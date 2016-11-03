@@ -160,11 +160,8 @@ def LDDMM_gradient_descent_scheme_solver(gradS, I, time_pts, niter, eps,
     # Give the inverse of time intervals
     inv_N = 1.0 / N
 
-    # Create the domain of image
+    # Create the space of image
     image_domain = gradS.domain
-
-    # Create the identity mapping
-    Id = image_domain.points().T
 
     # Get the dimansion
     dim = image_domain.ndim
@@ -174,20 +171,18 @@ def LDDMM_gradient_descent_scheme_solver(gradS, I, time_pts, niter, eps,
     series_pspace = ProductSpace(pspace, N+1)
     series_image_space = ProductSpace(image_domain, N+1)
 
-    mass_presv_space = ProductSpace(pspace, image_domain)
-
     # Initialize vector fileds at different time points
     vector_fields = series_pspace.zero()
 
     # Give the initial two series deformations and series Jacobian determinant
     image_N0 = series_image_space.element()
-    phi_N1 = series_pspace.element()
+    grad_data_matching_N1 = series_image_space.element()
     detDphi_N1 = series_image_space.element()
-    grad_object_func = series_pspace.element()
+
     for i in range(N+1):
         image_N0[i] = image_domain.element(I)
-        phi_N1[i] = pspace.element(Id)
         detDphi_N1[i] = image_domain.one()
+        grad_data_matching_N1[i] = image_domain.element(gradS(I))
 
     # Create the gradient op
     grad_op = Gradient(domain=image_domain, method='forward',
@@ -199,43 +194,44 @@ def LDDMM_gradient_descent_scheme_solver(gradS, I, time_pts, niter, eps,
 
     # Begin iteration
     for _ in range(niter):
-        # Update phi_N0, phi_N1 and detDphi_N1
-        for i in range(N):
+        # Update the velocity field
+        for i in range(N+1):
+            tmp1 = grad_data_matching_N1[i] * detDphi_N1[i]
+            tmp = grad_op(image_N0[i])
             for j in range(dim):
-                phi_N1[N-i-1][j] = image_domain.element(
-                    _linear_deform(phi_N1[N-i][j],
-                                   inv_N * vector_fields[N-i]))
+                tmp[j] *= tmp1
+            tmp3 = (2 * np.pi) * vectorial_ft_fit_op.inverse(
+                vectorial_ft_fit_op(tmp) * ft_kernel_fitting)
+
+            vector_fields[i] = vector_fields[i] - eps * (
+                lamb * vector_fields[i] - tmp3)
+
+        # Update image_N0 and detDphi_N1
+        for i in range(N):
             image_N0[i+1] = image_domain.element(
-                    _linear_deform(image_N0[i], -inv_N * vector_fields[i]))                          
+                _linear_deform(image_N0[i], -inv_N * vector_fields[i]))
+                          
             jacobian_det = image_domain.element(
                 np.exp(inv_N * div_op(vector_fields[N-i])))
+ 
             detDphi_N1[N-i-1] = image_domain.element(
                 jacobian_det * image_domain.element(_linear_deform(
                     detDphi_N1[N-i], inv_N * vector_fields[N-i])))
         
         # Update deformed template
         PhiStarI = image_N0[N]
+
         # Show intermediate result
         if callback is not None:
             callback(PhiStarI)
-        grad_data_matching = image_domain.element(gradS(PhiStarI))
 
-        # Update the velocity field
-        for i in range(N+1):
-            mass_presv_dfield = mass_presv_space.element([phi_N1[i],
-                                                          detDphi_N1[i]])
+        # Update gradient of the data matching
+        grad_data_matching_N1[N] = image_domain.element(gradS(PhiStarI))
+        for i in range(N):
+            grad_data_matching_N1[N-i-1] = image_domain.element(
+                _linear_deform(grad_data_matching_N1[N-i],
+                               inv_N * vector_fields[N-i]))
 
-            tmp1 = image_domain.element(mass_presv_deform(grad_data_matching,
-                                                          mass_presv_dfield)) 
-            tmp = grad_op(image_N0[i])
-            for j in range(dim):
-                tmp[j] *= tmp1
-            tmp3 = (2 * np.pi) * vectorial_ft_fit_op.inverse(
-                vectorial_ft_fit_op(tmp) * ft_kernel_fitting)
-            # Update the gradient of the data matching term
-            grad_object_func[i] = lamb * vector_fields[i] - tmp3
-
-            vector_fields[i] = vector_fields[i] - eps * grad_object_func[i]
 
     return image_N0
 
@@ -439,12 +435,12 @@ padded_ft_fit_op = padded_ft_op(space, padded_size)
 vectorial_ft_fit_op = DiagonalOperator(*([padded_ft_fit_op] * space.ndim))
 
 # Fix the sigma parameter in the kernel
-sigma = 3.0
+sigma = 2.5
 
 ft_kernel_fitting = fitting_kernel_ft(kernel)
 
 # Maximum iteration number
-niter = 200
+niter = 600
 
 callback = CallbackShow('iterates', display_step=5) & CallbackPrintIteration()
 
@@ -594,7 +590,7 @@ if impl2 == 'reconstruction':
 # For image matching
 if impl2 == 'matching':
     # Give step size for solver
-    eps = 0.05
+    eps = 0.2
 
     # Give regularization parameter
     lamb = 0.000001
@@ -640,7 +636,7 @@ if impl2 == 'matching':
     rec_result = space.element(image_N0[time_itvs])
 
     # Plot the results of interest
-    plt.figure(1, figsize=(21, 10))
+    plt.figure(1, figsize=(21, 14))
     plt.clf()
 
     plt.subplot(2, 3, 1)
