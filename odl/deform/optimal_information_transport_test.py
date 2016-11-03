@@ -230,8 +230,10 @@ def optimal_information_transport_solver2(I0, I1, niter, eps, lamb,
         # Check the mass
         # print(np.sum(PhiStarX))
 
+        # Compute inverse inertia
         v = inverse_inertia_op(u)
 
+        # Update the non-mass-preserving deformed template
         non_mp_deform_I0 = domain.element(
             _linear_deform(non_mp_deform_I0, - eps * v))
 
