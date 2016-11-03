@@ -25,7 +25,7 @@ space = odl.uniform_discr([-1, -1], [1, 1], (256, 256))
 
 # Make the Wavelet transform operator on this space. The range is calculated
 # automatically. The default backend is PyWavelets (pywt).
-wavelet_op = odl.trafos.WaveletTransform(space, nscales=2, wbasis='Haar')
+wavelet_op = odl.trafos.WaveletTransform(space, wavelet='Haar', nlevels=2)
 
 # Create a phantom and its wavelet transfrom and display them.
 phantom = odl.phantom.shepp_logan(space, modified=True)
