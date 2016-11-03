@@ -16,11 +16,11 @@
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Example using a filtered backprojection in 2d using the ray transform and a
-ramp filter. The ramp filter is implemented in fourier space.
+Example using a filtered backprojection (FBP) in cone-beam 3d using `fbp_op`.
 
-See https://en.wikipedia.org/wiki/Radon_transform#Inversion_formulas for
-more information.
+Note that the FBP is only approximate in 3d, but still gives a decent
+reconstruction that can be used as an initial guess in more complicated
+methods.
 """
 
 import numpy as np
@@ -30,19 +30,20 @@ import odl
 # --- Set-up geometry of the problem --- #
 
 
-# Discrete reconstruction space: discretized functions on the rectangle
-# [-20, 20]^2 with 300 samples per dimension.
+# Discrete reconstruction space: discretized functions on the cube
+# [-20, 20]^3 with 300 samples per dimension.
 reco_space = odl.uniform_discr(
-    min_pt=[-20, -20], max_pt=[20, 20], shape=[300, 300], dtype='float32')
+    min_pt=[-20, -20, -20], max_pt=[20, 20, 20], shape=[300, 300, 300],
+    dtype='float32')
 
-# Angles: uniformly spaced, n = 1000, min = 0, max = pi
-angle_partition = odl.uniform_partition(0, np.pi, 1000)
-
-# Detector: uniformly sampled, n = 500, min = -30, max = 30
-detector_partition = odl.uniform_partition(-30, 30, 500)
-
-# Make a parallel beam geometry with flat detector
-geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
+# Make a circular cone beam geometry with flat detector
+# Angles: uniformly spaced, n = 360, min = 0, max = 2 * pi
+angle_partition = odl.uniform_partition(0, 2 * np.pi, 360)
+# Detector: uniformly sampled, n = (558, 558), min = (-30, -30), max = (30, 30)
+detector_partition = odl.uniform_partition([-30, -30], [30, 30], [558, 558])
+geometry = odl.tomo.CircularConeFlatGeometry(
+    angle_partition, detector_partition, src_radius=500, det_radius=100,
+    axis=[1, 1, 1])
 
 
 # --- Create FilteredBackProjection (FBP) operator --- #
@@ -51,19 +52,8 @@ geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 # Ray transform (= forward projection). We use the ASTRA CUDA backend.
 ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl='astra_cuda')
 
-# Fourier transform in detector direction
-fourier = odl.trafos.FourierTransform(ray_trafo.range, axes=[1])
-
-# Create ramp in the detector direction
-ramp_function = fourier.range.element(lambda x: np.abs(x[1]) / (2 * np.pi))
-
-# Create ramp filter via the convolution formula with fourier transforms
-ramp_filter = fourier.inverse * ramp_function * fourier
-
-# Create filtered backprojection by composing the backprojection (adjoint) with
-# the ramp filter.
-fbp = ray_trafo.adjoint * ramp_filter
-
+# Create FBP operator using utility function
+fbp = odl.tomo.fbp_op(ray_trafo)
 
 # --- Show some examples --- #
 
