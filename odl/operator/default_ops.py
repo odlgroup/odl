@@ -33,7 +33,7 @@ from odl.set import LinearSpace, LinearSpaceElement, Field, RealNumbers
 __all__ = ('ScalingOperator', 'ZeroOperator', 'IdentityOperator',
            'LinCombOperator', 'MultiplyOperator', 'PowerOperator',
            'InnerProductOperator', 'NormOperator', 'DistOperator',
-           'ConstantOperator')
+           'ConstantOperator', 'RealPart', 'ImagPart', 'ComplexEmbedding')
 
 
 class ScalingOperator(Operator):
@@ -865,6 +865,321 @@ class ZeroOperator(Operator):
         """Return ``str(self)``."""
         return '0'
 
+
+class RealPart(Operator):
+
+    """Operator that extracts real part of a vector."""
+
+    def __init__(self, space):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        space : `FnBase`
+            Space which real part should be taken, needs to implement
+            ``space.real_space``.
+
+        Examples
+        --------
+        Take real part of cn vector:
+
+        >>> c3 = odl.cn(3)
+        >>> op = RealPart(c3)
+        >>> op([1 + 2j, 2, 3 - 1j])
+        rn(3).element([1.0, 2.0, 3.0])
+
+        The operator is the identity on real spaces
+
+        >>> r3 = odl.rn(3)
+        >>> op = RealPart(r3)
+        >>> op([1, 2, 3])
+        rn(3).element([1.0, 2.0, 3.0])
+
+        The operator also works on other `FnBase` spaces such as
+        `DiscreteLp` spaces
+
+        >>> r3 = odl.uniform_discr(0, 1, 3, dtype=complex)
+        >>> op = RealPart(r3)
+        >>> op([1, 2, 3])
+        uniform_discr(0.0, 1.0, 3).element([1.0, 2.0, 3.0])
+        """
+        real_space = space.real_space
+        linear = space == real_space
+        Operator.__init__(self, space, real_space, linear=linear)
+
+    def _call(self, x):
+        """Return ``self(x)``."""
+        return x.real
+
+    @property
+    def inverse(self):
+        """Return the pseudoinverse.
+
+        Examples
+        --------
+        This is not a true inverse, only a pseudoinverse, the complex part
+        will by necessity be lost.
+
+        >>> c3 = odl.cn(3)
+        >>> op = RealPart(c3)
+        >>> op.inverse(op([1 + 2j, 2, 3 - 1j]))
+        cn(3).element([(1+0j), (2+0j), (3+0j)])
+        """
+        return ComplexEmbedding(self.domain, scalar=1)
+
+    @property
+    def adjoint(self):
+        """Return the (left) adjoint.
+
+        Notes
+        -----
+        Due to technicalities of operators from a complex space into a real
+        space, this does not satisfy the usual adjoint equation:
+
+        .. math::
+            \langle Ax, y \rangle = \langle x, A^*y \rangle
+
+        Instead it satisfies the left adjoint equation:
+
+        .. math::
+            \langle AA^*x, y \rangle = \langle A^*x, A^*y \rangle
+
+        Examples
+        --------
+        The adjoint satisfies the adjoint equation for real spaces
+
+        >>> c3 = odl.cn(3)
+        >>> op = RealPart(c3)
+        >>> x = op.range.element([1, 2, 3])
+        >>> y = op.range.element([3, 2, 1])
+        >>> AtAxy = op(op.adjoint(x)).inner(y)
+        >>> AtxAty = op.adjoint(x).inner(op.adjoint(y))
+        >>> AtAxy == AtxAty
+        True
+        """
+        return ComplexEmbedding(self.domain, scalar=1)
+
+
+class ImagPart(Operator):
+    def __init__(self, space):
+        """Operator that extracts imaginary part of a vector.
+
+        Parameters
+        ----------
+        space : `FnBase`
+            Space which imaginary part should be taken, needs to implement
+            ``space.real_space``.
+
+        Examples
+        --------
+        Take imaginary part of cn vector:
+
+        >>> c3 = odl.cn(3)
+        >>> op = ImagPart(c3)
+        >>> op([1 + 2j, 2, 3 - 1j])
+        rn(3).element([2.0, 0.0, -1.0])
+
+        The operator is the zero operator on real spaces
+
+        >>> r3 = odl.cn(3)
+        >>> op = ImagPart(r3)
+        >>> op([1, 2, 3])
+        rn(3).element([0.0, 0.0, 0.0])
+        """
+        real_space = space.real_space
+        linear = space == real_space
+        Operator.__init__(self, space, real_space, linear=linear)
+
+    def _call(self, x):
+        """Return ``self(x)``."""
+        return x.imag
+
+    @property
+    def inverse(self):
+        """Return the pseudoinverse.
+
+        Examples
+        --------
+        This is not a true inverse, only a pseudoinverse, the real part
+        will by necessity be lost.
+
+        >>> c3 = odl.cn(3)
+        >>> op = ImagPart(c3)
+        >>> op.inverse(op([1 + 2j, 2, 3 - 1j]))
+        cn(3).element([(2+0j), 0j, (-1+0j)])
+        """
+        return ComplexEmbedding(self.domain, scalar=1)
+
+    @property
+    def adjoint(self):
+        """Return the (left) adjoint.
+
+        Notes
+        -----
+        Due to technicalities of operators from a complex space into a real
+        space, this does not satisfy the usual adjoint equation:
+
+        .. math::
+            \langle Ax, y \rangle = \langle x, A^*y \rangle
+
+        Instead it satisfies the left adjoint equation:
+
+        .. math::
+            \langle AA^*x, y \rangle = \langle A^*x, A^*y \rangle
+
+        Examples
+        --------
+        The adjoint satisfies the adjoint equation for real spaces
+
+        >>> c3 = odl.cn(3)
+        >>> op = RealPart(c3)
+        >>> x = op.range.element([1, 2, 3])
+        >>> y = op.range.element([3, 2, 1])
+        >>> AtAxy = op(op.adjoint(x)).inner(y)
+        >>> AtxAty = op.adjoint(x).inner(op.adjoint(y))
+        >>> AtAxy == AtxAty
+        True
+        """
+        return ComplexEmbedding(self.domain, scalar=1)
+
+
+class ComplexEmbedding(Operator):
+
+    """Operator that embeds a vector into a complex space."""
+
+    def __init__(self, space, scalar=1):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        space : `FnBase`
+            Space which real part should be taken, needs to implement
+            ``space.complex_space``.
+        scalar : ``space.complex_space.field`` element
+            Scalar which the incomming vectors should be multiplied by in order
+            to get the complex vector.
+
+        Examples
+        --------
+        Embed real vector into complex space
+
+        >>> r3 = odl.rn(3)
+        >>> op = ComplexEmbedding(r3)
+        >>> op([1, 2, 3])
+        cn(3).element([(1+0j), (2+0j), (3+0j)])
+
+        Embed real vector as imaginary part into complex space
+
+        >>> op = ComplexEmbedding(r3, scalar=1j)
+        >>> op([1, 2, 3])
+        cn(3).element([1j, 2j, 3j])
+
+        The operator is simple multiplication by scalar on complex spaces
+
+        >>> c3 = odl.cn(3)
+        >>> op = ComplexEmbedding(c3)
+        >>> op([1 + 1j, 2 + 2j, 3 + 3j])
+        cn(3).element([(1+1j), (2+2j), (3+3j)])
+        """
+        complex_space = space.complex_space
+        self.scalar = complex_space.field.element(scalar)
+        Operator.__init__(self, space, complex_space, linear=True)
+
+    def _call(self, x, out):
+        """Return ``self(x)``."""
+        if self.domain.is_rn:
+            # Real domain, multiply separately
+            out.real = self.scalar.real * x
+            out.imag = self.scalar.imag * x
+        else:
+            # Complex domain
+            out.lincomb(self.scalar, x)
+
+    @property
+    def inverse(self):
+        """Return the (left) inverse.
+
+        If the domain is a real space, this is not a true inverse,
+        only a (left) inverse.
+
+        Examples
+        --------
+        >>> r3 = odl.rn(3)
+        >>> op = ComplexEmbedding(r3, scalar=1)
+        >>> op.inverse(op([1, 2, 4]))
+        rn(3).element([1.0, 2.0, 4.0])
+        """
+        if self.domain.is_rn:
+            # Real domain
+            # Optimizations for simple cases.
+            if self.scalar.real == self.scalar:
+                return (1 / self.scalar.real) * RealPart(self.range)
+            elif 1j * self.scalar.imag == self.scalar:
+                return (1 / self.scalar.imag) * ImagPart(self.range)
+            else:
+                # General case
+                inv_scalar = (1 / self.scalar).conjugate()
+                return ((inv_scalar.real) * RealPart(self.range) +
+                        (inv_scalar.imag) * ImagPart(self.range))
+        else:
+            # Complex domain
+            return ComplexEmbedding(self.range, self.scalar.conjugate())
+
+    @property
+    def adjoint(self):
+        """Return the (right) adjoint.
+
+        Notes
+        -----
+        Due to technicalities of operators from a real space into a complex
+        space, this does not satisfy the usual adjoint equation:
+
+        .. math::
+            \langle Ax, y \rangle = \langle x, A^*y \rangle
+
+        Instead it satisfies the left adjoint equation:
+
+        .. math::
+            \langle A^*Ax, y \rangle = \langle Ax, Ay \rangle
+
+        Examples
+        --------
+        The adjoint satisfies the adjoint equation for complex spaces
+
+        >>> c3 = odl.cn(3)
+        >>> op = ComplexEmbedding(c3, scalar=1j)
+        >>> x = c3.element([1 + 1j, 2 + 2j, 3 + 3j])
+        >>> y = c3.element([3 + 1j, 2 + 2j, 3 + 1j])
+        >>> Axy = op(x).inner(y)
+        >>> xAty = x.inner(op.adjoint(y))
+        >>> Axy == xAty
+        True
+
+        For real domains, it only satisfies the (right) adjoint equation
+
+        >>> r3 = odl.rn(3)
+        >>> op = ComplexEmbedding(r3, scalar=1j)
+        >>> x = r3.element([1, 2, 3])
+        >>> y = r3.element([3, 2, 3])
+        >>> AtAxy = op.adjoint(op(x)).inner(y)
+        >>> AxAy = op(x).inner(op(y))
+        >>> AtAxy == AxAy
+        True
+        """
+        if self.domain.is_rn:
+            # Real domain
+            # Optimizations for simple cases.
+            if self.scalar.real == self.scalar:
+                return self.scalar.real * RealPart(self.range)
+            elif 1j * self.scalar.imag == self.scalar:
+                return self.scalar.imag * ImagPart(self.range)
+            else:
+                # General case
+                return (self.scalar.real * RealPart(self.range) +
+                        self.scalar.imag * ImagPart(self.range))
+        else:
+            # Complex domain
+            return ComplexEmbedding(self.range, self.scalar.conjugate())
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position
