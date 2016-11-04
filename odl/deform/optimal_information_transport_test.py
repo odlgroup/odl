@@ -297,7 +297,8 @@ def inverse_inertia_op(impl3):
     ----------
     impl3 : `string`
         implementation method, solving poisson equation or using RKHS
-    """
+    """ 
+    
     temp = 2 * np.pi
     if impl3 == 'poisson':
         return temp * vectorial_ft_op.inverse * poisson_kernel_ft * vectorial_ft_op
@@ -347,14 +348,16 @@ def kernel(x):
 
 
 # Give input images
-I0name = './pictures/c_highres.png'
-I1name = './pictures/i_highres.png'
+#I0name = './pictures/c_highres.png'
+#I1name = './pictures/i_highres.png'
 # I0name = './pictures/handnew1.png'
 # I1name = './pictures/DS0002AxialSlice80.png'
 #I0name = './pictures/handnew1.png'
 #I1name = './pictures/handnew2.png'
-#I0name = './pictures/v.png'
-#I1name = './pictures/j.png'
+I0name = './pictures/v.png'
+I1name = './pictures/j.png'
+#I0name = './pictures/ImageHalf068.png'
+#I1name = './pictures/ImageHalf069.png'
 
 # Get digital images
 #I0 = np.rot90(plt.imread(I0name).astype('float'), -1)[::2, ::2]
@@ -364,26 +367,8 @@ I1 = np.rot90(plt.imread(I1name).astype('float'), -1)
 
 # Discrete reconstruction space: discretized functions on the rectangle
 space = odl.uniform_discr(
-    min_pt=[-16, -16], max_pt=[16, 16], shape=[256, 256],
+    min_pt=[-16, -16], max_pt=[16, 16], shape=[64, 64],
     dtype='float32', interp='linear')
-
-# Give the number of directions
-num_angles = 60
-
-# Create the uniformly distributed directions
-angle_partition = odl.uniform_partition(0, np.pi, num_angles,
-                                        nodes_on_bdry=[(True, False)])
-
-# Create 2-D projection domain
-# The length should be 1.5 times of that of the reconstruction space
-detector_partition = odl.uniform_partition(-24, 24, 384)
-
-# Create 2-D parallel projection geometry
-geometry = odl.tomo.Parallel2dGeometry(angle_partition,
-                                       detector_partition)
-
-# Ray transform aka forward projection. We use ASTRA CUDA backend.
-ray_trafo = odl.tomo.RayTransform(space, geometry, impl='astra_cuda')
 
 # Create the ground truth as the given image
 ground_truth = space.element(I0)
@@ -393,34 +378,6 @@ ground_truth = space.element(I0)
 
 # # Create the ground truth as the submarine phantom
 # ground_truth = odl.util.submarine_phantom(space, smooth=True, taper=50.0)
-
-# Create projection data by calling the ray transform on the phantom
-proj_data = ray_trafo(ground_truth)
-
-# Add white Gaussion noise onto the noiseless data
-noise = odl.phantom.white_noise(ray_trafo.range) * 0.0
-
-# Add white Gaussion noise from file
-#noise = ray_trafo.range.element(np.load('noise_20angles.npy'))
-
-# Create the noisy projection data
-noise_proj_data = proj_data + noise
-
-# Create the noisy data from file
-#noise_proj_data = ray_trafo.range.element(
-#    np.load('noise_proj_data_20angles_snr_4_98.npy'))
-
-# Compute the signal-to-noise ratio in dB
-snr = snr(proj_data, noise, impl='dB')
-
-# Output the signal-to-noise ratio
-print('snr = {!r}'.format(snr))
-
-# Maximum iteration number
-niter = 1000
-
-callback = odl.solvers.CallbackShow(
-    'iterates', display_step=50) & odl.solvers.CallbackPrintIteration()
 
 # Create the template as the given image
 template = space.element(I1)
@@ -437,20 +394,27 @@ template = space.element(I1)
 #template = space.element(geometric_deform(
 #    shepp_logan(space, modified=True), deform_field))
 
+# Maximum iteration number
+niter = 1000
+
+# Show intermiddle results
+callback = odl.solvers.CallbackShow(
+    'iterates', display_step=50) & odl.solvers.CallbackPrintIteration()
+
 # Implementation method for mass preserving or not,
 # impl chooses 'mp' or 'nmp', 'mp' means mass-preserving method,
 # 'nmp' means non-mass-preserving method
-impl1 = 'mp'
+impl1 = 'nmp'
 
 # Implementation method for image matching or image reconstruction,
 # impl chooses 'matching' or 'reconstruction', 'matching' means image matching,
 # 'reconstruction' means image reconstruction
-impl2 = 'reconstruction'
+impl2 = 'matching'
 
 # Implementation method with Klas Modin or rkhs
 # impl chooses 'poisson' or 'rkhs', 'poisson' means using poisson solver,
 # 'rkhs' means using V-gradient
-impl3 = 'rkhs'
+impl3 = 'poisson'
 
 # Normalize the template's density as the same as the ground truth if consider
 # mass preserving method
@@ -466,7 +430,7 @@ template.show('Template')
 # For image reconstruction
 if impl2 == 'reconstruction':
     # Give step size for solver
-    eps = 0.005
+    eps = 0.001
 
     # Give regularization parameter
     lamb = 0.05
@@ -474,8 +438,45 @@ if impl2 == 'reconstruction':
     # Fix the sigma parameter in the kernel
     sigma = 2.0
 
-    # Create the forward operator for image reconstruction
-    op = ray_trafo
+    # Give the number of directions
+    num_angles = 20
+    
+    # Create the uniformly distributed directions
+    angle_partition = odl.uniform_partition(0, np.pi, num_angles,
+                                            nodes_on_bdry=[(True, False)])
+    
+    # Create 2-D projection domain
+    # The length should be 1.5 times of that of the reconstruction space
+    detector_partition = odl.uniform_partition(-24, 24, 256)
+    
+    # Create 2-D parallel projection geometry
+    geometry = odl.tomo.Parallel2dGeometry(angle_partition,
+                                           detector_partition)
+    
+    # Ray transform aka forward projection. We use ASTRA CUDA backend.
+    op = odl.tomo.RayTransform(space, geometry, impl='astra_cuda')
+
+    # Create projection data by calling the ray transform on the phantom
+    proj_data = op(ground_truth)
+    
+    # Add white Gaussion noise onto the noiseless data
+    noise = odl.phantom.white_noise(op.range) * 0.1
+    
+    # Add white Gaussion noise from file
+    #noise = ray_trafo.range.element(np.load('noise_20angles.npy'))
+    
+    # Create the noisy projection data
+    noise_proj_data = proj_data + noise
+    
+    # Create the noisy data from file
+    #noise_proj_data = ray_trafo.range.element(
+    #    np.load('noise_proj_data_20angles_snr_4_98.npy'))
+    
+    # Compute the signal-to-noise ratio in dB
+    snr = snr(proj_data, noise, impl='dB')
+    
+    # Output the signal-to-noise ratio
+    print('snr = {!r}'.format(snr))
 
     # Create the gradient operator for the L2 functional
     gradS = op.adjoint * odl.ResidualOperator(op, noise_proj_data)
@@ -530,7 +531,7 @@ if impl2 == 'reconstruction':
 # For image matching
 if impl2 == 'matching':
     # Give step size for solver
-    eps = 0.0025
+    eps = 0.01
 
     # Give regularization parameter
     lamb = 0.05
@@ -541,12 +542,27 @@ if impl2 == 'matching':
     # Create the forward operator for image matching
     op = odl.IdentityOperator(space)
 
-    # Create the gradient operator for the L2 functional
-    gradS = op.adjoint * odl.ResidualOperator(op, ground_truth)
+    # Create projection data by calling the ray transform on the phantom
+    data = op(ground_truth)
+    
+    # Add white Gaussion noise onto the noiseless data
+    noise = odl.phantom.white_noise(op.range) * 0.0
+    
+    # Create the noisy projection data
+    noise_data = data + noise
+    
+    # Compute the signal-to-noise ratio in dB
+    snr = snr(data, noise, impl='dB')
+    
+    # Output the signal-to-noise ratio
+    print('snr = {!r}'.format(snr))
 
-    padded_size = 2 * space.shape[0]
-    padded_ft_op = padded_ft_op(space, padded_size)
-    vectorial_ft_op = odl.DiagonalOperator(padded_ft_op, space.ndim)
+    # Create the gradient operator for the L2 functional
+    gradS = op.adjoint * odl.ResidualOperator(op, noise_data)
+
+    padded_size = 2 * gradS.domain.shape[0]
+    padded_ft_op = padded_ft_op(gradS.domain, padded_size)
+    vectorial_ft_op = odl.DiagonalOperator(padded_ft_op, gradS.domain.ndim)
 
     # Compute Fourier trasform of the kernel function in data matching term
     ft_kernel_fitting = fitting_kernel_ft(kernel)

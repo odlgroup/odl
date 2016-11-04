@@ -189,8 +189,7 @@ def LDDMM_gradient_descent_scheme_solver(gradS, I, time_pts, niter, eps,
                        pad_mode='symmetric')
 
     # Create the divergence op
-    div_op = Divergence(domain=pspace, method='forward',
-                        pad_mode='symmetric')
+    div_op = Divergence(domain=pspace, method='forward', pad_mode='symmetric')
 
     # Begin iteration
     for _ in range(niter):
@@ -235,146 +234,21 @@ def LDDMM_gradient_descent_scheme_solver(gradS, I, time_pts, niter, eps,
     return image_N0
 
 
-class LDDMMOperator(Operator):
-    
-    def __init__(self, template, time_pts):
-        self.template = template
-        self.time_pts = time_pts
-        vecfield_space = self.template.space.vector_field_space
-        velocity_field_space = ProductSpace(vecfield_space, self.time_pts + 1)
-        super().__init__(domain=velocity_field_space,
-                         range=self.template.space)
-
-    def _call(self, veloc_field):
-        pass
-    
-    def derivative(self, veloc_field):
-        return LDDMMOperatorDerivative(self.template, self.time_pts,
-                                       veloc_field)
-        
-
-class LDDMMOperatorDerivative(Operator):
-    
-    def __init__(self, template, time_pts, velocity_field):
-        # Point at which derivative was taken
-        # TODO: better name
-        self.velocity_field = velocity_field
-
-        self.template = template
-        self.time_pts = time_pts
-        super().__init__(domain=velocity_field.space,
-                         range=self.template.space,
-                         linear=True)
-
-    def _call(self, v):
-        pass
-    
-    @property
-    def adjoint(self):
-        return LDDMMOperatorDerivativeAdjoint(self.template, self.time_pts,
-                                              self.vecfield)
-
-class LDDMMOperatorDerivativeAdjoint(Operator):
-    
-    def __init__(self, template, time_pts, velocity_field):
-        # Point at which derivative was taken
-        # TODO: better name
-        self.velocity_field = velocity_field
-
-        self.template = template
-        self.time_pts = time_pts
-        super().__init__(domain=self.template.space,
-                         range=velocity_field.space,
-                         linear=True)
-        
-        self.jacobian_series_space = ProductSpace(self.domain,
-                                                  self.time_pts + 1)
-        self.mass_presv_space = ProductSpace(self.range[0], self.domain)
-
-        self.Id = self.domain.points().T
-        # Give the initial two series deformations and series Jacobian
-        # determinant
-        self.phi_N0 = self.velocity_field_space.element()
-        self.phi_N0[0][:] = self.Id
-        self.phi_N1 = self.velocity_field_space.element()
-        self.phi_N1[-1][:] = self.Id
-        self.detDphi_N1 = self.jacobian_series_space.one()
-
-
-        # Create the gradient op
-        self.grad_op = Gradient(domain=self.domain, method='forward',
-                                pad_mode='symmetric')
-
-        # Create the divergence op
-        self.div_op = Divergence(domain=self.range, method='forward',
-                                 pad_mode='symmetric')
-
-        self.ndim = self.domain.ndim
-        self.N = self.time_pts
-        self.jacobian_update = self.domain.element()
-
-    def _call(self, image, out):
-        # Update phi_N0, phi_N1 and detDphi_N1
-        for i in range(self.time_pts):
-            for j in range(self.ndim):
-                # Deform "forward" vector field at i-th time point -> i+1
-                _linear_deform(
-                    self.phi_N0[i][j], -1.0 / self.N * self.vector_fields[i],
-                    out=phi_N0[i+1][j])
-
-                # Deform "backward" vector field at (N-i)-th time point
-                # -> N-1-i
-                _linear_deform(
-                    self.phi_N1[self.N-i][j], 1.0 / self.N * self.vector_fields[self.N-i],
-                    out=self.phi_N1[self.N-i-1][j])
-
-                # Update the Jacobian at time point N-i-1 with an approximation
-                # at time point N-i
-                self.jacobian_update.assign(
-                        np.exp(1.0 / self.N * self.div_op(self.vector_fields[self.N-i])))
-
-                _linear_deform(
-                        self.detDphi_N1[self.N-i], 1.0 / self.N * self.vector_fields[self.N-i],
-                        out=self.detDphi_N1[self.N-i-1])
-                self.detDphi_N1[self.N-i-1] *= self.jacobian_update
-
-        # Update the velocity field
-        mass_presv_dfield = self.mass_presv_space.element()
-        tmp1 = self.domain.element()
-        tmp2 = self.domain.element()
-        deformed_grad = self.range.element()
-
-        for i in range(self.N+1):
-            # Deform input image with a mass-preserving deformation
-            mass_presv_dfield.assign([self.phi_N1[i], self.detDphi_N1[i]])
-            mass_presv_deform(image, mass_presv_dfield, out=tmp1)
-            
-            # Compute deformed gradient of the template
-            geometric_deform(self.template, self.phi_N0[i], out=tmp2)
-            self.grad_op(tmp2, out=deformed_grad)
-
-            # Multiply both
-            for di in deformed_grad:
-                di *= tmp1
-
-            tmp3 = vectorial_ft_fit_op.inverse(
-                vectorial_ft_fit_op(deformed_grad) * ft_kernel_fitting)
-
-            out[i].lincomb(lamb, self.vector_fields[i], -1, tmp3)
-
-
-
 # Give input images
 #I0name = './pictures/c_highres.png'
 #I1name = './pictures/i_highres.png'
-I0name = './pictures/DS0003AxialSlice80.png'
-I1name = './pictures/DS0002AxialSlice80.png'
-I0name = './pictures/hand5.png'
-I1name = './pictures/hand3.png'
-I0name = './pictures/handnew1.png'
-I1name = './pictures/handnew2.png'
+#I0name = './pictures/DS0003AxialSlice80.png'
+#I1name = './pictures/DS0002AxialSlice80.png'
+#I0name = './pictures/hand5.png'
+#I1name = './pictures/hand3.png'
+#I0name = './pictures/handnew1.png'
+#I1name = './pictures/handnew2.png'
+I0name = './pictures/v.png'
+I1name = './pictures/j.png'
 #I0name = './pictures/ImageHalf058.png'
 #I1name = './pictures/ImageHalf059.png'
+#I0name = './pictures/ImageHalf068.png'
+#I1name = './pictures/ImageHalf069.png'
 
 # Get digital images
 #I0 = np.rot90(plt.imread(I0name).astype('float'), -1)[::2, ::2]
@@ -384,25 +258,8 @@ I1 = np.rot90(plt.imread(I1name).astype('float'), -1)
 
 # Discrete reconstruction space: discretized functions on the rectangle
 space = uniform_discr(
-    min_pt=[-16, -16], max_pt=[16, 16], shape=[256, 256],
+    min_pt=[-16, -16], max_pt=[16, 16], shape=[64, 64],
     dtype='float32', interp='linear')
-
-# Give the number of directions
-num_angles = 60
-
-# Create the uniformly distributed directions
-angle_partition = uniform_partition(0, np.pi, num_angles,
-                                    nodes_on_bdry=[(True, False)])
-
-# Create 2-D projection domain
-# The length should be 1.5 times of that of the reconstruction space
-detector_partition = uniform_partition(-24, 24,384)
-
-# Create 2-D parallel projection geometry
-geometry = Parallel2dGeometry(angle_partition, detector_partition)
-
-# Ray transform aka forward projection. We use ASTRA CUDA backend.
-ray_trafo = RayTransform(space, geometry, impl='astra_cuda')
 
 # Create the ground truth as the given image
 ground_truth = space.element(I0)
@@ -436,11 +293,13 @@ vectorial_ft_fit_op = DiagonalOperator(*([padded_ft_fit_op] * space.ndim))
 # Fix the sigma parameter in the kernel
 sigma = 2.5
 
+# Compute the FT of kernel in fitting term
 ft_kernel_fitting = fitting_kernel_ft(kernel)
 
 # Maximum iteration number
-niter = 800
+niter = 2000
 
+# Show intermiddle results
 callback = CallbackShow('iterates', display_step=5) & CallbackPrintIteration()
 
 # Implementation method for mass preserving or not,
@@ -451,7 +310,6 @@ impl1 = 'nmp'
 # Implementation method for image matching or image reconstruction,
 # impl chooses 'matching' or 'reconstruction', 'matching' means image matching,
 # 'reconstruction' means image reconstruction
-# impl2 = 'matching'
 impl2 = 'matching'
 
 # Normalize the template's density as the same as the ground truth if consider
@@ -465,10 +323,27 @@ template.show('template')
 # For image reconstruction
 if impl2 == 'reconstruction':
     # Give step size for solver
-    eps = 0.1
+    eps = 0.05
 
     # Give regularization parameter
-    lamb = 0.000001
+    lamb = 0.0001
+
+    # Give the number of directions
+    num_angles = 20
+    
+    # Create the uniformly distributed directions
+    angle_partition = uniform_partition(0, np.pi, num_angles,
+                                        nodes_on_bdry=[(True, False)])
+    
+    # Create 2-D projection domain
+    # The length should be 1.5 times of that of the reconstruction space
+    detector_partition = uniform_partition(-24, 24, 364)
+    
+    # Create 2-D parallel projection geometry
+    geometry = Parallel2dGeometry(angle_partition, detector_partition)
+    
+    # Ray transform aka forward projection. We use ASTRA CUDA backend.
+    ray_trafo = RayTransform(space, geometry, impl='astra_cuda')
 
     # Create the forward operator for image reconstruction
     op = ray_trafo
@@ -499,7 +374,7 @@ if impl2 == 'reconstruction':
     gradS = op.adjoint * ResidualOperator(op, noise_proj_data)
 
     # Give the number of time points
-    time_itvs = 20
+    time_itvs = 10
 
     # Compute by LDDMM solver
     image_N0 = LDDMM_gradient_descent_scheme_solver(
@@ -589,10 +464,10 @@ if impl2 == 'reconstruction':
 # For image matching
 if impl2 == 'matching':
     # Give step size for solver
-    eps = 0.2
+    eps = 0.02
 
     # Give regularization parameter
-    lamb = 0.1
+    lamb = 0.000001
 
     # Create the forward operator for image matching
     op = IdentityOperator(space)
@@ -603,15 +478,8 @@ if impl2 == 'matching':
     # Add white Gaussion noise onto the noiseless data
     noise = 0.0 * white_noise(op.range)
 
-    # Add white Gaussion noise from file
-    # noise = op.range.element(np.load('noise_20angles.npy'))
-
     # Create the noisy projection data
     noise_data = data + noise
-
-    # Create the noisy data from file
-    #noise_proj_data = op.range.element(
-    #    np.load('noise_proj_data_20angles_snr_4_98.npy'))
 
     # Compute the signal-to-noise ratio in dB
     snr = snr(data, noise, impl='dB')
@@ -635,7 +503,7 @@ if impl2 == 'matching':
     rec_result = space.element(image_N0[time_itvs])
 
     # Plot the results of interest
-    plt.figure(1, figsize=(21, 14))
+    plt.figure(1, figsize=(21, 10))
     plt.clf()
 
     plt.subplot(2, 3, 1)
@@ -650,21 +518,21 @@ if impl2 == 'matching':
                vmin=np.asarray(rec_result_1).min(),
                vmax=np.asarray(rec_result_1).max()) 
     plt.colorbar()
-    plt.title('time_pts = {!r}'.format(5))
+    plt.title('time_pts = {!r}'.format(4))
 
     plt.subplot(2, 3, 3)
     plt.imshow(np.rot90(rec_result_2), cmap='bone',
                vmin=np.asarray(rec_result_2).min(),
                vmax=np.asarray(rec_result_2).max()) 
     plt.colorbar()
-    plt.title('time_pts = {!r}'.format(10))
+    plt.title('time_pts = {!r}'.format(8))
 
     plt.subplot(2, 3, 4)
     plt.imshow(np.rot90(rec_result_3), cmap='bone',
                vmin=np.asarray(rec_result_3).min(),
                vmax=np.asarray(rec_result_3).max()) 
     plt.colorbar()
-    plt.title('time_pts = {!r}'.format(15))
+    plt.title('time_pts = {!r}'.format(12))
 
     plt.subplot(2, 3, 5)
     plt.imshow(np.rot90(rec_result), cmap='bone',
