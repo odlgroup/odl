@@ -178,11 +178,12 @@ def LDDMM_gradient_descent_scheme_solver(gradS, I, time_pts, niter, eps,
     image_N0 = series_image_space.element()
     grad_data_matching_N1 = series_image_space.element()
     detDphi_N1 = series_image_space.element()
+    grad_data_matching = image_domain.element(gradS(I))
 
     for i in range(N+1):
         image_N0[i] = image_domain.element(I)
         detDphi_N1[i] = image_domain.one()
-        grad_data_matching_N1[i] = image_domain.element(gradS(I))
+        grad_data_matching_N1[i] = grad_data_matching
 
     # Create the gradient op
     grad_op = Gradient(domain=image_domain, method='forward',
@@ -207,28 +208,30 @@ def LDDMM_gradient_descent_scheme_solver(gradS, I, time_pts, niter, eps,
 
         # Update image_N0 and detDphi_N1
         for i in range(N):
+            # Update image_N0[i+1] by image_N0[i] and vector_fields[i+1]
             image_N0[i+1] = image_domain.element(
                 _linear_deform(image_N0[i], -inv_N * vector_fields[i+1]))
-                          
-            jacobian_det = np.exp(inv_N * div_op(vector_fields[N-i-1]))
- 
+            # Update detDphi_N1[N-i-1] by detDphi_N1[N-i]
+            # and vector_fields[N-i-1]
+            jacobian_det = image_domain.element(
+                np.exp(inv_N * div_op(vector_fields[N-i-1])))
             detDphi_N1[N-i-1] = image_domain.element(
-                jacobian_det * _linear_deform(
-                    detDphi_N1[N-i], inv_N * vector_fields[N-i-1]))
+                jacobian_det * image_domain.element(_linear_deform(
+                    detDphi_N1[N-i], inv_N * vector_fields[N-i-1])))
         
-        # Update deformed template
+        # Update the deformed template
         PhiStarI = image_N0[N]
 
         # Show intermediate result
         if callback is not None:
             callback(PhiStarI)
 
-        # Update gradient of the data matching
+        # Update gradient of the data matching: grad S(W_I(v^k))
         grad_data_matching_N1[N] = image_domain.element(gradS(PhiStarI))
         for i in range(N):
             grad_data_matching_N1[N-i-1] = image_domain.element(
                 _linear_deform(grad_data_matching_N1[N-i],
-                               inv_N * vector_fields[N-i]))
+                               inv_N * vector_fields[N-i-1]))
 
     return image_N0
 
@@ -463,7 +466,7 @@ if impl2 == 'reconstruction':
 # For image matching
 if impl2 == 'matching':
     # Give step size for solver
-    eps = 0.02
+    eps = 0.05
 
     # Give regularization parameter
     lamb = 0.000001
