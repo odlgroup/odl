@@ -15,24 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Tomography related operators and geometries."""
+"""Routines for Data I/O."""
 
 
 from __future__ import absolute_import
 
 __all__ = ()
 
-from .geometry import *
-__all__ += geometry.__all__
+from .uncompr_bin import *
+__all__ += uncompr_bin.__all__
 
-from .backends import *
-__all__ += backends.__all__
-
-from .operators import *
-__all__ += operators.__all__
-
-from .analytic import *
-__all__ += analytic.__all__
-
-from .data import *
-__all__ += data.__all__
+from .mrc2014 import *
+__all__ += mrc2014.__all__
