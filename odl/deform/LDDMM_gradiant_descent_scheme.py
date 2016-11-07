@@ -215,9 +215,8 @@ def LDDMM_gradient_descent_scheme_solver(gradS, I, time_pts, niter, eps,
             # and vector_fields[N-i-1]
             jacobian_det = image_domain.element(
                 np.exp(inv_N * div_op(vector_fields[N-i-1])))
-            detDphi_N1[N-i-1] = image_domain.element(
-                jacobian_det * image_domain.element(_linear_deform(
-                    detDphi_N1[N-i], inv_N * vector_fields[N-i-1])))
+            detDphi_N1[N-i-1] = jacobian_det * image_domain.element(_linear_deform(
+                    detDphi_N1[N-i], inv_N * vector_fields[N-i-1]))
         
         # Update the deformed template
         PhiStarI = image_N0[N]
@@ -466,7 +465,7 @@ if impl2 == 'reconstruction':
 # For image matching
 if impl2 == 'matching':
     # Give step size for solver
-    eps = 0.05
+    eps = 0.3
 
     # Give regularization parameter
     lamb = 0.000001

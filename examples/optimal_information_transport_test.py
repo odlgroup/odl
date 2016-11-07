@@ -43,7 +43,7 @@ I1 = np.rot90(plt.imread(I1name).astype('float'), -1)[::2, ::2]
 
 # Discrete reconstruction space: discretized functions on the rectangle
 space = odl.uniform_discr(
-    min_corner=[-16, -16], max_corner=[16, 16], nsamples=[128, 128],
+    min_pt=[-16, -16], max_pt=[16, 16], shape=[128, 128],
     dtype='float32', interp='linear')
 
 # Give the number of directions
