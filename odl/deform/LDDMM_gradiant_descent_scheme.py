@@ -208,14 +208,13 @@ def LDDMM_gradient_descent_scheme_solver(gradS, I, time_pts, niter, eps,
         # Update image_N0 and detDphi_N1
         for i in range(N):
             image_N0[i+1] = image_domain.element(
-                _linear_deform(image_N0[i], -inv_N * vector_fields[i]))
+                _linear_deform(image_N0[i], -inv_N * vector_fields[i+1]))
                           
-            jacobian_det = image_domain.element(
-                np.exp(inv_N * div_op(vector_fields[N-i])))
+            jacobian_det = np.exp(inv_N * div_op(vector_fields[N-i-1]))
  
             detDphi_N1[N-i-1] = image_domain.element(
-                jacobian_det * image_domain.element(_linear_deform(
-                    detDphi_N1[N-i], inv_N * vector_fields[N-i])))
+                jacobian_det * _linear_deform(
+                    detDphi_N1[N-i], inv_N * vector_fields[N-i-1]))
         
         # Update deformed template
         PhiStarI = image_N0[N]
@@ -297,7 +296,7 @@ sigma = 2.5
 ft_kernel_fitting = fitting_kernel_ft(kernel)
 
 # Maximum iteration number
-niter = 2000
+niter = 3000
 
 # Show intermiddle results
 callback = CallbackShow('iterates', display_step=5) & CallbackPrintIteration()
@@ -491,15 +490,15 @@ if impl2 == 'matching':
     gradS = op.adjoint * ResidualOperator(op, noise_data)
 
     # Give the number of time intervals
-    time_itvs = 10
+    time_itvs = 20
 
     # Compute by LDDMM solver
     image_N0 = LDDMM_gradient_descent_scheme_solver(
         gradS, template, time_itvs, niter, eps, lamb, callback)
     
-    rec_result_1 = space.element(image_N0[2])
-    rec_result_2 = space.element(image_N0[5])
-    rec_result_3 = space.element(image_N0[8])
+    rec_result_1 = space.element(image_N0[4])
+    rec_result_2 = space.element(image_N0[10])
+    rec_result_3 = space.element(image_N0[16])
     rec_result = space.element(image_N0[time_itvs])
 
     # Plot the results of interest
