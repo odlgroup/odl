@@ -61,7 +61,7 @@ def dual(request):
     return request.param
 
 
-func_params = ['l1', 'l2', 'l2^2', 'kl', 'kl_cross_ent',
+func_params = ['l1', 'l2', 'l2^2', 'kl', 'kl_cross_ent', 'const',
                'groupl11', 'groupl12']
 func_ids = [' f = {}'.format(p.ljust(10)) for p in func_params]
 
@@ -83,6 +83,8 @@ def functional(request, offset, dual, stepsize):
         func = odl.solvers.KullbackLeibler(space)
     elif name == 'kl_cross_ent':
         func = odl.solvers.KullbackLeiblerCrossEntropy(space)
+    elif name == 'const':
+        func = odl.solvers.ConstantFunctional(space, constant=2)
     elif name == 'groupl11':
         space = odl.ProductSpace(space, 2)
         func = odl.solvers.GroupL1Norm(space, exponent=1)

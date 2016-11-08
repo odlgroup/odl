@@ -44,7 +44,7 @@ from odl.util import conj_exponent
 
 __all__ = ('L1Norm', 'L2Norm', 'L2NormSquared',
            'ZeroFunctional', 'ConstantFunctional', 'IndicatorLpUnitBall',
-           'GroupL1Norm', 'IndicatorGroupL1UnitBall',
+           'GroupL1Norm', 'IndicatorGroupL1UnitBall', 'IndicatorZero',
            'IndicatorBox', 'IndicatorNonnegativity', 'KullbackLeibler',
            'KullbackLeiblerCrossEntropy', 'SeparableSum',
            'QuadraticForm')
@@ -643,6 +643,7 @@ class ConstantFunctional(Functional):
 
     @property
     def constant(self):
+        """The constant value of the functional."""
         return self.__constant
 
     def _call(self, x):
@@ -674,63 +675,12 @@ class ConstantFunctional(Functional):
             \\infty & \\text{else}
             \\end{array} \\right.
         """
-        functional = self
-
-        class ConstantFunctionalConvexConj(Functional):
-
-            """The convex conjugate functional of the constant functional.
-
-            It does not implement `gradient` since it is not differentiable
-            anywhere.
-            """
-
-            def __init__(self):
-                """Initialize a new instance."""
-                super().__init__(functional.domain, linear=False)
-
-            def _call(self, x):
-                """Apply the functional to the given point."""
-
-                if x.norm() == 0:
-                    # In this case x is the zero-element.
-                    return -functional.constant
-                else:
-                    return np.inf
-
-            @property
-            def convex_conj(self):
-                """The convex conjugate functional.
-
-                Notes
-                -----
-                By the Fenchel-Moreau theorem the convex conjugate functional
-                is the constant functional [BC2011]_.
-                """
-                return functional
-
-            @property
-            def proximal(self):
-                """Return the `proximal factory` of the functional.
-
-                This is the zero operator.
-                """
-                def zero_proximal(sigma=1.0):
-                    """Proximal factory for zero operator.
-
-                    Parameters
-                    ----------
-                    sigma : positive float
-                        Step size parameter. Default: 1.0"""
-                    return ZeroOperator(self.domain)
-
-                return zero_proximal
-
-        return ConstantFunctionalConvexConj()
+        return IndicatorZero(self.domain, -self.constant)
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r})'.format(self.__class__.__name__,
-                                 self.domain, self.constant)
+        return '{}({!r}, {!r})'.format(self.__class__.__name__,
+                                       self.domain, self.constant)
 
 
 class ZeroFunctional(ConstantFunctional):
@@ -863,6 +813,88 @@ class IndicatorNonnegativity(IndicatorBox):
     def __repr__(self):
         """Return ``repr(self)``."""
         return '{}({!r})'.format(self.__class__.__name__, self.domain)
+
+
+class IndicatorZero(Functional):
+
+    """The indicator function on zero.
+
+    The function has a constant value if the input is zero, otherwise infinity.
+    """
+
+    def __init__(self, space, constant=0):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        space : `LinearSpace`
+            Domain of the functional.
+        constant : element in ``domain.field``, optional
+            The constant value of the functional
+
+        Examples
+        --------
+        >>> space = odl.rn(3)
+        >>> func = IndicatorZero(space)
+        >>> func([0, 0, 0])
+        0
+        >>> func([0, 0, 1])
+        inf
+
+        >>> func = IndicatorZero(space, constant=2)
+        >>> func([0, 0, 0])
+        2
+        """
+        self.__constant = constant
+        super().__init__(space, linear=False)
+
+    @property
+    def constant(self):
+        """The constant value of the functional if ``x=0``."""
+        return self.__constant
+
+    def _call(self, x):
+        """Apply the functional to the given point."""
+
+        if x.norm() == 0:
+            # In this case x is the zero-element.
+            return self.constant
+        else:
+            return np.inf
+
+    @property
+    def convex_conj(self):
+        """The convex conjugate functional.
+
+        Notes
+        -----
+        By the Fenchel-Moreau theorem the convex conjugate functional
+        is the constant functional [BC2011]_.
+        """
+        return ConstantFunctional(self.domain, -self.constant)
+
+    @property
+    def proximal(self):
+        """Return the proximal factory of the functional.
+
+        This is the zero operator.
+        """
+        def zero_proximal(sigma=1.0):
+            """Proximal factory for zero operator.
+
+            Parameters
+            ----------
+            sigma : positive float, optional
+                Step size parameter.
+            """
+            return ZeroOperator(self.domain)
+
+        return zero_proximal
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{}({!r}, {!r})'.format(self.__class__.__name__,
+                                       self.domain, self.value)
 
 
 class KullbackLeibler(Functional):
