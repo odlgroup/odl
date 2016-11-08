@@ -98,7 +98,7 @@ f = odl.solvers.SeparableSum(l2_norm, l1_norm)
 
 
 # Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
-op_norm = 1.1 * odl.power_method_opnorm(op)
+op_norm = 1.3 * odl.power_method_opnorm(op, maxiter=6)
 
 niter = 100  # Number of iterations
 tau = 1.0 / op_norm  # Step size for the primal variable
@@ -107,7 +107,7 @@ gamma = 0.2
 
 # Optionally pass callback to the solver to display intermediate results
 callback = (odl.solvers.CallbackPrintIteration() &
-            odl.solvers.CallbackShow())
+            odl.solvers.CallbackShow(display_step=5))
 
 # Choose a starting point
 x = op.domain.zero()
