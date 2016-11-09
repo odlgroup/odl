@@ -374,6 +374,9 @@ class CallbackShow(SolverCallback):
         ----------
         display_step : positive int, optional
             Number of iterations between plots. Default: 1
+        saveto : string, optional
+            Path to where the figures are to be saved. If not given, the
+            figures are not saved. Default: None
 
         Other Parameters
         ----------------
@@ -384,6 +387,7 @@ class CallbackShow(SolverCallback):
         self.kwargs = kwargs
         self.fig = kwargs.pop('fig', None)
         self.display_step = kwargs.pop('display_step', 1)
+        self.saveto = kwargs.pop('saveto', None)
         self.iter = 0
         self.space_of_last_x = None
 
@@ -395,8 +399,15 @@ class CallbackShow(SolverCallback):
         self.space_of_last_x = x_space
 
         if (self.iter % self.display_step) == 0:
-            self.fig = x.show(*self.args, fig=self.fig,
-                              update_in_place=update_in_place, **self.kwargs)
+            if self.saveto is None:
+                self.fig = x.show(*self.args, fig=self.fig,
+                                  update_in_place=update_in_place,
+                                  **self.kwargs)
+            else:
+                self.fig = x.show(*self.args, fig=self.fig,
+                                  saveto=(self.saveto + '_' + str(self.iter)),
+                                  update_in_place=update_in_place,
+                                  **self.kwargs)
 
         self.iter += 1
 
@@ -408,55 +419,14 @@ class CallbackShow(SolverCallback):
     def __repr__(self):
         """Return ``repr(self)``."""
 
-        return '{}(display_step={}, fig={}, *{!r}, **{!r})'.format(
+        return '{}(display_step={}, saveto={}, fig={}, *{!r}, **{!r})'.format(
             self.__class__.__name__,
+            self.saveto,
             self.display_step,
             self.fig,
             self.args,
             self.kwargs)
 
-
-class CallbackShowAndSave(SolverCallback):
-
-    """Show and save the iterates.
-
-    See Also
-    --------
-    odl.discr.lp_discr.DiscreteLpElement.show
-    odl.space.base_ntuples.NtuplesBaseVector.show
-    """
-
-    def __init__(self, file_prefix, *args, **kwargs):
-        """Initialize a new instance.
-
-        Additional parameters are passed through to the ``show`` method.
-
-        Parameters
-        ----------
-        file_prefix : string
-            Path to where the figure is to be saved
-        display_step : positive int, optional
-            Number of iterations between plots/saves. Default: 1
-
-        Other Parameters
-        ----------------
-        kwargs :
-            Optional arguments passed on to ``x.show``
-        """
-        self.file_prefix = file_prefix
-        self.args = args
-        self.kwargs = kwargs
-        self.fig = kwargs.pop('fig', None)
-        self.display_step = kwargs.pop('display_step', 1)
-        self.iter = 0
-
-    def __call__(self, x):
-        """Show and save the current iterate."""
-        if (self.iter % self.display_step) == 0:
-            self.fig = x.show(*self.args, fig=self.fig, **self.kwargs,
-                              saveto=(self.file_prefix + '_' + str(self.iter)))
-
-        self.iter += 1
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position
