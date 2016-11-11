@@ -25,14 +25,63 @@ from future import standard_library
 from builtins import super
 from odl.operator.operator import Operator
 from odl.deform import LinDeformFixedTempl
-from odl.util.phantom import shepp_logan
+from odl.phantom import shepp_logan
 from odl.deform.mass_preserving import geometric_deform
 from odl.solvers import CallbackShow, CallbackPrintIteration
 import odl
 import numpy as np
 import time
 import matplotlib.pyplot as plt
+from odl.deform.mrc2014 import MRCFileReader
 standard_library.install_aliases()
+
+
+def K(x, y, sigma):
+    # Define the K matrix as symmetric gaussian
+    return np.exp(-((x[0] - y[0])**2 + (x[1] - y[1])**2) / sigma**2) * np.eye(2)
+
+
+def v(x, grid, alphas, sigma):
+    """ Calculate the translation at point x """
+    alpha1, alpha2 = alphas  # unpack translations per direction
+    result = np.zeros_like(x)
+    for i, (point, a1, a2) in enumerate(zip(grid.points(), alpha1, alpha2)):
+        result += K(x, point, sigma).dot([a1, a2]).squeeze()
+    return result
+
+
+class LinearDeformation(Operator):
+    """ A linear deformation given by:
+        ``g(x) = f(x + v(x))``
+    Where ``f(x)`` is the input template and ``v(x)`` is the translation at
+    point ``x``. ``v(x)`` is computed using gaussian kernels with midpoints at
+    ``grid``.
+    """
+    def __init__(self, fspace, vspace, grid, sigma):
+        self.grid = grid
+        self.sigma = sigma
+        super().__init__(odl.ProductSpace(fspace, vspace), fspace, False)
+
+    def _call(self, x):
+        # Unpack input
+        f, alphas = x
+#        extension = f.space.extension(f.ntuple)  # this syntax is improved in pull #276
+
+        # Array of output values
+        out_values = np.zeros(f.size)
+
+        for i, point in enumerate(self.range.points()):
+            # Calculate deformation in each point
+            point += v(point, self.grid, alphas, self.sigma)
+
+            if point in f.space.domain:
+                # Use extension operator of f
+                out_values[i] = f.interpolation(point)
+            else:
+                # Zero boundary condition
+                out_values[i] = 0
+
+        return out_values
 
 
 class Functional(Operator):
@@ -729,39 +778,73 @@ I1 = np.rot90(plt.imread(I1name).astype('float'), -1)
 # Create 2-D discretization reconstruction space
 # The size of the domain should be proportional to the given images
 discr_space = odl.uniform_discr([-16, -16],
-                                [16, 16], [64, 64],
+                                [16, 16], [128, 128],
                                 dtype='float32', interp='linear')
 
 # Create 2-D discretization space for control points
-cptsspace = odl.uniform_discr([-16, -16], [16, 16], [64, 64],
+cptsspace = odl.uniform_discr([-16, -16], [16, 16], [128, 128],
                               dtype='float32', interp='linear')
 
 # Create discretization space for vector field
 vspace = odl.ProductSpace(cptsspace, cptsspace.ndim)
 
-# Create the ground truth as the given image
-ground_truth = discr_space.element(I0)
+
+
+
+
+## Create the ground truth as the given image
+#ground_truth = discr_space.element(I0)
 
 # Create the ground truth as the Shepp-Logan phantom
-# ground_truth = shepp_logan(discr_space, modified=True)
+ground_truth = shepp_logan(discr_space, modified=True)
 
-# Create the template as the given image
-template = discr_space.element(I1)
+## Create the template as the given image
+#template = discr_space.element(I1)
 
 # Create the template for Shepp-Logan phantom
-#deform_field_space = discr_space.vector_field_space
-#disp_func = [
-#    lambda x: 16.0 * np.sin(np.pi * x[0] / 40.0),
-#    lambda x: 16.0 * np.sin(np.pi * x[1] / 36.0)]
-#deform_field = deform_field_space.element(disp_func)
-##template = discr_space.element(geometric_deform(
-##    odl.phantom.shepp_logan(discr_space, modified=True), deform_field))
+deform_field_space = discr_space.vector_field_space
+disp_func = [
+    lambda x: 16.0 * np.sin(np.pi * x[0] / 40.0),
+    lambda x: 16.0 * np.sin(np.pi * x[1] / 36.0)]
+# Discretization of the space
+spc = odl.uniform_discr([0, 0], [1, 1], [128, 128])
+
+# deformation space
+# n: number of gridpoints for deformation, usually smaller than m
+pspace = odl.ProductSpace(odl.uniform_discr([0, 0], [1, 1], [5, 5]), 2)
+
+# Deformation operator
+deformation = LinearDeformation(spc, pspace, pspace[0].grid, sigma=0.2)
+
+# Create input function
+f = shepp_logan(spc, True)
+
+# Create deformation field
+values = np.zeros([2, 5, 5])
+values[0, :, :5//2] = 0.02  # movement in "x" direction
+values[1, 5//2, :] = 0.01   # movement in "y" direction
+def_coeff = pspace.element(values)
+# Show input
+f.show(title='f')
+def_coeff.show(title='deformation')
+
+# Calculate deformed function
+result = deformation([f, def_coeff])
+result.show(title='result')
+template_deformed_1 = discr_space.element(result)
+
+disp_field = deform_field_space.element(disp_func)
 ## Create the template from the deformed ground truth
-#ground_truth = discr_space.element(geometric_deform(
-#    discr_space.element(I0), deform_field))
+template = discr_space.element(geometric_deform(
+    template_deformed_1, disp_field))
+
+ground_truth.show('ground truth')
+template.show('template')
+
+
 
 # Give the number of directions
-num_angles = 60
+num_angles = 6
 
 # Create the uniformly distributed directions
 angle_partition = odl.uniform_partition(
@@ -769,7 +852,7 @@ angle_partition = odl.uniform_partition(
 
 # Create 2-D projection domain
 # The length should be 1.5 times of that of the reconstruction space
-detector_partition = odl.uniform_partition(-24, 24, 192)
+detector_partition = odl.uniform_partition(-24, 24, 182)
 
 # Create 2-D parallel projection geometry
 geometry = odl.tomo.Parallel2dGeometry(angle_partition,
@@ -784,7 +867,7 @@ xray_trafo_op = odl.tomo.RayTransform(discr_space,
 proj_data = xray_trafo_op(ground_truth)
 
 # Create white Gaussian noise
-noise = 0.01 * odl.phantom.white_noise(xray_trafo_op.range)
+noise = 1.0 * odl.phantom.white_noise(xray_trafo_op.range)
 
 # Add white Gaussion noise from file
 # noise = xray_trafo_op.range.element(np.load('noise_20angles.npy'))
@@ -821,7 +904,7 @@ vectorial_ft_fit_op = odl.DiagonalOperator(
 momenta = vspace.zero()
 
 # Fix the sigma parameter in the kernel
-sigma = 6.0
+sigma = 7.0
 
 # Compute Fourier trasform of the kernel function in data matching term
 ft_kernel_fitting = fitting_kernel_ft(kernel)
@@ -860,16 +943,13 @@ l2_data_fit_func = L2DataMatchingFunctional(xray_trafo_op.range,
 shape_func = ShapeRegularizationFunctional(vspace, ft_kernel_shape)
 
 # Shape regularization parameter, should be nonnegtive
-lambda_shape = 0.00001
+lambda_shape = 0.000001
 
 # Step size for the gradient descent method
 eta = 0.001
 
 # Maximum iteration number
-niter = 1500
-
-ground_truth.show('ground truth')
-template.show('template')
+niter = 2000
 
 callback = CallbackShow('iterates', display_step=5) & CallbackPrintIteration()
 
@@ -934,15 +1014,15 @@ plt.clf()
 
 plt.subplot(2, 3, 1)
 plt.imshow(np.rot90(template), cmap='bone',
-           vmin=np.asarray(template).min(),
-           vmax=np.asarray(template).max())
+           vmin=np.asarray(ground_truth).min(),
+           vmax=np.asarray(ground_truth).max()), plt.axis('off')
 plt.colorbar()
 plt.title('Template')
 
 plt.subplot(2, 3, 2)
 plt.imshow(np.rot90(deformed_template), cmap='bone',
-           vmin=np.asarray(deformed_template).min(),
-           vmax=np.asarray(deformed_template).max()) 
+           vmin=np.asarray(ground_truth).min(),
+           vmax=np.asarray(ground_truth).max()), plt.axis('off')
 plt.colorbar()
 plt.title('Reconstructed result')
 
@@ -950,7 +1030,7 @@ plt.title('Reconstructed result')
 plt.subplot(2, 3, 3)
 plt.imshow(np.rot90(ground_truth), cmap='bone',
            vmin=np.asarray(ground_truth).min(),
-           vmax=np.asarray(ground_truth).max())
+           vmax=np.asarray(ground_truth).max()), plt.axis('off')
 plt.colorbar()
 plt.title('Ground truth')
 
@@ -960,15 +1040,15 @@ plt.plot(np.asarray(proj_data)[0], 'b', np.asarray(noise_proj_data)[0],
 #plt.title('$\Theta=0^\circ$, b: truth, r: noisy, '
 #    'g: rec_proj, SNR = {:.3}dB'.format(snr))
 #plt.gca().axes.yaxis.set_ticklabels([])
-plt.axis([0, 191, -3, 10])
+plt.axis([0, 181, -3, 10])
 plt.grid(True)
 
 plt.subplot(2, 3, 5)
-plt.plot(np.asarray(proj_data)[5], 'b', np.asarray(noise_proj_data)[5],
-         'r', np.asarray(rec_proj_data)[5], 'g')
+plt.plot(np.asarray(proj_data)[2], 'b', np.asarray(noise_proj_data)[2],
+         'r', np.asarray(rec_proj_data)[2], 'g')
 #plt.title('$\Theta=90^\circ$')
 #plt.gca().axes.yaxis.set_ticklabels([])
-plt.axis([0, 191, -3, 10])
+plt.axis([0, 181, -3, 10])
 plt.grid(True)
 
 #plt.subplot(2, 3, 5)
@@ -980,11 +1060,11 @@ plt.grid(True)
 #plt.grid(True)
 
 plt.subplot(2, 3, 6)
-plt.plot(np.asarray(proj_data)[15], 'b', np.asarray(noise_proj_data)[15],
-         'r', np.asarray(rec_proj_data)[15], 'g')
+plt.plot(np.asarray(proj_data)[4], 'b', np.asarray(noise_proj_data)[4],
+         'r', np.asarray(rec_proj_data)[4], 'g')
 #plt.title('$\Theta=135^\circ$')
 #plt.gca().axes.yaxis.set_ticklabels([])
-plt.axis([0, 191, -3, 10])
+plt.axis([0, 181, -3, 10])
 plt.grid(True)
 
 ## Plot the results of interest
@@ -1034,3 +1114,95 @@ plt.grid(True)
 #plt.title('Theta=0, blue: truth_data, red: rec result')
 #plt.gca().axes.yaxis.set_ticklabels([])
 #plt.axis([0, 191, -17, 32])
+
+## TV reconstruction by Chambolle-Pock algorithm
+## Initialize gradient operator
+#gradient = odl.Gradient(discr_space, method='forward')
+#
+## Column vector of two operators
+#op = odl.BroadcastOperator(xray_trafo_op, gradient)
+#
+## Create the proximal operator for unconstrained primal variable
+#proximal_primal = odl.solvers.proximal_const_func(op.domain)
+#
+## Create proximal operators for the dual variable
+#
+## l2-data matching
+#prox_convconj_l2 = odl.solvers.proximal_cconj_l2_squared(xray_trafo_op.range,
+#                                                         g=proj_data)
+#
+## Isotropic TV-regularization i.e. the l1-norm
+#prox_convconj_l1 = odl.solvers.proximal_cconj_l1(gradient.range, lam=0.03,
+#                                                 isotropic=True)
+#
+## Combine proximal operators, order must correspond to the operator K
+#proximal_dual = odl.solvers.combine_proximals(prox_convconj_l2,
+#                                              prox_convconj_l1)
+#
+#
+## --- Select solver parameters and solve using Chambolle-Pock --- #
+#
+#
+## Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
+#op_norm = 1.1 * odl.power_method_opnorm(op)
+#
+#niter = 2000  # Number of iterations
+#tau = 1.0 / op_norm  # Step size for the primal variable
+#sigma = 1.0 / op_norm  # Step size for the dual variable
+#gamma = 0.2
+#
+## Optionally pass callback to the solver to display intermediate results
+#callback = (odl.solvers.CallbackPrintIteration() &
+#            odl.solvers.CallbackShow())
+#
+## Choose a starting point
+#x = op.domain.zero()
+#
+## Run the algorithm
+#odl.solvers.chambolle_pock_solver(
+#    op, x, tau=tau, sigma=sigma, proximal_primal=proximal_primal,
+#    proximal_dual=proximal_dual, niter=niter, callback=callback,
+#    gamma=gamma)
+#
+## Display images
+#ground_truth.show(title='original image')
+#x.show(title='TV reconstruction', show=True)
+#plt.imshow(np.rot90(x), cmap='bone',
+#           vmin=np.asarray(ground_truth).min(),
+#           vmax=np.asarray(ground_truth).max()), plt.axis('off')
+
+
+# test example from particle
+phantom_reader = MRCFileReader('./ET_testdata/One_particle/rna_phantom.mrc')
+particle = phantom_reader.read_data()
+
+tiltseries_reader = MRCFileReader('./ET_testdata/One_particle/tiltseries.mrc')
+tiltseries_data = tiltseries_reader.read_data()
+
+tiltseries_nonoise_reader = MRCFileReader('./ET_testdata/One_particle/tiltseries_nonoise.mrc')
+tiltseries_nonoise_data = tiltseries_nonoise_reader.read_data()
+
+phantom_shape = phantom_reader.data_shape
+phantom_csides = phantom_reader.cell_sides_angstrom
+phantom_extent = phantom_csides * phantom_shape
+
+data_shape = tiltseries_reader.data_shape
+data_csides = tiltseries_reader.cell_sides_angstrom
+data_extent = data_csides * data_shape
+
+# Create 2-D discretization reconstruction space
+# The size of the domain should be proportional to the given images
+phantom_space_3d = odl.uniform_discr(-phantom_extent / 2, phantom_extent / 2,
+                                     phantom_shape, dtype='float32',
+                                     interp='linear')
+data_space_3d = odl.uniform_discr(-data_extent / 2, data_extent / 2,
+                                  data_shape, dtype='float32',
+                                  interp='linear')                            
+
+particle_phantom = phantom_space_3d.element(particle)
+tiltseries_data = data_space_3d.element(tiltseries_data)
+tiltseries_nonoise_data = data_space_3d.element(tiltseries_nonoise_data)
+
+particle_phantom.show(indices=np.s_[:, :, phantom_shape[-1] // 2], title='phantom')
+tiltseries_data.show(indices=np.s_[:, :, data_shape[-1] // 2], title='tiltseries_data')
+tiltseries_nonoise_data.show(indices=np.s_[:, :, data_shape[-1] // 2], title='tiltseries_nonoise_data')
