@@ -4,17 +4,22 @@
 A guide to the different notions of derivative
 ##############################################
 
-The concept of a derivative is one of the core concepts of mathematical analysis and is used where we want a linear approximation of a function in some point. Since the derivative is used in different contexts to mean slightly different things, this guide has been written to clarify and introduce what the different concepts mean when used in ODL.
+The concept of a derivative is one of the core concepts of mathematical analysis analysis, and it is essential whenever a linear approximation of a function in some point is required. 
+Since the notion of derivative has different meanings in different contexts, this guide has been written to introduce the different derivative concepts used in ODL.
 
 In short, different notions of derivatives that will be discussed here are:
 
-* **Derivative**. When we write derivative in ODL code and documentation, we intend the derivative of an `Operator` :math:`A : \mathcal{X} \rightarrow \mathcal{Y}` w.r.t to a disturbance in :math:`x`, i.e a linear approximation of :math:`A(x + h)` for small :math:`h`. The derivative in a point :math:`x` is an `Operator` :math:`A'(x) : \mathcal{X} \rightarrow \mathcal{Y}`.
+* **Derivative**. When we write "derivative" in ODL code and documentation, we mean the derivative of an `Operator` :math:`A : \mathcal{X} \rightarrow \mathcal{Y}` w.r.t to a disturbance in :math:`x`, i.e a linear approximation of :math:`A(x + h)` for small :math:`h`.
+  The derivative in a point :math:`x` is an `Operator` :math:`A'(x) : \mathcal{X} \rightarrow \mathcal{Y}`.
 
-* **Gradient**. If the operator :math:`A` is a `functional`, i.e. :math:`A : \mathcal{X} \rightarrow \mathbb{R}`, then the gradient is the direction in which :math:`A` increases the most. The gradient in a point :math:`x` is a vector :math:`[\nabla A](x)` in :math:`\mathcal{X}` such that :math:`A'(x)(y) = \langle [\nabla A](x), y \rangle`. The gradient operator is the operator :math:`x \rightarrow [\nabla A](x)`.
+* **Gradient**. If the operator :math:`A` is a `functional`, i.e. :math:`A : \mathcal{X} \rightarrow \mathbb{R}`, then the gradient is the direction in which :math:`A` increases the most. 
+  The gradient in a point :math:`x` is a vector :math:`[\nabla A](x)` in :math:`\mathcal{X}` such that :math:`A'(x)(y) = \langle [\nabla A](x), y \rangle`. 
+  The gradient operator is the operator :math:`x \rightarrow [\nabla A](x)`.
 
 * **Hessian**. The hessian in a point :math:`x` is the derivative operator of the gradient operator, i.e. :math:`H(x) = [\nabla A]'(x)`.
 
-* **Spatial Gradient**. The spatial gradient is only defined for spaces :math:`\mathcal{F}(\Omega, \mathbb{F})` whose elements are functions over some domain :math:`\Omega \subset \mathbb{R}^d` taking values in :math:`\mathbb{R}` or :math:`\mathbb{C}`. It can be seen as a vectorized version of the usual gradient, taken in each point in :math:`\Omega`.
+* **Spatial Gradient**. The spatial gradient is only defined for spaces :math:`\mathcal{F}(\Omega, \mathbb{F})` whose elements are functions over some domain :math:`\Omega \subset \mathbb{R}^d` taking values in :math:`\mathbb{R}` or :math:`\mathbb{C}`. 
+  It can be seen as a vectorized version of the usual gradient, taken in each point in :math:`\Omega`.
 
 Derivative
 ##########
@@ -52,6 +57,12 @@ Here :math:`f'(x)` is defined as the linear operator (if it exists) that satisfi
 
 This definition of the derivative is called the *Fréchet derivative*.
 
+The Gateaux derivative
+~~~~~~~~~~~~~~~~~~~~~~
+The concept of directional derivative can also be extended to Banach spaces, giving the *Gateaux* derivative. 
+The Gateaux derivative is more general than the Fréchet derivative, but is not a linear operator. An example of a function that is Gateaux differentiable but not Fréchet differentiable is the absolute value function.
+It not used in ODL since it can fail to be linear. 
+
 Rules for the Fréchet derivative
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -59,18 +70,18 @@ Many of the usual rules for derivatives also hold for the Fréchet derivative, i
 
 * Linearity
 
-.. math::
-    (a f + b y)'(x)(y) = a f'(x)(y) + b g'(x)(y)
+  .. math::
+      (a f + b y)'(x)(y) = a f'(x)(y) + b g'(x)(y)
 
 * Chain rule
 
-.. math::
-    (g \circ f)'(x)(y) = g'(f(x))(f'(x)(y))
+  .. math::
+      (g \circ f)'(x)(y) = g'(f(x))(f'(x)(y))
 
 * Linear operators are their own derivatives. If :math:`f` linear, then
 
-.. math::
-   f'(x)(y) = f(y)
+  .. math::
+     f'(x)(y) = f(y)
 
 Implementations in ODL
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -87,7 +98,7 @@ In the classical setting of functionals :math:`f : \mathbb{R}^n \rightarrow \mat
     \nabla f =
     \begin{bmatrix}
         \dfrac{\partial f}{\partial x_1}
-        , \dots,
+        \dots
         \dfrac{\partial f}{\partial x_n}
     \end{bmatrix}
 
@@ -118,7 +129,8 @@ In the classical setting of functionals :math:`f : \mathbb{R}^n \rightarrow \mat
     \dfrac{\partial^2 f}{\partial x_n\,\partial x_1} & \dfrac{\partial^2 f}{\partial x_n\,\partial x_2} & \cdots & \dfrac{\partial^2 f}{\partial x_n^2}
     \end{bmatrix}
 
-with the derivatives are evaluated in the point :math:`x`. It has the property that that the quadratic variation of :math:`f` is
+with the derivatives are evaluated in the point :math:`x`. 
+It has the property that that the quadratic variation of :math:`f` is
 
 .. math::
     f(x + d) = f(x) + \langle d, [\nabla f](x)\rangle + \langle d, [H(x)](d)\rangle + o(\|d\|^2)
@@ -133,8 +145,8 @@ If we take this second property as the *definition* of the Hessian, it can easil
 Implementations in ODL
 ~~~~~~~~~~~~~~~~~~~~~~
 
-The hessian is not explicitly implemented anywhere in ODL.
-Instead it is taken as the derivative of the gradient operator.
+The Hessian is not explicitly implemented anywhere in ODL.
+Instead it can be used in the form of the derivative of the gradient operator.
 This is however not implemented for all functionals.
 
 * For an example of a functional whose gradient has a derivative, see `RosenbrockFunctional`.
@@ -143,7 +155,7 @@ This is however not implemented for all functionals.
 Spatial Gradient
 ################
 
-The spatial gradient of afunction :math:`f` which is an element in some function space :math:`f \in \mathcal{F}(\Omega, \mathbb{R})`, is a element in the function space :math:`\mathcal{F}(\Omega, \mathbb{R}^n)` such that for any :math:`x, d \in \Omega`.
+The spatial gradient of a function :math:`f \in \mathcal{F}(\Omega, \mathbb{R})` is an element in the function space :math:`\mathcal{F}(\Omega, \mathbb{R}^n)` such that for any :math:`x, d \in \Omega`.
 
 .. math::
     \lim_{h \rightarrow 0} \frac{\| f(x + h d) - f(x) - \langle h d, grad f \rangle \|}{h} = 0
