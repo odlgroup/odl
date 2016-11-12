@@ -460,5 +460,20 @@ def test_quadratic_form(space):
     assert isinstance(func.convex_conj, odl.solvers.QuadraticForm)
 
 
+def test_separable_sum(space):
+    """Test for the separable sum."""
+    l1 = odl.solvers.L1Norm(space)
+    l2 = odl.solvers.L2Norm(space)
+
+    x = noise_element(space)
+    y = noise_element(space)
+
+    func = odl.solvers.SeparableSum(l1, l2)
+    assert func([x, y]) == pytest.approx(l1(x) + l2(y))
+
+    power_func = odl.solvers.SeparableSum(l1, 5)
+    assert power_func([x, x, x, x, x]) == pytest.approx(5 * l1(x))
+
+
 if __name__ == '__main__':
     pytest.main([str(__file__.replace('\\', '/')), '-v'])

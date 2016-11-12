@@ -1146,14 +1146,14 @@ class SeparableSum(Functional):
 
         Examples
         --------
-        Create functional ``f([x1, x2]) = ||x1||_1 + ||x2||_2``
+        Create functional ``f([x1, x2]) = ||x1||_1 + ||x2||_2``:
 
         >>> space = odl.rn(3)
         >>> l1 = odl.solvers.L1Norm(space)
         >>> l2 = odl.solvers.L2Norm(space)
         >>> f_sum = odl.solvers.SeparableSum(l1, l2)
 
-        Create functional ``f([x1, ... ,xn]) = \sum_i ||xi||_1``
+        Create functional ``f([x1, ... ,xn]) = \sum_i ||xi||_1``:
 
         >>> f_sum = odl.solvers.SeparableSum(l1, 5)
         """
