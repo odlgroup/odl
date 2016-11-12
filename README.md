@@ -45,42 +45,7 @@ You can check that everything was installed properly by running
 
 This requires [pytest](http://pytest.org/latest/). See the [installation](http://odlgroup.github.io/odl/guide/introduction/installing.html) documentation for further information.
 
-
-Optional Dependencies
----------------------
-Several ODL features work better with external packages installed. This is a list of optional dependencies and links for further information. Some of the packages can be installed along ODL through pip by calling
-
-    pip install odl[FOO, BAR, ...]
-
-where FOO, BAR, etc are the dependencies. Others require more complicated installation procedures, in that case, consult the respective package for instructions.
-
-| Package | Purpose | Dependency |
-|---------|---------|------------|
-| [odlcuda](https://github.com/odlgroup/odlcuda/)   | CUDA backend |  |
-| [ASTRA](https://github.com/astra-toolbox/astra-toolbox)    | Tomographic forward/backward projectors in [RayTransform](http://odlgroup.github.io/odl/generated/odl.tomo.operators.ray_trafo.RayTransform.html) |  |
-| [scikit-image](http://scikit-image.org/)    | 2D parallel beam forward/backward projectors in [RayTransform](http://odlgroup.github.io/odl/generated/odl.tomo.operators.ray_trafo.RayTransform.html) | scikit |
-| [FFTW](https://github.com/pyFFTW/pyFFTW)   | Accelerated [FourierTransform](http://odlgroup.github.io/odl/generated/odl.trafos.fourier.FourierTransform.html) | fftw |
-| [PyWavelets](https://github.com/PyWavelets/pywt)   | Computation of the  [WaveletTransform](http://odlgroup.github.io/odl/generated/odl.trafos.wavelet.WaveletTransform.html) | pywavelets |
-| [matplotlib](http://matplotlib.org/)   | Visualization through the [show](http://odlgroup.github.io/odl/generated/odl.discr.lp_discr.DiscreteLpElement.show.html) command | show |
-| [proximal](http://github.com/comp-imaging/ProxImaL)   | Solution of some convex optimization problems | proximal |
-| [pytest](http://pytest.org/latest/)   | Unit tests | testing |
-
-
-Compatibility
--------------
 ODL is compatible to Python 2 and 3 through the `future` library. It is intended to work on all major platforms (GNU/Linux / Mac / Windows).
-
-Currently (2016-06-10) known working combinations are:
-
-| Platform     | Python          |
-|--------------|-----------------|
-| Windows 7    | 2.7             |
-| Windows 10   | 2.7             |
-| Ubuntu 14.04 | 2.7             |
-| Ubuntu 15.10 | 2.7 / 3.4 / 3.5 |
-| Ubuntu 16.04 | 2.7 / 3.4 / 3.5 |
-| Fedora 22    | 2.7 / 3.4       |
-| Mac OSX      | 3.5             |
 
 License
 -------
