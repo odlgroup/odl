@@ -36,9 +36,9 @@ def mlem(op, x, data, niter=1, noise='poisson', callback=None, **kwargs):
 
     Attempts to solve::
 
-        max_x L(data | x)
+        max_x L(x | data)
 
-    where ``L(data, | x)`` is the likelihood of ``data`` given ``x``. The
+    where ``L(x | data)`` is the likelihood of ``data`` given ``x``. The
     likelihood depends on the forward operator ``op`` such that
     (approximately)::
 
@@ -79,15 +79,9 @@ def mlem(op, x, data, niter=1, noise='poisson', callback=None, **kwargs):
 
     .. math::
 
-        P(g | g \\text{ is } X(A(x)) \\text{ distributed})
+        P(g | g \\text{ is } X(A(x)) \\text{ distributed}).
 
-    where the expectation of :math:`X(A(x))` satisfies
-
-    .. math::
-
-        \\mathbb{E}(X(A(x))) = A(x)
-
-    with 'poisson' noise the algorithm is given by:
+    With 'poisson' noise the algorithm is given by:
 
     .. math::
 
@@ -95,63 +89,27 @@ def mlem(op, x, data, niter=1, noise='poisson', callback=None, **kwargs):
 
     See Also
     --------
+    osmlem : Ordered subsets MLEM
     loglikelihood : Function for calculating the logarithm of the likelihood
     """
-    # TODO: Should this be call to osmlem?
-
-    noise, noise_in = str(noise).lower(), noise
-    if noise not in AVAILABLE_MLEM_NOISE:
-        raise NotImplemented("noise '{}' not understood"
-                             ''.format(noise_in))
-
-    # Convert data to range element
-    data = op.range.element(data)
-
-    if noise == 'poisson':
-        # Parameter used to enforce positivity.
-        # TODO: let users give this.
-        eps = 1e-8
-
-        if np.any(np.less(x, 0)):
-            raise ValueError('`x` must be non-negative')
-
-        sensitivities = kwargs.pop('sensitivities', None)
-        if sensitivities is None:
-            sensitivities = np.maximum(op.adjoint(op.range.one()), eps)
-
-        tmp_dom = op.domain.element()
-        tmp_ran = op.range.element()
-
-        for _ in range(niter):
-            op(x, out=tmp_ran)
-            tmp_ran.ufunc.maximum(eps, out=tmp_ran)
-            data.divide(tmp_ran, out=tmp_ran)
-
-            op.adjoint(tmp_ran, out=tmp_dom)
-            tmp_dom /= sensitivities
-
-            x *= tmp_dom
-
-            if callback is not None:
-                callback(x)
-    else:
-        raise RuntimeError('unknown noise model')
+    osmlem([op], x, [data], niter=niter, noise=noise, callback=callback,
+           **kwargs)
 
 
 def osmlem(op, x, data, niter=1, noise='poisson', callback=None, **kwargs):
     """Ordered Subsets Maximum Likelihood Expectation Maximation algorithm.
 
-    Attempts to solve::
+    This solver attempts to solve::
 
-        max_x L(data | x)
+        max_x L(x | data)
 
-    where ``L(data, | x)`` is the likelihood of ``data`` given ``x``. The
+    where ``L(x, | data)`` is the likelihood of ``x`` given ``data``. The
     likelihood depends on the forward operators ``op[0], ..., op[n-1]`` such
     that (approximately)::
 
         op[i](x) = data[i]
 
-    With the precise form of *approximately* is determined by ``noise``.
+    Where the precise form of *approximately* is determined by ``noise``.
 
     Parameters
     ----------
@@ -175,7 +133,7 @@ def osmlem(op, x, data, niter=1, noise='poisson', callback=None, **kwargs):
     Other Parameters
     ----------------
     sensitivities : float or ``op.domain`` `element-like`, optional
-        Usable with ``noise='poisson'``. The algorithm contains a ``A^T 1``
+        Usable with ``noise='poisson'``. The algorithm contains an ``A^T 1``
         term, if this parameter is given, it is replaced by it.
         Default: ``op[i].adjoint(op[i].range.one())``
 
@@ -187,22 +145,23 @@ def osmlem(op, x, data, niter=1, noise='poisson', callback=None, **kwargs):
 
     .. math::
 
-        \prod_{i=1}^M P(g_i | g_i \\text{ is } X(A_i(x)) \\text{ distributed})
+        \prod_{i=1}^M P(g_i | g_i \\text{ is } X(A_i(x)) \\text{ distributed}).
 
-    where the expectation of :math:`X(A_i(x))` satisfies
-
-    .. math::
-
-        \\mathbb{E}(X(A_i(x))) = A_i(x)
-
-    with 'poisson' noise the algorithm is given by partial updates:
+    With 'poisson' noise the algorithm is given by partial updates:
 
     .. math::
 
        x_{n + m/M} =
        \\frac{x_{n + (m - 1)/M}}{A_i^* 1} A_i^* (g_i / A_i(x_{n + (m - 1)/M}))
 
-    for :math:`m = 1, ..., M` and :math:`x_{n+1} = x_{n + M/M}`
+    for :math:`m = 1, ..., M` and :math:`x_{n+1} = x_{n + M/M}`.
+
+    The algorithm is not guaranteed to converge, but works for many practical
+    problems.
+
+    References
+    ----------
+    Natterer, F. Mathematical Methods in Image Reconstruction, section 5.3.2.
 
     See Also
     --------
@@ -216,7 +175,8 @@ def osmlem(op, x, data, niter=1, noise='poisson', callback=None, **kwargs):
 
     n_ops = len(op)
     if len(data) != n_ops:
-        raise ValueError('number of data does not match number of operators')
+        raise ValueError('number of data ({}) does not match number of '
+                         'operators ({})'.format(len(data), n_ops))
     if not all(x in opi.domain for opi in op):
         raise ValueError('`x` not an element in the domains of all operators')
 

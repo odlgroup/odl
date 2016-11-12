@@ -34,7 +34,8 @@ import numpy as np
                         'landweber',
                         'conjugate_gradient',
                         'conjugate_gradient_normal',
-                        'mlem'])
+                        'mlem',
+                        'osmlem'])
 def iterative_solver(request):
     """Return a solver given by a name with interface solve(op, x, rhs)."""
     solver_name = request.param
@@ -58,6 +59,9 @@ def iterative_solver(request):
     elif solver_name == 'mlem':
         def solver(op, x, rhs):
             odl.solvers.mlem(op, x, rhs, niter=10)
+    elif solver_name == 'osmlem':
+        def solver(op, x, rhs):
+            odl.solvers.osmlem([op, op], x, [rhs, rhs], niter=10)
     else:
         raise ValueError('solver not valid')
 
