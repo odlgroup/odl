@@ -38,7 +38,7 @@ def mlem(op, x, data, niter=1, noise='poisson', callback=None, **kwargs):
 
         max_x L(x | data)
 
-    where ``L(x | data)`` is the likelihood of ``data`` given ``x``. The
+    where ``L(x | data)`` is the likelihood of ``x`` given ``data``. The
     likelihood depends on the forward operator ``op`` such that
     (approximately)::
 
@@ -109,7 +109,7 @@ def osmlem(op, x, data, niter=1, noise='poisson', callback=None, **kwargs):
 
         op[i](x) = data[i]
 
-    Where the precise form of *approximately* is determined by ``noise``.
+    where the precise form of *approximately* is determined by ``noise``.
 
     Parameters
     ----------
