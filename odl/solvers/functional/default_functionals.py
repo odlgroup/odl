@@ -114,12 +114,12 @@ class L1Norm(Functional):
 
     @property
     def proximal(self):
-        """Return the proximal factory of the functional.
+        """Return the `proximal factory` of the functional.
 
         See Also
         --------
         odl.solvers.nonsmooth.proximal_operators.proximal_l1 :
-            proximal factory for the L1-norm.
+            `proximal factory` for the L1-norm.
         """
         return proximal_l1(space=self.domain)
 
@@ -260,11 +260,11 @@ class GroupL1Norm(Functional):
 
     @property
     def proximal(self):
-        """Return the `proximal factory` of the functional.
+        """Return the ``proximal factory`` of the functional.
 
         See Also
         --------
-        proximal_l1 : proximal factory for the L1-norm.
+        proximal_l1 : `proximal factory` for the L1-norm.
         """
         if self.pointwise_norm.exponent == 1:
             return proximal_l1(space=self.domain)
@@ -347,7 +347,8 @@ class IndicatorGroupL1UnitBall(Functional):
 
         See Also
         --------
-        proximal_cconj_l1 : proximal factory for the L1-norms convex conjugate.
+        proximal_cconj_l1 : `proximal factory` for the L1-norms convex
+                            conjugate.
         """
         if self.pointwise_norm.exponent == 1:
             return proximal_cconj_l1(space=self.domain)
@@ -469,14 +470,14 @@ class IndicatorLpUnitBall(Functional):
 
     @property
     def proximal(self):
-        """Return the proximal factory of the functional.
+        """Return the `proximal factory` of the functional.
 
         See Also
         --------
         odl.solvers.nonsmooth.proximal_operators.proximal_cconj_l1 :
-            proximal factory for convex conjuagte of L1-norm.
+            `proximal factory` for convex conjuagte of L1-norm.
         odl.solvers.nonsmooth.proximal_operators.proximal_cconj_l2 :
-            proximal factory for convex conjuagte of L2-norm.
+            `proximal factory` for convex conjuagte of L2-norm.
         """
         if self.exponent == np.inf:
             return proximal_cconj_l1(space=self.domain)
@@ -545,12 +546,12 @@ class L2Norm(Functional):
 
     @property
     def proximal(self):
-        """Return the proximal factory of the functional.
+        """Return the `proximal factory` of the functional.
 
         See Also
         --------
         odl.solvers.nonsmooth.proximal_operators.proximal_l2 :
-            proximal factory for L2-norm.
+            `proximal factory` for L2-norm.
         """
         return proximal_l2(space=self.domain)
 
@@ -594,12 +595,12 @@ class L2NormSquared(Functional):
 
     @property
     def proximal(self):
-        """Return the proximal factory of the functional.
+        """Return the `proximal factory` of the functional.
 
         See Also
         --------
         odl.solvers.nonsmooth.proximal_operators.proximal_l2_squared :
-            Proximal factory for the squared L2-norm.
+            `proximal factory` for the squared L2-norm.
         """
         return proximal_l2_squared(space=self.domain)
 
@@ -654,7 +655,7 @@ class ConstantFunctional(Functional):
 
     @property
     def proximal(self):
-        """Return the proximal factory of the functional."""
+        """Return the `proximal factory` of the functional."""
         return proximal_const_func(self.domain)
 
     @property
@@ -708,7 +709,7 @@ class ConstantFunctional(Functional):
 
             @property
             def proximal(self):
-                """Return the proximal factory of the functional.
+                """Return the `proximal factory` of the functional.
 
                 This is the zero operator.
                 """
@@ -813,7 +814,7 @@ class IndicatorBox(Functional):
 
     @property
     def proximal(self):
-        """Return the proximal factory of the functional."""
+        """Return the `proximal factory` of the functional."""
         return proximal_box_constraint(self.domain, self.lower, self.upper)
 
     def __repr__(self):
@@ -969,12 +970,12 @@ class KullbackLeibler(Functional):
 
     @property
     def proximal(self):
-        """Return the proximal factory of the functional.
+        """Return the `proximal factory` of the functional.
 
         See Also
         --------
         odl.solvers.nonsmooth.proximal_operators.proximal_cconj_kl :
-            Proximal factory for convex conjugate of KL.
+            `proximal factory` for convex conjugate of KL.
         odl.solvers.nonsmooth.proximal_operators.proximal_cconj :
             Proximal of the convex conjugate of a functional.
         """
@@ -1086,12 +1087,12 @@ class KullbackLeiblerConvexConj(Functional):
 
     @property
     def proximal(self):
-        """Return the proximal factory of the functional.
+        """Return the `proximal factory` of the functional.
 
         See Also
         --------
         odl.solvers.nonsmooth.proximal_operators.proximal_cconj_kl :
-            Proximal factory for convex conjugate of KL.
+            `proximal factory` for convex conjugate of KL.
         odl.solvers.nonsmooth.proximal_operators.proximal_cconj :
             Proximal of the convex conjugate of a functional.
         """
@@ -1224,13 +1225,13 @@ class KullbackLeiblerCrossEntropy(Functional):
 
     @property
     def proximal(self):
-        """Return the proximal factory of the functional.
+        """Return the `proximal factory` of the functional.
 
         See Also
         --------
         odl.solvers.nonsmooth.proximal_operators.\
 proximal_cconj_kl_cross_entropy :
-            Proximal factory for convex conjugate of the KL cross entropy.
+            `proximal factory` for convex conjugate of the KL cross entropy.
         odl.solvers.nonsmooth.proximal_operators.proximal_cconj :
             Proximal of the convex conjugate of a functional.
         """
@@ -1323,13 +1324,13 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
 
     @property
     def proximal(self):
-        """Return the proximal factory of the functional.
+        """Return the `proximal factory` of the functional.
 
         See Also
         --------
         odl.solvers.nonsmooth.proximal_operators.\
 proximal_cconj_kl_cross_entropy :
-            Proximal factory for convex conjugate of the KL cross entropy.
+            `proximal factory` for convex conjugate of the KL cross entropy.
         """
         return proximal_cconj_kl_cross_entropy(space=self.domain, g=self.prior)
 
@@ -1418,7 +1419,7 @@ class SeparableSum(Functional):
 
     @property
     def proximal(self):
-        """Return the proximal factory of the functional.
+        """Return the `proximal factory` of the functional.
 
         The proximal operator separates over separable sums.
 
