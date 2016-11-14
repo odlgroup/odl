@@ -70,16 +70,19 @@ collect_ignore = [os.path.join(odl_root, 'setup.py')]
 
 if not PYFFTW_AVAILABLE:
     collect_ignore.append(
-        os.path.join(odl_root, 'odl/trafos/backends/pyfftw_bindings.py'))
+        os.path.join(odl_root, 'odl', 'trafos', 'backends',
+                     'pyfftw_bindings.py'))
 if not PYWT_AVAILABLE:
     collect_ignore.append(
-        os.path.join(odl_root, 'odl/trafos/backends/pywt_bindings.py'))
+        os.path.join(odl_root, 'odl', 'trafos', 'backends',
+                     'pywt_bindings.py'))
     # Currently `pywt` is the only implementation
     collect_ignore.append(
-        os.path.join(odl_root, 'odl/trafos/wavelet.py'))
+        os.path.join(odl_root, 'odl', 'trafos', 'wavelet.py'))
 
 
 def pytest_ignore_collect(path, config):
+    raise Exception(path, config.getvalue())
     return str(path) in collect_ignore
 
 
