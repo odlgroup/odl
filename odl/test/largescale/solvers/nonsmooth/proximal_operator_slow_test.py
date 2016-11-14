@@ -53,7 +53,7 @@ def offset(request):
 
 
 dual_params = [False, True]
-dual_ids = [' dual = {} '.format(str(p).ljust(5)) for p in offset_params]
+dual_ids = [' dual = {} '.format(str(p).ljust(5)) for p in dual_params]
 
 
 @pytest.fixture(scope="module", ids=dual_ids, params=dual_params)
@@ -100,7 +100,8 @@ def functional(request, offset, dual, stepsize):
 
     if dual:
         if name == 'groupl11':
-            pytest.xfail('group l1-1 norm has no proximal')
+            # TODO: Issue #712
+            pytest.xfail('group l1-1 norm has no convex conjugate')
 
         func = func.convex_conj
 

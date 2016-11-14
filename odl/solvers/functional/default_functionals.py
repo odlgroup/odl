@@ -171,7 +171,7 @@ class GroupL1Norm(Functional):
         exponent : non-zero float, optional
             Exponent of the norm in each point. Values between
             0 and 1 are currently not supported due to numerical
-            instability.
+            instability. Infinity gives the supremum norm.
             Default: ``vfspace.exponent``, usually 2.
 
         Examples
@@ -182,7 +182,7 @@ class GroupL1Norm(Functional):
         >>> op([[3, 3], [4, 4]])
         10.0
 
-        Can also change exponent of inner  (p) norm:
+        Set exponent of inner (p) norm:
 
         >>> op2 = GroupL1Norm(pspace, exponent=1)
         >>> op2([[3, 3], [4, 4]])
@@ -199,7 +199,7 @@ class GroupL1Norm(Functional):
         """Return the group L1-norm of ``x``."""
         # TODO: update when integration operator is in place: issue #440
         pointwise_norm = self.pointwise_norm(x)
-        return pointwise_norm.inner(self.domain[0].one())
+        return pointwise_norm.inner(pointwise_norm.range.one())
 
     @property
     def gradient(self):
@@ -239,7 +239,6 @@ class GroupL1Norm(Functional):
 
             def _call(self, x):
                 """Return ``self(x)``."""
-
                 p = functional.pointwise_norm.exponent
 
                 if functional.pointwise_norm.exponent == 1:
@@ -261,7 +260,7 @@ class GroupL1Norm(Functional):
 
     @property
     def proximal(self):
-        """Return the proximal factory of the functional.
+        """Return the `proximal factory` of the functional.
 
         See Also
         --------
@@ -309,7 +308,7 @@ class IndicatorGroupL1UnitBall(Functional):
         exponent : non-zero float, optional
             Exponent of the norm in each point. Values between
             0 and 1 are currently not supported due to numerical
-            instability.
+            instability. Infinity gives the supremum norm.
             Default: ``vfspace.exponent``, usually 2.
 
         Examples
@@ -322,7 +321,7 @@ class IndicatorGroupL1UnitBall(Functional):
         >>> op([[3, 3], [4, 4]])
         inf
 
-        Can also change exponent of inner  (p) norm:
+        Set exponent of inner (p) norm:
 
         >>> op2 = IndicatorGroupL1UnitBall(pspace, exponent=1)
         """
@@ -344,11 +343,11 @@ class IndicatorGroupL1UnitBall(Functional):
 
     @property
     def proximal(self):
-        """Return the proximal factory of the functional.
+        """Return the `proximal factory` of the functional.
 
         See Also
         --------
-        proximal_l1 : proximal factory for the L1-norm.
+        proximal_cconj_l1 : proximal factory for the L1-norms convex conjugate.
         """
         if self.pointwise_norm.exponent == 1:
             return proximal_cconj_l1(space=self.domain)
@@ -360,7 +359,13 @@ class IndicatorGroupL1UnitBall(Functional):
 
     @property
     def convex_conj(self):
-        """The convex conjugate is the the group L1-norm."""
+        """Convex conjugate functional of IndicatorLpUnitBall.
+
+        Returns
+        -------
+        convex_conj : GroupL1Norm
+            The convex conjugate is the the group L1-norm.
+        """
         conj_exp = conj_exponent(self.pointwise_norm.exponent)
         return GroupL1Norm(self.domain, exponent=conj_exp)
 
