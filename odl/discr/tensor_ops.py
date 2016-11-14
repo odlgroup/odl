@@ -357,7 +357,8 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
 
         vf = self.domain.element(vf)
         vf_pwnorm_fac = self(vf)
-        vf_pwnorm_fac **= (self.exponent - 1)
+        if self.exponent != 2:  # optimize away most common case.
+            vf_pwnorm_fac **= (self.exponent - 1)
 
         inner_vf = vf.copy()
 

@@ -28,19 +28,24 @@ import scipy
 from numbers import Integral
 
 from odl.solvers.functional.functional import Functional
-from odl.operator import Operator, ConstantOperator
+from odl.discr import PointwiseNorm
+from odl.space import ProductSpace
+from odl.operator import (Operator, ConstantOperator, ZeroOperator,
+                          ScalingOperator, DiagonalOperator)
+from odl.solvers.functional.functional import (
+    Functional, FunctionalDefaultConvexConjugate)
 from odl.solvers.nonsmooth.proximal_operators import (
     proximal_l1, proximal_cconj_l1, proximal_l2, proximal_cconj_l2,
     proximal_l2_squared, proximal_const_func, proximal_box_constraint,
     proximal_cconj, proximal_cconj_kl, proximal_cconj_kl_cross_entropy,
     combine_proximals)
-from odl.operator import (ZeroOperator, ScalingOperator, DiagonalOperator)
-from odl.space import ProductSpace
+from odl.util import conj_exponent
 
 
-__all__ = ('L1Norm', 'L2Norm', 'L2NormSquared', 'ZeroFunctional',
-           'ConstantFunctional', 'IndicatorLpUnitBall', 'IndicatorBox',
-           'IndicatorNonnegativity', 'KullbackLeibler',
+__all__ = ('L1Norm', 'L2Norm', 'L2NormSquared',
+           'ZeroFunctional', 'ConstantFunctional', 'IndicatorLpUnitBall',
+           'GroupL1Norm', 'IndicatorGroupL1UnitBall',
+           'IndicatorBox', 'IndicatorNonnegativity', 'KullbackLeibler',
            'KullbackLeiblerCrossEntropy', 'SeparableSum',
            'QuadraticForm')
 
@@ -110,12 +115,12 @@ class L1Norm(Functional):
 
     @property
     def proximal(self):
-        """Return the proximal factory of the functional.
+        """Return the `proximal factory` of the functional.
 
         See Also
         --------
         odl.solvers.nonsmooth.proximal_operators.proximal_l1 :
-            proximal factory for the L1-norm.
+            `proximal factory` for the L1-norm.
         """
         return proximal_l1(space=self.domain)
 
@@ -123,6 +128,254 @@ class L1Norm(Functional):
     def convex_conj(self):
         """The convex conjugate functional of the L1-norm."""
         return IndicatorLpUnitBall(self.domain, exponent=np.inf)
+
+
+class GroupL1Norm(Functional):
+
+    """The functional corresponding to the mixed L1--Lp norm on `ProductSpace`.
+
+    The L1-norm, ``|| ||x||_p ||_1``,  is defined as the integral/sum of
+    ``||x||_p``, where  ``||x||_p`` is the pointwise p-norm.
+
+    This is also known as the cross norm.
+
+    Notes
+    -----
+    If the functional is defined on an :math:`\mathbb{R}^{n \\times m}`-like
+    space, the group :math:`L_1`-norm, denoted
+    :math:`\| \\cdot \|_{\\times, p}` is defined as
+
+    .. math::
+
+        \|F\|_{\\times, p} =
+        \\sum_{i = 1}^n \\left(\\sum_{j=1}^m |F_{i,j}|^p\\right)^{1/p}
+
+    If the functional is defined on an :math:`(\\mathcal{L}^p)^m`-like space,
+    the group :math:`L_1`-norm is defined as
+
+    .. math::
+
+        \| F \|_{\\times, p} =
+        \\int_{\Omega} \\left(\\sum_{j = 1}^m |F_j(x)|^p\\right)^{1/p}
+        \mathrm{d}x.
+    """
+
+    def __init__(self, vfspace, exponent=None):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        vfspace : `ProductSpace`
+            Space of vector fields on which the operator acts.
+            It has to be a product space of identical spaces, i.e. a
+            power space.
+        exponent : non-zero float, optional
+            Exponent of the norm in each point. Values between
+            0 and 1 are currently not supported due to numerical
+            instability. Infinity gives the supremum norm.
+            Default: ``vfspace.exponent``, usually 2.
+
+        Examples
+        --------
+        >>> space = odl.rn(2)
+        >>> pspace = odl.ProductSpace(space, 2)
+        >>> op = GroupL1Norm(pspace)
+        >>> op([[3, 3], [4, 4]])
+        10.0
+
+        Set exponent of inner (p) norm:
+
+        >>> op2 = GroupL1Norm(pspace, exponent=1)
+        >>> op2([[3, 3], [4, 4]])
+        14.0
+        """
+        if not isinstance(vfspace, ProductSpace):
+            raise TypeError('`space` must be a `ProductSpace`')
+        if not vfspace.is_power_space:
+            raise TypeError('`space.is_power_space` must be `True`')
+        self.pointwise_norm = PointwiseNorm(vfspace, exponent)
+        super().__init__(space=vfspace, linear=False, grad_lipschitz=np.nan)
+
+    def _call(self, x):
+        """Return the group L1-norm of ``x``."""
+        # TODO: update when integration operator is in place: issue #440
+        pointwise_norm = self.pointwise_norm(x)
+        return pointwise_norm.inner(pointwise_norm.space.one())
+
+    @property
+    def gradient(self):
+        """Gradient operator of the functional.
+
+        The functional is not differentiable in ``x=0``. However, when
+        evaluating the gradient operator in this point it will return 0.
+
+         Notes
+        -----
+        The gradient is given by
+
+        .. math::
+            \\left[ \\nabla \| \|f\|_1 \|_1 \\right]_i =
+            \\frac{f_i}{|f_i|}
+
+        .. math::
+            \\left[ \\nabla \| \|f\|_2 \|_1 \\right]_i =
+            \\frac{f_i}{\|f\|_2}
+
+        else:
+
+        .. math::
+            \\left[ \\nabla || ||f||_p ||_1 \\right]_i =
+            \\frac{| f_i |^{p-2} f_i}{||f||_p^{p-1}}
+        """
+        functional = self
+
+        class GroupL1Gradient(Operator):
+
+            """The gradient operator of the `GroupL1Norm` functional."""
+
+            def __init__(self):
+                """Initialize a new instance."""
+                super().__init__(functional.domain, functional.domain,
+                                 linear=False)
+
+            def _call(self, x):
+                """Return ``self(x)``."""
+                p = functional.pointwise_norm.exponent
+
+                if functional.pointwise_norm.exponent == 1:
+                    result = np.abs(x)
+                    np.divide(x, result, out=result, where=result != 0)
+                    return result
+                elif functional.pointwise_norm.exponent == 2:
+                    result = functional.pointwise_norm(x)
+                    np.divide(x, result, out=result, where=result != 0)
+                    return result
+                else:
+                    dividend = np.power(np.abs(x), p - 2) * x
+                    divisor = np.power(functional.pointwise_norm(x), p - 1)
+                    np.divide(dividend, divisor, out=divisor,
+                              where=divisor != 0)
+                    return divisor
+
+        return GroupL1Gradient()
+
+    @property
+    def proximal(self):
+        """Return the ``proximal factory`` of the functional.
+
+        See Also
+        --------
+        proximal_l1 : `proximal factory` for the L1-norm.
+        """
+        if self.pointwise_norm.exponent == 1:
+            return proximal_l1(space=self.domain)
+        elif self.pointwise_norm.exponent == 2:
+            return proximal_l1(space=self.domain, isotropic=True)
+        else:
+            raise NotImplementedError('`proximal` only implemented for p = 1 '
+                                      'or 2')
+
+    @property
+    def convex_conj(self):
+        """The convex conjugate functional of the group L1-norm."""
+        conj_exp = conj_exponent(self.pointwise_norm.exponent)
+        return IndicatorGroupL1UnitBall(self.domain, exponent=conj_exp)
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{}({!r}, exponent={})'.format(self.__class__.__name__,
+                                              self.domain,
+                                              self.pointwise_norm.exponent)
+
+
+class IndicatorGroupL1UnitBall(Functional):
+
+    """The convex conjugate to the mixed L1--Lp norm on `ProductSpace`.
+
+    See Also
+    --------
+    GroupL1Norm
+    """
+
+    def __init__(self, vfspace, exponent=None):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        vfspace : `ProductSpace`
+            Space of vector fields on which the operator acts.
+            It has to be a product space of identical spaces, i.e. a
+            power space.
+        exponent : non-zero float, optional
+            Exponent of the norm in each point. Values between
+            0 and 1 are currently not supported due to numerical
+            instability. Infinity gives the supremum norm.
+            Default: ``vfspace.exponent``, usually 2.
+
+        Examples
+        --------
+        >>> space = odl.rn(2)
+        >>> pspace = odl.ProductSpace(space, 2)
+        >>> op = IndicatorGroupL1UnitBall(pspace)
+        >>> op([[0.1, 0.5], [0.2, 0.3]])
+        0
+        >>> op([[3, 3], [4, 4]])
+        inf
+
+        Set exponent of inner (p) norm:
+
+        >>> op2 = IndicatorGroupL1UnitBall(pspace, exponent=1)
+        """
+        if not isinstance(vfspace, ProductSpace):
+            raise TypeError('`space` must be a `ProductSpace`')
+        if not vfspace.is_power_space:
+            raise TypeError('`space.is_power_space` must be `True`')
+        self.pointwise_norm = PointwiseNorm(vfspace, exponent)
+        super().__init__(space=vfspace, linear=False, grad_lipschitz=np.nan)
+
+    def _call(self, x):
+        """Return ``self(x)``."""
+        x_norm = self.pointwise_norm(x).ufunc.max()
+
+        if x_norm > 1:
+            return np.inf
+        else:
+            return 0
+
+    @property
+    def proximal(self):
+        """Return the `proximal factory` of the functional.
+
+        See Also
+        --------
+        proximal_cconj_l1 : `proximal factory` for the L1-norms convex
+                            conjugate.
+        """
+        if self.pointwise_norm.exponent == 1:
+            return proximal_cconj_l1(space=self.domain)
+        elif self.pointwise_norm.exponent == 2:
+            return proximal_cconj_l1(space=self.domain, isotropic=True)
+        else:
+            raise NotImplementedError('`proximal` only implemented for p = 1 '
+                                      'or 2')
+
+    @property
+    def convex_conj(self):
+        """Convex conjugate functional of IndicatorLpUnitBall.
+
+        Returns
+        -------
+        convex_conj : GroupL1Norm
+            The convex conjugate is the the group L1-norm.
+        """
+        conj_exp = conj_exponent(self.pointwise_norm.exponent)
+        return GroupL1Norm(self.domain, exponent=conj_exp)
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{}({!r}, exponent={})'.format(self.__class__.__name__,
+                                              self.domain,
+                                              self.pointwise_norm.exponent)
 
 
 class IndicatorLpUnitBall(Functional):
@@ -218,14 +471,14 @@ class IndicatorLpUnitBall(Functional):
 
     @property
     def proximal(self):
-        """Return the proximal factory of the functional.
+        """Return the `proximal factory` of the functional.
 
         See Also
         --------
         odl.solvers.nonsmooth.proximal_operators.proximal_cconj_l1 :
-            proximal factory for convex conjuagte of L1-norm.
+            `proximal factory` for convex conjuagte of L1-norm.
         odl.solvers.nonsmooth.proximal_operators.proximal_cconj_l2 :
-            proximal factory for convex conjuagte of L2-norm.
+            `proximal factory` for convex conjuagte of L2-norm.
         """
         if self.exponent == np.inf:
             return proximal_cconj_l1(space=self.domain)
@@ -294,12 +547,12 @@ class L2Norm(Functional):
 
     @property
     def proximal(self):
-        """Return the proximal factory of the functional.
+        """Return the `proximal factory` of the functional.
 
         See Also
         --------
         odl.solvers.nonsmooth.proximal_operators.proximal_l2 :
-            proximal factory for L2-norm.
+            `proximal factory` for L2-norm.
         """
         return proximal_l2(space=self.domain)
 
@@ -343,12 +596,12 @@ class L2NormSquared(Functional):
 
     @property
     def proximal(self):
-        """Return the proximal factory of the functional.
+        """Return the `proximal factory` of the functional.
 
         See Also
         --------
         odl.solvers.nonsmooth.proximal_operators.proximal_l2_squared :
-            Proximal factory for the squared L2-norm.
+            `proximal factory` for the squared L2-norm.
         """
         return proximal_l2_squared(space=self.domain)
 
@@ -403,7 +656,7 @@ class ConstantFunctional(Functional):
 
     @property
     def proximal(self):
-        """Return the proximal factory of the functional."""
+        """Return the `proximal factory` of the functional."""
         return proximal_const_func(self.domain)
 
     @property
@@ -457,7 +710,7 @@ class ConstantFunctional(Functional):
 
             @property
             def proximal(self):
-                """Return the proximal factory of the functional.
+                """Return the `proximal factory` of the functional.
 
                 This is the zero operator.
                 """
@@ -562,7 +815,7 @@ class IndicatorBox(Functional):
 
     @property
     def proximal(self):
-        """Return the proximal factory of the functional."""
+        """Return the `proximal factory` of the functional."""
         return proximal_box_constraint(self.domain, self.lower, self.upper)
 
     def __repr__(self):
@@ -718,12 +971,12 @@ class KullbackLeibler(Functional):
 
     @property
     def proximal(self):
-        """Return the proximal factory of the functional.
+        """Return the `proximal factory` of the functional.
 
         See Also
         --------
         odl.solvers.nonsmooth.proximal_operators.proximal_cconj_kl :
-            Proximal factory for convex conjugate of KL.
+            `proximal factory` for convex conjugate of KL.
         odl.solvers.nonsmooth.proximal_operators.proximal_cconj :
             Proximal of the convex conjugate of a functional.
         """
@@ -835,12 +1088,12 @@ class KullbackLeiblerConvexConj(Functional):
 
     @property
     def proximal(self):
-        """Return the proximal factory of the functional.
+        """Return the `proximal factory` of the functional.
 
         See Also
         --------
         odl.solvers.nonsmooth.proximal_operators.proximal_cconj_kl :
-            Proximal factory for convex conjugate of KL.
+            `proximal factory` for convex conjugate of KL.
         odl.solvers.nonsmooth.proximal_operators.proximal_cconj :
             Proximal of the convex conjugate of a functional.
         """
@@ -973,13 +1226,13 @@ class KullbackLeiblerCrossEntropy(Functional):
 
     @property
     def proximal(self):
-        """Return the proximal factory of the functional.
+        """Return the `proximal factory` of the functional.
 
         See Also
         --------
         odl.solvers.nonsmooth.proximal_operators.\
 proximal_cconj_kl_cross_entropy :
-            Proximal factory for convex conjugate of the KL cross entropy.
+            `proximal factory` for convex conjugate of the KL cross entropy.
         odl.solvers.nonsmooth.proximal_operators.proximal_cconj :
             Proximal of the convex conjugate of a functional.
         """
@@ -1072,13 +1325,13 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
 
     @property
     def proximal(self):
-        """Return the proximal factory of the functional.
+        """Return the `proximal factory` of the functional.
 
         See Also
         --------
         odl.solvers.nonsmooth.proximal_operators.\
 proximal_cconj_kl_cross_entropy :
-            Proximal factory for convex conjugate of the KL cross entropy.
+            `proximal factory` for convex conjugate of the KL cross entropy.
         """
         return proximal_cconj_kl_cross_entropy(space=self.domain, g=self.prior)
 
@@ -1187,7 +1440,7 @@ class SeparableSum(Functional):
 
     @property
     def proximal(self):
-        """Return the proximal factory of the functional.
+        """Return the `proximal factory` of the functional.
 
         The proximal operator separates over separable sums.
 
