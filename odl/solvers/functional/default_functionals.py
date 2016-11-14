@@ -199,7 +199,7 @@ class GroupL1Norm(Functional):
         """Return the group L1-norm of ``x``."""
         # TODO: update when integration operator is in place: issue #440
         pointwise_norm = self.pointwise_norm(x)
-        return pointwise_norm.inner(pointwise_norm.range.one())
+        return pointwise_norm.inner(pointwise_norm.space.one())
 
     @property
     def gradient(self):

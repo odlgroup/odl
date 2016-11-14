@@ -82,7 +82,6 @@ if not PYWT_AVAILABLE:
 
 
 def pytest_ignore_collect(path, config):
-    raise Exception(path, config.getvalue())
     return str(path) in collect_ignore
 
 
