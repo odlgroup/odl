@@ -1,8 +1,8 @@
 .. _derivatives_in_depth:
 
-##############################################
-A guide to the different notions of derivative
-##############################################
+######################################
+On the different notions of derivative
+######################################
 
 The concept of a derivative is one of the core concepts of mathematical analysis analysis, and it is essential whenever a linear approximation of a function in some point is required.
 Since the notion of derivative has different meanings in different contexts, this guide has been written to introduce the different derivative concepts used in ODL.

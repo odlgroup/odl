@@ -13,7 +13,6 @@ It is intended to familiarize you with important concepts that can be hard to in
 
     operator_guide
     linearspace_guide
-    derivatives_guide
     numpy_guide
     vectorization_guide
     functional_guide
