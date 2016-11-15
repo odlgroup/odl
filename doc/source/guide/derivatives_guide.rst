@@ -21,6 +21,8 @@ In short, different notions of derivatives that will be discussed here are:
 * **Spatial Gradient**. The spatial gradient is only defined for spaces :math:`\mathcal{F}(\Omega, \mathbb{F})` whose elements are functions over some domain :math:`\Omega \subset \mathbb{R}^d` taking values in :math:`\mathbb{R}` or :math:`\mathbb{C}`.
   It can be seen as a vectorized version of the usual gradient, taken in each point in :math:`\Omega`.
 
+* **Subgradient**. The subgradient extends the notion of derivative to any convex functional and is used in some optimization solvers where the objective function is not differentiable.
+
 Derivative
 ##########
 
@@ -102,11 +104,13 @@ In the classical setting of functionals :math:`f : \mathbb{R}^n \rightarrow \mat
         \dfrac{\partial f}{\partial x_n}
     \end{bmatrix}
 
-This can be generalized to the setting of functionals :math:`f : \mathcal{X} \rightarrow \mathbb{R}` mapping elements in some Hilbert space :math:`\mathcal{X}` to the real numbers by noting that the derivative has a special form by the `Riesz representation theorem
-<https://en.wikipedia.org/wiki/Riesz_representation_theorem>`_, namely that the linear operator :math:`f'(x)` can be represented by a vector :math:`[\nabla f](x) \in \mathcal{X}` such that for all :math:`y \in \mathcal{X}`:
+This can be generalized to the setting of functionals :math:`f : \mathcal{X} \rightarrow \mathbb{R}` mapping elements in some Banach space :math:`\mathcal{X}` to the real numbers by noting that the Fréchet derivative can be written as
 
 .. math::
     f'(x)(y) = \langle y, [\nabla f](x) \rangle.
+
+Where :math:`[\nabla f](x)` lies in the dual space of :math:`\mathcal{X}`, denoted :math:`\mathcal{X}^*`. For most spaces in ODL, the spaces are *Hilbert* spaces where :math:`\mathcal{X} = \mathcal{X}^*` by the `Riesz representation theorem
+<https://en.wikipedia.org/wiki/Riesz_representation_theorem>`_ and hence :math:`f'(x) \in \mathcal{X}`.
 
 We call the (possibly nonlinear) operator :math:`x \rightarrow [\nabla f](x)` the *Gradient operator* of :math:`f`.
 
@@ -158,10 +162,26 @@ Spatial Gradient
 The spatial gradient of a function :math:`f \in \mathcal{F}(\Omega, \mathbb{R})` is an element in the function space :math:`\mathcal{F}(\Omega, \mathbb{R}^n)` such that for any :math:`x, d \in \Omega`.
 
 .. math::
-    \lim_{h \rightarrow 0} \frac{\| f(x + h d) - f(x) - \langle h d, grad f \rangle \|}{h} = 0
+    \lim_{h \rightarrow 0} \frac{\| f(x + h d) - f(x) - \langle h d, \text{grad} f \rangle \|}{h} = 0
 
 Implementations in ODL
 ~~~~~~~~~~~~~~~~~~~~~~
 
 * The spatial gradient is implemented in ODL in the `Gradient` operator.
 * Several related operators such as the `PartialDerivative` and `Laplacian` are also available.
+
+Subgradient
+###########
+The Subgradient (also *subderivative* or *subdifferential*) of a *convex* function :math:`f : \mathcal{X} \rightarrow \mathbb{R}`, mapping a banach space :math:`\mathcal{X}` to :math:`\mathbb{R}` is defined as the set valued function :math:`\partial f : \mathcal{X} \rightarrow 2^{\mathcal{X}^*}` whose values are:
+
+.. math::
+   [\partial f](x_0) = \{c \in \mathcal{X}^* \ s.t. \ f(x) - f(x_0) \geq \langle c , x - x_0 \rangle \forall x \in \mathcal{X} \}
+
+for functions that are differentiable in the usual sense, this reduces to the usual gradient.
+
+
+Implementations in ODL
+~~~~~~~~~~~~~~~~~~~~~~
+
+The subgradient is not explicitly implemented in odl, but is implicitly used in the proximal operators.
+See :ref:`proximal_operators` for more information.
