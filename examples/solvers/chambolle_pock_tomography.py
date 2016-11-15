@@ -118,6 +118,6 @@ odl.solvers.chambolle_pock_solver(
     callback=callback)
 
 # Display images
-discr_phantom.show(title='original image')
-data.show(title='convolved image')
-x.show(title='deconvolved image', show=True)
+discr_phantom.show(title='Phantom')
+data.show(title='Projection data')
+x.show(title='TV reconstruction', show=True)
