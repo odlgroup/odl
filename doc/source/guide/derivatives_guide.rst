@@ -4,7 +4,7 @@
 A guide to the different notions of derivative
 ##############################################
 
-The concept of a derivative is one of the core concepts of mathematical analysis analysis, and it is essential whenever a linear approximation of a function in some point is required. 
+The concept of a derivative is one of the core concepts of mathematical analysis analysis, and it is essential whenever a linear approximation of a function in some point is required.
 Since the notion of derivative has different meanings in different contexts, this guide has been written to introduce the different derivative concepts used in ODL.
 
 In short, different notions of derivatives that will be discussed here are:
@@ -12,13 +12,13 @@ In short, different notions of derivatives that will be discussed here are:
 * **Derivative**. When we write "derivative" in ODL code and documentation, we mean the derivative of an `Operator` :math:`A : \mathcal{X} \rightarrow \mathcal{Y}` w.r.t to a disturbance in :math:`x`, i.e a linear approximation of :math:`A(x + h)` for small :math:`h`.
   The derivative in a point :math:`x` is an `Operator` :math:`A'(x) : \mathcal{X} \rightarrow \mathcal{Y}`.
 
-* **Gradient**. If the operator :math:`A` is a `functional`, i.e. :math:`A : \mathcal{X} \rightarrow \mathbb{R}`, then the gradient is the direction in which :math:`A` increases the most. 
-  The gradient in a point :math:`x` is a vector :math:`[\nabla A](x)` in :math:`\mathcal{X}` such that :math:`A'(x)(y) = \langle [\nabla A](x), y \rangle`. 
+* **Gradient**. If the operator :math:`A` is a `functional`, i.e. :math:`A : \mathcal{X} \rightarrow \mathbb{R}`, then the gradient is the direction in which :math:`A` increases the most.
+  The gradient in a point :math:`x` is a vector :math:`[\nabla A](x)` in :math:`\mathcal{X}` such that :math:`A'(x)(y) = \langle [\nabla A](x), y \rangle`.
   The gradient operator is the operator :math:`x \rightarrow [\nabla A](x)`.
 
 * **Hessian**. The hessian in a point :math:`x` is the derivative operator of the gradient operator, i.e. :math:`H(x) = [\nabla A]'(x)`.
 
-* **Spatial Gradient**. The spatial gradient is only defined for spaces :math:`\mathcal{F}(\Omega, \mathbb{F})` whose elements are functions over some domain :math:`\Omega \subset \mathbb{R}^d` taking values in :math:`\mathbb{R}` or :math:`\mathbb{C}`. 
+* **Spatial Gradient**. The spatial gradient is only defined for spaces :math:`\mathcal{F}(\Omega, \mathbb{F})` whose elements are functions over some domain :math:`\Omega \subset \mathbb{R}^d` taking values in :math:`\mathbb{R}` or :math:`\mathbb{C}`.
   It can be seen as a vectorized version of the usual gradient, taken in each point in :math:`\Omega`.
 
 Derivative
@@ -59,9 +59,9 @@ This definition of the derivative is called the *Fréchet derivative*.
 
 The Gateaux derivative
 ~~~~~~~~~~~~~~~~~~~~~~
-The concept of directional derivative can also be extended to Banach spaces, giving the *Gateaux* derivative. 
-The Gateaux derivative is more general than the Fréchet derivative, but is not a linear operator. An example of a function that is Gateaux differentiable but not Fréchet differentiable is the absolute value function.
-It not used in ODL since it can fail to be linear. 
+The concept of directional derivative can also be extended to Banach spaces, giving the *Gateaux* derivative.
+The Gateaux derivative is more general than the Fréchet derivative, but is not always a linear operator. An example of a function that is Gateaux differentiable but not Fréchet differentiable is the absolute value function.
+For this reason, when we write "derivative" in ODL, we generally mean the Fréchet derivative, but in some cases the Gateaux derivative can be used via duck-typing.
 
 Rules for the Fréchet derivative
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -129,7 +129,7 @@ In the classical setting of functionals :math:`f : \mathbb{R}^n \rightarrow \mat
     \dfrac{\partial^2 f}{\partial x_n\,\partial x_1} & \dfrac{\partial^2 f}{\partial x_n\,\partial x_2} & \cdots & \dfrac{\partial^2 f}{\partial x_n^2}
     \end{bmatrix}
 
-with the derivatives are evaluated in the point :math:`x`. 
+with the derivatives are evaluated in the point :math:`x`.
 It has the property that that the quadratic variation of :math:`f` is
 
 .. math::
