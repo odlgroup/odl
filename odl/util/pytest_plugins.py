@@ -82,7 +82,7 @@ if not PYWT_AVAILABLE:
 
 
 def pytest_ignore_collect(path, config):
-    return str(path) in collect_ignore
+    return os.path.normcase(str(path)) in collect_ignore
 
 
 # --- Reusable fixtures ---
