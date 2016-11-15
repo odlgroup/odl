@@ -20,72 +20,75 @@
 import numpy as np
 
 from odl.tomo.data.uncompr_bin import (
-    FileReaderUncompressedBinary, standardized_fields, spec_fields)
+    FileReaderUncompressedBinary, header_fields_from_table)
 
 
-__all__ = ('FileReaderMRC',)
+__all__ = ('FileReaderMRC', 'MRC_2014_SPEC')
 
 
 MRC_2014_SPEC = """
-+---------+-------+---------+--------+-------------------------------+
-|Long word|Byte   |Data type|Name    |Description                    |
-+=========+=======+=========+========+===============================+
-|1        |1-4    |Int32    |NX      |Number of columns              |
-+---------+-------+---------+--------+-------------------------------+
-|2        |5-8    |Int32    |NY      |Number of rows                 |
-+---------+-------+---------+--------+-------------------------------+
-|3        |9-12   |Int32    |NZ      |Number of sections             |
-+---------+-------+---------+--------+-------------------------------+
-|4        |13-16  |Int32    |MODE    |Data type                      |
-+---------+-------+---------+--------+-------------------------------+
-|...      |       |         |        |                               |
-+---------+-------+---------+--------+-------------------------------+
-|8        |29-32  |Int32    |MX      |Number of intervals along X of |
-|         |       |         |        |the "unit cell"                |
-+---------+-------+---------+--------+-------------------------------+
-|9        |33-36  |Int32    |MY      |Number of intervals along Y of |
-|         |       |         |        |the "unit cell"                |
-+---------+-------+---------+--------+-------------------------------+
-|10       |37-40  |Int32    |MZ      |Number of intervals along Z of |
-|         |       |         |        |the "unit cell"                |
-+---------+-------+---------+--------+-------------------------------+
-|11-13    |41-52  |Float32  |CELLA   |Cell dimension in angstroms    |
-+---------+-------+---------+--------+-------------------------------+
-|...      |       |         |        |                               |
-+---------+-------+---------+--------+-------------------------------+
-|20       |77-80  |Float32  |DMIN    |Minimum density value          |
-+---------+-------+---------+--------+-------------------------------+
-|21       |81-84  |Float32  |DMAX    |Maximum density value          |
-+---------+-------+---------+--------+-------------------------------+
-|22       |85-88  |Float32  |DMEAN   |Mean density value             |
-+---------+-------+---------+--------+-------------------------------+
-|23       |89-92  |Int32    |ISPG    |Space group number 0, 1, or 401|
-+---------+-------+---------+--------+-------------------------------+
-|24       |93-96  |Int32    |NSYMBT  |Number of bytes in extended    |
-|         |       |         |        |header                         |
-+---------+-------+---------+--------+-------------------------------+
-|...      |       |         |        |                               |
-+---------+-------+---------+--------+-------------------------------+
-|27       |105-108|Char     |EXTTYPE |Extended header type           |
-+---------+-------+---------+--------+-------------------------------+
-|28       |109-112|Int32    |NVERSION|Format version identification  |
-|         |       |         |        |number                         |
-+---------+-------+---------+--------+-------------------------------+
-|...      |       |         |        |                               |
-+---------+-------+---------+--------+-------------------------------+
-|50-52    |197-208|Float32  |ORIGIN  |Origin in X, Y, Z used in      |
-|         |       |         |        |transform                      |
-+---------+-------+---------+--------+-------------------------------+
-|53       |209-212|Char     |MAP     |Character string 'MAP' to      |
-|         |       |         |        |identify file type             |
-+---------+-------+---------+--------+-------------------------------+
-|54       |213-216|Char     |MACHST  |Machine stamp                  |
-+---------+-------+---------+--------+-------------------------------+
-|55       |217-220|Float32  |RMS     |RMS deviation of map from mean |
-|         |       |         |        |density                        |
-+---------+-------+---------+--------+-------------------------------+
++---------+--------+----------+--------+-------------------------------+
+|Long word|Byte    |Data type |Name    |Description                    |
++=========+========+==========+========+===============================+
+|1        |1-4     |Int32     |NX      |Number of columns              |
++---------+--------+----------+--------+-------------------------------+
+|2        |5-8     |Int32     |NY      |Number of rows                 |
++---------+--------+----------+--------+-------------------------------+
+|3        |9-12    |Int32     |NZ      |Number of sections             |
++---------+--------+----------+--------+-------------------------------+
+|4        |13-16   |Int32     |MODE    |Data type                      |
++---------+--------+----------+--------+-------------------------------+
+|...      |        |          |        |                               |
++---------+--------+----------+--------+-------------------------------+
+|8        |29-32   |Int32     |MX      |Number of intervals along X of |
+|         |        |          |        |the "unit cell"                |
++---------+--------+----------+--------+-------------------------------+
+|9        |33-36   |Int32     |MY      |Number of intervals along Y of |
+|         |        |          |        |the "unit cell"                |
++---------+--------+----------+--------+-------------------------------+
+|10       |37-40   |Int32     |MZ      |Number of intervals along Z of |
+|         |        |          |        |the "unit cell"                |
++---------+--------+----------+--------+-------------------------------+
+|11-13    |41-52   |Float32   |CELLA   |Cell dimension in angstroms    |
++---------+--------+----------+--------+-------------------------------+
+|...      |        |          |        |                               |
++---------+--------+----------+--------+-------------------------------+
+|20       |77-80   |Float32   |DMIN    |Minimum density value          |
++---------+--------+----------+--------+-------------------------------+
+|21       |81-84   |Float32   |DMAX    |Maximum density value          |
++---------+--------+----------+--------+-------------------------------+
+|22       |85-88   |Float32   |DMEAN   |Mean density value             |
++---------+--------+----------+--------+-------------------------------+
+|23       |89-92   |Int32     |ISPG    |Space group number 0, 1, or 401|
++---------+--------+----------+--------+-------------------------------+
+|24       |93-96   |Int32     |NSYMBT  |Number of bytes in extended    |
+|         |        |          |        |header                         |
++---------+--------+----------+--------+-------------------------------+
+|...      |        |          |        |                               |
++---------+--------+----------+--------+-------------------------------+
+|27       |105-108 |String    |EXTTYPE |Extended header type           |
++---------+--------+----------+--------+-------------------------------+
+|28       |109-112 |Int32     |NVERSION|Format version identification  |
+|         |        |          |        |number                         |
++---------+--------+----------+--------+-------------------------------+
+|...      |        |          |        |                               |
++---------+--------+----------+--------+-------------------------------+
+|50-52    |197-208 |Float32   |ORIGIN  |Origin in X, Y, Z used in      |
+|         |        |          |        |transform                      |
++---------+--------+----------+--------+-------------------------------+
+|53       |209-212 |String    |MAP     |Character string 'MAP' to      |
+|         |        |          |        |identify file type             |
++---------+--------+----------+--------+-------------------------------+
+|54       |213-216 |String    |MACHST  |Machine stamp                  |
++---------+--------+----------+--------+-------------------------------+
+|55       |217-220 |Float32   |RMS     |RMS deviation of map from mean |
+|         |        |          |        |density                        |
++---------+--------+----------+--------+-------------------------------+
+|56       |221-224 |Int32     |NLABL   |Number of labels being used    |
++---------+--------+----------+--------+-------------------------------+
+|57-256   |225-1024|String(10)|LABEL   |10 80-character text labels    |
++---------+--------+----------+--------+-------------------------------+
 """
-# TODO: add nlabl stuff
 
 MRC_HEADER_BYTES = 1024
 MRC_SPEC_KEYS = {
@@ -99,15 +102,15 @@ MRC_SPEC_KEYS = {
 MRC_DTYPE_TO_NPY_DTYPE = {
     'Float32': np.dtype('float32'),
     'Int32': np.dtype('int32'),
-    'Char': np.dtype('S1')}
+    'String': np.dtype('S1')}
 
 MRC_MODE_TO_NPY_DTYPE = {
-    0: np.dtype('uint8'),
+    0: np.dtype('int8'),
     1: np.dtype('int16'),
     2: np.dtype('float32'),
     6: np.dtype('uint16')}
 
-ANGSTROM = 1e-10
+ANGSTROM_IN_METERS = 1e-10
 
 
 class FileReaderMRC(FileReaderUncompressedBinary):
@@ -121,21 +124,19 @@ class FileReaderMRC(FileReaderUncompressedBinary):
 
     References
     ----------
-    [Che+2015] Cheng, A, Henderson, R, Mastronarde, D, Ludtke, S J,
-    Schoenmakers, R H M, Short, J, Marabini, R, Dallakyan, S, Agard, D,
-    and Winn, M. *MRC2014: Extensions to the MRC format header for electron
-    cryo-microscopy and tomography*. Journal of Structural Biology,
-    129 (2015), pp 146--150.
+    [Che+2015] Cheng, A et al. *MRC2014: Extensions to the MRC format header
+    for electron cryo-microscopy and tomography*. Journal of Structural
+    Biology, 129 (2015), pp 146--150.
     """
 
-    def __init__(self, file, header_fields=None):
+    def __init__(self, file, header_fields=None, **kwargs):
         """Initialize a new instance.
 
         Parameters
         ----------
         file : file-like or str
             Stream or filename from which to read the data. The stream
-            is allowed to be already opened in 'rb' mode.
+            is allowed to be already opened in ``'rb'`` mode.
         header_fields : sequence of dicts, optional
             Definition of the fields in the header (per row), each
             containing key-value pairs for the following keys:
@@ -150,27 +151,50 @@ class FileReaderMRC(FileReaderUncompressedBinary):
 
             For the default ``None``, the MRC2014 format is used, see
             ``MRC2014_SPEC``.
+        set_attrs : bool, optional
+            If ``True``, set attributes of ``self`` from the header for
+            convenient access. This can fail for non-standard
+            ``header_fields``, in which case ``False`` should be chosen.
+            Default: ``True``
         """
         if header_fields is None:
-            header_fields = standardized_fields(
-                spec_fields(MRC_2014_SPEC, id_key=MRC_SPEC_KEYS['id']),
-                keys=MRC_SPEC_KEYS, dtype_map=MRC_DTYPE_TO_NPY_DTYPE)
-        super().__init__(file, header_fields)
+            header_fields = header_fields_from_table(
+                spec_table=MRC_2014_SPEC,
+                keys=MRC_SPEC_KEYS,
+                dtype_map=MRC_DTYPE_TO_NPY_DTYPE)
+        super().__init__(file, header_fields, **kwargs)
+
+        # Initialize later set attributes to some values
+        self.cell_sides = None
+        self.cell_sides_angstrom = None
+        self.mrc_version = None
+        self.extended_header_type = None
+        self.text_labels = None
 
     def _set_attrs_from_header(self):
-        """Set the following attributes of ``self`` from ``self.header``:
+        """Set attributes of ``self`` from `header`.
+
+        This method is called by `read_header` if the ``set_attrs`` option
+        is set to ``True``. The following attributes are being set:
 
             - ``data_shape`` : Shape of the (full) data.
             - ``data_dtype`` : Data type of the data.
             - ``cell_sides`` : Size of the unit cell in meters.
+            - ``cell_sides_angstrom`` : Size of the unit cell in Angstrom.
             - ``mrc_version`` : ``(major, minor)`` tuple encoding the version
               of the MRC specification used to create the file.
+            - ``extended_header_type`` : String identifier for the type of
+              extended header. See `the specification homepage
+              <http://www.ccpem.ac.uk/mrc_format/mrc2014.php>`_ for
+              possible values.
+            - ``text_labels`` : 10-tuple of strings used for extra
+              information on the file (``LABEL`` field).
         """
         # data_shape
         nx = self.header['nx']['value']
         ny = self.header['ny']['value']
         nz = self.header['nz']['value']
-        self.data_shape = tuple(np.array([nx, ny, nz], dtype=int).squeeze())
+        self.data_shape = tuple(int(n) for n in (nx, ny, nz))
 
         # data_dtype
         mode = int(self.header['mode']['value'])
@@ -179,19 +203,47 @@ class FileReaderMRC(FileReaderUncompressedBinary):
         except KeyError:
             raise ValueError('data mode {} not supported'.format(mode))
 
-        # cell_sides
+        # cell_sides[_angstrom]
         self.cell_sides_angstrom = np.asarray(self.header['cella']['value'],
                                               dtype=float)
-        self.cell_sides = self.cell_sides_angstrom * ANGSTROM
+        self.cell_sides = self.cell_sides_angstrom * ANGSTROM_IN_METERS
 
         # mrc_version
         nversion = self.header['nversion']['value']
-        maj_ver, min_ver = nversion // 10, nversion % 10
-        self.mrc_version = (maj_ver, min_ver)
+        self.mrc_version = (nversion // 10, nversion % 10)
 
         # header_bytes
         extra_header_bytes = self.header['nsymbt']['value']
         self.header_bytes = MRC_HEADER_BYTES + extra_header_bytes
+
+        # extended_header_type
+        self.extended_header_type = ''.join(self.header['exttype']['value'])
+
+        # text_labels
+        self.text_labels = tuple(''.join(row)
+                                 for row in self.header['label']['value'])
+
+    def read_data(self, dstart=None, dend=None):
+        """Read the data from `file` and return it as Numpy array.
+
+        Parameters
+        ----------
+        dstart : int, optional
+            Offset in bytes of the data field. By default, it is equal
+            to ``header_size``. Backwards indexing with negative values
+            is also supported.
+            Use a value larger than the header size to extract a data subset.
+        dend : int, optional
+            End position in bytes until which data is read (exclusive).
+            Backwards indexing with negative values is also supported.
+            Use a value different from the file size to extract a data subset.
+
+        Returns
+        -------
+        data : `numpy.ndarray`
+            The data read from `file`.
+        """
+        return super().read_data(dstart, dend, reshape_order='F')
 
     # TODO: read extended header for the standard flavors, see the spec
     # homepage
