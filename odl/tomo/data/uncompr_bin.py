@@ -23,12 +23,15 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import int, object, open, str
 
+from collections import OrderedDict
 import csv
 import numpy as np
 import struct
 
 
-__all__ = ('FileReaderUncompressedBinary', 'header_fields_from_table')
+__all__ = ('FileReaderRawBinaryWithHeader',
+           'FileWriterRawBinaryWithHeader',
+           'header_fields_from_table')
 
 
 def _fields_from_table(spec_table, id_key):
@@ -220,7 +223,7 @@ def header_fields_from_table(spec_table, keys, dtype_map):
     return tuple(conv_list)
 
 
-class FileReaderUncompressedBinary(object):
+class FileReaderRawBinaryWithHeader(object):
 
     """Reader for uncompressed binary files using an optional header.
 
@@ -253,6 +256,11 @@ class FileReaderUncompressedBinary(object):
             - ``'description'`` (optional) : A human-readable description
               of the field.
 
+            If empty, the header size is set 0, and the data type is
+            assumed to be ``dtype``. Use this in conjunction with
+            parametrized `read_data` to bypass the header and read
+            arbitrary data portions.
+
         dtype : optional
             Data type of the file's data block. It must be understood by
             the `numpy.dtype` constructor. By default, the data type
@@ -275,12 +283,12 @@ class FileReaderUncompressedBinary(object):
         except TypeError:
             pass
 
-        if file.mode != 'rb':
-            raise ValueError("`file` must be opened in 'rb' mode, but mode "
-                             "'is {}'".format(file.mode))
+        if not file.readable() or 'b' not in file.mode:
+            raise ValueError("`file` must be opened readable in binary mode, "
+                             "but mode 'is {}'".format(file.mode))
 
         self.__file = file
-        self.set_attrs = bool(kwargs.pop('set_attrs', True))
+        self.__set_attrs_from_header = bool(kwargs.pop('set_attrs', True))
 
         # Initialize some attributes to default values, plus the header
         self.data_shape = -1  # Makes reshape a no-op
@@ -297,6 +305,10 @@ class FileReaderUncompressedBinary(object):
         """File object from which ``self`` reads."""
         return self.__file
 
+    def close(self):
+        """Close `file`."""
+        self.file.close()
+
     @property
     def header(self):
         """Header as read from `file`, or ``None``."""
@@ -307,6 +319,24 @@ class FileReaderUncompressedBinary(object):
         """Tuple of dictionaries defining the fields in `header`."""
         return self.__header_fields
 
+    def read(self):
+        """Return header and data from `file`.
+
+        Returns
+        -------
+        header : `OrderedDict`
+            The header as read from `file`.
+        data : `numpy.ndarray`
+            The data block from `file`, reshaped according to
+            ``self.data_shape``.
+
+        See Also
+        --------
+        read_header
+        read_data
+        """
+        return self.read_header(), self.read_data()
+
     def read_header(self):
         """Read the header from `file`.
 
@@ -314,18 +344,26 @@ class FileReaderUncompressedBinary(object):
 
         Returns
         -------
-        header : dict
-            Header of ``self.file`` stored in a dictionary, where each
+        header : `OrderedDict`
+            Header from `file`, stored in an ordered dictionary, where each
             entry has the following form::
 
-                'name': {'value': value, 'description': description}
+                'name': {'value': value_as_array,
+                         'offset': offset_in_bytes
+                         'description': description_string}
 
-            All ``value``'s are `numpy.ndarray`'s with at least one
-            dimension. If a ``shape`` is given in `header_fields`,
+            All ``'value'``'s are `numpy.ndarray`'s with at least one
+            dimension. If a ``'shape'`` is given in `header_fields`,
             the resulting array is reshaped accordingly.
+
+        See Also
+        --------
+        read_data
         """
-        # Read all fields except data
-        header = {}
+        # Read all fields except data. We use an OrderedDict such that
+        # the order is the same as in `header_fields`. This makes it simple
+        # to write later on in the correct order, based only on `header`.
+        header = OrderedDict()
         for field in self.header_fields:
             # Get all the values from the dictionary
             name = field['name']
@@ -333,6 +371,7 @@ class FileReaderUncompressedBinary(object):
                 continue
             entry = {'description': field.get('description', '')}
             offset_bytes = int(field['offset'])
+            entry['offset'] = offset_bytes
             size_bytes = int(field['size'])
             dtype = np.dtype(field['dtype'])
             shape = field.get('dshape', -1)  # no-op by default
@@ -374,16 +413,17 @@ class FileReaderUncompressedBinary(object):
                 packed_value = packed_value.replace(b'\x00', b' ')
                 value = np.fromiter(packed_value.decode().ljust(size_bytes),
                                     dtype=dtype)
-                entry['value'] = value.astype(str).reshape(shape)
+                entry['value'] = value.reshape(shape)
             else:
                 value = np.array(struct.unpack_from(fmt, packed_value),
                                  dtype=dtype)
                 entry['value'] = value.reshape(shape)
+
             header[name] = entry
 
         # Store information gained from the header
         self.__header = header
-        if self.set_attrs:
+        if self.__set_attrs_from_header:
             self._set_attrs_from_header()
 
         return header
@@ -402,14 +442,14 @@ class FileReaderUncompressedBinary(object):
         raise NotImplementedError('abstract method')
 
     def read_data(self, dstart=None, dend=None, reshape_order='C'):
-        """Read the data from `file` and return it as Numpy array.
+        """Read data from `file` and return it as Numpy array.
 
         Parameters
         ----------
         dstart : int, optional
-            Offset in bytes of the data field. By default, it is equal
-            to ``header_size``. Backwards indexing with negative values
-            is also supported.
+            Offset in bytes of the data field. By default, it is taken to
+            be the header size as determined from reading the header.
+            Backwards indexing with negative values is also supported.
             Use a value larger than the header size to extract a data subset.
         dend : int, optional
             End position in bytes until which data is read (exclusive).
@@ -423,6 +463,10 @@ class FileReaderUncompressedBinary(object):
         -------
         data : `numpy.ndarray`
             The data read from `file`.
+
+        See Also
+        --------
+        read_header
         """
         filesize_bytes = self.file.seek(0, 2)  # 2 means "from the end"
         if dstart is None:
@@ -468,6 +512,149 @@ class FileReaderUncompressedBinary(object):
             data = data.reshape(self.data_shape, order=reshape_order)
 
         return data
+
+
+class FileWriterRawBinaryWithHeader(object):
+
+    """Writer for uncompressed binary files using an optional header.
+
+    This class can be used to write a single binary header followed by a
+    single block of uncompressed binary data to a file.
+    Alternatively, the header can be bypassed and data blocks can be
+    written directly using `write_data`, which allows to write arbitrary
+    portions.
+    """
+
+    def __init__(self, file, header=OrderedDict()):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        file : file-like or str
+            Stream or filename to which to write the data. The stream
+            is allowed to be already opened in a writable mode.
+        header : `OrderedDict`, optional
+            Header in form of an ordered dictionary, where each entry has
+            the following form::
+
+                'name': {'value': value_as_array,
+                         'offset': offset_in_bytes
+                         'description': description_string}
+
+            All ``'value'``'s must be `numpy.ndarray`'s. Their size and the
+            ``'offset'`` entry determine the space that the value occupies
+            in `file`'s header.
+
+            If an empty dictionary is given, no header is written.
+
+        Notes
+        -----
+        **Important:** There is no check if the writes from the provided
+        header are consistent, i.e., that they don't overwrite each other.
+        Ensuring this is the user's responsibility.
+
+        See Also
+        --------
+        header_fields_from_table :
+            Function to parse a specification table, returning a field
+            sequence usable as ``header_fields`` parameter.
+        FileReaderRawBinaryWithHeader.read_header
+        """
+        try:
+            file = open(file, 'wb')
+        except TypeError:
+            pass
+
+        if not file.writable() or 'b' not in file.mode:
+            raise ValueError("`file` must be opened writable in binary mode, "
+                             "but mode 'is {}'".format(file.mode))
+
+        self.__file = file
+        self.__header = header
+        self.header_bytes = 0  # Updated by `write_header`
+
+    @property
+    def file(self):
+        """File object from which ``self`` reads."""
+        return self.__file
+
+    def close(self):
+        """Close `file`."""
+        self.file.close()
+
+    @property
+    def header(self):
+        """Header dictionary to be written to `file`."""
+        return self.__header
+
+    def write(self, data):
+        """Write `header` and provided ``data`` to `file`.
+
+        Parameters
+        ----------
+        data : `array-like`
+            Data that should be written to `file`.
+        """
+        self.write_header()
+        self.write_data(data)
+
+    def write_header(self):
+        """Write `header` to `file`.
+
+        See Also
+        --------
+        read_data
+        """
+        max_offset = 0
+        for name, properties in self.header.items():
+            value = properties['value']
+            offset_bytes = int(properties['offset'])
+            if offset_bytes > max_offset:
+                max_offset = offset_bytes
+                value_at_max_offset = value
+
+            self.file.seek(offset_bytes)
+            value.tofile(self.file)
+
+        # Determine header size
+        self.header_bytes = max_offset + value_at_max_offset.nbytes
+
+    def write_data(self, data, dstart=None, reshape_order='C'):
+        """Read data from `file` and return it as Numpy array.
+
+        Parameters
+        ----------
+        data : `array-like`
+            Data that should be written to `file`.
+        dstart : non-negative int, optional
+            Offset in bytes of the start position of the written data.
+            By default, it is taken to be the header size as determined
+            by `write_header`.
+        reshape_order : {'C', 'F', 'A'}, optional
+            Value passed as ``order`` parameter to `numpy.reshape`.
+            Reshaping is only done in case the whole data block is read.
+
+        Returns
+        -------
+        data : `numpy.ndarray`
+            The data read from `file`.
+        """
+        data = np.asarray(data).reshape(-1, order=reshape_order)
+        if dstart is None:
+            dstart = int(self.header_bytes)
+        elif dstart < 0:
+            raise ValueError('`dstart` must be non-negative, got {}'
+                             ''.format(dstart))
+        else:
+            dstart = int(dstart)
+
+        if dstart < self.header_bytes:
+            raise ValueError('invalid `dstart`, resulting in absolute '
+                             '`dstart` < `header_bytes` ({} < {})'
+                             ''.format(dstart, self.header_bytes))
+
+        self.file.seek(dstart)
+        data.tofile(self.file)
 
 
 if __name__ == '__main__':

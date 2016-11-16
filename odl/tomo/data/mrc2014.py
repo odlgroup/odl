@@ -26,10 +26,11 @@ from builtins import int, super
 import numpy as np
 
 from odl.tomo.data.uncompr_bin import (
-    FileReaderUncompressedBinary, header_fields_from_table)
+    FileReaderRawBinaryWithHeader, FileWriterRawBinaryWithHeader,
+    header_fields_from_table)
 
 
-__all__ = ('FileReaderMRC', 'MRC_2014_SPEC_TABLE')
+__all__ = ('FileReaderMRC', 'FileWriterMRC')
 
 
 MRC_2014_SPEC_TABLE = """
@@ -130,11 +131,11 @@ MRC_MODE_TO_NPY_DTYPE = {
 ANGSTROM_IN_METERS = 1e-10
 
 
-class FileReaderMRC(FileReaderUncompressedBinary):
+class FileReaderMRC(FileReaderRawBinaryWithHeader):
 
     """Reader for the MRC file format(s).
 
-    By default, the MRC2014 format is used, see ``MRC_2014_SPEC`` for
+    By default, the MRC2014 format is used, see `print_mrc_2014_spec` for
     details. See also [Che+2015]_ or the `explanations on the CCP4 homepage
     <http://www.ccpem.ac.uk/mrc_format/mrc2014.php>`_ for the
     text of the specification.
@@ -159,15 +160,16 @@ class FileReaderMRC(FileReaderUncompressedBinary):
             containing key-value pairs for the following keys:
 
             - ``'name'`` : Label for the field.
-            - ``'offset_bytes'`` : Start of the field in bytes.
-            - ``'size_bytes'`` : Size of the field in bytes.
+            - ``'offset'`` : Start of the field in bytes.
+            - ``'size'`` : Size of the field in bytes.
             - ``'dtype'`` : Data type in Numpy- or Numpy-readable format.
             - ``'dshape'`` (optional) : The array of values is reshaped to
               this shape.
-            - ``'description'`` : A human-readable description of the field.
+            - ``'description'`` (optional) : A human-readable description
+              of the field.
 
             For the default ``None``, the MRC2014 format is used, see
-            ``MRC2014_SPEC``.
+            `print_mrc2014_spec`.
         set_attrs : bool, optional
             If ``True``, set attributes of ``self`` from the header for
             convenient access. This can fail for non-standard
@@ -238,10 +240,11 @@ class FileReaderMRC(FileReaderUncompressedBinary):
         self.header_bytes = MRC_HEADER_BYTES + extra_header_bytes
 
         # extended_header_type
-        self.extended_header_type = ''.join(self.header['exttype']['value'])
+        self.extended_header_type = ''.join(
+            self.header['exttype']['value'].astype(str))
 
         # text_labels
-        self.text_labels = tuple(''.join(row)
+        self.text_labels = tuple(''.join(row.astype(str))
                                  for row in self.header['label']['value'])
 
     def read_data(self, dstart=None, dend=None):
@@ -268,3 +271,21 @@ class FileReaderMRC(FileReaderUncompressedBinary):
 
     # TODO: read extended header for the standard flavors, see the spec
     # homepage
+
+
+class FileWriterMRC(FileWriterRawBinaryWithHeader):
+
+    """Writer for the MRC file format(s).
+
+    See [Che+2015]_ or the `explanations on the CCP4 homepage
+    <http://www.ccpem.ac.uk/mrc_format/mrc2014.php>`_ for the
+    text of the specification.
+
+    References
+    ----------
+    [Che+2015] Cheng, A et al. *MRC2014: Extensions to the MRC format header
+    for electron cryo-microscopy and tomography*. Journal of Structural
+    Biology, 129 (2015), pp 146--150.
+    """
+
+    print_mrc2014_spec = staticmethod(print_mrc2014_spec)
