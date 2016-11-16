@@ -107,9 +107,9 @@ In the classical setting of functionals :math:`f : \mathbb{R}^n \rightarrow \mat
 This can be generalized to the setting of functionals :math:`f : \mathcal{X} \rightarrow \mathbb{R}` mapping elements in some Banach space :math:`\mathcal{X}` to the real numbers by noting that the Fréchet derivative can be written as
 
 .. math::
-    f'(x)(y) = \langle y, [\nabla f](x) \rangle.
+    f'(x)(y) = \langle y, [\nabla f](x) \rangle,
 
-Where :math:`[\nabla f](x)` lies in the dual space of :math:`\mathcal{X}`, denoted :math:`\mathcal{X}^*`. For most spaces in ODL, the spaces are *Hilbert* spaces where :math:`\mathcal{X} = \mathcal{X}^*` by the `Riesz representation theorem
+where :math:`[\nabla f](x)` lies in the dual space of :math:`\mathcal{X}`, denoted :math:`\mathcal{X}^*`. For most spaces in ODL, the spaces are *Hilbert* spaces where :math:`\mathcal{X} = \mathcal{X}^*` by the `Riesz representation theorem
 <https://en.wikipedia.org/wiki/Riesz_representation_theorem>`_ and hence :math:`f'(x) \in \mathcal{X}`.
 
 We call the (possibly nonlinear) operator :math:`x \rightarrow [\nabla f](x)` the *Gradient operator* of :math:`f`.
@@ -172,7 +172,7 @@ Implementations in ODL
 
 Subgradient
 ###########
-The Subgradient (also *subderivative* or *subdifferential*) of a *convex* function :math:`f : \mathcal{X} \rightarrow \mathbb{R}`, mapping a banach space :math:`\mathcal{X}` to :math:`\mathbb{R}` is defined as the set valued function :math:`\partial f : \mathcal{X} \rightarrow 2^{\mathcal{X}^*}` whose values are:
+The Subgradient (also *subderivative* or *subdifferential*) of a *convex* function :math:`f : \mathcal{X} \rightarrow \mathbb{R}`, mapping a Banach space :math:`\mathcal{X}` to :math:`\mathbb{R}`, is defined as the set-valued function :math:`\partial f : \mathcal{X} \rightarrow 2^{\mathcal{X}^*}` whose values are:
 
 .. math::
    [\partial f](x_0) = \{c \in \mathcal{X}^* \ s.t. \ f(x) - f(x_0) \geq \langle c , x - x_0 \rangle \forall x \in \mathcal{X} \}
