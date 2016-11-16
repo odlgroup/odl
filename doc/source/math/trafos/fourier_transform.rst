@@ -52,7 +52,7 @@ Further Properties
 ------------------
 
 .. math::
-    \mathcal{F^{-1}}(\phi) = \mathcal{F}(\check\phi) = \mathcal{F}(\phi)(-\cdot)
+    \mathcal{F}^{-1}(\phi) = \mathcal{F}(\check\phi) = \mathcal{F}(\phi)(-\cdot)
     = \overline{\mathcal{F}(\overline{\phi})} = \mathcal{F}^3(\phi),
     \quad \check\phi(x) = \phi(-x),
     :label: fourier_properties
