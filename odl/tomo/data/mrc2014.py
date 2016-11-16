@@ -23,6 +23,7 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import int, super
 
+from collections import OrderedDict
 import numpy as np
 
 from odl.tomo.data.uncompr_bin import (
@@ -108,7 +109,6 @@ def print_mrc2014_spec():
 print_mrc2014_spec.__doc__ += MRC_2014_SPEC_TABLE
 
 
-MRC_HEADER_BYTES = 1024
 MRC_SPEC_KEYS = {
     'id': 'Long word',
     'byte_range': 'Byte',
@@ -127,6 +127,7 @@ MRC_MODE_TO_NPY_DTYPE = {
     1: np.dtype('int16'),
     2: np.dtype('float32'),
     6: np.dtype('uint16')}
+NPY_DTYPE_TO_MRC_MODE = {v: k for k, v in MRC_MODE_TO_NPY_DTYPE.items()}
 
 ANGSTROM_IN_METERS = 1e-10
 
@@ -365,3 +366,127 @@ class FileWriterMRC(FileWriterRawBinaryWithHeader):
     """
 
     print_mrc2014_spec = staticmethod(print_mrc2014_spec)
+
+
+def mrc_2014_header_from_params(shape, dtype, kind, **kwargs):
+    """Create a minimal MRC2014 header from the given parameters.
+
+    Parameters
+    ----------
+    shape : 3-sequence of ints
+        3D shape of the stored data. The values are used as
+        ``'nx', 'ny', 'nz'`` header entries, in this order.
+    dtype : {'int8', 'int16', 'float32', 'uint16'}
+        Data type specifier as understood by `numpy.dtype`. It is
+        translated to a ``'mode'`` header entry. See `this page
+        <http://www.ccpem.ac.uk/mrc_format/mrc2014.php>`_ for valid
+        modes.
+    kind : {'volume', 'projections'}
+        Interpretation of the 3D data, either as single 3D volume or as
+        a stack of 2D projections. The value is used for the ``'ispg'``
+        header entry.
+    cell_sides : 3-sequence of floats, optional
+        Size of the 3D unit cell in meters. The values are used for
+        the ``'cella'`` header entry.
+        Default: ``(1, 1, 1)``
+    dmin, dmax : float, optional
+        Minimum and maximum values of the data, used for header entries
+        ``'dmin'`` and ``'dmax'``, resp.
+        Default: 1.0, 0.0. These values indicate according to [Che+2015]_
+        that the values are considered as undetermined.
+    dmean, rms : float, optional
+        Mean and variance of the data, used for header entries ``'dmean'``
+        and ``'rms'``, resp.
+        Default: ``min(dmin, dmax) - 1, -1.0``. These values indicate
+        according to [Che+2015]_ that the values are considered as
+        undetermined.
+    mrc_version : 2-tuple of int, optional
+        Version identifier for the MRC file, used for the ``'nversion'``
+        header entry.
+        Default: ``(2014, 0)``
+    text_labels : sequence of strings
+        Maximal 10 strings with 80 characters each, used for the
+        ``'nlabl'`` and ``'label'`` header entries.
+        Default: ``[]``
+
+    Returns
+    -------
+    header : `OrderedDict`
+        Header stored in an ordered dictionary, where each entry has the
+        following form::
+
+            'name': {'value': value_as_array,
+                     'offset': offset_in_bytes
+                     'description': description_string}
+
+        All ``'value'``'s are `numpy.ndarray`'s with at least one
+        dimension.
+
+    References
+    ----------
+    [Che+2015] Cheng, A et al. *MRC2014: Extensions to the MRC format header
+    for electron cryo-microscopy and tomography*. Journal of Structural
+    Biology, 129 (2015), pp 146--150.
+    """
+    # Positional args
+    kind, kind_in = str(kind).lower(), kind
+    if kind not in ('volume', 'projections'):
+        raise ValueError("`kind '{}' not understood".format(kind_in))
+
+    # Keyword args
+    cell_sides = kwargs.pop('cell_sides', (1.0, 1.0, 1.0))
+    dmin = kwargs.pop('dmin', 1.0)
+    dmax = kwargs.pop('dmax', 0.0)
+    dmean = kwargs.pop('dmean', min(dmin, dmax) - 1.0)
+    rms = kwargs.pop('dmean', -1.0)
+    mrc_version = kwargs.pop('mrc_version', (2014, 0))
+    if len(mrc_version) != 2:
+        raise ValueError('`mrc_version` must be a sequence of length 2, got '
+                         '{}'.format(mrc_version))
+
+    # Text labels: fill each label up with whitespace to 80 characters.
+    # Create the remaining labels as 80 * '\x00'
+    text_labels_in = kwargs.pop('text_labels', [])
+    nlabl = len(text_labels_in)
+    if nlabl > 10:
+        raise ValueError('expexted maximum of 10 labels, got {} labels'
+                         ''.format(nlabl))
+    text_labels = [str(label).ljust(80) for label in text_labels_in]
+    if any(len(label) > 80 for label in text_labels):
+        raise ValueError('labels cannot have more than 80 characters each')
+
+    # Convert to header-friendly form. Names are required to match
+    # exactly the header field names, and all of them must exist,
+    # so that `eval` below succeeds for all fields.
+    nx, ny, nz = [np.array(n, dtype='int32').reshape([1]) for n in shape]
+    mode = np.array(NPY_DTYPE_TO_MRC_MODE[np.dtype(dtype)],
+                    dtype='int32').reshape([1])
+    mx, my, mz = nx, ny, nz
+    cella = np.array(cell_sides, dtype='float32').reshape([3])
+    dmin, dmax, dmean, rms = [np.array(x, dtype='float32').reshape([1])
+                              for x in (dmin, dmax, dmean, rms)]
+    ispg = 1 if kind == 'volume' else 0
+    ispg = np.array(ispg, dtype='int32', ndmin=1)
+    nsymbt = np.array([0], dtype='int32')
+    exttype = np.fromiter('    ', dtype='S1')
+    nversion = np.array(10 * mrc_version[0] + mrc_version[1],
+                        dtype='int32').reshape([1])
+    origin = np.zeros(3, dtype='float32')
+    map = np.fromiter('MAP ', dtype='S1')
+    machst = np.fromiter('DA ', dtype='S1')
+    nlabl = np.array(nlabl, dtype='int32').reshape([1])
+    label = np.zeros((10, 80), dtype='S1')  # ensure correct size
+    for i, label_i in enumerate(text_labels):
+        label[i] = np.fromiter(label_i, dtype='S1')
+
+    # Make the header
+    # We use again the specification to set the values
+    header_fields = header_fields_from_table(
+        MRC_2014_SPEC_TABLE, MRC_SPEC_KEYS, MRC_DTYPE_TO_NPY_DTYPE)
+
+    header = OrderedDict()
+    for field in header_fields:
+        header[field['name']] = {'offset': field['offset'],
+                                 'value': eval(field['name'])}
+
+    return header
