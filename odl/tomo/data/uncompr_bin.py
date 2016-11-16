@@ -233,9 +233,14 @@ class FileReaderRawBinaryWithHeader(object):
     Alternatively, the header can be bypassed and data blocks can be
     read directly using `read_data` with start and end byte values, which
     allows to read arbitrary portions.
+
+    An instance of this class can also be used as context manager, i.e.::
+
+        with FileReaderRawBinaryWithHeader(file, header_fields) as reader:
+            header, data = reader.read()
     """
 
-    def __init__(self, file, header_fields=(), dtype=None, **kwargs):
+    def __init__(self, file, header_fields=(), dtype=None):
         """Initialize a new instance.
 
         Parameters
@@ -266,11 +271,6 @@ class FileReaderRawBinaryWithHeader(object):
             the `numpy.dtype` constructor. By default, the data type
             is determined from the file header, or, if no information
             is available there, it is set to ``np.dtype(float)``.
-        set_attrs : bool, optional
-            If ``True``, set attributes of ``self`` from the header for
-            convenient access. This can fail for non-standard
-            ``header_fields``, in which case ``False`` should be chosen.
-            Default: ``True``
 
         See Also
         --------
@@ -278,40 +278,95 @@ class FileReaderRawBinaryWithHeader(object):
             Function to parse a specification table, returning a field
             sequence usable as ``header_fields`` parameter.
         """
-        try:
-            file = open(file, 'rb')
-        except TypeError:
-            pass
-
-        if not file.readable() or 'b' not in file.mode:
-            raise ValueError("`file` must be opened readable in binary mode, "
-                             "but mode 'is {}'".format(file.mode))
-
-        self.__file = file
-        self.__set_attrs_from_header = bool(kwargs.pop('set_attrs', True))
-
-        # Initialize some attributes to default values, plus the header
-        self.data_shape = -1  # Makes reshape a no-op
-        self.data_dtype = np.dtype(dtype)
-        self.header_bytes = 0
-        self.__header_fields = header_fields
-        if self.header_fields:
-            self.__header = self.read_header()
+        # Need those attrs in subsequent code
+        file_attrs = ('name', 'mode', 'is_readable', 'is_writable', 'seek',
+                      'closed', 'close')
+        is_file = all(hasattr(file, attr) for attr in file_attrs)
+        if is_file:
+            self.__file = file
+            self.__file_shared = True
         else:
-            self.__header = None
+            self.__file = open(file, 'rb')
+            self.__file_shared = False
+
+        if not self.file.readable():
+            raise IOError('`file` is not readable')
+        if 'b' not in self.file.mode:
+            raise ValueError("`file` must be opened in binary mode, "
+                             "but mode 'is {}'".format(self.file.mode))
+
+        try:
+            iter(header_fields)
+        except TypeError:
+            raise TypeError('`header_fields` must be iterable, got '
+                            '{!r}'.format(header_fields))
+        self.__header_fields = header_fields
+
+        # Set default values for some attributes
+        self.__init_data_dtype = np.dtype(dtype)
+        self.__header = OrderedDict()
 
     @property
     def file(self):
         """File object from which ``self`` reads."""
         return self.__file
 
-    def close(self):
-        """Close `file`."""
-        self.file.close()
+    def __enter__(self):
+        """Initializer for the context manager."""
+        return self
+
+    def __exit__(self, *exc):
+        """Cleanup before on exiting the context manager."""
+        if not self.__file_shared:
+            self.file.close()
+
+    @property
+    def header_size(self):
+        """Size of `file`'s header in bytes.
+
+        The size of the header is determined from `header`. If this is not
+        possible (i.e., before the header has been read), 0 is returned.
+        """
+        if not self.header:
+            return 0
+
+        # Determine header size by finding the largest offset and the
+        # value of the corresponding entry. The header size is the
+        # offset plus the size of the entry.
+        max_offset = 0
+        value_at_max_offset = np.array([])
+        for entry in self.header.values():
+            if entry['offset'] > max_offset:
+                max_offset = entry['offset']
+                value_at_max_offset = entry['value']
+
+        return max_offset + value_at_max_offset.nbytes
+
+    @property
+    def data_shape(self):
+        """Shape of the whole data block in `file`.
+
+        This is a default implementation always returning -1, which makes
+        reshaping a no-op.
+        Subclasses should override this property with an implementation
+        that returns the data shape from the header.
+        """
+        return -1
+
+    @property
+    def data_dtype(self):
+        """Data type of the data block in `file`.
+
+        This is a default implementation returning the data type gained
+        from the ``dtype`` argument in the initializer.
+        Subclasses should override this property with an implementation
+        that returns the data type from the header.
+        """
+        return self.__init_data_dtype
 
     @property
     def header(self):
-        """Header as read from `file`, or ``None``."""
+        """Header as read from `file`, or an empty dictionary."""
         return self.__header
 
     @property
@@ -423,23 +478,8 @@ class FileReaderRawBinaryWithHeader(object):
 
         # Store information gained from the header
         self.__header = header
-        if self.__set_attrs_from_header:
-            self._set_attrs_from_header()
 
         return header
-
-    def _set_attrs_from_header(self):
-        """Abstract method for setting attributes from `header`.
-
-        The minimum attributes to set by this method are:
-
-            - ``data_shape`` : Shape of the (full) data.
-            - ``data_dtype`` : Data type of the data.
-
-        Subclasses should override this method. They may define additional
-        attributes to set.
-        """
-        raise NotImplementedError('abstract method')
 
     def read_data(self, dstart=None, dend=None, reshape_order='C'):
         """Read data from `file` and return it as Numpy array.
@@ -470,7 +510,7 @@ class FileReaderRawBinaryWithHeader(object):
         """
         filesize_bytes = self.file.seek(0, 2)  # 2 means "from the end"
         if dstart is None:
-            dstart_abs = int(self.header_bytes)
+            dstart_abs = int(self.header_size)
         elif dstart < 0:
             dstart_abs = filesize_bytes + int(dstart)
         else:
@@ -487,10 +527,10 @@ class FileReaderRawBinaryWithHeader(object):
             raise ValueError('invalid `dstart` and `dend`, resulting in '
                              'absolute `dstart` >= `dend` ({} >= {})'
                              ''.format(dstart_abs, dend_abs))
-        if dstart_abs < self.header_bytes:
+        if dstart_abs < self.header_size:
             raise ValueError('invalid `dstart`, resulting in absolute '
-                             '`dstart` < `header_bytes` ({} < {})'
-                             ''.format(dstart_abs, self.header_bytes))
+                             '`dstart` < `header_size` ({} < {})'
+                             ''.format(dstart_abs, self.header_size))
         if dend_abs > filesize_bytes:
             raise ValueError('invalid `dend`, resulting in absolute '
                              '`dend` > `filesize_bytes` ({} < {})'
@@ -507,7 +547,7 @@ class FileReaderRawBinaryWithHeader(object):
         data = np.fromfile(self.file, dtype=self.data_dtype,
                            count=int(num_elems))
 
-        if dstart_abs == self.header_bytes and dend_abs == filesize_bytes:
+        if dstart_abs == self.header_size and dend_abs == filesize_bytes:
             # Full dataset read, reshape to stored shape.
             data = data.reshape(self.data_shape, order=reshape_order)
 
@@ -571,7 +611,7 @@ class FileWriterRawBinaryWithHeader(object):
 
         self.__file = file
         self.__header = header
-        self.header_bytes = 0  # Updated by `write_header`
+        self.header_size = 0  # Updated by `write_header`
 
     @property
     def file(self):
@@ -617,7 +657,7 @@ class FileWriterRawBinaryWithHeader(object):
             value.tofile(self.file)
 
         # Determine header size
-        self.header_bytes = max_offset + value_at_max_offset.nbytes
+        self.header_size = max_offset + value_at_max_offset.nbytes
 
     def write_data(self, data, dstart=None, reshape_order='C'):
         """Read data from `file` and return it as Numpy array.
@@ -641,17 +681,17 @@ class FileWriterRawBinaryWithHeader(object):
         """
         data = np.asarray(data).reshape(-1, order=reshape_order)
         if dstart is None:
-            dstart = int(self.header_bytes)
+            dstart = int(self.header_size)
         elif dstart < 0:
             raise ValueError('`dstart` must be non-negative, got {}'
                              ''.format(dstart))
         else:
             dstart = int(dstart)
 
-        if dstart < self.header_bytes:
+        if dstart < self.header_size:
             raise ValueError('invalid `dstart`, resulting in absolute '
-                             '`dstart` < `header_bytes` ({} < {})'
-                             ''.format(dstart, self.header_bytes))
+                             '`dstart` < `header_size` ({} < {})'
+                             ''.format(dstart, self.header_size))
 
         self.file.seek(dstart)
         data.tofile(self.file)

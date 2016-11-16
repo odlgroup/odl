@@ -133,7 +133,7 @@ ANGSTROM_IN_METERS = 1e-10
 
 class FileReaderMRC(FileReaderRawBinaryWithHeader):
 
-    """Reader for the MRC file format(s).
+    """Reader for the MRC file format.
 
     By default, the MRC2014 format is used, see `print_mrc_2014_spec` for
     details. See also [Che+2015]_ or the `explanations on the CCP4 homepage
@@ -182,70 +182,146 @@ class FileReaderMRC(FileReaderRawBinaryWithHeader):
                 keys=MRC_SPEC_KEYS,
                 dtype_map=MRC_DTYPE_TO_NPY_DTYPE)
 
-        # Initialize later set attributes to some values
-        self.cell_sides = None
-        self.cell_sides_angstrom = None
-        self.mrc_version = None
-        self.extended_header_type = None
-        self.text_labels = None
-
-        # Call init as late as here because it possibly sets attributes
         super().__init__(file, header_fields, **kwargs)
 
     print_mrc2014_spec = staticmethod(print_mrc2014_spec)
 
-    def _set_attrs_from_header(self):
-        """Set attributes of ``self`` from `header`.
+    @property
+    def header_size(self):
+        """Size of `file`'s header in bytes.
 
-        This method is called by `read_header` if the ``set_attrs`` option
-        is set to ``True``. The following attributes are being set:
+        The size of the header is determined from `header`. If this is not
+        possible (i.e., before the header has been read), 0 is returned.
 
-            - ``data_shape`` : Shape of the (full) data.
-            - ``data_dtype`` : Data type of the data.
-            - ``cell_sides`` : Size of the unit cell in meters.
-            - ``cell_sides_angstrom`` : Size of the unit cell in Angstrom.
-            - ``mrc_version`` : ``(major, minor)`` tuple encoding the version
-              of the MRC specification used to create the file.
-            - ``extended_header_type`` : String identifier for the type of
-              extended header. See `the specification homepage
-              <http://www.ccpem.ac.uk/mrc_format/mrc2014.php>`_ for
-              possible values.
-            - ``text_labels`` : 10-tuple of strings used for extra
-              information on the file (``LABEL`` field).
+        If the header contains an ``'nsymbt'`` entry (size of the extra
+        header in bytes), its value is added to the regular header size.
         """
-        # data_shape
-        nx = self.header['nx']['value']
-        ny = self.header['ny']['value']
-        nz = self.header['nz']['value']
-        self.data_shape = tuple(int(n) for n in (nx, ny, nz))
+        standard_header_size = super().header_size
+        if standard_header_size == 0:
+            return standard_header_size
 
-        # data_dtype
-        mode = int(self.header['mode']['value'])
         try:
-            self.data_dtype = MRC_MODE_TO_NPY_DTYPE[mode]
+            extra_header_size = int(self.header['nsymbt']['value'])
         except KeyError:
-            raise ValueError('data mode {} not supported'.format(mode))
+            extra_header_size = 0
 
-        # cell_sides[_angstrom]
-        self.cell_sides_angstrom = np.asarray(self.header['cella']['value'],
-                                              dtype=float)
-        self.cell_sides = self.cell_sides_angstrom * ANGSTROM_IN_METERS
+        return standard_header_size + extra_header_size
 
-        # mrc_version
-        nversion = self.header['nversion']['value']
-        self.mrc_version = (nversion // 10, nversion % 10)
+    @property
+    def data_shape(self):
+        """Shape tuple of the whole data block as determined from `header`.
 
-        # header_bytes
-        extra_header_bytes = self.header['nsymbt']['value']
-        self.header_bytes = MRC_HEADER_BYTES + extra_header_bytes
+        If no header is available (i.e., before it has been initialized),
+        or any of the header entries ``'nx', 'ny', 'nz'`` is missing,
+        -1 is returned, which makes reshaping a no-op.
+        Otherwise, the returned shape is ``(nx, ny, nz)``.
+        """
+        if not self.header:
+            return -1
+        try:
+            nx = self.header['nx']['value']
+            ny = self.header['ny']['value']
+            nz = self.header['nz']['value']
+        except KeyError:
+            return -1
+        else:
+            return tuple(int(n) for n in (nx, ny, nz))
 
-        # extended_header_type
-        self.extended_header_type = ''.join(
-            self.header['exttype']['value'].astype(str))
+    @property
+    def data_dtype(self):
+        """Data type of the data block as determined from `header`.
 
-        # text_labels
-        self.text_labels = tuple(''.join(row.astype(str))
-                                 for row in self.header['label']['value'])
+        If no header is available (i.e., before it has been initialized),
+        or the header entry ``'mode'`` is missing, the data type gained
+        from the ``dtype`` argument in the initializer is returned.
+        Otherwise, it is determined from ``mode``.
+        """
+        if not self.header:
+            return self.__init_data_dtype
+        try:
+            mode = int(self.header['mode']['value'])
+        except KeyError:
+            return self.__init_data_dtype
+        else:
+            try:
+                return MRC_MODE_TO_NPY_DTYPE[mode]
+            except KeyError:
+                raise ValueError('data mode {} not supported'.format(mode))
+
+    @property
+    def data_kind(self):
+        """String ``'volume'``, ``'projections'`` or ``'unknown'``.
+
+        The value is determined from the ``'ispg'`` header entry.
+        """
+        ispg = self.header['ispg']['value']
+        if ispg == 0:
+            return 'projections'
+        elif ispg == 1:
+            return 'volume'
+        else:
+            return 'unknown'
+
+    @property
+    def cell_sides_angstrom(self):
+        """Array of sizes of a unit cell in Angstroms.
+
+        The value is determined from the ``'cella'`` entry in `header`.
+        """
+        return np.asarray(self.header['cella']['value'], dtype=float)
+
+    @property
+    def cell_sides(self):
+        """Array of sizes of a unit cell in meters.
+
+        The value is determined from the ``'cella'`` entry in `header`.
+        """
+        return self.cell_sides_angstrom * ANGSTROM_IN_METERS
+
+    # TODO: origin
+
+    @property
+    def mrc_version(self):
+        """Version tuple of the MRC file.
+
+        The value is determined from the ``'nversion'`` header entry.
+        """
+        nversion = int(self.header['nversion']['value'])
+        return nversion // 10, nversion % 10
+
+    @property
+    def extended_header_type(self):
+        """Type of the extended header.
+
+        The value is determined from the header entry ``'exttype'``.
+        See `the specification homepage
+        <http://www.ccpem.ac.uk/mrc_format/mrc2014.php>`_ for possible
+        values.
+        """
+        return ''.join(self.header['exttype']['value'].astype(str))
+
+    @property
+    def labels(self):
+        """Return the 10-tuple of text labels from `header`.
+
+        The value is determined from the header entries ``'nlabl'`` and
+        ``'label'``.
+        """
+        label_array = self.header['label']['value']
+        labels = tuple(''.join(row.astype(str)) for row in label_array)
+
+        try:
+            nlabels = int(self.header['nlabl']['value'])
+        except KeyError:
+            nlabels = len(labels)
+
+        # Check if there are nontrivial labels after the number given in
+        # the header. If yes, ignore the 'nlabl' information and return
+        # all labels.
+        if any(label for label in labels[nlabels:]):
+            return labels
+        else:
+            return labels[:nlabels]
 
     def read_data(self, dstart=None, dend=None):
         """Read the data from `file` and return it as Numpy array.
@@ -275,7 +351,7 @@ class FileReaderMRC(FileReaderRawBinaryWithHeader):
 
 class FileWriterMRC(FileWriterRawBinaryWithHeader):
 
-    """Writer for the MRC file format(s).
+    """Writer for the MRC file format.
 
     See [Che+2015]_ or the `explanations on the CCP4 homepage
     <http://www.ccpem.ac.uk/mrc_format/mrc2014.php>`_ for the
