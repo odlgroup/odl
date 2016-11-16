@@ -10,5 +10,6 @@ This section explains the mathematical concepts on which ODL is built.
     linear_spaces
     discretization
     resizing_ops
+    derivatives_guide
     trafos/index
     solvers/solvers

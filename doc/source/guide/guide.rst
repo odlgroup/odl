@@ -13,8 +13,8 @@ It is intended to familiarize you with important concepts that can be hard to in
 
     operator_guide
     linearspace_guide
-    functional_guide
-    vectorization_guide
     numpy_guide
+    vectorization_guide
+    functional_guide
     proximal_lang_guide
     chambolle_pock_guide
