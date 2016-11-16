@@ -17,26 +17,18 @@
 
 """Utilities and class for reading uncompressed binary files with header."""
 
+# Imports for common Python 2/3 codebase
+from __future__ import print_function, division, absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import int, object, open, str
+
 import csv
 import numpy as np
 import struct
 
 
 __all__ = ('FileReaderUncompressedBinary', 'header_fields_from_table')
-
-
-DTYPE_MAP_NPY2STRUCT = {
-    np.dtype('float64'): 'd',
-    np.dtype('float32'): 'f',
-    np.dtype('int64'): 'l',
-    np.dtype('int32'): 'i',
-    np.dtype('int16'): 'h',
-    np.dtype('int8'): 'b',
-    np.dtype('uint64'): 'L',
-    np.dtype('uint32'): 'I',
-    np.dtype('uint16'): 'H',
-    np.dtype('uint8'): 'B',
-    np.dtype('S1'): 'b'}
 
 
 def _fields_from_table(spec_table, id_key):
@@ -110,8 +102,8 @@ def header_fields_from_table(spec_table, keys, dtype_map):
            entries, a shape can be specified immediately after the type
            specifier, e.g., ``Float32(4)`` or ``Int32(2,2)``. It is also
            possible to give an incomplete shape, e.g., ``Int32(2)`` with
-           a 16-byte field. In this case, the shape is completed to
-           ``(2, 2)`` automatically. By default, the one-dimensional shape
+           a 24-byte field. In this case, the shape is completed to
+           ``(3, 2)`` automatically. By default, the one-dimensional shape
            is determined from the data type and the byte range.
         4. Name : The name of the field as used later (in lowercase) for
            identification.
@@ -128,9 +120,9 @@ def header_fields_from_table(spec_table, keys, dtype_map):
     +==============+=========+==========================================+
     |'name'        |string   |Name of the element                       |
     +--------------+---------+------------------------------------------+
-    |'offset_bytes'|int      |Offset of the current element in bytes    |
+    |'offset'      |int      |Offset of the current element in bytes    |
     +--------------+---------+------------------------------------------+
-    |'size_bytes'  |int      |Size of the current element in bytes      |
+    |'size'        |int      |Size of the current element in bytes      |
     +--------------+---------+------------------------------------------+
     |'dtype'       |type     |Data type of the current element as       |
     |              |         |defined by Numpy                          |
@@ -178,11 +170,11 @@ def header_fields_from_table(spec_table, keys, dtype_map):
 
         # Get byte range and set start
         byte_range = field[keys['byte_range']].split('-')
-        byte_start = int(byte_range[0]) - 1
-        byte_end = int(byte_range[-1]) - 1
-        byte_size = byte_end - byte_start + 1
-        new_field['offset_bytes'] = byte_start
-        new_field['size_bytes'] = byte_size
+        offset_bytes = int(byte_range[0]) - 1
+        end_bytes = int(byte_range[-1]) - 1
+        size_bytes = end_bytes - offset_bytes + 1
+        new_field['offset'] = offset_bytes
+        new_field['size'] = size_bytes
 
         # Data type: transform to Numpy format and get shape
         dtype_shape = field[keys['dtype']].split('(')
@@ -194,32 +186,32 @@ def header_fields_from_table(spec_table, keys, dtype_map):
 
             # Re-attach left parenthesis that was removed in the split
             dshape = np.atleast_1d(eval('(' + dtype_shape[-1]))
-            byte_size_from_shape = np.prod(dshape) * dtype.itemsize
-            if byte_size_from_shape >= byte_size:
+            size_bytes_from_shape = np.prod(dshape) * dtype.itemsize
+            if size_bytes_from_shape >= size_bytes:
                 raise ValueError(
                     "entry '{}': field size {} from shape {} and "
                     "dtype.itemsize {} larger than field size {} from spec"
-                    "".format(field[keys['name']], byte_size_from_shape,
-                              dshape, dtype.itemsize, byte_size))
+                    "".format(field[keys['name']], size_bytes_from_shape,
+                              dshape, dtype.itemsize, size_bytes))
 
             # Try to complete the given shape
-            if byte_size % byte_size_from_shape:
+            if size_bytes % size_bytes_from_shape:
                 raise ValueError(
                     "entry '{}': shape {} cannot be completed consistently "
                     "using field size {} and `dtype.itemsize` {}"
-                    "".format(field[keys['name']], dshape, byte_size,
+                    "".format(field[keys['name']], dshape, size_bytes,
                               dtype.itemsize))
 
-            dshape = tuple(dshape) + (byte_size // byte_size_from_shape,)
+            dshape = (size_bytes // size_bytes_from_shape,) + tuple(dshape)
 
         else:
-            if byte_size % dtype.itemsize:
+            if size_bytes % dtype.itemsize:
                 raise ValueError(
                     "entry '{}': field size {} not a multiple of "
                     "`dtype.itemsize` {}"
                     "".format(field[keys['name']], field[keys['byte_range']],
                               dtype.itemsize, field[keys['dtype']]))
-            dshape = (byte_size // dtype.itemsize,)
+            dshape = (size_bytes // dtype.itemsize,)
 
         new_field['dshape'] = dshape
 
@@ -253,12 +245,13 @@ class FileReaderUncompressedBinary(object):
             containing key-value pairs for the following keys:
 
             - ``'name'`` : Label for the field.
-            - ``'offset_bytes'`` : Start of the field in bytes.
-            - ``'size_bytes'`` : Size of the field in bytes.
+            - ``'offset'`` : Start of the field in bytes.
+            - ``'size'`` : Size of the field in bytes.
             - ``'dtype'`` : Data type in Numpy- or Numpy-readable format.
             - ``'dshape'`` (optional) : The array of values is reshaped to
               this shape.
-            - ``'description'`` : A human-readable description of the field.
+            - ``'description'`` (optional) : A human-readable description
+              of the field.
 
         dtype : optional
             Data type of the file's data block. It must be understood by
@@ -287,7 +280,7 @@ class FileReaderUncompressedBinary(object):
                              "'is {}'".format(file.mode))
 
         self.__file = file
-        self.set_attrs = bool(kwargs.pop('set_attrs'), True)
+        self.set_attrs = bool(kwargs.pop('set_attrs', True))
 
         # Initialize some attributes to default values, plus the header
         self.data_shape = -1  # Makes reshape a no-op
@@ -339,20 +332,20 @@ class FileReaderUncompressedBinary(object):
             if name == 'data':
                 continue
             entry = {'description': field.get('description', '')}
-            offset_bytes = field['offset_bytes']
-            size_bytes = field.get('size_bytes', None)
-            dtype = field['dtype']
+            offset_bytes = int(field['offset'])
+            size_bytes = int(field['size'])
+            dtype = np.dtype(field['dtype'])
             shape = field.get('dshape', -1)  # no-op by default
 
             if size_bytes is None:
-                # Default if 'size_bytes' is omitted
+                # Default if 'size' is omitted
                 num_elems = 1
             else:
                 num_elems = size_bytes / dtype.itemsize
 
-            if num_elems != int(num_elems):
+            if size_bytes % dtype.itemsize:
                 raise RuntimeError(
-                    "field '{}': `size_bytes` {} and `dtype.itemsize` {} "
+                    "field '{}': `size` {} and `dtype.itemsize` {} "
                     " result in non-integer number of elements"
                     "".format(name, size_bytes, dtype.itemsize))
 
@@ -360,22 +353,25 @@ class FileReaderUncompressedBinary(object):
             # data
             if np.issubdtype(dtype, np.dtype('S')):
                 # Have conversion only for 'S1', so we need to translate
-                fmt = (str(int(num_elems) * dtype.itemsize) +
-                       DTYPE_MAP_NPY2STRUCT[np.dtype('S1')])
+                fmt = (str(int(num_elems) * dtype.itemsize) + 's')
             else:
-                fmt = str(int(num_elems)) + DTYPE_MAP_NPY2STRUCT[dtype]
+                # Format character can be obtained as dtype.char
+                fmt = str(int(num_elems)) + dtype.char
 
             if struct.calcsize(fmt) != size_bytes:
                 raise RuntimeError(
                     "field '{}': format '{}' results in {} bytes, but "
-                    "`size_bytes` is {}"
+                    "`size` is {}"
                     "".format(name, fmt, struct.calcsize(fmt), size_bytes))
 
             self.file.seek(offset_bytes)
             packed_value = self.file.read(size_bytes)
 
             if np.issubdtype(dtype, np.dtype('S')):
-                # Bytestring type, decode instead of unpacking
+                # Bytestring type, decode instead of unpacking. Replace
+                # \x00 characters with whitespace so the final length is
+                # correct
+                packed_value = packed_value.replace(b'\x00', b' ')
                 value = np.fromiter(packed_value.decode().ljust(size_bytes),
                                     dtype=dtype)
                 entry['value'] = value.astype(str).reshape(shape)

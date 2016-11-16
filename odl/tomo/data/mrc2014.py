@@ -17,16 +17,22 @@
 
 """Specification and reader for the MRC2014 file format."""
 
+# Imports for common Python 2/3 codebase
+from __future__ import print_function, division, absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import int, super
+
 import numpy as np
 
 from odl.tomo.data.uncompr_bin import (
     FileReaderUncompressedBinary, header_fields_from_table)
 
 
-__all__ = ('FileReaderMRC', 'MRC_2014_SPEC')
+__all__ = ('FileReaderMRC', 'MRC_2014_SPEC_TABLE')
 
 
-MRC_2014_SPEC = """
+MRC_2014_SPEC_TABLE = """
 +---------+--------+----------+--------+-------------------------------+
 |Long word|Byte    |Data type |Name    |Description                    |
 +=========+========+==========+========+===============================+
@@ -86,9 +92,20 @@ MRC_2014_SPEC = """
 +---------+--------+----------+--------+-------------------------------+
 |56       |221-224 |Int32     |NLABL   |Number of labels being used    |
 +---------+--------+----------+--------+-------------------------------+
-|57-256   |225-1024|String(10)|LABEL   |10 80-character text labels    |
+|57-256   |225-1024|String(80)|LABEL   |10 80-character text labels    |
 +---------+--------+----------+--------+-------------------------------+
 """
+
+
+def print_mrc2014_spec():
+    """Print the MRC2014 specification table.
+
+    The specification table is as follows:
+    """
+    print(MRC_2014_SPEC_TABLE)
+
+print_mrc2014_spec.__doc__ += MRC_2014_SPEC_TABLE
+
 
 MRC_HEADER_BYTES = 1024
 MRC_SPEC_KEYS = {
@@ -159,10 +176,9 @@ class FileReaderMRC(FileReaderUncompressedBinary):
         """
         if header_fields is None:
             header_fields = header_fields_from_table(
-                spec_table=MRC_2014_SPEC,
+                spec_table=MRC_2014_SPEC_TABLE,
                 keys=MRC_SPEC_KEYS,
                 dtype_map=MRC_DTYPE_TO_NPY_DTYPE)
-        super().__init__(file, header_fields, **kwargs)
 
         # Initialize later set attributes to some values
         self.cell_sides = None
@@ -170,6 +186,11 @@ class FileReaderMRC(FileReaderUncompressedBinary):
         self.mrc_version = None
         self.extended_header_type = None
         self.text_labels = None
+
+        # Call init as late as here because it possibly sets attributes
+        super().__init__(file, header_fields, **kwargs)
+
+    print_mrc2014_spec = staticmethod(print_mrc2014_spec)
 
     def _set_attrs_from_header(self):
         """Set attributes of ``self`` from `header`.
