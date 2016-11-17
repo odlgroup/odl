@@ -26,7 +26,11 @@ from builtins import int, super
 from collections import OrderedDict
 from itertools import permutations
 import numpy as np
+import struct
 
+from odl.tomo.data.fei_extended_header import (
+    MRC_FEI_EXT_HEADER_SECTION, MRC_FEI_MAX_SECTIONS, MRC_FEI_SECTION_SIZE,
+    print_fei_ext_header_spec)
 from odl.tomo.data.uncompr_bin import (
     FileReaderRawBinaryWithHeader, FileWriterRawBinaryWithHeader,
     header_fields_from_table)
@@ -129,7 +133,6 @@ MRC_SPEC_KEYS = {
     'name': 'Name',
     'description': 'Description'}
 
-# Add more if needed
 MRC_DTYPE_TO_NPY_DTYPE = {
     'Float32': np.dtype('float32'),
     'Int32': np.dtype('int32'),
@@ -194,10 +197,11 @@ class FileReaderMRC(FileReaderRawBinaryWithHeader):
         super().__init__(file, header_fields)
 
     print_mrc2014_spec = staticmethod(print_mrc2014_spec)
+    print_fei_ext_header_spec = staticmethod(print_fei_ext_header_spec)
 
     @property
     def header_size(self):
-        """Size of `file`'s header in bytes.
+        """Total size of `file`'s header (including extended) in bytes.
 
         The size of the header is determined from `header`. If this is not
         possible (i.e., before the header has been read), 0 is returned.
@@ -343,6 +347,14 @@ class FileReaderMRC(FileReaderRawBinaryWithHeader):
         return nversion // 10, nversion % 10
 
     @property
+    def extended_header_size(self):
+        """Size of the extended header in bytes.
+
+        The value is determined from the header entry ``'nsymbt'``.
+        """
+        return int(self.header['nsymbt']['value'])
+
+    @property
     def extended_header_type(self):
         """Type of the extended header.
 
@@ -375,6 +387,135 @@ class FileReaderMRC(FileReaderRawBinaryWithHeader):
             return labels
         else:
             return labels[:nlabels]
+
+    def read_extended_header(self, groupby='field', force_type=''):
+        """Read the extended header according to `extended_header_type`.
+
+        Currently, only the FEI extended header format is supported.
+        See `print_fei_ext_header_spec` or `this homepage`_ for the format
+        specification.
+
+        The extended header usually has one header section per
+        image (slice), in case of the FEI header 128 bytes each, with
+        a maximum of 1024 sections.
+
+        Parameters
+        ----------
+        groupby : {'field', 'section'}
+            How to group the values in the extended header sections.
+
+            ``'field'`` : make an array per section field, e.g.::
+
+                'defocus': [dval1, dval2, ..., dvalN],
+                'exp_time': [tval1, tval2, ..., tvalN],
+                ...
+
+            ``'section'`` : make a dictionary for each section, e.g.::
+
+                {'defocus': dval1, 'exp_time': tval1},
+                {'defocus': dval2, 'exp_time': tval2},
+                ...
+
+        force_type : string, optional
+            If given, this value overrides the `extended_header_type`
+            from `header`.
+
+            Currently supported: ``'FEI1'``
+
+        Returns
+        -------
+        ext_header: `OrderedDict` or tuple
+            For ``groupby == 'field'``, a dictionary with the field names
+            as keys, like in the example.
+            For ``groupby == 'section'``, a tuple of dictionaries as
+            shown above.
+            The returned data structures store no offsets, in contrast
+            to the regular header.
+
+        See Also
+        --------
+
+        References
+        ----------
+        .. _this homepage:
+           http://www.2dx.unibas.ch/documentation/mrc-software/fei-\
+extended-mrc-format-not-used-by-2dx
+        """
+        ext_header_type = str(force_type).upper() or self.extended_header_type
+        if ext_header_type != 'FEI1':
+            raise ValueError("extended header type '{}' not supported"
+                             "".format(self.extended_header_type))
+
+        groupby, groupby_in = str(groupby).lower(), groupby
+        if groupby not in ('field', 'section'):
+            raise ValueError("`groupby` '{}' not understood"
+                             "".format(groupby_in))
+
+        ext_header_len = int(self.header['nsymbt']['value'])
+        if ext_header_len % MRC_FEI_SECTION_SIZE:
+            raise ValueError('extended header length {} from header is '
+                             'not divisible by extended header section size '
+                             '{}'.format(ext_header_len, MRC_FEI_SECTION_SIZE))
+
+        num_sections = ext_header_len // MRC_FEI_SECTION_SIZE
+        if num_sections > MRC_FEI_MAX_SECTIONS:
+            raise ValueError('calculated number of sections ({}) exceeds '
+                             'maximum number of sections ({})'
+                             ''.format(num_sections, MRC_FEI_MAX_SECTIONS))
+
+        section_fields = header_fields_from_table(
+            MRC_FEI_EXT_HEADER_SECTION, keys=MRC_SPEC_KEYS,
+            dtype_map=MRC_DTYPE_TO_NPY_DTYPE)
+
+        if groupby == 'field':
+
+            # Make a list for each field and append the values for that
+            # field. Then create an array from that list and store it
+            # under the field name.
+            ext_header = OrderedDict()
+            for field in section_fields:
+                value_list = []
+                field_offset = field['offset']
+                field_dtype = field['dtype']
+                field_dshape = field['dshape']
+                for section in range(num_sections):
+                    # Get the bytestring from the right position in the file,
+                    # unpack it and append the value to the list.
+                    section_start = section * MRC_FEI_SECTION_SIZE
+                    self.file.seek(section_start + field_offset)
+                    num_items = int(np.prod(field_dshape))
+                    size_bytes = num_items * field_dtype.itemsize
+                    packed_value = self.file.read(size_bytes)
+                    fmt = '{}{}'.format(num_items, field_dtype.char)
+                    value_list.append(struct.unpack(fmt, packed_value))
+
+                ext_header[field['name']] = np.array(value_list,
+                                                     dtype=field_dtype)
+            return ext_header
+
+        else:
+
+            # Loop though the sections and append all values from that
+            # section to a list. Return it as a tuple.
+            ext_header = []
+            for section in range(num_sections):
+                entry = {}
+                section_start = section * MRC_FEI_SECTION_SIZE
+                for field in section_fields:
+                    # Get the bytestring from the right position in the file,
+                    # unpack it and store the value as array in the dict.
+                    self.file.seek(section_start + field['offset'])
+                    num_items = int(np.prod(field['dshape']))
+                    size_bytes = num_items * field['dtype'].itemsize
+                    packed_value = self.file.read(size_bytes)
+                    fmt = '{}{}'.format(num_items, field['dtype'].char)
+                    value = struct.unpack(fmt, packed_value)
+                    # Make each entry a 1-element 1D array as usual
+                    entry[field['name']] = np.array(
+                        value, dtype=field['dtype']).reshape(field['dshape'])
+
+                ext_header.append(entry)
+            return tuple(ext_header)
 
     def read_data(self, dstart=None, dend=None, swap_axes=True):
         """Read the data from `file` and return it as Numpy array.
