@@ -31,7 +31,7 @@ from odl.tomo.data.uncompr_bin import (
     header_fields_from_table)
 
 
-__all__ = ('FileReaderMRC', 'FileWriterMRC')
+__all__ = ('FileReaderMRC', 'FileWriterMRC', 'mrc_header_from_params')
 
 
 MRC_2014_SPEC_TABLE = """
@@ -58,8 +58,18 @@ MRC_2014_SPEC_TABLE = """
 |         |        |          |        |the "unit cell"                |
 +---------+--------+----------+--------+-------------------------------+
 |11-13    |41-52   |Float32   |CELLA   |Cell dimension in angstroms    |
+|         |        |          |        |(whole volume)                 |
 +---------+--------+----------+--------+-------------------------------+
 |...      |        |          |        |                               |
++---------+--------+----------+--------+-------------------------------+
+|17       |65-68   |Int32     |MAPC    |axis corresponding to sections |
+|         |        |          |        |(1,2,3 for X,Y,Z)              |
++---------+--------+----------+--------+-------------------------------+
+|18       |69-72   |Int32     |MAPR    |axis corresponding to sections |
+|         |        |          |        |(1,2,3 for X,Y,Z)              |
++---------+--------+----------+--------+-------------------------------+
+|19       |73-76   |Int32     |MAPS    |axis corresponding to sections |
+|         |        |          |        |(1,2,3 for X,Y,Z)              |
 +---------+--------+----------+--------+-------------------------------+
 |20       |77-80   |Float32   |DMIN    |Minimum density value          |
 +---------+--------+----------+--------+-------------------------------+
@@ -226,7 +236,9 @@ class FileReaderMRC(FileReaderRawBinaryWithHeader):
         except KeyError:
             return -1
         else:
-            return tuple(int(n) for n in (nx, ny, nz))
+            shape = (nx, ny, nz)
+            axes = self.data_axis_order
+            return tuple(int(shape[ax]) for ax in axes)
 
     @property
     def data_dtype(self):
@@ -238,11 +250,11 @@ class FileReaderMRC(FileReaderRawBinaryWithHeader):
         Otherwise, it is determined from ``mode``.
         """
         if not self.header:
-            return self.__init_data_dtype
+            return self._init_data_dtype
         try:
             mode = int(self.header['mode']['value'])
         except KeyError:
-            return self.__init_data_dtype
+            return self._init_data_dtype
         else:
             try:
                 return MRC_MODE_TO_NPY_DTYPE[mode]
@@ -264,12 +276,34 @@ class FileReaderMRC(FileReaderRawBinaryWithHeader):
             return 'unknown'
 
     @property
+    def data_axis_order(self):
+        """Permutation of ``(0, 1, 2)``.
+
+        If no header is available, (i.e., before it has been initialized),
+        or one of the header entries ``'mapc', 'mapr', 'maps'`` is missing,
+        the identity permutation ``(1, 2, 3)`` is returned.
+        Otherwise, value is determined from the ``'mapc', 'mapr', 'maps'``
+        header entries.
+        """
+        if not self.header:
+            return (0, 1, 2)
+        try:
+            mapc = self.header['mapc']['value']
+            mapr = self.header['mapr']['value']
+            maps = self.header['maps']['value']
+        except KeyError:
+            return (0, 1, 2)
+        else:
+            return tuple(int(m) - 1 for m in (mapc, mapr, maps))
+
+    @property
     def cell_sides_angstrom(self):
         """Array of sizes of a unit cell in Angstroms.
 
         The value is determined from the ``'cella'`` entry in `header`.
         """
-        return np.asarray(self.header['cella']['value'], dtype=float)
+        return (np.asarray(self.header['cella']['value'], dtype=float) /
+                self.data_shape)
 
     @property
     def cell_sides(self):
@@ -324,7 +358,7 @@ class FileReaderMRC(FileReaderRawBinaryWithHeader):
         else:
             return labels[:nlabels]
 
-    def read_data(self, dstart=None, dend=None):
+    def read_data(self, dstart=None, dend=None, swap_axes=True):
         """Read the data from `file` and return it as Numpy array.
 
         Parameters
@@ -338,13 +372,20 @@ class FileReaderMRC(FileReaderRawBinaryWithHeader):
             End position in bytes until which data is read (exclusive).
             Backwards indexing with negative values is also supported.
             Use a value different from the file size to extract a data subset.
+        swap_axes : bool, optional
+            If ``True``, use `data_axis_order` to swap the axes in the
+            returned array. In that case, the shape of the array may no
+            longer agree with `data_shape`.
 
         Returns
         -------
         data : `numpy.ndarray`
             The data read from `file`.
         """
-        return super().read_data(dstart, dend, reshape_order='F')
+        data = super().read_data(dstart, dend, reshape_order='F')
+        if swap_axes:
+            data = np.transpose(data, axes=self.data_axis_order)
+        return data
 
     # TODO: read extended header for the standard flavors, see the spec
     # homepage
@@ -367,8 +408,111 @@ class FileWriterMRC(FileWriterRawBinaryWithHeader):
 
     print_mrc2014_spec = staticmethod(print_mrc2014_spec)
 
+    @property
+    def data_shape(self):
+        """Shape tuple of the whole data block as determined from `header`.
 
-def mrc_2014_header_from_params(shape, dtype, kind, **kwargs):
+        If any of the header entries ``'nx', 'ny', 'nz'`` is missing,
+        -1 is returned, which makes reshaping a no-op.
+        Otherwise, the returned shape is ``(nx, ny, nz)``.
+        """
+        if not self.header:
+            return -1
+        try:
+            nx = self.header['nx']['value']
+            ny = self.header['ny']['value']
+            nz = self.header['nz']['value']
+        except KeyError:
+            return -1
+        else:
+            shape = (nx, ny, nz)
+            axes = self.data_axis_order
+            return tuple(int(shape[ax]) for ax in axes)
+
+    @property
+    def data_dtype(self):
+        """Data type of the data block as determined from `header`.
+
+        If the header entry ``'mode'`` is missing, ``None`` is returned.
+        Otherwise, it is determined from ``mode``.
+        """
+        if not self.header:
+            return None
+        try:
+            mode = int(self.header['mode']['value'])
+        except KeyError:
+            return None
+        else:
+            try:
+                return MRC_MODE_TO_NPY_DTYPE[mode]
+            except KeyError:
+                raise ValueError('data mode {} not supported'.format(mode))
+
+    @property
+    def data_axis_order(self):
+        """Permutation of ``(0, 1, 2)``.
+
+        If one of the header entries ``'mapc', 'mapr', 'maps'`` is missing,
+        the identity permutation ``(1, 2, 3)`` is returned.
+        Otherwise, value is determined from the ``'mapc', 'mapr', 'maps'``
+        header entries.
+        """
+        if not self.header:
+            return (0, 1, 2)
+        try:
+            mapc = self.header['mapc']['value']
+            mapr = self.header['mapr']['value']
+            maps = self.header['maps']['value']
+        except KeyError:
+            return (0, 1, 2)
+        else:
+            return tuple(int(m) - 1 for m in (mapc, mapr, maps))
+
+    def write_data(self, data, dstart=None, swap_axes=True):
+        """Write ``data`` to `file`.
+
+        Parameters
+        ----------
+        data : `array-like`
+            Data that should be written to `file`.
+        dstart : non-negative int, optional
+            Offset in bytes of the start position of the written data.
+            If provided, reshaping and axis swapping of ``data`` is
+            skipped.
+            For ``None``, `header_size` is used.
+        swap_axes : bool, optional
+            If ``True``, use the ``'mapc', 'mapr', 'maps'`` header entries
+            to swap the axes in the ``data`` before writing. Use ``False``
+            only if the data is already consistent with the final axis
+            order.
+        """
+        if dstart is None:
+            reshape = True
+            dstart = int(self.header_size)
+        elif dstart < 0:
+            raise ValueError('`dstart` must be non-negative, got {}'
+                             ''.format(dstart))
+        else:
+            reshape = True
+            dstart = int(dstart)
+
+        if dstart < self.header_size:
+            raise ValueError('invalid `dstart`, resulting in absolute '
+                             '`dstart` < `header_size` ({} < {})'
+                             ''.format(dstart, self.header_size))
+
+        data = np.asarray(data, dtype=self.data_dtype)
+        if reshape:
+            data = data.reshape(self.data_shape)
+            if swap_axes:
+                data = np.transpose(data, axes=self.data_axis_order)
+
+        data = data.reshape(-1, order='F')
+        self.file.seek(dstart)
+        data.tofile(self.file)
+
+
+def mrc_header_from_params(shape, dtype, kind, **kwargs):
     """Create a minimal MRC2014 header from the given parameters.
 
     Parameters
@@ -389,6 +533,11 @@ def mrc_2014_header_from_params(shape, dtype, kind, **kwargs):
         Size of the 3D unit cell in meters. The values are used for
         the ``'cella'`` header entry.
         Default: ``(1, 1, 1)``
+    axis_order : permutation of ``(0, 1, 2)`` optional
+        Order of the data axes as they should appear in the stored file.
+        The values are used for the ``'mapc', 'mapr', 'maps'`` header
+        entries.
+        Default: ``(0, 1, 2)``
     dmin, dmax : float, optional
         Minimum and maximum values of the data, used for header entries
         ``'dmin'`` and ``'dmax'``, resp.
@@ -435,6 +584,11 @@ def mrc_2014_header_from_params(shape, dtype, kind, **kwargs):
 
     # Keyword args
     cell_sides = kwargs.pop('cell_sides', (1.0, 1.0, 1.0))
+    axis_order = kwargs.pop('axis_order', (0, 1, 2))
+    if (len(axis_order) != 3 or
+            any(axis_order.count(i) != 1 for i in (0, 1, 2))):
+        raise ValueError('`axis_order` must be a permutation of (0, 1, 2), '
+                         'got {}'.format(axis_order))
     dmin = kwargs.pop('dmin', 1.0)
     dmax = kwargs.pop('dmax', 0.0)
     dmean = kwargs.pop('dmean', min(dmin, dmax) - 1.0)
@@ -463,6 +617,9 @@ def mrc_2014_header_from_params(shape, dtype, kind, **kwargs):
                     dtype='int32').reshape([1])
     mx, my, mz = nx, ny, nz
     cella = np.array(cell_sides, dtype='float32').reshape([3])
+    cella *= [int(n) for n in (nx, ny, nz)]
+    mapc, mapr, maps = [np.array(m, dtype='int32').reshape([1]) + 1
+                        for m in axis_order]
     dmin, dmax, dmean, rms = [np.array(x, dtype='float32').reshape([1])
                               for x in (dmin, dmax, dmean, rms)]
     ispg = 1 if kind == 'volume' else 0
@@ -473,7 +630,8 @@ def mrc_2014_header_from_params(shape, dtype, kind, **kwargs):
                         dtype='int32').reshape([1])
     origin = np.zeros(3, dtype='float32')
     map = np.fromiter('MAP ', dtype='S1')
-    machst = np.fromiter('DA ', dtype='S1')
+    # TODO: no idea how to properly choose the machine stamp
+    machst = np.fromiter(b'DD  ', dtype='S1')
     nlabl = np.array(nlabl, dtype='int32').reshape([1])
     label = np.zeros((10, 80), dtype='S1')  # ensure correct size
     for i, label_i in enumerate(text_labels):

@@ -300,7 +300,7 @@ class FileReaderRawBinaryWithHeader(object):
         self.__header_fields = header_fields
 
         # Set default values for some attributes
-        self.__init_data_dtype = np.dtype(dtype)
+        self._init_data_dtype = np.dtype(dtype)
         self.__header = OrderedDict()
 
     @property
@@ -359,7 +359,7 @@ class FileReaderRawBinaryWithHeader(object):
         Subclasses should override this property with an implementation
         that returns the data type from the header.
         """
-        return self.__init_data_dtype
+        return self._init_data_dtype
 
     @property
     def header(self):
@@ -678,7 +678,7 @@ class FileWriterRawBinaryWithHeader(object):
             value.tofile(self.file)
 
     def write_data(self, data, dstart=None, reshape_order='C'):
-        """Read data from `file` and return it as Numpy array.
+        """Write ``data`` to `file`.
 
         Parameters
         ----------
@@ -690,11 +690,6 @@ class FileWriterRawBinaryWithHeader(object):
         reshape_order : {'C', 'F', 'A'}, optional
             Value passed as ``order`` parameter to `numpy.reshape`.
             Reshaping is only done in case the whole data block is read.
-
-        Returns
-        -------
-        data : `numpy.ndarray`
-            The data read from `file`.
         """
         data = np.asarray(data).reshape(-1, order=reshape_order)
         if dstart is None:
