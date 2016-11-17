@@ -117,9 +117,9 @@ def projector(request, dtype):
                                              [100, 100], dtype=dtype)
 
         # Geometry
-        dpart = odl.uniform_partition(-30, 30, 200)
+        dpart = odl.uniform_partition(-40, 40, 200)
         geom = tomo.FanFlatGeometry(apart, dpart,
-                                    src_radius=500, det_radius=100)
+                                    src_radius=100, det_radius=100)
 
         # Ray transform
         return tomo.RayTransform(discr_reco_space, geom,
@@ -131,9 +131,9 @@ def projector(request, dtype):
                                              [100, 100, 100], dtype=dtype)
 
         # Geometry
-        dpart = odl.uniform_partition([-30, -30], [30, 30], [200, 200])
+        dpart = odl.uniform_partition([-40, -40], [40, 40], [200, 200])
         geom = tomo.CircularConeFlatGeometry(
-            apart, dpart, src_radius=500, det_radius=100, axis=[1, 0, 0])
+            apart, dpart, src_radius=100, det_radius=100, axis=[1, 0, 0])
 
         # Ray transform
         return tomo.RayTransform(discr_reco_space, geom,
@@ -150,7 +150,7 @@ def projector(request, dtype):
         apart = odl.uniform_partition(0, 8 * 2 * np.pi, n_angle)
         dpart = odl.uniform_partition([-30, -3], [30, 3], [200, 20])
         geom = tomo.HelicalConeFlatGeometry(apart, dpart, pitch=5.0,
-                                            src_radius=500, det_radius=100)
+                                            src_radius=100, det_radius=100)
 
         # Ray transform
         return tomo.RayTransform(discr_reco_space, geom,

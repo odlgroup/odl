@@ -16,7 +16,7 @@
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Example using a filtered backprojection (FBP) in cone-beam 3d using `fbp_op`.
+Example using a filtered backprojection (FBP) in fan beam using `fbp_op`.
 
 Note that the FBP is only approximate in this geometry, but still gives a
 decent reconstruction that can be used as an initial guess in more complicated
@@ -31,20 +31,19 @@ import odl
 
 
 # Discrete reconstruction space: discretized functions on the cube
-# [-20, 20]^3 with 300 samples per dimension.
+# [-20, 20]^2 with 300 samples per dimension.
 reco_space = odl.uniform_discr(
-    min_pt=[-20, -20, -20], max_pt=[20, 20, 20], shape=[300, 300, 300],
+    min_pt=[-20, -20], max_pt=[20, 20], shape=[300, 300],
     dtype='float32')
 
 # Make a circular cone beam geometry with flat detector
 # Angles: uniformly spaced, n = 360, min = 0, max = 2 * pi
 angle_partition = odl.uniform_partition(0, 2 * np.pi, 360)
-# Detector: uniformly sampled, n = (558, 558), min = (-40, -40), max = (40, 40)
-detector_partition = odl.uniform_partition([-40, -40], [40, 40], [558, 558])
-# Geometry with large cone and fan angle and tilted axis.
-geometry = odl.tomo.CircularConeFlatGeometry(
-    angle_partition, detector_partition, src_radius=40, det_radius=40,
-    axis=[1, 1, 1])
+# Detector: uniformly sampled, n = 558, min = -60, max = 60
+detector_partition = odl.uniform_partition(-60, 60, 558)
+# Geometry with large fan angle
+geometry = odl.tomo.FanFlatGeometry(
+    angle_partition, detector_partition, src_radius=40, det_radius=40)
 
 
 # --- Create FilteredBackProjection (FBP) operator --- #

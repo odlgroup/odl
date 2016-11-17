@@ -98,9 +98,17 @@ def fbp_op(ray_trafo, padding=True):
         else:
             axes = [1, 2]
 
+        # Add scaling for cone-beam case
+        if hasattr(ray_trafo.geometry, 'src_radius'):
+            scale = (ray_trafo.geometry.src_radius /
+                     (ray_trafo.geometry.src_radius +
+                      ray_trafo.geometry.det_radius))
+        else:
+            scale = 1.0
+
         # Define ramp filter
         def fft_filter(x):
-            return np.abs(c[0] * x[1] + c[1] * x[2]) / (2 * alen)
+            return np.abs(c[0] * x[1] + c[1] * x[2]) * (scale / (2 * alen))
 
         # Define (padded) fourier transform
         if padding:
