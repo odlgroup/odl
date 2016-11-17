@@ -236,9 +236,7 @@ class FileReaderMRC(FileReaderRawBinaryWithHeader):
         except KeyError:
             return -1
         else:
-            shape = (nx, ny, nz)
-            axes = self.data_axis_order
-            return tuple(int(shape[ax]) for ax in axes)
+            return tuple(int(n) for n in (nx, ny, nz))
 
     @property
     def data_dtype(self):
@@ -425,9 +423,7 @@ class FileWriterMRC(FileWriterRawBinaryWithHeader):
         except KeyError:
             return -1
         else:
-            shape = (nx, ny, nz)
-            axes = self.data_axis_order
-            return tuple(int(shape[ax]) for ax in axes)
+            return tuple(int(n) for n in (nx, ny, nz))
 
     @property
     def data_dtype(self):
@@ -503,7 +499,8 @@ class FileWriterMRC(FileWriterRawBinaryWithHeader):
 
         data = np.asarray(data, dtype=self.data_dtype)
         if reshape:
-            data = data.reshape(self.data_shape)
+            shape = tuple(self.data_shape[ax] for ax in self.data_axis_order)
+            data = data.reshape(shape)
             if swap_axes:
                 data = np.transpose(data, axes=self.data_axis_order)
 
@@ -612,7 +609,8 @@ def mrc_header_from_params(shape, dtype, kind, **kwargs):
     # Convert to header-friendly form. Names are required to match
     # exactly the header field names, and all of them must exist,
     # so that `eval` below succeeds for all fields.
-    nx, ny, nz = [np.array(n, dtype='int32').reshape([1]) for n in shape]
+    nx, ny, nz = [np.array(shape[ax], dtype='int32').reshape([1])
+                  for ax in axis_order]
     mode = np.array(NPY_DTYPE_TO_MRC_MODE[np.dtype(dtype)],
                     dtype='int32').reshape([1])
     mx, my, mz = nx, ny, nz
