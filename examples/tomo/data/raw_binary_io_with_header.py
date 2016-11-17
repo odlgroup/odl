@@ -32,10 +32,7 @@ sequence of dictionaries with a certain structure.
 from __future__ import print_function
 
 from collections import OrderedDict
-try:
-    import matplotlib.pyplot as plt
-except ImportError:
-    plt = None
+import matplotlib.pyplot as plt
 import numpy as np
 import scipy
 import tempfile
@@ -108,11 +105,11 @@ print('px_size -- original {}, from file {}'.format(px_size, px_size_file))
 print('dtype   -- original {}, from file {}'
       ''.format(str(image.dtype), ''.join(dtype_file.astype(str))))
 
-if plt is not None:
-    plt.figure()
-    plt.title('Original image')
-    plt.imshow(image, cmap='Greys_r')
-    plt.figure()
-    plt.title('Image from file')
-    plt.imshow(image, cmap='Greys_r')
-    plt.show()
+# Compare the plots of the original and reconstructed images
+plt.figure()
+plt.title('Original image')
+plt.imshow(image, cmap='Greys_r')
+plt.figure()
+plt.title('Image from file')
+plt.imshow(image, cmap='Greys_r')
+plt.show()

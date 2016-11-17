@@ -28,10 +28,7 @@ volume is written back to disk, using a different header.
 
 from __future__ import print_function
 
-try:
-    import matplotlib.pyplot as plt
-except ImportError:
-    plt = None
+import matplotlib.pyplot as plt
 import numpy as np
 import os
 import tempfile
@@ -72,11 +69,11 @@ values[:, 5:15, 20:25] = 1
 print('Values from file all equal to check array? ',
       np.array_equal(values, data))
 
-if plt is not None:
-    plt.figure()
-    plt.title('Hopefully a standing rectangle, middle right')
-    plt.imshow(data[5], cmap='Greys_r', interpolation='none')
-    plt.show()
+# Plot the data to see if it also looks correct
+plt.figure()
+plt.title('Hopefully a standing rectangle, middle right')
+plt.imshow(data[5], cmap='Greys_r', interpolation='none')
+plt.show()
 
 
 # --- Writing --- #
