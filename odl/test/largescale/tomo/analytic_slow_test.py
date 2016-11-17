@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Test reconstruction with ASTRA."""
+"""Test analytical reconstruction methods."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -35,7 +35,7 @@ from odl.tomo.util.testutils import (skip_if_no_astra, skip_if_no_astra_cuda,
 
 
 @pytest.fixture(scope="module", params=['float32', 'float64'],
-                ids=[' dtype=float32 ', ' dtype=float64 '])
+                ids=[' dtype = float32 ', ' dtype = float64 '])
 def dtype(request):
     return request.param
 

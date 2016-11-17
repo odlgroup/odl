@@ -39,13 +39,14 @@ def fbp_op(ray_trafo, padding=True):
     ray_trafo : `RayTransform`
         The ray transform (forward operator) whose approximate inverse should
         be computed. Its geometry has to be any of the following
-        Parallel2DGeometry : Exact reconstruction
-        Parallel3dAxisGeometry : Exact reconstruction
-        FanFlatGeometry : Approximate reconstruction, correct in limit of fan
+        `Parallel2DGeometry` : Exact reconstruction
+        `Parallel3dAxisGeometry` : Exact reconstruction
+        `FanFlatGeometry : Approximate reconstruction, correct in limit of fan
                           angle = 0.
-        CircularConeFlatGeometry : Approximate reconstruction, correct in limit
-                                   of fan angle = 0.
-        HelicalConeFlatGeometry : Very approximate.
+        `CircularConeFlatGeometry` : Approximate reconstruction, correct in
+                                     limit of fan angle = 0 and cone angle = 0.
+        `HelicalConeFlatGeometry` : Very approximate.
+        Other geometries: Not supported
 
     padding : bool, optional
         If the data space should be zero padded. Without padding, the data may
@@ -104,11 +105,19 @@ def fbp_op(ray_trafo, padding=True):
         # Define (padded) fourier transform
         if padding:
             # Define padding operator
+            if used_axes[0]:
+                padded_shape_u = ray_trafo.range.shape[1] * 2 - 1
+            else:
+                padded_shape_u = ray_trafo.range.shape[1]
+
+            if used_axes[1]:
+                padded_shape_v = ray_trafo.range.shape[2] * 2 - 1
+            else:
+                padded_shape_v = ray_trafo.range.shape[2]
+
             ran_shp = (ray_trafo.range.shape[0],
-                       ray_trafo.range.shape[1] * 2 - 1 if used_axes[0]
-                       else ray_trafo.range.shape[1],
-                       ray_trafo.range.shape[2] * 2 - 1 if used_axes[1]
-                       else ray_trafo.range.shape[2])
+                       padded_shape_u,
+                       padded_shape_v)
             resizing = ResizingOperator(ray_trafo.range, ran_shp=ran_shp)
 
             fourier = FourierTransform(resizing.range, axes=axes, impl=impl)
