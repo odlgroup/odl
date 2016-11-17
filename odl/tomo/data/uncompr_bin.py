@@ -279,8 +279,7 @@ class FileReaderRawBinaryWithHeader(object):
             sequence usable as ``header_fields`` parameter.
         """
         # Need those attrs in subsequent code
-        file_attrs = ('name', 'mode', 'is_readable', 'is_writable', 'seek',
-                      'closed', 'close')
+        file_attrs = ('mode', 'seek', 'read', 'close')
         is_file = all(hasattr(file, attr) for attr in file_attrs)
         if is_file:
             self.__file = file
@@ -289,8 +288,6 @@ class FileReaderRawBinaryWithHeader(object):
             self.__file = open(file, 'rb')
             self.__file_shared = False
 
-        if not self.file.readable():
-            raise IOError('`file` is not readable')
         if 'b' not in self.file.mode:
             raise ValueError("`file` must be opened in binary mode, "
                              "but mode 'is {}'".format(self.file.mode))
@@ -600,27 +597,56 @@ class FileWriterRawBinaryWithHeader(object):
             sequence usable as ``header_fields`` parameter.
         FileReaderRawBinaryWithHeader.read_header
         """
-        try:
-            file = open(file, 'wb')
-        except TypeError:
-            pass
+        # Need those attrs in subsequent code
+        file_attrs = ('mode', 'seek', 'write', 'close')
+        is_file = all(hasattr(file, attr) for attr in file_attrs)
+        if is_file:
+            self.__file = file
+            self.__file_shared = True
+        else:
+            self.__file = open(file, 'wb')
+            self.__file_shared = False
 
-        if not file.writable() or 'b' not in file.mode:
-            raise ValueError("`file` must be opened writable in binary mode, "
-                             "but mode 'is {}'".format(file.mode))
+        if 'b' not in self.file.mode:
+            raise ValueError("`file` must be opened in binary mode, "
+                             "but mode 'is {}'".format(self.file.mode))
 
-        self.__file = file
+        if not isinstance(header, dict):
+            raise TypeError('`header` must be a dictionary, got {!r}'
+                            ''.format(header))
         self.__header = header
-        self.header_size = 0  # Updated by `write_header`
 
     @property
     def file(self):
         """File object from which ``self`` reads."""
         return self.__file
 
-    def close(self):
-        """Close `file`."""
-        self.file.close()
+    def __enter__(self):
+        """Initializer for the context manager."""
+        return self
+
+    def __exit__(self, *exc):
+        """Cleanup before on exiting the context manager."""
+        if not self.__file_shared:
+            self.file.close()
+
+    @property
+    def header_size(self):
+        """Size of `header` in bytes."""
+        if not self.header:
+            return 0
+
+        # Determine header size by finding the largest offset and the
+        # value of the corresponding entry. The header size is the
+        # offset plus the size of the entry.
+        max_offset = 0
+        value_at_max_offset = np.array([])
+        for entry in self.header.values():
+            if entry['offset'] > max_offset:
+                max_offset = entry['offset']
+                value_at_max_offset = entry['value']
+
+        return max_offset + value_at_max_offset.nbytes
 
     @property
     def header(self):
@@ -645,19 +671,11 @@ class FileWriterRawBinaryWithHeader(object):
         --------
         read_data
         """
-        max_offset = 0
         for name, properties in self.header.items():
             value = properties['value']
             offset_bytes = int(properties['offset'])
-            if offset_bytes > max_offset:
-                max_offset = offset_bytes
-                value_at_max_offset = value
-
             self.file.seek(offset_bytes)
             value.tofile(self.file)
-
-        # Determine header size
-        self.header_size = max_offset + value_at_max_offset.nbytes
 
     def write_data(self, data, dstart=None, reshape_order='C'):
         """Read data from `file` and return it as Numpy array.
@@ -668,8 +686,7 @@ class FileWriterRawBinaryWithHeader(object):
             Data that should be written to `file`.
         dstart : non-negative int, optional
             Offset in bytes of the start position of the written data.
-            By default, it is taken to be the header size as determined
-            by `write_header`.
+            By default, it is taken to be `header_size`.
         reshape_order : {'C', 'F', 'A'}, optional
             Value passed as ``order`` parameter to `numpy.reshape`.
             Reshaping is only done in case the whole data block is read.

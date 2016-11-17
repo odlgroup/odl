@@ -40,7 +40,8 @@ import numpy as np
 import scipy
 import tempfile
 
-import odl
+from odl.tomo.data import (
+    FileReaderRawBinaryWithHeader, FileWriterRawBinaryWithHeader)
 
 
 # --- Writing --- #
@@ -66,17 +67,18 @@ header['origin'] = {'offset': 8, 'value': origin}
 header['px_size'] = {'offset': 16, 'value': px_size}
 header['dtype'] = {'offset': 24, 'value': dtype}
 
-# Initialize the writer with a file and the header. We use a temporary
-# file in order to keep the workspace clean.
+# Use a temporary file for the output to keep the workspace clean.
+# The writer can be used as a context manager like `open`:
 file = tempfile.NamedTemporaryFile()
-writer = odl.tomo.data.FileWriterRawBinaryWithHeader(file, header)
 
-# Write header and data to the file
-writer.write(image)
+with FileWriterRawBinaryWithHeader(file, header) as writer:
 
-# Print some stuff to see that the sizes are correct
-print('File size ({}) = Image size ({}) + Header size ({})'
-      ''.format(file.seek(0, 2), image.nbytes, writer.header_bytes))
+    # Write header and data to the file
+    writer.write(image)
+
+    # Print some stuff to see that the sizes are correct
+    print('File size ({}) = Image size ({}) + Header size ({})'
+          ''.format(file.seek(0, 2), image.nbytes, writer.header_size))
 
 
 # --- Reading --- #
@@ -89,14 +91,10 @@ header_fields = [
     {'name': 'dtype', 'offset': 24, 'size': 10, 'dtype': 'S1'}
 ]
 
-# Now we create a reader and read from our newly created file.
-# TODO: make this simpler after fixing the properties
-reader = odl.tomo.data.FileReaderRawBinaryWithHeader(
-    file, header_fields, set_attrs=False)
-reader.header_bytes = writer.header_bytes
-
-# Read header and data in one go
-header_file, image_file = reader.read()
+# Read header and data from the newly created file. Again, we can use
+# the reader in form of a context manager:
+with FileReaderRawBinaryWithHeader(file, header_fields) as reader:
+    header_file, image_file = reader.read()  # Read header and data in one go
 
 # Check that everything has been reconstructed correctly
 shape_file = header_file['shape']['value']
