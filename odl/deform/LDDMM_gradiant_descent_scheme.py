@@ -465,7 +465,7 @@ if impl2 == 'reconstruction':
 # For image matching
 if impl2 == 'matching':
     # Give step size for solver
-    eps = 0.3
+    eps = 0.5
 
     # Give regularization parameter
     lamb = 0.000001
