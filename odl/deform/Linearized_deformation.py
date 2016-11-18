@@ -1194,7 +1194,7 @@ callback = (odl.solvers.CallbackPrintIteration() &
 # Choose a starting point
 x = forward_op.domain.zero()   
 # Run the algorithm                          
-odl.solvers.conjugate_gradient_normal(forward_op, x, tiltseries_nonoise - np.mean(tiltseries_nonoise), niter=niter,
+odl.solvers.conjugate_gradient_normal(forward_op, x, -(tiltseries_nonoise - np.mean(tiltseries_nonoise)), niter=niter,
                                       callback=callback)
 
 x.show(coords=[None, 0, None], title='Conjugate gradient reconstruction')
