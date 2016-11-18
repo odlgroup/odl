@@ -237,8 +237,10 @@ class DiscreteLp(DiscretizedSpace):
     def tangent_bundle(self):
         """The tangent bundle associated with `domain` using `partition`.
 
-        The tangent bundle of a n-dimensional space can be seen as the set of
-        n-vectors on the same domain.
+        The tangent bundle of a space ``X`` of functions ``R^d --> F`` can be
+        interpreted as the space of vector-valued functions ``R^d --> F^d``.
+        This space can be identified with the power space ``X^d`` as used
+        in this implementation.
         """
         return ProductSpace(self, self.ndim)
 
