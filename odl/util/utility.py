@@ -27,7 +27,7 @@ import numpy as np
 
 
 __all__ = ('array1d_repr', 'array1d_str', 'arraynd_repr', 'arraynd_str',
-           'dtype_repr', 'conj_exponent', 'snr',
+           'dtype_repr', 'conj_exponent',
            'is_scalar_dtype', 'is_int_dtype', 'is_floating_dtype',
            'is_real_dtype', 'is_real_floating_dtype',
            'is_complex_floating_dtype',
@@ -513,42 +513,6 @@ class writable_array(object):
         """
         self.obj[:] = self.arr
         self.arr = None
-
-
-def snr(signal, noise, impl):
-    """Compute the signal-to-noise ratio.
-
-    Parameters
-    ----------
-    signal : `array-like`
-        Noiseless data.
-    noise : `array-like`
-        Noise.
-    impl : {'general', 'dB'}
-        Implementation method.
-        'general' means SNR = variance(signal) / variance(noise),
-        'dB' means SNR = 10 * log10 (variance(signal) / variance(noise)).
-
-    Returns
-    -------
-    snr : `float`
-        Value of signal-to-noise ratio.
-        If the power of noise is zero, then the return is 'inf',
-        otherwise, the computed value.
-    """
-    if np.abs(np.asarray(noise)).sum() != 0:
-        ave1 = np.sum(signal) / signal.size
-        ave2 = np.sum(noise) / noise.size
-        s_power = np.sqrt(np.sum((signal - ave1) * (signal - ave1)))
-        n_power = np.sqrt(np.sum((noise - ave2) * (noise - ave2)))
-        if impl == 'general':
-            return s_power / n_power
-        elif impl == 'dB':
-            return 10.0 * np.log10(s_power / n_power)
-        else:
-            raise ValueError('unknown `impl` {}'.format(impl))
-    else:
-        return float('inf')
 
 
 if __name__ == '__main__':

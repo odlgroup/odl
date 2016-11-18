@@ -25,6 +25,3 @@ __all__ = ()
 
 from .linearized import *
 __all__ += linearized.__all__
-
-from .optimal_information_transport import *
-__all__ += optimal_information_transport.__all__
