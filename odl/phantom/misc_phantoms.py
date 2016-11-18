@@ -1,4 +1,4 @@
-﻿# Copyright 2014-2016 The ODL development group
+# Copyright 2014-2016 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -24,8 +24,7 @@ standard_library.install_aliases()
 
 import numpy as np
 
-
-__all__ = ('submarine',)
+__all__ = ('submarine', 'disc_phantom')
 
 
 def submarine(space, smooth=True, taper=20.0):
@@ -152,6 +151,90 @@ def _submarine_2d_nonsmooth(space):
 
     out = space.element(ellipse)
     out += space.element(rect)
+    return out.ufunc.minimum(1, out=out)
+
+
+def disc_phantom(discr, smooth=True, taper=20.0):
+    """Return a 'disc' phantom consisting in an disc.
+
+    This phantom is used in [Okt2015]_ for shape-based reconstruction.
+
+    Parameters
+    ----------
+    discr : `DiscreteLp`
+        Discretized space in which the phantom is supposed to be created
+    smooth : `bool`, optional
+        If `True`, the boundaries are smoothed out. Otherwise, the
+        function steps from 0 to 1 at the boundaries.
+    taper : `float`, optional
+        Tapering parameter for the boundary smoothing. Larger values
+        mean faster taper, i.e. sharper boundaries.
+
+    Returns
+    -------
+    phantom : `DiscreteLpElement`
+    """
+    if discr.ndim == 2:
+        if smooth:
+            return _disc_phantom_2d_smooth(discr, taper)
+        else:
+            return _disc_phantom_2d_nonsmooth(discr)
+    else:
+        raise ValueError('Phantom only defined in 2 dimensions, got {}.'
+                         ''.format(discr.dim))
+
+
+def _disc_phantom_2d_smooth(discr, taper):
+    """Return a 2d smooth 'disc' phantom."""
+
+    def logistic(x, c):
+        """Smoothed step function from 0 to 1, centered at 0."""
+        return 1. / (1 + np.exp(-c * x))
+
+    def blurred_ellipse(x):
+        """Blurred characteristic function of an ellipse.
+        If ``discr.domain`` is a rectangle ``[-1, 1] x [-1, 1]``,
+        the ellipse is centered at ``(0.0, 0.0)`` and has half-axes
+        ``(0.25, 0.25)``. For other domains, the values are scaled
+        accordingly.
+        """
+        halfaxes = np.array([0.25, 0.25]) * discr.domain.extent() / 2
+        center = np.array([0.0, 0.0]) * discr.domain.extent() / 2
+
+        # Efficiently calculate |z|^2, z = (x - center) / radii
+        sq_ndist = np.zeros_like(x[0])
+        for xi, rad, cen in zip(x, halfaxes, center):
+            sq_ndist = sq_ndist + ((xi - cen) / rad) ** 2
+
+        out = np.sqrt(sq_ndist)
+        out -= 1
+        # Return logistic(taper * (1 - |z|))
+        return logistic(out, -taper)
+
+    out = discr.element(blurred_ellipse)
+    return out.ufunc.minimum(1, out=out)
+
+
+def _disc_phantom_2d_nonsmooth(discr):
+    """Return a 2d nonsmooth 'disc' phantom."""
+
+    def ellipse(x):
+        """Characteristic function of an ellipse.
+        If ``discr.domain`` is a rectangle ``[-1, 1] x [-1, 1]``,
+        the ellipse is centered at ``(0.0, 0.0)`` and has half-axes
+        ``(0.25, 0.25)``. For other domains, the values are scaled
+        accordingly.
+        """
+        halfaxes = np.array([0.25, 0.25]) * discr.domain.extent() / 2
+        center = np.array([0.0, 0.0]) * discr.domain.extent() / 2
+
+        sq_ndist = np.zeros_like(x[0])
+        for xi, rad, cen in zip(x, halfaxes, center):
+            sq_ndist = sq_ndist + ((xi - cen) / rad) ** 2
+
+        return np.where(sq_ndist <= 1, 1, 0)
+
+    out = discr.element(ellipse)
     return out.ufunc.minimum(1, out=out)
 
 
