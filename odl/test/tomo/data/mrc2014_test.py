@@ -210,7 +210,8 @@ def test_mrc_io(ncells, mrc_mode_dtype, ispg_kind, axis_order):
     writer.write_data(data)
 
     # Check file size
-    file_size = writer.file.seek(0, 2)
+    writer.file.seek(0, 2)
+    file_size = writer.file.tell()
     assert file_size == writer.header_size + data.nbytes
 
     # Check flat arrays

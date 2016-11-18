@@ -77,7 +77,8 @@ def test_uncompr_bin_io_without_header(shape, floating_dtype, order):
     with FileWriterRawBinaryWithHeader(file) as writer:
         writer.write_data(data, reshape_order=order)
 
-    file_size = file.seek(0, 2)  # asserts file is still open
+    file.seek(0, 2)  # asserts file is still open
+    file_size = file.tell()
     assert file_size == data.nbytes
 
     section_size_bytes = int(np.prod(shape[:2])) * dtype.itemsize

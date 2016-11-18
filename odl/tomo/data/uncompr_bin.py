@@ -505,7 +505,8 @@ class FileReaderRawBinaryWithHeader(object):
         --------
         read_header
         """
-        filesize_bytes = self.file.seek(0, 2)  # 2 means "from the end"
+        self.file.seek(0, 2)  # 2 means "from the end"
+        filesize_bytes = self.file.tell()
         if dstart is None:
             dstart_abs = int(self.header_size)
         elif dstart < 0:
