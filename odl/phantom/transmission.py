@@ -145,14 +145,14 @@ def shepp_logan(space, modified=False):
 
 
 def _analytical_forbild_phantom(resolution, ear):
-    """Analytical description of forbild phantom.
+    """Analytical description of FORBILD phantom.
 
     Parameters
     ----------
-    resolution : `bool`
-        If true, insers a small resolution insert to the left.
-    ear : `bool`
-        If true, insers a ear-like structure to the right.
+    resolution : bool
+        If ``True``, insert a small resolution test pattern to the left.
+    ear : bool
+        If ``True``, insert an ear-like structure to the right.
     """
     sha = 0.2 * np.sqrt(3)
     y016b = -14.294530834372887
@@ -248,7 +248,7 @@ def _analytical_forbild_phantom(resolution, ear):
 def forbild(space, resolution=False, ear=True):
     """Standard `FORBILD phantom` in 2 dimensions.
 
-    The forbild phantom is intended for testing CT-algorithms and is intended
+    The FORBILD phantom is intended for testing CT algorithms and is intended
     to be similar to a human head.
 
     Parameters
@@ -256,14 +256,19 @@ def forbild(space, resolution=False, ear=True):
     space : `DiscreteLp`
         The space in which the phantom should be corrected. Needs to be two-
         dimensional.
-    resolution : `bool`, optional
-        If true, insers a small resolution insert to the left.
-    ear : `bool`, optional
-        If true, insers a ear-like structure to the right.
+    resolution : bool, optional
+        If ``True``, insert a small resolution test pattern to the left.
+    ear : bool, optional
+        If ``True``, insert an ear-like structure to the right.
+
+    Returns
+    -------
+    forbild : ``space``-element
+        FORBILD phantom discretized by ``space``.
 
     See Also
     --------
-    shepp_logan : A more simple phantom with similar uses, also works in 3d.
+    shepp_logan : A simpler phantom for similar purposes, also working in 3d.
 
     References
     ----------
@@ -271,13 +276,13 @@ def forbild(space, resolution=False, ear=True):
     .. _algorithm: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3426508/
     """
     def transposeravel(arr):
-        """Implement matlabs ``transpose(arr(:))``."""
+        """Implement MATLAB's ``transpose(arr(:))``."""
         return arr.T.ravel()
 
     if not isinstance(space, DiscreteLp):
         raise TypeError('`space` must be a `DiscreteLp`')
     if not space.ndim == 2:
-        raise TypeError('`space` must be two dimensional')
+        raise TypeError('`space` must be two-dimensional')
 
     # Create analytic description of phantom
     phantomE, phantomC = _analytical_forbild_phantom(resolution, ear)
@@ -299,22 +304,21 @@ def forbild(space, resolution=False, ear=True):
                         transposeravel(ycoord) - phantomE[k, 1]])
         D = np.array([[1 / phantomE[k, 2], 0],
                       [0, 1 / phantomE[k, 3]]])
-        phi = phantomE[k, 4] * np.pi / 180
+        phi = np.deg2rad(phantomE[k, 4])
         Q = np.array([[np.cos(phi), np.sin(phi)],
                       [-np.sin(phi), np.cos(phi)]])
         f = phantomE[k, 5]
         nclip = int(phantomE[k, 6])
-        equation1 = np.sum(((D.dot(Q)).dot(Vx0))**2, axis=0)
+        equation1 = np.sum(D.dot(Q).dot(Vx0) ** 2, axis=0)
         i = (equation1 <= 1.0)
 
         # Handle clipping surfaces
-        if nclip > 0:
-            for j in range(1, nclip + 1):
-                d = phantomC[0, nclipinfo]
-                psi = phantomC[1, nclipinfo] * np.pi / 180.0
-                equation2 = np.array([np.cos(psi), np.sin(psi)]).dot(Vx0)
-                i *= (equation2 < d)
-                nclipinfo += 1
+        for _ in range(nclip):  # note: nclib can be 0
+            d = phantomC[0, nclipinfo]
+            psi = np.deg2rad(phantomC[1, nclipinfo])
+            equation2 = np.array([np.cos(psi), np.sin(psi)]).dot(Vx0)
+            i &= (equation2 < d)
+            nclipinfo += 1
 
         image[i] += f
 
@@ -329,7 +333,7 @@ if __name__ == '__main__':
     discr = odl.uniform_discr([-1, -1], [1, 1], [1000, 1000])
     shepp_logan(discr, modified=True).show('shepp_logan 2d modified=True')
     shepp_logan(discr, modified=False).show('shepp_logan 2d modified=False')
-    forbild(discr).show('forbild 2d', clim=[1.035, 1.065])
+    forbild(discr).show('FORBILD 2d', clim=[1.035, 1.065])
 
     # 3D
     discr = odl.uniform_discr([-1, -1, -1], [1, 1, 1], [300, 300, 300])
