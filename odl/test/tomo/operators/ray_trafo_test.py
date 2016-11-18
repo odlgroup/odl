@@ -31,7 +31,7 @@ import odl
 import odl.tomo as tomo
 from odl.tomo.util.testutils import (skip_if_no_astra, skip_if_no_astra_cuda,
                                      skip_if_no_scikit)
-from odl.util.testutils import almost_equal
+from odl.util.testutils import almost_equal, all_almost_equal
 
 
 # Find the valid projectors
@@ -206,6 +206,27 @@ def test_adjoint(projector):
     result_AxAx = proj.inner(proj)
     result_xAtAx = backproj.inner(vol)
     assert almost_equal(result_AxAx, result_xAtAx, places=places)
+
+
+def test_adjoint_of_adjoint(projector):
+    """Test discrete Ray transform adjoint of adjoint."""
+
+    # Create Shepp-Logan phantom
+    vol = odl.phantom.shepp_logan(projector.domain, modified=True)
+
+    # Calculate projection
+    proj = projector(vol)
+    proj_adj_adj = projector.adjoint.adjoint(vol)
+
+    # Verify A(x) == (A^*)^*(x)
+    assert all_almost_equal(proj, proj_adj_adj)
+
+    # Calculate adjoints
+    proj_adj = projector.adjoint(proj)
+    proj_adj_adj_adj = projector.adjoint.adjoint.adjoint(proj)
+
+    # Verify A^*(y) == ((A^*)^*)^*(x)
+    assert all_almost_equal(proj_adj, proj_adj_adj_adj)
 
 
 def test_angles(projector):
