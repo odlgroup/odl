@@ -38,6 +38,8 @@ def white_noise(space, mean=0, stddev=1):
     mean : `float` or ``space`` `element-like`
         The mean of the white noise. If a scalar, it is interpreted as
         ``mean * space.one()``.
+        If ``space`` is complex, the real and complex part become the mean of
+        their respective part of the noise.
     stddev : `float` or ``space`` `element-like`
         The standard deviation of the white noise. If a scalar, it is
         interpreted as ``stddev * space.one()``.
@@ -55,7 +57,14 @@ def white_noise(space, mean=0, stddev=1):
     if isinstance(space, ProductSpace):
         values = [white_noise(subspace, mean, stddev) for subspace in space]
     else:
-        values = np.random.normal(loc=mean, scale=stddev, size=space.shape)
+        if space.is_cn:
+            real = np.random.normal(
+                loc=mean.real, scale=stddev, size=space.shape)
+            imag = np.random.normal(
+                loc=mean.imag, scale=stddev, size=space.shape)
+            values = real + 1j * imag
+        else:
+            values = np.random.normal(loc=mean, scale=stddev, size=space.shape)
     return space.element(values)
 
 
@@ -103,6 +112,9 @@ if __name__ == '__main__':
     r100 = odl.rn(100)
     white_noise(r100).show('white_noise')
     white_noise(r100, mean=5).show('white_noise with mean')
+
+    c100 = odl.cn(100)
+    white_noise(c100).show('complex white_noise')
 
     discr = odl.uniform_discr([-1, -1], [1, 1], [300, 300])
     white_noise(discr).show('white_noise 2d')
