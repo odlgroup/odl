@@ -250,7 +250,8 @@ class RayBackProjection(Operator):
             if impl == 'astra_cuda' and not ASTRA_CUDA_AVAILABLE:
                 raise ValueError("'astra_cuda' backend not available")
             if not np.allclose(discr_range.partition.cell_sides[1:],
-                               discr_range.partition.cell_sides[:-1]):
+                               discr_range.partition.cell_sides[:-1],
+                               atol=0, rtol=1e-5):
                 raise ValueError('ASTRA does not support different voxel '
                                  'sizes per axis, got {}'
                                  ''.format(discr_range.partition.cell_sides))
