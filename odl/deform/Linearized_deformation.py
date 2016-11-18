@@ -777,8 +777,7 @@ I1 = np.rot90(plt.imread(I1name).astype('float'), -1)
 
 # Create 2-D discretization reconstruction space
 # The size of the domain should be proportional to the given images
-discr_space = odl.uniform_discr([-16, -16],
-                                [16, 16], [128, 128],
+discr_space = odl.uniform_discr([-16, -16], [16, 16], [128, 128],
                                 dtype='float32', interp='linear')
 
 # Create 2-D discretization space for control points
@@ -847,16 +846,14 @@ template.show('template')
 num_angles = 6
 
 # Create the uniformly distributed directions
-angle_partition = odl.uniform_partition(
-    0, np.pi, num_angles, nodes_on_bdry=[(True, False)])
+angle_partition = odl.uniform_partition(0, np.pi, num_angles, nodes_on_bdry=[(True, False)])
 
 # Create 2-D projection domain
 # The length should be 1.5 times of that of the reconstruction space
 detector_partition = odl.uniform_partition(-24, 24, 182)
 
 # Create 2-D parallel projection geometry
-geometry = odl.tomo.Parallel2dGeometry(angle_partition,
-                                       detector_partition)
+geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 
 # Create forward projection operator by X-ray transform
 xray_trafo_op = odl.tomo.RayTransform(discr_space,
@@ -1115,94 +1112,150 @@ plt.grid(True)
 #plt.gca().axes.yaxis.set_ticklabels([])
 #plt.axis([0, 191, -17, 32])
 
-## TV reconstruction by Chambolle-Pock algorithm
-## Initialize gradient operator
-#gradient = odl.Gradient(discr_space, method='forward')
-#
-## Column vector of two operators
-#op = odl.BroadcastOperator(xray_trafo_op, gradient)
-#
-## Create the proximal operator for unconstrained primal variable
-#proximal_primal = odl.solvers.proximal_const_func(op.domain)
-#
-## Create proximal operators for the dual variable
-#
-## l2-data matching
-#prox_convconj_l2 = odl.solvers.proximal_cconj_l2_squared(xray_trafo_op.range,
-#                                                         g=proj_data)
-#
-## Isotropic TV-regularization i.e. the l1-norm
-#prox_convconj_l1 = odl.solvers.proximal_cconj_l1(gradient.range, lam=0.03,
-#                                                 isotropic=True)
-#
-## Combine proximal operators, order must correspond to the operator K
-#proximal_dual = odl.solvers.combine_proximals(prox_convconj_l2,
-#                                              prox_convconj_l1)
-#
-#
-## --- Select solver parameters and solve using Chambolle-Pock --- #
-#
-#
-## Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
-#op_norm = 1.1 * odl.power_method_opnorm(op)
-#
-#niter = 2000  # Number of iterations
-#tau = 1.0 / op_norm  # Step size for the primal variable
-#sigma = 1.0 / op_norm  # Step size for the dual variable
-#gamma = 0.2
-#
-## Optionally pass callback to the solver to display intermediate results
-#callback = (odl.solvers.CallbackPrintIteration() &
-#            odl.solvers.CallbackShow())
-#
-## Choose a starting point
-#x = op.domain.zero()
-#
-## Run the algorithm
-#odl.solvers.chambolle_pock_solver(
-#    op, x, tau=tau, sigma=sigma, proximal_primal=proximal_primal,
-#    proximal_dual=proximal_dual, niter=niter, callback=callback,
-#    gamma=gamma)
-#
-## Display images
-#ground_truth.show(title='original image')
-#x.show(title='TV reconstruction', show=True)
-#plt.imshow(np.rot90(x), cmap='bone',
-#           vmin=np.asarray(ground_truth).min(),
-#           vmax=np.asarray(ground_truth).max()), plt.axis('off')
 
 
-# test example from particle
-phantom_reader = MRCFileReader('./ET_testdata/One_particle/rna_phantom.mrc')
-particle = phantom_reader.read_data()
 
-tiltseries_reader = MRCFileReader('./ET_testdata/One_particle/tiltseries.mrc')
+## Magnification
+#magnification = 25000
+## Detector pixel size in meter
+#det_pix_size = 16 * 10**(-6)
+## Number of detector pixels
+#det_pix_x = 200
+#det_pix_y = 200
+## Single axis tilting
+#angle_partition_3d = odl.uniform_partition(-60, 120, 61)
+
+
+
+## Load data
+directory = '/home/chong/SwedenWork_Chong/Development_S/odl/odl/\
+deform/ET_testdata/One_particle/'
+data_filename = 'tiltseries.mrc'
+noise_free_data_filename = 'tiltseries_nonoise.mrc'
+tiltseries_reader = MRCFileReader(directory + data_filename)
 tiltseries_data = tiltseries_reader.read_data()
-
-tiltseries_nonoise_reader = MRCFileReader('./ET_testdata/One_particle/tiltseries_nonoise.mrc')
+tiltseries_nonoise_reader = MRCFileReader(directory + noise_free_data_filename)
 tiltseries_nonoise_data = tiltseries_nonoise_reader.read_data()
 
-phantom_shape = phantom_reader.data_shape
-phantom_csides = phantom_reader.cell_sides_angstrom
-phantom_extent = phantom_csides * phantom_shape
-
+## Data space
+# Number of detector pixels and directions
 data_shape = tiltseries_reader.data_shape
-data_csides = tiltseries_reader.cell_sides_angstrom
-data_extent = data_csides * data_shape
+# Size of detector region after magnification in nm
+data_csides = tiltseries_reader.cell_sides * 1e9
+# Generate sampling on detector region, assume (0,0) is in the middle
+detector_partition = odl.uniform_partition(-data_csides[0:2] / 2,
+                                           data_csides[0:2] / 2,
+                                           data_shape[0:2])  
+# 61 angles uniformly distributed from -60 to 60
+angle_partition = odl.uniform_partition(np.deg2rad(-60+90), np.deg2rad(60+90), 61,
+                                        nodes_on_bdry=[(True, True)])
+# Create 3-D parallel projection geometry
+single_axis_geometry = odl.tomo.Parallel3dAxisGeometry(angle_partition,
+                                                       detector_partition,
+                                                       axis=[0, 0, -1])
 
-# Create 2-D discretization reconstruction space
-# The size of the domain should be proportional to the given images
-phantom_space_3d = odl.uniform_discr(-phantom_extent / 2, phantom_extent / 2,
-                                     phantom_shape, dtype='float32',
-                                     interp='linear')
-data_space_3d = odl.uniform_discr(-data_extent / 2, data_extent / 2,
-                                  data_shape, dtype='float32',
-                                  interp='linear')                            
+## Reconstruction space
+# Voxels in 3D region of interest
+rec_shape = np.array([200, 200, 200])
+# Define the 3D region centered at the origin in nm
+rec_size = np.array([70.,70., 70.])
+# Reconstruction space
+rec_space = odl.uniform_discr(-rec_size / 2, rec_size / 2, rec_shape,
+                              dtype='float32', interp='linear')
+                              
+## Create forward operator
+forward_op = odl.tomo.RayTransform(rec_space, single_axis_geometry,
+                                   impl='astra_cuda')
 
-particle_phantom = phantom_space_3d.element(particle)
-tiltseries_data = data_space_3d.element(tiltseries_data)
-tiltseries_nonoise_data = data_space_3d.element(tiltseries_nonoise_data)
+## Load data as an element in range of forward operator
+tiltseries = forward_op.range.element(np.swapaxes(tiltseries_data, 0, 2))
+tiltseries_nonoise = forward_op.range.element(
+    np.swapaxes(tiltseries_nonoise_data, 0, 2))
+# Show 2D data for middle angle
+(tiltseries - np.mean(tiltseries)).show(
+    indices=np.s_[tiltseries.shape[0] // 2, :, :],
+    title='Middle projection (noise)')
+(tiltseries_nonoise - np.mean(tiltseries_nonoise)).show(
+    indices=np.s_[tiltseries_nonoise.shape[0] // 2, :, :],
+    title='Middle projection (noise-free)')
+## Check why we get such high values in data!
+#particle = forward_op.domain.one() * 100000000
+#a = forward_op(particle)
+#a.show(indices=np.s_[a.shape[0] // 2, :, :], title='30th projection by forward_op')
 
-particle_phantom.show(indices=np.s_[:, :, phantom_shape[-1] // 2], title='phantom')
-tiltseries_data.show(indices=np.s_[:, :, data_shape[-1] // 2], title='tiltseries_data')
-tiltseries_nonoise_data.show(indices=np.s_[:, :, data_shape[-1] // 2], title='tiltseries_nonoise_data')
+                                   
+## Reconstructions
+
+# conjugate_gradient_normal
+niter = 100  # Number of iterations
+# Optionally pass callback to the solver to display intermediate results
+callback = (odl.solvers.CallbackPrintIteration() &
+            odl.solvers.CallbackShow(coords=[None, 0, None]))
+# Choose a starting point
+x = forward_op.domain.zero()   
+# Run the algorithm                          
+odl.solvers.conjugate_gradient_normal(forward_op, x, tiltseries_nonoise - np.mean(tiltseries_nonoise), niter=niter,
+                                      callback=callback)
+
+x.show(coords=[None, 0, None], title='Conjugate gradient reconstruction')
+
+
+
+# TV reconstruction by Chambolle-Pock algorithm
+# Initialize gradient operator
+gradient = odl.Gradient(rec_space, method='forward')
+# Column vector of two operators
+op = odl.BroadcastOperator(forward_op, gradient)
+# Create the proximal operator for unconstrained primal variable
+proximal_primal = odl.solvers.proximal_const_func(op.domain)
+# Create proximal operators for the dual variable
+# l2-data matching
+prox_convconj_l2 = odl.solvers.proximal_cconj_l2_squared(forward_op.range,
+                                                         g=tiltseries_nonoise - np.mean(tiltseries_nonoise))
+# Isotropic TV-regularization i.e. the l1-norm
+prox_convconj_l1 = odl.solvers.proximal_cconj_l1(gradient.range, lam=4000.0,
+                                                 isotropic=True)
+# Combine proximal operators, order must correspond to the operator K
+proximal_dual = odl.solvers.combine_proximals(prox_convconj_l2,
+                                              prox_convconj_l1)
+# --- Select solver parameters and solve using Chambolle-Pock --- #
+# Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
+op_norm = 1.1 * odl.power_method_opnorm(op)
+
+niter = 400  # Number of iterations
+tau = 1.0 / op_norm  # Step size for the primal variable
+sigma = 1.0 / op_norm  # Step size for the dual variable
+gamma = 0.2
+
+# Optionally pass callback to the solver to display intermediate results
+callback = (odl.solvers.CallbackPrintIteration() &
+            odl.solvers.CallbackShow())
+
+# Choose a starting point
+x = op.domain.zero()
+
+# Run the algorithm
+odl.solvers.chambolle_pock_solver(
+    op, x, tau=tau, sigma=sigma, proximal_primal=proximal_primal,
+    proximal_dual=proximal_dual, niter=niter, callback=callback,
+    gamma=gamma)
+    
+
+######################################################
+
+# Read in particle
+particle_filename = 'rna_phantom.mrc'
+particle_reader = MRCFileReader(directory + particle_filename)
+particle = particle_reader.read_data()
+# Extract size 
+particle_shape = particle_reader.data_shape
+particle_csides = particle_reader.cell_sides * 1e9
+# Create particle space
+particle_space = odl.uniform_discr(-particle_csides / 2, particle_csides / 2,
+                                   particle_shape, dtype='float32',
+                                   interp='linear')
+
+# Display images
+particle = particle_space.element(particle)
+particle.show(indices=np.s_[:, :, particle_shape[-1] // 2], title='Particle')
+
