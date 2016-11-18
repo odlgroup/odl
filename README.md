@@ -43,7 +43,7 @@ You can check that everything was installed properly by running
 
     python -c "import odl; odl.test()"
 
-This requires [pytest](http://pytest.org/latest/). See the [installation](http://odlgroup.github.io/odl/guide/introduction/installing.html) documentation for further information.
+This requires [pytest](http://pytest.org/latest/). See the [installation](https://odlgroup.github.io/odl/getting_started/installing.html) documentation for further information.
 
 ODL is compatible to Python 2 and 3 through the `future` library. It is intended to work on all major platforms (GNU/Linux / Mac / Windows).
 
