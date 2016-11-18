@@ -48,7 +48,7 @@ templ_space = odl.uniform_discr([-1, -1], [1, 1], (100, 100), interp='linear')
 template = odl.phantom.cuboid(templ_space, [-0.5, -0.25], [0.5, 0.25])
 
 # Create a product space for displacement field
-disp_field_space = templ_space.vector_field_space
+disp_field_space = templ_space.tangent_bundle
 
 # Define a displacement field that bends the template a bit towards the
 # upper left. We use a list of 2 functions and discretize it using the

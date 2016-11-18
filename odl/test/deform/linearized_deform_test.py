@@ -236,7 +236,7 @@ def test_fixed_templ_deriv(space):
 def test_fixed_disp_init():
     """Verify that the init method and checks work properly."""
     space = odl.uniform_discr(0, 1, 5)
-    disp_field = space.vector_field_space.element(
+    disp_field = space.tangent_bundle.element(
         disp_field_factory(space.ndim))
 
     # Valid input
@@ -247,7 +247,7 @@ def test_fixed_disp_init():
     with pytest.raises(TypeError):  # displacement not ProductSpaceElement
         LinDeformFixedDisp(space.one())
     with pytest.raises(TypeError):  # templ_space not DiscreteLp
-        LinDeformFixedDisp(disp_field, space.vector_field_space)
+        LinDeformFixedDisp(disp_field, space.tangent_bundle)
     with pytest.raises(TypeError):  # templ_space not a power space
         bad_pspace = odl.ProductSpace(space, odl.rn(3))
         LinDeformFixedDisp(disp_field, bad_pspace)
@@ -265,7 +265,7 @@ def test_fixed_disp_init():
 def test_fixed_disp_call(space):
     """Verify that LinDeformFixedDisp produces the correct deformation."""
     template = space.element(template_function)
-    disp_field = space.vector_field_space.element(
+    disp_field = space.real_space.tangent_bundle.element(
         disp_field_factory(space.ndim))
 
     # Calculate result and exact result
@@ -283,7 +283,7 @@ def test_fixed_disp_inv(space):
     """Verify that the inverse of LinDeformFixedDisp is correct."""
     # Set up template and displacement field
     template = space.element(template_function)
-    disp_field = space.vector_field_space.element(
+    disp_field = space.real_space.tangent_bundle.element(
         disp_field_factory(space.ndim))
 
     # Verify that the inverse is in fact a (left and right) inverse
@@ -304,7 +304,7 @@ def test_fixed_disp_adj(space):
     """Verify that the adjoint of LinDeformFixedDisp is correct."""
     # Set up template and displacement field
     template = space.element(template_function)
-    disp_field = space.vector_field_space.element(
+    disp_field = space.real_space.tangent_bundle.element(
         disp_field_factory(space.ndim))
 
     # Calculate result

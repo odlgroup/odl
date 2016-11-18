@@ -234,9 +234,15 @@ class DiscreteLp(DiscretizedSpace):
         return self.__exponent
 
     @property
-    def vector_field_space(self):
-        """Space of vector fields based on ``self``."""
-        return ProductSpace(self.real_space, self.ndim)
+    def tangent_bundle(self):
+        """The tangent bundle associated with `domain` using `partition`.
+
+        The tangent bundle of a space ``X`` of functions ``R^d --> F`` can be
+        interpreted as the space of vector-valued functions ``R^d --> F^d``.
+        This space can be identified with the power space ``X^d`` as used
+        in this implementation.
+        """
+        return ProductSpace(self, self.ndim)
 
     def element(self, inp=None, **kwargs):
         """Create an element from ``inp`` or from scratch.
@@ -804,7 +810,7 @@ class DiscreteLpElement(DiscretizedSpaceElement):
                     if coord_maxp is None:
                         max_ind = len(subpart)
                     else:
-                        min_ind = np.ceil(subpart.index(coord_maxp,
+                        max_ind = np.ceil(subpart.index(coord_maxp,
                                                         floating=True))
 
                     indices += [slice(int(min_ind), int(max_ind))]
