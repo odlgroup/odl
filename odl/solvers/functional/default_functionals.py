@@ -817,7 +817,7 @@ class IndicatorNonnegativity(IndicatorBox):
 
 class IndicatorZero(Functional):
 
-    """The indicator function on zero.
+    """The indicator function of the singleton set {0}.
 
     The function has a constant value if the input is zero, otherwise infinity.
     """
@@ -855,7 +855,6 @@ class IndicatorZero(Functional):
 
     def _call(self, x):
         """Apply the functional to the given point."""
-
         if x.norm() == 0:
             # In this case x is the zero-element.
             return self.constant
@@ -868,8 +867,8 @@ class IndicatorZero(Functional):
 
         Notes
         -----
-        By the Fenchel-Moreau theorem the convex conjugate functional
-        is the constant functional [BC2011]_.
+        By the Fenchel-Moreau theorem the convex conjugate is the constant
+        functional [BC2011]_ with the constant value of -`constant`.
         """
         return ConstantFunctional(self.domain, -self.constant)
 
@@ -894,7 +893,7 @@ class IndicatorZero(Functional):
     def __repr__(self):
         """Return ``repr(self)``."""
         return '{}({!r}, {!r})'.format(self.__class__.__name__,
-                                       self.domain, self.value)
+                                       self.domain, self.constant)
 
 
 class KullbackLeibler(Functional):
