@@ -29,7 +29,6 @@ from numbers import Integral
 
 from odl.discr import PointwiseNorm
 from odl.solvers.functional.functional import Functional
-from odl.discr import PointwiseNorm
 from odl.space import ProductSpace
 from odl.operator import (Operator, ConstantOperator, ZeroOperator,
                           ScalingOperator, DiagonalOperator)
@@ -425,6 +424,7 @@ class IndicatorLpUnitBall(Functional):
             Specifies wich norm to use.
         """
         super().__init__(space=space, linear=False)
+        self.__norm = LpNorm(space, exponent)
         self.__exponent = float(exponent)
 
     @property
@@ -432,19 +432,9 @@ class IndicatorLpUnitBall(Functional):
         """Exponent corresponding to the norm."""
         return self.__exponent
 
-    # TODO: update when integration operator is in place: issue #440
     def _call(self, x):
         """Apply the functional to the given point."""
-        if self.exponent == 1:
-            x_norm = x.ufunc.absolute().inner(self.domain.one())
-        elif self.exponent == 2:
-            x_norm = x.norm()
-        elif self.exponent == np.inf:
-            x_norm = x.ufunc.absolute().ufunc.max()
-        else:
-            tmp = x.ufunc.absolute()
-            tmp.ufunc.power(self.exponent, out=tmp)
-            x_norm = np.power(tmp.inner(self.domain.one()), 1 / self.exponent)
+        x_norm = self.__norm(x)
 
         if x_norm > 1:
             return np.inf
@@ -467,8 +457,7 @@ class IndicatorLpUnitBall(Functional):
         elif self.exponent == 2:
             return L2Norm(self.domain)
         else:
-            # TODO: Add Lp-norm functional.
-            raise NotImplementedError('currently not implemented')
+            return LpNorm(self.domain, exponent=conj_exponent(self.exponent))
 
     @property
     def proximal(self):
@@ -572,10 +561,10 @@ class LpNorm(Functional):
 
     """The functional corresponding to the Lp-norm.
 
-    The Lp-norm, ``||x||_p``,  is defined as:
+    The Lp-norm, ``||f||_p``,  is defined as
 
     .. math::
-       \\left(\\int |x|^p \\right)^{1/p}
+        \\left(\\int |f(x)|^p dx \\right)^{1/p}
     """
 
     def __init__(self, space, exponent):
@@ -594,6 +583,8 @@ class LpNorm(Functional):
     # TODO: update when integration operator is in place: issue #440
     def _call(self, x):
         """Return the Lp-norm of ``x``."""
+        if self.exponent == 0:
+            return self.domain.one().inner(np.not_equal(x, 0))
         if np.isfinite(self.exponent):
             xpow = x.ufunc.power(self.exponent)
             return np.power(self.domain.one().inner(xpow), 1 / self.exponent)
@@ -609,11 +600,14 @@ class LpNorm(Functional):
     @property
     def convex_conj(self):
         """The convex conjugate functional of the Lp-norm."""
-        return IndicatorLpUnitBall(self.domain, exponent=1 / self.exponent)
+        return IndicatorLpUnitBall(self.domain,
+                                   exponent=conj_exponent(self.exponent))
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r})'.format(self.__class__.__name__, self.domain)
+        return '{}({!r})'.format(self.__class__.__name__,
+                                 self.domain,
+                                 self.exponent)
 
 
 class L2NormSquared(Functional):
