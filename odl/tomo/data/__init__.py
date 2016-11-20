@@ -25,7 +25,7 @@ __all__ = ()
 from .uncompr_bin import *
 __all__ += uncompr_bin.__all__
 
-from .mrc2014 import *
-__all__ += mrc2014.__all__
+from .mrc import *
+__all__ += mrc.__all__
 
 from . import fei_extended_header
