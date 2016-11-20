@@ -35,11 +35,11 @@ def white_noise(space, mean=0, stddev=1):
     ----------
     space : `FnBase` or `ProductSpace`
         The space in which the noise is created.
-    mean : `float` or ``space`` `element-like`
+    mean : ``space.field`` element or ``space`` `element-like`
         The mean of the white noise. If a scalar, it is interpreted as
         ``mean * space.one()``.
-        If ``space`` is complex, the real and complex part become the mean of
-        their respective part of the noise.
+        If ``space`` is complex, the real and imaginary parts are interpreted
+        as the mean of their respective part of the noise.
     stddev : `float` or ``space`` `element-like`
         The standard deviation of the white noise. If a scalar, it is
         interpreted as ``stddev * space.one()``.
