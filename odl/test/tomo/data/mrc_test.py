@@ -43,18 +43,16 @@ def mrc_mode_dtype(request):
     mode, dtype = request.param
     return mode, np.dtype(dtype)
 
-
 axis_order = simple_fixture(
     name='axis_order',
     params=list(permutations((0, 1, 2))))
 
-ncells = simple_fixture(
-    name='ncells',
+shape = simple_fixture(
+    name='shape',
     params=[(5, 10, 20), (1, 5, 6), (10, 1, 1), (1, 1, 1)])
 
-
 ispg_kind_params = [(0, 'projections'), (1, 'volume')]
-ispg_kind_ids = [" ispg = {p[0]}, kind = '{p[0]}' ".format(p=p)
+ispg_kind_ids = [" ispg = {p[0]}, kind = '{p[1]}' ".format(p=p)
                  for p in ispg_kind_params]
 
 
@@ -63,24 +61,24 @@ def ispg_kind(request):
     return request.param
 
 
-def test_mrc_header_from_params_defaults(ncells, mrc_mode_dtype, ispg_kind):
+def test_mrc_header_from_params_defaults(shape, mrc_mode_dtype, ispg_kind):
     """Test the utility function for the minimal required parameters."""
     mode, dtype = mrc_mode_dtype
     true_ispg, kind = ispg_kind
-    header = mrc_header_from_params(ncells, dtype, kind)
+    header = mrc_header_from_params(shape, dtype, kind)
 
     # Check values of all header entries
     nx = header['nx']['value']
     ny = header['ny']['value']
     nz = header['nz']['value']
-    assert all_equal([nx, ny, nz], ncells)
+    assert all_equal([nx, ny, nz], shape)
     assert header['mode']['value'] == mode
     mx = header['mx']['value']
     my = header['my']['value']
     mz = header['mz']['value']
-    assert all_equal([mx, my, mz], ncells)
+    assert all_equal([mx, my, mz], shape)
     cella = header['cella']['value']
-    assert all_equal(cella, np.ones(3) * ncells)
+    assert all_equal(cella, np.ones(3) * shape)
     mapc = header['mapc']['value']
     mapr = header['mapr']['value']
     maps = header['maps']['value']
@@ -95,13 +93,13 @@ def test_mrc_header_from_params_defaults(ncells, mrc_mode_dtype, ispg_kind):
     nsymbt = header['nsymbt']['value']
     assert nsymbt == 0
     exttype = header['exttype']['value']
-    assert np.array_equal(exttype, np.fromiter('    ', dtype='S1'))
+    assert np.array_equal(exttype, np.fromstring('    ', dtype='S1'))
     nversion = header['nversion']['value']
     assert nversion == 20140
     origin = header['origin']['value']
-    assert np.array_equal(origin, np.zeros(3, dtype=int))
+    assert all_equal(origin, [0, 0, 0])
     map = header['map']['value']
-    assert np.array_equal(map, np.fromiter('MAP ', dtype='S1'))
+    assert np.array_equal(map, np.fromstring('MAP ', dtype='S1'))
     machst = header['machst']['value']
     assert np.array_equal(machst, np.fromiter(b'DD  ', dtype='S1'))
     nlabl = header['nlabl']['value']
@@ -126,23 +124,23 @@ def test_mrc_header_from_params_defaults(ncells, mrc_mode_dtype, ispg_kind):
 
 def test_mrc_header_from_params_kwargs():
     """Test the utility function for the minimal required parameters."""
-    ncells = (10, 20, 30)
+    shape = (10, 20, 30)
     dtype = np.dtype('int8')
     kind = 'projections'
-    kwargs = {}
-    kwargs['extent'] = [10.0, 1.5, 0.1]
-    kwargs['axis_order'] = (2, 0, 1)
-    kwargs['dmin'] = 1.0
-    kwargs['dmax'] = 5.0
-    kwargs['dmean'] = 2.0
-    kwargs['rms'] = 0.5
-    kwargs['mrc_version'] = (2014, 1)
-    kwargs['text_labels'] = ['label 1', '   label 2   ']
-    header = mrc_header_from_params(ncells, dtype, kind, **kwargs)
+    kwargs = {'extent': [10.0, 1.5, 0.1],
+              'axis_order': (2, 0, 1),
+              'dmin': 1.0,
+              'dmax': 5.0,
+              'dmean': 2.0,
+              'rms': 0.5,
+              'mrc_version': (2014, 1),
+              'text_labels': ['label 1', '   label 2   ']
+              }
+    header = mrc_header_from_params(shape, dtype, kind, **kwargs)
 
     # Check values of the header entries set by kwargs
     cella = header['cella']['value']
-    assert np.allclose(cella, np.array([10.0, 1.5, 0.1]))
+    assert np.allclose(cella, [10.0, 1.5, 0.1])
     mapc = header['mapc']['value']
     mapr = header['mapr']['value']
     maps = header['maps']['value']
@@ -158,32 +156,28 @@ def test_mrc_header_from_params_kwargs():
     assert nlabl == 2
     label = header['label']['value']
     true_label = np.zeros([10, 80], dtype='S1')
-    true_label[0] = np.fromiter('label 1'.ljust(80), dtype='S1')
-    true_label[1] = np.fromiter('   label 2   '.ljust(80), dtype='S1')
+    true_label[0] = np.fromstring('label 1'.ljust(80), dtype='S1')
+    true_label[1] = np.fromstring('   label 2   '.ljust(80), dtype='S1')
     assert np.array_equal(label, true_label)
 
     # Check all data types
-    int32_vars = [mapc, mapr, maps, nversion, nlabl]
-    for v in int32_vars:
+    for v in [mapc, mapr, maps, nversion, nlabl]:
         assert v.dtype == np.dtype('int32')
 
-    float32_vars = [cella, dmin, dmax, dmean, rms]
-    for v in float32_vars:
+    for v in [cella, dmin, dmax, dmean, rms]:
         assert v.dtype == np.dtype('float32')
 
-    string_vars = [label]
-    for v in string_vars:
-        assert v.dtype == np.dtype('S1')
+    assert label.dtype == np.dtype('S1')
 
 
-def test_mrc_io(ncells, mrc_mode_dtype, ispg_kind, axis_order):
+def test_mrc_io(shape, mrc_mode_dtype, ispg_kind, axis_order):
     """Test reading and writing MRC files and the class properties."""
     _, dtype = mrc_mode_dtype
     _, kind = ispg_kind
 
-    # Data shape is the inverse permutation of nx, ny, nz
-    data_shape = tuple(ncells[ax] for ax in np.argsort(axis_order))
-    header = mrc_header_from_params(ncells, dtype, kind,
+    # Data storage shape is the inverse permutation of nx, ny, nz
+    data_storage_shape = tuple(shape[ax] for ax in np.argsort(axis_order))
+    header = mrc_header_from_params(shape, dtype, kind,
                                     axis_order=axis_order)
 
     # Test writer properties using standard class construction
@@ -191,13 +185,13 @@ def test_mrc_io(ncells, mrc_mode_dtype, ispg_kind, axis_order):
     writer = FileWriterMRC(file, header)
 
     assert writer.header_size == 1024  # Standard MRC header size
-    assert all_equal(writer.num_cells, ncells)
-    assert all_equal(writer.data_shape, data_shape)
+    assert all_equal(writer.data_shape, shape)
+    assert all_equal(writer.data_storage_shape, data_storage_shape)
     assert writer.data_dtype == dtype
     assert all_equal(writer.data_axis_order, axis_order)
 
     # Test writing some data (that all data types can represent).
-    data = np.random.randint(0, 10, size=data_shape).astype(dtype)
+    data = np.random.randint(0, 10, size=shape).astype(dtype)
     writer.write_data(data)
 
     # Check file size
@@ -208,7 +202,8 @@ def test_mrc_io(ncells, mrc_mode_dtype, ispg_kind, axis_order):
     # Check flat arrays
     file.seek(1024)
     raw_data = np.fromfile(file, dtype=dtype)
-    flat_data = np.transpose(data, axes=axis_order).reshape(-1, order='F')
+    flat_data = np.transpose(data, axes=np.argsort(axis_order))
+    flat_data = flat_data.reshape(-1, order='F')
     assert np.array_equal(raw_data, flat_data)
 
     # Write everything using the context manager syntax
@@ -219,8 +214,8 @@ def test_mrc_io(ncells, mrc_mode_dtype, ispg_kind, axis_order):
     reader = FileReaderMRC(file)
     reader.read_header()
     assert writer.header_size == 1024  # Standard MRC header size
-    assert all_equal(reader.num_cells, ncells)
-    assert all_equal(reader.data_shape, data_shape)
+    assert all_equal(reader.data_shape, shape)
+    assert all_equal(reader.data_storage_shape, data_storage_shape)
     assert reader.data_dtype == dtype
     assert reader.data_kind == kind
     assert all_equal(reader.data_axis_order, axis_order)

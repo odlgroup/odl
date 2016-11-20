@@ -35,7 +35,7 @@ __all__ = ('FileReaderRawBinaryWithHeader',
 
 
 def _fields_from_table(spec_table, id_key):
-    """Read the specification and return a list of fields.
+    """Read a specification and return a list of fields.
 
     The given specification is assumed to be in
     `reST grid table format
@@ -54,10 +54,9 @@ def _fields_from_table(spec_table, id_key):
         Field list of the specification with combined multi-line entries.
         Each field corresponds to one (multi-)line of the spec.
     """
-    # Reformat the table, throwing away lines not starting with '|' or
-    # containing '...'.
+    # Reformat the table, throwing away lines not starting with '|'
     spec_lines = [line[1:-1].rstrip() for line in spec_table.splitlines()
-                  if line.startswith('|') and '...' not in line]
+                  if line.startswith('|')]
 
     # Guess the CSV dialect and read the table, producing an iterable
     dialect = csv.Sniffer().sniff(spec_lines[0], delimiters='|')
@@ -108,11 +107,10 @@ def header_fields_from_table(spec_table, keys, dtype_map):
            a 24-byte field. In this case, the shape is completed to
            ``(3, 2)`` automatically. By default, the one-dimensional shape
            is determined from the data type and the byte range.
+           The data type must map to a NumPy data type (``dtype_map``).
         4. Name : The name of the field as used later (in lowercase) for
            identification.
         5. Description : An explanation of the field.
-
-    The table may also contain rows with ``...``, which are ignored.
 
     The converted specification is a tuple of dictionaries, each
     corresponding to one (multi-)row (=field) of the original table. Each
@@ -246,8 +244,8 @@ class FileReaderRawBinaryWithHeader(object):
         Parameters
         ----------
         file : file-like or str
-            Stream or filename from which to read the data. The stream
-            is allowed to be already opened in ``'rb'`` mode.
+            Stream or filename from which to read the data. A stream
+            must to be open in ``'rb'`` mode.
         header_fields : sequence of dicts, optional
             Definition of the fields in the header (per row), each
             containing key-value pairs for the following keys:
@@ -283,10 +281,10 @@ class FileReaderRawBinaryWithHeader(object):
         is_file = all(hasattr(file, attr) for attr in file_attrs)
         if is_file:
             self.__file = file
-            self.__file_shared = True
+            self.__owns_file = False
         else:
             self.__file = open(file, 'rb')
-            self.__file_shared = False
+            self.__owns_file = True
 
         if 'b' not in self.file.mode:
             raise ValueError("`file` must be opened in binary mode, "
@@ -314,7 +312,7 @@ class FileReaderRawBinaryWithHeader(object):
 
     def __exit__(self, *exc):
         """Cleanup before on exiting the context manager."""
-        if not self.__file_shared:
+        if self.__owns_file:
             self.file.close()
 
     @property
@@ -330,18 +328,13 @@ class FileReaderRawBinaryWithHeader(object):
         # Determine header size by finding the largest offset and the
         # value of the corresponding entry. The header size is the
         # offset plus the size of the entry.
-        max_offset = 0
-        value_at_max_offset = np.array([])
-        for entry in self.header.values():
-            if entry['offset'] > max_offset:
-                max_offset = entry['offset']
-                value_at_max_offset = entry['value']
-
-        return max_offset + value_at_max_offset.nbytes
+        max_entry = max(self.header.values(),
+                        key=lambda val: val['offset'])
+        return max_entry['offset'] + max_entry['value'].nbytes
 
     @property
-    def data_shape(self):
-        """Shape of the whole data block in `file`.
+    def data_storage_shape(self):
+        """Shape of the whole data block as stored in `file`.
 
         This is a default implementation always returning -1, which makes
         reshaping a no-op.
@@ -380,7 +373,7 @@ class FileReaderRawBinaryWithHeader(object):
             The header as read from `file`.
         data : `numpy.ndarray`
             The data block from `file`, reshaped according to
-            ``self.data_shape``.
+            `data_storage_shape`.
 
         See Also
         --------
@@ -536,10 +529,11 @@ class FileReaderRawBinaryWithHeader(object):
 
         num_elems = (dend_abs - dstart_abs) / self.data_dtype.itemsize
         if num_elems != int(num_elems):
-            raise ValueError('trying to read {} bytes, corresponding to '
-                             '{} elements of type {}'
-                             ''.format(dend_abs - dstart_abs, num_elems,
-                                       self.data_dtype))
+            raise ValueError(
+                'trying to read {} bytes, which is not a multiple of '
+                'the itemsize {} of the data type {}'
+                ''.format(dend_abs - dstart_abs, self.data_dtype.itemsize,
+                          self.data_dtype))
         self.file.seek(dstart_abs)
         # Numpy determines byte order by itself
         data = np.fromfile(self.file, dtype=self.data_dtype,
@@ -547,7 +541,7 @@ class FileReaderRawBinaryWithHeader(object):
 
         if dstart_abs == self.header_size and dend_abs == filesize_bytes:
             # Full dataset read, reshape to stored shape.
-            data = data.reshape(self.data_shape, order=reshape_order)
+            data = data.reshape(self.data_storage_shape, order=reshape_order)
 
         return data
 
@@ -563,14 +557,14 @@ class FileWriterRawBinaryWithHeader(object):
     portions.
     """
 
-    def __init__(self, file, header=OrderedDict()):
+    def __init__(self, file, header=None):
         """Initialize a new instance.
 
         Parameters
         ----------
         file : file-like or str
-            Stream or filename to which to write the data. The stream
-            is allowed to be already opened in a writable mode.
+            Stream or filename to which to write the data. A stream
+            must be open in a writable mode.
         header : `OrderedDict`, optional
             Header in form of an ordered dictionary, where each entry has
             the following form::
@@ -583,7 +577,7 @@ class FileWriterRawBinaryWithHeader(object):
             ``'offset'`` entry determine the space that the value occupies
             in `file`'s header.
 
-            If an empty dictionary is given, no header is written.
+            For ``None``, no header is written.
 
         Notes
         -----
@@ -598,15 +592,18 @@ class FileWriterRawBinaryWithHeader(object):
             sequence usable as ``header_fields`` parameter.
         FileReaderRawBinaryWithHeader.read_header
         """
+        if header is None:
+            header = OrderedDict()
+
         # Need those attrs in subsequent code
         file_attrs = ('mode', 'seek', 'write', 'close')
         is_file = all(hasattr(file, attr) for attr in file_attrs)
         if is_file:
             self.__file = file
-            self.__file_shared = True
+            self.__owns_file = False
         else:
             self.__file = open(file, 'wb')
-            self.__file_shared = False
+            self.__owns_file = True
 
         if 'b' not in self.file.mode:
             raise ValueError("`file` must be opened in binary mode, "
@@ -628,7 +625,7 @@ class FileWriterRawBinaryWithHeader(object):
 
     def __exit__(self, *exc):
         """Cleanup before on exiting the context manager."""
-        if not self.__file_shared:
+        if self.__owns_file:
             self.file.close()
 
     @property
@@ -640,14 +637,9 @@ class FileWriterRawBinaryWithHeader(object):
         # Determine header size by finding the largest offset and the
         # value of the corresponding entry. The header size is the
         # offset plus the size of the entry.
-        max_offset = 0
-        value_at_max_offset = np.array([])
-        for entry in self.header.values():
-            if entry['offset'] > max_offset:
-                max_offset = entry['offset']
-                value_at_max_offset = entry['value']
-
-        return max_offset + value_at_max_offset.nbytes
+        max_entry = max(self.header.values(),
+                        key=lambda val: val['offset'])
+        return max_entry['offset'] + max_entry['value'].nbytes
 
     @property
     def header(self):
@@ -670,9 +662,9 @@ class FileWriterRawBinaryWithHeader(object):
 
         See Also
         --------
-        read_data
+        write_data
         """
-        for name, properties in self.header.items():
+        for properties in self.header.values():
             value = properties['value']
             offset_bytes = int(properties['offset'])
             self.file.seek(offset_bytes)
@@ -691,6 +683,10 @@ class FileWriterRawBinaryWithHeader(object):
         reshape_order : {'C', 'F', 'A'}, optional
             Value passed as ``order`` parameter to `numpy.reshape`.
             Reshaping is only done in case the whole data block is read.
+
+        See Also
+        --------
+        write_header
         """
         data = np.asarray(data).reshape(-1, order=reshape_order)
         if dstart is None:

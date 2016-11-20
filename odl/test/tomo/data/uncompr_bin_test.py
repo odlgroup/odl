@@ -38,10 +38,6 @@ from odl.util.testutils import all_equal, simple_fixture
 # --- pytest fixtures --- #
 
 
-axis_order = simple_fixture(
-    name='axis_order',
-    params=list(permutations((0, 1, 2))))
-
 shape = simple_fixture(
     name='shape',
     params=[(5, 10, 20), (1, 5, 6), (10, 1, 1), (1, 1, 1)])

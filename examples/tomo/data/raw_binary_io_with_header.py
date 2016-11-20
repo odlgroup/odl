@@ -53,7 +53,7 @@ px_size = np.array([0.1, 0.1], dtype='float32')
 # To make it storable as binary data, we take the string version of the data
 # type with a fixed size of 10 characters and encode it as array of single
 # bytes.
-dtype = np.fromiter(str(image.dtype).ljust(10), dtype='S1')
+dtype = np.fromstring(str(image.dtype).ljust(10), dtype='S1')
 
 # Create the header
 # Use an OrderedDict for the header to have a predictable order when
@@ -66,16 +66,17 @@ header['dtype'] = {'offset': 24, 'value': dtype}
 
 # Use a temporary file for the output to keep the workspace clean.
 # The writer can be used as a context manager like `open`:
-file = tempfile.NamedTemporaryFile()
+tmp_file = tempfile.NamedTemporaryFile()
 
-with FileWriterRawBinaryWithHeader(file, header) as writer:
-
+with FileWriterRawBinaryWithHeader(tmp_file, header) as writer:
     # Write header and data to the file
     writer.write(image)
 
     # Print some stuff to see that the sizes are correct
+    tmp_file.seek(0, 2)  # last position
+    file_size = tmp_file.tell()
     print('File size ({}) = Image size ({}) + Header size ({})'
-          ''.format(file.seek(0, 2), image.nbytes, writer.header_size))
+          ''.format(file_size, image.nbytes, writer.header_size))
 
 
 # --- Reading --- #
@@ -90,10 +91,10 @@ header_fields = [
 
 # Read header and data from the newly created file. Again, we can use
 # the reader in form of a context manager:
-with FileReaderRawBinaryWithHeader(file, header_fields) as reader:
+with FileReaderRawBinaryWithHeader(tmp_file, header_fields) as reader:
     header_file, image_file = reader.read()  # Read header and data in one go
 
-# Check that everything has been reconstructed correctly
+# Check that everything has been restored correctly
 shape_file = header_file['shape']['value']
 origin_file = header_file['origin']['value']
 px_size_file = header_file['px_size']['value']
@@ -105,7 +106,7 @@ print('px_size -- original {}, from file {}'.format(px_size, px_size_file))
 print('dtype   -- original {}, from file {}'
       ''.format(str(image.dtype), ''.join(dtype_file.astype(str))))
 
-# Compare the plots of the original and reconstructed images
+# Compare the plots of the original and recovered images
 plt.figure()
 plt.title('Original image')
 plt.imshow(image, cmap='Greys_r')

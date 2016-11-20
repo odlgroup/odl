@@ -27,5 +27,3 @@ __all__ += uncompr_bin.__all__
 
 from .mrc import *
 __all__ += mrc.__all__
-
-from . import fei_extended_header
