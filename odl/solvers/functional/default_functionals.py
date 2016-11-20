@@ -1677,10 +1677,25 @@ class QuadraticForm(Functional):
 
 class NuclearNorm(Functional):
 
-    """The nuclear norm.
+    """Nuclear norm for matrix valued functions.
 
-    See article:
-    Collaborative Total Variation: A General Framework for Vectorial TV Models
+    Notes
+    -----
+    For a function :math:`f : \\Omega \\rightarrow \\mathbb{R}^{n \\times m}`,
+    the nuclear norm with parameters :math:`p` and :math:`q` is defined by
+
+    .. math::
+        \\left( \int_\Omega \|\sigma(f(x))\|_p^q d x \\right)^{1/q},
+
+    where :math:`\sigma(f(x))` is the vector of singular values of :math:`f` in
+    point :math:`x` and :math:`\| \cdot \|_p` is the usual :math:`p`-norm on
+    :math:`\mathbb{R}^{\min(n, m)}`.
+
+    References
+    ----------
+    J. Duran, M. Moeller, C. Sbert, and D. Cremers. Collaborative Total
+    Variation: A General Framework for Vectorial TV Models, SIAM Journal of
+    Imaging Sciences 9(1): 116--151, 2016.
     """
 
     def __init__(self, space, outer_exp=1, singular_vector_exp=2):
@@ -1697,7 +1712,10 @@ class NuclearNorm(Functional):
 
         Examples
         --------
-        >>> import odl
+        Simple example, nuclear norm of matrix valued function with all ones
+        in 3 points. The singular values are [2, 0], which has 2-norm 2. Since
+        there are 3 points, the expected total value is     6.
+
         >>> r3 = odl.rn(3)
         >>> space = odl.ProductSpace(odl.ProductSpace(r3, 2), 2)
         >>> norm = NuclearNorm(space)
@@ -1709,7 +1727,7 @@ class NuclearNorm(Functional):
             raise TypeError('`space` must be a `ProductSpace` of '
                             '`ProductSpace`s')
         if (not space.is_power_space or not space[0].is_power_space):
-            raise TypeError('`space` must be of the form `FnBase^nxm`')
+            raise TypeError('`space` must be of the form `FnBase^(nxm)`')
 
         super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
 
@@ -1747,26 +1765,24 @@ class NuclearNorm(Functional):
 
         Here the indices are changed such that the "outer" indices come last,
         this is in order to have the access order as `numpy.linalg.svd` needs
-        them.
+        it.
 
         This is the inverse of `_asvector`.
         """
         shape = self.domain[0][0].shape + self.pshape
-        arr = np.zeros(shape, dtype=self.domain.dtype)
+        arr = np.empty(shape, dtype=self.domain.dtype)
         for i, xi in enumerate(vec):
-            for j, xii in enumerate(xi):
-                arr[..., i, j] = xii.asarray()
+            for j, xij in enumerate(xi):
+                arr[..., i, j] = xij.asarray()
 
         return arr
 
     def _asvector(self, arr):
-        """Convert ``vec`` to an `domain` element.
+        """Convert ``vec`` to a `domain` element.
 
         This is the inverse of `_asarray`.
         """
-
         result = self._moveaxis(arr, [-2, -1], [0, 1])
-
         return self.domain.element(result)
 
     def _call(self, x):
@@ -1806,7 +1822,7 @@ class NuclearNorm(Functional):
 
         func = self
 
-        class NuclearNormProximalOperator(Operator):
+        class NuclearNormProximal(Operator):
             """Proximal operator of `NuclearNorm`."""
             def __init__(self, sigma):
                 self.sigma = sigma
@@ -1833,11 +1849,11 @@ class NuclearNorm(Functional):
                 elif func.pwisenorm.exponent == 2:
                     s_reordered = func._moveaxis(s, -1, 0)
                     snorm = func.pwisenorm(s_reordered).asarray()
-                    snorm = np.maximum(self.sigma, snorm)
+                    snorm = np.maximum(self.sigma, snorm, out=snorm)
                     sprox = (1 - self.sigma / snorm)[..., None] * s
                 elif func.pwisenorm.exponent == np.inf:
                     snorm = np.sum(np.abs(s), axis=-1)
-                    snorm = np.maximum(self.sigma, snorm)
+                    snorm = np.maximum(self.sigma, snorm, out=snorm)
                     sprox = (1 - self.sigma / snorm)[..., None] * s
                 else:
                     raise RuntimeError
@@ -1852,7 +1868,7 @@ class NuclearNorm(Functional):
                 # different shapes.
                 return func._asvector(result)
 
-        return NuclearNormProximalOperator
+        return NuclearNormProximal
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position
