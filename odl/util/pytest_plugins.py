@@ -88,7 +88,7 @@ def pytest_ignore_collect(path, config):
 # --- Reusable fixtures ---
 
 fn_impl_params = odl.FN_IMPLS.keys()
-fn_impl_ids = [" impl='{}' ".format(p) for p in fn_impl_params]
+fn_impl_ids = [" impl = '{}' ".format(p) for p in fn_impl_params]
 
 
 @fixture(scope="module", ids=fn_impl_ids, params=fn_impl_params)
@@ -97,7 +97,7 @@ def fn_impl(request):
     return request.param
 
 ntuples_impl_params = odl.NTUPLES_IMPLS.keys()
-ntuples_impl_ids = [" impl='{}' ".format(p) for p in ntuples_impl_params]
+ntuples_impl_ids = [" impl = '{}' ".format(p) for p in ntuples_impl_params]
 
 
 @fixture(scope="module", ids=ntuples_impl_ids, params=ntuples_impl_params)
@@ -107,7 +107,7 @@ def ntuples_impl(request):
 
 
 floating_dtype_params = np.sctypes['float'] + np.sctypes['complex']
-floating_dtype_ids = [' dtype={} '.format(dtype_repr(dt))
+floating_dtype_ids = [' dtype = {} '.format(dtype_repr(dt))
                       for dt in floating_dtype_params]
 
 
@@ -120,7 +120,7 @@ def floating_dtype(request):
 scalar_dtype_params = (floating_dtype_params +
                        np.sctypes['int'] +
                        np.sctypes['uint'])
-scalar_dtype_ids = [' dtype={} '.format(dtype_repr(dt))
+scalar_dtype_ids = [' dtype = {} '.format(dtype_repr(dt))
                     for dt in scalar_dtype_params]
 
 
@@ -131,7 +131,7 @@ def scalar_dtype(request):
 
 
 ufunc_params = odl.util.ufuncs.UFUNCS
-ufunc_ids = [' ufunc={} '.format(p[0]) for p in ufunc_params]
+ufunc_ids = [' ufunc = {} '.format(p[0]) for p in ufunc_params]
 
 
 @fixture(scope="module", ids=ufunc_ids, params=ufunc_params)
@@ -153,7 +153,7 @@ def ufunc(request):
 
 
 reduction_params = odl.util.ufuncs.REDUCTIONS
-reduction_ids = [' reduction={} '.format(p[0]) for p in reduction_params]
+reduction_ids = [' reduction = {} '.format(p[0]) for p in reduction_params]
 
 
 @fixture(scope="module", ids=reduction_ids, params=reduction_params)

@@ -27,7 +27,7 @@ import numpy as np
 import tempfile
 
 from odl.tomo.data import mrc_header_from_params, FileWriterMRC, FileReaderMRC
-from odl.util.testutils import all_equal
+from odl.util.testutils import all_equal, simple_fixture
 
 
 # --- pytest fixtures --- #
@@ -44,22 +44,13 @@ def mrc_mode_dtype(request):
     return mode, np.dtype(dtype)
 
 
-axis_order_params = list(permutations((0, 1, 2)))
-axis_order_ids = [' axis_order = {} '.format(p) for p in axis_order_params]
+axis_order = simple_fixture(
+    name='axis_order',
+    params=list(permutations((0, 1, 2))))
 
-
-@pytest.fixture(scope='module', ids=axis_order_ids, params=axis_order_params)
-def axis_order(request):
-    return request.param
-
-
-ncells_params = [(5, 10, 20), (1, 5, 6), (10, 1, 1), (1, 1, 1)]
-ncells_ids = [' ncells = {} '.format(p) for p in ncells_params]
-
-
-@pytest.fixture(scope='module', ids=ncells_ids, params=ncells_params)
-def ncells(request):
-    return request.param
+ncells = simple_fixture(
+    name='ncells',
+    params=[(5, 10, 20), (1, 5, 6), (10, 1, 1), (1, 1, 1)])
 
 
 ispg_kind_params = [(0, 'projections'), (1, 'volume')]

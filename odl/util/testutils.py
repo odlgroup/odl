@@ -235,6 +235,42 @@ try:
         reason='Need --benchmark option to run'
     )
 
+    def simple_fixture(name, params, fmt=None):
+        """Helper to create a pytest fixture using only name and params.
+
+        Parameters
+        ----------
+        name : str
+            Name of the parameters used for the ``ids`` argument
+            to `pytest.fixture`.
+        params : sequence
+            Values to be taken as parameters in the fixture. They are
+            used as ``params`` argument to `pytest.fixture`.
+        fmt : str, optional
+            Use this format string for the generation of the ``ids``.
+            For each value, the id string is generated as::
+
+                fmt.format(name=name, value=value)
+
+            hence the format string must use ``{name}`` and ``{value}``.
+
+            Default: ``" {name} = '{value}' "`` for string parameters,
+            otherwise ``" {name} = {value} "``
+        """
+        if fmt is None:
+            try:
+                params[0] + ''
+            except TypeError:
+                # Not a string type
+                fmt = " {name} = {value} "
+            else:
+                # String type
+                fmt = " {name} = '{value}' "
+
+        ids = [fmt.format(name=name, value=value) for value in params]
+        wrapper = pytest.fixture(scope='module', ids=ids, params=params)
+        return wrapper(lambda request: request.param)
+
 except ImportError:
     def _pass(function):
         """Trivial decorator used if pytest marks are not available."""

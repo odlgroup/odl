@@ -32,37 +32,24 @@ import tempfile
 
 from odl.tomo.data import (
     FileWriterRawBinaryWithHeader, FileReaderRawBinaryWithHeader)
-from odl.util.testutils import all_equal
+from odl.util.testutils import all_equal, simple_fixture
 
 
 # --- pytest fixtures --- #
 
 
-axis_order_params = list(permutations((0, 1, 2)))
-axis_order_ids = [' axis_order = {} '.format(p) for p in axis_order_params]
+axis_order = simple_fixture(
+    name='axis_order',
+    params=list(permutations((0, 1, 2))))
+
+shape = simple_fixture(
+    name='shape',
+    params=[(5, 10, 20), (1, 5, 6), (10, 1, 1), (1, 1, 1)])
+
+order = simple_fixture(name='order', params=['F', 'C'])
 
 
-@pytest.fixture(scope='module', ids=axis_order_ids, params=axis_order_params)
-def axis_order(request):
-    return request.param
-
-
-shape_params = [(5, 10, 20), (1, 5, 6), (10, 1, 1), (1, 1, 1)]
-shape_ids = [' shape = {} '.format(p) for p in shape_params]
-
-
-@pytest.fixture(scope='module', ids=shape_ids, params=shape_params)
-def shape(request):
-    return request.param
-
-
-order_params = ['F', 'C']
-order_ids = [" order = 'F' ", " order = 'C' "]
-
-
-@pytest.fixture(scope='module', ids=order_ids, params=order_params)
-def order(request):
-    return request.param
+# --- Tests --- #
 
 
 def test_uncompr_bin_io_without_header(shape, floating_dtype, order):
