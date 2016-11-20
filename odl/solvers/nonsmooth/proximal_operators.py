@@ -132,7 +132,6 @@ def proximal_cconj(prox_factory):
 
     For reference on the Moreau identity, see [CP2011c]_.
     """
-
     def cconj_prox_factory(sigma):
         """Create proximal for the dual with a given sigma.
 
@@ -147,7 +146,7 @@ def proximal_cconj(prox_factory):
             The proximal operator of ``s * F^*`` where ``s`` is the step size
         """
         sigma = float(sigma)
-        prox_other = (sigma * prox_factory(1.0 / sigma) * (1.0 / sigma))
+        prox_other = sigma * prox_factory(1.0 / sigma) * (1.0 / sigma)
         return IdentityOperator(prox_other.domain) - prox_other
 
     return cconj_prox_factory

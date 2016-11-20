@@ -15,20 +15,21 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Tomography with Nuclear norm regularization .
+"""Tomography with nuclear norm regularization.
 
 Solves the optimization problem
 
     min_{0 <= x_1 <= 1, 0 <= x_2 <= 1}
-        ||Ax_1 - g_1||_2^2 + 0.1 ||Ax_2 - g_2||_2^2 +
+        ||A(x_1) - g_1||_2^2 + 0.1 ||A(x_2) - g_2||_2^2 +
         lam || [grad(x_1), grad(x_2)] ||_*
 
-Where ``A`` is the ray transform,  ``grad`` is the spatial gradient,
+where ``A`` is the ray transform,  ``grad`` is the spatial gradient,
 ``g_1``, ``g_2`` the given noisy data and ``|| . ||_*`` is the nuclear-norm.
 
 The nuclear norm takes a vectorwise matrix norm, the spectral norm, i.e. the
-p-norm of the singular vectors. It introduces a coupling between the terms
-which allows better reconstructions.
+p-norm of the singular values. It introduces a coupling between the terms
+which allows better reconstructions by using the edge information from one term
+in reconstructing the other term.
 
 In this case we assume that ``g_2`` is much more noisy than ``g_1``, but we can
 still get an acceptable reconstruction.
@@ -61,56 +62,61 @@ geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 # The implementation of the ray transform to use, options:
 # 'scikit'                    Requires scikit-image (can be installed by
 #                             running ``pip install scikit-image``).
-# 'astra_cpu', 'astra_cuda'   Require astra tomography to be installed.
+# 'astra_cpu', 'astra_cuda'   Requires astra tomography to be installed.
 #                             Astra is much faster than scikit. Webpage:
 #                             https://github.com/astra-toolbox/astra-toolbox
 impl = 'astra_cuda'
 
-# Create the forward operator
+# Create the forward operator, and also the vectorial forward operator.
 ray_trafo = odl.tomo.RayTransform(space, geometry, impl=impl)
 forward_op = odl.DiagonalOperator(ray_trafo, 2)
 
-
 # Create phantom, first contains only part of the information in the second
+# We do this by using a sub-set of the ellipses in the well known Shepp-Logan
+# phantom.
 ellipses = odl.phantom.shepp_logan_ellipses(space.ndim, modified=True)
 phantom = forward_op.domain.element(
     [odl.phantom.ellipse_phantom(space, ellipses[:2]),
      odl.phantom.ellipse_phantom(space, ellipses)])
 phantom.show('phantom')
 
-# Create phantom where second channel is highly noisy
-rhs = forward_op(phantom)
-rhs[1] += odl.phantom.white_noise(forward_op.range[1]) * np.mean(rhs[1])
-rhs.show('rhs')
+# Create phantom where second channel is highly noisy (SNR = 1)
+data = forward_op(phantom)
+data[1] += odl.phantom.white_noise(forward_op.range[1]) * np.mean(data[1])
+data.show('data')
 
-# Set up gradient
+# Set up gradient and the vectorial gradient.
 gradient = odl.Gradient(ray_trafo.domain)
 pgradient = odl.DiagonalOperator(gradient, 2)
 
-# Assemble all operators
-lin_ops = [forward_op, pgradient]
-
-# Create data discrepancy functionals as needed
-l2err1 = odl.solvers.L2NormSquared(ray_trafo.range).translated(rhs[0])
-l2err2 = odl.solvers.L2NormSquared(ray_trafo.range).translated(rhs[1])
+# Create data discrepancy functionals
+l2err1 = odl.solvers.L2NormSquared(ray_trafo.range).translated(data[0])
+l2err2 = odl.solvers.L2NormSquared(ray_trafo.range).translated(data[1])
 
 # Scale the error term of the second channel so it is more heavily regularized.
+# Note that we need to use SeparableSum, otherwise the solver would not be able
+# to compute the proximal.
 l2err = odl.solvers.SeparableSum(l2err1, 0.1 * l2err2)
 
 # Create nuclear norm
 nuc_norm = odl.solvers.NuclearNorm(pgradient.range,
                                    singular_vector_exp=1)
 
-# Assemble the functionals
-const = 0.1
-g = [l2err, const * nuc_norm]
+# Assemble the functionals and operators for the solver
+lam = 0.1
+lin_ops = [forward_op, pgradient]
+g = [l2err, lam * nuc_norm]
 f = odl.solvers.IndicatorBox(forward_op.domain, 0, 1)
-func = f + l2err * forward_op + const * nuc_norm * pgradient
 
-# Solve
-x = forward_op.domain.zero()
+# Create callback that prints current iterate value and displays every 20th
+# iterate.
+func = f + l2err * forward_op + lam * nuc_norm * pgradient
 callback = (odl.solvers.CallbackShow(display_step=20) &
             odl.solvers.CallbackPrint(func=func))
+
+# Solve the problem. Here the parameters are chosen in order to ensure
+# convergence, see the documentation for further information.
+x = forward_op.domain.zero()
 odl.solvers.douglas_rachford_pd(x, f, g, lin_ops,
                                 tau=0.5, sigma=[0.01, 0.1],
-                                niter=1000, callback=callback)
+                                niter=100, callback=callback)

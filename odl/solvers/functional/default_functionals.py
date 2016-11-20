@@ -1816,6 +1816,10 @@ class NuclearNorm(Functional):
             raise NotImplementedError('`proximal` only implemented for '
                                       '`singular_vector_exp` in [1, 2, inf]')
 
+        if self.outernorm.exponent == np.inf:
+            # Implemented via duality.
+            return proximal_cconj(self.convex_conj.proximal)
+
         def nddot(a, b):
             """Compute pointwise matrix product in the last indices."""
             return np.einsum('...ij,...jk->...ik', a, b)
@@ -1825,8 +1829,8 @@ class NuclearNorm(Functional):
         class NuclearNormProximal(Operator):
             """Proximal operator of `NuclearNorm`."""
             def __init__(self, sigma):
-                self.sigma = sigma
-                Operator.__init__(self, func.domain, func.domain)
+                self.sigma = float(sigma)
+                Operator.__init__(self, func.domain, func.domain, linear=False)
 
             def _call(self, x):
                 """Return ``self(x)``."""
@@ -1868,7 +1872,19 @@ class NuclearNorm(Functional):
                 # different shapes.
                 return func._asvector(result)
 
+            def __repr__(self):
+                """Return ``repr(self)``."""
+                return '{!r}.proximal({})'.format(func, self.sigma)
+
         return NuclearNormProximal
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{}({!r}, {}, {})'.format(self.__class__.__name__,
+                                       self.domain,
+                                       self.outernorm.exponent,
+                                       self.pwisenorm.exponent)
+
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position

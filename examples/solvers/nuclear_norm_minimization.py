@@ -15,47 +15,52 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Total variation MRI inversion using the Douglas-Rachford solver.
+"""Nuclear norm minimization using the Douglas-Rachford solver.
 
 Solves the optimization problem
 
-    min ||x - g||_2^2 + lam || grad(x) ||_*
+    min_{x_1, x_2} ||x_1 - g_1||_2^2 + ||x_2 - g_2||_2^2 +
+                   lam || [grad(x_1), grad(x_2)] ||_*
 
 where ``grad`` is the spatial gradient, ``g`` the given noisy data and
-``|| . ||_*`` is the nuclear-norm.
+``|| . ||_*`` is the nuclear norm.
+
+The nuclear norm introduces a coupling between the channels, and hence we
+expect that edges should coincide in the optimal solution.
 """
 
 import odl
 
+# Create space that the function should live on. Here, we want a vector valued
+# function, so we create the tuple of two spaces.
 space = odl.uniform_discr(0, 1, 100)
 pspace = odl.ProductSpace(space, 2)
 
-identity = odl.IdentityOperator(pspace)
-
+# Create the gradient operator on the set of vector-valued functions.
 gradient = odl.Gradient(space, pad_mode='order1')
 pgradient = odl.DiagonalOperator(gradient, 2)
 
-rhs = pspace.element([lambda x: x[0], lambda x: x[0] > 0.6])
-rhs.show()
-
-# Assemble all operators
-lin_ops = [identity, pgradient]
+# Create the data. The first part is a linear function, the second is a step
+# function at x=0.6
+data = pspace.element([lambda x: x, lambda x: x > 0.6])
+data.show('data')
 
 # Create functionals as needed
 l2err = odl.solvers.L2NormSquared(pspace)
-nuc_norm = odl.solvers.NuclearNorm(pgradient.range)
+nuc_norm = 0.02 * odl.solvers.NuclearNorm(pgradient.range)
 
-const = 0.02
-
-g = [l2err.translated(rhs),
-     const * nuc_norm]
+# Assemble operators and functionals
+lin_ops = [odl.IdentityOperator(pspace), pgradient]
+g = [l2err.translated(data), nuc_norm]
 f = odl.solvers.ZeroFunctional(pspace)
-func = f + l2err + const * nuc_norm * pgradient
 
-# Solve
-x = rhs.copy()
+# Create a callback that shows the current function value
+func = f + l2err.translated(data) + nuc_norm * pgradient
 callback = (odl.solvers.CallbackShow(display_step=20) &
             odl.solvers.CallbackPrint(func))
+
+# Solve
+x = data.copy()
 odl.solvers.douglas_rachford_pd(x, f, g, lin_ops,
                                 tau=1e-2, sigma=[1.0, 1e-3],
-                                niter=200, callback=callback)
+                                niter=2000, callback=callback)
