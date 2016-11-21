@@ -26,6 +26,12 @@ References
 .. [BV2004] Boyd, S, and Vandenberghe, L. *Convex optimization*.
    Cambridge university press, 2004.
 
+.. [Che+2015] Cheng, A, Henderson, R, Mastronarde, D, Ludtke, S J,
+   Schoenmakers, R H M, Short, J, Marabini, R, Dallakyan, S, Agard, D,
+   and Winn, M. *MRC2014: Extensions to the MRC format header for electron
+   cryo-microscopy and tomography*. Journal of Structural Biology,
+   129 (2015), pp 146--150.
+
 .. [CP2011a] Chambolle, A and Pock, T. *A First-Order
    Primal-Dual Algorithm for Convex Problems with Applications to
    Imaging*. Journal of Mathematical Imaging and Vision, 40 (2011),
