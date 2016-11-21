@@ -70,11 +70,13 @@ def test_uncompr_bin_io_without_header(shape, floating_dtype, order):
     with FileReaderRawBinaryWithHeader(file, dtype=dtype) as reader:
 
         # whole file, should work
-        file_data = reader.read_data(reshape_order=order)
+        file_data = reader.read_data().reshape(reader.data_storage_shape,
+                                               order=order)
         assert np.array_equal(file_data, flat_data)
 
-        file_data = reader.read_data(dstart=0, dend=file_size,
-                                     reshape_order=order)
+        # again whole file, but with explicit arguments
+        file_data = reader.read_data(dstart=0, dend=file_size).reshape(
+            reader.data_storage_shape, order=order)
         assert np.array_equal(file_data, flat_data)
 
         # read an arbitrary section ('F' ordering only, otherwise stuff is

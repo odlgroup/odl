@@ -471,7 +471,7 @@ class FileReaderRawBinaryWithHeader(object):
 
         return header
 
-    def read_data(self, dstart=None, dend=None, reshape_order='C'):
+    def read_data(self, dstart=None, dend=None):
         """Read data from `file` and return it as Numpy array.
 
         Parameters
@@ -485,9 +485,6 @@ class FileReaderRawBinaryWithHeader(object):
             End position in bytes until which data is read (exclusive).
             Backwards indexing with negative values  is also supported.
             Use a value different from the file size to extract a data subset.
-        reshape_order : {'C', 'F', 'A'}, optional
-            Value passed as ``order`` parameter to `numpy.reshape`.
-            Reshaping is only done in case the whole data block is read.
 
         Returns
         -------
@@ -536,14 +533,8 @@ class FileReaderRawBinaryWithHeader(object):
                           self.data_dtype))
         self.file.seek(dstart_abs)
         # Numpy determines byte order by itself
-        data = np.fromfile(self.file, dtype=self.data_dtype,
+        return np.fromfile(self.file, dtype=self.data_dtype,
                            count=int(num_elems))
-
-        if dstart_abs == self.header_size and dend_abs == filesize_bytes:
-            # Full dataset read, reshape to stored shape.
-            data = data.reshape(self.data_storage_shape, order=reshape_order)
-
-        return data
 
 
 class FileWriterRawBinaryWithHeader(object):

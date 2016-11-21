@@ -628,7 +628,8 @@ extended-mrc-format-not-used-by-2dx
         data : `numpy.ndarray`
             The data read from `file`.
         """
-        data = super().read_data(dstart, dend, reshape_order='F')
+        data = super().read_data(dstart, dend).reshape(self.data_shape,
+                                                       order='F')
         if swap_axes:
             data = np.transpose(data, axes=self.data_axis_order)
             assert data.shape == self.data_shape
