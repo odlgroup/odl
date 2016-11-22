@@ -1906,9 +1906,9 @@ class NuclearNorm(Functional):
     def __repr__(self):
         """Return ``repr(self)``."""
         return '{}({!r}, {}, {})'.format(self.__class__.__name__,
-                                       self.domain,
-                                       self.outernorm.exponent,
-                                       self.pwisenorm.exponent)
+                                         self.domain,
+                                         self.outernorm.exponent,
+                                         self.pwisenorm.exponent)
 
 
 if __name__ == '__main__':
