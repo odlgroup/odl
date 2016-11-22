@@ -1731,9 +1731,9 @@ class NuclearNorm(Functional):
         ----------
         space : `ProductSpace` of `ProductSpace` of `FnBase`
             Domain of the functional.
-        outer_exp : {1, 2, inf}
+        outer_exp : {1, 2, inf}, optional
             Exponent for the outer norm.
-        singular_vector_exp : {1, 2, inf}
+        singular_vector_exp : {1, 2, inf}, optional
             Exponent for the norm for the singular vectors.
 
         Examples
@@ -1842,10 +1842,6 @@ class NuclearNorm(Functional):
         if self.pwisenorm.exponent not in [1, 2, np.inf]:
             raise NotImplementedError('`proximal` only implemented for '
                                       '`singular_vector_exp` in [1, 2, inf]')
-
-        if self.outernorm.exponent == np.inf:
-            # Implemented via duality.
-            return proximal_cconj(self.convex_conj.proximal)
 
         def nddot(a, b):
             """Compute pointwise matrix product in the last indices."""

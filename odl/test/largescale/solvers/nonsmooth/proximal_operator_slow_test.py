@@ -62,12 +62,13 @@ def dual(request):
 
 
 func_params = ['l1', 'l2', 'l2^2', 'kl', 'kl_cross_ent', 'const',
-               'groupl11', 'groupl12']
+               'groupl11', 'groupl12',
+               'nuclearnorm-1-1', 'nuclearnorm-1-2', 'nuclearnorm-1-inf']
 func_ids = [' f = {}'.format(p.ljust(10)) for p in func_params]
 
 
 @pytest.fixture(scope="module", ids=func_ids, params=func_params)
-def functional(request, offset, dual, stepsize):
+def functional(request, offset, dual):
     """Return functional whose proximal should be tested."""
     name = request.param.strip()
 
@@ -91,6 +92,14 @@ def functional(request, offset, dual, stepsize):
     elif name == 'groupl12':
         space = odl.ProductSpace(space, 2)
         func = odl.solvers.GroupL1Norm(space, exponent=2)
+    elif name.startswith('nuclearnorm'):
+        outer_exp = float(name.split('-')[1])
+        singular_vector_exp = float(name.split('-')[2])
+
+        space = odl.ProductSpace(odl.ProductSpace(space, 2), 3)
+        func = odl.solvers.NuclearNorm(space,
+                                       outer_exp=outer_exp,
+                                       singular_vector_exp=singular_vector_exp)
     else:
         assert False
 
@@ -104,6 +113,9 @@ def functional(request, offset, dual, stepsize):
         if name == 'groupl11':
             # TODO: Issue #712
             pytest.xfail('group l1-1 norm has no convex conjugate')
+        elif name.startswith('nuclearnorm'):
+            # TODO: Issue #729
+            pytest.xfail('nuclear norm has no convex conjugate')
 
         func = func.convex_conj
 
