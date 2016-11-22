@@ -29,36 +29,15 @@ import scipy.special
 
 # Internal
 import odl
-from odl.util.testutils import (noise_element, all_almost_equal)
+from odl.util.testutils import (noise_element, all_almost_equal,
+                                simple_fixture)
 
 pytestmark = odl.util.skip_if_no_largescale
 
 
-step_params = [0.1, 1.0, 10.0]
-step_ids = [' stepsize = {} '.format(p) for p in step_params]
-
-
-@pytest.fixture(scope="module", ids=step_ids, params=step_params)
-def stepsize(request):
-    return request.param
-
-
-offset_params = [False, True]
-offset_ids = [' offset = {} '.format(str(p).ljust(5)) for p in offset_params]
-
-
-@pytest.fixture(scope="module", ids=offset_ids, params=offset_params)
-def offset(request):
-    return request.param
-
-
-dual_params = [False, True]
-dual_ids = [' dual = {} '.format(str(p).ljust(5)) for p in dual_params]
-
-
-@pytest.fixture(scope="module", ids=dual_ids, params=dual_params)
-def dual(request):
-    return request.param
+stepsize = simple_fixture('stepsize', [0.1, 1.0, 10.0])
+offset = simple_fixture('offset', [False, True])
+dual = simple_fixture('dual', [False, True])
 
 
 func_params = ['l1', 'l2', 'l2^2', 'kl', 'kl_cross_ent', 'const',
@@ -110,13 +89,6 @@ def functional(request, offset, dual):
         func = func.translated(g)
 
     if dual:
-        if name == 'groupl11':
-            # TODO: Issue #712
-            pytest.xfail('group l1-1 norm has no convex conjugate')
-        elif name.startswith('nuclearnorm'):
-            # TODO: Issue #729
-            pytest.xfail('nuclear norm has no convex conjugate')
-
         func = func.convex_conj
 
     return func

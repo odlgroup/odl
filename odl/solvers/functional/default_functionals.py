@@ -47,7 +47,8 @@ __all__ = ('LpNorm', 'L1Norm', 'L2Norm', 'L2NormSquared',
            'GroupL1Norm', 'IndicatorGroupL1UnitBall', 'IndicatorZero',
            'IndicatorBox', 'IndicatorNonnegativity', 'KullbackLeibler',
            'KullbackLeiblerCrossEntropy', 'SeparableSum',
-           'QuadraticForm', 'NuclearNorm')
+           'QuadraticForm',
+           'NuclearNorm', 'IndicatorNuclearNormUnitBall')
 
 
 class LpNorm(Functional):
@@ -407,7 +408,7 @@ class IndicatorGroupL1UnitBall(Functional):
         proximal_cconj_l1 : `proximal factory` for the L1-norms convex
                             conjugate.
         """
-        if self.pointwise_norm.exponent == 1:
+        if self.pointwise_norm.exponent == np.inf:
             return proximal_cconj_l1(space=self.domain)
         elif self.pointwise_norm.exponent == 2:
             return proximal_cconj_l1(space=self.domain, isotropic=True)
@@ -1901,6 +1902,19 @@ class NuclearNorm(Functional):
 
         return NuclearNormProximal
 
+    @property
+    def convex_conj(self):
+        """Convex conjugate of the nuclear norm.
+
+        The convex conjugate is the indicator function on the unit ball of
+        the dual norm where the dual norm is obtained by taking the conjugate
+        exponent of both the outer and singular vector exponents.
+        """
+        return IndicatorNuclearNormUnitBall(
+            self.domain,
+            conj_exponent(self.outernorm.exponent),
+            conj_exponent(self.pwisenorm.exponent))
+
     def __repr__(self):
         """Return ``repr(self)``."""
         return '{}({!r}, {}, {})'.format(self.__class__.__name__,
@@ -1908,6 +1922,94 @@ class NuclearNorm(Functional):
                                          self.outernorm.exponent,
                                          self.pwisenorm.exponent)
 
+
+class IndicatorNuclearNormUnitBall(Functional):
+    """Indicator on unit ball of nuclear norm for matrix valued functions.
+
+    Notes
+    -----
+    For a matrix-valued function
+    :math:`f : \\Omega \\rightarrow \\mathbb{R}^{n \\times m}`,
+    the nuclear norm with parameters :math:`p` and :math:`q` is defined by
+
+    .. math::
+        \\left( \int_\Omega \|\sigma(f(x))\|_p^q d x \\right)^{1/q},
+
+    where :math:`\sigma(f(x))` is the vector of singular values of the matrix
+    :math:`f(x)` and :math:`\| \cdot \|_p` is the usual :math:`p`-norm on
+    :math:`\mathbb{R}^{\min(n, m)}`.
+
+    This function is defined as the indicator on the unit ball of the nuclear
+    norm, that is, 0 if the nuclear norm is less than 1, and infinity else.
+
+    References
+    ----------
+    J. Duran, M. Moeller, C. Sbert, and D. Cremers. Collaborative Total
+    Variation: A General Framework for Vectorial TV Models, SIAM Journal of
+    Imaging Sciences 9(1): 116--151, 2016.
+    """
+
+    def __init__(self, space, outer_exp=1, singular_vector_exp=2):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        space : `ProductSpace` of `ProductSpace` of `FnBase`
+            Domain of the functional.
+        outer_exp : {1, 2, inf}, optional
+            Exponent for the outer norm.
+        singular_vector_exp : {1, 2, inf}, optional
+            Exponent for the norm for the singular vectors.
+
+        Examples
+        --------
+        Simple example, nuclear norm of matrix valued function with all ones
+        in 3 points. The singular values are [2, 0], which has squared 2-norm
+        2. Since there are 3 points, the expected total value is 6.
+        Since the nuclear norm is larger than 1, the indicator is infinity.
+
+        >>> r3 = odl.rn(3)
+        >>> space = odl.ProductSpace(odl.ProductSpace(r3, 2), 2)
+        >>> norm = IndicatorNuclearNormUnitBall(space)
+        >>> norm(space.one())
+        inf
+        """
+        self.__norm = NuclearNorm(space, outer_exp, singular_vector_exp)
+        super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
+
+    def _call(self, x):
+        """Return ``self(x)``."""
+        x_norm = self.__norm(x)
+
+        if x_norm > 1:
+            return np.inf
+        else:
+            return 0
+
+    @property
+    def proximal(self):
+        """The proximal operator."""
+        # Implement proximal via duality
+        return proximal_cconj(self.convex_conj.proximal)
+
+    @property
+    def convex_conj(self):
+        """Convex conjugate of the unit ball indicator of the  nuclear norm.
+
+        The convex conjugate is the dual nuclear norm  where the dual norm is
+        obtained by taking the conjugate exponent of both the outer and
+        singular vector exponents.
+        """
+        return NuclearNorm(self.domain,
+                           conj_exponent(self.__norm.outernorm.exponent),
+                           conj_exponent(self.__norm.pwisenorm.exponent))
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{}({!r}, {}, {})'.format(self.__class__.__name__,
+                                         self.domain,
+                                         self.__norm.outernorm.exponent,
+                                         self.__norm.pwisenorm.exponent)
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position
