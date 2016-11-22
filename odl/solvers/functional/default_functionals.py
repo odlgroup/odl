@@ -1706,14 +1706,15 @@ class NuclearNorm(Functional):
 
     Notes
     -----
-    For a function :math:`f : \\Omega \\rightarrow \\mathbb{R}^{n \\times m}`,
+    For a matrix-valued function
+    :math:`f : \\Omega \\rightarrow \\mathbb{R}^{n \\times m}`,
     the nuclear norm with parameters :math:`p` and :math:`q` is defined by
 
     .. math::
         \\left( \int_\Omega \|\sigma(f(x))\|_p^q d x \\right)^{1/q},
 
-    where :math:`\sigma(f(x))` is the vector of singular values of :math:`f` in
-    point :math:`x` and :math:`\| \cdot \|_p` is the usual :math:`p`-norm on
+    where :math:`\sigma(f(x))` is the vector of singular values of the matrix
+    :math:`f(x)` and :math:`\| \cdot \|_p` is the usual :math:`p`-norm on
     :math:`\mathbb{R}^{\min(n, m)}`.
 
     References
@@ -1738,8 +1739,8 @@ class NuclearNorm(Functional):
         Examples
         --------
         Simple example, nuclear norm of matrix valued function with all ones
-        in 3 points. The singular values are [2, 0], which has 2-norm 2. Since
-        there are 3 points, the expected total value is     6.
+        in 3 points. The singular values are [2, 0], which has squared 2-norm
+        2. Since there are 3 points, the expected total value is 6.
 
         >>> r3 = odl.rn(3)
         >>> space = odl.ProductSpace(odl.ProductSpace(r3, 2), 2)
@@ -1761,10 +1762,12 @@ class NuclearNorm(Functional):
                                        exponent=singular_vector_exp)
         self.pshape = (self.domain.size, self.domain[0].size)
 
+    # TODO: Remove when numpy 1.11 is required by ODL
     def _moveaxis(self, arr, source, dest):
         """Implementation of `numpy.moveaxis`.
 
-        Needed since `numpy.moveaxis` requires numpy 1.11, which ODL doesnt.
+        Needed since `numpy.moveaxis` requires numpy 1.11, which ODL doesn't
+        have as a dependency.
         """
         try:
             source = list(source)
@@ -1788,9 +1791,8 @@ class NuclearNorm(Functional):
     def _asarray(self, vec):
         """Convert ``x`` to an array.
 
-        Here the indices are changed such that the "outer" indices come last,
-        this is in order to have the access order as `numpy.linalg.svd` needs
-        it.
+        Here the indices are changed such that the "outer" indices come last
+        in order to have the access order as `numpy.linalg.svd` needs it.
 
         This is the inverse of `_asvector`.
         """

@@ -48,14 +48,14 @@ import odl
 
 
 # Discrete reconstruction space: discretized functions on the rectangle
-# [-20, 20]^2 with 300 samples per dimension.
+# [-20, 20]^2 with 100 samples per dimension.
 space = odl.uniform_discr(
     min_pt=[-20, -20], max_pt=[20, 20], shape=[100, 100], dtype='float32')
 
 # Make a parallel beam geometry with flat detector
-# Angles: uniformly spaced, n = 200, min = 0, max = 2 * pi
+# Angles: uniformly spaced, n = 300, min = 0, max = 2 * pi
 angle_partition = odl.uniform_partition(0, 2 * np.pi, 300)
-# Detector: uniformly sampled, n = 200, min = -30, max = 30
+# Detector: uniformly sampled, n = 300, min = -30, max = 30
 detector_partition = odl.uniform_partition(-30, 30, 300)
 geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 
@@ -71,7 +71,8 @@ impl = 'astra_cuda'
 ray_trafo = odl.tomo.RayTransform(space, geometry, impl=impl)
 forward_op = odl.DiagonalOperator(ray_trafo, 2)
 
-# Create phantom, first contains only part of the information in the second
+# Create phantom where the first component contains only part of the
+# information in the  second component.
 # We do this by using a sub-set of the ellipses in the well known Shepp-Logan
 # phantom.
 ellipses = odl.phantom.shepp_logan_ellipses(space.ndim, modified=True)
@@ -80,7 +81,7 @@ phantom = forward_op.domain.element(
      odl.phantom.ellipse_phantom(space, ellipses)])
 phantom.show('phantom')
 
-# Create phantom where second channel is highly noisy (SNR = 1)
+# Create data where second channel is highly noisy (SNR = 1)
 data = forward_op(phantom)
 data[1] += odl.phantom.white_noise(forward_op.range[1]) * np.mean(data[1])
 data.show('data')
@@ -96,6 +97,7 @@ l2err2 = odl.solvers.L2NormSquared(ray_trafo.range).translated(data[1])
 # Scale the error term of the second channel so it is more heavily regularized.
 # Note that we need to use SeparableSum, otherwise the solver would not be able
 # to compute the proximal.
+# The separable sum is defomed by: l2err([x, y]) = l2err1(x) + 0.1 * l2err(y)
 l2err = odl.solvers.SeparableSum(l2err1, 0.1 * l2err2)
 
 # Create nuclear norm
