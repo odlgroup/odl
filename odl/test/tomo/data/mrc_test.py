@@ -181,48 +181,49 @@ def test_mrc_io(shape, mrc_mode_dtype, ispg_kind, axis_order):
                                     axis_order=axis_order)
 
     # Test writer properties using standard class construction
-    file = tempfile.TemporaryFile()
-    writer = FileWriterMRC(file, header)
+    with tempfile.NamedTemporaryFile() as named_file:
+        file = named_file.file
+        writer = FileWriterMRC(file, header)
 
-    assert writer.header_size == 1024  # Standard MRC header size
-    assert all_equal(writer.data_shape, shape)
-    assert all_equal(writer.data_storage_shape, data_storage_shape)
-    assert writer.data_dtype == dtype
-    assert all_equal(writer.data_axis_order, axis_order)
+        assert writer.header_size == 1024  # Standard MRC header size
+        assert all_equal(writer.data_shape, shape)
+        assert all_equal(writer.data_storage_shape, data_storage_shape)
+        assert writer.data_dtype == dtype
+        assert all_equal(writer.data_axis_order, axis_order)
 
-    # Test writing some data (that all data types can represent).
-    data = np.random.randint(0, 10, size=shape).astype(dtype)
-    writer.write_data(data)
+        # Test writing some data (that all data types can represent).
+        data = np.random.randint(0, 10, size=shape).astype(dtype)
+        writer.write_data(data)
 
-    # Check file size
-    writer.file.seek(0, 2)
-    file_size = writer.file.tell()
-    assert file_size == writer.header_size + data.nbytes
+        # Check file size
+        writer.file.seek(0, 2)
+        file_size = writer.file.tell()
+        assert file_size == writer.header_size + data.nbytes
 
-    # Check flat arrays
-    file.seek(1024)
-    raw_data = np.fromfile(file, dtype=dtype)
-    flat_data = np.transpose(data, axes=np.argsort(axis_order))
-    flat_data = flat_data.reshape(-1, order='F')
-    assert np.array_equal(raw_data, flat_data)
+        # Check flat arrays
+        file.seek(1024)
+        raw_data = np.fromfile(file, dtype=dtype)
+        flat_data = np.transpose(data, axes=np.argsort(axis_order))
+        flat_data = flat_data.reshape(-1, order='F')
+        assert np.array_equal(raw_data, flat_data)
 
-    # Write everything using the context manager syntax
-    with FileWriterMRC(file, header) as writer:
-        writer.write(data)
+        # Write everything using the context manager syntax
+        with FileWriterMRC(file, header) as writer:
+            writer.write(data)
 
-    # Read from the same file using the reader with standard constructor
-    reader = FileReaderMRC(file)
-    reader.read_header()
-    assert writer.header_size == 1024  # Standard MRC header size
-    assert all_equal(reader.data_shape, shape)
-    assert all_equal(reader.data_storage_shape, data_storage_shape)
-    assert reader.data_dtype == dtype
-    assert reader.data_kind == kind
-    assert all_equal(reader.data_axis_order, axis_order)
-    assert np.allclose(reader.cell_sides_angstrom, 1.0)
-    assert all_equal(reader.mrc_version, (2014, 0))
-    assert reader.extended_header_type == '    '
-    assert reader.labels == ()
+        # Read from the same file using the reader with standard constructor
+        reader = FileReaderMRC(file)
+        reader.read_header()
+        assert writer.header_size == 1024  # Standard MRC header size
+        assert all_equal(reader.data_shape, shape)
+        assert all_equal(reader.data_storage_shape, data_storage_shape)
+        assert reader.data_dtype == dtype
+        assert reader.data_kind == kind
+        assert all_equal(reader.data_axis_order, axis_order)
+        assert np.allclose(reader.cell_sides_angstrom, 1.0)
+        assert all_equal(reader.mrc_version, (2014, 0))
+        assert reader.extended_header_type == '    '
+        assert reader.labels == ()
 
 
 if __name__ == '__main__':
