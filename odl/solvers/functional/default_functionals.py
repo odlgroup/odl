@@ -42,7 +42,7 @@ from odl.solvers.nonsmooth.proximal_operators import (
 from odl.util import conj_exponent
 
 
-__all__ = ('L1Norm', 'L2Norm', 'LpNorm', 'L2NormSquared',
+__all__ = ('LpNorm', 'L1Norm', 'L2Norm', 'L2NormSquared',
            'ZeroFunctional', 'ConstantFunctional', 'IndicatorLpUnitBall',
            'GroupL1Norm', 'IndicatorGroupL1UnitBall', 'IndicatorZero',
            'IndicatorBox', 'IndicatorNonnegativity', 'KullbackLeibler',
@@ -50,84 +50,61 @@ __all__ = ('L1Norm', 'L2Norm', 'LpNorm', 'L2NormSquared',
            'QuadraticForm', 'NuclearNorm')
 
 
-class L1Norm(Functional):
+# TODO make l1 and l2 norms inherit from this.
+class LpNorm(Functional):
 
-    """The functional corresponding to L1-norm.
+    """The functional corresponding to the Lp-norm.
 
-    The L1-norm, ``||x||_1``,  is defined as the integral/sum of ``|x|``.
-
-    Notes
-    -----
-    If the functional is defined on an :math:`\mathbb{R}^n`-like space, the
-    :math:`L_1`-norm is defined as
+    The Lp-norm, ``||f||_p``,  is defined as
 
     .. math::
-
-        \| x \|_1 = \\sum_{i=1}^n |x_i|.
-
-    If the functional is defined on an :math:`L_2`-like space, the
-    :math:`L_1`-norm is defined as
-
-    .. math::
-
-        \| x \|_1 = \\int_\Omega |x(t)| dt.
+        \\left(\\int |f(x)|^p dx \\right)^{1/p}
     """
 
-    def __init__(self, space):
+    def __init__(self, space, exponent):
         """Initialize a new instance.
 
         Parameters
         ----------
         space : `DiscreteLp` or `FnBase`
             Domain of the functional.
+        exponent : float
+            Exponent for the norm (``p``).
         """
+        self.exponent = float(exponent)
         super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
 
     # TODO: update when integration operator is in place: issue #440
     def _call(self, x):
-        """Return the L1-norm of ``x``."""
-        return x.ufunc.absolute().inner(self.domain.one())
-
-    # TODO: remove inner class when ufunc operators are in place: issue #567
-    @property
-    def gradient(self):
-        """Gradient operator of the functional.
-
-        The functional is not differentiable in ``x=0``. However, when
-        evaluating the gradient operator in this point it will return 0.
-        """
-        functional = self
-
-        class L1Gradient(Operator):
-
-            """The gradient operator of this functional."""
-
-            def __init__(self):
-                """Initialize a new instance."""
-                super().__init__(functional.domain, functional.domain,
-                                 linear=False)
-
-            def _call(self, x):
-                """Apply the gradient operator to the given point."""
-                return x.ufunc.sign()
-
-        return L1Gradient()
-
-    @property
-    def proximal(self):
-        """Return the `proximal factory` of the functional.
-
-        See Also
-        --------
-        odl.solvers.nonsmooth.proximal_operators.proximal_l1 :
-            `proximal factory` for the L1-norm.
-        """
-        return proximal_l1(space=self.domain)
+        """Return the Lp-norm of ``x``."""
+        if self.exponent == 0:
+            return self.domain.one().inner(np.not_equal(x, 0))
+        elif self.exponent == 1:
+            return x.ufunc.absolute().inner(self.domain.one())
+        elif self.exponent == 2:
+            return x.inner(x)
+        elif np.isfinite(self.exponent):
+            tmp = x.ufunc.absolute()
+            tmp.ufunc.power(self.exponent, out=tmp)
+            return np.power(tmp.inner(self.domain.one()), 1 / self.exponent)
+        elif self.exponent == np.inf:
+            return x.ufunc.absolute().ufunc.max()
+        elif self.exponent == -np.inf:
+            return x.ufunc.absolute().ufunc.min()
+        else:
+            raise RuntimeError('unknown exponent')
 
     @property
     def convex_conj(self):
-        """The convex conjugate functional of the L1-norm."""
-        return IndicatorLpUnitBall(self.domain, exponent=np.inf)
+        """The convex conjugate functional of the Lp-norm."""
+        return IndicatorLpUnitBall(self.domain,
+                                   exponent=conj_exponent(self.exponent))
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{}({!r})'.format(self.__class__.__name__,
+                                 self.domain,
+                                 self.exponent)
 
 
 class GroupL1Norm(Functional):
@@ -483,6 +460,86 @@ class IndicatorLpUnitBall(Functional):
                                       self.domain, self.exponent)
 
 
+class L1Norm(Functional):
+
+    """The functional corresponding to L1-norm.
+
+    The L1-norm, ``||x||_1``,  is defined as the integral/sum of ``|x|``.
+
+    Notes
+    -----
+    If the functional is defined on an :math:`\mathbb{R}^n`-like space, the
+    :math:`L_1`-norm is defined as
+
+    .. math::
+
+        \| x \|_1 = \\sum_{i=1}^n |x_i|.
+
+    If the functional is defined on an :math:`L_2`-like space, the
+    :math:`L_1`-norm is defined as
+
+    .. math::
+
+        \| x \|_1 = \\int_\Omega |x(t)| dt.
+    """
+
+    def __init__(self, space):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        space : `DiscreteLp` or `FnBase`
+            Domain of the functional.
+        """
+        super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
+
+    # TODO: update when integration operator is in place: issue #440
+    def _call(self, x):
+        """Return the L1-norm of ``x``."""
+        return x.ufunc.absolute().inner(self.domain.one())
+
+    # TODO: remove inner class when ufunc operators are in place: issue #567
+    @property
+    def gradient(self):
+        """Gradient operator of the functional.
+
+        The functional is not differentiable in ``x=0``. However, when
+        evaluating the gradient operator in this point it will return 0.
+        """
+        functional = self
+
+        class L1Gradient(Operator):
+
+            """The gradient operator of this functional."""
+
+            def __init__(self):
+                """Initialize a new instance."""
+                super().__init__(functional.domain, functional.domain,
+                                 linear=False)
+
+            def _call(self, x):
+                """Apply the gradient operator to the given point."""
+                return x.ufunc.sign()
+
+        return L1Gradient()
+
+    @property
+    def proximal(self):
+        """Return the proximal factory of the functional.
+
+        See Also
+        --------
+        odl.solvers.nonsmooth.proximal_operators.proximal_l1 :
+            proximal factory for the L1-norm.
+        """
+        return proximal_l1(space=self.domain)
+
+    @property
+    def convex_conj(self):
+        """The convex conjugate functional of the L1-norm."""
+        return IndicatorLpUnitBall(self.domain, exponent=np.inf)
+
+
 class L2Norm(Functional):
 
     """The functional corresponding to the L2-norm.
@@ -554,60 +611,6 @@ class L2Norm(Functional):
     def __repr__(self):
         """Return ``repr(self)``."""
         return '{}({!r})'.format(self.__class__.__name__, self.domain)
-
-
-# TODO make l1 and l2 norms inherit from this.
-class LpNorm(Functional):
-
-    """The functional corresponding to the Lp-norm.
-
-    The Lp-norm, ``||f||_p``,  is defined as
-
-    .. math::
-        \\left(\\int |f(x)|^p dx \\right)^{1/p}
-    """
-
-    def __init__(self, space, exponent):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        space : `DiscreteLp` or `FnBase`
-            Domain of the functional.
-        exponent : float
-            Exponent for the norm (``p``).
-        """
-        self.exponent = float(exponent)
-        super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
-
-    # TODO: update when integration operator is in place: issue #440
-    def _call(self, x):
-        """Return the Lp-norm of ``x``."""
-        if self.exponent == 0:
-            return self.domain.one().inner(np.not_equal(x, 0))
-        if np.isfinite(self.exponent):
-            xpow = x.ufunc.power(self.exponent)
-            return np.power(self.domain.one().inner(xpow), 1 / self.exponent)
-        elif self.exponent == np.inf:
-            xabs = x.ufunc.absolute()
-            return np.max(xabs)
-        elif self.exponent == -np.inf:
-            xabs = x.ufunc.absolute()
-            return np.min(xabs)
-        else:
-            raise RuntimeError('unknown exponent')
-
-    @property
-    def convex_conj(self):
-        """The convex conjugate functional of the Lp-norm."""
-        return IndicatorLpUnitBall(self.domain,
-                                   exponent=conj_exponent(self.exponent))
-
-    def __repr__(self):
-        """Return ``repr(self)``."""
-        return '{}({!r})'.format(self.__class__.__name__,
-                                 self.domain,
-                                 self.exponent)
 
 
 class L2NormSquared(Functional):
