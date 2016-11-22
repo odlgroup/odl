@@ -157,9 +157,8 @@ def test_L2_norm(space, sigma):
         expected_result = x / x.norm()
         assert all_almost_equal(func.gradient(x), expected_result)
 
-    # Verify that the gradient at zero raises
-    with pytest.raises(ValueError):
-        func.gradient(func.domain.zero())
+    # Verify that the gradient at zero is zero
+    assert all_almost_equal(func.gradient(func.domain.zero()), space.zero())
 
     # Test proximal operator - expecting
     # x * (1 - sigma/||x||) if ||x|| > sigma, 0 else

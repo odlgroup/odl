@@ -50,15 +50,25 @@ __all__ = ('LpNorm', 'L1Norm', 'L2Norm', 'L2NormSquared',
            'QuadraticForm', 'NuclearNorm')
 
 
-# TODO make l1 and l2 norms inherit from this.
 class LpNorm(Functional):
 
     """The functional corresponding to the Lp-norm.
 
-    The Lp-norm, ``||f||_p``,  is defined as
+    Notes
+    -----
+    If the functional is defined on an :math:`\mathbb{R}^n`-like space, the
+    :math:`\| \cdot \|_p`-norm is defined as
 
     .. math::
-        \\left(\\int |f(x)|^p dx \\right)^{1/p}
+
+        \| x \|_p = \\left(\\sum_{i=1}^n |x_i|^p \\right)^{1/p}.
+
+    If the functional is defined on an :math:`L_2`-like space, the
+    :math:`\| \cdot \|_p`-norm is defined as
+
+    .. math::
+
+        \| x \|_p = \\left(\\int_\Omega |x(t)|^p dt. \\right)^{1/p}
     """
 
     def __init__(self, space, exponent):
@@ -82,7 +92,7 @@ class LpNorm(Functional):
         elif self.exponent == 1:
             return x.ufunc.absolute().inner(self.domain.one())
         elif self.exponent == 2:
-            return x.inner(x)
+            return np.sqrt(x.inner(x))
         elif np.isfinite(self.exponent):
             tmp = x.ufunc.absolute()
             tmp.ufunc.power(self.exponent, out=tmp)
@@ -100,11 +110,80 @@ class LpNorm(Functional):
         return IndicatorLpUnitBall(self.domain,
                                    exponent=conj_exponent(self.exponent))
 
+    @property
+    def proximal(self):
+        """Return the proximal factory of the functional.
+
+        See Also
+        --------
+        odl.solvers.nonsmooth.proximal_operators.proximal_l1 :
+            proximal factory for the L1-norm.
+        odl.solvers.nonsmooth.proximal_operators.proximal_l2 :
+            proximal factory for the L2-norm.
+        """
+        if self.exponent == 1:
+            return proximal_l1(space=self.domain)
+        elif self.exponent == 2:
+            return proximal_l2(space=self.domain)
+        else:
+            raise NotImplementedError('`proximal` only implemented for p=1 or '
+                                      'p=2')
+
+    @property
+    def gradient(self):
+        """Gradient operator of the functional.
+
+        The functional is not differentiable in ``x=0``. However, when
+        evaluating the gradient operator in this point it will return 0.
+        """
+        functional = self
+
+        if self.exponent == 1:
+            class L1Gradient(Operator):
+
+                """The gradient operator of this functional."""
+
+                def __init__(self):
+                    """Initialize a new instance."""
+                    super().__init__(functional.domain, functional.domain,
+                                     linear=False)
+
+                def _call(self, x):
+                    """Apply the gradient operator to the given point."""
+                    return x.ufunc.sign()
+
+            return L1Gradient()
+        elif self.exponent == 2:
+            class L2Gradient(Operator):
+
+                """The gradient operator of this functional."""
+
+                def __init__(self):
+                    """Initialize a new instance."""
+                    super().__init__(functional.domain, functional.domain,
+                                     linear=False)
+
+                def _call(self, x):
+                    """Apply the gradient operator to the given point.
+
+                    The gradient is not defined in 0.
+                    """
+                    norm_of_x = x.norm()
+                    if norm_of_x == 0:
+                        return self.domain.zero()
+                    else:
+                        return x / norm_of_x
+
+            return L2Gradient()
+        else:
+            raise NotImplementedError('`gradient` only implemented for p=1 or '
+                                      'p=2')
+
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r})'.format(self.__class__.__name__,
-                                 self.domain,
-                                 self.exponent)
+        return '{}({!r}, {!r})'.format(self.__class__.__name__,
+                                       self.domain,
+                                       self.exponent)
 
 
 class GroupL1Norm(Functional):
@@ -452,7 +531,8 @@ class IndicatorLpUnitBall(Functional):
         elif self.exponent == 2:
             return proximal_cconj_l2(space=self.domain)
         else:
-            raise NotImplementedError('currently not implemented')
+            raise NotImplementedError('`gradient` only implemented for p=2 or '
+                                      'p=inf')
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -460,7 +540,7 @@ class IndicatorLpUnitBall(Functional):
                                       self.domain, self.exponent)
 
 
-class L1Norm(Functional):
+class L1Norm(LpNorm):
 
     """The functional corresponding to L1-norm.
 
@@ -469,14 +549,14 @@ class L1Norm(Functional):
     Notes
     -----
     If the functional is defined on an :math:`\mathbb{R}^n`-like space, the
-    :math:`L_1`-norm is defined as
+    :math:`\| \cdot \|_1`-norm is defined as
 
     .. math::
 
         \| x \|_1 = \\sum_{i=1}^n |x_i|.
 
     If the functional is defined on an :math:`L_2`-like space, the
-    :math:`L_1`-norm is defined as
+    :math:`\| \cdot \|_1`-norm is defined as
 
     .. math::
 
@@ -491,61 +571,36 @@ class L1Norm(Functional):
         space : `DiscreteLp` or `FnBase`
             Domain of the functional.
         """
-        super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
+        super().__init__(space=space, exponent=1)
 
-    # TODO: update when integration operator is in place: issue #440
-    def _call(self, x):
-        """Return the L1-norm of ``x``."""
-        return x.ufunc.absolute().inner(self.domain.one())
-
-    # TODO: remove inner class when ufunc operators are in place: issue #567
-    @property
-    def gradient(self):
-        """Gradient operator of the functional.
-
-        The functional is not differentiable in ``x=0``. However, when
-        evaluating the gradient operator in this point it will return 0.
-        """
-        functional = self
-
-        class L1Gradient(Operator):
-
-            """The gradient operator of this functional."""
-
-            def __init__(self):
-                """Initialize a new instance."""
-                super().__init__(functional.domain, functional.domain,
-                                 linear=False)
-
-            def _call(self, x):
-                """Apply the gradient operator to the given point."""
-                return x.ufunc.sign()
-
-        return L1Gradient()
-
-    @property
-    def proximal(self):
-        """Return the proximal factory of the functional.
-
-        See Also
-        --------
-        odl.solvers.nonsmooth.proximal_operators.proximal_l1 :
-            proximal factory for the L1-norm.
-        """
-        return proximal_l1(space=self.domain)
-
-    @property
-    def convex_conj(self):
-        """The convex conjugate functional of the L1-norm."""
-        return IndicatorLpUnitBall(self.domain, exponent=np.inf)
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{}({!r})'.format(self.__class__.__name__,
+                                 self.domain)
 
 
-class L2Norm(Functional):
+class L2Norm(LpNorm):
 
     """The functional corresponding to the L2-norm.
 
     The L2-norm, ``||x||_2``,  is defined as the square-root out of the
     integral/sum of ``x^2``.
+
+    Notes
+    -----
+    If the functional is defined on an :math:`\mathbb{R}^n`-like space, the
+    :math:`\| \cdot \|_2`-norm is defined as
+
+    .. math::
+
+        \| x \|_2 = \\sqrt{ \\sum_{i=1}^n |x_i|^2 }.
+
+    If the functional is defined on an :math:`L_2`-like space, the
+    :math:`\| \cdot \|_2`-norm is defined as
+
+    .. math::
+
+        \| x \|_2 = \\sqrt{ \\int_\Omega |x(t)|^2 dt. }
     """
 
     def __init__(self, space):
@@ -556,61 +611,12 @@ class L2Norm(Functional):
         space : `DiscreteLp` or `FnBase`
             Domain of the functional.
         """
-        super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
-
-    # TODO: update when integration operator is in place: issue #440
-    def _call(self, x):
-        """Return the L2-norm of ``x``."""
-        return np.sqrt(x.inner(x))
-
-    @property
-    def gradient(self):
-        """Gradient operator of the functional."""
-        functional = self
-
-        class L2Gradient(Operator):
-
-            """The gradient operator of this functional."""
-
-            def __init__(self):
-                """Initialize a new instance."""
-                super().__init__(functional.domain, functional.domain,
-                                 linear=False)
-
-            def _call(self, x):
-                """Apply the gradient operator to the given point.
-
-                The gradient is not defined in 0.
-                """
-                norm_of_x = x.norm()
-                if norm_of_x == 0:
-                    # The derivative is not defined for 0.
-                    raise ValueError('The gradient of the L2 functional is '
-                                     'not defined for the zero element.')
-                else:
-                    return x / norm_of_x
-
-        return L2Gradient()
-
-    @property
-    def proximal(self):
-        """Return the `proximal factory` of the functional.
-
-        See Also
-        --------
-        odl.solvers.nonsmooth.proximal_operators.proximal_l2 :
-            `proximal factory` for L2-norm.
-        """
-        return proximal_l2(space=self.domain)
-
-    @property
-    def convex_conj(self):
-        """The convex conjugate functional of the L2-norm."""
-        return IndicatorLpUnitBall(self.domain, exponent=2)
+        super().__init__(space=space, exponent=2)
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r})'.format(self.__class__.__name__, self.domain)
+        return '{}({!r})'.format(self.__class__.__name__,
+                                 self.domain)
 
 
 class L2NormSquared(Functional):
@@ -619,6 +625,22 @@ class L2NormSquared(Functional):
 
     The squared L2-norm, ``||x||_2^2``,  is defined as the integral/sum of
     ``x^2``.
+
+    Notes
+    -----
+    If the functional is defined on an :math:`\mathbb{R}^n`-like space, the
+    :math:`\| \cdot \|_2^2`-functional is defined as
+
+    .. math::
+
+        \| x \|_2^2 = \\sum_{i=1}^n |x_i|^2.
+
+    If the functional is defined on an :math:`L_2`-like space, the
+    :math:`\| \cdot \|_2^2`-functional is defined as
+
+    .. math::
+
+        \| x \|_2^2 = \\int_\Omega |x(t)|^2 dt.
     """
 
     def __init__(self, space):
