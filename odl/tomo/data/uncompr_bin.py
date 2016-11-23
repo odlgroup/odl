@@ -276,14 +276,16 @@ class FileReaderRawBinaryWithHeader(object):
             Function to parse a specification table, returning a field
             sequence usable as ``header_fields`` parameter.
         """
+        # Pick out the file object from temp files
+        file = getattr(file, 'file', file)
         # Need those attrs in subsequent code
-        file_attrs = ('mode', 'seek', 'read', 'close')
+        file_attrs = ('mode', 'seek', 'read', 'readinto', 'close')
         is_file = all(hasattr(file, attr) for attr in file_attrs)
         if is_file:
             self.__file = file
             self.__owns_file = False
         else:
-            self.__file = open(file, 'rb')
+            self.__file = open(file, 'rb', buffering=0)
             self.__owns_file = True
 
         if 'b' not in self.file.mode:
@@ -532,9 +534,9 @@ class FileReaderRawBinaryWithHeader(object):
                 ''.format(dend_abs - dstart_abs, self.data_dtype.itemsize,
                           self.data_dtype))
         self.file.seek(dstart_abs)
-        # Numpy determines byte order by itself
-        return np.fromfile(self.file, dtype=self.data_dtype,
-                           count=int(num_elems))
+        array = np.empty(int(num_elems), dtype=self.data_dtype)
+        self.file.readinto(array.data)
+        return array
 
 
 class FileWriterRawBinaryWithHeader(object):
@@ -586,6 +588,8 @@ class FileWriterRawBinaryWithHeader(object):
         if header is None:
             header = OrderedDict()
 
+        # Pick out the file object from temp files
+        file = getattr(file, 'file', file)
         # Need those attrs in subsequent code
         file_attrs = ('mode', 'seek', 'write', 'close')
         is_file = all(hasattr(file, attr) for attr in file_attrs)
@@ -593,7 +597,7 @@ class FileWriterRawBinaryWithHeader(object):
             self.__file = file
             self.__owns_file = False
         else:
-            self.__file = open(file, 'wb')
+            self.__file = open(file, 'wb', buffering=0)
             self.__owns_file = True
 
         if 'b' not in self.file.mode:
