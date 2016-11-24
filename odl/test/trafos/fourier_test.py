@@ -631,16 +631,42 @@ def test_fourier_trafo_inverse(impl, sign):
             assert all_almost_equal(ft.adjoint(ft(char_rect)), discr_rect)
 
 
-def _test_adjoint(operator):
+def _test_adjoint(op):
     """Test adjoint of operator satisfies the definition."""
-    x = noise_element(operator.domain)
-    y = noise_element(operator.range)
 
-    Axy = operator(x).inner(y)
-    xAty = x.inner(operator.adjoint(y))
+    if ((op.domain.is_rn and op.range.is_rn) or
+            (op.domain.is_cn and op.range.is_cn) and False):
+        # If both match, the usual adjoint definition should hold.
+        x = noise_element(op.domain)
+        y = noise_element(op.range)
 
-    assert Axy.real == pytest.approx(xAty.real, rel=1e-2)
-    assert Axy.imag == pytest.approx(xAty.imag, rel=1e-2)
+        Axy = op(x).inner(y)
+        xAty = x.inner(op.adjoint(y))
+
+        assert Axy.real == pytest.approx(xAty.real, rel=1e-2)
+        assert Axy.imag == pytest.approx(xAty.imag, rel=1e-2)
+    elif op.domain.is_rn and op.range.is_cn:
+        # If domain is real, but range complex only satisfies right adjoint
+        x = noise_element(op.domain)
+        y = noise_element(op.domain)
+
+        AtAxy = op.adjoint(op(x)).inner(y)
+        AxAy = op(x).inner(op(y))
+
+        assert AtAxy.real == pytest.approx(AxAy.real, rel=1e-2)
+        assert AtAxy.imag == pytest.approx(AxAy.imag, rel=1e-2)
+    elif op.domain.is_cn and op.range.is_rn:
+        # If domain is complex, but range real only satisfies left adjoint
+        x = noise_element(op.range)
+        y = noise_element(op.range)
+
+        AtAxy = op(op.adjoint(x)).inner(y)
+        AtxAty = op.adjoint(x).inner(op.adjoint(y))
+
+        assert AtAxy.real == pytest.approx(AtxAty.real, rel=1e-2)
+        assert AtAxy.imag == pytest.approx(AtxAty.imag, rel=1e-2)
+    else:
+        assert False  # should not happen
 
 
 def test_fourier_trafo_adjoint(impl, sign):
