@@ -39,11 +39,25 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
+from pkg_resources import parse_version
+
 try:
     import astra
     ASTRA_AVAILABLE = True
+    try:
+        # Available from 1.8rc1
+        ASTRA_VERSION = astra.__version__
+    except AttributeError:
+        astra_ver_num = astra.astra.version()
+        ASTRA_VERSION = '.'.join([str(astra_ver_num // 100),
+                                  str(astra_ver_num % 100)])
+
+    if parse_version(ASTRA_VERSION) < parse_version('1.7'):
+        raise RuntimeError('ASTRA version < 1.7 not supported')
 except ImportError:
     ASTRA_AVAILABLE = False
+    ASTRA_VERSION = ''
+
 import numpy as np
 
 from odl.discr import DiscreteLp, DiscreteLpElement
@@ -52,9 +66,9 @@ from odl.tomo.geometry import (
     FlatDetector)
 
 
-__all__ = ('ASTRA_AVAILABLE', 'astra_volume_geometry',
-           'astra_projection_geometry', 'astra_data', 'astra_projector',
-           'astra_algorithm',
+__all__ = ('ASTRA_AVAILABLE', 'ASTRA_VERSION',
+           'astra_volume_geometry', 'astra_projection_geometry',
+           'astra_data', 'astra_projector', 'astra_algorithm',
            'astra_conebeam_3d_geom_to_vec',
            'astra_conebeam_2d_geom_to_vec',
            'astra_parallel_3d_geom_to_vec')
@@ -542,6 +556,14 @@ def astra_projector(vol_interp, astra_vol_geom, astra_proj_geom, ndim, impl):
         proj_cfg['type'] = type_map_cuda[proj_type]
     proj_cfg['VolumeGeometry'] = astra_vol_geom
     proj_cfg['ProjectionGeometry'] = astra_proj_geom
+    proj_cfg['options'] = {}
+
+    # Add the hacky 1/r^2 weighting exposed in intermediate versions of
+    # ASTRA
+    # TODO: add upper bound when the exposed feature is removed
+    if (parse_version(ASTRA_VERSION) >= parse_version('1.8rc1') and
+            proj_type in ('cone', 'cone_vec')):
+        proj_cfg['options']['DensityWeighting'] = True
 
     if ndim == 2:
         return astra.projector.create(proj_cfg)

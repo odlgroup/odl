@@ -46,7 +46,7 @@ def test_astra_cuda_projector_parallel2d():
     phantom = odl.phantom.cuboid(reco_space, min_pt=[0, 0], max_pt=[4, 5])
 
     # Create parallel geometry
-    angle_part = odl.uniform_partition(0, 2 * np.pi, 8)
+    angle_part = odl.uniform_partition(0, np.pi, 8)
     det_part = odl.uniform_partition(-6, 6, 6)
     geom = odl.tomo.Parallel2dGeometry(angle_part, det_part)
 
@@ -108,7 +108,7 @@ def test_astra_cuda_projector_parallel3d():
                                  max_pt=[4, 5, 6])
 
     # Create parallel geometry
-    angle_part = odl.uniform_partition(0, 2 * np.pi, 8)
+    angle_part = odl.uniform_partition(0, np.pi, 8)
     det_part = odl.uniform_partition([-7, -8], [7, 8], (7, 8))
     geom = odl.tomo.Parallel3dAxisGeometry(angle_part, det_part)
 

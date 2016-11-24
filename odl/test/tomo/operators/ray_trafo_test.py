@@ -22,13 +22,13 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-# External
-import pytest
 import numpy as np
+from pkg_resources import parse_version
+import pytest
 
-# Internal
 import odl
 import odl.tomo as tomo
+from odl.tomo.backends import ASTRA_VERSION
 from odl.tomo.util.testutils import (skip_if_no_astra, skip_if_no_astra_cuda,
                                      skip_if_no_scikit)
 from odl.util.testutils import almost_equal, all_almost_equal
@@ -190,10 +190,13 @@ def test_projector(projector, in_place):
 
 def test_adjoint(projector):
     """Test discrete Ray transform backward projection."""
-
-    # TODO: this needs to be improved
-    # Accept 10% errors
-    places = 1
+    # Relative tolerance, still rather high due to imperfectly matched
+    # adjoint in the cone beam case
+    if (parse_version(ASTRA_VERSION) < parse_version('1.8rc1') and
+            isinstance(projector.geometry, odl.tomo.HelicalConeFlatGeometry)):
+        rtol = 0.1
+    else:
+        rtol = 0.05
 
     # Create Shepp-Logan phantom
     vol = odl.phantom.shepp_logan(projector.domain, modified=True)
@@ -205,7 +208,7 @@ def test_adjoint(projector):
     # Verified the identity <Ax, Ax> = <A^* A x, x>
     result_AxAx = proj.inner(proj)
     result_xAtAx = backproj.inner(vol)
-    assert almost_equal(result_AxAx, result_xAtAx, places=places)
+    assert result_AxAx == pytest.approx(result_xAtAx, rel=rtol)
 
 
 def test_adjoint_of_adjoint(projector):
