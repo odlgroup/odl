@@ -301,7 +301,8 @@ class WaveletTransform(WaveletTransformBase):
             if `is_orthogonal` is ``False``
         """
         if self.is_orthogonal:
-            return self.inverse
+            scale = 1.0 / self.domain.partition.cell_volume
+            return scale * self.inverse
         else:
             # TODO: put adjoint here
             return super().adjoint
