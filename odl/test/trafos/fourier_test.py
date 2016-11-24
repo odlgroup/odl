@@ -595,7 +595,6 @@ def test_fourier_trafo_inverse(impl, sign):
 
     ft = FourierTransform(discr, sign=sign, impl=impl)
     assert all_almost_equal(ft.inverse(ft(char_interval)), discr_char)
-    assert all_almost_equal(ft.adjoint(ft(char_interval)), discr_char)
 
     # Half-complex
     discr = odl.uniform_discr(-2, 2, 40, impl='numpy', dtype='float32')
@@ -613,7 +612,6 @@ def test_fourier_trafo_inverse(impl, sign):
     for axes in [(0,), 1]:
         ft = FourierTransform(discr, sign=sign, impl=impl, axes=axes)
         assert all_almost_equal(ft.inverse(ft(char_rect)), discr_rect)
-        assert all_almost_equal(ft.adjoint(ft(char_rect)), discr_rect)
 
     # 2D with axes, halfcomplex
     discr = odl.uniform_discr([-2, -2], [2, 2], (20, 10), impl='numpy',
@@ -628,7 +626,6 @@ def test_fourier_trafo_inverse(impl, sign):
             ft = FourierTransform(discr, sign=sign, impl=impl, axes=axes,
                                   halfcomplex=halfcomplex)
             assert all_almost_equal(ft.inverse(ft(char_rect)), discr_rect)
-            assert all_almost_equal(ft.adjoint(ft(char_rect)), discr_rect)
 
 
 def _test_adjoint(op):

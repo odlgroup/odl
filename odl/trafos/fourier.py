@@ -964,7 +964,8 @@ class FourierTransformBase(Operator):
         inverse
         """
         if self.domain.exponent == 2.0 and self.range.exponent == 2.0:
-            return self.inverse
+            raise NotImplementedError(
+                'Adjoint not implemented for this fourier transform.')
         else:
             raise NotImplementedError(
                 'no adjoint defined for exponents ({}, {}) != (2, 2)'
@@ -1365,13 +1366,25 @@ class FourierTransform(FourierTransformBase):
         return out
 
     @property
+    def adjoint(self):
+        """The adjoint Fourier transform."""
+        if self.domain.exponent != 2.0 or self.range.exponent != 2.0:
+            raise NotImplementedError(
+                'Adjoint only implemented for exponent=2')
+        sign = '+' if self.sign == '-' else '-'
+        return FourierTransformInverse(
+            domain=self.range, range=self.domain, impl=self.impl,
+            axes=self.axes, halfcomplex=self.halfcomplex, shift=self.shifts,
+            sign=sign, tmp_r=self._tmp_r, tmp_f=self._tmp_f, variant='adjoint')
+
+    @property
     def inverse(self):
         """The inverse Fourier transform."""
         sign = '+' if self.sign == '-' else '-'
         return FourierTransformInverse(
             domain=self.range, range=self.domain, impl=self.impl,
             axes=self.axes, halfcomplex=self.halfcomplex, shift=self.shifts,
-            sign=sign, tmp_r=self._tmp_r, tmp_f=self._tmp_f)
+            sign=sign, tmp_r=self._tmp_r, tmp_f=self._tmp_f, variant='inverse')
 
 
 class FourierTransformInverse(FourierTransformBase):
@@ -1428,17 +1441,23 @@ class FourierTransformInverse(FourierTransformBase):
 
         Other Parameters
         ----------------
-        tmp_r : `DiscreteLpElement` or `numpy.ndarray`
+        tmp_r : `DiscreteLpElement` or `numpy.ndarray`, optional
             Temporary for calculations in the real space (range of
             this transform). It is shared with the inverse.
 
             Variants using this: C2R, R2C (forward), R2HC (forward)
 
-        tmp_f : `DiscreteLpElement` or `numpy.ndarray`
+        tmp_f : `DiscreteLpElement` or `numpy.ndarray`, optional
             Temporary for calculations in the frequency (reciprocal)
             space. It is shared with the inverse.
 
             Variants using this: C2R, HC2R, R2C (forward)
+
+        variant : {'inverse', 'adjoint'}, optional
+            The variant that should be used. In the continuous case, the
+            inverse is equal to the adjoint, but in the discrete case they
+            differ slightly.
+            Default: 'inverse'
 
         Notes
         -----
@@ -1466,6 +1485,13 @@ class FourierTransformInverse(FourierTransformBase):
           for details.
         """
         # TODO: variants wrt placement of 2*pi
+        variant = kwargs.pop('variant', 'inverse')
+        if variant == 'inverse':
+            self.__op = 'divide'
+        elif variant == 'adjoint':
+            self.__op = 'adjoint'
+        else:
+            raise ValueError('`variant` not understood')
         super().__init__(inverse=True, domain=range, range=domain,
                          impl=impl, **kwargs)
 
@@ -1490,7 +1516,7 @@ class FourierTransformInverse(FourierTransformBase):
         return dft_postprocess_data(
             x, real_grid=self.range.grid, recip_grid=self.domain.grid,
             shift=self.shifts, axes=self.axes, sign=self.sign,
-            interp=self.domain.interp, op='divide', out=out)
+            interp=self.domain.interp, op=self.__op, out=out)
 
     def _postprocess(self, x, out=None):
         """Return the post-processed version of ``x``.
@@ -1546,6 +1572,9 @@ class FourierTransformInverse(FourierTransformBase):
         self._postprocess(out, out=out)
         if self.halfcomplex:
             assert is_real_dtype(out.dtype)
+
+        if self.__op == 'adjoint' and self.halfcomplex:
+            out /= 2
 
         if self.range.field == RealNumbers():
             return out.real
@@ -1614,6 +1643,9 @@ class FourierTransformInverse(FourierTransformBase):
         # too.
         if self.sign == '-':
             fft_arr /= np.prod(np.take(self.domain.shape, self.axes))
+
+        if self.__op == 'adjoint' and self.halfcomplex:
+            out /= 2
 
         # Post-processing in IFT = pre-processing in FT. In-place for
         # C2C and HC2R. For C2R, this is out-of-place and discards the
