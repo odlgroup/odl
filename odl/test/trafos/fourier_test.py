@@ -631,6 +631,53 @@ def test_fourier_trafo_inverse(impl, sign):
             assert all_almost_equal(ft.adjoint(ft(char_rect)), discr_rect)
 
 
+def _test_adjoint(operator):
+    """Test adjoint of operator satisfies the definition."""
+    x = noise_element(operator.domain)
+    y = noise_element(operator.range)
+
+    Axy = operator(x).inner(y)
+    xAty = x.inner(operator.adjoint(y))
+
+    assert Axy.real == pytest.approx(xAty.real, rel=1e-2)
+    assert Axy.imag == pytest.approx(xAty.imag, rel=1e-2)
+
+
+def test_fourier_trafo_adjoint(impl, sign):
+    """Test if the adjoint really is the adjoint."""
+
+    # Complex-to-complex
+    discr = odl.uniform_discr(-2, 2, 40, impl='numpy', dtype='complex64')
+    ft = FourierTransform(discr, sign=sign, impl=impl)
+    _test_adjoint(ft)
+
+    # Half-complex
+    discr = odl.uniform_discr(-2, 2, 40, impl='numpy', dtype='float32')
+    ft = FourierTransform(discr, impl=impl, halfcomplex=True)
+    _test_adjoint(ft)
+
+    # 2D with axes, C2C
+    discr = odl.uniform_discr([-2, -2], [2, 2], (20, 10), impl='numpy',
+                              dtype='complex64')
+
+    for axes in [(0,), 1]:
+        ft = FourierTransform(discr, sign=sign, impl=impl, axes=axes)
+        _test_adjoint(ft)
+
+    # 2D with axes, halfcomplex
+    discr = odl.uniform_discr([-2, -2], [2, 2], (20, 10), impl='numpy',
+                              dtype='float32')
+
+    for halfcomplex in [False, True]:
+        if halfcomplex and sign == '+':
+            continue  # cannot mix halfcomplex with sign
+
+        for axes in [(0,), (1,)]:
+            ft = FourierTransform(discr, sign=sign, impl=impl, axes=axes,
+                                  halfcomplex=halfcomplex)
+            _test_adjoint(ft)
+
+
 def test_fourier_trafo_hat_1d():
     # Hat function as used in linear interpolation. It is not so
     # well discretized by nearest neighbor interpolation, so a larger
