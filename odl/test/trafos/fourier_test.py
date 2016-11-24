@@ -635,36 +635,36 @@ def _test_adjoint(op):
     """Test adjoint of operator satisfies the definition."""
 
     if ((op.domain.is_rn and op.range.is_rn) or
-            (op.domain.is_cn and op.range.is_cn) and False):
+            (op.domain.is_cn and op.range.is_cn)):
         # If both match, the usual adjoint definition should hold.
-        x = noise_element(op.domain)
-        y = noise_element(op.range)
+        x = odl.phantom.cuboid(op.domain)
+        y = odl.phantom.cuboid(op.range)
 
         Axy = op(x).inner(y)
         xAty = x.inner(op.adjoint(y))
 
-        assert Axy.real == pytest.approx(xAty.real, rel=1e-2)
-        assert Axy.imag == pytest.approx(xAty.imag, rel=1e-2)
+        assert Axy.real == pytest.approx(xAty.real, rel=1e-2, abs=1e-4)
+        assert Axy.imag == pytest.approx(xAty.imag, rel=1e-2, abs=1e-4)
     elif op.domain.is_rn and op.range.is_cn:
         # If domain is real, but range complex only satisfies right adjoint
-        x = noise_element(op.domain)
-        y = noise_element(op.domain)
+        x = odl.phantom.cuboid(op.domain)
+        y = odl.phantom.cuboid(op.domain)
 
         AtAxy = op.adjoint(op(x)).inner(y)
         AxAy = op(x).inner(op(y))
 
-        assert AtAxy.real == pytest.approx(AxAy.real, rel=1e-2)
-        assert AtAxy.imag == pytest.approx(AxAy.imag, rel=1e-2)
+        assert AtAxy.real == pytest.approx(AxAy.real, rel=1e-2, abs=1e-4)
+        assert AtAxy.imag == pytest.approx(0, abs=1e-4)
     elif op.domain.is_cn and op.range.is_rn:
         # If domain is complex, but range real only satisfies left adjoint
-        x = noise_element(op.range)
-        y = noise_element(op.range)
+        x = odl.phantom.cuboid(op.range)
+        y = odl.phantom.cuboid(op.range)
 
         AtAxy = op(op.adjoint(x)).inner(y)
         AtxAty = op.adjoint(x).inner(op.adjoint(y))
 
-        assert AtAxy.real == pytest.approx(AtxAty.real, rel=1e-2)
-        assert AtAxy.imag == pytest.approx(AtxAty.imag, rel=1e-2)
+        assert AtAxy.real == pytest.approx(AtxAty.real, rel=1e-2, abs=1e-4)
+        assert AtAxy.imag == pytest.approx(0, abs=1e-4)
     else:
         assert False  # should not happen
 
