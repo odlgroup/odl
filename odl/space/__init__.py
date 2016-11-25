@@ -15,14 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Concrete vector spaces."""
+"""Basic vector spaces and utilities."""
 
 from __future__ import absolute_import
 
-__all__ = ('base_ntuples', 'weighting')
+__all__ = ('base_ntuples', 'base_tensors', 'weighting')
 
 from . import base_ntuples
-
+from . import base_tensors
 from . import weighting
 
 from .npy_ntuples import *

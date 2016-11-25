@@ -42,6 +42,7 @@ import re
 
 
 __all__ = ('NtuplesBaseUFuncs', 'NumpyNtuplesUFuncs',
+           'GeneralTensorBaseUFuncs',
            'DiscreteLpUFuncs', 'ProductSpaceUFuncs')
 
 
@@ -96,7 +97,7 @@ numpy.{}
 # Wrap all numpy ufuncs
 
 def wrap_ufunc_base(name, n_in, n_out, doc):
-    """Add ufunc methods to `NtuplesBaseUFuncs`."""
+    """Return ufunc wrapper for implementation-agnostic ufunc classes."""
     wrapped = getattr(np, name)
     if n_in == 1:
         if n_out == 0:
@@ -147,7 +148,7 @@ def wrap_ufunc_base(name, n_in, n_out, doc):
 
 # Wrap reductions
 def wrap_reduction_base(name, doc):
-    """Add ufunc methods to `NtuplesBaseUFuncs`."""
+    """Return reduction wrapper for implementation-agnostic ufunc classes."""
     wrapped = getattr(np, name)
 
     def wrapper(self):
@@ -181,11 +182,34 @@ for name, doc in REDUCTIONS:
     setattr(NtuplesBaseUFuncs, name, method)
 
 
+class GeneralTensorBaseUFuncs(object):
+
+    """UFuncs for `GeneralTensorBase` objects.
+
+    Internal object, should not be created except in `GeneralTensorBase`.
+    """
+
+    def __init__(self, vector):
+        """Create ufunc wrapper for vector."""
+        self.vector = vector
+
+
+# Add ufunc methods to UFunc class
+for name, n_in, n_out, doc in UFUNCS:
+    method = wrap_ufunc_base(name, n_in, n_out, doc)
+    setattr(GeneralTensorBaseUFuncs, name, method)
+
+# Add reduction methods to UFunc class
+for name, doc in REDUCTIONS:
+    method = wrap_reduction_base(name, doc)
+    setattr(GeneralTensorBaseUFuncs, name, method)
+
+
 # Optimized implementation of ufuncs since we can use the out parameter
-# as well as the data parameter to avoid one call to asarray() when using an
-# NumpyNtuplesVector
-def wrap_ufunc_ntuples(name, n_in, n_out, doc):
-    """Add ufunc methods to `NumpyNtuplesUFuncs`."""
+# as well as the data parameter to avoid one call to asarray() when using a
+# Numpy-based data class.
+def wrap_ufunc_numpy(name, n_in, n_out, doc):
+    """Return ufunc wrapper for Numpy-based ufunc classes."""
 
     # Get method from numpy
     wrapped = getattr(np, name)
@@ -243,15 +267,15 @@ class NumpyNtuplesUFuncs(NtuplesBaseUFuncs):
 
 # Add ufunc methods to UFunc class
 for name, n_in, n_out, doc in UFUNCS:
-    method = wrap_ufunc_ntuples(name, n_in, n_out, doc)
+    method = wrap_ufunc_numpy(name, n_in, n_out, doc)
     setattr(NumpyNtuplesUFuncs, name, method)
 
 
-# Optimized implementation of ufuncs since we can use the out parameter
-# as well as the data parameter to avoid one call to asarray() when using a
-# NumpyNtuplesVector
+# For DiscreteLP, basically the UFunc mechanism can be propagated from its
+# `ntuple` attribute, which is NumpyNtuple or CudaNtuple. Sometimes,
+# reshaping is required.
 def wrap_ufunc_discretelp(name, n_in, n_out, doc):
-    """Add ufunc methods to `DiscreteLpUFuncs`."""
+    """Return ufunc wrapper for `DiscreteLpUFuncs`."""
 
     if n_in == 1:
         if n_out == 0:
@@ -313,6 +337,8 @@ def wrap_ufunc_discretelp(name, n_in, n_out, doc):
 
 
 def wrap_reduction_discretelp(name, doc):
+    """Return reduction wrapper for `DiscreteLpUFuncs`."""
+
     def wrapper(self):
         method = getattr(self.vector.ntuple.ufunc, name)
         return method()
@@ -342,7 +368,7 @@ for name, doc in REDUCTIONS:
 
 # Ufuncs for product space elements
 def wrap_ufunc_productspace(name, n_in, n_out, doc):
-    """Add ufunc methods to `ProductSpaceElement`."""
+    """Return ufunc wrapper for `ProductSpaceUFuncs`."""
 
     if n_in == 1:
         if n_out == 0:
@@ -406,7 +432,7 @@ def wrap_ufunc_productspace(name, n_in, n_out, doc):
 
 
 def wrap_reduction_productspace(name, doc):
-    """Add reduction methods to `ProductSpaceElement`."""
+    """Return reduction wrapper for `ProductSpaceUFuncs`."""
     def wrapper(self):
         results = [getattr(x.ufunc, name)() for x in self.vector]
         return getattr(np, name)(results)
