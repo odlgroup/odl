@@ -11,7 +11,7 @@ Glossary
 
     array-like
         Any data structure which can be converted into a `numpy.ndarray` by the
-        `numpy.array` constructor. Includes all `NtuplesBaseVector` based classes.
+        `numpy.array` constructor. Includes all `GeneralizedTensor` based classes.
 
     convex conjugate
         The convex conjugate (also called Fenchel conjugate) is an important tool in convex optimization.
@@ -22,7 +22,7 @@ Glossary
 
     discretization
         Structure to handle the mapping between abstract objects (e.g. functions) and concrete, finite realizations.
-        It encompasses an abstract `Set`, a finite data container (`NtuplesBaseVector` in general) and the mappings between them,         :term:`sampling` and :term:`interpolation`.
+        It encompasses an abstract `Set`, a finite data container (`GeneralizedTensor` in general) and the mappings between them,         :term:`sampling` and :term:`interpolation`.
 
     domain
         Set of elements to which an operator can be applied.

@@ -26,8 +26,11 @@ import operator
 import os
 
 import odl
+from odl.space.entry_points import TENSOR_SET_IMPLS, TENSOR_SPACE_IMPLS
 from odl.trafos.backends import PYFFTW_AVAILABLE, PYWT_AVAILABLE
-from odl.util import dtype_repr, OptionalArgDecorator
+from odl.util.testutils import simple_fixture
+from odl.util.utility import dtype_repr
+from odl.util.vectorization import OptionalArgDecorator
 
 try:
     from pytest import fixture
@@ -87,23 +90,10 @@ def pytest_ignore_collect(path, config):
 
 # --- Reusable fixtures ---
 
-fn_impl_params = odl.FN_IMPLS.keys()
-fn_impl_ids = [" impl = '{}' ".format(p) for p in fn_impl_params]
-
-
-@fixture(scope="module", ids=fn_impl_ids, params=fn_impl_params)
-def fn_impl(request):
-    """String with an available `FnBase` implementation name."""
-    return request.param
-
-ntuples_impl_params = odl.NTUPLES_IMPLS.keys()
-ntuples_impl_ids = [" impl = '{}' ".format(p) for p in ntuples_impl_params]
-
-
-@fixture(scope="module", ids=ntuples_impl_ids, params=ntuples_impl_params)
-def ntuples_impl(request):
-    """String with an available `NtuplesBase` implementation name."""
-    return request.param
+tset_impl = simple_fixture(name='tset_impl',
+                           params=TENSOR_SET_IMPLS.keys())
+tspace_impl = simple_fixture(name='tspace_impl',
+                             params=TENSOR_SPACE_IMPLS.keys())
 
 
 floating_dtype_params = np.sctypes['float'] + np.sctypes['complex']

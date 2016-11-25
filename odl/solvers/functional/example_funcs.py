@@ -27,8 +27,8 @@ import numpy as np
 
 from odl.solvers.functional.functional import Functional
 from odl.operator.operator import Operator
-from odl.space.base_ntuples import FnBase
-from odl.space.npy_ntuples import MatVecOperator
+from odl.space.base_tensors import TensorSpace
+from odl.space.npy.tensors import MatVecOperator
 
 
 __all__ = ('RosenbrockFunctional',)
@@ -67,7 +67,7 @@ class RosenbrockFunctional(Functional):
 
         Parameters
         ----------
-        space : `FnBase`
+        space : `TensorSpace`
             Domain of the functional.
         scale : positive float, optional
             The scale ``c`` in the functional determining how "ill-behaved" the
@@ -101,8 +101,8 @@ class RosenbrockFunctional(Functional):
         3.0
         """
         self.scale = float(scale)
-        if not isinstance(space, FnBase):
-            raise ValueError('`space` must be an `FnBase`')
+        if not isinstance(space, TensorSpace):
+            raise ValueError('`space` must be an `TensorSpace`')
         if space.size < 2:
             raise ValueError('`space` must be at least two dimensional')
         super().__init__(space=space, linear=False, grad_lipschitz=np.inf)

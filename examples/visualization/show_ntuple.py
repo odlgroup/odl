@@ -1,4 +1,4 @@
-"""Example for using `FnBaseVector.show`.
+"""Example for using `Tensor.show`.
 
 The ``show`` method is implemented for all types of n-tuples and displays
 the data as a scatter plot.

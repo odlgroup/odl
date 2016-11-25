@@ -875,7 +875,7 @@ class RealPart(Operator):
 
         Parameters
         ----------
-        space : `FnBase`
+        space : `TensorSpace`
             Space which real part should be taken, needs to implement
             ``space.real_space``.
 
@@ -895,7 +895,7 @@ class RealPart(Operator):
         >>> op([1, 2, 3])
         rn(3).element([1.0, 2.0, 3.0])
 
-        The operator also works on other `FnBase` spaces such as
+        The operator also works on other `TensorSpace` spaces such as
         `DiscreteLp` spaces:
 
         >>> r3 = odl.uniform_discr(0, 1, 3, dtype=complex)
@@ -988,7 +988,7 @@ class ImagPart(Operator):
 
         Parameters
         ----------
-        space : `FnBase`
+        space : `TensorSpace`
             Space which imaginary part should be taken, needs to implement
             ``space.real_space``.
 
@@ -1096,7 +1096,7 @@ class ComplexEmbedding(Operator):
 
         Parameters
         ----------
-        space : `FnBase`
+        space : `TensorSpace`
             Space which real part should be taken, needs to implement
             ``space.complex_space``.
         scalar : ``space.complex_space.field`` element
