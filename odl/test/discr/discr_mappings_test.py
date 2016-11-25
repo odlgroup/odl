@@ -21,7 +21,7 @@ from odl.util.testutils import (
     all_almost_equal, all_equal, almost_equal)
 
 
-def test_nearest_interpolation_1d_complex(fn_impl):
+def test_nearest_interpolation_1d_complex(tspace_impl):
     intv = odl.IntervalProd(0, 1)
     part = odl.uniform_partition_fromintv(intv, 5, nodes_on_bdry=False)
     # Coordinate vectors are:
@@ -122,7 +122,7 @@ def test_nearest_interpolation_2d_string():
     # [0.125, 0.375, 0.625, 0.875], [0.25, 0.75]
 
     space = odl.FunctionSet(rect, odl.Strings(1))
-    dspace = odl.ntuples(part.size, dtype='U1')
+    dspace = odl.tensor_set(part.size, dtype='U1')
     interp_op = NearestInterpolation(space, part, dspace)
     values = np.array([c for c in 'mystring'])
     function = interp_op(values)
