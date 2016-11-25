@@ -22,50 +22,50 @@ def test_vector_numpy():
     inp = [1.0, 2.0, 3.0]
 
     x = vector(inp)
-    assert isinstance(x, odl.NumpyFnVector)
+    assert isinstance(x, odl.NumpyTensor)
     assert x.dtype == np.dtype('float64')
     assert all_equal(x, inp)
 
     x = vector([1.0, 2.0, float('inf')])
     assert x.dtype == np.dtype('float64')
-    assert isinstance(x, odl.NumpyFnVector)
+    assert isinstance(x, odl.NumpyTensor)
 
     x = vector([1.0, 2.0, float('nan')])
     assert x.dtype == np.dtype('float64')
-    assert isinstance(x, odl.NumpyFnVector)
+    assert isinstance(x, odl.NumpyTensor)
 
     x = vector([1, 2, 3], dtype='float32')
     assert x.dtype == np.dtype('float32')
-    assert isinstance(x, odl.NumpyFnVector)
+    assert isinstance(x, odl.NumpyTensor)
 
     # Cn
     inp = [1 + 1j, 2, 3 - 2j]
 
     x = vector(inp)
-    assert isinstance(x, odl.NumpyFnVector)
+    assert isinstance(x, odl.NumpyTensor)
     assert x.dtype == np.dtype('complex128')
     assert all_equal(x, inp)
 
     x = vector([1, 2, 3], dtype='complex64')
-    assert isinstance(x, odl.NumpyFnVector)
+    assert isinstance(x, odl.NumpyTensor)
 
     # Fn
     inp = [1, 2, 3]
 
     x = vector(inp)
-    assert isinstance(x, odl.NumpyNtuplesVector)
+    assert isinstance(x, odl.NumpyTensorSetVector)
     assert x.dtype == np.dtype('int')
     assert all_equal(x, inp)
 
-    # Ntuples
+    # Tensors
     inp = ['a', 'b', 'c']
     x = vector(inp)
-    assert isinstance(x, odl.NumpyNtuplesVector)
+    assert isinstance(x, odl.NumpyTensorSetVector)
     assert np.issubdtype(x.dtype, basestring)
     assert all_equal(x, inp)
 
     x = vector([1, 2, 'inf'])  # Becomes string type
-    assert isinstance(x, odl.NumpyNtuplesVector)
+    assert isinstance(x, odl.NumpyTensorSetVector)
     assert np.issubdtype(x.dtype, basestring)
     assert all_equal(x, ['1', '2', 'inf'])
 

@@ -281,10 +281,10 @@ class RayTransformBase(Operator):
 
     def _call(self, x, out=None):
         """Return ``self(x[, out])``."""
-        if self.domain.is_rn:
+        if self.domain.is_real_space:
             return self._call_real(x, out)
 
-        elif self.domain.is_cn:
+        elif self.domain.is_complex_space:
             result_parts = [
                 self._call_real(x.real, getattr(out, 'real', None)),
                 self._call_real(x.imag, getattr(out, 'imag', None))]

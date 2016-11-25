@@ -34,13 +34,13 @@ space_ids = [' space = {}'.format(p.ljust(10)) for p in space_params]
 
 
 @pytest.fixture(scope="module", ids=space_ids, params=space_params)
-def space(request, fn_impl):
+def space(request, tspace_impl):
     name = request.param.strip()
 
     if name == 'r10':
-        return odl.rn(10, impl=fn_impl)
+        return odl.rn(10, impl=tspace_impl)
     elif name == 'uniform_discr':
-        return odl.uniform_discr(0, 1, 7, impl=fn_impl)
+        return odl.uniform_discr(0, 1, 7, impl=tspace_impl)
 
 
 # --- functional tests --- #

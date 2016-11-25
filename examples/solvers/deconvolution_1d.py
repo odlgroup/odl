@@ -11,13 +11,13 @@ class Convolution(odl.Operator):
         self.kernel = kernel
         self.adjkernel = (adjkernel if adjkernel is not None
                           else kernel.space.element(kernel[::-1].copy()))
-        self.norm = float(np.sum(np.abs(self.kernel.ntuple)))
+        self.norm = float(np.sum(np.abs(self.kernel.tensor)))
         odl.Operator.__init__(self, domain=kernel.space, range=kernel.space,
                               linear=True)
 
     def _call(self, rhs, out):
-        ndimage.convolve(rhs.ntuple.data, self.kernel.ntuple.data,
-                         output=out.ntuple.data, mode='wrap')
+        ndimage.convolve(rhs.tensor.data, self.kernel.tensor.data,
+                         output=out.tensor.data, mode='wrap')
 
     @property
     def adjoint(self):

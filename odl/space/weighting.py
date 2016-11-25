@@ -19,7 +19,7 @@ import numpy as np
 import scipy.linalg as linalg
 from scipy.sparse.base import isspmatrix
 
-from odl.space.base_ntuples import FnBaseVector
+from odl.space.base_tensors import Tensor
 from odl.util import array1d_repr, arraynd_repr, signature_string, indent_rows
 
 
@@ -531,8 +531,7 @@ class ArrayWeighting(Weighting):
         ----------
         array : 1-dim. `array-like`
             Weighting array of inner product, norm and distance.
-            Native `FnBaseVector` instances are stored
-            as-is without copying.
+            Native `Tensor` instances are stored as-is without copying.
         impl : string
             Specifier for the implementation backend.
         exponent : positive float, optional
@@ -555,21 +554,17 @@ class ArrayWeighting(Weighting):
         # We store our "own" data structures as-is to retain Numpy
         # compatibility while avoiding copies. Other things are run through
         # numpy.asarray.
-        if isinstance(array, FnBaseVector):
+        if isinstance(array, Tensor):
             self.__array = array
         else:
             self.__array = np.asarray(array)
 
         if self.array.dtype == object:
             raise ValueError('invalid array {}'.format(array))
-        elif self.array.ndim != 1:
-            raise ValueError('array {} is {}-dimensional instead of '
-                             '1-dimensional'
-                             ''.format(array, self._array.ndim))
 
     @property
     def array(self):
-        """Weighting array of this inner instance."""
+        """Weighting array of this instance."""
         return self.__array
 
     def is_valid(self):
@@ -609,7 +604,7 @@ class ArrayWeighting(Weighting):
             ``True`` if other is a `Weighting` instance with the same
             `Weighting.impl`, which yields the same result as this
             weighting for any input, ``False`` otherwise. This is checked
-            by entry-wise comparison of matrices/arrays/constants.
+            by entry-wise comparison of arrays/constants.
         """
         # Optimization for equality
         if self == other:

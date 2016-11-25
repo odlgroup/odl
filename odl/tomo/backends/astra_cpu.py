@@ -58,7 +58,7 @@ def astra_cpu_forward_projector(vol_data, geometry, proj_space, out=None):
                         'instance.'.format(vol_data))
     if vol_data.space.impl != 'numpy':
         raise TypeError('dspace {!r} of the volume is not an '
-                        'instance of `NumpyNtuples`'
+                        'instance of `NumpyTensorSet`'
                         ''.format(vol_data.space.dspace))
     if not isinstance(geometry, Geometry):
         raise TypeError('geometry  {!r} is not a Geometry instance'
@@ -68,7 +68,7 @@ def astra_cpu_forward_projector(vol_data, geometry, proj_space, out=None):
                         'instance.'.format(proj_space))
     if proj_space.impl != 'numpy':
         raise TypeError('data type {!r} of the reconstruction space is not an '
-                        'instance of NumpyNtuples'.format(proj_space.dspace))
+                        'instance of NumpyTensorSet'.format(proj_space.dspace))
     if vol_data.ndim != geometry.ndim:
         raise ValueError('dimensions {} of volume data and {} of geometry '
                          'do not match'
@@ -145,7 +145,7 @@ def astra_cpu_back_projector(proj_data, geometry, reco_space, out=None):
                         'instance'.format(proj_data))
     if proj_data.space.impl != 'numpy':
         raise TypeError('data type {!r} of the projection space is not an '
-                        'instance of NumpyNtuples'
+                        'instance of NumpyTensorSet'
                         ''.format(proj_data.shape.dspace))
     if not isinstance(geometry, Geometry):
         raise TypeError('geometry  {!r} is not a Geometry instance'
@@ -155,7 +155,7 @@ def astra_cpu_back_projector(proj_data, geometry, reco_space, out=None):
                         'instance'.format(reco_space))
     if reco_space.impl != 'numpy':
         raise TypeError('data type {!r} of the reconstruction space is not an '
-                        'instance of NumpyNtuples'.format(reco_space.dspace))
+                        'instance of NumpyTensorSet'.format(reco_space.dspace))
     if reco_space.ndim != geometry.ndim:
         raise ValueError('dimensions {} of reconstruction space and {} of '
                          'geometry do not match'.format(

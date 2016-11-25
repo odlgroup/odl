@@ -18,7 +18,7 @@ import numpy as np
 
 from odl.solvers.functional.functional import Functional
 from odl.operator import Operator, MatrixOperator
-from odl.space.base_ntuples import FnBase
+from odl.space.base_tensors import TensorSpace
 
 
 __all__ = ('RosenbrockFunctional',)
@@ -57,7 +57,7 @@ class RosenbrockFunctional(Functional):
 
         Parameters
         ----------
-        space : `FnBase`
+        space : `TensorSpace`
             Domain of the functional.
         scale : positive float, optional
             The scale ``c`` in the functional determining how "ill-behaved" the
@@ -91,10 +91,11 @@ class RosenbrockFunctional(Functional):
         3.0
         """
         self.scale = float(scale)
-        if not isinstance(space, FnBase):
-            raise ValueError('`space` must be an `FnBase`')
+        if not isinstance(space, TensorSpace):
+            raise ValueError('`space` must be a `TensorSpace` instance, '
+                             'got {!r}'.format(space))
         if space.size < 2:
-            raise ValueError('`space` must be at least two dimensional')
+            raise ValueError('`space` must be at least two-dimensional')
         super().__init__(space=space, linear=False, grad_lipschitz=np.inf)
 
     def _call(self, x):
@@ -136,7 +137,6 @@ class RosenbrockFunctional(Functional):
 
                 This is also known as the Hessian.
                 """
-
                 # TODO: Implement optimized version of this that does not need
                 # a matrix.
                 shape = (functional.domain.size, functional.domain.size)

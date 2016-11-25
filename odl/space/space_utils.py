@@ -13,12 +13,12 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-__all__ = ('vector', 'ntuples', 'fn', 'cn', 'rn')
+__all__ = ('vector', 'tensor_set', 'tensor_space', 'cn', 'rn')
 
 import numpy as np
 
 from odl.set import RealNumbers, ComplexNumbers
-from odl.space.entry_points import NTUPLES_IMPLS, FN_IMPLS
+from odl.space.entry_points import TENSOR_SET_IMPLS, TENSOR_SPACE_IMPLS
 from odl.util import (
     is_real_floating_dtype, is_complex_floating_dtype, is_scalar_dtype)
 
@@ -35,12 +35,12 @@ def vector(array, dtype=None, impl='numpy'):
         Set the data type of the vector manually with this option.
         By default, the space type is inferred from the input data.
     impl : string, optional
-        The backend to use. See `odl.space.entry_points.NTUPLES_IMPLS` and
-        `odl.space.entry_points.FN_IMPLS` for available options.
+        The backend to use. See `odl.space.entry_points.TENSOR_SET_IMPLS` and
+        `odl.space.entry_points.TENSOR_SPACE_IMPLS` for available options.
 
     Returns
     -------
-    vec : `NtuplesBaseVector`
+    vec : `GeneralizedTensor`
         Vector created from the input array. Its concrete type depends
         on the provided arguments.
 
@@ -52,7 +52,7 @@ def vector(array, dtype=None, impl='numpy'):
     Examples
     --------
     >>> vector([1, 2, 3])  # No automatic cast to float
-    fn(3, 'int').element([1, 2, 3])
+    tensor_space(3, 'int').element([1, 2, 3])
     >>> vector([1, 2, 3], dtype=float)
     rn(3).element([1.0, 2.0, 3.0])
     >>> vector([1 + 1j, 2, 3 - 2j])
@@ -61,7 +61,7 @@ def vector(array, dtype=None, impl='numpy'):
     Non-scalar types are also supported:
 
     >>> vector([True, False])
-    ntuples(2, 'bool').element([True, False])
+    tensor_set(2, 'bool').element([True, False])
 
     Scalars become a one-element vector:
 
@@ -84,14 +84,14 @@ def vector(array, dtype=None, impl='numpy'):
 
     # Select implementation
     if space_dtype is None or is_scalar_dtype(space_dtype):
-        space_type = fn
+        space_type = tensor_space
     else:
-        space_type = ntuples
+        space_type = tensor_set
 
     return space_type(len(arr), dtype=space_dtype, impl=impl).element(arr)
 
 
-def ntuples(size, dtype, impl='numpy', **kwargs):
+def tensor_set(size, dtype, impl='numpy', **kwargs):
     """Set of tuples of a fixed size.
 
     Parameters
@@ -106,23 +106,23 @@ def ntuples(size, dtype, impl='numpy', **kwargs):
 
         Only complex floating-point data types are allowed.
     impl : string, optional
-        The backend to use. See `odl.space.entry_points.NTUPLES_IMPLS` for
+        The backend to use. See `odl.space.entry_points.TENSOR_SET_IMPLS` for
         available options.
     kwargs :
         Extra keyword arguments to pass to the implmentation.
 
     Returns
     -------
-    ntuple : `NtuplesBase`
+    tset : `TensorSet`
 
     See Also
     --------
-    fn : n-tuples over a field with arbitrary scalar data type.
+    tensor_space : n-tuples over a field with arbitrary scalar data type.
     """
-    return NTUPLES_IMPLS[impl](size, dtype, **kwargs)
+    return TENSOR_SET_IMPLS[impl](size, dtype, **kwargs)
 
 
-def fn(size, dtype=None, impl='numpy', **kwargs):
+def tensor_space(size, dtype=None, impl='numpy', **kwargs):
     """Return the space ``F^n`` for arbitrary field ``F``.
 
     Parameters
@@ -136,29 +136,29 @@ def fn(size, dtype=None, impl='numpy', **kwargs):
         objects or as string.
 
         Default: default of the implementation given by calling
-        ``default_dtype()`` on the `FnBase` implementation.
+        ``default_dtype()`` on the `TensorSpace` implementation.
     impl : string, optional
-        The backend to use. See `odl.space.entry_points.FN_IMPLS` for
+        The backend to use. See `odl.space.entry_points.TENSOR_SPACE_IMPLS` for
         available options.
     kwargs :
         Extra keyword arguments to pass to the implmentation.
 
     Returns
     -------
-    fn : `FnBase`
+    tspace : `TensorSpace`
 
     See Also
     --------
-    ntuples : n-tuples over a field with arbitrary data type.
+    tensor_set : n-tuples over a field with arbitrary data type.
     """
-    fn_impl = FN_IMPLS[impl]
+    tspace_impl = TENSOR_SPACE_IMPLS[impl]
 
     if dtype is None:
-        dtype = fn_impl.default_dtype()
+        dtype = tspace_impl.default_dtype()
 
-    fn = fn_impl(size, dtype, **kwargs)
+    tspace = tspace_impl(size, dtype, **kwargs)
 
-    return fn
+    return tspace
 
 
 def cn(size, dtype=None, impl='numpy', **kwargs):
@@ -177,22 +177,24 @@ def cn(size, dtype=None, impl='numpy', **kwargs):
         Only complex floating-point data types are allowed.
 
         Default: default of the implementation given by calling
-        ``default_dtype(ComplexNumbers())`` on the `FnBase` implementation.
+        ``default_dtype(ComplexNumbers())`` on the `TensorSpace`
+        implementation.
+
     impl : string, optional
-        The backend to use. See `odl.space.entry_points.FN_IMPLS` for
+        The backend to use. See `odl.space.entry_points.TENSOR_SPACE_IMPLS` for
         available options.
     kwargs :
         Extra keyword arguments to pass to the implmentation.
 
     Returns
     -------
-    cn : `FnBase`
+    cn : `TensorSpace`
 
     See Also
     --------
-    fn : n-tuples over a field with arbitrary scalar data type.
+    tensor_space : n-tuples over a field with arbitrary scalar data type.
     """
-    cn_impl = FN_IMPLS[impl]
+    cn_impl = TENSOR_SPACE_IMPLS[impl]
 
     if dtype is None:
         dtype = cn_impl.default_dtype(ComplexNumbers())
@@ -220,22 +222,23 @@ def rn(size, dtype=None, impl='numpy', **kwargs):
 
         Only real floating-point data types are allowed.
         Default: default of the implementation given by calling
-        ``default_dtype(RealNumbers())`` on the `FnBase` implementation.
+        ``default_dtype(RealNumbers())`` on the `TensorSpace` implementation.
+
     impl : string, optional
-        The backend to use. See `odl.space.entry_points.FN_IMPLS` for
+        The backend to use. See `odl.space.entry_points.TENSOR_SPACE_IMPLS` for
         available options.
     kwargs :
         Extra keyword arguments to pass to the implmentation.
 
     Returns
     -------
-    rn : `FnBase`
+    rn : `TensorSpace`
 
     See Also
     --------
-    fn : n-tuples over a field with arbitrary scalar data type.
+    tensor_space : n-tuples over a field with arbitrary scalar data type.
     """
-    rn_impl = FN_IMPLS[impl]
+    rn_impl = TENSOR_SPACE_IMPLS[impl]
 
     if dtype is None:
         dtype = rn_impl.default_dtype(RealNumbers())

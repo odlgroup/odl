@@ -25,7 +25,7 @@ def white_noise(space, mean=0, stddev=1, seed=None):
 
     Parameters
     ----------
-    space : `FnBase` or `ProductSpace`
+    space : `TensorSpace` or `ProductSpace`
         The space in which the noise is created.
     mean : ``space.field`` element or ``space`` `element-like`, optional
         The mean of the white noise. If a scalar, it is interpreted as
@@ -74,7 +74,7 @@ def poisson_noise(intensity, seed=None):
 
     Parameters
     ----------
-    intensity : `FnBase` element or `ProductSpace` element
+    intensity : `TensorSpace` element or `ProductSpace` element
         The intensity (usually called lambda) parameter of the noise.
 
     Returns
@@ -123,7 +123,7 @@ def salt_pepper_noise(vector, fraction=0.05, salt_vs_pepper=0.5,
 
     Parameters
     ----------
-    vector : `FnBase` or `ProductSpace`
+    vector : `TensorSpace` or `ProductSpace`
         The vector that noise should be added to.
     fraction : float, optional
         The propotion of the elements in ``vector`` that should be converted

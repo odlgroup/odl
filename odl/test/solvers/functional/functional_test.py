@@ -50,14 +50,14 @@ def sigma(request):
 
 
 @pytest.fixture(scope="module", ids=space_ids, params=space_params)
-def space(request, fn_impl):
+def space(request, tspace_impl):
     name = request.param.strip()
 
     if name == 'r10':
-        return odl.rn(10, impl=fn_impl)
+        return odl.rn(10, impl=tspace_impl)
     elif name == 'uniform_discr':
         # Discretization parameters
-        return odl.uniform_discr(0, 1, 7, impl=fn_impl)
+        return odl.uniform_discr(0, 1, 7, impl=tspace_impl)
 
 
 func_params = ['l1 ', 'l2', 'l2^2', 'constant', 'zero', 'ind_unit_ball_1',

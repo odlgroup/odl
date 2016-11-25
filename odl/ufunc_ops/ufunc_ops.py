@@ -15,7 +15,7 @@ standard_library.install_aliases()
 
 import numpy as np
 from odl.set import LinearSpace, RealNumbers, Field
-from odl.space import ProductSpace, fn
+from odl.space import ProductSpace, tensor_space
 from odl.operator import Operator, MultiplyOperator
 from odl.util.utility import is_int_dtype
 from odl.util.ufuncs import UFUNCS
@@ -159,7 +159,7 @@ def ufunc_class_factory(name, nargin, nargout, docstring):
 
         Parameters
         ----------
-        space : `FnBase`
+        space : `TensorSpace`
             The domain of the operator.
         """
         if not isinstance(space, LinearSpace):
@@ -205,7 +205,7 @@ def ufunc_class_factory(name, nargin, nargout, docstring):
     else:
         dtype = float
 
-    space = fn(3, dtype=dtype)
+    space = tensor_space(3, dtype=dtype)
     if nargin == 1:
         vec = space.element([-1, 1, 2])
         arg = '{}'.format(vec)
@@ -317,7 +317,7 @@ Create functional with domain/range as real numbers:
 """
 
 RAW_UFUNC_FACTORY_OPERATOR_DOCSTRING = """
-Create operator that acts pointwise on a `FnBase`
+Create operator that acts pointwise on a `TensorSpace`
 
 >>> space = odl.rn(3)
 >>> op = odl.ufunc_ops.{name}(space)

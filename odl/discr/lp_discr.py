@@ -25,7 +25,8 @@ from odl.discr.discr_mappings import (
 from odl.discr.partition import (
     RectPartition, uniform_partition_fromintv, uniform_partition)
 from odl.set import RealNumbers, ComplexNumbers, IntervalProd
-from odl.space import FunctionSpace, ProductSpace, FN_IMPLS
+from odl.space import FunctionSpace, ProductSpace
+from odl.space.entry_points import TENSOR_SPACE_IMPLS
 from odl.space.weighting import Weighting, NoWeighting, ConstWeighting
 from odl.util import (
     apply_on_boundary, is_real_dtype, is_complex_floating_dtype,
@@ -56,9 +57,9 @@ class DiscreteLp(DiscretizedSpace):
         partition : `RectPartition`
             Partition of (a subset of) ``fspace.domain`` based on a
             `RectGrid`.
-        dspace : `FnBase`
+        dspace : `TensorSpace`
             Space of elements used for data storage. It must have the
-            same `FnBase.field` as ``fspace``
+            same `TensorSpace.field` as ``fspace``
         exponent : positive float, optional
             The parameter :math:`p` in :math:`L^p`. If the exponent is
             not equal to the default 2.0, the space has no inner
@@ -607,7 +608,7 @@ class DiscreteLpElement(DiscretizedSpaceElement):
         """Set the real part of this element to ``newreal``."""
         newreal_flat = np.asarray(newreal, order=self.space.order).reshape(
             -1, order=self.space.order)
-        self.ntuple.real = newreal_flat
+        self.tensor.real = newreal_flat
 
     @property
     def imag(self):
@@ -620,7 +621,7 @@ class DiscreteLpElement(DiscretizedSpaceElement):
         """Set the imaginary part of this element to ``newimag``."""
         newimag_flat = np.asarray(newimag, order=self.space.order).reshape(
             -1, order=self.space.order)
-        self.ntuple.imag = newimag_flat
+        self.tensor.imag = newimag_flat
 
     def conj(self, out=None):
         """Complex conjugate of this element.
@@ -660,9 +661,9 @@ class DiscreteLpElement(DiscretizedSpaceElement):
         True
         """
         if out is None:
-            return self.space.element(self.ntuple.conj())
+            return self.space.element(self.tensor.conj())
         else:
-            self.ntuple.conj(out=out.ntuple)
+            self.tensor.conj(out=out.tensor)
             return out
 
     def __setitem__(self, indices, values):
@@ -684,8 +685,8 @@ class DiscreteLpElement(DiscretizedSpaceElement):
             shape is allowed as ``values``.
         """
         if values in self.space:
-            # For DiscretizedSetElement of the same type, use ntuple directly
-            self.ntuple[indices] = values.ntuple
+            # For DiscretizedSetElement of the same type, use.tensor directly
+            self.tensor[indices] = values.tensor
         else:
             # Other sequence types are piped through a Numpy array. Equivalent
             # views are optimized for in Numpy.
@@ -739,7 +740,7 @@ class DiscreteLpElement(DiscretizedSpaceElement):
 
         Notes
         -----
-        These are optimized to use the underlying ntuple space and incur no
+        These are optimized to use the underlying tensor space and incur no
         overhead unless these do.
         """
         return DiscreteLpUfuncs(self)
@@ -1213,7 +1214,7 @@ def uniform_discr_fromintv(interval, shape, exponent=2.0, interp='nearest',
     """
     dtype = kwargs.pop('dtype', None)
     if dtype is None:
-        dtype = FN_IMPLS[impl].default_dtype()
+        dtype = TENSOR_SPACE_IMPLS[impl].default_dtype()
 
     fspace = FunctionSpace(interval, out_dtype=dtype)
     return uniform_discr_fromspace(fspace, shape, exponent, interp, impl,

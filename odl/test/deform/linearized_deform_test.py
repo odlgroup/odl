@@ -14,6 +14,7 @@ import pytest
 
 import odl
 from odl.deform import LinDeformFixedTempl, LinDeformFixedDisp
+from odl.space.entry_points import TENSOR_SPACE_IMPLS
 from odl.util.testutils import almost_equal, simple_fixture
 
 
@@ -26,17 +27,17 @@ ndim = simple_fixture('ndim', [1, 2, 3])
 
 
 @pytest.fixture
-def space(request, ndim, interp, dtype, fn_impl):
+def space(request, ndim, interp, dtype, tspace_impl):
     """Example space.
 
     Generates example spaces with various implementations, dimensions, dtypes
     and interpolations.
     """
-    if np.dtype(dtype) not in odl.FN_IMPLS[fn_impl].available_dtypes():
+    if dtype not in TENSOR_SPACE_IMPLS[tspace_impl].available_dtypes():
         pytest.skip('dtype not available for this backend')
 
     return odl.uniform_discr([-1] * ndim, [1] * ndim, [20] * ndim,
-                             interp=interp, impl=fn_impl, dtype=dtype)
+                             interp=interp, impl=tspace_impl, dtype=dtype)
 
 
 # --- Helper functions --- #

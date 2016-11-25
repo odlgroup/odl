@@ -8,27 +8,27 @@
 
 """Entry points for adding more spaces to ODL using external packages.
 
-External packages can add implementations of `NtuplesBase` and `FnBase` by
+External packages can add implementations of `TensorSet` and `TensorSpace` by
 hooking into the setuptools entry point ``'odl.space'`` and exposing the
-methods ``ntuples_impls`` and ``fn_impls``.
+methods ``tensor_set_impls`` and ``tensor_space_impls``.
 
 
 Attributes
 ----------
-NTUPLES_IMPLS: dict
-    A dictionary that maps a string to an `NtuplesBase` implementation.
-FN_IMPLS: dict
-    A dictionary that maps a string to an `FnBase` implementation.
+TENSOR_SET_IMPLS: dict
+    A dictionary that maps a string to an `TensorSet` implementation.
+TENSOR_SPACE_IMPLS: dict
+    A dictionary that maps a string to an `TensorSpace` implementation.
 
 Notes
 -----
-This is used with functions such as `rn`, `fn` and `uniform_discr` in order
-to allow arbitrary implementations.
+This is used with functions such as `rn`, `cn`, `tensor_space` or
+`uniform_discr` in order to allow arbitrary implementations.
 
 See Also
 --------
-NumpyFn : Numpy based implementation of `FnBase`
-NumpyNtuples : Numpy based implementation of `NtuplesBase`
+NumpyTensorSpace : Numpy based implementation of `TensorSpace`
+NumpyTensorSet : Numpy based implementation of `TensorSet`
 """
 
 # Imports for common Python 2/3 codebase
@@ -37,16 +37,16 @@ from future import standard_library
 standard_library.install_aliases()
 
 from pkg_resources import iter_entry_points
-from odl.space.npy_ntuples import NumpyNtuples, NumpyFn
+from odl.space.npy.tensors import NumpyTensorSet, NumpyTensorSpace
 
-__all__ = ('NTUPLES_IMPLS', 'FN_IMPLS')
+__all__ = ('TENSOR_SET_IMPLS', 'TENSOR_SPACE_IMPLS')
 
-NTUPLES_IMPLS = {'numpy': NumpyNtuples}
-FN_IMPLS = {'numpy': NumpyFn}
+TENSOR_SET_IMPLS = {'numpy': NumpyTensorSet}
+TENSOR_SPACE_IMPLS = {'numpy': NumpyTensorSpace}
 for entry_point in iter_entry_points(group='odl.space', name=None):
     try:
         module = entry_point.load()
-        NTUPLES_IMPLS.update(module.ntuples_impls())
-        FN_IMPLS.update(module.fn_impls())
+        TENSOR_SET_IMPLS.update(module.tensor_set_impls())
+        TENSOR_SPACE_IMPLS.update(module.tensor_space_impls())
     except ImportError:
         pass

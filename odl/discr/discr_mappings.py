@@ -23,7 +23,7 @@ import numpy as np
 
 from odl.operator import Operator
 from odl.discr.partition import RectPartition
-from odl.space.base_ntuples import NtuplesBase, FnBase
+from odl.space.base_tensors import TensorSet, TensorSpace
 from odl.space import FunctionSet, FunctionSpace
 from odl.util import (
     is_valid_input_meshgrid, out_shape_from_array, out_shape_from_meshgrid)
@@ -54,9 +54,9 @@ class FunctionSetMapping(Operator):
         partition : `RectPartition`
             Partition of (a subset of) ``fset.domain`` based on a
             `RectGrid`.
-        dspace : `NtuplesBase`
+        dspace : `TensorSet`
             Data space providing containers for the values of a
-            discretized object. Its `NtuplesBase.size` must be equal
+            discretized object. Its `TensorSet.size` must be equal
             to the total number of grid points.
         linear : bool, optional
             Create a linear operator if ``True``, otherwise a non-linear
@@ -78,8 +78,8 @@ class FunctionSetMapping(Operator):
         if not isinstance(partition, RectPartition):
             raise TypeError('`partition` {!r} is not a `RectPartition` '
                             'instance'.format(partition))
-        if not isinstance(dspace, NtuplesBase):
-            raise TypeError('`dspace` {!r} is not an `NtuplesBase` instance'
+        if not isinstance(dspace, TensorSet):
+            raise TypeError('`dspace` {!r} is not an `TensorSet` instance'
                             ''.format(dspace))
 
         if not fset.domain.contains_set(partition):
@@ -101,8 +101,8 @@ class FunctionSetMapping(Operator):
             if not isinstance(fset, FunctionSpace):
                 raise TypeError('`fset` {!r} is not a `FunctionSpace` '
                                 'instance'.format(fset))
-            if not isinstance(dspace, FnBase):
-                raise TypeError('`dspace` {!r} is not an `FnBase` instance'
+            if not isinstance(dspace, TensorSpace):
+                raise TypeError('`dspace` {!r} is not an `TensorSpace` instance'
                                 ''.format(dspace))
             if fset.field != dspace.field:
                 raise ValueError('`field` {} of the function space and `field`'
@@ -183,9 +183,9 @@ class PointCollocation(FunctionSetMapping):
         partition : `RectPartition`
             Partition of (a subset of) ``ip_fset.domain`` based on a
             `RectGrid`
-        dspace : `NtuplesBase`
+        dspace : `TensorSet`
             Data space providing containers for the values of a
-            discretized object. Its `NtuplesBase.size` must be equal
+            discretized object. Its `TensorSet.size` must be equal
             to the total number of grid points.
         order : {'C', 'F'}, optional
             Ordering of the axes in the data storage. 'C' means the
@@ -239,7 +239,7 @@ class PointCollocation(FunctionSetMapping):
         ----------
         func : `FunctionSetElement`
             The function to be evaluated
-        out : `NtuplesBaseVector`, optional
+        out : `GeneralizedTensor`, optional
             Array to which the values are written. Its shape must be
             ``(N,)``, where N is the total number of grid points. The
             data type must be the same as in the ``dspace`` of this
@@ -249,7 +249,7 @@ class PointCollocation(FunctionSetMapping):
 
         Returns
         -------
-        out : `NtuplesBaseVector`, optional
+        out : `GeneralizedTensor`, optional
             The function values at the grid points. If ``out`` was
             provided, the returned object is a reference to it.
 
@@ -321,9 +321,9 @@ class NearestInterpolation(FunctionSetMapping):
         partition : `RectPartition`
             Partition of (a subset of) ``ip_fset.domain`` based on a
             spatial grid
-        dspace : `NtuplesBase`
+        dspace : `TensorSet`
             Data space providing containers for the values of a
-            discretized object. Its `NtuplesBase.size` must be equal
+            discretized object. Its `TensorSet.size` must be equal
             to the total number of grid points.
 
         Other Parameters
@@ -357,7 +357,7 @@ class NearestInterpolation(FunctionSetMapping):
         >>> part.grid.coord_vectors
         (array([ 0.125,  0.375,  0.625,  0.875]), array([ 0.25,  0.75]))
 
-        >>> dspace = odl.ntuples(part.size, dtype='U1')
+        >>> dspace = odl.tensor_set(part.size, dtype='U1')
 
         Now we initialize the operator and test it with some points:
 
@@ -398,7 +398,7 @@ class NearestInterpolation(FunctionSetMapping):
 
         Parameters
         ----------
-        x : `NtuplesBaseVector`
+        x : `GeneralizedTensor`
             The array of values to be interpolated
         out : `FunctionSetElement`, optional
             Element in which to store the interpolator
@@ -473,10 +473,10 @@ class LinearInterpolation(FunctionSetMapping):
         partition : `RectPartition`
             Partition of (a subset of) ``fspace.domain`` based on a
             `RectGrid`
-        dspace : `FnBase`
+        dspace : `TensorSpace`
             Data space providing containers for the values of a
-            discretized object. Its `NtuplesBase.size` must be equal
-            to the total number of grid points, and its `FnBase.field`
+            discretized object. Its `TensorSet.size` must be equal
+            to the total number of grid points, and its `TensorSpace.field`
             must be the same as that of the function space.
         order : {'C', 'F'}, optional
             Ordering of the axes in the data storage. 'C' means the
@@ -496,7 +496,7 @@ class LinearInterpolation(FunctionSetMapping):
 
         Parameters
         ----------
-        x : `FnBaseVector`
+        x : `Tensor`
             The array of values to be interpolated
         out : `FunctionSpaceElement`, optional
             Element in which to store the interpolator
@@ -553,10 +553,10 @@ class PerAxisInterpolation(FunctionSetMapping):
         partition : `RectPartition`
             Partition of (a subset of) ``fspace.domain`` based on a
             `RectGrid`
-        dspace : `FnBase`
+        dspace : `TensorSpace`
             Data space providing containers for the values of a
-            discretized object. Its `NtuplesBase.size` must be equal
-            to the total number of grid points, and its `FnBase.field`
+            discretized object. Its `TensorSet.size` must be equal
+            to the total number of grid points, and its `TensorSpace.field`
             must be the same as that of the function space.
         schemes : string or sequence of strings
             Indicates which interpolation scheme to use for which axis.
@@ -631,7 +631,7 @@ class PerAxisInterpolation(FunctionSetMapping):
 
         Parameters
         ----------
-        x : `FnBaseVector`
+        x : `Tensor`
             The array of values to be interpolated
         out : `FunctionSpaceElement`, optional
             Element in which to store the interpolator

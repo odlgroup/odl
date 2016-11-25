@@ -19,7 +19,7 @@ spc = odl.cn(10)
 odl.diagnostics.SpaceTest(spc).run_tests()
 
 
-if 'cuda' in odl.FN_IMPLS:
+if 'cuda' in odl.space.entry_points.TENSOR_SPACE_IMPLS:
     print('\n\n TESTING FOR CUDA rn SPACE \n\n')
 
     spc = odl.rn(10, impl='cuda')
