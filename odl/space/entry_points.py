@@ -8,35 +8,33 @@
 
 """Entry points for adding more spaces to ODL using external packages.
 
-External packages can add implementations of `NtuplesBase` and `FnBase` by
-hooking into the setuptools entry point ``'odl.space'`` and exposing the
-methods ``ntuples_impls`` and ``fn_impls``.
+External packages can add an implementation of `TensorSpace` by hooking
+into the setuptools entry point ``'odl.space'`` and exposing the method
+``tensor_space_impls``.
 
-This is used with functions such as `rn`, `fn` and `uniform_discr` in order
-to allow arbitrary implementations.
+This is used with functions such as `rn`, `cn`, `tensor_space` or
+`uniform_discr` in order to allow arbitrary implementations.
 
 See Also
 --------
-NumpyFn : Numpy based implementation of `FnBase`
-NumpyNtuples : Numpy based implementation of `NtuplesBase`
+NumpyTensorSpace : Numpy based implementation of `TensorSpace`
 """
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 
-from odl.space.npy_ntuples import NumpyNtuples, NumpyFn
+from odl.space.npy_tensors import NumpyTensorSpace
 
-__all__ = ('ntuples_impl_names', 'fn_impl_names',
-           'ntuples_impl', 'fn_impl')
+# We don't expose anything to odl.space
+__all__ = ()
 
 IS_INITIALIZED = False
-NTUPLES_IMPLS = {'numpy': NumpyNtuples}
-FN_IMPLS = {'numpy': NumpyFn}
+TENSOR_SPACE_IMPLS = {'numpy': NumpyTensorSpace}
 
 
 def _initialize_if_needed():
-    """Initialize ``NTUPLES_IMPLS`` and ``FN_IMPLS`` if not already done."""
-    global IS_INITIALIZED, NTUPLES_IMPLS, FN_IMPLS
+    """Initialize ``TENSOR_SPACE_IMPLS`` if not already done."""
+    global IS_INITIALIZED, TENSOR_SPACE_IMPLS
     if not IS_INITIALIZED:
         # pkg_resources has long import time
         from pkg_resources import iter_entry_points
@@ -46,78 +44,42 @@ def _initialize_if_needed():
             except ImportError:
                 pass
             else:
-                NTUPLES_IMPLS.update(module.ntuples_impls())
-                FN_IMPLS.update(module.fn_impls())
+                TENSOR_SPACE_IMPLS.update(module.tensor_space_impls())
         IS_INITIALIZED = True
 
 
-def ntuples_impl_names():
-    """A tuple of strings with valid ntuples implementation names."""
+def tensor_space_impl_names():
+    """A tuple of strings with valid tensor space implementation names."""
     _initialize_if_needed()
-    return tuple(NTUPLES_IMPLS.keys())
+    return tuple(TENSOR_SPACE_IMPLS.keys())
 
 
-def fn_impl_names():
-    """A tuple of strings with valid fn implementation names."""
-    _initialize_if_needed()
-    return tuple(FN_IMPLS.keys())
-
-
-def ntuples_impl(impl):
-    """N-tuples class corresponding to key.
+def tensor_space_impl(impl):
+    """Tensor space class corresponding to the given impl name.
 
     Parameters
     ----------
-    impl : `str`
-        Name of the implementation, see `ntuples_impl_names` for full list.
+    impl : str
+        Name of the implementation, see `tensor_space_impl_names` for
+        the full list.
 
     Returns
     -------
-    ntuples_impl : `type`
-        Class inheriting from `NtuplesBase`.
+    tensor_space_impl : type
+        Class inheriting from `TensorSpace`.
 
     Raises
     ------
     ValueError
-        If ``impl`` is not a valid name of a ntuples imlementation.
+        If ``impl`` is not a valid name of a tensor space imlementation.
     """
     if impl != 'numpy':
         # Shortcut to improve "import odl" times since most users do not use
-        # non-numpy backend.
+        # non-numpy backends
         _initialize_if_needed()
 
     try:
-        return NTUPLES_IMPLS[impl]
+        return TENSOR_SPACE_IMPLS[impl]
     except KeyError:
-        raise ValueError("key '{}' does not correspond to a valid ntuples "
-                         "implmentation".format(impl))
-
-
-def fn_impl(impl):
-    """Fn class corresponding to key.
-
-    Parameters
-    ----------
-    impl : `str`
-        Name of the implementation, see `fn_impl_names` for full list.
-
-    Returns
-    -------
-    fn_impl : `type`
-        Class inheriting from `FnBase`.
-
-    Raises
-    ------
-    ValueError
-        If ``impl`` is not a valid name of a fn imlementation.
-    """
-    if impl != 'numpy':
-        # Shortcut to improve "import odl" times since most users do not use
-        # non-numpy backend.
-        _initialize_if_needed()
-
-    try:
-        return FN_IMPLS[impl]
-    except KeyError:
-        raise ValueError("key '{}' does not correspond to a valid fn "
-                         "implmentation".format(impl))
+        raise ValueError("`impl` {!r} does not correspond to a valid tensor "
+                         "space implmentation".format(impl))
