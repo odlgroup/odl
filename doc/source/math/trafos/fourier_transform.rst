@@ -159,7 +159,7 @@ There is a certain degree of freedom in the choice of the most negative frequenc
 Usually one wants to center the Fourier space grid around zero since most information is typically
 concentrated there. Point-symmetric grids are the standard choice, however sometimes one explicitly
 wants to include (for even :math:`n`) or exclude (for odd :math:`n`) the zero frequency from the
-grid, which is achieved by shifting the frequency :math:`xi_0` by :math:`-\sigma/2`. This results in
+grid, which is achieved by shifting the frequency :math:`\xi_0` by :math:`-\sigma/2`. This results in
 two possible choices
 
 .. math::

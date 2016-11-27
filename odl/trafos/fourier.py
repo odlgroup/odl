@@ -1238,7 +1238,7 @@ class FourierTransform(FourierTransformBase):
 
         C2C: use ``tmp_r`` or ``tmp_f`` (C2C operation)
         R2C: use ``tmp_f`` (R2C operation)
-        HALFC: use ``tmp_r`` (R2R operation)
+        R2HC: use ``tmp_r`` (R2R operation)
 
         The result is stored in ``out`` if given, otherwise in
         a temporary or a new array.
@@ -1259,7 +1259,7 @@ class FourierTransform(FourierTransformBase):
 
         C2C: use ``tmp_f`` (C2C operation)
         R2C: use ``tmp_f`` (C2C operation)
-        HALFC: use ``tmp_f`` (C2C operation)
+        R2HC: use ``tmp_f`` (C2C operation)
 
         The result is stored in ``out`` if given, otherwise in
         a temporary or a new array.
