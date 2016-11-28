@@ -1495,7 +1495,7 @@ class SeparableSum(Functional):
     def __repr__(self):
         """Return ``repr(self)``."""
         func_repr = ', '.join(repr(func) for func in self.functionals)
-        return '{}()'.format(self.__class__.__name__, func_repr)
+        return '{}({})'.format(self.__class__.__name__, func_repr)
 
 
 class QuadraticForm(Functional):
