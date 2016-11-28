@@ -34,38 +34,75 @@ from odl.trafos.fourier import (
     FourierTransform)
 from odl.util import (all_almost_equal, never_skip, skip_if_no_pyfftw,
                       noise_element,
-                      is_real_dtype, conj_exponent, complex_dtype)
-
+                      is_real_dtype, conj_exponent, complex_dtype,
+                      simple_fixture)
 # --- pytest fixtures --- #
 
-impl_params = [never_skip('numpy'), skip_if_no_pyfftw('pyfftw')]
-impl_ids = [' impl = {} '.format(impl.args[1]) for impl in impl_params]
+# Fixture for FFT implementations
+impl = simple_fixture('impl', [never_skip('numpy'),
+                               skip_if_no_pyfftw('pyfftw')])
+
+# Fixture for space exponents
+exponent = simple_fixture('p', [2.0, 1.0, float('inf'), 1.5])
+
+# Fixture for the sign of the Fourier transform
+sign = simple_fixture('sign', ['-', '+'])
 
 
-@pytest.fixture(scope="module", ids=impl_ids, params=impl_params)
-def impl(request):
-    """Fixture for FFT implementations."""
-    return request.param
+fouriertrafo_params = ['1d real-halfcomplex, odd n, sign+',
+                       '1d real-halfcomplex, odd n, sign-',
+                       '1d real-halfcomplex, even n',
+                       '1d real-complex, odd n',
+                       '1d real-complex, even n',
+                       '1d complex-complex odd n',
+                       '1d complex-complex even n',
+                       '2d real-halfcomplex',
+                       '2d real-complex',
+                       '2d complex-complex']
+fouriertrafo_ids = [" ft='{}' ".format(m)
+                    for m in fouriertrafo_params]
 
 
-exp_params = [2.0, 1.0, float('inf'), 1.5]
-exp_ids = [' p = {} '.format(p) for p in exp_params]
+@pytest.fixture(scope='module',
+                params=fouriertrafo_params, ids=fouriertrafo_ids)
+def fouriertrafo(request, impl):
+    name = request.param
 
-
-@pytest.fixture(scope="module", ids=exp_ids, params=exp_params)
-def exponent(request):
-    """Fixture for space exponents."""
-    return request.param
-
-
-sign_params = ['-', '+']
-sign_ids = [" sign='{}' ".format(p) for p in sign_params]
-
-
-@pytest.fixture(scope='module', ids=sign_ids, params=sign_params)
-def sign(request):
-    """Fixture for the sign of the Fourier transform."""
-    return request.param
+    if name == '1d real-halfcomplex, odd n, sign+':
+        discr = odl.uniform_discr(-2, 2, 11, impl='numpy', dtype='float32')
+        return FourierTransform(discr, sign='+', impl=impl, halfcomplex=True)
+    elif name == '1d real-halfcomplex, odd n, sign-':
+        discr = odl.uniform_discr(-2, 2, 13, impl='numpy', dtype='float64')
+        return FourierTransform(discr, sign='-', impl=impl, halfcomplex=True)
+    elif name == '1d real-halfcomplex, even n':
+        discr = odl.uniform_discr(-2, 2, 20, impl='numpy', dtype='float32')
+        return FourierTransform(discr, impl=impl, halfcomplex=True)
+    elif name == '1d real-complex, odd n':
+        discr = odl.uniform_discr(-2, 2, 15, impl='numpy', dtype='float32')
+        return FourierTransform(discr, impl=impl, halfcomplex=False)
+    elif name == '1d real-complex, even n':
+        discr = odl.uniform_discr(-2, 2, 22, impl='numpy', dtype='float64')
+        return FourierTransform(discr, impl=impl, halfcomplex=False)
+    elif name == '1d complex-complex odd n':
+        discr = odl.uniform_discr(-2, 2, 22, impl='numpy', dtype='complex64')
+        return FourierTransform(discr, impl=impl)
+    elif name == '1d complex-complex even n':
+        discr = odl.uniform_discr(-2, 2, 22, impl='numpy', dtype='complex32')
+        return FourierTransform(discr, impl=impl)
+    elif name == '2d real-halfcomplex':
+        discr = odl.uniform_discr([-2, -3], [0, 4], [6, 5], impl='numpy',
+                                  dtype='float32')
+        return FourierTransform(discr, impl=impl, halfcomplex=True)
+    elif name == '2d real-complex':
+        discr = odl.uniform_discr([0, -20], [0.3, -16], [11, 11], impl='numpy',
+                                  dtype='float32')
+        return FourierTransform(discr, impl=impl, halfcomplex=False)
+    elif name == '2d complex-complex':
+        discr = odl.uniform_discr([-2, -2], [2, 2], [20, 4], impl='numpy',
+                                  dtype='complex32')
+        return FourierTransform(discr, impl=impl)
+    else:
+        assert False
 
 
 # --- helper functions --- #
@@ -81,7 +118,6 @@ def _params_from_dtype(dtype):
 def sinc(x):
     # numpy.sinc scales by pi, we don't want that
     return np.sinc(x / np.pi)
-
 
 # ---- DiscreteFourierTransform ---- #
 
@@ -534,26 +570,23 @@ def test_fourier_trafo_charfun_1d():
         assert (func_dft - func_true_ft).norm() < 5e-6
 
 
-def test_fourier_trafo_scaling():
+def test_fourier_trafo_scaling(fouriertrafo):
     # Test if the FT scales correctly
 
-    # Characteristic function of [0, 1], its Fourier transform is
-    # given by exp(-1j * y / 2) * sinc(y/2)
-    def char_interval(x):
-        return (x >= 0) & (x <= 1)
+    if fouriertrafo.domain.is_rn or fouriertrafo.range.is_rn:
+        scales = [2, -1, 0]
+        phantom = odl.phantom.cuboid(fouriertrafo.domain)
+    else:
+        scales = [2, 1j, -2.5j, 1 - 4j]
+        phantom = (1 + 0.5j) * odl.phantom.cuboid(fouriertrafo.domain)
 
-    def char_interval_ft(x):
-        return np.exp(-1j * x / 2) * sinc(x / 2) / np.sqrt(2 * np.pi)
-
-    fspace = odl.FunctionSpace(odl.IntervalProd(-2, 2),
-                               field=odl.ComplexNumbers())
-    discr = odl.uniform_discr_fromspace(fspace, 40, impl='numpy')
-    dft = FourierTransform(discr)
-
-    for factor in (2, 1j, -2.5j, 1 - 4j):
-        func_true_ft = factor * dft.range.element(char_interval_ft)
-        func_dft = dft(factor * fspace.element(char_interval))
-        assert (func_dft - func_true_ft).norm() < 1e-6
+    for op in [fouriertrafo,
+               fouriertrafo.inverse, fouriertrafo.inverse.adjoint,
+               fouriertrafo.adjoint, fouriertrafo.adjoint.inverse]:
+        for factor in scales:
+            func_true_ft = factor * op(phantom)
+            func_dft = op(factor * phantom)
+            assert (func_dft - func_true_ft).norm() < 1e-6
 
 
 def test_fourier_trafo_sign(impl):
@@ -583,54 +616,25 @@ def test_fourier_trafo_sign(impl):
         FourierTransform(discr, sign=-1, impl=impl)
 
 
-def test_fourier_trafo_inverse(impl, sign):
-    # Test if the inverse really is the inverse
+def _test_inverse(op):
+    # Verify inverse of op
+    phantom = odl.phantom.cuboid(op.domain)
+    result = op.inverse(op(phantom))
+    assert all_almost_equal(result, phantom)
 
-    def char_interval(x):
-        return (x >= 0) & (x <= 1)
 
-    # Complex-to-complex
-    discr = odl.uniform_discr(-2, 2, 40, impl='numpy', dtype='complex64')
-    discr_char = discr.element(char_interval)
+def test_inverse(fouriertrafo):
+    """Test if the inverse really is the inverse."""
+    _test_inverse(fouriertrafo)
 
-    ft = FourierTransform(discr, sign=sign, impl=impl)
-    assert all_almost_equal(ft.inverse(ft(char_interval)), discr_char)
 
-    # Half-complex
-    discr = odl.uniform_discr(-2, 2, 40, impl='numpy', dtype='float32')
-    ft = FourierTransform(discr, impl=impl, halfcomplex=True)
-    assert all_almost_equal(ft.inverse(ft(char_interval)), discr_char)
-
-    def char_rect(x):
-        return (x[0] >= 0) & (x[0] <= 1) & (x[1] >= 0) & (x[1] <= 1)
-
-    # 2D with axes, C2C
-    discr = odl.uniform_discr([-2, -2], [2, 2], (20, 10), impl='numpy',
-                              dtype='complex64')
-    discr_rect = discr.element(char_rect)
-
-    for axes in [(0,), 1]:
-        ft = FourierTransform(discr, sign=sign, impl=impl, axes=axes)
-        assert all_almost_equal(ft.inverse(ft(char_rect)), discr_rect)
-
-    # 2D with axes, halfcomplex
-    discr = odl.uniform_discr([-2, -2], [2, 2], (20, 10), impl='numpy',
-                              dtype='float32')
-    discr_rect = discr.element(char_rect)
-
-    for halfcomplex in [False, True]:
-        if halfcomplex and sign == '+':
-            continue  # cannot mix halfcomplex with sign
-
-        for axes in [(0,), (1,)]:
-            ft = FourierTransform(discr, sign=sign, impl=impl, axes=axes,
-                                  halfcomplex=halfcomplex)
-            assert all_almost_equal(ft.inverse(ft(char_rect)), discr_rect)
+def test_adjoint_inverse(fouriertrafo):
+    """Test if the inverse of the adjoint really is the inverse."""
+    _test_inverse(fouriertrafo.adjoint)
 
 
 def _test_adjoint(op):
-    """Test adjoint of operator satisfies the definition."""
-
+    # Verify adjoint of op
     if ((op.domain.is_rn and op.range.is_rn) or
             (op.domain.is_cn and op.range.is_cn)):
         # If both match, the usual adjoint definition should hold.
@@ -666,39 +670,14 @@ def _test_adjoint(op):
         assert False  # should not happen
 
 
-def test_fourier_trafo_adjoint(impl, sign):
-    """Test if the adjoint really is the adjoint."""
+def test_adjoint(fouriertrafo):
+    """Test adjoint of operator satisfies the definition."""
+    _test_adjoint(fouriertrafo)
 
-    # Complex-to-complex
-    discr = odl.uniform_discr(-2, 2, 40, impl='numpy', dtype='complex64')
-    ft = FourierTransform(discr, sign=sign, impl=impl)
-    _test_adjoint(ft)
 
-    # Half-complex
-    discr = odl.uniform_discr(-2, 2, 40, impl='numpy', dtype='float32')
-    ft = FourierTransform(discr, impl=impl, halfcomplex=True)
-    _test_adjoint(ft)
-
-    # 2D with axes, C2C
-    discr = odl.uniform_discr([-2, -2], [2, 2], (20, 10), impl='numpy',
-                              dtype='complex64')
-
-    for axes in [(0,), 1]:
-        ft = FourierTransform(discr, sign=sign, impl=impl, axes=axes)
-        _test_adjoint(ft)
-
-    # 2D with axes, halfcomplex
-    discr = odl.uniform_discr([-2, -2], [2, 2], (20, 10), impl='numpy',
-                              dtype='float32')
-
-    for halfcomplex in [False, True]:
-        if halfcomplex and sign == '+':
-            continue  # cannot mix halfcomplex with sign
-
-        for axes in [(0,), (1,)]:
-            ft = FourierTransform(discr, sign=sign, impl=impl, axes=axes,
-                                  halfcomplex=halfcomplex)
-            _test_adjoint(ft)
+def test_inverse_adjoint(fouriertrafo):
+    """Test adjoint of the inverse operator satisfies the definition."""
+    _test_adjoint(fouriertrafo.inverse)
 
 
 def test_fourier_trafo_hat_1d():
