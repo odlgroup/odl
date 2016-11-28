@@ -27,7 +27,7 @@ import time
 
 __all__ = ('CallbackStore', 'CallbackApply',
            'CallbackPrintTiming', 'CallbackPrintIteration',
-           'CallbackPrintNorm', 'CallbackShow')
+           'CallbackPrint', 'CallbackPrintNorm', 'CallbackShow', )
 
 
 class SolverCallback(object):
@@ -281,6 +281,65 @@ class CallbackPrintTiming(SolverCallback):
     def __repr__(self):
         """Return ``repr(self)``."""
         return 'CallbackPrintTiming()'
+
+
+class CallbackPrint(SolverCallback):
+
+    """Print the current value."""
+
+    def __init__(self, func=None, fmt='{!r}'):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        func : callable
+            Functional that should be called on the current iterate before
+            printing. Default: print current iterate.
+        fmt : string
+            Formating that should be applied. Default: print representation.
+
+        Examples
+        --------
+        Callback for simply printing the current iterate:
+
+        >>> callback = CallbackPrint()
+        >>> callback([1, 2])
+        [1, 2]
+
+        Apply function before printing:
+
+        >>> callback = CallbackPrint(func=np.sum)
+        >>> callback([1, 2])
+        3
+
+        Format to two decimal points:
+
+        >>> callback = CallbackPrint(func=np.sum, fmt='{0:.2f}')
+        >>> callback([1, 2])
+        3.00
+        """
+        self.fmt = str(fmt)
+        if func is not None and not callable(func):
+            raise TypeError('`func` must be `callable` or `None`')
+        self.func = func
+
+    def __call__(self, result):
+        """Print the current value."""
+        if self.func is not None:
+            result = self.func(result)
+
+        print(self.fmt.format(result))
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        argvals = []
+        if self.func is not None:
+            argvals.append('{!r}'.format(self.func))
+        if self.fmt != '{!r}':
+            argvals.append('{!r}'.format(self.tmp))
+        argstr = ', '.join(argvals)
+
+        return 'CallbackPrint({})'.format(argstr)
 
 
 class CallbackPrintNorm(SolverCallback):

@@ -27,8 +27,8 @@ import numpy as np
 import scipy
 from numbers import Integral
 
-from odl.solvers.functional.functional import Functional
 from odl.discr import PointwiseNorm
+from odl.solvers.functional.functional import Functional
 from odl.space import ProductSpace
 from odl.operator import (Operator, ConstantOperator, ZeroOperator,
                           ScalingOperator, DiagonalOperator)
@@ -42,53 +42,94 @@ from odl.solvers.nonsmooth.proximal_operators import (
 from odl.util import conj_exponent
 
 
-__all__ = ('L1Norm', 'L2Norm', 'L2NormSquared',
+__all__ = ('LpNorm', 'L1Norm', 'L2Norm', 'L2NormSquared',
            'ZeroFunctional', 'ConstantFunctional', 'IndicatorLpUnitBall',
            'GroupL1Norm', 'IndicatorGroupL1UnitBall', 'IndicatorZero',
            'IndicatorBox', 'IndicatorNonnegativity', 'KullbackLeibler',
            'KullbackLeiblerCrossEntropy', 'SeparableSum',
-           'QuadraticForm')
+           'QuadraticForm',
+           'NuclearNorm', 'IndicatorNuclearNormUnitBall')
 
 
-class L1Norm(Functional):
+class LpNorm(Functional):
 
-    """The functional corresponding to L1-norm.
-
-    The L1-norm, ``||x||_1``,  is defined as the integral/sum of ``|x|``.
+    """The functional corresponding to the Lp-norm.
 
     Notes
     -----
     If the functional is defined on an :math:`\mathbb{R}^n`-like space, the
-    :math:`L_1`-norm is defined as
+    :math:`\| \cdot \|_p`-norm is defined as
 
     .. math::
 
-        \| x \|_1 = \\sum_{i=1}^n |x_i|.
+        \| x \|_p = \\left(\\sum_{i=1}^n |x_i|^p \\right)^{1/p}.
 
     If the functional is defined on an :math:`L_2`-like space, the
-    :math:`L_1`-norm is defined as
+    :math:`\| \cdot \|_p`-norm is defined as
 
     .. math::
 
-        \| x \|_1 = \\int_\Omega |x(t)| dt.
+        \| x \|_p = \\left(\\int_\Omega |x(t)|^p dt. \\right)^{1/p}
     """
 
-    def __init__(self, space):
+    def __init__(self, space, exponent):
         """Initialize a new instance.
 
         Parameters
         ----------
         space : `DiscreteLp` or `FnBase`
             Domain of the functional.
+        exponent : float
+            Exponent for the norm (``p``).
         """
+        self.exponent = float(exponent)
         super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
 
     # TODO: update when integration operator is in place: issue #440
     def _call(self, x):
-        """Return the L1-norm of ``x``."""
-        return x.ufunc.absolute().inner(self.domain.one())
+        """Return the Lp-norm of ``x``."""
+        if self.exponent == 0:
+            return self.domain.one().inner(np.not_equal(x, 0))
+        elif self.exponent == 1:
+            return x.ufunc.absolute().inner(self.domain.one())
+        elif self.exponent == 2:
+            return np.sqrt(x.inner(x))
+        elif np.isfinite(self.exponent):
+            tmp = x.ufunc.absolute()
+            tmp.ufunc.power(self.exponent, out=tmp)
+            return np.power(tmp.inner(self.domain.one()), 1 / self.exponent)
+        elif self.exponent == np.inf:
+            return x.ufunc.absolute().ufunc.max()
+        elif self.exponent == -np.inf:
+            return x.ufunc.absolute().ufunc.min()
+        else:
+            raise RuntimeError('unknown exponent')
 
-    # TODO: remove inner class when ufunc operators are in place: issue #567
+    @property
+    def convex_conj(self):
+        """The convex conjugate functional of the Lp-norm."""
+        return IndicatorLpUnitBall(self.domain,
+                                   exponent=conj_exponent(self.exponent))
+
+    @property
+    def proximal(self):
+        """Return the proximal factory of the functional.
+
+        See Also
+        --------
+        odl.solvers.nonsmooth.proximal_operators.proximal_l1 :
+            proximal factory for the L1-norm.
+        odl.solvers.nonsmooth.proximal_operators.proximal_l2 :
+            proximal factory for the L2-norm.
+        """
+        if self.exponent == 1:
+            return proximal_l1(space=self.domain)
+        elif self.exponent == 2:
+            return proximal_l2(space=self.domain)
+        else:
+            raise NotImplementedError('`proximal` only implemented for p=1 or '
+                                      'p=2')
+
     @property
     def gradient(self):
         """Gradient operator of the functional.
@@ -98,36 +139,52 @@ class L1Norm(Functional):
         """
         functional = self
 
-        class L1Gradient(Operator):
+        if self.exponent == 1:
+            class L1Gradient(Operator):
 
-            """The gradient operator of this functional."""
+                """The gradient operator of this functional."""
 
-            def __init__(self):
-                """Initialize a new instance."""
-                super().__init__(functional.domain, functional.domain,
-                                 linear=False)
+                def __init__(self):
+                    """Initialize a new instance."""
+                    super().__init__(functional.domain, functional.domain,
+                                     linear=False)
 
-            def _call(self, x):
-                """Apply the gradient operator to the given point."""
-                return x.ufunc.sign()
+                def _call(self, x):
+                    """Apply the gradient operator to the given point."""
+                    return x.ufunc.sign()
 
-        return L1Gradient()
+            return L1Gradient()
+        elif self.exponent == 2:
+            class L2Gradient(Operator):
 
-    @property
-    def proximal(self):
-        """Return the `proximal factory` of the functional.
+                """The gradient operator of this functional."""
 
-        See Also
-        --------
-        odl.solvers.nonsmooth.proximal_operators.proximal_l1 :
-            `proximal factory` for the L1-norm.
-        """
-        return proximal_l1(space=self.domain)
+                def __init__(self):
+                    """Initialize a new instance."""
+                    super().__init__(functional.domain, functional.domain,
+                                     linear=False)
 
-    @property
-    def convex_conj(self):
-        """The convex conjugate functional of the L1-norm."""
-        return IndicatorLpUnitBall(self.domain, exponent=np.inf)
+                def _call(self, x):
+                    """Apply the gradient operator to the given point.
+
+                    The gradient is not defined in 0.
+                    """
+                    norm_of_x = x.norm()
+                    if norm_of_x == 0:
+                        return self.domain.zero()
+                    else:
+                        return x / norm_of_x
+
+            return L2Gradient()
+        else:
+            raise NotImplementedError('`gradient` only implemented for p=1 or '
+                                      'p=2')
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{}({!r}, {!r})'.format(self.__class__.__name__,
+                                       self.domain,
+                                       self.exponent)
 
 
 class GroupL1Norm(Functional):
@@ -351,7 +408,7 @@ class IndicatorGroupL1UnitBall(Functional):
         proximal_cconj_l1 : `proximal factory` for the L1-norms convex
                             conjugate.
         """
-        if self.pointwise_norm.exponent == 1:
+        if self.pointwise_norm.exponent == np.inf:
             return proximal_cconj_l1(space=self.domain)
         elif self.pointwise_norm.exponent == 2:
             return proximal_cconj_l1(space=self.domain, isotropic=True)
@@ -424,6 +481,7 @@ class IndicatorLpUnitBall(Functional):
             Specifies wich norm to use.
         """
         super().__init__(space=space, linear=False)
+        self.__norm = LpNorm(space, exponent)
         self.__exponent = float(exponent)
 
     @property
@@ -431,19 +489,9 @@ class IndicatorLpUnitBall(Functional):
         """Exponent corresponding to the norm."""
         return self.__exponent
 
-    # TODO: update when integration operator is in place: issue #440
     def _call(self, x):
         """Apply the functional to the given point."""
-        if self.exponent == 1:
-            x_norm = x.ufunc.absolute().inner(self.domain.one())
-        elif self.exponent == 2:
-            x_norm = x.norm()
-        elif self.exponent == np.inf:
-            x_norm = x.ufunc.absolute().ufunc.max()
-        else:
-            tmp = x.ufunc.absolute()
-            tmp.ufunc.power(self.exponent, out=tmp)
-            x_norm = np.power(tmp.inner(self.domain.one()), 1 / self.exponent)
+        x_norm = self.__norm(x)
 
         if x_norm > 1:
             return np.inf
@@ -466,8 +514,7 @@ class IndicatorLpUnitBall(Functional):
         elif self.exponent == 2:
             return L2Norm(self.domain)
         else:
-            # TODO: Add Lp-norm functional.
-            raise NotImplementedError('currently not implemented')
+            return LpNorm(self.domain, exponent=conj_exponent(self.exponent))
 
     @property
     def proximal(self):
@@ -485,7 +532,8 @@ class IndicatorLpUnitBall(Functional):
         elif self.exponent == 2:
             return proximal_cconj_l2(space=self.domain)
         else:
-            raise NotImplementedError('currently not implemented')
+            raise NotImplementedError('`gradient` only implemented for p=2 or '
+                                      'p=inf')
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -493,12 +541,27 @@ class IndicatorLpUnitBall(Functional):
                                       self.domain, self.exponent)
 
 
-class L2Norm(Functional):
+class L1Norm(LpNorm):
 
-    """The functional corresponding to the L2-norm.
+    """The functional corresponding to L1-norm.
 
-    The L2-norm, ``||x||_2``,  is defined as the square-root out of the
-    integral/sum of ``x^2``.
+    The L1-norm, ``||x||_1``,  is defined as the integral/sum of ``|x|``.
+
+    Notes
+    -----
+    If the functional is defined on an :math:`\mathbb{R}^n`-like space, the
+    :math:`\| \cdot \|_1`-norm is defined as
+
+    .. math::
+
+        \| x \|_1 = \\sum_{i=1}^n |x_i|.
+
+    If the functional is defined on an :math:`L_2`-like space, the
+    :math:`\| \cdot \|_1`-norm is defined as
+
+    .. math::
+
+        \| x \|_1 = \\int_\Omega |x(t)| dt.
     """
 
     def __init__(self, space):
@@ -509,61 +572,52 @@ class L2Norm(Functional):
         space : `DiscreteLp` or `FnBase`
             Domain of the functional.
         """
-        super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
-
-    # TODO: update when integration operator is in place: issue #440
-    def _call(self, x):
-        """Return the L2-norm of ``x``."""
-        return np.sqrt(x.inner(x))
-
-    @property
-    def gradient(self):
-        """Gradient operator of the functional."""
-        functional = self
-
-        class L2Gradient(Operator):
-
-            """The gradient operator of this functional."""
-
-            def __init__(self):
-                """Initialize a new instance."""
-                super().__init__(functional.domain, functional.domain,
-                                 linear=False)
-
-            def _call(self, x):
-                """Apply the gradient operator to the given point.
-
-                The gradient is not defined in 0.
-                """
-                norm_of_x = x.norm()
-                if norm_of_x == 0:
-                    # The derivative is not defined for 0.
-                    raise ValueError('The gradient of the L2 functional is '
-                                     'not defined for the zero element.')
-                else:
-                    return x / norm_of_x
-
-        return L2Gradient()
-
-    @property
-    def proximal(self):
-        """Return the `proximal factory` of the functional.
-
-        See Also
-        --------
-        odl.solvers.nonsmooth.proximal_operators.proximal_l2 :
-            `proximal factory` for L2-norm.
-        """
-        return proximal_l2(space=self.domain)
-
-    @property
-    def convex_conj(self):
-        """The convex conjugate functional of the L2-norm."""
-        return IndicatorLpUnitBall(self.domain, exponent=2)
+        super().__init__(space=space, exponent=1)
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r})'.format(self.__class__.__name__, self.domain)
+        return '{}({!r})'.format(self.__class__.__name__,
+                                 self.domain)
+
+
+class L2Norm(LpNorm):
+
+    """The functional corresponding to the L2-norm.
+
+    The L2-norm, ``||x||_2``,  is defined as the square-root out of the
+    integral/sum of ``x^2``.
+
+    Notes
+    -----
+    If the functional is defined on an :math:`\mathbb{R}^n`-like space, the
+    :math:`\| \cdot \|_2`-norm is defined as
+
+    .. math::
+
+        \| x \|_2 = \\sqrt{ \\sum_{i=1}^n |x_i|^2 }.
+
+    If the functional is defined on an :math:`L_2`-like space, the
+    :math:`\| \cdot \|_2`-norm is defined as
+
+    .. math::
+
+        \| x \|_2 = \\sqrt{ \\int_\Omega |x(t)|^2 dt. }
+    """
+
+    def __init__(self, space):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        space : `DiscreteLp` or `FnBase`
+            Domain of the functional.
+        """
+        super().__init__(space=space, exponent=2)
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{}({!r})'.format(self.__class__.__name__,
+                                 self.domain)
 
 
 class L2NormSquared(Functional):
@@ -572,6 +626,22 @@ class L2NormSquared(Functional):
 
     The squared L2-norm, ``||x||_2^2``,  is defined as the integral/sum of
     ``x^2``.
+
+    Notes
+    -----
+    If the functional is defined on an :math:`\mathbb{R}^n`-like space, the
+    :math:`\| \cdot \|_2^2`-functional is defined as
+
+    .. math::
+
+        \| x \|_2^2 = \\sum_{i=1}^n |x_i|^2.
+
+    If the functional is defined on an :math:`L_2`-like space, the
+    :math:`\| \cdot \|_2^2`-functional is defined as
+
+    .. math::
+
+        \| x \|_2^2 = \\int_\Omega |x(t)|^2 dt.
     """
 
     def __init__(self, space):
@@ -1630,6 +1700,321 @@ class QuadraticForm(Functional):
                                  vector=vector,
                                  constant=constant)
 
+
+class NuclearNorm(Functional):
+
+    """Nuclear norm for matrix valued functions.
+
+    Notes
+    -----
+    For a matrix-valued function
+    :math:`f : \\Omega \\rightarrow \\mathbb{R}^{n \\times m}`,
+    the nuclear norm with parameters :math:`p` and :math:`q` is defined by
+
+    .. math::
+        \\left( \int_\Omega \|\sigma(f(x))\|_p^q d x \\right)^{1/q},
+
+    where :math:`\sigma(f(x))` is the vector of singular values of the matrix
+    :math:`f(x)` and :math:`\| \cdot \|_p` is the usual :math:`p`-norm on
+    :math:`\mathbb{R}^{\min(n, m)}`.
+
+    For a detailed description of its properties, e.g, its proximal, convex
+    conjugate and more, see [Du+2016]_.
+
+    References
+    ----------
+    J. Duran, M. Moeller, C. Sbert, and D. Cremers. Collaborative Total
+    Variation: A General Framework for Vectorial TV Models, SIAM Journal of
+    Imaging Sciences 9(1): 116--151, 2016.
+    """
+
+    def __init__(self, space, outer_exp=1, singular_vector_exp=2):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        space : `ProductSpace` of `ProductSpace` of `FnBase`
+            Domain of the functional.
+        outer_exp : {1, 2, inf}, optional
+            Exponent for the outer norm.
+        singular_vector_exp : {1, 2, inf}, optional
+            Exponent for the norm for the singular vectors.
+
+        Examples
+        --------
+        Simple example, nuclear norm of matrix valued function with all ones
+        in 3 points. The singular values are [2, 0], which has squared 2-norm
+        2. Since there are 3 points, the expected total value is 6.
+
+        >>> r3 = odl.rn(3)
+        >>> space = odl.ProductSpace(odl.ProductSpace(r3, 2), 2)
+        >>> norm = NuclearNorm(space)
+        >>> norm(space.one())
+        6.0
+        """
+        if (not isinstance(space, ProductSpace) or
+                not isinstance(space[0], ProductSpace)):
+            raise TypeError('`space` must be a `ProductSpace` of '
+                            '`ProductSpace`s')
+        if (not space.is_power_space or not space[0].is_power_space):
+            raise TypeError('`space` must be of the form `FnBase^(nxm)`')
+
+        super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
+
+        self.outernorm = LpNorm(self.domain[0][0], exponent=outer_exp)
+        self.pwisenorm = PointwiseNorm(self.domain[0],
+                                       exponent=singular_vector_exp)
+        self.pshape = (self.domain.size, self.domain[0].size)
+
+    # TODO: Remove when numpy 1.11 is required by ODL
+    def _moveaxis(self, arr, source, dest):
+        """Implementation of `numpy.moveaxis`.
+
+        Needed since `numpy.moveaxis` requires numpy 1.11, which ODL doesn't
+        have as a dependency.
+        """
+        try:
+            source = list(source)
+        except TypeError:
+            source = [source]
+        try:
+            dest = list(dest)
+        except TypeError:
+            dest = [dest]
+
+        source = [a + arr.ndim if a < 0 else a for a in source]
+        dest = [a + arr.ndim if a < 0 else a for a in dest]
+
+        order = [n for n in range(arr.ndim) if n not in source]
+
+        for dest, src in sorted(zip(dest, source)):
+            order.insert(dest, src)
+
+        return arr.transpose(order)
+
+    def _asarray(self, vec):
+        """Convert ``x`` to an array.
+
+        Here the indices are changed such that the "outer" indices come last
+        in order to have the access order as `numpy.linalg.svd` needs it.
+
+        This is the inverse of `_asvector`.
+        """
+        shape = self.domain[0][0].shape + self.pshape
+        arr = np.empty(shape, dtype=self.domain.dtype)
+        for i, xi in enumerate(vec):
+            for j, xij in enumerate(xi):
+                arr[..., i, j] = xij.asarray()
+
+        return arr
+
+    def _asvector(self, arr):
+        """Convert ``vec`` to a `domain` element.
+
+        This is the inverse of `_asarray`.
+        """
+        result = self._moveaxis(arr, [-2, -1], [0, 1])
+        return self.domain.element(result)
+
+    def _call(self, x):
+        """Return ``self(x)``."""
+
+        # Convert to array with most
+        arr = self._asarray(x)
+        svd_diag = np.linalg.svd(arr, compute_uv=False)
+
+        # Rotate the axes so the svd-direction is first
+        s_reordered = self._moveaxis(svd_diag, -1, 0)
+
+        # Return nuclear norm
+        return self.outernorm(self.pwisenorm(s_reordered))
+
+    @property
+    def proximal(self):
+        """Return the proximal operator.
+
+        Raises
+        ------
+        NotImplementedError
+            if ``outer_exp`` is not 1 or ``singular_vector_exp`` is not 1, 2 or
+            infinity
+        """
+        if self.outernorm.exponent != 1:
+            raise NotImplementedError('`proximal` only implemented for '
+                                      '`outer_exp==1`')
+        if self.pwisenorm.exponent not in [1, 2, np.inf]:
+            raise NotImplementedError('`proximal` only implemented for '
+                                      '`singular_vector_exp` in [1, 2, inf]')
+
+        def nddot(a, b):
+            """Compute pointwise matrix product in the last indices."""
+            return np.einsum('...ij,...jk->...ik', a, b)
+
+        func = self
+
+        class NuclearNormProximal(Operator):
+            """Proximal operator of `NuclearNorm`."""
+            def __init__(self, sigma):
+                self.sigma = float(sigma)
+                Operator.__init__(self, func.domain, func.domain, linear=False)
+
+            def _call(self, x):
+                """Return ``self(x)``."""
+                arr = func._asarray(x)
+
+                # Compute SVD
+                U, s, Vt = np.linalg.svd(arr, full_matrices=False)
+
+                # transpose pointwise
+                V = Vt.swapaxes(-1, -2)
+
+                # Take pseudoinverse of s
+                sinv = s.copy()
+                sinv[sinv != 0] = 1 / sinv[sinv != 0]
+
+                # Take pointwise proximal operator of s w.r.t. the norm
+                # on the singular vectors
+                if func.pwisenorm.exponent == 1:
+                    sprox = np.sign(s) * np.maximum(np.abs(s) - self.sigma, 0)
+                elif func.pwisenorm.exponent == 2:
+                    s_reordered = func._moveaxis(s, -1, 0)
+                    snorm = func.pwisenorm(s_reordered).asarray()
+                    snorm = np.maximum(self.sigma, snorm, out=snorm)
+                    sprox = (1 - self.sigma / snorm)[..., None] * s
+                elif func.pwisenorm.exponent == np.inf:
+                    snorm = np.sum(np.abs(s), axis=-1)
+                    snorm = np.maximum(self.sigma, snorm, out=snorm)
+                    sprox = (1 - self.sigma / snorm)[..., None] * s
+                else:
+                    raise RuntimeError
+
+                # Compute s matrix
+                sproxsinv = (sprox * sinv)[..., :, None]
+
+                # Compute the final result
+                result = nddot(nddot(arr, V), sproxsinv * Vt)
+
+                # Cast to vector and return. Note array and vector have
+                # different shapes.
+                return func._asvector(result)
+
+            def __repr__(self):
+                """Return ``repr(self)``."""
+                return '{!r}.proximal({})'.format(func, self.sigma)
+
+        return NuclearNormProximal
+
+    @property
+    def convex_conj(self):
+        """Convex conjugate of the nuclear norm.
+
+        The convex conjugate is the indicator function on the unit ball of
+        the dual norm where the dual norm is obtained by taking the conjugate
+        exponent of both the outer and singular vector exponents.
+        """
+        return IndicatorNuclearNormUnitBall(
+            self.domain,
+            conj_exponent(self.outernorm.exponent),
+            conj_exponent(self.pwisenorm.exponent))
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{}({!r}, {}, {})'.format(self.__class__.__name__,
+                                         self.domain,
+                                         self.outernorm.exponent,
+                                         self.pwisenorm.exponent)
+
+
+class IndicatorNuclearNormUnitBall(Functional):
+    """Indicator on unit ball of nuclear norm for matrix valued functions.
+
+    Notes
+    -----
+    For a matrix-valued function
+    :math:`f : \\Omega \\rightarrow \\mathbb{R}^{n \\times m}`,
+    the nuclear norm with parameters :math:`p` and :math:`q` is defined by
+
+    .. math::
+        \\left( \int_\Omega \|\sigma(f(x))\|_p^q d x \\right)^{1/q},
+
+    where :math:`\sigma(f(x))` is the vector of singular values of the matrix
+    :math:`f(x)` and :math:`\| \cdot \|_p` is the usual :math:`p`-norm on
+    :math:`\mathbb{R}^{\min(n, m)}`.
+
+    This function is defined as the indicator on the unit ball of the nuclear
+    norm, that is, 0 if the nuclear norm is less than 1, and infinity else.
+
+    For a detailed description of its properties, e.g, its proximal, convex
+    conjugate and more, see [Du+2016]_.
+
+    References
+    ----------
+    J. Duran, M. Moeller, C. Sbert, and D. Cremers. Collaborative Total
+    Variation: A General Framework for Vectorial TV Models, SIAM Journal of
+    Imaging Sciences 9(1): 116--151, 2016.
+    """
+
+    def __init__(self, space, outer_exp=1, singular_vector_exp=2):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        space : `ProductSpace` of `ProductSpace` of `FnBase`
+            Domain of the functional.
+        outer_exp : {1, 2, inf}, optional
+            Exponent for the outer norm.
+        singular_vector_exp : {1, 2, inf}, optional
+            Exponent for the norm for the singular vectors.
+
+        Examples
+        --------
+        Simple example, nuclear norm of matrix valued function with all ones
+        in 3 points. The singular values are [2, 0], which has squared 2-norm
+        2. Since there are 3 points, the expected total value is 6.
+        Since the nuclear norm is larger than 1, the indicator is infinity.
+
+        >>> r3 = odl.rn(3)
+        >>> space = odl.ProductSpace(odl.ProductSpace(r3, 2), 2)
+        >>> norm = IndicatorNuclearNormUnitBall(space)
+        >>> norm(space.one())
+        inf
+        """
+        self.__norm = NuclearNorm(space, outer_exp, singular_vector_exp)
+        super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
+
+    def _call(self, x):
+        """Return ``self(x)``."""
+        x_norm = self.__norm(x)
+
+        if x_norm > 1:
+            return np.inf
+        else:
+            return 0
+
+    @property
+    def proximal(self):
+        """The proximal operator."""
+        # Implement proximal via duality
+        return proximal_cconj(self.convex_conj.proximal)
+
+    @property
+    def convex_conj(self):
+        """Convex conjugate of the unit ball indicator of the  nuclear norm.
+
+        The convex conjugate is the dual nuclear norm  where the dual norm is
+        obtained by taking the conjugate exponent of both the outer and
+        singular vector exponents.
+        """
+        return NuclearNorm(self.domain,
+                           conj_exponent(self.__norm.outernorm.exponent),
+                           conj_exponent(self.__norm.pwisenorm.exponent))
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{}({!r}, {}, {})'.format(self.__class__.__name__,
+                                         self.domain,
+                                         self.__norm.outernorm.exponent,
+                                         self.__norm.pwisenorm.exponent)
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position
