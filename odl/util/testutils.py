@@ -35,7 +35,7 @@ __all__ = ('almost_equal', 'all_equal', 'all_almost_equal', 'never_skip',
            'skip_if_no_pyfftw', 'skip_if_no_largescale',
            'noise_array', 'noise_element', 'noise_elements',
            'Timer', 'timeit', 'ProgressBar', 'ProgressRange',
-           'test', 'run_doctests')
+           'test', 'run_doctests', 'simple_fixture')
 
 
 def _places(a, b, default=None):
