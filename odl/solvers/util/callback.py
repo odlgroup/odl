@@ -293,14 +293,14 @@ class CallbackPrint(SolverCallback):
         Parameters
         ----------
         func : callable
-            Functional that should be called with the current iterate before
+            Functional that should be called on the current iterate before
             printing. Default: print current iterate.
         fmt : string
             Formating that should be applied. Default: print representation.
 
         Examples
         --------
-        Callback for simply printing the result
+        Callback for simply printing the current iterate:
 
         >>> callback = CallbackPrint()
         >>> callback([1, 2])
@@ -312,9 +312,11 @@ class CallbackPrint(SolverCallback):
         >>> callback([1, 2])
         3
 
-        >>> callback = CallbackPrint(func=np.sum, fmt='{}')
+        Format to two decimal points:
+
+        >>> callback = CallbackPrint(func=np.sum, fmt='{0:.2f}')
         >>> callback([1, 2])
-        3
+        3.00
         """
         self.fmt = str(fmt)
         if func is not None and not callable(func):

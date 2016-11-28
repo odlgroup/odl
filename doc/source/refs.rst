@@ -95,3 +95,6 @@ References
    *A primal-dual hybrid gradient method for non-linear operators with
    applications to MRI*. Inverse Problems, 30 (2014).
 
+.. [Du+2016] J. Duran, M. Moeller, C. Sbert, and D. Cremers.
+   *Collaborative Total Variation: A General Framework for Vectorial TV Models*
+   SIAM Journal of Imaging Sciences 9(1): 116--151, 2016.

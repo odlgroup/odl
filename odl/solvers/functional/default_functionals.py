@@ -1718,6 +1718,9 @@ class NuclearNorm(Functional):
     :math:`f(x)` and :math:`\| \cdot \|_p` is the usual :math:`p`-norm on
     :math:`\mathbb{R}^{\min(n, m)}`.
 
+    For a detailed description of its properties, e.g, its proximal, convex
+    conjugate and more, see [Du+2016]_.
+
     References
     ----------
     J. Duran, M. Moeller, C. Sbert, and D. Cremers. Collaborative Total
@@ -1836,7 +1839,6 @@ class NuclearNorm(Functional):
             if ``outer_exp`` is not 1 or ``singular_vector_exp`` is not 1, 2 or
             infinity
         """
-
         if self.outernorm.exponent != 1:
             raise NotImplementedError('`proximal` only implemented for '
                                       '`outer_exp==1`')
@@ -1941,6 +1943,9 @@ class IndicatorNuclearNormUnitBall(Functional):
 
     This function is defined as the indicator on the unit ball of the nuclear
     norm, that is, 0 if the nuclear norm is less than 1, and infinity else.
+
+    For a detailed description of its properties, e.g, its proximal, convex
+    conjugate and more, see [Du+2016]_.
 
     References
     ----------

@@ -86,7 +86,7 @@ data = forward_op(phantom)
 data[1] += odl.phantom.white_noise(forward_op.range[1]) * np.mean(data[1])
 data.show('data')
 
-# Set up gradient and the vectorial gradient.
+# Set up gradient and vectorial gradient
 gradient = odl.Gradient(ray_trafo.domain)
 pgradient = odl.DiagonalOperator(gradient, 2)
 
@@ -97,7 +97,7 @@ l2err2 = odl.solvers.L2NormSquared(ray_trafo.range).translated(data[1])
 # Scale the error term of the second channel so it is more heavily regularized.
 # Note that we need to use SeparableSum, otherwise the solver would not be able
 # to compute the proximal.
-# The separable sum is defomed by: l2err([x, y]) = l2err1(x) + 0.1 * l2err(y)
+# The separable sum is defined by: l2err([x, y]) = l2err1(x) + 0.1 * l2err(y)
 l2err = odl.solvers.SeparableSum(l2err1, 0.1 * l2err2)
 
 # Create nuclear norm
