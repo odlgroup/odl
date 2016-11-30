@@ -17,9 +17,13 @@
 
 """Denoising using the Chambolle-Pock solver with TV & entropy-type data term.
 
-Solves the optimization problem with the Kullback-Leibler data divergence
+Solves the following optimization problem:
 
-    min_{x > 0}  sum(A(x) - g ln(A(x)) + lam || |grad(x)| ||_1
+    min_{x > 0}  KL(x, g) + lam || |grad(x)| ||_1
+
+where ``KL(x, g)`` is the Kullback-Leibler divergence, ``grad`` is the
+spatial gradient, ``|| . ||_1`` is the 1 norm and lam is a regularization
+constant.
 
 For details see :ref:`chambolle_pock`, :ref:`proximal_operators`, and
 references therein.
@@ -65,17 +69,13 @@ g = odl.solvers.IndicatorNonnegativity(op.domain)
 # Functionals related to the dual variable
 
 # Kulback-Leibler data matching
-prox_convconj_kl = odl.solvers.proximal_cconj_kl(space, lam=1.0, g=noisy)
-
-# TODO: fix hack with issue #612
-kl_data_matching = odl.solvers.simple_functional(space,
-                                                 cconj_prox=prox_convconj_kl)
+kl_divergence = odl.solvers.KullbackLeibler(space, prior=noisy)
 
 # Isotropic TV-regularization: l1-norm of grad(x)
 l1_norm = 0.1 * odl.solvers.L1Norm(gradient.range)
 
 # Make separable sum of functionals, order must correspond to the operator K
-f = odl.solvers.SeparableSum(kl_data_matching, l1_norm)
+f = odl.solvers.SeparableSum(kl_divergence, l1_norm)
 
 # Optional: pass callback objects to solver
 callback = (odl.solvers.CallbackPrintIteration() &
