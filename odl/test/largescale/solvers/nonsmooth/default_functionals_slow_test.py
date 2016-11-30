@@ -22,15 +22,13 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-# External
 import numpy as np
 import pytest
 import scipy.special
-
-# Internal
 import odl
 from odl.util.testutils import (noise_element, all_almost_equal,
                                 simple_fixture)
+from odl.solvers.functional.functional import FunctionalDefaultConvexConjugate
 
 pytestmark = odl.util.skip_if_no_largescale
 
@@ -98,9 +96,9 @@ def functional(request, offset, dual):
 EPS = 1e-6
 
 
-def proximal_objective(function, x, y):
+def proximal_objective(functional, x, y):
     """Calculate the objective function of the proximal optimization problem"""
-    return function(y) + (1.0 / 2.0) * (x - y).norm() ** 2
+    return functional(y) + (1.0 / 2.0) * (x - y).norm() ** 2
 
 
 def test_proximal_defintion(functional, stepsize):
@@ -116,7 +114,8 @@ def test_proximal_defintion(functional, stepsize):
     """
     proximal = functional.proximal(stepsize)
 
-    assert proximal.domain == proximal.range
+    assert proximal.domain == functional.domain
+    assert proximal.range == functional.domain
 
     x = noise_element(proximal.domain) * 10
     f_x = proximal_objective(stepsize * functional, x, x)
@@ -133,6 +132,38 @@ def test_proximal_defintion(functional, stepsize):
             print(repr(functional), x, y, prox_x, f_prox_x, f_y)
 
         assert f_prox_x <= f_y + EPS
+
+
+def cconj_objective(functional, x, y):
+    """Calculate the objective function of the convex conjugate problem"""
+    return x.inner(y) - functional(x)
+
+
+def test_cconj_defintion(functional):
+    """Test the defintion of the convex conjugate:
+
+        f^*(y) = sup_x {<x, y> - f(x)}
+
+    Hence we expect for all x in the domain of the proximal
+
+        <x, y> - f(x) <= f^*(y)
+    """
+    f_cconj = functional.convex_conj
+    if isinstance(functional.convex_conj, FunctionalDefaultConvexConjugate):
+        pytest.skip('functional has no convex conjugate')
+        return
+
+    y = noise_element(functional.domain)
+    f_cconj_y = f_cconj(y)
+
+    for i in range(100):
+        x = noise_element(functional.domain)
+        lhs = x.inner(y) - functional(x)
+
+        if not lhs <= f_cconj_y + EPS:
+            print(repr(functional), repr(f_cconj), x, y, lhs, f_cconj_y)
+
+        assert lhs <= f_cconj_y + EPS
 
 
 def test_proximal_cconj_kl_cross_entropy_solving_opt_problem():
