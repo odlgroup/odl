@@ -52,6 +52,7 @@ import odl
 
 # Parameters
 lam = 0.01
+data_matching = 'exact'
 
 # --- Create spaces, forward operator and simulated data ---
 
@@ -83,12 +84,22 @@ gradient = odl.Gradient(space)
 # Functional to enforce 0 <= x <= 1
 f = odl.solvers.IndicatorBox(space, 0, 1)
 
-# Functional to enforce Ax = g
-indicator_data = odl.solvers.IndicatorZero(ray_trafo.range).translated(data)
+if data_matching == 'exact':
+    # Functional to enforce Ax = g
+    indicator_zero = odl.solvers.IndicatorZero(ray_trafo.range)
+    indicator_data = indicator_zero.translated(data)
+elif data_matching == 'inexact':
+    # Functional to enforce ||Ax - g||_2 < eps
+    eps = 1e-4
+    indicator_l2_ball = odl.solvers.IndicatorLpUnitBall(ray_trafo.range, 2)
+    indicator_data = indicator_l2_ball.translated(data / eps) * (1 / eps)
+    
+else:
+    raise RuntimeError('unknown data_matching')
 
 # Functional for TV minimization
 cross_norm = lam * odl.solvers.GroupL1Norm(gradient.range)
-
+    
 # --- Create functionals for solving the optimization problem ---
 
 # Assemble operators and functionals for the solver
@@ -101,7 +112,7 @@ callback = (odl.solvers.CallbackShow('iterates',
             odl.solvers.CallbackPrintIteration())
 
 # Solve with initial guess x = 0.
-# Step size parameters are selected to ensure convergece.
+# Step size parameters are selected to ensure convergence.
 # See douglas_rachford_pd doc for more information.
 x = ray_trafo.domain.zero()
 odl.solvers.douglas_rachford_pd(x, f, g, lin_ops,
