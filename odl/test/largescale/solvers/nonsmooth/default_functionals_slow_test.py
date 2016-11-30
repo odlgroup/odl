@@ -22,15 +22,13 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-# External
 import numpy as np
 import pytest
 import scipy.special
-
-# Internal
 import odl
 from odl.util.testutils import (noise_element, all_almost_equal,
                                 simple_fixture)
+from odl.solvers.functional.functional import FunctionalDefaultConvexConjugate
 
 pytestmark = odl.util.skip_if_no_largescale
 
@@ -41,9 +39,9 @@ dual = simple_fixture('dual', [False, True])
 
 
 func_params = ['l1', 'l2', 'l2^2', 'kl', 'kl_cross_ent', 'const',
-               'groupl11', 'groupl12',
+               'groupl1-1', 'groupl1-2',
                'nuclearnorm-1-1', 'nuclearnorm-1-2', 'nuclearnorm-1-inf']
-func_ids = [' f = {}'.format(p.ljust(10)) for p in func_params]
+func_ids = [' f = {} '.format(p.ljust(10)) for p in func_params]
 
 
 @pytest.fixture(scope="module", ids=func_ids, params=func_params)
@@ -65,12 +63,10 @@ def functional(request, offset, dual):
         func = odl.solvers.KullbackLeiblerCrossEntropy(space)
     elif name == 'const':
         func = odl.solvers.ConstantFunctional(space, constant=2)
-    elif name == 'groupl11':
+    elif name.startswith('groupl1'):
+        exponent = float(name.split('-')[1])
         space = odl.ProductSpace(space, 2)
-        func = odl.solvers.GroupL1Norm(space, exponent=1)
-    elif name == 'groupl12':
-        space = odl.ProductSpace(space, 2)
-        func = odl.solvers.GroupL1Norm(space, exponent=2)
+        func = odl.solvers.GroupL1Norm(space, exponent=exponent)
     elif name.startswith('nuclearnorm'):
         outer_exp = float(name.split('-')[1])
         singular_vector_exp = float(name.split('-')[2])
@@ -98,9 +94,9 @@ def functional(request, offset, dual):
 EPS = 1e-6
 
 
-def proximal_objective(function, x, y):
-    """Calculate the objective function of the proximal optimization problem"""
-    return function(y) + (1.0 / 2.0) * (x - y).norm() ** 2
+def proximal_objective(functional, x, y):
+    """Objective function of the proximal optimization problem."""
+    return functional(y) + (1.0 / 2.0) * (x - y).norm() ** 2
 
 
 def test_proximal_defintion(functional, stepsize):
@@ -116,16 +112,14 @@ def test_proximal_defintion(functional, stepsize):
     """
     proximal = functional.proximal(stepsize)
 
-    assert proximal.domain == proximal.range
+    assert proximal.domain == functional.domain
+    assert proximal.range == functional.domain
 
-    x = noise_element(proximal.domain) * 10
-    f_x = proximal_objective(stepsize * functional, x, x)
-    prox_x = proximal(x)
-    f_prox_x = proximal_objective(stepsize * functional, x, prox_x)
+    for _ in range(100):
+        x = noise_element(proximal.domain) * 10
+        prox_x = proximal(x)
+        f_prox_x = proximal_objective(stepsize * functional, x, prox_x)
 
-    assert f_prox_x <= f_x + EPS
-
-    for i in range(100):
         y = noise_element(proximal.domain)
         f_y = proximal_objective(stepsize * functional, x, y)
 
@@ -133,6 +127,38 @@ def test_proximal_defintion(functional, stepsize):
             print(repr(functional), x, y, prox_x, f_prox_x, f_y)
 
         assert f_prox_x <= f_y + EPS
+
+
+def cconj_objective(functional, x, y):
+    """CObjective function of the convex conjugate problem."""
+    return x.inner(y) - functional(x)
+
+
+def test_cconj_defintion(functional):
+    """Test the defintion of the convex conjugate:
+
+        f^*(y) = sup_x {<x, y> - f(x)}
+
+    Hence we expect for all x in the domain of the proximal
+
+        <x, y> - f(x) <= f^*(y)
+    """
+    f_cconj = functional.convex_conj
+    if isinstance(functional.convex_conj, FunctionalDefaultConvexConjugate):
+        pytest.skip('functional has no convex conjugate')
+        return
+
+    for _ in range(100):
+        y = noise_element(functional.domain)
+        f_cconj_y = f_cconj(y)
+
+        x = noise_element(functional.domain)
+        lhs = x.inner(y) - functional(x)
+
+        if not lhs <= f_cconj_y + EPS:
+            print(repr(functional), repr(f_cconj), x, y, lhs, f_cconj_y)
+
+        assert lhs <= f_cconj_y + EPS
 
 
 def test_proximal_cconj_kl_cross_entropy_solving_opt_problem():

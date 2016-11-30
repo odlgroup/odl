@@ -1852,6 +1852,12 @@ class NuclearNorm(Functional):
 
         func = self
 
+        # Add epsilon to fix rounding errors, i.e. make sure that when we
+        # project on the unit ball, we actually end up slightly inside the unit
+        # ball. Without, we may end up slightly outside.
+        dtype = getattr(self.domain, 'dtype', float)
+        eps = np.finfo(dtype).resolution * 10
+
         class NuclearNormProximal(Operator):
             """Proximal operator of `NuclearNorm`."""
             def __init__(self, sigma):
@@ -1875,16 +1881,17 @@ class NuclearNorm(Functional):
                 # Take pointwise proximal operator of s w.r.t. the norm
                 # on the singular vectors
                 if func.pwisenorm.exponent == 1:
-                    sprox = np.sign(s) * np.maximum(np.abs(s) - self.sigma, 0)
+                    abss = np.abs(s) - (self.sigma - eps)
+                    sprox = np.sign(s) * np.maximum(abss, 0)
                 elif func.pwisenorm.exponent == 2:
                     s_reordered = func._moveaxis(s, -1, 0)
                     snorm = func.pwisenorm(s_reordered).asarray()
                     snorm = np.maximum(self.sigma, snorm, out=snorm)
-                    sprox = (1 - self.sigma / snorm)[..., None] * s
+                    sprox = ((1 - eps) - self.sigma / snorm)[..., None] * s
                 elif func.pwisenorm.exponent == np.inf:
                     snorm = np.sum(np.abs(s), axis=-1)
                     snorm = np.maximum(self.sigma, snorm, out=snorm)
-                    sprox = (1 - self.sigma / snorm)[..., None] * s
+                    sprox = ((1 - eps) - self.sigma / snorm)[..., None] * s
                 else:
                     raise RuntimeError
 
