@@ -39,13 +39,19 @@ def fbp_op(ray_trafo, padding=True):
     ray_trafo : `RayTransform`
         The ray transform (forward operator) whose approximate inverse should
         be computed. Its geometry has to be any of the following
+
         `Parallel2DGeometry` : Exact reconstruction
+
         `Parallel3dAxisGeometry` : Exact reconstruction
-        `FanFlatGeometry : Approximate reconstruction, correct in limit of fan
-                          angle = 0.
+
+        `FanFlatGeometry` : Approximate reconstruction, correct in limit of fan
+        angle = 0.
+
         `CircularConeFlatGeometry` : Approximate reconstruction, correct in
-                                     limit of fan angle = 0 and cone angle = 0.
+        limit of fan angle = 0 and cone angle = 0.
+
         `HelicalConeFlatGeometry` : Very approximate.
+
         Other geometries: Not supported
 
     padding : bool, optional
