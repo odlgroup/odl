@@ -314,12 +314,13 @@ class LinDeformFixedDisp(Operator):
             if not isinstance(templ_space, DiscreteLp):
                 raise TypeError('`templ_space` must be a `DiscreteLp` '
                                 'instance, got {!r}'.format(templ_space))
-            if templ_space.real_space.tangent_bundle != displacement.space:
-                raise ValueError('`templ_space.real_space.tangent_bundle` not '
-                                 'equal to `displacement.space` ({} != {})'
+            if templ_space.partition != displacement.space[0].partition:
+                raise ValueError('`templ_space.partition` not '
+                                 'equal to `displacement`s partiton '
+                                 '({!r} != {!r})'
                                  ''.format(
-                                     templ_space.real_space.tangent_bundle,
-                                     displacement.space))
+                                     templ_space.partition,
+                                     displacement.space[0].partition))
 
         self.__displacement = displacement
         super().__init__(domain=templ_space, range=templ_space, linear=True)
