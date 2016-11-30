@@ -28,7 +28,7 @@ import numpy as np
 from odl.discr import (DiscreteLp, DiscreteLpElement, Gradient, Divergence,
                        PointwiseInner)
 from odl.operator.operator import Operator
-from odl.space import ProductSpaceElement
+from odl.space import ProductSpace
 
 
 __all__ = ('LinDeformFixedTempl', 'LinDeformFixedDisp')
@@ -136,13 +136,20 @@ class LinDeformFixedTempl(Operator):
     i.e., :math:`W_I'(v)^*(J)(x) = J(x) \, \\nabla I(x + v(x))`.
     """
 
-    def __init__(self, template):
+    def __init__(self, template, domain=None):
         """Initialize a new instance.
 
         Parameters
         ----------
         template : `DiscreteLpElement`
             Fixed template that is to be deformed.
+        domain : power space of `DiscreteLp`
+            The space of all allowable coordinates in the deformation.
+            A `ProductSpace` of ``template.ndim`` copies of a function-space.
+            It must fulfill
+            ``domain[0].partition == template.space.partition``, so
+            this option is useful mainly when different interpolations
+            in the displacement and template.
 
         Examples
         --------
@@ -170,12 +177,34 @@ class LinDeformFixedTempl(Operator):
         >>> print(op(disp_field))
         [0.0, 0.0, 1.0, 0.5, 0.0]
         """
-        if not isinstance(template, DiscreteLpElement):
-            raise TypeError('`template` must be a `DiscreteLpElement`'
-                            'instance, got {!r}'.format(template))
-
+        space = getattr(template, 'space', None)
+        if not isinstance(space, DiscreteLp):
+            raise TypeError('`template.space` must be a `DiscreteLp`'
+                            'instance, got {!r}'.format(space))
         self.__template = template
-        super().__init__(domain=self.template.space.real_space.tangent_bundle,
+
+        if domain is None:
+            domain = self.template.space.real_space.tangent_bundle
+        else:
+            if not isinstance(domain, ProductSpace):
+                raise TypeError('`coord_space` must be a `ProductSpace` '
+                                'instance, got {!r}'.format(domain))
+            if not domain.is_power_space:
+                raise TypeError('`coord_space` must be a power space, '
+                                'got {!r}'.format(domain))
+            if not isinstance(domain[0], DiscreteLp):
+                raise TypeError('`coord_space[0]` must be a `DiscreteLp` '
+                                'instance, got {!r}'.format(domain[0]))
+
+            if template.space.partition != domain[0].partition:
+                raise ValueError('`template.space.partition` not '
+                                 'equal to `coord_space`s partiton '
+                                 '({!r} != {!r})'
+                                 ''.format(
+                                     template.space.partition,
+                                     domain[0].partition))
+
+        super().__init__(domain=domain,
                          range=self.template.space,
                          linear=False)
 
@@ -220,7 +249,12 @@ class LinDeformFixedTempl(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r})'.format(self.__class__.__name__, self.template)
+        arg_reprs = [repr(self.template)]
+        if self.domain != self.__displacement.space[0]:
+            arg_reprs.append('domain={!r}'.format(self.domain))
+        arg_str = ', '.join(arg_reprs)
+
+        return '{}({})'.format(self.__class__.__name__, arg_str)
 
 
 class LinDeformFixedDisp(Operator):
@@ -268,8 +302,10 @@ class LinDeformFixedDisp(Operator):
         templ_space : `DiscreteLp`, optional
             Template space on which this operator is applied, i.e. the
             operator domain and range. It must fulfill
-            ``domain.real_space.tangent_bundle == displacement.space``, so this
-            option is useful mainly for support of complex spaces.
+            ``templ_space[0].partition == displacement.space.partition``, so
+            this option is useful mainly for support of complex spaces and if
+            different interpolations should be used for the displacement and
+            template.
             Default: ``displacement.space[0]``
 
         Examples
@@ -298,15 +334,16 @@ class LinDeformFixedDisp(Operator):
         >>> print(op(template))
         [0.0, 0.0, 1.0, 0.5, 0.0]
         """
-        if not isinstance(displacement, ProductSpaceElement):
-            raise TypeError('`displacement must be a `ProductSpaceElement` '
-                            'instance, got {!r}'.format(displacement))
-        if not displacement.space.is_power_space:
+        space = getattr(displacement, 'space', None)
+        if not isinstance(space, ProductSpace):
+            raise TypeError('`displacement.space` must be a `ProductSpace` '
+                            'instance, got {!r}'.format(space))
+        if not space.is_power_space:
             raise TypeError('`displacement.space` must be a power space, '
-                            'got {!r}'.format(displacement.space))
-        if not isinstance(displacement.space[0], DiscreteLp):
+                            'got {!r}'.format(space))
+        if not isinstance(space[0], DiscreteLp):
             raise TypeError('`displacement.space[0]` must be a `DiscreteLp` '
-                            'instance, got {!r}'.format(displacement.space[0]))
+                            'instance, got {!r}'.format(space[0]))
 
         if templ_space is None:
             templ_space = displacement.space[0]
@@ -314,13 +351,13 @@ class LinDeformFixedDisp(Operator):
             if not isinstance(templ_space, DiscreteLp):
                 raise TypeError('`templ_space` must be a `DiscreteLp` '
                                 'instance, got {!r}'.format(templ_space))
-            if templ_space.partition != displacement.space[0].partition:
+            if templ_space.partition != space[0].partition:
                 raise ValueError('`templ_space.partition` not '
                                  'equal to `displacement`s partiton '
                                  '({!r} != {!r})'
                                  ''.format(
                                      templ_space.partition,
-                                     displacement.space[0].partition))
+                                     space[0].partition))
 
         self.__displacement = displacement
         super().__init__(domain=templ_space, range=templ_space, linear=True)
@@ -360,14 +397,12 @@ class LinDeformFixedDisp(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        if self.domain == self.__displacement.space[0]:
-            domain_repr = ''
-        else:
-            domain_repr = ', domain={!r}'.format(self.domain)
+        arg_reprs = [repr(self.displacement)]
+        if self.domain != self.__displacement.space[0]:
+            arg_reprs.append('templ_space={!r}'.format(self.domain))
+        arg_str = ', '.join(arg_reprs)
 
-        return '{}({!r}{})'.format(self.__class__.__name__,
-                                   self.__displacement,
-                                   domain_repr)
+        return '{}({})'.format(self.__class__.__name__, arg_str)
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position
