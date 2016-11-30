@@ -21,11 +21,11 @@ Solves the optimization problem
 
     min_{0 <= x <= 1, Ax = g} lam ||grad(x)||_x
 
-where ``A`` is ray transform operator, ``g`` the given noisy data, ``eps`` is
-a small number, ``grad`` is the spatial gradient and || . ||_x is the so called
-cross-norm, giving rise to isotropic Total Variation.
+where ``A`` is ray transform operator, ``g`` the given noisy data, ``grad`` is
+the spatial gradient and || . ||_x is the so called cross-norm, giving rise to
+isotropic Total Variation.
 
-We do this by rewriting the problem on the form
+This problem can be rewritten in the form
 
     min_{0 <= x <= 1} lam ||grad(x)||_x + I_{Ax = g}
 
@@ -33,19 +33,18 @@ where I_{.} is the indicator function, which is zero if ``Ax = g`` and infinity
 otherwise. This is a standard convex optimization problem that can
 be solved with the `douglas_rachford_pd` solver.
 
-In this example, the angles are highly under-sampled and the problem is solved
-using only 6 angles. Dispite this, we get a perfect reconstruction.
+In this example, the problem is solved with only 22 angles available, which is
+highly under-sampled data. Despite this, we get a perfect reconstruction.
 A filtered backprojection (pseudoinverse) reconstruction is also shown at the
 end for comparsion.
-
-Note that the ``Ax = g`` condition could be relaxed to ``||Ax - g|| < eps`` for
-some small eps in order to account for noise. This would be done using the
-`IndicatorLpUnitBall` functional instead of `IndicatorZero`, as in this
-example.
 
 This is an implementation of the "puzzling numerical experiment" in the seminal
 paper "Robust Uncertainty Principles: Exact Signal Reconstruction from Highly
 Incomplete Frequency Information", Candes et. al. 2006.
+
+Note that the ``Ax = g`` condition can be relaxed to ``||Ax - g|| <= eps``
+for some small ``eps`` in order to account for noise. This can be done using
+the `IndicatorLpUnitBall` functional instead of `IndicatorZero`.
 """
 
 import numpy as np
@@ -57,7 +56,7 @@ lam = 0.01
 # --- Create spaces, forward operator and simulated data ---
 
 # Discrete reconstruction space: discretized functions on the rectangle
-# [-20, 20]^2 with 128 samples per dimension.
+# [-20, 20]^2 with 512 samples per dimension.
 space = odl.uniform_discr(min_pt=[-20, -20], max_pt=[20, 20], shape=[512, 512])
 
 # Make a parallel beam geometry with flat detector
@@ -84,7 +83,7 @@ gradient = odl.Gradient(space)
 # Functional to enforce 0 <= x <= 1
 f = odl.solvers.IndicatorBox(space, 0, 1)
 
-# Functional for I_{Ax = g}
+# Functional to enforce Ax = g
 indicator_data = odl.solvers.IndicatorZero(ray_trafo.range).translated(data)
 
 # Functional for TV minimization
@@ -96,7 +95,7 @@ cross_norm = lam * odl.solvers.GroupL1Norm(gradient.range)
 lin_ops = [ray_trafo, gradient]
 g = [indicator_data, cross_norm]
 
-# Create callback that prints iteration number and shows partial results
+# Create callback that prints the iteration number and shows partial results
 callback = (odl.solvers.CallbackShow('iterates',
                                      display_step=20, clim=[0, 1]) &
             odl.solvers.CallbackPrintIteration())
