@@ -109,24 +109,34 @@ def chambolle_pock_solver(x, f, g, L, tau, sigma, niter=1, **kwargs):
         \\min_{x \\in X} F(K x) + G(x),
 
     where the technical conditions are that :math:`K` is an operator
-    between Hilbert spaces :math:`X` and :math:`Y`, where convergence is only
-    guaranteed if :math:`K` is linear and :math:`X, Y` are finite dimensional.
-    Further, :math:`G : X -> [0, +\\infty]` and :math:`F : Y -> [0, +\\infty]`
-    are proper, convex, lower-semicontinuous functionals.
+    between Hilbert spaces :math:`X` and :math:`Y`.
+    Further, :math:`G : X \\rightarrow [0, +\\infty]` and
+    :math:`F : Y \\rightarrow [0, +\\infty]` are proper, convex,
+    lower-semicontinuous functionals.
+
+    Convergence is only guaranteed if :math:`K` is linear, :math:`X, Y`
+    are finite dimensional and the step lengths :math:`\\sigma` and
+    :math:`\\tau` satisfy
+
+    .. math::
+
+       \\tau \\sigma \|K\| < 1
+
+    where :math:`\|K\|` is the operator norm of :math:`K`.
 
     It is often of interest to study problems that involve several operators,
     for example the classical TV regularized problem
 
     .. math::
 
-        \\min_x ||Ax - b||_2^2 + ||\\nabla x||_1.
+        \\min_x \|Ax - b\|_2^2 + \|\\nabla x\|_1.
 
     Here it is tempting to let :math:`K=A`, :math:`F(y)=||y||_2^2` and
-    :math:`G(x)=||\\nabla x||_1`. This is however not feasible since the
+    :math:`G(x)=\|\\nabla x\|_1`. This is however not feasible since the
     proximal of :math:`||\\nabla x||_1` has no closed form expression.
 
     Instead, the problem can be formulated :math:`K(x) = (A(x), \\nabla x)`,
-    :math:`F((x_1, x_2)) = ||x_1||_2^2 + ||x_2||_1`, :math:`G(x)=0`. See the
+    :math:`F((x_1, x_2)) = \|x_1\|_2^2 + \|x_2\|_1`, :math:`G(x)=0`. See the
     examples folder for more information on how to do this.
 
     See Also
