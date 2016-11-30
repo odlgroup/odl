@@ -86,20 +86,29 @@ f = odl.solvers.IndicatorBox(space, 0, 1)
 
 if data_matching == 'exact':
     # Functional to enforce Ax = g
+    # Due to the splitting used in the douglas_rachford_pd solver, we only
+    # create the functional for the indicator function on g here, the forward
+    # model is handled separately.
     indicator_zero = odl.solvers.IndicatorZero(ray_trafo.range)
     indicator_data = indicator_zero.translated(data)
 elif data_matching == 'inexact':
     # Functional to enforce ||Ax - g||_2 < eps
+    # We do this by rewriting the condition on the form
+    # f(x) = 0 if ||A(x/eps) - (g/eps)||_2 < 1, infinity otherwise
+    # That function (with A handled separately, as mentioned above) is
+    # implemented in ODL as the IndicatorLpUnitBall function.
+    # Note that we use right multiplication in order to scale in input argument
+    # instead of the result of the functional, as would be the case with left
+    # multiplication.
     eps = 1e-4
     indicator_l2_ball = odl.solvers.IndicatorLpUnitBall(ray_trafo.range, 2)
     indicator_data = indicator_l2_ball.translated(data / eps) * (1 / eps)
-    
 else:
     raise RuntimeError('unknown data_matching')
 
 # Functional for TV minimization
 cross_norm = lam * odl.solvers.GroupL1Norm(gradient.range)
-    
+
 # --- Create functionals for solving the optimization problem ---
 
 # Assemble operators and functionals for the solver
