@@ -392,6 +392,10 @@ class RectPartition(object):
         # Optimized version for exact equality
         return self.set == other.set and self.grid == other.grid
 
+    def __ne__(self, other):
+        """Return ``self != other``."""
+        return not (self == other)
+
     def __getitem__(self, indices):
         """Return ``self[indices]``.
 
