@@ -1881,7 +1881,8 @@ class NuclearNorm(Functional):
                 # Take pointwise proximal operator of s w.r.t. the norm
                 # on the singular vectors
                 if func.pwisenorm.exponent == 1:
-                    sprox = np.sign(s) * np.maximum(np.abs(s) - self.sigma, 0)
+                    abss = np.abs(s) - (self.sigma - eps)
+                    sprox = np.sign(s) * np.maximum(abss, 0)
                 elif func.pwisenorm.exponent == 2:
                     s_reordered = func._moveaxis(s, -1, 0)
                     snorm = func.pwisenorm(s_reordered).asarray()
