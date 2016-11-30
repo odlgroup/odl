@@ -117,14 +117,11 @@ def test_proximal_defintion(functional, stepsize):
     assert proximal.domain == functional.domain
     assert proximal.range == functional.domain
 
-    x = noise_element(proximal.domain) * 10
-    f_x = proximal_objective(stepsize * functional, x, x)
-    prox_x = proximal(x)
-    f_prox_x = proximal_objective(stepsize * functional, x, prox_x)
-
-    assert f_prox_x <= f_x + EPS
-
     for i in range(100):
+        x = noise_element(proximal.domain) * 10
+        prox_x = proximal(x)
+        f_prox_x = proximal_objective(stepsize * functional, x, prox_x)
+
         y = noise_element(proximal.domain)
         f_y = proximal_objective(stepsize * functional, x, y)
 
@@ -153,10 +150,10 @@ def test_cconj_defintion(functional):
         pytest.skip('functional has no convex conjugate')
         return
 
-    y = noise_element(functional.domain)
-    f_cconj_y = f_cconj(y)
-
     for i in range(100):
+        y = noise_element(functional.domain)
+        f_cconj_y = f_cconj(y)
+
         x = noise_element(functional.domain)
         lhs = x.inner(y) - functional(x)
 
