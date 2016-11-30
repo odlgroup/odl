@@ -42,6 +42,10 @@ Note that the ``Ax = g`` condition could be relaxed to ``||Ax - g|| < eps`` for
 some small eps in order to account for noise. This would be done using the
 `IndicatorLpUnitBall` functional instead of `IndicatorZero`, as in this
 example.
+
+This is an implementation of the "puzzling numerical experiment" in the seminal
+paper "Robust Uncertainty Principles: Exact Signal Reconstruction from Highly
+Incomplete Frequency Information", Candes et. al. 2006.
 """
 
 import numpy as np
@@ -54,13 +58,13 @@ lam = 0.01
 
 # Discrete reconstruction space: discretized functions on the rectangle
 # [-20, 20]^2 with 128 samples per dimension.
-space = odl.uniform_discr(min_pt=[-20, -20], max_pt=[20, 20], shape=[128, 128])
+space = odl.uniform_discr(min_pt=[-20, -20], max_pt=[20, 20], shape=[512, 512])
 
 # Make a parallel beam geometry with flat detector
-# Angles: uniformly spaced, n = 6, min = 0, max = pi
-angle_partition = odl.uniform_partition(0, np.pi, 6)
-# Detector: uniformly sampled, n = 1000, min = -30, max = 30
-detector_partition = odl.uniform_partition(-30, 30, 1000)
+# Angles: uniformly spaced, n = 22, min = 0, max = pi
+angle_partition = odl.uniform_partition(0, np.pi, 22)
+# Detector: uniformly sampled, n = 512, min = -30, max = 30
+detector_partition = odl.uniform_partition(-30, 30, 512)
 geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 
 # Ray transform (= forward projection). We use ASTRA CUDA backend.
@@ -93,7 +97,8 @@ lin_ops = [ray_trafo, gradient]
 g = [indicator_data, cross_norm]
 
 # Create callback that prints iteration number and shows partial results
-callback = (odl.solvers.CallbackShow(display_step=50, clim=[0, 1]) &
+callback = (odl.solvers.CallbackShow('iterates',
+                                     display_step=20, clim=[0, 1]) &
             odl.solvers.CallbackPrintIteration())
 
 # Solve with initial guess x = 0.
@@ -101,8 +106,8 @@ callback = (odl.solvers.CallbackShow(display_step=50, clim=[0, 1]) &
 # See douglas_rachford_pd doc for more information.
 x = ray_trafo.domain.zero()
 odl.solvers.douglas_rachford_pd(x, f, g, lin_ops,
-                                tau=0.1, sigma=[0.1, 0.1], lam=1.5,
-                                niter=1000, callback=callback)
+                                tau=0.1, sigma=[0.1, 0.02], lam=1.5,
+                                niter=200, callback=callback)
 
 # Compare with filtered backprojection
 fbp_recon = odl.tomo.fbp_op(ray_trafo)(data)
