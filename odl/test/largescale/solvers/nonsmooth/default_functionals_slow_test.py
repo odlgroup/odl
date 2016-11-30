@@ -39,9 +39,9 @@ dual = simple_fixture('dual', [False, True])
 
 
 func_params = ['l1', 'l2', 'l2^2', 'kl', 'kl_cross_ent', 'const',
-               'groupl11', 'groupl12',
+               'groupl1-1', 'groupl1-2',
                'nuclearnorm-1-1', 'nuclearnorm-1-2', 'nuclearnorm-1-inf']
-func_ids = [' f = {}'.format(p.ljust(10)) for p in func_params]
+func_ids = [' f = {} '.format(p.ljust(10)) for p in func_params]
 
 
 @pytest.fixture(scope="module", ids=func_ids, params=func_params)
@@ -63,12 +63,10 @@ def functional(request, offset, dual):
         func = odl.solvers.KullbackLeiblerCrossEntropy(space)
     elif name == 'const':
         func = odl.solvers.ConstantFunctional(space, constant=2)
-    elif name == 'groupl11':
+    elif name.startswith('groupl1'):
+        exponent = float(name.split('-')[1])
         space = odl.ProductSpace(space, 2)
-        func = odl.solvers.GroupL1Norm(space, exponent=1)
-    elif name == 'groupl12':
-        space = odl.ProductSpace(space, 2)
-        func = odl.solvers.GroupL1Norm(space, exponent=2)
+        func = odl.solvers.GroupL1Norm(space, exponent=exponent)
     elif name.startswith('nuclearnorm'):
         outer_exp = float(name.split('-')[1])
         singular_vector_exp = float(name.split('-')[2])
@@ -97,7 +95,7 @@ EPS = 1e-6
 
 
 def proximal_objective(functional, x, y):
-    """Calculate the objective function of the proximal optimization problem"""
+    """Objective function of the proximal optimization problem."""
     return functional(y) + (1.0 / 2.0) * (x - y).norm() ** 2
 
 
@@ -117,7 +115,7 @@ def test_proximal_defintion(functional, stepsize):
     assert proximal.domain == functional.domain
     assert proximal.range == functional.domain
 
-    for i in range(100):
+    for _ in range(100):
         x = noise_element(proximal.domain) * 10
         prox_x = proximal(x)
         f_prox_x = proximal_objective(stepsize * functional, x, prox_x)
@@ -132,7 +130,7 @@ def test_proximal_defintion(functional, stepsize):
 
 
 def cconj_objective(functional, x, y):
-    """Calculate the objective function of the convex conjugate problem"""
+    """CObjective function of the convex conjugate problem."""
     return x.inner(y) - functional(x)
 
 
@@ -150,7 +148,7 @@ def test_cconj_defintion(functional):
         pytest.skip('functional has no convex conjugate')
         return
 
-    for i in range(100):
+    for _ in range(100):
         y = noise_element(functional.domain)
         f_cconj_y = f_cconj(y)
 

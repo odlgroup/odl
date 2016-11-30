@@ -988,10 +988,8 @@ def proximal_cconj_l1(space, lam=1, g=None, isotropic=False):
     if g is not None and g not in space:
         raise TypeError('{!r} is not an element of {!r}'.format(g, space))
 
-    if isotropic and not isinstance(space, ProductSpace):
-        raise TypeError('`isotropic` given without productspace `space`({})'
-                        ''.format(space))
-    if isotropic and not space.is_power_space:
+    if (isotropic and (not isinstance(space, ProductSpace) or
+                       not space.is_power_space)):
         raise TypeError('`isotropic` given with non-powerspace `space`({})'
                         ''.format(space))
 
