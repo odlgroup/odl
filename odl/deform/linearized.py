@@ -143,13 +143,14 @@ class LinDeformFixedTempl(Operator):
         ----------
         template : `DiscreteLpElement`
             Fixed template that is to be deformed.
-        domain : power space of `DiscreteLp`
-            The space of all allowable coordinates in the deformation.
+        domain : power space of `DiscreteLp`, optional
+            The space of all allowed coordinates in the deformation.
             A `ProductSpace` of ``template.ndim`` copies of a function-space.
             It must fulfill
             ``domain[0].partition == template.space.partition``, so
-            this option is useful mainly when different interpolations
+            this option is useful mainly when using different interpolations
             in the displacement and template.
+            Default: ``template.space.real_space.tangent_bundle``
 
         Examples
         --------
@@ -187,22 +188,20 @@ class LinDeformFixedTempl(Operator):
             domain = self.template.space.real_space.tangent_bundle
         else:
             if not isinstance(domain, ProductSpace):
-                raise TypeError('`coord_space` must be a `ProductSpace` '
+                raise TypeError('`domain` must be a `ProductSpace` '
                                 'instance, got {!r}'.format(domain))
             if not domain.is_power_space:
-                raise TypeError('`coord_space` must be a power space, '
+                raise TypeError('`domain` must be a power space, '
                                 'got {!r}'.format(domain))
             if not isinstance(domain[0], DiscreteLp):
-                raise TypeError('`coord_space[0]` must be a `DiscreteLp` '
+                raise TypeError('`domain[0]` must be a `DiscreteLp` '
                                 'instance, got {!r}'.format(domain[0]))
 
             if template.space.partition != domain[0].partition:
-                raise ValueError('`template.space.partition` not '
-                                 'equal to `coord_space`s partiton '
-                                 '({!r} != {!r})'
-                                 ''.format(
-                                     template.space.partition,
-                                     domain[0].partition))
+                raise ValueError(
+                    '`template.space.partition` not equal to `coord_space`s '
+                    'partiton ({!r} != {!r})'
+                    ''.format(template.space.partition, domain[0].partition))
 
         super().__init__(domain=domain,
                          range=self.template.space,
@@ -304,7 +303,7 @@ class LinDeformFixedDisp(Operator):
             operator domain and range. It must fulfill
             ``templ_space[0].partition == displacement.space.partition``, so
             this option is useful mainly for support of complex spaces and if
-            different interpolations should be used for the displacement and
+            different interpolations should be used for displacement and
             template.
             Default: ``displacement.space[0]``
 
@@ -352,12 +351,10 @@ class LinDeformFixedDisp(Operator):
                 raise TypeError('`templ_space` must be a `DiscreteLp` '
                                 'instance, got {!r}'.format(templ_space))
             if templ_space.partition != space[0].partition:
-                raise ValueError('`templ_space.partition` not '
-                                 'equal to `displacement`s partiton '
-                                 '({!r} != {!r})'
-                                 ''.format(
-                                     templ_space.partition,
-                                     space[0].partition))
+                raise ValueError(
+                    '`templ_space.partition` not equal to `displacement`s '
+                    'partiton ({!r} != {!r})'
+                    ''.format(templ_space.partition, space[0].partition))
 
         self.__displacement = displacement
         super().__init__(domain=templ_space, range=templ_space, linear=True)
