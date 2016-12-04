@@ -24,8 +24,7 @@ from odl.util.ufuncs import TensorSetUfuncs
 from odl.util.utility import TYPE_MAP_R2C, TYPE_MAP_C2R
 
 
-__all__ = ('TensorSet', 'GeneralizedTensor',
-           'TensorSpace', 'Tensor')
+__all__ = ('TensorSet', 'TensorSpace')
 
 
 class TensorSet(Set):
@@ -399,7 +398,7 @@ class GeneralizedTensor(object):
         """
         return TensorSetUfuncs(self)
 
-    def show(self, title=None, method='scatter', show=False, fig=None,
+    def show(self, title=None, method='scatter', force_show=False, fig=None,
              **kwargs):
         """Display this tensor graphically for ``ndim == 1 or 2``.
 
@@ -415,8 +414,10 @@ class GeneralizedTensor(object):
 
             'scatter' : point plot
 
-        show : bool, optional
-            If the plot should be showed now or deferred until later.
+        force_show : bool, optional
+            Whether the plot should be forced to be shown now or deferred
+            until later. Note that some backends always display the plot,
+            regardless of this value.
 
         fig : `matplotlib.figure.Figure`
             The figure to show in. Expected to be of same "style", as
@@ -443,7 +444,8 @@ class GeneralizedTensor(object):
         from odl.discr import uniform_grid
         grid = uniform_grid(0, self.size - 1, self.size)
         return show_discrete_data(self.asarray(), grid, title=title,
-                                  method=method, show=show, fig=fig, **kwargs)
+                                  method=method, force_show=force_show,
+                                  fig=fig, **kwargs)
 
 
 class TensorSpace(TensorSet, LinearSpace):
@@ -523,7 +525,7 @@ class TensorSpace(TensorSet, LinearSpace):
     def _astype(self, dtype):
         """Internal helper for ``astype``."""
         return type(self)(self.shape, dtype=dtype, order=self.order,
-                          weight=getattr(self, 'weighting', None))
+                          weighting=getattr(self, 'weighting', None))
 
     def astype(self, dtype):
         """Return a copy of this space with new ``dtype``.

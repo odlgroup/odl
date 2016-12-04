@@ -365,7 +365,11 @@ class ComplexNumbers(Field):
     def element(self, inp=None):
         """Return a complex number from ``inp`` or from scratch."""
         if inp is not None:
-            return complex(inp)
+            # Workaround for missing __complex__ of numpy.ndarray
+            if isinstance(inp, np.ndarray):
+                return complex(inp.reshape(-1)[0])
+            else:
+                return complex(inp)
         else:
             return complex(0.0, 0.0)
 

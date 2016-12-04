@@ -239,7 +239,7 @@ for name, n_in, n_out, doc in UFUNCS:
 
 
 # For DiscreteLP, basically the ufunc mechanism can be propagated from its
-# `tensor` attribute, which is NumpyNtuple or CudaNtuple. Sometimes,
+# `tensor` attribute, which is NumpyTensor or CudaNtuple. Sometimes,
 # reshaping is required.
 def wrap_ufunc_discretelp(name, n_in, n_out, doc):
     """Return ufunc wrapper for `DiscreteLpUfuncs`."""

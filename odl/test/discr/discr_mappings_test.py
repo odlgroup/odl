@@ -21,6 +21,7 @@ from odl.util.testutils import (
     all_almost_equal, all_equal, almost_equal)
 
 
+# TODO: fixture is not being used
 def test_nearest_interpolation_1d_complex(tspace_impl):
     intv = odl.IntervalProd(0, 1)
     part = odl.uniform_partition_fromintv(intv, 5, nodes_on_bdry=False)

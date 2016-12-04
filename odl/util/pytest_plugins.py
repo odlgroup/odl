@@ -20,7 +20,6 @@ import odl
 from odl.space.entry_points import TENSOR_SET_IMPLS, TENSOR_SPACE_IMPLS
 from odl.trafos.backends import PYFFTW_AVAILABLE, PYWT_AVAILABLE
 from odl.util.testutils import simple_fixture
-from odl.util.utility import dtype_repr
 
 try:
     from pytest import fixture
@@ -97,36 +96,28 @@ def pytest_ignore_collect(path, config):
 
 # --- Reusable fixtures ---
 
+# Simple ones, use helper
 tset_impl = simple_fixture(name='tset_impl',
                            params=TENSOR_SET_IMPLS.keys())
 tspace_impl = simple_fixture(name='tspace_impl',
                              params=TENSOR_SPACE_IMPLS.keys())
 
+floating_dtypes = np.sctypes['float'] + np.sctypes['complex']
+floating_dtype_params = [np.dtype(dt) for dt in floating_dtypes]
+floating_dtype = simple_fixture(name='dtype',
+                                params=floating_dtype_params,
+                                fmt=' {name} = np.{value.name} ')
 
-floating_dtype_params = np.sctypes['float'] + np.sctypes['complex']
-floating_dtype_ids = [' dtype = {} '.format(dtype_repr(dt))
-                      for dt in floating_dtype_params]
+scalar_dtypes = floating_dtype_params + np.sctypes['int'] + np.sctypes['uint']
+scalar_dtype_params = [np.dtype(dt) for dt in floating_dtypes]
+scalar_dtype = simple_fixture(name='dtype',
+                              params=scalar_dtype_params,
+                              fmt=' {name} = np.{value.name} ')
 
-
-@fixture(scope="module", ids=floating_dtype_ids, params=floating_dtype_params)
-def floating_dtype(request):
-    """Floating point (real or complex) dtype."""
-    return request.param
-
-
-scalar_dtype_params = (floating_dtype_params +
-                       np.sctypes['int'] +
-                       np.sctypes['uint'])
-scalar_dtype_ids = [' dtype = {} '.format(dtype_repr(dt))
-                    for dt in scalar_dtype_params]
+order = simple_fixture(name='order', params=['C', 'F'])
 
 
-@fixture(scope="module", ids=scalar_dtype_ids, params=scalar_dtype_params)
-def scalar_dtype(request):
-    """Scalar (integers or real or complex) dtype."""
-    return request.param
-
-
+# More complicated ones with non-trivial documentation
 ufunc_params = odl.util.ufuncs.UFUNCS
 ufunc_ids = [' ufunc = {} '.format(p[0]) for p in ufunc_params]
 
@@ -166,6 +157,7 @@ def reduction(request):
     """
     return request.param
 
+
 arithmetic_op_par = [operator.add,
                      operator.truediv,
                      operator.mul,
@@ -174,8 +166,8 @@ arithmetic_op_par = [operator.add,
                      operator.itruediv,
                      operator.imul,
                      operator.isub]
-arithmetic_op_ids = [' + ', ' / ', ' * ', ' - ',
-                     ' += ', ' /= ', ' *= ', ' -= ']
+arithmetic_op_ids = [" op = '{}' ".format(op)
+                     for op in ['+', '/', '*', '-', '+=', '/=', '*=', '-=']]
 
 
 @fixture(ids=arithmetic_op_ids, params=arithmetic_op_par)
