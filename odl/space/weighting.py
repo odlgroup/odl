@@ -29,7 +29,7 @@ import scipy.linalg as linalg
 from scipy.sparse.base import isspmatrix
 
 from odl.space.base_ntuples import FnBaseVector
-from odl.space.base_tensors import TensorBase
+from odl.space.base_tensors import BaseTensor
 from odl.util.utility import array1d_repr, arraynd_repr
 
 
@@ -555,7 +555,7 @@ class ArrayWeightingBase(WeightingBase):
         # We store our "own" data structures as-is to retain Numpy
         # compatibility while avoiding copies. Other things are run through
         # numpy.asarray.
-        if isinstance(array, (FnBaseVector, TensorBase)):
+        if isinstance(array, (FnBaseVector, BaseTensor)):
             self.__array = array
         else:
             self.__array = np.asarray(array)

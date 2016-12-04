@@ -42,7 +42,7 @@ import re
 
 
 __all__ = ('NtuplesBaseUFuncs', 'NumpyNtuplesUFuncs',
-           'GeneralTensorBaseUFuncs',
+           'BaseGeneralizedTensorUFuncs',
            'DiscreteLpUFuncs', 'ProductSpaceUFuncs')
 
 
@@ -182,11 +182,11 @@ for name, doc in REDUCTIONS:
     setattr(NtuplesBaseUFuncs, name, method)
 
 
-class GeneralTensorBaseUFuncs(object):
+class BaseGeneralizedTensorUFuncs(object):
 
-    """UFuncs for `GeneralTensorBase` objects.
+    """UFuncs for `BaseGeneralizedTensor` objects.
 
-    Internal object, should not be created except in `GeneralTensorBase`.
+    Internal object, should not be created except in `BaseGeneralizedTensor`.
     """
 
     def __init__(self, vector):
@@ -197,12 +197,12 @@ class GeneralTensorBaseUFuncs(object):
 # Add ufunc methods to UFunc class
 for name, n_in, n_out, doc in UFUNCS:
     method = wrap_ufunc_base(name, n_in, n_out, doc)
-    setattr(GeneralTensorBaseUFuncs, name, method)
+    setattr(BaseGeneralizedTensorUFuncs, name, method)
 
 # Add reduction methods to UFunc class
 for name, doc in REDUCTIONS:
     method = wrap_reduction_base(name, doc)
-    setattr(GeneralTensorBaseUFuncs, name, method)
+    setattr(BaseGeneralizedTensorUFuncs, name, method)
 
 
 # Optimized implementation of ufuncs since we can use the out parameter

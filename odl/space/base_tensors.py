@@ -26,18 +26,18 @@ import numpy as np
 
 from odl.set.sets import Set, RealNumbers, ComplexNumbers
 from odl.set.space import LinearSpace, LinearSpaceElement
-from odl.util.ufuncs import GeneralTensorBaseUFuncs
+from odl.util.ufuncs import BaseGeneralizedTensorUFuncs
 from odl.util.utility import (
     arraynd_repr, dtype_repr, is_scalar_dtype, is_floating_dtype,
     is_real_dtype, is_complex_floating_dtype,
     TYPE_MAP_R2C, TYPE_MAP_C2R)
 
 
-__all__ = ('TensorSetBase', 'GeneralTensorBase',
-           'TensorSpaceBase', 'TensorBase')
+__all__ = ('BaseTensorSet', 'BaseGeneralizedTensor',
+           'BaseTensorSpace', 'BaseTensor')
 
 
-class TensorSetBase(Set):
+class BaseTensorSet(Set):
 
     """Base class for sets of tensors of arbitrary type."""
 
@@ -159,13 +159,13 @@ class TensorSetBase(Set):
 
     @property
     def element_type(self):
-        """Type of elements in this set: `GeneralTensorBase`."""
-        return GeneralTensorBase
+        """Type of elements in this set: `BaseGeneralizedTensor`."""
+        return BaseGeneralizedTensor
 
 
-class GeneralTensorBase(object):
+class BaseGeneralizedTensor(object):
 
-    """Abstract class for representation of `TensorSetBase` elements.
+    """Abstract class for representation of `BaseTensorSet` elements.
 
     Defines abstract and concrete attributes independent of data
     representation.
@@ -207,7 +207,7 @@ class GeneralTensorBase(object):
 
         Returns
         -------
-        values : `TensorSetBase.dtype` or `GeneralTensorBase`
+        values : `BaseTensorSet.dtype` or `BaseGeneralizedTensor`
             The value(s) at the given indices. Note that depending on
             the implementation, the returned object may be a (writable)
             view into the original array.
@@ -222,7 +222,7 @@ class GeneralTensorBase(object):
         indices : index expression
             Integer, slice or sequence of these, defining the positions
             of the data array which should be written to.
-        values : scalar, `array-like` or `GeneralTensorBase`
+        values : scalar, `array-like` or `BaseGeneralizedTensor`
             The value(s) that are to be assigned.
 
             If ``index`` is an integer, ``value`` must be a scalar.
@@ -317,7 +317,7 @@ class GeneralTensorBase(object):
 
         Returns
         -------
-        vector : `GeneralTensorBase`
+        vector : `BaseGeneralizedTensor`
             Tensor wrapping ``obj``.
         """
         if obj.ndim == 0:
@@ -340,12 +340,12 @@ class GeneralTensorBase(object):
 
     @property
     def ufunc(self):
-        """`TensorSetBaseUfuncs`, access to numpy style ufuncs.
+        """`BaseTensorSetUfuncs`, access to numpy style ufuncs.
 
         These are always available, but may or may not be optimized for
         the specific space in use.
         """
-        return GeneralTensorBaseUFuncs(self)
+        return BaseGeneralizedTensorUFuncs(self)
 
     def show(self, title=None, method='scatter', show=False, fig=None,
              **kwargs):
@@ -394,7 +394,7 @@ class GeneralTensorBase(object):
                                   method=method, show=show, fig=fig, **kwargs)
 
 
-class TensorSpaceBase(TensorSetBase, LinearSpace):
+class BaseTensorSpace(BaseTensorSet, LinearSpace):
 
     """Base class for tensor spaces independent of implementation."""
 
@@ -414,7 +414,7 @@ class TensorSpaceBase(TensorSetBase, LinearSpace):
         order : {'C', 'F'}
             Axis ordering of the data storage.
         """
-        TensorSetBase.__init__(self, shape, dtype, order)
+        BaseTensorSet.__init__(self, shape, dtype, order)
 
         if not is_scalar_dtype(self.dtype):
             raise TypeError('`dtype` must be a scalar data type, got {!r}'
@@ -485,7 +485,7 @@ class TensorSpaceBase(TensorSetBase, LinearSpace):
 
         Returns
         -------
-        newspace : `TensorSpaceBase`
+        newspace : `BaseTensorSpace`
             Version of this space with given data type.
         """
         if dtype is None:
@@ -570,13 +570,13 @@ class TensorSpaceBase(TensorSetBase, LinearSpace):
 
     @property
     def element_type(self):
-        """Type of elements in this set: `TensorBase`."""
-        return TensorBase
+        """Type of elements in this set: `BaseTensor`."""
+        return BaseTensor
 
 
-class TensorBase(GeneralTensorBase, LinearSpaceElement):
+class BaseTensor(BaseGeneralizedTensor, LinearSpaceElement):
 
-    """Abstract class for representation of `TensorSpaceBase` elements.
+    """Abstract class for representation of `BaseTensorSpace` elements.
 
     Defines abstract and concrete attributes and methods independent
     of data representation.
