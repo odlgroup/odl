@@ -134,20 +134,11 @@ def all_equal(iter1, iter2):
 
 
 def all_almost_equal_array(v1, v2, places):
-    # Ravel if has order, only DiscreteLpElement has an order
-    if hasattr(v1, 'order'):
-        v1 = v1.__array__().ravel(v1.order)
-    else:
-        v1 = v1.__array__()
-
-    if hasattr(v2, 'order'):
-        v2 = v2.__array__().ravel(v2.order)
-    else:
-        v2 = v2.__array__()
-
-    return np.all(np.isclose(v1, v2,
-                             rtol=10 ** (-places), atol=10 ** (-places),
-                             equal_nan=True))
+    v1 = v1.__array__()
+    v2 = v2.__array__()
+    return np.allclose(v1, v2,
+                       rtol=10 ** (-places), atol=10 ** (-places),
+                       equal_nan=True)
 
 
 def all_almost_equal(iter1, iter2, places=None):

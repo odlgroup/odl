@@ -33,8 +33,7 @@ from odl.util.utility import (
     is_real_dtype, is_real_floating_dtype, is_complex_floating_dtype)
 
 
-__all__ = ('NumpyTensorSet', 'NumpyGeneralizedTensor',
-           'NumpyTensorSpace', 'NumpyTensor')
+__all__ = ('NumpyTensorSet', 'NumpyTensorSpace')
 
 
 _BLAS_DTYPES = (np.dtype('float32'), np.dtype('float64'),
@@ -131,10 +130,7 @@ class NumpyTensorSet(TensorSet):
                     return inp
                 else:
                     arr = np.array(inp, copy=False, dtype=self.dtype, ndmin=1,
-                                   order='A')
-                    if arr.shape != self.shape:
-                        raise ValueError('expected input shape {}, got {}'
-                                         ''.format((self.size,), arr.shape))
+                                   order='A').reshape(self.shape)
 
                     return self.element_type(self, arr)
             else:
@@ -852,22 +848,23 @@ class NumpyTensorSpace(TensorSpace, NumpyTensorSet):
             else:
                 self.__weighting = _weighting(
                     weighting, exponent, dist_using_inner=dist_using_inner)
+
+            # Check (afterwards) that the weighting input was sane
             if isinstance(self.weighting, NumpyTensorSpaceArrayWeighting):
                 if self.weighting.array.dtype == object:
                     raise ValueError('invalid `weighting` argument: {}'
                                      ''.format(weighting))
-                if self.weighting.array.ndim != self.ndim:
-                    raise ValueError('array-like weights must have {} '
-                                     'dimensions, got a {}-dim. array'
-                                     ''.format(self.ndim,
-                                               self.weighting.array.ndim))
-
-                for i, (n_a, n_s) in enumerate(zip(self.weighting.array.shape,
-                                                   self.shape)):
-                    # TODO: document (implement??) this possibility
-                    if n_a not in (1, n_s):
-                        raise ValueError('in axis {}: expected shape 1 or '
-                                         '{}, got {}'.format(i, n_s, n_a))
+                elif not np.can_cast(self.weighting.array.dtype, self.dtype):
+                    raise ValueError(
+                        'cannot cast from `weighting` data type {} to '
+                        'the space `dtype` {}'
+                        ''.format(dtype_str(self.weighting.array.dtype),
+                                  dtype_str(self.dtype)))
+                if self.weighting.array.shape != self.shape:
+                    raise ValueError('array-like weights must have same '
+                                     'shape {} as this space, got {}'
+                                     ''.format(self.shape,
+                                               self.weighting.array.shape))
 
         elif dist is not None:
             self.__weighting = NumpyTensorSpaceCustomDist(dist)
@@ -1012,7 +1009,7 @@ class NumpyTensorSpace(TensorSpace, NumpyTensorSet):
         Weighting is supported, too:
 
         >>> weights = [[2, 1, 1], [1, 1, 2]]
-        >>> space_1_w = odl.rn((2, 3), exponent=1, weight=weights)
+        >>> space_1_w = odl.rn((2, 3), exponent=1, weighting=weights)
         >>> x = space_1_w.element([[-1, 1, 2],
         ...                        [1, -1, 1]])
         >>> y = space_1_w.one()
@@ -1054,7 +1051,7 @@ class NumpyTensorSpace(TensorSpace, NumpyTensorSet):
 
         >>> weights = [[1, 2, 1], [1, 1, 2]]
         >>> space_1_w = odl.rn((2, 3), exponent=1,
-        ...                    weight=weights)
+        ...                    weighting=weights)
         >>> x = space_1_w.element([[1, 0, 3],
         ...                        [4, -1, 3]])
         >>> space_1_w.norm(x)
@@ -1089,8 +1086,9 @@ class NumpyTensorSpace(TensorSpace, NumpyTensorSet):
 
         Weighting is supported, too:
 
-        >>> weights = [[1, 2, 1], [2, 1, 1]]
-        >>> space_w = odl.rn((2, 3), weight=weights)
+        >>> weights = [[1, 2, 1],
+        ...            [2, 1, 1]]
+        >>> space_w = odl.rn((2, 3), weighting=weights)
         >>> x = space_w.element([[1, 0, 3],
         ...                      [4, -1, 3]])
         >>> y = space_w.one()
@@ -1447,6 +1445,45 @@ class NumpyTensor(Tensor, NumpyGeneralizedTensor):
             self.data.conj(out.data)
             return out
 
+    def __getitem__(self, indices):
+        """Return ``self[indices]``.
+
+        Parameters
+        ----------
+        indices : index expression
+            Integer, slice or sequence of these, defining the positions
+            of the data array which should be accessed.
+
+        Returns
+        -------
+        values : `NumpyTensorSet.dtype` or `NumpyGeneralizedTensor`
+            The value(s) at the given indices. Note that the returned
+            object is a writable view into the original tensor.
+
+        Examples
+        --------
+        >>> import odl
+        >>> tspace = odl.rn((2, 3))
+        >>> x = tspace.element([[1, 2, 3],
+        ...                     [4, 5, 6]])
+        >>> x[0, 1]
+        2.0
+        >>> x[:, 1:]
+        rn((2, 2)).element(
+        [[2.0, 3.0],
+         [5.0, 6.0]]
+        )
+        """
+        arr = self.data[indices]
+        if np.isscalar(arr):
+            return arr
+        else:
+            space_constructor = type(self.space)
+            space = space_constructor(
+                arr.shape, dtype=self.dtype, order=self.order,
+                exponent=self.space.exponent, weighting=self.space.weighting)
+            return space.element(arr)
+
     def __ipow__(self, other):
         """Return ``self **= other``."""
         try:
@@ -1457,6 +1494,51 @@ class NumpyTensor(Tensor, NumpyGeneralizedTensor):
 
         np.power(self.data, other, out=self.data)
         return self
+
+    def __int__(self):
+        """Return ``int(self)``.
+
+        Raises
+        ------
+        TypeError
+            if ``self.size != 1``.
+        """
+        return int(self.data)
+
+    def __long__(self):
+        """Return ``long(self)``.
+
+        This method is only available in Python 2.
+
+        Raises
+        ------
+        TypeError
+            if ``self.size != 1``.
+        """
+        return long(self.data)
+
+    def __float__(self):
+        """Return ``float(self)``.
+
+        Raises
+        ------
+        TypeError
+            if ``self.size != 1``.
+        """
+        return float(self.data)
+
+    def __complex__(self):
+        """Return ``complex(self)``.
+
+        Raises
+        ------
+        TypeError
+            if ``self.size != 1``.
+        """
+        if self.size != 1:
+            raise TypeError('only size-1 tensors can be converted to '
+                            'Python scalars')
+        return complex(self.data.ravel()[0])
 
 
 def _weighting(weights, exponent, dist_using_inner=False):
@@ -1474,7 +1556,7 @@ def _weighting(weights, exponent, dist_using_inner=False):
     return weighting
 
 
-def weighted_inner(weights):
+def npy_weighted_inner(weights):
     """Weighted inner product on `Fn` spaces as free function.
 
     Parameters
@@ -1498,7 +1580,7 @@ def weighted_inner(weights):
     return _weighting(weights, exponent=2.0).inner
 
 
-def weighted_norm(weights, exponent=2.0):
+def npy_weighted_norm(weights, exponent=2.0):
     """Weighted norm on `Fn` spaces as free function.
 
     Parameters
@@ -1524,7 +1606,7 @@ def weighted_norm(weights, exponent=2.0):
     return _weighting(weights, exponent=exponent).norm
 
 
-def weighted_dist(weights, exponent=2.0, use_inner=False):
+def npy_weighted_dist(weights, exponent=2.0, use_inner=False):
     """Weighted distance on `Fn` spaces as free function.
 
     Parameters
