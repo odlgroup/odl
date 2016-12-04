@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""CPU implementations of tensor spaces."""
+"""CPU implementations of tensor spaces using Numpy."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -31,21 +31,18 @@ import numpy as np
 import scipy.linalg as linalg
 
 from odl.set.sets import RealNumbers, ComplexNumbers
-from odl.space.base_ntuples import (
-    NtuplesBase, NtuplesBaseVector, FnBase, FnBaseVector)
 from odl.space.base_tensors import (
-    TensorSetBase, GeneralTensorBase, TensorSpaceBase, TensorBase)
+    BaseTensorSet, BaseGeneralizedTensor, BaseTensorSpace, BaseTensor)
 from odl.space.weighting import (
-    WeightingBase, MatrixWeightingBase, ArrayWeightingBase,
-    ConstWeightingBase, NoWeightingBase,
-    CustomInnerBase, CustomNormBase, CustomDistBase)
-from odl.util.ufuncs import NumpyGeneralTensorUFuncs
+    BaseWeighting, BaseArrayWeighting, BaseConstWeighting, BaseNoWeighting,
+    BaseCustomInner, BaseCustomNorm, BaseCustomDist)
+from odl.util.ufuncs import NumpyGeneralizedTensorUFuncs
 from odl.util.utility import (
     dtype_repr, is_real_dtype, is_real_floating_dtype,
     is_complex_floating_dtype)
 
 
-__all__ = ('NumpyTensorSet', 'NumpyGeneralTensor',
+__all__ = ('NumpyTensorSet', 'NumpyGeneralizedTensor',
            'NumpyTensorSpace', 'NumpyTensor')
 
 
@@ -53,7 +50,7 @@ _BLAS_DTYPES = (np.dtype('float32'), np.dtype('float64'),
                 np.dtype('complex64'), np.dtype('complex128'))
 
 
-class NumpyTensorSet(TensorSetBase):
+class NumpyTensorSet(BaseTensorSet):
 
     """The set of tensors of arbitrary type."""
 
@@ -71,7 +68,7 @@ class NumpyTensorSet(TensorSetBase):
         order : {'C', 'F'}, optional
             Axis ordering of the data storage.
         """
-        TensorSetBase.__init__(self, shape, dtype, order)
+        BaseTensorSet.__init__(self, shape, dtype, order)
 
     def element(self, inp=None, data_ptr=None):
         """Create a new element.
@@ -90,7 +87,7 @@ class NumpyTensorSet(TensorSetBase):
 
         Returns
         -------
-        element : `NumpyGeneralTensor`
+        element : `NumpyGeneralizedTensor`
             The new element created (from ``inp``).
 
         Notes
@@ -209,11 +206,11 @@ class NumpyTensorSet(TensorSetBase):
 
     @property
     def element_type(self):
-        """Type of elements in this space: `NumpyGeneralTensor`."""
-        return NumpyGeneralTensor
+        """Type of elements in this space: `NumpyGeneralizedTensor`."""
+        return NumpyGeneralizedTensor
 
 
-class NumpyGeneralTensor(GeneralTensorBase):
+class NumpyGeneralizedTensor(BaseGeneralizedTensor):
 
     """Representation of a `NumpyTensorSet` element."""
 
@@ -232,7 +229,7 @@ class NumpyGeneralTensor(GeneralTensorBase):
                             ''.format(data, space.dtype))
         self._data = data
 
-        GeneralTensorBase.__init__(self, space)
+        BaseGeneralizedTensor.__init__(self, space)
 
     @property
     def data(self):
@@ -363,7 +360,7 @@ class NumpyGeneralTensor(GeneralTensorBase):
 
         Returns
         -------
-        copy : `NumpyGeneralTensor`
+        copy : `NumpyGeneralizedTensor`
             The deep copy
 
         Examples
@@ -393,7 +390,7 @@ class NumpyGeneralTensor(GeneralTensorBase):
 
         Returns
         -------
-        values : `NumpyTensorSet.dtype` or `NumpyGeneralTensor`
+        values : `NumpyTensorSet.dtype` or `NumpyGeneralizedTensor`
             The value(s) at the given indices. Note that the returned
             object is a writable view into the original tensor.
 
@@ -426,7 +423,7 @@ class NumpyGeneralTensor(GeneralTensorBase):
         indices : index expression
             Integer, slice or sequence of these, defining the positions
             of the data array which should be written to.
-        values : scalar, array-like or `NumpyGeneralTensor`
+        values : scalar, array-like or `NumpyGeneralizedTensor`
             The value(s) that are to be assigned.
 
             If ``index`` is an integer, ``value`` must be a scalar.
@@ -512,7 +509,7 @@ class NumpyGeneralTensor(GeneralTensorBase):
          [1, 1, 1]]
         )
         """
-        if isinstance(values, NumpyGeneralTensor):
+        if isinstance(values, NumpyGeneralizedTensor):
             self.data[indices] = values.data
         else:
             self.data[indices] = values
@@ -523,7 +520,7 @@ class NumpyGeneralTensor(GeneralTensorBase):
 
         Notes
         -----
-        These ufuncs are optimized for use with `NumpyGeneralTensor`'s
+        These ufuncs are optimized for use with `NumpyGeneralizedTensor`'s
         and incur practically no overhead.
 
         Examples
@@ -571,7 +568,7 @@ class NumpyGeneralTensor(GeneralTensorBase):
         >>> result is out
         True
         """
-        return NumpyGeneralTensorUFuncs(self)
+        return NumpyGeneralizedTensorUFuncs(self)
 
 
 def _blas_is_applicable(*args):
@@ -584,7 +581,7 @@ def _blas_is_applicable(*args):
 
     Parameters
     ----------
-    x1,...,xN : `NumpyGeneralTensor`
+    x1,...,xN : `NumpyGeneralizedTensor`
         The tensors to be tested for BLAS conformity.
     """
     return (all(x.dtype == args[0].dtype and
@@ -670,7 +667,7 @@ def _lincomb(a, x1, b, x2, out, dtype):
                 axpy(x1.data, out.data, native(out.size), a)
 
 
-class NumpyTensorSpace(TensorSpaceBase, NumpyTensorSet):
+class NumpyTensorSpace(BaseTensorSpace, NumpyTensorSet):
 
     """The space of tensors of given shape.
 
@@ -714,7 +711,7 @@ class NumpyTensorSpace(TensorSpaceBase, NumpyTensorSet):
 
             None: no weighting (default)
 
-            `WeightingBase`: Use this weighting as-is. Compatibility
+            `BaseWeighting`: Use this weighting as-is. Compatibility
             with this space's elements is not checked during init.
 
             float: Weighting by a constant
@@ -838,7 +835,7 @@ class NumpyTensorSpace(TensorSpaceBase, NumpyTensorSet):
         tensor_space((2, 3), 'int')
         """
         NumpyTensorSet.__init__(self, shape, dtype, order)
-        TensorSpaceBase.__init__(self, shape, dtype, order)
+        BaseTensorSpace.__init__(self, shape, dtype, order)
 
         dist = kwargs.pop('dist', None)
         norm = kwargs.pop('norm', None)
@@ -858,7 +855,7 @@ class NumpyTensorSpace(TensorSpaceBase, NumpyTensorSet):
 
         # Set the weighting
         if weighting is not None:
-            if isinstance(weighting, WeightingBase):
+            if isinstance(weighting, BaseWeighting):
                 self.__weighting = weighting
             else:
                 self.__weighting = _weighting(
@@ -959,7 +956,7 @@ class NumpyTensorSpace(TensorSpaceBase, NumpyTensorSet):
 
         Parameters
         ----------
-        a, b : `TensorSpaceBase.field` element
+        a, b : `BaseTensorSpace.field` element
             Scalars to multiply ``x1`` and ``x2`` with.
         x1, x2 : `NumpyTensor`
             Summands in the linear combination.
@@ -1258,7 +1255,7 @@ class NumpyTensorSpace(TensorSpaceBase, NumpyTensorSet):
         return NumpyTensor
 
 
-class NumpyTensor(TensorBase, NumpyGeneralTensor):
+class NumpyTensor(BaseTensor, NumpyGeneralizedTensor):
 
     """Representation of a `NumpyTensorSpace` element."""
 
@@ -1268,8 +1265,8 @@ class NumpyTensor(TensorBase, NumpyGeneralTensor):
             raise TypeError('`space` must be a `NumpyTensorSpace` instance, '
                             'got {!r}'.format(space))
 
-        TensorBase.__init__(self, space)
-        NumpyGeneralTensor.__init__(self, space, data)
+        BaseTensor.__init__(self, space)
+        NumpyGeneralizedTensor.__init__(self, space, data)
 
     @property
     def real(self):
@@ -1626,7 +1623,7 @@ def _inner_default(x1, x2):
 # Possible use case: outer product of `ndim` 1-dim. arrays
 
 
-class NumpyTensorSpaceArrayWeighting(ArrayWeightingBase):
+class NumpyTensorSpaceArrayWeighting(BaseArrayWeighting):
 
     """Weighting of a `NumpyTensorSpace` by an array.
 
@@ -1748,7 +1745,7 @@ class NumpyTensorSpaceArrayWeighting(ArrayWeightingBase):
             return float(_pnorm_diagweight(x, self.exponent, self.array))
 
 
-class NumpyTensorSpaceConstWeighting(ConstWeightingBase):
+class NumpyTensorSpaceConstWeighting(BaseConstWeighting):
 
     """Weighting of a `NumpyTensorSpace` by a constant.
 
@@ -1883,7 +1880,7 @@ class NumpyTensorSpaceConstWeighting(ConstWeightingBase):
                     float(_pnorm_default(x1 - x2, self.exponent)))
 
 
-class NumpyTensorSpaceNoWeighting(NoWeightingBase,
+class NumpyTensorSpaceNoWeighting(BaseNoWeighting,
                                   NumpyTensorSpaceConstWeighting):
 
     """Weighting of a `NumpyTensorSpace` with constant 1."""
@@ -1935,7 +1932,7 @@ class NumpyTensorSpaceNoWeighting(NoWeightingBase,
                          dist_using_inner=dist_using_inner)
 
 
-class NumpyTensorSpaceCustomInner(CustomInnerBase):
+class NumpyTensorSpaceCustomInner(BaseCustomInner):
 
     """Class for handling a user-specified inner product."""
 
@@ -1967,7 +1964,7 @@ class NumpyTensorSpaceCustomInner(CustomInnerBase):
                          dist_using_inner=dist_using_inner)
 
 
-class NumpyTensorSpaceCustomNorm(CustomNormBase):
+class NumpyTensorSpaceCustomNorm(BaseCustomNorm):
 
     """Class for handling a user-specified norm.
 
@@ -1992,7 +1989,7 @@ class NumpyTensorSpaceCustomNorm(CustomNormBase):
         super().__init__(norm, impl='numpy')
 
 
-class NumpyTensorSpaceCustomDist(CustomDistBase):
+class NumpyTensorSpaceCustomDist(BaseCustomDist):
 
     """Class for handling a user-specified distance in `Fn`.
 

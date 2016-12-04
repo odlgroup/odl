@@ -531,7 +531,7 @@ class BaseArrayWeighting(BaseWeighting):
         ----------
         vector : 1-dim. `array-like`
             Weighting array of inner product, norm and distance.
-            Native `FnBaseVector` or `TensorBase` instances are stored
+            Native `FnBaseVector` or `BaseTensor` instances are stored
             as-is without copying.
         impl : string
             Specifier for the implementation backend.
