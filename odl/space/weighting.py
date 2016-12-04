@@ -33,12 +33,12 @@ from odl.space.base_tensors import BaseTensor
 from odl.util.utility import array1d_repr, arraynd_repr
 
 
-__all__ = ('MatrixWeightingBase', 'ArrayWeightingBase', 'ConstWeightingBase',
-           'NoWeightingBase',
-           'CustomInnerBase', 'CustomNormBase', 'CustomDistBase')
+__all__ = ('BaseMatrixWeighting', 'BaseArrayWeighting', 'BaseConstWeighting',
+           'BaseNoWeighting',
+           'BaseCustomInner', 'BaseCustomNorm', 'BaseCustomDist')
 
 
-class WeightingBase(object):
+class BaseWeighting(object):
 
     """Abstract base class for weighting of finite-dimensional spaces.
 
@@ -115,7 +115,7 @@ class WeightingBase(object):
         arrays may be compared entry-wise. That is the task of the
         `equiv` method.
         """
-        return (isinstance(other, WeightingBase) and
+        return (isinstance(other, BaseWeighting) and
                 self.impl == other.impl and
                 self.exponent == other.exponent and
                 self.dist_using_inner == other.dist_using_inner)
@@ -128,7 +128,7 @@ class WeightingBase(object):
         Returns
         -------
         equivalent : bool
-            ``True`` if ``other`` is a `WeightingBase` instance which
+            ``True`` if ``other`` is a `BaseWeighting` instance which
             yields the same result as this inner product for any
             input, ``False`` otherwise.
         """
@@ -193,7 +193,7 @@ class WeightingBase(object):
             return self.norm(x1 - x2)
 
 
-class MatrixWeightingBase(WeightingBase):
+class BaseMatrixWeighting(BaseWeighting):
 
     """Weighting of a space by a matrix.
 
@@ -390,7 +390,7 @@ class MatrixWeightingBase(WeightingBase):
         Returns
         -------
         equals : bool
-            ``True`` if other is a `MatrixWeightingBase` instance
+            ``True`` if other is a `BaseMatrixWeighting` instance
             with **identical** matrix, ``False`` otherwise.
 
         See Also
@@ -409,8 +409,8 @@ class MatrixWeightingBase(WeightingBase):
         Returns
         -------
         equivalent : bool
-            ``True`` if other is a `WeightingBase` instance with the same
-            `WeightingBase.impl`, which yields the same result as this
+            ``True`` if other is a `BaseWeighting` instance with the same
+            `BaseWeighting.impl`, which yields the same result as this
             weighting for any input, ``False`` otherwise. This is checked
             by entry-wise comparison of matrices/vectors/constants.
         """
@@ -421,7 +421,7 @@ class MatrixWeightingBase(WeightingBase):
         elif self.exponent != getattr(other, 'exponent', -1):
             return False
 
-        elif isinstance(other, MatrixWeightingBase):
+        elif isinstance(other, BaseMatrixWeighting):
             if self.matrix.shape != other.matrix.shape:
                 return False
 
@@ -442,7 +442,7 @@ class MatrixWeightingBase(WeightingBase):
                 else:
                     return np.array_equal(self.matrix, other.matrix)
 
-        elif isinstance(other, ArrayWeightingBase):
+        elif isinstance(other, BaseArrayWeighting):
             if self.matrix_issparse:
                 return (np.array_equiv(self.matrix.diagonal(),
                                        other.array) and
@@ -452,7 +452,7 @@ class MatrixWeightingBase(WeightingBase):
                 return np.array_equal(
                     self.matrix, other.array * np.eye(self.matrix.shape[0]))
 
-        elif isinstance(other, ConstWeightingBase):
+        elif isinstance(other, BaseConstWeighting):
             if self.matrix_issparse:
                 return (np.array_equiv(self.matrix.diagonal(), other.const) and
                         np.array_equal(self.matrix.asformat('dia').offsets,
@@ -512,7 +512,7 @@ class MatrixWeightingBase(WeightingBase):
                                                             self.matrix)
 
 
-class ArrayWeightingBase(WeightingBase):
+class BaseArrayWeighting(BaseWeighting):
 
     """Weighting of a space by an array.
 
@@ -578,7 +578,7 @@ class ArrayWeightingBase(WeightingBase):
         Returns
         -------
         equals : bool
-            ``True`` if ``other`` is an `ArrayWeightingBase` instance with
+            ``True`` if ``other`` is an `BaseArrayWeighting` instance with
             **identical** array, False otherwise.
 
         See Also
@@ -597,20 +597,20 @@ class ArrayWeightingBase(WeightingBase):
         Returns
         -------
         equivalent : bool
-            ``True`` if ``other`` is a `WeightingBase` instance with the same
-            `WeightingBase.impl`, which yields the same result as this
+            ``True`` if ``other`` is a `BaseWeighting` instance with the same
+            `BaseWeighting.impl`, which yields the same result as this
             weighting for any input, ``False`` otherwise. This is checked
             by entry-wise comparison of arrays / constants.
         """
         # Optimization for equality
         if self == other:
             return True
-        elif (not isinstance(other, WeightingBase) or
+        elif (not isinstance(other, BaseWeighting) or
               self.exponent != other.exponent):
             return False
-        elif isinstance(other, MatrixWeightingBase):
+        elif isinstance(other, BaseMatrixWeighting):
             return other.equiv(self)
-        elif isinstance(other, ConstWeightingBase):
+        elif isinstance(other, BaseConstWeighting):
             return np.array_equiv(self.array, other.const)
         else:
             return np.array_equal(self.array, other.array)
@@ -645,7 +645,7 @@ class ArrayWeightingBase(WeightingBase):
                                                             self.array)
 
 
-class ConstWeightingBase(WeightingBase):
+class BaseConstWeighting(BaseWeighting):
 
     """Weighting of a space by a constant."""
 
@@ -692,7 +692,7 @@ class ConstWeightingBase(WeightingBase):
         Returns
         -------
         equal : bool
-            ``True`` if other is a `ConstWeightingBase` instance with the
+            ``True`` if other is a `BaseConstWeighting` instance with the
             same constant, ``False`` otherwise.
         """
         if other is self:
@@ -707,14 +707,14 @@ class ConstWeightingBase(WeightingBase):
         Returns
         -------
         equivalent : bool
-            ``True`` if other is a `WeightingBase` instance with the same
-            `WeightingBase.impl`, which yields the same result as this
+            ``True`` if other is a `BaseWeighting` instance with the same
+            `BaseWeighting.impl`, which yields the same result as this
             weighting for any input, ``False`` otherwise. This is checked
             by entry-wise comparison of matrices/vectors/constants.
         """
-        if isinstance(other, ConstWeightingBase):
+        if isinstance(other, BaseConstWeighting):
             return self == other
-        elif isinstance(other, (ArrayWeightingBase, MatrixWeightingBase)):
+        elif isinstance(other, (BaseArrayWeighting, BaseMatrixWeighting)):
             return other.equiv(self)
         else:
             return False
@@ -756,7 +756,7 @@ class ConstWeightingBase(WeightingBase):
                 self.exponent, self.const)
 
 
-class NoWeightingBase(ConstWeightingBase):
+class BaseNoWeighting(BaseConstWeighting):
 
     """Weighting with constant 1."""
 
@@ -783,7 +783,7 @@ class NoWeightingBase(ConstWeightingBase):
         """
         # Support singleton pattern for subclasses
         if not hasattr(self, '_initialized'):
-            ConstWeightingBase.__init__(
+            BaseConstWeighting.__init__(
                 self, const=1.0, impl=impl, exponent=exponent,
                 dist_using_inner=dist_using_inner)
             self._initialized = True
@@ -807,7 +807,7 @@ class NoWeightingBase(ConstWeightingBase):
             return 'NoWeighting: p = {}'.format(self.exponent)
 
 
-class CustomInnerBase(WeightingBase):
+class BaseCustomInner(BaseWeighting):
 
     """Class for handling a user-specified inner product."""
 
@@ -859,7 +859,7 @@ class CustomInnerBase(WeightingBase):
         Returns
         -------
         equal : bool
-            ``True`` if other is a `CustomInnerBase`
+            ``True`` if other is a `BaseCustomInner`
             instance with the same inner product, ``False`` otherwise.
         """
         return super().__eq__(other) and self.inner == other.inner
@@ -884,7 +884,7 @@ class CustomInnerBase(WeightingBase):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
-class CustomNormBase(WeightingBase):
+class BaseCustomNorm(BaseWeighting):
 
     """Class for handling a user-specified norm.
 
@@ -931,7 +931,7 @@ class CustomNormBase(WeightingBase):
         Returns
         -------
         equal : bool
-            ``True`` if other is a `CustomNormBase` instance with the same
+            ``True`` if other is a `BaseCustomNorm` instance with the same
             norm, ``False`` otherwise.
         """
         return super().__eq__(other) and self.norm == other.norm
@@ -953,7 +953,7 @@ class CustomNormBase(WeightingBase):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
-class CustomDistBase(WeightingBase):
+class BaseCustomDist(BaseWeighting):
 
     """Class for handling a user-specified distance.
 
@@ -1004,7 +1004,7 @@ class CustomDistBase(WeightingBase):
         Returns
         -------
         equal : bool
-            ``True`` if other is a `CustomDistBase` instance with the same
+            ``True`` if other is a `BaseCustomDist` instance with the same
             dist, ``False`` otherwise.
         """
         return super().__eq__(other) and self.dist == other.dist

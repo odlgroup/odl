@@ -29,8 +29,8 @@ import numpy as np
 
 from odl.set import LinearSpace, LinearSpaceElement
 from odl.space.weighting import (
-    WeightingBase, ArrayWeightingBase, ConstWeightingBase, NoWeightingBase,
-    CustomInnerBase, CustomNormBase, CustomDistBase)
+    BaseWeighting, BaseArrayWeighting, BaseConstWeighting, BaseNoWeighting,
+    BaseCustomInner, BaseCustomNorm, BaseCustomDist)
 from odl.util.ufuncs import ProductSpaceUFuncs
 from odl.util.utility import is_real_dtype
 
@@ -81,7 +81,7 @@ class ProductSpace(LinearSpace):
 
             ``None`` : no weighting (default)
 
-            `WeightingBase` : weighting class, used directly. Such a
+            `BaseWeighting` : weighting class, used directly. Such a
             class instance can be retrieved from the space by the
             `ProductSpace.weighting` property.
 
@@ -272,7 +272,7 @@ class ProductSpace(LinearSpace):
 
         # Assign weighting
         if weight is not None:
-            if isinstance(weight, WeightingBase):
+            if isinstance(weight, BaseWeighting):
                 self.__weighting = weight
             elif np.isscalar(weight):
                 self.__weighting = ProductSpaceConstWeighting(
@@ -900,7 +900,7 @@ for op in ['add', 'sub', 'mul', 'div', 'truediv']:
         setattr(ProductSpaceElement, name, _broadcast_arithmetic(name))
 
 
-class ProductSpaceArrayWeighting(ArrayWeightingBase):
+class ProductSpaceArrayWeighting(BaseArrayWeighting):
 
     """Vector weighting for `ProductSpace`.
 
@@ -1010,7 +1010,7 @@ class ProductSpaceArrayWeighting(ArrayWeightingBase):
             return float(np.linalg.norm(norms, ord=self.exponent))
 
 
-class ProductSpaceConstWeighting(ConstWeightingBase):
+class ProductSpaceConstWeighting(BaseConstWeighting):
 
     """Constant weighting for `ProductSpace`.
 
@@ -1160,7 +1160,7 @@ class ProductSpaceConstWeighting(ConstWeightingBase):
                         np.linalg.norm(dnorms, ord=self.exponent))
 
 
-class ProductSpaceNoWeighting(NoWeightingBase, ProductSpaceConstWeighting):
+class ProductSpaceNoWeighting(BaseNoWeighting, ProductSpaceConstWeighting):
 
     """Weighting of `ProductSpace` with constant 1."""
 
@@ -1211,7 +1211,7 @@ class ProductSpaceNoWeighting(NoWeightingBase, ProductSpaceConstWeighting):
                          dist_using_inner=dist_using_inner)
 
 
-class ProductSpaceCustomInner(CustomInnerBase):
+class ProductSpaceCustomInner(BaseCustomInner):
 
     """Class for handling a user-specified inner products."""
 
@@ -1246,7 +1246,7 @@ class ProductSpaceCustomInner(CustomInnerBase):
                          dist_using_inner=dist_using_inner)
 
 
-class ProductSpaceCustomNorm(CustomNormBase):
+class ProductSpaceCustomNorm(BaseCustomNorm):
 
     """Class for handling a user-specified norm on `ProductSpace`.
 
@@ -1272,7 +1272,7 @@ class ProductSpaceCustomNorm(CustomNormBase):
         super().__init__(norm, impl='numpy')
 
 
-class ProductSpaceCustomDist(CustomDistBase):
+class ProductSpaceCustomDist(BaseCustomDist):
 
     """Class for handling a user-specified distance on `ProductSpace`.
 
