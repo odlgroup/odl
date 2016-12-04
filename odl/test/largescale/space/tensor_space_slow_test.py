@@ -103,7 +103,7 @@ def test_setitem(tspace):
 
 
 def tspace_weighting(tspace):
-    """ Get the weighting of a tspace space """
+    """ Get the weighting of a tensor space """
 
     # TODO: use actual weighting
 

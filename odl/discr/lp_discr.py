@@ -674,7 +674,7 @@ class DiscreteLpElement(DiscretizedSpaceElement):
             shape is allowed as ``values``.
         """
         if values in self.space:
-            # For DiscretizedSetElement of the same type, use.tensor directly
+            # For DiscretizedSetElement of the same type, use tensor directly
             self.tensor[indices] = values.tensor
         else:
             # Other sequence types are piped through a Numpy array. Equivalent
