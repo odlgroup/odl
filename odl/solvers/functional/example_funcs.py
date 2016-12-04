@@ -27,8 +27,9 @@ import numpy as np
 
 from odl.solvers.functional.functional import Functional
 from odl.operator.operator import Operator
-from odl.space.base_ntuples import FnBase
-from odl.space.npy_ntuples import MatVecOperator
+from odl.space.base_tensors import FnBase
+# TODO: find a place for the opertor and import from there
+# from odl.space.npy_tensors import MatVecOperator
 
 
 __all__ = ('RosenbrockFunctional',)

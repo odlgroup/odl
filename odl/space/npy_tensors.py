@@ -42,8 +42,7 @@ from odl.util.utility import (
     is_complex_floating_dtype)
 
 
-__all__ = ('NumpyTensorSet', 'NumpyGeneralizedTensor',
-           'NumpyTensorSpace', 'NumpyTensor')
+__all__ = ('NumpyTensorSet', 'NumpyTensorSpace')
 
 
 _BLAS_DTYPES = (np.dtype('float32'), np.dtype('float64'),

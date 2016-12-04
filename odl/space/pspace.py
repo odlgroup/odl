@@ -661,7 +661,7 @@ class ProductSpaceElement(LinearSpaceElement):
         """`ProductSpaceUFuncs`, access to Numpy style ufuncs.
 
         These are always available if the underlying spaces are
-        `NtuplesBase`.
+        `BaseTensorSet`.
 
         Examples
         --------
@@ -706,8 +706,8 @@ class ProductSpaceElement(LinearSpaceElement):
 
         See Also
         --------
-        odl.util.ufuncs.NtuplesBaseUFuncs
-            Base class for ufuncs in `NtuplesBase` spaces, subspaces may
+        odl.util.ufuncs.BaseTensorSetUFuncs
+            Base class for ufuncs in `BaseTensorSet` spaces, subspaces may
             override this for greater efficiency.
         odl.util.ufuncs.ProductSpaceUFuncs
             For a list of available ufuncs.
@@ -810,7 +810,7 @@ class ProductSpaceElement(LinearSpaceElement):
         --------
         odl.discr.lp_discr.DiscreteLpElement.show :
             Display of a discretized function
-        odl.space.base_ntuples.NtuplesBaseVector.show :
+        odl.space.base_tensors.BaseGeneralizedTensor.show :
             Display of sequence type data
         odl.util.graphics.show_discrete_data :
             Underlying implementation

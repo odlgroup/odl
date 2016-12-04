@@ -66,9 +66,9 @@ class DiscreteLp(DiscretizedSpace):
         partition : `RectPartition`
             Partition of (a subset of) ``fspace.domain`` based on a
             `TensorGrid`
-        dspace : `FnBase`
+        dspace : `BaseTensorSpace`
             Space of elements used for data storage. It must have the
-            same `FnBase.field` as ``fspace``
+            same `BaseTensorSpace.field` as ``fspace``
         exponent : positive float, optional
             The parameter :math:`p` in :math:`L^p`. If the exponent is
             not equal to the default 2.0, the space has no inner

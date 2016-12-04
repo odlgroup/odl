@@ -18,7 +18,7 @@
 """UFuncs for ODL vectors.
 
 These functions are internal and should only be used as methods on
-`NtuplesBaseVector` type spaces.
+`BaseGeneralizedTensor` type spaces.
 
 See `numpy.ufuncs
 <http://docs.scipy.org/doc/numpy/reference/ufuncs.html>`_
@@ -27,9 +27,10 @@ for more information.
 Notes
 -----
 The default implementation of these methods make heavy use of the
-``NtuplesBaseVector.__array__`` to extract a `numpy.ndarray` from the vector,
-and then apply a ufunc to it. Afterwards, ``NtuplesBaseVector.__array_wrap__``
-is used to re-wrap the data into the appropriate space.
+``BaseGeneralizedTensor.__array__`` to extract a `numpy.ndarray` from the
+vector, and then apply a ufunc to it. Afterwards,
+``BaseGeneralizedTensor.__array_wrap__`` is used to re-wrap the data into
+the appropriate space element.
 """
 
 # Imports for common Python 2/3 codebase
@@ -41,7 +42,7 @@ import numpy as np
 import re
 
 
-__all__ = ('NtuplesBaseUFuncs', 'NumpyNtuplesUFuncs',
+__all__ = ('BaseTensorSetUFuncs',
            'BaseGeneralizedTensorUFuncs', 'NumpyGeneralizedTensorUFuncs',
            'DiscreteLpUFuncs', 'ProductSpaceUFuncs')
 
@@ -159,11 +160,11 @@ def wrap_reduction_base(name, doc):
     return wrapper
 
 
-class NtuplesBaseUFuncs(object):
+class BaseTensorSetUFuncs(object):
 
-    """UFuncs for `NtuplesBaseVector` objects.
+    """UFuncs for `BaseGeneralizedTensor` objects.
 
-    Internal object, should not be created except in `NtuplesBaseVector`.
+    Internal object, should not be created except in `BaseGeneralizedTensor`.
     """
 
     def __init__(self, vector):
@@ -174,12 +175,12 @@ class NtuplesBaseUFuncs(object):
 # Add ufunc methods to UFunc class
 for name, n_in, n_out, doc in UFUNCS:
     method = wrap_ufunc_base(name, n_in, n_out, doc)
-    setattr(NtuplesBaseUFuncs, name, method)
+    setattr(BaseTensorSetUFuncs, name, method)
 
 # Add reduction methods to UFunc class
 for name, doc in REDUCTIONS:
     method = wrap_reduction_base(name, doc)
-    setattr(NtuplesBaseUFuncs, name, method)
+    setattr(BaseTensorSetUFuncs, name, method)
 
 
 class BaseGeneralizedTensorUFuncs(object):
@@ -255,20 +256,6 @@ def wrap_ufunc_numpy(name, n_in, n_out, doc):
     wrapper.__name__ = name
     wrapper.__doc__ = doc
     return wrapper
-
-
-class NumpyNtuplesUFuncs(NtuplesBaseUFuncs):
-
-    """UFuncs for `NumpyNtuplesVector` objects.
-
-    Internal object, should not be created except in `NumpyNtuplesVector`.
-    """
-
-
-# Add ufunc methods to UFunc class
-for name, n_in, n_out, doc in UFUNCS:
-    method = wrap_ufunc_numpy(name, n_in, n_out, doc)
-    setattr(NumpyNtuplesUFuncs, name, method)
 
 
 class NumpyGeneralizedTensorUFuncs(BaseGeneralizedTensorUFuncs):
@@ -363,7 +350,7 @@ def wrap_reduction_discretelp(name, doc):
     return wrapper
 
 
-class DiscreteLpUFuncs(NtuplesBaseUFuncs):
+class DiscreteLpUFuncs(BaseTensorSetUFuncs):
 
     """UFuncs for `DiscreteLpElement` objects.
 

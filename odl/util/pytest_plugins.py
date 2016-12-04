@@ -87,22 +87,26 @@ def pytest_ignore_collect(path, config):
 
 # --- Reusable fixtures ---
 
-fn_impl_params = odl.FN_IMPLS.keys()
-fn_impl_ids = [" impl = '{}' ".format(p) for p in fn_impl_params]
+tensor_space_impl_params = odl.FN_IMPLS.keys()
+tensor_space_impl_ids = [" impl = '{}' ".format(p)
+                         for p in tensor_space_impl_params]
 
 
-@fixture(scope="module", ids=fn_impl_ids, params=fn_impl_params)
-def fn_impl(request):
-    """String with an available `FnBase` implementation name."""
+@fixture(scope="module", ids=tensor_space_impl_ids,
+         params=tensor_space_impl_params)
+def tensor_space_impl(request):
+    """String with an available `BaseTensorSpace` implementation name."""
     return request.param
 
-ntuples_impl_params = odl.NTUPLES_IMPLS.keys()
-ntuples_impl_ids = [" impl = '{}' ".format(p) for p in ntuples_impl_params]
+tensor_set_impl_params = odl.TENSOR_SET_IMPLS.keys()
+tensor_set_impl_ids = [" impl = '{}' ".format(p)
+                       for p in tensor_set_impl_params]
 
 
-@fixture(scope="module", ids=ntuples_impl_ids, params=ntuples_impl_params)
-def ntuples_impl(request):
-    """String with an available `NtuplesBase` implementation name."""
+@fixture(scope="module", ids=tensor_set_impl_ids,
+         params=tensor_set_impl_params)
+def tensor_set_impl(request):
+    """String with an available `BaseTensorSet` implementation name."""
     return request.param
 
 

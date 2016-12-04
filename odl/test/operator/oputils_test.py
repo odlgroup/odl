@@ -32,7 +32,8 @@ from odl.operator.oputils import matrix_representation, power_method_opnorm
 from odl.space.pspace import ProductSpace
 from odl.operator.pspace_ops import ProductSpaceOperator
 
-from odl.space.npy_ntuples import MatVecOperator
+# TODO: change import
+from odl.space.npy_tensors import MatVecOperator
 from odl.util.testutils import almost_equal
 
 

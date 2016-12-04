@@ -53,10 +53,11 @@ def padding(request):
 
 
 @pytest.fixture(scope="module", params=[1, 2, 3], ids=['1d', '2d', '3d'])
-def space(request, fn_impl):
+def space(request, tensor_space_impl):
     ndim = request.param
 
-    return odl.uniform_discr([0] * ndim, [1] * ndim, [5] * ndim, impl=fn_impl)
+    return odl.uniform_discr([0] * ndim, [1] * ndim, [5] * ndim,
+                             impl=tensor_space_impl)
 
 
 # Test data

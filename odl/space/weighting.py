@@ -28,7 +28,6 @@ import numpy as np
 import scipy.linalg as linalg
 from scipy.sparse.base import isspmatrix
 
-from odl.space.base_ntuples import FnBaseVector
 from odl.space.base_tensors import BaseTensor
 from odl.util.utility import array1d_repr, arraynd_repr
 
@@ -531,7 +530,7 @@ class BaseArrayWeighting(BaseWeighting):
         ----------
         vector : 1-dim. `array-like`
             Weighting array of inner product, norm and distance.
-            Native `FnBaseVector` or `BaseTensor` instances are stored
+            Native `BaseTensor` or `BaseTensor` instances are stored
             as-is without copying.
         impl : string
             Specifier for the implementation backend.
@@ -555,7 +554,7 @@ class BaseArrayWeighting(BaseWeighting):
         # We store our "own" data structures as-is to retain Numpy
         # compatibility while avoiding copies. Other things are run through
         # numpy.asarray.
-        if isinstance(array, (FnBaseVector, BaseTensor)):
+        if isinstance(array, BaseTensor):
             self.__array = array
         else:
             self.__array = np.asarray(array)

@@ -54,7 +54,7 @@ def vector(array, dtype=None, impl='numpy'):
 
     Returns
     -------
-    vec : `NtuplesBaseVector`
+    vec : `BaseGeneralizedTensor`
         Vector created from the input array. Its concrete type depends
         on the provided arguments.
 
@@ -125,7 +125,7 @@ def ntuples(size, dtype, impl='numpy', **kwargs):
 
     Returns
     -------
-    ntuple : `NtuplesBase`
+    ntuple : `BaseTensorSet`
 
     See Also
     --------
@@ -145,7 +145,7 @@ def fn(size, dtype=None, impl='numpy', **kwargs):
         Data type of each element. Can be provided in any
         way the `numpy.dtype` function understands, e.g. as built-in type
         or as a string.
-        For ``None``, the `FnBase.default_dtype` of the created space
+        For ``None``, the `BaseTensorSpace.default_dtype` of the created space
         is used.
     impl : str, optional
         The backend to use. See `odl.space.entry_points.FN_IMPLS` for
@@ -155,7 +155,7 @@ def fn(size, dtype=None, impl='numpy', **kwargs):
 
     Returns
     -------
-    fn : `FnBase`
+    fn : `BaseTensorSpace`
 
     See Also
     --------
@@ -181,7 +181,7 @@ def cn(size, dtype=None, impl='numpy', **kwargs):
         way the `numpy.dtype` function understands, e.g. as built-in type
         or as a string. Only complex floating-point data types are
         allowed.
-        For ``None``, the `FnBase.default_dtype` of the created space
+        For ``None``, the `BaseTensorSpace.default_dtype` of the created space
         is used in the form ``default_dtype(ComplexNumbers())``.
     impl : str, optional
         The backend to use. See `odl.space.entry_points.FN_IMPLS` for
@@ -191,7 +191,7 @@ def cn(size, dtype=None, impl='numpy', **kwargs):
 
     Returns
     -------
-    cn : `FnBase`
+    cn : `BaseTensorSpace`
 
     See Also
     --------
@@ -222,7 +222,7 @@ def rn(size, dtype=None, impl='numpy', **kwargs):
         way the `numpy.dtype` function understands, e.g. as built-in type
         or as a string. Only real floating-point data types are
         allowed.
-        For ``None``, the `FnBase.default_dtype` of the created space
+        For ``None``, the `BaseTensorSpace.default_dtype` of the created space
         is used in the form ``default_dtype(RealNumbers())``.
     impl : str, optional
         The backend to use. See `odl.space.entry_points.FN_IMPLS` for
@@ -232,7 +232,7 @@ def rn(size, dtype=None, impl='numpy', **kwargs):
 
     Returns
     -------
-    rn : `FnBase`
+    rn : `BaseTensorSpace`
 
     See Also
     --------

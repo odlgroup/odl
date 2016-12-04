@@ -19,14 +19,10 @@
 
 from __future__ import absolute_import
 
-__all__ = ('base_ntuples', 'base_tensors', 'weighting')
+__all__ = ('base_tensors', 'weighting')
 
-from . import base_ntuples
 from . import base_tensors
 from . import weighting
-
-from .npy_ntuples import *
-__all__ += npy_ntuples.__all__
 
 from .npy_tensors import *
 __all__ += npy_tensors.__all__

@@ -33,8 +33,7 @@ from odl.util.utility import (
     TYPE_MAP_R2C, TYPE_MAP_C2R)
 
 
-__all__ = ('BaseTensorSet', 'BaseGeneralizedTensor',
-           'BaseTensorSpace', 'BaseTensor')
+__all__ = ('BaseTensorSet', 'BaseTensorSpace')
 
 
 class BaseTensorSet(Set):

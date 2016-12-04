@@ -24,8 +24,8 @@ standard_library.install_aliases()
 from builtins import super
 
 from odl.operator import Operator
-from odl.space.base_ntuples import (NtuplesBase, NtuplesBaseVector,
-                                    FnBase, FnBaseVector)
+from odl.space.base_tensors import (BaseTensorSet, BaseGeneralizedTensor,
+                                    BaseTensorSpace, BaseTensor)
 from odl.space import FunctionSet, FN_IMPLS, NTUPLES_IMPLS
 from odl.set import RealNumbers, ComplexNumbers, LinearSpace
 from odl.util.utility import (
@@ -37,7 +37,7 @@ __all__ = ('DiscretizedSet', 'DiscretizedSetElement',
            'DiscretizedSpace', 'DiscretizedSpaceElement')
 
 
-class DiscretizedSet(NtuplesBase):
+class DiscretizedSet(BaseTensorSet):
 
     """Abstract discretization class for general sets.
 
@@ -71,7 +71,7 @@ class DiscretizedSet(NtuplesBase):
         ----------
         uspace : `FunctionSet`
             The undiscretized (abstract) set to be discretized
-        dspace : `NtuplesBase`
+        dspace : `BaseTensorSet`
             Data space providing containers for the values of a
             discretized object
         sampling : `Operator`, optional
@@ -86,8 +86,8 @@ class DiscretizedSet(NtuplesBase):
         if not isinstance(uspace, FunctionSet):
             raise TypeError('`uspace` {!r} not a `Set` instance'
                             ''.format(uspace))
-        if not isinstance(dspace, NtuplesBase):
-            raise TypeError('`dspace` {!r} not an `NtuplesBase` instance'
+        if not isinstance(dspace, BaseTensorSet):
+            raise TypeError('`dspace` {!r} not a `BaseTensorSet` instance'
                             ''.format(dspace))
 
         if sampling is not None:
@@ -142,7 +142,7 @@ class DiscretizedSet(NtuplesBase):
 
         Returns
         -------
-        dspace : `NtuplesBase`
+        dspace : `BaseTensorSet`
         """
         return self.__dspace
 
@@ -218,7 +218,7 @@ class DiscretizedSet(NtuplesBase):
         elif other is None:
             return False
         else:
-            return (NtuplesBase.__eq__(self, other) and
+            return (BaseTensorSet.__eq__(self, other) and
                     other.uspace == self.uspace and
                     other.dspace == self.dspace and
                     other.sampling == self.sampling and
@@ -240,7 +240,7 @@ class DiscretizedSet(NtuplesBase):
         return DiscretizedSetElement
 
 
-class DiscretizedSetElement(NtuplesBaseVector):
+class DiscretizedSetElement(BaseGeneralizedTensor):
 
     """Representation of a `DiscretizedSet` element.
 
@@ -251,7 +251,7 @@ class DiscretizedSetElement(NtuplesBaseVector):
         assert isinstance(space, DiscretizedSet)
         assert ntuple in space.dspace
 
-        NtuplesBaseVector.__init__(self, space)
+        BaseGeneralizedTensor.__init__(self, space)
         self.__ntuple = ntuple
 
     @property
@@ -313,7 +313,7 @@ class DiscretizedSetElement(NtuplesBaseVector):
 
         Returns
         -------
-        values : `NtuplesBaseVector`
+        values : `BaseGeneralizedTensor`
             The value(s) at the index (indices)
         """
         return self.ntuple.__getitem__(indices)
@@ -325,7 +325,7 @@ class DiscretizedSetElement(NtuplesBaseVector):
         ----------
         indices : int or `slice`
             The position(s) that should be set
-        values : scalar, `array-like` or `NtuplesBaseVector`
+        values : scalar, `array-like` or `BaseGeneralizedTensor`
             The value(s) that are to be assigned.
 
             If ``index`` is an int, ``value`` must be single value.
@@ -407,7 +407,7 @@ class DiscretizedSetElement(NtuplesBaseVector):
                                          arraynd_repr(self.asarray()))
 
 
-class DiscretizedSpace(DiscretizedSet, FnBase):
+class DiscretizedSpace(DiscretizedSet, BaseTensorSpace):
 
     """Abstract class for discretizations of linear vector spaces.
 
@@ -431,9 +431,9 @@ class DiscretizedSpace(DiscretizedSet, FnBase):
         ----------
         uspace : `LinearSpace`
             The (abstract) space to be discretized
-        dspace : `FnBase`
+        dspace : `BaseTensorSpace`
             Data space providing containers for the values of a
-            discretized object. Its `FnBase.field` attribute
+            discretized object. Its `BaseTensorSpace.field` attribute
             must be the same as ``uspace.field``.
         sampling : `Operator`, linear, optional
             Operator mapping a `DiscretizedSet.uspace` element
@@ -445,14 +445,14 @@ class DiscretizedSpace(DiscretizedSet, FnBase):
             ``interpol.domain == dspace``, ``interpol.range == uspace``.
         """
         DiscretizedSet.__init__(self, uspace, dspace, sampling, interpol)
-        FnBase.__init__(self, dspace.size, dspace.dtype)
+        BaseTensorSpace.__init__(self, dspace.size, dspace.dtype)
 
         if not isinstance(uspace, LinearSpace):
-            raise TypeError('`uspace` {!r} not a LinearSpace '
-                            'instance'.format(uspace))
+            raise TypeError('`uspace` {!r} not a `LinearSpace` instance '
+                            ''.format(uspace))
 
-        if not isinstance(dspace, FnBase):
-            raise TypeError('`dspace` {!r} not an FnBase instance'
+        if not isinstance(dspace, BaseTensorSpace):
+            raise TypeError('`dspace` {!r} not a `BaseTensorSpace` instance'
                             ''.format(dspace))
 
         if uspace.field != dspace.field:
@@ -531,7 +531,7 @@ class DiscretizedSpace(DiscretizedSet, FnBase):
         return DiscretizedSpaceElement
 
 
-class DiscretizedSpaceElement(DiscretizedSetElement, FnBaseVector):
+class DiscretizedSpaceElement(DiscretizedSetElement, BaseTensor):
 
     """Representation of a `DiscretizedSpace` element."""
 
