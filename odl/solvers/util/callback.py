@@ -23,6 +23,7 @@ from future import standard_library
 standard_library.install_aliases()
 
 import time
+import os
 
 
 __all__ = ('CallbackStore', 'CallbackApply',
@@ -375,8 +376,12 @@ class CallbackShow(SolverCallback):
         display_step : positive int, optional
             Number of iterations between plots. Default: 1
         saveto : string, optional
-            Path to where the figures are to be saved. If not given, the
-            figures are not saved. Default: None
+            Path to a directory where the figures are to be saved, potentially
+            followed by a file name. If the directory name does not exist, a
+            ``ValueError`` is raised. If not given, the figures are not saved.
+            Default: None
+        suffix : string, optinal
+            Format of the figure saved. Default: ``png``
 
         Other Parameters
         ----------------
@@ -388,8 +393,22 @@ class CallbackShow(SolverCallback):
         self.fig = kwargs.pop('fig', None)
         self.display_step = kwargs.pop('display_step', 1)
         self.saveto = kwargs.pop('saveto', None)
+        self.suffix = kwargs.pop('suffix', 'png')
         self.iter = 0
         self.space_of_last_x = None
+
+        if self.saveto is not None:
+            head, tail = os.path.split(self.saveto)
+            if not os.path.exists(head) or head == '':
+                raise ValueError('head of the `saveto` {} path not found'
+                                 ''.format(head))
+            if ((not tail.count('{') == tail.count('}'))):
+                raise ValueError('tail of `saveto` {} does not contain the '
+                                 ' same number of ``{`` as ``}``'.format(tail))
+            elif tail.count('{') == 1:
+                self.adv_saveto = True
+            elif tail.count('{') == 0:
+                self.adv_saveto = False
 
     def __call__(self, x):
         """Show the current iterate."""
@@ -403,9 +422,18 @@ class CallbackShow(SolverCallback):
                 self.fig = x.show(*self.args, fig=self.fig,
                                   update_in_place=update_in_place,
                                   **self.kwargs)
-            else:
+
+            elif self.adv_saveto:
                 self.fig = x.show(*self.args, fig=self.fig,
-                                  saveto=(self.saveto + '_' + str(self.iter)),
+                                  saveto=(self.saveto.format(self.iter) + '.' +
+                                          self.suffix),
+                                  update_in_place=update_in_place,
+                                  **self.kwargs)
+
+            elif not self.adv_saveto:
+                self.fig = x.show(*self.args, fig=self.fig,
+                                  saveto=(self.saveto + '_' + str(self.iter) +
+                                          '.' + self.suffix),
                                   update_in_place=update_in_place,
                                   **self.kwargs)
 
