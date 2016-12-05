@@ -23,6 +23,7 @@ from future import standard_library
 standard_library.install_aliases()
 
 import numpy as np
+from pkg_resources import parse_version
 try:
     import astra
     ASTRA_CUDA_AVAILABLE = astra.astra.use_cuda()
@@ -31,6 +32,7 @@ except ImportError:
 
 from odl.discr import DiscreteLp, DiscreteLpElement
 from odl.tomo.backends.astra_setup import (
+    ASTRA_VERSION,
     astra_projection_geometry, astra_volume_geometry, astra_projector,
     astra_data, astra_algorithm)
 from odl.tomo.geometry import (
@@ -44,7 +46,6 @@ __all__ = ('astra_cuda_forward_projector', 'astra_cuda_back_projector',
 
 
 # TODO: use context manager when creating data structures
-# TODO: is magnification scaling at the right place?
 
 def astra_cuda_forward_projector(vol_data, geometry, proj_space, out=None):
     """Run an ASTRA forward projection on the given data using the GPU.
@@ -226,40 +227,7 @@ def astra_cuda_back_projector(proj_data, geometry, reco_space, out=None):
         # Run algorithm
         astra.algorithm.run(algo_id)
 
-    # Angular integration weighting factor
-    # angle interval weight by approximate cell volume
-    extent = float(geometry.motion_partition.extent())
-    size = float(geometry.motion_partition.size)
-    scaling_factor = extent / size
-
-    # Fix inconsistent scaling
-    if isinstance(geometry, Parallel2dGeometry):
-        # scales with 1 / (cell volume)
-        scaling_factor *= float(reco_space.cell_volume)
-    elif isinstance(geometry, FanFlatGeometry):
-        # scales with 1 / (cell volume)
-        scaling_factor *= float(reco_space.cell_volume)
-        # magnification correction
-        src_radius = geometry.src_radius
-        det_radius = geometry.det_radius
-        scaling_factor *= ((src_radius + det_radius) / src_radius)
-    elif isinstance(geometry, Parallel3dAxisGeometry):
-        # scales with voxel stride
-        # currently only square voxels are supported
-        extent = reco_space.partition.extent()
-        shape = np.array(reco_space.shape, dtype=float)
-        scaling_factor /= float(extent[0] / shape[0])
-    elif isinstance(geometry, HelicalConeFlatGeometry):
-        # cone scales with voxel stride
-        # currently only square voxels are supported
-        extent = reco_space.partition.extent()
-        shape = np.array(reco_space.shape, dtype=float)
-        scaling_factor /= float(extent[0] / shape[0])
-        # magnification correction
-        src_radius = geometry.src_radius
-        det_radius = geometry.det_radius
-        scaling_factor *= ((src_radius + det_radius) / src_radius) ** 2
-    out *= scaling_factor
+    out *= astra_cuda_bp_scaling_factor(reco_space, geometry)
 
     # Delete ASTRA objects
     astra.algorithm.delete(algo_id)
@@ -271,6 +239,83 @@ def astra_cuda_back_projector(proj_data, geometry, reco_space, out=None):
         astra.projector3d.delete(proj_id)
 
     return out
+
+
+def astra_cuda_bp_scaling_factor(reco_space, geometry):
+    """Volume scaling accounting for differing adjoint definitions.
+
+    ASTRA defines the adjoint operator in terms of a fully discrete
+    setting (transposed "projection matrix") without any relation to
+    physical dimensions, which makes a re-scaling necessary to
+    translate it to spaces with physical dimensions.
+
+    Behavior of ASTRA changes slightly between versions, so we keep
+    track of it and adapt the scaling accordingly.
+    """
+    # Angular integration weighting factor
+    # angle interval weight by approximate cell volume
+    angle_extent = float(geometry.motion_partition.extent())
+    num_angles = float(geometry.motion_partition.size)
+    scaling_factor = angle_extent / num_angles
+
+    if parse_version(ASTRA_VERSION) < parse_version('1.8rc1'):
+        # Fix inconsistent scaling
+        if isinstance(geometry, Parallel2dGeometry):
+            # Scales with 1 / cell_volume
+            scaling_factor *= float(reco_space.cell_volume)
+        elif isinstance(geometry, FanFlatGeometry):
+            # Scales with 1 / cell_volume
+            scaling_factor *= float(reco_space.cell_volume)
+            # Additional magnification correction
+            src_radius = geometry.src_radius
+            det_radius = geometry.det_radius
+            scaling_factor *= ((src_radius + det_radius) / src_radius)
+        elif isinstance(geometry, Parallel3dAxisGeometry):
+            # Scales with voxel stride
+            # In 1.7, only cubic voxels are supported
+            voxel_stride = reco_space.cell_sides[0]
+            scaling_factor /= float(voxel_stride)
+        elif isinstance(geometry, HelicalConeFlatGeometry):
+            # Scales with 1 / cell_volume
+            # In 1.7, only cubic voxels are supported
+            voxel_stride = reco_space.cell_sides[0]
+            scaling_factor /= float(voxel_stride)
+            # Magnification correction
+            src_radius = geometry.src_radius
+            det_radius = geometry.det_radius
+            scaling_factor *= ((src_radius + det_radius) / src_radius) ** 2
+
+    else:
+        if isinstance(geometry, Parallel2dGeometry):
+            # Scales with 1 / cell_volume
+            scaling_factor *= float(reco_space.cell_volume)
+        elif isinstance(geometry, FanFlatGeometry):
+            # Scales with 1 / cell_volume
+            scaling_factor *= float(reco_space.cell_volume)
+            # Magnification correction
+            src_radius = geometry.src_radius
+            det_radius = geometry.det_radius
+            scaling_factor *= ((src_radius + det_radius) / src_radius)
+        elif isinstance(geometry, Parallel3dAxisGeometry):
+            # Scales with cell volume
+            # currently only square voxels are supported
+            scaling_factor /= reco_space.cell_volume
+        elif isinstance(geometry, HelicalConeFlatGeometry):
+            # Scales with cell volume
+            scaling_factor /= reco_space.cell_volume
+            # Magnification correction
+            src_radius = geometry.src_radius
+            det_radius = geometry.det_radius
+            scaling_factor *= ((src_radius + det_radius) / src_radius) ** 2
+
+            # Correction for scaled 1/r^2 factor in ASTRA's density weighting
+            det_px_area = geometry.det_partition.cell_volume
+            scaling_factor *= (src_radius ** 2 * det_px_area ** 2 /
+                               reco_space.cell_volume ** 2)
+
+        # TODO: add case with new ASTRA release
+
+    return scaling_factor
 
 
 if __name__ == '__main__':

@@ -27,8 +27,8 @@ reco_space = odl.uniform_discr(
     dtype='float32')
 
 # Make a parallel beam geometry with flat detector
-# Angles: uniformly spaced, n = 360, min = 0, max = 2 * pi
-angle_partition = odl.uniform_partition(0, 2 * np.pi, 360)
+# Angles: uniformly spaced, n = 180, min = 0, max = pi
+angle_partition = odl.uniform_partition(0, np.pi, 180)
 # Detector: uniformly sampled, n = (558, 558), min = (-30, -30), max = (30, 30)
 detector_partition = odl.uniform_partition([-30, -30], [30, 30], [558, 558])
 # Discrete reconstruction space
