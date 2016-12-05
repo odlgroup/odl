@@ -773,13 +773,12 @@ class ZeroFunctional(ConstantFunctional):
         return '{}({!r})'.format(self.__class__.__name__, self.domain)
 
 
-class ScalingFunctional(Functional):
+class ScalingFunctional(Functional, ScalingOperator):
 
     """Functional that scales the input argument by a value.
 
-    See Also
-    --------
-    ScalingOperator
+    Since the range of a functional is always a field, the domain of this
+    functional is also a field, i.e. real or complex numbers.
     """
 
     def __init__(self, field, constant):
@@ -800,17 +799,9 @@ class ScalingFunctional(Functional):
         >>> func(5)
         15.0
         """
-        super().__init__(space=field, linear=True, grad_lipschitz=0)
+        Functional.__init__(self, space=field, linear=True, grad_lipschitz=0)
+        ScalingOperator.__init__(self, field, constant)
         self.__scalar = self.range.element(constant)
-
-    @property
-    def scalar(self):
-        """The constant value to scale by."""
-        return self.__scalar
-
-    def _call(self, x):
-        """Return a constant value."""
-        return self.scalar * x
 
     @property
     def gradient(self):

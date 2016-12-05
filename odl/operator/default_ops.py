@@ -43,14 +43,14 @@ class ScalingOperator(Operator):
         ``ScalingOperator(s)(x) == s * x``
     """
 
-    def __init__(self, space, scalar):
+    def __init__(self, domain, scalar):
         """Initialize a new instance.
 
         Parameters
         ----------
-        space : `LinearSpace`
-            Space of elements on which this operator acts.
-        scalar : ``space.field`` element
+        domain : `LinearSpace` or `Field`
+            Set of elements on which this operator acts.
+        scalar : ``domain.field`` element
             Fixed scaling factor of this operator.
 
         Examples
@@ -66,12 +66,12 @@ class ScalingOperator(Operator):
         >>> op(vec)  # Out-of-place
         rn(3).element([2.0, 4.0, 6.0])
         """
-        if not isinstance(space, LinearSpace):
-            raise TypeError('`space` {!r} not a LinearSpace instance'
-                            ''.format(space))
+        if not isinstance(domain, (LinearSpace, Field)):
+            raise TypeError('`space` {!r} not a `LinearSpace` or `Field` '
+                            'instance'.format(domain))
 
-        super().__init__(space, space, linear=True)
-        self.__scalar = space.field.element(scalar)
+        super().__init__(domain, domain, linear=True)
+        self.__scalar = domain.field.element(scalar)
 
     @property
     def scalar(self):
