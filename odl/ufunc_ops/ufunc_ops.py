@@ -78,12 +78,24 @@ def gradient_factory(name):
     elif name == 'log':
         def gradient(self):
             """Return the gradient operator."""
-            return FunctionalQuotient(ConstantFunctional(self.domain, 1.0),
-                                      IdentityFunctional(self.domain))
+            return reciprocal(self.domain)
     elif name == 'exp':
         def gradient(self):
             """Return the gradient operator."""
             return self
+    elif name == 'reciprocal':
+        def gradient(self):
+            """Return the gradient operator."""
+            return FunctionalQuotient(ConstantFunctional(self.domain, -1.0),
+                                      square(self.domain))
+    elif name == 'sinh':
+        def gradient(self):
+            """Return the gradient operator."""
+            return cosh(self.domain)
+    elif name == 'cosh':
+        def gradient(self):
+            """Return the gradient operator."""
+            return sinh(self.domain)
     else:
         # Fallback to default
         gradient = Functional.gradient
@@ -125,6 +137,20 @@ def derivative_factory(name):
         def derivative(self, point):
             """Return the derivative operator."""
             return MultiplyOperator(self(point))
+    elif name == 'reciprocal':
+        def derivative(self, point):
+            """Return the derivative operator."""
+            point = self.domain.element(point)
+            return MultiplyOperator(-self(point) ** 2)
+    elif name == 'sinh':
+        def derivative(self, point):
+            """Return the derivative operator."""
+            point = self.domain.element(point)
+            return MultiplyOperator(cosh(self.domain)(point))
+    elif name == 'cosh':
+        def derivative(self, point):
+            """Return the derivative operator."""
+            return MultiplyOperator(sinh(self.domain)(point))
     else:
         # Fallback to default
         derivative = Operator.derivative
@@ -166,7 +192,7 @@ def ufunc_class_factory(name, nargin, nargout, docstring):
         Operator.__init__(self, domain=domain, range=range, linear=linear)
 
     def _call(self, x, out=None):
-        """return ``self(x)``."""
+        """Return ``self(x)``."""
         if out is None:
             if nargin == 1:
                 return getattr(x.ufunc, name)()
@@ -243,7 +269,7 @@ def ufunc_functional_factory(name, nargin, nargout, docstring):
         Functional.__init__(self, space=field, linear=linear)
 
     def _call(self, x):
-        """return ``self(x)``."""
+        """Return ``self(x)``."""
         if nargin == 1:
             return getattr(np, name)(x)
         else:
@@ -296,14 +322,12 @@ Examples
 RAW_UFUNC_FACTORY_FUNCTIONAL_DOCSTRING = """
 Create functional with domain/range as real numbers:
 
->>> import odl
 >>> func = odl.ufunc_ops.{name}()
 """
 
 RAW_UFUNC_FACTORY_OPERATOR_DOCSTRING = """
 Create operator that acts pointwise on a `FnBase`
 
->>> import odl
 >>> space = odl.rn(3)
 >>> op = odl.ufunc_ops.{name}(space)
 """

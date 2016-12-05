@@ -49,7 +49,7 @@ __all__ = ('LpNorm', 'L1Norm', 'L2Norm', 'L2NormSquared',
            'KullbackLeiblerCrossEntropy', 'SeparableSum',
            'QuadraticForm',
            'NuclearNorm', 'IndicatorNuclearNormUnitBall',
-           'ScalingFunctional')
+           'ScalingFunctional', 'IdentityFunctional')
 
 
 class LpNorm(Functional):
@@ -781,12 +781,12 @@ class ScalingFunctional(Functional, ScalingOperator):
     functional is also a field, i.e. real or complex numbers.
     """
 
-    def __init__(self, field, constant):
+    def __init__(self, field, scale):
         """Initialize a new instance.
 
         Parameters
         ----------
-        space : `Field`
+        field : `Field`
             Domain of the functional.
         scale : element in ``domain``
             The constant value to scale by.
@@ -800,8 +800,7 @@ class ScalingFunctional(Functional, ScalingOperator):
         15.0
         """
         Functional.__init__(self, space=field, linear=True, grad_lipschitz=0)
-        ScalingOperator.__init__(self, field, constant)
-        self.__scalar = self.range.element(constant)
+        ScalingOperator.__init__(self, field, scale)
 
     @property
     def gradient(self):
