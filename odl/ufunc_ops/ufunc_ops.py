@@ -47,7 +47,7 @@ Examples
 >>> space = odl.{space!r}
 >>> op = odl.ufunc_ops.{name}(space)
 >>> print(op({arg}))
-{result}
+{result!s}
 """
 
 
@@ -291,7 +291,7 @@ def ufunc_functional_factory(name, nargin, nargout, docstring):
     val = 1.0
     arg = '{}'.format(val)
     with np.errstate(all='ignore'):
-        result = str(float(getattr(np, name)(val)))
+        result = np.float64(getattr(np, name)(val))
 
     examples_docstring = RAW_EXAMPLES_DOCSTRING.format(space=space, name=name,
                                                        arg=arg, result=result)

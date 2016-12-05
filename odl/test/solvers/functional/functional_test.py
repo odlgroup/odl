@@ -196,6 +196,7 @@ def test_arithmetic():
     assert all_almost_equal((functional * y)(x), functional(y * x))
     assert all_almost_equal(((functional * y) * y)(x), functional((y * y) * x))
 
+
 def test_left_scalar_mult(space, scalar):
     """Test for right and left multiplication of a functional with a scalar."""
     # Less strict checking for single precision
