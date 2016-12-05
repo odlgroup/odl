@@ -1028,14 +1028,17 @@ class KullbackLeibler(Functional):
 
     Notes
     -----
-    The functional :math:`F` is given by
+    The functional :math:`F` with prior :math:`g>0` is given by:
 
     .. math::
-        \\sum_{i} \left( x_i - g_i + g_i \log \left( \\frac{g_i}{ pos(x_i) }
-        \\right) \\right) + I_{x \\geq 0}(x)
-
-    where :math:`g` is the prior, and :math:`I_{x \\geq 0}(x)` is the indicator
-    function on nonnegative elements.
+        F(x)
+        =
+        \\begin{cases}
+            \\sum_{i} \left( x_i - g_i + g_i \log \left( \\frac{g_i}{ x_i }
+            \\right) \\right) & \\text{if } x_i > 0 \\forall i
+            \\\\
+            +\\infty & \\text{else.}
+        \\end{cases}
 
     KL based objectives are common in MLEM optimization problems and are often
     used as data-matching term when data noise governed by a multivariate
@@ -1046,12 +1049,18 @@ class KullbackLeibler(Functional):
     diescribed in `this Wikipedia article
     <https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence>`_, and
     the functional :math:`F` is obtained by switching place of the prior and
-    the varialbe in the KL cross entropy functional. See the See Also section.
+    the varialbe in the KL cross entropy functional.
+
+    For a theoretical exposition, see `Csiszar1991`_.
 
     See Also
     --------
     KullbackLeiblerConvexConj : the convex conjugate functional
     KullbackLeiblerCrossEntropy : related functional
+
+    References
+    ----------
+    .. _Csiszar1991:  http://www.jstor.org/stable/2241918
     """
 
     def __init__(self, space, prior=None):
@@ -1157,14 +1166,17 @@ class KullbackLeiblerConvexConj(Functional):
 
     Notes
     -----
-    The functional is given by
+    The functional :math:`F^*` with prior :math:`g>0` is given by:
 
     .. math::
-        \\sum_i \left(-g_i \ln(pos({1_X}_i - x_i)) \\right) +
-        I_{1_X - x \geq 0}(x)
-
-    where :math:`g` is the prior, and :math:`I_{1_X - x \geq 0}(x)` is the
-    indicator function on :math:`x \leq 1`.
+        F^*(x)
+        =
+        \\begin{cases}
+            \\sum_{i} \left( -g_i \ln(1 - x_i) \\right)
+            & \\text{if } x_i < 1 \\forall i
+            \\\\
+            +\\infty & \\text{else}
+        \\end{cases}
 
     See Also
     --------
@@ -1273,30 +1285,41 @@ class KullbackLeiblerCrossEntropy(Functional):
 
     Notes
     -----
-    The functional :math:`F` is given by
+    The functional :math:`F` with prior :math:`g>0` is given by:
 
     .. math::
-        \\sum_{i} \left( g_i - x_i + x_i \log \left( \\frac{x_i}{ pos(g_i) }
-        \\right) \\right) + I_{x \\geq 0}(x)
+        F(x)
+        =
+        \\begin{cases}
+            \\sum_{i} \left( g_i - x_i + x_i \log \left( \\frac{x_i}{g_i}
+            \\right) \\right)
+            & \\text{if } g_i > 0 \\forall i
+            \\\\
+            +\\infty & \\text{else}
+        \\end{cases}
 
-    where :math:`g` is the prior, and :math:`I_{x \\geq 0}(x)` is the indicator
-    function on nonnegative elements.
-
-    `Wikipedia article on Kullback Leibler divergence
-    <https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence>`_.
-    For further information about the functional, see for example `this article
+    For further information about the functional, see the
+    `Wikipedia article on the Kullback Leibler divergence
+    <https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence>`_,
+    or read for example `this article
     <http://ieeexplore.ieee.org/document/1056144/?arnumber=1056144>`_.
 
     The KL cross entropy functional :math:`F`, described above, is related to
     another functional which is also know as KL divergence. This functional
     is often used as data discrepancy term in inverse problems, when data is
-    corrupted with Poisson noise. This functional is obtained by changing place
+    corrupted with Poisson noise. It is obtained by changing place
     of the prior and the variable. See the See Also section.
+
+    For a theoretical exposition, see `Csiszar1991`_.
 
     See Also
     --------
     KullbackLeibler : related functional
     KullbackLeiblerCrossEntropyConvexConj : the convex conjugate functional
+
+    References
+    ----------
+    .. _Csiszar1991:  http://www.jstor.org/stable/2241918
     """
 
     def __init__(self, space, prior=None):
@@ -1412,12 +1435,11 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
 
     Notes
     -----
-    The functional is given by
+    The functional :math:`F^*` with prior :math:`g>0` is given by
 
     .. math::
-        \\sum_i g_i (exp(x_i) - 1)
+        F^*(x) = \\sum_i g_i \\left(e^{x_i} - 1\\right)
 
-    where :math:`g` is the prior.
     See Also
     --------
     KullbackLeiblerCrossEntropy : convex conjugate functional
