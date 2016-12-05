@@ -1,3 +1,5 @@
+.. _dev_document
+
 ###############
 How to document
 ###############
