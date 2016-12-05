@@ -93,7 +93,8 @@ def matrix_representation(op):
             return x.asarray().ravel()
 
     # Generate the matrix
-    matrix = np.zeros([np.sum(n), np.sum(m)])
+    dtype = np.promote_types(op.domain.dtype, op.range.dtype)
+    matrix = np.zeros([np.sum(n), np.sum(m)], dtype=dtype)
     tmp_ran = op.range.element()  # Store for reuse in loop
     tmp_dom = op.domain.zero()  # Store for reuse in loop
     index = 0
