@@ -868,7 +868,7 @@ class ZeroOperator(Operator):
 
 class RealPart(Operator):
 
-    """Operator that extracts real part of a vector."""
+    """Operator that extracts the real part of a vector."""
 
     def __init__(self, space):
         """Initialize a new instance.
@@ -881,14 +881,14 @@ class RealPart(Operator):
 
         Examples
         --------
-        Take real part of cn vector:
+        Take the real part of complex vector:
 
         >>> c3 = odl.cn(3)
         >>> op = RealPart(c3)
         >>> op([1 + 2j, 2, 3 - 1j])
         rn(3).element([1.0, 2.0, 3.0])
 
-        The operator is the identity on real spaces
+        The operator is the identity on real spaces:
 
         >>> r3 = odl.rn(3)
         >>> op = RealPart(r3)
@@ -896,7 +896,7 @@ class RealPart(Operator):
         rn(3).element([1.0, 2.0, 3.0])
 
         The operator also works on other `FnBase` spaces such as
-        `DiscreteLp` spaces
+        `DiscreteLp` spaces:
 
         >>> r3 = odl.uniform_discr(0, 1, 3, dtype=complex)
         >>> op = RealPart(r3)
@@ -904,7 +904,7 @@ class RealPart(Operator):
         uniform_discr(0.0, 1.0, 3).element([1.0, 2.0, 3.0])
         """
         real_space = space.real_space
-        linear = space == real_space
+        linear = (space == real_space)
         Operator.__init__(self, space, real_space, linear=linear)
 
     def _call(self, x):
@@ -913,10 +913,17 @@ class RealPart(Operator):
 
     @property
     def inverse(self):
-        """Return the pseudoinverse.
+        """Return the (pseudo-)inverse.
 
         Examples
         --------
+        The inverse is its own inverse if its domain is real:
+
+        >>> r3 = odl.rn(3)
+        >>> op = RealPart(r3)
+        >>> op.inverse(op([1, 2, 3]))
+        rn(3).element([1.0, 2.0, 3.0])
+
         This is not a true inverse, only a pseudoinverse, the complex part
         will by necessity be lost.
 
@@ -925,7 +932,10 @@ class RealPart(Operator):
         >>> op.inverse(op([1 + 2j, 2, 3 - 1j]))
         cn(3).element([(1+0j), (2+0j), (3+0j)])
         """
-        return ComplexEmbedding(self.domain, scalar=1)
+        if self.is_linear:
+            return self
+        else:
+            return ComplexEmbedding(self.domain, scalar=1)
 
     @property
     def adjoint(self):
@@ -939,14 +949,23 @@ class RealPart(Operator):
         .. math::
             \langle Ax, y \rangle = \langle x, A^*y \rangle
 
-        Instead it satisfies the left adjoint equation:
+        Instead it is an adjoint in a weaker sense as follows:
 
         .. math::
             \langle AA^*x, y \rangle = \langle A^*x, A^*y \rangle
 
         Examples
         --------
-        The adjoint satisfies the adjoint equation for real spaces
+        The adjoint satisfies the adjoint equation for real spaces:
+
+        >>> r3 = odl.rn(3)
+        >>> op = RealPart(r3)
+        >>> x = op.domain.element([1, 2, 3])
+        >>> y = op.range.element([3, 2, 1])
+        >>> x.inner(op.adjoint(y)) == op(x).inner(y)
+        True
+
+        If the domain is complex, it only satisfies the weaker definition:
 
         >>> c3 = odl.cn(3)
         >>> op = RealPart(c3)
@@ -957,12 +976,15 @@ class RealPart(Operator):
         >>> AtAxy == AtxAty
         True
         """
-        return ComplexEmbedding(self.domain, scalar=1)
+        if self.is_linear:
+            return self
+        else:
+            return ComplexEmbedding(self.domain, scalar=1)
 
 
 class ImagPart(Operator):
     def __init__(self, space):
-        """Operator that extracts imaginary part of a vector.
+        """Operator that extracts the imaginary part of a vector.
 
         Parameters
         ----------
@@ -972,22 +994,22 @@ class ImagPart(Operator):
 
         Examples
         --------
-        Take imaginary part of cn vector:
+        Take the imaginary part of complex vector:
 
         >>> c3 = odl.cn(3)
         >>> op = ImagPart(c3)
         >>> op([1 + 2j, 2, 3 - 1j])
         rn(3).element([2.0, 0.0, -1.0])
 
-        The operator is the zero operator on real spaces
+        The operator is the zero operator on real spaces:
 
-        >>> r3 = odl.cn(3)
+        >>> r3 = odl.rn(3)
         >>> op = ImagPart(r3)
         >>> op([1, 2, 3])
         rn(3).element([0.0, 0.0, 0.0])
         """
         real_space = space.real_space
-        linear = space == real_space
+        linear = (space == real_space)
         Operator.__init__(self, space, real_space, linear=linear)
 
     def _call(self, x):
@@ -1000,15 +1022,25 @@ class ImagPart(Operator):
 
         Examples
         --------
+        The inverse is the zero operator if the domain is real:
+
+        >>> r3 = odl.rn(3)
+        >>> op = ImagPart(r3)
+        >>> op.inverse(op([1, 2, 3]))
+        rn(3).element([0.0, 0.0, 0.0])
+
         This is not a true inverse, only a pseudoinverse, the real part
         will by necessity be lost.
 
         >>> c3 = odl.cn(3)
         >>> op = ImagPart(c3)
         >>> op.inverse(op([1 + 2j, 2, 3 - 1j]))
-        cn(3).element([(2+0j), 0j, (-1+0j)])
+        cn(3).element([2j, 0j, (-0-1j)])
         """
-        return ComplexEmbedding(self.domain, scalar=1)
+        if self.is_linear:
+            return ZeroOperator(self.domain)
+        else:
+            return ComplexEmbedding(self.domain, scalar=1j)
 
     @property
     def adjoint(self):
@@ -1022,17 +1054,26 @@ class ImagPart(Operator):
         .. math::
             \langle Ax, y \rangle = \langle x, A^*y \rangle
 
-        Instead it satisfies the left adjoint equation:
+        Instead it is an adjoint in a weaker sense as follows:
 
         .. math::
             \langle AA^*x, y \rangle = \langle A^*x, A^*y \rangle
 
         Examples
         --------
-        The adjoint satisfies the adjoint equation for real spaces
+        The adjoint satisfies the adjoint equation for real spaces:
+
+        >>> r3 = odl.rn(3)
+        >>> op = ImagPart(r3)
+        >>> x = op.domain.element([1, 2, 3])
+        >>> y = op.range.element([3, 2, 1])
+        >>> x.inner(op.adjoint(y)) == op(x).inner(y)
+        True
+
+        If the domain is complex, it only satisfies the weaker definition:
 
         >>> c3 = odl.cn(3)
-        >>> op = RealPart(c3)
+        >>> op = ImagPart(c3)
         >>> x = op.range.element([1, 2, 3])
         >>> y = op.range.element([3, 2, 1])
         >>> AtAxy = op(op.adjoint(x)).inner(y)
@@ -1040,7 +1081,10 @@ class ImagPart(Operator):
         >>> AtAxy == AtxAty
         True
         """
-        return ComplexEmbedding(self.domain, scalar=1)
+        if self.is_linear:
+            return ZeroOperator(self.domain)
+        else:
+            return ComplexEmbedding(self.domain, scalar=1j)
 
 
 class ComplexEmbedding(Operator):
@@ -1061,25 +1105,26 @@ class ComplexEmbedding(Operator):
 
         Examples
         --------
-        Embed real vector into complex space
+        Embed real vector into complex space:
 
         >>> r3 = odl.rn(3)
         >>> op = ComplexEmbedding(r3)
         >>> op([1, 2, 3])
         cn(3).element([(1+0j), (2+0j), (3+0j)])
 
-        Embed real vector as imaginary part into complex space
+        Embed real vector as imaginary part into complex space:
 
         >>> op = ComplexEmbedding(r3, scalar=1j)
         >>> op([1, 2, 3])
         cn(3).element([1j, 2j, 3j])
 
-        The operator is simple multiplication by scalar on complex spaces
+        On complex spaces the operator is the same as simple multiplication by
+        scalar:
 
         >>> c3 = odl.cn(3)
-        >>> op = ComplexEmbedding(c3)
+        >>> op = ComplexEmbedding(c3, scalar=1 + 2j)
         >>> op([1 + 1j, 2 + 2j, 3 + 3j])
-        cn(3).element([(1+1j), (2+2j), (3+3j)])
+        cn(3).element([(-1+3j), (-2+6j), (-3+9j)])
         """
         complex_space = space.complex_space
         self.scalar = complex_space.field.element(scalar)
@@ -1137,7 +1182,7 @@ class ComplexEmbedding(Operator):
         .. math::
             \langle Ax, y \rangle = \langle x, A^*y \rangle
 
-        Instead it satisfies the left adjoint equation:
+        Instead it is an adjoint in a weaker sense as follows:
 
         .. math::
             \langle A^*Ax, y \rangle = \langle Ax, Ay \rangle
