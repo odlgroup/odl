@@ -397,18 +397,11 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
             raise TypeError('`func` {!r} is not a `Functional` instance'
                             ''.format(func))
 
-        self.__scalar = func.range.element(scalar)
-
         Functional.__init__(self, space=func.domain, linear=func.is_linear,
                             grad_lipschitz=(
                                 np.abs(scalar) * func.grad_lipschitz))
 
         OperatorLeftScalarMult.__init__(self, operator=func, scalar=scalar)
-
-    @property
-    def scalar(self):
-        """The scalar."""
-        return self.__scalar
 
     @property
     def functional(self):
