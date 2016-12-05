@@ -1642,6 +1642,11 @@ class OperatorRightScalarMult(Operator):
                                 'operator domain {!r}'
                                 ''.format(tmp, operator.domain))
 
+        if isinstance(operator, OperatorRightScalarMult):
+            # Shortcut to save performance in case of repeated multiplications
+            scalar = scalar * operator.scalar
+            operator = operator.operator
+
         super().__init__(operator.domain, operator.range, operator.is_linear)
         self.__operator = operator
         self.__scalar = scalar
