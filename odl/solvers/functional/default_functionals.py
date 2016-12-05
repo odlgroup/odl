@@ -1229,10 +1229,10 @@ class KullbackLeiblerCrossEntropy(Functional):
 
     Notes
     -----
-    The functional :math:`F` with prior :math:`x>0` is given by:
+    The functional :math:`F` with prior :math:`g>0` is given by:
 
     .. math::
-        F(g)
+        F(x)
         =
         \\begin{cases}
             \\sum_{i} \left( g_i - x_i + x_i \log \left( \\frac{x_i}{g_i}
@@ -1379,10 +1379,10 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
 
     Notes
     -----
-    The functional :math:`F^*` with prior :math:`x>0` is given by
+    The functional :math:`F^*` with prior :math:`g>0` is given by
 
     .. math::
-        F^*(g) = \\sum_i g_i \\left(e^{x_i} - 1\\right)
+        F^*(x) = \\sum_i g_i \\left(e^{x_i} - 1\\right)
 
     See Also
     --------
