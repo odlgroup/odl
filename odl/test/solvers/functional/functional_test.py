@@ -129,7 +129,7 @@ def functional(request, space):
 # --- functional tests --- #
 
 
-def test_derivative(functional, space):
+def test_derivative(functional):
     """Test for the derivative of a functional.
 
     The test checks that the directional derivative in a point is the same as
@@ -157,7 +157,7 @@ def test_derivative(functional, space):
         y = y - y.ufunc.max() + 0.99
 
     # Compute a "small" step size according to dtype of space
-    step = float(np.sqrt(np.finfo(space.dtype).eps))
+    step = float(np.sqrt(np.finfo(functional.domain.dtype).eps))
 
     # Numerical test of gradient, only low accuracy can be guaranteed.
     assert all_almost_equal((functional(x + step * y) - functional(x)) / step,
@@ -185,12 +185,16 @@ def test_arithmetic():
     assert functional(x) == functional(x)
     assert functional(x) != functional2(x)
     assert (scalar * functional)(x) == scalar * functional(x)
+    assert (scalar * (scalar * functional))(x) == scalar**2 * functional(x)
     assert (functional * scalar)(x) == functional(scalar * x)
+    assert ((functional * scalar) * scalar)(x) == functional(scalar**2 * x)
     assert (functional + functional2)(x) == functional(x) + functional2(x)
     assert (functional - functional2)(x) == functional(x) - functional2(x)
     assert (functional * operator)(x) == functional(operator(x))
-    assert (y * functional)(x) == y * functional(x)
-    assert (functional * y)(x) == functional(y * x)
+    assert all_almost_equal((y * functional)(x), y * functional(x))
+    assert all_almost_equal((y * (y * functional))(x), (y * y) * functional(x))
+    assert all_almost_equal((functional * y)(x), functional(y * x))
+    assert all_almost_equal(((functional * y) * y)(x), functional((y * y) * x))
 
 
 def test_left_scalar_mult(space, scalar):

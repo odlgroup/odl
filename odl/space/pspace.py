@@ -350,15 +350,16 @@ class ProductSpace(LinearSpace):
 
         Raises
         ------
-        AttributeError : If any of the subspaces does not implement `dtype` or
-            if the dtype of the subspaces does not match.
+        AttributeError
+            If any of the subspaces does not implement `dtype` or if the dtype
+            of the subspaces does not match.
         """
         dtypes = [space.dtype for space in self.spaces]
 
         if all(dtype == dtypes[0] for dtype in dtypes):
             return dtypes[0]
         else:
-            raise AttributeError("`dtype`'s of subspaces is not equal")
+            raise AttributeError("`dtype`'s of subspaces not equal")
 
     def element(self, inp=None, cast=True):
         """Create an element in the product space.
@@ -410,6 +411,10 @@ class ProductSpace(LinearSpace):
 
         if inp in self:
             return inp
+
+        if len(inp) != len(self):
+            raise ValueError('length of `inp` {} does not match length of '
+                             'space {}'.format(len(inp), len(self)))
 
         if (all(isinstance(v, LinearSpaceElement) and v.space == space
                 for v, space in zip(inp, self.spaces))):

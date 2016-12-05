@@ -801,7 +801,7 @@ class Operator(object):
             # Left multiplication is more efficient, so we can use this in the
             # case of linear operator.
             if self.is_linear:
-                return OperatorLeftScalarMult(self, other)
+                return other * self
             else:
                 return OperatorRightScalarMult(self, other)
         elif isinstance(other, LinearSpaceElement) and other in self.domain:
@@ -1472,6 +1472,11 @@ class OperatorLeftScalarMult(Operator):
                                       operator.range.field,
                                       operator.range))
 
+        if isinstance(operator, OperatorLeftScalarMult):
+            # Shortcut to save performance in case of repeated multiplications
+            scalar = scalar * operator.scalar
+            operator = operator.operator
+
         super().__init__(operator.domain, operator.range,
                          linear=operator.is_linear)
         self.__operator = operator
@@ -1494,17 +1499,6 @@ class OperatorLeftScalarMult(Operator):
         else:
             self.operator(x, out=out)
             out *= self.scalar
-
-    def __rmul__(self, other):
-        """Implement ``other * self``.
-
-        Optimization for repeated multiplications.
-        """
-
-        if other in self.range.field:
-            return OperatorLeftScalarMult(self.operator, self.scalar * other)
-        else:
-            return super().__rmul__(other)
 
     @property
     def inverse(self):
@@ -1647,6 +1641,11 @@ class OperatorRightScalarMult(Operator):
             raise OpDomainError('`tmp` {!r} not an element of the '
                                 'operator domain {!r}'
                                 ''.format(tmp, operator.domain))
+
+        if isinstance(operator, OperatorRightScalarMult):
+            # Shortcut to save performance in case of repeated multiplications
+            scalar = scalar * operator.scalar
+            operator = operator.operator
 
         super().__init__(operator.domain, operator.range, operator.is_linear)
         self.__operator = operator
