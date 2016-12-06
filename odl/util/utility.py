@@ -27,7 +27,7 @@ import numpy as np
 
 
 __all__ = ('array1d_repr', 'array1d_str', 'arraynd_repr', 'arraynd_str',
-           'dtype_repr', 'conj_exponent',
+           'dtype_repr', 'conj_exponent', 'signature_string', 'indent_rows',
            'is_scalar_dtype', 'is_int_dtype', 'is_floating_dtype',
            'is_real_dtype', 'is_real_floating_dtype',
            'is_complex_floating_dtype',
@@ -42,9 +42,9 @@ TYPE_MAP_C2R = {cdt: np.empty(0, dtype=cdt).real.dtype
 TYPE_MAP_C2R.update({k: k for k in TYPE_MAP_R2C.keys()})
 
 
-def _indent_rows(string, indent=4):
-    out_string = '\n'.join((' ' * indent) + row for row in string.split('\n'))
-    return out_string
+def indent_rows(string, indent=4):
+    """Return ``string`` indented by ``indent`` spaces."""
+    return '\n'.join((' ' * indent) + row for row in string.split('\n'))
 
 
 def array1d_repr(array, nprint=6):
@@ -170,7 +170,7 @@ def arraynd_str(array, nprint=None):
 
 
 def dtype_repr(dtype):
-    """Stringification of data type with default for int and float."""
+    """Stringify ``dtype`` for ``repr`` with default for int and float."""
     dtype = np.dtype(dtype)
     if dtype == np.dtype(int):
         return "'int'"
@@ -181,9 +181,18 @@ def dtype_repr(dtype):
     else:
         return "'{}'".format(dtype)
 
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod()
+
+def dtype_str(dtype):
+    """Stringify ``dtype`` for ``str`` with default for int and float."""
+    dtype = np.dtype(dtype)
+    if dtype == np.dtype(int):
+        return 'int'
+    elif dtype == np.dtype(float):
+        return 'float'
+    elif dtype == np.dtype(complex):
+        return 'complex'
+    else:
+        return '{}'.format(dtype)
 
 
 def with_metaclass(meta, *bases):
@@ -521,6 +530,176 @@ class writable_array(object):
         """
         self.obj[:] = self.arr
         self.arr = None
+
+
+def signature_string(posargs, optargs, sep=', ', mod='!s'):
+    """Return a stringified signature from given arguments.
+
+    Parameters
+    ----------
+    posargs : sequence
+        Positional argument values, always included in the returned string.
+        They appear in the string as (roughly)::
+
+            sep.join(str(arg) for arg in posargs)
+
+    optargs : sequence of 3-tuples
+        Optional arguments with names and defaults, given in the form::
+
+            [(name1, value1, default1), (name2, value2, default2), ...]
+
+        Only those parameters that are different from the given default
+        are included as ``name=value`` keyword pairs.
+
+    sep : string or sequence of strings, optional
+        Separator(s) for the argument strings. A provided single string is
+        used for all joining operations.
+        A given sequence must have 3 entries ``pos_sep, opt_sep, part_sep``.
+        The ``pos_sep`` and ``opt_sep`` strings are used for joining the
+        respective sequences of argument strings, and ``part_sep`` joins
+        these two joined strings.
+    mod : string or sequence, optional
+        Format modifier(s) for the argument strings. A provided single
+        string is used for all format strings.
+        A given sequence can must have 2 entries ``pos_mod, opt_mod``
+        that are either strings or sequences of strings.
+        If they are strings, they are used as modifiers for the respective
+        argument string sequences.
+        If they are sequences of strings, their lengths must match those
+        of ``posargs`` and ``optargs``, respectively, and they modify
+        the format strings in a one-to-one fashion.
+
+        Note that string parameters are not affected by format modifiers.
+
+    Returns
+    -------
+    signature : string
+        Stringification of a signature, typically used in the form::
+
+            '{}({})'.format(self.__class__.__name__, signature)
+
+    Examples
+    --------
+    Usage with non-trivial entries in both sequences, with a typical
+    use case:
+
+    >>> posargs = [1, 'hello', None]
+    >>> optargs = [('dtype', 'float32', 'float64')]
+    >>> signature_string(posargs, optargs)
+    "1, 'hello', None, dtype='float32'"
+    >>> '{}({})'.format('MyClass', signature_string(posargs, optargs))
+    "MyClass(1, 'hello', None, dtype='float32')"
+
+    Empty sequences and optargs values equal to default are omitted:
+
+    >>> posargs = ['hello']
+    >>> optargs = [('size', 1, 1)]
+    >>> signature_string(posargs, optargs)
+    "'hello'"
+    >>> posargs = []
+    >>> optargs = [('size', 2, 1)]
+    >>> signature_string(posargs, optargs)
+    'size=2'
+    >>> posargs = []
+    >>> optargs = [('size', 1, 1)]
+    >>> signature_string(posargs, optargs)
+    ''
+
+    Using a different separator, globally or per argument "category":
+
+    >>> posargs = [1, 'hello', None]
+    >>> optargs = [('dtype', 'float32', 'float64'),
+    ...            ('order', 'F', 'C')]
+    >>> signature_string(posargs, optargs)
+    "1, 'hello', None, dtype='float32', order='F'"
+    >>> signature_string(posargs, optargs, sep=(',', ',', ', '))
+    "1,'hello',None, dtype='float32',order='F'"
+
+    Using format modifiers:
+
+    >>> posargs = ['hello', 2.345]
+    >>> optargs = [('extent', 1.442, 1.0), ('spacing', 0.0151, 1.0)]
+    >>> signature_string(posargs, optargs)
+    "'hello', 2.345, extent=1.442, spacing=0.0151"
+    >>> mod = ':.2'  # print only two significant digits for all arguments
+    >>> signature_string(posargs, optargs, mod=mod)
+    "'hello', 2.3, extent=1.4, spacing=0.015"
+    >>> mod = [['', ''], [':.3', ':.2']]  # one modifier per argument
+    >>> signature_string(posargs, optargs, mod=mod)
+    "'hello', 2.345, extent=1.44, spacing=0.015"
+    """
+    # Define the separators for the two possible cases
+    try:
+        sep + ''
+    except TypeError:
+        pos_sep, opt_sep, part_sep = sep
+    else:
+        pos_sep = opt_sep = part_sep = sep
+
+    # Convert modifiers to 2-sequence of sequence of strings
+    try:
+        mod + ''
+    except TypeError:
+        pos_mod, opt_mod = mod
+    else:
+        pos_mod = opt_mod = mod
+
+    mods = []
+    for m, args in zip((pos_mod, opt_mod), (posargs, optargs)):
+        try:
+            m + ''
+        except TypeError:
+            if len(m) != len(args):
+                raise ValueError('sequence length mismatch: '
+                                 'len({}) != len({})'.format(m, args))
+            mods.append(m)
+        else:
+            mods.append([m] * len(args))
+
+    pos_mod, opt_mod = mods
+
+    # Convert the arguments to strings
+    parts = []
+
+    # Stringify values, treating strings specially
+    posargs_conv = []
+    for arg, modifier in zip(posargs, pos_mod):
+        try:
+            arg + ''
+        except TypeError:
+            # All non-string types are passed a format conversion
+            fmt = '{{{}}}'.format(modifier)
+        else:
+            # Preserve single quotes for strings
+            fmt = "'{}'"
+
+        posargs_conv.append(fmt.format(arg))
+
+    if posargs_conv:
+        parts.append(pos_sep.join(argstr for argstr in posargs_conv))
+
+    # Build 'key=value' strings for values that are not equal to default
+    optargs_conv = []
+    for (name, value, default), modifier in zip(optargs, opt_mod):
+        if value == default:
+            # Don't include
+            continue
+
+        # See above on str and repr
+        try:
+            value + ''
+        except TypeError:
+            fmt = '{{{}}}'.format(modifier)
+        else:
+            fmt = "'{}'"
+
+        value_str = fmt.format(value)
+
+        optargs_conv.append('{}={}'.format(name, value_str))
+    if optargs_conv:
+        parts.append(opt_sep.join(optargs_conv))
+
+    return part_sep.join(parts)
 
 
 if __name__ == '__main__':
