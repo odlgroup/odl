@@ -116,9 +116,31 @@ def tensor_space(shape, dtype=None, order='C', impl='numpy', **kwargs):
     -------
     tspace : `TensorSpace`
 
+    Examples
+    --------
+    Space of 2x3 tensors with ``int64`` entries (although not strictly a
+    vector space):
+
+    >>> odl.tensor_space((2, 3), dtype='int64')
+    tensor_space((2, 3), 'int')
+
+    The default data type depends on the implementation. For
+    ``impl='numpy'``, it is ``'float64'``:
+
+    >>> ts = odl.tensor_space((2, 3))
+    >>> ts
+    rn((2, 3))
+    >>> ts.dtype
+    dtype('float64')
+
+    One-dimensional spaces have special constructors:
+
+    >>> odl.tensor_space((3,), dtype='int64')
+    fn(3, 'int')
+
     See also
     --------
-    tensor_set : set of tensors with arbitrary data type.
+    tensor_set : Set of tensors with arbitrary data type.
     """
     tspace_cls = tensor_space_impl(impl)
 
@@ -155,9 +177,31 @@ def cn(shape, dtype=None, order='C', impl='numpy', **kwargs):
     -------
     complex_tspace : `TensorSpace`
 
+    Examples
+    --------
+    Space of complex 2x3 tensors with ``complex64`` entries:
+
+    >>> odl.cn((2, 3), dtype='complex64')
+    cn((2, 3), 'complex64')
+
+    The default data type depends on the implementation. For
+    ``impl='numpy'``, it is ``'complex128'``:
+
+    >>> ts = odl.cn((2, 3))
+    >>> ts
+    cn((2, 3))
+    >>> ts.dtype
+    dtype('complex128')
+
+    One-dimensional spaces have special constructors:
+
+    >>> odl.cn((3,))
+    cn(3)
+
     See also
     --------
-    tensor_space : space of tensors with arbitrary scalar data type.
+    tensor_space : Space of tensors with arbitrary scalar data type.
+    rn : Real tensor space.
     """
     cn_cls = tensor_space_impl(impl)
 
@@ -198,9 +242,31 @@ def rn(shape, dtype=None, order='C', impl='numpy', **kwargs):
     -------
     real_tspace : `TensorSpace`
 
+    Examples
+    --------
+    Space of real 2x3 tensors with ``float32`` entries:
+
+    >>> odl.rn((2, 3), dtype='float32')
+    rn((2, 3), 'float32')
+
+    The default data type depends on the implementation. For
+    ``impl='numpy'``, it is ``'float64'``:
+
+    >>> ts = odl.rn((2, 3))
+    >>> ts
+    rn((2, 3))
+    >>> ts.dtype
+    dtype('float64')
+
+    One-dimensional spaces have special constructors:
+
+    >>> odl.rn((3,))
+    rn(3)
+
     See also
     --------
-    tensor_space : space of tensors with arbitrary scalar data type.
+    tensor_space : Space of tensors with arbitrary scalar data type.
+    cn : Complex tensor space.
     """
     rn_cls = tensor_space_impl(impl)
 

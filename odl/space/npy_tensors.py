@@ -29,8 +29,8 @@ from odl.space.weighting import (
     CustomInner, CustomNorm, CustomDist)
 from odl.util.ufuncs import NumpyTensorSetUfuncs
 from odl.util.utility import (
-    dtype_repr, is_real_dtype, is_real_floating_dtype,
-    is_complex_floating_dtype)
+    dtype_str, signature_string,
+    is_real_dtype, is_real_floating_dtype, is_complex_floating_dtype)
 
 
 __all__ = ('NumpyTensorSet', 'NumpyGeneralizedTensor',
@@ -197,6 +197,18 @@ class NumpyTensorSet(TensorSet):
     def element_type(self):
         """Type of elements in this space: `NumpyGeneralizedTensor`."""
         return NumpyGeneralizedTensor
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        if self.ndim == 1:
+            posargs = [self.size]
+        else:
+            posargs = [self.shape]
+        constructor_name = 'tensor_set'
+        posargs.append(dtype_str(self.dtype))
+        optargs = [('order', self.order, self.default_order())]
+        return '{}({})'.format(constructor_name,
+                               signature_string(posargs, optargs))
 
 
 class NumpyGeneralizedTensor(GeneralizedTensor):
@@ -486,7 +498,7 @@ class NumpyGeneralizedTensor(GeneralizedTensor):
         >>> maxval = 255  # maximum signed 8-bit unsigned int
         >>> x[0, :] = maxval + 1
         >>> x
-        NumpyTensorSet((2, 3), 'int8').element(
+        tensor_set((2, 3), 'int8').element(
         [[0, 0, 0],
          [1, 1, 1]]
         )
@@ -896,25 +908,26 @@ class NumpyTensorSpace(TensorSpace, NumpyTensorSet):
         return np.sctypes['int'] + np.sctypes['float'] + np.sctypes['complex']
 
     @staticmethod
-    def default_dtype(field):
+    def default_dtype(field=None):
         """Return the default data type of this class for a given field.
 
         Parameters
         ----------
-        field : `Field`
+        field : `Field`, optional
             Set of numbers to be represented by a data type.
             Currently supported : `RealNumbers`, `ComplexNumbers`
+            The default ``None`` means `RealNumbers`
 
         Returns
         -------
-        dtype : `type`
+        dtype : `numpy.dtype`
             Numpy data type specifier. The returned defaults are:
 
-            ``RealNumbers()`` : ``np.dtype('float64')``
+                ``RealNumbers()`` : ``np.dtype('float64')``
 
-            ``ComplexNumbers()`` : ``np.dtype('complex128')``
+                ``ComplexNumbers()`` : ``np.dtype('complex128')``
         """
-        if field == RealNumbers():
+        if field is None or field == RealNumbers():
             return np.dtype('float64')
         elif field == ComplexNumbers():
             return np.dtype('complex128')
@@ -1201,16 +1214,29 @@ class NumpyTensorSpace(TensorSpace, NumpyTensorSet):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        inner_str = '{}'.format(self.shape)
-        if self.dtype != self.default_dtype(self.field):
-            inner_str += ', {}'.format(dtype_repr(self.dtype))
-        if self.order != 'C':
-            inner_str += ", order='F'"
+        if self.ndim == 1:
+            posargs = [self.size]
+        else:
+            posargs = [self.shape]
 
+        if self.is_real_space:
+            constructor_name = 'rn'
+        elif self.is_complex_space:
+            constructor_name = 'cn'
+        else:
+            constructor_name = 'tensor_space'
+
+        if (constructor_name == 'tensor_space' or
+                self.dtype != self.default_dtype(self.field)):
+            posargs.append(dtype_str(self.dtype))
+
+        optargs = [('order', self.order, self.default_order())]
+        inner_str = signature_string(posargs, optargs)
         weight_str = self.weighting.repr_part
         if weight_str:
             inner_str += ', ' + weight_str
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+
+        return '{}({})'.format(constructor_name, inner_str)
 
     @property
     def element_type(self):
