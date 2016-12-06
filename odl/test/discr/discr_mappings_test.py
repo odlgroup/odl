@@ -36,7 +36,8 @@ from odl.util.testutils import (
     all_almost_equal, all_equal, almost_equal)
 
 
-def test_nearest_interpolation_1d_complex(fn_impl):
+# TODO: fixture is not being used
+def test_nearest_interpolation_1d_complex(tensor_space_impl):
     intv = odl.IntervalProd(0, 1)
     part = odl.uniform_partition_fromintv(intv, 5, nodes_on_bdry=False)
     # Coordinate vectors are:

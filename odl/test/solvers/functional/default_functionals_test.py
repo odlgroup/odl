@@ -45,13 +45,13 @@ space_ids = [' space = {}'.format(p.ljust(10)) for p in space_params]
 
 
 @pytest.fixture(scope="module", ids=space_ids, params=space_params)
-def space(request, fn_impl):
+def space(request, tensor_space_impl):
     name = request.param.strip()
 
     if name == 'r10':
-        return odl.rn(10, impl=fn_impl)
+        return odl.rn(10, impl=tensor_space_impl)
     elif name == 'uniform_discr':
-        return odl.uniform_discr(0, 1, 7, impl=fn_impl)
+        return odl.uniform_discr(0, 1, 7, impl=tensor_space_impl)
 
 
 sigma_params = [0.001, 2.7, np.array(0.5), 10]

@@ -34,8 +34,7 @@ from odl.discr.discr_mappings import (
 from odl.discr.partition import (
     RectPartition, uniform_partition_fromintv, uniform_partition)
 from odl.set import RealNumbers, ComplexNumbers, IntervalProd
-from odl.space import FunctionSpace, ProductSpace, FN_IMPLS
-from odl.space.weighting import WeightingBase
+from odl.space import FunctionSpace, ProductSpace, TENSOR_SPACE_IMPLS
 from odl.util.normalize import (
     normalized_scalar_param_list, safe_int_conv, normalized_nodes_on_bdry)
 from odl.util.numerics import apply_on_boundary
@@ -66,9 +65,9 @@ class DiscreteLp(DiscretizedSpace):
         partition : `RectPartition`
             Partition of (a subset of) ``fspace.domain`` based on a
             `TensorGrid`
-        dspace : `FnBase`
+        dspace : `BaseTensorSpace`
             Space of elements used for data storage. It must have the
-            same `FnBase.field` as ``fspace``
+            same `BaseTensorSpace.field` as ``fspace``
         exponent : positive float, optional
             The parameter :math:`p` in :math:`L^p`. If the exponent is
             not equal to the default 2.0, the space has no inner
@@ -1148,7 +1147,7 @@ def uniform_discr_fromintv(interval, shape, exponent=2.0, interp='nearest',
     """
     dtype = kwargs.pop('dtype', None)
     if dtype is None:
-        dtype = FN_IMPLS[impl].default_dtype()
+        dtype = TENSOR_SPACE_IMPLS[impl].default_dtype()
 
     fspace = FunctionSpace(interval, out_dtype=dtype)
     return uniform_discr_fromspace(fspace, shape, exponent, interp, impl,

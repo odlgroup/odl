@@ -22,15 +22,15 @@ Including some benchmarks with an optimized version.
 
 import numpy as np
 import odl
-from odl.space.base_ntuples import FnBase, FnBaseVector
+from odl.space.base_tensors import BaseTensorSpace, BaseTensor
 from odl.util.testutils import Timer
 
 
-class SimpleRn(FnBase):
+class SimpleRn(BaseTensorSpace):
     """The real space R^n, non-optimized implmentation."""
 
     def __init__(self, size):
-        FnBase.__init__(self, size, np.float)
+        BaseTensorSpace.__init__(self, shape=(size,), dtype=np.float)
 
     def zero(self):
         return self.element(np.zeros(self.size))
@@ -66,9 +66,9 @@ class SimpleRn(FnBase):
         return self.element(np.empty(self.dim, dtype=np.float64))
 
 
-class RnVector(FnBaseVector):
+class RnVector(BaseTensor):
     def __init__(self, space, data):
-        FnBaseVector.__init__(self, space)
+        BaseTensor.__init__(self, space)
         self.data = data
 
     def __getitem__(self, index):

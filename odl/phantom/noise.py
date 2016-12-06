@@ -33,7 +33,7 @@ def white_noise(space, mean=0, stddev=1):
 
     Parameters
     ----------
-    space : `FnBase` or `ProductSpace`
+    space : `BaseTensorSpace` or `ProductSpace`
         The space in which the noise is created.
     mean : ``space.field`` element or ``space`` `element-like`
         The mean of the white noise. If a scalar, it is interpreted as
@@ -73,7 +73,7 @@ def poisson_noise(intensity):
 
     Parameters
     ----------
-    intensity : `FnBase` or `ProductSpace`
+    intensity : `BaseTensorSpace` or `ProductSpace`
         The intensity (usually called lambda) parameter of the noise.
 
     Returns

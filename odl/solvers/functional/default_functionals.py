@@ -78,7 +78,7 @@ class LpNorm(Functional):
 
         Parameters
         ----------
-        space : `DiscreteLp` or `FnBase`
+        space : `DiscreteLp` or `BaseTensorSpace`
             Domain of the functional.
         exponent : float
             Exponent for the norm (``p``).
@@ -476,7 +476,7 @@ class IndicatorLpUnitBall(Functional):
 
         Parameters
         ----------
-        space : `DiscreteLp` or `FnBase`
+        space : `DiscreteLp` or `BaseTensorSpace`
             Domain of the functional.
         exponent : int or infinity
             Specifies wich norm to use.
@@ -570,7 +570,7 @@ class L1Norm(LpNorm):
 
         Parameters
         ----------
-        space : `DiscreteLp` or `FnBase`
+        space : `DiscreteLp` or `BaseTensorSpace`
             Domain of the functional.
         """
         super().__init__(space=space, exponent=1)
@@ -650,7 +650,7 @@ class L2NormSquared(Functional):
 
         Parameters
         ----------
-        space : `DiscreteLp` or `FnBase`
+        space : `DiscreteLp` or `BaseTensorSpace`
             Domain of the functional.
         """
         super().__init__(space=space, linear=False, grad_lipschitz=2)
@@ -1068,7 +1068,7 @@ class KullbackLeibler(Functional):
 
         Parameters
         ----------
-        space : `DiscreteLp` or `FnBase`
+        space : `DiscreteLp` or `BaseTensorSpace`
             Domain of the functional.
         prior : ``space`` `element-like`, optional
             Data term, positive.
@@ -1188,7 +1188,7 @@ class KullbackLeiblerConvexConj(Functional):
 
         Parameters
         ----------
-        space : `DiscreteLp` or `FnBase`
+        space : `DiscreteLp` or `BaseTensorSpace`
             Domain of the functional.
         g : ``space`` `element-like`, optional
             Data term, positive.
@@ -1327,7 +1327,7 @@ class KullbackLeiblerCrossEntropy(Functional):
 
         Parameters
         ----------
-        space : `DiscreteLp` or `FnBase`
+        space : `DiscreteLp` or `BaseTensorSpace`
             Domain of the functional.
         prior : ``space`` `element-like`, optional
             Data term, positive.
@@ -1450,7 +1450,7 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
 
         Parameters
         ----------
-        space : `DiscreteLp` or `FnBase`
+        space : `DiscreteLp` or `BaseTensorSpace`
             Domain of the functional.
         g : ``space`` `element-like`, optional
             Data term, positive.

@@ -323,12 +323,12 @@ def noise_array(space):
     else:
         # Generate numpy space elements, real or complex or int
         if np.issubdtype(space.dtype, np.floating):
-            arr = np.random.randn(space.size)
+            arr = np.random.randn(*space.shape)
         elif np.issubdtype(space.dtype, np.integer):
-            arr = np.random.randint(-10, 10, space.size)
+            arr = np.random.randint(-10, 10, space.shape)
         else:
-            arr = (np.random.randn(space.size) +
-                   1j * np.random.randn(space.size)) / np.sqrt(2.0)
+            arr = (np.random.randn(*space.shape) +
+                   1j * np.random.randn(*space.shape)) / np.sqrt(2.0)
 
         return arr.astype(space.dtype, copy=False)
 

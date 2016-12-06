@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Example for using `FnBaseVector.show`.
+"""Example for using `BaseTensor.show`.
 
 The ``show`` method is implemented for all types of n-tuples and displays
 the data as a scatter plot.

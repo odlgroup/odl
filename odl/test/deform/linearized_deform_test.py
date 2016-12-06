@@ -48,17 +48,18 @@ def ndim(request):
 
 
 @pytest.fixture
-def space(request, ndim, interp, dtype, fn_impl):
+def space(request, ndim, interp, dtype, tensor_space_impl):
     """Example space.
 
     Generates example spaces with various implementations, dimensions, dtypes
     and interpolations.
     """
-    if dtype not in odl.FN_IMPLS[fn_impl].available_dtypes():
+    if dtype not in odl.FN_IMPLS[tensor_space_impl].available_dtypes():
         pytest.skip('dtype not available for this backend')
 
     return odl.uniform_discr([-1] * ndim, [1] * ndim, [20] * ndim,
-                             interp=interp, impl=fn_impl, dtype=dtype)
+                             interp=interp, impl=tensor_space_impl,
+                             dtype=dtype)
 
 
 # Set up constants and helper functions

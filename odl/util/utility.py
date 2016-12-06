@@ -170,7 +170,7 @@ def arraynd_str(array, nprint=None):
 
 
 def dtype_repr(dtype):
-    """Stringification of data type with default for int and float."""
+    """Stringify ``dtype`` for ``repr`` with default for int and float."""
     dtype = np.dtype(dtype)
     if dtype == np.dtype(int):
         return "'int'"
@@ -181,9 +181,18 @@ def dtype_repr(dtype):
     else:
         return "'{}'".format(dtype)
 
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod()
+
+def dtype_str(dtype):
+    """Stringify ``dtype`` for ``str`` with default for int and float."""
+    dtype = np.dtype(dtype)
+    if dtype == np.dtype(int):
+        return 'int'
+    elif dtype == np.dtype(float):
+        return 'float'
+    elif dtype == np.dtype(complex):
+        return 'complex'
+    else:
+        return '{}'.format(dtype)
 
 
 def with_metaclass(meta, *bases):
@@ -513,6 +522,97 @@ class writable_array(object):
         """
         self.obj[:] = self.arr
         self.arr = None
+
+
+def repr_signature(posargs, optargs):
+    """Helper for the signature part of ``repr`` strings.
+
+    Parameters
+    ----------
+    posargs : sequence
+        Positional argument values, always included in the returned string.
+        They appear in the string as (roughly)::
+
+            ', '.join(str(arg) for arg in posargs)
+
+    optargs : sequence of 3-tuples
+        Optional arguments with names and defaults, given in the form::
+
+            [(name1, value1, default1), (name2, value2, default2), ...]
+
+        Only those parameters that are different from the given default
+        are included as ``name=value`` keyword pairs.
+
+    Returns
+    -------
+    repr_signature : string
+        Signature part of a ``repr`` string, typically used in the form::
+
+            '{}({})'.format(self.__class__.__name__, repr_signature)
+
+    Examples
+    --------
+    Usage with non-trivial entries in both sequences, with a typical
+    use case:
+
+    >>> posargs = [1, 'hello', None]
+    >>> optargs = [('dtype', 'float32', 'float64')]
+    >>> repr_signature(posargs, optargs)
+    "1, 'hello', None, dtype='float32'"
+    >>> '{}({})'.format('MyClass', repr_signature(posargs, optargs))
+    "MyClass(1, 'hello', None, dtype='float32')"
+
+    Empty sequences and optargs values equal to default are omitted:
+
+    >>> posargs = ['hello']
+    >>> optargs = [('size', 1, 1)]
+    >>> repr_signature(posargs, optargs)
+    "'hello'"
+    >>> posargs = []
+    >>> optargs = [('size', 2, 1)]
+    >>> repr_signature(posargs, optargs)
+    'size=2'
+    >>> posargs = []
+    >>> optargs = [('size', 1, 1)]
+    >>> repr_signature(posargs, optargs)
+    ''
+    """
+    parts = []
+
+    # Stringify values, treating strings specially
+    posargs_conv = []
+    for arg in posargs:
+        try:
+            arg + ''
+        except TypeError:
+            # All non-string types are passed through str
+            posargs_conv.append(str(arg))
+        else:
+            # repr is adequate for strings since it preserves the quotes
+            posargs_conv.append(repr(arg))
+    if posargs_conv:
+        parts.append(', '.join(argstr for argstr in posargs_conv))
+
+    # Build 'key=value' strings for values that are not equal to default
+    optargs_conv = []
+    for name, value, default in optargs:
+        if value == default:
+            # Don't include
+            continue
+
+        # See above on str and repr
+        try:
+            value + ''
+        except TypeError:
+            value_str = str(value)
+        else:
+            value_str = repr(value)
+
+        optargs_conv.append('{}={}'.format(name, value_str))
+    if optargs_conv:
+        parts.append(', '.join(optargs_conv))
+
+    return ', '.join(parts)
 
 
 if __name__ == '__main__':
