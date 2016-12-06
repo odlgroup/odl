@@ -28,7 +28,8 @@ import numpy as np
 from odl.util.utility import with_metaclass
 
 
-__all__ = ('LineSearch', 'BacktrackingLineSearch', 'ConstantLineSearch')
+__all__ = ('LineSearch', 'BacktrackingLineSearch', 'ConstantLineSearch',
+           'PredefinedLineSearch')
 
 
 class LineSearch(with_metaclass(ABCMeta, object)):
@@ -195,21 +196,48 @@ class ConstantLineSearch(LineSearch):
     def __call__(self, x, direction, dir_derivative):
         """Calculate the step length at a point.
 
-        Parameters
-        ----------
-        x : `LinearSpaceElement`
-            The current point
-        direction : `LinearSpaceElement`
-            Search direction in which the line search should be computed
-        dir_derivative : float
-            Directional derivative along the ``direction``
-
-        Returns
-        -------
-        step : float
-            The constant step length
+        All arguments are ignored and are only added to fit the interface.
         """
         return self.constant
+
+
+class PredefinedLineSearch(LineSearch):
+
+    """Line search object that returns a step length from a function."""
+
+    def __init__(self, func):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        func : callable
+            Function that when called with an iteration count. Iterations are
+            zero indexed, i.e. the first iteration is the zero:th.
+
+        Examples
+        --------
+        Make a step size that is 1.0 for the first 5 iterations, then 0.1
+
+        >>> def step_length(iter):
+        ...     if iter < 5:
+        ...         return 1.0
+        ...     else:
+        ...         return 0.1
+        >>> line_search = PredefinedLineSearch(step_length)
+        """
+        if not callable(func):
+            raise TypeError('`func` must be a callable.')
+        self.func = func
+        self.iter_count = 0
+
+    def __call__(self, x, direction, dir_derivative):
+        """Calculate the step length at a point.
+
+        All arguments are ignored and are only added to fit the interface.
+        """
+        step = self.func(self.iter_count)
+        self.iter_count += 1
+        return step
 
 
 class BarzilaiBorweinStep(object):
