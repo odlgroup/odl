@@ -70,8 +70,9 @@ class RosenbrockFunctional(Functional):
         space : `TensorSpace`
             Domain of the functional.
         scale : positive float, optional
-            The scale ``c`` in the functional determining how "ill-behaved" the
-            functional should be.
+            The scale ``c`` in the functional determining how
+            "ill-behaved" the functional should be. Larger value means
+            worse behavior.
 
         Examples
         --------
@@ -91,7 +92,7 @@ class RosenbrockFunctional(Functional):
         >>> functional([1, 1, 1, 1, 1])
         0.0
 
-        We can change how much the function is ill behaved via ``scale``:
+        We can change how much the function is ill-behaved via ``scale``:
 
         >>> r2 = odl.rn(2)
         >>> functional = RosenbrockFunctional(r2, scale=2)
@@ -104,7 +105,8 @@ class RosenbrockFunctional(Functional):
         if not isinstance(space, TensorSpace):
             raise ValueError('`space` must be an `TensorSpace`')
         if space.size < 2:
-            raise ValueError('`space` must be at least two dimensional')
+            raise ValueError('`space` must have size >= 2, got {}'
+                             ''.format(space.size))
         super().__init__(space=space, linear=False, grad_lipschitz=np.inf)
 
     def _call(self, x):
