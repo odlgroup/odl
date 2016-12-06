@@ -28,8 +28,8 @@ from odl.set.sets import Set, RealNumbers, ComplexNumbers
 from odl.set.space import LinearSpace, LinearSpaceElement
 from odl.util.ufuncs import BaseGeneralizedTensorUFuncs
 from odl.util.utility import (
-    arraynd_repr, dtype_repr, is_scalar_dtype, is_floating_dtype,
-    is_real_dtype, is_complex_floating_dtype,
+    is_scalar_dtype, is_floating_dtype, is_real_dtype,
+    arraynd_repr, dtype_str, repr_signature,
     TYPE_MAP_R2C, TYPE_MAP_C2R)
 
 
@@ -114,7 +114,44 @@ class BaseTensorSet(Set):
 
         Examples
         --------
-        TODO: write one
+        Elements created with the `BaseTensorSet.element` method are
+        guaranteed to be contained in the same space:
+
+        >>> spc = odl.tensor_space((2, 3), dtype='uint64')
+        >>> spc.element() in spc
+        True
+        >>> x = spc.element([[0, 1, 2],
+        ...                  [3, 4, 5]])
+        >>> x in spc
+        True
+
+        Sizes, data types and other essential properties characterize
+        spaces and decide about membership:
+
+        >>> smaller_spc = odl.tensor_space((2, 2), dtype='uint64')
+        >>> y = smaller_spc.element([[0, 1],
+        ...                          [2, 3]])
+        >>> y in spc
+        False
+        >>> x in smaller_spc
+        False
+        >>> other_dtype_spc = odl.tensor_space((2, 3), dtype='uint32')
+        >>> z = other_dtype_spc.element([[0, 1, 2],
+        ...                              [3, 4, 5]])
+        >>> z in spc
+        False
+        >>> x in other_dtype_spc
+        False
+
+        On the other hand, spaces are not unique:
+
+        >>> spc2 = odl.tensor_space((2, 3), dtype='uint64')  # same as spc
+        >>> x2 = spc2.element([[5, 4, 3],
+        ...                    [2, 1, 0]])
+        >>> x2 in spc
+        True
+        >>> x in spc2
+        True
         """
         return getattr(other, 'space', None) == self
 
@@ -129,7 +166,21 @@ class BaseTensorSet(Set):
 
         Examples
         --------
-        TODO: write one
+        Sizes, data types and other essential properties characterize
+        spaces and decide about equality:
+
+        >>> spc = odl.tensor_space((2, 3), dtype='uint64')
+        >>> spc == spc
+        True
+        >>> spc2 = odl.tensor_space((2, 3), dtype='uint64')
+        >>> spc2 == spc
+        True
+        >>> smaller_spc = odl.tensor_space((2, 2), dtype='uint64')
+        >>> spc == smaller_spc
+        False
+        >>> other_dtype_spc = odl.tensor_space((2, 3), dtype='uint32')
+        >>> spc == other_dtype_spc
+        False
         """
         if other is self:
             return True
@@ -142,10 +193,10 @@ class BaseTensorSet(Set):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        inner_str = '{}, {}'.format(self.shape, dtype_repr(self.dtype))
-        if self.order != self.default_order():
-            inner_str += "order='{}'".format(self.order)
-        return "{}({})".format(self.__class__.__name__, inner_str)
+        posargs = [self.shape, dtype_str(self.dtype)]
+        optargs = [('order', self.order, self.default_order())]
+        return "{}({})".format(self.__class__.__name__,
+                               repr_signature(posargs, optargs))
 
     @staticmethod
     def default_order():
@@ -582,11 +633,8 @@ class BaseTensor(BaseGeneralizedTensor, LinearSpaceElement):
     of data representation.
     """
 
-    def __eq__(self, other):
-        return LinearSpaceElement.__eq__(self, other)
-
-    def copy(self):
-        return LinearSpaceElement.copy(self)
+    __eq__ = LinearSpaceElement.__eq__
+    copy = LinearSpaceElement.copy
 
 
 if __name__ == '__main__':
