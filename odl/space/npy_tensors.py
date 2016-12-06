@@ -38,8 +38,8 @@ from odl.space.weighting import (
     BaseCustomInner, BaseCustomNorm, BaseCustomDist)
 from odl.util.ufuncs import NumpyGeneralizedTensorUFuncs
 from odl.util.utility import (
-    dtype_repr, is_real_dtype, is_real_floating_dtype,
-    is_complex_floating_dtype)
+    dtype_str, repr_signature,
+    is_real_dtype, is_real_floating_dtype, is_complex_floating_dtype)
 
 
 __all__ = ('NumpyTensorSet', 'NumpyTensorSpace')
@@ -207,6 +207,19 @@ class NumpyTensorSet(BaseTensorSet):
     def element_type(self):
         """Type of elements in this space: `NumpyGeneralizedTensor`."""
         return NumpyGeneralizedTensor
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        if self.ndim == 1:
+            constructor_name = 'ntuples'
+            posargs = [self.size]
+        else:
+            constructor_name = 'tensor_set'
+            posargs = [self.shape]
+        posargs.append(dtype_str(self.dtype))
+        optargs = [('order', self.order, self.default_order())]
+        return '{}({})'.format(constructor_name,
+                               repr_signature(posargs, optargs))
 
 
 class NumpyGeneralizedTensor(BaseGeneralizedTensor):
@@ -915,25 +928,26 @@ class NumpyTensorSpace(BaseTensorSpace, NumpyTensorSet):
         return np.sctypes['int'] + np.sctypes['float'] + np.sctypes['complex']
 
     @staticmethod
-    def default_dtype(field):
+    def default_dtype(field=None):
         """Return the default data type of this class for a given field.
 
         Parameters
         ----------
-        field : `Field`
+        field : `Field`, optional
             Set of numbers to be represented by a data type.
             Currently supported : `RealNumbers`, `ComplexNumbers`
+            The default ``None`` means `RealNumbers`
 
         Returns
         -------
-        dtype : `type`
+        dtype : `numpy.dtype`
             Numpy data type specifier. The returned defaults are:
 
-            ``RealNumbers()`` : ``np.dtype('float64')``
+                ``RealNumbers()`` : ``np.dtype('float64')``
 
-            ``ComplexNumbers()`` : ``np.dtype('complex128')``
+                ``ComplexNumbers()`` : ``np.dtype('complex128')``
         """
-        if field == RealNumbers():
+        if field is None or field == RealNumbers():
             return np.dtype('float64')
         elif field == ComplexNumbers():
             return np.dtype('complex128')
@@ -1226,26 +1240,38 @@ class NumpyTensorSpace(BaseTensorSpace, NumpyTensorSet):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        if self.is_real_space:
-            constructor_name = 'rtensors'
-        elif self.is_complex_space:
-            constructor_name = 'ctensors'
-        else:
-            constructor_name = 'tensor_space'
+        if self.ndim == 1:
+            posargs = [self.size]
+            if self.is_real_space:
+                constructor_name = 'rn'
+            elif self.is_complex_space:
+                constructor_name = 'cn'
+            else:
+                constructor_name = 'fn'
 
-        inner_str = '{}'.format(self.shape)
+            if (constructor_name == 'fn' or
+                    self.dtype != self.default_dtype(self.field)):
+                posargs.append(dtype_str(self.dtype))
 
-        if (constructor_name == 'tensor_space' or
-                self.dtype != self.default_dtype(self.field)):
-            inner_str += ', {}'.format(dtype_repr(self.dtype))
+        else:  # self.ndim > 1
+            posargs = [self.shape]
+            if self.is_real_space:
+                constructor_name = 'rtensors'
+            elif self.is_complex_space:
+                constructor_name = 'ctensors'
+            else:
+                constructor_name = 'tensor_space'
 
-        # TODO: default order class attribute?
-        if self.order != 'C':
-            inner_str += ", order='F'"
+            if (constructor_name == 'tensor_space' or
+                    self.dtype != self.default_dtype(self.field)):
+                posargs.append(dtype_str(self.dtype))
 
+        optargs = [('order', self.order, self.default_order())]
+        inner_str = repr_signature(posargs, optargs)
         weight_str = self.weighting.repr_part
         if weight_str:
             inner_str += ', ' + weight_str
+
         return '{}({})'.format(constructor_name, inner_str)
 
     @property

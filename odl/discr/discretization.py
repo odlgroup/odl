@@ -26,7 +26,7 @@ from builtins import super
 from odl.operator import Operator
 from odl.space.base_tensors import (BaseTensorSet, BaseGeneralizedTensor,
                                     BaseTensorSpace, BaseTensor)
-from odl.space import FunctionSet, FN_IMPLS, NTUPLES_IMPLS
+from odl.space import FunctionSet, TENSOR_SET_IMPLS, TENSOR_SPACE_IMPLS
 from odl.set import RealNumbers, ComplexNumbers, LinearSpace
 from odl.util.utility import (
     arraynd_repr, arraynd_str,
@@ -549,7 +549,7 @@ class DiscretizedSpaceElement(DiscretizedSetElement, BaseTensor):
 
 
 def dspace_type(space, impl, dtype=None):
-    """Select the correct corresponding n-tuples space.
+    """Select the correct corresponding tensor space.
 
     Parameters
     ----------
@@ -559,7 +559,7 @@ def dspace_type(space, impl, dtype=None):
         consistent with it.
     impl : string
         Implementation backend for the data space
-    dtype : `numpy.dtype`, optional
+    dtype : optional
         Data type which the space is supposed to use. If ``None`` is
         given, the space type is purely determined from ``space`` and
         ``impl``. Otherwise, it must be compatible with the
@@ -571,9 +571,9 @@ def dspace_type(space, impl, dtype=None):
         Space type selected after the space's field, the backend and
         the data type
     """
-    spacetype_map = {RealNumbers: FN_IMPLS,
-                     ComplexNumbers: FN_IMPLS,
-                     type(None): NTUPLES_IMPLS}
+    spacetype_map = {RealNumbers: TENSOR_SPACE_IMPLS,
+                     ComplexNumbers: TENSOR_SPACE_IMPLS,
+                     type(None): TENSOR_SET_IMPLS}
 
     field_type = type(getattr(space, 'field', None))
 

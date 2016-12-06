@@ -59,7 +59,10 @@ class BaseTensorSet(Set):
             raise ValueError('`shape` must have only positive entries, got '
                              '{}'.format(shape))
         self.__dtype = np.dtype(dtype)
-        self.__order = str(order).upper()
+        if self.ndim == 1:
+            self.__order = 'C'
+        else:
+            self.__order = str(order).upper()
         if self.order not in ('C', 'F'):
             raise ValueError("`order '' not understood".format(order))
 
@@ -200,11 +203,6 @@ class BaseTensorSet(Set):
     @staticmethod
     def default_order():
         """Return the default axis ordering of this implementation."""
-        raise NotImplementedError('abstract method')
-
-    @staticmethod
-    def available_dtypes():
-        """Return the list of data types available in this implementation."""
         raise NotImplementedError('abstract method')
 
     @staticmethod
