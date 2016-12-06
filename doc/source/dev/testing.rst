@@ -118,8 +118,7 @@ The main purpose of the examples is however to show ODL from a users perspective
 
 It is even possible to run all examples as part of the test suite by running ``pytest --examples``, but be aware that this requires all ODL dependencies to be installed and that plotting windows can be opened during execution.
 
-Consult the `examples`_ directory for an impression of the style in which ODL examples are written
-For examples on how to write examples, please consult the examples directory.
+Consult the `examples`_ directory for an impression of the style in which ODL examples are written.
 
 .. _doctest: https://docs.python.org/library/doctest.html
 .. _pytest: http://doc.pytest.org/en/latest/
