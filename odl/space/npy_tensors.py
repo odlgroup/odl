@@ -516,7 +516,7 @@ class NumpyGeneralizedTensor(BaseGeneralizedTensor):
         >>> maxval = 255  # maximum signed 8-bit unsigned int
         >>> x[0, :] = maxval + 1
         >>> x
-        NumpyTensorSet((2, 3), 'int8').element(
+        tensor_set((2, 3), 'int8').element(
         [[0, 0, 0],
          [1, 1, 1]]
         )
