@@ -1023,8 +1023,8 @@ def test_norm_rectangle_boundary(tspace_impl, exponent):
     grid = odl.uniform_grid([0, 0], [1, 1], (4, 4))
     part = odl.RectPartition(rect, grid)
     weight = 1.0 if exponent == float('inf') else part.cell_volume
-    dspace = odl.rn(part.size, dtype=dtype, impl=tspace_impl, exponent=exponent,
-                    weighting=weight)
+    dspace = odl.rn(part.size, dtype=dtype, impl=tspace_impl,
+                    exponent=exponent, weighting=weight)
     discr = DiscreteLp(fspace, part, dspace, exponent=exponent)
 
     if exponent == float('inf'):

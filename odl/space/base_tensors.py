@@ -54,7 +54,10 @@ class TensorSet(Set):
             raise ValueError('`shape` must have only positive entries, got '
                              '{}'.format(shape))
         self.__dtype = np.dtype(dtype)
-        self.__order = str(order).upper()
+        if self.ndim == 1:
+            self.__order = 'C'
+        else:
+            self.__order = str(order).upper()
         if self.order not in ('C', 'F'):
             raise ValueError("`order '' not understood".format(order))
 
