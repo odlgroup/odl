@@ -27,7 +27,7 @@ from odl.phantom.geometric import ellipse_phantom
 import numpy as np
 
 
-__all__ = ('shepp_logan_ellipses', 'shepp_logan')
+__all__ = ('shepp_logan_ellipses', 'shepp_logan', 'forbild')
 
 
 def _shepp_logan_ellipse_2d():
