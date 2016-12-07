@@ -26,7 +26,7 @@ import pytest
 import numpy as np
 
 import odl
-from odl.discr.tensor_ops import PointwiseNorm, PointwiseInner
+from odl.discr.tensor_ops import PointwiseNorm, PointwiseInner, PointwiseSum
 from odl.space.pspace import ProductSpace
 from odl.util.testutils import all_almost_equal, all_equal
 
@@ -428,6 +428,22 @@ def test_pointwise_inner_adjoint_weighted():
     pwinner.adjoint(testfunc, out=out)
     assert all_almost_equal(out, true_inner_adj.reshape([3, -1]))
 
+
+# ---- PointwiseSum ----
+
+
+def test_pointwise_sum():
+    """PointwiseSum currently depends on PointwiseInner, we verify that."""
+
+    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2))
+    vfspace = ProductSpace(fspace, 3, exponent=2)
+
+    # Make sure the code runs and test the properties
+    psum = PointwiseSum(vfspace)
+    assert isinstance(psum, PointwiseInner)
+    assert psum.base_space == fspace
+    assert all_equal(psum.weights, [1, 1, 1])
+    assert all_equal(psum.vecfield, psum.domain.one())
 
 if __name__ == '__main__':
     pytest.main([str(__file__.replace('\\', '/')), '-v'])
