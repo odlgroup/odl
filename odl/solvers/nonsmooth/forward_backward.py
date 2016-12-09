@@ -64,13 +64,13 @@ def forward_backward_pd(x, f, g, L, h, tau, sigma, niter,
         The functionals ``g_i``. Needs to have ``g_i.convex_conj.proximal``.
     L : sequence of `Operator`'s'
         Sequence of linear operators ``L_i``, with as many elements as
-        ``prox_cc_gs``.
+        ``g``.
     h : `Functional`
         The functional ``h``. Needs to have ``h.gradient``.
     tau : float
-        Step size-like parameter for ``prox_f``.
+        Step size-like parameter for ``f``.
     sigma : sequence of floats
-        Sequence of step size-like parameters for the sequence ``prox_cc_g``.
+        Sequence of step size-like parameters for the sequence ``g``.
     niter : int
         Number of iterations.
     callback : callable, optional

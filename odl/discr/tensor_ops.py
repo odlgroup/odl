@@ -30,7 +30,7 @@ from odl.set import RealNumbers, ComplexNumbers, LinearSpace
 from odl.space import ProductSpace
 
 
-__all__ = ('PointwiseNorm', 'PointwiseInner')
+__all__ = ('PointwiseNorm', 'PointwiseInner', 'PointwiseSum')
 
 _SUPPORTED_DIFF_METHODS = ('central', 'forward', 'backward')
 
@@ -147,11 +147,10 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
             0 and 1 are currently not supported due to numerical
             instability.
             Default: ``vfspace.exponent``
-        weight : `array-like` or float, optional
+        weight : `array-like` or positive float, optional
             Weighting array or constant for the norm. If an array is
             given, its length must be equal to ``domain.size``, and
-            all entries must be positive. A provided constant must be
-            positive.
+            all entries must be positive.
             By default, the weights are is taken from
             ``domain.weighting``. Note that this excludes unusual
             weightings with custom inner product, norm or dist.
@@ -395,9 +394,7 @@ class PointwiseInnerBase(PointwiseTensorFieldOperator):
             product of an input vector field
         weight : `array-like` or float, optional
             Weighting array or constant for the norm. If an array is
-            given, its length must be equal to ``domain.size``, and
-            all entries must be positive. A provided constant must be
-            positive.
+            given, its length must be equal to ``domain.size``.
             By default, the weights are is taken from
             ``domain.weighting``. Note that this excludes unusual
             weightings with custom inner product, norm or dist.
@@ -433,16 +430,9 @@ class PointwiseInnerBase(PointwiseTensorFieldOperator):
                                  'not define a weighting vector or constant'
                                  ''.format(vfspace.weighting))
         elif np.isscalar(weight):
-            if weight <= 0:
-                raise ValueError('weighting constant must be positive, got '
-                                 '{}'.format(weight))
             self._weights = float(weight) * np.ones(vfspace.size)
         else:
             self._weights = np.asarray(weight, dtype='float64')
-            if (not np.all(self.weights > 0) or
-                    not np.all(np.isfinite(self.weights))):
-                raise ValueError('weighting array {} contains invalid '
-                                 'entries'.format(weight))
         self._is_weighted = not np.array_equiv(self.weights, 1.0)
 
     @property
@@ -498,8 +488,7 @@ class PointwiseInner(PointwiseInnerBase):
         weight : `array-like` or float, optional
             Weighting array or constant for the norm. If an array is
             given, its length must be equal to ``domain.size``, and
-            all entries must be positive. A provided constant must be
-            positive.
+            all entries must be positive.
             By default, the weights are is taken from
             ``domain.weighting``. Note that this excludes unusual
             weightings with custom inner product, norm or dist.
@@ -619,8 +608,7 @@ class PointwiseInnerAdjoint(PointwiseInnerBase):
         weight : `array-like` or float, optional
             Weighting array or constant of the inner product operator.
             If an array is given, its length must be equal to
-            ``len(vecfield)``, and all entries must be positive. A
-            provided constant must be positive.
+            ``len(vecfield)``.
             By default, the weights are is taken from
             ``range.weighting`` if applicable. Note that this excludes
             unusual weightings with custom inner product, norm or dist.
@@ -667,6 +655,65 @@ class PointwiseInnerAdjoint(PointwiseInnerBase):
         """
         return PointwiseInner(vfspace=self.range, vecfield=self.vecfield,
                               weight=self.weights)
+
+
+# TODO: Optimize this to an optimized operator on its own.
+class PointwiseSum(PointwiseInner):
+
+    """Take the point-wise sum of a vector field.
+
+    This operator takes the (weighted) sum
+
+        ``sum(F(x)) = [ sum_j( w_j * F_j(x) ) ]
+
+    where ``F`` is a vector field. This implies that
+    the `Operator.domain` is a power space of a discretized function
+    space. For example, if ``X`` is a `DiscreteLp` space, then
+    ``ProductSpace(X, d)`` is a valid domain for any positive integer
+    ``d``.
+    """
+
+    def __init__(self, vfspace, weight=None):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        vfspace : `ProductSpace`
+            Space of vector fields on which the operator acts.
+            It has to be a product space of identical spaces, i.e. a
+            power space.
+        weight : `array-like` or float, optional
+            Weighting array or constant for the sum. If an array is
+            given, its length must be equal to ``domain.size``.
+            By default, the weights are is taken from
+            ``domain.weighting``. Note that this excludes unusual
+            weightings with custom inner product, norm or dist.
+
+        Examples
+        --------
+        We make a tiny vector field space in 2D and create the
+        standard point-wise sum operator on that space. The operator
+        maps a vector field to a scalar function:
+
+        >>> spc = odl.uniform_discr([-1, -1], [1, 1], (1, 2))
+        >>> vfspace = odl.ProductSpace(spc, 2)
+        >>> pw_sum = PointwiseSum(vfspace)
+        >>> pw_sum.range == spc
+        True
+
+        Now we can calculate the sum in each point:
+
+        >>> x = vfspace.element([[[1, -4]],
+        ...                      [[0, 3]]])
+        >>> print(pw_sum(x))
+        [[1.0, -1.0]]
+        """
+        if not isinstance(vfspace, ProductSpace):
+            raise TypeError('`vfspace` {!r} is not a ProductSpace '
+                            'instance'.format(vfspace))
+
+        ones = vfspace.one()
+        super().__init__(vfspace, vecfield=ones, weight=weight)
 
 
 if __name__ == '__main__':
