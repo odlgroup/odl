@@ -33,11 +33,10 @@ from odl.util.testutils import skip_if_no_largescale, simple_fixture
 from odl.tomo.util.testutils import (skip_if_no_astra, skip_if_no_astra_cuda,
                                      skip_if_no_scikit)
 
-dtype = simple_fixture('dtype', ['float32', 'float64'])
 filter_type = simple_fixture(
     'filter_type', ['Ram-Lak', 'Shepp-Logan', 'Cosine', 'Hamming', 'Hann'])
 filter_cutoff = simple_fixture(
-    'filter_cutoff', [0.9, 1.0])
+    'filter_cutoff', [0.5, 0.9, 1.0])
 
 # Find the valid projectors
 # TODO: Add nonuniform once #671 is solved
@@ -60,9 +59,10 @@ projectors = [pytest.mark.skipif(p.args[0] + largescale, p.args[1])
 
 
 @pytest.fixture(scope="module", params=projectors, ids=projector_ids)
-def projector(request, dtype):
+def projector(request):
 
     n_angles = 500
+    dtype = 'float32'
 
     geom, impl, angle = request.param.split()
 
@@ -159,8 +159,8 @@ def projector(request, dtype):
 
 
 @skip_if_no_largescale
-def test_fbp_reconstruction(projector, filter_type, filter_cutoff):
-    """Test discrete Ray transform using ASTRA for reconstruction."""
+def test_fbp_reconstruction(projector):
+    """Test filtered backprojection with various projectors."""
 
     # Create Shepp-Logan phantom
     vol = odl.phantom.shepp_logan(projector.domain, modified=False)
@@ -168,10 +168,8 @@ def test_fbp_reconstruction(projector, filter_type, filter_cutoff):
     # Project data
     projections = projector(vol)
 
-    # Create FBP operator and apply to projections
-    fbp_operator = odl.tomo.fbp_op(projector,
-                                   filter_type=filter_type,
-                                   filter_cutoff=filter_cutoff)
+    # Create default FBP operator and apply to projections
+    fbp_operator = odl.tomo.fbp_op(projector)
 
     fbp_result = fbp_operator(projections)
 
@@ -182,8 +180,43 @@ def test_fbp_reconstruction(projector, filter_type, filter_cutoff):
         # Only an approximation
         maxerr = vol.norm() / 3.0
 
-    # Make sure the result is somewhat close to the actual result.
-    assert fbp_result.dist(vol) < maxerr
+    error = vol.dist(fbp_result)
+    assert error < maxerr
+
+
+@skip_if_no_astra_cuda
+@skip_if_no_largescale
+def test_fbp_reconstruction_filters(filter_type, filter_cutoff):
+    """Validate that the various filters work as expected."""
+
+    apart = odl.uniform_partition(0, np.pi, 500)
+
+    discr_reco_space = odl.uniform_discr([-20, -20], [20, 20],
+                                         [100, 100], dtype='float32')
+
+    # Geometry
+    dpart = odl.uniform_partition(-30, 30, 500)
+    geom = tomo.Parallel2dGeometry(apart, dpart)
+
+    # Ray transform
+    projector = tomo.RayTransform(discr_reco_space, geom, impl='astra_cuda')
+
+    # Create Shepp-Logan phantom
+    vol = odl.phantom.shepp_logan(projector.domain, modified=False)
+
+    # Project data
+    projections = projector(vol)
+
+    # Create FBP operator with filters and apply to projections
+    fbp_operator = odl.tomo.fbp_op(projector,
+                                   filter_type=filter_type,
+                                   filter_cutoff=filter_cutoff)
+
+    fbp_result = fbp_operator(projections)
+
+    maxerr = vol.norm() / 5.0
+    error = vol.dist(fbp_result)
+    assert error < maxerr
 
 
 if __name__ == '__main__':
