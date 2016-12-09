@@ -147,11 +147,10 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
             0 and 1 are currently not supported due to numerical
             instability.
             Default: ``vfspace.exponent``
-        weight : `array-like` or float, optional
+        weight : `array-like` or positive float, optional
             Weighting array or constant for the norm. If an array is
             given, its length must be equal to ``domain.size``, and
-            all entries must be positive. A provided constant must be
-            positive.
+            all entries must be positive.
             By default, the weights are is taken from
             ``domain.weighting``. Note that this excludes unusual
             weightings with custom inner product, norm or dist.
