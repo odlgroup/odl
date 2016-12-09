@@ -395,9 +395,7 @@ class PointwiseInnerBase(PointwiseTensorFieldOperator):
             product of an input vector field
         weight : `array-like` or float, optional
             Weighting array or constant for the norm. If an array is
-            given, its length must be equal to ``domain.size``, and
-            all entries must be positive. A provided constant must be
-            positive.
+            given, its length must be equal to ``domain.size``.
             By default, the weights are is taken from
             ``domain.weighting``. Note that this excludes unusual
             weightings with custom inner product, norm or dist.
@@ -433,16 +431,9 @@ class PointwiseInnerBase(PointwiseTensorFieldOperator):
                                  'not define a weighting vector or constant'
                                  ''.format(vfspace.weighting))
         elif np.isscalar(weight):
-            if weight <= 0:
-                raise ValueError('weighting constant must be positive, got '
-                                 '{}'.format(weight))
             self._weights = float(weight) * np.ones(vfspace.size)
         else:
             self._weights = np.asarray(weight, dtype='float64')
-            if (not np.all(self.weights > 0) or
-                    not np.all(np.isfinite(self.weights))):
-                raise ValueError('weighting array {} contains invalid '
-                                 'entries'.format(weight))
         self._is_weighted = not np.array_equiv(self.weights, 1.0)
 
     @property
@@ -498,8 +489,7 @@ class PointwiseInner(PointwiseInnerBase):
         weight : `array-like` or float, optional
             Weighting array or constant for the norm. If an array is
             given, its length must be equal to ``domain.size``, and
-            all entries must be positive. A provided constant must be
-            positive.
+            all entries must be positive.
             By default, the weights are is taken from
             ``domain.weighting``. Note that this excludes unusual
             weightings with custom inner product, norm or dist.
@@ -619,8 +609,7 @@ class PointwiseInnerAdjoint(PointwiseInnerBase):
         weight : `array-like` or float, optional
             Weighting array or constant of the inner product operator.
             If an array is given, its length must be equal to
-            ``len(vecfield)``, and all entries must be positive. A
-            provided constant must be positive.
+            ``len(vecfield)``.
             By default, the weights are is taken from
             ``range.weighting`` if applicable. Note that this excludes
             unusual weightings with custom inner product, norm or dist.
@@ -695,10 +684,8 @@ class PointwiseSum(PointwiseInner):
             It has to be a product space of identical spaces, i.e. a
             power space.
         weight : `array-like` or float, optional
-            Weighting array or constant for the norm. If an array is
-            given, its length must be equal to ``domain.size``, and
-            all entries must be positive. A provided constant must be
-            positive.
+            Weighting array or constant for the sum. If an array is
+            given, its length must be equal to ``domain.size``.
             By default, the weights are is taken from
             ``domain.weighting``. Note that this excludes unusual
             weightings with custom inner product, norm or dist.
