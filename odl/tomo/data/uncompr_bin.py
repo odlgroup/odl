@@ -21,7 +21,7 @@
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
-from builtins import int, object, open, str
+from builtins import int, object, open
 
 from collections import OrderedDict
 import csv
