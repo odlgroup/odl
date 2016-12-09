@@ -226,7 +226,7 @@ class LineSearchFromIterNum(LineSearch):
         ...         return 1.0
         ...     else:
         ...         return 0.1
-        >>> line_search = PredefinedLineSearch(step_length)
+        >>> line_search = LineSearchFromIterNum(step_length)
         """
         if not callable(func):
             raise TypeError('`func` must be a callable.')
