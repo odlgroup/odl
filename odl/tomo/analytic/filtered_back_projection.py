@@ -71,6 +71,7 @@ def fbp_filter(norm_freq, filter_type, filter_cutoff):
 
     return filt
 
+
 def fbp_op(ray_trafo, padding=True, filter_type='Ram-Lak', filter_cutoff=1.0):
     """Create filtered back-projection from a `RayTransform`.
 
@@ -117,11 +118,11 @@ def fbp_op(ray_trafo, padding=True, filter_type='Ram-Lak', filter_cutoff=1.0):
     if ray_trafo.domain.ndim == 2:
         # Define ramp filter
         def fft_filter(x):
-            norm_freq = np.abs(x[1]) / np.max(np.abs(x[1]))
+            abs_freq = np.abs(x[1])
+            norm_freq = abs_freq / np.max(abs_freq)
             filt = fbp_filter(norm_freq, filter_type, filter_cutoff)
-            ramp = np.sqrt(x[1]**2)
             scaling = 1 / (2 * alen)
-            return filt * ramp * scaling
+            return filt * abs_freq * scaling
 
         # Define (padded) fourier transform
         if padding:
@@ -165,12 +166,11 @@ def fbp_op(ray_trafo, padding=True, filter_type='Ram-Lak', filter_cutoff=1.0):
 
         # Define ramp filter
         def fft_filter(x):
-            freq = np.abs(c[0] * x[1] + c[1] * x[2])
-            norm_freq = freq / np.max(freq)
+            abs_freq = np.abs(c[0] * x[1] + c[1] * x[2])
+            norm_freq = abs_freq / np.max(abs_freq)
             filt = fbp_filter(norm_freq, filter_type, filter_cutoff)
-            ramp = np.sqrt(x[1]**2)
             scaling = scale / (2 * alen)
-            return filt * ramp * scaling
+            return filt * abs_freq * scaling
 
         # Define (padded) fourier transform
         if padding:
@@ -212,7 +212,7 @@ if __name__ == '__main__':
     # Display the various filters
     import matplotlib.pyplot as plt
     x = np.linspace(0, 1, 100)
-    cutoff = 0.9
+    cutoff = 0.7
 
     for filter_name in ['Ram-Lak', 'Shepp-Logan', 'Cosine', 'Hamming', 'Hann']:
         plt.plot(x, x * fbp_filter(x, filter_name, cutoff), label=filter_name)

@@ -29,16 +29,15 @@ import numpy as np
 # Internal
 import odl
 import odl.tomo as tomo
-from odl.util.testutils import skip_if_no_largescale
+from odl.util.testutils import skip_if_no_largescale, simple_fixture
 from odl.tomo.util.testutils import (skip_if_no_astra, skip_if_no_astra_cuda,
                                      skip_if_no_scikit)
 
-
-@pytest.fixture(scope="module", params=['float32', 'float64'],
-                ids=[' dtype = float32 ', ' dtype = float64 '])
-def dtype(request):
-    return request.param
-
+dtype = simple_fixture('dtype', ['float32', 'float64'])
+filter_type = simple_fixture(
+    'filter_type', ['Ram-Lak', 'Shepp-Logan', 'Cosine', 'Hamming', 'Hann'])
+filter_cutoff = simple_fixture(
+    'filter_cutoff', [0.9, 1.0])
 
 # Find the valid projectors
 # TODO: Add nonuniform once #671 is solved
@@ -160,7 +159,7 @@ def projector(request, dtype):
 
 
 @skip_if_no_largescale
-def test_fbp_reconstruction(projector):
+def test_fbp_reconstruction(projector, filter_type, filter_cutoff):
     """Test discrete Ray transform using ASTRA for reconstruction."""
 
     # Create Shepp-Logan phantom
@@ -169,7 +168,10 @@ def test_fbp_reconstruction(projector):
     # Project data
     projections = projector(vol)
 
-    fbp_operator = odl.tomo.fbp_op(projector)
+    # Create FBP operator and apply to projections
+    fbp_operator = odl.tomo.fbp_op(projector,
+                                   filter_type=filter_type,
+                                   filter_cutoff=filter_cutoff)
 
     fbp_result = fbp_operator(projections)
 
