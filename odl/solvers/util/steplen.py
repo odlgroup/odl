@@ -29,7 +29,7 @@ from odl.util.utility import with_metaclass
 
 
 __all__ = ('LineSearch', 'BacktrackingLineSearch', 'ConstantLineSearch',
-           'PredefinedLineSearch')
+           'LineSearchFromIterNum')
 
 
 class LineSearch(with_metaclass(ABCMeta, object)):
@@ -201,9 +201,12 @@ class ConstantLineSearch(LineSearch):
         return self.constant
 
 
-class PredefinedLineSearch(LineSearch):
+class LineSearchFromIterNum(LineSearch):
 
-    """Line search object that returns a step length from a function."""
+    """Line search object that returns a step length from a function.
+
+    The returned step length is ``func(iter_count)``.
+    """
 
     def __init__(self, func):
         """Initialize a new instance.
@@ -211,12 +214,12 @@ class PredefinedLineSearch(LineSearch):
         Parameters
         ----------
         func : callable
-            Function that when called with an iteration count. Iterations are
-            zero indexed, i.e. the first iteration is the zero:th.
+            Function that when called with an iteration count should return the
+            step length. The iteration count starts at 0.
 
         Examples
         --------
-        Make a step size that is 1.0 for the first 5 iterations, then 0.1
+        Make a step size that is 1.0 for the first 5 iterations, then 0.1:
 
         >>> def step_length(iter):
         ...     if iter < 5:
