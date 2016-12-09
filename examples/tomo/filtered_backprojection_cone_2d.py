@@ -53,7 +53,7 @@ geometry = odl.tomo.FanFlatGeometry(
 ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl='astra_cuda')
 
 # Create FBP operator using utility function
-fbp = odl.tomo.fbp_op(ray_trafo)
+fbp = odl.tomo.fbp_op(ray_trafo, filter_type='Hann', filter_cutoff=0.8)
 
 
 # --- Show some examples --- #

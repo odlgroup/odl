@@ -118,7 +118,7 @@ def fbp_op(ray_trafo, padding=True, filter_type='Ram-Lak', filter_cutoff=1.0):
         # Define ramp filter
         def fft_filter(x):
             norm_freq = np.abs(x[1]) / np.max(np.abs(x[1]))
-            filt = smoothing_filter(norm_freq, filter_type, filter_cutoff)
+            filt = fbp_filter(norm_freq, filter_type, filter_cutoff)
             ramp = np.sqrt(x[1]**2)
             scaling = 1 / (2 * alen)
             return filt * ramp * scaling
@@ -165,7 +165,12 @@ def fbp_op(ray_trafo, padding=True, filter_type='Ram-Lak', filter_cutoff=1.0):
 
         # Define ramp filter
         def fft_filter(x):
-            return np.abs(c[0] * x[1] + c[1] * x[2]) * (scale / (2 * alen))
+            freq = np.abs(c[0] * x[1] + c[1] * x[2])
+            norm_freq = freq / np.max(freq)
+            filt = fbp_filter(norm_freq, filter_type, filter_cutoff)
+            ramp = np.sqrt(x[1]**2)
+            scaling = scale / (2 * alen)
+            return filt * ramp * scaling
 
         # Define (padded) fourier transform
         if padding:
