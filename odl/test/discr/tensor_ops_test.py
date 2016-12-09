@@ -89,6 +89,12 @@ def test_pointwise_norm_init_properties():
     with pytest.raises(ValueError):
         PointwiseNorm(vfspace, exponent=0.5)  # < 1 not allowed
 
+    with pytest.raises(ValueError):
+        PointwiseNorm(vfspace, weight=-1)  # < 0 not allowed
+
+    with pytest.raises(ValueError):
+        PointwiseNorm(vfspace, weight=[1, 0, 1])  # 0 invalid
+
 
 def test_pointwise_norm_real(exponent):
     # 1d
