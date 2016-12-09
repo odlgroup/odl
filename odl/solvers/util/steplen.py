@@ -28,7 +28,8 @@ import numpy as np
 from odl.util.utility import with_metaclass
 
 
-__all__ = ('LineSearch', 'BacktrackingLineSearch', 'ConstantLineSearch')
+__all__ = ('LineSearch', 'BacktrackingLineSearch', 'ConstantLineSearch',
+           'LineSearchFromIterNum')
 
 
 class LineSearch(with_metaclass(ABCMeta, object)):
@@ -195,73 +196,51 @@ class ConstantLineSearch(LineSearch):
     def __call__(self, x, direction, dir_derivative):
         """Calculate the step length at a point.
 
-        Parameters
-        ----------
-        x : `LinearSpaceElement`
-            The current point
-        direction : `LinearSpaceElement`
-            Search direction in which the line search should be computed
-        dir_derivative : float
-            Directional derivative along the ``direction``
-
-        Returns
-        -------
-        step : float
-            The constant step length
+        All arguments are ignored and are only added to fit the interface.
         """
         return self.constant
 
 
-class BarzilaiBorweinStep(object):
+class LineSearchFromIterNum(LineSearch):
 
-    """Barzilai-Borwein method to compute a step length.
+    """Line search object that returns a step length from a function.
 
-    Barzilai-Borwein method to compute a step length
-    for gradient descent methods.
-
-    The method is described in [BB1988]_ and [Ray1997]_.
+    The returned step length is ``func(iter_count)``.
     """
 
-    def __init__(self, gradf, step0=0.0005):
+    def __init__(self, func):
         """Initialize a new instance.
 
         Parameters
         ----------
-        gradf : `Operator`
-            The gradient of the objective function at a point
-        step0 : float, optional
-            Initial step length parameter
-        """
-        self.gradf = gradf
-        self.step0 = step0
+        func : callable
+            Function that when called with an iteration count should return the
+            step length. The iteration count starts at 0.
 
-    def __call__(self, x, x0):
+        Examples
+        --------
+        Make a step size that is 1.0 for the first 5 iterations, then 0.1:
+
+        >>> def step_length(iter):
+        ...     if iter < 5:
+        ...         return 1.0
+        ...     else:
+        ...         return 0.1
+        >>> line_search = LineSearchFromIterNum(step_length)
+        """
+        if not callable(func):
+            raise TypeError('`func` must be a callable.')
+        self.func = func
+        self.iter_count = 0
+
+    def __call__(self, x, direction, dir_derivative):
         """Calculate the step length at a point.
 
-        Parameters
-        ----------
-        x : `LinearSpaceElement`
-            The current point
-        x0 : `LinearSpaceElement`
-            The previous point
-
-        Returns
-        -------
-        step : float
-            Computed step length.
+        All arguments are ignored and are only added to fit the interface.
         """
-        if x == x0:
-            return self.step0
-
-        gradx = self.gradf(x)
-
-        if gradx == self.gradf(x0):
-            return self.step0
-
-        errx = x - x0
-        grad_diff = gradx - self.gradf(x0)
-        recip_step = grad_diff.inner(errx) / errx.norm() ** 2
-        return 1.0 / recip_step
+        step = self.func(self.iter_count)
+        self.iter_count += 1
+        return step
 
 
 if __name__ == '__main__':
