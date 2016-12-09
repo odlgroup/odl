@@ -28,7 +28,50 @@ from odl.trafos import FourierTransform, PYFFTW_AVAILABLE
 __all__ = ('fbp_op',)
 
 
-def fbp_op(ray_trafo, padding=True):
+def fbp_filter(norm_freq, filter_type, filter_cutoff):
+    """Create a smoothing filter for FBP.
+
+    Parameters
+    ----------
+    norm_freq : `array-like`
+        Normalized frequencies.
+    filter_type : {'Ram-Lak', 'Shepp-Logan', 'Cosine', 'Hamming', 'Hann'}
+        The type of filter to be used.
+    filter_cutoff : float
+        Relative cutoff frequency for the filter.
+
+    Returns
+    -------
+    smoothing_filter : `numpy.ndarray`
+
+    References
+    ----------
+    http://oftankonyv.reak.bme.hu/tiki-index.php?page=Reconstruction
+    """
+    if not (0 < filter_cutoff <= 1):
+        raise ValueError('`filter_cutoff` ({}) not in the interval (0, 1]'
+                         ''.format(filter_cutoff))
+
+    indicator = (norm_freq <= filter_cutoff)
+
+    if filter_type == 'Ram-Lak':
+        filt = indicator
+    elif filter_type == 'Shepp-Logan':
+        filt = indicator * np.sinc(norm_freq / (2 * filter_cutoff))
+    elif filter_type == 'Cosine':
+        filt = indicator * np.cos(norm_freq * np.pi / (2 * filter_cutoff))
+    elif filter_type == 'Hamming':
+        filt = indicator * (0.54 +
+                            0.46 * np.cos(norm_freq * np.pi / (filter_cutoff)))
+    elif filter_type == 'Hann':
+        filt = indicator * np.cos(norm_freq * np.pi / (2 * filter_cutoff)) ** 2
+    else:
+        raise ValueError('unknown `filter_type` ({})'
+                         ''.format(filter_type))
+
+    return filt
+
+def fbp_op(ray_trafo, padding=True, filter_type='Ram-Lak', filter_cutoff=1.0):
     """Create filtered back-projection from a `RayTransform`.
 
     The filtered back-projection is an approximate inverse to the ray
@@ -58,6 +101,10 @@ def fbp_op(ray_trafo, padding=True):
         If the data space should be zero padded. Without padding, the data may
         be corrupted due to the circular convolution used. Using padding makes
         the algorithm slower.
+    filter_type : {'Ram-Lak', 'Shepp-Logan', 'Cosine', 'Hamming', 'Hann'}
+        The type of filter to be used.
+    filter_cutoff : float
+        Relative cutoff frequency for the filter.
 
     Returns
     -------
@@ -70,7 +117,11 @@ def fbp_op(ray_trafo, padding=True):
     if ray_trafo.domain.ndim == 2:
         # Define ramp filter
         def fft_filter(x):
-            return np.sqrt(x[1]**2) / (2 * alen)
+            norm_freq = np.abs(x[1]) / np.max(np.abs(x[1]))
+            filt = smoothing_filter(norm_freq, filter_type, filter_cutoff)
+            ramp = np.sqrt(x[1]**2)
+            scaling = 1 / (2 * alen)
+            return filt * ramp * scaling
 
         # Define (padded) fourier transform
         if padding:
@@ -153,6 +204,17 @@ def fbp_op(ray_trafo, padding=True):
 
 
 if __name__ == '__main__':
+    # Display the various filters
+    import matplotlib.pyplot as plt
+    x = np.linspace(0, 1, 100)
+    cutoff = 0.9
+
+    for filter_name in ['Ram-Lak', 'Shepp-Logan', 'Cosine', 'Hamming', 'Hann']:
+        plt.plot(x, x * fbp_filter(x, filter_name, cutoff), label=filter_name)
+
+    plt.title('Filters with cutoff = {}'.format(cutoff))
+    plt.legend(loc=2)
+
     # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()
