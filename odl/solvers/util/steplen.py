@@ -243,58 +243,6 @@ class LineSearchFromIterNum(LineSearch):
         return step
 
 
-class BarzilaiBorweinStep(object):
-
-    """Barzilai-Borwein method to compute a step length.
-
-    Barzilai-Borwein method to compute a step length
-    for gradient descent methods.
-
-    The method is described in [BB1988]_ and [Ray1997]_.
-    """
-
-    def __init__(self, gradf, step0=0.0005):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        gradf : `Operator`
-            The gradient of the objective function at a point
-        step0 : float, optional
-            Initial step length parameter
-        """
-        self.gradf = gradf
-        self.step0 = step0
-
-    def __call__(self, x, x0):
-        """Calculate the step length at a point.
-
-        Parameters
-        ----------
-        x : `LinearSpaceElement`
-            The current point
-        x0 : `LinearSpaceElement`
-            The previous point
-
-        Returns
-        -------
-        step : float
-            Computed step length.
-        """
-        if x == x0:
-            return self.step0
-
-        gradx = self.gradf(x)
-
-        if gradx == self.gradf(x0):
-            return self.step0
-
-        errx = x - x0
-        grad_diff = gradx - self.gradf(x0)
-        recip_step = grad_diff.inner(errx) / errx.norm() ** 2
-        return 1.0 / recip_step
-
-
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
