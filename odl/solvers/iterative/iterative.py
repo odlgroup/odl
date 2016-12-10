@@ -26,6 +26,7 @@ from odl.operator import IdentityOperator, OperatorComp, OperatorSum
 from odl.util import normalized_scalar_param_list
 from odl.solvers.scalar import BacktrackingLineSearch
 
+
 __all__ = ('landweber', 'conjugate_gradient', 'conjugate_gradient_normal',
            'conjugate_gradient_nonlinear', 'gauss_newton', 'kaczmarz')
 
@@ -282,21 +283,10 @@ Conjugate_gradient_on_the_normal_equations>`_.
             callback(x)
 
 
-def conjugate_gradient_nonlinear(op, x, rhs, niter=1, niter_reset=None,
-                                 line_search=None, beta_method='FR',
+def conjugate_gradient_nonlinear(f, x, rhs, niter=1, nreset=0,
+                                 line_search=1.0, tol=1e-16, beta_method='FR',
                                  callback=None):
-    """Optimized implementation of CG for the normal equations.
-
-    This method solves the inverse problem (of the first kind)
-
-    ``A(x) == rhs``
-
-    with a linear `Operator` ``A`` by looking at the normal equations
-
-    ``A.adjoint(A(x)) == A.adjoint(rhs)``
-
-    It uses a minimum amount of memory copies by applying re-usable
-    temporaries and in-place evaluation.
+    """Conjugate gradient for nonlinear problems.
 
     The method is described in a
     `Wikipedia article
@@ -304,7 +294,7 @@ def conjugate_gradient_nonlinear(op, x, rhs, niter=1, niter_reset=None,
 
     Parameters
     ----------
-    op : `Operator`
+    op : `Functional`
         Operator in the inverse problem. If not linear, it must have
         an implementation of `Operator.derivative`, which
         in turn must implement `Operator.adjoint`, i.e.
@@ -316,19 +306,18 @@ def conjugate_gradient_nonlinear(op, x, rhs, niter=1, niter_reset=None,
     rhs : ``op.range`` element
         Right-hand side of the equation defining the inverse problem
     niter : int
-        Maximum number of iterations in total.
-    niter_reset : int, optional
-        Maximum number of iterations before reset. Default: no reset.
-    line_search : `LineSearch`, optional.
-        Line searching method to use. Default: `BacktrackingLineSearch`.
+        Number of iterations per reset.
+    nreset : int, optional
+        Number of times the solver should be reset. Default: no reset.
+    line_search : float or `LineSearch`, optional
+        Strategy to choose the step length. If a float is given, uses it as a
+        fixed step length. Default: `BacktrackingLineSearch`
+    tol : float, optional
+        Tolerance that should be used for terminating the iteration.
     beta_method : {'FR', 'PR', 'HS', 'DY'}
         Method to calculate ``beta`` in the iterates. TODO
     callback : `callable`, optional
         Object executing code per iteration, e.g. plotting each iterate
-
-    Returns
-    -------
-    None
 
     See Also
     --------
@@ -338,61 +327,50 @@ def conjugate_gradient_nonlinear(op, x, rhs, niter=1, niter_reset=None,
     # TODO: add a book reference
     # TODO: update doc
 
-    if x not in op.domain:
-        raise TypeError('`x` {!r} is not in the domain of `op` {!r}'
-                        ''.format(x, op.domain))
+    if x not in f.domain:
+        raise TypeError('`x` {!r} is not in the domain of `f` {!r}'
+                        ''.format(x, f.domain))
 
-    if line_search is None:
-        def f(x):
-            return (op(x) - rhs).norm() ** 2
-        line_search = BacktrackingLineSearch(f, c=0.05)
+    if not callable(line_search):
+        line_search = BacktrackingLineSearch(f, discount=0.05)
 
-    def gradf(x):
-        return 2.0 * op.derivative(x).adjoint(op(x) - rhs)
+    for rest_nr in range(nreset + 1):
+        dx = -f.gradient(x)
+        dir_derivative = -dx.inner(dx)
+        if abs(dir_derivative) < tol:
+            return
+        a = line_search(x, dx, dir_derivative)
+        x.lincomb(1, x, a, dx)  # x = x + a * dx
 
-    if niter_reset is not None:
-        niter, niter_left = min(niter, niter_reset), niter - niter_reset
-    else:
-        niter_left = 0
+        dx_old = dx
+        s = dx  # for 'HS' and 'DY' beta methods
 
-    dx = -gradf(x)
-    dir_derivative = -dx.inner(dx)
-    a = line_search(x, dx, dir_derivative)
-    x += a * dx
+        for _ in range(niter):
+            dx, dx_old = -f.gradient(x), dx
 
-    dx_old = dx
-    s = dx  # for 'HS' and 'DY' beta methods
+            if beta_method == 'FR':
+                beta = dx.inner(dx) / dx_old.inner(dx_old)
+            elif beta_method == 'PR':
+                beta = dx.inner(dx - dx_old) / dx_old.inner(dx_old)
+            elif beta_method == 'HS':
+                beta = dx.inner(dx - dx_old) / s.inner(dx - dx_old)
+            elif beta_method == 'DY':
+                beta = dx.inner(dx) / s.inner(dx - dx_old)
+            else:
+                raise ValueError('unknown ``beta_method``')
 
-    for _ in range(niter):
-        dx, dx_old = -gradf(x), dx
+            if abs(beta) < tol:
+                return
 
-        if beta_method == 'FR':
-            beta = dx.inner(dx) / dx_old.inner(dx_old)
-        elif beta_method == 'PR':
-            beta = dx.inner(dx - dx_old) / dx_old.inner(dx_old)
-        elif beta_method == 'HS':
-            beta = dx.inner(dx - dx_old) / s.inner(dx - dx_old)
-        elif beta_method == 'DY':
-            beta = dx.inner(dx) / s.inner(dx - dx_old)
-        else:
-            raise ValueError('unknown ``beta_method``')
+            s = dx + beta * s
+            dir_derivative = -s.inner(s)
+            if abs(dir_derivative) < tol:
+                return
+            a = line_search(x, s, dir_derivative)
+            x.lincomb(1, x, a, s)  # x = x + a * s
 
-        s = dx + beta * s
-        dir_derivative = -dx.inner(s)
-        a = line_search(x, s, dir_derivative)
-
-        x += a * s
-
-        if callback is not None:
-            callback(x)
-
-    if niter_left > 0:
-        # Recursive call in case we need more iters.
-        conjugate_gradient_nonlinear(op, x, rhs, niter=niter_left,
-                                     niter_reset=niter_reset,
-                                     line_search=line_search,
-                                     beta_method=beta_method,
-                                     callback=callback)
+            if callback is not None:
+                callback(x)
 
 
 def exp_zero_seq(base):

@@ -207,6 +207,7 @@ class BacktrackingLineSearch(LineSearch):
             point = x + alpha * direction
             fval = self.function(point)
 
+            print('alpha', alpha, fx, fval)
             if np.isnan(fval):
                 # We do not want to compare against NaN below, and NaN should
                 # indicate a user error.
