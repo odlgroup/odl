@@ -21,6 +21,10 @@ import numpy as np
                         'landweber',
                         'conjugate_gradient',
                         'conjugate_gradient_normal',
+                        'conjugate_gradient_nonlinear_FR',
+                        'conjugate_gradient_nonlinear_PR',
+                        'conjugate_gradient_nonlinear_HS',
+                        'conjugate_gradient_nonlinear_DY',
                         'mlem',
                         'osmlem',
                         'kaczmarz'])
@@ -44,6 +48,12 @@ def iterative_solver(request):
     elif solver_name == 'conjugate_gradient_normal':
         def solver(op, x, rhs):
             odl.solvers.conjugate_gradient_normal(op, x, rhs, niter=10)
+    elif solver_name.startswith('conjugate_gradient_nonlinear'):
+        def solver(op, x, rhs):
+            beta_method = solver_name.split('_')[-1]
+            func = odl.solvers.L2NormSquared(op.domain) * (op - rhs)
+            odl.solvers.conjugate_gradient_nonlinear(func, x, rhs, niter=10,
+                                                     beta_method=beta_method)
     elif solver_name == 'mlem':
         def solver(op, x, rhs):
             odl.solvers.mlem(op, x, rhs, niter=10)
