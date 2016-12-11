@@ -196,6 +196,9 @@ class BacktrackingLineSearch(LineSearch):
             raise ValueError('function returned invalid value {} in starting '
                              'point ({})'.format(fx, x))
 
+        # Create temporary
+        point = x.copy()
+
         num_iter = 0
         while True:
             if num_iter > self.max_num_iter:
@@ -204,10 +207,9 @@ class BacktrackingLineSearch(LineSearch):
                                  'sufficient decrease'
                                  ''.format(self.max_num_iter, alpha))
 
-            point = x + alpha * direction
+            point.lincomb(1, x, alpha, direction)  # pt = x + alpha * direction
             fval = self.function(point)
 
-            print('alpha', alpha, fx, fval)
             if np.isnan(fval):
                 # We do not want to compare against NaN below, and NaN should
                 # indicate a user error.
@@ -215,8 +217,7 @@ class BacktrackingLineSearch(LineSearch):
                                  'point ({})'.format(point))
 
             expected_decrease = np.abs(alpha * dir_derivative * self.discount)
-            if (not np.isinf(fval) and  # short circuit if fval is infite
-                    fval <= fx - expected_decrease):
+            if (fval <= fx - expected_decrease):
                 # Stop iterating if the value decreases sufficiently.
                 break
 
