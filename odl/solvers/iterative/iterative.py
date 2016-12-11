@@ -24,7 +24,7 @@ standard_library.install_aliases()
 
 from odl.operator import IdentityOperator, OperatorComp, OperatorSum
 from odl.util import normalized_scalar_param_list
-from odl.solvers.scalar import BacktrackingLineSearch
+from odl.solvers.util import ConstantLineSearch, BacktrackingLineSearch
 
 
 __all__ = ('landweber', 'conjugate_gradient', 'conjugate_gradient_normal',
@@ -284,7 +284,7 @@ Conjugate_gradient_on_the_normal_equations>`_.
 
 
 def conjugate_gradient_nonlinear(f, x, rhs, niter=1, nreset=0,
-                                 line_search=1.0, tol=1e-16, beta_method='FR',
+                                 line_search=None, tol=1e-16, beta_method='FR',
                                  callback=None):
     """Conjugate gradient for nonlinear problems.
 
@@ -331,10 +331,13 @@ def conjugate_gradient_nonlinear(f, x, rhs, niter=1, nreset=0,
         raise TypeError('`x` {!r} is not in the domain of `f` {!r}'
                         ''.format(x, f.domain))
 
-    if not callable(line_search):
-        line_search = BacktrackingLineSearch(f, discount=0.05)
+    if line_search is None:
+        line_search = BacktrackingLineSearch(f, estimate_step=True)
+    elif not callable(line_search):
+        line_search = ConstantLineSearch(line_search)
 
     for rest_nr in range(nreset + 1):
+        # First iteration is done without beta
         dx = -f.gradient(x)
         dir_derivative = -dx.inner(dx)
         if abs(dir_derivative) < tol:
@@ -346,8 +349,10 @@ def conjugate_gradient_nonlinear(f, x, rhs, niter=1, nreset=0,
         s = dx  # for 'HS' and 'DY' beta methods
 
         for _ in range(niter):
+            # Compute dx as -grad f
             dx, dx_old = -f.gradient(x), dx
 
+            # Calculate "beta"
             if beta_method == 'FR':
                 beta = dx.inner(dx) / dx_old.inner(dx_old)
             elif beta_method == 'PR':
@@ -359,14 +364,19 @@ def conjugate_gradient_nonlinear(f, x, rhs, niter=1, nreset=0,
             else:
                 raise ValueError('unknown ``beta_method``')
 
-            if abs(beta) < tol:
-                return
+            # Reset beta if negative.
+            beta = max(0, beta)
 
-            s = dx + beta * s
-            dir_derivative = -s.inner(s)
+            # Update search direction
+            s.lincomb(1, dx, beta, s)  # s = dx + beta * s
+
+            # Find optimal step along s
+            dir_derivative = -dx.inner(s)
             if abs(dir_derivative) < tol:
                 return
             a = line_search(x, s, dir_derivative)
+
+            # Update position
             x.lincomb(1, x, a, s)  # x = x + a * s
 
             if callback is not None:
