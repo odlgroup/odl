@@ -37,7 +37,7 @@ def cuboid(space, min_pt=None, max_pt=None):
     min_pt : array-like of shape ``(space.ndim,)``, optional
         Lower left corner of the cuboid. If ``None`` is given, a quarter
         of the extent from ``space.min_pt`` towards the inside is chosen.
-    min_pt : array-like of shape ``(space.ndim,)``, optional
+    max_pt : array-like of shape ``(space.ndim,)``, optional
         Upper right corner of the cuboid. If ``None`` is given, ``min_pt``
         plus half the extent is chosen.
 
