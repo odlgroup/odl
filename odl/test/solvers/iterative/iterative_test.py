@@ -52,7 +52,7 @@ def iterative_solver(request):
         def solver(op, x, rhs):
             beta_method = solver_name.split('_')[-1]
             func = odl.solvers.L2NormSquared(op.domain) * (op - rhs)
-            odl.solvers.conjugate_gradient_nonlinear(func, x, rhs, niter=10,
+            odl.solvers.conjugate_gradient_nonlinear(func, x, rhs, niter=20,
                                                      beta_method=beta_method)
     elif solver_name == 'mlem':
         def solver(op, x, rhs):
