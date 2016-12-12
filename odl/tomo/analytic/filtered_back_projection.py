@@ -24,9 +24,40 @@ import numpy as np
 import scipy as sp
 from odl.discr import ResizingOperator
 from odl.trafos import FourierTransform, PYFFTW_AVAILABLE
+from odl.tomo.util.utility import perpendicular_vector
 
 
 __all__ = ('fbp_op', 'tam_danielson_window')
+
+
+def _axis_in_detector(geometry):
+    """A vector in the detector plane that points along the rotation axis."""
+    du = geometry.det_init_axes[0]
+    dv = geometry.det_init_axes[1]
+    axis = geometry.axis
+    c = np.array([np.vdot(axis, du), np.vdot(axis, dv)])
+    cnorm = np.linalg.norm(c)
+
+    # Check for numerical errors
+    assert cnorm != 0
+
+    return c / cnorm
+
+
+def _rotation_direction_in_detector(geometry):
+    """A vector in the detector plane that points in the rotation direction."""
+    du = geometry.det_init_axes[0]
+    dv = geometry.det_init_axes[1]
+    axis = geometry.axis
+    det_normal = np.cross(du, dv)
+    rot_dir = np.cross(axis, det_normal)
+    c = np.array([np.vdot(rot_dir, du), np.vdot(rot_dir, dv)])
+    cnorm = np.linalg.norm(c)
+
+    # Check for numerical errors
+    assert cnorm != 0
+
+    return c / cnorm
 
 
 def _fbp_filter(norm_freq, filter_type, filter_cutoff):
@@ -103,6 +134,9 @@ def tam_danielson_window(ray_trafo, smoothing_width=0.05):
     pitch = ray_trafo.geometry.pitch
     dx = ray_trafo.range.meshgrid[1].ravel()
 
+    # Find the direction that the filter should be taken in
+    axis_proj = _axis_in_detector(ray_trafo.geometry)
+
     # Compute angles
     phi = np.arctan(dx / (src_radius + det_radius))
     theta = phi * 2
@@ -129,8 +163,11 @@ def tam_danielson_window(ray_trafo, smoothing_width=0.05):
 
     # Create window function
     def window_fcn(x):
-        lower_wndw = 0.5 * (1 + sp.special.erf((x[2] - lower_proj) / width))
-        upper_wndw = 0.5 * (1 + sp.special.erf((upper_proj - x[2]) / width))
+        x_along_axis = axis_proj[0] * x[1] + axis_proj[1] * x[2]
+        lower_wndw = 0.5 * (
+            1 + sp.special.erf((x_along_axis - lower_proj) / width))
+        upper_wndw = 0.5 * (
+            1 + sp.special.erf((upper_proj - x_along_axis) / width))
 
         return lower_wndw * upper_wndw
 
@@ -159,7 +196,8 @@ def fbp_op(ray_trafo, padding=True, filter_type='Ram-Lak', filter_cutoff=1.0):
         `CircularConeFlatGeometry` : Approximate reconstruction, correct in
         limit of fan angle = 0 and cone angle = 0.
 
-        `HelicalConeFlatGeometry` : Very approximate.
+        `HelicalConeFlatGeometry` : Very approximate unless a
+        `tam_danielson_window` is used. Accurate with the window.
 
         Other geometries: Not supported
 
@@ -168,15 +206,17 @@ def fbp_op(ray_trafo, padding=True, filter_type='Ram-Lak', filter_cutoff=1.0):
         be corrupted due to the circular convolution used. Using padding makes
         the algorithm slower.
     filter_type : string, optional
-        The type of filter to be used.
-        Options:
-        {'Ram-Lak', 'Shepp-Logan', 'Cosine', 'Hamming', 'Hann'}
+        The type of filter to be used. The options are, approximate order from
+        most noise senstive to least noise sensitive: 'Ram-Lak', 'Shepp-Logan',
+        'Cosine', 'Hamming' and 'Hann'.
     filter_cutoff : float, optional
-        Relative cutoff frequency for the filter.
+        Relative cutoff frequency for the filter, a scalar in the range (0, 1].
+        The normalized frequencies are rescaled so that they fit into the range
+        [0, filter_cutoff].
 
     Returns
     -------
-    fbp : `Operator`
+    fbp_op : `Operator`
         Approximate inverse operator of ``ray_trafo``.
 
     See Also
@@ -209,17 +249,10 @@ def fbp_op(ray_trafo, padding=True, filter_type='Ram-Lak', filter_cutoff=1.0):
 
     elif ray_trafo.domain.ndim == 3:
         # Find the direction that the filter should be taken in
-        du = ray_trafo.geometry.det_init_axes[0]
-        dv = ray_trafo.geometry.det_init_axes[1]
-        axis = ray_trafo.geometry.axis
-        det_normal = np.cross(du, dv)
-        rot_dir = np.cross(axis, det_normal)
-        c = np.array([np.vdot(rot_dir, du), np.vdot(rot_dir, dv)])
-        cnorm = np.linalg.norm(c)
-        assert cnorm != 0
-        c /= cnorm
+        rot_dir = _rotation_direction_in_detector(ray_trafo.geometry)
 
-        used_axes = c != 0
+        # Find what axes should be used in the fourier transform
+        used_axes = (rot_dir != 0)
         if used_axes[0] and not used_axes[1]:
             axes = [1]
         elif not used_axes[0] and used_axes[1]:
@@ -241,7 +274,7 @@ def fbp_op(ray_trafo, padding=True, filter_type='Ram-Lak', filter_cutoff=1.0):
 
         # Define ramp filter
         def fft_filter(x):
-            abs_freq = np.abs(c[0] * x[1] + c[1] * x[2])
+            abs_freq = np.abs(rot_dir[0] * x[1] + rot_dir[1] * x[2])
             norm_freq = abs_freq / np.max(abs_freq)
             filt = _fbp_filter(norm_freq, filter_type, filter_cutoff)
             scaling = scale / (2 * alen)
