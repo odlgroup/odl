@@ -74,7 +74,11 @@ def _fbp_filter(norm_freq, filter_type, filter_cutoff):
 
 
 def tam_danielson_window(ray_trafo, smoothing_width=0.05):
-    """Create Tam-Danielson window.
+    """Create Tam-Danielson window from a `RayTransform`.
+
+    The Tam-Danielson window is an indicator function on the minimal set of
+    data needed to reconstruct a given data. It is useful in analytic
+    reconstruction methods such as FBP to give a more accurate reconstruction.
 
     Parameters
     ----------
@@ -82,6 +86,15 @@ def tam_danielson_window(ray_trafo, smoothing_width=0.05):
         The ray transform that the window should be computed for.
     smoothing_width : float
         Relative width of the smoothing applied to the windows edges.
+
+    Returns
+    -------
+    tam_danielson_window : ``ray_trafo.range`` element
+
+    See Also
+    --------
+    fbp_op : Filtered back-projection from `RayTransform`
+    HelicalConeFlatGeometry : The geometry this is most useful for.
     """
 
     # Extract parameters
@@ -113,7 +126,6 @@ def tam_danielson_window(ray_trafo, smoothing_width=0.05):
     lower_proj = lower_proj[None, :, None]
     upper_proj = upper_proj[None, :, None]
     width = width[None, :, None]
-    # proj_pitch = proj_pitch[None, :, None]
 
     # Create window function
     def window_fcn(x):
@@ -122,9 +134,7 @@ def tam_danielson_window(ray_trafo, smoothing_width=0.05):
 
         return lower_wndw * upper_wndw
 
-    window = ray_trafo.range.element(window_fcn)
-    window.show(coords=[0, None, None])
-    return window
+    return ray_trafo.range.element(window_fcn)
 
 
 def fbp_op(ray_trafo, padding=True, filter_type='Ram-Lak', filter_cutoff=1.0):
@@ -168,6 +178,10 @@ def fbp_op(ray_trafo, padding=True, filter_type='Ram-Lak', filter_cutoff=1.0):
     -------
     fbp : `Operator`
         Approximate inverse operator of ``ray_trafo``.
+
+    See Also
+    --------
+    tam_danielson_window : Windowing for helical data
     """
     impl = 'pyfftw' if PYFFTW_AVAILABLE else 'numpy'
     alen = ray_trafo.geometry.motion_params.length
