@@ -21,14 +21,15 @@ from future import standard_library
 standard_library.install_aliases()
 
 import numpy as np
+import scipy as sp
 from odl.discr import ResizingOperator
 from odl.trafos import FourierTransform, PYFFTW_AVAILABLE
 
 
-__all__ = ('fbp_op',)
+__all__ = ('fbp_op', 'tam_danielson_window')
 
 
-def fbp_filter(norm_freq, filter_type, filter_cutoff):
+def _fbp_filter(norm_freq, filter_type, filter_cutoff):
     """Create a smoothing filter for FBP.
 
     Parameters
@@ -72,6 +73,60 @@ def fbp_filter(norm_freq, filter_type, filter_cutoff):
     return filt
 
 
+def tam_danielson_window(ray_trafo, smoothing_width=0.05):
+    """Create Tam-Danielson window.
+
+    Parameters
+    ----------
+    ray_trafo : `RayTransform`
+        The ray transform that the window should be computed for.
+    smoothing_width : float
+        Relative width of the smoothing applied to the windows edges.
+    """
+
+    # Extract parameters
+    src_radius = ray_trafo.geometry.src_radius
+    det_radius = ray_trafo.geometry.det_radius
+    pitch = ray_trafo.geometry.pitch
+    dx = ray_trafo.range.meshgrid[1].ravel()
+
+    # Compute angles
+    phi = np.arctan(dx / (src_radius + det_radius))
+    theta = phi * 2
+
+    # Compute lower and upper bound
+    source_to_line_distance = src_radius + src_radius * np.cos(theta)
+    source_to_line_lower = pitch * (theta - np.pi) / (2 * np.pi)
+    source_to_line_upper = pitch * (theta + np.pi) / (2 * np.pi)
+
+    scale = (src_radius + det_radius) / source_to_line_distance
+
+    lower_proj = source_to_line_lower * scale
+    upper_proj = source_to_line_upper * scale
+
+    # Compute a smoothed width
+    interval = (upper_proj - lower_proj)
+    width = interval * smoothing_width / np.sqrt(2)
+
+    # Append axes
+    interval = interval[None, :, None]
+    lower_proj = lower_proj[None, :, None]
+    upper_proj = upper_proj[None, :, None]
+    width = width[None, :, None]
+    # proj_pitch = proj_pitch[None, :, None]
+
+    # Create window function
+    def window_fcn(x):
+        lower_wndw = 0.5 * (1 + sp.special.erf((x[2] - lower_proj) / width))
+        upper_wndw = 0.5 * (1 + sp.special.erf((upper_proj - x[2]) / width))
+
+        return lower_wndw * upper_wndw
+
+    window = ray_trafo.range.element(window_fcn)
+    window.show(coords=[0, None, None])
+    return window
+
+
 def fbp_op(ray_trafo, padding=True, filter_type='Ram-Lak', filter_cutoff=1.0):
     """Create filtered back-projection from a `RayTransform`.
 
@@ -102,9 +157,11 @@ def fbp_op(ray_trafo, padding=True, filter_type='Ram-Lak', filter_cutoff=1.0):
         If the data space should be zero padded. Without padding, the data may
         be corrupted due to the circular convolution used. Using padding makes
         the algorithm slower.
-    filter_type : {'Ram-Lak', 'Shepp-Logan', 'Cosine', 'Hamming', 'Hann'}
+    filter_type : string, optional
         The type of filter to be used.
-    filter_cutoff : float
+        Options:
+        {'Ram-Lak', 'Shepp-Logan', 'Cosine', 'Hamming', 'Hann'}
+    filter_cutoff : float, optional
         Relative cutoff frequency for the filter.
 
     Returns
@@ -120,7 +177,7 @@ def fbp_op(ray_trafo, padding=True, filter_type='Ram-Lak', filter_cutoff=1.0):
         def fft_filter(x):
             abs_freq = np.abs(x[1])
             norm_freq = abs_freq / np.max(abs_freq)
-            filt = fbp_filter(norm_freq, filter_type, filter_cutoff)
+            filt = _fbp_filter(norm_freq, filter_type, filter_cutoff)
             scaling = 1 / (2 * alen)
             return filt * abs_freq * scaling
 
@@ -161,6 +218,10 @@ def fbp_op(ray_trafo, padding=True, filter_type='Ram-Lak', filter_cutoff=1.0):
             scale = (ray_trafo.geometry.src_radius /
                      (ray_trafo.geometry.src_radius +
                       ray_trafo.geometry.det_radius))
+
+            if ray_trafo.geometry.pitch != 0:
+                # In helical each projection hits the detector less than once.
+                scale *= alen / (np.pi)
         else:
             scale = 1.0
 
@@ -168,7 +229,7 @@ def fbp_op(ray_trafo, padding=True, filter_type='Ram-Lak', filter_cutoff=1.0):
         def fft_filter(x):
             abs_freq = np.abs(c[0] * x[1] + c[1] * x[2])
             norm_freq = abs_freq / np.max(abs_freq)
-            filt = fbp_filter(norm_freq, filter_type, filter_cutoff)
+            filt = _fbp_filter(norm_freq, filter_type, filter_cutoff)
             scaling = scale / (2 * alen)
             return filt * abs_freq * scaling
 
@@ -215,7 +276,7 @@ if __name__ == '__main__':
     cutoff = 0.7
 
     for filter_name in ['Ram-Lak', 'Shepp-Logan', 'Cosine', 'Hamming', 'Hann']:
-        plt.plot(x, x * fbp_filter(x, filter_name, cutoff), label=filter_name)
+        plt.plot(x, x * _fbp_filter(x, filter_name, cutoff), label=filter_name)
 
     plt.title('Filters with cutoff = {}'.format(cutoff))
     plt.legend(loc=2)
