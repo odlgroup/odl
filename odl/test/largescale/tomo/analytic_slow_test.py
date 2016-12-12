@@ -46,6 +46,7 @@ projectors = [skip_if_no_astra('par2d astra_cpu uniform'),
               skip_if_no_astra_cuda('cone2d astra_cuda uniform'),
               skip_if_no_astra_cuda('par3d astra_cuda uniform'),
               skip_if_no_astra_cuda('cone3d astra_cuda uniform'),
+              skip_if_no_astra_cuda('helical astra_cuda uniform'),
               skip_if_no_scikit('par2d scikit uniform')]
 
 projector_ids = ['geom={}, impl={}, angles={}'
@@ -94,8 +95,7 @@ def projector(request):
         geom = tomo.Parallel2dGeometry(apart, dpart)
 
         # Ray transform
-        return tomo.RayTransform(discr_reco_space, geom,
-                                 impl=impl)
+        return tomo.RayTransform(discr_reco_space, geom, impl=impl)
 
     elif geom == 'par3d':
         # Discrete reconstruction space
@@ -107,8 +107,7 @@ def projector(request):
         geom = tomo.Parallel3dAxisGeometry(apart, dpart, axis=[1, 1, 0])
 
         # Ray transform
-        return tomo.RayTransform(discr_reco_space, geom,
-                                 impl=impl)
+        return tomo.RayTransform(discr_reco_space, geom, impl=impl)
 
     elif geom == 'cone2d':
         # Discrete reconstruction space
@@ -121,8 +120,7 @@ def projector(request):
                                     src_radius=100, det_radius=100)
 
         # Ray transform
-        return tomo.RayTransform(discr_reco_space, geom,
-                                 impl=impl)
+        return tomo.RayTransform(discr_reco_space, geom, impl=impl)
 
     elif geom == 'cone3d':
         # Discrete reconstruction space
@@ -130,13 +128,12 @@ def projector(request):
                                              [100, 100, 100], dtype=dtype)
 
         # Geometry
-        dpart = odl.uniform_partition([-40, -40], [40, 40], [200, 200])
+        dpart = odl.uniform_partition([-50, -50], [50, 50], [200, 200])
         geom = tomo.CircularConeFlatGeometry(
             apart, dpart, src_radius=100, det_radius=100, axis=[1, 0, 0])
 
         # Ray transform
-        return tomo.RayTransform(discr_reco_space, geom,
-                                 impl=impl)
+        return tomo.RayTransform(discr_reco_space, geom, impl=impl)
 
     elif geom == 'helical':
         # Discrete reconstruction space
@@ -147,13 +144,12 @@ def projector(request):
         # TODO: angles
         n_angle = 2000
         apart = odl.uniform_partition(0, 8 * 2 * np.pi, n_angle)
-        dpart = odl.uniform_partition([-30, -3], [30, 3], [200, 20])
+        dpart = odl.uniform_partition([-50, -4], [50, 4], [200, 20])
         geom = tomo.HelicalConeFlatGeometry(apart, dpart, pitch=5.0,
                                             src_radius=100, det_radius=100)
 
-        # Ray transform
-        return tomo.RayTransform(discr_reco_space, geom,
-                                 impl=impl)
+        # Windowed ray transform
+        return tomo.RayTransform(discr_reco_space, geom, impl=impl)
     else:
         raise ValueError('param not valid')
 
@@ -171,15 +167,15 @@ def test_fbp_reconstruction(projector):
     # Create default FBP operator and apply to projections
     fbp_operator = odl.tomo.fbp_op(projector)
 
+    # Add window if problem is in 3d.
+    if (isinstance(projector.geometry, odl.tomo.HelicalConeFlatGeometry) and
+            projector.geometry.pitch != 0):
+        fbp_operator = fbp_operator * odl.tomo.tam_danielson_window(projector)
+
+    # Compute the FBP result
     fbp_result = fbp_operator(projections)
 
-    if isinstance(projector.geometry, odl.tomo.ParallelGeometry):
-        # Should be exact for parallel
-        maxerr = vol.norm() / 5.0
-    else:
-        # Only an approximation
-        maxerr = vol.norm() / 3.0
-
+    maxerr = vol.norm() / 5.0
     error = vol.dist(fbp_result)
     assert error < maxerr
 
