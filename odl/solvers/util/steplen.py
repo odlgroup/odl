@@ -70,8 +70,8 @@ class BacktrackingLineSearch(LineSearch):
     <https://en.wikipedia.org/wiki/Backtracking_line_search>`_.
     """
 
-    def __init__(self, function, tau=0.5, discount=0.01, max_num_iter=None,
-                 estimate_step=False):
+    def __init__(self, function, tau=0.5, discount=0.01, alpha=1.0,
+                 max_num_iter=None, estimate_step=False):
         """Initialize a new instance.
 
         Parameters
@@ -86,30 +86,50 @@ class BacktrackingLineSearch(LineSearch):
             The "discount factor" on ``step length * direction derivative``,
             yielding the threshold under which the function value must lie to
             be accepted (see the references).
+        alpha : float, optional
+            The initial guess for the step length.
         max_num_iter : int, optional
             Maximum number of iterations allowed each time the line
             search method is called. If not set, this number is calculated
             to allow a shortest step length of 10 times machine epsilon.
         estimate_step : float
             If the last step should be used as a estimate for the next step.
+
+        Examples
+        --------
+        Create line search
+
+        >>> r3 = odl.rn(3)
+        >>> func = odl.solvers.L2NormSquared(r3)
+        >>> line_search = BacktrackingLineSearch(func)
+
+        Find step in point x and direction d that decreases the function value.
+
+        >>> x = r3.element([1, 2, 3])
+        >>> d = r3.element([-1, -1, -1])
+        >>> step_len = line_search(x, d)
+        >>> step_len
+        1.0
+        >>> func(x + step_len * d) < func(x)
+        True
         """
         self.function = function
         self.tau = float(tau)
         self.discount = float(discount)
         self.estimate_step = bool(estimate_step)
+        self.alpha = float(alpha)
 
-        self.alpha = 1.0
         self.total_num_iter = 0
-        # Use a default value that allows the shortest step to be < 0.0001
-        # times the original step length
+        # Use a default value that allows the shortest step to be < 10 times
+        # machine epsilon.
         if max_num_iter is None:
-            # TODO: make space dependent
-            eps = 10 * np.finfo(float).resolution
+            dtype = getattr(self.function.domain, 'dtype', float)
+            eps = 10 * np.finfo(dtype).resolution
             self.max_num_iter = int(np.ceil(np.log(eps) / np.log(self.tau)))
         else:
             self.max_num_iter = int(max_num_iter)
 
-    def __call__(self, x, direction, dir_derivative):
+    def __call__(self, x, direction, dir_derivative=None):
         """Calculate the optimal step length along a line.
 
         Parameters
@@ -118,8 +138,9 @@ class BacktrackingLineSearch(LineSearch):
             The current point
         direction : `LinearSpaceElement`
             Search direction in which the line search should be computed
-        dir_derivative : float
+        dir_derivative : float, optional
             Directional derivative along the ``direction``
+            Default: ``function.gradient(x).inner(direction)``
 
         Returns
         -------
@@ -127,7 +148,10 @@ class BacktrackingLineSearch(LineSearch):
             The computed step length
         """
         fx = self.function(x)
-        dir_derivative = float(dir_derivative)
+        if dir_derivative is None:
+            dir_derivative = self.function.gradient(x).inner(direction)
+        else:
+            dir_derivative = float(dir_derivative)
 
         if dir_derivative == 0:
             raise ValueError('dir_derivative == 0, no descent can be found')
