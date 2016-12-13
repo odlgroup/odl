@@ -79,7 +79,7 @@ def _fbp_filter(norm_freq, filter_type, frequency_scaling):
 
     Examples
     --------
-    Create a FBP filter
+    Create an FBP filter
 
     >>> norm_freq = np.linspace(0, 1, 10)
     >>> filt = _fbp_filter(norm_freq,
@@ -287,9 +287,11 @@ def fbp_op(ray_trafo, padding=True,
                       ray_trafo.geometry.det_radius))
 
             if ray_trafo.geometry.pitch != 0:
-                # In helical geometry the whole volume is not in by each
-                # projection, ideally each point in the volume effects only by
-                # the projections in a half rotation.
+                # In helical geometry the whole volume is not in each
+                # projection and we need to use another weighting.
+                # Ideally each point in the volume effects only
+                # the projections in a half rotation, so we assume that that
+                # is the case.
                 scale *= alen / (np.pi)
         else:
             scale = 1.0

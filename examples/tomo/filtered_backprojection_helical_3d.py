@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Example using a FBP in helical 3D geometry using `fbp_op`.
+"""Example using FBP in helical 3D geometry using `fbp_op`.
 
 Note that the FBP is only approximate in this geometry, but still gives a
 decent reconstruction that can be used as an initial guess in more complex

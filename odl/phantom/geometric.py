@@ -106,7 +106,8 @@ def defrise(space, nellipses=8, alternating=False):
         Discretized space in which the phantom is supposed to be created.
         Needs to be 2d or 3d.
     nellipses : int, optional
-        Number of ellipses
+        Number of ellipses. If more ellipses are used, each ellipse becomes
+        thinner.
     alternating : bool, optional
         True if the ellipses should have alternating densities (+1, -1),
         otherwise all ellipses have value +1.
@@ -134,7 +135,8 @@ def defrise_ellipses(ndim, nellipses=8, alternating=False):
     ndim : {2, 3}
         Dimension of the space the ellipses should be in.
     nellipses : int, optional
-        Number of ellipses
+        Number of ellipses. If more ellipses are used, each ellipse becomes
+        thinner.
     alternating : bool, optional
         True if the ellipses should have alternating densities (+1, -1),
         otherwise all ellipses have value +1.
