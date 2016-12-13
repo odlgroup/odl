@@ -495,10 +495,6 @@ def dft_postprocess_data(arr, real_grid, recip_grid, shift, axes,
     else:
         raise ValueError("`sign` '{}' not understood".format(sign))
 
-    op, op_in = str(op).lower(), op
-    if op not in ('multiply', 'divide'):
-        raise ValueError("kernel `op` '{}' not understood".format(op_in))
-
     # Make a list from interp if that's not the case already
     try:
         # Duck-typed string check
@@ -544,10 +540,15 @@ def dft_postprocess_data(arr, real_grid, recip_grid, shift, axes,
         freqs = np.linspace(fmin, fmax, num=len_dft)
         stride = real_grid.stride[ax]
 
+        op, op_in = str(op).lower(), op
         if op == 'multiply':
             onedim_arr *= stride * _interp_kernel_ft(freqs, intp)
-        else:
+        elif op == 'divide':
             onedim_arr /= stride * _interp_kernel_ft(freqs, intp)
+        elif op == 'adjoint':
+            onedim_arr *= _interp_kernel_ft(freqs, intp) / stride * (2 * np.pi)
+        else:
+            raise ValueError("kernel `op` '{}' not understood".format(op_in))
 
         onedim_arrs.append(onedim_arr.astype(out.dtype, copy=False))
 

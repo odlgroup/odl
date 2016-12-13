@@ -160,5 +160,55 @@ def test_wavelet_transform(wave_impl, shape_setup, floating_dtype):
     assert all_almost_equal(image, reco_image)
 
 
+def test_wavelet_adjoint(wave_impl, shape_setup, floating_dtype):
+    """Verify that the adjoint of the wavelet operator is correct.
+
+    This is done by checking the definition of the adjoint::
+
+        <Ax, y> = <x, Aty>
+    """
+    # Verify that the operator works as expected
+    wavelet, pad_mode, nlevels, shape, _ = shape_setup
+    ndim = len(shape)
+
+    space = odl.uniform_discr([-1] * ndim, [1] * ndim, shape,
+                              dtype=floating_dtype)
+
+    wave_trafo = odl.trafos.WaveletTransform(
+        space, wavelet, nlevels, pad_mode, impl=wave_impl)
+
+    x = noise_element(wave_trafo.domain)
+    y = noise_element(wave_trafo.range)
+
+    Axy = wave_trafo(x).inner(y)
+    xAty = x.inner(wave_trafo.adjoint(y))
+
+    assert Axy == pytest.approx(xAty, rel=1e-2)
+
+
+def test_wavelet_inverse(wave_impl, shape_setup, floating_dtype):
+    """Verify that the adjoint of the wavelet operator is correct.
+
+    This is done by checking the definition of the adjoint::
+
+        <Ax, y> = <x, Aty>
+    """
+    # Verify that the operator works as expected
+    wavelet, pad_mode, nlevels, shape, _ = shape_setup
+    ndim = len(shape)
+
+    space = odl.uniform_discr([-1] * ndim, [1] * ndim, shape,
+                              dtype=floating_dtype)
+
+    wave_trafo = odl.trafos.WaveletTransform(
+        space, wavelet, nlevels, pad_mode, impl=wave_impl)
+
+    x = noise_element(wave_trafo.domain)
+
+    AiAx = wave_trafo.inverse(wave_trafo(x))
+
+    assert all_almost_equal(x, AiAx)
+
+
 if __name__ == '__main__':
     pytest.main([str(__file__.replace('\\', '/')), '-v'])
