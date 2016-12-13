@@ -35,8 +35,8 @@ from odl.tomo.util.testutils import (skip_if_no_astra, skip_if_no_astra_cuda,
 
 filter_type = simple_fixture(
     'filter_type', ['Ram-Lak', 'Shepp-Logan', 'Cosine', 'Hamming', 'Hann'])
-filter_cutoff = simple_fixture(
-    'filter_cutoff', [0.5, 0.9, 1.0])
+frequency_scaling = simple_fixture(
+    'frequency_scaling', [0.5, 0.9, 1.0])
 
 # Find the valid projectors
 # TODO: Add nonuniform once #671 is solved
@@ -182,7 +182,7 @@ def test_fbp_reconstruction(projector):
 
 @skip_if_no_astra_cuda
 @skip_if_no_largescale
-def test_fbp_reconstruction_filters(filter_type, filter_cutoff):
+def test_fbp_reconstruction_filters(filter_type, frequency_scaling):
     """Validate that the various filters work as expected."""
 
     apart = odl.uniform_partition(0, np.pi, 500)
@@ -206,7 +206,7 @@ def test_fbp_reconstruction_filters(filter_type, filter_cutoff):
     # Create FBP operator with filters and apply to projections
     fbp_operator = odl.tomo.fbp_op(projector,
                                    filter_type=filter_type,
-                                   filter_cutoff=filter_cutoff)
+                                   frequency_scaling=frequency_scaling)
 
     fbp_result = fbp_operator(projections)
 

@@ -70,7 +70,7 @@ windowed_fbp = fbp * odl.tomo.tam_danielson_window(ray_trafo)
 # --- Show some examples --- #
 
 
-# Create a Shepp-Logan phantom (modified version)
+# Create a discrete Shepp-Logan phantom (modified version)
 phantom = odl.phantom.shepp_logan(reco_space, modified=True)
 
 # Create projection data by calling the ray transform on the phantom
@@ -81,7 +81,8 @@ fbp_reconstruction = fbp(proj_data)
 w_fbp_reconstruction = windowed_fbp(proj_data)
 
 # Show a slice of phantom, projections, and reconstruction
-phantom.show(title='Phantom')
+phantom.show(title='Phantom',
+             coords=[0, None, None], clim=[-0.1, 1.1])
 proj_data.show(title='Simulated data (sinogram)')
 fbp_reconstruction.show(title='Filtered back-projection',
                         coords=[0, None, None], clim=[-0.1, 1.1])
