@@ -16,11 +16,14 @@
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Example using a filtered backprojection in 2d using the ray transform and a
+Example using a filtered back-projection in 2d using the ray transform and a
 ramp filter. The ramp filter is implemented in fourier space.
 
 See https://en.wikipedia.org/wiki/Radon_transform#Inversion_formulas for
 more information.
+
+Also note that ODL has a utility function, `fbp_op` that can be used to perform
+filtered back-projection.
 """
 
 import numpy as np
@@ -45,7 +48,7 @@ detector_partition = odl.uniform_partition(-30, 30, 500)
 geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 
 
-# --- Create FilteredBackProjection (FBP) operator --- #
+# --- Create Filtered Back-Projection (FBP) operator --- #
 
 
 # Ray transform (= forward projection). We use the ASTRA CUDA backend.
@@ -60,8 +63,8 @@ ramp_function = fourier.range.element(lambda x: np.abs(x[1]) / (2 * np.pi))
 # Create ramp filter via the convolution formula with fourier transforms
 ramp_filter = fourier.inverse * ramp_function * fourier
 
-# Create filtered backprojection by composing the backprojection (adjoint) with
-# the ramp filter.
+# Create filtered back-projection by composing the back-projection (adjoint)
+# with the ramp filter.
 fbp = ray_trafo.adjoint * ramp_filter
 
 
@@ -74,11 +77,11 @@ phantom = odl.phantom.shepp_logan(reco_space, modified=True)
 # Create projection data by calling the ray transform on the phantom
 proj_data = ray_trafo(phantom)
 
-# Calculate filtered backprojection of data
+# Calculate filtered back-projection of data
 fbp_reconstruction = fbp(proj_data)
 
 # Shows a slice of the phantom, projections, and reconstruction
 phantom.show(title='Phantom')
 proj_data.show(title='Projection data (sinogram)')
-fbp_reconstruction.show(title='Filtered backprojection')
+fbp_reconstruction.show(title='Filtered back-projection')
 (phantom - fbp_reconstruction).show(title='Error')

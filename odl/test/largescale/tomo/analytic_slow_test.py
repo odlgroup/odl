@@ -156,7 +156,7 @@ def projector(request):
 
 @skip_if_no_largescale
 def test_fbp_reconstruction(projector):
-    """Test filtered backprojection with various projectors."""
+    """Test filtered back-projection with various projectors."""
 
     # Create Shepp-Logan phantom
     vol = odl.phantom.shepp_logan(projector.domain, modified=False)

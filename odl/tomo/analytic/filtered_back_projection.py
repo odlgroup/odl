@@ -24,7 +24,6 @@ import numpy as np
 import scipy as sp
 from odl.discr import ResizingOperator
 from odl.trafos import FourierTransform, PYFFTW_AVAILABLE
-from odl.tomo.util.utility import perpendicular_vector
 
 
 __all__ = ('fbp_op', 'tam_danielson_window')
@@ -60,63 +59,69 @@ def _rotation_direction_in_detector(geometry):
     return c / cnorm
 
 
-def _fbp_filter(norm_freq, filter_type, filter_cutoff):
+def _fbp_filter(norm_freq, filter_type, frequency_scaling):
     """Create a smoothing filter for FBP.
 
     Parameters
     ----------
     norm_freq : `array-like`
-        Normalized frequencies.
+        Frequencies normalized to lie in the interval [0, 1].
     filter_type : {'Ram-Lak', 'Shepp-Logan', 'Cosine', 'Hamming', 'Hann'}
         The type of filter to be used.
-    filter_cutoff : float
-        Relative cutoff frequency for the filter.
+    frequency_scaling : float
+        Scaling of the frequencies for the filter. All frequencies are scaled
+        by this number, any relative frequency above ``frequency_scaling`` is
+        set to 0.
 
     Returns
     -------
     smoothing_filter : `numpy.ndarray`
 
-    References
-    ----------
-    http://oftankonyv.reak.bme.hu/tiki-index.php?page=Reconstruction
-    """
-    if not (0 < filter_cutoff <= 1):
-        raise ValueError('`filter_cutoff` ({}) not in the interval (0, 1]'
-                         ''.format(filter_cutoff))
+    Examples
+    --------
+    Create a FBP filter
 
-    indicator = (norm_freq <= filter_cutoff)
+    >>> norm_freq = np.linspace(0, 1, 10)
+    >>> filt = _fbp_filter(norm_freq,
+    ...                    filter_type='Hann',
+    ...                    frequency_scaling=0.8)
+    """
 
     if filter_type == 'Ram-Lak':
-        filt = indicator
+        filt = 1
     elif filter_type == 'Shepp-Logan':
-        filt = indicator * np.sinc(norm_freq / (2 * filter_cutoff))
+        filt = np.sinc(norm_freq / (2 * frequency_scaling))
     elif filter_type == 'Cosine':
-        filt = indicator * np.cos(norm_freq * np.pi / (2 * filter_cutoff))
+        filt = np.cos(norm_freq * np.pi / (2 * frequency_scaling))
     elif filter_type == 'Hamming':
-        filt = indicator * (0.54 +
-                            0.46 * np.cos(norm_freq * np.pi / (filter_cutoff)))
+        filt = 0.54 + 0.46 * np.cos(norm_freq * np.pi / (frequency_scaling))
     elif filter_type == 'Hann':
-        filt = indicator * np.cos(norm_freq * np.pi / (2 * filter_cutoff)) ** 2
+        filt = np.cos(norm_freq * np.pi / (2 * frequency_scaling)) ** 2
     else:
         raise ValueError('unknown `filter_type` ({})'
                          ''.format(filter_type))
 
-    return filt
+    indicator = (norm_freq <= frequency_scaling)
+    return indicator * filt
 
 
 def tam_danielson_window(ray_trafo, smoothing_width=0.05):
     """Create Tam-Danielson window from a `RayTransform`.
 
     The Tam-Danielson window is an indicator function on the minimal set of
-    data needed to reconstruct a given data. It is useful in analytic
-    reconstruction methods such as FBP to give a more accurate reconstruction.
+    data needed to reconstruct a volume from given data. It is useful in
+    analytic reconstruction methods such as FBP to give a more accurate
+    reconstruction.
+
+    See TAM1998_ for more information.
 
     Parameters
     ----------
     ray_trafo : `RayTransform`
-        The ray transform that the window should be computed for.
-    smoothing_width : float
-        Relative width of the smoothing applied to the windows edges.
+        The ray transform for which to compute the window.
+    smoothing_width : positive float, optional
+        Width of the smoothing applied to the window's edges given as a
+        fraction of the width of the full window.
 
     Returns
     -------
@@ -124,18 +129,33 @@ def tam_danielson_window(ray_trafo, smoothing_width=0.05):
 
     See Also
     --------
-    fbp_op : Filtered back-projection from `RayTransform`
-    HelicalConeFlatGeometry : The geometry this is most useful for.
-    """
+    fbp_op : Filtered back-projection operator from `RayTransform`
+    HelicalConeFlatGeometry : The primary use case for this window function.
 
+    References
+    ----------
+    .. _TAM1998: http://iopscience.iop.org/article/10.1088/0031-9155/43/4/028
+    """
     # Extract parameters
     src_radius = ray_trafo.geometry.src_radius
     det_radius = ray_trafo.geometry.det_radius
     pitch = ray_trafo.geometry.pitch
-    dx = ray_trafo.range.meshgrid[1].ravel()
 
-    # Find the direction that the filter should be taken in
+    if pitch == 0:
+        raise ValueError('Tam-Danielson window is only defined with '
+                         '`pitch!=0`')
+
+    smoothing_width = float(smoothing_width)
+    if smoothing_width < 0:
+        raise ValueError('`smoothing_width` should be a positive float')
+
+    # Find projection of axis on detector
     axis_proj = _axis_in_detector(ray_trafo.geometry)
+    rot_dir = _rotation_direction_in_detector(ray_trafo.geometry)
+
+    # Find distance from projection of rotation axis for each pixel
+    dx = (rot_dir[0] * ray_trafo.range.meshgrid[1] +
+          rot_dir[1] * ray_trafo.range.meshgrid[2])
 
     # Compute angles
     phi = np.arctan(dx / (src_radius + det_radius))
@@ -143,10 +163,10 @@ def tam_danielson_window(ray_trafo, smoothing_width=0.05):
 
     # Compute lower and upper bound
     source_to_line_distance = src_radius + src_radius * np.cos(theta)
+    scale = (src_radius + det_radius) / source_to_line_distance
+
     source_to_line_lower = pitch * (theta - np.pi) / (2 * np.pi)
     source_to_line_upper = pitch * (theta + np.pi) / (2 * np.pi)
-
-    scale = (src_radius + det_radius) / source_to_line_distance
 
     lower_proj = source_to_line_lower * scale
     upper_proj = source_to_line_upper * scale
@@ -155,26 +175,25 @@ def tam_danielson_window(ray_trafo, smoothing_width=0.05):
     interval = (upper_proj - lower_proj)
     width = interval * smoothing_width / np.sqrt(2)
 
-    # Append axes
-    interval = interval[None, :, None]
-    lower_proj = lower_proj[None, :, None]
-    upper_proj = upper_proj[None, :, None]
-    width = width[None, :, None]
-
     # Create window function
     def window_fcn(x):
         x_along_axis = axis_proj[0] * x[1] + axis_proj[1] * x[2]
-        lower_wndw = 0.5 * (
-            1 + sp.special.erf((x_along_axis - lower_proj) / width))
-        upper_wndw = 0.5 * (
-            1 + sp.special.erf((upper_proj - x_along_axis) / width))
+        if smoothing_width != 0:
+            lower_wndw = 0.5 * (
+                1 + sp.special.erf((x_along_axis - lower_proj) / width))
+            upper_wndw = 0.5 * (
+                1 + sp.special.erf((upper_proj - x_along_axis) / width))
+        else:
+            lower_wndw = (x_along_axis >= lower_proj)
+            upper_wndw = (x_along_axis <= upper_proj)
 
         return lower_wndw * upper_wndw
 
     return ray_trafo.range.element(window_fcn)
 
 
-def fbp_op(ray_trafo, padding=True, filter_type='Ram-Lak', filter_cutoff=1.0):
+def fbp_op(ray_trafo, padding=True,
+           filter_type='Ram-Lak', frequency_scaling=1.0):
     """Create filtered back-projection from a `RayTransform`.
 
     The filtered back-projection is an approximate inverse to the ray
@@ -209,10 +228,11 @@ def fbp_op(ray_trafo, padding=True, filter_type='Ram-Lak', filter_cutoff=1.0):
         The type of filter to be used. The options are, approximate order from
         most noise senstive to least noise sensitive: 'Ram-Lak', 'Shepp-Logan',
         'Cosine', 'Hamming' and 'Hann'.
-    filter_cutoff : float, optional
-        Relative cutoff frequency for the filter, a scalar in the range (0, 1].
+    frequency_scaling : float, optional
+        Relative cutoff frequency for the filter.
         The normalized frequencies are rescaled so that they fit into the range
-        [0, filter_cutoff].
+        [0, frequency_scaling]. Any frequency above ``frequency_scaling`` is
+        set to zero.
 
     Returns
     -------
@@ -228,10 +248,10 @@ def fbp_op(ray_trafo, padding=True, filter_type='Ram-Lak', filter_cutoff=1.0):
 
     if ray_trafo.domain.ndim == 2:
         # Define ramp filter
-        def fft_filter(x):
+        def fourier_filter(x):
             abs_freq = np.abs(x[1])
             norm_freq = abs_freq / np.max(abs_freq)
-            filt = _fbp_filter(norm_freq, filter_type, filter_cutoff)
+            filt = _fbp_filter(norm_freq, filter_type, frequency_scaling)
             scaling = 1 / (2 * alen)
             return filt * abs_freq * scaling
 
@@ -267,16 +287,18 @@ def fbp_op(ray_trafo, padding=True, filter_type='Ram-Lak', filter_cutoff=1.0):
                       ray_trafo.geometry.det_radius))
 
             if ray_trafo.geometry.pitch != 0:
-                # In helical each projection hits the detector less than once.
+                # In helical geometry the whole volume is not in by each
+                # projection, ideally each point in the volume effects only by
+                # the projections in a half rotation.
                 scale *= alen / (np.pi)
         else:
             scale = 1.0
 
         # Define ramp filter
-        def fft_filter(x):
+        def fourier_filter(x):
             abs_freq = np.abs(rot_dir[0] * x[1] + rot_dir[1] * x[2])
             norm_freq = abs_freq / np.max(abs_freq)
-            filt = _fbp_filter(norm_freq, filter_type, filter_cutoff)
+            filt = _fbp_filter(norm_freq, filter_type, frequency_scaling)
             scaling = scale / (2 * alen)
             return filt * abs_freq * scaling
 
@@ -306,18 +328,19 @@ def fbp_op(ray_trafo, padding=True, filter_type='Ram-Lak', filter_cutoff=1.0):
         raise NotImplementedError('FBP only implemented in 2d and 3d')
 
     # Create ramp in the detector direction
-    ramp_function = fourier.range.element(fft_filter)
+    ramp_function = fourier.range.element(fourier_filter)
 
     # Create ramp filter via the convolution formula with fourier transforms
     ramp_filter = fourier.inverse * ramp_function * fourier
 
-    # Create filtered backprojection by composing the backprojection
+    # Create filtered back-projection by composing the backprojection
     # (adjoint) with the ramp filter.
     return ray_trafo.adjoint * ramp_filter
 
 
 if __name__ == '__main__':
     # Display the various filters
+    import odl
     import matplotlib.pyplot as plt
     x = np.linspace(0, 1, 100)
     cutoff = 0.7
@@ -325,8 +348,24 @@ if __name__ == '__main__':
     for filter_name in ['Ram-Lak', 'Shepp-Logan', 'Cosine', 'Hamming', 'Hann']:
         plt.plot(x, x * _fbp_filter(x, filter_name, cutoff), label=filter_name)
 
-    plt.title('Filters with cutoff = {}'.format(cutoff))
+    plt.title('Filters with frequency scaling = {}'.format(cutoff))
     plt.legend(loc=2)
+
+    # Show the Tam-Danielson window
+
+    # Create Ray Transform in helical geometry
+    reco_space = odl.uniform_discr(
+        min_pt=[-20, -20, 0], max_pt=[20, 20, 40], shape=[300, 300, 300])
+    angle_partition = odl.uniform_partition(0, 8 * 2 * np.pi, 2000)
+    detector_partition = odl.uniform_partition([-40, -4], [40, 4], [500, 500])
+    geometry = odl.tomo.HelicalConeFlatGeometry(
+        angle_partition, detector_partition, src_radius=100, det_radius=100,
+        pitch=5.0)
+    ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl='astra_cuda')
+
+    # Crete and show TD window
+    td_window = tam_danielson_window(ray_trafo, smoothing_width=0)
+    td_window.show('Tam-Danielson window', coords=[0, None, None])
 
     # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests

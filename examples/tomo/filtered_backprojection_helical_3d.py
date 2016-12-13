@@ -15,15 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""
-Example using a filtered backprojection (FBP) in helical 3d using `fbp_op`.
+"""Example using a FBP in helical 3D geometry using `fbp_op`.
 
 Note that the FBP is only approximate in this geometry, but still gives a
-decent reconstruction that can be used as an initial guess in more complicated
+decent reconstruction that can be used as an initial guess in more complex
 methods.
 
-In helical geometries, the data is in general over-sampled which causes
-streaking artefacts and a wrong scaling. This can be reduced using a
+In helical geometries, the data are in general over-sampled which causes
+streak artefacts and a wrong scaling. This can be reduced using a
 Tam-Danielson window.
 """
 
@@ -31,10 +30,10 @@ import numpy as np
 import odl
 
 
-# --- Set-up geometry of the problem --- #
+# --- Set up geometry of the problem --- #
 
 
-# Discrete reconstruction space: discretized functions on the cube
+# Reconstruction space: discretized functions on the cube
 # [-20, 20]^2 x [0, 40] with 300 samples per dimension.
 reco_space = odl.uniform_discr(
     min_pt=[-20, -20, 0], max_pt=[20, 20, 40], shape=[300, 300, 300],
@@ -42,23 +41,27 @@ reco_space = odl.uniform_discr(
 
 # Make a helical cone beam geometry with flat detector
 # Angles: uniformly spaced, n = 2000, min = 0, max = 8 * 2 * pi
+# This gives 8 full turns of the helix.
 angle_partition = odl.uniform_partition(0, 8 * 2 * np.pi, 2000)
-# Detector: uniformly sampled, n = (558, 60), min = (-30, -4), max = (30, 4)
+# Detector: uniformly sampled with a small height,
+# n = (558, 60), min = (-30, -4), max = (30, 4)
 detector_partition = odl.uniform_partition([-40, -4], [40, 4], [558, 60])
-# Spiral has a pitch of 5, we run 8 rounds (due to max angle = 8 * 2 * pi)
+# Create geometry
 geometry = odl.tomo.HelicalConeFlatGeometry(
     angle_partition, detector_partition, src_radius=100, det_radius=100,
     pitch=5.0)
 
 
-# --- Create FilteredBackProjection (FBP) operator --- #
+# --- Create Filtered Back-Projection (FBP) operator --- #
 
 
 # Ray transform (= forward projection). We use the ASTRA CUDA backend.
 ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl='astra_cuda')
 
 # Unwindowed fbp
-fbp = odl.tomo.fbp_op(ray_trafo, filter_type='Hann', filter_cutoff=0.8)
+# We select a Hamming filter, and only use the lowest 80% of frequencies to
+# avoid high frequency noise.
+fbp = odl.tomo.fbp_op(ray_trafo, filter_type='Hamming', frequency_scaling=0.8)
 
 # Create Tam-Danielson window to improve result
 windowed_fbp = fbp * odl.tomo.tam_danielson_window(ray_trafo)
@@ -67,20 +70,20 @@ windowed_fbp = fbp * odl.tomo.tam_danielson_window(ray_trafo)
 # --- Show some examples --- #
 
 
-# Create a discrete Shepp-Logan phantom (modified version)
+# Create a Shepp-Logan phantom (modified version)
 phantom = odl.phantom.shepp_logan(reco_space, modified=True)
 
 # Create projection data by calling the ray transform on the phantom
 proj_data = ray_trafo(phantom)
 
-# Calculate filtered backprojection of data
+# Calculate FBP reconstructions, once without window, once with window
 fbp_reconstruction = fbp(proj_data)
 w_fbp_reconstruction = windowed_fbp(proj_data)
 
-# Shows a slice of the phantom, projections, and reconstruction
+# Show a slice of phantom, projections, and reconstruction
 phantom.show(title='Phantom')
-proj_data.show(title='Projection data (sinogram)')
-fbp_reconstruction.show(title='Filtered backprojection',
+proj_data.show(title='Simulated data (sinogram)')
+fbp_reconstruction.show(title='Filtered back-projection',
                         coords=[0, None, None], clim=[-0.1, 1.1])
-w_fbp_reconstruction.show(title='Windowed filtered backprojection',
+w_fbp_reconstruction.show(title='Windowed filtered back-projection',
                           coords=[0, None, None], clim=[-0.1, 1.1])

@@ -16,7 +16,7 @@
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Example using a filtered backprojection (FBP) in fan beam using `fbp_op`.
+Example using a filtered back-projection (FBP) in fan beam using `fbp_op`.
 
 Note that the FBP is only approximate in this geometry, but still gives a
 decent reconstruction that can be used as an initial guess in more complicated
@@ -46,14 +46,16 @@ geometry = odl.tomo.FanFlatGeometry(
     angle_partition, detector_partition, src_radius=40, det_radius=40)
 
 
-# --- Create FilteredBackProjection (FBP) operator --- #
+# --- Create Filtered Back-Projection (FBP) operator --- #
 
 
 # Ray transform (= forward projection). We use the ASTRA CUDA backend.
 ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl='astra_cuda')
 
 # Create FBP operator using utility function
-fbp = odl.tomo.fbp_op(ray_trafo, filter_type='Hann', filter_cutoff=0.8)
+# We select a Hann filter, and only use the lowest 80% of frequencies to avoid
+# high frequency noise.
+fbp = odl.tomo.fbp_op(ray_trafo, filter_type='Hann', frequency_scaling=0.8)
 
 
 # --- Show some examples --- #
@@ -65,11 +67,11 @@ phantom = odl.phantom.shepp_logan(reco_space, modified=True)
 # Create projection data by calling the ray transform on the phantom
 proj_data = ray_trafo(phantom)
 
-# Calculate filtered backprojection of data
+# Calculate filtered back-projection of data
 fbp_reconstruction = fbp(proj_data)
 
 # Shows a slice of the phantom, projections, and reconstruction
 phantom.show(title='Phantom')
 proj_data.show(title='Projection data (sinogram)')
-fbp_reconstruction.show(title='Filtered backprojection')
+fbp_reconstruction.show(title='Filtered back-projection')
 (phantom - fbp_reconstruction).show(title='Error')

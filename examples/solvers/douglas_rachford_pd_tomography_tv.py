@@ -35,7 +35,7 @@ be solved with the `douglas_rachford_pd` solver.
 
 In this example, the problem is solved with only 22 angles available, which is
 highly under-sampled data. Despite this, we get a perfect reconstruction.
-A filtered backprojection (pseudoinverse) reconstruction is also shown at the
+A filtered back-projection (pseudoinverse) reconstruction is also shown at the
 end for comparsion.
 
 This is an implementation of the "puzzling numerical experiment" in the seminal
@@ -128,6 +128,6 @@ odl.solvers.douglas_rachford_pd(x, f, g, lin_ops,
                                 tau=0.1, sigma=[0.1, 0.02], lam=1.5,
                                 niter=200, callback=callback)
 
-# Compare with filtered backprojection
+# Compare with filtered back-projection
 fbp_recon = odl.tomo.fbp_op(ray_trafo)(data)
 fbp_recon.show('FBP reconstruction')
