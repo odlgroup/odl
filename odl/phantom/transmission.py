@@ -131,6 +131,7 @@ def shepp_logan(space, modified=False):
     See Also
     --------
     forbild : Similar phantom but with more complexity. Only supports 2d.
+    odl.phantom.geometric.defrise : Geometry test phantom
     shepp_logan_ellipses : Get the parameters that define this phantom
     odl.phantom.geometric.ellipse_phantom :
         Function for creating arbitrary ellipse phantoms

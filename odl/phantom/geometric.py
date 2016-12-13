@@ -24,7 +24,7 @@ standard_library.install_aliases()
 
 import numpy as np
 
-__all__ = ('cuboid', 'ellipse_phantom', 'indicate_proj_axis')
+__all__ = ('cuboid', 'defrise', 'ellipse_phantom', 'indicate_proj_axis')
 
 
 def cuboid(space, min_pt=None, max_pt=None):
@@ -93,6 +93,94 @@ def cuboid(space, min_pt=None, max_pt=None):
         return result
 
     return space.element(phantom)
+
+
+def defrise(space, nellipses=8, alternating=False):
+    """Phantom with regularily spaced ellipses.
+
+    This phantom is often used to verify cone-beam algorithms.
+
+    Parameters
+    ----------
+    space : `DiscretizedSpace`
+        Discretized space in which the phantom is supposed to be created.
+        Needs to be 2d or 3d.
+    nellipses : int, optional
+        Number of ellipses. If more ellipses are used, each ellipse becomes
+        thinner.
+    alternating : bool, optional
+        True if the ellipses should have alternating densities (+1, -1),
+        otherwise all ellipses have value +1.
+
+    Returns
+    -------
+    phantom : ``space`` element
+        The generated phantom in ``space``.
+
+    See Also
+    --------
+    odl.phantom.transmission.shepp_logan
+    """
+    ellipses = defrise_ellipses(space.ndim, nellipses=nellipses,
+                                alternating=alternating)
+
+    return ellipse_phantom(space, ellipses)
+
+
+def defrise_ellipses(ndim, nellipses=8, alternating=False):
+    """Ellipses for the standard Defrise phantom in 2 or 3 dimensions.
+
+    Parameters
+    ----------
+    ndim : {2, 3}
+        Dimension of the space the ellipses should be in.
+    nellipses : int, optional
+        Number of ellipses. If more ellipses are used, each ellipse becomes
+        thinner.
+    alternating : bool, optional
+        True if the ellipses should have alternating densities (+1, -1),
+        otherwise all ellipses have value +1.
+
+    See Also
+    --------
+    odl.phantom.geometric.ellipse_phantom :
+        Function for creating arbitrary ellipse phantoms
+    shepp_logan : Create a phantom with these ellipses
+    """
+    ellipses = []
+    if ndim == 2:
+        for i in range(nellipses):
+            if alternating:
+                value = (-1.0 + 2.0 * (i % 2))
+            else:
+                value = 1.0
+
+            axis_1 = 0.5
+            axis_2 = 0.5 / (nellipses + 1)
+            center_x = 0.0
+            center_y = -1 + 2.0 / (nellipses + 1.0) * (i + 1)
+            rotation = 0
+            ellipses.append(
+                [value, axis_1, axis_2, center_x, center_y, rotation])
+    elif ndim == 3:
+        for i in range(nellipses):
+            if alternating:
+                value = (-1.0 + 2.0 * (i % 2))
+            else:
+                value = 1.0
+
+            axis_1 = axis_2 = 0.5
+            axis_3 = 0.5 / (nellipses + 1)
+            center_x = center_y = 0.0
+            center_z = -1 + 2.0 / (nellipses + 1.0) * (i + 1)
+            rotation_phi = rotation_theta = rotation_psi = 0
+
+            ellipses.append(
+                [value, axis_1, axis_2, axis_3,
+                 center_x, center_y, center_z,
+                 rotation_phi, rotation_theta, rotation_psi])
+
+    return ellipses
 
 
 def indicate_proj_axis(space, scale_structures=0.5):
@@ -482,6 +570,8 @@ def ellipse_phantom(space, ellipses):
         typically used for transmission imaging
     odl.phantom.transmission.shepp_logan_ellipses : Ellipses for the
         Shepp-Logan phantom
+    odl.phantom.geometric.defrise_ellipses : Ellipses for the
+        Defrise phantom
     """
 
     if space.ndim == 2:
@@ -520,6 +610,14 @@ if __name__ == '__main__':
     ellipses = [[1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
                 [1.0, 0.6, 0.6, 0.6, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]
     ellipse_phantom(discr, ellipses).show('ellipse phantom 3d')
+
+    # Defrise phantom 2D
+    discr = odl.uniform_discr([-1, -1], [1, 1], [300, 300])
+    defrise(discr).show('defrise 2D')
+
+    # Defrise phantom 2D
+    discr = odl.uniform_discr([-1, -1, -1], [1, 1, 1], [300, 300, 300])
+    defrise(discr).show('defrise 3D', coords=[0, None, None])
 
     # Run also the doctests
     # pylint: disable=wrong-import-position

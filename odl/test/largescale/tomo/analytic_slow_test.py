@@ -29,16 +29,14 @@ import numpy as np
 # Internal
 import odl
 import odl.tomo as tomo
-from odl.util.testutils import skip_if_no_largescale
+from odl.util.testutils import skip_if_no_largescale, simple_fixture
 from odl.tomo.util.testutils import (skip_if_no_astra, skip_if_no_astra_cuda,
                                      skip_if_no_scikit)
 
-
-@pytest.fixture(scope="module", params=['float32', 'float64'],
-                ids=[' dtype = float32 ', ' dtype = float64 '])
-def dtype(request):
-    return request.param
-
+filter_type = simple_fixture(
+    'filter_type', ['Ram-Lak', 'Shepp-Logan', 'Cosine', 'Hamming', 'Hann'])
+frequency_scaling = simple_fixture(
+    'frequency_scaling', [0.5, 0.9, 1.0])
 
 # Find the valid projectors
 # TODO: Add nonuniform once #671 is solved
@@ -48,6 +46,7 @@ projectors = [skip_if_no_astra('par2d astra_cpu uniform'),
               skip_if_no_astra_cuda('cone2d astra_cuda uniform'),
               skip_if_no_astra_cuda('par3d astra_cuda uniform'),
               skip_if_no_astra_cuda('cone3d astra_cuda uniform'),
+              skip_if_no_astra_cuda('helical astra_cuda uniform'),
               skip_if_no_scikit('par2d scikit uniform')]
 
 projector_ids = ['geom={}, impl={}, angles={}'
@@ -61,9 +60,10 @@ projectors = [pytest.mark.skipif(p.args[0] + largescale, p.args[1])
 
 
 @pytest.fixture(scope="module", params=projectors, ids=projector_ids)
-def projector(request, dtype):
+def projector(request):
 
     n_angles = 500
+    dtype = 'float32'
 
     geom, impl, angle = request.param.split()
 
@@ -95,8 +95,7 @@ def projector(request, dtype):
         geom = tomo.Parallel2dGeometry(apart, dpart)
 
         # Ray transform
-        return tomo.RayTransform(discr_reco_space, geom,
-                                 impl=impl)
+        return tomo.RayTransform(discr_reco_space, geom, impl=impl)
 
     elif geom == 'par3d':
         # Discrete reconstruction space
@@ -108,8 +107,7 @@ def projector(request, dtype):
         geom = tomo.Parallel3dAxisGeometry(apart, dpart, axis=[1, 1, 0])
 
         # Ray transform
-        return tomo.RayTransform(discr_reco_space, geom,
-                                 impl=impl)
+        return tomo.RayTransform(discr_reco_space, geom, impl=impl)
 
     elif geom == 'cone2d':
         # Discrete reconstruction space
@@ -122,8 +120,7 @@ def projector(request, dtype):
                                     src_radius=100, det_radius=100)
 
         # Ray transform
-        return tomo.RayTransform(discr_reco_space, geom,
-                                 impl=impl)
+        return tomo.RayTransform(discr_reco_space, geom, impl=impl)
 
     elif geom == 'cone3d':
         # Discrete reconstruction space
@@ -131,13 +128,12 @@ def projector(request, dtype):
                                              [100, 100, 100], dtype=dtype)
 
         # Geometry
-        dpart = odl.uniform_partition([-40, -40], [40, 40], [200, 200])
+        dpart = odl.uniform_partition([-50, -50], [50, 50], [200, 200])
         geom = tomo.CircularConeFlatGeometry(
             apart, dpart, src_radius=100, det_radius=100, axis=[1, 0, 0])
 
         # Ray transform
-        return tomo.RayTransform(discr_reco_space, geom,
-                                 impl=impl)
+        return tomo.RayTransform(discr_reco_space, geom, impl=impl)
 
     elif geom == 'helical':
         # Discrete reconstruction space
@@ -148,20 +144,19 @@ def projector(request, dtype):
         # TODO: angles
         n_angle = 2000
         apart = odl.uniform_partition(0, 8 * 2 * np.pi, n_angle)
-        dpart = odl.uniform_partition([-30, -3], [30, 3], [200, 20])
+        dpart = odl.uniform_partition([-50, -4], [50, 4], [200, 20])
         geom = tomo.HelicalConeFlatGeometry(apart, dpart, pitch=5.0,
                                             src_radius=100, det_radius=100)
 
-        # Ray transform
-        return tomo.RayTransform(discr_reco_space, geom,
-                                 impl=impl)
+        # Windowed ray transform
+        return tomo.RayTransform(discr_reco_space, geom, impl=impl)
     else:
         raise ValueError('param not valid')
 
 
 @skip_if_no_largescale
 def test_fbp_reconstruction(projector):
-    """Test discrete Ray transform using ASTRA for reconstruction."""
+    """Test filtered back-projection with various projectors."""
 
     # Create Shepp-Logan phantom
     vol = odl.phantom.shepp_logan(projector.domain, modified=False)
@@ -169,19 +164,55 @@ def test_fbp_reconstruction(projector):
     # Project data
     projections = projector(vol)
 
+    # Create default FBP operator and apply to projections
     fbp_operator = odl.tomo.fbp_op(projector)
+
+    # Add window if problem is in 3d.
+    if (isinstance(projector.geometry, odl.tomo.HelicalConeFlatGeometry) and
+            projector.geometry.pitch != 0):
+        fbp_operator = fbp_operator * odl.tomo.tam_danielson_window(projector)
+
+    # Compute the FBP result
+    fbp_result = fbp_operator(projections)
+
+    maxerr = vol.norm() / 5.0
+    error = vol.dist(fbp_result)
+    assert error < maxerr
+
+
+@skip_if_no_astra_cuda
+@skip_if_no_largescale
+def test_fbp_reconstruction_filters(filter_type, frequency_scaling):
+    """Validate that the various filters work as expected."""
+
+    apart = odl.uniform_partition(0, np.pi, 500)
+
+    discr_reco_space = odl.uniform_discr([-20, -20], [20, 20],
+                                         [100, 100], dtype='float32')
+
+    # Geometry
+    dpart = odl.uniform_partition(-30, 30, 500)
+    geom = tomo.Parallel2dGeometry(apart, dpart)
+
+    # Ray transform
+    projector = tomo.RayTransform(discr_reco_space, geom, impl='astra_cuda')
+
+    # Create Shepp-Logan phantom
+    vol = odl.phantom.shepp_logan(projector.domain, modified=False)
+
+    # Project data
+    projections = projector(vol)
+
+    # Create FBP operator with filters and apply to projections
+    fbp_operator = odl.tomo.fbp_op(projector,
+                                   filter_type=filter_type,
+                                   frequency_scaling=frequency_scaling)
 
     fbp_result = fbp_operator(projections)
 
-    if isinstance(projector.geometry, odl.tomo.ParallelGeometry):
-        # Should be exact for parallel
-        maxerr = vol.norm() / 5.0
-    else:
-        # Only an approximation
-        maxerr = vol.norm() / 3.0
-
-    # Make sure the result is somewhat close to the actual result.
-    assert fbp_result.dist(vol) < maxerr
+    maxerr = vol.norm() / 5.0
+    error = vol.dist(fbp_result)
+    assert error < maxerr
 
 
 if __name__ == '__main__':

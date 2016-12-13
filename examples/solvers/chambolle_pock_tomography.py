@@ -119,5 +119,5 @@ odl.solvers.chambolle_pock_solver(
 
 # Display images
 discr_phantom.show(title='Phantom')
-data.show(title='Projection data')
+data.show(title='Simulated data (Sinogram)')
 x.show(title='TV reconstruction', show=True)
