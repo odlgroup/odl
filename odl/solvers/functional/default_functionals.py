@@ -49,7 +49,8 @@ __all__ = ('LpNorm', 'L1Norm', 'L2Norm', 'L2NormSquared',
            'KullbackLeiblerCrossEntropy', 'SeparableSum',
            'QuadraticForm',
            'NuclearNorm', 'IndicatorNuclearNormUnitBall',
-           'ScalingFunctional', 'IdentityFunctional')
+           'ScalingFunctional', 'IdentityFunctional',
+           'MoreauEnvelope')
 
 
 class LpNorm(Functional):
@@ -2100,6 +2101,44 @@ class IndicatorNuclearNormUnitBall(Functional):
                                          self.domain,
                                          self.__norm.outernorm.exponent,
                                          self.__norm.pwisenorm.exponent)
+
+
+class MoreauEnvelope(Functional):
+    """Moreau envelope of a convex functional.
+
+    The Moraeu evelope is a way to smooth an arbitrary convex functional
+    such that its gradient can be computed given the proximal of the original
+    functional.
+
+    Notes
+    -----
+    The Moreau envelope of a convex functional
+    :math:`f : \mathcal{X} \\rightarrow \mathbb{R}` multiplied by a scalar
+    :math:`\\sigma` is defined by
+
+    .. math::
+        \mathrm{env}_{\\sigma  f}(x) =
+        \\min_{y \\in \\mathcal{X}}
+        \\left\{ \\frac{1}{2 \\sigma} \| x - y \|_2^2 + f(x) \\right\}
+
+    The gradient of the envelope is given by
+
+    .. math::
+        [\\nabla \mathrm{env}_{\\sigma  f}](x) =
+        \\frac{1}{\\sigma} (x - \mathrm{prox}_{\\sigma  f}(x))
+    """
+    def __init__(self, functional, scalar=1.0):
+        self.functional = functional
+        self.scalar = scalar
+        super().__init__(space=functional.space,
+                         linear=False)
+
+    @property
+    def gradient(self):
+        """The gradient operator."""
+        return (ScalingOperator(self.domain, 1 / self.scalar) -
+                (1 / self.scalar) * self.functional.proximal(self.scalar))
+
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position
