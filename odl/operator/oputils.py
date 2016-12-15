@@ -108,7 +108,7 @@ def matrix_representation(op):
                 tmp_idx = 0
                 for k in range(num_ran):
                     matrix[tmp_idx: tmp_idx + op.range[k].size, index] = (
-                        tmp_ran[k])
+                        as_flat_array(tmp_ran[k]))
                     tmp_idx += op.range[k].size
             else:
                 matrix[:, index] = as_flat_array(tmp_ran)
