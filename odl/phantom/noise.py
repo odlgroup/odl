@@ -23,9 +23,10 @@ from future import standard_library
 standard_library.install_aliases()
 
 import numpy as np
+from odl.util.utility import as_flat_array
 
 
-__all__ = ('white_noise', 'poisson_noise')
+__all__ = ('white_noise', 'poisson_noise', 'salt_pepper_noise')
 
 
 def white_noise(space, mean=0, stddev=1):
@@ -51,6 +52,7 @@ def white_noise(space, mean=0, stddev=1):
     See Also
     --------
     poisson_noise
+    salt_pepper_noise
     numpy.random.normal
     """
     from odl.space import ProductSpace
@@ -73,7 +75,7 @@ def poisson_noise(intensity):
 
     Parameters
     ----------
-    intensity : `FnBase` or `ProductSpace`
+    intensity : `FnBase` element or `ProductSpace` element
         The intensity (usually called lambda) parameter of the noise.
 
     Returns
@@ -95,6 +97,7 @@ def poisson_noise(intensity):
     See Also
     --------
     white_noise
+    salt_pepper_noise
     numpy.random.poisson
     """
     from odl.space import ProductSpace
@@ -103,6 +106,84 @@ def poisson_noise(intensity):
     else:
         values = np.random.poisson(intensity.asarray())
     return intensity.space.element(values)
+
+
+def salt_pepper_noise(vector, amount=0.05, salt_vs_pepper=0.5,
+                      low_val=None, high_val=None):
+    """Add salt and pepper noise to vector.
+
+    Salt and pepper noise replaces random elements in ``vector`` with
+    ``low_val`` or ``high_val``.
+
+    Parameters
+    ----------
+    vector : `FnBase` or `ProductSpace`
+        The vector that noise should be added to.
+    amount : float, optional
+        The propotion of elements in vector whose element should be converted
+        to noise.
+    salt_vs_pepper : float, optional
+        Relative aboundance of salt (high) vs pepper (low) noise. A high value
+        means more salt than pepper noise.
+    low_val : float, optional
+        The "pepper" color in the noise.
+        Default: minimum value of ``vector``. For product spaces, takes min for
+        each sub-space.
+    high_val : float, optional
+        The "salt" value in the noise.
+        Default: maximuim value of ``vector``. For product spaces, takes max
+        for each sub-space.
+
+    Returns
+    -------
+    salt_pepper_noise : ``vector.space`` element
+        ``vector`` with salt and pepper noise.
+
+    See Also
+    --------
+    white_noise
+    poisson_noise
+    """
+    from odl.space import ProductSpace
+
+    # Validate input parameters
+    amount, amount_in = float(amount), amount
+    if not (0 <= amount <= 1):
+        raise ValueError('`amount` ({}) should be a float in the interval '
+                         '[0, 1]'.format(amount_in))
+
+    salt_vs_pepper, salt_vs_pepper_in = float(salt_vs_pepper), salt_vs_pepper
+    if not (0 <= salt_vs_pepper <= 1):
+        raise ValueError('`salt_vs_pepper` ({}) should be a float in the '
+                         'interval [0, 1]'.format(salt_vs_pepper_in))
+
+
+
+    if isinstance(vector.space, ProductSpace):
+        values = [salt_pepper_noise(subintensity, amount, salt_vs_pepper,
+                                    low_val, high_val)
+                  for subintensity in vector]
+    else:
+        # Extract vector of values
+        values = as_flat_array(vector).copy()
+
+        # Determine fill-in values if not given
+        if low_val is None:
+            low_val = np.min(values)
+        if high_val is None:
+            high_val = np.max(values)
+
+        # Create randomly selected points as a subset of image.
+        a = np.arange(vector.size)
+        np.random.shuffle(a)
+        salt_indices = a[:int(amount * vector.size * salt_vs_pepper)]
+        pepper_indices = a[int(amount * vector.size * salt_vs_pepper):
+                           int(amount * vector.size)]
+
+        values[salt_indices] = 1
+        values[pepper_indices] = -1
+
+    return vector.space.element(values)
 
 
 if __name__ == '__main__':
@@ -118,6 +199,10 @@ if __name__ == '__main__':
 
     discr = odl.uniform_discr([-1, -1], [1, 1], [300, 300])
     white_noise(discr).show('white_noise 2d')
+
+    vector = odl.phantom.shepp_logan(discr, modified=True)
+    poisson_noise(vector * 100).show('poisson_noise 2d')
+    salt_pepper_noise(vector).show('salt_pepper_noise 2d')
 
     # Run also the doctests
     # pylint: disable=wrong-import-position
