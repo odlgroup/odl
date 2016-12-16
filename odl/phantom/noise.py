@@ -157,8 +157,6 @@ def salt_pepper_noise(vector, amount=0.05, salt_vs_pepper=0.5,
         raise ValueError('`salt_vs_pepper` ({}) should be a float in the '
                          'interval [0, 1]'.format(salt_vs_pepper_in))
 
-
-
     if isinstance(vector.space, ProductSpace):
         values = [salt_pepper_noise(subintensity, amount, salt_vs_pepper,
                                     low_val, high_val)

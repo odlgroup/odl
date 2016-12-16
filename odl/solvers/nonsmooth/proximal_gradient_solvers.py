@@ -29,20 +29,17 @@ import numpy as np
 __all__ = ('proximal_gradient', 'accelerated_proximal_gradient')
 
 
-def proximal_gradient(x, f, g, gamma, niter, callback=None, accelerated=True,
-                      **kwargs):
+def proximal_gradient(x, f, g, gamma, niter, callback=None, **kwargs):
     """(Accelerated) proximal gradient algorithm for convex optimization.
 
     Also known as "Iterative Soft-Thresholding Algorithm" (ISTA).
-
-    If the ``accelerated=True` option, the method is known as "Fast Iterative
-    Soft-Thresholding Algorithm" (FISTA).
+    See Beck2009_ for more information.
 
     Solves the convex optimization problem::
 
         min_{x in X} f(x) + g(x)
 
-    where ``g`` is differentiable and the proximal operator of ``f`` is known.
+    where the proximal operator of ``f`` is known and ``g`` is differentiable.
 
     Parameters
     ----------
@@ -58,11 +55,11 @@ def proximal_gradient(x, f, g, gamma, niter, callback=None, accelerated=True,
         Step size parameter.
     niter : non-negative int, optional
         Number of iterations.
+    callback : callable, optional
+        Function called with the current iterate after each iteration.
 
     Other Parameters
     ----------------
-    callback : callable, optional
-        Function called with the current iterate after each iteration.
     lam : float or callable, optional
         Overrelaxation step size. If callable, should take an index (zero
         indexed) and return the corresponding step size.
@@ -95,6 +92,10 @@ def proximal_gradient(x, f, g, gamma, niter, callback=None, accelerated=True,
        \\sum_{k=0}^\\infty \\lambda_k (\\delta - \\lambda_k) = + \\infty
 
     where :math:`\\delta = \\min \{1, \\beta / \\gamma\}`.
+
+    References
+    ----------
+    .. _Beck2009: http://epubs.siam.org/doi/abs/10.1137/080716542
     """
     # Starting point
     if x not in f.domain:
@@ -141,13 +142,13 @@ def accelerated_proximal_gradient(x, f, g, gamma, niter, callback=None,
     """Accelerated proximal gradient algorithm for convex optimization.
 
     The method is known as "Fast Iterative Soft-Thresholding Algorithm"
-    (FISTA).
+    (FISTA). See Beck2009_ for more information.
 
     Solves the convex optimization problem::
 
         min_{x in X} f(x) + g(x)
 
-    where ``g`` is differentiable and the proximal operator of ``f`` is known.
+    where the proximal operator of ``f`` is known and ``g`` is differentiable.
 
     Parameters
     ----------
@@ -163,9 +164,6 @@ def accelerated_proximal_gradient(x, f, g, gamma, niter, callback=None,
         Step size parameter.
     niter : non-negative int, optional
         Number of iterations.
-
-    Other Parameters
-    ----------------
     callback : callable, optional
         Function called with the current iterate after each iteration.
 
@@ -188,6 +186,10 @@ def accelerated_proximal_gradient(x, f, g, gamma, niter, callback=None,
     .. math::
 
        0 < \\gamma < 2 \\beta.
+
+    References
+    ----------
+    .. _Beck2009: http://epubs.siam.org/doi/abs/10.1137/080716542
     """
     # Starting point
     if x not in f.domain:

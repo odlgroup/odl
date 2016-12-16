@@ -19,9 +19,11 @@
 
 Solves the optimization problem
 
-    min_x || x - g ||_1 + lam ||grad(x)||_2^2
+    min_x || x - g ||_1 + lam || grad(x) ||_2^2
 
 Where ``grad`` is the spatial gradient operator and ``g`` is given noisy data.
+
+The proximal gradient solvers are also known as ISTA and FISTA.
 """
 
 import odl
@@ -50,8 +52,7 @@ l1_norm = odl.solvers.L1Norm(space)
 data_discrepancy = l1_norm.translated(data)
 
 # l2-squared norm of gradient
-regularizer = 0.1 * odl.solvers.L1NormSquared(grad.range) * grad
-regularizer = 0.1 * odl.solvers.L2NormSquared(grad.range) * grad
+regularizer = 0.05 * odl.solvers.L2NormSquared(grad.range) * grad
 
 # --- Select solver parameters and solve using proximal gradient --- #
 
@@ -62,17 +63,17 @@ gamma = 0.01
 callback = (odl.solvers.CallbackPrintIteration() &
             odl.solvers.CallbackShow(display_step=10))
 
-# Run the algorithm
+# Run the algorithm (ISTA)
 x = space.zero()
 odl.solvers.proximal_gradient(
-    x, f=data_discrepancy, g=regularizer, niter=100, gamma=gamma,
+    x, f=data_discrepancy, g=regularizer, niter=200, gamma=gamma,
     callback=callback)
 
-# Compare to accelerated version
+# Compare to accelerated version (FISTA) which is much faster
 callback.reset()
 x_acc = space.zero()
 odl.solvers.accelerated_proximal_gradient(
-    x_acc, f=data_discrepancy, g=regularizer, niter=100, gamma=gamma,
+    x_acc, f=data_discrepancy, g=regularizer, niter=50, gamma=gamma,
     callback=callback)
 
 # Display images
