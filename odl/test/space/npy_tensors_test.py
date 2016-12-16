@@ -1428,14 +1428,79 @@ def test_ufuncs(tspace, ufunc):
 def test_reduction(tspace, reduction):
     """Test reductions in x.ufunc against direct Numpy reduction."""
     name, _ = reduction
-    ufunc = getattr(np, name)
+    npy_reduction = getattr(np, name)
 
     x_arr, x = noise_elements(tspace, 1)
-    # Should be equal theoretically, but summation order, other stuff, ...
-    assert ufunc(x_arr) == pytest.approx(getattr(x.ufunc, name)())
+    x_reduction = getattr(x.ufunc, name)
+
+    # Should be equal theoretically, but summation order, other stuff, ...,
+    # hence we use approx
+
+    # Full reduction, produces scalar
+    result_npy = npy_reduction(x_arr)
+    result = x_reduction()
+    assert result == pytest.approx(result_npy)
+    result = x_reduction(axis=(0, 1))
+    assert result == pytest.approx(result_npy)
+
+    # Reduction along axes, produces element in reduced space
+    result_npy = npy_reduction(x_arr, axis=0)
+    result = x_reduction(axis=0)
+    assert isinstance(result, NumpyTensor)
+    assert result.shape == result_npy.shape
+    assert result.dtype == x.dtype
+    assert np.allclose(result, result_npy)
+    # Check reduced space properties
+    assert isinstance(result.space, NumpyTensorSpace)
+    assert result.space.exponent == x.space.exponent
+    assert result.space.weighting == x.space.weighting  # holds true here
+    # Evaluate in-place
+    out = result.space.element()
+    x_reduction(axis=0, out=out)
+    assert np.allclose(out, result_npy)
+
+    # Use keepdims parameter
+    result_npy = npy_reduction(x_arr, axis=1, keepdims=True)
+    result = x_reduction(axis=1, keepdims=True)
+    assert result.shape == result_npy.shape
+    assert np.allclose(result, result_npy)
+    # Evaluate in-place
+    out = result.space.element()
+    x_reduction(axis=1, keepdims=True, out=out)
+    assert np.allclose(out, result_npy)
+
+    # Use dtype parameter
+    # These reductions have a `dtype` parameter
+    if name in ('cumprod', 'cumsum', 'mean', 'prod', 'std', 'sum',
+                'trace', 'var'):
+        result_npy = npy_reduction(x_arr, axis=1, dtype='complex64')
+        result = x_reduction(axis=1, dtype='complex64')
+        assert result.dtype == np.dtype('complex64')
+        assert np.allclose(result, result_npy)
+        # Evaluate in-place
+        out = result.space.element()
+        x_reduction(axis=1, dtype='complex64', out=out)
+        assert np.allclose(out, result_npy)
+
+
+def test_reduction_with_weighting():
+    """Weightings are tricky to handle, check some cases."""
+    # Constant weighting, should propagate
+    tspace = odl.rtensors((3, 4), weight=0.5)
+    x = tspace.one()
+    red = x.ufuncs.sum(axis=0)
+    assert red.space.weighting == tspace.weighting
+
+    # Array weighting, should result in no weighting
+    weight_arr = np.ones((3, 4)) * 0.5
+    tspace = odl.rtensors((3, 4), weight=weight_arr, exponent=1.5)
+    x = tspace.one()
+    red = x.ufuncs.sum(axis=0)
+    assert red.space.weighting == NumpyTensorSpaceNoWeighting(exponent=1.5)
 
 
 def test_ufunc_reduction_docs_notempty():
+    """Check that the generated docstrings are not empty."""
     for _, __, ___, doc in UFUNCS:
         assert doc.splitlines()[0] != ''
 
