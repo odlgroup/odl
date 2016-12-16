@@ -79,7 +79,7 @@ class FunctionSetMapping(Operator):
             raise TypeError('`partition` {!r} is not a `RectPartition` '
                             'instance'.format(partition))
         if not isinstance(dspace, TensorSet):
-            raise TypeError('`dspace` {!r} is not an `TensorSet` instance'
+            raise TypeError('`dspace` {!r} is not a `TensorSet` instance'
                             ''.format(dspace))
 
         if not fset.domain.contains_set(partition):
@@ -102,8 +102,8 @@ class FunctionSetMapping(Operator):
                 raise TypeError('`fset` {!r} is not a `FunctionSpace` '
                                 'instance'.format(fset))
             if not isinstance(dspace, TensorSpace):
-                raise TypeError('`dspace` {!r} is not an `TensorSpace` instance'
-                                ''.format(dspace))
+                raise TypeError('`dspace` {!r} is not a `TensorSpace` '
+                                'instance'.format(dspace))
             if fset.field != dspace.field:
                 raise ValueError('`field` {} of the function space and `field`'
                                  ' {} of the data space are not equal'

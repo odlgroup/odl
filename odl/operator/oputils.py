@@ -49,14 +49,16 @@ def matrix_representation(op):
     if not (isinstance(op.domain, TensorSpace) or
             (isinstance(op.domain, ProductSpace) and
              all(isinstance(spc, TensorSpace) for spc in op.domain))):
-        raise TypeError('operator domain {!r} is not TensorSpace, nor ProductSpace '
-                        'with only TensorSpace components'.format(op.domain))
+        raise TypeError('operator domain {!r} is neither `TensorSpace` '
+                        'nor `ProductSpace` with only `TensorSpace` '
+                        'components'.format(op.domain))
 
     if not (isinstance(op.range, TensorSpace) or
             (isinstance(op.range, ProductSpace) and
              all(isinstance(spc, TensorSpace) for spc in op.range))):
-        raise TypeError('operator range {!r} is not TensorSpace, nor ProductSpace '
-                        'with only TensorSpace components'.format(op.range))
+        raise TypeError('operator range {!r} is neither `TensorSpace` '
+                        'nor `ProductSpace` with only `TensorSpace` '
+                        'components'.format(op.range))
 
     # Get the size of the range, and handle ProductSpace
     # Store for reuse in loop

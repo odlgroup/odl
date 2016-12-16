@@ -6,7 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""CPU implementations of tensor spaces."""
+"""CPU implementations of tensor spaces using NumPy."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import

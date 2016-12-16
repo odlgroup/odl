@@ -74,7 +74,7 @@ def poisson_noise(intensity, seed=None):
 
     Parameters
     ----------
-    intensity : `TensorSpace` element or `ProductSpace` element
+    intensity : `TensorSpace` or `ProductSpace` element
         The intensity (usually called lambda) parameter of the noise.
 
     Returns

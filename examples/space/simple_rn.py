@@ -13,7 +13,7 @@ class SimpleRn(TensorSpace):
     """The real space R^n, non-optimized implmentation."""
 
     def __init__(self, size):
-        TensorSpace.__init__(self, size, np.float)
+        TensorSpace.__init__(self, size, dtype=float)
 
     def zero(self):
         return self.element(np.zeros(self.size))

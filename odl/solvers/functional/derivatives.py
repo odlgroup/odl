@@ -100,10 +100,10 @@ class NumericalDerivative(Operator):
             raise TypeError('`operator` has to be an `Operator` instance')
 
         if not isinstance(operator.domain, TensorSpace):
-            raise TypeError('`operator.domain` has to be an `TensorSpace` '
+            raise TypeError('`operator.domain` must be a `TensorSpace` '
                             'instance')
         if not isinstance(operator.range, TensorSpace):
-            raise TypeError('`operator.range` has to be an `TensorSpace` '
+            raise TypeError('`operator.range` must be a `TensorSpace` '
                             'instance')
 
         self.operator = operator
@@ -225,7 +225,7 @@ class NumericalGradient(Operator):
             raise TypeError('`functional` has to be a `Functional` instance')
 
         if not isinstance(functional.domain, TensorSpace):
-            raise TypeError('`functional.domain` has to be an `TensorSpace` '
+            raise TypeError('`functional.domain` must be a `TensorSpace` '
                             'instance')
 
         self.functional = functional

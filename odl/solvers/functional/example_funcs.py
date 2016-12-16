@@ -95,6 +95,8 @@ class RosenbrockFunctional(Functional):
         if not isinstance(space, TensorSpace):
             raise ValueError('`space` must be a `TensorSpace` instance, '
                              'got {!r}'.format(space))
+        if space.ndim > 1:
+            raise ValueError('`space` cannot have more than 1 dimension')
         if space.size < 2:
             raise ValueError('`space.size` must be >= 2, got {}'
                              ''.format(space.size))

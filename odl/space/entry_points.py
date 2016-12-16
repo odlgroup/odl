@@ -8,9 +8,9 @@
 
 """Entry points for adding more spaces to ODL using external packages.
 
-External packages can add implementations of `TensorSet` and `TensorSpace` by
-hooking into the setuptools entry point ``'odl.space'`` and exposing the
-methods ``tensor_set_impls`` and ``tensor_space_impls``.
+External packages can add implementations of `TensorSet` and
+`TensorSpace` by hooking into the setuptools entry point ``'odl.space'``
+and exposing the methods ``tensor_set_impls`` and ``tensor_space_impls``.
 
 
 Attributes
@@ -18,7 +18,7 @@ Attributes
 TENSOR_SET_IMPLS: dict
     A dictionary that maps a string to an `TensorSet` implementation.
 TENSOR_SPACE_IMPLS: dict
-    A dictionary that maps a string to an `TensorSpace` implementation.
+    A dictionary that maps a string to a `TensorSpace` implementation.
 
 Notes
 -----

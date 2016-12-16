@@ -79,7 +79,7 @@ class DiscretizedSet(TensorSet):
             raise TypeError('`uspace` {!r} not a `Set` instance'
                             ''.format(uspace))
         if not isinstance(dspace, TensorSet):
-            raise TypeError('`dspace` {!r} not an `TensorSet` instance'
+            raise TypeError('`dspace` {!r} not a `TensorSet` instance'
                             ''.format(dspace))
 
         if sampling is not None:
@@ -448,7 +448,7 @@ class DiscretizedSpace(DiscretizedSet, TensorSpace):
                             'instance'.format(uspace))
 
         if not isinstance(dspace, TensorSpace):
-            raise TypeError('`dspace` {!r} not an TensorSpace instance'
+            raise TypeError('`dspace` {!r} not a `TensorSpace` instance'
                             ''.format(dspace))
 
         if uspace.field != dspace.field:
