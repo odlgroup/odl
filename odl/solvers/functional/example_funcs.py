@@ -28,6 +28,7 @@ import numpy as np
 from odl.solvers.functional.functional import Functional
 from odl.operator.operator import Operator
 from odl.space.base_tensors import TensorSpace
+# TODO: find a place for the opertor and import from there
 # from odl.space.npy_tensors import MatVecOperator
 
 
@@ -103,7 +104,9 @@ class RosenbrockFunctional(Functional):
         """
         self.scale = float(scale)
         if not isinstance(space, TensorSpace):
-            raise ValueError('`space` must be an `TensorSpace`')
+            raise ValueError('`space` must be a `TensorSpace` instance')
+        if space.ndim > 1:
+            raise ValueError('`space` cannot have more than 1 dimension')
         if space.size < 2:
             raise ValueError('`space` must have size >= 2, got {}'
                              ''.format(space.size))
