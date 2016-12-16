@@ -11,7 +11,7 @@ Glossary
 
     array-like
         Any data structure which can be converted into a `numpy.ndarray` by the
-        `numpy.array` constructor. Includes all `GeneralizedTensor` based classes.
+        `numpy.array` constructor. Includes all `Tensor` based classes.
 
     convex conjugate
         The convex conjugate (also called Fenchel conjugate) is an important tool in convex optimization.
