@@ -35,7 +35,7 @@ def proximal_gradient(x, f, g, gamma, niter, callback=None, **kwargs):
     Also known as "Iterative Soft-Thresholding Algorithm" (ISTA).
     See Beck2009_ for more information.
 
-    Solves the convex optimization problem::
+    This solver solves the convex optimization problem::
 
         min_{x in X} f(x) + g(x)
 
@@ -61,8 +61,8 @@ def proximal_gradient(x, f, g, gamma, niter, callback=None, **kwargs):
     Other Parameters
     ----------------
     lam : float or callable, optional
-        Overrelaxation step size. If callable, should take an index (zero
-        indexed) and return the corresponding step size.
+        Overrelaxation step size. If callable, it should take an index
+        (starting at zero) and return the corresponding step size.
         Default: 1.0
 
     Notes
@@ -70,25 +70,21 @@ def proximal_gradient(x, f, g, gamma, niter, callback=None, **kwargs):
     The problem of interest is
 
     .. math::
-
         \\min_{x \\in X} f(x) + g(x),
 
-    where the technical conditions are that
-    :math:`f : X \\rightarrow \mathbb{R}` is proper, convex and
-    lower-semicontinuous, and :math:`g : X \\rightarrow \mathbb{R}` is
-    differentiable and :math:`\\nabla g` is :math:`1 / \\beta`-Lipschitz
-    continuous.
+    where the formal conditions are that
+    :math:`f : X \\to \mathbb{R}` is proper, convex and lower-semicontinuous,
+    and :math:`g : X \\to \mathbb{R}` is differentiable and
+    :math:`\\nabla g` is :math:`1 / \\beta`-Lipschitz continuous.
 
     Convergence is only guaranteed if the step length :math:`\\gamma` satisfies
 
     .. math::
-
        0 < \\gamma < 2 \\beta
 
     and the parameter :math:`\\lambda` (``lam``) satisfies
 
     .. math::
-
        \\sum_{k=0}^\\infty \\lambda_k (\\delta - \\lambda_k) = + \\infty
 
     where :math:`\\delta = \\min \{1, \\beta / \\gamma\}`.
@@ -97,7 +93,7 @@ def proximal_gradient(x, f, g, gamma, niter, callback=None, **kwargs):
     ----------
     .. _Beck2009: http://epubs.siam.org/doi/abs/10.1137/080716542
     """
-    # Starting point
+    # Get and validate input
     if x not in f.domain:
         raise TypeError('`x` {!r} is not in the domain of `f` {!r}'
                         ''.format(x, f.domain))
@@ -105,21 +101,19 @@ def proximal_gradient(x, f, g, gamma, niter, callback=None, **kwargs):
         raise TypeError('`x` {!r} is not in the domain of `g` {!r}'
                         ''.format(x, g.domain))
 
-    # Step size parameter
     gamma, gamma_in = float(gamma), gamma
     if gamma <= 0:
         raise ValueError('`gamma` must be positive, got {}'.format(gamma_in))
 
-    # Number of iterations
-    if not isinstance(niter, int) or niter < 0:
-        raise ValueError('`niter` {} not understood'
-                         ''.format(niter))
+    if int(niter) != niter:
+        raise ValueError('`niter` {} not understood'.format(niter))
 
     lam_in = kwargs.pop('lam', 1.0)
     lam = lam_in if callable(lam_in) else lambda _: float(lam_in)
 
-    # Get the proximals
+    # Get the proximal and gradient
     f_prox = f.proximal(gamma)
+    g_grad = g.gradient
 
     # Create temporary
     tmp = x.space.element()
@@ -127,8 +121,8 @@ def proximal_gradient(x, f, g, gamma, niter, callback=None, **kwargs):
     for k in range(niter):
         lam_k = lam(k)
 
-        # x - tau grad_g (x)
-        tmp.lincomb(1, x, -gamma, g.gradient(x))
+        # x - gamma grad_g (x)
+        tmp.lincomb(1, x, -gamma, g_grad(x))
 
         # Update x
         x.lincomb(1 - lam_k, x, lam_k, f_prox(tmp))
@@ -191,7 +185,7 @@ def accelerated_proximal_gradient(x, f, g, gamma, niter, callback=None,
     ----------
     .. _Beck2009: http://epubs.siam.org/doi/abs/10.1137/080716542
     """
-    # Starting point
+    # Get and validate input
     if x not in f.domain:
         raise TypeError('`x` {!r} is not in the domain of `f` {!r}'
                         ''.format(x, f.domain))
@@ -199,18 +193,16 @@ def accelerated_proximal_gradient(x, f, g, gamma, niter, callback=None,
         raise TypeError('`x` {!r} is not in the domain of `g` {!r}'
                         ''.format(x, g.domain))
 
-    # Step size parameter
     gamma, gamma_in = float(gamma), gamma
     if gamma <= 0:
         raise ValueError('`gamma` must be positive, got {}'.format(gamma_in))
 
-    # Number of iterations
-    if not isinstance(niter, int) or niter < 0:
-        raise ValueError('`niter` {} not understood'
-                         ''.format(niter))
+    if int(niter) != niter:
+        raise ValueError('`niter` {} not understood'.format(niter))
 
-    # Get the proximals
+    # Get the proximal
     f_prox = f.proximal(gamma)
+    g_grad = g.gradient
 
     # Create temporary
     tmp = x.space.element()
@@ -222,8 +214,8 @@ def accelerated_proximal_gradient(x, f, g, gamma, niter, callback=None,
         t, t_old = (1 + np.sqrt(1 + 4 * t ** 2)) / 2, t
         alpha = (t_old - 1) / t
 
-        # x - tau grad_g (x)
-        tmp.lincomb(1, y, -gamma, g.gradient(y))
+        # x - gamma grad_g (y)
+        tmp.lincomb(1, y, -gamma, g_grad(y))
 
         # Store old x value in y
         y.assign(x)
