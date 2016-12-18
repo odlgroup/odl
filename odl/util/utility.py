@@ -707,6 +707,37 @@ def signature_string(posargs, optargs, sep=', ', mod=''):
     return part_sep.join(parts)
 
 
+# TODO: Remove when numpy 1.11 is an ODL dependency
+def moveaxis(a, source, destination):
+    """Implementation of `numpy.moveaxis`.
+
+    Needed since `numpy.moveaxis` requires numpy 1.11, which ODL doesn't
+    have as a dependency.
+    """
+    import numpy
+    if hasattr(numpy, 'moveaxis'):
+        return numpy.moveaxis(a, source, destination)
+
+    try:
+        source = list(source)
+    except TypeError:
+        source = [source]
+    try:
+        destination = list(destination)
+    except TypeError:
+        destination = [destination]
+
+    source = [ax + a.ndim if ax < 0 else ax for ax in source]
+    destination = [ax + a.ndim if ax < 0 else ax for ax in destination]
+
+    order = [n for n in range(a.ndim) if n not in source]
+
+    for dest, src in sorted(zip(destination, source)):
+        order.insert(dest, src)
+
+    return a.transpose(order)
+
+
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
