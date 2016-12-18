@@ -29,8 +29,11 @@ By using a combination of regularizers, a better result is achieved.
 """
 
 import numpy as np
-import scipy.misc
 import odl
+
+
+# Select what type of denoising to use. Options: 'TV', 'NLM' and 'TV_NLM'
+model = 'TV_NLM'
 
 
 # --- Set up the forward operator (ray transform) --- #
@@ -39,13 +42,13 @@ import odl
 # Discrete reconstruction space: discretized functions on the rectangle
 # [-20, 20]^2 with 256 samples per dimension.
 space = odl.uniform_discr(
-    min_pt=[-20, -20], max_pt=[20, 20], shape=[257, 257], dtype='float32')
+    min_pt=[-20, -20], max_pt=[20, 20], shape=[256, 256], dtype='float32')
 
 # Make a parallel beam geometry with flat detector
-# Angles: uniformly spaced, n = 360, min = 0, max = 2 * pi
-angle_partition = odl.uniform_partition(0, np.pi, 360)
+# Angles: uniformly spaced, n = 360, min = 0, max = pi
+angle_partition = odl.uniform_partition(0, np.pi, 1000)
 # Detector: uniformly sampled, n = 558, min = -30, max = 30
-detector_partition = odl.uniform_partition(-30, 30, 558)
+detector_partition = odl.uniform_partition(-30, 30, 1000)
 geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 
 # The implementation of the ray transform to use, options:
@@ -76,10 +79,6 @@ data += odl.phantom.white_noise(ray_trafo.range) * np.mean(data) * 0.01
 
 gradient = odl.Gradient(space)
 
-# Assemble the linear operators. Here the TV-term is represented as a
-# composition of the 1-norm and the gradient. See the documentation of the
-# solver `forward_backward_pd` for the general form of the problem.
-lin_ops = [gradient, odl.IdentityOperator(space)]
 
 # The implementation of Non-Local Means transform to use, options:
 # 'skimage'                   Requires scikit-image (can be installed by
@@ -89,34 +88,48 @@ lin_ops = [gradient, odl.IdentityOperator(space)]
 impl = 'opencv'
 
 # Create functionals for the regularizers and the bound constrains.
-g = [0.01 * odl.solvers.L1Norm(gradient.range),
-     odl.solvers.NLMRegularizer(space, h=0.1, impl=impl,
-                                patch_size=5, patch_distance=11)]
+l1_norm = odl.solvers.GroupL1Norm(gradient.range)
+nlm_func = odl.solvers.NLMRegularizer(space, h=0.02, impl=impl,
+                                      patch_size=5, patch_distance=11)
 f = odl.solvers.IndicatorBox(space, 0, 2)
+
+# Assemble the linear operators. Here the TV-term is represented as a
+# composition of the 1-norm and the gradient. See the documentation of the
+# solver `forward_backward_pd` for the general form of the problem.
+if model == 'TV':
+    lin_ops = [gradient]
+    g = [0.004 * l1_norm]
+    sigma = [0.05]
+elif model == 'NLM':
+    lin_ops = [odl.IdentityOperator(space)]
+    g = [nlm_func]
+    sigma = [2.0]
+elif model == 'TV_NLM':
+    lin_ops = [gradient, odl.IdentityOperator(space)]
+    g = [0.002 * l1_norm, nlm_func]
+    sigma = [0.05, 2.0]
+else:
+    raise RuntimeError('Unknown model')
 
 # This gradient encodes the differentiable term(s) of the goal functional,
 # which corresponds to the "forward" part of the method. In this example the
 # differentiable part is the squared 2-norm.
 l2_norm = odl.solvers.L2NormSquared(ray_trafo.range)
-h = 2 * l2_norm.translated(data) * ray_trafo
-
-# Create initial guess for the solver.
-x = space.zero()
+h = l2_norm.translated(data) * ray_trafo
 
 # Used to display intermediate results and print iteration number.
 callback = (odl.solvers.CallbackShow(display_step=5, clim=[1, 1.1]) &
             odl.solvers.CallbackPrintIteration())
 
-
 # Use FBP as initial guess
 fbp_op = odl.tomo.fbp_op(ray_trafo,
-                         filter_type='Hamming', frequency_scaling=0.7)
+                         filter_type='Hann', frequency_scaling=0.3)
 fbp = fbp_op(data)
 fbp.show('fbp', clim=[1, 1.1])
 
 # Call the solver. x is updated in-place with the consecutive iterates.
 x = fbp.copy()
-odl.solvers.forward_backward_pd(x, f, g, lin_ops, h, tau=0.001,
-                                sigma=[0.5, 10], niter=200, callback=callback)
+odl.solvers.forward_backward_pd(x, f, g, lin_ops, h, tau=0.005,
+                                sigma=sigma, niter=1000, callback=callback)
 
-x.show('final result', clim=[1, 1.1])
+x.show('final result {}'.format(model), clim=[1, 1.1])
