@@ -19,8 +19,10 @@ import ctypes
 from functools import partial
 from math import sqrt
 import numpy as np
+import scipy.sparse
 import scipy.linalg as linalg
 
+from odl.operator.operator import Operator
 from odl.set.sets import RealNumbers, ComplexNumbers
 from odl.space.base_tensors import (
     TensorSet, GeneralizedTensor, TensorSpace, Tensor)
@@ -2088,6 +2090,204 @@ class NumpyTensorSpaceCustomDist(CustomDist):
             - ``dist(x, y) <= dist(x, z) + dist(z, y)``
         """
         super().__init__(dist, impl='numpy')
+
+
+class MatrixOperator(Operator):
+
+    """A matrix acting as a linear operator.
+
+    This operator uses a matrix to represent an operator, and get its
+    adjoint and inverse by doing computations on the matrix. This is in
+    general a rather slow and memory-inefficient approach, and users are
+    recommended to use other alternatives if possible.
+    """
+
+    def __init__(self, matrix, domain=None, range=None, axis=0):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        matrix : `array-like` or  `scipy.sparse.base.spmatrix`
+            2-dimensional array representing the linear operator.
+        domain : `NumpyTensorSpace`, optional
+            Space of elements on which the operator can act. Its
+            ``dtype`` must be castable to ``range.dtype``.
+            For the default ``None``, a space with 1 axis and size
+            ``matrix.shape[1]`` is used, together with the matrix'
+            data type.
+        range : `NumpyTensorSpace`, optional
+            Space of elements on to which the operator maps. Its
+            ``shape`` and ``dtype`` attributes must match the ones
+            of the result of the multiplication.
+            For the default ``None``, the range is inferred from
+            ``matrix``, ``domain`` and ``axis``.
+        axis : int, optional
+            Sum over this axis of an input tensor in the
+            multiplication.
+
+        Examples
+        --------
+        >>> m = np.ones((3, 4))
+        >>>
+        TODO: implement example
+
+        Notes
+        -----
+        For a matrix :math:`A \\in \\mathbb{F}^{n \\times m}`, the
+        operation on a tensor :math:`T \\in \mathbb{F}^{n_1 \\times
+        \dots \\times n_d}` is defined as the summation
+
+        .. math::
+            (A \cdot T)_{i_1, \dots, i_k, \dots, i_d} =
+            \sum_{j=1}^m A_{i_k j} T_{i_1, \dots, j, \dots, i_d}.
+
+        It produces a new tensor :math:`A \cdot T \in \mathbb{F}^{
+        n_1 \\times \dots \\times n \\times \dots \\times n_d}`.
+        """
+        if scipy.sparse.isspmatrix(matrix):
+            self.__matrix = matrix
+        else:
+            self.__matrix = np.asarray(matrix)
+
+        self.__axis, axis_in = int(axis), axis
+        if self.axis != axis_in:
+            raise ValueError('`axis` must be integer, got {}'.format(axis_in))
+
+        if self.matrix.ndim != 2:
+            raise ValueError('`matrix` has {} axes instead of 2'
+                             ''.format(self.matrix.ndim))
+
+        # Infer or check domain
+        if domain is None:
+            domain = NumpyTensorSpace((self.matrix.shape[1],),
+                                      dtype=self.matrix.dtype)
+        else:
+            if not isinstance(domain, NumpyTensorSpace):
+                raise TypeError('`domain` must be not a `NumpyTensorSpace`'
+                                'instance, got {!r}'.format(domain))
+
+            if scipy.sparse.isspmatrix(self.matrix) and domain.ndim > 1:
+                raise ValueError('`domain.ndim` > 1 unsupported for '
+                                 'scipy sparse matrices')
+
+            if domain.shape[axis] != self.matrix.shape[1]:
+                raise ValueError('`domain.shape[axis]` not equal to '
+                                 '`matrix.shape[1]` ({} != {})'
+                                 ''.format(domain.shape[axis],
+                                           self.matrix.shape[1]))
+
+        # Infer or check range
+        range_shape = list(domain.shape)
+        range_shape[self.axis] = self.matrix.shape[0]
+
+        if range is None:
+            range_dtype = np.promote_types(self.matrix.dtype, domain.dtype)
+            range = NumpyTensorSpace(range_shape, dtype=range_dtype)
+        else:
+            if not isinstance(range, NumpyTensorSpace):
+                raise TypeError('`range` must be not a `NumpyTensorSpace`'
+                                'instance, got {!r}'.format(range))
+
+            if range.shape != tuple(range_shape):
+                raise ValueError('expected `range.shape` = {}, got {}'
+                                 ''.format(tuple(range_shape), range.shape))
+
+        # Check compatibility of data types
+        if not np.can_cast(domain.dtype, range.dtype):
+            raise TypeError('domain data type {!r} cannot be safely cast to '
+                            'range data type {!r}'
+                            ''.format(domain.dtype, range.dtype))
+
+        if not np.can_cast(self.matrix.dtype, range.dtype):
+            raise TypeError('matrix data type {!r} cannot be safely cast to '
+                            'range data type {!r}.'
+                            ''.format(matrix.dtype, range.dtype))
+
+        super().__init__(domain, range, linear=True)
+
+    @property
+    def matrix(self):
+        """Matrix representing this operator."""
+        return self.__matrix
+
+    @property
+    def axis(self):
+        """Axis of domain elements over which is summed."""
+        return self.__axis
+
+    @property
+    def adjoint(self):
+        """Adjoint operator represented by the adjoint matrix.
+
+        Returns
+        -------
+        adjoint : `MatrixOperator`
+        """
+        return MatrixOperator(self.matrix.conj().T,
+                              domain=self.range, range=self.domain,
+                              axis=self.axis)
+
+    @property
+    def inverse(self):
+        """Inverse operator represented by the inverse matrix.
+
+        Taking the inverse causes sparse matrices to become dense and is
+        generally very heavy computationally since the matrix is inverted
+        numerically (an O(n^3) operation). It is recommended to instead
+        use one of the solvers available in the ``odl.solvers`` package.
+
+        Returns
+        -------
+        inverse : `MatrixOperator`
+        """
+        if self.matrix_issparse:
+            dense_matrix = self.matrix.toarray()
+        else:
+            dense_matrix = self.matrix
+
+        return MatrixOperator(np.linalg.inv(dense_matrix),
+                              domain=self.range, range=self.domain,
+                              axis=self.axis)
+
+    def _call(self, x, out=None):
+        """Raw apply method on input, writing to given output."""
+        if out is None:
+            if scipy.sparse.isspmatrix(self.matrix):
+                out = self.matrix.dot(x.data)
+            else:
+                out = np.tensordot(self.matrix, x.data, axes=(1, self.axis))
+
+            return out
+
+        else:
+            if scipy.sparse.isspmatrix(self.matrix):
+                # Unfortunately, there is no native in-place dot product for
+                # sparse matrices
+                out.data[:] = self.matrix.dot(x.data)
+            elif self.range.ndim == 1:
+                self.matrix.dot(x.data, out=out.data)
+            else:
+                # Could use einsum to have out, but it's damn slow
+                out.data[:] = np.tensordot(self.matrix, x.data,
+                                           axes=(1, self.axis))
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        sig_str = '{!r}'.format(self.matrix)
+        opt_arg_strings = []
+        if self.domain != NumpyTensorSpace((self.matrix.shape[1],),
+                                           dtype=self.matrix.dtype):
+            opt_arg_strings.append('{!r}'.format(self.domain))
+        range_shape = list(self.domain.shape)
+        range_shape[self.axis] = self.matrix.shape[0]
+        if self.range != NumpyTensorSpace(range_shape,
+                                          dtype=self.matrix.dtype):
+            opt_arg_strings.append('{!r}'.format(self.domain))
+
+        if opt_arg_strings:
+            sig_str += ',\n' + ', '.join(opt_arg_strings)
+
+        return '{}(\n{}\n)'.format(self.__class__.__name__, sig_str)
 
 
 if __name__ == '__main__':
