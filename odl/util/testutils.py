@@ -134,8 +134,6 @@ def all_equal(iter1, iter2):
 
 
 def all_almost_equal_array(v1, v2, places):
-    v1 = v1.__array__()
-    v2 = v2.__array__()
     return np.allclose(v1, v2,
                        rtol=10 ** (-places), atol=10 ** (-places),
                        equal_nan=True)
