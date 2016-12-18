@@ -18,6 +18,9 @@ __all__ += testutils.__all__
 from .utility import *
 __all__ += utility.__all__
 
+from .npy_compat import *
+__all__ += npy_compat.__all__
+
 from .normalize import *
 __all__ += normalize.__all__
 
