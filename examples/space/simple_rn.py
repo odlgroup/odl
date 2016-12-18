@@ -68,7 +68,7 @@ r5 = SimpleRn(5)
 # odl.diagnostics.SpaceTest(r5).run_tests()
 
 # Do some tests to compare
-n = 10**7
+n = 10 ** 7
 iterations = 10
 
 # Perform some benchmarks with rn

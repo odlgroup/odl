@@ -30,8 +30,8 @@ from odl.space.weighting import (
     Weighting, ArrayWeighting, ConstWeighting, NoWeighting,
     CustomInner, CustomNorm, CustomDist)
 from odl.util.ufuncs import NumpyTensorSetUfuncs
-from odl.util.utility import (
-    dtype_str, signature_string,
+from odl.util import (
+    dtype_str, signature_string, moveaxis,
     is_real_dtype, is_real_floating_dtype, is_complex_floating_dtype)
 
 
@@ -2109,6 +2109,8 @@ class MatrixOperator(Operator):
         ----------
         matrix : `array-like` or  `scipy.sparse.base.spmatrix`
             2-dimensional array representing the linear operator.
+            For Scipy sparse matrices only rank-1 tensor spaces are
+            allowed as ``domain``.
         domain : `NumpyTensorSpace`, optional
             Space of elements on which the operator can act. Its
             ``dtype`` must be castable to ``range.dtype``.
@@ -2127,9 +2129,32 @@ class MatrixOperator(Operator):
 
         Examples
         --------
+        By default, ``domain`` and ``range`` are spaces of rank
+        (number of axes) 1:
+
         >>> m = np.ones((3, 4))
-        >>>
-        TODO: implement example
+        >>> op = MatrixOperator(m)
+        >>> op.domain
+        rn(4)
+        >>> op.range
+        rn(3)
+        >>> op([1, 2, 3, 4])
+        rn(3).element(
+        [10.0, 10.0, 10.0]
+        )
+
+        For multi-dimensional arrays (tensors), the summation
+        (contraction) can be performed along a specific axis. In
+        this example, the number of matrix rows (4) must match the
+        domain shape entry in the given axis:
+
+        >>> dom = odl.rtensors((5, 4, 4))  # can use axis=1 or axis=2
+        >>> op = MatrixOperator(m, domain=dom, axis=1)
+        >>> op(dom.one()).shape
+        (5, 3, 4)
+        >>> op = MatrixOperator(m, domain=dom, axis=2)
+        >>> op(dom.one()).shape
+        (5, 4, 3)
 
         Notes
         -----
@@ -2193,15 +2218,11 @@ class MatrixOperator(Operator):
                                  ''.format(tuple(range_shape), range.shape))
 
         # Check compatibility of data types
-        if not np.can_cast(domain.dtype, range.dtype):
-            raise TypeError('domain data type {!r} cannot be safely cast to '
-                            'range data type {!r}'
-                            ''.format(domain.dtype, range.dtype))
-
-        if not np.can_cast(self.matrix.dtype, range.dtype):
-            raise TypeError('matrix data type {!r} cannot be safely cast to '
-                            'range data type {!r}.'
-                            ''.format(matrix.dtype, range.dtype))
+        result_dtype = np.promote_types(domain.dtype, self.matrix.dtype)
+        if not np.can_cast(result_dtype, range.dtype):
+            raise TypeError('result data type {} cannot be safely cast to '
+                            'range data type {}'
+                            ''.format(dtype_str(result_dtype, range.dtype)))
 
         super().__init__(domain, range, linear=True)
 
@@ -2240,7 +2261,7 @@ class MatrixOperator(Operator):
         -------
         inverse : `MatrixOperator`
         """
-        if self.matrix_issparse:
+        if scipy.sparse.issparse(self.matrix):
             dense_matrix = self.matrix.toarray()
         else:
             dense_matrix = self.matrix
@@ -2250,15 +2271,14 @@ class MatrixOperator(Operator):
                               axis=self.axis)
 
     def _call(self, x, out=None):
-        """Raw apply method on input, writing to given output."""
+        """Return ``self(x[, out])``."""
         if out is None:
             if scipy.sparse.isspmatrix(self.matrix):
                 out = self.matrix.dot(x.data)
             else:
-                out = np.tensordot(self.matrix, x.data, axes=(1, self.axis))
-
-            return out
-
+                dot = np.tensordot(self.matrix, x.data, axes=(1, self.axis))
+                # New axis ends up as first, need to swap it to its place
+                out = moveaxis(dot, 0, self.axis)
         else:
             if scipy.sparse.isspmatrix(self.matrix):
                 # Unfortunately, there is no native in-place dot product for
@@ -2268,8 +2288,11 @@ class MatrixOperator(Operator):
                 self.matrix.dot(x.data, out=out.data)
             else:
                 # Could use einsum to have out, but it's damn slow
-                out.data[:] = np.tensordot(self.matrix, x.data,
-                                           axes=(1, self.axis))
+                dot = np.tensordot(self.matrix, x.data, axes=(1, self.axis))
+                # New axis ends up as first, need to move it to its place
+                out.data[:] = moveaxis(dot, 0, self.axis)
+
+        return out
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -2277,12 +2300,15 @@ class MatrixOperator(Operator):
         opt_arg_strings = []
         if self.domain != NumpyTensorSpace((self.matrix.shape[1],),
                                            dtype=self.matrix.dtype):
-            opt_arg_strings.append('{!r}'.format(self.domain))
+            opt_arg_strings.append('domain={!r}'.format(self.domain))
         range_shape = list(self.domain.shape)
         range_shape[self.axis] = self.matrix.shape[0]
         if self.range != NumpyTensorSpace(range_shape,
                                           dtype=self.matrix.dtype):
-            opt_arg_strings.append('{!r}'.format(self.domain))
+            opt_arg_strings.append('range={!r}'.format(self.range))
+
+        if self.axis != 0:
+            opt_arg_strings.append('axis={}'.format(self.axis))
 
         if opt_arg_strings:
             sig_str += ',\n' + ', '.join(opt_arg_strings)

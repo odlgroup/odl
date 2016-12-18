@@ -6,7 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Test to make sure the TensorSpace spaces work with larger sizes."""
+"""Test to make sure the `TensorSpace` spaces work with larger sizes."""
 
 from __future__ import division
 import numpy as np

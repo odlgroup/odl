@@ -399,9 +399,9 @@ class NearestInterpolation(FunctionSetMapping):
         Parameters
         ----------
         x : `GeneralizedTensor`
-            The array of values to be interpolated
+            The array of values to be interpolated.
         out : `FunctionSetElement`, optional
-            Element in which to store the interpolator
+            Element in which to store the interpolator.
 
         Returns
         -------

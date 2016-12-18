@@ -1093,7 +1093,7 @@ class ComplexEmbedding(Operator):
         Parameters
         ----------
         space : `TensorSpace`
-            Space which real part should be taken, needs to implement
+            Space whose real part should be taken, needs to implement
             ``space.complex_space``.
         scalar : ``space.complex_space.field`` element, optional
             Scalar which the incomming vectors should be multiplied by in order

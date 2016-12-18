@@ -18,8 +18,8 @@ import numpy as np
 from odl.set.sets import Set, RealNumbers, ComplexNumbers
 from odl.set.space import LinearSpace, LinearSpaceElement
 from odl.util import (
-    is_scalar_dtype, is_floating_dtype, is_real_dtype,
-    arraynd_repr, dtype_str, signature_string)
+    is_scalar_dtype, is_floating_dtype, is_real_dtype, safe_int_conv,
+    arraynd_repr, arraynd_str, dtype_str, signature_string)
 from odl.util.ufuncs import TensorSetUfuncs
 from odl.util.utility import TYPE_MAP_R2C, TYPE_MAP_C2R
 
@@ -31,27 +31,29 @@ class TensorSet(Set):
 
     """Base class for sets of tensors of arbitrary type."""
 
-    def __init__(self, shape, dtype, order):
+    def __init__(self, shape, dtype, order='C'):
         """Initialize a new instance.
 
         Parameters
         ----------
         shape : int or sequence of int
-            Number of elements per axis.
+            Number of entries per axis that elements in this space have.
         dtype :
-            Data type of each element. Can be provided in any
-            way the `numpy.dtype` function understands, e.g.
+            Scalar data type of elements in this space. Can be provided
+            in any way the `numpy.dtype` constructor understands, e.g.
             as built-in type or as a string.
-        order : {'C', 'F'}
-            Axis ordering of the data storage.
+        order : {'C', 'F'}, optional
+            Axis ordering of the data storage. Only relevant for more
+            than 1 axis.
         """
         try:
-            self.__shape = tuple(int(s) for s in shape)
+            self.__shape = tuple(safe_int_conv(s) for s in shape)
         except TypeError:
-            self.__shape = (int(shape),)
+            self.__shape = (safe_int_conv(shape),)
         if any(s < 0 for s in self.shape):
             raise ValueError('`shape` must have only positive entries, got '
                              '{}'.format(shape))
+
         self.__dtype = np.dtype(dtype)
         if self.ndim == 1:
             self.__order = 'C'
@@ -67,7 +69,7 @@ class TensorSet(Set):
 
     @property
     def dtype(self):
-        """Data type of each tensor entry."""
+        """Scalar data type of each entry in an element of this space."""
         return self.__dtype
 
     @property
@@ -77,12 +79,12 @@ class TensorSet(Set):
 
     @property
     def size(self):
-        """Total number of tensor entries."""
+        """Total number of entries in an element of this space."""
         return np.prod(self.shape)
 
     @property
     def ndim(self):
-        """Number of dimensions (axes)."""
+        """Number of axes (=dimensions) of this space."""
         return len(self.shape)
 
     def __len__(self):
@@ -321,7 +323,7 @@ class GeneralizedTensor(object):
 
     @property
     def ndim(self):
-        """Number of dimensions (axes)."""
+        """Number of axes (=dimensions) of this tensor."""
         return self.space.ndim
 
     def __len__(self):
@@ -338,7 +340,7 @@ class GeneralizedTensor(object):
 
     @property
     def nbytes(self):
-        """Number of bytes in memory occupied by this tensor."""
+        """Total number of bytes in memory occupied by this tensor."""
         return self.size * self.itemsize
 
     def __array__(self, dtype=None):
@@ -382,7 +384,7 @@ class GeneralizedTensor(object):
 
     def __str__(self):
         """Return ``str(self)``."""
-        return arraynd_repr(self)
+        return arraynd_str(self)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -452,7 +454,7 @@ class TensorSpace(TensorSet, LinearSpace):
 
     """Base class for tensor spaces independent of implementation."""
 
-    def __init__(self, shape, dtype, order):
+    def __init__(self, shape, dtype, order='C'):
         """Initialize a new instance.
 
         Parameters
@@ -465,7 +467,7 @@ class TensorSpace(TensorSet, LinearSpace):
             as built-in type, as one of NumPy's internal datatype
             objects or as string.
             Only scalar data types (numbers) are allowed.
-        order : {'C', 'F'}
+        order : {'C', 'F'}, optional
             Axis ordering of the data storage.
         """
         TensorSet.__init__(self, shape, dtype, order)
@@ -523,7 +525,11 @@ class TensorSpace(TensorSet, LinearSpace):
         return self.astype(self.complex_dtype)
 
     def _astype(self, dtype):
-        """Internal helper for ``astype``."""
+        """Internal helper for ``astype``.
+
+        Subclasses with differing init parameters should overload this
+        method.
+        """
         return type(self)(self.shape, dtype=dtype, order=self.order,
                           weighting=getattr(self, 'weighting', None))
 
@@ -550,7 +556,6 @@ class TensorSpace(TensorSet, LinearSpace):
         if dtype == self.dtype:
             return self
 
-        # TODO: check against implementation in TensorSpace
         # Caching for real and complex versions (exact dtype mappings)
         if dtype == self.__real_dtype:
             if self.__real_space is None:
@@ -573,9 +578,9 @@ class TensorSpace(TensorSet, LinearSpace):
         yield ('Linspaced', self.element(
             np.linspace(0, 1, self.size).reshape(self.shape)))
 
-        if self.is_real_tensor_space:
+        if self.is_real_space:
             yield ('Random noise', self.element(np.random.rand(*self.shape)))
-        elif self.is_complex_tensor_space:
+        elif self.is_complex_space:
             yield ('Random noise',
                    self.element(np.random.rand(*self.shape) +
                                 np.random.rand(*self.shape) * 1j))
