@@ -24,7 +24,7 @@ from odl.util import (
     is_real_dtype, is_complex_floating_dtype, dtype_repr,
     complex_dtype, real_dtype,
     is_valid_input_array, is_valid_input_meshgrid,
-    out_shape_from_array, out_shape_from_meshgrid, vectorize)
+    out_shape_from_array, out_shape_from_meshgrid, vectorize, broadcast_to)
 from odl.util.utility import preload_first_arg
 
 
@@ -55,22 +55,6 @@ def _default_out_of_place(func, x, **kwargs):
     out = np.empty(out_shape, dtype=dtype)
     func(x, out=out, **kwargs)
     return out
-
-
-def _broadcast_to(array, shape):
-    """Wrapper for the numpy function broadcast_to.
-
-    Added since we dont require numpy 1.10 and hence cant guarantee that this
-    exists.
-    """
-    array = np.asarray(array)
-    try:
-        return np.broadcast_to(array, shape)
-    except AttributeError:
-        # The above requires numpy 1.10, fallback impl else
-        shape = [m if n == 1 and m != 1 else 1
-                 for n, m in zip(array.shape, shape)]
-        return array + np.zeros(shape, dtype=array.dtype)
 
 
 class FunctionSet(Set):
@@ -411,7 +395,7 @@ class FunctionSetElement(Operator):
 
             if out_shape != (1,) and out.shape != out_shape:
                 # Try to broadcast the returned element if possible
-                out = _broadcast_to(out, out_shape)
+                out = broadcast_to(out, out_shape)
         else:
             if not isinstance(out, np.ndarray):
                 raise TypeError('output {!r} not a `numpy.ndarray` '

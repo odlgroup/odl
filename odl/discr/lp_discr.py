@@ -6,7 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-""":math:`L^p` type discretizations of function spaces."""
+"""Lebesgue L^p type discretizations of function spaces."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -31,7 +31,8 @@ from odl.space.weighting import Weighting, NoWeighting, ConstWeighting
 from odl.util import (
     apply_on_boundary, is_real_dtype, is_complex_floating_dtype,
     dtype_str, signature_string, indent_rows,
-    normalized_scalar_param_list, safe_int_conv, normalized_nodes_on_bdry)
+    normalized_scalar_param_list, safe_int_conv, normalized_nodes_on_bdry,
+    broadcast_to)
 from odl.util.ufuncs import DiscreteLpUfuncs
 
 __all__ = ('DiscreteLp', 'DiscreteLpElement',
@@ -381,13 +382,7 @@ class DiscreteLp(DiscretizedSpace):
                         ''.format(input_shape, self.shape))
             elif arr.shape != self.shape and arr.ndim == self.ndim:
                 # Try to broadcast the array if possible
-                try:
-                    arr = np.broadcast_to(arr, self.shape)
-                except AttributeError:
-                    # The above requires numpy 1.10, fallback impl else
-                    shape = [m if n == 1 and m != 1 else 1
-                             for n, m in zip(arr.shape, self.shape)]
-                    arr = arr + np.zeros(shape, dtype=arr.dtype)
+                arr = broadcast_to(arr, self.shape)
             arr = arr.ravel(order=self.order)
             return self.element_type(self, self.dspace.element(arr))
 

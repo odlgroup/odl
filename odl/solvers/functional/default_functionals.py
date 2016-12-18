@@ -30,7 +30,7 @@ from odl.solvers.nonsmooth.proximal_operators import (
     proximal_convex_conj, proximal_convex_conj_kl,
     proximal_convex_conj_kl_cross_entropy,
     combine_proximals)
-from odl.util import conj_exponent
+from odl.util import conj_exponent, moveaxis
 
 
 __all__ = ('LpNorm', 'L1Norm', 'L2Norm', 'L2NormSquared',
@@ -1921,32 +1921,6 @@ class NuclearNorm(Functional):
                                        exponent=singular_vector_exp)
         self.pshape = (self.domain.size, self.domain[0].size)
 
-    # TODO: Remove when numpy 1.11 is required by ODL
-    def _moveaxis(self, arr, source, dest):
-        """Implementation of `numpy.moveaxis`.
-
-        Needed since `numpy.moveaxis` requires numpy 1.11, which ODL doesn't
-        have as a dependency.
-        """
-        try:
-            source = list(source)
-        except TypeError:
-            source = [source]
-        try:
-            dest = list(dest)
-        except TypeError:
-            dest = [dest]
-
-        source = [a + arr.ndim if a < 0 else a for a in source]
-        dest = [a + arr.ndim if a < 0 else a for a in dest]
-
-        order = [n for n in range(arr.ndim) if n not in source]
-
-        for dest, src in sorted(zip(dest, source)):
-            order.insert(dest, src)
-
-        return arr.transpose(order)
-
     def _asarray(self, vec):
         """Convert ``x`` to an array.
 
@@ -1968,7 +1942,7 @@ class NuclearNorm(Functional):
 
         This is the inverse of `_asarray`.
         """
-        result = self._moveaxis(arr, [-2, -1], [0, 1])
+        result = moveaxis(arr, [-2, -1], [0, 1])
         return self.domain.element(result)
 
     def _call(self, x):
@@ -1979,7 +1953,7 @@ class NuclearNorm(Functional):
         svd_diag = np.linalg.svd(arr, compute_uv=False)
 
         # Rotate the axes so the svd-direction is first
-        s_reordered = self._moveaxis(svd_diag, -1, 0)
+        s_reordered = moveaxis(svd_diag, -1, 0)
 
         # Return nuclear norm
         return self.outernorm(self.pwisenorm(s_reordered))
