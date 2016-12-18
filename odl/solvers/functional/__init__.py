@@ -21,3 +21,6 @@ __all__ += example_funcs.__all__
 
 from .derivatives import *
 __all__ += derivatives.__all__
+
+from .nonlocalmeans_functionals import *
+__all__ += nonlocalmeans_functionals.__all__
