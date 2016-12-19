@@ -521,14 +521,14 @@ def test_element_equals():
 def test_element_getitem_single():
     H = odl.ProductSpace(odl.rn(1), odl.rn(2))
 
-    x1 = H[0].element([0])
-    x2 = H[1].element([1, 2])
-    x = H.element([x1, x2])
+    x0 = H[0].element([0])
+    x1 = H[1].element([1, 2])
+    x = H.element([x0, x1])
 
-    assert x[-2] is x1
-    assert x[-1] is x2
-    assert x[0] is x1
-    assert x[1] is x2
+    assert x[-2] is x0
+    assert x[-1] is x1
+    assert x[0] is x0
+    assert x[1] is x1
     with pytest.raises(IndexError):
         x[-3]
         x[2]
@@ -537,84 +537,135 @@ def test_element_getitem_single():
 def test_element_getitem_slice():
     H = odl.ProductSpace(odl.rn(1), odl.rn(2), odl.rn(3))
 
-    x1 = H[0].element([0])
-    x2 = H[1].element([1, 2])
-    x3 = H[2].element([3, 4, 5])
-    x = H.element([x1, x2, x3])
+    x0 = H[0].element([0])
+    x1 = H[1].element([1, 2])
+    x2 = H[2].element([3, 4, 5])
+    x = H.element([x0, x1, x2])
 
     assert x[:2].space == H[:2]
-    assert x[:2][0] is x1
-    assert x[:2][1] is x2
+    assert x[:2][0] is x0
+    assert x[:2][1] is x1
 
 
 def test_element_getitem_fancy():
     H = odl.ProductSpace(odl.rn(1), odl.rn(2), odl.rn(3))
 
-    x1 = H[0].element([0])
-    x2 = H[1].element([1, 2])
-    x3 = H[2].element([3, 4, 5])
-    x = H.element([x1, x2, x3])
+    x0 = H[0].element([0])
+    x1 = H[1].element([1, 2])
+    x2 = H[2].element([3, 4, 5])
+    x = H.element([x0, x1, x2])
 
     assert x[[0, 2]].space == H[[0, 2]]
-    assert x[[0, 2]][0] is x1
-    assert x[[0, 2]][1] is x3
+    assert x[[0, 2]][0] is x0
+    assert x[[0, 2]][1] is x2
 
 
 def test_element_setitem_single():
-    H = odl.ProductSpace(odl.rn(1), odl.rn(2))
+    """Test assignment of pspace parts with single indices."""
+    pspace = odl.ProductSpace(odl.rn(1), odl.rn(2))
 
-    x1 = H[0].element([0])
-    x2 = H[1].element([1, 2])
-    x = H.element([x1, x2])
+    x0 = pspace[0].element([0])
+    x1 = pspace[1].element([1, 2])
+    x = pspace.element([x0, x1])
+    old_x0 = x[0]
+    old_x1 = x[1]
 
-    x1_1 = H[0].element([1])
-    x[-2] = x1_1
-    assert x[-2] is x1_1
+    # Check that values are set, but identity is preserved
+    new_x0 = pspace[0].element([1])
+    x[-2] = new_x0
+    assert x[-2] == new_x0
+    assert x[-2] is old_x0
 
-    x2_1 = H[1].element([3, 4])
-    x[-1] = x2_1
-    assert x[-1] is x2_1
+    new_x1 = pspace[1].element([3, 4])
+    x[-1] = new_x1
+    assert x[-1] == new_x1
+    assert x[-1] is old_x1
 
-    x1_2 = H[0].element([5])
-    x[0] = x1_2
+    # Set values with scalars
+    x[1] = -1
+    assert all_equal(x[1], [-1, -1])
+    assert x[1] is old_x1
 
-    x2_2 = H[1].element([3, 4])
-    x[1] = x2_2
-    assert x[1] is x2_2
-
+    # Check that out-of-bounds indices raise IndexError
     with pytest.raises(IndexError):
-        x[-3] = x2
-        x[2] = x1
+        x[-3] = x1
+    with pytest.raises(IndexError):
+        x[2] = x0
 
 
 def test_element_setitem_slice():
-    H = odl.ProductSpace(odl.rn(1), odl.rn(2), odl.rn(3))
+    """Test assignment of pspace parts with slices."""
+    pspace = odl.ProductSpace(odl.rn(1), odl.rn(2), odl.rn(3))
 
-    x1 = H[0].element([0])
-    x2 = H[1].element([1, 2])
-    x3 = H[2].element([3, 4, 5])
-    x = H.element([x1, x2, x3])
+    x0 = pspace[0].element([0])
+    x1 = pspace[1].element([1, 2])
+    x2 = pspace[2].element([3, 4, 5])
+    x = pspace.element([x0, x1, x2])
+    old_x0 = x[0]
+    old_x1 = x[1]
 
-    x1_new = H[0].element([6])
-    x2_new = H[1].element([7, 8])
-    x[:2] = H[:2].element([x1_new, x2_new])
-    assert x[:2][0] is x1_new
-    assert x[:2][1] is x2_new
+    # Check that values are set, but identity is preserved
+    new_x0 = pspace[0].element([6])
+    new_x1 = pspace[1].element([7, 8])
+    x[:2] = pspace[:2].element([new_x0, new_x1])
+    assert x[:2][0] is old_x0
+    assert x[:2][0] == new_x0
+    assert x[:2][1] is old_x1
+    assert x[:2][1] == new_x1
+
+    # Set values with sequences of scalars
+    x[:2] = [-1, -2]
+    assert x[:2][0] is old_x0
+    assert all_equal(x[:2][0], [-1])
+    assert x[:2][1] is old_x1
+    assert all_equal(x[:2][1], [-2, -2])
 
 
 def test_element_setitem_fancy():
-    H = odl.ProductSpace(odl.rn(1), odl.rn(2), odl.rn(3))
+    """Test assignment of pspace parts with lists."""
+    pspace = odl.ProductSpace(odl.rn(1), odl.rn(2), odl.rn(3))
 
-    x1 = H[0].element([0])
-    x2 = H[1].element([1, 2])
-    x3 = H[2].element([3, 4, 5])
-    x = H.element([x1, x2, x3])
+    x0 = pspace[0].element([0])
+    x1 = pspace[1].element([1, 2])
+    x2 = pspace[2].element([3, 4, 5])
+    x = pspace.element([x0, x1, x2])
+    old_x0 = x[0]
+    old_x2 = x[2]
 
-    x1_new = H[0].element([6])
-    x3_new = H[2].element([7, 8, 9])
-    x[[0, 2]] = H[[0, 2]].element([x1_new, x3_new])
-    assert x[[0, 2]][0] is x1_new
-    assert x[[0, 2]][1] is x3_new
+    # Check that values are set, but identity is preserved
+    new_x0 = pspace[0].element([6])
+    new_x2 = pspace[2].element([7, 8, 9])
+    x[[0, 2]] = pspace[[0, 2]].element([new_x0, new_x2])
+    assert x[[0, 2]][0] is old_x0
+    assert x[[0, 2]][0] == new_x0
+    assert x[[0, 2]][1] is old_x2
+    assert x[[0, 2]][1] == new_x2
+
+    # Set values with sequences of scalars
+    x[[0, 2]] = [-1, -2]
+    assert x[[0, 2]][0] is old_x0
+    assert all_equal(x[[0, 2]][0], [-1])
+    assert x[[0, 2]][1] is old_x2
+    assert all_equal(x[[0, 2]][1], [-2, -2, -2])
+
+
+def test_element_setitem_broadcast():
+    """Test assignment of power space parts with broadcasting."""
+    pspace = odl.ProductSpace(odl.rn(2), 3)
+    x0 = pspace[0].element([0, 1])
+    x1 = pspace[1].element([2, 3])
+    x2 = pspace[2].element([4, 5])
+    x = pspace.element([x0, x1, x2])
+    old_x0 = x[0]
+    old_x1 = x[1]
+
+    # Set values with a single base space element
+    new_x0 = pspace[0].element([4, 5])
+    x[:2] = new_x0
+    assert x[0] is old_x0
+    assert x[0] == new_x0
+    assert x[1] is old_x1
+    assert x[1] == new_x0
 
 
 def test_unary_ops():
