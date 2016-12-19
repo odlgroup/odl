@@ -79,4 +79,5 @@ odl.solvers.accelerated_proximal_gradient(
 # Display images
 data.show(title='Data')
 x.show(title='L1 regularized reconstruction')
-x_acc.show(title='L1 regularized reconstruction (accelerated)', show=True)
+x_acc.show(title='L1 regularized reconstruction (accelerated)',
+           force_show=True)

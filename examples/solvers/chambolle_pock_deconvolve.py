@@ -104,4 +104,4 @@ odl.solvers.chambolle_pock_solver(
 # Display images
 phantom.show(title='original image')
 data.show(title='convolved image')
-x.show(title='deconvolved image', show=True)
+x.show(title='deconvolved image', force_show=True)

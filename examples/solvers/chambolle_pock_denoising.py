@@ -96,4 +96,4 @@ odl.solvers.chambolle_pock_solver(
 # Display images
 orig.show(title='original image')
 noisy.show(title='noisy image')
-x.show(title='reconstruction', show=True)
+x.show(title='reconstruction', force_show=True)

@@ -101,4 +101,4 @@ odl.solvers.douglas_rachford_pd
 # Display images
 discr_phantom.show(title='original image')
 data.show(title='sinogram')
-x.show(title='reconstructed image', show=True)
+x.show(title='reconstructed image', force_show=True)

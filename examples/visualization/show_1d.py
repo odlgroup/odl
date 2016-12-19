@@ -39,4 +39,4 @@ fig = (elem / 2).show(fig=fig)
 plt.show()
 
 # "Instant" plotting can be forced
-elem.show(show=True)
+elem.show(force_show=True)
