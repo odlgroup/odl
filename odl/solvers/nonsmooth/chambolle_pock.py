@@ -107,7 +107,7 @@ def chambolle_pock_solver(x, f, g, L, tau, sigma, niter=1, **kwargs):
 
         \\min_{x \\in X} F(K x) + G(x),
 
-    where the technical conditions are that :math:`K` is an operator
+    where the formal conditions are that :math:`K` is an operator
     between Hilbert spaces :math:`X` and :math:`Y`.
     Further, :math:`G : X \\rightarrow [0, +\\infty]` and
     :math:`F : Y \\rightarrow [0, +\\infty]` are proper, convex,

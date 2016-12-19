@@ -33,7 +33,7 @@ def proximal_gradient(x, f, g, gamma, niter, callback=None, **kwargs):
     """(Accelerated) proximal gradient algorithm for convex optimization.
 
     Also known as "Iterative Soft-Thresholding Algorithm" (ISTA).
-    See Beck2009_ for more information.
+    See `[Beck2009]`_ for more information.
 
     This solver solves the convex optimization problem::
 
@@ -91,7 +91,7 @@ def proximal_gradient(x, f, g, gamma, niter, callback=None, **kwargs):
 
     References
     ----------
-    .. _Beck2009: http://epubs.siam.org/doi/abs/10.1137/080716542
+    .. _[Beck2009]: http://epubs.siam.org/doi/abs/10.1137/080716542
     """
     # Get and validate input
     if x not in f.domain:
@@ -136,7 +136,7 @@ def accelerated_proximal_gradient(x, f, g, gamma, niter, callback=None,
     """Accelerated proximal gradient algorithm for convex optimization.
 
     The method is known as "Fast Iterative Soft-Thresholding Algorithm"
-    (FISTA). See Beck2009_ for more information.
+    (FISTA). See `[Beck2009]`_ for more information.
 
     Solves the convex optimization problem::
 
@@ -169,11 +169,10 @@ def accelerated_proximal_gradient(x, f, g, gamma, niter, callback=None,
 
         \\min_{x \\in X} f(x) + g(x),
 
-    where the technical conditions are that
-    :math:`f : X \\rightarrow \mathbb{R}` is proper, convex and
-    lower-semicontinuous, and :math:`g : X \\rightarrow \mathbb{R}` is
-    differentiable and :math:`\\nabla g` is :math:`1 / \\beta`-Lipschitz
-    continuous.
+    where the formal conditions are that
+    :math:`f : X \\to \mathbb{R}` is proper, convex and lower-semicontinuous,
+    and :math:`g : X \\to \mathbb{R}` is differentiable and
+    :math:`\\nabla g` is :math:`1 / \\beta`-Lipschitz continuous.
 
     Convergence is only guaranteed if the step length :math:`\\gamma` satisfies
 
@@ -183,7 +182,7 @@ def accelerated_proximal_gradient(x, f, g, gamma, niter, callback=None,
 
     References
     ----------
-    .. _Beck2009: http://epubs.siam.org/doi/abs/10.1137/080716542
+    .. _[Beck2009]: http://epubs.siam.org/doi/abs/10.1137/080716542
     """
     # Get and validate input
     if x not in f.domain:
