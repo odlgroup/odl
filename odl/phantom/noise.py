@@ -108,7 +108,7 @@ def poisson_noise(intensity):
     return intensity.space.element(values)
 
 
-def salt_pepper_noise(vector, amount=0.05, salt_vs_pepper=0.5,
+def salt_pepper_noise(vector, fraction=0.05, salt_vs_pepper=0.5,
                       low_val=None, high_val=None):
     """Add salt and pepper noise to vector.
 
@@ -119,20 +119,21 @@ def salt_pepper_noise(vector, amount=0.05, salt_vs_pepper=0.5,
     ----------
     vector : `FnBase` or `ProductSpace`
         The vector that noise should be added to.
-    amount : float, optional
-        The propotion of elements in vector whose element should be converted
+    fraction : float, optional
+        The propotion of the elements in ``vector`` that should be converted
         to noise.
     salt_vs_pepper : float, optional
         Relative aboundance of salt (high) vs pepper (low) noise. A high value
         means more salt than pepper noise.
     low_val : float, optional
         The "pepper" color in the noise.
-        Default: minimum value of ``vector``. For product spaces, takes min for
+        Default: minimum value of ``vector``. For product spaces the minimum
+        value per subspace is taken.
         each sub-space.
     high_val : float, optional
         The "salt" value in the noise.
-        Default: maximuim value of ``vector``. For product spaces, takes max
-        for each sub-space.
+        Default: maximuim value of ``vector``. For product spaces the maximum
+        value per subspace is taken.
 
     Returns
     -------
@@ -147,10 +148,10 @@ def salt_pepper_noise(vector, amount=0.05, salt_vs_pepper=0.5,
     from odl.space import ProductSpace
 
     # Validate input parameters
-    amount, amount_in = float(amount), amount
-    if not (0 <= amount <= 1):
-        raise ValueError('`amount` ({}) should be a float in the interval '
-                         '[0, 1]'.format(amount_in))
+    fraction, fraction_in = float(fraction), fraction
+    if not (0 <= fraction <= 1):
+        raise ValueError('`fraction` ({}) should be a float in the interval '
+                         '[0, 1]'.format(fraction_in))
 
     salt_vs_pepper, salt_vs_pepper_in = float(salt_vs_pepper), salt_vs_pepper
     if not (0 <= salt_vs_pepper <= 1):
@@ -158,7 +159,7 @@ def salt_pepper_noise(vector, amount=0.05, salt_vs_pepper=0.5,
                          'interval [0, 1]'.format(salt_vs_pepper_in))
 
     if isinstance(vector.space, ProductSpace):
-        values = [salt_pepper_noise(subintensity, amount, salt_vs_pepper,
+        values = [salt_pepper_noise(subintensity, fraction, salt_vs_pepper,
                                     low_val, high_val)
                   for subintensity in vector]
     else:
@@ -174,12 +175,12 @@ def salt_pepper_noise(vector, amount=0.05, salt_vs_pepper=0.5,
         # Create randomly selected points as a subset of image.
         a = np.arange(vector.size)
         np.random.shuffle(a)
-        salt_indices = a[:int(amount * vector.size * salt_vs_pepper)]
-        pepper_indices = a[int(amount * vector.size * salt_vs_pepper):
-                           int(amount * vector.size)]
+        salt_indices = a[:int(fraction * vector.size * salt_vs_pepper)]
+        pepper_indices = a[int(fraction * vector.size * salt_vs_pepper):
+                           int(fraction * vector.size)]
 
-        values[salt_indices] = 1
-        values[pepper_indices] = -1
+        values[salt_indices] = high_val
+        values[pepper_indices] = -low_val
 
     return vector.space.element(values)
 
