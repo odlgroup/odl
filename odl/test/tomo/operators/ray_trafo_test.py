@@ -167,7 +167,7 @@ def in_place(request):
 
 
 def test_projector(projector, in_place):
-    """Test discrete Ray transform forward projection."""
+    """Test Ray transform forward projection."""
 
     # TODO: this needs to be improved
     # Accept 10% errors
@@ -189,7 +189,7 @@ def test_projector(projector, in_place):
 
 
 def test_adjoint(projector):
-    """Test discrete Ray transform backward projection."""
+    """Test Ray transform backward projection."""
     # Relative tolerance, still rather high due to imperfectly matched
     # adjoint in the cone beam case
     if (parse_version(ASTRA_VERSION) < parse_version('1.8rc1') and
@@ -212,7 +212,7 @@ def test_adjoint(projector):
 
 
 def test_adjoint_of_adjoint(projector):
-    """Test discrete Ray transform adjoint of adjoint."""
+    """Test Ray transform adjoint of adjoint."""
 
     # Create Shepp-Logan phantom
     vol = odl.phantom.shepp_logan(projector.domain, modified=True)
@@ -233,10 +233,11 @@ def test_adjoint_of_adjoint(projector):
 
 
 def test_angles(projector):
-    """Test discrete Ray transform angle conventions."""
+    """Test Ray transform angle conventions."""
 
-    # Smoothed line/hyperplane around 0:th dimension
-    vol = projector.domain.element(lambda x: np.exp(-x[0] ** 2))
+    # Smoothed line/hyperplane with offset
+    vol = projector.domain.element(
+        lambda x: np.exp(-(x[0] + 2 * x[1] - 10) ** 2))
 
     # Create projection
     result = projector(vol).asarray()
@@ -246,8 +247,19 @@ def test_angles(projector):
     ind_angle = np.argmax(np.max(result, axis=axes))
     maximum_angle = projector.geometry.angles[ind_angle]
 
-    # We expect the maximum at pi / 2 (and possibly multiples of it)
-    assert almost_equal(np.fmod(maximum_angle, np.pi), np.pi / 2, places=1)
+    # Verify correct maximum angle
+    expected = np.arctan2(1, -2)
+    assert almost_equal(np.fmod(maximum_angle, np.pi), expected, places=1)
+
+    # Find the pixel where the projection has a maximum at that angle
+    axes = () if projector.domain.ndim == 2 else 1
+    ind_pixel = np.argmax(np.max(result[ind_angle], axis=axes))
+    max_pixel = projector.geometry.det_partition[ind_pixel, ...].mid_pt[0]
+
+    # This is hard to measure, so mostly check it is on the correct side, i.e.
+    # geometry is not flipped.
+    expected = 10 * np.sqrt(1.0/3)
+    assert np.abs(max_pixel - expected) < expected // 2
 
 
 if __name__ == '__main__':
