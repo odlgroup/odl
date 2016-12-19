@@ -80,8 +80,8 @@ W = odl.trafos.WaveletTransform(space, wavelet='haar', nlevels=5)
 # to weight by the scale of the wavelets.
 # The "area" of the wavelets scales as 2 ^ scale, but we use a slightly smaller
 # number in order to allow some high frequencies.
-scales = W.inverse.get_scales()
-Wtrafo = W.inverse * (1 / (np.power(1.7, 1 + scales)))
+scales = W.scales()
+Wtrafoinv = W.inverse * (1 / (np.power(1.7, scales)))
 
 # Create regularizer as l1 norm
 regularizer = 0.0002 * odl.solvers.L1Norm(W.range)
@@ -90,12 +90,12 @@ regularizer = 0.0002 * odl.solvers.L1Norm(W.range)
 l2_norm_sq = odl.solvers.L2NormSquared(ray_trafo.range).translated(data)
 
 # Compose from the right with ray transform and wavelet transform
-data_discrepancy = l2_norm_sq * ray_trafo * Wtrafo
+data_discrepancy = l2_norm_sq * ray_trafo * Wtrafoinv
 
 # --- Select solver parameters and solve using proximal gradient --- #
 
 # Select step-size that guarantees convergence.
-gamma = 0.2
+gamma = 0.05
 
 # Optionally pass callback to the solver to display intermediate results
 callback = (odl.solvers.CallbackPrintIteration() &
@@ -104,7 +104,7 @@ callback = (odl.solvers.CallbackPrintIteration() &
 
 def callb(x):
     """Callback that displays the inverse wavelet transform of current iter."""
-    callback(Wtrafo(x))
+    callback(Wtrafoinv(x))
 
 # Run the algorithm (FISTA)
 x = data_discrepancy.domain.zero()
@@ -115,4 +115,4 @@ odl.solvers.accelerated_proximal_gradient(
 # Display images
 data.show(title='Data')
 x.show(title='Wavelet coefficients')
-Wtrafo(x).show('Wavelet regularized reconstruction')
+Wtrafoinv(x).show('Wavelet regularized reconstruction')
