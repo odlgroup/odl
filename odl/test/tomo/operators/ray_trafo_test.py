@@ -14,7 +14,6 @@ from pkg_resources import parse_version
 import pytest
 
 import odl
-import odl.tomo as tomo
 from odl.tomo.backends import ASTRA_VERSION
 from odl.tomo.util.testutils import (skip_if_no_astra, skip_if_no_astra_cuda,
                                      skip_if_no_skimage)
@@ -42,26 +41,26 @@ def geometry(request):
     if geom == 'par2d':
         apart = odl.uniform_partition(0, np.pi, n_angles)
         dpart = odl.uniform_partition(-30, 30, m)
-        return tomo.Parallel2dGeometry(apart, dpart)
+        return odl.tomo.Parallel2dGeometry(apart, dpart)
     elif geom == 'par3d':
         apart = odl.uniform_partition(0, np.pi, n_angles)
         dpart = odl.uniform_partition([-30, -30], [30, 30], (m, m))
-        return tomo.Parallel3dAxisGeometry(apart, dpart)
+        return odl.tomo.Parallel3dAxisGeometry(apart, dpart)
     elif geom == 'cone2d':
         apart = odl.uniform_partition(0, 2 * np.pi, n_angles)
         dpart = odl.uniform_partition(-30, 30, m)
-        return tomo.FanFlatGeometry(apart, dpart, src_radius=200,
-                                    det_radius=100)
+        return odl.tomo.FanFlatGeometry(apart, dpart, src_radius=200,
+                                        det_radius=100)
     elif geom == 'cone3d':
         apart = odl.uniform_partition(0, 2 * np.pi, n_angles)
         dpart = odl.uniform_partition([-60, -60], [60, 60], (m, m))
-        return tomo.CircularConeFlatGeometry(apart, dpart, src_radius=200,
-                                             det_radius=100)
+        return odl.tomo.CircularConeFlatGeometry(apart, dpart, src_radius=200,
+                                                 det_radius=100)
     elif geom == 'helical':
         apart = odl.uniform_partition(0, 8 * 2 * np.pi, n_angles)
         dpart = odl.uniform_partition([-30, -3], [30, 3], (m, m))
-        return tomo.HelicalConeFlatGeometry(apart, dpart, pitch=5.0,
-                                            src_radius=200, det_radius=100)
+        return odl.tomo.HelicalConeFlatGeometry(apart, dpart, pitch=5.0,
+                                                src_radius=200, det_radius=100)
     else:
         raise ValueError('geom not valid')
 
@@ -130,9 +129,9 @@ def projector(request):
                                        dtype=dtype)
         # Geometry
         dpart = odl.uniform_partition(-30, 30, m)
-        geom = tomo.Parallel2dGeometry(apart, dpart)
+        geom = odl.tomo.Parallel2dGeometry(apart, dpart)
         # Ray transform
-        return tomo.RayTransform(reco_space, geom, impl=impl)
+        return odl.tomo.RayTransform(reco_space, geom, impl=impl)
 
     elif geom == 'par3d':
         # Reconstruction space
@@ -141,9 +140,9 @@ def projector(request):
 
         # Geometry
         dpart = odl.uniform_partition([-30] * 2, [30] * 2, [m] * 2)
-        geom = tomo.Parallel3dAxisGeometry(apart, dpart)
+        geom = odl.tomo.Parallel3dAxisGeometry(apart, dpart)
         # Ray transform
-        return tomo.RayTransform(reco_space, geom, impl=impl)
+        return odl.tomo.RayTransform(reco_space, geom, impl=impl)
 
     elif geom == 'cone2d':
         # Reconstruction space
@@ -151,10 +150,10 @@ def projector(request):
                                        dtype=dtype)
         # Geometry
         dpart = odl.uniform_partition(-30, 30, m)
-        geom = tomo.FanFlatGeometry(apart, dpart, src_radius=200,
-                                    det_radius=100)
+        geom = odl.tomo.FanFlatGeometry(apart, dpart, src_radius=200,
+                                        det_radius=100)
         # Ray transform
-        return tomo.RayTransform(reco_space, geom, impl=impl)
+        return odl.tomo.RayTransform(reco_space, geom, impl=impl)
 
     elif geom == 'cone3d':
         # Reconstruction space
@@ -162,10 +161,10 @@ def projector(request):
                                        dtype=dtype)
         # Geometry
         dpart = odl.uniform_partition([-60] * 2, [60] * 2, [m] * 2)
-        geom = tomo.CircularConeFlatGeometry(apart, dpart, src_radius=200,
-                                             det_radius=100)
+        geom = odl.tomo.CircularConeFlatGeometry(apart, dpart, src_radius=200,
+                                                 det_radius=100)
         # Ray transform
-        return tomo.RayTransform(reco_space, geom, impl=impl)
+        return odl.tomo.RayTransform(reco_space, geom, impl=impl)
 
     elif geom == 'helical':
         # Discrete reconstruction space
@@ -174,10 +173,10 @@ def projector(request):
         # Geometry, overwriting angle partition
         apart = odl.uniform_partition(0, 8 * 2 * np.pi, n_angles)
         dpart = odl.uniform_partition([-30, -3], [30, 3], [m] * 2)
-        geom = tomo.HelicalConeFlatGeometry(apart, dpart, pitch=5.0,
-                                            src_radius=200, det_radius=100)
+        geom = odl.tomo.HelicalConeFlatGeometry(apart, dpart, pitch=5.0,
+                                                src_radius=200, det_radius=100)
         # Ray transform
-        return tomo.RayTransform(reco_space, geom, impl=impl)
+        return odl.tomo.RayTransform(reco_space, geom, impl=impl)
     else:
         raise ValueError('geom not valid')
 
@@ -193,7 +192,7 @@ def in_place(request):
 
 
 def test_projector(projector, in_place):
-    """Test discrete Ray transform forward projection."""
+    """Test Ray transform forward projection."""
 
     # TODO: this needs to be improved
     # Accept 10% errors
@@ -215,7 +214,7 @@ def test_projector(projector, in_place):
 
 
 def test_adjoint(projector):
-    """Test discrete Ray transform backward projection."""
+    """Test Ray transform backward projection."""
     # Relative tolerance, still rather high due to imperfectly matched
     # adjoint in the cone beam case
     if (parse_version(ASTRA_VERSION) < parse_version('1.8rc1') and
@@ -237,21 +236,61 @@ def test_adjoint(projector):
     assert result_AxAx == pytest.approx(result_xAtAx, rel=rtol)
 
 
+def test_adjoint_of_adjoint(projector):
+    """Test Ray transform adjoint of adjoint."""
+
+    # Create Shepp-Logan phantom
+    vol = odl.phantom.shepp_logan(projector.domain, modified=True)
+
+    # Calculate projection
+    proj = projector(vol)
+    proj_adj_adj = projector.adjoint.adjoint(vol)
+
+    # Verify A(x) == (A^*)^*(x)
+    assert all_almost_equal(proj, proj_adj_adj)
+
+    # Calculate adjoints
+    proj_adj = projector.adjoint(proj)
+    proj_adj_adj_adj = projector.adjoint.adjoint.adjoint(proj)
+
+    # Verify A^*(y) == ((A^*)^*)^*(x)
+    assert all_almost_equal(proj_adj, proj_adj_adj_adj)
+
+
 def test_angles(projector):
-    """Test discrete Ray transform angle conventions."""
-    # Smoothed line/hyperplane around axis x[1] = 0
-    vol = projector.domain.element(lambda x: np.exp(-x[1] ** 2))
+    """Test Ray transform angle conventions."""
+
+    # Smoothed line/hyperplane with offset
+    vol = projector.domain.element(
+        lambda x: np.exp(-(2 * x[0] - 10 + x[1]) ** 2))
 
     # Create projection
     result = projector(vol).asarray()
 
-    # Find the angle where the projection has a maximum (along the line)
+    # Find the angle where the projection has a maximum (along the line).
     axes = 1 if projector.domain.ndim == 2 else (1, 2)
     ind_angle = np.argmax(np.max(result, axis=axes))
-    maximum_angle = projector.geometry.angles[ind_angle]
+    # Restrict to [0, 2 * pi) for helical
+    maximum_angle = np.fmod(projector.geometry.angles[ind_angle], 2 * np.pi)
 
-    # We expect the maximum at pi / 2 (and possibly multiples of it)
-    assert almost_equal(np.fmod(maximum_angle, np.pi), np.pi / 2, places=1)
+    # Verify correct maximum angle. The line is defined by the equation
+    # x1 = 10 - 2 * x0, i.e. the slope -2. Thus the angle arctan(1/2) should
+    # give the maximum projection values.
+    expected = np.arctan2(1, 2)
+    assert np.fmod(maximum_angle, np.pi) == pytest.approx(expected, abs=0.1)
+
+    # Find the pixel where the projection has a maximum at that angle
+    axes = () if projector.domain.ndim == 2 else 1
+    ind_pixel = np.argmax(np.max(result[ind_angle], axis=axes))
+    max_pixel = projector.geometry.det_partition[ind_pixel, ...].mid_pt[0]
+
+    # The line is at distance 2 * sqrt(5) from the origin, which translates
+    # to the same distance from the detector midpoint, with positive sign
+    # if the angle is smaller than pi and negative sign otherwise.
+    expected = 2 * np.sqrt(5) if maximum_angle < np.pi else -2 * np.sqrt(5)
+    # This is a bit hard to check strictly, so we mostly test for the
+    # correct side
+    assert max_pixel == pytest.approx(expected, abs=abs(max_pixel))
 
 
 def test_complex(impl):

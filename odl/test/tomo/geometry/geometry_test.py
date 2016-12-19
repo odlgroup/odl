@@ -32,6 +32,7 @@ det_pos_init_3d_params = list(set(permutations((1, 0, 0))) |
                               set(product((-1, 1), repeat=3)))
 det_pos_init_3d = simple_fixture('det_pos_init', det_pos_init_3d_params)
 axis = simple_fixture('axis', det_pos_init_3d_params)
+shift = simple_fixture('shift', [0, 1])
 
 
 # --- helpers --- #
@@ -48,32 +49,37 @@ def rotate(vector, axis, angle):
 # --- tests --- #
 
 
-def test_parallel_2d_props():
+def test_parallel_2d_props(shift):
     """Test basic properties of 2D parallel geometries."""
     full_angle = np.pi
     apart = odl.uniform_partition(0, full_angle, 10)
     dpart = odl.uniform_partition(0, 1, 10)
-    geom = odl.tomo.Parallel2dGeometry(apart, dpart)
+    translation = np.array([shift, shift], dtype=float)
+    geom = odl.tomo.Parallel2dGeometry(apart, dpart, translation=translation)
 
     assert geom.ndim == 2
     assert isinstance(geom.detector, odl.tomo.Flat1dDetector)
 
     # Check defaults
-    assert all_almost_equal(geom.det_pos_init, [0, 1])
-    assert all_almost_equal(geom.det_refpoint(0), [0, 1])
-    assert all_almost_equal(geom.det_point_position(0, 0), [0, 1])
+    assert all_almost_equal(geom.det_pos_init, translation + [0, 1])
+    assert all_almost_equal(geom.det_refpoint(0), geom.det_pos_init)
+    assert all_almost_equal(geom.det_point_position(0, 0), geom.det_pos_init)
     assert all_almost_equal(geom.det_axis_init, [1, 0])
     assert all_almost_equal(geom.det_axis(0), [1, 0])
+    assert all_almost_equal(geom.translation, translation)
 
     # Check that we first rotate, then shift along the rotated axis, which
     # is equivalent to shifting first and then rotating.
     # Here we expect to rotate the reference point to [-1, 0] and then shift
     # by 1 (=detector param) along the detector axis [0, 1] at that angle.
-    assert all_almost_equal(geom.det_point_position(np.pi / 2, 1), [-1, 1])
+    # Global translation should be added afterwards.
+    assert all_almost_equal(geom.det_point_position(np.pi / 2, 1),
+                            translation + [-1, 1])
     assert all_almost_equal(geom.det_axis(np.pi / 2), [0, 1])
 
     # Detector to source vector, should be independent of the detector
-    # parameter. At pi/2 it should point into the (+x) direction.
+    # parameter and of translation.
+    # At pi/2 it should point into the (+x) direction.
     assert all_almost_equal(geom.det_to_src(np.pi / 2, 0), [1, 0])
     assert all_almost_equal(geom.det_to_src(np.pi / 2, 1), [1, 0])
 
@@ -86,10 +92,10 @@ def test_parallel_2d_props():
         geom.rotation_matrix(2 * full_angle)
 
     # Singular rotation matrix
-    extra_rot = [[1, 1],
-                 [1, 1]]
-    with pytest.raises(ValueError):
-        odl.tomo.Parallel2dGeometry(apart, dpart, extra_rot=extra_rot)
+    rot_matrix = [[1, 1],
+                  [1, 1]]
+    with pytest.raises(np.linalg.LinAlgError):
+        odl.tomo.Parallel2dGeometry(apart, dpart, init_matrix=rot_matrix)
 
     # check str and repr work without crashing and return a non-empty string
     assert str(geom) > ''
@@ -152,18 +158,18 @@ def test_parallel_2d_slanted_detector():
                             [-1 - sqrt_1_2, sqrt_1_2])
 
 
-def test_parallel_2d_extra_rot():
-    """Test the ``extra_rotation`` parameter in 2d parallel geometry."""
+def test_parallel_2d_init_matrix():
+    """Test the ``init_matrix`` parameter in 2d parallel geometry."""
     full_angle = np.pi
     apart = odl.uniform_partition(0, full_angle, 10)
     dpart = odl.uniform_partition(0, 1, 10)
     angle = 3 * np.pi / 4
-    extra_rot = np.array([[np.cos(angle), -np.sin(angle)],
+    rot_matrix = np.array([[np.cos(angle), -np.sin(angle)],
                           [np.sin(angle), np.cos(angle)]])
 
     # Start at [0, 1] with extra rotation by 135 degrees, making 225 degrees
     # in total for the initial position (at the bisector in the 3rd quardant)
-    geom = odl.tomo.Parallel2dGeometry(apart, dpart, extra_rot=extra_rot)
+    geom = odl.tomo.Parallel2dGeometry(apart, dpart, init_matrix=rot_matrix)
 
     init_pos = np.array([-1, -1], dtype=float)
     init_pos /= np.linalg.norm(init_pos)
@@ -174,23 +180,27 @@ def test_parallel_2d_extra_rot():
     assert all_almost_equal(geom.det_axis_init, norm_axis)
 
 
-def test_parallel_3d_props():
+def test_parallel_3d_props(shift):
     """Test basic properties of 3D parallel geometries."""
     full_angle = np.pi
     apart = odl.uniform_partition(0, full_angle, 10)
     dpart = odl.uniform_partition([0, 0], [1, 1], (10, 10))
-    geom = odl.tomo.Parallel3dAxisGeometry(apart, dpart)
+    translation = np.array([shift, shift, shift], dtype=float)
+    geom = odl.tomo.Parallel3dAxisGeometry(apart, dpart,
+                                           translation=translation)
 
     assert geom.ndim == 3
     assert isinstance(geom.detector, odl.tomo.Flat2dDetector)
 
     # Check defaults
     assert all_almost_equal(geom.axis, [0, 0, 1])
-    assert all_almost_equal(geom.det_pos_init, [0, 1, 0])
-    assert all_almost_equal(geom.det_refpoint(0), [0, 1, 0])
-    assert all_almost_equal(geom.det_point_position(0, [0, 0]), [0, 1, 0])
+    assert all_almost_equal(geom.det_pos_init, translation + [0, 1, 0])
+    assert all_almost_equal(geom.det_refpoint(0), geom.det_pos_init)
+    assert all_almost_equal(geom.det_point_position(0, [0, 0]),
+                            geom.det_pos_init)
     assert all_almost_equal(geom.det_axes_init, ([1, 0, 0], [0, 0, 1]))
     assert all_almost_equal(geom.det_axes(0), ([1, 0, 0], [0, 0, 1]))
+    assert all_almost_equal(geom.translation, translation)
 
     # Check that we first rotate, then shift along the initial detector
     # axes rotated according to the angle, which is equivalent to shifting
@@ -198,8 +208,9 @@ def test_parallel_3d_props():
     # Here we expect to rotate the reference point to [-1, 0, 0] and then
     # shift by (1, 1) (=detector param) along the detector axes
     # ([0, 1, 0], [0, 0, 1]) at that angle.
+    # Global translation should come last.
     assert all_almost_equal(geom.det_point_position(np.pi / 2, [1, 1]),
-                            [-1, 1, 1])
+                            translation + [-1, 1, 1])
 
     # Detector to source vector, should be independent of the detector
     # parameter. At pi/2 it should point into the (+x) direction.
@@ -263,6 +274,10 @@ def test_parallel_3d_orientation(axis):
         orient = np.linalg.det(np.vstack([normal_det_to_src, axis_0, axis_1]))
         assert orient == pytest.approx(1)
 
+    # check str and repr work without crashing and return a non-empty string
+    assert str(geom) > ''
+    assert repr(geom) > ''
+
 
 def test_parallel_3d_slanted_detector():
     """Check if non-standard detector axes are handled correctly."""
@@ -301,9 +316,13 @@ def test_parallel_3d_slanted_detector():
     assert all_almost_equal(geom.det_point_position(np.pi / 2, [1, 1]),
                             true_det_pt)
 
+    # check str and repr work without crashing and return a non-empty string
+    assert str(geom) > ''
+    assert repr(geom) > ''
 
-def test_parallel_3d_extra_rot():
-    """Test the ``extra_rotation`` parameter in 3d parallel geometry."""
+
+def test_parallel_3d_init_matrix():
+    """Test the ``init_matrix`` parameter in 3d parallel geometry."""
     full_angle = np.pi
     apart = odl.uniform_partition(0, full_angle, 10)
     dpart = odl.uniform_partition([0, 0], [1, 1], (10, 10))
@@ -311,11 +330,12 @@ def test_parallel_3d_extra_rot():
     # rotation.
     # This one rotates by +pi/2 in phi and -pi/2 in theta, resulting in the
     # axis remapping x->y, y->-z, z->-x.
-    extra_rot = np.array([[0, 0, -1],
-                          [1, 0, 0],
-                          [0, -1, 0]], dtype=float)
+    rot_matrix = np.array([[0, 0, -1],
+                           [1, 0, 0],
+                           [0, -1, 0]], dtype=float)
 
-    geom = odl.tomo.Parallel3dAxisGeometry(apart, dpart, extra_rot=extra_rot)
+    geom = odl.tomo.Parallel3dAxisGeometry(apart, dpart,
+                                           init_matrix=rot_matrix)
 
     # Axis was [0, 0, 1], gets mapped to [-1, 0, 0]
     assert all_almost_equal(geom.axis, [-1, 0, 0])
@@ -326,6 +346,10 @@ def test_parallel_3d_extra_rot():
     # Detector axes start at [1, 0, 0] and [0, 0, 1], and get mapped to
     # [0, 1, 0] and [-1, 0, 0]
     assert all_almost_equal(geom.det_axes_init, ([0, 1, 0], [-1, 0, 0]))
+
+    # check str and repr work without crashing and return a non-empty string
+    assert str(geom) > ''
+    assert repr(geom) > ''
 
 
 def test_parallel_beam_geometry_helper():
@@ -385,33 +409,38 @@ def test_parallel_beam_geometry_helper():
     assert pytest.approx(geometry.det_partition.extent, 2 * rho)
 
 
-def test_fanflat_props():
+def test_fanflat_props(shift):
     """Test basic properties of 2d fanflat geometries."""
     full_angle = 2 * np.pi
     apart = odl.uniform_partition(0, full_angle, 10)
     dpart = odl.uniform_partition(0, 1, 10)
     src_rad = 10
     det_rad = 5
-    geom = odl.tomo.FanFlatGeometry(apart, dpart, src_rad, det_rad)
+    translation = np.array([shift, shift], dtype=float)
+    geom = odl.tomo.FanFlatGeometry(apart, dpart, src_rad, det_rad,
+                                    translation=translation)
 
     assert geom.ndim == 2
     assert isinstance(geom.detector, odl.tomo.Flat1dDetector)
 
     # Check defaults
     assert all_almost_equal(geom.src_to_det_init, [0, 1])
-    assert all_almost_equal(geom.src_position(0), [0, -src_rad])
-    assert all_almost_equal(geom.det_refpoint(0), [0, det_rad])
-    assert all_almost_equal(geom.det_point_position(0, 0), [0, det_rad])
+    assert all_almost_equal(geom.src_position(0), translation + [0, -src_rad])
+    assert all_almost_equal(geom.det_refpoint(0), translation + [0, det_rad])
+    assert all_almost_equal(geom.det_point_position(0, 0),
+                            geom.det_refpoint(0))
     assert all_almost_equal(geom.det_axis_init, [1, 0])
     assert all_almost_equal(geom.det_axis(0), [1, 0])
+    assert all_almost_equal(geom.translation, translation)
 
     # Check that we first rotate, then shift along the rotated axis, which
     # is equivalent to shifting first and then rotating.
     # Here we expect to rotate the reference point to [-det_rad, 0] and then
     # shift by 1 (=detector param) along the detector axis [0, 1] at that
     # angle.
+    # Global translation should come afterwards.
     assert all_almost_equal(geom.det_point_position(np.pi / 2, 1),
-                            [-det_rad, 1])
+                            translation + [-det_rad, 1])
     assert all_almost_equal(geom.det_axis(np.pi / 2), [0, 1])
 
     # Detector to source vector. At param=0 it should be perpendicular to
@@ -437,25 +466,27 @@ def test_fanflat_props():
         odl.tomo.FanFlatGeometry(apart, dpart, src_radius=0, det_radius=0)
 
     # Singular rotation matrix
-    extra_rot = [[1, 1],
-                 [1, 1]]
-    with pytest.raises(ValueError):
+    rot_matrix = [[1, 1],
+                  [1, 1]]
+    with pytest.raises(np.linalg.LinAlgError):
         odl.tomo.FanFlatGeometry(apart, dpart, src_rad, det_rad,
-                                 extra_rot=extra_rot)
+                                 init_matrix=rot_matrix)
 
     # check str and repr work without crashing and return a non-empty string
     assert str(geom) > ''
     assert repr(geom) > ''
 
 
-def test_circular_cone_flat_props():
+def test_circular_cone_flat_props(shift):
     """Test basic properties of 3D circular cone beam geometries."""
     full_angle = 2 * np.pi
     apart = odl.uniform_partition(0, full_angle, 10)
     dpart = odl.uniform_partition([0, 0], [1, 1], (10, 10))
     src_rad = 10
     det_rad = 5
-    geom = odl.tomo.CircularConeFlatGeometry(apart, dpart, src_rad, det_rad)
+    translation = np.array([shift, shift, shift], dtype=float)
+    geom = odl.tomo.CircularConeFlatGeometry(apart, dpart, src_rad, det_rad,
+                                             translation=translation)
 
     assert geom.ndim == 3
     assert isinstance(geom.detector, odl.tomo.Flat2dDetector)
@@ -463,12 +494,15 @@ def test_circular_cone_flat_props():
     # Check defaults
     assert all_almost_equal(geom.axis, [0, 0, 1])
     assert all_almost_equal(geom.src_to_det_init, [0, 1, 0])
-    assert all_almost_equal(geom.src_position(0), [0, -src_rad, 0])
-    assert all_almost_equal(geom.det_refpoint(0), [0, det_rad, 0])
+    assert all_almost_equal(geom.src_position(0),
+                            translation + [0, -src_rad, 0])
+    assert all_almost_equal(geom.det_refpoint(0),
+                            translation + [0, det_rad, 0])
     assert all_almost_equal(geom.det_point_position(0, [0, 0]),
-                            [0, det_rad, 0])
+                            geom.det_refpoint(0))
     assert all_almost_equal(geom.det_axes_init, ([1, 0, 0], [0, 0, 1]))
     assert all_almost_equal(geom.det_axes(0), ([1, 0, 0], [0, 0, 1]))
+    assert all_almost_equal(geom.translation, translation)
 
     # Check that we first rotate, then shift along the initial detector
     # axes rotated according to the angle, which is equivalent to shifting
@@ -476,8 +510,9 @@ def test_circular_cone_flat_props():
     # Here we expect to rotate the reference point to [-det_rad, 0, 0] and
     # then shift by (1, 1) (=detector param) along the detector axes
     # ([0, 1, 0], [0, 0, 1]) at that angle.
+    # Global translation should come last.
     assert all_almost_equal(geom.det_point_position(np.pi / 2, [1, 1]),
-                            [-det_rad, 1, 1])
+                            translation + [-det_rad, 1, 1])
 
     # Detector to source vector. At param=0 it should be perpendicular to
     # the detector towards the source, here at pi/2 it should point into
@@ -526,7 +561,7 @@ def test_circular_cone_flat_props():
     assert repr(geom) > ''
 
 
-def test_helical_cone_flat_props():
+def test_helical_cone_flat_props(shift):
     """Test basic properties of 3D helical cone beam geometries."""
     full_angle = 2 * np.pi
     apart = odl.uniform_partition(0, full_angle, 10)
@@ -534,8 +569,9 @@ def test_helical_cone_flat_props():
     src_rad = 10
     det_rad = 5
     pitch = 2.0
+    translation = np.array([shift, shift, shift], dtype=float)
     geom = odl.tomo.HelicalConeFlatGeometry(apart, dpart, src_rad, det_rad,
-                                            pitch)
+                                            pitch, translation=translation)
 
     assert geom.ndim == 3
     assert isinstance(geom.detector, odl.tomo.Flat2dDetector)
@@ -543,12 +579,15 @@ def test_helical_cone_flat_props():
     # Check defaults
     assert all_almost_equal(geom.axis, [0, 0, 1])
     assert all_almost_equal(geom.src_to_det_init, [0, 1, 0])
-    assert all_almost_equal(geom.src_position(0), [0, -src_rad, 0])
-    assert all_almost_equal(geom.det_refpoint(0), [0, det_rad, 0])
+    assert all_almost_equal(geom.src_position(0),
+                            translation + [0, -src_rad, 0])
+    assert all_almost_equal(geom.det_refpoint(0),
+                            translation + [0, det_rad, 0])
     assert all_almost_equal(geom.det_point_position(0, [0, 0]),
-                            [0, det_rad, 0])
+                            geom.det_refpoint(0))
     assert all_almost_equal(geom.det_axes_init, ([1, 0, 0], [0, 0, 1]))
     assert all_almost_equal(geom.det_axes(0), ([1, 0, 0], [0, 0, 1]))
+    assert all_almost_equal(geom.translation, translation)
 
     # Check that we first rotate, then shift along the initial detector
     # axes rotated according to the angle, which is equivalent to shifting
@@ -558,8 +597,9 @@ def test_helical_cone_flat_props():
     # ([0, 1, 0], [0, 0, 1]) at that angle. In addition, everything is
     # shifted along the rotation axis [0, 0, 1] by 1/4 of the pitch
     # (since the pitch is the vertical distance after a full turn 2*pi).
+    # Global translation should come last.
     assert all_almost_equal(geom.det_point_position(np.pi / 2, [1, 1]),
-                            [-det_rad, 1, 1 + pitch / 4])
+                            translation + [-det_rad, 1, 1 + pitch / 4])
 
     # Make sure that source and detector move at the same height and stay
     # opposite of each other
