@@ -75,6 +75,11 @@ def _modified_shepp_logan_ellipses(ellipses):
     """
     intensities = [1.0, -0.8, -0.2, -0.2, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
 
+    # Add minimal numbers to ensure that the result is nowhere negative.
+    # This is needed due to numerical issues.
+    intensities[2] += 5e-17
+    intensities[3] += 5e-17
+
     assert len(ellipses) == len(intensities)
 
     for ellipse, intensity in zip(ellipses, intensities):
