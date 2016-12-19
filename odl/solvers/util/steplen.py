@@ -78,6 +78,7 @@ class BacktrackingLineSearch(LineSearch):
         ----------
         function : callable
             The cost function of the optimization problem to be solved.
+            If function is not a `Functional`, the argument `dir_derivative`
         tau : float, optional
             The amount the step length is decreased in each iteration,
             as long as it does not fulfill the decrease condition.
@@ -112,6 +113,21 @@ class BacktrackingLineSearch(LineSearch):
         1.0
         >>> func(x + step_len * d) < func(x)
         True
+
+        Also works with non-functionals as arguments, but then the
+        dir_derivative argument is mandatory
+
+        >>> r3 = odl.rn(3)
+        >>> func = lambda x: x[0] ** 2 + x[1] ** 2 + x[2] ** 2
+        >>> line_search = BacktrackingLineSearch(func)
+        >>> x = r3.element([1, 2, 3])
+        >>> d = r3.element([-1, -1, -1])
+        >>> dir_derivative = -12
+        >>> step_len = line_search(x, d, dir_derivative=dir_derivative)
+        >>> step_len
+        1.0
+        >>> func(x + step_len * d) < func(x)
+        True
         """
         self.function = function
         self.tau = float(tau)
@@ -123,7 +139,10 @@ class BacktrackingLineSearch(LineSearch):
         # Use a default value that allows the shortest step to be < 10 times
         # machine epsilon.
         if max_num_iter is None:
-            dtype = getattr(self.function.domain, 'dtype', float)
+            try:
+                dtype = self.function.domain.dtype
+            except AttributeError:
+                dtype = float
             eps = 10 * np.finfo(dtype).resolution
             self.max_num_iter = int(np.ceil(np.log(eps) / np.log(self.tau)))
         else:
@@ -149,12 +168,19 @@ class BacktrackingLineSearch(LineSearch):
         """
         fx = self.function(x)
         if dir_derivative is None:
-            dir_derivative = self.function.gradient(x).inner(direction)
+            try:
+                gradient = self.function.gradient
+            except AttributeError:
+                raise ValueError('`dir_derivative` only optional if '
+                                 '`function.gradient exists')
+            else:
+                dir_derivative = gradient(x).inner(direction)
         else:
             dir_derivative = float(dir_derivative)
 
         if dir_derivative == 0:
             raise ValueError('dir_derivative == 0, no descent can be found')
+
         if not self.estimate_step:
             alpha = 1.0
         else:
