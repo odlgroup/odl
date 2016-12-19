@@ -639,8 +639,14 @@ def reciprocal_space(space, axes=None, halfcomplex=False, shift=True,
     else:
         part = uniform_partition_fromgrid(recip_grid)
 
+    # Use convention of adding a hat to represent fourier transform of variable
+    axis_labels = list(space.axis_labels)
+    for i in axes:
+        axis_labels[i] = '$\^{{{}}}$'.format(axis_labels[i])
+
     recip_spc = uniform_discr_frompartition(part, exponent=exponent,
-                                            dtype=dtype, impl=impl)
+                                            dtype=dtype, impl=impl,
+                                            axis_labels=axis_labels)
 
     return recip_spc
 
