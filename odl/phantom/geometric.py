@@ -289,7 +289,8 @@ def _ellipse_phantom_2d(space, ellipses):
     Parameters
     ----------
     space : `DiscreteLp`
-        Space the phantom should be generated in.
+        Space the phantom should be generated in. If ``space.shape`` is
+        1 in an axis, a corresponding slice of the phantom is created.
     ellipses : list of lists
         Each row should contain:
         'value', 'axis_1', 'axis_2', 'center_x', 'center_y', 'rotation'
@@ -403,7 +404,8 @@ def _ellipse_phantom_3d(space, ellipses):
     Parameters
     ----------
     space : `DiscreteLp`
-        Space the phantom should be generated in.
+        Space the phantom should be generated in. If ``space.shape`` is
+        1 in an axis, a corresponding slice of the phantom is created.
     ellipses : list of lists
         Each row should contain:
         'value', 'axis_1', 'axis_2', 'axis_3',
@@ -523,6 +525,8 @@ def ellipse_phantom(space, ellipses):
     ----------
     space : `DiscreteLp`
         Space in which the phantom is created, must be 2- or 3-dimensional.
+        If ``space.shape`` is 1 in an axis, a corresponding slice of the
+        phantom is created.
     ellipses : sequence of sequences
         If ``space`` is 2-dimensional each row should contain:
 
