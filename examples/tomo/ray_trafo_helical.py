@@ -29,8 +29,8 @@ reco_space = odl.uniform_discr(
 # Make a helical cone beam geometry with flat detector
 # Angles: uniformly spaced, n = 2000, min = 0, max = 8 * 2 * pi
 angle_partition = odl.uniform_partition(0, 8 * 2 * np.pi, 2000)
-# Detector: uniformly sampled, n = (558, 60), min = (-30, -3), max = (30, 3)
-detector_partition = odl.uniform_partition([-30, -3], [30, 3], [558, 60])
+# Detector: uniformly sampled, n = (558, 60), min = (-50, -3), max = (50, 3)
+detector_partition = odl.uniform_partition([-50, -3], [50, 3], [558, 60])
 # Spiral has a pitch of 5, we run 8 rounds (due to max angle = 8 * 2 * pi)
 geometry = odl.tomo.HelicalConeFlatGeometry(
     angle_partition, detector_partition, src_radius=100, det_radius=100,
@@ -50,8 +50,8 @@ proj_data = ray_trafo(phantom)
 backproj = ray_trafo.adjoint(proj_data)
 
 # Shows a slice of the phantom, projections, and reconstruction
-phantom.show(indices=np.s_[:, :, 150], title='Phantom, middle z slice')
-proj_data.show(indices=np.s_[1000, :, :], title='Projection 1000')
-proj_data.show(indices=np.s_[1500, :, :], title='Projection 1500')
-backproj.show(indices=np.s_[:, :, 150],
-              title='back-projection, middle z slice')
+phantom.show(coords=[None, None, 20], title='Phantom, middle z slice')
+proj_data.show(coords=[2 * np.pi, None, None],
+               title='Projection after exactly one turn')
+proj_data.show(coords=[None, None, 0], title='Sinogram, middle slice')
+backproj.show(coords=[None, None, 20], title='Back-projection, middle z slice')
