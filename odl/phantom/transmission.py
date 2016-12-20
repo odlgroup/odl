@@ -128,6 +128,8 @@ def shepp_logan(space, modified=False):
     ----------
     space : `DiscreteLp`
         Space in which the phantom is created, must be 2- or 3-dimensional.
+        If ``space.shape`` is 1 in an axis, a corresponding slice of the
+        phantom is created.
     modified : `bool`, optional
         True if the modified Shepp-Logan phantom should be given.
         The modified phantom has greatly amplified contrast to aid

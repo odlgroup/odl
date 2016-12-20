@@ -289,7 +289,8 @@ def _ellipse_phantom_2d(space, ellipses):
     Parameters
     ----------
     space : `DiscreteLp`
-        Space the phantom should be generated in.
+        Space the phantom should be generated in. If ``space.shape`` is
+        1 in an axis, a corresponding slice of the phantom is created.
     ellipses : list of lists
         Each row should contain:
         'value', 'axis_1', 'axis_2', 'center_x', 'center_y', 'rotation'
@@ -317,7 +318,10 @@ def _ellipse_phantom_2d(space, ellipses):
     grid = []
     for i in range(2):
         meani = (minp[i] + maxp[i]) / 2.0
-        diffi = (maxp[i] - minp[i]) / 2.0
+        # Where space.shape = 1, we have minp = maxp, so we set diffi = 1
+        # to avoid division by zero. Effectively, this allows constructing
+        # a slice of a 2D phantom.
+        diffi = (maxp[i] - minp[i]) / 2.0 or 1.0
         grid += [(grid_in[i] - meani) / diffi]
 
     for ellip in ellipses:
@@ -400,7 +404,8 @@ def _ellipse_phantom_3d(space, ellipses):
     Parameters
     ----------
     space : `DiscreteLp`
-        Space the phantom should be generated in.
+        Space the phantom should be generated in. If ``space.shape`` is
+        1 in an axis, a corresponding slice of the phantom is created.
     ellipses : list of lists
         Each row should contain:
         'value', 'axis_1', 'axis_2', 'axis_3',
@@ -431,7 +436,10 @@ def _ellipse_phantom_3d(space, ellipses):
     grid = []
     for i in range(3):
         meani = (minp[i] + maxp[i]) / 2.0
-        diffi = (maxp[i] - minp[i]) / 2.0
+        # Where space.shape = 1, we have minp = maxp, so we set diffi = 1
+        # to avoid division by zero. Effectively, this allows constructing
+        # a slice of a 3D phantom.
+        diffi = (maxp[i] - minp[i]) / 2.0 or 1.0
         grid += [(grid_in[i] - meani) / diffi]
 
     for ellip in ellipses:
@@ -517,6 +525,8 @@ def ellipse_phantom(space, ellipses):
     ----------
     space : `DiscreteLp`
         Space in which the phantom is created, must be 2- or 3-dimensional.
+        If ``space.shape`` is 1 in an axis, a corresponding slice of the
+        phantom is created.
     ellipses : sequence of sequences
         If ``space`` is 2-dimensional each row should contain:
 
