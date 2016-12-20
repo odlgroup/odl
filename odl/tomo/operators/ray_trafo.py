@@ -154,10 +154,19 @@ class RayTransform(Operator):
             range_dspace = discr_domain.dspace_type(geometry.partition.size,
                                                     weight=weight, dtype=dtype)
 
+            if geometry.ndim == 2:
+                axis_labels = ['$\\theta$', '$s$']
+            elif geometry.ndim == 3:
+                axis_labels = ['$\\theta$', '$u$', '$v$']
+            else:
+                # TODO Add this when we add nd ray transform.
+                axis_labels = None
+
             range_interp = kwargs.get('interp', 'nearest')
             discr_range = DiscreteLp(
                 range_uspace, geometry.partition, range_dspace,
-                interp=range_interp, order=discr_domain.order)
+                interp=range_interp, order=discr_domain.order,
+                axis_labels=axis_labels)
 
         super().__init__(discr_domain, discr_range, linear=True)
 
@@ -276,10 +285,19 @@ class RayBackProjection(Operator):
             domain_dspace = discr_range.dspace_type(geometry.partition.size,
                                                     weight=weight, dtype=dtype)
 
+            if geometry.ndim == 2:
+                axis_labels = ['$\\theta$', '$s$']
+            elif geometry.ndim == 3:
+                axis_labels = ['$\\theta$', '$u$', '$v$']
+            else:
+                # TODO Add this when we add nd ray transform.
+                axis_labels = None
+
             domain_interp = kwargs.get('interp', 'nearest')
             discr_domain = DiscreteLp(
                 domain_uspace, geometry.partition, domain_dspace,
-                interp=domain_interp, order=discr_range.order)
+                interp=domain_interp, order=discr_range.order,
+                axis_labels=axis_labels)
         super().__init__(discr_domain, discr_range, linear=True)
 
     @property

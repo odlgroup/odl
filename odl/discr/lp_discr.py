@@ -87,6 +87,10 @@ class DiscreteLp(DiscretizedSpace):
             first axis varies slowest, the last axis fastest;
             vice versa for 'F'.
             Default: 'C'
+        axis_labels : sequence of str, optional
+            Names of the axes to use for plotting etc.
+            Default: ['x'] in 1-D, ['x', 'y'] in 2-D, ['x', 'y', 'z'] in 3-D
+            and ['x1', 'x2', ..., 'xn'] in n-D.
         """
         if not isinstance(fspace, FunctionSpace):
             raise TypeError('{!r} is not a FunctionSpace instance'
@@ -149,6 +153,19 @@ class DiscreteLp(DiscretizedSpace):
                 self.exponent != dspace.exponent):
             raise ValueError('`exponent` {} not equal to data space exponent '
                              '{}'.format(self.exponent, dspace.exponent))
+
+        axis_labels = kwargs.pop('axis_labels', None)
+        if axis_labels is None:
+            if self.ndim <= 3:
+                self.axis_labels = ['$x$', '$y$', '$z$'][:self.ndim]
+            else:
+                self.axis_labels = ['$x_{}$'.format(axis)
+                                    for axis in range(self.ndim)]
+        else:
+            self.axis_labels = tuple(str(label) for label in axis_labels)
+
+        if kwargs:
+            raise ValueError('unknown arguments {}'.format(kwargs))
 
     @property
     def interp(self):
@@ -841,20 +858,17 @@ class DiscreteLpElement(DiscretizedSpaceElement):
             raise ValueError('too many axes ({} > {})'.format(len(indices),
                                                               self.ndim))
 
-        if self.ndim <= 3:
-            axis_labels = ['x', 'y', 'z']
-        else:
-            axis_labels = ['x{}'.format(axis) for axis in range(self.ndim)]
         squeezed_axes = [axis for axis in range(self.ndim)
                          if not isinstance(indices[axis], Integral)]
-        axis_labels = [axis_labels[axis] for axis in squeezed_axes]
+        axis_labels = [self.space.axis_labels[axis] for axis in squeezed_axes]
 
         # Squeeze grid and values according to the index expression
         part = self.space.partition[indices].squeeze()
         values = self.asarray()[indices].squeeze()
 
         return show_discrete_data(values, part, title=title, method=method,
-                                  show=show, fig=fig, axis_labels=axis_labels,
+                                  show=show, fig=fig,
+                                  axis_labels=axis_labels,
                                   **kwargs)
 
 
@@ -956,7 +970,8 @@ def uniform_discr_frompartition(partition, exponent=2.0, interp='nearest',
         dspace = ds_type(partition.size, impl=impl, weight=weight,
                          exponent=exponent)
 
-    return DiscreteLp(fspace, partition, dspace, exponent, interp, order=order)
+    return DiscreteLp(fspace, partition, dspace, exponent, interp, order=order,
+                      **kwargs)
 
 
 def uniform_discr_fromspace(fspace, shape, exponent=2.0, interp='nearest',
@@ -1523,7 +1538,8 @@ def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
                                  nodes_on_bdry=nodes_on_bdry)
 
     return uniform_discr_frompartition(new_part, exponent=discr.exponent,
-                                       interp=discr.interp, impl=discr.impl)
+                                       interp=discr.interp, impl=discr.impl,
+                                       **kwargs)
 
 
 def _scaling_func_list(bdry_fracs, exponent=1.0):
