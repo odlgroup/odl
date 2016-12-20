@@ -192,12 +192,9 @@ def tam_danielson_window(ray_trafo, smoothing_width=0.05):
     return ray_trafo.range.element(window_fcn)
 
 
-def fbp_op(ray_trafo, padding=True,
-           filter_type='Ram-Lak', frequency_scaling=1.0):
-    """Create filtered back-projection from a `RayTransform`.
-
-    The filtered back-projection is an approximate inverse to the ray
-    transform.
+def fbp_filter_op(ray_trafo, padding=True, filter_type='Ram-Lak',
+                  frequency_scaling=1.0):
+    """Create a filter operator for FBP from a `RayTransform`.
 
     Parameters
     ----------
@@ -236,8 +233,8 @@ def fbp_op(ray_trafo, padding=True,
 
     Returns
     -------
-    fbp_op : `Operator`
-        Approximate inverse operator of ``ray_trafo``.
+    filter_op : `Operator`
+        Filtering operator for FBP based on ``ray_trafo``.
 
     See Also
     --------
@@ -333,11 +330,62 @@ def fbp_op(ray_trafo, padding=True,
     ramp_function = fourier.range.element(fourier_filter)
 
     # Create ramp filter via the convolution formula with fourier transforms
-    ramp_filter = fourier.inverse * ramp_function * fourier
+    return fourier.inverse * ramp_function * fourier
 
-    # Create filtered back-projection by composing the backprojection
-    # (adjoint) with the ramp filter.
-    return ray_trafo.adjoint * ramp_filter
+
+def fbp_op(ray_trafo, padding=True, filter_type='Ram-Lak',
+           frequency_scaling=1.0):
+    """Create filtered back-projection operator from a `RayTransform`.
+
+    The filtered back-projection is an approximate inverse to the ray
+    transform.
+
+    Parameters
+    ----------
+    ray_trafo : `RayTransform`
+        The ray transform (forward operator) whose approximate inverse should
+        be computed. Its geometry has to be any of the following
+
+        `Parallel2DGeometry` : Exact reconstruction
+
+        `Parallel3dAxisGeometry` : Exact reconstruction
+
+        `FanFlatGeometry` : Approximate reconstruction, correct in limit of fan
+        angle = 0.
+
+        `CircularConeFlatGeometry` : Approximate reconstruction, correct in
+        limit of fan angle = 0 and cone angle = 0.
+
+        `HelicalConeFlatGeometry` : Very approximate unless a
+        `tam_danielson_window` is used. Accurate with the window.
+
+        Other geometries: Not supported
+
+    padding : bool, optional
+        If the data space should be zero padded. Without padding, the data may
+        be corrupted due to the circular convolution used. Using padding makes
+        the algorithm slower.
+    filter_type : string, optional
+        The type of filter to be used. The options are, approximate order from
+        most noise senstive to least noise sensitive: 'Ram-Lak', 'Shepp-Logan',
+        'Cosine', 'Hamming' and 'Hann'.
+    frequency_scaling : float, optional
+        Relative cutoff frequency for the filter.
+        The normalized frequencies are rescaled so that they fit into the range
+        [0, frequency_scaling]. Any frequency above ``frequency_scaling`` is
+        set to zero.
+
+    Returns
+    -------
+    fbp_op : `Operator`
+        Approximate inverse operator of ``ray_trafo``.
+
+    See Also
+    --------
+    tam_danielson_window : Windowing for helical data
+    """
+    return ray_trafo.adjoint * fbp_filter_op(ray_trafo, padding, filter_type,
+                                             frequency_scaling)
 
 
 if __name__ == '__main__':
