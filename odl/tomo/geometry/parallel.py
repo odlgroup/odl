@@ -25,13 +25,14 @@ from builtins import super
 
 import numpy as np
 
+from odl.discr import uniform_partition
 from odl.tomo.geometry.detector import Flat1dDetector, Flat2dDetector
 from odl.tomo.geometry.geometry import Geometry, AxisOrientedGeometry
 from odl.tomo.util.utility import euler_matrix, perpendicular_vector
 
 
 __all__ = ('ParallelGeometry', 'Parallel2dGeometry', 'Parallel3dEulerGeometry',
-           'Parallel3dAxisGeometry')
+           'Parallel3dAxisGeometry', 'parallel_beam_geometry')
 
 
 class ParallelGeometry(Geometry):
@@ -424,6 +425,63 @@ class Parallel3dAxisGeometry(ParallelGeometry, AxisOrientedGeometry):
 
     # Fix for bug in ABC thinking this is abstract
     rotation_matrix = AxisOrientedGeometry.rotation_matrix
+
+
+def parallel_beam_geometry(space, angles=None, det_shape=None):
+    """Create default parallel beam geometry from space.
+
+    This default geometry gives a fully sampled sinogram according to the
+    nyquist criterium. In general this gives a very large number of samples.
+
+    This is intended for simple test cases where users do not need the full
+    flexibility of the geometries, but simply wants a geomoetry that works.
+
+    Parameters
+    ----------
+    space : `DiscreteLp`
+        Space in which the image should live. Needs to be 2d or 3d.
+    angles : int, optional
+        Number of angles. Default: Enough to fully sample the data.
+    det_shape : int or sequence of int, optional
+        Number of detector pixels. Default: Enough to fully sample the data.
+
+    Returns
+    -------
+    geometry : ParallelGeometry
+        If ``space`` is 2d, returns a ``Parallel2dGeometry``.
+        If ``space`` is 3d, returns a ``Parallel3dAxisGeometry``.
+    """
+    # Find maximum distance from rotation axis
+    corners = space.domain.corners()[:, :2]
+    max_dist = np.max(np.linalg.norm(corners, axis=1))
+
+    # Find default values according to nyquist criterion
+    max_side = max(space.partition.cell_sides[:2])
+    if det_shape is None:
+        if space.ndim == 2:
+            det_shape = int(4 * max_dist / max_side) + 1
+        elif space.ndim == 3:
+            width = int(4 * max_dist / max_side) + 1
+            height = 2 * space.shape[2]
+            det_shape = [width, height]
+
+    if angles is None:
+        angles = int(2 * np.pi * max_dist / max_side)
+
+    # Define angles
+    angle_partition = uniform_partition(0, np.pi, angles)
+
+    if space.ndim == 2:
+        det_partition = uniform_partition(-max_dist, max_dist, det_shape)
+        return Parallel2dGeometry(angle_partition, det_partition)
+    elif space.ndim == 3:
+        min_h = space.domain.min_pt[2]
+        max_h = space.domain.max_pt[2]
+
+        det_partition = uniform_partition([-max_dist, min_h],
+                                          [max_dist, max_h],
+                                          det_shape)
+        return Parallel3dAxisGeometry(angle_partition, det_partition)
 
 
 if __name__ == '__main__':
