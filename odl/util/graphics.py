@@ -119,16 +119,19 @@ def show_discrete_data(values, grid, title=None, method='',
     show : bool, optional
         If the plot should be showed now or deferred until later
 
-    fig : `matplotlib.figure.Figure`
+    fig : `matplotlib.figure.Figure`, optional
         The figure to show in. Expected to be of same "style", as the figure
         given by this function. The most common usecase is that fig is the
         return value from an earlier call to this function.
 
-    interp : {'nearest', 'linear'}
+    interp : {'nearest', 'linear'}, optional
         Interpolation method to use.
 
-    axis_labels : string
+    axis_labels : string, optional
         Axis labels, default: ['x', 'y']
+
+    axis_fontsize : int, optional
+        Fontsize for the axes. Default: 16
 
     kwargs : {'figsize', 'saveto', ...}
         Extra keyword arguments passed on to display method
@@ -166,6 +169,7 @@ def show_discrete_data(values, grid, title=None, method='',
     figsize = kwargs.pop('figsize', None)
     saveto = kwargs.pop('saveto', None)
     interp = kwargs.pop('interp', 'nearest')
+    axis_fontsize = kwargs.pop('axis_fontsize', 16)
 
     if values.ndim == 1:  # TODO: maybe a plotter class would be better
         if not method:
@@ -260,9 +264,9 @@ def show_discrete_data(values, grid, title=None, method='',
             # Create new axis if needed
             sub_re = plt.subplot(arrange_subplots[0], **sub_kwargs)
             sub_re.set_title('Real part')
-            sub_re.set_xlabel(axis_labels[0])
+            sub_re.set_xlabel(axis_labels[0], fontsize=axis_fontsize)
             if values.ndim == 2:
-                sub_re.set_ylabel(axis_labels[1])
+                sub_re.set_ylabel(axis_labels[1], fontsize=axis_fontsize)
             else:
                 sub_re.set_ylabel('value')
         else:
@@ -296,9 +300,9 @@ def show_discrete_data(values, grid, title=None, method='',
         if len(fig.axes) < 3:
             sub_im = plt.subplot(arrange_subplots[1], **sub_kwargs)
             sub_im.set_title('Imaginary part')
-            sub_im.set_xlabel(axis_labels[0])
+            sub_im.set_xlabel(axis_labels[0], fontsize=axis_fontsize)
             if values.ndim == 2:
-                sub_im.set_ylabel(axis_labels[1])
+                sub_im.set_ylabel(axis_labels[1], fontsize=axis_fontsize)
             else:
                 sub_im.set_ylabel('value')
         else:
@@ -332,9 +336,9 @@ def show_discrete_data(values, grid, title=None, method='',
         if len(fig.axes) == 0:
             # Create new axis object if needed
             sub = plt.subplot(111, **sub_kwargs)
-            sub.set_xlabel(axis_labels[0])
+            sub.set_xlabel(axis_labels[0], fontsize=axis_fontsize)
             if values.ndim == 2:
-                sub.set_ylabel(axis_labels[1])
+                sub.set_ylabel(axis_labels[1], fontsize=axis_fontsize)
             else:
                 sub.set_ylabel('value')
             try:

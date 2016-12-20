@@ -155,9 +155,9 @@ class RayTransform(Operator):
                                                     weight=weight, dtype=dtype)
 
             if geometry.ndim == 2:
-                axis_labels = ['$\\theta$ (rad)', 's']
+                axis_labels = ['$\\theta$', '$s$']
             elif geometry.ndim == 3:
-                axis_labels = ['$\\theta$ (rad)', 'u', 'v']
+                axis_labels = ['$\\theta$', '$u$', '$v$']
             else:
                 # TODO Add this when we add nd ray transform.
                 axis_labels = None
@@ -286,9 +286,9 @@ class RayBackProjection(Operator):
                                                     weight=weight, dtype=dtype)
 
             if geometry.ndim == 2:
-                axis_labels = ['$\\theta$ (rad)', 's']
+                axis_labels = ['$\\theta$', '$s$']
             elif geometry.ndim == 3:
-                axis_labels = ['$\\theta$ (rad)', 'u', 'v']
+                axis_labels = ['$\\theta$', '$u$', '$v$']
             else:
                 # TODO Add this when we add nd ray transform.
                 axis_labels = None

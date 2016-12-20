@@ -157,9 +157,9 @@ class DiscreteLp(DiscretizedSpace):
         axis_labels = kwargs.pop('axis_labels', None)
         if axis_labels is None:
             if self.ndim <= 3:
-                self.axis_labels = ['x', 'y', 'z'][:self.ndim]
+                self.axis_labels = ['$x$', '$y$', '$z$'][:self.ndim]
             else:
-                self.axis_labels = ['x{}'.format(axis)
+                self.axis_labels = ['$x_{}$'.format(axis)
                                     for axis in range(self.ndim)]
         else:
             self.axis_labels = tuple(str(label) for label in axis_labels)
