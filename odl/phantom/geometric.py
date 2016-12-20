@@ -317,6 +317,9 @@ def _ellipse_phantom_2d(space, ellipses):
     grid = []
     for i in range(2):
         meani = (minp[i] + maxp[i]) / 2.0
+        # Where space.shape = 1, we have minp = maxp, so we set diffi = 1
+        # to avoid division by zero. Effectively, this allows constructing
+        # a slice of a 2D phantom.
         diffi = (maxp[i] - minp[i]) / 2.0 or 1.0
         grid += [(grid_in[i] - meani) / diffi]
 
@@ -431,6 +434,9 @@ def _ellipse_phantom_3d(space, ellipses):
     grid = []
     for i in range(3):
         meani = (minp[i] + maxp[i]) / 2.0
+        # Where space.shape = 1, we have minp = maxp, so we set diffi = 1
+        # to avoid division by zero. Effectively, this allows constructing
+        # a slice of a 3D phantom.
         diffi = (maxp[i] - minp[i]) / 2.0 or 1.0
         grid += [(grid_in[i] - meani) / diffi]
 
