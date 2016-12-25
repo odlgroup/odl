@@ -25,8 +25,6 @@ where ``A`` is a simplified MRI imaging operator, ``grad`` is the spatial
 gradient and ``g`` the given noisy data.
 """
 
-# --- THIS EXAMPLE IS CURRENTLY BROKEN UNTILL ISSUE #590 IS FIXED ---
-
 import numpy as np
 import odl
 
@@ -58,7 +56,7 @@ lin_ops = [mri_op, gradient]
 
 # Create functionals as needed
 g = [odl.solvers.L2Norm(mri_op.range).translated(noisy_data),
-     lam * odl.solvers.L1Norm(mri_op.range)]
+     lam * odl.solvers.L1Norm(gradient.range)]
 f = odl.solvers.IndicatorBox(space, 0, 1)
 
 # Solve
