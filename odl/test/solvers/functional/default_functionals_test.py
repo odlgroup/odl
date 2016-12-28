@@ -489,5 +489,36 @@ def test_separable_sum(space):
     assert func.convex_conj([x, y]) == l1.convex_conj(x) + l2.convex_conj(y)
 
 
+def test_moreau_envelope_l1():
+    """Test for the moreau envelope with L1 norm."""
+    space = odl.rn(3)
+
+    l1 = odl.solvers.L1Norm(space)
+
+    # Test l1 norm, gives "Huber norm"
+    smoothed_l1 = odl.solvers.MoreauEnvelope(l1)
+    assert all_almost_equal(smoothed_l1.gradient([0, -0.2, 0.7]),
+                            [0, -0.2, 0.7])
+    assert all_almost_equal(smoothed_l1.gradient([-3, 2, 10]),
+                            [-1, 1, 1])
+
+    # Test with different sigma
+    smoothed_l1 = odl.solvers.MoreauEnvelope(l1, sigma=0.5)
+    assert all_almost_equal(smoothed_l1.gradient([0, 0.2, 0.7]),
+                            [0, 0.4, 1.0])
+
+
+def test_moreau_envelope_l2_sq(space, sigma):
+    """Test for the moreau envelope with l2 norm squared."""
+
+    # Result is ||x||_2^2 / (1 + 2 sigma)
+    # Gradient is x * 2 / (1 + 2 * sigma)
+    l2_sq = odl.solvers.L2NormSquared(space)
+
+    smoothed_l2_sq = odl.solvers.MoreauEnvelope(l2_sq, sigma=sigma)
+    x = noise_element(space)
+    assert all_almost_equal(smoothed_l2_sq.gradient(x),
+                            x * 2 / (1 + 2 * sigma))
+
 if __name__ == '__main__':
     pytest.main([str(__file__.replace('\\', '/')), '-v'])

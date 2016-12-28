@@ -2125,8 +2125,8 @@ class MoreauEnvelope(Functional):
 
     .. math::
         \mathrm{env}_{\\sigma  f}(x) =
-        \\min_{y \\in \\mathcal{X}}
-        \\left\{ \\frac{1}{2 \\sigma} \| x - y \|_2^2 + f(x) \\right\}
+        \\inf_{y \\in \\mathcal{X}}
+        \\left\{ \\frac{1}{2 \\sigma} \| x - y \|_2^2 + f(y) \\right\}
 
     The gradient of the envelope is given by
 
