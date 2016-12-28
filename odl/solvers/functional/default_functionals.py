@@ -2108,7 +2108,14 @@ class MoreauEnvelope(Functional):
 
     The Moraeu evelope is a way to smooth an arbitrary convex functional
     such that its gradient can be computed given the proximal of the original
-    functional.
+    functional and has the same critical points as the functional.
+
+    It is also called the Moreau-Yosida regularization.
+
+    Note that the only computable property of the Moreau envelope is the
+    gradient, the functional itself cannot be evaluated efficiently.
+
+    See `Proximal Algorithms`_ for more information.
 
     Notes
     -----
@@ -2126,18 +2133,54 @@ class MoreauEnvelope(Functional):
     .. math::
         [\\nabla \mathrm{env}_{\\sigma  f}](x) =
         \\frac{1}{\\sigma} (x - \mathrm{prox}_{\\sigma  f}(x))
+
+    References
+    ----------
+    .. _Proximal Algorithms: \
+https://web.stanford.edu/~boyd/papers/pdf/prox_algs.pdf
     """
-    def __init__(self, functional, scalar=1.0):
-        self.functional = functional
-        self.scalar = scalar
-        super().__init__(space=functional.space,
+
+    def __init__(self, functional, sigma=1.0):
+        """Initialize an instance.
+
+        Parameters
+        ----------
+        functional : `Functional`
+            The functional ``f`` in the definition of the moreau envelope,
+            the function to be smoothed.
+        sigma : positive float
+            The scalar ``sigma`` in the definition of the moreau envelope.
+            Higher sigma give a stronger smoothing while smaller values give
+            a weak smoothing.
+
+        Examples
+        --------
+        Create smoothed l1 norm:
+
+        >>> space = odl.rn(3)
+        >>> l1_norm = odl.solvers.L1Norm(space)
+        >>> smoothed_l1 = MoreauEnvelope(l1_norm)
+        """
+        self.__functional = functional
+        self.__sigma = sigma
+        super().__init__(space=functional.domain,
                          linear=False)
+
+    @property
+    def functional(self):
+        """The functional that has been regularized."""
+        return self.__functional
+
+    @property
+    def sigma(self):
+        """Regularization constant, high means stronger regularization."""
+        return self.__sigma
 
     @property
     def gradient(self):
         """The gradient operator."""
-        return (ScalingOperator(self.domain, 1 / self.scalar) -
-                (1 / self.scalar) * self.functional.proximal(self.scalar))
+        return (ScalingOperator(self.domain, 1 / self.sigma) -
+                (1 / self.sigma) * self.functional.proximal(self.sigma))
 
 
 if __name__ == '__main__':
