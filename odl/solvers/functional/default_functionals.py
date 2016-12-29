@@ -2146,11 +2146,11 @@ https://web.stanford.edu/~boyd/papers/pdf/prox_algs.pdf
         Parameters
         ----------
         functional : `Functional`
-            The functional ``f`` in the definition of the moreau envelope,
+            The functional ``f`` in the definition of the Moreau envelope,
             the function to be smoothed.
         sigma : positive float
-            The scalar ``sigma`` in the definition of the moreau envelope.
-            Higher sigma give a stronger smoothing while smaller values give
+            The scalar ``sigma`` in the definition of the Moreau envelope.
+            Higher sigma give a strong smoothing while smaller values give
             a weak smoothing.
 
         Examples
@@ -2173,7 +2173,7 @@ https://web.stanford.edu/~boyd/papers/pdf/prox_algs.pdf
 
     @property
     def sigma(self):
-        """Regularization constant, high means stronger regularization."""
+        """Regularization constant, higher means stronger regularization."""
         return self.__sigma
 
     @property

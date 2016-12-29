@@ -490,7 +490,7 @@ def test_separable_sum(space):
 
 
 def test_moreau_envelope_l1():
-    """Test for the moreau envelope with L1 norm."""
+    """Test for the Moreau envelope with L1 norm."""
     space = odl.rn(3)
 
     l1 = odl.solvers.L1Norm(space)
@@ -509,7 +509,7 @@ def test_moreau_envelope_l1():
 
 
 def test_moreau_envelope_l2_sq(space, sigma):
-    """Test for the moreau envelope with l2 norm squared."""
+    """Test for the Moreau envelope with l2 norm squared."""
 
     # Result is ||x||_2^2 / (1 + 2 sigma)
     # Gradient is x * 2 / (1 + 2 * sigma)
