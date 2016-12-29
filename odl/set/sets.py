@@ -356,7 +356,7 @@ class ComplexNumbers(Field):
         if inp is not None:
             # Workaround for missing __complex__ of numpy.ndarray
             if isinstance(inp, np.ndarray):
-                return complex(inp.reshape(-1)[0])
+                return complex(inp.reshape([1])[0])
             else:
                 return complex(inp)
         else:

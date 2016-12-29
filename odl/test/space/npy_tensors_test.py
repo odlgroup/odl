@@ -120,14 +120,11 @@ def test_init_tset():
     NumpyTensorSet((3, 4), dtype=float)
     NumpyTensorSet((3, 4), dtype=complex)
     NumpyTensorSet((3, 4), dtype=complex, order='F')
+    NumpyTensorSet(3, dtype=int)
 
     # Alternative constructors
     odl.tensor_set((3, 4), dtype=int)
     odl.tensor_set((3, 4), dtype='S1', order='F')
-
-    # Check error scenarios
-    with pytest.raises(TypeError):
-        NumpyTensorSet(3, dtype=int)  # bad shape
 
 
 def test_init_tspace():

@@ -27,6 +27,7 @@ import numpy as np
 
 __all__ = ('broadcast_to', 'moveaxis')
 
+
 # TODO: Remove when numpy 1.10 is an ODL dependency
 def broadcast_to(array, shape):
     """Broadcast an array to a new shape.
