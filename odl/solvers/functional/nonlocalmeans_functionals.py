@@ -24,7 +24,6 @@ standard_library.install_aliases()
 from builtins import super
 
 import numpy as np
-from numbers import Integral
 
 from odl.operator import Operator
 from odl.solvers.functional.functional import Functional
@@ -38,7 +37,35 @@ class NLMRegularizer(Functional):
 
     """The nonlocal means functional.
 
-    TODO: What is the actual functional?
+    See Buades2005_ for more information.
+
+    Notes
+    -----
+    The nonlocal means regularization of a image :math:`u` is given by
+
+    .. math::
+        NL[u](x) =
+            \\frac{1}{C(x)}
+            \\int_\\Omega
+            e^{-\\frac{(G_a * |u(x + \cdot) - u(y + \cdot)|^2)(0)}{h^2}}
+            u(y) dy
+
+    where :math:`\Omega` is the domain, :math:`G_a` is a gaussian kernel,
+    :math:`h` is a parameter and :math:`*` denotes convolution and :math:`C(x)`
+    is a normalization constant
+
+    .. math::
+        C(x) =
+        \\int_\\Omega
+        e^{-\\frac{(G_a * |u(x + \cdot) - u(y + \cdot)|^2)(0)}{h^2}}
+        dy
+
+    See FlexISP_
+
+    References
+    ----------
+    .. _Buades2005: http://ieeexplore.ieee.org/document/1467423/
+    .. _FlexISP: http://dl.acm.org/citation.cfm?doid=2661229.2661260
     """
 
     def __init__(self, space, h,

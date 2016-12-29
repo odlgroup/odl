@@ -42,14 +42,14 @@ model = 'TV_NLM'
 # Discrete reconstruction space: discretized functions on the rectangle
 # [-20, 20]^2 with 256 samples per dimension.
 space = odl.uniform_discr(
-    min_pt=[-20, -20], max_pt=[20, 20], shape=[256, 256], dtype='float32')
+    min_pt=[-20, -20, -20], max_pt=[20, 20, 20], shape=[256, 256, 256], dtype='float32')
 
 # Make a parallel beam geometry with flat detector
 # Angles: uniformly spaced, n = 360, min = 0, max = pi
 angle_partition = odl.uniform_partition(0, np.pi, 1000)
 # Detector: uniformly sampled, n = 558, min = -30, max = 30
-detector_partition = odl.uniform_partition(-30, 30, 1000)
-geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
+detector_partition = odl.uniform_partition([-30, -30], [30, 30], [500, 500])
+geometry = odl.tomo.Parallel3dAxisGeometry(angle_partition, detector_partition)
 
 # The implementation of the ray transform to use, options:
 # 'scikit'                    Requires scikit-image (can be installed by
@@ -67,7 +67,7 @@ ray_trafo = odl.tomo.RayTransform(space, geometry, impl=impl)
 
 
 # Create phantom
-phantom = odl.phantom.forbild(space)
+phantom = odl.phantom.shepp_logan(space)
 phantom.show('phantom', clim=[1, 1.1])
 
 # Create sinogram of forward projected phantom with noise
