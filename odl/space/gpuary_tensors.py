@@ -707,7 +707,7 @@ class GpuTensorSpace(TensorSpace):
         if inp is None and data_ptr is None:
             if order is None:
                 arr = gpuary.empty(self.shape, dtype=self.dtype,
-                                   order=self.order, cls=ndgpuarray,
+                                   order=order, cls=ndgpuarray,
                                    context=self.context)
             else:
                 arr = gpuary.empty(self.shape, dtype=self.dtype,
@@ -1012,7 +1012,7 @@ class GpuTensorSpace(TensorSpace):
         >>> result is out
         True
         """
-        multiply(x1.data, x2.data, out=out.data)
+        x1.ufuncs.multiply(x2, out=out)
 
     def _divide(self, x1, x2, out):
         """Entry-wise division of two tensors, assigned to out.
@@ -1043,8 +1043,7 @@ class GpuTensorSpace(TensorSpace):
         >>> result is out
         True
         """
-        # TODO: import from ufuncs
-        divide(x1.data, x2.data, out=out.data)
+        x1.ufuncs.divide(x2, out=out)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -1496,9 +1495,399 @@ class GpuTensor(Tensor):
         """Return ``str(self)``."""
         return str(self.data)
 
+    def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
+        """Interface to Numpy's ufunc machinery.
+
+        This method is called by Numpy version 1.13 and higher as a single
+        point for the ufunc dispatch logic. An object implementing
+        ``__array_ufunc__`` takes over control when a `numpy.ufunc` is
+        called on it, allowing it to use custom implementations and
+        output types.
+
+        This includes handling of in-place arithmetic like
+        ``npy_array += custom_obj``. In this case, the custom object's
+        ``__array_ufunc__`` takes precedence over the baseline
+        `numpy.ndarray` implementation. It will be called with
+        ``npy_array`` as ``out`` argument, which ensures that the
+        returned object is a Numpy array. For this to work properly,
+        ``__array_ufunc__`` has to accept Numpy arrays as ``out`` arguments.
+        The same holds analogously for GPU arrays.
+
+        See the `corresponding NEP`_ and the `interface documentation`_
+        for further details. See also the `general documentation on
+        Numpy ufuncs`_.
+
+        .. note::
+            This implementation looks for native ufuncs in ``pygpu.ufuncs``
+            and falls back to the basic implementation with Numpy arrays
+            in case no native ufunc is available. That fallback version
+            comes with significant overhead due to data copies between
+            host and device.
+
+        .. note::
+            When an ``out`` parameter is specified, and (one of) it has
+            type `numpy.ndarray`, the inputs are converted to Numpy
+            arrays, and the Numpy ufunc is invoked.
+
+        .. note::
+            When using operations that alter the shape (like ``reduce``),
+            or the data type (can be any of the methods),
+            the resulting array is wrapped in a space of the same
+            type as ``self.space``, propagating space properties like
+            `exponent` or `weighting` as closely as possible.
+
+        Parameters
+        ----------
+        ufunc : `numpy.ufunc`
+            Ufunc that should be called on ``self``.
+        method : str
+            Method on ``ufunc`` that should be called on ``self``.
+            Possible values:
+
+            ``'__call__'``, ``'accumulate'``, ``'at'``, ``'outer'``,
+            ``'reduce'``, ``'reduceat'``
+
+        input1, ..., inputN :
+            Positional arguments to ``ufunc.method``.
+        kwargs :
+            Keyword arguments to ``ufunc.method``.
+
+        Returns
+        -------
+        ufunc_result : `GpuTensor`, `numpy.ndarray` or tuple
+            Result of the ufunc evaluation. If no ``out`` keyword argument
+            was given, the result is a `Tensor` or a tuple
+            of such, depending on the number of outputs of ``ufunc``.
+            If ``out`` was provided, the returned object or tuple entries
+            refer(s) to ``out``.
+
+        Examples
+        --------
+        We apply `numpy.add` to ODL tensors:
+
+        >>> r3 = odl.rn(3, impl='gpuarray')
+        >>> x = r3.element([1, 2, 3])
+        >>> y = r3.element([-1, -2, -3])
+        >>> x.__array_ufunc__(np.add, '__call__', x, y)
+        rn(3, impl='gpuarray').element([ 0.,  0.,  0.])
+        >>> np.add(x, y)  # same mechanism for Numpy >= 1.13
+        rn(3, impl='gpuarray').element([ 0.,  0.,  0.])
+
+        As ``out``, a Numpy array or an ODL tensor can be given (wrapped
+        in a sequence):
+
+        >>> out = r3.element()
+        >>> res = x.__array_ufunc__(np.add, '__call__', x, y, out=(out,))
+        >>> out
+        rn(3, impl='gpuarray').element([ 0.,  0.,  0.])
+        >>> res is out
+        True
+        >>> out_arr = np.empty(3)
+        >>> res = x.__array_ufunc__(np.add, '__call__', x, y, out=(out_arr,))
+        >>> out_arr
+        array([ 0.,  0.,  0.])
+        >>> res is out_arr
+        True
+
+        With multiple dimensions:
+
+        >>> r23 = odl.rn((2, 3), impl='gpuarray')
+        >>> x = y = r23.one()
+        >>> x.__array_ufunc__(np.add, '__call__', x, y)
+        rn((2, 3), impl='gpuarray').element(
+            [[ 2.,  2.,  2.],
+             [ 2.,  2.,  2.]]
+        )
+
+        The ``ufunc.accumulate`` method retains the original `shape` and
+        `dtype`. The latter can be changed with the ``dtype`` parameter:
+
+        >>> x = r3.element([1, 2, 3])
+        >>> x.__array_ufunc__(np.add, 'accumulate', x)
+        rn(3, impl='gpuarray').element([ 1.,  3.,  6.])
+        >>> np.add.accumulate(x)  # same mechanism for Numpy >= 1.13
+        rn(3, impl='gpuarray').element([ 1.,  3.,  6.])
+
+        For multi-dimensional tensors, an optional ``axis`` parameter
+        can be provided:
+
+        >>> z = r23.one()
+        >>> z.__array_ufunc__(np.add, 'accumulate', z, axis=1)
+        rn((2, 3), impl='gpuarray').element(
+            [[ 1.,  2.,  3.],
+             [ 1.,  2.,  3.]]
+        )
+
+        The ``ufunc.at`` method operates in-place. Here we add the second
+        operand ``[5, 10]`` to ``x`` at indices ``[0, 2]``:
+
+        >>> x = r3.element([1, 2, 3])
+        >>> x.__array_ufunc__(np.add, 'at', x, [0, 2], [5, 10])
+        >>> x
+        rn(3, impl='gpuarray').element([  6.,   2.,  13.])
+
+        For outer-product-type operations, i.e., operations where the result
+        shape is the sum of the individual shapes, the ``ufunc.outer``
+        method can be used:
+
+        >>> x = odl.rn(2, impl='gpuarray').element([0, 3])
+        >>> y = odl.rn(3, impl='gpuarray').element([1, 2, 3])
+        >>> x.__array_ufunc__(np.add, 'outer', x, y)
+        rn((2, 3), impl='gpuarray').element(
+            [[ 1.,  2.,  3.],
+             [ 4.,  5.,  6.]]
+        )
+        >>> y.__array_ufunc__(np.add, 'outer', y, x)
+        rn((3, 2), impl='gpuarray').element(
+            [[ 1.,  4.],
+             [ 2.,  5.],
+             [ 3.,  6.]]
+        )
+
+        Using ``ufunc.reduce`` produces a scalar, which can be avoided with
+        ``keepdims=True``:
+
+        >>> x = r3.element([1, 2, 3])
+        >>> x.__array_ufunc__(np.add, 'reduce', x)
+        6.0
+        >>> x.__array_ufunc__(np.add, 'reduce', x, keepdims=True)
+        rn(1, impl='gpuarray').element([ 6.])
+
+        In multiple dimensions, ``axis`` can be provided for reduction over
+        selected axes:
+
+        >>> z = r23.element([[1, 2, 3],
+        ...                  [4, 5, 6]])
+        >>> z.__array_ufunc__(np.add, 'reduce', z, axis=1)
+        rn(2, impl='gpuarray').element([  6.,  15.])
+
+        Finally, ``add.reduceat`` is a combination of ``reduce`` and
+        ``at`` with rather flexible and complex semantics (see the
+        `reduceat documentation`_ for details):
+
+        >>> x = r3.element([1, 2, 3])
+        >>> x.__array_ufunc__(np.add, 'reduceat', x, [0, 1])
+        rn(2, impl='gpuarray').element([ 1.,  5.])
+
+        References
+        ----------
+        .. _corresponding NEP:
+           https://github.com/numpy/numpy/blob/master/doc/neps/\
+ufunc-overrides.rst
+
+        .. _interface documentation:
+           https://github.com/charris/numpy/blob/master/doc/source/reference/\
+arrays.classes.rst#special-attributes-and-methods
+
+        .. _general documentation on Numpy ufuncs:
+           https://docs.scipy.org/doc/numpy/reference/ufuncs.html
+
+        .. _reduceat documentation:
+           https://docs.scipy.org/doc/numpy/reference/generated/\
+numpy.ufunc.reduceat.html
+        """
+        # --- Process `out` --- #
+
+        # Unwrap out if provided. The output parameters are all wrapped
+        # in one tuple, even if there is only one.
+        out_tuple = kwargs.pop('out', ())
+
+        # Check number of `out` args, depending on `method`
+        if method == '__call__' and len(out_tuple) not in (0, ufunc.nout):
+            raise ValueError(
+                "need 0 or {} `out` arguments for `method='__call__'`, "
+                'got {}'.format(ufunc.nout, len(out_tuple)))
+        elif method != '__call__' and len(out_tuple) not in (0, 1):
+            raise ValueError(
+                "need 0 or 1 `out` arguments for `method={!r}`, "
+                'got {}'.format(method, len(out_tuple)))
+
+        # We allow our own tensors, the data container type and
+        # `numpy.ndarray` objects as `out` (see docs for reason for the
+        # latter)
+        valid_types = (type(self), type(self.data), np.ndarray)
+        if not all(isinstance(o, valid_types) or o is None
+                   for o in out_tuple):
+            return NotImplemented
+
+        # Determine native ufunc vs. Numpy ufunc
+        if any(isinstance(o, np.ndarray) for o in out_tuple):
+            native_ufunc = None
+            use_native = False
+        else:
+            native_ufunc = getattr(pygpu, ufunc.__name__, None)
+            use_native = (native_ufunc is not None)
+
+        # Assign to `out` or `out1` and `out2`, respectively, unwrapping the
+        # data container
+        out = out1 = out2 = None
+        if len(out_tuple) == 1:
+            if isinstance(out_tuple[0], type(self)):
+                out = out_tuple[0].data
+            else:
+                out = out_tuple[0]
+        elif len(out_tuple) == 2:
+            if isinstance(out_tuple[0], type(self)):
+                out1 = out_tuple[0].data
+            else:
+                out1 = out_tuple[0]
+            if isinstance(out_tuple[1], type(self)):
+                out1 = out_tuple[1].data
+            else:
+                out1 = out_tuple[1]
+
+        # --- Process `inputs` --- #
+
+        # Pull out the data container of the inputs if necessary
+        inputs = tuple(
+            inp.data if isinstance(inp, type(self)) else inp
+            for inp in inputs)
+
+        # --- Get some parameters for later --- #
+
+        # Arguments for space constructors
+        exponent = self.space.exponent
+        weighting = self.space.weighting
+
+        # --- Evaluate ufunc --- #
+
+        # TODO: something wrong with 'at', doctest fails
+
+        if method == '__call__':
+            if ufunc.nout == 1:
+                kwargs['out'] = (out,)
+                if use_native:
+                    res = native_ufunc(*inputs, **kwargs)
+                else:
+                    # Everything is cast to Numpy arrays by the parent method;
+                    # the result can be a Numpy array or a tensor
+                    res = super(GpuTensor, self).__array_ufunc__(
+                        ufunc, '__call__', *inputs, **kwargs)
+
+                # Wrap result if necessary (lazily)
+                if out is None:
+                    if is_floating_dtype(res.dtype):
+                        # Weighting contains exponent
+                        spc_kwargs = {'weighting': weighting}
+                    else:
+                        # No `exponent` or `weighting` applicable
+                        spc_kwargs = {}
+                    out_space = type(self.space)(
+                        self.shape, res.dtype, self.context, **spc_kwargs)
+                    return out_space.element(res)
+                else:
+                    # `out` may be the unwrapped version, return the original
+                    return out_tuple[0]
+
+            elif ufunc.nout == 2:
+                kwargs['out'] = (out1, out2)
+                if use_native:
+                    res1, res2 = native_ufunc(*inputs, **kwargs)
+                else:
+                    # Everything is cast to Numpy arrays by the parent method;
+                    # the results can be Numpy arrays or tensors
+                    res1, res2 = super(GpuTensor, self).__array_ufunc__(
+                        ufunc, '__call__', *inputs, **kwargs)
+
+                # Wrap results if necessary (lazily)
+                # We don't use exponents or weightings since we don't know
+                # how to map them to the spaces
+                if out1 is None:
+                    res_space = type(self.space)(
+                        self.shape, res1.dtype, self.context)
+                    result1 = res_space.element(res1)
+                else:
+                    result1 = out_tuple[0]
+
+                if out2 is None:
+                    res_space = type(self.space)(
+                        self.shape, res2.dtype, self.context)
+                    result2 = res_space.element(res2)
+                else:
+                    result2 = out_tuple[1]
+
+                return result1, result2
+
+            else:
+                raise NotImplementedError('nout = {} not supported'
+                                          ''.format(ufunc.nout))
+
+        elif method == 'at':
+            native_method = getattr(native_ufunc, 'at', None)
+            use_native = (use_native and native_method is not None)
+
+            def eval_at_via_npy(*inputs, **kwargs):
+                gpu_arr = inputs[0]
+                npy_arr = np.asarray(gpu_arr)
+                new_inputs = (npy_arr,) + inputs[1:]
+                super(GpuTensor, self).__array_ufunc__(
+                    ufunc, method, *new_inputs, **kwargs)
+                gpu_arr[:] = npy_arr
+
+            if use_native:
+                # Native method could exist but raise `NotImplementedError`
+                # or return `NotImplemented`, falling back to Numpy case
+                # then, too
+                try:
+                    res = native_method(*inputs, **kwargs)
+                except NotImplementedError:
+                    eval_at_via_npy(*inputs, **kwargs)
+                else:
+                    if res is NotImplemented:
+                        eval_at_via_npy(*inputs, **kwargs)
+            else:
+                eval_at_via_npy(*inputs, **kwargs)
+
+        else:  # method != '__call__'
+            kwargs['out'] = (out,)
+            native_method = getattr(native_ufunc, method, None)
+            use_native = (use_native and native_method is not None)
+
+            if use_native:
+                # Native method could exist but raise `NotImplementedError`
+                # or return `NotImplemented`, falling back to base case
+                # then, too
+                try:
+                    res = native_method(*inputs, **kwargs)
+                except NotImplementedError:
+                    res = super(GpuTensor, self).__array_ufunc__(
+                        ufunc, method, *inputs, **kwargs)
+                else:
+                    if res is NotImplemented:
+                        res = super(GpuTensor, self).__array_ufunc__(
+                            ufunc, method, *inputs, **kwargs)
+
+            else:
+                res = super(GpuTensor, self).__array_ufunc__(
+                    ufunc, method, *inputs, **kwargs)
+
+            # Shortcut for scalar or no return value
+            if np.isscalar(res) or res is None:
+                # The first occurs for `reduce` with all axes,
+                # the second for in-place stuff (`at` currently)
+                return res
+
+            # Wrap result if necessary (lazily)
+            if out is None:
+                if is_floating_dtype(res.dtype):
+                    if res.shape != self.shape:
+                        # Don't propagate weighting if shape changes
+                        weighting = GpuTensorSpaceConstWeighting(1.0, exponent)
+                    spc_kwargs = {'weighting': weighting}
+                else:
+                    spc_kwargs = {}
+
+                res_space = type(self.space)(
+                    res.shape, res.dtype, self.context, **spc_kwargs)
+                result = res_space.element(res)
+            else:
+                result = out_tuple[0]
+
+            return result
+
     @property
     def ufuncs(self):
-        """`GpuTensorSpaceUfuncs`, access to NumPy style ufuncs.
+        """Access to NumPy style ufuncs.
 
         Examples
         --------
@@ -1534,11 +1923,13 @@ class GpuTensor(Tensor):
 
         Notes
         -----
-        These functions are optimized for use with GPU arrays and incur
-        no overhead.
+        Those ufuncs which are implemented natively on the GPU incur no
+        significant overhead. However, for missing functions, a fallback
+        Numpy implementation is used which causes significant overhead
+        due to data copies between host and device.
         """
-        # TODO: import from ufuncs
-        return GpuTensorSpaceUfuncs(self)
+        # TODO: Test with some native ufuncs, then remove this attribute
+        return super(GpuTensor, self).ufuncs
 
     @property
     def real(self):

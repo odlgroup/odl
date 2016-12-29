@@ -26,8 +26,13 @@ arrays.classes.rst#special-attributes-and-methods>`_.
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 
+from functools import wraps
 import numpy as np
 import re
+try:
+    import pygpu
+except ImportError:
+    pygpu = None
 
 
 __all__ = ('TensorSpaceUfuncs', 'ProductSpaceUfuncs')
@@ -79,8 +84,10 @@ def wrap_ufunc_base(name, n_in, n_out, doc):
     if n_in == 1:
         if n_out == 1:
             def wrapper(self, out=None):
-                if out is None or isinstance(out, (type(self.elem),
-                                                   type(self.elem.data))):
+                valid_out_types = (type(self.elem),
+                                   type(self.elem.data),
+                                   np.ndarray)
+                if out is None or isinstance(out, valid_out_types):
                     out = (out,)
 
                 return self.elem.__array_ufunc__(
@@ -123,8 +130,6 @@ class TensorSpaceUfuncs(object):
     def __init__(self, elem):
         """Create ufunc wrapper for elem."""
         self.elem = elem
-
-    # Reductions for backwards compatibility
 
     def sum(self, axis=None, dtype=None, out=None, keepdims=False):
         """Return the sum of ``self``.
