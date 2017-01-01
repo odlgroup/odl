@@ -76,7 +76,7 @@ def _linear_deform(template, displacement, out=None):
     """
     image_pts = template.space.points()
     for i, vi in enumerate(displacement):
-        image_pts[:, i] += vi.tensor.asarray()
+        image_pts[:, i] += vi.asarray()
     return template.interpolation(image_pts.T, out=out, bounds_check=False)
 
 

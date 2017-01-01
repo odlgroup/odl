@@ -133,7 +133,7 @@ def tensor_set(shape, dtype, order='C', impl='numpy', **kwargs):
     Set of 3-tuples with unsigned integer entries:
 
     >>> odl.tensor_set(3, dtype='uint64')
-    ntuples(3, 'uint64')
+    tensor_set(3, 'uint64')
 
     2x3 tensors with unsigned integer entries:
 
@@ -143,7 +143,7 @@ def tensor_set(shape, dtype, order='C', impl='numpy', **kwargs):
     One-dimensional spaces have special constructors:
 
     >>> odl.tensor_set((3,), dtype='uint64')
-    ntuples(3, 'uint64')
+    tensor_set(3, 'uint64')
 
     See also
     --------
