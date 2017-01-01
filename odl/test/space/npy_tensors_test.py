@@ -51,8 +51,7 @@ exponent = simple_fixture(
 
 s_indices_params = [
     0, [1], (1,), (0, 1), (2, 3),
-    (0, slice(None)), (slice(None, None, 2), slice(None))
-    ]
+    (0, slice(None)), (slice(None, None, 2), slice(None))]
 setitem_indices = simple_fixture(name='indices', params=s_indices_params)
 
 g_indices_params = s_indices_params + [[[0, 2, 1, 1], [0, 1, 1, 3]],
@@ -748,18 +747,18 @@ def test_matrix_op_init(matrix):
 
     # Test default domain and range
     mat_op = MatrixOperator(dense_matrix)
-    assert mat_op.domain == odl.fn(4, matrix.dtype)
-    assert mat_op.range == odl.fn(3, matrix.dtype)
+    assert mat_op.domain == odl.tensor_space(4, matrix.dtype)
+    assert mat_op.range == odl.tensor_space(3, matrix.dtype)
     assert np.all(mat_op.matrix == dense_matrix)
     sparse_matrix = scipy.sparse.coo_matrix(dense_matrix)
     mat_op = MatrixOperator(sparse_matrix)
-    assert mat_op.domain == odl.fn(4, matrix.dtype)
-    assert mat_op.range == odl.fn(3, matrix.dtype)
+    assert mat_op.domain == odl.tensor_space(4, matrix.dtype)
+    assert mat_op.range == odl.tensor_space(3, matrix.dtype)
     assert (mat_op.matrix != sparse_matrix).getnnz() == 0
 
     # Explicit domain and range
-    dom = odl.fn(4, matrix.dtype)
-    ran = odl.fn(3, matrix.dtype)
+    dom = odl.tensor_space(4, matrix.dtype)
+    ran = odl.tensor_space(3, matrix.dtype)
     mat_op = MatrixOperator(dense_matrix, domain=dom, range=ran)
     assert mat_op.domain == dom
     assert mat_op.range == ran
@@ -812,7 +811,7 @@ def test_matrix_op_init(matrix):
         bad_ran = odl.tensor_space((6, 3, 4), matrix.dtype)
         MatrixOperator(dense_matrix, domain=dom, range=bad_ran, axis=2)
     with pytest.raises(ValueError):
-        bad_dom_for_sparse = odl.rtensors((6, 5, 4))
+        bad_dom_for_sparse = odl.rn((6, 5, 4))
         MatrixOperator(sparse_matrix, domain=bad_dom_for_sparse, axis=2)
 
     # Make sure this runs at all
@@ -841,7 +840,7 @@ def test_matrix_op_call(matrix):
     assert all_almost_equal(out, true_result_sparse)
 
     # Multi-dimensional case
-    domain = odl.rtensors((2, 2, 4))
+    domain = odl.rn((2, 2, 4))
     mat_op = MatrixOperator(dense_matrix, domain, axis=2)
     xarr, x = noise_elements(mat_op.domain)
     true_result = moveaxis(np.tensordot(dense_matrix, xarr, (1, 2)), 0, 2)
@@ -862,7 +861,7 @@ def test_matrix_op_call_explicit():
     # Multiplication along `axis` with `mat` is the same as summation
     # along `axis` and stacking 3 times along the same axis
     for axis in range(3):
-        mat_op = MatrixOperator(mat, domain=odl.rtensors(xarr.shape),
+        mat_op = MatrixOperator(mat, domain=odl.rn(xarr.shape),
                                 axis=axis)
         result = mat_op(xarr)
         true_result = np.repeat(np.sum(xarr, axis=axis, keepdims=True),
@@ -929,7 +928,7 @@ def test_matrix_op_inverse():
 
 def test_array_weighting_init(exponent):
     """Test initialization of array weighting."""
-    space = odl.rtensors((3, 4))
+    space = odl.rn((3, 4))
     weight_arr = _pos_array(space)
     weight_elem = space.element(weight_arr)
 
@@ -1481,14 +1480,14 @@ def test_reduction(tspace, reduction):
 def test_reduction_with_weighting():
     """Weightings are tricky to handle, check some cases."""
     # Constant weighting, should propagate
-    tspace = odl.rtensors((3, 4), weight=0.5)
+    tspace = odl.rn((3, 4), weighting=0.5)
     x = tspace.one()
     red = x.ufuncs.sum(axis=0)
     assert red.space.weighting == tspace.weighting
 
     # Array weighting, should result in no weighting
     weight_arr = np.ones((3, 4)) * 0.5
-    tspace = odl.rtensors((3, 4), weight=weight_arr, exponent=1.5)
+    tspace = odl.rn((3, 4), weighting=weight_arr, exponent=1.5)
     x = tspace.one()
     red = x.ufuncs.sum(axis=0)
     assert red.space.weighting == NumpyTensorSpaceNoWeighting(exponent=1.5)
