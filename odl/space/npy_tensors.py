@@ -390,7 +390,7 @@ class NumpyGeneralizedTensor(GeneralizedTensor):
 
         Examples
         --------
-        >>> space = odl.rn((2, 3))
+        >>> space = odl.tensor_space((2, 3), dtype='uint32')
         >>> x = space.element([[1, 2, 3],
         ...                    [4, 5, 6]])
         >>> x[0, 1]
@@ -1010,7 +1010,8 @@ class NumpyTensorSpace(TensorSpace, NumpyTensorSet):
 
         Weighting is supported, too:
 
-        >>> weights = [[2, 1, 1], [1, 1, 2]]
+        >>> weights = [[2, 1, 1],
+        ...            [1, 1, 2]]
         >>> space_1_w = odl.rn((2, 3), exponent=1, weighting=weights)
         >>> x = space_1_w.element([[-1, 1, 2],
         ...                        [1, -1, 1]])
@@ -1051,7 +1052,8 @@ class NumpyTensorSpace(TensorSpace, NumpyTensorSet):
 
         Weighting is supported:
 
-        >>> weights = [[1, 2, 1], [1, 1, 2]]
+        >>> weights = [[1, 2, 1],
+        ...            [1, 1, 2]]
         >>> space_1_w = odl.rn((2, 3), exponent=1,
         ...                    weighting=weights)
         >>> x = space_1_w.element([[1, 0, 3],
@@ -1180,30 +1182,30 @@ class NumpyTensorSpace(TensorSpace, NumpyTensorSet):
 
         Examples
         --------
-        >>> import odl
-        >>> tspace = odl.rn((2, 3))
-        >>> same_tspace = odl.rn((2, 3), exponent=2)
-        >>> same_tspace == tspace
+
+        >>> space = odl.rn((2, 3))
+        >>> same_space = odl.rn((2, 3), exponent=2)
+        >>> same_space == space
         True
 
         Different `shape`, `exponent` or `dtype` all result in
         different spaces:
 
-        >>> diff_tspace = odl.rn((2, 3, 4))
-        >>> diff_tspace == tspace
+        >>> diff_space = odl.rn((2, 3, 4))
+        >>> diff_space == space
         False
-        >>> diff_tspace = odl.rn((2, 3), exponent=1)
-        >>> diff_tspace == tspace
+        >>> diff_space = odl.rn((2, 3), exponent=1)
+        >>> diff_space == space
         False
-        >>> diff_tspace = odl.rn((2, 3), dtype='float32')
-        >>> diff_tspace == tspace
+        >>> diff_space = odl.rn((2, 3), dtype='float32')
+        >>> diff_space == space
         False
 
         A `NumpyTensorSpace` with the same properties is considered
         equal:
 
-        >>> same_tspace = odl.NumpyTensorSpace((2, 3), dtype='float64')
-        >>> same_tspace == tspace
+        >>> same_space = odl.NumpyTensorSpace((2, 3), dtype='float64')
+        >>> same_space == space
         True
         """
         if other is self:
@@ -1269,10 +1271,10 @@ class NumpyTensor(Tensor, NumpyGeneralizedTensor):
 
         Examples
         --------
-        >>> import odl
-        >>> tspace = odl.cn((2, 3))
-        >>> x = tspace.element([[1 + 1j, 2, 3 - 3j],
-        ...                     [4, 5 - 5j, 6]])
+
+        >>> space = odl.cn((2, 3))
+        >>> x = space.element([[1 + 1j, 2, 3 - 3j],
+        ...                    [4, 5 - 5j, 6]])
         >>> x.real
         rn((2, 3)).element(
         [[1.0, 2.0, 3.0],
@@ -1295,10 +1297,9 @@ class NumpyTensor(Tensor, NumpyGeneralizedTensor):
 
         Examples
         --------
-        >>> import odl
-        >>> tspace = odl.cn((2, 3))
-        >>> x = tspace.element([[1 + 1j, 2, 3 - 3j],
-        ...                     [4, 5 - 5j, 6]])
+        >>> space = odl.cn((2, 3))
+        >>> x = space.element([[1 + 1j, 2, 3 - 3j],
+        ...                    [4, 5 - 5j, 6]])
         >>> zero = odl.rn((2, 3)).zero()
         >>> x.real = zero
         >>> x
@@ -1337,10 +1338,9 @@ class NumpyTensor(Tensor, NumpyGeneralizedTensor):
 
         Examples
         --------
-        >>> import odl
-        >>> tspace = odl.cn((2, 3))
-        >>> x = tspace.element([[1 + 1j, 2, 3 - 3j],
-        ...                     [4, 5 - 5j, 6]])
+        >>> space = odl.cn((2, 3))
+        >>> x = space.element([[1 + 1j, 2, 3 - 3j],
+        ...                    [4, 5 - 5j, 6]])
         >>> x.imag
         rn((2, 3)).element(
         [[1.0, 0.0, -3.0],
@@ -1363,10 +1363,9 @@ class NumpyTensor(Tensor, NumpyGeneralizedTensor):
 
         Examples
         --------
-        >>> import odl
-        >>> tspace = odl.cn((2, 3))
-        >>> x = tspace.element([[1 + 1j, 2, 3 - 3j],
-        ...                     [4, 5 - 5j, 6]])
+        >>> space = odl.cn((2, 3))
+        >>> x = space.element([[1 + 1j, 2, 3 - 3j],
+        ...                    [4, 5 - 5j, 6]])
         >>> zero = odl.rn((2, 3)).zero()
         >>> x.imag = zero
         >>> x
@@ -1410,10 +1409,9 @@ class NumpyTensor(Tensor, NumpyGeneralizedTensor):
 
         Examples
         --------
-        >>> import odl
-        >>> tspace = odl.cn((2, 3))
-        >>> x = tspace.element([[1 + 1j, 2, 3 - 3j],
-        ...                     [4, 5 - 5j, 6]])
+        >>> space = odl.cn((2, 3))
+        >>> x = space.element([[1 + 1j, 2, 3 - 3j],
+        ...                    [4, 5 - 5j, 6]])
         >>> x.conj()
         cn((2, 3)).element(
         [[(1-1j), (2-0j), (3+3j)],
@@ -1422,7 +1420,7 @@ class NumpyTensor(Tensor, NumpyGeneralizedTensor):
 
         The out parameter allows you to avoid a copy
 
-        >>> y = tspace.element()
+        >>> y = space.element()
         >>> y_out = x.conj(out=y)
         >>> y
         cn((2, 3)).element(
@@ -1464,10 +1462,9 @@ class NumpyTensor(Tensor, NumpyGeneralizedTensor):
 
         Examples
         --------
-        >>> import odl
-        >>> tspace = odl.rn((2, 3))
-        >>> x = tspace.element([[1, 2, 3],
-        ...                     [4, 5, 6]])
+        >>> space = odl.rn((2, 3))
+        >>> x = space.element([[1, 2, 3],
+        ...                    [4, 5, 6]])
         >>> x[0, 1]
         2.0
         >>> x[:, 1:]
@@ -2148,7 +2145,7 @@ class MatrixOperator(Operator):
         this example, the number of matrix rows (4) must match the
         domain shape entry in the given axis:
 
-        >>> dom = odl.rtensors((5, 4, 4))  # can use axis=1 or axis=2
+        >>> dom = odl.rn((5, 4, 4))  # can use axis=1 or axis=2
         >>> op = MatrixOperator(m, domain=dom, axis=1)
         >>> op(dom.one()).shape
         (5, 3, 4)
