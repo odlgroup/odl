@@ -27,8 +27,9 @@ import numpy as np
 
 # Internal
 import odl
-from odl.discr.lp_discr import DiscreteLp
+from odl.discr.lp_discr import DiscreteLp, DiscreteLpElement
 from odl.space.base_tensors import TensorSpace
+from odl.space.npy_tensors import NumpyTensor
 from odl.util.testutils import (almost_equal, all_equal, all_almost_equal,
                                 noise_elements, simple_fixture)
 
@@ -146,7 +147,7 @@ def test_element_1d(exponent):
     weight = 1.0 if exponent == float('inf') else discr.cell_volume
     dspace = odl.rn(3, exponent=exponent, weighting=weight)
     elem = discr.element()
-    assert isinstance(elem, odl.DiscreteLpElement)
+    assert isinstance(elem, DiscreteLpElement)
     assert elem.tensor in dspace
 
 
@@ -156,7 +157,7 @@ def test_element_2d(exponent):
     weight = 1.0 if exponent == float('inf') else discr.cell_volume
     dspace = odl.rn(9, exponent=exponent, weighting=weight)
     elem = discr.element()
-    assert isinstance(elem, odl.DiscreteLpElement)
+    assert isinstance(elem, DiscreteLpElement)
     assert elem.tensor in dspace
 
 
@@ -164,8 +165,8 @@ def test_element_from_array_1d():
     discr = odl.uniform_discr(0, 1, 3, impl='numpy')
     elem = discr.element([1, 2, 3])
 
-    assert isinstance(elem, odl.DiscreteLpElement)
-    assert isinstance(elem.tensor, odl.NumpyTensor)
+    assert isinstance(elem, DiscreteLpElement)
+    assert isinstance(elem.tensor, NumpyTensor)
     assert all_equal(elem.tensor, [1, 2, 3])
 
 
@@ -175,8 +176,8 @@ def test_element_from_array_2d():
     elem = discr.element([[1, 2],
                          [3, 4]])
 
-    assert isinstance(elem, odl.DiscreteLpElement)
-    assert isinstance(elem.tensor, odl.NumpyTensor)
+    assert isinstance(elem, DiscreteLpElement)
+    assert isinstance(elem.tensor, NumpyTensor)
 
     # Check ordering
     assert all_equal(elem.tensor, [1, 2, 3, 4])
@@ -333,8 +334,8 @@ def test_zero():
     discr = odl.uniform_discr(0, 1, 3)
     zero = discr.zero()
 
-    assert isinstance(zero, odl.DiscreteLpElement)
-    assert isinstance(zero.tensor, odl.NumpyTensor)
+    assert isinstance(zero, DiscreteLpElement)
+    assert isinstance(zero.tensor, NumpyTensor)
     assert all_equal(zero, [0, 0, 0])
 
 
