@@ -16,8 +16,7 @@ class Convolution(odl.Operator):
             domain=kernel.space, range=kernel.space, linear=True)
 
     def _call(self, rhs, out):
-        ndimage.convolve(rhs.tensor.data, self.kernel.tensor.data,
-                         output=out.tensor.data, mode='wrap')
+        ndimage.convolve(rhs, self.kernel, output=out.tensor.data, mode='wrap')
 
     @property
     def adjoint(self):
