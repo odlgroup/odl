@@ -2104,12 +2104,13 @@ class IndicatorNuclearNormUnitBall(Functional):
 
 
 class MoreauEnvelope(Functional):
+
     """Moreau envelope of a convex functional.
 
-    The Moraeu evelope is a way to smooth an arbitrary convex functional
+    The Moreau envelope is a way to smooth an arbitrary convex functional
     such that its gradient can be computed given the proximal of the original
-    functional and has the same critical points as the functional.
-
+    functional.
+    The new functional has the same critical points as the original.
     It is also called the Moreau-Yosida regularization.
 
     Note that the only computable property of the Moreau envelope is the
@@ -2146,12 +2147,11 @@ https://web.stanford.edu/~boyd/papers/pdf/prox_algs.pdf
         Parameters
         ----------
         functional : `Functional`
-            The functional ``f`` in the definition of the Moreau envelope,
-            the function to be smoothed.
+            The functional ``f`` in the definition of the Moreau envelope that
+            is to be smoothed.
         sigma : positive float
             The scalar ``sigma`` in the definition of the Moreau envelope.
-            Higher sigma give a strong smoothing while smaller values give
-            a weak smoothing.
+            Larger values mean stronger smoothing.
 
         Examples
         --------
@@ -2173,7 +2173,7 @@ https://web.stanford.edu/~boyd/papers/pdf/prox_algs.pdf
 
     @property
     def sigma(self):
-        """Regularization constant, higher means stronger regularization."""
+        """Regularization constant, larger means stronger regularization."""
         return self.__sigma
 
     @property

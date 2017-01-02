@@ -72,23 +72,20 @@ data += odl.phantom.white_noise(ray_trafo.range) * np.mean(data) * 0.1
 
 # --- Set up optimization problem and solve --- #
 
-# Create data term ||Ax - b||_2^2 as composition of l2 norm squared
-# and the residual operator.
+# Create data term ||Ax - b||_2^2 as composition of the squared L2 norm and the
+# ray trafo translated by the data.
 l2_norm = odl.solvers.L2NormSquared(ray_trafo.range)
 data_discrepancy = l2_norm * (ray_trafo - data)
 
 # Create regularizing functional || |grad(x)| ||_1 and smooth the functional
 # using the Moreau envelope.
+# The parameter sigma controls the strength of the regularization.
 gradient = odl.Gradient(reco_space)
 l1_norm = odl.solvers.GroupL1Norm(gradient.range)
-
-# The parameter sigma controlls the strength of the regularization.
 smoothed_l1 = odl.solvers.MoreauEnvelope(l1_norm, sigma=0.03)
-
-# Compose with gradient in order to create the target functional
 regularizer = smoothed_l1 * gradient
 
-# Create objective functional
+# Create full objective functional
 obj_fun = data_discrepancy + 0.03 * regularizer
 
 # Create initial estimate of the inverse Hessian by a diagonal estimate
