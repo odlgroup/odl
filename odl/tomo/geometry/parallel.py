@@ -434,7 +434,7 @@ def parallel_beam_geometry(space, angles=None, det_shape=None):
     flexibility of the geometries, but simply want a geometry that works.
 
     This default geometry gives a fully sampled sinogram according to the
-    nyquist criterion, which in general results in a very large number of
+    Nyquist criterion, which in general results in a very large number of
     samples.
 
     Parameters
@@ -462,9 +462,9 @@ def parallel_beam_geometry(space, angles=None, det_shape=None):
     >>> space = odl.uniform_discr([-1, -1], [1, 1], [20, 20])
     >>> geometry = parallel_beam_geometry(space)
     >>> geometry.angles.size
-    89
+    45
     >>> geometry.detector.size
-    57
+    29
 
     Notes
     -----
@@ -507,9 +507,13 @@ http://dx.doi.org/10.1137/1.9780898718324
     corners = space.domain.corners()[:, :2]
     rho = np.max(np.linalg.norm(corners, axis=1))
 
-    # Find default values according to Nyquist criterion
+    # Find default values according to Nyquist criterion.
+
+    # We assume that the function is bandlimited by a wave along the x or y
+    # axis. The highest frequency we can measure is then a standing wave with
+    # period of twice the inter-node distance.
     min_side = min(space.partition.cell_sides[:2])
-    omega = 2 * np.pi / min_side
+    omega = np.pi / min_side
 
     if det_shape is None:
         if space.ndim == 2:

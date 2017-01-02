@@ -123,14 +123,14 @@ def test_parallel_3d_single_axis_geometry():
     assert repr(geom)
 
 
-def test_parallel_beam_helper():
+def test_parallel_beam_geometry_helper():
     """Test that parallel_beam_geometry satisfies the sampling conditions."""
     # --- 2d case ---
     space = odl.uniform_discr([-1, -1], [1, 1], [20, 20])
     geometry = odl.tomo.parallel_beam_geometry(space)
 
     rho = np.sqrt(2)
-    omega = 2 * np.pi * 10.0
+    omega = np.pi * 10.0
 
     # Validate angles
     assert geometry.motion_partition.is_uniform
@@ -168,7 +168,7 @@ def test_parallel_beam_helper():
     geometry = odl.tomo.parallel_beam_geometry(space)
 
     rho = np.sqrt(2) * 2
-    omega = 2 * np.pi * 10.0
+    omega = np.pi * 10.0
 
     # Validate angles
     assert geometry.motion_partition.is_uniform
