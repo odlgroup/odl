@@ -17,14 +17,14 @@
 
 """
 Example creating a filtered back-projection in 2d using the ray transform and a
-ramp filter. The ramp filter is implemented in fourier space.
+ramp filter. The ramp filter is implemented in Fourier space.
 
 See https://en.wikipedia.org/wiki/Radon_transform#Inversion_formulas for
 more information.
 
 Also note that ODL has a utility function, `fbp_op` that can be used to perform
 filtered back-projection, and that this example is intended to show how this
-could be implemented in ODL.
+could be implemented by hand using ODL.
 """
 
 import numpy as np

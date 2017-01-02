@@ -428,13 +428,14 @@ class Parallel3dAxisGeometry(ParallelGeometry, AxisOrientedGeometry):
 
 
 def parallel_beam_geometry(space, angles=None, det_shape=None):
-    """Create default parallel beam geometry from space.
-
-    This default geometry gives a fully sampled sinogram according to the
-    nyquist criterion. In general this gives a very large number of samples.
+    """Create default parallel beam geometry from ``space``.
 
     This is intended for simple test cases where users do not need the full
-    flexibility of the geometries, but simply want a geomoetry that works.
+    flexibility of the geometries, but simply want a geometry that works.
+
+    This default geometry gives a fully sampled sinogram according to the
+    nyquist criterion, which in general results in a very large number of
+    samples.
 
     Parameters
     ----------
@@ -468,18 +469,18 @@ def parallel_beam_geometry(space, angles=None, det_shape=None):
     Notes
     -----
     According to `Mathematical Methods in Image Reconstruction`_ (page 72), for
-    a function :math:`f : \\mathbb{R}^2 \\to \\mathbb{R}`, that has compact
+    a function :math:`f : \\mathbb{R}^2 \\to \\mathbb{R}` that has compact
     support
 
     .. math::
         \| x \| > \\rho  \implies f(x) = 0,
 
-    and that is bandlimited in some appropriate sense
+    and is essentially bandlimited
 
     .. math::
-       \| \\xi \| > \\Omega \implies \\hat{f}(\\xi) = 0.
+       \| \\xi \| > \\Omega \implies \\hat{f}(\\xi) \\approx 0,
 
-    Then, in order to fully reconstruct the function from a parallel beam ray
+    then, in order to fully reconstruct the function from a parallel beam ray
     transform the function should be sampled at an angular interval
     :math:`\\Delta \psi` such that
 
@@ -494,7 +495,7 @@ def parallel_beam_geometry(space, angles=None, det_shape=None):
 
     The geometry returned by this function satisfies these conditions exactly.
 
-    If the domain is 3 dimensional, the geometry is "separable", in that each
+    If the domain is 3-dimensional, the geometry is "separable", in that each
     slice along the z-dimension of the data is treated as independed 2d data.
 
     References
@@ -506,7 +507,7 @@ http://dx.doi.org/10.1137/1.9780898718324
     corners = space.domain.corners()[:, :2]
     rho = np.max(np.linalg.norm(corners, axis=1))
 
-    # Find default values according to nyquist criterion
+    # Find default values according to Nyquist criterion
     min_side = min(space.partition.cell_sides[:2])
     omega = 2 * np.pi / min_side
 
@@ -535,6 +536,8 @@ http://dx.doi.org/10.1137/1.9780898718324
                                           [rho, max_h],
                                           det_shape)
         return Parallel3dAxisGeometry(angle_partition, det_partition)
+    else:
+        raise ValueError('``space.ndim`` must be 2 or 3.')
 
 
 if __name__ == '__main__':
