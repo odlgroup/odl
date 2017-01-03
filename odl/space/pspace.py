@@ -644,9 +644,11 @@ class ProductSpaceElement(LinearSpaceElement):
             return self.parts[indices]
         elif isinstance(indices, slice):
             return self.space[indices].element(self.parts[indices])
-        else:
+        elif isinstance(indices, list):
             out_parts = [self.parts[i] for i in indices]
             return self.space[indices].element(out_parts)
+        else:
+            raise TypeError('bad index type {}'.format(type(indices)))
 
     def __setitem__(self, indices, values):
         """Implement ``self[indices] = values``."""
