@@ -772,7 +772,7 @@ class NumpyTensorSpace(TensorSpace, NumpyTensorSet):
             Further keyword arguments are passed to the weighting
             classes.
 
-        See also
+        See Also
         --------
         rn : constructor for real tensor spaces
         cn : constructor for complex tensor spaces
@@ -1580,7 +1580,7 @@ def npy_weighted_inner(weights):
         are applicable to spaces of any size, for arrays the sizes
         of the weighting and the space must match.
 
-    See also
+    See Also
     --------
     NumpyTensorSpaceConstWeighting
     NumpyTensorSpaceArrayWeighting
@@ -1606,7 +1606,7 @@ def npy_weighted_norm(weights, exponent=2.0):
         are applicable to spaces of any size, for arrays the sizes
         of the weighting and the space must match.
 
-    See also
+    See Also
     --------
     NumpyTensorSpaceConstWeighting
     NumpyTensorSpaceArrayWeighting
@@ -1642,7 +1642,7 @@ def npy_weighted_dist(weights, exponent=2.0, use_inner=False):
         are applicable to spaces of any size, for arrays the sizes
         of the weighting and the space must match.
 
-    See also
+    See Also
     --------
     NumpyTensorSpaceConstWeighting
     NumpyTensorSpaceArrayWeighting
@@ -2194,7 +2194,7 @@ class MatrixOperator(Operator):
                                       dtype=self.matrix.dtype)
         else:
             if not isinstance(domain, NumpyTensorSpace):
-                raise TypeError('`domain` must be not a `NumpyTensorSpace`'
+                raise TypeError('`domain` must be a `NumpyTensorSpace` '
                                 'instance, got {!r}'.format(domain))
 
             if scipy.sparse.isspmatrix(self.matrix) and domain.ndim > 1:
