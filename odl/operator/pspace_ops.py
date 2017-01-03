@@ -387,7 +387,7 @@ class ComponentProjection(Operator):
         ----------
         space : `ProductSpace`
             Space to project from.
-        index : int, slice, or iterable
+        index : int, slice, or list
             Indices defining the subspace. If ``index`` is not an integer,
             the `Operator.range` of this operator is also a `ProductSpace`.
 
@@ -398,7 +398,7 @@ class ComponentProjection(Operator):
         >>> r3 = odl.rn(3)
         >>> X = odl.ProductSpace(r1, r2, r3)
 
-        Projection on n-th component
+        Projection on n-th component:
 
         >>> proj = odl.ComponentProjection(X, 0)
         >>> x = [[1.0],
@@ -407,7 +407,7 @@ class ComponentProjection(Operator):
         >>> proj(x)
         rn(1).element([1.0])
 
-        Projection on sub-space
+        Projection on sub-space:
 
         >>> proj = odl.ComponentProjection(X, [0, 2])
         >>> proj(x)
@@ -466,7 +466,7 @@ class ComponentProjectionAdjoint(Operator):
         ----------
         space : `ProductSpace`
             Space to project to.
-        index : int, slice, or iterable
+        index : int, slice, or list
             Indexes to project from.
 
         Examples
@@ -479,8 +479,8 @@ class ComponentProjectionAdjoint(Operator):
 
         Projection on the 0-th component:
 
-        >>> proj = odl.ComponentProjectionAdjoint(X, 0)
-        >>> proj(x[0])
+        >>> proj_adj = odl.ComponentProjectionAdjoint(X, 0)
+        >>> proj_adj(x[0])
         ProductSpace(rn(1), rn(2), rn(3)).element([
             [1.0],
             [0.0, 0.0],
@@ -489,8 +489,8 @@ class ComponentProjectionAdjoint(Operator):
 
         Projection on a sub-space corresponding to indices 0 and 2:
 
-        >>> proj = odl.ComponentProjectionAdjoint(X, [0, 2])
-        >>> proj(x[0, 2])
+        >>> proj_adj = odl.ComponentProjectionAdjoint(X, [0, 2])
+        >>> proj_adj(x[[0, 2]])
         ProductSpace(rn(1), rn(2), rn(3)).element([
             [1.0],
             [0.0, 0.0],
