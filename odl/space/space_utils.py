@@ -145,7 +145,7 @@ def tensor_set(shape, dtype, order='C', impl='numpy', **kwargs):
     >>> odl.tensor_set((3,), dtype='uint64')
     tensor_set(3, 'uint64')
 
-    See also
+    See Also
     --------
     tensor_space : Space of tensors with arbitrary scalar data type.
     """
@@ -206,7 +206,7 @@ def tensor_space(shape, dtype=None, order='C', impl='numpy', **kwargs):
     >>> odl.tensor_space((3,), dtype='int64')
     tensor_space(3, 'int')
 
-    See also
+    See Also
     --------
     tensor_set : Set of tensors with arbitrary data type.
     """
@@ -266,7 +266,7 @@ def cn(shape, dtype=None, order='C', impl='numpy', **kwargs):
     >>> space.dtype
     dtype('complex128')
 
-    See also
+    See Also
     --------
     tensor_space : Space of tensors with arbitrary scalar data type.
     rn : Real tensor spaces.
@@ -336,7 +336,7 @@ def rn(shape, dtype=None, order='C', impl='numpy', **kwargs):
     >>> odl.rn((3,))
     rn(3)
 
-    See also
+    See Also
     --------
     tensor_space : Space of tensors with arbitrary scalar data type.
     cn : Complex tensor space.

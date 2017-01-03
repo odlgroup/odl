@@ -8,8 +8,8 @@
 
 from __future__ import division
 from builtins import super
-import pytest
 import numpy as np
+import pytest
 import sys
 
 import odl
@@ -31,7 +31,7 @@ class MultiplyAndSquareOp(Operator):
         ran = (odl.rn(matrix.shape[0])
                if range is None else range)
 
-        super().__init__(dom, ran)
+        Operator.__init__(self, dom, ran)
         self.matrix = matrix
 
     def _call(self, rhs, out=None):

@@ -98,7 +98,7 @@ class TensorSet(Set):
 
     @property
     def nbytes(self):
-        """Number of bytes an element of this space uses in memory."""
+        """Total number of bytes used by an element of this space in memory."""
         return self.size * self.itemsize
 
     def __contains__(self, other):
@@ -459,13 +459,12 @@ class TensorSpace(TensorSet, LinearSpace):
 
         Parameters
         ----------
-        shape : sequence of int
+        shape : int or sequence of ints
             Number of elements per axis.
         dtype :
-            Data type of each element. Can be provided in any
-            way the `numpy.dtype` function understands, most notably
-            as built-in type, as one of NumPy's internal datatype
-            objects or as string.
+            Scalar data type of elements in this space. Can be provided
+            in any way the `numpy.dtype` constructor understands, e.g.
+            as built-in type or as a string.
             Only scalar data types (numbers) are allowed.
         order : {'C', 'F'}, optional
             Axis ordering of the data storage.

@@ -74,7 +74,7 @@ given below.
         def my_other_method(self):
             """Print the parameter.
 
-            See also
+            See Also
             --------
             my_method : some calculation, but not much
             """
