@@ -40,8 +40,8 @@ space = odl.uniform_discr(
     min_pt=[-20, -20], max_pt=[20, 20], shape=[256, 256], dtype='float32')
 
 # Make a parallel beam geometry with flat detector
-# Angles: uniformly spaced, n = 300, min = 0, max = 2 * pi
-angle_partition = odl.uniform_partition(0, 2 * np.pi, 300)
+# Angles: uniformly spaced, n = 300, min = 0, max = pi
+angle_partition = odl.uniform_partition(0, np.pi, 300)
 # Detector: uniformly sampled, n = 300, min = -30, max = 30
 detector_partition = odl.uniform_partition(-30, 30, 300)
 geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
