@@ -49,7 +49,8 @@ __all__ = ('LpNorm', 'L1Norm', 'L2Norm', 'L2NormSquared',
            'KullbackLeiblerCrossEntropy', 'SeparableSum',
            'QuadraticForm',
            'NuclearNorm', 'IndicatorNuclearNormUnitBall',
-           'ScalingFunctional', 'IdentityFunctional')
+           'ScalingFunctional', 'IdentityFunctional',
+           'MoreauEnvelope')
 
 
 class LpNorm(Functional):
@@ -2100,6 +2101,87 @@ class IndicatorNuclearNormUnitBall(Functional):
                                          self.domain,
                                          self.__norm.outernorm.exponent,
                                          self.__norm.pwisenorm.exponent)
+
+
+class MoreauEnvelope(Functional):
+
+    """Moreau envelope of a convex functional.
+
+    The Moreau envelope is a way to smooth an arbitrary convex functional
+    such that its gradient can be computed given the proximal of the original
+    functional.
+    The new functional has the same critical points as the original.
+    It is also called the Moreau-Yosida regularization.
+
+    Note that the only computable property of the Moreau envelope is the
+    gradient, the functional itself cannot be evaluated efficiently.
+
+    See `Proximal Algorithms`_ for more information.
+
+    Notes
+    -----
+    The Moreau envelope of a convex functional
+    :math:`f : \mathcal{X} \\rightarrow \mathbb{R}` multiplied by a scalar
+    :math:`\\sigma` is defined by
+
+    .. math::
+        \mathrm{env}_{\\sigma  f}(x) =
+        \\inf_{y \\in \\mathcal{X}}
+        \\left\{ \\frac{1}{2 \\sigma} \| x - y \|_2^2 + f(y) \\right\}
+
+    The gradient of the envelope is given by
+
+    .. math::
+        [\\nabla \mathrm{env}_{\\sigma  f}](x) =
+        \\frac{1}{\\sigma} (x - \mathrm{prox}_{\\sigma  f}(x))
+
+    References
+    ----------
+    .. _Proximal Algorithms: \
+https://web.stanford.edu/~boyd/papers/pdf/prox_algs.pdf
+    """
+
+    def __init__(self, functional, sigma=1.0):
+        """Initialize an instance.
+
+        Parameters
+        ----------
+        functional : `Functional`
+            The functional ``f`` in the definition of the Moreau envelope that
+            is to be smoothed.
+        sigma : positive float
+            The scalar ``sigma`` in the definition of the Moreau envelope.
+            Larger values mean stronger smoothing.
+
+        Examples
+        --------
+        Create smoothed l1 norm:
+
+        >>> space = odl.rn(3)
+        >>> l1_norm = odl.solvers.L1Norm(space)
+        >>> smoothed_l1 = MoreauEnvelope(l1_norm)
+        """
+        self.__functional = functional
+        self.__sigma = sigma
+        super().__init__(space=functional.domain,
+                         linear=False)
+
+    @property
+    def functional(self):
+        """The functional that has been regularized."""
+        return self.__functional
+
+    @property
+    def sigma(self):
+        """Regularization constant, larger means stronger regularization."""
+        return self.__sigma
+
+    @property
+    def gradient(self):
+        """The gradient operator."""
+        return (ScalingOperator(self.domain, 1 / self.sigma) -
+                (1 / self.sigma) * self.functional.proximal(self.sigma))
+
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position
