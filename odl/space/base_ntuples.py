@@ -416,7 +416,7 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
         """
         return NtuplesBaseUFuncs(self)
 
-    def show(self, title=None, method='scatter', show=False, fig=None,
+    def show(self, title=None, method='scatter', force_show=False, fig=None,
              **kwargs):
         """Display this vector graphically.
 
@@ -432,9 +432,10 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
 
             'plot' : graph plot
 
-        show : bool, optional
-            If ``True``, the plot is shown immediately. Otherwise, display is
-            deferred to a later point in time.
+        force_show : bool, optional
+            Whether the plot should be forced to be shown now or deferred until
+            later. Note that some backends always displays the plot, regardless
+            of this value.
         fig : `matplotlib.figure.Figure`, optional
             Figure to draw into. Expected to be of same "style" as
             the figure given by this function. The most common use case
@@ -459,7 +460,8 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
         from odl.discr import RegularGrid
         grid = RegularGrid(0, self.size - 1, self.size)
         return show_discrete_data(self.asarray(), grid, title=title,
-                                  method=method, show=show, fig=fig, **kwargs)
+                                  method=method, force_show=force_show,
+                                  fig=fig, **kwargs)
 
     @property
     def impl(self):

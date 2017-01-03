@@ -29,7 +29,7 @@ space = odl.uniform_discr([0, 0], [1, 1], [100, 100])
 phantom = odl.phantom.shepp_logan(space, modified=True)
 
 # Show all data
-phantom.show(show=True)
+phantom.show(force_show=True)
 
 # We can show subsets by index
 phantom.show(indices=[slice(None), 50])

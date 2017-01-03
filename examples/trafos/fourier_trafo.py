@@ -57,7 +57,7 @@ phantom_real_ft.show(title='Half-complex Fourier Transform')
 # If the space is real, the inverse also gives a real result.
 phantom_real_ft_inv = ft_op_halfc.inverse(phantom_real_ft)
 phantom_real_ft_inv.show(title='Half-complex Fourier Transform inverted',
-                         show=True)
+                         force_show=True)
 
 # The FT operator itself has no option of (zero-)padding, but it can be
 # composed with a `ResizingOperator` which does exactly that. Note that the

@@ -84,13 +84,14 @@ def _axes_info(grid, npoints=5):
 
 
 def show_discrete_data(values, grid, title=None, method='',
-                       show=False, fig=None, **kwargs):
+                       force_show=False, fig=None, **kwargs):
     """Display a discrete 1d or 2d function.
 
     Parameters
     ----------
     values : `numpy.ndarray`
         The values to visualize
+
     grid : `TensorGrid` or `RectPartition`
         Grid of the values
 
@@ -115,9 +116,10 @@ def show_discrete_data(values, grid, title=None, method='',
 
         'wireframe', 'plot_wireframe' : surface plot
 
-
-    show : bool, optional
-        If the plot should be showed now or deferred until later
+    force_show : bool, optional
+        Whether the plot should be forced to be shown now or deferred until
+        later. Note that some backends always displays the plot, regardless
+        of this value.
 
     fig : `matplotlib.figure.Figure`, optional
         The figure to show in. Expected to be of same "style", as the figure
@@ -142,8 +144,6 @@ def show_discrete_data(values, grid, title=None, method='',
     -------
     fig : `matplotlib.figure.Figure`
         The resulting figure. It is also shown to the user.
-    colorbar : `matplotlib.colorbar.Colorbar`
-        The colorbar
 
     See Also
     --------
@@ -389,7 +389,7 @@ def show_discrete_data(values, grid, title=None, method='',
         plt.draw()
         plt.pause(0.1)
 
-    if show:
+    if force_show:
         plt.show()
 
     if saveto is not None:

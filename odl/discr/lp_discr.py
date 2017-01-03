@@ -719,7 +719,7 @@ class DiscreteLpElement(DiscretizedSpaceElement):
         return DiscreteLpUFuncs(self)
 
     def show(self, title=None, method='', coords=None, indices=None,
-             show=False, fig=None, **kwargs):
+             force_show=False, fig=None, **kwargs):
         """Display the function graphically.
 
         Parameters
@@ -764,9 +764,10 @@ class DiscreteLpElement(DiscretizedSpaceElement):
             (semantically ``[:, :, shape[2:] // 2]``).
             This option is mutually exclusive to ``coords``.
 
-        show : bool, optional
-            If ``True``, show the plot now. Otherwise, display is deferred
-            deferred until later.
+        force_show : bool, optional
+            Whether the plot should be forced to be shown now or deferred until
+            later. Note that some backends always displays the plot, regardless
+            of this value.
 
         fig : `matplotlib.figure.Figure`
             The figure to show in. Expected to be of same "style", as
@@ -867,9 +868,8 @@ class DiscreteLpElement(DiscretizedSpaceElement):
         values = self.asarray()[indices].squeeze()
 
         return show_discrete_data(values, part, title=title, method=method,
-                                  show=show, fig=fig,
-                                  axis_labels=axis_labels,
-                                  **kwargs)
+                                  force_show=force_show, fig=fig,
+                                  axis_labels=axis_labels, **kwargs)
 
 
 def uniform_discr_frompartition(partition, exponent=2.0, interp='nearest',

@@ -100,4 +100,4 @@ odl.solvers.chambolle_pock_solver(
 # Display images
 orig.show(title='original image')
 noisy.show(title='noisy image')
-x.show(title='denoised', show=True)  # show and hold
+x.show(title='denoised', force_show=True)  # show and hold
