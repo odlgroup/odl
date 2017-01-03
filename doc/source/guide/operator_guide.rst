@@ -28,7 +28,7 @@ operator
 
 for a matrix :math:`A\in \mathbb{R}^{n\times m}` as follows::
 
-    class MatVecOperator(odl.Operator):
+    class MatrixOperator(odl.Operator):
         def __init__(self, matrix):
             self.matrix = matrix
             dom = odl.rn(matrix.shape[1])
@@ -47,7 +47,7 @@ this behavior, create the (private) `Operator._call`
 method with the following signature, here given for the above
 example::
 
-  class MatVecOperator(odl.Operator):
+  class MatrixOperator(odl.Operator):
       ...
       def _call(self, x, out):
           self.matrix.dot(x, out=out.asarray())
@@ -61,7 +61,7 @@ Out-of-place evaluation means that the operator is evaluated on a ``domain`` ele
 the result is written to a *newly allocated* ``range`` element. To implement this
 behavior, use the following signature for `Operator._call` (again given for the above example)::
 
-  class MatVecOperator(odl.Operator):
+  class MatrixOperator(odl.Operator):
       ...
       def _call(self, x):
           return self.matrix.dot(x)
@@ -73,8 +73,10 @@ avoided*.
 **Important:** Do not call these methods directly. Use the call pattern
 ``operator(x)`` or ``operator(x, out=y)``, e.g.::
 
-    matrix = np.array([[1, 0], [0, 1], [1, 1]])
-    operator = MatVecOperator(matrix)
+    matrix = np.array([[1, 0],
+                       [0, 1],
+                       [1, 1]])
+    operator = MatrixOperator(matrix)
     x = odl.rn(2).one()
     y = odl.rn(3).element()
 
