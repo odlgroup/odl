@@ -24,10 +24,9 @@ def test_matrix_representation():
     A = np.random.rand(n, n)
 
     Aop = odl.MatrixOperator(A)
+    matrix_repr = matrix_representation(Aop)
 
-    the_matrix = matrix_representation(Aop)
-
-    assert almost_equal(np.sum(np.abs(A - the_matrix)), 1e-6)
+    assert almost_equal(np.sum(np.abs(A - matrix_repr)), 1e-6)
 
 
 def test_matrix_representation_product_to_lin_space():
@@ -49,9 +48,9 @@ def test_matrix_representation_product_to_lin_space():
     AB_matrix = np.hstack([A, B])
     ABop = ProductSpaceOperator([Aop, Bop], dom, ran)
 
-    the_matrix = matrix_representation(ABop)
+    matrix_repr = matrix_representation(ABop)
 
-    assert almost_equal(np.sum(np.abs(AB_matrix - the_matrix)), 1e-6)
+    assert almost_equal(np.sum(np.abs(AB_matrix - matrix_repr)), 1e-6)
 
 
 def test_matrix_representation_lin_space_to_product():
@@ -73,9 +72,9 @@ def test_matrix_representation_lin_space_to_product():
     AB_matrix = np.vstack([A, B])
     ABop = ProductSpaceOperator([[Aop], [Bop]], dom, ran)
 
-    the_matrix = matrix_representation(ABop)
+    matrix_repr = matrix_representation(ABop)
 
-    assert almost_equal(np.sum(np.abs(AB_matrix - the_matrix)), 1e-6)
+    assert almost_equal(np.sum(np.abs(AB_matrix - matrix_repr)), 1e-6)
 
 
 def test_matrix_representation_product_to_product():
@@ -98,9 +97,9 @@ def test_matrix_representation_product_to_product():
     ABop = ProductSpaceOperator([[Aop, 0],
                                  [0, Bop]],
                                 ran_and_dom, ran_and_dom)
-    the_matrix = matrix_representation(ABop)
+    matrix_repr = matrix_representation(ABop)
 
-    assert almost_equal(np.sum(np.abs(AB_matrix - the_matrix)), 1e-6)
+    assert almost_equal(np.sum(np.abs(AB_matrix - matrix_repr)), 1e-6)
 
 
 def test_matrix_representation_product_to_product_two():
@@ -121,9 +120,9 @@ def test_matrix_representation_product_to_product_two():
     ABop = ProductSpaceOperator([[Aop, 0],
                                  [0, Bop]],
                                 ran_and_dom, ran_and_dom)
-    the_matrix = matrix_representation(ABop)
+    matrix_repr = matrix_representation(ABop)
 
-    assert almost_equal(np.sum(np.abs(AB_matrix - the_matrix)), 1e-6)
+    assert almost_equal(np.sum(np.abs(AB_matrix - matrix_repr)), 1e-6)
 
 
 def test_matrix_representation_not_linear_op():
