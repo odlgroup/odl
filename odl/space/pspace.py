@@ -602,12 +602,12 @@ class ProductSpaceElement(LinearSpaceElement):
     def __init__(self, space, parts):
         """Initialize a new instance."""
         super().__init__(space)
-        self._parts = list(parts)
+        self.__parts = tuple(parts)
 
     @property
     def parts(self):
         """Parts of this product space element."""
-        return self._parts
+        return self.__parts
 
     @property
     def size(self):
@@ -644,17 +644,49 @@ class ProductSpaceElement(LinearSpaceElement):
             return self.parts[indices]
         elif isinstance(indices, slice):
             return self.space[indices].element(self.parts[indices])
-        else:
+        elif isinstance(indices, list):
             out_parts = [self.parts[i] for i in indices]
             return self.space[indices].element(out_parts)
+        else:
+            raise TypeError('bad index type {}'.format(type(indices)))
 
     def __setitem__(self, indices, values):
         """Implement ``self[indices] = values``."""
+        # Get the parts to which we assign values
+        if isinstance(indices, Integral):
+            indexed_parts = (self.parts[indices],)
+            values = (values,)
+        elif isinstance(indices, slice):
+            indexed_parts = self.parts[indices]
+        elif isinstance(indices, list):
+            indexed_parts = tuple(self.parts[i] for i in indices)
+        else:
+            raise TypeError('bad index type {}'.format(type(indices)))
+
+        # Do the assignment, with broadcasting if desired
         try:
-            self.parts[indices] = values
+            iter(values)
         except TypeError:
-            for i, index in enumerate(indices):
-                self.parts[index] = values[i]
+            # `values` is not iterable, assume it can be assigned to
+            # all indexed parts
+            for p in indexed_parts:
+                p[:] = values
+        else:
+            # `values` is iterable; it could still represent a single
+            # element of a power space.
+            if self.space.is_power_space and values in self.space[0]:
+                # Broadcast a single element across a power space
+                for p in indexed_parts:
+                    p[:] = values
+            else:
+                # Now we really have one assigned value per part
+                if len(values) != len(indexed_parts):
+                    raise ValueError(
+                        'length of iterable `values` not equal to number of '
+                        'indexed parts ({} != {})'
+                        ''.format(len(values), len(indexed_parts)))
+                for p, v in zip(indexed_parts, values):
+                    p[:] = v
 
     @property
     def ufunc(self):
