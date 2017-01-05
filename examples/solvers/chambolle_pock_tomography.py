@@ -74,7 +74,7 @@ data += odl.phantom.white_noise(ray_trafo.range) * np.mean(data) * 0.1
 
 
 # Initialize gradient operator
-gradient = odl.Gradient(reco_space, method='forward')
+gradient = odl.Gradient(reco_space)
 
 # Column vector of two operators
 op = odl.BroadcastOperator(ray_trafo, gradient)
@@ -88,7 +88,7 @@ g = odl.solvers.ZeroFunctional(op.domain)
 l2_norm = odl.solvers.L2NormSquared(ray_trafo.range).translated(data)
 
 # Isotropic TV-regularization i.e. the l1-norm
-l1_norm = 0.03 * odl.solvers.L1Norm(gradient.range)
+l1_norm = 0.01 * odl.solvers.L1Norm(gradient.range)
 
 # Combine functionals, order must correspond to the operator K
 f = odl.solvers.SeparableSum(l2_norm, l1_norm)
@@ -98,16 +98,16 @@ f = odl.solvers.SeparableSum(l2_norm, l1_norm)
 
 
 # Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
-op_norm = 1.3 * odl.power_method_opnorm(op, maxiter=6)
+op_norm = 1.3 * odl.power_method_opnorm(op, maxiter=10)
 
 niter = 100  # Number of iterations
 tau = 1.0 / op_norm  # Step size for the primal variable
 sigma = 1.0 / op_norm  # Step size for the dual variable
-gamma = 0.2
+gamma = 0.1
 
 # Optionally pass callback to the solver to display intermediate results
 callback = (odl.solvers.CallbackPrintIteration() &
-            odl.solvers.CallbackShow(display_step=5))
+            odl.solvers.CallbackShow())
 
 # Choose a starting point
 x = op.domain.zero()

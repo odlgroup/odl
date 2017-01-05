@@ -94,7 +94,7 @@ hessinv_estimate = odl.ScalingOperator(reco_space, 1 / opnorm ** 2)
 
 # Optionally pass callback to the solver to display intermediate results
 callback = (odl.solvers.CallbackPrintIteration() &
-            odl.solvers.CallbackShow(display_step=5))
+            odl.solvers.CallbackShow())
 
 # Pick parameters
 maxiter = 30

@@ -113,7 +113,7 @@ f = odl.solvers.IndicatorBox(forward_op.domain, 0, 1)
 # Create callback that prints current iterate value and displays every 20th
 # iterate.
 func = f + l2err * forward_op + lam * nuc_norm * pgradient
-callback = (odl.solvers.CallbackShow(display_step=20) &
+callback = (odl.solvers.CallbackShow() &
             odl.solvers.CallbackPrint(func=func))
 
 # Solve the problem. Here the parameters are chosen in order to ensure

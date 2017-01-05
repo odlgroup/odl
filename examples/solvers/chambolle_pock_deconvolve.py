@@ -32,7 +32,7 @@ import numpy as np
 import odl
 
 # Discretization parameters
-n = 50
+n = 128
 
 # Discretized spaces
 space = odl.uniform_discr([0, 0], [n, n], [n, n])
@@ -42,7 +42,7 @@ space = odl.uniform_discr([0, 0], [n, n], [n, n])
 # Where F[.] is the Fourier transform and the fourier transform of a guassian
 # with standard deviation filter_width is another gaussian with width
 # 1 / filter_width
-filter_width = 2.0  # standard deviation of the Gaussian filter
+filter_width = 3.0  # standard deviation of the Gaussian filter
 ft = odl.trafos.FourierTransform(space)
 c = filter_width ** 2 / 4.0 ** 2
 gaussian = ft.range.element(lambda x: np.exp(-(x[0] ** 2 + x[1] ** 2) * c))
@@ -85,10 +85,9 @@ f = odl.solvers.SeparableSum(l2_norm_squared, l1_norm)
 # Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
 op_norm = 1.1 * odl.power_method_opnorm(op)
 
-niter = 500  # Number of iterations
-tau = 1.0 / op_norm  # Step size for the primal variable
-sigma = 1.0 / op_norm  # Step size for the dual variable
-
+niter = 300  # Number of iterations
+tau = 10.0 / op_norm  # Step size for the primal variable
+sigma = 0.1 / op_norm  # Step size for the dual variables
 
 # Optionally pass callback to the solver to display intermediate results
 callback = (odl.solvers.CallbackPrintIteration() &
