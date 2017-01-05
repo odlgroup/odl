@@ -23,11 +23,9 @@ from future import standard_library
 standard_library.install_aliases()
 from past.builtins import basestring
 
-# External module imports
 import pytest
 import numpy as np
 
-# ODL imports
 import odl
 from odl import vector
 from odl.util.testutils import all_equal
@@ -36,7 +34,8 @@ from odl.util.testutils import all_equal
 def test_vector_numpy():
 
     # Rn
-    inp = [1.0, 2.0, 3.0]
+    inp = [[1.0, 2.0, 3.0],
+           [4.0, 5.0, 6.0]]
 
     x = vector(inp)
     assert isinstance(x, odl.NumpyTensor)
@@ -56,7 +55,8 @@ def test_vector_numpy():
     assert isinstance(x, odl.NumpyTensor)
 
     # Cn
-    inp = [1 + 1j, 2, 3 - 2j]
+    inp = [[1 + 1j, 2, 3 - 2j],
+           [4 + 1j, 5, 6 - 1j]]
 
     x = vector(inp)
     assert isinstance(x, odl.NumpyTensor)
@@ -86,12 +86,12 @@ def test_vector_numpy():
     assert np.issubdtype(x.dtype, basestring)
     assert all_equal(x, ['1', '2', 'inf'])
 
-    # Input not one-dimensional
-    x = vector(5.0)  # OK
+    # Scalar or empty input
+    x = vector(5.0)  # becomes 1d, size 1
     assert x.shape == (1,)
 
-    with pytest.raises(ValueError):
-        vector([[1, 0], [0, 1]])
+    x = vector([])  # becomes 1d, size 0
+    assert x.shape == (0,)
 
 
 if __name__ == '__main__':
