@@ -434,6 +434,8 @@ def show_discrete_data(values, grid, title=None, method='',
         else:
             fig.canvas.update()
             fig.canvas.flush_events()
+            if not plt.isinteractive():
+                plt.pause(0.0001)
 
     if force_show:
         plt.show()
