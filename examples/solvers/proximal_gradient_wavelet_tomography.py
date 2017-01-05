@@ -84,7 +84,7 @@ scales = W.scales()
 Wtrafoinv = W.inverse * (1 / (np.power(1.7, scales)))
 
 # Create regularizer as l1 norm
-regularizer = 0.0002 * odl.solvers.L1Norm(W.range)
+regularizer = 0.0005 * odl.solvers.L1Norm(W.range)
 
 # l2-squared norm of residual
 l2_norm_sq = odl.solvers.L2NormSquared(ray_trafo.range).translated(data)
@@ -94,12 +94,12 @@ data_discrepancy = l2_norm_sq * ray_trafo * Wtrafoinv
 
 # --- Select solver parameters and solve using proximal gradient --- #
 
-# Select step-size that guarantees convergence.
-gamma = 0.05
+# Select step-size that gives convergence.
+gamma = 0.2
 
 # Optionally pass callback to the solver to display intermediate results
 callback = (odl.solvers.CallbackPrintIteration() &
-            odl.solvers.CallbackShow())
+            odl.solvers.CallbackShow(display_step=5))
 
 
 def callb(x):
@@ -109,7 +109,7 @@ def callb(x):
 # Run the algorithm (FISTA)
 x = data_discrepancy.domain.zero()
 odl.solvers.accelerated_proximal_gradient(
-    x, f=regularizer, g=data_discrepancy, niter=200, gamma=gamma,
+    x, f=regularizer, g=data_discrepancy, niter=400, gamma=gamma,
     callback=callb)
 
 # Display images
