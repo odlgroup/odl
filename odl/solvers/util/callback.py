@@ -385,11 +385,18 @@ class CallbackShow(SolverCallback):
         self.fig = kwargs.pop('fig', None)
         self.display_step = kwargs.pop('display_step', 1)
         self.iter = 0
+        self.space_of_last_x = None
 
     def __call__(self, x):
         """Show the current iterate."""
+        # Check if we should update the figure in place
+        x_space = x.space
+        update_in_place = (self.space_of_last_x == x_space)
+        self.space_of_last_x = x_space
+
         if (self.iter % self.display_step) == 0:
-            self.fig = x.show(*self.args, fig=self.fig, **self.kwargs)
+            self.fig = x.show(*self.args, fig=self.fig,
+                              update_in_place=update_in_place, **self.kwargs)
 
         self.iter += 1
 
