@@ -852,15 +852,15 @@ class ProductSpaceElement(LinearSpaceElement):
 
         if indices is None:
             if len(self) < 5:
-                indices = np.arange(self.size)
+                indices = list(np.arange(self.size))
             else:
-                indices = np.linspace(0, self.size - 1, 4, dtype=int)
+                indices = list(np.linspace(0, self.size - 1, 4, dtype=int))
         else:
             if isinstance(indices, tuple):
                 indices, kwargs['indices'] = indices[0], indices[1:]
 
             if isinstance(indices, slice):
-                indices = range(*indices.indices(self.size))
+                indices = list(range(*indices.indices(self.size)))
             elif isinstance(indices, Integral):
                 indices = [indices]
 
