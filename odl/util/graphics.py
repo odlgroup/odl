@@ -432,9 +432,8 @@ def show_discrete_data(values, grid, title=None, method='',
             plt.draw()
             plt.pause(0.1)
         else:
-            sub.draw_artist(csub)
-            fig.canvas.blit(fig.bbox)
-            fig.canvas.draw()
+            fig.canvas.update()
+            fig.canvas.flush_events()
 
     if force_show:
         plt.show()
