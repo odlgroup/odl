@@ -55,6 +55,8 @@ class NumpyTensorSet(TensorSet):
 
     """The set of tensors of arbitrary type."""
 
+    impl = 'numpy'
+
     def __init__(self, shape, dtype, order='C'):
         """Initialize a new instance.
 
@@ -186,7 +188,7 @@ class NumpyTensorSet(TensorSet):
 
     @staticmethod
     def available_dtypes():
-        """Return the list of data types available in this implementation.
+        """Return the tuple of data types available in this implementation.
 
         Notes
         -----
@@ -198,7 +200,7 @@ class NumpyTensorSet(TensorSet):
         all_types = []
         for val in np.sctypes.values():
             all_types.extend(val)
-        return all_types
+        return tuple(all_types)
 
     @property
     def element_type(self):
@@ -2145,9 +2147,7 @@ class MatrixOperator(Operator):
         >>> op.range
         rn(3)
         >>> op([1, 2, 3, 4])
-        rn(3).element(
-        [10.0, 10.0, 10.0]
-        )
+        rn(3).element([10.0, 10.0, 10.0])
 
         For multi-dimensional arrays (tensors), the summation
         (contraction) can be performed along a specific axis. In
@@ -2302,24 +2302,36 @@ class MatrixOperator(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        sig_str = '{!r}'.format(self.matrix)
-        opt_arg_strings = []
-        if self.domain != NumpyTensorSpace((self.matrix.shape[1],),
-                                           dtype=self.matrix.dtype):
-            opt_arg_strings.append('domain={!r}'.format(self.domain))
+        # Matrix printing itself in an executable way
+        matrix_str = np.array2string(self.matrix, separator=', ')
+
+        # Optional arguments with defaults, inferred from the matrix
+        optargs = []
+        # domain
+        optargs.append(
+            ('domain', self.domain, NumpyTensorSpace(self.matrix.shape[1],
+                                                     self.matrix.dtype))
+        )
+        # range
         range_shape = list(self.domain.shape)
         range_shape[self.axis] = self.matrix.shape[0]
-        if self.range != NumpyTensorSpace(range_shape,
-                                          dtype=self.matrix.dtype):
-            opt_arg_strings.append('range={!r}'.format(self.range))
+        optargs.append(
+            ('range', self.range, NumpyTensorSpace(range_shape,
+                                                   self.matrix.dtype))
+        )
+        # axis
+        optargs.append(('axis', self.axis, 0))
 
-        if self.axis != 0:
-            opt_arg_strings.append('axis={}'.format(self.axis))
+        opt_str = repr_signature([], optargs)
 
-        if opt_arg_strings:
-            sig_str += ',\n' + ', '.join(opt_arg_strings)
+        # Put them together using a newline before and after the matrix
+        strings = [matrix_str]
+        if opt_str:
+            strings.append(opt_str)
+        inner_str = '\n' + ',\n'.join(strings)
+        return '{}({})'.format(self.__class__.__name__, inner_str)
 
-        return '{}(\n{}\n)'.format(self.__class__.__name__, sig_str)
+    __str__ = __repr__
 
 
 if __name__ == '__main__':
