@@ -63,6 +63,11 @@ class TensorSet(Set):
             raise ValueError("`order '' not understood".format(order))
 
     @property
+    def impl(self):
+        """Implementation back-end of this tensor set."""
+        raise NotImplementedError('abstract method')
+
+    @property
     def shape(self):
         """Number of elements per axis."""
         return self.__shape
@@ -229,6 +234,11 @@ class GeneralizedTensor(object):
     def __init__(self, space, *args, **kwargs):
         """Initialize a new instance."""
         self.__space = space
+
+    @property
+    def impl(self):
+        """Implementation back-end of this tensor."""
+        return self.space.impl
 
     def copy(self):
         """Create an identical (deep) copy of this tensor."""
