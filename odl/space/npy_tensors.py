@@ -503,7 +503,7 @@ class NumpyGeneralizedTensor(GeneralizedTensor):
 
     @property
     def ufuncs(self):
-        """`NumpyTensorSetUfuncs`, access to numpy style ufuncs.
+        """`NumpyTensorSetUfuncs`, access to Numpy style ufuncs.
 
         Notes
         -----
