@@ -430,11 +430,15 @@ def show_discrete_data(values, grid, title=None, method='',
         plt.show(block=False)
         if not update_in_place:
             plt.draw()
-            plt.pause(0.1)
+            plt.pause(0.0001)
         else:
-            fig.canvas.update()
-            fig.canvas.flush_events()
-            if not plt.isinteractive():
+            try:
+                sub.draw_artist(csub)
+                fig.canvas.blit(fig.bbox)
+                fig.canvas.update()
+                fig.canvas.flush_events()
+            except AttributeError:
+                plt.draw()
                 plt.pause(0.0001)
 
     if force_show:
