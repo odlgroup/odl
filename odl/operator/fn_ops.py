@@ -16,10 +16,10 @@ from builtins import super
 import numpy as np
 
 from odl.operator.operator import Operator
-from odl.space import fn
+from odl.space import tensor_space
 from odl.set import LinearSpace, Field
 from odl.discr import DiscreteLp
-from odl.space.base_ntuples import FnBase
+from odl.space.base_tensors import TensorSpace
 
 __all__ = ('SamplingOperator', 'WeightedSumSamplingOperator',
            'FlatteningOperator', 'FlatteningOperatorAdjoint')

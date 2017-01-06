@@ -76,7 +76,7 @@ def _linear_deform(template, displacement, out=None):
     """
     image_pts = template.space.points()
     for i, vi in enumerate(displacement):
-        image_pts[:, i] += vi.asarray()
+        image_pts[:, i] += vi.asarray().ravel()
     return template.interpolation(image_pts.T, out=out, bounds_check=False)
 
 
@@ -218,7 +218,7 @@ class LinDeformFixedTempl(Operator):
         """
         # To implement the complex case we need to be able to embed the real
         # vector field space into the range of the gradient. Issue #59.
-        if not self.range.is_rn:
+        if not self.range.is_real_space:
             raise NotImplementedError('derivative not implemented for complex '
                                       'spaces.')
 

@@ -319,6 +319,11 @@ for name, n_in, n_out, doc in UFUNCS:
     method = wrap_ufunc_numpy(name, n_in, n_out, doc)
     setattr(NumpyTensorSetUfuncs, name, method)
 
+# Add reduction methods to ufunc class
+for name, doc in REDUCTIONS:
+    method = wrap_reduction_numpy(name, doc)
+    setattr(NumpyTensorSetUfuncs, name, method)
+
 
 # --- Wrappers for DiscreteLp --- #
 

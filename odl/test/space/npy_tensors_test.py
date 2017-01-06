@@ -1394,7 +1394,7 @@ def test_ufuncs(tspace, ufunc):
 
     # Out-of-place:
     np_result = npufunc(*in_arrays)
-    vec_fun = getattr(data_vector.ufunc, name)
+    vec_fun = getattr(data_vector.ufuncs, name)
     odl_result = vec_fun(*in_vectors)
     assert all_almost_equal(np_result, odl_result)
 
@@ -1407,7 +1407,7 @@ def test_ufuncs(tspace, ufunc):
 
     # In-place:
     np_result = npufunc(*(in_arrays + out_arrays))
-    vec_fun = getattr(data_vector.ufunc, name)
+    vec_fun = getattr(data_vector.ufuncs, name)
     odl_result = vec_fun(*(in_vectors + out_vectors))
     assert all_almost_equal(np_result, odl_result)
 
@@ -1425,7 +1425,7 @@ def test_reduction(tspace, reduction):
     npy_reduction = getattr(np, name)
 
     x_arr, x = noise_elements(tspace, 1)
-    x_reduction = getattr(x.ufunc, name)
+    x_reduction = getattr(x.ufuncs, name)
 
     # Should be equal theoretically, but summation order, other stuff, ...,
     # hence we use approx
