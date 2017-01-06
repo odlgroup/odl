@@ -44,7 +44,7 @@ from odl.util import (
     is_real_dtype, is_real_floating_dtype, is_complex_floating_dtype)
 
 
-__all__ = ('NumpyTensorSet', 'NumpyTensorSpace')
+__all__ = ('NumpyTensorSet', 'NumpyTensorSpace', 'MatrixOperator')
 
 
 _BLAS_DTYPES = (np.dtype('float32'), np.dtype('float64'),
@@ -519,7 +519,7 @@ class NumpyGeneralizedTensor(GeneralizedTensor):
 
     @property
     def ufuncs(self):
-        """`NumpyTensorSetUfuncs`, access to numpy style ufuncs.
+        """`NumpyTensorSetUfuncs`, access to Numpy style ufuncs.
 
         Notes
         -----

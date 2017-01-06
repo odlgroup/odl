@@ -77,7 +77,7 @@ def test_factory(exponent, tspace_impl):
 
     assert isinstance(discr.dspace, TensorSpace)
     assert discr.dspace.impl == tspace_impl
-    assert discr.is_rn
+    assert discr.is_real_space
     assert discr.dspace.exponent == exponent
 
     # Complex
@@ -87,7 +87,7 @@ def test_factory(exponent, tspace_impl):
 
         assert isinstance(discr.dspace, TensorSpace)
         assert discr.dspace.impl == tspace_impl
-        assert discr.is_cn
+        assert discr.is_complex_space
         assert discr.dspace.exponent == exponent
     except TypeError:
         # Not all spaces support complex, that is fine.
@@ -105,7 +105,7 @@ def test_factory_dtypes(tspace_impl):
             discr = odl.uniform_discr(0, 1, 10, impl=tspace_impl, dtype=dtype)
             assert isinstance(discr.dspace, TensorSpace)
             assert discr.dspace.impl == tspace_impl
-            assert discr.is_rn
+            assert discr.is_real_space
         except TypeError:
             continue
 
@@ -123,7 +123,7 @@ def test_factory_dtypes(tspace_impl):
             discr = odl.uniform_discr(0, 1, 10, impl=tspace_impl, dtype=dtype)
             assert isinstance(discr.dspace, TensorSpace)
             assert discr.dspace.impl == tspace_impl
-            assert discr.is_cn
+            assert discr.is_complex_space
             assert discr.dspace.element().space.dtype == dtype
         except TypeError:
             continue

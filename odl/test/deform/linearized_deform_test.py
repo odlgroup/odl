@@ -198,7 +198,7 @@ def test_fixed_templ_call(space):
 
 
 def test_fixed_templ_deriv(space):
-    if not space.is_rn:
+    if not space.is_real_space:
         pytest.skip('derivative not implemented for complex dtypes')
 
     # Set up template and displacement field
