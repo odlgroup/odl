@@ -63,7 +63,7 @@ op = odl.BroadcastOperator(odl.IdentityOperator(space), gradient)
 l2_norm = odl.solvers.L2NormSquared(space).translated(noisy)
 
 # Isotropic TV-regularization: l1-norm of grad(x)
-l1_norm = 0.2 * odl.solvers.L1Norm(gradient.range)
+l1_norm = 0.15 * odl.solvers.L1Norm(gradient.range)
 
 # Make separable sum of functionals, order must correspond to the operator K
 f = odl.solvers.SeparableSum(l2_norm, l1_norm)
@@ -78,13 +78,13 @@ g = odl.solvers.IndicatorNonnegativity(op.domain)
 # Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
 op_norm = 1.1 * odl.power_method_opnorm(op, xstart=noisy)
 
-niter = 400  # Number of iterations
+niter = 200  # Number of iterations
 tau = 1.0 / op_norm  # Step size for the primal variable
 sigma = 1.0 / op_norm  # Step size for the dual variable
 
 # Optional: pass callback objects to solver
 callback = (odl.solvers.CallbackPrintIteration() &
-            odl.solvers.CallbackShow(display_step=20))
+            odl.solvers.CallbackShow(display_step=5))
 
 # Starting point
 x = op.domain.zero()

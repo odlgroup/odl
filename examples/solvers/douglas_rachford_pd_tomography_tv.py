@@ -52,7 +52,7 @@ import odl
 
 # Parameters
 lam = 0.01
-data_matching = 'inexact'
+data_matching = 'exact'
 
 # --- Create spaces, forward operator and simulated data ---
 
@@ -121,7 +121,7 @@ g = [indicator_data, cross_norm]
 
 # Create callback that prints the iteration number and shows partial results
 callback = (odl.solvers.CallbackShow('iterates',
-                                     display_step=20, clim=[0, 1]) &
+                                     display_step=5, clim=[0, 1]) &
             odl.solvers.CallbackPrintIteration())
 
 # Solve with initial guess x = 0.

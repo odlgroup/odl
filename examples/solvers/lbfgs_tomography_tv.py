@@ -94,7 +94,7 @@ hessinv_estimate = odl.ScalingOperator(reco_space, 1 / opnorm ** 2)
 
 # Optionally pass callback to the solver to display intermediate results
 callback = (odl.solvers.CallbackPrintIteration() &
-            odl.solvers.CallbackShow(display_step=5))
+            odl.solvers.CallbackShow())
 
 # Pick parameters
 maxiter = 30
@@ -111,4 +111,4 @@ odl.solvers.bfgs_method(
 # Display images
 discr_phantom.show(title='original image')
 data.show(title='sinogram')
-x.show(title='reconstructed image', show=True)
+x.show(title='reconstructed image', force_show=True)
