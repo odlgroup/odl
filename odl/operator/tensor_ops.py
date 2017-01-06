@@ -901,10 +901,12 @@ class MatrixOperator(Operator):
         posargs = [matrix_str]
 
         # Optional arguments with defaults, inferred from the matrix
+        range_shape = list(self.domain.shape)
+        range_shape[self.axis] = self.matrix.shape[0]
         optargs = [
             ('domain', self.domain, tensor_space(self.matrix.shape[1],
                                                  self.matrix.dtype)),
-            ('range', self.range, tensor_space(self.matrix.shape[0],
+            ('range', self.range, tensor_space(range_shape,
                                                self.matrix.dtype)),
             ('axis', self.axis, 0)
         ]

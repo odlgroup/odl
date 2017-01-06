@@ -200,6 +200,8 @@ class TensorSet(Set):
         return "{}({})".format(self.__class__.__name__,
                                signature_string(posargs, optargs))
 
+    __str__ = __repr__
+
     @staticmethod
     def default_order():
         """Return the default axis ordering of this implementation."""
@@ -388,8 +390,11 @@ class GeneralizedTensor(object):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{!r}.element(\n{}\n)'.format(self.space,
-                                             arraynd_repr(self))
+        if self.rank == 1:
+            inner_str = arraynd_repr(self)
+        else:
+            inner_str = '\n' + arraynd_repr(self) + '\n'
+        return '{!r}.element({})'.format(self.space, inner_str)
 
     @property
     def ufuncs(self):

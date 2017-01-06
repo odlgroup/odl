@@ -19,20 +19,16 @@ import ctypes
 from functools import partial
 from math import sqrt
 import numpy as np
-import scipy.sparse
 import scipy.linalg as linalg
 
-from odl.operator.operator import Operator
 from odl.set.sets import RealNumbers, ComplexNumbers
 from odl.space.base_tensors import (
     TensorSet, GeneralizedTensor, TensorSpace, Tensor)
 from odl.space.weighting import (
     Weighting, ArrayWeighting, ConstWeighting, NoWeighting,
     CustomInner, CustomNorm, CustomDist)
+from odl.util import dtype_str, signature_string, is_real_dtype
 from odl.util.ufuncs import NumpyTensorSetUfuncs
-from odl.util import (
-    dtype_str, signature_string, moveaxis,
-    is_real_dtype, is_real_floating_dtype, is_complex_floating_dtype)
 
 
 __all__ = ('NumpyTensorSet', 'NumpyTensorSpace')
@@ -45,6 +41,8 @@ _BLAS_DTYPES = (np.dtype('float32'), np.dtype('float64'),
 class NumpyTensorSet(TensorSet):
 
     """The set of tensors of arbitrary type."""
+
+    impl = 'numpy'
 
     def __init__(self, shape, dtype, order='C'):
         """Initialize a new instance.
@@ -177,7 +175,7 @@ class NumpyTensorSet(TensorSet):
 
     @staticmethod
     def available_dtypes():
-        """Return the list of data types available in this implementation.
+        """Return the tuple of data types available in this implementation.
 
         Notes
         -----
@@ -189,7 +187,7 @@ class NumpyTensorSet(TensorSet):
         all_types = []
         for val in np.sctypes.values():
             all_types.extend(val)
-        return all_types
+        return tuple(all_types)
 
     @property
     def element_type(self):
