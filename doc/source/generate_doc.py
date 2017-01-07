@@ -54,26 +54,26 @@ string = """{shortname}
 
 
 def import_submodules(package, name=None, recursive=True):
-    """ Import all submodules of a module, recursively, including subpackages
-    """
+    """Recursively import all submodules of ``package``."""
     if isinstance(package, str):
         package = importlib.import_module(package)
 
     if name is None:
         name = package.__name__
 
-    submodules = [m[0] for m in inspect.getmembers(
-        package, inspect.ismodule) if m[1].__name__.startswith('odl')]
+    submodules = [m[0] for m in inspect.getmembers(package, inspect.ismodule)
+                  if m[1].__name__.startswith('odl')]
 
     results = {}
     for pkgname in submodules:
         full_name = name + '.' + pkgname
         try:
             results[full_name] = importlib.import_module(full_name)
-            if recursive:
-                results.update(import_submodules(full_name, full_name))
         except ImportError:
             pass
+        else:
+            if recursive:
+                results.update(import_submodules(full_name, full_name))
     return results
 
 

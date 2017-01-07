@@ -48,11 +48,11 @@ def douglas_rachford_pd(x, f, g, L, tau, sigma, niter,
         Sequence of of the functions ``g_i``. Needs to have
         ``g[i].convex_conj.proximal``.
     L : sequence of `Operator`'s
-        Sequence of `Opeartor`s` with as many elements as ``g``.
+        Sequence of `Opeartor`'s with as many elements as ``g``.
     tau : float
         Step size parameter for ``f``.
     sigma : sequence of floats
-        Step size parameters for the ``g_i``s.
+        Step size parameters for the ``g_i``'s.
     niter : int
         Number of iterations.
     callback : callable, optional
@@ -60,7 +60,7 @@ def douglas_rachford_pd(x, f, g, L, tau, sigma, niter,
 
     Other Parameters
     ----------------
-    l : sequence of `Functionals`'s, optional
+    l : sequence of `Functional`'s, optional
         Sequence of of the functions ``l_i``. Needs to have
         ``l[i].convex_conj.proximal``.
         If omitted, the simpler problem without ``l_i``  will be considered.
