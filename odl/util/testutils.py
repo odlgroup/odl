@@ -276,7 +276,6 @@ else:
         return wrapper(lambda request: request.param)
 
 
-
 # Helpers to generate data
 def noise_array(space):
     """Generate a white noise array that is compatible with ``space``.
