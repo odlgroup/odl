@@ -10,9 +10,10 @@
 
 from __future__ import absolute_import
 
-__all__ = ('stir_bindings',)
+__all__ = ()
 
-from . import stir_bindings
+from .stir_bindings import *
+__all__ += stir_bindings.__all__
 
 from .astra_setup import *
 __all__ += astra_setup.__all__

@@ -151,7 +151,8 @@ def tensor_space(shape, dtype=None, order='C', impl='numpy', **kwargs):
     >>> ts.dtype
     dtype('float64')
 
-    One-dimensional spaces have special constructors:
+    One-dimensional spaces can be initialized with a single integer as
+    ``shape``:
 
     >>> odl.tensor_space((3,), dtype='int64')
     tensor_space(3, 'int')
@@ -281,7 +282,8 @@ def rn(shape, dtype=None, order='C', impl='numpy', **kwargs):
     >>> ts.dtype
     dtype('float64')
 
-    One-dimensional spaces have special constructors:
+    One-dimensional spaces can be initialized with a single integer as
+    ``shape``:
 
     >>> odl.rn((3,))
     rn(3)

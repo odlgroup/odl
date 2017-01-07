@@ -806,7 +806,7 @@ class IdentityFunctional(ScalingFunctional):
 
     See Also
     --------
-    IdentityOperator
+    odl.operator.IdentityOperator
     """
 
     def __init__(self, field):

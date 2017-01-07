@@ -184,7 +184,18 @@ def is_subdict(subdict, dictionary):
 try:
     # Try catch in case user does not have pytest
     import pytest
+except ImportError:
+    def _pass(function):
+        """Trivial decorator used if pytest marks are not available."""
+        return function
 
+    never_skip = _pass
+    skip_if_no_stir = _pass
+    skip_if_no_pywavelets = _pass
+    skip_if_no_pyfftw = _pass
+    skip_if_no_largescale = _pass
+    skip_if_no_benchmark = _pass
+else:
     # Used in lists where the elements should all be skipifs
     never_skip = pytest.mark.skipif(
         "False",
@@ -214,18 +225,6 @@ try:
         "not pytest.config.getoption('--benchmark')",
         reason='Need --benchmark option to run'
     )
-
-except ImportError:
-    def _pass(function):
-        """Trivial decorator used if pytest marks are not available."""
-        return function
-
-    never_skip = _pass
-    skip_if_no_stir = _pass
-    skip_if_no_pywavelets = _pass
-    skip_if_no_pyfftw = _pass
-    skip_if_no_largescale = _pass
-    skip_if_no_benchmark = _pass
 
 
 def simple_fixture(name, params, fmt=None):
