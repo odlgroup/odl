@@ -354,8 +354,9 @@ def as_proximal_lang_operator(op, norm_bound=None):
     Notes
     -----
     If the data representation of ``op``'s domain and range is of type
-    `NumpyTensorSpace` this incurs no significant overhead. If the data space is
-    ``CudaFn`` or some other nonlocal type, the overhead is significant.
+    `NumpyTensorSpace` this incurs no significant overhead. If the data
+    space is implemented with CUDA or some other non-local representation,
+    the overhead is significant.
 
     References
     ----------

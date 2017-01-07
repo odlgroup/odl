@@ -640,7 +640,7 @@ class PointwiseSum(PointwiseInner):
 
     This operator takes the (weighted) sum
 
-        ``sum(F(x)) = [ sum_j( w_j * F_j(x) ) ]
+        ``sum(F(x)) = [ sum_j( w_j * F_j(x) ) ]``
 
     where ``F`` is a vector field. This implies that
     the `Operator.domain` is a power space of a discretized function

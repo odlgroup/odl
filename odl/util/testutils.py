@@ -193,7 +193,18 @@ def is_subdict(subdict, dictionary):
 try:
     # Try catch in case user does not have pytest
     import pytest
+except ImportError:
+    def _pass(function):
+        """Trivial decorator used if pytest marks are not available."""
+        return function
 
+    never_skip = _pass
+    skip_if_no_stir = _pass
+    skip_if_no_pywavelets = _pass
+    skip_if_no_pyfftw = _pass
+    skip_if_no_largescale = _pass
+    skip_if_no_benchmark = _pass
+else:
     # Used in lists where the elements should all be skipifs
     never_skip = pytest.mark.skipif(
         "False",
@@ -231,10 +242,10 @@ try:
         ----------
         name : str
             Name of the parameters used for the ``ids`` argument
-            to `pytest.fixture`.
+            to `pytest.fixture`_.
         params : sequence
             Values to be taken as parameters in the fixture. They are
-            used as ``params`` argument to `pytest.fixture`.
+            used as ``params`` argument to `pytest.fixture`_.
         fmt : str, optional
             Use this format string for the generation of the ``ids``.
             For each value, the id string is generated as::
@@ -245,6 +256,10 @@ try:
 
             Default: ``" {name} = '{value}' "`` for string parameters,
             otherwise ``" {name} = {value} "``
+
+        References
+        ----------
+        .. _pytest.fixture: http://doc.pytest.org/en/latest/fixture.html
         """
         if fmt is None:
             try:
@@ -260,17 +275,6 @@ try:
         wrapper = pytest.fixture(scope='module', ids=ids, params=params)
         return wrapper(lambda request: request.param)
 
-except ImportError:
-    def _pass(function):
-        """Trivial decorator used if pytest marks are not available."""
-        return function
-
-    never_skip = _pass
-    skip_if_no_stir = _pass
-    skip_if_no_pywavelets = _pass
-    skip_if_no_pyfftw = _pass
-    skip_if_no_largescale = _pass
-    skip_if_no_benchmark = _pass
 
 
 # Helpers to generate data
