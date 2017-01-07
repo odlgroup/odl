@@ -1554,7 +1554,7 @@ def _weighting(weights, exponent, dist_using_inner=False):
 
 
 def npy_weighted_inner(weights):
-    """Weighted inner product on `Fn` spaces as free function.
+    """Weighted inner product on `TensorSpace`'s as free function.
 
     Parameters
     ----------
@@ -1578,7 +1578,7 @@ def npy_weighted_inner(weights):
 
 
 def npy_weighted_norm(weights, exponent=2.0):
-    """Weighted norm on `Fn` spaces as free function.
+    """Weighted norm on `TensorSpace`'s as free function.
 
     Parameters
     ----------
@@ -1604,7 +1604,7 @@ def npy_weighted_norm(weights, exponent=2.0):
 
 
 def npy_weighted_dist(weights, exponent=2.0, use_inner=False):
-    """Weighted distance on `Fn` spaces as free function.
+    """Weighted distance on `TensorSpace`'s as free function.
 
     Parameters
     ----------
@@ -2015,7 +2015,7 @@ class NumpyTensorSpaceCustomInner(CustomInner):
         ----------
         inner : `callable`
             The inner product implementation. It must accept two
-            `FnVector` arguments, return an element from their space's
+            `Tensor` arguments, return an element from their space's
             field (real or complex number) and satisfy the following
             conditions for all vectors ``x, y, z`` and scalars ``s``:
 
@@ -2049,9 +2049,10 @@ class NumpyTensorSpaceCustomNorm(CustomNorm):
         Parameters
         ----------
         norm : `callable`
-            The norm implementation. It must accept an `FnVector`
+            The norm implementation. It must accept a `Tensor`
             argument, return a `float` and satisfy the following
-            conditions for all vectors ``x, y`` and scalars ``s``:
+            conditions for all any two elements ``x, y`` and scalars
+            ``s``:
 
             - ``||x|| >= 0``
             - ``||x|| = 0``  if and only if  ``x = 0``
@@ -2063,7 +2064,7 @@ class NumpyTensorSpaceCustomNorm(CustomNorm):
 
 class NumpyTensorSpaceCustomDist(CustomDist):
 
-    """Class for handling a user-specified distance in `Fn`.
+    """Class for handling a user-specified distance in `TensorSpace`.
 
     Note that this removes ``inner`` and ``norm``.
     """
@@ -2074,10 +2075,10 @@ class NumpyTensorSpaceCustomDist(CustomDist):
         Parameters
         ----------
         dist : `callable`
-            The distance function defining a metric on `Fn`. It must
-            accept two `FnVector` arguments, return a `float` and and
+            The distance function defining a metric on `TensorSpace`. It
+            must accept two `Tensor` arguments, return a `float` and
             fulfill the following mathematical conditions for any three
-            vectors ``x, y, z``:
+            elements ``x, y, z``:
 
             - ``dist(x, y) >= 0``
             - ``dist(x, y) = 0``  if and only if  ``x = y``

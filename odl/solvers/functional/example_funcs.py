@@ -26,21 +26,23 @@ __all__ = ('RosenbrockFunctional',)
 
 class RosenbrockFunctional(Functional):
 
-    """The well-known `Rosenbrock function`_ on ``R^n``.
+    """The well-known Rosenbrock function on ``R^n``.
 
-    This function is usually used as a test problem in smooth optimization.
+    The `Rosenbrock function`_ is often used as a test problem in
+    smooth optimization.
 
     Notes
     -----
-    The functional is defined for :math:`x` in :math:`\\mathbb{R}^n`,
+    The functional is defined for :math:`x \\in \\mathbb{R}^n`,
     :math:`n \\geq 2`, as
 
     .. math::
-        \sum_{i=1}^{n - 1} c (x_{i+1} - x_i^2)^2 + (1 - x_i)^2
+        \sum_{i=1}^{n - 1} c (x_{i+1} - x_i^2)^2 + (1 - x_i)^2,
 
-    Where :math:`c` is a constant usually set to 100 which determines how "ill-
-    behaved" the function should be.
-    It has a minimum at :math:`x = [1, \\dots, 1]`, independent of :math:`c`.
+    where :math:`c` is a constant usually set to 100 which determines how
+    "ill-behaved" the function should be.
+    The global minimum lies at :math:`x = (1, \\dots, 1)`, independent
+    of :math:`c`.
 
     There are two definitions of the n-dimensional Rosenbrock function found in
     the literature. One is the product of 2-dimensional Rosenbrock functions,
@@ -49,7 +51,7 @@ class RosenbrockFunctional(Functional):
 
     References
     ----------
-    .. _Rosenbrock function: en.wikipedia.org/wiki/Rosenbrock_function
+    .. _Rosenbrock function: https://en.wikipedia.org/wiki/Rosenbrock_function
     """
 
     def __init__(self, space, scale=100.0):

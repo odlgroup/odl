@@ -6,7 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Utility library for ODL, only for internal use."""
+"""Utility library for ODL, mainly for internal use."""
 
 from __future__ import absolute_import
 

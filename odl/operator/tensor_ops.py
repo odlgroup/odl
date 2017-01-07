@@ -635,7 +635,7 @@ class PointwiseSum(PointwiseInner):
 
     This operator takes the (weighted) sum
 
-        ``sum(F(x)) = [ sum_j( w_j * F_j(x) ) ]
+        ``sum(F(x)) = [ sum_j( w_j * F_j(x) ) ]``
 
     where ``F`` is a vector field. This implies that
     the `Operator.domain` is a power space of a discretized function
@@ -706,15 +706,15 @@ class MatrixOperator(Operator):
             2-dimensional array representing the linear operator.
             For Scipy sparse matrices only rank-1 tensor spaces are
             allowed as ``domain``.
-        domain : `NumpyTensorSpace`, optional
+        domain : `TensorSpace`, optional
             Space of elements on which the operator can act. Its
             ``dtype`` must be castable to ``range.dtype``.
             For the default ``None``, a space with 1 axis and size
             ``matrix.shape[1]`` is used, together with the matrix'
             data type.
-        range : `NumpyTensorSpace`, optional
+        range : `TensorSpace`, optional
             Space of elements on to which the operator maps. Its
-            ``shape`` and ``dtype`` attributes must match the ones
+            ``shape`` and ``dtype`` attributes must match those
             of the result of the multiplication.
             For the default ``None``, the range is inferred from
             ``matrix``, ``domain`` and ``axis``.
@@ -724,8 +724,7 @@ class MatrixOperator(Operator):
 
         Examples
         --------
-        By default, ``domain`` and ``range`` are spaces of rank
-        (number of axes) 1:
+        By default, ``domain`` and ``range`` are spaces of with one axis:
 
         >>> m = np.ones((3, 4))
         >>> op = MatrixOperator(m)
@@ -734,9 +733,7 @@ class MatrixOperator(Operator):
         >>> op.range
         rn(3)
         >>> op([1, 2, 3, 4])
-        rn(3).element(
-        [10.0, 10.0, 10.0]
-        )
+        rn(3).element([10.0, 10.0, 10.0])
 
         For multi-dimensional arrays (tensors), the summation
         (contraction) can be performed along a specific axis. In
@@ -750,6 +747,13 @@ class MatrixOperator(Operator):
         >>> op = MatrixOperator(m, domain=dom, axis=2)
         >>> op(dom.one()).shape
         (5, 4, 3)
+
+        The operator also works on `uniform_discr` type spaces:
+
+        >>> space = odl.uniform_discr(0, 1, 4)
+        >>> op = MatrixOperator(m, domain=space)
+        >>> op(space.one())
+        rn(3).element([4.0, 4.0, 4.0])
 
         Notes
         -----
