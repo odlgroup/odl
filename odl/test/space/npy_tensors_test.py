@@ -59,10 +59,8 @@ g_indices_params = s_indices_params + [[[0, 2, 1, 1], [0, 1, 1, 3]],
 getitem_indices = simple_fixture(name='indices', params=g_indices_params)
 
 
-weight_params = [None, 0.5, _pos_array(odl.tensor_space((3, 4))),
-                 _pos_array(odl.tensor_space((3, 4))).ravel()]
-weight_ids = [' weight = None ', ' weight = 0.5 ', ' weight = <array>',
-              ' weight = <array>']
+weight_params = [None, 0.5, _pos_array(odl.tensor_space((3, 4)))]
+weight_ids = [' weight = None ', ' weight = 0.5 ', ' weight = <array> ']
 
 
 @pytest.fixture(scope='module', params=weight_params, ids=weight_ids)
@@ -176,7 +174,6 @@ def test_init_tspace():
 
 def test_init_tspace_weighting(weight, exponent):
     """Test if weightings during init give the correct weighting classes."""
-
     space = odl.tensor_space((3, 4), weighting=weight, exponent=exponent)
     if isinstance(weight, np.ndarray):
         weighting = NumpyTensorSpaceArrayWeighting(weight, exponent=exponent)

@@ -130,7 +130,8 @@ class NumpyTensorSet(TensorSet):
                     return inp
                 else:
                     arr = np.array(inp, copy=False, dtype=self.dtype, ndmin=1,
-                                   order='A').reshape(self.shape)
+                                   order='A').reshape(self.shape,
+                                                      order=self.order)
 
                     return self.element_type(self, arr)
             else:
@@ -392,11 +393,11 @@ class NumpyGeneralizedTensor(GeneralizedTensor):
         >>> x = space.element([[1, 2, 3],
         ...                    [4, 5, 6]])
         >>> x[0, 1]
-        2.0
+        2
         >>> x[:, 1:]
-        rn((2, 2)).element(
-        [[2.0, 3.0],
-         [5.0, 6.0]]
+        tensor_space((2, 2), 'uint32').element(
+        [[2, 3],
+         [5, 6]]
         )
         """
         arr = self.data[indices]

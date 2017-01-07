@@ -290,7 +290,7 @@ def wrap_reduction_numpy(name, doc):
                 # match any longer
                 if isinstance(weighting, NumpyTensorSpaceArrayWeighting):
                     weighting = NumpyTensorSpaceNoWeighting(exponent=exponent)
-                extra_args['weight'] = weighting
+                extra_args['weighting'] = weighting
 
             out_space_constr = type(self.elem.space)
             out_space = out_space_constr(out_arr.shape, dtype, self.elem.order,
@@ -367,14 +367,6 @@ def wrap_ufunc_discretelp(name, n_in, n_out, doc):
             def wrapper(self, x2, out=None):
                 if x2 in self.elem.space:
                     x2 = x2.tensor
-
-                try:
-                    # TODO: remove this
-                    # Try to reshape to linear data
-                    x2 = x2.reshape(self.elem.size,
-                                    order=self.elem.space.order)
-                except AttributeError:
-                    pass
 
                 method = getattr(self.elem.tensor.ufuncs, name)
                 if out is None:

@@ -140,12 +140,6 @@ def tensor_set(shape, dtype, order='C', impl='numpy', **kwargs):
     >>> odl.tensor_set((2, 3), dtype='uint64')
     tensor_set((2, 3), 'uint64')
 
-    One-dimensional spaces can be initialized with a single integer as
-    ``shape``:
-
-    >>> odl.tensor_set((3,), dtype='uint64')
-    tensor_set(3, 'uint64')
-
     See Also
     --------
     tensor_space : Space of tensors with arbitrary scalar data type.
@@ -187,8 +181,7 @@ def tensor_space(shape, dtype=None, order='C', impl='numpy', **kwargs):
     >>> odl.tensor_space(3, dtype='int64')
     tensor_space(3, 'int')
 
-    2x3 tensors with ``int64`` entries (although not strictly a
-    vector space):
+    2x3 tensors with same data type:
 
     >>> odl.tensor_space((2, 3), dtype='int64')
     tensor_space((2, 3), 'int')
@@ -201,12 +194,6 @@ def tensor_space(shape, dtype=None, order='C', impl='numpy', **kwargs):
     rn((2, 3))
     >>> ts.dtype
     dtype('float64')
-
-    One-dimensional spaces can be initialized with a single integer as
-    ``shape``:
-
-    >>> odl.tensor_space((3,), dtype='int64')
-    tensor_space(3, 'int')
 
     See Also
     --------
@@ -332,12 +319,6 @@ def rn(shape, dtype=None, order='C', impl='numpy', **kwargs):
     rn((2, 3))
     >>> ts.dtype
     dtype('float64')
-
-    One-dimensional spaces can be initialized with a single integer as
-    ``shape``:
-
-    >>> odl.rn((3,))
-    rn(3)
 
     See Also
     --------
