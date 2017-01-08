@@ -2134,6 +2134,17 @@ class MoreauEnvelope(Functional):
         [\\nabla \mathrm{env}_{\\sigma  f}](x) =
         \\frac{1}{\\sigma} (x - \mathrm{prox}_{\\sigma  f}(x))
 
+    Example, if :math:`f = \| \cdot \|_1`, then
+
+    .. math::
+        [\mathrm{env}_{\\sigma  \| \cdot \|}(x)]_i =
+        \\begin{cases}
+            \\frac{1}{2 \\sigma} x_i^2 & \\text{if } |x_i| \leq \\sigma \\\\
+            |x_i| - \\frac{\\sigma}{2} & \\text{if } |x_i| > \\sigma
+        \\end{cases}
+
+    which is the usual Huber functional.
+
     References
     ----------
     .. _Proximal Algorithms: \
