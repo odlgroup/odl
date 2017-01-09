@@ -23,7 +23,6 @@ from future import standard_library
 standard_library.install_aliases()
 
 import time
-import os
 
 
 __all__ = ('CallbackStore', 'CallbackApply',
@@ -387,11 +386,6 @@ class CallbackShow(SolverCallback):
         ----------------
         kwargs :
             Optional arguments passed on to ``x.show``
-
-        Raises
-        ------
-        ValueError
-           If ``saveto`` is not a valid path
 
         Examples
         --------
