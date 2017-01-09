@@ -374,16 +374,42 @@ class CallbackShow(SolverCallback):
         ----------
         display_step : positive int, optional
             Number of iterations between plots. Default: 1
+        saveto : string, optional
+            Path to a directory where the figures are to be saved, followed by
+            a file name and potentially a file format. Standard python string
+            formatting is possible to use in order to index the figures with
+            iteration number. If the directory name does not exist, a
+            ``ValueError`` is raised. If ``None``, the figures are not saved.
+            Default: ``None``
 
         Other Parameters
         ----------------
         kwargs :
             Optional arguments passed on to ``x.show``
+
+        Examples
+        --------
+        Show the result of each iterate.
+
+        >>> callback = CallbackShow()
+
+        Show and save every fifth iterate in ``png`` format, overwriting the
+        previous one.
+
+        >>> callback = CallbackShow(display_step=5,
+        ...                         saveto='my_path/my_iterate.png')
+
+        Show and save each fifth iterate in ``png`` format, indexing the files
+        with the iteration number.
+
+        >>> callback = CallbackShow(display_step=5,
+        ...                         saveto='my_path/my_iterate_{}.png')
         """
         self.args = args
         self.kwargs = kwargs
         self.fig = kwargs.pop('fig', None)
         self.display_step = kwargs.pop('display_step', 1)
+        self.saveto = kwargs.pop('saveto', None)
         self.iter = 0
         self.space_of_last_x = None
 
@@ -395,8 +421,16 @@ class CallbackShow(SolverCallback):
         self.space_of_last_x = x_space
 
         if (self.iter % self.display_step) == 0:
-            self.fig = x.show(*self.args, fig=self.fig,
-                              update_in_place=update_in_place, **self.kwargs)
+            if self.saveto is None:
+                self.fig = x.show(*self.args, fig=self.fig,
+                                  update_in_place=update_in_place,
+                                  **self.kwargs)
+
+            else:
+                self.fig = x.show(*self.args, fig=self.fig,
+                                  saveto=self.saveto.format(self.iter),
+                                  update_in_place=update_in_place,
+                                  **self.kwargs)
 
         self.iter += 1
 
@@ -408,8 +442,9 @@ class CallbackShow(SolverCallback):
     def __repr__(self):
         """Return ``repr(self)``."""
 
-        return '{}(display_step={}, fig={}, *{!r}, **{!r})'.format(
+        return '{}(display_step={}, saveto={}, fig={}, *{!r}, **{!r})'.format(
             self.__class__.__name__,
+            self.saveto,
             self.display_step,
             self.fig,
             self.args,
