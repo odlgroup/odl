@@ -490,7 +490,8 @@ class FnBase(NtuplesBase, LinearSpace):
         NtuplesBase.__init__(self, size, dtype)
 
         if not is_scalar_dtype(self.dtype):
-            raise TypeError('{!r} is not a scalar data type'.format(dtype))
+            raise ValueError('{} is not a scalar data type'
+                             ''.format(dtype_repr(dtype)))
 
         if is_real_dtype(self.dtype):
             field = RealNumbers()

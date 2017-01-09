@@ -34,8 +34,8 @@ from odl import NumpyNtuples, NumpyFn, NumpyFnVector
 from odl.operator.operator import Operator
 from odl.set.space import LinearSpaceTypeError
 from odl.space.npy_ntuples import (
-    NumpyFnConstWeighting, NumpyFnVectorWeighting, NumpyFnMatrixWeighting,
-    NumpyFnNoWeighting, NumpyFnCustomInnerProduct, NumpyFnCustomNorm,
+    NumpyFnConstWeighting, NumpyFnArrayWeighting, NumpyFnMatrixWeighting,
+    NumpyFnNoWeighting, NumpyFnCustomInner, NumpyFnCustomNorm,
     NumpyFnCustomDist,
     npy_weighted_inner, npy_weighted_norm, npy_weighted_dist,
     MatVecOperator)
@@ -117,27 +117,27 @@ def test_init():
     NumpyFn(3, complex)
 
     # Fn only works on scalars
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         NumpyFn(3, 'S1')
 
     # Rn
     odl.rn(3, float)
 
     # Rn only works on reals
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         odl.rn(3, complex)
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         odl.rn(3, 'S1')
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         odl.rn(3, int)
 
     # Cn
     odl.cn(3, complex)
 
     # Cn only works on reals
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         odl.cn(3, float)
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         odl.cn(3, 'S1')
 
     # Backported int from future fails (not recognized by numpy.dtype())
@@ -145,7 +145,7 @@ def test_init():
     from builtins import int as future_int
     import sys
     if sys.version_info.major != 3:
-        with pytest.raises(TypeError):
+        with pytest.raises(ValueError):
             NumpyFn(3, future_int)
 
     # Init with weights or custom space functions
@@ -172,7 +172,7 @@ def test_init_weighting(exponent):
               NumpyFn(3, complex, exponent=exponent, weight=weight_vec),
               NumpyFn(3, complex, exponent=exponent, weight=weight_mat)]
     weightings = [NumpyFnConstWeighting(const, exponent=exponent),
-                  NumpyFnVectorWeighting(weight_vec, exponent=exponent),
+                  NumpyFnArrayWeighting(weight_vec, exponent=exponent),
                   NumpyFnMatrixWeighting(weight_mat, exponent=exponent)]
 
     for spc, weight in zip(spaces, weightings):
@@ -1076,7 +1076,7 @@ def test_matrix_equiv():
     sparse_eye = sp.sparse.eye(5)
     w_eye = NumpyFnMatrixWeighting(sparse_eye)
     w_dense_eye = NumpyFnMatrixWeighting(sparse_eye.todense())
-    w_eye_vec = NumpyFnVectorWeighting(np.ones(5))
+    w_eye_vec = NumpyFnArrayWeighting(np.ones(5))
 
     w_eye_wrong_exp = NumpyFnMatrixWeighting(sparse_eye, exponent=1)
 
@@ -1246,8 +1246,8 @@ def test_vector_init(exponent):
     rn = odl.rn(5)
     weight_vec = _pos_array(rn)
 
-    NumpyFnVectorWeighting(weight_vec, exponent=exponent)
-    NumpyFnVectorWeighting(rn.element(weight_vec), exponent=exponent)
+    NumpyFnArrayWeighting(weight_vec, exponent=exponent)
+    NumpyFnArrayWeighting(rn.element(weight_vec), exponent=exponent)
 
 
 def test_vector_vector():
@@ -1255,23 +1255,23 @@ def test_vector_vector():
     weight_vec = _pos_array(rn)
     weight_elem = rn.element(weight_vec)
 
-    weighting_vec = NumpyFnVectorWeighting(weight_vec)
-    weighting_elem = NumpyFnVectorWeighting(weight_elem)
+    weighting_vec = NumpyFnArrayWeighting(weight_vec)
+    weighting_elem = NumpyFnArrayWeighting(weight_elem)
 
-    assert isinstance(weighting_vec.vector, np.ndarray)
-    assert isinstance(weighting_elem.vector, NumpyFnVector)
+    assert isinstance(weighting_vec.array, np.ndarray)
+    assert isinstance(weighting_elem.array, NumpyFnVector)
 
 
 def test_vector_is_valid():
     rn = odl.rn(5)
     weight_vec = _pos_array(rn)
-    weighting_vec = NumpyFnVectorWeighting(weight_vec)
+    weighting_vec = NumpyFnArrayWeighting(weight_vec)
 
     assert weighting_vec.is_valid()
 
     # Invalid
     weight_vec[0] = 0
-    weighting_vec = NumpyFnVectorWeighting(weight_vec)
+    weighting_vec = NumpyFnArrayWeighting(weight_vec)
     assert not weighting_vec.is_valid()
 
 
@@ -1280,12 +1280,12 @@ def test_vector_equals():
     weight_vec = _pos_array(rn)
     weight_elem = rn.element(weight_vec)
 
-    weighting_vec = NumpyFnVectorWeighting(weight_vec)
-    weighting_vec2 = NumpyFnVectorWeighting(weight_vec)
-    weighting_elem = NumpyFnVectorWeighting(weight_elem)
-    weighting_elem2 = NumpyFnVectorWeighting(weight_elem)
-    weighting_other_vec = NumpyFnVectorWeighting(weight_vec - 1)
-    weighting_other_exp = NumpyFnVectorWeighting(weight_vec - 1, exponent=1)
+    weighting_vec = NumpyFnArrayWeighting(weight_vec)
+    weighting_vec2 = NumpyFnArrayWeighting(weight_vec)
+    weighting_elem = NumpyFnArrayWeighting(weight_elem)
+    weighting_elem2 = NumpyFnArrayWeighting(weight_elem)
+    weighting_other_vec = NumpyFnArrayWeighting(weight_vec - 1)
+    weighting_other_exp = NumpyFnArrayWeighting(weight_vec - 1, exponent=1)
 
     assert weighting_vec == weighting_vec2
     assert weighting_vec != weighting_elem
@@ -1301,10 +1301,10 @@ def test_vector_equiv():
     diag_mat = weight_vec * np.eye(5)
     different_vec = weight_vec - 1
 
-    w_vec = NumpyFnVectorWeighting(weight_vec)
-    w_elem = NumpyFnVectorWeighting(weight_elem)
+    w_vec = NumpyFnArrayWeighting(weight_vec)
+    w_elem = NumpyFnArrayWeighting(weight_elem)
     w_diag_mat = NumpyFnMatrixWeighting(diag_mat)
-    w_different_vec = NumpyFnVectorWeighting(different_vec)
+    w_different_vec = NumpyFnArrayWeighting(different_vec)
 
     # Equal -> True
     assert w_vec.equiv(w_vec)
@@ -1317,7 +1317,7 @@ def test_vector_equiv():
     # Test shortcuts
     const_vec = np.ones(5) * 1.5
 
-    w_vec = NumpyFnVectorWeighting(const_vec)
+    w_vec = NumpyFnArrayWeighting(const_vec)
     w_const = NumpyFnConstWeighting(1.5)
     w_wrong_const = NumpyFnConstWeighting(1)
     w_wrong_exp = NumpyFnConstWeighting(1.5, exponent=1)
@@ -1336,7 +1336,7 @@ def test_vector_inner(fn):
     [xarr, yarr], [x, y] = noise_elements(fn, 2)
 
     weight_vec = _pos_array(fn)
-    weighting_vec = NumpyFnVectorWeighting(weight_vec)
+    weighting_vec = NumpyFnArrayWeighting(weight_vec)
 
     true_inner = np.vdot(yarr, xarr * weight_vec)
 
@@ -1349,14 +1349,14 @@ def test_vector_inner(fn):
 
     # Exponent != 2 -> no inner product, should raise
     with pytest.raises(NotImplementedError):
-        NumpyFnVectorWeighting(weight_vec, exponent=1.0).inner(x, y)
+        NumpyFnArrayWeighting(weight_vec, exponent=1.0).inner(x, y)
 
 
 def test_vector_norm(fn, exponent):
     xarr, x = noise_elements(fn)
 
     weight_vec = _pos_array(fn)
-    weighting_vec = NumpyFnVectorWeighting(weight_vec, exponent=exponent)
+    weighting_vec = NumpyFnArrayWeighting(weight_vec, exponent=exponent)
 
     if exponent == float('inf'):
         true_norm = np.linalg.norm(weight_vec * xarr, ord=float('inf'))
@@ -1375,7 +1375,7 @@ def test_vector_dist(fn, exponent):
     [xarr, yarr], [x, y] = noise_elements(fn, n=2)
 
     weight_vec = _pos_array(fn)
-    weighting_vec = NumpyFnVectorWeighting(weight_vec, exponent=exponent)
+    weighting_vec = NumpyFnArrayWeighting(weight_vec, exponent=exponent)
 
     if exponent == float('inf'):
         true_dist = np.linalg.norm(
@@ -1395,7 +1395,7 @@ def test_vector_dist_using_inner(fn):
     [xarr, yarr], [x, y] = noise_elements(fn, 2)
 
     weight_vec = _pos_array(fn)
-    w = NumpyFnVectorWeighting(weight_vec)
+    w = NumpyFnArrayWeighting(weight_vec)
 
     true_dist = np.linalg.norm(np.sqrt(weight_vec) * (xarr - yarr))
     # Using 3 places (single precision default) since the result is always
@@ -1404,7 +1404,7 @@ def test_vector_dist_using_inner(fn):
 
     # Only possible for exponent=2
     with pytest.raises(ValueError):
-        NumpyFnVectorWeighting(weight_vec, exponent=1, dist_using_inner=True)
+        NumpyFnArrayWeighting(weight_vec, exponent=1, dist_using_inner=True)
 
     # With free function
     w_dist = npy_weighted_dist(weight_vec, use_inner=True)
@@ -1579,10 +1579,10 @@ def test_custom_inner(fn):
     def inner(x, y):
         return np.vdot(y, x)
 
-    w = NumpyFnCustomInnerProduct(inner)
-    w_same = NumpyFnCustomInnerProduct(inner)
-    w_other = NumpyFnCustomInnerProduct(np.dot)
-    w_d = NumpyFnCustomInnerProduct(inner, dist_using_inner=False)
+    w = NumpyFnCustomInner(inner)
+    w_same = NumpyFnCustomInner(inner)
+    w_other = NumpyFnCustomInner(np.dot)
+    w_d = NumpyFnCustomInner(inner, dist_using_inner=False)
 
     assert w == w
     assert w == w_same
@@ -1602,7 +1602,7 @@ def test_custom_inner(fn):
     assert almost_equal(w_d.dist(x, y), true_dist)
 
     with pytest.raises(TypeError):
-        NumpyFnCustomInnerProduct(1)
+        NumpyFnCustomInner(1)
 
 
 def test_custom_norm(fn):

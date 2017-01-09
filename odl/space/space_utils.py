@@ -33,7 +33,7 @@ from odl.space.entry_points import NTUPLES_IMPLS, FN_IMPLS
 
 
 def vector(array, dtype=None, impl='numpy'):
-    """Create an n-tuples type vector from an array.
+    """Create an n-tuples type vector from an array-like object.
 
     Parameters
     ----------
@@ -93,32 +93,30 @@ def vector(array, dtype=None, impl='numpy'):
 
     # Select implementation
     if space_dtype is None or is_scalar_dtype(space_dtype):
-        space_type = fn
+        space_constructor = fn
     else:
-        space_type = ntuples
+        space_constructor = ntuples
 
-    return space_type(len(arr), dtype=space_dtype, impl=impl).element(arr)
+    return space_constructor(
+        len(arr), dtype=space_dtype, impl=impl).element(arr)
 
 
 def ntuples(size, dtype, impl='numpy', **kwargs):
-    """Set of tuples of a fixed size.
+    """Return a set of n-tuples of arbitrary data type.
 
     Parameters
     ----------
     size : positive int
         The number of dimensions of the space
-    dtype : `object`
-        The data type of the storage array. Can be provided in any
-        way the `numpy.dtype` function understands, most notably
-        as built-in type, as one of NumPy's internal datatype
-        objects or as string.
-
-        Only complex floating-point data types are allowed.
-    impl : string
+    dtype :
+        Data type of each element. Can be provided in any
+        way the `numpy.dtype` function understands, e.g. as built-in type
+        or as a string.
+    impl : str, optional
         The backend to use. See `odl.space.entry_points.NTUPLES_IMPLS` for
         available options.
-    kwargs :
-        Extra keyword arguments to pass to the implmentation.
+    kwargs : optional
+        Extra keyword arguments passed to the set constructor.
 
     Returns
     -------
@@ -132,25 +130,23 @@ def ntuples(size, dtype, impl='numpy', **kwargs):
 
 
 def fn(size, dtype=None, impl='numpy', **kwargs):
-    """Return the space ``F^n`` for arbitrary field ``F``.
+    """Return a space of n-tuples of arbitrary scalar data type.
 
     Parameters
     ----------
     size : positive int
         The number of dimensions of the space
-    dtype : `object`
-        The data type of the storage array. Can be provided in any
-        way the `numpy.dtype` function understands, most notably
-        as built-in type, as one of NumPy's internal datatype
-        objects or as string.
-
-        Default: default of the implementation given by calling
-        ``default_dtype()`` on the `FnBase` implementation.
-    impl : string
+    dtype : optional
+        Data type of each element. Can be provided in any
+        way the `numpy.dtype` function understands, e.g. as built-in type
+        or as a string.
+        For ``None``, the `FnBase.default_dtype` of the created space
+        is used.
+    impl : str, optional
         The backend to use. See `odl.space.entry_points.FN_IMPLS` for
         available options.
-    kwargs :
-        Extra keyword arguments to pass to the implmentation.
+    kwargs : optional
+        Extra keyword arguments passed to the space constructor.
 
     Returns
     -------
@@ -158,16 +154,14 @@ def fn(size, dtype=None, impl='numpy', **kwargs):
 
     See Also
     --------
-    ntuples : n-tuples over a field with arbitrary data type.
+    ntuples : n-tuples with arbitrary data type.
     """
-    fn_impl = FN_IMPLS[impl]
+    fn_type = FN_IMPLS[impl]
 
     if dtype is None:
-        dtype = fn_impl.default_dtype()
+        dtype = fn_type.default_dtype()
 
-    fn = fn_impl(size, dtype, **kwargs)
-
-    return fn
+    return fn_type(size, dtype, **kwargs)
 
 
 def cn(size, dtype=None, impl='numpy', **kwargs):
@@ -176,22 +170,19 @@ def cn(size, dtype=None, impl='numpy', **kwargs):
     Parameters
     ----------
     size : positive int
-        The number of dimensions of the space
-    dtype : `object`
-        The data type of the storage array. Can be provided in any
-        way the `numpy.dtype` function understands, most notably
-        as built-in type, as one of NumPy's internal datatype
-        objects or as string.
-
-        Only complex floating-point data types are allowed.
-
-        Default: default of the implementation given by calling
-        ``default_dtype(ComplexNumbers())`` on the `FnBase` implementation.
-    impl : string
+        Number of entries in a space element.
+    dtype : optional
+        Data type of each element. Can be provided in any
+        way the `numpy.dtype` function understands, e.g. as built-in type
+        or as a string. Only complex floating-point data types are
+        allowed.
+        For ``None``, the `FnBase.default_dtype` of the created space
+        is used in the form ``default_dtype(ComplexNumbers())``.
+    impl : str, optional
         The backend to use. See `odl.space.entry_points.FN_IMPLS` for
         available options.
     kwargs :
-        Extra keyword arguments to pass to the implmentation.
+        Extra keyword arguments passed to the space constructor.
 
     Returns
     -------
@@ -201,16 +192,16 @@ def cn(size, dtype=None, impl='numpy', **kwargs):
     --------
     fn : n-tuples over a field with arbitrary scalar data type.
     """
-    cn_impl = FN_IMPLS[impl]
+    cn_type = FN_IMPLS[impl]
 
     if dtype is None:
-        dtype = cn_impl.default_dtype(ComplexNumbers())
+        dtype = cn_type.default_dtype(ComplexNumbers())
 
-    cn = cn_impl(size, dtype, **kwargs)
+    cn = cn_type(size, dtype, **kwargs)
 
     if not cn.is_cn:
-        raise TypeError('data type {!r} not a complex floating-point type.'
-                        ''.format(dtype))
+        raise ValueError('data type {!r} not a complex floating-point type'
+                         ''.format(dtype))
     return cn
 
 
@@ -220,21 +211,19 @@ def rn(size, dtype=None, impl='numpy', **kwargs):
     Parameters
     ----------
     size : positive int
-        The number of dimensions of the space
-    dtype : `object`
-        The data type of the storage array. Can be provided in any
-        way the `numpy.dtype` function understands, most notably
-        as built-in type, as one of NumPy's internal datatype
-        objects or as string.
-
-        Only real floating-point data types are allowed.
-        Default: default of the implementation given by calling
-        ``default_dtype(RealNumbers())`` on the `FnBase` implementation.
-    impl : string
+        Number of entries in a space element.
+    dtype : optional
+        Data type of each element. Can be provided in any
+        way the `numpy.dtype` function understands, e.g. as built-in type
+        or as a string. Only real floating-point data types are
+        allowed.
+        For ``None``, the `FnBase.default_dtype` of the created space
+        is used in the form ``default_dtype(RealNumbers())``.
+    impl : str, optional
         The backend to use. See `odl.space.entry_points.FN_IMPLS` for
         available options.
     kwargs :
-        Extra keyword arguments to pass to the implmentation.
+        Extra keyword arguments passed to the space constructor.
 
     Returns
     -------
@@ -244,16 +233,16 @@ def rn(size, dtype=None, impl='numpy', **kwargs):
     --------
     fn : n-tuples over a field with arbitrary scalar data type.
     """
-    rn_impl = FN_IMPLS[impl]
+    rn_type = FN_IMPLS[impl]
 
     if dtype is None:
-        dtype = rn_impl.default_dtype(RealNumbers())
+        dtype = rn_type.default_dtype(RealNumbers())
 
-    rn = rn_impl(size, dtype, **kwargs)
+    rn = rn_type(size, dtype, **kwargs)
 
     if not rn.is_rn:
-        raise TypeError('data type {!r} not a real floating-point type.'
-                        ''.format(dtype))
+        raise ValueError('data type {!r} not a real floating-point type'
+                         ''.format(dtype))
     return rn
 
 
