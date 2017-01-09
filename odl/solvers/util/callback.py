@@ -376,39 +376,48 @@ class CallbackShow(SolverCallback):
         display_step : positive int, optional
             Number of iterations between plots. Default: 1
         saveto : string, optional
-            Path to a directory where the figures are to be saved, potentially
-            followed by a file name. If the directory name does not exist, a
-            ``ValueError`` is raised. If not given, the figures are not saved.
-            Default: None
-        suffix : string, optinal
-            Format of the figure saved. Default: ``png``
+            Path to a directory where the figures are to be saved, followed by
+            a file name and potentially a file format. Standard python string
+            formatting is possible to use in order to index the figures with
+            iteration number. If the directory name does not exist, a
+            ``ValueError`` is raised. If ``None``, the figures are not saved.
+            Default: ``None``
 
         Other Parameters
         ----------------
         kwargs :
             Optional arguments passed on to ``x.show``
+
+        Raises
+        ------
+        ValueError
+           If ``saveto`` is not a valid path
+
+        Examples
+        --------
+        Show the result of each iterate.
+
+        >>> callback = CallbackShow()
+
+        Show and save every fifth iterate in ``png`` format, overwriting the
+        previous one.
+
+        >>> callback = CallbackShow(display_step=5,
+        ...                         saveto='my_path/my_iterate.png')
+
+        Show and save each fifth iterate in ``png`` format, indexing the files
+        with the iteration number.
+
+        >>> callback = CallbackShow(display_step=5,
+        ...                         saveto='my_path/my_iterate_{}.png')
         """
         self.args = args
         self.kwargs = kwargs
         self.fig = kwargs.pop('fig', None)
         self.display_step = kwargs.pop('display_step', 1)
         self.saveto = kwargs.pop('saveto', None)
-        self.suffix = kwargs.pop('suffix', 'png')
         self.iter = 0
         self.space_of_last_x = None
-
-        if self.saveto is not None:
-            head, tail = os.path.split(self.saveto)
-            if not os.path.exists(head) or head == '':
-                raise ValueError('head of the `saveto` {} path not found'
-                                 ''.format(head))
-            if ((not tail.count('{') == tail.count('}'))):
-                raise ValueError('tail of `saveto` {} does not contain the '
-                                 ' same number of ``{`` as ``}``'.format(tail))
-            elif tail.count('{') == 1:
-                self.adv_saveto = True
-            elif tail.count('{') == 0:
-                self.adv_saveto = False
 
     def __call__(self, x):
         """Show the current iterate."""
@@ -423,17 +432,9 @@ class CallbackShow(SolverCallback):
                                   update_in_place=update_in_place,
                                   **self.kwargs)
 
-            elif self.adv_saveto:
+            else:
                 self.fig = x.show(*self.args, fig=self.fig,
-                                  saveto=(self.saveto.format(self.iter) + '.' +
-                                          self.suffix),
-                                  update_in_place=update_in_place,
-                                  **self.kwargs)
-
-            elif not self.adv_saveto:
-                self.fig = x.show(*self.args, fig=self.fig,
-                                  saveto=(self.saveto + '_' + str(self.iter) +
-                                          '.' + self.suffix),
+                                  saveto=self.saveto.format(self.iter),
                                   update_in_place=update_in_place,
                                   **self.kwargs)
 
