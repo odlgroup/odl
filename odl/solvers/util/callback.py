@@ -23,11 +23,13 @@ from future import standard_library
 standard_library.install_aliases()
 
 import time
-
+import os
+import numpy as np
 
 __all__ = ('CallbackStore', 'CallbackApply',
            'CallbackPrintTiming', 'CallbackPrintIteration',
-           'CallbackPrint', 'CallbackPrintNorm', 'CallbackShow', )
+           'CallbackPrint', 'CallbackPrintNorm', 'CallbackShow',
+           'CallbackSaveToDisk')
 
 
 class SolverCallback(object):
@@ -438,16 +440,101 @@ class CallbackShow(SolverCallback):
         """Set `iter` to 0 and create a new figure."""
         self.iter = 0
         self.fig = None
+        self.space_of_last_x = None
 
     def __repr__(self):
         """Return ``repr(self)``."""
-
         return '{}(display_step={}, saveto={}, fig={}, *{!r}, **{!r})'.format(
             self.__class__.__name__,
-            self.saveto,
             self.display_step,
+            self.saveto,
             self.fig,
             self.args,
+            self.kwargs)
+
+
+class CallbackSaveToDisk(SolverCallback):
+
+    """Save the iterates to disk."""
+
+    def __init__(self, saveto, save_step=1, impl='pickle', **kwargs):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        saveto : string
+            Path to a directory where the figures are to be saved, followed by
+            a file name and potentially a file format. Standard python string
+            formatting is possible to use in order to index the iterates with
+            iteration number.
+        save_step : positive int, optional
+            Number of iterations between saves.
+            Default: ``None``
+        impl : {'numpy', 'pickle', 'numpy_txt'}, optional
+            The format to store the iterate in. Numpy formats are only usable
+            if the data can be converted to an array via `numpy.asarray`.
+
+        Other Parameters
+        ----------------
+        kwargs :
+            Optional arguments passed to the save function.
+
+        Examples
+        --------
+        Store each iterate
+
+        >>> callback = CallbackSaveToDisk('my_path/my_iterate')
+
+        Save every fifth overwriting the previous one.
+
+        >>> callback = CallbackSaveToDisk(saveto='my_path/my_iterate',
+        ...                               save_step=5)
+
+        Save each fifth iterate in ``numpy`` format, indexing the files with
+        the iteration number.
+
+        >>> callback = CallbackSaveToDisk(saveto='my_path/my_iterate_{}',
+        ...                               save_step=5, impl='numpy')
+        """
+        self.saveto = saveto
+        self.save_step = save_step
+        self.impl = impl
+        self.kwargs = kwargs
+        self.iter = 0
+
+    def __call__(self, x):
+        """Save the current iterate."""
+        if (self.iter % self.save_step) == 0:
+            file_path = self.saveto.format(self.iter)
+            folder_path = os.path.dirname(os.path.realpath(file_path))
+
+            if not os.path.exists(folder_path):
+                os.makedirs(folder_path)
+
+            if self.impl == 'pickle':
+                import pickle
+                with open(file_path, 'wb+') as f:
+                    pickle.dump(x, f)
+            elif self.impl == 'numpy':
+                np.save(file_path, np.asarray(x))
+            elif self.impl == 'numpy_txt':
+                np.savetxt(file_path, np.asarray(x))
+            else:
+                raise RuntimeError('unknown `impl` {}'.format(self.impl))
+
+        self.iter += 1
+
+    def reset(self):
+        """Set `iter` to 0."""
+        self.iter = 0
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{}(saveto={}, save_step={}, impl={}, **{!r})'.format(
+            self.__class__.__name__,
+            self.saveto,
+            self.save_step,
+            self.impl,
             self.kwargs)
 
 
