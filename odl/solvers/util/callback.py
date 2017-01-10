@@ -29,7 +29,7 @@ import numpy as np
 __all__ = ('CallbackStore', 'CallbackApply',
            'CallbackPrintTiming', 'CallbackPrintIteration',
            'CallbackPrint', 'CallbackPrintNorm', 'CallbackShow',
-           'CallbackSaveToDisk')
+           'CallbackSaveToDisk', 'CallbackSleep')
 
 
 class SolverCallback(object):
@@ -536,6 +536,39 @@ class CallbackSaveToDisk(SolverCallback):
             self.save_step,
             self.impl,
             self.kwargs)
+
+
+class CallbackSleep(SolverCallback):
+
+    """Sleep for a specific time."""
+
+    def __init__(self, seconds=1.0):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        seconds : float
+            Number of seconds to cleep, can be float for subsecond precision.
+
+        Examples
+        --------
+        Sleep 1 second between each iterate
+
+        >>> callback = CallbackSleep(seconds=1)
+
+        Sleep 10 ms between each iterate
+
+        >>> callback = CallbackSleep(seconds=0.01)
+        """
+        self.seconds = float(seconds)
+
+    def __call__(self, x):
+        """Sleep for a specified time."""
+        time.sleep(self.seconds)
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{}(seconds={})'.format(self.__class__.__name__, self.seconds)
 
 
 if __name__ == '__main__':
