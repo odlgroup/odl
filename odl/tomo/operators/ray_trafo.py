@@ -33,7 +33,7 @@ from odl.tomo.backends import (
     ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE,
     astra_cpu_forward_projector, astra_cpu_back_projector,
     astra_cuda_forward_projector, astra_cuda_back_projector,
-    scikit_radon_forward, scikit_radon_back_projector)
+    scikit_radon_forward, scikit_radon_back_projector, AstraProjectorImpl)
 
 _SUPPORTED_IMPL = ('astra_cpu', 'astra_cuda', 'scikit')
 
@@ -72,6 +72,8 @@ class RayTransform(Operator):
         discr_range : `DiscreteLp`
             Discretized space, the range of the forward projector.
             Default: Infered from parameters.
+        use_cache : bool
+            True if data should be cached. Default: True
 
         Notes
         -----
@@ -90,6 +92,8 @@ class RayTransform(Operator):
         if impl not in _SUPPORTED_IMPL:
             raise ValueError('`impl` {!r} not supported'
                              ''.format(impl_in))
+
+        self.use_cache = kwargs.pop('use_cache', True)
 
         # TODO: sanity checks between impl and discretization impl
         if impl.startswith('astra'):
@@ -189,8 +193,14 @@ class RayTransform(Operator):
                 return astra_cpu_forward_projector(x, self.geometry,
                                                    self.range, out)
             elif data_impl == 'cuda':
-                return astra_cuda_forward_projector(x, self.geometry,
-                                                    self.range, out)
+                if self.use_cache:
+                    proj = getattr(self, 'astra_projector', None)
+                    if proj is None:
+                        self.astra_projector = AstraProjectorImpl(self.geometry, self.range, use_cache=True)
+                    return self.astra_projector.call_forward(x, out)
+                else:
+                    return astra_cuda_forward_projector(x, self.geometry,
+                                                        self.range, out)
             else:
                 # Should never happen
                 raise RuntimeError('implementation info is inconsistent')

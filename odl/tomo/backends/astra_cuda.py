@@ -42,8 +42,136 @@ from odl.util import writable_array
 
 
 __all__ = ('astra_cuda_forward_projector', 'astra_cuda_back_projector',
-           'ASTRA_CUDA_AVAILABLE')
+           'ASTRA_CUDA_AVAILABLE', 'AstraProjectorImpl')
 
+
+class AstraProjectorImpl(object):
+    def __init__(self, geometry, proj_space, use_cache):
+        self.geometry = geometry
+        self.proj_space = proj_space
+        self.use_cache = use_cache
+
+        self.algo_id = None
+        self.vol_id = None
+        self.sino_id = None
+        self.proj_id = None
+
+        if use_cache:
+            self.out_array = np.asarray(proj_space.element(),
+                                        dtype='float32', order='C')
+
+    def call_forward(self, vol_data, out=None):
+        if not isinstance(vol_data, DiscreteLpElement):
+            raise TypeError('volume data {!r} is not a DiscreteLpElement '
+                            'instance'.format(vol_data))
+        if not isinstance(self.geometry, Geometry):
+            raise TypeError('geometry  {!r} is not a Geometry instance'
+                            ''.format(self.geometry))
+        if vol_data.ndim != self.geometry.ndim:
+            raise ValueError('dimensions {} of volume data and {} of geometry '
+                             'do not match'
+                             ''.format(vol_data.ndim, self.geometry.ndim))
+        if not isinstance(self.proj_space, DiscreteLp):
+            raise TypeError('projection space {!r} is not a DiscreteLp '
+                            'instance'.format(self.proj_space))
+        if out is not None:
+            if not isinstance(out, DiscreteLpElement):
+                raise TypeError('`out` {} is neither None nor a '
+                                'DiscreteLpElement instance'.format(out))
+
+        ndim = vol_data.ndim
+
+        # Create astra geometries
+        vol_geom = astra_volume_geometry(vol_data.space)
+
+        # Create ASTRA data structures
+
+        # In the case dim == 3, we need to swap axes, so can't perform the FP
+        # in-place
+        if self.vol_id is None:
+            proj_geom = astra_projection_geometry(self.geometry)
+            self.vol_id = astra_data(vol_geom, datatype='volume', data=vol_data,
+                                     allow_copy=True)
+        else:
+            if self.geometry.ndim == 2:
+                astra.data2d.store(self.vol_id, vol_data.asarray())
+            elif self.geometry.ndim == 3:
+                astra.data3d.store(self.vol_id, vol_data.asarray())
+
+        # Create projector
+        if self.proj_id is None:
+            self.proj_id = astra_projector('nearest', vol_geom, proj_geom, ndim,
+                                           impl='cuda')
+
+        if ndim == 2:
+            if out is None:
+                out = self.proj_space.element()
+
+            if self.use_cache:
+                out_array = self.out_array
+            else:
+                out_array = np.asarray(self.proj_space.element(),
+                                       dtype='float32', order='C')
+
+            # Wrap the array in correct dtype etc if needed
+            if self.sino_id is None:
+                self.sino_id = astra_data(proj_geom, datatype='projection', data=out_array)
+
+            # Create algorithm
+            if self.algo_id is None:
+                self.algo_id = astra_algorithm('forward', ndim, self.vol_id, self.sino_id,
+                                               proj_id=self.proj_id, impl='cuda')
+
+            # Run algorithm
+            astra.algorithm.run(self.algo_id)
+
+            out[:] = out_array
+        elif ndim == 3:
+            sino_id = astra_data(proj_geom, datatype='projection',
+                                 ndim=self.proj_space.ndim)
+
+            # Create algorithm
+            algo_id = astra_algorithm('forward', ndim, vol_id, sino_id,
+                                      proj_id=proj_id, impl='cuda')
+
+            # Run algorithm
+            astra.algorithm.run(algo_id)
+
+            if out is None:
+                out = self.proj_space.element(np.rollaxis(astra.data3d.get(sino_id),
+                                                          0, 3))
+            else:
+                out[:] = np.rollaxis(astra.data3d.get(sino_id), 0, 3)
+        else:
+            raise RuntimeError('unknown ndim')
+
+        # Fix inconsistent scaling
+        if isinstance(self.geometry, Parallel2dGeometry):
+            # parallel2d scales with pixel stride
+            out *= 1 / float(self.geometry.det_partition.cell_sides[0])
+
+        if not self.use_cache:
+            self.delete_ids()
+
+        return out
+
+    def delete_ids(self):
+        # Delete ASTRA objects
+        astra.algorithm.delete(self.algo_id)
+        if self.geometry.ndim == 2:
+            astra.data2d.delete((self.vol_id, self.sino_id))
+            astra.projector.delete(self.proj_id)
+        else:
+            astra.data3d.delete((self.vol_id, self.sino_id))
+            astra.projector3d.delete(self.proj_id)
+
+        self.algo_id = None
+        self.vol_id = None
+        self.sino_id = None
+        self.proj_id = None
+
+    def __del__(self):
+        self.delete_ids()
 
 # TODO: use context manager when creating data structures
 
