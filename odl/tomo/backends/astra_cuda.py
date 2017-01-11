@@ -56,7 +56,7 @@ class AstraProjectorImpl(object):
         self.sino_id = None
         self.proj_id = None
 
-        if use_cache:
+        if use_cache and geometry.ndim == 2:
             self.out_array = np.asarray(proj_space.element(),
                                         dtype='float32', order='C')
 
@@ -127,21 +127,23 @@ class AstraProjectorImpl(object):
 
             out[:] = out_array
         elif ndim == 3:
-            sino_id = astra_data(proj_geom, datatype='projection',
-                                 ndim=self.proj_space.ndim)
+            if self.sino_id is None:
+                self.sino_id = astra_data(proj_geom, datatype='projection',
+                                          ndim=self.proj_space.ndim)
 
             # Create algorithm
-            algo_id = astra_algorithm('forward', ndim, vol_id, sino_id,
-                                      proj_id=proj_id, impl='cuda')
+            if self.algo_id is None:
+                self.algo_id = astra_algorithm('forward', ndim, self.vol_id, self.sino_id,
+                                               proj_id=self.proj_id, impl='cuda')
 
             # Run algorithm
-            astra.algorithm.run(algo_id)
+            astra.algorithm.run(self.algo_id)
 
             if out is None:
-                out = self.proj_space.element(np.rollaxis(astra.data3d.get(sino_id),
+                out = self.proj_space.element(np.rollaxis(astra.data3d.get(self.sino_id),
                                                           0, 3))
             else:
-                out[:] = np.rollaxis(astra.data3d.get(sino_id), 0, 3)
+                out[:] = np.rollaxis(astra.data3d.get(self.sino_id), 0, 3)
         else:
             raise RuntimeError('unknown ndim')
 
