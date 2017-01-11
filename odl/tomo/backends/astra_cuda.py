@@ -41,12 +41,28 @@ from odl.tomo.geometry import (
 from odl.util import writable_array
 
 
-__all__ = ('astra_cuda_forward_projector', 'astra_cuda_back_projector',
-           'ASTRA_CUDA_AVAILABLE', 'AstraProjectorImpl')
+__all__ = ('astra_cuda_back_projector',
+           'ASTRA_CUDA_AVAILABLE',
+           'AstraCudaProjectorImpl')
 
 
-class AstraProjectorImpl(object):
+class AstraCudaProjectorImpl(object):
+
+    """Thin wrapper around ASTRA."""
+
     def __init__(self, geometry, proj_space, use_cache):
+        """Run an ASTRA forward projection on the given data using the GPU.
+
+        Parameters
+        ----------
+        geometry : `Geometry`
+            Geometry defining the tomographic setup
+        out : ``proj_space`` element, optional
+            Element of the projection space to which the result is written. If
+            ``None``, an element in ``proj_space`` is created.
+        use_cache : bool
+            True if data should be cached. Default: True
+        """
         self.geometry = geometry
         self.proj_space = proj_space
         self.use_cache = use_cache
@@ -61,6 +77,22 @@ class AstraProjectorImpl(object):
                                         dtype='float32', order='C')
 
     def call_forward(self, vol_data, out=None):
+        """Run an ASTRA forward projection on the given data using the GPU.
+
+        Parameters
+        ----------
+        vol_data : `DiscreteLpElement`
+            Volume data to which the projector is applied
+        out : ``proj_space`` element, optional
+            Element of the projection space to which the result is written. If
+            ``None``, an element in ``proj_space`` is created.
+
+        Returns
+        -------
+        out : ``proj_space`` element
+            Projection data resulting from the application of the projector.
+            If ``out`` was provided, the returned object is a reference to it.
+        """
         if not isinstance(vol_data, DiscreteLpElement):
             raise TypeError('volume data {!r} is not a DiscreteLpElement '
                             'instance'.format(vol_data))
@@ -174,113 +206,6 @@ class AstraProjectorImpl(object):
 
     def __del__(self):
         self.delete_ids()
-
-# TODO: use context manager when creating data structures
-
-def astra_cuda_forward_projector(vol_data, geometry, proj_space, out=None):
-    """Run an ASTRA forward projection on the given data using the GPU.
-
-    Parameters
-    ----------
-    vol_data : `DiscreteLpElement`
-        Volume data to which the projector is applied
-    geometry : `Geometry`
-        Geometry defining the tomographic setup
-    proj_space : `DiscreteLp`
-        Space to which the calling operator maps
-    out : ``proj_space`` element, optional
-        Element of the projection space to which the result is written. If
-        ``None``, an element in ``proj_space`` is created.
-
-    Returns
-    -------
-    out : ``proj_space`` element
-        Projection data resulting from the application of the projector.
-        If ``out`` was provided, the returned object is a reference to it.
-    """
-    if not isinstance(vol_data, DiscreteLpElement):
-        raise TypeError('volume data {!r} is not a DiscreteLpElement '
-                        'instance'.format(vol_data))
-    if not isinstance(geometry, Geometry):
-        raise TypeError('geometry  {!r} is not a Geometry instance'
-                        ''.format(geometry))
-    if vol_data.ndim != geometry.ndim:
-        raise ValueError('dimensions {} of volume data and {} of geometry '
-                         'do not match'
-                         ''.format(vol_data.ndim, geometry.ndim))
-    if not isinstance(proj_space, DiscreteLp):
-        raise TypeError('projection space {!r} is not a DiscreteLp '
-                        'instance'.format(proj_space))
-    if out is not None:
-        if not isinstance(out, DiscreteLpElement):
-            raise TypeError('`out` {} is neither None nor a '
-                            'DiscreteLpElement instance'.format(out))
-
-    ndim = vol_data.ndim
-
-    # Create astra geometries
-    vol_geom = astra_volume_geometry(vol_data.space)
-    proj_geom = astra_projection_geometry(geometry)
-
-    # Create ASTRA data structures
-
-    # In the case dim == 3, we need to swap axes, so can't perform the FP
-    # in-place
-    vol_id = astra_data(vol_geom, datatype='volume', data=vol_data,
-                        allow_copy=True)
-
-    # Create projector
-    proj_id = astra_projector('nearest', vol_geom, proj_geom, ndim,
-                              impl='cuda')
-
-    if ndim == 2:
-        if out is None:
-            out = proj_space.element()
-
-        # Wrap the array in correct dtype etc if needed
-        with writable_array(out, dtype='float32', order='C') as arr:
-            sino_id = astra_data(proj_geom, datatype='projection', data=arr)
-
-            # Create algorithm
-            algo_id = astra_algorithm('forward', ndim, vol_id, sino_id,
-                                      proj_id=proj_id, impl='cuda')
-
-            # Run algorithm
-            astra.algorithm.run(algo_id)
-    elif ndim == 3:
-        sino_id = astra_data(proj_geom, datatype='projection',
-                             ndim=proj_space.ndim)
-
-        # Create algorithm
-        algo_id = astra_algorithm('forward', ndim, vol_id, sino_id,
-                                  proj_id=proj_id, impl='cuda')
-
-        # Run algorithm
-        astra.algorithm.run(algo_id)
-
-        if out is None:
-            out = proj_space.element(np.rollaxis(astra.data3d.get(sino_id),
-                                                 0, 3))
-        else:
-            out[:] = np.rollaxis(astra.data3d.get(sino_id), 0, 3)
-    else:
-        raise RuntimeError('unknown ndim')
-
-    # Fix inconsistent scaling
-    if isinstance(geometry, Parallel2dGeometry):
-        # parallel2d scales with pixel stride
-        out *= 1 / float(geometry.det_partition.cell_sides[0])
-
-    # Delete ASTRA objects
-    astra.algorithm.delete(algo_id)
-    if ndim == 2:
-        astra.data2d.delete((vol_id, sino_id))
-        astra.projector.delete(proj_id)
-    else:
-        astra.data3d.delete((vol_id, sino_id))
-        astra.projector3d.delete(proj_id)
-
-    return out
 
 
 def astra_cuda_back_projector(proj_data, geometry, reco_space, out=None):

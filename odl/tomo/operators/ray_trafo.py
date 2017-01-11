@@ -32,8 +32,8 @@ from odl.tomo.geometry import Geometry, Parallel2dGeometry
 from odl.tomo.backends import (
     ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE,
     astra_cpu_forward_projector, astra_cpu_back_projector,
-    astra_cuda_forward_projector, astra_cuda_back_projector,
-    scikit_radon_forward, scikit_radon_back_projector, AstraProjectorImpl)
+    AstraCudaProjectorImpl, astra_cuda_back_projector,
+    scikit_radon_forward, scikit_radon_back_projector)
 
 _SUPPORTED_IMPL = ('astra_cpu', 'astra_cuda', 'scikit')
 
@@ -193,14 +193,12 @@ class RayTransform(Operator):
                 return astra_cpu_forward_projector(x, self.geometry,
                                                    self.range, out)
             elif data_impl == 'cuda':
-                if self.use_cache:
-                    proj = getattr(self, 'astra_projector', None)
-                    if proj is None:
-                        self.astra_projector = AstraProjectorImpl(self.geometry, self.range, use_cache=True)
-                    return self.astra_projector.call_forward(x, out)
-                else:
-                    return astra_cuda_forward_projector(x, self.geometry,
-                                                        self.range, out)
+                proj = getattr(self, 'astra_projector', None)
+                if proj is None:
+                    self.astra_projector = AstraCudaProjectorImpl(
+                        self.geometry, self.range, use_cache=self.use_cache)
+
+                return self.astra_projector.call_forward(x, out)
             else:
                 # Should never happen
                 raise RuntimeError('implementation info is inconsistent')
