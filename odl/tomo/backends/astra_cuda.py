@@ -41,8 +41,7 @@ from odl.tomo.geometry import (
 from odl.util import writable_array
 
 
-__all__ = ('astra_cuda_back_projector',
-           'ASTRA_CUDA_AVAILABLE',
+__all__ = ('ASTRA_CUDA_AVAILABLE',
            'AstraCudaProjectorImpl', 'AstraCudaBackProjectorImpl')
 
 
@@ -113,14 +112,12 @@ class AstraCudaProjectorImpl(object):
 
         ndim = vol_data.ndim
 
-        # Create astra geometries
-        vol_geom = astra_volume_geometry(vol_data.space)
-
         # Create ASTRA data structures
 
         # In the case dim == 3, we need to swap axes, so can't perform the FP
         # in-place
         if self.vol_id is None:
+            vol_geom = astra_volume_geometry(vol_data.space)
             proj_geom = astra_projection_geometry(self.geometry)
             self.vol_id = astra_data(vol_geom, datatype='volume', data=vol_data,
                                      allow_copy=True)
@@ -316,12 +313,11 @@ class AstraCudaBackProjectorImpl(object):
                                      ndim=self.reco_space.ndim)
         if self.algo_id is None:
             # Create algorithm
-            algo_id = astra_algorithm('backward', ndim, self.vol_id, self.sino_id,
-                                      proj_id=self.proj_id, impl='cuda')
+            self.algo_id = astra_algorithm('backward', ndim, self.vol_id, self.sino_id,
+                                           proj_id=self.proj_id, impl='cuda')
 
         # Run algorithm
-        astra.algorithm.run(algo_id)
-
+        astra.algorithm.run(self.algo_id)
 
         if out is None:
             out = self.proj_space.element()
