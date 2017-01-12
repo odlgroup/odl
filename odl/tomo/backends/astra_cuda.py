@@ -187,19 +187,24 @@ class AstraCudaProjectorImpl(object):
         return out
 
     def delete_ids(self):
-        # Delete ASTRA objects
-        astra.algorithm.delete(self.algo_id)
+        """Delete ASTRA objects."""
         if self.geometry.ndim == 2:
-            astra.data2d.delete((self.vol_id, self.sino_id))
-            astra.projector.delete(self.proj_id)
+            adata, aproj = astra.data2d, astra.projector
         else:
-            astra.data3d.delete((self.vol_id, self.sino_id))
-            astra.projector3d.delete(self.proj_id)
+            adata, aproj = astra.data3d, astra.projector3d
 
-        self.algo_id = None
-        self.vol_id = None
-        self.sino_id = None
-        self.proj_id = None
+        if self.algo_id is not None:
+            astra.algorithm.delete(self.algo_id)
+            self.algo_id = None
+        if self.vol_id is not None:
+            adata.delete(self.vol_id)
+            self.vol_id = None
+        if self.sino_id is not None:
+            adata.delete(self.sino_id)
+            self.sino_id = None
+        if self.proj_id is not None:
+            aproj.delete(self.proj_id)
+            self.proj_id = None
 
     def __del__(self):
         self.delete_ids()
@@ -297,9 +302,6 @@ class AstraCudaBackProjectorImpl(object):
             self.proj_id = astra_projector('nearest', vol_geom, proj_geom, ndim,
                                            impl='cuda')
 
-        # Reconstruction volume
-        if out is None:
-            out = self.reco_space.element()
 
         if self.use_cache:
             out_array = self.out_array
@@ -319,10 +321,10 @@ class AstraCudaBackProjectorImpl(object):
         # Run algorithm
         astra.algorithm.run(self.algo_id)
 
+        # Reconstruction volume
         if out is None:
-            out = self.proj_space.element()
-        else:
-            out[:] = self.out_array
+            out = self.reco_space.element()
+        out[:] = out_array
 
         out *= astra_cuda_bp_scaling_factor(self.reco_space, self.geometry)
 
@@ -332,19 +334,24 @@ class AstraCudaBackProjectorImpl(object):
         return out
 
     def delete_ids(self):
-        # Delete ASTRA objects
-        astra.algorithm.delete(self.algo_id)
+        """Delete ASTRA objects."""
         if self.geometry.ndim == 2:
-            astra.data2d.delete((self.vol_id, self.sino_id))
-            astra.projector.delete(self.proj_id)
+            adata, aproj = astra.data2d, astra.projector
         else:
-            astra.data3d.delete((self.vol_id, self.sino_id))
-            astra.projector3d.delete(self.proj_id)
+            adata, aproj = astra.data3d, astra.projector3d
 
-        self.algo_id = None
-        self.vol_id = None
-        self.sino_id = None
-        self.proj_id = None
+        if self.algo_id is not None:
+            astra.algorithm.delete(self.algo_id)
+            self.algo_id = None
+        if self.vol_id is not None:
+            adata.delete(self.vol_id)
+            self.vol_id = None
+        if self.sino_id is not None:
+            adata.delete(self.sino_id)
+            self.sino_id = None
+        if self.proj_id is not None:
+            aproj.delete(self.proj_id)
+            self.proj_id = None
 
     def __del__(self):
         self.delete_ids()
