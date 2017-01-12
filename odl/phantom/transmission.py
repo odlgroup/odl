@@ -261,9 +261,9 @@ def forbild(space, resolution=False, ear=True, value_type='density'):
 
     The phantom is defined using the following materials:
 
-    =========================  =====  =======
-    Material                   Index  Density
-    =========================  =====  =======
+    =========================  =====  ================
+    Material                   Index  Density (g/cm^3)
+    =========================  =====  ================
     Air                        0      0.0000
     Cerebrospinal fluid (CSF)  1      1.0450
     Small less dense sphere    2      1.0475
@@ -272,7 +272,7 @@ def forbild(space, resolution=False, ear=True, value_type='density'):
     Blood                      5      1.0550
     Eyes                       6      1.0600
     Bone                       7      1.8000
-    =========================  =====  =======
+    =========================  =====  ================
 
     Parameters
     ----------
@@ -308,7 +308,7 @@ def forbild(space, resolution=False, ear=True, value_type='density'):
 
     if not isinstance(space, DiscreteLp):
         raise TypeError('`space` must be a `DiscreteLp`')
-    if not space.ndim == 2:
+    if space.ndim != 2:
         raise TypeError('`space` must be two-dimensional')
 
     # Create analytic description of phantom
@@ -317,9 +317,9 @@ def forbild(space, resolution=False, ear=True, value_type='density'):
     # Rescale points to the default grid.
     # The forbild phantom is defined on [-12.8, 12.8] x [-12.8, 12.8]
     xcoord, ycoord = space.points().T
-    xcoord = (xcoord - np.min(xcoord)) / (np.max(xcoord) - np.min(xcoord))
+    xcoord = (xcoord - space.min_pt[0]) / (space.max_pt[0] - space.min_pt[0])
     xcoord = 25.8 * xcoord - 12.8
-    ycoord = (ycoord - np.min(ycoord)) / (np.max(ycoord) - np.min(ycoord))
+    ycoord = (ycoord - space.min_pt[1]) / (space.max_pt[1] - space.min_pt[1])
     ycoord = 25.8 * ycoord - 12.8
 
     # Compute the phantom values in each voxel
@@ -350,19 +350,19 @@ def forbild(space, resolution=False, ear=True, value_type='density'):
         image[i] += f
 
     if value_type == 'materials':
-        materials = np.zeros(space.size)
+        materials = np.zeros(space.size, dtype=space.dtype)
         # csf
-        materials[(image > 1.043) & (image < 1.047)] = 1
+        materials[(image > 1.043) & (image <= 1.047)] = 1
         # less_dense_sphere
-        materials[(image > 1.047) & (image < 1.048)] = 2
+        materials[(image > 1.047) & (image <= 1.048)] = 2
         # brain
-        materials[(image > 1.048) & (image < 1.052)] = 3
+        materials[(image > 1.048) & (image <= 1.052)] = 3
         # denser_sphere
-        materials[(image > 1.052) & (image < 1.053)] = 4
+        materials[(image > 1.052) & (image <= 1.053)] = 4
         # blood
-        materials[(image > 1.053) & (image < 1.056)] = 5
+        materials[(image > 1.053) & (image <= 1.058)] = 5
         # eye
-        materials[(image > 1.058) & (image < 1.062)] = 6
+        materials[(image > 1.058) & (image <= 1.062)] = 6
         # Bone
         materials[image > 1.75] = 7
 
