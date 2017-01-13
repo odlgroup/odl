@@ -28,14 +28,14 @@ import numpy as np
 __all__ = ('cylinders_from_ellipses',)
 
 
-def cylinders_from_ellipses(ellipses2d):
+def cylinders_from_ellipses(ellipses):
     """Create 3d cylinders from ellipses."""
-    ellipses2d = np.asarray(ellipses2d)
-    ellipses3d = np.zeros((ellipses2d.shape[0], 10))
-    ellipses3d[:, [0, 1, 2, 4, 5, 7]] = ellipses2d
-    ellipses3d[:, 3] = 100000.0
+    ellipses = np.asarray(ellipses)
+    ellipsoids = np.zeros((ellipses.shape[0], 10))
+    ellipsoids[:, [0, 1, 2, 4, 5, 7]] = ellipses
+    ellipsoids[:, 3] = 100000.0
 
-    return ellipses3d
+    return ellipsoids
 
 
 if __name__ == '__main__':

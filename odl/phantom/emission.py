@@ -22,7 +22,7 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-from odl.phantom.geometric import ellipse_phantom
+from odl.phantom.geometric import ellipsoid_phantom
 from odl.phantom.phantom_utils import cylinders_from_ellipses
 
 
@@ -125,9 +125,9 @@ def derenzo_sources(space):
     cylinders.
     """
     if space.ndim == 2:
-        return ellipse_phantom(space, _derenzo_sources_2d())
+        return ellipsoid_phantom(space, _derenzo_sources_2d())
     if space.ndim == 3:
-        return ellipse_phantom(
+        return ellipsoid_phantom(
             space, cylinders_from_ellipses(_derenzo_sources_2d()))
     else:
         raise ValueError('dimension not 2, no phantom available')
