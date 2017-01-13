@@ -122,7 +122,7 @@ def tam_danielson_window(ray_trafo, smoothing_width=0.05, n_half_rot=1):
     smoothing_width : positive float, optional
         Width of the smoothing applied to the window's edges given as a
         fraction of the width of the full window.
-    n_half_rot : int
+    n_half_rot : odd int
         Total number of half rotations to include in the window. Values larger
         than 1 should be used if the pitch is much smaller than the detector
         height.
@@ -152,6 +152,9 @@ def tam_danielson_window(ray_trafo, smoothing_width=0.05, n_half_rot=1):
     smoothing_width = float(smoothing_width)
     if smoothing_width < 0:
         raise ValueError('`smoothing_width` should be a positive float')
+
+    if n_half_rot % 2 != 1:
+        raise ValueError('`n_half_rot` must be odd, got {}'.format(n_half_rot))
 
     # Find projection of axis on detector
     axis_proj = _axis_in_detector(ray_trafo.geometry)
