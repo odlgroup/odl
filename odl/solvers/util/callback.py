@@ -377,11 +377,14 @@ class CallbackShow(SolverCallback):
         display_step : positive int, optional
             Number of iterations between plots. Default: 1
         saveto : string, optional
-            Path to a directory where the figures are to be saved, followed by
-            a file name and potentially a file format. Standard python string
-            formatting is possible to use in order to index the figures with
-            iteration number. If the directory name does not exist, a
-            ``ValueError`` is raised. If ``None``, the figures are not saved.
+            Format string for the name of the file(s) where
+            iterates are saved. The file name is generated as
+
+                filename = saveto.format(cur_iter_num)
+
+            where ``cur_iter_num`` is the current iteration number.
+            If the directory name does not exist, a ``ValueError`` is raised.
+            If ``saveto is None``, the figures are not saved.
             Default: ``None``
 
         Other Parameters
@@ -391,18 +394,18 @@ class CallbackShow(SolverCallback):
 
         Examples
         --------
-        Show the result of each iterate.
+        Show the result of each iterate:
 
         >>> callback = CallbackShow()
 
         Show and save every fifth iterate in ``png`` format, overwriting the
-        previous one.
+        previous one:
 
         >>> callback = CallbackShow(display_step=5,
         ...                         saveto='my_path/my_iterate.png')
 
         Show and save each fifth iterate in ``png`` format, indexing the files
-        with the iteration number.
+        with the iteration number:
 
         >>> callback = CallbackShow(display_step=5,
         ...                         saveto='my_path/my_iterate_{}.png')
@@ -463,15 +466,16 @@ class CallbackSaveToDisk(SolverCallback):
         Parameters
         ----------
         saveto : string
-            Path to a directory where the figures are to be saved, followed by
-            a file name and potentially a file format. Standard python string
-            formatting is possible to use in order to index the iterates with
-            iteration number.
+            Format string for the name of the file(s) where
+            iterates are saved. The file name is generated as
+
+                filename = saveto.format(cur_iter_num)
+
+            where ``cur_iter_num`` is the current iteration number.
         save_step : positive int, optional
             Number of iterations between saves.
-            Default: ``None``
         impl : {'numpy', 'pickle', 'numpy_txt'}, optional
-            The format to store the iterate in. Numpy formats are only usable
+            The format to store the iterates in. Numpy formats are only usable
             if the data can be converted to an array via `numpy.asarray`.
 
         Other Parameters
@@ -481,17 +485,17 @@ class CallbackSaveToDisk(SolverCallback):
 
         Examples
         --------
-        Store each iterate
+        Store each iterate:
 
         >>> callback = CallbackSaveToDisk('my_path/my_iterate')
 
-        Save every fifth overwriting the previous one.
+        Save every fifth overwriting the previous one:
 
         >>> callback = CallbackSaveToDisk(saveto='my_path/my_iterate',
         ...                               save_step=5)
 
         Save each fifth iterate in ``numpy`` format, indexing the files with
-        the iteration number.
+        the iteration number:
 
         >>> callback = CallbackSaveToDisk(saveto='my_path/my_iterate_{}',
         ...                               save_step=5, impl='numpy')
@@ -514,11 +518,11 @@ class CallbackSaveToDisk(SolverCallback):
             if self.impl == 'pickle':
                 import pickle
                 with open(file_path, 'wb+') as f:
-                    pickle.dump(x, f)
+                    pickle.dump(x, f, **self.kwargs)
             elif self.impl == 'numpy':
-                np.save(file_path, np.asarray(x))
+                np.save(file_path, np.asarray(x), **self.kwargs)
             elif self.impl == 'numpy_txt':
-                np.savetxt(file_path, np.asarray(x))
+                np.savetxt(file_path, np.asarray(x), **self.kwargs)
             else:
                 raise RuntimeError('unknown `impl` {}'.format(self.impl))
 
@@ -548,15 +552,15 @@ class CallbackSleep(SolverCallback):
         Parameters
         ----------
         seconds : float
-            Number of seconds to cleep, can be float for subsecond precision.
+            Number of seconds to sleep, can be float for subsecond precision.
 
         Examples
         --------
-        Sleep 1 second between each iterate
+        Sleep 1 second between consecutive iterates:
 
         >>> callback = CallbackSleep(seconds=1)
 
-        Sleep 10 ms between each iterate
+        Sleep 10 ms between consecutive iterate:
 
         >>> callback = CallbackSleep(seconds=0.01)
         """
