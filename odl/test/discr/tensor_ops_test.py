@@ -59,7 +59,7 @@ def test_pointwise_norm_init_properties():
     pwnorm = PointwiseNorm(vfspace, exponent=2)
     assert pwnorm.exponent == 2
 
-    pwnorm = PointwiseNorm(vfspace, weight=2)
+    pwnorm = PointwiseNorm(vfspace, weighting=2)
     assert all_equal(pwnorm.weights, [2])
     assert pwnorm.is_weighted
 
@@ -78,7 +78,7 @@ def test_pointwise_norm_init_properties():
     pwnorm = PointwiseNorm(vfspace, exponent=2)
     assert pwnorm.exponent == 2
 
-    pwnorm = PointwiseNorm(vfspace, weight=[1, 2, 3])
+    pwnorm = PointwiseNorm(vfspace, weighting=[1, 2, 3])
     assert all_equal(pwnorm.weights, [1, 2, 3])
     assert pwnorm.is_weighted
 
@@ -90,10 +90,10 @@ def test_pointwise_norm_init_properties():
         PointwiseNorm(vfspace, exponent=0.5)  # < 1 not allowed
 
     with pytest.raises(ValueError):
-        PointwiseNorm(vfspace, weight=-1)  # < 0 not allowed
+        PointwiseNorm(vfspace, weighting=-1)  # < 0 not allowed
 
     with pytest.raises(ValueError):
-        PointwiseNorm(vfspace, weight=[1, 0, 1])  # 0 invalid
+        PointwiseNorm(vfspace, weighting=[1, 0, 1])  # 0 invalid
 
 
 def test_pointwise_norm_real(exponent):
@@ -165,7 +165,7 @@ def test_pointwise_norm_weighted(exponent):
     fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2))
     vfspace = ProductSpace(fspace, 3)
     weight = np.array([1.0, 2.0, 3.0])
-    pwnorm = PointwiseNorm(vfspace, exponent, weight=weight)
+    pwnorm = PointwiseNorm(vfspace, exponent, weighting=weight)
 
     testarr = np.array([[[1, 2],
                          [3, 4]],
@@ -205,7 +205,7 @@ def test_pointwise_inner_init_properties():
     assert not pwinner.is_weighted
     repr(pwinner)
 
-    pwinner = PointwiseInner(vfspace, vfspace.one(), weight=[1, 2, 3])
+    pwinner = PointwiseInner(vfspace, vfspace.one(), weighting=[1, 2, 3])
     assert all_equal(pwinner.weights, [1, 2, 3])
     assert pwinner.is_weighted
 
@@ -311,7 +311,7 @@ def test_pointwise_inner_weighted():
                        [1, 1]]])
 
     weight = np.array([1.0, 2.0, 3.0])
-    pwinner = PointwiseInner(vfspace, vecfield=array, weight=weight)
+    pwinner = PointwiseInner(vfspace, vecfield=array, weighting=weight)
 
     testarr = np.array([[[1, 2],
                          [3, 4]],
@@ -382,7 +382,7 @@ def test_pointwise_inner_adjoint():
 def test_pointwise_inner_adjoint_weighted():
     # Weighted product space only
     fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2), dtype=complex)
-    vfspace = ProductSpace(fspace, 3, weight=[2, 4, 6])
+    vfspace = ProductSpace(fspace, 3, weighting=[2, 4, 6])
     array = np.array([[[-1 - 1j, -3],
                        [2, 2j]],
                       [[-1j, 0],
@@ -406,7 +406,7 @@ def test_pointwise_inner_adjoint_weighted():
     assert all_almost_equal(out, true_inner_adj.reshape([3, -1]))
 
     # Using different weighting in the inner product
-    pwinner = PointwiseInner(vfspace, vecfield=array, weight=[4, 8, 12])
+    pwinner = PointwiseInner(vfspace, vecfield=array, weighting=[4, 8, 12])
 
     testarr = np.array([[1 + 1j, 2],
                         [3, 4 - 2j]])

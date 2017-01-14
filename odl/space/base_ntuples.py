@@ -548,7 +548,7 @@ class FnBase(NtuplesBase, LinearSpace):
 
     def _astype(self, dtype):
         """Internal helper for ``astype``. Can be overridden by subclasses."""
-        return type(self)(self.size, dtype=dtype, weight=self.weighting)
+        return type(self)(self.size, dtype=dtype, weighting=self.weighting)
 
     def astype(self, dtype):
         """Return a copy of this space with new ``dtype``.
