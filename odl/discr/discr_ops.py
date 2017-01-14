@@ -220,7 +220,7 @@ class ResizingOperatorBase(Operator):
         >>> space = odl.uniform_discr([0, 0], [1, 1], (2, 4))
         >>> resize_op = odl.ResizingOperator(space, ran_shp=(4, 4))
         >>> resize_op.range
-        uniform_discr([-0.5, 0.0], [1.5, 1.0], [4, 4])
+        uniform_discr([-0.5, 0.0], [1.5, 1.0], (4, 4))
 
         Testing different padding methods in the first axis (zero padding
         is the default):

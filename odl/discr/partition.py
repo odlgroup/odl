@@ -36,6 +36,7 @@ from odl.set import IntervalProd
 from odl.util.normalize import (
     normalized_index_expression, normalized_nodes_on_bdry,
     normalized_scalar_param_list, safe_int_conv)
+from odl.util.utility import signature_string, indent_rows
 
 
 __all__ = ('RectPartition', 'uniform_partition_fromintv',
@@ -100,15 +101,21 @@ class RectPartition(object):
 
         self.__cell_boundary_vecs = tuple(bdry_vecs)
 
+        # Initialize nodes_on_bdry
+        left_on_bdry = np.isclose(self.grid.min_pt, self.set.min_pt)[:, None]
+        right_on_bdry = np.isclose(self.grid.max_pt, self.set.max_pt)[:, None]
+        on_bdry = np.hstack([left_on_bdry, right_on_bdry]).tolist()
+        self.__nodes_on_bdry = tuple(tuple(r) for r in on_bdry)
+
     @property
     def cell_boundary_vecs(self):
         """Return the cell boundaries as coordinate vectors.
 
         Examples
         --------
-        >>> rect = IntervalProd([0, -1], [1, 2])
-        >>> grid = TensorGrid([0, 1], [-1, 0, 2])
-        >>> part = RectPartition(rect, grid)
+        >>> rect = odl.IntervalProd([0, -1], [1, 2])
+        >>> grid = odl.TensorGrid([0, 1], [-1, 0, 2])
+        >>> part = odl.RectPartition(rect, grid)
         >>> part.cell_boundary_vecs
         (array([ 0. ,  0.5,  1. ]), array([-1. , -0.5,  1. ,  2. ]))
         """
@@ -118,6 +125,58 @@ class RectPartition(object):
     def set(self):
         """Partitioned set, an `IntervalProd`."""
         return self.__set
+
+    @property
+    def nodes_on_bdry(self):
+        """Encoding of grid points lying on the boundary.
+
+        Examples
+        --------
+        Using global option (default ``False``):
+
+        >>> part = odl.nonuniform_partition([0, 2, 3], [1, 3])
+        >>> part.nodes_on_bdry
+        False
+        >>> part = odl.nonuniform_partition([0, 2, 3], [1, 3],
+        ...                                 nodes_on_bdry=True)
+        >>> part.nodes_on_bdry
+        True
+
+        ``False`` in axis 0, ``True`` in axis 1:
+
+        >>> part = odl.nonuniform_partition([0, 2, 3], [1, 3],
+        ...                                 nodes_on_bdry=[False, True])
+        >>> part.nodes_on_bdry
+        (False, True)
+
+        In axis 0, ``False`` left and ``True`` right, in axis 1 ``False``:
+
+        >>> part = odl.nonuniform_partition([0, 2, 3], [1, 3],
+        ...                                 nodes_on_bdry=[[False, True],
+        ...                                                False])
+        >>> part.nodes_on_bdry
+        ((False, True), False)
+        """
+        nodes_on_bdry = []
+        for on_bdry in self.nodes_on_bdry_by_axis:
+            l, r = on_bdry
+            if l == r:
+                nodes_on_bdry.append(l)
+            else:
+                nodes_on_bdry.append((l, r))
+        if all(on_bdry == nodes_on_bdry[0] for on_bdry in nodes_on_bdry[1:]):
+            return nodes_on_bdry[0]
+        else:
+            return tuple(nodes_on_bdry)
+
+    @property
+    def nodes_on_bdry_by_axis(self):
+        """Nested tuple of booleans for `nodes_on_bdry`.
+
+        This attribute is equivalent to `nodes_on_bdry`, but always in
+        the form of a nested tuple.
+        """
+        return self.__nodes_on_bdry
 
     # IntervalProd related pass-through methods and derived properties
     # min, max and extent are for duck-typing purposes
@@ -191,7 +250,9 @@ class RectPartition(object):
 
         Examples
         --------
-        >>> partition = uniform_partition([0, 0, 0], [1, 1, 1], [2, 3, 4])
+        >>> partition = odl.uniform_partition([0, 0, 0],
+        ...                                   [1, 1, 1],
+        ...                                   shape=(2, 3, 4))
         >>> len(partition)
         2
 
@@ -254,9 +315,9 @@ class RectPartition(object):
         are 0.5 and 1, and in the second axis, [-2, 2] contains the
         fractions 1.5 and 0.5.
 
-        >>> rect = IntervalProd([0, -2], [1.5, 2])
-        >>> grid = TensorGrid([0, 1], [-1, 0, 2])
-        >>> part = RectPartition(rect, grid)
+        >>> rect = odl.IntervalProd([0, -2], [1.5, 2])
+        >>> grid = odl.TensorGrid([0, 1], [-1, 0, 2])
+        >>> part = odl.RectPartition(rect, grid)
         >>> part.boundary_cell_fractions
         ((0.5, 1.0), (1.5, 0.5))
         """
@@ -293,9 +354,9 @@ class RectPartition(object):
         [0, 0.5, 1] x [-1, -0.5, 1, 2], hence the cell size vectors
         are [0.5, 0.5] x [0.5, 1.5, 1]:
 
-        >>> rect = IntervalProd([0, -1], [1, 2])
-        >>> grid = TensorGrid([0, 1], [-1, 0, 2])
-        >>> part = RectPartition(rect, grid)
+        >>> rect = odl.IntervalProd([0, -1], [1, 2])
+        >>> grid = odl.TensorGrid([0, 1], [-1, 0, 2])
+        >>> part = odl.RectPartition(rect, grid)
         >>> part.cell_boundary_vecs
         (array([ 0. ,  0.5,  1. ]), array([-1. , -0.5,  1. ,  2. ]))
         >>> part.cell_sizes_vecs
@@ -327,9 +388,9 @@ class RectPartition(object):
         means that the grid points are [0, 0.5, 1] x [-1, 0.5, 2],
         i.e. the inner cell has side lengths 0.5 x 1.5:
 
-        >>> rect = IntervalProd([0, -1], [1, 2])
-        >>> grid = RegularGrid([0, -1], [1, 2], (3, 3))
-        >>> part = RectPartition(rect, grid)
+        >>> rect = odl.IntervalProd([0, -1], [1, 2])
+        >>> grid = odl.RegularGrid([0, -1], [1, 2], (3, 3))
+        >>> part = odl.RectPartition(rect, grid)
         >>> part.cell_sides
         array([ 0.5,  1.5])
         """
@@ -355,9 +416,9 @@ class RectPartition(object):
         means that the grid points are [0, 0.5, 1] x [-1, 0.5, 2],
         i.e. the inner cell has side lengths 0.5 x 1.5:
 
-        >>> rect = IntervalProd([0, -1], [1, 2])
-        >>> grid = RegularGrid([0, -1], [1, 2], (3, 3))
-        >>> part = RectPartition(rect, grid)
+        >>> rect = odl.IntervalProd([0, -1], [1, 2])
+        >>> grid = odl.RegularGrid([0, -1], [1, 2], (3, 3))
+        >>> part = odl.RectPartition(rect, grid)
         >>> part.cell_sides
         array([ 0.5,  1.5])
         >>> part.cell_volume
@@ -407,37 +468,52 @@ class RectPartition(object):
 
         Examples
         --------
-        >>> intvp = IntervalProd([-1, 1, 4, 2], [3, 6, 5, 7])
-        >>> grid = TensorGrid([-1, 0, 3], [2, 4], [5], [2, 4, 7])
-        >>> part = RectPartition(intvp, grid)
-        >>> part.cell_boundary_vecs
-        (array([-1. , -0.5,  1.5,  3. ]),
-         array([ 1.,  3.,  6.]),
-         array([ 4.,  5.]),
-         array([ 2. ,  3. ,  5.5,  7. ]))
+        >>> intvp = odl.IntervalProd([-1, 1, 4, 2], [3, 6, 5, 7])
+        >>> grid = odl.TensorGrid([-1, 0, 3], [2, 4], [5], [2, 4, 7])
+        >>> part = odl.RectPartition(intvp, grid)
+        >>> part
+        nonuniform_partition(
+            [-1.0, 0.0, 3.0],
+            [2.0, 4.0],
+            [5.0],
+            [2.0, 4.0, 7.0],
+            min_pt=[-1.0, 1.0, 4.0, 2.0], max_pt=[3.0, 6.0, 5.0, 7.0]
+        )
 
         Indexing picks out sub-intervals (compare with the boundary
         vectors):
 
         >>> part[0, 0, 0, 0]
-        RectPartition(
-            IntervalProd([-1.0, 1.0, 4.0, 2.0], [-0.5, 3.0, 5.0, 3.0]),
-            TensorGrid([-1.0], [2.0], [5.0], [2.0]))
+        nonuniform_partition(
+            [-1.0],
+            [2.0],
+            [5.0],
+            [2.0],
+            min_pt=[-1.0, 1.0, 4.0, 2.0], max_pt=[-0.5, 3.0, 5.0, 3.0]
+        )
 
         Taking an advanced slice (every second along the first axis,
         the last in the last axis and everything in between):
 
         >>> part[::2, ..., -1]
-        RectPartition(
-            IntervalProd([-1.0, 1.0, 4.0, 5.5], [3.0, 6.0, 5.0, 7.0]),
-            TensorGrid([-1.0, 3.0], [2.0, 4.0], [5.0], [7.0]))
+        nonuniform_partition(
+            [-1.0, 3.0],
+            [2.0, 4.0],
+            [5.0],
+            [7.0],
+            min_pt=[-1.0, 1.0, 4.0, 5.5], max_pt=[3.0, 6.0, 5.0, 7.0]
+        )
 
         Too few indices are filled up with an ellipsis from the right:
 
         >>> part[1]
-        RectPartition(
-            IntervalProd([-0.5, 1.0, 4.0, 2.0], [1.5, 6.0, 5.0, 7.0]),
-            TensorGrid([0.0], [2.0, 4.0], [5.0], [2.0, 4.0, 7.0]))
+        nonuniform_partition(
+            [0.0],
+            [2.0, 4.0],
+            [5.0],
+            [2.0, 4.0, 7.0],
+            min_pt=[-0.5, 1.0, 4.0, 2.0], max_pt=[1.5, 6.0, 5.0, 7.0]
+        )
 
         Colons etc work as expected:
 
@@ -495,10 +571,10 @@ class RectPartition(object):
 
         Examples
         --------
-        >>> part1 = uniform_partition([0, -1], [1, 2], (3, 3))
-        >>> part2 = uniform_partition(0, 1, 5)
+        >>> part1 = odl.uniform_partition([0, -1], [1, 2], (3, 3))
+        >>> part2 = odl.uniform_partition(0, 1, 5)
         >>> part1.insert(1, part2)
-        uniform_partition([0.0, 0.0, -1.0], [1.0, 1.0, 2.0], [3, 5, 3])
+        uniform_partition([0.0, 0.0, -1.0], [1.0, 1.0, 2.0], (3, 5, 3))
 
         See Also
         --------
@@ -518,10 +594,10 @@ class RectPartition(object):
 
         Examples
         --------
-        >>> part1 = uniform_partition([0, -1], [1, 2], (3, 3))
-        >>> part2 = uniform_partition(0, 1, 5)
+        >>> part1 = odl.uniform_partition([0, -1], [1, 2], (3, 3))
+        >>> part2 = odl.uniform_partition(0, 1, 5)
         >>> part1.append(part2)
-        uniform_partition([0.0, -1.0, 0.0], [1.0, 2.0, 1.0], [3, 3, 5])
+        uniform_partition([0.0, -1.0, 0.0], [1.0, 2.0, 1.0], (3, 3, 5))
 
         See Also
         --------
@@ -539,7 +615,7 @@ class RectPartition(object):
 
         Examples
         --------
-        >>> p = uniform_partition([0, -1], [1, 2], (3, 1))
+        >>> p = odl.uniform_partition([0, -1], [1, 2], (3, 1))
         >>> p.squeeze()
         uniform_partition(0.0, 1.0, 3)
 
@@ -583,7 +659,7 @@ class RectPartition(object):
         --------
         Get the indices of start and end:
 
-        >>> p = uniform_partition(0, 2, 5)
+        >>> p = odl.uniform_partition(0, 2, 5)
         >>> p.index(0)
         0
         >>> p.index(2)
@@ -612,7 +688,7 @@ class RectPartition(object):
         >>> p.index([0.5, 2])
         (2, 0)
         >>> p[p.index([0.5, 2])]
-        uniform_partition([0.5, -1.0], [0.75, 2.0], [1, 1])
+        uniform_partition([0.5, -1.0], [0.75, 2.0], (1, 1))
         """
         value = np.atleast_1d(self.set.element(value))
         result = []
@@ -648,7 +724,7 @@ class RectPartition(object):
         --------
         Access the subpartition along each axis:
 
-        >>> p = uniform_partition([0, 1, 2], [1, 3, 5], [3, 5, 6])
+        >>> p = odl.uniform_partition([0, 1, 2], [1, 3, 5], (3, 5, 6))
         >>> p.byaxis[0]
         uniform_partition(0.0, 1.0, 3)
         >>> p.byaxis[1]
@@ -661,9 +737,9 @@ class RectPartition(object):
         >>> p.byaxis[:] == p
         True
         >>> p.byaxis[1:]
-        uniform_partition([1.0, 2.0], [3.0, 5.0], [5, 6])
+        uniform_partition([1.0, 2.0], [3.0, 5.0], (5, 6))
         >>> p.byaxis[[0, 2]]
-        uniform_partition([0.0, 2.0], [1.0, 5.0], [3, 6])
+        uniform_partition([0.0, 2.0], [1.0, 5.0], (3, 6))
         """
         partition = self
 
@@ -686,7 +762,7 @@ class RectPartition(object):
 
                 Examples
                 --------
-                >>> p = uniform_partition(0, 1, 5)
+                >>> p = odl.uniform_partition(0, 1, 5)
                 >>> p.byaxis
                 uniform_partition(0, 1, 5).byaxis
                 """
@@ -700,20 +776,63 @@ class RectPartition(object):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        if uniform_partition_fromintv(self.set, self.shape) == self:
+        bdry_fracs = np.vstack(self.boundary_cell_fractions)
+        default_bdry_fracs = np.all(np.isclose(bdry_fracs, 0.5) |
+                                    np.isclose(bdry_fracs, 1.0))
 
+        # Get default shifts of min_pt and max_pt from corresponding
+        # grid points
+        csizes_l = np.fromiter((s[0] for s in self.cell_sizes_vecs),
+                               dtype=float)
+        csizes_r = np.fromiter((s[-1] for s in self.cell_sizes_vecs),
+                               dtype=float)
+        shift_l = ((bdry_fracs[:, 0].astype(float).squeeze() - 0.5) *
+                   csizes_l)
+        shift_r = ((bdry_fracs[:, 1].astype(float).squeeze() - 0.5) *
+                   csizes_r)
+
+        if self.is_uniform and default_bdry_fracs:
+            constructor = 'uniform_partition'
             if self.ndim == 1:
-                inner_str = '{}, {}, {}'.format(float(self.set.min_pt),
-                                                float(self.set.max_pt),
-                                                self.size)
+                posargs = [self.min_pt[0], self.max_pt[0], self.shape[0]]
             else:
-                inner_str = '{}, {}, {}'.format(list(self.set.min_pt),
-                                                list(self.set.max_pt),
-                                                list(self.shape))
-            return 'uniform_partition({})'.format(inner_str)
+                posargs = [list(self.min_pt), list(self.max_pt), self.shape]
+
+            optargs = [('nodes_on_bdry', self.nodes_on_bdry, False)]
+
+            sig_str = signature_string(posargs, optargs)
+            return '{}({})'.format(constructor, sig_str)
         else:
-            inner_str = '\n    {!r},\n    {!r}'.format(self.set, self.grid)
-            return '{}({})'.format(self.__class__.__name__, inner_str)
+            constructor = 'nonuniform_partition'
+            posargs = [list(v) for v in self.coord_vectors]
+
+            optargs = []
+            # Defaults with and without nodes_on_bdry option
+            nodes_def_min_pt = self.grid.min_pt - shift_l
+            nodes_def_max_pt = self.grid.max_pt + shift_r
+            def_min_pt = self.grid.min_pt - 0.5 * csizes_l
+            def_max_pt = self.grid.max_pt + 0.5 * csizes_r
+
+            # Since min/max_pt and nodes_on_bdry are mutex, we need a
+            # couple of cases here
+            if (np.allclose(self.min_pt, nodes_def_min_pt) and
+                    np.allclose(self.max_pt, nodes_def_max_pt)):
+                # Append nodes_on_bdry to list of optional args
+                optargs.append(('nodes_on_bdry', self.nodes_on_bdry, False))
+            else:
+                # Append min/max_pt to list of optional args if not
+                # default (need check here because array comparison is
+                # ambiguous)
+                if not np.allclose(self.min_pt, def_min_pt):
+                    p = self.min_pt[0] if self.ndim == 1 else list(self.min_pt)
+                    optargs.append((('min_pt', p, None)))
+                if not np.allclose(self.max_pt, def_max_pt):
+                    p = self.max_pt[0] if self.ndim == 1 else list(self.max_pt)
+                    optargs.append((('max_pt', p, None)))
+
+            sig_str = signature_string(posargs, optargs,
+                                       sep=[',\n', ', ', ',\n'])
+            return '{}(\n{}\n)'.format(constructor, indent_rows(sig_str))
 
 
 def uniform_partition_fromintv(intv_prod, shape, nodes_on_bdry=False):
@@ -746,8 +865,8 @@ def uniform_partition_fromintv(intv_prod, shape, nodes_on_bdry=False):
     --------
     By default, no grid points are placed on the boundary:
 
-    >>> interval = IntervalProd(0, 1)
-    >>> part = uniform_partition_fromintv(interval, 4)
+    >>> interval = odl.IntervalProd(0, 1)
+    >>> part = odl.uniform_partition_fromintv(interval, 4)
     >>> part.cell_boundary_vecs
     (array([ 0.  ,  0.25,  0.5 ,  0.75,  1.  ]),)
     >>> part.grid.coord_vectors
@@ -755,7 +874,8 @@ def uniform_partition_fromintv(intv_prod, shape, nodes_on_bdry=False):
 
     This can be changed with the nodes_on_bdry parameter:
 
-    >>> part = uniform_partition_fromintv(interval, 3, nodes_on_bdry=True)
+    >>> part = odl.uniform_partition_fromintv(interval, 3,
+    ...                                       nodes_on_bdry=True)
     >>> part.cell_boundary_vecs
     (array([ 0.  ,  0.25,  0.75,  1.  ]),)
     >>> part.grid.coord_vectors
@@ -764,8 +884,8 @@ def uniform_partition_fromintv(intv_prod, shape, nodes_on_bdry=False):
     We can specify this per axis, too. In this case we choose both
     in the first axis and only the rightmost in the second:
 
-    >>> rect = IntervalProd([0, 0], [1, 1])
-    >>> part = uniform_partition_fromintv(
+    >>> rect = odl.IntervalProd([0, 0], [1, 1])
+    >>> part = odl.uniform_partition_fromintv(
     ...     rect, (3, 3), nodes_on_bdry=(True, (False, True)))
     ...
     >>> part.cell_boundary_vecs[0]  # first axis, as above
@@ -826,24 +946,25 @@ def uniform_partition_fromgrid(grid, min_pt=None, max_pt=None):
     Have ``min_pt`` and ``max_pt`` of the bounding box automatically
     calculated:
 
-    >>> grid = RegularGrid(0, 1, 3)
+    >>> grid = odl.RegularGrid(0, 1, 3)
     >>> grid.coord_vectors
     (array([ 0. ,  0.5,  1. ]),)
-    >>> part = uniform_partition_fromgrid(grid)
+    >>> part = odl.uniform_partition_fromgrid(grid)
     >>> part.cell_boundary_vecs
     (array([-0.25,  0.25,  0.75,  1.25]),)
 
     ``min_pt`` and ``max_pt`` can be given explicitly:
 
-    >>> part = uniform_partition_fromgrid(grid, min_pt=0, max_pt=1)
+    >>> part = odl.uniform_partition_fromgrid(grid, min_pt=0, max_pt=1)
     >>> part.cell_boundary_vecs
     (array([ 0.  ,  0.25,  0.75,  1.  ]),)
 
     Using dictionaries, selective axes can be explicitly set. The
     keys refer to axes, the values to the coordinates to use:
 
-    >>> grid = RegularGrid([0, 0], [1, 1], (3, 3))
-    >>> part = uniform_partition_fromgrid(grid, min_pt={0: -1}, max_pt={-1: 3})
+    >>> grid = odl.RegularGrid([0, 0], [1, 1], (3, 3))
+    >>> part = odl.uniform_partition_fromgrid(grid,
+    ...                                       min_pt={0: -1}, max_pt={-1: 3})
     >>> part.cell_boundary_vecs[0]
     array([-1.  ,  0.25,  0.75,  1.25])
     >>> part.cell_boundary_vecs[1]
@@ -938,37 +1059,40 @@ def uniform_partition(min_pt=None, max_pt=None, shape=None, cell_sides=None,
     Any combination of three of the four parameters can be used for
     creation of a partition:
 
-    >>> part = uniform_partition(min_pt=0, max_pt=2, shape=4)
+    >>> part = odl.uniform_partition(min_pt=0, max_pt=2, shape=4)
     >>> part.cell_boundary_vecs
     (array([ 0. ,  0.5,  1. ,  1.5,  2. ]),)
-    >>> part = uniform_partition(min_pt=0, shape=4, cell_sides=0.5)
+    >>> part = odl.uniform_partition(min_pt=0, shape=4, cell_sides=0.5)
     >>> part.cell_boundary_vecs
     (array([ 0. ,  0.5,  1. ,  1.5,  2. ]),)
-    >>> part = uniform_partition(max_pt=2, shape=4, cell_sides=0.5)
+    >>> part = odl.uniform_partition(max_pt=2, shape=4, cell_sides=0.5)
     >>> part.cell_boundary_vecs
     (array([ 0. ,  0.5,  1. ,  1.5,  2. ]),)
-    >>> part = uniform_partition(min_pt=0, max_pt=2, cell_sides=0.5)
+    >>> part = odl.uniform_partition(min_pt=0, max_pt=2, cell_sides=0.5)
     >>> part.cell_boundary_vecs
     (array([ 0. ,  0.5,  1. ,  1.5,  2. ]),)
 
     In higher dimensions, the parameters can be given differently in
     each axis. Where ``None`` is given, the value will be computed:
 
-    >>> part = uniform_partition(min_pt=[0, 0], max_pt=[1, 2], shape=[4, 2])
+    >>> part = odl.uniform_partition(min_pt=[0, 0], max_pt=[1, 2],
+    ...                              shape=[4, 2])
     >>> part.cell_boundary_vecs
     (array([ 0.  ,  0.25,  0.5 ,  0.75,  1.  ]), array([ 0.,  1.,  2.]))
-    >>> part = uniform_partition(min_pt=[0, 0], max_pt=[1, 2],
-    ...                          shape=[None, 2], cell_sides=[0.25, None])
+    >>> part = odl.uniform_partition(min_pt=[0, 0], max_pt=[1, 2],
+    ...                              shape=[None, 2], cell_sides=[0.25, None])
     >>> part.cell_boundary_vecs
     (array([ 0.  ,  0.25,  0.5 ,  0.75,  1.  ]), array([ 0.,  1.,  2.]))
-    >>> part = uniform_partition(min_pt=[0, None], max_pt=[None, 2],
-    ...                          shape=[4, 2], cell_sides=[0.25, 1])
+    >>> part = odl.uniform_partition(min_pt=[0, None], max_pt=[None, 2],
+    ...                              shape=[4, 2], cell_sides=[0.25, 1])
     >>> part.cell_boundary_vecs
     (array([ 0.  ,  0.25,  0.5 ,  0.75,  1.  ]), array([ 0.,  1.,  2.]))
 
     By default, no grid points are placed on the boundary:
 
-    >>> part = uniform_partition(0, 1, 4)
+    >>> part = odl.uniform_partition(0, 1, 4)
+    >>> part.nodes_on_bdry
+    False
     >>> part.cell_boundary_vecs
     (array([ 0.  ,  0.25,  0.5 ,  0.75,  1.  ]),)
     >>> part.grid.coord_vectors
@@ -976,7 +1100,9 @@ def uniform_partition(min_pt=None, max_pt=None, shape=None, cell_sides=None,
 
     This can be changed with the nodes_on_bdry parameter:
 
-    >>> part = uniform_partition(0, 1, 3, nodes_on_bdry=True)
+    >>> part = odl.uniform_partition(0, 1, 3, nodes_on_bdry=True)
+    >>> part.nodes_on_bdry
+    True
     >>> part.cell_boundary_vecs
     (array([ 0.  ,  0.25,  0.75,  1.  ]),)
     >>> part.grid.coord_vectors
@@ -985,8 +1111,8 @@ def uniform_partition(min_pt=None, max_pt=None, shape=None, cell_sides=None,
     We can specify this per axis, too. In this case we choose both
     in the first axis and only the rightmost in the second:
 
-    >>> part = uniform_partition([0, 0], [1, 1], (3, 3),
-    ...                          nodes_on_bdry=(True, (False, True)))
+    >>> part = odl.uniform_partition([0, 0], [1, 1], (3, 3),
+    ...                              nodes_on_bdry=(True, (False, True)))
     ...
     >>> part.cell_boundary_vecs[0]  # first axis, as above
     array([ 0.  ,  0.25,  0.75,  1.  ])
@@ -1085,6 +1211,8 @@ def nonuniform_partition(*coord_vecs, **kwargs):
         Cannot be given with both min_pt and max_pt since they determine the
         same thing.
 
+        Default: ``False``
+
     See Also
     --------
     uniform_partition : uniformly spaced points
@@ -1093,45 +1221,49 @@ def nonuniform_partition(*coord_vecs, **kwargs):
 
     Examples
     --------
-    With uniformly spaced points the result is the same as a uniform partition:
+    With uniformly spaced points the result is the same as a
+    uniform partition:
 
-    >>> nonuniform_partition([0, 1, 2, 3])
+    >>> odl.nonuniform_partition([0, 1, 2, 3])
     uniform_partition(-0.5, 3.5, 4)
-    >>> nonuniform_partition([0, 1, 2, 3], [1, 2])
-    uniform_partition([-0.5, 0.5], [3.5, 2.5], [4, 2])
+    >>> odl.nonuniform_partition([0, 1, 2, 3], [1, 2])
+    uniform_partition([-0.5, 0.5], [3.5, 2.5], (4, 2))
 
-    If the points are not uniformly spaced a nonuniform partition is created.
-    Note that the containing interval is calculated by assuming that the points
-    are in the middle of the sub-intervals:
+    If the points are not uniformly spaced, a nonuniform partition is
+    created. Note that the containing interval is calculated by assuming
+    that the points are in the middle of the sub-intervals:
 
-    >>> nonuniform_partition([0, 1, 3])
-    RectPartition(
-        IntervalProd(-0.5, 4.0),
-        TensorGrid([0.0, 1.0, 3.0]))
+    >>> odl.nonuniform_partition([0, 1, 3])
+    nonuniform_partition(
+        [0.0, 1.0, 3.0]
+    )
 
     Higher dimensional partitions are created by specifying the gridpoints
     along each dimension:
 
-    >>> nonuniform_partition([0, 1, 3], [1, 2])
-    RectPartition(
-        IntervalProd([-0.5, 0.5], [4.0, 2.5]),
-        TensorGrid([0.0, 1.0, 3.0], [1.0, 2.0]))
+    >>> odl.nonuniform_partition([0, 1, 3], [1, 2])
+    nonuniform_partition(
+        [0.0, 1.0, 3.0],
+        [1.0, 2.0]
+    )
 
     If the endpoints should be on the boundary, the ``nodes_on_bdry`` parameter
     can be used:
 
-    >>> nonuniform_partition([0, 1, 3], nodes_on_bdry=True)
-    RectPartition(
-        IntervalProd(0.0, 3.0),
-        TensorGrid([0.0, 1.0, 3.0]))
+    >>> odl.nonuniform_partition([0, 1, 3], nodes_on_bdry=True)
+    nonuniform_partition(
+        [0.0, 1.0, 3.0],
+        nodes_on_bdry=True
+    )
 
     Users can also manually specify the containing intervals dimensions by
     using the ``min_pt`` and ``max_pt`` arguments:
 
-    >>> nonuniform_partition([0, 1, 3], min_pt=-2, max_pt=3)
-    RectPartition(
-        IntervalProd(-2.0, 3.0),
-        TensorGrid([0.0, 1.0, 3.0]))
+    >>> odl.nonuniform_partition([0, 1, 3], min_pt=-2, max_pt=3)
+    nonuniform_partition(
+        [0.0, 1.0, 3.0],
+        min_pt=-2.0, max_pt=3.0
+    )
     """
     # Get parameters from kwargs
     min_pt = kwargs.pop('min_pt', None)
@@ -1172,7 +1304,16 @@ def nonuniform_partition(*coord_vecs, **kwargs):
                 max_pt[i] = coords[-1] + (coords[-1] - coords[-2]) / 2.0
 
     interval = IntervalProd(min_pt, max_pt)
-    grid = TensorGrid(*coord_vecs)
+
+    if all(np.allclose(np.diff(v), (v[1] - v[0])) for v in coord_vecs):
+        g_min_pt, g_max_pt, g_shape = [], [], []
+        for v in coord_vecs:
+            g_min_pt.append(v[0])
+            g_max_pt.append(v[-1])
+            g_shape.append(len(v))
+        grid = RegularGrid(g_min_pt, g_max_pt, g_shape)
+    else:
+        grid = TensorGrid(*coord_vecs)
     return RectPartition(interval, grid)
 
 
