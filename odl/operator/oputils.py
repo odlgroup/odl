@@ -27,7 +27,7 @@ import numpy as np
 
 from odl.space.base_ntuples import FnBase
 from odl.space import ProductSpace
-from odl.util.utility import as_flat_array
+from odl.util import as_flat_array
 
 __all__ = ('matrix_representation', 'power_method_opnorm', 'as_scipy_operator',
            'as_proximal_lang_operator')

@@ -31,8 +31,8 @@ from odl.set import LinearSpace, LinearSpaceElement
 from odl.space.weighting import (
     Weighting, ArrayWeighting, ConstWeighting, NoWeighting,
     CustomInnerProduct, CustomNorm, CustomDist)
+from odl.util import is_real_dtype
 from odl.util.ufuncs import ProductSpaceUfuncs
-from odl.util.utility import is_real_dtype
 
 
 __all__ = ('ProductSpace', 'ProductSpaceElement')

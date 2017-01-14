@@ -36,13 +36,11 @@ from odl.discr.partition import (
 from odl.set import RealNumbers, ComplexNumbers, IntervalProd
 from odl.space import FunctionSpace, ProductSpace, FN_IMPLS
 from odl.space.weighting import Weighting, NoWeighting, ConstWeighting
-from odl.util.normalize import (
+from odl.util import (
+    apply_on_boundary, is_real_dtype, is_complex_floating_dtype,
+    dtype_str, signature_string, indent_rows,
     normalized_scalar_param_list, safe_int_conv, normalized_nodes_on_bdry)
-from odl.util.numerics import apply_on_boundary
 from odl.util.ufuncs import DiscreteLpUfuncs
-from odl.util.utility import (
-    is_real_dtype, is_complex_floating_dtype,
-    dtype_str, signature_string, indent_rows)
 
 __all__ = ('DiscreteLp', 'DiscreteLpElement',
            'uniform_discr_frompartition', 'uniform_discr_fromspace',
@@ -471,9 +469,9 @@ class DiscreteLp(DiscretizedSpace):
             default_dtype_s = dtype_str(
                 self.dspace.default_dtype(RealNumbers()))
 
-            if isinstance(self.weighting, NoWeightingBase):
+            if isinstance(self.weighting, NoWeighting):
                 weighting = 'none'
-            elif (isinstance(self.weighting, ConstWeightingBase) and
+            elif (isinstance(self.weighting, ConstWeighting) and
                   np.isclose(self.weighting.const, self.cell_volume)):
                 weighting = 'const'
             else:

@@ -24,7 +24,6 @@ standard_library.install_aliases()
 import numpy as np
 import pytest
 
-# Internal
 from odl.util.normalize import (
     normalized_scalar_param_list, normalized_axes_tuple)
 

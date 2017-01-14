@@ -27,12 +27,11 @@ import numpy as np
 
 
 __all__ = ('array1d_repr', 'array1d_str', 'arraynd_repr', 'arraynd_str',
-           'dtype_repr', 'conj_exponent', 'signature_string', 'indent_rows',
+           'dtype_repr', 'dtype_str', 'signature_string', 'indent_rows',
            'is_scalar_dtype', 'is_int_dtype', 'is_floating_dtype',
            'is_real_dtype', 'is_real_floating_dtype',
-           'is_complex_floating_dtype',
-           'real_dtype', 'complex_dtype',
-           'as_flat_array', 'writable_array')
+           'is_complex_floating_dtype', 'real_dtype', 'complex_dtype',
+           'conj_exponent', 'as_flat_array', 'writable_array')
 
 TYPE_MAP_R2C = {np.dtype(dtype): np.result_type(dtype, 1j)
                 for dtype in np.sctypes['float']}

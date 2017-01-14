@@ -28,8 +28,8 @@ from abc import ABCMeta, abstractmethod
 from numbers import Integral, Real, Complex
 import numpy as np
 
-from odl.util.utility import (
-    is_int_dtype, is_real_dtype, is_scalar_dtype, with_metaclass)
+from odl.util import is_int_dtype, is_real_dtype, is_scalar_dtype
+from odl.util.utility import with_metaclass
 
 
 __all__ = ('Set', 'EmptySet', 'UniversalSet', 'Field', 'Integers',

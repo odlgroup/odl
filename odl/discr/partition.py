@@ -33,10 +33,10 @@ import numpy as np
 
 from odl.discr.grid import TensorGrid, RegularGrid, uniform_sampling_fromintv
 from odl.set import IntervalProd
-from odl.util.normalize import (
+from odl.util import (
     normalized_index_expression, normalized_nodes_on_bdry,
-    normalized_scalar_param_list, safe_int_conv)
-from odl.util.utility import signature_string, indent_rows
+    normalized_scalar_param_list, safe_int_conv,
+    signature_string, indent_rows)
 
 
 __all__ = ('RectPartition', 'uniform_partition_fromintv',

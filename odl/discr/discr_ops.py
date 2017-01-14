@@ -27,8 +27,9 @@ import numpy as np
 
 from odl.discr import DiscreteLp, uniform_discr
 from odl.operator import Operator
-from odl.util.normalize import normalized_scalar_param_list, safe_int_conv
-from odl.util.numerics import resize_array, _SUPPORTED_RESIZE_PAD_MODES
+from odl.util import (
+    normalized_scalar_param_list, safe_int_conv, resize_array)
+from odl.util.numerics import _SUPPORTED_RESIZE_PAD_MODES
 
 
 __all__ = ('Resampling', 'ResizingOperator')

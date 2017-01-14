@@ -27,8 +27,8 @@ import pytest
 
 # Internal
 from odl.discr.grid import sparse_meshgrid
+from odl.util import is_int_dtype
 from odl.util.testutils import all_equal
-from odl.util.utility import is_int_dtype
 from odl.util.vectorization import (
     is_valid_input_array, is_valid_input_meshgrid,
     out_shape_from_meshgrid, out_shape_from_array,

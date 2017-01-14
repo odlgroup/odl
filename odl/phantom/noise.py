@@ -23,7 +23,7 @@ from future import standard_library
 standard_library.install_aliases()
 
 import numpy as np
-from odl.util.utility import as_flat_array
+from odl.util import as_flat_array
 
 
 __all__ = ('white_noise', 'poisson_noise', 'salt_pepper_noise')
