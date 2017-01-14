@@ -89,9 +89,17 @@ class DiscreteLp(DiscretizedSpace):
             vice versa for 'F'.
             Default: 'C'
         axis_labels : sequence of str, optional
-            Names of the axes to use for plotting etc.
-            Default: ['x'] in 1-D, ['x', 'y'] in 2-D, ['x', 'y', 'z'] in 3-D
-            and ['x1', 'x2', ..., 'xn'] in n-D.
+            Names of the axes to use for plotting etc. Default:
+
+                1D: ``['$x$']``
+
+                2D: ``['$x$', '$y$']``
+
+                3D: ``['$x$', '$y$', '$z$']``
+
+                nD: ``['$x_1$', '$x_2$', ..., '$x_n$']``
+
+            Note: The ``$`` signs ensure rendering as LaTeX.
         """
         if not isinstance(fspace, FunctionSpace):
             raise TypeError('{!r} is not a FunctionSpace instance'
@@ -158,7 +166,7 @@ class DiscreteLp(DiscretizedSpace):
         axis_labels = kwargs.pop('axis_labels', None)
         if axis_labels is None:
             if self.ndim <= 3:
-                self.__axis_labels = tuple(['$x$', '$y$', '$z$'][:self.ndim])
+                self.__axis_labels = ('$x$', '$y$', '$z$')[:self.ndim]
             else:
                 self.__axis_labels = tuple('$x_{}$'.format(axis)
                                            for axis in range(self.ndim))
@@ -447,7 +455,7 @@ class DiscreteLp(DiscretizedSpace):
             use_uniform = False
 
         if self.ndim <= 3:
-            default_ax_lbl = tuple(['$x$', '$y$', '$z$'][:self.ndim])
+            default_ax_lbl = ('$x$', '$y$', '$z$')[:self.ndim]
         else:
             default_ax_lbl = tuple('$x_{}$'.format(i)
                                    for i in range(self.ndim))
