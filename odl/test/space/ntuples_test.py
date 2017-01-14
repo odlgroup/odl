@@ -1712,7 +1712,7 @@ def test_ufuncs(fn, ufunc):
 
     # Out-of-place:
     np_result = npufunc(*in_arrays)
-    vec_fun = getattr(data_vector.ufunc, name)
+    vec_fun = getattr(data_vector.ufuncs, name)
     odl_result = vec_fun(*in_vectors)
     assert all_almost_equal(np_result, odl_result)
 
@@ -1725,7 +1725,7 @@ def test_ufuncs(fn, ufunc):
 
     # In-place:
     np_result = npufunc(*(in_arrays + out_arrays))
-    vec_fun = getattr(data_vector.ufunc, name)
+    vec_fun = getattr(data_vector.ufuncs, name)
     odl_result = vec_fun(*(in_vectors + out_vectors))
     assert all_almost_equal(np_result, odl_result)
 
@@ -1745,7 +1745,7 @@ def test_reduction(fn, reduction):
     # Create some data
     x_arr, x = noise_elements(fn, 1)
 
-    assert ufunc(x_arr) == getattr(x.ufunc, name)()
+    assert ufunc(x_arr) == getattr(x.ufuncs, name)()
 
 
 def test_ufunc_reduction_docs_notempty():

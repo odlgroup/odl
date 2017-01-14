@@ -31,7 +31,7 @@ from odl.set import LinearSpace, LinearSpaceElement
 from odl.space.weighting import (
     WeightingBase, VectorWeightingBase, ConstWeightingBase, NoWeightingBase,
     CustomInnerProductBase, CustomNormBase, CustomDistBase)
-from odl.util.ufuncs import ProductSpaceUFuncs
+from odl.util.ufuncs import ProductSpaceUfuncs
 from odl.util.utility import is_real_dtype
 
 
@@ -689,8 +689,8 @@ class ProductSpaceElement(LinearSpaceElement):
                     p[:] = v
 
     @property
-    def ufunc(self):
-        """`ProductSpaceUFuncs`, access to Numpy style ufuncs.
+    def ufuncs(self):
+        """`ProductSpaceUfuncs`, access to Numpy style ufuncs.
 
         These are always available if the underlying spaces are
         `NtuplesBase`.
@@ -699,7 +699,7 @@ class ProductSpaceElement(LinearSpaceElement):
         --------
         >>> r22 = odl.ProductSpace(odl.rn(2), 2)
         >>> x = r22.element([[1, -2], [-3, 4]])
-        >>> x.ufunc.absolute()
+        >>> x.ufuncs.absolute()
         ProductSpace(rn(2), 2).element([
             [1.0, 2.0],
             [3.0, 4.0]
@@ -708,12 +708,12 @@ class ProductSpaceElement(LinearSpaceElement):
         These functions can also be used with non-vector arguments and
         support broadcasting, per component and even recursively:
 
-        >>> x.ufunc.add([1, 2])
+        >>> x.ufuncs.add([1, 2])
         ProductSpace(rn(2), 2).element([
             [2.0, 0.0],
             [-2.0, 6.0]
         ])
-        >>> x.ufunc.subtract(1)
+        >>> x.ufuncs.subtract(1)
         ProductSpace(rn(2), 2).element([
             [0.0, -3.0],
             [-4.0, 3.0]
@@ -721,13 +721,13 @@ class ProductSpaceElement(LinearSpaceElement):
 
         There is also support for various reductions (sum, prod, min, max):
 
-        >>> x.ufunc.sum()
+        >>> x.ufuncs.sum()
         0.0
 
         Writing to ``out`` is also supported:
 
         >>> y = r22.element()
-        >>> result = x.ufunc.absolute(out=y)
+        >>> result = x.ufuncs.absolute(out=y)
         >>> result
         ProductSpace(rn(2), 2).element([
             [1.0, 2.0],
@@ -738,13 +738,13 @@ class ProductSpaceElement(LinearSpaceElement):
 
         See Also
         --------
-        odl.util.ufuncs.NtuplesBaseUFuncs
+        odl.util.ufuncs.NtuplesBaseUfuncs
             Base class for ufuncs in `NtuplesBase` spaces, subspaces may
             override this for greater efficiency.
-        odl.util.ufuncs.ProductSpaceUFuncs
+        odl.util.ufuncs.ProductSpaceUfuncs
             For a list of available ufuncs.
         """
-        return ProductSpaceUFuncs(self)
+        return ProductSpaceUfuncs(self)
 
     def __str__(self):
         """Return ``str(self)``."""

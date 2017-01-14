@@ -175,7 +175,7 @@ def ufunc_class_factory(name, nargin, nargout, docstring):
             raise TypeError('`space` {!r} not a `LinearSpace`'.format(space))
 
         if _is_integer_only_ufunc(name) and not is_int_dtype(space.dtype):
-            raise ValueError("UFunc '{}' only defined with integral dtype"
+            raise ValueError("ufunc '{}' only defined with integral dtype"
                              "".format(name))
 
         if nargin == 1:
@@ -195,14 +195,14 @@ def ufunc_class_factory(name, nargin, nargout, docstring):
         """Return ``self(x)``."""
         if out is None:
             if nargin == 1:
-                return getattr(x.ufunc, name)()
+                return getattr(x.ufuncs, name)()
             else:
-                return getattr(x[0].ufunc, name)(*x[1:])
+                return getattr(x[0].ufuncs, name)(*x[1:])
         else:
             if nargin == 1:
-                return getattr(x.ufunc, name)(out=out)
+                return getattr(x.ufuncs, name)(out=out)
             else:
-                return getattr(x[0].ufunc, name)(*x[1:], out=out)
+                return getattr(x[0].ufuncs, name)(*x[1:], out=out)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -219,13 +219,13 @@ def ufunc_class_factory(name, nargin, nargout, docstring):
         vec = space.element([-1, 1, 2])
         arg = '{}'.format(vec)
         with np.errstate(all='ignore'):
-            result = getattr(vec.ufunc, name)()
+            result = getattr(vec.ufuncs, name)()
     else:
         vec = space.element([-1, 1, 2])
         vec2 = space.element([3, 4, 5])
         arg = '[{}, {}]'.format(vec, vec2)
         with np.errstate(all='ignore'):
-            result = getattr(vec.ufunc, name)(vec2)
+            result = getattr(vec.ufuncs, name)(vec2)
 
     if nargout == 2:
         result = '{{{}, {}}}'.format(result[0], result[1])
@@ -246,7 +246,7 @@ def ufunc_class_factory(name, nargin, nargout, docstring):
 
 
 def ufunc_functional_factory(name, nargin, nargout, docstring):
-    """Create a UFunc `Functional` from a given specification."""
+    """Create a ufunc `Functional` from a given specification."""
 
     assert 0 <= nargin <= 2
 
@@ -262,7 +262,7 @@ def ufunc_functional_factory(name, nargin, nargout, docstring):
             raise TypeError('`field` {!r} not a `Field`'.format(space))
 
         if _is_integer_only_ufunc(name):
-            raise ValueError("UFunc '{}' only defined with integral dtype"
+            raise ValueError("ufunc '{}' only defined with integral dtype"
                              "".format(name))
 
         linear = name in LINEAR_UFUNCS
@@ -347,7 +347,7 @@ for name, nargin, nargout, docstring in UFUNCS:
                 else:
                     return globals()[name + '_op'](domain)
             except KeyError:
-                raise ValueError('UFunc not available for {}'.format(domain))
+                raise ValueError('ufunc not available for {}'.format(domain))
         return ufunc_factory
 
     globals()[name + '_op'] = ufunc_class_factory(name, nargin,

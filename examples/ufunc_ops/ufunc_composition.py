@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Examples of using the UFunc (Universal Function) functionals in ODL.
+"""Examples of using the ufunc (Universal Function) functionals in ODL.
 
 Here we demonstrate how the functionals can be composed with other operators
 and functionals in order to achieve more complicated functions.

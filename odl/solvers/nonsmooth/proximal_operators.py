@@ -544,12 +544,12 @@ def proximal_box_constraint(space, lower=None, upper=None):
             """Apply the operator to ``x`` and store the result in ``out``."""
 
             if lower is not None and upper is None:
-                x.ufunc.maximum(lower, out=out)
+                x.ufuncs.maximum(lower, out=out)
             elif lower is None and upper is not None:
-                x.ufunc.minimum(upper, out=out)
+                x.ufuncs.minimum(upper, out=out)
             elif lower is not None and upper is not None:
-                x.ufunc.maximum(lower, out=out)
-                out.ufunc.minimum(upper, out=out)
+                x.ufuncs.maximum(lower, out=out)
+                out.ufuncs.minimum(upper, out=out)
             else:
                 out.assign(x)
 
@@ -1027,10 +1027,10 @@ def proximal_cconj_l1(space, lam=1, g=None, isotropic=False):
                 for x_i in diff[1:]:
                     x_i.multiply(x_i, out=sq_tmp)
                     tmp += sq_tmp
-                tmp.ufunc.sqrt(out=tmp)
+                tmp.ufuncs.sqrt(out=tmp)
 
                 # Pointwise maximum of |x| and lambda
-                tmp.ufunc.maximum(lam, out=tmp)
+                tmp.ufuncs.maximum(lam, out=tmp)
 
                 # Global scaling
                 tmp /= lam
@@ -1041,10 +1041,10 @@ def proximal_cconj_l1(space, lam=1, g=None, isotropic=False):
 
             else:
                 # Calculate |x| = pointwise 2-norm of x
-                diff.ufunc.absolute(out=out)
+                diff.ufuncs.absolute(out=out)
 
                 # Pointwise maximum of |x| and lambda
-                out.ufunc.maximum(lam, out=out)
+                out.ufuncs.maximum(lam, out=out)
 
                 # Global scaling
                 out /= lam
@@ -1238,7 +1238,7 @@ def proximal_cconj_kl(space, lam=1, g=None):
             out -= lam
 
             # (out)^2
-            out.ufunc.square(out=out)
+            out.ufuncs.square(out=out)
 
             # out = out + 4 lam sigma g
             # If g is None, it is taken as the one element
@@ -1248,7 +1248,7 @@ def proximal_cconj_kl(space, lam=1, g=None):
                 out.lincomb(1, out, 4.0 * lam * self.sigma, g)
 
             # out = sqrt(out)
-            out.ufunc.sqrt(out=out)
+            out.ufuncs.sqrt(out=out)
 
             # out = x - out
             out.lincomb(1, x, -1, out)

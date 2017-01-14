@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Examples of using the UFunc functionals in ODL in optimization.
+"""Examples of using the ufunc functionals in ODL in optimization.
 
 Here, we minimize the logarithm of the rosenbrock function:
 

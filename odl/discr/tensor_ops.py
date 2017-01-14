@@ -255,7 +255,7 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
 
     def _call_vecfield_1(self, vf, out):
         """Implement ``self(vf, out)`` for exponent 1."""
-        vf[0].ufunc.absolute(out=out)
+        vf[0].ufuncs.absolute(out=out)
         if self.is_weighted:
             out *= self.weights[0]
 
@@ -264,14 +264,14 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
 
         tmp = self.range.element()
         for fi, wi in zip(vf[1:], self.weights[1:]):
-            fi.ufunc.absolute(out=tmp)
+            fi.ufuncs.absolute(out=tmp)
             if self.is_weighted:
                 tmp *= wi
             out += tmp
 
     def _call_vecfield_inf(self, vf, out):
         """Implement ``self(vf, out)`` for exponent ``inf``."""
-        vf[0].ufunc.absolute(out=out)
+        vf[0].ufuncs.absolute(out=out)
         if self.is_weighted:
             out *= self.weights[0]
 
@@ -280,16 +280,16 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
 
         tmp = self.range.element()
         for vfi, wi in zip(vf[1:], self.weights[1:]):
-            vfi.ufunc.absolute(out=tmp)
+            vfi.ufuncs.absolute(out=tmp)
             if self.is_weighted:
                 tmp *= wi
-            out.ufunc.maximum(tmp, out=out)
+            out.ufuncs.maximum(tmp, out=out)
 
     def _call_vecfield_p(self, vf, out):
         """Implement ``self(vf, out)`` for exponent 1 < p < ``inf``."""
         # Optimization for 1 component - just absolute value (maybe weighted)
         if self.domain.size == 1:
-            vf[0].ufunc.absolute(out=out)
+            vf[0].ufuncs.absolute(out=out)
             if self.is_weighted:
                 out *= self.weights[0] ** (1 / self.exponent)
             return
@@ -306,7 +306,7 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
                 tmp *= wi
             out += tmp
 
-        out.ufunc.power(1 / self.exponent, out=out)
+        out.ufuncs.power(1 / self.exponent, out=out)
 
     def _abs_pow_ufunc(self, fi, out):
         """Compute |F_i(x)|^p point-wise and write to ``out``."""
@@ -314,8 +314,8 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
         if self.exponent == 2.0 and self.base_space.field == RealNumbers():
             fi.multiply(fi, out=out)
         else:
-            fi.ufunc.absolute(out=out)
-            out.ufunc.power(self.exponent, out=out)
+            fi.ufuncs.absolute(out=out)
+            out.ufuncs.power(self.exponent, out=out)
 
     def derivative(self, vf):
         """Derivative of the point-wise norm operator at ``vf``.

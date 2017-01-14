@@ -185,7 +185,7 @@ def test_projector(projector, in_place):
 
     # We expect maximum value to be along diagonal
     expected_max = projector.domain.partition.extent()[0] * np.sqrt(2)
-    assert almost_equal(proj.ufunc.max(), expected_max, places=places)
+    assert almost_equal(proj.ufuncs.max(), expected_max, places=places)
 
 
 def test_adjoint(projector):

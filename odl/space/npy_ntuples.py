@@ -39,7 +39,7 @@ from odl.space.weighting import (
     WeightingBase, MatrixWeightingBase, VectorWeightingBase,
     ConstWeightingBase, NoWeightingBase,
     CustomInnerProductBase, CustomNormBase, CustomDistBase)
-from odl.util.ufuncs import NumpyNtuplesUFuncs
+from odl.util.ufuncs import NumpyNtuplesUfuncs
 from odl.util.utility import dtype_repr, is_real_dtype
 
 
@@ -443,36 +443,36 @@ class NumpyNtuplesVector(NtuplesBaseVector):
             self.data[indices] = values
 
     @property
-    def ufunc(self):
-        """`NumpyNtuplesUFuncs`, access to numpy style ufuncs.
+    def ufuncs(self):
+        """`NumpyNtuplesUfuncs`, access to numpy style ufuncs.
 
         Examples
         --------
         >>> r2 = NumpyFn(2)
         >>> x = r2.element([1, -2])
-        >>> x.ufunc.absolute()
+        >>> x.ufuncs.absolute()
         rn(2).element([1.0, 2.0])
 
         These functions can also be used with broadcasting
 
-        >>> x.ufunc.add(3)
+        >>> x.ufuncs.add(3)
         rn(2).element([4.0, 1.0])
 
         and non-space elements
 
-        >>> x.ufunc.subtract([3, 3])
+        >>> x.ufuncs.subtract([3, 3])
         rn(2).element([-2.0, -5.0])
 
         There is also support for various reductions (sum, prod, min, max)
 
-        >>> x.ufunc.sum()
+        >>> x.ufuncs.sum()
         -1.0
 
         They also support an out parameter
 
         >>> y = r2.element([3, 4])
         >>> out = r2.element()
-        >>> result = x.ufunc.add(y, out=out)
+        >>> result = x.ufuncs.add(y, out=out)
         >>> result
         rn(2).element([4.0, 2.0])
         >>> result is out
@@ -482,7 +482,7 @@ class NumpyNtuplesVector(NtuplesBaseVector):
         -----
         These are optimized for use with ntuples and incur no overhead.
         """
-        return NumpyNtuplesUFuncs(self)
+        return NumpyNtuplesUfuncs(self)
 
 
 def _blas_is_applicable(*args):
