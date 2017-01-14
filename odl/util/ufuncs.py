@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""UFuncs for ODL vectors.
+"""Ufuncs for ODL vectors.
 
 These functions are internal and should only be used as methods on
 `NtuplesBaseVector` type spaces.
@@ -41,8 +41,8 @@ import numpy as np
 import re
 
 
-__all__ = ('NtuplesBaseUFuncs', 'NumpyNtuplesUFuncs',
-           'DiscreteLpUFuncs', 'ProductSpaceUFuncs')
+__all__ = ('NtuplesBaseUfuncs', 'NumpyNtuplesUfuncs',
+           'DiscreteLpUfuncs', 'ProductSpaceUfuncs')
 
 
 # Some are ignored since they don't cooperate with dtypes, needs fix
@@ -96,7 +96,7 @@ numpy.{}
 # Wrap all numpy ufuncs
 
 def wrap_ufunc_base(name, n_in, n_out, doc):
-    """Add ufunc methods to `NtuplesBaseUFuncs`."""
+    """Add ufunc methods to `NtuplesBaseUfuncs`."""
     wrapped = getattr(np, name)
     if n_in == 1:
         if n_out == 0:
@@ -147,7 +147,7 @@ def wrap_ufunc_base(name, n_in, n_out, doc):
 
 # Wrap reductions
 def wrap_reduction_base(name, doc):
-    """Add ufunc methods to `NtuplesBaseUFuncs`."""
+    """Add ufunc methods to `NtuplesBaseUfuncs`."""
     wrapped = getattr(np, name)
 
     def wrapper(self):
@@ -158,9 +158,9 @@ def wrap_reduction_base(name, doc):
     return wrapper
 
 
-class NtuplesBaseUFuncs(object):
+class NtuplesBaseUfuncs(object):
 
-    """UFuncs for `NtuplesBaseVector` objects.
+    """Ufuncs for `NtuplesBaseVector` objects.
 
     Internal object, should not be created except in `NtuplesBaseVector`.
     """
@@ -170,22 +170,22 @@ class NtuplesBaseUFuncs(object):
         self.vector = vector
 
 
-# Add ufunc methods to UFunc class
+# Add ufunc methods to ufunc class
 for name, n_in, n_out, doc in UFUNCS:
     method = wrap_ufunc_base(name, n_in, n_out, doc)
-    setattr(NtuplesBaseUFuncs, name, method)
+    setattr(NtuplesBaseUfuncs, name, method)
 
-# Add reduction methods to UFunc class
+# Add reduction methods to ufunc class
 for name, doc in REDUCTIONS:
     method = wrap_reduction_base(name, doc)
-    setattr(NtuplesBaseUFuncs, name, method)
+    setattr(NtuplesBaseUfuncs, name, method)
 
 
 # Optimized implementation of ufuncs since we can use the out parameter
 # as well as the data parameter to avoid one call to asarray() when using an
 # NumpyNtuplesVector
 def wrap_ufunc_ntuples(name, n_in, n_out, doc):
-    """Add ufunc methods to `NumpyNtuplesUFuncs`."""
+    """Add ufunc methods to `NumpyNtuplesUfuncs`."""
 
     # Get method from numpy
     wrapped = getattr(np, name)
@@ -233,35 +233,35 @@ def wrap_ufunc_ntuples(name, n_in, n_out, doc):
     return wrapper
 
 
-class NumpyNtuplesUFuncs(NtuplesBaseUFuncs):
+class NumpyNtuplesUfuncs(NtuplesBaseUfuncs):
 
-    """UFuncs for `NumpyNtuplesVector` objects.
+    """Ufuncs for `NumpyNtuplesVector` objects.
 
     Internal object, should not be created except in `NumpyNtuplesVector`.
     """
 
 
-# Add ufunc methods to UFunc class
+# Add ufunc methods to ufunc class
 for name, n_in, n_out, doc in UFUNCS:
     method = wrap_ufunc_ntuples(name, n_in, n_out, doc)
-    setattr(NumpyNtuplesUFuncs, name, method)
+    setattr(NumpyNtuplesUfuncs, name, method)
 
 
 # Optimized implementation of ufuncs since we can use the out parameter
 # as well as the data parameter to avoid one call to asarray() when using a
 # NumpyNtuplesVector
 def wrap_ufunc_discretelp(name, n_in, n_out, doc):
-    """Add ufunc methods to `DiscreteLpUFuncs`."""
+    """Add ufunc methods to `DiscreteLpUfuncs`."""
 
     if n_in == 1:
         if n_out == 0:
             def wrapper(self):
-                method = getattr(self.vector.ntuple.ufunc, name)
+                method = getattr(self.vector.ntuple.ufuncs, name)
                 return self.vector.space.element(method())
 
         elif n_out == 1:
             def wrapper(self, out=None):
-                method = getattr(self.vector.ntuple.ufunc, name)
+                method = getattr(self.vector.ntuple.ufuncs, name)
                 if out is None:
                     return self.vector.space.element(method())
                 else:
@@ -270,7 +270,7 @@ def wrap_ufunc_discretelp(name, n_in, n_out, doc):
 
         elif n_out == 2:
             def wrapper(self, out1=None, out2=None):
-                method = getattr(self.vector.ntuple.ufunc, name)
+                method = getattr(self.vector.ntuple.ufuncs, name)
                 if out1 is None:
                     out1 = self.vector.space.element()
                 if out2 is None:
@@ -295,7 +295,7 @@ def wrap_ufunc_discretelp(name, n_in, n_out, doc):
                 except AttributeError:
                     pass
 
-                method = getattr(self.vector.ntuple.ufunc, name)
+                method = getattr(self.vector.ntuple.ufuncs, name)
                 if out is None:
                     return self.vector.space.element(method(x2))
                 else:
@@ -314,7 +314,7 @@ def wrap_ufunc_discretelp(name, n_in, n_out, doc):
 
 def wrap_reduction_discretelp(name, doc):
     def wrapper(self):
-        method = getattr(self.vector.ntuple.ufunc, name)
+        method = getattr(self.vector.ntuple.ufuncs, name)
         return method()
 
     wrapper.__name__ = name
@@ -322,22 +322,22 @@ def wrap_reduction_discretelp(name, doc):
     return wrapper
 
 
-class DiscreteLpUFuncs(NtuplesBaseUFuncs):
+class DiscreteLpUfuncs(NtuplesBaseUfuncs):
 
-    """UFuncs for `DiscreteLpElement` objects.
+    """Ufuncs for `DiscreteLpElement` objects.
 
     Internal object, should not be created except in `DiscreteLpElement`.
     """
 
 
-# Add ufunc methods to UFunc class
+# Add ufunc methods to ufunc class
 for name, n_in, n_out, doc in UFUNCS:
     method = wrap_ufunc_discretelp(name, n_in, n_out, doc)
-    setattr(DiscreteLpUFuncs, name, method)
+    setattr(DiscreteLpUfuncs, name, method)
 
 for name, doc in REDUCTIONS:
     method = wrap_reduction_discretelp(name, doc)
-    setattr(DiscreteLpUFuncs, name, method)
+    setattr(DiscreteLpUfuncs, name, method)
 
 
 # Ufuncs for product space elements
@@ -347,17 +347,17 @@ def wrap_ufunc_productspace(name, n_in, n_out, doc):
     if n_in == 1:
         if n_out == 0:
             def wrapper(self):
-                result = [getattr(x.ufunc, name)() for x in self.vector]
+                result = [getattr(x.ufuncs, name)() for x in self.vector]
                 return self.vector.space.element(result)
 
         elif n_out == 1:
             def wrapper(self, out=None):
                 if out is None:
-                    result = [getattr(x.ufunc, name)() for x in self.vector]
+                    result = [getattr(x.ufuncs, name)() for x in self.vector]
                     return self.vector.space.element(result)
                 else:
                     for x, out_x in zip(self.vector, out):
-                        getattr(x.ufunc, name)(out=out_x)
+                        getattr(x.ufuncs, name)(out=out_x)
                     return out
 
         elif n_out == 2:
@@ -367,7 +367,7 @@ def wrap_ufunc_productspace(name, n_in, n_out, doc):
                 if out2 is None:
                     out2 = self.vector.space.element()
                 for x, out1_x, out2_x in zip(self.vector, out1, out2):
-                    getattr(x.ufunc, name)(out1=out1_x, out2=out2_x)
+                    getattr(x.ufuncs, name)(out1=out1_x, out2=out2_x)
                 return out1, out2
 
         else:
@@ -378,21 +378,21 @@ def wrap_ufunc_productspace(name, n_in, n_out, doc):
             def wrapper(self, x2, out=None):
                 if x2 in self.vector.space:
                     if out is None:
-                        result = [getattr(x.ufunc, name)(x2p)
+                        result = [getattr(x.ufuncs, name)(x2p)
                                   for x, x2p in zip(self.vector, x2)]
                         return self.vector.space.element(result)
                     else:
                         for x, x2p, outp in zip(self.vector, x2, out):
-                            getattr(x.ufunc, name)(x2p, out=outp)
+                            getattr(x.ufuncs, name)(x2p, out=outp)
                         return out
                 else:
                     if out is None:
-                        result = [getattr(x.ufunc, name)(x2)
+                        result = [getattr(x.ufuncs, name)(x2)
                                   for x in self.vector]
                         return self.vector.space.element(result)
                     else:
                         for x, outp in zip(self.vector, out):
-                            getattr(x.ufunc, name)(x2, out=outp)
+                            getattr(x.ufuncs, name)(x2, out=outp)
                         return out
 
         else:
@@ -408,7 +408,7 @@ def wrap_ufunc_productspace(name, n_in, n_out, doc):
 def wrap_reduction_productspace(name, doc):
     """Add reduction methods to `ProductSpaceElement`."""
     def wrapper(self):
-        results = [getattr(x.ufunc, name)() for x in self.vector]
+        results = [getattr(x.ufuncs, name)() for x in self.vector]
         return getattr(np, name)(results)
 
     wrapper.__name__ = name
@@ -416,9 +416,9 @@ def wrap_reduction_productspace(name, doc):
     return wrapper
 
 
-class ProductSpaceUFuncs(object):
+class ProductSpaceUfuncs(object):
 
-    """UFuncs for `ProductSpaceElement` objects.
+    """Ufuncs for `ProductSpaceElement` objects.
 
     Internal object, should not be created except in `ProductSpaceElement`.
     """
@@ -427,13 +427,13 @@ class ProductSpaceUFuncs(object):
         self.vector = vector
 
 
-# Add ufunc methods to UFunc class
+# Add ufunc methods to ufunc class
 for name, n_in, n_out, doc in UFUNCS:
     method = wrap_ufunc_productspace(name, n_in, n_out, doc)
-    setattr(ProductSpaceUFuncs, name, method)
+    setattr(ProductSpaceUfuncs, name, method)
 
 
-# Add reduction methods to UFunc class
+# Add reduction methods to ufunc class
 for name, doc in REDUCTIONS:
     method = wrap_reduction_productspace(name, doc)
-    setattr(ProductSpaceUFuncs, name, method)
+    setattr(ProductSpaceUfuncs, name, method)

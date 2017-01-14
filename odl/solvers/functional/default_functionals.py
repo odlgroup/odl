@@ -93,17 +93,17 @@ class LpNorm(Functional):
         if self.exponent == 0:
             return self.domain.one().inner(np.not_equal(x, 0))
         elif self.exponent == 1:
-            return x.ufunc.absolute().inner(self.domain.one())
+            return x.ufuncs.absolute().inner(self.domain.one())
         elif self.exponent == 2:
             return np.sqrt(x.inner(x))
         elif np.isfinite(self.exponent):
-            tmp = x.ufunc.absolute()
-            tmp.ufunc.power(self.exponent, out=tmp)
+            tmp = x.ufuncs.absolute()
+            tmp.ufuncs.power(self.exponent, out=tmp)
             return np.power(tmp.inner(self.domain.one()), 1 / self.exponent)
         elif self.exponent == np.inf:
-            return x.ufunc.absolute().ufunc.max()
+            return x.ufuncs.absolute().ufuncs.max()
         elif self.exponent == -np.inf:
-            return x.ufunc.absolute().ufunc.min()
+            return x.ufuncs.absolute().ufuncs.min()
         else:
             raise RuntimeError('unknown exponent')
 
@@ -153,7 +153,7 @@ class LpNorm(Functional):
 
                 def _call(self, x):
                     """Apply the gradient operator to the given point."""
-                    return x.ufunc.sign()
+                    return x.ufuncs.sign()
 
             return L1Gradient()
         elif self.exponent == 2:
@@ -394,7 +394,7 @@ class IndicatorGroupL1UnitBall(Functional):
 
     def _call(self, x):
         """Return ``self(x)``."""
-        x_norm = self.pointwise_norm(x).ufunc.max()
+        x_norm = self.pointwise_norm(x).ufuncs.max()
 
         if x_norm > 1:
             return np.inf
@@ -879,12 +879,12 @@ class IndicatorBox(Functional):
         # know x is inside the box.
         tmp = self.domain.element()
         if self.lower is not None and self.upper is None:
-            x.ufunc.maximum(self.lower, out=tmp)
+            x.ufuncs.maximum(self.lower, out=tmp)
         elif self.lower is None and self.upper is not None:
-            x.ufunc.minimum(self.upper, out=tmp)
+            x.ufuncs.minimum(self.upper, out=tmp)
         elif self.lower is not None and self.upper is not None:
-            x.ufunc.maximum(self.lower, out=tmp)
-            tmp.ufunc.minimum(self.upper, out=tmp)
+            x.ufuncs.maximum(self.lower, out=tmp)
+            tmp.ufuncs.minimum(self.upper, out=tmp)
         else:
             tmp.assign(x)
 

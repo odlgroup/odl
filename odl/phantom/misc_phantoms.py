@@ -108,7 +108,7 @@ def _submarine_2d_smooth(space, taper):
 
     out = space.element(blurred_ellipse)
     out += space.element(blurred_rect)
-    return out.ufunc.minimum(1, out=out)
+    return out.ufuncs.minimum(1, out=out)
 
 
 def _submarine_2d_nonsmooth(space):
@@ -152,7 +152,7 @@ def _submarine_2d_nonsmooth(space):
 
     out = space.element(ellipse)
     out += space.element(rect)
-    return out.ufunc.minimum(1, out=out)
+    return out.ufuncs.minimum(1, out=out)
 
 
 if __name__ == '__main__':

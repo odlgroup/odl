@@ -760,12 +760,12 @@ def test_ufunc(fn_impl, ufunc):
     out_vectors = vectors[n_args:]
 
     # Verify type
-    assert isinstance(data_vector.ufunc,
-                      odl.util.ufuncs.DiscreteLpUFuncs)
+    assert isinstance(data_vector.ufuncs,
+                      odl.util.ufuncs.DiscreteLpUfuncs)
 
     # Out-of-place:
     np_result = ufunc(*in_arrays)
-    vec_fun = getattr(data_vector.ufunc, name)
+    vec_fun = getattr(data_vector.ufuncs, name)
     odl_result = vec_fun(*in_vectors)
     assert all_almost_equal(np_result, odl_result)
 
@@ -778,7 +778,7 @@ def test_ufunc(fn_impl, ufunc):
 
     # In-place:
     np_result = ufunc(*(in_arrays + out_arrays))
-    vec_fun = getattr(data_vector.ufunc, name)
+    vec_fun = getattr(data_vector.ufuncs, name)
     odl_result = vec_fun(*(in_vectors + out_vectors))
     assert all_almost_equal(np_result, odl_result)
 
@@ -791,7 +791,7 @@ def test_ufunc(fn_impl, ufunc):
 
     # Test out-of-place with np data
     np_result = ufunc(*in_arrays)
-    vec_fun = getattr(data_vector.ufunc, name)
+    vec_fun = getattr(data_vector.ufuncs, name)
     odl_result = vec_fun(*in_arrays[1:])
     assert all_almost_equal(np_result, odl_result)
 
@@ -864,7 +864,7 @@ def test_reduction(fn_impl, reduction):
 
     # Create some data
     x_arr, x = noise_elements(space, 1)
-    assert almost_equal(ufunc(x_arr), getattr(x.ufunc, name)())
+    assert almost_equal(ufunc(x_arr), getattr(x.ufuncs, name)())
 
 
 powers = [1.0, 2.0, 0.5, -0.5, -1.0, -2.0]

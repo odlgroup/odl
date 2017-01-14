@@ -39,7 +39,7 @@ from odl.space.weighting import WeightingBase
 from odl.util.normalize import (
     normalized_scalar_param_list, safe_int_conv, normalized_nodes_on_bdry)
 from odl.util.numerics import apply_on_boundary
-from odl.util.ufuncs import DiscreteLpUFuncs
+from odl.util.ufuncs import DiscreteLpUfuncs
 from odl.util.utility import (
     is_real_dtype, is_complex_floating_dtype, dtype_repr)
 
@@ -676,36 +676,36 @@ class DiscreteLpElement(DiscretizedSpaceElement):
             super().__setitem__(indices, values)
 
     @property
-    def ufunc(self):
-        """`DiscreteLpUFuncs`, access to numpy style ufuncs.
+    def ufuncs(self):
+        """`DiscreteLpUfuncs`, access to numpy style ufuncs.
 
         Examples
         --------
         >>> X = uniform_discr(0, 1, 2)
         >>> x = X.element([1, -2])
-        >>> x.ufunc.absolute()
+        >>> x.ufuncs.absolute()
         uniform_discr(0.0, 1.0, 2).element([1.0, 2.0])
 
         These functions can also be used with broadcasting
 
-        >>> x.ufunc.add(3)
+        >>> x.ufuncs.add(3)
         uniform_discr(0.0, 1.0, 2).element([4.0, 1.0])
 
         and non-space elements
 
-        >>> x.ufunc.subtract([3, 3])
+        >>> x.ufuncs.subtract([3, 3])
         uniform_discr(0.0, 1.0, 2).element([-2.0, -5.0])
 
         There is also support for various reductions (sum, prod, min, max)
 
-        >>> x.ufunc.sum()
+        >>> x.ufuncs.sum()
         -1.0
 
         Also supports out parameter
 
         >>> y = X.element([3, 4])
         >>> out = X.element()
-        >>> result = x.ufunc.add(y, out=out)
+        >>> result = x.ufuncs.add(y, out=out)
         >>> result
         uniform_discr(0.0, 1.0, 2).element([4.0, 2.0])
         >>> result is out
@@ -716,7 +716,7 @@ class DiscreteLpElement(DiscretizedSpaceElement):
         These are optimized to use the underlying ntuple space and incur no
         overhead unless these do.
         """
-        return DiscreteLpUFuncs(self)
+        return DiscreteLpUfuncs(self)
 
     def show(self, title=None, method='', coords=None, indices=None,
              force_show=False, fig=None, **kwargs):
