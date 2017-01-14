@@ -105,7 +105,7 @@ def _fbp_filter(norm_freq, filter_type, frequency_scaling):
     return indicator * filt
 
 
-def tam_danielson_window(ray_trafo, smoothing_width=0.05):
+def tam_danielson_window(ray_trafo, smoothing_width=0.05, n_half_rot=1):
     """Create Tam-Danielson window from a `RayTransform`.
 
     The Tam-Danielson window is an indicator function on the minimal set of
@@ -122,6 +122,10 @@ def tam_danielson_window(ray_trafo, smoothing_width=0.05):
     smoothing_width : positive float, optional
         Width of the smoothing applied to the window's edges given as a
         fraction of the width of the full window.
+    n_half_rot : odd int
+        Total number of half rotations to include in the window. Values larger
+        than 1 should be used if the pitch is much smaller than the detector
+        height.
 
     Returns
     -------
@@ -149,6 +153,9 @@ def tam_danielson_window(ray_trafo, smoothing_width=0.05):
     if smoothing_width < 0:
         raise ValueError('`smoothing_width` should be a positive float')
 
+    if n_half_rot % 2 != 1:
+        raise ValueError('`n_half_rot` must be odd, got {}'.format(n_half_rot))
+
     # Find projection of axis on detector
     axis_proj = _axis_in_detector(ray_trafo.geometry)
     rot_dir = _rotation_direction_in_detector(ray_trafo.geometry)
@@ -165,8 +172,8 @@ def tam_danielson_window(ray_trafo, smoothing_width=0.05):
     source_to_line_distance = src_radius + src_radius * np.cos(theta)
     scale = (src_radius + det_radius) / source_to_line_distance
 
-    source_to_line_lower = pitch * (theta - np.pi) / (2 * np.pi)
-    source_to_line_upper = pitch * (theta + np.pi) / (2 * np.pi)
+    source_to_line_lower = pitch * (theta - n_half_rot * np.pi) / (2 * np.pi)
+    source_to_line_upper = pitch * (theta + n_half_rot * np.pi) / (2 * np.pi)
 
     lower_proj = source_to_line_lower * scale
     upper_proj = source_to_line_upper * scale
@@ -189,7 +196,7 @@ def tam_danielson_window(ray_trafo, smoothing_width=0.05):
 
         return lower_wndw * upper_wndw
 
-    return ray_trafo.range.element(window_fcn)
+    return ray_trafo.range.element(window_fcn) / n_half_rot
 
 
 def fbp_filter_op(ray_trafo, padding=True, filter_type='Ram-Lak',
