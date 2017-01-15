@@ -198,7 +198,8 @@ class RayTransform(Operator):
                 proj = getattr(self, 'astra_projector', None)
                 if proj is None:
                     self.astra_projector = AstraCudaProjectorImpl(
-                        self.geometry, self.range, use_cache=self.use_cache)
+                        self.geometry, self.domain, self.range,
+                        use_cache=self.use_cache)
 
                 return self.astra_projector.call_forward(x, out)
             else:
@@ -222,7 +223,8 @@ class RayTransform(Operator):
 
         kwargs = self.kwargs.copy()
         kwargs['discr_domain'] = self.range
-        self.backproj = RayBackProjection(self.domain, self.geometry, self.impl, use_cache=self.use_cache,
+        self.backproj = RayBackProjection(self.domain, self.geometry,
+                                          self.impl, use_cache=self.use_cache,
                                           **kwargs)
         return self.backproj
 
@@ -345,7 +347,8 @@ class RayBackProjection(Operator):
                 backproj = getattr(self, 'astra_backprojector', None)
                 if backproj is None:
                     self.astra_backprojector = AstraCudaBackProjectorImpl(
-                        self.geometry, self.range, use_cache=self.use_cache)
+                        self.geometry, self.range, self.domain,
+                        use_cache=self.use_cache)
 
                 return self.astra_backprojector.call_backward(x, out)
             else:
@@ -370,7 +373,8 @@ class RayBackProjection(Operator):
 
         kwargs = self.kwargs.copy()
         kwargs['discr_range'] = self.domain
-        self.ray_trafo = RayTransform(self.range, self.geometry, impl=self.impl, use_cache=self.use_cache,
+        self.ray_trafo = RayTransform(self.range, self.geometry,
+                                      impl=self.impl, use_cache=self.use_cache,
                                       **kwargs)
         return self.ray_trafo
 
