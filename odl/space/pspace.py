@@ -30,7 +30,7 @@ import numpy as np
 from odl.set import LinearSpace, LinearSpaceElement
 from odl.space.weighting import (
     Weighting, ArrayWeighting, ConstWeighting, NoWeighting,
-    CustomInnerProduct, CustomNorm, CustomDist)
+    CustomInner, CustomNorm, CustomDist)
 from odl.util import is_real_dtype
 from odl.util.ufuncs import ProductSpaceUfuncs
 
@@ -297,7 +297,7 @@ class ProductSpace(LinearSpace):
         elif norm is not None:
             self.__weighting = ProductSpaceCustomNorm(norm)
         elif inner is not None:
-            self.__weighting = ProductSpaceCustomInnerProduct(inner)
+            self.__weighting = ProductSpaceCustomInner(inner)
         else:  # all None -> no weighing
             self.__weighting = ProductSpaceNoWeighting(
                 exponent, dist_using_inner=dist_using_inner)
@@ -1243,7 +1243,7 @@ class ProductSpaceNoWeighting(NoWeighting, ProductSpaceConstWeighting):
                          dist_using_inner=dist_using_inner)
 
 
-class ProductSpaceCustomInnerProduct(CustomInnerProduct):
+class ProductSpaceCustomInner(CustomInner):
 
     """Class for handling a user-specified inner product on `ProductSpace`."""
 

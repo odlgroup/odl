@@ -38,7 +38,7 @@ from odl.space.base_ntuples import (
 from odl.space.weighting import (
     Weighting, MatrixWeighting, ArrayWeighting,
     ConstWeighting, NoWeighting,
-    CustomInnerProduct, CustomNorm, CustomDist)
+    CustomInner, CustomNorm, CustomDist)
 from odl.util import dtype_repr, is_real_dtype
 from odl.util.ufuncs import NumpyNtuplesUfuncs
 
@@ -774,7 +774,7 @@ class NumpyFn(FnBase, NumpyNtuples):
         elif norm is not None:
             self.__weighting = NumpyFnCustomNorm(norm)
         elif inner is not None:
-            self.__weighting = NumpyFnCustomInnerProduct(inner)
+            self.__weighting = NumpyFnCustomInner(inner)
         else:  # all None -> no weighing
             self.__weighting = NumpyFnNoWeighting(
                 exponent, dist_using_inner=dist_using_inner)
@@ -2035,7 +2035,7 @@ class NumpyFnNoWeighting(NoWeighting, NumpyFnConstWeighting):
                          dist_using_inner=dist_using_inner)
 
 
-class NumpyFnCustomInnerProduct(CustomInnerProduct):
+class NumpyFnCustomInner(CustomInner):
 
     """Class for handling a user-specified inner product in `NumpyFn`."""
 
