@@ -26,7 +26,8 @@ import numpy as np
 
 
 __all__ = ('normalized_scalar_param_list', 'normalized_index_expression',
-           'normalized_nodes_on_bdry', 'normalized_axes_tuple')
+           'normalized_nodes_on_bdry', 'normalized_axes_tuple',
+           'safe_int_conv')
 
 
 def normalized_scalar_param_list(param, length, param_conv=None,

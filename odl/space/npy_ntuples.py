@@ -39,8 +39,8 @@ from odl.space.weighting import (
     Weighting, MatrixWeighting, ArrayWeighting,
     ConstWeighting, NoWeighting,
     CustomInnerProduct, CustomNorm, CustomDist)
+from odl.util import dtype_repr, is_real_dtype
 from odl.util.ufuncs import NumpyNtuplesUfuncs
-from odl.util.utility import dtype_repr, is_real_dtype
 
 
 __all__ = ('NumpyNtuples', 'NumpyNtuplesVector', 'NumpyFn', 'NumpyFnVector',

@@ -29,7 +29,7 @@ import scipy.linalg as linalg
 from scipy.sparse.base import isspmatrix
 
 from odl.space.base_ntuples import FnBaseVector
-from odl.util.utility import array1d_repr, arraynd_repr
+from odl.util import array1d_repr, arraynd_repr
 
 
 __all__ = ('MatrixWeighting', 'ArrayWeighting', 'ConstWeighting',

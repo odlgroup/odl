@@ -34,7 +34,7 @@ from odl.operator import Operator
 from odl.discr.partition import RectPartition
 from odl.space.base_ntuples import NtuplesBase, FnBase
 from odl.space import FunctionSet, FunctionSpace
-from odl.util.vectorization import (
+from odl.util import (
     is_valid_input_meshgrid, out_shape_from_array, out_shape_from_meshgrid)
 
 

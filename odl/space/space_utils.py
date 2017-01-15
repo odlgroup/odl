@@ -27,9 +27,9 @@ __all__ = ('vector', 'ntuples', 'fn', 'cn', 'rn')
 import numpy as np
 
 from odl.set import RealNumbers, ComplexNumbers
-from odl.util.utility import (
-    is_real_floating_dtype, is_complex_floating_dtype, is_scalar_dtype)
 from odl.space.entry_points import NTUPLES_IMPLS, FN_IMPLS
+from odl.util import (
+    is_real_floating_dtype, is_complex_floating_dtype, is_scalar_dtype)
 
 
 def vector(array, dtype=None, impl='numpy'):

@@ -27,8 +27,9 @@ import numpy as np
 
 from odl.discr import DiscreteLp, uniform_discr
 from odl.operator import Operator
-from odl.util.normalize import normalized_scalar_param_list, safe_int_conv
-from odl.util.numerics import resize_array, _SUPPORTED_RESIZE_PAD_MODES
+from odl.util import (
+    normalized_scalar_param_list, safe_int_conv, resize_array)
+from odl.util.numerics import _SUPPORTED_RESIZE_PAD_MODES
 
 
 __all__ = ('Resampling', 'ResizingOperator')
@@ -220,7 +221,7 @@ class ResizingOperatorBase(Operator):
         >>> space = odl.uniform_discr([0, 0], [1, 1], (2, 4))
         >>> resize_op = odl.ResizingOperator(space, ran_shp=(4, 4))
         >>> resize_op.range
-        uniform_discr([-0.5, 0.0], [1.5, 1.0], [4, 4])
+        uniform_discr([-0.5, 0.0], [1.5, 1.0], (4, 4))
 
         Testing different padding methods in the first axis (zero padding
         is the default):
