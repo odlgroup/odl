@@ -26,7 +26,7 @@ from builtins import super
 import numpy as np
 
 from odl.discr.lp_discr import DiscreteLp
-from odl.discr.tensor_ops import PointwiseTensorFieldOperator
+from odl.operator.tensor_ops import PointwiseTensorFieldOperator
 from odl.space import ProductSpace
 
 
