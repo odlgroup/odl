@@ -26,7 +26,7 @@ from builtins import super
 import numpy as np
 
 from odl.discr.lp_discr import DiscreteLp
-from odl.discr.tensor_ops import PointwiseTensorFieldOperator
+from odl.operator.tensor_ops import PointwiseTensorFieldOperator
 from odl.space import ProductSpace
 
 
@@ -120,7 +120,8 @@ class PartialDerivative(PointwiseTensorFieldOperator):
 
         # Method is affine if nonzero padding is given.
         linear = not (pad_mode == 'constant' and pad_const != 0)
-        super().__init__(domain=space, range=space, linear=linear)
+        super().__init__(domain=space, range=space, base_space=space,
+                         linear=linear)
         self.axis = int(axis)
         self.dx = space.cell_sides[axis]
 
@@ -296,7 +297,7 @@ class Gradient(PointwiseTensorFieldOperator):
             range = ProductSpace(domain, domain.ndim)
 
         linear = not (pad_mode == 'constant' and pad_const != 0)
-        super().__init__(domain, range, linear=linear)
+        super().__init__(domain, range, base_space=domain, linear=linear)
 
         self.method, method_in = str(method).lower(), method
         if method not in _SUPPORTED_DIFF_METHODS:
@@ -477,7 +478,7 @@ class Divergence(PointwiseTensorFieldOperator):
             range = domain[0]
 
         linear = not (pad_mode == 'constant' and pad_const != 0)
-        super().__init__(domain, range, linear=linear)
+        super().__init__(domain, range, base_space=range, linear=linear)
 
         self.method, method_in = str(method).lower(), method
         if method not in _SUPPORTED_DIFF_METHODS:
@@ -611,7 +612,8 @@ class Laplacian(PointwiseTensorFieldOperator):
         if not isinstance(space, DiscreteLp):
             raise TypeError('`space` {!r} is not a DiscreteLp instance'
                             ''.format(space))
-        super().__init__(domain=space, range=space, linear=True)
+        super().__init__(domain=space, range=space, base_space=space,
+                         linear=True)
 
         self.pad_mode, pad_mode_in = str(pad_mode).lower(), pad_mode
         if pad_mode not in _SUPPORTED_PAD_MODES:

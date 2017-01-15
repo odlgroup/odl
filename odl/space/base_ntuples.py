@@ -28,11 +28,12 @@ import numpy as np
 
 from odl.set import (Set, RealNumbers, ComplexNumbers, LinearSpace,
                      LinearSpaceElement)
-from odl.util.ufuncs import NtuplesBaseUFuncs
-from odl.util.utility import (
-    array1d_repr, array1d_str, dtype_repr, with_metaclass,
+from odl.util.ufuncs import NtuplesBaseUfuncs
+from odl.util import (
+    array1d_repr, array1d_str, dtype_repr,
     is_scalar_dtype, is_real_dtype, is_floating_dtype,
     complex_dtype, real_dtype)
+from odl.util.utility import with_metaclass
 
 
 __all__ = ('NtuplesBase', 'NtuplesBaseVector', 'FnBase', 'FnBaseVector')
@@ -408,13 +409,13 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
                                          array1d_repr(self))
 
     @property
-    def ufunc(self):
+    def ufuncs(self):
         """Internal class for access to Numpy style universal functions.
 
         These default ufuncs are always available, but may or may not be
         optimized for the specific space in use.
         """
-        return NtuplesBaseUFuncs(self)
+        return NtuplesBaseUfuncs(self)
 
     def show(self, title=None, method='scatter', force_show=False, fig=None,
              **kwargs):
@@ -548,7 +549,7 @@ class FnBase(NtuplesBase, LinearSpace):
 
     def _astype(self, dtype):
         """Internal helper for ``astype``. Can be overridden by subclasses."""
-        return type(self)(self.size, dtype=dtype, weight=self.weighting)
+        return type(self)(self.size, dtype=dtype, weighting=self.weighting)
 
     def astype(self, dtype):
         """Return a copy of this space with new ``dtype``.

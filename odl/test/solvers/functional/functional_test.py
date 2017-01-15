@@ -148,13 +148,13 @@ def test_derivative(functional):
     if (isinstance(functional, odl.solvers.KullbackLeibler) or
             isinstance(functional, odl.solvers.KullbackLeiblerCrossEntropy)):
         # The functional is not defined for values <= 0
-        x = x.ufunc.absolute()
-        y = y.ufunc.absolute()
+        x = x.ufuncs.absolute()
+        y = y.ufuncs.absolute()
 
     if isinstance(functional, KullbackLeiblerConvexConj):
         # The functional is not defined for values >= 1
-        x = x - x.ufunc.max() + 0.99
-        y = y - y.ufunc.max() + 0.99
+        x = x - x.ufuncs.max() + 0.99
+        y = y - y.ufuncs.max() + 0.99
 
     # Compute a "small" step size according to dtype of space
     step = float(np.sqrt(np.finfo(functional.domain.dtype).eps))

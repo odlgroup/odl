@@ -152,7 +152,8 @@ class RayTransform(Operator):
             weight = extent / size
 
             range_dspace = discr_domain.dspace_type(geometry.partition.size,
-                                                    weight=weight, dtype=dtype)
+                                                    weighting=weight,
+                                                    dtype=dtype)
 
             if geometry.ndim == 2:
                 axis_labels = ['$\\theta$', '$s$']
@@ -283,7 +284,8 @@ class RayBackProjection(Operator):
             weight = extent / size
 
             domain_dspace = discr_range.dspace_type(geometry.partition.size,
-                                                    weight=weight, dtype=dtype)
+                                                    weighting=weight,
+                                                    dtype=dtype)
 
             if geometry.ndim == 2:
                 axis_labels = ['$\\theta$', '$s$']

@@ -38,7 +38,7 @@ from odl.tomo.backends.astra_setup import (
 from odl.tomo.geometry import (
     Geometry, Parallel2dGeometry, FanFlatGeometry, Parallel3dAxisGeometry,
     HelicalConeFlatGeometry)
-from odl.util.utility import writable_array
+from odl.util import writable_array
 
 
 __all__ = ('astra_cuda_forward_projector', 'astra_cuda_back_projector',

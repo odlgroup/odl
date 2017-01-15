@@ -29,12 +29,12 @@ import numpy as np
 from odl.operator.operator import Operator, _dispatch_call_args
 from odl.set import (RealNumbers, ComplexNumbers, Set, Field, LinearSpace,
                      LinearSpaceElement)
-from odl.util.utility import (is_real_dtype, is_complex_floating_dtype,
-                              preload_first_arg, dtype_repr,
-                              complex_dtype, real_dtype)
-from odl.util.vectorization import (
+from odl.util import (
+    is_real_dtype, is_complex_floating_dtype, dtype_repr,
+    complex_dtype, real_dtype,
     is_valid_input_array, is_valid_input_meshgrid,
     out_shape_from_array, out_shape_from_meshgrid, vectorize)
+from odl.util.utility import preload_first_arg
 
 
 __all__ = ('FunctionSet', 'FunctionSetElement',

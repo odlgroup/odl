@@ -27,8 +27,8 @@ import numpy as np
 
 import odl
 from odl.discr.discr_ops import _SUPPORTED_RESIZE_PAD_MODES
+from odl.util import is_scalar_dtype, is_real_floating_dtype
 from odl.util.testutils import almost_equal, noise_element, dtype_places
-from odl.util.utility import is_scalar_dtype, is_real_floating_dtype
 
 
 # --- ResizingOperator --- #

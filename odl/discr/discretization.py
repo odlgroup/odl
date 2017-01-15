@@ -28,7 +28,7 @@ from odl.space.base_ntuples import (NtuplesBase, NtuplesBaseVector,
                                     FnBase, FnBaseVector)
 from odl.space import FunctionSet, FN_IMPLS, NTUPLES_IMPLS
 from odl.set import RealNumbers, ComplexNumbers, LinearSpace
-from odl.util.utility import (
+from odl.util import (
     arraynd_repr, arraynd_str,
     is_real_floating_dtype, is_complex_floating_dtype, is_scalar_dtype)
 

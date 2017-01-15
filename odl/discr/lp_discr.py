@@ -35,13 +35,12 @@ from odl.discr.partition import (
     RectPartition, uniform_partition_fromintv, uniform_partition)
 from odl.set import RealNumbers, ComplexNumbers, IntervalProd
 from odl.space import FunctionSpace, ProductSpace, FN_IMPLS
-from odl.space.weighting import WeightingBase
-from odl.util.normalize import (
+from odl.space.weighting import Weighting, NoWeighting, ConstWeighting
+from odl.util import (
+    apply_on_boundary, is_real_dtype, is_complex_floating_dtype,
+    dtype_str, signature_string, indent_rows,
     normalized_scalar_param_list, safe_int_conv, normalized_nodes_on_bdry)
-from odl.util.numerics import apply_on_boundary
-from odl.util.ufuncs import DiscreteLpUFuncs
-from odl.util.utility import (
-    is_real_dtype, is_complex_floating_dtype, dtype_repr)
+from odl.util.ufuncs import DiscreteLpUfuncs
 
 __all__ = ('DiscreteLp', 'DiscreteLpElement',
            'uniform_discr_frompartition', 'uniform_discr_fromspace',
@@ -88,9 +87,17 @@ class DiscreteLp(DiscretizedSpace):
             vice versa for 'F'.
             Default: 'C'
         axis_labels : sequence of str, optional
-            Names of the axes to use for plotting etc.
-            Default: ['x'] in 1-D, ['x', 'y'] in 2-D, ['x', 'y', 'z'] in 3-D
-            and ['x1', 'x2', ..., 'xn'] in n-D.
+            Names of the axes to use for plotting etc. Default:
+
+                1D: ``['$x$']``
+
+                2D: ``['$x$', '$y$']``
+
+                3D: ``['$x$', '$y$', '$z$']``
+
+                nD: ``['$x_1$', '$x_2$', ..., '$x_n$']``
+
+            Note: The ``$`` signs ensure rendering as LaTeX.
         """
         if not isinstance(fspace, FunctionSpace):
             raise TypeError('{!r} is not a FunctionSpace instance'
@@ -157,12 +164,12 @@ class DiscreteLp(DiscretizedSpace):
         axis_labels = kwargs.pop('axis_labels', None)
         if axis_labels is None:
             if self.ndim <= 3:
-                self.axis_labels = ['$x$', '$y$', '$z$'][:self.ndim]
+                self.__axis_labels = ('$x$', '$y$', '$z$')[:self.ndim]
             else:
-                self.axis_labels = ['$x_{}$'.format(axis)
-                                    for axis in range(self.ndim)]
+                self.__axis_labels = tuple('$x_{}$'.format(axis)
+                                           for axis in range(self.ndim))
         else:
-            self.axis_labels = tuple(str(label) for label in axis_labels)
+            self.__axis_labels = tuple(str(label) for label in axis_labels)
 
         if kwargs:
             raise ValueError('unknown arguments {}'.format(kwargs))
@@ -180,6 +187,11 @@ class DiscreteLp(DiscretizedSpace):
     def interp_by_axis(self):
         """Interpolation by axis type of this discretization."""
         return self.__interp_by_axis
+
+    @property
+    def axis_labels(self):
+        """Labels for axes when displaying space elements."""
+        return self.__axis_labels
 
     @property
     def min_pt(self):
@@ -426,7 +438,7 @@ class DiscreteLp(DiscretizedSpace):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        # Check if the factory repr can be used
+        # Clunky check if the factory repr can be used
         if (uniform_partition_fromintv(
                 self.uspace.domain, self.shape,
                 nodes_on_bdry=False) == self.partition):
@@ -440,63 +452,61 @@ class DiscreteLp(DiscretizedSpace):
         else:
             use_uniform = False
 
-        if use_uniform:
-            impl = self.dspace.impl
-            default_dtype = self.dspace.default_dtype(RealNumbers())
-
-            arg_fstr = '{}, {}, {}'
-            if self.exponent != 2.0:
-                arg_fstr += ', exponent={exponent}'
-            if self.dtype != default_dtype:
-                arg_fstr += ', dtype={dtype}'
-            if not all(s == 'nearest' for s in self.interp_by_axis):
-                arg_fstr += ', interp={interp!r}'
-            if impl != 'numpy':
-                arg_fstr += ', impl={impl!r}'
-            if self.order != 'C':
-                arg_fstr += ', order={order!r}'
-            if nodes_on_bdry:
-                arg_fstr += ', nodes_on_bdry={nodes_on_bdry!r}'
-
-            if self.ndim == 1:
-                min_str = '{!r}'.format(self.uspace.domain.min()[0])
-                max_str = '{!r}'.format(self.uspace.domain.max()[0])
-                shape_str = '{!r}'.format(self.shape[0])
-            else:
-                min_str = '{!r}'.format(list(self.uspace.domain.min()))
-                max_str = '{!r}'.format(list(self.uspace.domain.max()))
-                shape_str = '{!r}'.format(list(self.shape))
-
-            arg_str = arg_fstr.format(
-                min_str, max_str, shape_str,
-                exponent=self.exponent,
-                dtype=dtype_repr(self.dtype),
-                interp=self.interp,
-                impl=impl,
-                order=self.order,
-                nodes_on_bdry=nodes_on_bdry)
-            return 'uniform_discr({})'.format(arg_str)
+        if self.ndim <= 3:
+            default_ax_lbl = ('$x$', '$y$', '$z$')[:self.ndim]
         else:
-            arg_fstr = '''
-    {!r},
-    {!r},
-    {!r}
-    '''
-            if self.exponent != 2.0:
-                arg_fstr += ', exponent={ex}'
-            if self.interp != 'nearest':
-                arg_fstr += ', interp={interp!r}'
-            if self.order != 'C':
-                arg_fstr += ', order={order!r}'
+            default_ax_lbl = tuple('$x_{}$'.format(i)
+                                   for i in range(self.ndim))
 
-            arg_str = arg_fstr.format(
-                self.uspace, self.partition, self.dspace, interp=self.interp,
-                ex=self.exponent, order=self.order)
-            return '{}({})'.format(self.__class__.__name__, arg_str)
+        if use_uniform:
+            constructor = 'uniform_discr'
+            if self.ndim == 1:
+                posargs = [self.min_pt[0], self.max_pt[0], self.shape[0]]
+            else:
+                posargs = [list(a) for a in [self.min_pt, self.max_pt]]
+                posargs.append(self.shape)
 
-    def __str__(self):
-        """Return ``str(self)``."""
-        return self.__repr__()
+            default_dtype_s = dtype_str(
+                self.dspace.default_dtype(RealNumbers()))
+
+            if isinstance(self.weighting, NoWeighting):
+                weighting = 'none'
+            elif (isinstance(self.weighting, ConstWeighting) and
+                  np.isclose(self.weighting.const, self.cell_volume)):
+                weighting = 'const'
+            else:
+                weighting = self.weighting
+
+            dtype_s = dtype_str(self.dtype)
+            optargs = [('exponent', self.exponent, 2.0),
+                       ('interp', self.interp, 'nearest'),
+                       ('impl', self.impl, 'numpy'),
+                       ('nodes_on_bdry', nodes_on_bdry, False),
+                       ('dtype', dtype_s, default_dtype_s),
+                       ('order', self.order, 'C'),
+                       ('weighting', weighting, 'const'),
+                       ('axis_labels', self.axis_labels, default_ax_lbl)]
+
+            inner_str = signature_string(posargs, optargs,
+                                         mod=[['!r'] * len(posargs),
+                                              ['!s'] * len(optargs)])
+            return '{}({})'.format(constructor, inner_str)
+
+        else:
+            constructor = self.__class__.__name__
+            posargs = [self.uspace, self.partition, self.dspace]
+
+            optargs = [('interp', self.interp, 'nearest'),
+                       ('axis_labels', self.axis_labels, default_ax_lbl),
+                       ('order', self.order, 'C')]
+
+            inner_str = signature_string(posargs, optargs,
+                                         sep=[',\n', ', ', ',\n'],
+                                         mod=['!r', '!s'])
+
+            return '{}(\n{}\n)'.format(constructor, indent_rows(inner_str))
+
+    __str__ = __repr__
 
     @property
     def element_type(self):
@@ -676,36 +686,36 @@ class DiscreteLpElement(DiscretizedSpaceElement):
             super().__setitem__(indices, values)
 
     @property
-    def ufunc(self):
-        """`DiscreteLpUFuncs`, access to numpy style ufuncs.
+    def ufuncs(self):
+        """`DiscreteLpUfuncs`, access to numpy style ufuncs.
 
         Examples
         --------
         >>> X = uniform_discr(0, 1, 2)
         >>> x = X.element([1, -2])
-        >>> x.ufunc.absolute()
+        >>> x.ufuncs.absolute()
         uniform_discr(0.0, 1.0, 2).element([1.0, 2.0])
 
         These functions can also be used with broadcasting
 
-        >>> x.ufunc.add(3)
+        >>> x.ufuncs.add(3)
         uniform_discr(0.0, 1.0, 2).element([4.0, 1.0])
 
         and non-space elements
 
-        >>> x.ufunc.subtract([3, 3])
+        >>> x.ufuncs.subtract([3, 3])
         uniform_discr(0.0, 1.0, 2).element([-2.0, -5.0])
 
         There is also support for various reductions (sum, prod, min, max)
 
-        >>> x.ufunc.sum()
+        >>> x.ufuncs.sum()
         -1.0
 
         Also supports out parameter
 
         >>> y = X.element([3, 4])
         >>> out = X.element()
-        >>> result = x.ufunc.add(y, out=out)
+        >>> result = x.ufuncs.add(y, out=out)
         >>> result
         uniform_discr(0.0, 1.0, 2).element([4.0, 2.0])
         >>> result is out
@@ -716,7 +726,7 @@ class DiscreteLpElement(DiscretizedSpaceElement):
         These are optimized to use the underlying ntuple space and incur no
         overhead unless these do.
         """
-        return DiscreteLpUFuncs(self)
+        return DiscreteLpUfuncs(self)
 
     def show(self, title=None, method='', coords=None, indices=None,
              force_show=False, fig=None, **kwargs):
@@ -950,24 +960,21 @@ def uniform_discr_frompartition(partition, exponent=2.0, interp='nearest',
     order = kwargs.pop('order', 'C')
 
     weighting = kwargs.pop('weighting', 'const')
-    if isinstance(weighting, WeightingBase):
-        # TODO: harmonize names, should be 'weighting' across the board
-        weight = weighting
-    else:
+    if not isinstance(weighting, Weighting):
         weighting, weighting_in = str(weighting).lower(), weighting
         if weighting == 'none' or float(exponent) == float('inf'):
-            weight = None
+            weighting = None
         elif weighting == 'const':
-            weight = partition.cell_volume
+            weighting = partition.cell_volume
         else:
             raise ValueError("`weighting` '{}' not understood"
                              "".format(weighting_in))
 
     if dtype is not None:
-        dspace = ds_type(partition.size, dtype=dtype, impl=impl, weight=weight,
-                         exponent=exponent)
+        dspace = ds_type(partition.size, dtype=dtype, impl=impl,
+                         weighting=weighting, exponent=exponent)
     else:
-        dspace = ds_type(partition.size, impl=impl, weight=weight,
+        dspace = ds_type(partition.size, impl=impl, weighting=weighting,
                          exponent=exponent)
 
     return DiscreteLp(fspace, partition, dspace, exponent, interp, order=order,
@@ -1236,12 +1243,12 @@ def uniform_discr(min_pt, max_pt, shape, exponent=2.0, interp='nearest',
     Create real space:
 
     >>> uniform_discr([0, 0], [1, 1], [10, 10])
-    uniform_discr([0.0, 0.0], [1.0, 1.0], [10, 10])
+    uniform_discr([0.0, 0.0], [1.0, 1.0], (10, 10))
 
     Can create complex space by giving a dtype
 
     >>> uniform_discr([0, 0], [1, 1], [10, 10], dtype='complex')
-    uniform_discr([0.0, 0.0], [1.0, 1.0], [10, 10], dtype='complex')
+    uniform_discr([0.0, 0.0], [1.0, 1.0], (10, 10), dtype='complex')
 
     See Also
     --------
@@ -1411,31 +1418,31 @@ def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
 
     Examples
     --------
-    >>> discr = uniform_discr([0, 0], [1, 2], (10, 5))
+    >>> discr = odl.uniform_discr([0, 0], [1, 2], (10, 5))
     >>> discr.cell_sides
     array([ 0.1,  0.4])
 
     If no additional argument is given, a copy of ``discr`` is
     returned:
 
-    >>> uniform_discr_fromdiscr(discr) == discr
+    >>> odl.uniform_discr_fromdiscr(discr) == discr
     True
-    >>> uniform_discr_fromdiscr(discr) is discr
+    >>> odl.uniform_discr_fromdiscr(discr) is discr
     False
 
     Giving ``min_pt`` or ``max_pt`` results in a
     translation, while for the other two options, the domain
     is kept but re-partitioned:
 
-    >>> uniform_discr_fromdiscr(discr, min_pt=[1, 1])
-    uniform_discr([1.0, 1.0], [2.0, 3.0], [10, 5])
-    >>> uniform_discr_fromdiscr(discr, max_pt=[0, 0])
-    uniform_discr([-1.0, -2.0], [0.0, 0.0], [10, 5])
-    >>> uniform_discr_fromdiscr(discr, cell_sides=[1, 1])
-    uniform_discr([0.0, 0.0], [1.0, 2.0], [1, 2])
-    >>> uniform_discr_fromdiscr(discr, shape=[5, 5])
-    uniform_discr([0.0, 0.0], [1.0, 2.0], [5, 5])
-    >>> uniform_discr_fromdiscr(discr, shape=[5, 5]).cell_sides
+    >>> odl.uniform_discr_fromdiscr(discr, min_pt=[1, 1])
+    uniform_discr([1.0, 1.0], [2.0, 3.0], (10, 5))
+    >>> odl.uniform_discr_fromdiscr(discr, max_pt=[0, 0])
+    uniform_discr([-1.0, -2.0], [0.0, 0.0], (10, 5))
+    >>> odl.uniform_discr_fromdiscr(discr, cell_sides=[1, 1])
+    uniform_discr([0.0, 0.0], [1.0, 2.0], (1, 2))
+    >>> odl.uniform_discr_fromdiscr(discr, shape=[5, 5])
+    uniform_discr([0.0, 0.0], [1.0, 2.0], (5, 5))
+    >>> odl.uniform_discr_fromdiscr(discr, shape=[5, 5]).cell_sides
     array([ 0.2,  0.4])
 
     The cases with 2 or more additional arguments and the syntax
@@ -1444,23 +1451,23 @@ def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
     # axis 0: translate to match max_pt = 3
     # axis 1: recompute max_pt using the original shape with the
     # new min_pt and cell_sides
-    >>> new_discr = uniform_discr_fromdiscr(discr, min_pt=[None, 1],
-    ...                                     max_pt=[3, None],
-    ...                                     cell_sides=[None, 0.25])
+    >>> new_discr = odl.uniform_discr_fromdiscr(discr, min_pt=[None, 1],
+    ...                                         max_pt=[3, None],
+    ...                                         cell_sides=[None, 0.25])
     >>> new_discr
-    uniform_discr([2.0, 1.0], [3.0, 2.25], [10, 5])
+    uniform_discr([2.0, 1.0], [3.0, 2.25], (10, 5))
     >>> new_discr.cell_sides
     array([ 0.1 ,  0.25])
 
     # axis 0: recompute min_pt from old cell_sides and new
     # max_pt and shape
     # axis 1: use new min_pt, shape and cell_sides only
-    >>> new_discr = uniform_discr_fromdiscr(discr, min_pt=[None, 1],
-    ...                                     max_pt=[3, None],
-    ...                                     shape=[5, 5],
-    ...                                     cell_sides=[None, 0.25])
+    >>> new_discr = odl.uniform_discr_fromdiscr(discr, min_pt=[None, 1],
+    ...                                         max_pt=[3, None],
+    ...                                         shape=[5, 5],
+    ...                                         cell_sides=[None, 0.25])
     >>> new_discr
-    uniform_discr([2.5, 1.0], [3.0, 2.25], [5, 5])
+    uniform_discr([2.5, 1.0], [3.0, 2.25], (5, 5))
     >>> new_discr.cell_sides
     array([ 0.1 ,  0.25])
     """

@@ -249,7 +249,7 @@ def test_vector_weighting(exponent):
     dists = [5, 7]
 
     weight = [0.5, 1.5]
-    pspace = odl.ProductSpace(r2, r3, weight=weight, exponent=exponent)
+    pspace = odl.ProductSpace(r2, r3, weighting=weight, exponent=exponent)
     x = pspace.element((r2x, r3x))
     y = pspace.element((r2y, r3y))
 
@@ -293,7 +293,7 @@ def test_const_weighting(exponent):
     dists = [5, 7]
 
     weight = 2.0
-    pspace = odl.ProductSpace(r2, r3, weight=weight, exponent=exponent)
+    pspace = odl.ProductSpace(r2, r3, weighting=weight, exponent=exponent)
     x = pspace.element((r2x, r3x))
     y = pspace.element((r2y, r3y))
 
@@ -394,13 +394,13 @@ def test_custom_funcs():
         odl.ProductSpace(r2, r3, norm=custom_norm, exponent=1.0)
 
     with pytest.raises(ValueError):
-        odl.ProductSpace(r2, r3, norm=custom_norm, weight=2.0)
+        odl.ProductSpace(r2, r3, norm=custom_norm, weighting=2.0)
 
     with pytest.raises(ValueError):
-        odl.ProductSpace(r2, r3, dist=custom_dist, weight=2.0)
+        odl.ProductSpace(r2, r3, dist=custom_dist, weighting=2.0)
 
     with pytest.raises(ValueError):
-        odl.ProductSpace(r2, r3, inner=custom_inner, weight=2.0)
+        odl.ProductSpace(r2, r3, inner=custom_inner, weighting=2.0)
 
 
 def test_power_RxR():
@@ -752,14 +752,14 @@ def test_ufuncs():
     # one arg
     x = H.element([[-1], [-2, -3]])
 
-    z = x.ufunc.absolute()
+    z = x.ufuncs.absolute()
     assert all_almost_equal(z, [[1], [2, 3]])
 
     # one arg with out
     x = H.element([[-1], [-2, -3]])
     y = H.element()
 
-    z = x.ufunc.absolute(out=y)
+    z = x.ufuncs.absolute(out=y)
     assert y is z
     assert all_almost_equal(z, [[1], [2, 3]])
 
@@ -768,7 +768,7 @@ def test_ufuncs():
     y = H.element([[4], [5, 6]])
     w = H.element()
 
-    z = x.ufunc.add(y)
+    z = x.ufuncs.add(y)
     assert all_almost_equal(z, [[5], [7, 9]])
 
     # Two args with out
@@ -776,7 +776,7 @@ def test_ufuncs():
     y = H.element([[4], [5, 6]])
     w = H.element()
 
-    z = x.ufunc.add(y, out=w)
+    z = x.ufuncs.add(y, out=w)
     assert w is z
     assert all_almost_equal(z, [[5], [7, 9]])
 
@@ -784,10 +784,10 @@ def test_ufuncs():
 def test_reductions():
     H = odl.ProductSpace(odl.rn(1), odl.rn(2))
     x = H.element([[1], [2, 3]])
-    assert x.ufunc.sum() == 6.0
-    assert x.ufunc.prod() == 6.0
-    assert x.ufunc.min() == 1.0
-    assert x.ufunc.max() == 3.0
+    assert x.ufuncs.sum() == 6.0
+    assert x.ufuncs.prod() == 6.0
+    assert x.ufuncs.min() == 1.0
+    assert x.ufuncs.max() == 3.0
 
 
 if __name__ == '__main__':

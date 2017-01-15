@@ -209,7 +209,7 @@ def osmlem(op, x, data, niter=1, noise='poisson', callback=None, **kwargs):
         for _ in range(niter):
             for i in range(n_ops):
                 op[i](x, out=tmp_ran[i])
-                tmp_ran[i].ufunc.maximum(eps, out=tmp_ran[i])
+                tmp_ran[i].ufuncs.maximum(eps, out=tmp_ran[i])
                 data[i].divide(tmp_ran[i], out=tmp_ran[i])
 
                 op[i].adjoint(tmp_ran[i], out=tmp_dom)

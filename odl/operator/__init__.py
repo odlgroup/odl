@@ -30,5 +30,8 @@ __all__ += default_ops.__all__
 from .pspace_ops import *
 __all__ += pspace_ops.__all__
 
+from .tensor_ops import *
+__all__ += tensor_ops.__all__
+
 from .oputils import *
 __all__ += oputils.__all__
