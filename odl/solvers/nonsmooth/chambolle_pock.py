@@ -58,23 +58,22 @@ def chambolle_pock_solver(x, f, g, L, tau, sigma, niter=1, **kwargs):
 
     Parameters
     ----------
-    x : ``op.domain`` element
+    x : ``L.domain`` element
         Starting point of the iteration, updated in-place.
     f : `Functional`
         The function ``f`` in the problem definition. Needs to have
         ``f.convex_conj.proximal``.
     g : `Functional`
-        The function ``f`` in the problem definition. Needs to have
+        The function ``g`` in the problem definition. Needs to have
         ``g.proximal``.
     L : linear `Operator`
         The linear operator that should be applied before ``f``. Its range must
-        match the domain of ``f``.
+        match the domain of ``f`` and its domain must match the domain of
+        ``g``.
     tau : positive float
         Step size parameter for the update of the primal (``g``) variable.
-        Controls the speed of convergence towards the minimum of G.
     sigma : positive float
         Step size parameter for the update of the dual (``f``) variable.
-        Controls the speed of convergence towards the minimum of ``F^*``.
     niter : non-negative int, optional
         Number of iterations.
 
@@ -108,7 +107,7 @@ def chambolle_pock_solver(x, f, g, L, tau, sigma, niter=1, **kwargs):
 
         \\min_{x \\in X} F(K x) + G(x),
 
-    where the technical conditions are that :math:`K` is an operator
+    where the formal conditions are that :math:`K` is an operator
     between Hilbert spaces :math:`X` and :math:`Y`.
     Further, :math:`G : X \\rightarrow [0, +\\infty]` and
     :math:`F : Y \\rightarrow [0, +\\infty]` are proper, convex,

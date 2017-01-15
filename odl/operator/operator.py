@@ -1112,8 +1112,12 @@ class OperatorSum(Operator):
         x : `domain` `element-like`
             Evaluation point of the derivative
         """
-        return OperatorSum(self.left.derivative(x), self.right.derivative(x),
-                           self.__tmp_dom, self.__tmp_ran)
+        if self.is_linear:
+            return self
+        else:
+            return OperatorSum(self.left.derivative(x),
+                               self.right.derivative(x),
+                               self.__tmp_dom, self.__tmp_ran)
 
     @property
     def adjoint(self):
@@ -1328,11 +1332,14 @@ class OperatorComp(Operator):
             Evaluation point of the derivative. Needs to be usable as
             input for the ``right`` operator.
         """
-        left_deriv = self.left.derivative(self.right(x))
-        right_deriv = self.right.derivative(x)
+        if self.is_linear:
+            return self
+        else:
+            left_deriv = self.left.derivative(self.right(x))
+            right_deriv = self.right.derivative(x)
 
-        return OperatorComp(left_deriv, right_deriv,
-                            self.__tmp)
+            return OperatorComp(left_deriv, right_deriv,
+                                self.__tmp)
 
     @property
     def adjoint(self):
@@ -1852,8 +1859,11 @@ class FunctionalLeftVectorMult(Operator):
         -------
         derivative : `FunctionalLeftVectorMult`
         """
-        return FunctionalLeftVectorMult(self.functional.derivative(x),
-                                        self.vector)
+        if self.is_linear:
+            return self
+        else:
+            return FunctionalLeftVectorMult(self.functional.derivative(x),
+                                            self.vector)
 
     @property
     def adjoint(self):
@@ -1956,7 +1966,10 @@ class OperatorLeftVectorMult(Operator):
         --------
         OperatorLeftVectorMult : the result
         """
-        return self.vector * self.operator.derivative(x)
+        if self.is_linear:
+            return self
+        else:
+            return self.vector * self.operator.derivative(x)
 
     @property
     def adjoint(self):
@@ -2069,7 +2082,10 @@ class OperatorRightVectorMult(Operator):
         --------
         OperatorRightVectorMult : the result
         """
-        return self.operator.derivative(x) * self.vector
+        if self.is_linear:
+            return self
+        else:
+            return self.operator.derivative(x) * self.vector
 
     @property
     def adjoint(self):

@@ -38,7 +38,7 @@ reco_space = odl.uniform_discr(
     min_pt=[-20, -20], max_pt=[20, 20], shape=[200, 200])
 
 # Make a parallel beam geometry with flat detector
-# Angles: uniformly spaced, n = 400, min = 0, max = 2 * pi
+# Angles: uniformly spaced, n = 400, min = 0, max = pi
 angle_partition = odl.uniform_partition(0, np.pi, 400)
 
 # Detector: uniformly sampled, n = 400, min = -30, max = 30
@@ -101,4 +101,4 @@ odl.solvers.douglas_rachford_pd
 # Display images
 discr_phantom.show(title='original image')
 data.show(title='sinogram')
-x.show(title='reconstructed image', show=True)
+x.show(title='reconstructed image', force_show=True)

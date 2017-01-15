@@ -15,27 +15,24 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Example for `DiscreteLpElement.show` in 2D.
+"""Example on using show and updating the figure in real time in 2d.
 
-Notes
------
-The behaviour of blocking shows etc in matplotlib is experimental and can cause
-issues with this example.
+This example uses the update_in_place option, which can improve performance.
 """
 
 import odl
+import matplotlib.pyplot as plt
 
-space = odl.uniform_discr([0, 0], [1, 1], [100, 100])
+n = 100
+m = 200
+space = odl.uniform_discr([0, 0], [1, 1], [n, n])
 phantom = odl.phantom.shepp_logan(space, modified=True)
 
-# Show all data
-phantom.show(force_show=True)
+# Create a figure by saving the result of show
+fig = None
 
-# We can show subsets by index
-phantom.show(indices=[slice(None), 50])
+# Reuse the figure indefinitely, values are overwritten.
+for i in range(m):
+    fig = (phantom * i).show(fig=fig, clim=[0, m], update_in_place=True)
 
-# Or we can show by coordinate
-phantom.show(coords=[None, 0.5])
-
-# We can also show subsets
-phantom.show(coords=[[None, 0.5], None])
+plt.show()

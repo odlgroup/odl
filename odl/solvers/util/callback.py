@@ -23,11 +23,13 @@ from future import standard_library
 standard_library.install_aliases()
 
 import time
-
+import os
+import numpy as np
 
 __all__ = ('CallbackStore', 'CallbackApply',
            'CallbackPrintTiming', 'CallbackPrintIteration',
-           'CallbackPrint', 'CallbackPrintNorm', 'CallbackShow', )
+           'CallbackPrint', 'CallbackPrintNorm', 'CallbackShow',
+           'CallbackSaveToDisk', 'CallbackSleep')
 
 
 class SolverCallback(object):
@@ -374,22 +376,66 @@ class CallbackShow(SolverCallback):
         ----------
         display_step : positive int, optional
             Number of iterations between plots. Default: 1
+        saveto : string, optional
+            Format string for the name of the file(s) where
+            iterates are saved. The file name is generated as
+
+                filename = saveto.format(cur_iter_num)
+
+            where ``cur_iter_num`` is the current iteration number.
+            If the directory name does not exist, a ``ValueError`` is raised.
+            If ``saveto is None``, the figures are not saved.
+            Default: ``None``
 
         Other Parameters
         ----------------
         kwargs :
             Optional arguments passed on to ``x.show``
+
+        Examples
+        --------
+        Show the result of each iterate:
+
+        >>> callback = CallbackShow()
+
+        Show and save every fifth iterate in ``png`` format, overwriting the
+        previous one:
+
+        >>> callback = CallbackShow(display_step=5,
+        ...                         saveto='my_path/my_iterate.png')
+
+        Show and save each fifth iterate in ``png`` format, indexing the files
+        with the iteration number:
+
+        >>> callback = CallbackShow(display_step=5,
+        ...                         saveto='my_path/my_iterate_{}.png')
         """
         self.args = args
         self.kwargs = kwargs
         self.fig = kwargs.pop('fig', None)
         self.display_step = kwargs.pop('display_step', 1)
+        self.saveto = kwargs.pop('saveto', None)
         self.iter = 0
+        self.space_of_last_x = None
 
     def __call__(self, x):
         """Show the current iterate."""
+        # Check if we should update the figure in place
+        x_space = x.space
+        update_in_place = (self.space_of_last_x == x_space)
+        self.space_of_last_x = x_space
+
         if (self.iter % self.display_step) == 0:
-            self.fig = x.show(*self.args, fig=self.fig, **self.kwargs)
+            if self.saveto is None:
+                self.fig = x.show(*self.args, fig=self.fig,
+                                  update_in_place=update_in_place,
+                                  **self.kwargs)
+
+            else:
+                self.fig = x.show(*self.args, fig=self.fig,
+                                  saveto=self.saveto.format(self.iter),
+                                  update_in_place=update_in_place,
+                                  **self.kwargs)
 
         self.iter += 1
 
@@ -397,16 +443,136 @@ class CallbackShow(SolverCallback):
         """Set `iter` to 0 and create a new figure."""
         self.iter = 0
         self.fig = None
+        self.space_of_last_x = None
 
     def __repr__(self):
         """Return ``repr(self)``."""
-
-        return '{}(display_step={}, fig={}, *{!r}, **{!r})'.format(
+        return '{}(display_step={}, saveto={}, fig={}, *{!r}, **{!r})'.format(
             self.__class__.__name__,
             self.display_step,
+            self.saveto,
             self.fig,
             self.args,
             self.kwargs)
+
+
+class CallbackSaveToDisk(SolverCallback):
+
+    """Save the iterates to disk."""
+
+    def __init__(self, saveto, save_step=1, impl='pickle', **kwargs):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        saveto : string
+            Format string for the name of the file(s) where
+            iterates are saved. The file name is generated as
+
+                filename = saveto.format(cur_iter_num)
+
+            where ``cur_iter_num`` is the current iteration number.
+        save_step : positive int, optional
+            Number of iterations between saves.
+        impl : {'numpy', 'pickle', 'numpy_txt'}, optional
+            The format to store the iterates in. Numpy formats are only usable
+            if the data can be converted to an array via `numpy.asarray`.
+
+        Other Parameters
+        ----------------
+        kwargs :
+            Optional arguments passed to the save function.
+
+        Examples
+        --------
+        Store each iterate:
+
+        >>> callback = CallbackSaveToDisk('my_path/my_iterate')
+
+        Save every fifth overwriting the previous one:
+
+        >>> callback = CallbackSaveToDisk(saveto='my_path/my_iterate',
+        ...                               save_step=5)
+
+        Save each fifth iterate in ``numpy`` format, indexing the files with
+        the iteration number:
+
+        >>> callback = CallbackSaveToDisk(saveto='my_path/my_iterate_{}',
+        ...                               save_step=5, impl='numpy')
+        """
+        self.saveto = saveto
+        self.save_step = save_step
+        self.impl = impl
+        self.kwargs = kwargs
+        self.iter = 0
+
+    def __call__(self, x):
+        """Save the current iterate."""
+        if (self.iter % self.save_step) == 0:
+            file_path = self.saveto.format(self.iter)
+            folder_path = os.path.dirname(os.path.realpath(file_path))
+
+            if not os.path.exists(folder_path):
+                os.makedirs(folder_path)
+
+            if self.impl == 'pickle':
+                import pickle
+                with open(file_path, 'wb+') as f:
+                    pickle.dump(x, f, **self.kwargs)
+            elif self.impl == 'numpy':
+                np.save(file_path, np.asarray(x), **self.kwargs)
+            elif self.impl == 'numpy_txt':
+                np.savetxt(file_path, np.asarray(x), **self.kwargs)
+            else:
+                raise RuntimeError('unknown `impl` {}'.format(self.impl))
+
+        self.iter += 1
+
+    def reset(self):
+        """Set `iter` to 0."""
+        self.iter = 0
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{}(saveto={}, save_step={}, impl={}, **{!r})'.format(
+            self.__class__.__name__,
+            self.saveto,
+            self.save_step,
+            self.impl,
+            self.kwargs)
+
+
+class CallbackSleep(SolverCallback):
+
+    """Sleep for a specific time."""
+
+    def __init__(self, seconds=1.0):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        seconds : float
+            Number of seconds to sleep, can be float for subsecond precision.
+
+        Examples
+        --------
+        Sleep 1 second between consecutive iterates:
+
+        >>> callback = CallbackSleep(seconds=1)
+
+        Sleep 10 ms between consecutive iterate:
+
+        >>> callback = CallbackSleep(seconds=0.01)
+        """
+        self.seconds = float(seconds)
+
+    def __call__(self, x):
+        """Sleep for a specified time."""
+        time.sleep(self.seconds)
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{}(seconds={})'.format(self.__class__.__name__, self.seconds)
 
 
 if __name__ == '__main__':

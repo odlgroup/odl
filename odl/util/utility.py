@@ -32,7 +32,7 @@ __all__ = ('array1d_repr', 'array1d_str', 'arraynd_repr', 'arraynd_str',
            'is_real_dtype', 'is_real_floating_dtype',
            'is_complex_floating_dtype',
            'real_dtype', 'complex_dtype',
-           'writable_array')
+           'as_flat_array', 'writable_array')
 
 TYPE_MAP_R2C = {np.dtype(dtype): np.result_type(dtype, 1j)
                 for dtype in np.sctypes['float']}
@@ -432,6 +432,14 @@ def preload_first_arg(instance, mode):
             raise ValueError('bad mode {!r}'.format(mode))
 
     return decorator
+
+
+def as_flat_array(vec):
+    """Return ``vec`` as a flat array according to the order of ``vec``."""
+    if hasattr(vec, 'order'):
+        return vec.asarray().ravel(vec.order)
+    else:
+        return vec.asarray().ravel()
 
 
 class writable_array(object):

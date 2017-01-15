@@ -74,8 +74,8 @@ def douglas_rachford_pd(x, f, g, L, tau, sigma, niter,
         ``l[i].convex_conj.proximal``.
         If omitted, the simpler problem without ``l_i``  will be considered.
     lam : float or callable, optional
-        Overrelaxation step size. If callable, should take an index (zero
-        indexed) and return the corresponding step size.
+        Overrelaxation step size. If callable, it should take an index
+        (starting at zero) and return the corresponding step size.
 
     Notes
     -----

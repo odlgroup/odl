@@ -53,8 +53,8 @@ space = odl.uniform_discr(
     min_pt=[-20, -20], max_pt=[20, 20], shape=[100, 100], dtype='float32')
 
 # Make a parallel beam geometry with flat detector
-# Angles: uniformly spaced, n = 300, min = 0, max = 2 * pi
-angle_partition = odl.uniform_partition(0, 2 * np.pi, 300)
+# Angles: uniformly spaced, n = 300, min = 0, max = pi
+angle_partition = odl.uniform_partition(0, np.pi, 300)
 # Detector: uniformly sampled, n = 300, min = -30, max = 30
 detector_partition = odl.uniform_partition(-30, 30, 300)
 geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
@@ -113,7 +113,7 @@ f = odl.solvers.IndicatorBox(forward_op.domain, 0, 1)
 # Create callback that prints current iterate value and displays every 20th
 # iterate.
 func = f + l2err * forward_op + lam * nuc_norm * pgradient
-callback = (odl.solvers.CallbackShow(display_step=20) &
+callback = (odl.solvers.CallbackShow() &
             odl.solvers.CallbackPrint(func=func))
 
 # Solve the problem. Here the parameters are chosen in order to ensure

@@ -84,13 +84,14 @@ def _axes_info(grid, npoints=5):
 
 
 def show_discrete_data(values, grid, title=None, method='',
-                       show=False, fig=None, **kwargs):
+                       force_show=False, fig=None, **kwargs):
     """Display a discrete 1d or 2d function.
 
     Parameters
     ----------
     values : `numpy.ndarray`
         The values to visualize
+
     grid : `TensorGrid` or `RectPartition`
         Grid of the values
 
@@ -115,20 +116,33 @@ def show_discrete_data(values, grid, title=None, method='',
 
         'wireframe', 'plot_wireframe' : surface plot
 
+    force_show : bool, optional
+        Whether the plot should be forced to be shown now or deferred until
+        later. Note that some backends always displays the plot, regardless
+        of this value.
 
-    show : bool, optional
-        If the plot should be showed now or deferred until later
-
-    fig : `matplotlib.figure.Figure`
+    fig : `matplotlib.figure.Figure`, optional
         The figure to show in. Expected to be of same "style", as the figure
         given by this function. The most common usecase is that fig is the
         return value from an earlier call to this function.
+        Default: New figure
 
-    interp : {'nearest', 'linear'}
+    interp : {'nearest', 'linear'}, optional
         Interpolation method to use.
+        Default: 'nearest'
 
-    axis_labels : string
+    axis_labels : string, optional
         Axis labels, default: ['x', 'y']
+
+    update_in_place : bool, optional
+        Update the content of the figure in place. Intended for faster real
+        time plotting, typically ~5 times faster.
+        This is only performed for ``method == 'imshow'`` with real data and
+        ``fig != None``. Otherwise this parameter is treated as False.
+        Default: False
+
+    axis_fontsize : int, optional
+        Fontsize for the axes. Default: 16
 
     kwargs : {'figsize', 'saveto', ...}
         Extra keyword arguments passed on to display method
@@ -139,8 +153,6 @@ def show_discrete_data(values, grid, title=None, method='',
     -------
     fig : `matplotlib.figure.Figure`
         The resulting figure. It is also shown to the user.
-    colorbar : `matplotlib.colorbar.Colorbar`
-        The colorbar
 
     See Also
     --------
@@ -166,6 +178,14 @@ def show_discrete_data(values, grid, title=None, method='',
     figsize = kwargs.pop('figsize', None)
     saveto = kwargs.pop('saveto', None)
     interp = kwargs.pop('interp', 'nearest')
+    axis_fontsize = kwargs.pop('axis_fontsize', 16)
+
+    # Check if we should and can update the plot in place
+    update_in_place = kwargs.pop('update_in_place', False)
+    if (update_in_place and
+            (fig is None or values_are_complex or values.ndim != 2 or
+             (values.ndim == 2 and method not in ('', 'imshow')))):
+        update_in_place = False
 
     if values.ndim == 1:  # TODO: maybe a plotter class would be better
         if not method:
@@ -246,7 +266,7 @@ def show_discrete_data(values, grid, title=None, method='',
             fig = plt.figure(fig.number)
             updatefig = True
 
-            if values.ndim > 1:
+            if values.ndim > 1 and not update_in_place:
                 # If the figure is larger than 1d, we can clear it since we
                 # dont reuse anything. Keeping it causes performance problems.
                 fig.clf()
@@ -260,9 +280,9 @@ def show_discrete_data(values, grid, title=None, method='',
             # Create new axis if needed
             sub_re = plt.subplot(arrange_subplots[0], **sub_kwargs)
             sub_re.set_title('Real part')
-            sub_re.set_xlabel(axis_labels[0])
+            sub_re.set_xlabel(axis_labels[0], fontsize=axis_fontsize)
             if values.ndim == 2:
-                sub_re.set_ylabel(axis_labels[1])
+                sub_re.set_ylabel(axis_labels[1], fontsize=axis_fontsize)
             else:
                 sub_re.set_ylabel('value')
         else:
@@ -296,9 +316,9 @@ def show_discrete_data(values, grid, title=None, method='',
         if len(fig.axes) < 3:
             sub_im = plt.subplot(arrange_subplots[1], **sub_kwargs)
             sub_im.set_title('Imaginary part')
-            sub_im.set_xlabel(axis_labels[0])
+            sub_im.set_xlabel(axis_labels[0], fontsize=axis_fontsize)
             if values.ndim == 2:
-                sub_im.set_ylabel(axis_labels[1])
+                sub_im.set_ylabel(axis_labels[1], fontsize=axis_fontsize)
             else:
                 sub_im.set_ylabel('value')
         else:
@@ -332,9 +352,9 @@ def show_discrete_data(values, grid, title=None, method='',
         if len(fig.axes) == 0:
             # Create new axis object if needed
             sub = plt.subplot(111, **sub_kwargs)
-            sub.set_xlabel(axis_labels[0])
+            sub.set_xlabel(axis_labels[0], fontsize=axis_fontsize)
             if values.ndim == 2:
-                sub.set_ylabel(axis_labels[1])
+                sub.set_ylabel(axis_labels[1], fontsize=axis_fontsize)
             else:
                 sub.set_ylabel('value')
             try:
@@ -345,8 +365,27 @@ def show_discrete_data(values, grid, title=None, method='',
         else:
             sub = fig.axes[0]
 
-        display = getattr(sub, method)
-        csub = display(*args_re, **dsp_kwargs)
+        if update_in_place:
+            import matplotlib as mpl
+            imgs = [obj for obj in sub.get_children()
+                    if isinstance(obj, mpl.image.AxesImage)]
+            if len(imgs) > 0 and updatefig:
+                imgs[0].set_data(args_re[0])
+                csub = imgs[0]
+
+                # Update min-max
+                if 'clim' not in kwargs:
+                    minval, maxval = _safe_minmax(values)
+                else:
+                    minval, maxval = kwargs['clim']
+
+                csub.set_clim(minval, maxval)
+            else:
+                display = getattr(sub, method)
+                csub = display(*args_re, **dsp_kwargs)
+        else:
+            display = getattr(sub, method)
+            csub = display(*args_re, **dsp_kwargs)
 
         # Axis ticks
         if method == 'imshow' and not grid.is_uniform:
@@ -354,9 +393,8 @@ def show_discrete_data(values, grid, title=None, method='',
             plt.xticks(xpts, xlabels)
             plt.yticks(ypts, ylabels)
 
-        if method == 'imshow' and len(fig.axes) < 2:
-            # Create colorbar if none seems to exist
-
+        if method == 'imshow':
+            # Add colorbar
             # Use clim from kwargs if given
             if 'clim' not in kwargs:
                 minval, maxval = _safe_minmax(values)
@@ -365,27 +403,45 @@ def show_discrete_data(values, grid, title=None, method='',
 
             ticks = _colorbar_ticks(minval, maxval)
             format = _colorbar_format(minval, maxval)
-
-            plt.colorbar(mappable=csub, ticks=ticks, format=format)
+            if len(fig.axes) < 2:
+                # Create colorbar if none seems to exist
+                plt.colorbar(mappable=csub, ticks=ticks, format=format)
+            elif update_in_place:
+                # If it exists and we should update it
+                csub.colorbar.set_clim(minval, maxval)
+                csub.colorbar.set_ticks(ticks)
+                csub.colorbar.set_ticklabels([format % tick for tick in ticks])
+                csub.colorbar.draw_all()
 
     # Fixes overlapping stuff at the expense of potentially squashed subplots
-    fig.tight_layout()
+    if not update_in_place:
+        fig.tight_layout()
 
-    if title is not None:
-        if not values_are_complex:
-            # Do not overwrite title for complex values
-            plt.title(title)
-        fig.canvas.manager.set_window_title(title)
+        if title is not None:
+            if not values_are_complex:
+                # Do not overwrite title for complex values
+                plt.title(title)
+            fig.canvas.manager.set_window_title(title)
 
     if updatefig or plt.isinteractive():
         # If we are running in interactive mode, we can always show the fig
         # This causes an artifact, where users of `CallbackShow` without
         # interactive mode only shows the figure after the second iteration.
         plt.show(block=False)
-        plt.draw()
-        plt.pause(0.1)
+        if not update_in_place:
+            plt.draw()
+            plt.pause(0.0001)
+        else:
+            try:
+                sub.draw_artist(csub)
+                fig.canvas.blit(fig.bbox)
+                fig.canvas.update()
+                fig.canvas.flush_events()
+            except AttributeError:
+                plt.draw()
+                plt.pause(0.0001)
 
-    if show:
+    if force_show:
         plt.show()
 
     if saveto is not None:

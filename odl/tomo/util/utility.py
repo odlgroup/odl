@@ -113,19 +113,16 @@ def axis_rotation(axis, angle, vectors):
     .. _Rodriguez' rotation formula:
         https://en.wikipedia.org/wiki/Rodrigues'_rotation_formula
     """
-    if not (hasattr(vectors, 'shape') and hasattr(vectors, 'ndim')):
-        vectors = np.asarray(vectors)
-
+    vectors = np.asarray(vectors)
     if not (vectors.shape == (3,) or (vectors.ndim == 2 and
                                       vectors.shape[1] == 3)):
-        raise ValueError('`vector` shape {} not (3,) or (N, 3)'
+        raise ValueError('`vector` shape must be (3,) or (N, 3), got {}'
                          ''.format(vectors.shape))
 
-    if not hasattr(axis, 'shape'):
-        axis = np.asarray(axis)
-
+    axis = np.asarray(axis)
     if axis.shape != (3,):
-        raise ValueError('`axis` shape {} not (3,)'.format(axis.shape))
+        raise ValueError('`axis` shape must be (3,), got {}'
+                         ''.format(axis.shape))
 
     angle = float(angle)
 
@@ -163,19 +160,18 @@ def axis_rotation_matrix(axis, angle):
     .. _Rodriguez' rotation formula:
         https://en.wikipedia.org/wiki/Rodrigues'_rotation_formula
     """
-    if not hasattr(axis, 'shape'):
-        axis = np.asarray(axis)
-
+    axis = np.asarray(axis)
     if axis.shape != (3,):
-        raise ValueError('`axis` shape {} not (3,)'.format(axis.shape))
+        raise ValueError('`axis` shape must be (3,), got {}'
+                         ''.format(axis.shape))
 
     angle = float(angle)
 
-    cross_mat = np.matrix([[0, -axis[2], axis[1]],
-                           [axis[2], 0, -axis[0]],
-                           [-axis[1], axis[0], 0]])
-    dy_mat = np.asmatrix(np.outer(axis, axis))
-    id_mat = np.asmatrix(np.eye(3))
+    cross_mat = np.array([[0, -axis[2], axis[1]],
+                          [axis[2], 0, -axis[0]],
+                          [-axis[1], axis[0], 0]])
+    dy_mat = np.outer(axis, axis)
+    id_mat = np.eye(3)
     cos_ang = np.cos(angle)
     sin_ang = np.sin(angle)
 
@@ -230,8 +226,8 @@ def angles_from_matrix(rot_matrix):
         return phi, theta, psi
 
     else:
-        raise ValueError('shape of `rot_matrix` is {}, expected (2, 2) '
-                         'or (3, 3)'.format(rot_matrix.shape))
+        raise ValueError('shape of `rot_matrix` must be (2, 2) or (3, 3), '
+                         'got {}'.format(rot_matrix.shape))
 
 
 def to_lab_sys(vec_in_local_coords, local_sys):

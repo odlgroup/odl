@@ -145,6 +145,7 @@ class WaveletTransformBase(Operator):
         if variant not in ('forward', 'inverse', 'adjoint'):
             raise ValueError("`variant` '{}' not understood"
                              "".format(variant_in))
+        self.__variant = variant
 
         if variant == 'forward':
             super().__init__(domain=space, range=coeff_space, linear=True)
@@ -185,6 +186,35 @@ class WaveletTransformBase(Operator):
     def is_biorthogonal(self):
         """Whether or not the wavelet basis is bi-orthogonal."""
         return self.pywt_wavelet.biorthogonal
+
+    def scales(self):
+        """Get the scales of each coefficient.
+
+        Returns
+        -------
+        scales : ``range`` element
+            The scale of each coefficient, given by an integer. 0 for the
+            lowest resolution and self.nlevels for the highest.
+        """
+        if self.impl == 'pywt':
+            if self.__variant == 'forward':
+                discr_space = self.domain
+                wavelet_space = self.range
+            else:
+                discr_space = self.range
+                wavelet_space = self.domain
+
+            shapes = pywt_coeff_shapes(discr_space.shape, self.pywt_wavelet,
+                                       self.nlevels, self.pywt_pad_mode)
+            coeff_list = [np.ones(shapes[0]) * 0]
+            dcoeffs_per_scale = 2 ** discr_space.ndim - 1
+            for i in range(1, 1 + len(shapes[1:])):
+                coeff_list.append(
+                    (np.ones(shapes[i]) * i,) * dcoeffs_per_scale)
+            coeffs = pywt_flat_array_from_coeffs(coeff_list)
+            return wavelet_space.element(coeffs)
+        else:
+            raise RuntimeError("bad `impl` '{}'".format(self.impl))
 
 
 class WaveletTransform(WaveletTransformBase):
@@ -301,7 +331,8 @@ class WaveletTransform(WaveletTransformBase):
             if `is_orthogonal` is ``False``
         """
         if self.is_orthogonal:
-            return self.inverse
+            scale = 1 / self.domain.partition.cell_volume
+            return scale * self.inverse
         else:
             # TODO: put adjoint here
             return super().adjoint
@@ -449,7 +480,8 @@ class WaveletTransformInverse(WaveletTransformBase):
         inverse
         """
         if self.is_orthogonal:
-            return self.inverse
+            scale = self.range.partition.cell_volume
+            return scale * self.inverse
         else:
             # TODO: put adjoint here
             return super().adjoint

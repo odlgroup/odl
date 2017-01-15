@@ -79,7 +79,7 @@ f = odl.solvers.SeparableSum(kl_divergence, l1_norm)
 
 # Optional: pass callback objects to solver
 callback = (odl.solvers.CallbackPrintIteration() &
-            odl.solvers.CallbackShow(display_step=20))
+            odl.solvers.CallbackShow(display_step=5))
 
 
 # --- Select solver parameters and solve using Chambolle-Pock --- #
@@ -100,4 +100,4 @@ odl.solvers.chambolle_pock_solver(
 # Display images
 orig.show(title='original image')
 noisy.show(title='noisy image')
-x.show(title='denoised', show=True)  # show and hold
+x.show(title='denoised', force_show=True)  # show and hold

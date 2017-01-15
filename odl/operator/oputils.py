@@ -27,6 +27,7 @@ import numpy as np
 
 from odl.space.base_ntuples import FnBase
 from odl.space import ProductSpace
+from odl.util.utility import as_flat_array
 
 __all__ = ('matrix_representation', 'power_method_opnorm', 'as_scipy_operator',
            'as_proximal_lang_operator')
@@ -86,12 +87,6 @@ def matrix_representation(op):
         num_dom = 1
         m = [op.domain.size]
 
-    def as_flat_array(x):
-        if hasattr(x, 'order'):
-            return x.asarray().ravel(x.order)
-        else:
-            return x.asarray().ravel()
-
     # Generate the matrix
     dtype = np.promote_types(op.domain.dtype, op.range.dtype)
     matrix = np.zeros([np.sum(n), np.sum(m)], dtype=dtype)
@@ -113,7 +108,7 @@ def matrix_representation(op):
                 tmp_idx = 0
                 for k in range(num_ran):
                     matrix[tmp_idx: tmp_idx + op.range[k].size, index] = (
-                        tmp_ran[k])
+                        as_flat_array(tmp_ran[k]))
                     tmp_idx += op.range[k].size
             else:
                 matrix[:, index] = as_flat_array(tmp_ran)

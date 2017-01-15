@@ -73,8 +73,6 @@ ray_trafo = odl.tomo.RayTransform(space, geometry, impl='astra_cuda')
 # Create sinogram
 phantom = odl.phantom.shepp_logan(space, modified=True)
 data = ray_trafo(phantom)
-phantom.show('Phantom')
-data.show('Sinogram')
 
 # --- Create functionals for solving the optimization problem ---
 
@@ -100,7 +98,13 @@ elif data_matching == 'inexact':
     # Note that we use right multiplication in order to scale in input argument
     # instead of the result of the functional, as would be the case with left
     # multiplication.
-    eps = 1e-4
+    eps = 5.0
+
+    # Add noise to data
+    raw_noise = odl.phantom.white_noise(ray_trafo.range)
+    data += raw_noise * eps / raw_noise.norm()
+
+    # Create indicator
     indicator_l2_ball = odl.solvers.IndicatorLpUnitBall(ray_trafo.range, 2)
     indicator_data = indicator_l2_ball.translated(data / eps) * (1 / eps)
 else:
@@ -117,7 +121,7 @@ g = [indicator_data, cross_norm]
 
 # Create callback that prints the iteration number and shows partial results
 callback = (odl.solvers.CallbackShow('iterates',
-                                     display_step=20, clim=[0, 1]) &
+                                     display_step=5, clim=[0, 1]) &
             odl.solvers.CallbackPrintIteration())
 
 # Solve with initial guess x = 0.
@@ -131,3 +135,5 @@ odl.solvers.douglas_rachford_pd(x, f, g, lin_ops,
 # Compare with filtered back-projection
 fbp_recon = odl.tomo.fbp_op(ray_trafo)(data)
 fbp_recon.show('FBP reconstruction')
+phantom.show('Phantom')
+data.show('Sinogram')

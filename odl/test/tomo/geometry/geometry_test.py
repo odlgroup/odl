@@ -123,6 +123,63 @@ def test_parallel_3d_single_axis_geometry():
     assert repr(geom)
 
 
+def test_parallel_beam_geometry_helper():
+    """Test that parallel_beam_geometry satisfies the sampling conditions."""
+    # --- 2d case ---
+    space = odl.uniform_discr([-1, -1], [1, 1], [20, 20])
+    geometry = odl.tomo.parallel_beam_geometry(space)
+
+    rho = np.sqrt(2)
+    omega = np.pi * 10.0
+
+    # Validate angles
+    assert geometry.motion_partition.is_uniform
+    assert pytest.approx(geometry.motion_partition.extent(), np.pi)
+    assert geometry.motion_partition.cell_sides <= np.pi / (rho * omega)
+
+    # Validate detector
+    assert geometry.det_partition.cell_sides <= np.pi / omega
+    assert pytest.approx(geometry.det_partition.extent(), 2 * rho)
+
+    # --- 3d case ---
+
+    space = odl.uniform_discr([-1, -1, 0], [1, 1, 2], [20, 20, 40])
+    geometry = odl.tomo.parallel_beam_geometry(space)
+
+    # Validate angles
+    assert geometry.motion_partition.is_uniform
+    assert pytest.approx(geometry.motion_partition.extent(), np.pi)
+    assert geometry.motion_partition.cell_sides <= np.pi / (rho * omega)
+
+    # Validate detector
+    assert geometry.det_partition.cell_sides[0] <= np.pi / omega
+    assert pytest.approx(geometry.det_partition.cell_sides[0], 0.05)
+    assert pytest.approx(geometry.det_partition.extent()[0], 2 * rho)
+
+    # Validate that new detector axis is correctly aligned with the rotation
+    # axis and that there is one detector row per slice
+    assert pytest.approx(geometry.det_partition.min_pt[1], 0.0)
+    assert pytest.approx(geometry.det_partition.max_pt[1], 2.0)
+    assert geometry.det_partition.shape[1] == space.shape[2]
+    assert all_equal(geometry.det_init_axes[1], geometry.axis)
+
+    # --- offset geometry ---
+    space = odl.uniform_discr([0, 0], [2, 2], [20, 20])
+    geometry = odl.tomo.parallel_beam_geometry(space)
+
+    rho = np.sqrt(2) * 2
+    omega = np.pi * 10.0
+
+    # Validate angles
+    assert geometry.motion_partition.is_uniform
+    assert pytest.approx(geometry.motion_partition.extent(), np.pi)
+    assert geometry.motion_partition.cell_sides <= np.pi / (rho * omega)
+
+    # Validate detector
+    assert geometry.det_partition.cell_sides <= np.pi / omega
+    assert pytest.approx(geometry.det_partition.extent(), 2 * rho)
+
+
 def test_fanflat():
     """2D fanbeam geometry with 1D line detector."""
 

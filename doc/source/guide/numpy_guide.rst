@@ -62,7 +62,7 @@ A very convenient feature of ODL is its seamless interaction with NumPy function
 
 This method always uses the NumPy implementation, which can involve overhead in case the data is not stored in a CPU space. To always enable optimized code, users can call the member `NtuplesBaseVector.ufunc`::
 
-   >>> x.ufunc.negative()
+   >>> x.ufuncs.negative()
    rn(3).element([-1.0, -2.0, -3.0])
 
 For other arbitrary functions, ODL vector space elements are generally accepted as input, but the output is often of `numpy.ndarray` type::
@@ -72,7 +72,7 @@ For other arbitrary functions, ODL vector space elements are generally accepted 
 
 Implementation notes
 --------------------
-The fact that the ``x.ufunc.negative()`` interface is needed is a known issue with NumPy and a `fix is underway
+The fact that the ``x.ufuncs.negative()`` interface is needed is a known issue with NumPy and a `fix is underway
 <http://docs.scipy.org/doc/numpy-dev/neps/ufunc-overrides.html>`_. As of April 2016, this is not yet available.
 
 NumPy functions as Operators

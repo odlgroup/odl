@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Basic examples of using the UFunc functionals in ODL."""
+"""Basic examples of using the ufunc functionals in ODL."""
 
 from __future__ import print_function
 import odl
@@ -44,7 +44,7 @@ print('[x^2](3) = {}, [d/dx x^2](3) = {}, '
     square.gradient.gradient(3), square.gradient.gradient.gradient(3)))
 
 
-# Can also define UFuncs on vector-spaces, then they act pointwise.
+# Can also define ufuncs on vector-spaces, then they act pointwise.
 
 r3 = odl.rn(3)
 exp_r3 = odl.ufunc_ops.exp(r3)

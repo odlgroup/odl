@@ -15,17 +15,18 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Total variation tomography using the Chambolle-Pock solver.
+"""Tomography using the `bfgs_method` solver.
 
-Solves the optimization problem
+Solves an approximation of the optimization problem
 
-    min_x  1/2 ||A(x) - g||_2^2 + lam || |grad(x)| ||_1
+    min_x ||A(x) - g||_2^2 + lam || |grad(x)| ||_1
 
 Where ``A`` is a parallel beam forward projector, ``grad`` the spatial
 gradient and ``g`` is given noisy data.
 
-For further details and a description of the solution method used, see
-:ref:`chambolle_pock` in the ODL documentation.
+The problem is approximated by applying the Moreau envelope to ``|| . ||_1``
+which gives a differentiable functional. This functional is equal to the so
+called Huber functional.
 """
 
 import numpy as np
@@ -36,15 +37,16 @@ import odl
 
 
 # Discrete reconstruction space: discretized functions on the rectangle
-# [-20, 20]^2 with 300 samples per dimension.
+# [-20, 20]^2 with 200 samples per dimension.
 reco_space = odl.uniform_discr(
-    min_pt=[-20, -20], max_pt=[20, 20], shape=[300, 300], dtype='float32')
+    min_pt=[-20, -20], max_pt=[20, 20], shape=[200, 200])
 
 # Make a parallel beam geometry with flat detector
-# Angles: uniformly spaced, n = 360, min = 0, max = pi
-angle_partition = odl.uniform_partition(0, np.pi, 360)
-# Detector: uniformly sampled, n = 558, min = -30, max = 30
-detector_partition = odl.uniform_partition(-30, 30, 558)
+# Angles: uniformly spaced, n = 400, min = 0, max = pi
+angle_partition = odl.uniform_partition(0, np.pi, 400)
+
+# Detector: uniformly sampled, n = 400, min = -30, max = 30
+detector_partition = odl.uniform_partition(-30, 30, 400)
 geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 
 # The implementation of the ray transform to use, options:
@@ -58,7 +60,6 @@ impl = 'astra_cuda'
 # Create the forward operator
 ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl=impl)
 
-
 # --- Generate artificial data --- #
 
 
@@ -69,55 +70,45 @@ discr_phantom = odl.phantom.shepp_logan(reco_space, modified=True)
 data = ray_trafo(discr_phantom)
 data += odl.phantom.white_noise(ray_trafo.range) * np.mean(data) * 0.1
 
+# --- Set up optimization problem and solve --- #
 
-# --- Set up the inverse problem --- #
+# Create data term ||Ax - b||_2^2 as composition of the squared L2 norm and the
+# ray trafo translated by the data.
+l2_norm = odl.solvers.L2NormSquared(ray_trafo.range)
+data_discrepancy = l2_norm * (ray_trafo - data)
 
-
-# Initialize gradient operator
+# Create regularizing functional || |grad(x)| ||_1 and smooth the functional
+# using the Moreau envelope.
+# The parameter sigma controls the strength of the regularization.
 gradient = odl.Gradient(reco_space)
+l1_norm = odl.solvers.GroupL1Norm(gradient.range)
+smoothed_l1 = odl.solvers.MoreauEnvelope(l1_norm, sigma=0.03)
+regularizer = smoothed_l1 * gradient
 
-# Column vector of two operators
-op = odl.BroadcastOperator(ray_trafo, gradient)
+# Create full objective functional
+obj_fun = data_discrepancy + 0.03 * regularizer
 
-# Do not use the g functional, set it to zero.
-g = odl.solvers.ZeroFunctional(op.domain)
-
-# Create functionals for the dual variable
-
-# l2-squared data matching
-l2_norm = odl.solvers.L2NormSquared(ray_trafo.range).translated(data)
-
-# Isotropic TV-regularization i.e. the l1-norm
-l1_norm = 0.01 * odl.solvers.L1Norm(gradient.range)
-
-# Combine functionals, order must correspond to the operator K
-f = odl.solvers.SeparableSum(l2_norm, l1_norm)
-
-
-# --- Select solver parameters and solve using Chambolle-Pock --- #
-
-
-# Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
-op_norm = 1.3 * odl.power_method_opnorm(op, maxiter=10)
-
-niter = 100  # Number of iterations
-tau = 1.0 / op_norm  # Step size for the primal variable
-sigma = 1.0 / op_norm  # Step size for the dual variable
-gamma = 0.1
+# Create initial estimate of the inverse Hessian by a diagonal estimate
+opnorm = odl.power_method_opnorm(ray_trafo)
+hessinv_estimate = odl.ScalingOperator(reco_space, 1 / opnorm ** 2)
 
 # Optionally pass callback to the solver to display intermediate results
 callback = (odl.solvers.CallbackPrintIteration() &
             odl.solvers.CallbackShow())
 
+# Pick parameters
+maxiter = 30
+num_store = 5  # only save some vectors (Limited memory)
+
 # Choose a starting point
-x = op.domain.zero()
+x = ray_trafo.domain.zero()
 
 # Run the algorithm
-odl.solvers.chambolle_pock_solver(
-    x, f, g, op, tau=tau, sigma=sigma, niter=niter, gamma=gamma,
-    callback=callback)
+odl.solvers.bfgs_method(
+    obj_fun, x, maxiter=maxiter, num_store=num_store,
+    hessinv_estimate=hessinv_estimate, callback=callback)
 
 # Display images
-discr_phantom.show(title='Phantom')
-data.show(title='Simulated data (Sinogram)')
-x.show(title='TV reconstruction', force_show=True)
+discr_phantom.show(title='original image')
+data.show(title='sinogram')
+x.show(title='reconstructed image', force_show=True)

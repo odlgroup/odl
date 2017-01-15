@@ -32,3 +32,6 @@ __all__ += douglas_rachford.__all__
 
 from .forward_backward import *
 __all__ += forward_backward.__all__
+
+from .proximal_gradient_solvers import *
+__all__ += proximal_gradient_solvers.__all__

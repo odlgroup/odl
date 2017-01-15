@@ -75,6 +75,11 @@ def _modified_shepp_logan_ellipses(ellipses):
     """
     intensities = [1.0, -0.8, -0.2, -0.2, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
 
+    # Add minimal numbers to ensure that the result is nowhere negative.
+    # This is needed due to numerical issues.
+    intensities[2] += 5e-17
+    intensities[3] += 5e-17
+
     assert len(ellipses) == len(intensities)
 
     for ellipse, intensity in zip(ellipses, intensities):
@@ -123,6 +128,8 @@ def shepp_logan(space, modified=False):
     ----------
     space : `DiscreteLp`
         Space in which the phantom is created, must be 2- or 3-dimensional.
+        If ``space.shape`` is 1 in an axis, a corresponding slice of the
+        phantom is created.
     modified : `bool`, optional
         True if the modified Shepp-Logan phantom should be given.
         The modified phantom has greatly amplified contrast to aid
@@ -246,11 +253,26 @@ def _analytical_forbild_phantom(resolution, ear):
     return phantomE, phantomC
 
 
-def forbild(space, resolution=False, ear=True):
+def forbild(space, resolution=False, ear=True, value_type='density'):
     """Standard `FORBILD phantom` in 2 dimensions.
 
     The FORBILD phantom is intended for testing CT algorithms and is intended
     to be similar to a human head.
+
+    The phantom is defined using the following materials:
+
+    =========================  =====  ================
+    Material                   Index  Density (g/cm^3)
+    =========================  =====  ================
+    Air                        0      0.0000
+    Cerebrospinal fluid (CSF)  1      1.0450
+    Small less dense sphere    2      1.0475
+    Brain                      3      1.0500
+    Small more dense sphere    4      1.0525
+    Blood                      5      1.0550
+    Eyes                       6      1.0600
+    Bone                       7      1.8000
+    =========================  =====  ================
 
     Parameters
     ----------
@@ -261,6 +283,10 @@ def forbild(space, resolution=False, ear=True):
         If ``True``, insert a small resolution test pattern to the left.
     ear : bool, optional
         If ``True``, insert an ear-like structure to the right.
+    value_type : {'density', 'materials'}, optional
+        The format the phantom should be given in.
+        'density' returns floats in the range [0, 1.8] (g/cm^3)
+        'materials' returns indices in the range [0, 7].
 
     Returns
     -------
@@ -282,7 +308,7 @@ def forbild(space, resolution=False, ear=True):
 
     if not isinstance(space, DiscreteLp):
         raise TypeError('`space` must be a `DiscreteLp`')
-    if not space.ndim == 2:
+    if space.ndim != 2:
         raise TypeError('`space` must be two-dimensional')
 
     # Create analytic description of phantom
@@ -291,9 +317,9 @@ def forbild(space, resolution=False, ear=True):
     # Rescale points to the default grid.
     # The forbild phantom is defined on [-12.8, 12.8] x [-12.8, 12.8]
     xcoord, ycoord = space.points().T
-    xcoord = (xcoord - np.min(xcoord)) / (np.max(xcoord) - np.min(xcoord))
+    xcoord = (xcoord - space.min_pt[0]) / (space.max_pt[0] - space.min_pt[0])
     xcoord = 25.8 * xcoord - 12.8
-    ycoord = (ycoord - np.min(ycoord)) / (np.max(ycoord) - np.min(ycoord))
+    ycoord = (ycoord - space.min_pt[1]) / (space.max_pt[1] - space.min_pt[1])
     ycoord = 25.8 * ycoord - 12.8
 
     # Compute the phantom values in each voxel
@@ -323,7 +349,28 @@ def forbild(space, resolution=False, ear=True):
 
         image[i] += f
 
-    return space.element(image)
+    if value_type == 'materials':
+        materials = np.zeros(space.size, dtype=space.dtype)
+        # csf
+        materials[(image > 1.043) & (image <= 1.047)] = 1
+        # less_dense_sphere
+        materials[(image > 1.047) & (image <= 1.048)] = 2
+        # brain
+        materials[(image > 1.048) & (image <= 1.052)] = 3
+        # denser_sphere
+        materials[(image > 1.052) & (image <= 1.053)] = 4
+        # blood
+        materials[(image > 1.053) & (image <= 1.058)] = 5
+        # eye
+        materials[(image > 1.058) & (image <= 1.062)] = 6
+        # Bone
+        materials[image > 1.75] = 7
+
+        return space.element(materials)
+    elif value_type == 'density':
+        return space.element(image)
+    else:
+        raise ValueError('unknown `value_type` {}'.format(value_type))
 
 
 if __name__ == '__main__':
@@ -335,6 +382,7 @@ if __name__ == '__main__':
     shepp_logan(discr, modified=True).show('shepp_logan 2d modified=True')
     shepp_logan(discr, modified=False).show('shepp_logan 2d modified=False')
     forbild(discr).show('FORBILD 2d', clim=[1.035, 1.065])
+    forbild(discr, value_type='materials').show('FORBILD 2d materials')
 
     # 3D
     discr = odl.uniform_discr([-1, -1, -1], [1, 1, 1], [300, 300, 300])

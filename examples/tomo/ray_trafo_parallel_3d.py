@@ -53,8 +53,7 @@ proj_data = ray_trafo(phantom)
 backproj = ray_trafo.adjoint(proj_data)
 
 # Shows a slice of the phantom, projections, and reconstruction
-phantom.show(indices=np.s_[:, :, 150], title='Phantom, middle z slice')
-proj_data.show(indices=np.s_[0, :, :], title='Projection 0')
-proj_data.show(indices=np.s_[90, :, :], title='Projection 90')
-backproj.show(indices=np.s_[:, :, 150],
-              title='back-projection, middle z slice')
+phantom.show(coords=[None, None, 0], title='Phantom, middle z slice')
+proj_data.show(coords=[0, None, None], title='Projection at theta=0')
+proj_data.show(coords=[None, None, 0], title='Sinogram, middle slice')
+backproj.show(coords=[None, None, 0], title='Back-projection, middle z slice')

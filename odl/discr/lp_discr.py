@@ -35,11 +35,11 @@ from odl.discr.partition import (
     RectPartition, uniform_partition_fromintv, uniform_partition)
 from odl.set import RealNumbers, ComplexNumbers, IntervalProd
 from odl.space import FunctionSpace, ProductSpace, FN_IMPLS
-from odl.space.weighting import WeightingBase
+from odl.space.weighting import Weighting
 from odl.util.normalize import (
     normalized_scalar_param_list, safe_int_conv, normalized_nodes_on_bdry)
 from odl.util.numerics import apply_on_boundary
-from odl.util.ufuncs import DiscreteLpUFuncs
+from odl.util.ufuncs import DiscreteLpUfuncs
 from odl.util.utility import (
     is_real_dtype, is_complex_floating_dtype, dtype_repr)
 
@@ -87,6 +87,10 @@ class DiscreteLp(DiscretizedSpace):
             first axis varies slowest, the last axis fastest;
             vice versa for 'F'.
             Default: 'C'
+        axis_labels : sequence of str, optional
+            Names of the axes to use for plotting etc.
+            Default: ['x'] in 1-D, ['x', 'y'] in 2-D, ['x', 'y', 'z'] in 3-D
+            and ['x1', 'x2', ..., 'xn'] in n-D.
         """
         if not isinstance(fspace, FunctionSpace):
             raise TypeError('{!r} is not a FunctionSpace instance'
@@ -149,6 +153,19 @@ class DiscreteLp(DiscretizedSpace):
                 self.exponent != dspace.exponent):
             raise ValueError('`exponent` {} not equal to data space exponent '
                              '{}'.format(self.exponent, dspace.exponent))
+
+        axis_labels = kwargs.pop('axis_labels', None)
+        if axis_labels is None:
+            if self.ndim <= 3:
+                self.axis_labels = ['$x$', '$y$', '$z$'][:self.ndim]
+            else:
+                self.axis_labels = ['$x_{}$'.format(axis)
+                                    for axis in range(self.ndim)]
+        else:
+            self.axis_labels = tuple(str(label) for label in axis_labels)
+
+        if kwargs:
+            raise ValueError('unknown arguments {}'.format(kwargs))
 
     @property
     def interp(self):
@@ -659,36 +676,36 @@ class DiscreteLpElement(DiscretizedSpaceElement):
             super().__setitem__(indices, values)
 
     @property
-    def ufunc(self):
-        """`DiscreteLpUFuncs`, access to numpy style ufuncs.
+    def ufuncs(self):
+        """`DiscreteLpUfuncs`, access to numpy style ufuncs.
 
         Examples
         --------
         >>> X = uniform_discr(0, 1, 2)
         >>> x = X.element([1, -2])
-        >>> x.ufunc.absolute()
+        >>> x.ufuncs.absolute()
         uniform_discr(0.0, 1.0, 2).element([1.0, 2.0])
 
         These functions can also be used with broadcasting
 
-        >>> x.ufunc.add(3)
+        >>> x.ufuncs.add(3)
         uniform_discr(0.0, 1.0, 2).element([4.0, 1.0])
 
         and non-space elements
 
-        >>> x.ufunc.subtract([3, 3])
+        >>> x.ufuncs.subtract([3, 3])
         uniform_discr(0.0, 1.0, 2).element([-2.0, -5.0])
 
         There is also support for various reductions (sum, prod, min, max)
 
-        >>> x.ufunc.sum()
+        >>> x.ufuncs.sum()
         -1.0
 
         Also supports out parameter
 
         >>> y = X.element([3, 4])
         >>> out = X.element()
-        >>> result = x.ufunc.add(y, out=out)
+        >>> result = x.ufuncs.add(y, out=out)
         >>> result
         uniform_discr(0.0, 1.0, 2).element([4.0, 2.0])
         >>> result is out
@@ -699,10 +716,10 @@ class DiscreteLpElement(DiscretizedSpaceElement):
         These are optimized to use the underlying ntuple space and incur no
         overhead unless these do.
         """
-        return DiscreteLpUFuncs(self)
+        return DiscreteLpUfuncs(self)
 
     def show(self, title=None, method='', coords=None, indices=None,
-             show=False, fig=None, **kwargs):
+             force_show=False, fig=None, **kwargs):
         """Display the function graphically.
 
         Parameters
@@ -747,9 +764,10 @@ class DiscreteLpElement(DiscretizedSpaceElement):
             (semantically ``[:, :, shape[2:] // 2]``).
             This option is mutually exclusive to ``coords``.
 
-        show : bool, optional
-            If ``True``, show the plot now. Otherwise, display is deferred
-            deferred until later.
+        force_show : bool, optional
+            Whether the plot should be forced to be shown now or deferred until
+            later. Note that some backends always displays the plot, regardless
+            of this value.
 
         fig : `matplotlib.figure.Figure`
             The figure to show in. Expected to be of same "style", as
@@ -841,21 +859,17 @@ class DiscreteLpElement(DiscretizedSpaceElement):
             raise ValueError('too many axes ({} > {})'.format(len(indices),
                                                               self.ndim))
 
-        if self.ndim <= 3:
-            axis_labels = ['x', 'y', 'z']
-        else:
-            axis_labels = ['x{}'.format(axis) for axis in range(self.ndim)]
         squeezed_axes = [axis for axis in range(self.ndim)
                          if not isinstance(indices[axis], Integral)]
-        axis_labels = [axis_labels[axis] for axis in squeezed_axes]
+        axis_labels = [self.space.axis_labels[axis] for axis in squeezed_axes]
 
         # Squeeze grid and values according to the index expression
         part = self.space.partition[indices].squeeze()
         values = self.asarray()[indices].squeeze()
 
         return show_discrete_data(values, part, title=title, method=method,
-                                  show=show, fig=fig, axis_labels=axis_labels,
-                                  **kwargs)
+                                  force_show=force_show, fig=fig,
+                                  axis_labels=axis_labels, **kwargs)
 
 
 def uniform_discr_frompartition(partition, exponent=2.0, interp='nearest',
@@ -936,27 +950,25 @@ def uniform_discr_frompartition(partition, exponent=2.0, interp='nearest',
     order = kwargs.pop('order', 'C')
 
     weighting = kwargs.pop('weighting', 'const')
-    if isinstance(weighting, WeightingBase):
-        # TODO: harmonize names, should be 'weighting' across the board
-        weight = weighting
-    else:
+    if not isinstance(weighting, Weighting):
         weighting, weighting_in = str(weighting).lower(), weighting
         if weighting == 'none' or float(exponent) == float('inf'):
-            weight = None
+            weighting = None
         elif weighting == 'const':
-            weight = partition.cell_volume
+            weighting = partition.cell_volume
         else:
             raise ValueError("`weighting` '{}' not understood"
                              "".format(weighting_in))
 
     if dtype is not None:
-        dspace = ds_type(partition.size, dtype=dtype, impl=impl, weight=weight,
-                         exponent=exponent)
+        dspace = ds_type(partition.size, dtype=dtype, impl=impl,
+                         weighting=weighting, exponent=exponent)
     else:
-        dspace = ds_type(partition.size, impl=impl, weight=weight,
+        dspace = ds_type(partition.size, impl=impl, weighting=weighting,
                          exponent=exponent)
 
-    return DiscreteLp(fspace, partition, dspace, exponent, interp, order=order)
+    return DiscreteLp(fspace, partition, dspace, exponent, interp, order=order,
+                      **kwargs)
 
 
 def uniform_discr_fromspace(fspace, shape, exponent=2.0, interp='nearest',
@@ -1523,7 +1535,8 @@ def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
                                  nodes_on_bdry=nodes_on_bdry)
 
     return uniform_discr_frompartition(new_part, exponent=discr.exponent,
-                                       interp=discr.interp, impl=discr.impl)
+                                       interp=discr.interp, impl=discr.impl,
+                                       **kwargs)
 
 
 def _scaling_func_list(bdry_fracs, exponent=1.0):
