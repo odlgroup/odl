@@ -38,7 +38,6 @@ from odl.tomo.backends.astra_setup import (
 from odl.tomo.geometry import (
     Geometry, Parallel2dGeometry, FanFlatGeometry, Parallel3dAxisGeometry,
     HelicalConeFlatGeometry)
-from odl.util import writable_array
 
 
 __all__ = ('ASTRA_CUDA_AVAILABLE',
@@ -62,9 +61,17 @@ class AstraCudaProjectorImpl(object):
         use_cache : bool
             True if data should be cached. Default: True
         """
+        if not isinstance(self.geometry, Geometry):
+            raise TypeError('geometry  {!r} is not a Geometry instance'
+                            ''.format(self.geometry))
         self.geometry = geometry
+
+        if not isinstance(self.proj_space, DiscreteLp):
+            raise TypeError('projection space {!r} is not a DiscreteLp '
+                            'instance'.format(self.proj_space))
         self.proj_space = proj_space
-        self.use_cache = use_cache
+
+        self.use_cache = bool(use_cache)
 
         self.algo_id = None
         self.vol_id = None
@@ -95,16 +102,10 @@ class AstraCudaProjectorImpl(object):
         if not isinstance(vol_data, DiscreteLpElement):
             raise TypeError('volume data {!r} is not a DiscreteLpElement '
                             'instance'.format(vol_data))
-        if not isinstance(self.geometry, Geometry):
-            raise TypeError('geometry  {!r} is not a Geometry instance'
-                            ''.format(self.geometry))
         if vol_data.ndim != self.geometry.ndim:
             raise ValueError('dimensions {} of volume data and {} of geometry '
                              'do not match'
                              ''.format(vol_data.ndim, self.geometry.ndim))
-        if not isinstance(self.proj_space, DiscreteLp):
-            raise TypeError('projection space {!r} is not a DiscreteLp '
-                            'instance'.format(self.proj_space))
         if out is not None:
             if not isinstance(out, DiscreteLpElement):
                 raise TypeError('`out` {} is neither None nor a '
@@ -119,8 +120,8 @@ class AstraCudaProjectorImpl(object):
         if self.vol_id is None:
             vol_geom = astra_volume_geometry(vol_data.space)
             proj_geom = astra_projection_geometry(self.geometry)
-            self.vol_id = astra_data(vol_geom, datatype='volume', data=vol_data,
-                                     allow_copy=True)
+            self.vol_id = astra_data(vol_geom, datatype='volume',
+                                     data=vol_data, allow_copy=True)
         else:
             if self.geometry.ndim == 2:
                 astra.data2d.store(self.vol_id, vol_data.asarray())
@@ -129,8 +130,8 @@ class AstraCudaProjectorImpl(object):
 
         # Create projector
         if self.proj_id is None:
-            self.proj_id = astra_projector('nearest', vol_geom, proj_geom, ndim,
-                                           impl='cuda')
+            self.proj_id = astra_projector('nearest', vol_geom, proj_geom,
+                                           ndim, impl='cuda')
 
         if ndim == 2:
             if out is None:
@@ -144,12 +145,14 @@ class AstraCudaProjectorImpl(object):
 
             # Wrap the array in correct dtype etc if needed
             if self.sino_id is None:
-                self.sino_id = astra_data(proj_geom, datatype='projection', data=out_array)
+                self.sino_id = astra_data(proj_geom, datatype='projection',
+                                          data=out_array)
 
             # Create algorithm
             if self.algo_id is None:
-                self.algo_id = astra_algorithm('forward', ndim, self.vol_id, self.sino_id,
-                                               proj_id=self.proj_id, impl='cuda')
+                self.algo_id = astra_algorithm(
+                    'forward', ndim, self.vol_id, self.sino_id,
+                    proj_id=self.proj_id, impl='cuda')
 
             # Run algorithm
             astra.algorithm.run(self.algo_id)
@@ -162,15 +165,16 @@ class AstraCudaProjectorImpl(object):
 
             # Create algorithm
             if self.algo_id is None:
-                self.algo_id = astra_algorithm('forward', ndim, self.vol_id, self.sino_id,
-                                               proj_id=self.proj_id, impl='cuda')
+                self.algo_id = astra_algorithm(
+                    'forward', ndim, self.vol_id,  self.sino_id,
+                    proj_id=self.proj_id, impl='cuda')
 
             # Run algorithm
             astra.algorithm.run(self.algo_id)
 
             if out is None:
-                out = self.proj_space.element(np.rollaxis(astra.data3d.get(self.sino_id),
-                                                          0, 3))
+                out = self.proj_space.element(
+                    np.rollaxis(astra.data3d.get(self.sino_id), 0, 3))
             else:
                 out[:] = np.rollaxis(astra.data3d.get(self.sino_id), 0, 3)
         else:
@@ -210,7 +214,6 @@ class AstraCudaProjectorImpl(object):
         self.delete_ids()
 
 
-
 class AstraCudaBackProjectorImpl(object):
 
     """Thin wrapper around ASTRA."""
@@ -227,9 +230,17 @@ class AstraCudaBackProjectorImpl(object):
         use_cache : bool
             True if data should be cached. Default: True
         """
+        if not isinstance(self.geometry, Geometry):
+            raise TypeError('geometry  {!r} is not a Geometry instance'
+                            ''.format(self.geometry))
         self.geometry = geometry
+
+        if not isinstance(self.reco_space, DiscreteLp):
+            raise TypeError('reconstruction space {!r} is not a DiscreteLp '
+                            'instance'.format(self.reco_space))
         self.reco_space = reco_space
-        self.use_cache = use_cache
+
+        self.use_cache = bool(use_cache)
 
         self.algo_id = None
         self.vol_id = None
@@ -261,16 +272,10 @@ class AstraCudaBackProjectorImpl(object):
         if not isinstance(proj_data, DiscreteLpElement):
             raise TypeError('projection data {!r} is not a DiscreteLpElement '
                             'instance'.format(proj_data))
-        if not isinstance(self.geometry, Geometry):
-            raise TypeError('geometry  {!r} is not a Geometry instance'
-                            ''.format(self.geometry))
-        if not isinstance(self.reco_space, DiscreteLp):
-            raise TypeError('reconstruction space {!r} is not a DiscreteLp '
-                            'instance'.format(self.reco_space))
         if self.reco_space.ndim != self.geometry.ndim:
             raise ValueError('dimensions {} of reconstruction space and {} of '
-                             'geometry do not match'.format(self.reco_space.ndim,
-                                                           self. geometry.ndim))
+                             'geometry do not match'.format(
+                                 self.reco_space.ndim, self.geometry.ndim))
         if out is not None:
             if not isinstance(out, DiscreteLpElement):
                 raise TypeError('`out` {} is neither None nor a '
@@ -299,9 +304,8 @@ class AstraCudaBackProjectorImpl(object):
 
         # Create projector
         if self.proj_id is None:
-            self.proj_id = astra_projector('nearest', vol_geom, proj_geom, ndim,
-                                           impl='cuda')
-
+            self.proj_id = astra_projector('nearest', vol_geom, proj_geom,
+                                           ndim, impl='cuda')
 
         if self.use_cache:
             out_array = self.out_array
@@ -311,12 +315,13 @@ class AstraCudaBackProjectorImpl(object):
 
         # Wrap the array in correct dtype etc if needed
         if self.vol_id is None:
-            self.vol_id = astra_data(vol_geom, datatype='volume', data=out_array,
-                                     ndim=self.reco_space.ndim)
+            self.vol_id = astra_data(vol_geom, datatype='volume',
+                                     data=out_array, ndim=self.reco_space.ndim)
         if self.algo_id is None:
             # Create algorithm
-            self.algo_id = astra_algorithm('backward', ndim, self.vol_id, self.sino_id,
-                                           proj_id=self.proj_id, impl='cuda')
+            self.algo_id = astra_algorithm(
+                'backward', ndim, self.vol_id, self.sino_id,
+                proj_id=self.proj_id, impl='cuda')
 
         # Run algorithm
         astra.algorithm.run(self.algo_id)
