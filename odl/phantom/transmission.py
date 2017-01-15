@@ -23,11 +23,11 @@ from future import standard_library
 standard_library.install_aliases()
 
 from odl.discr import DiscreteLp
-from odl.phantom.geometric import ellipse_phantom
+from odl.phantom.geometric import ellipsoid_phantom
 import numpy as np
 
 
-__all__ = ('shepp_logan_ellipses', 'shepp_logan', 'forbild')
+__all__ = ('shepp_logan_ellipsoids', 'shepp_logan', 'forbild')
 
 
 def _shepp_logan_ellipse_2d():
@@ -49,8 +49,8 @@ def _shepp_logan_ellipse_2d():
             [0.01, .0230, .0460, 0.0600, -.6050, 0]]
 
 
-def _shepp_logan_ellipse_3d():
-    """Return ellipse parameters for a 3d Shepp-Logan phantom.
+def _shepp_logan_ellipsoids_3d():
+    """Return ellipsoid parameters for a 3d Shepp-Logan phantom.
 
     This assumes that the ellipses are contained in the cube
     [-1, -1, -1]x[1, 1, 1].
@@ -68,8 +68,8 @@ def _shepp_logan_ellipse_3d():
             [0.01, .0230, .0460, .020, 0.0600, -.6050, 0.00, 0.0, 0, 0]]
 
 
-def _modified_shepp_logan_ellipses(ellipses):
-    """Modify ellipses to give the modified Shepp-Logan phantom.
+def _modified_shepp_logan_ellipsoids(ellipsoids):
+    """Modify ellipsoids to give the modified Shepp-Logan phantom.
 
     Works for both 2d and 3d.
     """
@@ -80,19 +80,19 @@ def _modified_shepp_logan_ellipses(ellipses):
     intensities[2] += 5e-17
     intensities[3] += 5e-17
 
-    assert len(ellipses) == len(intensities)
+    assert len(ellipsoids) == len(intensities)
 
-    for ellipse, intensity in zip(ellipses, intensities):
-        ellipse[0] = intensity
+    for ellipsoid, intensity in zip(ellipsoids, intensities):
+        ellipsoid[0] = intensity
 
 
-def shepp_logan_ellipses(ndim, modified=False):
-    """Ellipses for the standard `Shepp-Logan phantom`_ in 2 or 3 dimensions.
+def shepp_logan_ellipsoids(ndim, modified=False):
+    """Ellipsoids for the standard `Shepp-Logan phantom`_ in 2 or 3 dimensions.
 
     Parameters
     ----------
     ndim : {2, 3}
-        Dimension of the space the ellipses should be in.
+        Dimension of the space the ellipsoids should be in.
     modified : bool, optional
         True if the modified Shepp-Logan phantom should be given.
         The modified phantom has greatly amplified contrast to aid
@@ -100,25 +100,25 @@ def shepp_logan_ellipses(ndim, modified=False):
 
     See Also
     --------
-    odl.phantom.geometric.ellipse_phantom :
-        Function for creating arbitrary ellipse phantoms
-    shepp_logan : Create a phantom with these ellipses
+    odl.phantom.geometric.ellipsoids_phantom :
+        Function for creating arbitrary ellipsoids phantoms
+    shepp_logan : Create a phantom with these ellipsoids
 
     References
     ----------
     .. _Shepp-Logan phantom: en.wikipedia.org/wiki/Shepp–Logan_phantom
     """
     if ndim == 2:
-        ellipses = _shepp_logan_ellipse_2d()
+        ellipsoids = _shepp_logan_ellipse_2d()
     elif ndim == 3:
-        ellipses = _shepp_logan_ellipse_3d()
+        ellipsoids = _shepp_logan_ellipsoids_3d()
     else:
         raise ValueError('dimension not 2 or 3, no phantom available')
 
     if modified:
-        _modified_shepp_logan_ellipses(ellipses)
+        _modified_shepp_logan_ellipsoids(ellipsoids)
 
-    return ellipses
+    return ellipsoids
 
 
 def shepp_logan(space, modified=False):
@@ -139,17 +139,17 @@ def shepp_logan(space, modified=False):
     --------
     forbild : Similar phantom but with more complexity. Only supports 2d.
     odl.phantom.geometric.defrise : Geometry test phantom
-    shepp_logan_ellipses : Get the parameters that define this phantom
-    odl.phantom.geometric.ellipse_phantom :
-        Function for creating arbitrary ellipse phantoms
+    shepp_logan_ellipsoids : Get the parameters that define this phantom
+    odl.phantom.geometric.ellipsoid_phantom :
+        Function for creating arbitrary ellipsoid phantoms
 
     References
     ----------
     .. _Shepp-Logan phantom: en.wikipedia.org/wiki/Shepp–Logan_phantom
     """
-    ellipses = shepp_logan_ellipses(space.ndim, modified)
+    ellipsoids = shepp_logan_ellipsoids(space.ndim, modified)
 
-    return ellipse_phantom(space, ellipses)
+    return ellipsoid_phantom(space, ellipsoids)
 
 
 def _analytical_forbild_phantom(resolution, ear):
