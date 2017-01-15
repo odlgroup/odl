@@ -47,17 +47,15 @@ class PointwiseTensorFieldOperator(Operator):
 
     For example, if ``X`` is a `DiscreteLp` space, then
     ``ProductSpace(X, d)`` is a valid domain for any positive integer
-    ``d``.
-
-    Currently, only vector fields, i.e. one-dimensional products of
-    ``X``, are supported.
+    ``d``. It is also possible to have tensor fields over tensor fields, i.e.
+    ``ProductSpace(ProductSpace(X, n), m)``.
 
     See Also
     --------
     ProductSpace
     """
 
-    def __init__(self, domain, range, linear=False):
+    def __init__(self, domain, range, base_space, linear=False):
         """Initialize a new instance.
 
         Parameters
@@ -67,46 +65,30 @@ class PointwiseTensorFieldOperator(Operator):
             They have to be either power spaces of the same base space
             ``X`` or the base space itself (only one of them).
             Empty product spaces are not allowed.
+        base_space : `LinearSpace`
+            The base space ``X``.
         linear : bool, optional
             If ``True``, assume that the operator is linear.
         """
-        if isinstance(domain, ProductSpace):
-            if not domain.is_power_space:
-                raise TypeError('`domain` {!r} is not a power space'
-                                ''.format(domain))
+        if domain != base_space:
+            if (not isinstance(domain, ProductSpace) or
+                    not domain.is_power_space or
+                    domain.size == 0):
+                raise TypeError('`domain` {!r} is neither `base_space` {!r} '
+                                'nor a nonempty power space of it'
+                                ''.format(domain, base_space))
 
-            if domain.size == 0:
-                raise ValueError('`domain` is a product space of size 0')
-
-            dom_base = domain[0]
-        elif isinstance(domain, LinearSpace):
-            dom_base = domain
-        else:
-            raise TypeError('`domain` {!r} is not a ProductSpace or '
-                            'LinearSpace instance'.format(domain))
-
-        if isinstance(range, ProductSpace):
-            if not range.is_power_space:
-                raise TypeError('`range` {!r} is not a power space'
-                                ''.format(range))
-
-            if range.size == 0:
-                raise ValueError('`range` is a product space of size 0')
-
-            ran_base = range[0]
-        elif isinstance(range, LinearSpace):
-            ran_base = range
-        else:
-            raise TypeError('`range` {!r} is not a ProductSpace or '
-                            'LinearSpace instance'.format(range))
-
-        if dom_base != ran_base:
-            raise ValueError('`domain` and `range` have different base spaces '
-                             '({!r} != {!r})'
-                             ''.format(dom_base, ran_base))
+        if range != base_space:
+            if (not isinstance(range, ProductSpace) or
+                    not range.is_power_space or
+                    range.size == 0 or
+                    range[0] != base_space):
+                raise TypeError('`range` {!r} is neither `base_space` {!r} '
+                                'nor a nonempty power space of it'
+                                ''.format(range, base_space))
 
         super().__init__(domain=domain, range=range, linear=linear)
-        self.__base_space = dom_base
+        self.__base_space = base_space
 
     @property
     def base_space(self):
@@ -189,7 +171,8 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
         if not isinstance(vfspace, ProductSpace):
             raise TypeError('`vfspace` {!r} is not a ProductSpace '
                             'instance'.format(vfspace))
-        super().__init__(domain=vfspace, range=vfspace[0], linear=False)
+        super().__init__(domain=vfspace, range=vfspace[0],
+                         base_space=vfspace[0], linear=False)
 
         # Need to check for product space shape once higher order tensors
         # are implemented
@@ -403,9 +386,11 @@ class PointwiseInnerBase(PointwiseTensorFieldOperator):
             raise TypeError('`vfsoace` {!r} is not a ProductSpace '
                             'instance'.format(vfspace))
         if adjoint:
-            super().__init__(domain=vfspace[0], range=vfspace, linear=True)
+            super().__init__(domain=vfspace[0], range=vfspace,
+                             base_space=vfspace[0], linear=True)
         else:
-            super().__init__(domain=vfspace, range=vfspace[0], linear=True)
+            super().__init__(domain=vfspace, range=vfspace[0],
+                             base_space=vfspace[0], linear=True)
 
         # Bail out if the space is complex but we cannot take the complex
         # conjugate.
