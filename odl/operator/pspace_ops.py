@@ -304,6 +304,10 @@ class ProductSpaceOperator(Operator):
             [0.0, 0.0, 0.0]
         ])
         """
+        # Short circuit optimization
+        if self.is_linear:
+            return self
+
         deriv_ops = [op.derivative(x[col]) for op, col in zip(self.ops.data,
                                                               self.ops.col)]
         indices = [self.ops.row, self.ops.col]
