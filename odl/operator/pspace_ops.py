@@ -358,9 +358,47 @@ class ProductSpaceOperator(Operator):
         adj_matrix = sp.sparse.coo_matrix((adjoint_ops, indices), shape)
         return ProductSpaceOperator(adj_matrix, self.range, self.domain)
 
+    def __getitem__(self, index):
+        """Get sub-operator by index.
+
+        Returns
+        -------
+        suboperator : `Operator` or ``None``
+            If there is an operator at [row, col], returns the operator,
+            otherwise returns ``0``.
+
+        Examples
+        --------
+        >>> r3 = odl.rn(3)
+        >>> X = odl.ProductSpace(r3, r3)
+        >>> I = odl.IdentityOperator(r3)
+        >>> x = X.element([[1, 2, 3], [4, 5, 6]])
+        >>> prod_op = ProductSpaceOperator([[0, I], [0, 0]],
+        ...                                domain=X, range=X)
+        >>> prod_op[0, 0]
+        0
+        >>> prod_op[0, 1]
+        IdentityOperator(rn(3))
+        >>> prod_op[1, 0]
+        0
+        >>> prod_op[1, 1]
+        0
+        """
+        row, col = index
+        linear_index = np.flatnonzero((self.ops.row == row) &
+                                      (self.ops.col == col))
+        if linear_index.size == 0:
+            return 0
+        else:
+            return self.ops.data[int(linear_index)]
+
     def __repr__(self):
         """Return ``repr(self)``."""
-        return 'ProductSpaceOperator({!r})'.format(self.ops)
+        aslist = [[0 for _ in range(self.domain.size)]
+                  for _ in range (self.range.size)]
+        for i, j, op in zip(self.ops.row, self.ops.col, self.ops.data):
+            aslist[i][j] = op
+        return 'ProductSpaceOperator({!r})'.format(aslist)
 
 
 class ComponentProjection(Operator):
