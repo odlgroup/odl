@@ -192,6 +192,11 @@ class DiscreteLp(DiscretizedSpace):
         return self.partition.max_pt
 
     @property
+    def mid_pt(self):
+        """Midpoint of the function domain."""
+        return self.partition.mid_pt
+
+    @property
     def order(self):
         """Axis ordering for array flattening."""
         return self.__order
@@ -480,14 +485,13 @@ class DiscreteLp(DiscretizedSpace):
             arg_fstr = '''
     {!r},
     {!r},
-    {!r}
-    '''
+    {!r}'''
             if self.exponent != 2.0:
-                arg_fstr += ', exponent={ex}'
-            if self.interp != 'nearest':
-                arg_fstr += ', interp={interp!r}'
+                arg_fstr += ',\n    exponent={ex}'
+            if self.interp != ['nearest'] * self.ndim:
+                arg_fstr += ',\n    interp={interp!r}'
             if self.order != 'C':
-                arg_fstr += ', order={order!r}'
+                arg_fstr += ',\n    order={order!r}'
 
             arg_str = arg_fstr.format(
                 self.uspace, self.partition, self.dspace, interp=self.interp,
@@ -1536,6 +1540,8 @@ def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
 
     return uniform_discr_frompartition(new_part, exponent=discr.exponent,
                                        interp=discr.interp, impl=discr.impl,
+                                       order=discr.order, dtype=discr.dtype,
+                                       weighting=discr.weighting,
                                        **kwargs)
 
 
