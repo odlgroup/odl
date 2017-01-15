@@ -26,7 +26,7 @@ import pytest
 import numpy as np
 
 import odl
-from odl.discr.tensor_ops import PointwiseNorm, PointwiseInner, PointwiseSum
+from odl.operator.tensor_ops import PointwiseNorm, PointwiseInner, PointwiseSum
 from odl.space.pspace import ProductSpace
 from odl.util.testutils import all_almost_equal, all_equal
 

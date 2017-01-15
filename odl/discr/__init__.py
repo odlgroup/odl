@@ -39,8 +39,5 @@ __all__ += lp_discr.__all__
 from .discr_ops import *
 __all__ += discr_ops.__all__
 
-from .tensor_ops import *
-__all__ += tensor_ops.__all__
-
 from .diff_ops import *
 __all__ += diff_ops.__all__

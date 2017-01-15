@@ -27,11 +27,10 @@ import numpy as np
 import scipy
 from numbers import Integral
 
-from odl.discr import PointwiseNorm
 from odl.solvers.functional.functional import Functional
 from odl.space import ProductSpace
 from odl.operator import (Operator, ConstantOperator, ZeroOperator,
-                          ScalingOperator, DiagonalOperator)
+                          ScalingOperator, DiagonalOperator, PointwiseNorm)
 from odl.solvers.functional.functional import (
     Functional, FunctionalDefaultConvexConjugate)
 from odl.solvers.nonsmooth.proximal_operators import (
