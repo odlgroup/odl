@@ -249,7 +249,7 @@ def test_vector_weighting(exponent):
     dists = [5, 7]
 
     weight = [0.5, 1.5]
-    pspace = odl.ProductSpace(r2, r3, weight=weight, exponent=exponent)
+    pspace = odl.ProductSpace(r2, r3, weighting=weight, exponent=exponent)
     x = pspace.element((r2x, r3x))
     y = pspace.element((r2y, r3y))
 
@@ -293,7 +293,7 @@ def test_const_weighting(exponent):
     dists = [5, 7]
 
     weight = 2.0
-    pspace = odl.ProductSpace(r2, r3, weight=weight, exponent=exponent)
+    pspace = odl.ProductSpace(r2, r3, weighting=weight, exponent=exponent)
     x = pspace.element((r2x, r3x))
     y = pspace.element((r2y, r3y))
 
@@ -394,13 +394,13 @@ def test_custom_funcs():
         odl.ProductSpace(r2, r3, norm=custom_norm, exponent=1.0)
 
     with pytest.raises(ValueError):
-        odl.ProductSpace(r2, r3, norm=custom_norm, weight=2.0)
+        odl.ProductSpace(r2, r3, norm=custom_norm, weighting=2.0)
 
     with pytest.raises(ValueError):
-        odl.ProductSpace(r2, r3, dist=custom_dist, weight=2.0)
+        odl.ProductSpace(r2, r3, dist=custom_dist, weighting=2.0)
 
     with pytest.raises(ValueError):
-        odl.ProductSpace(r2, r3, inner=custom_inner, weight=2.0)
+        odl.ProductSpace(r2, r3, inner=custom_inner, weighting=2.0)
 
 
 def test_power_RxR():

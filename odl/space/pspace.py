@@ -29,8 +29,8 @@ import numpy as np
 
 from odl.set import LinearSpace, LinearSpaceElement
 from odl.space.weighting import (
-    WeightingBase, VectorWeightingBase, ConstWeightingBase, NoWeightingBase,
-    CustomInnerProductBase, CustomNormBase, CustomDistBase)
+    Weighting, ArrayWeighting, ConstWeighting, NoWeighting,
+    CustomInnerProduct, CustomNorm, CustomDist)
 from odl.util.ufuncs import ProductSpaceUfuncs
 from odl.util.utility import is_real_dtype
 
@@ -75,13 +75,13 @@ class ProductSpace(LinearSpace):
             Scalar field of the resulting space.
             Default: ``spaces[0].field``
 
-        weight : optional
+        weighting : optional
             Use weighted inner product, norm, and dist. The following
-            types are supported as ``weight``:
+            types are supported as ``weighting``:
 
             ``None`` : no weighting (default)
 
-            `WeightingBase` : weighting class, used directly. Such a
+            `Weighting` : weighting class, used directly. Such a
             class instance can be retrieved from the space by the
             `ProductSpace.weighting` property.
 
@@ -108,7 +108,7 @@ class ProductSpace(LinearSpace):
             This creates an intermediate array ``x - y``, which can be
             avoided by choosing ``dist_using_inner=True``.
 
-            Cannot be combined with: ``weight, norm, inner``
+            Cannot be combined with: ``weighting, norm, inner``
 
         norm : callable, optional
             The norm implementation. It must accept an
@@ -123,7 +123,7 @@ class ProductSpace(LinearSpace):
 
             By default, ``norm(x)`` is calculated as ``inner(x, x)``.
 
-            Cannot be combined with: ``weight, dist, inner``
+            Cannot be combined with: ``weighting, dist, inner``
 
         inner : callable, optional
             The inner product implementation. It must accept two
@@ -136,7 +136,7 @@ class ProductSpace(LinearSpace):
             - ``<s*x + y, z> = s * <x, z> + <y, z>``
             - ``<x, x> = 0``  if and only if  ``x = 0``
 
-            Cannot be combined with: ``weight, dist, norm``
+            Cannot be combined with: ``weighting, dist, norm``
 
         dist_using_inner : bool, optional
             Calculate ``dist`` using the formula
@@ -159,7 +159,7 @@ class ProductSpace(LinearSpace):
 
         See Also
         --------
-        ProductSpaceElementWeighting
+        ProductSpaceArrayWeighting
         ProductSpaceConstWeighting
 
         Examples
@@ -224,7 +224,7 @@ class ProductSpace(LinearSpace):
         dist = kwargs.pop('dist', None)
         norm = kwargs.pop('norm', None)
         inner = kwargs.pop('inner', None)
-        weight = kwargs.pop('weight', None)
+        weighting = kwargs.pop('weighting', None)
         exponent = kwargs.pop('exponent', 2.0)
         dist_using_inner = bool(kwargs.pop('dist_using_inner', False))
         if kwargs:
@@ -232,8 +232,8 @@ class ProductSpace(LinearSpace):
                             ''.format(kwargs))
 
         # Check validity of option combination (3 or 4 out of 4 must be None)
-        if sum(x is None for x in (dist, norm, inner, weight)) < 3:
-            raise ValueError('invalid combination of options weight, '
+        if sum(x is None for x in (dist, norm, inner, weighting)) < 3:
+            raise ValueError('invalid combination of options weighting, '
                              'dist, norm and inner')
 
         if any(x is not None for x in (dist, norm, inner)) and exponent != 2.0:
@@ -271,22 +271,22 @@ class ProductSpace(LinearSpace):
         super().__init__(field)
 
         # Assign weighting
-        if weight is not None:
-            if isinstance(weight, WeightingBase):
-                self.__weighting = weight
-            elif np.isscalar(weight):
+        if weighting is not None:
+            if isinstance(weighting, Weighting):
+                self.__weighting = weighting
+            elif np.isscalar(weighting):
                 self.__weighting = ProductSpaceConstWeighting(
-                    weight, exponent, dist_using_inner=dist_using_inner)
-            elif weight is None:
+                    weighting, exponent, dist_using_inner=dist_using_inner)
+            elif weighting is None:
                 # Need to wait until dist, norm and inner are handled
                 pass
             else:  # last possibility: make a product space element
-                arr = np.asarray(weight)
+                arr = np.asarray(weighting)
                 if arr.dtype == object:
-                    raise ValueError('invalid weight argument {}'
-                                     ''.format(weight))
+                    raise ValueError('invalid weighting argument {}'
+                                     ''.format(weighting))
                 if arr.ndim == 1:
-                    self.__weighting = ProductSpaceElementWeighting(
+                    self.__weighting = ProductSpaceArrayWeighting(
                         arr, exponent, dist_using_inner=dist_using_inner)
                 else:
                     raise ValueError('weighting array has {} dimensions, '
@@ -932,11 +932,11 @@ for op in ['add', 'sub', 'mul', 'div', 'truediv']:
         setattr(ProductSpaceElement, name, _broadcast_arithmetic(name))
 
 
-class ProductSpaceElementWeighting(VectorWeightingBase):
+class ProductSpaceArrayWeighting(ArrayWeighting):
 
-    """Vector weighting for `ProductSpace`.
+    """Array weighting for `ProductSpace`.
 
-    For exponent 2.0, a new weighted inner product with vector ``w``
+    For exponent 2.0, a new weighted inner product with array ``w``
     is defined as::
 
         <x, y>_w = <w * x, y>
@@ -958,18 +958,18 @@ class ProductSpaceElementWeighting(VectorWeightingBase):
 
     unless ``w = (1,...,1)``.
 
-    The vector may only have positive entries, otherwise it does not
+    The array may only have positive entries, otherwise it does not
     define an inner product or norm, respectively. This is not checked
     during initialization.
     """
 
-    def __init__(self, vector, exponent=2.0, dist_using_inner=False):
+    def __init__(self, array, exponent=2.0, dist_using_inner=False):
         """Initialize a new instance.
 
         Parameters
         ----------
-        vector : 1-dim. `array-like`
-            Weighting vector of the inner product.
+        array : 1-dim. `array-like`
+            Weighting array of the inner product.
         exponent : positive float, optional
             Exponent of the norm. For values other than 2.0, no inner
             product is defined.
@@ -984,11 +984,11 @@ class ProductSpaceElementWeighting(VectorWeightingBase):
 
             Can only be used if ``exponent`` is 2.0.
         """
-        super().__init__(vector, impl='numpy', exponent=exponent,
+        super().__init__(array, impl='numpy', exponent=exponent,
                          dist_using_inner=dist_using_inner)
 
     def inner(self, x1, x2):
-        """Calculate the vector weighted inner product of two elements.
+        """Calculate the array-weighted inner product of two elements.
 
         Parameters
         ----------
@@ -1009,14 +1009,14 @@ class ProductSpaceElementWeighting(VectorWeightingBase):
             (x1i.inner(x2i) for x1i, x2i in zip(x1, x2)),
             dtype=x1[0].space.dtype, count=len(x1))
 
-        inner = np.dot(inners, self.vector)
+        inner = np.dot(inners, self.array)
         if is_real_dtype(x1[0].dtype):
             return float(inner)
         else:
             return complex(inner)
 
     def norm(self, x):
-        """Calculate the vector-weighted norm of an element.
+        """Calculate the array-weighted norm of an element.
 
         Parameters
         ----------
@@ -1035,14 +1035,14 @@ class ProductSpaceElementWeighting(VectorWeightingBase):
             norms = np.fromiter(
                 (xi.norm() for xi in x), dtype=np.float64, count=len(x))
             if self.exponent in (1.0, float('inf')):
-                norms *= self.vector
+                norms *= self.array
             else:
-                norms *= self.vector ** (1.0 / self.exponent)
+                norms *= self.array ** (1.0 / self.exponent)
 
             return float(np.linalg.norm(norms, ord=self.exponent))
 
 
-class ProductSpaceConstWeighting(ConstWeightingBase):
+class ProductSpaceConstWeighting(ConstWeighting):
 
     """Constant weighting for `ProductSpace`.
 
@@ -1192,7 +1192,7 @@ class ProductSpaceConstWeighting(ConstWeightingBase):
                         np.linalg.norm(dnorms, ord=self.exponent))
 
 
-class ProductSpaceNoWeighting(NoWeightingBase, ProductSpaceConstWeighting):
+class ProductSpaceNoWeighting(NoWeighting, ProductSpaceConstWeighting):
 
     """Weighting of `ProductSpace` with constant 1."""
 
@@ -1243,7 +1243,7 @@ class ProductSpaceNoWeighting(NoWeightingBase, ProductSpaceConstWeighting):
                          dist_using_inner=dist_using_inner)
 
 
-class ProductSpaceCustomInnerProduct(CustomInnerProductBase):
+class ProductSpaceCustomInnerProduct(CustomInnerProduct):
 
     """Class for handling a user-specified inner product on `ProductSpace`."""
 
@@ -1278,7 +1278,7 @@ class ProductSpaceCustomInnerProduct(CustomInnerProductBase):
                          dist_using_inner=dist_using_inner)
 
 
-class ProductSpaceCustomNorm(CustomNormBase):
+class ProductSpaceCustomNorm(CustomNorm):
 
     """Class for handling a user-specified norm on `ProductSpace`.
 
@@ -1304,7 +1304,7 @@ class ProductSpaceCustomNorm(CustomNormBase):
         super().__init__(norm, impl='numpy')
 
 
-class ProductSpaceCustomDist(CustomDistBase):
+class ProductSpaceCustomDist(CustomDist):
 
     """Class for handling a user-specified distance on `ProductSpace`.
 

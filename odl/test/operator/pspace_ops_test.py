@@ -61,7 +61,7 @@ def test_pspace_op_init():
 def test_pspace_op_weighted_init():
 
     r3 = odl.rn(3)
-    ran = odl.ProductSpace(r3, 2, weight=[1, 2])
+    ran = odl.ProductSpace(r3, 2, weighting=[1, 2])
     I = odl.IdentityOperator(r3)
 
     with pytest.raises(NotImplementedError):

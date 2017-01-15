@@ -35,7 +35,7 @@ from odl.discr.partition import (
     RectPartition, uniform_partition_fromintv, uniform_partition)
 from odl.set import RealNumbers, ComplexNumbers, IntervalProd
 from odl.space import FunctionSpace, ProductSpace, FN_IMPLS
-from odl.space.weighting import WeightingBase
+from odl.space.weighting import Weighting
 from odl.util.normalize import (
     normalized_scalar_param_list, safe_int_conv, normalized_nodes_on_bdry)
 from odl.util.numerics import apply_on_boundary
@@ -950,24 +950,21 @@ def uniform_discr_frompartition(partition, exponent=2.0, interp='nearest',
     order = kwargs.pop('order', 'C')
 
     weighting = kwargs.pop('weighting', 'const')
-    if isinstance(weighting, WeightingBase):
-        # TODO: harmonize names, should be 'weighting' across the board
-        weight = weighting
-    else:
+    if not isinstance(weighting, Weighting):
         weighting, weighting_in = str(weighting).lower(), weighting
         if weighting == 'none' or float(exponent) == float('inf'):
-            weight = None
+            weighting = None
         elif weighting == 'const':
-            weight = partition.cell_volume
+            weighting = partition.cell_volume
         else:
             raise ValueError("`weighting` '{}' not understood"
                              "".format(weighting_in))
 
     if dtype is not None:
-        dspace = ds_type(partition.size, dtype=dtype, impl=impl, weight=weight,
-                         exponent=exponent)
+        dspace = ds_type(partition.size, dtype=dtype, impl=impl,
+                         weighting=weighting, exponent=exponent)
     else:
-        dspace = ds_type(partition.size, impl=impl, weight=weight,
+        dspace = ds_type(partition.size, impl=impl, weighting=weighting,
                          exponent=exponent)
 
     return DiscreteLp(fspace, partition, dspace, exponent, interp, order=order,

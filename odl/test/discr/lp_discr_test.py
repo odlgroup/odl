@@ -153,7 +153,7 @@ def test_factory_nd(exponent):
 def test_element_1d(exponent):
     discr = odl.uniform_discr(0, 1, 3, impl='numpy', exponent=exponent)
     weight = 1.0 if exponent == float('inf') else discr.cell_volume
-    dspace = odl.rn(3, exponent=exponent, weight=weight)
+    dspace = odl.rn(3, exponent=exponent, weighting=weight)
     elem = discr.element()
     assert isinstance(elem, odl.DiscreteLpElement)
     assert elem.ntuple in dspace
@@ -163,7 +163,7 @@ def test_element_2d(exponent):
     discr = odl.uniform_discr([0, 0], [1, 1], [3, 3],
                               impl='numpy', exponent=exponent)
     weight = 1.0 if exponent == float('inf') else discr.cell_volume
-    dspace = odl.rn(9, exponent=exponent, weight=weight)
+    dspace = odl.rn(9, exponent=exponent, weighting=weight)
     elem = discr.element()
     assert isinstance(elem, odl.DiscreteLpElement)
     assert elem.ntuple in dspace
@@ -1000,7 +1000,7 @@ def test_norm_rectangle_boundary(fn_impl, exponent):
     part = odl.RectPartition(rect, grid)
     weight = 1.0 if exponent == float('inf') else part.cell_volume
     dspace = odl.rn(part.size, dtype=dtype, impl=fn_impl, exponent=exponent,
-                    weight=weight)
+                    weighting=weight)
     discr = DiscreteLp(fspace, part, dspace, exponent=exponent)
 
     if exponent == float('inf'):
