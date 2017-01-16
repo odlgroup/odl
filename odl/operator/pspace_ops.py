@@ -304,6 +304,10 @@ class ProductSpaceOperator(Operator):
             [0.0, 0.0, 0.0]
         ])
         """
+        # Short circuit optimization
+        if self.is_linear:
+            return self
+
         deriv_ops = [op.derivative(x[col]) for op, col in zip(self.ops.data,
                                                               self.ops.col)]
         indices = [self.ops.row, self.ops.col]
@@ -354,9 +358,51 @@ class ProductSpaceOperator(Operator):
         adj_matrix = sp.sparse.coo_matrix((adjoint_ops, indices), shape)
         return ProductSpaceOperator(adj_matrix, self.range, self.domain)
 
+    def __getitem__(self, index):
+        """Get sub-operator by index.
+
+        Parameters
+        ----------
+        index : tuple of int
+            A pair of integers given as (row, col).
+
+        Returns
+        -------
+        suboperator : `Operator` or ``0``
+            If there is an operator at (row, col), the operator is returned,
+            otherwise ``0``.
+
+        Examples
+        --------
+        >>> r3 = odl.rn(3)
+        >>> pspace = odl.ProductSpace(r3, r3)
+        >>> I = odl.IdentityOperator(r3)
+        >>> prod_op = ProductSpaceOperator([[0, I],
+        ...                                 [0, 0]],
+        ...                                domain=pspace, range=pspace)
+        >>> prod_op[0, 0]
+        0
+        >>> prod_op[0, 1]
+        IdentityOperator(rn(3))
+        >>> prod_op[1, 0]
+        0
+        >>> prod_op[1, 1]
+        0
+        """
+        row, col = index
+        linear_index = np.flatnonzero((self.ops.row == row) &
+                                      (self.ops.col == col))
+        if linear_index.size == 0:
+            return 0
+        else:
+            return self.ops.data[int(linear_index)]
+
     def __repr__(self):
         """Return ``repr(self)``."""
-        return 'ProductSpaceOperator({!r})'.format(self.ops)
+        aslist = [[0] * self.domain.size for _ in range(self.range.size)]
+        for i, j, op in zip(self.ops.row, self.ops.col, self.ops.data):
+            aslist[i][j] = op
+        return '{}({!r})'.format(self.__class__.__name__, aslist)
 
 
 class ComponentProjection(Operator):
