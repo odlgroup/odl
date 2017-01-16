@@ -23,7 +23,7 @@ Features
 - Objects to represent mathematical notions like vector spaces and operators, including properties as expected from mathematics (inner product, norm, operator composition, ...)
 - Convenience functionality for operators like arithmetic, composition, operator matrices etc., which satisfy the known mathematical rules.
 - Out-of-the-box support for frequently used operators like scaling, partial derivative, gradient, Fourier transform etc.
-- A versatile and pluggable library of optimization routines for smooth and non-smooth problems, such as CGLS, BFGS, Forward-Backward splitting and Douglas-Rachford splitting.
+- A versatile and pluggable library of optimization routines for smooth and non-smooth problems, such as CGLS, BFGS, Chambolle-Pock and Douglas-Rachford splitting.
 - Support for tomographic imaging with a unified geometry representation and bindings to external libraries for efficient computation of projections and back-projections.
 - Standardized tests to validate implementations against expected behavior of the corresponding mathematical object, e.g. if a user-defined norm satisfies `norm(x + y) <= norm(x) + norm(y)` for a number of input vectors `x` and `y`.
 
