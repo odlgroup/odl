@@ -132,5 +132,16 @@ def test_steepest_descent(functional):
     assert functional(x) < 1e-3
 
 
+def test_conjguate_gradient_nonlinear(functional):
+    """Test the ``conjugate_gradient_nonlinear`` solver."""
+    line_search = odl.solvers.BacktrackingLineSearch(functional)
+
+    x = functional.domain.one()
+    odl.solvers.conjugate_gradient_nonlinear(functional, x, tol=1e-6,
+                                             line_search=line_search)
+
+    assert functional(x) < 1e-3
+
+
 if __name__ == '__main__':
     pytest.main([str(__file__.replace('\\', '/')), '-v'])
