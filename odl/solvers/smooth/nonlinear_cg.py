@@ -34,6 +34,19 @@ def conjugate_gradient_nonlinear(f, x, line_search=1.0, maxiter=1000, nreset=0,
                                  callback=None):
     """Conjugate gradient for nonlinear problems.
 
+    Notes
+    -----
+    This is a general and optimized implementation of the nonlinear conjguate
+    gradient method for solving a general unconstrained optimization problem
+
+        :math:`\min f(x)`
+
+    for a differentiable function
+    :math:`f: \mathcal{X}\\to \mathbb{R}` on a Hilbert space
+    :math:`\mathcal{X}`. It does so by finding a zero of the gradient
+
+        :math:`\\nabla f: \mathcal{X} \\to \mathcal{X}`.
+
     The method is described in a
     `Wikipedia article
     <https://en.wikipedia.org/wiki/Nonlinear_conjugate_gradient_method>`_.
@@ -41,35 +54,36 @@ def conjugate_gradient_nonlinear(f, x, line_search=1.0, maxiter=1000, nreset=0,
     Parameters
     ----------
     f : `Functional`
-        Operator in the inverse problem. If not linear, it must have
-        an implementation of `Operator.derivative`, which
-        in turn must implement `Operator.adjoint`, i.e.
-        the call ``op.derivative(x).adjoint`` must be valid.
+        Functional with ``f.gradient``.
     x : ``op.domain`` element
         Vector to which the result is written. Its initial value is
         used as starting point of the iteration, and its values are
         updated in each iteration step.
     line_search : float or `LineSearch`, optional
         Strategy to choose the step length. If a float is given, uses it as a
+        fixed step length.
     maxiter : int
-        Number of iterations per reset.
+        Maximum number of iterations to perform.
     nreset : int, optional
         Number of times the solver should be reset. Default: no reset.
         fixed step length. Default: `BacktrackingLineSearch`
     tol : float, optional
         Tolerance that should be used for terminating the iteration.
     beta_method : {'FR', 'PR', 'HS', 'DY'}
-        Method to calculate ``beta`` in the iterates. TODO
+        Method to calculate ``beta`` in the iterates.
+        * ``'FR'`` : Fletcher-Reeves
+        * ``'PR'`` : Polak-Ribiere
+        * ``'HS'`` : Hestenes-Stiefel
+        * ``'DY'`` : Dai-Yuan
     callback : `callable`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
     See Also
     --------
+    bfgs_method : Quasi-newton solver for the same problem
     conjugate_gradient : Optimized solver for linear and symmetric case
     conjugate_gradient_normal : Equivalent solver but for linear case
     """
-    # TODO: add a book reference
-    # TODO: update doc
 
     if x not in f.domain:
         raise TypeError('`x` {!r} is not in the domain of `f` {!r}'
@@ -80,7 +94,7 @@ def conjugate_gradient_nonlinear(f, x, line_search=1.0, maxiter=1000, nreset=0,
     elif not callable(line_search):
         line_search = ConstantLineSearch(line_search)
 
-    for rest_nr in range(nreset + 1):
+    for _ in range(nreset + 1):
         # First iteration is done without beta
         dx = -f.gradient(x)
         dir_derivative = -dx.inner(dx)
@@ -92,7 +106,7 @@ def conjugate_gradient_nonlinear(f, x, line_search=1.0, maxiter=1000, nreset=0,
         dx_old = dx
         s = dx  # for 'HS' and 'DY' beta methods
 
-        for _ in range(maxiter):
+        for _ in range(maxiter // (nreset + 1)):
             # Compute dx as -grad f
             dx, dx_old = -f.gradient(x), dx
 

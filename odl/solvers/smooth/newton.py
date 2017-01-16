@@ -271,7 +271,7 @@ Goldfarb%E2%80%93Shanno_algorithm>`_
     Parameters
     ----------
     f : `Functional`
-        Functional with ``f.gradient``
+        Functional with ``f.gradient``.
     x : ``f.domain`` element
         Starting point of the iteration
     line_search : float or `LineSearch`, optional
@@ -279,7 +279,6 @@ Goldfarb%E2%80%93Shanno_algorithm>`_
         fixed step length.
     maxiter : int, optional
         Maximum number of iterations.
-        ``tol``.
     tol : float, optional
         Tolerance that should be used for terminating the iteration.
     num_store : int, optional

@@ -245,7 +245,7 @@ Conjugate_gradient_on_the_normal_equations>`_.
     See Also
     --------
     conjugate_gradient : Optimized solver for symmetric matrices
-    conjugate_gradient_normal : Equivalent solver but for nonlinear case
+    conjugate_gradient_nonlinear : Equivalent solver but for nonlinear case
     """
     # TODO: add a book reference
     # TODO: update doc
