@@ -14,12 +14,10 @@ from future import standard_library
 standard_library.install_aliases()
 
 from odl.operator import IdentityOperator, OperatorComp, OperatorSum
-from odl.util import normalized_scalar_param_list
-from odl.solvers.util import ConstantLineSearch, BacktrackingLineSearch
 
 
 __all__ = ('landweber', 'conjugate_gradient', 'conjugate_gradient_normal',
-           'conjugate_gradient_nonlinear', 'gauss_newton', 'kaczmarz')
+           'gauss_newton', 'kaczmarz')
 
 
 # TODO: update all docs
@@ -275,106 +273,6 @@ Conjugate_gradient_on_the_normal_equations>`_.
 
         if callback is not None:
             callback(x)
-
-
-def conjugate_gradient_nonlinear(f, x, rhs, niter=1, nreset=0,
-                                 line_search=None, tol=1e-16, beta_method='FR',
-                                 callback=None):
-    """Conjugate gradient for nonlinear problems.
-
-    The method is described in a
-    `Wikipedia article
-    <https://en.wikipedia.org/wiki/Nonlinear_conjugate_gradient_method>`_.
-
-    Parameters
-    ----------
-    op : `Functional`
-        Operator in the inverse problem. If not linear, it must have
-        an implementation of `Operator.derivative`, which
-        in turn must implement `Operator.adjoint`, i.e.
-        the call ``op.derivative(x).adjoint`` must be valid.
-    x : ``op.domain`` element
-        Vector to which the result is written. Its initial value is
-        used as starting point of the iteration, and its values are
-        updated in each iteration step.
-    rhs : ``op.range`` element
-        Right-hand side of the equation defining the inverse problem
-    niter : int
-        Number of iterations per reset.
-    nreset : int, optional
-        Number of times the solver should be reset. Default: no reset.
-    line_search : float or `LineSearch`, optional
-        Strategy to choose the step length. If a float is given, uses it as a
-        fixed step length. Default: `BacktrackingLineSearch`
-    tol : float, optional
-        Tolerance that should be used for terminating the iteration.
-    beta_method : {'FR', 'PR', 'HS', 'DY'}
-        Method to calculate ``beta`` in the iterates. TODO
-    callback : `callable`, optional
-        Object executing code per iteration, e.g. plotting each iterate
-
-    See Also
-    --------
-    conjugate_gradient : Optimized solver for linear and symmetric case
-    conjugate_gradient_normal : Equivalent solver but for linear case
-    """
-    # TODO: add a book reference
-    # TODO: update doc
-
-    if x not in f.domain:
-        raise TypeError('`x` {!r} is not in the domain of `f` {!r}'
-                        ''.format(x, f.domain))
-
-    if line_search is None:
-        line_search = BacktrackingLineSearch(f, estimate_step=True)
-    elif not callable(line_search):
-        line_search = ConstantLineSearch(line_search)
-
-    for rest_nr in range(nreset + 1):
-        # First iteration is done without beta
-        dx = -f.gradient(x)
-        dir_derivative = -dx.inner(dx)
-        if abs(dir_derivative) < tol:
-            return
-        a = line_search(x, dx, dir_derivative)
-        x.lincomb(1, x, a, dx)  # x = x + a * dx
-
-        dx_old = dx
-        s = dx  # for 'HS' and 'DY' beta methods
-
-        for _ in range(niter):
-            # Compute dx as -grad f
-            dx, dx_old = -f.gradient(x), dx
-
-            # Calculate "beta"
-            if beta_method == 'FR':
-                beta = dx.inner(dx) / dx_old.inner(dx_old)
-            elif beta_method == 'PR':
-                beta = dx.inner(dx - dx_old) / dx_old.inner(dx_old)
-            elif beta_method == 'HS':
-                beta = dx.inner(dx - dx_old) / s.inner(dx - dx_old)
-            elif beta_method == 'DY':
-                beta = dx.inner(dx) / s.inner(dx - dx_old)
-            else:
-                raise ValueError('unknown ``beta_method``')
-
-            # Reset beta if negative.
-            beta = max(0, beta)
-
-            # Update search direction
-            s.lincomb(1, dx, beta, s)  # s = dx + beta * s
-
-            # Find optimal step along s
-            dir_derivative = -dx.inner(s)
-            if abs(dir_derivative) < tol:
-                return
-            a = line_search(x, s, dir_derivative)
-
-            # Update position
-            x.lincomb(1, x, a, s)  # x = x + a * s
-
-            if callback is not None:
-                callback(x)
 
 
 def exp_zero_seq(base):

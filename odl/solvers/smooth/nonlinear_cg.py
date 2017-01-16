@@ -78,7 +78,6 @@ def conjugate_gradient_nonlinear(f, x, line_search=1.0, maxiter=1000, nreset=0,
     conjugate_gradient_normal : Equivalent solver but for least-squares problem
     with linear operator
     """
-
     if x not in f.domain:
         raise TypeError('`x` {!r} is not in the domain of `f` {!r}'
                         ''.format(x, f.domain))
@@ -122,6 +121,7 @@ def conjugate_gradient_nonlinear(f, x, line_search=1.0, maxiter=1000, nreset=0,
 
             # Find optimal step along s
             dir_derivative = -dx.inner(s)
+
             if abs(dir_derivative) <= tol:
                 return
             a = line_search(x, s, dir_derivative)
