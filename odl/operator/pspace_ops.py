@@ -361,20 +361,25 @@ class ProductSpaceOperator(Operator):
     def __getitem__(self, index):
         """Get sub-operator by index.
 
+        Parameters
+        ----------
+        index : tuple of int
+            A pair of integers given as (row, col).
+
         Returns
         -------
-        suboperator : `Operator` or ``None``
-            If there is an operator at [row, col], returns the operator,
-            otherwise returns ``0``.
+        suboperator : `Operator` or ``0``
+            If there is an operator at (row, col), the operator is returned,
+            otherwise ``0``.
 
         Examples
         --------
         >>> r3 = odl.rn(3)
-        >>> X = odl.ProductSpace(r3, r3)
+        >>> pspace = odl.ProductSpace(r3, r3)
         >>> I = odl.IdentityOperator(r3)
-        >>> x = X.element([[1, 2, 3], [4, 5, 6]])
-        >>> prod_op = ProductSpaceOperator([[0, I], [0, 0]],
-        ...                                domain=X, range=X)
+        >>> prod_op = ProductSpaceOperator([[0, I],
+        ...                                 [0, 0]],
+        ...                                domain=pspace, range=pspace)
         >>> prod_op[0, 0]
         0
         >>> prod_op[0, 1]
@@ -394,11 +399,10 @@ class ProductSpaceOperator(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        aslist = [[0 for _ in range(self.domain.size)]
-                  for _ in range (self.range.size)]
+        aslist = [[0] * self.domain.size for _ in range(self.range.size)]
         for i, j, op in zip(self.ops.row, self.ops.col, self.ops.data):
             aslist[i][j] = op
-        return 'ProductSpaceOperator({!r})'.format(aslist)
+        return '{}({!r})'.format(self.__class__.__name__, aslist)
 
 
 class ComponentProjection(Operator):
