@@ -34,7 +34,7 @@ from odl.util import array1d_repr, arraynd_repr
 
 __all__ = ('MatrixWeighting', 'ArrayWeighting', 'ConstWeighting',
            'NoWeighting',
-           'CustomInnerProduct', 'CustomNorm', 'CustomDist')
+           'CustomInner', 'CustomNorm', 'CustomDist')
 
 
 class Weighting(object):
@@ -809,7 +809,7 @@ class NoWeighting(ConstWeighting):
             return 'NoWeighting: p = {}'.format(self.exponent)
 
 
-class CustomInnerProduct(Weighting):
+class CustomInner(Weighting):
 
     """Class for handling a user-specified inner product."""
 

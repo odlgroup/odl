@@ -35,7 +35,7 @@ from odl.operator.operator import Operator
 from odl.set.space import LinearSpaceTypeError
 from odl.space.npy_ntuples import (
     NumpyFnConstWeighting, NumpyFnArrayWeighting, NumpyFnMatrixWeighting,
-    NumpyFnNoWeighting, NumpyFnCustomInnerProduct, NumpyFnCustomNorm,
+    NumpyFnNoWeighting, NumpyFnCustomInner, NumpyFnCustomNorm,
     NumpyFnCustomDist,
     npy_weighted_inner, npy_weighted_norm, npy_weighted_dist,
     MatVecOperator)
@@ -1579,10 +1579,10 @@ def test_custom_inner(fn):
     def inner(x, y):
         return np.vdot(y, x)
 
-    w = NumpyFnCustomInnerProduct(inner)
-    w_same = NumpyFnCustomInnerProduct(inner)
-    w_other = NumpyFnCustomInnerProduct(np.dot)
-    w_d = NumpyFnCustomInnerProduct(inner, dist_using_inner=False)
+    w = NumpyFnCustomInner(inner)
+    w_same = NumpyFnCustomInner(inner)
+    w_other = NumpyFnCustomInner(np.dot)
+    w_d = NumpyFnCustomInner(inner, dist_using_inner=False)
 
     assert w == w
     assert w == w_same
@@ -1602,7 +1602,7 @@ def test_custom_inner(fn):
     assert almost_equal(w_d.dist(x, y), true_dist)
 
     with pytest.raises(TypeError):
-        NumpyFnCustomInnerProduct(1)
+        NumpyFnCustomInner(1)
 
 
 def test_custom_norm(fn):
