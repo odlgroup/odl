@@ -253,7 +253,8 @@ def _analytical_forbild_phantom(resolution, ear):
     return phantomE, phantomC
 
 
-def forbild(space, resolution=False, ear=True, value_type='density'):
+def forbild(space, resolution=False, ear=True, value_type='density',
+            scale='auto'):
     """Standard `FORBILD phantom` in 2 dimensions.
 
     The FORBILD phantom is intended for testing CT algorithms and is intended
@@ -287,6 +288,16 @@ def forbild(space, resolution=False, ear=True, value_type='density'):
         The format the phantom should be given in.
         'density' returns floats in the range [0, 1.8] (g/cm^3)
         'materials' returns indices in the range [0, 7].
+    scale : {'auto', 'cm', 'meters', 'mm'}
+        Controls how ``space`` should be rescaled to fit the definition of
+        the forbild phantom, which is defined on the square
+        [-12.8, 12.8] x [-12.8, 12.8] cm.
+
+        * ``'auto'`` means that space is rescaled to fit exactly. The space is
+          also centered at [0, 0].
+        * ``'cm'`` means the dimensions of the space should be used as is.
+        * ``'m'`` means all dimensions of the space are multiplied by 100.
+        * ``'mm'`` means all dimensions of the space are divided by 10.
 
     Returns
     -------
@@ -317,10 +328,23 @@ def forbild(space, resolution=False, ear=True, value_type='density'):
     # Rescale points to the default grid.
     # The forbild phantom is defined on [-12.8, 12.8] x [-12.8, 12.8]
     xcoord, ycoord = space.points().T
-    xcoord = (xcoord - space.min_pt[0]) / (space.max_pt[0] - space.min_pt[0])
-    xcoord = 25.8 * xcoord - 12.8
-    ycoord = (ycoord - space.min_pt[1]) / (space.max_pt[1] - space.min_pt[1])
-    ycoord = 25.8 * ycoord - 12.8
+    if scale == 'auto':
+        xcoord = ((xcoord - space.min_pt[0]) /
+                  (space.max_pt[0] - space.min_pt[0]))
+        xcoord = 25.8 * xcoord - 12.8
+        ycoord = ((ycoord - space.min_pt[1]) /
+                  (space.max_pt[1] - space.min_pt[1]))
+        ycoord = 25.8 * ycoord - 12.8
+    elif scale == 'cm':
+        pass  # dimensions already correct.
+    elif scale == 'm':
+        xcoord *= 100.0
+        ycoord *= 100.0
+    elif scale == 'mm':
+        xcoord /= 10.0
+        ycoord /= 10.0
+    else:
+        raise ValueError('unknown `scale` {}'.format(scale))
 
     # Compute the phantom values in each voxel
     image = np.zeros(space.size)
