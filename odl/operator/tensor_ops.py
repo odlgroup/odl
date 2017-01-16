@@ -197,7 +197,7 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
                                   np.ones(len(self.domain)))
             else:
                 raise ValueError('weighting scheme {!r} of the domain does '
-                                 'not define a weighting vector or constant'
+                                 'not define a weighting array or constant'
                                  ''.format(self.domain.weighting))
         elif np.isscalar(weighting):
             if weighting <= 0:
@@ -219,7 +219,7 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
 
     @property
     def weights(self):
-        """Weighting vector of this norm."""
+        """Weighting array of this operator."""
         return self.__weights
 
     @property
@@ -412,7 +412,7 @@ class PointwiseInnerBase(PointwiseTensorFieldOperator):
                                   np.ones(len(vfspace)))
             else:
                 raise ValueError('weighting scheme {!r} of the domain does '
-                                 'not define a weighting vector or constant'
+                                 'not define a weighting array or constant'
                                  ''.format(vfspace.weighting))
         elif np.isscalar(weighting):
             self.__weights = float(weighting) * np.ones(vfspace.size)
@@ -427,7 +427,7 @@ class PointwiseInnerBase(PointwiseTensorFieldOperator):
 
     @property
     def weights(self):
-        """Weighting vector of this norm."""
+        """Weighting array of this operator."""
         return self.__weights
 
     @property
@@ -610,7 +610,7 @@ class PointwiseInnerAdjoint(PointwiseInnerBase):
                                   np.ones(len(self.range)))
         else:
             raise ValueError('weighting scheme {!r} of the range does '
-                             'not define a weighting vector or constant'
+                             'not define a weighting array or constant'
                              ''.format(self.range.weighting))
 
     def _call(self, f, out):

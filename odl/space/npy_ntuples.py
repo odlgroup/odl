@@ -45,8 +45,6 @@ from odl.util.ufuncs import NumpyNtuplesUfuncs
 
 __all__ = ('NumpyNtuples', 'NumpyNtuplesVector', 'NumpyFn', 'NumpyFnVector',
            'MatVecOperator',
-           'NumpyFnMatrixWeighting', 'NumpyFnArrayWeighting',
-           'NumpyFnConstWeighting',
            'npy_weighted_dist', 'npy_weighted_norm', 'npy_weighted_inner')
 
 
@@ -1472,7 +1470,9 @@ def npy_weighted_inner(weights):
 
     See Also
     --------
-    NumpyFnConstWeighting, NumpyFnArrayWeighting, NumpyFnMatrixWeighting
+    NumpyFnConstWeighting
+    NumpyFnArrayWeighting
+    NumpyFnMatrixWeighting
     """
     return _weighting(weights, exponent=2.0).inner
 
@@ -1499,7 +1499,9 @@ def npy_weighted_norm(weights, exponent=2.0):
 
     See Also
     --------
-    NumpyFnConstWeighting, NumpyFnArrayWeighting, NumpyFnMatrixWeighting
+    NumpyFnConstWeighting
+    NumpyFnArrayWeighting
+    NumpyFnMatrixWeighting
     """
     return _weighting(weights, exponent=exponent).norm
 
@@ -1536,7 +1538,9 @@ def npy_weighted_dist(weights, exponent=2.0, use_inner=False):
 
     See Also
     --------
-    NumpyFnConstWeighting, NumpyFnArrayWeighting, NumpyFnMatrixWeighting
+    NumpyFnConstWeighting
+    NumpyFnArrayWeighting
+    NumpyFnMatrixWeighting
     """
     return _weighting(weights, exponent=exponent,
                       dist_using_inner=use_inner).dist
@@ -1749,35 +1753,11 @@ class NumpyFnMatrixWeighting(MatrixWeighting):
 
 class NumpyFnArrayWeighting(ArrayWeighting):
 
-    """Vector weighting for `NumpyFn`.
+    """Weighting of `Fn` by an array.
 
-    For exponent 2.0, a new weighted inner product with array ``w``
-    is defined as::
-
-        <a, b>_w := <w * a, b> = b^H (w * a)
-
-    with ``b^H`` standing for transposed complex conjugate and
-    ``w * a`` for entry-wise multiplication.
-
-    For other exponents, only norm and dist are defined. In the case of
-    exponent ``inf``, the weighted norm is
-
-        ||a||_{w, inf} := ||w * a||_inf
-
-    otherwise it is::
-
-        ||a||_{w, p} := ||w^{1/p} * a||
-
-    Note that this definition does **not** fulfill the limit property
-    in ``p``, i.e.::
-
-        ||x||_{w, p} --/-> ||x||_{w, inf}  for p --> inf
-
-    unless ``w = (1,...,1)``.
-
-    The array may only have positive entries, otherwise it does not
-    define an inner product or norm, respectively. This is not checked
-    during initialization.
+    This class defines a point-wise weighting, i.e., a weighting with
+    a different value for each index.
+    See ``Notes`` for mathematical details.
     """
 
     def __init__(self, array, exponent=2.0, dist_using_inner=False):
@@ -1788,8 +1768,8 @@ class NumpyFnArrayWeighting(ArrayWeighting):
         array : `array-like`, one-dim.
             Weighting array of the inner product, norm and distance.
         exponent : positive float
-            Exponent of the norm. For values other than 2.0, the inner
-            product is not defined.
+            Exponent of the norm. For values other than 2.0, no inner
+            product is defined.
         dist_using_inner : bool, optional
             Calculate ``dist`` using the formula
 
@@ -1800,12 +1780,54 @@ class NumpyFnArrayWeighting(ArrayWeighting):
             exactly zero for equal (but not identical) ``x`` and ``y``.
 
             This option can only be used if ``exponent`` is 2.0.
+
+        Notes
+        -----
+        - For exponent 2.0, a new weighted inner product with array
+          :math:`w` is defined as
+
+          .. math::
+              \\langle a, b\\rangle_w :=
+              \\langle w \odot a, b\\rangle =
+              b^{\mathrm{H}} (w \odot a),
+
+          where :math:`b^{\mathrm{H}}` stands for transposed complex
+          conjugate and :math:`w \odot a` for entry-wise multiplication.
+
+        - For other exponents, only norm and dist are defined. In the
+          case of exponent :math:`\\infty`, the weighted norm is
+
+          .. math::
+              \| a\|_{w, \\infty} :=
+              \| w \odot a\|_{\\infty},
+
+          otherwise it is (using point-wise exponentiation)
+
+          .. math::
+
+              \| a\|_{w, p} :=
+              \| w^{1/p} \odot a\|_{\\infty}.
+
+        - Note that this definition does **not** fulfill the limit
+          property in :math:`p`, i.e.
+
+          .. math::
+              \| a\|_{w, p} \\not\\to
+              \| a\|_{w, \\infty} \quad (p \\to \\infty)
+
+          unless :math:`w = (1, \dots, 1)`. The reason for this choice
+          is that the alternative with the limit property consists in
+          ignoring the weights altogether.
+
+        - The array may only have positive entries, otherwise it does
+          not define an inner product or norm, respectively. This is not
+          checked during initialization.
         """
         super().__init__(array, impl='numpy', exponent=exponent,
                          dist_using_inner=dist_using_inner)
 
     def inner(self, x1, x2):
-        """Calculate the array-weighted inner product of two vectors.
+        """Return the weighted inner product of two vectors.
 
         Parameters
         ----------
@@ -1815,7 +1837,7 @@ class NumpyFnArrayWeighting(ArrayWeighting):
         Returns
         -------
         inner : float or complex
-            The inner product of the two provided vectors
+            The inner product of the two provided vectors.
         """
         if self.exponent != 2.0:
             raise NotImplementedError('no inner product defined for '
@@ -1854,31 +1876,8 @@ class NumpyFnConstWeighting(ConstWeighting):
 
     """Weighting of `NumpyFn` by a constant.
 
-    For exponent 2.0, a new weighted inner product with constant
-    ``c`` is defined as::
-
-        <a, b>_c = c * <a, b> = c * b^H a
-
-    with ``b^H`` standing for transposed complex conjugate.
-
-    For other exponents, only norm and dist are defined. In the case of
-    exponent ``inf``, the weighted norm is defined as::
-
-        ||a||_{c, inf} := c ||a||_inf
-
-    otherwise it is::
-
-        ||a||_{c, p} := c^{1/p}  ||a||_p
-
-    Note that this definition does **not** fulfill the limit property
-    in ``p``, i.e.::
-
-        ||a||_{c,p} --/-> ||a||_{c,inf}  for p --> inf
-
-    unless ``c = 1``.
-
-    The constant must be positive, otherwise it does not define an
-    inner product or norm, respectively.
+    This class defines a weighting with the same constant for each index.
+    See ``Notes`` for mathematical details.
     """
 
     def __init__(self, constant, exponent=2.0, dist_using_inner=False):
@@ -1901,6 +1900,43 @@ class NumpyFnConstWeighting(ConstWeighting):
             exactly zero for equal (but not identical) ``x`` and ``y``.
 
             This option can only be used if ``exponent`` is 2.0.
+
+        Notes
+        -----
+        - For exponent 2.0, a new weighted inner product with constant
+          :math:`c` is defined as
+
+          .. math::
+              \\langle a, b\\rangle_c = c\, \\langle a, b\\rangle
+              = c\, b^{\mathrm{H}} a,
+
+          with :math:`b^{\mathrm{H}}` standing for transposed complex
+          conjugate.
+
+          For other exponents, only norm and dist are defined. In the case of
+          exponent :math:`\infty`, the weighted norm is defined as
+
+          .. math::
+              \|a\|_{c, \infty} := c\, \|a\|_\infty,
+
+          otherwise it is
+
+          .. math::
+              \|a\|_{c, p} := c^{1/p}\, \|a\|_p.
+
+        - Note that this definition does **not** fulfill the limit property
+          in ``p``, i.e.,
+
+          .. math::
+              \|a\|_{c,p} \\not\\to \|a\|_{c,\infty}
+              \quad\\text{for } p \\to \infty
+
+          unless :math:`c = 1`. The reason for this choice is that the
+          alternative fulfilling the limit property consists in ignoring
+          the weight altogether.
+
+        - The constant must be positive, otherwise it does not define an
+          inner product or norm, respectively.
         """
         super().__init__(constant, impl='numpy', exponent=exponent,
                          dist_using_inner=dist_using_inner)
