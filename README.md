@@ -23,35 +23,35 @@ Features
 - Objects to represent mathematical notions like vector spaces and operators, including properties as expected from mathematics (inner product, norm, operator composition, ...)
 - Convenience functionality for operators like arithmetic, composition, operator matrices etc., which satisfy the known mathematical rules.
 - Out-of-the-box support for frequently used operators like scaling, partial derivative, gradient, Fourier transform etc.
+- A versatile and pluggable library of optimization routines for smooth and non-smooth problems, such as CGLS, BFGS, Forward-Backward splitting and Douglas-Rachford splitting.
 - Support for tomographic imaging with a unified geometry representation and bindings to external libraries for efficient computation of projections and back-projections.
 - Standardized tests to validate implementations against expected behavior of the corresponding mathematical object, e.g. if a user-defined norm satisfies `norm(x + y) <= norm(x) + norm(y)` for a number of input vectors `x` and `y`.
 
-Documentation
-=============
-
-Introduction, mathematical details and the API reference can be found at the [ODL documentation page](https://odlgroup.github.io/odl/).
-
-There is also a large number of examples available in the [examples](examples) folder.
-
 Installation
 ============
-For basic installation without extra dependencies, run
+Installing ODL should be as easy as
+
+    conda install odl
+
+or
 
     pip install odl
 
-You can check that everything was installed properly by running
+For more detailed instructions, check out the [Installation guide](https://odlgroup.github.io/odl/getting_started/installing.html).
 
-    python -c "import odl; odl.test()"
+The code is compatible with Python 2 and 3 through the `future` library. It is intended to work on all major platforms (GNU/Linux / Mac / Windows).
 
-This requires [pytest](http://pytest.org/latest/). See the [installation](https://odlgroup.github.io/odl/getting_started/installing.html) documentation for further information.
-
-ODL is compatible to Python 2 and 3 through the `future` library. It is intended to work on all major platforms (GNU/Linux / Mac / Windows).
+Resources
+=========
+- [ODL Documentation](https://odlgroup.github.io/odl/)
+- [Installation guide](https://odlgroup.github.io/odl/getting_started/installing.html)
+- [Getting Started](https://odlgroup.github.io/odl/getting_started/getting_started.html)
+- [Code Examples](examples)
+- [API reference](https://odlgroup.github.io/odl/odl.html)
 
 License
--------
-GPL Version 3 or later. See [LICENSE](LICENSE) file.
-
-If you would like to get the code under a different license, please contact the developers.
+=======
+GPL Version 3 or later. See the [LICENSE](LICENSE) file.
 
 ODL development group
 ---------------------
