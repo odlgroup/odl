@@ -531,7 +531,7 @@ class writable_array(object):
         self.arr = None
 
 
-def signature_string(posargs, optargs, sep=', ', mod='!s'):
+def signature_string(posargs, optargs, sep=', ', mod=''):
     """Return a stringified signature from given arguments.
 
     Parameters
@@ -567,8 +567,6 @@ def signature_string(posargs, optargs, sep=', ', mod='!s'):
         If they are sequences of strings, their lengths must match those
         of ``posargs`` and ``optargs``, respectively, and they modify
         the format strings in a one-to-one fashion.
-
-        Note that string parameters are not affected by format modifiers.
 
     Returns
     -------
@@ -620,9 +618,11 @@ def signature_string(posargs, optargs, sep=', ', mod='!s'):
     >>> optargs = [('extent', 1.442, 1.0), ('spacing', 0.0151, 1.0)]
     >>> signature_string(posargs, optargs)
     "'hello', 2.345, extent=1.442, spacing=0.0151"
-    >>> mod = ':.2'  # print only two significant digits for all arguments
+    >>> # Print only two significant digits for all arguments.
+    >>> # NOTE: this also affects the string!
+    >>> mod = ':.2'
     >>> signature_string(posargs, optargs, mod=mod)
-    "'hello', 2.3, extent=1.4, spacing=0.015"
+    'he, 2.3, extent=1.4, spacing=0.015'
     >>> mod = [['', ''], [':.3', ':.2']]  # one modifier per argument
     >>> signature_string(posargs, optargs, mod=mod)
     "'hello', 2.345, extent=1.44, spacing=0.015"
@@ -669,8 +669,11 @@ def signature_string(posargs, optargs, sep=', ', mod='!s'):
             # All non-string types are passed a format conversion
             fmt = '{{{}}}'.format(modifier)
         else:
-            # Preserve single quotes for strings
-            fmt = "'{}'"
+            # Preserve single quotes for strings by default
+            if modifier:
+                fmt = '{{{}}}'.format(modifier)
+            else:
+                fmt = "'{}'"
 
         posargs_conv.append(fmt.format(arg))
 
@@ -690,7 +693,10 @@ def signature_string(posargs, optargs, sep=', ', mod='!s'):
         except TypeError:
             fmt = '{{{}}}'.format(modifier)
         else:
-            fmt = "'{}'"
+            if modifier:
+                fmt = '{{{}}}'.format(modifier)
+            else:
+                fmt = "'{}'"
 
         value_str = fmt.format(value)
 

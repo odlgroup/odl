@@ -993,7 +993,9 @@ class ProductSpaceArrayWeighting(ArrayWeighting):
               \|x\|_{w,p} \\not\\to \|x\|_{w,\infty}
               \quad\\text{for } p \\to \infty
 
-          unless :math:`w = (1,...,1)`.
+          unless :math:`w = (1,...,1)`. The reason for this choice
+          is that the alternative with the limit property consists in
+          ignoring the weights altogether.
 
         - The array may only have positive entries, otherwise it does not
           define an inner product or norm, respectively. This is not checked
@@ -1114,7 +1116,9 @@ class ProductSpaceConstWeighting(ConstWeighting):
               \|x\|_{c,p} \\not\\to \|x\|_{c,\infty}
               \quad \\text{for } p \\to \infty
 
-          unless :math:`c = 1`.
+          unless :math:`c = 1`. The reason for this choice
+          is that the alternative with the limit property consists in
+          ignoring the weight altogether.
 
         - The constant must be positive, otherwise it does not define an
           inner product or norm, respectively.

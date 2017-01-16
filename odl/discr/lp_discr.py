@@ -489,7 +489,7 @@ class DiscreteLp(DiscretizedSpace):
 
             inner_str = signature_string(posargs, optargs,
                                          mod=[['!r'] * len(posargs),
-                                              ['!s'] * len(optargs)])
+                                              [''] * len(optargs)])
             return '{}({})'.format(constructor, inner_str)
 
         else:
