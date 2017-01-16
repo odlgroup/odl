@@ -26,3 +26,6 @@ __all__ += gradient.__all__
 
 from .newton import *
 __all__ += newton.__all__
+
+from .nonlinear_cg import *
+__all__ += nonlinear_cg.__all__
