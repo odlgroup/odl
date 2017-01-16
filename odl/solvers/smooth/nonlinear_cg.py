@@ -23,7 +23,24 @@ __all__ = ('conjugate_gradient_nonlinear',)
 def conjugate_gradient_nonlinear(f, x, line_search=1.0, maxiter=1000, nreset=0,
                                  tol=1e-16, beta_method='FR',
                                  callback=None):
-    """Conjugate gradient method for general nonlinear problems.
+    """Conjugate gradient for nonlinear problems.
+
+    Notes
+    -----
+    This is a general and optimized implementation of the nonlinear conjguate
+    gradient method for solving a general unconstrained optimization problem
+
+        :math:`\min f(x)`
+
+    for a differentiable function
+    :math:`f: \mathcal{X}\\to \mathbb{R}` on a Hilbert space
+    :math:`\mathcal{X}`. It does so by finding a zero of the gradient
+
+        :math:`\\nabla f: \mathcal{X} \\to \mathcal{X}`.
+
+    The method is described in a
+    `Wikipedia article
+    <https://en.wikipedia.org/wiki/Nonlinear_conjugate_gradient_method>`_.
 
     Parameters
     ----------
