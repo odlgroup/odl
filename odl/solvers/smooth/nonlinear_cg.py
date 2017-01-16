@@ -29,8 +29,8 @@ from odl.solvers.util import ConstantLineSearch, BacktrackingLineSearch
 __all__ = ('conjugate_gradient_nonlinear',)
 
 
-def conjugate_gradient_nonlinear(f, x, rhs, niter=1, nreset=0,
-                                 line_search=None, tol=1e-16, beta_method='FR',
+def conjugate_gradient_nonlinear(f, x, line_search=1.0, maxiter=1000, nreset=0,
+                                 tol=1e-16, beta_method='FR',
                                  callback=None):
     """Conjugate gradient for nonlinear problems.
 
@@ -40,7 +40,7 @@ def conjugate_gradient_nonlinear(f, x, rhs, niter=1, nreset=0,
 
     Parameters
     ----------
-    op : `Functional`
+    f : `Functional`
         Operator in the inverse problem. If not linear, it must have
         an implementation of `Operator.derivative`, which
         in turn must implement `Operator.adjoint`, i.e.
@@ -49,14 +49,12 @@ def conjugate_gradient_nonlinear(f, x, rhs, niter=1, nreset=0,
         Vector to which the result is written. Its initial value is
         used as starting point of the iteration, and its values are
         updated in each iteration step.
-    rhs : ``op.range`` element
-        Right-hand side of the equation defining the inverse problem
-    niter : int
+    line_search : float or `LineSearch`, optional
+        Strategy to choose the step length. If a float is given, uses it as a
+    maxiter : int
         Number of iterations per reset.
     nreset : int, optional
         Number of times the solver should be reset. Default: no reset.
-    line_search : float or `LineSearch`, optional
-        Strategy to choose the step length. If a float is given, uses it as a
         fixed step length. Default: `BacktrackingLineSearch`
     tol : float, optional
         Tolerance that should be used for terminating the iteration.
@@ -94,7 +92,7 @@ def conjugate_gradient_nonlinear(f, x, rhs, niter=1, nreset=0,
         dx_old = dx
         s = dx  # for 'HS' and 'DY' beta methods
 
-        for _ in range(niter):
+        for _ in range(maxiter):
             # Compute dx as -grad f
             dx, dx_old = -f.gradient(x), dx
 
