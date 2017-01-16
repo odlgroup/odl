@@ -86,8 +86,10 @@ target/
 # PyCharm project files
 .idea
 
-# IPython / Jupyter notebook files
-*.ipynb
+# Kate swap files
+*.kate-swp
+
+# IPython / Jupyter notebook checkpoint files
 .ipynb_checkpoints
 
 # Documentation build files
