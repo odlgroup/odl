@@ -50,8 +50,8 @@ geometry = odl.tomo.CircularConeFlatGeometry(
 # --- Create Filteredback-projection (FBP) operator --- #
 
 
-# Ray transform (= forward projection). We use the ASTRA CUDA backend.
-ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl='astra_cuda')
+# Ray transform (= forward projection).
+ray_trafo = odl.tomo.RayTransform(reco_space, geometry)
 
 # Create FBP operator using utility function
 # We select a Shepp-Logan filter, and only use the lowest 80% of frequencies to

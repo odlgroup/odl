@@ -39,8 +39,8 @@ detector_partition = odl.uniform_partition([-30, -30], [30, 30], [558, 558])
 # give a zero result.
 geometry = odl.tomo.Parallel3dAxisGeometry(angle_partition, detector_partition)
 
-# Ray transform (= forward projection). We use ASTRA CUDA backend.
-ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl='astra_cuda')
+# Ray transform (= forward projection).
+ray_trafo = odl.tomo.RayTransform(reco_space, geometry)
 
 # Create a discrete Shepp-Logan phantom (modified version)
 phantom = odl.phantom.shepp_logan(reco_space, modified=True)

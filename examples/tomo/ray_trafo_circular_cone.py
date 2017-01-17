@@ -35,8 +35,8 @@ geometry = odl.tomo.CircularConeFlatGeometry(
     angle_partition, detector_partition, src_radius=1000, det_radius=100,
     axis=[1, 0, 0])
 
-# Ray transform (= forward projection). We use the ASTRA CUDA backend.
-ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl='astra_cuda')
+# Ray transform (= forward projection).
+ray_trafo = odl.tomo.RayTransform(reco_space, geometry)
 
 # Create a discrete Shepp-Logan phantom (modified version)
 phantom = odl.phantom.shepp_logan(reco_space, True)

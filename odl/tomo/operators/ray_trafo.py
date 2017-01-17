@@ -62,10 +62,10 @@ class RayTransform(Operator):
         ----------------
         impl : {`None`, 'astra_cuda', 'astra_cpu', 'scikit'}, optional
             Implementation back-end for the transform. Supported back-ends:
-            * 'astra_cuda': ASTRA toolbox, using CUDA, 2D or 3D
-            * 'astra_cpu': ASTRA toolbox using CPU, only 2D
-            * 'scikit': scikit-image, only 2D parallel with square domain
-            If `None` is given, prefers the fastest available backend.
+            * ``'astra_cuda'``: ASTRA toolbox, using CUDA, 2D or 3D
+            * ``'astra_cpu'``: ASTRA toolbox using CPU, only 2D
+            * ``'scikit'``: scikit-image, only 2D parallel with square domain
+            If ``None`` is given, the fastest available back-end is used.
         interp : {'nearest', 'linear'}
             Interpolation type for the discretization of the operator
             range.
@@ -265,10 +265,10 @@ class RayBackProjection(Operator):
         ----------------
         impl : {'astra_cpu', 'astra_cuda', 'scikit'}, optional
             Implementation back-end for the transform. Supported back-ends:
-            * 'astra_cuda': ASTRA toolbox, using CUDA, 2D or 3D
-            * 'astra_cpu': ASTRA toolbox using CPU, only 2D
-            * 'scikit': scikit-image, only 2D parallel with square domain
-            If `None` is given, prefers the fastest available backend.
+            * ``'astra_cuda'``: ASTRA toolbox, using CUDA, 2D or 3D
+            * ``'astra_cpu'``: ASTRA toolbox using CPU, only 2D
+            * ``'scikit'``: scikit-image, only 2D parallel with square domain
+            If ``None`` is given, the fastest available back-end is used.
         interp : {'nearest', 'linear'}
             Interpolation type for the discretization of the operator range.
             Default: 'nearest'

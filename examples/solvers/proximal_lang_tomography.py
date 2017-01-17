@@ -45,16 +45,8 @@ angle_partition = odl.uniform_partition(0, np.pi, 360)
 detector_partition = odl.uniform_partition(-30, 30, 558)
 geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 
-# The implementation of the ray transform to use, options:
-# 'scikit'                    Requires scikit-image (can be installed by
-#                             running ``pip install scikit-image``).
-# 'astra_cpu', 'astra_cuda'   Requires astra tomography to be installed.
-#                             Astra is much faster than scikit. Webpage:
-#                             https://github.com/astra-toolbox/astra-toolbox
-impl = 'astra_cuda'
-
 # Initialize the ray transform (forward projection).
-ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl=impl)
+ray_trafo = odl.tomo.RayTransform(reco_space, geometry)
 
 # Convert ray transform to proximal language operator
 proximal_lang_ray_trafo = odl.as_proximal_lang_operator(ray_trafo)
