@@ -28,17 +28,10 @@ import numpy as np
 import odl
 from odl.operator.tensor_ops import PointwiseNorm, PointwiseInner, PointwiseSum
 from odl.space.pspace import ProductSpace
-from odl.util.testutils import all_almost_equal, all_equal
+from odl.util.testutils import all_almost_equal, all_equal, simple_fixture
 
 
-exp_params = [2.0, 1.0, float('inf'), 3.5, 1.5]
-exp_ids = [' p = {} '.format(p) for p in exp_params]
-
-
-@pytest.fixture(scope="module", ids=exp_ids, params=exp_params)
-def exponent(request):
-    return request.param
-
+exponent = simple_fixture('exponent', [2.0, 1.0, float('inf'), 3.5, 1.5])
 
 # ---- PointwiseNorm ----
 

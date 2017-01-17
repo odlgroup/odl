@@ -30,44 +30,14 @@ import odl
 from odl.trafos.util.ft_utils import (
     reciprocal_grid, realspace_grid, dft_preprocess_data)
 from odl.util import all_almost_equal, all_equal
+from odl.util.testutils import simple_fixture
 
 
 # --- pytest fixtures --- #
-
-
-true_or_false = [True, False]
-halfcx_ids = [' halfcomplex={} '.format(p) for p in true_or_false]
-
-
-@pytest.fixture(scope='module', ids=halfcx_ids, params=true_or_false)
-def halfcomplex(request):
-    return request.param
-
-
-shift_ids = [' shift={} '.format(p) for p in true_or_false]
-
-
-@pytest.fixture(scope='module', ids=shift_ids, params=true_or_false)
-def shift(request):
-    return request.param
-
-
-parity_params = ['even', 'odd']
-parity_ids = [" parity='{}' ".format(p) for p in parity_params]
-
-
-@pytest.fixture(scope='module', ids=parity_ids, params=parity_params)
-def parity(request):
-    return request.param
-
-
-sign_params = ['-', '+']
-sign_ids = [" sign='{}' ".format(p) for p in sign_params]
-
-
-@pytest.fixture(scope='module', ids=sign_ids, params=sign_params)
-def sign(request):
-    return request.param
+halfcomplex = simple_fixture('halfcomplex', [True, False])
+shift = simple_fixture('shift', [True, False])
+parity = simple_fixture('parity', ['even', 'odd'])
+sign = simple_fixture('sign', ['-', '+'])
 
 
 # --- reciprocal_grid --- #

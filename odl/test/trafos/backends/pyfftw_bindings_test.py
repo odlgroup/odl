@@ -27,7 +27,9 @@ import pytest
 
 from odl.trafos.backends import pyfftw_call, PYFFTW_AVAILABLE
 from odl.util import (
-    all_almost_equal, is_real_dtype, complex_dtype)
+    is_real_dtype, complex_dtype)
+from odl.util.testutils import (
+    all_almost_equal, simple_fixture)
 
 
 pytestmark = pytest.mark.skipif(not PYFFTW_AVAILABLE,
@@ -36,21 +38,9 @@ pytestmark = pytest.mark.skipif(not PYFFTW_AVAILABLE,
 
 # --- pytest fixtures --- #
 
-
-plan_params = ['estimate', 'measure', 'patient', 'exhaustive']
-plan_ids = [" planning = '{}' ".format(p) for p in plan_params]
-
-
-@pytest.fixture(scope="module", ids=plan_ids, params=plan_params)
-def planning(request):
-    return request.param
-
-
-@pytest.fixture(scope='module', ids=[' forward ', ' backward '],
-                params=['forward', 'backward'])
-def direction(request):
-    return request.param
-
+planning = simple_fixture('planning', ['estimate', 'measure', 'patient',
+                                       'exhaustive'])
+direction = simple_fixture('direction', ['forward', 'backward'])
 
 # --- helper functions --- #
 

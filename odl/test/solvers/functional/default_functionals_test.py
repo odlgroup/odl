@@ -24,20 +24,16 @@ import pytest
 
 # Internal
 import odl
-from odl.util.testutils import all_almost_equal, almost_equal, noise_element
+from odl.util.testutils import (all_almost_equal, almost_equal, noise_element,
+                                simple_fixture)
 from odl.solvers.functional.default_functionals import (
     KullbackLeiblerConvexConj, KullbackLeiblerCrossEntropyConvexConj)
 
 # --- pytest fixtures --- #
-
-
-scalar_params = [0.01, 2.7, np.array(5.0), 10, -2, -0.2, -np.array(7.1), 0]
-scalar_ids = [' scalar={} '.format(s) for s in scalar_params]
-
-
-@pytest.fixture(scope='module', params=scalar_params, ids=scalar_ids)
-def scalar(request):
-    return request.param
+scalar = simple_fixture('scalar', [0.01, 2.7, np.array(5.0), 10, -2, -0.2,
+                                   -np.array(7.1), 0])
+sigma = simple_fixture('sigma', [0.001, 2.7, np.array(0.5), 10])
+exponent = simple_fixture('sigma', [1, 2, 1.5, 2.5, -1.6])
 
 
 space_params = ['r10', 'uniform_discr']
@@ -52,24 +48,6 @@ def space(request, fn_impl):
         return odl.rn(10, impl=fn_impl)
     elif name == 'uniform_discr':
         return odl.uniform_discr(0, 1, 7, impl=fn_impl)
-
-
-sigma_params = [0.001, 2.7, np.array(0.5), 10]
-sigma_ids = [' sigma={} '.format(s) for s in sigma_params]
-
-
-@pytest.fixture(scope='module', params=sigma_params, ids=sigma_ids)
-def sigma(request):
-    return request.param
-
-
-exponent_params = [1, 2, 1.5, 2.5, -1.6]
-exponent_ids = [' exponent={} '.format(s) for s in exponent_params]
-
-
-@pytest.fixture(scope='module', params=exponent_params, ids=exponent_ids)
-def exponent(request):
-    return request.param
 
 
 # --- functional tests --- #

@@ -29,27 +29,14 @@ import odl
 from odl.discr.diff_ops import (
     finite_diff, PartialDerivative, Gradient, Divergence, Laplacian)
 from odl.util.testutils import (
-    all_equal, all_almost_equal, almost_equal, never_skip, noise_element)
+    all_equal, all_almost_equal, almost_equal, never_skip, noise_element,
+    simple_fixture)
 
 
-methods = ['central', 'forward', 'backward']
-method_ids = [' method={} '.format(p) for p in methods]
-
-
-@pytest.fixture(scope="module", params=methods, ids=method_ids)
-def method(request):
-    return request.param
-
-
-paddings = [('constant', 0), ('constant', 1), 'symmetric', 'periodic',
-            'order0', 'order1', 'order2']
-padding_ids = [' constant=0 ', ' constant=1 ', ' symmetric ', ' periodic ',
-               ' order0 ', ' order1 ', '  order2 ']
-
-
-@pytest.fixture(scope="module", params=paddings, ids=padding_ids)
-def padding(request):
-    return request.param
+method = simple_fixture('method', ['central', 'forward', 'backward'])
+padding = simple_fixture('padding', [('constant', 0), ('constant', 1),
+                                     'symmetric', 'periodic',
+                                     'order0', 'order1', 'order2'])
 
 
 @pytest.fixture(scope="module", params=[1, 2, 3], ids=['1d', '2d', '3d'])

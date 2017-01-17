@@ -26,18 +26,10 @@ import pytest
 
 from odl.util.normalize import (
     normalized_scalar_param_list, normalized_axes_tuple)
-
+from odl.util.testutils import simple_fixture
 
 # --- pytest fixtures --- #
-
-
-length_params = [1, 2]
-length_ids = [' length = {} '.format(p) for p in length_params]
-
-
-@pytest.fixture(scope="module", ids=length_ids, params=length_params)
-def length(request):
-    return request.param
+length = simple_fixture('length', [1, 2])
 
 
 single_conv_params = [(-1.0, float),

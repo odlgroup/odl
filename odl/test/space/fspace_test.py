@@ -30,7 +30,8 @@ import numpy as np
 import odl
 from odl import FunctionSet, FunctionSpace
 from odl.discr.grid import sparse_meshgrid
-from odl.util.testutils import all_almost_equal, all_equal, almost_equal
+from odl.util.testutils import (all_almost_equal, all_equal, almost_equal,
+                                simple_fixture)
 
 
 def test_fspace_init():
@@ -467,21 +468,8 @@ def test_fspace_one():
     assert all_equal(one_vec(mg), np.ones((2, 3), dtype=complex))
 
 
-scal_params = [2.0, 0.0, -1.0]
-a_ids = [' a = {} '.format(s) for s in scal_params]
-a_fixture = pytest.fixture(scope="module", ids=a_ids, params=scal_params)
-b_ids = [' b = {} '.format(s) for s in scal_params]
-b_fixture = pytest.fixture(scope="module", ids=b_ids, params=scal_params)
-
-
-@a_fixture
-def a(request):
-    return request.param
-
-
-@b_fixture
-def b(request):
-    return request.param
+a = simple_fixture('a', [2.0, 0.0, -1.0])
+b = simple_fixture('b', [2.0, 0.0, -1.0])
 
 
 def test_fspace_lincomb(a, b):
@@ -561,15 +549,7 @@ def test_fspace_lincomb(a, b):
 
 # NOTE: multiply and divide are tested via magic methods
 
-
-pow_params = [3, 1.0, 0.5, 6.0]
-pow_ids = [' pow = {} '.format(p) for p in pow_params]
-pow_fixture = pytest.fixture(scope="module", ids=pow_ids, params=pow_params)
-
-
-@pow_fixture
-def power(request):
-    return request.param
+power = simple_fixture('power', [3, 1.0, 0.5, 6.0])
 
 
 def test_fspace_power(power):
@@ -615,13 +595,7 @@ def test_fspace_power(power):
     assert all_almost_equal(out_mg, true_mg)
 
 
-op_params = ['+', '+=', '-', '-=', '*', '*=', '/', '/=']
-op_ids = [' op = {} '.format(op) for op in op_params]
-
-
-@pytest.fixture(scope="module", ids=op_ids, params=op_params)
-def op(request):
-    return request.param
+op = simple_fixture('op', ['+', '+=', '-', '-=', '*', '*=', '/', '/='])
 
 
 var_params = ['vv', 'vs', 'sv']

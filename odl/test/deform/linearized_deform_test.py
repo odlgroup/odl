@@ -27,24 +27,13 @@ import pytest
 
 import odl
 from odl.deform import LinDeformFixedTempl, LinDeformFixedDisp
-from odl.util.testutils import almost_equal
+from odl.util.testutils import almost_equal, simple_fixture
 
 
 # Set up fixtures
-
-@pytest.fixture(params=['float', 'complex'])
-def dtype(request):
-    return np.dtype(request.param)
-
-
-@pytest.fixture(params=['linear', 'nearest'])
-def interp(request):
-    return request.param
-
-
-@pytest.fixture(params=[1, 2, 3])
-def ndim(request):
-    return request.param
+dtype = simple_fixture('dtype', ['float', 'complex'])
+interp = simple_fixture('interp', ['linear', 'nearest'])
+ndim = simple_fixture('ndim', [1, 2, 3])
 
 
 @pytest.fixture
@@ -54,7 +43,7 @@ def space(request, ndim, interp, dtype, fn_impl):
     Generates example spaces with various implementations, dimensions, dtypes
     and interpolations.
     """
-    if dtype not in odl.FN_IMPLS[fn_impl].available_dtypes():
+    if np.dtype(dtype) not in odl.FN_IMPLS[fn_impl].available_dtypes():
         pytest.skip('dtype not available for this backend')
 
     return odl.uniform_discr([-1] * ndim, [1] * ndim, [20] * ndim,

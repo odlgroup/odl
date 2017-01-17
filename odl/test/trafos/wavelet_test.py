@@ -26,43 +26,15 @@ import numpy as np
 
 import odl
 from odl.util.testutils import (all_almost_equal, noise_element,
-                                skip_if_no_pywavelets)
+                                skip_if_no_pywavelets, simple_fixture)
 
 
-wavelet_params = ['db1', 'sym2']
-wavelet_ids = [" wavelet='{}' ".format(w) for w in wavelet_params]
-
-
-@pytest.fixture(scope='module', params=wavelet_params, ids=wavelet_ids)
-def wavelet(request):
-    return request.param
-
-
-pad_mode_params = ['constant', 'pywt_periodic']
-pad_mode_ids = [" pad_mode='{}' ".format(m) for m in pad_mode_params]
-
-
-@pytest.fixture(scope='module', params=pad_mode_params, ids=pad_mode_ids)
-def pad_mode(request):
-    return request.param
-
-
-ndim_params = [1, 2, 3]
-ndim_ids = [' ndim={} '.format(ndim) for ndim in ndim_params]
-
-
-@pytest.fixture(scope='module', params=ndim_params, ids=ndim_ids)
-def ndim(request):
-    return request.param
-
-
-nlevels_params = [1, 3]
-nlevels_ids = [' nlevels={} '.format(nlevels) for nlevels in nlevels_params]
-
-
-@pytest.fixture(scope='module', params=nlevels_params, ids=nlevels_ids)
-def nlevels(request):
-    return request.param
+# --- pytest fixtures --- #
+wavelet = simple_fixture('wavelet', ['db1', 'sym2'])
+pad_mode = simple_fixture('pad_mode', ['constant', 'pywt_periodic'])
+ndim = simple_fixture('ndim', [1, 2, 3])
+nlevels = simple_fixture('nlevels', [1, 3])
+wave_impl = simple_fixture('wave_impl', [skip_if_no_pywavelets('pywt')])
 
 
 @pytest.fixture(scope='module')
@@ -112,16 +84,6 @@ def shape_setup(ndim, wavelet, pad_mode):
         raise RuntimeError
 
     return wavelet, pad_mode, nlevels, image_shape, coeff_shapes
-
-
-wave_impl_params = [skip_if_no_pywavelets('pywt')]
-wave_impl_ids = [" wave_impl='{}' ".format(impl.args[1])
-                 for impl in wave_impl_params]
-
-
-@pytest.fixture(scope='module', params=wave_impl_params, ids=wave_impl_ids)
-def wave_impl(request):
-    return request.param
 
 
 def test_wavelet_transform(wave_impl, shape_setup, floating_dtype):

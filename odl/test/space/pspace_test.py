@@ -27,16 +27,10 @@ import operator
 
 import odl
 from odl.util.testutils import (all_equal, all_almost_equal, almost_equal,
-                                noise_elements)
+                                noise_elements, simple_fixture)
 
 
-exp_params = [2.0, 1.0, float('inf'), 0.5, 1.5]
-exp_ids = [' p = {} '.format(p) for p in exp_params]
-
-
-@pytest.fixture(scope="module", ids=exp_ids, params=exp_params)
-def exponent(request):
-    return request.param
+exponent = simple_fixture('exponent', [2.0, 1.0, float('inf'), 0.5, 1.5])
 
 
 def test_emptyproduct():
