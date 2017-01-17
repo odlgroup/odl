@@ -26,7 +26,8 @@ from odl.discr import ResizingOperator
 from odl.trafos import FourierTransform, PYFFTW_AVAILABLE
 
 
-__all__ = ('fbp_op', 'tam_danielson_window')
+__all__ = ('fbp_op', 'fbp_filter_op', 'tam_danielson_window',
+           'parker_weighting')
 
 
 def _axis_in_detector(geometry):
@@ -134,6 +135,7 @@ def tam_danielson_window(ray_trafo, smoothing_width=0.05, n_half_rot=1):
     See Also
     --------
     fbp_op : Filtered back-projection operator from `RayTransform`
+    tam_danielson_window : Weighting for short scan data
     HelicalConeFlatGeometry : The primary use case for this window function.
 
     References
@@ -197,6 +199,97 @@ def tam_danielson_window(ray_trafo, smoothing_width=0.05, n_half_rot=1):
         return lower_wndw * upper_wndw
 
     return ray_trafo.range.element(window_fcn) / n_half_rot
+
+
+def parker_weighting(ray_trafo, q=0.25):
+    """Create parker weighting for a `RayTransform`.
+
+    Parker weighting is a weighting function that ensures that oversampled
+    fan/cone beam data are weighted such that each line has unit weight. It is
+    useful in analytic reconstruction methods such as FBP to give a more
+    accurate result and can improve convergence rates for iterative methods.
+
+    See the article `Parker weights revisited`_ for more information.
+
+    Parameters
+    ----------
+    ray_trafo : `RayTransform`
+        The ray transform for which to compute the weights.
+    q : float
+        Parameter controlling the speed of the roll-off at the edges of the
+        weighting. 1.0 gives the classical Parker weighting, while smaller
+        values in general lead to lower noise but stronger discretization
+        artifacts.
+
+    Returns
+    -------
+    parker_weighting : ``ray_trafo.range`` element
+
+    See Also
+    --------
+    fbp_op : Filtered back-projection operator from `RayTransform`
+    tam_danielson_window : Indicator function for helical data
+    FanFlatGeometry : Use case in 2d
+    CircularConeFlatGeometry : Use case in 3d
+
+    References
+    ----------
+    .. _Parker weights revisited: https://www.ncbi.nlm.nih.gov/pubmed/11929021
+    """
+    # Note: Parameter names taken from WES2002
+
+    # Extract parameters
+    src_radius = ray_trafo.geometry.src_radius
+    det_radius = ray_trafo.geometry.det_radius
+    ndim = ray_trafo.geometry.ndim
+    angles = ray_trafo.range.meshgrid[0]
+    min_rot_angle = ray_trafo.geometry.motion_partition.min_pt
+    alen = ray_trafo.geometry.motion_params.length
+
+    # Parker weightings are not defined for helical geometries
+    if ray_trafo.geometry.ndim != 2:
+        pitch = ray_trafo.geometry.pitch
+        if pitch != 0:
+            raise ValueError('Parker weighting window is only defined with '
+                             '`pitch==0`')
+
+    # Find distance from projection of rotation axis for each pixel
+    if ndim == 2:
+        dx = ray_trafo.range.meshgrid[1]
+    elif ndim == 3:
+        # Find projection of axis on detector
+        rot_dir = _rotation_direction_in_detector(ray_trafo.geometry)
+        dx = (rot_dir[0] * ray_trafo.range.meshgrid[1] +
+              rot_dir[1] * ray_trafo.range.meshgrid[2])
+
+    # Compute parameters
+    dx_abs_max = np.max(np.abs(dx))
+    max_fan_angle = 2 * np.arctan2(dx_abs_max, src_radius + det_radius)
+    delta = max_fan_angle / 2
+    epsilon = alen - np.pi - max_fan_angle
+
+    if epsilon < 0:
+        raise Exception('data not sufficiently sampled for parker weighting')
+
+    # Define utility functions
+    def S(betap):
+        return (0.5 * (1.0 + np.sin(np.pi * betap)) * (np.abs(betap) < 0.5) +
+                (betap >= 0.5))
+
+    def b(alpha):
+        return q * (2 * delta - 2 * alpha + epsilon)
+
+    # Create weighting function
+    beta = angles - min_rot_angle  # rotation angle
+    alpha = np.arctan2(dx, src_radius + det_radius)
+
+    S1 = S(beta / b(alpha) - 0.5)
+    S2 = S((beta - 2 * delta + 2 * alpha - epsilon) / b(alpha) + 0.5)
+    S3 = S((beta - np.pi + 2 * alpha) / b(-alpha) - 0.5)
+    S4 = S((beta - np.pi - 2 * delta - epsilon) / b(-alpha) + 0.5)
+
+    scale = 0.5 * alen / np.pi
+    return ray_trafo.range.element((S1 + S2 - S3 - S4) * scale)
 
 
 def fbp_filter_op(ray_trafo, padding=True, filter_type='Ram-Lak',
@@ -396,12 +489,14 @@ def fbp_op(ray_trafo, padding=True, filter_type='Ram-Lak',
 
 
 if __name__ == '__main__':
-    # Display the various filters
     import odl
     import matplotlib.pyplot as plt
+
+    # Display the various filters
     x = np.linspace(0, 1, 100)
     cutoff = 0.7
 
+    plt.figure('fbp filter')
     for filter_name in ['Ram-Lak', 'Shepp-Logan', 'Cosine', 'Hamming', 'Hann']:
         plt.plot(x, x * _fbp_filter(x, filter_name, cutoff), label=filter_name)
 
@@ -423,6 +518,19 @@ if __name__ == '__main__':
     # Crete and show TD window
     td_window = tam_danielson_window(ray_trafo, smoothing_width=0)
     td_window.show('Tam-Danielson window', coords=[0, None, None])
+
+    # Show the Parker weighting
+
+    # Create Ray Transform in fan beam geometry
+    angle_partition = odl.uniform_partition(0, np.pi + 0.8, 360)
+    detector_partition = odl.uniform_partition(-40, 40, 558)
+    geometry = odl.tomo.FanFlatGeometry(
+        angle_partition, detector_partition, src_radius=80, det_radius=40)
+    ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl='astra_cuda')
+
+    # Crete and show parker weighting
+    parker_weighting = parker_weighting(ray_trafo)
+    parker_weighting.show('Parker weighting')
 
     # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
