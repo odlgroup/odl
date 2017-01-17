@@ -27,7 +27,7 @@ import pytest
 from odl.util import (
     apply_on_boundary, fast_1d_tensor_mult, resize_array, is_real_dtype)
 from odl.util.numerics import _SUPPORTED_RESIZE_PAD_MODES
-from odl.util.testutils import all_equal, almost_equal
+from odl.util.testutils import all_equal, almost_equal, simple_fixture
 
 
 # --- pytest fixtures --- #
@@ -53,13 +53,7 @@ def padding(request):
     return pad_mode, pad_const
 
 
-variants = ['extend', 'restrict', 'mixed']
-variant_ids = [" variant = '{}' ".format(v) for v in variants]
-
-
-@pytest.fixture(scope="module", ids=variant_ids, params=variants)
-def variant(request):
-    return request.param
+variant = simple_fixture('variant', ['extend', 'restrict', 'mixed'])
 
 
 @pytest.fixture(scope="module")

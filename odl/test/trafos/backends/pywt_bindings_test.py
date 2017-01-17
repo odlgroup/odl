@@ -36,7 +36,8 @@ from odl.trafos.backends.pywt_bindings import (
     pywt_flat_array_from_coeffs, pywt_coeffs_from_flat_array,
     pywt_single_level_decomp,
     pywt_multi_level_decomp, pywt_multi_level_recon)
-from odl.util.testutils import all_almost_equal, all_equal, noise_array
+from odl.util.testutils import (all_almost_equal, all_equal, noise_array,
+                                simple_fixture)
 
 
 pytestmark = pytest.mark.skipif(not PYWT_AVAILABLE,
@@ -44,42 +45,10 @@ pytestmark = pytest.mark.skipif(not PYWT_AVAILABLE,
 
 
 # --- pytest fixtures --- #
-
-
-wavelet_params = ['db1', 'sym2']
-wavelet_ids = [" wavelet = '{}' ".format(w) for w in wavelet_params]
-
-
-@pytest.fixture(scope='module', params=wavelet_params, ids=wavelet_ids)
-def wavelet(request):
-    return request.param
-
-
-pywt_mode_params = ['zero', 'periodization']
-pywt_mode_ids = [" mode = '{}' ".format(m) for m in pywt_mode_params]
-
-
-@pytest.fixture(scope='module', params=pywt_mode_params, ids=pywt_mode_ids)
-def pywt_mode(request):
-    return request.param
-
-
-ndim_params = [1, 2, 3]
-ndim_ids = [' ndim = {} '.format(ndim) for ndim in ndim_params]
-
-
-@pytest.fixture(scope='module', params=ndim_params, ids=ndim_ids)
-def ndim(request):
-    return request.param
-
-
-nlevels_params = [1, 3]
-nlevels_ids = [' nlevels = {} '.format(nlevels) for nlevels in nlevels_params]
-
-
-@pytest.fixture(scope='module', params=nlevels_params, ids=nlevels_ids)
-def nlevels(request):
-    return request.param
+wavelet = simple_fixture('wavelet', ['db1', 'sym2'])
+pywt_mode = simple_fixture('pywt_mode', ['zero', 'periodization'])
+ndim = simple_fixture('ndim', [1, 2, 3])
+nlevels = simple_fixture('nlevels', [1, 3])
 
 
 @pytest.fixture(scope='module')

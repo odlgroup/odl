@@ -30,19 +30,10 @@ import odl
 from odl.discr.lp_discr import DiscreteLp
 from odl.space.base_ntuples import FnBase
 from odl.util.testutils import (almost_equal, all_equal, all_almost_equal,
-                                noise_elements)
-
-# Pytest fixture
-
+                                noise_elements, simple_fixture)
 
 # Simply modify exp_params to modify the fixture
-exp_params = [2.0, 1.0, float('inf'), 0.5, 1.5]
-exp_ids = [' p = {} '.format(p) for p in exp_params]
-
-
-@pytest.fixture(scope="module", ids=exp_ids, params=exp_params)
-def exponent(request):
-    return request.param
+exponent = simple_fixture('exponent', [2.0, 1.0, float('inf'), 0.5, 1.5])
 
 
 def test_init(exponent):

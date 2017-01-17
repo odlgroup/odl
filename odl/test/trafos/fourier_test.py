@@ -35,37 +35,13 @@ from odl.trafos.fourier import (
 from odl.util import (all_almost_equal, never_skip, skip_if_no_pyfftw,
                       noise_element,
                       is_real_dtype, conj_exponent, complex_dtype)
+from odl.util.testutils import simple_fixture
 
 # --- pytest fixtures --- #
-
-impl_params = [never_skip('numpy'), skip_if_no_pyfftw('pyfftw')]
-impl_ids = [' impl = {} '.format(impl.args[1]) for impl in impl_params]
-
-
-@pytest.fixture(scope="module", ids=impl_ids, params=impl_params)
-def impl(request):
-    """Fixture for FFT implementations."""
-    return request.param
-
-
-exp_params = [2.0, 1.0, float('inf'), 1.5]
-exp_ids = [' p = {} '.format(p) for p in exp_params]
-
-
-@pytest.fixture(scope="module", ids=exp_ids, params=exp_params)
-def exponent(request):
-    """Fixture for space exponents."""
-    return request.param
-
-
-sign_params = ['-', '+']
-sign_ids = [" sign='{}' ".format(p) for p in sign_params]
-
-
-@pytest.fixture(scope='module', ids=sign_ids, params=sign_params)
-def sign(request):
-    """Fixture for the sign of the Fourier transform."""
-    return request.param
+impl = simple_fixture('impl', [never_skip('numpy'),
+                               skip_if_no_pyfftw('pyfftw')])
+exponent = simple_fixture('exponent', [2.0, 1.0, float('inf'), 1.5])
+sign = simple_fixture('sign', ['-', '+'])
 
 
 # --- helper functions --- #
