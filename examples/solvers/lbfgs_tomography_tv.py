@@ -49,16 +49,8 @@ angle_partition = odl.uniform_partition(0, np.pi, 400)
 detector_partition = odl.uniform_partition(-30, 30, 400)
 geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 
-# The implementation of the ray transform to use, options:
-# 'scikit'                    Requires scikit-image (can be installed by
-#                             running ``pip install scikit-image``).
-# 'astra_cpu', 'astra_cuda'   Require astra tomography to be installed.
-#                             Astra is much faster than scikit. Webpage:
-#                             https://github.com/astra-toolbox/astra-toolbox
-impl = 'astra_cuda'
-
 # Create the forward operator
-ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl=impl)
+ray_trafo = odl.tomo.RayTransform(reco_space, geometry)
 
 # --- Generate artificial data --- #
 

@@ -52,8 +52,8 @@ geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 # --- Create Filtered Back-Projection (FBP) operator --- #
 
 
-# Ray transform (= forward projection). We use the ASTRA CUDA backend.
-ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl='astra_cuda')
+# Ray transform (= forward projection).
+ray_trafo = odl.tomo.RayTransform(reco_space, geometry)
 
 # Fourier transform in detector direction
 fourier = odl.trafos.FourierTransform(ray_trafo.range, axes=[1])

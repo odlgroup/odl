@@ -67,8 +67,8 @@ angle_partition = odl.uniform_partition(0, np.pi, 22)
 detector_partition = odl.uniform_partition(-30, 30, 512)
 geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 
-# Ray transform (= forward projection). We use ASTRA CUDA backend.
-ray_trafo = odl.tomo.RayTransform(space, geometry, impl='astra_cuda')
+# Ray transform (= forward projection).
+ray_trafo = odl.tomo.RayTransform(space, geometry)
 
 # Create sinogram
 phantom = odl.phantom.shepp_logan(space, modified=True)

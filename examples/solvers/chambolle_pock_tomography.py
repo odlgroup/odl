@@ -47,16 +47,8 @@ angle_partition = odl.uniform_partition(0, np.pi, 360)
 detector_partition = odl.uniform_partition(-30, 30, 558)
 geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 
-# The implementation of the ray transform to use, options:
-# 'scikit'                    Requires scikit-image (can be installed by
-#                             running ``pip install scikit-image``).
-# 'astra_cpu', 'astra_cuda'   Require astra tomography to be installed.
-#                             Astra is much faster than scikit. Webpage:
-#                             https://github.com/astra-toolbox/astra-toolbox
-impl = 'astra_cuda'
-
 # Create the forward operator
-ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl=impl)
+ray_trafo = odl.tomo.RayTransform(reco_space, geometry)
 
 
 # --- Generate artificial data --- #
@@ -88,7 +80,7 @@ g = odl.solvers.ZeroFunctional(op.domain)
 l2_norm = odl.solvers.L2NormSquared(ray_trafo.range).translated(data)
 
 # Isotropic TV-regularization i.e. the l1-norm
-l1_norm = 0.01 * odl.solvers.L1Norm(gradient.range)
+l1_norm = 0.015 * odl.solvers.L1Norm(gradient.range)
 
 # Combine functionals, order must correspond to the operator K
 f = odl.solvers.SeparableSum(l2_norm, l1_norm)
@@ -98,12 +90,12 @@ f = odl.solvers.SeparableSum(l2_norm, l1_norm)
 
 
 # Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
-op_norm = 1.3 * odl.power_method_opnorm(op, maxiter=10)
+op_norm = 1.5 * odl.power_method_opnorm(op, maxiter=10)
 
-niter = 100  # Number of iterations
+niter = 200  # Number of iterations
 tau = 1.0 / op_norm  # Step size for the primal variable
 sigma = 1.0 / op_norm  # Step size for the dual variable
-gamma = 0.1
+gamma = 0.5
 
 # Optionally pass callback to the solver to display intermediate results
 callback = (odl.solvers.CallbackPrintIteration() &
