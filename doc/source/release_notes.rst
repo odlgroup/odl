@@ -9,6 +9,78 @@ Release Notes
 Upcoming release
 ================
 
+ODL 0.5.3 Release Notes (2017-01-17)
+====================================
+
+Lots of small improvements and feature additions in this release.
+Most notable are the remarkable performance improvements to the ASTRA bindings (up to 10x), the addition of ``fbp_op`` to create filtered back-projection operators with several filter and windowing options, as well as further performance improvements to operator compositions and the ``show`` methods.
+
+New features
+------------
+- Add the ``SeparableSum(func, n)`` syntax for n-times repetition of the same summand (:pull:`685`).
+- Add the Ordered Subsets MLEM solver ``odl.solvers.osmlem`` for faster EM reconstruction (:pull:`647`).
+- Add ``GroupL1Norm`` and ``IndicatorGroupL1UnitBall`` for mixed L1-Lp norm regularization (:pull:`620`).
+- Add ``fbp_op`` helper to create filtered back-projection operators for a range of geometries (:pull:`703`).
+- Add 2-dimensional FORBILD phantom (:pull:`694`, :pull:`804`, :pull:`820`).
+- Add ``IndicatorZero`` functional in favor of of ``ConstantFunctionalConvexConj`` (:pull:`707`).
+- Add reader for MRC data files and for custom binary formats with fixed header (:pull:`716`).
+- Add ``NuclearNorm`` functional for multi-channel regularization (:pull:`691`).
+- Add ``CallbackPrint`` for printing of intermediate results in iterative solvers (:pull:`691`).
+- Expose Numpy ufuncs as operators in the new ``ufunc_ops`` subpackage (:pull:`576`).
+- Add ``ScalingFunctional`` and ``IdentityFunctional`` (:pull:`576`).
+- Add ``RealPart``, ``ImagPart`` and ``ComplexEmbedding`` operators (:pull:`706`).
+- Add ``PointwiseSum`` operator for vector fields (:pull:`754`).
+- Add ``LineSearchFromIterNum`` for using a pre-defined mapping from iteration number to step size (:pull:`752`).
+- Add ``axis_labels`` option to ``DiscreteLp`` for custom labels in plots (:pull:`770`).
+- Add Defrise phantom for cone beam geometry testing (:pull:`756`).
+- Add ``filter`` option to ``fbp_op`` and ``tam_danielson_window`` and ``parker_weighting`` helpers for helical/cone geometries (:pull:`756`, :pull:`806`, :pull:`825`).
+- Add ISTA (``proximal_gradient``) and FISTA (``accelerated_proximal_gradient``) algorithms, among others useful for L1 regularization (:pull:`758`).
+- Add ``salt_pepper_noise`` helper function (:pull:`758`).
+- Expose FBP filtering as operator ``fbp_filter_op`` (:pull:`780`).
+- Add ``parallel_beam_geometry`` helper for creation of simple test geometries (:pull:`775`).
+- Add ``MoreauEnvelope`` functional for smoothed regularization (:pull:`763`).
+- Add ``saveto`` option to ``CallbackShow`` to store plots of iterates (:pull:`708`).
+- Add ``CallbackSaveToDisk`` and ``CallbackSleep`` (:pull:`798`).
+- Add a utility ``signature_string`` for robust generation of strings for ``repr`` or ``str`` (:pull:`808`).
+
+Improvements
+------------
+- New documentation on the operator derivative notion in ODL (:pull:`668`).
+- Add largescale tests for the convex conjugates of functionals (:pull:`744`).
+- Add ``domain`` parameter to ``LinDeformFixedTempl`` for better extensibility (:pull:`748`).
+- Add example for sparse tomography with TV regularization using the Douglas-Rachford solver (:pull:`746`).
+- Add support for 1/r^2 scaling in cone beam backprojection with ASTRA 1.8 using a helper function for rescaling (:pull:`749`).
+- Improve performance of operator scaling in certain cases (:pull:`576`).
+- Add documentation on testing in ODL (:pull:`704`).
+- Replace occurrences of ``numpy.matrix`` objects (:pull:`778`).
+- Implement Numpy-style indexing for ``ProductSpaceElement`` objects (:pull:`774`).
+- Greatly improve efficiency of ``show`` by updating the figure in place instead of re-creating (:pull:`789`).
+- Improve efficiency of operator derivatives by short-circuiting in case of a linear operator (:pull:`796`).
+- Implement simple indexing for ``ProducSpaceOperator`` (:pull:`815`).
+- Add caching to ASTRA projectors, thus making algorithms run much faster (:pull:`802`).
+
+Changes
+-------
+- Rename ``vector_field_space`` to ``tangent_bundle`` in vector spaces (more adequate for complex spaces) (:pull:`702`).
+- Rename ``show`` parameter of ``show`` methods to ``force_show`` (:pull:`771`).
+- Rename ``elem.ufunc`` to ``elem.ufuncs`` where implemented (:pull:`809`).
+- Remove "Base" from weighting base classes and rename ``weight`` parameter to ``weighting`` for consistency (:pull:`810`).
+- Move ``tensor_ops`` module from ``odl.discr`` to ``odl.operator`` for more general application (:pull:`813`).
+- Rename ``ellipse`` to ``ellipsoid`` in names intended for 3D cases (:pull:`816`).
+- Pick the fastest available implementation in ``RayTransform`` by default instead of ``astra_cpu`` (:pull:`826`).
+
+Bugfixes
+--------
+- Prevent ASTRA cubic voxel check from failing due to numerical rounding errors (:pull:`721`).
+- Implement the missing ``__ne__`` in ``RectPartition`` (:pull:`748`).
+- Correct adjoint of ``WaveletTransform`` (:pull:`758`).
+- Fix issue with creation of phantoms in a space with degenerate shape (:pull:`777`).
+- Fix issue with Windows paths in ``collect_ignore``.
+- Fix bad dict lookup with ``RayTransform.adjoint.adjoint``.
+- Fix rounding issue in a couple of indicator functionals.
+- Several bugfixes in ``show`` methods.
+- Fixes to outdated example code.
+
 ODL 0.5.2 Release Notes (2016-11-02)
 ====================================
 

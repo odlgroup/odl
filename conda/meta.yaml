@@ -1,11 +1,11 @@
 package:
     name: odl
-    version: "0.5.2"
+    version: "0.5.3"
 
 source:
     git_url: https://github.com/odlgroup/odl
     # git_rev: master  # for testing, put any branch here
-    git_rev: v0.5.2  # release
+    git_rev: v0.5.3  # release
     # git_rev: a542c12d23da7fa5b92b360a51ea14e4804c58f6  # intermediate bugfix revision
 
 build:
@@ -14,14 +14,14 @@ build:
 
 requirements:
     build:
-        - python 2.7|>=3.4
+        - python
         - setuptools
         - nomkl # [not win]
         - future >=0.14
         - numpy >=1.9
         - scipy >=0.14
     run:
-        - python 2.7|>=3.4
+        - python
         - future >=0.14
         - nomkl # [not win]
         - numpy >=1.9
