@@ -30,168 +30,98 @@ import sys
 # Internal
 import odl
 from odl.tomo.backends.astra_cuda import (
-    astra_cuda_forward_projector, astra_cuda_back_projector)
+    AstraCudaProjectorImpl, AstraCudaBackProjectorImpl)
 from odl.tomo.util.testutils import skip_if_no_astra_cuda
+from odl.util.testutils import simple_fixture
 
 
 # TODO: test with CUDA implemented uniform_discr
 
 
-@skip_if_no_astra_cuda
-def test_astra_cuda_projector_parallel2d():
-    """Parallel 2D forward and backward projectors on the GPU."""
+use_cache = simple_fixture('use_cache', [False, True])
+
+# Find the valid projectors
+projectors = [skip_if_no_astra_cuda('par2d'),
+              skip_if_no_astra_cuda('cone2d'),
+              skip_if_no_astra_cuda('par3d'),
+              skip_if_no_astra_cuda('cone3d'),
+              skip_if_no_astra_cuda('helical')]
+
+
+space_and_geometry_ids = ['geom = {}'.format(p.args[1]) for p in projectors]
+
+
+@pytest.fixture(scope="module", params=projectors, ids=space_and_geometry_ids)
+def space_and_geometry(request):
+    dtype = 'float32'
+    geom = request.param
+
+    apart = odl.uniform_partition(0, 2 * np.pi, 8)
+
+    if geom == 'par2d':
+        reco_space = odl.uniform_discr([-4, -5], [4, 5], (4, 5),
+                                       dtype=dtype)
+        dpart = odl.uniform_partition(-6, 6, 6)
+        geom = odl.tomo.Parallel2dGeometry(apart, dpart)
+    elif geom == 'par3d':
+        reco_space = odl.uniform_discr([-4, -5, -6], [4, 5, 6], (4, 5, 6),
+                                       dtype=dtype)
+        dpart = odl.uniform_partition([-7, -8], [7, 8], (7, 8))
+        geom = odl.tomo.Parallel3dAxisGeometry(apart, dpart)
+    elif geom == 'cone2d':
+        reco_space = odl.uniform_discr([-4, -5], [4, 5], (4, 5),
+                                       dtype=dtype)
+        dpart = odl.uniform_partition(-6, 6, 6)
+        geom = odl.tomo.FanFlatGeometry(apart, dpart, src_radius=100,
+                                        det_radius=10)
+    elif geom == 'cone3d':
+        reco_space = odl.uniform_discr([-4, -5, -6], [4, 5, 6], (4, 5, 6),
+                                       dtype=dtype)
+        dpart = odl.uniform_partition([-7, -8], [7, 8], (7, 8))
+
+        geom = odl.tomo.CircularConeFlatGeometry(apart, dpart, src_radius=200,
+                                                 det_radius=100)
+    elif geom == 'helical':
+        reco_space = odl.uniform_discr([-4, -5, -6], [4, 5, 6], (4, 5, 6),
+                                       dtype=dtype)
+
+        # overwrite angle
+        apart = odl.uniform_partition(0, 2 * 2 * np.pi, 18)
+        dpart = odl.uniform_partition([-7, -8], [7, 8], (7, 8))
+        geom = odl.tomo.HelicalConeFlatGeometry(apart, dpart, pitch=1.0,
+                                                src_radius=200, det_radius=100)
+    else:
+        raise ValueError('geom not valid')
+
+    return reco_space, geom
+
+
+def test_astra_cuda_projector(space_and_geometry, use_cache):
+    """Test ASTRA CUDA projector."""
 
     # Create reco space and a phantom
-    reco_space = odl.uniform_discr([-4, -5], [4, 5], (4, 5), dtype='float32')
-    phantom = odl.phantom.cuboid(reco_space, min_pt=[0, 0], max_pt=[4, 5])
-
-    # Create parallel geometry
-    angle_part = odl.uniform_partition(0, np.pi, 8)
-    det_part = odl.uniform_partition(-6, 6, 6)
-    geom = odl.tomo.Parallel2dGeometry(angle_part, det_part)
+    reco_space, geom = space_and_geometry
+    phantom = odl.phantom.cuboid(reco_space)
 
     # Make projection space
     proj_space = odl.uniform_discr_frompartition(geom.partition,
-                                                 dtype='float32')
+                                                 dtype=reco_space.dtype)
 
     # Forward evaluation
-    proj_data = astra_cuda_forward_projector(phantom, geom, proj_space)
-    assert proj_data.shape == proj_space.shape
+    projector = AstraCudaProjectorImpl(geom, reco_space, proj_space,
+                                       use_cache=use_cache)
+    proj_data = projector.call_forward(phantom)
+    assert proj_data in proj_space
     assert proj_data.norm() > 0
+    assert np.all(proj_data.asarray() >= 0)
 
     # Backward evaluation
-    backproj = astra_cuda_back_projector(proj_data, geom, reco_space)
-    assert backproj.shape == reco_space.shape
+    back_projector = AstraCudaBackProjectorImpl(geom, reco_space, proj_space,
+                                                use_cache=use_cache)
+    backproj = back_projector.call_backward(proj_data)
+    assert backproj in reco_space
     assert backproj.norm() > 0
-
-
-@skip_if_no_astra_cuda
-def test_astra_cuda_projector_fanflat():
-    """Fanflat 2D forward and backward projectors on the GPU."""
-
-    # Create reco space and a phantom
-    reco_space = odl.uniform_discr([-4, -5], [4, 5], (4, 5), dtype='float32')
-    phantom = odl.phantom.cuboid(reco_space, min_pt=[0, 0], max_pt=[4, 5])
-
-    # Create fan beam geometry with flat detector
-    angle_part = odl.uniform_partition(0, 2 * np.pi, 8)
-    det_part = odl.uniform_partition(-6, 6, 6)
-    src_rad = 100
-    det_rad = 10
-    geom = odl.tomo.FanFlatGeometry(angle_part, det_part, src_rad, det_rad)
-
-    # Make projection space
-    proj_space = odl.uniform_discr_frompartition(geom.partition,
-                                                 dtype='float32')
-
-    # Forward evaluation
-    proj_data = astra_cuda_forward_projector(phantom, geom, proj_space)
-    assert proj_data.shape == proj_space.shape
-    assert proj_data.norm() > 0
-
-    # Backward evaluation
-    backproj = astra_cuda_back_projector(proj_data, geom, reco_space)
-    assert backproj.shape == reco_space.shape
-    assert backproj.norm() > 0
-
-
-@pytest.mark.xfail(sys.platform == 'win32', strict=True,
-                   reason="Fails on windows")
-@skip_if_no_astra_cuda
-def test_astra_cuda_projector_parallel3d():
-    """Test 3D forward and backward projection functions on the GPU."""
-
-    # Create reco space and a phantom
-    reco_space = odl.uniform_discr([-4, -5, -6], [4, 5, 6], (4, 5, 6),
-                                   dtype='float32')
-    phantom = odl.phantom.cuboid(reco_space, min_pt=[0, 0, 0],
-                                 max_pt=[4, 5, 6])
-
-    # Create parallel geometry
-    angle_part = odl.uniform_partition(0, np.pi, 8)
-    det_part = odl.uniform_partition([-7, -8], [7, 8], (7, 8))
-    geom = odl.tomo.Parallel3dAxisGeometry(angle_part, det_part)
-
-    # Make projection space
-    proj_space = odl.uniform_discr_frompartition(geom.partition,
-                                                 dtype='float32')
-
-    # Forward evaluation
-    proj_data = astra_cuda_forward_projector(phantom, geom, proj_space)
-    assert proj_data.shape == proj_space.shape
-    assert proj_data.norm() > 0
-
-    # Backward evaluation
-    backproj = astra_cuda_back_projector(proj_data, geom, reco_space)
-    assert backproj.shape == reco_space.shape
-    assert backproj.norm() > 0
-
-
-@skip_if_no_astra_cuda
-def test_astra_gpu_projector_circular_conebeam():
-    """Test 3D forward and backward projection functions on the GPU."""
-
-    # Create reco space and a phantom
-    reco_space = odl.uniform_discr([-4, -5, -6], [4, 5, 6], (4, 5, 6),
-                                   dtype='float32')
-    phantom = odl.phantom.cuboid(reco_space, min_pt=[0, 0, 0],
-                                 max_pt=[4, 5, 6])
-
-    # Create circular cone beam geometry with flat detector
-    angle_part = odl.uniform_partition(0, 2 * np.pi, 8)
-    det_part = odl.uniform_partition([-7, -8], [7, 8], (7, 8))
-    src_rad = 1000
-    det_rad = 100
-    geom = odl.tomo.CircularConeFlatGeometry(angle_part, det_part, src_rad,
-                                             det_rad)
-
-    # Make projection space
-    proj_space = odl.uniform_discr_frompartition(geom.partition,
-                                                 dtype='float32')
-
-    # Forward evaluation
-    proj_data = astra_cuda_forward_projector(phantom, geom, proj_space)
-    assert proj_data.shape == proj_space.shape
-    assert proj_data.norm() > 0
-
-    # Backward evaluation
-    backproj = astra_cuda_back_projector(proj_data, geom, reco_space)
-    assert backproj.shape == reco_space.shape
-    assert backproj.norm() > 0
-
-
-@skip_if_no_astra_cuda
-def test_astra_cuda_projector_helical_conebeam():
-    """Test 3D forward and backward projection functions on the GPU."""
-
-    # Create reco space and a phantom
-    reco_space = odl.uniform_discr([-4, -5, -6], [4, 5, 6], (4, 5, 6),
-                                   dtype='float32')
-    phantom = odl.phantom.cuboid(reco_space, min_pt=[0, 0, 0],
-                                 max_pt=[4, 5, 6])
-
-    # Create circular cone beam geometry with flat detector
-    angle_part = odl.uniform_partition(0, 2 * np.pi, 8)
-    det_part = odl.uniform_partition([-7, -8], [7, 8], (7, 8))
-    src_rad = 1000
-    det_rad = 100
-    pitch = 0.5
-    geom = odl.tomo.HelicalConeFlatGeometry(angle_part, det_part, src_rad,
-                                            det_rad, pitch)
-
-    # Make projection space
-    proj_space = odl.uniform_discr_frompartition(geom.partition,
-                                                 dtype='float32')
-
-    # Forward evaluation
-    proj_data = astra_cuda_forward_projector(phantom, geom, proj_space)
-    assert proj_data.shape == proj_space.shape
-    assert proj_data.norm() > 0
-
-    # Backward evaluation
-    backproj = astra_cuda_back_projector(proj_data, geom, reco_space)
-    assert backproj.shape == reco_space.shape
-    assert backproj.norm() > 0
+    assert np.all(proj_data.asarray() >= 0)
 
 
 if __name__ == '__main__':

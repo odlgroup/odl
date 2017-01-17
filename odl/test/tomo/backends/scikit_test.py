@@ -35,20 +35,19 @@ from odl.tomo.util.testutils import skip_if_no_scikit
 
 @skip_if_no_scikit
 def test_scikit_radon_projector_parallel2d():
-    """Parallel 2D forward and backward projectors on the GPU."""
+    """Parallel 2D forward and backward projectors with scikit."""
 
     # Create reco space and a phantom
-    reco_space = odl.uniform_discr([-5, -5], [5, 5], (5, 5), dtype='float32')
+    reco_space = odl.uniform_discr([-5, -5], [5, 5], (5, 5))
     phantom = odl.phantom.cuboid(reco_space, min_pt=[0, 0], max_pt=[5, 5])
 
     # Create parallel geometry
-    angle_part = odl.uniform_partition(0, 2 * np.pi, 8)
+    angle_part = odl.uniform_partition(0, np.pi, 5)
     det_part = odl.uniform_partition(-6, 6, 6)
     geom = odl.tomo.Parallel2dGeometry(angle_part, det_part)
 
     # Make projection space
-    proj_space = odl.uniform_discr_frompartition(geom.partition,
-                                                 dtype='float32')
+    proj_space = odl.uniform_discr_frompartition(geom.partition)
 
     # Forward evaluation
     proj_data = scikit_radon_forward(phantom, geom, proj_space)

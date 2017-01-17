@@ -32,7 +32,7 @@ from odl.tomo.geometry import Geometry, Parallel2dGeometry
 from odl.tomo.backends import (
     ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE,
     astra_cpu_forward_projector, astra_cpu_back_projector,
-    astra_cuda_forward_projector, astra_cuda_back_projector,
+    AstraCudaProjectorImpl, AstraCudaBackProjectorImpl,
     scikit_radon_forward, scikit_radon_back_projector)
 
 _SUPPORTED_IMPL = ('astra_cpu', 'astra_cuda', 'scikit')
@@ -72,6 +72,12 @@ class RayTransform(Operator):
         discr_range : `DiscreteLp`
             Discretized space, the range of the forward projector.
             Default: Infered from parameters.
+        use_cache : bool
+            If ``True``, data is cached. Note that this causes notable memory
+            overhead, both on the GPU and on the CPU since a full volume and
+            projection is stored. In the 3D case, some users may want to
+            disable this.
+            Default: True
 
         Notes
         -----
@@ -90,6 +96,8 @@ class RayTransform(Operator):
         if impl not in _SUPPORTED_IMPL:
             raise ValueError('`impl` {!r} not supported'
                              ''.format(impl_in))
+
+        self.use_cache = kwargs.pop('use_cache', True)
 
         # TODO: sanity checks between impl and discretization impl
         if impl.startswith('astra'):
@@ -169,6 +177,8 @@ class RayTransform(Operator):
                 interp=range_interp, order=discr_domain.order,
                 axis_labels=axis_labels)
 
+        self.backproj = None
+
         super().__init__(discr_domain, discr_range, linear=True)
 
     @property
@@ -189,8 +199,13 @@ class RayTransform(Operator):
                 return astra_cpu_forward_projector(x, self.geometry,
                                                    self.range, out)
             elif data_impl == 'cuda':
-                return astra_cuda_forward_projector(x, self.geometry,
-                                                    self.range, out)
+                proj = getattr(self, 'astra_projector', None)
+                if proj is None:
+                    self.astra_projector = AstraCudaProjectorImpl(
+                        self.geometry, self.domain, self.range,
+                        use_cache=self.use_cache)
+
+                return self.astra_projector.call_forward(x, out)
             else:
                 # Should never happen
                 raise RuntimeError('implementation info is inconsistent')
@@ -207,10 +222,15 @@ class RayTransform(Operator):
         -------
         adjoint : `RayBackProjection`
         """
+        if self.backproj is not None:
+            return self.backproj
+
         kwargs = self.kwargs.copy()
         kwargs['discr_domain'] = self.range
-        return RayBackProjection(self.domain, self.geometry, self.impl,
-                                 **kwargs)
+        self.backproj = RayBackProjection(self.domain, self.geometry,
+                                          self.impl, use_cache=self.use_cache,
+                                          **kwargs)
+        return self.backproj
 
 
 class RayBackProjection(Operator):
@@ -240,6 +260,11 @@ class RayBackProjection(Operator):
         discr_domain : `DiscreteLp`
             Discretized space, the range of the forward projector.
             Default: Infered from parameters.
+        use_cache : bool
+            If ``True``, data is cached. Note that this causes notable memory
+            overhead, both on the GPU and on the CPU since a full volume and
+            projection is stored. In the 3D case, some users may want to
+            disable this.
         """
         if not isinstance(discr_range, DiscreteLp):
             raise TypeError('`discr_range` {!r} is not a `DiscreteLp`'
@@ -265,6 +290,8 @@ class RayBackProjection(Operator):
                 raise ValueError('ASTRA does not support different voxel '
                                  'sizes per axis, got {}'
                                  ''.format(discr_range.partition.cell_sides))
+
+        self.use_cache = kwargs.pop('use_cache', True)
 
         self.__geometry = geometry
         self.__impl = impl
@@ -300,6 +327,9 @@ class RayBackProjection(Operator):
                 domain_uspace, geometry.partition, domain_dspace,
                 interp=domain_interp, order=discr_range.order,
                 axis_labels=axis_labels)
+
+        self.ray_trafo = None
+
         super().__init__(discr_domain, discr_range, linear=True)
 
     @property
@@ -321,8 +351,13 @@ class RayBackProjection(Operator):
                 return astra_cpu_back_projector(x, self.geometry,
                                                 self.range, out)
             elif data_impl == 'cuda':
-                return astra_cuda_back_projector(x, self.geometry,
-                                                 self.range, out)
+                backproj = getattr(self, 'astra_backprojector', None)
+                if backproj is None:
+                    self.astra_backprojector = AstraCudaBackProjectorImpl(
+                        self.geometry, self.range, self.domain,
+                        use_cache=self.use_cache)
+
+                return self.astra_backprojector.call_backward(x, out)
             else:
                 # Should never happen
                 raise RuntimeError('implementation info is inconsistent')
@@ -340,10 +375,15 @@ class RayBackProjection(Operator):
         -------
         adjoint : `RayTransform`
         """
+        if self.ray_trafo is not None:
+            return self.ray_trafo
+
         kwargs = self.kwargs.copy()
         kwargs['discr_range'] = self.domain
-        return RayTransform(self.range, self.geometry, impl=self.impl,
-                            **kwargs)
+        self.ray_trafo = RayTransform(self.range, self.geometry,
+                                      impl=self.impl, use_cache=self.use_cache,
+                                      **kwargs)
+        return self.ray_trafo
 
 
 if __name__ == '__main__':
