@@ -30,7 +30,7 @@ from odl.operator import Operator
 from odl.space import FunctionSpace
 from odl.tomo.geometry import Geometry, Parallel2dGeometry
 from odl.tomo.backends import (
-    ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE,
+    ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE, SCIKIT_IMAGE_AVAILABLE,
     astra_cpu_forward_projector, astra_cpu_back_projector,
     AstraCudaProjectorImpl, AstraCudaBackProjectorImpl,
     scikit_radon_forward, scikit_radon_back_projector)
@@ -47,7 +47,7 @@ class RayTransform(Operator):
 
     """Discrete Ray transform between L^p spaces."""
 
-    def __init__(self, discr_domain, geometry, impl='astra_cpu', **kwargs):
+    def __init__(self, discr_domain, geometry, **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -57,18 +57,19 @@ class RayTransform(Operator):
         geometry : `Geometry`
             Geometry of the transform, containing information about
             the operator range
-        impl : {'astra_cpu', 'astra_cuda', 'scikit'}, optional
+
+        Other Parameters
+        ----------------
+        impl : {`None`, 'astra_cuda', 'astra_cpu', 'scikit'}, optional
             Implementation back-end for the transform. Supported back-ends:
-            'astra_cpu': ASTRA toolbox using CPU, only 2D
-            'astra_cuda': ASTRA toolbox, using CUDA, 2D or 3D
-            'scikit': scikit-image, only 2D parallel with square domain
+            * 'astra_cuda': ASTRA toolbox, using CUDA, 2D or 3D
+            * 'astra_cpu': ASTRA toolbox using CPU, only 2D
+            * 'scikit': scikit-image, only 2D parallel with square domain
+            If `None` is given, prefers the fastest available backend.
         interp : {'nearest', 'linear'}
             Interpolation type for the discretization of the operator
             range.
             Default: 'nearest'
-
-        Other Parameters
-        ----------------
         discr_range : `DiscreteLp`
             Discretized space, the range of the forward projector.
             Default: Infered from parameters.
@@ -91,6 +92,18 @@ class RayTransform(Operator):
         if not isinstance(geometry, Geometry):
             raise TypeError('`geometry` {!r} is not a `Geometry` instance'
                             ''.format(geometry))
+
+        impl = kwargs.pop('impl', None)
+        if impl is None:
+            # Select fastest available
+            if ASTRA_CUDA_AVAILABLE:
+                impl = 'astra_cuda'
+            elif ASTRA_AVAILABLE:
+                impl = 'astra_cpu'
+            elif SCIKIT_IMAGE_AVAILABLE:
+                impl = 'scikit'
+            else:
+                raise ValueError('no valid `impl` installed')
 
         impl, impl_in = str(impl).lower(), impl
         if impl not in _SUPPORTED_IMPL:
@@ -228,7 +241,8 @@ class RayTransform(Operator):
         kwargs = self.kwargs.copy()
         kwargs['discr_domain'] = self.range
         self.backproj = RayBackProjection(self.domain, self.geometry,
-                                          self.impl, use_cache=self.use_cache,
+                                          impl=self.impl,
+                                          use_cache=self.use_cache,
                                           **kwargs)
         return self.backproj
 
@@ -236,7 +250,7 @@ class RayTransform(Operator):
 class RayBackProjection(Operator):
     """Adjoint of the discrete Ray transform between L^p spaces."""
 
-    def __init__(self, discr_range, geometry, impl='astra_cpu', **kwargs):
+    def __init__(self, discr_range, geometry, **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -246,17 +260,18 @@ class RayBackProjection(Operator):
         geometry : `Geometry`
             The geometry of the transform, contains information about
             the operator domain
-        impl : {'astra_cpu', 'astra_cuda', 'scikit'}, optional
-            Implementation back-end for the transform. Supported back-ends:
-            'astra_cpu': ASTRA toolbox using CPU, only 2D
-            'astra_cuda': ASTRA toolbox, using CUDA, 2D or 3D
-            'scikit': scikit-image, only 2D parallel with square domain
-        interp : {'nearest', 'linear'}
-            Interpolation type for the discretization of the operator range.
-            Default: 'nearest'
 
         Other Parameters
         ----------------
+        impl : {'astra_cpu', 'astra_cuda', 'scikit'}, optional
+            Implementation back-end for the transform. Supported back-ends:
+            * 'astra_cuda': ASTRA toolbox, using CUDA, 2D or 3D
+            * 'astra_cpu': ASTRA toolbox using CPU, only 2D
+            * 'scikit': scikit-image, only 2D parallel with square domain
+            If `None` is given, prefers the fastest available backend.
+        interp : {'nearest', 'linear'}
+            Interpolation type for the discretization of the operator range.
+            Default: 'nearest'
         discr_domain : `DiscreteLp`
             Discretized space, the range of the forward projector.
             Default: Infered from parameters.
@@ -273,6 +288,18 @@ class RayBackProjection(Operator):
         if not isinstance(geometry, Geometry):
             raise TypeError('`geometry` {!r} is not a `Geometry` instance'
                             ''.format(geometry))
+
+        impl = kwargs.pop('impl', None)
+        if impl is None:
+            # Select fastest available
+            if ASTRA_CUDA_AVAILABLE:
+                impl = 'astra_cuda'
+            elif ASTRA_AVAILABLE:
+                impl = 'astra_cpu'
+            elif SCIKIT_IMAGE_AVAILABLE:
+                impl = 'scikit'
+            else:
+                raise ValueError('no valid `impl` installed')
 
         impl, impl_in = str(impl).lower(), impl
         if impl not in _SUPPORTED_IMPL:
@@ -381,7 +408,8 @@ class RayBackProjection(Operator):
         kwargs = self.kwargs.copy()
         kwargs['discr_range'] = self.domain
         self.ray_trafo = RayTransform(self.range, self.geometry,
-                                      impl=self.impl, use_cache=self.use_cache,
+                                      impl=self.impl,
+                                      use_cache=self.use_cache,
                                       **kwargs)
         return self.ray_trafo
 
