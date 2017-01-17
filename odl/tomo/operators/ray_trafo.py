@@ -73,7 +73,11 @@ class RayTransform(Operator):
             Discretized space, the range of the forward projector.
             Default: Infered from parameters.
         use_cache : bool
-            True if data should be cached. Default: True
+            If ``True``, data is cached. Note that this causes notable memory
+            overhead, both on the GPU and on the CPU since a full volume and
+            projection is stored. In the 3D case, some users may want to
+            disable this.
+            Default: True
 
         Notes
         -----
@@ -257,7 +261,10 @@ class RayBackProjection(Operator):
             Discretized space, the range of the forward projector.
             Default: Infered from parameters.
         use_cache : bool
-            True if data should be cached. Default: True
+            If ``True``, data is cached. Note that this causes notable memory
+            overhead, both on the GPU and on the CPU since a full volume and
+            projection is stored. In the 3D case, some users may want to
+            disable this.
         """
         if not isinstance(discr_range, DiscreteLp):
             raise TypeError('`discr_range` {!r} is not a `DiscreteLp`'

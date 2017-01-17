@@ -15,13 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Performance example of running native astra vs using ODL for reconstruction.
+"""Performance example of running native ASTRA vs using ODL for reconstruction.
 
 In this example, a 512x512 image is reconstructed using the Conjugate Gradient
 Least Squares method on the GPU.
 
 In general, ASTRA is fater than ODL since it does not need to perform any
-copies and all arithmetic is performed on the GPU. Dispite this, ODL is not
+copies and all arithmetic is performed on the GPU. Despite this, ODL is not
 much slower. In this example, the overhead is about x2, depending on the
 hardware used.
 """
@@ -70,7 +70,7 @@ cfg['ProjectorId'] = proj_id
 # Create the algorithm object from the configuration structure
 alg_id = astra.algorithm.create(cfg)
 
-with odl.util.Timer('Astra run'):
+with odl.util.Timer('ASTRA run'):
     # Run the algorithm
     astra.algorithm.run(alg_id, niter)
 
@@ -86,7 +86,7 @@ astra.projector.delete(proj_id)
 # --- ODL ---
 
 # Create reconstruction space
-reco_space = odl.uniform_discr(-domain_size/2, domain_size/2, domain_size)
+reco_space = odl.uniform_discr(-domain_size / 2, domain_size / 2, domain_size)
 
 # Create geometry
 geometry = odl.tomo.parallel_beam_geometry(reco_space, n_angles, det_size)
@@ -102,7 +102,7 @@ x = reco_space.zero()
 with odl.util.Timer('ODL run'):
     odl.solvers.conjugate_gradient_normal(ray_trafo, x, rhs, niter=niter)
 
-# Display results for comparsion
+# Display results for comparison
 plt.figure('data')
 plt.imshow(data.T, origin='lower', cmap='bone')
 plt.figure('ASTRA sinogram')

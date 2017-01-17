@@ -128,12 +128,12 @@ def astra_cpu_forward_projector(vol_data, geometry, proj_space, out=None):
 
 
 def astra_cpu_back_projector(proj_data, geometry, reco_space, out=None):
-    """Run an ASTRA backward projection on the given data using the CPU.
+    """Run an ASTRA back-projection on the given data using the CPU.
 
     Parameters
     ----------
     proj_data : `DiscreteLpElement`
-        Projection data to which the backward projector is applied
+        Projection data to which the back-projector is applied
     geometry : `Geometry`
         Geometry defining the tomographic setup
     reco_space : `DiscreteLp`

@@ -54,33 +54,27 @@ class AstraCudaProjectorImpl(object):
     proj_id = None
 
     def __init__(self, geometry, reco_space, proj_space, use_cache):
-        """Run an ASTRA forward projection on the given data using the GPU.
+        """Initialize a new instance.
 
         Parameters
         ----------
         geometry : `Geometry`
-            Geometry defining the tomographic setup
-        out : ``proj_space`` element, optional
-            Element of the projection space to which the result is written. If
-            ``None``, an element in ``proj_space`` is created.
+            Geometry defining the tomographic setup.
+        reco_space : `DiscreteLp`
+            Reconstruction space, the space of the images to be forward
+            projected.
+        proj_space : ``DiscreteLp``
+            Projection space, the space of the result.
         use_cache : bool
-            True if data should be cached. Default: True
+            If ``True``, data is cached.
         """
-        if not isinstance(geometry, Geometry):
-            raise TypeError('geometry  {!r} is not a Geometry instance'
-                            ''.format(geometry))
+        assert isinstance(geometry, Geometry)
+        assert isinstance(reco_space, DiscreteLp)
+        assert isinstance(proj_space, DiscreteLp)
+
         self.geometry = geometry
-
-        if not isinstance(reco_space, DiscreteLp):
-            raise TypeError('reconstruciton space {!r} is not a DiscreteLp '
-                            'instance'.format(proj_space))
         self.reco_space = reco_space
-
-        if not isinstance(proj_space, DiscreteLp):
-            raise TypeError('projection space {!r} is not a DiscreteLp '
-                            'instance'.format(proj_space))
         self.proj_space = proj_space
-
         self.use_cache = bool(use_cache)
 
         if self.use_cache:
@@ -91,11 +85,11 @@ class AstraCudaProjectorImpl(object):
 
         Parameters
         ----------
-        vol_data : `DiscreteLpElement`
-            Volume data to which the projector is applied
-        out : ``proj_space`` element, optional
+        vol_data : `reco_space` element
+            Volume data to which the projector is applied.
+        out : `proj_space` element, optional
             Element of the projection space to which the result is written. If
-            ``None``, an element in ``proj_space`` is created.
+            ``None``, an element in `proj_space` is created.
 
         Returns
         -------
@@ -103,56 +97,46 @@ class AstraCudaProjectorImpl(object):
             Projection data resulting from the application of the projector.
             If ``out`` was provided, the returned object is a reference to it.
         """
-        if not isinstance(vol_data, DiscreteLpElement):
-            raise TypeError('volume data {!r} is not a DiscreteLpElement '
-                            'instance'.format(vol_data))
-        if vol_data.ndim != self.geometry.ndim:
-            raise ValueError('dimensions {} of volume data and {} of geometry '
-                             'do not match'
-                             ''.format(vol_data.ndim, self.geometry.ndim))
+        assert vol_data in self.reco_space
         if out is not None:
-            if not isinstance(out, DiscreteLpElement):
-                raise TypeError('`out` {} is neither None nor a '
-                                'DiscreteLpElement instance'.format(out))
+            assert out in self.proj_space
+        else:
+            out = self.proj_space.element()
 
         # Create ids if they don't exist
         if not self.use_cache:
             self.create_ids()
 
-        # Copy data to CUDA
+        # Copy data to GPU memory
         if self.geometry.ndim == 2:
             astra.data2d.store(self.vol_id, vol_data.asarray())
         elif self.geometry.ndim == 3:
             astra.data3d.store(self.vol_id, vol_data.asarray())
+        else:
+            raise RuntimeError('unknown ndim')
 
         # Run algorithm
         astra.algorithm.run(self.algo_id)
 
         # Copy result to host
         if self.geometry.ndim == 2:
-            if out is None:
-                out = self.proj_space.element()
-
             out[:] = self.out_array
         elif self.geometry.ndim == 3:
-            if out is None:
-                out = self.proj_space.element()
-
             out[:] = np.rollaxis(self.out_array, 0, 3)
-        else:
-            raise RuntimeError('unknown ndim')
 
-        # Fix inconsistent scaling
+        # Fix inconsistent scaling in ASTRA
         if isinstance(self.geometry, Parallel2dGeometry):
             # parallel2d scales with pixel stride
-            out *= 1 / float(self.geometry.det_partition.cell_sides[0])
+            out *= 1 / float(self.geometry.det_partition.cell_volume)
 
+        # Delete ASTRA ids if we should not cache
         if not self.use_cache:
             self.delete_ids()
 
         return out
 
     def create_ids(self):
+        """Create ASTRA objects."""
         ndim = self.geometry.ndim
 
         # Create input and output arrays
@@ -171,8 +155,11 @@ class AstraCudaProjectorImpl(object):
         # Create ASTRA data structures
         vol_geom = astra_volume_geometry(self.reco_space)
         proj_geom = astra_projection_geometry(self.geometry)
-        self.vol_id = astra_data(vol_geom, datatype='volume',
-                                 data=self.in_array, allow_copy=False)
+        self.vol_id = astra_data(vol_geom,
+                                 datatype='volume',
+                                 ndim=self.reco_space.ndim,
+                                 data=self.in_array,
+                                 allow_copy=False)
 
         self.proj_id = astra_projector('nearest', vol_geom, proj_geom,
                                        ndim, impl='cuda')
@@ -212,6 +199,7 @@ class AstraCudaProjectorImpl(object):
         self.out_array = None
 
     def __del__(self):
+        """Implement ``del self``."""
         self.delete_ids()
 
 
@@ -225,71 +213,61 @@ class AstraCudaBackProjectorImpl(object):
     proj_id = None
 
     def __init__(self, geometry, reco_space, proj_space, use_cache):
-        """Run an ASTRA forward projection on the given data using the GPU.
+        """Initialize a new instance.
 
         Parameters
         ----------
         geometry : `Geometry`
-            Geometry defining the tomographic setup
+            Geometry defining the tomographic setup.
         reco_space : `DiscreteLp`
-            Space to which the calling operator maps
+            Reconstruction space, the space to which the backprojection maps.
+        proj_space : ``DiscreteLp``
+            Projection space, the space from which the backprojection maps.
         use_cache : bool
-            True if data should be cached. Default: True
+            If ``True``, data is cached.
         """
-        if not isinstance(geometry, Geometry):
-            raise TypeError('geometry  {!r} is not a Geometry instance'
-                            ''.format(geometry))
+        assert isinstance(geometry, Geometry)
+        assert isinstance(reco_space, DiscreteLp)
+        assert isinstance(proj_space, DiscreteLp)
+
         self.geometry = geometry
-
-        if not isinstance(reco_space, DiscreteLp):
-            raise TypeError('reconstruction space {!r} is not a DiscreteLp '
-                            'instance'.format(reco_space))
         self.reco_space = reco_space
-
-        if not isinstance(proj_space, DiscreteLp):
-            raise TypeError('projection space {!r} is not a DiscreteLp '
-                            'instance'.format(proj_space))
         self.proj_space = proj_space
-
         self.use_cache = bool(use_cache)
 
         if self.use_cache:
             self.create_ids()
 
     def call_backward(self, proj_data, out=None):
-        """Run an ASTRA backward projection on the given data using the GPU.
+        """Run an ASTRA back-projection on the given data using the GPU.
 
         Parameters
         ----------
-        proj_data : `DiscreteLp` element
-            Projection data to which the backward projector is applied
-        out : ``reco_space`` element, optional
+        proj_data : `proj_space` element
+            Projection data to which the back-projector is applied.
+        out : `reco_space` element, optional
             Element of the reconstruction space to which the result is written.
             If ``None``, an element in ``reco_space`` is created.
 
         Returns
         -------
         out : ``reco_space`` element
-            Reconstruction data resulting from the application of the backward
-            projector. If ``out`` was provided, the returned object is a
+            Reconstruction data resulting from the application of the
+            back-projector. If ``out`` was provided, the returned object is a
             reference to it.
         """
-        if not isinstance(proj_data, DiscreteLpElement):
-            raise TypeError('projection data {!r} is not a DiscreteLpElement '
-                            'instance'.format(proj_data))
-        if self.reco_space.ndim != self.geometry.ndim:
-            raise ValueError('dimensions {} of reconstruction space and {} of '
-                             'geometry do not match'.format(
-                                 self.reco_space.ndim, self.geometry.ndim))
-        if out is not None:
-            if not isinstance(out, DiscreteLpElement):
-                raise TypeError('`out` {} is neither None nor a '
-                                'DiscreteLpElement instance'.format(out))
 
+        assert proj_data in self.proj_space
+        if out is not None:
+            assert out in self.reco_space
+        else:
+            out = self.reco_space.element()
+
+        # Create ids if they don't exist
         if not self.use_cache:
             self.create_ids()
 
-        # Create geometries
+        # Copy data to GPU memory
         if self.geometry.ndim == 2:
             astra.data2d.store(self.sino_id, proj_data.asarray())
         elif self.geometry.ndim == 3:
@@ -300,20 +278,20 @@ class AstraCudaBackProjectorImpl(object):
         # Run algorithm
         astra.algorithm.run(self.algo_id)
 
-        # Reconstruction volume
-        if out is None:
-            out = self.reco_space.element()
-
+        # Copy result to CPU memory
         out[:] = self.out_array
 
+        # Fix inconsistent scaling in ASTRA
         out *= astra_cuda_bp_scaling_factor(self.reco_space, self.geometry)
 
+        # Delete ASTRA ids if we should not cache
         if not self.use_cache:
             self.delete_ids()
 
         return out
 
     def create_ids(self):
+        """Create ASTRA objects."""
         ndim = self.geometry.ndim
 
         if ndim == 2:
@@ -328,19 +306,20 @@ class AstraCudaBackProjectorImpl(object):
         self.out_array = np.empty(self.reco_space.shape,
                                   dtype='float32', order='C')
 
-        # Create geometries
+        # Create ASTRA data structures
         vol_geom = astra_volume_geometry(self.reco_space)
         proj_geom = astra_projection_geometry(self.geometry)
-        self.sino_id = astra_data(proj_geom, datatype='projection',
+        self.sino_id = astra_data(proj_geom,
+                                  datatype='projection',
                                   data=self.in_array,
+                                  ndim=self.proj_space.ndim,
                                   allow_copy=False)
 
-        # Create projector
         self.proj_id = astra_projector('nearest', vol_geom, proj_geom,
                                        ndim, impl='cuda')
 
-        # Wrap the array in correct dtype etc if needed
-        self.vol_id = astra_data(vol_geom, datatype='volume',
+        self.vol_id = astra_data(vol_geom,
+                                 datatype='volume',
                                  data=self.out_array,
                                  ndim=self.reco_space.ndim,
                                  allow_copy=False)
@@ -371,6 +350,7 @@ class AstraCudaBackProjectorImpl(object):
             self.proj_id = None
 
     def __del__(self):
+        """Implement ``del self``."""
         self.delete_ids()
 
 

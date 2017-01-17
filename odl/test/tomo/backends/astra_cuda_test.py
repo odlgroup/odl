@@ -97,7 +97,7 @@ def space_and_geometry(request):
 
 
 def test_astra_cuda_projector(space_and_geometry, use_cache):
-    """Parallel 2D forward and backward projectors on the GPU."""
+    """Test ASTRA CUDA projector."""
 
     # Create reco space and a phantom
     reco_space, geom = space_and_geometry
@@ -111,7 +111,7 @@ def test_astra_cuda_projector(space_and_geometry, use_cache):
     projector = AstraCudaProjectorImpl(geom, reco_space, proj_space,
                                        use_cache=use_cache)
     proj_data = projector.call_forward(phantom)
-    assert proj_data.shape == proj_space.shape
+    assert proj_data in proj_space
     assert proj_data.norm() > 0
     assert np.all(proj_data.asarray() >= 0)
 
@@ -119,7 +119,7 @@ def test_astra_cuda_projector(space_and_geometry, use_cache):
     back_projector = AstraCudaBackProjectorImpl(geom, reco_space, proj_space,
                                                 use_cache=use_cache)
     backproj = back_projector.call_backward(proj_data)
-    assert backproj.shape == reco_space.shape
+    assert backproj in reco_space
     assert backproj.norm() > 0
     assert np.all(proj_data.asarray() >= 0)
 
