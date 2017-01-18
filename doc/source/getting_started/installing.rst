@@ -283,7 +283,7 @@ You also need `pip`_ to perform the installation.
     You should consider performing all described steps in a `conda environment <http://conda.pydata.org/docs/using/envs.html>`_ -- it gives you the same encapsulation benefits as developer that you would enjoy also as a user (no conflicting packages, free to choose Python version, ...).
     See the `Installing Anaconda`_ section for setup instructions.
 
-To get ODL, clone the repository with the command
+To get ODL, navigate to a folder where you want the ODL repository to be stored and clone the repository with the command
 
 .. code-block:: bash
 
@@ -296,25 +296,33 @@ In a conda environment
 ======================
 This part assumes that you have activated a conda environment before (see :ref:`installing_anaconda`).
 
-You can choose to install dependencies first (optional ones in square brackets):
+You can choose to install dependencies first:
 
 **On Linux/MacOS:**
 
 .. code-block:: bash
 
-    $ conda install nomkl numpy scipy future [matplotlib]
+    $ conda install nomkl numpy scipy future matplotlib
 
 **On Windows:**
 
 .. code-block:: bash
 
-    $ conda install numpy scipy future [matplotlib]
+    $ conda install numpy scipy future matplotlib
 
 After that, enter the top-level directory of the cloned repository and run
 
 .. code-block:: bash
 
    $ pip install --editable .
+   
+**Optional dependencies:**
+
+You may also want to install optional dependencies:
+
+.. code-block:: bash
+
+    $ conda install matplotlib pytest pytest-pep8
 
 Using only ``pip``
 ==================
@@ -378,7 +386,7 @@ Now you can check that everything was installed properly by running
    $ python -c "import odl; odl.test()"
 
 .. note::
-    Don't run this command in the top-level directory of an ODL clone, since in that case, the tests in the repository may be run, not the ones in the installed package.
+    If you have several versions of ODL and run this command in the top-level directory of an ODL clone, the tests in the repository will be run, not the ones in the installed package.
 
 If you have installed ODL from source, you can also use ``pytest`` directly in the root of your ODL clone:
 
