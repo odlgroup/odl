@@ -938,6 +938,35 @@ class NumpyFn(FnBase, NumpyNtuples):
         """
         return self.weighting.inner(x1, x2)
 
+    def _integral(self, x):
+        """Raw integral of vector.
+
+        Parameters
+        ----------
+        x : `NumpyFnVector`
+            The vector whose integral should be computed.
+
+        Returns
+        -------
+        inner : `field` element
+            Inner product of the vectors
+
+        Examples
+        --------
+        >>> c3 = NumpyFn(2, dtype=complex)
+        >>> x = c3.element([5+1j, -2j])
+        >>> c3.integral(x)
+        (5-1j)
+
+        Notes
+        -----
+        Integration of `ntuples` vectors are defined as the sum of the elements
+        in the vector, i.e. the discrete measure.
+
+        In weighted spaces, the unweighted measure is used for the integral.
+        """
+        return np.sum(x)
+
     def _multiply(self, x1, x2, out):
         """Entry-wise product of two vectors, assigned to out.
 

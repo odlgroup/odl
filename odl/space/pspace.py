@@ -511,6 +511,10 @@ class ProductSpace(LinearSpace):
         """Inner product of two elements."""
         return self.weighting.inner(x1, x2)
 
+    def _integral(self, x):
+        """Integral of ``x``."""
+        return sum(xi.integral() for xi in x)
+
     def _multiply(self, x1, x2, out):
         """Product ``out = x1 * x2``."""
         for spc, xp, yp, outp in zip(self.spaces, x1.parts, x2.parts,
