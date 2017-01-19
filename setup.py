@@ -102,7 +102,7 @@ Features
 setup(
     name='odl',
 
-    version='0.5.3',
+    version='0.5.4.dev0',
 
     description='Operator Discretization Library',
     long_description=long_description,
