@@ -21,7 +21,7 @@ from odl.util import signature_string
 __all__ = ('CallbackStore', 'CallbackApply',
            'CallbackPrintTiming', 'CallbackPrintIteration',
            'CallbackPrint', 'CallbackPrintNorm', 'CallbackShow',
-           'CallbackSaveToDisk', 'CallbackSleep')
+           'CallbackSaveToDisk', 'CallbackSleep', 'CallbackShowConvergence')
 
 
 class SolverCallback(object):
@@ -726,6 +726,33 @@ class CallbackSleep(SolverCallback):
         optargs = [('seconds', self.seconds, 1.0)]
         inner_str = signature_string([], optargs)
         return '{}({})'.format(self.__class__.__name__, inner_str)
+
+
+class CallbackShowConvergence(SolverCallback):
+
+    """Displays a convergence plot."""
+
+    def __init__(self, functional, title='convergence',
+                 logx=False, logy=False):
+        self.functional = functional
+        self.logx = logx
+        self.logy = logy
+        self.iter = 0
+
+        import matplotlib.pyplot as plt
+        self.fig = plt.figure(title)
+        self.ax = self.fig.add_subplot(111)
+        self.ax.set_xlabel('iteration')
+        self.ax.set_ylabel('function value')
+        self.ax.set_title(title)
+        if logx:
+            self.ax.set_xscale("log", nonposx='clip')
+        if logy:
+            self.ax.set_yscale("log", nonposy='clip')
+
+    def __call__(self, x):
+        self.ax.scatter(self.iter, self.functional(x))
+        self.iter += 1
 
 
 if __name__ == '__main__':
