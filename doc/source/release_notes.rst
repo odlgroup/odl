@@ -6,8 +6,8 @@
 Release Notes
 #############
 
-Upcoming release
-================
+Upcoming release (could be 0.5.4)
+=================================
 
 ODL 0.5.3 Release Notes (2017-01-17)
 ====================================
