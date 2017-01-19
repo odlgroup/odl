@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Simple iterative type optimization schemes."""
+"""Nonlinear version of conjugate gradient."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -23,7 +23,7 @@ from future import standard_library
 standard_library.install_aliases()
 
 
-from odl.solvers.util import ConstantLineSearch, BacktrackingLineSearch
+from odl.solvers.util import ConstantLineSearch
 
 
 __all__ = ('conjugate_gradient_nonlinear',)
@@ -62,7 +62,7 @@ def conjugate_gradient_nonlinear(f, x, line_search=1.0, maxiter=1000, nreset=0,
     line_search : float or `LineSearch`, optional
         Strategy to choose the step length. If a float is given, uses it as a
         fixed step length.
-    maxiter : int
+    maxiter : int, optional
         Maximum number of iterations to perform.
     nreset : int, optional
         Number of times the solver should be reset. Default: no reset.
@@ -89,9 +89,7 @@ def conjugate_gradient_nonlinear(f, x, line_search=1.0, maxiter=1000, nreset=0,
         raise TypeError('`x` {!r} is not in the domain of `f` {!r}'
                         ''.format(x, f.domain))
 
-    if line_search is None:
-        line_search = BacktrackingLineSearch(f, estimate_step=True)
-    elif not callable(line_search):
+    if not callable(line_search):
         line_search = ConstantLineSearch(line_search)
 
     for _ in range(nreset + 1):
@@ -116,9 +114,9 @@ def conjugate_gradient_nonlinear(f, x, line_search=1.0, maxiter=1000, nreset=0,
             elif beta_method == 'PR':
                 beta = dx.inner(dx - dx_old) / dx_old.inner(dx_old)
             elif beta_method == 'HS':
-                beta = dx.inner(dx - dx_old) / s.inner(dx - dx_old)
+                beta = - dx.inner(dx - dx_old) / s.inner(dx - dx_old)
             elif beta_method == 'DY':
-                beta = dx.inner(dx) / s.inner(dx - dx_old)
+                beta = - dx.inner(dx) / s.inner(dx - dx_old)
             else:
                 raise ValueError('unknown ``beta_method``')
 
