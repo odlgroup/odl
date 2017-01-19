@@ -733,10 +733,28 @@ class CallbackShowConvergence(SolverCallback):
     """Displays a convergence plot."""
 
     def __init__(self, functional, title='convergence',
-                 logx=False, logy=False):
+                 logx=False, logy=False, **kwargs):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        functional : callable
+            Function that is called with the current iterate and returns the
+            function value.
+        title : str, optional
+            Title of the plot.
+        logx : bool, optional
+            If true, the x axis is logarithmic.
+        logx : bool, optional
+            If true, the y axis is logarithmic.
+        kwargs :
+            Additional parameters passed to the scatter function.
+        """
         self.functional = functional
+        self.title = title
         self.logx = logx
         self.logy = logy
+        self.kwargs = kwargs
         self.iter = 0
 
         import matplotlib.pyplot as plt
@@ -751,8 +769,26 @@ class CallbackShowConvergence(SolverCallback):
             self.ax.set_yscale("log", nonposy='clip')
 
     def __call__(self, x):
-        self.ax.scatter(self.iter, self.functional(x))
+        """Implement ``self(x)``."""
+        if self.logx:
+            it = self.iter + 1
+        else:
+            it = self.iter
+        self.ax.scatter(it, self.functional(x), **self.kwargs)
         self.iter += 1
+
+    def reset(self):
+        """Set `iter` to 0."""
+        self.iter = 0
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{}(functional={}, title={}, logx={}, logy={})'.format(
+            self.__class__.__name__,
+            self.functional,
+            self.title,
+            self.logx,
+            self.logy)
 
 
 if __name__ == '__main__':
