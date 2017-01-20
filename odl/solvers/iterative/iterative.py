@@ -490,15 +490,24 @@ def kaczmarz(ops, x, rhs, niter=1, omega=1, projection=None,
 
     omega = normalized_scalar_param_list(omega, len(ops), param_conv=float)
 
-    # Reusable temporaries
-    tmp_ran = [opi.range.element() for opi in ops]
+    # Reusable elements in the range, one per type of space
+    ranges = [opi.range for opi in ops]
+    unique_ranges = set(ranges)
+    tmp_rans = {ran: ran.element() for ran in unique_ranges}
+
+    # Single reusable element in the domain
     tmp_dom = domain.element()
 
+    # Iteratively find solution
     for _ in range(niter):
         for i in range(len(ops)):
-            ops[i](x, out=tmp_ran[i])
-            tmp_ran[i] -= rhs[i]
-            ops[i].derivative(x).adjoint(tmp_ran[i], out=tmp_dom)
+            # Find residual
+            tmp_ran = tmp_rans[ops[i].range]
+            ops[i](x, out=tmp_ran)
+            tmp_ran -= rhs[i]
+
+            # Update x
+            ops[i].derivative(x).adjoint(tmp_ran, out=tmp_dom)
             x.lincomb(1, x, -omega[i], tmp_dom)
 
             if projection is not None:
