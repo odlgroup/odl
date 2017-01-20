@@ -987,7 +987,7 @@ def test_norm_rectangle_boundary(fn_impl, exponent):
                             (rect.volume) ** (1 / exponent))
 
     # Completely arbitrary boundary
-    grid = odl.RegularGrid([0, 0], [1, 1], (4, 4))
+    grid = odl.uniform_grid([0, 0], [1, 1], (4, 4))
     part = odl.RectPartition(rect, grid)
     weight = 1.0 if exponent == float('inf') else part.cell_volume
     dspace = odl.rn(part.size, dtype=dtype, impl=fn_impl, exponent=exponent,

@@ -25,7 +25,7 @@ from builtins import super
 
 import numpy as np
 
-from odl.discr import RegularGrid, DiscreteLp, discr_sequence_space
+from odl.discr import DiscreteLp, discr_sequence_space
 from odl.operator import Operator
 from odl.set import RealNumbers, ComplexNumbers
 from odl.trafos.backends.pyfftw_bindings import (
@@ -809,7 +809,7 @@ class FourierTransformBase(Operator):
         self.__impl = impl
 
         # Handle half-complex yes/no and shifts
-        if isinstance(domain.grid, RegularGrid):
+        if domain.grid.is_uniform:
             if domain.field == ComplexNumbers():
                 self.__halfcomplex = False
             else:
@@ -819,7 +819,7 @@ class FourierTransformBase(Operator):
                 kwargs.pop('shift', True), length=len(self.axes),
                 param_conv=bool)
         else:
-            raise NotImplementedError('irregular grids not yet supported')
+            raise NotImplementedError('non-uniform grids not yet supported')
 
         sign = kwargs.pop('sign', '-')
         if sign not in ('+', '-'):

@@ -153,7 +153,7 @@ class FunctionSet(Set):
 
         See Also
         --------
-        odl.discr.grid.TensorGrid.meshgrid : efficient grids for function
+        odl.discr.grid.RectGrid.meshgrid : efficient grids for function
             evaluation
         """
         if not callable(fcall):

@@ -15,17 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-
-# Imports for common Python 2/3 codebase
-from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
-
-# External module imports
 import pytest
 import numpy as np
 
-# ODL imports
 import odl
 from odl.util.testutils import all_equal, all_almost_equal
 
@@ -41,21 +33,21 @@ def test_partition_init():
 
     # Simply test if code runs
     odl.RectPartition(odl.IntervalProd(min_pt, max_pt),
-                      odl.TensorGrid(vec1, vec2))
+                      odl.RectGrid(vec1, vec2))
     odl.RectPartition(odl.IntervalProd(min_pt[0], max_pt[0]),
-                      odl.TensorGrid(vec1))
+                      odl.RectGrid(vec1))
 
     # Degenerate dimensions should work, too
     vec2 = np.array([1.0])
     odl.RectPartition(odl.IntervalProd(min_pt, max_pt),
-                      odl.TensorGrid(vec1, vec2))
+                      odl.RectGrid(vec1, vec2))
 
 
 def test_partition_init_raise():
     # Check different error scenarios
     vec1 = np.array([2, 4, 5, 7])
     vec2 = np.array([-4, -3, 0, 1, 4])
-    grid = odl.TensorGrid(vec1, vec2)
+    grid = odl.RectGrid(vec1, vec2)
     min_pt = [2, -5]
     max_pt = [10, 4]
 
@@ -84,7 +76,7 @@ def test_partition_init_raise():
 def test_partition_set():
     vec1 = np.array([2, 4, 5, 7])
     vec2 = np.array([-4, -3, 0, 1, 4])
-    grid = odl.TensorGrid(vec1, vec2)
+    grid = odl.RectGrid(vec1, vec2)
 
     min_pt = [1, -4]
     max_pt = [10, 5]
@@ -101,7 +93,7 @@ def test_partition_set():
 def test_partition_cell_boundary_vecs():
     vec1 = np.array([2, 4, 5, 7])
     vec2 = np.array([-4, -3, 0, 1, 4])
-    grid = odl.TensorGrid(vec1, vec2)
+    grid = odl.RectGrid(vec1, vec2)
 
     midpts1 = [3, 4.5, 6]
     midpts2 = [-3.5, -1.5, 0.5, 2.5]
@@ -120,7 +112,7 @@ def test_partition_cell_boundary_vecs():
 def test_partition_cell_sizes_vecs():
     vec1 = np.array([2, 4, 5, 7])
     vec2 = np.array([-4, -3, 0, 1, 4])
-    grid = odl.TensorGrid(vec1, vec2)
+    grid = odl.RectGrid(vec1, vec2)
 
     midpts1 = [3, 4.5, 6]
     midpts2 = [-3.5, -1.5, 0.5, 2.5]
@@ -139,7 +131,7 @@ def test_partition_cell_sizes_vecs():
 
 
 def test_partition_cell_sides():
-    grid = odl.RegularGrid([0, 1], [2, 4], (5, 3))
+    grid = odl.uniform_grid([0, 1], [2, 4], (5, 3))
     intv = odl.IntervalProd([0, 1], [2, 4])
     part = odl.RectPartition(intv, grid)
     true_sides = [0.5, 1.5]
@@ -147,7 +139,7 @@ def test_partition_cell_sides():
 
 
 def test_partition_cell_volume():
-    grid = odl.RegularGrid([0, 1], [2, 4], (5, 3))
+    grid = odl.uniform_grid([0, 1], [2, 4], (5, 3))
     intv = odl.IntervalProd([0, 1], [2, 4])
     part = odl.RectPartition(intv, grid)
     true_volume = 0.5 * 1.5
@@ -159,7 +151,7 @@ def test_partition_insert():
     vec12 = [-4, -3, 0, 1, 4]
     min_pt1 = [1, -4]
     max_pt1 = [7, 5]
-    grid1 = odl.TensorGrid(vec11, vec12)
+    grid1 = odl.RectGrid(vec11, vec12)
     intv1 = odl.IntervalProd(min_pt1, max_pt1)
     part1 = odl.RectPartition(intv1, grid1)
 
@@ -167,7 +159,7 @@ def test_partition_insert():
     vec22 = [0]
     min_pt2 = [-2, -2]
     max_pt2 = [4, 0]
-    grid2 = odl.TensorGrid(vec21, vec22)
+    grid2 = odl.RectGrid(vec21, vec22)
     intv2 = odl.IntervalProd(min_pt2, max_pt2)
     part2 = odl.RectPartition(intv2, grid2)
 
@@ -192,7 +184,7 @@ def test_partition_getitem():
     vecs = [vec1, vec2, vec3, vec4]
     min_pt = [1, -4, -2, -2]
     max_pt = [7, 5, 4, 0]
-    grid = odl.TensorGrid(*vecs)
+    grid = odl.RectGrid(*vecs)
     intv = odl.IntervalProd(min_pt, max_pt)
     part = odl.RectPartition(intv, grid)
 
@@ -200,7 +192,7 @@ def test_partition_getitem():
     slc = (1, -2, 2, 0)
     slc_vecs = [v[i] for i, v in zip(slc, vecs)]
     slc_part = part[slc]
-    assert slc_part.grid == odl.TensorGrid(*slc_vecs)
+    assert slc_part.grid == odl.RectGrid(*slc_vecs)
     slc_min_pt = [3, 0.5, 1.5, -2]
     slc_max_pt = [4.5, 2.5, 4, 0]
     assert slc_part.set == odl.IntervalProd(slc_min_pt, slc_max_pt)
@@ -208,7 +200,7 @@ def test_partition_getitem():
     slc = (slice(None), slice(None, None, 2), slice(None, 2), 0)
     slc_vecs = [v[i] for i, v in zip(slc, vecs)]
     slc_part = part[slc]
-    assert slc_part.grid == odl.TensorGrid(*slc_vecs)
+    assert slc_part.grid == odl.RectGrid(*slc_vecs)
     slc_min_pt = [1, -4, -2, -2]
     slc_max_pt = [7, 5, 1.5, 0]
     assert slc_part.set == odl.IntervalProd(slc_min_pt, slc_max_pt)
@@ -223,7 +215,7 @@ def test_partition_getitem():
     lst_max_pt = [6, 5, 4, 0]
     lst_intv = odl.IntervalProd(lst_min_pt, lst_max_pt)
     lst_vec1 = [2, 5]
-    lst_grid = odl.TensorGrid(lst_vec1, vec2, vec3, vec4)
+    lst_grid = odl.RectGrid(lst_vec1, vec2, vec3, vec4)
     lst_part = odl.RectPartition(lst_intv, lst_grid)
     assert part[[0, 2]] == lst_part
 
@@ -288,7 +280,7 @@ def test_uniform_partition_fromgrid():
     max_pt_calc = [7 + (7 - 5) / 2, 4 + (4 - 1) / 2]
 
     # Default case
-    grid = odl.TensorGrid(vec1, vec2)
+    grid = odl.RectGrid(vec1, vec2)
     part = odl.uniform_partition_fromgrid(grid)
     assert part.set == odl.IntervalProd(min_pt_calc, max_pt_calc)
 
@@ -308,7 +300,7 @@ def test_uniform_partition_fromgrid():
     assert part.set == odl.IntervalProd(true_min_pt, true_max_pt)
 
     # Degenerate dimension, needs both explicit min_pt and max_pt
-    grid = odl.TensorGrid(vec1, [1.0])
+    grid = odl.RectGrid(vec1, [1.0])
     with pytest.raises(ValueError):
         odl.uniform_partition_fromgrid(grid)
     with pytest.raises(ValueError):

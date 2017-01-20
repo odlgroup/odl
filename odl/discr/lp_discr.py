@@ -64,7 +64,7 @@ class DiscreteLp(DiscretizedSpace):
             The continuous space to be discretized
         partition : `RectPartition`
             Partition of (a subset of) ``fspace.domain`` based on a
-            `TensorGrid`
+            `RectGrid`.
         dspace : `FnBase`
             Space of elements used for data storage. It must have the
             same `FnBase.field` as ``fspace``
@@ -212,6 +212,11 @@ class DiscreteLp(DiscretizedSpace):
     def partition(self):
         """`RectPartition` of the domain."""
         return self.__partition
+
+    @property
+    def is_uniform_byaxis(self):
+        """Boolean tuple showing uniformity of ``self.partition`` per axis."""
+        return self.partition.is_uniform_byaxis
 
     @property
     def is_uniform(self):
