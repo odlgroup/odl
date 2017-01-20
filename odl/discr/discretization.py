@@ -224,6 +224,12 @@ class DiscretizedSet(NtuplesBase):
                     other.sampling == self.sampling and
                     other.interpolation == self.interpolation)
 
+    def __hash__(self):
+        """Return ``hash(self)``."""
+        return (NtuplesBase.__hash__(self) ^
+                hash(self.uspace) ^ hash(self.dspace) ^
+                hash(self.__sampling) ^ hash(self.__interpolation))
+
     @property
     def impl(self):
         """Underlying implmentation type for the dspace."""

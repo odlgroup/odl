@@ -1045,6 +1045,10 @@ class NumpyFn(FnBase, NumpyNtuples):
         return (NumpyNtuples.__eq__(self, other) and
                 self.weighting == other.weighting)
 
+    def __hash__(self):
+        """Return ``hash(self)``."""
+        return NumpyNtuples.__hash__(self) ^ hash(self.weighting)
+
     def __repr__(self):
         """Return ``repr(self)``."""
         if self.is_rn:

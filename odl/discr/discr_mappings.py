@@ -136,6 +136,11 @@ class FunctionSetMapping(Operator):
                     self.partition == other.partition and
                     self.order == other.order)
 
+    def __hash__(self):
+        """Return ``hash(self)``."""
+        return (hash(type(self)) ^ hash(self.domain) ^ hash(self.range) ^
+                hash(self.partition) ^ hash(self.order))
+
     @property
     def partition(self):
         """Underlying domain partition."""

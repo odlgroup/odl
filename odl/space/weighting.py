@@ -119,6 +119,11 @@ class Weighting(object):
                 self.exponent == other.exponent and
                 self.dist_using_inner == other.dist_using_inner)
 
+    def __hash__(self):
+        """Return ``hash(self)``."""
+        return (hash(type(self)) ^ hash(self.impl) ^ hash(self.exponent) ^
+                hash(self.dist_using_inner))
+
     def equiv(self, other):
         """Test if ``other`` is an equivalent weighting.
 
@@ -402,6 +407,10 @@ class MatrixWeighting(Weighting):
         return (super().__eq__(other) and
                 self.matrix is getattr(other, 'matrix', None))
 
+    def __hash__(self):
+        """Return ``hash(self)``."""
+        return super().__hash__() ^ hash(self.matrix)
+
     def equiv(self, other):
         """Test if other is an equivalent weighting.
 
@@ -594,6 +603,10 @@ class ArrayWeighting(Weighting):
         return (super().__eq__(other) and
                 self.array is getattr(other, 'array', None))
 
+    def __hash__(self):
+        """Return ``hash(self)``."""
+        return super().__hash__() ^ hash(self.array)
+
     def equiv(self, other):
         """Return True if other is an equivalent weighting.
 
@@ -697,6 +710,10 @@ class ConstWeighting(Weighting):
 
         return (super().__eq__(other) and
                 self.const == getattr(other, 'const', None))
+
+    def __hash__(self):
+        """Return ``hash(self)``."""
+        return super().__hash__() ^ hash(self.const)
 
     def equiv(self, other):
         """Test if other is an equivalent weighting.
@@ -836,6 +853,10 @@ class CustomInner(Weighting):
         """
         return super().__eq__(other) and self.inner == other.inner
 
+    def __hash__(self):
+        """Return ``hash(self)``."""
+        return super().__hash__() ^ hash(self.inner)
+
     @property
     def repr_part(self):
         """String usable in a space's ``__repr__`` method."""
@@ -902,6 +923,10 @@ class CustomNorm(Weighting):
             norm, ``False`` otherwise.
         """
         return super().__eq__(other) and self.norm == other.norm
+
+    def __hash__(self):
+        """Return ``hash(self)``."""
+        return super().__hash__() ^ hash(self.norm)
 
     @property
     def repr_part(self):
@@ -975,6 +1000,10 @@ class CustomDist(Weighting):
             dist, ``False`` otherwise.
         """
         return super().__eq__(other) and self.dist == other.dist
+
+    def __hash__(self):
+        """Return ``hash(self)``."""
+        return super().__hash__() ^ hash(self.dist)
 
     @property
     def repr_part(self):

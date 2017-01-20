@@ -558,6 +558,10 @@ class ProductSpace(LinearSpace):
                     all(x == y for x, y in zip(self.spaces,
                                                other.spaces)))
 
+    def __hash__(self):
+        """Return ``hash(self)``."""
+        return hash(type(self)) ^ hash(self.spaces) ^ hash(self.weighting)
+
     def __getitem__(self, indices):
         """Return ``self[indices]``."""
         if isinstance(indices, Integral):

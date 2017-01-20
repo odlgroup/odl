@@ -223,6 +223,10 @@ class IntervalProd(Set):
         return (np.all(self.min_pt == other.min_pt) and
                 np.all(self.max_pt == other.max_pt))
 
+    def __hash__(self):
+        """Return ``hash(self)``."""
+        return hash(type(self)) ^ hash(self.min_pt) ^ hash(self.max_pt)
+
     def approx_contains(self, point, atol):
         """Return ``True`` if ``point`` is "almost" contained in this set.
 
