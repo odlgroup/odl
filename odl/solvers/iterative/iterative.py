@@ -23,10 +23,11 @@ from future import standard_library
 standard_library.install_aliases()
 
 from odl.operator import IdentityOperator, OperatorComp, OperatorSum
+from odl.util import normalized_scalar_param_list
 
 
 __all__ = ('landweber', 'conjugate_gradient', 'conjugate_gradient_normal',
-           'gauss_newton')
+           'gauss_newton', 'kaczmarz')
 
 
 # TODO: update all docs
@@ -403,6 +404,119 @@ def gauss_newton(op, x, rhs, niter=1, zero_seq=exp_zero_seq(2.0),
 
         if callback is not None:
             callback(x)
+
+
+def kaczmarz(ops, x, rhs, niter=1, omega=1, projection=None,
+             callback=None):
+    """Optimized implementation of Kaczmarz's method.
+
+    Solves the inverse problem::
+
+        A_n(x) = rhs_n
+
+    This is also known as the Landweber-Kaczmarz's method, since the method
+    coincides with the Landweber method for a single operator.
+
+    Parameters
+    ----------
+    ops : sequence of `Operator`'s
+        Operators in the inverse problem. They must have a
+        `Operator.derivative` property, which returns a new operator which in
+        turn has an `Operator.adjoint` property, i.e.
+        ``op[i].derivative(x).adjoint`` must be well-defined for ``x`` in the
+        operator domain and for all ``i``.
+    x : ``op.domain`` element
+        Element to which the result is written. Its initial value is
+        used as starting point of the iteration, and its values are
+        updated in each iteration step.
+    rhs : sequence of ``ops[i].range`` elements
+        Right-hand side of the equation defining the inverse problem.
+    niter : int, optional
+        Maximum number of iterations
+    omega : positive float or sequence of positive float, optional
+        Relaxation parameter in the iteration. If a single float is given the
+        same step is used for all operators, otherwise separate steps are used.
+    projection : callable, optional
+        Function that can be used to modify the iterates in each iteration,
+        for example enforcing positivity. The function should take one
+        argument and modify it in-place.
+    callback : callable, optional
+        Object executing code per iteration, e.g. plotting each iterate.
+
+    Notes
+    -----
+    This method calculates an approximate least-squares solution of
+    the inverse problem of the first kind
+
+    .. math::
+        \mathcal{A}_i (x) = y_i \\quad 1 \\leq i \\leq n,
+
+    for a given :math:`y_n \\in \mathcal{Y}_n`, i.e. an approximate
+    solution :math:`x^*` to
+
+        :math:`\min_{x\\in \mathcal{X}}
+        \\sum_{i=1}^n \| \mathcal{A}_i(x) - y_i \|_{\mathcal{Y}_i}^2`
+
+    for a (Frechet-) differentiable operator
+    :math:`\mathcal{A}: \mathcal{X} \\to \mathcal{Y}` between Hilbert
+    spaces :math:`\mathcal{X}` and :math:`\mathcal{Y}`. The method
+    starts from an initial guess :math:`x_0` and uses the
+    iteration
+
+    .. math::
+        x_{k+1} = x_k - \omega_{[i]} \ \partial \mathcal{A}_{[i]}(x)^*
+                                 (\mathcal{A}_{[i]}(x_k) - y_{[i]}),
+
+    where :math:`\partial \mathcal{A}_{[i]}(x)` is the Frechet derivative
+    of :math:`\mathcal{A}_{[i]}` at :math:`x`, :math:`\omega_{[i]}` is a
+    relaxation parameter and :math:`[i] := i mod n`.
+    For linear problems, a choice
+    :math:`0 < \omega_{[i]} < 2/\\lVert \mathcal{A}_{[i]}^2\\rVert` guarantees
+    convergence, where :math:`\|\mathcal{A}_{[i]}\|` stands for the
+    operator norm of :math:`\mathcal{A}_{[i]}`.
+
+    This implementation uses a minimum amount of memory copies by
+    applying re-usable temporaries and in-place evaluation.
+
+    The method is also described in a
+    `Wikipedia article
+    <https://en.wikipedia.org/wiki/Kaczmarz_method>`_.
+
+    See Also
+    --------
+    landweber
+    """
+    domain = ops[0].domain
+    if any(domain != opi.domain for opi in ops):
+        raise ValueError('`opi[i].domain` are not all equal')
+
+    if x not in domain:
+        raise TypeError('`x` {!r} is not in the domain of `ops` {!r}'
+                        ''.format(x, domain))
+
+    if len(ops) != len(rhs):
+        raise ValueError('`number of `ops` {} does not match number of '
+                         '`rhs` {}'.format(len(ops), len(rhs)))
+
+    omega = normalized_scalar_param_list(omega, len(ops), param_conv=float)
+
+    # Reusable temporaries
+    tmp_ran = [opi.range.element() for opi in ops]
+    tmp_dom = domain.element()
+
+    for _ in range(niter):
+        for i in range(len(ops)):
+            ops[i](x, out=tmp_ran[i])
+            tmp_ran[i] -= rhs[i]
+            ops[i].derivative(x).adjoint(tmp_ran[i], out=tmp_dom)
+            x.lincomb(1, x, -omega[i], tmp_dom)
+
+            if projection is not None:
+                projection(x)
+
+            if callback is not None:
+                callback(x)
+
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position
