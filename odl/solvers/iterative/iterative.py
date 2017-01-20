@@ -36,6 +36,36 @@ __all__ = ('landweber', 'conjugate_gradient', 'conjugate_gradient_normal',
 def landweber(op, x, rhs, niter=1, omega=1, projection=None, callback=None):
     """Optimized implementation of Landweber's method.
 
+    Solves the inverse problem::
+
+        A(x) = rhs
+
+    Parameters
+    ----------
+    op : `Operator`
+        Operator in the inverse problem. It must have a `Operator.derivative`
+        property, which returns a new operator which in turn has an
+        `Operator.adjoint` property, i.e. ``op.derivative(x).adjoint`` must be
+        well-defined for ``x`` in the operator domain.
+    x : ``op.domain`` element
+        Element to which the result is written. Its initial value is
+        used as starting point of the iteration, and its values are
+        updated in each iteration step.
+    rhs : ``op.range`` element
+        Right-hand side of the equation defining the inverse problem.
+    niter : int, optional
+        Maximum number of iterations.
+    omega : positive float, optional
+        Relaxation parameter in the iteration.
+    projection : callable, optional
+        Function that can be used to modify the iterates in each iteration,
+        for example enforcing positivity. The function should take one
+        argument and modify it in-place.
+    callback : callable, optional
+        Object executing code per iteration, e.g. plotting each iterate.
+
+    Notes
+    -----
     This method calculates an approximate least-squares solution of
     the inverse problem of the first kind
 
@@ -72,34 +102,6 @@ def landweber(op, x, rhs, niter=1, omega=1, projection=None, callback=None):
     The method is also described in a
     `Wikipedia article
     <https://en.wikipedia.org/wiki/Landweber_iteration>`_.
-
-    Parameters
-    ----------
-    op : `Operator`
-        Operator in the inverse problem. It must have a `Operator.derivative`
-        property, which returns a new operator which in turn has an
-        `Operator.adjoint` property, i.e. ``op.derivative(x).adjoint`` must be
-        well-defined for ``x`` in the operator domain.
-    x : ``op.domain`` element
-        Element to which the result is written. Its initial value is
-        used as starting point of the iteration, and its values are
-        updated in each iteration step.
-    rhs : ``op.range`` element
-        Right-hand side of the equation defining the inverse problem
-    niter : int, optional
-        Maximum number of iterations
-    omega : positive float, optional
-        Relaxation parameter in the iteration
-    projection : callable, optional
-        Function that can be used to modify the iterates in each iteration,
-        for example enforcing positivity. The function should take one
-        argument and modify it in-place.
-    callback : callable, optional
-        Object executing code per iteration, e.g. plotting each iterate
-
-    Returns
-    -------
-    None
     """
     # TODO: add a book reference
 
@@ -127,9 +129,9 @@ def landweber(op, x, rhs, niter=1, omega=1, projection=None, callback=None):
 def conjugate_gradient(op, x, rhs, niter=1, callback=None):
     """Optimized implementation of CG for self-adjoint operators.
 
-    This method solves the inverse problem (of the first kind)
+    This method solves the inverse problem (of the first kind)::
 
-    :math:`A x = y`
+        A(x) = y
 
     for a linear and self-adjoint `Operator` ``A``.
 
@@ -151,15 +153,11 @@ def conjugate_gradient(op, x, rhs, niter=1, callback=None):
         used as starting point of the iteration, and its values are
         updated in each iteration step.
     rhs : ``op.range`` element
-        Right-hand side of the equation defining the inverse problem
+        Right-hand side of the equation defining the inverse problem.
     niter : int, optional
-        Maximum number of iterations
+        Maximum number of iterations.
     callback : callable, optional
-        Object executing code per iteration, e.g. plotting each iterate
-
-    Returns
-    -------
-    None
+        Object executing code per iteration, e.g. plotting each iterate.
 
     See Also
     --------
@@ -212,13 +210,13 @@ def conjugate_gradient(op, x, rhs, niter=1, callback=None):
 def conjugate_gradient_normal(op, x, rhs, niter=1, callback=None):
     """Optimized implementation of CG for the normal equation.
 
-    This method solves the normal equation
+    This method solves the normal equations::
 
-    :math:`A^* A x = A^* y`
+        A.adjoint(A(x)) = A.adjoint(y)
 
-    to the inverse problem (of the first kind)
+    to the inverse problem (of the first kind)::
 
-    :math:`A x = y`
+        A(x) = y
 
     with a linear `Operator` ``A``.
 
@@ -244,13 +242,9 @@ Conjugate_gradient_on_the_normal_equations>`_.
     rhs : ``op.range`` element
         Right-hand side of the equation defining the inverse problem
     niter : int, optional
-        Maximum number of iterations
+        Maximum number of iterations.
     callback : callable, optional
-        Object executing code per iteration, e.g. plotting each iterate
-
-    Returns
-    -------
-    None
+        Object executing code per iteration, e.g. plotting each iterate.
 
     See Also
     --------
@@ -306,13 +300,12 @@ def exp_zero_seq(base):
     Parameters
     ----------
     base : float
-        Base of the sequence. Its absolute value must be larger than
-        1.
+        Base of the sequence. Its absolute value must be larger than 1.
 
     Yields
     ------
     val : float
-        The next value in the exponential sequence
+        The next value in the exponential sequence.
     """
     value = 1.0
     while True:
@@ -324,9 +317,9 @@ def gauss_newton(op, x, rhs, niter=1, zero_seq=exp_zero_seq(2.0),
                  callback=None):
     """Optimized implementation of a Gauss-Newton method.
 
-    This method solves the inverse problem (of the first kind)
+    This method solves the inverse problem (of the first kind)::
 
-    :math:`A (x) = y`
+        A(x) = y
 
     for a (Frechet-) differentiable `Operator` ``A`` using a
     Gauss-Newton iteration.
@@ -353,16 +346,12 @@ def gauss_newton(op, x, rhs, niter=1, zero_seq=exp_zero_seq(2.0),
     rhs : ``op.range`` element
         Right-hand side of the equation defining the inverse problem
     niter : int, optional
-        Maximum number of iterations
+        Maximum number of iterations.
     zero_seq : iterable, optional
         Zero sequence whose values are used for the regularization of
-        the linearized problem in each Newton step
+        the linearized problem in each Newton step.
     callback : callable, optional
-        Object executing code per iteration, e.g. plotting each iterate
-
-    Returns
-    -------
-    None
+        Object executing code per iteration, e.g. plotting each iterate.
     """
     if x not in op.domain:
         raise TypeError('`x` {!r} is not in the domain of `op` {!r}'
@@ -410,7 +399,7 @@ def kaczmarz(ops, x, rhs, niter=1, omega=1, projection=None,
              callback=None):
     """Optimized implementation of Kaczmarz's method.
 
-    Solves the inverse problem::
+    Solves the inverse problem given by the set of equations::
 
         A_n(x) = rhs_n
 
@@ -469,7 +458,8 @@ def kaczmarz(ops, x, rhs, niter=1, omega=1, projection=None,
 
     where :math:`\partial \mathcal{A}_{[i]}(x)` is the Frechet derivative
     of :math:`\mathcal{A}_{[i]}` at :math:`x`, :math:`\omega_{[i]}` is a
-    relaxation parameter and :math:`[i] := i mod n`.
+    relaxation parameter and :math:`[i] := i \\text{ mod } n`.
+
     For linear problems, a choice
     :math:`0 < \omega_{[i]} < 2/\\lVert \mathcal{A}_{[i]}^2\\rVert` guarantees
     convergence, where :math:`\|\mathcal{A}_{[i]}\|` stands for the
