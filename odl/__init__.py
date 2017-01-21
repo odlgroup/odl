@@ -25,24 +25,25 @@ restricted to) inverse problems.
 from __future__ import absolute_import
 
 __version__ = '0.5.4.dev0'
-__all__ = ()
+__all__ = ('diagnostics', 'discr', 'operator', 'set', 'space', 'solvers',
+           'tomo', 'trafos', 'util', 'phantom', 'deform', 'ufunc_ops')
 
 # Propagate names defined in __all__ of all submodules into the top-level
 # module
-from . import diagnostics
-
-from .discr import *
-__all__ += discr.__all__
-
-from .operator import *
-__all__ += operator.__all__
-
 from .set import *
 __all__ += set.__all__
+
+# operator must come before space because npy_ntuples imports Operator
+from .operator import *
+__all__ += operator.__all__
 
 from .space import *
 __all__ += space.__all__
 
+from .discr import *
+__all__ += discr.__all__
+
+from . import diagnostics
 from . import solvers
 from . import trafos
 from . import tomo

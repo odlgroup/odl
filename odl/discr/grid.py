@@ -106,8 +106,6 @@ class RectGrid(Set):
             [1.0, 2.0, 5.0],
             [-2.0, 1.5, 2.0]
         )
-        >>> print(g)
-        grid [1.0, 2.0, 5.0] x [-2.0, 1.5, 2.0]
         >>> g.ndim  # number of axes
         2
         >>> g.shape  # points per axis
@@ -208,7 +206,7 @@ class RectGrid(Set):
         # Uniformity, setting True in degenerate axes
         diffs = [np.diff(v) for v in self.coord_vectors]
         self.__is_uniform_byaxis = tuple(
-            True if diff.size == 0 else np.allclose(diff, diff[0])
+            (diff.size == 0) or np.allclose(diff, diff[0])
             for diff in diffs)
 
     # Attributes
@@ -392,6 +390,11 @@ class RectGrid(Set):
     def stride(self):
         """Step per axis between neighboring points of a uniform grid.
 
+        Raises
+        ------
+        NotImplementedError
+            if the grid is not uniform
+
         Examples
         --------
         >>> rg = uniform_grid([-1.5, -1], [-0.5, 3], (2, 3))
@@ -570,10 +573,12 @@ class RectGrid(Set):
         # Optimization for some common cases
         if other is self:
             return True
-        if not (isinstance(other, RectGrid) and
-                np.all(self.shape <= other.shape) and
-                np.all(self.min_pt >= other.min_pt - atol) and
-                np.all(self.max_pt <= other.max_pt + atol)):
+        if not isinstance(other, RectGrid):
+            return False
+        if not all(self.shape[i] <= other.shape[i] and
+                   self.min_pt[i] >= other.min_pt[i] - atol and
+                   self.max_pt[i] <= other.max_pt[i] + atol
+                   for i in range(self.ndim)):
             return False
 
         if self.is_uniform and other.is_uniform:
@@ -599,7 +604,7 @@ class RectGrid(Set):
                 # vec_s. If there is no almost zero entry in each row,
                 # return False.
                 vec_o_mg, vec_s_mg = sparse_meshgrid(vec_o, vec_s)
-                if not np.all(np.any(np.abs(vec_s_mg - vec_o_mg) <= atol,
+                if not np.all(np.any(np.isclose(vec_s_mg, vec_o_mg, atol=atol),
                                      axis=0)):
                     return False
             return True
@@ -701,7 +706,7 @@ class RectGrid(Set):
         )
 
         """
-        nondegen_indcs = np.where(self.nondegen_byaxis)[0]
+        nondegen_indcs = np.flatnonzero(self.nondegen_byaxis)
         coord_vecs = [self.coord_vectors[axis] for axis in nondegen_indcs]
         return RectGrid(*coord_vecs)
 

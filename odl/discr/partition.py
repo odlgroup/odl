@@ -632,7 +632,7 @@ class RectPartition(object):
         RectGrid.squeeze
         IntervalProd.squeeze
         """
-        nondegen_indcs = np.where(self.grid.nondegen_byaxis)[0]
+        nondegen_indcs = np.flatnonzero(self.grid.nondegen_byaxis)
         newset = self.set[nondegen_indcs]
         return RectPartition(newset, self.grid.squeeze())
 
@@ -771,10 +771,6 @@ class RectPartition(object):
 
         return RectPartitionByAxis()
 
-    def __str__(self):
-        """Return ``str(self)``."""
-        return 'partition of {} using {}'.format(self.set, self.grid)
-
     def __repr__(self):
         """Return ``repr(self)``."""
         bdry_fracs = np.vstack(self.boundary_cell_fractions)
@@ -834,6 +830,8 @@ class RectPartition(object):
             sig_str = signature_string(posargs, optargs,
                                        sep=[',\n', ', ', ',\n'])
             return '{}(\n{}\n)'.format(constructor, indent_rows(sig_str))
+
+    __str__ = __repr__
 
 
 def uniform_partition_fromintv(intv_prod, shape, nodes_on_bdry=False):
@@ -898,10 +896,7 @@ def uniform_partition_fromintv(intv_prod, shape, nodes_on_bdry=False):
     >>> part.grid.coord_vectors[1]
     array([ 0.2,  0.6,  1. ])
     """
-
-    grid = uniform_grid_fromintv(intv_prod, shape,
-                                     nodes_on_bdry=nodes_on_bdry)
-
+    grid = uniform_grid_fromintv(intv_prod, shape, nodes_on_bdry=nodes_on_bdry)
     return RectPartition(intv_prod, grid)
 
 

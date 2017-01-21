@@ -101,7 +101,7 @@ class IntervalProd(Set):
     @property
     def true_ndim(self):
         """Number of non-degenerate (positive-length) intervals."""
-        return sum(self.nondegen_byaxis.astype(int))
+        return np.count_nonzero(self.nondegen_byaxis)
 
     @property
     def volume(self):
