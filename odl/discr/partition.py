@@ -31,7 +31,7 @@ from builtins import object, range, super, zip
 
 import numpy as np
 
-from odl.discr.grid import RectGrid, uniform_sampling_fromintv
+from odl.discr.grid import RectGrid, uniform_grid_fromintv
 from odl.set import IntervalProd
 from odl.util import (
     normalized_index_expression, normalized_nodes_on_bdry,
@@ -899,7 +899,7 @@ def uniform_partition_fromintv(intv_prod, shape, nodes_on_bdry=False):
     array([ 0.2,  0.6,  1. ])
     """
 
-    grid = uniform_sampling_fromintv(intv_prod, shape,
+    grid = uniform_grid_fromintv(intv_prod, shape,
                                      nodes_on_bdry=nodes_on_bdry)
 
     return RectPartition(intv_prod, grid)

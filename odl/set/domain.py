@@ -366,7 +366,7 @@ class IntervalProd(Set):
 
         Grids are also accepted as input:
 
-        >>> agrid = odl.uniform_sampling(rbox.min_pt, rbox.max_pt, [3, 1, 3])
+        >>> agrid = odl.uniform_grid(rbox.min_pt, rbox.max_pt, [3, 1, 3])
         >>> rbox.contains_all(agrid)
         True
         """

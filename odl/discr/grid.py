@@ -31,12 +31,11 @@ import numpy as np
 
 from odl.set import Set, IntervalProd
 from odl.util import (
-    normalized_index_expression, array1d_repr, array1d_str, safe_int_conv,
-    signature_string, indent_rows)
+    normalized_index_expression, normalized_scalar_param_list, safe_int_conv,
+    array1d_repr, array1d_str, signature_string, indent_rows)
 
 
-__all__ = ('RectGrid', 'uniform_grid', 'uniform_sampling_fromintv',
-           'uniform_sampling')
+__all__ = ('RectGrid', 'uniform_grid', 'uniform_grid_fromintv')
 
 
 def sparse_meshgrid(*x):
@@ -959,98 +958,13 @@ class RectGrid(Set):
                                          mod=['!s', ''])
             return '{}(\n{}\n)'.format(constructor, indent_rows(inner_str))
 
-    def __str__(self):
-        """Return ``str(self)``."""
-        posargs = [array1d_repr(v) for v in self.coord_vectors]
-        grid_str = signature_string(posargs, [], sep=[' x ', ', ', ', '],
-                                    mod=['!s', ''])
-        return 'grid ' + grid_str
+    __str__ = __repr__
 
 
-def uniform_grid(min_pt, max_pt, shape):
-    """Return a uniform `RectGrid` from given min/max and shape.
+def uniform_grid_fromintv(intv_prod, shape, nodes_on_bdry=True):
+    """Return a grid from sampling an interval product uniformly.
 
-    The returned grid has uniformly spaced coodinate vectors, where
-    the k-th coordinate vector is calculated according to::
-
-        v_k[j] = min_pt[k] + j * (max_pt[k] - min_pt[k]) / (shape[k] - 1)
-
-    Parameters
-    ----------
-    min_pt, max_pt : float or sequence of floats
-        Points defining the minimum/maximum grid coordinates.
-    shape : int or sequence of ints
-        Number of grid points per axis.
-
-    Returns
-    -------
-    uniform_grid : `RectGrid`
-        Rectilinear grid with uniformly spaced coordinate vectors.
-
-    Examples
-    --------
-    >>> rg = odl.uniform_grid([-1.5, -1], [-0.5, 3], (2, 3))
-    >>> rg
-    uniform_grid([-1.5, -1.0], [-0.5, 3.0], (2, 3))
-    >>> rg.coord_vectors
-    (array([-1.5, -0.5]), array([-1.,  1.,  3.]))
-    >>> rg.ndim, rg.size
-    (2, 6)
-
-    In 1D, we don't need sequences:
-
-    >>> rg = odl.uniform_grid(0, 1, 10)
-    >>> rg.shape
-    (10,)
-
-    See Also
-    --------
-    uniform_sampling : uniformly sample an `IntervalProd` given by min/max
-    """
-    min_pt, min_pt_in = np.atleast_1d(min_pt).astype('float64'), min_pt
-    max_pt, max_pt_in = np.atleast_1d(max_pt).astype('float64'), max_pt
-    shape, shape_in = (np.atleast_1d(shape).astype('int64', casting='safe'),
-                       shape)
-
-    if any(x.ndim != 1 for x in (min_pt, max_pt, shape)):
-        raise ValueError('`min_pt`, `max_pt`, `shape` must all have '
-                         '`ndim == 1`, got {}, {}, {}'
-                         ''.format(min_pt.ndim, max_pt.ndim, shape.ndim))
-
-    if not min_pt.shape == max_pt.shape == shape.shape:
-        raise ValueError('`min_pt`, `max_pt`, `shape` must all have the same '
-                         'shape, got shapes {}, {}, {}'
-                         ''.format(min_pt.shape, max_pt.shape, shape.shape))
-
-    if not np.all(np.isfinite(min_pt)):
-        raise ValueError('`min_pt` {} has invalid entries'.format(min_pt_in))
-
-    if not np.all(np.isfinite(max_pt)):
-        raise ValueError('`max_pt` {} has invalid entries'.format(max_pt_in))
-
-    if not np.all(min_pt <= max_pt):
-        raise ValueError('`min_pt` {} not everywhere less than or equal to '
-                         '`max_pt` {}'.format(min_pt_in, max_pt_in))
-
-    if np.any(shape <= 0):
-        raise ValueError('`shape` must contain only positive values, got {}'
-                         ''.format(shape_in))
-
-    degen = np.where(min_pt == max_pt)[0]
-    if np.any(shape[degen] != 1):
-        raise ValueError('degenerated axes {} with shapes {}, expected '
-                         '{}'.format(tuple(degen[:]), tuple(shape[degen]),
-                                     len(degen) * (1,)))
-
-    coord_vecs = [np.linspace(mi, ma, num, endpoint=True, dtype=np.float64)
-                  for mi, ma, num in zip(min_pt, max_pt, shape)]
-    return RectGrid(*coord_vecs)
-
-
-def uniform_sampling_fromintv(intv_prod, shape, nodes_on_bdry=True):
-    """Sample an interval product uniformly.
-
-    The resulting grid will include ``intv_prod.min_pt`` and
+    The resulting grid will by default include ``intv_prod.min_pt`` and
     ``intv_prod.max_pt`` as grid points. If you want a subdivision into
     equally sized cells with grid points in the middle, use
     `uniform_partition` instead.
@@ -1079,31 +993,30 @@ def uniform_sampling_fromintv(intv_prod, shape, nodes_on_bdry=True):
     sampling : `RectGrid`
         Uniform sampling grid for the interval product.
 
-    See Also
-    --------
-    uniform_sampling:
-        sample an implicitly defined interval product
-    odl.discr.partition.uniform_partition_fromintv :
-        divide interval product into equally sized subsets
-
     Examples
     --------
     >>> rbox = odl.IntervalProd([-1.5, 2], [-0.5, 3])
-    >>> grid = uniform_sampling_fromintv(rbox, (3, 3))
+    >>> grid = uniform_grid_fromintv(rbox, (3, 3))
     >>> grid.coord_vectors
     (array([-1.5, -1. , -0.5]), array([ 2. ,  2.5,  3. ]))
 
     To have the nodes in the "middle", use ``nodes_on_bdry=False``:
 
-    >>> grid = uniform_sampling_fromintv(rbox, (2, 2), nodes_on_bdry=False)
+    >>> grid = uniform_grid_fromintv(rbox, (2, 2), nodes_on_bdry=False)
     >>> grid.coord_vectors
     (array([-1.25, -0.75]), array([ 2.25,  2.75]))
-    """
-    shape = np.atleast_1d(shape).astype('int64', casting='safe')
 
+    See Also
+    --------
+    uniform_grid : Create a uniform grid directly.
+    odl.discr.partition.uniform_partition_fromintv :
+        divide interval product into equally sized subsets
+    """
     if not isinstance(intv_prod, IntervalProd):
         raise TypeError('{!r} is not an `IntervalProd` instance'
                         ''.format(intv_prod))
+
+    shape = normalized_scalar_param_list(shape, intv_prod.ndim, safe_int_conv)
 
     if np.shape(nodes_on_bdry) == ():
         nodes_on_bdry = ([(bool(nodes_on_bdry), bool(nodes_on_bdry))] *
@@ -1162,11 +1075,14 @@ def uniform_sampling_fromintv(intv_prod, shape, nodes_on_bdry=True):
             gmin.append(xmin + (xmax - xmin) / (2 * n))
             gmax.append(xmax - (xmax - xmin) / (2 * n))
 
-    return uniform_grid(gmin, gmax, shape)
+    # Create the grid
+    coord_vecs = [np.linspace(mi, ma, num, endpoint=True, dtype=np.float64)
+                  for mi, ma, num in zip(gmin, gmax, shape)]
+    return RectGrid(*coord_vecs)
 
 
-def uniform_sampling(min_pt, max_pt, shape, nodes_on_bdry=True):
-    """Sample an implicitly defined interval product uniformly.
+def uniform_grid(min_pt, max_pt, shape, nodes_on_bdry=True):
+    """Return a grid from sampling an implicit interval product uniformly.
 
     Parameters
     ----------
@@ -1187,9 +1103,14 @@ def uniform_sampling(min_pt, max_pt, shape, nodes_on_bdry=True):
         A single boolean is interpreted as a global choice for all
         boundaries.
 
+    Returns
+    -------
+    uniform_grid : `RectGrid`
+        The resulting uniform grid.
+
     See Also
     --------
-    uniform_sampling_fromintv :
+    uniform_grid_fromintv :
         sample a given interval product
     odl.discr.partition.uniform_partition :
         divide implicitly defined interval product into equally
@@ -1197,25 +1118,28 @@ def uniform_sampling(min_pt, max_pt, shape, nodes_on_bdry=True):
 
     Examples
     --------
-    >>> grid = odl.uniform_sampling([-1.5, 2], [-0.5, 3], (3, 3))
+    By default, the min/max points are included in the grid:
+
+    >>> grid = odl.uniform_grid([-1.5, 2], [-0.5, 3], (3, 3))
     >>> grid.coord_vectors
     (array([-1.5, -1. , -0.5]), array([ 2. ,  2.5,  3. ]))
 
-    To have the nodes in the "middle", use ``nodes_on_bdry=False``:
+    If ``shape`` is supposed to refer to small subvolumes, and the grid
+    should be their centers, use the option ``nodes_on_bdry=False``:
 
-    >>> grid = odl.uniform_sampling([-1.5, 2], [-0.5, 3], (2, 2),
-    ...                             nodes_on_bdry=False)
+    >>> grid = odl.uniform_grid([-1.5, 2], [-0.5, 3], (2, 2),
+    ...                         nodes_on_bdry=False)
     >>> grid.coord_vectors
     (array([-1.25, -0.75]), array([ 2.25,  2.75]))
 
     In 1D, we don't need sequences:
 
-    >>> grid = odl.uniform_sampling(0, 1, 3)
+    >>> grid = odl.uniform_grid(0, 1, 3)
     >>> grid.coord_vectors
     (array([ 0. ,  0.5,  1. ]),)
     """
-    return uniform_sampling_fromintv(IntervalProd(min_pt, max_pt), shape,
-                                     nodes_on_bdry=nodes_on_bdry)
+    return uniform_grid_fromintv(IntervalProd(min_pt, max_pt), shape,
+                                 nodes_on_bdry=nodes_on_bdry)
 
 
 if __name__ == '__main__':

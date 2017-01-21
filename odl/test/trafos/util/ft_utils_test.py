@@ -46,7 +46,7 @@ sign = simple_fixture('sign', ['-', '+'])
 def test_reciprocal_grid_1d(halfcomplex, shift, parity):
 
     shape = 10 if parity == 'even' else 11
-    grid = odl.uniform_sampling(0, 1, shape=shape)
+    grid = odl.uniform_grid(0, 1, shape=shape)
     s = grid.stride
     n = np.array(grid.shape)
 
@@ -98,7 +98,7 @@ def test_reciprocal_grid_1d(halfcomplex, shift, parity):
 
 def test_reciprocal_grid_nd():
 
-    grid = odl.uniform_sampling([0] * 3, [1] * 3, shape=(3, 4, 5))
+    grid = odl.uniform_grid([0] * 3, [1] * 3, shape=(3, 4, 5))
     s = grid.stride
     n = np.array(grid.shape)
 
@@ -118,7 +118,7 @@ def test_reciprocal_grid_nd():
 
 def test_reciprocal_grid_nd_shift_list():
 
-    grid = odl.uniform_sampling([0] * 3, [1] * 3, shape=(3, 4, 5))
+    grid = odl.uniform_grid([0] * 3, [1] * 3, shape=(3, 4, 5))
     s = grid.stride
     n = np.array(grid.shape)
     shift = [False, True, False]
@@ -141,7 +141,7 @@ def test_reciprocal_grid_nd_shift_list():
 
 def test_reciprocal_grid_nd_axes():
 
-    grid = odl.uniform_sampling([0] * 3, [1] * 3, shape=(3, 4, 5))
+    grid = odl.uniform_grid([0] * 3, [1] * 3, shape=(3, 4, 5))
     s = grid.stride
     n = np.array(grid.shape)
     axes_list = [[1, -1], [0], 0, [0, 2, 1], [2, 0]]
@@ -173,7 +173,7 @@ def test_reciprocal_grid_nd_axes():
 
 def test_reciprocal_grid_nd_halfcomplex():
 
-    grid = odl.uniform_sampling([0] * 3, [1] * 3, shape=(3, 4, 5))
+    grid = odl.uniform_grid([0] * 3, [1] * 3, shape=(3, 4, 5))
     s = grid.stride
     n = np.array(grid.shape)
     stride_last = 2 * np.pi / (s[-1] * n[-1])

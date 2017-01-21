@@ -552,11 +552,10 @@ def test_uniform_init_raise():
     with pytest.raises(ValueError):
         uniform_grid(minpt, maxpt_with_inf, shape)
 
-    # Shape casting to int raises a TypeError
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         uniform_grid(minpt, maxpt, shape_with_nan)
 
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         uniform_grid(minpt, maxpt, shape_with_inf)
 
     maxpt_smaller_minpt1 = (0.7, 0, 1)
