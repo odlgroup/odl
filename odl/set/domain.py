@@ -225,7 +225,8 @@ class IntervalProd(Set):
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        return hash(type(self)) ^ hash(self.min_pt) ^ hash(self.max_pt)
+        return (hash(type(self)) ^
+                hash(list(self.min_pt)) ^ hash(list(self.max_pt)))
 
     def approx_contains(self, point, atol):
         """Return ``True`` if ``point`` is "almost" contained in this set.

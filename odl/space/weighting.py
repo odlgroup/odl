@@ -409,7 +409,8 @@ class MatrixWeighting(Weighting):
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        return super().__hash__() ^ hash(self.matrix)
+        # TODO: Better hash for matrix?
+        return super().__hash__() ^ hash(self.matrix.tostring())
 
     def equiv(self, other):
         """Test if other is an equivalent weighting.
@@ -605,7 +606,8 @@ class ArrayWeighting(Weighting):
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        return super().__hash__() ^ hash(self.array)
+        # TODO: Better hash for array?
+        return super().__hash__() ^ hash(self.array.tostring())
 
     def equiv(self, other):
         """Return True if other is an equivalent weighting.
