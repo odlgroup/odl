@@ -61,6 +61,7 @@ test_path = os.path.join(root_path, 'odl', 'test')
 
 
 def find_tests():
+    """Discover the test files for packaging."""
     tests = []
     for path, _, filenames in os.walk(os.path.join(root_path, test_path)):
         for filename in filenames:
@@ -71,6 +72,14 @@ def find_tests():
                 tests.append(os.path.join(path, filename))
 
     return tests
+
+
+# Determine version from top-level package __init__.py file
+with open(os.path.join(root_path, 'odl', '__init__.py')) as f:
+    for line in f:
+        if line.startswith('__version__'):
+            version = line.strip().split()[-1][1:-1]
+            break
 
 
 long_description = """
@@ -102,7 +111,7 @@ Features
 setup(
     name='odl',
 
-    version='0.5.4.dev0',
+    version=version,
 
     description='Operator Discretization Library',
     long_description=long_description,
