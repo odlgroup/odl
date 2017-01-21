@@ -197,6 +197,7 @@ def test_equals():
     assert not interval1 == rectangle1
     assert rectangle1 == rectangle1
     assert rectangle2 == rectangle2
+    assert rectangle1 != rectangle3
     assert not rectangle1 == rectangle3
 
     r1_1 = IntervalProd(-np.inf, np.inf)
@@ -212,6 +213,33 @@ def test_equals():
     for non_interval in [1, 1j, np.array([1, 2])]:
         assert interval1 != non_interval
         assert rectangle1 != non_interval
+
+
+def test_hash():
+    interval1 = IntervalProd(1, 2)
+    interval2 = IntervalProd(1, 2)
+    interval3 = IntervalProd([1], [2])
+    interval4 = IntervalProd(2, 3)
+    rectangle1 = IntervalProd([1, 2], [2, 3])
+    rectangle2 = IntervalProd((1, 2), (2, 3))
+    rectangle3 = IntervalProd([0, 2], [2, 3])
+
+    assert hash(interval1) == hash(interval1)
+    assert hash(interval1) == hash(interval2)
+    assert hash(interval1) == hash(interval3)
+    assert hash(interval1) != hash(interval4)
+    assert hash(rectangle1) == hash(rectangle1)
+    assert hash(rectangle2) == hash(rectangle2)
+    assert hash(rectangle2) != hash(rectangle3)
+
+    r1_1 = IntervalProd(-np.inf, np.inf)
+    r1_2 = IntervalProd(-np.inf, np.inf)
+    positive_reals = IntervalProd(0, np.inf)
+    assert hash(r1_1) == hash(r1_1)
+    assert hash(r1_1) == hash(r1_2)
+
+    assert hash(positive_reals) == hash(positive_reals)
+    assert hash(positive_reals) != hash(r1_1)
 
 
 def test_contains():

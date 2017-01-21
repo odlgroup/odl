@@ -138,8 +138,8 @@ class FunctionSetMapping(Operator):
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        return (hash(type(self)) ^ hash(self.domain) ^ hash(self.range) ^
-                hash(self.partition) ^ hash(self.order))
+        return hash((type(self), self.domain, self.range, self.partition,
+                     self.order))
 
     @property
     def partition(self):

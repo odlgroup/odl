@@ -121,8 +121,8 @@ class Weighting(object):
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        return (hash(type(self)) ^ hash(self.impl) ^ hash(self.exponent) ^
-                hash(self.dist_using_inner))
+        return hash((type(self), self.impl, self.exponent,
+                     self.dist_using_inner))
 
     def equiv(self, other):
         """Test if ``other`` is an equivalent weighting.

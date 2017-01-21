@@ -162,6 +162,38 @@ def test_init_weighting(exponent):
         assert spc.weighting == weight
 
 
+def test_equals_space(exponent):
+    x1 = NumpyFn(3, exponent=exponent)
+    x2 = NumpyFn(3, exponent=exponent)
+    y = NumpyFn(4, exponent=exponent)
+
+    assert x1 is x1
+    assert x1 is not x2
+    assert x1 is not y
+    assert x1 == x1
+    assert x1 == x2
+    assert x1 != y
+    assert hash(x1) == hash(x2)
+    assert hash(x1) != hash(y)
+
+
+def test_equals_vec(exponent):
+    r3 = NumpyFn(3, exponent=exponent)
+    r4 = NumpyFn(4, exponent=exponent)
+    x1 = r3.element([1, 2, 3])
+    x2 = r3.element([1, 2, 3])
+    y = r3.element([2, 2, 3])
+    z = r4.element([1, 2, 3, 4])
+
+    assert x1 is x1
+    assert x1 is not x2
+    assert x1 is not y
+    assert x1 == x1
+    assert x1 == x2
+    assert x1 != y
+    assert x1 != z
+
+
 def test_astype():
     rn = odl.rn(3, weighting=1.5)
     cn = odl.cn(3, weighting=1.5)

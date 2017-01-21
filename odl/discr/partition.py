@@ -467,7 +467,7 @@ class RectPartition(object):
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        return hash(type(self)) ^ hash(self.set) ^ hash(self.grid)
+        return hash((type(self), self.set, self.grid))
 
     def __ne__(self, other):
         """Return ``self != other``."""

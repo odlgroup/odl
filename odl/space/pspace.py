@@ -225,7 +225,7 @@ class ProductSpace(LinearSpace):
         norm = kwargs.pop('norm', None)
         inner = kwargs.pop('inner', None)
         weighting = kwargs.pop('weighting', None)
-        exponent = kwargs.pop('exponent', 2.0)
+        exponent = float(kwargs.pop('exponent', 2.0))
         dist_using_inner = bool(kwargs.pop('dist_using_inner', False))
         if kwargs:
             raise TypeError('got unexpected keyword arguments: {}'
@@ -560,7 +560,7 @@ class ProductSpace(LinearSpace):
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        return hash(type(self)) ^ hash(self.spaces) ^ hash(self.weighting)
+        return hash((type(self), self.spaces, self.weighting))
 
     def __getitem__(self, indices):
         """Return ``self[indices]``."""

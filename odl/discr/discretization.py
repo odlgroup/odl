@@ -226,9 +226,10 @@ class DiscretizedSet(NtuplesBase):
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        return (NtuplesBase.__hash__(self) ^
-                hash(self.uspace) ^ hash(self.dspace) ^
-                hash(self.__sampling) ^ hash(self.__interpolation))
+
+        return hash((NtuplesBase.__hash__(self),
+                     self.uspace, self.dspace, self.__sampling,
+                     self.__interpolation))
 
     @property
     def impl(self):

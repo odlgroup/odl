@@ -186,8 +186,7 @@ class FunctionSet(Set):
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        return (hash(type(self)) ^ hash(self.domain) ^ hash(self.range) ^
-                hash(self.out_dtype))
+        return hash((type(self), self.domain, self.range, self.out_dtype))
 
     def __contains__(self, other):
         """Return ``other in self``.

@@ -270,7 +270,7 @@ class Strings(Set):
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        return hash(type(self)) ^ hash(self.length)
+        return hash((type(self), self.length))
 
     def element(self, inp=None):
         """Return an element from ``inp`` or from scratch."""
@@ -561,7 +561,7 @@ class CartesianProduct(Set):
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        return hash(type(self)) ^ hash(self.sets)
+        return hash((type(self), self.sets))
 
     def element(self, inp=None):
         """Create a `CartesianProduct` element.
