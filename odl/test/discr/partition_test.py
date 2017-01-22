@@ -95,13 +95,13 @@ def test_equals():
     vec2 = np.array([-4, -2, 0, 2, 4])
 
     part1 = odl.RectPartition(odl.IntervalProd(1, 6),
-                              odl.TensorGrid(vec1))
+                              odl.RectGrid(vec1))
     part2 = odl.RectPartition(odl.IntervalProd([1, -5], [6, 5]),
-                              odl.TensorGrid(vec1, vec2))
+                              odl.RectGrid(vec1, vec2))
     part2_again = odl.RectPartition(odl.IntervalProd([1, -5], [6, 5]),
-                                    odl.TensorGrid(vec1, vec2))
+                                    odl.RectGrid(vec1, vec2))
     part2_rev = odl.RectPartition(odl.IntervalProd([-5, 1], [5, 6]),
-                                  odl.TensorGrid(vec2, vec1))
+                                  odl.RectGrid(vec2, vec1))
 
     _test_eq(part1, part1)
     _test_eq(part2, part2)

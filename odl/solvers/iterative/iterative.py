@@ -43,9 +43,7 @@ def landweber(op, x, rhs, niter=1, omega=1, projection=None, callback=None):
     Parameters
     ----------
     op : `Operator`
-        Operator in the inverse problem. It must have a `Operator.derivative`
-        property, which returns a new operator which in turn has an
-        `Operator.adjoint` property, i.e. ``op.derivative(x).adjoint`` must be
+        Operator in the inverse problem. ``op.derivative(x).adjoint`` must be
         well-defined for ``x`` in the operator domain.
     x : ``op.domain`` element
         Element to which the result is written. Its initial value is
@@ -54,7 +52,7 @@ def landweber(op, x, rhs, niter=1, omega=1, projection=None, callback=None):
     rhs : ``op.range`` element
         Right-hand side of the equation defining the inverse problem.
     niter : int, optional
-        Maximum number of iterations.
+        Number of iterations.
     omega : positive float, optional
         Relaxation parameter in the iteration.
     projection : callable, optional
@@ -155,7 +153,7 @@ def conjugate_gradient(op, x, rhs, niter=1, callback=None):
     rhs : ``op.range`` element
         Right-hand side of the equation defining the inverse problem.
     niter : int, optional
-        Maximum number of iterations.
+        Number of iterations.
     callback : callable, optional
         Object executing code per iteration, e.g. plotting each iterate.
 
@@ -242,7 +240,7 @@ Conjugate_gradient_on_the_normal_equations>`_.
     rhs : ``op.range`` element
         Right-hand side of the equation defining the inverse problem
     niter : int, optional
-        Maximum number of iterations.
+        Number of iterations.
     callback : callable, optional
         Object executing code per iteration, e.g. plotting each iterate.
 
@@ -409,11 +407,8 @@ def kaczmarz(ops, x, rhs, niter=1, omega=1, projection=None,
     Parameters
     ----------
     ops : sequence of `Operator`'s
-        Operators in the inverse problem. They must have a
-        `Operator.derivative` property, which returns a new operator which in
-        turn has an `Operator.adjoint` property, i.e.
-        ``op[i].derivative(x).adjoint`` must be well-defined for ``x`` in the
-        operator domain and for all ``i``.
+        Operators in the inverse problem. ``op[i].derivative(x).adjoint`` must
+        be well-defined for ``x`` in the operator domain and for all ``i``.
     x : ``op.domain`` element
         Element to which the result is written. Its initial value is
         used as starting point of the iteration, and its values are
@@ -421,8 +416,8 @@ def kaczmarz(ops, x, rhs, niter=1, omega=1, projection=None,
     rhs : sequence of ``ops[i].range`` elements
         Right-hand side of the equation defining the inverse problem.
     niter : int, optional
-        Maximum number of iterations
-    omega : positive float or sequence of positive float, optional
+        Number of iterations.
+    omega : positive float or sequence of positive floats, optional
         Relaxation parameter in the iteration. If a single float is given the
         same step is used for all operators, otherwise separate steps are used.
     projection : callable, optional
@@ -443,8 +438,9 @@ def kaczmarz(ops, x, rhs, niter=1, omega=1, projection=None,
     for a given :math:`y_n \\in \mathcal{Y}_n`, i.e. an approximate
     solution :math:`x^*` to
 
-        :math:`\min_{x\\in \mathcal{X}}
-        \\sum_{i=1}^n \| \mathcal{A}_i(x) - y_i \|_{\mathcal{Y}_i}^2`
+    .. math::
+        \min_{x\\in \mathcal{X}}
+        \\sum_{i=1}^n \| \mathcal{A}_i(x) - y_i \|_{\mathcal{Y}_i}^2
 
     for a (Frechet-) differentiable operator
     :math:`\mathcal{A}: \mathcal{X} \\to \mathcal{Y}` between Hilbert
@@ -453,24 +449,25 @@ def kaczmarz(ops, x, rhs, niter=1, omega=1, projection=None,
     iteration
 
     .. math::
-        x_{k+1} = x_k - \omega_{[i]} \ \partial \mathcal{A}_{[i]}(x)^*
-                                 (\mathcal{A}_{[i]}(x_k) - y_{[i]}),
+        x_{k+1} = x_k - \omega_{[k]} \ \partial \mathcal{A}_{[k]}(x_k)^*
+                                 (\mathcal{A}_{[k]}(x_k) - y_{[k]}),
 
-    where :math:`\partial \mathcal{A}_{[i]}(x)` is the Frechet derivative
-    of :math:`\mathcal{A}_{[i]}` at :math:`x`, :math:`\omega_{[i]}` is a
-    relaxation parameter and :math:`[i] := i \\text{ mod } n`.
+    where :math:`\partial \mathcal{A}_{[k]}(x_k)` is the Frechet derivative
+    of :math:`\mathcal{A}_{[k]}` at :math:`x_k`, :math:`\omega_{[k]}` is a
+    relaxation parameter and :math:`[k] := k \\text{ mod } n`.
 
     For linear problems, a choice
-    :math:`0 < \omega_{[i]} < 2/\\lVert \mathcal{A}_{[i]}^2\\rVert` guarantees
-    convergence, where :math:`\|\mathcal{A}_{[i]}\|` stands for the
-    operator norm of :math:`\mathcal{A}_{[i]}`.
+    :math:`0 < \omega_i < 2/\\lVert \mathcal{A}_{i}^2\\rVert` guarantees
+    convergence, where :math:`\|\mathcal{A}_{i}\|` stands for the
+    operator norm of :math:`\mathcal{A}_{i}`.
 
     This implementation uses a minimum amount of memory copies by
     applying re-usable temporaries and in-place evaluation.
 
     The method is also described in a
     `Wikipedia article
-    <https://en.wikipedia.org/wiki/Kaczmarz_method>`_.
+    <https://en.wikipedia.org/wiki/Kaczmarz_method>`_. and in Natterer, F.
+    Mathematical Methods in Image Reconstruction, section 5.3.2.
 
     See Also
     --------
