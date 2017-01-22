@@ -168,8 +168,9 @@ def test_astra_projection_geometry():
     apart = odl.uniform_partition(0, 2 * np.pi, 5)
     dpart = odl.uniform_partition(-40, 40, 10)
 
-    # motion sampling grid, detector sampling grid but not RegularGrid
-    dpart_0 = odl.RectPartition(odl.IntervalProd(0, 0), odl.TensorGrid([0]))
+    # motion sampling grid, detector sampling grid but not uniform
+    dpart_0 = odl.RectPartition(odl.IntervalProd(0, 3),
+                                odl.RectGrid([0, 1, 3]))
     geom_p2d = odl.tomo.Parallel2dGeometry(apart, dpart=dpart_0)
     with pytest.raises(ValueError):
         odl.tomo.astra_projection_geometry(geom_p2d)

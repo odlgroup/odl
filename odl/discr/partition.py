@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Partitons of interval products based on tensor grids.
+"""Partitons of interval products based on rectilinear grids.
 
 A partition of a set is a finite collection of nonempty, pairwise
 disjoint subsets whose union is the original set. The partitions
@@ -31,7 +31,7 @@ from builtins import object, range, super, zip
 
 import numpy as np
 
-from odl.discr.grid import TensorGrid, RegularGrid, uniform_sampling_fromintv
+from odl.discr.grid import RectGrid, uniform_grid_fromintv
 from odl.set import IntervalProd
 from odl.util import (
     normalized_index_expression, normalized_nodes_on_bdry,
@@ -46,7 +46,7 @@ __all__ = ('RectPartition', 'uniform_partition_fromintv',
 
 class RectPartition(object):
 
-    """Rectangular partition by hypercubes based on `TensorGrid`.
+    """Rectangular partition by hypercubes based on `RectGrid`.
 
     In 1d, a partition of an interval is implicitly defined by a
     collection of points x[0], ..., x[N-1] (a grid) which are chosen to
@@ -64,15 +64,15 @@ class RectPartition(object):
         ----------
         intv_prod : `IntervalProd`
             Set to be partitioned
-        grid : `TensorGrid`
+        grid : `RectGrid`
             Spatial points supporting the partition. They must be
             contained in ``intv_prod``.
         """
         if not isinstance(intv_prod, IntervalProd):
             raise TypeError('{!r} is not an IntervalProd instance'
                             ''.format(intv_prod))
-        if not isinstance(grid, TensorGrid):
-            raise TypeError('{!r} is not a TensorGrid instance'
+        if not isinstance(grid, RectGrid):
+            raise TypeError('{!r} is not a RectGrid instance'
                             ''.format(grid))
 
         # More conclusive error than the one from contains_set
@@ -114,7 +114,7 @@ class RectPartition(object):
         Examples
         --------
         >>> rect = odl.IntervalProd([0, -1], [1, 2])
-        >>> grid = odl.TensorGrid([0, 1], [-1, 0, 2])
+        >>> grid = odl.RectGrid([0, 1], [-1, 0, 2])
         >>> part = odl.RectPartition(rect, grid)
         >>> part.cell_boundary_vecs
         (array([ 0. ,  0.5,  1. ]), array([-1. , -0.5,  1. ,  2. ]))
@@ -219,14 +219,26 @@ class RectPartition(object):
 
     @property
     def grid(self):
-        """`TensorGrid` defining this partition."""
+        """`RectGrid` defining this partition."""
         return self.__grid
 
-    # TensorGrid related pass-through methods and derived properties
+    # RectGrid related pass-through methods and derived properties
+    @property
+    def is_uniform_byaxis(self):
+        """Boolean tuple showing uniformity of ``self.grid`` per axis.
+
+        Examples
+        --------
+        >>> part = nonuniform_partition([0, 1, 3], [1, 2, 3])
+        >>> part.is_uniform_byaxis
+        (False, True)
+        """
+        return self.grid.is_uniform_byaxis
+
     @property
     def is_uniform(self):
-        """``True`` if ``self.grid`` is a `RegularGrid`."""
-        return isinstance(self.grid, RegularGrid)
+        """``True`` if ``self.grid`` is uniform."""
+        return self.grid.is_uniform
 
     @property
     def ndim(self):
@@ -316,7 +328,7 @@ class RectPartition(object):
         fractions 1.5 and 0.5.
 
         >>> rect = odl.IntervalProd([0, -2], [1.5, 2])
-        >>> grid = odl.TensorGrid([0, 1], [-1, 0, 2])
+        >>> grid = odl.RectGrid([0, 1], [-1, 0, 2])
         >>> part = odl.RectPartition(rect, grid)
         >>> part.boundary_cell_fractions
         ((0.5, 1.0), (1.5, 0.5))
@@ -355,7 +367,7 @@ class RectPartition(object):
         are [0.5, 0.5] x [0.5, 1.5, 1]:
 
         >>> rect = odl.IntervalProd([0, -1], [1, 2])
-        >>> grid = odl.TensorGrid([0, 1], [-1, 0, 2])
+        >>> grid = odl.RectGrid([0, 1], [-1, 0, 2])
         >>> part = odl.RectPartition(rect, grid)
         >>> part.cell_boundary_vecs
         (array([ 0. ,  0.5,  1. ]), array([-1. , -0.5,  1. ,  2. ]))
@@ -379,7 +391,7 @@ class RectPartition(object):
     def cell_sides(self):
         """Side lengths of all 'inner' cells of a uniform partition.
 
-        Only defined if ``self.grid`` is a `RegularGrid`.
+        Only defined if ``self.grid`` is uniform.
 
         Examples
         --------
@@ -389,7 +401,7 @@ class RectPartition(object):
         i.e. the inner cell has side lengths 0.5 x 1.5:
 
         >>> rect = odl.IntervalProd([0, -1], [1, 2])
-        >>> grid = odl.RegularGrid([0, -1], [1, 2], (3, 3))
+        >>> grid = odl.uniform_grid([0, -1], [1, 2], (3, 3))
         >>> part = odl.RectPartition(rect, grid)
         >>> part.cell_sides
         array([ 0.5,  1.5])
@@ -407,7 +419,7 @@ class RectPartition(object):
     def cell_volume(self):
         """Volume of the 'inner' cells of a uniform partition.
 
-        Only defined if ``self.grid`` is a `RegularGrid`.
+        Only defined if ``self.grid`` is uniform.
 
         Examples
         --------
@@ -417,7 +429,7 @@ class RectPartition(object):
         i.e. the inner cell has side lengths 0.5 x 1.5:
 
         >>> rect = odl.IntervalProd([0, -1], [1, 2])
-        >>> grid = odl.RegularGrid([0, -1], [1, 2], (3, 3))
+        >>> grid = odl.uniform_grid([0, -1], [1, 2], (3, 3))
         >>> part = odl.RectPartition(rect, grid)
         >>> part.cell_sides
         array([ 0.5,  1.5])
@@ -469,7 +481,7 @@ class RectPartition(object):
         Examples
         --------
         >>> intvp = odl.IntervalProd([-1, 1, 4, 2], [3, 6, 5, 7])
-        >>> grid = odl.TensorGrid([-1, 0, 3], [2, 4], [5], [2, 4, 7])
+        >>> grid = odl.RectGrid([-1, 0, 3], [2, 4], [5], [2, 4, 7])
         >>> part = odl.RectPartition(intvp, grid)
         >>> part
         nonuniform_partition(
@@ -480,19 +492,7 @@ class RectPartition(object):
             min_pt=[-1.0, 1.0, 4.0, 2.0], max_pt=[3.0, 6.0, 5.0, 7.0]
         )
 
-        Indexing picks out sub-intervals (compare with the boundary
-        vectors):
-
-        >>> part[0, 0, 0, 0]
-        nonuniform_partition(
-            [-1.0],
-            [2.0],
-            [5.0],
-            [2.0],
-            min_pt=[-1.0, 1.0, 4.0, 2.0], max_pt=[-0.5, 3.0, 5.0, 3.0]
-        )
-
-        Taking an advanced slice (every second along the first axis,
+        Take an advanced slice (every second along the first axis,
         the last in the last axis and everything in between):
 
         >>> part[::2, ..., -1]
@@ -629,10 +629,11 @@ class RectPartition(object):
 
         See Also
         --------
-        TensorGrid.squeeze
+        RectGrid.squeeze
         IntervalProd.squeeze
         """
-        newset = self.set[self.grid.inondeg]
+        nondegen_indcs = np.flatnonzero(self.grid.nondegen_byaxis)
+        newset = self.set[nondegen_indcs]
         return RectPartition(newset, self.grid.squeeze())
 
     def index(self, value, floating=False):
@@ -770,10 +771,6 @@ class RectPartition(object):
 
         return RectPartitionByAxis()
 
-    def __str__(self):
-        """Return ``str(self)``."""
-        return 'partition of {} using {}'.format(self.set, self.grid)
-
     def __repr__(self):
         """Return ``repr(self)``."""
         bdry_fracs = np.vstack(self.boundary_cell_fractions)
@@ -833,6 +830,8 @@ class RectPartition(object):
             sig_str = signature_string(posargs, optargs,
                                        sep=[',\n', ', ', ',\n'])
             return '{}(\n{}\n)'.format(constructor, indent_rows(sig_str))
+
+    __str__ = __repr__
 
 
 def uniform_partition_fromintv(intv_prod, shape, nodes_on_bdry=False):
@@ -897,10 +896,7 @@ def uniform_partition_fromintv(intv_prod, shape, nodes_on_bdry=False):
     >>> part.grid.coord_vectors[1]
     array([ 0.2,  0.6,  1. ])
     """
-
-    grid = uniform_sampling_fromintv(intv_prod, shape,
-                                     nodes_on_bdry=nodes_on_bdry)
-
+    grid = uniform_grid_fromintv(intv_prod, shape, nodes_on_bdry=nodes_on_bdry)
     return RectPartition(intv_prod, grid)
 
 
@@ -913,7 +909,7 @@ def uniform_partition_fromgrid(grid, min_pt=None, max_pt=None):
 
     Parameters
     ----------
-    grid : `TensorGrid`
+    grid : `RectGrid`
         Grid on which the partition is based
     min_pt, max_pt : float, sequence of floats, or dict
         Spatial points defining the lower/upper limits of the intervals
@@ -946,7 +942,7 @@ def uniform_partition_fromgrid(grid, min_pt=None, max_pt=None):
     Have ``min_pt`` and ``max_pt`` of the bounding box automatically
     calculated:
 
-    >>> grid = odl.RegularGrid(0, 1, 3)
+    >>> grid = odl.uniform_grid(0, 1, 3)
     >>> grid.coord_vectors
     (array([ 0. ,  0.5,  1. ]),)
     >>> part = odl.uniform_partition_fromgrid(grid)
@@ -962,7 +958,7 @@ def uniform_partition_fromgrid(grid, min_pt=None, max_pt=None):
     Using dictionaries, selective axes can be explicitly set. The
     keys refer to axes, the values to the coordinates to use:
 
-    >>> grid = odl.RegularGrid([0, 0], [1, 1], (3, 3))
+    >>> grid = odl.uniform_grid([0, 0], [1, 1], (3, 3))
     >>> part = odl.uniform_partition_fromgrid(grid,
     ...                                       min_pt={0: -1}, max_pt={-1: 3})
     >>> part.cell_boundary_vecs[0]
@@ -1304,16 +1300,7 @@ def nonuniform_partition(*coord_vecs, **kwargs):
                 max_pt[i] = coords[-1] + (coords[-1] - coords[-2]) / 2.0
 
     interval = IntervalProd(min_pt, max_pt)
-
-    if all(np.allclose(np.diff(v), (v[1] - v[0])) for v in coord_vecs):
-        g_min_pt, g_max_pt, g_shape = [], [], []
-        for v in coord_vecs:
-            g_min_pt.append(v[0])
-            g_max_pt.append(v[-1])
-            g_shape.append(len(v))
-        grid = RegularGrid(g_min_pt, g_max_pt, g_shape)
-    else:
-        grid = TensorGrid(*coord_vecs)
+    grid = RectGrid(*coord_vecs)
     return RectPartition(interval, grid)
 
 

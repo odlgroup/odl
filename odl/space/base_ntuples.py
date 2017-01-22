@@ -458,8 +458,8 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
         odl.util.graphics.show_discrete_data : Underlying implementation
         """
         from odl.util.graphics import show_discrete_data
-        from odl.discr import RegularGrid
-        grid = RegularGrid(0, self.size - 1, self.size)
+        from odl.discr import uniform_grid
+        grid = uniform_grid(0, self.size - 1, self.size)
         return show_discrete_data(self.asarray(), grid, title=title,
                                   method=method, force_show=force_show,
                                   fig=fig, **kwargs)

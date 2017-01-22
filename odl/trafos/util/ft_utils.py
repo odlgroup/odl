@@ -25,8 +25,9 @@ from builtins import range
 
 import numpy as np
 
-from odl.discr import (RegularGrid, DiscreteLp, uniform_partition_fromgrid,
-                       uniform_discr_frompartition)
+from odl.discr import (
+    uniform_grid, DiscreteLp, uniform_partition_fromgrid,
+    uniform_discr_frompartition)
 from odl.set import RealNumbers
 from odl.util import (
     fast_1d_tensor_mult,
@@ -84,8 +85,8 @@ def reciprocal_grid(grid, shift=True, axes=None, halfcomplex=False):
 
     Parameters
     ----------
-    grid : `RegularGrid`
-        Original sampling grid
+    grid : uniform `RectGrid`
+        Original sampling grid,.
     shift : bool or sequence of bools, optional
         If ``True``, the grid is shifted by half a stride in the negative
         direction. With a sequence, this option is applied separately on
@@ -102,7 +103,7 @@ def reciprocal_grid(grid, shift=True, axes=None, halfcomplex=False):
 
     Returns
     -------
-    reciprocal_grid : `RegularGrid`
+    reciprocal_grid : uniform `RectGrid`
         The reciprocal grid.
     """
     if axes is None:
@@ -158,7 +159,7 @@ def reciprocal_grid(grid, shift=True, axes=None, halfcomplex=False):
         else:
             rmax[axes[-1]] = 0
 
-    return RegularGrid(rmin, rmax, rshape)
+    return uniform_grid(rmin, rmax, rshape)
 
 
 def realspace_grid(recip_grid, x0, axes=None, halfcomplex=False,
@@ -195,7 +196,7 @@ def realspace_grid(recip_grid, x0, axes=None, halfcomplex=False,
 
     Parameters
     ----------
-    recip_grid : `RegularGrid`
+    recip_grid : uniform `RectGrid`
         Sampling grid in reciprocal space.
     x0 : `array-like`
         Desired minimum point of the real space grid.
@@ -213,8 +214,8 @@ def realspace_grid(recip_grid, x0, axes=None, halfcomplex=False,
 
     Returns
     -------
-    irecip : `RegularGrid`
-        The inverse reciprocal grid
+    irecip : uniform `RectGrid`
+        The inverse reciprocal grid.
     """
     if axes is None:
         axes = list(range(recip_grid.ndim))
@@ -244,7 +245,7 @@ def realspace_grid(recip_grid, x0, axes=None, halfcomplex=False,
     irstride[axes] = 2 * np.pi / (irshape[axes] * rstride[axes])
     irmax = irmin + (irshape - 1) * irstride
 
-    return RegularGrid(irmin, irmax, irshape)
+    return uniform_grid(irmin, irmax, irshape)
 
 
 def dft_preprocess_data(arr, shift=True, axes=None, sign='-', out=None):
@@ -437,9 +438,9 @@ def dft_postprocess_data(arr, real_grid, recip_grid, shift, axes,
     arr : `array-like`
         Array to be pre-processed. An array with real data type is
         converted to its complex counterpart.
-    real_grid : `RegularGrid`
-        Real space grid in the transform
-    recip_grid : `RegularGrid`
+    real_grid : uniform `RectGrid`
+        Real space grid in the transform.
+    recip_grid : uniform `RectGrid`
         Reciprocal grid in the transform
     shift : bool or sequence of bools
         If ``True``, the grid is shifted by half a stride in the negative

@@ -62,7 +62,7 @@ class FunctionSetMapping(Operator):
             discretized
         partition : `RectPartition`
             Partition of (a subset of) ``fset.domain`` based on a
-            `TensorGrid`
+            `RectGrid`.
         dspace : `NtuplesBase`
             Data space providing containers for the values of a
             discretized object. Its `NtuplesBase.size` must be equal
@@ -186,7 +186,7 @@ class PointCollocation(FunctionSetMapping):
             `Set.contains_set` method.
         partition : `RectPartition`
             Partition of (a subset of) ``ip_fset.domain`` based on a
-            `TensorGrid`
+            `RectGrid`
         dspace : `NtuplesBase`
             Data space providing containers for the values of a
             discretized object. Its `NtuplesBase.size` must be equal
@@ -205,10 +205,10 @@ class PointCollocation(FunctionSetMapping):
         >>> rect = odl.IntervalProd([1, 3], [2, 5])
         >>> funcset = odl.FunctionSpace(rect)
 
-        Partition the rectangle by a tensor grid:
+        Partition the rectangle by a rectilinear grid:
 
         >>> rect = odl.IntervalProd([1, 3], [2, 5])
-        >>> grid = odl.TensorGrid([1, 2], [3, 4, 5])
+        >>> grid = odl.RectGrid([1, 2], [3, 4, 5])
         >>> partition = odl.RectPartition(rect, grid)
         >>> rn = odl.rn(grid.size)
 
@@ -267,7 +267,7 @@ vectorization_guide.html>`_ for a detailed introduction.
 
         See Also
         --------
-        odl.discr.grid.TensorGrid.meshgrid
+        odl.discr.grid.RectGrid.meshgrid
         numpy.meshgrid
         """
         mesh = self.grid.meshgrid
@@ -476,7 +476,7 @@ class LinearInterpolation(FunctionSetMapping):
             `Set.contains_set` method.
         partition : `RectPartition`
             Partition of (a subset of) ``fspace.domain`` based on a
-            `TensorGrid`
+            `RectGrid`
         dspace : `FnBase`
             Data space providing containers for the values of a
             discretized object. Its `NtuplesBase.size` must be equal
@@ -556,7 +556,7 @@ class PerAxisInterpolation(FunctionSetMapping):
             `Set.contains_set` method.
         partition : `RectPartition`
             Partition of (a subset of) ``fspace.domain`` based on a
-            `TensorGrid`
+            `RectGrid`
         dspace : `FnBase`
             Data space providing containers for the values of a
             discretized object. Its `NtuplesBase.size` must be equal

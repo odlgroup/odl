@@ -79,7 +79,7 @@ def test_resizing_op_raise():
     with pytest.raises(TypeError):
         odl.ResizingOperator(odl.rn(5), ran_shp=(10,))
 
-    grid = odl.TensorGrid([0, 2, 3])
+    grid = odl.RectGrid([0, 2, 3])
     part = odl.RectPartition(odl.IntervalProd(0, 3), grid)
     fspace = odl.FunctionSpace(odl.IntervalProd(0, 3))
     dspace = odl.rn(3)

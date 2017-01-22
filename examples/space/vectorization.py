@@ -75,7 +75,7 @@ def numba_example():
 
     # Create a unform grid in [0, 1] x [0, 1] (fspace.domain) with 2000
     # samples per dimension.
-    grid = odl.uniform_sampling_fromintv(fspace.domain, [2000, 2000])
+    grid = odl.uniform_grid_fromintv(fspace.domain, [2000, 2000])
     # The points() method really creates all grid points (2000^2) and
     # stores them one-by-one (row-wise) in a large array with shape
     # (2000*2000, 2). Since the function expects points[i] to be the
