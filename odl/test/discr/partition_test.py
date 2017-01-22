@@ -75,6 +75,43 @@ def test_partition_init_raise():
         odl.RectPartition(odl.IntervalProd(min_pt_toolarge, max_pt), None)
 
 
+def _test_eq(x, y):
+    """Test equality of x and y."""
+    assert x == y
+    assert not x != y
+    assert hash(x) == hash(y)
+
+
+def _test_neq(x, y):
+    """Test non-equality of x and y."""
+    assert x != y
+    assert not x == y
+    assert hash(x) != hash(y)
+
+
+def test_equals():
+    """Test partition equality checks and hash."""
+    vec1 = np.array([2, 3, 4, 5])
+    vec2 = np.array([-4, -2, 0, 2, 4])
+
+    part1 = odl.RectPartition(odl.IntervalProd(1, 6),
+                              odl.TensorGrid(vec1))
+    part2 = odl.RectPartition(odl.IntervalProd([1, -5], [6, 5]),
+                              odl.TensorGrid(vec1, vec2))
+    part2_again = odl.RectPartition(odl.IntervalProd([1, -5], [6, 5]),
+                                    odl.TensorGrid(vec1, vec2))
+    part2_rev = odl.RectPartition(odl.IntervalProd([-5, 1], [5, 6]),
+                                  odl.TensorGrid(vec2, vec1))
+
+    _test_eq(part1, part1)
+    _test_eq(part2, part2)
+    _test_eq(part2, part2_again)
+
+    _test_neq(part1, part2)
+    _test_neq(part2, part2_rev)
+    assert part2 != (vec1, vec2)
+
+
 def test_partition_set():
     vec1 = np.array([2, 4, 5, 7])
     vec2 = np.array([-4, -3, 0, 1, 4])

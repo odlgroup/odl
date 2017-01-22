@@ -499,10 +499,8 @@ class RectGrid(Set):
     def __hash__(self):
         """Return ``hash(self)``."""
         # TODO: update with #841
-        hsh = hash(type(self))
-        for coord_vec in self.coord_vectors:
-            hsh ^= hash(coord_vec.tostring())
-        return hsh
+        coord_vec_str = tuple(cv.tostring() for cv in self.coord_vectors)
+        return hash((type(self), coord_vec_str))
 
     def approx_contains(self, other, atol):
         """Test if ``other`` belongs to this grid up to a tolerance.

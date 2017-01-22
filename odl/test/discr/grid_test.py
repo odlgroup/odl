@@ -151,7 +151,22 @@ def test_RectGrid_element():
     assert some_pt in grid
 
 
+def _test_eq(x, y):
+    """Test equality of x and y."""
+    assert x == y
+    assert not x != y
+    assert hash(x) == hash(y)
+
+
+def _test_neq(x, y):
+    """Test non-equality of x and y."""
+    assert x != y
+    assert not x == y
+    assert hash(x) != hash(y)
+
+
 def test_RectGrid_equals():
+    """Test grid equality checks and hash."""
     vec1 = np.array([2, 3, 4, 5])
     vec2 = np.array([-4, -2, 0, 2, 4])
 
@@ -160,14 +175,13 @@ def test_RectGrid_equals():
     grid2_again = RectGrid(vec1, vec2)
     grid2_rev = RectGrid(vec2, vec1)
 
-    assert grid1 == grid1
-    assert not grid1 != grid1
-    assert grid2 == grid2
-    assert not grid2 != grid2
-    assert grid2 == grid2_again
-    assert not grid1 == grid2
-    assert not grid2 == grid2_rev
-    assert not grid2 == (vec1, vec2)
+    _test_eq(grid1, grid1)
+    _test_eq(grid2, grid2)
+    _test_eq(grid2, grid2_again)
+
+    _test_neq(grid1, grid2)
+    _test_neq(grid2, grid2_rev)
+    assert grid2 != (vec1, vec2)
 
     # Fuzzy check
     grid1 = RectGrid(vec1, vec2)
