@@ -40,7 +40,7 @@ class TensorSet(Set):
 
     """Base class for sets of tensors of arbitrary type."""
 
-    def __init__(self, shape, dtype, order='C'):
+    def __init__(self, shape, dtype, order='K'):
         """Initialize a new instance.
 
         Parameters
@@ -51,9 +51,12 @@ class TensorSet(Set):
             Scalar data type of elements in this space. Can be provided
             in any way the `numpy.dtype` constructor understands, e.g.
             as built-in type or as a string.
-        order : {'C', 'F'}, optional
+        order : {'K', 'C', 'F'}, optional
             Axis ordering of the data storage. Only relevant for more
             than 1 axis.
+            For ``'C'`` and ``'F'``, elements are forced to use
+            contiguous memory in the respective ordering.
+            For ``'K'`` no contiguousness is enforced.
         """
         try:
             self.__shape = tuple(safe_int_conv(s) for s in shape)
@@ -64,12 +67,9 @@ class TensorSet(Set):
                              '{}'.format(shape))
 
         self.__dtype = np.dtype(dtype)
-        if self.ndim == 1:
-            self.__order = 'C'
-        else:
-            self.__order = str(order).upper()
-        if self.order not in ('C', 'F'):
-            raise ValueError("`order '' not understood".format(order))
+        self.__order = str(order).upper()
+        if self.order not in ('K', 'C', 'F'):
+            raise ValueError("`order '{}' not understood".format(order))
 
     @property
     def impl(self):
@@ -88,8 +88,21 @@ class TensorSet(Set):
 
     @property
     def order(self):
-        """Data storage order, either 'C' or 'F'."""
+        """Guaranteed data storage order in this space.
+
+        This is one of ``('C', 'F', 'K')``, where ``'K'`` means
+        "no guarantee".
+        """
         return self.__order
+
+    @property
+    def new_elem_order(self):
+        """Storage order for new elements in this space.
+
+        This is identical to `order` except for ``self.order == 'K'``,
+        where ``'C'`` is returned.
+        """
+        return 'F' if self.order == 'F' else 'C'
 
     @property
     def size(self):
@@ -211,16 +224,11 @@ class TensorSet(Set):
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = [self.shape, dtype_str(self.dtype)]
-        optargs = [('order', self.order, self.default_order())]
+        optargs = [('order', self.order, 'K')]
         return "{}({})".format(self.__class__.__name__,
                                signature_string(posargs, optargs))
 
     __str__ = __repr__
-
-    @staticmethod
-    def default_order():
-        """Return the default axis ordering of this implementation."""
-        raise NotImplementedError('abstract method')
 
     @staticmethod
     def available_dtypes():
@@ -243,6 +251,7 @@ class GeneralizedTensor(object):
 
     def __init__(self, space, *args, **kwargs):
         """Initialize a new instance."""
+        assert isinstance(space, TensorSet)
         self.__space = space
 
     @property
@@ -335,7 +344,7 @@ class GeneralizedTensor(object):
 
     @property
     def order(self):
-        """Data storage order, either ``'C'`` or ``'F'``."""
+        """Data storage order, either ``'C'``, ``'F'`` or ``'K'``."""
         return self.space.order
 
     @property
@@ -484,7 +493,7 @@ class TensorSpace(TensorSet, LinearSpace):
 
     """Base class for tensor spaces independent of implementation."""
 
-    def __init__(self, shape, dtype, order='C'):
+    def __init__(self, shape, dtype, order='K'):
         """Initialize a new instance.
 
         Parameters
@@ -496,8 +505,12 @@ class TensorSpace(TensorSet, LinearSpace):
             in any way the `numpy.dtype` constructor understands, e.g.
             as built-in type or as a string.
             Only scalar data types (numbers) are allowed.
-        order : {'C', 'F'}, optional
-            Axis ordering of the data storage.
+        order : {'K', 'C', 'F'}, optional
+            Axis ordering of the data storage. Only relevant for more
+            than 1 axis.
+            For ``'C'`` and ``'F'``, elements are forced to use
+            contiguous memory in the respective ordering.
+            For ``'K'`` no contiguousness is enforced.
         """
         TensorSet.__init__(self, shape, dtype, order)
 
@@ -553,16 +566,16 @@ class TensorSpace(TensorSet, LinearSpace):
         """The space corresponding to this space's `complex_dtype`."""
         return self.astype(self.complex_dtype)
 
-    def _astype(self, dtype):
-        """Internal helper for ``astype``.
+    def _astype(self, dtype, order):
+        """Internal helper for `astype`.
 
         Subclasses with differing init parameters should overload this
         method.
         """
-        return type(self)(self.shape, dtype=dtype, order=self.order,
+        return type(self)(self.shape, dtype=dtype, order=order,
                           weighting=getattr(self, 'weighting', None))
 
-    def astype(self, dtype):
+    def astype(self, dtype, order=None):
         """Return a copy of this space with new ``dtype``.
 
         Parameters
@@ -571,6 +584,13 @@ class TensorSpace(TensorSet, LinearSpace):
             Data type of the returned space. Can be given in any way
             `numpy.dtype` understands, e.g. as string (``'complex64'``)
             or data type (``complex``).
+        order : {'K', 'C', 'F'}, optional
+            Axis ordering of the data storage. Only relevant for more
+            than 1 axis.
+            For ``'C'`` and ``'F'``, elements are forced to use
+            contiguous memory in the respective ordering.
+            For ``'K'`` no contiguousness is enforced.
+            The default ``None`` is equivalent to ``self.order``.
 
         Returns
         -------
@@ -581,21 +601,24 @@ class TensorSpace(TensorSet, LinearSpace):
             # Need to filter this out since Numpy iterprets it as 'float'
             raise ValueError('unknown data type `None`')
 
+        if order is None:
+            order = self.order
+
         dtype = np.dtype(dtype)
-        if dtype == self.dtype:
+        if dtype == self.dtype and order == self.order:
             return self
 
         # Caching for real and complex versions (exact dtype mappings)
-        if dtype == self.__real_dtype:
+        if dtype == self.__real_dtype and order == self.order:
             if self.__real_space is None:
-                self.__real_space = self._astype(dtype)
+                self.__real_space = self._astype(dtype, self.order)
             return self.__real_space
-        elif dtype == self.__complex_dtype:
+        elif dtype == self.__complex_dtype and order == self.order:
             if self.__complex_space is None:
-                self.__complex_space = self._astype(dtype)
+                self.__complex_space = self._astype(dtype, self.order)
             return self.__complex_space
         else:
-            return self._astype(dtype)
+            return self._astype(dtype, order)
 
     @property
     def examples(self):
@@ -664,11 +687,7 @@ class TensorSpace(TensorSet, LinearSpace):
 
 class Tensor(GeneralizedTensor, LinearSpaceElement):
 
-    """Abstract class for representation of `TensorSpace` elements.
-
-    Defines abstract and concrete attributes and methods independent
-    of data representation.
-    """
+    """Abstract class for representation of `TensorSpace` elements."""
 
     __eq__ = LinearSpaceElement.__eq__
     copy = LinearSpaceElement.copy
