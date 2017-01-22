@@ -114,7 +114,7 @@ scalar_dtype = simple_fixture(name='dtype',
                               params=scalar_dtype_params,
                               fmt=' {name} = np.{value.name} ')
 
-order = simple_fixture(name='order', params=['C', 'F'])
+order = simple_fixture(name='order', params=['C', 'F', 'K'])
 
 
 # More complicated ones with non-trivial documentation

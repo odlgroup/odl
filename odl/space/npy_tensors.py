@@ -44,7 +44,7 @@ class NumpyTensorSet(TensorSet):
 
     impl = 'numpy'
 
-    def __init__(self, shape, dtype, order='C'):
+    def __init__(self, shape, dtype, order='K'):
         """Initialize a new instance.
 
         Parameters
@@ -55,8 +55,12 @@ class NumpyTensorSet(TensorSet):
             Data type of each element. Can be provided in any
             way the `numpy.dtype` function understands, e.g.
             as built-in type or as a string.
-        order : {'C', 'F'}, optional
-            Axis ordering of the data storage.
+        order : {'K', 'C', 'F'}, optional
+            Axis ordering of the data storage. Only relevant for more
+            than 1 axis.
+            For ``'C'`` and ``'F'``, elements are forced to use
+            contiguous memory in the respective ordering.
+            For ``'K'`` no contiguousness is enforced.
         """
         TensorSet.__init__(self, shape, dtype, order)
 
@@ -100,7 +104,7 @@ class NumpyTensorSet(TensorSet):
 
         Construction from data pointer:
 
-        >>> int_tset = odl.tensor_set((2, 3), dtype='int')
+        >>> int_tset = odl.tensor_set((2, 3), dtype='int', order='F')
         >>> x = int_tset.element([[1, 2, 3],
         ...                       [4, 5, 6]])
         >>> y = int_tset.element(data_ptr=x.data_ptr)
@@ -112,17 +116,21 @@ class NumpyTensorSet(TensorSet):
         [[1, -1, 3],
          [4, 5, 6]]
         """
-        # TODO: exactly the same code would work for NumpyNtuples, factor out!
         if inp is None:
             if data_ptr is None:
-                arr = np.empty(self.shape, dtype=self.dtype, order=self.order)
+                arr = np.empty(self.shape, dtype=self.dtype,
+                               order=self.new_elem_order)
                 return self.element_type(self, arr)
             else:
+                if self.order == 'K':
+                    raise ValueError("`data_ptr` cannot be used with 'K' "
+                                     "ordering")
                 ctype_array_def = ctypes.c_byte * self.nbytes
                 as_ctype_array = ctype_array_def.from_address(data_ptr)
                 as_numpy_array = np.ctypeslib.as_array(as_ctype_array)
-                arr = as_numpy_array.view(dtype=self.dtype).reshape(
-                    self.shape, order=self.order)
+                arr = as_numpy_array.view(dtype=self.dtype)
+                # TODO: check if self.order is correct here
+                arr = arr.reshape(self.shape, order=self.order)
                 return self.element_type(self, arr)
         else:
             if data_ptr is None:
@@ -130,9 +138,8 @@ class NumpyTensorSet(TensorSet):
                     return inp
                 else:
                     arr = np.array(inp, copy=False, dtype=self.dtype, ndmin=1,
-                                   order='A').reshape(self.shape,
-                                                      order=self.order)
-
+                                   order=self.order)
+                    arr = arr.reshape(self.shape)
                     return self.element_type(self, arr)
             else:
                 raise ValueError('cannot provide both `inp` and `data_ptr`')
@@ -151,7 +158,7 @@ class NumpyTensorSet(TensorSet):
         )
         """
         return self.element(np.zeros(self.shape, dtype=self.dtype,
-                                     order=self.order))
+                                     order=self.new_elem_order))
 
     def one(self):
         """Return a tensor of all ones.
@@ -167,12 +174,7 @@ class NumpyTensorSet(TensorSet):
         )
         """
         return self.element(np.ones(self.shape, dtype=self.dtype,
-                                    order=self.order))
-
-    @staticmethod
-    def default_order():
-        """Return the default axis ordering of this implementation."""
-        return 'C'
+                                    order=self.new_elem_order))
 
     @staticmethod
     def available_dtypes():
@@ -203,7 +205,7 @@ class NumpyTensorSet(TensorSet):
             posargs = [self.shape]
         constructor_name = 'tensor_set'
         posargs.append(dtype_str(self.dtype))
-        optargs = [('order', self.order, self.default_order())]
+        optargs = [('order', self.order, 'K')]
         return '{}({})'.format(constructor_name,
                                signature_string(posargs, optargs))
 
@@ -214,25 +216,18 @@ class NumpyGeneralizedTensor(GeneralizedTensor):
 
     def __init__(self, space, data):
         """Initialize a new instance."""
-        if not isinstance(space, NumpyTensorSet):
-            raise TypeError('`space` must be a `NumpyTensorSet` '
-                            'instance, got {!r}'.format(space))
-
-        if not isinstance(data, np.ndarray):
-            raise TypeError('`data` {!r} not a `numpy.ndarray` instance'
-                            ''.format(data))
-
-        if data.dtype != space.dtype:
-            raise TypeError('`data` {!r} not of dtype {!r}'
-                            ''.format(data, space.dtype))
-        self._data = data
-
+        assert isinstance(space, NumpyTensorSet)
+        assert isinstance(data, np.ndarray)
+        assert data.dtype == space.dtype
+        if space.order in ('C', 'F'):
+            assert data.flags[space.order + '_CONTIGUOUS']
+        self.__data = data
         GeneralizedTensor.__init__(self, space)
 
     @property
     def data(self):
         """The `numpy.ndarray` representing the data of ``self``."""
-        return self._data
+        return self.__data
 
     def asarray(self, out=None):
         """Extract the data of this array as a ``numpy.ndarray``.
@@ -404,8 +399,16 @@ class NumpyGeneralizedTensor(GeneralizedTensor):
         if np.isscalar(arr):
             return arr
         else:
-            return type(self.space)(arr.shape, dtype=self.dtype,
-                                    order=self.order).element(arr)
+            if (self.order in ('C', 'F') and
+                    arr.flags[self.order + '_CONTIGUOUS']):
+                out_spc_order = self.order
+            else:
+                # To preserve the array view for non-contiguous slices,
+                # we need to use 'K' for the space in that case.
+                out_spc_order = 'K'
+            out_spc = type(self.space)(arr.shape, dtype=self.dtype,
+                                       order=out_spc_order)
+            return out_spc.element(arr)
 
     def __setitem__(self, indices, values):
         """Implement ``self[indices] = values``.
@@ -436,9 +439,9 @@ class NumpyGeneralizedTensor(GeneralizedTensor):
         )
 
         Assignment from array-like structures or another tensor
-        (may be in a different space):
+        (allowed to be in a different space):
 
-        >>> tset = odl.tensor_set((2, 2), 'short')
+        >>> tset = odl.tensor_set((2, 2), dtype='short')
         >>> y = tset.element([[-1, 2],
         ...                   [0, 0]])
         >>> x[:, :2] = y
@@ -489,13 +492,13 @@ class NumpyGeneralizedTensor(GeneralizedTensor):
         Be aware of unsafe casts and over-/underflows, there
         will be warnings at maximum.
 
-        >>> tset = odl.tensor_set((2, 3), 'int8')
+        >>> tset = odl.tensor_set((2, 3), 'uint8')
         >>> x = tset.element([[0, 0, 0],
         ...                   [1, 1, 1]])
         >>> maxval = 255  # maximum signed 8-bit unsigned int
         >>> x[0, :] = maxval + 1
         >>> x
-        tensor_set((2, 3), 'int8').element(
+        tensor_set((2, 3), 'uint8').element(
         [[0, 0, 0],
          [1, 1, 1]]
         )
@@ -582,7 +585,6 @@ def _blas_is_applicable(*args):
 
 def _lincomb(a, x1, b, x2, out, dtype):
     """Raw linear combination depending on data type."""
-
     # Shortcut for small problems
     if x1.size < 100:  # small array optimization
         out.data[:] = a * x1.data + b * x2.data
@@ -668,24 +670,24 @@ class NumpyTensorSpace(TensorSpace, NumpyTensorSet):
     `NumpyTensor` class.
     """
 
-    def __init__(self, shape, dtype=None, order='C', **kwargs):
+    def __init__(self, shape, dtype=None, order='K', **kwargs):
         """Initialize a new instance.
 
         Parameters
         ----------
         shape : positive int or sequence of positive int
             Number of elements per axis of elements in this space.
-        dtype : optional
-            The data type of the storage array. For ``None``,
-            the default data type of this space is used.
-            Only scalar data types are allowed.
-
-            ``dtype`` can be given in any way the `numpy.dtype`
-            function understands, e.g. as built-in type or as a string.
-
-        order : {'C', 'F'}, optional
-            Axis ordering of the data storage.
-
+        dtype :
+            Data type of each element. Can be provided in any
+            way the `numpy.dtype` function understands, e.g.
+            as built-in type or as a string. For ``None``,
+            the `default_dtype` of this space is used.
+        order : {'K', 'C', 'F'}, optional
+            Axis ordering of the data storage. Only relevant for more
+            than 1 axis.
+            For ``'C'`` and ``'F'``, elements are forced to use
+            contiguous memory in the respective ordering.
+            For ``'K'`` no contiguousness is enforced.
         exponent : positive float, optional
             Exponent of the norm. For values other than 2.0, no
             inner product is defined.
@@ -1231,7 +1233,7 @@ class NumpyTensorSpace(TensorSpace, NumpyTensorSet):
                 self.dtype != self.default_dtype(self.field)):
             posargs.append(dtype_str(self.dtype))
 
-        optargs = [('order', self.order, self.default_order())]
+        optargs = [('order', self.order, 'K')]
         inner_str = signature_string(posargs, optargs)
         weight_str = self.weighting.repr_part
         if weight_str:
@@ -1280,8 +1282,12 @@ class NumpyTensor(Tensor, NumpyGeneralizedTensor):
          [4.0, 5.0, 6.0]]
         )
         """
-        real_space = self.space.astype(self.space.real_dtype)
-        return real_space.element(self.data.real)
+        if self.space.is_real_space:
+            return self
+        else:
+            # Definitely non-contiguous
+            real_space = self.space.astype(self.space.real_dtype, order='K')
+            return real_space.element(self.data.real)
 
     @real.setter
     def real(self, newreal):
@@ -1346,8 +1352,12 @@ class NumpyTensor(Tensor, NumpyGeneralizedTensor):
          [0.0, -5.0, 0.0]]
         )
         """
-        real_space = self.space.astype(self.space.real_dtype)
-        return real_space.element(self.data.imag)
+        if self.space.is_real_space:
+            return self.space.zero()
+        else:
+            # Definitely non-contiguous
+            real_space = self.space.astype(self.space.real_dtype, order='K')
+            return real_space.element(self.data.imag)
 
     @imag.setter
     def imag(self, newimag):
@@ -1359,6 +1369,11 @@ class NumpyTensor(Tensor, NumpyGeneralizedTensor):
         ----------
         newimag : array-like or scalar
             Values to be assigned to the imaginary part of this element.
+
+        Raises
+        ------
+        ValueError
+            if the space is real, i.e., no imagninary part can be set
 
         Examples
         --------
@@ -1389,6 +1404,8 @@ class NumpyTensor(Tensor, NumpyGeneralizedTensor):
          [(4+5j), (5+6j), (6+7j)]]
         )
         """
+        if self.space.is_real_space:
+            raise ValueError('cannot set imaginary part in real spaces')
         self.imag.data[:] = newimag
 
     def conj(self, out=None):
@@ -1477,8 +1494,15 @@ class NumpyTensor(Tensor, NumpyGeneralizedTensor):
             return arr
         else:
             space_constructor = type(self.space)
+            if (self.order in ('C', 'F') and
+                    arr.flags[self.order + '_CONTIGUOUS']):
+                out_spc_order = self.order
+            else:
+                # To preserve the array view for non-contiguous slices,
+                # we need to use 'K' for the space in that case.
+                out_spc_order = 'K'
             space = space_constructor(
-                arr.shape, dtype=self.dtype, order=self.order,
+                arr.shape, dtype=self.dtype, order=out_spc_order,
                 exponent=self.space.exponent, weighting=self.space.weighting)
             return space.element(arr)
 
