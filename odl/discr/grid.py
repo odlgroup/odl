@@ -1195,11 +1195,6 @@ def uniform_sampling_fromintv(intv_prod, shape, nodes_on_bdry=True):
     >>> grid = uniform_sampling_fromintv(rbox, (2, 2), nodes_on_bdry=False)
     >>> grid.coord_vectors
     (array([-1.25, -0.75]), array([ 2.25,  2.75]))
-
-
-    See Also
-    --------
-    uniform_sampling : Sample an implicitly created `IntervalProd`
     """
     shape = np.atleast_1d(shape).astype('int64', casting='safe')
 
