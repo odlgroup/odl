@@ -102,7 +102,9 @@ def test_init_tset():
     NumpyTensorSet((3, 4), dtype=int)
     NumpyTensorSet((3, 4), dtype=float)
     NumpyTensorSet((3, 4), dtype=complex)
+    NumpyTensorSet((3, 4), dtype=complex, order='C')
     NumpyTensorSet((3, 4), dtype=complex, order='F')
+    NumpyTensorSet((3, 4), dtype=complex, order='K')
     NumpyTensorSet(3, dtype=int)
 
     # Alternative constructors
@@ -594,6 +596,30 @@ def test_setitem(setitem_indices):
     assert all_equal(x, x_arr)
 
 
+def test_order(order):
+    """Check if axis ordering is handled properly."""
+    tspace = odl.tensor_space((3, 4), order=order)
+    assert tspace.order == order
+
+    x = noise_element(tspace)
+    assert x.order == order
+    if order in ('C', 'F'):
+        assert x.data.flags[order + '_CONTIGUOUS']
+
+    # getitem with contiguous chunks should preserve order
+    if order in ('C', 'K'):
+        assert x[0, 1:3].order == order
+        assert x[1:2, :].order == order
+    if order in ('F', 'K'):
+        assert x[1:3, 0].order == order
+        assert x[:, 1:2].order == order
+
+    assert x[...] in tspace
+
+    # non-contiguous slices result in 'K' ordering
+    assert x[::2, :].order == 'K'
+
+
 def test_transpose():
     """Test the .T property of tensors against plain inner product."""
     tspace = odl.tensor_space((3, 4), dtype=complex, weighting=2)
@@ -872,6 +898,8 @@ def test_matrix_op_adjoint(matrix):
     dense_matrix = matrix
     sparse_matrix = scipy.sparse.coo_matrix(dense_matrix)
 
+    tol = 2 * matrix.size * np.finfo(matrix.dtype).resolution
+
     # Default 1d case
     dmat_op = MatrixOperator(dense_matrix)
     smat_op = MatrixOperator(sparse_matrix)
@@ -880,10 +908,10 @@ def test_matrix_op_adjoint(matrix):
 
     inner_ran = dmat_op(x).inner(y)
     inner_dom = x.inner(dmat_op.adjoint(y))
-    assert inner_ran == pytest.approx(inner_dom)
+    assert inner_ran == pytest.approx(inner_dom, rel=tol, abs=tol)
     inner_ran = smat_op(x).inner(y)
     inner_dom = x.inner(smat_op.adjoint(y))
-    assert inner_ran == pytest.approx(inner_dom)
+    assert inner_ran == pytest.approx(inner_dom, rel=tol, abs=tol)
 
     # Multi-dimensional case
     domain = odl.tensor_space((2, 2, 4), matrix.dtype)
@@ -892,7 +920,7 @@ def test_matrix_op_adjoint(matrix):
     y = noise_element(mat_op.range)
     inner_ran = mat_op(x).inner(y)
     inner_dom = x.inner(mat_op.adjoint(y))
-    assert inner_ran == pytest.approx(inner_dom)
+    assert inner_ran == pytest.approx(inner_dom, rel=tol, abs=tol)
 
 
 def test_matrix_op_inverse():
