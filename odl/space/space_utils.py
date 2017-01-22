@@ -54,19 +54,19 @@ def vector(array, dtype=None, order='C', impl='numpy'):
     --------
     >>> odl.vector([[1, 2, 3],
     ...             [4, 5, 6]])  # No automatic cast to float
-    tensor_space((2, 3), 'int').element(
+    tensor_space((2, 3), 'int', order='C').element(
     [[1, 2, 3],
      [4, 5, 6]]
     )
     >>> odl.vector([[1, 2, 3],
     ...             [4, 5, 6]], dtype=float)
-    rn((2, 3)).element(
+    rn((2, 3), order='C').element(
     [[1.0, 2.0, 3.0],
      [4.0, 5.0, 6.0]]
     )
     >>> odl.vector([[1, 2 - 1j, 3],
     ...             [4, 5, 6 + 2j]])
-    cn((2, 3)).element(
+    cn((2, 3), order='C').element(
     [[(1+0j), (2-1j), (3+0j)],
      [(4+0j), (5+0j), (6+2j)]]
     )
@@ -75,7 +75,7 @@ def vector(array, dtype=None, order='C', impl='numpy'):
 
     >>> odl.vector([[True, True, False],
     ...             [False, False, True]])
-    tensor_set((2, 3), 'bool').element(
+    tensor_set((2, 3), 'bool', order='C').element(
     [[True, True, False],
      [False, False, True]]
     )
@@ -102,7 +102,7 @@ def vector(array, dtype=None, order='C', impl='numpy'):
                         impl=impl).element(arr)
 
 
-def tensor_space(shape, dtype=None, order='C', impl='numpy', **kwargs):
+def tensor_space(shape, dtype=None, order='K', impl='numpy', **kwargs):
     """Return a tensor space with arbitrary scalar data type.
 
     Parameters
@@ -115,9 +115,13 @@ def tensor_space(shape, dtype=None, order='C', impl='numpy', **kwargs):
         as a string.
         For ``None``, the `TensorSpace.default_dtype` of the
         created space is used.
-    order : {'C', 'F'}, optional
-        Axis ordering of the data storage.
-    impl : string, optional
+    order : {'K', 'C', 'F'}, optional
+        Axis ordering of the data storage. Only relevant for more
+        than 1 axis.
+        For ``'C'`` and ``'F'``, elements are forced to use
+        contiguous memory in the respective ordering.
+        For ``'K'`` no contiguousness is enforced.
+    impl : str, optional
         Impmlementation back-end for the space. See
         `odl.space.entry_points.tensor_space_impl_names` for available
         options.
@@ -162,7 +166,7 @@ def tensor_space(shape, dtype=None, order='C', impl='numpy', **kwargs):
     return tspace_cls(shape, dtype, order, **kwargs)
 
 
-def cn(shape, dtype=None, order='C', impl='numpy', **kwargs):
+def cn(shape, dtype=None, order='K', impl='numpy', **kwargs):
     """Return a space of complex tensors.
 
     Parameters
@@ -176,8 +180,12 @@ def cn(shape, dtype=None, order='C', impl='numpy', **kwargs):
         For ``None``, the `TensorSpace.default_dtype` of the
         created space is used in the form
         ``default_dtype(ComplexNumbers())``.
-    order : {'C', 'F'}, optional
-        Axis ordering of the data storage.
+    order : {'K', 'C', 'F'}, optional
+        Axis ordering of the data storage. Only relevant for more
+        than 1 axis.
+        For ``'C'`` and ``'F'``, elements are forced to use
+        contiguous memory in the respective ordering.
+        For ``'K'`` no contiguousness is enforced.
     impl : str, optional
         Impmlementation back-end for the space. See
         `odl.space.entry_points.tensor_space_impl_names` for available
@@ -227,7 +235,7 @@ def cn(shape, dtype=None, order='C', impl='numpy', **kwargs):
     return cn
 
 
-def rn(shape, dtype=None, order='C', impl='numpy', **kwargs):
+def rn(shape, dtype=None, order='K', impl='numpy', **kwargs):
     """Return a space of real tensors.
 
     Parameters
@@ -241,9 +249,13 @@ def rn(shape, dtype=None, order='C', impl='numpy', **kwargs):
         For ``None``, the `TensorSpace.default_dtype` of the
         created space is used in the form
         ``default_dtype(RealNumbers())``.
-    order : {'C', 'F'}, optional
-        Axis ordering of the data storage.
-    impl : string, optional
+    order : {'K', 'C', 'F'}, optional
+        Axis ordering of the data storage. Only relevant for more
+        than 1 axis.
+        For ``'C'`` and ``'F'``, elements are forced to use
+        contiguous memory in the respective ordering.
+        For ``'K'`` no contiguousness is enforced.
+    impl : str, optional
         Impmlementation back-end for the space. See
         `odl.space.entry_points.tensor_space_impl_names` for available
         options.
