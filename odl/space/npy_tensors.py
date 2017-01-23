@@ -96,8 +96,8 @@ class NumpyTensorSet(TensorSet):
         ...                    [4, 5, 6]])
         >>> x
         rn((2, 3)).element(
-        [[1.0, 2.0, 3.0],
-         [4.0, 5.0, 6.0]]
+            [[1.0, 2.0, 3.0],
+             [4.0, 5.0, 6.0]]
         )
         >>> x.space
         rn((2, 3))
@@ -116,33 +116,37 @@ class NumpyTensorSet(TensorSet):
         [[1, -1, 3],
          [4, 5, 6]]
         """
-        if inp is None:
-            if data_ptr is None:
-                arr = np.empty(self.shape, dtype=self.dtype,
-                               order=self.new_elem_order)
-                return self.element_type(self, arr)
-            else:
-                if self.order == 'K':
-                    raise ValueError("`data_ptr` cannot be used with 'K' "
-                                     "ordering")
-                ctype_array_def = ctypes.c_byte * self.nbytes
-                as_ctype_array = ctype_array_def.from_address(data_ptr)
-                as_numpy_array = np.ctypeslib.as_array(as_ctype_array)
-                arr = as_numpy_array.view(dtype=self.dtype)
-                # TODO: check if self.order is correct here
-                arr = arr.reshape(self.shape, order=self.order)
-                return self.element_type(self, arr)
+        if inp is None and data_ptr is None:
+            arr = np.empty(self.shape, dtype=self.dtype,
+                           order=self.new_elem_order)
+            return self.element_type(self, arr)
+
+        elif inp is None and data_ptr is not None:
+            if self.order == 'K':
+                raise ValueError("`data_ptr` cannot be used with 'K' "
+                                 "ordering")
+            ctype_array_def = ctypes.c_byte * self.nbytes
+            as_ctype_array = ctype_array_def.from_address(data_ptr)
+            as_numpy_array = np.ctypeslib.as_array(as_ctype_array)
+            arr = as_numpy_array.view(dtype=self.dtype)
+            arr = arr.reshape(self.shape, order=self.order)
+            return self.element_type(self, arr)
+
+        elif inp is not None and data_ptr is None:
+            if inp in self:
+                # Short-circuit for space elements
+                return inp
+
+            # Use `view_order` to preserve views if possible
+            arr = np.array(inp, copy=False, dtype=self.dtype, ndmin=self.ndim,
+                           order=self.view_order)
+            if arr.shape != self.shape:
+                raise ValueError('shape of `inp` not equal to space `shape`: '
+                                 '{} != {}'.format(arr.shape, self.shape))
+            return self.element_type(self, arr)
+
         else:
-            if data_ptr is None:
-                if inp in self:
-                    return inp
-                else:
-                    arr = np.array(inp, copy=False, dtype=self.dtype, ndmin=1,
-                                   order=self.order)
-                    arr = arr.reshape(self.shape)
-                    return self.element_type(self, arr)
-            else:
-                raise ValueError('cannot provide both `inp` and `data_ptr`')
+            raise ValueError('cannot provide both `inp` and `data_ptr`')
 
     def zero(self):
         """Return a tensor of all zeros.
@@ -153,8 +157,8 @@ class NumpyTensorSet(TensorSet):
         >>> x = space.zero()
         >>> x
         rn((2, 3)).element(
-        [[0.0, 0.0, 0.0],
-         [0.0, 0.0, 0.0]]
+            [[0.0, 0.0, 0.0],
+             [0.0, 0.0, 0.0]]
         )
         """
         return self.element(np.zeros(self.shape, dtype=self.dtype,
@@ -169,8 +173,8 @@ class NumpyTensorSet(TensorSet):
         >>> x = space.one()
         >>> x
         rn((2, 3)).element(
-        [[1.0, 1.0, 1.0],
-         [1.0, 1.0, 1.0]]
+            [[1.0, 1.0, 1.0],
+             [1.0, 1.0, 1.0]]
         )
         """
         return self.element(np.ones(self.shape, dtype=self.dtype,
@@ -206,8 +210,8 @@ class NumpyTensorSet(TensorSet):
         constructor_name = 'tensor_set'
         posargs.append(dtype_str(self.dtype))
         optargs = [('order', self.order, 'K')]
-        return '{}({})'.format(constructor_name,
-                               signature_string(posargs, optargs))
+        inner_str = signature_string(posargs, optargs)
+        return '{}({})'.format(constructor_name, inner_str)
 
 
 class NumpyGeneralizedTensor(GeneralizedTensor):
@@ -391,8 +395,8 @@ class NumpyGeneralizedTensor(GeneralizedTensor):
         2
         >>> x[:, 1:]
         tensor_space((2, 2), 'uint32').element(
-        [[2, 3],
-         [5, 6]]
+            [[2, 3],
+             [5, 6]]
         )
         """
         arr = self.data[indices]
@@ -434,8 +438,8 @@ class NumpyGeneralizedTensor(GeneralizedTensor):
         >>> x[0, 1] = -1
         >>> x
         rn((2, 3)).element(
-        [[1.0, -1.0, 3.0],
-         [4.0, 5.0, 6.0]]
+            [[1.0, -1.0, 3.0],
+             [4.0, 5.0, 6.0]]
         )
 
         Assignment from array-like structures or another tensor
@@ -447,22 +451,22 @@ class NumpyGeneralizedTensor(GeneralizedTensor):
         >>> x[:, :2] = y
         >>> x
         rn((2, 3)).element(
-        [[-1.0, 2.0, 3.0],
-         [0.0, 0.0, 6.0]]
+            [[-1.0, 2.0, 3.0],
+             [0.0, 0.0, 6.0]]
         )
         >>> x[0, 1:] = [7, 8]
         >>> x
         rn((2, 3)).element(
-        [[-1.0, 7.0, 8.0],
-         [0.0, 0.0, 6.0]]
+            [[-1.0, 7.0, 8.0],
+             [0.0, 0.0, 6.0]]
         )
         >>> import numpy as np
         >>> x[:] = np.array([[0, 0, 0],
         ...                  [1, 1, 1]])
         >>> x
         rn((2, 3)).element(
-        [[0.0, 0.0, 0.0],
-         [1.0, 1.0, 1.0]]
+            [[0.0, 0.0, 0.0],
+             [1.0, 1.0, 1.0]]
         )
 
         Broadcasting is also supported:
@@ -470,8 +474,8 @@ class NumpyGeneralizedTensor(GeneralizedTensor):
         >>> x[:, ::2] = -2.
         >>> x
         rn((2, 3)).element(
-        [[-2.0, 0.0, -2.0],
-         [-2.0, 1.0, -2.0]]
+            [[-2.0, 0.0, -2.0],
+             [-2.0, 1.0, -2.0]]
         )
 
         Array views are preserved:
@@ -480,13 +484,13 @@ class NumpyGeneralizedTensor(GeneralizedTensor):
         >>> y[:] = -9
         >>> y
         rn((2, 2)).element(
-        [[-9.0, -9.0],
-         [-9.0, -9.0]]
+            [[-9.0, -9.0],
+             [-9.0, -9.0]]
         )
         >>> x
         rn((2, 3)).element(
-        [[-9.0, 0.0, -9.0],
-         [-9.0, 1.0, -9.0]]
+            [[-9.0, 0.0, -9.0],
+             [-9.0, 1.0, -9.0]]
         )
 
         Be aware of unsafe casts and over-/underflows, there
@@ -499,8 +503,8 @@ class NumpyGeneralizedTensor(GeneralizedTensor):
         >>> x[0, :] = maxval + 1
         >>> x
         tensor_set((2, 3), 'uint8').element(
-        [[0, 0, 0],
-         [1, 1, 1]]
+            [[0, 0, 0],
+             [1, 1, 1]]
         )
         """
         if isinstance(values, NumpyGeneralizedTensor):
@@ -524,22 +528,22 @@ class NumpyGeneralizedTensor(GeneralizedTensor):
         ...                    [4, -5, 6]])
         >>> x.ufuncs.absolute()
         rn((2, 3)).element(
-        [[1.0, 2.0, 3.0],
-         [4.0, 5.0, 6.0]]
+            [[1.0, 2.0, 3.0],
+             [4.0, 5.0, 6.0]]
         )
 
         Broadcasting and array-like input is supported, too:
 
         >>> x.ufuncs.add(3)
         rn((2, 3)).element(
-        [[4.0, 1.0, 6.0],
-         [7.0, -2.0, 9.0]]
+            [[4.0, 1.0, 6.0],
+             [7.0, -2.0, 9.0]]
         )
         >>> x.ufuncs.subtract([[0, 0, 1],
         ...                   [1, 0, 0]])
         rn((2, 3)).element(
-        [[1.0, -2.0, 2.0],
-         [3.0, -5.0, 6.0]]
+            [[1.0, -2.0, 2.0],
+             [3.0, -5.0, 6.0]]
         )
 
         There is also support for various reductions (sum, prod, min,
@@ -555,8 +559,8 @@ class NumpyGeneralizedTensor(GeneralizedTensor):
         >>> result = x.ufuncs.add(y, out=out)
         >>> result
         rn((2, 3)).element(
-        [[2.0, -1.0, 4.0],
-         [5.0, -4.0, 7.0]]
+            [[2.0, -1.0, 4.0],
+             [5.0, -4.0, 7.0]]
         )
         >>> result is out
         True
@@ -577,18 +581,22 @@ def _blas_is_applicable(*args):
     x1,...,xN : `NumpyGeneralizedTensor`
         The tensors to be tested for BLAS conformity.
     """
-    return (all(x.dtype == args[0].dtype and
-                x.dtype in _BLAS_DTYPES and
-                x.data.flags.contiguous
-                for x in args))
+    if any(x.dtype != args[0].dtype for x in args[1:]):
+        return False
+    if any(x.dtype not in _BLAS_DTYPES for x in args):
+        return False
+    if not (all(x.flags.f_contiguous for x in args) or
+            all(x.flags.c_contiguous for x in args)):
+        return False
+    return True
 
 
 def _lincomb(a, x1, b, x2, out, dtype):
     """Raw linear combination depending on data type."""
     # Shortcut for small problems
-    if x1.size < 100:  # small array optimization
-        out.data[:] = a * x1.data + b * x2.data
-        return
+    # if x1.size < 100:  # small array optimization
+    #     out.data[:] = a * x1.data + b * x2.data
+    #     return
 
     # Use blas for larger problems
     def fallback_axpy(x1, x2, n, a):
@@ -609,7 +617,12 @@ def _lincomb(a, x1, b, x2, out, dtype):
         x2[...] = x1[...]
         return x2
 
-    if _blas_is_applicable(x1, x2, out):
+    # Need flat data for BLAS, otherwise in-place does not work
+    x1_arr = x1.data.ravel(order=x1.space.view_order)
+    x2_arr = x2.data.ravel(order=x1.space.view_order)
+    out_arr = out.data.ravel(order=x1.space.view_order)
+
+    if _blas_is_applicable(x1.data, x2.data, out.data):
         axpy, scal, copy = linalg.blas.get_blas_funcs(
             ['axpy', 'scal', 'copy'], arrays=(x1.data, x2.data, out.data))
     else:
@@ -620,43 +633,44 @@ def _lincomb(a, x1, b, x2, out, dtype):
         _lincomb(a + b, x1, 0, x1, out, dtype)
     elif out is x1 and out is x2:
         # All the vectors are aligned -> out = (a+b)*out
-        scal(a + b, out.data, native(out.size))
+        scal(a + b, out_arr, native(out_arr.size))
     elif out is x1:
         # out is aligned with x1 -> out = a*out + b*x2
         if a != 1:
-            scal(a, out.data, native(out.size))
+            scal(a, out_arr, native(out_arr.size))
         if b != 0:
-            axpy(x2.data, out.data, native(out.size), b)
+            axpy(x2_arr, out_arr, native(out_arr.size), b)
     elif out is x2:
         # out is aligned with x2 -> out = a*x1 + b*out
         if b != 1:
-            scal(b, out.data, native(out.size))
+            scal(b, out_arr, native(out_arr.size))
         if a != 0:
-            axpy(x1.data, out.data, native(out.size), a)
+            axpy(x1_arr, out_arr, native(out_arr.size), a)
     else:
         # We have exhausted all alignment options, so x1 != x2 != out
         # We now optimize for various values of a and b
         if b == 0:
             if a == 0:  # Zero assignment -> out = 0
-                out.data[:] = 0
+                out_arr[:] = 0
             else:  # Scaled copy -> out = a*x1
-                copy(x1.data, out.data, native(out.size))
+                copy(x1_arr, out_arr, native(out_arr.size))
                 if a != 1:
-                    scal(a, out.data, native(out.size))
-        else:
+                    scal(a, out_arr, native(out_arr.size))
+
+        else:  # b != 0
             if a == 0:  # Scaled copy -> out = b*x2
-                copy(x2.data, out.data, native(out.size))
+                copy(x2_arr, out_arr, native(out_arr.size))
                 if b != 1:
-                    scal(b, out.data, native(out.size))
+                    scal(b, out_arr, native(out_arr.size))
 
             elif a == 1:  # No scaling in x1 -> out = x1 + b*x2
-                copy(x1.data, out.data, native(out.size))
-                axpy(x2.data, out.data, native(out.size), b)
+                copy(x1_arr, out_arr, native(out_arr.size))
+                axpy(x2_arr, out_arr, native(out_arr.size), b)
             else:  # Generic case -> out = a*x1 + b*x2
-                copy(x2.data, out.data, native(out.size))
+                copy(x2_arr, out_arr, native(out_arr.size))
                 if b != 1:
-                    scal(b, out.data, native(out.size))
-                axpy(x1.data, out.data, native(out.size), a)
+                    scal(b, out_arr, native(out_arr.size))
+                axpy(x1_arr, out_arr, native(out_arr.size), a)
 
 
 class NumpyTensorSpace(TensorSpace, NumpyTensorSet):
@@ -971,8 +985,8 @@ class NumpyTensorSpace(TensorSpace, NumpyTensorSet):
         )
         >>> out
         cn((2, 3)).element(
-        [[0j, (-1+0j), 2j],
-         [-1j, 1j, 2j]]
+            [[0j, (-1+0j), 2j],
+             [-1j, 1j, 2j]]
         )
         """
         _lincomb(a, x1, b, x2, out, self.dtype)
@@ -1125,13 +1139,13 @@ class NumpyTensorSpace(TensorSpace, NumpyTensorSet):
         >>> out = space.element()
         >>> space.multiply(x, y, out=out)  # out is returned
         rn((2, 3)).element(
-        [[-1.0, 0.0, -3.0],
-         [4.0, 1.0, 3.0]]
+            [[-1.0, 0.0, -3.0],
+             [4.0, 1.0, 3.0]]
         )
         >>> out
         rn((2, 3)).element(
-        [[-1.0, 0.0, -3.0],
-         [4.0, 1.0, 3.0]]
+            [[-1.0, 0.0, -3.0],
+             [4.0, 1.0, 3.0]]
         )
         """
         np.multiply(x1.data, x2.data, out=out.data)
@@ -1159,13 +1173,13 @@ class NumpyTensorSpace(TensorSpace, NumpyTensorSet):
         >>> out = space.element()
         >>> space.divide(x, y, out=out)  # out is returned
         rn((2, 3)).element(
-        [[2.0, 0.0, 2.0],
-         [1.0, 0.0, 1.0]]
+            [[2.0, 0.0, 2.0],
+             [1.0, 0.0, 1.0]]
         )
         >>> out
         rn((2, 3)).element(
-        [[2.0, 0.0, 2.0],
-         [1.0, 0.0, 1.0]]
+            [[2.0, 0.0, 2.0],
+             [1.0, 0.0, 1.0]]
         )
         """
         np.divide(x1.data, x2.data, out=out.data)
@@ -1260,6 +1274,9 @@ class NumpyTensor(Tensor, NumpyGeneralizedTensor):
         Tensor.__init__(self, space)
         NumpyGeneralizedTensor.__init__(self, space, data)
 
+    # Don't want LinearSpace.__eq__ based on dist, too limiting (dtypes)
+    __eq__ = NumpyGeneralizedTensor.__eq__
+
     @property
     def real(self):
         """Real part of ``self``.
@@ -1278,8 +1295,8 @@ class NumpyTensor(Tensor, NumpyGeneralizedTensor):
         ...                    [4, 5 - 5j, 6]])
         >>> x.real
         rn((2, 3)).element(
-        [[1.0, 2.0, 3.0],
-         [4.0, 5.0, 6.0]]
+            [[1.0, 2.0, 3.0],
+             [4.0, 5.0, 6.0]]
         )
         """
         if self.space.is_real_space:
@@ -1309,8 +1326,8 @@ class NumpyTensor(Tensor, NumpyGeneralizedTensor):
         >>> x.real = zero
         >>> x
         cn((2, 3)).element(
-        [[1j, 0j, -3j],
-         [0j, -5j, 0j]]
+            [[1j, 0j, -3j],
+             [0j, -5j, 0j]]
         )
 
         Other array-like types and broadcasting:
@@ -1318,15 +1335,15 @@ class NumpyTensor(Tensor, NumpyGeneralizedTensor):
         >>> x.real = 1.0
         >>> x
         cn((2, 3)).element(
-        [[(1+1j), (1+0j), (1-3j)],
-         [(1+0j), (1-5j), (1+0j)]]
+            [[(1+1j), (1+0j), (1-3j)],
+             [(1+0j), (1-5j), (1+0j)]]
         )
         >>> x.real = [[2, 3, 4],
         ...           [5, 6, 7]]
         >>> x
         cn((2, 3)).element(
-        [[(2+1j), (3+0j), (4-3j)],
-         [(5+0j), (6-5j), (7+0j)]]
+            [[(2+1j), (3+0j), (4-3j)],
+             [(5+0j), (6-5j), (7+0j)]]
         )
         """
         self.real.data[:] = newreal
@@ -1348,8 +1365,8 @@ class NumpyTensor(Tensor, NumpyGeneralizedTensor):
         ...                    [4, 5 - 5j, 6]])
         >>> x.imag
         rn((2, 3)).element(
-        [[1.0, 0.0, -3.0],
-         [0.0, -5.0, 0.0]]
+            [[1.0, 0.0, -3.0],
+             [0.0, -5.0, 0.0]]
         )
         """
         if self.space.is_real_space:
@@ -1384,8 +1401,8 @@ class NumpyTensor(Tensor, NumpyGeneralizedTensor):
         >>> x.imag = zero
         >>> x
         cn((2, 3)).element(
-        [[(1+0j), (2+0j), (3+0j)],
-         [(4+0j), (5+0j), (6+0j)]]
+            [[(1+0j), (2+0j), (3+0j)],
+             [(4+0j), (5+0j), (6+0j)]]
         )
 
         Other array-like types and broadcasting:
@@ -1393,15 +1410,15 @@ class NumpyTensor(Tensor, NumpyGeneralizedTensor):
         >>> x.imag = 1.0
         >>> x
         cn((2, 3)).element(
-        [[(1+1j), (2+1j), (3+1j)],
-         [(4+1j), (5+1j), (6+1j)]]
+            [[(1+1j), (2+1j), (3+1j)],
+             [(4+1j), (5+1j), (6+1j)]]
         )
         >>> x.imag = [[2, 3, 4],
         ...           [5, 6, 7]]
         >>> x
         cn((2, 3)).element(
-        [[(1+2j), (2+3j), (3+4j)],
-         [(4+5j), (5+6j), (6+7j)]]
+            [[(1+2j), (2+3j), (3+4j)],
+             [(4+5j), (5+6j), (6+7j)]]
         )
         """
         if self.space.is_real_space:
@@ -1430,8 +1447,8 @@ class NumpyTensor(Tensor, NumpyGeneralizedTensor):
         ...                    [4, 5 - 5j, 6]])
         >>> x.conj()
         cn((2, 3)).element(
-        [[(1-1j), (2-0j), (3+3j)],
-         [(4-0j), (5+5j), (6-0j)]]
+            [[(1-1j), (2-0j), (3+3j)],
+             [(4-0j), (5+5j), (6-0j)]]
         )
 
         The out parameter allows you to avoid a copy
@@ -1440,8 +1457,8 @@ class NumpyTensor(Tensor, NumpyGeneralizedTensor):
         >>> y_out = x.conj(out=y)
         >>> y
         cn((2, 3)).element(
-        [[(1-1j), (2-0j), (3+3j)],
-         [(4-0j), (5+5j), (6-0j)]]
+            [[(1-1j), (2-0j), (3+3j)],
+             [(4-0j), (5+5j), (6-0j)]]
         )
         >>> y_out is y
         True
@@ -1451,8 +1468,8 @@ class NumpyTensor(Tensor, NumpyGeneralizedTensor):
         >>> x_out = x.conj(out=x)
         >>> x
         cn((2, 3)).element(
-        [[(1-1j), (2-0j), (3+3j)],
-         [(4-0j), (5+5j), (6-0j)]]
+            [[(1-1j), (2-0j), (3+3j)],
+             [(4-0j), (5+5j), (6-0j)]]
         )
         """
         if out is None:
@@ -1485,8 +1502,8 @@ class NumpyTensor(Tensor, NumpyGeneralizedTensor):
         2.0
         >>> x[:, 1:]
         rn((2, 2)).element(
-        [[2.0, 3.0],
-         [5.0, 6.0]]
+            [[2.0, 3.0],
+             [5.0, 6.0]]
         )
         """
         arr = self.data[indices]
@@ -1667,36 +1684,36 @@ def npy_weighted_dist(weights, exponent=2.0, use_inner=False):
 
 def _norm_default(x):
     """Default Euclidean norm implementation."""
-    if _blas_is_applicable(x):
+    if _blas_is_applicable(x.data):
         nrm2 = linalg.blas.get_blas_funcs('nrm2', dtype=x.dtype)
         norm = partial(nrm2, n=native(x.size))
     else:
         norm = np.linalg.norm
-    return norm(x.data)
+    return norm(x.data.ravel(order=x.space.view_order))
 
 
 def _pnorm_default(x, p):
     """Default p-norm implementation."""
-    return np.linalg.norm(x.data.ravel(), ord=p)
+    return np.linalg.norm(x.data.ravel(order=x.space.view_order), ord=p)
 
 
 def _pnorm_diagweight(x, p, w):
     """Diagonally weighted p-norm implementation."""
     # This is faster than first applying the weights and then summing with
     # BLAS dot or nrm2
-    xp = np.abs(x.data.ravel())
+    xp = np.abs(x.data.ravel(order=x.space.view_order))
     if np.isfinite(p):
         xp = np.power(xp, p, out=xp)
-        xp *= w.ravel()  # w is a plain NumPy array
+        xp *= w.ravel(order='K')  # w is a plain NumPy array
         return np.sum(xp) ** (1 / p)
     else:
-        xp *= w.ravel()
+        xp *= w.ravel(order='K')
         return np.max(xp)
 
 
 def _inner_default(x1, x2):
     """Default Euclidean inner product implementation."""
-    if _blas_is_applicable(x1, x2):
+    if _blas_is_applicable(x1.data, x2.data):
         dotc = linalg.blas.get_blas_funcs('dotc', dtype=x1.dtype)
         dot = partial(dotc, n=native(x1.size))
     elif is_real_dtype(x1.dtype):
@@ -1704,7 +1721,8 @@ def _inner_default(x1, x2):
     else:
         dot = np.vdot  # slowest alternative
     # x2 as first argument because we want linearity in x1
-    return dot(x2.data.ravel(), x1.data.ravel())
+    return dot(x2.data.ravel(order=x2.space.view_order),
+               x1.data.ravel(order=x1.space.view_order))
 
 
 # TODO: implement intermediate weighting schemes with arrays that are

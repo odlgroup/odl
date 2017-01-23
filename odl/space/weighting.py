@@ -822,12 +822,12 @@ class CustomInner(Weighting):
         if not callable(inner):
             raise TypeError('`inner` {!r} is not callable'
                             ''.format(inner))
-        self._inner = inner
+        self.__inner = inner
 
     @property
     def inner(self):
         """Custom inner product of this instance.."""
-        return self._inner
+        return self.__inner
 
     def __eq__(self, other):
         """Return ``self == other``.
@@ -889,7 +889,7 @@ class CustomNorm(Weighting):
         if not callable(norm):
             raise TypeError('`norm` {!r} is not callable'
                             ''.format(norm))
-        self._norm = norm
+        self.__norm = norm
 
     def inner(self, x1, x2):
         """Inner product is not defined for custom distance."""
@@ -898,7 +898,7 @@ class CustomNorm(Weighting):
     @property
     def norm(self):
         """Custom norm of this instance.."""
-        return self._norm
+        return self.__norm
 
     def __eq__(self, other):
         """Return ``self == other``.
@@ -962,12 +962,12 @@ class CustomDist(Weighting):
         if not callable(dist):
             raise TypeError('`dist` {!r} is not callable'
                             ''.format(dist))
-        self._dist = dist
+        self.__dist = dist
 
     @property
     def dist(self):
         """Custom distance of this instance.."""
-        return self._dist
+        return self.__dist
 
     def inner(self, x1, x2):
         """Inner product is not defined for custom distance."""

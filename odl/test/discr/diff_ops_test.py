@@ -242,7 +242,7 @@ def test_part_deriv(space, method, padding):
                            pad_const=pad_const)
 
         partial_vec = partial(dom_vec)
-        assert all_almost_equal(partial_vec.asarray(), diff)
+        assert all_almost_equal(partial_vec, diff)
 
         # Test adjoint operator
         derivative = partial.derivative()

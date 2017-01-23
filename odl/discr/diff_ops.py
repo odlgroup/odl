@@ -19,6 +19,7 @@ import numpy as np
 from odl.discr.lp_discr import DiscreteLp
 from odl.operator.tensor_ops import PointwiseTensorFieldOperator
 from odl.space import ProductSpace
+from odl.util import writable_array
 
 
 __all__ = ('PartialDerivative', 'Gradient', 'Divergence', 'Laplacian')
@@ -134,13 +135,10 @@ class PartialDerivative(PointwiseTensorFieldOperator):
             out = self.range.element()
 
         # TODO: this pipes CUDA arrays through NumPy. Write native operator.
-        out_arr = out.asarray()
-        finite_diff(x.asarray(), out=out_arr, axis=self.axis, dx=self.dx,
-                    method=self.method, pad_mode=self.pad_mode,
-                    pad_const=self.pad_const)
-
-        # self assignment: no overhead in the case out_arr is a view
-        out[:] = out_arr
+        with writable_array(out) as out_arr:
+            finite_diff(x.asarray(), axis=self.axis, dx=self.dx,
+                        method=self.method, pad_mode=self.pad_mode,
+                        pad_const=self.pad_const, out=out_arr)
         return out
 
     def derivative(self, point=None):
@@ -492,7 +490,7 @@ class Divergence(PointwiseTensorFieldOperator):
         dx = self.range.cell_sides
 
         out_arr = out.asarray()
-        tmp = np.empty(out.shape, out.dtype, order=out.space.order)
+        tmp = np.empty(out.shape, out.dtype, order=out.space.new_elem_order)
         for axis in range(ndim):
             finite_diff(x[axis], axis=axis, dx=dx[axis], method=self.method,
                         pad_mode=self.pad_mode,
@@ -627,7 +625,7 @@ class Laplacian(PointwiseTensorFieldOperator):
 
         x_arr = x.asarray()
         out_arr = out.asarray()
-        tmp = np.empty(out.shape, out.dtype, order=out.space.order)
+        tmp = np.empty(out.shape, out.dtype, order=out.space.new_elem_order)
 
         ndim = self.domain.ndim
         dx = self.domain.cell_sides

@@ -19,7 +19,7 @@ from odl.set.sets import Set, RealNumbers, ComplexNumbers
 from odl.set.space import LinearSpace, LinearSpaceElement
 from odl.util import (
     is_scalar_dtype, is_floating_dtype, is_real_dtype, safe_int_conv,
-    arraynd_repr, arraynd_str, dtype_str, signature_string)
+    arraynd_repr, arraynd_str, dtype_str, signature_string, indent_rows)
 from odl.util.ufuncs import TensorSetUfuncs
 from odl.util.utility import TYPE_MAP_R2C, TYPE_MAP_C2R
 
@@ -93,7 +93,16 @@ class TensorSet(Set):
         This is identical to `order` except for ``self.order == 'K'``,
         where ``'C'`` is returned.
         """
-        return 'F' if self.order == 'F' else 'C'
+        return 'C' if self.order == 'K' else self.order
+
+    @property
+    def view_order(self):
+        """Order argument for view-preserving operations.
+
+        This is identical to `order` except for ``self.order == 'K'``,
+        where ``'A'`` is returned.
+        """
+        return 'A' if self.order == 'K' else self.order
 
     @property
     def size(self):
@@ -412,7 +421,7 @@ class GeneralizedTensor(object):
         if self.rank == 1:
             inner_str = arraynd_repr(self)
         else:
-            inner_str = '\n' + arraynd_repr(self) + '\n'
+            inner_str = '\n' + indent_rows(arraynd_repr(self)) + '\n'
         return '{!r}.element({})'.format(self.space, inner_str)
 
     @property

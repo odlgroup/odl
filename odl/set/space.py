@@ -657,7 +657,8 @@ class LinearSpaceElement(object):
             return other.__rmul__(self)
         elif other in self.space.field:
             tmp = self.space.element()
-            return self.space.lincomb(other, self, out=tmp)
+            result = self.space.lincomb(other, self, out=tmp)
+            return result
         elif other in self.space:
             tmp = self.space.element()
             return self.space.multiply(other, self, out=tmp)

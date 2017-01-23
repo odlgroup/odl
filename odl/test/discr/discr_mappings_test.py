@@ -91,7 +91,7 @@ def test_nearest_interpolation_2d_float():
     space = odl.FunctionSpace(rect)
     dspace = odl.rn(part.shape)
     interp_op = NearestInterpolation(space, part, dspace)
-    function = interp_op([0, 1, 2, 3, 4, 5, 6, 7])
+    function = interp_op(np.reshape([0, 1, 2, 3, 4, 5, 6, 7], part.shape))
 
     # Evaluate at single point
     val = function([0.3, 0.6])  # closest to index (1, 1) -> 3
@@ -180,7 +180,7 @@ def test_linear_interpolation_2d():
     space = odl.FunctionSpace(rect)
     dspace = odl.rn(part.shape)
     interp_op = LinearInterpolation(space, part, dspace)
-    values = np.arange(1, 9, dtype='float64')
+    values = np.arange(1, 9, dtype='float64').reshape(part.shape)
     function = interp_op(values)
     rvals = values.reshape([4, 2])
 
@@ -252,7 +252,7 @@ def test_per_axis_interpolation():
     variants = [None, 'right']
     interp_op = PerAxisInterpolation(space, part, dspace, schemes=schemes,
                                      nn_variants=variants)
-    values = np.arange(1, 9, dtype='float64')
+    values = np.arange(1, 9, dtype='float64').reshape(part.shape)
     function = interp_op(values)
     rvals = values.reshape([4, 2])
 

@@ -21,7 +21,7 @@ from odl.space import FunctionSet
 from odl.space.entry_points import TENSOR_SET_IMPLS, TENSOR_SPACE_IMPLS
 from odl.set import RealNumbers, ComplexNumbers, LinearSpace
 from odl.util import (
-    arraynd_repr, arraynd_str,
+    arraynd_repr, arraynd_str, indent_rows,
     is_real_floating_dtype, is_complex_floating_dtype, is_scalar_dtype)
 
 
@@ -389,8 +389,8 @@ class DiscretizedSetElement(GeneralizedTensor):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{!r}.element({})'.format(self.space,
-                                         arraynd_repr(self.asarray()))
+        inner_str = indent_rows(arraynd_repr(self.asarray()))
+        return '{!r}.element(\n{}\n)'.format(self.space, inner_str)
 
 
 class DiscretizedSpace(DiscretizedSet, TensorSpace):
