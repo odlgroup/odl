@@ -85,7 +85,7 @@ def test_resizing_op_raise():
     fspace = odl.FunctionSpace(odl.IntervalProd(0, 3))
     dspace = odl.rn(3)
     space = odl.DiscreteLp(fspace, part, dspace)
-    with pytest.raises(ValueError):
+    with pytest.raises(NotImplementedError):
         odl.ResizingOperator(space, ran_shp=(10,))
 
     # different cell sides in domain and range

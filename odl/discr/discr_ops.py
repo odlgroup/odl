@@ -28,7 +28,7 @@ import numpy as np
 from odl.discr import DiscreteLp, uniform_discr
 from odl.operator import Operator
 from odl.util import (
-    normalized_scalar_param_list, safe_int_conv, resize_array)
+    normalized_scalar_param_list, safe_int_conv, writable_array, resize_array)
 from odl.util.numerics import _SUPPORTED_RESIZE_PAD_MODES
 
 
@@ -357,11 +357,10 @@ class ResizingOperator(ResizingOperatorBase):
 
     def _call(self, x, out):
         """Implement ``self(x, out)``."""
-        # TODO: simplify once context manager is available
-        out[:] = resize_array(x.asarray(), self.range.shape,
-                              offset=self.offset, pad_mode=self.pad_mode,
-                              pad_const=self.pad_const, direction='forward',
-                              out=out.asarray())
+        with writable_array(out) as out_arr:
+            resize_array(x.asarray(), self.range.shape, offset=self.offset,
+                         pad_mode=self.pad_mode, pad_const=self.pad_const,
+                         direction='forward', out=out_arr)
 
     def derivative(self, point):
         """Derivative of this operator at ``point``.
@@ -398,11 +397,11 @@ class ResizingOperator(ResizingOperatorBase):
 
             def _call(self, x, out):
                 """Implement ``self(x, out)``."""
-                # TODO: simplify once context manager is available
-                out[:] = resize_array(
-                    x.asarray(), self.range.shape, offset=self.offset,
-                    pad_mode=self.pad_mode, pad_const=0, direction='adjoint',
-                    out=out.asarray())
+                with writable_array(out) as out_arr:
+                    resize_array(x.asarray(), self.range.shape,
+                                 offset=self.offset, pad_mode=self.pad_mode,
+                                 pad_const=0, direction='adjoint',
+                                 out=out_arr)
 
             @property
             def adjoint(self):

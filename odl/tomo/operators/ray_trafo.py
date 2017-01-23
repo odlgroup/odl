@@ -158,11 +158,7 @@ class RayTransform(Operator):
 
             # Create a discretized space (operator range) with the same
             # data-space type as the domain.
-            # TODO: use a ProductSpace structure or find a way to treat
-            # different dimensions differently in DiscreteLp
-            # (i.e. in partitions).
-            range_uspace = FunctionSpace(geometry.params,
-                                         out_dtype=dtype)
+            range_uspace = FunctionSpace(geometry.params, out_dtype=dtype)
 
             # Approximate cell volume
             # TODO: angles and detector must be handled separately. While the
@@ -172,7 +168,7 @@ class RayTransform(Operator):
             size = float(geometry.partition.size)
             weight = extent / size
 
-            range_dspace = discr_domain.dspace_type(geometry.partition.size,
+            range_dspace = discr_domain.dspace_type(geometry.partition.shape,
                                                     weighting=weight,
                                                     dtype=dtype)
 
@@ -187,8 +183,7 @@ class RayTransform(Operator):
             range_interp = kwargs.get('interp', 'nearest')
             discr_range = DiscreteLp(
                 range_uspace, geometry.partition, range_dspace,
-                interp=range_interp, order=discr_domain.order,
-                axis_labels=axis_labels)
+                interp=range_interp, axis_labels=axis_labels)
 
         self.backproj = None
 

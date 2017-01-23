@@ -17,19 +17,12 @@
 
 """Test astra setup functions."""
 
-from __future__ import print_function, division, absolute_import
-from future import standard_library
-
-standard_library.install_aliases()
-
-# External
 import numpy as np
 import pytest
 from odl.tomo.backends.astra_setup import ASTRA_AVAILABLE
 if ASTRA_AVAILABLE:
     import astra
 
-# Internal
 import odl
 from odl.util.testutils import is_subdict
 
@@ -229,7 +222,7 @@ def test_volume_data_2d():
 
     # From existing
     discr_dom = _discrete_domain(2, 'nearest')
-    data_in = discr_dom.element(np.ones(10 * 20, dtype='float32'))
+    data_in = discr_dom.element(np.ones((10, 20), dtype='float32'))
     data_id = odl.tomo.astra_data(VOL_GEOM_2D, 'volume', data=data_in)
     data_out = astra.data2d.get_shared(data_id)
     assert data_out.shape == (10, 20)
@@ -250,7 +243,7 @@ def test_volume_data_3d():
 
     # From existing
     discr_dom = _discrete_domain(3, 'nearest')
-    data_in = discr_dom.element(np.ones(10 * 20 * 30, dtype='float32'))
+    data_in = discr_dom.element(np.ones((10, 20, 30), dtype='float32'))
     data_id = odl.tomo.astra_data(VOL_GEOM_3D, 'volume', data=data_in)
     data_out = astra.data3d.get_shared(data_id)
     assert data_out.shape == (10, 20, 30)
