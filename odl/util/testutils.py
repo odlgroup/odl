@@ -33,7 +33,7 @@ def _places(a, b, default=None):
     """Return number of expected correct digits between ``a`` and ``b``.
 
     Returned numbers if one of ``a.dtype`` and ``b.dtype`` is as below:
-        2 -- for ``np.float16``
+        1 -- for ``np.float16``
 
         3 -- for ``np.float32`` or ``np.complex64``
 
@@ -41,6 +41,8 @@ def _places(a, b, default=None):
     """
     dtype1 = getattr(a, 'dtype', object)
     dtype2 = getattr(b, 'dtype', object)
+    print(dtype1)
+    print(dtype2)
     return min(dtype_places(dtype1, default), dtype_places(dtype2, default))
 
 
@@ -150,10 +152,11 @@ def all_almost_equal(iter1, iter2, places=None):
     if iter1 is None and iter2 is None:
         return True
 
-    if places is None:
-        places = _places(iter1, iter2, None)
-
     if hasattr(iter1, '__array__') and hasattr(iter2, '__array__'):
+        # Only get default places if comparing arrays, need to keep `None`
+        # otherwise for recursive calls.
+        if places is None:
+            places = _places(iter1, iter2, None)
         return all_almost_equal_array(iter1, iter2, places)
 
     try:

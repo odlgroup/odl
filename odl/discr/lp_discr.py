@@ -29,8 +29,7 @@ from odl.space.weighting import Weighting, NoWeighting, ConstWeighting
 from odl.util import (
     apply_on_boundary, is_real_dtype, is_complex_floating_dtype,
     dtype_str, signature_string, indent_rows, is_string,
-    normalized_scalar_param_list, safe_int_conv, normalized_nodes_on_bdry,
-    broadcast_to)
+    normalized_scalar_param_list, safe_int_conv, normalized_nodes_on_bdry)
 from odl.util.ufuncs import DiscreteLpUfuncs
 
 __all__ = ('DiscreteLp', 'DiscreteLpElement',
@@ -166,6 +165,11 @@ class DiscreteLp(DiscretizedSpace):
     def partition(self):
         """`RectPartition` of the function domain."""
         return self.__partition
+
+    @property
+    def exponent(self):
+        """Exponent of this space, the ``p`` in ``L^p``."""
+        return self.dspace.exponent
 
     @property
     def min_pt(self):
@@ -334,29 +338,12 @@ class DiscreteLp(DiscretizedSpace):
             return self.element_type(self, self.sampling(inp_elem, **kwargs))
         else:
             # Sequence-type input
-            arr = np.asarray(inp, dtype=self.dtype)
-            input_shape = arr.shape
+            return self.element_type(self, self.dspace.element(inp))
 
-            # Attempt to handle some cases with exact match
-            if arr.ndim > 1 and self.ndim == 1:
-                arr = arr.squeeze()  # Squeeze could solve the problem
-                if arr.shape != self.shape:
-                    raise ValueError(
-                        'input shape does not match grid shape: {} != {}'
-                        ''.format(input_shape, self.shape))
-            elif arr.shape != self.shape:
-                # Try reshaping first, then broadcast
-                try:
-                    arr = arr.reshape(self.shape, order=self.order)
-                except ValueError:
-                    pass
-                arr = broadcast_to(arr, self.shape)
-            return self.element_type(self, self.dspace.element(arr))
-
-    def _astype(self, dtype):
+    def _astype(self, dtype, order):
         """Internal helper for ``astype``."""
         fspace = self.uspace.astype(dtype)
-        dspace = self.dspace.astype(dtype)
+        dspace = self.dspace.astype(dtype, order)
         return type(self)(fspace, self.partition, dspace, interp=self.interp,
                           axis_labels=self.axis_labels)
 
@@ -446,7 +433,7 @@ class DiscreteLp(DiscretizedSpace):
                        ('impl', self.impl, 'numpy'),
                        ('nodes_on_bdry', nodes_on_bdry, False),
                        ('dtype', dtype_s, default_dtype_s),
-                       ('order', self.order, 'C'),
+                       ('order', self.order, 'K'),
                        ('weighting', weighting, 'const')]
 
             inner_str = signature_string(posargs, optargs,
@@ -457,9 +444,7 @@ class DiscreteLp(DiscretizedSpace):
         else:
             constructor = self.__class__.__name__
             posargs = [self.uspace, self.partition, self.dspace]
-
             optargs = [('interp', self.interp, 'nearest')]
-
             inner_str = signature_string(posargs, optargs,
                                          sep=[',\n', ', ', ',\n'],
                                          mod=['!r', '!s'])
@@ -480,48 +465,6 @@ class DiscreteLpElement(DiscretizedSpaceElement):
 
     """Representation of a `DiscreteLp` element."""
 
-    def asarray(self, out=None):
-        """Extract the data of this array as a numpy array.
-
-        Parameters
-        ----------
-        out : `numpy.ndarray`, optional
-            Array in which the result should be written in-place.
-            Has to be contiguous and of the correct dtype and
-            shape.
-        """
-        if out is None:
-            if self.space.ndim == 0:
-                out = DiscretizedSpaceElement.asarray(self)
-            else:
-                out = DiscretizedSpaceElement.asarray(self).reshape(
-                    self.shape, order=self.space.order)
-            return out
-
-        else:
-            if out.shape not in (self.space.shape, (self.space.size,)):
-                raise ValueError('output array has shape {}, expected '
-                                 '{} or ({},)'
-                                 ''.format(out.shape, self.space.shape,
-                                           self.space.size))
-            out_r = out.reshape(self.space.shape,
-                                order=self.space.order)
-            if out_r.flags.c_contiguous:
-                out_order = 'C'
-            elif out_r.flags.f_contiguous:
-                out_order = 'F'
-            else:
-                raise ValueError('output array not contiguous')
-
-            if out_order != self.space.order:
-                raise ValueError('output array has ordering {!r}, '
-                                 'expected {!r}'
-                                 ''.format(self.space.order, out_order))
-
-            super(DiscreteLpElement, self).asarray(
-                out=out.ravel(order=self.space.order))
-            return out
-
     @property
     def cell_sides(self):
         """Side lengths of a cell in an underlying *uniform* partition."""
@@ -535,26 +478,22 @@ class DiscreteLpElement(DiscretizedSpaceElement):
     @property
     def real(self):
         """Real part of this element."""
-        return self.space.real_space.element(self.ntuple.real)
+        return self.space.real_space.element(self.tensor.real)
 
     @real.setter
     def real(self, newreal):
         """Set the real part of this element to ``newreal``."""
-        newreal_flat = np.asarray(newreal, order=self.space.order).reshape(
-            -1, order=self.space.order)
-        self.tensor.real = newreal_flat
+        self.tensor.real = newreal
 
     @property
     def imag(self):
         """Imaginary part of this element."""
-        return self.space.real_space.element(self.ntuple.imag)
+        return self.space.real_space.element(self.tensor.imag)
 
     @imag.setter
     def imag(self, newimag):
         """Set the imaginary part of this element to ``newimag``."""
-        newimag_flat = np.asarray(newimag, order=self.space.order).reshape(
-            -1, order=self.space.order)
-        self.tensor.imag = newimag_flat
+        self.tensor.imag = newimag
 
     def conj(self, out=None):
         """Complex conjugate of this element.
@@ -618,21 +557,8 @@ class DiscreteLpElement(DiscretizedSpaceElement):
             shape is allowed as ``values``.
         """
         if values in self.space:
-            # For DiscretizedSetElement of the same type, use tensor directly
             self.tensor[indices] = values.tensor
         else:
-            # Other sequence types are piped through a Numpy array. Equivalent
-            # views are optimized for in Numpy.
-            if indices == slice(None):
-                values = np.atleast_1d(values)
-                if (values.ndim > 1 and
-                        values.shape != self.space.shape):
-                    raise ValueError('shape {} of value array {} not equal '
-                                     'to sampling grid shape {}'
-                                     ''.format(values.shape, values,
-                                               self.space.shape))
-                values = values.ravel(order=self.space.order)
-
             super(DiscreteLpElement, self).__setitem__(indices, values)
 
     @property
@@ -884,8 +810,12 @@ def uniform_discr_frompartition(partition, exponent=2.0, interp='nearest',
 
     Other Parameters
     ----------------
-    order : {'C', 'F'}, optional
-        Axis ordering in the data storage. Default: 'C'
+    order : {'K', 'C', 'F'}, optional
+        Axis ordering of the data storage. Only relevant for more
+        than 1 axis.
+        For ``'C'`` and ``'F'``, elements are forced to use
+        contiguous memory in the respective ordering.
+        For ``'K'`` no contiguousness is enforced.
     dtype : dtype
         Data type for the discretized space.
 
@@ -931,7 +861,7 @@ def uniform_discr_frompartition(partition, exponent=2.0, interp='nearest',
     if not partition.is_uniform:
         raise ValueError('`partition` is not uniform')
 
-    order = kwargs.pop('order', 'C')
+    order = kwargs.pop('order', 'K')
 
     dtype = kwargs.pop('dtype', None)
     if dtype is not None:
@@ -1001,8 +931,12 @@ def uniform_discr_fromspace(fspace, shape, exponent=2.0, interp='nearest',
 
         Default: ``False``.
 
-    order : {'C', 'F'}, optional
-        Axis ordering in the data storage. Default: 'C'
+    order : {'K', 'C', 'F'}, optional
+        Axis ordering of the data storage. Only relevant for more
+        than 1 axis.
+        For ``'C'`` and ``'F'``, elements are forced to use
+        contiguous memory in the respective ordering.
+        For ``'K'`` no contiguousness is enforced.
     dtype : dtype, optional
         Data type for the discretized space. If not specified, the
         `FunctionSpace.out_dtype` of ``fspace`` is used.
@@ -1120,8 +1054,12 @@ def uniform_discr_fromintv(interval, shape, exponent=2.0, interp='nearest',
         boundaries.
         Default: ``False``
 
-    order : {'C', 'F'}, optional
-        Axis ordering in the data storage. Default: 'C'
+    order : {'K', 'C', 'F'}, optional
+        Axis ordering of the data storage. Only relevant for more
+        than 1 axis.
+        For ``'C'`` and ``'F'``, elements are forced to use
+        contiguous memory in the respective ordering.
+        For ``'K'`` no contiguousness is enforced.
     dtype : dtype
         Data type for the discretized space.
 
@@ -1206,11 +1144,12 @@ def uniform_discr(min_pt, max_pt, shape, exponent=2.0, interp='nearest',
 
             Default for ``'cuda'``: ``'float32'``
 
-    order : {'C', 'F'}, optional
-        Ordering of the axes in the data storage. ``'C'`` means the
-        first axis varies slowest, the last axis fastest;
-        vice versa for ``'F'``.
-        Default: ``'C'``
+    order : {'K', 'C', 'F'}, optional
+        Axis ordering of the data storage. Only relevant for more
+        than 1 axis.
+        For ``'C'`` and ``'F'``, elements are forced to use
+        contiguous memory in the respective ordering.
+        For ``'K'`` no contiguousness is enforced.
     nodes_on_bdry : bool or sequence, optional
         If a sequence is provided, it determines per axis whether to
         place the last grid point on the boundary (``True``) or shift it
@@ -1299,9 +1238,12 @@ def discr_sequence_space(shape, exponent=2.0, impl='numpy', **kwargs):
 
             Default for ``'cuda'``: ``'float32'``
 
-    order : {'C', 'F'}, optional
-        Axis ordering in the data storage. Default: 'C'
-
+    order : {'K', 'C', 'F'}, optional
+        Axis ordering of the data storage. Only relevant for more
+        than 1 axis.
+        For ``'C'`` and ``'F'``, elements are forced to use
+        contiguous memory in the respective ordering.
+        For ``'K'`` no contiguousness is enforced.
     kwargs :
         Additional keyword parameters passed to the `DiscreteLp`
         initializer.

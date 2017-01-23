@@ -180,61 +180,27 @@ def test_discretelp_element_from_array():
     assert all_equal(elem.tensor, [1, 2, 3])
 
 
-def test_element_from_array_2d():
-    # assert orderings work properly with 2d
-    discr = odl.uniform_discr([0, 0], [1, 1], [2, 2], impl='numpy', order='C')
+def test_element_from_array_2d(order):
+    """Test element in 2d with different orderings."""
+    discr = odl.uniform_discr([0, 0], [1, 1], [2, 2], impl='numpy',
+                              order=order)
     elem = discr.element([[1, 2],
-                         [3, 4]])
+                          [3, 4]])
 
     assert isinstance(elem, DiscreteLpElement)
     assert isinstance(elem.tensor, NumpyTensor)
-
-    # Check ordering
-    assert all_equal(elem.tensor, [1, 2, 3, 4])
-
-    # Linear creation works as well
-    linear_elem = discr.element([1, 2, 3, 4])
-    assert all_equal(linear_elem.tensor, [1, 2, 3, 4])
-
-    # Fortran order
-    discr = odl.uniform_discr([0, 0], [1, 1], (2, 2), impl='numpy', order='F')
-    elem = discr.element([[1, 2],
-                          [3, 4]])
-    assert np.array_equal(elem.tensor, [[1, 2],
-                                        [3, 4]])
+    assert all_equal(elem, [[1, 2],
+                            [3, 4]])
 
     with pytest.raises(ValueError):
-        discr.element([1, 2, 3])  # wrong shape
-
-
-def test_discretelp_element_order():
-    """Test axis ordering when creating element from flat array."""
-    # 'C' ordering
-    discr = odl.uniform_discr([0, 0], [1, 1], (2, 2), order='C')
-    elem = discr.element([1, 2, 3, 4])
-    assert np.array_equal(elem.tensor, [[1, 2],
-                                        [3, 4]])
-
-    # 'F' ordering
-    discr = odl.uniform_discr([0, 0], [1, 1], (2, 2), order='F')
-    assert discr.order == 'F'
-    elem = discr.element([1, 2, 3, 4])
-    assert np.array_equal(elem.tensor, [[1, 3],
-                                        [2, 4]])
-
-
-def test_discretelp_element_bcast():
-    """Test broadcasting of input to the element method."""
-    discr = odl.uniform_discr([0, 0], [1, 1], (2, 2), order='C')
-    bcast_elem = discr.element([2])  # broadcast along both axes
-    assert np.array_equal(bcast_elem, [[2, 2],
-                                       [2, 2]])
-    bcast_elem = discr.element([[1, 2]])  # along axis 0
-    assert np.array_equal(bcast_elem, [[1, 2],
-                                       [1, 2]])
-    bcast_elem = discr.element([[1], [2]])  # along axis 1
-    assert np.array_equal(bcast_elem, [[1, 1],
-                                       [2, 2]])
+        discr.element([1, 2, 3])  # wrong size & shape
+    with pytest.raises(ValueError):
+        discr.element([1, 2, 3, 4])  # wrong shape
+    with pytest.raises(ValueError):
+        discr.element([[1],
+                       [2],
+                       [3],
+                       [4]])  # wrong shape
 
 
 def test_element_from_function_1d():
@@ -296,7 +262,8 @@ def test_element_from_function_2d():
         return x[0] ** 2 + np.maximum(x[1], 0)
 
     elem_f = space.element(f)
-    true_elem = [x[0] ** 2 + max(x[1], 0) for x in points]
+    true_elem = np.reshape([x[0] ** 2 + max(x[1], 0) for x in points],
+                           space.shape)
     assert all_equal(elem_f, true_elem)
 
     # With parameter
@@ -305,35 +272,42 @@ def test_element_from_function_2d():
         return x[0] ** 2 + np.maximum(x[1], c)
 
     elem_f_default = space.element(f)
-    true_elem = [x[0] ** 2 + max(x[1], 0) for x in points]
+    true_elem = np.reshape([x[0] ** 2 + max(x[1], 0) for x in points],
+                           space.shape)
     assert all_equal(elem_f_default, true_elem)
 
     elem_f_2 = space.element(f, c=1)
-    true_elem = [x[0] ** 2 + max(x[1], 1) for x in points]
+    true_elem = np.reshape([x[0] ** 2 + max(x[1], 1) for x in points],
+                           space.shape)
     assert all_equal(elem_f_2, true_elem)
 
     # Using a lambda
     elem_lam = space.element(lambda x: x[0] - x[1])
-    true_elem = [x[0] - x[1] for x in points]
+    true_elem = np.reshape([x[0] - x[1] for x in points],
+                           space.shape)
     assert all_equal(elem_lam, true_elem)
 
     # Using broadcasting
     elem_lam = space.element(lambda x: x[0])
-    true_elem = [x[0] for x in points]
+    true_elem = np.reshape([x[0] for x in points],
+                           space.shape)
     assert all_equal(elem_lam, true_elem)
 
     elem_lam = space.element(lambda x: x[1])
-    true_elem = [x[1] for x in points]
+    true_elem = np.reshape([x[1] for x in points],
+                           space.shape)
     assert all_equal(elem_lam, true_elem)
 
     # Broadcast from constant function
     elem_lam = space.element(lambda x: 1.0)
-    true_elem = [1.0 for x in points]
+    true_elem = np.reshape([1.0 for x in points],
+                           space.shape)
     assert all_equal(elem_lam, true_elem)
 
     # Non vectorized
     elem_lam = space.element(lambda x: x[0] + x[1], vectorized=False)
-    true_elem = [x[0] + x[1] for x in points]
+    true_elem = np.reshape([x[0] + x[1] for x in points],
+                           space.shape)
     assert all_equal(elem_lam, true_elem)
 
 
@@ -518,13 +492,13 @@ def test_getslice():
     discr = odl.uniform_discr(0, 1, 3)
     elem = discr.element([1, 2, 3])
 
-    assert isinstance(elem[:], odl.NumpyTensor)
+    assert isinstance(elem[:], NumpyTensor)
     assert all_equal(elem[:], [1, 2, 3])
 
     discr = odl.uniform_discr(0, 1, 3, dtype='complex')
     elem = discr.element([1 + 2j, 2 - 2j, 3])
 
-    assert isinstance(elem[:], odl.NumpyTensor)
+    assert isinstance(elem[:], NumpyTensor)
     assert all_equal(elem[:], [1 + 2j, 2 - 2j, 3])
 
 
@@ -566,32 +540,37 @@ def test_setitem_nd():
     discr = odl.uniform_discr([0, 0], [1, 1], [3, 2])
 
     elem = discr.element([[1, 2],
-                         [3, 4],
-                         [5, 6]])
+                          [3, 4],
+                          [5, 6]])
 
     elem[:] = [[-1, -2],
                [-3, -4],
                [-5, -6]]
-    assert all_equal(elem, [-1, -2, -3, -4, -5, -6])
+    assert all_equal(elem, [[-1, -2],
+                            [-3, -4],
+                            [-5, -6]])
 
     arr = np.arange(6, 12).reshape([3, 2])
     elem[:] = arr
-    assert all_equal(elem, np.arange(6, 12))
+    assert all_equal(elem, arr)
 
     elem[:] = 0
-    assert all_equal(elem, [0] * 6)
+    assert all_equal(elem, np.zeros(elem.shape))
 
     elem[:] = [1]
-    assert all_equal(elem, [1] * 6)
+    assert all_equal(elem, np.ones(elem.shape))
 
-    with pytest.raises(ValueError):
-        elem[:] = [0, 0]  # bad shape
+    elem[:] = [0, 0]  # broadcasting assignment
+    assert all_equal(elem, np.zeros(elem.shape))
 
     with pytest.raises(ValueError):
         elem[:] = [0, 0, 0]  # bad shape
 
     with pytest.raises(ValueError):
-        elem[:] = np.arange(6)[:, np.newaxis]  # bad shape (6, 1)
+        elem[:] = np.arange(6)  # bad shape (6,)
+
+    with pytest.raises(ValueError):
+        elem[:] = np.ones((2, 3))[..., np.newaxis]  # bad shape (2, 3, 1)
 
     with pytest.raises(ValueError):
         arr = np.arange(6, 12).reshape([3, 2])
@@ -606,13 +585,13 @@ def test_setitem_nd():
     arr = np.arange(size).reshape(shape)
 
     elem[:] = arr
-    assert all_equal(elem, np.arange(size))
+    assert all_equal(elem, arr)
 
     elem[:] = 0
-    assert all_equal(elem, np.zeros(size))
+    assert all_equal(elem, np.zeros(elem.shape))
 
     elem[:] = [1]
-    assert all_equal(elem, np.ones(size))
+    assert all_equal(elem, np.ones(elem.shape))
 
     with pytest.raises(ValueError):
         # Reversed shape -> bad
@@ -627,72 +606,34 @@ def test_setslice():
     assert all_equal(elem, [4, 5, 6])
 
 
-def test_asarray_2d():
-    discr_F = odl.uniform_discr([0, 0], [1, 1], [2, 2], order='F')
-    elem_F = discr_F.element([[1, 2],
-                             [3, 4]])
+def test_asarray_2d(order):
+    """Test the asarray method for different orderings."""
+    discr = odl.uniform_discr([0, 0], [1, 1], [2, 2], order=order)
+    elem = discr.element([[1, 2],
+                          [3, 4]])
 
     # Verify that returned array equals input data
-    assert all_equal(elem_F.asarray(), [[1, 2],
-                                        [3, 4]])
+    assert all_equal(elem.asarray(), [[1, 2],
+                                      [3, 4]])
     # Check order of out array
-    assert elem_F.asarray().flags['F_CONTIGUOUS']
+    assert elem.asarray().flags[discr.new_elem_order + '_CONTIGUOUS']
 
     # test out parameter
-    out_F = np.asfortranarray(np.empty([2, 2]))
-    result_F = elem_F.asarray(out=out_F)
-    assert result_F is out_F
-    assert all_equal(out_F, [[1, 2],
+    out_c = np.empty([2, 2], order='C')
+    result_c = elem.asarray(out=out_c)
+    assert result_c is out_c
+    assert all_equal(out_c, [[1, 2],
                              [3, 4]])
-
-    # Try discontinuous
-    out_F_wrong = np.asfortranarray(np.empty([2, 2]))[::2, :]
-    with pytest.raises(ValueError):
-        result_F = elem_F.asarray(out=out_F_wrong)
+    out_f = np.empty([2, 2], order='F')
+    result_f = elem.asarray(out=out_f)
+    assert result_f is out_f
+    assert all_equal(out_f, [[1, 2],
+                             [3, 4]])
 
     # Try wrong shape
-    out_F_wrong = np.asfortranarray(np.empty([2, 3]))
+    out_wrong_shape = np.empty([2, 3])
     with pytest.raises(ValueError):
-        result_F = elem_F.asarray(out=out_F_wrong)
-
-    # Try wrong order
-    out_F_wrong = np.empty([2, 2])
-    with pytest.raises(ValueError):
-        elem_F.asarray(out=out_F_wrong)
-
-    # Also check with C ordering
-    discr_C = odl.uniform_discr([0, 0], [1, 1], (2, 2), order='C')
-    elem_C = discr_C.element([[1, 2],
-                             [3, 4]])
-
-    # Verify that returned array equals input data
-    assert all_equal(elem_C.asarray(), [[1, 2],
-                                        [3, 4]])
-
-    # Check order of out array
-    assert elem_C.asarray().flags['C_CONTIGUOUS']
-
-    # test out parameter
-    out_C = np.empty([2, 2])
-    result_C = elem_C.asarray(out=out_C)
-    assert result_C is out_C
-    assert all_equal(out_C, [[1, 2],
-                             [3, 4]])
-
-    # Try discontinuous
-    out_C_wrong = np.empty([4, 2])[::2, :]
-    with pytest.raises(ValueError):
-        result_C = elem_C.asarray(out=out_C_wrong)
-
-    # Try wrong shape
-    out_C_wrong = np.empty([2, 3])
-    with pytest.raises(ValueError):
-        result_C = elem_C.asarray(out=out_C_wrong)
-
-    # Try wrong order
-    out_C_wrong = np.asfortranarray(np.empty([2, 2]))
-    with pytest.raises(ValueError):
-        elem_C.asarray(out=out_C_wrong)
+        elem.asarray(out=out_wrong_shape)
 
 
 def test_transpose():
@@ -832,75 +773,68 @@ def test_ufunc(tspace_impl, ufunc):
             assert isinstance(odl_result[i], space.element_type)
 
 
-def test_real_imag(fn_impl):
-    # Get real and imag
+def test_real_imag(fn_impl, order):
+    """Check if real and imaginary parts can be read and written to."""
     for dtype in filter(odl.util.is_complex_floating_dtype,
                         odl.fn_impl(fn_impl).available_dtypes()):
         cdiscr = odl.uniform_discr([0, 0], [1, 1], [2, 2], dtype=dtype,
-                                   impl=fn_impl)
+                                   impl=fn_impl, order=order)
         rdiscr = cdiscr.real_space
 
-        x = cdiscr.element([[1 - 1j, 2 - 2j], [3 - 3j, 4 - 4j]])
+        # Get real and imag
+        x = cdiscr.element([[1 - 1j, 2 - 2j],
+                            [3 - 3j, 4 - 4j]])
         assert x.real in rdiscr
-        assert all_equal(x.real, [1, 2, 3, 4])
+        assert all_equal(x.real, [[1, 2],
+                                  [3, 4]])
         assert x.imag in rdiscr
-        assert all_equal(x.imag, [-1, -2, -3, -4])
+        assert all_equal(x.imag, [[-1, -2],
+                                  [-3, -4]])
 
         # Set with different data types and shapes
         for assigntype in (lambda x: x, list, tuple, rdiscr.element):
             # Without [:] assignment
             x = cdiscr.zero()
-            x.real = assigntype([[2, 3], [4, 5]])
-            assert all_equal(x.real, [2, 3, 4, 5])
+            x.real = assigntype([[2, 3],
+                                 [4, 5]])
+            assert all_equal(x.real, [[2, 3],
+                                      [4, 5]])
 
             x = cdiscr.zero()
-            x.real = assigntype([4, 5, 6, 7])
-            assert all_equal(x.real, [4, 5, 6, 7])
-
-            x = cdiscr.zero()
-            x.imag = assigntype([[2, 3], [4, 5]])
-            assert all_equal(x.imag, [2, 3, 4, 5])
-
-            x = cdiscr.zero()
-            x.imag = assigntype([4, 5, 6, 7])
-            assert all_equal(x.imag, [4, 5, 6, 7])
+            x.imag = assigntype([[4, 5],
+                                 [6, 7]])
+            assert all_equal(x.imag, [[4, 5],
+                                      [6, 7]])
 
             # With [:] assignment
             x = cdiscr.zero()
-            x.real[:] = assigntype([[2, 3], [4, 5]])
-            assert all_equal(x.real, [2, 3, 4, 5])
+            x.real[:] = assigntype([[2, 3],
+                                    [4, 5]])
+            assert all_equal(x.real, [[2, 3],
+                                      [4, 5]])
 
             x = cdiscr.zero()
-            x.real[:] = assigntype([4, 5, 6, 7])
-            assert all_equal(x.real, [4, 5, 6, 7])
+            x.imag[:] = assigntype([[2, 3],
+                                    [4, 5]])
+            assert all_equal(x.imag, [[2, 3],
+                                      [4, 5]])
 
-            x = cdiscr.zero()
-            x.imag[:] = assigntype([[2, 3], [4, 5]])
-            assert all_equal(x.imag, [2, 3, 4, 5])
-
-            x = cdiscr.zero()
-            x.imag[:] = assigntype([4, 5, 6, 7])
-            assert all_equal(x.imag, [4, 5, 6, 7])
-
+        # Setting with scalars
         x = cdiscr.zero()
         x.real = 1
-        assert all_equal(x.real, [1, 1, 1, 1])
+        assert all_equal(x.real, [[1, 1],
+                                  [1, 1]])
 
         x = cdiscr.zero()
         x.imag = -1
-        assert all_equal(x.imag, [-1, -1, -1, -1])
+        assert all_equal(x.imag, [[-1, -1],
+                                  [-1, -1]])
 
-        # 'F' ordering
-        cdiscr = odl.uniform_discr([0, 0], [1, 1], [2, 2], dtype=dtype,
-                                   impl=fn_impl, order='F')
-
-        x = cdiscr.element()
-        newreal = [[3, 4], [5, 6]]
-        x.real = newreal
-        assert all_equal(x.real, [3, 5, 4, 6])  # flattened in 'F' order
-        newreal = [4, 5, 6, 7]
-        x.real = newreal
-        assert all_equal(x.real, [4, 5, 6, 7])
+    # Incompatible shapes
+    with pytest.raises(ValueError):
+        x.real = [4, 5, 6, 7]
+    with pytest.raises(ValueError):
+        x.imag = [4, 5, 6, 7]
 
 
 def test_reduction(tspace_impl, reduction):
