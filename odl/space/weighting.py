@@ -28,7 +28,7 @@ import numpy as np
 import scipy.linalg as linalg
 from scipy.sparse.base import isspmatrix
 
-from odl.space.base_ntuples import FnBaseVector
+from odl.space.base_tensors import Tensor
 from odl.util import array1d_repr, arraynd_repr, signature_string, indent_rows
 
 
@@ -408,7 +408,7 @@ class MatrixWeighting(Weighting):
         Returns
         -------
         equivalent : bool
-            ``True`` if other is a `Weighting` instance with the same
+            ``True`` if ``other`` is a `Weighting` instance with the same
             `Weighting.impl`, which yields the same result as this
             weighting for any input, ``False`` otherwise. This is checked
             by entry-wise comparison of matrices/arrays/constants.
@@ -528,10 +528,9 @@ class ArrayWeighting(Weighting):
 
         Parameters
         ----------
-        array : 1-dim. `array-like`
+        array : `array-like`
             Weighting array of inner product, norm and distance.
-            Native `FnBaseVector` instances are stored
-            as-is without copying.
+            Native `Tensor` instances are stored as-is without copying.
         impl : string
             Specifier for the implementation backend.
         exponent : positive float
@@ -554,21 +553,17 @@ class ArrayWeighting(Weighting):
         # We store our "own" data structures as-is to retain Numpy
         # compatibility while avoiding copies. Other things are run through
         # numpy.asarray.
-        if isinstance(array, FnBaseVector):
+        if isinstance(array, Tensor):
             self.__array = array
         else:
             self.__array = np.asarray(array)
 
         if self.array.dtype == object:
             raise ValueError('invalid array {}'.format(array))
-        elif self.array.ndim != 1:
-            raise ValueError('array {} is {}-dimensional instead of '
-                             '1-dimensional'
-                             ''.format(array, self._array.ndim))
 
     @property
     def array(self):
-        """Weighting array of this inner instance."""
+        """Weighting array of this instance."""
         return self.__array
 
     def is_valid(self):
@@ -581,8 +576,8 @@ class ArrayWeighting(Weighting):
         Returns
         -------
         equals : bool
-            ``True`` if other is a `ArrayWeighting` instance with
-            **identical** array, ``False`` otherwise.
+            ``True`` if ``other`` is an `ArrayWeighting` instance with
+            **identical** array, False otherwise.
 
         See Also
         --------
@@ -600,10 +595,10 @@ class ArrayWeighting(Weighting):
         Returns
         -------
         equivalent : bool
-            ``True`` if other is a `Weighting` instance with the same
+            ``True`` if ``other`` is a `Weighting` instance with the same
             `Weighting.impl`, which yields the same result as this
             weighting for any input, ``False`` otherwise. This is checked
-            by entry-wise comparison of matrices/arrays/constants.
+            by entry-wise comparison of arrays/constants.
         """
         # Optimization for equality
         if self == other:
@@ -621,12 +616,10 @@ class ArrayWeighting(Weighting):
     @property
     def repr_part(self):
         """String usable in a space's ``__repr__`` method."""
-        part = 'weighting={}'.format(array1d_repr(self.array, nprint=10))
-        if self.exponent != 2.0:
-            part += ', exponent={}'.format(self.exponent)
-        if self.dist_using_inner:
-            part += ', dist_using_inner=True'
-        return part
+        optargs = [('weighting', self.array, None),
+                   ('exponent', self.exponent, 2.0),
+                   ('dist_using_inner', self.dist_using_inner, False)]
+        return signature_string([], optargs, mod=[[], ['!r', '', '']])
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -689,7 +682,7 @@ class ConstWeighting(Weighting):
         Returns
         -------
         equal : bool
-            ``True`` if other is a `ConstWeighting` instance with the
+            ``True`` if ``other`` is a `ConstWeighting` instance with the
             same constant, ``False`` otherwise.
         """
         if other is self:

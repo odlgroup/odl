@@ -25,7 +25,7 @@ standard_library.install_aliases()
 
 import numpy as np
 
-from odl.space.base_ntuples import FnBase
+from odl.space.base_tensors import TensorSpace
 from odl.space import ProductSpace
 from odl.util import as_flat_array
 
@@ -55,17 +55,19 @@ def matrix_representation(op):
     if not op.is_linear:
         raise ValueError('the operator is not linear')
 
-    if not (isinstance(op.domain, FnBase) or
+    if not (isinstance(op.domain, TensorSpace) or
             (isinstance(op.domain, ProductSpace) and
-             all(isinstance(spc, FnBase) for spc in op.domain))):
-        raise TypeError('operator domain {!r} is not FnBase, nor ProductSpace '
-                        'with only FnBase components'.format(op.domain))
+             all(isinstance(spc, TensorSpace) for spc in op.domain))):
+        raise TypeError('operator domain {!r} is neither `TensorSpace` '
+                        'nor `ProductSpace` with only `TensorSpace` '
+                        'components'.format(op.domain))
 
-    if not (isinstance(op.range, FnBase) or
+    if not (isinstance(op.range, TensorSpace) or
             (isinstance(op.range, ProductSpace) and
-             all(isinstance(spc, FnBase) for spc in op.range))):
-        raise TypeError('operator range {!r} is not FnBase, nor ProductSpace '
-                        'with only FnBase components'.format(op.range))
+             all(isinstance(spc, TensorSpace) for spc in op.range))):
+        raise TypeError('operator range {!r} is neither `TensorSpace` '
+                        'nor `ProductSpace` with only `TensorSpace` '
+                        'components'.format(op.range))
 
     # Get the size of the range, and handle ProductSpace
     # Store for reuse in loop
@@ -297,7 +299,7 @@ def as_scipy_operator(op):
     Notes
     -----
     If the data representation of ``op``'s domain and range is of type
-    `NumpyFn` this incurs no significant overhead. If the space type is
+    `NumpyTensorSpace` this incurs no significant overhead. If the space type is
     ``CudaFn`` or some other nonlocal type, the overhead is significant.
     """
     if not op.is_linear:
@@ -352,8 +354,9 @@ def as_proximal_lang_operator(op, norm_bound=None):
     Notes
     -----
     If the data representation of ``op``'s domain and range is of type
-    `NumpyFn` this incurs no significant overhead. If the data space is
-    ``CudaFn`` or some other nonlocal type, the overhead is significant.
+    `NumpyTensorSpace` this incurs no significant overhead. If the data
+    space is implemented with CUDA or some other non-local representation,
+    the overhead is significant.
 
     References
     ----------

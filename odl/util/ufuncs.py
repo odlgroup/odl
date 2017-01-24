@@ -15,10 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Ufuncs for ODL vectors.
+"""Ufunc for ODL-wrapped arrays.
 
 These functions are internal and should only be used as methods on
-`NtuplesBaseVector` type spaces.
+`TensorSet` type spaces.
 
 See `numpy.ufuncs
 <http://docs.scipy.org/doc/numpy/reference/ufuncs.html>`_
@@ -27,9 +27,10 @@ for more information.
 Notes
 -----
 The default implementation of these methods make heavy use of the
-``NtuplesBaseVector.__array__`` to extract a `numpy.ndarray` from the vector,
-and then apply a ufunc to it. Afterwards, ``NtuplesBaseVector.__array_wrap__``
-is used to re-wrap the data into the appropriate space.
+``GeneralizedTensor.__array__`` to extract a `numpy.ndarray` from the
+element, and then apply a ufunc to it. Afterwards,
+``GeneralizedTensor.__array_wrap__`` is used to re-wrap the data into
+the appropriate space element.
 """
 
 # Imports for common Python 2/3 codebase
@@ -41,7 +42,7 @@ import numpy as np
 import re
 
 
-__all__ = ('NtuplesBaseUfuncs', 'NumpyNtuplesUfuncs',
+__all__ = ('TensorSetUfuncs', 'NumpyTensorSetUfuncs',
            'DiscreteLpUfuncs', 'ProductSpaceUfuncs')
 
 
@@ -50,7 +51,7 @@ RAW_UFUNCS = ['absolute', 'add', 'arccos', 'arccosh', 'arcsin', 'arcsinh',
               'arctan', 'arctan2', 'arctanh', 'bitwise_and', 'bitwise_or',
               'bitwise_xor', 'ceil', 'conj', 'copysign', 'cos', 'cosh',
               'deg2rad', 'divide', 'equal', 'exp', 'exp2', 'expm1', 'floor',
-              'floor_divide', 'fmax', 'fmin', 'fmod', 'fmod', 'greater',
+              'floor_divide', 'fmax', 'fmin', 'fmod', 'greater',
               'greater_equal', 'hypot', 'invert', 'isfinite', 'isinf', 'isnan',
               'left_shift', 'less', 'less_equal', 'log', 'log10', 'log1p',
               'log2', 'logaddexp', 'logaddexp2', 'logical_and', 'logical_not',
@@ -77,6 +78,9 @@ numpy.{}
 """.format(name)
     UFUNCS.append((name, n_in, n_out, doc))
 
+# TODO: add the following reductions (to the CUDA implementation):
+# ['var', 'trace', 'tensordot', 'std', 'ptp', 'mean', 'diff', 'cumsum',
+#  'cumprod', 'average']
 RAW_REDUCTIONS = [('sum', 'sum', 'Sum of array elements.'),
                   ('prod', 'prod', 'Product of array elements.'),
                   ('min', 'amin', 'Minimum value in array.'),
@@ -93,32 +97,32 @@ numpy.{}
     REDUCTIONS += [(name, doc)]
 
 
-# Wrap all numpy ufuncs
+# --- Wrappers for base tensors --- #
 
 def wrap_ufunc_base(name, n_in, n_out, doc):
-    """Add ufunc methods to `NtuplesBaseUfuncs`."""
+    """Return ufunc wrapper for implementation-agnostic ufunc classes."""
     wrapped = getattr(np, name)
     if n_in == 1:
         if n_out == 0:
             def wrapper(self):
-                return wrapped(self.vector)
+                return wrapped(self.elem)
 
         elif n_out == 1:
             def wrapper(self, out=None):
                 if out is None:
-                    out = self.vector.space.element()
+                    out = self.elem.space.element()
 
-                out[:] = wrapped(self.vector)
+                out[:] = wrapped(self.elem)
                 return out
 
         elif n_out == 2:
             def wrapper(self, out1=None, out2=None):
                 if out1 is None:
-                    out1 = self.vector.space.element()
+                    out1 = self.elem.space.element()
                 if out2 is None:
-                    out2 = self.vector.space.element()
+                    out2 = self.elem.space.element()
 
-                [y1, y2] = wrapped(self.vector)
+                [y1, y2] = wrapped(self.elem)
                 out1[:] = y1
                 out2[:] = y2
                 return out1, out2
@@ -130,9 +134,9 @@ def wrap_ufunc_base(name, n_in, n_out, doc):
         if n_out == 1:
             def wrapper(self, x2, out=None):
                 if out is None:
-                    return wrapped(self.vector, x2)
+                    return wrapped(self.elem, x2)
                 else:
-                    out[:] = wrapped(self.vector, x2)
+                    out[:] = wrapped(self.elem, x2)
                     return out
 
         else:
@@ -145,70 +149,94 @@ def wrap_ufunc_base(name, n_in, n_out, doc):
     return wrapper
 
 
-# Wrap reductions
 def wrap_reduction_base(name, doc):
-    """Add ufunc methods to `NtuplesBaseUfuncs`."""
+    """Return reduction wrapper for implementation-agnostic reductions."""
     wrapped = getattr(np, name)
 
-    def wrapper(self):
-        return wrapped(self.vector)
+    def wrapper(self, axis=None, out=None, keepdims=False, **kwargs):
+        # Avoid giving arrays explicitly through kwargs
+        kwargs.pop('a', None)
+        kwargs.pop('b', None)
+        kwargs.pop('out', None)
+
+        # Put positional arguments with defaults into kwargs
+        if axis is not None:
+            kwargs['axis'] = axis
+        kwargs['keepdims'] = keepdims
+
+        # Get dtype parameter present in some reductions since it's
+        # relevant for the output space
+        dtype = kwargs.get('dtype', self.elem.dtype)
+
+        if out is None:
+            out_arr = wrapped(self.elem, **kwargs)
+            if np.isscalar(out_arr):
+                return out_arr
+
+            out_space_constr = type(self.elem.space)
+            out_space = out_space_constr(out_arr.shape, dtype, self.elem.order)
+            return out_space.element(out_arr)
+        else:
+            out[:] = wrapped(self.elem, **kwargs)
+            return out
 
     wrapper.__name__ = name
     wrapper.__doc__ = doc
     return wrapper
 
 
-class NtuplesBaseUfuncs(object):
+class TensorSetUfuncs(object):
 
-    """Ufuncs for `NtuplesBaseVector` objects.
+    """Ufuncs for `GeneralizedTensor` objects.
 
-    Internal object, should not be created except in `NtuplesBaseVector`.
+    Internal object, should not be created except in `GeneralizedTensor`.
     """
 
-    def __init__(self, vector):
-        """Create ufunc wrapper for vector."""
-        self.vector = vector
+    def __init__(self, elem):
+        """Create ufunc wrapper for elem."""
+        self.elem = elem
 
 
 # Add ufunc methods to ufunc class
 for name, n_in, n_out, doc in UFUNCS:
     method = wrap_ufunc_base(name, n_in, n_out, doc)
-    setattr(NtuplesBaseUfuncs, name, method)
+    setattr(TensorSetUfuncs, name, method)
 
 # Add reduction methods to ufunc class
 for name, doc in REDUCTIONS:
     method = wrap_reduction_base(name, doc)
-    setattr(NtuplesBaseUfuncs, name, method)
+    setattr(TensorSetUfuncs, name, method)
 
 
-# Optimized implementation of ufuncs since we can use the out parameter
-# as well as the data parameter to avoid one call to asarray() when using an
-# NumpyNtuplesVector
-def wrap_ufunc_ntuples(name, n_in, n_out, doc):
-    """Add ufunc methods to `NumpyNtuplesUfuncs`."""
+# --- Wrappers for Numpy-based tensors --- #
 
+
+# Optimized implementation of ufuncs and reductions using the `out` parameter
+
+def wrap_ufunc_numpy(name, n_in, n_out, doc):
+    """Return ufunc wrapper for Numpy-based ufunc classes."""
     # Get method from numpy
     wrapped = getattr(np, name)
     if n_in == 1:
         if n_out == 0:
             def wrapper(self):
-                return wrapped(self.vector)
+                return wrapped(self.elem)
 
         elif n_out == 1:
             def wrapper(self, out=None):
                 if out is None:
-                    out = self.vector.space.element()
-                wrapped(self.vector, out.data)
+                    out = self.elem.space.element()
+                wrapped(self.elem, out.data)
                 return out
 
         elif n_out == 2:
             def wrapper(self, out1=None, out2=None):
                 if out1 is None:
-                    out1 = self.vector.space.element()
+                    out1 = self.elem.space.element()
                 if out2 is None:
-                    out2 = self.vector.space.element()
+                    out2 = self.elem.space.element()
 
-                y1, y2 = wrapped(self.vector, out1.data, out2.data)
+                y1, y2 = wrapped(self.elem, out1.data, out2.data)
                 return out1, out2
 
         else:
@@ -218,9 +246,9 @@ def wrap_ufunc_ntuples(name, n_in, n_out, doc):
         if n_out == 1:
             def wrapper(self, x2, out=None):
                 if out is None:
-                    out = self.vector.space.element()
+                    out = self.elem.space.element()
 
-                wrapped(self.vector, x2, out.data)
+                wrapped(self.elem, x2, out.data)
                 return out
 
         else:
@@ -233,50 +261,111 @@ def wrap_ufunc_ntuples(name, n_in, n_out, doc):
     return wrapper
 
 
-class NumpyNtuplesUfuncs(NtuplesBaseUfuncs):
+def wrap_reduction_numpy(name, doc):
+    """Return reduction wrapper for Numpy-based ufunc classes."""
+    wrapped = getattr(np, name)
 
-    """Ufuncs for `NumpyNtuplesVector` objects.
+    def wrapper(self, axis=None, out=None, keepdims=False, **kwargs):
+        from odl.space.npy_tensors import (NumpyTensorSpaceArrayWeighting,
+                                           NumpyTensorSpaceNoWeighting)
+        # Avoid giving arrays explicitly through kwargs
+        kwargs.pop('a', None)
+        kwargs.pop('b', None)
+        kwargs.pop('out', None)
 
-    Internal object, should not be created except in `NumpyNtuplesVector`.
+        # Put positional arguments with defaults into kwargs
+        if axis is not None:
+            kwargs['axis'] = axis
+        kwargs['keepdims'] = keepdims
+
+        # Get dtype parameter present in some reductions since it's
+        # relevant for the output space
+        dtype = kwargs.get('dtype', self.elem.dtype)
+
+        if out is None:
+            out_arr = wrapped(self.elem, **kwargs)
+            if np.isscalar(out_arr):
+                return out_arr
+
+            # For the TensorSpace variant, we additionally pass `exponent`
+            # and `weight` to the constructor
+            extra_args = {}
+            exponent = getattr(self.elem.space, 'exponent', None)
+            if exponent is not None:
+                extra_args['exponent'] = exponent
+            weighting = getattr(self.elem.space, 'weighting', None)
+            if weighting is not None:
+                # Array weighting cannot be propagated since sizes don't
+                # match any longer
+                if isinstance(weighting, NumpyTensorSpaceArrayWeighting):
+                    weighting = NumpyTensorSpaceNoWeighting(exponent=exponent)
+                extra_args['weighting'] = weighting
+
+            out_space_constr = type(self.elem.space)
+            out_space = out_space_constr(out_arr.shape, dtype, self.elem.order,
+                                         **extra_args)
+            return out_space.element(out_arr)
+        else:
+            wrapped(self.elem, out=out.data, **kwargs)
+            return out
+
+    wrapper.__name__ = name
+    wrapper.__doc__ = doc
+    return wrapper
+
+
+class NumpyTensorSetUfuncs(TensorSetUfuncs):
+
+    """Ufuncs for `NumpyGeneralizedTensor` objects.
+
+    Internal object, should not be created except in
+    `NumpyGeneralizedTensor`.
     """
 
 
 # Add ufunc methods to ufunc class
 for name, n_in, n_out, doc in UFUNCS:
-    method = wrap_ufunc_ntuples(name, n_in, n_out, doc)
-    setattr(NumpyNtuplesUfuncs, name, method)
+    method = wrap_ufunc_numpy(name, n_in, n_out, doc)
+    setattr(NumpyTensorSetUfuncs, name, method)
+
+# Add reduction methods to ufunc class
+for name, doc in REDUCTIONS:
+    method = wrap_reduction_numpy(name, doc)
+    setattr(NumpyTensorSetUfuncs, name, method)
 
 
-# Optimized implementation of ufuncs since we can use the out parameter
-# as well as the data parameter to avoid one call to asarray() when using a
-# NumpyNtuplesVector
+# --- Wrappers for DiscreteLp --- #
+
+
+# For DiscreteLP, basically the ufunc mechanism can be propagated from its
+# `tensor` attribute. Sometimes, reshaping is required.
+# TODO: update this!
 def wrap_ufunc_discretelp(name, n_in, n_out, doc):
-    """Add ufunc methods to `DiscreteLpUfuncs`."""
-
+    """Return ufunc wrapper for `DiscreteLpUfuncs`."""
     if n_in == 1:
         if n_out == 0:
             def wrapper(self):
-                method = getattr(self.vector.ntuple.ufuncs, name)
-                return self.vector.space.element(method())
+                method = getattr(self.elem.tensor.ufuncs, name)
+                return self.elem.space.element(method())
 
         elif n_out == 1:
             def wrapper(self, out=None):
-                method = getattr(self.vector.ntuple.ufuncs, name)
+                method = getattr(self.elem.tensor.ufuncs, name)
                 if out is None:
-                    return self.vector.space.element(method())
+                    return self.elem.space.element(method())
                 else:
-                    method(out=out.ntuple)
+                    method(out=out.tensor)
                     return out
 
         elif n_out == 2:
             def wrapper(self, out1=None, out2=None):
-                method = getattr(self.vector.ntuple.ufuncs, name)
+                method = getattr(self.elem.tensor.ufuncs, name)
                 if out1 is None:
-                    out1 = self.vector.space.element()
+                    out1 = self.elem.space.element()
                 if out2 is None:
-                    out2 = self.vector.space.element()
+                    out2 = self.elem.space.element()
 
-                y1, y2 = method(out1.ntuple, out2.ntuple)
+                y1, y2 = method(out1.tensor, out2.tensor)
                 return out1, out2
 
         else:
@@ -285,21 +374,14 @@ def wrap_ufunc_discretelp(name, n_in, n_out, doc):
     elif n_in == 2:
         if n_out == 1:
             def wrapper(self, x2, out=None):
-                if x2 in self.vector.space:
-                    x2 = x2.ntuple
+                if x2 in self.elem.space:
+                    x2 = x2.tensor
 
-                try:
-                    # Try to reshape to linear data
-                    x2 = x2.reshape(self.vector.size,
-                                    order=self.vector.space.order)
-                except AttributeError:
-                    pass
-
-                method = getattr(self.vector.ntuple.ufuncs, name)
+                method = getattr(self.elem.tensor.ufuncs, name)
                 if out is None:
-                    return self.vector.space.element(method(x2))
+                    return self.elem.space.element(method(x2))
                 else:
-                    method(x2, out.ntuple)
+                    method(x2, out.tensor)
                     return out
 
         else:
@@ -313,8 +395,10 @@ def wrap_ufunc_discretelp(name, n_in, n_out, doc):
 
 
 def wrap_reduction_discretelp(name, doc):
+    """Return reduction wrapper for `DiscreteLpUfuncs`."""
+
     def wrapper(self):
-        method = getattr(self.vector.ntuple.ufuncs, name)
+        method = getattr(self.elem.tensor.ufuncs, name)
         return method()
 
     wrapper.__name__ = name
@@ -322,7 +406,7 @@ def wrap_reduction_discretelp(name, doc):
     return wrapper
 
 
-class DiscreteLpUfuncs(NtuplesBaseUfuncs):
+class DiscreteLpUfuncs(TensorSetUfuncs):
 
     """Ufuncs for `DiscreteLpElement` objects.
 
@@ -340,33 +424,34 @@ for name, doc in REDUCTIONS:
     setattr(DiscreteLpUfuncs, name, method)
 
 
-# Ufuncs for product space elements
-def wrap_ufunc_productspace(name, n_in, n_out, doc):
-    """Add ufunc methods to `ProductSpaceElement`."""
+# --- Wrappers for Product space elements --- #
 
+
+def wrap_ufunc_productspace(name, n_in, n_out, doc):
+    """Return ufunc wrapper for `ProductSpaceUfuncs`."""
     if n_in == 1:
         if n_out == 0:
             def wrapper(self):
-                result = [getattr(x.ufuncs, name)() for x in self.vector]
-                return self.vector.space.element(result)
+                result = [getattr(x.ufuncs, name)() for x in self.elem]
+                return self.elem.space.element(result)
 
         elif n_out == 1:
             def wrapper(self, out=None):
                 if out is None:
-                    result = [getattr(x.ufuncs, name)() for x in self.vector]
-                    return self.vector.space.element(result)
+                    result = [getattr(x.ufuncs, name)() for x in self.elem]
+                    return self.elem.space.element(result)
                 else:
-                    for x, out_x in zip(self.vector, out):
+                    for x, out_x in zip(self.elem, out):
                         getattr(x.ufuncs, name)(out=out_x)
                     return out
 
         elif n_out == 2:
             def wrapper(self, out1=None, out2=None):
                 if out1 is None:
-                    out1 = self.vector.space.element()
+                    out1 = self.elem.space.element()
                 if out2 is None:
-                    out2 = self.vector.space.element()
-                for x, out1_x, out2_x in zip(self.vector, out1, out2):
+                    out2 = self.elem.space.element()
+                for x, out1_x, out2_x in zip(self.elem, out1, out2):
                     getattr(x.ufuncs, name)(out1=out1_x, out2=out2_x)
                 return out1, out2
 
@@ -376,22 +461,22 @@ def wrap_ufunc_productspace(name, n_in, n_out, doc):
     elif n_in == 2:
         if n_out == 1:
             def wrapper(self, x2, out=None):
-                if x2 in self.vector.space:
+                if x2 in self.elem.space:
                     if out is None:
                         result = [getattr(x.ufuncs, name)(x2p)
-                                  for x, x2p in zip(self.vector, x2)]
-                        return self.vector.space.element(result)
+                                  for x, x2p in zip(self.elem, x2)]
+                        return self.elem.space.element(result)
                     else:
-                        for x, x2p, outp in zip(self.vector, x2, out):
+                        for x, x2p, outp in zip(self.elem, x2, out):
                             getattr(x.ufuncs, name)(x2p, out=outp)
                         return out
                 else:
                     if out is None:
                         result = [getattr(x.ufuncs, name)(x2)
-                                  for x in self.vector]
-                        return self.vector.space.element(result)
+                                  for x in self.elem]
+                        return self.elem.space.element(result)
                     else:
-                        for x, outp in zip(self.vector, out):
+                        for x, outp in zip(self.elem, out):
                             getattr(x.ufuncs, name)(x2, out=outp)
                         return out
 
@@ -406,9 +491,9 @@ def wrap_ufunc_productspace(name, n_in, n_out, doc):
 
 
 def wrap_reduction_productspace(name, doc):
-    """Add reduction methods to `ProductSpaceElement`."""
+    """Return reduction wrapper for `ProductSpaceUfuncs`."""
     def wrapper(self):
-        results = [getattr(x.ufuncs, name)() for x in self.vector]
+        results = [getattr(x.ufuncs, name)() for x in self.elem]
         return getattr(np, name)(results)
 
     wrapper.__name__ = name
@@ -422,9 +507,9 @@ class ProductSpaceUfuncs(object):
 
     Internal object, should not be created except in `ProductSpaceElement`.
     """
-    def __init__(self, vector):
-        """Create ufunc wrapper for vector."""
-        self.vector = vector
+    def __init__(self, elem):
+        """Create ufunc wrapper for ``elem``."""
+        self.elem = elem
 
 
 # Add ufunc methods to ufunc class

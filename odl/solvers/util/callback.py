@@ -364,7 +364,7 @@ class CallbackShow(SolverCallback):
     See Also
     --------
     odl.discr.lp_discr.DiscreteLpElement.show
-    odl.space.base_ntuples.NtuplesBaseVector.show
+    odl.space.base_tensors.GeneralizedTensor.show
     """
 
     def __init__(self, *args, **kwargs):

@@ -38,7 +38,7 @@ from odl.solvers.nonsmooth.proximal_operators import (
     proximal_l2_squared, proximal_const_func, proximal_box_constraint,
     proximal_cconj, proximal_cconj_kl, proximal_cconj_kl_cross_entropy,
     combine_proximals)
-from odl.util import conj_exponent
+from odl.util import conj_exponent, moveaxis
 
 
 __all__ = ('LpNorm', 'L1Norm', 'L2Norm', 'L2NormSquared',
@@ -78,7 +78,7 @@ class LpNorm(Functional):
 
         Parameters
         ----------
-        space : `DiscreteLp` or `FnBase`
+        space : `DiscreteLp` or `TensorSpace`
             Domain of the functional.
         exponent : float
             Exponent for the norm (``p``).
@@ -476,7 +476,7 @@ class IndicatorLpUnitBall(Functional):
 
         Parameters
         ----------
-        space : `DiscreteLp` or `FnBase`
+        space : `DiscreteLp` or `TensorSpace`
             Domain of the functional.
         exponent : int or infinity
             Specifies wich norm to use.
@@ -570,7 +570,7 @@ class L1Norm(LpNorm):
 
         Parameters
         ----------
-        space : `DiscreteLp` or `FnBase`
+        space : `DiscreteLp` or `TensorSpace`
             Domain of the functional.
         """
         super().__init__(space=space, exponent=1)
@@ -610,7 +610,7 @@ class L2Norm(LpNorm):
 
         Parameters
         ----------
-        space : `DiscreteLp` or `FnBase`
+        space : `DiscreteLp` or `TensorSpace`
             Domain of the functional.
         """
         super().__init__(space=space, exponent=2)
@@ -650,7 +650,7 @@ class L2NormSquared(Functional):
 
         Parameters
         ----------
-        space : `DiscreteLp` or `FnBase`
+        space : `DiscreteLp` or `TensorSpace`
             Domain of the functional.
         """
         super().__init__(space=space, linear=False, grad_lipschitz=2)
@@ -814,7 +814,7 @@ class IdentityFunctional(ScalingFunctional):
 
     See Also
     --------
-    IdentityOperator
+    odl.operator.IdentityOperator
     """
 
     def __init__(self, field):
@@ -1068,7 +1068,7 @@ class KullbackLeibler(Functional):
 
         Parameters
         ----------
-        space : `DiscreteLp` or `FnBase`
+        space : `DiscreteLp` or `TensorSpace`
             Domain of the functional.
         prior : ``space`` `element-like`, optional
             Data term, positive.
@@ -1188,7 +1188,7 @@ class KullbackLeiblerConvexConj(Functional):
 
         Parameters
         ----------
-        space : `DiscreteLp` or `FnBase`
+        space : `DiscreteLp` or `TensorSpace`
             Domain of the functional.
         g : ``space`` `element-like`, optional
             Data term, positive.
@@ -1327,7 +1327,7 @@ class KullbackLeiblerCrossEntropy(Functional):
 
         Parameters
         ----------
-        space : `DiscreteLp` or `FnBase`
+        space : `DiscreteLp` or `TensorSpace`
             Domain of the functional.
         prior : ``space`` `element-like`, optional
             Data term, positive.
@@ -1450,7 +1450,7 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
 
         Parameters
         ----------
-        space : `DiscreteLp` or `FnBase`
+        space : `DiscreteLp` or `TensorSpace`
             Domain of the functional.
         g : ``space`` `element-like`, optional
             Data term, positive.
@@ -1811,7 +1811,7 @@ class NuclearNorm(Functional):
 
         Parameters
         ----------
-        space : `ProductSpace` of `ProductSpace` of `FnBase`
+        space : `ProductSpace` of `ProductSpace` of `TensorSpace`
             Domain of the functional.
         outer_exp : {1, 2, inf}, optional
             Exponent for the outer norm.
@@ -1835,7 +1835,7 @@ class NuclearNorm(Functional):
             raise TypeError('`space` must be a `ProductSpace` of '
                             '`ProductSpace`s')
         if (not space.is_power_space or not space[0].is_power_space):
-            raise TypeError('`space` must be of the form `FnBase^(nxm)`')
+            raise TypeError('`space` must be of the form `TensorSpace^(nxm)`')
 
         super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
 
@@ -1843,32 +1843,6 @@ class NuclearNorm(Functional):
         self.pwisenorm = PointwiseNorm(self.domain[0],
                                        exponent=singular_vector_exp)
         self.pshape = (self.domain.size, self.domain[0].size)
-
-    # TODO: Remove when numpy 1.11 is required by ODL
-    def _moveaxis(self, arr, source, dest):
-        """Implementation of `numpy.moveaxis`.
-
-        Needed since `numpy.moveaxis` requires numpy 1.11, which ODL doesn't
-        have as a dependency.
-        """
-        try:
-            source = list(source)
-        except TypeError:
-            source = [source]
-        try:
-            dest = list(dest)
-        except TypeError:
-            dest = [dest]
-
-        source = [a + arr.ndim if a < 0 else a for a in source]
-        dest = [a + arr.ndim if a < 0 else a for a in dest]
-
-        order = [n for n in range(arr.ndim) if n not in source]
-
-        for dest, src in sorted(zip(dest, source)):
-            order.insert(dest, src)
-
-        return arr.transpose(order)
 
     def _asarray(self, vec):
         """Convert ``x`` to an array.
@@ -1891,7 +1865,7 @@ class NuclearNorm(Functional):
 
         This is the inverse of `_asarray`.
         """
-        result = self._moveaxis(arr, [-2, -1], [0, 1])
+        result = moveaxis(arr, [-2, -1], [0, 1])
         return self.domain.element(result)
 
     def _call(self, x):
@@ -1902,7 +1876,7 @@ class NuclearNorm(Functional):
         svd_diag = np.linalg.svd(arr, compute_uv=False)
 
         # Rotate the axes so the svd-direction is first
-        s_reordered = self._moveaxis(svd_diag, -1, 0)
+        s_reordered = moveaxis(svd_diag, -1, 0)
 
         # Return nuclear norm
         return self.outernorm(self.pwisenorm(s_reordered))
@@ -2044,7 +2018,7 @@ class IndicatorNuclearNormUnitBall(Functional):
 
         Parameters
         ----------
-        space : `ProductSpace` of `ProductSpace` of `FnBase`
+        space : `ProductSpace` of `ProductSpace` of `TensorSpace`
             Domain of the functional.
         outer_exp : {1, 2, inf}, optional
             Exponent for the outer norm.
