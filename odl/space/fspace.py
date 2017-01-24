@@ -178,10 +178,15 @@ class FunctionSet(Set):
         if other is self:
             return True
 
-        return (isinstance(other, FunctionSet) and
+        return (isinstance(other, type(self)) and
+                isinstance(self, type(other)) and
                 self.domain == other.domain and
                 self.range == other.range and
                 self.out_dtype == other.out_dtype)
+
+    def __hash__(self):
+        """Return ``hash(self)``."""
+        return hash((type(self), self.domain, self.range, self.out_dtype))
 
     def __contains__(self, other):
         """Return ``other in self``.
@@ -712,22 +717,6 @@ class FunctionSpace(FunctionSet, LinearSpace):
                 out.fill(1)
 
         return self.element_type(self, one_vec)
-
-    def __eq__(self, other):
-        """Return ``self == other``.
-
-        Returns
-        -------
-        equals : bool
-            ``True`` if ``other`` is a `FunctionSpace` with same
-            `FunctionSpace.domain` and `FunctionSpace.range`,
-            ``False`` otherwise.
-        """
-        if other is self:
-            return True
-
-        return (isinstance(other, FunctionSpace) and
-                FunctionSet.__eq__(self, other))
 
     def _astype(self, out_dtype):
         """Internal helper for ``astype``."""

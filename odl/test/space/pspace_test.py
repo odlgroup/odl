@@ -69,6 +69,41 @@ def test_RxR():
     assert all_equal([v1, v2], u)
 
 
+def test_equals_space(exponent):
+    r2 = odl.rn(2)
+    r2x3_1 = odl.ProductSpace(r2, 3, exponent=exponent)
+    r2x3_2 = odl.ProductSpace(r2, 3, exponent=exponent)
+    r2x4 = odl.ProductSpace(r2, 4, exponent=exponent)
+
+    assert r2x3_1 is r2x3_1
+    assert r2x3_1 is not r2x3_2
+    assert r2x3_1 is not r2x4
+    assert r2x3_1 == r2x3_1
+    assert r2x3_1 == r2x3_2
+    assert r2x3_1 != r2x4
+    assert hash(r2x3_1) == hash(r2x3_2)
+    assert hash(r2x3_1) != hash(r2x4)
+
+
+def test_equals_vec(exponent):
+    r2 = odl.rn(2)
+    r2x3 = odl.ProductSpace(r2, 3, exponent=exponent)
+    r2x4 = odl.ProductSpace(r2, 4, exponent=exponent)
+
+    x1 = r2x3.zero()
+    x2 = r2x3.zero()
+    y = r2x3.one()
+    z = r2x4.zero()
+
+    assert x1 is x1
+    assert x1 is not x2
+    assert x1 is not y
+    assert x1 == x1
+    assert x1 == x2
+    assert x1 != y
+    assert x1 != z
+
+
 def test_is_power_space():
     r2 = odl.rn(2)
     r2x3 = odl.ProductSpace(r2, 3)

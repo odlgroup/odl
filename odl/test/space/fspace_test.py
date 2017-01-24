@@ -74,7 +74,22 @@ def test_fspace_simple_attributes():
     assert fspace_c.range == odl.ComplexNumbers()
 
 
-def test_fspace_equality():
+def _test_eq(x, y):
+    """Test equality of x and y."""
+    assert x == y
+    assert not x != y
+    assert hash(x) == hash(y)
+
+
+def _test_neq(x, y):
+    """Test non-equality of x and y."""
+    assert x != y
+    assert not x == y
+    assert hash(x) != hash(y)
+
+
+def test_equals():
+    """Test equality check and hash."""
     intv = odl.IntervalProd(0, 1)
     intv2 = odl.IntervalProd(-1, 1)
     fspace = FunctionSpace(intv)
@@ -82,9 +97,12 @@ def test_fspace_equality():
     fspace_c = FunctionSpace(intv, field=odl.ComplexNumbers())
     fspace_intv2 = FunctionSpace(intv2)
 
-    assert fspace == fspace_r
-    assert fspace != fspace_c
-    assert fspace != fspace_intv2
+    _test_eq(fspace, fspace)
+    _test_eq(fspace, fspace_r)
+    _test_eq(fspace_c, fspace_c)
+
+    _test_neq(fspace, fspace_c)
+    _test_neq(fspace, fspace_intv2)
 
 
 def _points(domain, num):

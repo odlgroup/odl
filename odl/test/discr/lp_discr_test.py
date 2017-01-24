@@ -338,6 +338,38 @@ def test_zero():
     assert all_equal(zero, [0, 0, 0])
 
 
+def test_equals_space(exponent, fn_impl):
+    x1 = odl.uniform_discr(0, 1, 3, exponent=exponent, impl=fn_impl)
+    x2 = odl.uniform_discr(0, 1, 3, exponent=exponent, impl=fn_impl)
+    y = odl.uniform_discr(0, 1, 4, exponent=exponent, impl=fn_impl)
+
+    assert x1 is x1
+    assert x1 is not x2
+    assert x1 is not y
+    assert x1 == x1
+    assert x1 == x2
+    assert x1 != y
+    assert hash(x1) == hash(x2)
+    assert hash(x1) != hash(y)
+
+
+def test_equals_vec(exponent, fn_impl):
+    discr = odl.uniform_discr(0, 1, 3, exponent=exponent, impl=fn_impl)
+    discr2 = odl.uniform_discr(0, 1, 4, exponent=exponent, impl=fn_impl)
+    x1 = discr.element([1, 2, 3])
+    x2 = discr.element([1, 2, 3])
+    y = discr.element([2, 2, 3])
+    z = discr2.element([1, 2, 3, 4])
+
+    assert x1 is x1
+    assert x1 is not x2
+    assert x1 is not y
+    assert x1 == x1
+    assert x1 == x2
+    assert x1 != y
+    assert x1 != z
+
+
 def _test_unary_operator(discr, function):
     # Verify that the statement y=function(x) gives equivalent results
     # to NumPy

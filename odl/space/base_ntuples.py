@@ -139,6 +139,10 @@ class NtuplesBase(Set):
                 self.size == other.size and
                 self.dtype == other.dtype)
 
+    def __hash__(self):
+        """Return ``hash(self)``."""
+        return hash((type(self), self.size, self.dtype))
+
     def __repr__(self):
         """Return ``repr(self)``."""
         return '{}({}, {})'.format(self.__class__.__name__, self.size,

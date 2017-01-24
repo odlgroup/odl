@@ -179,7 +179,22 @@ def test_element():
     assert set_.element() in set_
 
 
+def _test_eq(x, y):
+    """Test equality of x and y."""
+    assert x == y
+    assert not x != y
+    assert hash(x) == hash(y)
+
+
+def _test_neq(x, y):
+    """Test non-equality of x and y."""
+    assert x != y
+    assert not x == y
+    assert hash(x) != hash(y)
+
+
 def test_equals():
+    """Test equality check of IntervalProd."""
     interval1 = IntervalProd(1, 2)
     interval2 = IntervalProd(1, 2)
     interval3 = IntervalProd([1], [2])
@@ -188,25 +203,23 @@ def test_equals():
     rectangle2 = IntervalProd((1, 2), (2, 3))
     rectangle3 = IntervalProd([0, 2], [2, 3])
 
-    assert interval1 == interval1
-    assert not interval1 != interval1
-    assert interval1 == interval2
-    assert interval1 == interval3
-    assert not interval1 == interval4
-    assert interval1 != interval4
-    assert not interval1 == rectangle1
-    assert rectangle1 == rectangle1
-    assert rectangle2 == rectangle2
-    assert not rectangle1 == rectangle3
+    _test_eq(interval1, interval1)
+    _test_eq(interval1, interval2)
+    _test_eq(interval1, interval3)
+    _test_neq(interval1, interval4)
+    _test_neq(interval1, rectangle1)
+    _test_eq(rectangle1, rectangle1)
+    _test_eq(rectangle2, rectangle2)
+    _test_eq(rectangle1, rectangle2)
+    _test_neq(rectangle1, rectangle3)
 
     r1_1 = IntervalProd(-np.inf, np.inf)
     r1_2 = IntervalProd(-np.inf, np.inf)
     positive_reals = IntervalProd(0, np.inf)
-    assert r1_1 == r1_1
-    assert r1_1 == r1_2
-
-    assert positive_reals == positive_reals
-    assert positive_reals != r1_1
+    _test_eq(r1_1, r1_1)
+    _test_eq(r1_1, r1_2)
+    _test_eq(positive_reals, positive_reals)
+    _test_neq(positive_reals, r1_1)
 
     # non interval
     for non_interval in [1, 1j, np.array([1, 2])]:

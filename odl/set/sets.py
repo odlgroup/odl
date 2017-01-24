@@ -184,6 +184,10 @@ class EmptySet(Set):
         """Return ``self == other``."""
         return isinstance(other, EmptySet)
 
+    def __hash__(self):
+        """Return ``hash(self)``."""
+        return hash(type(self))
+
     def element(self, inp=None):
         """Return None."""
         return None
@@ -207,6 +211,10 @@ class UniversalSet(Set):
     def __eq__(self, other):
         """Return ``self == other``."""
         return isinstance(other, UniversalSet)
+
+    def __hash__(self):
+        """Return ``hash(self)``."""
+        return hash(type(self))
 
     def element(self, inp=None):
         """Return ``inp`` in any case."""
@@ -259,6 +267,10 @@ class Strings(Set):
     def __eq__(self, other):
         """Return ``self == other``."""
         return isinstance(other, Strings) and other.length == self.length
+
+    def __hash__(self):
+        """Return ``hash(self)``."""
+        return hash((type(self), self.length))
 
     def element(self, inp=None):
         """Return an element from ``inp`` or from scratch."""
@@ -351,6 +363,10 @@ class ComplexNumbers(Field):
 
         return isinstance(other, ComplexNumbers)
 
+    def __hash__(self):
+        """Return ``hash(self)``."""
+        return hash(type(self))
+
     def element(self, inp=None):
         """Return a complex number from ``inp`` or from scratch."""
         if inp is not None:
@@ -408,6 +424,10 @@ class RealNumbers(Field):
 
         return isinstance(other, RealNumbers)
 
+    def __hash__(self):
+        """Return ``hash(self)``."""
+        return hash(type(self))
+
     def element(self, inp=None):
         """Return a real number from ``inp`` or from scratch."""
         if inp is not None:
@@ -425,13 +445,6 @@ class RealNumbers(Field):
 class Integers(Set):
 
     """Set of integers."""
-
-    def __eq__(self, other):
-        """Return ``self == other``."""
-        if other is self:
-            return True
-
-        return isinstance(other, Integers)
 
     def __contains__(self, other):
         """Return ``other in self``."""
@@ -463,6 +476,17 @@ class Integers(Set):
         if dtype is None:
             dtype = np.result_type(*other)
         return is_int_dtype(dtype)
+
+    def __eq__(self, other):
+        """Return ``self == other``."""
+        if other is self:
+            return True
+
+        return isinstance(other, Integers)
+
+    def __hash__(self):
+        """Return ``hash(self)``."""
+        return hash(type(self))
 
     def element(self, inp=None):
         """Return an integer from ``inp`` or from scratch."""
@@ -534,6 +558,10 @@ class CartesianProduct(Set):
         return (isinstance(other, CartesianProduct) and
                 len(other) == len(self) and
                 all(so == ss for so, ss in zip(other.sets, self.sets)))
+
+    def __hash__(self):
+        """Return ``hash(self)``."""
+        return hash((type(self), self.sets))
 
     def element(self, inp=None):
         """Create a `CartesianProduct` element.

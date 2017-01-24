@@ -463,7 +463,14 @@ class RectPartition(object):
             return True
 
         # Optimized version for exact equality
-        return self.set == other.set and self.grid == other.grid
+        return (isinstance(other, type(self)) and
+                isinstance(self, type(other)) and
+                self.set == other.set and
+                self.grid == other.grid)
+
+    def __hash__(self):
+        """Return ``hash(self)``."""
+        return hash((type(self), self.set, self.grid))
 
     def __ne__(self, other):
         """Return ``self != other``."""
