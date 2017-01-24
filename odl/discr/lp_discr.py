@@ -241,9 +241,22 @@ class DiscreteLp(DiscretizedSpace):
         """All sampling points in the partition as a sparse meshgrid."""
         return self.partition.meshgrid
 
-    def points(self):
-        """All sampling points in the partition."""
-        return self.partition.points()
+    def points(self, order=None):
+        """All sampling points in the partition.
+
+        Parameters
+        ----------
+        order : {None, 'C', 'F'}
+            Axis ordering in the resulting point array. For the default
+            ``None``, `new_elem_order` is used.
+
+        Returns
+        -------
+        points : `numpy.ndarray`
+            The shape of the array is ``size x ndim``, i.e. the points
+            are stored as rows.
+        """
+        return self.partition.points(order=self.new_elem_order)
 
     @property
     def tangent_bundle(self):

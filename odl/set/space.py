@@ -228,7 +228,6 @@ class LinearSpace(Set):
         if b is None:  # Single element
             if x2 is not None:
                 raise ValueError('`x2` provided but not `b`')
-            print('space.py: _lincomb(a, x1, 0, x1, out)')
             self._lincomb(a, x1, 0, x1, out)
             return out
 
@@ -241,7 +240,6 @@ class LinearSpace(Set):
                 raise LinearSpaceTypeError('`x2` {!r} is not an element of '
                                            '{!r}'.format(x2, self))
 
-            print('space.py: _lincomb(a, x1, b, x2, out)')
             self._lincomb(a, x1, b, x2, out)
 
         return out
@@ -550,15 +548,8 @@ class LinearSpaceElement(object):
         """Return ``self * other``."""
         # Instead of using __imul__ we duplicate code here for performance
         if other in self.space.field:
-            print('space.py: __mul__')
-            print(self.space)
-            print(other)
-            print(self)
             tmp = self.space.element()
-            result = self.space.lincomb(other, self, out=tmp)
-            print(result)
-            print(tmp)
-            return result
+            return self.space.lincomb(other, self, out=tmp)
         elif other in self.space:
             tmp = self.space.element()
             return self.space.multiply(other, self, out=tmp)

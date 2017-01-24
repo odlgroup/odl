@@ -204,10 +204,10 @@ class NumpyTensorSet(TensorSet):
 
         The available dtypes may depend on the specific system used.
         """
-        all_types = []
-        for val in np.sctypes.values():
-            all_types.extend(val)
-        return tuple(all_types)
+        all_dtypes = []
+        for lst in np.sctypes.values():
+            all_dtypes.extend(lst)
+        return tuple(np.dtype(dtype) for dtype in all_dtypes)
 
     @property
     def element_type(self):
@@ -1002,7 +1002,6 @@ class NumpyTensorSpace(TensorSpace, NumpyTensorSet):
              [-1j, 1j, 2j]]
         )
         """
-        print('npy_tensors.py: _lincomb(a, x1, b, x2, out, self.dtype)')
         _lincomb(a, x1, b, x2, out, self.dtype)
 
     def _dist(self, x1, x2):

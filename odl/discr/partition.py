@@ -274,9 +274,14 @@ class RectPartition(object):
         """
         return len(self.grid)
 
-    def points(self):
-        """Return the sampling grid points."""
-        return self.grid.points()
+    def points(self, order='C'):
+        """Return the sampling grid points.
+
+        See Also
+        --------
+        RectGrid.points
+        """
+        return self.grid.points(order)
 
     @property
     def meshgrid(self):

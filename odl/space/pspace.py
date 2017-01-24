@@ -35,7 +35,7 @@ from odl.util import is_real_dtype
 from odl.util.ufuncs import ProductSpaceUfuncs
 
 
-__all__ = ('ProductSpace', 'ProductSpaceElement')
+__all__ = ('ProductSpace',)
 
 
 class ProductSpace(LinearSpace):

@@ -40,7 +40,9 @@ class ScalingOperator(Operator):
 
     """Operator of multiplication with a scalar.
 
-    ``ScalingOperator(s)(x) == s * x``
+    Implements::
+
+        ScalingOperator(s)(x) == s * x
     """
 
     def __init__(self, domain, scalar):
@@ -134,7 +136,9 @@ class IdentityOperator(ScalingOperator):
 
     """Operator mapping each element to itself.
 
-        ``IdentityOperator()(x) == x``
+    Implements::
+
+        IdentityOperator()(x) == x
     """
 
     def __init__(self, space):
@@ -160,7 +164,9 @@ class LinCombOperator(Operator):
 
     """Operator mapping two space elements to a linear combination.
 
-    ``LinCombOperator(a, b)(x, y) == a * x + b * y``
+    Implements::
+
+        LinCombOperator(a, b)(x, y) == a * x + b * y
     """
 
     def __init__(self, space, a, b):
@@ -211,7 +217,9 @@ class MultiplyOperator(Operator):
 
     """Operator multiplying by a fixed space or field element.
 
-    ``MultiplyOperator(y)(x) == x * y``
+    Implements::
+
+        MultiplyOperator(y)(x) == x * y
 
     Here, ``y`` is a `LinearSpaceElement` or `Field` element and
     ``x`` is a `LinearSpaceElement`.
@@ -332,7 +340,9 @@ class PowerOperator(Operator):
 
     """Operator taking a fixed power of a space or field element.
 
-    ``PowerOperator(p)(x) == x ** p``
+    Implements::
+
+        PowerOperator(p)(x) == x ** p
 
     Here, ``x`` is a `LinearSpaceElement` or `Field` element and ``p`` is
     a number. Hence, this operator can be defined either on a
@@ -431,7 +441,9 @@ class PowerOperator(Operator):
 class InnerProductOperator(Operator):
     """Operator taking the inner product with a fixed space element.
 
-    ``InnerProductOperator(y)(x) <==> y.inner(x)``
+    Implements::
+
+        InnerProductOperator(y)(x) <==> y.inner(x)
 
     This is only applicable in inner product spaces.
 
@@ -521,9 +533,12 @@ class NormOperator(Operator):
 
     """Vector space norm as an operator.
 
-    ``NormOperator()(x) <==> x.norm()``
+    Implements::
 
-    This is only applicable in normed spaces.
+        NormOperator()(x) <==> x.norm()
+
+    This is only applicable in normed spaces, i.e., spaces implementing
+    a `LinearSpace.norm` method.
 
     See Also
     --------
@@ -611,9 +626,12 @@ class DistOperator(Operator):
 
     """Operator taking the distance to a fixed space element.
 
-    ``DistOperator(y)(x) == y.dist(x)``
+    Implements::
 
-    This is only applicable in metric spaces.
+        DistOperator(y)(x) == y.dist(x)
+
+    This is only applicable in metric spaces, i.e., spaces implementing
+    a `LinearSpace.dist` method.
 
     See Also
     --------
@@ -712,7 +730,9 @@ class ConstantOperator(Operator):
 
     """Operator that always returns the same value.
 
-    ``ConstantOperator(y)(x) == y``
+    Implements::
+
+        ConstantOperator(y)(x) == y
     """
 
     def __init__(self, constant, domain=None, range=None):
@@ -803,7 +823,9 @@ class ZeroOperator(Operator):
 
     """Operator mapping each element to the zero element.
 
-    ``ZeroOperator(space)(x) == space.zero()``
+    Implements::
+
+        ZeroOperator(space)(x) == space.zero()
     """
 
     def __init__(self, domain, range=None):
@@ -868,7 +890,12 @@ class ZeroOperator(Operator):
 
 class RealPart(Operator):
 
-    """Operator that extracts the real part of a vector."""
+    """Operator that extracts the real part of a vector.
+
+    Implements::
+
+        RealPart(x) == x.real
+    """
 
     def __init__(self, space):
         """Initialize a new instance.
@@ -984,7 +1011,12 @@ class RealPart(Operator):
 
 class ImagPart(Operator):
 
-    """Operator that extracts the imaginary part of a vector."""
+    """Operator that extracts the imaginary part of a vector.
+
+    Implements::
+
+        ImagPart(x) == x.imag
+    """
 
     def __init__(self, space):
         """Initialize a new instance.
@@ -1092,7 +1124,12 @@ class ImagPart(Operator):
 
 class ComplexEmbedding(Operator):
 
-    """Operator that embeds a vector into a complex space."""
+    """Operator that embeds a vector into a complex space.
+
+    Implements::
+
+        ComplexEmbedding(x) == x + 1j * zero()
+    """
 
     def __init__(self, space, scalar=1):
         """Initialize a new instance.
