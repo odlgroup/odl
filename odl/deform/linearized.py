@@ -76,8 +76,10 @@ def _linear_deform(template, displacement, out=None):
     """
     image_pts = template.space.points()
     for i, vi in enumerate(displacement):
-        image_pts[:, i] += vi.asarray().ravel()
-    return template.interpolation(image_pts.T, out=out, bounds_check=False)
+        image_pts[:, i] += vi.asarray().ravel(order=vi.space.view_order)
+    values = template.interpolation(image_pts.T, out=out, bounds_check=False)
+    return values.reshape(displacement.space[0].shape,
+                          order=displacement.space[0].view_order)
 
 
 class LinDeformFixedTempl(Operator):
@@ -136,7 +138,7 @@ class LinDeformFixedTempl(Operator):
             It must fulfill
             ``domain[0].partition == template.space.partition``, so
             this option is useful mainly when using different interpolations
-            in the displacement and template.
+            in displacement and template.
             Default: ``template.space.real_space.tangent_bundle``
 
         Examples

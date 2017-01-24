@@ -84,6 +84,9 @@ First, we use the member ufuncs which accept an ``out`` parameter in an appropri
     >>> y
     rn(3).element([-1.0, -2.0, -3.0])
 
+Another advantage of these member ufuncs is that they are ususally optimized for a specific implementation, for example CUDA-based arrays, while ``np.*`` always converts to a Numpy array first.
+(This could potentially be changed with the planned ``__numpy_ufunc__`` interface, but currently it is not possible.)
+
 Second, if a space element has to be modified in-place using some Numpy function (or any function defined on arrays), we have the `writable_array` context manager that exposes a Numpy array which gets automatically assigned back to the ODL object::
 
     >>> with odl.util.writable_array(x) as x_arr:

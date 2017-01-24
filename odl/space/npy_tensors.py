@@ -191,10 +191,10 @@ class NumpyTensorSet(TensorSet):
 
         The available dtypes may depend on the specific system used.
         """
-        all_types = []
-        for val in np.sctypes.values():
-            all_types.extend(val)
-        return tuple(all_types)
+        all_dtypes = []
+        for lst in np.sctypes.values():
+            all_dtypes.extend(lst)
+        return tuple(np.dtype(dtype) for dtype in all_dtypes)
 
     @property
     def element_type(self):

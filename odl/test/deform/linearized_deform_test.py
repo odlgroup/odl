@@ -33,6 +33,7 @@ def space(request, ndim, interp, dtype, tspace_impl):
     Generates example spaces with various implementations, dimensions, dtypes
     and interpolations.
     """
+    dtype = np.dtype(dtype)
     if dtype not in TENSOR_SPACE_IMPLS[tspace_impl].available_dtypes():
         pytest.skip('dtype not available for this backend')
 
