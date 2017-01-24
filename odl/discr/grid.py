@@ -785,7 +785,7 @@ class RectGrid(Set):
         Parameters
         ----------
         order : {'C', 'F'}, optional
-            Axis ordering in the resulting point array
+            Axis ordering in the resulting point array.
 
         Returns
         -------
