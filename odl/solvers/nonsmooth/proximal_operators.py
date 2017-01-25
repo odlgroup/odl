@@ -1190,7 +1190,7 @@ def proximal_convex_conj_kl(space, lam=1, g=None):
     The convex conjugate :math:`F^*` of :math:`F` is
 
     .. math::
-        F^*(p) = \\sum_i (-g_i \\ln(pos({1_X}_i - p_i))) +
+        F^*(p) = \\sum_i (-g_i \\ln(\\text{pos}({1_X}_i - p_i))) +
         I_{1_X - p \geq 0}(p)
 
     where :math:`p` is the variable dual to :math:`x`, and :math:`1_X` is an
@@ -1217,7 +1217,7 @@ def proximal_convex_conj_kl(space, lam=1, g=None):
 
     This functional :math:`F`, described above, is related to the
     Kullback-Leibler cross entropy functional. The KL cross entropy is the one
-    diescribed in `this Wikipedia article
+    described in `this Wikipedia article
     <https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence>`_, and
     the functional :math:`F` is obtained by switching place of the prior and
     the varialbe in the KL cross entropy functional. See the See Also section.

@@ -57,18 +57,18 @@ def astra_cpu_forward_projector(vol_data, geometry, proj_space, out=None):
         raise TypeError('volume data {!r} is not a `DiscreteLpElement` '
                         'instance.'.format(vol_data))
     if vol_data.space.impl != 'numpy':
-        raise TypeError('dspace {!r} of the volume is not an '
-                        'instance of `NumpyTensorSet`'
-                        ''.format(vol_data.space.dspace))
+        raise TypeError('`vol_data` must be a `numpy.ndarray` based, '
+                        "container got `impl` {!r}"
+                        "".format(vol_data.space.impl))
     if not isinstance(geometry, Geometry):
         raise TypeError('geometry  {!r} is not a Geometry instance'
                         ''.format(geometry))
     if not isinstance(proj_space, DiscreteLp):
-        raise TypeError('projection space {!r} is not a DiscreteLp '
+        raise TypeError('`proj_space` {!r} is not a DiscreteLp '
                         'instance.'.format(proj_space))
     if proj_space.impl != 'numpy':
-        raise TypeError('data type {!r} of the reconstruction space is not an '
-                        'instance of NumpyTensorSet'.format(proj_space.dspace))
+        raise TypeError("`proj_space.impl` must be 'numpy', got {!r}"
+                        "".format(proj_space.impl))
     if vol_data.ndim != geometry.ndim:
         raise ValueError('dimensions {} of volume data and {} of geometry '
                          'do not match'
@@ -144,9 +144,9 @@ def astra_cpu_back_projector(proj_data, geometry, reco_space, out=None):
         raise TypeError('projection data {!r} is not a DiscreteLpElement '
                         'instance'.format(proj_data))
     if proj_data.space.impl != 'numpy':
-        raise TypeError('data type {!r} of the projection space is not an '
-                        'instance of NumpyTensorSet'
-                        ''.format(proj_data.shape.dspace))
+        raise TypeError('`proj_data` must be a `numpy.ndarray` based, '
+                        "container got `impl` {!r}"
+                        "".format(proj_data.space.impl))
     if not isinstance(geometry, Geometry):
         raise TypeError('geometry  {!r} is not a Geometry instance'
                         ''.format(geometry))
@@ -154,8 +154,8 @@ def astra_cpu_back_projector(proj_data, geometry, reco_space, out=None):
         raise TypeError('reconstruction space {!r} is not a DiscreteLp '
                         'instance'.format(reco_space))
     if reco_space.impl != 'numpy':
-        raise TypeError('data type {!r} of the reconstruction space is not an '
-                        'instance of NumpyTensorSet'.format(reco_space.dspace))
+        raise TypeError("`reco_space.impl` must be 'numpy', got {!r}"
+                        "".format(reco_space.impl))
     if reco_space.ndim != geometry.ndim:
         raise ValueError('dimensions {} of reconstruction space and {} of '
                          'geometry do not match'.format(

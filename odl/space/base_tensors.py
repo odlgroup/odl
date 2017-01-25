@@ -18,26 +18,34 @@ import numpy as np
 from odl.set.sets import Set, RealNumbers, ComplexNumbers
 from odl.set.space import LinearSpace, LinearSpaceElement
 from odl.util import (
-    is_scalar_dtype, is_floating_dtype, is_real_dtype, safe_int_conv,
+    is_scalar_dtype, is_floating_dtype, is_real_dtype,
+    is_complex_floating_dtype, safe_int_conv,
     arraynd_repr, arraynd_str, dtype_str, signature_string, indent_rows)
-from odl.util.ufuncs import TensorSetUfuncs
+from odl.util.ufuncs import TensorSpaceUfuncs
 from odl.util.utility import TYPE_MAP_R2C, TYPE_MAP_C2R
 
 
-__all__ = ('TensorSet', 'TensorSpace')
+__all__ = ('TensorSpace',)
 
 
-class TensorSet(Set):
+class TensorSpace(LinearSpace):
 
     """Base class for sets of tensors of arbitrary data type.
 
     A tensor is, in the most general sense, a multi-dimensional array
-    that allows operations per entry (keep `rank` constant),
+    that allows operations per entry (keep the rank constant),
     reductions / contractions (reduce the rank) and broadcasting
     (raises the rank).
-    Since the data type is arbitrary, this set of tensors is in general
-    not a vector space, hence its admissible operations are rather
-    limited. For tensors with a space structure, use `TensorSpace`.
+    For non-numeric data type like ``object``, the range of valid
+    operations is rather limited since such a set of tensors does not
+    define a vector space.
+    Any numeric data type, on the other hand, is considered valid for
+    a tensor space, although certain operations - like division with
+    integer dtype - are not guaranteed to yield reasonable results.
+
+    Under these restrictions, all basic vector space operations are
+    supported by this class, along with reductions based on arithmetic
+    or comparison, and element-wise mathematical functions ("ufuncs").
 
     See `this Wikipedia article <https://en.wikipedia.org/wiki/Tensor>`_
     on tensors for further details.
@@ -54,7 +62,8 @@ class TensorSet(Set):
         dtype :
             Scalar data type of elements in this space. Can be provided
             in any way the `numpy.dtype` constructor understands, e.g.
-            as built-in type or as a string.
+            as built-in type or as a string. Data types with non-trivial
+            shapes are not allowed.
         order : {'K', 'C', 'F'}, optional
             Axis ordering of the data storage. Only relevant for more
             than 1 axis.
@@ -71,9 +80,38 @@ class TensorSet(Set):
                              '{}'.format(shape))
 
         self.__dtype = np.dtype(dtype)
+        if self.dtype.shape:
+            raise ValueError('`dtype` {!r} with shape {} not allowed'
+                             ''.format(dtype, self.dtype.shape))
         self.__order = str(order).upper()
         if self.order not in ('K', 'C', 'F'):
             raise ValueError("`order '{}' not understood".format(order))
+
+        if is_real_dtype(self.dtype):
+            # real includes non-floating-point like integers
+            field = RealNumbers()
+            self.__is_real = True
+            self.__is_complex = False
+            self.__real_dtype = self.dtype
+            self.__real_space = self
+            self.__complex_dtype = TYPE_MAP_R2C.get(self.dtype, None)
+            self.__complex_space = None  # Set in first call of astype
+            LinearSpace.__init__(self, field)
+        elif is_complex_floating_dtype(self.dtype):
+            field = ComplexNumbers()
+            self.__is_real = False
+            self.__is_complex = True
+            self.__real_dtype = TYPE_MAP_C2R[self.dtype]
+            self.__real_space = None  # Set in first call of astype
+            self.__complex_dtype = self.dtype
+            self.__complex_space = self
+            LinearSpace.__init__(self, field)
+        else:
+            self.__is_real = False
+            self.__is_complex = False
+            # No call to LinearSpace.__init__ since field=None is invalid
+
+        self.__is_floating = is_floating_dtype(self.dtype)
 
     @property
     def impl(self):
@@ -89,6 +127,135 @@ class TensorSet(Set):
     def dtype(self):
         """Scalar data type of each entry in an element of this space."""
         return self.__dtype
+
+    @property
+    def is_numeric(self):
+        """``True`` if `dtype` is numeric, otherwise ``False``."""
+        return self.__is_real or self.__is_complex
+
+    @property
+    def is_real_space(self):
+        """True if this is a space of real tensors."""
+        return self.__is_real and self.__is_floating
+
+    @property
+    def is_complex_space(self):
+        """True if this is a space of complex tensors."""
+        return self.__is_complex and self.__is_floating
+
+    @property
+    def real_dtype(self):
+        """The real dtype corresponding to this space's `dtype`.
+
+        Raises
+        ------
+        NotImplementedError
+            If `dtype` is not a numeric data type.
+        """
+        if not self.is_numeric:
+            raise NotImplementedError(
+                '`real_dtype` not defined for non-numeric `dtype`')
+        return self.__real_dtype
+
+    @property
+    def complex_dtype(self):
+        """The complex dtype corresponding to this space's `dtype`.
+
+        Raises
+        ------
+        NotImplementedError
+            If `dtype` is not a numeric data type.
+        """
+        if not self.is_numeric:
+            raise NotImplementedError(
+                '`complex_dtype` not defined for non-numeric `dtype`')
+        return self.__complex_dtype
+
+    @property
+    def real_space(self):
+        """The space corresponding to this space's `real_dtype`.
+
+        Raises
+        ------
+        NotImplementedError
+            If `dtype` is not a numeric data type.
+        """
+        if not self.is_numeric:
+            raise NotImplementedError(
+                '`real_space` not defined for non-numeric `dtype`')
+        return self.astype(self.real_dtype)
+
+    @property
+    def complex_space(self):
+        """The space corresponding to this space's `complex_dtype`.
+
+        Raises
+        ------
+        NotImplementedError
+            If `dtype` is not a numeric data type.
+        """
+        if not self.is_numeric:
+            raise NotImplementedError(
+                '`complex_space` not defined for non-numeric `dtype`')
+        return self.astype(self.complex_dtype)
+
+    def _astype(self, dtype, order):
+        """Internal helper for `astype`.
+
+        Subclasses with differing init parameters should overload this
+        method.
+        """
+        return type(self)(self.shape, dtype=dtype, order=order,
+                          weighting=getattr(self, 'weighting', None))
+
+    def astype(self, dtype, order=None):
+        """Return a copy of this space with new ``dtype``.
+
+        Parameters
+        ----------
+        dtype :
+            Scalar data type of the returned space. Can be provided
+            in any way the `numpy.dtype` constructor understands, e.g.
+            as built-in type or as a string. Data types with non-trivial
+            shapes are not allowed.
+        order : {'K', 'C', 'F'}, optional
+            Axis ordering of the data storage. Only relevant for more
+            than 1 axis.
+            For ``'C'`` and ``'F'``, elements are forced to use
+            contiguous memory in the respective ordering.
+            For ``'K'`` no contiguousness is enforced.
+            The default ``None`` is equivalent to ``self.order``.
+
+        Returns
+        -------
+        newspace : `TensorSpace`
+            Version of this space with given data type.
+        """
+        if dtype is None:
+            # Need to filter this out since Numpy iterprets it as 'float'
+            raise ValueError('`None` is not a valid data type')
+
+        if order is None:
+            order = self.order
+
+        dtype = np.dtype(dtype)
+        if dtype == self.dtype and order == self.order:
+            return self
+
+        if self.is_numeric:
+            # Caching for real and complex versions (exact dtype mappings)
+            if dtype == self.__real_dtype and order == self.order:
+                if self.__real_space is None:
+                    self.__real_space = self._astype(dtype, self.order)
+                return self.__real_space
+            elif dtype == self.__complex_dtype and order == self.order:
+                if self.__complex_space is None:
+                    self.__complex_space = self._astype(dtype, self.order)
+                return self.__complex_space
+            else:
+                return self._astype(dtype, order)
+        else:
+            return self._astype(dtype, order)
 
     @property
     def order(self):
@@ -113,9 +280,9 @@ class TensorSet(Set):
         """Order argument for view-preserving operations.
 
         This is identical to `order` except for ``self.order == 'K'``,
-        where ``'A'`` is returned. The main use case for this property
-        is in reshaping with `numpy.reshape` or `numpy.ravel`, if
-        views into the original array should be preserved.
+        where ``'A'`` ("any") is returned. The main use case for this
+        property is in reshaping with `numpy.reshape` or `numpy.ravel`,
+        if views into the original array should be preserved.
         """
         return 'A' if self.order == 'K' else self.order
 
@@ -126,7 +293,7 @@ class TensorSet(Set):
 
     @property
     def ndim(self):
-        """Number of axes (=dimensions) of this space."""
+        """Number of axes (=dimensions) of this space, also called "rank"."""
         return len(self.shape)
 
     def __len__(self):
@@ -154,7 +321,7 @@ class TensorSet(Set):
 
         Examples
         --------
-        Elements created with the `TensorSet.element` method are
+        Elements created with the `TensorSpace.element` method are
         guaranteed to be contained in the same space:
 
         >>> spc = odl.tensor_space((2, 3), dtype='uint64')
@@ -196,11 +363,11 @@ class TensorSet(Set):
         Of course, random garbage is not in the space:
 
         >>> spc = odl.tensor_space((2, 3), dtype='uint64')
-        >>> None in space
+        >>> None in spc
         False
-        >>> object in space
+        >>> object in spc
         False
-        >>> False in space
+        >>> False in spc
         False
         """
         return getattr(other, 'space', None) == self
@@ -256,6 +423,65 @@ class TensorSet(Set):
 
     __str__ = __repr__
 
+    @property
+    def examples(self):
+        """Return example random vectors."""
+        # Always return the same numbers
+        rand_state = np.random.get_state()
+        np.random.seed(1337)
+
+        if self.is_numeric:
+            yield ('Linearly spaced samples', self.element(
+                np.linspace(0, 1, self.size).reshape(self.shape)))
+            yield ('Normally distributed noise',
+                   self.element(np.random.standard_normal(self.shape)))
+
+        if self.is_real_space:
+            yield ('Uniformly distributed noise',
+                   self.element(np.random.uniform(size=self.shape)))
+        elif self.is_complex_space:
+            yield ('Uniformly distributed noise',
+                   self.element(np.random.uniform(size=self.shape) +
+                                np.random.uniform(size=self.shape) * 1j))
+        else:
+            # TODO: return something that always works, like zeros or ones?
+            raise NotImplementedError('no examples available for non-numeric'
+                                      'data type')
+
+        np.random.set_state(rand_state)
+
+    def zero(self):
+        """Return a tensor of all zeros."""
+        raise NotImplementedError('abstract method')
+
+    def one(self):
+        """Return a tensor of all ones."""
+        raise NotImplementedError('abstract method')
+
+    def _multiply(self, x1, x2, out):
+        """The entry-wise product of two tensors, assigned to ``out``."""
+        raise NotImplementedError('abstract method')
+
+    def _divide(self, x1, x2, out):
+        """The entry-wise quotient of two tensors, assigned to ``out``."""
+        raise NotImplementedError('abstract method')
+
+    @staticmethod
+    def default_dtype(field=None):
+        """Return the default data type for a given field.
+
+        Parameters
+        ----------
+        field : `Field`, optional
+            Set of numbers to be represented by a data type.
+
+        Returns
+        -------
+        dtype :
+            Numpy data type specifier.
+        """
+        raise NotImplementedError('abstract method')
+
     @staticmethod
     def available_dtypes():
         """Return the list of data types available in this implementation."""
@@ -263,23 +489,23 @@ class TensorSet(Set):
 
     @property
     def element_type(self):
-        """Type of elements in this set: `GeneralizedTensor`."""
-        return GeneralizedTensor
+        """Type of elements in this set: `Tensor`."""
+        return Tensor
 
 
-class GeneralizedTensor(object):
+class Tensor(LinearSpaceElement):
 
-    """Abstract class for representation of `TensorSet` elements."""
+    """Abstract class for representation of `TensorSpace` elements."""
 
     def __init__(self, space):
         """Initialize a new instance.
 
         Parameters
         ----------
-        space : TensorSet
+        space : TensorSpace
             The space to which this tensor belongs.
         """
-        assert isinstance(space, TensorSet)
+        assert isinstance(space, TensorSpace)
         self.__space = space
 
     @property
@@ -287,9 +513,7 @@ class GeneralizedTensor(object):
         """Name of the implementation back-end of this tensor."""
         return self.space.impl
 
-    def copy(self):
-        """Create an identical (deep) copy of this tensor."""
-        raise NotImplementedError('abstract method')
+    copy = LinearSpaceElement.copy
 
     def asarray(self, out=None):
         """Extract the data of this tensor as a Numpy array.
@@ -319,7 +543,7 @@ class GeneralizedTensor(object):
 
         Returns
         -------
-        values : `TensorSet.dtype` or `GeneralizedTensor`
+        values : `TensorSpace.dtype` or `Tensor`
             The value(s) at the given indices. Note that depending on
             the implementation, the returned object may be a (writable)
             view into the original array.
@@ -334,7 +558,7 @@ class GeneralizedTensor(object):
         indices : index expression
             Integer, slice or sequence of these, defining the positions
             of the data array which should be written to.
-        values : scalar, `array-like` or `GeneralizedTensor`
+        values : scalar, `array-like` or `Tensor`
             The value(s) that are to be assigned.
 
             If ``index`` is an integer, ``value`` must be a scalar.
@@ -344,16 +568,7 @@ class GeneralizedTensor(object):
         """
         raise NotImplementedError('abstract method')
 
-    def __eq__(self, other):
-        """Return ``self == other``.
-
-        Returns
-        -------
-        equals : bool
-            True if all entries of ``self`` and ``other`` are equal,
-            False otherwise.
-        """
-        raise NotImplementedError('abstract method')
+    __eq__ = LinearSpaceElement.__eq__
 
     def __ne__(self, other):
         """Return ``self != other``."""
@@ -376,7 +591,7 @@ class GeneralizedTensor(object):
 
     @property
     def order(self):
-        """Data storage order, either ``'C'``, ``'F'`` or ``'K'``."""
+        """Data storage order, either ``'K'``, ``'C'`` or ``'F'``."""
         return self.space.order
 
     @property
@@ -442,7 +657,7 @@ class GeneralizedTensor(object):
 
         Returns
         -------
-        vector : `GeneralizedTensor`
+        wrapper : `Tensor`
             Tensor wrapping ``obj``.
         """
         if obj.ndim == 0:
@@ -456,7 +671,7 @@ class GeneralizedTensor(object):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        if self.rank == 1:
+        if self.ndim == 1:
             inner_str = arraynd_repr(self)
         else:
             inner_str = '\n' + indent_rows(arraynd_repr(self)) + '\n'
@@ -464,12 +679,12 @@ class GeneralizedTensor(object):
 
     @property
     def ufuncs(self):
-        """`TensorSetUfuncs`, access to numpy style ufuncs.
+        """`TensorSpaceUfuncs`, access to Numpy style ufuncs.
 
         These are always available, but may or may not be optimized for
         the specific space in use.
         """
-        return TensorSetUfuncs(self)
+        return TensorSpaceUfuncs(self)
 
     def show(self, title=None, method='scatter', force_show=False, fig=None,
              **kwargs):
@@ -519,226 +734,6 @@ class GeneralizedTensor(object):
         return show_discrete_data(self.asarray(), grid, title=title,
                                   method=method, force_show=force_show,
                                   fig=fig, **kwargs)
-
-
-class TensorSpace(TensorSet, LinearSpace):
-
-    """Base class for tensor spaces independent of implementation.
-
-    A tensor is, in the most general sense, a multi-dimensional array
-    that allows operations per entry (keep `rank` constant),
-    reductions / contractions (reduce the rank) and broadcasting
-    (raises the rank).
-    Any *scalar* data type is allowed for a tensor space, although
-    certain operations - like division with integer dtype - are not
-    guaranteed to yield reasonable results.
-    That said, all possible vector space operations are supported by
-    this class, along with reductions based on arithmetic or comparison,
-    and element-wise mathematical functions ("ufuncs").
-
-    See `this Wikipedia article <https://en.wikipedia.org/wiki/Tensor>`_
-    on tensors for further details.
-    """
-
-    def __init__(self, shape, dtype, order='K'):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        shape : positive int or sequence of positive ints
-            Number of entries per axis for elements in this space. A
-            single integer results in a space with rank 1, i.e., 1 axis.
-        dtype :
-            Scalar data type of elements in this space. Can be provided
-            in any way the `numpy.dtype` constructor understands, e.g.
-            as built-in type or as a string.
-            Only scalar data types (numbers) are allowed.
-        order : {'K', 'C', 'F'}, optional
-            Axis ordering of the data storage. Only relevant for more
-            than 1 axis.
-            For ``'C'`` and ``'F'``, elements are forced to use
-            contiguous memory in the respective ordering.
-            For ``'K'`` no contiguousness is enforced.
-        """
-        TensorSet.__init__(self, shape, dtype, order)
-
-        if not is_scalar_dtype(self.dtype):
-            raise ValueError('`dtype` must be a scalar data type, got {!r}'
-                             ''.format(dtype))
-
-        if is_real_dtype(self.dtype):
-            field = RealNumbers()
-            self.__is_real = True
-            self.__real_dtype = self.dtype
-            self.__real_space = self
-            self.__complex_dtype = TYPE_MAP_R2C.get(self.dtype, None)
-            self.__complex_space = None  # Set in first call of astype
-        else:
-            field = ComplexNumbers()
-            self.__is_real = False
-            self.__real_dtype = TYPE_MAP_C2R[self.dtype]
-            self.__real_space = None  # Set in first call of astype
-            self.__complex_dtype = self.dtype
-            self.__complex_space = self
-
-        self.__is_floating = is_floating_dtype(self.dtype)
-        LinearSpace.__init__(self, field)
-
-    @property
-    def is_real_space(self):
-        """True if this is a space of real tensors."""
-        return self.__is_real and self.__is_floating
-
-    @property
-    def is_complex_space(self):
-        """True if this is a space of complex tensors."""
-        return (not self.__is_real) and self.__is_floating
-
-    @property
-    def real_dtype(self):
-        """The real dtype corresponding to this space's `dtype`."""
-        return self.__real_dtype
-
-    @property
-    def complex_dtype(self):
-        """The complex dtype corresponding to this space's `dtype`."""
-        return self.__complex_dtype
-
-    @property
-    def real_space(self):
-        """The space corresponding to this space's `real_dtype`."""
-        return self.astype(self.real_dtype)
-
-    @property
-    def complex_space(self):
-        """The space corresponding to this space's `complex_dtype`."""
-        return self.astype(self.complex_dtype)
-
-    def _astype(self, dtype, order):
-        """Internal helper for `astype`.
-
-        Subclasses with differing init parameters should overload this
-        method.
-        """
-        return type(self)(self.shape, dtype=dtype, order=order,
-                          weighting=getattr(self, 'weighting', None))
-
-    def astype(self, dtype, order=None):
-        """Return a copy of this space with new ``dtype``.
-
-        Parameters
-        ----------
-        dtype :
-            Data type of the returned space. Can be given in any way
-            `numpy.dtype` understands, e.g. as string (``'complex64'``)
-            or data type (``complex``).
-        order : {'K', 'C', 'F'}, optional
-            Axis ordering of the data storage. Only relevant for more
-            than 1 axis.
-            For ``'C'`` and ``'F'``, elements are forced to use
-            contiguous memory in the respective ordering.
-            For ``'K'`` no contiguousness is enforced.
-            The default ``None`` is equivalent to ``self.order``.
-
-        Returns
-        -------
-        newspace : `TensorSpace`
-            Version of this space with given data type.
-        """
-        if dtype is None:
-            # Need to filter this out since Numpy iterprets it as 'float'
-            raise ValueError('unknown data type `None`')
-
-        if order is None:
-            order = self.order
-
-        dtype = np.dtype(dtype)
-        if dtype == self.dtype and order == self.order:
-            return self
-
-        # Caching for real and complex versions (exact dtype mappings)
-        if dtype == self.__real_dtype and order == self.order:
-            if self.__real_space is None:
-                self.__real_space = self._astype(dtype, self.order)
-            return self.__real_space
-        elif dtype == self.__complex_dtype and order == self.order:
-            if self.__complex_space is None:
-                self.__complex_space = self._astype(dtype, self.order)
-            return self.__complex_space
-        else:
-            return self._astype(dtype, order)
-
-    @property
-    def examples(self):
-        """Return example random vectors."""
-        # Always return the same numbers
-        rand_state = np.random.get_state()
-        np.random.seed(1337)
-
-        yield ('Linspaced', self.element(
-            np.linspace(0, 1, self.size).reshape(self.shape)))
-
-        if self.is_real_space:
-            yield ('Random noise', self.element(np.random.rand(*self.shape)))
-        elif self.is_complex_space:
-            yield ('Random noise',
-                   self.element(np.random.rand(*self.shape) +
-                                np.random.rand(*self.shape) * 1j))
-
-        yield ('Normally distributed random noise',
-               self.element(np.random.randn(self.size)))
-
-        np.random.set_state(rand_state)
-
-    def zero(self):
-        """Return a tensor of all zeros."""
-        raise NotImplementedError('abstract method')
-
-    def one(self):
-        """Return a tensor of all ones."""
-        raise NotImplementedError('abstract method')
-
-    def _multiply(self, x1, x2, out):
-        """The entry-wise product of two tensors, assigned to ``out``."""
-        raise NotImplementedError('abstract method')
-
-    def _divide(self, x1, x2, out):
-        """The entry-wise quotient of two tensors, assigned to ``out``."""
-        raise NotImplementedError('abstract method')
-
-    @staticmethod
-    def default_dtype(field=None):
-        """Return the default data type for a given field.
-
-        Parameters
-        ----------
-        field : `Field`, optional
-            Set of numbers to be represented by a data type.
-
-        Returns
-        -------
-        dtype :
-            Numpy data type specifier.
-        """
-        raise NotImplementedError('abstract method')
-
-    @staticmethod
-    def available_dtypes():
-        """Return the list of data types available in this implementation."""
-        raise NotImplementedError('abstract method')
-
-    @property
-    def element_type(self):
-        """Type of elements in this set: `Tensor`."""
-        return Tensor
-
-
-class Tensor(GeneralizedTensor, LinearSpaceElement):
-
-    """Abstract class for representation of `TensorSpace` elements."""
-
-    __eq__ = LinearSpaceElement.__eq__
-    copy = LinearSpaceElement.copy
 
 
 if __name__ == '__main__':

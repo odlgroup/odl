@@ -8,15 +8,13 @@
 
 """Entry points for adding more spaces to ODL using external packages.
 
-External packages can add implementations of `TensorSet` and
-`TensorSpace` by hooking into the setuptools entry point ``'odl.space'``
-and exposing the methods ``tensor_set_impls`` and ``tensor_space_impls``.
+External packages can add an implementation of `TensorSpace` by hooking
+into the setuptools entry point ``'odl.space'`` and exposing the method
+``tensor_space_impls``.
 
 
 Attributes
 ----------
-TENSOR_SET_IMPLS: dict
-    A dictionary that maps a string to an `TensorSet` implementation.
 TENSOR_SPACE_IMPLS: dict
     A dictionary that maps a string to a `TensorSpace` implementation.
 
@@ -28,7 +26,6 @@ This is used with functions such as `rn`, `cn`, `tensor_space` or
 See Also
 --------
 NumpyTensorSpace : Numpy based implementation of `TensorSpace`
-NumpyTensorSet : Numpy based implementation of `TensorSet`
 """
 
 # Imports for common Python 2/3 codebase
@@ -37,17 +34,15 @@ from future import standard_library
 standard_library.install_aliases()
 
 from pkg_resources import iter_entry_points
-from odl.space.npy_tensors import NumpyTensorSet, NumpyTensorSpace
+from odl.space.npy_tensors import NumpyTensorSpace
 
 __all__ = ()
 
 
-TENSOR_SET_IMPLS = {'numpy': NumpyTensorSet}
 TENSOR_SPACE_IMPLS = {'numpy': NumpyTensorSpace}
 for entry_point in iter_entry_points(group='odl.space', name=None):
     try:
         module = entry_point.load()
-        TENSOR_SET_IMPLS.update(module.tensor_set_impls())
         TENSOR_SPACE_IMPLS.update(module.tensor_space_impls())
     except ImportError:
         pass

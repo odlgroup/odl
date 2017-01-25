@@ -41,14 +41,21 @@ class LinearSpace(Set):
         field : `Field`
             Scalar field of numbers for this space.
         """
-        if not isinstance(field, Field):
-            raise TypeError('`field` {!r} is not a `Field` instance')
-        self.__field = field
+        if field is None or isinstance(field, Field):
+            self.__field = field
+        else:
+            raise TypeError('`field` must be a `Field` instance, got {!r}'
+                            ''.format(field))
 
     @property
     def field(self):
         """Scalar field of numbers for this vector space."""
         return self.__field
+
+    @property
+    def has_field(self):
+        """``True`` if `field` is not ``None``, otherwise ``False``."""
+        return self.field is not None
 
     def element(self, inp=None, **kwargs):
         """Create a `LinearSpaceElement` from ``inp`` or from scratch.
@@ -98,7 +105,6 @@ class LinearSpace(Set):
         This method is intended to be private. Public callers should
         resort to `dist` which is type-checked.
         """
-        # default implementation
         return self.norm(x1 - x2)
 
     def _norm(self, x):
@@ -107,7 +113,6 @@ class LinearSpace(Set):
         This method is intended to be private. Public callers should
         resort to `norm` which is type-checked.
         """
-        # default implementation
         return float(np.sqrt(self.inner(x, x).real))
 
     def _inner(self, x1, x2):
@@ -116,7 +121,6 @@ class LinearSpace(Set):
         This method is intended to be private. Public callers should
         resort to `inner` which is type-checked.
         """
-        # No default implementation possible
         raise LinearSpaceNotImplementedError(
             'inner product not implemented in space {!r}'.format(self))
 
@@ -126,7 +130,6 @@ class LinearSpace(Set):
         This method is intended to be private. Public callers should
         resort to `multiply` which is type-checked.
         """
-        # No default implementation possible
         raise LinearSpaceNotImplementedError(
             'multiplication not implemented in space {!r}'.format(self))
 
@@ -138,7 +141,6 @@ class LinearSpace(Set):
     # Default methods
     def zero(self):
         """Return the zero (additive unit) element of this space."""
-        # Default implementation using lincomb
         tmp = self.element()
         self.lincomb(tmp, 0, tmp, 0, tmp)
         return tmp
@@ -201,6 +203,9 @@ class LinearSpace(Set):
 
             ``x = x * (1 + 2 + 3.14)``.
         """
+        if not self.has_field:
+            raise TypeError('`lincomb` cannot be used with `field=None`')
+
         if out is None:
             out = self.element()
         elif out not in self:
@@ -252,7 +257,6 @@ class LinearSpace(Set):
         if x2 not in self:
             raise LinearSpaceTypeError('`x2` {!r} is not an element of '
                                        '{!r}'.format(x2, self))
-
         return float(self._dist(x1, x2))
 
     def norm(self, x):
@@ -271,7 +275,6 @@ class LinearSpace(Set):
         if x not in self:
             raise LinearSpaceTypeError('`x` {!r} is not an element of '
                                        '{!r}'.format(x, self))
-
         return float(self._norm(x))
 
     def inner(self, x1, x2):
@@ -287,13 +290,14 @@ class LinearSpace(Set):
         inner : `LinearSpace.field` element
             Inner product of ``x1`` and ``x2``.
         """
+        if not self.has_field:
+            raise TypeError('`inner` cannot be used with `field=None`')
         if x1 not in self:
             raise LinearSpaceTypeError('`x1` {!r} is not an element of '
                                        '{!r}'.format(x1, self))
         if x2 not in self:
             raise LinearSpaceTypeError('`x2` {!r} is not an element of '
                                        '{!r}'.format(x2, self))
-
         return self.field.element(self._inner(x1, x2))
 
     def multiply(self, x1, x2, out=None):
@@ -324,7 +328,6 @@ class LinearSpace(Set):
         if x2 not in self:
             raise LinearSpaceTypeError('`x2` {!r} is not an element of '
                                        '{!r}'.format(x2, self))
-
         self._multiply(x1, x2, out)
         return out
 
@@ -358,7 +361,6 @@ class LinearSpace(Set):
         if x2 not in self:
             raise LinearSpaceTypeError('`x2` {!r} is not an element of '
                                        '{!r}'.format(x2, self))
-
         self._divide(x1, x2, out)
         return out
 

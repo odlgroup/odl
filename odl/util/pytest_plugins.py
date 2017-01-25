@@ -17,7 +17,7 @@ import operator
 import os
 
 import odl
-from odl.space.entry_points import TENSOR_SET_IMPLS, TENSOR_SPACE_IMPLS
+from odl.space.entry_points import TENSOR_SPACE_IMPLS
 from odl.trafos.backends import PYFFTW_AVAILABLE, PYWT_AVAILABLE
 from odl.util.testutils import simple_fixture
 
@@ -97,8 +97,6 @@ def pytest_ignore_collect(path, config):
 # --- Reusable fixtures ---
 
 # Simple ones, use helper
-tset_impl = simple_fixture(name='tset_impl',
-                           params=TENSOR_SET_IMPLS.keys())
 tspace_impl = simple_fixture(name='tspace_impl',
                              params=TENSOR_SPACE_IMPLS.keys())
 

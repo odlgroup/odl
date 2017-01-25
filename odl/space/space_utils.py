@@ -16,11 +16,10 @@ standard_library.install_aliases()
 import numpy as np
 
 from odl.set import RealNumbers, ComplexNumbers
-from odl.space.entry_points import TENSOR_SET_IMPLS, TENSOR_SPACE_IMPLS
-from odl.util import is_scalar_dtype
+from odl.space.entry_points import TENSOR_SPACE_IMPLS
 
 
-__all__ = ('vector', 'tensor_set', 'tensor_space', 'cn', 'rn')
+__all__ = ('vector', 'tensor_space', 'cn', 'rn')
 
 
 def vector(array, dtype=None, order='C', impl='numpy'):
@@ -38,7 +37,6 @@ def vector(array, dtype=None, order='C', impl='numpy'):
         Axis ordering of the data storage.
     impl : str
         Impmlementation back-end for the vector. See
-        `odl.space.entry_points.TENSOR_SET_IMPLS` and
         `odl.space.entry_points.TENSOR_SPACE_IMPLS` for available options.
 
     Returns
@@ -77,14 +75,13 @@ def vector(array, dtype=None, order='C', impl='numpy'):
 
     >>> odl.vector([[True, True, False],
     ...             [False, False, True]])
-    tensor_set((2, 3), 'bool', order='C').element(
+    tensor_space((2, 3), 'bool', order='C').element(
     [[True, True, False],
      [False, False, True]]
     )
     """
     # Sanitize input
     arr = np.array(array, copy=False, order=order, ndmin=1)
-
     if arr.dtype is object:
         raise ValueError('invalid input data resulting in `dtype==object`')
 
@@ -94,62 +91,8 @@ def vector(array, dtype=None, order='C', impl='numpy'):
     else:
         space_dtype = arr.dtype
 
-    # Select implementation
-    if space_dtype is None or is_scalar_dtype(space_dtype):
-        space_constr = tensor_space
-    else:
-        space_constr = tensor_set
-
-    return space_constr(arr.shape, dtype=space_dtype, order=order,
-                        impl=impl).element(arr)
-
-
-def tensor_set(shape, dtype, order='K', impl='numpy', **kwargs):
-    """Return a tensor set with arbitrary data type.
-
-    Parameters
-    ----------
-    shape : positive int or sequence of positive ints
-        Number of entries per axis for elements in this space. A
-        single integer results in a space with rank 1, i.e., 1 axis.
-    dtype :
-        Data type of each element. Can be provided in any way the
-        `numpy.dtype` function understands, e.g. as built-in type or
-        as a string.
-    order : {'K', 'C', 'F'}, optional
-        Axis ordering of the data storage. Only relevant for more
-        than 1 axis.
-        For ``'C'`` and ``'F'``, elements are forced to use
-        contiguous memory in the respective ordering.
-        For ``'K'`` no contiguousness is enforced.
-    impl : str, optional
-        Impmlementation back-end for the tensor set. See
-        `odl.space.entry_points.TENSOR_SET_IMPLS` and
-        `odl.space.entry_points.TENSOR_SPACE_IMPLS` for available options.
-    kwargs :
-        Extra keyword arguments passed to the set constructor.
-
-    Returns
-    -------
-    tset : `TensorSet`
-
-    Examples
-    --------
-    Set of 3-tuples with unsigned integer entries:
-
-    >>> odl.tensor_set(3, dtype='uint64')
-    tensor_set(3, 'uint64')
-
-    2x3 tensors with unsigned integer entries:
-
-    >>> odl.tensor_set((2, 3), dtype='uint64')
-    tensor_set((2, 3), 'uint64')
-
-    See Also
-    --------
-    tensor_space : Space of tensors with arbitrary scalar data type.
-    """
-    return TENSOR_SET_IMPLS[impl](shape, dtype, order, **kwargs)
+    space = tensor_space(arr.shape, dtype=space_dtype, order=order, impl=impl)
+    return space.element(arr)
 
 
 def tensor_space(shape, dtype=None, order='K', impl='numpy', **kwargs):
@@ -174,14 +117,13 @@ def tensor_space(shape, dtype=None, order='K', impl='numpy', **kwargs):
         For ``'K'`` no contiguousness is enforced.
     impl : str, optional
         Impmlementation back-end for the space. See
-        `odl.space.entry_points.TENSOR_SET_IMPLS` and
         `odl.space.entry_points.TENSOR_SPACE_IMPLS` for available options.
     kwargs :
         Extra keyword arguments passed to the space constructor.
 
     Returns
     -------
-    tspace : `TensorSpace`
+    space : `TensorSpace`
 
     Examples
     --------
@@ -207,14 +149,15 @@ def tensor_space(shape, dtype=None, order='K', impl='numpy', **kwargs):
 
     See Also
     --------
-    tensor_set : Set of tensors with arbitrary data type.
+    rn : Real tensor space.
+    cn : Complex tensor space.
     """
-    tspace_constr = TENSOR_SPACE_IMPLS[impl]
+    space_constr = TENSOR_SPACE_IMPLS[impl]
 
     if dtype is None:
-        dtype = tspace_constr.default_dtype()
+        dtype = space_constr.default_dtype()
 
-    return tspace_constr(shape, dtype=dtype, order=order, **kwargs)
+    return space_constr(shape, dtype=dtype, order=order, **kwargs)
 
 
 def cn(shape, dtype=None, order='K', impl='numpy', **kwargs):
@@ -240,7 +183,6 @@ def cn(shape, dtype=None, order='K', impl='numpy', **kwargs):
         For ``'K'`` no contiguousness is enforced.
     impl : str, optional
         Impmlementation back-end for the space. See
-        `odl.space.entry_points.TENSOR_SET_IMPLS` and
         `odl.space.entry_points.TENSOR_SPACE_IMPLS` for available options.
     kwargs :
         Extra keyword arguments passed to the space constructor.
@@ -273,7 +215,7 @@ def cn(shape, dtype=None, order='K', impl='numpy', **kwargs):
     See Also
     --------
     tensor_space : Space of tensors with arbitrary scalar data type.
-    rn : Real tensor spaces.
+    rn : Real tensor space.
     """
     cn_constr = TENSOR_SPACE_IMPLS[impl]
 
@@ -310,7 +252,6 @@ def rn(shape, dtype=None, order='K', impl='numpy', **kwargs):
         For ``'K'`` no contiguousness is enforced.
     impl : str, optional
         Impmlementation back-end for the space. See
-        `odl.space.entry_points.TENSOR_SET_IMPLS` and
         `odl.space.entry_points.TENSOR_SPACE_IMPLS` for available options.
     kwargs :
         Extra keyword arguments passed to the space constructor.

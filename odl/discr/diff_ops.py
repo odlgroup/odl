@@ -265,8 +265,8 @@ class Gradient(PointwiseTensorFieldOperator):
         >>> g = grad.range.element((data, data ** 2))
         >>> adj_g = grad.adjoint(g)
         >>> print(adj_g)
-        [[0.0, -2.0, -5.0, -8.0, -11.0],
-         [0.0, -5.0, -14.0, -23.0, -32.0]]
+        [[-0.0, -2.0, -5.0, -8.0, -11.0],
+         [-0.0, -5.0, -14.0, -23.0, -32.0]]
         >>> g.inner(grad_f) / f.inner(adj_g)
         1.0
         """

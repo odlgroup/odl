@@ -9,7 +9,7 @@
 """Ufunc for ODL-wrapped arrays.
 
 These functions are internal and should only be used as methods on
-`TensorSet` type spaces.
+`TensorSpace` type spaces.
 
 See `numpy.ufuncs
 <http://docs.scipy.org/doc/numpy/reference/ufuncs.html>`_
@@ -18,9 +18,9 @@ for more information.
 Notes
 -----
 The default implementation of these methods make heavy use of the
-``GeneralizedTensor.__array__`` to extract a `numpy.ndarray` from the
+``Tensor.__array__`` to extract a `numpy.ndarray` from the
 element, and then apply a ufunc to it. Afterwards,
-``GeneralizedTensor.__array_wrap__`` is used to re-wrap the data into
+``Tensor.__array_wrap__`` is used to re-wrap the data into
 the appropriate space element.
 """
 
@@ -33,7 +33,7 @@ import numpy as np
 import re
 
 
-__all__ = ('TensorSetUfuncs', 'NumpyTensorSetUfuncs',
+__all__ = ('TensorSpaceUfuncs', 'NumpyTensorSpaceUfuncs',
            'DiscreteLpUfuncs', 'ProductSpaceUfuncs')
 
 
@@ -176,11 +176,11 @@ def wrap_reduction_base(name, doc):
     return wrapper
 
 
-class TensorSetUfuncs(object):
+class TensorSpaceUfuncs(object):
 
-    """Ufuncs for `GeneralizedTensor` objects.
+    """Ufuncs for `Tensor` objects.
 
-    Internal object, should not be created except in `GeneralizedTensor`.
+    Internal object, should not be created except in `Tensor`.
     """
 
     def __init__(self, elem):
@@ -191,12 +191,12 @@ class TensorSetUfuncs(object):
 # Add ufunc methods to ufunc class
 for name, n_in, n_out, doc in UFUNCS:
     method = wrap_ufunc_base(name, n_in, n_out, doc)
-    setattr(TensorSetUfuncs, name, method)
+    setattr(TensorSpaceUfuncs, name, method)
 
 # Add reduction methods to ufunc class
 for name, doc in REDUCTIONS:
     method = wrap_reduction_base(name, doc)
-    setattr(TensorSetUfuncs, name, method)
+    setattr(TensorSpaceUfuncs, name, method)
 
 
 # --- Wrappers for Numpy-based tensors --- #
@@ -305,24 +305,23 @@ def wrap_reduction_numpy(name, doc):
     return wrapper
 
 
-class NumpyTensorSetUfuncs(TensorSetUfuncs):
+class NumpyTensorSpaceUfuncs(TensorSpaceUfuncs):
 
-    """Ufuncs for `NumpyGeneralizedTensor` objects.
+    """Ufuncs for `NumpyTensor` objects.
 
-    Internal object, should not be created except in
-    `NumpyGeneralizedTensor`.
+    Internal object, should not be created except in `NumpyTensor`.
     """
 
 
 # Add ufunc methods to ufunc class
 for name, n_in, n_out, doc in UFUNCS:
     method = wrap_ufunc_numpy(name, n_in, n_out, doc)
-    setattr(NumpyTensorSetUfuncs, name, method)
+    setattr(NumpyTensorSpaceUfuncs, name, method)
 
 # Add reduction methods to ufunc class
 for name, doc in REDUCTIONS:
     method = wrap_reduction_numpy(name, doc)
-    setattr(NumpyTensorSetUfuncs, name, method)
+    setattr(NumpyTensorSpaceUfuncs, name, method)
 
 
 # --- Wrappers for DiscreteLp --- #
@@ -397,7 +396,7 @@ def wrap_reduction_discretelp(name, doc):
     return wrapper
 
 
-class DiscreteLpUfuncs(TensorSetUfuncs):
+class DiscreteLpUfuncs(TensorSpaceUfuncs):
 
     """Ufuncs for `DiscreteLpElement` objects.
 

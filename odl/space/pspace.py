@@ -710,7 +710,7 @@ class ProductSpaceElement(LinearSpaceElement):
         """`ProductSpaceUfuncs`, access to Numpy style ufuncs.
 
         These are always available if the underlying spaces are
-        `TensorSet`.
+        `TensorSpace`.
 
         Examples
         --------
@@ -755,8 +755,8 @@ class ProductSpaceElement(LinearSpaceElement):
 
         See Also
         --------
-        odl.util.ufuncs.TensorSetUfuncs
-            Base class for ufuncs in `TensorSet` spaces, subspaces may
+        odl.util.ufuncs.TensorSpaceUfuncs
+            Base class for ufuncs in `TensorSpace` spaces, subspaces may
             override this for greater efficiency.
         odl.util.ufuncs.ProductSpaceUfuncs
             For a list of available ufuncs.

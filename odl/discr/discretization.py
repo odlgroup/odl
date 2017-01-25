@@ -12,29 +12,26 @@
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
-from builtins import super
 
 from odl.operator import Operator
-from odl.space.base_tensors import (
-    TensorSet, GeneralizedTensor, TensorSpace, Tensor)
-from odl.space import FunctionSet
-from odl.space.entry_points import TENSOR_SET_IMPLS, TENSOR_SPACE_IMPLS
-from odl.set import RealNumbers, ComplexNumbers, LinearSpace
+from odl.set.sets import Set
+from odl.space.base_tensors import TensorSpace, Tensor
+from odl.space.entry_points import TENSOR_SPACE_IMPLS
+from odl.set import RealNumbers, ComplexNumbers
 from odl.util import (
     arraynd_repr, arraynd_str, indent_rows,
     is_real_floating_dtype, is_complex_floating_dtype, is_scalar_dtype)
 
 
-__all__ = ('DiscretizedSet', 'DiscretizedSetElement',
-           'DiscretizedSpace', 'DiscretizedSpaceElement')
+__all__ = ('DiscretizedSpace',)
 
 
-class DiscretizedSet(TensorSet):
+class DiscretizedSpace(TensorSpace):
 
-    """Abstract discretization class for general sets.
+    """Abstract discretization class for general sets or spaces.
 
     A discretization in ODL is a way to encode the transition from
-    an arbitrary set to a set of n-tuples explicitly representable
+    an arbitrary set to a set of discrete values explicitly representable
     in a computer. The most common use case is the discretization of
     an infinite-dimensional vector space of functions by means of
     storing coefficients in a finite basis.
@@ -61,9 +58,9 @@ class DiscretizedSet(TensorSet):
 
         Parameters
         ----------
-        uspace : `FunctionSet`
+        uspace : `Set`
             The undiscretized (abstract) set to be discretized.
-        dspace : `TensorSet`
+        dspace : `TensorSpace`
             Data space providing containers for the values of a
             discretized object.
         sampling : `Operator`, optional
@@ -75,23 +72,21 @@ class DiscretizedSet(TensorSet):
             Must satisfy ``interpol.domain == dspace``,
             ``interpol.range == uspace``.
             """
-        if not isinstance(uspace, FunctionSet):
-            raise TypeError('`uspace` {!r} not a `Set` instance'
-                            ''.format(uspace))
-        if not isinstance(dspace, TensorSet):
-            raise TypeError('`dspace` {!r} not a `TensorSet` instance'
+        if not isinstance(uspace, Set):
+            raise TypeError('`uspace` must be a `Set` instance, '
+                            'got {!r}'.format(uspace))
+        if not isinstance(dspace, TensorSpace):
+            raise TypeError('`dspace` {!r} not a `TensorSpace` instance'
                             ''.format(dspace))
 
         if sampling is not None:
             if not isinstance(sampling, Operator):
                 raise TypeError('`sampling` {!r} not an `Operator` '
                                 'instance'.format(sampling))
-
             if sampling.domain != uspace:
                 raise ValueError('`sampling.domain` {} not equal to '
                                  'the undiscretized space {}'
                                  ''.format(sampling.domain, dspace))
-
             if sampling.range != dspace:
                 raise ValueError('`sampling.range` {} not equal to'
                                  'the data space {}'
@@ -101,18 +96,16 @@ class DiscretizedSet(TensorSet):
             if not isinstance(interpol, Operator):
                 raise TypeError('`interpol` {!r} not an Operator '
                                 'instance'.format(interpol))
-
             if interpol.domain != dspace:
                 raise ValueError('`interpol.domain` {} not equal '
                                  'to the data space {}'
                                  ''.format(interpol.domain, dspace))
-
             if interpol.range != uspace:
                 raise ValueError('`interpol.range` {} not equal to'
                                  'the undiscretized space {}'
                                  ''.format(interpol.range, uspace))
 
-        TensorSet.__init__(self, dspace.shape, dspace.dtype, dspace.order)
+        TensorSpace.__init__(self, dspace.shape, dspace.dtype, dspace.order)
         self.__uspace = uspace
         self.__dspace = dspace
         self.__sampling = sampling
@@ -165,7 +158,7 @@ class DiscretizedSet(TensorSet):
 
         Returns
         -------
-        element : `DiscretizedSetElement`
+        element : `DiscretizedSpaceElement`
             The discretized element, calculated as ``sampling(inp)`` or
             ``dspace.element(inp)``, tried in this order.
 
@@ -188,9 +181,9 @@ class DiscretizedSet(TensorSet):
         Returns
         -------
         equals : bool
-            ``True`` if ``other`` is a `DiscretizedSet`
+            ``True`` if ``other`` is a `DiscretizedSpace`
             instance and all attributes `uspace`, `dspace`,
-            `DiscretizedSet.sampling` and `DiscretizedSet.interpolation`
+            `DiscretizedSpace.sampling` and `DiscretizedSpace.interpolation`
             of ``other`` and this discretization are equal, ``False``
             otherwise.
         """
@@ -200,7 +193,7 @@ class DiscretizedSet(TensorSet):
         elif other is None:
             return False
         else:
-            return (TensorSet.__eq__(self, other) and
+            return (TensorSpace.__eq__(self, other) and
                     other.uspace == self.uspace and
                     other.dspace == self.dspace and
                     other.sampling == self.sampling and
@@ -223,21 +216,78 @@ class DiscretizedSet(TensorSet):
         """Domain of the continuous space."""
         return self.uspace.domain
 
+    # Pass-through attributes of the wrapped ``dspace``
+    def zero(self):
+        """Return the element of all zeros."""
+        return self.element_type(self, self.dspace.zero())
+
+    def one(self):
+        """Return the element of all ones."""
+        return self.element_type(self, self.dspace.one())
+
+    @property
+    def weighting(self):
+        """This space's weighting scheme."""
+        return getattr(self.dspace, 'weighting', None)
+
+    @property
+    def is_weighted(self):
+        """``True`` if the ``dspace`` is weighted."""
+        return getattr(self.dspace, 'is_weighted', False)
+
+    def _lincomb(self, a, x1, b, x2, out):
+        """Raw linear combination."""
+        self.dspace._lincomb(a, x1.tensor, b, x2.tensor, out.tensor)
+
+    def _dist(self, x1, x2):
+        """Raw distance between two elements."""
+        return self.dspace._dist(x1.tensor, x2.tensor)
+
+    def _norm(self, x):
+        """Raw norm of an element."""
+        return self.dspace._norm(x.tensor)
+
+    def _inner(self, x1, x2):
+        """Raw inner product of two elements."""
+        return self.dspace._inner(x1.tensor, x2.tensor)
+
+    def _multiply(self, x1, x2, out):
+        """Raw pointwise multiplication of two elements."""
+        self.dspace._multiply(x1.tensor, x2.tensor, out.tensor)
+
+    def _divide(self, x1, x2, out):
+        """Raw pointwise multiplication of two elements."""
+        self.dspace._divide(x1.tensor, x2.tensor, out.tensor)
+
+    @property
+    def examples(self):
+        """Return example functions in the space.
+
+        These are created by discretizing the examples in the underlying
+        `uspace`.
+
+        See Also
+        --------
+        odl.space.fspace.FunctionSpace.examples
+        """
+        for name, elem in self.uspace.examples:
+            yield (name, self.element(elem))
+
     @property
     def element_type(self):
-        """`DiscretizedSetElement`"""
-        return DiscretizedSetElement
+        """Type of elements in this space: `DiscretizedSpaceElement`."""
+        return DiscretizedSpaceElement
 
 
-class DiscretizedSetElement(GeneralizedTensor):
+class DiscretizedSpaceElement(Tensor):
 
-    """Representation of a `DiscretizedSet` element.
+    """Representation of a `DiscretizedSpace` element.
 
     Basically only a wrapper class for dspace's element class."""
 
     def __init__(self, space, tensor):
         """Initialize a new instance."""
-        GeneralizedTensor.__init__(self, space)
+        Tensor.__init__(self, space)
         self.__tensor = tensor
 
     @property
@@ -299,7 +349,7 @@ class DiscretizedSetElement(GeneralizedTensor):
 
         Returns
         -------
-        values : `GeneralizedTensor`
+        values : `Tensor`
             The value(s) at the index (indices)
         """
         return self.tensor.__getitem__(indices)
@@ -311,7 +361,7 @@ class DiscretizedSetElement(GeneralizedTensor):
         ----------
         indices : int or `slice`
             The position(s) that should be set
-        values : scalar, `array-like` or `GeneralizedTensor`
+        values : scalar, `array-like` or `Tensor`
             The value(s) that are to be assigned.
 
             If ``index`` is an int, ``value`` must be single value.
@@ -346,7 +396,7 @@ class DiscretizedSetElement(GeneralizedTensor):
 
         See Also
         --------
-        DiscretizedSet.sampling : For full description
+        DiscretizedSpace.sampling : For full description
         """
         self.space.sampling(ufunc, out=self.tensor, **kwargs)
 
@@ -356,7 +406,7 @@ class DiscretizedSetElement(GeneralizedTensor):
 
         Returns
         -------
-        interpolation_op : `FunctionSetMapping`
+        interpolation_op : `FunctionSpaceMapping`
             Operatior representing a continuous interpolation of this
             element.
 
@@ -379,9 +429,17 @@ class DiscretizedSetElement(GeneralizedTensor):
 
         See Also
         --------
-        DiscretizedSet.interpolation : For full description
+        DiscretizedSpace.interpolation : For full description
         """
         return self.space.interpolation(self.tensor)
+
+    def __ipow__(self, p):
+        """Implement ``self **= p``."""
+        # Falls back to `LinearSpaceElement.__ipow__` if `self.tensor`
+        # has no own `__ipow__`. The fallback only works for integer `p`.
+        # TODO: do we even need this??
+        self.tensor.__ipow__(p)
+        return self
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -389,148 +447,12 @@ class DiscretizedSetElement(GeneralizedTensor):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        inner_str = indent_rows(arraynd_repr(self.asarray()))
-        return '{!r}.element(\n{}\n)'.format(self.space, inner_str)
-
-
-class DiscretizedSpace(DiscretizedSet, TensorSpace):
-
-    """Abstract class for discretizations of linear vector spaces.
-
-    This variant of `DiscretizedSet` adds linear structure
-    to all its members. The `DiscretizedSet.uspace` is a
-    `LinearSpace`, the `DiscretizedSet.dspace`
-    for the data representation is an implementation of
-    :math:`\mathbb{F}^n`, where :math:`\mathbb{F}` is some
-    `Field`, and both `DiscretizedSet.sampling`
-    and `DiscretizedSet.interpolation` are linear
-    `Operator`'s.
-    """
-
-    def __init__(self, uspace, dspace, sampling=None, interpol=None):
-        """Abstract initialization method.
-
-        Intended to be called by subclasses for proper type checking
-        and setting of attributes.
-
-        Parameters
-        ----------
-        uspace : `LinearSpace`
-            The (abstract) space to be discretized
-        dspace : `TensorSpace`
-            Data space providing containers for the values of a
-            discretized object. Its `TensorSpace.field` attribute
-            must be the same as ``uspace.field``.
-        sampling : `Operator`, linear, optional
-            Operator mapping a `DiscretizedSet.uspace` element
-            to a `DiscretizedSet.dspace` element. Must satisfy
-            ``sampling.domain == uspace``, ``sampling.range == dspace``
-        interpol : `Operator`, linear, optional
-            Operator mapping a `DiscretizedSet.dspace` element
-            to a `DiscretizedSet.uspace` element. Must satisfy
-            ``interpol.domain == dspace``, ``interpol.range == uspace``.
-        """
-        DiscretizedSet.__init__(self, uspace, dspace, sampling, interpol)
-        TensorSpace.__init__(self, dspace.shape, dspace.dtype, dspace.order)
-
-        if not isinstance(uspace, LinearSpace):
-            raise TypeError('`uspace` {!r} not a LinearSpace '
-                            'instance'.format(uspace))
-
-        if not isinstance(dspace, TensorSpace):
-            raise TypeError('`dspace` {!r} not a `TensorSpace` instance'
-                            ''.format(dspace))
-
-        if uspace.field != dspace.field:
-            raise ValueError('fields {} and {} of the undiscretized and '
-                             'data spaces, resp., are not equal'
-                             ''.format(uspace.field, dspace.field))
-
-        if sampling is not None and not sampling.is_linear:
-            raise TypeError('`sampling` {!r} is not linear'
-                            ''.format(sampling))
-
-        if interpol is not None and not interpol.is_linear:
-            raise TypeError('`interpol` {!r} is not linear'
-                            ''.format(interpol))
-
-    # Pass-through attributes of the wrapped ``dspace``
-    def zero(self):
-        """Return the element of all zeros."""
-        return self.element_type(self, self.dspace.zero())
-
-    def one(self):
-        """Return the element of all ones."""
-        return self.element_type(self, self.dspace.one())
-
-    @property
-    def weighting(self):
-        """This space's weighting scheme."""
-        return getattr(self.dspace, 'weighting', None)
-
-    @property
-    def is_weighted(self):
-        """``True`` if the ``dspace`` is weighted."""
-        return getattr(self.dspace, 'is_weighted', False)
-
-    def _lincomb(self, a, x1, b, x2, out):
-        """Raw linear combination."""
-        self.dspace._lincomb(a, x1.tensor, b, x2.tensor, out.tensor)
-
-    def _dist(self, x1, x2):
-        """Raw distance between two elements."""
-        return self.dspace._dist(x1.tensor, x2.tensor)
-
-    def _norm(self, x):
-        """Raw norm of an element."""
-        return self.dspace._norm(x.tensor)
-
-    def _inner(self, x1, x2):
-        """Raw inner product of two elements."""
-        return self.dspace._inner(x1.tensor, x2.tensor)
-
-    def _multiply(self, x1, x2, out):
-        """Raw pointwise multiplication of two elements."""
-        self.dspace._multiply(x1.tensor, x2.tensor, out.tensor)
-
-    def _divide(self, x1, x2, out):
-        """Raw pointwise multiplication of two elements."""
-        self.dspace._divide(x1.tensor, x2.tensor, out.tensor)
-
-    @property
-    def examples(self):
-        """Return example functions in the space.
-
-        These are created by discretizing the examples in the underlying
-        `uspace`.
-
-        See Also
-        --------
-        odl.space.fspace.FunctionSpace.examples
-        """
-        for name, elem in self.uspace.examples:
-            yield (name, self.element(elem))
-
-    @property
-    def element_type(self):
-        """`DiscretizedSpaceElement`"""
-        return DiscretizedSpaceElement
-
-
-class DiscretizedSpaceElement(DiscretizedSetElement, Tensor):
-
-    """Representation of a `DiscretizedSpace` element."""
-
-    def __init__(self, space, data):
-        """Initialize a new instance."""
-        DiscretizedSetElement.__init__(self, space, data)
-
-    def __ipow__(self, p):
-        """Implement ``self **= p``."""
-        # Falls back to `LinearSpaceElement.__ipow__` if `self.tensor`
-        # has no own `__ipow__`. The fallback only works for integer `p`.
-        self.tensor.__ipow__(p)
-        return self
+        inner_str = arraynd_repr(self.asarray())
+        if self.space.ndim == 1:
+            return '{!r}.element({})'.format(self.space, inner_str)
+        else:
+            return '{!r}.element(\n{}\n)'.format(self.space,
+                                                 indent_rows(inner_str))
 
 
 def dspace_type(space, impl, dtype=None):
@@ -556,10 +478,6 @@ def dspace_type(space, impl, dtype=None):
         Space type selected after the space's field, the backend and
         the data type
     """
-    spacetype_map = {RealNumbers: TENSOR_SPACE_IMPLS,
-                     ComplexNumbers: TENSOR_SPACE_IMPLS,
-                     type(None): TENSOR_SET_IMPLS}
-
     field_type = type(getattr(space, 'field', None))
 
     if dtype is None:
@@ -583,7 +501,7 @@ def dspace_type(space, impl, dtype=None):
         raise TypeError('non-scalar data type {!r} cannot be combined with '
                         'a `LinearSpace`'.format(dtype))
 
-    stype = spacetype_map[field_type].get(impl, None)
+    stype = TENSOR_SPACE_IMPLS.get(impl, None)
 
     if stype is None:
         raise NotImplementedError('no corresponding data space available '
