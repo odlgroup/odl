@@ -1190,7 +1190,7 @@ class KullbackLeiblerConvexConj(Functional):
         ----------
         space : `DiscreteLp` or `FnBase`
             Domain of the functional.
-        g : ``space`` `element-like`, optional
+        prior : ``space`` `element-like`, optional
             Data term, positive.
             Default: if None it is take as the one-element.
         """
@@ -1452,7 +1452,7 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
         ----------
         space : `DiscreteLp` or `FnBase`
             Domain of the functional.
-        g : ``space`` `element-like`, optional
+        prior : ``space`` `element-like`, optional
             Data term, positive.
             Default: if None it is take as the one-element.
         """

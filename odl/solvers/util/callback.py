@@ -137,7 +137,7 @@ class CallbackStore(SolverCallback):
         results : list, optional
             List in which to store the iterates.
             Default: new list (``[]``)
-        results : callable, optional
+        function : callable, optional
             Function to be called on all incoming results before storage.
             Default: copy
 

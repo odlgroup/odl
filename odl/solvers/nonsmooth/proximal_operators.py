@@ -343,7 +343,7 @@ def proximal_composition(proximal, operator, mu):
 
     Parameters
     ----------
-    prox_factory : callable
+    proximal : callable
         A factory function that, when called with a step size returns the
         proximal operator of ``F``
     operator : `Operator`

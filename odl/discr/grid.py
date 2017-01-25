@@ -1097,8 +1097,10 @@ def uniform_grid(min_pt, max_pt, shape, nodes_on_bdry=True):
 
     Parameters
     ----------
-    min_pt, max_pt : float or sequence of float
-        Vectors of lower/upper ends of the intervals in the product.
+    min_pt : float or sequence of float
+        Vectors of lower ends of the intervals in the product.
+    max_pt : float or sequence of float
+        Vectors of upper ends of the intervals in the product.
     shape : int or sequence of ints
         Number of nodes per axis. Entries corresponding to degenerate axes
         must be equal to 1.

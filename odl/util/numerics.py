@@ -321,7 +321,7 @@ def resize_array(arr, newshp, offset=None, pad_mode='constant', pad_const=0,
         Array to be resized.
     newshp : sequence of ints
         Desired shape of the output array.
-    offset: sequence of ints, optional
+    offset : sequence of ints, optional
         Specifies how many entries are added to/removed from the "left"
         side (corresponding to low indices) of ``arr``.
     pad_mode : string, optional

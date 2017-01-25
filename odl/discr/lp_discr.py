@@ -1188,8 +1188,10 @@ def uniform_discr(min_pt, max_pt, shape, exponent=2.0, interp='nearest',
 
     Parameters
     ----------
-    min_pt, max_pt: float or sequence of floats
-        Minimum/maximum corners of the desired function domain.
+    min_pt : float or sequence of floats
+        Maximum corners of the desired function domain.
+    max_pt : float or sequence of floats
+        Minimum corners of the desired function domain.
     shape : int or sequence of ints
         Number of samples per axis.
     exponent : positive float, optional
@@ -1334,10 +1336,14 @@ def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
     ----------
     discr : `DiscreteLp`
         Uniformly discretized space used as a template.
-    min_pt, max_pt: float or sequence of floats
-        Minimum/maximum corners of the desired function domain.
-    shape : int or sequence of ints
+    min_pt : float or sequence of floats, optional
+        Minimum corners of the desired function domain.
+    max_pt : float or sequence of floats, optional
+        Maximum corners of the desired function domain.
+    shape : int or sequence of ints, optional
         Number of samples per axis.
+    cell_sides : array-like, optional
+        Side length of each cell.
     exponent : positive float, optional
         The parameter :math:`p` in :math:`L^p`. If the exponent is not
         equal to the default 2.0, the space has no inner product.

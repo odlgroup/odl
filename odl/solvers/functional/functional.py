@@ -819,7 +819,7 @@ class FunctionalLinearPerturb(Functional):
         ----------
         func : `Functional`
             Function corresponding to ``f``.
-        translation : `domain` element
+        linear_term : `domain` element
             Element in domain of ``func``, corresponding to the translation.
         """
         if not isinstance(func, Functional):

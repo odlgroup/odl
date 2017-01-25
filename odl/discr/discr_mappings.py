@@ -185,7 +185,7 @@ class PointCollocation(FunctionSetMapping):
 
         Parameters
         ----------
-        fset : `FunctionSet`
+        ip_fset : `FunctionSet`
             The non-discretized (abstract) set of functions to be
             discretized. The function domain must provide a
             `Set.contains_set` method.
