@@ -30,7 +30,7 @@ from odl.set.sets import Field, Set, UniversalSet
 
 
 __all__ = ('LinearSpace', 'LinearSpaceElement', 'UniversalSpace',
-           'LinearSpaceTypeError', 'LinearSpaceTypeError')
+           'LinearSpaceTypeError')
 
 
 class LinearSpace(Set):

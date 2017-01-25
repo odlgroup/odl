@@ -15,11 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
+"""Unit tests for Numpy-based tensors."""
 
-# Imports for common Python 2/3 codebase
-from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
 from builtins import range
 
 import numpy as np
@@ -51,9 +48,9 @@ PYTHON2 = sys.version_info < (3, 0)
 
 
 # Helpers to generate data
-def _pos_array(tspace):
-    """Create an array with positive real entries in ``tspace``."""
-    return np.abs(noise_array(tspace)) + 0.1
+def _pos_array(space):
+    """Create an array with positive real entries in ``space``."""
+    return np.abs(noise_array(space)) + 0.1
 
 
 # --- Pytest fixtures --- #
@@ -217,15 +214,15 @@ def test_init_tspace_weighting(weight, exponent):
 
 def test_properties():
     """Test that the space and element properties are as expected."""
-    tspace = odl.tensor_space((3, 4), dtype=complex, exponent=1, weighting=2)
-    x = tspace.element()
-    assert x.space is tspace
-    assert x.ndim == tspace.ndim == 2
-    assert x.dtype == tspace.dtype == np.dtype(complex)
-    assert x.size == tspace.size == 12
-    assert x.shape == tspace.shape == (3, 4)
-    assert x.itemsize == tspace.dtype.itemsize
-    assert x.nbytes == x.itemsize * x.size
+    space = odl.tensor_space((3, 4), dtype=complex, exponent=1, weighting=2)
+    x = space.element()
+    assert x.space is space
+    assert x.ndim == space.ndim == 2
+    assert x.dtype == space.dtype == np.dtype(complex)
+    assert x.size == space.size == 12
+    assert x.shape == space.shape == (3, 4)
+    assert x.itemsize == space.dtype.itemsize
+    assert x.nbytes == space.nbytes
 
 
 def test_tspace_astype():
@@ -296,9 +293,9 @@ def test_lincomb(tspace):
 
 def test_lincomb_raise(tspace):
     """Test if lincomb raises correctly for bad input."""
-    other_tspace = odl.rn((4, 3))
+    other_space = odl.rn((4, 3))
 
-    other_x = other_tspace.zero()
+    other_x = other_space.zero()
     x, y, z = tspace.zero(), tspace.zero(), tspace.zero()
 
     with pytest.raises(LinearSpaceTypeError):
@@ -336,9 +333,9 @@ def test_multiply(tspace):
 
 def test_multiply_exceptions(tspace):
     """Test if multiply raises correctly for bad input."""
-    other_tspace = odl.rn((4, 3))
+    other_space = odl.rn((4, 3))
 
-    other_x = other_tspace.zero()
+    other_x = other_space.zero()
     x, y = tspace.zero(), tspace.zero()
 
     with pytest.raises(LinearSpaceTypeError):
@@ -458,12 +455,14 @@ def test_binary_operator(tspace, arithmetic_op):
 def test_assign(tspace):
     """Test the assign method using ``==`` comparison."""
     x = noise_element(tspace)
+    x_old = x
     y = noise_element(tspace)
 
     y.assign(x)
 
     assert y == x
     assert y is not x
+    assert x is x_old
 
     # test alignment
     x *= 2
@@ -475,6 +474,7 @@ def test_inner(tspace):
     xd = noise_element(tspace)
     yd = noise_element(tspace)
 
+    # TODO: add weighting
     correct_inner = np.vdot(yd, xd)
     assert tspace.inner(xd, yd) == pytest.approx(correct_inner)
     assert xd.inner(yd) == pytest.approx(correct_inner)
@@ -482,8 +482,8 @@ def test_inner(tspace):
 
 def test_inner_exceptions(tspace):
     """Test if inner raises correctly for bad input."""
-    other_tspace = odl.rn((4, 3))
-    other_x = other_tspace.zero()
+    other_space = odl.rn((4, 3))
+    other_x = other_space.zero()
     x = tspace.zero()
 
     with pytest.raises(LinearSpaceTypeError):
@@ -504,8 +504,8 @@ def test_norm(tspace):
 
 def test_norm_exceptions(tspace):
     """Test if norm raises correctly for bad input."""
-    other_tspace = odl.rn((4, 3))
-    other_x = other_tspace.zero()
+    other_space = odl.rn((4, 3))
+    other_x = other_space.zero()
 
     with pytest.raises(LinearSpaceTypeError):
         tspace.norm(other_x)
@@ -533,8 +533,8 @@ def test_dist(tspace):
 
 def test_dist_exceptions(tspace):
     """Test if dist raises correctly for bad input."""
-    other_tspace = odl.rn((4, 3))
-    other_x = other_tspace.zero()
+    other_space = odl.rn((4, 3))
+    other_x = other_space.zero()
     x = tspace.zero()
 
     with pytest.raises(LinearSpaceTypeError):
@@ -546,19 +546,19 @@ def test_dist_exceptions(tspace):
 
 def test_pdist(exponent):
     """Test the dist method with p!=2 against numpy.linalg.norm of diff."""
-    for tspace in (odl.rn((3, 4), exponent=exponent),
-                   odl.cn((3, 4), exponent=exponent)):
-        [xarr, yarr], [x, y] = noise_elements(tspace, n=2)
+    for space in (odl.rn((3, 4), exponent=exponent),
+                  odl.cn((3, 4), exponent=exponent)):
+        [xarr, yarr], [x, y] = noise_elements(space, n=2)
 
         correct_dist = np.linalg.norm((xarr - yarr).ravel(), ord=exponent)
-        assert tspace.dist(x, y) == pytest.approx(correct_dist)
+        assert space.dist(x, y) == pytest.approx(correct_dist)
         assert x.dist(y) == pytest.approx(correct_dist)
 
 
-def test_getitem(getitem_indices):
+def test_element_getitem(getitem_indices):
     """Check if getitem produces correct values, shape and other stuff."""
-    tspace = odl.tensor_space((3, 4), dtype=complex, exponent=1, weighting=2)
-    x_arr, x = noise_elements(tspace)
+    space = odl.tensor_space((3, 4), dtype=complex, exponent=1, weighting=2)
+    x_arr, x = noise_elements(space)
 
     x_arr_sliced = x_arr[getitem_indices]
     sliced_shape = x_arr_sliced.shape
@@ -573,9 +573,9 @@ def test_getitem(getitem_indices):
         # Check that the space properties are preserved
         sliced_spc = x_sliced.space
         assert sliced_spc.shape == sliced_shape
-        assert sliced_spc.dtype == tspace.dtype
-        assert sliced_spc.exponent == tspace.exponent
-        assert sliced_spc.weighting == tspace.weighting
+        assert sliced_spc.dtype == space.dtype
+        assert sliced_spc.exponent == space.exponent
+        assert sliced_spc.weighting == space.weighting
 
         # Check that we have a view that manipulates the original array
         # (or not, depending on indexing style)
@@ -584,10 +584,10 @@ def test_getitem(getitem_indices):
         assert all_equal(x_arr, x)
 
 
-def test_setitem(setitem_indices):
+def test_element_setitem(setitem_indices):
     """Check if setitem produces the same result as NumPy."""
-    tspace = odl.tensor_space((3, 4), dtype=complex, exponent=1, weighting=2)
-    x_arr, x = noise_elements(tspace)
+    space = odl.tensor_space((3, 4), dtype=complex, exponent=1, weighting=2)
+    x_arr, x = noise_elements(space)
 
     x_arr_sliced = x_arr[setitem_indices]
     sliced_shape = x_arr_sliced.shape
@@ -612,10 +612,10 @@ def test_setitem(setitem_indices):
 
 def test_order(order):
     """Check if axis ordering is handled properly."""
-    tspace = odl.tensor_space((3, 4), order=order)
-    assert tspace.order == order
+    space = odl.tensor_space((3, 4), order=order)
+    assert space.order == order
 
-    x = noise_element(tspace)
+    x = noise_element(space)
     assert x.order == order
     if order in ('C', 'F'):
         assert x.data.flags[order + '_CONTIGUOUS']
@@ -628,7 +628,7 @@ def test_order(order):
         assert x[1:3, 0].order == order
         assert x[:, 1:2].order == order
 
-    assert x[...] in tspace
+    assert x[...] in space
 
     # non-contiguous slices result in 'K' ordering
     assert x[::2, :].order == 'K'
@@ -636,9 +636,9 @@ def test_order(order):
 
 def test_transpose():
     """Test the .T property of tensors against plain inner product."""
-    tspace = odl.tensor_space((3, 4), dtype=complex, weighting=2)
-    x = noise_element(tspace)
-    y = noise_element(tspace)
+    space = odl.tensor_space((3, 4), dtype=complex, weighting=2)
+    x = noise_element(space)
+    y = noise_element(space)
 
     # Assert linear operator
     assert isinstance(x.T, odl.Operator)
@@ -663,8 +663,8 @@ def test_multiply_by_scalar(tspace):
 
 def test_member_copy():
     """Test copy method of elements."""
-    tspace = odl.tensor_space((3, 4), dtype=complex, exponent=1, weighting=2)
-    x = noise_element(tspace)
+    space = odl.tensor_space((3, 4), dtype=complex, exponent=1, weighting=2)
+    x = noise_element(space)
 
     y = x.copy()
     assert x == y
@@ -678,8 +678,8 @@ def test_member_copy():
 def test_python_copy():
     """Test compatibility with the Python copy module."""
     import copy
-    tspace = odl.tensor_space((3, 4), dtype=complex, exponent=1, weighting=2)
-    x = noise_element(tspace)
+    space = odl.tensor_space((3, 4), dtype=complex, exponent=1, weighting=2)
+    x = noise_element(space)
 
     # Shallow copy
     y = copy.copy(x)
@@ -739,23 +739,28 @@ def test_conversion_to_scalar():
 
 def test_numpy_array_interface():
     """Verify that the __array__ interface for NumPy works."""
-    tspace = odl.tensor_space((3, 4), dtype='float32', exponent=1, weighting=2)
-    x = tspace.zero()
+    space = odl.tensor_space((3, 4), dtype='float32', exponent=1, weighting=2)
+    x = space.one()
     arr = x.__array__()
 
     assert isinstance(arr, np.ndarray)
-    assert np.array_equal(arr, np.zeros(x.shape))
+    assert np.array_equal(arr, np.ones(x.shape))
+
+    x_arr = np.array(x)
+    assert np.array_equal(x_arr, np.ones(x.shape))
+    x_as_arr = np.asarray(x)
+    assert np.array_equal(x_as_arr, np.ones(x.shape))
 
 
 def test_array_wrap_method():
     """Verify that the __array_wrap__ method for NumPy works."""
-    tspace = odl.tensor_space((3, 4), dtype='float32', exponent=1, weighting=2)
-    x_arr, x = noise_elements(tspace)
+    space = odl.tensor_space((3, 4), dtype='float32', exponent=1, weighting=2)
+    x_arr, x = noise_elements(space)
     y_arr = np.sin(x_arr)
     y = np.sin(x)  # Should yield again an ODL tensor
 
     assert all_equal(y, y_arr)
-    assert y in tspace
+    assert y in space
 
 
 def test_conj(tspace):
@@ -1519,15 +1524,15 @@ def test_reduction(tspace, reduction):
 def test_reduction_with_weighting():
     """Weightings are tricky to handle, check some cases."""
     # Constant weighting, should propagate
-    tspace = odl.rn((3, 4), weighting=0.5)
-    x = tspace.one()
+    space = odl.rn((3, 4), weighting=0.5)
+    x = space.one()
     red = x.ufuncs.sum(axis=0)
-    assert red.space.weighting == tspace.weighting
+    assert red.space.weighting == space.weighting
 
     # Array weighting, should result in no weighting
     weight_arr = np.ones((3, 4)) * 0.5
-    tspace = odl.rn((3, 4), weighting=weight_arr, exponent=1.5)
-    x = tspace.one()
+    space = odl.rn((3, 4), weighting=weight_arr, exponent=1.5)
+    x = space.one()
     red = x.ufuncs.sum(axis=0)
     assert red.space.weighting == NumpyTensorSpaceNoWeighting(exponent=1.5)
 

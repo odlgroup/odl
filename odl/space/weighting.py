@@ -664,17 +664,22 @@ class ConstWeighting(Weighting):
         """
         super().__init__(impl=impl, exponent=exponent,
                          dist_using_inner=dist_using_inner)
-        self._const = float(const)
+        self.__const = float(const)
         if self.const <= 0:
             raise ValueError('expected positive constant, got {}'
                              ''.format(const))
         if not np.isfinite(self.const):
             raise ValueError('`const` {} is invalid'.format(const))
 
+    def __hash__(self):
+        """Return ``hash(self)``."""
+        return hash((type(self), self.const, self.impl, self.exponent,
+                     self.dist_using_inner))
+
     @property
     def const(self):
         """Weighting constant of this inner product."""
-        return self._const
+        return self.__const
 
     def __eq__(self, other):
         """Return ``self == other``.
@@ -829,6 +834,10 @@ class CustomInner(Weighting):
         """
         return super().__eq__(other) and self.inner == other.inner
 
+    def __hash__(self):
+        """Return ``hash(self)``."""
+        return hash((type(self), self.inner, self.impl, self.dist_using_inner))
+
     @property
     def repr_part(self):
         """String usable in a space's ``__repr__`` method."""
@@ -895,6 +904,10 @@ class CustomNorm(Weighting):
             norm, ``False`` otherwise.
         """
         return super().__eq__(other) and self.norm == other.norm
+
+    def __hash__(self):
+        """Return ``hash(self)``."""
+        return hash((type(self), self.norm, self.impl))
 
     @property
     def repr_part(self):
@@ -969,6 +982,10 @@ class CustomDist(Weighting):
         """
         return super().__eq__(other) and self.dist == other.dist
 
+    def __hash__(self):
+        """Return ``hash(self)``."""
+        return hash((type(self), self.dist, self.impl))
+
     @property
     def repr_part(self):
         """Return a string usable in a space's ``__repr__`` method."""
@@ -984,6 +1001,5 @@ class CustomDist(Weighting):
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

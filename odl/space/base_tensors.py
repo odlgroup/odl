@@ -38,15 +38,28 @@ __all__ = ('TensorSet', 'TensorSpace')
 
 class TensorSet(Set):
 
-    """Base class for sets of tensors of arbitrary type."""
+    """Base class for sets of tensors of arbitrary data type.
+
+    A tensor is, in the most general sense, a multi-dimensional array
+    that allows operations per entry (keep `rank` constant),
+    reductions / contractions (reduce the rank) and broadcasting
+    (raises the rank).
+    Since the data type is arbitrary, this set of tensors is in general
+    not a vector space, hence its admissible operations are rather
+    limited. For tensors with a space structure, use `TensorSpace`.
+
+    See `this Wikipedia article <https://en.wikipedia.org/wiki/Tensor>`_
+    on tensors for further details.
+    """
 
     def __init__(self, shape, dtype, order='K'):
         """Initialize a new instance.
 
         Parameters
         ----------
-        shape : int or sequence of int
-            Number of entries per axis that elements in this space have.
+        shape : positive int or sequence of positive ints
+            Number of entries per axis for elements in this space. A
+            single integer results in a space with rank 1, i.e., 1 axis.
         dtype :
             Scalar data type of elements in this space. Can be provided
             in any way the `numpy.dtype` constructor understands, e.g.
@@ -73,7 +86,7 @@ class TensorSet(Set):
 
     @property
     def impl(self):
-        """Implementation back-end of this tensor set."""
+        """Name of the implementation back-end of this tensor set."""
         raise NotImplementedError('abstract method')
 
     @property
@@ -109,7 +122,9 @@ class TensorSet(Set):
         """Order argument for view-preserving operations.
 
         This is identical to `order` except for ``self.order == 'K'``,
-        where ``'A'`` is returned.
+        where ``'A'`` is returned. The main use case for this property
+        is in reshaping with `numpy.reshape` or `numpy.ravel`, if
+        views into the original array should be preserved.
         """
         return 'A' if self.order == 'K' else self.order
 
@@ -148,8 +163,8 @@ class TensorSet(Set):
         Returns
         -------
         contains : bool
-            True if ``other.space`` is equal to ``self``,
-            False otherwise.
+            ``True`` if ``other`` has a ``space`` attribute that is equal
+            to this space, ``False`` otherwise.
 
         Examples
         --------
@@ -191,6 +206,16 @@ class TensorSet(Set):
         True
         >>> x in spc2
         True
+
+        Of course, random garbage is not in the space:
+
+        >>> spc = odl.tensor_space((2, 3), dtype='uint64')
+        >>> None in space
+        False
+        >>> object in space
+        False
+        >>> False in space
+        False
         """
         return getattr(other, 'space', None) == self
 
@@ -200,35 +225,41 @@ class TensorSet(Set):
         Returns
         -------
         equals : bool
-            True if ``other`` is an instance of ``type(self)`` with the
-            same `shape`, `dtype` and `order`, otherwise `False`.
+            True if ``self`` and ``other`` have the same type, `shape`
+            `dtype` and `order`, otherwise ``False``.
 
         Examples
         --------
         Sizes, data types and other essential properties characterize
         spaces and decide about equality:
 
-        >>> spc = odl.tensor_space((2, 3), dtype='uint64')
+        >>> spc = odl.tensor_space(3, dtype='uint64')
         >>> spc == spc
         True
-        >>> spc2 = odl.tensor_space((2, 3), dtype='uint64')
+        >>> spc2 = odl.tensor_space(3, dtype='uint64')
         >>> spc2 == spc
         True
-        >>> smaller_spc = odl.tensor_space((2, 2), dtype='uint64')
+        >>> smaller_spc = odl.tensor_space(2, dtype='uint64')
         >>> spc == smaller_spc
         False
-        >>> other_dtype_spc = odl.tensor_space((2, 3), dtype='uint32')
+        >>> other_dtype_spc = odl.tensor_space(3, dtype='uint32')
         >>> spc == other_dtype_spc
+        False
+        >>> other_shape_spc = odl.tensor_space((3, 1), dtype='uint64')
+        >>> spc == other_shape_spc
         False
         """
         if other is self:
             return True
 
-        return ((isinstance(self, type(other)) or
-                 isinstance(other, type(self))) and
+        return (type(self) == type(other) and
                 self.shape == other.shape and
                 self.dtype == other.dtype and
                 self.order == other.order)
+
+    def __hash__(self):
+        """Return ``hash(self)``."""
+        return hash((type(self), self.shape, self.dtype, self.order))
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -252,20 +283,22 @@ class TensorSet(Set):
 
 class GeneralizedTensor(object):
 
-    """Abstract class for representation of `TensorSet` elements.
+    """Abstract class for representation of `TensorSet` elements."""
 
-    Defines abstract and concrete attributes independent of data
-    representation.
-    """
+    def __init__(self, space):
+        """Initialize a new instance.
 
-    def __init__(self, space, *args, **kwargs):
-        """Initialize a new instance."""
+        Parameters
+        ----------
+        space : TensorSet
+            The space to which this tensor belongs.
+        """
         assert isinstance(space, TensorSet)
         self.__space = space
 
     @property
     def impl(self):
-        """Implementation back-end of this tensor."""
+        """Name of the implementation back-end of this tensor."""
         return self.space.impl
 
     def copy(self):
@@ -336,6 +369,14 @@ class GeneralizedTensor(object):
         """
         raise NotImplementedError('abstract method')
 
+    def __ne__(self, other):
+        """Return ``self != other``."""
+        return not self == other
+
+    def __hash__(self):
+        """Return ``hash(self)``."""
+        raise NotImplementedError('abstract method')
+
     @property
     def space(self):
         """The space to which this tensor belongs."""
@@ -357,6 +398,15 @@ class GeneralizedTensor(object):
         return self.space.order
 
     @property
+    def view_order(self):
+        """Order argument for view-preserving operations.
+
+        This is identical to `order` except for ``self.order == 'K'``,
+        where ``'A'`` is returned.
+        """
+        return self.space.view_order
+
+    @property
     def size(self):
         """Total number of entries."""
         return self.space.size
@@ -369,7 +419,7 @@ class GeneralizedTensor(object):
     @property
     def rank(self):
         """Rank of this tensor, the same as number of dimensions."""
-        return self.space.ndim
+        return self.space.rank
 
     def __len__(self):
         """Return ``len(self)``.
@@ -381,12 +431,12 @@ class GeneralizedTensor(object):
     @property
     def itemsize(self):
         """Size in bytes of one tensor entry."""
-        return self.dtype.itemsize
+        return self.space.itemsize
 
     @property
     def nbytes(self):
         """Total number of bytes in memory occupied by this tensor."""
-        return self.size * self.itemsize
+        return self.space.nbytes
 
     def __array__(self, dtype=None):
         """Return a Numpy array from this tensor.
@@ -422,10 +472,6 @@ class GeneralizedTensor(object):
             return self.space.field.element(obj)
         else:
             return self.space.element(obj)
-
-    def __ne__(self, other):
-        """Return ``self != other``."""
-        return not self.__eq__(other)
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -500,15 +546,31 @@ class GeneralizedTensor(object):
 
 class TensorSpace(TensorSet, LinearSpace):
 
-    """Base class for tensor spaces independent of implementation."""
+    """Base class for tensor spaces independent of implementation.
+
+    A tensor is, in the most general sense, a multi-dimensional array
+    that allows operations per entry (keep `rank` constant),
+    reductions / contractions (reduce the rank) and broadcasting
+    (raises the rank).
+    Any *scalar* data type is allowed for a tensor space, although
+    certain operations - like division with integer dtype - are not
+    guaranteed to yield reasonable results.
+    That said, all possible vector space operations are supported by
+    this class, along with reductions based on arithmetic or comparison,
+    and element-wise mathematical functions ("ufuncs").
+
+    See `this Wikipedia article <https://en.wikipedia.org/wiki/Tensor>`_
+    on tensors for further details.
+    """
 
     def __init__(self, shape, dtype, order='K'):
         """Initialize a new instance.
 
         Parameters
         ----------
-        shape : int or sequence of ints
-            Number of elements per axis.
+        shape : positive int or sequence of positive ints
+            Number of entries per axis for elements in this space. A
+            single integer results in a space with rank 1, i.e., 1 axis.
         dtype :
             Scalar data type of elements in this space. Can be provided
             in any way the `numpy.dtype` constructor understands, e.g.
@@ -703,6 +765,5 @@ class Tensor(GeneralizedTensor, LinearSpaceElement):
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()
