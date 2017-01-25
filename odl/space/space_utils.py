@@ -108,7 +108,8 @@ def tensor_space(shape, dtype=None, order='K', impl='numpy', **kwargs):
     Parameters
     ----------
     shape : positive int or sequence of positive ints
-        Number of entries per axis for each element.
+        Number of entries per axis for elements in this space. A
+        single integer results in a space with rank 1, i.e., 1 axis.
     dtype : optional
         Data type of each element. Can be provided in any way the
         `numpy.dtype` function understands, e.g. as built-in type or
@@ -172,7 +173,8 @@ def cn(shape, dtype=None, order='K', impl='numpy', **kwargs):
     Parameters
     ----------
     shape : positive int or sequence of positive ints
-        Number of entries per axis of an element in the created space.
+        Number of entries per axis for elements in this space. A
+        single integer results in a space with rank 1, i.e., 1 axis.
     dtype : optional
         Data type of each element. Can be provided in any way the
         `numpy.dtype` function understands, e.g. as built-in type or
@@ -241,7 +243,8 @@ def rn(shape, dtype=None, order='K', impl='numpy', **kwargs):
     Parameters
     ----------
     shape : positive int or sequence of positive ints
-        Number of entries per axis of an element in the created space.
+        Number of entries per axis for elements in this space. A
+        single integer results in a space with rank 1, i.e., 1 axis.
     dtype : optional
         Data type of each element. Can be provided in any way the
         `numpy.dtype` function understands, e.g. as built-in type or
