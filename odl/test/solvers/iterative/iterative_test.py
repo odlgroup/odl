@@ -66,7 +66,7 @@ def iterative_solver(request):
     elif solver_name == 'kaczmarz':
         def solver(op, x, rhs):
             norm2 = op.adjoint(op(x)).norm() / x.norm()
-            odl.solvers.kaczmarz([op, op], x, [rhs, rhs], niter=10,
+            odl.solvers.kaczmarz([op, op], x, [rhs, rhs], niter=20,
                                  omega=0.5 / norm2)
     else:
         raise ValueError('solver not valid')

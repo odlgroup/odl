@@ -1027,6 +1027,11 @@ def uniform_grid_fromintv(intv_prod, shape, nodes_on_bdry=True):
         raise TypeError('{!r} is not an `IntervalProd` instance'
                         ''.format(intv_prod))
 
+    if (np.any(np.isinf(intv_prod.min_pt)) or
+            np.any(np.isinf(intv_prod.max_pt))):
+        raise ValueError('`intv_prod` must be finite, got {!r}'
+                         ''.format('intv_prod'))
+
     shape = normalized_scalar_param_list(shape, intv_prod.ndim, safe_int_conv)
 
     if np.shape(nodes_on_bdry) == ():

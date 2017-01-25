@@ -76,6 +76,10 @@ class IntervalProd(Set):
                              ''.format(len(self.min_pt), len(self.max_pt)))
 
         for axis, (xmin, xmax) in enumerate(zip(self.min_pt, self.max_pt)):
+            if np.isnan(xmin):
+                raise ValueError('in axis {}: min_pt is NaN'.format(axis))
+            if np.isnan(xmax):
+                raise ValueError('in axis {}: max_pt is NaN'.format(axis))
             if xmax < xmin:
                 raise ValueError('in axis {}: upper end smaller than lower '
                                  'end ({} < {})'.format(axis, xmax, xmin))
