@@ -489,7 +489,7 @@ class FileReaderMRC(FileReaderRawBinaryWithHeader, MRCHeaderProperties):
 
         Parameters
         ----------
-        groupby : {'field', 'section'}
+        groupby : {'field', 'section'}, optional
             How to group the values in the extended header sections.
 
             ``'field'`` : make an array per section field, e.g.::
@@ -744,7 +744,7 @@ def mrc_header_from_params(shape, dtype, kind, **kwargs):
         Version identifier for the MRC file, used for the ``'nversion'``
         header entry.
         Default: ``(2014, 0)``
-    text_labels : sequence of strings
+    text_labels : sequence of strings, optional
         Maximal 10 strings with 80 characters each, used for the
         ``'nlabl'`` and ``'label'`` header entries.
         Default: ``[]``

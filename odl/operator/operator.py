@@ -450,7 +450,7 @@ class Operator(object):
         range : `Set`
             The range of this operator, i.e., the set this operator
             maps to
-        linear : bool
+        linear : bool, optional
             If ``True``, the operator is considered as linear. In this
             case, ``domain`` and ``range`` have to be instances of
             `LinearSpace`, or `Field`.

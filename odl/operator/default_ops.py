@@ -344,7 +344,7 @@ class PowerOperator(Operator):
 
         Parameters
         ----------
-        domain : `LinearSpace` or `Field`, optional
+        domain : `LinearSpace` or `Field`
             Set of elements on which the operator can be applied.
         exponent : float
             Exponent parameter of the power function applied to an element.
@@ -1099,7 +1099,7 @@ class ComplexEmbedding(Operator):
         space : `FnBase`
             Space which real part should be taken, needs to implement
             ``space.complex_space``.
-        scalar : ``space.complex_space.field`` element
+        scalar : ``space.complex_space.field`` element, optional
             Scalar which the incomming vectors should be multiplied by in order
             to get the complex vector.
 

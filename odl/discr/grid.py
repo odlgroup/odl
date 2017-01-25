@@ -544,9 +544,9 @@ class RectGrid(Set):
 
         Parameters
         ----------
-        other :  `RectGrid`
-            The other grid which is supposed to contain this grid.
-        atol : float
+        other :  `TensorGrid`
+            The other grid which is supposed to contain this grid
+        atol : float, optional
             Allow deviations up to this number in absolute value
             per coordinate vector entry.
 
@@ -721,7 +721,7 @@ class RectGrid(Set):
 
         Parameters
         ----------
-        order : {'C', 'F'}
+        order : {'C', 'F'}, optional
             Axis ordering in the resulting point array
 
         Returns
@@ -794,7 +794,7 @@ class RectGrid(Set):
 
         Parameters
         ----------
-        order : {'C', 'F'}
+        order : {'C', 'F'}, optional
             Axis ordering in the resulting point array
 
         Returns

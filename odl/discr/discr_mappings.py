@@ -67,7 +67,7 @@ class FunctionSetMapping(Operator):
             Data space providing containers for the values of a
             discretized object. Its `NtuplesBase.size` must be equal
             to the total number of grid points.
-        linear : bool
+        linear : bool, optional
             Create a linear operator if ``True``, otherwise a non-linear
             operator.
         order : {'C', 'F'}, optional

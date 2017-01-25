@@ -194,7 +194,7 @@ def indicate_proj_axis(space, scale_structures=0.5):
     ----------
     space : `DiscretizedSpace`
         Discretized space in which the phantom is supposed to be created
-    scale_structures : positive float in (0, 1]
+    scale_structures : positive float in (0, 1], optional
         Scales objects (cube, cuboids)
 
     Returns

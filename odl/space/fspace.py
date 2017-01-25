@@ -133,17 +133,17 @@ class FunctionSet(Set):
         """
         return self.__out_dtype
 
-    def element(self, fcall=None, vectorized=True):
+    def element(self, fcall, vectorized=True):
         """Create a `FunctionSet` element.
 
         Parameters
         ----------
-        fcall : callable, optional
+        fcall : callable
             The actual instruction for out-of-place evaluation.
             It must return a `FunctionSet.range` element or a
             `numpy.ndarray` of such (vectorized call).
 
-        vectorized : bool
+        vectorized : bool, optional
             Whether ``fcall`` supports vectorized evaluation.
 
         Returns
@@ -323,7 +323,7 @@ class FunctionSetElement(Operator):
 
         Other Parameters
         ----------------
-        bounds_check : bool
+        bounds_check : bool, optional
             If ``True``, check if all input points lie in the function
             domain in the case of vectorized evaluation. This requires
             the domain to implement `Set.contains_all`.
@@ -642,7 +642,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
             If fcall is a `FunctionSetElement`, it is wrapped
             as a new `FunctionSpaceElement`.
 
-        vectorized : bool
+        vectorized : bool, optional
             Whether ``fcall`` supports vectorized evaluation.
 
         Returns

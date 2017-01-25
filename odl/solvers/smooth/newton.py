@@ -96,7 +96,7 @@ def _broydens_direction(s, y, x, hessinv_estimate=None, impl='first'):
         Point in which to evaluate the product.
     hessinv_estimate : `Operator`, optional
         Initial estimate of the hessian ``H0^-1``.
-    impl : {'first', 'second'}
+    impl : {'first', 'second'}, optional
         The type of Broydens method to use.
 
     Returns
@@ -379,7 +379,7 @@ def broydens_method(f, x, line_search=1.0, impl='first', maxiter=1000,
     line_search : float or `LineSearch`, optional
         Strategy to choose the step length. If a float is given, uses it as a
         fixed step length.
-    impl : {'first', 'second'}
+    impl : {'first', 'second'}, optional
         What version of Broydens method to use. First is also known as Broydens
         'good' method, while the second is known as Broydens 'bad' method.
     maxiter : int, optional

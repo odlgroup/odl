@@ -92,9 +92,9 @@ class BacktrackingLineSearch(LineSearch):
             The initial guess for the step length.
         max_num_iter : int, optional
             Maximum number of iterations allowed each time the line
-            search method is called. If not set, this number is calculated
+            search method is called. If ``None``, this number is calculated
             to allow a shortest step length of 10 times machine epsilon.
-        estimate_step : float
+        estimate_step : bool, optional
             If the last step should be used as a estimate for the next step.
 
         Examples

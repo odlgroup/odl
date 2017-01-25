@@ -51,7 +51,7 @@ def conjugate_gradient_nonlinear(f, x, line_search=1.0, maxiter=1000, nreset=0,
         Number of times the solver should be reset. Default: no reset.
     tol : float, optional
         Tolerance that should be used for terminating the iteration.
-    beta_method : {'FR', 'PR', 'HS', 'DY'}
+    beta_method : {'FR', 'PR', 'HS', 'DY'}, optional
         Method to calculate ``beta`` in the iterates.
         * ``'FR'`` : Fletcher-Reeves
         * ``'PR'`` : Polak-Ribiere

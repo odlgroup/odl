@@ -453,7 +453,7 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
 
                     Parameters
                     ----------
-                    sigma : positive float
+                    sigma : positive float, optional
                         Step size parameter. Default: 1.0
                 """
                 return self.functional.proximal(sigma * self.scalar)

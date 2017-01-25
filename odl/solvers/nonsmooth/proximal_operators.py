@@ -595,10 +595,10 @@ def proximal_cconj_l2(space, lam=1, g=None):
     space : `LinearSpace`
         Domain of F(x). Needs to be a Hilbert space.
         That is, have an inner product (`LinearSpace.inner`).
-    g : ``space`` element
-        An element in ``space``
-    lam : positive float
-        Scaling factor or regularization parameter
+    lam : positive float, optional
+        Scaling factor or regularization parameter.
+    g : ``space`` element, optional
+        An element in ``space``. Default: ``space.zero``.
 
     Returns
     -------
@@ -661,10 +661,10 @@ def proximal_l2(space, lam=1, g=None):
     space : `LinearSpace`
         Domain of F(x). Needs to be a Hilbert space.
         That is, have an inner product (`LinearSpace.inner`).
-    g : ``space`` element
-        An element in ``space``.
-    lam : positive float
+    lam : positive float, optional
         Scaling factor or regularization parameter.
+    g : ``space`` element, optional
+        An element in ``space``. Default: ``space.zero``.
 
     Returns
     -------
@@ -768,10 +768,10 @@ def proximal_cconj_l2_squared(space, lam=1, g=None):
     space : `LinearSpace`
         Domain of F(x). Needs to be a Hilbert space.
         That is, have an inner product (`LinearSpace.inner`).
-    g : ``space`` element
-        An element in ``space``
-    lam : positive float
-        Scaling factor or regularization parameter
+    lam : positive float, optional
+        Scaling factor or regularization parameter.
+    g : ``space`` element, optional
+        An element in ``space``. Default: ``space.zero``.
 
     Returns
     -------
@@ -856,10 +856,10 @@ def proximal_l2_squared(space, lam=1, g=None):
     space : `LinearSpace`
         Domain of F(x). Needs to be a Hilbert space.
         That is, have an inner product (`LinearSpace.inner`).
-    g : ``space`` element
-        An element in ``space``
-    lam : positive float
-        Scaling factor or regularization parameter
+    lam : positive float, optional
+        Scaling factor or regularization parameter.
+    g : ``space`` element, optional
+        An element in ``space``. Default: ``space.zero``.
 
     Returns
     -------
@@ -906,11 +906,11 @@ def proximal_cconj_l1(space, lam=1, g=None, isotropic=False):
     ----------
     space : `LinearSpace` or `ProductSpace` of `LinearSpace` spaces
         Domain of the functional F
-    g : ``space`` element
-        An element in ``space``
-    lam : positive float
-        Scaling factor or regularization parameter
-    isotropic : bool
+    lam : positive float, optional
+        Scaling factor or regularization parameter.
+    g : ``space`` element, optional
+        An element in ``space``. Default: ``space.zero``.
+    isotropic : bool, optional
         If ``True``, take the vectorial 2-norm point-wise. Otherwise,
         use the vectorial 1-norm. Only available if ``space`` is a
         `ProductSpace`.
@@ -1069,11 +1069,11 @@ def proximal_l1(space, lam=1, g=None, isotropic=False):
     ----------
     space : `LinearSpace` or `ProductSpace`
         Domain of the functional.
-    g : ``space`` element
-        An element in ``space``.
-    lam : positive float
+    lam : positive float, optional
         Scaling factor or regularization parameter.
-    isotropic : bool
+    g : ``space`` element, optional
+        An element in ``space``. Default: ``space.zero``.
+    isotropic : bool, optional
         If ``True``, take the vectorial 2-norm point-wise. Otherwise,
         use the vectorial 1-norm. Only available if ``space`` is a
         `ProductSpace`.
@@ -1141,10 +1141,10 @@ def proximal_cconj_kl(space, lam=1, g=None):
     ----------
     space : `FnBase`
         Space X which is the domain of the functional F
+    lam : positive float, optional
+        Scaling factor.
     g : ``space`` element, optional
         Data term, positive. If None it is take as the one-element.
-    lam : positive float
-        Scaling factor.
 
     Returns
     -------
@@ -1279,16 +1279,15 @@ def proximal_cconj_kl_cross_entropy(space, lam=1, g=None):
     ----------
     space : `FnBase`
         Space X which is the domain of the functional F
+    lam : positive float, optional
+        Scaling factor.
     g : ``space`` element, optional
         Data term, positive. If None it is take as the one-element.
-    lam : positive float
-        Scaling factor.
 
     Returns
     -------
     prox_factory : function
         Factory for the proximal operator to be initialized.
-
 
     See Also
     --------

@@ -650,7 +650,7 @@ class RectPartition(object):
         ----------
         value : ``self.set`` element
             Point whose index to find.
-        floating : bool
+        floating : bool, optional
             If True, then the index should also give the position inside the
             voxel. This is given by returning the integer valued index of the
             voxel plus the distance from the left cell boundary as a fraction
@@ -918,7 +918,7 @@ def uniform_partition_fromgrid(grid, min_pt=None, max_pt=None):
     ----------
     grid : `RectGrid`
         Grid on which the partition is based
-    min_pt, max_pt : float, sequence of floats, or dict
+    min_pt, max_pt : float, sequence of floats, or dict, optional
         Spatial points defining the lower/upper limits of the intervals
         to be partitioned. The points can be specified in two ways:
 

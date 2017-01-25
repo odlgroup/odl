@@ -784,13 +784,13 @@ class DiscreteLpElement(DiscretizedSpaceElement):
             later. Note that some backends always displays the plot, regardless
             of this value.
 
-        fig : `matplotlib.figure.Figure`
+        fig : `matplotlib.figure.Figure`, optional
             The figure to show in. Expected to be of same "style", as
             the figure given by this function. The most common use case
             is that ``fig`` is the return value of an earlier call to
             this function.
 
-        kwargs : {'figsize', 'saveto', 'clim', ...}
+        kwargs : {'figsize', 'saveto', 'clim', ...}, optional
             Extra keyword arguments passed on to the display method.
             See the Matplotlib functions for documentation of extra
             options.
@@ -1349,7 +1349,7 @@ def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
 
             'linear' : use linear interpolation
 
-    impl : string
+    impl : string, optional
         Implementation of the data storage arrays. See
     nodes_on_bdry : bool or sequence, optional
         Specifies whether to put the outmost grid nodes on the

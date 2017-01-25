@@ -123,7 +123,7 @@ def tam_danielson_window(ray_trafo, smoothing_width=0.05, n_half_rot=1):
     smoothing_width : positive float, optional
         Width of the smoothing applied to the window's edges given as a
         fraction of the width of the full window.
-    n_half_rot : odd int
+    n_half_rot : odd int, optional
         Total number of half rotations to include in the window. Values larger
         than 1 should be used if the pitch is much smaller than the detector
         height.
@@ -215,7 +215,7 @@ def parker_weighting(ray_trafo, q=0.25):
     ----------
     ray_trafo : `RayTransform`
         The ray transform for which to compute the weights.
-    q : float
+    q : float, optional
         Parameter controlling the speed of the roll-off at the edges of the
         weighting. 1.0 gives the classical Parker weighting, while smaller
         values in general lead to lower noise but stronger discretization

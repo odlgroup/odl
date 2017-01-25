@@ -2159,7 +2159,7 @@ https://web.stanford.edu/~boyd/papers/pdf/prox_algs.pdf
         functional : `Functional`
             The functional ``f`` in the definition of the Moreau envelope that
             is to be smoothed.
-        sigma : positive float
+        sigma : positive float, optional
             The scalar ``sigma`` in the definition of the Moreau envelope.
             Larger values mean stronger smoothing.
 

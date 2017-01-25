@@ -70,7 +70,7 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
     array_out : `numpy.ndarray`
         Output array storing the transformed values, may be aliased
         with ``array_in``.
-    direction : {'forward', 'backward'}
+    direction : {'forward', 'backward'}, optional
         Direction of the transform
     axes : int or sequence of ints, optional
         Dimensions along which to take the transform. ``None`` means
@@ -86,10 +86,11 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
         Use this plan instead of calculating a new one. If specified,
         the options ``planning_effort``, ``planning_timelimit`` and
         ``threads`` have no effect.
-    planning_effort : {'estimate', 'measure', 'patient', 'exhaustive'}
+    planning_effort : str, optional
         Flag for the amount of effort put into finding an optimal
         FFTW plan. See the `FFTW doc on planner flags
         <http://www.fftw.org/fftw3_doc/Planner-Flags.html>`_.
+        Available options: {'estimate', 'measure', 'patient', 'exhaustive'}
         Default: 'estimate'
     planning_timelimit : float or ``None``, optional
         Limit planning time to roughly this many seconds.

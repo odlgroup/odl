@@ -390,7 +390,7 @@ def noise_elements(space, n=1):
         Space in which to create an element. The
         `odl.set.space.LinearSpace.element` method of the space needs to
         accept input of `numpy.ndarray` type.
-    n : int
+    n : int, optional
         Number of elements to create.
 
     Returns
