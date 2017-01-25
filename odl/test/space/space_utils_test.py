@@ -12,7 +12,7 @@ from past.builtins import basestring
 import pytest
 
 from odl import vector
-from odl.space.npy_tensors import NumpyTensor, NumpyGeneralizedTensor
+from odl.space.npy_tensors import NumpyTensor
 from odl.util.testutils import all_equal
 
 
@@ -55,19 +55,19 @@ def test_vector_numpy():
     inp = [1, 2, 3]
 
     x = vector(inp)
-    assert isinstance(x, NumpyGeneralizedTensor)
+    assert isinstance(x, NumpyTensor)
     assert x.dtype == np.dtype('int')
     assert all_equal(x, inp)
 
     # Tensors
     inp = ['a', 'b', 'c']
     x = vector(inp)
-    assert isinstance(x, NumpyGeneralizedTensor)
+    assert isinstance(x, NumpyTensor)
     assert np.issubdtype(x.dtype, basestring)
     assert all_equal(x, inp)
 
     x = vector([1, 2, 'inf'])  # Becomes string type
-    assert isinstance(x, NumpyGeneralizedTensor)
+    assert isinstance(x, NumpyTensor)
     assert np.issubdtype(x.dtype, basestring)
     assert all_equal(x, ['1', '2', 'inf'])
 

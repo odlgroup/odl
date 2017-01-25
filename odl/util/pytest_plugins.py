@@ -94,6 +94,7 @@ def pytest_ignore_collect(path, config):
 
 # --- Reusable fixtures ---
 
+# Simple ones, use helper
 tspace_impl = simple_fixture(name='tspace_impl',
                              params=tensor_space_impl_names())
 
