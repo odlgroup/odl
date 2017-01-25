@@ -25,7 +25,7 @@ from odl.util.utility import with_metaclass
 
 __all__ = ('Set', 'EmptySet', 'UniversalSet', 'Field', 'Integers',
            'RealNumbers', 'ComplexNumbers', 'Strings', 'CartesianProduct',
-           'SetUnion')
+           'SetUnion', 'SetIntersection')
 
 
 class Set(with_metaclass(ABCMeta, object)):
@@ -638,7 +638,12 @@ class SetUnion(Set):
         Parameters
         ----------
         set1, ..., setN : `Set`
-            The instances
+            The sets whose union should be taken.
+
+        Examples
+        --------
+        >>> reals, complexnrs = odl.RealNumbers(), odl.ComplexNumbers()
+        >>> union = odl.SetUnion(reals, complexnrs)
         """
         if not all(isinstance(set_, Set) for set_ in sets):
             wrong = [set_ for set_ in sets
@@ -653,16 +658,18 @@ class SetUnion(Set):
         return self._sets
 
     def __contains__(self, other):
-        """Test if `other` is contained in this set.
+        """Return ``other in self``.
 
         Returns
         -------
         contains : `bool`
             `True` if `other` is a member of any subset, `False` otherwise.
 
-        >>> r2, r3 = odl.rn(2), odl.rn(3)
-        >>> union = odl.SetUnion(r2, r3)
-        >>> r2.element() in union
+        Examples
+        --------
+        >>> reals, complexnrs = odl.RealNumbers(), odl.ComplexNumbers()
+        >>> union = odl.SetUnion(reals, complexnrs)
+        >>> 2 + 1j in union
         True
         >>> [1, 2] in union
         False
@@ -670,7 +677,7 @@ class SetUnion(Set):
         return any(other in set for set in self.sets)
 
     def __eq__(self, other):
-        """`s.__eq__(other) <==> s == other`.
+        """Return ``self == other``.
 
         Returns
         -------
@@ -715,18 +722,130 @@ class SetUnion(Set):
         else:
             return self.sets[indcs]
 
-    def __str__(self):
-        """s.__str__() <==> str(s)."""
-        return ' U '.join(str(set_) for set_ in self.sets)
-
     def __repr__(self):
-        """s.__repr__() <==> repr(s).
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> reals, complexnrs = odl.RealNumbers(), odl.ComplexNumbers()
+        >>> odl.SetUnion(reals, complexnrs)
+        SetUnion(RealNumbers(), ComplexNumbers())
+        """
+        sets_str = ', '.join(repr(set_) for set_ in self.sets)
+        return '{}({})'.format(self.__class__.__name__, sets_str)
+
+
+class SetIntersection(Set):
+    """The intersection of several subsets.
+
+    The elements of this set are elements of all the subsets.
+
+    Notes
+    -----
+    Mathematically, this is simply the regular intersection of sets, given by
+
+    .. math::
+        X = \\bigcap_{i=1}^n X_i
+    """
+
+    def __init__(self, *sets):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        set1, ..., setN : `Set`
+            The sets whose intersection should be taken.
+
+        Examples
+        --------
+        >>> reals, complexnrs = odl.RealNumbers(), odl.ComplexNumbers()
+        >>> union = odl.SetIntersection(reals, complexnrs)
+        """
+        if not all(isinstance(set_, Set) for set_ in sets):
+            wrong = [set_ for set_ in sets
+                     if not isinstance(set_, Set)]
+            raise TypeError('{!r} not Set instance(s)'.format(wrong))
+
+        self._sets = tuple(sets)
+
+    @property
+    def sets(self):
+        """The factors (sets) as a tuple."""
+        return self._sets
+
+    def __contains__(self, other):
+        """Return ``other in self``.
+
+        Returns
+        -------
+        contains : `bool`
+            `True` if `other` is a member of all subsets, `False` otherwise.
+
+        Examples
+        --------
+        >>> reals, complexnrs = odl.RealNumbers(), odl.ComplexNumbers()
+        >>> intersection = odl.SetIntersection(reals, complexnrs)
+        >>> 1.0 in intersection
+        True
+        >>> 1.0j in intersection
+        False
+        """
+        return all(other in set for set in self.sets)
+
+    def __eq__(self, other):
+        """Return ``self == other``.
+
+        Returns
+        -------
+        equals : `boolean`
+            `True` if `other` is a `SetUnion` instance, and
+            has the same subsets as this set, `False` otherwise.
+        """
+        return (type(self) == type(other) and
+                len(other) == len(self) and
+                all(so == ss for so, ss in zip(other.sets, self.sets)))
+
+    def element(self, inp=None):
+        """Create a new element.
+
+        First tries calling the first set, then the second, etc.
+
+        For more specific control, use set[i].element() to pick which subset to
+        use.
+        """
+        for set in self.sets:
+            try:
+                inp = set.element(inp)
+            except NotImplementedError:
+                raise NotImplementedError('element not implemented for all '
+                                          'of the subsets')
+        return inp
+
+    def __getitem__(self, indcs):
+        """Return ``self[indcs]``.
 
         Examples
         --------
         >>> emp, univ = odl.EmptySet(), odl.UniversalSet()
-        >>> odl.SetUnion(emp, univ)
-        SetUnion(EmptySet(), UniversalSet())
+        >>> prod = odl.SetIntersection(emp, univ, univ, emp, emp)
+        >>> prod[2]
+        UniversalSet()
+        >>> prod[2:4]
+        SetIntersection(UniversalSet(), EmptySet())
+        """
+        if isinstance(indcs, slice):
+            return SetIntersection(*self.sets[indcs])
+        else:
+            return self.sets[indcs]
+
+    def __repr__(self):
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> reals, complexnrs = odl.RealNumbers(), odl.ComplexNumbers()
+        >>> odl.SetIntersection(reals, complexnrs)
+        SetIntersection(RealNumbers(), ComplexNumbers())
         """
         sets_str = ', '.join(repr(set_) for set_ in self.sets)
         return '{}({})'.format(self.__class__.__name__, sets_str)
