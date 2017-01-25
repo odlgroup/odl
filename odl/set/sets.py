@@ -25,7 +25,7 @@ from odl.util.utility import with_metaclass
 
 __all__ = ('Set', 'EmptySet', 'UniversalSet', 'Field', 'Integers',
            'RealNumbers', 'ComplexNumbers', 'Strings', 'CartesianProduct',
-           'SetUnion', 'SetIntersection')
+           'SetUnion', 'SetIntersection', 'FiniteSet')
 
 
 class Set(with_metaclass(ABCMeta, object)):
@@ -650,12 +650,12 @@ class SetUnion(Set):
                      if not isinstance(set_, Set)]
             raise TypeError('{!r} not Set instance(s)'.format(wrong))
 
-        self._sets = tuple(sets)
+        self.__sets = tuple(sets)
 
     @property
     def sets(self):
         """The factors (sets) as a tuple."""
-        return self._sets
+        return self.__sets
 
     def __contains__(self, other):
         """Return ``other in self``.
@@ -704,6 +704,10 @@ class SetUnion(Set):
                 pass
         raise NotImplementedError('element not implemented for any of the '
                                   'subsets')
+
+    def __len__(self):
+        """Return ``len(self)``."""
+        return len(self.sets)
 
     def __getitem__(self, indcs):
         """Return ``self[indcs]``.
@@ -766,12 +770,12 @@ class SetIntersection(Set):
                      if not isinstance(set_, Set)]
             raise TypeError('{!r} not Set instance(s)'.format(wrong))
 
-        self._sets = tuple(sets)
+        self.__sets = tuple(sets)
 
     @property
     def sets(self):
         """The factors (sets) as a tuple."""
-        return self._sets
+        return self.__sets
 
     def __contains__(self, other):
         """Return ``other in self``.
@@ -821,6 +825,10 @@ class SetIntersection(Set):
                                           'of the subsets')
         return inp
 
+    def __len__(self):
+        """Return ``len(self)``."""
+        return len(self.sets)
+
     def __getitem__(self, indcs):
         """Return ``self[indcs]``.
 
@@ -849,6 +857,112 @@ class SetIntersection(Set):
         """
         sets_str = ', '.join(repr(set_) for set_ in self.sets)
         return '{}({})'.format(self.__class__.__name__, sets_str)
+
+
+class FiniteSet(Set):
+    """A set given by a finite tuple of elements.
+
+    Notes
+    -----
+    Mathematically, this is simply the set given via listing the members of the
+    set:
+
+    .. math::
+        X = \{x_1, x_2, \dots, x_n\}
+    """
+
+    def __init__(self, *elements):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        set1, ..., setN : `Set`
+            The elements in the set.
+
+        Examples
+        --------
+        >>> set = odl.FiniteSet(1, 'string')
+        """
+        self.__elements = tuple(elements)
+
+    @property
+    def elements(self):
+        """The elements as a tuple."""
+        return self.__elements
+
+    def __contains__(self, other):
+        """Return ``other in self``.
+
+        Returns
+        -------
+        contains : `bool`
+            `True` if `other` is an element in `elements`, `False` otherwise.
+
+        Examples
+        --------
+        >>> set = odl.FiniteSet(1, 'string')
+        >>> 1 in set
+        True
+        >>> 2 in set
+        False
+        >>> 'string' in set
+        True
+        """
+        return other in self.elements
+
+    def __eq__(self, other):
+        """Return ``self == other``.
+
+        Returns
+        -------
+        equals : `boolean`
+            `True` if `other` is a `SetUnion` instance, and
+            has the same subsets as this set, `False` otherwise.
+        """
+        return (type(self) == type(other) and
+                len(other) == len(self) and
+                all(eo == es for eo, es in zip(other.elements, self.elements)))
+
+    def element(self, inp=None):
+        """Create a new element.
+
+        First tries calling the first set, then the second, etc.
+
+        For more specific control, use set[i].element() to pick which subset to
+        use.
+        """
+        if inp in self.elements:
+            return inp
+        else:
+            return Set.element(self, inp)
+
+    def __getitem__(self, indcs):
+        """Return ``self[indcs]``.
+
+        Examples
+        --------
+
+        >>> set = odl.FiniteSet(1, 2, 3, 'string')
+        >>> set[:3]
+        FiniteSet(1, 2, 3)
+        >>> set[3]
+        'string'
+        """
+        if isinstance(indcs, slice):
+            return FiniteSet(*self.elements[indcs])
+        else:
+            return self.elements[indcs]
+
+    def __repr__(self):
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> odl.FiniteSet(1, 'string')
+        FiniteSet(1, 'string')
+        """
+        elements_str = ', '.join(repr(el) for el in self.elements)
+        return '{}({})'.format(self.__class__.__name__, elements_str)
 
 
 if __name__ == '__main__':
