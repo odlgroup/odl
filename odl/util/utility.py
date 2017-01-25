@@ -460,12 +460,14 @@ def preload_first_arg(instance, mode):
     return decorator
 
 
-def as_flat_array(vec):
-    """Return ``vec`` as a flat array according to the order of ``vec``."""
-    if hasattr(vec, 'order'):
-        return vec.asarray().ravel(vec.order)
+def as_flat_array(x):
+    """Return ``x`` as a flat array according to its axis ordering."""
+    if hasattr(x, 'view_order'):
+        return x.asarray().ravel(x.view_order)
+    elif hasattr(x, 'order'):
+        return x.asarray().ravel(x.order)
     else:
-        return vec.asarray().ravel()
+        return x.asarray().ravel()
 
 
 class writable_array(object):

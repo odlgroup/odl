@@ -55,11 +55,11 @@ class DiscreteLp(DiscretizedSpace):
         fspace : `FunctionSpace`
             The continuous space to be discretized
         partition : `RectPartition`
-            Partition of (a subset of) ``fspace.domain`` based on a
-            `RectGrid`.
+            Partition of (a subset of) ``fspace.domain``.
         dspace : `TensorSpace`
             Space of elements used for data storage. It must have the
-            same `TensorSpace.field` as ``fspace``.
+            same `TensorSpace.field` as ``fspace`` and the same
+            `TensorSpace.shape` as ``partition``.
         interp : string or sequence of strings, optional
             The interpolation type to be used for discretization.
             A sequence is interpreted as interpolation scheme per

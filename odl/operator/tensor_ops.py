@@ -702,7 +702,7 @@ class MatrixOperator(Operator):
 
         Parameters
         ----------
-        matrix : `array-like` or  `scipy.sparse.base.spmatrix`
+        matrix : `array-like` or `scipy.sparse.base.spmatrix`
             2-dimensional array representing the linear operator.
             For Scipy sparse matrices only rank-1 tensor spaces are
             allowed as ``domain``.

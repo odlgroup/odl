@@ -36,7 +36,7 @@ def vector(array, dtype=None, order='C', impl='numpy'):
         By default, the space type is inferred from the input data.
     order : {'C', 'F'}, optional
         Axis ordering of the data storage.
-    impl : `str`
+    impl : str
         Impmlementation back-end for the vector. See
         `odl.space.entry_points.TENSOR_SET_IMPLS` and
         `odl.space.entry_points.TENSOR_SPACE_IMPLS` for available options.
@@ -109,8 +109,9 @@ def tensor_set(shape, dtype, order='K', impl='numpy', **kwargs):
 
     Parameters
     ----------
-    shape : sequence of positive int
-        Number of entries per axis for each element.
+    shape : positive int or sequence of positive ints
+        Number of entries per axis for elements in this space. A
+        single integer results in a space with rank 1, i.e., 1 axis.
     dtype :
         Data type of each element. Can be provided in any way the
         `numpy.dtype` function understands, e.g. as built-in type or
@@ -121,7 +122,7 @@ def tensor_set(shape, dtype, order='K', impl='numpy', **kwargs):
         For ``'C'`` and ``'F'``, elements are forced to use
         contiguous memory in the respective ordering.
         For ``'K'`` no contiguousness is enforced.
-    impl : `str`
+    impl : str, optional
         Impmlementation back-end for the tensor set. See
         `odl.space.entry_points.TENSOR_SET_IMPLS` and
         `odl.space.entry_points.TENSOR_SPACE_IMPLS` for available options.
@@ -157,7 +158,8 @@ def tensor_space(shape, dtype=None, order='K', impl='numpy', **kwargs):
     Parameters
     ----------
     shape : positive int or sequence of positive ints
-        Number of entries per axis for each element.
+        Number of entries per axis for elements in this space. A
+        single integer results in a space with rank 1, i.e., 1 axis.
     dtype : optional
         Data type of each element. Can be provided in any way the
         `numpy.dtype` function understands, e.g. as built-in type or
@@ -170,7 +172,7 @@ def tensor_space(shape, dtype=None, order='K', impl='numpy', **kwargs):
         For ``'C'`` and ``'F'``, elements are forced to use
         contiguous memory in the respective ordering.
         For ``'K'`` no contiguousness is enforced.
-    impl : `str`
+    impl : str, optional
         Impmlementation back-end for the space. See
         `odl.space.entry_points.TENSOR_SET_IMPLS` and
         `odl.space.entry_points.TENSOR_SPACE_IMPLS` for available options.
@@ -221,7 +223,8 @@ def cn(shape, dtype=None, order='K', impl='numpy', **kwargs):
     Parameters
     ----------
     shape : positive int or sequence of positive ints
-        Number of entries per axis of an element in the created space.
+        Number of entries per axis for elements in this space. A
+        single integer results in a space with rank 1, i.e., 1 axis.
     dtype : optional
         Data type of each element. Can be provided in any way the
         `numpy.dtype` function understands, e.g. as built-in type or
@@ -235,7 +238,7 @@ def cn(shape, dtype=None, order='K', impl='numpy', **kwargs):
         For ``'C'`` and ``'F'``, elements are forced to use
         contiguous memory in the respective ordering.
         For ``'K'`` no contiguousness is enforced.
-    impl : `str`
+    impl : str, optional
         Impmlementation back-end for the space. See
         `odl.space.entry_points.TENSOR_SET_IMPLS` and
         `odl.space.entry_points.TENSOR_SPACE_IMPLS` for available options.
@@ -290,7 +293,8 @@ def rn(shape, dtype=None, order='K', impl='numpy', **kwargs):
     Parameters
     ----------
     shape : positive int or sequence of positive ints
-        Number of entries per axis of an element in the created space.
+        Number of entries per axis for elements in this space. A
+        single integer results in a space with rank 1, i.e., 1 axis.
     dtype : optional
         Data type of each element. Can be provided in any way the
         `numpy.dtype` function understands, e.g. as built-in type or
@@ -304,7 +308,7 @@ def rn(shape, dtype=None, order='K', impl='numpy', **kwargs):
         For ``'C'`` and ``'F'``, elements are forced to use
         contiguous memory in the respective ordering.
         For ``'K'`` no contiguousness is enforced.
-    impl : `str`
+    impl : str, optional
         Impmlementation back-end for the space. See
         `odl.space.entry_points.TENSOR_SET_IMPLS` and
         `odl.space.entry_points.TENSOR_SPACE_IMPLS` for available options.

@@ -17,11 +17,11 @@ from builtins import super
 
 import ctypes
 from functools import partial
-from math import sqrt
 import numpy as np
 import scipy.linalg as linalg
 
 from odl.set.sets import RealNumbers, ComplexNumbers
+from odl.set.space import LinearSpaceTypeError
 from odl.space.base_tensors import (
     TensorSet, GeneralizedTensor, TensorSpace, Tensor)
 from odl.space.weighting import (
@@ -40,29 +40,29 @@ _BLAS_DTYPES = (np.dtype('float32'), np.dtype('float64'),
 
 class NumpyTensorSet(TensorSet):
 
-    """The set of tensors of arbitrary type."""
+    """Set of tensors of arbitrary data type.
 
-    impl = 'numpy'
+    A tensor is, in the most general sense, a multi-dimensional array
+    that allows operations per entry (keep `rank` constant),
+    reductions / contractions (reduce the rank) and broadcasting
+    (raises the rank).
+    Any *scalar* data type is allowed for a tensor space, although
+    certain operations - like division with integer dtype - are not
+    guaranteed to yield reasonable results.
+    That said, all possible vector space operations are supported by
+    this class, along with reductions based on arithmetic or comparison,
+    and element-wise mathematical functions ("ufuncs").
 
-    def __init__(self, shape, dtype, order='K'):
-        """Initialize a new instance.
+    This class is implemented using `numpy.ndarray`'s as back-end.
 
-        Parameters
-        ----------
-        shape : sequence of int
-            Number of elements per axis.
-        dtype :
-            Data type of each element. Can be provided in any
-            way the `numpy.dtype` function understands, e.g.
-            as built-in type or as a string.
-        order : {'K', 'C', 'F'}, optional
-            Axis ordering of the data storage. Only relevant for more
-            than 1 axis.
-            For ``'C'`` and ``'F'``, elements are forced to use
-            contiguous memory in the respective ordering.
-            For ``'K'`` no contiguousness is enforced.
-        """
-        TensorSet.__init__(self, shape, dtype, order)
+    See `this Wikipedia article <https://en.wikipedia.org/wiki/Tensor>`_
+    on tensors for further details.
+    """
+
+    @property
+    def impl(self):
+        """Name of the implementation back-end: ``'numpy'``."""
+        return 'numpy'
 
     def element(self, inp=None, data_ptr=None):
         """Create a new element.
@@ -78,6 +78,12 @@ class NumpyTensorSet(TensorSet):
             If ``inp`` is a `numpy.ndarray` of the same shape and data
             type as this space, the array is wrapped, not copied.
             Other array-like objects are copied.
+        data_ptr : int, optional
+            Pointer to the start memory address of a contiguous Numpy array
+            or an equivalent raw container with the same total number of
+            bytes. This option can only be used if `order` is ``'C'`` or
+            ``'F'``, otherwise contiguousness cannot be guaranteed.
+            The option is also mutually exclusive with ``inp``.
 
         Returns
         -------
@@ -108,13 +114,17 @@ class NumpyTensorSet(TensorSet):
         >>> x = int_tset.element([[1, 2, 3],
         ...                       [4, 5, 6]])
         >>> y = int_tset.element(data_ptr=x.data_ptr)
-        >>> print(y)
-        [[1, 2, 3],
-         [4, 5, 6]]
+        >>> y
+        tensor_set((2, 3), 'int', order='F').element(
+            [[1, 2, 3],
+             [4, 5, 6]]
+        )
         >>> y[0, 1] = -1
-        >>> print(x)
-        [[1, -1, 3],
-         [4, 5, 6]]
+        >>> y
+        tensor_set((2, 3), 'int', order='F').element(
+            [[1, -1, 3],
+             [4, 5, 6]]
+        )
         """
         if inp is None and data_ptr is None:
             arr = np.empty(self.shape, dtype=self.dtype,
@@ -193,8 +203,10 @@ class NumpyTensorSet(TensorSet):
         """
         all_dtypes = []
         for lst in np.sctypes.values():
-            all_dtypes.extend(lst)
-        return tuple(np.dtype(dtype) for dtype in all_dtypes)
+            all_dtypes.extend(set(lst))
+        dtypes = [np.dtype(dtype) for dtype in all_dtypes]
+        dtypes.remove(np.dtype('void'))
+        return tuple(dtypes)
 
     @property
     def element_type(self):
@@ -327,6 +339,8 @@ class NumpyGeneralizedTensor(GeneralizedTensor):
         >>> y = space.element([[-1, 2, 3],
         ...                    [4, 5, 6]])
         >>> x == y
+        False
+        >>> x == object
         False
 
         Space membership matters:
@@ -583,12 +597,13 @@ def _blas_is_applicable(*args):
     """
     if any(x.dtype != args[0].dtype for x in args[1:]):
         return False
-    if any(x.dtype not in _BLAS_DTYPES for x in args):
+    elif any(x.dtype not in _BLAS_DTYPES for x in args):
         return False
-    if not (all(x.flags.f_contiguous for x in args) or
-            all(x.flags.c_contiguous for x in args)):
+    elif not (all(x.flags.f_contiguous for x in args) or
+              all(x.flags.c_contiguous for x in args)):
         return False
-    return True
+    else:
+        return True
 
 
 def _lincomb(a, x1, b, x2, out, dtype):
@@ -597,25 +612,6 @@ def _lincomb(a, x1, b, x2, out, dtype):
     # if x1.size < 100:  # small array optimization
     #     out.data[:] = a * x1.data + b * x2.data
     #     return
-
-    # Use blas for larger problems
-    def fallback_axpy(x1, x2, n, a):
-        """Fallback axpy implementation avoiding copy."""
-        if a != 0:
-            x2 /= a
-            x2 += x1
-            x2 *= a
-        return x2
-
-    def fallback_scal(a, x, n):
-        """Fallback scal implementation."""
-        x *= a
-        return x
-
-    def fallback_copy(x1, x2, n):
-        """Fallback copy implementation."""
-        x2[...] = x1[...]
-        return x2
 
     # Need flat data for BLAS, otherwise in-place does not work
     x1_arr = x1.data.ravel(order=x1.space.view_order)
@@ -626,6 +622,26 @@ def _lincomb(a, x1, b, x2, out, dtype):
         axpy, scal, copy = linalg.blas.get_blas_funcs(
             ['axpy', 'scal', 'copy'], arrays=(x1.data, x2.data, out.data))
     else:
+        # TODO: test if these really work properly, e.g., with
+        # non-contiguous data!
+        def fallback_axpy(x1, x2, n, a):
+            """Fallback axpy implementation avoiding copy."""
+            if a != 0:
+                x2 /= a
+                x2 += x1
+                x2 *= a
+            return x2
+
+        def fallback_scal(a, x, n):
+            """Fallback scal implementation."""
+            x *= a
+            return x
+
+        def fallback_copy(x1, x2, n):
+            """Fallback copy implementation."""
+            x2[...] = x1[...]
+            return x2
+
         axpy, scal, copy = (fallback_axpy, fallback_scal, fallback_copy)
 
     if x1 is x2 and b != 0:
@@ -689,8 +705,9 @@ class NumpyTensorSpace(TensorSpace, NumpyTensorSet):
 
         Parameters
         ----------
-        shape : positive int or sequence of positive int
-            Number of elements per axis of elements in this space.
+        shape : positive int or sequence of positive ints
+            Number of entries per axis for elements in this space. A
+            single integer results in a space with rank 1, i.e., 1 axis.
         dtype :
             Data type of each element. Can be provided in any
             way the `numpy.dtype` function understands, e.g.
@@ -827,16 +844,16 @@ class NumpyTensorSpace(TensorSpace, NumpyTensorSet):
 
         Examples
         --------
-        >>> tspace = odl.tensor_space((2, 3), dtype='float64')
-        >>> tspace
+        >>> space = NumpyTensorSpace((2, 3), dtype='float64')
+        >>> space
         rn((2, 3))
 
-        >>> tspace = odl.tensor_space((2, 3), dtype='complex64')
-        >>> tspace
+        >>> space = NumpyTensorSpace((2, 3), dtype='complex64')
+        >>> space
         cn((2, 3), 'complex64')
 
-        >>> tspace = odl.tensor_space((2, 3), dtype='int64')
-        >>> tspace
+        >>> space = NumpyTensorSpace((2, 3), dtype='int64')
+        >>> space
         tensor_space((2, 3), 'int')
         """
         NumpyTensorSet.__init__(self, shape, dtype, order)
@@ -905,7 +922,7 @@ class NumpyTensorSpace(TensorSpace, NumpyTensorSet):
 
     @property
     def is_weighted(self):
-        """Return True if the space has a non-trivial weighting."""
+        """Return ``True`` if the space has a non-trivial weighting."""
         return not isinstance(self.weighting, NumpyTensorSpaceNoWeighting)
 
     @staticmethod
@@ -1215,6 +1232,8 @@ class NumpyTensorSpace(TensorSpace, NumpyTensorSet):
         >>> diff_space = odl.rn((2, 3), dtype='float32')
         >>> diff_space == space
         False
+        >>> space == object
+        False
 
         A `NumpyTensorSpace` with the same properties is considered
         equal:
@@ -1228,6 +1247,11 @@ class NumpyTensorSpace(TensorSpace, NumpyTensorSet):
 
         return (NumpyTensorSet.__eq__(self, other) and
                 self.weighting == other.weighting)
+
+    def __hash__(self):
+        """Return ``hash(self)``."""
+        return hash((type(self), self.shape, self.dtype, self.order,
+                     self.weighting))
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -1267,10 +1291,7 @@ class NumpyTensor(Tensor, NumpyGeneralizedTensor):
 
     def __init__(self, space, data):
         """Initialize a new instance."""
-        if not isinstance(space, NumpyTensorSpace):
-            raise TypeError('`space` must be a `NumpyTensorSpace` instance, '
-                            'got {!r}'.format(space))
-
+        assert isinstance(space, NumpyTensorSpace)
         Tensor.__init__(self, space)
         NumpyGeneralizedTensor.__init__(self, space, data)
 
@@ -1390,7 +1411,7 @@ class NumpyTensor(Tensor, NumpyGeneralizedTensor):
         Raises
         ------
         ValueError
-            if the space is real, i.e., no imagninary part can be set
+            If the space is real, i.e., no imagninary part can be set.
 
         Examples
         --------
@@ -1475,6 +1496,9 @@ class NumpyTensor(Tensor, NumpyGeneralizedTensor):
         if out is None:
             return self.space.element(self.data.conj())
         else:
+            if out not in self.space:
+                raise LinearSpaceTypeError('`out` {!r} not in space {!r}'
+                                           ''.format(out, self.space))
             self.data.conj(out.data)
             return out
 
@@ -1535,45 +1559,22 @@ class NumpyTensor(Tensor, NumpyGeneralizedTensor):
         return self
 
     def __int__(self):
-        """Return ``int(self)``.
-
-        Raises
-        ------
-        TypeError
-            if ``self.size != 1``.
-        """
+        """Return ``int(self)``."""
         return int(self.data)
 
     def __long__(self):
         """Return ``long(self)``.
 
         This method is only available in Python 2.
-
-        Raises
-        ------
-        TypeError
-            if ``self.size != 1``.
         """
         return long(self.data)
 
     def __float__(self):
-        """Return ``float(self)``.
-
-        Raises
-        ------
-        TypeError
-            if ``self.size != 1``.
-        """
+        """Return ``float(self)``."""
         return float(self.data)
 
     def __complex__(self):
-        """Return ``complex(self)``.
-
-        Raises
-        ------
-        TypeError
-            if ``self.size != 1``.
-        """
+        """Return ``complex(self)``."""
         if self.size != 1:
             raise TypeError('only size-1 tensors can be converted to '
                             'Python scalars')
@@ -1809,6 +1810,11 @@ class NumpyTensorSpaceArrayWeighting(ArrayWeighting):
         super().__init__(array, impl='numpy', exponent=exponent,
                          dist_using_inner=dist_using_inner)
 
+    def __hash__(self):
+        """Return ``hash(self)``."""
+        return hash((type(self), self.array.tostring(), self.exponent,
+                     self.dist_using_inner))
+
     def inner(self, x1, x2):
         """Return the weighted inner product of ``x1`` and ``x2``.
 
@@ -1850,7 +1856,7 @@ class NumpyTensorSpaceArrayWeighting(ArrayWeighting):
             norm_squared = self.inner(x, x).real  # TODO: optimize?!
             if norm_squared < 0:
                 norm_squared = 0.0  # Compensate for numerical error
-            return sqrt(norm_squared)
+            return float(np.sqrt(norm_squared))
         else:
             return float(_pnorm_diagweight(x, self.exponent, self.array))
 
@@ -1960,12 +1966,12 @@ class NumpyTensorSpaceConstWeighting(ConstWeighting):
             The norm of the tensor.
         """
         if self.exponent == 2.0:
-            return sqrt(self.const) * float(_norm_default(x))
+            return float(np.sqrt(self.const) * _norm_default(x))
         elif self.exponent == float('inf'):
-            return self.const * float(_pnorm_default(x, self.exponent))
+            return float(self.const * _pnorm_default(x, self.exponent))
         else:
-            return (self.const ** (1 / self.exponent) *
-                    float(_pnorm_default(x, self.exponent)))
+            return float((self.const ** (1 / self.exponent) *
+                          _pnorm_default(x, self.exponent)))
 
     def dist(self, x1, x2):
         """Return the weighted distance between ``x1`` and ``x2``.
@@ -1985,14 +1991,14 @@ class NumpyTensorSpaceConstWeighting(ConstWeighting):
                             2 * _inner_default(x1, x2).real)
             if dist_squared < 0.0:  # Compensate for numerical error
                 dist_squared = 0.0
-            return sqrt(self.const) * float(sqrt(dist_squared))
+            return float(np.sqrt(self.const * dist_squared))
         elif self.exponent == 2.0:
-            return sqrt(self.const) * _norm_default(x1 - x2)
+            return float(np.sqrt(self.const) * _norm_default(x1 - x2))
         elif self.exponent == float('inf'):
-            return self.const * float(_pnorm_default(x1 - x2, self.exponent))
+            return float(self.const * _pnorm_default(x1 - x2, self.exponent))
         else:
-            return (self.const ** (1 / self.exponent) *
-                    float(_pnorm_default(x1 - x2, self.exponent)))
+            return float((self.const ** (1 / self.exponent) *
+                          _pnorm_default(x1 - x2, self.exponent)))
 
 
 class NumpyTensorSpaceNoWeighting(NoWeighting,
@@ -2029,7 +2035,7 @@ class NumpyTensorSpaceNoWeighting(NoWeighting,
 
         Parameters
         ----------
-        exponent : positive `float`
+        exponent : positive `float`, optional
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
         dist_using_inner : `bool`, optional

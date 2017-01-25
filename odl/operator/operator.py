@@ -1534,7 +1534,6 @@ class OperatorLeftScalarMult(Operator):
     def _call(self, x, out=None):
         """Implement ``self(x[, out])``."""
         if out is None:
-            print(self.operator(x))
             return self.scalar * self.operator(x)
         else:
             self.operator(x, out=out)
