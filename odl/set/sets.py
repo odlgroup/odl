@@ -24,7 +24,8 @@ from odl.util.utility import with_metaclass
 
 
 __all__ = ('Set', 'EmptySet', 'UniversalSet', 'Field', 'Integers',
-           'RealNumbers', 'ComplexNumbers', 'Strings', 'CartesianProduct')
+           'RealNumbers', 'ComplexNumbers', 'Strings', 'CartesianProduct',
+           'SetUnion')
 
 
 class Set(with_metaclass(ABCMeta, object)):
@@ -614,6 +615,119 @@ class CartesianProduct(Set):
 
     def __repr__(self):
         """Return ``repr(self)``."""
+        sets_str = ', '.join(repr(set_) for set_ in self.sets)
+        return '{}({})'.format(self.__class__.__name__, sets_str)
+
+
+class SetUnion(Set):
+    """The union of several subsets.
+
+    The elements of this set are elements of at least one of the subsets.
+
+    Notes
+    -----
+    Mathematically, this is simply the regular union of sets, given by
+
+    .. math::
+        X = \\bigcup_{i=1}^n X_i
+    """
+
+    def __init__(self, *sets):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        set1, ..., setN : `Set`
+            The instances
+        """
+        if not all(isinstance(set_, Set) for set_ in sets):
+            wrong = [set_ for set_ in sets
+                     if not isinstance(set_, Set)]
+            raise TypeError('{!r} not Set instance(s)'.format(wrong))
+
+        self._sets = tuple(sets)
+
+    @property
+    def sets(self):
+        """The factors (sets) as a tuple."""
+        return self._sets
+
+    def __contains__(self, other):
+        """Test if `other` is contained in this set.
+
+        Returns
+        -------
+        contains : `bool`
+            `True` if `other` is a member of any subset, `False` otherwise.
+
+        >>> r2, r3 = odl.rn(2), odl.rn(3)
+        >>> union = odl.SetUnion(r2, r3)
+        >>> r2.element() in union
+        True
+        >>> [1, 2] in union
+        False
+        """
+        return any(other in set for set in self.sets)
+
+    def __eq__(self, other):
+        """`s.__eq__(other) <==> s == other`.
+
+        Returns
+        -------
+        equals : `boolean`
+            `True` if `other` is a `SetUnion` instance, and
+            has the same subsets as this set, `False` otherwise.
+        """
+        return (type(self) == type(other) and
+                len(other) == len(self) and
+                all(so == ss for so, ss in zip(other.sets, self.sets)))
+
+    def element(self, inp=None):
+        """Create a new element.
+
+        First tries calling the first set, then the second, etc.
+
+        For more specific control, use set[i].element() to pick which subset to
+        use.
+        """
+        for set in self.sets:
+            try:
+                return set.element(inp)
+            except NotImplementedError:
+                pass
+        raise NotImplementedError('element not implemented for any of the '
+                                  'subsets')
+
+    def __getitem__(self, indcs):
+        """Return ``self[indcs]``.
+
+        Examples
+        --------
+        >>> emp, univ = odl.EmptySet(), odl.UniversalSet()
+        >>> prod = odl.SetUnion(emp, univ, univ, emp, emp)
+        >>> prod[2]
+        UniversalSet()
+        >>> prod[2:4]
+        SetUnion(UniversalSet(), EmptySet())
+        """
+        if isinstance(indcs, slice):
+            return SetUnion(*self.sets[indcs])
+        else:
+            return self.sets[indcs]
+
+    def __str__(self):
+        """s.__str__() <==> str(s)."""
+        return ' U '.join(str(set_) for set_ in self.sets)
+
+    def __repr__(self):
+        """s.__repr__() <==> repr(s).
+
+        Examples
+        --------
+        >>> emp, univ = odl.EmptySet(), odl.UniversalSet()
+        >>> odl.SetUnion(emp, univ)
+        SetUnion(EmptySet(), UniversalSet())
+        """
         sets_str = ', '.join(repr(set_) for set_ in self.sets)
         return '{}({})'.format(self.__class__.__name__, sets_str)
 
