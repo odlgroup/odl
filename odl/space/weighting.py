@@ -677,17 +677,23 @@ class ConstWeighting(Weighting):
         """
         super(ConstWeighting, self).__init__(
             impl=impl, exponent=exponent, dist_using_inner=dist_using_inner)
-        self._const = float(const)
+
+        self.__const = float(const)
         if self.const <= 0:
             raise ValueError('expected positive constant, got {}'
                              ''.format(const))
         if not np.isfinite(self.const):
             raise ValueError('`const` {} is invalid'.format(const))
 
+    def __hash__(self):
+        """Return ``hash(self)``."""
+        return hash((type(self), self.const, self.impl, self.exponent,
+                     self.dist_using_inner))
+
     @property
     def const(self):
         """Weighting constant of this inner product."""
-        return self._const
+        return self.__const
 
     def __eq__(self, other):
         """Return ``self == other``.
@@ -1022,6 +1028,5 @@ class CustomDist(Weighting):
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

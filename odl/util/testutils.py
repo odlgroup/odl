@@ -41,8 +41,6 @@ def _places(a, b, default=None):
     """
     dtype1 = getattr(a, 'dtype', object)
     dtype2 = getattr(b, 'dtype', object)
-    print(dtype1)
-    print(dtype2)
     return min(dtype_places(dtype1, default), dtype_places(dtype2, default))
 
 
