@@ -491,6 +491,10 @@ def test_getitem_single():
         H[-3]
         H[2]
 
+    assert H[(1,)] == odl.ProductSpace(r2)
+    with pytest.raises(ValueError):
+        H[0, 1]
+
 
 def test_getitem_slice():
     r1 = odl.rn(1)

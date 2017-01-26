@@ -561,11 +561,17 @@ class ProductSpace(LinearSpace):
         if isinstance(indices, Integral):
             return self.spaces[indices]
         elif isinstance(indices, slice):
-            return ProductSpace(*self.spaces[indices],
-                                field=self.field)
-        else:
+            return ProductSpace(*self.spaces[indices], field=self.field)
+        elif isinstance(indices, tuple):
+            if len(indices) > 1:
+                raise ValueError('too many indices: {}'.format(indices))
+            return ProductSpace(self.spaces[indices[0]], field=self.field)
+        elif isinstance(indices, list):
             return ProductSpace(*[self.spaces[i] for i in indices],
                                 field=self.field)
+        else:
+            raise TypeError('`indices` must be integer, slice or list, got '
+                            '{!r}'.format(indices))
 
     def __str__(self):
         """Return ``str(self)``."""

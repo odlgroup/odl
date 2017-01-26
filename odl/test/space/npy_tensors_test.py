@@ -51,7 +51,7 @@ exponent = simple_fixture(
 
 
 s_indices_params = [
-    0, [1], (1,), (0, 1), (2, 3),
+    0, [1], (1,), (0, 1), (2, 3), slice(None), slice(None, None, 2),
     (0, slice(None)), (slice(None, None, 2), slice(None))]
 setitem_indices = simple_fixture(name='indices', params=s_indices_params)
 
