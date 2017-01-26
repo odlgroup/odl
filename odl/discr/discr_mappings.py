@@ -88,12 +88,13 @@ class FunctionSpaceMapping(Operator):
 
         domain = fspace if map_type == 'sampling' else dspace
         range = dspace if map_type == 'sampling' else fspace
-        super(FunctionSetMapping, self).__init__(domain, range, linear=linear)
+        super(FunctionSpaceMapping, self).__init__(
+            domain, range, linear=linear)
 
         self.__partition = partition
 
         if self.is_linear:
-            if not fspace.has_field:
+            if self.field is None:
                 raise TypeError('`fspace.field` cannot be `None` for '
                                 '`linear=True`')
             if not dspace.is_numeric:
@@ -254,7 +255,7 @@ class PointCollocation(FunctionSpaceMapping):
            https://odlgroup.github.io/odl/guide/in_depth/\
 vectorization_guide.html
         """
-        linear = getattr(fspace, 'has_field', False)
+        linear = getattr(fspace, 'field', None) is not None
         FunctionSpaceMapping.__init__(self, 'sampling', fspace, partition,
                                       dspace, linear)
 
@@ -372,9 +373,9 @@ class NearestInterpolation(FunctionSpaceMapping):
           made by changing ``<=`` to ``<`` at one place. This difference
           may not be noticable in some situations due to rounding errors.
         """
-        linear = getattr(fspace, 'has_field', False)
+        linear = getattr(fspace, 'field', None) is not None
         super(NearestInterpolation, self).__init__(
-            'interpolation', fset, partition, dspace, linear)
+            'interpolation', fspace, partition, dspace, linear)
 
         self.__variant = str(variant).lower()
         if self.variant not in ('left', 'right'):
@@ -436,7 +437,7 @@ class LinearInterpolation(FunctionSpaceMapping):
             to ``partition.shape``, and its `TensorSpace.field` must
             match ``fspace.field``.
         """
-        if not getattr(fspace, 'has_field', False):
+        if getattr(fspace, 'field', None) is None:
             raise TypeError('`fspace.field` cannot be `None`')
         super(LinearInterpolation, self).__init__(
             'interpolation', fspace, partition, dspace, linear=True)
@@ -500,7 +501,7 @@ class PerAxisInterpolation(FunctionSpaceMapping):
             This option has no effect for schemes other than nearest
             neighbor.
         """
-        if not getattr(fspace, 'has_field', False):
+        if getattr(fspace, 'field', None) is None:
             raise TypeError('`fspace.field` cannot be `None`')
 
         super(PerAxisInterpolation, self).__init__(
