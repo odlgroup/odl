@@ -14,7 +14,7 @@ from __future__ import print_function, division, absolute_import
 import numpy as np
 
 from odl.space.base_tensors import Tensor
-from odl.util import array1d_repr, arraynd_repr, signature_string, indent_rows
+from odl.util import arraynd_repr, signature_string, indent_rows
 
 
 __all__ = ('MatrixWeighting', 'ArrayWeighting', 'ConstWeighting',
@@ -278,7 +278,7 @@ class MatrixWeighting(Weighting):
             raise ValueError('matrix has shape {}, expected a square matrix'
                              ''.format(self._matrix.shape))
 
-        if (self.matrix_issparse and
+        if (scipy.sparse.isspmatrix(self.matrix) and
                 self.exponent not in (1.0, 2.0, float('inf'))):
             raise NotImplementedError('sparse matrices only supported for '
                                       'exponent 1.0, 2.0 or `inf`')
@@ -304,12 +304,6 @@ class MatrixWeighting(Weighting):
         """Weighting matrix of this inner product."""
         return self._matrix
 
-    @property
-    def matrix_issparse(self):
-        """Whether the representing matrix is sparse or not."""
-        import scipy.sparse
-        return scipy.sparse.isspmatrix(self.matrix)
-
     def is_valid(self):
         """Test if the matrix is positive definite Hermitian.
 
@@ -319,7 +313,10 @@ class MatrixWeighting(Weighting):
         which can be very time-consuming for large matrices. Sparse
         matrices are not supported.
         """
-        if self.matrix_issparse:
+        # Lazy import to improve `import odl` time
+        import scipy.sparse
+
+        if scipy.sparse.isspmatrix(self.matrix):
             raise NotImplementedError('validation not supported for sparse '
                                       'matrices')
         elif self._eigval is not None:
@@ -365,7 +362,7 @@ class MatrixWeighting(Weighting):
         import scipy.sparse
 
         # TODO: fix dead link `scipy.linalg.decomp.eigh`
-        if self.matrix_issparse:
+        if scipy.sparse.isspmatrix(self.matrix):
             raise NotImplementedError('sparse matrix not supported')
 
         if cache is None:
@@ -417,6 +414,9 @@ class MatrixWeighting(Weighting):
             weighting for any input, ``False`` otherwise. This is checked
             by entry-wise comparison of matrices/arrays/constants.
         """
+        # Lazy import to improve `import odl` time
+        import scipy.sparse
+
         # Optimization for equality
         if self == other:
             return True
@@ -428,7 +428,7 @@ class MatrixWeighting(Weighting):
             if self.matrix.shape != other.matrix.shape:
                 return False
 
-            if self.matrix_issparse:
+            if scipy.sparse.isspmatrix(self.matrix):
                 if other.matrix_issparse:
                     # Optimization for different number of nonzero elements
                     if self.matrix.nnz != other.matrix.nnz:
@@ -446,7 +446,7 @@ class MatrixWeighting(Weighting):
                     return np.array_equal(self.matrix, other.matrix)
 
         elif isinstance(other, ArrayWeighting):
-            if self.matrix_issparse:
+            if scipy.sparse.isspmatrix(self.matrix):
                 return (np.array_equiv(self.matrix.diagonal(),
                                        other.array) and
                         np.array_equal(self.matrix.asformat('dia').offsets,
@@ -456,7 +456,7 @@ class MatrixWeighting(Weighting):
                     self.matrix, other.array * np.eye(self.matrix.shape[0]))
 
         elif isinstance(other, ConstWeighting):
-            if self.matrix_issparse:
+            if scipy.sparse.isspmatrix(self.matrix):
                 return (np.array_equiv(self.matrix.diagonal(), other.const) and
                         np.array_equal(self.matrix.asformat('dia').offsets,
                                        np.array([0])))
@@ -469,7 +469,10 @@ class MatrixWeighting(Weighting):
     @property
     def repr_part(self):
         """Return a string usable in a space's ``__repr__`` method."""
-        if self.matrix_issparse:
+        # Lazy import to improve `import odl` time
+        import scipy.sparse
+
+        if scipy.sparse.isspmatrix(self.matrix):
             part = 'weighting={}'.format(self.matrix)
         else:
             part = 'weighting={}'.format(arraynd_repr(self.matrix, nprint=10))
@@ -481,7 +484,10 @@ class MatrixWeighting(Weighting):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        if self.matrix_issparse:
+        # Lazy import to improve `import odl` time
+        import scipy.sparse
+
+        if scipy.sparse.isspmatrix(self.matrix):
             inner_fstr = ('<{shape} sparse matrix, format {fmt!r}, {nnz} '
                           'stored entries>')
             fmt = self.matrix.format
@@ -677,8 +683,8 @@ class ConstWeighting(Weighting):
         """
         super(ConstWeighting, self).__init__(
             impl=impl, exponent=exponent, dist_using_inner=dist_using_inner)
-
         self.__const = float(const)
+
         if self.const <= 0:
             raise ValueError('expected positive constant, got {}'
                              ''.format(const))
