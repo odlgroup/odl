@@ -70,16 +70,19 @@ class FunctionSpace(LinearSpace):
         range : `Set` or ``None``, optional
             The range of the functions, usually the `RealNumbers` or
             `ComplexNumbers`. If ``out_dtype`` is given, the range
-            is inferred.
+            is inferred, see below for details.
         out_dtype : optional
             Scalar data type of the return value of a function in this
             space. Can be provided in any way the `numpy.dtype`
             constructor understands, e.g. as built-in type or as a string.
-            If ``range`` is an instance of `RealNumbers`, the default
-            ``out_dtype`` is ``'float64'``, for `ComplexNumbers` it is
-            ``'complex128'``. For other ``range`` types, there is no
-            default ``out_dtype``, in which case dtypes are inferred
-            lazily at runtime.
+            This option is combined with ``range`` as follows:
+
+            - If ``range`` is ``None`` or an instance of `RealNumbers`,
+              the default ``out_dtype`` is ``'float64'``.
+            - If ``range`` is an instance of `ComplexNumbers`, the default
+              ``out_dtype`` is ``'complex128'``.
+            - Otherwise, there is no default ``out_dtype``, in which case
+              the dtype of function outputs is inferred lazily at runtime.
         """
         # Checking types
         if not isinstance(domain, Set):
@@ -106,7 +109,10 @@ class FunctionSpace(LinearSpace):
                                  '`range=ComplexNumbers()`, got {}'
                                  ''.format(out_dtype))
         elif range is None:
-            if is_real_dtype(out_dtype):
+            if out_dtype is None:
+                field = range = RealNumbers()
+                out_dtype = np.dtype('float64')
+            elif is_real_dtype(out_dtype):
                 field = range = RealNumbers()
             elif is_complex_floating_dtype(out_dtype):
                 field = range = ComplexNumbers()

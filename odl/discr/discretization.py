@@ -202,9 +202,8 @@ class DiscretizedSpace(TensorSpace):
     def __hash__(self):
         """Return ``hash(self)``."""
 
-        return hash((NtuplesBase.__hash__(self),
-                     self.uspace, self.dspace, self.__sampling,
-                     self.__interpolation))
+        return hash((super().__hash__(), self.uspace, self.dspace,
+                     self.sampling, self.interpolation))
 
     @property
     def impl(self):
