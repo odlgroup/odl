@@ -626,7 +626,7 @@ class ArrayWeighting(Weighting):
     @property
     def repr_part(self):
         """String usable in a space's ``__repr__`` method."""
-        optargs = [('weighting', array1d_repr(self.array, nprint=10), ''),
+        optargs = [('weighting', arraynd_repr(self.array, nprint=10), ''),
                    ('exponent', self.exponent, 2.0),
                    ('dist_using_inner', self.dist_using_inner, False)]
         return signature_string([], optargs, sep=[',\n', ', ', ',\n'],
@@ -634,12 +634,12 @@ class ArrayWeighting(Weighting):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        posargs = [self.array]
+        posargs = [arraynd_repr(self.array)]
         optargs = [('exponent', self.exponent, 2.0),
                    ('dist_using_inner', self.dist_using_inner, False)]
         inner_str = signature_string(posargs, optargs,
                                      sep=[', ', ', ', ',\n'],
-                                     mod=['!r', ''])
+                                     mod=['!s', ''])
         return '{}(\n{}\n)'.format(self.__class__.__name__,
                                    indent_rows(inner_str))
 
@@ -684,11 +684,6 @@ class ConstWeighting(Weighting):
                              ''.format(const))
         if not np.isfinite(self.const):
             raise ValueError('`const` {} is invalid'.format(const))
-
-    def __hash__(self):
-        """Return ``hash(self)``."""
-        return hash((type(self), self.const, self.impl, self.exponent,
-                     self.dist_using_inner))
 
     @property
     def const(self):
