@@ -96,7 +96,6 @@ class TensorSpace(LinearSpace):
             self.__real_space = self
             self.__complex_dtype = TYPE_MAP_R2C.get(self.dtype, None)
             self.__complex_space = None  # Set in first call of astype
-            LinearSpace.__init__(self, field)
         elif is_complex_floating_dtype(self.dtype):
             field = ComplexNumbers()
             self.__is_real = False
@@ -105,12 +104,12 @@ class TensorSpace(LinearSpace):
             self.__real_space = None  # Set in first call of astype
             self.__complex_dtype = self.dtype
             self.__complex_space = self
-            LinearSpace.__init__(self, field)
         else:
+            field = None
             self.__is_real = False
             self.__is_complex = False
-            # No call to LinearSpace.__init__ since field=None is invalid
 
+        LinearSpace.__init__(self, field)
         self.__is_floating = is_floating_dtype(self.dtype)
 
     @property

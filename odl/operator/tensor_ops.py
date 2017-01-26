@@ -22,7 +22,7 @@ from odl.set import RealNumbers, ComplexNumbers
 from odl.space import ProductSpace, tensor_space
 from odl.space.base_tensors import TensorSpace
 from odl.util import (
-    signature_string, indent_rows, dtype_str, moveaxis, writable_array)
+    signature_string, indent_rows, dtype_repr, moveaxis, writable_array)
 
 
 __all__ = ('PointwiseNorm', 'PointwiseInner', 'PointwiseSum', 'MatrixOperator')
@@ -819,9 +819,10 @@ class MatrixOperator(Operator):
         # Check compatibility of data types
         result_dtype = np.promote_types(domain.dtype, self.matrix.dtype)
         if not np.can_cast(result_dtype, range.dtype):
-            raise TypeError('result data type {} cannot be safely cast to '
-                            'range data type {}'
-                            ''.format(dtype_str(result_dtype, range.dtype)))
+            raise ValueError('result data type {} cannot be safely cast to '
+                             'range data type {}'
+                             ''.format(dtype_repr(result_dtype),
+                                       dtype_repr(range.dtype)))
 
         super().__init__(domain, range, linear=True)
 
@@ -897,7 +898,7 @@ class MatrixOperator(Operator):
     def __repr__(self):
         """Return ``repr(self)``."""
         # Matrix printing itself in an executable way (for dense matrix)
-        if self.matrix_issparse:
+        if scipy.sparse.isspmatrix(self.matrix):
             # Don't convert to dense, can take forever
             matrix_str = repr(self.matrix)
         else:

@@ -123,19 +123,18 @@ def salt_pepper_noise(vector, fraction=0.05, salt_vs_pepper=0.5,
 
     Parameters
     ----------
-    vector : `TensorSpace` or `ProductSpace`
+    vector : `TensorSpaceElement` or `ProductSpaceElement`
         The vector that noise should be added to.
     fraction : float, optional
         The propotion of the elements in ``vector`` that should be converted
         to noise.
     salt_vs_pepper : float, optional
-        Relative aboundance of salt (high) vs pepper (low) noise. A high value
+        Relative abundance of salt (high) vs pepper (low) noise. A high value
         means more salt than pepper noise.
     low_val : float, optional
         The "pepper" color in the noise.
         Default: minimum value of ``vector``. For product spaces the minimum
         value per subspace is taken.
-        each sub-space.
     high_val : float, optional
         The "salt" value in the noise.
         Default: maximuim value of ``vector``. For product spaces the maximum

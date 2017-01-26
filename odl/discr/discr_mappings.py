@@ -94,7 +94,7 @@ class FunctionSpaceMapping(Operator):
         self.__partition = partition
 
         if self.is_linear:
-            if not fspace.has_field:
+            if self.field is None:
                 raise TypeError('`fspace.field` cannot be `None` for '
                                 '`linear=True`')
             if not dspace.is_numeric:
@@ -255,7 +255,7 @@ class PointCollocation(FunctionSpaceMapping):
            https://odlgroup.github.io/odl/guide/in_depth/\
 vectorization_guide.html
         """
-        linear = getattr(fspace, 'has_field', False)
+        linear = getattr(fspace, 'field', None) is not None
         FunctionSpaceMapping.__init__(self, 'sampling', fspace, partition,
                                       dspace, linear)
 
@@ -373,7 +373,7 @@ class NearestInterpolation(FunctionSpaceMapping):
           made by changing ``<=`` to ``<`` at one place. This difference
           may not be noticable in some situations due to rounding errors.
         """
-        linear = getattr(fspace, 'has_field', False)
+        linear = getattr(fspace, 'field', None) is not None
         FunctionSpaceMapping.__init__(self, 'interpolation', fspace, partition,
                                       dspace, linear)
 
@@ -437,7 +437,7 @@ class LinearInterpolation(FunctionSpaceMapping):
             to ``partition.shape``, and its `TensorSpace.field` must
             match ``fspace.field``.
         """
-        if not getattr(fspace, 'has_field', False):
+        if getattr(fspace, 'field', None) is None:
             raise TypeError('`fspace.field` cannot be `None`')
         FunctionSpaceMapping.__init__(self, 'interpolation', fspace, partition,
                                       dspace, linear=True)
@@ -501,7 +501,7 @@ class PerAxisInterpolation(FunctionSpaceMapping):
             This option has no effect for schemes other than nearest
             neighbor.
         """
-        if not getattr(fspace, 'has_field', False):
+        if getattr(fspace, 'field', None) is None:
             raise TypeError('`fspace.field` cannot be `None`')
         FunctionSpaceMapping.__init__(self, 'interpolation', fspace, partition,
                                       dspace, linear=True)

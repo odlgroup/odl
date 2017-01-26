@@ -228,7 +228,7 @@ class NumpyTensorSpace(TensorSpace):
         norm = kwargs.pop('norm', None)
         inner = kwargs.pop('inner', None)
         weighting = kwargs.pop('weighting', None)
-        exponent = kwargs.pop('exponent', 2.0)
+        exponent = kwargs.pop('exponent', getattr(weighting, 'exponent', 2.0))
         dist_using_inner = bool(kwargs.pop('dist_using_inner', False))
 
         if (not self.is_numeric and

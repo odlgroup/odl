@@ -17,6 +17,7 @@ import odl
 from odl.operator.tensor_ops import (
     PointwiseNorm, PointwiseInner, PointwiseSum, MatrixOperator)
 from odl.space.pspace import ProductSpace
+from odl.util import moveaxis
 from odl.util.testutils import (
     all_almost_equal, all_equal, simple_fixture, noise_element, noise_elements)
 
@@ -41,6 +42,22 @@ def _dense_matrix(fn):
 def _sparse_matrix(fn):
     """Create a sparse positive definite Hermitian matrix for `fn`."""
     return scipy.sparse.coo_matrix(_dense_matrix(fn))
+
+
+matrix_dtype = simple_fixture(
+    name='matrix_dtype',
+    params=['float32', 'complex64', 'float64', 'complex128'])
+
+
+@pytest.fixture(scope='module')
+def matrix(matrix_dtype):
+    dtype = np.dtype(matrix_dtype)
+    if np.issubsctype(dtype, np.floating):
+        return np.ones((3, 4), dtype=dtype)
+    elif np.issubsctype(dtype, np.complexfloating):
+        return np.ones((3, 4), dtype=dtype) * (1 + 1j)
+    else:
+        assert 0
 
 
 exponent = simple_fixture('exponent', [2.0, 1.0, float('inf'), 3.5, 1.5])
@@ -448,192 +465,198 @@ def test_pointwise_sum():
 # ---- MatrixOperator ---- #
 
 
-def test_mat_op_init_and_basic_properties():
-    """Test initialization and basic properties of MatrixOperator."""
+def test_matrix_op_init(matrix):
+    """Test initialization and properties of matrix operators."""
+    dense_matrix = matrix
+    sparse_matrix = scipy.sparse.coo_matrix(dense_matrix)
+
+    # Just check if the code runs
+    MatrixOperator(dense_matrix)
+    MatrixOperator(sparse_matrix)
+
     # Test default domain and range
-    r2 = odl.rn(2)
-    op_real = MatrixOperator([[1.0, 2],
-                              [-1, 0.5]])
+    mat_op = MatrixOperator(dense_matrix)
+    assert mat_op.domain == odl.tensor_space(4, matrix.dtype)
+    assert mat_op.range == odl.tensor_space(3, matrix.dtype)
+    assert np.all(mat_op.matrix == dense_matrix)
+    sparse_matrix = scipy.sparse.coo_matrix(dense_matrix)
+    mat_op = MatrixOperator(sparse_matrix)
+    assert mat_op.domain == odl.tensor_space(4, matrix.dtype)
+    assert mat_op.range == odl.tensor_space(3, matrix.dtype)
+    assert (mat_op.matrix != sparse_matrix).getnnz() == 0
 
-    assert op_real.domain == r2
-    assert op_real.range == r2
+    # Explicit domain and range
+    dom = odl.tensor_space(4, matrix.dtype)
+    ran = odl.tensor_space(3, matrix.dtype)
+    mat_op = MatrixOperator(dense_matrix, domain=dom, range=ran)
+    assert mat_op.domain == dom
+    assert mat_op.range == ran
+    mat_op = MatrixOperator(sparse_matrix, domain=dom, range=ran)
+    assert mat_op.domain == dom
+    assert mat_op.range == ran
 
-    c2 = odl.cn(2)
-    op_complex = MatrixOperator([[1.0, 2 + 1j],
-                                 [-1 - 1j, 0.5]])
+    # Bad 1d sizes
+    with pytest.raises(ValueError):
+        MatrixOperator(dense_matrix, domain=odl.cn(4), range=odl.cn(4))
+    with pytest.raises(ValueError):
+        MatrixOperator(dense_matrix, range=odl.cn(4))
+    # Invalid range dtype
+    with pytest.raises(ValueError):
+        MatrixOperator(dense_matrix.astype(complex), range=odl.rn(4))
 
-    assert op_complex.domain == c2
-    assert op_complex.range == c2
+    # Data type promotion
+    # real space, complex matrix -> complex space
+    dom = odl.rn(4)
+    mat_op = MatrixOperator(dense_matrix.astype(complex), domain=dom)
+    assert mat_op.domain == dom
+    assert mat_op.range == odl.cn(3)
 
-    int2 = odl.fn(2, dtype=int)
-    op_int = MatrixOperator([[1, 2],
-                             [-1, 0]])
+    # complex space, real matrix -> complex space
+    dom = odl.cn(4)
+    mat_op = MatrixOperator(dense_matrix.real, domain=dom)
+    assert mat_op.domain == dom
+    assert mat_op.range == odl.cn(3)
 
-    assert op_int.domain == int2
-    assert op_int.range == int2
-
-    # Rectangular
-    rect_mat = 2 * np.eye(2, 3)
-    r3 = odl.rn(3)
-
-    op = MatrixOperator(rect_mat)
-    assert op.domain == r3
-    assert op.range == r2
-
-    MatrixOperator(rect_mat, domain=r3, range=r2)
+    # Multi-dimensional spaces
+    dom = odl.tensor_space((6, 5, 4), matrix.dtype)
+    ran = odl.tensor_space((6, 5, 3), matrix.dtype)
+    mat_op = MatrixOperator(dense_matrix, domain=dom, axis=2)
+    assert mat_op.range == ran
+    mat_op = MatrixOperator(dense_matrix, domain=dom, range=ran, axis=2)
+    assert mat_op.range == ran
 
     with pytest.raises(ValueError):
-        MatrixOperator(rect_mat, domain=r2, range=r2)
-
+        bad_dom = odl.tensor_space((6, 6, 6), matrix.dtype)  # wrong shape
+        MatrixOperator(dense_matrix, domain=bad_dom)
     with pytest.raises(ValueError):
-        MatrixOperator(rect_mat, domain=r3, range=r3)
-
+        dom = odl.tensor_space((6, 5, 4), matrix.dtype)
+        bad_ran = odl.tensor_space((6, 6, 6), matrix.dtype)  # wrong shape
+        MatrixOperator(dense_matrix, domain=dom, range=bad_ran)
     with pytest.raises(ValueError):
-        MatrixOperator(rect_mat, domain=r2, range=r3)
-
-    # Rn to Cn okay
-    MatrixOperator(rect_mat, domain=r3, range=odl.cn(2))
-
-    # Cn to Rn not okay (no safe cast)
-    with pytest.raises(TypeError):
-        MatrixOperator(rect_mat, domain=odl.cn(3), range=r2)
-
-    # Complex matrix between real spaces not okay
-    rect_complex_mat = rect_mat + 1j
-    with pytest.raises(TypeError):
-        MatrixOperator(rect_complex_mat, domain=r3, range=r2)
-
-    # Init with array-like structure (including numpy.matrix)
-    op = MatrixOperator(rect_mat, domain=r3, range=r2)
-    assert isinstance(op.matrix, np.ndarray)
-
-    op = MatrixOperator(np.asmatrix(rect_mat), domain=r3, range=r2)
-    assert isinstance(op.matrix, np.ndarray)
-
-    op = MatrixOperator(rect_mat.tolist(), domain=r3, range=r2)
-    assert isinstance(op.matrix, np.ndarray)
-    assert not op.matrix_issparse
-
-    sparse_mat = _sparse_matrix(odl.rn(5))
-    op = MatrixOperator(sparse_mat, domain=odl.rn(5), range=odl.rn(5))
-    assert isinstance(op.matrix, scipy.sparse.spmatrix)
-    assert op.matrix_issparse
+        MatrixOperator(dense_matrix, domain=dom, axis=1)
+    with pytest.raises(ValueError):
+        MatrixOperator(dense_matrix, domain=dom, axis=0)
+    with pytest.raises(ValueError):
+        bad_ran = odl.tensor_space((6, 3, 4), matrix.dtype)
+        MatrixOperator(dense_matrix, domain=dom, range=bad_ran, axis=2)
+    with pytest.raises(ValueError):
+        bad_dom_for_sparse = odl.rn((6, 5, 4))
+        MatrixOperator(sparse_matrix, domain=bad_dom_for_sparse, axis=2)
 
     # Init with uniform_discr space (subclass of FnBase)
-    dom = odl.uniform_discr(0, 1, 3)
-    ran = odl.uniform_discr(0, 1, 2)
-    MatrixOperator(rect_mat, domain=dom, range=ran)
+    dom = odl.uniform_discr(0, 1, 4, dtype=dense_matrix.dtype)
+    ran = odl.uniform_discr(0, 1, 3, dtype=dense_matrix.dtype)
+    MatrixOperator(dense_matrix, domain=dom, range=ran)
+
+    # Make sure this runs at all
+    str(mat_op)
+    repr(mat_op)
 
 
-def test_mat_op_adjoint(fn):
-    # Square cases
-    sparse_mat = _sparse_matrix(fn)
-    dense_mat = _dense_matrix(fn)
+def test_matrix_op_call(matrix):
+    """Validate result from calls to matrix operators against Numpy."""
+    dense_matrix = matrix
+    sparse_matrix = scipy.sparse.coo_matrix(dense_matrix)
 
-    op_sparse = MatrixOperator(sparse_mat, fn, fn)
-    op_dense = MatrixOperator(dense_mat, fn, fn)
+    # Default 1d case
+    dmat_op = MatrixOperator(dense_matrix)
+    smat_op = MatrixOperator(sparse_matrix)
+    xarr, x = noise_elements(dmat_op.domain)
 
-    # Just test if it runs, nothing interesting to test here
-    op_sparse.adjoint
-    op_dense.adjoint
+    true_result_dense = dense_matrix.dot(xarr)
+    true_result_sparse = sparse_matrix.dot(xarr)
+    assert all_almost_equal(dmat_op(x), true_result_dense)
+    assert all_almost_equal(smat_op(x), true_result_sparse)
+    out = dmat_op.range.element()
+    dmat_op(x, out=out)
+    assert all_almost_equal(out, true_result_dense)
+    smat_op(x, out=out)
+    assert all_almost_equal(out, true_result_sparse)
 
-    # Rectangular case
-    rect_mat = 2 * np.eye(2, 3)
-    r2, r3 = odl.rn(2), odl.rn(3)
-    c2 = odl.cn(2)
-
-    op = MatrixOperator(rect_mat, r3, r2)
-    op_adj = op.adjoint
-    assert op_adj.domain == op.range
-    assert op_adj.range == op.domain
-    assert np.array_equal(op_adj.matrix, op.matrix.conj().T)
-    assert np.array_equal(op_adj.adjoint.matrix, op.matrix)
-
-    # The operator Rn -> Cn has no adjoint
-    op_noadj = MatrixOperator(rect_mat, r3, c2)
-    with pytest.raises(NotImplementedError):
-        op_noadj.adjoint
-
-
-def test_mat_op_inverse(fn):
-    # Sparse case
-    sparse_mat = _sparse_matrix(fn)
-    op_sparse = MatrixOperator(sparse_mat, fn, fn)
-
-    op_sparse_inv = op_sparse.inverse
-    assert op_sparse_inv.domain == op_sparse.range
-    assert op_sparse_inv.range == op_sparse.domain
-    assert all_almost_equal(op_sparse_inv.matrix,
-                            np.linalg.inv(op_sparse.matrix.todense()))
-    assert all_almost_equal(op_sparse_inv.inverse.matrix,
-                            op_sparse.matrix.todense())
-
-    # Test application
-    x = noise_element(fn)
-    assert all_almost_equal(x, op_sparse.inverse(op_sparse(x)))
-
-    # Dense case
-    dense_mat = _dense_matrix(fn)
-    op_dense = MatrixOperator(dense_mat, fn, fn)
-    op_dense_inv = op_dense.inverse
-    assert op_dense_inv.domain == op_dense.range
-    assert op_dense_inv.range == op_dense.domain
-    assert all_almost_equal(op_dense_inv.matrix,
-                            np.linalg.inv(op_dense.matrix))
-    assert all_almost_equal(op_dense_inv.inverse.matrix,
-                            op_dense.matrix)
-
-    # Test application
-    x = noise_element(fn)
-    assert all_almost_equal(x, op_dense.inverse(op_dense(x)))
+    # Multi-dimensional case
+    domain = odl.rn((2, 2, 4))
+    mat_op = MatrixOperator(dense_matrix, domain, axis=2)
+    xarr, x = noise_elements(mat_op.domain)
+    true_result = moveaxis(np.tensordot(dense_matrix, xarr, (1, 2)), 0, 2)
+    assert all_almost_equal(mat_op(x), true_result)
+    out = mat_op.range.element()
+    mat_op(x, out=out)
+    assert all_almost_equal(out, true_result)
 
 
-def test_mat_op_call(fn):
-    # Square cases
-    sparse_mat = _sparse_matrix(fn)
-    dense_mat = _dense_matrix(fn)
-    xarr, x = noise_elements(fn)
+def test_matrix_op_call_explicit():
+    """Validate result from call to matrix op against explicit calculation."""
+    mat = np.ones((3, 2))
+    xarr = np.array([[[0, 1],
+                      [2, 3]],
+                     [[4, 5],
+                      [6, 7]]], dtype=float)
 
-    op_sparse = MatrixOperator(sparse_mat, fn, fn)
-    op_dense = MatrixOperator(dense_mat, fn, fn)
+    # Multiplication along `axis` with `mat` is the same as summation
+    # along `axis` and stacking 3 times along the same axis
+    for axis in range(3):
+        mat_op = MatrixOperator(mat, domain=odl.rn(xarr.shape),
+                                axis=axis)
+        result = mat_op(xarr)
+        true_result = np.repeat(np.sum(xarr, axis=axis, keepdims=True),
+                                repeats=3, axis=axis)
+        assert result.shape == true_result.shape
+        assert np.allclose(result, true_result)
 
-    yarr_sparse = sparse_mat.dot(xarr)
-    yarr_dense = dense_mat.dot(xarr)
 
-    # Out-of-place
-    y = op_sparse(x)
-    assert all_almost_equal(y, yarr_sparse)
+def test_matrix_op_adjoint(matrix):
+    """Test if the adjoint of matrix operators is correct."""
+    dense_matrix = matrix
+    sparse_matrix = scipy.sparse.coo_matrix(dense_matrix)
 
-    y = op_dense(x)
-    assert all_almost_equal(y, yarr_dense)
+    tol = 2 * matrix.size * np.finfo(matrix.dtype).resolution
 
-    # In-place
-    y = fn.element()
-    op_sparse(x, out=y)
-    assert all_almost_equal(y, yarr_sparse)
+    # Default 1d case
+    dmat_op = MatrixOperator(dense_matrix)
+    smat_op = MatrixOperator(sparse_matrix)
+    x = noise_element(dmat_op.domain)
+    y = noise_element(dmat_op.range)
 
-    y = fn.element()
-    op_dense(x, out=y)
-    assert all_almost_equal(y, yarr_dense)
+    inner_ran = dmat_op(x).inner(y)
+    inner_dom = x.inner(dmat_op.adjoint(y))
+    assert inner_ran == pytest.approx(inner_dom, rel=tol, abs=tol)
+    inner_ran = smat_op(x).inner(y)
+    inner_dom = x.inner(smat_op.adjoint(y))
+    assert inner_ran == pytest.approx(inner_dom, rel=tol, abs=tol)
 
-    # Rectangular case
-    rect_mat = 2 * np.eye(2, 3)
-    r2, r3 = odl.rn(2), odl.rn(3)
+    # Multi-dimensional case
+    domain = odl.tensor_space((2, 2, 4), matrix.dtype)
+    mat_op = MatrixOperator(dense_matrix, domain, axis=2)
+    x = noise_element(mat_op.domain)
+    y = noise_element(mat_op.range)
+    inner_ran = mat_op(x).inner(y)
+    inner_dom = x.inner(mat_op.adjoint(y))
+    assert inner_ran == pytest.approx(inner_dom, rel=tol, abs=tol)
 
-    op = MatrixOperator(rect_mat, r3, r2)
-    xarr = np.arange(3, dtype=float)
-    x = r3.element(xarr)
 
-    yarr = rect_mat.dot(xarr)
+def test_matrix_op_inverse():
+    """Test if the inverse of matrix operators is correct."""
+    dense_matrix = np.ones((3, 3)) + 4 * np.eye(3)  # invertible
+    sparse_matrix = scipy.sparse.coo_matrix(dense_matrix)
 
-    # Out-of-place
-    y = op(x)
-    assert all_almost_equal(y, yarr)
+    # Default 1d case
+    dmat_op = MatrixOperator(dense_matrix)
+    smat_op = MatrixOperator(sparse_matrix)
+    x = noise_element(dmat_op.domain)
+    md_x = dmat_op(x)
+    mdinv_md_x = dmat_op.inverse(md_x)
+    assert all_almost_equal(x, mdinv_md_x)
+    ms_x = smat_op(x)
+    msinv_ms_x = smat_op.inverse(ms_x)
+    assert all_almost_equal(x, msinv_ms_x)
 
-    # In-place
-    y = r2.element()
-    op(x, out=y)
-    assert all_almost_equal(y, yarr)
+    # Multi-dimensional case
+    domain = odl.tensor_space((2, 2, 3), dense_matrix.dtype)
+    mat_op = MatrixOperator(dense_matrix, domain, axis=2)
+    x = noise_element(mat_op.domain)
+    m_x = mat_op(x)
+    minv_m_x = mat_op.inverse(m_x)
+    assert all_almost_equal(x, minv_m_x)
 
 
 if __name__ == '__main__':
