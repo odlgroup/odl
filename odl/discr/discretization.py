@@ -200,9 +200,19 @@ class DiscretizedSpace(TensorSpace):
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        return hash((super(DiscretizedSpace, self).__hash__(),
-                     self.uspace, self.dspace, self.__sampling,
-                     self.__interpolation))
+        prop_list = [super(DiscretizedSpace, self).__hash__(),
+                     self.uspace, self.dspace]
+        # May not exist
+        try:
+            prop_list.append(self.sampling)
+        except NotImplementedError:
+            pass
+        try:
+            prop_list.append(self.interpolation)
+        except NotImplementedError:
+            pass
+
+        return hash(tuple(prop_list))
 
     @property
     def impl(self):
@@ -508,6 +518,5 @@ def dspace_type(space, impl, dtype=None):
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()
