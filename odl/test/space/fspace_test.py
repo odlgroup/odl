@@ -139,12 +139,13 @@ def test_fspace_vector_init():
 def test_fspace_vector_eval():
     str3 = odl.Strings(3)
     ints = odl.Integers()
-    fset = FunctionSpace(str3, ints)
+    fspace = FunctionSpace(str3, ints)
     strings = np.array(['aa', 'b', 'cab', 'aba'])
     out_vec = np.empty((4,), dtype=int)
 
     # Vectorized for arrays only
-    f_vec = fset.element(lambda s: np.array([str(si).count('a') for si in s]))
+    f_vec = fspace.element(lambda s: np.array([str(si).count('a')
+                                               for si in s]))
     true_vec = [2, 0, 1, 2]
 
     assert f_vec('abc') == 1

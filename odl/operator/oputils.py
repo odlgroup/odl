@@ -289,8 +289,9 @@ def as_scipy_operator(op):
     Notes
     -----
     If the data representation of ``op``'s domain and range is of type
-    `NumpyTensorSpace` this incurs no significant overhead. If the space type is
-    ``CudaFn`` or some other nonlocal type, the overhead is significant.
+    `NumpyTensorSpace` this incurs no significant overhead. If the space
+    type is ``CudaFn`` or some other nonlocal type, the overhead is
+    significant.
     """
     if not op.is_linear:
         raise ValueError('`op` needs to be linear')

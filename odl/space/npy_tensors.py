@@ -920,6 +920,10 @@ class NumpyTensor(Tensor):
         else:
             return np.array_equal(self.data, other.data)
 
+    def __hash__(self):
+        """Return ``hash(self)``."""
+        return hash((type(self), self.space, self.data.tobytes()))
+
     def copy(self):
         """Create an identical (deep) copy of this vector.
 
@@ -1735,7 +1739,7 @@ class NumpyTensorSpaceArrayWeighting(ArrayWeighting):
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        return hash((type(self), self.array.tostring(), self.exponent,
+        return hash((type(self), self.array.tobytes(), self.exponent,
                      self.dist_using_inner))
 
     def inner(self, x1, x2):

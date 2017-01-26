@@ -284,7 +284,8 @@ class FunctionSpace(LinearSpace):
         -------
         equals : bool
             ``True`` if ``other`` is a `FunctionSpace` with same
-            `FunctionSpace.domain` and `FunctionSpace.range`, ``False`` otherwise.
+            `FunctionSpace.domain`, `FunctionSpace.range` and
+            `FunctionSpace.out_dtype`, ``False`` otherwise.
         """
         if other is self:
             return True
@@ -293,6 +294,10 @@ class FunctionSpace(LinearSpace):
                 self.domain == other.domain and
                 self.range == other.range and
                 self.out_dtype == other.out_dtype)
+
+    def __hash__(self):
+        """Return ``hash(self)``."""
+        return hash((type(self), self.domain, self.range, self.out_dtype))
 
     def __contains__(self, other):
         """Return ``other in self``.
@@ -986,6 +991,18 @@ class FunctionSpaceElement(LinearSpaceElement, Operator):
             funcs_equal = self._call_out_of_place == other._call_out_of_place
 
         return self.space == other.space and funcs_equal
+
+    def __hash__(self):
+        """Return ``hash(self)``."""
+        hash_list = [type(self), self.space, self._call_has_out]
+        if self._call_has_out:
+            # Out-of-place can be wrapped in this case, so we compare only
+            # the in-place methods.
+            hash_list.append(self._call_in_place)
+        else:
+            # Just the opposite of the first case
+            hash_list.append(self._call_out_of_place)
+        return hash(tuple(hash_list))
 
     # Power functions are more general than the ones in LinearSpace
     def __pow__(self, p):
