@@ -157,13 +157,6 @@ def test_init_tspace():
     with pytest.raises(ValueError):
         odl.cn(3, 'S1')
 
-    # Backported int from future fails (not recognized by numpy.dtype())
-    # (Python 2 only)
-    from builtins import int as future_int
-    if PYTHON2:
-        with pytest.raises(ValueError):
-            NumpyTensorSpace((3, 4), future_int)
-
     # Init with weights or custom space functions
     weight_const = 1.5
     weight_arr = _pos_array(odl.rn((3, 4), float))

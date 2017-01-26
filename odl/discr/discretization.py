@@ -12,6 +12,7 @@
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
+from builtins import super
 
 from odl.operator import Operator
 from odl.set.sets import Set

@@ -481,7 +481,7 @@ class SumFunctional(Operator):
     """Sum of elements."""
 
     def __init__(self, domain):
-        super().__init__(domain, domain.field, linear=True)
+        Operator.__init__(self, domain, domain.field, linear=True)
 
     def _call(self, x):
         return np.sum(x)
@@ -496,7 +496,7 @@ class ConstantVector(Operator):
     """Vector times a scalar."""
 
     def __init__(self, domain):
-        super().__init__(domain.field, domain, linear=True)
+        Operator.__init__(self, domain.field, domain, linear=True)
 
     def _call(self, x):
         return self.range.element(np.ones(self.range.size) * x)
@@ -675,7 +675,7 @@ class SumSquaredFunctional(Operator):
     """Sum of the squared elements."""
 
     def __init__(self, domain):
-        super().__init__(domain, domain.field, linear=False)
+        Operator.__init__(self, domain, domain.field, linear=False)
 
     def _call(self, x):
         return np.sum(x ** 2)
