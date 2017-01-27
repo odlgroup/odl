@@ -21,6 +21,8 @@ from odl.operator import Operator
 from odl.set import RealNumbers, ComplexNumbers
 from odl.space import ProductSpace, tensor_space
 from odl.space.base_tensors import TensorSpace
+from odl.space.npy_tensors import NumpyTensorSpaceNoWeighting
+from odl.space.weighting import ArrayWeighting
 from odl.util import (
     signature_string, indent_rows, dtype_repr, moveaxis, writable_array)
 
@@ -748,12 +750,14 @@ class MatrixOperator(Operator):
         >>> op(dom.one()).shape
         (5, 4, 3)
 
-        The operator also works on `uniform_discr` type spaces:
+        The operator also works on `uniform_discr` type spaces. Note,
+        however, that the ``weighting`` of the domain is propagated to
+        the range by default:
 
         >>> space = odl.uniform_discr(0, 1, 4)
         >>> op = MatrixOperator(m, domain=space)
         >>> op(space.one())
-        rn(3).element([4.0, 4.0, 4.0])
+        rn(3, weighting=0.25).element([4.0, 4.0, 4.0])
 
         Notes
         -----
@@ -771,7 +775,8 @@ class MatrixOperator(Operator):
         if scipy.sparse.isspmatrix(matrix):
             self.__matrix = matrix
         else:
-            self.__matrix = np.asarray(matrix)
+            order = getattr(domain, 'order', None)
+            self.__matrix = np.array(matrix, copy=False, order=order, ndmin=2)
 
         self.__axis, axis_in = int(axis), axis
         if self.axis != axis_in:
@@ -800,17 +805,26 @@ class MatrixOperator(Operator):
                                  ''.format(domain.shape[axis],
                                            self.matrix.shape[1]))
 
-        # Infer or check range
         range_shape = list(domain.shape)
         range_shape[self.axis] = self.matrix.shape[0]
 
         if range is None:
+            # Infer range
             range_dtype = np.promote_types(self.matrix.dtype, domain.dtype)
-            range = tensor_space(range_shape, dtype=range_dtype)
+            if (range_shape != domain.shape and
+                    isinstance(domain.weighting, ArrayWeighting)):
+                # Cannot propagate weighting due to size mismatch.
+                weighting = None
+            else:
+                weighting = domain.weighting
+            range = tensor_space(range_shape, dtype=range_dtype,
+                                 order=domain.order, weighting=weighting,
+                                 exponent=domain.exponent)
         else:
+            # Check consistency of range
             if not isinstance(range, TensorSpace):
-                raise TypeError('`range` must be not a `TensorSpace`'
-                                'instance, got {!r}'.format(range))
+                raise TypeError('`range` must be a `TensorSpace` instance, '
+                                'got {!r}'.format(range))
 
             if range.shape != tuple(range_shape):
                 raise ValueError('expected `range.shape` = {}, got {}'

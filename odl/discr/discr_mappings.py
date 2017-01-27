@@ -94,7 +94,7 @@ class FunctionSpaceMapping(Operator):
         self.__partition = partition
 
         if self.is_linear:
-            if self.field is None:
+            if self.domain.field is None:
                 raise TypeError('`fspace.field` cannot be `None` for '
                                 '`linear=True`')
             if not dspace.is_numeric:

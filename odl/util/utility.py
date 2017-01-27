@@ -462,9 +462,7 @@ def preload_first_arg(instance, mode):
 
 def as_flat_array(x):
     """Return ``x`` as a flat array according to its axis ordering."""
-    if hasattr(x, 'view_order'):
-        return x.asarray().ravel(x.view_order)
-    elif hasattr(x, 'order'):
+    if hasattr(x, 'order'):
         return x.asarray().ravel(x.order)
     else:
         return x.asarray().ravel()

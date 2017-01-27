@@ -51,7 +51,7 @@ class TensorSpace(LinearSpace):
     on tensors for further details.
     """
 
-    def __init__(self, shape, dtype, order='K'):
+    def __init__(self, shape, dtype, order='A'):
         """Initialize a new instance.
 
         Parameters
@@ -64,12 +64,12 @@ class TensorSpace(LinearSpace):
             in any way the `numpy.dtype` constructor understands, e.g.
             as built-in type or as a string. Data types with non-trivial
             shapes are not allowed.
-        order : {'K', 'C', 'F'}, optional
+        order : {'A', 'C', 'F'}, optional
             Axis ordering of the data storage. Only relevant for more
             than 1 axis.
             For ``'C'`` and ``'F'``, elements are forced to use
             contiguous memory in the respective ordering.
-            For ``'K'`` no contiguousness is enforced.
+            For ``'A'`` ("any") no contiguousness is enforced.
         """
         try:
             self.__shape = tuple(safe_int_conv(s) for s in shape)
@@ -84,7 +84,7 @@ class TensorSpace(LinearSpace):
             raise ValueError('`dtype` {!r} with shape {} not allowed'
                              ''.format(dtype, self.dtype.shape))
         self.__order = str(order).upper()
-        if self.order not in ('K', 'C', 'F'):
+        if self.order not in ('A', 'C', 'F'):
             raise ValueError("`order '{}' not understood".format(order))
 
         if is_real_dtype(self.dtype):
@@ -217,12 +217,12 @@ class TensorSpace(LinearSpace):
             in any way the `numpy.dtype` constructor understands, e.g.
             as built-in type or as a string. Data types with non-trivial
             shapes are not allowed.
-        order : {'K', 'C', 'F'}, optional
+        order : {'A', 'C', 'F'}, optional
             Axis ordering of the data storage. Only relevant for more
             than 1 axis.
             For ``'C'`` and ``'F'``, elements are forced to use
             contiguous memory in the respective ordering.
-            For ``'K'`` no contiguousness is enforced.
+            For ``'A'`` ("any") no contiguousness is enforced.
             The default ``None`` is equivalent to ``self.order``.
 
         Returns
@@ -260,8 +260,8 @@ class TensorSpace(LinearSpace):
     def order(self):
         """Guaranteed data storage order in this space.
 
-        This is one of ``('C', 'F', 'K')``, where ``'K'`` means
-        "no guarantee".
+        This is one of ``('A', 'C', 'F')``, where ``'A'`` means "any",
+        i.e. "no guarantee".
         """
         return self.__order
 
@@ -269,21 +269,10 @@ class TensorSpace(LinearSpace):
     def new_elem_order(self):
         """Storage order for new elements in this space.
 
-        This is identical to `order` except for ``self.order == 'K'``,
+        This is identical to `order` except for ``self.order == 'A'``,
         where ``'C'`` is returned.
         """
-        return 'C' if self.order == 'K' else self.order
-
-    @property
-    def view_order(self):
-        """Order argument for view-preserving operations.
-
-        This is identical to `order` except for ``self.order == 'K'``,
-        where ``'A'`` ("any") is returned. The main use case for this
-        property is in reshaping with `numpy.reshape` or `numpy.ravel`,
-        if views into the original array should be preserved.
-        """
-        return 'A' if self.order == 'K' else self.order
+        return 'C' if self.order == 'A' else self.order
 
     @property
     def size(self):
@@ -416,7 +405,7 @@ class TensorSpace(LinearSpace):
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = [self.shape, dtype_str(self.dtype)]
-        optargs = [('order', self.order, 'K')]
+        optargs = [('order', self.order, 'A')]
         return "{}({})".format(self.__class__.__name__,
                                signature_string(posargs, optargs))
 
@@ -590,17 +579,8 @@ class Tensor(LinearSpaceElement):
 
     @property
     def order(self):
-        """Data storage order, either ``'K'``, ``'C'`` or ``'F'``."""
+        """Data storage order, either ``'A'``, ``'C'`` or ``'F'``."""
         return self.space.order
-
-    @property
-    def view_order(self):
-        """Order argument for view-preserving operations.
-
-        This is identical to `order` except for ``self.order == 'K'``,
-        where ``'A'`` is returned.
-        """
-        return self.space.view_order
 
     @property
     def size(self):
