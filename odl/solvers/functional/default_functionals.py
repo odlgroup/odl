@@ -1725,7 +1725,7 @@ class QuadraticForm(Functional):
     def gradient(self):
         """Gradient operator of the functional."""
         if self.operator is None:
-            return ConstantOperator(self.domain, self.vector)
+            return ConstantOperator(self.vector, self.domain)
         else:
             if not self.operator.is_linear:
                 # TODO: Acutally works otherwise, but needs more work
