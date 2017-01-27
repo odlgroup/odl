@@ -595,17 +595,17 @@ def test_order(order):
         assert x.data.flags[order + '_CONTIGUOUS']
 
     # getitem with contiguous chunks should preserve order
-    if order in ('C', 'K'):
+    if order in ('C', 'A'):
         assert x[0, 1:3].order == order
         assert x[1:2, :].order == order
-    if order in ('F', 'K'):
+    if order in ('F', 'A'):
         assert x[1:3, 0].order == order
         assert x[:, 1:2].order == order
 
     assert x[...] in space
 
-    # non-contiguous slices result in 'K' ordering
-    assert x[::2, :].order == 'K'
+    # non-contiguous slices result in 'A' ordering
+    assert x[::2, :].order == 'A'
 
 
 def test_transpose():
