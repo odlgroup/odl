@@ -419,22 +419,30 @@ def test_quadratic_form(space):
     expected_result = x.inner(operator(x)) + vector.inner(x) + constant
     assert almost_equal(func(x), expected_result)
 
-    # Also test with some values as none
-    func_no_offset = odl.solvers.QuadraticForm(operator, constant=constant)
-    expected_result = x.inner(operator(x)) + constant
-    assert almost_equal(func_no_offset(x), expected_result)
-
-    func_no_operator = odl.solvers.QuadraticForm(vector=vector,
-                                                 constant=constant)
-    expected_result = vector.inner(x) + constant
-    assert almost_equal(func_no_operator(x), expected_result)
-
     # The gradient
     expected_gradient = 2 * operator(x) + vector
     assert all_almost_equal(func.gradient(x), expected_gradient)
 
     # The convex conjugate
     assert isinstance(func.convex_conj, odl.solvers.QuadraticForm)
+
+    # Test for linear functional Also test with some values as none
+    func_no_operator = odl.solvers.QuadraticForm(vector=vector,
+                                                 constant=constant)
+    expected_result = vector.inner(x) + constant
+    assert almost_equal(func_no_operator(x), expected_result)
+
+    expected_gradient = vector
+    assert all_almost_equal(func_no_operator.gradient(x), expected_gradient)
+
+    # Convex conjugate is not defined
+    with pytest.raises(ValueError):
+        func_no_operator.convex_conj
+
+    # Test with no offset
+    func_no_offset = odl.solvers.QuadraticForm(operator, constant=constant)
+    expected_result = x.inner(operator(x)) + constant
+    assert almost_equal(func_no_offset(x), expected_result)
 
 
 def test_separable_sum(space):
