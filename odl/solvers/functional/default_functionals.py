@@ -1760,8 +1760,13 @@ class QuadraticForm(Functional):
 
         """
         if self.operator is None:
-            # Everywhere infinite in this case
-            raise ValueError('convex conjugate not defined without operator')
+            # The convex conjugate of an affine functional is a translation of
+            # the IndicatorZero functional, with value minus the constant
+            tmp = IndicatorZero(space=self.domain, constant=-self.constant)
+            if self.vector is None:
+                return tmp
+            else:
+                return tmp.translated(self.vector)
 
         if self.vector is None:
             # Handle trivial case separately

@@ -435,9 +435,10 @@ def test_quadratic_form(space):
     expected_gradient = vector
     assert all_almost_equal(func_no_operator.gradient(x), expected_gradient)
 
-    # Convex conjugate is not defined
-    with pytest.raises(ValueError):
-        func_no_operator.convex_conj
+    # The convex conjugate is a translation of the IndicatorZero
+    assert isinstance(func_no_operator.convex_conj.functional,
+                      odl.solvers.IndicatorZero)
+    assert func_no_operator.convex_conj.functional.constant == -constant
 
     # Test with no offset
     func_no_offset = odl.solvers.QuadraticForm(operator, constant=constant)
