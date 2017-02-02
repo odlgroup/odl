@@ -236,20 +236,25 @@ class CallbackPrintIteration(SolverCallback):
 
     _default_text = 'iter ='
 
-    def __init__(self, text=None):
+    def __init__(self, text=None, display_step=1):
         """Initialize a new instance.
 
         Parameters
         ----------
         text : string
             Text to display before the iteration count. Default: 'iter ='
+        display_step : positive int, optional
+            Number of iterations between output. Default: 1
         """
+        self.display_step = int(display_step)
         self.text = text if text is not None else self._default_text
         self.iter = 0
 
     def __call__(self, _):
         """Print the current iteration."""
-        print("{} {}".format(self.text, self.iter))
+        if (self.iter % self.display_step) == 0:
+            print("{} {}".format(self.text, self.iter))
+
         self.iter += 1
 
     def reset(self):
