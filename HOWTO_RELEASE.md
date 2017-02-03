@@ -30,8 +30,7 @@ When all required PRs are merged, ensure that the latest `master` branch is sane
   $ pytest --doctest-modules --examples --doctest-doc --largescale
   ```
 - Do the same for Python 2.7.
-- Make sure the tests also run on the platforms you're currently *not* testing on.
-  Ask a buddy maintainer if necessary.
+- Make sure the tests also run on the platforms you're currently *not* testing on. Ask a buddy maintainer if necessary.
 - Build the documentation. This requires `sphinx` and the `sphinxext` submodule:
   ```
   $ conda install sphinx sphinx-rtd-theme
@@ -43,8 +42,7 @@ When all required PRs are merged, ensure that the latest `master` branch is sane
     grep -E "SEVERE|ERROR|WARNING" |\
     grep -E -v "more than one target found for|__eq__|document isn't included in any toctree"
   ```
-  The last command builds the documentation and filters from the output all irrelevant warnings, letting through only the "proper" warnings and errors.
-  If possible, *fix these remaining issues*.
+  The last command builds the documentation and filters from the output all irrelevant warnings, letting through only the "proper" warnings and errors. If possible, *fix these remaining issues*.
 - Glance the built documentation (usually in `doc/_build`) for obvious errors.
 
 ## 3. Make a release branch off `master` and draft the release
@@ -53,18 +51,13 @@ When all tests succeed and the docs are fine, start a release branch. All work u
 **Do not touch any code on this branch other than indicated below!**
 
 - Create a branch off current `master` with the name `release-X.Y.Z`, inserting the correct version number, of course.
-- Compile the release notes.
-  They should contain all *user-visible* changes (internal stuff like modified tests is not required) and should be summarized in one or two sentences on top, perhaps mentioning the most notable changes.
-  Check the [Release Notes](https://github.com/odlgroup/odl/blob/master/doc/source/release_notes.rst) file for details on sections, formatting etc.
-- Increment the version number.
-  The current locations of version numbers are the [odl/__init__.py](https://github.com/odlgroup/odl/blob/master/odl/__init__.py) and [conda/meta.yaml](https://github.com/odlgroup/odl/blob/master/conda/meta.yaml).
-  To make sure you don't miss any other location (or the information here is outdated), perform a search:
+- Compile the release notes. They should contain all *user-visible* changes (internal stuff like modified tests is not required) and should be summarized in one or two sentences on top, perhaps mentioning the most notable changes. Check the [Release Notes](https://github.com/odlgroup/odl/blob/master/doc/source/release_notes.rst) file for details on sections, formatting etc.
+- Increment the version number. The current locations of version numbers are the [odl/__init__.py](https://github.com/odlgroup/odl/blob/master/odl/__init__.py) and [conda/meta.yaml](https://github.com/odlgroup/odl/blob/master/conda/meta.yaml). To make sure you don't miss any other location (or the information here is outdated), perform a search:
   ```
   $ cd doc && make clean && cd ..  # remove the local HTML doc first
   $ grep -Ir "0\.5\.4" . | grep -E -v "\.git|release_notes\.rst|odl\.egg-info"
   ```
-- Change the `git_rev` field in `conda/meta.yaml` to `'vX.Y.Z'`, using the upcoming version number.
-  This is the git tag you will create when making the release on GitHub.
+- Change the `git_rev` field in `conda/meta.yaml` to `'vX.Y.Z'`, using the upcoming version number. This is the git tag you will create when making the release on GitHub.
 - Commit the changes, using a message like `REL: bump version to X.Y.Z`.
 - Make a PR and merge it after review.
 
@@ -86,8 +79,7 @@ Now that the version is incremented,
   ```
   The packages are by default stored in a `dist` folder.
 
-- To build the conda packages, you should *not* work in a specific environment but rather exit to the root environment.
-  There, install the `conda-build` tool for building packages:
+- To build the conda packages, you should *not* work in a specific environment but rather exit to the root environment. There, install the `conda-build` tool for building packages:
   ```
   $ source deactivate
   $ conda install conda-build
@@ -132,8 +124,7 @@ Before actually uploading packages to "official" servers, first use a test locat
   $ python -c "import odl; odl.test()"
   ```
   **TODO:** Currently no `odlgroup` user exists on the test server, may need to be created.
-- Upload the conda package to *your own* conda channel and test the install procedure in a new conda environment.
-  The upload requires the `anaconda-client` package:
+- Upload the conda package to *your own* conda channel and test the install procedure in a new conda environment. The upload requires the `anaconda-client` package:
   ```
   $ source deactivate
   $ conda install anaconda-client
@@ -161,6 +152,12 @@ Installing the packages works, now it's time to put them out into the wild.
   ```
   For this step, you need the access credentials for the `odlgroup` user on the Anaconda server.
 
+## 8. Bump current `master` to a development version
+
+To ensure a larger version number for installations from the git `master` branch, the version number must be increased immediately.
+
+- Add a `.dev0` at the end of the version string in `odl/__init__.py`.
+- Make a PR with just this change. It should be the first one that goes in after the release.
 
 ## Done!
 
