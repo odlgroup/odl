@@ -156,8 +156,10 @@ Installing the packages works, now it's time to put them out into the wild.
 
 To ensure a larger version number for installations from the git `master` branch, the version number must be increased immediately.
 
-- Add a `.dev0` at the end of the version string in `odl/__init__.py`.
-- Make a PR with just this change. It should be the first one that goes in after the release.
+- Change the version string `'X.Y.Z'` in `odl/__init__.py` to `'X.Y.Z+1.dev0'` (e.g. from `'0.5.3'` to `'0.5.4.dev0'`).
+- Change the `git_rev` field in `conda/meta.yaml` to `'master'`.
+- Commit the changes, using a message like `REL: bump version to X.Y.Z.dev0`.
+- Make a PR with just this change and merge it after review. It should be the first one that goes in after the release.
 
 ## Done!
 
