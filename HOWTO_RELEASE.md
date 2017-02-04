@@ -71,9 +71,17 @@ Now that the version is incremented,
 
 ## 5. Create packages for PyPI and Conda
 
-- Making the packages for PyPI is straightforward:
+It is important to **update the local git repository** before creating packages, to make sure that they are built from the correct git revision.
+
+- Pull from GitHub and switch to `master` (or to the new version tag, which should be equivalent):
   ```
-  $ conda install wheel
+  $ git checkout master
+  $ git pull
+  ```
+
+- Making the packages for PyPI is straightforward. However, **make sure you delete old `build` directories** since they can pollute new builds:
+  ```
+  $ rm build/ -rf
   $ python setup.py sdist
   $ python setup.py bdist_wheel
   ```
@@ -101,37 +109,25 @@ Now that the version is incremented,
   ```
   Replace `<package>` by the package file as built by the previous `conda build` command.
 
-## 6. Upload the packages to test locations and test installing them
+## 6. Test installing the local packages and check them
 
-Before actually uploading packages to "official" servers, first use a test location and make sure installation works as expected.
+Before actually uploading packages to "official" servers, first install the local packages and run the unit tests.
 
-- Install the `twine` package for uploading packages to PyPI in your working environment:
+- Install directly from the source package (`*.tar.gz`) or the wheel (`*.whl`) into a new conda environment:
   ```
-  $ source activate release35
-  $ pip install twine
-  ```
-- Upload the source package (`*.tar.gz`) and the wheel (`*.whl`) to the test server and try installing it from there into a new conda environment:
-  ```
-  $ cd /path/to/odl_repo
-  $ twine upload -u odlgroup -r pypitest <package>
   $ source deactivate
   $ conda create -n pypi_install python=X.Y  # choose Python version
   $ source activate pypi_install
-  $ pip install --index-url https://test.pypi.org/legacy odl
-  $ python -c "import odl; odl.test()"
-  $ pip uninstall odl
-  $ pip install --index-url --no-binary https://test.pypi.org/legacy odl
+  $ cd /path/to/odl_repo
+  $ pip install dist/<pkg_filename>
   $ python -c "import odl; odl.test()"
   ```
-  **TODO:** Currently no `odlgroup` user exists on the test server, may need to be created.
-- Upload the conda package to *your own* conda channel and test the install procedure in a new conda environment. The upload requires the `anaconda-client` package:
+- Install and test the local conda packages in a new conda environment:
   ```
   $ source deactivate
-  $ conda install anaconda-client
-  $ anaconda upload -u <your_username> <package1> <package2> <...>
   $ conda create -n conda_install python=X.Y  # choose Python version
   $ source activate conda_install
-  $ conda install -c <your_username> odl
+  $ conda install --use-local nomkl odl
   $ python -c "import odl; odl.test()"
   ```
 
@@ -139,14 +135,21 @@ Before actually uploading packages to "official" servers, first use a test locat
 
 Installing the packages works, now it's time to put them out into the wild.
 
-- Upload the source package and the wheel to the "real" PyPI server using again `twine`:
+- Install the `twine` package for uploading packages to PyPI in your working environment:
   ```
-  $ source deactivate && source activate release35
-  $ twine upload -u odlgorup -r pypi <package>
+  $ source deactivate
+  $ source activate release35
+  $ pip install twine
+  ```
+- Upload the source package and the wheel to the PyPI server using `twine`:
+  ```
+  $ cd /path/to/odl_repo
+  $ twine upload -u odlgorup dist/<pkg_filename>
   ```
   This requires the access credentials for the `odlgroup` user on PyPI.
-- Upload the conda packages to the `odlgroup` channel in the Anaconda cloud:
+- Upload the conda packages to the `odlgroup` channel in the Anaconda cloud. The upload requires the `anaconda-client` package:
   ```
+  $ conda install anaconda-client
   $ cd $HOME/miniconda3/conda-bld
   $ anaconda upload -u odlgroup `find . -name "odl-X.Y.Z*"`
   ```
