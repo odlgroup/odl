@@ -670,7 +670,7 @@ class Laplacian(PointwiseTensorFieldOperator):
 
         Parameters
         ----------
-        point : ``domain`` element
+        point : ``domain`` element, optional
             The point to take the derivative in. Does not change the result
             since the operator is affine.
         """

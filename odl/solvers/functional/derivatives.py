@@ -51,9 +51,9 @@ class NumericalDerivative(Operator):
             domain and range must be `FnBase` spaces.
         point : ``operator.domain`` `element-like`
             The point to compute the derivative in.
-        method : {'backward', 'forward', 'central'}
+        method : {'backward', 'forward', 'central'}, optional
             The method to use to compute the derivative.
-        step : float
+        step : float, optional
             The step length used in the derivative computation.
             Default: selects the step according to the dtype of the space.
 
@@ -174,9 +174,9 @@ class NumericalGradient(Operator):
         functional : `Functional`
             The functional whose gradient should be computed. Its domain must
             be an `FnBase` space.
-        method : {'backward', 'forward', 'central'}
+        method : {'backward', 'forward', 'central'}, optional
             The method to use to compute the gradient.
-        step : float
+        step : float, optional
             The step length used in the derivative computation.
             Default: selects the step according to the dtype of the space.
 

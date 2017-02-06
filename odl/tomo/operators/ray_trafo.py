@@ -66,14 +66,14 @@ class RayTransform(Operator):
             * ``'astra_cpu'``: ASTRA toolbox using CPU, only 2D
             * ``'scikit'``: scikit-image, only 2D parallel with square domain
             If ``None`` is given, the fastest available back-end is used.
-        interp : {'nearest', 'linear'}
+        interp : {'nearest', 'linear'}, optional
             Interpolation type for the discretization of the operator
             range.
             Default: 'nearest'
-        discr_range : `DiscreteLp`
+        discr_range : `DiscreteLp`, optional
             Discretized space, the range of the forward projector.
             Default: Infered from parameters.
-        use_cache : bool
+        use_cache : bool, optional
             If ``True``, data is cached. Note that this causes notable memory
             overhead, both on the GPU and on the CPU since a full volume and
             projection is stored. In the 3D case, some users may want to
@@ -269,13 +269,13 @@ class RayBackProjection(Operator):
             * ``'astra_cpu'``: ASTRA toolbox using CPU, only 2D
             * ``'scikit'``: scikit-image, only 2D parallel with square domain
             If ``None`` is given, the fastest available back-end is used.
-        interp : {'nearest', 'linear'}
+        interp : {'nearest', 'linear'}, optional
             Interpolation type for the discretization of the operator range.
             Default: 'nearest'
-        discr_domain : `DiscreteLp`
+        discr_domain : `DiscreteLp`, optional
             Discretized space, the range of the forward projector.
             Default: Infered from parameters.
-        use_cache : bool
+        use_cache : bool, optional
             If ``True``, data is cached. Note that this causes notable memory
             overhead, both on the GPU and on the CPU since a full volume and
             projection is stored. In the 3D case, some users may want to

@@ -373,7 +373,7 @@ class ProductSpace(LinearSpace):
             Otherwise, a new element is created from the
             components by calling the ``element()`` methods
             in the component spaces.
-        cast : bool
+        cast : bool, optional
             If ``True``, casting is allowed. Otherwise, a ``TypeError``
             is raised for input that is not a sequence of elements of
             the spaces that make up this product space.
@@ -813,7 +813,7 @@ class ProductSpaceElement(LinearSpaceElement):
 
         Parameters
         ----------
-        title : string
+        title : string, optional
             Title of the figures
 
         indices : index expression, optional
@@ -1260,7 +1260,7 @@ class ProductSpaceNoWeighting(NoWeighting, ProductSpaceConstWeighting):
 
         Parameters
         ----------
-        exponent : positive float
+        exponent : positive float, optional
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
         dist_using_inner : bool, optional

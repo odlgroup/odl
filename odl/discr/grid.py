@@ -544,9 +544,9 @@ class RectGrid(Set):
 
         Parameters
         ----------
-        other :  `RectGrid`
-            The other grid which is supposed to contain this grid.
-        atol : float
+        other :  `TensorGrid`
+            The other grid which is supposed to contain this grid
+        atol : float, optional
             Allow deviations up to this number in absolute value
             per coordinate vector entry.
 
@@ -721,7 +721,7 @@ class RectGrid(Set):
 
         Parameters
         ----------
-        order : {'C', 'F'}
+        order : {'C', 'F'}, optional
             Axis ordering in the resulting point array
 
         Returns
@@ -794,7 +794,7 @@ class RectGrid(Set):
 
         Parameters
         ----------
-        order : {'C', 'F'}
+        order : {'C', 'F'}, optional
             Axis ordering in the resulting point array
 
         Returns
@@ -1027,6 +1027,11 @@ def uniform_grid_fromintv(intv_prod, shape, nodes_on_bdry=True):
         raise TypeError('{!r} is not an `IntervalProd` instance'
                         ''.format(intv_prod))
 
+    if (np.any(np.isinf(intv_prod.min_pt)) or
+            np.any(np.isinf(intv_prod.max_pt))):
+        raise ValueError('`intv_prod` must be finite, got {!r}'
+                         ''.format('intv_prod'))
+
     shape = normalized_scalar_param_list(shape, intv_prod.ndim, safe_int_conv)
 
     if np.shape(nodes_on_bdry) == ():
@@ -1097,8 +1102,10 @@ def uniform_grid(min_pt, max_pt, shape, nodes_on_bdry=True):
 
     Parameters
     ----------
-    min_pt, max_pt : float or sequence of float
-        Vectors of lower/upper ends of the intervals in the product.
+    min_pt : float or sequence of float
+        Vectors of lower ends of the intervals in the product.
+    max_pt : float or sequence of float
+        Vectors of upper ends of the intervals in the product.
     shape : int or sequence of ints
         Number of nodes per axis. Entries corresponding to degenerate axes
         must be equal to 1.

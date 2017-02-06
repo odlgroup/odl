@@ -453,7 +453,7 @@ def dft_postprocess_data(arr, real_grid, recip_grid, shift, axes,
         Interpolation scheme used in the real-space.
     sign : {'-', '+'}, optional
         Sign of the complex exponent.
-    op : {'multiply', 'divide'}
+    op : {'multiply', 'divide'}, optional
         Operation to perform with the stride times the interpolation
         kernel FT
     out : `numpy.ndarray`, optional

@@ -372,6 +372,10 @@ class WaveletTransformInverse(WaveletTransformBase):
         range : `DiscreteLp`
             Domain of the forward wavelet transform (the "image domain"),
             which is the range of this inverse transform.
+        nlevels : positive int
+            Number of scaling levels to be used in the decomposition. The
+            maximum number of levels can be calculated with
+            `pywt.dwt_max_level`.
         wavelet : string or `pywt.Wavelet`
             Specification of the wavelet to be used in the transform.
             If a string is given, it is converted to a `pywt.Wavelet`.
@@ -393,12 +397,6 @@ class WaveletTransformInverse(WaveletTransformBase):
 
             ``'dmey'``: Discrete FIR approximation of the Meyer wavelet
 
-        nlevels : positive int
-            Number of scaling levels to be used in the decomposition. The
-            maximum number of levels can be calculated with
-            `pywt.dwt_max_level`.
-        variant : {'forward', 'inverse', 'adjoint'}
-            Wavelet transform variant to be created.
         pad_mode : string, optional
             Method to be used to extend the signal.
 

@@ -1,4 +1,4 @@
-# Copyright 2014-2016 The ODL development group
+# Copyright 2014-2017 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -216,8 +216,6 @@ def conjugate_gradient_normal(op, x, rhs, niter=1, callback=None):
 
         A(x) = y
 
-    with a linear `Operator` ``A``.
-
     It uses a minimum amount of memory copies by applying re-usable
     temporaries and in-place evaluation.
 
@@ -247,6 +245,7 @@ Conjugate_gradient_on_the_normal_equations>`_.
     See Also
     --------
     conjugate_gradient : Optimized solver for symmetric matrices
+    conjugate_gradient_nonlinear : Equivalent solver but for nonlinear case
     """
     # TODO: add a book reference
     # TODO: update doc

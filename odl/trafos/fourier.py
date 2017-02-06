@@ -86,7 +86,7 @@ class DiscreteFourierTransformBase(Operator):
             arrays.
             Otherwise, calculate the full complex FFT. If ``dom_dtype``
             is a complex type, this option has no effect.
-        impl : {'numpy', 'pyfftw'}
+        impl : {'numpy', 'pyfftw'}, optional
             Backend for the FFT implementation. The 'pyfftw' backend
             is faster but requires the ``pyfftw`` package.
         """
@@ -301,10 +301,11 @@ class DiscreteFourierTransformBase(Operator):
 
         Parameters
         ----------
-        planning_effort : {'estimate', 'measure', 'patient', 'exhaustive'}
+        planning_effort : str, optional
             Flag for the amount of effort put into finding an optimal
             FFTW plan. See the `FFTW doc on planner flags
             <http://www.fftw.org/fftw3_doc/Planner-Flags.html>`_.
+            Options: {'estimate', 'measure', 'patient', 'exhaustive'}
         planning_timelimit : float, optional
             Limit planning time to roughly this amount of seconds.
             Default: None (no limit)
@@ -412,7 +413,7 @@ class DiscreteFourierTransform(DiscreteFourierTransformBase):
             arrays.
             Otherwise, calculate the full complex FFT. If ``dom_dtype``
             is a complex type, this option has no effect.
-        impl : {'numpy', 'pyfftw'}
+        impl : {'numpy', 'pyfftw'}, optional
             Backend for the FFT implementation. The ``'pyfftw'`` backend
             is faster but requires the ``pyfftw`` package.
 
@@ -561,7 +562,7 @@ class DiscreteFourierTransformInverse(DiscreteFourierTransformBase):
             ``floor(N[i]/2) + 1`` in this axis ``i``.
             Otherwise, domain and range have the same shape. If
             ``range`` is a complex space, this option has no effect.
-        impl : {'numpy', 'pyfftw'}
+        impl : {'numpy', 'pyfftw'}, optional
             Backend for the FFT implementation. The 'pyfftw' backend
             is faster but requires the ``pyfftw`` package.
 
@@ -729,7 +730,7 @@ class FourierTransformBase(Operator):
             is determined from ``domain`` and the other parameters. The
             exponent is chosen to be the conjugate ``p / (p - 1)``,
             which reads as 'inf' for p=1 and 1 for p='inf'.
-        impl : {'numpy', 'pyfftw'}
+        impl : {'numpy', 'pyfftw'}, optional
             Backend for the FFT implementation. The 'pyfftw' backend
             is faster but requires the ``pyfftw`` package.
         axes : int or sequence of ints, optional
@@ -754,13 +755,13 @@ class FourierTransformBase(Operator):
 
         Other Parameters
         ----------------
-        tmp_r : `DiscreteLpElement` or `numpy.ndarray`
+        tmp_r : `DiscreteLpElement` or `numpy.ndarray`, optional
             Temporary for calculations in the real space (domain of
             this transform). It is shared with the inverse.
 
             Variants using this: R2C, R2HC, C2R (inverse)
 
-        tmp_f : `DiscreteLpElement` or `numpy.ndarray`
+        tmp_f : `DiscreteLpElement` or `numpy.ndarray`, optional
             Temporary for calculations in the frequency (reciprocal)
             space. It is shared with the inverse.
 
@@ -1033,10 +1034,11 @@ class FourierTransformBase(Operator):
 
         Parameters
         ----------
-        planning_effort : {'estimate', 'measure', 'patient', 'exhaustive'}
+        planning_effort : str, optional
             Flag for the amount of effort put into finding an optimal
             FFTW plan. See the `FFTW doc on planner flags
             <http://www.fftw.org/fftw3_doc/Planner-Flags.html>`_.
+            Options: {'estimate', 'measure', 'patient', 'exhaustive'}
         planning_timelimit : float or ``None``, optional
             Limit planning time to roughly this many seconds.
             Default: ``None`` (no limit)
@@ -1168,7 +1170,7 @@ class FourierTransform(FourierTransformBase):
             is determined from ``domain`` and the other parameters. The
             exponent is chosen to be the conjugate ``p / (p - 1)``,
             which reads as 'inf' for p=1 and 1 for p='inf'.
-        impl : {'numpy', 'pyfftw'}
+        impl : {'numpy', 'pyfftw'}, optional
             Backend for the FFT implementation. The 'pyfftw' backend
             is faster but requires the ``pyfftw`` package.
         axes : int or sequence of ints, optional
@@ -1193,13 +1195,13 @@ class FourierTransform(FourierTransformBase):
 
         Other Parameters
         ----------------
-        tmp_r : `DiscreteLpElement` or `numpy.ndarray`
+        tmp_r : `DiscreteLpElement` or `numpy.ndarray`, optional
             Temporary for calculations in the real space (domain of
             this transform). It is shared with the inverse.
 
             Variants using this: R2C, R2HC, C2R (inverse)
 
-        tmp_f : `DiscreteLpElement` or `numpy.ndarray`
+        tmp_f : `DiscreteLpElement` or `numpy.ndarray`, optional
             Temporary for calculations in the frequency (reciprocal)
             space. It is shared with the inverse.
 
@@ -1403,7 +1405,7 @@ class FourierTransformInverse(FourierTransformBase):
             domain is determined from ``range`` and the other parameters.
             The exponent is chosen to be the conjugate ``p / (p - 1)``,
             which reads as 'inf' for p=1 and 1 for p='inf'.
-        impl : {'numpy', 'pyfftw'}
+        impl : {'numpy', 'pyfftw'}, optional
             Backend for the FFT implementation. The 'pyfftw' backend
             is faster but requires the ``pyfftw`` package.
         axes : int or sequence of ints, optional
@@ -1428,13 +1430,13 @@ class FourierTransformInverse(FourierTransformBase):
 
         Other Parameters
         ----------------
-        tmp_r : `DiscreteLpElement` or `numpy.ndarray`
+        tmp_r : `DiscreteLpElement` or `numpy.ndarray`, optional
             Temporary for calculations in the real space (range of
             this transform). It is shared with the inverse.
 
             Variants using this: C2R, R2C (forward), R2HC (forward)
 
-        tmp_f : `DiscreteLpElement` or `numpy.ndarray`
+        tmp_f : `DiscreteLpElement` or `numpy.ndarray`, optional
             Temporary for calculations in the frequency (reciprocal)
             space. It is shared with the inverse.
 

@@ -43,7 +43,7 @@ def vector(array, dtype=None, impl='numpy'):
     dtype : optional
         Set the data type of the vector manually with this option.
         By default, the space type is inferred from the input data.
-    impl : string
+    impl : string, optional
         The backend to use. See `odl.space.entry_points.NTUPLES_IMPLS` and
         `odl.space.entry_points.FN_IMPLS` for available options.
 
@@ -114,7 +114,7 @@ def ntuples(size, dtype, impl='numpy', **kwargs):
         objects or as string.
 
         Only complex floating-point data types are allowed.
-    impl : string
+    impl : string, optional
         The backend to use. See `odl.space.entry_points.NTUPLES_IMPLS` for
         available options.
     kwargs :
@@ -138,7 +138,7 @@ def fn(size, dtype=None, impl='numpy', **kwargs):
     ----------
     size : positive int
         The number of dimensions of the space
-    dtype : `object`
+    dtype : `object`, optional
         The data type of the storage array. Can be provided in any
         way the `numpy.dtype` function understands, most notably
         as built-in type, as one of NumPy's internal datatype
@@ -146,7 +146,7 @@ def fn(size, dtype=None, impl='numpy', **kwargs):
 
         Default: default of the implementation given by calling
         ``default_dtype()`` on the `FnBase` implementation.
-    impl : string
+    impl : string, optional
         The backend to use. See `odl.space.entry_points.FN_IMPLS` for
         available options.
     kwargs :
@@ -177,7 +177,7 @@ def cn(size, dtype=None, impl='numpy', **kwargs):
     ----------
     size : positive int
         The number of dimensions of the space
-    dtype : `object`
+    dtype : `object`, optional
         The data type of the storage array. Can be provided in any
         way the `numpy.dtype` function understands, most notably
         as built-in type, as one of NumPy's internal datatype
@@ -187,7 +187,7 @@ def cn(size, dtype=None, impl='numpy', **kwargs):
 
         Default: default of the implementation given by calling
         ``default_dtype(ComplexNumbers())`` on the `FnBase` implementation.
-    impl : string
+    impl : string, optional
         The backend to use. See `odl.space.entry_points.FN_IMPLS` for
         available options.
     kwargs :
@@ -221,7 +221,7 @@ def rn(size, dtype=None, impl='numpy', **kwargs):
     ----------
     size : positive int
         The number of dimensions of the space
-    dtype : `object`
+    dtype : `object`, optional
         The data type of the storage array. Can be provided in any
         way the `numpy.dtype` function understands, most notably
         as built-in type, as one of NumPy's internal datatype
@@ -230,7 +230,7 @@ def rn(size, dtype=None, impl='numpy', **kwargs):
         Only real floating-point data types are allowed.
         Default: default of the implementation given by calling
         ``default_dtype(RealNumbers())`` on the `FnBase` implementation.
-    impl : string
+    impl : string, optional
         The backend to use. See `odl.space.entry_points.FN_IMPLS` for
         available options.
     kwargs :

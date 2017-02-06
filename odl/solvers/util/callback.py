@@ -137,7 +137,7 @@ class CallbackStore(SolverCallback):
         results : list, optional
             List in which to store the iterates.
             Default: new list (``[]``)
-        results : callable, optional
+        function : callable, optional
             Function to be called on all incoming results before storage.
             Default: copy
 
@@ -241,7 +241,7 @@ class CallbackPrintIteration(SolverCallback):
 
         Parameters
         ----------
-        text : string
+        text : string, optional
             Text to display before the iteration count. Default: 'iter ='
         display_step : positive int, optional
             Number of iterations between output. Default: 1
@@ -299,10 +299,10 @@ class CallbackPrint(SolverCallback):
 
         Parameters
         ----------
-        func : callable
+        func : callable, optional
             Functional that should be called on the current iterate before
             printing. Default: print current iterate.
-        fmt : string
+        fmt : string, optional
             Formating that should be applied. Default: print representation.
 
         Examples
@@ -556,7 +556,7 @@ class CallbackSleep(SolverCallback):
 
         Parameters
         ----------
-        seconds : float
+        seconds : float, optional
             Number of seconds to sleep, can be float for subsecond precision.
 
         Examples

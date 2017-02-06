@@ -784,13 +784,13 @@ class DiscreteLpElement(DiscretizedSpaceElement):
             later. Note that some backends always displays the plot, regardless
             of this value.
 
-        fig : `matplotlib.figure.Figure`
+        fig : `matplotlib.figure.Figure`, optional
             The figure to show in. Expected to be of same "style", as
             the figure given by this function. The most common use case
             is that ``fig`` is the return value of an earlier call to
             this function.
 
-        kwargs : {'figsize', 'saveto', 'clim', ...}
+        kwargs : {'figsize', 'saveto', 'clim', ...}, optional
             Extra keyword arguments passed on to the display method.
             See the Matplotlib functions for documentation of extra
             options.
@@ -1188,8 +1188,10 @@ def uniform_discr(min_pt, max_pt, shape, exponent=2.0, interp='nearest',
 
     Parameters
     ----------
-    min_pt, max_pt: float or sequence of floats
-        Minimum/maximum corners of the desired function domain.
+    min_pt : float or sequence of floats
+        Maximum corners of the desired function domain.
+    max_pt : float or sequence of floats
+        Minimum corners of the desired function domain.
     shape : int or sequence of ints
         Number of samples per axis.
     exponent : positive float, optional
@@ -1334,10 +1336,14 @@ def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
     ----------
     discr : `DiscreteLp`
         Uniformly discretized space used as a template.
-    min_pt, max_pt: float or sequence of floats
-        Minimum/maximum corners of the desired function domain.
-    shape : int or sequence of ints
+    min_pt : float or sequence of floats, optional
+        Minimum corners of the desired function domain.
+    max_pt : float or sequence of floats, optional
+        Maximum corners of the desired function domain.
+    shape : int or sequence of ints, optional
         Number of samples per axis.
+    cell_sides : array-like, optional
+        Side length of each cell.
     exponent : positive float, optional
         The parameter :math:`p` in :math:`L^p`. If the exponent is not
         equal to the default 2.0, the space has no inner product.
@@ -1349,7 +1355,7 @@ def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
 
             'linear' : use linear interpolation
 
-    impl : string
+    impl : string, optional
         Implementation of the data storage arrays. See
     nodes_on_bdry : bool or sequence, optional
         Specifies whether to put the outmost grid nodes on the

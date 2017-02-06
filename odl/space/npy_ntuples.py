@@ -1490,7 +1490,7 @@ def npy_weighted_norm(weights, exponent=2.0):
         Weights of the norm. A scalar is interpreted as a
         constant weight, a 1-dim. array as a weighting array and a
         2-dimensional array as a weighting matrix.
-    exponent : positive float
+    exponent : positive float, optional
         Exponent of the norm. If ``weight`` is a sparse matrix, only
         1.0, 2.0 and ``inf`` are allowed.
 
@@ -1519,7 +1519,7 @@ def npy_weighted_dist(weights, exponent=2.0, use_inner=False):
         Weights of the distance. A scalar is interpreted as a
         constant weight, a 1-dim. array as a weighting array and a
         2-dimensional array as a weighting matrix.
-    exponent : positive float
+    exponent : positive float, optional
         Exponent of the norm. If ``weight`` is a sparse matrix, only
         1.0, 2.0 and ``inf`` are allowed.
     use_inner : bool, optional
@@ -1631,7 +1631,7 @@ class NumpyFnMatrixWeighting(MatrixWeighting):
         ----------
         matrix :  `scipy.sparse.spmatrix` or `array-like`, 2-dim.
             Square weighting matrix of the inner product
-        exponent : positive float
+        exponent : positive float, optional
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
             If ``matrix`` is a sparse matrix, only 1.0, 2.0 and ``inf``
@@ -1771,7 +1771,7 @@ class NumpyFnArrayWeighting(ArrayWeighting):
         ----------
         array : `array-like`, one-dim.
             Weighting array of the inner product, norm and distance.
-        exponent : positive float
+        exponent : positive float, optional
             Exponent of the norm. For values other than 2.0, no inner
             product is defined.
         dist_using_inner : bool, optional
@@ -1891,7 +1891,7 @@ class NumpyFnConstWeighting(ConstWeighting):
         ----------
         constant : positive float
             Weighting constant of the inner product.
-        exponent : positive float
+        exponent : positive float, optional
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
         dist_using_inner : bool, optional
@@ -2057,7 +2057,7 @@ class NumpyFnNoWeighting(NoWeighting, NumpyFnConstWeighting):
 
         Parameters
         ----------
-        exponent : positive float
+        exponent : positive float, optional
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
         dist_using_inner : bool, optional

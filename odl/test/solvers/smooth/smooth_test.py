@@ -27,6 +27,10 @@ import odl
 from odl.operator import OpNotImplementedError
 
 
+nonlinear_cg_beta = odl.util.testutils.simple_fixture('nonlinear_cg_beta',
+                                                      ['FR', 'PR', 'HS', 'DY'])
+
+
 @pytest.fixture(scope="module", params=['l2_squared', 'l2_squared_scaled',
                                         'rosenbrock'])
 def functional(request):
@@ -128,6 +132,18 @@ def test_steepest_descent(functional):
     x = functional.domain.one()
     odl.solvers.steepest_descent(functional, x, tol=1e-6,
                                  line_search=line_search)
+
+    assert functional(x) < 1e-3
+
+
+def test_conjguate_gradient_nonlinear(functional, nonlinear_cg_beta):
+    """Test the ``conjugate_gradient_nonlinear`` solver."""
+    line_search = odl.solvers.BacktrackingLineSearch(functional)
+
+    x = functional.domain.one()
+    odl.solvers.conjugate_gradient_nonlinear(functional, x, tol=1e-6,
+                                             line_search=line_search,
+                                             beta_method=nonlinear_cg_beta)
 
     assert functional(x) < 1e-3
 

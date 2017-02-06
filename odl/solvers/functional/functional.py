@@ -453,7 +453,7 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
 
                     Parameters
                     ----------
-                    sigma : positive float
+                    sigma : positive float, optional
                         Step size parameter. Default: 1.0
                 """
                 return self.functional.proximal(sigma * self.scalar)
@@ -819,7 +819,7 @@ class FunctionalLinearPerturb(Functional):
         ----------
         func : `Functional`
             Function corresponding to ``f``.
-        translation : `domain` element
+        linear_term : `domain` element
             Element in domain of ``func``, corresponding to the translation.
         """
         if not isinstance(func, Functional):

@@ -92,9 +92,9 @@ class BacktrackingLineSearch(LineSearch):
             The initial guess for the step length.
         max_num_iter : int, optional
             Maximum number of iterations allowed each time the line
-            search method is called. If not set, this number is calculated
+            search method is called. If ``None``, this number is calculated
             to allow a shortest step length of 10 times machine epsilon.
-        estimate_step : float
+        estimate_step : bool, optional
             If the last step should be used as a estimate for the next step.
 
         Examples
@@ -192,9 +192,12 @@ class BacktrackingLineSearch(LineSearch):
             # direction
             alpha *= -1
 
-        if np.isnan(fx) or np.isinf(fx):
+        if not np.isfinite(fx):
             raise ValueError('function returned invalid value {} in starting '
                              'point ({})'.format(fx, x))
+
+        # Create temporary
+        point = x.copy()
 
         num_iter = 0
         while True:
@@ -204,7 +207,7 @@ class BacktrackingLineSearch(LineSearch):
                                  'sufficient decrease'
                                  ''.format(self.max_num_iter, alpha))
 
-            point = x + alpha * direction
+            point.lincomb(1, x, alpha, direction)  # pt = x + alpha * direction
             fval = self.function(point)
 
             if np.isnan(fval):
@@ -214,8 +217,7 @@ class BacktrackingLineSearch(LineSearch):
                                  'point ({})'.format(point))
 
             expected_decrease = np.abs(alpha * dir_derivative * self.discount)
-            if (not np.isinf(fval) and  # short circuit if fval is infite
-                    fval <= fx - expected_decrease):
+            if (fval <= fx - expected_decrease):
                 # Stop iterating if the value decreases sufficiently.
                 break
 

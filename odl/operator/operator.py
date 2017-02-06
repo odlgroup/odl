@@ -45,9 +45,12 @@ def _default_call_out_of_place(op, x, **kwargs):
 
     Parameters
     ----------
-    x : `domain` element
-        An object in the operator domain. The operator is applied
-        to it.
+    op : `Operator`
+        Operator to call
+    x : ``op.domain`` element
+        Point in which to call the operator.
+    kwargs:
+        Optional arguments to the operator.
 
     Returns
     -------
@@ -65,17 +68,15 @@ def _default_call_in_place(op, x, out, **kwargs):
 
     Parameters
     ----------
-    x : `domain` element
-        An object in the operator domain. The operator is applied
-        to it.
-
-    out : `range` element
+    op : `Operator`
+        Operator to call
+    x : ``op.domain`` element
+        Point in which to call the operator.
+    out : ``op.range`` element
         An object in the operator range. The result of an operator
-        evaluation.
-
-    Returns
-    -------
-    None
+        evaluation is written here.
+    kwargs:
+        Optional arguments to the operator.
     """
     out.assign(op.range.element(op._call_out_of_place(x, **kwargs)))
 
@@ -168,9 +169,9 @@ def _dispatch_call_args(cls=None, bound_call=None, unbound_call=None,
     cls : `class`, optional
         The ``_call()`` method of this class is checked. If omitted,
         provide ``unbound_call`` instead to check directly.
-    bound_call: callable, optional
+    bound_call : callable, optional
         Check this bound method instead of ``cls``
-    unbound_call: callable, optional
+    unbound_call : callable, optional
         Check this unbound function instead of ``cls``
     attr : string, optional
         Check this attribute instead of ``_call``, e.g. ``__call__``
@@ -450,7 +451,7 @@ class Operator(object):
         range : `Set`
             The range of this operator, i.e., the set this operator
             maps to
-        linear : bool
+        linear : bool, optional
             If ``True``, the operator is considered as linear. In this
             case, ``domain`` and ``range`` have to be instances of
             `LinearSpace`, or `Field`.
@@ -2021,8 +2022,8 @@ class OperatorRightVectorMult(Operator):
 
         Parameters
         ----------
-        op : `Operator`
-            The domain of ``op`` must be a ``vector.space``.
+        operator : `Operator`
+            The domain of ``operator`` must be a ``vector.space``.
         vector : ``op.domain`` element
             The fixed element to multiply with.
         """

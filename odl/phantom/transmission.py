@@ -288,7 +288,7 @@ def forbild(space, resolution=False, ear=True, value_type='density',
         The format the phantom should be given in.
         'density' returns floats in the range [0, 1.8] (g/cm^3)
         'materials' returns indices in the range [0, 7].
-    scale : {'auto', 'cm', 'meters', 'mm'}
+    scale : {'auto', 'cm', 'meters', 'mm'}, optional
         Controls how ``space`` should be rescaled to fit the definition of
         the forbild phantom, which is defined on the square
         [-12.8, 12.8] x [-12.8, 12.8] cm.

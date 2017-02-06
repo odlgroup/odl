@@ -199,7 +199,7 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
         step : int, optional
             Vector index step between consecutive array ellements.
             ``None`` is equivalent to 1.
-        out : `numpy.ndarray`
+        out : `numpy.ndarray`, optional
             Array to write the result to.
 
         Returns
@@ -446,7 +446,7 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
             the figure given by this function. The most common use case
             is that ``fig`` is the return value of an earlier call to
             this function.
-        kwargs : {'figsize', 'saveto', ...}
+        kwargs : {'figsize', 'saveto', ...}, optional
             Extra keyword arguments passed on to the display method.
             See the Matplotlib functions for documentation of extra
             options.

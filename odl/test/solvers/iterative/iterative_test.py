@@ -50,7 +50,7 @@ def iterative_solver(request):
     elif solver_name == 'landweber':
         def solver(op, x, rhs):
             norm2 = op.adjoint(op(x)).norm() / x.norm()
-            odl.solvers.landweber(op, x, rhs, niter=10, omega=0.5 / norm2)
+            odl.solvers.landweber(op, x, rhs, niter=50, omega=0.5 / norm2)
     elif solver_name == 'conjugate_gradient':
         def solver(op, x, rhs):
             odl.solvers.conjugate_gradient(op, x, rhs, niter=10)
@@ -66,7 +66,7 @@ def iterative_solver(request):
     elif solver_name == 'kaczmarz':
         def solver(op, x, rhs):
             norm2 = op.adjoint(op(x)).norm() / x.norm()
-            odl.solvers.kaczmarz([op, op], x, [rhs, rhs], niter=10,
+            odl.solvers.kaczmarz([op, op], x, [rhs, rhs], niter=20,
                                  omega=0.5 / norm2)
     else:
         raise ValueError('solver not valid')
@@ -89,7 +89,10 @@ def optimization_problem(request):
         # Simple right hand side
         rhs = op.range.one()
 
-        return op, rhs
+        # Initial guess
+        x = op.domain.element([0.6, 0.8, 1.0, 1.2, 1.4])
+
+        return op, x, rhs
     elif problem_name == 'Identity':
         # Define problem
         space = odl.uniform_discr(0, 1, 5)
@@ -98,7 +101,10 @@ def optimization_problem(request):
         # Simple right hand side
         rhs = op.range.element([0, 0, 1, 0, 0])
 
-        return op, rhs
+        # Initial guess
+        x = op.domain.element([0.6, 0.8, 1.0, 1.2, 1.4])
+
+        return op, x, rhs
     else:
         raise ValueError('problem not valid')
 
@@ -109,10 +115,9 @@ def test_solver(optimization_problem, iterative_solver):
     # Solve within 1%
     places = 2
 
-    op, rhs = optimization_problem
+    op, x, rhs = optimization_problem
 
     # Solve problem
-    x = op.domain.one()
     iterative_solver(op, x, rhs)
 
     # Assert residual is small

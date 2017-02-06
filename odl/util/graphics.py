@@ -144,7 +144,7 @@ def show_discrete_data(values, grid, title=None, method='',
     axis_fontsize : int, optional
         Fontsize for the axes. Default: 16
 
-    kwargs : {'figsize', 'saveto', ...}
+    kwargs : {'figsize', 'saveto', ...}, optional
         Extra keyword arguments passed on to display method
         See the Matplotlib functions for documentation of extra
         options.

@@ -53,7 +53,7 @@ def array1d_repr(array, nprint=6):
     ----------
     array : `array-like`
         The array to print
-    nprint : int
+    nprint : int, optional
         Maximum number of elements to print
     """
     assert int(nprint) > 0
@@ -72,7 +72,7 @@ def array1d_str(array, nprint=6):
     ----------
     array : `array-like`
         The array to print
-    nprint : int
+    nprint : int, optional
         Maximum number of elements to print
     """
     assert int(nprint) > 0
@@ -93,7 +93,7 @@ def arraynd_repr(array, nprint=None):
     ----------
     array : `array-like`
         The array to print
-    nprint : int
+    nprint : int, optional
         Maximum number of elements to print.
         Default: 6 if array.ndim <= 2, else 2
 
@@ -134,7 +134,7 @@ def arraynd_str(array, nprint=None):
     ----------
     array : `array-like`
         The array to print
-    nprint : int
+    nprint : int, optional
         Maximum number of elements to print.
         Default: 6 if array.ndim <= 2, else 2
 

@@ -544,7 +544,7 @@ class ArrayWeighting(Weighting):
             as-is without copying.
         impl : string
             Specifier for the implementation backend.
-        exponent : positive float
+        exponent : positive float, optional
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
         dist_using_inner : bool, optional
@@ -764,11 +764,11 @@ class NoWeighting(ConstWeighting):
 
         Parameters
         ----------
-        exponent : positive float
-            Exponent of the norm. For values other than 2.0, the inner
-            product is not defined.
         impl : string
             Specifier for the implementation backend.
+        exponent : positive float, optional
+            Exponent of the norm. For values other than 2.0, the inner
+            product is not defined.
         dist_using_inner : bool, optional
             Calculate `dist` using the formula
 

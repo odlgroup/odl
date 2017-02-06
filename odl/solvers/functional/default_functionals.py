@@ -1190,7 +1190,7 @@ class KullbackLeiblerConvexConj(Functional):
         ----------
         space : `DiscreteLp` or `FnBase`
             Domain of the functional.
-        g : ``space`` `element-like`, optional
+        prior : ``space`` `element-like`, optional
             Data term, positive.
             Default: if None it is take as the one-element.
         """
@@ -1452,7 +1452,7 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
         ----------
         space : `DiscreteLp` or `FnBase`
             Domain of the functional.
-        g : ``space`` `element-like`, optional
+        prior : ``space`` `element-like`, optional
             Data term, positive.
             Default: if None it is take as the one-element.
         """
@@ -2159,7 +2159,7 @@ https://web.stanford.edu/~boyd/papers/pdf/prox_algs.pdf
         functional : `Functional`
             The functional ``f`` in the definition of the Moreau envelope that
             is to be smoothed.
-        sigma : positive float
+        sigma : positive float, optional
             The scalar ``sigma`` in the definition of the Moreau envelope.
             Larger values mean stronger smoothing.
 
