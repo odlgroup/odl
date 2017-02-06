@@ -406,6 +406,35 @@ def test_type_errors():
         Aop.adjoint(r4Vec1, r4Vec2)
 
 
+def test_arithmetic():
+    """Test that all standard arithmetic works."""
+    # Create elements needed for later
+    operator = MultiplyAndSquareOp(np.random.rand(4, 3))
+    operator2 = MultiplyAndSquareOp(np.random.rand(4, 3))
+    operator3 = MultiplyAndSquareOp(np.random.rand(3, 3))
+    operator4 = MultiplyAndSquareOp(np.random.rand(4, 4))
+    x = noise_element(operator.domain)
+    y = noise_element(operator.domain)
+    z = noise_element(operator.range)
+    scalar = np.pi
+
+    # Simple tests here, more in depth comes later
+    assert operator(x) == operator(x)
+    assert operator(x) != operator2(x)
+    assert (scalar * operator)(x) == scalar * operator(x)
+    assert (scalar * (scalar * operator))(x) == scalar**2 * operator(x)
+    assert (operator * scalar)(x) == operator(scalar * x)
+    assert ((operator * scalar) * scalar)(x) == operator(scalar**2 * x)
+    assert (operator + operator2)(x) == operator(x) + operator2(x)
+    assert (operator - operator2)(x) == operator(x) - operator2(x)
+    assert (operator * operator3)(x) == operator(operator3(x))
+    assert (operator4 * operator)(x) == operator4(operator(x))
+    assert all_almost_equal((z * operator)(x), z * operator(x))
+    assert all_almost_equal((z * (z * operator))(x), (z * z) * operator(x))
+    assert all_almost_equal((operator * y)(x), operator(x * y))
+    assert all_almost_equal(((operator * y) * y)(x), operator(x * (y * y)))
+
+
 def test_operator_pointwise_product():
     """Test OperatorPointwiseProduct."""
     Aop = MultiplyAndSquareOp(np.random.rand(4, 3))
