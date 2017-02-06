@@ -60,7 +60,7 @@ def test_L1_norm(space, sigma):
     x = noise_element(space)
 
     # Test functional evaluation
-    expected_result = (np.abs(x)).inner(space.one())
+    expected_result = np.abs(x).integral()
     assert almost_equal(func(x), expected_result)
 
     # Test gradient - expecting sign function
@@ -127,7 +127,7 @@ def test_L2_norm(space, sigma):
     x_norm = x.norm()
 
     # Test functional evaluation
-    expected_result = np.sqrt((x ** 2).inner(space.one()))
+    expected_result = np.sqrt((x ** 2).integral())
     assert almost_equal(func(x), expected_result)
 
     # Test gradient

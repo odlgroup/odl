@@ -409,6 +409,11 @@ class DiscreteLp(DiscretizedSpace):
             x_arr = apply_on_boundary(x, func=func_list, only_once=False)
             return super()._inner(self.element(x_arr), y)
 
+    def _integral(self, x):
+        """Return ``self.integral(x)``."""
+        # TODO: optimize
+        return x.inner(self.one())
+
     def _norm(self, x):
         """Return ``self.norm(x)``."""
         bdry_fracs = self.partition.boundary_cell_fractions

@@ -130,6 +130,16 @@ class LinearSpace(Set):
         raise LinearSpaceNotImplementedError(
             'inner product not implemented in space {!r}'.format(self))
 
+    def _integral(self, x):
+        """Return the integral of ``x1``.
+
+        This method is intended to be private. Public callers should
+        resort to `inner` which is type-checked.
+        """
+        # No default implementation possible
+        raise LinearSpaceNotImplementedError(
+            'integral not implemented in space {!r}'.format(self))
+
     def _multiply(self, x1, x2, out):
         """Implement the pointwise multiplication ``out[:] = x1 * x2``.
 
@@ -306,6 +316,25 @@ class LinearSpace(Set):
                                        '{!r}'.format(x2, self))
 
         return self.field.element(self._inner(x1, x2))
+
+    def integral(self, x):
+        """Return the integral of ``x``.
+
+        Parameters
+        ----------
+        x : `LinearSpaceElement`
+            Elements whose integral to compute.
+
+        Returns
+        -------
+        integral : `LinearSpace.field` element
+            Integral of ``x``.
+        """
+        if x not in self:
+            raise LinearSpaceTypeError('`x` {!r} is not an element of '
+                                       '{!r}'.format(x, self))
+
+        return self.field.element(self._integral(x))
 
     def multiply(self, x1, x2, out=None):
         """Return the pointwise product of ``x1`` and ``x2``.
@@ -818,6 +847,15 @@ class LinearSpaceElement(object):
         LinearSpace.inner
         """
         return self.space.inner(self, other)
+
+    def integral(self):
+        """Return the integral of ``self``.
+
+        See Also
+        --------
+        LinearSpace.integral
+        """
+        return self.space.integral(self)
 
     def multiply(self, other, out=None):
         """Return ``out = self * other``.

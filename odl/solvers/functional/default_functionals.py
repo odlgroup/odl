@@ -90,15 +90,15 @@ class LpNorm(Functional):
     def _call(self, x):
         """Return the Lp-norm of ``x``."""
         if self.exponent == 0:
-            return self.domain.one().inner(np.not_equal(x, 0))
+            return np.not_equal(x, 0).integral()
         elif self.exponent == 1:
-            return x.ufuncs.absolute().inner(self.domain.one())
+            return x.ufuncs.absolute().integral()
         elif self.exponent == 2:
             return np.sqrt(x.inner(x))
         elif np.isfinite(self.exponent):
             tmp = x.ufuncs.absolute()
             tmp.ufuncs.power(self.exponent, out=tmp)
-            return np.power(tmp.inner(self.domain.one()), 1 / self.exponent)
+            return np.power(tmp.integral(), 1 / self.exponent)
         elif self.exponent == np.inf:
             return x.ufuncs.absolute().ufuncs.max()
         elif self.exponent == -np.inf:
@@ -256,9 +256,8 @@ class GroupL1Norm(Functional):
 
     def _call(self, x):
         """Return the group L1-norm of ``x``."""
-        # TODO: update when integration operator is in place: issue #440
         pointwise_norm = self.pointwise_norm(x)
-        return pointwise_norm.inner(pointwise_norm.space.one())
+        return pointwise_norm.integral()
 
     @property
     def gradient(self):
@@ -1087,7 +1086,6 @@ class KullbackLeibler(Functional):
         """The prior in the Kullback-Leibler functional."""
         return self.__prior
 
-    # TODO: update when integration operator is in place: issue #440
     def _call(self, x):
         """Return the KL-diveregnce in the point ``x``.
 
@@ -1095,10 +1093,10 @@ class KullbackLeibler(Functional):
         infinity.
         """
         if self.prior is None:
-            tmp = ((x - 1 - np.log(x)).inner(self.domain.one()))
+            tmp = (x - 1 - np.log(x)).integral()
         else:
             tmp = ((x - self.prior + self.prior * np.log(self.prior / x))
-                   .inner(self.domain.one()))
+                   .integral())
         if np.isnan(tmp):
             # In this case, some element was less than or equal to zero
             return np.inf
@@ -1207,7 +1205,6 @@ class KullbackLeiblerConvexConj(Functional):
         """The prior in convex conjugate Kullback-Leibler functional."""
         return self.__prior
 
-    # TODO: update when integration operator is in place: issue #440
     def _call(self, x):
         """Return the value in the point ``x``.
 
@@ -1215,9 +1212,9 @@ class KullbackLeiblerConvexConj(Functional):
         positive infinity.
         """
         if self.prior is None:
-            tmp = -1.0 * (np.log(1 - x)).inner(self.domain.one())
+            tmp = -1.0 * (np.log(1 - x)).integral()
         else:
-            tmp = (-self.prior * np.log(1 - x)).inner(self.domain.one())
+            tmp = (-self.prior * np.log(1 - x)).integral()
         if np.isnan(tmp):
             # In this case, some element was larger than or equal to one
             return np.inf
@@ -1346,7 +1343,6 @@ class KullbackLeiblerCrossEntropy(Functional):
         """The prior in the Kullback-Leibler functional."""
         return self.__prior
 
-    # TODO: update when integration operator is in place: issue #440
     def _call(self, x):
         """Return the KL-diveregnce in the point ``x``.
 
@@ -1354,10 +1350,10 @@ class KullbackLeiblerCrossEntropy(Functional):
         infinity.
         """
         if self.prior is None:
-            tmp = (1 - x + scipy.special.xlogy(x, x)).inner(self.domain.one())
+            tmp = (1 - x + scipy.special.xlogy(x, x)).integral()
         else:
             tmp = ((self.prior - x + scipy.special.xlogy(x, x / self.prior))
-                   .inner(self.domain.one()))
+                   .integral())
         if np.isnan(tmp):
             # In this case, some element was less than or equal to zero
             return np.inf
@@ -1469,13 +1465,12 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
         """The prior in convex conjugate Kullback-Leibler Cross Entorpy."""
         return self.__prior
 
-    # TODO: update when integration operator is in place: issue #440
     def _call(self, x):
         """Return the value in the point ``x``."""
         if self.prior is None:
-            tmp = (np.exp(x) - 1).inner(self.domain.one())
+            tmp = (np.exp(x) - 1).integral()
         else:
-            tmp = (self.prior * (np.exp(x) - 1)).inner(self.domain.one())
+            tmp = (self.prior * (np.exp(x) - 1)).integral()
         return tmp
 
     # TODO: replace this when UFuncOperators is in place: PL #576
