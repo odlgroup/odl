@@ -729,9 +729,18 @@ class Operator(object):
         else:
             return NotImplemented
 
+    def __radd__(self, other):
+        """Return ``other + self``."""
+        # Use commutativity
+        return self + other
+
     def __sub__(self, other):
         """Return ``self - other``."""
         return self + (-1) * other
+
+    def __rsub__(self, other):
+        """Return ``other - self``."""
+        return (-1) * self + other
 
     def __mul__(self, other):
         """Return ``self * other``.
@@ -1428,6 +1437,15 @@ class OperatorPointwiseProduct(Operator):
             self.left(x, out=out)
             self.right(x, out=tmp)
             out *= tmp
+
+    def derivative(self, x):
+        """Return the derivative at ``x``."""
+        if self.is_linear:
+            return self
+        else:
+            left = self.right(x) * self.left.derivative(x)
+            right = self.left(x) * self.right.derivative(x)
+            return left + right
 
     def __repr__(self):
         """Return ``repr(self)``."""
