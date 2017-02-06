@@ -1756,12 +1756,28 @@ class QuadraticForm(Functional):
         .. math::
             (<x, Ax> + <b, x> + c)^* (x) =
             <(x - b), A^-1 (x - b)> - c =
-            <x , A^-1 x> - <x, A^-* b> - <x, A^-1 b> + <b, A^-1 b> - c
+            <x , A^-1 x> - <x, A^-* b> - <x, A^-1 b> + <b, A^-1 b> - c.
 
+        If the quadratic part of the functional is zero it is instead given
+        by a translated indicator function on zero, i.e., if
+
+        .. math::
+            f(x) = <b, x> + c,
+
+        then
+
+        .. math::
+            f^*(x^*) =
+            \\begin{cases}
+                -c & \\text{if } x^* = b \\\\
+                \\infty & \\text{else.}
+            \\end{cases}
+
+        See Also
+        --------
+        IndicatorZero
         """
         if self.operator is None:
-            # The convex conjugate of an affine functional is a translation of
-            # the IndicatorZero functional, with value minus the constant
             tmp = IndicatorZero(space=self.domain, constant=-self.constant)
             if self.vector is None:
                 return tmp
