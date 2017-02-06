@@ -158,9 +158,9 @@ class IdentityOperator(ScalingOperator):
 
 class LinCombOperator(Operator):
 
-    """Operator mapping two space elements to a linear combination.
+    """Operator mapping two space elements to a linear combination::
 
-        ``LinCombOperator(a, b)(x, y) == a * x + b * y``
+        LinCombOperator(a, b)([x, y]) == a * x + b * y
     """
 
     def __init__(self, space, a, b):
