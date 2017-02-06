@@ -378,6 +378,65 @@ class LinearSpace(Set):
         """Type of elements of this space (`LinearSpaceElement`)."""
         return LinearSpaceElement
 
+    def __pow__(self, shape):
+        """Return ``self ** shape``.
+
+        Notes
+        -----
+        This can be overridden by subclasses in order to give better memory
+        coherence or otherwise a better interface.
+
+        Examples
+        --------
+        Create simple power space:
+
+        >>> r2 = odl.rn(2)
+        >>> r2 ** 4
+        ProductSpace(rn(2), 4)
+
+        Multiple powers work as expected:
+
+        >>> r2 ** (4, 2)
+        ProductSpace(ProductSpace(rn(2), 4), 2)
+        """
+        from odl.space import ProductSpace
+
+        try:
+            shape = (int(shape),)
+        except TypeError:
+            shape = tuple(shape)
+
+        pspace = self
+        for n in shape:
+            pspace = ProductSpace(pspace, n)
+
+        return pspace
+
+    def __mul__(self, other):
+        """Return ``self * other``.
+
+        Notes
+        -----
+        This can be overridden by subclasses in order to give better memory
+        coherence or otherwise a better interface.
+
+        Examples
+        --------
+        Create simple product space:
+
+        >>> r2 = odl.rn(2)
+        >>> r3 = odl.rn(3)
+        >>> r2 * r3
+        ProductSpace(rn(2), rn(3))
+        """
+        from odl.space import ProductSpace
+
+        if not isinstance(other, LinearSpace):
+            raise TypeError('Can only multiply with `LinearSpace`, got {!r}'
+                            ''.format(other))
+
+        return ProductSpace(self, other)
+
 
 class LinearSpaceElement(object):
 
