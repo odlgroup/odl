@@ -378,6 +378,34 @@ class LinearSpace(Set):
         """Type of elements of this space (`LinearSpaceElement`)."""
         return LinearSpaceElement
 
+    def __pow__(self, shape):
+        """Return ``self ** shape``.
+
+        Examples
+        --------
+        Create simple product space
+
+        >>> r2 = odl.rn(2)
+        >>> r2 ** 4
+        ProductSpace(rn(2), 4)
+
+        Multiple products work as expected
+
+        >>> r2 ** (4, 2)
+        ProductSpace(ProductSpace(rn(2), 4), 2)
+        """
+        try:
+            shape = (int(shape),)
+        except TypeError:
+            shape = tuple(shape)
+        from odl.space import ProductSpace
+
+        pspace = self
+        for n in shape:
+            pspace = ProductSpace(pspace, n)
+
+        return pspace
+
 
 class LinearSpaceElement(object):
 
