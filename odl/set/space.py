@@ -399,11 +399,12 @@ class LinearSpace(Set):
         >>> r2 ** (4, 2)
         ProductSpace(ProductSpace(rn(2), 4), 2)
         """
+        from odl.space import ProductSpace
+
         try:
             shape = (int(shape),)
         except TypeError:
             shape = tuple(shape)
-        from odl.space import ProductSpace
 
         pspace = self
         for n in shape:
@@ -428,11 +429,11 @@ class LinearSpace(Set):
         >>> r2 * r3
         ProductSpace(rn(2), rn(3))
         """
-        if not isinstance(other, LinearSpace):
-            raise TypeError('Can only multiply with `LinearSpace`, got {}'
-                            ''.format(other))
-
         from odl.space import ProductSpace
+
+        if not isinstance(other, LinearSpace):
+            raise TypeError('Can only multiply with `LinearSpace`, got {!r}'
+                            ''.format(other))
 
         return ProductSpace(self, other)
 
