@@ -729,9 +729,18 @@ class Operator(object):
         else:
             return NotImplemented
 
+    def __radd__(self, other):
+        """Return ``other + self``."""
+        # Use commutativity
+        return self + other
+
     def __sub__(self, other):
         """Return ``self - other``."""
         return self + (-1) * other
+
+    def __rsub__(self, other):
+        """Return ``other - self``."""
+        return (-1) * self + other
 
     def __mul__(self, other):
         """Return ``self * other``.
