@@ -32,7 +32,7 @@ Installation
 ============
 Installing ODL should be as easy as
 
-    conda install odl
+    conda install -c odlgroup odl
 
 or
 
