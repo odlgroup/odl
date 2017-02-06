@@ -33,14 +33,12 @@ from odl.util.testutils import (all_almost_equal, noise_element,
 wavelet = simple_fixture('wavelet', ['db1', 'sym2'])
 pad_mode = simple_fixture('pad_mode', ['constant', 'pywt_periodic'])
 ndim = simple_fixture('ndim', [1, 2, 3])
-nlevels = simple_fixture('nlevels', [1, 3])
+nlevels = simple_fixture('nlevels', [2, None])
 wave_impl = simple_fixture('wave_impl', [skip_if_no_pywavelets('pywt')])
 
 
 @pytest.fixture(scope='module')
-def shape_setup(ndim, wavelet, pad_mode):
-    nlevels = 2
-
+def shape_setup(ndim, nlevels, wavelet, pad_mode):
     if ndim == 1:
         image_shape = (16,)
         if wavelet == 'db1':

@@ -39,7 +39,7 @@ except ImportError:
 
 __all__ = ('PAD_MODES_ODL2PYWT', 'PYWT_SUPPORTED_MODES', 'PYWT_AVAILABLE',
            'pywt_wavelet', 'pywt_pad_mode', 'pywt_coeff_shapes',
-           'pywt_flat_coeff_size',
+           'pywt_flat_coeff_size', 'pywt_max_nlevels',
            'pywt_flat_array_from_coeffs', 'pywt_coeffs_from_flat_array',
            'pywt_single_level_decomp', 'pywt_single_level_recon',
            'pywt_multi_level_decomp', 'pywt_multi_level_recon')
@@ -178,6 +178,48 @@ modes.html
     shape_list.reverse()
     shape_list.pop()
     return shape_list
+
+
+def pywt_max_nlevels(shape, wavelet):
+    """Return the maximum nlevels option.
+
+    Parameters
+    ----------
+    shape : sequence
+        Shape of an input to the transform.
+    wavelet : string or `pywt.Wavelet`
+        Specification of the wavelet to be used in the transform.
+        If a string is given, it is converted to a `pywt.Wavelet`.
+        Use `pywt.wavelist` to get a list of available wavelets.
+
+    Returns
+    -------
+    max_nlevels : int
+        Maximum value for the nlevels option.
+
+    Examples
+    --------
+    Find maximum nlevels for Haar wavelet.
+
+    >>> pywt_max_nlevels([10], 'haar')
+    3
+    >>> pywt_max_nlevels([1024], 'haar')
+    10
+
+    For multiple axes, the maximum nlevels is determined by the smallest shape:
+
+    >>> pywt_max_nlevels([10, 1024], 'haar')
+    3
+    """
+
+    wavelet = pywt_wavelet(wavelet)
+
+    # TODO: adapt for axes
+    max_nlevels = np.inf
+    for i, n in enumerate(shape):
+        max_nlevels = min(max_nlevels, pywt.dwt_max_level(n, wavelet.dec_len))
+
+    return max_nlevels
 
 
 def pywt_flat_coeff_size(shape, wavelet, nlevels, mode):
