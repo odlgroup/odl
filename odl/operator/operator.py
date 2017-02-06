@@ -1429,6 +1429,15 @@ class OperatorPointwiseProduct(Operator):
             self.right(x, out=tmp)
             out *= tmp
 
+    def derivative(self, x):
+        """Return the derivative at ``x``."""
+        if self.is_linear:
+            return self
+        else:
+            left = self.right(x) * self.left.derivative(x)
+            right = self.left(x) * self.right.derivative(x)
+            return left + right
+
     def __repr__(self):
         """Return ``repr(self)``."""
         return '{}({!r}, {!r})'.format(self.__class__.__name__,
