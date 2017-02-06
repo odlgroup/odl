@@ -79,7 +79,7 @@ def test_nonlinear_op():
     assert all_almost_equal(Aop(xvec), mult_sq_np(A, x))
 
 
-def evaluate(operator, point, expected):
+def check_call(operator, point, expected):
     """Assert that operator(point) == expected."""
 
     assert all_almost_equal(operator(point), expected)
@@ -105,10 +105,10 @@ def test_nonlinear_addition():
 
     assert not C.is_linear
 
-    evaluate(C, xvec, mult_sq_np(A, x) + mult_sq_np(B, x))
+    check_call(C, xvec, mult_sq_np(A, x) + mult_sq_np(B, x))
 
     # Using operator overloading
-    evaluate(Aop + Bop, xvec, mult_sq_np(A, x) + mult_sq_np(B, x))
+    check_call(Aop + Bop, xvec, mult_sq_np(A, x) + mult_sq_np(B, x))
 
     # Verify that unmatched operators domains fail
     C = np.random.rand(4, 4)
@@ -136,12 +136,12 @@ def test_nonlinear_scale():
         assert not rscaled.is_linear
 
         # Explicit
-        evaluate(lscaled, xvec, scale * mult_sq_np(A, x))
-        evaluate(rscaled, xvec, mult_sq_np(A, scale * x))
+        check_call(lscaled, xvec, scale * mult_sq_np(A, x))
+        check_call(rscaled, xvec, mult_sq_np(A, scale * x))
 
         # Using operator overloading
-        evaluate(scale * Aop, xvec, scale * mult_sq_np(A, x))
-        evaluate(Aop * scale, xvec, mult_sq_np(A, scale * x))
+        check_call(scale * Aop, xvec, scale * mult_sq_np(A, x))
+        check_call(Aop * scale, xvec, mult_sq_np(A, scale * x))
 
     # Fail when scaling by wrong scalar type (A complex number)
     wrongscalars = [1j, [1, 2], (1, 2)]
@@ -175,12 +175,12 @@ def test_nonlinear_vector_mult():
     assert not rmult.is_linear
     assert not lmult.is_linear
 
-    evaluate(rmult, x, mult_sq_np(A, rvec * x))
-    evaluate(lmult, x, lvec * mult_sq_np(A, x))
+    check_call(rmult, x, mult_sq_np(A, rvec * x))
+    check_call(lmult, x, lvec * mult_sq_np(A, x))
 
     # Using operator overloading
-    evaluate(Aop * rvec, x, mult_sq_np(A, rvec * x))
-    evaluate(lvec * Aop, x, lvec * mult_sq_np(A, x))
+    check_call(Aop * rvec, x, mult_sq_np(A, rvec * x))
+    check_call(lvec * Aop, x, lvec * mult_sq_np(A, x))
 
 
 def test_nonlinear_composition():
@@ -196,7 +196,7 @@ def test_nonlinear_composition():
 
     assert not C.is_linear
 
-    evaluate(C, xvec, mult_sq_np(A, mult_sq_np(B, x)))
+    check_call(C, xvec, mult_sq_np(A, mult_sq_np(B, x)))
 
     # Verify that incorrect order fails
     with pytest.raises(OpTypeError):
@@ -419,20 +419,28 @@ def test_arithmetic():
     scalar = np.pi
 
     # Simple tests here, more in depth comes later
-    assert operator(x) == operator(x)
-    assert operator(x) != operator2(x)
-    assert (scalar * operator)(x) == scalar * operator(x)
-    assert (scalar * (scalar * operator))(x) == scalar**2 * operator(x)
-    assert (operator * scalar)(x) == operator(scalar * x)
-    assert ((operator * scalar) * scalar)(x) == operator(scalar**2 * x)
-    assert (operator + operator2)(x) == operator(x) + operator2(x)
-    assert (operator - operator2)(x) == operator(x) - operator2(x)
-    assert (operator * operator3)(x) == operator(operator3(x))
-    assert (operator4 * operator)(x) == operator4(operator(x))
-    assert all_almost_equal((z * operator)(x), z * operator(x))
-    assert all_almost_equal((z * (z * operator))(x), (z * z) * operator(x))
-    assert all_almost_equal((operator * y)(x), operator(x * y))
-    assert all_almost_equal(((operator * y) * y)(x), operator(x * (y * y)))
+    check_call(+operator, x, operator(x))
+    check_call(-operator, x, -operator(x))
+    check_call(scalar * operator, x, scalar * operator(x))
+    check_call(scalar * (scalar * operator), x, scalar**2 * operator(x))
+    check_call(operator * scalar, x, operator(scalar * x))
+    check_call((operator * scalar) * scalar, x, operator(scalar**2 * x))
+    check_call(operator + operator2, x, operator(x) + operator2(x))
+    check_call(operator - operator2, x, operator(x) - operator2(x))
+    check_call(operator * operator3, x, operator(operator3(x)))
+    check_call(operator4 * operator, x, operator4(operator(x)))
+    check_call(z * operator, x, z * operator(x))
+    check_call(z * (z * operator), x, (z * z) * operator(x))
+    check_call(operator * y, x, operator(x * y))
+    check_call((operator * y) * y, x, operator((y * y) * x))
+    check_call(operator + z, x, operator(x) + z)
+    check_call(operator - z, x, operator(x) - z)
+    check_call(z + operator, x, z + operator(x))
+    check_call(z - operator, x, z - operator(x))
+    check_call(operator + scalar, x, operator(x) + scalar)
+    check_call(operator - scalar, x, operator(x) - scalar)
+    check_call(scalar + operator, x, scalar + operator(x))
+    check_call(scalar - operator, x, scalar - operator(x))
 
 
 def test_operator_pointwise_product():
@@ -445,7 +453,7 @@ def test_operator_pointwise_product():
 
     # Evaluate
     expected = Aop(x) * Bop(x)
-    evaluate(prod, x, expected)
+    check_call(prod, x, expected)
 
     # Derivative
     y = noise_element(Aop.domain)
@@ -453,7 +461,7 @@ def test_operator_pointwise_product():
                 Bop.derivative(x)(y) * Aop(x))
     derivative = prod.derivative(x)
     assert derivative.is_linear
-    evaluate(derivative, y, expected)
+    check_call(derivative, y, expected)
 
     # Adjoint
     z = noise_element(Aop.range)
@@ -461,7 +469,7 @@ def test_operator_pointwise_product():
                 Bop.derivative(x).adjoint(z * Aop(x)))
     adjoint = derivative.adjoint
     assert adjoint.is_linear
-    evaluate(adjoint, z, expected)
+    check_call(adjoint, z, expected)
 
 
 # FUNCTIONAL TEST
