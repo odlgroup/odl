@@ -35,7 +35,7 @@ from odl import (Operator, OperatorSum, OperatorComp,
                  MatVecOperator, OperatorLeftVectorMult,
                  OpTypeError, OpDomainError, OpRangeError)
 from odl.operator.operator import _signature_from_spec, _dispatch_call_args
-from odl.util.testutils import almost_equal, all_almost_equal
+from odl.util.testutils import almost_equal, all_almost_equal, noise_element
 
 
 class MultiplyAndSquareOp(Operator):
@@ -56,6 +56,9 @@ class MultiplyAndSquareOp(Operator):
         else:
             np.dot(self.matrix, rhs.data, out=out.data)
             out **= 2
+
+    def derivative(self, x):
+        return 2 * odl.MatVecOperator(self.matrix)
 
     def __str__(self):
         return "MaS: " + str(self.matrix) + " ** 2"
@@ -401,6 +404,35 @@ def test_type_errors():
 
     with pytest.raises(OpDomainError):
         Aop.adjoint(r4Vec1, r4Vec2)
+
+
+def test_operator_pointwise_product():
+    """Test OperatorPointwiseProduct."""
+    Aop = MultiplyAndSquareOp(np.random.rand(4, 3))
+    Bop = MultiplyAndSquareOp(np.random.rand(4, 3))
+    x = noise_element(Aop.domain)
+
+    prod = odl.OperatorPointwiseProduct(Aop, Bop)
+
+    # Evaluate
+    expected = Aop(x) * Bop(x)
+    evaluate(prod, x, expected)
+
+    # Derivative
+    y = noise_element(Aop.domain)
+    expected = (Aop.derivative(x)(y) * Bop(x) +
+                Bop.derivative(x)(y) * Aop(x))
+    derivative = prod.derivative(x)
+    assert derivative.is_linear
+    evaluate(derivative, y, expected)
+
+    # Adjoint
+    z = noise_element(Aop.range)
+    expected = (Aop.derivative(x).adjoint(z * Bop(x)) +
+                Bop.derivative(x).adjoint(z * Aop(x)))
+    adjoint = derivative.adjoint
+    assert adjoint.is_linear
+    evaluate(adjoint, z, expected)
 
 
 # FUNCTIONAL TEST
