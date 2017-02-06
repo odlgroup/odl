@@ -234,26 +234,51 @@ class CallbackPrintIteration(SolverCallback):
 
     """Print the iteration count."""
 
-    _default_text = 'iter ='
+    _default_fmt = 'iter = {}'
 
-    def __init__(self, text=None, display_step=1):
+    def __init__(self, fmt=None, display_step=1):
         """Initialize a new instance.
 
         Parameters
         ----------
-        text : string, optional
-            Text to display before the iteration count. Default: 'iter ='
+        fmt : string, optional
+            Format string for the text to be printed. The text is printed as::
+
+                print(fmt.format(cur_iter_num))
+
+            where ``cur_iter_num`` is the current iteration number.
         display_step : positive int, optional
             Number of iterations between output. Default: 1
+
+        Examples
+        --------
+        Create simple callback that prints iteration count
+
+        >>> callback = CallbackPrintIteration()
+        >>> callback(None)
+        iter = 0
+        >>> callback(None)
+        iter = 1
+
+        Create callback that prints iteration count every 2:th iterate with
+        a custom string.
+
+        >>> callback = CallbackPrintIteration(fmt='Current iter is {}.',
+        ...                                   display_step=2)
+        >>> callback(None)
+        Current iter is 0.
+        >>> callback(None)  # prints nothing
+        >>> callback(None)
+        Current iter is 2.
         """
         self.display_step = int(display_step)
-        self.text = text if text is not None else self._default_text
+        self.fmt = fmt if fmt is not None else self._default_fmt
         self.iter = 0
 
     def __call__(self, _):
         """Print the current iteration."""
         if (self.iter % self.display_step) == 0:
-            print("{} {}".format(self.text, self.iter))
+            print(self.fmt.format(self.iter))
 
         self.iter += 1
 
@@ -263,8 +288,8 @@ class CallbackPrintIteration(SolverCallback):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        textstr = '' if self.text == self._default_text else self.text
-        return 'CallbackPrintIteration({})'.format(textstr)
+        fmtstr = '' if self.fmt == self._default_fmt else self.fmt
+        return 'CallbackPrintIteration({})'.format(fmtstr)
 
 
 class CallbackPrintTiming(SolverCallback):
