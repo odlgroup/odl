@@ -5,19 +5,18 @@ Solves the optimization problem
     min_x ||A(x) - g||_2^2 + TGV_2(x)
 
 Where ``A`` is a parallel beam forward projector and ``g`` is given noisy data.
-TGV_2 is the second order total generalized variation of x, defined as
+TGV_2 is the second order total generalized variation of ``x``, defined as
 
     TGV_2(x) = min_y lam_1 ||grad(x) - y||_1 + lam_2 ||eps(y)||_1
 
 where ``grad`` is the (vectorial) spatial gradient and ``eps`` is the matrix
-valued spatial second derivative. The problem is rewritten as
+valued spatial derivative of the vector valued function ``y``.
+
+The problem is rewritten as
 
     min_{x, y} ||A(x) - g||_2^2 +  lam_1 ||grad(x) - y||_1 + lam_2 ||eps(y)||_1
 
-which can then be solved with the chambolle pock method.
-
-For further details and a description of the solution method used, see
-:ref:`chambolle_pock` in the ODL documentation.
+which can then be solved with the Chambolle-Pock method.
 """
 
 import numpy as np
@@ -43,10 +42,10 @@ ray_trafo = odl.tomo.RayTransform(reco_space, geometry)
 
 
 # Create phantom
-discr_phantom = odl.phantom.shepp_logan(reco_space, modified=True)
+phantom = odl.phantom.shepp_logan(reco_space, modified=True)
 
 # Create sinogram of forward projected phantom with noise
-data = ray_trafo(discr_phantom)
+data = ray_trafo(phantom)
 data += odl.phantom.white_noise(ray_trafo.range) * np.mean(data) * 0.1
 
 
@@ -56,10 +55,16 @@ data += odl.phantom.white_noise(ray_trafo.range) * np.mean(data) * 0.1
 # Initialize gradient operator
 gradient = odl.Gradient(reco_space)
 
-eps = odl.DiagonalOperator(gradient, 2)
+eps = odl.DiagonalOperator(gradient, reco_space.ndim)
 
-# Column vector of three operators
+# Create the domain of the problem, given by the reconstruction space and the
+# range of the gradient on the reconstruction space.
 domain = odl.ProductSpace(reco_space, gradient.range)
+
+# Column vector of three operators defined as:
+# 1. Computes ``A(x)``
+# 2. Computes ``grad(x) - y``
+# 3. Computes ``eps(y)``
 op = odl.BroadcastOperator(
     ray_trafo * odl.ComponentProjection(domain, 0),
     odl.ReductionOperator(gradient, odl.ScalingOperator(gradient.range, -1)),
@@ -73,7 +78,7 @@ g = odl.solvers.ZeroFunctional(op.domain)
 # l2-squared data matching
 l2_norm = odl.solvers.L2NormSquared(ray_trafo.range).translated(data)
 
-# The l1-norms
+# The l1-norms scaled by regularization paramters
 l1_norm_1 = 0.015 * odl.solvers.L1Norm(gradient.range)
 l1_norm_2 = 0.001 * odl.solvers.L1Norm(eps.range)
 
@@ -105,7 +110,7 @@ odl.solvers.chambolle_pock_solver(
     callback=callback)
 
 # Display images
-discr_phantom.show(title='Phantom')
+phantom.show(title='Phantom')
 data.show(title='Simulated data (Sinogram)')
 x[0].show(title='TGV reconstruction')
-x[1].show(title='Derivatives of reconstruction', force_show=True)
+x[1].show(title='Derivatives', force_show=True)
