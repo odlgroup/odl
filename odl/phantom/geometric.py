@@ -250,14 +250,14 @@ def indicate_proj_axis(space, scale_structures=0.5):
     # cube of size 2 * dx
     x0 = (cen - 3 * dx)[0]
     x, y, z = cen - 1 * dx
-    phan[x0:x, y:-y, z:-z] = 1
+    phan[int(x0):int(x), int(y):int(-y), int(z):int(-z)] = 1
 
     # 1st cuboid of size (dx[0], dx[1], 2 * dx[2])
     x0 = (cen + 1 * dx)[1]
     x1 = (cen + 2 * dx)[1]
     y0 = cen[1]
     z = (cen - dx)[2]
-    phan[x0:x1, y0:-y, z:-z] = 1
+    phan[int(x0):int(x1), int(y0):int(-y), int(z):int(-z)] = 1
 
     # 2nd cuboid of (dx[0], dx[1], 2 * dx[2]) touching the first diagonally
     # at a long edge
@@ -265,7 +265,7 @@ def indicate_proj_axis(space, scale_structures=0.5):
     x1 = (cen + 3 * dx)[1]
     y1 = cen[1]
     z = (cen - dx)[2]
-    phan[x0:x1, y:y1, z:-z] = 1
+    phan[int(x0):int(x1), int(y):int(y1), int(z):int(-z)] = 1
 
     return space.element(phan)
 
