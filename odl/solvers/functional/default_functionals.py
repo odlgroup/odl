@@ -1725,7 +1725,7 @@ class QuadraticForm(Functional):
     def gradient(self):
         """Gradient operator of the functional."""
         if self.operator is None:
-            return ConstantOperator(self.domain, self.vector)
+            return ConstantOperator(self.vector, self.domain)
         else:
             if not self.operator.is_linear:
                 # TODO: Acutally works otherwise, but needs more work
@@ -1756,12 +1756,33 @@ class QuadraticForm(Functional):
         .. math::
             (<x, Ax> + <b, x> + c)^* (x) =
             <(x - b), A^-1 (x - b)> - c =
-            <x , A^-1 x> - <x, A^-* b> - <x, A^-1 b> + <b, A^-1 b> - c
+            <x , A^-1 x> - <x, A^-* b> - <x, A^-1 b> + <b, A^-1 b> - c.
 
+        If the quadratic part of the functional is zero it is instead given
+        by a translated indicator function on zero, i.e., if
+
+        .. math::
+            f(x) = <b, x> + c,
+
+        then
+
+        .. math::
+            f^*(x^*) =
+            \\begin{cases}
+                -c & \\text{if } x^* = b \\\\
+                \\infty & \\text{else.}
+            \\end{cases}
+
+        See Also
+        --------
+        IndicatorZero
         """
         if self.operator is None:
-            # Everywhere infinite in this case
-            raise ValueError('convex conjugate not defined without operator')
+            tmp = IndicatorZero(space=self.domain, constant=-self.constant)
+            if self.vector is None:
+                return tmp
+            else:
+                return tmp.translated(self.vector)
 
         if self.vector is None:
             # Handle trivial case separately

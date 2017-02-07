@@ -40,7 +40,9 @@ dual = simple_fixture('dual', [False, True])
 
 func_params = ['l1', 'l2', 'l2^2', 'kl', 'kl_cross_ent', 'const',
                'groupl1-1', 'groupl1-2',
-               'nuclearnorm-1-1', 'nuclearnorm-1-2', 'nuclearnorm-1-inf']
+               'nuclearnorm-1-1', 'nuclearnorm-1-2', 'nuclearnorm-1-inf'
+               'quadratic', 'linear']
+
 func_ids = [' f = {} '.format(p.ljust(10)) for p in func_params]
 
 
@@ -75,6 +77,11 @@ def functional(request, offset, dual):
         func = odl.solvers.NuclearNorm(space,
                                        outer_exp=outer_exp,
                                        singular_vector_exp=singular_vector_exp)
+    elif name == 'quadratic':
+        func = odl.solvers.QuadraticForm(operator=odl.IdentityOperator(space),
+                                         vector=space.one(), constant=0.623)
+    elif name == 'linear':
+        func = odl.solvers.QuadraticForm(vector=space.one(), constant=0.623)
     else:
         assert False
 
@@ -110,6 +117,25 @@ def test_proximal_defintion(functional, stepsize):
 
         f(x*) + 1/2 ||x-x*||^2 <= f(y) + 1/2 ||x-y||^2
     """
+    # No implementation of the proximal for quardartic form
+    if isinstance(functional, odl.solvers.QuadraticForm):
+        pytest.skip('functional has no proximal')
+        return
+
+    # No implementation of the proximal for translations of quardartic form
+    if (isinstance(functional, odl.solvers.FunctionalTranslation) and
+            isinstance(functional.functional, odl.solvers.QuadraticForm)):
+        pytest.skip('functional has no proximal')
+        return
+
+    # No implementation of the proximal for convex conj of quardartic form,
+    # except if the quadratic part is 0.
+    if (isinstance(functional, odl.solvers.FunctionalLinearPerturb) and
+            isinstance(functional.functional, odl.solvers.QuadraticForm) and
+            functional.functional.operator is not None):
+        pytest.skip('functional has no proximal')
+        return
+
     proximal = functional.proximal(stepsize)
 
     assert proximal.domain == functional.domain
