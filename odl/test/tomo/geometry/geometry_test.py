@@ -134,12 +134,12 @@ def test_parallel_beam_geometry_helper():
 
     # Validate angles
     assert geometry.motion_partition.is_uniform
-    assert pytest.approx(geometry.motion_partition.extent(), np.pi)
+    assert pytest.approx(geometry.motion_partition.extent, np.pi)
     assert geometry.motion_partition.cell_sides <= np.pi / (rho * omega)
 
     # Validate detector
     assert geometry.det_partition.cell_sides <= np.pi / omega
-    assert pytest.approx(geometry.det_partition.extent(), 2 * rho)
+    assert pytest.approx(geometry.det_partition.extent, 2 * rho)
 
     # --- 3d case ---
 
@@ -148,13 +148,13 @@ def test_parallel_beam_geometry_helper():
 
     # Validate angles
     assert geometry.motion_partition.is_uniform
-    assert pytest.approx(geometry.motion_partition.extent(), np.pi)
+    assert pytest.approx(geometry.motion_partition.extent, np.pi)
     assert geometry.motion_partition.cell_sides <= np.pi / (rho * omega)
 
     # Validate detector
     assert geometry.det_partition.cell_sides[0] <= np.pi / omega
     assert pytest.approx(geometry.det_partition.cell_sides[0], 0.05)
-    assert pytest.approx(geometry.det_partition.extent()[0], 2 * rho)
+    assert pytest.approx(geometry.det_partition.extent[0], 2 * rho)
 
     # Validate that new detector axis is correctly aligned with the rotation
     # axis and that there is one detector row per slice
@@ -172,12 +172,12 @@ def test_parallel_beam_geometry_helper():
 
     # Validate angles
     assert geometry.motion_partition.is_uniform
-    assert pytest.approx(geometry.motion_partition.extent(), np.pi)
+    assert pytest.approx(geometry.motion_partition.extent, np.pi)
     assert geometry.motion_partition.cell_sides <= np.pi / (rho * omega)
 
     # Validate detector
     assert geometry.det_partition.cell_sides <= np.pi / omega
-    assert pytest.approx(geometry.det_partition.extent(), 2 * rho)
+    assert pytest.approx(geometry.det_partition.extent, 2 * rho)
 
 
 def test_fanflat():

@@ -38,7 +38,7 @@ def scikit_sinogram_space(geometry, volume_space, sinogram_space):
     """Create a range adapted to the scikit radon geometry."""
 
     padded_size = int(np.ceil(volume_space.shape[0] * np.sqrt(2)))
-    det_width = volume_space.domain.extent()[0] * np.sqrt(2)
+    det_width = volume_space.domain.extent[0] * np.sqrt(2)
     scikit_detector_part = uniform_partition(-det_width / 2.0,
                                              det_width / 2.0,
                                              padded_size)

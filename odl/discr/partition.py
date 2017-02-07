@@ -213,9 +213,10 @@ class RectPartition(object):
         """
         return self.set.max()
 
+    @property
     def extent(self):
         """Return a vector containing the total extent (max - min)."""
-        return self.set.extent()
+        return self.set.extent
 
     @property
     def grid(self):
@@ -412,7 +413,7 @@ class RectPartition(object):
                 '`cell_sizes_vecs()` instead')
 
         sides = self.grid.stride
-        sides[sides == 0] = self.extent()[sides == 0]
+        sides[sides == 0] = self.extent[sides == 0]
         return sides
 
     @property

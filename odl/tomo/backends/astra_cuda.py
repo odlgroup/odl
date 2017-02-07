@@ -367,7 +367,7 @@ def astra_cuda_bp_scaling_factor(reco_space, geometry):
     """
     # Angular integration weighting factor
     # angle interval weight by approximate cell volume
-    angle_extent = float(geometry.motion_partition.extent())
+    angle_extent = float(geometry.motion_partition.extent)
     num_angles = float(geometry.motion_partition.size)
     scaling_factor = angle_extent / num_angles
 

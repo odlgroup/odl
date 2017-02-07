@@ -128,22 +128,22 @@ def test_true_ndim():
 
 def test_extent():
     set_ = IntervalProd(1, 2)
-    assert set_.extent() == 1
+    assert set_.extent == 1
 
     set_ = IntervalProd(1, 1)
-    assert set_.extent() == 0
+    assert set_.extent == 0
 
     set_ = IntervalProd(0, np.inf)
-    assert set_.extent() == np.inf
+    assert set_.extent == np.inf
 
     set_ = IntervalProd(-np.inf, 0)
-    assert set_.extent() == np.inf
+    assert set_.extent == np.inf
 
     set_ = IntervalProd(-np.inf, np.inf)
-    assert set_.extent() == np.inf
+    assert set_.extent == np.inf
 
     set_ = IntervalProd([1, 2, 3], [5, 6, 7])
-    assert list(set_.extent()) == [4, 4, 4]
+    assert list(set_.extent) == [4, 4, 4]
 
 
 def test_volume():

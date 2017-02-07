@@ -142,7 +142,7 @@ class RayTransform(Operator):
                 raise ValueError('`discr_domain.shape` needs to be square '
                                  'got {}'.format(shape))
 
-            extent = discr_domain.domain.extent()
+            extent = discr_domain.domain.extent
             if extent[0] != extent[1]:
                 raise ValueError('`discr_domain.extent` needs to be square '
                                  'got {}'.format(extent))
@@ -168,7 +168,7 @@ class RayTransform(Operator):
             # TODO: angles and detector must be handled separately. While the
             # detector should be uniformly discretized, the angles do not have
             # to and often are not.
-            extent = float(geometry.partition.extent().prod())
+            extent = float(geometry.partition.extent.prod())
             size = float(geometry.partition.size)
             weight = extent / size
 
@@ -333,7 +333,7 @@ class RayBackProjection(Operator):
             domain_uspace = FunctionSpace(geometry.params, out_dtype=dtype)
 
             # Approximate cell volume
-            extent = float(geometry.partition.extent().prod())
+            extent = float(geometry.partition.extent.prod())
             size = float(geometry.partition.size)
             weight = extent / size
 

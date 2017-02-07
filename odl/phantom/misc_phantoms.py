@@ -72,8 +72,8 @@ def _submarine_2d_smooth(space, taper):
         ``(0.4, 0.14)``. For other domains, the values are scaled
         accordingly.
         """
-        halfaxes = np.array([0.4, 0.14]) * space.domain.extent()
-        center = np.array([0.6, 0.3]) * space.domain.extent()
+        halfaxes = np.array([0.4, 0.14]) * space.domain.extent
+        center = np.array([0.6, 0.3]) * space.domain.extent
         center += space.domain.min()
 
         # Efficiently calculate |z|^2, z = (x - center) / radii
@@ -94,9 +94,9 @@ def _submarine_2d_smooth(space, taper):
         ``(0.76, 0.6)``. For other domains, the values are scaled
         accordingly.
         """
-        xlower = np.array([0.56, 0.4]) * space.domain.extent()
+        xlower = np.array([0.56, 0.4]) * space.domain.extent
         xlower += space.domain.min()
-        xupper = np.array([0.76, 0.6]) * space.domain.extent()
+        xupper = np.array([0.76, 0.6]) * space.domain.extent
         xupper += space.domain.min()
 
         out = np.ones_like(x[0])
@@ -122,8 +122,8 @@ def _submarine_2d_nonsmooth(space):
         ``(0.4, 0.14)``. For other domains, the values are scaled
         accordingly.
         """
-        halfaxes = np.array([0.4, 0.14]) * space.domain.extent()
-        center = np.array([0.6, 0.3]) * space.domain.extent()
+        halfaxes = np.array([0.4, 0.14]) * space.domain.extent
+        center = np.array([0.6, 0.3]) * space.domain.extent
         center += space.domain.min()
 
         sq_ndist = np.zeros_like(x[0])
@@ -140,9 +140,9 @@ def _submarine_2d_nonsmooth(space):
         ``(0.76, 0.6)``. For other domains, the values are scaled
         accordingly.
         """
-        xlower = np.array([0.56, 0.4]) * space.domain.extent()
+        xlower = np.array([0.56, 0.4]) * space.domain.extent
         xlower += space.domain.min()
-        xupper = np.array([0.76, 0.6]) * space.domain.extent()
+        xupper = np.array([0.76, 0.6]) * space.domain.extent
         xupper += space.domain.min()
 
         out = np.ones_like(x[0])
