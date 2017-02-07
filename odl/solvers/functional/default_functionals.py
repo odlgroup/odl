@@ -2068,9 +2068,9 @@ class IndicatorNuclearNormUnitBall(Functional):
 
     @property
     def convex_conj(self):
-        """Convex conjugate of the unit ball indicator of the  nuclear norm.
+        """Convex conjugate of the unit ball indicator of the nuclear norm.
 
-        The convex conjugate is the dual nuclear norm  where the dual norm is
+        The convex conjugate is the dual nuclear norm where the dual norm is
         obtained by taking the conjugate exponent of both the outer and
         singular vector exponents.
         """
@@ -2108,15 +2108,15 @@ class MoreauEnvelope(Functional):
     :math:`\\sigma` is defined by
 
     .. math::
-        \mathrm{env}_{\\sigma  f}(x) =
+        \mathrm{env}_{\\sigma f}(x) =
         \\inf_{y \\in \\mathcal{X}}
         \\left\{ \\frac{1}{2 \\sigma} \| x - y \|_2^2 + f(y) \\right\}
 
     The gradient of the envelope is given by
 
     .. math::
-        [\\nabla \mathrm{env}_{\\sigma  f}](x) =
-        \\frac{1}{\\sigma} (x - \mathrm{prox}_{\\sigma  f}(x))
+        [\\nabla \mathrm{env}_{\\sigma f}](x) =
+        \\frac{1}{\\sigma} (x - \mathrm{prox}_{\\sigma f}(x))
 
     Example: if :math:`f = \| \cdot \|_1`, then
 

@@ -170,7 +170,7 @@ def proximal_translation(prox_factory, y):
     Given a functional :math:`F`, this is calculated according to the rule
 
     .. math::
-        \mathrm{prox}_{\\sigma  F( \cdot - y)}(x) =
+        \mathrm{prox}_{\\sigma F( \cdot - y)}(x) =
         y + \mathrm{prox}_{\\sigma F}(x - y)
 
     where :math:`y` is the translation, and :math:`\\sigma` is the step size.

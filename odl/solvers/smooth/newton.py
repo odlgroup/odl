@@ -358,7 +358,7 @@ def broydens_method(f, x, line_search=1.0, impl='first', maxiter=1000,
 
     Notes
     -----
-    This is a general and optimized implementation of Broyden's  method,
+    This is a general and optimized implementation of Broyden's method,
     a quasi-Newton method for solving a general unconstrained optimization
     problem
 

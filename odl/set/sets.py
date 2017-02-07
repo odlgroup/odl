@@ -456,7 +456,7 @@ class Integers(Set):
         Returns
         -------
         contained : bool
-            ``True`` if  other is an instance of `Integers`,
+            ``True`` if other is an instance of `Integers`,
             ``False`` otherwise.
 
         Examples
