@@ -3,7 +3,7 @@
 In this example, a 512x512 image is reconstructed using the Conjugate Gradient
 Least Squares method on the GPU.
 
-In general, ASTRA is fater than ODL since it does not need to perform any
+In general, ASTRA is faster than ODL since it does not need to perform any
 copies and all arithmetic is performed on the GPU. Despite this, ODL is not
 much slower. In this example, the overhead is about x2, depending on the
 hardware used.
