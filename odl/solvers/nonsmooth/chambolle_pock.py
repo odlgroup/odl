@@ -38,7 +38,7 @@ __all__ = ('chambolle_pock_solver',)
 # TODO: add dual gap as convergence measure
 # TODO: diagonal preconditioning
 
-def chambolle_pock_solver(x, f, g, L, tau, sigma, niter=1, **kwargs):
+def chambolle_pock_solver(x, f, g, L, tau, sigma, niter, **kwargs):
     """Chambolle-Pock algorithm for non-smooth convex optimization problems.
 
     First order primal-dual hybrid-gradient method for non-smooth convex
@@ -74,7 +74,7 @@ def chambolle_pock_solver(x, f, g, L, tau, sigma, niter=1, **kwargs):
         Step size parameter for the update of the primal (``g``) variable.
     sigma : positive float
         Step size parameter for the update of the dual (``f``) variable.
-    niter : non-negative int, optional
+    niter : non-negative int
         Number of iterations.
 
     Other Parameters

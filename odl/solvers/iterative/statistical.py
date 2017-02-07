@@ -30,7 +30,7 @@ __all__ = ('mlem', 'osmlem', 'loglikelihood')
 AVAILABLE_MLEM_NOISE = ('poisson',)
 
 
-def mlem(op, x, data, niter=1, noise='poisson', callback=None, **kwargs):
+def mlem(op, x, data, niter, noise='poisson', callback=None, **kwargs):
 
     """Maximum Likelihood Expectation Maximation algorithm.
 
@@ -56,7 +56,7 @@ def mlem(op, x, data, niter=1, noise='poisson', callback=None, **kwargs):
         updated in each iteration step.
     data : ``op.range`` `element-like`
         Right-hand side of the equation defining the inverse problem.
-    niter : int, optional
+    niter : int
         Number of iterations.
     noise : {'poisson'}, optional
         Noise model determining the variant of MLEM.
@@ -94,7 +94,7 @@ def mlem(op, x, data, niter=1, noise='poisson', callback=None, **kwargs):
            **kwargs)
 
 
-def osmlem(op, x, data, niter=1, noise='poisson', callback=None, **kwargs):
+def osmlem(op, x, data, niter, noise='poisson', callback=None, **kwargs):
     """Ordered Subsets Maximum Likelihood Expectation Maximation algorithm.
 
     This solver attempts to solve::
@@ -119,7 +119,7 @@ def osmlem(op, x, data, niter=1, noise='poisson', callback=None, **kwargs):
         updated in each iteration step.
     data : sequence of ``op.range`` `element-like`
         Right-hand sides of the equation defining the inverse problem.
-    niter : int, optional
+    niter : int
         Number of iterations.
     noise : {'poisson'}, optional
         Noise model determining the variant of MLEM.
