@@ -74,7 +74,8 @@ class ProductSpaceOperator(Operator):
 
     Mathematically, a `ProductSpaceOperator` is an operator
 
-        :math:`\mathcal{A}: \mathcal{X} \\to \mathcal{Y}`
+    .. math::
+        \mathcal{A}: \mathcal{X} \\to \mathcal{Y}
 
     between product spaces
     :math:`\mathcal{X}=\mathcal{X}_1 \\times\dots\\times \mathcal{X}_m`
@@ -82,8 +83,9 @@ class ProductSpaceOperator(Operator):
     :math:`\mathcal{Y}=\mathcal{Y}_1 \\times\dots\\times \mathcal{Y}_n`
     which can be written in the form
 
-        :math:`\mathcal{A} = (\mathcal{A}_{ij})_{i,j},  \quad
-        i = 1, \dots, n, \\ j = 1, \dots, m`
+    .. math::
+        \mathcal{A} = (\mathcal{A}_{ij})_{i,j},  \quad
+                          i = 1, \dots, n, \\ j = 1, \dots, m
 
     with *component operators*
     :math:`\mathcal{A}_{ij}: \mathcal{X}_j \\to \mathcal{Y}_i`.
@@ -91,7 +93,8 @@ class ProductSpaceOperator(Operator):
     Its action on a vector :math:`x = (x_1, \dots, x_m)` is defined as
     the matrix multiplication
 
-        :math:`[\mathcal{A}(x)]_i = \sum_{j=1}^m \mathcal{A}_{ij}(x_j)`.
+    .. math::
+        [\mathcal{A}(x)]_i = \sum_{j=1}^m \mathcal{A}_{ij}(x_j).
 
     See Also
     --------
@@ -412,7 +415,8 @@ class ComponentProjection(Operator):
     For a product space :math:`\mathcal{X} = \mathcal{X}_1 \\times \dots
     \\times \mathcal{X}_n`, the component projection
 
-        :math:`\mathcal{P}_i: \mathcal{X} \\to \mathcal{X}_i`
+    .. math::
+       \mathcal{P}_i: \mathcal{X} \\to \mathcal{X}_i
 
     is given by :math:`\mathcal{P}_i(x) = x_i` for an element
     :math:`x = (x_1, \dots, x_n) \\in \mathcal{X}`.

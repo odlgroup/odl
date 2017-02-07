@@ -62,14 +62,12 @@ class LpNorm(Functional):
     :math:`\| \cdot \|_p`-norm is defined as
 
     .. math::
-
         \| x \|_p = \\left(\\sum_{i=1}^n |x_i|^p \\right)^{1/p}.
 
     If the functional is defined on an :math:`L_2`-like space, the
     :math:`\| \cdot \|_p`-norm is defined as
 
     .. math::
-
         \| x \|_p = \\left(\\int_\Omega |x(t)|^p dt. \\right)^{1/p}
     """
 
@@ -204,7 +202,6 @@ class GroupL1Norm(Functional):
     :math:`\| \\cdot \|_{\\times, p}` is defined as
 
     .. math::
-
         \|F\|_{\\times, p} =
         \\sum_{i = 1}^n \\left(\\sum_{j=1}^m |F_{i,j}|^p\\right)^{1/p}
 
@@ -212,7 +209,6 @@ class GroupL1Norm(Functional):
     the group :math:`L_1`-norm is defined as
 
     .. math::
-
         \| F \|_{\\times, p} =
         \\int_{\Omega} \\left(\\sum_{j = 1}^m |F_j(x)|^p\\right)^{1/p}
         \mathrm{d}x.
@@ -554,14 +550,12 @@ class L1Norm(LpNorm):
     :math:`\| \cdot \|_1`-norm is defined as
 
     .. math::
-
         \| x \|_1 = \\sum_{i=1}^n |x_i|.
 
     If the functional is defined on an :math:`L_2`-like space, the
     :math:`\| \cdot \|_1`-norm is defined as
 
     .. math::
-
         \| x \|_1 = \\int_\Omega |x(t)| dt.
     """
 

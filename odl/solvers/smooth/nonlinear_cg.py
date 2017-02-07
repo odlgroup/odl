@@ -65,13 +65,15 @@ def conjugate_gradient_nonlinear(f, x, line_search=1.0, maxiter=1000, nreset=0,
     This is a general and optimized implementation of the nonlinear conjguate
     gradient method for solving a general unconstrained optimization problem
 
-        :math:`\min f(x)`
+    .. math::
+        \min f(x)
 
     for a differentiable functional
     :math:`f: \mathcal{X}\\to \mathbb{R}` on a Hilbert space
     :math:`\mathcal{X}`. It does so by finding a zero of the gradient
 
-        :math:`\\nabla f: \mathcal{X} \\to \mathcal{X}`.
+    .. math::
+        \\nabla f: \mathcal{X} \\to \mathcal{X}.
 
     The method is described in a
     `Wikipedia article
