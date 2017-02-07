@@ -423,7 +423,7 @@ class MRCHeaderProperties(object):
             return labels[:nlabels]
 
 
-class FileReaderMRC(FileReaderRawBinaryWithHeader, MRCHeaderProperties):
+class FileReaderMRC(MRCHeaderProperties, FileReaderRawBinaryWithHeader):
 
     """Reader for the MRC file format.
 
@@ -473,8 +473,6 @@ class FileReaderMRC(FileReaderRawBinaryWithHeader, MRCHeaderProperties):
 
     print_mrc2014_spec = staticmethod(print_mrc2014_spec)
     print_fei_ext_header_spec = staticmethod(print_fei_ext_header_spec)
-    data_storage_shape = MRCHeaderProperties.data_storage_shape
-    data_dtype = MRCHeaderProperties.data_dtype
 
     def read_extended_header(self, groupby='field', force_type=''):
         """Read the extended header according to `extended_header_type`.
@@ -636,7 +634,7 @@ extended-mrc-format-not-used-by-2dx
         return data
 
 
-class FileWriterMRC(FileWriterRawBinaryWithHeader, MRCHeaderProperties):
+class FileWriterMRC(MRCHeaderProperties, FileWriterRawBinaryWithHeader):
 
     """Writer for the MRC file format.
 
@@ -652,8 +650,6 @@ class FileWriterMRC(FileWriterRawBinaryWithHeader, MRCHeaderProperties):
     """
 
     print_mrc2014_spec = staticmethod(print_mrc2014_spec)
-    data_storage_shape = MRCHeaderProperties.data_storage_shape
-    data_dtype = MRCHeaderProperties.data_dtype
 
     def write_data(self, data, dstart=None, swap_axes=True):
         """Write ``data`` to `file`.
