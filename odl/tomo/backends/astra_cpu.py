@@ -210,7 +210,7 @@ def astra_cpu_back_projector(proj_data, geometry, reco_space, out=None):
 
     # Angular integration weighting factor
     # angle interval weight by approximate cell volume
-    extent = float(geometry.motion_partition.extent())
+    extent = float(geometry.motion_partition.extent)
     size = float(geometry.motion_partition.size)
     scaling_factor = extent / size
 

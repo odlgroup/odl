@@ -146,13 +146,26 @@ class IntervalProd(Set):
         return self.__nondegen_byaxis
 
     def min(self):
-        """Return the minimum point of this interval product."""
+        """Return the minimum point of this interval product.
+
+        Notes
+        -----
+        This is a method instead of a property in order to match the numpy
+        interface. Users should mostly use `min_pt` directly.
+        """
         return self.min_pt
 
     def max(self):
-        """Return the maximum point of this interval product."""
+        """Return the maximum point of this interval product.
+
+        Notes
+        -----
+        This is a method instead of a property in order to match the numpy
+        interface. Users should mostly use `max_pt` directly.
+        """
         return self.max_pt
 
+    @property
     def extent(self):
         """Return the vector of interval lengths per axis."""
         return self.max() - self.min()
@@ -440,7 +453,7 @@ class IntervalProd(Set):
         elif ndim > self.true_ndim:
             return 0.0
         else:
-            return np.prod(self.extent()[self.nondegen_byaxis])
+            return np.prod(self.extent[self.nondegen_byaxis])
 
     def dist(self, point, exponent=2.0):
         """Return the distance of ``point`` to this set.

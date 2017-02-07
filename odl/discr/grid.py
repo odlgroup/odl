@@ -406,17 +406,18 @@ class RectGrid(Set):
                                       'grid')
         strd = np.zeros(self.ndim)
         strd[self.nondegen_byaxis] = (
-            self.extent()[self.nondegen_byaxis] /
+            self.extent[self.nondegen_byaxis] /
             (np.array(self.shape)[self.nondegen_byaxis] - 1))
         return strd
 
+    @property
     def extent(self):
         """Return the edge lengths of this grid's minimal bounding box.
 
         Examples
         --------
         >>> g = RectGrid([1, 2, 5], [-2, 1.5, 2])
-        >>> g.extent()
+        >>> g.extent
         array([ 4.,  4.])
         """
         return self.max_pt - self.min_pt

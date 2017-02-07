@@ -92,7 +92,7 @@ def test_fourier_trafo_forward_complex(domain, impl):
         return np.where(sum_sq < 1, 1, 0)
 
     def charfun_freq_ball(x):
-        rad = np.max(ft.range.domain.extent() / 4)
+        rad = np.max(ft.range.domain.extent / 4)
         sum_sq = sum(xi ** 2 for xi in x)
         return np.where(sum_sq < rad ** 2, 1, 0)
 
