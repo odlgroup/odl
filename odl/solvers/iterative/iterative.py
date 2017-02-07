@@ -33,7 +33,7 @@ __all__ = ('landweber', 'conjugate_gradient', 'conjugate_gradient_normal',
 # TODO: update all docs
 
 
-def landweber(op, x, rhs, niter=1, omega=1, projection=None, callback=None):
+def landweber(op, x, rhs, niter, omega=1, projection=None, callback=None):
     """Optimized implementation of Landweber's method.
 
     Solves the inverse problem::
@@ -51,7 +51,7 @@ def landweber(op, x, rhs, niter=1, omega=1, projection=None, callback=None):
         updated in each iteration step.
     rhs : ``op.range`` element
         Right-hand side of the equation defining the inverse problem.
-    niter : int, optional
+    niter : int
         Number of iterations.
     omega : positive float, optional
         Relaxation parameter in the iteration.
@@ -124,7 +124,7 @@ def landweber(op, x, rhs, niter=1, omega=1, projection=None, callback=None):
             callback(x)
 
 
-def conjugate_gradient(op, x, rhs, niter=1, callback=None):
+def conjugate_gradient(op, x, rhs, niter, callback=None):
     """Optimized implementation of CG for self-adjoint operators.
 
     This method solves the inverse problem (of the first kind)::
@@ -152,7 +152,7 @@ def conjugate_gradient(op, x, rhs, niter=1, callback=None):
         updated in each iteration step.
     rhs : ``op.range`` element
         Right-hand side of the equation defining the inverse problem.
-    niter : int, optional
+    niter : int
         Number of iterations.
     callback : callable, optional
         Object executing code per iteration, e.g. plotting each iterate.
@@ -205,7 +205,7 @@ def conjugate_gradient(op, x, rhs, niter=1, callback=None):
             callback(x)
 
 
-def conjugate_gradient_normal(op, x, rhs, niter=1, callback=None):
+def conjugate_gradient_normal(op, x, rhs, niter, callback=None):
     """Optimized implementation of CG for the normal equation.
 
     This method solves the normal equations::
@@ -237,7 +237,7 @@ Conjugate_gradient_on_the_normal_equations>`_.
         updated in each iteration step.
     rhs : ``op.range`` element
         Right-hand side of the equation defining the inverse problem
-    niter : int, optional
+    niter : int
         Number of iterations.
     callback : callable, optional
         Object executing code per iteration, e.g. plotting each iterate.
@@ -310,7 +310,7 @@ def exp_zero_seq(base):
         yield value
 
 
-def gauss_newton(op, x, rhs, niter=1, zero_seq=exp_zero_seq(2.0),
+def gauss_newton(op, x, rhs, niter, zero_seq=exp_zero_seq(2.0),
                  callback=None):
     """Optimized implementation of a Gauss-Newton method.
 
@@ -342,7 +342,7 @@ def gauss_newton(op, x, rhs, niter=1, zero_seq=exp_zero_seq(2.0),
         updated in each iteration step.
     rhs : ``op.range`` element
         Right-hand side of the equation defining the inverse problem
-    niter : int, optional
+    niter : int
         Maximum number of iterations.
     zero_seq : iterable, optional
         Zero sequence whose values are used for the regularization of
@@ -392,7 +392,7 @@ def gauss_newton(op, x, rhs, niter=1, zero_seq=exp_zero_seq(2.0),
             callback(x)
 
 
-def kaczmarz(ops, x, rhs, niter=1, omega=1, projection=None,
+def kaczmarz(ops, x, rhs, niter, omega=1, projection=None,
              callback=None):
     """Optimized implementation of Kaczmarz's method.
 
@@ -414,7 +414,7 @@ def kaczmarz(ops, x, rhs, niter=1, omega=1, projection=None,
         updated in each iteration step.
     rhs : sequence of ``ops[i].range`` elements
         Right-hand side of the equation defining the inverse problem.
-    niter : int, optional
+    niter : int
         Number of iterations.
     omega : positive float or sequence of positive floats, optional
         Relaxation parameter in the iteration. If a single float is given the
