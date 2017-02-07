@@ -443,7 +443,6 @@ class IndicatorLpUnitBall(Functional):
     This functional is defined as
 
         .. math::
-
             f(x) = \\left\{ \\begin{array}{ll}
             0 & \\text{if } ||x||_{L_p} \\leq 1, \\\\
             \\infty & \\text{else,}
@@ -453,13 +452,11 @@ class IndicatorLpUnitBall(Functional):
     of :math:`p` is defined as
 
         .. math::
-
             \| x \|_{L_p} = \\left( \\int_{\Omega} |x|^p dx \\right)^{1/p},
 
     and for :math:`p = \\infty` it is defined as
 
         .. math::
-
             ||x||_{\\infty} = \max_x (|x|).
 
     The functional also allows noninteger and nonpositive values of the
@@ -588,14 +585,12 @@ class L2Norm(LpNorm):
     :math:`\| \cdot \|_2`-norm is defined as
 
     .. math::
-
         \| x \|_2 = \\sqrt{ \\sum_{i=1}^n |x_i|^2 }.
 
     If the functional is defined on an :math:`L_2`-like space, the
     :math:`\| \cdot \|_2`-norm is defined as
 
     .. math::
-
         \| x \|_2 = \\sqrt{ \\int_\Omega |x(t)|^2 dt. }
     """
 
@@ -628,14 +623,12 @@ class L2NormSquared(Functional):
     :math:`\| \cdot \|_2^2`-functional is defined as
 
     .. math::
-
         \| x \|_2^2 = \\sum_{i=1}^n |x_i|^2.
 
     If the functional is defined on an :math:`L_2`-like space, the
     :math:`\| \cdot \|_2^2`-functional is defined as
 
     .. math::
-
         \| x \|_2^2 = \\int_\Omega |x(t)|^2 dt.
     """
 
@@ -734,7 +727,6 @@ class ConstantFunctional(Functional):
         This functional is defined as
 
          .. math::
-
             f^*(x) = \\left\{ \\begin{array}{ll}
             -constant & \\text{if } x = 0, \\\\
             \\infty & \\text{else}
@@ -832,7 +824,6 @@ class IndicatorBox(Functional):
     :math:`b` is defined as:
 
     .. math::
-
         F(x) = \\begin{cases}
             0 & \\text{if } a \\leq x \\leq b \\text{ everywhere}, \\\\
             \\infty & \\text{else}
@@ -904,7 +895,6 @@ class IndicatorNonnegativity(IndicatorBox):
     The nonnegativity indicator :math:`F`  is defined as:
 
     .. math::
-
         F(x) = \\begin{cases}
             0 & \\text{if } 0 \\leq x \\text{ everywhere}, \\\\
             \\infty & \\text{else}

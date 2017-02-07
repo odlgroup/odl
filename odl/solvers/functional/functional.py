@@ -94,7 +94,6 @@ class Functional(Operator):
         The operator that corresponds to the mapping
 
         .. math::
-
             x \\to \\nabla f(x)
 
         where :math:`\\nabla f(x)` is the element used to evaluate
@@ -111,10 +110,9 @@ class Functional(Operator):
         -----
         The proximal operator of a function :math:`f` is an operator defined as
 
-            .. math::
-
-                prox_{\\sigma f}(x) = \\sup_{y} \\left\{ f(y) -
-                \\frac{1}{2\\sigma} \| y-x \|_2^2 \\right\}.
+        .. math::
+            prox_{\\sigma f}(x) = \\sup_{y} \\left\{ f(y) -
+            \\frac{1}{2\\sigma} \| y-x \|_2^2 \\right\}.
 
         Proximal operators are often used in different optimization algorithms,
         especially when designed to handle nonsmooth functionals.
@@ -139,7 +137,6 @@ class Functional(Operator):
         defined on a Hilber space, is defined as the functional
 
         .. math::
-
             f^*(x^*) = \\sup_{x} \{ \\langle x^*,x \\rangle - f(x)  \}.
 
         The concept is also known as the Legendre transformation.

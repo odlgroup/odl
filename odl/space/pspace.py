@@ -974,7 +974,6 @@ class ProductSpaceArrayWeighting(ArrayWeighting):
           :math:`w` is defined as
 
           .. math::
-
               \\langle x, y \\rangle_w = \\langle w \odot x, y \\rangle
 
           with component-wise multiplication :math:`w \odot x`. For other
@@ -982,20 +981,17 @@ class ProductSpaceArrayWeighting(ArrayWeighting):
           of exponent ``inf``, the weighted norm is
 
           .. math::
-
               \|x\|_{w,\infty} = \|w \odot x\|_\infty,
 
           otherwise it is
 
           .. math::
-
               \|x\|_{w,p} = \|w^{1/p} \odot x\|_p.
 
         - Note that this definition does **not** fulfill the limit property
           in :math:`p`, i.e.,
 
           .. math::
-
               \|x\|_{w,p} \\not\\to \|x\|_{w,\infty}
               \quad\\text{for } p \\to \infty
 
@@ -1098,27 +1094,23 @@ class ProductSpaceConstWeighting(ConstWeighting):
           :math:`c` is defined as
 
           .. math::
-
             \\langle x, y \\rangle_c = c\, \\langle x, y \\rangle.
 
           For other exponents, only ``norm`` and ```dist`` are defined.
           In the case of exponent ``inf``, the weighted norm is
 
           .. math::
-
               \|x\|_{c,\infty} = c\, \|x\|_\infty,
 
           otherwise it is
 
           .. math::
-
               \|x\|_{c,p} = c^{1/p} \, \|x\|_p.
 
         - Note that this definition does **not** fulfill the limit property
           in :math:`p`, i.e.,
 
           .. math::
-
               \|x\|_{c,p} \\not\\to \|x\|_{c,\infty}
               \quad \\text{for } p \\to \infty
 

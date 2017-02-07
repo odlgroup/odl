@@ -104,7 +104,6 @@ def chambolle_pock_solver(x, f, g, L, tau, sigma, niter=1, **kwargs):
     The problem of interest is
 
     .. math::
-
         \\min_{x \\in X} F(K x) + G(x),
 
     where the formal conditions are that :math:`K` is an operator
@@ -118,7 +117,6 @@ def chambolle_pock_solver(x, f, g, L, tau, sigma, niter=1, **kwargs):
     :math:`\\tau` satisfy
 
     .. math::
-
        \\tau \\sigma \|K\| < 1
 
     where :math:`\|K\|` is the operator norm of :math:`K`.
@@ -127,7 +125,6 @@ def chambolle_pock_solver(x, f, g, L, tau, sigma, niter=1, **kwargs):
     for example the classical TV regularized problem
 
     .. math::
-
         \\min_x \|Ax - b\|_2^2 + \|\\nabla x\|_1.
 
     Here it is tempting to let :math:`K=A`, :math:`F(y)=||y||_2^2` and

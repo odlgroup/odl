@@ -108,7 +108,6 @@ class LinDeformFixedTempl(Operator):
     with fixed template maps :math:`V` into :math:`X`:
 
     .. math::
-
         W_I : V \\to X, \quad W_I(v) := I(\cdot + v(\cdot)),
 
     i.e., :math:`W_I(v)(x) = I(x + v(x))`.
@@ -117,7 +116,6 @@ class LinDeformFixedTempl(Operator):
     an operator that maps :math:`V` into :math:`X`:
 
     .. math::
-
         W_I'(v) : V \\to X, \quad W_I'(v)(u) =
         \\big< \\nabla I(\cdot + v(\cdot)), u \\big>_{\mathbb{R}^d},
 
@@ -128,7 +126,6 @@ class LinDeformFixedTempl(Operator):
     is also an operator that maps :math:`X` into :math:`V`:
 
     .. math::
-
         W_I'(v)^* : X \\to V, \quad W_I'(v)^*(J) =
         J \, \\nabla I(\cdot + v(\cdot)),
 
@@ -274,7 +271,6 @@ class LinDeformFixedDisp(Operator):
     displacement field :math:`v \\in V` maps :math:`X` into :math:`X`:
 
     .. math::
-
         W_v : X \\to X, \quad W_v(I) := I(\cdot + v(\cdot)),
 
     i.e., :math:`W_v(I)(x) = I(x + v(x))`.
@@ -284,7 +280,6 @@ class LinDeformFixedDisp(Operator):
     though, one can approximate the adjoint by
 
     .. math::
-
         W_v^*(I) \\approx \exp(-\mathrm{div}\, v) \, I(\cdot - v(\cdot)),
 
     i.e., :math:`W_v^*(I)(x) \\approx \exp(-\mathrm{div}\,v(x))\, I(x - v(x))`.

@@ -51,7 +51,6 @@ class ProductSpaceOperator(Operator):
     as a linear combination of "sub-operators", e.g.
 
     .. math::
-
         \\left(
         \\begin{array}{ccc}
         A & B & 0 \\\\

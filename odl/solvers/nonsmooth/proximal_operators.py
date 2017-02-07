@@ -115,7 +115,6 @@ def proximal_cconj(prox_factory):
     convex conjugate :math:`F^*`, the proximals satisfy
 
     .. math::
-
         \mathrm{prox}_{\\sigma F^*}(x) +\\sigma \,
         \mathrm{prox}_{F / \\sigma}(x / \\sigma) = x
 
@@ -123,7 +122,6 @@ def proximal_cconj(prox_factory):
     the convex conjugate is given by
 
     .. math::
-
         \mathrm{prox}_{\\sigma F^*}(x) =
         x - \\sigma \, \mathrm{prox}_{F / \\sigma}(x / \\sigma)
 
@@ -172,7 +170,6 @@ def proximal_translation(prox_factory, y):
     Given a functional :math:`F`, this is calculated according to the rule
 
     .. math::
-
         \mathrm{prox}_{\\sigma  F( \cdot - y)}(x) =
         y + \mathrm{prox}_{\\sigma F}(x - y)
 
@@ -223,7 +220,6 @@ def proximal_arg_scaling(prox_factory, scaling):
     Given a functional :math:`F`, this is calculated according to the rule
 
     .. math::
-
         \mathrm{prox}_{\\sigma F( \cdot scal)}(x) =
         \\frac{1}{scal} \mathrm{prox}_{\\sigma \, scal^2 \, F }(x \, scal)
 
@@ -281,7 +277,6 @@ def proximal_quadratic_perturbation(prox_factory, a, u=None):
     Given a functional :math:`F`, this is calculated according to the rule
 
     .. math::
-
         \mathrm{prox}_{\\sigma \left(F( \cdot ) + a \| \cdot \|^2 +
         <u, \cdot >\\right)}(x) =
         c \; \mathrm{prox}_{\\sigma F( \cdot \, c)}((x - \\sigma u) c)
@@ -289,7 +284,6 @@ def proximal_quadratic_perturbation(prox_factory, a, u=None):
     where :math:`c` is the constant
 
     .. math::
-
         c = \\frac{1}{\\sqrt{2 \\sigma a + 1}},
 
     :math:`a` is the scaling parameter belonging to the quadratic term,
@@ -362,13 +356,11 @@ def proximal_composition(proximal, operator, mu):
     :math:`\\mu`
 
     .. math::
-
         L^*(L(x)) = \\mu * x
 
     and a convex function :math:`F`, the following identity holds
 
     .. math::
-
         \mathrm{prox}_{\\sigma F \circ L}(x) = x + \\frac{1}{\\mu}
         L^* \left( \mathrm{prox}_{\\mu \\sigma F}(Lx) - Lx \\right)
 
@@ -427,7 +419,6 @@ def proximal_const_func(space):
     the identity operator
 
     .. math::
-
         \mathrm{prox}_{\\sigma G}(x) = x
 
     Note that it is independent of :math:`\\sigma`.
@@ -486,7 +477,6 @@ def proximal_box_constraint(space, lower=None, upper=None):
     defined as
 
     .. math::
-
         I_{P}(x) = \\begin{cases}
         0 & \\text{if } x \\in P, \\\\
         \\infty & \\text{if } x \\not \\in P
@@ -496,7 +486,6 @@ def proximal_box_constraint(space, lower=None, upper=None):
     :math:`\\sigma I_{P}` is given by the projection onto the interval
 
     .. math::
-
          \mathrm{prox}_{\\sigma I_{P}}(x) = \\begin{cases}
          a & \\text{if } x < a, \\\\
          x & \\text{if } x \\in [a,b], \\\\
@@ -613,13 +602,11 @@ def proximal_cconj_l2(space, lam=1, g=None):
     The :math:`L_2`-norm/distance :math:`F` is given by is given by
 
     .. math::
-
         F(x) = \\lambda \|x - g\|_2
 
     The convex conjugate :math:`F^*` of :math:`F` is given by
 
     .. math::
-
         F^*(y) = \\begin{cases}
         0 & \\text{if } \|y-g\|_2 \leq \\lambda, \\\\
         \\infty & \\text{else.}
@@ -630,7 +617,6 @@ def proximal_cconj_l2(space, lam=1, g=None):
     satisfying :math:`\|y-g\|_2 \leq \\lambda`, i.e., by
 
     .. math::
-
         \mathrm{prox}_{\\sigma F^*}(y) = \\begin{cases}
         \\lambda \\frac{y - g}{\|y - g\|}
         & \\text{if } \|y-g\|_2 > \\lambda, \\\\
@@ -679,14 +665,12 @@ def proximal_l2(space, lam=1, g=None):
     The :math:`L_2`-norm/distance :math:`F` is given by
 
     .. math::
-
         F(x) = \\lambda \|x - g\|_2
 
     For a step size :math:`\\sigma`, the proximal operator of :math:`\\sigma F`
     is given by
 
     .. math::
-
         \mathrm{prox}_{\\sigma F}(y) = \\begin{cases}
         \\frac{1 - c}{\|y-g\|} \\cdot y  + c \cdot g
         & \\text{if } c < g, \\\\
@@ -783,13 +767,11 @@ def proximal_cconj_l2_squared(space, lam=1, g=None):
     The squared :math:`L_2`-norm/distance :math:`F` is given by
 
     .. math::
-
         F(x) =  \\lambda \|x - g\|_2^2.
 
     The convex conjugate :math:`F^*` of :math:`F` is given by
 
     .. math::
-
         F^*(y) = \\frac{1}{4\\lambda} \left( \|
         y\|_2^2 + \langle y, g \\rangle \\right)
 
@@ -797,7 +779,6 @@ def proximal_cconj_l2_squared(space, lam=1, g=None):
     :math:`\\sigma F^*` is given by
 
     .. math::
-
         \mathrm{prox}_{\\sigma F^*}(y) = \\frac{y - \\sigma g}{1 +
         \\sigma/(2 \\lambda)}
 
@@ -871,14 +852,12 @@ def proximal_l2_squared(space, lam=1, g=None):
     The squared :math:`L_2`-norm/distance :math:`F` is given by
 
     .. math::
-
         F(x) =  \\lambda \|x - g\|_2^2.
 
     For a step size :math:`\\sigma`, the proximal operator of :math:`\\sigma F`
     is given by
 
     .. math::
-
         \mathrm{prox}_{\\sigma F}(x) = \\frac{x + 2 \\sigma \\lambda g}
         {1 + 2 \\sigma \\lambda}.
 
@@ -925,14 +904,12 @@ def proximal_cconj_l1(space, lam=1, g=None, isotropic=False):
     The :math:`L_1`-norm/distance :math:`F` is the functional
 
     .. math::
-
         F(x) = \\lambda \|x - g\|_1.
 
     The convex conjugate :math:`F^*` of :math:`F` is given by the indicator
     function of the set :math:`Q_\\lambda`
 
     .. math::
-
         F^*(y) = I_{Q_\\lambda} \left(
         \left| \\frac{y}{\\lambda} \\right| +
         \left\\langle \\frac{y}{\\lambda}, g \\right\\rangle
@@ -945,7 +922,6 @@ def proximal_cconj_l1(space, lam=1, g=None, isotropic=False):
     :math:`\\sigma F^*` is given by
 
     .. math::
-
         \mathrm{prox}_{\\sigma F^*}(y) = \\frac{\\lambda (y - \\sigma g)}{
         \\max(\\lambda, |y - \\sigma g|)}
 
@@ -953,13 +929,11 @@ def proximal_cconj_l1(space, lam=1, g=None, isotropic=False):
     case the ``isotropic`` parameter can be used, giving
 
     .. math::
-
         F(x) = \\lambda \| \|x - g\|_2 \|_1
 
     In this case, the dual is
 
     .. math::
-
         F^*(y) = \\lambda I_{Q_\\lambda} \left(
         \left|\left| \\frac{y}{\\lambda} \\right|\\right|_2 +
         \left\langle \\frac{y}{\\lambda}, g \\right\\rangle
@@ -969,7 +943,6 @@ def proximal_cconj_l1(space, lam=1, g=None, isotropic=False):
     :math:`\\sigma F^*` is given by
 
     .. math::
-
         \mathrm{prox}_{\\sigma F^*}(y) = \\frac{\\lambda (y - \\sigma g)}{
         \\max(\\lambda, \|y - \\sigma g\|_2)}
 
@@ -1088,14 +1061,12 @@ def proximal_l1(space, lam=1, g=None, isotropic=False):
     The :math:`L_1`-norm/distance :math:`F` is the functional
 
     .. math::
-
         F(x) = \\lambda \|x - g\|_1.
 
     For a step size :math:`\\sigma`, the proximal operator of :math:`\\sigma F`
     is
 
     .. math::
-
         \mathrm{prox}_{\\sigma F}(y) = \\begin{cases}
         y - \\sigma \\lambda
         & \\text{if } y > g + \\sigma \\lambda, \\\\
@@ -1110,7 +1081,6 @@ def proximal_l1(space, lam=1, g=None, isotropic=False):
     the ``isotropic`` parameter can be used, giving
 
     .. math::
-
         F(x) = \\lambda \| \|x - g\|_2 \|_1
 
     The proximal can be calculated using the Moreau equality (also known as
@@ -1160,7 +1130,6 @@ def proximal_cconj_kl(space, lam=1, g=None):
     The functional is given by the expression
 
     .. math::
-
         F(x) = \\sum_i (x_i - g_i + g_i \\ln(g_i) - g_i \\ln(pos(x_i))) +
         I_{x \\geq 0}(x)
 
@@ -1175,7 +1144,6 @@ def proximal_cconj_kl(space, lam=1, g=None):
     The convex conjugate :math:`F^*` of :math:`F` is
 
     .. math::
-
         F^*(p) = \\sum_i (-g_i \\ln(pos({1_X}_i - p_i))) +
         I_{1_X - p \geq 0}(p)
 
@@ -1185,7 +1153,6 @@ def proximal_cconj_kl(space, lam=1, g=None):
     The proximal operator of the convex conjugate of F is
 
     .. math::
-
         \mathrm{prox}_{\\sigma (\\lambda F)^*}(x) =
         \\frac{\\lambda 1_X + x - \\sqrt{(x -  \\lambda 1_X)^2 +
         4 \\lambda \\sigma g}}{2}
@@ -1298,7 +1265,6 @@ def proximal_cconj_kl_cross_entropy(space, lam=1, g=None):
     The functional is given by the expression
 
     .. math::
-
         F(x) = \\sum_i (x_i \\ln(pos(x_i)) - x_i \\ln(g_i) + g_i - x_i) +
         I_{x \\geq 0}(x)
 
@@ -1313,7 +1279,6 @@ def proximal_cconj_kl_cross_entropy(space, lam=1, g=None):
     The convex conjugate :math:`F^*` of :math:`F` is
 
     .. math::
-
         F^*(p) = \\sum_i g_i (exp(p_i) - 1)
 
     where :math:`p` is the variable dual to :math:`x`.
@@ -1321,7 +1286,6 @@ def proximal_cconj_kl_cross_entropy(space, lam=1, g=None):
     The proximal operator of the convex conjugate of :math:`F` is
 
     .. math::
-
         \mathrm{prox}_{\\sigma (\\lambda F)^*}(x) = x - \\lambda
         W(\\frac{\\sigma}{\\lambda} g e^{x/\\lambda})
 

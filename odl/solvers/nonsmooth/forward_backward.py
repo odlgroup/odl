@@ -87,7 +87,6 @@ def forward_backward_pd(x, f, g, L, h, tau, sigma, niter,
     The mathematical problem to solve is
 
      .. math::
-
         \min_x f(x) + \sum_{i=0}^n (g_i \Box l_i)(L_i x) + h(x),
 
     where :math:`f`, :math:`g_i`, :math:`l_i` and :math:`h` are functionals and
@@ -95,7 +94,6 @@ def forward_backward_pd(x, f, g, L, h, tau, sigma, niter,
     is defined by
 
      .. math::
-
         (g \Box l)(x) = \inf_y g(y) + l(x - y).
 
     The exact conditions on the involved functionals are as follows: :math:`f`
@@ -120,7 +118,6 @@ def forward_backward_pd(x, f, g, L, h, tau, sigma, niter,
     :math:`L_i` need to satisfy
 
     .. math::
-
        2 \min \{ \\frac{1}{\\tau}, \\frac{1}{\sigma_1}, \\ldots,
        \\frac{1}{\sigma_m} \} \cdot \min\{ \\eta, \\nu_1, \\ldots, \\nu_m  \}
        \cdot \\sqrt{1 - \\tau \\sum_{i=1}^n \\sigma_i ||L_i||^2} > 1,
