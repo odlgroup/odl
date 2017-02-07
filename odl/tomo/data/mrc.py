@@ -212,6 +212,9 @@ class MRCHeaderProperties(object):
 
     """Mixin class adding MRC header-based properties to I/O classes."""
 
+    print_mrc2014_spec = staticmethod(print_mrc2014_spec)
+    print_fei_ext_header_spec = staticmethod(print_fei_ext_header_spec)
+
     @property
     def header_size(self):
         """Total size of `file`'s header (including extended) in bytes.
@@ -471,9 +474,6 @@ class FileReaderMRC(MRCHeaderProperties, FileReaderRawBinaryWithHeader):
 
         super().__init__(file, header_fields)
 
-    print_mrc2014_spec = staticmethod(print_mrc2014_spec)
-    print_fei_ext_header_spec = staticmethod(print_fei_ext_header_spec)
-
     def read_extended_header(self, groupby='field', force_type=''):
         """Read the extended header according to `extended_header_type`.
 
@@ -648,8 +648,6 @@ class FileWriterMRC(MRCHeaderProperties, FileWriterRawBinaryWithHeader):
     for electron cryo-microscopy and tomography*. Journal of Structural
     Biology, 129 (2015), pp 146--150.
     """
-
-    print_mrc2014_spec = staticmethod(print_mrc2014_spec)
 
     def write_data(self, data, dstart=None, swap_axes=True):
         """Write ``data`` to `file`.
