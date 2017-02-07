@@ -62,14 +62,12 @@ class LpNorm(Functional):
     :math:`\| \cdot \|_p`-norm is defined as
 
     .. math::
-
         \| x \|_p = \\left(\\sum_{i=1}^n |x_i|^p \\right)^{1/p}.
 
     If the functional is defined on an :math:`L_2`-like space, the
     :math:`\| \cdot \|_p`-norm is defined as
 
     .. math::
-
         \| x \|_p = \\left(\\int_\Omega |x(t)|^p dt. \\right)^{1/p}
     """
 
@@ -204,7 +202,6 @@ class GroupL1Norm(Functional):
     :math:`\| \\cdot \|_{\\times, p}` is defined as
 
     .. math::
-
         \|F\|_{\\times, p} =
         \\sum_{i = 1}^n \\left(\\sum_{j=1}^m |F_{i,j}|^p\\right)^{1/p}
 
@@ -212,7 +209,6 @@ class GroupL1Norm(Functional):
     the group :math:`L_1`-norm is defined as
 
     .. math::
-
         \| F \|_{\\times, p} =
         \\int_{\Omega} \\left(\\sum_{j = 1}^m |F_j(x)|^p\\right)^{1/p}
         \mathrm{d}x.
@@ -447,7 +443,6 @@ class IndicatorLpUnitBall(Functional):
     This functional is defined as
 
         .. math::
-
             f(x) = \\left\{ \\begin{array}{ll}
             0 & \\text{if } ||x||_{L_p} \\leq 1, \\\\
             \\infty & \\text{else,}
@@ -457,13 +452,11 @@ class IndicatorLpUnitBall(Functional):
     of :math:`p` is defined as
 
         .. math::
-
             \| x \|_{L_p} = \\left( \\int_{\Omega} |x|^p dx \\right)^{1/p},
 
     and for :math:`p = \\infty` it is defined as
 
         .. math::
-
             ||x||_{\\infty} = \max_x (|x|).
 
     The functional also allows noninteger and nonpositive values of the
@@ -554,14 +547,12 @@ class L1Norm(LpNorm):
     :math:`\| \cdot \|_1`-norm is defined as
 
     .. math::
-
         \| x \|_1 = \\sum_{i=1}^n |x_i|.
 
     If the functional is defined on an :math:`L_2`-like space, the
     :math:`\| \cdot \|_1`-norm is defined as
 
     .. math::
-
         \| x \|_1 = \\int_\Omega |x(t)| dt.
     """
 
@@ -594,14 +585,12 @@ class L2Norm(LpNorm):
     :math:`\| \cdot \|_2`-norm is defined as
 
     .. math::
-
         \| x \|_2 = \\sqrt{ \\sum_{i=1}^n |x_i|^2 }.
 
     If the functional is defined on an :math:`L_2`-like space, the
     :math:`\| \cdot \|_2`-norm is defined as
 
     .. math::
-
         \| x \|_2 = \\sqrt{ \\int_\Omega |x(t)|^2 dt. }
     """
 
@@ -634,14 +623,12 @@ class L2NormSquared(Functional):
     :math:`\| \cdot \|_2^2`-functional is defined as
 
     .. math::
-
         \| x \|_2^2 = \\sum_{i=1}^n |x_i|^2.
 
     If the functional is defined on an :math:`L_2`-like space, the
     :math:`\| \cdot \|_2^2`-functional is defined as
 
     .. math::
-
         \| x \|_2^2 = \\int_\Omega |x(t)|^2 dt.
     """
 
@@ -740,7 +727,6 @@ class ConstantFunctional(Functional):
         This functional is defined as
 
          .. math::
-
             f^*(x) = \\left\{ \\begin{array}{ll}
             -constant & \\text{if } x = 0, \\\\
             \\infty & \\text{else}
@@ -838,7 +824,6 @@ class IndicatorBox(Functional):
     :math:`b` is defined as:
 
     .. math::
-
         F(x) = \\begin{cases}
             0 & \\text{if } a \\leq x \\leq b \\text{ everywhere}, \\\\
             \\infty & \\text{else}
@@ -910,7 +895,6 @@ class IndicatorNonnegativity(IndicatorBox):
     The nonnegativity indicator :math:`F`  is defined as:
 
     .. math::
-
         F(x) = \\begin{cases}
             0 & \\text{if } 0 \\leq x \\text{ everywhere}, \\\\
             \\infty & \\text{else}
@@ -2105,9 +2089,9 @@ class IndicatorNuclearNormUnitBall(Functional):
 
     @property
     def convex_conj(self):
-        """Convex conjugate of the unit ball indicator of the  nuclear norm.
+        """Convex conjugate of the unit ball indicator of the nuclear norm.
 
-        The convex conjugate is the dual nuclear norm  where the dual norm is
+        The convex conjugate is the dual nuclear norm where the dual norm is
         obtained by taking the conjugate exponent of both the outer and
         singular vector exponents.
         """
@@ -2145,15 +2129,15 @@ class MoreauEnvelope(Functional):
     :math:`\\sigma` is defined by
 
     .. math::
-        \mathrm{env}_{\\sigma  f}(x) =
+        \mathrm{env}_{\\sigma f}(x) =
         \\inf_{y \\in \\mathcal{X}}
         \\left\{ \\frac{1}{2 \\sigma} \| x - y \|_2^2 + f(y) \\right\}
 
     The gradient of the envelope is given by
 
     .. math::
-        [\\nabla \mathrm{env}_{\\sigma  f}](x) =
-        \\frac{1}{\\sigma} (x - \mathrm{prox}_{\\sigma  f}(x))
+        [\\nabla \mathrm{env}_{\\sigma f}](x) =
+        \\frac{1}{\\sigma} (x - \mathrm{prox}_{\\sigma f}(x))
 
     Example: if :math:`f = \| \cdot \|_1`, then
 

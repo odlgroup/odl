@@ -71,7 +71,7 @@ class Resampling(Operator):
         >>> resampling.range
         uniform_discr(0.0, 1.0, 6)
 
-        Apply the  corresponding resampling operator to an element:
+        Apply the corresponding resampling operator to an element:
 
         >>> print(resampling([0, 1, 0]))
         [0.0, 0.0, 1.0, 1.0, 0.0, 0.0]

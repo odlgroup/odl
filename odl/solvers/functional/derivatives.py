@@ -91,7 +91,6 @@ class NumericalDerivative(Operator):
         ``method='forward'``:
 
         .. math::
-
             \\partial A(x)(dx) =
             (A(x + dx \\cdot h / \| dx \|) - A(x))
             \\cdot \\frac{\| dx \|}{h}

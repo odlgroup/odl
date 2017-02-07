@@ -485,7 +485,7 @@ class FileReaderRawBinaryWithHeader(object):
             Use a value larger than the header size to extract a data subset.
         dend : int, optional
             End position in bytes until which data is read (exclusive).
-            Backwards indexing with negative values  is also supported.
+            Backwards indexing with negative values is also supported.
             Use a value different from the file size to extract a data subset.
 
         Returns

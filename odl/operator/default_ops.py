@@ -580,7 +580,6 @@ class NormOperator(Operator):
         spaces, in which case it is given by
 
         .. math::
-
             (D \|\cdot\|)(y)(x) = \langle y / \|y\|, x \\rangle
 
         Examples
@@ -678,7 +677,6 @@ class DistOperator(Operator):
         spaces, in which case it is given by
 
         .. math::
-
             (D d(\cdot, y))(z)(x) = \\langle (y-z) / d(y, z), x \\rangle
 
         Examples

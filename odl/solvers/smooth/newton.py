@@ -145,13 +145,15 @@ def newtons_method(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
     This is a general and optimized implementation of Newton's method
     for solving the problem:
 
-        :math:`\min f(x)`
+    .. math::
+        \min f(x)
 
     for a differentiable function
     :math:`f: \mathcal{X}\\to \mathbb{R}` on a Hilbert space
     :math:`\mathcal{X}`. It does so by finding a zero of the gradient
 
-        :math:`\\nabla f: \mathcal{X} \\to \mathcal{X}`.
+    .. math::
+        \\nabla f: \mathcal{X} \\to \mathcal{X}.
 
     of finding a root of a function.
 
@@ -165,11 +167,13 @@ def newtons_method(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
 
     The algorithm works by iteratively solving
 
-        :math:`\partial f(x_k)p_k = -f(x_k)`
+    .. math::
+        \partial f(x_k)p_k = -f(x_k)
 
     and then updating as
 
-        :math:`x_{k+1} = x_k + \\alpha x_k`,
+    .. math::
+        x_{k+1} = x_k + \\alpha x_k,
 
     where :math:`\\alpha` is a suitable step length (see the
     references). In this implementation the system of equations are
@@ -250,13 +254,15 @@ def bfgs_method(f, x, line_search=1.0, maxiter=1000, tol=1e-15, num_store=None,
     method with BFGS update for solving a general unconstrained
     optimization problem
 
-        :math:`\min f(x)`
+    .. math::
+        \min f(x)
 
     for a differentiable function
     :math:`f: \mathcal{X}\\to \mathbb{R}` on a Hilbert space
     :math:`\mathcal{X}`. It does so by finding a zero of the gradient
 
-        :math:`\\nabla f: \mathcal{X} \\to \mathcal{X}`.
+    .. math::
+        \\nabla f: \mathcal{X} \\to \mathcal{X}.
 
     The QN method is an approximate Newton method, where the Hessian
     is approximated and gradually updated in each step. This
@@ -352,17 +358,19 @@ def broydens_method(f, x, line_search=1.0, impl='first', maxiter=1000,
 
     Notes
     -----
-    This is a general and optimized implementation of Broyden's  method,
+    This is a general and optimized implementation of Broyden's method,
     a quasi-Newton method for solving a general unconstrained optimization
     problem
 
-        :math:`\min f(x)`
+    .. math::
+        \min f(x)
 
     for a differentiable function
     :math:`f: \mathcal{X}\\to \mathbb{R}` on a Hilbert space
     :math:`\mathcal{X}`. It does so by finding a zero of the gradient
 
-        :math:`\\nabla f: \mathcal{X} \\to \mathcal{X}`
+    .. math::
+        \\nabla f: \mathcal{X} \\to \mathcal{X}
 
     using a Newton-type update scheme with approximate Hessian.
 

@@ -40,7 +40,8 @@ def steepest_descent(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
     General implementation of steepest decent (also known as gradient
     decent) for solving
 
-        :math:`\min f(x)`
+    .. math::
+        \min f(x)
 
     The algorithm is intended for unconstrained problems. It needs line
     search in order guarantee convergence. With appropriate line search,

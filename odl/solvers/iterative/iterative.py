@@ -67,13 +67,14 @@ def landweber(op, x, rhs, niter=1, omega=1, projection=None, callback=None):
     This method calculates an approximate least-squares solution of
     the inverse problem of the first kind
 
-        :math:`\mathcal{A} (x) = y`,
+    .. math::
+        \mathcal{A} (x) = y,
 
     for a given :math:`y\\in \mathcal{Y}`, i.e. an approximate
     solution :math:`x^*` to
 
-        :math:`\min_{x\\in \mathcal{X}}
-        \\lVert \mathcal{A}(x) - y \\rVert_{\mathcal{Y}}^2`
+    .. math::
+        \min_{x\\in \mathcal{X}} \| \mathcal{A}(x) - y \|_{\mathcal{Y}}^2
 
     for a (Frechet-) differentiable operator
     :math:`\mathcal{A}: \mathcal{X} \\to \mathcal{Y}` between Hilbert
@@ -81,8 +82,9 @@ def landweber(op, x, rhs, niter=1, omega=1, projection=None, callback=None):
     starts from an initial guess :math:`x_0` and uses the
     iteration
 
-    :math:`x_{k+1} = x_k -
-    \omega \ \partial \mathcal{A}(x)^* (\mathcal{A}(x_k) - y)`,
+    .. math::
+        x_{k+1} = x_k -
+                  \omega \ \partial \mathcal{A}(x)^* (\mathcal{A}(x_k) - y),
 
     where :math:`\partial \mathcal{A}(x)` is the Frechet derivativ
     of :math:`\mathcal{A}` at :math:`x` and :math:`\omega` is a

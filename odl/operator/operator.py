@@ -307,14 +307,16 @@ class Operator(object):
 
     An operator is a mapping
 
-        :math:`\mathcal{A}: \mathcal{X} \\to \mathcal{Y}`
+    .. math::
+        \mathcal{A}: \mathcal{X} \\to \mathcal{Y}
 
     between sets :math:`\mathcal{X}` (domain) and :math:`\mathcal{Y}`
     (range). The evaluation of :math:`\mathcal{A}` at an element
     :math:`x \\in \mathcal{X}` is denoted by :math:`\mathcal{A}(x)`
     and produces an element in :math:`\mathcal{Y}`:
 
-        :math:`y = \mathcal{A}(x) \\in \mathcal{Y}`.
+    .. math::
+        y = \mathcal{A}(x) \\in \mathcal{Y}.
 
     Programmatically, these properties are reflected in the `Operator`
     class described in the following.

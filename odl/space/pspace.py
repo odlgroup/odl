@@ -153,18 +153,15 @@ class ProductSpace(LinearSpace):
 
             Cannot be combined with: ``dist``
 
-        Returns
-        -------
-        prodspace : `ProductSpace`
-
-        See Also
-        --------
-        ProductSpaceArrayWeighting
-        ProductSpaceConstWeighting
-
         Examples
         --------
+        Product of two rn spaces
+
         >>> r2x3 = ProductSpace(odl.rn(2), odl.rn(3))
+
+        Powerspace of rn space
+
+        >>> r2x2x2 = ProductSpace(odl.rn(2), 3)
 
         Notes
         -----
@@ -184,32 +181,33 @@ class ProductSpace(LinearSpace):
 
         **Inner product:**
 
-            :math:`\langle x, y \\rangle =
-            \\sum_{i=1}^d \langle x_i, y_i \\rangle_i`
+        .. math::
+            \langle x, y \\rangle = \\sum_{i=1}^d \langle x_i, y_i \\rangle_i
 
         **Norm:**
 
         - :math:`p < \infty`:
 
-            :math:`\lVert x\\rVert =
-            \left( \sum_{i=1}^d \lVert x_i \\rVert_i^p \\right)^{1/p}`
+        .. math::
+            \lVert x\\rVert =
+            \left( \sum_{i=1}^d \lVert x_i \\rVert_i^p \\right)^{1/p}
 
         - :math:`p = \infty`:
 
-            :math:`\lVert x\\rVert =
-            \max_i \lVert x_i \\rVert_i`
+        .. math::
+            \lVert x\\rVert = \max_i \lVert x_i \\rVert_i
 
         **Distance:**
 
         - :math:`p < \infty`:
 
-            :math:`d(x, y) =
-            \left( \sum_{i=1}^d d_i(x_i, y_i)^p \\right)^{1/p}`
+        .. math::
+            d(x, y) = \left( \sum_{i=1}^d d_i(x_i, y_i)^p \\right)^{1/p}
 
         - :math:`p = \infty`:
 
-            :math:`d(x, y) =
-            \max_i d_i(x_i, y_i)`
+        .. math::
+            d(x, y) = \max_i d_i(x_i, y_i)
 
         To implement own versions of these functions, you can use
         the following snippet to gather the vector of norms (analogously
@@ -219,6 +217,10 @@ class ProductSpace(LinearSpace):
                 (xi.norm() for xi in x),
                 dtype=np.float64, count=len(x))
 
+        See Also
+        --------
+        ProductSpaceArrayWeighting
+        ProductSpaceConstWeighting
         """
         field = kwargs.pop('field', None)
         dist = kwargs.pop('dist', None)
@@ -972,7 +974,6 @@ class ProductSpaceArrayWeighting(ArrayWeighting):
           :math:`w` is defined as
 
           .. math::
-
               \\langle x, y \\rangle_w = \\langle w \odot x, y \\rangle
 
           with component-wise multiplication :math:`w \odot x`. For other
@@ -980,20 +981,17 @@ class ProductSpaceArrayWeighting(ArrayWeighting):
           of exponent ``inf``, the weighted norm is
 
           .. math::
-
               \|x\|_{w,\infty} = \|w \odot x\|_\infty,
 
           otherwise it is
 
           .. math::
-
               \|x\|_{w,p} = \|w^{1/p} \odot x\|_p.
 
         - Note that this definition does **not** fulfill the limit property
           in :math:`p`, i.e.,
 
           .. math::
-
               \|x\|_{w,p} \\not\\to \|x\|_{w,\infty}
               \quad\\text{for } p \\to \infty
 
@@ -1096,27 +1094,23 @@ class ProductSpaceConstWeighting(ConstWeighting):
           :math:`c` is defined as
 
           .. math::
-
             \\langle x, y \\rangle_c = c\, \\langle x, y \\rangle.
 
           For other exponents, only ``norm`` and ```dist`` are defined.
           In the case of exponent ``inf``, the weighted norm is
 
           .. math::
-
               \|x\|_{c,\infty} = c\, \|x\|_\infty,
 
           otherwise it is
 
           .. math::
-
               \|x\|_{c,p} = c^{1/p} \, \|x\|_p.
 
         - Note that this definition does **not** fulfill the limit property
           in :math:`p`, i.e.,
 
           .. math::
-
               \|x\|_{c,p} \\not\\to \|x\|_{c,\infty}
               \quad \\text{for } p \\to \infty
 

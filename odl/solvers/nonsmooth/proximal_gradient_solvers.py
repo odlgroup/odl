@@ -166,7 +166,6 @@ def accelerated_proximal_gradient(x, f, g, gamma, niter, callback=None,
     The problem of interest is
 
     .. math::
-
         \\min_{x \\in X} f(x) + g(x),
 
     where the formal conditions are that
@@ -177,7 +176,6 @@ def accelerated_proximal_gradient(x, f, g, gamma, niter, callback=None,
     Convergence is only guaranteed if the step length :math:`\\gamma` satisfies
 
     .. math::
-
        0 < \\gamma < 2 \\beta.
 
     References
