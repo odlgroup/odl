@@ -1,4 +1,4 @@
-# Copyright 2014-2016 The ODL development group
+# Copyright 2014-2017 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -25,6 +25,7 @@ standard_library.install_aliases()
 import time
 import os
 import numpy as np
+from odl.util import signature_string
 
 __all__ = ('CallbackStore', 'CallbackApply',
            'CallbackPrintTiming', 'CallbackPrintIteration',
@@ -69,8 +70,7 @@ class SolverCallback(object):
         --------
         >>> store = CallbackStore()
         >>> iter = CallbackPrintIteration()
-        >>> both = store & iter
-        >>> both
+        >>> store & iter
         CallbackStore() & CallbackPrintIteration()
         """
         return _CallbackAnd(self, other)
@@ -157,24 +157,19 @@ class CallbackStore(SolverCallback):
         >>> norm_function = lambda x: x.norm()
         >>> callback = CallbackStore(function=norm_function)
         """
-        self._results = [] if results is None else results
-        self._function = function
-
-    @property
-    def results(self):
-        """Sequence of partial results."""
-        return self._results
+        self.results = [] if results is None else results
+        self.function = function
 
     def __call__(self, result):
         """Append result to results list."""
-        if self._function:
-            self._results.append(self._function(result))
+        if self.function:
+            self.results.append(self.function(result))
         else:
-            self._results.append(result.copy())
+            self.results.append(result.copy())
 
     def reset(self):
         """Clear the `results` list."""
-        self._results = []
+        self.results = []
 
     def __iter__(self):
         """Allow iteration over the results."""
@@ -191,15 +186,12 @@ class CallbackStore(SolverCallback):
         """Number of results stored."""
         return len(self.results)
 
-    def __str__(self):
-        """Return ``str(self)``."""
-        resultstr = '' if self.results == [] else str(self.results)
-        return 'CallbackStore({})'.format(resultstr)
-
     def __repr__(self):
         """Return ``repr(self)``."""
-        resultrepr = '' if self.results == [] else repr(self.results)
-        return 'CallbackStore({})'.format(resultrepr)
+        optargs = [('results', self.results, []),
+                   ('function', self.function, None)]
+        inner_str = signature_string([], optargs)
+        return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
 class CallbackApply(SolverCallback):
@@ -252,7 +244,7 @@ class CallbackPrintIteration(SolverCallback):
 
         Examples
         --------
-        Create simple callback that prints iteration count
+        Create simple callback that prints iteration count:
 
         >>> callback = CallbackPrintIteration()
         >>> callback(None)
@@ -260,8 +252,8 @@ class CallbackPrintIteration(SolverCallback):
         >>> callback(None)
         iter = 1
 
-        Create callback that prints iteration count every 2:th iterate with
-        a custom string.
+        Create callback that every 2nd iterate prints iteration count with
+        a custom string:
 
         >>> callback = CallbackPrintIteration(fmt='Current iter is {}.',
         ...                                   display_step=2)
@@ -287,9 +279,17 @@ class CallbackPrintIteration(SolverCallback):
         self.iter = 0
 
     def __repr__(self):
-        """Return ``repr(self)``."""
-        fmtstr = '' if self.fmt == self._default_fmt else self.fmt
-        return 'CallbackPrintIteration({})'.format(fmtstr)
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> CallbackPrintIteration(fmt='Current iter is {}.', display_step=2)
+        CallbackPrintIteration(fmt='Current iter is {}.', display_step=2)
+        """
+        optargs = [('fmt', self.fmt, self._default_fmt),
+                   ('display_step', self.display_step, 1)]
+        inner_str = signature_string([], optargs)
+        return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
 class CallbackPrintTiming(SolverCallback):
@@ -364,14 +364,10 @@ class CallbackPrint(SolverCallback):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        argvals = []
-        if self.func is not None:
-            argvals.append('{!r}'.format(self.func))
-        if self.fmt != '{!r}':
-            argvals.append('{!r}'.format(self.tmp))
-        argstr = ', '.join(argvals)
-
-        return 'CallbackPrint({})'.format(argstr)
+        optargs = [('func', self.func, None),
+                   ('fmt', self.fmt, '{!r}')]
+        inner_str = signature_string([], optargs)
+        return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
 class CallbackPrintNorm(SolverCallback):
@@ -602,7 +598,9 @@ class CallbackSleep(SolverCallback):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}(seconds={})'.format(self.__class__.__name__, self.seconds)
+        optargs = [('seconds', self.seconds, 1.0)]
+        inner_str = signature_string([], optargs)
+        return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
 if __name__ == '__main__':
