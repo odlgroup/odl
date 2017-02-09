@@ -1582,7 +1582,7 @@ class SeparableSum(Functional):
         domain = ProductSpace(*domains)
         linear = all(func.is_linear for func in functionals)
 
-        self.__functionals = functionals
+        self.__functionals = tuple(functionals)
 
         super().__init__(space=domain, linear=linear)
 
@@ -1594,6 +1594,42 @@ class SeparableSum(Functional):
     def functionals(self):
         """The summands of the functional."""
         return self.__functionals
+
+    def __getitem__(self, indices):
+        """Return ``self[index]``.
+
+        Parameters
+        ----------
+        indices : index expression
+            Object determining which parts of the sum to extract.
+
+        Returns
+        -------
+        subfunctional : `Functional` or `SeparableSum`
+            Functional corresponding to the given indices.
+
+        Examples
+        --------
+        >>> space = odl.rn(3)
+        >>> l1 = odl.solvers.L1Norm(space)
+        >>> l2 = odl.solvers.L2Norm(space)
+        >>> f_sum = odl.solvers.SeparableSum(l1, l2, 2*l2)
+
+        Extract single sub-functional via integer index:
+
+        >>> f_sum[0]
+        L1Norm(rn(3))
+
+        Extract subset of functionals:
+
+        >>> f_sum[:2]
+        SeparableSum(L1Norm(rn(3)), L2Norm(rn(3)))
+        """
+        result = self.functionals[indices]
+        if isinstance(result, tuple):
+            return SeparableSum(*result)
+        else:
+            return result
 
     @property
     def gradient(self):
