@@ -421,6 +421,20 @@ class ProductSpaceOperator(Operator):
 
             return ReductionOperator(*ops)
 
+    @property
+    def shape(self):
+        """Return the shape of the matrix of operators."""
+        return self.ops.shape
+
+    def __len__(self):
+        """Return ``len(self)``."""
+        return self.shape[0]
+
+    @property
+    def size(self):
+        """Return the total size of the matrix of operators."""
+        return np.prod(self.shape)
+
     def __repr__(self):
         """Return ``repr(self)``."""
         aslist = [[0] * self.domain.size for _ in range(self.range.size)]
@@ -704,6 +718,11 @@ class BroadcastOperator(Operator):
         """Return ``len(self)``."""
         return len(self.operators)
 
+    @property
+    def size(self):
+        """Return the total number of sub-operators."""
+        return len(self)
+
     def _call(self, x, out=None):
         """Evaluate all operators in ``x`` and broadcast."""
         wrapped_x = self.prod_op.domain.element([x], cast=False)
@@ -861,6 +880,11 @@ class ReductionOperator(Operator):
     def __len__(self):
         """Return ``len(self)``."""
         return len(self.operators)
+
+    @property
+    def size(self):
+        """Return the total number of sub-operators."""
+        return len(self)
 
     def _call(self, x, out=None):
         """Apply operators to ``x`` and sum."""
@@ -1038,6 +1062,11 @@ class DiagonalOperator(ProductSpaceOperator):
     def __len__(self):
         """Return ``len(self)``."""
         return len(self.operators)
+
+    @property
+    def size(self):
+        """Return the total number of sub-operators."""
+        return len(self)
 
     def derivative(self, point):
         """Derivative of this operator.
