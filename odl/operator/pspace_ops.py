@@ -366,14 +366,16 @@ class ProductSpaceOperator(Operator):
 
         Parameters
         ----------
-        index : tuple of int
+        index : int or tuple of int
             A pair of integers given as (row, col).
 
         Returns
         -------
-        suboperator : `Operator` or ``0``
-            If there is an operator at (row, col), the operator is returned,
-            otherwise ``0``.
+        suboperator : `ReductionOperator`, `Operator` or ``0``
+            If index is an integer, return the row given by the index.
+
+            If index is a tuple, and if there is an operator at (row, col),
+            the operator is returned, otherwise ``0``.
 
         Examples
         --------
@@ -391,14 +393,33 @@ class ProductSpaceOperator(Operator):
         0
         >>> prod_op[1, 1]
         0
+
+        By accessing single indices, a row is extracted as a
+        `ReductionOperator`:
+
+        >>> prod_op[0]
+        ReductionOperator(ZeroOperator(rn(3)), IdentityOperator(rn(3)))
         """
-        row, col = index
-        linear_index = np.flatnonzero((self.ops.row == row) &
-                                      (self.ops.col == col))
-        if linear_index.size == 0:
-            return 0
+        if isinstance(index, tuple):
+            row, col = index
+
+            linear_index = np.flatnonzero((self.ops.row == row) &
+                                          (self.ops.col == col))
+            if linear_index.size == 0:
+                return 0
+            else:
+                return self.ops.data[int(linear_index)]
         else:
-            return self.ops.data[int(linear_index)]
+            ops = [None] * len(self.domain)
+            for op, col, row in zip(self.ops.data, self.ops.col, self.ops.row):
+                if row == index:
+                    ops[col] = op
+
+            for i in range(len(self.domain)):
+                if ops[i] is None:
+                    ops[i] = ZeroOperator(self.domain[i])
+
+            return ReductionOperator(*ops)
 
     def __repr__(self):
         """Return ``repr(self)``."""
