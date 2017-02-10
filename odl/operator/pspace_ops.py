@@ -28,6 +28,7 @@ import scipy as sp
 from numbers import Integral
 
 from odl.operator.operator import Operator
+from odl.operator.default_ops import ZeroOperator
 from odl.space import ProductSpace
 
 
@@ -494,6 +495,18 @@ class ComponentProjection(Operator):
         """
         return ComponentProjectionAdjoint(self.domain, self.index)
 
+    def __repr__(self):
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> X = odl.ProductSpace(odl.rn(1), odl.rn(2))
+        >>> odl.ComponentProjection(X, 0)
+        ComponentProjection(ProductSpace(rn(1), rn(2)), 0)
+        """
+        return '{}({!r}, {})'.format(self.__class__.__name__,
+                                     self.domain, self.index)
+
 
 class ComponentProjectionAdjoint(Operator):
 
@@ -575,6 +588,18 @@ class ComponentProjectionAdjoint(Operator):
             operator's `index`.
         """
         return ComponentProjection(self.range, self.index)
+
+    def __repr__(self):
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> X = odl.ProductSpace(odl.rn(1), odl.rn(2))
+        >>> odl.ComponentProjectionAdjoint(X, 0)
+        ComponentProjectionAdjoint(ProductSpace(rn(1), rn(2)), 0)
+        """
+        return '{}({!r}, {})'.format(self.__class__.__name__,
+                                     self.range, self.index)
 
 
 class BroadcastOperator(Operator):
@@ -720,6 +745,25 @@ class BroadcastOperator(Operator):
         rn(3).element([5.0, 8.0, 11.0])
         """
         return ReductionOperator(*[op.adjoint for op in self.operators])
+
+    def __repr__(self):
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> spc = odl.rn(3)
+        >>> id = odl.IdentityOperator(spc)
+        >>> odl.BroadcastOperator(id, 3)
+        BroadcastOperator(IdentityOperator(rn(3)), 3)
+        >>> odl.BroadcastOperator(id, 2 * id)
+        BroadcastOperator(IdentityOperator(rn(3)), 2 * IdentityOperator(rn(3)))
+        """
+        if all(op == self[0] for op in self):
+            return '{}({!r}, {})'.format(self.__class__.__name__,
+                                         self[0], len(self))
+        else:
+            op_repr = ', '.join(repr(op) for op in self)
+            return '{}({})'.format(self.__class__.__name__, op_repr)
 
 
 class ReductionOperator(Operator):
@@ -869,6 +913,25 @@ class ReductionOperator(Operator):
         ])
         """
         return BroadcastOperator(*[op.adjoint for op in self.operators])
+
+    def __repr__(self):
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> spc = odl.rn(3)
+        >>> id = odl.IdentityOperator(spc)
+        >>> odl.ReductionOperator(id, 3)
+        ReductionOperator(IdentityOperator(rn(3)), 3)
+        >>> odl.ReductionOperator(id, 2 * id)
+        ReductionOperator(IdentityOperator(rn(3)), 2 * IdentityOperator(rn(3)))
+        """
+        if all(op == self[0] for op in self):
+            return '{}({!r}, {})'.format(self.__class__.__name__,
+                                         self[0], len(self))
+        else:
+            op_repr = ', '.join(repr(op) for op in self)
+            return '{}({})'.format(self.__class__.__name__, op_repr)
 
 
 class DiagonalOperator(ProductSpaceOperator):
@@ -1047,6 +1110,25 @@ class DiagonalOperator(ProductSpaceOperator):
         inverses = [op.inverse for op in self.operators]
         return DiagonalOperator(*inverses,
                                 domain=self.range, range=self.domain)
+
+    def __repr__(self):
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> spc = odl.rn(3)
+        >>> id = odl.IdentityOperator(spc)
+        >>> odl.DiagonalOperator(id, 3)
+        DiagonalOperator(IdentityOperator(rn(3)), 3)
+        >>> odl.DiagonalOperator(id, 2 * id)
+        DiagonalOperator(IdentityOperator(rn(3)), 2 * IdentityOperator(rn(3)))
+        """
+        if all(op == self[0] for op in self):
+            return '{}({!r}, {})'.format(self.__class__.__name__,
+                                         self[0], len(self))
+        else:
+            op_repr = ', '.join(repr(op) for op in self)
+            return '{}({})'.format(self.__class__.__name__, op_repr)
 
 
 if __name__ == '__main__':
