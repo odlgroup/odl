@@ -651,8 +651,12 @@ class BroadcastOperator(Operator):
         return self.__operators
 
     def __getitem__(self, index):
-        """Return an operator by index."""
+        """Return ``self(index)``."""
         return self.operators[index]
+
+    def __len__(self):
+        """Return ``len(self)``."""
+        return len(self.operators)
 
     def _call(self, x, out=None):
         """Evaluate all operators in ``x`` and broadcast."""
@@ -788,6 +792,10 @@ class ReductionOperator(Operator):
     def __getitem__(self, index):
         """Return an operator by index."""
         return self.operators[index]
+
+    def __len__(self):
+        """Return ``len(self)``."""
+        return len(self.operators)
 
     def _call(self, x, out=None):
         """Apply operators to ``x`` and sum."""
@@ -942,6 +950,10 @@ class DiagonalOperator(ProductSpaceOperator):
     def __getitem__(self, index):
         """Return an operator by index."""
         return self.operators[index]
+
+    def __len__(self):
+        """Return ``len(self)``."""
+        return len(self.operators)
 
     def derivative(self, point):
         """Derivative of this operator.
