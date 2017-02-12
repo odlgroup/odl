@@ -12,6 +12,8 @@ Since this is not everyday work and may be done under the stress of a (self-impo
     The instructions in this document are tentative until tested in practice.
     They are also written from the perspective of Linux and may need adaption for other platforms.
 
+
+.. _dev_rel_release_schedule:
 1. Agree on a release schedule
 ------------------------------
 This involves the "what" and "when" of the release process and fixes a feature set that is supposed to be included in the new version.
@@ -20,6 +22,8 @@ The steps are:
 - Open an issue on the issue tracker using the title **Release X.Y.Z** (insert numbers, of course).
 - Discuss and agree on a set of open PRs that should be merged before making a release.
 
+
+.. _dev_rel_master_ok:
 2. Make sure tests succeed and docs are built properly
 ------------------------------------------------------
 When all required PRs are merged, ensure that the latest ``master`` branch is sane. Travis CI checks every PR, but certain things like CUDA cannot be tested there and must therefore undergo tests on a local machine, for at least Python 2.7 and one version of Python 3.
@@ -63,18 +67,33 @@ When all required PRs are merged, ensure that the latest ``master`` branch is sa
   If possible, *fix these remaining issues*.
 - Glance the built documentation (usually in ``doc/_build``) for obvious errors.
 
-3. Make a release branch off ``master`` and draft the release
--------------------------------------------------------------
+
+.. _dev_rel_release_branch:
+3. Make a release branch off ``master``
+---------------------------------------
 When all tests succeed and the docs are fine, start a release branch.
-All work until the creation of the git release tag is now done on the release branch.
-**Do not touch any code on this branch other than indicated below!**
+**Do not touch any actual code on this branch other than indicated below!**
 
 - Create a branch off current ``master`` with the name ``release-X.Y.Z``, inserting the correct version number, of course.
-- Compile the release notes.
-  They should contain all *user-visible* changes (internal stuff like test modifications is not required) and should be summarized in one or two sentences on top, perhaps mentioning the most notable changes.
-  Check the `Release Notes <https://github.com/odlgroup/odl/blob/master/doc/source/release_notes.rst>`_ file for details on sections, formatting etc.
-- Increment the version number.
-  The current locations of version numbers are in `odl/__init__.py <https://github.com/odlgroup/odl/blob/master/odl/__init__.py>`_ and `conda/meta.yaml <https://github.com/odlgroup/odl/blob/master/conda/meta.yaml>`_.
+
+  .. code-block:: bash
+
+    git checkout master
+    git pull
+    git checkout -b release-X.Y.Z
+    git push -u my_fork release-X.Y.Z
+
+  Like any regular branch that should result in a PR, the release branch is pushed to a fork.
+
+
+.. _dev_rel_bump_master:
+4. Bump the ``master`` branch to the next development version
+-------------------------------------------------------------
+To ensure a larger version number for installations from the git master branch, the version number must be increased before merging the release branch.
+
+- On the ``master`` branch, change the version string in ``odl/__init__.py`` to the next revision larger than the upcoming release version, plus ``'dev0'``.
+  For example, if the release version string is ``'0.5.3'``, use ``'0.5.4.dev0'``.
+
   To make sure you don't miss any other location (or the information here is outdated), perform a search:
 
   .. code-block:: bash
@@ -82,30 +101,43 @@ All work until the creation of the git release tag is now done on the release br
     cd doc && make clean && cd ..  # remove the local HTML doc first
     grep -Ir "0\.5\.4" . | grep -E -v "\.git|release_notes\.rst|odl\.egg-info"
 
+- In the file ``conda/meta.yaml``, change the version string after ``version: `` to the same as above, but without the ``dev0`` tag.
+  In the example above, this would mean to change it from ``"0.5.3"`` to ``"0.5.4"``.
+
+  If necessary, change ``git_rev`` value to ``master``, although that should already be the case.
+
+- Commit the changes, using a message like ``REL: bump version to X.Y.Z.dev0``.
+- Make a PR with just this change and merge it after review.
+  It must be merged before the release branch.
+
+
+.. _dev_rel_publish:
+5. Compile and publish the release
+----------------------------------
+Back on the release branch with a ``git checkout release-X.Y.Z``, it is now time to prepare the release documents, increment the version number and make a release on GitHub.
+
+- Compile the release notes.
+  They should contain all *user-visible* changes (internal stuff like test modifications is not required) and should be summarized in one or two sentences on top, perhaps mentioning the most notable changes.
+  Check the `Release Notes <https://github.com/odlgroup/odl/blob/master/doc/source/release_notes.rst>`_ file for details on sections, formatting etc.
+- Increment the version number in ``odl/__init__.py`` and ``conda/meta.yaml``.
+  As in :ref:`Section 4<dev_rel_bump_master>`, perform a search to make sure you didn't miss a version info location.
 - Change the ``git_rev`` field in ``conda/meta.yaml`` to ``'vX.Y.Z'``, using the upcoming version number.
   This is the git tag you will create when making the release on GitHub.
 - Commit the changes, using a message like ``REL: bump version to X.Y.Z``.
-- Make a PR and merge it after review.
+- Make a PR and fix review comments.
+  When doing so, try to keep the ``REL: bump version to X.Y.Z`` commit last, for example by using ``git commit --amend`` for fixes, or by squashing the commits on the release branch.
 
-4. Make a release on GitHub
----------------------------
-Now that the version is incremented,
+  **Don't merge immediately when ready!**
 
-- make a new `Release <https://github.com/odlgroup/odl/releases>`_ on GitHub.
+- Make a new `Release <https://github.com/odlgroup/odl/releases>`_ on GitHub **from the release branch, not master**.
 - Paste the short summary from the release notes file (converting from RST to Markdown) but don't insert the details.
 - Add a link to the current section in the release notes file.
 
-5. Create packages for PyPI and Conda
+
+.. _dev_rel_create_pkgs:
+6. Create packages for PyPI and Conda
 -------------------------------------
-It is important to **update the local git repository** before creating packages, to make sure that they are built from the correct git revision.
-
-- Pull from GitHub and switch to the new version tag:
-
-  .. code-block:: bash
-
-    git checkout master
-    git pull
-    git checkout vX.Y.Z
+The packages should be built on the release branch to make sure that the version information is correct.
 
 - Making the packages for PyPI is straightforward.
   However, **make sure you delete old** ``build`` **directories** since they can pollute new builds:
@@ -126,7 +158,7 @@ It is important to **update the local git repository** before creating packages,
     source deactivate
     conda install conda-build
 
-- Invoke the following command to build a package for your platform and all supported Pyhton versions:
+- Invoke the following command to build a package for your platform and all supported Python versions:
 
   .. code-block:: bash
 
@@ -150,7 +182,9 @@ It is important to **update the local git repository** before creating packages,
 
   Replace ``<package>`` by the package file as built by the previous ``conda build`` command.
 
-6. Test installing the local packages and check them
+
+.. _dev_rel_test_pkgs:
+7. Test installing the local packages and check them
 ----------------------------------------------------
 Before actually uploading packages to "official" servers, first install the local packages and run the unit tests.
 
@@ -175,7 +209,9 @@ Before actually uploading packages to "official" servers, first install the loca
     conda install --use-local nomkl odl
     python -c "import odl; odl.test()"
 
-7. Upload the packages to the official locations
+
+.. _dev_rel_upload_pkgs:
+8. Upload the packages to the official locations
 ------------------------------------------------
 Installing the packages works, now it's time to put them out into the wild.
 
@@ -206,15 +242,17 @@ Installing the packages works, now it's time to put them out into the wild.
 
   For this step, you need the access credentials for the ``odlgroup`` user on the Anaconda server.
 
-8. Bump current ``master`` to a development version
----------------------------------------------------
-To ensure a larger version number for installations from the git ``master`` branch, the version number must be increased immediately.
 
-- Change the version string ``'X.Y.Z'`` in ``odl/__init__.py`` to ``'X.Y.Z+1.dev0'`` (e.g. from ``'0.5.3'`` to ``'0.5.4.dev0'``).
-- Change the ``git_rev`` field in ``conda/meta.yaml`` to ``'master'``.
-- Commit the changes, using a message like ``REL: bump version to X.Y.Z.dev0``.
-- Make a PR with just this change and merge it after review.
-  It should be the first one that goes in after the release.
+.. _dev_rel_merge_release_pr:
+9. Merge the release branch
+---------------------------
+Now the release branch can finally be merged.
+The sole purpose of this step is to update the release notes on ``master`` and potentially get the last minute changes.
+
+- The release branch will have conflicts with ``master`` since both have modified the version information.
+  Resolve them in favor of the changes made on ``master``.
+  In particular, make sure that the changes in :ref:`Section 4<dev_rel_bump_master>` stay intact.
+- Merge the PR for the release.
 
 Done!
 -----
