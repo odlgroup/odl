@@ -374,8 +374,9 @@ class ProductSpaceOperator(Operator):
         suboperator : `ReductionOperator`, `Operator` or ``0``
             If index is an integer, return the row given by the index.
 
-            If index is a tuple, and if there is an operator at (row, col),
-            the operator is returned, otherwise ``0``.
+            If index is a tuple, it must have two elements.
+            if there is an operator at ``(row, col)``,  the operator is
+            returned, otherwise ``0``.
 
         Examples
         --------
@@ -410,6 +411,8 @@ class ProductSpaceOperator(Operator):
             else:
                 return self.ops.data[int(linear_index)]
         else:
+            index = int(index)
+
             ops = [None] * len(self.domain)
             for op, col, row in zip(self.ops.data, self.ops.col, self.ops.row):
                 if row == index:
@@ -423,7 +426,7 @@ class ProductSpaceOperator(Operator):
 
     @property
     def shape(self):
-        """Return the shape of the matrix of operators."""
+        """Shape of the matrix of operators."""
         return self.ops.shape
 
     def __len__(self):
@@ -432,7 +435,7 @@ class ProductSpaceOperator(Operator):
 
     @property
     def size(self):
-        """Return the total size of the matrix of operators."""
+        """Total size of the matrix of operators."""
         return np.prod(self.shape)
 
     def __repr__(self):
@@ -519,7 +522,7 @@ class ComponentProjection(Operator):
 
     @property
     def adjoint(self):
-        """Return the adjoint operator.
+        """The adjoint operator.
 
         The adjoint is given by extending along `ComponentProjection.index`,
         and setting zero along the others.
@@ -720,7 +723,7 @@ class BroadcastOperator(Operator):
 
     @property
     def size(self):
-        """Return the total number of sub-operators."""
+        """Total number of sub-operators."""
         return len(self)
 
     def _call(self, x, out=None):
@@ -883,7 +886,7 @@ class ReductionOperator(Operator):
 
     @property
     def size(self):
-        """Return the total number of sub-operators."""
+        """Total number of sub-operators."""
         return len(self)
 
     def _call(self, x, out=None):
@@ -1065,7 +1068,7 @@ class DiagonalOperator(ProductSpaceOperator):
 
     @property
     def size(self):
-        """Return the total number of sub-operators."""
+        """Total number of sub-operators."""
         return len(self)
 
     def derivative(self, point):
