@@ -3,7 +3,7 @@
 Compiled extensions
 ===================
 There are several compiled extensions to ODL.
-Some of them can be installed using ``conda`` or ``pip``, others require manual compilation.
+Some of them can be installed using ``conda`` or `pip`_, others require manual compilation.
 This section assumes that you have a working installation of python and ODL.
 
 
@@ -12,7 +12,7 @@ ASTRA for X-ray tomography
 To calculate fast forward and backward projections for image reconstruction in X-ray tomography, install the `ASTRA tomography toolbox <https://github.com/astra-toolbox/astra-toolbox>`_.
 ASTRA projectors are fully supported in ODL.
 
-You can try using the conda package, but we can give no guarantee that it works out of the box:
+Astra is most easily installed using conda:
 
 .. code-block:: bash
 
@@ -127,38 +127,8 @@ If you get a ``KeyError: 'cuda'``, then something went wrong with the package in
 If the above command instead raises a ``MemoryError`` or similar, your graphics card is not properly configured, and you should solve that issue first.
 
 
-.. _Anaconda: https://anaconda.org/
-.. _Miniconda: http://conda.pydata.org/miniconda.html
-.. _Managing conda environments: http://conda.pydata.org/docs/using/envs.html
-.. _Managing conda channels: http://conda.pydata.org/docs/channels.html
-
-.. _virtualenv: https://virtualenv.pypa.io/en/stable/
 .. _pip: https://pip.pypa.io/en/stable/
-.. _install pip: https://pip.pypa.io/en/stable/installing/#installation
-.. _Python Package Index: https://pypi.python.org/pypi
 
-.. _Spyder: https://github.com/spyder-ide/spyder
-.. _PyCharm: https://www.jetbrains.com/pycharm/
-
-.. _Git: http://www.git-scm.com/
-.. _msysgit: http://code.google.com/p/msysgit/downloads/list
-.. _git-osx-installer: http://code.google.com/p/git-osx-installer/downloads/list
-.. _GitHub Help : https://help.github.com/
-
-.. _pytest: https://pypi.python.org/pypi/pytest
-.. _coverage: https://pypi.python.org/pypi/coverage/
-
-.. _NumPy: http://www.numpy.org/
-.. _SciPy: https://www.scipy.org/
-.. _future: https://pypi.python.org/pypi/future/
-.. _matplotlib: http://matplotlib.org/
-.. _FFTW: http://fftw.org/
-.. _pyFFTW: https://pypi.python.org/pypi/pyFFTW
-.. _FFTW: http://fftw.org/
-.. _PyWavelets: https://pypi.python.org/pypi/PyWavelets
-.. _scikit-image: http://scikit-image.org/
-.. _ProxImaL: http://www.proximal-lang.org/en/latest/
-.. _CVXPY: http://www.cvxpy.org/en/latest/
 .. _odlcuda: https://github.com/odlgroup/odlcuda
 .. _CUDA toolkit: https://developer.nvidia.com/cuda-toolkit
 .. _ASTRA: https://github.com/astra-toolbox/astra-toolbox

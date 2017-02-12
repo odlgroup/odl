@@ -14,14 +14,14 @@ Instructions for the impatient:
   .. code-block:: bash
 
      $ git clone https://github.com/odlgroup/odl
-     
+
 - Install ODL
 
   .. code-block:: bash
 
     $ cd odl
     $ pip install --user --editable .
-    
+
 - Install the :ref:`extensions you want<Extra dependencies>`.
 
 
@@ -66,7 +66,7 @@ After that, enter the top-level directory of the cloned repository and run
 .. code-block:: bash
 
    $ pip install --editable .
-   
+
 **Optional dependencies:**
 
 You may also want to install optional dependencies:
@@ -84,13 +84,13 @@ Enter the top-level directory of the cloned repository and run
    $ pip install --user --editable .
 
 
-.. warning::
+.. note::
     **Don't forget the "." (dot) at the end** - it refers to the current directory, the location from where ``pip`` is supposed to install ODL.
 
 .. note::
     We recommend the ``--editable`` option (can be shortened to ``-e``) since it installs a link instead of copying the files to your Python packages location.
     This way, local changes to the code (e.g. after a ``git pull``) take immediate effect after reloading the package, without requiring re-installation.
-    
+
 
 **Optional dependencies:**
 
@@ -99,12 +99,12 @@ You may also want to install optional dependencies:
 .. code-block:: bash
 
     $ pip install --user .[testing, show]
-    
+
 Extra dependencies
 ------------------
-As a developer, you may want to install further optional dependencies. 
+As a developer, you may want to install further optional dependencies.
 Consult the :ref:`pip<installing_odl_pip_extensions>` or :ref:`conda<installing_odl_conda_extensions>` guide for further instructions.
-    
+
 Running the tests
 =================
 Unit tests in ODL are based on `pytest`_.
@@ -115,13 +115,13 @@ First, you need to install the testing dependencies using your favorite method b
 * Using conda:
 
     .. code-block:: bash
-    
+
         $ conda install pytest
-        
+
 * Using pip:
 
     .. code-block:: bash
-    
+
         $ pip install --user odl[testing]
 
 Now you can check that everything was installed properly by running
@@ -138,47 +138,14 @@ You can also use ``pytest`` directly in the root of your ODL clone:
 .. code-block:: bash
 
    $ pytest
-   
+
 For more information on the tests, see :ref:`dev_testing`.
-    
+
 Further developer information
 =============================
 See :ref:`Contributing to ODL <contributing>` for more information.
 
 
-.. _Anaconda: https://anaconda.org/
-.. _Miniconda: http://conda.pydata.org/miniconda.html
-.. _Managing conda environments: http://conda.pydata.org/docs/using/envs.html
-.. _Managing conda channels: http://conda.pydata.org/docs/channels.html
-
-.. _virtualenv: https://virtualenv.pypa.io/en/stable/
 .. _pip: https://pip.pypa.io/en/stable/
-.. _install pip: https://pip.pypa.io/en/stable/installing/#installation
-.. _Python Package Index: https://pypi.python.org/pypi
-
-.. _Spyder: https://github.com/spyder-ide/spyder
-.. _PyCharm: https://www.jetbrains.com/pycharm/
-
 .. _Git: http://www.git-scm.com/
-.. _msysgit: http://code.google.com/p/msysgit/downloads/list
-.. _git-osx-installer: http://code.google.com/p/git-osx-installer/downloads/list
-.. _GitHub Help : https://help.github.com/
-
 .. _pytest: https://pypi.python.org/pypi/pytest
-.. _coverage: https://pypi.python.org/pypi/coverage/
-
-.. _NumPy: http://www.numpy.org/
-.. _SciPy: https://www.scipy.org/
-.. _future: https://pypi.python.org/pypi/future/
-.. _matplotlib: http://matplotlib.org/
-.. _FFTW: http://fftw.org/
-.. _pyFFTW: https://pypi.python.org/pypi/pyFFTW
-.. _FFTW: http://fftw.org/
-.. _PyWavelets: https://pypi.python.org/pypi/PyWavelets
-.. _scikit-image: http://scikit-image.org/
-.. _ProxImaL: http://www.proximal-lang.org/en/latest/
-.. _CVXPY: http://www.cvxpy.org/en/latest/
-.. _odlcuda: https://github.com/odlgroup/odlcuda
-.. _CUDA toolkit: https://developer.nvidia.com/cuda-toolkit
-.. _ASTRA: https://github.com/astra-toolbox/astra-toolbox
-.. _STIR: https://github.com/UCL/STIR

@@ -8,24 +8,24 @@ This guide will go through all steps necessary for a full ODL installation, star
 
 TL;DR
 =====
-If you already have a working python environment, ODL and some basic dependencies can be installed using either pip: 
+If you already have a working python environment, ODL and some basic dependencies can be installed using either `pip`_:
 
 .. code-block:: bash
 
     $ pip install odl[testing, show]
-    
+
 or conda:
 
 .. code-block:: bash
 
     $ conda install -c odlgroup odl matplotlib pytest scikit-image spyder
-    
+
 After installation, the installation can be verified by running the tests:
 
 .. code-block:: bash
 
     $ python -c "import odl; odl.test()"
-    
+
 Introduction
 ============
 
@@ -79,38 +79,12 @@ If that does not help, `make an issue on GitHub <https://github.com/odlgroup/odl
 
 
 .. _Anaconda: https://anaconda.org/
-.. _Miniconda: http://conda.pydata.org/miniconda.html
-.. _Managing conda environments: http://conda.pydata.org/docs/using/envs.html
-.. _Managing conda channels: http://conda.pydata.org/docs/channels.html
 
 .. _virtualenv: https://virtualenv.pypa.io/en/stable/
 .. _pip: https://pip.pypa.io/en/stable/
-.. _install pip: https://pip.pypa.io/en/stable/installing/#installation
-.. _Python Package Index: https://pypi.python.org/pypi
 
 .. _Spyder: https://github.com/spyder-ide/spyder
 .. _PyCharm: https://www.jetbrains.com/pycharm/
 
-.. _Git: http://www.git-scm.com/
-.. _msysgit: http://code.google.com/p/msysgit/downloads/list
-.. _git-osx-installer: http://code.google.com/p/git-osx-installer/downloads/list
-.. _GitHub Help : https://help.github.com/
-
-.. _pytest: https://pypi.python.org/pypi/pytest
-.. _coverage: https://pypi.python.org/pypi/coverage/
-
 .. _NumPy: http://www.numpy.org/
 .. _SciPy: https://www.scipy.org/
-.. _future: https://pypi.python.org/pypi/future/
-.. _matplotlib: http://matplotlib.org/
-.. _FFTW: http://fftw.org/
-.. _pyFFTW: https://pypi.python.org/pypi/pyFFTW
-.. _FFTW: http://fftw.org/
-.. _PyWavelets: https://pypi.python.org/pypi/PyWavelets
-.. _scikit-image: http://scikit-image.org/
-.. _ProxImaL: http://www.proximal-lang.org/en/latest/
-.. _CVXPY: http://www.cvxpy.org/en/latest/
-.. _odlcuda: https://github.com/odlgroup/odlcuda
-.. _CUDA toolkit: https://developer.nvidia.com/cuda-toolkit
-.. _ASTRA: https://github.com/astra-toolbox/astra-toolbox
-.. _STIR: https://github.com/UCL/STIR

@@ -5,7 +5,7 @@ Installing ODL using conda
 ##########################
 
 Anaconda is a binary distribution package that allows user to install pre-compiled python packages in a very simple manner.
-It works on all platforms and is the recommended way of installing ODL as a user. 
+It works on all platforms and is the recommended way of installing ODL as a user.
 If you already have anaconda installed, you can go directly to `Installing ODL and its dependencies`_, otherwise you need to begin by installing anaconda.
 
 TL;DR
@@ -89,14 +89,16 @@ Install ODL and all its (minimal) dependencies in a ``conda`` environment of you
         $ conda config --append channels odlgroup
 
     After that, ``conda install odl`` and ``conda update odl`` work without the ``-c`` option.
-    
+
 .. _installing_odl_conda_extensions:
 
 Extra dependencies
 ------------------
 The following packages are optional and extend the functionality of ODL.
+Some of them require `pip`_ in order to be installed. See `install pip`_ for
+further instructions.
 
-- Image and plot displaying capabilities:
+- Image and plot displaying capabilities using `matplotlib`_:
 
   .. code-block:: bash
 
@@ -107,19 +109,19 @@ The following packages are optional and extend the functionality of ODL.
   * Install the `FFTW`_ C library version 3 (all possible precisions).
     Use your Linux package manager for this task or consult the `Windows <http://fftw.org/install/windows.html>`_ or `MacOS <fftw.org/install/mac.html>`_ instructions, respectively.
 
-  * Run
+  * Install the python backend `pyFFTW`_ by running:
 
     .. code-block:: bash
 
         $ pip install pyfftw
 
-- Wavelet transforms (currently not in mainstream conda):
+- Wavelet transforms (currently not in mainstream conda) using `PyWavelets`_:
 
   .. code-block:: bash
 
     $ pip install pywavelets
 
-- Simple backend for ray transforms:
+- Simple backend for ray transforms using `scikit-image`_:
 
   .. code-block:: bash
 
@@ -138,9 +140,9 @@ The following packages are optional and extend the functionality of ODL.
   .. code-block:: bash
 
     $ pip install proximal
-    
-More information can be found in :ref:`installing_odl_extensions`.    
-    
+
+More information can be found in :ref:`installing_odl_extensions`.
+
 Running the tests
 =================
 Unit tests in ODL are based on `pytest`_.
@@ -165,34 +167,18 @@ Now you can check that everything was installed properly by running
 .. _Managing conda environments: http://conda.pydata.org/docs/using/envs.html
 .. _Managing conda channels: http://conda.pydata.org/docs/channels.html
 
-.. _virtualenv: https://virtualenv.pypa.io/en/stable/
 .. _pip: https://pip.pypa.io/en/stable/
 .. _install pip: https://pip.pypa.io/en/stable/installing/#installation
-.. _Python Package Index: https://pypi.python.org/pypi
 
 .. _Spyder: https://github.com/spyder-ide/spyder
-.. _PyCharm: https://www.jetbrains.com/pycharm/
-
-.. _Git: http://www.git-scm.com/
-.. _msysgit: http://code.google.com/p/msysgit/downloads/list
-.. _git-osx-installer: http://code.google.com/p/git-osx-installer/downloads/list
-.. _GitHub Help : https://help.github.com/
 
 .. _pytest: https://pypi.python.org/pypi/pytest
-.. _coverage: https://pypi.python.org/pypi/coverage/
 
-.. _NumPy: http://www.numpy.org/
-.. _SciPy: https://www.scipy.org/
-.. _future: https://pypi.python.org/pypi/future/
 .. _matplotlib: http://matplotlib.org/
 .. _FFTW: http://fftw.org/
 .. _pyFFTW: https://pypi.python.org/pypi/pyFFTW
-.. _FFTW: http://fftw.org/
 .. _PyWavelets: https://pypi.python.org/pypi/PyWavelets
 .. _scikit-image: http://scikit-image.org/
 .. _ProxImaL: http://www.proximal-lang.org/en/latest/
 .. _CVXPY: http://www.cvxpy.org/en/latest/
-.. _odlcuda: https://github.com/odlgroup/odlcuda
-.. _CUDA toolkit: https://developer.nvidia.com/cuda-toolkit
 .. _ASTRA: https://github.com/astra-toolbox/astra-toolbox
-.. _STIR: https://github.com/UCL/STIR
