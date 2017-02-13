@@ -19,7 +19,7 @@ from abc import ABCMeta, abstractmethod
 from numbers import Integral, Real, Complex
 import numpy as np
 
-from odl.util import is_int_dtype, is_real_dtype, is_scalar_dtype
+from odl.util import is_int_dtype, is_real_dtype, is_scalar_dtype, unique
 from odl.util.utility import with_metaclass
 
 
@@ -518,7 +518,7 @@ class CartesianProduct(Set):
 
     @property
     def sets(self):
-        """Factors (sets) as a tuple."""
+        """The sets of this carthesian product as a tuple."""
         return self.__sets
 
     def __contains__(self, other):
@@ -553,9 +553,8 @@ class CartesianProduct(Set):
             has the same length as this Cartesian product and all sets
             with the same index are equal, ``False`` otherwise.
         """
-        return (isinstance(other, CartesianProduct) and
-                len(other) == len(self) and
-                all(so == ss for so, ss in zip(other.sets, self.sets)))
+        return (type(self) == type(other) and
+                self.sets == other.sets)
 
     def __hash__(self):
         """Return ``hash(self)``."""
@@ -597,12 +596,12 @@ class CartesianProduct(Set):
 
         Examples
         --------
-        >>> emp, univ = EmptySet(), UniversalSet()
-        >>> prod = CartesianProduct(emp, univ, univ, emp, emp)
-        >>> prod[2]
-        UniversalSet()
+        >>> reals, complexnrs = odl.RealNumbers(), odl.ComplexNumbers()
+        >>> prod = odl.CartesianProduct(reals, complexnrs, complexnrs, reals)
+        >>> prod[1]
+        ComplexNumbers()
         >>> prod[2:4]
-        CartesianProduct(UniversalSet(), EmptySet())
+        CartesianProduct(ComplexNumbers(), RealNumbers())
         """
         if isinstance(indices, slice):
             return CartesianProduct(*self.sets[indices])
@@ -624,12 +623,8 @@ class SetUnion(Set):
 
     The elements of this set are elements of at least one of the subsets.
 
-    Notes
-    -----
-    Mathematically, this is simply the regular union of sets, given by
-
-    .. math::
-        X = \\bigcup_{i=1}^n X_i
+    This is a *lazy* union, i.e. there is no intelligence and the set is
+    literally stored as the union of its subsets.
     """
 
     def __init__(self, *sets):
@@ -639,22 +634,22 @@ class SetUnion(Set):
         ----------
         set1, ..., setN : `Set`
             The sets whose union should be taken.
+            Any duplicates are be ignored.
 
         Examples
         --------
         >>> reals, complexnrs = odl.RealNumbers(), odl.ComplexNumbers()
         >>> union = odl.SetUnion(reals, complexnrs)
         """
-        if not all(isinstance(set_, Set) for set_ in sets):
-            wrong = [set_ for set_ in sets
-                     if not isinstance(set_, Set)]
-            raise TypeError('{!r} not Set instance(s)'.format(wrong))
+        for set_ in sets:
+            if not isinstance(set_, Set):
+                raise TypeError('{!r} is not a Set instance.'.format(set_))
 
-        self.__sets = tuple(sets)
+        self.__sets = tuple(unique(sets))
 
     @property
     def sets(self):
-        """The factors (sets) as a tuple."""
+        """The sets of this union as a tuple."""
         return self.__sets
 
     def __contains__(self, other):
@@ -662,8 +657,9 @@ class SetUnion(Set):
 
         Returns
         -------
-        contains : `bool`
-            `True` if `other` is a member of any subset, `False` otherwise.
+        contains : bool
+            ``True`` if ``other`` is a member of any subset,
+            ``False`` otherwise.
 
         Examples
         --------
@@ -681,13 +677,17 @@ class SetUnion(Set):
 
         Returns
         -------
-        equals : `boolean`
-            `True` if `other` is a `SetUnion` instance, and
-            has the same subsets as this set, `False` otherwise.
+        equals : bool
+            ``True`` if ``other`` is a `SetUnion` instance, and
+            has the same subsets as this set, ``False`` otherwise.
         """
         return (type(self) == type(other) and
-                len(other) == len(self) and
-                all(so == ss for so, ss in zip(other.sets, self.sets)))
+                all(set_ in other for set_ in self) and
+                all(set_ in self for set_ in other))
+
+    def __hash__(self):
+        """Return ``hash(self)``."""
+        return hash((type(self), set(self.sets)))
 
     def element(self, inp=None):
         """Create a new element.
@@ -714,12 +714,12 @@ class SetUnion(Set):
 
         Examples
         --------
-        >>> emp, univ = odl.EmptySet(), odl.UniversalSet()
-        >>> prod = odl.SetUnion(emp, univ, univ, emp, emp)
-        >>> prod[2]
-        UniversalSet()
-        >>> prod[2:4]
-        SetUnion(UniversalSet(), EmptySet())
+        >>> reals, complexnrs = odl.RealNumbers(), odl.ComplexNumbers()
+        >>> prod = odl.SetUnion(reals, complexnrs)
+        >>> prod[0]
+        RealNumbers()
+        >>> prod[:]
+        SetUnion(RealNumbers(), ComplexNumbers())
         """
         if isinstance(indcs, slice):
             return SetUnion(*self.sets[indcs])
@@ -744,12 +744,8 @@ class SetIntersection(Set):
 
     The elements of this set are elements of all the subsets.
 
-    Notes
-    -----
-    Mathematically, this is simply the regular intersection of sets, given by
-
-    .. math::
-        X = \\bigcap_{i=1}^n X_i
+    This is a *lazy* intersection, i.e. there is no intelligence and the set is
+    literally stored as the intersection of its subsets.
     """
 
     def __init__(self, *sets):
@@ -759,22 +755,22 @@ class SetIntersection(Set):
         ----------
         set1, ..., setN : `Set`
             The sets whose intersection should be taken.
+            Any duplicates are be ignored.
 
         Examples
         --------
         >>> reals, complexnrs = odl.RealNumbers(), odl.ComplexNumbers()
         >>> union = odl.SetIntersection(reals, complexnrs)
         """
-        if not all(isinstance(set_, Set) for set_ in sets):
-            wrong = [set_ for set_ in sets
-                     if not isinstance(set_, Set)]
-            raise TypeError('{!r} not Set instance(s)'.format(wrong))
+        for set_ in sets:
+            if not isinstance(set_, Set):
+                raise TypeError('{!r} is not a Set instance.'.format(set_))
 
-        self.__sets = tuple(sets)
+        self.__sets = tuple(unique(sets))
 
     @property
     def sets(self):
-        """The factors (sets) as a tuple."""
+        """The sets of this intersection as a tuple."""
         return self.__sets
 
     def __contains__(self, other):
@@ -782,8 +778,9 @@ class SetIntersection(Set):
 
         Returns
         -------
-        contains : `bool`
-            `True` if `other` is a member of all subsets, `False` otherwise.
+        contains : bool
+            ``True`` if ``other`` is a member of all subsets,
+            ``False`` otherwise.
 
         Examples
         --------
@@ -801,29 +798,17 @@ class SetIntersection(Set):
 
         Returns
         -------
-        equals : `boolean`
-            `True` if `other` is a `SetUnion` instance, and
-            has the same subsets as this set, `False` otherwise.
+        equals : bool
+            ``True`` if ``other`` is a `SetUnion` instance, and
+            has the same subsets as this set, ``False`` otherwise.
         """
         return (type(self) == type(other) and
-                len(other) == len(self) and
-                all(so == ss for so, ss in zip(other.sets, self.sets)))
+                all(set_ in other for set_ in self) and
+                all(set_ in self for set_ in other))
 
-    def element(self, inp=None):
-        """Create a new element.
-
-        First tries calling the first set, then the second, etc.
-
-        For more specific control, use set[i].element() to pick which subset to
-        use.
-        """
-        for set in self.sets:
-            try:
-                inp = set.element(inp)
-            except NotImplementedError:
-                raise NotImplementedError('element not implemented for all '
-                                          'of the subsets')
-        return inp
+    def __hash__(self):
+        """Return ``hash(self)``."""
+        return hash((type(self), set(self.sets)))
 
     def __len__(self):
         """Return ``len(self)``."""
@@ -834,12 +819,12 @@ class SetIntersection(Set):
 
         Examples
         --------
-        >>> emp, univ = odl.EmptySet(), odl.UniversalSet()
-        >>> prod = odl.SetIntersection(emp, univ, univ, emp, emp)
-        >>> prod[2]
-        UniversalSet()
-        >>> prod[2:4]
-        SetIntersection(UniversalSet(), EmptySet())
+        >>> reals, complexnrs = odl.RealNumbers(), odl.ComplexNumbers()
+        >>> prod = odl.SetIntersection(reals, complexnrs)
+        >>> prod[0]
+        RealNumbers()
+        >>> prod[:]
+        SetIntersection(RealNumbers(), ComplexNumbers())
         """
         if isinstance(indcs, slice):
             return SetIntersection(*self.sets[indcs])
@@ -860,30 +845,21 @@ class SetIntersection(Set):
 
 
 class FiniteSet(Set):
-    """A set given by a finite tuple of elements.
-
-    Notes
-    -----
-    Mathematically, this is simply the set given via listing the members of the
-    set:
-
-    .. math::
-        X = \{x_1, x_2, \dots, x_n\}
-    """
+    """A set given by a finite number of elements."""
 
     def __init__(self, *elements):
         """Initialize a new instance.
 
         Parameters
         ----------
-        set1, ..., setN : `Set`
-            The elements in the set.
+        element1, ..., elementN : `Set`
+            The elements in the set. Any duplicates are ignored.
 
         Examples
         --------
         >>> set = odl.FiniteSet(1, 'string')
         """
-        self.__elements = tuple(elements)
+        self.__elements = tuple(unique(elements))
 
     @property
     def elements(self):
@@ -895,8 +871,9 @@ class FiniteSet(Set):
 
         Returns
         -------
-        contains : `bool`
-            `True` if `other` is an element in `elements`, `False` otherwise.
+        contains : bool
+            ``True`` if ``other`` is an element in `elements`,
+            ``False`` otherwise.
 
         Examples
         --------
@@ -915,33 +892,38 @@ class FiniteSet(Set):
 
         Returns
         -------
-        equals : `boolean`
-            `True` if `other` is a `SetUnion` instance, and
-            has the same subsets as this set, `False` otherwise.
+        equals : bool
+            ``True`` if ``other`` is a `SetUnion` instance, and
+            has the same subsets as this set, ``False`` otherwise.
         """
+        # Need to loop since order could be different
         return (type(self) == type(other) and
-                len(other) == len(self) and
-                all(eo == es for eo, es in zip(other.elements, self.elements)))
+                all(el in other for el in self) and
+                all(el in self for el in other))
+
+    def __hash__(self):
+        """Return ``hash(self)``."""
+        return hash((type(self), set(self.elements)))
 
     def element(self, inp=None):
         """Create a new element.
 
-        First tries calling the first set, then the second, etc.
-
         For more specific control, use set[i].element() to pick which subset to
         use.
         """
-        if inp in self.elements:
+        if inp is None:
+            return self.elements[0]
+        elif inp in self.elements:
             return inp
         else:
-            return Set.element(self, inp)
+            raise ValueError('cannot convert inp {} to element in {}'
+                             ''.format(inp, self))
 
     def __getitem__(self, indcs):
         """Return ``self[indcs]``.
 
         Examples
         --------
-
         >>> set = odl.FiniteSet(1, 2, 3, 'string')
         >>> set[:3]
         FiniteSet(1, 2, 3)
