@@ -144,17 +144,10 @@ modes.html
     if nlevels_in != nlevels:
         raise ValueError('`nlevels` must be integer, got {}'
                          ''.format(nlevels_in))
-    # TODO: adapt for axes
-    for i, n in enumerate(shape):
-        max_levels = pywt.dwt_max_level(n, wavelet.dec_len)
-        if max_levels == 0:
-            raise ValueError('in axis {}: data size {} too small for '
-                             'transform, results in maximal `nlevels` of 0'
-                             ''.format(i, n))
-        if not 0 < nlevels <= max_levels:
-            raise ValueError('in axis {}: `nlevels` must satisfy 0 < nlevels '
-                             '<= {}, got {}'
-                             ''.format(i, max_levels, nlevels))
+    max_nlevels = pywt_max_nlevels(shape, wavelet)
+    if nlevels > max_nlevels:
+        raise ValueError('`nlevels` larger than maximum value {}'
+                         ''.format(nlevels_in, max_nlevels))
 
     mode, mode_in = str(mode).lower(), mode
     if mode not in PYWT_SUPPORTED_MODES:
@@ -211,6 +204,7 @@ def pywt_max_nlevels(shape, wavelet):
     >>> pywt_max_nlevels([10, 1024], 'haar')
     3
     """
+    shape = tuple(shape)
     wavelet = pywt_wavelet(wavelet)
 
     # TODO: adapt for axes
@@ -709,21 +703,14 @@ wavelet-transform.html#multilevel-decomposition-using-wavedec
     arr = np.asarray(arr)
     wavelet = pywt_wavelet(wavelet)
 
-    # TODO: adapt for axes
     nlevels, nlevels_in = int(nlevels), nlevels
     if nlevels_in != nlevels:
         raise ValueError('`nlevels` must be integer, got {}'
                          ''.format(nlevels_in))
-    for i, n in enumerate(arr.shape):
-        max_levels = pywt.dwt_max_level(n, wavelet.dec_len)
-        if max_levels == 0:
-            raise ValueError('in axis {}: data size {} too small for '
-                             'transform, results in maximal `nlevels` of 0'
-                             ''.format(i, n))
-        if not 0 < nlevels <= max_levels:
-            raise ValueError('in axis {}: `nlevels` must satisfy 0 < nlevels '
-                             '<= {}, got {}'
-                             ''.format(i, max_levels, nlevels))
+    max_nlevels = pywt_max_nlevels(arr.shape, wavelet)
+    if nlevels > max_nlevels:
+        raise ValueError('`nlevels` larger than maximum value {}'
+                         ''.format(nlevels_in, max_nlevels))
 
     mode, mode_in = str(mode).lower(), mode
     if mode not in PYWT_SUPPORTED_MODES:
