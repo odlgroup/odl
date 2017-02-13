@@ -14,8 +14,10 @@ from future import standard_library
 standard_library.install_aliases()
 
 from functools import wraps
+from collections import OrderedDict
 import numpy as np
 from pkg_resources import parse_requirements
+
 
 
 __all__ = ('array1d_repr', 'array1d_str', 'arraynd_repr', 'arraynd_str',
@@ -24,7 +26,7 @@ __all__ = ('array1d_repr', 'array1d_str', 'arraynd_repr', 'arraynd_str',
            'is_real_dtype', 'is_real_floating_dtype',
            'is_complex_floating_dtype', 'real_dtype', 'complex_dtype',
            'conj_exponent', 'as_flat_array', 'writable_array',
-           'run_from_ipython', 'NumpyRandomSeed', 'cache_arguments')
+           'run_from_ipython', 'NumpyRandomSeed', 'cache_arguments', 'unique')
 
 TYPE_MAP_R2C = {np.dtype(dtype): np.result_type(dtype, 1j)
                 for dtype in np.sctypes['float']}
@@ -864,6 +866,44 @@ class NumpyRandomSeed(object):
         """Called upon exiting ``with`` command."""
         if self.seed is not None:
             np.random.set_state(self.startstate)
+
+
+def unique(seq):
+    """Return the unique values in a sequence.
+
+    Parameters
+    ----------
+    seq : sequence
+        Sequence with (possibly duplicate) elements.
+
+    Returns
+    -------
+    unique : list
+        Unique elements of seq. Order is guaranteed to be the same as in seq.
+
+    Examples
+    --------
+    >>> unique([1, 2, 3, 3])
+    [1, 2, 3]
+
+    >>> unique((1, 'str', 'str'))
+    [1, 'str']
+
+    Also works with unhashable types:
+
+    >>> unique((1, [1], [1]))
+    [1, [1]]
+    """
+    # First check if all elements are hashable, if so O(n) can be done
+    try:
+        return list(OrderedDict.fromkeys(seq))
+    except TypeError:
+        # Unhashable, resort to O(n^2)
+        unique_values = []
+        for i in seq:
+            if i not in unique_values:
+                unique_values.append(i)
+        return unique_values
 
 
 if __name__ == '__main__':
