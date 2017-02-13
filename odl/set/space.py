@@ -570,7 +570,7 @@ class LinearSpaceElement(object):
         elif isinstance(other, LinearSpaceElement):
             # We do not `return NotImplemented` here since we don't want a
             # fallback for in-place. Otherwise python attempts
-            # `self = self + other` which does not modify self.
+            # `self = self - other` which does not modify self.
             raise TypeError('cannot subtract {!r} and {!r} in place'
                             ''.format(self, other))
         elif other in self.space.field:
@@ -698,7 +698,7 @@ class LinearSpaceElement(object):
         elif isinstance(other, LinearSpaceElement):
             # We do not `return NotImplemented` here since we don't want a
             # fallback for in-place. Otherwise python attempts
-            # `self = self * other` which does not modify self.
+            # `self = self / other` which does not modify self.
             raise TypeError('cannot divide {!r} and {!r} in place'
                             ''.format(self, other))
         else:
