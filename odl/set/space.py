@@ -508,26 +508,39 @@ class LinearSpaceElement(object):
         """Implement ``self += other``."""
         if other in self.space:
             return self.space.lincomb(1, self, 1, other, out=self)
-        elif other in self.space.field:
-            one = getattr(self.space, 'one', None)
-            if one is None:
-                return NotImplemented
-            else:
-                # other --> other * space.one()
-                return self.space.lincomb(1, self, other, one(), out=self)
-        else:
+        elif isinstance(other, LinearSpaceElement):
             # We do not `return NotImplemented` here since we don't want a
             # fallback for in-place. Otherwise python attempts
             # `self = self + other` which does not modify self.
             raise TypeError('cannot add {!r} and {!r} in place'
                             ''.format(self, other))
+        elif other in self.space.field:
+            one = getattr(self.space, 'one', None)
+            if one is None:
+                raise TypeError('cannot add {!r} and {!r} in place'
+                                ''.format(self, other))
+            else:
+                # other --> other * space.one()
+                return self.space.lincomb(1, self, other, one(), out=self)
+        else:
+            try:
+                other = self.space.element(other)
+            except (TypeError, ValueError):
+                raise TypeError('cannot add {!r} and {!r} in place'
+                                ''.format(self, other))
+            else:
+                return self.__iadd__(other)
 
     def __add__(self, other):
         """Return ``self + other``."""
         # Instead of using __iadd__ we duplicate code here for performance
-        if other in self.space:
+        if getattr(other, '__array_priority__', 0) > self.__array_priority__:
+            return other.__radd__(self)
+        elif other in self.space:
             tmp = self.space.element()
             return self.space.lincomb(1, self, 1, other, out=tmp)
+        elif isinstance(other, LinearSpaceElement):
+            return NotImplemented
         elif other in self.space.field:
             one = getattr(self.space, 'one', None)
             if one is None:
@@ -536,33 +549,56 @@ class LinearSpaceElement(object):
                 tmp = one()
                 return self.space.lincomb(1, self, other, tmp, out=tmp)
         else:
-            return NotImplemented
+            try:
+                other = self.space.element(other)
+            except (TypeError, ValueError):
+                return NotImplemented
+            else:
+                return self.__add__(other)
 
-    __radd__ = __add__
+    def __radd__(self, other):
+        """Return ``other + self``."""
+        if getattr(other, '__array_priority__', 0) > self.__array_priority__:
+            return other.__add__(self)
+        else:
+            return self.__add__(other)
 
     def __isub__(self, other):
         """Implement ``self -= other``."""
         if other in self.space:
             return self.space.lincomb(1, self, -1, other, out=self)
-        elif other in self.space.field:
-            one = getattr(self.space, 'one', None)
-            if one is None:
-                return NotImplemented
-            else:
-                return self.space.lincomb(1, self, -other, one(), out=self)
-        else:
+        elif isinstance(other, LinearSpaceElement):
             # We do not `return NotImplemented` here since we don't want a
             # fallback for in-place. Otherwise python attempts
             # `self = self - other` which does not modify self.
             raise TypeError('cannot subtract {!r} and {!r} in place'
                             ''.format(self, other))
+        elif other in self.space.field:
+            one = getattr(self.space, 'one', None)
+            if one is None:
+                raise TypeError('cannot subtract {!r} and {!r} in place'
+                                ''.format(self, other))
+            else:
+                return self.space.lincomb(1, self, -other, one(), out=self)
+        else:
+            try:
+                other = self.space.element(other)
+            except (TypeError, ValueError):
+                raise TypeError('cannot subtract {!r} and {!r} in place'
+                                ''.format(self, other))
+            else:
+                return self.__isub__(other)
 
     def __sub__(self, other):
         """Return ``self - other``."""
         # Instead of using __isub__ we duplicate code here for performance
-        if other in self.space:
+        if getattr(other, '__array_priority__', 0) > self.__array_priority__:
+            return other.__rsub__(self)
+        elif other in self.space:
             tmp = self.space.element()
             return self.space.lincomb(1, self, -1, other, out=tmp)
+        elif isinstance(other, LinearSpaceElement):
+            return NotImplemented
         elif other in self.space.field:
             one = getattr(self.space, 'one', None)
             if one is None:
@@ -571,14 +607,23 @@ class LinearSpaceElement(object):
                 tmp = one()
                 return self.space.lincomb(1, self, -other, tmp, out=tmp)
         else:
-            return NotImplemented
+            try:
+                other = self.space.element(other)
+            except (TypeError, ValueError):
+                return NotImplemented
+            else:
+                return self.__sub__(other)
 
     def __rsub__(self, other):
         """Return ``other - self``."""
-        if other in self.space:
+        if getattr(other, '__array_priority__', 0) > self.__array_priority__:
+            return other.__sub__(self)
+        elif other in self.space:
             tmp = self.space.element()
             return self.space.lincomb(1, other, -1, self, out=tmp)
-        if other in self.space.field:
+        elif isinstance(other, LinearSpaceElement):
+            return NotImplemented
+        elif other in self.space.field:
             one = getattr(self.space, 'one', None)
             if one is None:
                 return NotImplemented
@@ -588,7 +633,12 @@ class LinearSpaceElement(object):
                 self.space.lincomb(other, tmp, out=tmp)
                 return self.space.lincomb(1, tmp, -1, self, out=tmp)
         else:
-            return NotImplemented
+            try:
+                other = self.space.element(other)
+            except (TypeError, ValueError):
+                return NotImplemented
+            else:
+                return self.__rsub__(other)
 
     def __imul__(self, other):
         """Implement ``self *= other``."""
@@ -596,26 +646,48 @@ class LinearSpaceElement(object):
             return self.space.lincomb(other, self, out=self)
         elif other in self.space:
             return self.space.multiply(other, self, out=self)
-        else:
+        elif isinstance(other, LinearSpaceElement):
             # We do not `return NotImplemented` here since we don't want a
             # fallback for in-place. Otherwise python attempts
             # `self = self * other` which does not modify self.
             raise TypeError('cannot multiply {!r} and {!r} in place'
                             ''.format(self, other))
+        else:
+            try:
+                other = self.space.element(other)
+            except (TypeError, ValueError):
+                raise TypeError('cannot multiply {!r} and {!r} in place'
+                                ''.format(self, other))
+            else:
+                return self.__imul__(other)
 
     def __mul__(self, other):
         """Return ``self * other``."""
         # Instead of using __imul__ we duplicate code here for performance
-        if other in self.space.field:
+        if getattr(other, '__array_priority__', 0) > self.__array_priority__:
+            return other.__rmul__(self)
+        elif other in self.space.field:
             tmp = self.space.element()
             return self.space.lincomb(other, self, out=tmp)
         elif other in self.space:
             tmp = self.space.element()
             return self.space.multiply(other, self, out=tmp)
-        else:
+        elif isinstance(other, LinearSpaceElement):
             return NotImplemented
+        else:
+            try:
+                other = self.space.element(other)
+            except (TypeError, ValueError):
+                return NotImplemented
+            else:
+                return self.__mul__(other)
 
-    __rmul__ = __mul__
+    def __rmul__(self, other):
+        """Return ``other * self``."""
+        if getattr(other, '__array_priority__', 0) > self.__array_priority__:
+            return other.__mul__(self)
+        else:
+            return self.__mul__(other)
 
     def __itruediv__(self, other):
         """Implement ``self /= other``."""
@@ -623,31 +695,50 @@ class LinearSpaceElement(object):
             return self.space.lincomb(1.0 / other, self, out=self)
         elif other in self.space:
             return self.space.divide(self, other, out=self)
-        else:
+        elif isinstance(other, LinearSpaceElement):
             # We do not `return NotImplemented` here since we don't want a
             # fallback for in-place. Otherwise python attempts
             # `self = self / other` which does not modify self.
             raise TypeError('cannot divide {!r} and {!r} in place'
                             ''.format(self, other))
+        else:
+            try:
+                other = self.space.element(other)
+            except (TypeError, ValueError):
+                raise TypeError('cannot divide {!r} and {!r} in place'
+                                ''.format(self, other))
+            else:
+                return self.__itruediv__(other)
 
     __idiv__ = __itruediv__
 
     def __truediv__(self, other):
         """Return ``self / other``."""
-        if other in self.space.field:
+        if getattr(other, '__array_priority__', 0) > self.__array_priority__:
+            return other.__rtruediv__(self)
+        elif other in self.space.field:
             tmp = self.space.element()
             return self.space.lincomb(1.0 / other, self, out=tmp)
         elif other in self.space:
             tmp = self.space.element()
             return self.space.divide(self, other, out=tmp)
-        else:
+        elif isinstance(other, LinearSpaceElement):
             return NotImplemented
+        else:
+            try:
+                other = self.space.element(other)
+            except (TypeError, ValueError):
+                return NotImplemented
+            else:
+                return self.__truediv__(other)
 
     __div__ = __truediv__
 
     def __rtruediv__(self, other):
         """Return ``other / self``."""
-        if other in self.space.field:
+        if getattr(other, '__array_priority__', 0) > self.__array_priority__:
+            return other.__truediv__(self)
+        elif other in self.space.field:
             one = getattr(self.space, 'one', None)
             if one is None:
                 return NotImplemented
@@ -659,8 +750,15 @@ class LinearSpaceElement(object):
         elif other in self.space:
             tmp = self.space.element()
             return self.space.divide(other, self, out=tmp)
-        else:
+        elif isinstance(other, LinearSpaceElement):
             return NotImplemented
+        else:
+            try:
+                other = self.space.element(other)
+            except (TypeError, ValueError):
+                return NotImplemented
+            else:
+                return self.__rtruediv__(other)
 
     __rdiv__ = __rtruediv__
 
@@ -681,14 +779,14 @@ class LinearSpaceElement(object):
         elif p == 1:
             return self
         elif p % 2 == 0:
-            self.space.multiply(self, self, out=self)
+            self *= self
             self **= p // 2
             return self
         else:
             tmp = self.copy()
             for _ in range(p - 2):
-                self.space.multiply(tmp, self, out=tmp)
-            self.space.multiply(tmp, self, out=self)
+                tmp *= self
+            self *= tmp
             return self
 
     def __pow__(self, p):
