@@ -450,7 +450,7 @@ def test_binary_operator_array(fn, arithmetic_op):
     z = arithmetic_op(y_arr, x)
 
     if arithmetic_op in [operator.iadd, operator.isub, operator.imul,
-                         operator.idiv, operator.itruediv]:
+                         operator.itruediv]:
         # In place should still be numpy array
         assert isinstance(z, np.ndarray)
         assert all_almost_equal([x, y_arr, z],
