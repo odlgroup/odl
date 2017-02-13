@@ -35,7 +35,7 @@ __all__ = ('LpNorm', 'L1Norm', 'L2Norm', 'L2NormSquared',
            'QuadraticForm',
            'NuclearNorm', 'IndicatorNuclearNormUnitBall',
            'ScalingFunctional', 'IdentityFunctional',
-           'MoreauEnvelope')
+           'MoreauEnvelope', 'HuberNorm')
 
 
 class LpNorm(Functional):
@@ -2290,6 +2290,68 @@ https://web.stanford.edu/~boyd/papers/pdf/prox_algs.pdf
         """The gradient operator."""
         return (ScalingOperator(self.domain, 1 / self.sigma) -
                 (1 / self.sigma) * self.functional.proximal(self.sigma))
+
+
+# TODO: Update doc, etsc.
+class HuberNorm(Functional):
+
+    """..."""
+
+    def __init__(self, space, epsilon):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        space : `DiscreteLp` or `FnBase`
+            Domain of the functional.
+        """
+        self.__epsilon = float(epsilon)
+        super().__init__(space=space, linear=False, grad_lipschitz=2)
+
+    @property
+    def epsilon(self):
+        return self.__epsilon
+
+    def _call(self, x):
+        """Return the squared L2-norm of ``x``."""
+        indices = x.ufunc.absolute() < self.epsilon
+        indices = np.float32(indices)
+
+        tmp = ((x * indices)**2 / (2.0 * self.epsilon) +
+               ((x).ufunc.absolute() - self.epsilon / 2.0) * (1-indices))
+
+        return tmp.inner(self.domain.one())
+
+    @property
+    def gradient(self):
+        """Gradient operator of the functional."""
+        functional = self
+
+        class HuberNormGradient(Operator):
+
+            """The gradient operator of this functional."""
+
+            def __init__(self):
+                """Initialize a new instance."""
+                super().__init__(functional.domain, functional.domain,
+                                 linear=False)
+
+            # TODO: Update this call. Might not work for PorductSpaces
+            def _call(self, x):
+                """Apply the gradient operator to the given point."""
+                indices = x.ufunc.absolute().asarray() < functional.epsilon
+                indices = np.float32(indices)
+
+                tmp = ((x * indices) / (functional.epsilon) +
+                       (x).ufunc.sign() * (1-indices))
+
+                return tmp
+
+        return HuberNormGradient()
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{}({!r})'.format(self.__class__.__name__, self.domain)
 
 
 if __name__ == '__main__':
