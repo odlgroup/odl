@@ -798,8 +798,9 @@ class BroadcastOperator(Operator):
         >>> id = odl.IdentityOperator(spc)
         >>> odl.BroadcastOperator(id, 3)
         BroadcastOperator(IdentityOperator(rn(3)), 3)
-        >>> odl.BroadcastOperator(id, 2 * id)
-        BroadcastOperator(IdentityOperator(rn(3)), 2 * IdentityOperator(rn(3)))
+        >>> scale = odl.ScalingOperator(spc, 3)
+        >>> odl.BroadcastOperator(id, scale)
+        BroadcastOperator(IdentityOperator(rn(3)), ScalingOperator(rn(3), 3.0))
         """
         if all(op == self[0] for op in self):
             return '{}({!r}, {})'.format(self.__class__.__name__,
@@ -971,8 +972,9 @@ class ReductionOperator(Operator):
         >>> id = odl.IdentityOperator(spc)
         >>> odl.ReductionOperator(id, 3)
         ReductionOperator(IdentityOperator(rn(3)), 3)
-        >>> odl.ReductionOperator(id, 2 * id)
-        ReductionOperator(IdentityOperator(rn(3)), 2 * IdentityOperator(rn(3)))
+        >>> scale = odl.ScalingOperator(spc, 3)
+        >>> odl.ReductionOperator(id, scale)
+        ReductionOperator(IdentityOperator(rn(3)), ScalingOperator(rn(3), 3.0))
         """
         if all(op == self[0] for op in self):
             return '{}({!r}, {})'.format(self.__class__.__name__,
@@ -1173,8 +1175,9 @@ class DiagonalOperator(ProductSpaceOperator):
         >>> id = odl.IdentityOperator(spc)
         >>> odl.DiagonalOperator(id, 3)
         DiagonalOperator(IdentityOperator(rn(3)), 3)
-        >>> odl.DiagonalOperator(id, 2 * id)
-        DiagonalOperator(IdentityOperator(rn(3)), 2 * IdentityOperator(rn(3)))
+        >>> scale = odl.ScalingOperator(spc, 3)
+        >>> odl.DiagonalOperator(id, scale)
+        DiagonalOperator(IdentityOperator(rn(3)), ScalingOperator(rn(3), 3.0))
         """
         if all(op == self[0] for op in self):
             return '{}({!r}, {})'.format(self.__class__.__name__,
