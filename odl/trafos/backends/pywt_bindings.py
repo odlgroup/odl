@@ -181,11 +181,11 @@ modes.html
 
 
 def pywt_max_nlevels(shape, wavelet):
-    """Return the maximum nlevels option.
+    """Return the maximum number of wavelet levels.
 
     Parameters
     ----------
-    shape : sequence
+    shape : sequence of ints
         Shape of an input to the transform.
     wavelet : string or `pywt.Wavelet`
         Specification of the wavelet to be used in the transform.
@@ -199,7 +199,7 @@ def pywt_max_nlevels(shape, wavelet):
 
     Examples
     --------
-    Find maximum nlevels for Haar wavelet.
+    Find maximum nlevels for Haar wavelet:
 
     >>> pywt_max_nlevels([10], 'haar')
     3
@@ -211,15 +211,10 @@ def pywt_max_nlevels(shape, wavelet):
     >>> pywt_max_nlevels([10, 1024], 'haar')
     3
     """
-
     wavelet = pywt_wavelet(wavelet)
 
     # TODO: adapt for axes
-    max_nlevels = np.inf
-    for i, n in enumerate(shape):
-        max_nlevels = min(max_nlevels, pywt.dwt_max_level(n, wavelet.dec_len))
-
-    return max_nlevels
+    return min(pywt.dwt_max_level(n, wavelet.dec_len) for n in shape)
 
 
 def pywt_flat_coeff_size(shape, wavelet, nlevels, mode):
