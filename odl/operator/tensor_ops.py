@@ -24,10 +24,12 @@ standard_library.install_aliases()
 from builtins import super
 
 import numpy as np
+import scipy
 
 from odl.operator import Operator
 from odl.set import RealNumbers, ComplexNumbers, LinearSpace
 from odl.space import ProductSpace
+from odl.space.npy_ntuples import NumpyFn
 
 
 __all__ = ('PointwiseNorm', 'PointwiseInner', 'PointwiseSum', 'MatVecOperator')
@@ -723,7 +725,7 @@ class MatVecOperator(Operator):
             ``shape``.
         """
         # TODO: fix dead link `scipy.sparse.spmatrix`
-        if isspmatrix(matrix):
+        if scipy.sparse.isspmatrix(matrix):
             self.__matrix = matrix
         else:
             self.__matrix = np.asarray(matrix)
@@ -772,7 +774,7 @@ class MatVecOperator(Operator):
     @property
     def matrix_issparse(self):
         """Whether the representing matrix is sparse or not."""
-        return isspmatrix(self.matrix)
+        return scipy.sparse.isspmatrix(self.matrix)
 
     @property
     def adjoint(self):
@@ -824,7 +826,6 @@ class MatVecOperator(Operator):
                 self.matrix.dot(x.data, out=out.data)
 
     # TODO: repr and str
-
 
 
 if __name__ == '__main__':

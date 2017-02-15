@@ -31,8 +31,6 @@ import odl
 from odl.operator.oputils import matrix_representation, power_method_opnorm
 from odl.space.pspace import ProductSpace
 from odl.operator.pspace_ops import ProductSpaceOperator
-
-from odl.space.npy_ntuples import MatVecOperator
 from odl.util.testutils import almost_equal
 
 
@@ -42,7 +40,7 @@ def test_matrix_representation():
     n = 3
     A = np.random.rand(n, n)
 
-    Aop = MatVecOperator(A)
+    Aop = odl.MatVecOperator(A)
 
     the_matrix = matrix_representation(Aop)
 
@@ -55,12 +53,12 @@ def test_matrix_representation_product_to_lin_space():
     n = 3
     rn = odl.rn(n)
     A = np.random.rand(n, n)
-    Aop = MatVecOperator(A)
+    Aop = odl.MatVecOperator(A)
 
     m = 2
     rm = odl.rn(m)
     B = np.random.rand(n, m)
-    Bop = MatVecOperator(B)
+    Bop = odl.MatVecOperator(B)
 
     dom = ProductSpace(rn, rm)
     ran = ProductSpace(rn, 1)
@@ -79,12 +77,12 @@ def test_matrix_representation_lin_space_to_product():
     n = 3
     rn = odl.rn(n)
     A = np.random.rand(n, n)
-    Aop = MatVecOperator(A)
+    Aop = odl.MatVecOperator(A)
 
     m = 2
     rm = odl.rn(m)
     B = np.random.rand(m, n)
-    Bop = MatVecOperator(B)
+    Bop = odl.MatVecOperator(B)
 
     dom = ProductSpace(rn, 1)
     ran = ProductSpace(rn, rm)
@@ -103,12 +101,12 @@ def test_matrix_representation_product_to_product():
     n = 3
     rn = odl.rn(n)
     A = np.random.rand(n, n)
-    Aop = MatVecOperator(A)
+    Aop = odl.MatVecOperator(A)
 
     m = 2
     rm = odl.rn(m)
     B = np.random.rand(m, m)
-    Bop = MatVecOperator(B)
+    Bop = odl.MatVecOperator(B)
 
     ran_and_dom = ProductSpace(rn, rm)
 
@@ -128,10 +126,10 @@ def test_matrix_representation_product_to_product_two():
     n = 3
     rn = odl.rn(n)
     A = np.random.rand(n, n)
-    Aop = MatVecOperator(A)
+    Aop = odl.MatVecOperator(A)
 
     B = np.random.rand(n, n)
-    Bop = MatVecOperator(B)
+    Bop = odl.MatVecOperator(B)
 
     ran_and_dom = ProductSpace(rn, 2)
 

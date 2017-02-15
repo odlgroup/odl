@@ -2,6 +2,7 @@
 
 import odl
 import scipy
+import scipy.signal
 
 
 class Convolution(odl.Operator):

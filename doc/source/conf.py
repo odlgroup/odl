@@ -186,7 +186,7 @@ htmlhelp_basename = 'odldoc'
 # --- Options for LaTeX output --- #
 
 latex_elements = {
-    'preamble': '''
+    'preamble': r'''
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{enumitem}

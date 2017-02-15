@@ -26,9 +26,8 @@ from builtins import super
 import numpy as np
 
 from odl.solvers.functional.functional import Functional
-from odl.operator.operator import Operator
+from odl.operator import Operator, MatVecOperator
 from odl.space.base_ntuples import FnBase
-from odl.space.npy_ntuples import MatVecOperator
 
 
 __all__ = ('RosenbrockFunctional',)
