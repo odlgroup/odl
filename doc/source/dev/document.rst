@@ -1,4 +1,4 @@
-.. _dev_document
+.. _dev_document:
 
 ###############
 How to document

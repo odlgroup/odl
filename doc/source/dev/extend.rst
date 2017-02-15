@@ -1,8 +1,12 @@
+.. _dev_extend:
+
 #############
 Extending ODL
 #############
 
-ODL is written to be easy to extend with new functionality and classes, and new content is welcome. With that said, not everything fits inside the main library and some ideas are better done as *extension packages*. This may give your package more freedom and allows a faster development cycle and help keep ODL from overflowing with content.
+ODL is written to be easy to extend with new functionality and classes, and new content is welcome.
+With that said, not everything fits inside the main library, and some ideas are better realized as *extension packages*, i.e., packages that use the core ODL library and extend it with experimental features.
+This lowers the requirement on code maturity, completeness of documentation, unit tests etc. on your side and allows the core library to stay slim and develop faster.
 
 There are several ways to extend ODL, some of which are listed below.
 
