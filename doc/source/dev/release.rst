@@ -20,7 +20,7 @@ This involves the "what" and "when" of the release process and fixes a feature s
 The steps are:
 
 - Open an issue on the issue tracker using the title **Release X.Y.Z** (insert numbers, of course).
-- Discuss and agree on a set of open PRs that should be merged before making a release.
+- Discuss and agree on a set of open PRs that should be merged and issues that should be resolved before making a release.
 
 
 .. _dev_rel_master_ok:
@@ -89,7 +89,7 @@ When all tests succeed and the docs are fine, start a release branch.
 .. _dev_rel_bump_master:
 4. Bump the ``master`` branch to the next development version
 -------------------------------------------------------------
-To ensure a larger version number for installations from the git master branch, the version number must be increased before merging the release branch.
+To ensure a higher version number for installations from the git master branch, the version number must be increased before merging the release branch.
 
 - On the ``master`` branch, change the version string in ``odl/__init__.py`` to the next revision larger than the upcoming release version, plus ``'dev0'``.
   For example, if the release version string is ``'0.5.3'``, use ``'0.5.4.dev0'``.
@@ -116,8 +116,14 @@ To ensure a larger version number for installations from the git master branch, 
 ----------------------------------
 Back on the release branch with a ``git checkout release-X.Y.Z``, it is now time to prepare the release documents, increment the version number and make a release on GitHub.
 
+.. note::
+    The release notes should actually be a running document where everybody who files a PR also makes an entry into the release notes file.
+    If not, tough on you -- it is your duty now to make up for all that missed work.
+    Maybe you'll remind your co-workers to do this in their next PR.
+
 - Compile the release notes.
-  They should contain all *user-visible* changes (internal stuff like test modifications is not required) and should be summarized in one or two sentences on top, perhaps mentioning the most notable changes.
+  They should contain all *user-visible* changes, including performance improvements and other niceties -- internal stuff like test modifications don't belong here.
+  The changes should be summarized in one or two sentences on top, perhaps mentioning the most notable ones in this release.
   Check the `Release Notes <https://github.com/odlgroup/odl/blob/master/doc/source/release_notes.rst>`_ file for details on sections, formatting etc.
 - Increment the version number in ``odl/__init__.py`` and ``conda/meta.yaml``.
   As in :ref:`Section 4<dev_rel_bump_master>`, perform a search to make sure you didn't miss a version info location.
@@ -168,13 +174,14 @@ The packages should be built on the release branch to make sure that the version
     conda build conda/ --python 3.6
     ...
 
-- Assuming this succeeds, enter the directory one above where the conda package was stored (as printed in the output), e.g.,
+- Assuming this succeeds, enter the directory one above where the conda package was stored (as printed in the output).
+  For example, if the package was stored as ``$HOME/miniconda3/conda-bld/linux-64/odl-X.Y.Z-py36_0.bz2``, issue the command
 
   .. code-block:: bash
 
     cd $HOME/miniconda3/conda-bld/
 
-  There, for each Python version "translate" the package to all platforms since ODL is actually platform-independent:
+  In this directory, for each Python version "translate" the package to all platforms since ODL is actually platform-independent:
 
   .. code-block:: bash
 
@@ -230,7 +237,8 @@ Installing the packages works, now it's time to put them out into the wild.
     cd /path/to/odl_repo
     twine upload -u odlgorup dist/<pkg_filename>
 
-  This requires the access credentials for the ``odlgroup`` user on PyPI.
+  This requires the access credentials for the ``odlgroup`` user on PyPI -- the maintainers have them.
+
 - Upload the conda packages to the ``odlgroup`` channel in the Anaconda cloud.
   The upload requires the ``anaconda-client`` package:
 
@@ -241,7 +249,7 @@ Installing the packages works, now it's time to put them out into the wild.
     anaconda upload -u odlgroup `find . -name "odl-X.Y.Z*"`
 
   For this step, you need the access credentials for the ``odlgroup`` user on the Anaconda server.
-
+  Talk to the maintainers to get them.
 
 .. _dev_rel_merge_release_pr:
 9. Merge the release branch
