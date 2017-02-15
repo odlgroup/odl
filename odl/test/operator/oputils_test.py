@@ -40,7 +40,7 @@ def test_matrix_representation():
     n = 3
     A = np.random.rand(n, n)
 
-    Aop = odl.MatVecOperator(A)
+    Aop = odl.MatrixOperator(A)
 
     the_matrix = matrix_representation(Aop)
 
@@ -53,12 +53,12 @@ def test_matrix_representation_product_to_lin_space():
     n = 3
     rn = odl.rn(n)
     A = np.random.rand(n, n)
-    Aop = odl.MatVecOperator(A)
+    Aop = odl.MatrixOperator(A)
 
     m = 2
     rm = odl.rn(m)
     B = np.random.rand(n, m)
-    Bop = odl.MatVecOperator(B)
+    Bop = odl.MatrixOperator(B)
 
     dom = ProductSpace(rn, rm)
     ran = ProductSpace(rn, 1)
@@ -77,12 +77,12 @@ def test_matrix_representation_lin_space_to_product():
     n = 3
     rn = odl.rn(n)
     A = np.random.rand(n, n)
-    Aop = odl.MatVecOperator(A)
+    Aop = odl.MatrixOperator(A)
 
     m = 2
     rm = odl.rn(m)
     B = np.random.rand(m, n)
-    Bop = odl.MatVecOperator(B)
+    Bop = odl.MatrixOperator(B)
 
     dom = ProductSpace(rn, 1)
     ran = ProductSpace(rn, rm)
@@ -101,12 +101,12 @@ def test_matrix_representation_product_to_product():
     n = 3
     rn = odl.rn(n)
     A = np.random.rand(n, n)
-    Aop = odl.MatVecOperator(A)
+    Aop = odl.MatrixOperator(A)
 
     m = 2
     rm = odl.rn(m)
     B = np.random.rand(m, m)
-    Bop = odl.MatVecOperator(B)
+    Bop = odl.MatrixOperator(B)
 
     ran_and_dom = ProductSpace(rn, rm)
 
@@ -126,10 +126,10 @@ def test_matrix_representation_product_to_product_two():
     n = 3
     rn = odl.rn(n)
     A = np.random.rand(n, n)
-    Aop = odl.MatVecOperator(A)
+    Aop = odl.MatrixOperator(A)
 
     B = np.random.rand(n, n)
-    Bop = odl.MatVecOperator(B)
+    Bop = odl.MatrixOperator(B)
 
     ran_and_dom = ProductSpace(rn, 2)
 
@@ -203,7 +203,7 @@ def test_power_method_opnorm_symm():
     mat = np.array([[10, -18],
                     [6, -11]], dtype=float)
 
-    op = odl.MatVecOperator(mat)
+    op = odl.MatrixOperator(mat)
     true_opnorm = 2
     opnorm_est = power_method_opnorm(op)
     assert almost_equal(opnorm_est, true_opnorm, places=2)
@@ -222,7 +222,7 @@ def test_power_method_opnorm_nonsymm():
                     [1.90246927, 2.54424763],
                     [5.32935411, 0.04573162]])
 
-    op = odl.MatVecOperator(mat)
+    op = odl.MatrixOperator(mat)
     true_opnorm = 6
 
     # Start vector (1, 1) is close to the wrong eigenvector
@@ -255,14 +255,14 @@ def test_power_method_opnorm_exceptions():
 
     with pytest.raises(ValueError):
         # Input vector in the nullspace
-        op = odl.MatVecOperator([[0., 1.],
+        op = odl.MatrixOperator([[0., 1.],
                                  [0., 0.]])
 
         power_method_opnorm(op, maxiter=2, xstart=op.domain.one())
 
     with pytest.raises(ValueError):
         # Uneven number of iterates for non square operator
-        op = odl.MatVecOperator([[1., 2., 3.],
+        op = odl.MatrixOperator([[1., 2., 3.],
                                  [4., 5., 6.]])
 
         power_method_opnorm(op, maxiter=1, xstart=op.domain.one())

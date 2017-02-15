@@ -28,7 +28,7 @@ import scipy
 
 import odl
 from odl.operator.tensor_ops import (
-    PointwiseNorm, PointwiseInner, PointwiseSum, MatVecOperator)
+    PointwiseNorm, PointwiseInner, PointwiseSum, MatrixOperator)
 from odl.space.npy_ntuples import NumpyFn
 from odl.space.pspace import ProductSpace
 from odl.util.testutils import (
@@ -463,104 +463,88 @@ def test_pointwise_sum():
     assert all_equal(psum.vecfield, psum.domain.one())
 
 
-# ---- MatVecOperator ---- #
+# ---- MatrixOperator ---- #
 
 
-def test_matvec_init(fn):
-    # Square matrices, sparse and dense
-    sparse_mat = _sparse_matrix(fn)
-    dense_mat = _dense_matrix(fn)
+def test_mat_op_init_and_basic_properties():
+    """Test initialization and basic properties of MatrixOperator."""
+    # Test default domain and range
+    r2 = odl.rn(2)
+    op_real = MatrixOperator([[1.0, 2],
+                              [-1, 0.5]])
 
-    MatVecOperator(sparse_mat, fn, fn)
-    MatVecOperator(dense_mat, fn, fn)
+    assert op_real.domain == r2
+    assert op_real.range == r2
 
-    # Test defaults
-    op_float = MatVecOperator([[1.0, 2],
-                               [-1, 0.5]])
-
-    assert isinstance(op_float.domain, NumpyFn)
-    assert op_float.domain.is_rn
-    assert isinstance(op_float.range, NumpyFn)
-    assert op_float.domain.is_rn
-
-    op_complex = MatVecOperator([[1.0, 2 + 1j],
+    c2 = odl.cn(2)
+    op_complex = MatrixOperator([[1.0, 2 + 1j],
                                  [-1 - 1j, 0.5]])
 
-    assert isinstance(op_complex.domain, NumpyFn)
-    assert op_complex.domain.is_cn
-    assert isinstance(op_complex.range, NumpyFn)
-    assert op_complex.domain.is_cn
+    assert op_complex.domain == c2
+    assert op_complex.range == c2
 
-    op_int = MatVecOperator([[1, 2],
+    int2 = odl.fn(2, dtype=int)
+    op_int = MatrixOperator([[1, 2],
                              [-1, 0]])
 
-    assert isinstance(op_int.domain, NumpyFn)
-    assert op_int.domain.dtype == int
-    assert isinstance(op_int.range, NumpyFn)
-    assert op_int.domain.dtype == int
+    assert op_int.domain == int2
+    assert op_int.range == int2
 
     # Rectangular
     rect_mat = 2 * np.eye(2, 3)
-    r2 = odl.rn(2)
     r3 = odl.rn(3)
 
-    MatVecOperator(rect_mat, r3, r2)
+    op = MatrixOperator(rect_mat)
+    assert op.domain == r3
+    assert op.range == r2
+
+    MatrixOperator(rect_mat, domain=r3, range=r2)
 
     with pytest.raises(ValueError):
-        MatVecOperator(rect_mat, r2, r2)
+        MatrixOperator(rect_mat, domain=r2, range=r2)
 
     with pytest.raises(ValueError):
-        MatVecOperator(rect_mat, r3, r3)
+        MatrixOperator(rect_mat, domain=r3, range=r3)
 
     with pytest.raises(ValueError):
-        MatVecOperator(rect_mat, r2, r3)
+        MatrixOperator(rect_mat, domain=r2, range=r3)
 
     # Rn to Cn okay
-    MatVecOperator(rect_mat, r3, odl.cn(2))
+    MatrixOperator(rect_mat, domain=r3, range=odl.cn(2))
 
     # Cn to Rn not okay (no safe cast)
     with pytest.raises(TypeError):
-        MatVecOperator(rect_mat, odl.cn(3), r2)
+        MatrixOperator(rect_mat, domain=odl.cn(3), range=r2)
 
     # Complex matrix between real spaces not okay
     rect_complex_mat = rect_mat + 1j
     with pytest.raises(TypeError):
-        MatVecOperator(rect_complex_mat, r3, r2)
+        MatrixOperator(rect_complex_mat, domain=r3, range=r2)
 
     # Init with array-like structure (including numpy.matrix)
-    MatVecOperator(rect_mat.tolist(), r3, r2)
-    MatVecOperator(np.asmatrix(rect_mat), r3, r2)
-
-
-def test_matvec_simple_properties():
-    # Matrix - always ndarray in for dense input, scipy.sparse.spmatrix else
-    rect_mat = 2 * np.eye(2, 3)
-    r2 = odl.rn(2)
-    r3 = odl.rn(3)
-
-    op = MatVecOperator(rect_mat, r3, r2)
+    op = MatrixOperator(rect_mat, domain=r3, range=r2)
     assert isinstance(op.matrix, np.ndarray)
 
-    op = MatVecOperator(np.asmatrix(rect_mat), r3, r2)
+    op = MatrixOperator(np.asmatrix(rect_mat), domain=r3, range=r2)
     assert isinstance(op.matrix, np.ndarray)
 
-    op = MatVecOperator(rect_mat.tolist(), r3, r2)
+    op = MatrixOperator(rect_mat.tolist(), domain=r3, range=r2)
     assert isinstance(op.matrix, np.ndarray)
     assert not op.matrix_issparse
 
     sparse_mat = _sparse_matrix(odl.rn(5))
-    op = MatVecOperator(sparse_mat, odl.rn(5), odl.rn(5))
+    op = MatrixOperator(sparse_mat, domain=odl.rn(5), range=odl.rn(5))
     assert isinstance(op.matrix, scipy.sparse.spmatrix)
     assert op.matrix_issparse
 
 
-def test_matvec_adjoint(fn):
+def test_mat_op_adjoint(fn):
     # Square cases
     sparse_mat = _sparse_matrix(fn)
     dense_mat = _dense_matrix(fn)
 
-    op_sparse = MatVecOperator(sparse_mat, fn, fn)
-    op_dense = MatVecOperator(dense_mat, fn, fn)
+    op_sparse = MatrixOperator(sparse_mat, fn, fn)
+    op_dense = MatrixOperator(dense_mat, fn, fn)
 
     # Just test if it runs, nothing interesting to test here
     op_sparse.adjoint
@@ -571,7 +555,7 @@ def test_matvec_adjoint(fn):
     r2, r3 = odl.rn(2), odl.rn(3)
     c2 = odl.cn(2)
 
-    op = MatVecOperator(rect_mat, r3, r2)
+    op = MatrixOperator(rect_mat, r3, r2)
     op_adj = op.adjoint
     assert op_adj.domain == op.range
     assert op_adj.range == op.domain
@@ -579,15 +563,15 @@ def test_matvec_adjoint(fn):
     assert np.array_equal(op_adj.adjoint.matrix, op.matrix)
 
     # The operator Rn -> Cn has no adjoint
-    op_noadj = MatVecOperator(rect_mat, r3, c2)
+    op_noadj = MatrixOperator(rect_mat, r3, c2)
     with pytest.raises(NotImplementedError):
         op_noadj.adjoint
 
 
-def test_matvec_inverse(fn):
+def test_mat_op_inverse(fn):
     # Sparse case
     sparse_mat = _sparse_matrix(fn)
-    op_sparse = MatVecOperator(sparse_mat, fn, fn)
+    op_sparse = MatrixOperator(sparse_mat, fn, fn)
 
     op_sparse_inv = op_sparse.inverse
     assert op_sparse_inv.domain == op_sparse.range
@@ -603,7 +587,7 @@ def test_matvec_inverse(fn):
 
     # Dense case
     dense_mat = _dense_matrix(fn)
-    op_dense = MatVecOperator(dense_mat, fn, fn)
+    op_dense = MatrixOperator(dense_mat, fn, fn)
     op_dense_inv = op_dense.inverse
     assert op_dense_inv.domain == op_dense.range
     assert op_dense_inv.range == op_dense.domain
@@ -617,14 +601,14 @@ def test_matvec_inverse(fn):
     assert all_almost_equal(x, op_dense.inverse(op_dense(x)))
 
 
-def test_matvec_call(fn):
+def test_mat_op_call(fn):
     # Square cases
     sparse_mat = _sparse_matrix(fn)
     dense_mat = _dense_matrix(fn)
     xarr, x = noise_elements(fn)
 
-    op_sparse = MatVecOperator(sparse_mat, fn, fn)
-    op_dense = MatVecOperator(dense_mat, fn, fn)
+    op_sparse = MatrixOperator(sparse_mat, fn, fn)
+    op_dense = MatrixOperator(dense_mat, fn, fn)
 
     yarr_sparse = sparse_mat.dot(xarr)
     yarr_dense = dense_mat.dot(xarr)
@@ -649,7 +633,7 @@ def test_matvec_call(fn):
     rect_mat = 2 * np.eye(2, 3)
     r2, r3 = odl.rn(2), odl.rn(3)
 
-    op = MatVecOperator(rect_mat, r3, r2)
+    op = MatrixOperator(rect_mat, r3, r2)
     xarr = np.arange(3, dtype=float)
     x = r3.element(xarr)
 

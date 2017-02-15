@@ -26,7 +26,7 @@ from builtins import super
 import numpy as np
 
 from odl.solvers.functional.functional import Functional
-from odl.operator import Operator, MatVecOperator
+from odl.operator import Operator, MatrixOperator
 from odl.space.base_ntuples import FnBase
 
 
@@ -159,7 +159,7 @@ class RosenbrockFunctional(Functional):
                     matrix[i, i + 1] = -4 * c * x[i]
                 matrix[-1, -1] = 2 * c
                 matrix[0, 0] = 2 + 12 * c * x[0] ** 2 - 4 * c * x[1]
-                return MatVecOperator(matrix, self.domain, self.range)
+                return MatrixOperator(matrix, self.domain, self.range)
 
         return RosenbrockGradient()
 

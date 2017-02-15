@@ -32,7 +32,7 @@ from odl.space import ProductSpace
 from odl.space.npy_ntuples import NumpyFn
 
 
-__all__ = ('PointwiseNorm', 'PointwiseInner', 'PointwiseSum', 'MatVecOperator')
+__all__ = ('PointwiseNorm', 'PointwiseInner', 'PointwiseSum', 'MatrixOperator')
 
 _SUPPORTED_DIFF_METHODS = ('central', 'forward', 'backward')
 
@@ -694,7 +694,7 @@ class PointwiseSum(PointwiseInner):
         super().__init__(vfspace, vecfield=ones, weighting=weighting)
 
 
-class MatVecOperator(Operator):
+class MatrixOperator(Operator):
 
     """Matrix multiply operator :math:`\mathbb{F}^n -> \mathbb{F}^m`.
 
@@ -782,14 +782,14 @@ class MatVecOperator(Operator):
 
         Returns
         -------
-        adjoint : `MatVecOperator`
+        adjoint : `MatrixOperator`
         """
         if self.domain.field != self.range.field:
             raise NotImplementedError('adjoint not defined since fields '
                                       'of domain and range differ ({} != {})'
                                       ''.format(self.domain.field,
                                                 self.range.field))
-        return MatVecOperator(self.matrix.conj().T,
+        return MatrixOperator(self.matrix.conj().T,
                               domain=self.range, range=self.domain)
 
     @property
@@ -803,14 +803,14 @@ class MatVecOperator(Operator):
 
         Returns
         -------
-        inverse : `MatVecOperator`
+        inverse : `MatrixOperator`
         """
         if self.matrix_issparse:
             dense_matrix = self.matrix.toarray()
         else:
             dense_matrix = self.matrix
 
-        return MatVecOperator(np.linalg.inv(dense_matrix),
+        return MatrixOperator(np.linalg.inv(dense_matrix),
                               domain=self.range, range=self.domain)
 
     def _call(self, x, out=None):
