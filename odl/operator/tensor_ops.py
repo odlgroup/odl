@@ -29,7 +29,9 @@ import scipy
 from odl.operator import Operator
 from odl.set import RealNumbers, ComplexNumbers, LinearSpace
 from odl.space import ProductSpace
+from odl.space.base_ntuples import FnBase
 from odl.space.npy_ntuples import NumpyFn
+from odl.util import writable_array
 
 
 __all__ = ('PointwiseNorm', 'PointwiseInner', 'PointwiseSum', 'MatrixOperator')
@@ -714,12 +716,12 @@ class MatrixOperator(Operator):
             ``(m, n)``, where ``n`` is the size of ``domain`` and ``m`` the
             size of ``range``. Its dtype must be castable to the range
             ``dtype``.
-        domain : `NumpyFn`, optional
+        domain : `FnBase`, optional
             Space on whose elements the matrix acts. If not provided,
             the domain is inferred from the matrix ``dtype`` and
             ``shape``. If provided, its dtype must be castable to the
             range dtype.
-        range : `NumpyFn`, optional
+        range : `FnBase`, optional
             Space to which the matrix maps. If not provided,
             the domain is inferred from the matrix ``dtype`` and
             ``shape``.
@@ -737,14 +739,14 @@ class MatrixOperator(Operator):
         # Infer domain and range from matrix if necessary
         if domain is None:
             domain = NumpyFn(self.matrix.shape[1], dtype=self.matrix.dtype)
-        elif not isinstance(domain, NumpyFn):
-            raise TypeError('`domain` {!r} is not an `NumpyFn` instance'
+        elif not isinstance(domain, FnBase):
+            raise TypeError('`domain` {!r} is not an `FnBase` instance'
                             ''.format(domain))
 
         if range is None:
             range = NumpyFn(self.matrix.shape[0], dtype=self.matrix.dtype)
-        elif not isinstance(range, NumpyFn):
-            raise TypeError('`range` {!r} is not an `NumpyFn` instance'
+        elif not isinstance(range, FnBase):
+            raise TypeError('`range` {!r} is not an `FnBase` instance'
                             ''.format(range))
 
         # Check compatibility of matrix with domain and range
@@ -816,14 +818,15 @@ class MatrixOperator(Operator):
     def _call(self, x, out=None):
         """Raw apply method on input, writing to given output."""
         if out is None:
-            return self.range.element(self.matrix.dot(x.data))
+            return self.range.element(self.matrix.dot(x))
         else:
             if self.matrix_issparse:
                 # Unfortunately, there is no native in-place dot product for
                 # sparse matrices
-                out.data[:] = self.matrix.dot(x.data)
+                out[:] = self.matrix.dot(x)
             else:
-                self.matrix.dot(x.data, out=out.data)
+                with writable_array(out) as out_arr:
+                    self.matrix.dot(x, out=out_arr)
 
     # TODO: repr and str
 

@@ -60,7 +60,7 @@ def _sparse_matrix(fn):
 exponent = simple_fixture('exponent', [2.0, 1.0, float('inf'), 3.5, 1.5])
 fn = simple_fixture('fn', [odl.rn(10, np.float64), odl.rn(10, np.float32),
                            odl.cn(10, np.complex128), odl.cn(10, np.complex64),
-                           odl.rn(100)])
+                           odl.rn(100), odl.uniform_discr(0, 1, 5)])
 
 
 # ---- PointwiseNorm ----
@@ -536,6 +536,11 @@ def test_mat_op_init_and_basic_properties():
     op = MatrixOperator(sparse_mat, domain=odl.rn(5), range=odl.rn(5))
     assert isinstance(op.matrix, scipy.sparse.spmatrix)
     assert op.matrix_issparse
+
+    # Init with uniform_discr space (subclass of FnBase)
+    dom = odl.uniform_discr(0, 1, 3)
+    ran = odl.uniform_discr(0, 1, 2)
+    MatrixOperator(rect_mat, domain=dom, range=ran)
 
 
 def test_mat_op_adjoint(fn):
