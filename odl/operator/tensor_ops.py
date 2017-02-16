@@ -28,10 +28,10 @@ import scipy
 
 from odl.operator import Operator
 from odl.set import RealNumbers, ComplexNumbers, LinearSpace
-from odl.space import ProductSpace
+from odl.space import ProductSpace, fn
 from odl.space.base_ntuples import FnBase
 from odl.space.npy_ntuples import NumpyFn
-from odl.util import writable_array
+from odl.util import writable_array, signature_string, indent_rows
 
 
 __all__ = ('PointwiseNorm', 'PointwiseInner', 'PointwiseSum', 'MatrixOperator')
@@ -698,12 +698,12 @@ class PointwiseSum(PointwiseInner):
 
 class MatrixOperator(Operator):
 
-    """Matrix multiply operator :math:`\mathbb{F}^n -> \mathbb{F}^m`.
+    """Matrix-vector multiplication as a linear operator.
 
-    This operator uses a matrix to represent an operator, and get its adjoint
-    and inverse by doing computations on the matrix. This is in general a
-    rather slow approach, and users are recommended to use other alternatives
-    if available.
+    This operator uses a matrix to represent an operator, and get its
+    adjoint and inverse by doing computations on the matrix. This is in
+    general a rather slow and memory-inefficient approach, and users are
+    recommended to use other alternatives if possible.
     """
 
     def __init__(self, matrix, domain=None, range=None):
@@ -711,20 +711,48 @@ class MatrixOperator(Operator):
 
         Parameters
         ----------
-        matrix : `array-like` or  `scipy.sparse.spmatrix`
-            Matrix representing the linear operator. Its shape must be
-            ``(m, n)``, where ``n`` is the size of ``domain`` and ``m`` the
-            size of ``range``. Its dtype must be castable to the range
-            ``dtype``.
+        matrix : `array-like` or `scipy.sparse.base.spmatrix`
+            2-dimensional array representing the linear operator.
         domain : `FnBase`, optional
-            Space on whose elements the matrix acts. If not provided,
-            the domain is inferred from the matrix ``dtype`` and
-            ``shape``. If provided, its dtype must be castable to the
-            range dtype.
+            Space of elements on which the operator can act. Its
+            ``dtype`` must be castable to ``range.dtype``.
+            For the default ``None``, a `NumpyFn` space with size
+            ``matrix.shape[1]`` is used, together with the matrix'
+            data type.
         range : `FnBase`, optional
-            Space to which the matrix maps. If not provided,
-            the domain is inferred from the matrix ``dtype`` and
-            ``shape``.
+            Space of elements on to which the operator maps. Its
+            ``shape`` and ``dtype`` attributes must match the ones
+            of the result of the multiplication.
+            For the default ``None``, the range is inferred from
+            ``matrix`` and ``domain``.
+
+        Examples
+        --------
+        By default, ``domain`` and ``range`` are `NumpyFn` type spaces:
+
+        >>> matrix = np.ones((3, 4))
+        >>> op = MatrixOperator(matrix)
+        >>> op
+        MatrixOperator(
+            [[ 1.,  1.,  1.,  1.],
+             [ 1.,  1.,  1.,  1.],
+             [ 1.,  1.,  1.,  1.]]
+        )
+        >>> op.domain
+        rn(4)
+        >>> op.range
+        rn(3)
+        >>> op([1, 2, 3, 4])
+        rn(3).element([10.0, 10.0, 10.0])
+
+        They can also be provided explicitly, for example with using
+        `uniform_discr` spaces:
+
+        >>> dom = odl.uniform_discr(0, 1, 4)
+        >>> ran = odl.uniform_discr(0, 1, 3)
+        >>> op = MatrixOperator(matrix, domain=dom, range=ran)
+        >>> op(dom.one())
+        uniform_discr(0.0, 1.0, 3).element([4.0, 4.0, 4.0])
         """
         # TODO: fix dead link `scipy.sparse.spmatrix`
         if scipy.sparse.isspmatrix(matrix):
@@ -738,29 +766,30 @@ class MatrixOperator(Operator):
 
         # Infer domain and range from matrix if necessary
         if domain is None:
-            domain = NumpyFn(self.matrix.shape[1], dtype=self.matrix.dtype)
+            domain = fn(self.matrix.shape[1], dtype=self.matrix.dtype)
         elif not isinstance(domain, FnBase):
             raise TypeError('`domain` {!r} is not an `FnBase` instance'
                             ''.format(domain))
 
         if range is None:
-            range = NumpyFn(self.matrix.shape[0], dtype=self.matrix.dtype)
+            range = fn(self.matrix.shape[0], dtype=self.matrix.dtype)
         elif not isinstance(range, FnBase):
             raise TypeError('`range` {!r} is not an `FnBase` instance'
                             ''.format(range))
 
         # Check compatibility of matrix with domain and range
-        if not np.can_cast(domain.dtype, range.dtype):
-            raise TypeError('domain data type {!r} cannot be safely cast to '
-                            'range data type {!r}'
-                            ''.format(domain.dtype, range.dtype))
-
         if self.matrix.shape != (range.size, domain.size):
             raise ValueError('matrix shape {} does not match the required '
                              'shape {} of a matrix {} --> {}'
                              ''.format(self.matrix.shape,
                                        (range.size, domain.size),
                                        domain, range))
+
+        if not np.can_cast(domain.dtype, range.dtype):
+            raise TypeError('domain data type {!r} cannot be safely cast to '
+                            'range data type {!r}'
+                            ''.format(domain.dtype, range.dtype))
+
         if not np.can_cast(self.matrix.dtype, range.dtype):
             raise TypeError('matrix data type {!r} cannot be safely cast to '
                             'range data type {!r}.'
@@ -828,8 +857,33 @@ class MatrixOperator(Operator):
                 with writable_array(out) as out_arr:
                     self.matrix.dot(x, out=out_arr)
 
-    # TODO: repr and str
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        # Matrix printing itself in an executable way
+        matrix_str = np.array2string(self.matrix, separator=', ')
+        posargs = [matrix_str]
 
+        # Optional arguments with defaults, inferred from the matrix
+        optargs = []
+        # domain
+        optargs.append(
+            ('domain', self.domain, fn(self.matrix.shape[1],
+                                       self.matrix.dtype))
+        )
+        # range
+        optargs.append(
+            ('range', self.range, fn(self.matrix.shape[0],
+                                     self.matrix.dtype))
+        )
+
+        inner_str = signature_string(posargs, optargs, sep=[', ', ', ', ',\n'],
+                                     mod=[['!s'], ['!r', '!r']])
+        return '{}(\n{}\n)'.format(self.__class__.__name__,
+                                   indent_rows(inner_str))
+
+    def __str__(self):
+        """Return ``str(self)``."""
+        return repr(self)
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position
