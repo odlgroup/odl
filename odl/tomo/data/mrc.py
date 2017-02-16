@@ -195,7 +195,7 @@ MRC_FEI_EXT_HEADER_SECTION = """
 +---------+---------+---------+---------------+------------------------------+
 """
 MRC_FEI_SECTION_SIZE = 128
-MRC_FEI_MAX_SECTIONS = 1024
+MRC_FEI_NUM_SECTIONS = 1024
 
 
 def print_fei_ext_header_spec():
@@ -483,7 +483,7 @@ class FileReaderMRC(MRCHeaderProperties, FileReaderRawBinaryWithHeader):
 
         The extended header usually has one header section per
         image (slice), in case of the FEI header 128 bytes each, with
-        a maximum of 1024 sections.
+        a total of 1024 sections.
 
         Parameters
         ----------
@@ -492,8 +492,8 @@ class FileReaderMRC(MRCHeaderProperties, FileReaderRawBinaryWithHeader):
 
             ``'field'`` : make an array per section field, e.g.::
 
-                'defocus': [dval1, dval2, ..., dvalN],
-                'exp_time': [tval1, tval2, ..., tvalN],
+                'defocus': [dval1, dval2, ..., dval1024],
+                'exp_time': [tval1, tval2, ..., tval1024],
                 ...
 
             ``'section'`` : make a dictionary for each section, e.g.::
@@ -501,6 +501,9 @@ class FileReaderMRC(MRCHeaderProperties, FileReaderRawBinaryWithHeader):
                 {'defocus': dval1, 'exp_time': tval1},
                 {'defocus': dval2, 'exp_time': tval2},
                 ...
+
+            If the number of images is smaller than 1024, the last values are
+            all set to zero.
 
         force_type : string, optional
             If given, this value overrides the `extended_header_type`
@@ -541,63 +544,46 @@ extended-mrc-format-not-used-by-2dx
                              '{}'.format(ext_header_len, MRC_FEI_SECTION_SIZE))
 
         num_sections = ext_header_len // MRC_FEI_SECTION_SIZE
-        if num_sections > MRC_FEI_MAX_SECTIONS:
-            raise ValueError('calculated number of sections ({}) exceeds '
-                             'maximum number of sections ({})'
-                             ''.format(num_sections, MRC_FEI_MAX_SECTIONS))
+        if num_sections != MRC_FEI_NUM_SECTIONS:
+            raise ValueError('calculated number of sections ({}) not equal to '
+                             'expected number of sections ({})'
+                             ''.format(num_sections, MRC_FEI_NUM_SECTIONS))
 
         section_fields = header_fields_from_table(
             MRC_FEI_EXT_HEADER_SECTION, keys=MRC_SPEC_KEYS,
             dtype_map=MRC_DTYPE_TO_NPY_DTYPE)
 
-        if groupby == 'field':
-            # Make a list for each field and append the values for that
-            # field. Then create an array from that list and store it
-            # under the field name.
-            ext_header = OrderedDict()
-            for field in section_fields:
-                value_list = []
-                field_offset = field['offset']
-                field_dtype = field['dtype']
-                field_dshape = field['dshape']
-                for section in range(num_sections):
-                    # Get the bytestring from the right position in the file,
-                    # unpack it and append the value to the list.
-                    section_start = section * MRC_FEI_SECTION_SIZE
-                    self.file.seek(section_start + field_offset)
-                    num_items = int(np.prod(field_dshape))
-                    size_bytes = num_items * field_dtype.itemsize
-                    packed_value = self.file.read(size_bytes)
-                    fmt = '{}{}'.format(num_items, field_dtype.char)
-                    value_list.append(struct.unpack(fmt, packed_value))
+        # Make a list for each field and append the values for that
+        # field. Then create an array from that list and store it
+        # under the field name.
+        ext_header = OrderedDict()
+        for field in section_fields:
+            value_list = []
+            field_offset = field['offset']
+            field_dtype = field['dtype']
+            field_dshape = field['dshape']
 
-                ext_header[field['name']] = np.array(value_list,
-                                                     dtype=field_dtype)
-            return ext_header
+            # Compute some parameters
+            num_items = int(np.prod(field_dshape))
+            size_bytes = num_items * field_dtype.itemsize
+            fmt = '{}{}'.format(num_items, field_dtype.char)
 
-        elif groupby == 'section':
-            # Loop though the sections and append all values from that
-            # section to a list. Return it as a tuple.
-            ext_header = []
             for section in range(num_sections):
-                entry = {}
-                section_start = section * MRC_FEI_SECTION_SIZE
-                for field in section_fields:
-                    # Get the bytestring from the right position in the file,
-                    # unpack it and store the value as array in the dict.
-                    self.file.seek(section_start + field['offset'])
-                    num_items = int(np.prod(field['dshape']))
-                    size_bytes = num_items * field['dtype'].itemsize
-                    packed_value = self.file.read(size_bytes)
-                    fmt = '{}{}'.format(num_items, field['dtype'].char)
-                    value = struct.unpack(fmt, packed_value)
-                    # Make each entry a 1-element 1D array as usual
-                    entry[field['name']] = np.array(
-                        value, dtype=field['dtype']).reshape(field['dshape'])
+                # Get the bytestring from the right position in the file,
+                # unpack it and append the value to the list.
+                start = section * MRC_FEI_SECTION_SIZE + field_offset
+                self.file.seek(start)
+                packed_value = self.file.read(size_bytes)
+                value_list.append(struct.unpack(fmt, packed_value))
 
-                ext_header.append(entry)
-            return tuple(ext_header)
+            ext_header[field['name']] = np.array(value_list, dtype=field_dtype)
 
+        if groupby == 'field':
+            return ext_header
+        elif groupby == 'section':
+            # Transpose the data and return as tuple.
+            return tuple({key: ext_header[key][i] for key in ext_header}
+                         for i in range(num_sections))
         else:
             raise ValueError("`groupby` '{}' not understood"
                              "".format(groupby_in))
