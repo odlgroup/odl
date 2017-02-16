@@ -2,6 +2,7 @@
 
 import odl
 import scipy
+import scipy.signal
 
 
 class Convolution(odl.Operator):
@@ -114,4 +115,4 @@ tau = 1.0
 x = space.zero()
 odl.solvers.douglas_rachford_pd(x, f, g_funcs, lin_ops,
                                 tau=tau, sigma=sigma, niter=100)
-x.show('TV Douglas-Rachford', show=True)
+x.show('TV Douglas-Rachford', force_show=True)

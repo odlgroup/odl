@@ -31,7 +31,6 @@ import numpy as np
 import scipy.linalg as linalg
 from scipy.sparse.base import isspmatrix
 
-from odl.operator import Operator
 from odl.set import RealNumbers, ComplexNumbers
 from odl.space.base_ntuples import (
     NtuplesBase, NtuplesBaseVector, FnBase, FnBaseVector)
@@ -44,7 +43,6 @@ from odl.util.ufuncs import NumpyNtuplesUfuncs
 
 
 __all__ = ('NumpyNtuples', 'NumpyNtuplesVector', 'NumpyFn', 'NumpyFnVector',
-           'MatVecOperator',
            'npy_weighted_dist', 'npy_weighted_norm', 'npy_weighted_inner')
 
 
@@ -1294,140 +1292,6 @@ class NumpyFnVector(FnBaseVector, NumpyNtuplesVector):
 
         np.power(self.data, other, out=self.data)
         return self
-
-
-class MatVecOperator(Operator):
-
-    """Matrix multiply operator :math:`\mathbb{F}^n -> \mathbb{F}^m`.
-
-    This operator uses a matrix to represent an operator, and get its adjoint
-    and inverse by doing computations on the matrix. This is in general a
-    rather slow approach, and users are recommended to use other alternatives
-    if available.
-    """
-
-    def __init__(self, matrix, domain=None, range=None):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        matrix : `array-like` or  `scipy.sparse.spmatrix`
-            Matrix representing the linear operator. Its shape must be
-            ``(m, n)``, where ``n`` is the size of ``domain`` and ``m`` the
-            size of ``range``. Its dtype must be castable to the range
-            ``dtype``.
-        domain : `NumpyFn`, optional
-            Space on whose elements the matrix acts. If not provided,
-            the domain is inferred from the matrix ``dtype`` and
-            ``shape``. If provided, its dtype must be castable to the
-            range dtype.
-        range : `NumpyFn`, optional
-            Space to which the matrix maps. If not provided,
-            the domain is inferred from the matrix ``dtype`` and
-            ``shape``.
-        """
-        # TODO: fix dead link `scipy.sparse.spmatrix`
-        if isspmatrix(matrix):
-            self.__matrix = matrix
-        else:
-            self.__matrix = np.asarray(matrix)
-
-        if self.matrix.ndim != 2:
-            raise ValueError('matrix {} has {} axes instead of 2'
-                             ''.format(matrix, self.matrix.ndim))
-
-        # Infer domain and range from matrix if necessary
-        if domain is None:
-            domain = NumpyFn(self.matrix.shape[1], dtype=self.matrix.dtype)
-        elif not isinstance(domain, NumpyFn):
-            raise TypeError('`domain` {!r} is not an `NumpyFn` instance'
-                            ''.format(domain))
-
-        if range is None:
-            range = NumpyFn(self.matrix.shape[0], dtype=self.matrix.dtype)
-        elif not isinstance(range, NumpyFn):
-            raise TypeError('`range` {!r} is not an `NumpyFn` instance'
-                            ''.format(range))
-
-        # Check compatibility of matrix with domain and range
-        if not np.can_cast(domain.dtype, range.dtype):
-            raise TypeError('domain data type {!r} cannot be safely cast to '
-                            'range data type {!r}'
-                            ''.format(domain.dtype, range.dtype))
-
-        if self.matrix.shape != (range.size, domain.size):
-            raise ValueError('matrix shape {} does not match the required '
-                             'shape {} of a matrix {} --> {}'
-                             ''.format(self.matrix.shape,
-                                       (range.size, domain.size),
-                                       domain, range))
-        if not np.can_cast(self.matrix.dtype, range.dtype):
-            raise TypeError('matrix data type {!r} cannot be safely cast to '
-                            'range data type {!r}.'
-                            ''.format(matrix.dtype, range.dtype))
-
-        super().__init__(domain, range, linear=True)
-
-    @property
-    def matrix(self):
-        """Matrix representing this operator."""
-        return self.__matrix
-
-    @property
-    def matrix_issparse(self):
-        """Whether the representing matrix is sparse or not."""
-        return isspmatrix(self.matrix)
-
-    @property
-    def adjoint(self):
-        """Adjoint operator represented by the adjoint matrix.
-
-        Returns
-        -------
-        adjoint : `MatVecOperator`
-        """
-        if self.domain.field != self.range.field:
-            raise NotImplementedError('adjoint not defined since fields '
-                                      'of domain and range differ ({} != {})'
-                                      ''.format(self.domain.field,
-                                                self.range.field))
-        return MatVecOperator(self.matrix.conj().T,
-                              domain=self.range, range=self.domain)
-
-    @property
-    def inverse(self):
-        """Inverse operator represented by the inverse matrix.
-
-        Taking the inverse causes sparse matrices to become dense and is
-        generally very heavy computationally since the matrix is inverted
-        numerically (an O(n^3) operation). It is recommended to instead
-        use one of the solvers available in the ``odl.solvers`` package.
-
-        Returns
-        -------
-        inverse : `MatVecOperator`
-        """
-        if self.matrix_issparse:
-            dense_matrix = self.matrix.toarray()
-        else:
-            dense_matrix = self.matrix
-
-        return MatVecOperator(np.linalg.inv(dense_matrix),
-                              domain=self.range, range=self.domain)
-
-    def _call(self, x, out=None):
-        """Raw apply method on input, writing to given output."""
-        if out is None:
-            return self.range.element(self.matrix.dot(x.data))
-        else:
-            if self.matrix_issparse:
-                # Unfortunately, there is no native in-place dot product for
-                # sparse matrices
-                out.data[:] = self.matrix.dot(x.data)
-            else:
-                self.matrix.dot(x.data, out=out.data)
-
-    # TODO: repr and str
 
 
 def _weighting(weights, exponent, dist_using_inner=False):

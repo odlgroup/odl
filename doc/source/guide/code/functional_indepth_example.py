@@ -103,8 +103,6 @@ print('Value of the functional in a random point: {}'
 
 # Now we use the steepest-decent solver and backtracking linesearch in order to
 # find the minimum of the functional.
-# Create the gradient operator
-grad = my_func.gradient
 
 # Create a starting guess. Also used by the solver to update in-place.
 x = space.one()
@@ -113,7 +111,7 @@ x = space.one()
 line_search = odl.solvers.BacktrackingLineSearch(my_func, max_num_iter=10)
 
 # Call the solver
-odl.solvers.steepest_descent(grad=grad, x=x, niter=10, line_search=line_search)
+odl.solvers.steepest_descent(my_func, x, maxiter=10, line_search=line_search)
 
 print('Expected value: {}'.format((-1.0 / 2) * linear_term))
 print('Found value: {}'.format(x))

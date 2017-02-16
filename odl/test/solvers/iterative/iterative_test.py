@@ -84,7 +84,7 @@ def optimization_problem(request):
     if problem_name == 'MatVec':
         # Define problem
         op_arr = np.eye(5) * 5 + np.ones([5, 5])
-        op = odl.MatVecOperator(op_arr)
+        op = odl.MatrixOperator(op_arr)
 
         # Simple right hand side
         rhs = op.range.one()
