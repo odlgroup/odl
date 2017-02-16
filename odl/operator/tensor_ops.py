@@ -745,7 +745,7 @@ class MatrixOperator(Operator):
         >>> op([1, 2, 3, 4])
         rn(3).element([10.0, 10.0, 10.0])
 
-        They can also be provided explicitly, for example with using
+        They can also be provided explicitly, for example with
         `uniform_discr` spaces:
 
         >>> dom = odl.uniform_discr(0, 1, 4)
@@ -753,6 +753,23 @@ class MatrixOperator(Operator):
         >>> op = MatrixOperator(matrix, domain=dom, range=ran)
         >>> op(dom.one())
         uniform_discr(0.0, 1.0, 3).element([4.0, 4.0, 4.0])
+
+        For storage efficiency, SciPy sparse matrices can be used:
+
+        >>> import scipy
+        >>> row_idcs = np.array([0, 3, 1, 0])
+        >>> col_idcs = np.array([0, 3, 1, 2])
+        >>> values = np.array([4.0, 5.0, 7.0, 9.0])
+        >>> matrix = scipy.sparse.coo_matrix((values, (row_idcs, col_idcs)),
+        ...                                  shape=(4, 4))
+        >>> matrix.toarray()
+        array([[ 4.,  0.,  9.,  0.],
+               [ 0.,  7.,  0.,  0.],
+               [ 0.,  0.,  0.,  0.],
+               [ 0.,  0.,  0.,  5.]])
+        >>> op = MatrixOperator(matrix)
+        >>> op(op.domain.one())
+        rn(4).element([13.0, 7.0, 0.0, 5.0])
         """
         # TODO: fix dead link `scipy.sparse.spmatrix`
         if scipy.sparse.isspmatrix(matrix):
@@ -840,7 +857,6 @@ class MatrixOperator(Operator):
             dense_matrix = self.matrix.toarray()
         else:
             dense_matrix = self.matrix
-
         return MatrixOperator(np.linalg.inv(dense_matrix),
                               domain=self.range, range=self.domain)
 
@@ -859,8 +875,12 @@ class MatrixOperator(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        # Matrix printing itself in an executable way
-        matrix_str = np.array2string(self.matrix, separator=', ')
+        # Matrix printing itself in an executable way (for dense matrix)
+        if self.matrix_issparse:
+            # Don't convert to dense, can take forever
+            matrix_str = repr(self.matrix)
+        else:
+            matrix_str = np.array2string(self.matrix, separator=', ')
         posargs = [matrix_str]
 
         # Optional arguments with defaults, inferred from the matrix
