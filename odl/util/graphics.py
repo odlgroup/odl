@@ -35,15 +35,23 @@ def _safe_minmax(values):
     """Calculate min and max of array with guards for nan and inf."""
 
     # Nan and inf guarded min and max
-    minval = np.min(values[np.isfinite(values)])
-    maxval = np.max(values[np.isfinite(values)])
+    isfinite = np.isfinite(values)
+    if np.any(isfinite):
+        # Only use finite values
+        values = values[isfinite]
+
+    minval = np.min(values)
+    maxval = np.max(values)
 
     return minval, maxval
 
 
 def _colorbar_ticks(minval, maxval):
     """Return the ticks (values show) in the colorbar."""
-    return [minval, (maxval + minval) / 2., maxval]
+    if not (np.isfinite(minval) and np.isfinite(maxval)):
+        return [0, 0, 0]
+    else:
+        return [minval, (maxval + minval) / 2., maxval]
 
 
 def _digits(minval, maxval):
@@ -56,7 +64,10 @@ def _digits(minval, maxval):
 
 def _colorbar_format(minval, maxval):
     """Return the format string for the colorbar."""
-    return '%.{}f'.format(_digits(minval, maxval))
+    if not (np.isfinite(minval) and np.isfinite(maxval)):
+        return str(maxval)
+    else:
+        return '%.{}f'.format(_digits(minval, maxval))
 
 
 def _axes_info(grid, npoints=5):
