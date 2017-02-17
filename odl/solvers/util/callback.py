@@ -400,6 +400,13 @@ class CallbackShow(SolverCallback):
 
         Parameters
         ----------
+        title : str, optional
+            Title of the window to be shown.
+            The title name is generated as
+
+                title = title.format(cur_iter_num)
+
+            where ``cur_iter_num`` is the current iteration number.
         display_step : positive int, optional
             Number of iterations between plots. Default: 1
         saveto : string, optional
@@ -441,6 +448,7 @@ class CallbackShow(SolverCallback):
         self.fig = kwargs.pop('fig', None)
         self.display_step = kwargs.pop('display_step', 1)
         self.saveto = kwargs.pop('saveto', None)
+        self.title = kwargs.pop('title', 'Iterate {}')
         self.iter = 0
         self.space_of_last_x = None
 
@@ -452,13 +460,15 @@ class CallbackShow(SolverCallback):
         self.space_of_last_x = x_space
 
         if (self.iter % self.display_step) == 0:
+            title = self.title.format(self.iter)
+
             if self.saveto is None:
-                self.fig = x.show(*self.args, fig=self.fig,
+                self.fig = x.show(*self.args, title=title, fig=self.fig,
                                   update_in_place=update_in_place,
                                   **self.kwargs)
 
             else:
-                self.fig = x.show(*self.args, fig=self.fig,
+                self.fig = x.show(*self.args, title=title, fig=self.fig,
                                   saveto=self.saveto.format(self.iter),
                                   update_in_place=update_in_place,
                                   **self.kwargs)
