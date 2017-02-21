@@ -1442,9 +1442,17 @@ def _lincomb(a, x1, b, x2, out, dtype):
     #     return
 
     # Need flat data for BLAS, otherwise in-place does not work
-    x1_arr = x1.data.ravel(order=x1.order)
-    x2_arr = x2.data.ravel(order=x1.order)
-    out_arr = out.data.ravel(order=x1.order)
+    # Raveling must happen in fixed order for non-contiguous out,
+    # otherwise 'A' is applied to arrays, which makes the outcome
+    # dependent on their respective contiguousness.
+    if out.data.flags.f_contiguous:
+        ravel_order = 'F'
+    else:
+        ravel_order = 'C'
+
+    x1_arr = x1.data.ravel(order=ravel_order)
+    x2_arr = x2.data.ravel(order=ravel_order)
+    out_arr = out.data.ravel(order=ravel_order)
 
     if _blas_is_applicable(x1.data, x2.data, out.data):
         axpy, scal, copy = linalg.blas.get_blas_funcs(
@@ -1515,6 +1523,10 @@ def _lincomb(a, x1, b, x2, out, dtype):
                 if b != 1:
                     scal(b, out_arr, native(out_arr.size))
                 axpy(x1_arr, out_arr, native(out_arr.size), a)
+
+    # Need to write back for non-contiguous out array. If the array
+    # is contiguous, this is a no-op
+    out.data[:] = out_arr.reshape(out.shape, order=ravel_order)
 
 
 def _weighting(weights, exponent, dist_using_inner=False):
