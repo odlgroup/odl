@@ -908,7 +908,7 @@ class CustomNorm(Weighting):
 
     def inner(self, x1, x2):
         """Inner product is not defined for custom distance."""
-        raise NotImplementedError
+        raise NotImplementedError('`inner` not defined for custom norm')
 
     @property
     def norm(self):
@@ -986,11 +986,11 @@ class CustomDist(Weighting):
 
     def inner(self, x1, x2):
         """Inner product is not defined for custom distance."""
-        raise NotImplementedError
+        raise NotImplementedError('`inner` not defined for custom distance')
 
     def norm(self, x):
         """Norm is not defined for custom distance."""
-        raise NotImplementedError
+        raise NotImplementedError('`norm` not defined for custom distance')
 
     def __eq__(self, other):
         """Return ``self == other``.

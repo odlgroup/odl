@@ -202,7 +202,7 @@ class Geometry(with_metaclass(ABCMeta, object)):
         vec : `numpy.ndarray`, shape (`ndim`,)
             (Unit) vector pointing from the detector to the source
         """
-        raise NotImplementedError
+        raise NotImplementedError('abstract method')
 
     def det_point_position(self, mpar, dpar):
         """Detector point position function.

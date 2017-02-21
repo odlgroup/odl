@@ -812,7 +812,7 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
 
     def _evaluate(self, indices, norm_distances, out=None):
         """Evaluation method, needs to be overridden."""
-        raise NotImplementedError
+        raise NotImplementedError('abstract method')
 
 
 class _NearestInterpolator(_Interpolator):

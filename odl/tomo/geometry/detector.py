@@ -122,7 +122,7 @@ class Detector(with_metaclass(ABCMeta, object)):
             Vector (``ndim=1``) or sequence of vectors corresponding
             to the partial derivatives at ``param``
         """
-        raise NotImplementedError
+        raise NotImplementedError('abstract method')
 
     def surface_measure(self, param):
         """Density function of the surface measure.
@@ -156,7 +156,7 @@ class Detector(with_metaclass(ABCMeta, object)):
         elif self.ndim == 2:
             return float(np.linalg.norm(np.cross(*self.surface_deriv(param))))
         else:
-            raise NotImplementedError
+            raise NotImplementedError('abstract method')
 
 
 class FlatDetector(Detector):
