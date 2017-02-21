@@ -182,7 +182,7 @@ class OptionalArgDecorator(object):
     @staticmethod
     def _wrapper(func, *wrapper_args, **wrapper_kwargs):
         """Return the wrapped function."""
-        raise NotImplementedError
+        raise NotImplementedError('abstract method')
 
 
 class vectorize(OptionalArgDecorator):

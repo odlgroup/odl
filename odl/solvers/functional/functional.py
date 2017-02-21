@@ -100,7 +100,9 @@ class Functional(Operator):
         derivatives in a direction :math:`d` by
         :math:`\\langle \\nabla f(x), d \\rangle`.
         """
-        raise NotImplementedError
+        raise NotImplementedError(
+            'no gradient implemented for functional {!r}'
+            ''.format(self))
 
     @property
     def proximal(self):
@@ -125,7 +127,9 @@ class Functional(Operator):
         i.e., a function returning a proximal operator. See for example
         `forward_backward_pd`.
         """
-        raise NotImplementedError
+        raise NotImplementedError(
+            'no proximal operator implemented for functional {!r}'
+            ''.format(self))
 
     @property
     def convex_conj(self):
