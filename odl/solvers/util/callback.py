@@ -37,13 +37,13 @@ class SolverCallback(object):
 
     """Abstract base class for handling iterates of solvers."""
 
-    def __call__(self, result):
+    def __call__(self, iterate):
         """Apply the callback object to result.
 
         Parameters
         ----------
-        result : `LinearSpaceElement`
-            Partial result after n iterations
+        iterate : `LinearSpaceElement`
+            Partial result after n iterations.
 
         Returns
         -------
@@ -116,12 +116,12 @@ class _CallbackAnd(SolverCallback):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return ' & '.join('{}'.format(p) for p in self.callbacks)
+        return ' & '.join('{!r}'.format(p) for p in self.callbacks)
 
 
 class CallbackStore(SolverCallback):
 
-    """Simple object for storing all iterates of a solver.
+    """Callback for storing all iterates of a solver.
 
     Can optionally apply a function, for example the norm or calculating the
     residual.
@@ -196,39 +196,70 @@ class CallbackStore(SolverCallback):
 
 class CallbackApply(SolverCallback):
 
-    """Simple object for applying a function to each iterate."""
+    """Callback for applying a custom function to iterates."""
 
-    def __init__(self, function):
+    def __init__(self, function, step=1):
         """Initialize a new instance.
 
         Parameters
         ----------
         function : callable
-            Function to call for each iteration
+            Function to call on the current iterate.
+        step : int, optional
+            Number of iterates between applications of ``function``.
+
+        Examples
+        --------
+        By default, the function is called on each iterate:
+
+        >>> def func(x):
+        ...     print(np.max(x))
+        >>> callback = CallbackApply(func)
+        >>> x = odl.rn(3).element([1, 2, 3])
+        >>> callback(x)
+        3.0
+        >>> callback(x)
+        3.0
+
+        To apply only to each n-th iterate, supply ``step=n``:
+
+        >>> callback = CallbackApply(func, step=2)
+        >>> callback(x)
+        3.0
+        >>> callback(x)  # no output
+        >>> callback(x)  # next output
+        3.0
         """
         assert callable(function)
         self.function = function
+        self.step = int(step)
+        self.iter = 0
 
     def __call__(self, result):
         """Apply function to result."""
-        self.function(result)
+        if self.iter % self.step == 0:
+            self.function(result)
+        self.iter += 1
 
     def __str__(self):
         """Return ``str(self)``."""
-        return 'CallbackApply({})'.format(self.function)
+        return repr(self)
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return 'CallbackApply({!r})'.format(self.function)
+        posargs = [self.function]
+        optargs = [('step', self.step, 1)]
+        inner_str = signature_string(posargs, optargs)
+        return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
 class CallbackPrintIteration(SolverCallback):
 
-    """Print the iteration count."""
+    """Callback for printing the iteration count."""
 
     _default_fmt = 'iter = {}'
 
-    def __init__(self, fmt=None, display_step=1):
+    def __init__(self, fmt=None, step=1):
         """Initialize a new instance.
 
         Parameters
@@ -239,7 +270,7 @@ class CallbackPrintIteration(SolverCallback):
                 print(fmt.format(cur_iter_num))
 
             where ``cur_iter_num`` is the current iteration number.
-        display_step : positive int, optional
+        step : positive int, optional
             Number of iterations between output. Default: 1
 
         Examples
@@ -256,20 +287,20 @@ class CallbackPrintIteration(SolverCallback):
         a custom string:
 
         >>> callback = CallbackPrintIteration(fmt='Current iter is {}.',
-        ...                                   display_step=2)
+        ...                                   step=2)
         >>> callback(None)
         Current iter is 0.
         >>> callback(None)  # prints nothing
         >>> callback(None)
         Current iter is 2.
         """
-        self.display_step = int(display_step)
+        self.step = int(step)
         self.fmt = fmt if fmt is not None else self._default_fmt
         self.iter = 0
 
     def __call__(self, _):
         """Print the current iteration."""
-        if (self.iter % self.display_step) == 0:
+        if self.iter % self.step == 0:
             print(self.fmt.format(self.iter))
 
         self.iter += 1
@@ -283,18 +314,18 @@ class CallbackPrintIteration(SolverCallback):
 
         Examples
         --------
-        >>> CallbackPrintIteration(fmt='Current iter is {}.', display_step=2)
-        CallbackPrintIteration(fmt='Current iter is {}.', display_step=2)
+        >>> CallbackPrintIteration(fmt='Current iter is {}.', step=2)
+        CallbackPrintIteration(fmt='Current iter is {}.', step=2)
         """
         optargs = [('fmt', self.fmt, self._default_fmt),
-                   ('display_step', self.display_step, 1)]
+                   ('step', self.step, 1)]
         inner_str = signature_string([], optargs)
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
 class CallbackPrintTiming(SolverCallback):
 
-    """Print the time elapsed since the previous iteration."""
+    """Callback for printing the time elapsed since the previous iteration."""
 
     def __init__(self):
         """Initialize a new instance."""
@@ -312,12 +343,12 @@ class CallbackPrintTiming(SolverCallback):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return 'CallbackPrintTiming()'
+        return '{}()'.format(self.__class__.__name__)
 
 
 class CallbackPrint(SolverCallback):
 
-    """Print the current value."""
+    """Callback for printing the current value."""
 
     def __init__(self, func=None, fmt='{!r}'):
         """Initialize a new instance.
@@ -372,7 +403,7 @@ class CallbackPrint(SolverCallback):
 
 class CallbackPrintNorm(SolverCallback):
 
-    """Print the current norm."""
+    """Callback for printing the current norm."""
 
     def __call__(self, result):
         """Print the current norm."""
@@ -380,12 +411,12 @@ class CallbackPrintNorm(SolverCallback):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return 'CallbackPrintNorm()'
+        return '{}()'.format(self.__class__.__name__)
 
 
 class CallbackShow(SolverCallback):
 
-    """Show the iterates.
+    """Callback for showing iterates.
 
     See Also
     --------
@@ -407,7 +438,7 @@ class CallbackShow(SolverCallback):
                 title = title.format(cur_iter_num)
 
             where ``cur_iter_num`` is the current iteration number.
-        display_step : positive int, optional
+        step : positive int, optional
             Number of iterations between plots. Default: 1
         saveto : string, optional
             Format string for the name of the file(s) where
@@ -423,7 +454,7 @@ class CallbackShow(SolverCallback):
         Other Parameters
         ----------------
         kwargs :
-            Optional arguments passed on to ``x.show``
+            Optional arguments passed on to ``x.show``.
 
         Examples
         --------
@@ -434,19 +465,23 @@ class CallbackShow(SolverCallback):
         Show and save every fifth iterate in ``png`` format, overwriting the
         previous one:
 
-        >>> callback = CallbackShow(display_step=5,
+        >>> callback = CallbackShow(step=5,
         ...                         saveto='my_path/my_iterate.png')
 
         Show and save each fifth iterate in ``png`` format, indexing the files
         with the iteration number:
 
-        >>> callback = CallbackShow(display_step=5,
+        >>> callback = CallbackShow(step=5,
         ...                         saveto='my_path/my_iterate_{}.png')
+
+        Pass additional arguments to ``show``:
+
+        >>> callback = CallbackShow(step=5, clim=[0, 1])
         """
         self.args = args
         self.kwargs = kwargs
         self.fig = kwargs.pop('fig', None)
-        self.display_step = kwargs.pop('display_step', 1)
+        self.step = kwargs.pop('step', 1)
         self.saveto = kwargs.pop('saveto', None)
         self.title = kwargs.pop('title', 'Iterate {}')
         self.iter = 0
@@ -459,9 +494,8 @@ class CallbackShow(SolverCallback):
         update_in_place = (self.space_of_last_x == x_space)
         self.space_of_last_x = x_space
 
-        if (self.iter % self.display_step) == 0:
+        if self.iter % self.step == 0:
             title = self.title.format(self.iter)
-
             if self.saveto is None:
                 self.fig = x.show(*self.args, title=title, fig=self.fig,
                                   update_in_place=update_in_place,
@@ -483,20 +517,19 @@ class CallbackShow(SolverCallback):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}(display_step={}, saveto={}, fig={}, *{!r}, **{!r})'.format(
-            self.__class__.__name__,
-            self.display_step,
-            self.saveto,
-            self.fig,
-            self.args,
-            self.kwargs)
+        optargs = [('step', self.step, 1),
+                   ('saveto', self.saveto, None)]
+        for kwarg, value in self.kwargs.items():
+            optargs.append((kwarg, value, None))
+        inner_str = signature_string([], optargs)
+        return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
 class CallbackSaveToDisk(SolverCallback):
 
-    """Save the iterates to disk."""
+    """Callback for saving iterates to disk."""
 
-    def __init__(self, saveto, save_step=1, impl='pickle', **kwargs):
+    def __init__(self, saveto, step=1, impl='pickle', **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -508,9 +541,9 @@ class CallbackSaveToDisk(SolverCallback):
                 filename = saveto.format(cur_iter_num)
 
             where ``cur_iter_num`` is the current iteration number.
-        save_step : positive int, optional
+        step : positive int, optional
             Number of iterations between saves.
-        impl : {'numpy', 'pickle', 'numpy_txt'}, optional
+        impl : {'pickle', 'numpy', 'numpy_txt'}, optional
             The format to store the iterates in. Numpy formats are only usable
             if the data can be converted to an array via `numpy.asarray`.
 
@@ -528,23 +561,23 @@ class CallbackSaveToDisk(SolverCallback):
         Save every fifth overwriting the previous one:
 
         >>> callback = CallbackSaveToDisk(saveto='my_path/my_iterate',
-        ...                               save_step=5)
+        ...                               step=5)
 
         Save each fifth iterate in ``numpy`` format, indexing the files with
         the iteration number:
 
         >>> callback = CallbackSaveToDisk(saveto='my_path/my_iterate_{}',
-        ...                               save_step=5, impl='numpy')
+        ...                               step=5, impl='numpy')
         """
         self.saveto = saveto
-        self.save_step = save_step
+        self.step = step
         self.impl = impl
         self.kwargs = kwargs
         self.iter = 0
 
     def __call__(self, x):
         """Save the current iterate."""
-        if (self.iter % self.save_step) == 0:
+        if self.iter % self.step == 0:
             file_path = self.saveto.format(self.iter)
             folder_path = os.path.dirname(os.path.realpath(file_path))
 
@@ -570,17 +603,18 @@ class CallbackSaveToDisk(SolverCallback):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}(saveto={}, save_step={}, impl={}, **{!r})'.format(
-            self.__class__.__name__,
-            self.saveto,
-            self.save_step,
-            self.impl,
-            self.kwargs)
+        posargs = [self.saveto]
+        optargs = [('step', self.step, 1),
+                   ('impl', self.impl, 'pickle')]
+        for kwarg, value in self.kwargs.items():
+            optargs.append((kwarg, value, None))
+        inner_str = signature_string(posargs, optargs)
+        return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
 class CallbackSleep(SolverCallback):
 
-    """Sleep for a specific time."""
+    """Callback for sleeping for a specific time span."""
 
     def __init__(self, seconds=1.0):
         """Initialize a new instance.

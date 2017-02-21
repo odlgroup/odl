@@ -74,7 +74,7 @@ sigma = 0.1 / op_norm  # Step size for the dual variables
 
 # Optionally pass callback to the solver to display intermediate results
 callback = (odl.solvers.CallbackPrintIteration() &
-            odl.solvers.CallbackShow(display_step=20))
+            odl.solvers.CallbackShow(step=20))
 
 # Choose a starting point
 x = op.domain.zero()

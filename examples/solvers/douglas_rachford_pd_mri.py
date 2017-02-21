@@ -44,7 +44,7 @@ f = odl.solvers.IndicatorBox(space, 0, 1)
 
 # Solve
 x = mri_op.domain.zero()
-callback = (odl.solvers.CallbackShow(display_step=5, clim=[0, 1]) &
+callback = (odl.solvers.CallbackShow(step=5, clim=[0, 1]) &
             odl.solvers.CallbackPrintIteration())
 odl.solvers.douglas_rachford_pd(x, f, g, lin_ops,
                                 tau=2.0, sigma=[1.0, 0.1],

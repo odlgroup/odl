@@ -49,7 +49,7 @@ f = odl.solvers.ZeroFunctional(pspace)
 # iterate graphically every 20:th step.
 func = f + l2err + nuc_norm * pgradient
 callback = (odl.solvers.CallbackPrint(func) &
-            odl.solvers.CallbackShow(display_step=20))
+            odl.solvers.CallbackShow(step=20))
 
 # Solve the problem. Here the parameters are chosen in order to ensure
 # convergence, see the documentation for further information.

@@ -74,7 +74,7 @@ gamma = 0.2
 
 # Optionally pass callback to the solver to display intermediate results
 callback = (odl.solvers.CallbackPrintIteration() &
-            odl.solvers.CallbackShow(display_step=5))
+            odl.solvers.CallbackShow(step=5))
 
 
 def callb(x):
