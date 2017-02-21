@@ -48,7 +48,7 @@ h = 0.5 * odl.solvers.L2NormSquared(space).translated(noisy_data)
 x = noisy_data.copy()
 
 # Used to display intermediate results and print iteration number.
-callback = (odl.solvers.CallbackShow(display_step=20, clim=[0, 255]) &
+callback = (odl.solvers.CallbackShow(step=20, clim=[0, 255]) &
             odl.solvers.CallbackPrintIteration())
 
 # Call the solver. x is updated in-place with the consecutive iterates.

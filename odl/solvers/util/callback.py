@@ -37,7 +37,7 @@ class SolverCallback(object):
 
     """Abstract base class for handling iterates of solvers."""
 
-    def __call__(self, result):
+    def __call__(self, iterate):
         """Apply the callback object to result.
 
         Parameters
@@ -259,7 +259,7 @@ class CallbackPrintIteration(SolverCallback):
 
     _default_fmt = 'iter = {}'
 
-    def __init__(self, fmt=None, display_step=1):
+    def __init__(self, fmt=None, step=1):
         """Initialize a new instance.
 
         Parameters
@@ -270,7 +270,7 @@ class CallbackPrintIteration(SolverCallback):
                 print(fmt.format(cur_iter_num))
 
             where ``cur_iter_num`` is the current iteration number.
-        display_step : positive int, optional
+        step : positive int, optional
             Number of iterations between output. Default: 1
 
         Examples
@@ -287,20 +287,20 @@ class CallbackPrintIteration(SolverCallback):
         a custom string:
 
         >>> callback = CallbackPrintIteration(fmt='Current iter is {}.',
-        ...                                   display_step=2)
+        ...                                   step=2)
         >>> callback(None)
         Current iter is 0.
         >>> callback(None)  # prints nothing
         >>> callback(None)
         Current iter is 2.
         """
-        self.display_step = int(display_step)
+        self.step = int(step)
         self.fmt = fmt if fmt is not None else self._default_fmt
         self.iter = 0
 
     def __call__(self, _):
         """Print the current iteration."""
-        if (self.iter % self.display_step) == 0:
+        if self.iter % self.step == 0:
             print(self.fmt.format(self.iter))
 
         self.iter += 1
@@ -314,11 +314,11 @@ class CallbackPrintIteration(SolverCallback):
 
         Examples
         --------
-        >>> CallbackPrintIteration(fmt='Current iter is {}.', display_step=2)
-        CallbackPrintIteration(fmt='Current iter is {}.', display_step=2)
+        >>> CallbackPrintIteration(fmt='Current iter is {}.', step=2)
+        CallbackPrintIteration(fmt='Current iter is {}.', step=2)
         """
         optargs = [('fmt', self.fmt, self._default_fmt),
-                   ('display_step', self.display_step, 1)]
+                   ('step', self.step, 1)]
         inner_str = signature_string([], optargs)
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
@@ -438,7 +438,7 @@ class CallbackShow(SolverCallback):
                 title = title.format(cur_iter_num)
 
             where ``cur_iter_num`` is the current iteration number.
-        display_step : positive int, optional
+        step : positive int, optional
             Number of iterations between plots. Default: 1
         saveto : string, optional
             Format string for the name of the file(s) where
@@ -465,23 +465,23 @@ class CallbackShow(SolverCallback):
         Show and save every fifth iterate in ``png`` format, overwriting the
         previous one:
 
-        >>> callback = CallbackShow(display_step=5,
+        >>> callback = CallbackShow(step=5,
         ...                         saveto='my_path/my_iterate.png')
 
         Show and save each fifth iterate in ``png`` format, indexing the files
         with the iteration number:
 
-        >>> callback = CallbackShow(display_step=5,
+        >>> callback = CallbackShow(step=5,
         ...                         saveto='my_path/my_iterate_{}.png')
 
         Pass additional arguments to ``show``:
 
-        >>> callback = CallbackShow(display_step=5, clim=[0, 1])
+        >>> callback = CallbackShow(step=5, clim=[0, 1])
         """
         self.args = args
         self.kwargs = kwargs
         self.fig = kwargs.pop('fig', None)
-        self.display_step = kwargs.pop('display_step', 1)
+        self.step = kwargs.pop('step', 1)
         self.saveto = kwargs.pop('saveto', None)
         self.title = kwargs.pop('title', 'Iterate {}')
         self.iter = 0
@@ -494,9 +494,8 @@ class CallbackShow(SolverCallback):
         update_in_place = (self.space_of_last_x == x_space)
         self.space_of_last_x = x_space
 
-        if (self.iter % self.display_step) == 0:
+        if self.iter % self.step == 0:
             title = self.title.format(self.iter)
-
             if self.saveto is None:
                 self.fig = x.show(*self.args, title=title, fig=self.fig,
                                   update_in_place=update_in_place,
@@ -518,7 +517,7 @@ class CallbackShow(SolverCallback):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        optargs = [('display_step', self.display_step, 1),
+        optargs = [('step', self.step, 1),
                    ('saveto', self.saveto, None)]
         for kwarg, value in self.kwargs.items():
             optargs.append((kwarg, value, None))
@@ -530,7 +529,7 @@ class CallbackSaveToDisk(SolverCallback):
 
     """Callback for saving iterates to disk."""
 
-    def __init__(self, saveto, save_step=1, impl='pickle', **kwargs):
+    def __init__(self, saveto, step=1, impl='pickle', **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -542,7 +541,7 @@ class CallbackSaveToDisk(SolverCallback):
                 filename = saveto.format(cur_iter_num)
 
             where ``cur_iter_num`` is the current iteration number.
-        save_step : positive int, optional
+        step : positive int, optional
             Number of iterations between saves.
         impl : {'pickle', 'numpy', 'numpy_txt'}, optional
             The format to store the iterates in. Numpy formats are only usable
@@ -562,23 +561,23 @@ class CallbackSaveToDisk(SolverCallback):
         Save every fifth overwriting the previous one:
 
         >>> callback = CallbackSaveToDisk(saveto='my_path/my_iterate',
-        ...                               save_step=5)
+        ...                               step=5)
 
         Save each fifth iterate in ``numpy`` format, indexing the files with
         the iteration number:
 
         >>> callback = CallbackSaveToDisk(saveto='my_path/my_iterate_{}',
-        ...                               save_step=5, impl='numpy')
+        ...                               step=5, impl='numpy')
         """
         self.saveto = saveto
-        self.save_step = save_step
+        self.step = step
         self.impl = impl
         self.kwargs = kwargs
         self.iter = 0
 
     def __call__(self, x):
         """Save the current iterate."""
-        if (self.iter % self.save_step) == 0:
+        if self.iter % self.step == 0:
             file_path = self.saveto.format(self.iter)
             folder_path = os.path.dirname(os.path.realpath(file_path))
 
@@ -605,7 +604,7 @@ class CallbackSaveToDisk(SolverCallback):
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = [self.saveto]
-        optargs = [('save_step', self.save_step, 1),
+        optargs = [('step', self.step, 1),
                    ('impl', self.impl, 'pickle')]
         for kwarg, value in self.kwargs.items():
             optargs.append((kwarg, value, None))
