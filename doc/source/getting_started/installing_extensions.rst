@@ -32,32 +32,6 @@ CUDA backend for linear arrays
 The `odlcuda`_ backend for fast array calculations on CUDA requires the `CUDA toolkit`_ (on Linux: use your distro package manager) and a CUDA capable graphics card with compute capability of at least 3.0.
 Search `this table <https://en.wikipedia.org/wiki/CUDA#GPUs_supported>`_ for your model.
 
-Installation using ``conda``
-----------------------------
-.. note::
-    In conda, the ``odlcuda`` package is currently available only for Linux 64-bit and Python 3.5.
-    Furthermore, you may experience failures due to "invalid device function" -- this is a known issue, and we're trying to fix it.
-
-If you have installed an ODL release, simply run (in a directory of your choice)
-
-.. code-block:: bash
-
-    $ conda install -c odlgroup odlcuda
-
-If you have installed ODL from source, you need to prevent conda from installing its version of ODL.
-To do this, find out the dependencies of ``odlcuda`` by running
-
-.. code-block:: bash
-
-    $ conda install --dry-run odlcuda
-
-Install all its dependencies except ``odl`` and ``odlcuda``.
-Finally, install ``odlcuda`` without dependencies:
-
-.. code-block:: bash
-
-    $ conda install --no-deps odlcuda
-
 Building from source
 --------------------
 You have two options of building ``odlcuda`` from source.
