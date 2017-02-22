@@ -60,7 +60,16 @@ def test_equality(metric_space):
 
 
 def test_comparsion(linear_space):
-    """Verify that elements in spaces cannot be compared."""
+    """Verify that spaces elements in spaces cannot be compared."""
+    with pytest.raises(TypeError):
+        linear_space <= linear_space
+    with pytest.raises(TypeError):
+        linear_space < linear_space
+    with pytest.raises(TypeError):
+        linear_space >= linear_space
+    with pytest.raises(TypeError):
+        linear_space > linear_space
+
     x = noise_element(linear_space)
     y = noise_element(linear_space)
 

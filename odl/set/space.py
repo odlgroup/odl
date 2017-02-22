@@ -804,14 +804,10 @@ class LinearSpaceElement(object):
         return self.copy()
 
     def __cmp__(self, other):
-        """Comparsion not implemented.
-
-        Raises
-        ------
-        TypeError
-        """
-        raise TypeError('unorderable type `{}`'
-                        ''.format(self.__class__.__name__))
+        """Comparsion not implemented."""
+        # Stops python 2 from allowing comparsion of arbitrary objects
+        raise TypeError('unorderable types: {}, {}'
+                        ''.format(self.__class__.__name__, type(other)))
 
     # Metric space method
     def __eq__(self, other):
