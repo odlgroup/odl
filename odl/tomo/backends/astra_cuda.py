@@ -271,8 +271,7 @@ class AstraCudaBackProjectorImpl(object):
         if self.geometry.ndim == 2:
             astra.data2d.store(self.sino_id, proj_data.asarray())
         elif self.geometry.ndim == 3:
-            swapped_proj_data = np.ascontiguousarray(
-                np.rollaxis(proj_data.asarray(), 2, 0))
+            swapped_proj_data = np.rollaxis(proj_data.asarray(), 2, 0)
             astra.data3d.store(self.sino_id, swapped_proj_data)
 
         # Run algorithm
