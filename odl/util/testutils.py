@@ -310,6 +310,13 @@ def noise_array(space):
         Array with white noise such that ``space.element``'s can be created
         from it.
 
+    Examples
+    --------
+    Create single noise array:
+
+    >>> space = odl.rn(3)
+    >>> array = noise_array(space)
+
     See Also
     --------
     noise_element
@@ -358,6 +365,13 @@ def noise_element(space):
     -------
     noise_element : ``space`` element
 
+    Examples
+    --------
+    Create single noise element:
+
+    >>> space = odl.rn(3)
+    >>> vector = noise_element(space)
+
     See Also
     --------
     noise_array
@@ -375,7 +389,7 @@ def noise_elements(space, n=1):
     floating point dtypes and uniformly spaced values between -10 and 10 in
     the case of integer dtypes.
 
-    The returned elements wrap the arrays.
+    The returned elements have the same values as the arrays.
 
     For product spaces the method is called recursively for all sub-spaces.
 
@@ -399,6 +413,17 @@ def noise_elements(space, n=1):
         A single array if ``n == 1``, otherwise a tuple of arrays.
     elements : ``space`` element or tuple of ``space`` elements
         A single element if ``n == 1``, otherwise a tuple of elements.
+
+    Examples
+    --------
+    Create single noise element:
+
+    >>> space = odl.rn(3)
+    >>> arr, vector = noise_elements(space)
+
+    Create multiple noise elements:
+
+    >>> [arr1, arr2], [vector1, vector2] = noise_elements(space, n=2)
 
     See Also
     --------
