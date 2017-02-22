@@ -135,6 +135,12 @@ class Set(with_metaclass(ABCMeta, object)):
         """Return ``self != other``."""
         return not self.__eq__(other)
 
+    def __cmp__(self, other):
+        """Comparsion not implemented."""
+        # Stops python 2 from allowing comparsion of arbitrary objects
+        raise TypeError('unorderable types: {}, {}'
+                        ''.format(self.__class__.__name__, type(other)))
+
     def element(self, inp=None):
         """Return an element from ``inp`` or from scratch.
 
