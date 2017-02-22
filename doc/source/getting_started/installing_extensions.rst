@@ -81,7 +81,7 @@ For both, first clone the ``odlcuda`` GitHub repository and enter the new direct
 
    .. code-block:: bash
 
-       $ conda install /path/to/your/miniconda/conda-bld/linux-64/odlcuda-0.3.0-py35_0.tar.bz2
+       $ conda install --use-local odlcuda
 
 
 2. **Manually with CMake**
