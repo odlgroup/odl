@@ -26,7 +26,7 @@ import pytest
 import odl
 from odl.util.testutils import simple_fixture, noise_element
 
-hilbert_spaces =  [odl.rn(3), odl.cn(3), odl.uniform_discr(0, 1, 3)]
+hilbert_spaces = [odl.rn(3), odl.cn(3), odl.uniform_discr(0, 1, 3)]
 normed_spaces = [odl.rn(3, exponent=1)] + hilbert_spaces
 metric_spaces = normed_spaces
 linear_spaces = metric_spaces
@@ -60,7 +60,7 @@ def test_equality(metric_space):
 
 
 def test_comparsion(linear_space):
-    """Verify that spaces elements in spaces cannot be compared."""
+    """Verify that spaces and elements in spaces cannot be compared."""
     with pytest.raises(TypeError):
         linear_space <= linear_space
     with pytest.raises(TypeError):
