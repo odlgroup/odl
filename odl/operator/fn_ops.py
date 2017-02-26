@@ -1,19 +1,19 @@
-## Copyright 2014-2016 The ODL development group
-##
-## This file is part of ODL.
-##
-## ODL is free software: you can redistribute it and/or modify
-## it under the terms of the GNU General Public License as published by
-## the Free Software Foundation, either version 3 of the License, or
-## (at your option) any later version.
-##
-## ODL is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU General Public License for more details.
-##
-## You should have received a copy of the GNU General Public License
-## along with ODL.  If not, see <http://www.gnu.org/licenses/>.
+# Copyright 2014-2017 The ODL development group
+#
+# This file is part of ODL.
+#
+# ODL is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# ODL is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 #
 #"""Default operators defined on any (reasonable) space."""
 
@@ -26,7 +26,8 @@ from builtins import super
 from odl.operator.operator import Operator
 from odl.space import fn
 from odl.set import LinearSpace, Field
-#from odl.util import writable_array
+from odl.discr import DiscreteLp
+from odl.space.base_ntuples import FnBase
 
 import numpy as np
 
@@ -36,8 +37,8 @@ __all__ = ('SamplingOperator', 'ZerofillingOperator',
 class SamplingOperator(Operator):
 
     """Operator that samples coefficients.
-
-        ``SamplingOperator(f)(i) == cell_volume * f(i) \approx \int_cell f(x) dx``
+    The operator is defined by 
+        ``SamplingOperator(f, indices) == cell_volume * f[indices]``
     """
 
     def __init__(self, domain, indices):
@@ -45,7 +46,7 @@ class SamplingOperator(Operator):
 
         Parameters
         ----------
-        domain : `LinearSpace` or `Field`
+        domain : `FnBase` or `DiscreteLp`
             Set of elements on which this operator acts.
         indices : list
             List of indices where to sample the function
@@ -54,17 +55,15 @@ class SamplingOperator(Operator):
         --------
         >>> X = odl.uniform_discr(min_pt=[0, 0], max_pt=[1, 1], shape=[2, 2])
         >>> x = X.element(range(X.size))
-        >>> ind = list()
-        >>> ind.append(range(2))
-        >>> ind.append([1,1])
-        >>> A = odl.operator.SamplingOperator(X, ind)
+        >>> ind = [[0, 1], [1, 1]]
+        >>> A = odl.SamplingOperator(X, ind)
         >>> A(x)
         rn(2).element([0.25, 0.75])
         >>> A(x)  # Out-of-place
         rn(2).element([0.25, 0.75])
         """
-        if not isinstance(domain, (LinearSpace, Field)):
-            raise TypeError('`space` {!r} not a `LinearSpace` or `Field` '
+        if not isinstance(domain, (FnBase, DiscreteLp)):
+            raise TypeError('`space` {!r} not a `FnBase` or `DiscreteLp` '
                             'instance'.format(domain))
 
         self.__indices = np.asarray(indices, dtype=int)
@@ -73,29 +72,30 @@ class SamplingOperator(Operator):
         if self.indices.ndim > 1:
             # Strides = increment in linear indices per axis
             strides = np.concatenate((np.cumprod(domain.shape[1:])[::-1], [1]))
-            self.__flat_indices = np.sum(self.indices * strides[:, None], axis=0)
+            self.__indices_flat = np.sum(self.indices * strides[:, None], axis=0)
+        else:
+            self.__indices_flat = self.indices
         
-        range = fn(self.flat_indices.size, dtype=domain.dtype)
-
+        range = fn(self.indices_flat.size, dtype=domain.dtype)
         super().__init__(domain, range, linear=True)
 
     @property
     def indices(self):
-        """indices where to sample the function."""
+        """Indices where to sample the function."""
         return self.__indices
 
     @property
-    def flat_indices(self):
-        """indices where to sample the function."""
-        return self.__flat_indices
+    def indices_flat(self):
+        """Flat indices (linear indexing) where to sample the function."""
+        return self.__indices_flat
 
     def _call(self, x, out=None):
         """Collect indices weighted with the cell volume."""
         c = getattr(self.domain, 'cell_volume', 1.0) # TODO: This only works for a subset of function spaces
         if out is None:
-            out = x[self.flat_indices]*c
+            out = c * x[self.indices_flat]
         else:
-            out[:] = x[self.flat_indices]*c
+            out[:] = c * x[self.indices_flat]
         return out
 
     @property
@@ -110,16 +110,18 @@ class SamplingOperator(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r}, {!r})'.format(self.__class__.__name__,
-                                       self.domain, self.indices)
+        return '{}({!r}, {!r})'.format(self.__class__.__name__, self.domain, 
+                                       self.indices)
 
     def __str__(self):
         """Return ``str(self)``."""
-        return '{} * I'.format(self.indices)
+        return repr(self)
 
 class ZerofillingOperator(Operator):
 
-    """Operator of multiplication with a scalar.
+    """Adjoint of the sampling operator.
+    If every index is sampled only once, then it performs a "zero filling" of
+    of the sampled coefficients.
 
         ``ZerofillingOperator(f)(x) == sum_{y in I, y == x} f(y), 0 if x not in I``
     """
@@ -129,34 +131,21 @@ class ZerofillingOperator(Operator):
 
         Parameters
         ----------
-        range : `LinearSpace` or `Field`
+        range : `FnBase` or `DiscreteLp`
             Set of elements into which this operator maps.
-        sample_indices : list
+        indices : list
             List of indices (I in the formula above)
 
         Examples
         --------
         >>> X = odl.uniform_discr(min_pt=[0, 0], max_pt=[1, 1], shape=[2, 2])
-        >>> x = X.one()
-        >>> ind = list()
-        >>> ind.append(range(2))
-        >>> ind.append([1,1])
-        >>> A = odl.operator.SamplingOperator(X, ind)
-        >>> A.adjoint(A(x))
-        uniform_discr([0.0, 0.0], [1.0, 1.0], (2, 2)).element([[0.0, 0.25], [0.0, 0.25]])
-        >>> A.adjoint(A(x))  # Out-of-place
-        uniform_discr([0.0, 0.0], [1.0, 1.0], (2, 2)).element([[0.0, 0.25], [0.0, 0.25]])
-
-        >>> X = odl.uniform_discr(min_pt=[-1, -1], max_pt=[1, 1], shape=[4, 3])
-        >>> x = X.element(range(1,X.size+1))
-        >>> ind = list()
-        >>> ind.append(range(3))
-        >>> ind.append(range(3))
-        >>> A = odl.operator.SamplingOperator(X, ind)
-        >>> A.adjoint(A(x)).inner(x) - A(x).inner(A(x))
-        -1.7763568394002505e-15
-        >>> A.adjoint(A(x))  # Out-of-place
-        -1.7763568394002505e-15
+        >>> ind = [[0, 1], [1, 1]]
+        >>> A = odl.ZerofillingOperator(X, ind)
+        >>> x = A.domain.one()
+        >>> A(x)
+        uniform_discr([0.0, 0.0], [1.0, 1.0], (2, 2)).element([[0.0, 1.0], [0.0, 1.0]])
+        >>> A(x)  # Out-of-place
+        uniform_discr([0.0, 0.0], [1.0, 1.0], (2, 2)).element([[0.0, 1.0], [0.0, 1.0]])
         """
 
         self.__indices = np.asarray(indices, dtype=int)
@@ -165,34 +154,29 @@ class ZerofillingOperator(Operator):
         if self.indices.ndim > 1:
             # Strides = increment in linear indices per axis
             strides = np.concatenate((np.cumprod(range.shape[1:])[::-1], [1]))
-            self.__flat_indices = np.sum(self.indices * strides[:, None], axis=0)
+            self.__indices_flat = np.sum(self.indices * strides[:, None], axis=0)
+        else:
+            self.__indices_flat = self.indices
 
-        self.__flat_indices_unique = np.unique(self.flat_indices)
-
-        domain = fn(self.flat_indices.size, dtype=range.dtype)
+        domain = fn(self.indices_flat.size, dtype=range.dtype)
         super().__init__(domain, range, linear=True)
             
     @property
     def indices(self):
-        """indices where to sample the function."""
+        """Indices where to sample the function."""
         return self.__indices
 
     @property
-    def flat_indices(self):
-        """flattened set of indices where to sample the function."""
-        return self.__flat_indices
-
-    @property
-    def flat_indices_unique(self):
-        """unique set of indices where to sample the function."""
-        return self.__flat_indices_unique
+    def indices_flat(self):
+        """Flattened set of indices (linear indexing) where to sample the function."""
+        return self.__indices_flat
 
     def _call(self, x, out=None):
-        """sum all values if indices are given multiple times."""        
-        y = np.bincount(self.flat_indices, weights=x, minlength=self.range.size)
+        """Sum all values if indices are given multiple times."""        
+        y = np.bincount(self.indices_flat, weights=x, minlength=self.range.size)
             
         if out is None:
-            out = self.range.element(y)
+            out = y
         else:
             out[:] = y
 
@@ -205,6 +189,17 @@ class ZerofillingOperator(Operator):
         Returns
         -------
         adjoint : `SamplingOperator`
+
+        Examples
+        --------
+        >>> X = odl.uniform_discr(min_pt=[-1, -1], max_pt=[1, 1], shape=[4, 3])
+        >>> x = X.element(range(1,X.size+1))
+        >>> ind = [[0, 1, 2], [0, 1, 2]]
+        >>> A = odl.SamplingOperator(X, ind)
+        >>> A.adjoint(A(x)).inner(x) - A(x).inner(A(x)) < 1e-10
+        True
+        >>> A.adjoint(A(x)).inner(x) - A(x).inner(A(x)) < 1e-10 # Out-of-place
+        True
         """
         return SamplingOperator(self.domain, self.indices)
 
@@ -216,14 +211,14 @@ class ZerofillingOperator(Operator):
 
     def __str__(self):
         """Return ``str(self)``."""
-        return '{} * I'.format(self.indices)
+        return repr(self)
 
 
 class VectoriseOperator(Operator):
 
     """Operator that reshapes the object as a column vector.
 
-        ``VectoriseOperator(f) == f[:]``
+        ``VectoriseOperator(f) == np.ravel(f)``
     """
 
     def __init__(self, domain, scaling=1):
@@ -231,26 +226,20 @@ class VectoriseOperator(Operator):
 
         Parameters
         ----------
-        domain : `LinearSpace` or `Field`
+        domain : `FnBase` or `DiscreteLp`
             Set of elements on which this operator acts.
 
         Examples
         --------
+        General usage example:
+
         >>> X = odl.uniform_discr(min_pt=[-1, -1], max_pt=[1, 1], shape=[3, 4])
         >>> x = X.element(range(X.size))
-        >>> A = odl.operator.VectoriseOperator(X)
+        >>> A = odl.VectoriseOperator(X)
         >>> A(x)
         rn(12).element([0.0, 1.0, 2.0, ..., 9.0, 10.0, 11.0])
         >>> A(x)  # Out-of-place
         rn(12).element([0.0, 1.0, 2.0, ..., 9.0, 10.0, 11.0])
-
-        >>> X = odl.uniform_discr(min_pt=[-1, -1], max_pt=[1, 1], shape=[3, 4])
-        >>> x = X.element(range(X.size))
-        >>> A = odl.operator.VectoriseOperator(X)
-        >>> (A.inverse(A(x)) - x).norm()
-        0.0
-        >>> (A.inverse(A(x)) - x).norm() # Out-of-place
-        0.0
         """
         if not isinstance(domain, (LinearSpace, Field)):
             raise TypeError('`space` {!r} not a `LinearSpace` or `Field` '
@@ -263,9 +252,9 @@ class VectoriseOperator(Operator):
     def _call(self, x, out=None):
         """Collect indices."""
         if out is None:
-            out = self.scaling*x[:]
+            out = self.scaling * np.ravel(x)
         else:
-            out[:] = self.scaling*x[:]
+            out[:] = self.scaling * np.ravel(x)
         return out
 
     @property
@@ -280,7 +269,17 @@ class VectoriseOperator(Operator):
 
         Returns
         -------
-        adjoint : `VectoriseOperatorAdjoint`
+        adjoint : `EmbeddingOperator`
+
+        Examples
+        --------
+        >>> X = odl.uniform_discr(min_pt=[-1, -1], max_pt=[1, 1], shape=[2, 3])
+        >>> A = odl.VectoriseOperator(X)
+        >>> x = A.domain.element(range(A.domain.size))
+        >>> A.adjoint(A(x)).inner(x) - A(x).inner(A(x)) < 1e-10
+        True
+        >>> A.adjoint(A(x)).inner(x) - A(x).inner(A(x)) < 1e-10 # Out-of-place
+        True
         """
         c = getattr(self.domain, 'cell_volume', 1.0) # TODO: This only works for a subset of function spaces
         return EmbeddingOperator(self.domain, self.scaling/c)
@@ -292,6 +291,16 @@ class VectoriseOperator(Operator):
         Returns
         -------
         adjoint : `EmbeddingOperator`
+
+        Examples
+        --------
+        >>> X = odl.uniform_discr(min_pt=[-1, -1], max_pt=[1, 1], shape=[3, 4])
+        >>> x = X.element(range(X.size))
+        >>> A = odl.VectoriseOperator(X)
+        >>> (A.inverse(A(x)) - x).norm() < 1e-10
+        True
+        >>> (A.inverse(A(x)) - x).norm() < 1e-10 # Out-of-place
+        True
         """
         return EmbeddingOperator(self.domain, 1./self.scaling)
 
@@ -301,16 +310,16 @@ class VectoriseOperator(Operator):
 
     def __str__(self):
         """Return ``str(self)``."""
-        return '{}'
-
+        return repr(self)
 
 class EmbeddingOperator(Operator):
 
     """Operator that creates an element of a vector space given its coefficients.
+    The operator is defined by:
 
-        ``EmbeddingOperator(f) == X.element(f)``
+        ``EmbeddingOperator(X)(f) == X.element(f)``
         
-        For the adjoint it is important that the element is scaled properly.
+    For the adjoint it is important that the element is scaled properly.
     """
 
     def __init__(self, range, scaling=1):
@@ -323,32 +332,15 @@ class EmbeddingOperator(Operator):
 
         Examples
         --------
-        Test for the adjoint
-        >>> X = odl.uniform_discr(min_pt=[-1, -1], max_pt=[1, 1], shape=[3, 4])
-        >>> A = odl.operator.VectoriseOperator(X)
+        General usage example:
+        
+        >>> X = odl.uniform_discr(min_pt=[-1, -1], max_pt=[1, 1], shape=[2, 2])
+        >>> A = odl.EmbeddingOperator(X)
         >>> x = A.domain.element(range(A.domain.size))
-        >>> A.adjoint(A(x)).inner(x) - A(x).inner(A(x))
-        0.0
-        >>> A.adjoint(A(x)).inner(x) - A(x).inner(A(x)) # Out-of-place
-        0.0
-
-        Test for the adjoint of the adjoint
-        >>> X = odl.uniform_discr(min_pt=[-1, -1], max_pt=[1, 1], shape=[3, 4])
-        >>> A = odl.operator.VectoriseOperator(X).adjoint
-        >>> x = A.domain.element(range(A.domain.size))
-        >>> A.adjoint(A(x)).inner(x) - A(x).inner(A(x))
-        0.0
-        >>> A.adjoint(A(x)).inner(x) - A(x).inner(A(x)) # Out-of-place
-        0.0
-
-        Test for the adjoint of the inverse
-        >>> X = odl.uniform_discr(min_pt=[-1, -1], max_pt=[1, 1], shape=[3, 4])
-        >>> A = odl.operator.VectoriseOperator(X).inverse
-        >>> x = A.domain.element(range(A.domain.size))
-        >>> A.adjoint(A(x)).inner(x) - A(x).inner(A(x))
-        0.0
-        >>> A.adjoint(A(x)).inner(x) - A(x).inner(A(x)) # Out-of-place
-        0.0
+        >>> A(x)
+        uniform_discr([-1.0, -1.0], [1.0, 1.0], (2, 2)).element([[0.0, 1.0], [2.0, 3.0]])
+        >>> A(x) # Out-of-place
+        uniform_discr([-1.0, -1.0], [1.0, 1.0], (2, 2)).element([[0.0, 1.0], [2.0, 3.0]])
         """
         if not isinstance(range, (LinearSpace, Field)):
             raise TypeError('`space` {!r} not a `LinearSpace` or `Field` '
@@ -361,9 +353,9 @@ class EmbeddingOperator(Operator):
     def _call(self, x, out=None):
         """Create a new element with the known coefficients."""
         if out is None:
-            out = self.range.element(self.scaling*x)
+            out = self.scaling*x
         else:
-            out[:] = self.scaling*x[:]
+            out[:] = self.scaling*x
         return out
 
     @property
@@ -378,9 +370,19 @@ class EmbeddingOperator(Operator):
         Returns
         -------
         adjoint : `VectoriseOperator`
+
+        Examples
+        --------
+        >>> X = odl.uniform_discr(min_pt=[-1, -1], max_pt=[1, 1], shape=[2, 3])
+        >>> A = odl.EmbeddingOperator(X)
+        >>> x = A.domain.element(range(A.domain.size))
+        >>> A.adjoint(A(x)).inner(x) - A(x).inner(A(x)) < 1e-10
+        True
+        >>> A.adjoint(A(x)).inner(x) - A(x).inner(A(x)) < 1e-10 # Out-of-place
+        True
         """
         c = getattr(self.range, 'cell_volume', 1.0) # TODO: This only works for a subset of function spaces
-        return VectoriseOperator(self.range, self.scaling/c)
+        return VectoriseOperator(self.range, self.scaling*c)
 
     @property
     def inverse(self):
@@ -389,6 +391,16 @@ class EmbeddingOperator(Operator):
         Returns
         -------
         adjoint : `VectoriseOperator`
+
+        Examples
+        --------
+        >>> X = odl.uniform_discr(min_pt=[-1, -1], max_pt=[1, 1], shape=[3, 4])
+        >>> A = odl.EmbeddingOperator(X)
+        >>> x = A.domain.element(range(A.domain.size))
+        >>> (A.inverse(A(x)) - x).norm() < 1e-10
+        True
+        >>> (A.inverse(A(x)) - x).norm() < 1e-10 # Out-of-place
+        True
         """
         return VectoriseOperator(self.range, 1./self.scaling)
 
@@ -398,9 +410,10 @@ class EmbeddingOperator(Operator):
 
     def __str__(self):
         """Return ``str(self)``."""
-        return '{}'
-
+        return repr(self)
+        
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()
+    
