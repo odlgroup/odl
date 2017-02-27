@@ -18,7 +18,7 @@ import numpy as np
 
 __all__ = ('array1d_repr', 'array1d_str', 'arraynd_repr', 'arraynd_str',
            'dtype_repr', 'dtype_str', 'signature_string', 'indent_rows',
-           'is_scalar_dtype', 'is_int_dtype', 'is_floating_dtype',
+           'is_numeric_dtype', 'is_int_dtype', 'is_floating_dtype',
            'is_real_dtype', 'is_real_floating_dtype',
            'is_complex_floating_dtype',
            'is_string',
@@ -242,8 +242,8 @@ def cache_arguments(function):
 
 
 @cache_arguments
-def is_scalar_dtype(dtype):
-    """Return ``True`` if ``dtype`` is a scalar type."""
+def is_numeric_dtype(dtype):
+    """Return ``True`` if ``dtype`` is a numeric type."""
     return np.issubsctype(dtype, np.number)
 
 
@@ -262,7 +262,7 @@ def is_floating_dtype(dtype):
 @cache_arguments
 def is_real_dtype(dtype):
     """Return ``True`` if ``dtype`` is a real (including integer) type."""
-    return is_scalar_dtype(dtype) and not is_complex_floating_dtype(dtype)
+    return is_numeric_dtype(dtype) and not is_complex_floating_dtype(dtype)
 
 
 @cache_arguments
