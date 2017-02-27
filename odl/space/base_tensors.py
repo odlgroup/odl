@@ -13,11 +13,11 @@ from __future__ import print_function, division, absolute_import
 
 import numpy as np
 
-from odl.set.sets import Set, RealNumbers, ComplexNumbers
+from odl.set.sets import RealNumbers, ComplexNumbers
 from odl.set.space import LinearSpace, LinearSpaceElement
 from odl.util import (
-    is_scalar_dtype, is_floating_dtype, is_real_dtype,
-    is_complex_floating_dtype, safe_int_conv,
+    is_numeric_dtype, is_floating_dtype, is_real_dtype,
+    is_real_floating_dtype, is_complex_floating_dtype, safe_int_conv,
     arraynd_repr, arraynd_str, dtype_str, signature_string, indent_rows)
 from odl.util.ufuncs import TensorSpaceUfuncs
 from odl.util.utility import TYPE_MAP_R2C, TYPE_MAP_C2R
@@ -88,27 +88,20 @@ class TensorSpace(LinearSpace):
         if is_real_dtype(self.dtype):
             # real includes non-floating-point like integers
             field = RealNumbers()
-            self.__is_real = True
-            self.__is_complex = False
             self.__real_dtype = self.dtype
             self.__real_space = self
             self.__complex_dtype = TYPE_MAP_R2C.get(self.dtype, None)
             self.__complex_space = None  # Set in first call of astype
         elif is_complex_floating_dtype(self.dtype):
             field = ComplexNumbers()
-            self.__is_real = False
-            self.__is_complex = True
             self.__real_dtype = TYPE_MAP_C2R[self.dtype]
             self.__real_space = None  # Set in first call of astype
             self.__complex_dtype = self.dtype
             self.__complex_space = self
         else:
             field = None
-            self.__is_real = False
-            self.__is_complex = False
 
         LinearSpace.__init__(self, field)
-        self.__is_floating = is_floating_dtype(self.dtype)
 
     @property
     def impl(self):
@@ -126,19 +119,14 @@ class TensorSpace(LinearSpace):
         return self.__dtype
 
     @property
-    def is_numeric(self):
-        """``True`` if `dtype` is numeric, otherwise ``False``."""
-        return self.__is_real or self.__is_complex
-
-    @property
     def is_real_space(self):
         """True if this is a space of real tensors."""
-        return self.__is_real and self.__is_floating
+        return is_real_floating_dtype(self.dtype)
 
     @property
     def is_complex_space(self):
         """True if this is a space of complex tensors."""
-        return self.__is_complex and self.__is_floating
+        return is_complex_floating_dtype(self.dtype)
 
     @property
     def real_dtype(self):
@@ -149,7 +137,7 @@ class TensorSpace(LinearSpace):
         NotImplementedError
             If `dtype` is not a numeric data type.
         """
-        if not self.is_numeric:
+        if not is_numeric_dtype(self.dtype):
             raise NotImplementedError(
                 '`real_dtype` not defined for non-numeric `dtype`')
         return self.__real_dtype
@@ -163,7 +151,7 @@ class TensorSpace(LinearSpace):
         NotImplementedError
             If `dtype` is not a numeric data type.
         """
-        if not self.is_numeric:
+        if not is_numeric_dtype(self.dtype):
             raise NotImplementedError(
                 '`complex_dtype` not defined for non-numeric `dtype`')
         return self.__complex_dtype
@@ -177,7 +165,7 @@ class TensorSpace(LinearSpace):
         NotImplementedError
             If `dtype` is not a numeric data type.
         """
-        if not self.is_numeric:
+        if not is_numeric_dtype(self.dtype):
             raise NotImplementedError(
                 '`real_space` not defined for non-numeric `dtype`')
         return self.astype(self.real_dtype)
@@ -191,7 +179,7 @@ class TensorSpace(LinearSpace):
         NotImplementedError
             If `dtype` is not a numeric data type.
         """
-        if not self.is_numeric:
+        if not is_numeric_dtype(self.dtype):
             raise NotImplementedError(
                 '`complex_space` not defined for non-numeric `dtype`')
         return self.astype(self.complex_dtype)
@@ -239,7 +227,7 @@ class TensorSpace(LinearSpace):
         if dtype == self.dtype and order == self.order:
             return self
 
-        if self.is_numeric:
+        if is_numeric_dtype(self.dtype):
             # Caching for real and complex versions (exact dtype mappings)
             if dtype == self.__real_dtype and order == self.order:
                 if self.__real_space is None:
@@ -416,7 +404,7 @@ class TensorSpace(LinearSpace):
         rand_state = np.random.get_state()
         np.random.seed(1337)
 
-        if self.is_numeric:
+        if is_numeric_dtype(self.dtype):
             yield ('Linearly spaced samples', self.element(
                 np.linspace(0, 1, self.size).reshape(self.shape)))
             yield ('Normally distributed noise',
