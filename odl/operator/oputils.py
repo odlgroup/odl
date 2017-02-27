@@ -441,10 +441,29 @@ def as_proximal_lang_operator(op, norm_bound=None):
                                  norm_bound=norm_bound)
 
 
-<<<<<<< 2e7cc2a65d6a35b35a45bf1850628fce943ea925
-=======
-def as_tensorflow_layer(odl_op, name):
-    """Convert ``Operator`` to tensorflow layer."""
+def as_tensorflow_layer(odl_op, name='ODLOperator'):
+    """Convert ``Operator`` to tensorflow layer.
+
+    Parameters
+    ----------
+    odl_op : `Operator`
+        The operator that should be wrapped to a tensorflow layer.
+    name : str
+        Tensorflow name of the operator
+
+    Returns
+    -------
+    tensorflow_layer : callable
+        Callable that, when called with an `tensorflow.Tensor` of shape
+        `(n, *odl_op.domain.shape, 1)` returns a tensor of shape
+        `(n, *odl_op.range.shape, 1)` where ``n`` is the number of batches.
+        Hence for each evaluation, ``odl_op`` is called a total of ``n`` times.
+        The `dtype` of the tensor is the same as the respective ODL spaces.
+
+        If ``odl_op`` implements `Operator.derivative` which in turn implements
+        `Operator.adjoint`, it is properly wrapped in ``tensorflow_layer``, and
+        gradients propagate as expected.
+    """
     import tensorflow as tf
     from tensorflow.python.framework import ops
 
@@ -459,26 +478,66 @@ def as_tensorflow_layer(odl_op, name):
             tf.RegisterGradient(rnd_name)(grad)
             g = tf.get_default_graph()
             with g.gradient_override_map({"PyFunc": rnd_name}):
-                return tf.py_func(func, inp, Tout, stateful=stateful, name=name)
+                return tf.py_func(func, inp, Tout, stateful=stateful,
+                                  name=name)
 
     def tensorflow_layer_grad_impl(x, dx):
+        """Implementation of the tensorflow gradient.
+
+        Gradient in tensorflow is equivalent to the adjoint of the derivative
+        in ODL.
+        """
+        x_shape = x.get_shape()
+        dx_shape = dx.get_shape()
+        out_shape = (int(x_shape[0]),) + odl_op.domain.shape + (1,)
+
+        # Validate input shape
+        assert x_shape[0] == dx_shape[0]
+        assert x_shape[1:] == odl_op.domain.shape + (1,)
+        assert dx_shape[1:] == odl_op.range.shape + (1,)
+
         def _impl(x, dx):
-            return np.asarray(odl_op.derivative(x).adjoint(dx))
+            out = np.empty(out_shape, odl_op.domain.dtype)
+            for i in range(x_shape[0]):
+                xi = x[i, ..., 0]
+                dxi = dx[i, ..., 0]
+                result = odl_op.derivative(xi).adjoint(dxi)
+                out[i] = np.asarray(result)[..., None]
+            return out
 
         with ops.name_scope(name, "ODLTensorflowLayerGrad", [x, dx]):
             result = py_func(_impl,
                              [x, dx],
                              [tf.float32])
-            return result[0]
 
-    # Actual gradient:
+            # We must manually set the output shape since tensorflow cannot
+            # figure it out
+            result = result[0]
+            result.set_shape(out_shape)
+            return result
+
     def tensorflow_layer_grad(op, grad):
+        """Thin wrapper for the gradient."""
         x = op.inputs[0]
         return tensorflow_layer_grad_impl(x, grad)
 
     def tensorflow_layer(x):
+        """Implementation of the tensorflow call.
+
+        Gradient in tensorflow is equivalent to the adjoint of the derivative
+        in ODL.
+        """
+        x_shape = x.get_shape()
+        out_shape = (int(x_shape[0]),) + odl_op.range.shape + (1,)
+
+        # Validate input shape
+        assert x_shape[1:] == odl_op.domain.shape + (1,)
+
         def _impl(x):
-            return np.asarray(odl_op(x))
+            out = np.empty(out_shape, odl_op.range.dtype)
+            for i in range(x_shape[0]):
+                out[i] = np.asarray(odl_op(x[i, ..., 0]))[..., None]
+            return out
 
         with ops.name_scope(name, "ODLTensorflowLayer", [x]) as name_call:
             result = py_func(_impl,
@@ -486,11 +545,16 @@ def as_tensorflow_layer(odl_op, name):
                              [tf.float32],
                              name=name_call,
                              grad=tensorflow_layer_grad)
-            return result[0]
+
+            # We must manually set the output shape since tensorflow cannot
+            # figure it out
+            result = result[0]
+            result.set_shape(out_shape)
+            return result
 
     return tensorflow_layer
 
->>>>>>> ENH: Add (initial) support for tensorflow interconnectivity
+
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
