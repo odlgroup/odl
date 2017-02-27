@@ -41,7 +41,7 @@ class SamplingOperator(Operator):
         ``SamplingOperator(f, indices) == cell_volume * f[indices]``
     """
 
-    def __init__(self, domain, indices):
+    def __init__(self, domain, indices, weighting=None):
         """Initialize a new instance.
 
         Parameters
@@ -50,6 +50,8 @@ class SamplingOperator(Operator):
             Set of elements on which this operator acts.
         indices : list
             List of indices where to sample the function
+        weighting : {None, 'cell_volume'}
+            weighting scheme
 
         Examples
         --------
@@ -58,9 +60,9 @@ class SamplingOperator(Operator):
         >>> ind = [[0, 1], [1, 1]]
         >>> A = odl.SamplingOperator(X, ind)
         >>> A(x)
-        rn(2).element([0.25, 0.75])
+        rn(2).element([1.0, 3.0])
         >>> A(x)  # Out-of-place
-        rn(2).element([0.25, 0.75])
+        rn(2).element([1.0, 3.0])
         """
         if not isinstance(domain, (FnBase, DiscreteLp)):
             raise TypeError('`space` {!r} not a `FnBase` or `DiscreteLp` '
@@ -75,9 +77,20 @@ class SamplingOperator(Operator):
             self.__indices_flat = np.sum(self.indices * strides[:, None], axis=0)
         else:
             self.__indices_flat = self.indices
+
+        self.__weighting = weighting        
+        if self.weighting is None:
+            self.__weights = 1
+        elif self.weighting == 'cell_volume':
+            self.__weights = getattr(domain, 'cell_volume', 1.0)
         
         range = fn(self.indices_flat.size, dtype=domain.dtype)
         super().__init__(domain, range, linear=True)
+
+    @property
+    def weighting(self):
+        """Weighting scheme for the sampling operator."""
+        return self.__weighting
 
     @property
     def indices(self):
@@ -91,11 +104,10 @@ class SamplingOperator(Operator):
 
     def _call(self, x, out=None):
         """Collect indices weighted with the cell volume."""
-        c = getattr(self.domain, 'cell_volume', 1.0) # TODO: This only works for a subset of function spaces
         if out is None:
-            out = c * x[self.indices_flat]
+            out = self.__weights * x[self.indices_flat]
         else:
-            out[:] = c * x[self.indices_flat]
+            out[:] = self.__weights * x[self.indices_flat]
         return out
 
     @property
@@ -106,7 +118,12 @@ class SamplingOperator(Operator):
         -------
         adjoint : `ZerofillingOperator`
         """
-        return ZerofillingOperator(self.domain, self.indices)
+        if self.weighting is None:
+            weighting = 'cell_volume'
+        elif self.weighting == 'cell_volume':
+            weighting = None
+            
+        return ZerofillingOperator(self.domain, self.indices, weighting)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -126,7 +143,7 @@ class ZerofillingOperator(Operator):
         ``ZerofillingOperator(f)(x) == sum_{y in I, y == x} f(y), 0 if x not in I``
     """
 
-    def __init__(self, range, indices):
+    def __init__(self, range, indices, weighting=None):
         """Initialize a new instance.
 
         Parameters
@@ -135,6 +152,8 @@ class ZerofillingOperator(Operator):
             Set of elements into which this operator maps.
         indices : list
             List of indices (I in the formula above)
+        weighting : {None, 'cell_volume'}
+            weighting scheme
 
         Examples
         --------
@@ -158,9 +177,20 @@ class ZerofillingOperator(Operator):
         else:
             self.__indices_flat = self.indices
 
+        self.__weighting = weighting        
+        if self.weighting is None:
+            self.__weights = 1
+        elif self.weighting == 'cell_volume':
+            self.__weights = getattr(range, 'cell_volume', 1.0)
+
         domain = fn(self.indices_flat.size, dtype=range.dtype)
         super().__init__(domain, range, linear=True)
             
+    @property
+    def weighting(self):
+        """Weighting scheme for the operator."""
+        return self.__weighting
+
     @property
     def indices(self):
         """Indices where to sample the function."""
@@ -176,9 +206,9 @@ class ZerofillingOperator(Operator):
         y = np.bincount(self.indices_flat, weights=x, minlength=self.range.size)
             
         if out is None:
-            out = y
+            out = self.__weights * y
         else:
-            out[:] = y
+            out[:] = self.__weights * y
 
         return out
 
@@ -201,7 +231,12 @@ class ZerofillingOperator(Operator):
         >>> A.adjoint(A(x)).inner(x) - A(x).inner(A(x)) < 1e-10 # Out-of-place
         True
         """
-        return SamplingOperator(self.domain, self.indices)
+        if self.weighting is None:
+            weighting = 'cell_volume'
+        elif self.weighting == 'cell_volume':
+            weighting = None
+            
+        return SamplingOperator(self.range, self.indices, weighting)
 
     def __repr__(self):
         """Return ``repr(self)``."""
