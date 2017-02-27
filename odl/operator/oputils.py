@@ -503,12 +503,17 @@ def as_tensorflow_layer(odl_op, name='ODLOperator'):
                 dxi = dx[i, ..., 0]
                 result = odl_op.derivative(xi).adjoint(dxi)
                 out[i] = np.asarray(result)[..., None]
+
+            # TODO: Improve
+            scale = odl_op.domain.cell_volume / odl_op.range.cell_volume
+            out *= scale
             return out
 
         with ops.name_scope(name, "ODLTensorflowLayerGrad", [x, dx]):
             result = py_func(_impl,
                              [x, dx],
-                             [tf.float32])
+                             [tf.float32],
+                             stateful=False)
 
             # We must manually set the output shape since tensorflow cannot
             # figure it out
@@ -544,6 +549,7 @@ def as_tensorflow_layer(odl_op, name='ODLOperator'):
                              [x],
                              [tf.float32],
                              name=name_call,
+                             stateful=False,
                              grad=tensorflow_layer_grad)
 
             # We must manually set the output shape since tensorflow cannot
