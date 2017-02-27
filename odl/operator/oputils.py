@@ -21,7 +21,8 @@ from odl.space import ProductSpace
 from odl.util import as_flat_array
 
 __all__ = ('matrix_representation', 'power_method_opnorm', 'as_scipy_operator',
-           'as_scipy_functional', 'as_proximal_lang_operator')
+           'as_scipy_functional', 'as_proximal_lang_operator',
+           'as_tensorflow_layer')
 
 
 def matrix_representation(op):
@@ -438,6 +439,54 @@ def as_proximal_lang_operator(op, norm_bound=None):
                                  forward=forward,
                                  adjoint=adjoint,
                                  norm_bound=norm_bound)
+
+
+def as_tensorflow_layer(odl_op, name):
+    """Convert ``Operator`` to tensorflow layer."""
+    import tensorflow as tf
+    from tensorflow.python.framework import ops
+
+    def py_func(func, inp, Tout, stateful=True, name=None, grad=None):
+        """Define custom py_func which takes also a grad op as argument."""
+        if grad is None:
+            return tf.py_func(func, inp, Tout, stateful=stateful, name=name)
+        else:
+            # Need to generate a unique name to avoid duplicates:
+            rnd_name = 'PyFuncGrad' + str(np.random.randint(0, 1E+8))
+
+            tf.RegisterGradient(rnd_name)(grad)
+            g = tf.get_default_graph()
+            with g.gradient_override_map({"PyFunc": rnd_name}):
+                return tf.py_func(func, inp, Tout, stateful=stateful, name=name)
+
+    def tensorflow_layer_grad_impl(x, dx):
+        def _impl(x, dx):
+            return np.asarray(odl_op.derivative(x).adjoint(dx))
+
+        with ops.name_scope(name, "ODLTensorflowLayerGrad", [x, dx]):
+            result = py_func(_impl,
+                             [x, dx],
+                             [tf.float32])
+            return result[0]
+
+    # Actual gradient:
+    def tensorflow_layer_grad(op, grad):
+        x = op.inputs[0]
+        return tensorflow_layer_grad_impl(x, grad)
+
+    def tensorflow_layer(x):
+        def _impl(x):
+            return np.asarray(odl_op(x))
+
+        with ops.name_scope(name, "ODLTensorflowLayer", [x]) as name_call:
+            result = py_func(_impl,
+                             [x],
+                             [tf.float32],
+                             name=name_call,
+                             grad=tensorflow_layer_grad)
+            return result[0]
+
+    return tensorflow_layer
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position
