@@ -882,7 +882,7 @@ class ProductSpaceElement(LinearSpaceElement):
         --------
         odl.discr.lp_discr.DiscreteLpElement.show :
             Display of a discretized function
-        odl.space.base_tensors.GeneralizedTensor.show :
+        odl.space.base_tensors.Tensor.show :
             Display of sequence type data
         odl.util.graphics.show_discrete_data :
             Underlying implementation

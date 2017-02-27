@@ -22,7 +22,7 @@ Glossary
 
     discretization
         Structure to handle the mapping between abstract objects (e.g. functions) and concrete, finite realizations.
-        It encompasses an abstract `Set`, a finite data container (`GeneralizedTensor` in general) and the mappings between them,         :term:`sampling` and :term:`interpolation`.
+        It encompasses an abstract `Set`, a `Tensor` as finite data container and the mappings between them, :term:`sampling` and :term:`interpolation`.
 
     domain
         Set of elements to which an operator can be applied.

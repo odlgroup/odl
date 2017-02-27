@@ -41,7 +41,7 @@ def vector(array, dtype=None, order='C', impl='numpy'):
 
     Returns
     -------
-    vector : `GeneralizedTensor`
+    vector : `Tensor`
         Vector created from the input array. Its concrete type depends
         on the provided arguments.
 
