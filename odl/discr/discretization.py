@@ -21,7 +21,7 @@ from odl.space.entry_points import TENSOR_SPACE_IMPLS
 from odl.set import RealNumbers, ComplexNumbers
 from odl.util import (
     arraynd_repr, arraynd_str, indent_rows,
-    is_real_floating_dtype, is_complex_floating_dtype, is_scalar_dtype)
+    is_real_floating_dtype, is_complex_floating_dtype, is_numeric_dtype)
 
 
 __all__ = ('DiscretizedSpace',)
@@ -492,13 +492,13 @@ def dspace_type(space, impl, dtype=None):
             raise TypeError('complex floating data type {!r} requires space '
                             'field to be of type ComplexNumbers, got {!r}'
                             ''.format(dtype, field_type))
-    elif is_scalar_dtype(dtype):
+    elif is_numeric_dtype(dtype):
         if field_type == ComplexNumbers:
             raise TypeError('non-floating data type {!r} requires space field '
                             'to be of type RealNumbers, got {!r}'
                             .format(dtype, field_type))
     else:
-        raise TypeError('non-scalar data type {!r} cannot be combined with '
+        raise TypeError('non-numeric data type {!r} cannot be combined with '
                         'a `LinearSpace`'.format(dtype))
 
     stype = TENSOR_SPACE_IMPLS.get(impl, None)

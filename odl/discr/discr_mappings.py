@@ -27,7 +27,8 @@ from odl.space.base_tensors import TensorSpace
 from odl.space import FunctionSpace
 from odl.util import (
     is_valid_input_meshgrid, out_shape_from_array, out_shape_from_meshgrid,
-    writable_array, signature_string, indent_rows, dtype_repr)
+    writable_array, signature_string, indent_rows, dtype_repr,
+    is_numeric_dtype)
 
 
 __all__ = ('FunctionSpaceMapping',
@@ -97,7 +98,7 @@ class FunctionSpaceMapping(Operator):
             if self.domain.field is None:
                 raise TypeError('`fspace.field` cannot be `None` for '
                                 '`linear=True`')
-            if not dspace.is_numeric:
+            if not is_numerc_dtype(dspace.dtype):
                 raise TypeError('`dspace.dtype` must be a numeric data type '
                                 'for `linear=True`, got {}'
                                 ''.format(dtype_repr(dspace)))

@@ -26,7 +26,8 @@ from odl.space.base_tensors import TensorSpace, Tensor
 from odl.space.weighting import (
     Weighting, ArrayWeighting, ConstWeighting, NoWeighting,
     CustomInner, CustomNorm, CustomDist)
-from odl.util import dtype_str, signature_string, is_real_dtype
+from odl.util import (
+    dtype_str, signature_string, is_real_dtype, is_numeric_dtype)
 from odl.util.ufuncs import NumpyTensorSpaceUfuncs
 
 
@@ -231,7 +232,7 @@ class NumpyTensorSpace(TensorSpace):
         exponent = kwargs.pop('exponent', getattr(weighting, 'exponent', 2.0))
         dist_using_inner = bool(kwargs.pop('dist_using_inner', False))
 
-        if (not self.is_numeric and
+        if (not is_numeric_dtype(self.dtype) and
                 any(x is not None for x in (dist, norm, inner, weighting))):
             raise ValueError('cannot use any of `weighting`, `dist`, `norm` '
                              'or `inner` for non-numeric `dtype` {}'
@@ -782,7 +783,7 @@ class NumpyTensorSpace(TensorSpace):
             constructor_name = 'tensor_space'
 
         if (constructor_name == 'tensor_space' or
-                not self.is_numeric or
+                not is_numeric_dtype(self.dtype) or
                 self.dtype != self.default_dtype(self.field)):
             posargs.append(dtype_str(self.dtype))
 
@@ -1307,7 +1308,7 @@ class NumpyTensor(Tensor):
              [(4-0j), (5+5j), (6-0j)]]
         )
         """
-        if not self.space.is_numeric:
+        if not is_numeric_dtype(self.space.dtype):
             raise NotImplementedError('`conj` not defined for non-numeric '
                                       'dtype {}'.format(self.dtype))
 
