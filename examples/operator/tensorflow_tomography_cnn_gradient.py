@@ -5,6 +5,19 @@ import numpy as np
 import odl
 
 
+def random_ellipse():
+    return (np.random.rand() - 0.3,
+            np.random.exponential() * 0.2, np.random.exponential() * 0.2,
+            np.random.rand() - 0.5, np.random.rand() - 0.5,
+            np.random.rand() * 2 * np.pi)
+
+
+def random_phantom(spc):
+    n = np.random.poisson(10)
+    ellipses = [random_ellipse() for _ in range(n)]
+    return odl.phantom.ellipsoid_phantom(spc, ellipses)
+
+
 def conv2d(x, W):
     return tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding='SAME')
 
@@ -15,62 +28,74 @@ def var(x):
 
 with tf.Session() as sess:
     # Create ODL data structures
-    space = odl.uniform_discr([-64, -64], [64, 64], [256, 256],
+    size = 128
+    space = odl.uniform_discr([-64, -64], [64, 64], [size, size],
                               dtype='float32')
     geometry = odl.tomo.parallel_beam_geometry(space)
     ray_transform = odl.tomo.RayTransform(space, geometry)
-    phantom = odl.phantom.shepp_logan(space, True)
-    data = ray_transform(phantom)
-    noisy_data = data + odl.phantom.white_noise(ray_transform.range) * np.mean(data) * 0.1
-    fbp = odl.tomo.fbp_op(ray_transform)(noisy_data)
+
 
     # Create tensorflow layer from odl operator
     odl_op_layer = odl.as_tensorflow_layer(ray_transform,
                                            'RayTransform')
     odl_op_layer_adjoint = odl.as_tensorflow_layer(ray_transform.adjoint,
                                                    'RayTransformAdjoint')
-    x = tf.constant(np.asarray(fbp)[None, :, :, None], name="x")
 
-    x_true = tf.constant(np.asarray(phantom)[None, :, :, None], name="x_true")
+    n_data = 50
+    x_arr = np.empty((n_data, space.shape[0], space.shape[1], 1), dtype='float32')
+    y_arr = np.empty((n_data, ray_transform.range.shape[0], ray_transform.range.shape[1], 1), dtype='float32')
+    x_true_arr = np.empty((n_data, space.shape[0], space.shape[1], 1), dtype='float32')
 
-    s = tf.Variable(tf.constant(np.zeros([1, 256, 256, 5]), dtype='float32'))
+    for i in range(n_data):
+        if i == 0:
+            phantom = odl.phantom.shepp_logan(space, True)
+        else:
+            phantom = random_phantom(space)
+        data = ray_transform(phantom)
+        noisy_data = data + odl.phantom.white_noise(ray_transform.range) * np.mean(data) * 0.1
+        fbp = odl.tomo.fbp_op(ray_transform)(noisy_data)
+
+        x_arr[i] = np.asarray(fbp)[..., None]
+        x_true_arr[i] = np.asarray(phantom)[..., None]
+        y_arr[i] = np.asarray(noisy_data)[..., None]
+
+    x = tf.constant(x_arr, name="x")
+    x_true = tf.constant(x_true_arr, name="x_true")
+    y = tf.constant(y_arr, name='y')
+
+    s = tf.Variable(tf.constant(np.zeros([n_data, size, size, 5]), dtype='float32'))
 
     # Create constant right hand side
-    y = tf.constant(np.asarray(noisy_data)[None, :, :, None])
 
-    w1 = var(np.random.randn(*[3, 3, 7, 32]) * 0.01)
-    b1 = var(np.random.randn(*[1, 256, 256, 32]) * 0.001)
+    w1 = tf.Variable(tf.truncated_normal([3, 3, 7, 32], stddev=0.01))
+    b1 = var(np.ones(32) * 0.1)
 
-    w2 = var(np.random.randn(*[3, 3, 32, 32]) * 0.01)
-    b2 = var(np.random.randn(*[1, 256, 256, 32]) * 0.001)
+    w2 = tf.Variable(tf.truncated_normal([3, 3, 32, 32], stddev=0.01))
+    b2 = var(np.ones(32) * 0.1)
 
-    w3 = var(np.random.randn(*[3, 3, 32, 6]) * 0.01)
-    b3 = var(np.random.randn(*[1, 256, 256, 6]) * 0.001)
+    w3 = tf.Variable(tf.truncated_normal([3, 3, 32, 6], stddev=0.01))
+    b3 = var(np.random.randn(6) * 0.001)
 
     n_iter = 5
-    x_vals = []
 
     loss = 0
     for i in range(n_iter):
         # Reshape for ODL
-        residual = odl_op_layer(x) - y
-        dx = odl_op_layer_adjoint(residual)
+        gradx = odl_op_layer_adjoint(odl_op_layer(x) - y)
 
-        dx = tf.concat([x, dx, s], axis=3)
+        dx = tf.concat([x, gradx, s], axis=3)
 
         dx = tf.nn.relu(conv2d(dx, w1) + b1)
         dx = tf.nn.relu(conv2d(dx, w2) + b2)
-        dx = tf.nn.dropout(dx, 0.95)
-        dx = tf.nn.tanh(conv2d(dx, w3) + b3)
+        dx = tf.nn.dropout(dx, 0.8)
+        dx = conv2d(dx, w3) + b3
 
-        s = dx[..., 1:]
-        dx = dx[..., 0][..., None]
+        s = tf.nn.relu(dx[..., 1:])
+        dx = tf.nn.tanh(dx[..., 0][..., None])
 
         x = x + dx
 
-        x_vals.append(x)
-
-        loss = loss + tf.nn.l2_loss(x - x_true) * (2. ** (i - n_iter))
+        loss = loss + tf.nn.l2_loss(x - x_true) * (2. ** (i - n_iter)) / n_data
 
     # Train using the adam optimizer
     learning_rate = tf.placeholder(tf.float32, shape=[])
@@ -80,12 +105,14 @@ with tf.Session() as sess:
     tf.global_variables_initializer().run()
 
     # Solve with an ODL callback to see what happens
-    callback = odl.solvers.CallbackShow(clim=[0, 1])
+    callback = odl.solvers.CallbackShow()
 
-    for i in range(1000):
+    for i in range(10000):
         if i < 100:
             sess.run(optimizer, feed_dict={learning_rate: 0.001})
         else:
-            sess.run(optimizer, feed_dict={learning_rate: 0.0001})
-        callback((space ** n_iter).element([xi.eval() for xi in x_vals]))
-        print(loss.eval())
+            sess.run(optimizer, feed_dict={learning_rate: 0.001})
+
+        if i % 10 == 0:
+            callback(space.element(x[0].eval()))
+            print(loss.eval())
