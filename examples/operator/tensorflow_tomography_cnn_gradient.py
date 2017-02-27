@@ -26,20 +26,17 @@ def var(x):
     return tf.Variable(tf.constant(x, dtype='float32'))
 
 
-def create_variable(name, shape, stddev=0.01):
-    variable = tf.Variable(tf.truncated_normal(shape, stddev=stddev), name=name)
-    return variable
-
-
 with tf.Session() as sess:
-
     # Create ODL data structures
-    size = 128
+    size = 256
     space = odl.uniform_discr([-64, -64], [64, 64], [size, size],
                               dtype='float32')
     geometry = odl.tomo.parallel_beam_geometry(space)
     ray_transform = odl.tomo.RayTransform(space, geometry)
-
+    phantom = odl.phantom.shepp_logan(space, True)
+    data = ray_transform(phantom)
+    noisy_data = data + odl.phantom.white_noise(ray_transform.range) * np.mean(data) * 0.1
+    fbp = odl.tomo.fbp_op(ray_transform)(noisy_data)
 
     # Create tensorflow layer from odl operator
     odl_op_layer = odl.as_tensorflow_layer(ray_transform,
@@ -128,3 +125,4 @@ with tf.Session() as sess:
 
         print('iter={}, training loss={}, validation loss={}'.format(i, loss_training, loss_value))
         callback(space.element(x_value[0]))
+
