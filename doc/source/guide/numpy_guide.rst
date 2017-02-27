@@ -32,7 +32,7 @@ If the data type and storage methods allow it, the element simply wraps the unde
    >>> x.data is float_arr
    True
 
-Casting ODL vector space elements to NumPy arrays can be done in two ways, either through the member function `GeneralizedTensor.asarray`, or using `numpy.asarray`. These are both optimized and if possible return a view::
+Casting ODL vector space elements to NumPy arrays can be done in two ways, either through the member function `Tensor.asarray`, or using `numpy.asarray`. These are both optimized and if possible return a view::
 
    >>> x.asarray()
    array([ 1.,  2.,  3.])
@@ -61,7 +61,7 @@ A very convenient feature of ODL is its seamless interaction with NumPy function
    >>> np.negative(x)
    rn(3).element([-1.0, -2.0, -3.0])
 
-This method always uses the NumPy implementation, which can involve overhead in case the data is not stored in a CPU space. To always enable optimized code, users can call the member `GeneralizedTensor.ufuncs`::
+This method always uses the NumPy implementation, which can involve overhead in case the data is not stored in a CPU space. To always enable optimized code, users can call the member `Tensor.ufuncs`::
 
    >>> x.ufuncs.negative()
    rn(3).element([-1.0, -2.0, -3.0])
