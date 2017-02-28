@@ -543,7 +543,7 @@ def test_matrix_op_init(matrix):
         bad_dom_for_sparse = odl.rn((6, 5, 4))
         MatrixOperator(sparse_matrix, domain=bad_dom_for_sparse, axis=2)
 
-    # Init with uniform_discr space (subclass of FnBase)
+    # Init with uniform_discr space (subclass of TensorSpace)
     dom = odl.uniform_discr(0, 1, 4, dtype=dense_matrix.dtype)
     ran = odl.uniform_discr(0, 1, 3, dtype=dense_matrix.dtype)
     MatrixOperator(dense_matrix, domain=dom, range=ran)
