@@ -31,7 +31,7 @@ __all__ = ('scikit_radon_forward', 'scikit_radon_back_projector',
 
 def scikit_theta(geometry):
     """Calculate angles in degrees with ODL scikit conventions."""
-    return np.asarray(geometry.motion_grid).squeeze() * 180.0 / np.pi
+    return geometry.angles * 180.0 / np.pi
 
 
 def scikit_sinogram_space(geometry, volume_space, sinogram_space):
