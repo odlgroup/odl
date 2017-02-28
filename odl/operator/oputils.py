@@ -489,7 +489,15 @@ def as_tensorflow_layer(odl_op, name='ODLOperator'):
         """
         x_shape = x.get_shape()
         dx_shape = dx.get_shape()
-        out_shape = (int(x_shape[0]),) + odl_op.domain.shape + (1,)
+        try:
+            n_x = int(x_shape[0])
+            fixed_size = True
+        except TypeError:
+            n_x = x_shape[0]
+            fixed_size = False
+
+        in_shape = (n_x,) + odl_op.range.shape + (1,)
+        out_shape = (n_x,) + odl_op.domain.shape + (1,)
 
         # Validate input shape
         assert x_shape[0] == dx_shape[0]
@@ -497,8 +505,15 @@ def as_tensorflow_layer(odl_op, name='ODLOperator'):
         assert dx_shape[1:] == odl_op.range.shape + (1,)
 
         def _impl(x, dx):
-            out = np.empty(out_shape, odl_op.domain.dtype)
-            for i in range(x_shape[0]):
+            if fixed_size:
+                x_out_shape = out_shape
+                assert x.shape == in_shape
+            else:
+                x_out_shape = (x.shape[0],) + out_shape[1:]
+                assert x.shape[1:] == in_shape[1:]
+
+            out = np.empty(x_out_shape, odl_op.domain.dtype)
+            for i in range(x_out_shape[0]):
                 xi = x[i, ..., 0]
                 dxi = dx[i, ..., 0]
                 result = odl_op.derivative(xi).adjoint(dxi)
@@ -533,14 +548,29 @@ def as_tensorflow_layer(odl_op, name='ODLOperator'):
         in ODL.
         """
         x_shape = x.get_shape()
-        out_shape = (int(x_shape[0]),) + odl_op.range.shape + (1,)
+        try:
+            n_x = int(x_shape[0])
+            fixed_size = True
+        except TypeError:
+            n_x = x_shape[0]
+            fixed_size = False
+
+        in_shape = (n_x,) + odl_op.domain.shape + (1,)
+        out_shape = (n_x,) + odl_op.range.shape + (1,)
 
         # Validate input shape
         assert x_shape[1:] == odl_op.domain.shape + (1,)
 
         def _impl(x):
-            out = np.empty(out_shape, odl_op.range.dtype)
-            for i in range(x_shape[0]):
+            if fixed_size:
+                x_out_shape = out_shape
+                assert x.shape == in_shape
+            else:
+                x_out_shape = (x.shape[0],) + out_shape[1:]
+                assert x.shape[1:] == in_shape[1:]
+
+            out = np.empty(x_out_shape, odl_op.range.dtype)
+            for i in range(x_out_shape[0]):
                 out[i] = np.asarray(odl_op(x[i, ..., 0]))[..., None]
             return out
 
