@@ -39,7 +39,7 @@ class RosenbrockFunctional(Functional):
     .. math::
         \sum_{i=1}^{n - 1} c (x_{i+1} - x_i^2)^2 + (1 - x_i)^2,
 
-    where :math:`c` is a constant usually set to 100 which determines how
+    where :math:`c` is a constant, usually set to 100, which determines how
     "ill-behaved" the function should be.
     The global minimum lies at :math:`x = (1, \\dots, 1)`, independent
     of :math:`c`.

@@ -98,7 +98,7 @@ class FunctionSpaceMapping(Operator):
             if self.domain.field is None:
                 raise TypeError('`fspace.field` cannot be `None` for '
                                 '`linear=True`')
-            if not is_numerc_dtype(dspace.dtype):
+            if not is_numeric_dtype(dspace.dtype):
                 raise TypeError('`dspace.dtype` must be a numeric data type '
                                 'for `linear=True`, got {}'
                                 ''.format(dtype_repr(dspace)))
@@ -368,9 +368,10 @@ class NearestInterpolation(FunctionSpaceMapping):
           assumed to be sorted in ascending order in each dimension
           for efficiency reasons.
         - Nearest neighbor interpolation is the only scheme which works
-          with data of non-scalar type since it does not involve any
-          arithmetic operations on the values.
-        - The distinction between 'left' and 'right' variants is currently
+          with data of non-numeric data type since it does not involve any
+          arithmetic operations on the values, in contrast to other
+          interpolation methods.
+        - The distinction between left and right variants is currently
           made by changing ``<=`` to ``<`` at one place. This difference
           may not be noticable in some situations due to rounding errors.
         """
@@ -398,7 +399,7 @@ class NearestInterpolation(FunctionSpaceMapping):
                 input_type = 'array'
 
             interpolator = _NearestInterpolator(
-                self.grid.coord_vectors, x.asarray(), variant=self.variant,
+                self.grid.coord_vectors, x, variant=self.variant,
                 input_type=input_type)
 
             return interpolator(arg, out=out)
@@ -454,7 +455,7 @@ class LinearInterpolation(FunctionSpaceMapping):
                 input_type = 'array'
 
             interpolator = _LinearInterpolator(
-                self.grid.coord_vectors, x.asarray(), input_type=input_type)
+                self.grid.coord_vectors, x, input_type=input_type)
 
             return interpolator(arg, out=out)
 
@@ -575,8 +576,7 @@ class PerAxisInterpolation(FunctionSpaceMapping):
                 input_type = 'array'
 
             interpolator = _PerAxisInterpolator(
-                self.grid.coord_vectors,
-                x.asarray(),
+                self.grid.coord_vectors, x,
                 schemes=self.schemes, nn_variants=self.nn_variants,
                 input_type=input_type)
 

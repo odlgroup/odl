@@ -6,7 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""CPU implementations of tensor spaces using NumPy."""
+"""NumPy implementation of `TensorSpace`."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -59,8 +59,16 @@ class NumpyTensorSpace(TensorSpace):
 
     This class is implemented using `numpy.ndarray`'s as back-end.
 
-    See `this Wikipedia article <https://en.wikipedia.org/wiki/Tensor>`_
-    on tensors for further details.
+    See the `Wikipedia article on tensors`_ for further details.
+    See also [Hac2012]_ "Part I Algebraic Tensors" for a rigorous
+    treatment of tensors with a definition close to this one.
+
+    References
+    ----------
+    [Hac2012] Hackbusch, W. *Tensor Spaces and Numerical Tensor Calculus*.
+    Springer, 2012.
+
+    .. _Wikipedia article on tensors: https://en.wikipedia.org/wiki/Tensor
     """
 
     def __init__(self, shape, dtype=None, order='A', **kwargs):
@@ -170,7 +178,6 @@ class NumpyTensorSpace(TensorSpace):
             constructor for tensor spaces of arbitrary scalar
             data type
 
-
         Notes
         -----
         - A distance function or metric on a space :math:`\mathcal{X}`
@@ -241,7 +248,7 @@ class NumpyTensorSpace(TensorSpace):
             raise ValueError('cannot use any of `dist`, `norm` or `inner` '
                              'for exponent != 2')
         # Check validity of option combination (3 or 4 out of 4 must be None)
-        if sum(x is None for x in (dist, norm, inner, weighting)) < 3:
+        if (dist, norm, inner, weighting).count(None) < 3:
             raise ValueError('invalid combination of options `weighting`, '
                              '`dist`, `norm` and `inner`')
 
@@ -318,14 +325,16 @@ class NumpyTensorSpace(TensorSpace):
         Parameters
         ----------
         inp : `array-like`, optional
-            Input to initialize the new element with.
+            Input used to initialize the new element.
 
             If ``inp`` is `None`, an empty element is created with no
             guarantee of its state (memory allocation only).
 
-            If ``inp`` is a `numpy.ndarray` of the same shape and data
-            type as this space, the array is wrapped, not copied.
-            Other array-like objects are copied.
+            If ``inp`` is a `numpy.ndarray` of the same `shape` and
+            `dtype` as this space, or if ``inp`` already lies in this
+            space, it is wrapped, not copied.
+            Other array-like objects are always copied.
+
         data_ptr : int, optional
             Pointer to the start memory address of a contiguous Numpy array
             or an equivalent raw container with the same total number of
@@ -440,7 +449,7 @@ class NumpyTensorSpace(TensorSpace):
 
     @staticmethod
     def available_dtypes():
-        """Return the tuple of data types available in this implementation.
+        """Return the set of data types available in this implementation.
 
         Notes
         -----
@@ -451,10 +460,10 @@ class NumpyTensorSpace(TensorSpace):
         """
         all_dtypes = []
         for lst in np.sctypes.values():
-            all_dtypes.extend(set(lst))
-        dtypes = [np.dtype(dtype) for dtype in all_dtypes]
-        dtypes.remove(np.dtype('void'))
-        return tuple(dtypes)
+            for dtype in lst:
+                all_dtypes.append(np.dtype(dtype))
+        all_dtypes.remove(np.dtype('void'))
+        return set(all_dtypes)
 
     @staticmethod
     def default_dtype(field=None):
@@ -807,13 +816,8 @@ class NumpyTensor(Tensor):
 
     def __init__(self, space, data):
         """Initialize a new instance."""
-        assert isinstance(space, NumpyTensorSpace)
-        assert isinstance(data, np.ndarray)
-        assert data.dtype == space.dtype
-        if space.order in ('C', 'F'):
-            assert data.flags[space.order + '_CONTIGUOUS']
+        super().__init__(space)
         self.__data = data
-        Tensor.__init__(self, space)
 
     @property
     def data(self):
@@ -932,10 +936,6 @@ class NumpyTensor(Tensor):
             return False
         else:
             return np.array_equal(self.data, other.data)
-
-    def __hash__(self):
-        """Return ``hash(self)``."""
-        return hash((type(self), self.space, self.data.tobytes()))
 
     def copy(self):
         """Create an identical (deep) copy of this vector.

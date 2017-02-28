@@ -164,7 +164,6 @@ class NumericalGradient(Operator):
         functional : `Functional`
             The functional whose gradient should be computed. Its domain must
             be a `TensorSpace`.
-            be an `FnBase` space.
         method : {'backward', 'forward', 'central'}, optional
             The method to use to compute the gradient.
         step : float, optional

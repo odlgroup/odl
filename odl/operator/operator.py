@@ -19,7 +19,8 @@ import inspect
 from numbers import Number, Integral
 import sys
 
-from odl.set import LinearSpace, LinearSpaceElement, Set, Field
+from odl.set import LinearSpace, Set, Field
+from odl.set.space import LinearSpaceElement
 from odl.util import cache_arguments
 
 

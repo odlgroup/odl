@@ -97,13 +97,15 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
 
     """Take the point-wise norm of a vector field.
 
-    This operator takes the (weighted) ``p``-norm
+    This operator computes the (weighted) p-norm in each point of
+    a vector field, thus producing a scalar-valued function.
+    It implements the formulas ::
 
-        ``||F(x)|| = [ sum_j( w_j * |F_j(x)|^p ) ]^(1/p)``
+        ||F(x)|| = [ sum_j( w_j * |F_j(x)|^p ) ]^(1/p)
 
-    for ``p`` finite and
+    for ``p`` finite and ::
 
-        ``||F(x)|| = max_j( w_j * |F_j(x)| )``
+        ||F(x)|| = max_j( w_j * |F_j(x)| )
 
     for ``p = inf``, where ``F`` is a vector field. This implies that
     the `Operator.domain` is a power space of a discretized function
@@ -302,9 +304,9 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
 
         The derivative at ``F`` of the point-wise norm operator ``N``
         with finite exponent ``p`` and weights ``w`` is the pointwise
-        inner product with the vector field
+        inner product with the vector field ::
 
-            ``x --> N(F)(x)^(1-p) * [ F_j(x) * |F_j(x)|^(p-2) ]_j``.
+            x --> N(F)(x)^(1-p) * [ F_j(x) * |F_j(x)|^(p-2) ]_j
 
         Note that this is not well-defined for ``F = 0``. If ``p < 2``,
         any zero component will result in a singularity.
@@ -442,9 +444,9 @@ class PointwiseInner(PointwiseInnerBase):
 
     """Take the point-wise inner product with a given vector field.
 
-    This operator takes the (weighted) inner product
+    This operator takes the (weighted) inner product ::
 
-        ``<F(x), G(x)> = sum_j ( w_j * F_j(x) * conj(G_j(x)) )``
+        <F(x), G(x)> = sum_j ( w_j * F_j(x) * conj(G_j(x)) )
 
     for a given vector field ``G``, where ``F`` is the vector field
     acting as a variable to this operator.
@@ -547,15 +549,15 @@ class PointwiseInnerAdjoint(PointwiseInnerBase):
 
     """Adjoint of the point-wise inner product operator.
 
-    The adjoint of the inner product operator is a mapping
+    The adjoint of the inner product operator is a mapping ::
 
-        ``A^* : X --> X^d``.
+        A^* : X --> X^d
 
     If the vector field space ``X^d`` is weighted by a vector ``v``,
     the adjoint, applied to a function ``h`` from ``X`` is the vector
-    field
+    field ::
 
-        ``x --> h(x) * (w / v) * G(x)``,
+        x --> h(x) * (w / v) * G(x),
 
     where ``G`` and ``w`` are the vector field and weighting from the
     inner product operator, resp., and all multiplications are understood
@@ -569,7 +571,7 @@ class PointwiseInnerAdjoint(PointwiseInnerBase):
         ----------
         sspace : `LinearSpace`
             "Scalar" space on which the operator acts
-        vecfield : `range` `element-like`
+        vecfield : range `element-like`
             Vector field of the point-wise inner product operator
         vfspace : `ProductSpace`, optional
             Space of vector fields to which the operator maps. It must
@@ -635,9 +637,9 @@ class PointwiseSum(PointwiseInner):
 
     """Take the point-wise sum of a vector field.
 
-    This operator takes the (weighted) sum
+    This operator takes the (weighted) sum ::
 
-        ``sum(F(x)) = [ sum_j( w_j * F_j(x) ) ]``
+        sum(F(x)) = [ sum_j( w_j * F_j(x) ) ]
 
     where ``F`` is a vector field. This implies that
     the `Operator.domain` is a power space of a discretized function
@@ -706,8 +708,8 @@ class MatrixOperator(Operator):
         ----------
         matrix : `array-like` or `scipy.sparse.base.spmatrix`
             2-dimensional array representing the linear operator.
-            For Scipy sparse matrices only rank-1 tensor spaces are
-            allowed as ``domain``.
+            For Scipy sparse matrices only tensor spaces with
+            ``ndim == 1`` are allowed as ``domain``.
         domain : `TensorSpace`, optional
             Space of elements on which the operator can act. Its
             ``dtype`` must be castable to ``range.dtype``.

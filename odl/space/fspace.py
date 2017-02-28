@@ -18,8 +18,8 @@ from inspect import isfunction
 import numpy as np
 
 from odl.operator.operator import Operator, _dispatch_call_args
-from odl.set import (RealNumbers, ComplexNumbers, Set, Field, LinearSpace,
-                     LinearSpaceElement)
+from odl.set import RealNumbers, ComplexNumbers, Set, LinearSpace
+from odl.set.space import LinearSpaceElement
 from odl.util import (
     is_real_dtype, is_complex_floating_dtype, dtype_repr,
     complex_dtype, real_dtype, signature_string,
@@ -86,7 +86,8 @@ class FunctionSpace(LinearSpace):
         """
         # Checking types
         if not isinstance(domain, Set):
-            raise TypeError('`domain` {!r} not a Set instance'.format(domain))
+            raise TypeError('`domain` must be a `Set` instance, got {!r}'
+                            ''.format(domain))
         if range is not None and not isinstance(range, Set):
             raise TypeError('`range` must be a `Set` instance, got {!r}'
                             ''.format(range))
@@ -125,7 +126,7 @@ class FunctionSpace(LinearSpace):
             # do lazy dtype inference
             field = None
 
-        LinearSpace.__init__(self, field)
+        super().__init__(field)
         self.__domain = domain
         self.__range = range
         self.__out_dtype = None if out_dtype is None else np.dtype(out_dtype)
@@ -209,9 +210,9 @@ class FunctionSpace(LinearSpace):
 
         Notes
         -----
-        If you specify ``vectorized=False``, the function is decorated
-        with a vectorizer, which makes two elements created this way
-        from the same function being regarded as *not equal*.
+        For ``vectorized=False``, the function is decorated with a
+        vectorizer, which implies that two elements created this way
+        from the same function are regarded as *not equal*.
         """
         if fcall is None:
             return self.zero()
@@ -233,13 +234,12 @@ class FunctionSpace(LinearSpace):
             return self.element_type(self, fcall)
 
     def zero(self):
-        """Function mapping everything to zero.
+        """Function mapping anything to zero.
 
         This function is the additive unit in the function space.
-
-        Since `FunctionSpace.lincomb` may be slow, we implement this function
-        directly.
         """
+        # Since `FunctionSpace.lincomb` may be slow, we implement this
+        # function directly
         def zero_vec(x, out=None):
             """Zero function, vectorized."""
             if is_valid_input_meshgrid(x, self.domain.ndim):
@@ -260,7 +260,7 @@ class FunctionSpace(LinearSpace):
         return self.element_type(self, zero_vec)
 
     def one(self):
-        """Function mapping everything to one.
+        """Function mapping anything to one.
 
         This function is the multiplicative unit in the function space.
         """
@@ -296,7 +296,7 @@ class FunctionSpace(LinearSpace):
         if other is self:
             return True
 
-        return (isinstance(other, FunctionSpace) and
+        return (type(other) == type(self) and
                 self.domain == other.domain and
                 self.range == other.range and
                 self.out_dtype == other.out_dtype)
@@ -329,8 +329,9 @@ class FunctionSpace(LinearSpace):
         ----------
         out_dtype :
             Output data type of the returned space. Can be given in any
-            way `numpy.dtype` understands, e.g. as string ('complex64')
-            or data type (complex). None is interpreted as 'float64'.
+            way `numpy.dtype` understands, e.g. as string (``'complex64'``)
+            or built-in type (``complex``). ``None`` is interpreted as
+            ``'float64'``.
 
         Returns
         -------
@@ -594,94 +595,59 @@ class FunctionSpace(LinearSpace):
         maxs = self.domain.max()
         means = (maxs + mins) / 2.0
         stds = (maxs - mins) / 4.0
-        ndim = getattr(self.domain, 'ndim', None)
+        ndim = getattr(self.domain, 'ndim', 0)
 
         # Zero and One
         yield ('Zero', self.zero())
         yield ('One', self.one())
 
         # Indicator function in first dimension
-        def _step_fun(x):
-            if ndim == 1:
-                return x > means[0]
-            else:
-                return (x[0] > means[0]) + 0 * sum(x[1:])  # fix size
+        def step_fun(x):
+            return (x[0] > means[0])
 
-        yield ('Step', self.element(_step_fun))
+        yield ('Step', self.element(step_fun))
 
         # Indicator function on hypercube
-        def _cube_fun(x):
-            if ndim > 1:
-                result = True
-                for points, mean, std in zip(x, means, stds):
-                    result = np.logical_and(result, points < mean + std)
-                    result = np.logical_and(result, points > mean - std)
-            else:
-                result = np.logical_and(x < means + stds,
-                                        x > means - stds)
-
+        def cube_fun(x):
+            result = True
+            for points, mean, std in zip(x, means, stds):
+                result = np.logical_and(result, points < mean + std)
+                result = np.logical_and(result, points > mean - std)
             return result
 
-        yield ('Cube', self.element(_cube_fun))
+        yield ('Cube', self.element(cube_fun))
 
-        # Indicator function on hypersphere
-        if self.domain.ndim > 1:  # Only if ndim > 1, don't duplicate cube
-            def _sphere_fun(x):
-                if ndim == 1:
-                    x = (x,)
-
-                r = 0
-
-                for points, mean, std in zip(x, means, stds):
-                    r = r + (points - mean) ** 2 / std ** 2
-
+        # Indicator function on a ball
+        if ndim > 1:  # Only if ndim > 1, don't duplicate cube
+            def ball_fun(x):
+                r = sum((xi - mean) ** 2 / std ** 2
+                        for xi, mean, std in zip(x, means, stds))
                 return r < 1.0
 
-            yield ('Sphere', self.element(_sphere_fun))
+            yield ('Ball', self.element(ball_fun))
 
         # Gaussian function
-        def _gaussian_fun(x):
-            if ndim == 1:
-                x = (x,)
-
-            r2 = 0
-            for points, mean, std in zip(x, means, stds):
-                r2 = r2 + (points - mean) ** 2 / ((std / 2) ** 2)
-
+        def gaussian_fun(x):
+            r2 = sum((xi - mean) ** 2 / (2 * std ** 2)
+                     for xi, mean, std in zip(x, means, stds))
             return np.exp(-r2)
 
-        yield ('Gaussian', self.element(_gaussian_fun))
+        yield ('Gaussian', self.element(gaussian_fun))
 
         # Gradient in each dimensions
-        for dim in range(self.domain.ndim):
-            def _gradient_fun(x):
-                if ndim == 1:
-                    x = (x,)
+        for axis in range(ndim):
+            def gradient_fun(x):
+                return (x[axis] - mins[axis]) / (maxs[axis] - mins[axis])
 
-                s = 0
-                for ind in range(len(x)):
-                    if ind == dim:
-                        s = s + (x[ind] - mins[ind]) / (maxs[ind] - mins[ind])
-                    else:
-                        s = s + x[ind] * 0  # Correct broadcast size
-
-                return s
-
-            yield ('grad {}'.format(dim), self.element(_gradient_fun))
+            yield ('Grad {}'.format(axis), self.element(gradient_fun))
 
         # Gradient in all dimensions
-        if self.domain.ndim > 1:  # Only if ndim > 1, don't duplicate grad 0
-            def _all_gradient_fun(x):
-                if ndim == 1:
-                    x = (x,)
+        if ndim > 1:  # Only if ndim > 1, don't duplicate grad 0
+            def all_gradient_fun(x):
+                return sum((xi - xmin) / (xmax - xmin)
+                           for xi, xmin, xmax in zip(x, mins, maxs))
 
-                s = 0
-                for ind in range(len(x)):
-                    s = s + (x[ind] - mins[ind]) / (maxs[ind] - mins[ind])
-
-                return s
-
-            yield ('Grad all', self.element(_all_gradient_fun))
+            yield ('Grad all', self.element(all_gradient_fun))
 
     @property
     def element_type(self):
@@ -710,7 +676,9 @@ class FunctionSpace(LinearSpace):
                                      mod=[[''], ['', '!s']])
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
-    __str__ = __repr__
+    def __str__(self):
+        """Return ``str(self)``."""
+        return repr(self)
 
 
 class FunctionSpaceElement(LinearSpaceElement, Operator):
@@ -729,7 +697,6 @@ class FunctionSpaceElement(LinearSpaceElement, Operator):
             It must return a `FunctionSpace.range` element or a
             `numpy.ndarray` of such (vectorized call).
         """
-        assert isinstance(fspace, FunctionSpace)
         LinearSpaceElement.__init__(self, fspace)
         Operator.__init__(self, self.space.domain, self.space.range,
                           linear=False)
@@ -824,7 +791,7 @@ class FunctionSpaceElement(LinearSpaceElement, Operator):
 
         Returns
         -------
-        out : range element or array of elements
+        out : `range` element or `numpy.ndarray` of elements
             Result of the function evaluation. If ``out`` was provided,
             the returned object is a reference to it.
 
@@ -942,8 +909,8 @@ class FunctionSpaceElement(LinearSpaceElement, Operator):
                                  'the range {}'
                                  ''.format(self.range))
 
-        # Numpy does not implement __complex__ for arrays (in contrast to
-        # __float__), so we have to fish out the scalar ourselves.
+        # Numpy < 1.12 does not implement __complex__ for arrays (in contrast
+        # to __float__), so we have to fish out the scalar ourselves.
         return self.range.element(out.ravel()[0]) if scalar_out else out
 
     def assign(self, other):
@@ -980,7 +947,7 @@ class FunctionSpaceElement(LinearSpaceElement, Operator):
         """
         if other is self:
             return True
-        if not isinstance(other, FunctionSpaceElement):
+        elif other not in self.space:
             return False
 
         # We cannot blindly compare since functions may have been wrapped
@@ -997,18 +964,6 @@ class FunctionSpaceElement(LinearSpaceElement, Operator):
             funcs_equal = self._call_out_of_place == other._call_out_of_place
 
         return self.space == other.space and funcs_equal
-
-    def __hash__(self):
-        """Return ``hash(self)``."""
-        hash_list = [type(self), self.space, self._call_has_out]
-        if self._call_has_out:
-            # Out-of-place can be wrapped in this case, so we compare only
-            # the in-place methods.
-            hash_list.append(self._call_in_place)
-        else:
-            # Just the opposite of the first case
-            hash_list.append(self._call_out_of_place)
-        return hash(tuple(hash_list))
 
     # Power functions are more general than the ones in LinearSpace
     def __pow__(self, p):

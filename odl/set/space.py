@@ -19,8 +19,7 @@ import numpy as np
 from odl.set.sets import Field, Set, UniversalSet
 
 
-__all__ = ('LinearSpace', 'LinearSpaceElement', 'UniversalSpace',
-           'LinearSpaceTypeError')
+__all__ = ('LinearSpace', 'UniversalSpace')
 
 
 class LinearSpace(Set):
@@ -423,6 +422,10 @@ class LinearSpace(Set):
 
         return ProductSpace(self, other)
 
+    def __str__(self):
+        """Return ``str(self)``."""
+        return repr(self)
+
 
 class LinearSpaceElement(object):
 
@@ -438,9 +441,6 @@ class LinearSpaceElement(object):
         All deriving classes must call this method to set the `space`
         property.
         """
-        if not isinstance(space, LinearSpace):
-            raise TypeError('`space` {!r} is not a `LinearSpace` instance'
-                            ''.format(space))
         self.__space = space
 
     @property
@@ -881,20 +881,8 @@ class LinearSpaceElement(object):
     __hash__ = None
 
     def __str__(self):
-        """Return ``str(self)``.
-
-        This is a default implementation that does not print any
-        information about the contents of the element.
-        """
-        return str(self.space) + 'Element'
-
-    def __repr__(self):
-        """Return ``repr(self)``.
-
-        This is a default implementation that does not print any
-        information about the contents of the element.
-        """
-        return repr(self.space) + 'Element'
+        """Return ``str(self)``."""
+        return repr(self)
 
     def __copy__(self):
         """Return a copy of this element.

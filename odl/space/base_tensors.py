@@ -18,7 +18,7 @@ import numpy as np
 from odl.set.sets import RealNumbers, ComplexNumbers
 from odl.set.space import LinearSpace, LinearSpaceElement
 from odl.util import (
-    is_numeric_dtype, is_floating_dtype, is_real_dtype,
+    is_numeric_dtype, is_real_dtype,
     is_real_floating_dtype, is_complex_floating_dtype, safe_int_conv,
     arraynd_repr, arraynd_str, dtype_str, signature_string, indent_rows)
 from odl.util.ufuncs import TensorSpaceUfuncs
@@ -47,8 +47,16 @@ class TensorSpace(LinearSpace):
     supported by this class, along with reductions based on arithmetic
     or comparison, and element-wise mathematical functions ("ufuncs").
 
-    See `this Wikipedia article <https://en.wikipedia.org/wiki/Tensor>`_
-    on tensors for further details.
+    See the `Wikipedia article on tensors`_ for further details.
+    See also [Hac2012]_ "Part I Algebraic Tensors" for a rigorous
+    treatment of tensors with a definition close to this one.
+
+    References
+    ----------
+    [Hac2012] Hackbusch, W. *Tensor Spaces and Numerical Tensor Calculus*.
+    Springer, 2012.
+
+    .. _Wikipedia article on tensors: https://en.wikipedia.org/wiki/Tensor
     """
 
     def __init__(self, shape, dtype, order='A'):
@@ -56,7 +64,7 @@ class TensorSpace(LinearSpace):
 
         Parameters
         ----------
-        shape : positive int or sequence of positive ints
+        shape : nonnegative int or sequence of nonnegative ints
             Number of entries per axis for elements in this space. A
             single integer results in a space with rank 1, i.e., 1 axis.
         dtype :
@@ -76,7 +84,7 @@ class TensorSpace(LinearSpace):
         except TypeError:
             self.__shape = (safe_int_conv(shape),)
         if any(s < 0 for s in self.shape):
-            raise ValueError('`shape` must have only positive entries, got '
+            raise ValueError('`shape` must have only nonnegative entries, got '
                              '{}'.format(shape))
 
         self.__dtype = np.dtype(dtype)
@@ -397,7 +405,9 @@ class TensorSpace(LinearSpace):
         return "{}({})".format(self.__class__.__name__,
                                signature_string(posargs, optargs))
 
-    __str__ = __repr__
+    def __str__(self):
+        """Return ``str(self)``."""
+        return repr(self)
 
     @property
     def examples(self):
@@ -460,7 +470,7 @@ class TensorSpace(LinearSpace):
 
     @staticmethod
     def available_dtypes():
-        """Return the list of data types available in this implementation."""
+        """Return the set of data types available in this implementation."""
         raise NotImplementedError('abstract method')
 
     @property
@@ -473,30 +483,12 @@ class Tensor(LinearSpaceElement):
 
     """Abstract class for representation of `TensorSpace` elements."""
 
-    def __init__(self, space):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        space : TensorSpace
-            The space to which this tensor belongs.
-        """
-        assert isinstance(space, TensorSpace)
-        self.__space = space
-
-    @property
-    def impl(self):
-        """Name of the implementation back-end of this tensor."""
-        return self.space.impl
-
-    copy = LinearSpaceElement.copy
-
     def asarray(self, out=None):
         """Extract the data of this tensor as a Numpy array.
 
         Parameters
         ----------
-        out : `numpy.ndarray`
+        out : `numpy.ndarray`, optional
             Array to write the result to.
 
         Returns
@@ -544,16 +536,10 @@ class Tensor(LinearSpaceElement):
         """
         raise NotImplementedError('abstract method')
 
-    __eq__ = LinearSpaceElement.__eq__
-
-    def __ne__(self, other):
-        """Return ``self != other``."""
-        return not self == other
-
     @property
-    def space(self):
-        """The space to which this tensor belongs."""
-        return self.__space
+    def impl(self):
+        """Name of the implementation back-end of this tensor."""
+        return self.space.impl
 
     @property
     def shape(self):
@@ -632,10 +618,6 @@ class Tensor(LinearSpaceElement):
         else:
             return self.space.element(obj)
 
-    def __str__(self):
-        """Return ``str(self)``."""
-        return arraynd_str(self)
-
     def __repr__(self):
         """Return ``repr(self)``."""
         if self.ndim == 1:
@@ -643,6 +625,10 @@ class Tensor(LinearSpaceElement):
         else:
             inner_str = '\n' + indent_rows(arraynd_repr(self)) + '\n'
         return '{!r}.element({})'.format(self.space, inner_str)
+
+    def __str__(self):
+        """Return ``str(self)``."""
+        return arraynd_str(self)
 
     @property
     def ufuncs(self):

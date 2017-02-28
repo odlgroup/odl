@@ -18,7 +18,8 @@ from numbers import Integral
 from itertools import product
 import numpy as np
 
-from odl.set import LinearSpace, LinearSpaceElement, RealNumbers
+from odl.set import LinearSpace
+from odl.set.space import LinearSpaceElement
 from odl.space.weighting import (
     Weighting, ArrayWeighting, ConstWeighting, NoWeighting,
     CustomInner, CustomNorm, CustomDist)

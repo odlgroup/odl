@@ -17,8 +17,9 @@ from builtins import super
 from copy import copy
 
 from odl.operator.operator import Operator
+from odl.set import LinearSpace, Field, RealNumbers
+from odl.set.space import LinearSpaceElement
 from odl.space import ProductSpace
-from odl.set import LinearSpace, LinearSpaceElement, Field, RealNumbers
 
 
 __all__ = ('ScalingOperator', 'ZeroOperator', 'IdentityOperator',
