@@ -26,8 +26,8 @@ def var(x):
     return tf.Variable(tf.constant(x, dtype='float32'))
 
 
-def create_variable(name, shape):
-    variable = tf.Variable(tf.truncated_normal(shape, stddev=0.01), name=name)
+def create_variable(name, shape, stddev=0.01):
+    variable = tf.Variable(tf.truncated_normal(shape, stddev=stddev), name=name)
     return variable
 
 
@@ -73,13 +73,13 @@ with tf.Session() as sess:
 
     # Create constant right hand side
 
-    w1 = create_variable('w1', shape=[3, 3, 7, 32])
+    w1 = tf.Variable(tf.truncated_normal([3, 3, 7, 32], stddev=0.01))
     b1 = var(np.ones(32) * 0.1)
 
-    w2 = create_variable('w2', shape=[3, 3, 32, 32])
+    w2 = tf.Variable(tf.truncated_normal([3, 3, 32, 32], stddev=0.01))
     b2 = var(np.ones(32) * 0.1)
 
-    w3 = create_variable('w3', shape=[3, 3, 32, 6])
+    w3 = tf.Variable(tf.truncated_normal([3, 3, 32, 6], stddev=0.01))
     b3 = var(np.random.randn(6) * 0.001)
 
     n_iter = 5
@@ -114,7 +114,7 @@ with tf.Session() as sess:
     # Solve with an ODL callback to see what happens
     callback = odl.solvers.CallbackShow()
 
-    for i in range(1000):
+    for i in range(10000):
         _, loss_training = sess.run([optimizer, loss],
                                   feed_dict={learning_rate: 0.001,
                                              x_0: x_arr[1:],
