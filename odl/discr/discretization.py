@@ -236,7 +236,7 @@ class DiscretizedSpace(TensorSpace):
     @property
     def weighting(self):
         """This space's weighting scheme."""
-        return getattr(self.dspace, 'weighting', None)
+        return self.dspace.weighting
 
     @property
     def is_weighted(self):
@@ -443,9 +443,9 @@ class DiscretizedSpaceElement(Tensor):
 
     def __ipow__(self, p):
         """Implement ``self **= p``."""
-        # Falls back to `LinearSpaceElement.__ipow__` if `self.tensor`
-        # has no own `__ipow__`. The fallback only works for integer `p`.
-        # TODO: do we even need this??
+        # The concrete `tensor` can specialize `__ipow__` for non-integer
+        # `p` so we want to use it here. Otherwise we get the default
+        # `LinearSpaceElement.__ipow__` which only works for integer `p`.
         self.tensor.__ipow__(p)
         return self
 
