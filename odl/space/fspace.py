@@ -14,10 +14,10 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import super
 
-from inspect import isfunction
+import inspect
 import numpy as np
+import sys
 
-from odl.operator.operator import Operator, _dispatch_call_args
 from odl.set import RealNumbers, ComplexNumbers, Set, LinearSpace
 from odl.set.space import LinearSpaceElement
 from odl.util import (
@@ -29,6 +29,57 @@ from odl.util.utility import preload_first_arg
 
 
 __all__ = ('FunctionSpace',)
+
+
+def _check_out_arg(func):
+    """Check if of ``func`` has an (optional) ``out`` argument.
+
+    Also verify that the signature of ``func`` has no ``*args`` since
+    they make argument propagation a hassle.
+
+    Parameters
+    ----------
+    func : callable
+        Object that should be inspected.
+
+    Returns
+    -------
+    has_out : bool
+        ``True`` if the signature has an ``out`` argument, ``False``
+        otherwise.
+    out_is_optional : bool
+        ``True`` if ``out`` is present and optional in the signature,
+        ``False`` otherwise.
+
+    Raises
+    ------
+    TypeError
+        If ``func``'s signature has ``*args``.
+    """
+    if sys.version_info.major > 2:
+        spec = inspect.getfullargspec(func)
+        kw_only = spec.kwonlyargs
+    else:
+        spec = inspect.getargspec(func)
+        kw_only = ()
+
+    if spec.varargs is not None:
+        raise TypeError('*args not allowed in function signature')
+
+    pos_args = spec.args
+    pos_defaults = () if spec.defaults is None else spec.defaults
+
+    has_out = 'out' in pos_args or 'out' in kw_only
+    if 'out' in pos_args:
+        has_out = True
+        out_is_optional = (
+            pos_args.index('out') >= len(pos_args) - len(pos_defaults))
+    elif 'out' in kw_only:
+        has_out = out_is_optional = True
+    else:
+        has_out = out_is_optional = False
+
+    return has_out, out_is_optional
 
 
 def _default_in_place(func, x, out, **kwargs):
@@ -681,7 +732,7 @@ class FunctionSpace(LinearSpace):
         return repr(self)
 
 
-class FunctionSpaceElement(LinearSpaceElement, Operator):
+class FunctionSpaceElement(LinearSpaceElement):
 
     """Representation of a `FunctionSpace` element."""
 
@@ -697,14 +748,14 @@ class FunctionSpaceElement(LinearSpaceElement, Operator):
             It must return a `FunctionSpace.range` element or a
             `numpy.ndarray` of such (vectorized call).
         """
-        LinearSpaceElement.__init__(self, fspace)
-        Operator.__init__(self, self.space.domain, self.space.range,
-                          linear=False)
+        super().__init__(fspace)
+        self.__domain = self.space.domain
+        self.__range = self.space.range
 
         # Determine which type of implementation fcall is
         if isinstance(fcall, FunctionSpaceElement):
-            call_has_out, call_out_optional, _ = _dispatch_call_args(
-                bound_call=fcall._call)
+            call_has_out = fcall._call_has_out
+            call_out_optional = fcall._call_out_optional
 
         # Numpy Ufuncs and similar objects (e.g. Numba DUfuncs)
         elif hasattr(fcall, 'nin') and hasattr(fcall, 'nout'):
@@ -717,12 +768,10 @@ class FunctionSpaceElement(LinearSpaceElement, Operator):
                                  'expected at most 1'
                                  ''.format(fcall.__name__, fcall.nout))
             call_has_out = call_out_optional = (fcall.nout == 1)
-        elif isfunction(fcall):
-            call_has_out, call_out_optional, _ = _dispatch_call_args(
-                unbound_call=fcall)
+        elif inspect.isfunction(fcall):
+            call_has_out, call_out_optional = _check_out_arg(fcall)
         elif callable(fcall):
-            call_has_out, call_out_optional, _ = _dispatch_call_args(
-                bound_call=fcall.__call__)
+            call_has_out, call_out_optional = _check_out_arg(fcall.__call__)
         else:
             raise TypeError('type {!r} not callable')
 
@@ -742,6 +791,16 @@ class FunctionSpaceElement(LinearSpaceElement, Operator):
             self._call_in_place = fcall
             self._call_out_of_place = preload_first_arg(self, 'out-of-place')(
                 _default_out_of_place)
+
+    @property
+    def domain(self):
+        """Set of objects on which this function can be evaluated."""
+        return self.__domain
+
+    @property
+    def range(self):
+        """Set in which the result of an evaluation of this function lies."""
+        return self.__range
 
     @property
     def out_dtype(self):

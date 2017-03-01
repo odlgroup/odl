@@ -18,7 +18,7 @@ from odl import (Operator, OperatorSum, OperatorComp,
                  FunctionalLeftVectorMult, OperatorRightVectorMult,
                  MatrixOperator, OperatorLeftVectorMult,
                  OpTypeError, OpDomainError, OpRangeError)
-from odl.operator.operator import _signature_from_spec, _dispatch_call_args
+from odl.operator.operator import _get_signature, _dispatch_call_args
 from odl.util.testutils import almost_equal, all_almost_equal, noise_element
 
 
@@ -857,10 +857,10 @@ def func(request):
     return request.param
 
 
-def test_signature_from_spec(func):
+def test_get_signature(func):
 
     true_sig = func.__doc__.splitlines()[0].strip()
-    sig = _signature_from_spec(func)
+    sig = _get_signature(func)
     assert true_sig == sig
 
 

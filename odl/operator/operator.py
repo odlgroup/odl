@@ -79,46 +79,39 @@ def _default_call_in_place(op, x, out, **kwargs):
     out.assign(op.range.element(op._call_out_of_place(x, **kwargs)))
 
 
-def _signature_from_spec(func):
-    """Return the signature of a python function as a string.
+def _get_signature(func):
+    """Return the signature of a callable as a string.
 
     Parameters
     ----------
-    func : `function`
-        Function whose signature to compile
+    func : callable
+        Function whose signature to extract.
 
     Returns
     -------
     sig : string
-        Signature of the function
+        Signature of the function.
     """
-    py3 = (sys.version_info.major > 2)
-    if py3:
-        spec = inspect.getfullargspec(func)
-    else:
-        spec = inspect.getargspec(func)
+    if sys.version_info.major > 2:
+        # Python 3 already implements this functionality
+        return func.__name__ + str(inspect.signature(func))
 
+    # In Python 2 we have to do it manually, unfortunately
+    spec = inspect.getargspec(func)
     posargs = spec.args
     defaults = spec.defaults if spec.defaults is not None else []
     varargs = spec.varargs
-    kwargs = spec.varkw if py3 else spec.keywords
+    kwargs = spec.keywords
     deflen = 0 if defaults is None else len(defaults)
     nodeflen = 0 if posargs is None else len(posargs) - deflen
 
     args = ['{}'.format(arg) for arg in posargs[:nodeflen]]
-    args += ['{}={}'.format(arg, dval)
-             for arg, dval in zip(posargs[nodeflen:], defaults)]
+    args.extend('{}={}'.format(arg, dval)
+                for arg, dval in zip(posargs[nodeflen:], defaults))
     if varargs:
-        args += ['*{}'.format(varargs)]
-    if py3:
-        kw_only = spec.kwonlyargs
-        kw_only_defaults = spec.kwonlydefaults
-        if kw_only and not varargs:
-            args += ['*']
-        args += ['{}={}'.format(arg, kw_only_defaults[arg])
-                 for arg in kw_only]
+        args.append('*{}'.format(varargs))
     if kwargs:
-        args += ['**{}'.format(kwargs)]
+        args.append('**{}'.format(kwargs))
 
     argstr = ', '.join(args)
 
@@ -236,7 +229,7 @@ def _dispatch_call_args(cls=None, bound_call=None, unbound_call=None,
         kw_only = ()
         kw_only_defaults = {}
 
-    signature = _signature_from_spec(call)
+    signature = _get_signature(call)
 
     pos_args = spec.args
     if unbound_call is not None:
