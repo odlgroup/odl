@@ -6,7 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Spaces of functions with common domain and range."""
+"""Spaces of scalar-, vector- and tensor-valued functions on a given domain."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -21,10 +21,11 @@ import sys
 from odl.set import RealNumbers, ComplexNumbers, Set, LinearSpace
 from odl.set.space import LinearSpaceElement
 from odl.util import (
-    is_real_dtype, is_complex_floating_dtype, dtype_repr,
+    is_real_dtype, is_complex_floating_dtype, dtype_repr, dtype_str,
     complex_dtype, real_dtype, signature_string,
     is_valid_input_array, is_valid_input_meshgrid,
-    out_shape_from_array, out_shape_from_meshgrid, vectorize, broadcast_to)
+    out_shape_from_array, out_shape_from_meshgrid, vectorize, broadcast_to,
+    writable_array)
 from odl.util.utility import preload_first_arg
 
 
@@ -107,80 +108,108 @@ def _default_out_of_place(func, x, **kwargs):
     return out
 
 
+def _fcall_out_type(fcall):
+    """Check if ``fcall`` has (optional) output argument.
+
+    This function is intended to work with all types of callables
+    that are used as input to `FunctionSpace.element`.
+    """
+    if isinstance(fcall, FunctionSpaceElement):
+        call_has_out = fcall._call_has_out
+        call_out_optional = fcall._call_out_optional
+
+    # Numpy Ufuncs and similar objects (e.g. Numba DUfuncs)
+    elif hasattr(fcall, 'nin') and hasattr(fcall, 'nout'):
+        if fcall.nin != 1:
+            raise ValueError('ufunc {} has {} input parameter(s), '
+                             'expected 1'
+                             ''.format(fcall.__name__, fcall.nin))
+        if fcall.nout > 1:
+            raise ValueError('ufunc {} has {} output parameter(s), '
+                             'expected at most 1'
+                             ''.format(fcall.__name__, fcall.nout))
+        call_has_out = call_out_optional = (fcall.nout == 1)
+    elif inspect.isfunction(fcall):
+        call_has_out, call_out_optional = _check_out_arg(fcall)
+    elif callable(fcall):
+        call_has_out, call_out_optional = _check_out_arg(fcall.__call__)
+    else:
+        raise TypeError('object {!r} not callable'.format(fcall))
+
+    return call_has_out, call_out_optional
+
+
 class FunctionSpace(LinearSpace):
 
-    """A vector space of functions."""
+    """A vector space of functions.
 
-    def __init__(self, domain, range=None, out_dtype=None):
+    Elements in this space represent scalar-, vector- or tensor-valued
+    functions on some set, usually a subset of a Euclidean space
+    :math:`\mathbb{R}^d`. The functions support vectorized evaluation,
+    see `the vectorization guide
+    <https://odlgroup.github.io/odl/guide/vectorization_guide.html>`_
+    for details.
+    """
+
+    def __init__(self, domain, out_dtype=None):
         """Initialize a new instance.
 
         Parameters
         ----------
         domain : `Set`
-            The domain of the functions
-        range : `Set` or ``None``, optional
-            The range of the functions, usually the `RealNumbers` or
-            `ComplexNumbers`. If ``out_dtype`` is given, the range
-            is inferred, see below for details.
+            The domain of the functions.
         out_dtype : optional
-            Scalar data type of the return value of a function in this
+            Data type of the return value of a function in this
             space. Can be provided in any way the `numpy.dtype`
             constructor understands, e.g. as built-in type or as a string.
-            This option is combined with ``range`` as follows:
 
-            - If ``range`` is ``None`` or an instance of `RealNumbers`,
-              the default ``out_dtype`` is ``'float64'``.
-            - If ``range`` is an instance of `ComplexNumbers`, the default
-              ``out_dtype`` is ``'complex128'``.
-            - Otherwise, there is no default ``out_dtype``, in which case
-              the dtype of function outputs is inferred lazily at runtime.
+            To create a space of vector- or tensor-valued functions,
+            use a dtype with a shape, e.g.,
+            ``np.dtype(('float64', (2, 3)))``.
+
+            For ``None``, the data type of function outputs is inferred
+            lazily at runtime.
+
+        Examples
+        --------
+        Real-valued functions on the interval [0, 1]:
+
+        >>> domain = odl.IntervalProd(0, 1)
+        >>> odl.FunctionSpace(domain)
+        FunctionSpace(IntervalProd(0.0, 1.0))
+
+        Complex-valued functions on the same domain can be created by
+        specifying ``out_dtype``:
+
+        >>> odl.FunctionSpace(domain, out_dtype=complex)
+        FunctionSpace(IntervalProd(0.0, 1.0), out_dtype='complex')
+
+        To get vector- or tensor-valued functions, specify
+        ``out_dtype`` with shape:
+
+        >>> vec_dtype = np.dtype(('float64', (3,)))  # 3 components
+        >>> odl.FunctionSpace(domain, out_dtype=vec_dtype)
+
         """
-        # Checking types
         if not isinstance(domain, Set):
             raise TypeError('`domain` must be a `Set` instance, got {!r}'
                             ''.format(domain))
-        if range is not None and not isinstance(range, Set):
-            raise TypeError('`range` must be a `Set` instance, got {!r}'
-                            ''.format(range))
+        self.__domain = domain
 
-        # Infer field/out_dtype or check consistency
-        if range == RealNumbers():
-            field = RealNumbers()
-            if out_dtype is None:
-                out_dtype = np.dtype('float64')
-            elif not is_real_dtype(out_dtype):
-                raise ValueError('`out_dtype` must be a real data type for '
-                                 '`range=RealNumbers()`, got {}'
-                                 ''.format(out_dtype))
-        elif range == ComplexNumbers():
-            field = ComplexNumbers()
-            if out_dtype is None:
-                out_dtype = np.dtype('complex128')
-            elif not is_complex_floating_dtype(out_dtype):
-                raise ValueError('`out_dtype` must be a complex data type for '
-                                 '`range=ComplexNumbers()`, got {}'
-                                 ''.format(out_dtype))
-        elif range is None:
-            if out_dtype is None:
-                field = range = RealNumbers()
-                out_dtype = np.dtype('float64')
-            elif is_real_dtype(out_dtype):
-                field = range = RealNumbers()
-            elif is_complex_floating_dtype(out_dtype):
-                field = range = ComplexNumbers()
-            else:
-                raise ValueError('`out_dtype` must be a real or complex '
-                                 'data type if `range` is `None`, got {}'
-                                 ''.format(out_dtype))
+        # Prevent None from being converted to float64 by np.dtype
+        if out_dtype is None:
+            self.__out_dtype = None
         else:
-            # range is some `Set` instance, if `out_dtype` is `None` we
-            # do lazy dtype inference
+            self.__out_dtype = np.dtype(out_dtype)
+
+        if is_real_dtype(self.out_dtype):
+            field = RealNumbers()
+        elif is_complex_floating_dtype(self.out_dtype):
+            field = ComplexNumbers()
+        else:
             field = None
 
         super().__init__(field)
-        self.__domain = domain
-        self.__range = range
-        self.__out_dtype = None if out_dtype is None else np.dtype(out_dtype)
 
         # Init cache attributes for real / complex variants
         if self.field == RealNumbers():
@@ -202,21 +231,22 @@ class FunctionSpace(LinearSpace):
 
     @property
     def domain(self):
-        """Common domain of all functions in this set."""
+        """Set from which a function in this space can take inputs."""
         return self.__domain
 
     @property
-    def range(self):
-        """Common range of all functions in this set."""
-        return self.__range
-
-    @property
     def out_dtype(self):
-        """Output data type of this function.
+        """Output data type of a function in this space.
 
-        If ``None``, the output data type is not uniquely pre-defined.
+        If ``None``, the output data type is not pre-defined and instead
+        inferred at run-time.
         """
         return self.__out_dtype
+
+    @property
+    def scalar_out_dtype(self):
+        """Scalar variant of ``out_dtype`` in case it has a shape."""
+        return getattr(self.out_dtype, 'base', None)
 
     @property
     def real_out_dtype(self):
@@ -227,6 +257,16 @@ class FunctionSpace(LinearSpace):
     def complex_out_dtype(self):
         """The complex dtype corresponding to this space's `out_dtype`."""
         return self.__complex_out_dtype
+
+    @property
+    def out_shape(self):
+        """Shape of function values, ``()`` for scalar output."""
+        return getattr(self.out_dtype, 'shape', ())
+
+    @property
+    def tensor_valued(self):
+        """``True`` if functions have multi-dim. output, else ``False``."""
+        return bool(self.out_shape)
 
     @property
     def real_space(self):
@@ -247,31 +287,56 @@ class FunctionSpace(LinearSpace):
             The actual instruction for out-of-place evaluation.
             It must return a `FunctionSpace.range` element or a
             `numpy.ndarray` of such (vectorized call).
-
-            If fcall is a `FunctionSpaceElement`, it is wrapped
+            If ``fcall`` is a `FunctionSpaceElement`, it is wrapped
             as a new `FunctionSpaceElement`.
-
-        vectorized : bool
-            Whether ``fcall`` supports vectorized evaluation.
+            Default: `zero`.
+        vectorized : bool, optional
+            If ``True``, assume that ``fcall`` supports vectorized
+            evaluation. For ``False``, , the function is decorated with a
+            vectorizer, which implies that two elements created this way
+            from the same function are regarded as *not equal*.
 
         Returns
         -------
         element : `FunctionSpaceElement`
-            The new element, always supports vectorization
+            The new element, always supports vectorization.
 
-        Notes
-        -----
-        For ``vectorized=False``, the function is decorated with a
-        vectorizer, which implies that two elements created this way
-        from the same function are regarded as *not equal*.
+        Examples
+        --------
+        Scalar-valued functions are straightforward to create:
+
+        >>> fspace = odl.FunctionSpace(odl.IntervalProd(0, 1))
+        >>> func = fspace.element(lambda x: x - 1)
+        >>> func(0.5)
+        -0.5
+        >>> func([0.1, 0.6])
+        array([-0.9, -0.4])
+
+        Vector-valued functions can eiter be given as a sequence of
+        scalar-valued functions or as a single function that returns
+        a sequence:
+
+        >>> fspace = odl.FunctionSpace(odl.IntervalProd(0, 1),
+        ...                            out_dtype=(float, (2,)))  # 2 components
+        >>> func = fspace.element([lambda x: x - 1, lambda x: x + 1])
+        >>> func(0.5)
+        array([-0.5,  1.5])
+
+        >>> func([0.1, 0.6])
+        array([[-0.9, -0.4],
+               [ 1.1,  1.6]])
+        >>> func2 = fspace.element(lambda x: (x - 1, x + 1))
+        >>> func2(0.5)
+        array([-0.5,  1.5])
+        >>> func2([0.1, 0.6])
+        array([[-0.9, -0.4],
+               [ 1.1,  1.6]])
         """
         if fcall is None:
             return self.zero()
         elif fcall in self:
             return fcall
-        else:
-            if not callable(fcall):
-                raise TypeError('`fcall` {!r} is not callable'.format(fcall))
+        elif callable(fcall):
             if not vectorized:
                 if self.field == RealNumbers():
                     otypes = ['float64']
@@ -281,55 +346,106 @@ class FunctionSpace(LinearSpace):
                     otypes = []
 
                 fcall = vectorize(otypes=otypes)(fcall)
-
             return self.element_type(self, fcall)
+        else:
+            # This is for the case that an array-like of callables
+            # is provided
+            if np.shape(fcall) != self.out_shape:
+                raise ValueError(
+                    'invalid `fcall` {!r}: expected `None`, a callable or '
+                    'an array-like of callables whose shape matches '
+                    '`out_shape` {}'.format(self.out_shape))
+
+            fcalls = np.array(fcall, dtype=object, ndmin=1).ravel().tolist()
+            if not vectorized:
+                if self.field == RealNumbers():
+                    otypes = ['float64']
+                elif self.field == ComplexNumbers():
+                    otypes = ['complex128']
+                else:
+                    otypes = []
+
+                fcalls = [vectorize(otypes=otypes)(f) for f in fcalls]
+
+            def wrapper(x, out=None, **kwargs):
+                """Function wrapping an array of callables."""
+                if is_valid_input_meshgrid(x, self.domain.ndim):
+                    scalar_out_shape = out_shape_from_meshgrid(x)
+                elif is_valid_input_array(x, self.domain.ndim):
+                    scalar_out_shape = out_shape_from_array(x)
+                else:
+                    raise RuntimeError('bad input')
+
+                if out is None:
+                    results = [f(x, **kwargs) for f in fcalls]
+                    bcast_results = [
+                        broadcast_to(np.squeeze(res), scalar_out_shape)
+                        for res in results]
+                    out_arr = np.array(bcast_results,
+                                       dtype=self.scalar_out_dtype)
+                    return out_arr.reshape(self.out_shape + scalar_out_shape)
+
+                else:
+                    # This is a precaution in case out is not contiguous
+                    with writable_array(out) as out_arr:
+                        # Flatten tensor axes to work on one tensor
+                        # component (= scalar function) at a time
+                        out_comps = out.reshape((-1,) + scalar_out_shape)
+                        for f, out_comp in zip(fcalls, out_comps):
+                            has_out, _ = _fcall_out_type(f)
+                            if has_out:
+                                f(x, out=out_comp, **kwargs)
+                            else:
+                                out_comp[:] = f(x, **kwargs)
+
+            return self.element_type(self, wrapper)
 
     def zero(self):
-        """Function mapping anything to zero.
-
-        This function is the additive unit in the function space.
-        """
+        """Function mapping anything to zero."""
         # Since `FunctionSpace.lincomb` may be slow, we implement this
         # function directly
         def zero_vec(x, out=None):
             """Zero function, vectorized."""
             if is_valid_input_meshgrid(x, self.domain.ndim):
-                out_shape = out_shape_from_meshgrid(x)
+                scalar_out_shape = out_shape_from_meshgrid(x)
             elif is_valid_input_array(x, self.domain.ndim):
-                out_shape = out_shape_from_array(x)
+                scalar_out_shape = out_shape_from_array(x)
             else:
                 raise TypeError('invalid input type')
 
+            # For tensor-valued functions
+            out_shape = self.out_shape + scalar_out_shape
+
             if out is None:
-                return np.zeros(out_shape, dtype=self.out_dtype)
+                return np.zeros(out_shape, dtype=self.scalar_out_dtype)
             else:
                 # Need to go through an array to fill with the correct
                 # zero value for all dtypes
-                fill_value = np.zeros(1, dtype=self.out_dtype)[0]
+                fill_value = np.zeros(1, dtype=self.scalar_out_dtype)[0]
                 out.fill(fill_value)
 
         return self.element_type(self, zero_vec)
 
     def one(self):
-        """Function mapping anything to one.
-
-        This function is the multiplicative unit in the function space.
-        """
+        """Function mapping anything to one."""
         def one_vec(x, out=None):
             """One function, vectorized."""
             if is_valid_input_meshgrid(x, self.domain.ndim):
-                out_shape = out_shape_from_meshgrid(x)
+                scalar_out_shape = out_shape_from_meshgrid(x)
             elif is_valid_input_array(x, self.domain.ndim):
-                out_shape = out_shape_from_array(x)
+                scalar_out_shape = out_shape_from_array(x)
             else:
                 raise TypeError('invalid input type')
 
+            # For tensor-valued functions
+            out_shape = self.out_shape + scalar_out_shape
+
             if out is None:
-                return np.ones(out_shape, dtype=self.out_dtype)
+                return np.ones(out_shape, dtype=self.scalar_out_dtype)
             else:
                 # Need to go through an array to fill with the correct
                 # zero value for all dtypes
-                fill_value = np.ones(1, dtype=self.out_dtype)[0]
+                fill_value = np.ones(1, dtype=self.scalar_out_dtype)[0]
                 out.fill(fill_value)
 
         return self.element_type(self, one_vec)
@@ -341,7 +457,7 @@ class FunctionSpace(LinearSpace):
         -------
         equals : bool
             ``True`` if ``other`` is a `FunctionSpace` with same
-            `FunctionSpace.domain`, `FunctionSpace.range` and
+            `FunctionSpace.domain`, `FunctionSpace.field` and
             `FunctionSpace.out_dtype`, ``False`` otherwise.
         """
         if other is self:
@@ -349,12 +465,12 @@ class FunctionSpace(LinearSpace):
 
         return (type(other) == type(self) and
                 self.domain == other.domain and
-                self.range == other.range and
+                self.field == other.field and
                 self.out_dtype == other.out_dtype)
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        return hash((type(self), self.domain, self.range, self.out_dtype))
+        return hash((type(self), self.domain, self.field, self.out_dtype))
 
     def __contains__(self, other):
         """Return ``other in self``.
@@ -413,6 +529,8 @@ class FunctionSpace(LinearSpace):
         The additions and multiplications are implemented via simple
         Python functions, so non-vectorized versions are slow.
         """
+        # TODO: adapt for tensor-valued functions
+
         # Store to allow aliasing
         x1_call_oop = x1._call_out_of_place
         x1_call_ip = x1._call_in_place
@@ -425,18 +543,18 @@ class FunctionSpace(LinearSpace):
             # ensure the correct final shape. The rest is optimized as
             # far as possible.
             if a == 0 and b != 0:
-                out = np.asarray(x2_call_oop(x), dtype=self.out_dtype)
+                out = np.asarray(x2_call_oop(x), dtype=self.scalar_out_dtype)
                 if b != 1:
                     out *= b
             elif b == 0:  # Contains the case a == 0
-                out = np.asarray(x1_call_oop(x), dtype=self.out_dtype)
+                out = np.asarray(x1_call_oop(x), dtype=self.scalar_out_dtype)
                 if a != 1:
                     out *= a
             else:
-                out = np.asarray(x1_call_oop(x), dtype=self.out_dtype)
+                out = np.asarray(x1_call_oop(x), dtype=self.scalar_out_dtype)
                 if a != 1:
                     out *= a
-                tmp = np.asarray(x2_call_oop(x), dtype=self.out_dtype)
+                tmp = np.asarray(x2_call_oop(x), dtype=self.scalar_out_dtype)
                 if b != 1:
                     tmp *= b
                 out += tmp
@@ -444,6 +562,7 @@ class FunctionSpace(LinearSpace):
 
         def lincomb_call_in_place(x, out):
             """Linear combination, in-place version."""
+            # TODO: remove this restriction
             if not isinstance(out, np.ndarray):
                 raise TypeError('in-place evaluation only possible if output '
                                 'is of type `numpy.ndarray`')
@@ -483,6 +602,8 @@ class FunctionSpace(LinearSpace):
         The multiplication is implemented with a simple Python
         function, so the non-vectorized versions are slow.
         """
+        # TODO: adapt for tensor-valued functions
+
         # Store to allow aliasing
         x1_call_oop = x1._call_out_of_place
         x1_call_ip = x1._call_in_place
@@ -492,11 +613,11 @@ class FunctionSpace(LinearSpace):
         def product_call_out_of_place(x):
             """Product out-of-place evaluation function."""
             return np.asarray(x1_call_oop(x) * x2_call_oop(x),
-                              dtype=self.out_dtype)
+                              dtype=self.scalar_out_dtype)
 
         def product_call_in_place(x, out):
             """Product in-place evaluation function."""
-            tmp = np.empty_like(out, dtype=self.out_dtype)
+            tmp = np.empty_like(out, dtype=self.scalar_out_dtype)
             x1_call_ip(x, out)
             x2_call_ip(x, tmp)
             out *= tmp
@@ -509,6 +630,8 @@ class FunctionSpace(LinearSpace):
 
     def _divide(self, x1, x2, out):
         """Raw pointwise division of two functions."""
+        # TODO: adapt for tensor-valued functions
+
         # Store to allow aliasing
         x1_call_oop = x1._call_out_of_place
         x1_call_ip = x1._call_in_place
@@ -518,11 +641,11 @@ class FunctionSpace(LinearSpace):
         def quotient_call_out_of_place(x):
             """Quotient out-of-place evaluation function."""
             return np.asarray(x1_call_oop(x) / x2_call_oop(x),
-                              dtype=self.out_dtype)
+                              dtype=self.scalar_out_dtype)
 
         def quotient_call_in_place(x, out):
             """Quotient in-place evaluation function."""
-            tmp = np.empty_like(out, dtype=self.out_dtype)
+            tmp = np.empty_like(out, dtype=self.scalar_out_dtype)
             x1_call_ip(x, out)
             x2_call_ip(x, tmp)
             out /= tmp
@@ -535,6 +658,8 @@ class FunctionSpace(LinearSpace):
 
     def _scalar_power(self, x, p, out):
         """Raw p-th power of a function, p integer or general scalar."""
+        # TODO: adapt for tensor-valued functions
+
         x_call_oop = x._call_out_of_place
         x_call_ip = x._call_in_place
 
@@ -566,9 +691,9 @@ class FunctionSpace(LinearSpace):
                 return self.one()
             elif p == int(p) and p >= 1:
                 return np.asarray(pow_posint(x_call_oop(x), int(p)),
-                                  dtype=self.out_dtype)
+                                  dtype=self.scalar_out_dtype)
             else:
-                return np.power(x_call_oop(x), p).astype(self.out_dtype)
+                return np.power(x_call_oop(x), p).astype(self.scalar_out_dtype)
 
         def power_call_in_place(x, out):
             """Power in-place evaluation function."""
@@ -589,10 +714,12 @@ class FunctionSpace(LinearSpace):
 
     def _realpart(self, x):
         """Function returning the real part of a result."""
+        # TODO: adapt for tensor-valued functions
+
         x_call_oop = x._call_out_of_place
 
         def realpart_oop(x):
-            return np.asarray(x_call_oop(x), dtype=self.out_dtype).real
+            return np.asarray(x_call_oop(x), dtype=self.scalar_out_dtype).real
 
         if is_real_dtype(self.out_dtype):
             return x
@@ -603,10 +730,12 @@ class FunctionSpace(LinearSpace):
 
     def _imagpart(self, x):
         """Function returning the imaginary part of a result."""
+        # TODO: adapt for tensor-valued functions
+
         x_call_oop = x._call_out_of_place
 
         def imagpart_oop(x):
-            return np.asarray(x_call_oop(x), dtype=self.out_dtype).imag
+            return np.asarray(x_call_oop(x), dtype=self.scalar_out_dtype).imag
 
         if is_real_dtype(self.out_dtype):
             return self.zero()
@@ -617,10 +746,13 @@ class FunctionSpace(LinearSpace):
 
     def _conj(self, x):
         """Function returning the complex conjugate of a result."""
+        # TODO: adapt for tensor-valued functions
+
         x_call_oop = x._call_out_of_place
 
         def conj_oop(x):
-            return np.asarray(x_call_oop(x), dtype=self.out_dtype).conj()
+            return np.asarray(x_call_oop(x),
+                              dtype=self.scalar_out_dtype).conj()
 
         if is_real_dtype(self.out_dtype):
             return x
@@ -641,6 +773,8 @@ class FunctionSpace(LinearSpace):
         Gaussian
         Linear gradients
         """
+        # TODO: adapt for tensor-valued functions
+
         # Get the points and calculate some statistics on them
         mins = self.domain.min()
         maxs = self.domain.max()
@@ -707,24 +841,25 @@ class FunctionSpace(LinearSpace):
 
     def __repr__(self):
         """Return ``repr(self)``."""
+        # TODO: change back to field
         posargs = [self.domain]
         optargs = []
-        dtype_str = dtype_repr(self.out_dtype)
-        if self.field == RealNumbers():
-            default_field = self.field
-            default_out_dtype_str = dtype_repr(np.dtype('float64'))
-        elif self.field == ComplexNumbers():
-            default_field = self.field
-            default_out_dtype_str = dtype_repr(np.dtype('complex128'))
+        if is_real_dtype(self.out_dtype):
+            default_field = RealNumbers()
+            default_dtype_string = 'float'
+        elif is_complex_floating_dtype(self.out_dtype):
+            default_field = ComplexNumbers()
+            default_dtype_string = 'None'
         else:
             default_field = None
-            default_out_dtype_str = 'None'
+            default_dtype_string = 'None'
 
         optargs.append(('field', self.field, default_field))
-        optargs.append(('out_dtype', dtype_str, default_out_dtype_str))
+        dtype_string = dtype_str(self.out_dtype)
+        optargs.append(('out_dtype', dtype_string, default_dtype_string))
 
         inner_str = signature_string(posargs, optargs,
-                                     mod=[[''], ['', '!s']])
+                                     mod=[['!r'], ['', '!s']])
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
     def __str__(self):
@@ -744,46 +879,21 @@ class FunctionSpaceElement(LinearSpaceElement):
         fspace : `FunctionSpace`
             Set of functions this element lives in.
         fcall : callable
-            The actual instruction for out-of-place evaluation.
-            It must return a `FunctionSpace.range` element or a
-            `numpy.ndarray` of such (vectorized call).
+            Object used to evaluate the function. Must support
+            vectorization and accept a sequence of
+            coordinate arrays ``x[0], ..., x[d]`` in sparse or dense
+            form, and return (or write to the ``out`` array) an
+            array of appropriate shape.
         """
         super().__init__(fspace)
-        self.__domain = self.space.domain
-        self.__range = self.space.range
+        self._call_has_out, self._call_out_optional = _fcall_out_type(fcall)
 
-        # Determine which type of implementation fcall is
-        if isinstance(fcall, FunctionSpaceElement):
-            call_has_out = fcall._call_has_out
-            call_out_optional = fcall._call_out_optional
-
-        # Numpy Ufuncs and similar objects (e.g. Numba DUfuncs)
-        elif hasattr(fcall, 'nin') and hasattr(fcall, 'nout'):
-            if fcall.nin != 1:
-                raise ValueError('ufunc {} has {} input parameter(s), '
-                                 'expected 1'
-                                 ''.format(fcall.__name__, fcall.nin))
-            if fcall.nout > 1:
-                raise ValueError('ufunc {} has {} output parameter(s), '
-                                 'expected at most 1'
-                                 ''.format(fcall.__name__, fcall.nout))
-            call_has_out = call_out_optional = (fcall.nout == 1)
-        elif inspect.isfunction(fcall):
-            call_has_out, call_out_optional = _check_out_arg(fcall)
-        elif callable(fcall):
-            call_has_out, call_out_optional = _check_out_arg(fcall.__call__)
-        else:
-            raise TypeError('type {!r} not callable')
-
-        self._call_has_out = call_has_out
-        self._call_out_optional = call_out_optional
-
-        if not call_has_out:
+        if not self._call_has_out:
             # Out-of-place-only
             self._call_in_place = preload_first_arg(self, 'in-place')(
                 _default_in_place)
             self._call_out_of_place = fcall
-        elif call_out_optional:
+        elif self._call_out_optional:
             # Dual-use
             self._call_in_place = self._call_out_of_place = fcall
         else:
@@ -795,12 +905,7 @@ class FunctionSpaceElement(LinearSpaceElement):
     @property
     def domain(self):
         """Set of objects on which this function can be evaluated."""
-        return self.__domain
-
-    @property
-    def range(self):
-        """Set in which the result of an evaluation of this function lies."""
-        return self.__range
+        return self.space.domain
 
     @property
     def out_dtype(self):
@@ -809,6 +914,21 @@ class FunctionSpaceElement(LinearSpaceElement):
         If ``None``, the output data type is not uniquely pre-defined.
         """
         return self.space.out_dtype
+
+    @property
+    def scalar_out_dtype(self):
+        """Scalar variant of ``out_dtype`` in case it has a shape."""
+        return self.space.scalar_out_dtype
+
+    @property
+    def out_shape(self):
+        """Shape of function values, ``()`` for scalar output."""
+        return self.space.out_shape
+
+    @property
+    def tensor_valued(self):
+        """``True`` if the output is multi-dim. output, else ``False``."""
+        return self.space.tensor_valued
 
     def _call(self, x, out=None, **kwargs):
         """Raw evaluation method."""
@@ -871,34 +991,37 @@ class FunctionSpaceElement(LinearSpaceElement):
                                  'domain {}, missing `contains_all()` '
                                  'method'.format(self.domain))
 
-        if bounds_check and not hasattr(self.range, 'contains_all'):
+        if bounds_check and not hasattr(self.space.field, 'contains_all'):
             raise AttributeError('bounds check not possible for '
-                                 'range {}, missing `contains_all()` '
-                                 'method'.format(self.range))
+                                 'field {}, missing `contains_all()` '
+                                 'method'.format(self.space.field))
 
         ndim = getattr(self.domain, 'ndim', None)
         # Check for input type and determine output shape
         if is_valid_input_meshgrid(x, ndim):
-            out_shape = out_shape_from_meshgrid(x)
+            scalar_in = False
+            scalar_out_shape = out_shape_from_meshgrid(x)
             scalar_out = False
             # Avoid operations on tuples like x * 2 by casting to array
             if ndim == 1:
                 x = x[0][None, ...]
         elif is_valid_input_array(x, ndim):
             x = np.asarray(x)
-            out_shape = out_shape_from_array(x)
+            scalar_in = False
+            scalar_out_shape = out_shape_from_array(x)
             scalar_out = False
             # For 1d, squeeze the array
             if ndim == 1 and x.ndim == 2:
                 x = x.squeeze()
         elif x in self.domain:
             x = np.atleast_2d(x).T  # make a (d, 1) array
-            out_shape = (1,)
-            scalar_out = (out is None)
+            scalar_in = True
+            scalar_out_shape = (1,)
+            scalar_out = (out is None and not self.space.tensor_valued)
         else:
             # Unknown input
             txt_1d = ' or (n,)' if ndim == 1 else ''
-            raise TypeError('Argument {!r} not a valid vectorized '
+            raise TypeError('argument {!r} not a valid function '
                             'input. Expected an element of the domain '
                             '{domain}, an array-like with shape '
                             '({domain.ndim}, n){} or a length-{domain.ndim} '
@@ -910,6 +1033,8 @@ class FunctionSpaceElement(LinearSpaceElement):
             if not self.domain.contains_all(x):
                 raise ValueError('input contains points outside '
                                  'the domain {}'.format(self.domain))
+
+        out_shape = self.space.out_shape + scalar_out_shape
 
         # Call the function and check out shape, before or after
         if out is None:
@@ -931,15 +1056,50 @@ class FunctionSpaceElement(LinearSpaceElement):
                 # squeeze to remove extra axes.
                 out = np.squeeze(out)
             else:
+                # Here we don't catch exceptions since they are likely true
+                # errors
                 out = self._call(x, **kwargs)
 
-            # Cast to proper dtype if needed, also convert to array if out
-            # is scalar.
-            out = np.asarray(out, self.out_dtype)
+            if isinstance(out, np.ndarray) or np.isscalar(out):
+                # Cast to proper dtype if needed, also convert to array if out
+                # is a scalar.
+                out = np.asarray(out, dtype=self.space.scalar_out_dtype)
+                if out_shape != (1,) and out.shape != out_shape:
+                    # Try to broadcast the returned element. For scalar
+                    # input, the last artificial axis is removed.
+                    if scalar_in:
+                        out = broadcast_to(out, out_shape[:-1])
+                    else:
+                        out = broadcast_to(out, out_shape)
 
-            if out_shape != (1,) and out.shape != out_shape:
-                # Try to broadcast the returned element if possible
-                out = broadcast_to(out, out_shape)
+            elif self.space.tensor_valued:
+                # TODO: fix case when such a function is evaluated at a
+                # single point
+
+                # The out object can be any array-like of objects with shapes
+                # that should all be broadcastable to scalar_out_shape.
+                results = np.array(out)
+                if results.dtype == object or scalar_in:
+                    # Some results don't have correct shape, need to
+                    # broadcast
+                    bcast_res = [broadcast_to(res, scalar_out_shape)
+                                 for res in results.ravel()]
+                    out_arr = np.array(bcast_res,
+                                       dtype=self.space.scalar_out_dtype)
+                elif (self.scalar_out_dtype is not None and
+                      results.dtype != self.scalar_out_dtype):
+                    raise ValueError(
+                        'result is of dtype {}, expected {}'
+                        ''.format(dtype_repr(results.dtype),
+                                  dtype_repr(self.space.scalar_out_dtype)))
+                else:
+                    out_arr = results
+                out = out_arr.reshape(out_shape)
+
+            else:
+                # TODO: improve message
+                raise RuntimeError('bad output of function call')
+
         else:
             if not isinstance(out, np.ndarray):
                 raise TypeError('output {!r} not a `numpy.ndarray` '
@@ -948,29 +1108,30 @@ class FunctionSpaceElement(LinearSpaceElement):
                 raise ValueError('output shape {} not equal to shape '
                                  '{} expected from input'
                                  ''.format(out.shape, out_shape))
-            if self.out_dtype is not None and out.dtype != self.out_dtype:
+            if (self.out_dtype is not None and
+                    out.dtype != self.scalar_out_dtype):
                 raise ValueError('`out.dtype` ({}) does not match out_dtype '
                                  '({})'.format(out.dtype, self.out_dtype))
 
-            if ndim == 1:
+            if ndim == 1 and not self.tensor_valued:
                 # TypeError for meshgrid in 1d, but expected array (see above)
                 try:
                     self._call(x, out=out, **kwargs)
                 except TypeError:
                     self._call(x[0], out=out, **kwargs)
-            else:
+            elif not self.tensor_valued:
                 self._call(x, out=out, **kwargs)
 
         # Check output values
         if bounds_check:
-            if not self.range.contains_all(out):
-                raise ValueError('output contains points outside '
-                                 'the range {}'
-                                 ''.format(self.range))
+            if not self.space.field.contains_all(out):
+                raise ValueError('output contains values not in the field '
+                                 '{}'
+                                 ''.format(self.space.field))
 
         # Numpy < 1.12 does not implement __complex__ for arrays (in contrast
         # to __float__), so we have to fish out the scalar ourselves.
-        return self.range.element(out.ravel()[0]) if scalar_out else out
+        return self.space.field.element(out.ravel()[0]) if scalar_out else out
 
     def assign(self, other):
         """Assign ``other`` to ``self``.

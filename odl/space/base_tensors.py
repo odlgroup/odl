@@ -70,8 +70,7 @@ class TensorSpace(LinearSpace):
         dtype :
             Scalar data type of elements in this space. Can be provided
             in any way the `numpy.dtype` constructor understands, e.g.
-            as built-in type or as a string. Data types with non-trivial
-            shapes are not allowed.
+            as built-in type or as a string.
         order : {'A', 'C', 'F'}, optional
             Axis ordering of the data storage. Only relevant for more
             than 1 axis.
@@ -79,18 +78,21 @@ class TensorSpace(LinearSpace):
             contiguous memory in the respective ordering.
             For ``'A'`` ("any") no contiguousness is enforced.
         """
+        # Handle shape and dtype, taking care also of dtypes with shape
         try:
-            self.__shape = tuple(safe_int_conv(s) for s in shape)
+            shape, shape_in = tuple(safe_int_conv(s) for s in shape), shape
         except TypeError:
-            self.__shape = (safe_int_conv(shape),)
-        if any(s < 0 for s in self.shape):
+            shape, shape_in = (safe_int_conv(shape),), shape
+        if any(s < 0 for s in shape):
             raise ValueError('`shape` must have only nonnegative entries, got '
-                             '{}'.format(shape))
+                             '{}'.format(shape_in))
+        dtype = np.dtype(dtype)
+        # We choose this order in contrast to Numpy, since we usually want
+        # to represent discretizations of vector- or tensor-valued functions,
+        # i.e., if dtype.shape == (3,) we expect f[0] to have shape `shape`.
+        self.__shape = dtype.shape + shape
+        self.__dtype = dtype.base
 
-        self.__dtype = np.dtype(dtype)
-        if self.dtype.shape:
-            raise ValueError('`dtype` {!r} with shape {} not allowed'
-                             ''.format(dtype, self.dtype.shape))
         self.__order = str(order).upper()
         if self.order not in ('A', 'C', 'F'):
             raise ValueError("`order '{}' not understood".format(order))

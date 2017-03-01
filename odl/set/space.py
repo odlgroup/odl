@@ -43,8 +43,8 @@ class LinearSpace(Set):
         if field is None or isinstance(field, Field):
             self.__field = field
         else:
-            raise TypeError('`field` must be a `Field` instance, got {!r}'
-                            ''.format(field))
+            raise TypeError('`field` must be a `Field` instance or `None`, '
+                            'got {!r}'.format(field))
 
     @property
     def field(self):
