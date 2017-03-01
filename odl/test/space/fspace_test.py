@@ -316,6 +316,53 @@ def test_fspace_vector_eval_complex():
     assert all_equal(out_mg, true_mg)
 
 
+def test_fspace_vector_with_params():
+    rect, points, mg = _standard_setup_2d()
+
+    def f(x, c):
+        return sum(x) + c
+
+    def f_out1(x, out, c):
+        out[:] = sum(x) + c
+
+    def f_out2(x, c, out):
+        out[:] = sum(x) + c
+
+    fspace = FunctionSpace(rect)
+    true_result_arr = f(points, c=2)
+    true_result_mg = f(mg, c=2)
+
+    f_elem = fspace.element(f)
+    assert all_equal(f_elem(points, c=2), true_result_arr)
+    out_arr = np.empty((5,))
+    f_elem(points, c=2, out=out_arr)
+    assert all_equal(out_arr, true_result_arr)
+    assert all_equal(f_elem(mg, c=2), true_result_mg)
+    out_mg = np.empty((2, 3))
+    f_elem(mg, c=2, out=out_mg)
+    assert all_equal(out_mg, true_result_mg)
+
+    f_out1_elem = fspace.element(f_out1)
+    assert all_equal(f_out1_elem(points, c=2), true_result_arr)
+    out_arr = np.empty((5,))
+    f_out1_elem(points, c=2, out=out_arr)
+    assert all_equal(out_arr, true_result_arr)
+    assert all_equal(f_out1_elem(mg, c=2), true_result_mg)
+    out_mg = np.empty((2, 3))
+    f_out1_elem(mg, c=2, out=out_mg)
+    assert all_equal(out_mg, true_result_mg)
+
+    f_out2_elem = fspace.element(f_out2)
+    assert all_equal(f_out2_elem(points, c=2), true_result_arr)
+    out_arr = np.empty((5,))
+    f_out2_elem(points, c=2, out=out_arr)
+    assert all_equal(out_arr, true_result_arr)
+    assert all_equal(f_out2_elem(mg, c=2), true_result_mg)
+    out_mg = np.empty((2, 3))
+    f_out2_elem(mg, c=2, out=out_mg)
+    assert all_equal(out_mg, true_result_mg)
+
+
 def test_fspace_vector_ufunc():
     intv = odl.IntervalProd(0, 1)
     points = _points(intv, num=5)
