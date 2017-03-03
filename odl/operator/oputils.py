@@ -477,7 +477,13 @@ def as_tensorflow_layer(odl_op, name='ODLOperator'):
 
             tf.RegisterGradient(rnd_name)(grad)
             g = tf.get_default_graph()
-            with g.gradient_override_map({"PyFunc": rnd_name}):
+
+            if stateful:
+                override_name = 'PyFunc'
+            else:
+                override_name = 'PyFuncStateless'
+
+            with g.gradient_override_map({override_name: rnd_name}):
                 return tf.py_func(func, inp, Tout, stateful=stateful,
                                   name=name)
 
@@ -500,7 +506,6 @@ def as_tensorflow_layer(odl_op, name='ODLOperator'):
         out_shape = (n_x,) + odl_op.domain.shape + (1,)
 
         # Validate input shape
-        assert x_shape[0] == dx_shape[0]
         assert x_shape[1:] == odl_op.domain.shape + (1,)
         assert dx_shape[1:] == odl_op.range.shape + (1,)
 
@@ -508,9 +513,11 @@ def as_tensorflow_layer(odl_op, name='ODLOperator'):
             if fixed_size:
                 x_out_shape = out_shape
                 assert x.shape == in_shape
+                assert dx.shape == out_shape
             else:
                 x_out_shape = (x.shape[0],) + out_shape[1:]
-                assert x.shape[1:] == in_shape[1:]
+                assert x.shape[1:] == out_shape[1:]
+                assert dx.shape[1:] == in_shape[1:]
 
             out = np.empty(x_out_shape, odl_op.domain.dtype)
             for i in range(x_out_shape[0]):
@@ -524,7 +531,7 @@ def as_tensorflow_layer(odl_op, name='ODLOperator'):
             out *= scale
             return out
 
-        with ops.name_scope(name, "ODLTensorflowLayerGrad", [x, dx]):
+        with ops.name_scope(name + 'Grad', "ODLTensorflowLayerGrad", [x, dx]):
             result = py_func(_impl,
                              [x, dx],
                              [tf.float32],
