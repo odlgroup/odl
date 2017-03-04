@@ -91,8 +91,7 @@ class SamplingOperator(Operator):
             # Strides = increment in linear indices per axis
             strides = np.concatenate((np.cumprod(domain.shape[1:])[::-1], [1]))
             self.__indices_flat = np.sum(
-                                    self.sampling_points * strides[:, None],
-                                    axis=0)
+                self.sampling_points * strides[:, None], axis=0)
         else:
             self.__indices_flat = self.sampling_points
 
@@ -223,8 +222,7 @@ class WeightedSumSamplingOperator(Operator):
             # Strides = increment in linear indices per axis
             strides = np.concatenate((np.cumprod(range.shape[1:])[::-1], [1]))
             self.__indices_flat = np.sum(
-                                    self.sampling_points * strides[:, None],
-                                    axis=0)
+                self.sampling_points * strides[:, None], axis=0)
         else:
             self.__indices_flat = self.sampling_points
 
@@ -373,7 +371,7 @@ class FlatteningOperator(Operator):
         """
         # TODO: This only works for a subset of function spaces
         c = getattr(self.domain, 'cell_volume', 1.0)
-        return 1./c * FlatteningOperatorAdjoint(self.domain)
+        return 1. / c * FlatteningOperatorAdjoint(self.domain)
 
     @property
     def inverse(self):
