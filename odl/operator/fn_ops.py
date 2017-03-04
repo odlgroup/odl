@@ -419,7 +419,7 @@ class FlatteningOperatorAdjoint(Operator):
         General usage example:
 
         >>> X = odl.uniform_discr(min_pt=[-1, -1], max_pt=[1, 1], shape=[1, 2])
-        >>> A = odl.EmbeddingOperator(X)
+        >>> A = odl.FlatteningOperatorAdjoint(X)
         >>> x = A.domain.element(range(A.domain.size))
         >>> A(x)
         uniform_discr([-1.0, -1.0], [1.0, 1.0], (1, 2)).element([[0.0, 1.0]])
@@ -448,7 +448,7 @@ class FlatteningOperatorAdjoint(Operator):
         Examples
         --------
         >>> X = odl.uniform_discr(min_pt=[-1, -1], max_pt=[1, 1], shape=[2, 3])
-        >>> A = odl.EmbeddingOperator(X)
+        >>> A = odl.FlatteningOperatorAdjoint(X)
         >>> x = A.domain.element(range(A.domain.size))
         >>> A.adjoint(A(x)).inner(x) - A(x).inner(A(x)) < 1e-10
         True
