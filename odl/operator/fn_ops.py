@@ -258,7 +258,7 @@ class WeightedSumSamplingOperator(Operator):
             out[:] = y
 
         if self.variant == 'dirac':
-            weights = getattr(self.domain, 'cell_volume', 1.0)
+            weights = getattr(self.range, 'cell_volume', 1.0)
         elif self.variant == 'char_fun':
             weights = 1.0
         else:
