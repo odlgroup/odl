@@ -206,8 +206,8 @@ class WeightedSumSamplingOperator(Operator):
         >>> A = odl.WeightedSumSamplingOperator(X, sampling_points, 'dirac')
         >>> x = A.domain.one()
         >>> A(x)
-        uniform_discr([0.0, 0.0], [1.0, 1.0], (2, 2)).element([[0.0, 0.25],
-        [0.0, 0.25]])
+        uniform_discr([0.0, 0.0], [1.0, 1.0], (2, 2)).element([[0.0, 4.0],
+        [0.0, 4.0]])
         >>> A = odl.WeightedSumSamplingOperator(X, sampling_points, 'char_fun')
         >>> A(x)
         uniform_discr([0.0, 0.0], [1.0, 1.0], (2, 2)).element([[0.0, 1.0],
@@ -266,7 +266,7 @@ class WeightedSumSamplingOperator(Operator):
                                ''.format(self.variant))
 
         if weights != 1.0:
-            out *= weights
+            out /= weights
 
         return out
 
