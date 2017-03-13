@@ -18,7 +18,10 @@ from itertools import zip_longest
 import numpy as np
 import sys
 import os
+import warnings
 from time import time
+from pkg_resources import parse_version
+from odl.util.utility import run_from_ipython
 
 
 __all__ = ('almost_equal', 'all_equal', 'all_almost_equal', 'never_skip',
@@ -669,6 +672,19 @@ def run_doctests(skip_if=False):
 
     import odl
     import numpy as np
+
+    if run_from_ipython():
+        try:
+            import spyder
+        except ImportError:
+            pass
+        else:
+            if parse_version(spyder.__version__) < parse_version('3.1.4'):
+                warnings.warn('A bug with IPython and Spyder < 3.1.4 '
+                              'sometimes cause doctests to fail to run. '
+                              'Please upgrade Spyder or use another '
+                              'interpreter if the doctests do not work.',
+                              RuntimeWarning)
 
     testmod(optionflags=optionflags,
             extraglobs={'odl': odl, 'np': np})
