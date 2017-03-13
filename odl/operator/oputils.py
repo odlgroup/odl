@@ -441,7 +441,7 @@ def as_proximal_lang_operator(op, norm_bound=None):
                                  norm_bound=norm_bound)
 
 
-def as_tensorflow_layer(odl_op, name='ODLOperator'):
+def as_tensorflow_layer(odl_op, name='ODLOperator', differentiable=True):
     """Convert ``Operator`` to tensorflow layer.
 
     Parameters
@@ -450,6 +450,9 @@ def as_tensorflow_layer(odl_op, name='ODLOperator'):
         The operator that should be wrapped to a tensorflow layer.
     name : str
         Tensorflow name of the operator
+    differentiable : boolean
+        True if the operator should be differentiable, otherwise assumes that
+        the derivative is everywhere zero.
 
     Returns
     -------
@@ -581,13 +584,18 @@ def as_tensorflow_layer(odl_op, name='ODLOperator'):
                 out[i] = np.asarray(odl_op(x[i, ..., 0]))[..., None]
             return out
 
+        if differentiable:
+            grad = tensorflow_layer_grad
+        else:
+            grad = None
+
         with ops.name_scope(name, "ODLTensorflowLayer", [x]) as name_call:
             result = py_func(_impl,
                              [x],
                              [tf.float32],
                              name=name_call,
                              stateful=False,
-                             grad=tensorflow_layer_grad)
+                             grad=grad)
 
             # We must manually set the output shape since tensorflow cannot
             # figure it out
