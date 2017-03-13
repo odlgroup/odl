@@ -576,6 +576,17 @@ class FunctionalComp(Functional, OperatorComp):
                 """Apply the gradient operator to the given point."""
                 return op.derivative(x).adjoint(func.gradient(op(x)))
 
+            def derivative(self, x):
+                """The derivative in point ``x``.
+
+                This is only defined
+                """
+                if not op.is_linear:
+                    raise NotImplementedError('derivative only implemented '
+                                              'for linear opertors.')
+                else:
+                    return (op.adjoint * func.gradient * op).derivative(x)
+
         return FunctionalCompositionGradient()
 
 
