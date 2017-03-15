@@ -1351,7 +1351,11 @@ class OperatorComp(Operator):
         if self.is_linear:
             return self
         else:
-            left_deriv = self.left.derivative(self.right(x))
+            if self.left.is_linear:
+                left_deriv = self.left
+            else:
+                left_deriv = self.left.derivative(self.right(x))
+
             right_deriv = self.right.derivative(x)
 
             return OperatorComp(left_deriv, right_deriv,
