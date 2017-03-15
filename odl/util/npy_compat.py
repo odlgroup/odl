@@ -23,8 +23,8 @@ __all__ = ('broadcast_to', 'moveaxis')
 def broadcast_to(array, shape):
     """Broadcast an array to a new shape.
 
-    This implementation is needed since NumPy introduces this function
-    in version 1.10, which ODL doesn't have as a dependency yet.
+    This function is a backport of `numpy.broadcast_to` introduced in
+    NumPy 1.10.
 
     See Also
     --------
@@ -46,8 +46,8 @@ def moveaxis(a, source, destination):
 
     Other axes remain in their original order.
 
-    This implementation is needed since NumPy introduces this function
-    in version 1.11, which ODL doesn't have as a dependency yet.
+    This function is a backport of `numpy.moveaxis` introduced in
+    NumPy 1.11.
 
     See Also
     --------
