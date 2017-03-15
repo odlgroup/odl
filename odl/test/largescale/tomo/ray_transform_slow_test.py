@@ -29,7 +29,7 @@ import numpy as np
 # Internal
 import odl
 import odl.tomo as tomo
-from odl.util.testutils import skip_if_no_largescale
+from odl.util.testutils import skip_if_no_largescale, simple_fixture
 from odl.tomo.util.testutils import (skip_if_no_astra, skip_if_no_astra_cuda,
                                      skip_if_no_scikit)
 
@@ -72,8 +72,11 @@ projectors = [pytest.mark.skipif(p.args[0] + largescale, p.args[1])
               for p in projectors]
 
 
+weighting = simple_fixture('weighting', ['const', 'none'])
+
+
 @pytest.fixture(scope="module", params=projectors, ids=projector_ids)
-def projector(request, dtype):
+def projector(request, dtype, weighting):
 
     n_angles = 200
 
@@ -99,8 +102,9 @@ def projector(request, dtype):
 
     if geom == 'par2d':
         # Discrete reconstruction space
-        discr_reco_space = odl.uniform_discr([-20, -20], [20, 20],
-                                             [100, 100], dtype=dtype)
+        discr_reco_space = odl.uniform_discr([-20, -20], [20, 20], [100, 100],
+                                             dtype=dtype,
+                                             weighting=weighting)
 
         # Geometry
         dpart = odl.uniform_partition(-30, 30, 200)
@@ -113,7 +117,9 @@ def projector(request, dtype):
     elif geom == 'par3d':
         # Discrete reconstruction space
         discr_reco_space = odl.uniform_discr([-20, -20, -20], [20, 20, 20],
-                                             [100, 100, 100], dtype=dtype)
+                                             [100, 100, 100],
+                                             dtype=dtype,
+                                             weighting=weighting)
 
         # Geometry
         dpart = odl.uniform_partition([-30, -30], [30, 30], [200, 200])
@@ -181,14 +187,10 @@ def test_reconstruction(projector):
     # Project data
     projections = projector(vol)
 
-    # Calculate operator norm for landweber
-    op_norm_est_squared = projector.adjoint(projections).norm() / vol.norm()
-    omega = 1.0 / op_norm_est_squared
-
     # Reconstruct using ODL
     recon = projector.domain.zero()
-    odl.solvers.landweber(projector, recon, projections, niter=50,
-                          omega=omega)
+    odl.solvers.conjugate_gradient_normal(projector, recon, projections,
+                                          niter=20)
 
     # Make sure the result is somewhat close to the actual result.
     assert recon.dist(vol) < vol.norm() / 3.0
