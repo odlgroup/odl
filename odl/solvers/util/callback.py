@@ -75,6 +75,34 @@ class SolverCallback(object):
         """
         return _CallbackAnd(self, other)
 
+    def __mul__(self, other):
+        """Return ``self * other``.
+
+        Compose callback with operator, calls the callback after calling the
+        operator.
+
+        Parameters
+        ----------
+        other : `Operator`
+            The operator to compose with.
+
+        Returns
+        -------
+        result : `SolverCallback`
+            A callback whose `__call__` method calls first the operator, and
+            then applies the callback to the result.
+
+        Examples
+        --------
+        >>> r3 = odl.rn(3)
+        >>> callback = odl.solvers.CallbackPrint()
+        >>> operator = odl.ScalingOperator(r3, 2.0)
+        >>> composed_callback = callback * operator
+        >>> composed_callback([1, 2, 3])
+        rn(3).element([2.0, 4.0, 6.0])
+        """
+        return _CallbackCompose(self, other)
+
     def reset(self):
         """Reset the callback to its initial state.
 
@@ -117,6 +145,45 @@ class _CallbackAnd(SolverCallback):
     def __repr__(self):
         """Return ``repr(self)``."""
         return ' & '.join('{!r}'.format(p) for p in self.callbacks)
+
+
+class _CallbackCompose(SolverCallback):
+
+    """Callback used for the composition of a callback with an operator."""
+
+    def __init__(self, callback, operator):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        callback : callable
+            The callback to call.
+        operator : `Operator`
+            Operator to apply before calling the callback.
+        """
+        self.callback = callback
+        self.operator = operator
+
+    def __call__(self, result):
+        """Apply the callback."""
+        self.callback(self.operator(result))
+
+    def reset(self):
+        """Reset the internal callback to its initial state."""
+        self.callback.reset()
+
+    def __repr__(self):
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> r3 = odl.rn(3)
+        >>> callback = odl.solvers.CallbackPrint()
+        >>> operator = odl.ScalingOperator(r3, 2.0)
+        >>> callback * operator
+        CallbackPrint() * ScalingOperator(rn(3), 2.0)
+        """
+        return '{!r} * {!r}'.format(self.callback, self.operator)
 
 
 class CallbackStore(SolverCallback):
