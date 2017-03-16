@@ -173,6 +173,7 @@ def as_tensorflow_layer(odl_op, name='ODLOperator', differentiable=True):
 
 class TensorflowSpace(odl.LinearSpace):
     """A space of tensorflow Tensors."""
+
     def __init__(self, shape, name='ODLTensorflowSpace'):
         odl.LinearSpace.__init__(self, odl.RealNumbers())
         self.shape = tuple(tf.Dimension(si) if not isinstance(si, tf.Dimension) else si for si in shape)
@@ -222,7 +223,7 @@ class TensorflowSpace(odl.LinearSpace):
         with tf.name_scope('{}_zero'.format(self.name)):
             return self.element(tf.zeros(self.init_shape,
                                          dtype=tf.float32))
-        
+
     def one(self):
         with tf.name_scope('{}_one'.format(self.name)):
             return self.element(tf.ones(self.init_shape,
