@@ -165,16 +165,23 @@ class RayTransform(Operator):
             range_uspace = FunctionSpace(geometry.params,
                                          out_dtype=dtype)
 
-            # Approximate cell volume
-            # TODO: angles and detector must be handled separately. While the
-            # detector should be uniformly discretized, the angles do not have
-            # to and often are not.
-            extent = float(geometry.partition.extent.prod())
-            size = float(geometry.partition.size)
-            weight = extent / size
+            if isinstance(discr_domain.weighting, NoWeighting):
+                weighting = 1.0
+            elif (isinstance(discr_domain.weighting, ConstWeighting) and
+                  np.isclose(discr_domain.weighting.const,
+                             discr_domain.cell_volume)):
+                # Approximate cell volume
+                # TODO: angles and detector must be handled separately. While the
+                # detector should be uniformly discretized, the angles do not have
+                # to and often are not.
+                extent = float(geometry.partition.extent.prod())
+                size = float(geometry.partition.size)
+                weighting = extent / size
+            else:
+                raise ValueError('unknown weighting of domain')
 
             range_dspace = discr_domain.dspace_type(geometry.partition.size,
-                                                    weighting=weight,
+                                                    weighting=weighting,
                                                     dtype=dtype)
 
             if geometry.ndim == 2:
@@ -185,20 +192,11 @@ class RayTransform(Operator):
                 # TODO Add this when we add nd ray transform.
                 axis_labels = None
 
-            if isinstance(discr_domain.weighting, NoWeighting):
-                weighting = 'none'
-            elif (isinstance(discr_domain.weighting, ConstWeighting) and
-                  np.isclose(discr_domain.weighting.const,
-                             discr_domain.cell_volume)):
-                weighting = 'const'
-            else:
-                raise ValueError('unknown weighting of domain')
-
             range_interp = kwargs.get('interp', 'nearest')
             discr_range = DiscreteLp(
                 range_uspace, geometry.partition, range_dspace,
                 interp=range_interp, order=discr_domain.order,
-                axis_labels=axis_labels, weighting=weighting)
+                axis_labels=axis_labels)
 
         self.backproj = None
 
@@ -342,13 +340,20 @@ class RayBackProjection(Operator):
             # data-space type as the range.
             domain_uspace = FunctionSpace(geometry.params, out_dtype=dtype)
 
-            # Approximate cell volume
-            extent = float(geometry.partition.extent.prod())
-            size = float(geometry.partition.size)
-            weight = extent / size
+            if isinstance(discr_range.weighting, NoWeighting):
+                weighting = 1.0
+            elif (isinstance(discr_range.weighting, ConstWeighting) and
+                  np.isclose(discr_range.weighting.const,
+                             discr_range.cell_volume)):
+                # Approximate cell volume
+                extent = float(geometry.partition.extent.prod())
+                size = float(geometry.partition.size)
+                weighting = extent / size
+            else:
+                raise ValueError('unknown weighting of domain')
 
             domain_dspace = discr_range.dspace_type(geometry.partition.size,
-                                                    weighting=weight,
+                                                    weighting=weighting,
                                                     dtype=dtype)
 
             if geometry.ndim == 2:
@@ -359,20 +364,11 @@ class RayBackProjection(Operator):
                 # TODO Add this when we add nd ray transform.
                 axis_labels = None
 
-            if isinstance(discr_range.weighting, NoWeighting):
-                weighting = 'none'
-            elif (isinstance(discr_range.weighting, ConstWeighting) and
-                  np.isclose(discr_range.weighting.const,
-                             discr_range.cell_volume)):
-                weighting = 'const'
-            else:
-                raise ValueError('unknown weighting of domain')
-
             domain_interp = kwargs.get('interp', 'nearest')
             discr_domain = DiscreteLp(
                 domain_uspace, geometry.partition, domain_dspace,
                 interp=domain_interp, order=discr_range.order,
-                axis_labels=axis_labels, weighting=weighting)
+                axis_labels=axis_labels)
 
         self.ray_trafo = None
 
