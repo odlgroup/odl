@@ -21,8 +21,7 @@ from odl.space import ProductSpace
 from odl.util import as_flat_array
 
 __all__ = ('matrix_representation', 'power_method_opnorm', 'as_scipy_operator',
-           'as_scipy_functional', 'as_proximal_lang_operator',
-           'as_tensorflow_layer')
+           'as_scipy_functional', 'as_proximal_lang_operator')
 
 
 def matrix_representation(op):
@@ -441,6 +440,7 @@ def as_proximal_lang_operator(op, norm_bound=None):
                                  norm_bound=norm_bound)
 
 
+<<<<<<< b2414531c589a988c473ffc5cb7c9bebcb2b631c
 def as_tensorflow_layer(odl_op, name='ODLOperator', differentiable=True):
     """Convert ``Operator`` to tensorflow layer.
 
