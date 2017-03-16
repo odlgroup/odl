@@ -20,7 +20,7 @@
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
-from future.utils import raise_from
+from future.utils import raise_from, native
 standard_library.install_aliases()
 
 import numpy as np
@@ -313,7 +313,7 @@ def as_scipy_operator(op):
         else:
             return arr.asarray()
 
-    shape = (op.range.size, op.domain.size)
+    shape = (native(op.range.size), native(op.domain.size))
 
     def matvec(v):
         return as_flat_array(op(v))
