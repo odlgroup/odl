@@ -151,7 +151,7 @@ class FunctionSpace(LinearSpace):
     for details.
     """
 
-    def __init__(self, domain, out_dtype=None):
+    def __init__(self, domain, out_dtype=float):
         """Initialize a new instance.
 
         Parameters
@@ -377,7 +377,13 @@ class FunctionSpace(LinearSpace):
                     raise RuntimeError('bad input')
 
                 if out is None:
-                    results = [f(x, **kwargs) for f in fcalls]
+                    results = []
+                    for f in fcalls:
+                        if np.isscalar(f):
+                            # Constant function
+                            results.append(f)
+                        else:
+                            results.append(f(x, **kwargs))
                     bcast_results = [
                         broadcast_to(np.squeeze(res), scalar_out_shape)
                         for res in results]
@@ -392,11 +398,14 @@ class FunctionSpace(LinearSpace):
                         # component (= scalar function) at a time
                         out_comps = out.reshape((-1,) + scalar_out_shape)
                         for f, out_comp in zip(fcalls, out_comps):
-                            has_out, _ = _fcall_out_type(f)
-                            if has_out:
-                                f(x, out=out_comp, **kwargs)
+                            if np.isscalar(f):
+                                out_comp[:] = f
                             else:
-                                out_comp[:] = f(x, **kwargs)
+                                has_out, _ = _fcall_out_type(f)
+                                if has_out:
+                                    f(x, out=out_comp, **kwargs)
+                                else:
+                                    out_comp[:] = f(x, **kwargs)
 
             return self.element_type(self, wrapper)
 
