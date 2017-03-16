@@ -29,6 +29,7 @@ from odl.discr import DiscreteLp
 from odl.operator import Operator
 from odl.space import FunctionSpace
 from odl.tomo.geometry import Geometry, Parallel2dGeometry
+from odl.space.weighting import NoWeighting, ConstWeighting
 from odl.tomo.backends import (
     ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE, SCIKIT_IMAGE_AVAILABLE,
     astra_cpu_forward_projector, astra_cpu_back_projector,
@@ -184,11 +185,20 @@ class RayTransform(Operator):
                 # TODO Add this when we add nd ray transform.
                 axis_labels = None
 
+            if isinstance(discr_domain.weighting, NoWeighting):
+                weighting = 'none'
+            elif (isinstance(discr_domain.weighting, ConstWeighting) and
+                  np.isclose(discr_domain.weighting.const,
+                             discr_domain.cell_volume)):
+                weighting = 'const'
+            else:
+                raise ValueError('unknown weighting of domain')
+
             range_interp = kwargs.get('interp', 'nearest')
             discr_range = DiscreteLp(
                 range_uspace, geometry.partition, range_dspace,
                 interp=range_interp, order=discr_domain.order,
-                axis_labels=axis_labels)
+                axis_labels=axis_labels, weighting=weighting)
 
         self.backproj = None
 
@@ -349,11 +359,20 @@ class RayBackProjection(Operator):
                 # TODO Add this when we add nd ray transform.
                 axis_labels = None
 
+            if isinstance(discr_range.weighting, NoWeighting):
+                weighting = 'none'
+            elif (isinstance(discr_range.weighting, ConstWeighting) and
+                  np.isclose(discr_range.weighting.const,
+                             discr_range.cell_volume)):
+                weighting = 'const'
+            else:
+                raise ValueError('unknown weighting of domain')
+
             domain_interp = kwargs.get('interp', 'nearest')
             discr_domain = DiscreteLp(
                 domain_uspace, geometry.partition, domain_dspace,
                 interp=domain_interp, order=discr_range.order,
-                axis_labels=axis_labels)
+                axis_labels=axis_labels, weighting=weighting)
 
         self.ray_trafo = None
 
