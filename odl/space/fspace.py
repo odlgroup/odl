@@ -183,14 +183,14 @@ class FunctionSpace(LinearSpace):
         specifying ``out_dtype``:
 
         >>> odl.FunctionSpace(domain, out_dtype=complex)
-        FunctionSpace(IntervalProd(0.0, 1.0), out_dtype='complex')
+        FunctionSpace(IntervalProd(0.0, 1.0), out_dtype=complex)
 
         To get vector- or tensor-valued functions, specify
         ``out_dtype`` with shape:
 
         >>> vec_dtype = np.dtype(('float64', (3,)))  # 3 components
         >>> odl.FunctionSpace(domain, out_dtype=vec_dtype)
-
+        FunctionSpace(IntervalProd(0.0, 1.0), out_dtype=('float64', (3,)))
         """
         if not isinstance(domain, Set):
             raise TypeError('`domain` must be a `Set` instance, got {!r}'
@@ -313,25 +313,68 @@ class FunctionSpace(LinearSpace):
         >>> func([0.1, 0.6])
         array([-0.9, -0.4])
 
+        It is also possible to use functions with parameters. Note that
+        such extra parameters have to be given by keyword when calling
+        the function:
+
+        >>> def f(x, b):
+        ...     return x + b
+        >>> func = fspace.element(f)
+        >>> func([0.1, 0.6], b=1)
+        array([ 1.1,  1.6])
+        >>> func([0.1, 0.6], b=-1)
+        array([-0.9, -0.4])
+
         Vector-valued functions can eiter be given as a sequence of
         scalar-valued functions or as a single function that returns
         a sequence:
 
+        >>> # Space of vector-valued functions with 2 components
         >>> fspace = odl.FunctionSpace(odl.IntervalProd(0, 1),
-        ...                            out_dtype=(float, (2,)))  # 2 components
-        >>> func = fspace.element([lambda x: x - 1, lambda x: x + 1])
-        >>> func(0.5)
+        ...                            out_dtype=(float, (2,)))
+        >>> # Possibility 1: provide component functions
+        >>> func1 = fspace.element([lambda x: x - 1, lambda x: x + 1])
+        >>> func1(0.5)
         array([-0.5,  1.5])
-
-        >>> func([0.1, 0.6])
+        >>> func1([0.1, 0.6])
         array([[-0.9, -0.4],
                [ 1.1,  1.6]])
+        >>> # Possibility 2: single function returning a sequence
         >>> func2 = fspace.element(lambda x: (x - 1, x + 1))
         >>> func2(0.5)
         array([-0.5,  1.5])
         >>> func2([0.1, 0.6])
         array([[-0.9, -0.4],
                [ 1.1,  1.6]])
+
+        If the function(s) include an ``out`` parameter, it can be provided
+        to hold the final result:
+
+        >>> # Sequence of functions with `out` parameter
+        >>> def f1(x, out):
+        ...     out[:] = x + 1
+        >>> def f2(x, out):
+        ...     out[:] = x - 1
+        >>> func = fspace.element([f1, f2])
+        >>> out = np.empty((2, 2))  # needs to match expected output shape
+        >>> result = func([0.1, 0.6], out=out)
+        >>> out
+        array([[ 1.1,  1.6],
+               [-0.9, -0.4]])
+        >>> result is out
+        True
+        >>> # Single function assigning to components of `out`
+        >>> def f(x, out):
+        ...     out[0] = x + 1
+        ...     out[1] = x - 1
+        >>> func = fspace.element(f)
+        >>> out = np.empty((2, 2))  # needs to match expected output shape
+        >>> result = func([0.1, 0.6], out=out)
+        >>> out
+        array([[ 1.1,  1.6],
+               [-0.9, -0.4]])
+        >>> result is out
+        True
         """
         if fcall is None:
             return self.zero()
@@ -987,13 +1030,14 @@ class FunctionSpaceElement(LinearSpaceElement):
         Raises
         ------
         TypeError
-            If ``x`` is not a valid vectorized evaluation argument
+            If ``x`` is not a valid vectorized evaluation argument.
 
-            If ``out`` is not a range element or a `numpy.ndarray`
-            of range elements
+            If ``out`` is neither ``None`` nor a `numpy.ndarray` of
+            adequate shape and data type.
 
         ValueError
-            If evaluation points fall outside the valid domain
+            If ``bounds_check == True`` evaluation points fall outside
+            the valid domain.
         """
         bounds_check = kwargs.pop('bounds_check', True)
         if bounds_check and not hasattr(self.domain, 'contains_all'):
@@ -1171,15 +1215,23 @@ class FunctionSpaceElement(LinearSpaceElement):
         equals : bool
             ``True`` if ``other`` is a `FunctionSpaceElement` with
             ``other.space == self.space``, and the functions for evaluation
-            evaluation of ``self`` and ``other`` are the same, ``False``
+            of ``self`` and ``other`` are the same, ``False``
             otherwise.
+
+        Notes
+        -----
+        Since there is potentially a lot of function wrapping going on,
+        it is very hard to find the "true" function behind a
+        `FunctionSpaceElement` for comparison. Therefore, users
+        should be aware that very often, comparison evaluates to ``False``
+        even if two elements were generated from the same function.
         """
         if other is self:
             return True
         elif other not in self.space:
             return False
 
-        # We cannot blindly compare since functions may have been wrapped
+        # We try to unwrap one level, which is better than nothing
         if (self._call_has_out != other._call_has_out or
                 self._call_out_optional != other._call_out_optional):
             return False
