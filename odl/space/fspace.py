@@ -85,26 +85,27 @@ def _check_out_arg(func):
 
 def _default_in_place(func, x, out, **kwargs):
     """Default in-place evaluation method."""
-    out[:] = func(x, **kwargs)
+    out[:] = func._call_out_of_place(x, **kwargs)
     return out
 
 
 def _default_out_of_place(func, x, **kwargs):
     """Default in-place evaluation method."""
     if is_valid_input_array(x, func.domain.ndim):
-        out_shape = out_shape_from_array(x)
+        scalar_out_shape = out_shape_from_array(x)
     elif is_valid_input_meshgrid(x, func.domain.ndim):
-        out_shape = out_shape_from_meshgrid(x)
+        scalar_out_shape = out_shape_from_meshgrid(x)
     else:
         raise TypeError('cannot use in-place method to implement '
                         'out-of-place non-vectorized evaluation')
 
-    dtype = func.space.out_dtype
+    dtype = func.space.scalar_out_dtype
     if dtype is None:
         dtype = np.result_type(*x)
 
+    out_shape = func.out_shape + scalar_out_shape
     out = np.empty(out_shape, dtype=dtype)
-    func(x, out=out, **kwargs)
+    func._call_in_place(x, out=out, **kwargs)
     return out
 
 
@@ -365,7 +366,9 @@ class FunctionSpace(LinearSpace):
                 else:
                     otypes = []
 
-                fcalls = [vectorize(otypes=otypes)(f) for f in fcalls]
+                # Vectorize, preserving scalars
+                fcalls = [f if np.isscalar(f) else vectorize(otypes=otypes)(f)
+                          for f in fcalls]
 
             def wrapper(x, out=None, **kwargs):
                 """Function wrapping an array of callables."""
@@ -412,8 +415,10 @@ class FunctionSpace(LinearSpace):
     def zero(self):
         """Function mapping anything to zero."""
         # Since `FunctionSpace.lincomb` may be slow, we implement this
-        # function directly
-        def zero_vec(x, out=None):
+        # function directly.
+        # The unused **kwargs are needed to support combination with
+        # functions that take parameters.
+        def zero_vec(x, out=None, **kwargs):
             """Zero function, vectorized."""
             if is_valid_input_meshgrid(x, self.domain.ndim):
                 scalar_out_shape = out_shape_from_meshgrid(x)
@@ -437,7 +442,8 @@ class FunctionSpace(LinearSpace):
 
     def one(self):
         """Function mapping anything to one."""
-        def one_vec(x, out=None):
+        # See zero() for remarks
+        def one_vec(x, out=None, **kwargs):
             """One function, vectorized."""
             if is_valid_input_meshgrid(x, self.domain.ndim):
                 scalar_out_shape = out_shape_from_meshgrid(x)
@@ -546,51 +552,51 @@ class FunctionSpace(LinearSpace):
         x2_call_oop = x2._call_out_of_place
         x2_call_ip = x2._call_in_place
 
-        def lincomb_call_out_of_place(x):
+        def lincomb_call_out_of_place(x, **kwargs):
             """Linear combination, out-of-place version."""
             # Due to vectorization, at least one call must be made to
             # ensure the correct final shape. The rest is optimized as
             # far as possible.
             if a == 0 and b != 0:
-                out = np.asarray(x2_call_oop(x), dtype=self.scalar_out_dtype)
+                out = np.asarray(x2_call_oop(x, **kwargs),
+                                 dtype=self.scalar_out_dtype)
                 if b != 1:
                     out *= b
             elif b == 0:  # Contains the case a == 0
-                out = np.asarray(x1_call_oop(x), dtype=self.scalar_out_dtype)
+                out = np.asarray(x1_call_oop(x, **kwargs),
+                                 dtype=self.scalar_out_dtype)
                 if a != 1:
                     out *= a
             else:
-                out = np.asarray(x1_call_oop(x), dtype=self.scalar_out_dtype)
+                out = np.asarray(x1_call_oop(x, **kwargs),
+                                 dtype=self.scalar_out_dtype)
                 if a != 1:
                     out *= a
-                tmp = np.asarray(x2_call_oop(x), dtype=self.scalar_out_dtype)
+                tmp = np.asarray(x2_call_oop(x, **kwargs),
+                                 dtype=self.scalar_out_dtype)
                 if b != 1:
                     tmp *= b
                 out += tmp
             return out
 
-        def lincomb_call_in_place(x, out):
+        def lincomb_call_in_place(x, out, **kwargs):
             """Linear combination, in-place version."""
-            # TODO: remove this restriction
-            if not isinstance(out, np.ndarray):
-                raise TypeError('in-place evaluation only possible if output '
-                                'is of type `numpy.ndarray`')
             # TODO: this could be optimized for the case when x1 and x2
             # are identical
             if a == 0 and b == 0:
                 out *= 0
             elif a == 0 and b != 0:
-                x2_call_ip(x, out)
+                x2_call_ip(x, out, **kwargs)
                 if b != 1:
                     out *= b
             elif b == 0 and a != 0:
-                x1_call_ip(x, out)
+                x1_call_ip(x, out, **kwargs)
                 if a != 1:
                     out *= a
             else:
                 tmp = np.empty_like(out)
-                x1_call_ip(x, out)
-                x2_call_ip(x, tmp)
+                x1_call_ip(x, out, **kwargs)
+                x2_call_ip(x, tmp, **kwargs)
                 if a != 1:
                     out *= a
                 if b != 1:
@@ -619,16 +625,17 @@ class FunctionSpace(LinearSpace):
         x2_call_oop = x2._call_out_of_place
         x2_call_ip = x2._call_in_place
 
-        def product_call_out_of_place(x):
+        def product_call_out_of_place(x, **kwargs):
             """Product out-of-place evaluation function."""
-            return np.asarray(x1_call_oop(x) * x2_call_oop(x),
-                              dtype=self.scalar_out_dtype)
+            return np.asarray(
+                x1_call_oop(x, **kwargs) * x2_call_oop(x, **kwargs),
+                dtype=self.scalar_out_dtype)
 
-        def product_call_in_place(x, out):
+        def product_call_in_place(x, out, **kwargs):
             """Product in-place evaluation function."""
             tmp = np.empty_like(out, dtype=self.scalar_out_dtype)
-            x1_call_ip(x, out)
-            x2_call_ip(x, tmp)
+            x1_call_ip(x, out, **kwargs)
+            x2_call_ip(x, tmp, **kwargs)
             out *= tmp
             return out
 
@@ -647,16 +654,17 @@ class FunctionSpace(LinearSpace):
         x2_call_oop = x2._call_out_of_place
         x2_call_ip = x2._call_in_place
 
-        def quotient_call_out_of_place(x):
+        def quotient_call_out_of_place(x, **kwargs):
             """Quotient out-of-place evaluation function."""
-            return np.asarray(x1_call_oop(x) / x2_call_oop(x),
-                              dtype=self.scalar_out_dtype)
+            return np.asarray(
+                x1_call_oop(x, **kwargs) / x2_call_oop(x, **kwargs),
+                dtype=self.scalar_out_dtype)
 
-        def quotient_call_in_place(x, out):
+        def quotient_call_in_place(x, out, **kwargs):
             """Quotient in-place evaluation function."""
             tmp = np.empty_like(out, dtype=self.scalar_out_dtype)
-            x1_call_ip(x, out)
-            x2_call_ip(x, tmp)
+            x1_call_ip(x, out, **kwargs)
+            x2_call_ip(x, tmp, **kwargs)
             out /= tmp
             return out
 
@@ -665,55 +673,57 @@ class FunctionSpace(LinearSpace):
         out._call_has_out = out._call_out_optional = True
         return out
 
-    def _scalar_power(self, x, p, out):
+    def _scalar_power(self, x, p_, out):
         """Raw p-th power of a function, p integer or general scalar."""
         # TODO: adapt for tensor-valued functions
 
         x_call_oop = x._call_out_of_place
         x_call_ip = x._call_in_place
 
-        def pow_posint(x, n):
+        def pow_posint(x, n_):
             """Recursion to calculate the n-th power out-of-place."""
             if isinstance(x, np.ndarray):
                 y = x.copy()
-                return ipow_posint(y, n)
+                return ipow_posint(y, n_)
             else:
-                return x ** n
+                return x ** n_
 
-        def ipow_posint(x, n):
+        def ipow_posint(x, n_):
             """Recursion to calculate the n-th power in-place."""
-            if n == 1:
+            if n_ == 1:
                 return x
-            elif n % 2 == 0:
+            elif n_ % 2 == 0:
                 x *= x
-                return ipow_posint(x, n // 2)
+                return ipow_posint(x, n_ // 2)
             else:
                 tmp = x.copy()
                 x *= x
-                ipow_posint(x, n // 2)
+                ipow_posint(x, n_ // 2)
                 x *= tmp
                 return x
 
-        def power_call_out_of_place(x):
+        def power_call_out_of_place(x, **kwargs):
             """Power out-of-place evaluation function."""
-            if p == 0:
+            if p_ == 0:
                 return self.one()
-            elif p == int(p) and p >= 1:
-                return np.asarray(pow_posint(x_call_oop(x), int(p)),
+            elif p_ == int(p_) and p_ >= 1:
+                return np.asarray(pow_posint(x_call_oop(x, **kwargs), int(p_)),
                                   dtype=self.scalar_out_dtype)
             else:
-                return np.power(x_call_oop(x), p).astype(self.scalar_out_dtype)
+                result = np.power(x_call_oop(x, **kwargs), p_)
+                return result.astype(self.scalar_out_dtype)
 
-        def power_call_in_place(x, out):
+        def power_call_in_place(x, out, **kwargs):
             """Power in-place evaluation function."""
-            if p == 0:
-                out.assign(self.one())
+            if p_ == 0:
+                out.fill(1)
+                return out
 
-            x_call_ip(x, out)
-            if p == int(p) and p >= 1:
-                return ipow_posint(out, int(p))
+            x_call_ip(x, out, **kwargs)
+            if p_ == int(p_) and p_ >= 1:
+                return ipow_posint(out, int(p_))
             else:
-                out **= p
+                out **= p_
                 return out
 
         out._call_out_of_place = power_call_out_of_place
@@ -723,44 +733,36 @@ class FunctionSpace(LinearSpace):
 
     def _realpart(self, x):
         """Function returning the real part of a result."""
-        # TODO: adapt for tensor-valued functions
-
         x_call_oop = x._call_out_of_place
 
-        def realpart_oop(x):
-            return np.asarray(x_call_oop(x), dtype=self.scalar_out_dtype).real
+        def realpart_oop(x, **kwargs):
+            return np.asarray(x_call_oop(x, **kwargs),
+                              dtype=self.scalar_out_dtype).real
 
         if is_real_dtype(self.out_dtype):
             return x
         else:
-            rdtype = real_dtype(self.out_dtype)
-            rspace = self.astype(rdtype)
-            return rspace.element(realpart_oop)
+            return self.real_space.element(realpart_oop)
 
     def _imagpart(self, x):
         """Function returning the imaginary part of a result."""
-        # TODO: adapt for tensor-valued functions
-
         x_call_oop = x._call_out_of_place
 
-        def imagpart_oop(x):
-            return np.asarray(x_call_oop(x), dtype=self.scalar_out_dtype).imag
+        def imagpart_oop(x, **kwargs):
+            return np.asarray(x_call_oop(x, **kwargs),
+                              dtype=self.scalar_out_dtype).imag
 
         if is_real_dtype(self.out_dtype):
             return self.zero()
         else:
-            rdtype = real_dtype(self.out_dtype)
-            rspace = self.astype(rdtype)
-            return rspace.element(imagpart_oop)
+            return self.real_space.element(imagpart_oop)
 
     def _conj(self, x):
         """Function returning the complex conjugate of a result."""
-        # TODO: adapt for tensor-valued functions
-
         x_call_oop = x._call_out_of_place
 
-        def conj_oop(x):
-            return np.asarray(x_call_oop(x),
+        def conj_oop(x, **kwargs):
+            return np.asarray(x_call_oop(x, **kwargs),
                               dtype=self.scalar_out_dtype).conj()
 
         if is_real_dtype(self.out_dtype):
@@ -850,7 +852,6 @@ class FunctionSpace(LinearSpace):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        # TODO: change back to field
         posargs = [self.domain]
         optargs = []
         if is_real_dtype(self.out_dtype):
@@ -1043,7 +1044,10 @@ class FunctionSpaceElement(LinearSpaceElement):
                 raise ValueError('input contains points outside '
                                  'the domain {}'.format(self.domain))
 
-        out_shape = self.space.out_shape + scalar_out_shape
+        if scalar_in:
+            out_shape = self.out_shape
+        else:
+            out_shape = self.out_shape + scalar_out_shape
 
         # Call the function and check out shape, before or after
         if out is None:
@@ -1074,12 +1078,8 @@ class FunctionSpaceElement(LinearSpaceElement):
                 # is a scalar.
                 out = np.asarray(out, dtype=self.space.scalar_out_dtype)
                 if out_shape != (1,) and out.shape != out_shape:
-                    # Try to broadcast the returned element. For scalar
-                    # input, the last artificial axis is removed.
-                    if scalar_in:
-                        out = broadcast_to(out, out_shape[:-1])
-                    else:
-                        out = broadcast_to(out, out_shape)
+                    # Try to broadcast the returned element.
+                    out = broadcast_to(out, out_shape)
 
             elif self.space.tensor_valued:
                 # TODO: fix case when such a function is evaluated at a
@@ -1128,7 +1128,7 @@ class FunctionSpaceElement(LinearSpaceElement):
                     self._call(x, out=out, **kwargs)
                 except TypeError:
                     self._call(x[0], out=out, **kwargs)
-            elif not self.tensor_valued:
+            else:
                 self._call(x, out=out, **kwargs)
 
         # Check output values
