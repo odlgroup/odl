@@ -3,7 +3,7 @@ import tensorflow as tf
 import numpy as np
 
 
-__all__ = ('as_tensorflow_layer', 'TensorflowSpace')
+__all__ = ('as_tensorflow_layer', 'TensorflowSpace', 'TensorflowSpaceOperator')
 
 
 def as_tensorflow_layer(odl_op, name='ODLOperator', differentiable=True):
@@ -173,8 +173,10 @@ def as_tensorflow_layer(odl_op, name='ODLOperator', differentiable=True):
 
 class TensorflowSpace(odl.LinearSpace):
     """A space of tensorflow Tensors."""
-    def __init__(self):
+    def __init__(self, shape):
         odl.LinearSpace.__init__(self, odl.RealNumbers())
+        self.shape = tuple(tf.Dimension(si) if not isinstance(si, tf.Dimension) else si for si in shape)
+        self.init_shape = tuple(si if si.value is not None else tf.Dimension(1) for si in self.shape)
 
     def _lincomb(self, a, x1, b, x2, out):
         out.data = a * x1.data + b * x2.data
@@ -184,15 +186,20 @@ class TensorflowSpace(odl.LinearSpace):
             return inp
         elif inp is None:
             return TensorflowSpaceElement(self,
-                                          tf.constant(0, dtype=tf.float32))
+                                          tf.zeros(self.init_shape,
+                                                   dtype=tf.float32))
         else:
             return TensorflowSpaceElement(self, inp)
 
+    def one(self):
+        return self.element(tf.ones(self.init_shape,
+                                    dtype=tf.float32))
+
     def __eq__(self, other):
-        return isinstance(other, TensorflowSpace)
+        return isinstance(other, TensorflowSpace) and other.shape == self.shape
 
     def __repr__(self):
-        return 'TensorflowSpace()'
+        return 'TensorflowSpace({})'.format(self.shape)
 
 
 class TensorflowSpaceElement(odl.LinearSpaceElement):
@@ -212,3 +219,21 @@ class TensorflowSpaceElement(odl.LinearSpaceElement):
 
     def __repr__(self):
         return '{}.element({})'.format(self.space, self.data)
+
+
+class TensorflowSpaceOperator(odl.Operator):
+    def __init__(self, domain, range, func, adjoint=None, linear=False):
+        odl.Operator.__init__(self, domain, range, linear)
+        self.func = func
+        self.adjoint_func = adjoint
+
+    def _call(self, x):
+        return self.func(x.data)
+
+    @property
+    def adjoint(self):
+        return TensorflowSpaceOperator(self.range,
+                                       self.domain,
+                                       self.adjoint_func,
+                                       self.func,
+                                       self.is_linear)
