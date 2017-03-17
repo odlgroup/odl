@@ -904,28 +904,6 @@ def test_array_weighting_dist(tspace, exponent):
     assert pdist(x, y) == pytest.approx(true_dist, rel=rtol)
 
 
-def test_array_weighting_dist_using_inner(tspace):
-    """Test dist using inner product in a weighted space."""
-    rtol = np.sqrt(np.finfo(tspace.dtype).resolution)
-
-    [xarr, yarr], [x, y] = noise_elements(tspace, 2)
-
-    weight_arr = _pos_array(tspace)
-    w = NumpyTensorSpaceArrayWeighting(weight_arr)
-
-    true_dist = np.linalg.norm(np.sqrt(weight_arr) * (xarr - yarr))
-    assert w.dist(x, y) == pytest.approx(true_dist, rel=rtol)
-
-    # Only possible for exponent == 2
-    with pytest.raises(ValueError):
-        NumpyTensorSpaceArrayWeighting(weight_arr, exponent=1,
-                                       dist_using_inner=True)
-
-    # With free function
-    w_dist = npy_weighted_dist(weight_arr, use_inner=True)
-    assert w_dist(x, y) == pytest.approx(true_dist, rel=rtol)
-
-
 def test_const_weighting_init(exponent):
     """Test initialization of constant weightings."""
     constant = 1.5
@@ -1030,48 +1008,19 @@ def test_const_weighting_dist(tspace, exponent):
     assert w_const_dist(x, y) == pytest.approx(true_dist)
 
 
-def test_const_weighting_dist_using_inner(tspace):
-    """Test dist with constant weighting using inner product."""
-    rtol = np.sqrt(np.finfo(tspace.dtype).resolution)
-
-    [xarr, yarr], [x, y] = noise_elements(tspace, 2)
-
-    constant = 1.5
-    w = NumpyTensorSpaceConstWeighting(constant)
-
-    true_dist = np.sqrt(constant) * np.linalg.norm(xarr - yarr)
-    assert w.dist(x, y) == pytest.approx(true_dist, rel=rtol)
-
-    # Only possible for exponent=2
-    with pytest.raises(ValueError):
-        NumpyTensorSpaceConstWeighting(constant, exponent=1,
-                                       dist_using_inner=True)
-
-    # With free function
-    w_dist = npy_weighted_dist(constant, use_inner=True)
-    assert w_dist(x, y) == pytest.approx(true_dist, rel=rtol)
-
-
 def test_noweight_init():
     """Test initialization of trivial weighting."""
     w = NumpyTensorSpaceNoWeighting()
     w_same1 = NumpyTensorSpaceNoWeighting()
     w_same2 = NumpyTensorSpaceNoWeighting(2)
-    w_same3 = NumpyTensorSpaceNoWeighting(2, False)
-    w_same4 = NumpyTensorSpaceNoWeighting(2, dist_using_inner=False)
-    w_same5 = NumpyTensorSpaceNoWeighting(exponent=2, dist_using_inner=False)
     w_other_exp = NumpyTensorSpaceNoWeighting(exponent=1)
-    w_dist_inner = NumpyTensorSpaceNoWeighting(dist_using_inner=True)
 
     # Singleton pattern
-    for same in (w_same1, w_same2, w_same3, w_same4, w_same5):
-        assert w is same
+    assert w is w_same1
+    assert w is w_same2
 
     # Proper creation
-    assert w is not w_other_exp
-    assert w is not w_dist_inner
     assert w != w_other_exp
-    assert w != w_dist_inner
 
 
 def test_custom_inner(tspace):
@@ -1086,12 +1035,10 @@ def test_custom_inner(tspace):
     w = NumpyTensorSpaceCustomInner(inner)
     w_same = NumpyTensorSpaceCustomInner(inner)
     w_other = NumpyTensorSpaceCustomInner(np.dot)
-    w_d = NumpyTensorSpaceCustomInner(inner, dist_using_inner=False)
 
     assert w == w
     assert w == w_same
     assert w != w_other
-    assert w != w_d
 
     true_inner = inner(xarr, yarr)
     assert w.inner(x, y) == pytest.approx(true_inner)
@@ -1100,9 +1047,7 @@ def test_custom_inner(tspace):
     assert w.norm(x) == pytest.approx(true_norm)
 
     true_dist = np.linalg.norm((xarr - yarr).ravel())
-    # Uses dist_using_inner by default in this case, therefore tolerance
     assert w.dist(x, y) == pytest.approx(true_dist, rel=rtol)
-    assert w_d.dist(x, y) == pytest.approx(true_dist)
 
     with pytest.raises(TypeError):
         NumpyTensorSpaceCustomInner(1)
