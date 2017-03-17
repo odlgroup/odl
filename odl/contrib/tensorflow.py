@@ -172,6 +172,7 @@ def as_tensorflow_layer(odl_op, name='ODLOperator', differentiable=True):
 
 
 class TensorflowSpace(odl.LinearSpace):
+
     """A space of tensorflow Tensors."""
 
     def __init__(self, shape, name='ODLTensorflowSpace'):
