@@ -97,8 +97,6 @@ class ProductSpace(LinearSpace):
             - ``dist(x, y) <= dist(x, z) + dist(z, y)``
 
             By default, ``dist(x, y)`` is calculated as ``norm(x - y)``.
-            This creates an intermediate array ``x - y``, which can be
-            avoided by choosing ``dist_using_inner=True``.
 
             Cannot be combined with: ``weighting, norm, inner``
 
@@ -129,21 +127,6 @@ class ProductSpace(LinearSpace):
             - ``<x, x> = 0``  if and only if  ``x = 0``
 
             Cannot be combined with: ``weighting, dist, norm``
-
-        dist_using_inner : bool, optional
-            Calculate ``dist`` using the formula
-
-                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
-
-            This avoids the creation of new arrays and is thus faster
-            for large arrays. On the downside, it will not evaluate to
-            exactly zero for equal (but not identical) ``x`` and ``y``.
-
-            This option can only be used if ``exponent`` is 2.0.
-
-            Default: ``False``.
-
-            Cannot be combined with: ``dist``
 
         Examples
         --------
@@ -220,7 +203,6 @@ class ProductSpace(LinearSpace):
         inner = kwargs.pop('inner', None)
         weighting = kwargs.pop('weighting', None)
         exponent = float(kwargs.pop('exponent', 2.0))
-        dist_using_inner = bool(kwargs.pop('dist_using_inner', False))
         if kwargs:
             raise TypeError('got unexpected keyword arguments: {}'
                             ''.format(kwargs))
@@ -271,7 +253,7 @@ class ProductSpace(LinearSpace):
                 self.__weighting = weighting
             elif np.isscalar(weighting):
                 self.__weighting = ProductSpaceConstWeighting(
-                    weighting, exponent, dist_using_inner=dist_using_inner)
+                    weighting, exponent)
             elif weighting is None:
                 # Need to wait until dist, norm and inner are handled
                 pass
@@ -282,7 +264,7 @@ class ProductSpace(LinearSpace):
                                      ''.format(weighting))
                 if arr.ndim == 1:
                     self.__weighting = ProductSpaceArrayWeighting(
-                        arr, exponent, dist_using_inner=dist_using_inner)
+                        arr, exponent)
                 else:
                     raise ValueError('weighting array has {} dimensions, '
                                      'expected 1'.format(arr.ndim))
@@ -294,8 +276,7 @@ class ProductSpace(LinearSpace):
         elif inner is not None:
             self.__weighting = ProductSpaceCustomInner(inner)
         else:  # all None -> no weighing
-            self.__weighting = ProductSpaceNoWeighting(
-                exponent, dist_using_inner=dist_using_inner)
+            self.__weighting = ProductSpaceNoWeighting(exponent)
 
     @property
     def size(self):
@@ -1002,7 +983,7 @@ class ProductSpaceArrayWeighting(ArrayWeighting):
     See ``Notes`` for mathematical details.
     """
 
-    def __init__(self, array, exponent=2.0, dist_using_inner=False):
+    def __init__(self, array, exponent=2.0):
         """Initialize a new instance.
 
         Parameters
@@ -1012,16 +993,6 @@ class ProductSpaceArrayWeighting(ArrayWeighting):
         exponent : positive float, optional
             Exponent of the norm. For values other than 2.0, no inner
             product is defined.
-        dist_using_inner : bool, optional
-            Calculate ``dist`` using the formula
-
-                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``.
-
-            This avoids the creation of new arrays and is thus faster
-            for large arrays. On the downside, it will not evaluate to
-            exactly zero for equal (but not identical) ``x`` and ``y``.
-
-            Can only be used if ``exponent`` is 2.0.
 
         Notes
         -----
@@ -1058,8 +1029,7 @@ class ProductSpaceArrayWeighting(ArrayWeighting):
           define an inner product or norm, respectively. This is not checked
           during initialization.
         """
-        super().__init__(array, impl='numpy', exponent=exponent,
-                         dist_using_inner=dist_using_inner)
+        super().__init__(array, impl='numpy', exponent=exponent)
 
     def inner(self, x1, x2):
         """Calculate the array-weighted inner product of two elements.
@@ -1122,7 +1092,7 @@ class ProductSpaceConstWeighting(ConstWeighting):
 
     """
 
-    def __init__(self, constant, exponent=2.0, dist_using_inner=False):
+    def __init__(self, constant, exponent=2.0):
         """Initialize a new instance.
 
         Parameters
@@ -1132,16 +1102,6 @@ class ProductSpaceConstWeighting(ConstWeighting):
         exponent : positive float, optional
             Exponent of the norm. For values other than 2.0, no inner
             product is defined.
-        dist_using_inner : bool, optional
-            Calculate ``dist`` using the formula
-
-                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
-
-            This avoids the creation of new arrays and is thus faster
-            for large arrays. On the downside, it will not evaluate to
-            exactly zero for equal (but not identical) ``x`` and ``y``.
-
-            Can only be used if ``exponent`` is 2.0.
 
         Notes
         -----
@@ -1176,8 +1136,7 @@ class ProductSpaceConstWeighting(ConstWeighting):
         - The constant must be positive, otherwise it does not define an
           inner product or norm, respectively.
         """
-        super().__init__(constant, impl='numpy', exponent=exponent,
-                         dist_using_inner=dist_using_inner)
+        super().__init__(constant, impl='numpy', exponent=exponent)
 
     def inner(self, x1, x2):
         """Calculate the constant-weighted inner product of two elements.
@@ -1244,36 +1203,15 @@ class ProductSpaceConstWeighting(ConstWeighting):
         dist : float
             The distance between the elements.
         """
-        if self.dist_using_inner:
-            norms1 = np.fromiter(
-                (x1i.norm() for x1i in x1),
-                dtype=np.float64, count=len(x1))
-            norm1 = np.linalg.norm(norms1)
+        dnorms = np.fromiter(
+            ((x1i - x2i).norm() for x1i, x2i in zip(x1, x2)),
+            dtype=np.float64, count=len(x1))
 
-            norms2 = np.fromiter(
-                (x2i.norm() for x2i in x2),
-                dtype=np.float64, count=len(x2))
-            norm2 = np.linalg.norm(norms2)
-
-            inners = np.fromiter(
-                (x1i.inner(x2i) for x1i, x2i in zip(x1, x2)),
-                dtype=x1[0].space.dtype, count=len(x1))
-            inner_re = np.sum(inners.real)
-
-            dist_squared = norm1 ** 2 + norm2 ** 2 - 2 * inner_re
-            if dist_squared < 0.0:  # Compensate for numerical error
-                dist_squared = 0.0
-            return np.sqrt(self.const) * float(np.sqrt(dist_squared))
+        if self.exponent == float('inf'):
+            return self.const * np.linalg.norm(dnorms, ord=self.exponent)
         else:
-            dnorms = np.fromiter(
-                ((x1i - x2i).norm() for x1i, x2i in zip(x1, x2)),
-                dtype=np.float64, count=len(x1))
-
-            if self.exponent == float('inf'):
-                return self.const * np.linalg.norm(dnorms, ord=self.exponent)
-            else:
-                return (self.const ** (1 / self.exponent) *
-                        np.linalg.norm(dnorms, ord=self.exponent))
+            return (self.const ** (1 / self.exponent) *
+                    np.linalg.norm(dnorms, ord=self.exponent))
 
 
 class ProductSpaceNoWeighting(NoWeighting, ProductSpaceConstWeighting):
@@ -1287,24 +1225,18 @@ class ProductSpaceNoWeighting(NoWeighting, ProductSpaceConstWeighting):
         """Implement singleton pattern if ``exp==2.0``."""
         if len(args) == 0:
             exponent = kwargs.pop('exponent', 2.0)
-            dist_using_inner = kwargs.pop('dist_using_inner', False)
-        elif len(args) == 1:
-            exponent = args[0]
-            args = args[1:]
-            dist_using_inner = kwargs.pop('dist_using_inner', False)
         else:
             exponent = args[0]
-            dist_using_inner = args[1]
-            args = args[2:]
+            args = args[1:]
 
-        if exponent == 2.0 and not dist_using_inner:
+        if exponent == 2.0:
             if not cls._instance:
                 cls._instance = super().__new__(cls, *args, **kwargs)
             return cls._instance
         else:
             return super().__new__(cls, *args, **kwargs)
 
-    def __init__(self, exponent=2.0, dist_using_inner=False):
+    def __init__(self, exponent=2.0):
         """Initialize a new instance.
 
         Parameters
@@ -1312,26 +1244,15 @@ class ProductSpaceNoWeighting(NoWeighting, ProductSpaceConstWeighting):
         exponent : positive float, optional
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
-        dist_using_inner : bool, optional
-            Calculate ``dist`` using the formula
-
-                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
-
-            This avoids the creation of new arrays and is thus faster
-            for large arrays. On the downside, it will not evaluate to
-            exactly zero for equal (but not identical) ``x`` and ``y``.
-
-            Can only be used if ``exponent`` is 2.0.
         """
-        super().__init__(impl='numpy', exponent=exponent,
-                         dist_using_inner=dist_using_inner)
+        super().__init__(impl='numpy', exponent=exponent)
 
 
 class ProductSpaceCustomInner(CustomInner):
 
     """Class for handling a user-specified inner products."""
 
-    def __init__(self, inner, dist_using_inner=False):
+    def __init__(self, inner):
         """Initialize a new instance.
 
         Parameters
@@ -1346,20 +1267,8 @@ class ProductSpaceCustomInner(CustomInner):
             - ``<x, y> = conj(<y, x>)``
             - ``<s*x + y, z> = s * <x, z> + <y, z>``
             - ``<x, x> = 0``  if and only if  ``x = 0``
-
-        dist_using_inner : bool, optional
-            Calculate ``dist`` using the formula
-
-                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
-
-            This avoids the creation of new arrays and is thus faster
-            for large arrays. On the downside, it will not evaluate to
-            exactly zero for equal (but not identical) ``x`` and ``y``.
-
-            Can only be used if ``exponent`` is 2.0.
         """
-        super().__init__(impl='numpy', inner=inner,
-                         dist_using_inner=dist_using_inner)
+        super().__init__(impl='numpy', inner=inner)
 
 
 class ProductSpaceCustomNorm(CustomNorm):
