@@ -13,6 +13,7 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
+from numbers import Integral
 import numpy as np
 
 from odl.set.sets import RealNumbers, ComplexNumbers
@@ -295,6 +296,77 @@ class TensorSpace(LinearSpace):
     def nbytes(self):
         """Total number of bytes used by an element of this space in memory."""
         return self.size * self.itemsize
+
+    def __getitem__(self, indices):
+        """Return ``self[indices]``.
+
+        This base version of indexing does not propagate weightings.
+        Subclasses need to override this method if weighting propagation
+        is desired.
+
+        Examples
+        --------
+        Integers and slices index the first axis:
+
+        >>> space = odl.rn((2, 3, 4))
+        >>> space[1]
+        rn((3, 4))
+        >>> space[1:]
+        rn((1, 3, 4))
+
+        Tuples, i.e. multi-indices, index per axis:
+
+        >>> space[0, 1]
+        rn(4)
+        >>> space[0, 1:]
+        rn((2, 4))
+        """
+        if isinstance(indices, Integral):
+            newshape = self.shape[1:]
+
+        elif isinstance(indices, slice):
+            # Take slice along axis 0
+            start, stop, step = indices.indices(self.shape[0])
+            newshape = (int(np.ceil((stop - start) / step)),) + self.shape[1:]
+
+        elif isinstance(indices, list):
+            # Fancy indexing, only for compatibility since nothing really
+            # interesting happens here
+            idx_arr = np.array(indices, dtype=int, ndmin=2)
+            for i, (row, length) in enumerate(zip(idx_arr, self.shape)):
+                row[row < 0] += length
+                if np.any((row < 0) | (row >= length)):
+                    raise IndexError('list contains invalid indices in row {}'
+                                     ''.format(i))
+            newshape = (idx_arr.shape[1],) + self.shape[idx_arr.shape[0]:]
+
+        elif isinstance(indices, tuple):
+            newshape = []
+            for ax, (idx, length) in enumerate(zip(indices, self.shape)):
+                if isinstance(idx, Integral):
+                    norm_idx = length - idx if idx < 0 else idx
+                    if not 0 <= norm_idx < length:
+                        raise IndexError(
+                            'index {} out of range in axis {} with length {}'
+                            ''.format(idx, ax, length))
+                elif isinstance(idx, slice):
+                    start, stop, step = idx.indices(length)
+                    if start >= length:
+                        newshape.append(0)
+                    else:
+                        stop = min(stop, length)
+                        newshape.append(int(np.ceil((stop - start) / step)))
+                else:
+                    raise TypeError('index tuple may only contain'
+                                    'integers or slices')
+            newshape.extend(self.shape[len(indices):])
+            newshape = tuple(newshape)
+
+        else:
+            raise TypeError('`indices` must be integer, slice, tuple or '
+                            'or list, got {!r}'.format(indices))
+
+        return type(self)(newshape, self.dtype, self.order)
 
     def __contains__(self, other):
         """Return ``other in self``.
