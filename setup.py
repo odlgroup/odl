@@ -83,7 +83,7 @@ with open(os.path.join(root_path, 'odl', '__init__.py')) as f:
 
 
 long_description = """
-Operator Discretization Library (ODL) is a Python library for fast prototyping focusing on (but not restricted to) inverse problems. ODL is being developed at `KTH Royal Institute of Technology <https://www.kth.se/en/sci/institutioner/math>`_.
+Operator Discretization Library (ODL) is a Python library for fast prototyping focusing on (but not restricted to) inverse problems. ODL is being developed at `KTH Royal Institute of Technology, Stockholm <https://www.kth.se/en/sci/institutioner/math>`_, and `Centrum Wiskunde & Informatica (CWI), Amsterdam <https://www.cwi.nl>`_.
 
 The main intent of ODL is to enable mathematicians and applied scientists to use different numerical methods on real-world problems without having to implement all necessary parts from the bottom up.
 This is reached by an `Operator` structure which encapsulates all application-specific parts, and a high-level formulation of solvers which usually expect an operator, data and additional parameters.
