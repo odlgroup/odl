@@ -587,8 +587,6 @@ class FunctionSpace(LinearSpace):
         The additions and multiplications are implemented via simple
         Python functions, so non-vectorized versions are slow.
         """
-        # TODO: adapt for tensor-valued functions
-
         # Store to allow aliasing
         x1_call_oop = x1._call_out_of_place
         x1_call_ip = x1._call_in_place
@@ -660,8 +658,6 @@ class FunctionSpace(LinearSpace):
         The multiplication is implemented with a simple Python
         function, so the non-vectorized versions are slow.
         """
-        # TODO: adapt for tensor-valued functions
-
         # Store to allow aliasing
         x1_call_oop = x1._call_out_of_place
         x1_call_ip = x1._call_in_place
@@ -689,8 +685,6 @@ class FunctionSpace(LinearSpace):
 
     def _divide(self, x1, x2, out):
         """Raw pointwise division of two functions."""
-        # TODO: adapt for tensor-valued functions
-
         # Store to allow aliasing
         x1_call_oop = x1._call_out_of_place
         x1_call_ip = x1._call_in_place
@@ -718,8 +712,6 @@ class FunctionSpace(LinearSpace):
 
     def _scalar_power(self, x, p_, out):
         """Raw p-th power of a function, p integer or general scalar."""
-        # TODO: adapt for tensor-valued functions
-
         x_call_oop = x._call_out_of_place
         x_call_ip = x._call_in_place
 
