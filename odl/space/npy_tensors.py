@@ -1715,7 +1715,7 @@ def _inner_default(x1, x2):
     else:
         dot = np.vdot  # slowest alternative
     # x2 as first argument because we want linearity in x1
-    return dot(x2.data.ravel(order=x2.order),
+    return dot(x2.data.ravel(order=x1.order),
                x1.data.ravel(order=x1.order))
 
 
