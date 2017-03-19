@@ -204,15 +204,22 @@ class NumpyTensorSpace(TensorSpace):
 
         Examples
         --------
-        >>> space = NumpyTensorSpace((2, 3), dtype='float64')
-        >>> space
-        rn((2, 3))
+        Initialization with the class constructor:
 
-        >>> space = NumpyTensorSpace((2, 3), dtype='complex64')
+        >>> space = NumpyTensorSpace(3, float)
         >>> space
-        cn((2, 3), 'complex64')
+        rn(3)
+        >>> space.shape
+        (3,)
+        >>> space.dtype
+        dtype('float64')
 
-        >>> space = NumpyTensorSpace((2, 3), dtype='int64')
+        A more convenient way is to use factory functions:
+
+        >>> space = odl.rn(3, weighting=[1, 2, 3])
+        >>> space
+        rn(3, weighting=[1, 2, 3])
+        >>> space = odl.tensor_space((2, 3), dtype=int)
         >>> space
         tensor_space((2, 3), 'int')
         """
@@ -332,34 +339,36 @@ class NumpyTensorSpace(TensorSpace):
 
         Examples
         --------
-        >>> space = odl.rn((2, 3))
-        >>> x = space.element([[1, 2, 3],
-        ...                    [4, 5, 6]])
+        Without arguments, an uninitialized element is created. With an
+        array-like input, the element can be initialized:
+
+        >>> space = odl.rn(3)
+        >>> empty = space.element()
+        >>> empty.shape
+        (3,)
+        >>> empty.space
+        rn(3)
+        >>> x = space.element([1, 2, 3])
         >>> x
-        rn((2, 3)).element(
-            [[1.0, 2.0, 3.0],
-             [4.0, 5.0, 6.0]]
-        )
-        >>> x.space
-        rn((2, 3))
+        rn(3).element([1.0, 2.0, 3.0])
 
-        Construction from data pointer:
+        Elements can also be constructed from a data pointer. In-place
+        mutations to the element will also modify the original array.
 
-        >>> int_space = odl.tensor_space((2, 3), dtype='int', order='F')
-        >>> x = int_space.element([[1, 2, 3],
-        ...                        [4, 5, 6]])
-        >>> y = int_space.element(data_ptr=x.data_ptr)
+        >>> int_space = odl.tensor_space((2, 3), dtype=int, order='F')
+        >>> arr = np.array([[1, 2, 3],
+        ...                 [4, 5, 6]], dtype=int, order='F')
+        >>> ptr = arr.ctypes.data
+        >>> y = int_space.element(data_ptr=ptr)
         >>> y
         tensor_space((2, 3), 'int', order='F').element(
             [[1, 2, 3],
              [4, 5, 6]]
         )
         >>> y[0, 1] = -1
-        >>> y
-        tensor_space((2, 3), 'int', order='F').element(
-            [[1, -1, 3],
-             [4, 5, 6]]
-        )
+        >>> arr
+        array([[ 1, -1,  3],
+               [ 4,  5,  6]])
         """
         if inp is None and data_ptr is None:
             arr = np.empty(self.shape, dtype=self.dtype,
@@ -398,13 +407,10 @@ class NumpyTensorSpace(TensorSpace):
 
         Examples
         --------
-        >>> space = odl.rn((2, 3))
+        >>> space = odl.rn(3)
         >>> x = space.zero()
         >>> x
-        rn((2, 3)).element(
-            [[0.0, 0.0, 0.0],
-             [0.0, 0.0, 0.0]]
-        )
+        rn(3).element([0.0, 0.0, 0.0])
         """
         return self.element(np.zeros(self.shape, dtype=self.dtype,
                                      order=self.new_elem_order))
@@ -414,13 +420,10 @@ class NumpyTensorSpace(TensorSpace):
 
         Examples
         --------
-        >>> space = odl.rn((2, 3))
+        >>> space = odl.rn(3)
         >>> x = space.one()
         >>> x
-        rn((2, 3)).element(
-            [[1.0, 1.0, 1.0],
-             [1.0, 1.0, 1.0]]
-        )
+        rn(3).element([1.0, 1.0, 1.0])
         """
         return self.element(np.ones(self.shape, dtype=self.dtype,
                                     order=self.new_elem_order))
@@ -491,22 +494,15 @@ class NumpyTensorSpace(TensorSpace):
 
         Examples
         --------
-        >>> space = odl.cn((2, 3))
-        >>> x = space.element([[0, 1j, 1],
-        ...                    [0, 1, 0]])
-        >>> y = space.element([[0, 0, 1j],
-        ...                    [-1j, 0, 2j]])
+        >>> space = odl.rn(3)
+        >>> x = space.element([0, 1, 1])
+        >>> y = space.element([0, 0, 1])
         >>> out = space.element()
-        >>> space.lincomb(1j, x, 1, y, out)  # out is returned
-        cn((2, 3)).element(
-        [[0j, (-1+0j), 2j],
-         [-1j, 1j, 2j]]
-        )
-        >>> out
-        cn((2, 3)).element(
-            [[0j, (-1+0j), 2j],
-             [-1j, 1j, 2j]]
-        )
+        >>> result = space.lincomb(1, x, 2, y, out)
+        >>> result
+        rn(3).element([0.0, 1.0, 3.0])
+        >>> result is out
+        True
         """
         _lincomb(a, x1, b, x2, out, self.dtype)
 
@@ -528,27 +524,24 @@ class NumpyTensorSpace(TensorSpace):
 
         Examples
         --------
-        >>> space_2 = odl.rn((2, 3), exponent=2)
-        >>> x = space_2.element([[-1, 1, 2],
-        ...                      [1, -1, 1]])
+        Different exponents result in difference metrics:
+
+        >>> space_2 = odl.rn(3, exponent=2)
+        >>> x = space_2.element([-1, -1, 2])
         >>> y = space_2.one()
         >>> space_2.dist(x, y)
         3.0
 
-        >>> space_1 = odl.rn((2, 3), exponent=1)
-        >>> x = space_1.element([[-1, 1, 2],
-        ...                      [1, -1, 1]])
+        >>> space_1 = odl.rn(3, exponent=1)
+        >>> x = space_1.element([-1, -1, 2])
         >>> y = space_1.one()
         >>> space_1.dist(x, y)
         5.0
 
         Weighting is supported, too:
 
-        >>> weights = [[2, 1, 1],
-        ...            [1, 1, 2]]
-        >>> space_1_w = odl.rn((2, 3), exponent=1, weighting=weights)
-        >>> x = space_1_w.element([[-1, 1, 2],
-        ...                        [1, -1, 1]])
+        >>> space_1_w = odl.rn(3, exponent=1, weighting=[2, 1, 1])
+        >>> x = space_1_w.element([-1, -1, 2])
         >>> y = space_1_w.one()
         >>> space_1_w.dist(x, y)
         7.0
@@ -573,27 +566,23 @@ class NumpyTensorSpace(TensorSpace):
 
         Examples
         --------
-        >>> space_2 = odl.rn((2, 3), exponent=2)
-        >>> x = space_2.element([[1, 0, 3],
-        ...                      [4, -1, 3]])
+        Different exponents result in difference norms:
+
+        >>> space_2 = odl.rn(3, exponent=2)
+        >>> x = space_2.element([3, 0, 4])
         >>> space_2.norm(x)
-        6.0
-        >>> space_1 = odl.rn((2, 3), exponent=1)
-        >>> x = space_1.element([[1, 0, 3],
-        ...                      [4, -1, 3]])
+        5.0
+        >>> space_1 = odl.rn(3, exponent=1)
+        >>> x = space_1.element([3, 0, 4])
         >>> space_1.norm(x)
-        12.0
+        7.0
 
-        Weighting is supported:
+        Weighting is supported, too:
 
-        >>> weights = [[1, 2, 1],
-        ...            [1, 1, 2]]
-        >>> space_1_w = odl.rn((2, 3), exponent=1,
-        ...                    weighting=weights)
-        >>> x = space_1_w.element([[1, 0, 3],
-        ...                        [4, -1, 3]])
+        >>> space_1_w = odl.rn(3, exponent=1, weighting=[2, 1, 1])
+        >>> x = space_1_w.element([3, 0, 4])
         >>> space_1_w.norm(x)
-        15.0
+        10.0
         """
         return self.weighting.norm(x)
 
@@ -615,23 +604,19 @@ class NumpyTensorSpace(TensorSpace):
 
         Examples
         --------
-        >>> space = odl.rn((2, 3))
-        >>> x = space.element([[1, 0, 3],
-        ...                    [4, -1, 3]])
+        >>> space = odl.rn(3)
+        >>> x = space.element([1, 0, 3])
         >>> y = space.one()
         >>> space.inner(x, y)
-        10.0
+        4.0
 
         Weighting is supported, too:
 
-        >>> weights = [[1, 2, 1],
-        ...            [2, 1, 1]]
-        >>> space_w = odl.rn((2, 3), weighting=weights)
-        >>> x = space_w.element([[1, 0, 3],
-        ...                      [4, -1, 3]])
+        >>> space_w = odl.rn(3, weighting=[2, 1, 1])
+        >>> x = space_w.element([1, 0, 3])
         >>> y = space_w.one()
         >>> space_w.inner(x, y)
-        14.0
+        5.0
         """
         return self.weighting.inner(x1, x2)
 
@@ -650,22 +635,17 @@ class NumpyTensorSpace(TensorSpace):
 
         Examples
         --------
-        >>> space = odl.rn((2, 3))
-        >>> x = space.element([[1, 0, 3],
-        ...                    [4, -1, 3]])
-        >>> y = space.element([[-1, 1, -1],
-        ...                    [1, -1, 1]])
+        >>> space = odl.rn(3)
+        >>> x = space.element([1, 0, 3])
+        >>> y = space.element([-1, 1, -1])
+        >>> space.multiply(x, y)
+        rn(3).element([-1.0, 0.0, -3.0])
         >>> out = space.element()
-        >>> space.multiply(x, y, out=out)  # out is returned
-        rn((2, 3)).element(
-            [[-1.0, 0.0, -3.0],
-             [4.0, 1.0, 3.0]]
-        )
-        >>> out
-        rn((2, 3)).element(
-            [[-1.0, 0.0, -3.0],
-             [4.0, 1.0, 3.0]]
-        )
+        >>> result = space.multiply(x, y, out=out)
+        >>> result
+        rn(3).element([-1.0, 0.0, -3.0])
+        >>> result is out
+        True
         """
         np.multiply(x1.data, x2.data, out=out.data)
 
@@ -684,22 +664,17 @@ class NumpyTensorSpace(TensorSpace):
 
         Examples
         --------
-        >>> space = odl.rn((2, 3))
-        >>> x = space.element([[2, 0, 4],
-        ...                    [-4, 0, 2]])
-        >>> y = space.element([[1, 1, 2],
-        ...                    [-4, 1, 2]])
+        >>> space = odl.rn(3)
+        >>> x = space.element([2, 0, 4])
+        >>> y = space.element([1, 1, 2])
+        >>> space.divide(x, y)
+        rn(3).element([2.0, 0.0, 2.0])
         >>> out = space.element()
-        >>> space.divide(x, y, out=out)  # out is returned
-        rn((2, 3)).element(
-            [[2.0, 0.0, 2.0],
-             [1.0, 0.0, 1.0]]
-        )
-        >>> out
-        rn((2, 3)).element(
-            [[2.0, 0.0, 2.0],
-             [1.0, 0.0, 1.0]]
-        )
+        >>> result = space.divide(x, y, out=out)
+        >>> result
+        rn(3).element([2.0, 0.0, 2.0])
+        >>> result is out
+        True
         """
         np.divide(x1.data, x2.data, out=out.data)
 
@@ -716,32 +691,35 @@ class NumpyTensorSpace(TensorSpace):
 
         Examples
         --------
-
-        >>> space = odl.rn((2, 3))
-        >>> same_space = odl.rn((2, 3), exponent=2)
+        >>> space = odl.rn(3)
+        >>> same_space = odl.rn(3, exponent=2)
         >>> same_space == space
         True
 
-        Different `shape`, `exponent` or `dtype` all result in
+        Different `shape`, `exponent`, `dtype` or `order` all result in
         different spaces:
 
-        >>> diff_space = odl.rn((2, 3, 4))
+        >>> diff_space = odl.rn((3, 4))
         >>> diff_space == space
         False
-        >>> diff_space = odl.rn((2, 3), exponent=1)
+        >>> diff_space = odl.rn(3, exponent=1)
         >>> diff_space == space
         False
-        >>> diff_space = odl.rn((2, 3), dtype='float32')
+        >>> diff_space = odl.rn(3, dtype='float32')
         >>> diff_space == space
         False
         >>> space == object
+        False
+        >>> space_a = odl.rn((2, 3), order='A')  # default
+        >>> space_c = odl.rn((2, 3), order='C')  # default
+        >>> space_a == space_c
         False
 
         A `NumpyTensorSpace` with the same properties is considered
         equal:
 
         >>> same_space = odl.NumpyTensorSpace((2, 3), dtype='float64')
-        >>> same_space == space
+        >>> same_space == space_a
         True
         """
         if other is self:
@@ -901,23 +879,20 @@ class NumpyTensor(Tensor):
 
         Examples
         --------
-        >>> space = odl.rn((2, 3), dtype='float32')
-        >>> x = space.element([[1, 2, 3],
-        ...                    [4, 5, 6]])
+        >>> space = odl.rn(3, dtype='float32')
+        >>> x = space.element([1, 2, 3])
         >>> x.asarray()
-        array([[ 1.,  2.,  3.],
-               [ 4.,  5.,  6.]], dtype=float32)
-
-        Using the out parameter:
-
-        >>> out = np.empty((2, 3), dtype='float32')
+        array([ 1.,  2.,  3.], dtype=float32)
+        >>> out = np.empty(3, dtype='float32')
         >>> result = x.asarray(out=out)
         >>> out
-        array([[ 1.,  2.,  3.],
-               [ 4.,  5.,  6.]], dtype=float32)
-
+        array([ 1.,  2.,  3.], dtype=float32)
         >>> result is out
         True
+        >>> space = odl.rn((2, 3))
+        >>> space.one().asarray()
+        array([[ 1.,  1.,  1.],
+               [ 1.,  1.,  1.]])
         """
         if out is None:
             return self.data
@@ -932,21 +907,19 @@ class NumpyTensor(Tensor):
         Examples
         --------
         >>> import ctypes
-        >>> space = odl.tensor_space((2, 3), dtype='int32')
-        >>> x = space.element([[1, 2, 3],
-        ...                    [4, 5, 6]])
-        >>> arr_type = ctypes.c_int32 * 6  # C type "array of 6 int32"
+        >>> space = odl.tensor_space(3, dtype='int32')
+        >>> x = space.element([1, 2, 3])
+        >>> arr_type = ctypes.c_int32 * 3  # C type "array of 6 int32"
         >>> buffer = arr_type.from_address(x.data_ptr)
         >>> arr = np.frombuffer(buffer, dtype='int32')
-        >>> print(arr)
-        [1 2 3 4 5 6]
+        >>> arr
+        array([1, 2, 3], dtype=int32)
 
         In-place modification via pointer:
 
         >>> arr[0] = -1
-        >>> print(x)
-        [[-1, 2, 3],
-         [4, 5, 6]]
+        >>> x
+        tensor_space(3, 'int32').element([-1, 2, 3])
         """
         return self.data.ctypes.data
 
@@ -959,23 +932,15 @@ class NumpyTensor(Tensor):
             True if all entries of ``other`` are equal to this
             the entries of ``self``, False otherwise.
 
-        Notes
-        -----
-        Space membership is not checked, hence vectors from
-        different spaces can be equal.
-
         Examples
         --------
-        >>> space = odl.rn((2, 3))
-        >>> x = space.element([[1, 2, 3],
-        ...                    [4, 5, 6]])
-        >>> y = space.element([[1, 2, 3],
-        ...                    [4, 5, 6]])
+        >>> space = odl.rn(3)
+        >>> x = space.element([1, 2, 3])
+        >>> y = space.element([1, 2, 3])
         >>> x == y
         True
 
-        >>> y = space.element([[-1, 2, 3],
-        ...                    [4, 5, 6]])
+        >>> y = space.element([-1, 2, 3])
         >>> x == y
         False
         >>> x == object
@@ -983,9 +948,8 @@ class NumpyTensor(Tensor):
 
         Space membership matters:
 
-        >>> space2 = odl.tensor_space((2, 3), dtype='int64')
-        >>> y = space2.element([[1, 2, 3],
-        ...                     [4, 5, 6]])
+        >>> space2 = odl.tensor_space(3, dtype='int64')
+        >>> y = space2.element([1, 2, 3])
         >>> x == y or y == x
         False
         """
@@ -1010,9 +974,8 @@ class NumpyTensor(Tensor):
 
         Examples
         --------
-        >>> space = odl.rn((2, 3))
-        >>> x = space.element([[1, 2, 3],
-        ...                    [4, 5, 6]])
+        >>> space = odl.rn(3)
+        >>> x = space.element([1, 2, 3])
         >>> y = x.copy()
         >>> y == x
         True
@@ -1040,6 +1003,12 @@ class NumpyTensor(Tensor):
 
         Examples
         --------
+        >>> space = odl.rn(3)
+        >>> x = space.element([1, 2, 3])
+        >>> x[0]
+        1.0
+        >>> x[1:]
+        rn(2).element([2.0, 3.0])
         >>> space = odl.rn((2, 3))
         >>> x = space.element([[1, 2, 3],
         ...                    [4, 5, 6]])
@@ -1050,6 +1019,27 @@ class NumpyTensor(Tensor):
             [[2.0, 3.0],
              [5.0, 6.0]]
         )
+        >>> y = x[[[0, 1], [1, 2]]]
+        >>> y
+        rn(2).element([2.0, 6.0])
+        >>> y[:] = 0
+        >>> x  # not modified
+        rn((2, 3)).element(
+            [[1.0, 2.0, 3.0],
+             [4.0, 5.0, 6.0]]
+        )
+
+        Slices can be assigned to, except if lists are used for
+        indexing:
+
+        >>> y = x[:, ::2]  # view into x
+        >>> y[:] = -9
+        >>> x
+        rn((2, 3)).element(
+            [[-9.0, 2.0, -9.0],
+             [-9.0, 5.0, -9.0]]
+        )
+
         """
         arr = self.data[indices]
         if np.isscalar(arr):
@@ -1086,6 +1076,19 @@ class NumpyTensor(Tensor):
 
         Examples
         --------
+        For 1d spaces, entries can be set with scalars or sequences of
+        correct shape:
+
+        >>> space = odl.rn(3)
+        >>> x = space.element([1, 2, 3])
+        >>> x[0] = -1
+        >>> x[1:] = (0, 1)
+        >>> x
+        rn(3).element([-1.0, 0.0, 1.0])
+
+        In higher dimensions, the Numpy assignment and broadcasting rules
+        apply. It is also possible to use tensors in other spaces:
+
         >>> space = odl.rn((2, 3))
         >>> x = space.element([[1, 2, 3],
         ...                    [4, 5, 6]])
@@ -1095,10 +1098,6 @@ class NumpyTensor(Tensor):
             [[1.0, -1.0, 3.0],
              [4.0, 5.0, 6.0]]
         )
-
-        Assignment from array-like structures or another tensor
-        (allowed to be in a different space):
-
         >>> space = odl.tensor_space((2, 2), dtype='short')
         >>> y = space.element([[-1, 2],
         ...                    [0, 0]])
@@ -1114,7 +1113,6 @@ class NumpyTensor(Tensor):
             [[-1.0, 7.0, 8.0],
              [0.0, 0.0, 6.0]]
         )
-        >>> import numpy as np
         >>> x[:] = np.array([[0, 0, 0],
         ...                  [1, 1, 1]])
         >>> x
@@ -1122,29 +1120,11 @@ class NumpyTensor(Tensor):
             [[0.0, 0.0, 0.0],
              [1.0, 1.0, 1.0]]
         )
-
-        Broadcasting is also supported:
-
         >>> x[:, ::2] = -2.
         >>> x
         rn((2, 3)).element(
             [[-2.0, 0.0, -2.0],
              [-2.0, 1.0, -2.0]]
-        )
-
-        Array views are preserved:
-
-        >>> y = x[:, ::2]  # view into x
-        >>> y[:] = -9
-        >>> y
-        rn((2, 2)).element(
-            [[-9.0, -9.0],
-             [-9.0, -9.0]]
-        )
-        >>> x
-        rn((2, 3)).element(
-            [[-9.0, 0.0, -9.0],
-             [-9.0, 1.0, -9.0]]
         )
 
         Be aware of unsafe casts and over-/underflows, there
@@ -1178,15 +1158,10 @@ class NumpyTensor(Tensor):
 
         Examples
         --------
-
-        >>> space = odl.cn((2, 3))
-        >>> x = space.element([[1 + 1j, 2, 3 - 3j],
-        ...                    [4, 5 - 5j, 6]])
+        >>> space = odl.cn(3)
+        >>> x = space.element([1 + 1j, 2, 3 - 3j])
         >>> x.real
-        rn((2, 3)).element(
-            [[1.0, 2.0, 3.0],
-             [4.0, 5.0, 6.0]]
-        )
+        rn(3).element([1.0, 2.0, 3.0])
         """
         if self.space.is_real_space:
             return self
@@ -1211,32 +1186,21 @@ class NumpyTensor(Tensor):
 
         Examples
         --------
-        >>> space = odl.cn((2, 3))
-        >>> x = space.element([[1 + 1j, 2, 3 - 3j],
-        ...                    [4, 5 - 5j, 6]])
-        >>> zero = odl.rn((2, 3)).zero()
+        >>> space = odl.cn(3)
+        >>> x = space.element([1 + 1j, 2, 3 - 3j])
+        >>> zero = odl.rn(3).zero()
         >>> x.real = zero
         >>> x
-        cn((2, 3)).element(
-            [[1j, 0j, -3j],
-             [0j, -5j, 0j]]
-        )
+        cn(3).element([1j, 0j, -3j])
 
         Other array-like types and broadcasting:
 
         >>> x.real = 1.0
         >>> x
-        cn((2, 3)).element(
-            [[(1+1j), (1+0j), (1-3j)],
-             [(1+0j), (1-5j), (1+0j)]]
-        )
-        >>> x.real = [[2, 3, 4],
-        ...           [5, 6, 7]]
+        cn(3).element([(1+1j), (1+0j), (1-3j)])
+        >>> x.real = [2, 3, 4]
         >>> x
-        cn((2, 3)).element(
-            [[(2+1j), (3+0j), (4-3j)],
-             [(5+0j), (6-5j), (7+0j)]]
-        )
+        cn(3).element([(2+1j), (3+0j), (4-3j)])
         """
         self.real.data[:] = newreal
 
@@ -1252,14 +1216,10 @@ class NumpyTensor(Tensor):
 
         Examples
         --------
-        >>> space = odl.cn((2, 3))
-        >>> x = space.element([[1 + 1j, 2, 3 - 3j],
-        ...                    [4, 5 - 5j, 6]])
+        >>> space = odl.cn(3)
+        >>> x = space.element([1 + 1j, 2, 3 - 3j])
         >>> x.imag
-        rn((2, 3)).element(
-            [[1.0, 0.0, -3.0],
-             [0.0, -5.0, 0.0]]
-        )
+        rn(3).element([1.0, 0.0, -3.0])
         """
         if self.space.is_real_space:
             return self.space.zero()
@@ -1289,32 +1249,21 @@ class NumpyTensor(Tensor):
 
         Examples
         --------
-        >>> space = odl.cn((2, 3))
-        >>> x = space.element([[1 + 1j, 2, 3 - 3j],
-        ...                    [4, 5 - 5j, 6]])
-        >>> zero = odl.rn((2, 3)).zero()
+        >>> space = odl.cn(3)
+        >>> x = space.element([1 + 1j, 2, 3 - 3j])
+        >>> zero = odl.rn(3).zero()
         >>> x.imag = zero
         >>> x
-        cn((2, 3)).element(
-            [[(1+0j), (2+0j), (3+0j)],
-             [(4+0j), (5+0j), (6+0j)]]
-        )
+        cn(3).element([(1+0j), (2+0j), (3+0j)])
 
         Other array-like types and broadcasting:
 
         >>> x.imag = 1.0
         >>> x
-        cn((2, 3)).element(
-            [[(1+1j), (2+1j), (3+1j)],
-             [(4+1j), (5+1j), (6+1j)]]
-        )
-        >>> x.imag = [[2, 3, 4],
-        ...           [5, 6, 7]]
+        cn(3).element([(1+1j), (2+1j), (3+1j)])
+        >>> x.imag = [2, 3, 4]
         >>> x
-        cn((2, 3)).element(
-            [[(1+2j), (2+3j), (3+4j)],
-             [(4+5j), (5+6j), (6+7j)]]
-        )
+        cn(3).element([(1+2j), (2+3j), (3+4j)])
         """
         if self.space.is_real_space:
             raise ValueError('cannot set imaginary part in real spaces')
@@ -1337,35 +1286,24 @@ class NumpyTensor(Tensor):
 
         Examples
         --------
-        >>> space = odl.cn((2, 3))
-        >>> x = space.element([[1 + 1j, 2, 3 - 3j],
-        ...                    [4, 5 - 5j, 6]])
+        >>> space = odl.cn(3)
+        >>> x = space.element([1 + 1j, 2, 3 - 3j])
         >>> x.conj()
-        cn((2, 3)).element(
-            [[(1-1j), (2-0j), (3+3j)],
-             [(4-0j), (5+5j), (6-0j)]]
-        )
-
-        The out parameter allows you to avoid a copy
-
-        >>> y = space.element()
-        >>> y_out = x.conj(out=y)
-        >>> y
-        cn((2, 3)).element(
-            [[(1-1j), (2-0j), (3+3j)],
-             [(4-0j), (5+5j), (6-0j)]]
-        )
-        >>> y_out is y
+        cn(3).element([(1-1j), (2-0j), (3+3j)])
+        >>> out = space.element()
+        >>> result = x.conj(out=out)
+        >>> result
+        cn(3).element([(1-1j), (2-0j), (3+3j)])
+        >>> result is out
         True
 
-        It can also be used for in-place conjugation:
+        In-place conjugation:
 
-        >>> x_out = x.conj(out=x)
+        >>> result = x.conj(out=x)
         >>> x
-        cn((2, 3)).element(
-            [[(1-1j), (2-0j), (3+3j)],
-             [(4-0j), (5+5j), (6-0j)]]
-        )
+        cn(3).element([(1-1j), (2-0j), (3+3j)])
+        >>> result is x
+        True
         """
         if not is_numeric_dtype(self.space.dtype):
             raise NotImplementedError('`conj` not defined for non-numeric '
@@ -1424,45 +1362,30 @@ class NumpyTensor(Tensor):
 
         Examples
         --------
-        >>> space = odl.rn((2, 3))
-        >>> x = space.element([[1, -2, 3],
-        ...                    [4, -5, 6]])
+        >>> space = odl.rn(3)
+        >>> x = space.element([1, -2, 3])
         >>> x.ufuncs.absolute()
-        rn((2, 3)).element(
-            [[1.0, 2.0, 3.0],
-             [4.0, 5.0, 6.0]]
-        )
+        rn(3).element([1.0, 2.0, 3.0])
 
-        Broadcasting and array-like input is supported, too:
+        Broadcasting and array-like input are supported:
 
         >>> x.ufuncs.add(3)
-        rn((2, 3)).element(
-            [[4.0, 1.0, 6.0],
-             [7.0, -2.0, 9.0]]
-        )
-        >>> x.ufuncs.subtract([[0, 0, 1],
-        ...                    [1, 0, 0]])
-        rn((2, 3)).element(
-            [[1.0, -2.0, 2.0],
-             [3.0, -5.0, 6.0]]
-        )
+        rn(3).element([4.0, 1.0, 6.0])
+        >>> x.ufuncs.subtract([0, 0, 1])
+        rn(3).element([1.0, -2.0, 2.0])
 
-        There is also support for various reductions (sum, prod, min,
-        max):
+        There is also support for various reductions (sum, prod, min, max):
 
         >>> x.ufuncs.sum()
-        7.0
+        2.0
 
-        The ``out`` parameter can be used for result storage:
+        The ``out`` parameter can be used to store the result:
 
         >>> y = space.one()
         >>> out = space.element()
         >>> result = x.ufuncs.add(y, out=out)
         >>> result
-        rn((2, 3)).element(
-            [[2.0, -1.0, 4.0],
-             [5.0, -4.0, 7.0]]
-        )
+        rn(3).element([2.0, -1.0, 4.0])
         >>> result is out
         True
         """

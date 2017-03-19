@@ -33,9 +33,10 @@ def vector(array, dtype=None, order='C', impl='numpy'):
     dtype : optional
         Set the data type of the vector manually with this option.
         By default, the space type is inferred from the input data.
-    order : {'C', 'F'}, optional
-        Axis ordering of the data storage.
-    impl : str
+    order : {'A', 'C', 'F'}, optional
+        Axis ordering of the data storage. ``'A'`` will try not to
+        modify the memory layout of ``array``.
+    impl : str, optional
         Impmlementation back-end for the vector. See
         `odl.space.entry_points.TENSOR_SPACE_IMPLS` for available options.
 
@@ -55,20 +56,20 @@ def vector(array, dtype=None, order='C', impl='numpy'):
     >>> odl.vector([[1, 2, 3],
     ...             [4, 5, 6]])  # No automatic cast to float
     tensor_space((2, 3), 'int', order='C').element(
-    [[1, 2, 3],
-     [4, 5, 6]]
+        [[1, 2, 3],
+         [4, 5, 6]]
     )
     >>> odl.vector([[1, 2, 3],
     ...             [4, 5, 6]], dtype=float)
     rn((2, 3), order='C').element(
-    [[1.0, 2.0, 3.0],
-     [4.0, 5.0, 6.0]]
+        [[1.0, 2.0, 3.0],
+         [4.0, 5.0, 6.0]]
     )
     >>> odl.vector([[1, 2 - 1j, 3],
     ...             [4, 5, 6 + 2j]])
     cn((2, 3), order='C').element(
-    [[(1+0j), (2-1j), (3+0j)],
-     [(4+0j), (5+0j), (6+2j)]]
+        [[(1+0j), (2-1j), (3+0j)],
+         [(4+0j), (5+0j), (6+2j)]]
     )
 
     Non-scalar types are also supported:
@@ -76,8 +77,8 @@ def vector(array, dtype=None, order='C', impl='numpy'):
     >>> odl.vector([[True, True, False],
     ...             [False, False, True]])
     tensor_space((2, 3), 'bool', order='C').element(
-    [[True, True, False],
-     [False, False, True]]
+        [[True, True, False],
+         [False, False, True]]
     )
     """
     # Sanitize input
