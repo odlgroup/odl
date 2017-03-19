@@ -713,35 +713,53 @@ class Tensor(LinearSpaceElement):
         """
         return TensorSpaceUfuncs(self)
 
-    def show(self, title=None, method='scatter', force_show=False, fig=None,
-             **kwargs):
-        """Display this tensor graphically for ``ndim == 1 or 2``.
+    def show(self, title=None, method='', indices=None, force_show=False,
+             fig=None, **kwargs):
+        """Display the function graphically.
 
         Parameters
         ----------
-        title : str, optional
+        title : string, optional
             Set the title of the figure
 
-        method : str, optional
+        method : string, optional
             1d methods:
 
-            'plot' : graph plot
+                ``'plot'`` : graph plot
 
-            'scatter' : point plot
+                ``'scatter'`` : scattered 2d points (2nd axis <-> value)
+
+            2d methods:
+
+                ``'imshow'`` : image plot with coloring according to
+                value, including a colorbar.
+
+                ``'scatter'`` : cloud of scattered 3d points
+                (3rd axis <-> value)
+
+        indices : index expression, optional
+            Display a slice of the array instead of the full array. The
+            index expression is most easily created with the `numpy.s_`
+            constructor, i.e. supply ``np.s_[:, 1, :]`` to display the
+            first slice along the second axis.
+            For data with 3 or more dimensions, the 2d slice in the first
+            two axes at the "middle" along the remaining axes is shown
+            (semantically ``[:, :, shape[2:] // 2]``).
+            This option is mutually exclusive to ``coords``.
 
         force_show : bool, optional
-            Whether the plot should be forced to be shown now or deferred
-            until later. Note that some backends always display the plot,
-            regardless of this value.
+            Whether the plot should be forced to be shown now or deferred until
+            later. Note that some backends always displays the plot, regardless
+            of this value.
 
-        fig : `matplotlib.figure.Figure`
+        fig : `matplotlib.figure.Figure`, optional
             The figure to show in. Expected to be of same "style", as
             the figure given by this function. The most common use case
-            is that ``fig`` is the return value from an earlier call to
+            is that ``fig`` is the return value of an earlier call to
             this function.
 
-        kwargs : {'figsize', 'saveto', ...}
-            Extra keyword arguments passed on to display method
+        kwargs : {'figsize', 'saveto', 'clim', ...}, optional
+            Extra keyword arguments passed on to the display method.
             See the Matplotlib functions for documentation of extra
             options.
 
@@ -754,13 +772,46 @@ class Tensor(LinearSpaceElement):
         --------
         odl.util.graphics.show_discrete_data : Underlying implementation
         """
-        # TODO: take code from DiscreteLpVector and adapt
-        from odl.util.graphics import show_discrete_data
         from odl.discr import uniform_grid
-        grid = uniform_grid(0, self.size - 1, self.size)
-        return show_discrete_data(self.asarray(), grid, title=title,
-                                  method=method, force_show=force_show,
-                                  fig=fig, **kwargs)
+        from odl.util.graphics import show_discrete_data
+
+        # Default to showing x-y slice "in the middle"
+        if indices is None and self.ndim >= 3:
+            indices = (slice(None),) * 2
+            indices += tuple(n // 2 for n in self.space.shape[2:])
+
+        if isinstance(indices, (Integral, slice)):
+            indices = (indices,)
+        elif indices is None or indices == Ellipsis:
+            indices = (slice(None),) * self.ndim
+        else:
+            indices = tuple(indices)
+
+        # Replace None by slice(None)
+        indices = tuple(slice(None) if idx is None else idx for idx in indices)
+
+        if Ellipsis in indices:
+            # Replace Ellipsis with the correct number of [:] expressions
+            pos = indices.index(Ellipsis)
+            indices = (indices[:pos] +
+                       (np.s_[:], ) * (self.ndim - len(indices) + 1) +
+                       indices[pos + 1:])
+
+        if len(indices) < self.ndim:
+            raise ValueError('too few axes ({} < {})'.format(len(indices),
+                                                             self.ndim))
+        if len(indices) > self.ndim:
+            raise ValueError('too many axes ({} > {})'.format(len(indices),
+                                                              self.ndim))
+
+        # Squeeze grid and values according to the index expression
+        full_grid = uniform_grid([0] * self.ndim, np.array(self.shape) - 1,
+                                 self.shape)
+        grid = full_grid[indices].squeeze()
+        values = self.asarray()[indices].squeeze()
+
+        return show_discrete_data(values, grid, title=title, method=method,
+                                  force_show=force_show, fig=fig, **kwargs)
 
 
 if __name__ == '__main__':
