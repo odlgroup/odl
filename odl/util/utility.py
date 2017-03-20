@@ -52,7 +52,12 @@ def array1d_repr(array, nprint=6):
     """
     assert int(nprint) > 0
 
-    if len(array) <= nprint:
+    if array.ndim == 0:
+        if array.size == 1:
+            return repr(np.array(array, ndmin=1)[0])
+        else:
+            return ''
+    if array.size <= nprint:
         return repr(list(array))
     else:
         return (repr(list(array[:nprint // 2])).rstrip(']') + ', ..., ' +

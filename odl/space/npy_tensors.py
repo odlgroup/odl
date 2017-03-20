@@ -799,15 +799,9 @@ class NumpyTensorSpace(TensorSpace):
                             'or list, got {!r}'.format(indices))
 
         if isinstance(self.weighting, ArrayWeighting):
-            new_array = self.weighting.array[indices]
+            new_array = np.asarray(self.weighting.array[indices])
             weighting = NumpyTensorSpaceArrayWeighting(
                 new_array, self.weighting.exponent)
-        elif (len(newshape) != self.ndim and
-              isinstance(self.weighting, ConstWeighting)):
-            # Cannot propagate the weighting constant to lower dimension
-            # since we don't know how it was produced. We take no weighting
-            # instead.
-            weighting = NumpyTensorSpaceNoWeighting(self.exponent)
         else:
             weighting = self.weighting
 
@@ -1619,27 +1613,23 @@ def _pnorm_diagweight(x, p, w):
     # This is faster than first applying the weights and then summing with
     # BLAS dot or nrm2
     xp = np.abs(x.data.ravel(order=x.order))
-    if np.isfinite(p):
-        xp = np.power(xp, p, out=xp)
-        xp *= w.ravel(order='K')  # w is a plain NumPy array
-        return np.sum(xp) ** (1 / p)
-    else:
-        xp *= w.ravel(order='K')
+    if p == float('inf'):
+        xp *= w.ravel(order=x.order)  # w is a plain NumPy array
         return np.max(xp)
+    else:
+        xp = np.power(xp, p, out=xp)
+        xp *= w.ravel(order=x.order)
+        return np.sum(xp) ** (1 / p)
 
 
 def _inner_default(x1, x2):
     """Default Euclidean inner product implementation."""
-    if _blas_is_applicable(x1.data, x2.data):
-        dotc = linalg.blas.get_blas_funcs('dotc', dtype=x1.dtype)
-        dot = partial(dotc, n=native(x1.size))
-    elif is_real_dtype(x1.dtype):
-        dot = np.dot  # still much faster than vdot
+    if is_real_dtype(x1.dtype):
+        return np.tensordot(x1, x2, [range(x1.ndim)] * 2)
     else:
-        dot = np.vdot  # slowest alternative
-    # x2 as first argument because we want linearity in x1
-    return dot(x2.data.ravel(order=x1.order),
-               x1.data.ravel(order=x1.order))
+        # x2 as first argument because we want linearity in x1
+        return np.vdot(x2.data.ravel(order=x1.order),
+                       x1.data.ravel(order=x1.order))
 
 
 # TODO: implement intermediate weighting schemes with arrays that are
