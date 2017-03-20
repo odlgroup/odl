@@ -84,7 +84,6 @@ def as_tensorflow_layer(odl_op, name='ODLOperator', differentiable=True):
             assert dx_shape[1:] == odl_op.range.shape + (1,)
 
         def _impl(x, dx):
-
             if fixed_size:
                 x_out_shape = out_shape
                 assert x.shape == in_shape
@@ -158,30 +157,24 @@ def as_tensorflow_layer(odl_op, name='ODLOperator', differentiable=True):
         else:
             out_shape = (n_x,) + odl_op.range.shape + (1,)
 
-
         # Validate input shape
         assert x_shape[1:] == odl_op.domain.shape + (1,)
 
         def _impl(x):
-            print('CALL ASSERT')
             if fixed_size:
                 x_out_shape = out_shape
                 assert x.shape == in_shape
             else:
                 x_out_shape = (x.shape[0],) + out_shape[1:]
                 assert x.shape[1:] == in_shape[1:]
-            print('CALL ASSERT OK')
 
             out = np.empty(x_out_shape, odl_op.domain.dtype)
             for i in range(x_out_shape[0]):
-                print('CALL LOOP')
                 if odl_op.is_functional:
                     out[i, 0] = odl_op(x[i, ..., 0])
                 else:
                     out[i, ..., 0] = np.asarray(odl_op(x[i, ..., 0]))
-            print('CALL DONE')
-            print(name)
-            print('shape {}'.format(out.shape))
+
             return out
 
         if differentiable:
