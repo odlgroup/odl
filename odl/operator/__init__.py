@@ -18,9 +18,6 @@ __all__ += operator.__all__
 from .default_ops import *
 __all__ += default_ops.__all__
 
-from .fn_ops import *
-__all__ += fn_ops.__all__
-
 from .pspace_ops import *
 __all__ += pspace_ops.__all__
 
