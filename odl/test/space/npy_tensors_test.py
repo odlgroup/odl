@@ -30,7 +30,6 @@ from odl.util.ufuncs import UFUNCS, REDUCTIONS
 
 # --- Test helpers --- #
 
-# Check for python3
 PYTHON2 = sys.version_info < (3, 0)
 
 
@@ -42,19 +41,16 @@ def _pos_array(space):
 
 # --- Pytest fixtures --- #
 
-exponent = simple_fixture(
-    name='exponent',
-    params=[2.0, 1.0, float('inf'), 0.5, 1.5])
+exponent = simple_fixture('exponent', [2.0, 1.0, float('inf'), 0.5, 1.5])
 
+setitem_indices_params = [
+    0, [1], (1,), (0, 1), (0, 1, 2), slice(None), slice(None, None, 2),
+    (0, slice(None)), (slice(None), 0, slice(None, None, 2))]
+setitem_indices = simple_fixture('indices', setitem_indices_params)
 
-s_indices_params = [
-    0, [1], (1,), (0, 1), (2, 3), slice(None), slice(None, None, 2),
-    (0, slice(None)), (slice(None, None, 2), slice(None))]
-setitem_indices = simple_fixture(name='indices', params=s_indices_params)
-
-g_indices_params = s_indices_params + [[[0, 2, 1, 1], [0, 1, 1, 3]],
-                                       (Ellipsis, None)]
-getitem_indices = simple_fixture(name='indices', params=g_indices_params)
+getitem_indices_params = (setitem_indices_params +
+                          [[[0, 1, 1, 0], [0, 1, 1, 2]], (Ellipsis, None)])
+getitem_indices = simple_fixture('indices', getitem_indices_params)
 
 
 weight_params = [None, 0.5, _pos_array(odl.tensor_space((3, 4)))]
@@ -138,7 +134,7 @@ def test_init_tspace_weighting(weight, exponent):
 
     assert space.weighting == weighting
 
-    # Using the class directly
+    # Using a weighting instance
     space = odl.tensor_space((3, 4), weighting=weighting, exponent=exponent)
     assert space.weighting is weighting
 
@@ -531,7 +527,7 @@ def test_pdist(exponent):
 
 def test_element_getitem(getitem_indices):
     """Check if getitem produces correct values, shape and other stuff."""
-    space = odl.tensor_space((3, 4), dtype=complex, exponent=1, weighting=2)
+    space = odl.tensor_space((2, 3, 4), dtype=complex, exponent=1, weighting=2)
     x_arr, x = noise_elements(space)
 
     x_arr_sliced = x_arr[getitem_indices]
@@ -560,7 +556,7 @@ def test_element_getitem(getitem_indices):
 
 def test_element_setitem(setitem_indices):
     """Check if setitem produces the same result as NumPy."""
-    space = odl.tensor_space((3, 4), dtype=complex, exponent=1, weighting=2)
+    space = odl.tensor_space((2, 3, 4), dtype=complex, exponent=1, weighting=2)
     x_arr, x = noise_elements(space)
 
     x_arr_sliced = x_arr[setitem_indices]
