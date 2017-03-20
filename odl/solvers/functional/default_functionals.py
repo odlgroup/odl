@@ -144,6 +144,10 @@ class LpNorm(Functional):
                     """Apply the gradient operator to the given point."""
                     return x.ufuncs.sign()
 
+                def derivative(self, x):
+                    """Derivative is a.e. zero."""
+                    return ZeroOperator(self.domain)
+
             return L1Gradient()
         elif self.exponent == 2:
             class L2Gradient(Operator):
