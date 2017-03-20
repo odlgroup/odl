@@ -1289,15 +1289,12 @@ class WeightedSumSamplingOperator(Operator):
         """Indices where to sample the function."""
         return self.__sampling_points
 
-    def _call(self, x, out=None):
+    def _call(self, x):
         """Sum all values if indices are given multiple times."""
         y = np.bincount(self._indices_flat, weights=x,
                         minlength=self.range.size)
 
-        if out is None:
-            out = y.reshape(self.range.shape)
-        else:
-            out[:] = y.reshape(self.range.shape)
+        out = y.reshape(self.range.shape)
 
         if self.variant == 'dirac':
             weights = getattr(self.range, 'cell_volume', 1.0)
@@ -1417,13 +1414,9 @@ class FlatteningOperator(Operator):
         range = tensor_space(domain.size, dtype=domain.dtype)
         super().__init__(domain, range, linear=True)
 
-    def _call(self, x, out=None):
-        """Flatten ``x``, writing to ``out``."""
-        if out is None:
-            out = np.ravel(x, order=self.order)
-        else:
-            out[:] = np.ravel(x, order=self.order)
-        return out
+    def _call(self, x):
+        """Flatten ``x``."""
+        return np.ravel(x, order=self.order)
 
     @property
     def order(self):
@@ -1493,14 +1486,10 @@ class FlatteningOperator(Operator):
                 """Initialize a new instance."""
                 super().__init__(op.range, op.domain, linear=True)
 
-            def _call(self, x, out=None):
-                """Reshape ``x`` to nD shape, writing to ``out``."""
-                if out is None:
-                    return np.reshape(x.asarray(), self.range.shape,
-                                      order=op.order)
-                else:
-                    out[:] = np.reshape(x.asarray(), self.range.shape,
-                                        order=op.order)
+            def _call(self, x):
+                """Reshape ``x`` back to n-dim. shape."""
+                return np.reshape(x.asarray(), self.range.shape,
+                                  order=op.order)
 
             def adjoint(self):
                 """Adjoint of this operator, a scaled `FlatteningOperator`."""
