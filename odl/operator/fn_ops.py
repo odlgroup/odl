@@ -13,28 +13,72 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 from builtins import super
+
+from numbers import Integral
 import numpy as np
 
 from odl.operator.operator import Operator
 from odl.space import tensor_space
-from odl.set import LinearSpace, Field
-from odl.discr import DiscreteLp
 from odl.space.base_tensors import TensorSpace
+from odl.util import signature_string, indent_rows
+
 
 __all__ = ('SamplingOperator', 'WeightedSumSamplingOperator',
-           'FlatteningOperator', 'FlatteningOperatorAdjoint')
+           'FlatteningOperator')
+
+
+def _normalize_sampling_points(sampling_points, ndim):
+    """Normalize points to an ndim-long list of linear index arrays."""
+    sampling_points_in = sampling_points
+    if ndim == 0:
+        sampling_points = [np.array(sampling_points, dtype=int, copy=False)]
+        if sampling_points[0].size != 0:
+            raise ValueError('`sampling_points` must be empty for '
+                             '0-dim. `domain`')
+    elif ndim == 1:
+        if isinstance(sampling_points, Integral):
+            sampling_points = (sampling_points,)
+        sampling_points = [np.array(sampling_points, dtype=int, copy=False,
+                                    ndmin=1)]
+        if sampling_points[0].ndim > 1:
+            raise ValueError('expected 1D index (array), got {}'
+                             ''.format(sampling_points_in))
+    else:
+        try:
+            iter(sampling_points)
+        except TypeError:
+            raise TypeError('`sampling_points` must be a sequence '
+                            'for domain with ndim > 1')
+        else:
+            if np.ndim(sampling_points) == 1:
+                sampling_points = [np.array(p, dtype=int)
+                                   for p in sampling_points]
+            else:
+                sampling_points = [
+                    np.array(pts, dtype=int, copy=False, ndmin=1)
+                    for pts in sampling_points]
+                if any(pts.ndim != 1 for pts in sampling_points):
+                    raise ValueError(
+                        'index arrays in `sampling_points` must be 1D, '
+                        'got {!r}'.format(sampling_points_in))
+
+    return sampling_points
 
 
 class SamplingOperator(Operator):
 
     """Operator that samples coefficients.
-    The operator is defined by::
-        ``SamplingOperator(f) == c * f[indices]``
+
+    The operator is defined by ::
+
+        SamplingOperator(f) == c * f[indices]
+
     with the weight c being determined by the variant. By choosing
     c = 1, this operator approximates point evaluations or inner products
-    with dirac deltas, see option 'point_eval'. By choosing c = cell_volume
-    it approximates the integration of f over the cell by multiplying its
-    function valume with the cell volume, see option 'integrate'.
+    with dirac deltas, see option ``'point_eval'``. By choosing
+    c = cell_volume it approximates the integration of f over the cell by
+    multiplying its function valume with the cell volume, see option
+    ``'integrate'``.
     """
 
     def __init__(self, domain, sampling_points, variant='point_eval'):
@@ -42,52 +86,76 @@ class SamplingOperator(Operator):
 
         Parameters
         ----------
-        domain : `FnBase` or `DiscreteLp`
+        domain : `TensorSpace`
             Set of elements on which this operator acts.
-        sampling_points : sequence
-            Sequence of indices that determine the sampling points.
-            In n dimensions, it should be of length n. Each element of
-            this list is a list by itself and should have the length of
-            the total number of sampling points. Example: To sample a
-            function at the points (0, 1) and (1, 1) the indices should
-            be defined as sampling_points = [[0, 1], [1, 1]].
+        sampling_points : 1D `array-like` or sequence of 1D array-likes
+            Indices that determine the sampling points.
+            In n dimensions, it should be a sequence of n arrays, where
+            each member array is of equal length N. The indexed positions
+            are ``(arr1[i], arr2[i], ..., arrn[i])``, in total N
+            points.
+            If ``domain`` is one-dimensional, a single array-like can be
+            used. Likewise, a single point can be given as integer in 1D,
+            and as a array-like sequence in nD.
         variant : {'point_eval', 'integrate'}, optional
-            For `'point_eval'` this operator performs the sampling by
+            For ``'point_eval'`` this operator performs the sampling by
             evaluation the function at the sampling points. The
-            `'integrate'` variant approximates integration by
+            ``'integrate'`` variant approximates integration by
             multiplying point evaluation with the cell volume.
 
         Examples
         --------
-        >>> X = odl.uniform_discr(min_pt=[0, 0], max_pt=[1, 1], shape=[2, 2])
-        >>> x = X.element(range(X.size))
-        >>> sampling_points = [[0, 1], [1, 1]]
-        >>> A = odl.SamplingOperator(X, sampling_points, 'point_eval')
-        >>> A(x)
-        rn(2).element([1.0, 3.0])
-        >>> A = odl.SamplingOperator(X, sampling_points, 'integrate')
-        >>> A(x)
-        rn(2).element([0.25, 0.75])
+        Sampling in 1d can be done with a single index (an int) or a
+        sequence of such:
+
+        >>> space = odl.uniform_discr(0, 1, 4)
+        >>> op = odl.SamplingOperator(space, sampling_points=1)
+        >>> x = space.element([1, 2, 3, 4])
+        >>> op(x)
+        rn(1).element([2.0])
+        >>> op = odl.SamplingOperator(space, sampling_points=[1, 2, 1])
+        >>> op(x)
+        rn(3).element([2.0, 3.0, 2.0])
+
+        There are two variants ``'point_eval'`` (default) and
+        ``'integrate'``, where the latter scales values by the cell
+        volume to approximate the integral over the cells of the points:
+
+        >>> op = odl.SamplingOperator(space, sampling_points=[1, 2, 1],
+        ...                           variant='integrate')
+        >>> space.cell_volume  # the scaling constant
+        0.25
+        >>> op(x)
+        rn(3).element([0.5, 0.75, 0.5])
+
+        In higher dimensions, a sequence of index array-likes must be
+        given, or a single sequence for a single point:
+
+        >>> space = odl.uniform_discr([0, 0], [1, 1], (2, 3))
+        >>> # Sample at the index (0, 2)
+        >>> op = odl.SamplingOperator(space, sampling_points=[0, 2])
+        >>> x = space.element([[1, 2, 3],
+        ...                    [4, 5, 6]])
+        >>> op(x)
+        rn(1).element([3.0])
+        >>> sampling_points = [[0, 1],  # indices (0, 2) and (1, 1)
+        ...                    [2, 1]]
+        >>> op = odl.SamplingOperator(space, sampling_points)
+        >>> op(x)
+        rn(2).element([3.0, 5.0])
         """
-        if not isinstance(domain, (FnBase, DiscreteLp)):
-            raise TypeError('`domain` {!r} not a `FnBase` or `DiscreteLp` '
-                            'instance'.format(domain))
+        if not isinstance(domain, TensorSpace):
+            raise TypeError('`domain` must be a `TensorSpace` instance, got '
+                            '{!r}'.format(domain))
 
-        self.__sampling_points = np.asarray(sampling_points, dtype=int)
-        self.__variant = variant
+        self.__sampling_points = _normalize_sampling_points(sampling_points,
+                                                            domain.ndim)
+        self.__variant = str(variant).lower()
+        if self.variant not in ('point_eval', 'integrate'):
+            raise ValueError('`variant` {!r} not understood'.format(variant))
 
-        # Converts a single sequence to an array of integers
-        # and a sequence of arrays to a vertically stacked array
-        if self.sampling_points.ndim > 1:
-            # Strides = increment in linear indices per axis
-            strides = np.concatenate((np.cumprod(domain.shape[1:])[::-1], [1]))
-            self.__indices_flat = np.sum(
-                self.sampling_points * strides[:, None], axis=0)
-        else:
-            self.__indices_flat = self.sampling_points
-
-        range = fn(self.indices_flat.size, dtype=domain.dtype)
-        super().__init__(domain, range, linear=True)
+        ran = tensor_space(self.sampling_points[0].size, dtype=domain.dtype)
+        super().__init__(domain, ran, linear=True)
 
     @property
     def variant(self):
@@ -99,25 +167,19 @@ class SamplingOperator(Operator):
         """Indices where to sample the function."""
         return self.__sampling_points
 
-    @property
-    def indices_flat(self):
-        """Flat indices (linear indexing) where to sample the function."""
-        return self.__indices_flat
-
     def _call(self, x, out=None):
         """Collect indices weighted with the cell volume."""
         if out is None:
-            out = x[self.indices_flat]
+            out = x[self.sampling_points]
         else:
-            out[:] = x[self.indices_flat]
+            out[:] = x[self.sampling_points]
 
         if self.variant == 'point_eval':
             weights = 1.0
         elif self.variant == 'integrate':
             weights = getattr(self.domain, 'cell_volume', 1.0)
         else:
-            raise RuntimeError('The variant "{!r}" is not yet supported'
-                               ''.format(self.variant))
+            raise RuntimeError('bad variant {!r}'.format(self.variant))
 
         if weights != 1.0:
             out *= weights
@@ -126,19 +188,34 @@ class SamplingOperator(Operator):
 
     @property
     def adjoint(self):
-        """Adjoint of the sampling is summing over weighted dirac deltas or
-        characteristic functions, see WeightedSumSamplingOperator.
+        """Adjoint of the sampling operator, a `WeightedSumSamplingOperator`.
+
+        If each sampling point occurs only once, the adjoint consists
+        in inserting the given values into the output at the sampling
+        points. Duplicate sampling points are weighted with their
+        multiplicity.
 
         Examples
         --------
-        >>> X = odl.uniform_discr(min_pt=[-1, -1], max_pt=[1, 1], shape=[4, 3])
-        >>> x = X.element(range(1,X.size+1))
-        >>> sampling_points = [[0, 1, 2], [0, 1, 2]]
-        >>> A = odl.SamplingOperator(X, sampling_points, 'point_eval')
-        >>> A.adjoint(A(x)).inner(x) - A(x).inner(A(x)) < 1e-10
+        >>> space = odl.uniform_discr([-1, -1], [1, 1], shape=(2, 3))
+        >>> # Point (0, 0) occurs twice
+        >>> sampling_points = [[0, 1, 1, 0],
+        ...                    [0, 1, 2, 0]]
+        >>> op = odl.SamplingOperator(space, sampling_points)
+        >>> x = space.element([[1, 2, 3],
+        ...                    [4, 5, 6]])
+        >>> op.adjoint(op(x)).inner(x) - op(x).inner(op(x)) < 1e-10
         True
-        >>> A = odl.SamplingOperator(X, sampling_points, 'integrate')
-        >>> A.adjoint(A(x)).inner(x) - A(x).inner(A(x)) < 1e-10
+        >>> op = odl.SamplingOperator(space, sampling_points,
+        ...                           variant='integrate')
+        >>> # Put ones at the indices in sampling_points, using double
+        >>> # weight at (0, 0) since it occurs twice
+        >>> op.adjoint(op.range.one())
+        uniform_discr([-1.0, -1.0], [1.0, 1.0], (2, 3)).element(
+            [[2.0, 0.0, 0.0],
+             [0.0, 1.0, 1.0]]
+        )
+        >>> op.adjoint(op(x)).inner(x) - op(x).inner(op(x)) < 1e-10
         True
         """
         if self.variant == 'point_eval':
@@ -146,16 +223,19 @@ class SamplingOperator(Operator):
         elif self.variant == 'integrate':
             variant = 'char_fun'
         else:
-            raise RuntimeError('The variant "{!r}" is not yet supported'
-                               ''.format(self.variant))
+            raise RuntimeError('bad variant {!r}'.format(self.variant))
 
         return WeightedSumSamplingOperator(self.domain, self.sampling_points,
                                            variant)
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r}, {!r})'.format(self.__class__.__name__, self.domain,
-                                       self.sampling_points)
+        posargs = [self.domain, self.sampling_points]
+        optargs = [('variant', self.variant, 'point_eval')]
+        sig_str = signature_string(posargs, optargs, mod=['!r', ''],
+                                   sep=[',\n', '', ',\n'])
+        return '{}(\n{}\n)'.format(self.__class__.__name__,
+                                   indent_rows(sig_str))
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -164,60 +244,118 @@ class SamplingOperator(Operator):
 
 class WeightedSumSamplingOperator(Operator):
 
-    """Adjoint of the sampling operator.
-    It sums dirac deltas or charactistic functions that are centered
-    around the sampling points and weighted by its argument.
+    """Operator computing the sum of coefficients at sampling locations.
+
+    This operator is the adjoint of `SamplingOperator`.
+
+    Notes
+    -----
+    The weighted sum sampling operator for a sequence
+    :math:`I = (i_n)_{n=1}^N`
+    of indices (possibly with duplicates) is given by
 
     .. math::
-        W(g)(x) == \sum_{i in sampling_points} d_i(x) g_i
+        W_I(g)(x) = \sum_{i \\in I} d_i(x) g_i,
+
+    where :math:`g \\in \mathbb{F}^N` is the value vector, and
+    :math:`d_i` is either a Dirac delta or a characteristic function of
+    the cell centered around the point indexed by :math:`i`.
     """
 
-    def __init__(self, range, sampling_points, variant='dirac'):
+    def __init__(self, range, sampling_points, variant='char_fun'):
         """Initialize a new instance.
 
         Parameters
         ----------
-        range : `FnBase` or `DiscreteLp`
+        range : `TensorSpace`
             Set of elements into which this operator maps.
-        sampling_points : sequence
-            Sequence of indices that determine the sampling points.
-            In n dimensions, it should be of length n. Each element of
-            this list is a list by itself and should have the length of
-            the total number of sampling points. Example: To sample a
-            function at the points (0, 1) and (1, 1) the indices should
-            be defined as sampling_points = [[0, 1], [1, 1]].
-        variant : {'dirac', 'char_fun'}, optional
+        sampling_points : 1D `array-like` or sequence of 1D array-likes
+            Indices that determine the sampling points.
+            In n dimensions, it should be a sequence of n arrays, where
+            each member array is of equal length N. The indexed positions
+            are ``(arr1[i], arr2[i], ..., arrn[i])``, in total N
+            points.
+            If ``range`` is one-dimensional, a single array-like can be
+            used. Likewise, a single point can be given as integer in 1D,
+            and as a array-like sequence in nD.
+        variant : {'char_fun', 'dirac'}, optional
             This option determines which function to sum over.
 
         Examples
         --------
-        >>> X = odl.uniform_discr(min_pt=[0, 0], max_pt=[1, 1], shape=[2, 2])
-        >>> sampling_points = [[0, 1], [1, 1]]
-        >>> A = odl.WeightedSumSamplingOperator(X, sampling_points, 'dirac')
-        >>> x = A.domain.one()
-        >>> A(x)
-        uniform_discr([0.0, 0.0], [1.0, 1.0], (2, 2)).element([[0.0, 4.0],
-        [0.0, 4.0]])
-        >>> A = odl.WeightedSumSamplingOperator(X, sampling_points, 'char_fun')
-        >>> A(x)
-        uniform_discr([0.0, 0.0], [1.0, 1.0], (2, 2)).element([[0.0, 1.0],
-        [0.0, 1.0]])
+        In 1d, a single index (an int) or a sequence of such can be used
+        for indexing.
+
+        >>> space = odl.uniform_discr(0, 1, 4)
+        >>> op = odl.WeightedSumSamplingOperator(space, sampling_points=1)
+        >>> op.domain
+        rn(1)
+        >>> x = op.domain.element([1])
+        >>> # Put value 1 at index 1
+        >>> op(x)
+        uniform_discr(0.0, 1.0, 4).element([0.0, 1.0, 0.0, 0.0])
+        >>> op = odl.WeightedSumSamplingOperator(space,
+        ...                                      sampling_points=[1, 2, 1])
+        >>> op.domain
+        rn(3)
+        >>> x = op.domain.element([1, 0.5, 0.25])
+        >>> # Index 1 occurs twice and gets two contributions (1 and 0.25)
+        >>> op(x)
+        uniform_discr(0.0, 1.0, 4).element([0.0, 1.25, 0.5, 0.0])
+
+        The ``'dirac'`` variant scales the values by the reciprocal
+        cell volume of the operator range:
+
+        >>> op = odl.WeightedSumSamplingOperator(
+        ...     space, sampling_points=[1, 2, 1], variant='dirac')
+        >>> x = op.domain.element([1, 0.5, 0.25])
+        >>> 1 / op.range.cell_volume  # the scaling constant
+        4.0
+        >>> op(x)
+        uniform_discr(0.0, 1.0, 4).element([0.0, 5.0, 2.0, 0.0])
+
+        In higher dimensions, a sequence of index array-likes must be
+        given, or a single sequence for a single point:
+
+        >>> space = odl.uniform_discr([0, 0], [1, 1], (2, 3))
+        >>> # Sample at the index (0, 2)
+        >>> op = odl.WeightedSumSamplingOperator(space,
+        ...                                      sampling_points=[0, 2])
+        >>> x = op.domain.element([1])
+        >>> # Insert the value 1 at index (0, 2)
+        >>> op(x)
+        uniform_discr([0.0, 0.0], [1.0, 1.0], (2, 3)).element(
+            [[0.0, 0.0, 1.0],
+             [0.0, 0.0, 0.0]]
+        )
+        >>> sampling_points = [[0, 1],  # indices (0, 2) and (1, 1)
+        ...                    [2, 1]]
+        >>> op = odl.WeightedSumSamplingOperator(space, sampling_points)
+        >>> x = op.domain.element([1, 2])
+        >>> op(x)
+        uniform_discr([0.0, 0.0], [1.0, 1.0], (2, 3)).element(
+            [[0.0, 0.0, 1.0],
+             [0.0, 2.0, 0.0]]
+        )
         """
-
-        self.__sampling_points = np.asarray(sampling_points, dtype=int)
-        self.__variant = variant
-
-        # Converts a single sequence to an array of integers
-        # and a sequence of arrays to a vertically stacked array
-        if self.sampling_points.ndim > 1:
-            # Strides = increment in linear indices per axis
-            strides = np.concatenate((np.cumprod(range.shape[1:])[::-1], [1]))
-            self.__indices_flat = np.sum(
-                self.sampling_points * strides[:, None], axis=0)
+        if not isinstance(range, TensorSpace):
+            raise TypeError('`range` must be a `TensorSpace` instance, got '
+                            '{!r}'.format(range))
+        self.__sampling_points = _normalize_sampling_points(sampling_points,
+                                                            range.ndim)
+        # Convert a list of index arrays to linear index array
+        indices_flat = np.ravel_multi_index(self.sampling_points,
+                                            dims=range.shape)
+        if np.isscalar(indices_flat):
+            self._indices_flat = np.array([indices_flat], dtype=int)
         else:
-            self.__indices_flat = self.sampling_points
+            self._indices_flat = indices_flat
 
-        domain = fn(self.indices_flat.size, dtype=range.dtype)
+        self.__variant = str(variant).lower()
+        if self.variant not in ('dirac', 'char_fun'):
+            raise ValueError('`variant` {!r} not understood'.format(variant))
+
+        domain = tensor_space(self.sampling_points[0].size, dtype=range.dtype)
         super().__init__(domain, range, linear=True)
 
     @property
@@ -230,21 +368,15 @@ class WeightedSumSamplingOperator(Operator):
         """Indices where to sample the function."""
         return self.__sampling_points
 
-    @property
-    def indices_flat(self):
-        """Flattened set of indices (linear indexing) where to sample the
-        function."""
-        return self.__indices_flat
-
     def _call(self, x, out=None):
         """Sum all values if indices are given multiple times."""
-        y = np.bincount(self.indices_flat, weights=x,
+        y = np.bincount(self._indices_flat, weights=x,
                         minlength=self.range.size)
 
         if out is None:
-            out = y
+            out = y.reshape(self.range.shape)
         else:
-            out[:] = y
+            out[:] = y.reshape(self.range.shape)
 
         if self.variant == 'dirac':
             weights = getattr(self.range, 'cell_volume', 1.0)
@@ -261,19 +393,30 @@ class WeightedSumSamplingOperator(Operator):
 
     @property
     def adjoint(self):
-        """Adjoint of the weighted sum of sampling functions is 'sampling',
-        see SamplingOperator.
+        """Adjoint of this operator, a `SamplingOperator`.
+
+        The ``'char_fun'`` variant of this operator corresponds to the
+        ``'integrate'`` sampling operator, and ``'dirac'`` corresponds to
+        ``'point_eval'``.
 
         Examples
         --------
-        >>> X = odl.uniform_discr(min_pt=[-1, -1], max_pt=[1, 1], shape=[4, 3])
-        >>> sampling_points = [[0, 1, 2], [0, 1, 2]]
-        >>> A = odl.WeightedSumSamplingOperator(X, sampling_points, 'dirac')
-        >>> x = A.domain.one()
-        >>> A.adjoint(A(x)).inner(x) - A(x).inner(A(x)) < 1e-10
+        >>> space = odl.uniform_discr([-1, -1], [1, 1], shape=(2, 3))
+        >>> # Point (0, 0) occurs twice
+        >>> sampling_points = [[0, 1, 1, 0],
+        ...                    [0, 1, 2, 0]]
+        >>> op = odl.WeightedSumSamplingOperator(space, sampling_points,
+        ...                                      variant='dirac')
+        >>> y = op.range.element([[1, 2, 3],
+        ...                       [4, 5, 6]])
+        >>> op.adjoint(y)
+        rn(4).element([1.0, 5.0, 6.0, 1.0])
+        >>> x = op.domain.element([1, 2, 3, 4])
+        >>> op.adjoint(op(x)).inner(x) - op(x).inner(op(x)) < 1e-10
         True
-        >>> A = odl.WeightedSumSamplingOperator(X, sampling_points, 'char_fun')
-        >>> A.adjoint(A(x)).inner(x) - A(x).inner(A(x)) < 1e-10
+        >>> op = odl.WeightedSumSamplingOperator(space, sampling_points,
+        ...                                      variant='char_fun')
+        >>> op.adjoint(op(x)).inner(x) - op(x).inner(op(x)) < 1e-10
         True
         """
         if self.variant == 'dirac':
@@ -288,8 +431,12 @@ class WeightedSumSamplingOperator(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r}, {!r})'.format(self.__class__.__name__,
-                                       self.domain, self.sampling_points)
+        posargs = [self.range, self.sampling_points]
+        optargs = [('variant', self.variant, 'char_fun')]
+        sig_str = signature_string(posargs, optargs, mod=['!r', ''],
+                                   sep=[',\n', '', ',\n'])
+        return '{}(\n{}\n)'.format(self.__class__.__name__,
+                                   indent_rows(sig_str))
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -300,41 +447,57 @@ class FlatteningOperator(Operator):
 
     """Operator that reshapes the object as a column vector.
 
-        ``FlatteningOperator(f) == np.ravel(f)``
+    The operation performed by this operator is ::
+
+        FlatteningOperator(x) == ravel(x)
+
+    The range of this operator is always a `TensorSpace`, i.e., even if
+    the domain is a discrete function space.
     """
 
-    def __init__(self, domain, order='C'):
+    def __init__(self, domain, order=None):
         """Initialize a new instance.
 
         Parameters
         ----------
-        domain : `FnBase` or `DiscreteLp`
+        domain : `TensorSpace`
             Set of elements on which this operator acts.
-        order : {'C', 'F'} (optional)
-            The flattening is performed in this order. 'C' means that
-            that the last index is changing fastest or in terms of a matrix
-            that the read out is row-by-row. Likewise 'F' is column-by-column.
+        order : {None, 'C', 'F'}, optional
+            If provided, flattening is performed in this order. ``'C'``
+            means that that the last index is changing fastest, while in
+            ``'F'`` ordering, the first index changes fastest.
+            By default, ``domain.order`` is used.
 
         Examples
         --------
-        General usage example:
-
-        >>> X = odl.uniform_discr(min_pt=[-1, -1], max_pt=[1, 1], shape=[2, 3])
-        >>> x = X.element(range(X.size))
-        >>> A = odl.FlatteningOperator(X)
-        >>> A(x)
-        rn(6).element([0.0, 1.0, 2.0, 3.0, 4.0, 5.0])
+        >>> space = odl.uniform_discr([-1, -1], [1, 1], shape=(2, 3))
+        >>> op = odl.FlatteningOperator(space)
+        >>> op.range
+        rn(6)
+        >>> x = space.element([[1, 2, 3],
+        ...                    [4, 5, 6]])
+        >>> op(x)
+        rn(6).element([1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
+        >>> op = odl.FlatteningOperator(space, order='F')
+        >>> op(x)
+        rn(6).element([1.0, 4.0, 2.0, 5.0, 3.0, 6.0])
         """
-        if not isinstance(domain, (LinearSpace, Field)):
-            raise TypeError('`domain` {!r} not a `LinearSpace` or `Field` '
-                            'instance'.format(domain))
+        if not isinstance(domain, TensorSpace):
+            raise TypeError('`domain` must be a `TensorSpace` instance, got '
+                            '{!r}'.format(domain))
 
-        self.__order = order
-        range = fn(domain.size, dtype=domain.dtype)
+        if order is None:
+            self.__order = domain.order
+        else:
+            self.__order = str(order).upper()
+            if self.order not in ('C', 'F'):
+                raise ValueError('`order` {!r} not understood'.format(order))
+
+        range = tensor_space(domain.size, dtype=domain.dtype)
         super().__init__(domain, range, linear=True)
 
     def _call(self, x, out=None):
-        """Collect indices"""
+        """Flatten ``x``, writing to ``out``."""
         if out is None:
             out = np.ravel(x, order=self.order)
         else:
@@ -343,131 +506,112 @@ class FlatteningOperator(Operator):
 
     @property
     def order(self):
-        """order of the flattening"""
+        """order of the flattening operation."""
         return self.__order
 
     @property
     def adjoint(self):
-        """Adjoint of the vectorising is creating an element with these
-        components with an appropriate weighting, see
-        FlatteningOperatorAdjoint.
+        """Adjoint of the flattening, a scaled version of the `inverse`.
 
         Examples
         --------
-        >>> X = odl.uniform_discr(min_pt=[-1, -1], max_pt=[1, 1], shape=[2, 3])
-        >>> A = odl.FlatteningOperator(X)
-        >>> x = A.domain.element(range(A.domain.size))
-        >>> A.adjoint(A(x)).inner(x) - A(x).inner(A(x)) < 1e-10
+        >>> space = odl.uniform_discr([-1, -1], [1, 1], shape=(2, 4))
+        >>> op = odl.FlatteningOperator(space)
+        >>> y = op.range.element([1, 2, 3, 4, 5, 6, 7, 8])
+        >>> 1 / space.cell_volume  # the scaling factor
+        2.0
+        >>> op.adjoint(y)
+        uniform_discr([-1.0, -1.0], [1.0, 1.0], (2, 4)).element(
+            [[2.0, 4.0, 6.0, 8.0],
+             [10.0, 12.0, 14.0, 16.0]]
+        )
+        >>> x = space.element([[1, 2, 3, 4],
+        ...                    [5, 6, 7, 8]])
+        >>> op.adjoint(op(x)).inner(x) - op(x).inner(op(x)) < 1e-10
         True
         """
-        # TODO: This only works for a subset of function spaces
-        c = getattr(self.domain, 'cell_volume', 1.0)
-        return 1. / c * FlatteningOperatorAdjoint(self.domain)
+        scaling = getattr(self.domain, 'cell_volume', 1.0)
+        return 1 / scaling * self.inverse
 
     @property
     def inverse(self):
-        """Reshaping to original shape, see FlatteningOperatorAdjoint.
+        """Operator that reshapes to original shape.
 
         Examples
         --------
-        >>> X = odl.uniform_discr(min_pt=[-1, -1], max_pt=[1, 1], shape=[3, 4])
-        >>> x = X.element(range(X.size))
-        >>> A = odl.FlatteningOperator(X)
-        >>> (A.inverse(A(x)) - x).norm() < 1e-10
+        >>> space = odl.uniform_discr([-1, -1], [1, 1], shape=(2, 4))
+        >>> op = odl.FlatteningOperator(space)
+        >>> y = op.range.element([1, 2, 3, 4, 5, 6, 7, 8])
+        >>> op.inverse(y)
+        uniform_discr([-1.0, -1.0], [1.0, 1.0], (2, 4)).element(
+            [[1.0, 2.0, 3.0, 4.0],
+             [5.0, 6.0, 7.0, 8.0]]
+        )
+        >>> op = odl.FlatteningOperator(space, order='F')
+        >>> op.inverse(y)
+        uniform_discr([-1.0, -1.0], [1.0, 1.0], (2, 4)).element(
+            [[1.0, 3.0, 5.0, 7.0],
+             [2.0, 4.0, 6.0, 8.0]]
+        )
+        >>> op(op.inverse(y)) == y
         True
         """
-        return FlatteningOperatorAdjoint(self.domain)
+        op = self
+        scaling = getattr(self.domain, 'cell_volume', 1.0)
+
+        class FlatteningOperatorInverse(Operator):
+
+            """Inverse of `FlatteningOperator`.
+
+            This operator reshapes a flat vector back to original shape::
+
+                FlatteningOperatorInverse(x) == reshape(x, orig_shape)
+            """
+
+            def __init__(self):
+                """Initialize a new instance."""
+                super().__init__(op.range, op.domain, linear=True)
+
+            def _call(self, x, out=None):
+                """Reshape ``x`` to nD shape, writing to ``out``."""
+                if out is None:
+                    return np.reshape(x.asarray(), self.range.shape,
+                                      order=op.order)
+                else:
+                    out[:] = np.reshape(x.asarray(), self.range.shape,
+                                        order=op.order)
+
+            def adjoint(self):
+                """Adjoint of this operator, a scaled `FlatteningOperator`."""
+                return scaling * op
+
+            def inverse(self):
+                """Inverse of this operator."""
+                return op
+
+            def __repr__(self):
+                """Return ``repr(self)``."""
+                return '{!r}.inverse'.format(op)
+
+            def __str__(self):
+                """Return ``str(self)``."""
+                return repr(self)
+
+        return FlatteningOperatorInverse()
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r})'.format(self.__class__.__name__, self.domain)
+        posargs = [self.domain]
+        optargs = [('order', self.order, self.domain.order)]
+        sig_str = signature_string(posargs, optargs, mod=['!r', ''],
+                                   sep=['', '', ',\n'])
+        return '{}(\n{}\n)'.format(self.__class__.__name__,
+                                   indent_rows(sig_str))
 
     def __str__(self):
         """Return ``str(self)``."""
         return repr(self)
 
-
-class FlatteningOperatorAdjoint(Operator):
-
-    """Operator that creates an element of a vector space given its coefficients:
-
-        ``FlatteningOperatorAdjoint(f) == range.element(f)``
-    """
-
-    # TODO: give the domain as an optional argument
-    def __init__(self, range):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        range : `LinearSpace` or `Field`
-            Space that the operator should map to.
-
-        Examples
-        --------
-        General usage example:
-
-        >>> X = odl.uniform_discr(min_pt=[-1, -1], max_pt=[1, 1], shape=[1, 2])
-        >>> A = odl.FlatteningOperatorAdjoint(X)
-        >>> x = A.domain.element(range(A.domain.size))
-        >>> A(x)
-        uniform_discr([-1.0, -1.0], [1.0, 1.0], (1, 2)).element([[0.0, 1.0]])
-        """
-        if not isinstance(range, (LinearSpace, Field)):
-            raise TypeError('`range` {!r} not a `LinearSpace` or `Field` '
-                            'instance'.format(range))
-
-        domain = fn(range.size, dtype=range.dtype)
-        super().__init__(domain, range, linear=True)
-
-    def _call(self, x, out=None):
-        """Create a new element with the known coefficients."""
-        if out is None:
-            out = x
-        else:
-            out[:] = x
-
-        return out
-
-    @property
-    def adjoint(self):
-        """Adjoint of this operation is flattening with an appropriate scaling,
-        see FlatteningOperator.
-
-        Examples
-        --------
-        >>> X = odl.uniform_discr(min_pt=[-1, -1], max_pt=[1, 1], shape=[2, 3])
-        >>> A = odl.FlatteningOperatorAdjoint(X)
-        >>> x = A.domain.element(range(A.domain.size))
-        >>> A.adjoint(A(x)).inner(x) - A(x).inner(A(x)) < 1e-10
-        True
-        """
-        # TODO: This only works for a subset of function spaces
-        c = getattr(self.range, 'cell_volume', 1.0)
-        return c * FlatteningOperator(self.range)
-
-    @property
-    def inverse(self):
-        """Inverse of the embedding is flattening with the right scaling,
-        see FlatteningOperator.
-
-        Examples
-        --------
-        >>> X = odl.uniform_discr(min_pt=[-1, -1], max_pt=[1, 1], shape=[3, 4])
-        >>> A = odl.FlatteningOperatorAdjoint(X)
-        >>> x = A.domain.element(range(A.domain.size))
-        >>> (A.inverse(A(x)) - x).norm() < 1e-10
-        True
-        """
-        return FlatteningOperator(self.range)
-
-    def __repr__(self):
-        """Return ``repr(self)``."""
-        return '{}({!r})'.format(self.__class__.__name__, self.domain)
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        return repr(self)
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position
