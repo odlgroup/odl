@@ -1067,6 +1067,13 @@ class SamplingOperator(Operator):
 
         self.__sampling_points = _normalize_sampling_points(sampling_points,
                                                             domain.ndim)
+        # Flatten indices during init for faster indexing later
+        indices_flat = np.ravel_multi_index(self.sampling_points,
+                                            dims=domain.shape)
+        if np.isscalar(indices_flat):
+            self._indices_flat = np.array([indices_flat], dtype=int)
+        else:
+            self._indices_flat = indices_flat
         self.__variant = str(variant).lower()
         if self.variant not in ('point_eval', 'integrate'):
             raise ValueError('`variant` {!r} not understood'.format(variant))
@@ -1084,12 +1091,9 @@ class SamplingOperator(Operator):
         """Indices where to sample the function."""
         return self.__sampling_points
 
-    def _call(self, x, out=None):
-        """Collect indices weighted with the cell volume."""
-        if out is None:
-            out = x[self.sampling_points]
-        else:
-            out[:] = x[self.sampling_points]
+    def _call(self, x):
+        """Return values at indices, possibly weighted."""
+        out = x.asarray().ravel()[self._indices_flat]
 
         if self.variant == 'point_eval':
             weights = 1.0
