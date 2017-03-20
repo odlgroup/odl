@@ -498,22 +498,31 @@ class CallbackShow(SolverCallback):
 
         Parameters
         ----------
-        title : str, optional
+        title : string, optional
             Title of the window to be shown.
             The title name is generated as
 
                 title = title.format(cur_iter_num)
 
             where ``cur_iter_num`` is the current iteration number.
+            Default: ``'Iterate {}'``
         step : positive int, optional
-            Number of iterations between plots. Default: 1
-        saveto : string, optional
+            Number of iterations between plots.
+            Default: 1
+        saveto : string or callable, optional
             Format string for the name of the file(s) where
-            iterates are saved. The file name is generated as
+            iterates are saved.
+
+            If ``saveto`` is a string, the file name is generated as ::
 
                 filename = saveto.format(cur_iter_num)
 
             where ``cur_iter_num`` is the current iteration number.
+
+            If ``saveto`` is a callable, the file name is generated as ::
+
+                filename = saveto(cur_iter_num)
+
             If the directory name does not exist, a ``ValueError`` is raised.
             If ``saveto is None``, the figures are not saved.
             Default: ``None``
@@ -550,7 +559,17 @@ class CallbackShow(SolverCallback):
         self.fig = kwargs.pop('fig', None)
         self.step = kwargs.pop('step', 1)
         self.saveto = kwargs.pop('saveto', None)
+        try:
+            self.saveto_formatter = self.saveto.format
+        except AttributeError:
+            self.saveto_formatter = self.saveto
+
         self.title = kwargs.pop('title', 'Iterate {}')
+        try:
+            self.title_formatter = self.title.format
+        except AttributeError:
+            self.title_formatter = self.title
+
         self.iter = 0
         self.space_of_last_x = None
 
@@ -562,17 +581,19 @@ class CallbackShow(SolverCallback):
         self.space_of_last_x = x_space
 
         if self.iter % self.step == 0:
-            title = self.title.format(self.iter)
+            title = self.title_formatter(self.iter)
+
             if self.saveto is None:
                 self.fig = x.show(*self.args, title=title, fig=self.fig,
                                   update_in_place=update_in_place,
                                   **self.kwargs)
 
             else:
+                saveto = self.saveto_formatter.format(self.iter)
+
                 self.fig = x.show(*self.args, title=title, fig=self.fig,
-                                  saveto=self.saveto.format(self.iter),
                                   update_in_place=update_in_place,
-                                  **self.kwargs)
+                                  saveto=saveto, **self.kwargs)
 
         self.iter += 1
 
@@ -584,7 +605,8 @@ class CallbackShow(SolverCallback):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        optargs = [('step', self.step, 1),
+        optargs = [('title', self.title, 'Iterate {}'),
+                   ('step', self.step, 1),
                    ('saveto', self.saveto, None)]
         for kwarg, value in self.kwargs.items():
             optargs.append((kwarg, value, None))
@@ -637,6 +659,11 @@ class CallbackSaveToDisk(SolverCallback):
         ...                               step=5, impl='numpy')
         """
         self.saveto = saveto
+        try:
+            self.saveto_formatter = self.saveto.format
+        except AttributeError:
+            self.saveto_formatter = self.saveto
+
         self.step = step
         self.impl = impl
         self.kwargs = kwargs
@@ -645,7 +672,7 @@ class CallbackSaveToDisk(SolverCallback):
     def __call__(self, x):
         """Save the current iterate."""
         if self.iter % self.step == 0:
-            file_path = self.saveto.format(self.iter)
+            file_path = self.saveto_formatter(self.iter)
             folder_path = os.path.dirname(os.path.realpath(file_path))
 
             if not os.path.exists(folder_path):
