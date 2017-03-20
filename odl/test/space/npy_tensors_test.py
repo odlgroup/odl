@@ -525,6 +525,41 @@ def test_pdist(exponent):
         assert x.dist(y) == pytest.approx(correct_dist)
 
 
+def test_space_getitem(getitem_indices):
+    """Check if space indexing works as expected."""
+    space = odl.tensor_space((2, 3, 4), dtype=complex, exponent=1, weighting=2)
+
+    # Ellipsis not supported
+    try:
+        iter(getitem_indices)
+    except TypeError:
+        pass
+    else:
+        if Ellipsis in getitem_indices:
+            with pytest.raises(TypeError):
+                space[getitem_indices]
+            return
+
+    sliced_space = space[getitem_indices]
+    x = np.empty(space.shape)
+    sliced_x = x[getitem_indices]
+    assert sliced_space.shape == sliced_x.shape
+
+    assert sliced_space.exponent == space.exponent
+    assert sliced_space.dtype == space.dtype
+    assert sliced_space.weighting == space.weighting
+
+
+def test_space_getitem_array_weighting():
+    """Check that array weighting is propagated correctly when slicing."""
+    shape = (2, 3)
+    weight_arr = np.arange(1, np.prod(shape) + 1).reshape(shape)
+    space = odl.tensor_space(shape, weighting=weight_arr)
+
+    sliced_space = space[0, ::2]
+    assert all_equal(sliced_space.weighting.array, weight_arr[0, ::2])
+
+
 def test_element_getitem(getitem_indices):
     """Check if getitem produces correct values, shape and other stuff."""
     space = odl.tensor_space((2, 3, 4), dtype=complex, exponent=1, weighting=2)
