@@ -70,14 +70,21 @@ def as_tensorflow_layer(odl_op, name='ODLOperator', differentiable=True):
             n_x = x_shape[0]
             fixed_size = False
 
-        in_shape = (n_x,) + odl_op.range.shape + (1,)
+        if odl_op.is_functional:
+            in_shape = (n_x, 1)
+        else:
+            in_shape = (n_x,) + odl_op.range.shape + (1,)
         out_shape = (n_x,) + odl_op.domain.shape + (1,)
 
         # Validate input shape
         assert x_shape[1:] == odl_op.domain.shape + (1,)
-        assert dx_shape[1:] == odl_op.range.shape + (1,)
+        if odl_op.is_functional:
+            assert dx_shape[1:] == (1,)
+        else:
+            assert dx_shape[1:] == odl_op.range.shape + (1,)
 
         def _impl(x, dx):
+
             if fixed_size:
                 x_out_shape = out_shape
                 assert x.shape == in_shape
@@ -89,13 +96,28 @@ def as_tensorflow_layer(odl_op, name='ODLOperator', differentiable=True):
 
             out = np.empty(x_out_shape, odl_op.domain.dtype)
             for i in range(x_out_shape[0]):
-                xi = x[i, ..., 0]
-                dxi = dx[i, ..., 0]
-                result = odl_op.derivative(xi).adjoint(dxi)
-                out[i] = np.asarray(result)[..., None]
+                if odl_op.is_functional:
+                    xi = x[i, ..., 0]
+                    dxi = dx[i, 0]
+                    out[i, ..., 0] = np.asarray(odl_op.gradient(xi)) * dxi
+                else:
+                    xi = x[i, ..., 0]
+                    dxi = dx[i, ..., 0]
+                    result = odl_op.derivative(xi).adjoint(dxi)
+                    out[i, ..., 0] = np.asarray(result)
 
             # TODO: Improve
-            scale = odl_op.domain.cell_volume / odl_op.range.cell_volume
+            try:
+                dom_weight = odl_op.domain.weighting.const
+            except AttributeError:
+                dom_weight = 1.0
+
+            try:
+                ran_weight = odl_op.range.weighting.const
+            except AttributeError:
+                ran_weight = 1.0
+
+            scale = dom_weight / ran_weight
             out *= scale
             return out
 
@@ -131,22 +153,35 @@ def as_tensorflow_layer(odl_op, name='ODLOperator', differentiable=True):
             fixed_size = False
 
         in_shape = (n_x,) + odl_op.domain.shape + (1,)
-        out_shape = (n_x,) + odl_op.range.shape + (1,)
+        if odl_op.is_functional:
+            out_shape = (n_x, 1)
+        else:
+            out_shape = (n_x,) + odl_op.range.shape + (1,)
+
 
         # Validate input shape
         assert x_shape[1:] == odl_op.domain.shape + (1,)
 
         def _impl(x):
+            print('CALL ASSERT')
             if fixed_size:
                 x_out_shape = out_shape
                 assert x.shape == in_shape
             else:
                 x_out_shape = (x.shape[0],) + out_shape[1:]
                 assert x.shape[1:] == in_shape[1:]
+            print('CALL ASSERT OK')
 
-            out = np.empty(x_out_shape, odl_op.range.dtype)
+            out = np.empty(x_out_shape, odl_op.domain.dtype)
             for i in range(x_out_shape[0]):
-                out[i] = np.asarray(odl_op(x[i, ..., 0]))[..., None]
+                print('CALL LOOP')
+                if odl_op.is_functional:
+                    out[i, 0] = odl_op(x[i, ..., 0])
+                else:
+                    out[i, ..., 0] = np.asarray(odl_op(x[i, ..., 0]))
+            print('CALL DONE')
+            print(name)
+            print('shape {}'.format(out.shape))
             return out
 
         if differentiable:
