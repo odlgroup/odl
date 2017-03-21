@@ -86,8 +86,8 @@ def as_tensorflow_layer(odl_op, name='ODLOperator', differentiable=True):
         def _impl(x, dx):
             if fixed_size:
                 x_out_shape = out_shape
-                assert x.shape == in_shape
-                assert dx.shape == out_shape
+                assert x.shape == out_shape
+                assert dx.shape == in_shape
             else:
                 x_out_shape = (x.shape[0],) + out_shape[1:]
                 assert x.shape[1:] == out_shape[1:]
