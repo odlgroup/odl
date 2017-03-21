@@ -71,7 +71,7 @@ def as_tensorflow_layer(odl_op, name='ODLOperator', differentiable=True):
             fixed_size = False
 
         if odl_op.is_functional:
-            in_shape = (n_x, 1)
+            in_shape = (n_x,)
         else:
             in_shape = (n_x,) + odl_op.range.shape + (1,)
         out_shape = (n_x,) + odl_op.domain.shape + (1,)
@@ -79,7 +79,7 @@ def as_tensorflow_layer(odl_op, name='ODLOperator', differentiable=True):
         # Validate input shape
         assert x_shape[1:] == odl_op.domain.shape + (1,)
         if odl_op.is_functional:
-            assert dx_shape[1:] == (1,)
+            assert dx_shape[1:] == ()
         else:
             assert dx_shape[1:] == odl_op.range.shape + (1,)
 
@@ -97,7 +97,7 @@ def as_tensorflow_layer(odl_op, name='ODLOperator', differentiable=True):
             for i in range(x_out_shape[0]):
                 if odl_op.is_functional:
                     xi = x[i, ..., 0]
-                    dxi = dx[i, 0]
+                    dxi = dx[i]
                     out[i, ..., 0] = np.asarray(odl_op.gradient(xi)) * dxi
                 else:
                     xi = x[i, ..., 0]
@@ -153,7 +153,7 @@ def as_tensorflow_layer(odl_op, name='ODLOperator', differentiable=True):
 
         in_shape = (n_x,) + odl_op.domain.shape + (1,)
         if odl_op.is_functional:
-            out_shape = (n_x, 1)
+            out_shape = (n_x,)
         else:
             out_shape = (n_x,) + odl_op.range.shape + (1,)
 
@@ -171,7 +171,7 @@ def as_tensorflow_layer(odl_op, name='ODLOperator', differentiable=True):
             out = np.empty(x_out_shape, odl_op.domain.dtype)
             for i in range(x_out_shape[0]):
                 if odl_op.is_functional:
-                    out[i, 0] = odl_op(x[i, ..., 0])
+                    out[i] = odl_op(x[i, ..., 0])
                 else:
                     out[i, ..., 0] = np.asarray(odl_op(x[i, ..., 0]))
 
