@@ -180,7 +180,7 @@ def projector(request, dtype, weighting):
 
 @skip_if_no_largescale
 def test_adjoint(projector):
-    """Test discrete Ray transform backward projection."""
+    """Test RayTransform adjoint matches definition."""
     # Relative tolerance, still rather high due to imperfectly matched
     # adjoint in the cone beam case
     if (parse_version(odl.tomo.ASTRA_VERSION) < parse_version('1.8rc1') and
@@ -204,7 +204,7 @@ def test_adjoint(projector):
 
 @skip_if_no_largescale
 def test_adjoint_of_adjoint(projector):
-    """Test discrete Ray transform adjoint of adjoint."""
+    """Test RayTransform adjoint of adjoint."""
 
     # Create Shepp-Logan phantom
     vol = odl.phantom.shepp_logan(projector.domain, modified=True)
@@ -226,8 +226,7 @@ def test_adjoint_of_adjoint(projector):
 
 @skip_if_no_largescale
 def test_reconstruction(projector):
-    return
-    """Test discrete Ray transform using ASTRA for reconstruction."""
+    """Test RayTransform for reconstruction."""
 
     # Create Shepp-Logan phantom
     vol = odl.phantom.shepp_logan(projector.domain, modified=True)

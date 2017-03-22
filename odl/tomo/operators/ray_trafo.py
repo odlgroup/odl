@@ -171,14 +171,14 @@ class RayTransform(Operator):
                   np.isclose(discr_domain.weighting.const,
                              discr_domain.cell_volume)):
                 # Approximate cell volume
-                # TODO: angles and detector must be handled separately. While the
-                # detector should be uniformly discretized, the angles do not have
-                # to and often are not.
+                # TODO: angles and detector must be handled separately. While
+                # the detector should be uniformly discretized, the angles do
+                # not have to and often are not.
                 extent = float(geometry.partition.extent.prod())
                 size = float(geometry.partition.size)
                 weighting = extent / size
             else:
-                raise ValueError('unknown weighting of domain')
+                raise NotImplementedError('unknown weighting of domain')
 
             range_dspace = discr_domain.dspace_type(geometry.partition.size,
                                                     weighting=weighting,
@@ -350,7 +350,7 @@ class RayBackProjection(Operator):
                 size = float(geometry.partition.size)
                 weighting = extent / size
             else:
-                raise ValueError('unknown weighting of domain')
+                raise NotImplementedError('unknown weighting of range')
 
             domain_dspace = discr_range.dspace_type(geometry.partition.size,
                                                     weighting=weighting,
