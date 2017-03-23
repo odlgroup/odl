@@ -14,7 +14,7 @@ def as_tensorflow_layer(odl_op, name='ODLOperator', differentiable=True):
     odl_op : `Operator`
         The operator that should be wrapped to a tensorflow layer.
     name : str
-        Tensorflow name of the operator
+        Tensorflow name of the operator.
     differentiable : boolean
         True if the operator should be differentiable, otherwise assumes that
         the derivative is everywhere zero.
@@ -84,6 +84,43 @@ def as_tensorflow_layer(odl_op, name='ODLOperator', differentiable=True):
             assert dx_shape[1:] == odl_op.range.shape + (1,)
 
         def _impl(x, dx):
+            """Implementation of the adjoint of the derivative.
+
+            Returns ::
+
+                odl_op.derivative(x).adjoint(dx)
+
+            Parameters
+            ----------
+            x : `numpy.ndarray`
+                Point(s) in which the derivative should be taken.
+                If ``odl_op`` is an `Operator` the axes are:
+                    0 : batch id. This is a constant if ``fixed_size`` is true,
+                        otherwise it is dynamic.
+                    1, ..., N-2 : spatial dimensions of data.
+                    n-1 : (currently) unused data channel.
+                If ``odl_op`` is a `Functional` the axes are:
+                    0 : batch id.
+            dx : `numpy.ndarray`
+                Point(s) in which the adjoint of the derivative of the operator
+                should be evaluated.
+                The axes are:
+                    0 : batch id. Should be pairwise matched with ``x``.
+                    1, ..., M-2 : spatial dimensions of data.
+                    n-1 : (currently) unused data channel.
+
+            Returns
+            -------
+            result : `numpy.ndarray`
+                Result of the computation.
+
+                If ``odl_op`` is an `Operator` the axes are:
+                    0 : batch id.
+                    1, ..., N-2 : spatial dimensions of data.
+                    n-1 : (currently) unused data channel.
+                If ``odl_op`` is a `Functional` the axes are:
+                    0 : batch id.
+            """
             if fixed_size:
                 x_out_shape = out_shape
                 assert x.shape == out_shape
@@ -140,8 +177,28 @@ def as_tensorflow_layer(odl_op, name='ODLOperator', differentiable=True):
     def tensorflow_layer(x):
         """Implementation of the tensorflow call.
 
-        Gradient in tensorflow is equivalent to the adjoint of the derivative
-        in ODL.
+        Returns a `tensorflow.Tensor` that represents a lazy application of
+        ``odl_op`` to ``x``.
+
+        Parameters
+        ----------
+        x : `tensorflow.Tensor`
+            Point(s) to which the layer should be applied.
+            The axes are:
+                0 : batch id. Can be fixed or dynamic.
+                1, ..., M-2 : spatial dimensions of data.
+                n-1 : (currently) unused data channel.
+
+        Returns
+        -------
+        result : `tensorflow.Tensor`
+            Lazy result of the computation.
+            If ``odl_op`` is an `Operator` the axes are:
+                0 : batch id.
+                1, ..., N-2 : spatial dimensions of data.
+                n-1 : (currently) unused data channel.
+            If ``odl_op`` is a `Functional` the axes are:
+                0 : batch id.
         """
         x_shape = x.get_shape()
         try:
@@ -161,6 +218,27 @@ def as_tensorflow_layer(odl_op, name='ODLOperator', differentiable=True):
         assert x_shape[1:] == odl_op.domain.shape + (1,)
 
         def _impl(x):
+            """Implementation of the tensorflow layer.
+
+            Parameters
+            ----------
+            x : `numpy.ndarray`
+                Point(s) in which the operator should be evaluated.
+                The axes are:
+                    0 : batch id. This is a constant if ``fixed_size`` is true,
+                        otherwise it is dynamic.
+                    1, ..., N-2 : spatial dimensions of data.
+                    n-1 : (currently) unused data channel.
+
+            Returns
+            -------
+            result : `numpy.ndarray`
+                Result of the computation.
+                The axes are:
+                    0 : batch id. Data is pairwise matched with ``x``.
+                    1, ..., M-2 : spatial dimensions of data.
+                    n-1 : (currently) unused data channel.
+            """
             if fixed_size:
                 x_out_shape = out_shape
                 assert x.shape == in_shape
