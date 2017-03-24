@@ -6,15 +6,16 @@ import numpy as np
 __all__ = ('as_tensorflow_layer', 'TensorflowSpace', 'TensorflowSpaceOperator')
 
 
-def as_tensorflow_layer(odl_op, name='ODLOperator', differentiable=True):
+def as_tensorflow_layer(odl_op, default_name='ODLOperator',
+                        differentiable=True):
     """Convert ``Operator`` to tensorflow layer.
 
     Parameters
     ----------
     odl_op : `Operator`
         The operator that should be wrapped to a tensorflow layer.
-    name : str
-        Tensorflow name of the operator.
+    default_name : str
+        Default name for tensorflow layers created.
     differentiable : boolean
         True if the operator should be differentiable, otherwise assumes that
         the derivative is everywhere zero.
@@ -40,141 +41,166 @@ def as_tensorflow_layer(odl_op, name='ODLOperator', differentiable=True):
         if grad is None:
             return tf.py_func(func, inp, Tout, stateful=stateful, name=name)
         else:
-            # Need to generate a unique name to avoid duplicates:
-            rnd_name = 'PyFuncGrad' + str(np.random.randint(0, 1E+8))
-
-            tf.RegisterGradient(rnd_name)(grad)
-            g = tf.get_default_graph()
-
             if stateful:
                 override_name = 'PyFunc'
             else:
                 override_name = 'PyFuncStateless'
 
+            # Need to generate a unique name to avoid duplicates:
+            rnd_name = override_name + 'Grad' + str(np.random.randint(0, 1E+8))
+
+            tf.RegisterGradient(rnd_name)(grad)
+            g = tf.get_default_graph()
+
             with g.gradient_override_map({override_name: rnd_name}):
                 return tf.py_func(func, inp, Tout, stateful=stateful,
                                   name=name)
 
-    def tensorflow_layer_grad_impl(x, dx):
+    def tensorflow_layer_grad_impl(x, dx, name):
         """Implementation of the tensorflow gradient.
 
         Gradient in tensorflow is equivalent to the adjoint of the derivative
         in ODL.
+
+        Returns a `tensorflow.Tensor` that represents a lazy application of ::
+
+            odl_op.derivative(x).adjoint(dx)
+
+        Parameters
+        ----------
+        x : `tensorflow.Tensor`
+            Point(s) to which the layer should be applied.
+            The axes are:
+                0 : batch id. Can be fixed or dynamic.
+                1, ..., M-2 : spatial dimensions of data.
+                n-1 : (currently) unused data channel.
+        name : string
+            Name of the tensor.
+
+        Returns
+        -------
+        result : `tensorflow.Tensor`
+            Lazy result of the computation.
+            If ``odl_op`` is an `Operator` the axes are:
+                0 : batch id.
+                1, ..., N-2 : spatial dimensions of data.
+                n-1 : (currently) unused data channel.
+            If ``odl_op`` is a `Functional` the axes are:
+                0 : batch id.
         """
-        x_shape = x.get_shape()
-        dx_shape = dx.get_shape()
-        try:
-            n_x = int(x_shape[0])
-            fixed_size = True
-        except TypeError:
-            n_x = x_shape[0]
-            fixed_size = False
+        with tf.name_scope(name):
+            x_shape = x.get_shape()
+            dx_shape = dx.get_shape()
+            try:
+                n_x = int(x_shape[0])
+                fixed_size = True
+            except TypeError:
+                n_x = x_shape[0]
+                fixed_size = False
 
-        if odl_op.is_functional:
-            in_shape = (n_x,)
-        else:
-            in_shape = (n_x,) + odl_op.range.shape + (1,)
-        out_shape = (n_x,) + odl_op.domain.shape + (1,)
-
-        # Validate input shape
-        assert x_shape[1:] == odl_op.domain.shape + (1,)
-        if odl_op.is_functional:
-            assert dx_shape[1:] == ()
-        else:
-            assert dx_shape[1:] == odl_op.range.shape + (1,)
-
-        def _impl(x, dx):
-            """Implementation of the adjoint of the derivative.
-
-            Returns ::
-
-                odl_op.derivative(x).adjoint(dx)
-
-            Parameters
-            ----------
-            x : `numpy.ndarray`
-                Point(s) in which the derivative should be taken.
-                If ``odl_op`` is an `Operator` the axes are:
-                    0 : batch id. This is a constant if ``fixed_size`` is true,
-                        otherwise it is dynamic.
-                    1, ..., N-2 : spatial dimensions of data.
-                    n-1 : (currently) unused data channel.
-                If ``odl_op`` is a `Functional` the axes are:
-                    0 : batch id.
-            dx : `numpy.ndarray`
-                Point(s) in which the adjoint of the derivative of the operator
-                should be evaluated.
-                The axes are:
-                    0 : batch id. Should be pairwise matched with ``x``.
-                    1, ..., M-2 : spatial dimensions of data.
-                    n-1 : (currently) unused data channel.
-
-            Returns
-            -------
-            result : `numpy.ndarray`
-                Result of the computation.
-
-                If ``odl_op`` is an `Operator` the axes are:
-                    0 : batch id.
-                    1, ..., N-2 : spatial dimensions of data.
-                    n-1 : (currently) unused data channel.
-                If ``odl_op`` is a `Functional` the axes are:
-                    0 : batch id.
-            """
-            if fixed_size:
-                x_out_shape = out_shape
-                assert x.shape == out_shape
-                assert dx.shape == in_shape
+            if odl_op.is_functional:
+                in_shape = (n_x,)
             else:
-                x_out_shape = (x.shape[0],) + out_shape[1:]
-                assert x.shape[1:] == out_shape[1:]
-                assert dx.shape[1:] == in_shape[1:]
+                in_shape = (n_x,) + odl_op.range.shape + (1,)
+            out_shape = (n_x,) + odl_op.domain.shape + (1,)
 
-            out = np.empty(x_out_shape, odl_op.domain.dtype)
-            for i in range(x_out_shape[0]):
-                if odl_op.is_functional:
-                    xi = x[i, ..., 0]
-                    dxi = dx[i]
-                    out[i, ..., 0] = np.asarray(odl_op.gradient(xi)) * dxi
+            # Validate input shape
+            assert x_shape[1:] == odl_op.domain.shape + (1,)
+            if odl_op.is_functional:
+                assert dx_shape[1:] == ()
+            else:
+                assert dx_shape[1:] == odl_op.range.shape + (1,)
+
+            def _impl(x, dx):
+                """Implementation of the adjoint of the derivative.
+
+                Returns ::
+
+                    odl_op.derivative(x).adjoint(dx)
+
+                Parameters
+                ----------
+                x : `numpy.ndarray`
+                    Point(s) in which the derivative should be taken.
+                    If ``odl_op`` is an `Operator` the axes are:
+                        0 : batch id. This is a constant if ``fixed_size`` is
+                            true, otherwise it is dynamic.
+                        1, ..., N-2 : spatial dimensions of data.
+                        n-1 : (currently) unused data channel.
+                    If ``odl_op`` is a `Functional` the axes are:
+                        0 : batch id.
+                dx : `numpy.ndarray`
+                    Point(s) in which the adjoint of the derivative of the
+                    operator should be evaluated.
+                    The axes are:
+                        0 : batch id. Should be pairwise matched with ``x``.
+                        1, ..., M-2 : spatial dimensions of data.
+                        n-1 : (currently) unused data channel.
+
+                Returns
+                -------
+                result : `numpy.ndarray`
+                    Result of the computation.
+
+                    If ``odl_op`` is an `Operator` the axes are:
+                        0 : batch id.
+                        1, ..., N-2 : spatial dimensions of data.
+                        n-1 : (currently) unused data channel.
+                    If ``odl_op`` is a `Functional` the axes are:
+                        0 : batch id.
+                """
+                if fixed_size:
+                    x_out_shape = out_shape
+                    assert x.shape == out_shape
+                    assert dx.shape == in_shape
                 else:
-                    xi = x[i, ..., 0]
-                    dxi = dx[i, ..., 0]
-                    result = odl_op.derivative(xi).adjoint(dxi)
-                    out[i, ..., 0] = np.asarray(result)
+                    x_out_shape = (x.shape[0],) + out_shape[1:]
+                    assert x.shape[1:] == out_shape[1:]
+                    assert dx.shape[1:] == in_shape[1:]
 
-            # TODO: Improve
-            try:
-                dom_weight = odl_op.domain.weighting.const
-            except AttributeError:
-                dom_weight = 1.0
+                out = np.empty(x_out_shape, odl_op.domain.dtype)
+                out[:] = np.nan
+                for i in range(x_out_shape[0]):
+                    if odl_op.is_functional:
+                        xi = x[i, ..., 0]
+                        dxi = dx[i]
+                        out[i, ..., 0] = np.asarray(odl_op.gradient(xi)) * dxi
+                    else:
+                        xi = x[i, ..., 0]
+                        dxi = dx[i, ..., 0]
+                        result = odl_op.derivative(xi).adjoint(dxi)
+                        out[i, ..., 0] = np.asarray(result)
 
-            try:
-                ran_weight = odl_op.range.weighting.const
-            except AttributeError:
-                ran_weight = 1.0
+                # TODO: Improve
+                try:
+                    dom_weight = odl_op.domain.weighting.const
+                except AttributeError:
+                    dom_weight = 1.0
 
-            scale = dom_weight / ran_weight
-            out *= scale
-            return out
+                try:
+                    ran_weight = odl_op.range.weighting.const
+                except AttributeError:
+                    ran_weight = 1.0
 
-        with ops.name_scope(name + 'Grad', "ODLTensorflowLayerGrad", [x, dx]):
-            result = py_func(_impl,
-                             [x, dx],
-                             [tf.float32],
-                             stateful=False)
+                scale = dom_weight / ran_weight
+                out *= scale
 
-            # We must manually set the output shape since tensorflow cannot
-            # figure it out
-            result = result[0]
-            result.set_shape(out_shape)
-            return result
+                return out
 
-    def tensorflow_layer_grad(op, grad):
-        """Thin wrapper for the gradient."""
-        x = op.inputs[0]
-        return tensorflow_layer_grad_impl(x, grad)
+            with ops.name_scope(name + '_pyfunc', values=[x, dx]) as name_call:
+                result = py_func(_impl,
+                                 [x, dx],
+                                 [tf.float32],
+                                 name=name_call,
+                                 stateful=True)
 
-    def tensorflow_layer(x):
+                # We must manually set the output shape since tensorflow cannot
+                # figure it out
+                result = result[0]
+                result.set_shape(out_shape)
+                return result
+
+    def tensorflow_layer(x, name=None):
         """Implementation of the tensorflow call.
 
         Returns a `tensorflow.Tensor` that represents a lazy application of
@@ -188,6 +214,8 @@ def as_tensorflow_layer(odl_op, name='ODLOperator', differentiable=True):
                 0 : batch id. Can be fixed or dynamic.
                 1, ..., M-2 : spatial dimensions of data.
                 n-1 : (currently) unused data channel.
+        name : string
+            Name of the tensor. Default: Defaultname.
 
         Returns
         -------
@@ -200,79 +228,88 @@ def as_tensorflow_layer(odl_op, name='ODLOperator', differentiable=True):
             If ``odl_op`` is a `Functional` the axes are:
                 0 : batch id.
         """
-        x_shape = x.get_shape()
-        try:
-            n_x = int(x_shape[0])
-            fixed_size = True
-        except TypeError:
-            n_x = x_shape[0]
-            fixed_size = False
+        if name is None:
+            name = default_name
 
-        in_shape = (n_x,) + odl_op.domain.shape + (1,)
-        if odl_op.is_functional:
-            out_shape = (n_x,)
-        else:
-            out_shape = (n_x,) + odl_op.range.shape + (1,)
+        with tf.name_scope(name):
+            x_shape = x.get_shape()
+            try:
+                n_x = int(x_shape[0])
+                fixed_size = True
+            except TypeError:
+                n_x = x_shape[0]
+                fixed_size = False
 
-        # Validate input shape
-        assert x_shape[1:] == odl_op.domain.shape + (1,)
-
-        def _impl(x):
-            """Implementation of the tensorflow layer.
-
-            Parameters
-            ----------
-            x : `numpy.ndarray`
-                Point(s) in which the operator should be evaluated.
-                The axes are:
-                    0 : batch id. This is a constant if ``fixed_size`` is true,
-                        otherwise it is dynamic.
-                    1, ..., N-2 : spatial dimensions of data.
-                    n-1 : (currently) unused data channel.
-
-            Returns
-            -------
-            result : `numpy.ndarray`
-                Result of the computation.
-                The axes are:
-                    0 : batch id. Data is pairwise matched with ``x``.
-                    1, ..., M-2 : spatial dimensions of data.
-                    n-1 : (currently) unused data channel.
-            """
-            if fixed_size:
-                x_out_shape = out_shape
-                assert x.shape == in_shape
+            in_shape = (n_x,) + odl_op.domain.shape + (1,)
+            if odl_op.is_functional:
+                out_shape = (n_x,)
             else:
-                x_out_shape = (x.shape[0],) + out_shape[1:]
-                assert x.shape[1:] == in_shape[1:]
+                out_shape = (n_x,) + odl_op.range.shape + (1,)
 
-            out = np.empty(x_out_shape, odl_op.domain.dtype)
-            for i in range(x_out_shape[0]):
-                if odl_op.is_functional:
-                    out[i] = odl_op(x[i, ..., 0])
+            # Validate input shape
+            assert x_shape[1:] == odl_op.domain.shape + (1,)
+
+            def _impl(x):
+                """Implementation of the tensorflow layer.
+
+                Parameters
+                ----------
+                x : `numpy.ndarray`
+                    Point(s) in which the operator should be evaluated.
+                    The axes are:
+                        0 : batch id. This is a constant if ``fixed_size`` is
+                            true, otherwise it is dynamic.
+                        1, ..., N-2 : spatial dimensions of data.
+                        n-1 : (currently) unused data channel.
+
+                Returns
+                -------
+                result : `numpy.ndarray`
+                    Result of the computation.
+                    The axes are:
+                        0 : batch id. Data is pairwise matched with ``x``.
+                        1, ..., M-2 : spatial dimensions of data.
+                        n-1 : (currently) unused data channel.
+                """
+                if fixed_size:
+                    x_out_shape = out_shape
+                    assert x.shape == in_shape
                 else:
-                    out[i, ..., 0] = np.asarray(odl_op(x[i, ..., 0]))
+                    x_out_shape = (x.shape[0],) + out_shape[1:]
+                    assert x.shape[1:] == in_shape[1:]
 
-            return out
+                out = np.empty(x_out_shape, odl_op.domain.dtype)
+                out[:] = np.nan
+                for i in range(x_out_shape[0]):
+                    if odl_op.is_functional:
+                        out[i] = odl_op(x[i, ..., 0])
+                    else:
+                        out[i, ..., 0] = np.asarray(odl_op(x[i, ..., 0]))
 
-        if differentiable:
-            grad = tensorflow_layer_grad
-        else:
-            grad = None
+                return out
 
-        with ops.name_scope(name, "ODLTensorflowLayer", [x]) as name_call:
-            result = py_func(_impl,
-                             [x],
-                             [tf.float32],
-                             name=name_call,
-                             stateful=False,
-                             grad=grad)
+            if differentiable:
+                def tensorflow_layer_grad(op, grad):
+                    """Thin wrapper for the gradient."""
+                    x = op.inputs[0]
+                    return tensorflow_layer_grad_impl(x, grad,
+                                                      name=name + '_grad')
+            else:
+                tensorflow_layer_grad = None
 
-            # We must manually set the output shape since tensorflow cannot
-            # figure it out
-            result = result[0]
-            result.set_shape(out_shape)
-            return result
+            with ops.name_scope(name + '_pyfunc', values=[x]) as name_call:
+                result = py_func(_impl,
+                                 [x],
+                                 [tf.float32],
+                                 name=name_call,
+                                 stateful=True,
+                                 grad=tensorflow_layer_grad)
+
+                # We must manually set the output shape since tensorflow cannot
+                # figure it out
+                result = result[0]
+                result.set_shape(out_shape)
+                return result
 
     return tensorflow_layer
 
