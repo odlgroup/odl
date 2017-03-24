@@ -29,6 +29,7 @@ from odl.tomo.backends.astra_setup import (
 from odl.tomo.geometry import (
     Geometry, Parallel2dGeometry, FanFlatGeometry, Parallel3dAxisGeometry,
     ConeFlatGeometry)
+from multiprocessing import Lock
 
 
 __all__ = ('ASTRA_CUDA_AVAILABLE',
@@ -62,6 +63,10 @@ class AstraCudaProjectorImpl(object):
 
         self.create_ids()
 
+        # Create a mutually exclusive lock so that two callers cant use the
+        # same shared resource at the same time.
+        self.mutex = Lock()
+
     def call_forward(self, vol_data, out=None):
         """Run an ASTRA forward projection on the given data using the GPU.
 
@@ -79,36 +84,37 @@ class AstraCudaProjectorImpl(object):
             Projection data resulting from the application of the projector.
             If ``out`` was provided, the returned object is a reference to it.
         """
-        assert vol_data in self.reco_space
-        if out is not None:
-            assert out in self.proj_space
-        else:
-            out = self.proj_space.element()
+        with self.mutex:
+            assert vol_data in self.reco_space
+            if out is not None:
+                assert out in self.proj_space
+            else:
+                out = self.proj_space.element()
 
-        # Copy data to GPU memory
-        if self.geometry.ndim == 2:
-            astra.data2d.store(self.vol_id, vol_data.asarray())
-        elif self.geometry.ndim == 3:
-            astra.data3d.store(self.vol_id, vol_data.asarray())
-        else:
-            raise RuntimeError('unknown ndim')
+            # Copy data to GPU memory
+            if self.geometry.ndim == 2:
+                astra.data2d.store(self.vol_id, vol_data.asarray())
+            elif self.geometry.ndim == 3:
+                astra.data3d.store(self.vol_id, vol_data.asarray())
+            else:
+                raise RuntimeError('unknown ndim')
 
-        # Run algorithm
-        astra.algorithm.run(self.algo_id)
+            # Run algorithm
+            astra.algorithm.run(self.algo_id)
 
-        # Copy result to host
-        if self.geometry.ndim == 2:
-            out[:] = self.out_array
-        elif self.geometry.ndim == 3:
-            out[:] = np.swapaxes(self.out_array, 0, 1).reshape(
-                self.proj_space.shape)
+            # Copy result to host
+            if self.geometry.ndim == 2:
+                out[:] = self.out_array
+            elif self.geometry.ndim == 3:
+                out[:] = np.swapaxes(self.out_array, 0, 1).reshape(
+                    self.proj_space.shape)
 
-        # Fix scaling to weight by pixel size
-        if isinstance(self.geometry, Parallel2dGeometry):
-            # parallel2d scales with pixel stride
-            out *= 1 / float(self.geometry.det_partition.cell_volume)
+            # Fix scaling to weight by pixel size
+            if isinstance(self.geometry, Parallel2dGeometry):
+                # parallel2d scales with pixel stride
+                out *= 1 / float(self.geometry.det_partition.cell_volume)
 
-        return out
+            return out
 
     def create_ids(self):
         """Create ASTRA objects."""
@@ -205,6 +211,10 @@ class AstraCudaBackProjectorImpl(object):
         self.proj_space = proj_space
         self.create_ids()
 
+            # Create a mutually exclusive lock so that two callers cant use the
+            # same shared resource at the same time.
+            self.mutex = Lock()
+
     def call_backward(self, proj_data, out=None):
         """Run an ASTRA back-projection on the given data using the GPU.
 
@@ -223,33 +233,34 @@ class AstraCudaBackProjectorImpl(object):
             back-projector. If ``out`` was provided, the returned object is a
             reference to it.
         """
-        assert proj_data in self.proj_space
-        if out is not None:
-            assert out in self.reco_space
-        else:
-            out = self.reco_space.element()
+        with self.mutex:
+            assert proj_data in self.proj_space
+            if out is not None:
+                assert out in self.reco_space
+            else:
+                out = self.reco_space.element()
 
-        # Copy data to GPU memory
-        if self.geometry.ndim == 2:
-            astra.data2d.store(self.sino_id, proj_data.asarray())
-        elif self.geometry.ndim == 3:
-            shape = (-1,) + self.geometry.det_partition.shape
-            reshaped_proj_data = proj_data.asarray().reshape(shape)
-            swapped_proj_data = np.ascontiguousarray(
-                np.swapaxes(reshaped_proj_data, 0, 1))
-            astra.data3d.store(self.sino_id, swapped_proj_data)
+            # Copy data to GPU memory
+            if self.geometry.ndim == 2:
+                astra.data2d.store(self.sino_id, proj_data.asarray())
+            elif self.geometry.ndim == 3:
+                shape = (-1,) + self.geometry.det_partition.shape
+                reshaped_proj_data = proj_data.asarray().reshape(shape)
+                swapped_proj_data = np.ascontiguousarray(
+                    np.swapaxes(reshaped_proj_data, 0, 1))
+                astra.data3d.store(self.sino_id, swapped_proj_data)
 
-        # Run algorithm
-        astra.algorithm.run(self.algo_id)
+            # Run algorithm
+            astra.algorithm.run(self.algo_id)
 
-        # Copy result to CPU memory
-        out[:] = self.out_array
+            # Copy result to CPU memory
+            out[:] = self.out_array
 
-        # Fix scaling to weight by pixel/voxel size
-        out *= astra_cuda_bp_scaling_factor(
-            self.proj_space, self.reco_space, self.geometry)
+            # Fix scaling to weight by pixel/voxel size
+            out *= astra_cuda_bp_scaling_factor(
+                self.proj_space, self.reco_space, self.geometry)
 
-        return out
+            return out
 
     def create_ids(self):
         """Create ASTRA objects."""
