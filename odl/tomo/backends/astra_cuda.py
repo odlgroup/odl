@@ -211,9 +211,9 @@ class AstraCudaBackProjectorImpl(object):
         self.proj_space = proj_space
         self.create_ids()
 
-            # Create a mutually exclusive lock so that two callers cant use the
-            # same shared resource at the same time.
-            self.mutex = Lock()
+        # Create a mutually exclusive lock so that two callers cant use the
+        # same shared resource at the same time.
+        self.mutex = Lock()
 
     def call_backward(self, proj_data, out=None):
         """Run an ASTRA back-projection on the given data using the GPU.
