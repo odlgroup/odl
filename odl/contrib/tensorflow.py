@@ -320,8 +320,12 @@ class TensorflowSpace(odl.LinearSpace):
 
     def __init__(self, shape, name='ODLTensorflowSpace'):
         odl.LinearSpace.__init__(self, odl.RealNumbers())
-        self.shape = tuple(tf.Dimension(si) if not isinstance(si, tf.Dimension) else si for si in shape)
-        self.init_shape = tuple(si if si.value is not None else tf.Dimension(1) for si in self.shape)
+        self.shape = tuple(tf.Dimension(si) if not isinstance(si, tf.Dimension)
+                           else si
+                           for si in shape)
+        self.init_shape = tuple(si if si.value is not None
+                                else tf.Dimension(1)
+                                for si in self.shape)
         self.name = name
 
     def _lincomb(self, a, x1, b, x2, out):
