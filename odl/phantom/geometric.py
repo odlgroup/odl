@@ -353,7 +353,7 @@ def _ellipse_phantom_2d(space, ellipses):
         b_squared = ellip[2] ** 2
         x0 = ellip[3]
         y0 = ellip[4]
-        theta = ellip[5] * np.pi / 180
+        theta = ellip[5]
 
         scales = [1 / a_squared, 1 / b_squared]
         center = (np.array([x0, y0]) + 1.0) / 2.0
@@ -474,9 +474,9 @@ def _ellipsoid_phantom_3d(space, ellipsoids):
         x0 = ellip[4]
         y0 = ellip[5]
         z0 = ellip[6]
-        phi = ellip[7] * np.pi / 180
-        theta = ellip[8] * np.pi / 180
-        psi = ellip[9] * np.pi / 180
+        phi = ellip[7]
+        theta = ellip[8]
+        psi = ellip[9]
 
         scales = [1 / a_squared, 1 / b_squared, 1 / c_squared]
         center = (np.array([x0, y0, z0]) + 1.0) / 2.0
@@ -562,6 +562,8 @@ def ellipsoid_phantom(space, ellipsoids):
 
         The ellipsoids need to be given such that the ellipsoids fall in the
         rectangle [-1, -1] x [1, 1] or equivalent in 3d.
+
+        The angles are given in radians.
 
     Notes
     -----
