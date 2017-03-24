@@ -211,27 +211,6 @@ def test_adjoint(projector):
     assert result_AxAx == pytest.approx(result_xAtAx, rel=rtol)
 
 
-def test_adjoint_of_adjoint(projector):
-    """Test discrete Ray transform adjoint of adjoint."""
-
-    # Create Shepp-Logan phantom
-    vol = odl.phantom.shepp_logan(projector.domain, modified=True)
-
-    # Calculate projection
-    proj = projector(vol)
-    proj_adj_adj = projector.adjoint.adjoint(vol)
-
-    # Verify A(x) == (A^*)^*(x)
-    assert all_almost_equal(proj, proj_adj_adj)
-
-    # Calculate adjoints
-    proj_adj = projector.adjoint(proj)
-    proj_adj_adj_adj = projector.adjoint.adjoint.adjoint(proj)
-
-    # Verify A^*(y) == ((A^*)^*)^*(x)
-    assert all_almost_equal(proj_adj, proj_adj_adj_adj)
-
-
 def test_angles(projector):
     """Test discrete Ray transform angle conventions."""
 

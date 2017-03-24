@@ -124,7 +124,7 @@ class AstraCudaProjectorImpl(object):
         elif self.geometry.ndim == 3:
             out[:] = np.rollaxis(self.out_array, 0, 3)
 
-        # Fix inconsistent scaling in ASTRA
+        # Fix scaling to weight by pixel size
         if isinstance(self.geometry, Parallel2dGeometry):
             # parallel2d scales with pixel stride
             out *= 1 / float(self.geometry.det_partition.cell_volume)
@@ -280,8 +280,9 @@ class AstraCudaBackProjectorImpl(object):
         # Copy result to CPU memory
         out[:] = self.out_array
 
-        # Fix inconsistent scaling in ASTRA
-        out *= astra_cuda_bp_scaling_factor(self.reco_space, self.geometry)
+        # Fix scaling to weight by pixel/voxel size
+        out *= astra_cuda_bp_scaling_factor(
+            self.proj_space, self.reco_space, self.geometry)
 
         # Delete ASTRA ids if we should not cache
         if not self.use_cache:
@@ -353,7 +354,7 @@ class AstraCudaBackProjectorImpl(object):
         self.delete_ids()
 
 
-def astra_cuda_bp_scaling_factor(reco_space, geometry):
+def astra_cuda_bp_scaling_factor(proj_space, reco_space, geometry):
     """Volume scaling accounting for differing adjoint definitions.
 
     ASTRA defines the adjoint operator in terms of a fully discrete
@@ -370,8 +371,17 @@ def astra_cuda_bp_scaling_factor(reco_space, geometry):
     num_angles = float(geometry.motion_partition.size)
     scaling_factor = angle_extent / num_angles
 
+    # Correct in case of non-weighted spaces
+    proj_extent = float(proj_space.partition.extent.prod())
+    proj_size = float(proj_space.partition.size)
+    proj_weighting = proj_extent / proj_size
+
+    scaling_factor *= (proj_space.weighting.const /
+                       proj_weighting)
+    scaling_factor /= (reco_space.weighting.const /
+                       reco_space.cell_volume)
+
     if parse_version(ASTRA_VERSION) < parse_version('1.8rc1'):
-        # Fix inconsistent scaling
         if isinstance(geometry, Parallel2dGeometry):
             # Scales with 1 / cell_volume
             scaling_factor *= float(reco_space.cell_volume)

@@ -25,11 +25,12 @@ standard_library.install_aliases()
 # External
 import pytest
 import numpy as np
+from pkg_resources import parse_version
 
 # Internal
 import odl
 import odl.tomo as tomo
-from odl.util.testutils import skip_if_no_largescale
+from odl.util.testutils import skip_if_no_largescale, simple_fixture
 from odl.tomo.util.testutils import (skip_if_no_astra, skip_if_no_astra_cuda,
                                      skip_if_no_scikit)
 
@@ -72,8 +73,11 @@ projectors = [pytest.mark.skipif(p.args[0] + largescale, p.args[1])
               for p in projectors]
 
 
+weighting = simple_fixture('weighting', ['const', 'none'])
+
+
 @pytest.fixture(scope="module", params=projectors, ids=projector_ids)
-def projector(request, dtype):
+def projector(request, dtype, weighting):
 
     n_angles = 200
 
@@ -99,8 +103,9 @@ def projector(request, dtype):
 
     if geom == 'par2d':
         # Discrete reconstruction space
-        discr_reco_space = odl.uniform_discr([-20, -20], [20, 20],
-                                             [100, 100], dtype=dtype)
+        discr_reco_space = odl.uniform_discr([-20, -20], [20, 20], [100, 100],
+                                             dtype=dtype,
+                                             weighting=weighting)
 
         # Geometry
         dpart = odl.uniform_partition(-30, 30, 200)
@@ -113,7 +118,9 @@ def projector(request, dtype):
     elif geom == 'par3d':
         # Discrete reconstruction space
         discr_reco_space = odl.uniform_discr([-20, -20, -20], [20, 20, 20],
-                                             [100, 100, 100], dtype=dtype)
+                                             [100, 100, 100],
+                                             dtype=dtype,
+                                             weighting=weighting)
 
         # Geometry
         dpart = odl.uniform_partition([-30, -30], [30, 30], [200, 200])
@@ -172,8 +179,54 @@ def projector(request, dtype):
 
 
 @skip_if_no_largescale
+def test_adjoint(projector):
+    """Test RayTransform adjoint matches definition."""
+    # Relative tolerance, still rather high due to imperfectly matched
+    # adjoint in the cone beam case
+    if (parse_version(odl.tomo.ASTRA_VERSION) < parse_version('1.8rc1') and
+            isinstance(projector.geometry, odl.tomo.HelicalConeFlatGeometry)):
+        rtol = 0.1
+    else:
+        rtol = 0.05
+
+    # Create Shepp-Logan phantom
+    vol = odl.phantom.shepp_logan(projector.domain, modified=True)
+
+    # Calculate projection
+    proj = projector(vol)
+    backproj = projector.adjoint(proj)
+
+    # Verified the identity <Ax, Ax> = <A^* A x, x>
+    result_AxAx = proj.inner(proj)
+    result_xAtAx = backproj.inner(vol)
+    assert result_AxAx == pytest.approx(result_xAtAx, rel=rtol)
+
+
+@skip_if_no_largescale
+def test_adjoint_of_adjoint(projector):
+    """Test RayTransform adjoint of adjoint."""
+
+    # Create Shepp-Logan phantom
+    vol = odl.phantom.shepp_logan(projector.domain, modified=True)
+
+    # Calculate projection
+    proj = projector(vol)
+    proj_adj_adj = projector.adjoint.adjoint(vol)
+
+    # Verify A(x) == (A^*)^*(x)
+    assert proj == proj_adj_adj
+
+    # Calculate adjoints
+    proj_adj = projector.adjoint(proj)
+    proj_adj_adj_adj = projector.adjoint.adjoint.adjoint(proj)
+
+    # Verify A^*(y) == ((A^*)^*)^*(x)
+    assert proj_adj == proj_adj_adj_adj
+
+
+@skip_if_no_largescale
 def test_reconstruction(projector):
-    """Test discrete Ray transform using ASTRA for reconstruction."""
+    """Test RayTransform for reconstruction."""
 
     # Create Shepp-Logan phantom
     vol = odl.phantom.shepp_logan(projector.domain, modified=True)
@@ -181,14 +234,10 @@ def test_reconstruction(projector):
     # Project data
     projections = projector(vol)
 
-    # Calculate operator norm for landweber
-    op_norm_est_squared = projector.adjoint(projections).norm() / vol.norm()
-    omega = 1.0 / op_norm_est_squared
-
     # Reconstruct using ODL
     recon = projector.domain.zero()
-    odl.solvers.landweber(projector, recon, projections, niter=50,
-                          omega=omega)
+    odl.solvers.conjugate_gradient_normal(projector, recon, projections,
+                                          niter=20)
 
     # Make sure the result is somewhat close to the actual result.
     assert recon.dist(vol) < vol.norm() / 3.0
