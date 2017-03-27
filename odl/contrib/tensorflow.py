@@ -190,7 +190,7 @@ def as_tensorflow_layer(odl_op, default_name='ODLOperator',
             with ops.name_scope(name + '_pyfunc', values=[x, dx]) as name_call:
                 result = py_func(_impl,
                                  [x, dx],
-                                 [tf.float32],
+                                 [odl_op.domain.dtype],
                                  name=name_call,
                                  stateful=True)
 
@@ -249,6 +249,9 @@ def as_tensorflow_layer(odl_op, default_name='ODLOperator',
             # Validate input shape
             assert x_shape[1:] == odl_op.domain.shape + (1,)
 
+            out_dtype = getattr(odl_op.range, 'dtype',
+                                odl_op.domain.dtype)
+
             def _impl(x):
                 """Implementation of the tensorflow layer.
 
@@ -278,7 +281,7 @@ def as_tensorflow_layer(odl_op, default_name='ODLOperator',
                     x_out_shape = (x.shape[0],) + out_shape[1:]
                     assert x.shape[1:] == in_shape[1:]
 
-                out = np.empty(x_out_shape, odl_op.domain.dtype)
+                out = np.empty(x_out_shape, out_dtype)
                 out[:] = np.nan
                 for i in range(x_out_shape[0]):
                     if odl_op.is_functional:
@@ -300,7 +303,7 @@ def as_tensorflow_layer(odl_op, default_name='ODLOperator',
             with ops.name_scope(name + '_pyfunc', values=[x]) as name_call:
                 result = py_func(_impl,
                                  [x],
-                                 [tf.float32],
+                                 [out_dtype],
                                  name=name_call,
                                  stateful=True,
                                  grad=tensorflow_layer_grad)
