@@ -14,12 +14,26 @@ from future import standard_library
 standard_library.install_aliases()
 
 import numpy as np
+import warnings
 
 from odl.util.testutils import run_doctests
 from odl.util.utility import is_real_dtype
 
 
 __all__ = ('show_discrete_data',)
+
+
+def warning_free_pause():
+    """Issue a matplotlib pause without the warning."""
+    import matplotlib.pyplot as plt
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore",
+                                message="Using default event loop until "
+                                        "function specific to this GUI is "
+                                        "implemented")
+
+        plt.pause(0.0001)
 
 
 def _safe_minmax(values):
@@ -415,13 +429,14 @@ def show_discrete_data(values, grid, title=None, method='',
                 csub.colorbar.set_ticklabels([format % tick for tick in ticks])
                 csub.colorbar.draw_all()
 
-    # Fixes overlapping stuff at the expense of potentially squashed subplots
+    # Set title of window
     if title is not None:
         if not values_are_complex:
             # Do not overwrite title for complex values
             plt.title(title)
         fig.canvas.manager.set_window_title(title)
 
+    # Fixes overlapping stuff at the expense of potentially squashed subplots
     if not update_in_place:
         fig.tight_layout()
 
@@ -432,7 +447,7 @@ def show_discrete_data(values, grid, title=None, method='',
         plt.show(block=False)
         if not update_in_place:
             plt.draw()
-            plt.pause(0.0001)
+            warning_free_pause()
         else:
             try:
                 sub.draw_artist(csub)
@@ -441,7 +456,7 @@ def show_discrete_data(values, grid, title=None, method='',
                 fig.canvas.flush_events()
             except AttributeError:
                 plt.draw()
-                plt.pause(0.0001)
+                warning_free_pause()
 
     if force_show:
         plt.show()
