@@ -156,6 +156,7 @@ def as_tensorflow_layer(odl_op, default_name='ODLOperator',
             x_shape = x.get_shape()
             dx_shape = dx.get_shape()
             try:
+                # Lazy check if the first dimension is dynamic
                 n_x = int(x_shape[0])
                 fixed_size = True
             except TypeError:
@@ -300,6 +301,7 @@ def as_tensorflow_layer(odl_op, default_name='ODLOperator',
             # Validate input shape
             x_shape = x.get_shape()
             try:
+                # Lazy check if the first dimension is dynamic
                 n_x = int(x_shape[0])
                 fixed_size = True
             except TypeError:
@@ -494,3 +496,9 @@ class TensorflowSpaceOperator(odl.Operator):
                                        self.adjoint_func,
                                        self.func,
                                        self.is_linear)
+
+
+if __name__ == '__main__':
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()
