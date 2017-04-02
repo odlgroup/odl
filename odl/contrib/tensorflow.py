@@ -1,6 +1,37 @@
+# Copyright 2014-2017 The ODL development group
+#
+# This file is part of ODL.
+#
+# ODL is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# ODL is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ODL.  If not, see <http://www.gnu.org/licenses/>.
+
+"""Utilities for interfacing ODL with Tensorflow."""
+
+# Imports for common Python 2/3 codebase
+from __future__ import print_function, division, absolute_import
+from builtins import range, str
+from future import standard_library
+standard_library.install_aliases()
+
 import odl
-import tensorflow as tf
 import numpy as np
+import uuid
+try:
+    # TODO: Lazy import to improve performance
+    import tensorflow as tf
+    TENSORFLOW_AVAILABLE = True
+except:
+    TENSORFLOW_AVAILABLE = False
 
 
 __all__ = ('as_tensorflow_layer', 'TensorflowSpace', 'TensorflowSpaceOperator')
@@ -17,7 +48,7 @@ def as_tensorflow_layer(odl_op, default_name='ODLOperator',
     default_name : str
         Default name for tensorflow layers created.
     differentiable : boolean
-        True if the operator should be differentiable, otherwise assumes that
+        True if the layer should be differentiable, otherwise assumes that
         the derivative is everywhere zero.
 
     Returns
@@ -33,11 +64,33 @@ def as_tensorflow_layer(odl_op, default_name='ODLOperator',
         `Operator.adjoint`, it is properly wrapped in ``tensorflow_layer``, and
         gradients propagate as expected.
     """
-    import tensorflow as tf
+    if not TENSORFLOW_AVAILABLE:
+        raise ImportError('Tensorflow not installed')
+
     from tensorflow.python.framework import ops
 
     def py_func(func, inp, Tout, stateful=True, name=None, grad=None):
-        """Define custom py_func which takes also a grad op as argument."""
+        """Define custom py_func which takes also a grad op as argument.
+
+        We need to overwrite this function since the default tensorflow py_func
+        does not support custom gradients.
+
+        Parameters
+        ----------
+        func : callable
+            Python function that takes and returns numpy arrays.
+        inp : sequence of `tensorflow.Tensor`
+            Input tensors for the function
+        Tout : sequence of `tensorflow.dtype`
+            Datatype of the output(s).
+        stateful : bool
+            If the function has internal state, i.e. if calling the function
+            with a given input always gives the same output.
+        name : string
+            Name of the python function
+        grad : callbable
+            Gradient of the function.
+        """
         if grad is None:
             return tf.py_func(func, inp, Tout, stateful=stateful, name=name)
         else:
@@ -47,7 +100,7 @@ def as_tensorflow_layer(odl_op, default_name='ODLOperator',
                 override_name = 'PyFuncStateless'
 
             # Need to generate a unique name to avoid duplicates:
-            rnd_name = override_name + 'Grad' + str(np.random.randint(0, 1E+8))
+            rnd_name = override_name + 'Grad' + str(uuid.uuid4())
 
             tf.RegisterGradient(rnd_name)(grad)
             g = tf.get_default_graph()
@@ -68,10 +121,20 @@ def as_tensorflow_layer(odl_op, default_name='ODLOperator',
 
         Parameters
         ----------
-        x : `tensorflow.Tensor`
-            Point(s) to which the layer should be applied.
+        x : `numpy.ndarray`
+            Point(s) in which the derivative should be taken.
+            If ``odl_op`` is an `Operator` the axes are:
+                0 : batch id. This is a constant if ``fixed_size`` is
+                    true, otherwise it is dynamic.
+                1, ..., N-2 : spatial dimensions of data.
+                n-1 : (currently) unused data channel.
+            If ``odl_op`` is a `Functional` the axes are:
+                0 : batch id.
+        dx : `tensorflow.Tensor`
+            Point(s) in which the adjoint of the derivative of the
+            operator should be evaluated.
             The axes are:
-                0 : batch id. Can be fixed or dynamic.
+                0 : batch id. Should be pairwise matched with ``x``.
                 1, ..., M-2 : spatial dimensions of data.
                 n-1 : (currently) unused data channel.
         name : string
@@ -89,6 +152,7 @@ def as_tensorflow_layer(odl_op, default_name='ODLOperator',
                 0 : batch id.
         """
         with tf.name_scope(name):
+            # Validate the input/output shape
             x_shape = x.get_shape()
             dx_shape = dx.get_shape()
             try:
@@ -104,7 +168,6 @@ def as_tensorflow_layer(odl_op, default_name='ODLOperator',
                 in_shape = (n_x,) + odl_op.range.shape + (1,)
             out_shape = (n_x,) + odl_op.domain.shape + (1,)
 
-            # Validate input shape
             assert x_shape[1:] == odl_op.domain.shape + (1,)
             if odl_op.is_functional:
                 assert dx_shape[1:] == ()
@@ -149,6 +212,7 @@ def as_tensorflow_layer(odl_op, default_name='ODLOperator',
                     If ``odl_op`` is a `Functional` the axes are:
                         0 : batch id.
                 """
+                # Validate the shape of the given input
                 if fixed_size:
                     x_out_shape = out_shape
                     assert x.shape == out_shape
@@ -158,8 +222,8 @@ def as_tensorflow_layer(odl_op, default_name='ODLOperator',
                     assert x.shape[1:] == out_shape[1:]
                     assert dx.shape[1:] == in_shape[1:]
 
+                # Evaluate the operator on all inputs in the batch.
                 out = np.empty(x_out_shape, odl_op.domain.dtype)
-                out[:] = np.nan
                 for i in range(x_out_shape[0]):
                     if odl_op.is_functional:
                         xi = x[i, ..., 0]
@@ -171,7 +235,8 @@ def as_tensorflow_layer(odl_op, default_name='ODLOperator',
                         result = odl_op.derivative(xi).adjoint(dxi)
                         out[i, ..., 0] = np.asarray(result)
 
-                # TODO: Improve
+                # Rescale the domain/range according to the weighting since
+                # tensorflow does not have weighted spaces.
                 try:
                     dom_weight = odl_op.domain.weighting.const
                 except AttributeError:
@@ -192,7 +257,7 @@ def as_tensorflow_layer(odl_op, default_name='ODLOperator',
                                  [x, dx],
                                  [odl_op.domain.dtype],
                                  name=name_call,
-                                 stateful=True)
+                                 stateful=False)
 
                 # We must manually set the output shape since tensorflow cannot
                 # figure it out
@@ -232,6 +297,7 @@ def as_tensorflow_layer(odl_op, default_name='ODLOperator',
             name = default_name
 
         with tf.name_scope(name):
+            # Validate input shape
             x_shape = x.get_shape()
             try:
                 n_x = int(x_shape[0])
@@ -246,7 +312,6 @@ def as_tensorflow_layer(odl_op, default_name='ODLOperator',
             else:
                 out_shape = (n_x,) + odl_op.range.shape + (1,)
 
-            # Validate input shape
             assert x_shape[1:] == odl_op.domain.shape + (1,)
 
             out_dtype = getattr(odl_op.range, 'dtype',
@@ -274,6 +339,7 @@ def as_tensorflow_layer(odl_op, default_name='ODLOperator',
                         1, ..., M-2 : spatial dimensions of data.
                         n-1 : (currently) unused data channel.
                 """
+                # Validate input shape
                 if fixed_size:
                     x_out_shape = out_shape
                     assert x.shape == in_shape
@@ -281,8 +347,8 @@ def as_tensorflow_layer(odl_op, default_name='ODLOperator',
                     x_out_shape = (x.shape[0],) + out_shape[1:]
                     assert x.shape[1:] == in_shape[1:]
 
+                # Evaluate the operator on all inputs in the batch.
                 out = np.empty(x_out_shape, out_dtype)
-                out[:] = np.nan
                 for i in range(x_out_shape[0]):
                     if odl_op.is_functional:
                         out[i] = odl_op(x[i, ..., 0])
@@ -305,7 +371,7 @@ def as_tensorflow_layer(odl_op, default_name='ODLOperator',
                                  [x],
                                  [out_dtype],
                                  name=name_call,
-                                 stateful=True,
+                                 stateful=False,
                                  grad=tensorflow_layer_grad)
 
                 # We must manually set the output shape since tensorflow cannot
@@ -388,6 +454,9 @@ class TensorflowSpace(odl.LinearSpace):
 
 
 class TensorflowSpaceElement(odl.LinearSpaceElement):
+
+    """Elements in TensorflowSpace."""
+
     def __init__(self, space, data):
         odl.LinearSpaceElement.__init__(self, space)
         self.data = data
@@ -407,6 +476,9 @@ class TensorflowSpaceElement(odl.LinearSpaceElement):
 
 
 class TensorflowSpaceOperator(odl.Operator):
+
+    """Wrap ODL operator so that it acts on TensorflowSpace elements."""
+
     def __init__(self, domain, range, func, adjoint=None, linear=False):
         odl.Operator.__init__(self, domain, range, linear)
         self.func = func
