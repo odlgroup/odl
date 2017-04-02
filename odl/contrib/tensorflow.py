@@ -23,7 +23,9 @@ from builtins import range, str
 from future import standard_library
 standard_library.install_aliases()
 
-import odl
+from odl.set import LinearSpace, LinearSpaceElement, RealNumbers
+from odl.operator import Operator
+
 import numpy as np
 import uuid
 try:
@@ -39,30 +41,36 @@ __all__ = ('as_tensorflow_layer', 'TensorflowSpace', 'TensorflowSpaceOperator')
 
 def as_tensorflow_layer(odl_op, default_name='ODLOperator',
                         differentiable=True):
-    """Convert ``Operator`` to tensorflow layer.
+    """Convert `Operator` or `Functional` into tensorflow layer.
 
     Parameters
     ----------
-    odl_op : `Operator`
+    odl_op : `Operator` or `Functional`
         The operator that should be wrapped to a tensorflow layer.
     default_name : str
         Default name for tensorflow layers created.
     differentiable : boolean
-        True if the layer should be differentiable, otherwise assumes that
-        the derivative is everywhere zero.
+        True if the layer should be differentiable, in which case  ``odl_op``
+        should implement `Operator.derivative` which in turn implements
+        `Operator.adjoint`, it is properly wrapped in ``tensorflow_layer``, and
+        gradients propagate as expected.
+
+        Otherwise assumes that the derivative is everywhere zero.
 
     Returns
     -------
     tensorflow_layer : callable
         Callable that, when called with an `tensorflow.Tensor` of shape
-        `(n, *odl_op.domain.shape, 1)` returns a tensor of shape
-        `(n, *odl_op.range.shape, 1)` where ``n`` is the number of batches.
+        `(n, *odl_op.domain.shape, 1)` where ``n`` is the number of batches
+        returns another `tensorflow.Tensor`.
+
+        If ``odl_op`` is an `Operator`, the shape of the returned tensor is
+        `(n, *odl_op.range.shape, 1)`.
+
         Hence for each evaluation, ``odl_op`` is called a total of ``n`` times.
+
         The `dtype` of the tensor is the same as the respective ODL spaces.
 
-        If ``odl_op`` implements `Operator.derivative` which in turn implements
-        `Operator.adjoint`, it is properly wrapped in ``tensorflow_layer``, and
-        gradients propagate as expected.
     """
     if not TENSORFLOW_AVAILABLE:
         raise ImportError('Tensorflow not installed')
@@ -385,12 +393,12 @@ def as_tensorflow_layer(odl_op, default_name='ODLOperator',
     return tensorflow_layer
 
 
-class TensorflowSpace(odl.LinearSpace):
+class TensorflowSpace(LinearSpace):
 
     """A space of tensorflow Tensors."""
 
     def __init__(self, shape, name='ODLTensorflowSpace'):
-        odl.LinearSpace.__init__(self, odl.RealNumbers())
+        LinearSpace.__init__(self, RealNumbers())
         self.shape = tuple(tf.Dimension(si) if not isinstance(si, tf.Dimension)
                            else si
                            for si in shape)
@@ -455,12 +463,12 @@ class TensorflowSpace(odl.LinearSpace):
         return 'TensorflowSpace({})'.format(self.shape)
 
 
-class TensorflowSpaceElement(odl.LinearSpaceElement):
+class TensorflowSpaceElement(LinearSpaceElement):
 
     """Elements in TensorflowSpace."""
 
     def __init__(self, space, data):
-        odl.LinearSpaceElement.__init__(self, space)
+        LinearSpaceElement.__init__(self, space)
         self.data = data
 
     @property
@@ -477,12 +485,12 @@ class TensorflowSpaceElement(odl.LinearSpaceElement):
         return '{}.element({})'.format(self.space, self.data)
 
 
-class TensorflowSpaceOperator(odl.Operator):
+class TensorflowSpaceOperator(Operator):
 
     """Wrap ODL operator so that it acts on TensorflowSpace elements."""
 
     def __init__(self, domain, range, func, adjoint=None, linear=False):
-        odl.Operator.__init__(self, domain, range, linear)
+        Operator.__init__(self, domain, range, linear)
         self.func = func
         self.adjoint_func = adjoint
 
