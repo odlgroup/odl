@@ -179,7 +179,7 @@ class PointCollocation(FunctionSpaceMapping):
         to the real numbers:
 
         >>> rect = odl.IntervalProd([1, 3], [2, 5])
-        >>> funcset = odl.FunctionSpace(rect)
+        >>> fspace = odl.FunctionSpace(rect)
 
         Partition the rectangle by a rectilinear grid:
 
@@ -190,10 +190,10 @@ class PointCollocation(FunctionSpaceMapping):
 
         Finally create the operator and test it on a function:
 
-        >>> coll_op = PointCollocation(funcset, partition, dspace)
+        >>> coll_op = PointCollocation(fspace, partition, dspace)
         >>>
         >>> # Properly vectorized function
-        >>> func_elem = funcset.element(lambda x: x[0] - x[1])
+        >>> func_elem = fspace.element(lambda x: x[0] - x[1])
         >>> coll_op(func_elem)
         rn((2, 3)).element(
         [[-2.0, -3.0, -4.0],
@@ -222,11 +222,9 @@ class PointCollocation(FunctionSpaceMapping):
         )
 
         It is possible to use parametric functions and pass the parameters
-        during operator call. Currently, this must *always* happen through
-        ``kwargs``:
+        during operator call:
 
-        >>> def plus_c(x, **kwargs):
-        ...     c = kwargs.pop('c', 0)
+        >>> def plus_c(x, c=0):
         ...     return x[0] - x[1] + c
         >>> coll_op(plus_c)  # uses default c = 0
         rn((2, 3)).element(
@@ -331,22 +329,19 @@ class NearestInterpolation(FunctionSpaceMapping):
         data type in 2d:
 
         >>> rect = odl.IntervalProd([0, 0], [1, 1])
-        >>> strings = odl.Strings(1)  # 1-char strings
-        >>> space = odl.FunctionSpace(rect, strings)
+        >>> fspace = odl.FunctionSpace(rect, out_dtype='U1')
 
         Partitioning the domain uniformly with no nodes on the boundary
         (will shift the grid points):
 
-        >>> part = odl.uniform_partition_fromintv(rect, [4, 2],
-        ...                                       nodes_on_bdry=False)
+        >>> part = odl.uniform_partition_fromintv(rect, [4, 2])
         >>> part.grid.coord_vectors
         (array([ 0.125,  0.375,  0.625,  0.875]), array([ 0.25,  0.75]))
 
-        >>> dspace = odl.tensor_space(part.shape, dtype='U1')
-
         Now we initialize the operator and test it with some points:
 
-        >>> interp_op = NearestInterpolation(space, part, dspace)
+        >>> dspace = odl.tensor_space(part.shape, dtype='U1')
+        >>> interp_op = NearestInterpolation(fspace, part, dspace)
         >>> values = np.array([c for c in 'mystring']).reshape(dspace.shape)
         >>> function = interp_op(values)
         >>> print(function([0.3, 0.6]))  # closest to index (1, 1) -> 3
