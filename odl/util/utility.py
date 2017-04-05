@@ -254,12 +254,14 @@ def cache_arguments(function):
 @cache_arguments
 def is_numeric_dtype(dtype):
     """Return ``True`` if ``dtype`` is a numeric type."""
+    dtype = np.dtype(dtype)
     return np.issubsctype(getattr(dtype, 'base', None), np.number)
 
 
 @cache_arguments
 def is_int_dtype(dtype):
     """Return ``True`` if ``dtype`` is an integer type."""
+    dtype = np.dtype(dtype)
     return np.issubsctype(getattr(dtype, 'base', None), np.integer)
 
 
@@ -278,12 +280,14 @@ def is_real_dtype(dtype):
 @cache_arguments
 def is_real_floating_dtype(dtype):
     """Return ``True`` if ``dtype`` is a real floating point type."""
+    dtype = np.dtype(dtype)
     return np.issubsctype(getattr(dtype, 'base', None), np.floating)
 
 
 @cache_arguments
 def is_complex_floating_dtype(dtype):
     """Return ``True`` if ``dtype`` is a complex floating point type."""
+    dtype = np.dtype(dtype)
     return np.issubsctype(getattr(dtype, 'base', None), np.complexfloating)
 
 

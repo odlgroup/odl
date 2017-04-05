@@ -22,14 +22,15 @@ from odl.util.testutils import (
 
 
 def test_nearest_interpolation_1d_complex(tspace_impl):
+    """Test nearest neighbor interpolation in 1d with complex values."""
     intv = odl.IntervalProd(0, 1)
     part = odl.uniform_partition_fromintv(intv, 5, nodes_on_bdry=False)
     # Coordinate vectors are:
     # [0.1, 0.3, 0.5, 0.7, 0.9]
 
-    space = odl.FunctionSpace(intv, range=odl.ComplexNumbers())
+    fspace = odl.FunctionSpace(intv, out_dtype=complex)
     dspace = odl.cn(part.shape)
-    interp_op = NearestInterpolation(space, part, dspace)
+    interp_op = NearestInterpolation(fspace, part, dspace)
     function = interp_op([0 + 1j, 1 + 2j, 2 + 3j, 3 + 4j, 4 + 5j])
 
     # Evaluate at single point
@@ -55,16 +56,17 @@ def test_nearest_interpolation_1d_complex(tspace_impl):
 
 
 def test_nearest_interpolation_1d_variants():
+    """Test nearest neighbor interpolation variants in 1d."""
     intv = odl.IntervalProd(0, 1)
     part = odl.uniform_partition_fromintv(intv, 5, nodes_on_bdry=False)
     # Coordinate vectors are:
     # [0.1, 0.3, 0.5, 0.7, 0.9]
 
-    space = odl.FunctionSpace(intv)
+    fspace = odl.FunctionSpace(intv)
     dspace = odl.rn(part.shape)
 
     # 'left' variant
-    interp_op = NearestInterpolation(space, part, dspace, variant='left')
+    interp_op = NearestInterpolation(fspace, part, dspace, variant='left')
     function = interp_op([0, 1, 2, 3, 4])
 
     # Testing two midpoints and the extreme values
@@ -73,7 +75,7 @@ def test_nearest_interpolation_1d_variants():
     assert all_equal(function(pts), true_arr)
 
     # 'right' variant
-    interp_op = NearestInterpolation(space, part, dspace, variant='right')
+    interp_op = NearestInterpolation(fspace, part, dspace, variant='right')
     function = interp_op([0, 1, 2, 3, 4])
 
     # Testing two midpoints and the extreme values
@@ -83,14 +85,15 @@ def test_nearest_interpolation_1d_variants():
 
 
 def test_nearest_interpolation_2d_float():
+    """Test nearest neighbor interpolation in 2d."""
     rect = odl.IntervalProd([0, 0], [1, 1])
     part = odl.uniform_partition_fromintv(rect, [4, 2], nodes_on_bdry=False)
     # Coordinate vectors are:
     # [0.125, 0.375, 0.625, 0.875], [0.25, 0.75]
 
-    space = odl.FunctionSpace(rect)
+    fspace = odl.FunctionSpace(rect)
     dspace = odl.rn(part.shape)
-    interp_op = NearestInterpolation(space, part, dspace)
+    interp_op = NearestInterpolation(fspace, part, dspace)
     function = interp_op(np.reshape([0, 1, 2, 3, 4, 5, 6, 7], part.shape))
 
     # Evaluate at single point
@@ -116,14 +119,15 @@ def test_nearest_interpolation_2d_float():
 
 
 def test_nearest_interpolation_2d_string():
+    """Test nearest neighbor interpolation in 2d with string values."""
     rect = odl.IntervalProd([0, 0], [1, 1])
     part = odl.uniform_partition_fromintv(rect, [4, 2], nodes_on_bdry=False)
     # Coordinate vectors are:
     # [0.125, 0.375, 0.625, 0.875], [0.25, 0.75]
 
-    space = odl.FunctionSpace(rect, odl.Strings(1))
+    fspace = odl.FunctionSpace(rect, out_dtype='U1')
     dspace = odl.tensor_space(part.shape, dtype='U1')
-    interp_op = NearestInterpolation(space, part, dspace)
+    interp_op = NearestInterpolation(fspace, part, dspace)
     values = np.array([c for c in 'mystring']).reshape(dspace.shape)
     function = interp_op(values)
 
@@ -150,14 +154,15 @@ def test_nearest_interpolation_2d_string():
 
 
 def test_linear_interpolation_1d():
+    """Test linear interpolation in 1d."""
     intv = odl.IntervalProd(0, 1)
     part = odl.uniform_partition_fromintv(intv, 5, nodes_on_bdry=False)
     # Coordinate vectors are:
     # [0.1, 0.3, 0.5, 0.7, 0.9]
 
-    space = odl.FunctionSpace(intv)
+    fspace = odl.FunctionSpace(intv)
     dspace = odl.rn(part.shape)
-    interp_op = LinearInterpolation(space, part, dspace)
+    interp_op = LinearInterpolation(fspace, part, dspace)
     function = interp_op([1, 2, 3, 4, 5])
 
     # Evaluate at single point
@@ -172,14 +177,15 @@ def test_linear_interpolation_1d():
 
 
 def test_linear_interpolation_2d():
+    """Test linear interpolation in 2d."""
     rect = odl.IntervalProd([0, 0], [1, 1])
     part = odl.uniform_partition_fromintv(rect, [4, 2], nodes_on_bdry=False)
     # Coordinate vectors are:
     # [0.125, 0.375, 0.625, 0.875], [0.25, 0.75]
 
-    space = odl.FunctionSpace(rect)
+    fspace = odl.FunctionSpace(rect)
     dspace = odl.rn(part.shape)
-    interp_op = LinearInterpolation(space, part, dspace)
+    interp_op = LinearInterpolation(fspace, part, dspace)
     values = np.arange(1, 9, dtype='float64').reshape(part.shape)
     function = interp_op(values)
     rvals = values.reshape([4, 2])
@@ -241,16 +247,17 @@ def test_linear_interpolation_2d():
 
 
 def test_per_axis_interpolation():
+    """Test different interpolation schemes per axis."""
     rect = odl.IntervalProd([0, 0], [1, 1])
     part = odl.uniform_partition_fromintv(rect, [4, 2], nodes_on_bdry=False)
     # Coordinate vectors are:
     # [0.125, 0.375, 0.625, 0.875], [0.25, 0.75]
 
-    space = odl.FunctionSpace(rect)
+    fspace = odl.FunctionSpace(rect)
     dspace = odl.rn(part.shape)
     schemes = ['linear', 'nearest']
     variants = [None, 'right']
-    interp_op = PerAxisInterpolation(space, part, dspace, schemes=schemes,
+    interp_op = PerAxisInterpolation(fspace, part, dspace, schemes=schemes,
                                      nn_variants=variants)
     values = np.arange(1, 9, dtype='float64').reshape(part.shape)
     function = interp_op(values)
@@ -298,8 +305,9 @@ def test_per_axis_interpolation():
 
 
 def test_collocation_interpolation_identity():
-    # Check if interpolation followed by collocation on the same grid
-    # is the identity
+    """Check if collocation is left-inverse to interpolation."""
+    # Interpolation followed by collocation on the same grid should be
+    # the identity
     rect = odl.IntervalProd([0, 0], [1, 1])
     part = odl.uniform_partition_fromintv(rect, [4, 2])
     space = odl.FunctionSpace(rect)

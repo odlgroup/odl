@@ -1041,7 +1041,7 @@ class FunctionSpaceElement(LinearSpaceElement):
             If ``bounds_check == True`` evaluation points fall outside
             the valid domain.
         """
-        bounds_check = kwargs.pop('bounds_check', True)
+        bounds_check = kwargs.pop('bounds_check', self.space.field is not None)
         if bounds_check and not hasattr(self.domain, 'contains_all'):
             raise AttributeError('bounds check not possible for '
                                  'domain {}, missing `contains_all()` '
@@ -1120,6 +1120,9 @@ class FunctionSpaceElement(LinearSpaceElement):
                 out = np.asarray(out, dtype=self.space.scalar_out_dtype)
                 if scalar_in:
                     out = np.squeeze(out)
+                elif ndim == 1 and out.shape == (1,) + out_shape:
+                    out = out.reshape(out_shape)
+
                 if out_shape not in ((), (1,)) and out.shape != out_shape:
                     # Try to broadcast the returned element.
                     out = broadcast_to(out, out_shape)
@@ -1195,7 +1198,13 @@ class FunctionSpaceElement(LinearSpaceElement):
 
         # Numpy < 1.12 does not implement __complex__ for arrays (in contrast
         # to __float__), so we have to fish out the scalar ourselves.
-        return self.space.field.element(out.ravel()[0]) if scalar_out else out
+        if scalar_out:
+            if self.space.field is None:
+                return out.ravel()[0]
+            else:
+                return self.space.field.element(out.ravel()[0])
+        else:
+            return out
 
     def assign(self, other):
         """Assign ``other`` to ``self``.

@@ -382,8 +382,8 @@ def test_fspace_init():
     str3 = odl.Strings(3)
     FunctionSpace(str3, out_dtype=int)
 
-    # Make sure this doesn't raise an exception due to a bug
-    repr(FunctionSpace(intv, out_dtype=(float, (2, 3))))
+    # Make sure repr shows something
+    assert repr(FunctionSpace(intv, out_dtype=(float, (2, 3))))
 
 
 def test_fspace_attributes():

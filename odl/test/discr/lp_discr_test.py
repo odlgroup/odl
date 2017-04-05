@@ -55,7 +55,7 @@ def test_discretelp_init():
 
     # Complex space
     fspace_c = odl.FunctionSpace(odl.IntervalProd([0, 0], [1, 1]),
-                                 range=odl.ComplexNumbers())
+                                 out_dtype=complex)
     dspace_c = odl.cn(part.shape)
     discr = DiscreteLp(fspace_c, part, dspace_c)
     assert discr.is_complex_space

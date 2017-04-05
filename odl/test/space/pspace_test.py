@@ -492,7 +492,7 @@ def test_getitem_single():
         H[2]
 
     assert H[(1,)] == r2
-    with pytest.raises(ValueError):
+    with pytest.raises(IndexError):
         H[0, 1]
 
 
