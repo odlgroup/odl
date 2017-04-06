@@ -57,9 +57,9 @@ def astra_cpu_forward_projector(vol_data, geometry, proj_space, out=None):
         raise TypeError('volume data {!r} is not a `DiscreteLpElement` '
                         'instance.'.format(vol_data))
     if vol_data.space.impl != 'numpy':
-        raise TypeError('`vol_data` must be a `numpy.ndarray` based, '
-                        "container got `impl` {!r}"
-                        "".format(vol_data.space.impl))
+        raise TypeError('`vol_data` must be a `numpy.ndarray` based '
+                        'container, got `impl` {!r}'
+                        ''.format(vol_data.space.impl))
     if not isinstance(geometry, Geometry):
         raise TypeError('geometry  {!r} is not a Geometry instance'
                         ''.format(geometry))

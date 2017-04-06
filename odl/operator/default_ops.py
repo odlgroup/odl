@@ -1134,8 +1134,8 @@ class ComplexEmbedding(Operator):
         Parameters
         ----------
         space : `TensorSpace`
-            Space whose into which should be embedded, needs to implement
-            ``space.complex_space``.
+            Space that should be embedded into its complex counterpart.
+            It must implement `TensorSpace.complex_space`.
         scalar : ``space.complex_space.field`` element, optional
             Scalar to be multiplied with incoming vectors in order
             to get the complex vector.

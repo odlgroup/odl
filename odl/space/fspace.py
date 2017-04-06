@@ -33,7 +33,7 @@ __all__ = ('FunctionSpace',)
 
 
 def _check_out_arg(func):
-    """Check if of ``func`` has an (optional) ``out`` argument.
+    """Check if ``func`` has an (optional) ``out`` argument.
 
     Also verify that the signature of ``func`` has no ``*args`` since
     they make argument propagation a hassle.
@@ -315,16 +315,16 @@ class FunctionSpace(LinearSpace):
             Default: `zero`.
         vectorized : bool, optional
             If ``True``, assume that ``fcall`` supports vectorized
-            evaluation. For ``False``, , the function is decorated with a
+            evaluation. For ``False``, the function is decorated with a
             vectorizer, which implies that two elements created this way
-            from the same function are regarded as *not equal*.
+            from the same function are regarded as not equal.
             The ``False`` option cannot be used if ``fcall`` has an
             ``out`` parameter.
 
         Returns
         -------
         element : `FunctionSpaceElement`
-            The new element, always supports vectorization.
+            The new element, always supporting vectorization.
 
         Examples
         --------
@@ -567,14 +567,11 @@ class FunctionSpace(LinearSpace):
             else:
                 raise TypeError('invalid input type')
 
-            # For tensor-valued functions
             out_shape = self.out_shape + scalar_out_shape
 
             if out is None:
                 return np.ones(out_shape, dtype=self.scalar_out_dtype)
             else:
-                # Need to go through an array to fill with the correct
-                # zero value for all dtypes
                 fill_value = np.ones(1, dtype=self.scalar_out_dtype)[0]
                 out.fill(fill_value)
 
@@ -1128,9 +1125,6 @@ class FunctionSpaceElement(LinearSpaceElement):
                     out = broadcast_to(out, out_shape)
 
             elif self.space.tensor_valued:
-                # TODO: fix case when such a function is evaluated at a
-                # single point
-
                 # The out object can be any array-like of objects with shapes
                 # that should all be broadcastable to scalar_out_shape.
                 results = np.array(out)
