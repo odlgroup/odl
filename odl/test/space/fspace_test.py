@@ -1101,7 +1101,16 @@ def test_fspace_elem_power(power, out_shape):
     else:
         assert False
 
+    # Out-of-place power
     f_elem_pow = f_elem ** power
+    assert all_almost_equal(f_elem_pow(points), true_result)
+    out_arr = np.empty(out_shape + (4,))
+    f_elem_pow(points, out_arr)
+    assert all_almost_equal(out_arr, true_result)
+
+    # In-place power
+    f_elem_pow = f_elem.copy()
+    f_elem_pow **= power
     assert all_almost_equal(f_elem_pow(points), true_result)
     out_arr = np.empty(out_shape + (4,))
     f_elem_pow(points, out_arr)
