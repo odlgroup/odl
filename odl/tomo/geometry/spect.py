@@ -45,12 +45,12 @@ class ParallelHoleCollimatorGeometry(Parallel3dAxisGeometry):
             Vector pointing towards the detector reference point in
             the initial position.
             Default: a `perpendicular_vector` to ``axis``.
-        det_init_axes : 2-tuple of `array-like`'s (shape ``(3,)``), optional
+        det_axes_init : 2-tuple of `array-like`'s (shape ``(3,)``), optional
             Initial axes defining the detector orientation.
             Default: the normalized cross product of ``axis`` and
             ``orig_to_det_init`` is used as first axis and ``axis`` as second.
         """
-        self._det_radius = float(det_rad)
+        self.__det_radius = float(det_rad)
         if self.det_radius <= 0:
             raise ValueError('expected a positive radius, got {}'
                              ''.format(det_rad))
@@ -64,13 +64,13 @@ class ParallelHoleCollimatorGeometry(Parallel3dAxisGeometry):
         else:
             raise ValueError('`orig_to_det_init` {} is too close to zero'
                              ''.format(orig_to_det_init))
-        kwargs['det_init_pos'] = orig_to_det_init
+        kwargs['det_pos_init'] = orig_to_det_init
         super().__init__(apart, dpart, axis, **kwargs)
 
     @property
     def det_radius(self):
         """Radius of the detector orbit."""
-        return self._det_radius
+        return self.__det_radius
 
     # Fix for bug in ABC thinking this is abstract
     rotation_matrix = AxisOrientedGeometry.rotation_matrix

@@ -23,8 +23,7 @@ __all__ = ('fbp_op', 'fbp_filter_op', 'tam_danielson_window',
 
 def _axis_in_detector(geometry):
     """A vector in the detector plane that points along the rotation axis."""
-    du = geometry.det_init_axes[0]
-    dv = geometry.det_init_axes[1]
+    du, dv = geometry.det_axes_init
     axis = geometry.axis
     c = np.array([np.vdot(axis, du), np.vdot(axis, dv)])
     cnorm = np.linalg.norm(c)
@@ -37,8 +36,7 @@ def _axis_in_detector(geometry):
 
 def _rotation_direction_in_detector(geometry):
     """A vector in the detector plane that points in the rotation direction."""
-    du = geometry.det_init_axes[0]
-    dv = geometry.det_init_axes[1]
+    du, dv = geometry.det_axes_init
     axis = geometry.axis
     det_normal = np.cross(du, dv)
     rot_dir = np.cross(axis, det_normal)

@@ -18,6 +18,7 @@ import numpy as np
 
 from odl.discr import RectPartition
 from odl.tomo.util.utility import perpendicular_vector
+from odl.util import indent_rows, signature_string
 
 
 __all__ = ('Detector', 'FlatDetector', 'Flat1dDetector', 'Flat2dDetector',
@@ -49,7 +50,7 @@ class Detector(object):
             raise TypeError('`part` {!r} is not a RectPartition instance'
                             ''.format(part))
 
-        self._part = part
+        self.__partition = part
 
     def surface(self, param):
         """Parametrization of the detector reference surface.
@@ -57,20 +58,20 @@ class Detector(object):
         Parameters
         ----------
         param : `params` element
-            Parameter value where to evaluate the function
+            Parameter value where to evaluate the function.
 
         Returns
         -------
         point :
             Spatial location of the detector point corresponding to
-            ``param``
+            ``param``.
         """
         raise NotImplementedError('abstract method')
 
     @property
     def partition(self):
         """Partition of the detector parameter set into subsets."""
-        return self._part
+        return self.__partition
 
     @property
     def ndim(self):
@@ -103,13 +104,13 @@ class Detector(object):
         Parameters
         ----------
         param : `params` element
-            The parameter value where to evaluate the function
+            Parameter value where to evaluate the function.
 
         Returns
         -------
         deriv :
             Vector (``ndim=1``) or sequence of vectors corresponding
-            to the partial derivatives at ``param``
+            to the partial derivatives at ``param``.
         """
         raise NotImplementedError('abstract method')
 
@@ -125,12 +126,12 @@ class Detector(object):
         Parameters
         ----------
         param : `params` element
-            The parameter value where to evaluate the function
+            Parameter value where to evaluate the function.
 
         Returns
         -------
         measure : float
-            The density value at the given parameter
+            The density value at the given parameter.
 
         .. _Arc length:
             https://en.wikipedia.org/wiki/Curve#Lengths_of_curves
@@ -145,7 +146,7 @@ class Detector(object):
         elif self.ndim == 2:
             return float(np.linalg.norm(np.cross(*self.surface_deriv(param))))
         else:
-            raise NotImplementedError('abstract method')
+            raise NotImplementedError('not implemented for ndim >= 3')
 
 
 class FlatDetector(Detector):
@@ -185,9 +186,9 @@ class Flat1dDetector(FlatDetector):
         ----------
         part : 1-dim. `RectPartition`
             Partition of the parameter interval, corresponding to the
-            line elements
+            line elements.
         axis : `array-like`, shape ``(2,)``
-            Principal axis of the detector
+            Principal axis of the detector.
         """
         super().__init__(part)
         if self.ndim != 1:
@@ -197,13 +198,15 @@ class Flat1dDetector(FlatDetector):
         if np.linalg.norm(axis) <= 1e-10:
             raise ValueError('`axis` vector {} too close to zero'
                              ''.format(axis))
-        self._axis = np.asarray(axis) / np.linalg.norm(axis)
-        self._normal = perpendicular_vector(self.axis)
+        self.__axis = np.asarray(axis) / np.linalg.norm(axis)
+        # Let (normal, axis) be positively oriented since the normal will
+        # be the basis for det_to_src.
+        self.__normal = -perpendicular_vector(self.axis)
 
     @property
     def axis(self):
         """Normalized principal axis of the detector."""
-        return self._axis
+        return self.__axis
 
     @property
     def normal(self):
@@ -212,7 +215,7 @@ class Flat1dDetector(FlatDetector):
         Its orientation is chosen such that the system ``axis, normal``
         is right-handed.
         """
-        return self._normal
+        return self.__normal
 
     def surface(self, param):
         """Parametrization of the (1d) detector reference surface.
@@ -224,13 +227,13 @@ class Flat1dDetector(FlatDetector):
         Parameters
         ----------
         param : `params` element
-            The parameter value where to evaluate the function
+            Parameter value where to evaluate the function.
 
         Returns
         -------
         point : `numpy.ndarray`, shape (2,)
             The point on the detector surface corresponding to the
-            given parameters
+            given parameters.
         """
         param = float(param)
         if param not in self.params:
@@ -244,12 +247,12 @@ class Flat1dDetector(FlatDetector):
         Parameters
         ----------
         param : `params` element, optional
-            The parameter value where to evaluate the function
+            Parameter value where to evaluate the function.
 
         Returns
         -------
         derivative : `numpy.ndarray`, shape (2,)
-            The constant derivative
+            The constant derivative.
         """
         if param is not None and param not in self.params:
             raise ValueError('`param` {} not in the valid range '
@@ -258,16 +261,12 @@ class Flat1dDetector(FlatDetector):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        inner_fstr = '\n    {!r},\n    {!r}'
-        inner_str = inner_fstr.format(self.partition, self.axis)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        posargs = [self.partition, self.axis]
+        inner_str = signature_string(posargs, [], sep=[',\n', ', ', ', '])
+        return '{}({})'.format(self.__class__.__name__,
+                               indent_rows(inner_str))
 
-    def __str__(self):
-        """Return ``str(self)``."""
-        # TODO: prettify
-        inner_fstr = '\n    {},\n    {}'
-        inner_str = inner_fstr.format(self.partition, self.axis)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+    __str__ = __repr__
 
 
 class Flat2dDetector(FlatDetector):
@@ -279,11 +278,12 @@ class Flat2dDetector(FlatDetector):
 
         Parameters
         ----------
-        part : 1-dim. `RectPartition`
-            Partition of the parameter interval, corresponding to the pixels.
+        part : 2-dim. `RectPartition`
+            Partition of the parameter interval, corresponding to the
+            pixels.
         axes : 2-tuple of `array-like`'s (shape ``(3,)``)
             Principal axes of the detector, e.g.
-            ``[(0, 1, 0), (0, 0, 1)]``
+            ``[(0, 1, 0), (0, 0, 1)]``.
         """
         super().__init__(part)
         if self.ndim != 2:
@@ -298,8 +298,8 @@ class Flat2dDetector(FlatDetector):
                 raise ValueError('axis vector {} has shape {}. expected (3,)'
                                  ''.format(i, np.shape(a)))
 
-        self._axes = tuple(np.asarray(a) / np.linalg.norm(a) for a in axes)
-        self._normal = np.cross(self.axes[0], self.axes[1])
+        self.__axes = tuple(np.asarray(a) / np.linalg.norm(a) for a in axes)
+        self.__normal = np.cross(self.axes[0], self.axes[1])
 
         if np.linalg.norm(self.normal) <= 1e-4:
             raise ValueError('`axes` are almost parallel (norm of normal = '
@@ -308,7 +308,7 @@ class Flat2dDetector(FlatDetector):
     @property
     def axes(self):
         """Normalized principal axes of this detector as a 2-tuple."""
-        return self._axes
+        return self.__axes
 
     @property
     def normal(self):
@@ -317,7 +317,7 @@ class Flat2dDetector(FlatDetector):
         The orientation is chosen such that the triple
         ``axes[0], axes[1], normal`` form a right-hand system.
         """
-        return self._normal
+        return self.__normal
 
     def surface(self, param):
         """Parametrization of the 2d detector reference surface.
@@ -329,13 +329,13 @@ class Flat2dDetector(FlatDetector):
         Parameters
         ----------
         param : `params` element
-            The parameter value where to evaluate the function
+            Parameter value where to evaluate the function.
 
         Returns
         -------
         point : `numpy.ndarray`, shape (3,)
             The point on the detector surface corresponding to the
-            given parameters
+            given parameters.
         """
         if param not in self.params:
             raise ValueError('`param` {} not in the valid range '
@@ -349,12 +349,12 @@ class Flat2dDetector(FlatDetector):
         Parameters
         ----------
         param : `params` element, optional
-            The parameter value where to evaluate the function
+            Parameter value where to evaluate the function.
 
         Returns
         -------
         derivatives : 2-tuple of `numpy.ndarray`'s (shape ``(3,)``)
-            The constant partial derivatives given by the detector axes
+            The constant partial derivatives given by the detector axes.
         """
         if param is not None and param not in self.params:
             raise ValueError('`param` {} not in the valid range '
@@ -391,16 +391,16 @@ class CircleSectionDetector(Detector):
         ----------
         part : 1-dim. `RectPartition`
             Partition of the parameter interval, corresponding to the
-            angle sections along the line
+            angle sections along the line.
         circ_rad : positive float
-            Radius of the circle along which the detector is curved
+            Radius of the circle along which the detector is curved.
         """
         super().__init__(part)
         if self.ndim != 1:
             raise ValueError('expected `part` to have 1 dimension, '
                              'got {}'.format(self.ndim))
 
-        self._circ_rad, circ_rad_in = float(circ_rad), circ_rad
+        self.__circ_rad, circ_rad_in = float(circ_rad), circ_rad
         if self.circ_rad <= 0:
             raise ValueError('`circ_rad` {} is not positive'
                              ''.format(circ_rad_in))
@@ -408,7 +408,7 @@ class CircleSectionDetector(Detector):
     @property
     def circ_rad(self):
         """Circle radius of this detector."""
-        return self._circ_rad
+        return self.__circ_rad
 
     def surface(self, param):
         """Parametrization of the detector reference surface.
@@ -416,7 +416,7 @@ class CircleSectionDetector(Detector):
         Parameters
         ----------
         param : `params` element
-            The parameter value where to evaluate the function
+            Parameter value where to evaluate the function.
         """
         if param in self.params or self.params.contains_all(param):
             return (self.circ_rad *
@@ -431,7 +431,7 @@ class CircleSectionDetector(Detector):
         Parameters
         ----------
         param : `params` element
-            The parameter value where to evaluate the function
+            Parameter value where to evaluate the function.
         """
         if param in self.params or self.params.contains_all(param):
             return self.circ_rad * np.array([-np.sin(param), np.cos(param)]).T
@@ -445,13 +445,13 @@ class CircleSectionDetector(Detector):
         Parameters
         ----------
         param : `params` element
-            The parameter value where to evaluate the function
+            Parameter value where to evaluate the function.
 
         Returns
         -------
         measure : float
             The constant density ``r``, equal to the length of the
-            tangent to the detector circle at any point
+            tangent to the detector circle at any point.
         """
         if param in self.params:
             return self.circ_rad
@@ -476,6 +476,5 @@ class CircleSectionDetector(Detector):
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

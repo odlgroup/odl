@@ -19,7 +19,8 @@ import numpy as np
 from odl.discr import uniform_partition
 from odl.tomo.geometry.detector import Flat1dDetector, Flat2dDetector
 from odl.tomo.geometry.geometry import Geometry, AxisOrientedGeometry
-from odl.tomo.util.utility import euler_matrix, perpendicular_vector
+from odl.tomo.util import euler_matrix, rotation_matrix_from_to
+from odl.util import signature_string, indent_rows
 
 
 __all__ = ('ParallelBeamGeometry',
@@ -38,39 +39,42 @@ class ParallelBeamGeometry(Geometry):
     detector.
     """
 
-    def __init__(self, ndim, apart, detector, det_init_pos):
+    def __init__(self, ndim, apart, detector, det_pos_init):
         """Initialize a new instance.
 
         Parameters
         ----------
         ndim : {2, 3}
             Number of dimensions of this geometry, i.e. dimensionality
-            of the physical space in which this geometry is embedded
+            of the physical space in which this geometry is embedded.
         apart : `RectPartition`
-            Partition of the angle set
+            Partition of the angle set.
         detector : `Detector`
-            The detector to use in this geometry
-        det_init_pos : `array-like`
-            Initial position of the detector reference point
+            The detector to use in this geometry.
+        det_pos_init : `array-like`
+            Initial position of the detector reference point.
         """
         super().__init__(ndim, apart, detector)
 
         if self.ndim not in (2, 3):
-            raise ValueError('number of dimensions is {}, expected 2 or 3'
-                             ''.format(ndim))
+            raise ValueError('`ndim` must be 2 or 3, got {}'.format(ndim))
 
-        self._det_init_pos = np.asarray(det_init_pos, dtype='float64')
-        if self._det_init_pos.shape != (self.ndim,):
-            raise ValueError('initial detector position has shape {}, '
-                             'expected ({},)'
-                             ''.format(self._det_init_pos.shape, self.ndim))
+        self.__det_pos_init = np.asarray(det_pos_init, dtype='float64')
+        if self.det_pos_init.shape != (self.ndim,):
+            raise ValueError('`det_pos_init` must have shape ({},), got {}'
+                             ''.format(self.ndim, self.det_pos_init.shape))
+
+    @property
+    def det_pos_init(self):
+        """Initial position of the detector reference point."""
+        return self.__det_pos_init
 
     @property
     def angles(self):
         """Discrete angles given in this geometry."""
         return self.motion_grid.coord_vectors[0]
 
-    def det_refpoint(self, angles):
+    def det_refpoint(self, angle):
         """Return the position of the detector ref. point at ``angles``.
 
         The reference point is given by a rotation of the initial
@@ -78,19 +82,19 @@ class ParallelBeamGeometry(Geometry):
 
         Parameters
         ----------
-        angles : float
-            Parameters describing the detector rotation, must be
+        angle : float
+            Parameter describing the detector rotation, must be
             contained in `motion_params`.
 
         Returns
         -------
         point : `numpy.ndarray`, shape (`ndim`,)
-            The reference point for the given parameters
+            The reference point for the given parameter.
         """
-        if angles not in self.motion_params:
-            raise ValueError('`angles` {} not in the valid range {}'
-                             ''.format(angles, self.motion_params))
-        return self.rotation_matrix(angles).dot(self._det_init_pos)
+        if angle not in self.motion_params:
+            raise ValueError('`angle` {} not in the valid range {}'
+                             ''.format(angle, self.motion_params))
+        return self.rotation_matrix(angle).dot(self.det_pos_init)
 
     def det_to_src(self, angles, dpar, normalized=True):
         """Direction from a detector location to the source.
@@ -103,7 +107,7 @@ class ParallelBeamGeometry(Geometry):
 
         Parameters
         ----------
-        angles : `array-like`
+        angles : float
             Euler angles given in radians, must be contained
             in this geometry's `motion_params`
         dpar : float
@@ -127,11 +131,9 @@ class ParallelBeamGeometry(Geometry):
         if angles not in self.motion_params:
             raise ValueError('`angles` {} not in the valid range {}'
                              ''.format(angles, self.motion_params))
-
         if dpar not in self.det_params:
             raise ValueError('`dpar` {} not in the valid range '
                              '{}'.format(dpar, self.det_params))
-
         if not normalized:
             raise NotImplementedError('non-normalized detector to source is '
                                       'not available in parallel case')
@@ -144,12 +146,14 @@ class Parallel2dGeometry(ParallelBeamGeometry):
     """Parallel beam geometry in 2d.
 
     The motion parameter is the counter-clockwise rotation angle around
-    the origin, and the detector is a line detector perpendicular to the
-    ray direction.
+    the origin, and the detector is a line detector.
 
-    In the standard configuration, the detector reference point starts
-    at ``(1, 0)``, and the initial detector axis is ``(0, 1)``.
+    In the standard configuration, the detector is perpendicular to the
+    ray direction, its reference point is initially at ``(-1, 0)``, and
+    the initial detector axis is ``(0, 1)``.
     """
+
+    _default_config = dict(det_pos_init=(-1, 0), det_axis_init=(0, 1))
 
     def __init__(self, apart, dpart, **kwargs):
         """Initialize a new instance.
@@ -157,54 +161,151 @@ class Parallel2dGeometry(ParallelBeamGeometry):
         Parameters
         ----------
         apart : 1-dim. `RectPartition`
-            Partition of the angle interval
+            Partition of the angle interval.
         dpart : 1-dim. `RectPartition`
-            Partition of the detector parameter interval
-        det_init_pos : `array-like`, shape ``(2,)``, optional
-            Initial position of the detector reference point. The zero
-            vector is only allowed if ``det_init_axis`` is explicitly
-            given.
-            Default: ``(1, 0)``.
-        det_init_axis : `array-like` (shape ``(2,)``), optional
-            Initial axis defining the detector orientation.
-            By default, a normalized `perpendicular_vector` to
-            ``det_init_pos`` is used, which is only valid if
-            ``det_init_axis`` is not zero.
+            Partition of the detector parameter interval.
+        det_pos_init : `array-like`, shape ``(2,)``, optional
+            Initial position of the detector reference point.
+            Default: ``(-1, 0)``.
+        det_axis_init : `array-like` (shape ``(2,)``), optional
+            Initial axis defining the detector orientation. The default
+            depends on ``det_pos_init``, see Notes.
+        extra_rot : `array_like`, shape ``(2, 2)``, optional
+            Rotation matrix that should be applied at the end to the
+            configuration of ``det_pos_init`` and ``det_axis_init``.
+            The rotation is extrinsic, i.e., defined in the "world"
+            coordinate system.
+
+        Notes
+        -----
+        In the default configuration, the initial detector reference point
+        is ``(-1, 0)``, and the initial detector axis is ``(0, 1)``. If a
+        different ``det_pos_init`` is chosen, the new default axis is
+        given as a rotation of the original one by a matrix that transforms
+        ``(1, 0)`` to the new (normalized) ``det_pos_init``. This matrix
+        is calculated with the `rotation_matrix_from_to` function.
+        Expressed in code, we have ::
+
+            init_rot = rotation_matrix_from_to((1, 0), det_pos_init)
+            det_axis_init = init_rot.dot((0, 1))
+
+        If ``det_pos_init == [0, 0]``, no rotation is performed.
+
+        Examples
+        --------
+        Initialization with default parameters:
+
+        >>> e_x, e_y = np.eye(2)  # standard unit vectors
+        >>> apart = odl.uniform_partition(0, np.pi, 10)
+        >>> dpart = odl.uniform_partition(-1, 1, 20)
+        >>> geom = Parallel2dGeometry(apart, dpart)
+        >>> np.allclose(geom.det_pos_init, -e_x)
+        True
+        >>> np.allclose(geom.det_axis_init, e_y)
+        True
+
+        Specifying an initial detector position by default rotates the
+        standard configuration to this position:
+
+        >>> geom = Parallel2dGeometry(apart, dpart, det_pos_init=(0, 1))
+        >>> np.allclose(geom.det_pos_init, e_y)
+        True
+        >>> np.allclose(geom.det_axis_init, e_x)
+        True
+        >>> geom = Parallel2dGeometry(apart, dpart, det_pos_init=(1, 0))
+        >>> np.allclose(geom.det_pos_init, e_x)
+        True
+        >>> np.allclose(geom.det_axis_init, -e_y)
+        True
+
+        The initial detector axis can also be set explicitly:
+
+        >>> geom = Parallel2dGeometry(
+        ...     apart, dpart, det_pos_init=(0, 1), det_axis_init=(1, 0))
+        >>> np.allclose(geom.det_pos_init, e_y)
+        True
+        >>> np.allclose(geom.det_axis_init, e_x)
+        True
+
+        A matrix can be given to perform a final rotation. This is most
+        useful to rotate non-standard ``det_axis_init``, or if full
+        control over the rotation is desired:
+
+        >>> rot_matrix = np.array([[-1, 0],
+        ...                        [0, 1]])
+        >>> geom = Parallel2dGeometry(apart, dpart, extra_rot=rot_matrix)
+        >>> np.allclose(geom.det_pos_init, e_x)
+        True
+        >>> np.allclose(geom.det_axis_init, e_y)
+        True
         """
-        self._det_init_pos = kwargs.pop('det_init_pos', (1.0, 0.0))
-        self._det_init_axis = kwargs.pop('det_init_axis', None)
+        def_det_pos = self._default_config['det_pos_init']
+        def_det_axis = self._default_config['det_axis_init']
 
-        if self.det_init_axis is None:
-            if np.linalg.norm(self.det_init_pos) <= 1e-10:
-                raise ValueError('`det_init_pos` {} is close to '
-                                 'zero. This is only allowed for explicit '
-                                 'det_init_axis'
-                                 ''.format(self.det_init_pos))
+        det_pos_init = np.array(kwargs.pop('det_pos_init', def_det_pos),
+                                dtype=float)
 
-            det_init_axis = perpendicular_vector(self.det_init_pos)
+        det_axis_init = kwargs.pop('det_axis_init', None)
+        extra_rot = np.asarray(kwargs.pop('extra_rot', np.eye(2)), dtype=float)
 
-        detector = Flat1dDetector(part=dpart, axis=det_init_axis)
+        if extra_rot.shape != (2, 2):
+            raise ValueError('`extra_rot` must have shape (2, 2), got {}'
+                             ''.format(extra_rot.shape))
+        if abs(np.linalg.det(extra_rot)) < 1e-4:
+            raise ValueError('`extra_rot` is almost singular')
+        self.__extra_rotation = extra_rot
+
+        if kwargs:
+            raise TypeError('got an unexpected keyword argument {!r}'
+                            ''.format(kwargs.popitem()[0]))
+
+        if (np.linalg.norm(np.asarray(det_pos_init) - def_det_pos) < 1e-4 or
+                np.linalg.norm(det_pos_init) == 0):
+            # Vector close to default is mapped to default (due to
+            # instability otherwise). We also take no rotation if det_pos_init
+            # is zero.
+            init_rot = np.eye(2)
+        else:
+            # Rotation due to non-standard det_pos_init
+            init_rot = rotation_matrix_from_to(def_det_pos, det_pos_init)
+
+        if det_axis_init is None:
+            det_axis_init = init_rot.dot(def_det_axis)
+
+        # Extra rotation of everything
+        det_pos_init = self.extra_rotation.dot(det_pos_init)
+        det_axis_init = self.extra_rotation.dot(det_axis_init)
+
+        detector = Flat1dDetector(part=dpart, axis=det_axis_init)
         super().__init__(ndim=2, apart=apart, detector=detector,
-                         det_init_pos=self.det_init_pos)
+                         det_pos_init=det_pos_init)
 
         if self.motion_partition.ndim != 1:
             raise ValueError('`apart` dimension {}, expected 1'
                              ''.format(self.motion_partition.ndim))
 
     @property
-    def det_init_pos(self):
-        """Position of the detector reference point at angle=0."""
-        return self._det_init_pos
+    def det_axis_init(self):
+        """Detector axis at angle 0."""
+        return self.detector.axis
+
+    def det_axis(self, angle):
+        """Return the detector axis at ``angle``."""
+        return self.rotation_matrix(angle).dot(self.det_axis_init)
 
     @property
-    def det_init_axis(self):
-        """Direction of the detector extent at angle=0."""
-        return self._det_init_axis
+    def extra_rotation(self):
+        """Rotation matrix to the initial detector configuration.
+
+        This rotation is applied after the initial definition of detector
+        position and axes.
+        """
+        return self.__extra_rotation
 
     def rotation_matrix(self, angle):
         """Return the rotation matrix for ``angle``.
 
-        For an angle ``phi``, the matrix is given by::
+        For an angle ``phi``, the matrix is given by ::
 
             rot(phi) = [[cos(phi), -sin(phi)],
                         [sin(phi), cos(phi)]]
@@ -230,21 +331,38 @@ class Parallel2dGeometry(ParallelBeamGeometry):
 
     def __repr__(self):
         """Return ``repr(self)``."""
+        posargs = [self.motion_partition, self.det_partition]
+        optargs = []
 
-        inner_fstr = '\n    {!r},\n    {!r}'
+        if not np.allclose(self.extra_rotation, np.eye(self.ndim)):
+            inv_rot = np.linalg.inv(self.extra_rotation)
+            orig_det_pos = inv_rot.dot(self.det_pos_init)
+            orig_det_axis = inv_rot.dot(self.det_axis_init)
+        else:
+            orig_det_pos = self.det_pos_init
+            orig_det_axis = self.det_axis_init
 
-        if not np.allclose(self.det_init_pos, [1, 0]):
-            inner_fstr += ',\n    det_init_pos={det_init_pos!r}'
+        # TODO: change array printing from tolist() to new array_str
+        def_init_pos = self._default_config['det_pos_init']
+        if not np.allclose(orig_det_pos, def_init_pos):
+            optargs.append(('det_pos_init', orig_det_pos.tolist(), None))
+            if np.linalg.norm(orig_det_pos) == 0:
+                init_rot = np.eye(self.ndim)
+            else:
+                init_rot = rotation_matrix_from_to(def_init_pos, orig_det_pos)
+            orig_det_axis = init_rot.T.dot(orig_det_axis)
 
-        if not np.allclose(self.det_init_pos,
-                           perpendicular_vector(self.det_init_pos)):
-            inner_fstr += ',\n    det_init_axis={det_init_axis!r}'
+        def_init_axis = self._default_config['det_axis_init']
+        if not np.allclose(orig_det_axis, def_init_axis):
+            det_axis_init = orig_det_axis.tolist()
+            optargs.append(('det_axis_init', det_axis_init, None))
 
-        inner_str = inner_fstr.format(self.motion_partition,
-                                      self.det_partition,
-                                      det_init_pos=self._det_init_pos,
-                                      det_init_axis=self.det_init_axis)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        if not np.allclose(self.extra_rotation, np.eye(self.ndim)):
+            optargs.append(('extra_rot', self.extra_rotation.tolist(), None))
+
+        sig_str = signature_string(posargs, optargs, sep=[',\n', ',\n', ',\n'])
+        return '{}(\n{}\n)'.format(self.__class__.__name__,
+                                   indent_rows(sig_str))
 
 
 class Parallel3dEulerGeometry(ParallelBeamGeometry):
@@ -255,9 +373,12 @@ class Parallel3dEulerGeometry(ParallelBeamGeometry):
     is flat and two-dimensional.
 
     In the standard configuration, the detector reference point starts
-    at ``(1, 0, 0)``, and the initial detector axes are
+    at ``(-1, 0, 0)``, and the initial detector axes are
     ``[(0, 1, 0), (0, 0, 1)]``.
     """
+
+    _default_config = dict(det_pos_init=(-1, 0, 0),
+                           det_axes_init=((0, 1, 0), (0, 0, 1)))
 
     def __init__(self, apart, dpart, **kwargs):
         """Initialize a new instance.
@@ -268,40 +389,150 @@ class Parallel3dEulerGeometry(ParallelBeamGeometry):
             Partition of the angle parameter set
         dpart : 2-dim. `RectPartition`
             Partition of the detector parameter interval
-        det_init_pos : `array-like`, shape ``(3,)``, optional
-            Initial position of the detector reference point. The zero
-            vector is only allowed if ``det_init_axes`` is explicitly
-            given.
-            Default: ``(1, 0, 0)``
-        det_init_axes : 2-tuple of `array-like`'s (shape ``(3,)``), optional
-            Initial axes defining the detector orientation.
-            By default, a normalized `perpendicular_vector` to
-            ``det_init_pos`` is taken as first axis, and the normalized
-            cross product of these two as second.
+        det_pos_init : `array-like`, shape ``(3,)``, optional
+            Initial position of the detector reference point.
+            Default: ``(-1, 0, 0)``
+        det_axes_init : 2-tuple of `array-like`'s (shape ``(3,)``), optional
+            Initial axes defining the detector orientation. The default
+            depends on ``det_pos_init``, see Notes.
+        extra_rot : `array_like`, shape ``(3, 3)``, optional
+            Rotation matrix that should be applied at the end to the
+            configuration of ``det_pos_init`` and ``det_axes_init``.
+            The rotation is extrinsic, i.e., defined in the "world"
+            coordinate system.
+
+        Notes
+        -----
+        In the default configuration, the initial detector reference point
+        is ``(-1, 0, 0)``, and the initial detector axes are
+        ``[(0, 1, 0), (0, 0, 1)]``. If a different ``det_pos_init`` is
+        chosen, the new default axes are given as a rotation of the original
+        ones by a matrix that transforms ``(-1, 0, 0)`` to the new
+        (normalized) ``det_pos_init``. This matrix is calculated with the
+        `rotation_matrix_from_to` function. Expressed in code, we have ::
+
+            init_rot = rotation_matrix_from_to((-1, 0, 0), det_pos_init)
+            det_axes_init[0] = init_rot.dot((0, 1, 0))
+            det_axes_init[1] = init_rot.dot((0, 0, 1))
+
+        Examples
+        --------
+        Initialization with default parameters and 2 Euler angles:
+
+        >>> e_x, e_y, e_z = np.eye(3)  # standard unit vectors
+        >>> apart = odl.uniform_partition([0, 0], [np.pi, 2 * np.pi],
+        ...                               (10, 20))
+        >>> dpart = odl.uniform_partition([-1, -1], [1, 1], (20, 20))
+        >>> geom = Parallel3dEulerGeometry(apart, dpart)
+        >>> np.allclose(geom.det_pos_init, -e_x)
+        True
+        >>> np.allclose(geom.det_axes_init, (e_y, e_z))
+        True
+
+        Specifying an initial detector position by default rotates the
+        standard configuration to this position:
+
+        >>> geom = Parallel3dEulerGeometry(apart, dpart,
+        ...                                det_pos_init=(0, 1, 0))
+        >>> np.allclose(geom.det_pos_init, e_y)
+        True
+        >>> np.allclose(geom.det_axes_init, (e_x, e_z))
+        True
+        >>> geom = Parallel3dEulerGeometry(apart, dpart,
+        ...                                det_pos_init=(0, 0, 1))
+        >>> np.allclose(geom.det_pos_init, e_z)
+        True
+        >>> np.allclose(geom.det_axes_init, (e_y, e_x))
+        True
+
+        The initial detector axes can also be set explicitly:
+
+        >>> geom = Parallel3dEulerGeometry(
+        ...     apart, dpart, det_pos_init=(0, 1, 0),
+        ...     det_axes_init=((-1, 0, 0), (0, 0, -1)))
+        >>> np.allclose(geom.det_pos_init, e_y)
+        True
+        >>> np.allclose(geom.det_axes_init, (-e_x, -e_z))
+        True
+
+        A matrix can be given to perform a final rotation. This is most
+        useful to rotate non-standard ``det_axes_init``, or if full
+        control over the rotation is desired:
+
+        >>> rot_matrix = np.array([[1, 0, 0],
+        ...                        [0, 0, -1],
+        ...                        [0, 1, 0]])
+        >>> geom = Parallel3dEulerGeometry(apart, dpart, extra_rot=rot_matrix)
+        >>> np.allclose(geom.det_pos_init, -e_x)  # default
+        True
+        >>> np.allclose(geom.det_axes_init, (e_z, -e_y))
+        True
         """
-        det_init_pos = kwargs.pop('det_init_pos', (1.0, 0.0, 0.0))
-        det_init_axes = kwargs.pop('det_init_axes', None)
+        def_det_pos = self._default_config['det_pos_init']
+        def_det_axes = self._default_config['det_axes_init']
 
-        if det_init_axes is None:
-            if np.linalg.norm(det_init_pos) <= 1e-10:
-                raise ValueError('`det_init_pos` {} is close to '
-                                 'zero. This is only allowed for explicit '
-                                 '`det_init_axes`.'.format(det_init_pos))
+        det_pos_init = np.asarray(kwargs.pop('det_pos_init', def_det_pos),
+                                  dtype=float)
+        det_axes_init = kwargs.pop('det_axes_init', None)
+        extra_rot = np.asarray(kwargs.pop('extra_rot', np.eye(3)))
 
-            det_init_axis_0 = perpendicular_vector(det_init_pos)
-            det_init_axis_1 = np.cross(det_init_pos, det_init_axis_0)
-            det_init_axes = (det_init_axis_0, det_init_axis_1)
+        if extra_rot.shape != (3, 3):
+            raise ValueError('`extra_rot` must have shape (3, 3), got {}'
+                             ''.format(extra_rot.shape))
+        if abs(np.linalg.det(extra_rot)) < 1e-4:
+            raise ValueError('`extra_rot` is almost singular')
+        self.__extra_rotation = extra_rot
 
-        detector = Flat2dDetector(part=dpart, axes=det_init_axes)
+        if kwargs:
+            raise TypeError('got an unexpected keyword argument {!r}'
+                            ''.format(kwargs.popitem()[0]))
+
+        if (np.linalg.norm(np.asarray(det_pos_init) - def_det_pos) < 1e-4 or
+                np.linalg.norm(det_pos_init) < 1e-4):
+            # Vector close to default is mapped to default (due to
+            # instability otherwise). We also take no rotation if det_pos_init
+            # is close to zero.
+            init_rot = np.eye(3)
+        else:
+            # Rotation due to non-standard det_pos_init
+            init_rot = rotation_matrix_from_to(def_det_pos, det_pos_init)
+
+        if det_axes_init is None:
+            det_axes_init = [init_rot.dot(a) for a in def_det_axes]
+
+        # Extra rotation of everything
+        det_pos_init = self.extra_rotation.dot(det_pos_init)
+        det_axes_init = [self.extra_rotation.dot(a) for a in det_axes_init]
+
+        detector = Flat2dDetector(part=dpart, axes=det_axes_init)
         super().__init__(ndim=3, apart=apart, detector=detector,
-                         det_init_pos=det_init_pos)
+                         det_pos_init=det_pos_init)
 
         if self.motion_partition.ndim not in (2, 3):
             raise ValueError('`apart` has dimension {}, expected '
                              '2 or 3'.format(self.motion_partition.ndim))
 
+    @property
+    def det_axes_init(self):
+        """Initial axes of the detector."""
+        return self.detector.axes
+
+    def det_axes(self, angles):
+        """Return the detector axes tuple at ``angle``."""
+        return tuple(self.rotation_matrix(angles).dot(axis)
+                     for axis in self.det_axes_init)
+
+    @property
+    def extra_rotation(self):
+        """Rotation matrix to the initial detector configuration.
+
+        This rotation is applied after the initial definition of detector
+        position and axes.
+        """
+        return self.__extra_rotation
+
     def rotation_matrix(self, angles):
-        """Matrix defining the detector rotation at ``angles``.
+        """Matrix defining the intrinsic rotation for ``angles``.
 
         Parameters
         ----------
@@ -312,10 +543,10 @@ class Parallel3dEulerGeometry(ParallelBeamGeometry):
         Returns
         -------
         rot : `numpy.ndarray`, shape ``(3, 3)``
-            The rotation matrix mapping the standard basis vectors in
-            the fixed ("lab") coordinate system to the basis vectors of
-            the local coordinate system of the detector reference point,
-            expressed in the fixed system.
+            Rotation matrix from the initial configuration of detector
+            position and axes (all angles zero) to the configuration at
+            ``angles``. The rotation is extrinsic, i.e., expressed in the
+            "world" coordinate system.
         """
         if angles not in self.motion_params:
             raise ValueError('`angles` {} not in the valid range {}'
@@ -324,16 +555,38 @@ class Parallel3dEulerGeometry(ParallelBeamGeometry):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        # TODO: det_init_axes
-        inner_fstr = '\n    {!r},\n    {!r}'
+        posargs = [self.motion_partition, self.det_partition]
+        optargs = []
 
-        if not np.allclose(self.origin_to_det, [1, 0]):
-            inner_fstr += ',\n    det_init_pos={det_init_pos!r}'
+        if not np.allclose(self.extra_rotation, np.eye(self.ndim)):
+            inv_rot = np.linalg.inv(self.extra_rotation)
+            orig_det_pos = inv_rot.dot(self.det_pos_init)
+            orig_det_axes = [inv_rot.dot(a) for a in self.det_axes_init]
+        else:
+            orig_det_pos = self.det_pos_init
+            orig_det_axes = self.det_axes_init
 
-        inner_str = inner_fstr.format(self.motion_partition,
-                                      self.det_partition,
-                                      det_init_pos=self._det_init_pos)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        # TODO: change array printing from tolist() to new array_str
+        def_init_pos = self._default_config['det_pos_init']
+        if not np.allclose(orig_det_pos, def_init_pos):
+            optargs.append(('det_pos_init', orig_det_pos.tolist(), None))
+            if np.linalg.norm(orig_det_pos) == 0:
+                init_rot = np.eye(self.ndim)
+            else:
+                init_rot = rotation_matrix_from_to(def_init_pos, orig_det_pos)
+            orig_det_axes = [init_rot.T.dot(a) for a in orig_det_axes]
+
+        def_init_axes = self._default_config['det_axes_init']
+        if not np.allclose(orig_det_axes, def_init_axes):
+            det_axes_init = tuple(a.tolist() for a in orig_det_axes)
+            optargs.append(('det_axes_init', det_axes_init, None))
+
+        if not np.allclose(self.extra_rotation, np.eye(self.ndim)):
+            optargs.append(('extra_rot', self.extra_rotation.tolist(), None))
+
+        sig_str = signature_string(posargs, optargs, sep=[',\n', ',\n', ',\n'])
+        return '{}(\n{}\n)'.format(self.__class__.__name__,
+                                   indent_rows(sig_str))
 
 
 class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
@@ -345,76 +598,225 @@ class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
     ray direction.
 
     In the standard configuration, the rotation axis is ``(0, 0, 1)``,
-    the detector reference point starts at ``(1, 0, 0)``, and the
+    the detector reference point starts at ``(-1, 0, 0)``, and the
     initial detector axes are ``[(0, 1, 0), (0, 0, 1)]``.
     """
 
-    def __init__(self, apart, dpart, axis=[0, 0, 1], **kwargs):
+    _default_config = dict(axis=(0, 0, 1),
+                           det_pos_init=(-1, 0, 0),
+                           det_axes_init=((0, 1, 0), (0, 0, 1)))
+
+    def __init__(self, apart, dpart, axis=(0, 0, 1), **kwargs):
         """Initialize a new instance.
 
         Parameters
         ----------
         apart : 1-dim. `RectPartition`
-            Partition of the angle interval
+            Partition of the angle interval.
         dpart : 2-dim. `RectPartition`
-            Partition of the detector parameter interval
+            Partition of the detector parameter rectangle.
         axis : `array-like`, shape ``(3,)``, optional
-            Fixed rotation axis defined by a 3-element vector
-        det_init_pos : `array-like`, shape ``(3,)``, optional
-            Initial position of the detector reference point. The zero
-            vector is only allowed if ``det_init_axes`` is explicitly
-            given.
-            By default, a `perpendicular_vector` to ``axis`` is used.
-        det_init_axes : 2-tuple of `array-like`'s (shape ``(3,)``), optional
-            Initial axes defining the detector orientation.
-            By default, the normalized cross product of ``axis`` and
-            ``det_init_pos`` is used as first axis and ``axis`` as second.
+            Vector defining the fixed rotation axis of this geometry.
+        det_pos_init : `array-like`, shape ``(3,)``, optional
+            Initial position of the detector reference point.
+            The default depends on ``axis``, see Notes.
+        det_axes_init : 2-tuple of `array-like`'s (shape ``(3,)``), optional
+            Initial axes defining the detector orientation. The default
+            depends on ``axis``, see Notes.
+        extra_rot : `array_like`, shape ``(3, 3)``, optional
+            Rotation matrix that should be applied at the end to the
+            configuration of ``det_pos_init`` and ``det_axes_init``.
+            The rotation is extrinsic, i.e., defined in the "world"
+            coordinate system.
+
+        Notes
+        -----
+        In the default configuration, the rotation axis is ``(0, 0, 1)``,
+        the initial detector reference point position is ``(-1, 0, 0)``,
+        and the default detector axes are ``[(0, 1, 0), (0, 0, 1)]``.
+        If a different ``axis`` is provided, the new default initial
+        position and the new default axes are the computed by rotating
+        the original ones by a matrix that transforms ``(0, 0, 1)`` to the
+        new (normalized) ``axis``. This matrix is calculated with the
+        `rotation_matrix_from_to` function. Expressed in code, we have ::
+
+            init_rot = rotation_matrix_from_to((0, 0, 1), axis)
+            det_pos_init = init_rot.dot((-1, 0, 0))
+            det_axes_init[0] = init_rot.dot((0, 1, 0))
+            det_axes_init[1] = init_rot.dot((0, 0, 1))
+
+        Examples
+        --------
+        Initialization with default parameters:
+
+        >>> e_x, e_y, e_z = np.eye(3)  # standard unit vectors
+        >>> apart = odl.uniform_partition(0, np.pi, 10)
+        >>> dpart = odl.uniform_partition([-1, -1], [1, 1], (20, 20))
+        >>> geom = Parallel3dAxisGeometry(apart, dpart)
+        >>> np.allclose(geom.axis, e_z)
+        True
+        >>> np.allclose(geom.det_pos_init, -e_x)
+        True
+        >>> np.allclose(geom.det_axes_init, (e_y, e_z))
+        True
+
+        Specifying an axis by default rotates the standard configuration
+        to this position:
+
+        >>> geom = Parallel3dAxisGeometry(apart, dpart, axis=(0, 1, 0))
+        >>> np.allclose(geom.axis, e_y)
+        True
+        >>> np.allclose(geom.det_pos_init, -e_x)
+        True
+        >>> np.allclose(geom.det_axes_init, (-e_z, e_y))
+        True
+        >>> geom = Parallel3dAxisGeometry(apart, dpart, axis=(1, 0, 0))
+        >>> np.allclose(geom.axis, e_x)
+        True
+        >>> np.allclose(geom.det_pos_init, e_z)
+        True
+        >>> np.allclose(geom.det_axes_init, (e_y, e_x))
+        True
+
+        The initial detector position and axes can also be set explicitly:
+
+        >>> geom = Parallel3dAxisGeometry(apart, dpart, axis=(0, 1, 0),
+        ...                               det_pos_init=(1, 0, 0))
+        >>> np.allclose(geom.axis, e_y)
+        True
+        >>> np.allclose(geom.det_pos_init, e_x)
+        True
+        >>> np.allclose(geom.det_axes_init, (-e_z, e_y))  # as above
+        True
+        >>> geom = Parallel3dAxisGeometry(
+        ...     apart, dpart, axis=(0, 1, 0),
+        ...     det_axes_init=((0, 1, 0), (0, 0, 1)))
+        >>> np.allclose(geom.axis, e_y)
+        True
+        >>> np.allclose(geom.det_pos_init, -e_x)
+        True
+        >>> np.allclose(geom.det_axes_init, (e_y, e_z))
+        True
+
+        A matrix can be given to perform a final rotation. This is most
+        useful to rotate non-standard ``det_axes_init``, or if full
+        control over the rotation is desired:
+
+        >>> rot_matrix = np.array([[1, 0, 0],
+        ...                        [0, 0, -1],
+        ...                        [0, 1, 0]])
+        >>> geom = Parallel3dAxisGeometry(apart, dpart, extra_rot=rot_matrix)
+        >>> np.allclose(geom.axis, -e_y)
+        True
+        >>> np.allclose(geom.det_pos_init, -e_x)  # default
+        True
+        >>> np.allclose(geom.det_axes_init, (e_z, -e_y))
+        True
         """
+        def_axis = self._default_config['axis']
+        def_det_pos = self._default_config['det_pos_init']
+        def_det_axes = self._default_config['det_axes_init']
+
+        det_pos_init = kwargs.pop('det_pos_init', None)
+        det_axes_init = kwargs.pop('det_axes_init', None)
+        extra_rot = np.asarray(kwargs.pop('extra_rot', np.eye(3)))
+
+        if extra_rot.shape != (3, 3):
+            raise ValueError('`extra_rot` must have shape (3, 3), got {}'
+                             ''.format(extra_rot.shape))
+        if abs(np.linalg.det(extra_rot)) < 1e-4:
+            raise ValueError('`extra_rot` is almost singular')
+        self.__extra_rotation = extra_rot
+
+        if kwargs:
+            raise TypeError('got an unexpected keyword argument {!r}'
+                            ''.format(kwargs.popitem()[0]))
+
+        if np.linalg.norm(np.asarray(axis) - def_axis) < 1e-4:
+            # Vector close to default is mapped to default (due to
+            # instability otherwise). We also take no rotation if det_pos_init
+            # is close to zero.
+            init_rot = np.eye(3)
+        else:
+            # Rotation due to non-standard det_pos_init
+            init_rot = rotation_matrix_from_to(def_axis, axis)
+
+        if det_pos_init is None:
+            det_pos_init = init_rot.dot(def_det_pos)
+
+        if det_axes_init is None:
+            det_axes_init = [init_rot.dot(a) for a in def_det_axes]
+
+        # Extra rotation of everything
+        det_pos_init = self.extra_rotation.dot(det_pos_init)
+        det_axes_init = [self.extra_rotation.dot(a) for a in det_axes_init]
+
+        axis = self.extra_rotation.dot(axis)
         AxisOrientedGeometry.__init__(self, axis)
-
-        det_init_pos = kwargs.pop('det_init_pos', perpendicular_vector(axis))
-        det_init_axes = kwargs.pop('det_init_axes', None)
-
-        if det_init_axes is None:
-            if np.linalg.norm(det_init_pos) <= 1e-10:
-                raise ValueError('initial detector position {} is close to '
-                                 'zero. This is only allowed for explicit '
-                                 '`det_init_axes`.'.format(det_init_pos))
-
-            det_init_axis_0 = np.cross(self.axis, det_init_pos)
-            det_init_axis_0 /= np.linalg.norm(det_init_axis_0)
-            det_init_axes = (det_init_axis_0, axis)
-
-        self.det_init_axes = det_init_axes
-
-        detector = Flat2dDetector(part=dpart, axes=det_init_axes)
+        detector = Flat2dDetector(part=dpart, axes=det_axes_init)
         super().__init__(ndim=3, apart=apart, detector=detector,
-                         det_init_pos=det_init_pos)
+                         det_pos_init=det_pos_init)
 
         if self.motion_partition.ndim != 1:
             raise ValueError('`apart` has dimension {}, expected 1'
                              ''.format(self.motion_partition.ndim))
 
+    @property
+    def det_axes_init(self):
+        """Initial axes of the detector."""
+        return self.detector.axes
+
+    def det_axes(self, angles):
+        """Return the detector axes tuple at ``angle``."""
+        return tuple(self.rotation_matrix(angles).dot(axis)
+                     for axis in self.det_axes_init)
+
+    @property
+    def extra_rotation(self):
+        """Rotation matrix to the initial detector configuration.
+
+        This rotation is applied after the initial definition of axis,
+        detector position and detector axes.
+        """
+        return self.__extra_rotation
+
     def __repr__(self):
         """Return ``repr(self)``."""
-        arg_fstr = '\n    {!r},\n    {!r}'
-        if not np.allclose(self.axis, [0, 0, 1]):
-            arg_fstr += ',\n    axis={axis!r}'
+        posargs = [self.motion_partition, self.det_partition]
+        optargs = []
 
-        if not np.allclose(self._det_init_pos,
-                           perpendicular_vector(self.axis)):
-            arg_fstr += ',\n    det_init_pos={det_init_pos!r}'
+        if not np.allclose(self.extra_rotation, np.eye(self.ndim)):
+            inv_rot = np.linalg.inv(self.extra_rotation)
+            orig_axis = inv_rot.dot(self.axis)
+            orig_det_pos = inv_rot.dot(self.det_pos_init)
+            orig_det_axes = [inv_rot.dot(a) for a in self.det_axes_init]
+        else:
+            orig_axis = self.axis
+            orig_det_pos = self.det_pos_init
+            orig_det_axes = self.det_axes_init
 
-        default_axes = [np.cross(self.axis, self._det_init_pos), self.axis]
-        if not np.allclose(self.detector.axes, default_axes):
-            arg_fstr += ',\n    det_init_axes={det_init_axes!r}'
+        def_axis = self._default_config['axis']
+        if not np.allclose(orig_axis, def_axis):
+            optargs.append(('axis', orig_axis.tolist(), None))
+            init_rot = rotation_matrix_from_to(def_axis, orig_axis)
+            orig_det_pos = init_rot.T.dot(orig_det_pos)
+            orig_det_axes = [init_rot.T.dot(a) for a in orig_det_axes]
 
-        arg_str = arg_fstr.format(self.motion_partition,
-                                  self.det_partition,
-                                  axis=self.axis,
-                                  det_init_pos=self._det_init_pos,
-                                  det_init_axes=self.detector.axes)
-        return '{}({})'.format(self.__class__.__name__, arg_str)
+        def_init_pos = self._default_config['det_pos_init']
+        if not np.allclose(orig_det_pos, def_init_pos):
+            optargs.append(('det_pos_init', orig_det_pos.tolist(), None))
+
+        def_init_axes = self._default_config['det_axes_init']
+        if not np.allclose(orig_det_axes, def_init_axes):
+            det_axes_init = tuple(a.tolist() for a in orig_det_axes)
+            optargs.append(('det_axes_init', det_axes_init, None))
+
+        if not np.allclose(self.extra_rotation, np.eye(self.ndim)):
+            optargs.append(('extra_rot', self.extra_rotation.tolist(), None))
+
+        sig_str = signature_string(posargs, optargs, sep=[',\n', ',\n', ',\n'])
+        return '{}(\n{}\n)'.format(self.__class__.__name__,
+                                   indent_rows(sig_str))
 
     # Fix for bug in ABC thinking this is abstract
     rotation_matrix = AxisOrientedGeometry.rotation_matrix
@@ -538,6 +940,5 @@ http://dx.doi.org/10.1137/1.9780898718324
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

@@ -14,8 +14,8 @@ from builtins import int
 
 import numpy as np
 
-
-__all__ = ('euler_matrix', 'axis_rotation', 'axis_rotation_matrix')
+__all__ = ('euler_matrix', 'axis_rotation', 'axis_rotation_matrix',
+           'rotation_matrix_from_to', 'perpendicular_vector')
 
 
 def euler_matrix(*angles):
@@ -170,6 +170,142 @@ def axis_rotation_matrix(axis, angle):
     sin_ang = np.sin(angle)
 
     return cos_ang * id_mat + (1. - cos_ang) * dy_mat + sin_ang * cross_mat
+
+
+def rotation_matrix_from_to(from_vec, to_vec):
+    """Return a matrix that rotates ``from_vec`` to ``to_vec`` in 3d.
+
+    Since a rotation from one vector to another has (at least) one
+    degree of freedom, this function makes deliberate but still
+    arbitrary choices to fix these free parameters. See Notes for
+    details.
+
+    Parameters
+    ----------
+    from_vec, to_vec : `array-like`
+        Vectors between which the returned matrix rotates. They should not
+        be very close to zero or collinear. Their shapes must be equal
+        to ``(3,)``.
+
+    Returns
+    -------
+    matrix : `numpy.ndarray`, shape ``(3, 3)``
+        A matrix rotating ``from_vec`` to ``to_vec``. Note that the
+        matrix does *not* include scaling, i.e. it is not guaranteed
+        that ``matrix.dot(from_vec) == to_vec``.
+
+    Examples
+    --------
+    In two dimensions, rotation is simple:
+
+    >>> from_vec, to_vec = [1, 0], [1, 1]
+    >>> mat = rotation_matrix_from_to(from_vec, to_vec)
+    >>> to_vec_normalized = np.divide(to_vec, np.linalg.norm(to_vec))
+    >>> np.allclose(mat.dot([1, 0]), to_vec_normalized)
+    True
+    >>> from_vec, to_vec = [1, 0], [-1, 1]
+    >>> mat = rotation_matrix_from_to(from_vec, to_vec)
+    >>> to_vec_normalized = np.divide(to_vec, np.linalg.norm(to_vec))
+    >>> np.allclose(mat.dot([1, 0]), to_vec_normalized)
+    True
+
+    Rotation in 3d by less than ``pi``:
+
+    >>> from_vec, to_vec = [1, 0, 0], [-1, 1, 0]
+    >>> mat = rotation_matrix_from_to(from_vec, to_vec)
+    >>> to_vec_normalized = np.divide(to_vec, np.linalg.norm(to_vec))
+    >>> np.allclose(mat.dot([1, 0, 0]), to_vec_normalized)
+    True
+
+    Rotation by more than ``pi``:
+
+    >>> from_vec, to_vec = [1, 0, 0], [-1, -1, 0]
+    >>> mat = rotation_matrix_from_to(from_vec, to_vec)
+    >>> to_vec_normalized = np.divide(to_vec, np.linalg.norm(to_vec))
+    >>> np.allclose(mat.dot([1, 0, 0]), to_vec_normalized)
+    True
+
+    Notes
+    -----
+    In 3d, the matrix corresponds to a rotation around the normal vector
+    :math:`\hat n = \hat u \\times \hat v`, where :math:`\hat u` and
+    :math:`\hat v` are the normalized versions of :math:`u`, the
+    vector from which to rotate, and :math:`v`, the vector to which
+    should be rotated.
+
+    The rotation angle is determined as
+    :math:`\\alpha = \pm \\arccos(\\langle \hat u, \hat v \\rangle)`.
+    Its sign corresponds to the sign of
+    :math:`\\langle \hat b, \hat v\\rangle`, where
+    :math:`\hat b = \hat n \\times \hat u` is the binormal vector.
+
+    In the case that :math:`\hat u` and :math:`\hat v` are collinear,
+    a perpendicular vector is chosen as :math:`\hat n = (1, 0, 0)` if
+    :math:`v_1 = v_2 = 0`, else :math:`\hat n = (-v_2, v_1, v_3)`.
+    The angle in this case is :math:`\\alpha = 0` if
+    :math:`\\langle \hat u, \hat v \\rangle > 0`, otherwise
+    :math:`\\alpha = \pi`.
+    """
+    from_vec, from_vec_in = (np.array(from_vec, dtype=float, copy=True),
+                             from_vec)
+    to_vec, to_vec_in = np.array(to_vec, dtype=float, copy=True), to_vec
+
+    if from_vec.shape not in ((2,), (3,)):
+        raise ValueError('`from_vec.shape` must be (2,) or (3,), got {}'
+                         ''.format(from_vec.shape))
+    if to_vec.shape not in ((2,), (3,)):
+        raise ValueError('`to_vec.shape` must be (2,) or (3,), got {}'
+                         ''.format(to_vec.shape))
+    if from_vec.shape != to_vec.shape:
+        raise ValueError('`from_vec.shape` and `to_vec.shape` not equal: '
+                         '{} != {}'
+                         ''.format(from_vec.shape, to_vec.shape))
+
+    ndim = len(from_vec)
+
+    # Normalize vectors
+    from_vec_norm = np.linalg.norm(from_vec)
+    if from_vec_norm < 1e-10:
+        raise ValueError('`from_vec` {} too close to zero'.format(from_vec_in))
+    from_vec /= from_vec_norm
+    to_vec_norm = np.linalg.norm(to_vec)
+    if to_vec_norm < 1e-10:
+        raise ValueError('`to_vec` {} too close to zero'.format(to_vec_in))
+    to_vec /= to_vec_norm
+
+    if ndim == 2:
+        dot = np.dot(from_vec, to_vec)
+        from_rot = (-from_vec[1], from_vec[0])
+        if dot == 0:
+            angle = np.pi / 2 if np.dot(from_rot, to_vec) > 0 else -np.pi / 2
+        elif np.array_equal(to_vec, -from_vec):
+            angle = np.pi
+        else:
+            angle = (np.sign(np.dot(from_rot, to_vec)) *
+                     np.arccos(np.dot(from_vec, to_vec)))
+        return np.array([[np.cos(angle), -np.sin(angle)],
+                         [np.sin(angle), np.cos(angle)]])
+
+    elif ndim == 3:
+        # Determine normal
+        normal = np.cross(from_vec, to_vec)
+        normal_norm = np.linalg.norm(normal)
+
+        if normal_norm < 1e-10:
+            # Collinear vectors, use perpendicular vector and angle = 0 or pi
+            normal = perpendicular_vector(from_vec)
+            angle = 0 if np.dot(from_vec, to_vec) > 0 else np.pi
+            return axis_rotation_matrix(normal, angle)
+        else:
+            # Usual case, determine binormal and sign of rotation angle
+            normal /= normal_norm
+            binormal = np.cross(normal, from_vec)
+            angle = (np.sign(np.dot(binormal, to_vec)) *
+                     np.arccos(np.dot(from_vec, to_vec)))
+            return axis_rotation_matrix(normal, angle)
+
+    else:
+        raise RuntimeError('bad ndim')
 
 
 def is_rotation_matrix(mat, show_diff=False):
