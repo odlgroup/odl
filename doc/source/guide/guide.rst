@@ -15,6 +15,7 @@ It is intended to familiarize you with important concepts that can be hard to in
     linearspace_guide
     numpy_guide
     vectorization_guide
+    geometry_guide
     functional_guide
     proximal_lang_guide
     chambolle_pock_guide
