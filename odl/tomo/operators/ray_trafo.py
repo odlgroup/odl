@@ -211,26 +211,54 @@ class RayTransform(Operator):
 
     def _call(self, x, out=None):
         """Forward project ``x`` and store the result in ``out`` if given."""
+        if self.domain.is_rn:
+            return self._call_real_fp(x, out)
+
+        elif self.domain.is_cn:
+            result_parts = []
+            for part in ['real', 'imag']:
+                x_part = getattr(x, part)
+                out_part = getattr(out, part, None)
+                result_parts.append(self._call_real_fp(x_part, out_part))
+
+            if out is None:
+                out = self.range.element()
+                out.real = result_parts[0]
+                out.imag = result_parts[1]
+
+            return out
+
+        else:
+            raise RuntimeError('bad domain {!r}'.format(self.domain))
+
+    def _call_real_fp(self, x_real, out_real):
+        """Real-space forward projection for the current set-up.
+
+        This method also sets ``self._astra_projector`` for
+        ``impl='astra_cuda'`` and enabled cache.
+        """
         if self.impl.startswith('astra'):
             backend, data_impl = self.impl.split('_')
             if data_impl == 'cpu':
-                return astra_cpu_forward_projector(x, self.geometry,
-                                                   self.range, out)
+                return astra_cpu_forward_projector(x_real, self.geometry,
+                                                   self.range.real_space,
+                                                   out_real)
             elif data_impl == 'cuda':
-                proj = getattr(self, 'astra_projector', None)
+                proj = getattr(self, '_astra_projector', None)
                 if proj is None:
                     self._astra_projector = AstraCudaProjectorImpl(
-                        self.geometry, self.domain, self.range,
-                        use_cache=self.use_cache)
+                        self.geometry, self.domain.real_space,
+                        self.range.real_space, self.use_cache)
 
-                return self._astra_projector.call_forward(x, out)
+                return self._astra_projector.call_forward(x_real, out_real)
             else:
                 # Should never happen
                 raise RuntimeError('bad `impl` {!r}'.format(self.impl))
         elif self.impl == 'skimage':
-            return skimage_radon_forward(x, self.geometry, self.range, out)
-        else:  # Should never happen
-            raise RuntimeError('bad `impl` {!r}'.format(self.impl))
+            return skimage_radon_forward(x_real, self.geometry,
+                                         self.range.real_space, out_real)
+        # Should never happen
+        raise RuntimeError('bad `impl` {!r}'.format(self.impl))
 
     @property
     def adjoint(self):
@@ -381,28 +409,58 @@ class RayBackProjection(Operator):
 
     def _call(self, x, out=None):
         """Back-project ``x`` and store the result in ``out`` if given."""
+        if self.domain.is_rn:
+            return self._call_real_bp(x, out)
 
+        elif self.domain.is_cn:
+            result_parts = []
+            for part in ['real', 'imag']:
+                x_part = getattr(x, part)
+                out_part = getattr(out, part, None)
+                result_parts.append(self._call_real_bp(x_part, out_part))
+
+            if out is None:
+                out = self.range.element()
+                out.real = result_parts[0]
+                out.imag = result_parts[1]
+
+            return out
+
+        else:
+            raise RuntimeError('bad domain {!r}'.format(self.domain))
+
+    def _call_real_bp(self, x_real, out_real):
+        """Real-space back-projection for the current set-up.
+
+        This method also sets ``self._astra_backprojector`` for
+        ``impl='astra_cuda'`` and enabled cache.
+        """
         if self.impl.startswith('astra'):
             backend, data_impl = self.impl.split('_')
             if data_impl == 'cpu':
-                return astra_cpu_back_projector(x, self.geometry,
-                                                self.range, out)
+                return astra_cpu_back_projector(x_real, self.geometry,
+                                                self.range.real_space,
+                                                out_real)
             elif data_impl == 'cuda':
-                backproj = getattr(self, 'astra_backprojector', None)
+                backproj = getattr(self, '_astra_backprojector', None)
                 if backproj is None:
                     self._astra_backprojector = AstraCudaBackProjectorImpl(
-                        self.geometry, self.range, self.domain,
-                        use_cache=self.use_cache)
+                        self.geometry, self.range.real_space,
+                        self.domain.real_space, self.use_cache)
 
-                return self._astra_backprojector.call_backward(x, out)
+                return self._astra_backprojector.call_backward(x_real,
+                                                               out_real)
             else:
                 # Should never happen
-                raise RuntimeError('implementation info is inconsistent')
+                raise RuntimeError('bad `impl` {!r}'.format(self.impl))
+
         elif self.impl == 'skimage':
-            return skimage_radon_back_projector(x, self.geometry,
-                                                self.range, out)
-        else:  # Should never happen
-            raise RuntimeError('implementation info is inconsistent')
+            return skimage_radon_back_projector(x_real, self.geometry,
+                                                self.range.real_space,
+                                                out_real)
+        else:
+            # Should never happen
+            raise RuntimeError('bad `impl` {!r}'.format(self.impl))
 
     @property
     def adjoint(self):
