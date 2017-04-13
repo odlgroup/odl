@@ -30,16 +30,16 @@ __all__ = ('psnr',)
 
 def mse(true, noisy):
     """Return the Mean Squared Errror.
-    
+
     Parameters
     ----------
     true : array-like
     noisy : array-like
-    
+
     Returns
     -------
-    psnr : float
-    
+    mse : float
+
     Examples
     --------
     >>> true = [1, 1, 1, 1, 1]
@@ -55,16 +55,16 @@ def mse(true, noisy):
 
 def psnr(true, noisy):
     """Return the Peak signal-to-noise ratio.
-    
+
     Parameters
     ----------
     true : array-like
     noisy : array-like
-    
+
     Returns
     -------
     psnr : float
-    
+
     Examples
     --------
     >>> true = [1, 1, 1, 1, 1]
@@ -72,23 +72,23 @@ def psnr(true, noisy):
     >>> result = psnr(true, noisy)
     >>> print('{:.3f}'.format(result))
     6.990
-    
+
     If true == noisy, the result is infinite
-    
+
     >>> psnr([1, 1], [1, 1])
     inf
-    
+
     If `true == 0` but `noisy != 0`, the result is negative infinity
-    
+
     >>> psnr(0, 1)
     -inf
     """
     true = np.asarray(true)
     noisy = np.asarray(noisy)
-    
+
     mse_result = mse(true, noisy)
     max_true = np.max(np.abs(true))
-    
+
     if mse_result == 0:
         return np.inf
     elif max_true == 0:
