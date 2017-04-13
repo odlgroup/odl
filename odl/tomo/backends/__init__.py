@@ -32,5 +32,5 @@ __all__ += astra_cpu.__all__
 from .astra_cuda import *
 __all__ += astra_cuda.__all__
 
-from .scikit_radon import *
-__all__ += scikit_radon.__all__
+from .skimage_radon import *
+__all__ += skimage_radon.__all__
