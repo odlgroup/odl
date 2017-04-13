@@ -31,7 +31,13 @@ import odl.tomo as tomo
 from odl.tomo.backends import ASTRA_VERSION
 from odl.tomo.util.testutils import (skip_if_no_astra, skip_if_no_astra_cuda,
                                      skip_if_no_skimage)
-from odl.util.testutils import almost_equal, all_almost_equal
+from odl.util.testutils import almost_equal, all_almost_equal, simple_fixture
+
+
+impl_params = [skip_if_no_astra('astra_cpu'),
+               skip_if_no_astra_cuda('astra_cuda'),
+               skip_if_no_skimage('skimage')]
+impl = simple_fixture('impl', impl_params, fmt=" {name} = '{value.args[1]}' ")
 
 
 # Find the valid projectors
@@ -227,6 +233,24 @@ def test_angles(projector):
 
     # We expect the maximum at pi / 2 (and possibly multiples of it)
     assert almost_equal(np.fmod(maximum_angle, np.pi), np.pi / 2, places=1)
+
+
+def test_complex(impl):
+    """Test transform of complex input for parallel 2d geometry."""
+    space_c = odl.uniform_discr([-1, -1], [1, 1], (10, 10), dtype='complex64')
+    space_r = space_c.real_space
+    geom = odl.tomo.parallel_beam_geometry(space_c)
+    ray_trafo_c = odl.tomo.RayTransform(space_c, geom, impl=impl)
+    ray_trafo_r = odl.tomo.RayTransform(space_r, geom, impl=impl)
+    vol = odl.phantom.shepp_logan(space_c)
+    vol.imag = odl.phantom.cuboid(space_r)
+
+    data = ray_trafo_c(vol)
+    true_data_re = ray_trafo_r(vol.real)
+    true_data_im = ray_trafo_r(vol.imag)
+
+    assert all_almost_equal(data.real, true_data_re)
+    assert all_almost_equal(data.imag, true_data_im)
 
 
 if __name__ == '__main__':
