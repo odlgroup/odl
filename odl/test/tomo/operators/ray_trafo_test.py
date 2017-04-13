@@ -30,7 +30,7 @@ import odl
 import odl.tomo as tomo
 from odl.tomo.backends import ASTRA_VERSION
 from odl.tomo.util.testutils import (skip_if_no_astra, skip_if_no_astra_cuda,
-                                     skip_if_no_scikit)
+                                     skip_if_no_skimage)
 from odl.util.testutils import almost_equal, all_almost_equal
 
 
@@ -55,8 +55,8 @@ projectors = [skip_if_no_astra('par2d astra_cpu uniform'),
               skip_if_no_astra_cuda('cone3d astra_cuda nonuniform'),
               skip_if_no_astra_cuda('cone3d astra_cuda random'),
               skip_if_no_astra_cuda('helical astra_cuda uniform'),
-              skip_if_no_scikit('par2d scikit uniform'),
-              skip_if_no_scikit('par2d scikit half_uniform')]
+              skip_if_no_skimage('par2d skimage uniform'),
+              skip_if_no_skimage('par2d skimage half_uniform')]
 
 
 projector_ids = ['geom={}, impl={}, angles={}'

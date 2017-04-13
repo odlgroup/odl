@@ -21,46 +21,46 @@ from odl.discr import uniform_discr_frompartition, uniform_partition
 import numpy as np
 try:
     from skimage.transform import radon, iradon
-    SCIKIT_AVAILABLE = True
+    SKIMAGE_AVAILABLE = True
 except ImportError:
-    SCIKIT_AVAILABLE = False
+    SKIMAGE_AVAILABLE = False
 
-__all__ = ('scikit_radon_forward', 'scikit_radon_back_projector',
-           'SCIKIT_AVAILABLE')
+__all__ = ('skimage_radon_forward', 'skimage_radon_back_projector',
+           'SKIMAGE_AVAILABLE')
 
 
-def scikit_theta(geometry):
-    """Calculate angles in degrees with ODL scikit conventions."""
+def skimage_theta(geometry):
+    """Calculate angles in degrees with ODL skimage conventions."""
     return geometry.angles * 180.0 / np.pi
 
 
-def scikit_sinogram_space(geometry, volume_space, sinogram_space):
-    """Create a range adapted to the scikit radon geometry."""
+def skimage_sinogram_space(geometry, volume_space, sinogram_space):
+    """Create a range adapted to the skimage radon geometry."""
 
     padded_size = int(np.ceil(volume_space.shape[0] * np.sqrt(2)))
     det_width = volume_space.domain.extent[0] * np.sqrt(2)
-    scikit_detector_part = uniform_partition(-det_width / 2.0,
-                                             det_width / 2.0,
-                                             padded_size)
+    skimage_detector_part = uniform_partition(-det_width / 2.0,
+                                              det_width / 2.0,
+                                              padded_size)
 
-    scikit_range_part = geometry.motion_partition.insert(1,
-                                                         scikit_detector_part)
+    skimage_range_part = geometry.motion_partition.insert(
+        1, skimage_detector_part)
 
-    scikit_range = uniform_discr_frompartition(scikit_range_part,
-                                               interp=sinogram_space.interp,
-                                               dtype=sinogram_space.dtype)
+    skimage_range = uniform_discr_frompartition(skimage_range_part,
+                                                interp=sinogram_space.interp,
+                                                dtype=sinogram_space.dtype)
 
-    return scikit_range
+    return skimage_range
 
 
-def clamped_interpolation(scikit_range, sinogram):
+def clamped_interpolation(skimage_range, sinogram):
     """Interpolate in a possibly smaller space.
 
     Sets all points that would be outside the domain to match the
     boundary values.
     """
-    min_x = scikit_range.domain.min()[1]
-    max_x = scikit_range.domain.max()[1]
+    min_x = skimage_range.domain.min()[1]
+    max_x = skimage_range.domain.max()[1]
 
     def interpolation_wrapper(x):
         x = (x[0], np.maximum(min_x, np.minimum(max_x, x[1])))
@@ -69,8 +69,8 @@ def clamped_interpolation(scikit_range, sinogram):
     return interpolation_wrapper
 
 
-def scikit_radon_forward(volume, geometry, range, out=None):
-    """Calculate forward projection using scikit
+def skimage_radon_forward(volume, geometry, range, out=None):
+    """Calculate forward projection using skimage.
 
     Parameters
     ----------
@@ -92,15 +92,16 @@ def scikit_radon_forward(volume, geometry, range, out=None):
     # Check basic requirements. Fully checking should be in wrapper
     assert volume.shape[0] == volume.shape[1]
 
-    theta = scikit_theta(geometry)
-    scikit_range = scikit_sinogram_space(geometry, volume.space, range)
+    theta = skimage_theta(geometry)
+    skimage_range = skimage_sinogram_space(geometry, volume.space, range)
 
-    sinogram = scikit_range.element(radon(volume.asarray(), theta=theta).T)
+    sino_arr = radon(volume.asarray(), theta=theta, circle=False).T
+    sinogram = skimage_range.element(sino_arr)
 
     if out is None:
         out = range.element()
 
-    out.sampling(clamped_interpolation(scikit_range, sinogram))
+    out.sampling(clamped_interpolation(skimage_range, sinogram))
 
     scale = volume.space.cell_sides[0]
 
@@ -109,8 +110,8 @@ def scikit_radon_forward(volume, geometry, range, out=None):
     return out
 
 
-def scikit_radon_back_projector(sinogram, geometry, range, out=None):
-    """Calculate forward projection using scikit
+def skimage_radon_back_projector(sinogram, geometry, range, out=None):
+    """Calculate forward projection using skimage.
 
     Parameters
     ----------
@@ -128,11 +129,11 @@ def scikit_radon_back_projector(sinogram, geometry, range, out=None):
     sinogram : ``range`` element
         Sinogram given by the projection.
     """
-    theta = scikit_theta(geometry)
-    scikit_range = scikit_sinogram_space(geometry, range, sinogram.space)
+    theta = skimage_theta(geometry)
+    skimage_range = skimage_sinogram_space(geometry, range, sinogram.space)
 
-    scikit_sinogram = scikit_range.element()
-    scikit_sinogram.sampling(clamped_interpolation(range, sinogram))
+    skimage_sinogram = skimage_range.element()
+    skimage_sinogram.sampling(clamped_interpolation(range, sinogram))
 
     if out is None:
         out = range.element()
@@ -140,8 +141,8 @@ def scikit_radon_back_projector(sinogram, geometry, range, out=None):
         # Only do asserts here since these are backend functions
         assert out in range
 
-    out[:] = iradon(scikit_sinogram.asarray().T, theta,
-                    output_size=range.shape[0], filter=None)
+    out[:] = iradon(skimage_sinogram.asarray().T, theta,
+                    output_size=range.shape[0], filter=None, circle=False)
 
     # Empirically determined value, gives correct scaling
     scaling_factor = 4.0 * float(geometry.motion_params.length) / (2 * np.pi)

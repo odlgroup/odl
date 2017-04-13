@@ -31,14 +31,14 @@ from odl.space import FunctionSpace
 from odl.tomo.geometry import Geometry, Parallel2dGeometry
 from odl.space.weighting import NoWeighting, ConstWeighting
 from odl.tomo.backends import (
-    ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE, SCIKIT_AVAILABLE,
+    ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE, SKIMAGE_AVAILABLE,
     astra_cpu_forward_projector, astra_cpu_back_projector,
     AstraCudaProjectorImpl, AstraCudaBackProjectorImpl,
-    scikit_radon_forward, scikit_radon_back_projector)
+    skimage_radon_forward, skimage_radon_back_projector)
 
 
 ASTRA_CPU_AVAILABLE = ASTRA_AVAILABLE
-_SUPPORTED_IMPL = ('astra_cpu', 'astra_cuda', 'scikit')
+_SUPPORTED_IMPL = ('astra_cpu', 'astra_cuda', 'skimage')
 
 
 __all__ = ('RayTransform', 'RayBackProjection')
@@ -61,11 +61,11 @@ class RayTransform(Operator):
 
         Other Parameters
         ----------------
-        impl : {`None`, 'astra_cuda', 'astra_cpu', 'scikit'}, optional
+        impl : {`None`, 'astra_cuda', 'astra_cpu', 'skimage'}, optional
             Implementation back-end for the transform. Supported back-ends:
             * ``'astra_cuda'``: ASTRA toolbox, using CUDA, 2D or 3D
             * ``'astra_cpu'``: ASTRA toolbox using CPU, only 2D
-            * ``'scikit'``: scikit-image, only 2D parallel with square domain
+            * ``'skimage'``: scikit-image, only 2D parallel with square domain
             If ``None`` is given, the fastest available back-end is used.
         interp : {'nearest', 'linear'}, optional
             Interpolation type for the discretization of the operator
@@ -101,8 +101,8 @@ class RayTransform(Operator):
                 impl = 'astra_cuda'
             elif ASTRA_AVAILABLE:
                 impl = 'astra_cpu'
-            elif SCIKIT_AVAILABLE:
-                impl = 'scikit'
+            elif SKIMAGE_AVAILABLE:
+                impl = 'skimage'
             else:
                 raise ValueError('no valid `impl` installed')
 
@@ -125,9 +125,9 @@ class RayTransform(Operator):
             if geometry.ndim > 2 and impl.endswith('cpu'):
                 raise ValueError('`impl` {}, only works for 2d geometries'
                                  ' got {}-d'.format(impl_in, geometry))
-        elif impl == 'scikit':
+        elif impl == 'skimage':
             if not isinstance(geometry, Parallel2dGeometry):
-                raise TypeError("'scikit' backend only supports 2d parallel "
+                raise TypeError("'skimage' backend only supports 2d parallel "
                                 'geometries')
 
             mid_pt = discr_domain.domain.mid_pt
@@ -227,8 +227,8 @@ class RayTransform(Operator):
             else:
                 # Should never happen
                 raise RuntimeError('bad `impl` {!r}'.format(self.impl))
-        elif self.impl == 'scikit':
-            return scikit_radon_forward(x, self.geometry, self.range, out)
+        elif self.impl == 'skimage':
+            return skimage_radon_forward(x, self.geometry, self.range, out)
         else:  # Should never happen
             raise RuntimeError('bad `impl` {!r}'.format(self.impl))
 
@@ -268,11 +268,11 @@ class RayBackProjection(Operator):
 
         Other Parameters
         ----------------
-        impl : {'astra_cpu', 'astra_cuda', 'scikit'}, optional
+        impl : {'astra_cpu', 'astra_cuda', 'skimage'}, optional
             Implementation back-end for the transform. Supported back-ends:
             * ``'astra_cuda'``: ASTRA toolbox, using CUDA, 2D or 3D
             * ``'astra_cpu'``: ASTRA toolbox using CPU, only 2D
-            * ``'scikit'``: scikit-image, only 2D parallel with square domain
+            * ``'skimage'``: scikit-image, only 2D parallel with square domain
             If ``None`` is given, the fastest available back-end is used.
         interp : {'nearest', 'linear'}, optional
             Interpolation type for the discretization of the operator range.
@@ -301,8 +301,8 @@ class RayBackProjection(Operator):
                 impl = 'astra_cuda'
             elif ASTRA_AVAILABLE:
                 impl = 'astra_cpu'
-            elif SCIKIT_AVAILABLE:
-                impl = 'scikit'
+            elif SKIMAGE_AVAILABLE:
+                impl = 'skimage'
             else:
                 raise ValueError('no valid `impl` installed')
 
@@ -398,9 +398,9 @@ class RayBackProjection(Operator):
             else:
                 # Should never happen
                 raise RuntimeError('implementation info is inconsistent')
-        elif self.impl == 'scikit':
-            return scikit_radon_back_projector(x, self.geometry,
-                                               self.range, out)
+        elif self.impl == 'skimage':
+            return skimage_radon_back_projector(x, self.geometry,
+                                                self.range, out)
         else:  # Should never happen
             raise RuntimeError('implementation info is inconsistent')
 
