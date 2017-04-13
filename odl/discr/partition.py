@@ -974,15 +974,16 @@ def uniform_partition_fromgrid(grid, min_pt=None, max_pt=None):
     >>> part.cell_boundary_vecs[1]
     array([-0.25,  0.25,  0.75,  3.  ])
     """
-    # Make dictionaries from min_pt and max_pt and fill with None where no
-    # value is given.
+    # Make dictionaries from `min_pt` and `max_pt` and fill with `None` where
+    # no value is given (taking negative indices into account)
     if min_pt is None:
         min_pt = {i: None for i in range(grid.ndim)}
     elif not hasattr(min_pt, 'items'):  # array-like
         min_pt = np.atleast_1d(min_pt)
         min_pt = {i: float(v) for i, v in enumerate(min_pt)}
     else:
-        min_pt.update({i: None for i in range(grid.ndim) if i not in min_pt})
+        min_pt.update({i: None for i in range(grid.ndim)
+                       if i not in min_pt and i - grid.ndim not in min_pt})
 
     if max_pt is None:
         max_pt = {i: None for i in range(grid.ndim)}
@@ -990,7 +991,8 @@ def uniform_partition_fromgrid(grid, min_pt=None, max_pt=None):
         max_pt = np.atleast_1d(max_pt)
         max_pt = {i: float(v) for i, v in enumerate(max_pt)}
     else:
-        max_pt.update({i: None for i in range(grid.ndim) if i not in max_pt})
+        max_pt.update({i: None for i in range(grid.ndim)
+                      if i not in max_pt and i - grid.ndim not in max_pt})
 
     # Set the values in the vectors by computing (None) or directly from the
     # given vectors (otherwise).
