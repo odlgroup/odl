@@ -31,18 +31,18 @@ from odl.space import FunctionSpace
 from odl.tomo.geometry import Geometry, Parallel2dGeometry
 from odl.space.weighting import NoWeighting, ConstWeighting
 from odl.tomo.backends import (
-    ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE, SCIKIT_IMAGE_AVAILABLE,
+    ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE, SCIKIT_AVAILABLE,
     astra_cpu_forward_projector, astra_cpu_back_projector,
     AstraCudaProjectorImpl, AstraCudaBackProjectorImpl,
     scikit_radon_forward, scikit_radon_back_projector)
 
+
+ASTRA_CPU_AVAILABLE = ASTRA_AVAILABLE
 _SUPPORTED_IMPL = ('astra_cpu', 'astra_cuda', 'scikit')
 
 
 __all__ = ('RayTransform', 'RayBackProjection')
 
-
-# TODO: DivergentBeamTransform?
 
 class RayTransform(Operator):
 
@@ -101,25 +101,22 @@ class RayTransform(Operator):
                 impl = 'astra_cuda'
             elif ASTRA_AVAILABLE:
                 impl = 'astra_cpu'
-            elif SCIKIT_IMAGE_AVAILABLE:
+            elif SCIKIT_AVAILABLE:
                 impl = 'scikit'
             else:
                 raise ValueError('no valid `impl` installed')
 
         impl, impl_in = str(impl).lower(), impl
         if impl not in _SUPPORTED_IMPL:
-            raise ValueError('`impl` {!r} not supported'
-                             ''.format(impl_in))
+            raise ValueError('`impl` {!r} not understood'.format(impl_in))
+        impl_available = globals()[impl.upper() + '_AVAILABLE']
+        if not impl_available:
+            raise ValueError('{!r} back-end not available'.format(impl))
 
         self.use_cache = kwargs.pop('use_cache', True)
 
-        # TODO: sanity checks between impl and discretization impl
         if impl.startswith('astra'):
-            # TODO: these should be moved somewhere else
-            if not ASTRA_AVAILABLE:
-                raise ValueError("'astra' back-end not available")
-            if impl == 'astra_cuda' and not ASTRA_CUDA_AVAILABLE:
-                raise ValueError("'astra_cuda' back-end not available")
+            # TODO: these checks should be moved somewhere else
             if not np.allclose(discr_domain.partition.cell_sides[1:],
                                discr_domain.partition.cell_sides[:-1]):
                 raise ValueError('ASTRA does not support different voxel '
@@ -151,7 +148,7 @@ class RayTransform(Operator):
         # TODO: sanity checks between domain and geometry (ndim, ...)
         self.__geometry = geometry
         self.__impl = impl
-        self.kwargs = kwargs
+        self._kwargs = kwargs
 
         discr_range = kwargs.pop('discr_range', None)
         if discr_range is None:
@@ -198,7 +195,7 @@ class RayTransform(Operator):
                 interp=range_interp, order=discr_domain.order,
                 axis_labels=axis_labels)
 
-        self.backproj = None
+        self._backproj = None
 
         super().__init__(discr_domain, discr_range, linear=True)
 
@@ -222,18 +219,18 @@ class RayTransform(Operator):
             elif data_impl == 'cuda':
                 proj = getattr(self, 'astra_projector', None)
                 if proj is None:
-                    self.astra_projector = AstraCudaProjectorImpl(
+                    self._astra_projector = AstraCudaProjectorImpl(
                         self.geometry, self.domain, self.range,
                         use_cache=self.use_cache)
 
-                return self.astra_projector.call_forward(x, out)
+                return self._astra_projector.call_forward(x, out)
             else:
                 # Should never happen
-                raise RuntimeError('implementation info is inconsistent')
+                raise RuntimeError('bad `impl` {!r}'.format(self.impl))
         elif self.impl == 'scikit':
             return scikit_radon_forward(x, self.geometry, self.range, out)
         else:  # Should never happen
-            raise RuntimeError('implementation info is inconsistent')
+            raise RuntimeError('bad `impl` {!r}'.format(self.impl))
 
     @property
     def adjoint(self):
@@ -243,16 +240,16 @@ class RayTransform(Operator):
         -------
         adjoint : `RayBackProjection`
         """
-        if self.backproj is not None:
-            return self.backproj
+        if self._backproj is not None:
+            return self._backproj
 
-        kwargs = self.kwargs.copy()
+        kwargs = self._kwargs.copy()
         kwargs['discr_domain'] = self.range
-        self.backproj = RayBackProjection(self.domain, self.geometry,
-                                          impl=self.impl,
-                                          use_cache=self.use_cache,
-                                          **kwargs)
-        return self.backproj
+        self._backproj = RayBackProjection(self.domain, self.geometry,
+                                           impl=self.impl,
+                                           use_cache=self.use_cache,
+                                           **kwargs)
+        return self._backproj
 
 
 class RayBackProjection(Operator):
@@ -304,21 +301,19 @@ class RayBackProjection(Operator):
                 impl = 'astra_cuda'
             elif ASTRA_AVAILABLE:
                 impl = 'astra_cpu'
-            elif SCIKIT_IMAGE_AVAILABLE:
+            elif SCIKIT_AVAILABLE:
                 impl = 'scikit'
             else:
                 raise ValueError('no valid `impl` installed')
 
         impl, impl_in = str(impl).lower(), impl
         if impl not in _SUPPORTED_IMPL:
-            raise ValueError("`impl` '{}' not supported"
-                             ''.format(impl_in))
+            raise ValueError('`impl` {!r} not supported'.format(impl_in))
+        impl_available = globals()[impl.upper() + '_AVAILABLE']
+        if not impl_available:
+            raise ValueError('{!r} back-end not available'.format(impl))
 
         if impl.startswith('astra'):
-            if not ASTRA_AVAILABLE:
-                raise ValueError("'astra' backend not available")
-            if impl == 'astra_cuda' and not ASTRA_CUDA_AVAILABLE:
-                raise ValueError("'astra_cuda' backend not available")
             if not np.allclose(discr_range.partition.cell_sides[1:],
                                discr_range.partition.cell_sides[:-1],
                                atol=0, rtol=1e-5):
@@ -330,7 +325,7 @@ class RayBackProjection(Operator):
 
         self.__geometry = geometry
         self.__impl = impl
-        self.kwargs = kwargs
+        self._kwargs = kwargs
 
         discr_domain = kwargs.pop('discr_domain', None)
         if discr_domain is None:
@@ -370,7 +365,7 @@ class RayBackProjection(Operator):
                 interp=domain_interp, order=discr_range.order,
                 axis_labels=axis_labels)
 
-        self.ray_trafo = None
+        self._ray_trafo = None
 
         super().__init__(discr_domain, discr_range, linear=True)
 
@@ -395,11 +390,11 @@ class RayBackProjection(Operator):
             elif data_impl == 'cuda':
                 backproj = getattr(self, 'astra_backprojector', None)
                 if backproj is None:
-                    self.astra_backprojector = AstraCudaBackProjectorImpl(
+                    self._astra_backprojector = AstraCudaBackProjectorImpl(
                         self.geometry, self.range, self.domain,
                         use_cache=self.use_cache)
 
-                return self.astra_backprojector.call_backward(x, out)
+                return self._astra_backprojector.call_backward(x, out)
             else:
                 # Should never happen
                 raise RuntimeError('implementation info is inconsistent')
@@ -417,16 +412,16 @@ class RayBackProjection(Operator):
         -------
         adjoint : `RayTransform`
         """
-        if self.ray_trafo is not None:
-            return self.ray_trafo
+        if self._ray_trafo is not None:
+            return self._ray_trafo
 
-        kwargs = self.kwargs.copy()
+        kwargs = self._kwargs.copy()
         kwargs['discr_range'] = self.domain
-        self.ray_trafo = RayTransform(self.range, self.geometry,
-                                      impl=self.impl,
-                                      use_cache=self.use_cache,
-                                      **kwargs)
-        return self.ray_trafo
+        self._ray_trafo = RayTransform(self.range, self.geometry,
+                                       impl=self.impl,
+                                       use_cache=self.use_cache,
+                                       **kwargs)
+        return self._ray_trafo
 
 
 if __name__ == '__main__':

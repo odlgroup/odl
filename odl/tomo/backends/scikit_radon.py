@@ -21,12 +21,12 @@ from odl.discr import uniform_discr_frompartition, uniform_partition
 import numpy as np
 try:
     from skimage.transform import radon, iradon
-    SCIKIT_IMAGE_AVAILABLE = True
+    SCIKIT_AVAILABLE = True
 except ImportError:
-    SCIKIT_IMAGE_AVAILABLE = False
+    SCIKIT_AVAILABLE = False
 
 __all__ = ('scikit_radon_forward', 'scikit_radon_back_projector',
-           'SCIKIT_IMAGE_AVAILABLE')
+           'SCIKIT_AVAILABLE')
 
 
 def scikit_theta(geometry):
@@ -54,10 +54,10 @@ def scikit_sinogram_space(geometry, volume_space, sinogram_space):
 
 
 def clamped_interpolation(scikit_range, sinogram):
-    """Interpolate in a possibly smaller space
+    """Interpolate in a possibly smaller space.
 
-    Sets all points that would be outside ofthe domain to match the boundary
-    values.
+    Sets all points that would be outside the domain to match the
+    boundary values.
     """
     min_x = scikit_range.domain.min()[1]
     max_x = scikit_range.domain.max()[1]
