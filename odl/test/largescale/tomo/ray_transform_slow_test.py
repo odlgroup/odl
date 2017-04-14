@@ -35,10 +35,8 @@ from odl.tomo.util.testutils import (skip_if_no_astra, skip_if_no_astra_cuda,
                                      skip_if_no_skimage)
 
 
-@pytest.fixture(scope="module", params=['float32', 'float64'],
-                ids=[' dtype=float32 ', ' dtype=float64 '])
-def dtype(request):
-    return request.param
+dtype_params = ['float32', 'float64', 'complex64']
+dtype = simple_fixture('dtype', dtype_params)
 
 
 # Find the valid projectors

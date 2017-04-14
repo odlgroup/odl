@@ -11,7 +11,7 @@ import odl
 # Reconstruction space: discretized complex-valued functions on the rectangle
 # [-20, 20]^2 with 300 samples per dimension.
 reco_space = odl.uniform_discr(
-    min_pt=[-20, -20], max_pt=[20, 20], shape=[300, 300], dtype='complex128')
+    min_pt=[-20, -20], max_pt=[20, 20], shape=[300, 300], dtype='complex64')
 
 # Parallel beam geometry with flat detector
 # Angles: uniformly spaced, n = 360, min = 0, max = pi
@@ -26,14 +26,17 @@ ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl='skimage')
 
 # Create a discretized phantom that is a Shepp-Logan phantom in the real
 # part and a cuboid in the imaginary part
-phantom = odl.phantom.shepp_logan(reco_space, modified=True)
-phantom.imag = odl.phantom.cuboid(reco_space.real_space)
+phantom = (odl.phantom.shepp_logan(reco_space, modified=True) +
+           1j * odl.phantom.cuboid(reco_space))
 
-# Create projection data by calling the ray transform on the phantom
+# Create projection data by calling the ray transform on the phantom.
+# This is equivalent to evaluating the real-space ray transform on the
+# real and imaginary parts separately.
 proj_data = ray_trafo(phantom)
 
 # Back-projection can be done by simply calling the adjoint operator on the
-# projection data (or any element in the projection space).
+# projection data (or any element in the projection space). Also here,
+# real and imaginary parts are back-projected separately.
 backproj = ray_trafo.adjoint(proj_data)
 
 # Show phantom, sinogram, and back-projected sinogram
