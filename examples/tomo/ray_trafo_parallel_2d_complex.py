@@ -1,8 +1,7 @@
 """Example computing the 2d parallel beam ray transform of a complex phantom.
 
-This example demonstrates that complex-valued functions work for both
-forward and back projections by application to real and imaginary parts
-separately.
+This example demonstrates that forward and back-projections work for
+complex-valued functions.
 """
 
 import numpy as np
@@ -30,8 +29,8 @@ phantom = (odl.phantom.shepp_logan(reco_space, modified=True) +
            1j * odl.phantom.cuboid(reco_space))
 
 # Create projection data by calling the ray transform on the phantom.
-# This is equivalent to evaluating the real-space ray transform on the
-# real and imaginary parts separately.
+# This is equivalent to evaluating the ray transform on the real and
+# imaginary parts separately.
 proj_data = ray_trafo(phantom)
 
 # Back-projection can be done by simply calling the adjoint operator on the
