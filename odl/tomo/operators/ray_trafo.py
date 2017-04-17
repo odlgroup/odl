@@ -39,6 +39,13 @@ from odl.tomo.backends import (
 
 ASTRA_CPU_AVAILABLE = ASTRA_AVAILABLE
 _SUPPORTED_IMPL = ('astra_cpu', 'astra_cuda', 'skimage')
+_AVAILABLE_IMPLS = []
+if ASTRA_CPU_AVAILABLE:
+    _AVAILABLE_IMPLS.append('astra_cpu')
+if ASTRA_CUDA_AVAILABLE:
+    _AVAILABLE_IMPLS.append('astra_cuda')
+if SKIMAGE_AVAILABLE:
+    _AVAILABLE_IMPLS.append('skimage')
 
 
 __all__ = ('RayTransform', 'RayBackProjection')
@@ -118,8 +125,7 @@ class RayTransformBase(Operator):
                             '{!r}'.format(geometry))
 
         # Handle backend choice
-        if not any(globals()[imp.upper() + '_AVAILABLE']
-                   for imp in _SUPPORTED_IMPL):
+        if not _AVAILABLE_IMPLS:
             raise RuntimeError('no ray transform back-end available; '
                                'this requires 3rd party packages, please '
                                'check the install docs')
@@ -138,8 +144,7 @@ class RayTransformBase(Operator):
             impl, impl_in = str(impl).lower(), impl
             if impl not in _SUPPORTED_IMPL:
                 raise ValueError('`impl` {!r} not understood'.format(impl_in))
-            impl_available = globals()[impl.upper() + '_AVAILABLE']
-            if not impl_available:
+            if impl not in _AVAILABLE_IMPLS:
                 raise ValueError('{!r} back-end not available'.format(impl))
 
         # Cache for input/output arrays of transforms
