@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Test scikit back-end."""
+"""Test skimage back-end."""
 
 from __future__ import print_function, division, absolute_import
 from future import standard_library
@@ -28,14 +28,14 @@ import pytest
 
 # Internal
 import odl
-from odl.tomo.backends.scikit_radon import (
-    scikit_radon_forward, scikit_radon_back_projector)
-from odl.tomo.util.testutils import skip_if_no_scikit
+from odl.tomo.backends.skimage_radon import (
+    skimage_radon_forward, skimage_radon_back_projector)
+from odl.tomo.util.testutils import skip_if_no_skimage
 
 
-@skip_if_no_scikit
-def test_scikit_radon_projector_parallel2d():
-    """Parallel 2D forward and backward projectors with scikit."""
+@skip_if_no_skimage
+def test_skimage_radon_projector_parallel2d():
+    """Parallel 2D forward and backward projectors with skimage."""
 
     # Create reco space and a phantom
     reco_space = odl.uniform_discr([-5, -5], [5, 5], (5, 5))
@@ -50,12 +50,12 @@ def test_scikit_radon_projector_parallel2d():
     proj_space = odl.uniform_discr_frompartition(geom.partition)
 
     # Forward evaluation
-    proj_data = scikit_radon_forward(phantom, geom, proj_space)
+    proj_data = skimage_radon_forward(phantom, geom, proj_space)
     assert proj_data.shape == proj_space.shape
     assert proj_data.norm() > 0
 
     # Backward evaluation
-    backproj = scikit_radon_back_projector(proj_data, geom, reco_space)
+    backproj = skimage_radon_back_projector(proj_data, geom, reco_space)
     assert backproj.shape == reco_space.shape
     assert backproj.norm() > 0
 

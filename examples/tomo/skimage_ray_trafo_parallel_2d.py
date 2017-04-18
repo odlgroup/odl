@@ -1,6 +1,6 @@
 """Example using the ray transform with 2d parallel beam geometry.
 
-This example makes use of the 'scikit' backend, which requires the
+This example makes use of the 'skimage' backend, which requires the
 `scikit-image <http://scikit-image.org/>`_ package.
 """
 
@@ -19,8 +19,8 @@ angle_partition = odl.uniform_partition(0, np.pi, 360)
 detector_partition = odl.uniform_partition(-30, 30, 558)
 geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 
-# Ray transform (= forward projection). We use the 'scikit' backend.
-ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl='scikit')
+# Ray transform (= forward projection). We use the 'skimage' backend.
+ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl='skimage')
 
 # Create a discrete Shepp-Logan phantom (modified version)
 phantom = odl.phantom.shepp_logan(reco_space, modified=True)

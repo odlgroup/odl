@@ -159,7 +159,7 @@ setup(
         'show': 'matplotlib',
         'fftw': 'pyfftw',
         'pywavelets': 'Pywavelets>=0.4',
-        'scikit': 'scikit-image',
+        'skimage': 'scikit-image',
         'proximal': 'proximal',
     },
 

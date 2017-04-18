@@ -31,69 +31,104 @@ from odl.space import FunctionSpace
 from odl.tomo.geometry import Geometry, Parallel2dGeometry
 from odl.space.weighting import NoWeighting, ConstWeighting
 from odl.tomo.backends import (
-    ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE, SCIKIT_IMAGE_AVAILABLE,
+    ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE, SKIMAGE_AVAILABLE,
     astra_cpu_forward_projector, astra_cpu_back_projector,
     AstraCudaProjectorImpl, AstraCudaBackProjectorImpl,
-    scikit_radon_forward, scikit_radon_back_projector)
+    skimage_radon_forward, skimage_radon_back_projector)
 
-_SUPPORTED_IMPL = ('astra_cpu', 'astra_cuda', 'scikit')
+
+ASTRA_CPU_AVAILABLE = ASTRA_AVAILABLE
+_SUPPORTED_IMPL = ('astra_cpu', 'astra_cuda', 'skimage')
+_AVAILABLE_IMPLS = []
+if ASTRA_CPU_AVAILABLE:
+    _AVAILABLE_IMPLS.append('astra_cpu')
+if ASTRA_CUDA_AVAILABLE:
+    _AVAILABLE_IMPLS.append('astra_cuda')
+if SKIMAGE_AVAILABLE:
+    _AVAILABLE_IMPLS.append('skimage')
 
 
 __all__ = ('RayTransform', 'RayBackProjection')
 
 
-# TODO: DivergentBeamTransform?
+class RayTransformBase(Operator):
 
-class RayTransform(Operator):
+    """Base class for ray transforms containing common attributes."""
 
-    """Discrete Ray transform between L^p spaces."""
-
-    def __init__(self, discr_domain, geometry, **kwargs):
+    def __init__(self, reco_space, geometry, variant, **kwargs):
         """Initialize a new instance.
 
         Parameters
         ----------
-        discr_domain : `DiscreteLp`
-            Discretized space, the domain of the forward projector
+        reco_space : `DiscreteLp`
+            Discretized reconstruction space, the domain of the forward
+            operator or the range of the adjoint (back-projection).
         geometry : `Geometry`
-            Geometry of the transform, containing information about
-            the operator range
+            Geometry of the transform that contains information about
+            the data structure.
+        variant : {'forward', 'backward'}
+            Variant of the transform, i.e., whether the ray transform
+            or its back-projection should be created.
 
         Other Parameters
         ----------------
-        impl : {`None`, 'astra_cuda', 'astra_cpu', 'scikit'}, optional
+        impl : {`None`, 'astra_cuda', 'astra_cpu', 'skimage'}, optional
             Implementation back-end for the transform. Supported back-ends:
-            * ``'astra_cuda'``: ASTRA toolbox, using CUDA, 2D or 3D
-            * ``'astra_cpu'``: ASTRA toolbox using CPU, only 2D
-            * ``'scikit'``: scikit-image, only 2D parallel with square domain
-            If ``None`` is given, the fastest available back-end is used.
+
+            - ``'astra_cuda'``: ASTRA toolbox, using CUDA, 2D or 3D
+            - ``'astra_cpu'``: ASTRA toolbox using CPU, only 2D
+            - ``'skimage'``: scikit-image, only 2D parallel with square
+              reconstruction space.
+
+            For the default ``None``, the fastest available back-end is
+            used.
+
         interp : {'nearest', 'linear'}, optional
-            Interpolation type for the discretization of the operator
-            range.
-            Default: 'nearest'
-        discr_range : `DiscreteLp`, optional
-            Discretized space, the range of the forward projector.
-            Default: Infered from parameters.
+            Interpolation type for the discretization of the projection
+            space. This has no effect if ``proj_space`` is given explicitly.
+            Default: ``'nearest'``
+        proj_space : `DiscreteLp`, optional
+            Discretized projection (sinogram) space, the range of the forward
+            operator or the domain of the adjoint (back-projection).
+            Default: Inferred from parameters.
         use_cache : bool, optional
-            If ``True``, data is cached. Note that this causes notable memory
-            overhead, both on the GPU and on the CPU since a full volume and
-            projection is stored. In the 3D case, some users may want to
-            disable this.
+            If ``True``, data is cached. This gives a significant speed-up
+            at the expense of a notable memory overhead, both on the GPU
+            and on the CPU, since a full volume and a projection dataset
+            are stored. That may be prohibitive in 3D.
             Default: True
 
         Notes
         -----
-        The ASTRA backend is faster if data is given with ``dtype`` 'float32'
-        and storage order 'C'. Otherwise copies will be needed.
+        The ASTRA backend is faster if data are given with
+        ``dtype='float32'`` and storage order 'C'. Otherwise copies will be
+        needed.
         """
-        if not isinstance(discr_domain, DiscreteLp):
-            raise TypeError('`discr_domain` {!r} is not a `DiscreteLp`'
-                            ' instance'.format(discr_domain))
+        variant, variant_in = str(variant).lower(), variant
+        if variant not in ('forward', 'backward'):
+            raise ValueError('`variant` {!r} not understood'
+                             ''.format(variant_in))
+
+        if variant == 'forward':
+            reco_name = 'domain'
+            proj_name = 'range'
+        else:
+            reco_name = 'range'
+            proj_name = 'domain'
+
+        if not isinstance(reco_space, DiscreteLp):
+            raise TypeError('`{}` must be a `DiscreteLp` instance, got '
+                            '{!r}'.format(reco_name, reco_space))
 
         if not isinstance(geometry, Geometry):
-            raise TypeError('`geometry` {!r} is not a `Geometry` instance'
-                            ''.format(geometry))
+            raise TypeError('`geometry` must be a `Geometry` instance, got '
+                            '{!r}'.format(geometry))
 
+        # Handle backend choice
+        if not _AVAILABLE_IMPLS:
+            raise RuntimeError('no ray transform back-end available; '
+                               'this requires 3rd party packages, please '
+                               'check the install docs')
         impl = kwargs.pop('impl', None)
         if impl is None:
             # Select fastest available
@@ -101,110 +136,127 @@ class RayTransform(Operator):
                 impl = 'astra_cuda'
             elif ASTRA_AVAILABLE:
                 impl = 'astra_cpu'
-            elif SCIKIT_IMAGE_AVAILABLE:
-                impl = 'scikit'
+            elif SKIMAGE_AVAILABLE:
+                impl = 'skimage'
             else:
-                raise ValueError('no valid `impl` installed')
+                raise RuntimeError('bad impl')
+        else:
+            impl, impl_in = str(impl).lower(), impl
+            if impl not in _SUPPORTED_IMPL:
+                raise ValueError('`impl` {!r} not understood'.format(impl_in))
+            if impl not in _AVAILABLE_IMPLS:
+                raise ValueError('{!r} back-end not available'.format(impl))
 
-        impl, impl_in = str(impl).lower(), impl
-        if impl not in _SUPPORTED_IMPL:
-            raise ValueError('`impl` {!r} not supported'
-                             ''.format(impl_in))
-
+        # Cache for input/output arrays of transforms
         self.use_cache = kwargs.pop('use_cache', True)
 
-        # TODO: sanity checks between impl and discretization impl
+        # Sanity checks
         if impl.startswith('astra'):
-            # TODO: these should be moved somewhere else
-            if not ASTRA_AVAILABLE:
-                raise ValueError("'astra' back-end not available")
-            if impl == 'astra_cuda' and not ASTRA_CUDA_AVAILABLE:
-                raise ValueError("'astra_cuda' back-end not available")
-            if not np.allclose(discr_domain.partition.cell_sides[1:],
-                               discr_domain.partition.cell_sides[:-1]):
-                raise ValueError('ASTRA does not support different voxel '
-                                 'sizes per axis, got {}'
-                                 ''.format(discr_domain.partition.cell_sides))
             if geometry.ndim > 2 and impl.endswith('cpu'):
-                raise ValueError('`impl` {}, only works for 2d geometries'
-                                 ' got {}-d'.format(impl_in, geometry))
-        elif impl == 'scikit':
+                raise ValueError('`impl` {!r}, only works for 2d'
+                                 ''.format(impl_in))
+        elif impl == 'skimage':
             if not isinstance(geometry, Parallel2dGeometry):
-                raise TypeError("'scikit' backend only supports 2d parallel "
-                                'geometries')
+                raise TypeError("{!r} backend only supports 2d parallel "
+                                'geometries'.format(impl))
 
-            mid_pt = discr_domain.domain.mid_pt
-            if not all(mid_pt == [0, 0]):
-                raise ValueError('`discr_domain.domain` needs to be '
-                                 'centered on [0, 0], got {}'.format(mid_pt))
+            mid_pt = reco_space.domain.mid_pt
+            if not np.allclose(mid_pt, [0, 0]):
+                raise ValueError('`{}` must be centered at (0, 0), got '
+                                 'midpoint {}'.format(reco_name, mid_pt))
 
-            shape = discr_domain.shape
+            shape = reco_space.shape
             if shape[0] != shape[1]:
-                raise ValueError('`discr_domain.shape` needs to be square '
-                                 'got {}'.format(shape))
+                raise ValueError('`{}.shape` must have equal entries, '
+                                 'got {}'.format(reco_name, shape))
 
-            extent = discr_domain.domain.extent
+            extent = reco_space.domain.extent
             if extent[0] != extent[1]:
-                raise ValueError('`discr_domain.extent` needs to be square '
-                                 'got {}'.format(extent))
+                raise ValueError('`{}.extent` must have equal entries, '
+                                 'got {}'.format(reco_name, extent))
 
-        # TODO: sanity checks between domain and geometry (ndim, ...)
+        if reco_space.ndim != geometry.ndim:
+            raise ValueError('`{}.ndim` not equal to `geometry.ndim`: '
+                             '{} != {}'.format(reco_name, reco_space.ndim,
+                                               geometry.ndim))
+
         self.__geometry = geometry
         self.__impl = impl
-        self.kwargs = kwargs
 
-        discr_range = kwargs.pop('discr_range', None)
-        if discr_range is None:
-            dtype = discr_domain.dspace.dtype
+        # Generate or check projection space
+        proj_space = kwargs.pop('proj_space', None)
+        if proj_space is None:
+            dtype = reco_space.dtype
+            proj_uspace = FunctionSpace(geometry.params, out_dtype=dtype)
 
-            # Create a discretized space (operator range) with the same
-            # data-space type as the domain.
-            # TODO: use a ProductSpace structure or find a way to treat
-            # different dimensions differently in DiscreteLp
-            # (i.e. in partitions).
-            range_uspace = FunctionSpace(geometry.params,
-                                         out_dtype=dtype)
-
-            if isinstance(discr_domain.weighting, NoWeighting):
+            if isinstance(reco_space.weighting, NoWeighting):
                 weighting = 1.0
-            elif (isinstance(discr_domain.weighting, ConstWeighting) and
-                  np.isclose(discr_domain.weighting.const,
-                             discr_domain.cell_volume)):
+            elif (isinstance(reco_space.weighting, ConstWeighting) and
+                  np.isclose(reco_space.weighting.const,
+                             reco_space.cell_volume)):
                 # Approximate cell volume
-                # TODO: angles and detector must be handled separately. While
-                # the detector should be uniformly discretized, the angles do
-                # not have to and often are not.
+                # TODO: find a way to treat angles and detector differently
+                # regarding weighting. While the detector should be uniformly
+                # discretized, the angles do not have to and often are not.
+                # The needed partition property is available since
+                # commit a551190d, but weighting is not adapted yet.
+                # See also issue #286
                 extent = float(geometry.partition.extent.prod())
                 size = float(geometry.partition.size)
                 weighting = extent / size
             else:
                 raise NotImplementedError('unknown weighting of domain')
 
-            range_dspace = discr_domain.dspace_type(geometry.partition.size,
-                                                    weighting=weighting,
-                                                    dtype=dtype)
+            proj_dspace = reco_space.dspace_type(geometry.partition.size,
+                                                 weighting=weighting,
+                                                 dtype=dtype)
 
             if geometry.ndim == 2:
                 axis_labels = ['$\\theta$', '$s$']
             elif geometry.ndim == 3:
                 axis_labels = ['$\\theta$', '$u$', '$v$']
             else:
-                # TODO Add this when we add nd ray transform.
+                # TODO Add this when we add nd ray transform
                 axis_labels = None
 
-            range_interp = kwargs.get('interp', 'nearest')
-            discr_range = DiscreteLp(
-                range_uspace, geometry.partition, range_dspace,
-                interp=range_interp, order=discr_domain.order,
+            proj_interp = kwargs.get('interp', 'nearest')
+            proj_space = DiscreteLp(
+                proj_uspace, geometry.partition, proj_dspace,
+                interp=proj_interp, order=reco_space.order,
                 axis_labels=axis_labels)
 
-        self.backproj = None
+        else:
+            # proj_space was given, checking some stuff
+            if not isinstance(proj_space, DiscreteLp):
+                raise TypeError('`{}` must be a `DiscreteLp` instance, '
+                                'got {!r}'.format(proj_name, proj_space))
+            if proj_space.shape != geometry.partition.shape:
+                raise ValueError('`{}.shape` not equal to `geometry.shape`: '
+                                 '{} != {}'.format(proj_name, proj_space.shape,
+                                                   geometry.partition.shape))
+            if proj_space.dtype != reco_space.dtype:
+                raise ValueError('`{}.dtype` not equal to `{}.dtype`: '
+                                 '{} != {}'.format(proj_name, reco_name,
+                                                   proj_space.dtype,
+                                                   reco_space.dtype))
 
-        super().__init__(discr_domain, discr_range, linear=True)
+        # Reserve name for cached properties (used for efficiency reasons)
+        self._adjoint = None
+        self._astra_wrapper = None
+
+        # Extra kwargs that can be reused for adjoint etc. These must
+        # be retrieved with `get` instead of `pop` above.
+        self._extra_kwargs = kwargs
+
+        # Finally, initialize the Operator structure
+        if variant == 'forward':
+            super().__init__(domain=reco_space, range=proj_space, linear=True)
+        elif variant == 'backward':
+            super().__init__(domain=proj_space, range=reco_space, linear=True)
 
     @property
     def impl(self):
-        """Implementation back-end for evaluation of this operator."""
+        """Implementation back-end for the evaluation of this operator."""
         return self.__impl
 
     @property
@@ -213,27 +265,107 @@ class RayTransform(Operator):
         return self.__geometry
 
     def _call(self, x, out=None):
-        """Forward project ``x`` and store the result in ``out`` if given."""
+        """Return ``self(x[, out])``."""
+        if self.domain.is_rn:
+            return self._call_real(x, out)
+
+        elif self.domain.is_cn:
+            result_parts = [
+                self._call_real(x.real, getattr(out, 'real', None)),
+                self._call_real(x.imag, getattr(out, 'imag', None))]
+
+            if out is None:
+                out = self.range.element()
+                out.real = result_parts[0]
+                out.imag = result_parts[1]
+
+            return out
+
+        else:
+            raise RuntimeError('bad domain {!r}'.format(self.domain))
+
+
+class RayTransform(RayTransformBase):
+
+    """Discrete Ray transform between L^p spaces."""
+
+    def __init__(self, domain, geometry, **kwargs):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        domain : `DiscreteLp`
+            Discretized reconstruction space, the domain of the forward
+            projector.
+        geometry : `Geometry`
+            Geometry of the transform, containing information about
+            the operator range (projection/sinogram space).
+
+        Other Parameters
+        ----------------
+        impl : {`None`, 'astra_cuda', 'astra_cpu', 'skimage'}, optional
+            Implementation back-end for the transform. Supported back-ends:
+
+            - ``'astra_cuda'``: ASTRA toolbox, using CUDA, 2D or 3D
+            - ``'astra_cpu'``: ASTRA toolbox using CPU, only 2D
+            - ``'skimage'``: scikit-image, only 2D parallel with square
+              reconstruction space.
+
+            For the default ``None``, the fastest available back-end is
+            used.
+        interp : {'nearest', 'linear'}, optional
+            Interpolation type for the discretization of the operator
+            range. This has no effect if ``range`` is given explicitly.
+            Default: ``'nearest'``
+        range : `DiscreteLp`, optional
+            Discretized projection (sinogram) space, the range of the
+            forward projector.
+            Default: Inferred from parameters.
+        use_cache : bool, optional
+            If ``True``, data is cached. This gives a significant speed-up
+            at the expense of a notable memory overhead, both on the GPU
+            and on the CPU, since a full volume and a projection dataset
+            are stored. That may be prohibitive in 3D.
+            Default: True
+
+        Notes
+        -----
+        The ASTRA backend is faster if data is given with ``dtype`` 'float32'
+        and storage order 'C'. Otherwise copies will be needed.
+        """
+        range = kwargs.pop('range', None)
+        super().__init__(reco_space=domain, proj_space=range,
+                         geometry=geometry, variant='forward', **kwargs)
+
+    def _call_real(self, x_real, out_real):
+        """Real-space forward projection for the current set-up.
+
+        This method also sets ``self._astra_projector`` for
+        ``impl='astra_cuda'`` and enabled cache.
+        """
         if self.impl.startswith('astra'):
             backend, data_impl = self.impl.split('_')
-            if data_impl == 'cpu':
-                return astra_cpu_forward_projector(x, self.geometry,
-                                                   self.range, out)
-            elif data_impl == 'cuda':
-                proj = getattr(self, 'astra_projector', None)
-                if proj is None:
-                    self.astra_projector = AstraCudaProjectorImpl(
-                        self.geometry, self.domain, self.range,
-                        use_cache=self.use_cache)
 
-                return self.astra_projector.call_forward(x, out)
+            if data_impl == 'cpu':
+                return astra_cpu_forward_projector(
+                    x_real, self.geometry, self.range.real_space, out_real)
+
+            elif data_impl == 'cuda':
+                if self._astra_wrapper is None:
+                    self._astra_wrapper = AstraCudaProjectorImpl(
+                        self.geometry, self.domain.real_space,
+                        self.range.real_space, self.use_cache)
+
+                return self._astra_wrapper.call_forward(x_real, out_real)
             else:
                 # Should never happen
-                raise RuntimeError('implementation info is inconsistent')
-        elif self.impl == 'scikit':
-            return scikit_radon_forward(x, self.geometry, self.range, out)
-        else:  # Should never happen
-            raise RuntimeError('implementation info is inconsistent')
+                raise RuntimeError('bad `impl` {!r}'.format(self.impl))
+        elif self.impl == 'skimage':
+            return skimage_radon_forward(x_real, self.geometry,
+                                         self.range.real_space, out_real)
+        else:
+            # Should never happen
+            raise RuntimeError('bad `impl` {!r}'.format(self.impl))
 
     @property
     def adjoint(self):
@@ -243,171 +375,99 @@ class RayTransform(Operator):
         -------
         adjoint : `RayBackProjection`
         """
-        if self.backproj is not None:
-            return self.backproj
+        if self._adjoint is not None:
+            return self._adjoint
 
-        kwargs = self.kwargs.copy()
-        kwargs['discr_domain'] = self.range
-        self.backproj = RayBackProjection(self.domain, self.geometry,
+        kwargs = self._extra_kwargs.copy()
+        kwargs['domain'] = self.range
+        self._adjoint = RayBackProjection(self.domain, self.geometry,
                                           impl=self.impl,
                                           use_cache=self.use_cache,
                                           **kwargs)
-        return self.backproj
+        return self._adjoint
 
 
-class RayBackProjection(Operator):
+class RayBackProjection(RayTransformBase):
     """Adjoint of the discrete Ray transform between L^p spaces."""
 
-    def __init__(self, discr_range, geometry, **kwargs):
+    def __init__(self, range, geometry, **kwargs):
         """Initialize a new instance.
 
         Parameters
         ----------
-        discr_range : `DiscreteLp`
-            Reconstruction space, the range of the back-projector
+        range : `DiscreteLp`
+            Discretized reconstruction space, the range of the
+            backprojection operator.
         geometry : `Geometry`
-            The geometry of the transform, contains information about
-            the operator domain
+            Geometry of the transform, containing information about
+            the operator domain (projection/sinogram space).
 
         Other Parameters
         ----------------
-        impl : {'astra_cpu', 'astra_cuda', 'scikit'}, optional
+        impl : {`None`, 'astra_cuda', 'astra_cpu', 'skimage'}, optional
             Implementation back-end for the transform. Supported back-ends:
-            * ``'astra_cuda'``: ASTRA toolbox, using CUDA, 2D or 3D
-            * ``'astra_cpu'``: ASTRA toolbox using CPU, only 2D
-            * ``'scikit'``: scikit-image, only 2D parallel with square domain
-            If ``None`` is given, the fastest available back-end is used.
+
+            - ``'astra_cuda'``: ASTRA toolbox, using CUDA, 2D or 3D
+            - ``'astra_cpu'``: ASTRA toolbox using CPU, only 2D
+            - ``'skimage'``: scikit-image, only 2D parallel with square
+              reconstruction space.
+
+            For the default ``None``, the fastest available back-end is
+            used.
         interp : {'nearest', 'linear'}, optional
-            Interpolation type for the discretization of the operator range.
-            Default: 'nearest'
-        discr_domain : `DiscreteLp`, optional
-            Discretized space, the range of the forward projector.
-            Default: Infered from parameters.
+            Interpolation type for the discretization of the operator
+            domain. This has no effect if ``domain`` is given explicitly.
+            Default: ``'nearest'``
+        domain : `DiscreteLp`, optional
+            Discretized projection (sinogram) space, the domain of the
+            backprojection operator.
+            Default: Inferred from parameters.
         use_cache : bool, optional
-            If ``True``, data is cached. Note that this causes notable memory
-            overhead, both on the GPU and on the CPU since a full volume and
-            projection is stored. In the 3D case, some users may want to
-            disable this.
+            If ``True``, data is cached. This gives a significant speed-up
+            at the expense of a notable memory overhead, both on the GPU
+            and on the CPU, since a full volume and a projection dataset
+            are stored. That may be prohibitive in 3D.
+            Default: True
+
+        Notes
+        -----
+        The ASTRA backend is faster if data is given with ``dtype`` 'float32'
+        and storage order 'C'. Otherwise copies will be needed.
         """
-        if not isinstance(discr_range, DiscreteLp):
-            raise TypeError('`discr_range` {!r} is not a `DiscreteLp`'
-                            ' instance'.format(discr_range))
+        domain = kwargs.pop('domain', None)
+        super().__init__(reco_space=range, proj_space=domain,
+                         geometry=geometry, variant='backward', **kwargs)
 
-        if not isinstance(geometry, Geometry):
-            raise TypeError('`geometry` {!r} is not a `Geometry` instance'
-                            ''.format(geometry))
+    def _call_real(self, x_real, out_real):
+        """Real-space back-projection for the current set-up.
 
-        impl = kwargs.pop('impl', None)
-        if impl is None:
-            # Select fastest available
-            if ASTRA_CUDA_AVAILABLE:
-                impl = 'astra_cuda'
-            elif ASTRA_AVAILABLE:
-                impl = 'astra_cpu'
-            elif SCIKIT_IMAGE_AVAILABLE:
-                impl = 'scikit'
-            else:
-                raise ValueError('no valid `impl` installed')
-
-        impl, impl_in = str(impl).lower(), impl
-        if impl not in _SUPPORTED_IMPL:
-            raise ValueError("`impl` '{}' not supported"
-                             ''.format(impl_in))
-
-        if impl.startswith('astra'):
-            if not ASTRA_AVAILABLE:
-                raise ValueError("'astra' backend not available")
-            if impl == 'astra_cuda' and not ASTRA_CUDA_AVAILABLE:
-                raise ValueError("'astra_cuda' backend not available")
-            if not np.allclose(discr_range.partition.cell_sides[1:],
-                               discr_range.partition.cell_sides[:-1],
-                               atol=0, rtol=1e-5):
-                raise ValueError('ASTRA does not support different voxel '
-                                 'sizes per axis, got {}'
-                                 ''.format(discr_range.partition.cell_sides))
-
-        self.use_cache = kwargs.pop('use_cache', True)
-
-        self.__geometry = geometry
-        self.__impl = impl
-        self.kwargs = kwargs
-
-        discr_domain = kwargs.pop('discr_domain', None)
-        if discr_domain is None:
-            dtype = discr_range.dspace.dtype
-
-            # Create a discretized space (operator domain) with the same
-            # data-space type as the range.
-            domain_uspace = FunctionSpace(geometry.params, out_dtype=dtype)
-
-            if isinstance(discr_range.weighting, NoWeighting):
-                weighting = 1.0
-            elif (isinstance(discr_range.weighting, ConstWeighting) and
-                  np.isclose(discr_range.weighting.const,
-                             discr_range.cell_volume)):
-                # Approximate cell volume
-                extent = float(geometry.partition.extent.prod())
-                size = float(geometry.partition.size)
-                weighting = extent / size
-            else:
-                raise NotImplementedError('unknown weighting of range')
-
-            domain_dspace = discr_range.dspace_type(geometry.partition.size,
-                                                    weighting=weighting,
-                                                    dtype=dtype)
-
-            if geometry.ndim == 2:
-                axis_labels = ['$\\theta$', '$s$']
-            elif geometry.ndim == 3:
-                axis_labels = ['$\\theta$', '$u$', '$v$']
-            else:
-                # TODO Add this when we add nd ray transform.
-                axis_labels = None
-
-            domain_interp = kwargs.get('interp', 'nearest')
-            discr_domain = DiscreteLp(
-                domain_uspace, geometry.partition, domain_dspace,
-                interp=domain_interp, order=discr_range.order,
-                axis_labels=axis_labels)
-
-        self.ray_trafo = None
-
-        super().__init__(discr_domain, discr_range, linear=True)
-
-    @property
-    def impl(self):
-        """Implementation back-end for evaluation of this operator."""
-        return self.__impl
-
-    @property
-    def geometry(self):
-        """Geometry of this operator."""
-        return self.__geometry
-
-    def _call(self, x, out=None):
-        """Back-project ``x`` and store the result in ``out`` if given."""
-
+        This method also sets ``self._astra_backprojector`` for
+        ``impl='astra_cuda'`` and enabled cache.
+        """
         if self.impl.startswith('astra'):
             backend, data_impl = self.impl.split('_')
             if data_impl == 'cpu':
-                return astra_cpu_back_projector(x, self.geometry,
-                                                self.range, out)
+                return astra_cpu_back_projector(x_real, self.geometry,
+                                                self.range.real_space,
+                                                out_real)
             elif data_impl == 'cuda':
-                backproj = getattr(self, 'astra_backprojector', None)
-                if backproj is None:
-                    self.astra_backprojector = AstraCudaBackProjectorImpl(
-                        self.geometry, self.range, self.domain,
-                        use_cache=self.use_cache)
+                if self._astra_wrapper is None:
+                    self._astra_wrapper = AstraCudaBackProjectorImpl(
+                        self.geometry, self.range.real_space,
+                        self.domain.real_space, self.use_cache)
 
-                return self.astra_backprojector.call_backward(x, out)
+                return self._astra_wrapper.call_backward(x_real, out_real)
             else:
                 # Should never happen
-                raise RuntimeError('implementation info is inconsistent')
-        elif self.impl == 'scikit':
-            return scikit_radon_back_projector(x, self.geometry,
-                                               self.range, out)
-        else:  # Should never happen
-            raise RuntimeError('implementation info is inconsistent')
+                raise RuntimeError('bad `impl` {!r}'.format(self.impl))
+
+        elif self.impl == 'skimage':
+            return skimage_radon_back_projector(x_real, self.geometry,
+                                                self.range.real_space,
+                                                out_real)
+        else:
+            # Should never happen
+            raise RuntimeError('bad `impl` {!r}'.format(self.impl))
 
     @property
     def adjoint(self):
@@ -417,16 +477,16 @@ class RayBackProjection(Operator):
         -------
         adjoint : `RayTransform`
         """
-        if self.ray_trafo is not None:
-            return self.ray_trafo
+        if self._adjoint is not None:
+            return self._adjoint
 
-        kwargs = self.kwargs.copy()
-        kwargs['discr_range'] = self.domain
-        self.ray_trafo = RayTransform(self.range, self.geometry,
-                                      impl=self.impl,
-                                      use_cache=self.use_cache,
-                                      **kwargs)
-        return self.ray_trafo
+        kwargs = self._extra_kwargs.copy()
+        kwargs['range'] = self.domain
+        self._adjoint = RayTransform(self.range, self.geometry,
+                                     impl=self.impl,
+                                     use_cache=self.use_cache,
+                                     **kwargs)
+        return self._adjoint
 
 
 if __name__ == '__main__':

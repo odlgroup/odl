@@ -32,13 +32,11 @@ import odl
 import odl.tomo as tomo
 from odl.util.testutils import skip_if_no_largescale, simple_fixture
 from odl.tomo.util.testutils import (skip_if_no_astra, skip_if_no_astra_cuda,
-                                     skip_if_no_scikit)
+                                     skip_if_no_skimage)
 
 
-@pytest.fixture(scope="module", params=['float32', 'float64'],
-                ids=[' dtype=float32 ', ' dtype=float64 '])
-def dtype(request):
-    return request.param
+dtype_params = ['float32', 'float64', 'complex64']
+dtype = simple_fixture('dtype', dtype_params)
 
 
 # Find the valid projectors
@@ -61,7 +59,7 @@ projectors = [skip_if_no_astra('par2d astra_cpu uniform'),
               skip_if_no_astra_cuda('cone3d astra_cuda nonuniform'),
               skip_if_no_astra_cuda('cone3d astra_cuda random'),
               skip_if_no_astra_cuda('helical astra_cuda uniform'),
-              skip_if_no_scikit('par2d scikit uniform')]
+              skip_if_no_skimage('par2d skimage uniform')]
 
 projector_ids = ['geom={}, impl={}, angles={}'
                  ''.format(*p.args[1].split()) for p in projectors]
