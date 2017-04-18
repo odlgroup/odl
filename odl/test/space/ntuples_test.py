@@ -1,34 +1,17 @@
-# Copyright 2014-2016 The ODL development group
+# Copyright 2014-2017 The ODL contributors
 #
 # This file is part of ODL.
 #
-# ODL is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# ODL is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with ODL.  If not, see <http://www.gnu.org/licenses/>.
+# This Source Code Form is subject to the terms of the Mozilla Public License,
+# v. 2.0. If a copy of the MPL was not distributed with this file, You can
+# obtain one at https://mozilla.org/MPL/2.0/.
 
-
-# Imports for common Python 2/3 codebase
-from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
-from builtins import range
-
-# External module imports
+from __future__ import division
 import numpy as np
 import pytest
 import operator
 import scipy
 
-# ODL imports
 import odl
 from odl import NumpyNtuples, NumpyFn, NumpyFnVector
 from odl.operator.operator import Operator
@@ -43,12 +26,13 @@ from odl.util.testutils import (almost_equal, all_almost_equal, all_equal,
                                 noise_elements, simple_fixture)
 from odl.util.ufuncs import UFUNCS, REDUCTIONS
 
-# Check for python3
 from sys import version_info
 PYTHON2 = version_info < (3, 0)
 
 
-# Helpers to generate data
+# --- Helper functions --- #
+
+
 def _pos_array(fn):
     """Create an array with positive real entries as weight in `fn`."""
     return np.abs(noise_array(fn)) + 0.1
@@ -76,14 +60,16 @@ def _sparse_matrix(fn):
     return scipy.sparse.coo_matrix(_dense_matrix(fn))
 
 
-# Pytest fixtures
+# --- pytest fixtures --- #
+
 
 fn = simple_fixture('fn', [odl.rn(10, np.float64), odl.rn(10, np.float32),
                            odl.cn(10, np.complex128), odl.cn(10, np.complex64),
                            odl.rn(100)])
 exponent = simple_fixture('exponent', [2.0, 1.0, float('inf'), 0.5, 1.5])
 
-# ---- Ntuples, Rn and Cn ---- #
+
+# ---- Tests of Ntuples, Rn and Cn ---- #
 
 
 def test_init():

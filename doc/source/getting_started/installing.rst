@@ -12,7 +12,7 @@ If you already have a working python environment, ODL and some basic dependencie
 
 .. code-block:: bash
 
-    $ pip install odl[testing, show]
+    $ pip install odl[testing,show]
 
 or conda:
 

@@ -1,22 +1,10 @@
-# Copyright 2014-2016 The ODL development group
+# Copyright 2014-2017 The ODL contributors
 #
 # This file is part of ODL.
 #
-# ODL is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# ODL is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with ODL.  If not, see <http://www.gnu.org/licenses/>.
-
-# All configuration values have a default; values that are commented out
-# serve to show the default.
+# This Source Code Form is subject to the terms of the Mozilla Public License,
+# v. 2.0. If a copy of the MPL was not distributed with this file, You can
+# obtain one at https://mozilla.org/MPL/2.0/.
 
 from distutils.version import StrictVersion
 import sphinx
@@ -27,8 +15,11 @@ import sys
 
 # --- General configuration --- #
 
+# All configuration values have a default; values that are commented out
+# serve to show the default.
+
 try:
-    # verify that we can even import odl properly
+    # Verify that we can import odl
     import odl
 except Exception as e:
     print('Failed importing odl, exiting')
@@ -36,7 +27,7 @@ except Exception as e:
     sys.exit(1)
 
 
-# add numpydoc folder
+# Add numpydoc folder
 sys.path.insert(0, os.path.abspath('../sphinxext'))
 
 # Add any Sphinx extension module names here, as strings. They can be
@@ -122,7 +113,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'odl'
-copyright = u'2015-2016, ODL development group'
+copyright = u'2015-2017, ODL development group'
 author = u'Jonas Adler, Holger Kohr, Ozan Öktem'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -169,7 +160,7 @@ html_theme = 'sphinx_rtd_theme'
 html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
-html_short_title = 'odl'
+html_short_title = 'ODL'
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
@@ -211,7 +202,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'odl.tex', u'odl Documentation',
+    (master_doc, 'odl.tex', u'ODL Documentation',
      u'Jonas Adler, Holger Kohr, Ozan Öktem', 'manual'),
 ]
 
@@ -241,7 +232,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'odl', u'odl Documentation',
+    (master_doc, 'odl', u'ODL Documentation',
      [author], 1)
 ]
 
@@ -255,7 +246,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'odl', u'odl Documentation',
+    (master_doc, 'odl', u'ODL Documentation',
      author, 'odl', 'One line description of project.',
      'Miscellaneous'),
 ]

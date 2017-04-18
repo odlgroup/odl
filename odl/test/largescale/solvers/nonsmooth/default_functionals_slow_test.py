@@ -1,27 +1,14 @@
-# Copyright 2014-2016 The ODL development group
+# Copyright 2014-2017 The ODL contributors
 #
 # This file is part of ODL.
 #
-# ODL is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# ODL is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with ODL.  If not, see <http://www.gnu.org/licenses/>.
+# This Source Code Form is subject to the terms of the Mozilla Public License,
+# v. 2.0. If a copy of the MPL was not distributed with this file, You can
+# obtain one at https://mozilla.org/MPL/2.0/.
 
 """Tests for the factory functions to create proximal operators."""
 
-# Imports for common Python 2/3 codebase
-from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
-
+from __future__ import division
 import numpy as np
 import pytest
 import scipy.special
@@ -30,8 +17,11 @@ from odl.util.testutils import (noise_element, all_almost_equal,
                                 simple_fixture)
 from odl.solvers.functional.functional import FunctionalDefaultConvexConjugate
 
-pytestmark = odl.util.skip_if_no_largescale
 
+# --- pytest fixtures --- #
+
+
+pytestmark = odl.util.skip_if_no_largescale
 
 stepsize = simple_fixture('stepsize', [0.1, 1.0, 10.0])
 offset = simple_fixture('offset', [False, True])
@@ -99,6 +89,9 @@ def functional(request, offset, dual):
 
 # Margin of error
 EPS = 1e-6
+
+
+# --- Functional tests --- #
 
 
 def proximal_objective(functional, x, y):
