@@ -31,7 +31,6 @@ from future import standard_library
 standard_library.install_aliases()
 
 from pkg_resources import parse_version
-
 try:
     import astra
     ASTRA_AVAILABLE = True
@@ -50,6 +49,7 @@ except ImportError:
     ASTRA_VERSION = ''
 
 import numpy as np
+import operator
 
 from odl.discr import DiscreteLp, DiscreteLpElement
 from odl.tomo.geometry import (
@@ -63,6 +63,70 @@ __all__ = ('ASTRA_AVAILABLE', 'ASTRA_VERSION',
            'astra_conebeam_3d_geom_to_vec',
            'astra_conebeam_2d_geom_to_vec',
            'astra_parallel_3d_geom_to_vec')
+
+
+# Dictionary specifying which ASTRA versions support which feature. The dict
+# values can be given as exact version '==1.7' or '1.7', as range '1.7-1.7.4',
+# as inequality '>=1.7' or as comma-separated composition of such (the items
+# will be OR-ed together), e.g. '<=1.7, >=1.7.2'.
+ASTRA_FEATURES = {'anisotropic_voxels_2d': None,
+                  'anisotropic_voxels_3d': '>=1.8',
+                  }
+
+
+def astra_supports(feature):
+    """Return bool indicating whether current ASTRA supports ``feature``.
+
+    Parameters
+    ----------
+    feature : str
+        String standing for a potential feature of ASTRA.
+        See ``ASTRA_FEATURES`` for possible values.
+
+    Returns
+    -------
+    supports : bool
+        ``True`` if the currently imported version of ASTRA supports the
+        feature in question, ``False`` otherwise.
+    """
+    feature = str(feature).lower()
+    supp_versions = ASTRA_FEATURES.get(feature, None)
+    if supp_versions is None:
+        return False
+
+    astra_ver = parse_version(ASTRA_VERSION)
+    ver_specs = supp_versions.split(',')
+    for spec in ver_specs:
+        spec = spec.strip()
+        if '-' in spec:
+            # Match range
+            minver, maxver = spec.split('-', maxsplit=1)
+            if (astra_ver >= parse_version(minver) and
+                    astra_ver <= parse_version(maxver)):
+                return True
+            else:
+                continue
+        else:
+            # Match (in)equality
+            ver = spec.strip('=<> ')
+            mod = spec[:-len(ver)] or '=='
+            if mod == '==':
+                op = operator.eq
+            elif mod == '>=':
+                op = operator.ge
+            elif mod == '>':
+                op = operator.gt
+            elif mod == '<=':
+                op = operator.le
+            elif mod == '<':
+                op = operator.lt
+            else:
+                raise ValueError('invalid operator {!r}'.format(mod))
+
+            if op(astra_ver, parse_version(ver)):
+                return True
+    # No match
+    return False
 
 
 def astra_volume_geometry(discr_reco):
@@ -108,14 +172,16 @@ def astra_volume_geometry(discr_reco):
 
     if discr_reco.ndim == 2:
         # ASTRA does in principle support custom minimum and maximum
-        # values for the volume extent, but projector creation fails
+        # values for the volume extent, but running the algorithm fails
         # if voxels are non-isotropic. We raise an exception here in
         # the meanwhile.
-        if not np.allclose(discr_reco.partition.cell_sides[1:],
-                           discr_reco.partition.cell_sides[:-1]):
-            raise NotImplementedError('non-isotropic voxels not supported by '
-                                      'ASTRA')
-        # given a 2D array of shape (x, y), a volume geometry is created as:
+        if (not np.allclose(discr_reco.partition.cell_sides[1:],
+                            discr_reco.partition.cell_sides[:-1]) and
+                not astra_supports('anisotropic_voxels_2d')):
+            raise NotImplementedError(
+                'non-isotropic pixels in 2d volumes not supported by ASTRA '
+                'v{}'.format(ASTRA_VERSION))
+        # Given a 2D array of shape (x, y), a volume geometry is created as:
         #    astra.create_vol_geom(x, y, y_min, y_max, x_min, x_max)
         # yielding a dictionary:
         #   'GridColCount': y,
@@ -124,17 +190,17 @@ def astra_volume_geometry(discr_reco):
         #   'WindowMaxY': x_max
         #   'WindowMinX': y_min
         #   'WindowMinY': x_min
+        if (not np.allclose(discr_reco.partition.cell_sides[1:],
+                            discr_reco.partition.cell_sides[:-1]) and
+                not astra_supports('anisotropic_voxels_3d')):
+            raise NotImplementedError(
+                'non-isotropic voxels in 3d volumes not supported by ASTRA '
+                'v{}'.format(ASTRA_VERSION))
         vol_geom = astra.create_vol_geom(vol_shp[0], vol_shp[1],
                                          vol_min[1], vol_max[1],
                                          vol_min[0], vol_max[0])
     elif discr_reco.ndim == 3:
-        # Non-isotropic voxels are not yet supported in 3d ASTRA
-        if not np.allclose(discr_reco.partition.cell_sides[1:],
-                           discr_reco.partition.cell_sides[:-1]):
-            # TODO: for parallel geometries, one can work around this issue
-            raise NotImplementedError('non-isotropic voxels not supported by '
-                                      'ASTRA')
-        # given a 3D array of shape (x, y, z), a volume geometry is created as:
+        # Given a 3D array of shape (x, y, z), a volume geometry is created as:
         #    astra.create_vol_geom(y, z, x, )
         # yielding a dictionary:
         #   'GridColCount': z
@@ -596,7 +662,7 @@ def astra_algorithm(direction, ndim, vol_id, sino_id, proj_id, impl):
                          ''.format(impl))
     if ndim is 3 and impl is 'cpu':
         raise NotImplementedError(
-            '3d algorithms for cpu is not supported by ASTRA')
+            '3d algorithms for CPU not supported by ASTRA')
     if proj_id is None and impl is 'cpu':
         raise ValueError("'cpu' implementation requires projector ID")
 
