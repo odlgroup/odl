@@ -1,13 +1,15 @@
-"""
-Example creating a filtered back-projection in 2d using the ray transform and a
-ramp filter. The ramp filter is implemented in Fourier space.
+"""Example for reconstruction with FBP in 2d parallel geometry.
+
+This example creates a filtered back-projection operator in 2d using the
+ray transform and a ramp filter. This ramp filter is implemented in Fourier
+space.
 
 See https://en.wikipedia.org/wiki/Radon_transform#Inversion_formulas for
 more information.
 
-Also note that ODL has a utility function, `fbp_op` that can be used to perform
-filtered back-projection, and that this example is intended to show how this
-could be implemented by hand using ODL.
+Also note that ODL has a utility function, `fbp_op` that can be used to
+generate the FBP operator. This example is intended to show how the same
+functionality could be implemented by hand in ODL.
 """
 
 import numpy as np
