@@ -11,17 +11,25 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-import pytest
-
-
 __all__ = ('skip_if_no_astra', 'skip_if_no_astra_cuda', 'skip_if_no_skimage')
 
+try:
+    import pytest
+except ImportError:
+    # Make trivial decorator
+    from odl.util import OptionalArgDecorator
 
-skip_if_no_astra = pytest.mark.skipif("not odl.tomo.ASTRA_AVAILABLE",
-                                      reason='ASTRA not available')
+    class ident(OptionalArgDecorator):
+        @staticmethod
+        def _wrapper(f, *a, **kw):
+            return f
 
-skip_if_no_astra_cuda = pytest.mark.skipif("not odl.tomo.ASTRA_CUDA_AVAILABLE",
-                                           reason='ASTRA CUDA not available')
+    skip_if_no_astra = skip_if_no_astra_cuda = skip_if_no_skimage = ident
 
-skip_if_no_skimage = pytest.mark.skipif("not odl.tomo.SKIMAGE_AVAILABLE",
-                                        reason='skimage not available')
+else:
+    skip_if_no_astra = pytest.mark.skipif('not odl.tomo.ASTRA_AVAILABLE',
+                                          reason='ASTRA not available')
+    skip_if_no_astra_cuda = pytest.mark.skipif(
+        'not odl.tomo.ASTRA_CUDA_AVAILABLE', reason='ASTRA CUDA not available')
+    skip_if_no_skimage = pytest.mark.skipif(
+        'not odl.tomo.SKIMAGE_AVAILABLE', reason='skimage not available')
