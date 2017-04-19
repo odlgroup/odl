@@ -6,8 +6,73 @@
 Release Notes
 #############
 
-Upcoming release (could be 0.5.4)
-=================================
+Upcoming release
+================
+
+ODL 0.6.0 Release Notes (2017-04-20)
+====================================
+Besides many small improvements and additions, this release is the first one under the new Mozilla Public License 2.0 (MPL-2.0).
+
+New features
+------------
+- The Kaczmarz method has been added to the ``solvers`` (:pull:`840`).
+- Most immutable types now have a ``__hash__`` method (:pull:`840`).
+- A variant of the Conjugate Gradient solver for non-linear problems has been added (:pull:`554`).
+- There is now an example for tomographic reconstruction using Total Generalized Variation (TGV). (:pull:`883`).
+- Power spaces can now be created using the ``**`` operator, e.g., ``odl.rn(3) ** 4``.
+  Likewise, product spaces can be created using multiplication ``*``, i.e., ``odl.rn(3) * odl.rn(4)`` (:pull:`882`).
+- A ``SamplingOperator`` for the extraction of values at given indices from arrays has been added, along with its adjoint ``WeightedSumSamplingOperator`` (:pull:`940`).
+- Callbacks can now be composed with operators, which can be useful, e.g., for transforming the current iterate before displaying it (:pull:`954`).
+- ``RayTransform`` (and thus also ``fbp_op``) can now be directly used on spaces of complex functions (:pull:`970`).
+
+Improvements
+------------
+- In ``CallbackPrintIteration``, a step number between displays can now be specified (:pull:`871`).
+- ``OperatorPointwiseProduct`` got its missing ``derivative`` (:pull:`877`).
+- ``SeparableSum`` functionals can now be indexed to retrieve the constituents (:pull:`898`).
+- Better self-printing of callbacks (:pull:`881`).
+- ``ProductSpaceOperator`` and subclasses now have ``size`` and ``__len__``, and the parent also has ``shape``.
+  Also self-printing of these operators is now better (:pull:`901`).
+- Arithmetic methods of ``LinearSpace`` have become more permissive in the sense that operations like ``space_element + raw_array`` now works if the array can be cast to an element of the same space (:pull:`902`).
+- There is now a (work-in-progress) document on the release process with the aim to avoid errors (:pull:`872`).
+- The MRC extended header implementation is now much simpler (:pull:`917`).
+- The ``show_discrete_data`` workhorse is now more robust towards arrays with ``inf`` and ``nan`` entries regarding colorbar settings (:pull:`921`).
+- The ``title`` in ``CallbackShow`` are now interpreted as format string with iteration number inserted, which enables updating the figure title in real time (:pull:`923`).
+- Installation instructions have been arranged in a better way, grouped after different ways of installing (:pull:`884`).
+- A performance comparison example pure ASTRA vs. ODL with ASTRA for 3d cone beam has been added (:pull:`912`).
+- ``OperatorComp`` avoids an operator evaluation in ``derivative`` in the case when the left operator is linear (:pull:`957`).
+- ``FunctionalComp`` now has a default implementation of ``gradient.derivative`` if the operator in the composition is linear (:pull:`956`).
+- The ``saveto`` parameter of ``CallbackShow`` can now be a callable that returns the file name to save to when called on the current iteration number (:pull:`955`).
+
+Changes
+-------
+- The ``sphinxext`` submodule has been from upstream (:pull:`846`).
+- The renames ``TensorGrid`` -> ``RectGrid`` and ``uniform_sampling`` -> ``uniform_grid`` have been made, and separate class ``RegularGrid`` has been removed in favor of treating regular grids as a special case of ``RectGrid``.
+  Instances of ``RectGrid`` have a new property ``is_uniform`` for this purpose.
+  Furthermore, uniformity of ``RectPartition`` and ``RectGrid`` is exposed as property per axis using ``is_uniform_byaxis`` (:pull:`841`).
+- ``extent`` of grids and partitions is now a property instead of a method (:pull:`889`).
+- The number of iterations in solvers is no longer optional since the old default 1 didn't make much sense (:pull:`888`).
+- The ``nlevels`` argument of ``WaveletTransform`` is now optional, and the default is the maximum number of levels as determined by the new function ``pywt_max_nlevels`` (:pull:`880`).
+- ``MatVecOperator`` is now called ``MatrixOperator`` and has been moved to the ``tensor_ops`` module.
+  This solves a circular dependency issue with ODL subpackages (:pull:`911`).
+- All step parameters of callbacks are now called just ``step`` (:pull:`929`).
+- The ``impl`` name for the scikit-image back-end in ``RayTransform`` has been changed from ``scikit`` to ``skimage`` (:pull:`970`).
+- ODL is now licensed under the Mozilla Public License 2.0 (:pull:`977`).
+
+Bugfixes
+--------
+- Fix an argument order error in the gradient of ``QuadraticForm`` (:pull:`868`).
+- Lots of small documentation fixes where ", optional" was forgotten in the Parameters section (:pull:`554`).
+- Fix an indexing bug in the ``indicate_proj_axis`` phantom (:pull:`878`).
+- Fix wrong inheritance order in ``FileReaderRawBinaryWithHeader`` that lead to wrong ``header_size`` (:pull:`893`).
+- Comparison of arbitrary objects in Python 2 is now disabled for a some ODL classes where it doesn't make sense (:pull:`933`).
+- Fix a bug in the angle calculation of the scikit-image back-end for Ray transforms (:pull:`947`).
+- Fix issue with wrong integer type in ``as_scipy_operator`` (:pull:`960`).
+- Fix wrong scaling in ``RayTransform`` and adjoint with unweighted spaces (:pull:`958`).
+- Fix normalization bug of ``min_pt`` and ``max_pt`` parameters in ``RectPartition`` (:pull:`971`).
+- Fix an issue with ``*args`` in ``CallbackShow`` that lead to the ``title`` argument provided twice (:pull:`981`).
+- Fix an unconditional ``pytest`` import that lead to an ``ImportError`` if pytest was not installed (:pull:`982`).
+
 
 ODL 0.5.3 Release Notes (2017-01-17)
 ====================================
