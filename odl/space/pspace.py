@@ -309,7 +309,10 @@ class ProductSpace(LinearSpace):
     def shape(self):
         """Number of spaces per axis."""
         # Currently supporting only 1d product spaces
-        return (self.size,)
+        if not self.is_power_space:
+            return NotImplementedError('shape only defined for power spaces')
+        else:
+            return (self.size,) + self[0].shape
 
     @property
     def spaces(self):
@@ -547,7 +550,7 @@ class ProductSpace(LinearSpace):
             return True
         else:
             return (isinstance(other, ProductSpace) and
-                    self.shape == other.shape and
+                    len(self) == len(other) and
                     self.weighting == other.weighting and
                     all(x == y for x, y in zip(self.spaces,
                                                other.spaces)))
@@ -627,6 +630,11 @@ class ProductSpaceElement(LinearSpaceElement):
         return self.__parts
 
     @property
+    def shape(self):
+        """Number of spaces per axis."""
+        return self.space.shape
+    
+    @property
     def size(self):
         """Number of factors of this element's space."""
         return self.space.size
@@ -704,6 +712,27 @@ class ProductSpaceElement(LinearSpaceElement):
                         ''.format(len(values), len(indexed_parts)))
                 for p, v in zip(indexed_parts, values):
                     p[:] = v
+
+    def __array__(self):
+        """An array representation of ``self``.
+        
+        Only available if `is_power_space` is True.
+        
+        Examples
+        --------
+        >>> spc = odl.ProductSpace(odl.rn(2), 2)
+        >>> x = spc.one()
+        >>> np.asarray(x)
+        array([[ 1.,  1.],
+               [ 1.,  1.]])
+        """
+        if not self.space.is_power_space:
+            return NotImplemented
+        else:
+            arr = np.zeros(self.shape, self.dtype)
+            for i in range(len(self)):
+                arr[i] = np.asarray(self[i])
+            return arr
 
     @property
     def ufuncs(self):
