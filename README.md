@@ -1,6 +1,6 @@
 [![PyPI version](https://badge.fury.io/py/odl.svg)](https://badge.fury.io/py/odl)
 [![Build Status](https://travis-ci.org/odlgroup/odl.svg?branch=master)](https://travis-ci.org/odlgroup/odl?branch=master)
-[![License](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](http://www.gnu.org/licenses/gpl-3.0)
+[![license](https://img.shields.io/badge/license-MPL--2.0-orange.svg)](https://opensource.org/licenses/MPL-2.0)
 [![DOI](https://zenodo.org/badge/45596393.svg)](https://zenodo.org/badge/latestdoi/45596393)
 
 ODL
@@ -19,7 +19,6 @@ The main advantages of this approach are that
 
 Features
 ========
-
 - Efficient and well-tested data containers based on [NumPy](https://github.com/numpy/numpy) (default) or CUDA (optional)
 - Objects to represent mathematical notions like vector spaces and operators, including properties as expected from mathematics (inner product, norm, operator composition, ...)
 - Convenience functionality for operators like arithmetic, composition, operator matrices etc., which satisfy the known mathematical rules.
@@ -52,11 +51,11 @@ Resources
 
 License
 =======
-GPL Version 3 or later. See the [LICENSE](LICENSE) file.
+Mozilla Public License version 2.0 or later. See the [LICENSE](LICENSE) file.
 
-ODL development group
----------------------
-To contact the developers either [write an issue on github](https://github.com/odlgroup/odl/issues/new) or send an email to odl@math.kth.se
+ODL developers
+--------------
+To contact the developers either [open an issue on the issue tracker](https://github.com/odlgroup/odl/issues/) or send an email to odl@math.kth.se
 
 ##### Main developers
 - Jonas Adler ([@adler-j](https://github.com/adler-j))
@@ -64,11 +63,12 @@ To contact the developers either [write an issue on github](https://github.com/o
 
 ##### Contributors
 - Ozan Öktem ([@ozanoktem](https://github.com/ozanoktem))
-- Kati Niinimäki ([@niinimaki](https://github.com/niinimaki))
 - Axel Ringh ([@aringh](https://github.com/aringh))
 - Julian Moosmann ([@moosmann](https://github.com/moosmann))
-- Chong Chen ([@chongchenmath](https://github.com/chongchenmath))
+- Kati Niinimäki ([@niinimaki](https://github.com/niinimaki))
+- Matthias J. Ehrhardt ([@MatthiasJE](https://github.com/matthiasje))
 - Willem Jan Palenstijn ([@wjp](https://github.com/wjp))
+- Chong Chen ([@chongchenmath](https://github.com/chongchenmath))
 
 Funding
 -------

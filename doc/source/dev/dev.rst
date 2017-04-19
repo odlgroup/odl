@@ -16,7 +16,7 @@ Don't be shy -- use the issue tracker to ask questions, too.
 If you are a developer and want to contribute code, you may want to read through the subsequent instructions.
 If you are experienced with Git, you may want to skip directly to :ref:`the development workflow section <development-workflow>`.
 
-In order to properly follow the ODL style, we recommend that you read the `How to document`_:ref:`dev_document` and :ref:`dev_testing` sections.
+In order to properly follow the ODL style, we recommend that you read the :ref:`dev_document` and :ref:`dev_testing` sections.
 
 Contents
 --------
