@@ -45,7 +45,7 @@ def geometry(request):
         return tomo.Parallel2dGeometry(apart, dpart)
     elif geom == 'par3d':
         apart = odl.uniform_partition(0, np.pi, n_angles)
-        dpart = odl.uniform_partition([-30] * 2, [30] * 2, [m] * 2)
+        dpart = odl.uniform_partition([-30, -30], [30, 30], (m, m))
         return tomo.Parallel3dAxisGeometry(apart, dpart)
     elif geom == 'cone2d':
         apart = odl.uniform_partition(0, 2 * np.pi, n_angles)
@@ -54,12 +54,12 @@ def geometry(request):
                                     det_radius=100)
     elif geom == 'cone3d':
         apart = odl.uniform_partition(0, 2 * np.pi, n_angles)
-        dpart = odl.uniform_partition([-60] * 2, [60] * 2, [m] * 2)
+        dpart = odl.uniform_partition([-60, -60], [60, 60], (m, m))
         return tomo.CircularConeFlatGeometry(apart, dpart, src_radius=200,
                                              det_radius=100)
     elif geom == 'helical':
         apart = odl.uniform_partition(0, 8 * 2 * np.pi, n_angles)
-        dpart = odl.uniform_partition([-30, -3], [30, 3], [m] * 2)
+        dpart = odl.uniform_partition([-30, -3], [30, 3], (m, m))
         return tomo.HelicalConeFlatGeometry(apart, dpart, pitch=5.0,
                                             src_radius=200, det_radius=100)
     else:
@@ -272,7 +272,7 @@ def test_complex(impl):
     assert all_almost_equal(data.imag, true_data_im)
 
 
-def test_aniso_voxels(geometry):
+def test_anisotropic_voxels(geometry):
     """Test projection and backprojection with anisotropic voxels."""
     ndim = geometry.ndim
     shape = [10] * (ndim - 1) + [5]

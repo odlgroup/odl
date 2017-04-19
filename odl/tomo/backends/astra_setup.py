@@ -43,21 +43,21 @@ try:
                                   str(astra_ver_num % 100)])
 
     if parse_version(ASTRA_VERSION) < parse_version('1.7'):
-        raise RuntimeError('ASTRA version < 1.7 not supported')
+        raise RuntimeError('ASTRA version < 1.7 not supported, please update')
 except ImportError:
     ASTRA_AVAILABLE = False
     ASTRA_VERSION = ''
 
 import numpy as np
-import operator
 
 from odl.discr import DiscreteLp, DiscreteLpElement
 from odl.tomo.geometry import (
     Geometry, Parallel2dGeometry, DivergentBeamGeometry, ParallelGeometry,
     FlatDetector)
+from odl.util.utility import pkg_supports
 
 
-__all__ = ('ASTRA_AVAILABLE', 'ASTRA_VERSION',
+__all__ = ('ASTRA_AVAILABLE', 'ASTRA_VERSION', 'astra_supports',
            'astra_volume_geometry', 'astra_projection_geometry',
            'astra_data', 'astra_projector', 'astra_algorithm',
            'astra_conebeam_3d_geom_to_vec',
@@ -66,12 +66,33 @@ __all__ = ('ASTRA_AVAILABLE', 'ASTRA_VERSION',
 
 
 # Dictionary specifying which ASTRA versions support which feature. The dict
-# values can be given as exact version '==1.7' or '1.7', as range '1.7-1.7.4',
-# as inequality '>=1.7' or as comma-separated composition of such (the items
-# will be OR-ed together), e.g. '<=1.7, >=1.7.2'.
-ASTRA_FEATURES = {'anisotropic_voxels_2d': None,
-                  'anisotropic_voxels_3d': '>=1.8',
-                  }
+# values must be specified as valid setuptools package requirements without
+# package name, e.g., as exact version '==1.7', as inequality '>=1.7' or as
+# several requirements that need to be satisfied simultaneously, e.g.,
+# '>=1.8,<=2.0'.
+# To give multiple requirements that should be OR-ed together, use a
+# sequence instead of a single string in the dictionary, e.g.,
+# ['==1.7', '>=1.8,<=2.0'].
+ASTRA_FEATURES = {
+    # Cell sizes not equal in both axes in 2d, currently crashes
+    'anisotropic_voxels_2d': None,
+    # Cell sizes not equal all 3 axes in 3d, see ASTRA PR #41
+    'anisotropic_voxels_3d': '>=1.8',
+    # Density weighting for cone 2d (fan beam), not supported yet,
+    # see the discussion in ASTRA issue #71
+    'cone2d_density_weighting': None,
+    # Hacky version of ray-density weighting in cone beam backprojection for
+    # constant source-detector distance, see ASTRA issue #71 and ASTRA PR #84
+    'cone3d_hacky_density_weighting': '>=1.8',
+    # General case not supported yet, see the discussion in ASTRA issue #71
+    'cone3d_density_weighting': None,
+    # Fix for division by zero with detector midpoint normal perpendicular
+    # to geometry axis in parallel 3d, see ASTRA issue #18
+    'par3d_det_mid_pt_perp_to_axis': '>=1.7.2',
+    # Linking instead of copying of GPU memory, see ASTRA issue #93.
+    # This will be in the next release.
+    'gpulink': '>1.8',
+}
 
 
 def astra_supports(feature):
@@ -80,8 +101,8 @@ def astra_supports(feature):
     Parameters
     ----------
     feature : str
-        String standing for a potential feature of ASTRA.
-        See ``ASTRA_FEATURES`` for possible values.
+        Name of a potential feature of ASTRA. See ``ASTRA_FEATURES`` for
+        possible values.
 
     Returns
     -------
@@ -89,44 +110,7 @@ def astra_supports(feature):
         ``True`` if the currently imported version of ASTRA supports the
         feature in question, ``False`` otherwise.
     """
-    feature = str(feature).lower()
-    supp_versions = ASTRA_FEATURES.get(feature, None)
-    if supp_versions is None:
-        return False
-
-    astra_ver = parse_version(ASTRA_VERSION)
-    ver_specs = supp_versions.split(',')
-    for spec in ver_specs:
-        spec = spec.strip()
-        if '-' in spec:
-            # Match range
-            minver, maxver = spec.split('-', maxsplit=1)
-            if (astra_ver >= parse_version(minver) and
-                    astra_ver <= parse_version(maxver)):
-                return True
-            else:
-                continue
-        else:
-            # Match (in)equality
-            ver = spec.strip('=<> ')
-            mod = spec[:-len(ver)] or '=='
-            if mod == '==':
-                op = operator.eq
-            elif mod == '>=':
-                op = operator.ge
-            elif mod == '>':
-                op = operator.gt
-            elif mod == '<=':
-                op = operator.le
-            elif mod == '<':
-                op = operator.lt
-            else:
-                raise ValueError('invalid operator {!r}'.format(mod))
-
-            if op(astra_ver, parse_version(ver)):
-                return True
-    # No match
-    return False
+    return pkg_supports(feature, ASTRA_VERSION, ASTRA_FEATURES)
 
 
 def astra_volume_geometry(discr_reco):
@@ -175,8 +159,7 @@ def astra_volume_geometry(discr_reco):
         # values for the volume extent, but running the algorithm fails
         # if voxels are non-isotropic. We raise an exception here in
         # the meanwhile.
-        if (not np.allclose(discr_reco.partition.cell_sides[1:],
-                            discr_reco.partition.cell_sides[:-1]) and
+        if (not discr_reco.partition.has_isotropic_cells and
                 not astra_supports('anisotropic_voxels_2d')):
             raise NotImplementedError(
                 'non-isotropic pixels in 2d volumes not supported by ASTRA '
@@ -190,16 +173,16 @@ def astra_volume_geometry(discr_reco):
         #   'WindowMaxY': x_max
         #   'WindowMinX': y_min
         #   'WindowMinY': x_min
-        if (not np.allclose(discr_reco.partition.cell_sides[1:],
-                            discr_reco.partition.cell_sides[:-1]) and
-                not astra_supports('anisotropic_voxels_3d')):
-            raise NotImplementedError(
-                'non-isotropic voxels in 3d volumes not supported by ASTRA '
-                'v{}'.format(ASTRA_VERSION))
         vol_geom = astra.create_vol_geom(vol_shp[0], vol_shp[1],
                                          vol_min[1], vol_max[1],
                                          vol_min[0], vol_max[0])
     elif discr_reco.ndim == 3:
+        # Not supported in all versions of ASTRA
+        if (not discr_reco.partition.has_isotropic_cells and
+                not astra_supports('anisotropic_voxels_3d')):
+            raise NotImplementedError(
+                'non-isotropic voxels in 3d volumes not supported by ASTRA '
+                'v{}'.format(ASTRA_VERSION))
         # Given a 3D array of shape (x, y, z), a volume geometry is created as:
         #    astra.create_vol_geom(y, z, x, )
         # yielding a dictionary:
@@ -247,7 +230,6 @@ def astra_conebeam_3d_geom_to_vec(geometry):
     vectors : `numpy.ndarray`
         Numpy array of shape ``(number of angles, 12)``
     """
-
     angles = geometry.angles
     vectors = np.zeros((angles.size, 12))
 
@@ -302,7 +284,6 @@ def astra_conebeam_2d_geom_to_vec(geometry):
     vectors : `numpy.ndarray`
         Numpy array of shape ``(number of angles, 6)``
     """
-
     angles = geometry.angles
     vectors = np.zeros((angles.size, 6))
 
@@ -357,7 +338,6 @@ def astra_parallel_3d_geom_to_vec(geometry):
     vectors : `numpy.ndarray`
         Numpy array of shape ``(number of angles, 12)``
     """
-
     angles = geometry.angles
     vectors = np.zeros((angles.size, 12))
 
@@ -385,7 +365,6 @@ def astra_parallel_3d_geom_to_vec(geometry):
     for i in range(4):
         new_ind += [2 + 3 * i, 1 + 3 * i, 0 + 3 * i]
     vectors = vectors[:, new_ind]
-
     return vectors
 
 
@@ -617,9 +596,8 @@ def astra_projector(vol_interp, astra_vol_geom, astra_proj_geom, ndim, impl):
 
     # Add the hacky 1/r^2 weighting exposed in intermediate versions of
     # ASTRA
-    # TODO: add upper bound when the exposed feature is removed
-    if (parse_version(ASTRA_VERSION) >= parse_version('1.8rc1') and
-            proj_type in ('cone', 'cone_vec')):
+    if (proj_type in ('cone', 'cone_vec') and
+            astra_supports('cone3d_hacky_density_weighting')):
         proj_cfg['options']['DensityWeighting'] = True
 
     if ndim == 2:
@@ -660,10 +638,10 @@ def astra_algorithm(direction, ndim, vol_id, sino_id, proj_id, impl):
     if impl not in ('cpu', 'cuda'):
         raise ValueError("`impl` type '{}' not understood"
                          ''.format(impl))
-    if ndim is 3 and impl is 'cpu':
+    if ndim == 3 and impl == 'cpu':
         raise NotImplementedError(
             '3d algorithms for CPU not supported by ASTRA')
-    if proj_id is None and impl is 'cpu':
+    if proj_id is None and impl == 'cpu':
         raise ValueError("'cpu' implementation requires projector ID")
 
     algo_map = {'forward': {2: {'cpu': 'FP', 'cuda': 'FP_CUDA'},
