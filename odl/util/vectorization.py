@@ -106,7 +106,7 @@ class OptionalArgDecorator(object):
                def myfunc(x):
                    pass
 
-           which is equivalent to::
+           which is equivalent to ::
 
                def myfunc(x):
                    pass
@@ -123,7 +123,7 @@ class OptionalArgDecorator(object):
                def myfunc(x):
                    pass
 
-           which is equivalent to::
+           which is equivalent to ::
 
                def myfunc(x):
                    pass
@@ -172,8 +172,12 @@ class OptionalArgDecorator(object):
 
     @staticmethod
     def _wrapper(func, *wrapper_args, **wrapper_kwargs):
-        """Return the wrapped function."""
-        raise NotImplementedError('abstract method')
+        """Make a wrapper for ``func`` and return it.
+
+        This is a default implementation that simply returns the wrapped
+        function, i.e., the resulting decorator is the identity.
+        """
+        return func
 
 
 class vectorize(OptionalArgDecorator):
@@ -221,7 +225,7 @@ class vectorize(OptionalArgDecorator):
     def _wrapper(func, *vect_args, **vect_kwargs):
         """Return the vectorized wrapper function."""
         if not hasattr(func, '__name__'):
-            # Set name if not available. Happens if func is actually a callable
+            # Set name if not available. Happens if func is actually a function
             func.__name__ = '{}.__call__'.format(func.__class__.__name__)
 
         return wraps(func)(_NumpyVectorizeWrapper(func, *vect_args,

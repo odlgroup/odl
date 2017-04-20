@@ -16,14 +16,8 @@ __all__ = ('skip_if_no_astra', 'skip_if_no_astra_cuda', 'skip_if_no_skimage')
 try:
     import pytest
 except ImportError:
-    # Make trivial decorator
-    from odl.util import OptionalArgDecorator
-
-    class ident(OptionalArgDecorator):
-        @staticmethod
-        def _wrapper(f, *a, **kw):
-            return f
-
+    # Use the identity decorator (default of OptionalArgDecorator)
+    from odl.util import OptionalArgDecorator as ident
     skip_if_no_astra = skip_if_no_astra_cuda = skip_if_no_skimage = ident
 
 else:
