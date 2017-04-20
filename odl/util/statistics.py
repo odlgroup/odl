@@ -25,7 +25,7 @@ standard_library.install_aliases()
 import numpy as np
 
 
-__all__ = ('psnr',)
+__all__ = ('mse', 'psnr', 'estimate_noise')
 
 
 def mse(true, noisy):
@@ -95,6 +95,43 @@ def psnr(true, noisy):
         return -np.inf
     else:
         return 20 * np.log10(max_true) - 10 * np.log10(mse_result)
+
+
+def estimate_noise(img):
+    """Estimate noise level in image.
+    
+    Parameters
+    ----------
+    img : array-lik
+    
+    Returns
+    -------
+    noise : float
+        estimate of standard deviation in image
+        
+    Examples
+    --------
+    Create image with noise 1.0, verify result
+    
+    >>> img = np.random.randn(10, 10)
+    >>> noise = estimate_noise(img)  # should be about 1
+    
+    See Also
+    --------
+    Reference: J. Immerkaer, “Fast Noise Variance Estimation”
+    """
+    import scipy.signal
+    import functools
+    img = np.asarray(img, dtype='float')
+    
+    M = functools.reduce(np.add.outer, [[-1, 2, -1]] * img.ndim)
+    
+    convolved = scipy.signal.convolve(img, M, 'valid')
+    conv_var = np.sum(np.square(convolved))
+    
+    sigma = np.sqrt(conv_var / (np.sum(M**2) * np.prod(convolved.shape)))
+    
+    return sigma
 
 
 if __name__ == '__main__':
