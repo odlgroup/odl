@@ -482,25 +482,25 @@ class CallbackShow(SolverCallback):
     odl.space.base_ntuples.NtuplesBaseVector.show
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, title=None, step=1, saveto=None, **kwargs):
         """Initialize a new instance.
 
         Additional parameters are passed through to the ``show`` method.
 
         Parameters
         ----------
-        title : string, optional
-            Title of the window to be shown.
-            The title name is generated as
+        title : str, optional
+            Format string for the title of the displayed figure.
+            The title name is generated as ::
 
                 title = title.format(cur_iter_num)
 
             where ``cur_iter_num`` is the current iteration number.
-            Default: ``'Iterate {}'``
+            For the default ``None``, the title format ``'Iterate {}'``
+            is used.
         step : positive int, optional
             Number of iterations between plots.
-            Default: 1
-        saveto : string or callable, optional
+        saveto : str or callable, optional
             Format string for the name of the file(s) where
             iterates are saved.
 
@@ -516,12 +516,11 @@ class CallbackShow(SolverCallback):
 
             If the directory name does not exist, a ``ValueError`` is raised.
             If ``saveto is None``, the figures are not saved.
-            Default: ``None``
 
         Other Parameters
         ----------------
         kwargs :
-            Optional arguments passed on to ``x.show``.
+            Optional keyword arguments passed on to ``x.show``.
 
         Examples
         --------
@@ -545,24 +544,20 @@ class CallbackShow(SolverCallback):
 
         >>> callback = CallbackShow(step=5, clim=[0, 1])
         """
-        self.args = args
-        self.kwargs = kwargs
+        if title is None:
+            self.title = 'Iterate {}'
+        else:
+            self.title = str(title)
+        self.title_formatter = self.title.format
+
+        self.saveto = saveto
+        self.saveto_formatter = getattr(self.saveto, 'format', self.saveto)
+
+        self.step = step
         self.fig = kwargs.pop('fig', None)
-        self.step = kwargs.pop('step', 1)
-        self.saveto = kwargs.pop('saveto', None)
-        try:
-            self.saveto_formatter = self.saveto.format
-        except AttributeError:
-            self.saveto_formatter = self.saveto
-
-        self.title = kwargs.pop('title', 'Iterate {}')
-        try:
-            self.title_formatter = self.title.format
-        except AttributeError:
-            self.title_formatter = self.title
-
         self.iter = 0
         self.space_of_last_x = None
+        self.kwargs = kwargs
 
     def __call__(self, x):
         """Show the current iterate."""
@@ -575,14 +570,13 @@ class CallbackShow(SolverCallback):
             title = self.title_formatter(self.iter)
 
             if self.saveto is None:
-                self.fig = x.show(*self.args, title=title, fig=self.fig,
+                self.fig = x.show(title, fig=self.fig,
                                   update_in_place=update_in_place,
                                   **self.kwargs)
 
             else:
                 saveto = self.saveto_formatter.format(self.iter)
-
-                self.fig = x.show(*self.args, title=title, fig=self.fig,
+                self.fig = x.show(title, fig=self.fig,
                                   update_in_place=update_in_place,
                                   saveto=saveto, **self.kwargs)
 
@@ -596,12 +590,14 @@ class CallbackShow(SolverCallback):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        optargs = [('title', self.title, 'Iterate {}'),
-                   ('step', self.step, 1),
+        posargs = []
+        if self.title != 'Iterate {}':
+            posargs.append(self.title)
+        optargs = [('step', self.step, 1),
                    ('saveto', self.saveto, None)]
         for kwarg, value in self.kwargs.items():
             optargs.append((kwarg, value, None))
-        inner_str = signature_string([], optargs)
+        inner_str = signature_string(posargs, optargs)
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
