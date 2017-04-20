@@ -18,16 +18,13 @@ import os
 
 import odl
 from odl.trafos.backends import PYFFTW_AVAILABLE, PYWT_AVAILABLE
-from odl.util import dtype_repr, OptionalArgDecorator
+from odl.util import dtype_repr
 
 try:
     from pytest import fixture
 except ImportError:
-    # Make trivial decorator
-    class fixture(OptionalArgDecorator):
-        @staticmethod
-        def _wrapper(f, *a, **kw):
-            return f
+    # Make fixture the identity decorator (default of OptionalArgDecorator)
+    from odl.util import OptionalArgDecorator as fixture
 
 
 # --- Add numpy and ODL to all doctests ---
