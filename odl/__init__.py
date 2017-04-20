@@ -14,7 +14,7 @@ restricted to) inverse problems.
 
 from __future__ import absolute_import
 
-__version__ = '0.5.4.dev0'
+__version__ = '0.6.0'
 __all__ = ('diagnostics', 'discr', 'operator', 'set', 'space', 'solvers',
            'tomo', 'trafos', 'util', 'phantom', 'deform', 'ufunc_ops')
 
