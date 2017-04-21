@@ -9,8 +9,7 @@ Its purpose is to avoid broken packages, broken documentation and many other thi
 Since this is not everyday work and may be done under the stress of a (self-imposed) deadline, it is clearly beneficial to have a checklist to hold on to.
 
 .. note::
-    The instructions in this document are tentative until tested in practice.
-    They are also written from the perspective of Linux and may need adaption for other platforms.
+    The instructions in this document are written from the perspective of Linux and may need adaption for other platforms.
 
 
 .. _dev_rel_release_schedule:
@@ -101,7 +100,7 @@ To ensure a higher version number for installations from the git master branch, 
     cd doc && make clean && cd ..  # remove the local HTML doc first
     grep -Ir "0\.5\.4" . | grep -E -v "\.git|release_notes\.rst|odl\.egg-info"
 
-- In the file ``conda/meta.yaml``, change the version string after ``version: `` to the same as above, but without the ``dev0`` tag.
+- In the file ``conda/meta.yaml``, change the version string after ``version:`` to the same as above, but without the ``dev0`` tag.
   In the example above, this would mean to change it from ``"0.5.3"`` to ``"0.5.4"``.
 
   If necessary, change ``git_rev`` value to ``master``, although that should already be the case.
@@ -131,14 +130,30 @@ Back on the release branch with a ``git checkout release-X.Y.Z``, it is now time
   This is the git tag you will create when making the release on GitHub.
 - Commit the changes, using a message like ``REL: bump version to X.Y.Z``.
 - Make a PR and fix review comments.
-  When doing so, try to keep the ``REL: bump version to X.Y.Z`` commit last, for example by using ``git commit --amend`` for fixes, or by squashing the commits on the release branch.
+  When doing so, keep the ``REL: bump version to X.Y.Z`` commit last, for example by using ``git commit --amend`` for fixes, or by squashing the commits on the release branch.
 
-  **Don't merge immediately when ready!**
+  .. note::
 
-- Make a new `Release <https://github.com/odlgroup/odl/releases>`_ on GitHub **from the release branch, not master**.
+    Getting a review is useful, but not mandatory since the only changes on the branch are the release notes and the version bump.
+    It is important that the version information is correct, but errors in the release notes are less grave since they are not distributed with the package and can thus be fixed afterwards.
+
+- Push the release branch to the main repository so that it is possible to make a `GitHub release <https://github.com/odlgroup/odl/releases>`_ from it:
+
+  .. code-block:: bash
+
+    git push origin release-X.Y.Z
+
+- Go to the `Releases <https://github.com/odlgroup/odl/releases>`_ page on GitHub.
+  Click on *Draft a new release* and **select the** ``release-X.Y.Z`` **branch from the dropdown menu, not master**.
+  Use ``vX.Y.Z`` as release tag (numbers inserted, of course).
 - Paste the short summary from the release notes file (converting from RST to Markdown) but don't insert the details.
-- Add a link to the current section in the release notes file.
+- Add a link to the `release notes documentation page <https://odlgroup.github.io/odl/release_notes.html>`_, as in earlier releases.
+  Later on, when the documentation with the new release notes is online, you can edit this link to point to the exact section.
 
+.. note::
+
+    If you encounter an issue (like a failing test) that needs immediate fix, stop at that point, fix the issue on a branch, make a PR and merge it after review.
+    After that, rebase the release branch(es) on the new master and continue.
 
 .. _dev_rel_create_pkgs:
 6. Create packages for PyPI and Conda
@@ -200,11 +215,17 @@ Before actually uploading packages to "official" servers, first install the loca
   .. code-block:: bash
 
     source deactivate
-    conda create -n pypi_install python=X.Y  # choose Python version
+    conda create -n pypi_install pytest python=X.Y  # choose Python version
     source activate pypi_install
     cd /path/to/odl_repo
-    pip install dist/<pkg_filename>
+    cd dist
+    pip install <pkg_filename>
     python -c "import odl; odl.test()"
+
+  .. warn::
+
+    Make sure that you're not in the repository root directory while testing, since this can confuse the ``import odl`` command.
+    The installed package should be tested, not the code repository.
 
 - Install and test the local conda packages in a new conda environment:
 
