@@ -748,7 +748,7 @@ class CallbackShowConvergence(SolverCallback):
         logx : bool, optional
             If true, the y axis is logarithmic.
         kwargs :
-            Additional parameters passed to the scatter function.
+            Additional parameters passed to the scatter-plotting function.
         """
         self.functional = functional
         self.title = title

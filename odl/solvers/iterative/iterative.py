@@ -14,6 +14,7 @@ from future import standard_library
 standard_library.install_aliases()
 
 from odl.operator import IdentityOperator, OperatorComp, OperatorSum
+from odl.util import normalized_scalar_param_list
 
 
 __all__ = ('landweber', 'conjugate_gradient', 'conjugate_gradient_normal',
@@ -198,15 +199,15 @@ def conjugate_gradient(op, x, rhs, niter, callback=None):
 
 
 def conjugate_gradient_normal(op, x, rhs, niter=1, callback=None):
-    """Optimized implementation of CG for the normal equations.
+    """Optimized implementation of CG for the normal equation.
 
-    This method solves the inverse problem (of the first kind)
+    This method solves the inverse problem (of the first kind) ::
 
-    ``A(x) == rhs``
+        A(x) == rhs
 
-    with a linear `Operator` ``A`` by looking at the normal equations
+    with a linear `Operator` ``A`` by looking at the normal equation ::
 
-    ``A.adjoint(A(x)) == A.adjoint(rhs)``
+        A.adjoint(A(x)) == A.adjoint(rhs)
 
     It uses a minimum amount of memory copies by applying re-usable
     temporaries and in-place evaluation.

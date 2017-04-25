@@ -15,7 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Minimizes the Rosenbrock functional using a variety of solution methods
+"""Minimize the Rosenbrock functional.
+
+This example shows how this can be done using a variety of solution methods.
 """
 
 import odl
