@@ -22,7 +22,8 @@ __all__ = ('array1d_repr', 'array1d_str', 'arraynd_repr', 'arraynd_str',
            'is_scalar_dtype', 'is_int_dtype', 'is_floating_dtype',
            'is_real_dtype', 'is_real_floating_dtype',
            'is_complex_floating_dtype', 'real_dtype', 'complex_dtype',
-           'conj_exponent', 'as_flat_array', 'writable_array')
+           'conj_exponent', 'as_flat_array', 'writable_array',
+           'run_from_ipython')
 
 TYPE_MAP_R2C = {np.dtype(dtype): np.result_type(dtype, 1j)
                 for dtype in np.sctypes['float']}
@@ -696,6 +697,11 @@ def signature_string(posargs, optargs, sep=', ', mod=''):
         parts.append(opt_sep.join(optargs_conv))
 
     return part_sep.join(parts)
+
+
+def run_from_ipython():
+    """If the process is run from IPython."""
+    return '__IPYTHON__' in globals()
 
 
 if __name__ == '__main__':
