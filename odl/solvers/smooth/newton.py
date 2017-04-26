@@ -216,11 +216,13 @@ def newtons_method(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
 
         # Solving A*x = b for x, in this case f''(x)*p = -f'(x)
         # TODO: Let the user provide/choose method for how to solve this?
-        if hasattr(hessian, 'inverse'):
-            hessian.inverse(-deriv_in_point, out=search_direction)
-        else:
+        try:
+            hessian_inverse = hessian.inverse
+        except NotImplementedError:
             conjugate_gradient(hessian, search_direction,
                                -deriv_in_point, cg_iter)
+        else:
+            hessian_inverse(-deriv_in_point, out=search_direction)
 
         # Computing step length
         dir_deriv = search_direction.inner(deriv_in_point)
