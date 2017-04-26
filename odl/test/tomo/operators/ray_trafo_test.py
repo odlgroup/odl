@@ -29,6 +29,42 @@ impl_params = [skip_if_no_astra('astra_cpu'),
                skip_if_no_skimage('skimage')]
 impl = simple_fixture('impl', impl_params, fmt=" {name} = '{value.args[1]}' ")
 
+geometry_params = ['par2d', 'par3d', 'cone2d', 'cone3d', 'helical']
+geometry_ids = [' geometry = {} '.format(p) for p in geometry_params]
+
+
+@pytest.fixture(scope='module', ids=geometry_ids, params=geometry_params)
+def geometry(request):
+    geom = request.param
+    m = 100
+    n_angles = 100
+
+    if geom == 'par2d':
+        apart = odl.uniform_partition(0, np.pi, n_angles)
+        dpart = odl.uniform_partition(-30, 30, m)
+        return tomo.Parallel2dGeometry(apart, dpart)
+    elif geom == 'par3d':
+        apart = odl.uniform_partition(0, np.pi, n_angles)
+        dpart = odl.uniform_partition([-30, -30], [30, 30], (m, m))
+        return tomo.Parallel3dAxisGeometry(apart, dpart)
+    elif geom == 'cone2d':
+        apart = odl.uniform_partition(0, 2 * np.pi, n_angles)
+        dpart = odl.uniform_partition(-30, 30, m)
+        return tomo.FanFlatGeometry(apart, dpart, src_radius=200,
+                                    det_radius=100)
+    elif geom == 'cone3d':
+        apart = odl.uniform_partition(0, 2 * np.pi, n_angles)
+        dpart = odl.uniform_partition([-60, -60], [60, 60], (m, m))
+        return tomo.CircularConeFlatGeometry(apart, dpart, src_radius=200,
+                                             det_radius=100)
+    elif geom == 'helical':
+        apart = odl.uniform_partition(0, 8 * 2 * np.pi, n_angles)
+        dpart = odl.uniform_partition([-30, -3], [30, 3], (m, m))
+        return tomo.HelicalConeFlatGeometry(apart, dpart, pitch=5.0,
+                                            src_radius=200, det_radius=100)
+    else:
+        raise ValueError('geom not valid')
+
 
 # Find the valid projectors
 projectors = [skip_if_no_astra('par2d astra_cpu uniform'),
@@ -55,11 +91,11 @@ projectors = [skip_if_no_astra('par2d astra_cpu uniform'),
               skip_if_no_skimage('par2d skimage half_uniform')]
 
 
-projector_ids = ['geom={}, impl={}, angles={}'
+projector_ids = [' geom={}, impl={}, angles={} '
                  ''.format(*p.args[1].split()) for p in projectors]
 
 
-@pytest.fixture(scope="module", params=projectors, ids=projector_ids)
+@pytest.fixture(scope='module', params=projectors, ids=projector_ids)
 def projector(request):
     n = 100
     m = 100
@@ -89,52 +125,45 @@ def projector(request):
         raise ValueError('angle not valid')
 
     if geom == 'par2d':
-        # Discrete reconstruction space
+        # Reconstruction space
         reco_space = odl.uniform_discr([-20] * 2, [20] * 2, [n] * 2,
                                        dtype=dtype)
-
         # Geometry
         dpart = odl.uniform_partition(-30, 30, m)
         geom = tomo.Parallel2dGeometry(apart, dpart)
-
+        # Ray transform
         return tomo.RayTransform(reco_space, geom, impl=impl)
 
     elif geom == 'par3d':
-        # Discrete reconstruction space
+        # Reconstruction space
         reco_space = odl.uniform_discr([-20] * 3, [20] * 3, [n] * 3,
                                        dtype=dtype)
 
         # Geometry
-        dpart = odl.uniform_partition([-30] * 2, [30] * 2, [n] * 2)
+        dpart = odl.uniform_partition([-30] * 2, [30] * 2, [m] * 2)
         geom = tomo.Parallel3dAxisGeometry(apart, dpart)
-
         # Ray transform
         return tomo.RayTransform(reco_space, geom, impl=impl)
 
     elif geom == 'cone2d':
-        # Discrete reconstruction space
+        # Reconstruction space
         reco_space = odl.uniform_discr([-20] * 2, [20] * 2, [n] * 2,
                                        dtype=dtype)
-
         # Geometry
         dpart = odl.uniform_partition(-30, 30, m)
         geom = tomo.FanFlatGeometry(apart, dpart, src_radius=200,
                                     det_radius=100)
-
         # Ray transform
         return tomo.RayTransform(reco_space, geom, impl=impl)
 
     elif geom == 'cone3d':
-        # Discrete reconstruction space
+        # Reconstruction space
         reco_space = odl.uniform_discr([-20] * 3, [20] * 3, [n] * 3,
                                        dtype=dtype)
-
         # Geometry
         dpart = odl.uniform_partition([-60] * 2, [60] * 2, [m] * 2)
-
         geom = tomo.CircularConeFlatGeometry(apart, dpart, src_radius=200,
                                              det_radius=100)
-
         # Ray transform
         return tomo.RayTransform(reco_space, geom, impl=impl)
 
@@ -142,20 +171,18 @@ def projector(request):
         # Discrete reconstruction space
         reco_space = odl.uniform_discr([-20, -20, 0], [20, 20, 40],
                                        [n] * 3, dtype=dtype)
-
-        # overwrite angle
+        # Geometry, overwriting angle partition
         apart = odl.uniform_partition(0, 8 * 2 * np.pi, n_angles)
         dpart = odl.uniform_partition([-30, -3], [30, 3], [m] * 2)
         geom = tomo.HelicalConeFlatGeometry(apart, dpart, pitch=5.0,
                                             src_radius=200, det_radius=100)
-
         # Ray transform
         return tomo.RayTransform(reco_space, geom, impl=impl)
     else:
         raise ValueError('geom not valid')
 
 
-@pytest.fixture(scope="module",
+@pytest.fixture(scope='module',
                 params=[True, False],
                 ids=[' in-place ', ' out-of-place '])
 def in_place(request):
@@ -212,7 +239,6 @@ def test_adjoint(projector):
 
 def test_angles(projector):
     """Test discrete Ray transform angle conventions."""
-
     # Smoothed line/hyperplane around 0:th dimension
     vol = projector.domain.element(lambda x: np.exp(-x[0] ** 2))
 
@@ -244,6 +270,39 @@ def test_complex(impl):
 
     assert all_almost_equal(data.real, true_data_re)
     assert all_almost_equal(data.imag, true_data_im)
+
+
+def test_anisotropic_voxels(geometry):
+    """Test projection and backprojection with anisotropic voxels."""
+    ndim = geometry.ndim
+    shape = [10] * (ndim - 1) + [5]
+    space = odl.uniform_discr([-1] * ndim, [1] * ndim, shape=shape,
+                              dtype='float32')
+
+    # If no implementation is available, skip
+    if ndim == 2 and not odl.tomo.ASTRA_AVAILABLE:
+        pytest.skip(msg='ASTRA not available, skipping 2d test')
+    elif ndim == 3 and not odl.tomo.ASTRA_CUDA_AVAILABLE:
+        pytest.skip(msg='ASTRA_CUDA not available, skipping 3d test')
+
+    ray_trafo = odl.tomo.RayTransform(space, geometry)
+    vol_one = ray_trafo.domain.one()
+    data_one = ray_trafo.range.one()
+
+    if ndim == 2:
+        # Should raise
+        with pytest.raises(NotImplementedError):
+            ray_trafo(vol_one)
+        with pytest.raises(NotImplementedError):
+            ray_trafo.adjoint(data_one)
+    elif ndim == 3:
+        # Just check that this doesn't crash and computes something nonzero
+        data = ray_trafo(vol_one)
+        backproj = ray_trafo.adjoint(data_one)
+        assert data.norm() > 0
+        assert backproj.norm() > 0
+    else:
+        assert False
 
 
 if __name__ == '__main__':

@@ -15,6 +15,7 @@ standard_library.install_aliases()
 
 from functools import wraps
 import numpy as np
+from pkg_resources import parse_requirements
 
 
 __all__ = ('array1d_repr', 'array1d_str', 'arraynd_repr', 'arraynd_str',
@@ -702,6 +703,106 @@ def signature_string(posargs, optargs, sep=', ', mod=''):
 def run_from_ipython():
     """If the process is run from IPython."""
     return '__IPYTHON__' in globals()
+
+
+def pkg_supports(feature, pkg_version, pkg_feat_dict):
+    """Return bool indicating whether a package supports ``feature``.
+
+    Parameters
+    ----------
+    feature : str
+        Name of a potential feature of a package.
+    pkg_version : str
+        Version of the package that should be checked for presence of the
+        feature.
+    pkg_feat_dict : dict
+        Specification of features of a package. Each item has the
+        following form::
+
+            feature_name: version_specification
+
+        Here, ``feature_name`` is a string that is matched against
+        ``feature``, and ``version_specification`` is a string or a
+        sequence of strings that specifies version sets. These
+        specifications are the same as for ``setuptools`` requirements,
+        just without the package name.
+        A ``None`` entry signals "no support in any version", i.e.,
+        always ``False``.
+        If a sequence of requirements are given, they are OR-ed together.
+        See ``Examples`` for details.
+
+    Returns
+    -------
+    supports : bool
+        ``True`` if ``pkg_version`` of the package in question supports
+        ``feature``, ``False`` otherwise.
+
+    Examples
+    --------
+    >>> feat_dict = {
+    ...     'feat1': '==0.5.1',
+    ...     'feat2': '>0.6, <=0.9',  # both required simultaneously
+    ...     'feat3': ['>0.6', '<=0.9'],  # only one required, i.e. always True
+    ...     'feat4': ['==0.5.1', '>0.6, <=0.9'],
+    ...     'feat5': None
+    ... }
+    >>> pkg_supports('feat1', '0.5.1', feat_dict)
+    True
+    >>> pkg_supports('feat1', '0.4', feat_dict)
+    False
+    >>> pkg_supports('feat2', '0.5.1', feat_dict)
+    False
+    >>> pkg_supports('feat2', '0.6.1', feat_dict)
+    True
+    >>> pkg_supports('feat2', '0.9', feat_dict)
+    True
+    >>> pkg_supports('feat2', '1.0', feat_dict)
+    False
+    >>> pkg_supports('feat3', '0.4', feat_dict)
+    True
+    >>> pkg_supports('feat3', '1.0', feat_dict)
+    True
+    >>> pkg_supports('feat4', '0.5.1', feat_dict)
+    True
+    >>> pkg_supports('feat4', '0.6', feat_dict)
+    False
+    >>> pkg_supports('feat4', '0.6.1', feat_dict)
+    True
+    >>> pkg_supports('feat4', '1.0', feat_dict)
+    False
+    >>> pkg_supports('feat5', '0.6.1', feat_dict)
+    False
+    >>> pkg_supports('feat5', '1.0', feat_dict)
+    False
+    """
+    feature = str(feature)
+    pkg_version = str(pkg_version)
+    supp_versions = pkg_feat_dict.get(feature, None)
+    if supp_versions is None:
+        return False
+
+    # Make sequence from single string
+    try:
+        supp_versions + ''
+    except TypeError:
+        pass
+    else:
+        supp_versions = [supp_versions]
+
+    # Make valid package requirements
+    ver_specs = ['pkg' + supp_ver for supp_ver in supp_versions]
+    # Each parse_requirements list contains only one entry since we specify
+    # only one package
+    ver_reqs = [list(parse_requirements(ver_spec))[0]
+                for ver_spec in ver_specs]
+
+    # If one of the requirements in the list is met, return True
+    for req in ver_reqs:
+        if req.specifier.contains(pkg_version):
+            return True
+
+    # No match
+    return False
 
 
 if __name__ == '__main__':

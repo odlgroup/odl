@@ -229,8 +229,26 @@ class RectPartition(object):
 
     @property
     def is_uniform(self):
-        """``True`` if ``self.grid`` is uniform."""
+        """``True`` if `grid` is uniform."""
         return self.grid.is_uniform
+
+    @property
+    def has_isotropic_cells(self):
+        """``True`` if `grid` is uniform and `cell sides` are all equal.
+
+        Always ``True`` for 1D partitions.
+
+        Examples
+        --------
+        >>> part = uniform_partition([0, -1], [1, 1], (5, 10))
+        >>> part.has_isotropic_cells
+        True
+        >>> part = uniform_partition([0, -1], [1, 1], (5, 5))
+        >>> part.has_isotropic_cells
+        False
+        """
+        return self.is_uniform and np.allclose(self.cell_sides[:-1],
+                                               self.cell_sides[1:])
 
     @property
     def ndim(self):

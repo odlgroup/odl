@@ -15,14 +15,17 @@ standard_library.install_aliases()
 from builtins import str, super
 
 import numpy as np
+import warnings
 
 from odl.discr import DiscreteLp
 from odl.operator import Operator
 from odl.space import FunctionSpace
-from odl.tomo.geometry import Geometry, Parallel2dGeometry
+from odl.tomo.geometry import (
+    Geometry, Parallel2dGeometry, Parallel3dAxisGeometry)
 from odl.space.weighting import NoWeighting, ConstWeighting
 from odl.tomo.backends import (
     ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE, SKIMAGE_AVAILABLE,
+    astra_supports, ASTRA_VERSION,
     astra_cpu_forward_projector, astra_cpu_back_projector,
     AstraCudaProjectorImpl, AstraCudaBackProjectorImpl,
     skimage_radon_forward, skimage_radon_back_projector)
@@ -144,8 +147,29 @@ class RayTransformBase(Operator):
         # Sanity checks
         if impl.startswith('astra'):
             if geometry.ndim > 2 and impl.endswith('cpu'):
-                raise ValueError('`impl` {!r}, only works for 2d'
+                raise ValueError('`impl` {!r} only works for 2d'
                                  ''.format(impl_in))
+
+            # Print a warning if the detector midpoint normal vector at any
+            # angle is perpendicular to the geometry axis in parallel 3d
+            # single-axis geometry -- this is broken in some ASTRA versions
+            if (isinstance(geometry, Parallel3dAxisGeometry) and
+                    not astra_supports('par3d_det_mid_pt_perp_to_axis')):
+                axis = geometry.axis
+                mid_pt = geometry.det_params.mid_pt
+                for i, angle in enumerate(geometry.angles):
+                    if abs(np.dot(axis,
+                                  geometry.det_to_src(angle, mid_pt))) < 1e-4:
+                        warnings.warn(
+                            'angle {}: detector midpoint normal {} is '
+                            'perpendicular to the geometry axis {} in '
+                            '`Parallel3dAxisGeometry`; this is broken in '
+                            'ASTRA v{}, please upgrade to v1.8 or later'
+                            ''.format(i, geometry.det_to_src(angle, mid_pt),
+                                      axis, ASTRA_VERSION),
+                            RuntimeWarning)
+                        break
+
         elif impl == 'skimage':
             if not isinstance(geometry, Parallel2dGeometry):
                 raise TypeError("{!r} backend only supports 2d parallel "

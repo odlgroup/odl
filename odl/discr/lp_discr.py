@@ -211,7 +211,7 @@ class DiscreteLp(DiscretizedSpace):
 
     @property
     def is_uniform(self):
-        """``True`` if ``self.partition`` is uniform."""
+        """``True`` if `partition` is uniform."""
         return self.partition.is_uniform
 
     @property
