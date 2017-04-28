@@ -6,7 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Nonlinear version of the conjugate gradient."""
+"""Nonlinear version of the conjugate gradient method."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -23,7 +23,26 @@ __all__ = ('conjugate_gradient_nonlinear',)
 def conjugate_gradient_nonlinear(f, x, line_search=1.0, maxiter=1000, nreset=0,
                                  tol=1e-16, beta_method='FR',
                                  callback=None):
-    """Conjugate gradient method for general nonlinear problems.
+    """Conjugate gradient for nonlinear problems.
+
+    Notes
+    -----
+    This is a general and optimized implementation of the nonlinear conjguate
+    gradient method for solving a general unconstrained optimization problem
+
+    .. math::
+        \min f(x)
+
+    for a differentiable functional
+    :math:`f: \mathcal{X}\\to \mathbb{R}` on a Hilbert space
+    :math:`\mathcal{X}`. It does so by finding a zero of the gradient
+
+    .. math::
+        \\nabla f: \mathcal{X} \\to \mathcal{X}.
+
+    The method is described in a
+    `Wikipedia article
+    <https://en.wikipedia.org/wiki/Nonlinear_conjugate_gradient_method>`_.
 
     Parameters
     ----------
@@ -41,14 +60,15 @@ def conjugate_gradient_nonlinear(f, x, line_search=1.0, maxiter=1000, nreset=0,
     nreset : int, optional
         Number of times the solver should be reset. Default: no reset.
     tol : float, optional
-        Tolerance that should be used for terminating the iteration.
+        Tolerance that should be used to terminating the iteration.
     beta_method : {'FR', 'PR', 'HS', 'DY'}, optional
         Method to calculate ``beta`` in the iterates.
+
         * ``'FR'`` : Fletcher-Reeves
         * ``'PR'`` : Polak-Ribiere
         * ``'HS'`` : Hestenes-Stiefel
         * ``'DY'`` : Dai-Yuan
-    callback : `callable`, optional
+    callback : callable, optional
         Object executing code per iteration, e.g. plotting each iterate.
 
     Notes
@@ -78,13 +98,15 @@ def conjugate_gradient_nonlinear(f, x, line_search=1.0, maxiter=1000, nreset=0,
     conjugate_gradient_normal : Equivalent solver but for least-squares problem
     with linear operator
     """
-
     if x not in f.domain:
         raise TypeError('`x` {!r} is not in the domain of `f` {!r}'
                         ''.format(x, f.domain))
 
     if not callable(line_search):
         line_search = ConstantLineSearch(line_search)
+
+    if beta_method not in ['FR', 'PR', 'HS', 'DY']:
+        raise ValueError('unknown ``beta_method``')
 
     for _ in range(nreset + 1):
         # First iteration is done without beta
@@ -95,7 +117,6 @@ def conjugate_gradient_nonlinear(f, x, line_search=1.0, maxiter=1000, nreset=0,
         a = line_search(x, dx, dir_derivative)
         x.lincomb(1, x, a, dx)  # x = x + a * dx
 
-        dx_old = dx
         s = dx  # for 'HS' and 'DY' beta methods
 
         for _ in range(maxiter // (nreset + 1)):
@@ -112,7 +133,7 @@ def conjugate_gradient_nonlinear(f, x, line_search=1.0, maxiter=1000, nreset=0,
             elif beta_method == 'DY':
                 beta = - dx.inner(dx) / s.inner(dx - dx_old)
             else:
-                raise ValueError('unknown ``beta_method``')
+                raise RuntimeError('unknown ``beta_method``')
 
             # Reset beta if negative.
             beta = max(0, beta)
@@ -122,6 +143,7 @@ def conjugate_gradient_nonlinear(f, x, line_search=1.0, maxiter=1000, nreset=0,
 
             # Find optimal step along s
             dir_derivative = -dx.inner(s)
+
             if abs(dir_derivative) <= tol:
                 return
             a = line_search(x, s, dir_derivative)

@@ -198,16 +198,16 @@ def conjugate_gradient(op, x, rhs, niter, callback=None):
             callback(x)
 
 
-def conjugate_gradient_normal(op, x, rhs, niter, callback=None):
+def conjugate_gradient_normal(op, x, rhs, niter=1, callback=None):
     """Optimized implementation of CG for the normal equation.
 
-    This method solves the normal equations::
+    This method solves the inverse problem (of the first kind) ::
 
-        A.adjoint(A(x)) = A.adjoint(y)
+        A(x) == rhs
 
-    to the inverse problem (of the first kind)::
+    with a linear `Operator` ``A`` by looking at the normal equation ::
 
-        A(x) = y
+        A.adjoint(A(x)) == A.adjoint(rhs)
 
     It uses a minimum amount of memory copies by applying re-usable
     temporaries and in-place evaluation.
