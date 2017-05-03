@@ -180,8 +180,14 @@ elif reconstruction_method == 'tv':
 else:
     raise RuntimeError('unknown reconstruction method')
 
+
+def fom(I0,I1):
+    gradient = odl.Gradient(I0.space)
+    return gradient(I0-I1).norm() + I0.space.dist(I0,I1)
+
+
 # Find optimal lambda
-optimal_parameters = optimal_parameters(reconstruction, space.dist,
+optimal_parameters = optimal_parameters(reconstruction,  fom,
                                         phantoms, data,
                                         initial_param=initial_param)
 
