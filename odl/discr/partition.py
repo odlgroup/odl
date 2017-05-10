@@ -148,8 +148,11 @@ class RectPartition(object):
         >>> part.nodes_on_bdry
         ((False, True), False)
         """
+        if self.size == 0:
+            return True
+
         nodes_on_bdry = []
-        for on_bdry in self.nodes_on_bdry_by_axis:
+        for on_bdry in self.nodes_on_bdry_byaxis:
             l, r = on_bdry
             if l == r:
                 nodes_on_bdry.append(l)
@@ -161,7 +164,7 @@ class RectPartition(object):
             return tuple(nodes_on_bdry)
 
     @property
-    def nodes_on_bdry_by_axis(self):
+    def nodes_on_bdry_byaxis(self):
         """Nested tuple of booleans for `nodes_on_bdry`.
 
         This attribute is equivalent to `nodes_on_bdry`, but always in
@@ -446,7 +449,7 @@ class RectPartition(object):
         >>> part.cell_volume
         0.75
         """
-        return float(np.prod(self.cell_sides))
+        return 0.0 if self.size == 0 else float(np.prod(self.cell_sides))
 
     def approx_equals(self, other, atol):
         """Return ``True`` in case of approximate equality.
@@ -543,11 +546,14 @@ class RectPartition(object):
         """
         # Special case of index list: slice along first axis
         if isinstance(indices, list):
-            new_min_pt = [self.cell_boundary_vecs[0][:-1][indices][0]]
-            new_max_pt = [self.cell_boundary_vecs[0][1:][indices][-1]]
-            for cvec in self.cell_boundary_vecs[1:]:
-                new_min_pt.append(cvec[0])
-                new_max_pt.append(cvec[-1])
+            if indices == []:
+                new_min_pt = new_max_pt = []
+            else:
+                new_min_pt = [self.cell_boundary_vecs[0][:-1][indices][0]]
+                new_max_pt = [self.cell_boundary_vecs[0][1:][indices][-1]]
+                for cvec in self.cell_boundary_vecs[1:]:
+                    new_min_pt.append(cvec[0])
+                    new_max_pt.append(cvec[-1])
 
             new_intvp = IntervalProd(new_min_pt, new_max_pt)
             new_grid = self.grid[indices]
@@ -649,7 +655,8 @@ class RectPartition(object):
         RectGrid.squeeze
         IntervalProd.squeeze
         """
-        nondegen_indcs = np.flatnonzero(self.grid.nondegen_byaxis)
+        nondegen_indcs = [i for i in range(self.ndim)
+                          if self.grid.nondegen_byaxis[i]]
         newset = self.set[nondegen_indcs]
         return RectPartition(newset, self.grid.squeeze())
 
@@ -790,6 +797,9 @@ class RectPartition(object):
 
     def __repr__(self):
         """Return ``repr(self)``."""
+        if self.ndim == 0:
+            return 'uniform_partition([], [], ())'
+
         bdry_fracs = np.vstack(self.boundary_cell_fractions)
         default_bdry_fracs = np.all(np.isclose(bdry_fracs, 0.5) |
                                     np.isclose(bdry_fracs, 1.0))
@@ -800,6 +810,7 @@ class RectPartition(object):
                                dtype=float)
         csizes_r = np.fromiter((s[-1] for s in self.cell_sizes_vecs),
                                dtype=float)
+
         shift_l = ((bdry_fracs[:, 0].astype(float).squeeze() - 0.5) *
                    csizes_l)
         shift_r = ((bdry_fracs[:, 1].astype(float).squeeze() - 0.5) *
@@ -1140,8 +1151,9 @@ def uniform_partition(min_pt=None, max_pt=None, shape=None, cell_sides=None,
     """
     # Normalize partition parameters
 
-    # np.size(None) == 1
-    sizes = [np.size(p) for p in (min_pt, max_pt, shape, cell_sides)]
+    # np.size(None) == 1, so that would screw it for sizes 0 of the rest
+    sizes = [np.size(p) for p in (min_pt, max_pt, shape, cell_sides)
+             if p is not None]
     ndim = int(np.max(sizes))
 
     min_pt = normalized_scalar_param_list(min_pt, ndim, param_conv=float,
