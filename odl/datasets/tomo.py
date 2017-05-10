@@ -6,7 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Datasets for the ray transform."""
+"""Tomographic datasets."""
 
 import numpy as np
 from odl.datasets.util import get_data
@@ -18,7 +18,7 @@ __all__ = ('walnut_data', 'walnut_geometry',
            'lotus_root_data', 'lotus_root_geometry')
 
 
-DATA_SUBSET = 'ray_transform'
+DATA_SUBSET = 'tomo'
 
 
 def walnut_data():
@@ -35,7 +35,7 @@ def walnut_data():
 
     References
     ----------
-    .. Tomographic X-ray data of a walnut: https://arxiv.org/abs/1502.04064
+    .. _Tomographic X-ray data of a walnut: https://arxiv.org/abs/1502.04064
     """
 
     # TODO: Store data in some ODL controlled url
@@ -51,7 +51,7 @@ def walnut_data():
 
 
 def walnut_geometry():
-    """Tomographic geometry for walnut data.
+    """Tomographic geometry for the walnut dataset.
 
     Notes
     -----
@@ -64,11 +64,11 @@ def walnut_geometry():
 
     References
     ----------
-    .. Tomographic X-ray data of a walnut: https://arxiv.org/abs/1502.04064
+    .. _Tomographic X-ray data of a walnut: https://arxiv.org/abs/1502.04064
     """
     # To get the same rotation as in the reference article
     a_offset = -np.pi / 2
-    apart = uniform_partition(a_offset, a_offset + 2*np.pi, 1200)
+    apart = uniform_partition(a_offset, a_offset + 2 * np.pi, 1200)
 
     # TODO: Find exact value, determined experimentally
     d_offset = -0.279
@@ -94,10 +94,9 @@ def lotus_root_data():
 
     References
     ----------
-    .. Tomographic X-ray data of a lotus root filled with attenuating objects:\
-    https://arxiv.org/abs/1502.04064
+    .. _Tomographic X-ray data of a lotus root filled with attenuating objects:
+       https://arxiv.org/abs/1609.07299
     """
-
     # TODO: Store data in some ODL controlled url
     url = 'http://www.fips.fi/dataset/CT_Lotus_v1/sinogram.mat'
     dct = get_data('lotus_root.mat', subset=DATA_SUBSET, url=url)
@@ -109,7 +108,7 @@ def lotus_root_data():
 
 
 def lotus_root_geometry():
-    """Tomographic geometry for lotus root data.
+    """Tomographic geometry for the lotus root dataset.
 
     Notes
     -----
@@ -122,11 +121,11 @@ def lotus_root_geometry():
 
     References
     ----------
-    .. Tomographic X-ray data of a lotus root filled with attenuating objects:\
-    https://arxiv.org/abs/1609.07299
+    .. _Tomographic X-ray data of a lotus root filled with attenuating objects:
+       https://arxiv.org/abs/1609.07299
     """
     # To get the same rotation as in the reference article
-    a_offset = np.pi/2
+    a_offset = np.pi / 2
     apart = uniform_partition(a_offset,
                               a_offset + 2 * np.pi * 366. / 360.,
                               366)
@@ -146,23 +145,23 @@ if __name__ == '__main__':
 
     # Walnut example
     space = odl.uniform_discr([-20, -20], [20, 20], [2296, 2296])
-    geometry = odl.datasets.ray_transform.walnut_geometry()
+    geometry = odl.datasets.tomo.walnut_geometry()
 
     ray_transform = odl.tomo.RayTransform(space, geometry)
     fbp_op = odl.tomo.fbp_op(ray_transform, filter_type='Hann')
 
-    data = odl.datasets.ray_transform.walnut_data()
-    fbp_op(data).show('walnut fbp', clim=[0, 0.05])
+    data = odl.datasets.tomo.walnut_data()
+    fbp_op(data).show('Walnut FBP reconstruction', clim=[0, 0.05])
 
     # Lotus root example
     space = odl.uniform_discr([-50, -50], [50, 50], [2240, 2240])
-    geometry = odl.datasets.ray_transform.lotus_root_geometry()
+    geometry = odl.datasets.tomo.lotus_root_geometry()
 
     ray_transform = odl.tomo.RayTransform(space, geometry)
     fbp_op = odl.tomo.fbp_op(ray_transform, filter_type='Hann')
 
-    data = odl.datasets.ray_transform.lotus_root_data()
-    fbp_op(data).show('lotus root fbp', clim=[0, 0.1])
+    data = odl.datasets.tomo.lotus_root_data()
+    fbp_op(data).show('Lotus root FBP reconstruction', clim=[0, 0.1])
 
     # Run doctests
     # pylint: disable=wrong-import-position

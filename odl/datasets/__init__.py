@@ -6,11 +6,11 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Access to real or simulated datasets for use with ODL."""
+"""Access to real or simulated datasets."""
 
 from __future__ import absolute_import
 
 
-__all__ = ('ray_transform',)
+__all__ = ('tomo',)
 
-from . import ray_transform
+from . import tomo

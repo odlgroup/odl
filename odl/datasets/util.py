@@ -6,7 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Utilities for ODL datasets."""
+"""Utilities for datasets."""
 
 import os
 from os.path import join, expanduser, exists
@@ -27,7 +27,8 @@ __all__ = ('get_data_dir', 'get_data')
 
 def get_data_dir():
     """Get the data directory."""
-    data_home = expanduser(join('~', 'odl_data'))
+    base_odl_dir = os.environ.get('ODL_DIR', expanduser(join('~', 'odl')))
+    data_home = join(base_odl_dir, 'datasets')
     if not exists(data_home):
         os.makedirs(data_home)
     return data_home
@@ -52,8 +53,7 @@ def get_data(filename, subset, url):
         Dictionary containing the dataset.
     """
     # check if this data set has been already downloaded
-    data_dir = get_data_dir()
-    data_dir = join(data_dir, subset)
+    data_dir = join(get_data_dir(), subset)
     if not exists(data_dir):
         os.makedirs(data_dir)
 
@@ -61,7 +61,7 @@ def get_data(filename, subset, url):
 
     # if the file does not exist, download it
     if not exists(filename):
-        print('data {}/{} missing, downloading from {}'
+        print('data {}/{} not in local storage, downloading from {}'
               ''.format(subset, filename, url))
 
         # open the url of the data
