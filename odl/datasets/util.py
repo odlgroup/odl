@@ -17,7 +17,7 @@ try:
 except ImportError:
     # Python 3+
     from urllib.request import urlopen
-    
+
 from shutil import copyfileobj
 from scipy import io
 
@@ -35,7 +35,7 @@ def get_data_dir():
 
 def get_data(filename, subset, url):
     """Get a dataset with from a url with local caching.
-    
+
     Parameters
     ----------
     filename : str
@@ -45,13 +45,12 @@ def get_data(filename, subset, url):
         is saved in a separate subfolder.
     url : str
         url to the dataset online.
-        
+
     Returns
     -------
     dataset : dict
         Dictionary containing the dataset.
     """
-
     # check if this data set has been already downloaded
     data_dir = get_data_dir()
     data_dir = join(data_dir, subset)
@@ -64,7 +63,7 @@ def get_data(filename, subset, url):
     if not exists(filename):
         print('data {}/{} missing, downloading from {}'
               ''.format(subset, filename, url))
-        
+
         # open the url of the data
         with urlopen(url) as data_url:
             # store downloaded file locally
@@ -81,4 +80,3 @@ if __name__ == '__main__':
     # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()
-    
