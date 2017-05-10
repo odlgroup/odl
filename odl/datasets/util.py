@@ -13,11 +13,9 @@ from os.path import join, expanduser, exists
 
 try:
     # Python 2
-    from urllib2 import HTTPError
     from urllib2 import urlopen
 except ImportError:
     # Python 3+
-    from urllib.error import HTTPError
     from urllib.request import urlopen
     
 from shutil import copyfileobj
@@ -32,7 +30,23 @@ def get_data_dir():
 
 
 def get_data(filename, subset, url):
-    """Download a dataset."""
+    """Get a dataset with from a url with local caching.
+    
+    Parameters
+    ----------
+    filename : str
+        Name of the file, for caching.
+    subset : str
+        To what subset the file belongs (e.g. 'ray_transform'). Each subset
+        is saved in a separate subfolder.
+    url : str
+        url to the dataset online.
+        
+    Returns
+    -------
+    dataset : dict
+        Dictionary containing the dataset.
+    """
 
     # check if this data set has been already downloaded
     data_dir = get_data_dir()
@@ -46,23 +60,14 @@ def get_data(filename, subset, url):
     if not exists(filename):
         print('data {}/{} missing, downloading from {}'
               ''.format(subset, filename, url))
-        try:
-            data_url = urlopen(url)
-        except HTTPError as e:
-            if e.code == 404:
-                e.msg = "Dataset '%s' not found on mldata.org." % dataname
-            raise
-        # store downloaded file
-        try:
+        
+        # open the url of the data
+        with urlopen(url) as data_url:
+            # store downloaded file locally
             with open(filename, 'w+b') as storage_file:
                 copyfileobj(data_url, storage_file)
-        except Exception as e:
-            print(e)
-            os.remove(filename)
-            raise
-        data_url.close()
 
-    # load dataset matlab file
+    # load dataset file
     with open(filename, 'rb') as storage_file:
         data_dict = io.loadmat(storage_file)
 

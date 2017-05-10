@@ -32,6 +32,8 @@ def walnut_data():
     ----------
     .. Tomographic X-ray data of a walnut: https://arxiv.org/abs/1502.04064
     """
+    
+    # TODO: Store data in some ODL controlled url
     dct = get_data('walnut.mat', subset=DATA_SUBSET,
                    url='http://www.fips.fi/dataset/CT_walnut_v1/FullSizeSinograms.mat')
     
@@ -43,7 +45,7 @@ def walnut_data():
     return data
 
 def walnut_geometry():
-    """Tomographic geometry for walnut data
+    """Tomographic geometry for walnut data.
     
     Notes
     -----
@@ -58,10 +60,11 @@ def walnut_geometry():
     ----------
     .. Tomographic X-ray data of a walnut: https://arxiv.org/abs/1502.04064
     """
+    # To get the same rotation as in the reference article
     a_offset = -np.pi / 2
     apart = uniform_partition(a_offset, a_offset + 2*np.pi, 1200)
     
-    # Determined experimentally
+    # TODO: Find exact value, determined experimentally
     d_offset = -0.279
     dpart = uniform_partition(d_offset - 57.4, d_offset + 57.4, 2296)
     
@@ -88,6 +91,8 @@ def lotus_root_data():
     .. Tomographic X-ray data of a lotus root filled with attenuating objects:\
     https://arxiv.org/abs/1502.04064
     """
+    
+    # TODO: Store data in some ODL controlled url
     dct = get_data('lotus_root.mat', subset=DATA_SUBSET,
                    url='http://www.fips.fi/dataset/CT_Lotus_v1/sinogram.mat')
     
@@ -98,7 +103,7 @@ def lotus_root_data():
 
 
 def lotus_root_geometry():
-    """Tomographic geometry for walnut data
+    """Tomographic geometry for lotus root data.
     
     Notes
     -----
@@ -114,10 +119,13 @@ def lotus_root_geometry():
     .. Tomographic X-ray data of a lotus root filled with attenuating objects:\
     https://arxiv.org/abs/1609.07299
     """
+    # To get the same rotation as in the reference article
     a_offset = np.pi/2
-    apart = uniform_partition(a_offset, a_offset + 2*np.pi * 366. / 360., 366)
+    apart = uniform_partition(a_offset, 
+                              a_offset + 2 * np.pi * 366. / 360., 
+                              366)
     
-    # Determined experimentally
+    # TODO: Find exact value, determined experimentally
     d_offset = 0.35
     dpart = uniform_partition(d_offset - 60, d_offset + 60, 2240)
     
