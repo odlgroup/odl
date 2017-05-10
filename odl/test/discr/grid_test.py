@@ -10,6 +10,7 @@ from __future__ import division
 import pytest
 import numpy as np
 
+import odl
 from odl.discr.grid import RectGrid, uniform_grid, sparse_meshgrid
 from odl.util.testutils import all_equal
 
@@ -51,9 +52,6 @@ def test_RectGrid_init_raise():
     with_inf[3] = np.inf
     empty = np.arange(0)
     bad_shape = np.array([[1, 2], [3, 4]])
-
-    with pytest.raises(ValueError):
-        RectGrid()
 
     with pytest.raises(ValueError):
         RectGrid(sorted1, unsorted, sorted2)
@@ -507,6 +505,51 @@ def test_RectGrid_getitem():
 
     sub_grid = RectGrid(vec3_sub)
     assert grid[1:3] == sub_grid
+
+
+def test_empty_grid():
+    """Check if empty grids behave as expected and all methods work."""
+    grid = RectGrid()
+
+    assert grid.ndim == grid.size == len(grid) == 0
+    assert grid.shape == ()
+
+    assert grid.coord_vectors == ()
+    assert grid.nondegen_byaxis == ()
+    assert np.array_equal(grid.min_pt, [])
+    assert np.array_equal(grid.max_pt, [])
+    assert np.array_equal(grid.mid_pt, [])
+    assert np.array_equal(grid.stride, [])
+    assert np.array_equal(grid.extent, [])
+    out = np.array([])
+    grid.min(out=out)
+    grid.max(out=out)
+
+    assert grid.is_uniform
+    assert grid.convex_hull() == odl.IntervalProd([], [])
+
+    same = RectGrid()
+    assert grid == same
+    assert hash(grid) == hash(same)
+    other = RectGrid([0, 2, 3])
+    assert grid != other
+    assert grid.is_subgrid(other)
+    assert [] in grid
+    assert 1.0 not in grid
+
+    assert grid.insert(0, other) == other
+    assert other.insert(0, grid) == other
+    assert other.insert(1, grid) == other
+    assert grid.squeeze() == grid
+    assert np.array_equal(grid.points(), np.array([]).reshape((0, 0)))
+    assert grid.corner_grid() == grid
+    assert np.array_equal(grid.corners(), np.array([]).reshape((0, 0)))
+    assert grid.meshgrid == ()
+
+    assert grid[[]] == grid
+    assert np.array_equal(np.asarray(grid), np.array([]).reshape((0, 0)))
+    assert grid == uniform_grid([], [], ())
+    repr(grid)
 
 
 # ---- uniform_grid ---- #

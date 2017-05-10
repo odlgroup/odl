@@ -160,9 +160,6 @@ class RectGrid(Set):
         Ordering is only relevant when the point array is actually created;
         the grid itself is independent of this ordering.
         """
-        if not coord_vectors:
-            raise ValueError('no coordinate vectors given')
-
         vecs = tuple(np.atleast_1d(vec).astype('float64')
                      for vec in coord_vectors)
         for i, vec in enumerate(vecs):
@@ -191,8 +188,7 @@ class RectGrid(Set):
         self.__coord_vectors = vecs
 
         # Non-degenerate axes
-        self.__nondegen_byaxis = np.fromiter(
-            (len(v) > 1 for v in self.coord_vectors), dtype=bool)
+        self.__nondegen_byaxis = tuple(len(v) > 1 for v in self.coord_vectors)
 
         # Uniformity, setting True in degenerate axes
         diffs = [np.diff(v) for v in self.coord_vectors]
@@ -237,7 +233,8 @@ class RectGrid(Set):
     @property
     def size(self):
         """Total number of grid points."""
-        return np.prod(self.shape)
+        # Since np.prod(()) == 1.0 we need to handle that by ourselves
+        return 0 if self.shape == () else np.prod(self.shape)
 
     def __len__(self):
         """Return ``len(self)``.
@@ -254,7 +251,7 @@ class RectGrid(Set):
         --------
         size : The total number of elements.
         """
-        return self.shape[0]
+        return 0 if self.shape == () else self.shape[0]
 
     @property
     def min_pt(self):
@@ -288,7 +285,7 @@ class RectGrid(Set):
         --------
         >>> g = uniform_grid([0, 0], [1, 1], (5, 1))
         >>> g.nondegen_byaxis
-        array([ True, False], dtype=bool)
+        (True, False)
         """
         return self.__nondegen_byaxis
 
@@ -396,9 +393,8 @@ class RectGrid(Set):
             raise NotImplementedError('`stride` not defined for non-uniform '
                                       'grid')
         strd = np.zeros(self.ndim)
-        strd[self.nondegen_byaxis] = (
-            self.extent[self.nondegen_byaxis] /
-            (np.array(self.shape)[self.nondegen_byaxis] - 1))
+        cond = np.array(self.nondegen_byaxis, dtype=bool)
+        strd[cond] = self.extent[cond] / (np.array(self.shape)[cond] - 1)
         return strd
 
     @property
@@ -578,6 +574,8 @@ class RectGrid(Set):
                    self.max_pt[i] <= other.max_pt[i] + atol
                    for i in range(self.ndim)):
             return False
+        if self.size == 0:
+            return True
 
         if self.is_uniform and other.is_uniform:
             # For uniform grids, it suffices to show that min_pt, max_pt
@@ -704,7 +702,8 @@ class RectGrid(Set):
         )
 
         """
-        nondegen_indcs = np.flatnonzero(self.nondegen_byaxis)
+        nondegen_indcs = [i for i in range(self.ndim)
+                          if self.nondegen_byaxis[i]]
         coord_vecs = [self.coord_vectors[axis] for axis in nondegen_indcs]
         return RectGrid(*coord_vecs)
 
@@ -898,8 +897,11 @@ class RectGrid(Set):
         True
         """
         if isinstance(indices, list):
-            new_coord_vecs = [self.coord_vectors[0][indices]]
-            new_coord_vecs += self.coord_vectors[1:]
+            if indices == []:
+                new_coord_vecs = []
+            else:
+                new_coord_vecs = [self.coord_vectors[0][indices]]
+                new_coord_vecs += self.coord_vectors[1:]
             return RectGrid(*new_coord_vecs)
 
         indices = normalized_index_expression(indices, self.shape,

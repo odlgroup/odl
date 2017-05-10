@@ -49,7 +49,7 @@ def normalized_scalar_param_list(param, length, param_conv=None,
     ----------
     param :
         Input parameter to turn into a list.
-    length : positive int
+    length : nonnegative int
         Desired length of the output list.
     param_conv : callable, optional
         Conversion applied to each list element. ``None`` means no conversion.
@@ -106,8 +106,9 @@ def normalized_scalar_param_list(param, length, param_conv=None,
     [False, False, True]
     """
     length, length_in = int(length), length
-    if length <= 0:
-        raise ValueError('`length` must be positive, got {}'.format(length_in))
+    if length < 0:
+        raise ValueError('`length` must be nonnegative, got {}'
+                         ''.format(length_in))
 
     try:
         # TODO: always use this when numpy >= 1.10 can be assumed
