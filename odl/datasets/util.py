@@ -21,6 +21,10 @@ except ImportError:
 from shutil import copyfileobj
 from scipy import io
 
+
+__all__ = ('get_data_dir', 'get_data')
+
+
 def get_data_dir():
     """Get the data directory."""
     data_home = expanduser(join('~', 'odl_data'))
@@ -72,3 +76,9 @@ def get_data(filename, subset, url):
         data_dict = io.loadmat(storage_file)
 
     return data_dict
+
+if __name__ == '__main__':
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()
+    

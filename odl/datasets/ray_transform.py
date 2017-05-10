@@ -14,6 +14,10 @@ from odl.discr import uniform_partition
 from odl.tomo import FanFlatGeometry
 
 
+__all__ = ('walnut_data', 'walnut_geometry',
+           'lotus_root_data', 'lotus_root_geometry')
+
+
 DATA_SUBSET = 'ray_transform'
 
 def walnut_data():
@@ -140,22 +144,27 @@ if __name__ == '__main__':
     
     # Walnut example
     space = odl.uniform_discr([-20, -20], [20, 20], [2296, 2296])
-    geometry = walnut_geometry()
+    geometry = odl.datasets.ray_transform.walnut_geometry()
     
     ray_transform = odl.tomo.RayTransform(space, geometry)
     fbp_op = odl.tomo.fbp_op(ray_transform, filter_type='Hann')
     
-    data = walnut_data()
+    data = odl.datasets.ray_transform.walnut_data()
     fbp_op(data).show('walnut fbp', clim=[0, 0.05])
     
 
     # Lotus root example
     space = odl.uniform_discr([-50, -50], [50, 50], [2240, 2240])
-    geometry = lotus_root_geometry()
+    geometry = odl.datasets.ray_transform.lotus_root_geometry()
     
     ray_transform = odl.tomo.RayTransform(space, geometry)
     fbp_op = odl.tomo.fbp_op(ray_transform, filter_type='Hann')
     
-    data = lotus_root_data()
+    data = odl.datasets.ray_transform.lotus_root_data()
     fbp_op(data).show('lotus root fbp', clim=[0, 0.1])
+    
+    # Run doctests
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()
     
