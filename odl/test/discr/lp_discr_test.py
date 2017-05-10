@@ -54,6 +54,26 @@ def test_init(exponent):
         odl.DiscreteLp(space, part, rn_wrong_size)
 
 
+def test_empty():
+    """Check if empty spaces behave as expected and all methods work."""
+    discr = odl.uniform_discr([], [], ())
+
+    assert discr.interp == 'nearest'
+    assert discr.axis_labels == ()
+    assert discr.order == 'C'
+    assert discr.exponent == 2.0
+    assert discr.tangent_bundle == odl.ProductSpace(field=odl.RealNumbers())
+    assert discr.complex_space == odl.uniform_discr([], [], (), dtype=complex)
+    hash(discr)
+    repr(discr)
+
+    elem = discr.element()
+    assert np.array_equal(elem.asarray(), [])
+    assert np.array_equal(elem.real, [])
+    assert np.array_equal(elem.imag, [])
+    assert np.array_equal(elem.conj(), [])
+
+
 def test_factory(exponent, fn_impl):
     discr = odl.uniform_discr(0, 1, 10, impl=fn_impl, exponent=exponent)
 

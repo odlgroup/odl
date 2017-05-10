@@ -18,11 +18,11 @@ from numbers import Integral
 from itertools import product
 import numpy as np
 
-from odl.set import LinearSpace, LinearSpaceElement
+from odl.set import LinearSpace, LinearSpaceElement, RealNumbers
 from odl.space.weighting import (
     Weighting, ArrayWeighting, ConstWeighting, NoWeighting,
     CustomInner, CustomNorm, CustomDist)
-from odl.util import is_real_dtype
+from odl.util import is_real_dtype, signature_string, indent_rows
 from odl.util.ufuncs import ProductSpaceUfuncs
 
 
@@ -255,7 +255,8 @@ class ProductSpace(LinearSpace):
         if field is None:
             if self.size == 0:
                 raise ValueError('no spaces provided, cannot deduce field')
-            field = self.spaces[0].field
+            else:
+                field = self.spaces[0].field
 
         # Cache for efficiency
         self.__is_power_space = all(spc == self.spaces[0]
@@ -577,14 +578,28 @@ class ProductSpace(LinearSpace):
 
     def __repr__(self):
         """Return ``repr(self)``."""
+        # TODO: add the other optional arguments
         if self.size == 0:
-            return '{}(field={})'.format(self.__class__.__name__, self.field)
+            posargs = []
+            optargs = [('field', self.field, None)]
+            oneline = True
         elif self.is_power_space:
-            return '{}({!r}, {})'.format(self.__class__.__name__,
-                                         self.spaces[0], self.size)
+            posargs = [self.spaces[0], self.size]
+            optargs = []
+            oneline = True
         else:
-            inner_str = ', '.join(repr(space) for space in self.spaces)
+            posargs = self.spaces
+            optargs = []
+            argstr = ', '.join(repr(s) for s in self.spaces)
+            oneline = (len(argstr) <= 40 and '\n' not in argstr)
+
+        if oneline:
+            inner_str = signature_string(posargs, optargs, sep=', ', mod='!r')
             return '{}({})'.format(self.__class__.__name__, inner_str)
+        else:
+            inner_str = signature_string(posargs, optargs, sep=',\n', mod='!r')
+            return '{}(\n{}\n)'.format(self.__class__.__name__,
+                                       indent_rows(inner_str))
 
     @property
     def element_type(self):
