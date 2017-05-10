@@ -263,7 +263,9 @@ class IntervalProd(Set):
         except (ValueError, TypeError):
             return False
 
-        if point.shape != (self.ndim,):
+        if point.size == 0:
+            return True
+        elif point.shape != (self.ndim,):
             return False
 
         return self.dist(point, exponent=np.inf) <= atol
