@@ -593,13 +593,13 @@ def reciprocal_space(space, axes=None, halfcomplex=False, shift=True,
     if not isinstance(space, DiscreteLp):
         raise TypeError('`space` {!r} is not a `DiscreteLp` instance'
                         ''.format(space))
-    if not space.is_uniform:
-        raise ValueError('`space` is not uniformly discretized')
-
     if axes is None:
         axes = tuple(range(space.ndim))
-
     axes = normalized_axes_tuple(axes, space.ndim)
+
+    if not all(space.is_uniform_byaxis[axis] for axis in axes):
+        raise ValueError('`space` is not uniformly discretized in the '
+                         '`axes` of the transform')
 
     if halfcomplex and space.field != RealNumbers():
         raise ValueError('`halfcomplex` option can only be used with real '
