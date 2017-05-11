@@ -627,12 +627,11 @@ class ArrayWeighting(Weighting):
     @property
     def repr_part(self):
         """String usable in a space's ``__repr__`` method."""
-        part = 'weighting={}'.format(array1d_repr(self.array, nprint=10))
-        if self.exponent != 2.0:
-            part += ', exponent={}'.format(self.exponent)
-        if self.dist_using_inner:
-            part += ', dist_using_inner=True'
-        return part
+        optargs = [('weighting', array1d_repr(self.array, nprint=10), ''),
+                   ('exponent', self.exponent, 2.0),
+                   ('dist_using_inner', self.dist_using_inner, False)]
+        return signature_string([], optargs, sep=[',\n', ', ', ',\n'],
+                                mod=[[], ['!s', '', '']])
 
     def __repr__(self):
         """Return ``repr(self)``."""

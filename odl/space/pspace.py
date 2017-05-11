@@ -578,7 +578,7 @@ class ProductSpace(LinearSpace):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        # TODO: add the other optional arguments
+        weight_str = self.weighting.repr_part
         if self.size == 0:
             posargs = []
             optargs = [('field', self.field, None)]
@@ -591,13 +591,18 @@ class ProductSpace(LinearSpace):
             posargs = self.spaces
             optargs = []
             argstr = ', '.join(repr(s) for s in self.spaces)
-            oneline = (len(argstr) <= 40 and '\n' not in argstr)
+            oneline = (len(argstr + weight_str) <= 40 and
+                       '\n' not in argstr + weight_str)
 
         if oneline:
             inner_str = signature_string(posargs, optargs, sep=', ', mod='!r')
+            if weight_str:
+                inner_str = ', '.join([inner_str, weight_str])
             return '{}({})'.format(self.__class__.__name__, inner_str)
         else:
             inner_str = signature_string(posargs, optargs, sep=',\n', mod='!r')
+            if weight_str:
+                inner_str = ',\n'.join([inner_str, weight_str])
             return '{}(\n{}\n)'.format(self.__class__.__name__,
                                        indent_rows(inner_str))
 
