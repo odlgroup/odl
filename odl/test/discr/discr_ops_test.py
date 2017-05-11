@@ -250,6 +250,22 @@ def test_resizing_op_mixed_uni_nonuni():
     assert res_op.axes == (0, 2)
     assert res_op.offset == (1, 0, 1, 0)
 
+    # Evaluation test with a simpler case
+    part = uni_part.append(nonuni_part)
+    fspace = odl.FunctionSpace(odl.IntervalProd(part.min_pt, part.max_pt))
+    dspace = odl.rn(part.size)
+    space = odl.DiscreteLp(fspace, part, dspace)
+    res_op = odl.ResizingOperator(space, ran_shp=(6, 3))
+    result = res_op(space.one())
+    true_result = [[0, 0, 0],
+                   [1, 1, 1],
+                   [1, 1, 1],
+                   [1, 1, 1],
+                   [1, 1, 1],
+                   [0, 0, 0]]
+    assert np.array_equal(result, true_result)
+
+    # Test adjoint
     elem = noise_element(space)
     res_elem = noise_element(res_op.range)
     inner1 = res_op(elem).inner(res_elem)

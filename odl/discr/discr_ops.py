@@ -260,7 +260,7 @@ class ResizingOperatorBase(Operator):
          [5.0, 6.0, 7.0, 8.0],
          [1.0, 2.0, 3.0, 4.0]]
         """
-        from builtins import range as range_seq
+        from builtins import range as builtin_range
 
         if not isinstance(domain, DiscreteLp):
             raise TypeError('`domain` must be a `DiscreteLp` instance, '
@@ -285,9 +285,9 @@ class ResizingOperatorBase(Operator):
                 raise ValueError('`offset` can only be combined with '
                                  '`ran_shp`')
 
-            for i in range_seq(domain.ndim):
-                if ((range.is_uniform_byaxis[i] and
-                    domain.is_uniform_byaxis[i]) and
+            for i in builtin_range(domain.ndim):
+                if (range.is_uniform_byaxis[i] and
+                    domain.is_uniform_byaxis[i] and
                         not np.isclose(range.cell_sides[i],
                                        domain.cell_sides[i])):
                     raise ValueError(
@@ -485,9 +485,10 @@ def _resize_discr(discr, newshp, offset, discr_kwargs):
 
     affected = np.not_equal(newshp, discr.shape)
     ndim = discr.ndim
-    if any(affected[i] for i in range(ndim)
-           if not discr.is_uniform_byaxis[i]):
-        raise ValueError('cannot resize non-uniformly discretized axes')
+    for i in range(ndim):
+        if affected[i] and not discr.is_uniform_byaxis[i]:
+            raise ValueError('cannot resize in non-uniformly discretized '
+                             'axis {}'.format(i))
 
     grid_min, grid_max = discr.grid.min(), discr.grid.max()
     cell_size = discr.cell_sides
@@ -530,27 +531,22 @@ def _resize_discr(discr, newshp, offset, discr_kwargs):
     dspace = fn(np.prod(newshp), dtype=dtype, impl=impl, exponent=exponent,
                 weighting=weighting)
 
-    # This part is a bit messy since we need to stack together the (old)
-    # nonuniform axes and the (new) uniform axes in the right order
-    nonuni_axes = np.where(np.logical_not(discr.is_uniform_byaxis))[0]
-    if nonuni_axes.size == 0:
-        nonuni_part = []
-    else:
-        nonuni_part = uniform_partition([], [], ())
-        for axis in nonuni_axes:
-            nonuni_part = nonuni_part.append(discr.partition.byaxis[axis])
+    # Stack together the (unchanged) nonuniform axes and the (new) uniform
+    # axes in the right order
+    nonuni_axes = [i for i in range(discr.ndim)
+                   if not discr.is_uniform_byaxis[i]]
+    nonuni_part = discr.partition.byaxis[nonuni_axes]
 
     part = uniform_partition([], [], ())
-    i_uni = i_nonuni = 0
+    count_nonuni = 0
     for i in range(ndim):
         if discr.is_uniform_byaxis[i]:
             part = part.append(
                 uniform_partition(new_minpt[i], new_maxpt[i], newshp[i],
                                   nodes_on_bdry=nodes_on_bdry[i]))
-            i_uni += 1
         else:
-            part = part.append(nonuni_part.byaxis[i_nonuni])
-            i_nonuni += 1
+            part = part.append(nonuni_part.byaxis[count_nonuni])
+            count_nonuni += 1
 
     return DiscreteLp(fspace, part, dspace, exponent=exponent, interp=interp,
                       order=order)
