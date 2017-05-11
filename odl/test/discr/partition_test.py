@@ -249,6 +249,38 @@ def test_partition_getitem():
     assert part[[0, 2]] == lst_part
 
 
+def test_empty_partition():
+    """Check if empty partitions behave as expected and all methods work."""
+    part = odl.RectPartition(odl.IntervalProd([], []),
+                             odl.uniform_grid([], [], ()))
+
+    assert part.cell_boundary_vecs == ()
+    assert part.nodes_on_bdry is True
+    assert part.nodes_on_bdry_byaxis == ()
+    assert part.has_isotropic_cells
+    assert part.boundary_cell_fractions == ()
+    assert part.cell_sizes_vecs == ()
+    assert np.array_equal(part.cell_sides, [])
+    assert part.cell_volume == 0
+
+    same = odl.RectPartition(odl.IntervalProd([], []),
+                             odl.uniform_grid([], [], ()))
+    assert part == same
+    assert hash(part) == hash(same)
+    other = odl.uniform_partition(0, 1, 4)
+    assert part != other
+
+    assert part[[]] == part
+    assert part.insert(0, other) == other
+    assert other.insert(0, part) == other
+    assert other.insert(1, part) == other
+    assert part.squeeze() == part
+    assert part.index([]) == ()
+    part.byaxis
+    assert part == odl.uniform_partition([], [], ())
+    repr(part)
+
+
 # ---- Functions ---- #
 
 
