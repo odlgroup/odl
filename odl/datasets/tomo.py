@@ -37,7 +37,6 @@ def walnut_data():
     ----------
     .. _Tomographic X-ray data of a walnut: https://arxiv.org/abs/1502.04064
     """
-
     # TODO: Store data in some ODL controlled url
     url = 'http://www.fips.fi/dataset/CT_walnut_v1/FullSizeSinograms.mat'
     dct = get_data('walnut.mat', subset=DATA_SUBSET, url=url)

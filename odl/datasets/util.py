@@ -27,7 +27,7 @@ __all__ = ('get_data_dir', 'get_data')
 
 def get_data_dir():
     """Get the data directory."""
-    base_odl_dir = os.environ.get('ODL_DIR', expanduser(join('~', 'odl')))
+    base_odl_dir = os.environ.get('ODL_HOME', expanduser(join('~', '.odl')))
     data_home = join(base_odl_dir, 'datasets')
     if not exists(data_home):
         os.makedirs(data_home)
