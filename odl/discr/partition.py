@@ -419,11 +419,6 @@ class RectPartition(object):
         >>> part.cell_sides
         array([ 0.5,  1.5])
         """
-        if not self.is_uniform:
-            raise NotImplementedError(
-                'cell sides not defined for irregular partitions. Use '
-                '`cell_sizes_vecs()` instead')
-
         sides = self.grid.stride
         sides[sides == 0] = self.extent[sides == 0]
         return sides

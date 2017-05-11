@@ -389,11 +389,10 @@ class RectGrid(Set):
         >>> rg.stride
         array([ 1.,  2.])
         """
-        if not self.is_uniform:
-            raise NotImplementedError('`stride` not defined for non-uniform '
-                                      'grid')
         strd = np.zeros(self.ndim)
-        cond = np.array(self.nondegen_byaxis, dtype=bool)
+        uniform = np.array(self.is_uniform_byaxis, dtype=bool)
+        strd[~uniform] = float('nan')
+        cond = np.logical_and(uniform, self.nondegen_byaxis)
         strd[cond] = self.extent[cond] / (np.array(self.shape)[cond] - 1)
         return strd
 
