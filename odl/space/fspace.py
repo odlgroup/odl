@@ -17,6 +17,7 @@ from builtins import super
 import inspect
 import numpy as np
 import sys
+import warnings
 
 from odl.set import RealNumbers, ComplexNumbers, Set, LinearSpace
 from odl.set.space import LinearSpaceElement
@@ -26,7 +27,7 @@ from odl.util import (
     is_valid_input_array, is_valid_input_meshgrid,
     out_shape_from_array, out_shape_from_meshgrid, vectorize, broadcast_to,
     writable_array)
-from odl.util.utility import preload_first_arg
+from odl.util.utility import preload_first_arg, getargspec
 
 
 __all__ = ('FunctionSpace',)
@@ -188,7 +189,7 @@ class FunctionSpace(LinearSpace):
 
             To create a space of vector- or tensor-valued functions,
             use a dtype with a shape, e.g.,
-            ``np.dtype(('float64', (2, 3)))``.
+            ``np.dtype((float, (2, 3)))``.
 
             For ``None``, the data type of function outputs is inferred
             lazily at runtime.
@@ -210,7 +211,7 @@ class FunctionSpace(LinearSpace):
         To get vector- or tensor-valued functions, specify
         ``out_dtype`` with shape:
 
-        >>> vec_dtype = np.dtype(('float64', (3,)))  # 3 components
+        >>> vec_dtype = np.dtype((float, (3,)))  # 3 components
         >>> odl.FunctionSpace(domain, out_dtype=vec_dtype)
         FunctionSpace(IntervalProd(0.0, 1.0), out_dtype=('float64', (3,)))
         """
@@ -232,7 +233,8 @@ class FunctionSpace(LinearSpace):
         else:
             field = None
 
-        super().__init__(field)
+        # TODO: change to super() when Py2 is dropped
+        LinearSpace.__init__(self, field)
 
         # Init cache attributes for real / complex variants
         if self.field == RealNumbers():
@@ -259,7 +261,7 @@ class FunctionSpace(LinearSpace):
 
     @property
     def out_dtype(self):
-        """Output data type of a function in this space.
+        """Output data type (including shape) of a function in this space.
 
         If ``None``, the output data type is not pre-defined and instead
         inferred at run-time.
@@ -274,12 +276,18 @@ class FunctionSpace(LinearSpace):
     @property
     def real_out_dtype(self):
         """The real dtype corresponding to this space's `out_dtype`."""
-        return self.__real_out_dtype
+        if self.__real_out_dtype is None:
+            raise TypeError('no real variant of output dtype defined')
+        else:
+            return self.__real_out_dtype
 
     @property
     def complex_out_dtype(self):
         """The complex dtype corresponding to this space's `out_dtype`."""
-        return self.__complex_out_dtype
+        if self.__complex_out_dtype is None:
+            raise TypeError('no complex variant of output dtype defined')
+        else:
+            return self.__complex_out_dtype
 
     @property
     def out_shape(self):
@@ -289,7 +297,7 @@ class FunctionSpace(LinearSpace):
     @property
     def tensor_valued(self):
         """``True`` if functions have multi-dim. output, else ``False``."""
-        return bool(self.out_shape)
+        return (self.out_shape != ())
 
     @property
     def real_space(self):
@@ -334,8 +342,8 @@ class FunctionSpace(LinearSpace):
         >>> func = fspace.element(lambda x: x - 1)
         >>> func(0.5)
         -0.5
-        >>> func([0.1, 0.6])
-        array([-0.9, -0.4])
+        >>> func([0.1, 0.5, 0.6])
+        array([-0.9, -0.5, -0.4])
 
         It is also possible to use functions with parameters. Note that
         such extra parameters have to be given by keyword when calling
@@ -344,10 +352,10 @@ class FunctionSpace(LinearSpace):
         >>> def f(x, b):
         ...     return x + b
         >>> func = fspace.element(f)
-        >>> func([0.1, 0.6], b=1)
-        array([ 1.1,  1.6])
-        >>> func([0.1, 0.6], b=-1)
-        array([-0.9, -0.4])
+        >>> func([0.1, 0.5, 0.6], b=1)
+        array([ 1.1, 1.5,  1.6])
+        >>> func([0.1, 0.5, 0.6], b=-1)
+        array([-0.9, -0.5, -0.4])
 
         Vector-valued functions can eiter be given as a sequence of
         scalar-valued functions or as a single function that returns
@@ -360,16 +368,16 @@ class FunctionSpace(LinearSpace):
         >>> func1 = fspace.element([lambda x: x + 1, np.negative])
         >>> func1(0.5)
         array([ 1.5, -0.5])
-        >>> func1([0.1, 0.6])
-        array([[ 1.1,  1.6],
-               [-0.1, -0.6]])
+        >>> func1([0.1, 0.5, 0.6])
+        array([[ 1.1,  1.5,  1.6],
+               [-0.1, -0.5, -0.6]])
         >>> # Possibility 2: single function returning a sequence
         >>> func2 = fspace.element(lambda x: (x + 1, -x))
         >>> func2(0.5)
         array([ 1.5, -0.5])
-        >>> func2([0.1, 0.6])
-        array([[ 1.1,  1.6],
-               [-0.1, -0.6]])
+        >>> func2([0.1, 0.5, 0.6])
+        array([[ 1.1,  1.5,  1.6],
+               [-0.1, -0.5, -0.6]])
 
         If the function(s) include(s) an ``out`` parameter, it can be
         provided to hold the final result:
@@ -380,11 +388,11 @@ class FunctionSpace(LinearSpace):
         >>> def f2(x, out):
         ...     out[:] = -x
         >>> func = fspace.element([f1, f2])
-        >>> out = np.empty((2, 2))  # needs to match expected output shape
-        >>> result = func([0.1, 0.6], out=out)
+        >>> out = np.empty((2, 3))  # needs to match expected output shape
+        >>> result = func([0.1, 0.5, 0.6], out=out)
         >>> out
-        array([[ 1.1,  1.6],
-               [-0.1, -0.6]])
+        array([[ 1.1,  1.5,  1.6],
+               [-0.1, -0.5, -0.6]])
         >>> result is out
         True
         >>> # Single function assigning to components of `out`
@@ -392,13 +400,53 @@ class FunctionSpace(LinearSpace):
         ...     out[0] = x + 1
         ...     out[1] = -x
         >>> func = fspace.element(f)
-        >>> out = np.empty((2, 2))  # needs to match expected output shape
-        >>> result = func([0.1, 0.6], out=out)
+        >>> out = np.empty((2, 3))  # needs to match expected output shape
+        >>> result = func([0.1, 0.5, 0.6], out=out)
         >>> out
-        array([[ 1.1,  1.6],
-               [-0.1, -0.6]])
+        array([[ 1.1,  1.5,  1.6],
+               [-0.1, -0.5, -0.6]])
         >>> result is out
         True
+
+        Tensor-valued functions and functions defined on higher-dimensional
+        domains work just analogously:
+
+        >>> fspace = odl.FunctionSpace(odl.IntervalProd([0, 0], [1, 1]),
+        ...                            out_dtype=(float, (2, 3)))
+        >>> def pyfunc(x):
+        ...     return [[x[0], x[1], x[0] + x[1]],
+        ...             [1, 0, 2 * (x[0] + x[1])]]
+        >>> func1 = fspace.element(pyfunc)
+        >>> # Points are given such that the first axis indexes the
+        >>> # components and the second enumerates the points.
+        >>> # We evaluate at [0.0, 0.5] and [0.0, 1.0] here.
+        >>> eval_pts = np.array([[0.0, 0.5],
+        ...                      [0.0, 1.0]]).T
+        >>> func1(eval_pts).shape
+        (2, 3, 2)
+        >>> func1(eval_pts)
+        array([[[ 0. ,  0. ],
+                [ 0.5,  1. ],
+                [ 0.5,  1. ]],
+        <BLANKLINE>
+               [[ 1. ,  1. ],
+                [ 0. ,  0. ],
+                [ 1. ,  2. ]]])
+
+        Furthermore, it is allowed to use scalar constants instead of
+        functions if the function is given as sequence:
+
+        >>> seq = [[lambda x: x[0], lambda x: x[1], lambda x: x[0] + x[1]],
+        ...        [1, 0, lambda x: 2 * (x[0] + x[1])]]
+        >>> func2 = fspace.element(seq)
+        >>> func2(eval_pts)
+        array([[[ 0. ,  0. ],
+                [ 0.5,  1. ],
+                [ 0.5,  1. ]],
+        <BLANKLINE>
+               [[ 1. ,  1. ],
+                [ 0. ,  0. ],
+                [ 1. ,  2. ]]])
         """
         if fcall is None:
             return self.zero()
@@ -407,16 +455,15 @@ class FunctionSpace(LinearSpace):
         elif callable(fcall):
             if not vectorized:
                 if hasattr(fcall, 'nin') and hasattr(fcall, 'nout'):
-                    raise TypeError('`fcall` {!r} is a ufunc-like object, '
-                                    'use vectorized=True')
+                    warnings.warn('`fcall` {!r} is a ufunc-like object, '
+                                  'use vectorized=True'.format(fcall),
+                                  RuntimeWarning)
                 has_out, _ = _check_out_arg(fcall)
                 if has_out:
                     raise TypeError('non-vectorized `fcall` with `out` '
                                     'parameter not allowed')
-                if self.field == RealNumbers():
-                    otypes = ['float64']
-                elif self.field == ComplexNumbers():
-                    otypes = ['complex128']
+                if self.field is not None:
+                    otypes = [self.scalar_out_dtype]
                 else:
                     otypes = []
 
@@ -444,13 +491,28 @@ class FunctionSpace(LinearSpace):
                 fcalls = [f if np.isscalar(f) else vectorize(otypes=otypes)(f)
                           for f in fcalls]
 
-            if sys.version_info.major < 3:
-                getargspec = inspect.getargspec
-            else:
-                getargspec = inspect.getfullargspec
-
             def wrapper(x, out=None, **kwargs):
-                """Function wrapping an array of callables."""
+                """Function wrapping an array of callables.
+
+                This wrapper does the following for out-of-place
+                evaluation (when ``out=None``):
+
+                1. Collect the results of all function evaluations into
+                   a list, handling all kinds of sequence entries
+                   (normal function, ufunc, constant, etc.).
+                2. Broadcast all results to the desired shape that is
+                   determined by the space's ``out_shape`` and the
+                   shape(s) of the input.
+                3. Form a big array containing the final result.
+
+                The in-place version is simpler because broadcasting
+                happens automatically when assigning to the components
+                of ``out``. Hence, we only have
+
+                1. Assign the result of the evaluation of the i-th
+                   function to ``out_flat[i]``, possibly using the
+                   ``out`` parameter of the function.
+                """
                 if is_valid_input_meshgrid(x, self.domain.ndim):
                     scalar_out_shape = out_shape_from_meshgrid(x)
                 elif is_valid_input_array(x, self.domain.ndim):
@@ -461,7 +523,10 @@ class FunctionSpace(LinearSpace):
                 if out is None:
                     # Out-of-place evaluation
 
-                    # Collect results of member functions into a list
+                    # Collect results of member functions into a list.
+                    # Put simply, all that happens here is
+                    # `results.append(f(x))`, just for a bunch of cases
+                    # and with or without `out`.
                     results = []
                     for f in fcalls:
                         if np.isscalar(f):
@@ -769,11 +834,8 @@ class FunctionSpace(LinearSpace):
 
     def _realpart(self, f):
         """Function returning the real part of the result from ``f``."""
-        # Avoid infinite recursions by making a copy of the function
-        f_copy = f.copy()
-
         def f_re(x, **kwargs):
-            result = np.asarray(f_copy(x, **kwargs),
+            result = np.asarray(f(x, **kwargs),
                                 dtype=self.scalar_out_dtype)
             return result.real
 
@@ -784,11 +846,8 @@ class FunctionSpace(LinearSpace):
 
     def _imagpart(self, f):
         """Function returning the imaginary part of the result from ``f``."""
-        # Avoid infinite recursions by making a copy of the function
-        f_copy = f.copy()
-
         def f_im(x, **kwargs):
-            result = np.asarray(f_copy(x, **kwargs),
+            result = np.asarray(f(x, **kwargs),
                                 dtype=self.scalar_out_dtype)
             return result.imag
 
@@ -799,11 +858,8 @@ class FunctionSpace(LinearSpace):
 
     def _conj(self, f):
         """Function returning the complex conjugate of a result."""
-        # Avoid infinite recursions by making a copy of the function
-        f_copy = f.copy()
-
         def f_conj(x, **kwargs):
-            result = np.asarray(f_copy(x, **kwargs),
+            result = np.asarray(f(x, **kwargs),
                                 dtype=self.scalar_out_dtype)
             return result.conj()
 
@@ -1037,6 +1093,39 @@ class FunctionSpaceElement(LinearSpaceElement):
         ValueError
             If ``bounds_check == True`` evaluation points fall outside
             the valid domain.
+
+        Examples
+        --------
+        In the following we have an ``ndim=2``-dimensional domain. The
+        following shows valid arrays and meshgrids for input:
+
+        >>> fspace = odl.FunctionSpace(odl.IntervalProd([0, 0], [1, 1]))
+        >>> func = fspace.element(lambda x: x[1] - x[0])
+        >>> # 3 evaluation points, given point per point, each of which
+        >>> # is contained in the function domain.
+        >>> points = [[0, 0],
+        ...           [0, 1],
+        ...           [0.5, 0.1]]
+        >>> # The array provided to `func` must be transposed since
+        >>> # the first axis must index the components of the points and
+        >>> # the second axis must enumerate them.
+        >>> array = np.array(points).T
+        >>> array.shape  # should be `ndim` x N
+        (2, 3)
+        >>> func(array)
+        array([ 0. ,  1. , -0.4])
+        >>> # A meshgrid is an `ndim`-long sequence of 1D Numpy arrays
+        >>> # containing the coordinates of the points. We use
+        >>> # 2 * 3 = 6 points here.
+        >>> comp0 = np.array([0.0, 1.0])  # first components
+        >>> comp1 = np.array([0.0, 0.5, 1.0])  # second components
+        >>> # The following adds extra dimensions to enable broadcasting.
+        >>> mesh = odl.discr.grid.sparse_meshgrid(comp0, comp1)
+        >>> len(mesh)  # should be `ndim`
+        2
+        >>> func(mesh)
+        array([[ 0. ,  0.5,  1. ],
+               [-1. , -0.5,  0. ]])
         """
         bounds_check = kwargs.pop('bounds_check', self.space.field is not None)
         if bounds_check and not hasattr(self.domain, 'contains_all'):
@@ -1120,8 +1209,9 @@ class FunctionSpaceElement(LinearSpaceElement):
                 elif ndim == 1 and out.shape == (1,) + out_shape:
                     out = out.reshape(out_shape)
 
-                if out_shape not in ((), (1,)) and out.shape != out_shape:
-                    # Try to broadcast the returned element.
+                if out_shape != () and out.shape != out_shape:
+                    # Broadcast the returned element, but not in the
+                    # scalar case.
                     out = broadcast_to(out, out_shape)
 
             elif self.space.tensor_valued:

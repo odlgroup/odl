@@ -265,7 +265,7 @@ class TensorSpace(LinearSpace):
         return self.__order
 
     @property
-    def new_elem_order(self):
+    def default_order(self):
         """Storage order for new elements in this space.
 
         This is identical to `order` except for ``self.order == 'A'``,

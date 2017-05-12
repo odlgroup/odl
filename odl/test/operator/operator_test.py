@@ -7,7 +7,6 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import division
-from builtins import super
 import numpy as np
 import pytest
 import sys
@@ -18,8 +17,9 @@ from odl import (Operator, OperatorSum, OperatorComp,
                  FunctionalLeftVectorMult, OperatorRightVectorMult,
                  MatrixOperator, OperatorLeftVectorMult,
                  OpTypeError, OpDomainError, OpRangeError)
-from odl.operator.operator import _get_signature, _dispatch_call_args
+from odl.operator.operator import _function_signature, _dispatch_call_args
 from odl.util.testutils import almost_equal, all_almost_equal, noise_element
+from odl.util.utility import getargspec
 
 
 class MultiplyAndSquareOp(Operator):
@@ -857,25 +857,20 @@ def func(request):
     return request.param
 
 
-def test_get_signature(func):
+def test_function_signature(func):
 
     true_sig = func.__doc__.splitlines()[0].strip()
-    sig = _get_signature(func)
+    sig = _function_signature(func)
     assert true_sig == sig
 
 
 def test_dispatch_call_args(func):
-    import inspect
-
-    py3 = sys.version_info.major > 2
-    getspec = inspect.getfullargspec if py3 else inspect.getargspec
-
     # Unbound functions
     true_has, true_opt = eval(func.__doc__.splitlines()[1].strip())
     good = func.__doc__.splitlines()[2].strip() == 'good'
 
     if good:
-        truespec = getspec(func)
+        truespec = getargspec(func)
         truespec.args.insert(0, 'self')
 
         has, opt, spec = _dispatch_call_args(unbound_call=func)

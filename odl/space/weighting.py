@@ -530,7 +530,7 @@ class ArrayWeighting(Weighting):
     def __hash__(self):
         """Return ``hash(self)``."""
         # TODO: Better hash for array?
-        return super().__hash__() ^ hash(self.array.tobytes())
+        return hash((super().__hash__(), self.array.tobytes()))
 
     def equiv(self, other):
         """Return True if other is an equivalent weighting.

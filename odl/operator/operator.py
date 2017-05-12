@@ -79,7 +79,7 @@ def _default_call_in_place(op, x, out, **kwargs):
     out.assign(op.range.element(op._call_out_of_place(x, **kwargs)))
 
 
-def _get_signature(func):
+def _function_signature(func):
     """Return the signature of a callable as a string.
 
     Parameters
@@ -229,7 +229,7 @@ def _dispatch_call_args(cls=None, bound_call=None, unbound_call=None,
         kw_only = ()
         kw_only_defaults = {}
 
-    signature = _get_signature(call)
+    signature = _function_signature(call)
 
     pos_args = spec.args
     if unbound_call is not None:

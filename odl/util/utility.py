@@ -15,8 +15,10 @@ standard_library.install_aliases()
 
 from functools import wraps
 from collections import OrderedDict
+import inspect
 import numpy as np
 from pkg_resources import parse_requirements
+import sys
 
 
 __all__ = ('array1d_repr', 'array1d_str', 'arraynd_repr', 'arraynd_str',
@@ -33,6 +35,12 @@ TYPE_MAP_R2C = {np.dtype(dtype): np.result_type(dtype, 1j)
 TYPE_MAP_C2R = {cdt: np.empty(0, dtype=cdt).real.dtype
                 for rdt, cdt in TYPE_MAP_R2C.items()}
 TYPE_MAP_C2R.update({k: k for k in TYPE_MAP_R2C.keys()})
+
+
+if sys.version_info.major < 3:
+    getargspec = inspect.getargspec
+else:
+    getargspec = inspect.getfullargspec
 
 
 def indent_rows(string, indent=4):

@@ -490,7 +490,7 @@ class Divergence(PointwiseTensorFieldOperator):
         dx = self.range.cell_sides
 
         out_arr = out.asarray()
-        tmp = np.empty(out.shape, out.dtype, order=out.space.new_elem_order)
+        tmp = np.empty(out.shape, out.dtype, order=out.space.default_order)
         for axis in range(ndim):
             finite_diff(x[axis], axis=axis, dx=dx[axis], method=self.method,
                         pad_mode=self.pad_mode,
@@ -625,7 +625,7 @@ class Laplacian(PointwiseTensorFieldOperator):
 
         x_arr = x.asarray()
         out_arr = out.asarray()
-        tmp = np.empty(out.shape, out.dtype, order=out.space.new_elem_order)
+        tmp = np.empty(out.shape, out.dtype, order=out.space.default_order)
 
         ndim = self.domain.ndim
         dx = self.domain.cell_sides

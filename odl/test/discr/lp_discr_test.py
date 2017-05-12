@@ -110,8 +110,8 @@ def test_uniform_discr_init_real(tspace_impl):
     assert discr.is_real_space
     assert discr.dspace.exponent == 2.0
     assert discr.dtype == discr.dspace.default_dtype(odl.RealNumbers())
-    assert all_equal(discr.min_pt, np.array([0]))
-    assert all_equal(discr.max_pt, np.array([1]))
+    assert all_equal(discr.min_pt, [0])
+    assert all_equal(discr.max_pt, [1])
     assert discr.shape == (10,)
     assert repr(discr)
 
@@ -615,7 +615,7 @@ def test_asarray_2d(order):
     assert all_equal(elem.asarray(), [[1, 2],
                                       [3, 4]])
     # Check order of out array
-    assert elem.asarray().flags[discr.new_elem_order + '_CONTIGUOUS']
+    assert elem.asarray().flags[discr.default_order + '_CONTIGUOUS']
 
     # test out parameter
     out_c = np.empty([2, 2], order='C')

@@ -341,7 +341,10 @@ class NearestInterpolation(FunctionSpaceMapping):
 
         >>> dspace = odl.tensor_space(part.shape, dtype='U1')
         >>> interp_op = NearestInterpolation(fspace, part, dspace)
-        >>> values = np.array([c for c in 'mystring']).reshape(dspace.shape)
+        >>> values = np.array([['m', 'y'],
+        ...                    ['s', 't'],
+        ...                    ['r', 'i'],
+        ...                    ['n', 'g']])
         >>> function = interp_op(values)
         >>> print(function([0.3, 0.6]))  # closest to index (1, 1) -> 3
         t

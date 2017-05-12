@@ -22,7 +22,7 @@ from odl.space.entry_points import TENSOR_SPACE_IMPLS
 __all__ = ('vector', 'tensor_space', 'cn', 'rn')
 
 
-def vector(array, dtype=None, order='C', impl='numpy'):
+def vector(array, dtype=None, order=None, impl='numpy'):
     """Create a vector from an array-like object.
 
     Parameters
@@ -33,9 +33,11 @@ def vector(array, dtype=None, order='C', impl='numpy'):
     dtype : optional
         Set the data type of the vector manually with this option.
         By default, the space type is inferred from the input data.
-    order : {'A', 'C', 'F'}, optional
+    order : {None, 'A', 'C', 'F'}, optional
         Axis ordering of the data storage. ``'A'`` will try not to
         modify the memory layout of ``array``.
+        For the default ``None``, the default order of the space
+        associated with ``impl`` is used.
     impl : str, optional
         Impmlementation back-end for the vector. See
         `odl.space.entry_points.TENSOR_SPACE_IMPLS` for available options.
@@ -53,32 +55,27 @@ def vector(array, dtype=None, order='C', impl='numpy'):
 
     Examples
     --------
-    >>> odl.vector([[1, 2, 3],
-    ...             [4, 5, 6]])  # No automatic cast to float
-    tensor_space((2, 3), 'int', order='C').element(
-        [[1, 2, 3],
-         [4, 5, 6]]
-    )
-    >>> odl.vector([[1, 2, 3],
-    ...             [4, 5, 6]], dtype=float)
-    rn((2, 3), order='C').element(
-        [[1.0, 2.0, 3.0],
-         [4.0, 5.0, 6.0]]
-    )
-    >>> odl.vector([[1, 2 - 1j, 3],
-    ...             [4, 5, 6 + 2j]])
-    cn((2, 3), order='C').element(
-        [[(1+0j), (2-1j), (3+0j)],
-         [(4+0j), (5+0j), (6+2j)]]
-    )
+    Create one-dimensional vectors:
+
+    >>> odl.vector([1, 2, 3])  # No automatic cast to float
+    tensor_space(3, 'int').element([1, 2, 3])
+    >>> odl.vector([1, 2, 3], dtype=float)
+    rn(3).element([1.0, 2.0, 3.0])
+    >>> odl.vector([1, 2 - 1j, 3])
+    cn(3).element([(1+0j), (2-1j), (3+0j)])
 
     Non-scalar types are also supported:
 
-    >>> odl.vector([[True, True, False],
-    ...             [False, False, True]])
-    tensor_space((2, 3), 'bool', order='C').element(
-        [[True, True, False],
-         [False, False, True]]
+    >>> odl.vector([True, True, False])
+    tensor_space(3, 'bool').element([True, True, False])
+
+    The function also supports multi-dimensional input:
+
+    >>> odl.vector([[1, 2, 3],
+    ...             [4, 5, 6]])
+    tensor_space((2, 3), 'int').element(
+        [[1, 2, 3],
+         [4, 5, 6]]
     )
     """
     # Sanitize input
@@ -92,7 +89,8 @@ def vector(array, dtype=None, order='C', impl='numpy'):
     else:
         space_dtype = arr.dtype
 
-    space = tensor_space(arr.shape, dtype=space_dtype, order=order, impl=impl)
+    kwargs = {'order', order} if order is not None else {}
+    space = tensor_space(arr.shape, dtype=space_dtype, impl=impl, **kwargs)
     return space.element(arr)
 
 

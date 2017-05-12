@@ -7,10 +7,8 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import division
-import inspect
 import numpy as np
 import pytest
-import sys
 
 import odl
 from odl import FunctionSpace
@@ -19,10 +17,6 @@ from odl.util.testutils import all_almost_equal, all_equal, simple_fixture
 
 
 # --- Helper functions --- #
-
-
-PY2 = sys.version_info.major < 3
-getargspec = inspect.getargspec if PY2 else inspect.getfullargspec
 
 
 def _points(domain, num):
@@ -411,7 +405,10 @@ def test_fspace_attributes():
     assert fspace_c.real_out_dtype == float
     assert fspace_c.complex_out_dtype == complex
     assert fspace_s.out_dtype == np.dtype('U1')
-    assert fspace_s.real_out_dtype is None
+    with pytest.raises(TypeError):
+        fspace_s.real_out_dtype
+    with pytest.raises(TypeError):
+        fspace_s.complex_out_dtype
 
     assert all(spc.scalar_out_dtype == spc.out_dtype for spc in scalar_spaces)
     assert all(spc.out_shape == () for spc in scalar_spaces)
@@ -656,7 +653,7 @@ def test_fspace_tens_eval(func_tens):
 
 
 def test_fspace_elem_eval_unusual_dtypes():
-    """Check evaluation with unusual data types."""
+    """Check evaluation with unusual data types (int and string)."""
     str3 = odl.Strings(3)
     fspace = FunctionSpace(str3, out_dtype=int)
     strings = np.array(['aa', 'b', 'cab', 'aba'])

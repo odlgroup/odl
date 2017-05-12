@@ -247,7 +247,7 @@ class DiscreteLp(DiscretizedSpace):
         ----------
         order : {None, 'C', 'F'}
             Axis ordering in the resulting point array. For the default
-            ``None``, `new_elem_order` is used.
+            ``None``, `default_order` is used.
 
         Returns
         -------
@@ -255,7 +255,7 @@ class DiscreteLp(DiscretizedSpace):
             The shape of the array is ``size x ndim``, i.e. the points
             are stored as rows.
         """
-        return self.partition.points(order=self.new_elem_order)
+        return self.partition.points(order=self.default_order)
 
     @property
     def tangent_bundle(self):

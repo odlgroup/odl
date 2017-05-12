@@ -6,7 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""NumPy implementation of `TensorSpace`."""
+"""NumPy implementation of tensor spaces."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -41,7 +41,7 @@ _BLAS_DTYPES = (np.dtype('float32'), np.dtype('float64'),
 
 class NumpyTensorSpace(TensorSpace):
 
-    """Set of tensors of arbitrary data type.
+    """Set of tensors of arbitrary data type, implemented with NumPy.
 
     A tensor is, in the most general sense, a multi-dimensional array
     that allows operations per entry (keep the rank constant),
@@ -84,7 +84,7 @@ class NumpyTensorSpace(TensorSpace):
             Data type of each element. Can be provided in any
             way the `numpy.dtype` function understands, e.g.
             as built-in type or as a string. For ``None``,
-            the `default_dtype` of this space is used.
+            the `default_dtype` of this space (``float64``) is used.
         order : {'A', 'C', 'F'}, optional
             Axis ordering of the data storage. Only relevant for more
             than 1 axis.
@@ -106,12 +106,12 @@ class NumpyTensorSpace(TensorSpace):
             Use weighted inner product, norm, and dist. The following
             types are supported as ``weighting``:
 
-            None: no weighting (default)
+            ``None``: no weighting, i.e. weighting with ``1.0`` (default).
 
             `Weighting`: Use this weighting as-is. Compatibility
             with this space's elements is not checked during init.
 
-            float: Weighting by a constant
+            ``float``: Weighting by a constant
 
             array-like: Pointwise weighting by an array
 
@@ -204,7 +204,7 @@ class NumpyTensorSpace(TensorSpace):
 
         Examples
         --------
-        Initialization with the class constructor:
+        Explicit initialization with the class constructor:
 
         >>> space = NumpyTensorSpace(3, float)
         >>> space
@@ -352,8 +352,20 @@ class NumpyTensorSpace(TensorSpace):
         >>> x
         rn(3).element([1.0, 2.0, 3.0])
 
-        Elements can also be constructed from a data pointer. In-place
-        mutations to the element will also modify the original array.
+        If the input already is a `numpy.ndarray` of correct `dtype`, it
+        will merely be wrapped, i.e., both array and space element access
+        the same memory, such that mutations will affect both:
+
+        >>> arr = np.array([1, 2, 3], dtype=float)
+        >>> elem = odl.rn(3).element(arr)
+        >>> elem[0] = 0
+        >>> elem
+        rn(3).element([0.0, 2.0, 3.0])
+        >>> arr
+        array([ 0.,  2.,  3.])
+
+        Elements can also be constructed from a data pointer, resulting
+        again in shared memory:
 
         >>> int_space = odl.tensor_space((2, 3), dtype=int, order='F')
         >>> arr = np.array([[1, 2, 3],
@@ -372,7 +384,7 @@ class NumpyTensorSpace(TensorSpace):
         """
         if inp is None and data_ptr is None:
             arr = np.empty(self.shape, dtype=self.dtype,
-                           order=self.new_elem_order)
+                           order=self.default_order)
             return self.element_type(self, arr)
 
         elif inp is None and data_ptr is not None:
@@ -413,7 +425,7 @@ class NumpyTensorSpace(TensorSpace):
         rn(3).element([0.0, 0.0, 0.0])
         """
         return self.element(np.zeros(self.shape, dtype=self.dtype,
-                                     order=self.new_elem_order))
+                                     order=self.default_order))
 
     def one(self):
         """Return a tensor of all ones.
@@ -426,7 +438,7 @@ class NumpyTensorSpace(TensorSpace):
         rn(3).element([1.0, 1.0, 1.0])
         """
         return self.element(np.ones(self.shape, dtype=self.dtype,
-                                    order=self.new_elem_order))
+                                    order=self.default_order))
 
     @staticmethod
     def available_dtypes():
@@ -442,9 +454,9 @@ class NumpyTensorSpace(TensorSpace):
         all_dtypes = []
         for lst in np.sctypes.values():
             for dtype in lst:
-                all_dtypes.append(np.dtype(dtype))
-        all_dtypes.remove(np.dtype('void'))
-        return set(all_dtypes)
+                if dtype not in (np.object, np.void):
+                    all_dtypes.append(np.dtype(dtype))
+        return tuple(sorted(set(all_dtypes)))
 
     @staticmethod
     def default_dtype(field=None):
@@ -733,6 +745,62 @@ class NumpyTensorSpace(TensorSpace):
         return hash((type(self), self.shape, self.dtype, self.order,
                      self.weighting))
 
+    @property
+    def byaxis(self):
+        """Return the subspace defined along one or several dimensions.
+
+        Examples
+        --------
+        Indexing can be done with any index expression that is
+        supported for indexing of ``numpy.arange(ndim)``:
+
+        >>> space = odl.rn((2, 3, 4))
+        >>> space.byaxis[0]
+        rn(2)
+        >>> space.byaxis[[2, 0, 1]]
+        rn((4, 2, 3))
+        >>> space.byaxis[1:]
+        rn((3, 4))
+        """
+        space = self
+
+        class byaxis(object):
+            """Helper class for indexing by axis."""
+
+            def __getitem__(self, indices):
+                """Return space along axes in ``indices``."""
+                if isinstance(indices, np.ndarray):
+                    raise TypeError('indexing with numpy.ndarray not '
+                                    'supported')
+
+                indices = np.arange(space.ndim)[indices]
+                if indices.ndim > 1:
+                    indices = indices.squeeze()
+
+                if indices.ndim > 1:
+                    raise ValueError('index list must be one-dimensional')
+
+                if np.isscalar(indices):
+                    indices = [indices]
+
+                newshape = tuple(space.shape[i] for i in indices)
+
+                if isinstance(space.weighting, ArrayWeighting):
+                    new_array = np.asarray(self.weighting.array[indices])
+                    weighting = NumpyTensorSpaceArrayWeighting(
+                        new_array, space.weighting.exponent)
+                else:
+                    weighting = space.weighting
+
+                return type(space)(newshape, space.dtype, space.order,
+                                   weighting=weighting)
+
+            def __repr__(self):
+                """Return ``repr(self)``."""
+                return repr(space) + '.byaxis'
+
+        return byaxis()
+
     def __getitem__(self, indices):
         """Return ``self[indices]``.
 
@@ -847,7 +915,7 @@ class NumpyTensor(Tensor):
 
     def __init__(self, space, data):
         """Initialize a new instance."""
-        super().__init__(space)
+        Tensor.__init__(self, space)
         self.__data = data
 
     @property
@@ -857,6 +925,9 @@ class NumpyTensor(Tensor):
 
     def asarray(self, out=None):
         """Extract the data of this array as a ``numpy.ndarray``.
+
+        This method is invoked when calling `numpy.asarray` on this
+        tensor.
 
         Parameters
         ----------
@@ -877,6 +948,8 @@ class NumpyTensor(Tensor):
         >>> x = space.element([1, 2, 3])
         >>> x.asarray()
         array([ 1.,  2.,  3.], dtype=float32)
+        >>> np.asarray(x) is x.asarray()
+        True
         >>> out = np.empty(3, dtype='float32')
         >>> result = x.asarray(out=out)
         >>> out
@@ -993,16 +1066,23 @@ class NumpyTensor(Tensor):
         -------
         values : `NumpyTensorSpace.dtype` or `NumpyTensor`
             The value(s) at the given indices. Note that the returned
-            object is a writable view into the original tensor.
+            object is a writable view into the original tensor, except
+            for the case when ``indices`` is a list.
 
         Examples
         --------
+        For one-dimensional spaces, indexing is as in linear arrays:
+
         >>> space = odl.rn(3)
         >>> x = space.element([1, 2, 3])
         >>> x[0]
         1.0
         >>> x[1:]
         rn(2).element([2.0, 3.0])
+
+        In higher dimensions, the i-th index expression accesses the
+        i-th axis:
+
         >>> space = odl.rn((2, 3))
         >>> x = space.element([[1, 2, 3],
         ...                    [4, 5, 6]])
@@ -1012,15 +1092,6 @@ class NumpyTensor(Tensor):
         rn((2, 2)).element(
             [[2.0, 3.0],
              [5.0, 6.0]]
-        )
-        >>> y = x[[[0, 1], [1, 2]]]
-        >>> y
-        rn(2).element([2.0, 6.0])
-        >>> y[:] = 0
-        >>> x  # not modified
-        rn((2, 3)).element(
-            [[1.0, 2.0, 3.0],
-             [4.0, 5.0, 6.0]]
         )
 
         Slices can be assigned to, except if lists are used for
@@ -1033,11 +1104,22 @@ class NumpyTensor(Tensor):
             [[-9.0, 2.0, -9.0],
              [-9.0, 5.0, -9.0]]
         )
-
+        >>> y = x[[[0, 1], [1, 2]]]  # not a view, won't modify x
+        >>> y
+        rn(2).element([2.0, -9.0])
+        >>> y[:] = 0
+        >>> x
+        rn((2, 3)).element(
+            [[-9.0, 2.0, -9.0],
+             [-9.0, 5.0, -9.0]]
+        )
         """
         arr = self.data[indices]
         if np.isscalar(arr):
-            return arr
+            if self.space.field is not None:
+                return self.space.field.element(arr)
+            else:
+                return arr
         else:
             space_constructor = type(self.space)
             if (self.order in ('C', 'F') and
@@ -1080,8 +1162,8 @@ class NumpyTensor(Tensor):
         >>> x
         rn(3).element([-1.0, 0.0, 1.0])
 
-        In higher dimensions, the Numpy assignment and broadcasting rules
-        apply. It is also possible to use tensors in other spaces:
+        It is also possible to use tensors of other spaces for
+        casting and assignment:
 
         >>> space = odl.rn((2, 3))
         >>> x = space.element([[1, 2, 3],
@@ -1092,21 +1174,18 @@ class NumpyTensor(Tensor):
             [[1.0, -1.0, 3.0],
              [4.0, 5.0, 6.0]]
         )
-        >>> space = odl.tensor_space((2, 2), dtype='short')
-        >>> y = space.element([[-1, 2],
-        ...                    [0, 0]])
+        >>> short_space = odl.tensor_space((2, 2), dtype='short')
+        >>> y = short_space.element([[-1, 2],
+        ...                          [0, 0]])
         >>> x[:, :2] = y
         >>> x
         rn((2, 3)).element(
             [[-1.0, 2.0, 3.0],
              [0.0, 0.0, 6.0]]
         )
-        >>> x[0, 1:] = [7, 8]
-        >>> x
-        rn((2, 3)).element(
-            [[-1.0, 7.0, 8.0],
-             [0.0, 0.0, 6.0]]
-        )
+
+        The Numpy assignment and broadcasting rules apply:
+
         >>> x[:] = np.array([[0, 0, 0],
         ...                  [1, 1, 1]])
         >>> x
@@ -1114,25 +1193,17 @@ class NumpyTensor(Tensor):
             [[0.0, 0.0, 0.0],
              [1.0, 1.0, 1.0]]
         )
+        >>> x[:, 1:] = [7, 8]
+        >>> x
+        rn((2, 3)).element(
+            [[0.0, 7.0, 8.0],
+             [1.0, 7.0, 8.0]]
+        )
         >>> x[:, ::2] = -2.
         >>> x
         rn((2, 3)).element(
-            [[-2.0, 0.0, -2.0],
-             [-2.0, 1.0, -2.0]]
-        )
-
-        Be aware of unsafe casts and over-/underflows, there
-        will be warnings at maximum.
-
-        >>> space = odl.tensor_space((2, 3), 'uint8')
-        >>> x = space.element([[0, 0, 0],
-        ...                    [1, 1, 1]])
-        >>> maxval = 255  # maximum signed 8-bit unsigned int
-        >>> x[0, :] = maxval + 1
-        >>> x
-        tensor_space((2, 3), 'uint8').element(
-            [[0, 0, 0],
-             [1, 1, 1]]
+            [[-2.0, 7.0, -2.0],
+             [-2.0, 7.0, -2.0]]
         )
         """
         if isinstance(values, NumpyTensor):
@@ -1299,6 +1370,13 @@ class NumpyTensor(Tensor):
         >>> result is x
         True
         """
+        if self.space.is_real_space:
+            if out is None:
+                return self
+            else:
+                out[:] = self
+                return out
+
         if not is_numeric_dtype(self.space.dtype):
             raise NotImplementedError('`conj` not defined for non-numeric '
                                       'dtype {}'.format(self.dtype))
@@ -1417,20 +1495,19 @@ def _lincomb(a, x1, b, x2, out, dtype):
     #     out.data[:] = a * x1.data + b * x2.data
     #     return
 
-    # Need flat data for BLAS, otherwise in-place does not work
-    # Raveling must happen in fixed order for non-contiguous out,
-    # otherwise 'A' is applied to arrays, which makes the outcome
-    # dependent on their respective contiguousness.
-    if out.data.flags.f_contiguous:
-        ravel_order = 'F'
-    else:
-        ravel_order = 'C'
-
-    x1_arr = x1.data.ravel(order=ravel_order)
-    x2_arr = x2.data.ravel(order=ravel_order)
-    out_arr = out.data.ravel(order=ravel_order)
-
     if _blas_is_applicable(x1.data, x2.data, out.data):
+        # Need flat data for BLAS, otherwise in-place does not work.
+        # Raveling must happen in fixed order for non-contiguous out,
+        # otherwise 'A' is applied to arrays, which makes the outcome
+        # dependent on their respective contiguousness.
+        if out.data.flags.f_contiguous:
+            ravel_order = 'F'
+        else:
+            ravel_order = 'C'
+
+        x1_arr = x1.data.ravel(order=ravel_order)
+        x2_arr = x2.data.ravel(order=ravel_order)
+        out_arr = out.data.ravel(order=ravel_order)
         axpy, scal, copy = linalg.blas.get_blas_funcs(
             ['axpy', 'scal', 'copy'], arrays=(x1_arr, x2_arr, out_arr))
     else:
@@ -1439,6 +1516,7 @@ def _lincomb(a, x1, b, x2, out, dtype):
         def fallback_axpy(x1, x2, n, a):
             """Fallback axpy implementation avoiding copy."""
             if a != 0:
+                # TODO: this could be unstable
                 x2 /= a
                 x2 += x1
                 x2 *= a
@@ -1455,6 +1533,9 @@ def _lincomb(a, x1, b, x2, out, dtype):
             return x2
 
         axpy, scal, copy = (fallback_axpy, fallback_scal, fallback_copy)
+        x1_arr = x1.data
+        x2_arr = x2.data
+        out_arr = out.data
 
     if x1 is x2 and b != 0:
         # x1 is aligned with x2 -> out = (a+b)*x1
@@ -1499,10 +1580,6 @@ def _lincomb(a, x1, b, x2, out, dtype):
                 if b != 1:
                     scal(b, out_arr, native(out_arr.size))
                 axpy(x1_arr, out_arr, native(out_arr.size), a)
-
-    # Need to write back for non-contiguous out array. If the array
-    # is contiguous, this is a no-op
-    out.data[:] = out_arr.reshape(out.shape, order=ravel_order)
 
 
 def _weighting(weights, exponent):
