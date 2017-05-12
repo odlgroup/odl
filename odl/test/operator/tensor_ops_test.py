@@ -479,6 +479,7 @@ def test_matrix_op_init(matrix):
     assert mat_op.domain == odl.tensor_space(4, matrix.dtype)
     assert mat_op.range == odl.tensor_space(3, matrix.dtype)
     assert np.all(mat_op.matrix == dense_matrix)
+
     sparse_matrix = scipy.sparse.coo_matrix(dense_matrix)
     mat_op = MatrixOperator(sparse_matrix)
     assert mat_op.domain == odl.tensor_space(4, matrix.dtype)
@@ -488,9 +489,11 @@ def test_matrix_op_init(matrix):
     # Explicit domain and range
     dom = odl.tensor_space(4, matrix.dtype)
     ran = odl.tensor_space(3, matrix.dtype)
+
     mat_op = MatrixOperator(dense_matrix, domain=dom, range=ran)
     assert mat_op.domain == dom
     assert mat_op.range == ran
+
     mat_op = MatrixOperator(sparse_matrix, domain=dom, range=ran)
     assert mat_op.domain == dom
     assert mat_op.range == ran
@@ -548,9 +551,9 @@ def test_matrix_op_init(matrix):
     ran = odl.uniform_discr(0, 1, 3, dtype=dense_matrix.dtype)
     MatrixOperator(dense_matrix, domain=dom, range=ran)
 
-    # Make sure this runs at all
-    str(mat_op)
-    repr(mat_op)
+    # Make sure this runs and returns something string-like
+    assert str(mat_op) > ''
+    assert repr(mat_op) > ''
 
 
 def test_matrix_op_call(matrix):
@@ -563,15 +566,14 @@ def test_matrix_op_call(matrix):
     smat_op = MatrixOperator(sparse_matrix)
     xarr, x = noise_elements(dmat_op.domain)
 
-    true_result_dense = dense_matrix.dot(xarr)
-    true_result_sparse = sparse_matrix.dot(xarr)
-    assert all_almost_equal(dmat_op(x), true_result_dense)
-    assert all_almost_equal(smat_op(x), true_result_sparse)
+    true_result = dense_matrix.dot(xarr)
+    assert all_almost_equal(dmat_op(x), true_result)
+    assert all_almost_equal(smat_op(x), true_result)
     out = dmat_op.range.element()
     dmat_op(x, out=out)
-    assert all_almost_equal(out, true_result_dense)
+    assert all_almost_equal(out, true_result)
     smat_op(x, out=out)
-    assert all_almost_equal(out, true_result_sparse)
+    assert all_almost_equal(out, true_result)
 
     # Multi-dimensional case
     domain = odl.rn((2, 2, 4))
