@@ -17,6 +17,7 @@ except ImportError:
     pass
 
 import odl
+from odl.tomo.backends.astra_setup import astra_supports
 from odl.util.testutils import is_subdict
 
 
@@ -70,15 +71,12 @@ def _discrete_domain_anisotropic(ndim, interp):
 
 
 def test_vol_geom_2d():
-    """Create ASTRA 2D volume geometry."""
-
-    discr_dom = _discrete_domain(2, 'nearest')
-    vol_geom = odl.tomo.astra_volume_geometry(discr_dom)
-
+    """Check correctness of ASTRA 2D volume geometries."""
     x_pts = 10  # x_pts = Rows
     y_pts = 20  # y_pts = Columns
-    assert discr_dom.grid.shape == (x_pts, y_pts)
 
+    # Isotropic voxel case
+    discr_dom = _discrete_domain(2, 'nearest')
     correct_dict = {
         'GridColCount': y_pts,
         'GridRowCount': x_pts,
@@ -88,25 +86,36 @@ def test_vol_geom_2d():
             'WindowMinY': -1.0,  # x_min
             'WindowMaxY': 1.0}}  # x_amx
 
+    vol_geom = odl.tomo.astra_volume_geometry(discr_dom)
     assert vol_geom == correct_dict
 
-    # non-isotropic case should fail due to lacking ASTRA support
+    # Anisotropic voxel case
     discr_dom = _discrete_domain_anisotropic(2, 'nearest')
-    with pytest.raises(NotImplementedError):
-        odl.tomo.astra_volume_geometry(discr_dom)
+    correct_dict = {
+        'GridColCount': y_pts,
+        'GridRowCount': x_pts,
+        'option': {
+            'WindowMinX': -1.0,  # y_min
+            'WindowMaxX': 1.0,  # y_max
+            'WindowMinY': -1.0,  # x_min
+            'WindowMaxY': 1.0}}  # x_amx
+
+    if astra_supports('anisotropic_voxels_2d'):
+        vol_geom = odl.tomo.astra_volume_geometry(discr_dom)
+        assert vol_geom == correct_dict
+    else:
+        with pytest.raises(NotImplementedError):
+            odl.tomo.astra_volume_geometry(discr_dom)
 
 
 def test_vol_geom_3d():
-    """Create ASTRA 2D volume geometry."""
+    """Check correctness of ASTRA 3D volume geometies."""
+    x_pts = 10
+    y_pts = 20
+    z_pts = 30
 
+    # Isotropic voxel case
     discr_dom = _discrete_domain(3, 'nearest')
-    vol_geom = odl.tomo.astra_volume_geometry(discr_dom)
-
-    x_pts = 10  # x_pts =
-    y_pts = 20  # y_pts =
-    z_pts = 30  # z_pts =
-    assert discr_dom.grid.shape == (x_pts, y_pts, z_pts)
-
     # x = columns, y = rows, z = slices
     correct_dict = {
         'GridColCount': z_pts,
@@ -120,12 +129,29 @@ def test_vol_geom_3d():
             'WindowMinZ': -1.0,  # x_min
             'WindowMaxZ': 1.0}}  # x_amx
 
+    vol_geom = odl.tomo.astra_volume_geometry(discr_dom)
     assert vol_geom == correct_dict
 
-    # non-isotropic case should fail due to lacking ASTRA support
     discr_dom = _discrete_domain_anisotropic(3, 'nearest')
-    with pytest.raises(NotImplementedError):
-        odl.tomo.astra_volume_geometry(discr_dom)
+    # x = columns, y = rows, z = slices
+    correct_dict = {
+        'GridColCount': z_pts,
+        'GridRowCount': y_pts,
+        'GridSliceCount': x_pts,
+        'option': {
+            'WindowMinX': -1.0,  # z_min
+            'WindowMaxX': 1.0,  # z_max
+            'WindowMinY': -1.0,  # y_min
+            'WindowMaxY': 1.0,  # y_amx
+            'WindowMinZ': -1.0,  # x_min
+            'WindowMaxZ': 1.0}}  # x_amx
+
+    if astra_supports('anisotropic_voxels_3d'):
+        vol_geom = odl.tomo.astra_volume_geometry(discr_dom)
+        assert vol_geom == correct_dict
+    else:
+        with pytest.raises(NotImplementedError):
+            odl.tomo.astra_volume_geometry(discr_dom)
 
 
 def test_proj_geom_parallel_2d():

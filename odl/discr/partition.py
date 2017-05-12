@@ -419,11 +419,6 @@ class RectPartition(object):
         >>> part.cell_sides
         array([ 0.5,  1.5])
         """
-        if not self.is_uniform:
-            raise NotImplementedError(
-                'cell sides not defined for irregular partitions. Use '
-                '`cell_sizes_vecs()` instead')
-
         sides = self.grid.stride
         sides[sides == 0] = self.extent[sides == 0]
         return sides
@@ -575,8 +570,13 @@ class RectPartition(object):
         new_grid = self.grid[indices]
         return RectPartition(new_intvp, new_grid)
 
-    def insert(self, index, other):
-        """Return a copy with ``other`` inserted before ``index``.
+    def insert(self, index, *parts):
+        """Return a copy with ``parts`` inserted before ``index``.
+
+        The given partitions are inserted (as a block) into ``self``,
+        yielding a new partition whose number of dimensions is the sum of
+        the numbers of dimensions of all involved partitions.
+        Note that no changes are made in-place.
 
         Parameters
         ----------
@@ -584,13 +584,13 @@ class RectPartition(object):
             Index of the dimension before which ``other`` is to
             be inserted. Negative indices count backwards from
             ``self.ndim``.
-        other : `RectPartition`
-            Partition to be inserted
+        part1, ..., partN : `RectPartition`
+            Partitions to be inserted into ``self``.
 
         Returns
         -------
         newpart : `RectPartition`
-            Partition with the inserted other partition
+            The enlarged partition.
 
         Examples
         --------
@@ -603,30 +603,41 @@ class RectPartition(object):
         --------
         append
         """
-        newgrid = self.grid.insert(index, other.grid)
-        newset = self.set.insert(index, other.set)
+        if not all(isinstance(p, RectPartition) for p in parts):
+            raise TypeError('`parts` must all be `RectPartition` instances, '
+                            'got ({})'
+                            ''.format(', '.join(repr(p) for p in parts)))
+        newgrid = self.grid.insert(index, *(p.grid for p in parts))
+        newset = self.set.insert(index, *(p.set for p in parts))
         return RectPartition(newset, newgrid)
 
-    def append(self, other):
-        """Insert at the end.
+    def append(self, *parts):
+        """Insert ``parts`` at the end as a block.
 
         Parameters
         ----------
-        other : `RectPartition`,
-            Set to be inserted.
+        part1, ..., partN : `RectPartition`
+            Partitions to be appended to ``self``.
+
+        Returns
+        -------
+        newpart : `RectPartition`
+            The enlarged partition.
 
         Examples
         --------
-        >>> part1 = odl.uniform_partition([0, -1], [1, 2], (3, 3))
+        >>> part1 = odl.uniform_partition(-1, 2, 3)
         >>> part2 = odl.uniform_partition(0, 1, 5)
         >>> part1.append(part2)
-        uniform_partition([0.0, -1.0, 0.0], [1.0, 2.0, 1.0], (3, 3, 5))
+        uniform_partition([-1.0, 0.0], [2.0, 1.0], (3, 5))
+        >>> part1.append(part2, part2)
+        uniform_partition([-1.0, 0.0, 0.0], [2.0, 1.0, 1.0], (3, 5, 5))
 
         See Also
         --------
         insert
         """
-        return self.insert(self.ndim, other)
+        return self.insert(self.ndim, *parts)
 
     def squeeze(self):
         """Return the partition with removed degenerate (length 1) dimensions.

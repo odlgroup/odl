@@ -389,13 +389,15 @@ class RectGrid(Set):
         >>> rg.stride
         array([ 1.,  2.])
         """
-        if not self.is_uniform:
-            raise NotImplementedError('`stride` not defined for non-uniform '
-                                      'grid')
-        strd = np.zeros(self.ndim)
-        cond = np.array(self.nondegen_byaxis, dtype=bool)
-        strd[cond] = self.extent[cond] / (np.array(self.shape)[cond] - 1)
-        return strd
+        strd = []
+        for i in range(self.ndim):
+            if not self.is_uniform_byaxis[i]:
+                strd.append(float('nan'))
+            elif self.nondegen_byaxis[i]:
+                strd.append(self.extent[i] / (self.shape[i] - 1.0))
+            else:
+                strd.append(0.0)
+        return np.array(strd)
 
     @property
     def extent(self):
@@ -605,27 +607,27 @@ class RectGrid(Set):
                     return False
             return True
 
-    def insert(self, index, other):
-        """Return a copy with ``other`` inserted before ``index``.
+    def insert(self, index, *grids):
+        """Return a copy with ``grids`` inserted before ``index``.
 
-        The given grid (``m`` dimensions) is inserted into the current
-        one (``n`` dimensions) before the given index, resulting in a new
-        `RectGrid` with ``n + m`` dimensions.
+        The given grids are inserted (as a block) into ``self``, yielding
+        a new grid whose number of dimensions is the sum of the numbers of
+        dimensions of all involved grids.
         Note that no changes are made in-place.
 
         Parameters
         ----------
         index : int
-            The index of the dimension before which ``other`` is to
+            The index of the dimension before which ``grids`` are to
             be inserted. Negative indices count backwards from
             ``self.ndim``.
-        other :  `RectGrid`
-            The grid to be inserted
+        grid1, ..., gridN :  `RectGrid`
+            The grids to be inserted into ``self``.
 
         Returns
         -------
         newgrid : `RectGrid`
-            The enlarged grid
+            The enlarged grid.
 
         Examples
         --------
@@ -638,33 +640,51 @@ class RectGrid(Set):
             [-6.0, 15.0],
             [-1.0, 0.0, 2.0]
         )
+        >>> g1.insert(1, g2, g2)
+        RectGrid(
+            [0.0, 1.0],
+            [1.0],
+            [-6.0, 15.0],
+            [1.0],
+            [-6.0, 15.0],
+            [-1.0, 0.0, 2.0]
+        )
 
         See Also
         --------
         append
         """
-        if not isinstance(other, RectGrid):
-            raise TypeError('`other` must be a `RectGrid` instance, got {}'
-                            ''.format(other))
-        idx = safe_int_conv(index)
-        # Support backward indexing
-        if idx < 0:
-            idx = self.ndim + idx
-        if not 0 <= idx <= self.ndim:
-            raise IndexError('index {} outside the valid range 0 ... {}'
-                             ''.format(idx, self.ndim))
+        index, index_in = safe_int_conv(index), index
+        if not -self.ndim <= index <= self.ndim:
+            raise IndexError('index {0} outside the valid range -{1} ... {1}'
+                             ''.format(index_in, self.ndim))
+        if index < 0:
+            index += self.ndim
 
-        new_vecs = (self.coord_vectors[:idx] + other.coord_vectors +
-                    self.coord_vectors[idx:])
-        return RectGrid(*new_vecs)
+        if len(grids) > 1:
+            return self.insert(index, grids[0]).insert(
+                index + grids[0].ndim, *(grids[1:]))
+        else:
+            grid = grids[0]
+            if not isinstance(grid, RectGrid):
+                raise TypeError('{!r} is not a `RectGrid` instance'
+                                ''.format(grid))
+            new_vecs = (self.coord_vectors[:index] + grid.coord_vectors +
+                        self.coord_vectors[index:])
+            return RectGrid(*new_vecs)
 
-    def append(self, other):
-        """Insert grid ``other`` at the end.
+    def append(self, *grids):
+        """Insert ``grids`` at the end as a block.
 
         Parameters
         ----------
-        other : `RectGrid`
-            Set to be inserted.
+        grid1, ..., gridN :  `RectGrid`
+            The grids to be appended to ``self``.
+
+        Returns
+        -------
+        newgrid : `RectGrid`
+            The enlarged grid.
 
         Examples
         --------
@@ -677,12 +697,21 @@ class RectGrid(Set):
             [1.0],
             [-6.0, 15.0]
         )
+        >>> g1.append(g2, g2)
+        RectGrid(
+            [0.0, 1.0],
+            [-1.0, 0.0, 2.0],
+            [1.0],
+            [-6.0, 15.0],
+            [1.0],
+            [-6.0, 15.0]
+        )
 
         See Also
         --------
         insert
         """
-        return self.insert(self.ndim, other)
+        return self.insert(self.ndim, *grids)
 
     def squeeze(self):
         """Return the grid with removed degenerate (length 1) dimensions.
