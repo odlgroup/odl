@@ -112,8 +112,7 @@ class FunctionSpaceMapping(Operator):
         if self is other:
             return True
         else:
-            return (isinstance(other, type(self)) and
-                    isinstance(self, type(other)) and
+            return (type(other) is type(self) and
                     self.domain == other.domain and
                     self.range == other.range and
                     self.partition == other.partition)

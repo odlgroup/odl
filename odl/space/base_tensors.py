@@ -273,7 +273,7 @@ class TensorSpace(LinearSpace):
     @property
     def size(self):
         """Total number of entries in an element of this space."""
-        return np.prod(self.shape)
+        return 0 if self.shape == () else int(np.prod(self.shape))
 
     @property
     def ndim(self):
@@ -282,12 +282,12 @@ class TensorSpace(LinearSpace):
 
     def __len__(self):
         """Number of tensor entries along the first axis."""
-        return self.shape[0]
+        return int(self.shape[0])
 
     @property
     def itemsize(self):
         """Size in bytes of one entry in an element of this space."""
-        return self.dtype.itemsize
+        return int(self.dtype.itemsize)
 
     @property
     def nbytes(self):
@@ -389,7 +389,7 @@ class TensorSpace(LinearSpace):
         if other is self:
             return True
 
-        return (type(self) == type(other) and
+        return (type(other) is type(self) and
                 self.shape == other.shape and
                 self.dtype == other.dtype and
                 self.order == other.order)
