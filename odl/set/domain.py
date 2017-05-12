@@ -628,6 +628,9 @@ class IntervalProd(Set):
                 index + intvs[0].ndim, *(intvs[1:]))
         else:
             intv = intvs[0]
+            if not isinstance(intv, IntervalProd):
+                raise TypeError('{!r} is not a `IntervalProd` instance'
+                                ''.format(intv))
             new_min_pt = np.empty(self.ndim + intv.ndim)
             new_max_pt = np.empty(self.ndim + intv.ndim)
 

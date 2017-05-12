@@ -654,12 +654,6 @@ class RectGrid(Set):
         --------
         append
         """
-        for i, grid in enumerate(grids):
-            if not isinstance(grid, RectGrid):
-                raise TypeError('all `grids` must be `RectGrid` instances, '
-                                'got {!r} as argument {}'
-                                ''.format(grid, i + 1))
-
         index, index_in = safe_int_conv(index), index
         if not -self.ndim <= index <= self.ndim:
             raise IndexError('index {0} outside the valid range -{1} ... {1}'
@@ -672,6 +666,9 @@ class RectGrid(Set):
                 index + grids[0].ndim, *(grids[1:]))
         else:
             grid = grids[0]
+            if not isinstance(grid, RectGrid):
+                raise TypeError('{!r} is not a `RectGrid` instance'
+                                ''.format(grid))
             new_vecs = (self.coord_vectors[:index] + grid.coord_vectors +
                         self.coord_vectors[index:])
             return RectGrid(*new_vecs)
