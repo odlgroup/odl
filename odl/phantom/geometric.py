@@ -267,6 +267,7 @@ def _getshapes_2d(center, max_radius, shape):
     index_radius = max_radius / 2.0 * np.array(shape)
 
     min_idx = np.floor(index_mean - index_radius).astype(int)
+    min_idx = np.maximum(min_idx, 0)  # avoid negative indices
     max_idx = np.ceil(index_mean + index_radius).astype(int)
     idx = [slice(minx, maxx) for minx, maxx in zip(min_idx, max_idx)]
     shapes = [(idx[0], slice(None)),
@@ -381,6 +382,7 @@ def _getshapes_3d(center, max_radius, shape):
     index_radius = max_radius / 2.0 * np.array(shape)
 
     min_idx = np.floor(index_mean - index_radius).astype(int)
+    min_idx = np.maximum(min_idx, 0)  # avoid negative indices
     max_idx = np.ceil(index_mean + index_radius).astype(int)
     idx = [slice(minx, maxx) for minx, maxx in zip(min_idx, max_idx)]
     shapes = [(idx[0], slice(None), slice(None)),
