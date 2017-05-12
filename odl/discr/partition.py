@@ -476,8 +476,7 @@ class RectPartition(object):
             return True
 
         # Optimized version for exact equality
-        return (isinstance(other, type(self)) and
-                isinstance(self, type(other)) and
+        return (type(other) is type(self) and
                 self.set == other.set and
                 self.grid == other.grid)
 

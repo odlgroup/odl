@@ -810,7 +810,7 @@ class NumpyTensorSpace(TensorSpace):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        if self.ndim == 1:
+        if self.ndim <= 1:
             posargs = [self.size]
         else:
             posargs = [self.shape]

@@ -99,6 +99,8 @@ class DiscreteLp(DiscretizedSpace):
                              'dspace dtype {}'
                              ''.format(fspace.out_dtype, dspace.dtype))
 
+        self.__partition = partition
+
         # Handle interp
         try:
             # Got single string
@@ -124,9 +126,7 @@ class DiscreteLp(DiscretizedSpace):
             if interp not in _SUPPORTED_INTERP:
                 raise ValueError("`interp` type '{}' not understood"
                                  "".format(interp_in))
-            self.__interp_by_axis = (interp,) * self.ndim
-
-        self.__partition = partition
+            self.__interp_byaxis = (interp,) * self.ndim
 
         # Assign sampling and interpolation operators
         sampling = PointCollocation(fspace, self.partition, dspace)
@@ -136,7 +136,7 @@ class DiscreteLp(DiscretizedSpace):
             interpol = LinearInterpolation(fspace, self.partition, dspace)
         else:
             interpol = PerAxisInterpolation(
-                fspace, self.partition, dspace, self.interp_by_axis)
+                fspace, self.partition, dspace, self.interp_byaxis)
 
         # Parent initializer
         DiscretizedSpace.__init__(self, fspace, dspace, sampling, interpol)
@@ -158,8 +158,10 @@ class DiscreteLp(DiscretizedSpace):
     @property
     def interp(self):
         """Interpolation type of this discretization."""
-        if all(interp == self.interp_byaxis[0]
-               for interp in self.interp_byaxis):
+        if self.ndim == 0:
+            return 'nearest'
+        elif all(interp == self.interp_byaxis[0]
+                 for interp in self.interp_byaxis):
             return self.interp_byaxis[0]
         else:
             return self.interp_byaxis

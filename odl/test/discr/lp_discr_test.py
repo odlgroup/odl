@@ -40,18 +40,18 @@ def test_discretelp_init():
     assert discr.dspace == dspace
     assert discr.partition == part
     assert discr.interp == 'nearest'
-    assert discr.interp_by_axis == ('nearest', 'nearest')
+    assert discr.interp_byaxis == ('nearest', 'nearest')
     assert discr.exponent == dspace.exponent
     assert discr.axis_labels == ('$x$', '$y$')
     assert discr.is_real_space
 
     discr = DiscreteLp(fspace, part, dspace, interp='linear')
     assert discr.interp == 'linear'
-    assert discr.interp_by_axis == ('linear', 'linear')
+    assert discr.interp_byaxis == ('linear', 'linear')
 
     discr = DiscreteLp(fspace, part, dspace, interp=['nearest', 'linear'])
     assert discr.interp == ('nearest', 'linear')
-    assert discr.interp_by_axis == ('nearest', 'linear')
+    assert discr.interp_byaxis == ('nearest', 'linear')
 
     # Complex space
     fspace_c = odl.FunctionSpace(odl.IntervalProd([0, 0], [1, 1]),
@@ -90,11 +90,11 @@ def test_empty():
     hash(discr)
     repr(discr)
 
-    elem = discr.element()
-    assert np.array_equal(elem.asarray(), [])
-    assert np.array_equal(elem.real, [])
-    assert np.array_equal(elem.imag, [])
-    assert np.array_equal(elem.conj(), [])
+    elem = discr.element(1.0)
+    assert np.array_equal(elem.asarray(), 1.0)
+    assert np.array_equal(elem.real, 1.0)
+    assert np.array_equal(elem.imag, 0.0)
+    assert np.array_equal(elem.conj(), 1.0)
 
 
 # --- uniform_discr --- #

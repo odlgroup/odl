@@ -562,7 +562,7 @@ class ArrayWeighting(Weighting):
         optargs = [('weighting', arraynd_repr(self.array, nprint=10), ''),
                    ('exponent', self.exponent, 2.0)]
         return signature_string([], optargs, sep=[',\n', ', ', ',\n'],
-                                mod=[[], ['!s', '', '']])
+                                mod=[[], ['!s', '']])
 
     def __repr__(self):
         """Return ``repr(self)``."""

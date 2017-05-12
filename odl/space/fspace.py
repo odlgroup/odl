@@ -590,7 +590,7 @@ class FunctionSpace(LinearSpace):
         if other is self:
             return True
 
-        return (type(other) == type(self) and
+        return (type(other) is type(self) and
                 self.domain == other.domain and
                 self.field == other.field and
                 self.out_dtype == other.out_dtype)
