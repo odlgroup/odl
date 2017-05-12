@@ -239,7 +239,7 @@ def test_resizing_op_mixed_uni_nonuni():
     """Check if resizing along uniform axes in mixed discretizations works."""
     nonuni_part = odl.nonuniform_partition([0, 1, 4])
     uni_part = odl.uniform_partition(-1, 1, 4)
-    part = uni_part.append(nonuni_part).append(uni_part).append(nonuni_part)
+    part = uni_part.append(nonuni_part, uni_part, nonuni_part)
     fspace = odl.FunctionSpace(odl.IntervalProd(part.min_pt, part.max_pt))
     dspace = odl.rn(part.size)
     space = odl.DiscreteLp(fspace, part, dspace)

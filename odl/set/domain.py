@@ -19,7 +19,7 @@ import numpy as np
 
 from odl.set.sets import Set
 from odl.util import (
-    array1d_repr, is_valid_input_array, is_valid_input_meshgrid)
+    array1d_repr, is_valid_input_array, is_valid_input_meshgrid, safe_int_conv)
 
 
 __all__ = ('IntervalProd',)
@@ -582,13 +582,12 @@ class IntervalProd(Set):
         e_new = self.max_pt[self.nondegen_byaxis]
         return IntervalProd(b_new, e_new)
 
-    def insert(self, index, other):
-        """Insert ``other`` before ``index``.
+    def insert(self, index, *intvs):
+        """Return a copy with ``intvs`` inserted before ``index``.
 
-        The given interval product (``ndim=m``) is inserted into the
-        current one (``ndim=n``) before the given index, resulting in a
-        new interval product with ``n+m`` dimensions.
-
+        The given interval products are inserted (as a block) into ``self``,
+        yielding a new interval product whose number of dimensions is the
+        sum of the numbers of dimensions of all involved interval products.
         Note that no changes are made in-place.
 
         Parameters
@@ -597,68 +596,78 @@ class IntervalProd(Set):
             Index of the dimension before which ``other`` is to
             be inserted. Must fulfill ``-ndim <= index <= ndim``.
             Negative indices count backwards from ``self.ndim``.
-        other : `IntervalProd`
-            Interval product to be inserted.
+        intv1, ..., intvN : `IntervalProd`
+            Interval products to be inserted into ``self``.
 
         Returns
         -------
         newintvp : `IntervalProd`
-            Interval product with ``other`` inserted.
+            The enlarged interval product.
 
         Examples
         --------
-        >>> rbox = IntervalProd([-1, 2], [-0.5, 3])
-        >>> rbox2 = IntervalProd([0, 0], [1, 0])
-        >>> rbox.insert(1, rbox2)
-        IntervalProd([-1.0, 0.0, 0.0, 2.0], [-0.5, 1.0, 0.0, 3.0])
-        >>> rbox.insert(-1, rbox2)
-        IntervalProd([-1.0, 0.0, 0.0, 2.0], [-0.5, 1.0, 0.0, 3.0])
+        >>> intv = IntervalProd([-1, 2], [-0.5, 3])
+        >>> intv2 = IntervalProd(0, 1)
+        >>> intv.insert(0, intv2)
+        IntervalProd([0.0, -1.0, 2.0], [1.0, -0.5, 3.0])
+        >>> intv.insert(-1, intv2)
+        IntervalProd([-1.0, 0.0, 2.0], [-0.5, 1.0, 3.0])
+        >>> intv.insert(1, intv2, intv2)
+        IntervalProd([-1.0, 0.0, 0.0, 2.0], [-0.5, 1.0, 1.0, 3.0])
         """
-        index, index_in = int(index), index
+        index, index_in = safe_int_conv(index), index
 
         if not -self.ndim <= index <= self.ndim:
-            raise IndexError('index {0} outside the valid range -{1} --> {1}'
+            raise IndexError('index {0} outside the valid range -{1} ... {1}'
                              ''.format(index_in, self.ndim))
         if index < 0:
             index += self.ndim
 
-        new_min_pt = np.empty(self.ndim + other.ndim)
-        new_max_pt = np.empty(self.ndim + other.ndim)
+        if len(intvs) > 1:
+            return self.insert(index, intvs[0]).insert(
+                index + intvs[0].ndim, *(intvs[1:]))
+        else:
+            intv = intvs[0]
+            new_min_pt = np.empty(self.ndim + intv.ndim)
+            new_max_pt = np.empty(self.ndim + intv.ndim)
 
-        new_min_pt[: index] = self.min_pt[: index]
-        new_max_pt[: index] = self.max_pt[: index]
-        new_min_pt[index: index + other.ndim] = other.min_pt
-        new_max_pt[index: index + other.ndim] = other.max_pt
-        if index < self.ndim:  # Avoid IndexError
-            new_min_pt[index + other.ndim:] = self.min_pt[index:]
-            new_max_pt[index + other.ndim:] = self.max_pt[index:]
+            new_min_pt[: index] = self.min_pt[: index]
+            new_max_pt[: index] = self.max_pt[: index]
+            new_min_pt[index: index + intv.ndim] = intv.min_pt
+            new_max_pt[index: index + intv.ndim] = intv.max_pt
+            if index < self.ndim:  # Avoid IndexError
+                new_min_pt[index + intv.ndim:] = self.min_pt[index:]
+                new_max_pt[index + intv.ndim:] = self.max_pt[index:]
 
-        return IntervalProd(new_min_pt, new_max_pt)
+            return IntervalProd(new_min_pt, new_max_pt)
 
-    def append(self, other):
-        """Insert at the end.
+    def append(self, *intvs):
+        """Insert ``intvs`` at the end as a block.
 
         Parameters
         ----------
-        other : `IntervalProd`
-            Set to be appended.
+        intv1, ..., intvN : `IntervalProd`
+            Interval products to be appended to ``self``.
 
         Returns
         -------
         newintvp : `IntervalProd`
-            Interval product with ``other`` appended.
+            The enlarged interval product.
 
         Examples
         --------
-        >>> rbox = IntervalProd([-1, 2], [-0.5, 3])
-        >>> rbox.append(IntervalProd(-1.0, 0.0))
-        IntervalProd([-1.0, 2.0, -1.0], [-0.5, 3.0, 0.0])
+        >>> intv = IntervalProd([-1, 2], [-0.5, 3])
+        >>> intv2 = IntervalProd(0, 1)
+        >>> intv.append(intv2)
+        IntervalProd([-1.0, 2.0, 0.0], [-0.5, 3.0, 1.0])
+        >>> intv.append(intv2, intv2)
+        IntervalProd([-1.0, 2.0, 0.0, 0.0], [-0.5, 3.0, 1.0, 1.0])
 
         See Also
         --------
         insert
         """
-        return self.insert(self.ndim, other)
+        return self.insert(self.ndim, *intvs)
 
     def corners(self, order='C'):
         """Return the corner points as a single array.
