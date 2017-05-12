@@ -53,13 +53,16 @@ def mse(true, noisy):
     return np.mean((true - noisy) ** 2)
 
 
-def psnr(true, noisy):
+def psnr(true, noisy, normalize=False):
     """Return the Peak signal-to-noise ratio.
 
     Parameters
     ----------
     true : array-like
     noisy : array-like
+    normalize : bool
+        If true, normalizes the true and noisy signal to have the same mean
+        and variance before comparison.
 
     Returns
     -------
@@ -85,6 +88,10 @@ def psnr(true, noisy):
     """
     true = np.asarray(true)
     noisy = np.asarray(noisy)
+
+    if normalize:
+        noisy = noisy + np.mean(true - noisy)
+        noisy = noisy * np.std(true) / np.std(noisy)
 
     mse_result = mse(true, noisy)
     max_true = np.max(np.abs(true))
