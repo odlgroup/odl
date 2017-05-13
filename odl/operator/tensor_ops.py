@@ -17,7 +17,7 @@ from odl.operator import Operator
 from odl.set import RealNumbers, ComplexNumbers
 from odl.space import ProductSpace, fn
 from odl.space.base_ntuples import FnBase
-from odl.util import writable_array, signature_string, indent_rows
+from odl.util import writable_array, signature_string, indent
 
 
 __all__ = ('PointwiseNorm', 'PointwiseInner', 'PointwiseSum', 'MatrixOperator')
@@ -136,7 +136,7 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
 
         >>> spc = odl.uniform_discr([-1, -1], [1, 1], (1, 2))
         >>> vfspace = odl.ProductSpace(spc, 2)
-        >>> pw_norm = PointwiseNorm(vfspace)
+        >>> pw_norm = odl.PointwiseNorm(vfspace)
         >>> pw_norm.range == spc
         True
 
@@ -145,7 +145,7 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
         >>> x = vfspace.element([[[1, -4]],
         ...                      [[0, 3]]])
         >>> print(pw_norm(x))
-        [[1.0, 5.0]]
+        [[ 1.,  5.]]
 
         We can change the exponent either in the vector field space
         or in the operator directly:
@@ -153,11 +153,11 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
         >>> vfspace = odl.ProductSpace(spc, 2, exponent=1)
         >>> pw_norm = PointwiseNorm(vfspace)
         >>> print(pw_norm(x))
-        [[1.0, 7.0]]
+        [[ 1.,  7.]]
         >>> vfspace = odl.ProductSpace(spc, 2)
         >>> pw_norm = PointwiseNorm(vfspace, exponent=1)
         >>> print(pw_norm(x))
-        [[1.0, 7.0]]
+        [[ 1.,  7.]]
         """
         if not isinstance(vfspace, ProductSpace):
             raise TypeError('`vfspace` {!r} is not a ProductSpace '
@@ -491,7 +491,7 @@ class PointwiseInner(PointwiseInnerBase):
         >>> x = vfspace.element([[[1, -4]],
         ...                      [[0, 3]]])
         >>> print(pw_inner(x))
-        [[0.0, -7.0]]
+        [[ 0., -7.]]
         """
         super(PointwiseInner, self).__init__(
             adjoint=False, vfspace=vfspace, vecfield=vecfield,
@@ -678,7 +678,7 @@ class PointwiseSum(PointwiseInner):
         >>> x = vfspace.element([[[1, -4]],
         ...                      [[0, 3]]])
         >>> print(pw_sum(x))
-        [[1.0, -1.0]]
+        [[ 1., -1.]]
         """
         if not isinstance(vfspace, ProductSpace):
             raise TypeError('`vfspace` {!r} is not a ProductSpace '
@@ -736,7 +736,7 @@ class MatrixOperator(Operator):
         >>> op.range
         rn(3)
         >>> op([1, 2, 3, 4])
-        rn(3).element([10.0, 10.0, 10.0])
+        rn(3).element([ 10.,  10.,  10.])
 
         They can also be provided explicitly, for example with
         `uniform_discr` spaces:
@@ -745,7 +745,7 @@ class MatrixOperator(Operator):
         >>> ran = odl.uniform_discr(0, 1, 3)
         >>> op = MatrixOperator(matrix, domain=dom, range=ran)
         >>> op(dom.one())
-        uniform_discr(0.0, 1.0, 3).element([4.0, 4.0, 4.0])
+        uniform_discr(0.0, 1.0, 3).element([ 4., 4., 4.])
 
         For storage efficiency, SciPy sparse matrices can be used:
 
@@ -762,7 +762,7 @@ class MatrixOperator(Operator):
                [ 0.,  0.,  0.,  5.]])
         >>> op = MatrixOperator(matrix)
         >>> op(op.domain.one())
-        rn(4).element([13.0, 7.0, 0.0, 5.0])
+        rn(4).element([ 13.,   7.,   0.,   5.])
         """
         # Lazy import to improve `import odl` time
         import scipy.sparse
@@ -898,8 +898,7 @@ class MatrixOperator(Operator):
 
         inner_str = signature_string(posargs, optargs, sep=[', ', ', ', ',\n'],
                                      mod=[['!s'], ['!r', '!r']])
-        return '{}(\n{}\n)'.format(self.__class__.__name__,
-                                   indent_rows(inner_str))
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
 
     def __str__(self):
         """Return ``str(self)``."""

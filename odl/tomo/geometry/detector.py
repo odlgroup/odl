@@ -16,7 +16,7 @@ import numpy as np
 
 from odl.discr import RectPartition
 from odl.tomo.util import perpendicular_vector, is_inside_bounds
-from odl.util import indent_rows, signature_string
+from odl.util import indent, signature_string, array_str
 
 
 __all__ = ('Detector',
@@ -411,10 +411,9 @@ class Flat1dDetector(Detector):
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = [self.partition]
-        optargs = [('axis', self.axis.tolist(), None)]
+        optargs = [('axis', array_str(self.axis), '')]
         inner_str = signature_string(posargs, optargs, sep=',\n')
-        return '{}(\n{}\n)'.format(self.__class__.__name__,
-                                   indent_rows(inner_str))
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -625,10 +624,9 @@ class Flat2dDetector(Detector):
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = [self.partition]
-        optargs = [('axes', tuple(ax.tolist() for ax in self.axes), None)]
+        optargs = [('axes', tuple(array_str(ax) for ax in self.axes), None)]
         inner_str = signature_string(posargs, optargs, sep=',\n')
-        return '{}(\n{}\n)'.format(self.__class__.__name__,
-                                   indent_rows(inner_str))
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -897,10 +895,9 @@ class CircleSectionDetector(Detector):
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = [self.partition]
-        optargs = [('center', self.center.tolist(), None)]
+        optargs = [('center', array_str(self.center), None)]
         inner_str = signature_string(posargs, optargs, sep=',\n')
-        return '{}(\n{}\n)'.format(self.__class__.__name__,
-                                   indent_rows(inner_str))
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
 
     def __str__(self):
         """Return ``str(self)``."""

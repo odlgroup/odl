@@ -64,7 +64,7 @@ class Resampling(Operator):
         Apply the corresponding resampling operator to an element:
 
         >>> print(resampling([0, 1, 0]))
-        [0.0, 0.0, 1.0, 1.0, 0.0, 0.0]
+        [ 0.,  0.,  1.,  1.,  0.,  0.]
 
         The result depends on the interpolation chosen for the underlying
         spaces:
@@ -72,7 +72,7 @@ class Resampling(Operator):
         >>> coarse_discr = odl.uniform_discr(0, 1, 3, interp='linear')
         >>> linear_resampling = odl.Resampling(coarse_discr, fine_discr)
         >>> print(linear_resampling([0, 1, 0]))
-        [0.0, 0.25, 0.75, 0.75, 0.25, 0.0]
+        [ 0.  ,  0.25,  0.75,  0.75,  0.25,  0.  ]
         """
         if domain.uspace != range.uspace:
             raise ValueError('`domain.uspace` ({}) does not match '
@@ -132,13 +132,13 @@ class Resampling(Operator):
 
         >>> x = [0.0, 1.0, 0.0]
         >>> print(resampling_inv(resampling(x)))
-        [0.0, 1.0, 0.0]
+        [ 0.,  1.,  0.]
 
         However, it can fail in the other direction:
 
         >>> y = [0.0, 0.0, 0.0, 1.0, 0.0, 0.0]
         >>> print(resampling(resampling_inv(y)))
-        [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        [ 0.,  0.,  0.,  0.,  0.,  0.]
         """
         return self.inverse
 
@@ -212,7 +212,7 @@ class ResizingOperatorBase(Operator):
         >>> space = odl.uniform_discr([0, 0], [1, 1], (2, 4))
         >>> resize_op = odl.ResizingOperator(space, ran_shp=(4, 4))
         >>> resize_op.range
-        uniform_discr([-0.5, 0.0], [1.5, 1.0], (4, 4))
+        uniform_discr([-0.5,  0. ], [ 1.5,  1. ], (4, 4))
 
         Testing different padding methods in the first axis (zero padding
         is the default):
@@ -221,28 +221,28 @@ class ResizingOperatorBase(Operator):
         ...      [5, 6, 7, 8]]
         >>> resize_op = odl.ResizingOperator(space, ran_shp=(4, 4))
         >>> print(resize_op(x))
-        [[0.0, 0.0, 0.0, 0.0],
-         [1.0, 2.0, 3.0, 4.0],
-         [5.0, 6.0, 7.0, 8.0],
-         [0.0, 0.0, 0.0, 0.0]]
+        [[ 0.,  0.,  0.,  0.],
+         [ 1.,  2.,  3.,  4.],
+         [ 5.,  6.,  7.,  8.],
+         [ 0.,  0.,  0.,  0.]]
         >>>
         >>> resize_op = odl.ResizingOperator(space, ran_shp=(4, 4),
         ...                                  offset=(0, 0),
         ...                                  pad_mode='periodic')
         >>> print(resize_op(x))
-        [[1.0, 2.0, 3.0, 4.0],
-         [5.0, 6.0, 7.0, 8.0],
-         [1.0, 2.0, 3.0, 4.0],
-         [5.0, 6.0, 7.0, 8.0]]
+        [[ 1.,  2.,  3.,  4.],
+         [ 5.,  6.,  7.,  8.],
+         [ 1.,  2.,  3.,  4.],
+         [ 5.,  6.,  7.,  8.]]
         >>>
         >>> resize_op = odl.ResizingOperator(space, ran_shp=(4, 4),
         ...                                  offset=(0, 0),
         ...                                  pad_mode='order0')
         >>> print(resize_op(x))
-        [[1.0, 2.0, 3.0, 4.0],
-         [5.0, 6.0, 7.0, 8.0],
-         [5.0, 6.0, 7.0, 8.0],
-         [5.0, 6.0, 7.0, 8.0]]
+        [[ 1.,  2.,  3.,  4.],
+         [ 5.,  6.,  7.,  8.],
+         [ 5.,  6.,  7.,  8.],
+         [ 5.,  6.,  7.,  8.]]
 
         Alternatively, the range of the operator can be provided directly.
         This requires that the partitions match, i.e. that the cell sizes
@@ -253,10 +253,10 @@ class ResizingOperatorBase(Operator):
         >>> resize_op = odl.ResizingOperator(space, large_spc,
         ...                                  pad_mode='periodic')
         >>> print(resize_op(x))
-        [[5.0, 6.0, 7.0, 8.0],
-         [1.0, 2.0, 3.0, 4.0],
-         [5.0, 6.0, 7.0, 8.0],
-         [1.0, 2.0, 3.0, 4.0]]
+        [[ 5.,  6.,  7.,  8.],
+         [ 1.,  2.,  3.,  4.],
+         [ 5.,  6.,  7.,  8.],
+         [ 1.,  2.,  3.,  4.]]
         """
         from builtins import range as builtin_range
 

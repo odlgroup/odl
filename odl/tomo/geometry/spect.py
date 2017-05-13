@@ -15,7 +15,7 @@ import numpy as np
 
 from odl.tomo.geometry.parallel import Parallel3dAxisGeometry
 from odl.tomo.util.utility import transform_system
-from odl.util import signature_string, indent_rows
+from odl.util import signature_string, indent, array_str
 
 __all__ = ('ParallelHoleCollimatorGeometry', )
 
@@ -176,22 +176,21 @@ class ParallelHoleCollimatorGeometry(Parallel3dAxisGeometry):
         optargs = [('det_radius', self.det_radius, -1)]
 
         if not np.allclose(self.axis, self._default_config['axis']):
-            optargs.append(['axis', self.axis.tolist(), None])
+            optargs.append(['axis', array_str(self.axis), ''])
 
         if self._orig_to_det_init_arg is not None:
             optargs.append(['orig_to_det_init',
-                            self._orig_to_det_init_arg.tolist(),
-                            None])
+                            array_str(self._orig_to_det_init_arg),
+                            ''])
 
         if self._det_axes_init_arg is not None:
             optargs.append(
                 ['det_axes_init',
-                 tuple(a.tolist() for a in self._det_axes_init_arg),
+                 tuple(array_str(a) for a in self._det_axes_init_arg),
                  None])
 
         if not np.array_equal(self.translation, (0, 0, 0)):
-            optargs.append(['translation', self.translation.tolist(), None])
+            optargs.append(['translation', array_str(self.translation), ''])
 
         sig_str = signature_string(posargs, optargs, sep=',\n')
-        return '{}(\n{}\n)'.format(self.__class__.__name__,
-                                   indent_rows(sig_str))
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(sig_str))

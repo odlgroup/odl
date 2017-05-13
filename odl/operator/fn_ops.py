@@ -62,10 +62,10 @@ class SamplingOperator(Operator):
         >>> sampling_points = [[0, 1], [1, 1]]
         >>> A = odl.SamplingOperator(X, sampling_points, 'point_eval')
         >>> A(x)
-        rn(2).element([1.0, 3.0])
+        rn(2).element([ 1.,  3.])
         >>> A = odl.SamplingOperator(X, sampling_points, 'integrate')
         >>> A(x)
-        rn(2).element([0.25, 0.75])
+        rn(2).element([ 0.25,  0.75])
         """
         if not isinstance(domain, (FnBase, DiscreteLp)):
             raise TypeError('`domain` {!r} not a `FnBase` or `DiscreteLp` '
@@ -194,12 +194,16 @@ class WeightedSumSamplingOperator(Operator):
         >>> A = odl.WeightedSumSamplingOperator(X, sampling_points, 'dirac')
         >>> x = A.domain.one()
         >>> A(x)
-        uniform_discr([0.0, 0.0], [1.0, 1.0], (2, 2)).element([[0.0, 4.0],
-        [0.0, 4.0]])
+        uniform_discr([ 0.,  0.], [ 1.,  1.], (2, 2)).element(
+            [[ 0.,  4.],
+             [ 0.,  4.]]
+        )
         >>> A = odl.WeightedSumSamplingOperator(X, sampling_points, 'char_fun')
         >>> A(x)
-        uniform_discr([0.0, 0.0], [1.0, 1.0], (2, 2)).element([[0.0, 1.0],
-        [0.0, 1.0]])
+        uniform_discr([ 0.,  0.], [ 1.,  1.], (2, 2)).element(
+            [[ 0.,  1.],
+             [ 0.,  1.]]
+        )
         """
 
         self.__sampling_points = np.asarray(sampling_points, dtype=int)
@@ -322,7 +326,7 @@ class FlatteningOperator(Operator):
         >>> x = X.element(range(X.size))
         >>> A = odl.FlatteningOperator(X)
         >>> A(x)
-        rn(6).element([0.0, 1.0, 2.0, 3.0, 4.0, 5.0])
+        rn(6).element([ 0.,  1.,  2.,  3.,  4.,  5.])
         """
         if not isinstance(domain, (LinearSpace, Field)):
             raise TypeError('`domain` {!r} not a `LinearSpace` or `Field` '
@@ -410,7 +414,9 @@ class FlatteningOperatorAdjoint(Operator):
         >>> A = odl.FlatteningOperatorAdjoint(X)
         >>> x = A.domain.element(range(A.domain.size))
         >>> A(x)
-        uniform_discr([-1.0, -1.0], [1.0, 1.0], (1, 2)).element([[0.0, 1.0]])
+        uniform_discr([-1., -1.], [ 1.,  1.], (1, 2)).element(
+            [[ 0.,  1.]]
+        )
         """
         if not isinstance(range, (LinearSpace, Field)):
             raise TypeError('`range` {!r} not a `LinearSpace` or `Field` '

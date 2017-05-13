@@ -18,8 +18,8 @@ from odl.set import (Set, RealNumbers, ComplexNumbers, LinearSpace,
                      LinearSpaceElement)
 from odl.util.ufuncs import NtuplesBaseUfuncs
 from odl.util import (
-    array1d_repr, array1d_str, dtype_repr,
-    is_scalar_dtype, is_real_dtype, is_floating_dtype,
+    array_str, dtype_repr, indent,
+    is_numeric_dtype, is_real_dtype, is_floating_dtype,
     complex_dtype, real_dtype)
 
 
@@ -392,12 +392,15 @@ class NtuplesBaseVector(object):
 
     def __str__(self):
         """Return ``str(self)``."""
-        return array1d_str(self)
+        return array_str(self)
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{!r}.element({})'.format(self.space,
-                                         array1d_repr(self))
+        if self.size <= 6:
+            return '{!r}.element({})'.format(self.space, array_str(self))
+        else:
+            return '{!r}.element(\n{}\n)'.format(self.space,
+                                                 indent(array_str(self)))
 
     @property
     def ufuncs(self):
@@ -481,7 +484,7 @@ class FnBase(NtuplesBase, LinearSpace):
         """
         NtuplesBase.__init__(self, size, dtype)
 
-        if not is_scalar_dtype(self.dtype):
+        if not is_numeric_dtype(self.dtype):
             raise TypeError('{!r} is not a scalar data type'.format(dtype))
 
         if is_real_dtype(self.dtype):

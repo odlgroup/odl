@@ -17,8 +17,8 @@ from odl.space.base_ntuples import (NtuplesBase, NtuplesBaseVector,
 from odl.space import FunctionSet, fn_impl, ntuples_impl
 from odl.set import RealNumbers, ComplexNumbers, LinearSpace
 from odl.util import (
-    arraynd_repr, arraynd_str,
-    is_real_floating_dtype, is_complex_floating_dtype, is_scalar_dtype)
+    array_str, indent,
+    is_real_floating_dtype, is_complex_floating_dtype, is_numeric_dtype)
 
 
 __all__ = ('DiscretizedSet', 'DiscretizedSetElement',
@@ -330,7 +330,7 @@ class DiscretizedSetElement(NtuplesBaseVector):
         self.ntuple.__setitem__(indices, input_data)
 
     def sampling(self, ufunc, **kwargs):
-        """Restrict a continuous function and assign to this element.
+        """Sample a continuous function and assign to this element.
 
         Parameters
         ----------
@@ -341,14 +341,14 @@ class DiscretizedSetElement(NtuplesBaseVector):
 
         Examples
         --------
-        >>> X = odl.uniform_discr(0, 1, 5)
-        >>> x = X.element()
+        >>> space = odl.uniform_discr(0, 1, 5)
+        >>> x = space.element()
 
         Assign x according to a continuous function:
 
         >>> x.sampling(lambda x: x)
-        >>> print(x)  # Print values at grid points (which are centered)
-        [0.1, 0.3, 0.5, 0.7, 0.9]
+        >>> x  # Print values at grid points (which are centered)
+        uniform_discr(0.0, 1.0, 5).element([ 0.1,  0.3,  0.5,  0.7,  0.9])
 
         See Also
         --------
@@ -391,12 +391,15 @@ class DiscretizedSetElement(NtuplesBaseVector):
 
     def __str__(self):
         """Return ``str(self)``."""
-        return arraynd_str(self.asarray())
+        return array_str(self)
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{!r}.element({})'.format(self.space,
-                                         arraynd_repr(self.asarray()))
+        if self.ndim == 1 and self.size <= 6:
+            return '{!r}.element({})'.format(self.space, array_str(self))
+        else:
+            return '{!r}.element(\n{}\n)'.format(self.space,
+                                                 indent(array_str(self)))
 
 
 class DiscretizedSpace(DiscretizedSet, FnBase):
@@ -577,7 +580,7 @@ def dspace_type(space, impl, dtype=None):
             raise TypeError('complex floating data type {!r} requires space '
                             'field to be of type ComplexNumbers, got {!r}'
                             ''.format(dtype, field_type))
-    elif is_scalar_dtype(dtype):
+    elif is_numeric_dtype(dtype):
         if field_type == ComplexNumbers:
             raise TypeError('non-floating data type {!r} requires space field '
                             'to be of type RealNumbers, got {!r}'
