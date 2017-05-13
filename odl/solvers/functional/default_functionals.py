@@ -1916,10 +1916,10 @@ class NuclearNorm(Functional):
 
         super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
 
-        self.outernorm = LpNorm(self.domain[0][0], exponent=outer_exp)
+        self.outernorm = LpNorm(self.domain[0, 0], exponent=outer_exp)
         self.pwisenorm = PointwiseNorm(self.domain[0],
                                        exponent=singular_vector_exp)
-        self.pshape = (self.domain.size, self.domain[0].size)
+        self.pshape = (len(self.domain), len(self.domain[0]))
 
     def _asarray(self, vec):
         """Convert ``x`` to an array.
@@ -1929,7 +1929,7 @@ class NuclearNorm(Functional):
 
         This is the inverse of `_asvector`.
         """
-        shape = self.domain[0][0].shape + self.pshape
+        shape = self.domain[0, 0].shape + self.pshape
         arr = np.empty(shape, dtype=self.domain.dtype)
         for i, xi in enumerate(vec):
             for j, xij in enumerate(xi):
@@ -1938,7 +1938,7 @@ class NuclearNorm(Functional):
         return arr
 
     def _asvector(self, arr):
-        """Convert ``vec`` to a `domain` element.
+        """Convert ``arr`` to a `domain` element.
 
         This is the inverse of `_asarray`.
         """

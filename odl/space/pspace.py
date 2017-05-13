@@ -216,34 +216,34 @@ class ProductSpace(LinearSpace):
             raise ValueError('`exponent` cannot be used together with '
                              'inner, norm or dist')
 
-        # Make a power space if the second argument is an integer
-        if (len(spaces) == 2 and
-                isinstance(spaces[0], LinearSpace) and
-                isinstance(spaces[1], Integral)):
+        # Make a power space if the second argument is an integer.
+        # For the case that the integer is 0, we already set the field here.
+        if len(spaces) == 2 and isinstance(spaces[1], Integral):
+            field = spaces[0].field
             spaces = [spaces[0]] * spaces[1]
 
         # Validate the space arguments
-        wrong_spaces = [spc for spc in spaces
-                        if not isinstance(spc, LinearSpace)]
-        if wrong_spaces:
-            raise TypeError('{!r} not LinearSpace instance(s)'
-                            ''.format(wrong_spaces))
-
+        if not all(isinstance(spc, LinearSpace) for spc in spaces):
+            raise TypeError(
+                'all arguments {} must be `LinearSpace` instances, or the '
+                'first argument must be `LinearSpace` and the second '
+                'integer; got {!r}'.format(spaces))
         if not all(spc.field == spaces[0].field for spc in spaces):
             raise ValueError('all spaces must have the same field')
 
         # Assign spaces and field
         self.__spaces = tuple(spaces)
-        self.__size = len(spaces)
-        if field is None:
-            if self.size == 0:
-                raise ValueError('no spaces provided, cannot deduce field')
-            else:
-                field = self.spaces[0].field
 
         # Cache for efficiency
         self.__is_power_space = all(spc == self.spaces[0]
                                     for spc in self.spaces[1:])
+
+        # Assing or infer field
+        if field is None:
+            if len(self) == 0:
+                raise ValueError('no spaces provided, cannot deduce field')
+            else:
+                field = self.spaces[0].field
 
         super().__init__(field)
 
@@ -278,20 +278,56 @@ class ProductSpace(LinearSpace):
         else:  # all None -> no weighing
             self.__weighting = ProductSpaceNoWeighting(exponent)
 
-    @property
-    def size(self):
-        """Number of factors."""
-        return self.__size
-
     def __len__(self):
-        """Return ``len(self)``."""
-        return self.size
+        """Return ``len(self)``.
+
+        This length is the number of spaces at the top level only,
+        and is equal to ``self.shape[0]``.
+        """
+        return len(self.spaces)
 
     @property
     def shape(self):
-        """Number of spaces per axis."""
-        # Currently supporting only 1d product spaces
-        return (self.size,)
+        """Total spaces per axis spaces, computed recursively.
+
+        The recursion ends at the fist level that does not comprise
+        a *power* space, i.e., which is not made of equal spaces.
+
+        Examples
+        --------
+        >>> r2, r3 = odl.rn(2), odl.rn(3)
+        >>> pspace = odl.ProductSpace(r2, r3)
+        >>> pspace.shape
+        (2,)
+        >>> pspace2 = odl.ProductSpace(pspace, 3)
+        >>> pspace2.shape
+        (3, 2)
+        """
+        if len(self) == 0:
+            return ()
+        elif self.is_power_space and isinstance(self.spaces[0], ProductSpace):
+            return (len(self),) + self.spaces[0].shape
+        else:
+            return (len(self),)
+
+    @property
+    def size(self):
+        """Total number of involved spaces, computed recursively.
+
+        The recursion ends at the fist level that does not comprise
+        a *power* space, i.e., which is not made of equal spaces.
+
+        Examples
+        --------
+        >>> r2, r3 = odl.rn(2), odl.rn(3)
+        >>> pspace = odl.ProductSpace(r2, r3)
+        >>> pspace.size
+        2
+        >>> pspace2 = odl.ProductSpace(pspace, 3)
+        >>> pspace2.size
+        6
+        """
+        return 0 if self.shape == () else int(np.prod(self.shape))
 
     @property
     def spaces(self):
@@ -377,8 +413,11 @@ class ProductSpace(LinearSpace):
         >>> x2 = r2.element([1, 2])
         >>> x3 = r3.element([1, 2, 3])
         >>> x = prod.element([x2, x3])
-        >>> print(x)
-        {[ 1.,  2.], [ 1.,  2.,  3.]}
+        >>> x
+        ProductSpace(rn(2), rn(3)).element([
+            [ 1.,  2.],
+            [ 1.,  2.,  3.]
+        ])
         """
         # If data is given as keyword arg, prefer it over arg list
         if inp is None:
@@ -626,22 +665,22 @@ class ProductSpace(LinearSpace):
 
     def __str__(self):
         """Return ``str(self)``."""
-        if self.size == 0:
+        if len(self) == 0:
             return '{}'
-        elif all(self.spaces[0] == space for space in self.spaces):
-            return '{' + str(self.spaces[0]) + '}^' + str(self.size)
+        elif self.is_power_space:
+            return '({}) ** {}'.format(self.spaces[0], len(self))
         else:
             return ' x '.join(str(space) for space in self.spaces)
 
     def __repr__(self):
         """Return ``repr(self)``."""
         weight_str = self.weighting.repr_part
-        if self.size == 0:
+        if len(self) == 0:
             posargs = []
             optargs = [('field', self.field, None)]
             oneline = True
         elif self.is_power_space:
-            posargs = [self.spaces[0], self.size]
+            posargs = [self.spaces[0], len(self)]
             optargs = []
             oneline = True
         else:
@@ -677,6 +716,8 @@ class ProductSpaceElement(LinearSpaceElement):
         """Initialize a new instance."""
         super().__init__(space)
         self.__parts = tuple(parts)
+        # Cache shape for efficiency
+        self.__shape = None
 
     @property
     def parts(self):
@@ -684,9 +725,79 @@ class ProductSpaceElement(LinearSpaceElement):
         return self.__parts
 
     @property
+    def shape(self):
+        """Number of values per axis in ``self``, computed recursively.
+
+        This is only valid if all product spaces are power spaces,
+        since otherwise the notion "number of values" is ambiguous.
+
+        Raises
+        ------
+        ValueError
+            If a `ProductSpace` is encountered that is not a power space.
+
+        See Also
+        --------
+        ProductSpace.shape
+
+        Examples
+        --------
+        >>> r4_3 = odl.ProductSpace(odl.rn(4), 3)
+        >>> x = r4_3.element()
+        >>> x.shape
+        (3, 4)
+        >>> r4_2_3 = odl.ProductSpace(r4_3, 2)
+        >>> y = r4_2_3.element()
+        >>> y.shape
+        (2, 3, 4)
+        """
+        if self.__shape is not None:
+            return self.__shape
+
+        if len(self) == 0:
+            self.__shape = ()
+        elif self.space.is_power_space:
+            self.__shape = (len(self),) + self[0].shape
+        else:
+            raise ValueError('{!r} is not a power space'
+                             ''.format(self.space))
+        return self.__shape
+
+    @property
+    def ndim(self):
+        """Number axes in ``self``, computed recursively.
+
+        Raises
+        ------
+        ValueError
+            If a `ProductSpace` is encountered that is not a power space.
+
+        See Also
+        --------
+        shape
+
+        Examples
+        --------
+        >>> r4_3 = odl.ProductSpace(odl.rn(4), 3)
+        >>> x = r4_3.element()
+        >>> x.ndim
+        2
+        >>> r4_2_3 = odl.ProductSpace(r4_3, 2)
+        >>> y = r4_2_3.element()
+        >>> y.ndim
+        3
+        """
+        return len(self.shape)
+
+    @property
     def size(self):
-        """Number of factors of this element's space."""
-        return self.space.size
+        """Total number of involved spaces, computed recursively.
+
+        See Also
+        --------
+        ProductSpace.size
+        """
+        return int(np.prod(self.shape))
 
     @property
     def dtype(self):
@@ -721,6 +832,44 @@ class ProductSpaceElement(LinearSpaceElement):
         elif isinstance(indices, list):
             out_parts = [self.parts[i] for i in indices]
             return self.space[indices].element(out_parts)
+        elif isinstance(indices, tuple):
+            if len(indices) == 0:
+                return ProductSpace().element()
+            elif len(indices) == 1:
+                # Tuple with a single entry - we just unpack and delegate
+                return self[indices[0]]
+            else:
+                # Tuple with multiple entries
+                if isinstance(indices[0], Integral):
+                    # In case the first entry is an integer, we drop the
+                    # axis and return directly from `parts`
+                    return self.parts[indices[0]][indices[1:]]
+                else:
+                    # indices[0] is a slice or list. We first retrieve the
+                    # parts indexed in this axis.
+                    # In any case we know that we want to keep this axis.
+                    if isinstance(indices[0], list):
+                        part = [self.parts[i] for i in indices[0]]
+                    else:
+                        part = self.parts[indices[0]]
+
+                    if (len(indices[1:]) == 1 and
+                            not all(isinstance(p, ProductSpaceElement)
+                                    for p in part)):
+                        # This case means we have "hit the bottom", i.e.,
+                        # there are non-ProductSpaces involved. In order
+                        # not to retrieve scalar values from these
+                        # elements, we use a slice of size 1.
+                        idx = indices[1]
+                        indexed = [p[idx:idx + 1] for p in part]
+                    else:
+                        # Here we're still in the "product space chain",
+                        # so we can use recursion to go on.
+                        indexed = [p[indices[1:]] for p in part]
+
+                    # Finally make a wrapping space for the indexed elements
+                    new_space = ProductSpace(*(p.space for p in indexed))
+                    return new_space.element(indexed)
         else:
             raise TypeError('bad index type {}'.format(type(indices)))
 
@@ -734,6 +883,21 @@ class ProductSpaceElement(LinearSpaceElement):
             indexed_parts = self.parts[indices]
         elif isinstance(indices, list):
             indexed_parts = tuple(self.parts[i] for i in indices)
+        elif isinstance(indices, tuple):
+            if len(indices) == 0:
+                return
+            else:
+                # We need to explicitly use __setitem__ here, otherwise
+                # __getitem__ is used and assigned to, which fails if
+                # a space like rn(3) is indexed at the very end.
+                part = self.parts[indices[0]]
+                if isinstance(part, LinearSpaceElement):
+                    part.__setitem__(indices[1:], values)
+                else:
+                    # part is a tuple
+                    for p in part:
+                        p.__setitem__(indices[1:], values)
+                return
         else:
             raise TypeError('bad index type {}'.format(type(indices)))
 
@@ -822,8 +986,7 @@ class ProductSpaceElement(LinearSpaceElement):
 
     def __str__(self):
         """Return ``str(self)``."""
-        inner_str = ', '.join(str(part) for part in self.parts)
-        return '{{{}}}'.format(inner_str)
+        return repr(self)
 
     def __repr__(self):
         """Return ``repr(self)``.
@@ -943,9 +1106,9 @@ class ProductSpaceElement(LinearSpaceElement):
 
         if indices is None:
             if len(self) < 5:
-                indices = list(range(self.size))
+                indices = list(range(len(self)))
             else:
-                indices = list(np.linspace(0, self.size - 1, 4, dtype=int))
+                indices = list(np.linspace(0, len(self) - 1, 4, dtype=int))
         else:
             if (isinstance(indices, tuple) or
                     (isinstance(indices, list) and
@@ -961,7 +1124,7 @@ class ProductSpaceElement(LinearSpaceElement):
                 indices = slice(None)
 
             if isinstance(indices, slice):
-                indices = list(range(*indices.indices(self.size)))
+                indices = list(range(*indices.indices(len(self))))
             elif isinstance(indices, Integral):
                 indices = [indices]
             else:

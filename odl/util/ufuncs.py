@@ -135,7 +135,7 @@ def wrap_ufunc_base(name, n_in, n_out, doc):
     else:
         raise NotImplementedError
 
-    wrapper.__name__ = name
+    wrapper.__name__ = wrapper.__qualname__ = name
     wrapper.__doc__ = doc
     return wrapper
 
@@ -172,7 +172,7 @@ def wrap_reduction_base(name, doc):
             out[:] = wrapped(self.elem, **kwargs)
             return out
 
-    wrapper.__name__ = name
+    wrapper.__name__ = wrapper.__qualname__ = name
     wrapper.__doc__ = doc
     return wrapper
 
@@ -248,7 +248,7 @@ def wrap_ufunc_numpy(name, n_in, n_out, doc):
     else:
         raise NotImplementedError
 
-    wrapper.__name__ = name
+    wrapper.__name__ = wrapper.__qualname__ = name
     wrapper.__doc__ = doc
     return wrapper
 
@@ -301,7 +301,7 @@ def wrap_reduction_numpy(name, doc):
             wrapped(self.elem, out=out.data, **kwargs)
             return out
 
-    wrapper.__name__ = name
+    wrapper.__name__ = wrapper.__qualname__ = name
     wrapper.__doc__ = doc
     return wrapper
 
@@ -379,7 +379,7 @@ def wrap_ufunc_discretelp(name, n_in, n_out, doc):
     else:
         raise NotImplementedError
 
-    wrapper.__name__ = name
+    wrapper.__name__ = wrapper.__qualname__ = name
     wrapper.__doc__ = doc
     return wrapper
 
@@ -391,7 +391,7 @@ def wrap_reduction_discretelp(name, doc):
         method = getattr(self.elem.tensor.ufuncs, name)
         return method()
 
-    wrapper.__name__ = name
+    wrapper.__name__ = wrapper.__qualname__ = name
     wrapper.__doc__ = doc
     return wrapper
 
@@ -475,7 +475,7 @@ def wrap_ufunc_productspace(name, n_in, n_out, doc):
     else:
         raise NotImplementedError
 
-    wrapper.__name__ = name
+    wrapper.__name__ = wrapper.__qualname__ = name
     wrapper.__doc__ = doc
     return wrapper
 
@@ -486,7 +486,7 @@ def wrap_reduction_productspace(name, doc):
         results = [getattr(x.ufuncs, name)() for x in self.elem]
         return getattr(np, name)(results)
 
-    wrapper.__name__ = name
+    wrapper.__name__ = wrapper.__qualname__ = name
     wrapper.__doc__ = doc
     return wrapper
 
