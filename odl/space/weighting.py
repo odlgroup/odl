@@ -21,7 +21,7 @@ import scipy.linalg as linalg
 from scipy.sparse.base import isspmatrix
 
 from odl.space.base_tensors import Tensor
-from odl.util import arraynd_repr, signature_string, indent_rows
+from odl.util import array_str, signature_string, indent
 
 
 __all__ = ('MatrixWeighting', 'ArrayWeighting', 'ConstWeighting',
@@ -423,7 +423,7 @@ class MatrixWeighting(Weighting):
         if scipy.sparse.isspmatrix(self.matrix):
             part = 'weighting={}'.format(self.matrix)
         else:
-            part = 'weighting={}'.format(arraynd_repr(self.matrix, nprint=10))
+            part = 'weighting={}'.format(array_str(self.matrix, nprint=10))
         if self.exponent != 2.0:
             part += ', exponent={}'.format(self.exponent)
         return part
@@ -559,20 +559,19 @@ class ArrayWeighting(Weighting):
     @property
     def repr_part(self):
         """String usable in a space's ``__repr__`` method."""
-        optargs = [('weighting', arraynd_repr(self.array, nprint=10), ''),
+        optargs = [('weighting', array_str(self.array, nprint=10), ''),
                    ('exponent', self.exponent, 2.0)]
         return signature_string([], optargs, sep=[',\n', ', ', ',\n'],
                                 mod=[[], ['!s', '']])
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        posargs = [arraynd_repr(self.array)]
+        posargs = [array_str(self.array)]
         optargs = [('exponent', self.exponent, 2.0)]
         inner_str = signature_string(posargs, optargs,
                                      sep=[', ', ', ', ',\n'],
                                      mod=['!s', ''])
-        return '{}(\n{}\n)'.format(self.__class__.__name__,
-                                   indent_rows(inner_str))
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
 
     __str__ = __repr__
 

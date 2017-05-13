@@ -27,8 +27,7 @@ from odl.space.base_tensors import TensorSpace
 from odl.space import FunctionSpace
 from odl.util import (
     is_valid_input_meshgrid, out_shape_from_array, out_shape_from_meshgrid,
-    writable_array, signature_string, indent_rows, dtype_repr,
-    is_numeric_dtype)
+    writable_array, signature_string, indent, dtype_repr, is_numeric_dtype)
 
 
 __all__ = ('FunctionSpaceMapping',
@@ -195,8 +194,8 @@ class PointCollocation(FunctionSpaceMapping):
         >>> func_elem = fspace.element(lambda x: x[0] - x[1])
         >>> coll_op(func_elem)
         rn((2, 3)).element(
-        [[-2.0, -3.0, -4.0],
-         [-1.0, -2.0, -3.0]]
+            [[-2., -3., -4.],
+             [-1., -2., -3.]]
         )
 
         We can use a Python function directly without creating a
@@ -204,8 +203,8 @@ class PointCollocation(FunctionSpaceMapping):
 
         >>> coll_op(lambda x: x[0] - x[1])
         rn((2, 3)).element(
-        [[-2.0, -3.0, -4.0],
-         [-1.0, -2.0, -3.0]]
+            [[-2., -3., -4.],
+             [-1., -2., -3.]]
         )
 
         Broadcasting and ``out`` parameters are supported:
@@ -216,8 +215,8 @@ class PointCollocation(FunctionSpaceMapping):
         True
         >>> out
         rn((2, 3)).element(
-        [[-2.0, -3.0, -4.0],
-         [-1.0, -2.0, -3.0]]
+            [[-2., -3., -4.],
+             [-1., -2., -3.]]
         )
 
         It is possible to use parametric functions and pass the parameters
@@ -227,13 +226,13 @@ class PointCollocation(FunctionSpaceMapping):
         ...     return x[0] - x[1] + c
         >>> coll_op(plus_c)  # uses default c = 0
         rn((2, 3)).element(
-        [[-2.0, -3.0, -4.0],
-         [-1.0, -2.0, -3.0]]
+            [[-2., -3., -4.],
+             [-1., -2., -3.]]
         )
         >>> coll_op(plus_c, c=2)
         rn((2, 3)).element(
-        [[0.0, -1.0, -2.0],
-         [1.0, 0.0, -1.0]]
+            [[ 0., -1., -2.],
+             [ 1.,  0., -1.]]
         )
 
         Notes
@@ -273,8 +272,7 @@ vectorization_guide.html
         inner_str = signature_string(posargs, [],
                                      sep=[',\n', ', ', ',\n'],
                                      mod=['!r', ''])
-        return '{}(\n{}\n)'.format(self.__class__.__name__,
-                                   indent_rows(inner_str))
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
 
 
 class NearestInterpolation(FunctionSpaceMapping):
@@ -410,8 +408,7 @@ class NearestInterpolation(FunctionSpaceMapping):
         inner_str = signature_string(posargs, optargs,
                                      sep=[',\n', ', ', ',\n'],
                                      mod=['!r', ''])
-        return '{}(\n{}\n)'.format(self.__class__.__name__,
-                                   indent_rows(inner_str))
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
 
 
 class LinearInterpolation(FunctionSpaceMapping):
@@ -464,8 +461,7 @@ class LinearInterpolation(FunctionSpaceMapping):
         inner_str = signature_string(posargs, [],
                                      sep=[',\n', ', ', ',\n'],
                                      mod=['!r', ''])
-        return '{}(\n{}\n)'.format(self.__class__.__name__,
-                                   indent_rows(inner_str))
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
 
 
 class PerAxisInterpolation(FunctionSpaceMapping):
@@ -610,8 +606,7 @@ class PerAxisInterpolation(FunctionSpaceMapping):
         inner_str = signature_string(posargs, optargs,
                                      sep=[',\n', ', ', ',\n'],
                                      mod=['!r', ''])
-        return '{}(\n{}\n)'.format(self.__class__.__name__,
-                                   indent_rows(inner_str))
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
 
 
 class _Interpolator(object):

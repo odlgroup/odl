@@ -20,7 +20,7 @@ from odl.space.base_tensors import TensorSpace, Tensor
 from odl.space.entry_points import TENSOR_SPACE_IMPLS
 from odl.set import RealNumbers, ComplexNumbers
 from odl.util import (
-    arraynd_repr, arraynd_str, indent_rows,
+    array_str, indent,
     is_real_floating_dtype, is_complex_floating_dtype, is_numeric_dtype)
 
 
@@ -374,7 +374,7 @@ class DiscretizedSpaceElement(Tensor):
         self.tensor.__setitem__(indices, input_data)
 
     def sampling(self, ufunc, **kwargs):
-        """Restrict a continuous function and assign to this element.
+        """Sample a continuous function and assign to this element.
 
         Parameters
         ----------
@@ -385,14 +385,14 @@ class DiscretizedSpaceElement(Tensor):
 
         Examples
         --------
-        >>> X = odl.uniform_discr(0, 1, 5)
-        >>> x = X.element()
+        >>> space = odl.uniform_discr(0, 1, 5)
+        >>> x = space.element()
 
         Assign x according to a continuous function:
 
         >>> x.sampling(lambda x: x)
-        >>> print(x)  # Print values at grid points (which are centered)
-        [0.1, 0.3, 0.5, 0.7, 0.9]
+        >>> x  # Print values at grid points (which are centered)
+        uniform_discr(0.0, 1.0, 5).element([ 0.1,  0.3,  0.5,  0.7,  0.9])
 
         See Also
         --------
@@ -443,16 +443,15 @@ class DiscretizedSpaceElement(Tensor):
 
     def __str__(self):
         """Return ``str(self)``."""
-        return arraynd_str(self.asarray())
+        return array_str(self)
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        inner_str = arraynd_repr(self.asarray())
+        inner_str = array_str(self)
         if self.space.ndim == 1:
             return '{!r}.element({})'.format(self.space, inner_str)
         else:
-            return '{!r}.element(\n{}\n)'.format(self.space,
-                                                 indent_rows(inner_str))
+            return '{!r}.element(\n{}\n)'.format(self.space, indent(inner_str))
 
 
 def dspace_type(space, impl, dtype=None):

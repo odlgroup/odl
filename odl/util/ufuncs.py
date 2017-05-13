@@ -145,6 +145,7 @@ def wrap_reduction_base(name, doc):
     wrapped = getattr(np, name)
 
     def wrapper(self, axis=None, out=None, keepdims=False, **kwargs):
+        """Reduction wrapper with the same signature as Numpy reductions."""
         # Avoid giving arrays explicitly through kwargs
         kwargs.pop('a', None)
         kwargs.pop('b', None)
@@ -328,8 +329,7 @@ for name, doc in REDUCTIONS:
 
 
 # For DiscreteLP, basically the ufunc mechanism can be propagated from its
-# `tensor` attribute. Sometimes, reshaping is required.
-# TODO: update this!
+# `tensor` attribute.
 def wrap_ufunc_discretelp(name, n_in, n_out, doc):
     """Return ufunc wrapper for `DiscreteLpUfuncs`."""
     if n_in == 1:

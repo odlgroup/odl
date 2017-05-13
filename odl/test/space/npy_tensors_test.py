@@ -30,7 +30,7 @@ from odl.util.ufuncs import UFUNCS, REDUCTIONS
 
 # --- Test helpers --- #
 
-PYTHON2 = sys.version_info < (3, 0)
+PYTHON2 = sys.version_info.major < 3
 
 
 # Helpers to generate data
@@ -140,10 +140,10 @@ def test_init_tspace_weighting(weight, exponent):
 
     # Errors for bad input
     with pytest.raises(ValueError):
-        odl.tensor_space((3, 4), weighting=np.ones([2, 4]))  # bad size
+        odl.tensor_space((3, 4), weighting=np.ones((2, 4)))  # bad size
 
     with pytest.raises(ValueError):
-        odl.tensor_space((3, 4), weighting=1j * np.ones([2, 4]))  # bad dtype
+        odl.tensor_space((3, 4), weighting=1j * np.ones((3, 4)))  # bad dtype
 
     with pytest.raises(TypeError):
         odl.tensor_space((3, 4), weighting=1j)  # raised by float() conversion
@@ -158,8 +158,8 @@ def test_properties():
     assert x.dtype == space.dtype == np.dtype(complex)
     assert x.size == space.size == 12
     assert x.shape == space.shape == (3, 4)
-    assert x.itemsize == space.dtype.itemsize
-    assert x.nbytes == space.nbytes
+    assert x.itemsize == 16
+    assert x.nbytes == 16 * 3 * 4
 
 
 def test_equals_space(exponent):
@@ -715,7 +715,6 @@ def test_conversion_to_scalar():
     assert float(element) == float(value)
     assert complex(element) == complex(value)
     if PYTHON2:
-        long = eval('long')
         assert long(element) == long(value)
 
     # Size 1 complex space
@@ -755,6 +754,8 @@ def test_numpy_array_interface():
     assert np.array_equal(x_arr, np.ones(x.shape))
     x_as_arr = np.asarray(x)
     assert np.array_equal(x_as_arr, np.ones(x.shape))
+    x_as_any_arr = np.asanyarray(x)
+    assert np.array_equal(x_as_any_arr, np.ones(x.shape))
 
 
 def test_array_wrap_method():

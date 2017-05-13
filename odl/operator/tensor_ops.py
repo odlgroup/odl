@@ -24,7 +24,7 @@ from odl.space import ProductSpace, tensor_space
 from odl.space.base_tensors import TensorSpace
 from odl.space.weighting import ArrayWeighting
 from odl.util import (
-    signature_string, indent_rows, dtype_repr, moveaxis, writable_array)
+    signature_string, indent, dtype_repr, moveaxis, writable_array)
 
 
 __all__ = ('PointwiseNorm', 'PointwiseInner', 'PointwiseSum', 'MatrixOperator',
@@ -155,7 +155,7 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
         >>> x = vfspace.element([[[1, -4]],
         ...                      [[0, 3]]])
         >>> print(pw_norm(x))
-        [[1.0, 5.0]]
+        [[ 1.,  5.]]
 
         We can change the exponent either in the vector field space
         or in the operator directly:
@@ -163,11 +163,11 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
         >>> vfspace = odl.ProductSpace(spc, 2, exponent=1)
         >>> pw_norm = PointwiseNorm(vfspace)
         >>> print(pw_norm(x))
-        [[1.0, 7.0]]
+        [[ 1.,  7.]]
         >>> vfspace = odl.ProductSpace(spc, 2)
         >>> pw_norm = PointwiseNorm(vfspace, exponent=1)
         >>> print(pw_norm(x))
-        [[1.0, 7.0]]
+        [[ 1.,  7.]]
         """
         if not isinstance(vfspace, ProductSpace):
             raise TypeError('`vfspace` {!r} is not a ProductSpace '
@@ -498,7 +498,7 @@ class PointwiseInner(PointwiseInnerBase):
         >>> x = vfspace.element([[[1, -4]],
         ...                      [[0, 3]]])
         >>> print(pw_inner(x))
-        [[0.0, -7.0]]
+        [[ 0., -7.]]
         """
         super().__init__(adjoint=False, vfspace=vfspace, vecfield=vecfield,
                          weighting=weighting)
@@ -683,7 +683,7 @@ class PointwiseSum(PointwiseInner):
         >>> x = vfspace.element([[[1, -4]],
         ...                      [[0, 3]]])
         >>> print(pw_sum(x))
-        [[1.0, -1.0]]
+        [[ 1., -1.]]
         """
         if not isinstance(vfspace, ProductSpace):
             raise TypeError('`vfspace` {!r} is not a ProductSpace '
@@ -739,7 +739,7 @@ class MatrixOperator(Operator):
         >>> op.range
         rn(3)
         >>> op([1, 2, 3, 4])
-        rn(3).element([10.0, 10.0, 10.0])
+        rn(3).element([ 10.,  10.,  10.])
 
         For multi-dimensional arrays (tensors), the summation
         (contraction) can be performed along a specific axis. In
@@ -761,7 +761,7 @@ class MatrixOperator(Operator):
         >>> space = odl.uniform_discr(0, 1, 4)
         >>> op = MatrixOperator(m, domain=space)
         >>> op(space.one())
-        rn(3, weighting=0.25).element([4.0, 4.0, 4.0])
+        rn(3, weighting=0.25).element([ 4.,  4.,  4.])
 
         Notes
         -----
@@ -936,8 +936,7 @@ class MatrixOperator(Operator):
 
         inner_str = signature_string(posargs, optargs, sep=[', ', ', ', ',\n'],
                                      mod=[['!s'], ['!r', '!r', '']])
-        return '{}(\n{}\n)'.format(self.__class__.__name__,
-                                   indent_rows(inner_str))
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -1029,10 +1028,10 @@ class SamplingOperator(Operator):
         >>> op = odl.SamplingOperator(space, sampling_points=1)
         >>> x = space.element([1, 2, 3, 4])
         >>> op(x)
-        rn(1).element([2.0])
+        rn(1).element([ 2.])
         >>> op = odl.SamplingOperator(space, sampling_points=[1, 2, 1])
         >>> op(x)
-        rn(3).element([2.0, 3.0, 2.0])
+        rn(3).element([ 2.,  3.,  2.])
 
         There are two variants ``'point_eval'`` (default) and
         ``'integrate'``, where the latter scales values by the cell
@@ -1043,7 +1042,7 @@ class SamplingOperator(Operator):
         >>> space.cell_volume  # the scaling constant
         0.25
         >>> op(x)
-        rn(3).element([0.5, 0.75, 0.5])
+        rn(3).element([ 0.5 ,  0.75,  0.5 ])
 
         In higher dimensions, a sequence of index array-likes must be
         given, or a single sequence for a single point:
@@ -1054,12 +1053,12 @@ class SamplingOperator(Operator):
         >>> x = space.element([[1, 2, 3],
         ...                    [4, 5, 6]])
         >>> op(x)
-        rn(1).element([3.0])
+        rn(1).element([ 3.])
         >>> sampling_points = [[0, 1],  # indices (0, 2) and (1, 1)
         ...                    [2, 1]]
         >>> op = odl.SamplingOperator(space, sampling_points)
         >>> op(x)
-        rn(2).element([3.0, 5.0])
+        rn(2).element([ 3.,  5.])
         """
         if not isinstance(domain, TensorSpace):
             raise TypeError('`domain` must be a `TensorSpace` instance, got '
@@ -1133,8 +1132,8 @@ class SamplingOperator(Operator):
         >>> # weight at (0, 0) since it occurs twice
         >>> op.adjoint(op.range.one())
         uniform_discr([-1.0, -1.0], [1.0, 1.0], (2, 3)).element(
-            [[2.0, 0.0, 0.0],
-             [0.0, 1.0, 1.0]]
+            [[ 2.,  0.,  0.],
+             [ 0.,  1.,  1.]]
         )
         >>> op.adjoint(op(x)).inner(x) - op(x).inner(op(x)) < 1e-10
         True
@@ -1155,8 +1154,7 @@ class SamplingOperator(Operator):
         optargs = [('variant', self.variant, 'point_eval')]
         sig_str = signature_string(posargs, optargs, mod=['!r', ''],
                                    sep=[',\n', '', ',\n'])
-        return '{}(\n{}\n)'.format(self.__class__.__name__,
-                                   indent_rows(sig_str))
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(sig_str))
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -1214,7 +1212,7 @@ class WeightedSumSamplingOperator(Operator):
         >>> x = op.domain.element([1])
         >>> # Put value 1 at index 1
         >>> op(x)
-        uniform_discr(0.0, 1.0, 4).element([0.0, 1.0, 0.0, 0.0])
+        uniform_discr(0.0, 1.0, 4).element([ 0.,  1.,  0.,  0.])
         >>> op = odl.WeightedSumSamplingOperator(space,
         ...                                      sampling_points=[1, 2, 1])
         >>> op.domain
@@ -1222,7 +1220,7 @@ class WeightedSumSamplingOperator(Operator):
         >>> x = op.domain.element([1, 0.5, 0.25])
         >>> # Index 1 occurs twice and gets two contributions (1 and 0.25)
         >>> op(x)
-        uniform_discr(0.0, 1.0, 4).element([0.0, 1.25, 0.5, 0.0])
+        uniform_discr(0.0, 1.0, 4).element([ 0.  ,  1.25,  0.5 ,  0.  ])
 
         The ``'dirac'`` variant scales the values by the reciprocal
         cell volume of the operator range:
@@ -1233,7 +1231,7 @@ class WeightedSumSamplingOperator(Operator):
         >>> 1 / op.range.cell_volume  # the scaling constant
         4.0
         >>> op(x)
-        uniform_discr(0.0, 1.0, 4).element([0.0, 5.0, 2.0, 0.0])
+        uniform_discr(0.0, 1.0, 4).element([ 0.,  5.,  2.,  0.])
 
         In higher dimensions, a sequence of index array-likes must be
         given, or a single sequence for a single point:
@@ -1246,8 +1244,8 @@ class WeightedSumSamplingOperator(Operator):
         >>> # Insert the value 1 at index (0, 2)
         >>> op(x)
         uniform_discr([0.0, 0.0], [1.0, 1.0], (2, 3)).element(
-            [[0.0, 0.0, 1.0],
-             [0.0, 0.0, 0.0]]
+            [[ 0.,  0.,  1.],
+             [ 0.,  0.,  0.]]
         )
         >>> sampling_points = [[0, 1],  # indices (0, 2) and (1, 1)
         ...                    [2, 1]]
@@ -1255,8 +1253,8 @@ class WeightedSumSamplingOperator(Operator):
         >>> x = op.domain.element([1, 2])
         >>> op(x)
         uniform_discr([0.0, 0.0], [1.0, 1.0], (2, 3)).element(
-            [[0.0, 0.0, 1.0],
-             [0.0, 2.0, 0.0]]
+            [[ 0.,  0.,  1.],
+             [ 0.,  2.,  0.]]
         )
         """
         if not isinstance(range, TensorSpace):
@@ -1328,7 +1326,7 @@ class WeightedSumSamplingOperator(Operator):
         >>> y = op.range.element([[1, 2, 3],
         ...                       [4, 5, 6]])
         >>> op.adjoint(y)
-        rn(4).element([1.0, 5.0, 6.0, 1.0])
+        rn(4).element([ 1.,  5.,  6.,  1.])
         >>> x = op.domain.element([1, 2, 3, 4])
         >>> op.adjoint(op(x)).inner(x) - op(x).inner(op(x)) < 1e-10
         True
@@ -1353,8 +1351,7 @@ class WeightedSumSamplingOperator(Operator):
         optargs = [('variant', self.variant, 'char_fun')]
         sig_str = signature_string(posargs, optargs, mod=['!r', ''],
                                    sep=[',\n', '', ',\n'])
-        return '{}(\n{}\n)'.format(self.__class__.__name__,
-                                   indent_rows(sig_str))
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(sig_str))
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -1395,10 +1392,10 @@ class FlatteningOperator(Operator):
         >>> x = space.element([[1, 2, 3],
         ...                    [4, 5, 6]])
         >>> op(x)
-        rn(6).element([1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
+        rn(6).element([ 1.,  2.,  3.,  4.,  5.,  6.])
         >>> op = odl.FlatteningOperator(space, order='F')
         >>> op(x)
-        rn(6).element([1.0, 4.0, 2.0, 5.0, 3.0, 6.0])
+        rn(6).element([ 1.,  4.,  2.,  5.,  3.,  6.])
         """
         if not isinstance(domain, TensorSpace):
             raise TypeError('`domain` must be a `TensorSpace` instance, got '
@@ -1436,8 +1433,8 @@ class FlatteningOperator(Operator):
         2.0
         >>> op.adjoint(y)
         uniform_discr([-1.0, -1.0], [1.0, 1.0], (2, 4)).element(
-            [[2.0, 4.0, 6.0, 8.0],
-             [10.0, 12.0, 14.0, 16.0]]
+            [[  2.,   4.,   6.,   8.],
+             [ 10.,  12.,  14.,  16.]]
         )
         >>> x = space.element([[1, 2, 3, 4],
         ...                    [5, 6, 7, 8]])
@@ -1458,14 +1455,14 @@ class FlatteningOperator(Operator):
         >>> y = op.range.element([1, 2, 3, 4, 5, 6, 7, 8])
         >>> op.inverse(y)
         uniform_discr([-1.0, -1.0], [1.0, 1.0], (2, 4)).element(
-            [[1.0, 2.0, 3.0, 4.0],
-             [5.0, 6.0, 7.0, 8.0]]
+            [[ 1.,  2.,  3.,  4.],
+             [ 5.,  6.,  7.,  8.]]
         )
         >>> op = odl.FlatteningOperator(space, order='F')
         >>> op.inverse(y)
         uniform_discr([-1.0, -1.0], [1.0, 1.0], (2, 4)).element(
-            [[1.0, 3.0, 5.0, 7.0],
-             [2.0, 4.0, 6.0, 8.0]]
+            [[ 1.,  3.,  5.,  7.],
+             [ 2.,  4.,  6.,  8.]]
         )
         >>> op(op.inverse(y)) == y
         True
@@ -1515,8 +1512,7 @@ class FlatteningOperator(Operator):
         optargs = [('order', self.order, self.domain.order)]
         sig_str = signature_string(posargs, optargs, mod=['!r', ''],
                                    sep=['', '', ',\n'])
-        return '{}(\n{}\n)'.format(self.__class__.__name__,
-                                   indent_rows(sig_str))
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(sig_str))
 
     def __str__(self):
         """Return ``str(self)``."""

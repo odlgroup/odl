@@ -21,7 +21,7 @@ from odl.set.space import LinearSpace, LinearSpaceElement
 from odl.util import (
     is_numeric_dtype, is_real_dtype,
     is_real_floating_dtype, is_complex_floating_dtype, safe_int_conv,
-    arraynd_repr, arraynd_str, dtype_str, signature_string, indent_rows)
+    array_str, dtype_str, signature_string, indent)
 from odl.util.ufuncs import TensorSpaceUfuncs
 from odl.util.utility import TYPE_MAP_R2C, TYPE_MAP_C2R
 
@@ -695,14 +695,14 @@ class Tensor(LinearSpaceElement):
     def __repr__(self):
         """Return ``repr(self)``."""
         if self.ndim == 1:
-            inner_str = arraynd_repr(self)
+            inner_str = array_str(self)
         else:
-            inner_str = '\n' + indent_rows(arraynd_repr(self)) + '\n'
+            inner_str = '\n' + indent(array_str(self)) + '\n'
         return '{!r}.element({})'.format(self.space, inner_str)
 
     def __str__(self):
         """Return ``str(self)``."""
-        return arraynd_str(self)
+        return array_str(self)
 
     @property
     def ufuncs(self):

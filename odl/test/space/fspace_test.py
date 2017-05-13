@@ -965,53 +965,65 @@ def test_fspace_one(out_shape):
 
 
 def test_fspace_lincomb_scalar(a, b):
-    """Check linear combination in function spaces."""
+    """Check linear combination in function spaces.
+
+    Note: Special cases and more alignment options are tested later in the
+    special methods like ``__add__``.
+    """
     intv = odl.IntervalProd([0, 0], [1, 1])
     fspace = FunctionSpace(intv)
     points = _points(fspace.domain, 4)
     true_result = a * func_nd_oop(points) + b * func_nd_bcast_ref(points)
 
-    # Note: Special cases and alignment are tested later in the special methods
-
-    # Non-vectorized
+    # Non-vectorized evaluation, checking with `out` array and without.
     f_elem1_novec = fspace.element(func_nd_oop, vectorized=False)
     f_elem2_novec = fspace.element(func_nd_bcast_oop, vectorized=False)
     out_novec = fspace.element(vectorized=False)
     fspace.lincomb(a, f_elem1_novec, b, f_elem2_novec, out_novec)
+
     assert all_equal(out_novec(points), true_result)
     out_arr = np.empty(4)
     out_novec(points, out=out_arr)
     assert all_equal(out_arr, true_result)
 
-    # Vectorized
+    # Vectorized evaluation with definition from out-of-place (oop),
+    # in-place (ip) and dual-use (dual) versions of Python functions.
+    # Checking evaluation with `out` array and without.
+
+    # out-of-place
     f_elem1_oop = fspace.element(func_nd_oop)
     f_elem2_oop = fspace.element(func_nd_bcast_oop)
     out_oop = fspace.element()
     fspace.lincomb(a, f_elem1_oop, b, f_elem2_oop, out_oop)
+
     assert all_equal(out_oop(points), true_result)
     out_arr = np.empty(4)
     out_oop(points, out=out_arr)
     assert all_equal(out_arr, true_result)
 
+    # in-place
     f_elem1_ip = fspace.element(func_nd_ip)
     f_elem2_ip = fspace.element(func_nd_bcast_ip)
     out_ip = fspace.element()
     fspace.lincomb(a, f_elem1_ip, b, f_elem2_ip, out_ip)
+
     assert all_equal(out_ip(points), true_result)
     out_arr = np.empty(4)
     out_ip(points, out=out_arr)
     assert all_equal(out_arr, true_result)
 
+    # dual
     f_elem1_dual = fspace.element(func_nd_dual)
     f_elem2_dual = fspace.element(func_nd_bcast_dual)
     out_dual = fspace.element()
     fspace.lincomb(a, f_elem1_dual, b, f_elem2_dual, out_dual)
+
     assert all_equal(out_dual(points), true_result)
     out_arr = np.empty(4)
     out_dual(points, out=out_arr)
     assert all_equal(out_arr, true_result)
 
-    # Mix vectorized and non-vectorized
+    # Check mixing vectorized and non-vectorized functions
     out = fspace.element()
     fspace.lincomb(a, f_elem1_oop, b, f_elem2_novec, out)
     assert all_equal(out(points), true_result)
@@ -1047,7 +1059,7 @@ def test_fspace_lincomb_scalar(a, b):
 
 def test_fspace_lincomb_vec_tens(a, b, out_shape):
     """Check linear combination in function spaces."""
-    if not out_shape:
+    if out_shape == ():
         return
 
     intv = odl.IntervalProd([0, 0], [1, 1])

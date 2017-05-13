@@ -154,7 +154,7 @@ class LinDeformFixedTempl(Operator):
         >>> op = LinDeformFixedTempl(template)
         >>> disp_field = [[0, 0, 0, -0.2, 0]]
         >>> print(op(disp_field))
-        [0.0, 0.0, 1.0, 1.0, 0.0]
+        [ 0.,  0.,  1.,  1.,  0.]
 
         The result depends on the chosen interpolation. With 'linear'
         interpolation and an offset equal to half the distance between two
@@ -165,7 +165,7 @@ class LinDeformFixedTempl(Operator):
         >>> op = LinDeformFixedTempl(template)
         >>> disp_field = [[0, 0, 0, -0.1, 0]]
         >>> print(op(disp_field))
-        [0.0, 0.0, 1.0, 0.5, 0.0]
+        [ 0. ,  0. ,  1. ,  0.5,  0. ]
         """
         space = getattr(template, 'space', None)
         if not isinstance(space, DiscreteLp):
@@ -307,7 +307,7 @@ class LinDeformFixedDisp(Operator):
         >>> op = LinDeformFixedDisp(disp_field)
         >>> template = [0, 0, 1, 0, 0]
         >>> print(op([0, 0, 1, 0, 0]))
-        [0.0, 0.0, 1.0, 1.0, 0.0]
+        [ 0.,  0.,  1.,  1.,  0.]
 
         The result depends on the chosen interpolation. With 'linear'
         interpolation and an offset equal to half the distance between two
@@ -318,7 +318,7 @@ class LinDeformFixedDisp(Operator):
         >>> op = LinDeformFixedDisp(disp_field)
         >>> template = [0, 0, 1, 0, 0]
         >>> print(op(template))
-        [0.0, 0.0, 1.0, 0.5, 0.0]
+        [ 0. ,  0. ,  1. ,  0.5,  0. ]
         """
         space = getattr(displacement, 'space', None)
         if not isinstance(space, ProductSpace):

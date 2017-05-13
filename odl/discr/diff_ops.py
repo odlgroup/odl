@@ -101,10 +101,11 @@ class PartialDerivative(PointwiseTensorFieldOperator):
         ...               [ 0.,  2.,  4.,  6.,  8.]])
         >>> discr = odl.uniform_discr([0, 0], [2, 1], f.shape)
         >>> par_deriv = PartialDerivative(discr, axis=0, pad_mode='order1')
-        >>> par_div_f = par_deriv(f)
-        >>> print(par_div_f)
-        [[0.0, 1.0, 2.0, 3.0, 4.0],
-         [0.0, 1.0, 2.0, 3.0, 4.0]]
+        >>> par_deriv(f)
+        uniform_discr([0.0, 0.0], [2.0, 1.0], (2, 5)).element(
+            [[ 0.,  1.,  2.,  3.,  4.],
+             [ 0.,  1.,  2.,  3.,  4.]]
+        )
         """
         if not isinstance(space, DiscreteLp):
             raise TypeError('`space` {!r} is not a DiscreteLp instance'
@@ -253,20 +254,26 @@ class Gradient(PointwiseTensorFieldOperator):
         >>> f = discr.element(data)
         >>> grad = Gradient(discr)
         >>> grad_f = grad(f)
-        >>> print(grad_f[0])
-        [[0.0, 1.0, 2.0, 3.0, 4.0],
-         [0.0, -2.0, -4.0, -6.0, -8.0]]
-        >>> print(grad_f[1])
-        [[1.0, 1.0, 1.0, 1.0, -4.0],
-         [2.0, 2.0, 2.0, 2.0, -8.0]]
+        >>> grad_f[0]
+        uniform_discr([0.0, 0.0], [2.0, 5.0], (2, 5)).element(
+            [[ 0.,  1.,  2.,  3.,  4.],
+             [ 0., -2., -4., -6., -8.]]
+        )
+        >>> grad_f[1]
+        uniform_discr([0.0, 0.0], [2.0, 5.0], (2, 5)).element(
+            [[ 1.,  1.,  1.,  1., -4.],
+             [ 2.,  2.,  2.,  2., -8.]]
+        )
 
         Verify adjoint:
 
         >>> g = grad.range.element((data, data ** 2))
         >>> adj_g = grad.adjoint(g)
-        >>> print(adj_g)
-        [[-0.0, -2.0, -5.0, -8.0, -11.0],
-         [-0.0, -5.0, -14.0, -23.0, -32.0]]
+        >>> adj_g
+        uniform_discr([0.0, 0.0], [2.0, 5.0], (2, 5)).element(
+            [[ -0.,  -2.,  -5.,  -8., -11.],
+             [ -0.,  -5., -14., -23., -32.]]
+        )
         >>> g.inner(grad_f) / f.inner(adj_g)
         1.0
         """
@@ -440,9 +447,9 @@ class Divergence(PointwiseTensorFieldOperator):
         >>> f = div.domain.element([data, data])
         >>> div_f = div(f)
         >>> print(div_f)
-        [[2.0, 2.0, 2.0, 2.0, -3.0],
-         [2.0, 2.0, 2.0, 2.0, -4.0],
-         [-1.0, -2.0, -3.0, -4.0, -12.0]]
+        [[  2.,   2.,   2.,   2.,  -3.],
+         [  2.,   2.,   2.,   2.,  -4.],
+         [ -1.,  -2.,  -3.,  -4., -12.]]
 
         Verify adjoint:
 
@@ -593,10 +600,12 @@ class Laplacian(PointwiseTensorFieldOperator):
         >>> space = odl.uniform_discr([0, 0], [3, 3], [3, 3])
         >>> f = space.element(data)
         >>> lap = Laplacian(space)
-        >>> print(lap(f))
-        [[0.0, 1.0, 0.0],
-         [1.0, -4.0, 1.0],
-         [0.0, 1.0, 0.0]]
+        >>> lap(f)
+        uniform_discr([0.0, 0.0], [3.0, 3.0], (3, 3)).element(
+            [[ 0.,  1.,  0.],
+             [ 1., -4.,  1.],
+             [ 0.,  1.,  0.]]
+        )
         """
         if not isinstance(space, DiscreteLp):
             raise TypeError('`space` {!r} is not a DiscreteLp instance'

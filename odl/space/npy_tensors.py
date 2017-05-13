@@ -350,7 +350,7 @@ class NumpyTensorSpace(TensorSpace):
         rn(3)
         >>> x = space.element([1, 2, 3])
         >>> x
-        rn(3).element([1.0, 2.0, 3.0])
+        rn(3).element([ 1.,  2.,  3.])
 
         If the input already is a `numpy.ndarray` of correct `dtype`, it
         will merely be wrapped, i.e., both array and space element access
@@ -360,7 +360,7 @@ class NumpyTensorSpace(TensorSpace):
         >>> elem = odl.rn(3).element(arr)
         >>> elem[0] = 0
         >>> elem
-        rn(3).element([0.0, 2.0, 3.0])
+        rn(3).element([ 0.,  2.,  3.])
         >>> arr
         array([ 0.,  2.,  3.])
 
@@ -422,7 +422,7 @@ class NumpyTensorSpace(TensorSpace):
         >>> space = odl.rn(3)
         >>> x = space.zero()
         >>> x
-        rn(3).element([0.0, 0.0, 0.0])
+        rn(3).element([ 0.,  0.,  0.])
         """
         return self.element(np.zeros(self.shape, dtype=self.dtype,
                                      order=self.default_order))
@@ -435,7 +435,7 @@ class NumpyTensorSpace(TensorSpace):
         >>> space = odl.rn(3)
         >>> x = space.one()
         >>> x
-        rn(3).element([1.0, 1.0, 1.0])
+        rn(3).element([ 1.,  1.,  1.])
         """
         return self.element(np.ones(self.shape, dtype=self.dtype,
                                     order=self.default_order))
@@ -512,7 +512,7 @@ class NumpyTensorSpace(TensorSpace):
         >>> out = space.element()
         >>> result = space.lincomb(1, x, 2, y, out)
         >>> result
-        rn(3).element([0.0, 1.0, 3.0])
+        rn(3).element([ 0.,  1.,  3.])
         >>> result is out
         True
         """
@@ -651,11 +651,11 @@ class NumpyTensorSpace(TensorSpace):
         >>> x = space.element([1, 0, 3])
         >>> y = space.element([-1, 1, -1])
         >>> space.multiply(x, y)
-        rn(3).element([-1.0, 0.0, -3.0])
+        rn(3).element([-1.,  0., -3.])
         >>> out = space.element()
         >>> result = space.multiply(x, y, out=out)
         >>> result
-        rn(3).element([-1.0, 0.0, -3.0])
+        rn(3).element([-1.,  0., -3.])
         >>> result is out
         True
         """
@@ -680,11 +680,11 @@ class NumpyTensorSpace(TensorSpace):
         >>> x = space.element([2, 0, 4])
         >>> y = space.element([1, 1, 2])
         >>> space.divide(x, y)
-        rn(3).element([2.0, 0.0, 2.0])
+        rn(3).element([ 2.,  0.,  2.])
         >>> out = space.element()
         >>> result = space.divide(x, y, out=out)
         >>> result
-        rn(3).element([2.0, 0.0, 2.0])
+        rn(3).element([ 2.,  0.,  2.])
         >>> result is out
         True
         """
@@ -1078,7 +1078,7 @@ class NumpyTensor(Tensor):
         >>> x[0]
         1.0
         >>> x[1:]
-        rn(2).element([2.0, 3.0])
+        rn(2).element([ 2.,  3.])
 
         In higher dimensions, the i-th index expression accesses the
         i-th axis:
@@ -1090,8 +1090,8 @@ class NumpyTensor(Tensor):
         2.0
         >>> x[:, 1:]
         rn((2, 2)).element(
-            [[2.0, 3.0],
-             [5.0, 6.0]]
+            [[ 2.,  3.],
+             [ 5.,  6.]]
         )
 
         Slices can be assigned to, except if lists are used for
@@ -1101,17 +1101,17 @@ class NumpyTensor(Tensor):
         >>> y[:] = -9
         >>> x
         rn((2, 3)).element(
-            [[-9.0, 2.0, -9.0],
-             [-9.0, 5.0, -9.0]]
+            [[-9.,  2., -9.],
+             [-9.,  5., -9.]]
         )
         >>> y = x[[[0, 1], [1, 2]]]  # not a view, won't modify x
         >>> y
-        rn(2).element([2.0, -9.0])
+        rn(2).element([ 2., -9.])
         >>> y[:] = 0
         >>> x
         rn((2, 3)).element(
-            [[-9.0, 2.0, -9.0],
-             [-9.0, 5.0, -9.0]]
+            [[-9.,  2., -9.],
+             [-9.,  5., -9.]]
         )
         """
         arr = self.data[indices]
@@ -1160,7 +1160,7 @@ class NumpyTensor(Tensor):
         >>> x[0] = -1
         >>> x[1:] = (0, 1)
         >>> x
-        rn(3).element([-1.0, 0.0, 1.0])
+        rn(3).element([-1.,  0.,  1.])
 
         It is also possible to use tensors of other spaces for
         casting and assignment:
@@ -1171,8 +1171,8 @@ class NumpyTensor(Tensor):
         >>> x[0, 1] = -1
         >>> x
         rn((2, 3)).element(
-            [[1.0, -1.0, 3.0],
-             [4.0, 5.0, 6.0]]
+            [[ 1., -1.,  3.],
+             [ 4.,  5.,  6.]]
         )
         >>> short_space = odl.tensor_space((2, 2), dtype='short')
         >>> y = short_space.element([[-1, 2],
@@ -1180,8 +1180,8 @@ class NumpyTensor(Tensor):
         >>> x[:, :2] = y
         >>> x
         rn((2, 3)).element(
-            [[-1.0, 2.0, 3.0],
-             [0.0, 0.0, 6.0]]
+            [[-1.,  2.,  3.],
+             [ 0.,  0.,  6.]]
         )
 
         The Numpy assignment and broadcasting rules apply:
@@ -1190,20 +1190,20 @@ class NumpyTensor(Tensor):
         ...                  [1, 1, 1]])
         >>> x
         rn((2, 3)).element(
-            [[0.0, 0.0, 0.0],
-             [1.0, 1.0, 1.0]]
+            [[ 0.,  0.,  0.],
+             [ 1.,  1.,  1.]]
         )
         >>> x[:, 1:] = [7, 8]
         >>> x
         rn((2, 3)).element(
-            [[0.0, 7.0, 8.0],
-             [1.0, 7.0, 8.0]]
+            [[ 0.,  7.,  8.],
+             [ 1.,  7.,  8.]]
         )
         >>> x[:, ::2] = -2.
         >>> x
         rn((2, 3)).element(
-            [[-2.0, 7.0, -2.0],
-             [-2.0, 7.0, -2.0]]
+            [[-2.,  7., -2.],
+             [-2.,  7., -2.]]
         )
         """
         if isinstance(values, NumpyTensor):
@@ -1226,7 +1226,7 @@ class NumpyTensor(Tensor):
         >>> space = odl.cn(3)
         >>> x = space.element([1 + 1j, 2, 3 - 3j])
         >>> x.real
-        rn(3).element([1.0, 2.0, 3.0])
+        rn(3).element([ 1.,  2.,  3.])
         """
         if self.space.is_real_space:
             return self
@@ -1284,7 +1284,7 @@ class NumpyTensor(Tensor):
         >>> space = odl.cn(3)
         >>> x = space.element([1 + 1j, 2, 3 - 3j])
         >>> x.imag
-        rn(3).element([1.0, 0.0, -3.0])
+        rn(3).element([ 1.,  0., -3.])
         """
         if self.space.is_real_space:
             return self.space.zero()
@@ -1354,11 +1354,11 @@ class NumpyTensor(Tensor):
         >>> space = odl.cn(3)
         >>> x = space.element([1 + 1j, 2, 3 - 3j])
         >>> x.conj()
-        cn(3).element([(1-1j), (2-0j), (3+3j)])
+        cn(3).element([ 1.-1.j,  2.-0.j,  3.+3.j])
         >>> out = space.element()
         >>> result = x.conj(out=out)
         >>> result
-        cn(3).element([(1-1j), (2-0j), (3+3j)])
+        cn(3).element([ 1.-1.j,  2.-0.j,  3.+3.j])
         >>> result is out
         True
 
@@ -1366,7 +1366,7 @@ class NumpyTensor(Tensor):
 
         >>> result = x.conj(out=x)
         >>> x
-        cn(3).element([(1-1j), (2-0j), (3+3j)])
+        cn(3).element([ 1.-1.j,  2.-0.j,  3.+3.j])
         >>> result is x
         True
         """
@@ -1437,14 +1437,14 @@ class NumpyTensor(Tensor):
         >>> space = odl.rn(3)
         >>> x = space.element([1, -2, 3])
         >>> x.ufuncs.absolute()
-        rn(3).element([1.0, 2.0, 3.0])
+        rn(3).element([ 1.,  2.,  3.])
 
         Broadcasting and array-like input are supported:
 
         >>> x.ufuncs.add(3)
-        rn(3).element([4.0, 1.0, 6.0])
+        rn(3).element([ 4.,  1.,  6.])
         >>> x.ufuncs.subtract([0, 0, 1])
-        rn(3).element([1.0, -2.0, 2.0])
+        rn(3).element([ 1., -2.,  2.])
 
         There is also support for various reductions (sum, prod, min, max):
 
@@ -1457,7 +1457,7 @@ class NumpyTensor(Tensor):
         >>> out = space.element()
         >>> result = x.ufuncs.add(y, out=out)
         >>> result
-        rn(3).element([2.0, -1.0, 4.0])
+        rn(3).element([ 2., -1.,  4.])
         >>> result is out
         True
         """

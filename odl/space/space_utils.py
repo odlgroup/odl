@@ -60,14 +60,14 @@ def vector(array, dtype=None, order=None, impl='numpy'):
     >>> odl.vector([1, 2, 3])  # No automatic cast to float
     tensor_space(3, 'int').element([1, 2, 3])
     >>> odl.vector([1, 2, 3], dtype=float)
-    rn(3).element([1.0, 2.0, 3.0])
+    rn(3).element([ 1.,  2.,  3.])
     >>> odl.vector([1, 2 - 1j, 3])
-    cn(3).element([(1+0j), (2-1j), (3+0j)])
+    cn(3).element([ 1.+0.j,  2.-1.j,  3.+0.j])
 
     Non-scalar types are also supported:
 
     >>> odl.vector([True, True, False])
-    tensor_space(3, 'bool').element([True, True, False])
+    tensor_space(3, 'bool').element([ True,  True, False])
 
     The function also supports multi-dimensional input:
 
