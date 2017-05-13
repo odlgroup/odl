@@ -378,16 +378,17 @@ class RectGrid(Set):
     def stride(self):
         """Step per axis between neighboring points of a uniform grid.
 
-        Raises
-        ------
-        NotImplementedError
-            if the grid is not uniform
+        If the grid contains axes that are not uniform, ``stride`` has
+        a ``NaN`` entry.
 
         Examples
         --------
         >>> rg = uniform_grid([-1.5, -1], [-0.5, 3], (2, 3))
         >>> rg.stride
         array([ 1.,  2.])
+        >>> g = RectGrid([0, 1, 2], [0, 1, 4])
+        >>> g.stride
+        array([  1.,  nan])
         """
         strd = []
         for i in range(self.ndim):

@@ -533,20 +533,14 @@ def _resize_discr(discr, newshp, offset, discr_kwargs):
 
     # Stack together the (unchanged) nonuniform axes and the (new) uniform
     # axes in the right order
-    nonuni_axes = [i for i in range(discr.ndim)
-                   if not discr.is_uniform_byaxis[i]]
-    nonuni_part = discr.partition.byaxis[nonuni_axes]
-
     part = uniform_partition([], [], ())
-    count_nonuni = 0
     for i in range(ndim):
         if discr.is_uniform_byaxis[i]:
             part = part.append(
                 uniform_partition(new_minpt[i], new_maxpt[i], newshp[i],
                                   nodes_on_bdry=nodes_on_bdry[i]))
         else:
-            part = part.append(nonuni_part.byaxis[count_nonuni])
-            count_nonuni += 1
+            part = part.append(discr.partition.byaxis[i])
 
     return DiscreteLp(fspace, part, dspace, exponent=exponent, interp=interp,
                       order=order)
