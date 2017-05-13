@@ -21,7 +21,7 @@ import numpy as np
 from odl.set import Set, IntervalProd
 from odl.util import (
     normalized_index_expression, normalized_scalar_param_list, safe_int_conv,
-    array1d_repr, signature_string, indent_rows)
+    array_str, signature_string, indent)
 
 
 __all__ = ('RectGrid', 'uniform_grid', 'uniform_grid_fromintv')
@@ -92,8 +92,8 @@ class RectGrid(Set):
         >>> g = RectGrid([1, 2, 5], [-2, 1.5, 2])
         >>> g
         RectGrid(
-            [1.0, 2.0, 5.0],
-            [-2.0, 1.5, 2.0]
+            [ 1.,  2.,  5.],
+            [-2. ,  1.5,  2. ]
         )
         >>> g.ndim  # number of axes
         2
@@ -113,17 +113,17 @@ class RectGrid(Set):
 
         >>> g[:, 0, 0, 0]
         RectGrid(
-            [-1.0, 0.0, 3.0],
-            [2.0],
-            [5.0],
-            [2.0]
+            [-1.,  0.,  3.],
+            [ 2.],
+            [ 5.],
+            [ 2.]
         )
         >>> g[0, ..., 1:]
         RectGrid(
-            [-1.0],
-            [2.0, 4.0, 5.0],
-            [5.0],
-            [4.0, 7.0]
+            [-1.],
+            [ 2.,  4.,  5.],
+            [ 5.],
+            [ 4.,  7.]
         )
 
         Notes
@@ -462,7 +462,7 @@ class RectGrid(Set):
         --------
         >>> g = RectGrid([-1, 0, 3], [2, 4], [5], [2, 4, 7])
         >>> g.convex_hull()
-        IntervalProd([-1.0, 2.0, 5.0, 2.0], [3.0, 4.0, 5.0, 7.0])
+        IntervalProd([-1.,  2.,  5.,  2.], [ 3.,  4.,  5.,  7.])
         """
         return IntervalProd(self.min(), self.max())
 
@@ -669,19 +669,19 @@ class RectGrid(Set):
         >>> g2 = RectGrid([1], [-6, 15])
         >>> g1.insert(1, g2)
         RectGrid(
-            [0.0, 1.0],
-            [1.0],
-            [-6.0, 15.0],
-            [-1.0, 0.0, 2.0]
+            [ 0.,  1.],
+            [ 1.],
+            [ -6.,  15.],
+            [-1.,  0.,  2.]
         )
         >>> g1.insert(1, g2, g2)
         RectGrid(
-            [0.0, 1.0],
-            [1.0],
-            [-6.0, 15.0],
-            [1.0],
-            [-6.0, 15.0],
-            [-1.0, 0.0, 2.0]
+            [ 0.,  1.],
+            [ 1.],
+            [ -6.,  15.],
+            [ 1.],
+            [ -6.,  15.],
+            [-1.,  0.,  2.]
         )
 
         See Also
@@ -726,19 +726,19 @@ class RectGrid(Set):
         >>> g2 = RectGrid([1], [-6, 15])
         >>> g1.append(g2)
         RectGrid(
-            [0.0, 1.0],
-            [-1.0, 0.0, 2.0],
-            [1.0],
-            [-6.0, 15.0]
+            [ 0.,  1.],
+            [-1.,  0.,  2.],
+            [ 1.],
+            [ -6.,  15.]
         )
         >>> g1.append(g2, g2)
         RectGrid(
-            [0.0, 1.0],
-            [-1.0, 0.0, 2.0],
-            [1.0],
-            [-6.0, 15.0],
-            [1.0],
-            [-6.0, 15.0]
+            [ 0.,  1.],
+            [-1.,  0.,  2.],
+            [ 1.],
+            [ -6.,  15.],
+            [ 1.],
+            [ -6.,  15.]
         )
 
         See Also
@@ -765,8 +765,8 @@ class RectGrid(Set):
         >>> g = RectGrid([0, 1], [-1], [-1, 0, 2])
         >>> g.squeeze()
         RectGrid(
-            [0.0, 1.0],
-            [-1.0, 0.0, 2.0]
+            [ 0.,  1.],
+            [-1.,  0.,  2.]
         )
         """
         if axis is None:
@@ -936,34 +936,34 @@ class RectGrid(Set):
 
         >>> g[:, 0, 0, 0]
         RectGrid(
-            [-1.0, 0.0, 3.0],
-            [2.0],
-            [5.0],
-            [2.0]
+            [-1.,  0.,  3.],
+            [ 2.],
+            [ 5.],
+            [ 2.]
         )
         >>> g[0, ..., 1:]
         RectGrid(
-            [-1.0],
-            [2.0, 4.0, 5.0],
-            [5.0],
-            [4.0, 7.0]
+            [-1.],
+            [ 2.,  4.,  5.],
+            [ 5.],
+            [ 4.,  7.]
         )
         >>> g[::2, ..., ::2]
         RectGrid(
-            [-1.0, 3.0],
-            [2.0, 4.0, 5.0],
-            [5.0],
-            [2.0, 7.0]
+            [-1.,  3.],
+            [ 2.,  4.,  5.],
+            [ 5.],
+            [ 2.,  7.]
         )
 
         Too few indices are filled up with an ellipsis from the right:
 
         >>> g[0]
         RectGrid(
-            [-1.0],
-            [2.0, 4.0, 5.0],
-            [5.0],
-            [2.0, 4.0, 7.0]
+            [-1.],
+            [ 2.,  4.,  5.],
+            [ 5.],
+            [ 2.,  4.,  7.]
         )
         >>> g[0] == g[0, :, :, :] == g[0, ...]
         True
@@ -1030,10 +1030,10 @@ class RectGrid(Set):
             return '{}({})'.format(constructor, inner_str)
         else:
             constructor = self.__class__.__name__
-            posargs = [array1d_repr(v) for v in self.coord_vectors]
+            posargs = [array_str(v) for v in self.coord_vectors]
             inner_str = signature_string(posargs, [], sep=[',\n', ', ', ', '],
                                          mod=['!s', ''])
-            return '{}(\n{}\n)'.format(constructor, indent_rows(inner_str))
+            return '{}(\n{}\n)'.format(constructor, indent(inner_str))
 
     __str__ = __repr__
 

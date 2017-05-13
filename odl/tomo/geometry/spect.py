@@ -15,7 +15,7 @@ import numpy as np
 
 from odl.tomo.geometry.parallel import Parallel3dAxisGeometry
 from odl.tomo.util.utility import transform_system
-from odl.util import signature_string, indent_rows
+from odl.util import signature_string, indent
 
 __all__ = ('ParallelHoleCollimatorGeometry', )
 
@@ -193,5 +193,4 @@ class ParallelHoleCollimatorGeometry(Parallel3dAxisGeometry):
             optargs.append(['translation', self.translation.tolist(), None])
 
         sig_str = signature_string(posargs, optargs, sep=',\n')
-        return '{}(\n{}\n)'.format(self.__class__.__name__,
-                                   indent_rows(sig_str))
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(sig_str))

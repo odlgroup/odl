@@ -28,7 +28,7 @@ from odl.space.entry_points import tensor_space_impl
 from odl.space.weighting import Weighting, NoWeighting, ConstWeighting
 from odl.util import (
     apply_on_boundary, is_real_dtype, is_complex_floating_dtype,
-    dtype_str, signature_string, indent_rows, is_string,
+    dtype_str, signature_string, indent, is_string,
     normalized_scalar_param_list, safe_int_conv, normalized_nodes_on_bdry)
 from odl.util.ufuncs import DiscreteLpUfuncs
 
@@ -314,10 +314,10 @@ class DiscreteLp(DiscretizedSpace):
 
         >>> space = odl.uniform_discr(-1, 1, 4)
         >>> space.element([1, 2, 3, 4])
-        uniform_discr(-1.0, 1.0, 4).element([1.0, 2.0, 3.0, 4.0])
+        uniform_discr(-1.0, 1.0, 4).element([ 1.,  2.,  3.,  4.])
         >>> vector = odl.rn(4).element([0, 1, 2, 3])
         >>> space.element(vector)
-        uniform_discr(-1.0, 1.0, 4).element([0.0, 1.0, 2.0, 3.0])
+        uniform_discr(-1.0, 1.0, 4).element([ 0.,  1.,  2.,  3.])
 
         On the other hand, non-discretized objects like Python functions
         can be discretized "on the fly":
@@ -335,7 +335,7 @@ class DiscreteLp(DiscretizedSpace):
         ...
         >>> space = odl.uniform_discr(-1, 1, 4)
         >>> space.element(f, c=0.5)
-        uniform_discr(-1.0, 1.0, 4).element([0.5, 0.5, 0.5, 0.75])
+        uniform_discr(-1.0, 1.0, 4).element([ 0.5 ,  0.5 ,  0.5 ,  0.75])
 
         See Also
         --------
@@ -465,7 +465,7 @@ class DiscreteLp(DiscretizedSpace):
                                          sep=[',\n', ', ', ',\n'],
                                          mod=['!r', '!s'])
 
-            return '{}(\n{}\n)'.format(constructor, indent_rows(inner_str))
+            return '{}(\n{}\n)'.format(constructor, indent(inner_str))
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -530,21 +530,24 @@ class DiscreteLpElement(DiscretizedSpaceElement):
         --------
         >>> discr = uniform_discr(0, 1, 4, dtype='complex')
         >>> x = discr.element([5+1j, 3, 2-2j, 1j])
-        >>> y = x.conj(); print(y)
-        [(5-1j), (3-0j), (2+2j), -1j]
+        >>> y = x.conj()
+        >>> print(y)
+        [ 5.-1.j,  3.-0.j,  2.+2.j,  0.-1.j]
 
         The out parameter allows you to avoid a copy:
 
         >>> z = discr.element()
-        >>> z_out = x.conj(out=z); print(z)
-        [(5-1j), (3-0j), (2+2j), -1j]
+        >>> z_out = x.conj(out=z)
+        >>> print(z)
+        [ 5.-1.j,  3.-0.j,  2.+2.j,  0.-1.j]
         >>> z_out is z
         True
 
         It can also be used for in-place conjugation:
 
-        >>> x_out = x.conj(out=x); print(x)
-        [(5-1j), (3-0j), (2+2j), -1j]
+        >>> x_out = x.conj(out=x)
+        >>> print(x)
+        [ 5.-1.j,  3.-0.j,  2.+2.j,  0.-1.j]
         >>> x_out is x
         True
         """
@@ -586,17 +589,17 @@ class DiscreteLpElement(DiscretizedSpaceElement):
         >>> X = uniform_discr(0, 1, 2)
         >>> x = X.element([1, -2])
         >>> x.ufuncs.absolute()
-        uniform_discr(0.0, 1.0, 2).element([1.0, 2.0])
+        uniform_discr(0.0, 1.0, 2).element([ 1.,  2.])
 
         These functions can also be used with broadcasting
 
         >>> x.ufuncs.add(3)
-        uniform_discr(0.0, 1.0, 2).element([4.0, 1.0])
+        uniform_discr(0.0, 1.0, 2).element([ 4.,  1.])
 
         and non-space elements
 
         >>> x.ufuncs.subtract([3, 3])
-        uniform_discr(0.0, 1.0, 2).element([-2.0, -5.0])
+        uniform_discr(0.0, 1.0, 2).element([-2., -5.])
 
         There is also support for various reductions (sum, prod, min, max)
 
@@ -609,7 +612,7 @@ class DiscreteLpElement(DiscretizedSpaceElement):
         >>> out = X.element()
         >>> result = x.ufuncs.add(y, out=out)
         >>> result
-        uniform_discr(0.0, 1.0, 2).element([4.0, 2.0])
+        uniform_discr(0.0, 1.0, 2).element([ 4.,  2.])
         >>> result is out
         True
 

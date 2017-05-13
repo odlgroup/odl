@@ -118,7 +118,7 @@ class ProductSpaceOperator(Operator):
         >>> prod_op = ProductSpaceOperator([I, I])
         >>> prod_op(x)
         ProductSpace(rn(3), 1).element([
-            [5.0, 7.0, 9.0]
+            [ 5.,  7.,  9.]
         ])
 
         Diagonal operator -- 0 or ``None`` means ignore, or the implicit
@@ -127,8 +127,8 @@ class ProductSpaceOperator(Operator):
         >>> prod_op = ProductSpaceOperator([[I, 0], [0, I]])
         >>> prod_op(x)
         ProductSpace(rn(3), 2).element([
-            [1.0, 2.0, 3.0],
-            [4.0, 5.0, 6.0]
+            [ 1.,  2.,  3.],
+            [ 4.,  5.,  6.]
         ])
 
         Complicated combinations:
@@ -136,8 +136,8 @@ class ProductSpaceOperator(Operator):
         >>> prod_op = ProductSpaceOperator([[I, I], [I, 0]])
         >>> prod_op(x)
         ProductSpace(rn(3), 2).element([
-            [5.0, 7.0, 9.0],
-            [1.0, 2.0, 3.0]
+            [ 5.,  7.,  9.],
+            [ 1.,  2.,  3.]
         ])
         """
         # Lazy import to improve `import odl` time
@@ -266,13 +266,13 @@ class ProductSpaceOperator(Operator):
         ...                                domain=X, range=X)
         >>> prod_op(x)
         ProductSpace(rn(3), 2).element([
-            [4.0, 5.0, 6.0],
-            [0.0, 0.0, 0.0]
+            [ 4.,  5.,  6.],
+            [ 0.,  0.,  0.]
         ])
         >>> prod_op.derivative(x)(x)
         ProductSpace(rn(3), 2).element([
-            [4.0, 5.0, 6.0],
-            [0.0, 0.0, 0.0]
+            [ 4.,  5.,  6.],
+            [ 0.,  0.,  0.]
         ])
 
         Example with affine operator
@@ -285,16 +285,16 @@ class ProductSpaceOperator(Operator):
 
         >>> op(x)
         ProductSpace(rn(3), 2).element([
-            [3.0, 4.0, 5.0],
-            [0.0, 0.0, 0.0]
+            [ 3.,  4.,  5.],
+            [ 0.,  0.,  0.]
         ])
 
         Derivative of affine operator does not have this offset
 
         >>> op.derivative(x)(x)
         ProductSpace(rn(3), 2).element([
-            [4.0, 5.0, 6.0],
-            [0.0, 0.0, 0.0]
+            [ 4.,  5.,  6.],
+            [ 0.,  0.,  0.]
         ])
         """
         # Lazy import to improve `import odl` time
@@ -339,13 +339,13 @@ class ProductSpaceOperator(Operator):
         ...                                domain=X, range=X)
         >>> prod_op(x)
         ProductSpace(rn(3), 2).element([
-            [4.0, 5.0, 6.0],
-            [0.0, 0.0, 0.0]
+            [ 4.,  5.,  6.],
+            [ 0.,  0.,  0.]
         ])
         >>> prod_op.adjoint(x)
         ProductSpace(rn(3), 2).element([
-            [0.0, 0.0, 0.0],
-            [1.0, 2.0, 3.0]
+            [ 0.,  0.,  0.],
+            [ 1.,  2.,  3.]
         ])
         """
         # Lazy import to improve `import odl` time
@@ -489,15 +489,15 @@ class ComponentProjection(Operator):
         ...      [2.0, 3.0],
         ...      [4.0, 5.0, 6.0]]
         >>> proj(x)
-        rn(1).element([1.0])
+        rn(1).element([ 1.])
 
         Projection on sub-space:
 
         >>> proj = odl.ComponentProjection(X, [0, 2])
         >>> proj(x)
         ProductSpace(rn(1), rn(3)).element([
-            [1.0],
-            [4.0, 5.0, 6.0]
+            [ 1.],
+            [ 4.,  5.,  6.]
         ])
         """
         self.__index = index
@@ -579,9 +579,9 @@ class ComponentProjectionAdjoint(Operator):
         >>> proj_adj = odl.ComponentProjectionAdjoint(X, 0)
         >>> proj_adj(x[0])
         ProductSpace(rn(1), rn(2), rn(3)).element([
-            [1.0],
-            [0.0, 0.0],
-            [0.0, 0.0, 0.0]
+            [ 1.],
+            [ 0.,  0.],
+            [ 0.,  0.,  0.]
         ])
 
         Projection on a sub-space corresponding to indices 0 and 2:
@@ -589,9 +589,9 @@ class ComponentProjectionAdjoint(Operator):
         >>> proj_adj = odl.ComponentProjectionAdjoint(X, [0, 2])
         >>> proj_adj(x[[0, 2]])
         ProductSpace(rn(1), rn(2), rn(3)).element([
-            [1.0],
-            [0.0, 0.0],
-            [4.0, 5.0, 6.0]
+            [ 1.],
+            [ 0.,  0.],
+            [ 4.,  5.,  6.]
         ])
         """
         self.__index = index
@@ -678,8 +678,8 @@ class BroadcastOperator(Operator):
         >>> x = [1, 2, 3]
         >>> op(x)
         ProductSpace(rn(3), 2).element([
-            [1.0, 2.0, 3.0],
-            [2.0, 4.0, 6.0]
+            [ 1.,  2.,  3.],
+            [ 2.,  4.,  6.]
         ])
 
         Can also initialize by calling an operator repeatedly:
@@ -754,16 +754,16 @@ class BroadcastOperator(Operator):
         >>> x = [1, 2, 3]
         >>> op(x)
         ProductSpace(rn(3), 2).element([
-            [0.0, 1.0, 2.0],
-            [0.0, 2.0, 4.0]
+            [ 0.,  1.,  2.],
+            [ 0.,  2.,  4.]
         ])
 
         The derivative of this affine operator does not have an offset:
 
         >>> op.derivative(x)(x)
         ProductSpace(rn(3), 2).element([
-            [1.0, 2.0, 3.0],
-            [2.0, 4.0, 6.0]
+            [ 1.,  2.,  3.],
+            [ 2.,  4.,  6.]
         ])
         """
         return BroadcastOperator(*[op.derivative(x) for op in
@@ -782,7 +782,7 @@ class BroadcastOperator(Operator):
         >>> I = odl.IdentityOperator(odl.rn(3))
         >>> op = BroadcastOperator(I, 2 * I)
         >>> op.adjoint([[1, 2, 3], [2, 3, 4]])
-        rn(3).element([5.0, 8.0, 11.0])
+        rn(3).element([  5.,   8.,  11.])
         """
         return ReductionOperator(*[op.adjoint for op in self.operators])
 
@@ -843,9 +843,9 @@ class ReductionOperator(Operator):
         Evaluating in a point gives the sum of the evaluation results of
         the individual operators:
 
-        >>> op([[1.0, 2.0, 3.0],
-        ...     [4.0, 6.0, 8.0]])
-        rn(3).element([9.0, 14.0, 19.0])
+        >>> op([[1, 2, 3],
+        ...     [4, 6, 8]])
+        rn(3).element([  9.,  14.,  19.])
 
         An ``out`` argument can be given for in-place evaluation:
 
@@ -931,9 +931,9 @@ class ReductionOperator(Operator):
 
         >>> op = ReductionOperator(I, 2 * I)
         >>> op([x, y])
-        rn(3).element([9.0, 14.0, 19.0])
+        rn(3).element([  9.,  14.,  19.])
         >>> op.derivative([x, y])([x, y])
-        rn(3).element([9.0, 14.0, 19.0])
+        rn(3).element([  9.,  14.,  19.])
 
         Example with affine operator
 
@@ -943,12 +943,12 @@ class ReductionOperator(Operator):
         Calling operator gives offset by [3, 3, 3]
 
         >>> op([x, y])
-        rn(3).element([6.0, 11.0, 16.0])
+        rn(3).element([  6.,  11.,  16.])
 
         Derivative of affine operator does not have this offset
 
         >>> op.derivative([x, y])([x, y])
-        rn(3).element([9.0, 14.0, 19.0])
+        rn(3).element([  9.,  14.,  19.])
         """
         return ReductionOperator(*[op.derivative(xi)
                                    for op, xi in zip(self.operators, x)])
@@ -967,8 +967,8 @@ class ReductionOperator(Operator):
         >>> op = ReductionOperator(I, 2 * I)
         >>> op.adjoint([1, 2, 3])
         ProductSpace(rn(3), 2).element([
-            [1.0, 2.0, 3.0],
-            [2.0, 4.0, 6.0]
+            [ 1.,  2.,  3.],
+            [ 2.,  4.,  6.]
         ])
         """
         return BroadcastOperator(*[op.adjoint for op in self.operators])
@@ -1042,8 +1042,8 @@ class DiagonalOperator(ProductSpaceOperator):
         >>> op([[1, 2, 3],
         ...     [4, 5, 6]])
         ProductSpace(rn(3), 2).element([
-            [1.0, 2.0, 3.0],
-            [8.0, 10.0, 12.0]
+            [ 1.,  2.,  3.],
+            [  8.,  10.,  12.]
         ])
 
         Can also be created using a multiple of a single operator

@@ -42,19 +42,21 @@ def cuboid(space, min_pt=None, max_pt=None):
     middle of the space domain and extends halfway towards all sides:
 
     >>> space = odl.uniform_discr([0, 0], [1, 1], [4, 6])
-    >>> print(odl.phantom.cuboid(space))
-    [[0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-     [0.0, 1.0, 1.0, 1.0, 1.0, 0.0],
-     [0.0, 1.0, 1.0, 1.0, 1.0, 0.0],
-     [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]
+    >>> cuboid = odl.phantom.cuboid(space)
+    >>> print(odl.util.array_str(cuboid, nprint=10))
+    [[ 0.,  0.,  0.,  0.,  0.,  0.],
+     [ 0.,  1.,  1.,  1.,  1.,  0.],
+     [ 0.,  1.,  1.,  1.,  1.,  0.],
+     [ 0.,  0.,  0.,  0.,  0.,  0.]]
 
     By specifying the corners, the cuboid can be arbitrarily shaped:
 
-    >>> print(odl.phantom.cuboid(space, [0.25, 0], [0.75, 0.5]))
-    [[0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-     [1.0, 1.0, 1.0, 0.0, 0.0, 0.0],
-     [1.0, 1.0, 1.0, 0.0, 0.0, 0.0],
-     [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]
+    >>> other_cuboid = odl.phantom.cuboid(space, [0.25, 0], [0.75, 0.5])
+    >>> print(odl.util.array_str(other_cuboid, nprint=10))
+    [[ 0.,  0.,  0.,  0.,  0.,  0.],
+     [ 1.,  1.,  1.,  0.,  0.,  0.],
+     [ 1.,  1.,  1.,  0.,  0.,  0.],
+     [ 0.,  0.,  0.,  0.,  0.,  0.]]
     """
     dom_min_pt = np.asarray(space.domain.min())
     dom_max_pt = np.asarray(space.domain.max())
@@ -197,49 +199,50 @@ def indicate_proj_axis(space, scale_structures=0.5):
     --------
     Phantom in 2D space:
 
-    >>> np.set_printoptions(edgeitems=4)  # make numpy print whole arrays
     >>> space = odl.uniform_discr([0, 0], [1, 1], shape=(8, 8))
     >>> phantom = indicate_proj_axis(space).asarray()
-    >>> print(phantom)
-    [[ 0.  0.  0.  0.  0.  0.  0.  0.]
-     [ 0.  0.  0.  1.  1.  0.  0.  0.]
-     [ 0.  0.  0.  1.  1.  0.  0.  0.]
-     [ 0.  0.  0.  0.  0.  0.  0.  0.]
-     [ 0.  0.  0.  0.  0.  0.  0.  0.]
-     [ 0.  0.  0.  0.  1.  0.  0.  0.]
-     [ 0.  0.  0.  1.  0.  0.  0.  0.]
-     [ 0.  0.  0.  0.  0.  0.  0.  0.]]
+    >>> print(odl.util.array_str(phantom, nprint=10))
+    [[ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
+     [ 0.,  0.,  0.,  1.,  1.,  0.,  0.,  0.],
+     [ 0.,  0.,  0.,  1.,  1.,  0.,  0.,  0.],
+     [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
+     [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
+     [ 0.,  0.,  0.,  0.,  1.,  0.,  0.,  0.],
+     [ 0.,  0.,  0.,  1.,  0.,  0.,  0.,  0.],
+     [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]]
 
-    >>> space = odl.uniform_discr([0, 0, 0], [1, 1, 1], shape=(8, 8, 8))
-    >>> phantom = indicate_proj_axis(space).asarray()
-    >>> np.set_printoptions(edgeitems=4)  # make numpy print whole arrays
-    >>> print(np.sum(phantom, 0))
-    [[ 0.  0.  0.  0.  0.  0.  0.  0.]
-     [ 0.  0.  0.  0.  0.  0.  0.  0.]
-     [ 0.  0.  0.  0.  0.  0.  0.  0.]
-     [ 0.  0.  0.  3.  3.  0.  0.  0.]
-     [ 0.  0.  0.  3.  3.  0.  0.  0.]
-     [ 0.  0.  0.  0.  0.  0.  0.  0.]
-     [ 0.  0.  0.  0.  0.  0.  0.  0.]
-     [ 0.  0.  0.  0.  0.  0.  0.  0.]]
-    >>> print(np.sum(phantom, 1))
-    [[ 0.  0.  0.  0.  0.  0.  0.  0.]
-     [ 0.  0.  0.  2.  2.  0.  0.  0.]
-     [ 0.  0.  0.  2.  2.  0.  0.  0.]
-     [ 0.  0.  0.  0.  0.  0.  0.  0.]
-     [ 0.  0.  0.  0.  0.  0.  0.  0.]
-     [ 0.  0.  0.  1.  1.  0.  0.  0.]
-     [ 0.  0.  0.  1.  1.  0.  0.  0.]
-     [ 0.  0.  0.  0.  0.  0.  0.  0.]]
-    >>> print(np.sum(phantom, 2))
-    [[ 0.  0.  0.  0.  0.  0.  0.  0.]
-     [ 0.  0.  0.  2.  2.  0.  0.  0.]
-     [ 0.  0.  0.  2.  2.  0.  0.  0.]
-     [ 0.  0.  0.  0.  0.  0.  0.  0.]
-     [ 0.  0.  0.  0.  0.  0.  0.  0.]
-     [ 0.  0.  0.  0.  2.  0.  0.  0.]
-     [ 0.  0.  0.  2.  0.  0.  0.  0.]
-     [ 0.  0.  0.  0.  0.  0.  0.  0.]]
+    >>> space = odl.uniform_discr([0] * 3, [1] * 3, [8, 8, 8])
+    >>> phantom = odl.phantom.indicate_proj_axis(space).asarray()
+    >>> axis_sum_0 = np.sum(phantom, axis=0)
+    >>> print(odl.util.array_str(axis_sum_0, nprint=10))
+    [[ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
+     [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
+     [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
+     [ 0.,  0.,  0.,  3.,  3.,  0.,  0.,  0.],
+     [ 0.,  0.,  0.,  3.,  3.,  0.,  0.,  0.],
+     [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
+     [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
+     [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]]
+    >>> axis_sum_1 = np.sum(phantom, axis=1)
+    >>> print(odl.util.array_str(axis_sum_1, nprint=10))
+    [[ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
+     [ 0.,  0.,  0.,  2.,  2.,  0.,  0.,  0.],
+     [ 0.,  0.,  0.,  2.,  2.,  0.,  0.,  0.],
+     [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
+     [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
+     [ 0.,  0.,  0.,  1.,  1.,  0.,  0.,  0.],
+     [ 0.,  0.,  0.,  1.,  1.,  0.,  0.,  0.],
+     [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]]
+    >>> axis_sum_2 = np.sum(phantom, axis=2)
+    >>> print(odl.util.array_str(axis_sum_2, nprint=10))
+    [[ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
+     [ 0.,  0.,  0.,  2.,  2.,  0.,  0.,  0.],
+     [ 0.,  0.,  0.,  2.,  2.,  0.,  0.,  0.],
+     [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
+     [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
+     [ 0.,  0.,  0.,  0.,  2.,  0.,  0.,  0.],
+     [ 0.,  0.,  0.,  2.,  0.,  0.,  0.,  0.],
+     [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]]
     """
     if not 0 < scale_structures <= 1:
         raise ValueError('`scale_structures` ({}) is not in (0, 1]'
@@ -590,11 +593,11 @@ def ellipsoid_phantom(space, ellipsoids):
     >>> ellipses = [[1.0, 1.0, 1.0, 0.0, 0.0, 0.0],
     ...             [1.0, 0.6, 0.6, 0.0, 0.0, 0.0]]
     >>> print(ellipsoid_phantom(space, ellipses))
-    [[0.0, 0.0, 1.0, 0.0, 0.0],
-     [0.0, 1.0, 2.0, 1.0, 0.0],
-     [1.0, 2.0, 2.0, 2.0, 1.0],
-     [0.0, 1.0, 2.0, 1.0, 0.0],
-     [0.0, 0.0, 1.0, 0.0, 0.0]]
+    [[ 0.,  0.,  1.,  0.,  0.],
+     [ 0.,  1.,  2.,  1.,  0.],
+     [ 1.,  2.,  2.,  2.,  1.],
+     [ 0.,  1.,  2.,  1.,  0.],
+     [ 0.,  0.,  1.,  0.,  0.]]
 
     See Also
     --------
@@ -808,6 +811,5 @@ if __name__ == '__main__':
     defrise(space).show('defrise 3D', coords=[0, None, None])
 
     # Run also the doctests
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()
