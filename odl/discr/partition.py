@@ -25,7 +25,7 @@ from odl.set import IntervalProd
 from odl.util import (
     normalized_index_expression, normalized_nodes_on_bdry,
     normalized_scalar_param_list, safe_int_conv,
-    signature_string, indent_rows)
+    signature_string, indent)
 
 
 __all__ = ('RectPartition', 'uniform_partition_fromintv',
@@ -903,7 +903,7 @@ class RectPartition(object):
 
             sig_str = signature_string(posargs, optargs,
                                        sep=[',\n', ', ', ',\n'])
-            return '{}(\n{}\n)'.format(constructor, indent_rows(sig_str))
+            return '{}(\n{}\n)'.format(constructor, indent(sig_str))
 
     def __str__(self):
         """Return ``str(self)``."""

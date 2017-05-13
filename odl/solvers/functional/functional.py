@@ -18,7 +18,7 @@ from odl.operator.default_ops import (IdentityOperator, ConstantOperator)
 from odl.solvers.nonsmooth import (proximal_arg_scaling, proximal_translation,
                                    proximal_quadratic_perturbation,
                                    proximal_const_func, proximal_convex_conj)
-from odl.util import (signature_string, indent_rows)
+from odl.util import signature_string, indent
 
 
 __all__ = ('Functional', 'FunctionalLeftScalarMult',
@@ -43,7 +43,7 @@ class Functional(Operator):
     The implementation of the functional class assumes that the domain
     :math:`X` is a Hilbert space and that the field of scalars :math:`F` is a
     is the real numbers. It is possible to create functions that do not fulfil
-    these assumptions, however some mathematical results might not be valide in
+    these assumptions, however some mathematical results might not be valid in
     this case. For more information, see `the ODL functional guide
     <http://odlgroup.github.io/odl/guide/in_depth/functional_guide.html>`_.
     """
@@ -890,8 +890,7 @@ class InfimalConvolution(Functional):
         """Return ``repr(self)``."""
         posargs = [self.left, self.right]
         inner_str = signature_string(posargs, [], sep=',\n')
-        return '{}(\n{}\n)'.format(self.__class__.__name__,
-                                   indent_rows(inner_str))
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -1282,7 +1281,7 @@ def simple_functional(space, fcall=None, grad=None, prox=None, grad_lip=np.nan,
     >>> func([1, 2, 3])
     14.0
     >>> func.gradient([1, 2, 3])
-    rn(3).element([2.0, 4.0, 6.0])
+    rn(3).element([ 2.,  4.,  6.])
     """
     if grad is not None and not isinstance(grad, Operator):
         grad_in = grad

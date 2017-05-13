@@ -16,7 +16,7 @@ import numpy as np
 
 from odl.discr import RectPartition
 from odl.tomo.util import perpendicular_vector, is_inside_bounds
-from odl.util import indent_rows, signature_string
+from odl.util import indent, signature_string
 
 
 __all__ = ('Detector',
@@ -413,8 +413,7 @@ class Flat1dDetector(Detector):
         posargs = [self.partition]
         optargs = [('axis', self.axis.tolist(), None)]
         inner_str = signature_string(posargs, optargs, sep=',\n')
-        return '{}(\n{}\n)'.format(self.__class__.__name__,
-                                   indent_rows(inner_str))
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -627,8 +626,7 @@ class Flat2dDetector(Detector):
         posargs = [self.partition]
         optargs = [('axes', tuple(ax.tolist() for ax in self.axes), None)]
         inner_str = signature_string(posargs, optargs, sep=',\n')
-        return '{}(\n{}\n)'.format(self.__class__.__name__,
-                                   indent_rows(inner_str))
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -899,8 +897,7 @@ class CircleSectionDetector(Detector):
         posargs = [self.partition]
         optargs = [('center', self.center.tolist(), None)]
         inner_str = signature_string(posargs, optargs, sep=',\n')
-        return '{}(\n{}\n)'.format(self.__class__.__name__,
-                                   indent_rows(inner_str))
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
 
     def __str__(self):
         """Return ``str(self)``."""
