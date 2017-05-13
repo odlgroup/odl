@@ -432,6 +432,29 @@ def test_power_RxR():
     assert all_equal([v1, v2], u)
 
 
+def test_power_shape():
+    """Check if shape and size are correct for higher-order power spaces."""
+    r2 = odl.rn(2)
+    r3 = odl.rn(3)
+
+    empty = odl.ProductSpace(field=odl.RealNumbers())
+    empty2 = odl.ProductSpace(r2, 0)
+    assert empty.shape == empty2.shape == ()
+    assert empty.size == empty2.size == 0
+
+    r2xr3 = odl.ProductSpace(r2, r3)
+    assert r2xr3.shape == (2,)
+    assert r2xr3.size == 2
+
+    r2xr3_4 = odl.ProductSpace(r2xr3, 4)
+    assert r2xr3_4.shape == (4, 2)
+    assert r2xr3_4.size == 8
+
+    r2xr3_4_5 = odl.ProductSpace(r2xr3_4, 5)
+    assert r2xr3_4_5.shape == (5, 4, 2)
+    assert r2xr3_4_5.size == 40
+
+
 def test_power_lincomb():
     H = odl.rn(2)
     HxH = odl.ProductSpace(H, 2)
@@ -537,46 +560,97 @@ def test_element_equals():
     assert x != x_4
 
 
-def test_element_getitem_single():
-    H = odl.ProductSpace(odl.rn(1), odl.rn(2))
+def test_element_getitem_int():
+    """Test indexing of product space elements with one or several integers."""
+    pspace = odl.ProductSpace(odl.rn(1), odl.rn(2))
 
-    x0 = H[0].element([0])
-    x1 = H[1].element([1, 2])
-    x = H.element([x0, x1])
+    # One level of product space
+    x0 = pspace[0].element([0])
+    x1 = pspace[1].element([1, 2])
+    x = pspace.element([x0, x1])
 
-    assert x[-2] is x0
-    assert x[-1] is x1
     assert x[0] is x0
     assert x[1] is x1
+    assert x[-2] is x0
+    assert x[-1] is x1
     with pytest.raises(IndexError):
         x[-3]
         x[2]
+    assert x[0, 0] == 0
+    assert x[1, 0] == 1
+
+    # Two levels of product spaces
+    pspace2 = odl.ProductSpace(pspace, 3)
+    z = pspace2.element([x, x, x])
+    assert z[0] is x
+    assert z[1, 0] is x0
+    assert z[1, 1, 1] == 2
 
 
 def test_element_getitem_slice():
-    H = odl.ProductSpace(odl.rn(1), odl.rn(2), odl.rn(3))
+    """Test indexing of product space elements with slices."""
+    # One level of product space
+    pspace = odl.ProductSpace(odl.rn(1), odl.rn(2), odl.rn(3))
 
-    x0 = H[0].element([0])
-    x1 = H[1].element([1, 2])
-    x2 = H[2].element([3, 4, 5])
-    x = H.element([x0, x1, x2])
+    x0 = pspace[0].element([0])
+    x1 = pspace[1].element([1, 2])
+    x2 = pspace[2].element([3, 4, 5])
+    x = pspace.element([x0, x1, x2])
 
-    assert x[:2].space == H[:2]
+    assert x[:2].space == pspace[:2]
     assert x[:2][0] is x0
     assert x[:2][1] is x1
 
 
 def test_element_getitem_fancy():
-    H = odl.ProductSpace(odl.rn(1), odl.rn(2), odl.rn(3))
+    pspace = odl.ProductSpace(odl.rn(1), odl.rn(2), odl.rn(3))
 
-    x0 = H[0].element([0])
-    x1 = H[1].element([1, 2])
-    x2 = H[2].element([3, 4, 5])
-    x = H.element([x0, x1, x2])
+    x0 = pspace[0].element([0])
+    x1 = pspace[1].element([1, 2])
+    x2 = pspace[2].element([3, 4, 5])
+    x = pspace.element([x0, x1, x2])
 
-    assert x[[0, 2]].space == H[[0, 2]]
+    assert x[[0, 2]].space == pspace[[0, 2]]
     assert x[[0, 2]][0] is x0
     assert x[[0, 2]][1] is x2
+
+
+def test_element_getitem_multi():
+    """Test element access with multiple indices."""
+    pspace = odl.ProductSpace(odl.rn(1), odl.rn(2))
+    pspace2 = odl.ProductSpace(pspace, 3)
+    pspace3 = odl.ProductSpace(pspace2, 2)
+    z = pspace3.element(
+        [[[[1],
+           [2, 3]],
+          [[4],
+           [5, 6]],
+          [[7],
+           [8, 9]]],
+         [[[10],
+           [12, 13]],
+          [[14],
+           [15, 16]],
+          [[17],
+           [18, 19]]]
+         ]
+    )
+
+    assert pspace3.shape == (2, 3, 2)
+    assert z[0, 0, 0, 0] == 1
+    assert all_equal(z[0, 0, 1], [2, 3])
+    assert all_equal(z[0, 0], [[1], [2, 3]])
+    assert all_equal(z[0, 1:], [[[4],
+                                 [5, 6]],
+                                [[7],
+                                 [8, 9]]])
+    print(z[0, 1:, 1])
+    assert all_equal(z[0, 1:, 1], [[5, 6],
+                                   [8, 9]])
+    assert all_equal(z[0, 1:, :, 0], [[[4],
+                                       [5]],
+                                      [[7],
+                                       [8]]])
 
 
 def test_element_setitem_single():
