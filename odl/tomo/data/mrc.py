@@ -18,6 +18,7 @@ from collections import OrderedDict
 from itertools import permutations
 import numpy as np
 import struct
+import warnings
 
 from odl.tomo.data.uncompr_bin import (
     FileReaderRawBinaryWithHeader, FileWriterRawBinaryWithHeader,
@@ -346,7 +347,15 @@ class MRCHeaderProperties(object):
         except KeyError:
             return (0, 1, 2)
         else:
-            return tuple(int(m) - 1 for m in [mapc, mapr, maps])
+            axis_order = tuple(int(m) - 1 for m in [mapc, mapr, maps])
+            if (sorted(axis_order) != [0, 1, 2]):
+                # Ignore invalid entries in the header, e.g. 0, 0, 0.
+                # Some MRC files out there are like that.
+                warnings.warn('invalid axis mapping {}, using (0, 1, 2)'
+                              ''.format(tuple(m + 1 for m in axis_order)),
+                              RuntimeWarning)
+                axis_order = (0, 1, 2)
+            return axis_order
 
     @property
     def cell_sides_angstrom(self):

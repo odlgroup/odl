@@ -113,15 +113,16 @@ class DiscreteLp(DiscretizedSpace):
             if interp not in _SUPPORTED_INTERP:
                 raise ValueError("`interp` type '{}' not understood"
                                  "".format(interp_in))
-            self.__interp_by_axis = [interp] * partition.ndim
+            # Ensure that there is 1 entry for ndim == 0
+            self.__interp_byaxis = (interp,) * max(partition.ndim, 1)
         except TypeError:
             # Got sequence of strings
             if len(interp) != partition.ndim:
                 raise ValueError('expected {} (ndim) entries in interp, '
                                  'got {}'.format(partition.ndim, len(interp)))
 
-            self.__interp_by_axis = [str(s).lower() for s in interp]
-            if any(s not in _SUPPORTED_INTERP for s in self.interp_by_axis):
+            self.__interp_byaxis = tuple(str(s).lower() for s in interp)
+            if any(s not in _SUPPORTED_INTERP for s in self.interp_byaxis):
                 raise ValueError('interp sequence {} contains illegal '
                                  'values'.format(interp))
 
@@ -134,15 +135,15 @@ class DiscreteLp(DiscretizedSpace):
         self.__partition = partition
         sampling = PointCollocation(fspace, self.partition, dspace,
                                     order=self.order)
-        if all(s == 'nearest' for s in self.interp_by_axis):
+        if all(s == 'nearest' for s in self.interp_byaxis):
             interpol = NearestInterpolation(fspace, self.partition, dspace,
                                             order=self.order)
-        elif all(s == 'linear' for s in self.interp_by_axis):
+        elif all(s == 'linear' for s in self.interp_byaxis):
             interpol = LinearInterpolation(fspace, self.partition, dspace,
                                            order=self.order)
         else:
             interpol = PerAxisInterpolation(
-                fspace, self.partition, dspace, self.interp_by_axis,
+                fspace, self.partition, dspace, self.interp_byaxis,
                 order=self.order)
 
         DiscretizedSpace.__init__(self, fspace, dspace, sampling, interpol)
@@ -168,16 +169,16 @@ class DiscreteLp(DiscretizedSpace):
     @property
     def interp(self):
         """Interpolation type of this discretization."""
-        if all(interp == self.interp_by_axis[0]
-               for interp in self.interp_by_axis):
-            return self.interp_by_axis[0]
+        if all(interp == self.interp_byaxis[0]
+               for interp in self.interp_byaxis):
+            return self.interp_byaxis[0]
         else:
-            return self.interp_by_axis
+            return self.interp_byaxis
 
     @property
-    def interp_by_axis(self):
+    def interp_byaxis(self):
         """Interpolation by axis type of this discretization."""
-        return self.__interp_by_axis
+        return self.__interp_byaxis
 
     @property
     def axis_labels(self):
@@ -267,7 +268,10 @@ class DiscreteLp(DiscretizedSpace):
         This space can be identified with the power space ``X^d`` as used
         in this implementation.
         """
-        return ProductSpace(self, self.ndim)
+        if self.ndim == 0:
+            return ProductSpace(field=self.field)
+        else:
+            return ProductSpace(self, self.ndim)
 
     def element(self, inp=None, **kwargs):
         """Create an element from ``inp`` or from scratch.
@@ -468,7 +472,11 @@ class DiscreteLp(DiscretizedSpace):
             if isinstance(self.weighting, NoWeighting):
                 weighting = 'none'
             elif (isinstance(self.weighting, ConstWeighting) and
-                  np.isclose(self.weighting.const, self.cell_volume)):
+                  (np.isclose(self.weighting.const, self.cell_volume))):
+                weighting = 'const'
+            elif (self.ndim == 0 and
+                  isinstance(self.weighting, ConstWeighting) and
+                  (np.isclose(self.weighting.const, 1.0))):
                 weighting = 'const'
             else:
                 weighting = self.weighting
@@ -525,8 +533,13 @@ class DiscreteLpElement(DiscretizedSpaceElement):
             shape.
         """
         if out is None:
-            return DiscretizedSpaceElement.asarray(self).reshape(
-                self.shape, order=self.space.order)
+            if self.space.ndim == 0:
+                out = DiscretizedSpaceElement.asarray(self)
+            else:
+                out = DiscretizedSpaceElement.asarray(self).reshape(
+                    self.shape, order=self.space.order)
+            return out
+
         else:
             if out.shape not in (self.space.shape, (self.space.size,)):
                 raise ValueError('output array has shape {}, expected '
@@ -795,8 +808,10 @@ class DiscreteLpElement(DiscretizedSpaceElement):
         --------
         odl.util.graphics.show_discrete_data : Underlying implementation
         """
-
         from odl.util.graphics import show_discrete_data
+
+        if self.ndim == 0:
+            raise ValueError('nothing to show for 0-dimensional vector')
 
         if coords is not None:
             if indices is not None:
@@ -961,7 +976,7 @@ def uniform_discr_frompartition(partition, exponent=2.0, interp='nearest',
         if weighting == 'none' or float(exponent) == float('inf'):
             weighting = None
         elif weighting == 'const':
-            weighting = partition.cell_volume
+            weighting = 1.0 if partition.ndim == 0 else partition.cell_volume
         else:
             raise ValueError("`weighting` '{}' not understood"
                              "".format(weighting_in))

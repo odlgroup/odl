@@ -16,7 +16,8 @@ from __future__ import absolute_import
 
 __version__ = '0.6.1.dev0'
 __all__ = ('diagnostics', 'discr', 'operator', 'set', 'space', 'solvers',
-           'tomo', 'trafos', 'util', 'phantom', 'deform', 'ufunc_ops')
+           'tomo', 'trafos', 'util', 'phantom', 'deform', 'ufunc_ops',
+           'datasets')
 
 # Propagate names defined in __all__ of all submodules into the top-level
 # module
@@ -41,6 +42,8 @@ from . import util
 from . import phantom
 from . import deform
 from . import ufunc_ops
+from . import datasets
+
 
 from .util import test
 __all__ += ('test',)

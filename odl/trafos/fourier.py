@@ -801,7 +801,7 @@ class FourierTransformBase(Operator):
         self.__impl = impl
 
         # Handle half-complex yes/no and shifts
-        if domain.grid.is_uniform:
+        if all(domain.grid.is_uniform_byaxis[i] for i in self.axes):
             if domain.field == ComplexNumbers():
                 self.__halfcomplex = False
             else:

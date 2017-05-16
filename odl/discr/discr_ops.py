@@ -16,8 +16,10 @@ from builtins import super
 
 import numpy as np
 
-from odl.discr import DiscreteLp, uniform_discr
+from odl.discr import DiscreteLp, uniform_partition, nonuniform_partition
 from odl.operator import Operator
+from odl.set import IntervalProd
+from odl.space import FunctionSpace, fn
 from odl.util import (
     normalized_scalar_param_list, safe_int_conv, resize_array)
 from odl.util.numerics import _SUPPORTED_RESIZE_PAD_MODES
@@ -258,12 +260,11 @@ class ResizingOperatorBase(Operator):
          [5.0, 6.0, 7.0, 8.0],
          [1.0, 2.0, 3.0, 4.0]]
         """
+        from builtins import range as builtin_range
+
         if not isinstance(domain, DiscreteLp):
             raise TypeError('`domain` must be a `DiscreteLp` instance, '
                             'got {!r}'.format(domain))
-
-        if not domain.is_uniform:
-            raise ValueError('`domain` is not uniformly discretized')
 
         offset = kwargs.pop('offset', None)
         discr_kwargs = kwargs.pop('discr_kwargs', {})
@@ -284,11 +285,16 @@ class ResizingOperatorBase(Operator):
                 raise ValueError('`offset` can only be combined with '
                                  '`ran_shp`')
 
-            if not np.allclose(range.cell_sides, domain.cell_sides):
-                raise ValueError(
-                    'cell sides of domain and range differ significantly '
-                    '(difference {})'
-                    ''.format(range.cell_sides - domain.cell_sides))
+            for i in builtin_range(domain.ndim):
+                if (range.is_uniform_byaxis[i] and
+                    domain.is_uniform_byaxis[i] and
+                        not np.isclose(range.cell_sides[i],
+                                       domain.cell_sides[i])):
+                    raise ValueError(
+                        'in axis {}: cell sides of domain and range differ '
+                        'significantly: (difference {})'
+                        ''.format(i,
+                                  range.cell_sides[i] - domain.cell_sides[i]))
 
             self.__offset = _offset_from_spaces(domain, range)
 
@@ -325,6 +331,12 @@ class ResizingOperatorBase(Operator):
     def pad_const(self):
         """Constant used by this operator in case of constant padding."""
         return self.__pad_const
+
+    @property
+    def axes(self):
+        """Dimensions in which an actual resizing is performed."""
+        return tuple(i for i in range(self.domain.ndim)
+                     if self.domain.shape[i] != self.range.shape[i])
 
 
 class ResizingOperator(ResizingOperatorBase):
@@ -430,13 +442,16 @@ class ResizingOperator(ResizingOperatorBase):
 
 def _offset_from_spaces(dom, ran):
     """Return index offset corresponding to given spaces."""
+    affected = np.not_equal(dom.shape, ran.shape)
     diff_l = np.abs(ran.grid.min() - dom.grid.min())
     offset_float = diff_l / dom.cell_sides
     offset = np.around(offset_float).astype(int)
-    if not np.allclose(offset, offset_float):
-        raise ValueError('range is shifted relative to domain by a '
-                         'non-multiple {} of cell_sides'
-                         ''.format(offset_float - offset))
+    for i in range(dom.ndim):
+        if affected[i] and not np.isclose(offset[i], offset_float[i]):
+            raise ValueError('in axis {}: range is shifted relative to domain '
+                             'by a non-multiple {} of cell_sides'
+                             ''.format(i, offset_float[i] - offset[i]))
+    offset[~affected] = 0
     return tuple(offset)
 
 
@@ -468,12 +483,24 @@ def _resize_discr(discr, newshp, offset, discr_kwargs):
     order = discr_kwargs.pop('order', discr.order)
     weighting = discr_kwargs.pop('weighting', discr.weighting)
 
+    affected = np.not_equal(newshp, discr.shape)
+    ndim = discr.ndim
+    for i in range(ndim):
+        if affected[i] and not discr.is_uniform_byaxis[i]:
+            raise ValueError('cannot resize in non-uniformly discretized '
+                             'axis {}'.format(i))
+
     grid_min, grid_max = discr.grid.min(), discr.grid.max()
     cell_size = discr.cell_sides
     new_minpt, new_maxpt = [], []
 
     for axis, (n_orig, n_new, off, on_bdry) in enumerate(zip(
             discr.shape, newshp, offset, nodes_on_bdry)):
+
+        if not affected[axis]:
+            new_minpt.append(discr.min_pt[axis])
+            new_maxpt.append(discr.max_pt[axis])
+            continue
 
         n_diff = n_new - n_orig
         if off is None:
@@ -499,9 +526,24 @@ def _resize_discr(discr, newshp, offset, discr_kwargs):
         else:
             new_maxpt.append(grid_max[axis] + (num_r + 0.5) * cell_size[axis])
 
-    return uniform_discr(new_minpt, new_maxpt, newshp, dtype=dtype, impl=impl,
-                         exponent=exponent, interp=interp, order=order,
-                         weighting=weighting, nodes_on_bdry=nodes_on_bdry)
+    fspace = FunctionSpace(IntervalProd(new_minpt, new_maxpt),
+                           out_dtype=dtype)
+    dspace = fn(np.prod(newshp), dtype=dtype, impl=impl, exponent=exponent,
+                weighting=weighting)
+
+    # Stack together the (unchanged) nonuniform axes and the (new) uniform
+    # axes in the right order
+    part = uniform_partition([], [], ())
+    for i in range(ndim):
+        if discr.is_uniform_byaxis[i]:
+            part = part.append(
+                uniform_partition(new_minpt[i], new_maxpt[i], newshp[i],
+                                  nodes_on_bdry=nodes_on_bdry[i]))
+        else:
+            part = part.append(discr.partition.byaxis[i])
+
+    return DiscreteLp(fspace, part, dspace, exponent=exponent, interp=interp,
+                      order=order)
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position

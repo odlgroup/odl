@@ -148,8 +148,11 @@ class RectPartition(object):
         >>> part.nodes_on_bdry
         ((False, True), False)
         """
+        if self.size == 0:
+            return True
+
         nodes_on_bdry = []
-        for on_bdry in self.nodes_on_bdry_by_axis:
+        for on_bdry in self.nodes_on_bdry_byaxis:
             l, r = on_bdry
             if l == r:
                 nodes_on_bdry.append(l)
@@ -161,7 +164,7 @@ class RectPartition(object):
             return tuple(nodes_on_bdry)
 
     @property
-    def nodes_on_bdry_by_axis(self):
+    def nodes_on_bdry_byaxis(self):
         """Nested tuple of booleans for `nodes_on_bdry`.
 
         This attribute is equivalent to `nodes_on_bdry`, but always in
@@ -416,11 +419,6 @@ class RectPartition(object):
         >>> part.cell_sides
         array([ 0.5,  1.5])
         """
-        if not self.is_uniform:
-            raise NotImplementedError(
-                'cell sides not defined for irregular partitions. Use '
-                '`cell_sizes_vecs()` instead')
-
         sides = self.grid.stride
         sides[sides == 0] = self.extent[sides == 0]
         return sides
@@ -446,7 +444,7 @@ class RectPartition(object):
         >>> part.cell_volume
         0.75
         """
-        return float(np.prod(self.cell_sides))
+        return 0.0 if self.size == 0 else float(np.prod(self.cell_sides))
 
     def approx_equals(self, other, atol):
         """Return ``True`` in case of approximate equality.
@@ -543,11 +541,14 @@ class RectPartition(object):
         """
         # Special case of index list: slice along first axis
         if isinstance(indices, list):
-            new_min_pt = [self.cell_boundary_vecs[0][:-1][indices][0]]
-            new_max_pt = [self.cell_boundary_vecs[0][1:][indices][-1]]
-            for cvec in self.cell_boundary_vecs[1:]:
-                new_min_pt.append(cvec[0])
-                new_max_pt.append(cvec[-1])
+            if indices == []:
+                new_min_pt = new_max_pt = []
+            else:
+                new_min_pt = [self.cell_boundary_vecs[0][:-1][indices][0]]
+                new_max_pt = [self.cell_boundary_vecs[0][1:][indices][-1]]
+                for cvec in self.cell_boundary_vecs[1:]:
+                    new_min_pt.append(cvec[0])
+                    new_max_pt.append(cvec[-1])
 
             new_intvp = IntervalProd(new_min_pt, new_max_pt)
             new_grid = self.grid[indices]
@@ -569,8 +570,13 @@ class RectPartition(object):
         new_grid = self.grid[indices]
         return RectPartition(new_intvp, new_grid)
 
-    def insert(self, index, other):
-        """Return a copy with ``other`` inserted before ``index``.
+    def insert(self, index, *parts):
+        """Return a copy with ``parts`` inserted before ``index``.
+
+        The given partitions are inserted (as a block) into ``self``,
+        yielding a new partition whose number of dimensions is the sum of
+        the numbers of dimensions of all involved partitions.
+        Note that no changes are made in-place.
 
         Parameters
         ----------
@@ -578,13 +584,13 @@ class RectPartition(object):
             Index of the dimension before which ``other`` is to
             be inserted. Negative indices count backwards from
             ``self.ndim``.
-        other : `RectPartition`
-            Partition to be inserted
+        part1, ..., partN : `RectPartition`
+            Partitions to be inserted into ``self``.
 
         Returns
         -------
         newpart : `RectPartition`
-            Partition with the inserted other partition
+            The enlarged partition.
 
         Examples
         --------
@@ -597,30 +603,41 @@ class RectPartition(object):
         --------
         append
         """
-        newgrid = self.grid.insert(index, other.grid)
-        newset = self.set.insert(index, other.set)
+        if not all(isinstance(p, RectPartition) for p in parts):
+            raise TypeError('`parts` must all be `RectPartition` instances, '
+                            'got ({})'
+                            ''.format(', '.join(repr(p) for p in parts)))
+        newgrid = self.grid.insert(index, *(p.grid for p in parts))
+        newset = self.set.insert(index, *(p.set for p in parts))
         return RectPartition(newset, newgrid)
 
-    def append(self, other):
-        """Insert at the end.
+    def append(self, *parts):
+        """Insert ``parts`` at the end as a block.
 
         Parameters
         ----------
-        other : `RectPartition`,
-            Set to be inserted.
+        part1, ..., partN : `RectPartition`
+            Partitions to be appended to ``self``.
+
+        Returns
+        -------
+        newpart : `RectPartition`
+            The enlarged partition.
 
         Examples
         --------
-        >>> part1 = odl.uniform_partition([0, -1], [1, 2], (3, 3))
+        >>> part1 = odl.uniform_partition(-1, 2, 3)
         >>> part2 = odl.uniform_partition(0, 1, 5)
         >>> part1.append(part2)
-        uniform_partition([0.0, -1.0, 0.0], [1.0, 2.0, 1.0], (3, 3, 5))
+        uniform_partition([-1.0, 0.0], [2.0, 1.0], (3, 5))
+        >>> part1.append(part2, part2)
+        uniform_partition([-1.0, 0.0, 0.0], [2.0, 1.0, 1.0], (3, 5, 5))
 
         See Also
         --------
         insert
         """
-        return self.insert(self.ndim, other)
+        return self.insert(self.ndim, *parts)
 
     def squeeze(self):
         """Return the partition with removed degenerate (length 1) dimensions.
@@ -649,7 +666,8 @@ class RectPartition(object):
         RectGrid.squeeze
         IntervalProd.squeeze
         """
-        nondegen_indcs = np.flatnonzero(self.grid.nondegen_byaxis)
+        nondegen_indcs = [i for i in range(self.ndim)
+                          if self.grid.nondegen_byaxis[i]]
         newset = self.set[nondegen_indcs]
         return RectPartition(newset, self.grid.squeeze())
 
@@ -790,6 +808,9 @@ class RectPartition(object):
 
     def __repr__(self):
         """Return ``repr(self)``."""
+        if self.ndim == 0:
+            return 'uniform_partition([], [], ())'
+
         bdry_fracs = np.vstack(self.boundary_cell_fractions)
         default_bdry_fracs = np.all(np.isclose(bdry_fracs, 0.5) |
                                     np.isclose(bdry_fracs, 1.0))
@@ -800,6 +821,7 @@ class RectPartition(object):
                                dtype=float)
         csizes_r = np.fromiter((s[-1] for s in self.cell_sizes_vecs),
                                dtype=float)
+
         shift_l = ((bdry_fracs[:, 0].astype(float).squeeze() - 0.5) *
                    csizes_l)
         shift_r = ((bdry_fracs[:, 1].astype(float).squeeze() - 0.5) *
@@ -1140,8 +1162,9 @@ def uniform_partition(min_pt=None, max_pt=None, shape=None, cell_sides=None,
     """
     # Normalize partition parameters
 
-    # np.size(None) == 1
-    sizes = [np.size(p) for p in (min_pt, max_pt, shape, cell_sides)]
+    # np.size(None) == 1, so that would screw it for sizes 0 of the rest
+    sizes = [np.size(p) for p in (min_pt, max_pt, shape, cell_sides)
+             if p is not None]
     ndim = int(np.max(sizes))
 
     min_pt = normalized_scalar_param_list(min_pt, ndim, param_conv=float,
