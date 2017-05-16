@@ -18,6 +18,23 @@ def optimal_parameters(reconstruction, fom, phantoms, data,
                        initial_param=0):
     """Find the optimal parameters for a reconstruction method.
 
+    Notes
+    -----
+    For a forward operator :math:`A : X \to Y`, a reconstruction operator
+     parametrized by :math:`\theta` is some operator :math:`R_\theta : Y \to X`
+     such that
+
+    .. math::
+        R_\theta(A(x)) \approx x.
+
+    The optimal choice of :math:`\theta` is given by
+
+    .. math::
+        \theta = \argmin_\theta fom(R(A(x) + noise), x)
+
+    where :math:`fom : X \times X \to \mathbb{R}` is a Figure of Merit.
+
+
     Parameters
     ----------
     reconstruction : callable
@@ -35,31 +52,47 @@ def optimal_parameters(reconstruction, fom, phantoms, data,
 
         and returns a scalar Figure of Merit.
     phantoms : sequence
-        True images
+        True images.
     data : sequence
-        The data to be reconstructed
+        The data to be reconstructed.
     initial_param : array-like
-        Initial guess for the parameters
+        Initial guess for the parameters.
     """
+
     def func(lam):
         # Function to be minimized by scipy
         return sum(fom(reconstruction(datai, lam), phantomi)
                    for phantomi, datai in zip(phantoms, data))
 
     # Pick resolution to fit the one used by the space
-    xtol = ftol = np.finfo(phantom.space.dtype).resolution * 10
+    tol= np.finfo(phantoms[0].space.dtype).resolution * 10
 
-    # Use a gradient free method to find the best parameters
-    parameters = scipy.optimize.fmin_powell(func, initial_param,
-                                            xtol=xtol,
-                                            ftol=ftol,
-                                            disp=False)
-    return parameters
+    initial_param = np.asarray(initial_param)
+
+    if initial_param.size == 1:
+        bracket = [initial_param - tol, initial_param + tol]
+        result = scipy.optimize.minimize_scalar(func,
+                                                bracket=bracket,
+                                                tol=tol,
+                                                bounds=None,
+                                                options={'disp': False})
+        return result.x
+    else:
+        # Use a gradient free method to find the best parameters
+        parameters = scipy.optimize.fmin_powell(func, initial_param,
+                                                xtol=tol,
+                                                ftol=tol,
+                                                disp=False)
+        return parameters
+
+
+
 
 
 # USER INPUT. Pick reconstruction: 'fbp', 'huber' or 'tv'
 # 'fbp' is fast, 'huber' and 'tv' takes some time.
-reconstruction_method = 'tv'
+
+reconstruction_method = 'fbp'
 signal_to_noise = 5.0
 
 # Reconstruction space
@@ -87,7 +120,12 @@ for phantom in phantoms:
 # Define the reconstruction method to use
 if reconstruction_method == 'fbp':
     # Define the reconstruction operator for FBP reconstruction
+    # The filter type here is 'Hann' and the parameter to optimize is the
+    # frequency scaling (cut off frequency)
     def reconstruction(proj_data, lam):
+
+        print('lam = {}'.format(lam))
+
         fbp_op = odl.tomo.fbp_op(ray_trafo,
                                  filter_type='Hann', frequency_scaling=1 / lam)
         return fbp_op(proj_data)
@@ -96,6 +134,11 @@ if reconstruction_method == 'fbp':
 
 elif reconstruction_method == 'huber':
     # Define the reconstruction operator for Huber regularized reconstruction
+    # the parameter to optimize is (lam, sigma) with
+    # sigma the size of the quadratic region
+    #   (parametrizing the moreau envelope of smoothed l1 norm)
+    # lam the regularization strength
+    #   (multiplying the smoothed l1 in the objectiv function)
     # See lbfgs_tomograhpy_tv.py for more information.
     def reconstruction(proj_data, parameters):
         # Extract the separate parameters
@@ -105,7 +148,7 @@ elif reconstruction_method == 'huber':
 
         # We do not allow negative paramters, so return a bogus result
         if lam <= 0 or sigma <= 0:
-            return 1000 * space.one()
+            return np.inf *  space.one()
 
         # Create data term ||Ax - b||_2^2
         l2_norm = odl.solvers.L2NormSquared(ray_trafo.range)
@@ -120,10 +163,6 @@ elif reconstruction_method == 'huber':
         # Create full objective functional
         obj_fun = data_discrepancy + lam * regularizer
 
-        # Create initial estimate of the inverse Hessian by a diagonal estimate
-        opnorm = odl.power_method_opnorm(ray_trafo)
-        hessinv_estimate = odl.ScalingOperator(space, 1 / opnorm ** 2)
-
         # Pick parameters
         maxiter = 30
         num_store = 5
@@ -132,7 +171,8 @@ elif reconstruction_method == 'huber':
         x = ray_trafo.domain.zero()
         odl.solvers.bfgs_method(
             obj_fun, x, maxiter=maxiter, num_store=num_store,
-            hessinv_estimate=hessinv_estimate)
+            hessinv_estimate=odl.ScalingOperator(
+                    space, 1 / odl.power_method_opnorm(ray_trafo) ** 2))
 
         return x
 
@@ -140,6 +180,7 @@ elif reconstruction_method == 'huber':
 
 elif reconstruction_method == 'tv':
     # Define the reconstruction operator for TV regularized reconstruction
+    # The parameter to optimize is the regularization strength
     # See chambolle_pock_tomography.py for more information.
 
     def reconstruction(proj_data, lam):
@@ -149,7 +190,7 @@ elif reconstruction_method == 'tv':
 
         # We do not allow negative paramters, so return a bogus result
         if lam <= 0:
-            return 1000 * space.one()
+            return np.inf * space.one()
 
         # Construct operators and functionals
         gradient = odl.Gradient(space)
@@ -164,15 +205,10 @@ elif reconstruction_method == 'tv':
         # Select solver parameters
         op_norm = 1.1 * odl.power_method_opnorm(op)
 
-        niter = 200  # Number of iterations
-        tau = 1.0 / op_norm  # Step size for the primal variable
-        sigma = 1.0 / op_norm  # Step size for the dual variable
-        gamma = 0.3
-
         # Run the algorithm
         x = op.domain.zero()
         odl.solvers.chambolle_pock_solver(
-            x, f, g, op, tau=tau, sigma=sigma, niter=niter, gamma=gamma)
+            x, f, g, op, tau=1.0 / op_norm, sigma=1.0 / op_norm, niter= 200, gamma= 0.3)
 
         return x
 
@@ -191,5 +227,8 @@ optimal_parameters = optimal_parameters(reconstruction,  fom,
                                         phantoms, data,
                                         initial_param=initial_param)
 
-reconstruction(data[0], optimal_parameters).show()
-reconstruction(data[1], optimal_parameters).show()
+reconstruction(data[0], initial_param).show(reconstruction_method+' , initial parameter')
+reconstruction(data[1], initial_param).show(reconstruction_method+' , initial parameter')
+
+reconstruction(data[0], optimal_parameters).show(reconstruction_method+' , optimal parameter')
+reconstruction(data[1], optimal_parameters).show(reconstruction_method+' , optimal parameter')
