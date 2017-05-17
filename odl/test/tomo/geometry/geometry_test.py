@@ -59,23 +59,23 @@ def test_parallel_2d_props():
     assert isinstance(geom.detector, odl.tomo.Flat1dDetector)
 
     # Check defaults
-    assert all_almost_equal(geom.det_pos_init, [-1, 0])
-    assert all_almost_equal(geom.det_refpoint(0), [-1, 0])
-    assert all_almost_equal(geom.det_point_position(0, 0), [-1, 0])
-    assert all_almost_equal(geom.det_axis_init, [0, 1])
-    assert all_almost_equal(geom.det_axis(0), [0, 1])
+    assert all_almost_equal(geom.det_pos_init, [0, 1])
+    assert all_almost_equal(geom.det_refpoint(0), [0, 1])
+    assert all_almost_equal(geom.det_point_position(0, 0), [0, 1])
+    assert all_almost_equal(geom.det_axis_init, [1, 0])
+    assert all_almost_equal(geom.det_axis(0), [1, 0])
 
     # Check that we first rotate, then shift along the rotated axis, which
     # is equivalent to shifting first and then rotating.
-    # Here we expect to rotate the reference point to [0, -1] and then shift
-    # by 1 (=detector param) along the detector axis [-1, 0] at that angle.
-    assert all_almost_equal(geom.det_point_position(np.pi / 2, 1), [-1, -1])
-    assert all_almost_equal(geom.det_axis(np.pi / 2), [-1, 0])
+    # Here we expect to rotate the reference point to [-1, 0] and then shift
+    # by 1 (=detector param) along the detector axis [0, 1] at that angle.
+    assert all_almost_equal(geom.det_point_position(np.pi / 2, 1), [-1, 1])
+    assert all_almost_equal(geom.det_axis(np.pi / 2), [0, 1])
 
     # Detector to source vector, should be independent of the detector
-    # parameter. At pi/2 it should point up (+y direction).
-    assert all_almost_equal(geom.det_to_src(np.pi / 2, 0), [0, 1])
-    assert all_almost_equal(geom.det_to_src(np.pi / 2, 1), [0, 1])
+    # parameter. At pi/2 it should point into the (+x) direction.
+    assert all_almost_equal(geom.det_to_src(np.pi / 2, 0), [1, 0])
+    assert all_almost_equal(geom.det_to_src(np.pi / 2, 1), [1, 0])
 
     # Rotation matrix, should correspond to counter-clockwise rotation
     assert all_almost_equal(geom.rotation_matrix(np.pi / 2), [[0, -1],
@@ -104,7 +104,7 @@ def test_parallel_2d_orientation(det_pos_init_2d):
     det_pos_init = det_pos_init_2d
     geom = odl.tomo.Parallel2dGeometry(apart, dpart, det_pos_init=det_pos_init)
 
-    assert all_equal(geom.det_pos_init, det_pos_init)
+    assert all_almost_equal(geom.det_pos_init, det_pos_init)
     assert all_almost_equal(geom.det_refpoint(0), det_pos_init)
     assert all_almost_equal(geom.det_point_position(0, 0), det_pos_init)
 
@@ -131,24 +131,25 @@ def test_parallel_2d_slanted_detector():
     # Detector forms a 45 degree angle with the x axis at initial position,
     # with positive direction upwards
     init_axis = [1, 1]
-    geom = odl.tomo.Parallel2dGeometry(apart, dpart, det_pos_init=[-1, 0],
+    geom = odl.tomo.Parallel2dGeometry(apart, dpart, det_pos_init=[0, 1],
                                        det_axis_init=init_axis)
 
-    assert all_almost_equal(geom.det_pos_init, [-1, 0])
+    assert all_almost_equal(geom.det_pos_init, [0, 1])
 
     norm_axis = np.array(init_axis, dtype=float)
     norm_axis /= np.linalg.norm(norm_axis)
     assert all_almost_equal(geom.det_axis_init, norm_axis)
 
+    sqrt_1_2 = np.sqrt(1.0 / 2.0)
     # At angle 0: detector position at param 1 should be
-    # [-1, 0] + [sqrt(0.5), sqrt(0.5)]
+    # [0, 1] + [sqrt(1/2), sqrt(1/2)]
     assert all_almost_equal(geom.det_point_position(0, 1),
-                            [-1 + np.sqrt(0.5), np.sqrt(0.5)])
+                            [sqrt_1_2, 1 + sqrt_1_2])
 
     # At angle pi/2: detector position at param 1 should be
-    # [0, -1] + [-sqrt(0.5), +sqrt(0.5)]
+    # [-1, 0] + [-sqrt(1/2), +sqrt(1/2)]
     assert all_almost_equal(geom.det_point_position(np.pi / 2, 1),
-                            [-np.sqrt(0.5), -1 + np.sqrt(0.5)])
+                            [-1 - sqrt_1_2, sqrt_1_2])
 
 
 def test_parallel_2d_extra_rot():
@@ -162,8 +163,7 @@ def test_parallel_2d_extra_rot():
 
     # Start at [0, 1] with extra rotation by 135 degrees, making 225 degrees
     # in total for the initial position (at the bisector in the 3rd quardant)
-    geom = odl.tomo.Parallel2dGeometry(apart, dpart, det_pos_init=[0, 1],
-                                       extra_rot=extra_rot)
+    geom = odl.tomo.Parallel2dGeometry(apart, dpart, extra_rot=extra_rot)
 
     init_pos = np.array([-1, -1], dtype=float)
     init_pos /= np.linalg.norm(init_pos)
@@ -186,25 +186,25 @@ def test_parallel_3d_props():
 
     # Check defaults
     assert all_almost_equal(geom.axis, [0, 0, 1])
-    assert all_almost_equal(geom.det_pos_init, [-1, 0, 0])
-    assert all_almost_equal(geom.det_refpoint(0), [-1, 0, 0])
-    assert all_almost_equal(geom.det_point_position(0, [0, 0]), [-1, 0, 0])
-    assert all_almost_equal(geom.det_axes_init, ([0, 1, 0], [0, 0, 1]))
-    assert all_almost_equal(geom.det_axes(0), ([0, 1, 0], [0, 0, 1]))
+    assert all_almost_equal(geom.det_pos_init, [0, 1, 0])
+    assert all_almost_equal(geom.det_refpoint(0), [0, 1, 0])
+    assert all_almost_equal(geom.det_point_position(0, [0, 0]), [0, 1, 0])
+    assert all_almost_equal(geom.det_axes_init, ([1, 0, 0], [0, 0, 1]))
+    assert all_almost_equal(geom.det_axes(0), ([1, 0, 0], [0, 0, 1]))
 
     # Check that we first rotate, then shift along the initial detector
     # axes rotated according to the angle, which is equivalent to shifting
     # first and then rotating.
-    # Here we expect to rotate the reference point to [0, -1, 0] and then
+    # Here we expect to rotate the reference point to [-1, 0, 0] and then
     # shift by (1, 1) (=detector param) along the detector axes
-    # ([-1, 0, 0], [0, 0, 1]) at that angle.
+    # ([0, 1, 0], [0, 0, 1]) at that angle.
     assert all_almost_equal(geom.det_point_position(np.pi / 2, [1, 1]),
-                            [-1, -1, 1])
+                            [-1, 1, 1])
 
     # Detector to source vector, should be independent of the detector
-    # parameter. At pi/2 it should point into the (-y) direction.
-    assert all_almost_equal(geom.det_to_src(np.pi / 2, [0, 0]), [0, 1, 0])
-    assert all_almost_equal(geom.det_to_src(np.pi / 2, [1, 1]), [0, 1, 0])
+    # parameter. At pi/2 it should point into the (+x) direction.
+    assert all_almost_equal(geom.det_to_src(np.pi / 2, [0, 0]), [1, 0, 0])
+    assert all_almost_equal(geom.det_to_src(np.pi / 2, [1, 1]), [1, 0, 0])
 
     # Rotation matrix, should correspond to counter-clockwise rotation
     # arond the z axis
@@ -270,16 +270,15 @@ def test_parallel_3d_slanted_detector():
     apart = odl.uniform_partition(0, full_angle, 10)
     dpart = odl.uniform_partition([0, 0], [1, 1], (10, 10))
 
-    # Detector axis 0 lies in the x-y plane and forms a 45 degree angle with
-    # the x axis at initial position. Axis 1 is perpendicular to axis 0 and
-    # makes a 45 degrees angle with the x-y plane.
+    # Detector axis 0 lies in the bisector of the positive quadrant of the
+    # x-y plane. Axis 1 is perpendicular to axis 0 and forms a 45 degree
+    # angle with the x-y plane.
     init_axis_0 = [1, 1, 0]
-    init_axis_1 = [1, -1, 1]
+    init_axis_1 = [-1, 1, 1]
     geom = odl.tomo.Parallel3dAxisGeometry(
-        apart, dpart, det_pos_init=[-1, 0, 0],
-        det_axes_init=[init_axis_0, init_axis_1])
+        apart, dpart, det_axes_init=[init_axis_0, init_axis_1])
 
-    assert all_almost_equal(geom.det_pos_init, [-1, 0, 0])
+    assert all_almost_equal(geom.det_pos_init, [0, 1, 0])
 
     norm_axis_0 = np.array(init_axis_0, dtype=float)
     norm_axis_0 /= np.linalg.norm(norm_axis_0)
@@ -288,17 +287,17 @@ def test_parallel_3d_slanted_detector():
     assert all_almost_equal(geom.det_axes_init, [norm_axis_0, norm_axis_1])
 
     # At angle 0: detector position at param (1, 1) should be
-    # [-1, 0, 0] +
-    #   1 * [sqrt(1/2), sqrt(1/2), 0] + 1 * [sqrt(1/3), -sqrt(1/3), sqrt(1/3)]
+    # [0, 1, 0] +
+    #   [sqrt(1/2), sqrt(1/2), 0] + [-sqrt(1/3), sqrt(1/3), sqrt(1/3)]
     sqrt_1_2 = np.sqrt(1.0 / 2.0)
     sqrt_1_3 = np.sqrt(1.0 / 3.0)
-    true_det_pt = [-1 + sqrt_1_2 + sqrt_1_3, sqrt_1_2 - sqrt_1_3, sqrt_1_3]
+    true_det_pt = [sqrt_1_2 - sqrt_1_3, 1 + sqrt_1_2 + sqrt_1_3, sqrt_1_3]
     assert all_almost_equal(geom.det_point_position(0, [1, 1]), true_det_pt)
 
     # At angle pi/2: detector position at param (1, 1) should be
-    # [0, -1, 0] +
-    #   1 * [-sqrt(1/2), sqrt(1/2), 0] + 1 * [sqrt(1/3), sqrt(1/3), sqrt(1/3)]
-    true_det_pt = [-sqrt_1_2 + sqrt_1_3, -1 + sqrt_1_2 + sqrt_1_3, sqrt_1_3]
+    # [-1, 0, 0] +
+    #   [-sqrt(1/2), sqrt(1/2), 0] + [-sqrt(1/3), -sqrt(1/3), sqrt(1/3)]
+    true_det_pt = [-1 - sqrt_1_2 - sqrt_1_3, sqrt_1_2 - sqrt_1_3, sqrt_1_3]
     assert all_almost_equal(geom.det_point_position(np.pi / 2, [1, 1]),
                             true_det_pt)
 
@@ -316,18 +315,17 @@ def test_parallel_3d_extra_rot():
                           [1, 0, 0],
                           [0, -1, 0]], dtype=float)
 
-    geom = odl.tomo.Parallel3dAxisGeometry(
-        apart, dpart, axis=[0, 1, 0], extra_rot=extra_rot)
+    geom = odl.tomo.Parallel3dAxisGeometry(apart, dpart, extra_rot=extra_rot)
 
-    # Axis was [0, 1, 0], gets mapped to [0, 0, -1]
-    assert all_almost_equal(geom.axis, [0, 0, -1])
+    # Axis was [0, 0, 1], gets mapped to [-1, 0, 0]
+    assert all_almost_equal(geom.axis, [-1, 0, 0])
 
-    # Detector position starts at [-1, 0, 0] and gets mapped to [0, -1, 0]
-    assert all_almost_equal(geom.det_pos_init, [0, -1, 0])
+    # Detector position starts at [0, 1, 0] and gets mapped to [0, 0, -1]
+    assert all_almost_equal(geom.det_pos_init, [0, 0, -1])
 
-    # Detector axes start at [0, 0, -1] and [0, 1, 0], and get mapped to
-    # [1, 0, 0] and [0, 0, -1]
-    assert all_almost_equal(geom.det_axes_init, ([1, 0, 0], [0, 0, -1]))
+    # Detector axes start at [1, 0, 0] and [0, 0, 1], and get mapped to
+    # [0, 1, 0] and [-1, 0, 0]
+    assert all_almost_equal(geom.det_axes_init, ([0, 1, 0], [-1, 0, 0]))
 
 
 def test_parallel_beam_geometry_helper():
@@ -400,28 +398,28 @@ def test_fanflat_props():
     assert isinstance(geom.detector, odl.tomo.Flat1dDetector)
 
     # Check defaults
-    assert all_almost_equal(geom.src_to_det_init, [-1, 0])
-    assert all_almost_equal(geom.src_position(0), [src_rad, 0])
-    assert all_almost_equal(geom.det_refpoint(0), [-det_rad, 0])
-    assert all_almost_equal(geom.det_point_position(0, 0), [-det_rad, 0])
-    assert all_almost_equal(geom.det_axis_init, [0, 1])
-    assert all_almost_equal(geom.det_axis(0), [0, 1])
+    assert all_almost_equal(geom.src_to_det_init, [0, 1])
+    assert all_almost_equal(geom.src_position(0), [0, -src_rad])
+    assert all_almost_equal(geom.det_refpoint(0), [0, det_rad])
+    assert all_almost_equal(geom.det_point_position(0, 0), [0, det_rad])
+    assert all_almost_equal(geom.det_axis_init, [1, 0])
+    assert all_almost_equal(geom.det_axis(0), [1, 0])
 
     # Check that we first rotate, then shift along the rotated axis, which
     # is equivalent to shifting first and then rotating.
-    # Here we expect to rotate the reference point to [0, -det_rad] and then
-    # shift by 1 (=detector param) along the detector axis [-1, 0] at that
+    # Here we expect to rotate the reference point to [-det_rad, 0] and then
+    # shift by 1 (=detector param) along the detector axis [0, 1] at that
     # angle.
     assert all_almost_equal(geom.det_point_position(np.pi / 2, 1),
-                            [-1, -det_rad])
-    assert all_almost_equal(geom.det_axis(np.pi / 2), [-1, 0])
+                            [-det_rad, 1])
+    assert all_almost_equal(geom.det_axis(np.pi / 2), [0, 1])
 
     # Detector to source vector. At param=0 it should be perpendicular to
     # the detector towards the source, here at pi/2 it should point into
-    # the (+y) direction.
+    # the (+x) direction.
     # At any other parameter, when adding the non-normalized vector to the
     # detector point position, one should get the source position.
-    assert all_almost_equal(geom.det_to_src(np.pi / 2, 0), [0, 1])
+    assert all_almost_equal(geom.det_to_src(np.pi / 2, 0), [1, 0])
     src_pos = (geom.det_point_position(np.pi / 2, 1) +
                geom.det_to_src(np.pi / 2, 1, normalized=False))
     assert all_almost_equal(src_pos, geom.src_position(np.pi / 2))
@@ -464,28 +462,29 @@ def test_circular_cone_flat_props():
 
     # Check defaults
     assert all_almost_equal(geom.axis, [0, 0, 1])
-    assert all_almost_equal(geom.src_to_det_init, [-1, 0, 0])
-    assert all_almost_equal(geom.det_refpoint(0), [-det_rad, 0, 0])
+    assert all_almost_equal(geom.src_to_det_init, [0, 1, 0])
+    assert all_almost_equal(geom.src_position(0), [0, -src_rad, 0])
+    assert all_almost_equal(geom.det_refpoint(0), [0, det_rad, 0])
     assert all_almost_equal(geom.det_point_position(0, [0, 0]),
-                            [-det_rad, 0, 0])
-    assert all_almost_equal(geom.det_axes_init, ([0, 1, 0], [0, 0, 1]))
-    assert all_almost_equal(geom.det_axes(0), ([0, 1, 0], [0, 0, 1]))
+                            [0, det_rad, 0])
+    assert all_almost_equal(geom.det_axes_init, ([1, 0, 0], [0, 0, 1]))
+    assert all_almost_equal(geom.det_axes(0), ([1, 0, 0], [0, 0, 1]))
 
     # Check that we first rotate, then shift along the initial detector
     # axes rotated according to the angle, which is equivalent to shifting
     # first and then rotating.
-    # Here we expect to rotate the reference point to [0, -det_rad, 0] and
+    # Here we expect to rotate the reference point to [-det_rad, 0, 0] and
     # then shift by (1, 1) (=detector param) along the detector axes
-    # ([-1, 0, 0], [0, 0, 1]) at that angle.
+    # ([0, 1, 0], [0, 0, 1]) at that angle.
     assert all_almost_equal(geom.det_point_position(np.pi / 2, [1, 1]),
-                            [-1, -det_rad, 1])
+                            [-det_rad, 1, 1])
 
     # Detector to source vector. At param=0 it should be perpendicular to
     # the detector towards the source, here at pi/2 it should point into
-    # the (+y) direction.
+    # the (+x) direction.
     # At any other parameter, when adding the non-normalized vector to the
     # detector point position, one should get the source position.
-    assert all_almost_equal(geom.det_to_src(np.pi / 2, [0, 0]), [0, 1, 0])
+    assert all_almost_equal(geom.det_to_src(np.pi / 2, [0, 0]), [1, 0, 0])
     src_pos = (geom.det_point_position(np.pi / 2, [1, 1]) +
                geom.det_to_src(np.pi / 2, [1, 1], normalized=False))
     assert all_almost_equal(src_pos, geom.src_position(np.pi / 2))
@@ -543,23 +542,24 @@ def test_helical_cone_flat_props():
 
     # Check defaults
     assert all_almost_equal(geom.axis, [0, 0, 1])
-    assert all_almost_equal(geom.src_to_det_init, [-1, 0, 0])
-    assert all_almost_equal(geom.det_refpoint(0), [-det_rad, 0, 0])
+    assert all_almost_equal(geom.src_to_det_init, [0, 1, 0])
+    assert all_almost_equal(geom.src_position(0), [0, -src_rad, 0])
+    assert all_almost_equal(geom.det_refpoint(0), [0, det_rad, 0])
     assert all_almost_equal(geom.det_point_position(0, [0, 0]),
-                            [-det_rad, 0, 0])
-    assert all_almost_equal(geom.det_axes_init, ([0, 1, 0], [0, 0, 1]))
-    assert all_almost_equal(geom.det_axes(0), ([0, 1, 0], [0, 0, 1]))
+                            [0, det_rad, 0])
+    assert all_almost_equal(geom.det_axes_init, ([1, 0, 0], [0, 0, 1]))
+    assert all_almost_equal(geom.det_axes(0), ([1, 0, 0], [0, 0, 1]))
 
     # Check that we first rotate, then shift along the initial detector
     # axes rotated according to the angle, which is equivalent to shifting
     # first and then rotating.
-    # Here we expect to rotate the reference point to [0, -det_rad, 0] and
+    # Here we expect to rotate the reference point to [-det_rad, 0, 0] and
     # then shift by (1, 1) (=detector param) along the detector axes
-    # ([-1, 0, 0], [0, 0, 1]) at that angle. In addition, everything is
+    # ([0, 1, 0], [0, 0, 1]) at that angle. In addition, everything is
     # shifted along the rotation axis [0, 0, 1] by 1/4 of the pitch
     # (since the pitch is the vertical distance after a full turn 2*pi).
     assert all_almost_equal(geom.det_point_position(np.pi / 2, [1, 1]),
-                            [-1, -det_rad, 1 + pitch / 4])
+                            [-det_rad, 1, 1 + pitch / 4])
 
     # Make sure that source and detector move at the same height and stay
     # opposite of each other
@@ -570,10 +570,10 @@ def test_helical_cone_flat_props():
 
     # Detector to source vector. At param=0 it should be perpendicular to
     # the detector towards the source, here at pi/2 it should point into
-    # the (+y) direction.
+    # the (+x) direction.
     # At any other parameter, when adding the non-normalized vector to the
     # detector point position, one should get the source position.
-    assert all_almost_equal(geom.det_to_src(np.pi / 2, [0, 0]), [0, 1, 0])
+    assert all_almost_equal(geom.det_to_src(np.pi / 2, [0, 0]), [1, 0, 0])
     src_pos = (geom.det_point_position(np.pi / 2, [1, 1]) +
                geom.det_to_src(np.pi / 2, [1, 1], normalized=False))
     assert all_almost_equal(src_pos, geom.src_position(np.pi / 2))
@@ -588,7 +588,7 @@ def test_helical_cone_flat_props():
     # pitch_offset
     geom = odl.tomo.HelicalConeFlatGeometry(apart, dpart, src_rad, det_rad,
                                             pitch, pitch_offset=0.5)
-    assert all_almost_equal(geom.det_refpoint(0), [-det_rad, 0, 0.5])
+    assert all_almost_equal(geom.det_refpoint(0), [0, det_rad, 0.5])
 
     # Invalid parameter
     with pytest.raises(ValueError):

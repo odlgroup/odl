@@ -27,8 +27,7 @@ class ParallelHoleCollimatorGeometry(Parallel3dAxisGeometry):
 
     """Geometry for SPECT Parallel hole collimator."""
 
-    def __init__(self, apart, dpart, det_rad, axis=[0, 0, 1],
-                 **kwargs):
+    def __init__(self, apart, dpart, det_rad, axis=(0, 0, 1), **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -40,31 +39,51 @@ class ParallelHoleCollimatorGeometry(Parallel3dAxisGeometry):
         det_rad : positive float
             Radius of the circular detector orbit.
         axis : `array-like`, shape ``(3,)``, optional
-            Fixed rotation axis.
+            Vector defining the fixed rotation axis of this geometry.
         orig_to_det_init : `array-like`, shape ``(3,)``, optional
-            Vector pointing towards the detector reference point in
-            the initial position.
-            Default: a `perpendicular_vector` to ``axis``.
+            Vector pointing towards the initial position of the detector
+            reference point. The default depends on ``axis``, see Notes.
+            The zero vector is not allowed.
         det_axes_init : 2-tuple of `array-like`'s (shape ``(3,)``), optional
-            Initial axes defining the detector orientation.
-            Default: the normalized cross product of ``axis`` and
-            ``orig_to_det_init`` is used as first axis and ``axis`` as second.
+            Initial axes defining the detector orientation. The default
+            depends on ``axis``, see Notes.
+        extra_rot : `array_like`, shape ``(3, 3)``, optional
+            Rotation matrix that should be applied at the end to the
+            configuration of ``orig_to_det_init`` and ``det_axes_init``.
+            The rotation is extrinsic, i.e., defined in the "world"
+            coordinate system.
+
+        Notes
+        -----
+        In the default configuration, the rotation axis is ``(0, 0, 1)``,
+        the vector towards the initial detector reference point is
+        ``(0, 1, 0)``, and the default detector axes are
+        ``[(1, 0, 0), (0, 0, 1)]``.
+        If a different ``axis`` is provided, the new default initial
+        position and the new default axes are the computed by rotating
+        the original ones by a matrix that transforms ``(0, 0, 1)`` to the
+        new (normalized) ``axis``. This matrix is calculated with the
+        `rotation_matrix_from_to` function. Expressed in code, we have ::
+
+            init_rot = rotation_matrix_from_to((0, 0, 1), axis)
+            orig_to_det_init = init_rot.dot((0, 1, 0))
+            det_axes_init[0] = init_rot.dot((1, 0, 0))
+            det_axes_init[1] = init_rot.dot((0, 0, 1))
         """
         self.__det_radius = float(det_rad)
         if self.det_radius <= 0:
             raise ValueError('expected a positive radius, got {}'
                              ''.format(det_rad))
 
-        orig_to_det_init = kwargs.pop('orig_to_det_init',
-                                      perpendicular_vector(axis))
+        orig_to_det_init = kwargs.pop('orig_to_det_init', None)
 
-        init_pos_norm = np.linalg.norm(orig_to_det_init)
-        if init_pos_norm > 1e-10:
-            orig_to_det_init *= self.det_radius / init_pos_norm
-        else:
-            raise ValueError('`orig_to_det_init` {} is too close to zero'
-                             ''.format(orig_to_det_init))
-        kwargs['det_pos_init'] = orig_to_det_init
+        if orig_to_det_init is not None:
+            init_pos_norm = np.linalg.norm(orig_to_det_init)
+            if init_pos_norm == 0:
+                raise ValueError('`orig_to_det_init` cannot be zero')
+            else:
+                orig_to_det_init *= self.det_radius / init_pos_norm
+            kwargs['det_pos_init'] = orig_to_det_init
         super().__init__(apart, dpart, axis, **kwargs)
 
     @property
@@ -72,5 +91,7 @@ class ParallelHoleCollimatorGeometry(Parallel3dAxisGeometry):
         """Radius of the detector orbit."""
         return self.__det_radius
 
-    # Fix for bug in ABC thinking this is abstract
-    rotation_matrix = AxisOrientedGeometry.rotation_matrix
+    @property
+    def orig_to_det_init(self):
+        """Unit vector from origin towards initial detector reference point."""
+        return self.det_pos_init / np.linalg.norm(self.det_pos_init)

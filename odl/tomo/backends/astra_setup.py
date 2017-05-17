@@ -35,7 +35,7 @@ try:
     import astra
     ASTRA_AVAILABLE = True
     try:
-        # Available from 1.8rc1
+        # Available from 1.8 on
         ASTRA_VERSION = astra.__version__
     except AttributeError:
         astra_ver_num = astra.astra.version()
@@ -77,6 +77,8 @@ ASTRA_FEATURES = {
     'anisotropic_voxels_2d': None,
     # Cell sizes not equal all 3 axes in 3d, see ASTRA PR #41
     'anisotropic_voxels_3d': '>=1.8',
+    # ASTRA geometry defined by vectors not supported yet, see ASTRA issue #54
+    'parallel2d_vec_geometry': None,
     # Density weighting for cone 2d (fan beam), not supported yet,
     # see the discussion in ASTRA issue #71
     'cone2d_density_weighting': None,
@@ -89,8 +91,8 @@ ASTRA_FEATURES = {
     # to geometry axis in parallel 3d, see ASTRA issue #18
     'par3d_det_mid_pt_perp_to_axis': '>=1.7.2',
     # Linking instead of copying of GPU memory, see ASTRA issue #93.
-    # This will be in the next release.
-    'gpulink': '>1.8',
+    # This will probably be in the next release.
+    'gpulink': None,
 }
 
 
@@ -155,26 +157,25 @@ def astra_volume_geometry(discr_reco):
 
     if discr_reco.ndim == 2:
         # ASTRA does in principle support custom minimum and maximum
-        # values for the volume extent, but running the algorithm fails
-        # if voxels are non-isotropic. We raise an exception here in
-        # the meanwhile.
+        # values for the volume extent also in earlier versions, but running
+        # the algorithm fails if voxels are non-isotropic.
         if (not discr_reco.partition.has_isotropic_cells and
                 not astra_supports('anisotropic_voxels_2d')):
             raise NotImplementedError(
                 'non-isotropic pixels in 2d volumes not supported by ASTRA '
                 'v{}'.format(ASTRA_VERSION))
         # Given a 2D array of shape (x, y), a volume geometry is created as:
-        #    astra.create_vol_geom(x, y, y_min, y_max, x_min, x_max)
+        #    astra.create_vol_geom(y, x, x_min, x_max, y_min, y_max)
         # yielding a dictionary:
-        #   'GridColCount': y,
-        #   'GridRowCount': x
-        #   'WindowMaxX': y_max
-        #   'WindowMaxY': x_max
-        #   'WindowMinX': y_min
-        #   'WindowMinY': x_min
-        vol_geom = astra.create_vol_geom(vol_shp[0], vol_shp[1],
-                                         vol_min[1], vol_max[1],
-                                         vol_min[0], vol_max[0])
+        #   {'GridRowCount': y,
+        #    'GridColCount': x,
+        #    'WindowMinX': x_min,
+        #    'WindowMaxX': x_max,
+        #    'WindowMinY': y_min,
+        #    'WindowMaxY': y_max}
+        vol_geom = astra.create_vol_geom(vol_shp[1], vol_shp[0],
+                                         vol_min[0], vol_max[0],
+                                         vol_min[1], vol_max[1])
     elif discr_reco.ndim == 3:
         # Not supported in all versions of ASTRA
         if (not discr_reco.partition.has_isotropic_cells and
@@ -183,17 +184,18 @@ def astra_volume_geometry(discr_reco):
                 'non-isotropic voxels in 3d volumes not supported by ASTRA '
                 'v{}'.format(ASTRA_VERSION))
         # Given a 3D array of shape (x, y, z), a volume geometry is created as:
-        #    astra.create_vol_geom(y, z, x, )
+        #    astra.create_vol_geom(y, z, x, z_min, z_max, y_min, y_max,
+        #                          x_min, x_max),
         # yielding a dictionary:
-        #   'GridColCount': z
-        #   'GridRowCount': y
-        #   'GridSliceCount': x
-        #   'WindowMinX': z_max
-        #   'WindowMaxX': z_max
-        #   'WindowMinY': y_min
-        #   'WindowMaxY': y_min
-        #   'WindowMinZ': x_min
-        #   'WindowMaxZ': x_min
+        #   {'GridColCount': z,
+        #    'GridRowCount': y,
+        #    'GridSliceCount': x,
+        #    'WindowMinX': z_max,
+        #    'WindowMaxX': z_max,
+        #    'WindowMinY': y_min,
+        #    'WindowMaxY': y_min,
+        #    'WindowMinZ': x_min,
+        #    'WindowMaxZ': x_min}
         vol_geom = astra.create_vol_geom(vol_shp[1], vol_shp[2], vol_shp[0],
                                          vol_min[2], vol_max[2],
                                          vol_min[1], vol_max[1],
@@ -208,16 +210,20 @@ def astra_conebeam_3d_geom_to_vec(geometry):
     """Create vectors for ASTRA projection geometries from ODL geometry.
 
     The 3D vectors are used to create an ASTRA projection geometry for
-    cone beam geometries ('cone_vec') with helical acquisition curves.
+    cone beam geometries, see ``'cone_vec'`` in the
+    `ASTRA projection geometry documentation`_.
 
-    Output vectors:
+    Each row of the returned vectors corresponds to a single projection
+    and consists of ::
 
-    Each row of vectors corresponds to a single projection, and consists of:
-        ( srcX, srcY, srcZ, dX, dY, dZ, uX, uY, uZ, vX, vY, vZ ):
-        src : the ray source
-        d   : the center of the detector
-        u   : the vector from detector pixel (0,0) to (0,1)
-        v   : the vector from detector pixel (0,0) to (1,0)
+        (srcX, srcY, srcZ, dX, dY, dZ, uX, uY, uZ, vX, vY, vZ)
+
+    with
+
+        - ``src``: the ray source position
+        - ``d``  : the center of the detector
+        - ``u``  : the vector from detector pixel ``(0,0)`` to ``(0,1)``
+        - ``v``  : the vector from detector pixel ``(0,0)`` to ``(1,0)``
 
     Parameters
     ----------
@@ -228,29 +234,31 @@ def astra_conebeam_3d_geom_to_vec(geometry):
     -------
     vectors : `numpy.ndarray`
         Numpy array of shape ``(number of angles, 12)``
+
+    References
+    ----------
+    .. _astra projection geometry documentation:
+       http://www.astra-toolbox.com/docs/geom3d.html#projection-geometries
     """
     angles = geometry.angles
     vectors = np.zeros((angles.size, 12))
 
     for ang_idx, angle in enumerate(angles):
-        rot_matrix = geometry.rotation_matrix(angle)
-
-        # source position
+        # Source position
         vectors[ang_idx, 0:3] = geometry.src_position(angle)
 
-        # center of detector
+        # Center of detector in 3D space
         mid_pt = geometry.det_params.mid_pt
         vectors[ang_idx, 3:6] = geometry.det_point_position(angle, mid_pt)
 
-        # vector from detector pixel (0,0) to (0,1)
-        unit_vecs = geometry.detector.axes
-        strides = geometry.det_grid.stride
-        vectors[ang_idx, 6:9] = rot_matrix.dot(unit_vecs[0] * strides[0])
-        vectors[ang_idx, 9:12] = rot_matrix.dot(unit_vecs[1] * strides[1])
+        # Vectors from detector pixel (0, 0) to (1, 0) and (0, 0) to (0, 1)
+        det_axes = geometry.det_axes(angle)
+        px_sizes = geometry.det_partition.cell_sides
+        vectors[ang_idx, 6:9] = det_axes[0] * px_sizes[0]
+        vectors[ang_idx, 9:12] = det_axes[1] * px_sizes[1]
 
-    # Astra order, needed for data to match what we expect from astra.
-    # Astra has a different axis convention to ODL (z, y, x), so we need
-    # to adapt to this by changing the order
+    # ASTRA has (z, y, x) axis convention, in contrast to (x, y, z) in ODL,
+    # so we need to adapt to this by changing the order.
     newind = []
     for i in range(4):
         newind += [2 + 3 * i, 1 + 3 * i, 0 + 3 * i]
@@ -263,15 +271,19 @@ def astra_conebeam_2d_geom_to_vec(geometry):
     """Create vectors for ASTRA projection geometries from ODL geometry.
 
     The 2D vectors are used to create an ASTRA projection geometry for
-    cone beam geometries ('flat_vec') with helical acquisition curves.
+    fan beam geometries, see ``'fanflat_vec'`` in the
+    `ASTRA projection geometry documentation`_.
 
-    Output vectors:
+    Each row of the returned vectors corresponds to a single projection
+    and consists of ::
 
-    Each row of vectors corresponds to a single projection, and consists of:
-        ( srcX, srcY, dX, dY, uX, uY )
-        src : the ray source
-        d : the center of the detector
-        u : the vector between the centers of detector pixels 0 and 1
+        (srcX, srcY, dX, dY, uX, uY)
+
+    with
+
+        - ``src``: the ray source position
+        - ``d``  : the center of the detector
+        - ``u``  : the vector from detector pixel 0 to 1
 
     Parameters
     ----------
@@ -282,32 +294,27 @@ def astra_conebeam_2d_geom_to_vec(geometry):
     -------
     vectors : `numpy.ndarray`
         Numpy array of shape ``(number of angles, 6)``
+
+    References
+    ----------
+    .. _astra projection geometry documentation:
+       http://www.astra-toolbox.com/docs/geom3d.html#projection-geometries
     """
     angles = geometry.angles
     vectors = np.zeros((angles.size, 6))
 
     for ang_idx, angle in enumerate(angles):
-        rot_matrix = geometry.rotation_matrix(angle)
-
-        # source position
+        # Source position
         vectors[ang_idx, 0:2] = geometry.src_position(angle)
 
-        # center of detector
+        # Center of detector
         mid_pt = geometry.det_params.mid_pt
         vectors[ang_idx, 2:4] = geometry.det_point_position(angle, mid_pt)
 
-        # vector from detector pixel (0) to (1)
-        unit_vec = geometry.detector.axis
-        strides = geometry.det_grid.stride
-        vectors[ang_idx, 4:6] = rot_matrix.dot(unit_vec * strides[0])
-
-    # Astra order, needed for data to match what we expect from astra.
-    # Astra has a different axis convention to ODL (z, y, x), so we need
-    # to adapt to this by changing the order
-    newind = []
-    for i in range(3):
-        newind += [1 + 2 * i, 0 + 2 * i]
-    vectors = vectors[:, newind]
+        # Vector from detector pixel 0 to 1
+        det_axis = geometry.det_axis(angle)
+        px_size = geometry.det_partition.cell_sides[0]
+        vectors[ang_idx, 4:6] = det_axis * px_size
 
     return vectors
 
@@ -316,16 +323,20 @@ def astra_parallel_3d_geom_to_vec(geometry):
     """Create vectors for ASTRA projection geometries from ODL geometry.
 
     The 3D vectors are used to create an ASTRA projection geometry for
-    parallel beam geometries ('parallel3d_vec').
+    parallel beam geometries, see ``'parallel3d_vec'`` in the
+    `ASTRA projection geometry documentation`_.
 
-    Output vectors:
+    Each row of the returned vectors corresponds to a single projection
+    and consists of ::
 
-    Each row of vectors corresponds to a single projection, and consists of:
-        ( rayX, rayY, rayZ, dX, dY, dZ, uX, uY, uZ, vX, vY, vZ )
-        ray : the ray direction
-        d   : the center of the detector
-        u   : the vector from detector pixel (0,0) to (0,1)
-        v   : the vector from detector pixel (0,0) to (1,0)
+        (rayX, rayY, rayZ, dX, dY, dZ, uX, uY, uZ, vX, vY, vZ)
+
+    with
+
+        - ``ray``: the ray direction
+        - ``d``  : the center of the detector
+        - ``u``  : the vector from detector pixel ``(0,0)`` to ``(0,1)``
+        - ``v``  : the vector from detector pixel ``(0,0)`` to ``(1,0)``
 
     Parameters
     ----------
@@ -335,31 +346,33 @@ def astra_parallel_3d_geom_to_vec(geometry):
     Returns
     -------
     vectors : `numpy.ndarray`
-        Numpy array of shape ``(number of angles, 12)``
+        Numpy array of shape ``(number of angles, 12)``.
+
+    References
+    ----------
+    .. _astra projection geometry documentation:
+       http://www.astra-toolbox.com/docs/geom3d.html#projection-geometries
     """
     angles = geometry.angles
     vectors = np.zeros((angles.size, 12))
 
     for ang_idx, angle in enumerate(angles):
-        rot_matrix = geometry.rotation_matrix(angle)
-
         mid_pt = geometry.det_params.mid_pt
 
-        # source position
-        vectors[ang_idx, 0:3] = geometry.det_to_src(angle, mid_pt)
+        # Ray direction = -(detector-to-source normal vector)
+        vectors[ang_idx, 0:3] = -geometry.det_to_src(angle, mid_pt)
 
-        # center of detector
+        # Center of the detector in 3D space
         vectors[ang_idx, 3:6] = geometry.det_point_position(angle, mid_pt)
 
-        # vector from detector pixel (0,0) to (0,1)
-        unit_vecs = geometry.detector.axes
-        strides = geometry.det_grid.stride
-        vectors[ang_idx, 6:9] = rot_matrix.dot(unit_vecs[0] * strides[0])
-        vectors[ang_idx, 9:12] = rot_matrix.dot(unit_vecs[1] * strides[1])
+        # Vectors from detector pixel (0, 0) to (1, 0) and (0, 0) to (0, 1)
+        det_axes = geometry.det_axes(angle)
+        px_sizes = geometry.det_partition.cell_sides
+        vectors[ang_idx, 6:9] = det_axes[0] * px_sizes[0]
+        vectors[ang_idx, 9:12] = det_axes[1] * px_sizes[1]
 
-    # Astra order, needed for data to match what we expect from astra.
-    # Astra has a different axis convention to ODL (z, y, x), so we need
-    # to adapt to this by changing the order
+    # ASTRA has (z, y, x) axis convention, in contrast to (x, y, z) in ODL,
+    # so we need to adapt to this by changing the order.
     new_ind = []
     for i in range(4):
         new_ind += [2 + 3 * i, 1 + 3 * i, 0 + 3 * i]
@@ -394,11 +407,6 @@ def astra_projection_geometry(geometry):
     if not geometry.det_partition.is_uniform:
         raise ValueError('non-uniform detector sampling is not supported')
 
-    # As of ASTRA version 1.7beta the volume width can be specified in the
-    # volume geometry creator also for 3D geometries. For version < 1.7
-    # this was possible only for 2D geometries. Thus, standard ASTRA
-    # projection geometries do not have to be rescaled any more by the (
-    # isotropic) voxel size.
     if (isinstance(geometry, ParallelBeamGeometry) and
             isinstance(geometry.detector, FlatDetector) and
             geometry.ndim == 2):

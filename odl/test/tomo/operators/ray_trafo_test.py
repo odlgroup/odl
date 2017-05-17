@@ -239,8 +239,8 @@ def test_adjoint(projector):
 
 def test_angles(projector):
     """Test discrete Ray transform angle conventions."""
-    # Smoothed line/hyperplane around 0:th dimension
-    vol = projector.domain.element(lambda x: np.exp(-x[0] ** 2))
+    # Smoothed line/hyperplane around axis x[1] = 0
+    vol = projector.domain.element(lambda x: np.exp(-x[1] ** 2))
 
     # Create projection
     result = projector(vol).asarray()

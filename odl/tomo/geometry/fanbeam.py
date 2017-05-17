@@ -38,12 +38,12 @@ class FanFlatGeometry(DivergentBeamGeometry):
     The motion parameter is the 1d rotation angle parameterizing source
     and detector positions simultaneously.
 
-    In the standard configuration, the source and detector start on the
-    first coodinate axis with vector ``(1, 0)`` from source to detector,
-    and the initial detector axis is ``(0, 1)``.
+    In the standard configuration, the detector is perpendicular to the
+    ray direction, its reference point is initially at ``(0, 1)``, and
+    the initial detector axis is ``(1, 0)``.
     """
 
-    _default_config = dict(src_to_det_init=(-1, 0), det_axis_init=(0, 1))
+    _default_config = dict(src_to_det_init=(0, 1), det_axis_init=(1, 0))
 
     def __init__(self, apart, dpart, src_radius, det_radius, **kwargs):
         """Initialize a new instance.
@@ -61,7 +61,7 @@ class FanFlatGeometry(DivergentBeamGeometry):
         src_to_det_init : `array-like` (shape ``(2,)``), optional
             Initial state of the vector pointing from source to detector
             reference point. The zero vector is not allowed.
-            Default: ``(-1, 0)``.
+            Default: ``(0, 1)``.
         det_axis_init : `array-like` (shape ``(2,)``), optional
             Initial axis defining the detector orientation. The default
             depends on ``src_to_det_init``, see Notes.
@@ -74,15 +74,15 @@ class FanFlatGeometry(DivergentBeamGeometry):
         Notes
         -----
         In the default configuration, the initial source-to-detector vector
-        is ``(1, 0)``, and the initial detector axis is ``(0, 1)``. If a
+        is ``(0, 1)``, and the initial detector axis is ``(1, 0)``. If a
         different ``src_to_det_init`` is chosen, the new default axis is
         given as a rotation of the original one by a matrix that transforms
-        ``(1, 0)`` to the new (normalized) ``src_to_det_init``. This matrix
+        ``(0, 1)`` to the new (normalized) ``src_to_det_init``. This matrix
         is calculated with the `rotation_matrix_from_to` function.
         Expressed in code, we have ::
 
-            init_rot = rotation_matrix_from_to((1, 0), src_to_det_init)
-            det_axis_init = init_rot.dot((0, 1))
+            init_rot = rotation_matrix_from_to((0, 1), src_to_det_init)
+            det_axis_init = init_rot.dot((1, 0))
 
         Examples
         --------
@@ -92,52 +92,52 @@ class FanFlatGeometry(DivergentBeamGeometry):
         >>> apart = odl.uniform_partition(0, 2 * np.pi, 10)
         >>> dpart = odl.uniform_partition(-1, 1, 20)
         >>> geom = FanFlatGeometry(apart, dpart, src_radius=1, det_radius=5)
-        >>> np.allclose(geom.src_to_det_init, -e_x)
+        >>> np.allclose(geom.src_to_det_init, e_y)
         True
-        >>> np.allclose(geom.det_axis_init, e_y)
+        >>> np.allclose(geom.det_axis_init, e_x)
         True
 
         Specifying an initial detector position by default rotates the
         standard configuration to this position:
 
         >>> geom = FanFlatGeometry(apart, dpart, src_radius=1, det_radius=5,
-        ...                        src_to_det_init=(0, 1))
-        >>> np.allclose(geom.src_to_det_init, e_y)
-        True
-        >>> np.allclose(geom.det_axis_init, e_x)
-        True
-        >>> geom = FanFlatGeometry(apart, dpart, src_radius=1, det_radius=5,
         ...                        src_to_det_init=(1, 0))
         >>> np.allclose(geom.src_to_det_init, e_x)
         True
         >>> np.allclose(geom.det_axis_init, -e_y)
+        True
+        >>> geom = FanFlatGeometry(apart, dpart, src_radius=1, det_radius=5,
+        ...                        src_to_det_init=(0, -1))
+        >>> np.allclose(geom.src_to_det_init, -e_y)
+        True
+        >>> np.allclose(geom.det_axis_init, -e_x)
         True
 
         The initial detector axis can also be set explicitly:
 
         >>> geom = FanFlatGeometry(
         ...     apart, dpart, src_radius=1, det_radius=5,
-        ...     src_to_det_init=(0, 1), det_axis_init=(1, 0))
-        >>> np.allclose(geom.src_to_det_init, e_y)
+        ...     src_to_det_init=(1, 0), det_axis_init=(0, 1))
+        >>> np.allclose(geom.src_to_det_init, e_x)
         True
-        >>> np.allclose(geom.det_axis_init, e_x)
+        >>> np.allclose(geom.det_axis_init, e_y)
         True
 
         A matrix can be given to perform a final rotation. This is most
         useful to rotate non-standard ``det_axis_init``, or if full
         control over the rotation is desired:
 
-        >>> rot_matrix = np.array([[-1, 0],
-        ...                        [0, 1]])
+        >>> rot_matrix = np.array([[1, 0],
+        ...                        [0, -1]])
         >>> geom = FanFlatGeometry(apart, dpart, src_radius=1, det_radius=5,
         ...                        extra_rot=rot_matrix)
-        >>> np.allclose(geom.src_to_det_init, e_x)
+        >>> np.allclose(geom.src_to_det_init, -e_y)
         True
-        >>> np.allclose(geom.det_axis_init, e_y)
+        >>> np.allclose(geom.det_axis_init, e_x)
         True
         """
-        def_src_to_det = self._default_config['src_to_det_init']
-        def_det_axis = self._default_config['det_axis_init']
+        default_src_to_det = self._default_config['src_to_det_init']
+        default_det_axis = self._default_config['det_axis_init']
 
         self.__src_radius, src_radius_in = float(src_radius), src_radius
         if self.src_radius < 0:
@@ -150,11 +150,8 @@ class FanFlatGeometry(DivergentBeamGeometry):
         if self.src_radius == 0 and self.det_radius == 0:
             raise ValueError('source and detector radii cannot both be 0')
 
-        src_to_det_init = np.asarray(kwargs.pop('src_to_det_init',
-                                                def_src_to_det), dtype=float)
-        if np.linalg.norm(src_to_det_init) <= 1e-6:
-            raise ValueError('`src_to_det_init` {} too close '
-                             'to zero'.format(src_to_det_init))
+        src_to_det_init = np.asarray(
+            kwargs.pop('src_to_det_init', default_src_to_det), dtype=float)
 
         det_axis_init = kwargs.pop('det_axis_init', None)
         extra_rot = np.asarray(kwargs.pop('extra_rot', np.eye(2)))
@@ -169,16 +166,21 @@ class FanFlatGeometry(DivergentBeamGeometry):
             raise TypeError('got an unexpected keyword argument {!r}'
                             ''.format(kwargs.popitem()[0]))
 
-        if np.linalg.norm(src_to_det_init - def_src_to_det) < 1e-4:
-            # Vector close to default is mapped to default (due to
-            # instability otherwise)
-            init_rot = np.eye(2)
+        src_to_det_init_norm = np.linalg.norm(src_to_det_init)
+        if src_to_det_init_norm == 0:
+            raise ValueError('`src_to_det_init` cannot be zero')
         else:
-            # Rotation due to non-standard src_to_det_init
-            init_rot = rotation_matrix_from_to(def_src_to_det, src_to_det_init)
+            dir_deviation = (
+                src_to_det_init / src_to_det_init_norm - default_src_to_det)
+            if np.linalg.norm(dir_deviation) < 1e-4:
+                # Almost no rotation, mapped to 0 rotation due to  instability
+                init_rot = np.eye(2)
+            else:
+                init_rot = rotation_matrix_from_to(default_src_to_det,
+                                                   src_to_det_init)
 
         if det_axis_init is None:
-            det_axis_init = init_rot.dot(def_det_axis)
+            det_axis_init = init_rot.dot(default_det_axis)
 
         # Extra rotation of everything
         src_to_det_init = self.extra_rotation.dot(src_to_det_init)
@@ -345,8 +347,8 @@ class FanFlatGeometry(DivergentBeamGeometry):
                                                orig_src_to_det)
             orig_det_axis = init_rot.T.dot(orig_det_axis)
 
-        def_init_axis = self._default_config['det_axis_init']
-        if not np.allclose(orig_det_axis, def_init_axis):
+        default_init_axis = self._default_config['det_axis_init']
+        if not np.allclose(orig_det_axis, default_init_axis):
             det_axis_init = orig_det_axis.tolist()
             optargs.append(('det_axis_init', det_axis_init, None))
 

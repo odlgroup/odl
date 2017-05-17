@@ -87,7 +87,9 @@ class AstraCudaProjectorImpl(object):
 
         # Copy data to GPU memory
         if self.geometry.ndim == 2:
-            astra.data2d.store(self.vol_id, vol_data.asarray())
+            # Rotate 90 degrees counter-clockwise to transfer from coordinate
+            # system (x, y) to (rows, cols)
+            astra.data2d.store(self.vol_id, np.rot90(vol_data.asarray(), 1))
         elif self.geometry.ndim == 3:
             astra.data3d.store(self.vol_id, vol_data.asarray())
         else:
@@ -116,12 +118,15 @@ class AstraCudaProjectorImpl(object):
         # Create input and output arrays
         if ndim == 2:
             astra_proj_shape = self.proj_space.shape
+            astra_vol_shape = (self.reco_space.shape[1],
+                               self.reco_space.shape[0])
         elif ndim == 3:
             astra_proj_shape = (self.proj_space.shape[2],
                                 self.proj_space.shape[0],
                                 self.proj_space.shape[1])
+            astra_vol_shape = self.reco_space.shape
 
-        self.in_array = np.empty(self.reco_space.shape,
+        self.in_array = np.empty(astra_vol_shape,
                                  dtype='float32', order='C')
         self.out_array = np.empty(astra_proj_shape,
                                   dtype='float32', order='C')
@@ -231,7 +236,12 @@ class AstraCudaBackProjectorImpl(object):
         astra.algorithm.run(self.algo_id)
 
         # Copy result to CPU memory
-        out[:] = self.out_array
+        if self.geometry.ndim == 2:
+            # Rotate 90 degrees counter-clockwise from coordinate system
+            # (rows, cols) to (x, y)
+            out[:] = np.rot90(self.out_array, -1)
+        elif self.geometry.ndim == 3:
+            out[:] = self.out_array
 
         # Fix scaling to weight by pixel/voxel size
         out *= astra_cuda_bp_scaling_factor(
@@ -245,14 +255,17 @@ class AstraCudaBackProjectorImpl(object):
 
         if ndim == 2:
             astra_proj_shape = self.proj_space.shape
+            astra_vol_shape = (self.reco_space.shape[1],
+                               self.reco_space.shape[0])
         elif ndim == 3:
             astra_proj_shape = (self.proj_space.shape[2],
                                 self.proj_space.shape[0],
                                 self.proj_space.shape[1])
+            astra_vol_shape = self.reco_space.shape
 
         self.in_array = np.empty(astra_proj_shape,
                                  dtype='float32', order='C')
-        self.out_array = np.empty(self.reco_space.shape,
+        self.out_array = np.empty(astra_vol_shape,
                                   dtype='float32', order='C')
 
         # Create ASTRA data structures
@@ -370,12 +383,15 @@ def astra_cuda_bp_scaling_factor(proj_space, reco_space, geometry):
         elif isinstance(geometry, HelicalConeFlatGeometry):
             # Scales with cell volume
             scaling_factor /= reco_space.cell_volume
-            # Magnification correction
+            # Magnification correction (scaling = 1 / magnification ** 2)
             src_radius = geometry.src_radius
             det_radius = geometry.det_radius
             scaling_factor *= ((src_radius + det_radius) / src_radius) ** 2
 
-            # Correction for scaled 1/r^2 factor in ASTRA's density weighting
+            # Correction for scaled 1/r^2 factor in ASTRA's density weighting.
+            # This compensates for scaled voxels and pixels, as well as a
+            # missing factor src_radius ** 2 in the ASTRA BP with
+            # density weighting.
             det_px_area = geometry.det_partition.cell_volume
             scaling_factor *= (src_radius ** 2 * det_px_area ** 2 /
                                reco_space.cell_volume ** 2)

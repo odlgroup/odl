@@ -19,7 +19,7 @@ import numpy as np
 from odl.tomo.geometry.detector import Flat2dDetector
 from odl.tomo.geometry.geometry import (
     DivergentBeamGeometry, AxisOrientedGeometry)
-from odl.tomo.util.utility import perpendicular_vector, rotation_matrix_from_to
+from odl.tomo.util.utility import rotation_matrix_from_to
 from odl.util import signature_string, indent_rows
 
 
@@ -40,8 +40,8 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
     and detector positions simultaneously.
 
     In the standard configuration, the rotation axis is ``(0, 0, 1)``,
-    the initial source-to-detector vector is ``(-1, 0, 0)``, and the
-    initial detector axes are ``[(0, 1, 0), (0, 0, 1)]``.
+    the initial source-to-detector vector is ``(0, 1, 0)``, and the
+    initial detector axes are ``[(1, 0, 0), (0, 0, 1)]``.
 
     See Also
     --------
@@ -49,8 +49,8 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
     """
 
     _default_config = dict(axis=(0, 0, 1),
-                           src_to_det_init=(-1, 0, 0),
-                           det_axes_init=((0, 1, 0), (0, 0, 1)))
+                           src_to_det_init=(0, 1, 0),
+                           det_axes_init=((1, 0, 0), (0, 0, 1)))
 
     def __init__(self, apart, dpart, src_radius, det_radius, pitch,
                  axis=(0, 0, 1), **kwargs):
@@ -92,8 +92,8 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         Notes
         -----
         In the default configuration, the rotation axis is ``(0, 0, 1)``,
-        the initial source-to-detector direction is ``(-1, 0, 0)``,
-        and the default detector axes are ``[(0, 1, 0), (0, 0, 1)]``.
+        the initial source-to-detector direction is ``(0, 1, 0)``,
+        and the default detector axes are ``[(1, 0, 0), (0, 0, 1)]``.
         If a different ``axis`` is provided, the new default initial
         position and the new default axes are the computed by rotating
         the original ones by a matrix that transforms ``(0, 0, 1)`` to the
@@ -101,8 +101,8 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         `rotation_matrix_from_to` function. Expressed in code, we have ::
 
             init_rot = rotation_matrix_from_to((0, 0, 1), axis)
-            src_to_det_init = init_rot.dot((-1, 0, 0))
-            det_axes_init[0] = init_rot.dot((0, 1, 0))
+            src_to_det_init = init_rot.dot((0, 1, 0))
+            det_axes_init[0] = init_rot.dot((1, 0, 0))
             det_axes_init[1] = init_rot.dot((0, 0, 1))
 
         Examples
@@ -116,17 +116,17 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         >>> geom = HelicalConeFlatGeometry(
         ...     apart, dpart, src_radius=5, det_radius=10, pitch=2)
         >>> geom.src_position(0)
-        array([ 5.,  0.,  0.])
+        array([ 0., -5.,  0.])
         >>> geom.det_refpoint(0)
-        array([-10.,   0.,   0.])
+        array([ 0., 10.,  0.])
         >>> np.allclose(geom.src_position(2 * np.pi),
         ...     geom.src_position(0) + (0, 0, 2))  # z shift due to pitch
         True
         >>> np.allclose(geom.axis, e_z)
         True
-        >>> np.allclose(geom.src_to_det_init, -e_x)
+        >>> np.allclose(geom.src_to_det_init, e_y)
         True
-        >>> np.allclose(geom.det_axes_init, (e_y, e_z))
+        >>> np.allclose(geom.det_axes_init, (e_x, e_z))
         True
 
         Specifying an axis by default rotates the standard configuration
@@ -137,18 +137,18 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         ...     axis=(0, 1, 0))
         >>> np.allclose(geom.axis, e_y)
         True
-        >>> np.allclose(geom.src_to_det_init, -e_x)
+        >>> np.allclose(geom.src_to_det_init, -e_z)
         True
-        >>> np.allclose(geom.det_axes_init, (-e_z, e_y))
+        >>> np.allclose(geom.det_axes_init, (e_x, e_y))
         True
         >>> geom = HelicalConeFlatGeometry(
         ...     apart, dpart, src_radius=5, det_radius=10, pitch=2,
         ...     axis=(1, 0, 0))
         >>> np.allclose(geom.axis, e_x)
         True
-        >>> np.allclose(geom.src_to_det_init, e_z)
+        >>> np.allclose(geom.src_to_det_init, e_y)
         True
-        >>> np.allclose(geom.det_axes_init, (e_y, e_x))
+        >>> np.allclose(geom.det_axes_init, (-e_z, e_x))
         True
 
         The initial source-to-detector vector and the detector axes can
@@ -156,17 +156,9 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
 
         >>> geom = HelicalConeFlatGeometry(
         ...     apart, dpart, src_radius=5, det_radius=10, pitch=2,
-        ...     axis=(0, 1, 0), src_to_det_init=(1, 0, 0))
-        >>> np.allclose(geom.axis, e_y)
-        True
-        >>> np.allclose(geom.src_to_det_init, e_x)
-        True
-        >>> np.allclose(geom.det_axes_init, (-e_z, e_y))  # as above
-        True
-        >>> geom = HelicalConeFlatGeometry(
-        ...     apart, dpart, src_radius=5, det_radius=10, pitch=2,
-        ...     axis=(0, 1, 0), det_axes_init=((0, 1, 0), (0, 0, 1)))
-        >>> np.allclose(geom.axis, e_y)
+        ...     src_to_det_init=(-1, 0, 0),
+        ...     det_axes_init=((0, 1, 0), (0, 0, 1)))
+        >>> np.allclose(geom.axis, e_z)
         True
         >>> np.allclose(geom.src_to_det_init, -e_x)
         True
@@ -185,14 +177,14 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         ...     extra_rot=rot_matrix)
         >>> np.allclose(geom.axis, -e_y)
         True
-        >>> np.allclose(geom.src_to_det_init, -e_x)  # default
+        >>> np.allclose(geom.src_to_det_init, e_z)
         True
-        >>> np.allclose(geom.det_axes_init, (e_z, -e_y))
+        >>> np.allclose(geom.det_axes_init, (e_x, -e_y))
         True
         """
-        def_axis = self._default_config['axis']
-        def_src_to_det = self._default_config['src_to_det_init']
-        def_det_axes = self._default_config['det_axes_init']
+        default_axis = self._default_config['axis']
+        default_src_to_det = self._default_config['src_to_det_init']
+        default_det_axes = self._default_config['det_axes_init']
 
         src_to_det_init = kwargs.pop('src_to_det_init', None)
         det_axes_init = kwargs.pop('det_axes_init', None)
@@ -204,22 +196,22 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
             raise ValueError('`extra_rot` is almost singular')
         self.__extra_rotation = extra_rot
 
-        if np.allclose(axis, def_axis, rtol=1e-3):
+        if np.allclose(axis, default_axis, rtol=1e-3):
             # Vector close to default is mapped to default (due to
             # instability otherwise)
             init_rot = np.eye(3)
         else:
             # Rotation due to non-standard src_to_det_init
-            init_rot = rotation_matrix_from_to(def_axis, axis)
+            init_rot = rotation_matrix_from_to(default_axis, axis)
 
         if src_to_det_init is None:
-            src_to_det_init = init_rot.dot(def_src_to_det)
+            src_to_det_init = init_rot.dot(default_src_to_det)
         if np.linalg.norm(src_to_det_init) <= 1e-10:
             raise ValueError('initial source to detector vector {} is too '
                              'close to zero'.format(src_to_det_init))
 
         if det_axes_init is None:
-            det_axes_init = [init_rot.dot(a) for a in def_det_axes]
+            det_axes_init = [init_rot.dot(a) for a in default_det_axes]
 
         # Extra rotation of everything
         src_to_det_init = self.extra_rotation.dot(src_to_det_init)
@@ -230,9 +222,6 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
 
         self.__src_to_det_init = (np.array(src_to_det_init) /
                                   np.linalg.norm(src_to_det_init))
-
-        src_to_det_init = kwargs.pop('src_to_det_init',
-                                     perpendicular_vector(self.axis))
 
         detector = Flat2dDetector(dpart, det_axes_init)
         super().__init__(ndim=3, motion_part=apart, detector=detector)
@@ -410,21 +399,21 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
             orig_src_to_det = self.src_to_det_init
             orig_det_axes = self.det_axes_init
 
-        def_axis = self._default_config['axis']
-        if not np.allclose(orig_axis, def_axis):
+        default_axis = self._default_config['axis']
+        if not np.allclose(orig_axis, default_axis):
             optargs.append(('axis', orig_axis.tolist(), None))
-            init_rot = rotation_matrix_from_to(def_axis, orig_axis)
+            init_rot = rotation_matrix_from_to(default_axis, orig_axis)
             orig_src_to_det = init_rot.T.dot(orig_src_to_det)
             orig_det_axes = [init_rot.T.dot(a) for a in orig_det_axes]
 
         optargs.append(('pitch_offset', self.pitch_offset, 0))
 
-        def_src_to_det = self._default_config['src_to_det_init']
-        if not np.allclose(orig_src_to_det, def_src_to_det):
+        default_src_to_det = self._default_config['src_to_det_init']
+        if not np.allclose(orig_src_to_det, default_src_to_det):
             optargs.append(('src_to_det_init', orig_src_to_det.tolist(), None))
 
-        def_init_axes = self._default_config['det_axes_init']
-        if not np.allclose(orig_det_axes, def_init_axes):
+        default_init_axes = self._default_config['det_axes_init']
+        if not np.allclose(orig_det_axes, default_init_axes):
             det_axes_init = tuple(a.tolist() for a in orig_det_axes)
             optargs.append(('det_axes_init', det_axes_init, None))
 
@@ -454,8 +443,8 @@ class CircularConeFlatGeometry(HelicalConeFlatGeometry):
     and detector positions simultaneously.
 
     In the standard configuration, the rotation axis is ``(0, 0, 1)``,
-    the initial source-to-detector vector is ``(-1, 0, 0)``, and the
-    initial detector axes are ``[(0, 1, 0), (0, 0, 1)]``.
+    the initial source-to-detector vector is ``(0, 1, 0)``, and the
+    initial detector axes are ``[(1, 0, 0), (0, 0, 1)]``.
 
     See Also
     --------
@@ -497,8 +486,8 @@ class CircularConeFlatGeometry(HelicalConeFlatGeometry):
         Notes
         -----
         In the default configuration, the rotation axis is ``(0, 0, 1)``,
-        the initial source-to-detector direction is ``(-1, 0, 0)``,
-        and the default detector axes are ``[(0, 1, 0), (0, 0, 1)]``.
+        the initial source-to-detector direction is ``(0, 1, 0)``,
+        and the default detector axes are ``[(1, 0, 0), (0, 0, 1)]``.
         If a different ``axis`` is provided, the new default initial
         position and the new default axes are the computed by rotating
         the original ones by a matrix that transforms ``(0, 0, 1)`` to the
@@ -506,31 +495,31 @@ class CircularConeFlatGeometry(HelicalConeFlatGeometry):
         `rotation_matrix_from_to` function. Expressed in code, we have ::
 
             init_rot = rotation_matrix_from_to((0, 0, 1), axis)
-            src_to_det_init = init_rot.dot((-1, 0, 0))
-            det_axes_init[0] = init_rot.dot((0, 1, 0))
+            src_to_det_init = init_rot.dot((0, 1, 0))
+            det_axes_init[0] = init_rot.dot((1, 0, 0))
             det_axes_init[1] = init_rot.dot((0, 0, 1))
 
         Examples
         --------
         Initialization with default parameters and some (arbitrary)
-        choices for pitch and radii:
+        choices for the radii:
 
         >>> e_x, e_y, e_z = np.eye(3)  # standard unit vectors
-        >>> apart = odl.uniform_partition(0, 2 * np.pi, 10)
+        >>> apart = odl.uniform_partition(0, 4 * np.pi, 10)
         >>> dpart = odl.uniform_partition([-1, -1], [1, 1], (20, 20))
         >>> geom = CircularConeFlatGeometry(
         ...     apart, dpart, src_radius=5, det_radius=10)
         >>> geom.src_position(0)
-        array([ 5.,  0.,  0.])
+        array([ 0., -5.,  0.])
         >>> geom.det_refpoint(0)
-        array([-10.,   0.,   0.])
+        array([ 0., 10.,  0.])
         >>> np.allclose(geom.src_position(2 * np.pi), geom.src_position(0))
         True
         >>> np.allclose(geom.axis, e_z)
         True
-        >>> np.allclose(geom.src_to_det_init, -e_x)
+        >>> np.allclose(geom.src_to_det_init, e_y)
         True
-        >>> np.allclose(geom.det_axes_init, (e_y, e_z))
+        >>> np.allclose(geom.det_axes_init, (e_x, e_z))
         True
 
         Specifying an axis by default rotates the standard configuration
@@ -541,18 +530,18 @@ class CircularConeFlatGeometry(HelicalConeFlatGeometry):
         ...     axis=(0, 1, 0))
         >>> np.allclose(geom.axis, e_y)
         True
-        >>> np.allclose(geom.src_to_det_init, -e_x)
+        >>> np.allclose(geom.src_to_det_init, -e_z)
         True
-        >>> np.allclose(geom.det_axes_init, (-e_z, e_y))
+        >>> np.allclose(geom.det_axes_init, (e_x, e_y))
         True
         >>> geom = CircularConeFlatGeometry(
         ...     apart, dpart, src_radius=5, det_radius=10,
         ...     axis=(1, 0, 0))
         >>> np.allclose(geom.axis, e_x)
         True
-        >>> np.allclose(geom.src_to_det_init, e_z)
+        >>> np.allclose(geom.src_to_det_init, e_y)
         True
-        >>> np.allclose(geom.det_axes_init, (e_y, e_x))
+        >>> np.allclose(geom.det_axes_init, (-e_z, e_x))
         True
 
         The initial source-to-detector vector and the detector axes can
@@ -560,17 +549,9 @@ class CircularConeFlatGeometry(HelicalConeFlatGeometry):
 
         >>> geom = CircularConeFlatGeometry(
         ...     apart, dpart, src_radius=5, det_radius=10,
-        ...     axis=(0, 1, 0), src_to_det_init=(1, 0, 0))
-        >>> np.allclose(geom.axis, e_y)
-        True
-        >>> np.allclose(geom.src_to_det_init, e_x)
-        True
-        >>> np.allclose(geom.det_axes_init, (-e_z, e_y))  # as above
-        True
-        >>> geom = CircularConeFlatGeometry(
-        ...     apart, dpart, src_radius=5, det_radius=10,
-        ...     axis=(0, 1, 0), det_axes_init=((0, 1, 0), (0, 0, 1)))
-        >>> np.allclose(geom.axis, e_y)
+        ...     src_to_det_init=(-1, 0, 0),
+        ...     det_axes_init=((0, 1, 0), (0, 0, 1)))
+        >>> np.allclose(geom.axis, e_z)
         True
         >>> np.allclose(geom.src_to_det_init, -e_x)
         True
@@ -589,9 +570,9 @@ class CircularConeFlatGeometry(HelicalConeFlatGeometry):
         ...     extra_rot=rot_matrix)
         >>> np.allclose(geom.axis, -e_y)
         True
-        >>> np.allclose(geom.src_to_det_init, -e_x)  # default
+        >>> np.allclose(geom.src_to_det_init, e_z)
         True
-        >>> np.allclose(geom.det_axes_init, (e_z, -e_y))
+        >>> np.allclose(geom.det_axes_init, (e_x, -e_y))
         True
         """
         # For a better error message
