@@ -22,11 +22,13 @@ from odl.tomo.geometry.geometry import Geometry, AxisOrientedGeometry
 from odl.tomo.util.utility import euler_matrix, perpendicular_vector
 
 
-__all__ = ('ParallelGeometry', 'Parallel2dGeometry', 'Parallel3dEulerGeometry',
-           'Parallel3dAxisGeometry', 'parallel_beam_geometry')
+__all__ = ('ParallelBeamGeometry',
+           'Parallel2dGeometry',
+           'Parallel3dEulerGeometry', 'Parallel3dAxisGeometry',
+           'parallel_beam_geometry')
 
 
-class ParallelGeometry(Geometry):
+class ParallelBeamGeometry(Geometry):
 
     """Abstract parallel beam geometry in 2 or 3 dimensions.
 
@@ -137,7 +139,7 @@ class ParallelGeometry(Geometry):
         return self.rotation_matrix(angles).dot(self.detector.normal)
 
 
-class Parallel2dGeometry(ParallelGeometry):
+class Parallel2dGeometry(ParallelBeamGeometry):
 
     """Parallel beam geometry in 2d.
 
@@ -245,7 +247,7 @@ class Parallel2dGeometry(ParallelGeometry):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
-class Parallel3dEulerGeometry(ParallelGeometry):
+class Parallel3dEulerGeometry(ParallelBeamGeometry):
 
     """Parallel beam geometry in 3d.
 
@@ -334,7 +336,7 @@ class Parallel3dEulerGeometry(ParallelGeometry):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
-class Parallel3dAxisGeometry(ParallelGeometry, AxisOrientedGeometry):
+class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
 
     """Parallel beam geometry in 3d with single rotation axis.
 
@@ -442,7 +444,7 @@ def parallel_beam_geometry(space, angles=None, det_shape=None):
 
     Returns
     -------
-    geometry : `ParallelGeometry`
+    geometry : `ParallelBeamGeometry`
         If ``space`` is 2d, returns a `Parallel2dGeometry`.
         If ``space`` is 3d, returns a `Parallel3dAxisGeometry`.
 

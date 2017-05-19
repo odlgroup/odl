@@ -52,8 +52,7 @@ import numpy as np
 
 from odl.discr import DiscreteLp, DiscreteLpElement
 from odl.tomo.geometry import (
-    Geometry, Parallel2dGeometry, DivergentBeamGeometry, ParallelGeometry,
-    FlatDetector)
+    Geometry, DivergentBeamGeometry, ParallelBeamGeometry, FlatDetector)
 from odl.util.utility import pkg_supports
 
 
@@ -400,7 +399,9 @@ def astra_projection_geometry(geometry):
     # this was possible only for 2D geometries. Thus, standard ASTRA
     # projection geometries do not have to be rescaled any more by the (
     # isotropic) voxel size.
-    if isinstance(geometry, Parallel2dGeometry):
+    if (isinstance(geometry, ParallelBeamGeometry) and
+            isinstance(geometry.detector, FlatDetector) and
+            geometry.ndim == 2):
         # TODO: change to parallel_vec when available
         det_width = geometry.det_partition.cell_sides[0]
         det_count = geometry.detector.size
@@ -415,7 +416,7 @@ def astra_projection_geometry(geometry):
         vec = astra_conebeam_2d_geom_to_vec(geometry)
         proj_geom = astra.create_proj_geom('fanflat_vec', det_count, vec)
 
-    elif (isinstance(geometry, ParallelGeometry) and
+    elif (isinstance(geometry, ParallelBeamGeometry) and
           isinstance(geometry.detector, FlatDetector) and
           geometry.ndim == 3):
         det_row_count = geometry.det_partition.shape[1]
@@ -470,9 +471,7 @@ def astra_data(astra_geom, datatype, data=None, ndim=2, allow_copy=False):
         ASTRA internal ID for the new data structure
     """
     if data is not None:
-        if isinstance(data, DiscreteLpElement):
-            ndim = data.space.ndim
-        elif isinstance(data, np.ndarray):
+        if isinstance(data, (DiscreteLpElement, np.ndarray)):
             ndim = data.ndim
         else:
             raise TypeError('`data` {!r} is neither DiscreteLpElement '
