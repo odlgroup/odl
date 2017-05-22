@@ -1155,7 +1155,7 @@ class ProductSpaceConstWeighting(ConstWeighting):
 
         inners = np.fromiter(
             (x1i.inner(x2i) for x1i, x2i in zip(x1, x2)),
-            dtype=complex, count=len(x1))
+            dtype=x1[0].space.dtype, count=len(x1))
 
         inner = self.const * np.sum(inners)
         return x1.space.field.element(inner)
