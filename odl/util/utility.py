@@ -24,7 +24,7 @@ __all__ = ('array1d_repr', 'array1d_str', 'arraynd_repr', 'arraynd_str',
            'is_real_dtype', 'is_real_floating_dtype',
            'is_complex_floating_dtype', 'real_dtype', 'complex_dtype',
            'conj_exponent', 'as_flat_array', 'writable_array',
-           'run_from_ipython')
+           'run_from_ipython', 'NumpyRandomSeed')
 
 TYPE_MAP_R2C = {np.dtype(dtype): np.result_type(dtype, 1j)
                 for dtype in np.sctypes['float']}
@@ -803,6 +803,43 @@ def pkg_supports(feature, pkg_version, pkg_feat_dict):
 
     # No match
     return False
+
+
+class NumpyRandomSeed(object):
+    """Context manager for numpy randoms seeds."""
+
+    def __init__(self, seed):
+        """
+
+        Parameters
+        ----------
+        seed : int or None
+            Seed value for the random number generator.
+            ``None`` is interpreted as keeping the current seed.
+
+        Examples
+        --------
+        Always returns same value with same seed:
+
+        >>> with NumpyRandomSeed(42):
+        ...     rand_int = np.random.randint(10)
+        >>> with NumpyRandomSeed(42):
+        ...     same_rand_int = np.random.randint(10)
+        >>> rand_int == same_rand_int
+        True
+        """
+        self.seed = seed
+
+    def __enter__(self):
+        """Called by ``with`` command."""
+        if self.seed is not None:
+            self.startstate = np.random.get_state()
+            np.random.seed(self.seed)
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        """Called upon exiting ``with`` command."""
+        if self.seed is not None:
+            np.random.set_state(self.startstate)
 
 
 if __name__ == '__main__':
