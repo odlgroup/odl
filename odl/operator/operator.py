@@ -50,7 +50,12 @@ def _default_call_out_of_place(op, x, **kwargs):
         evaluation.
     """
     out = op.range.element()
-    op._call_in_place(x, out, **kwargs)
+    result = op._call_in_place(x, out, **kwargs)
+    if result is not None and result is not out:
+        raise ValueError('`op` returned a different value than `out`.'
+                         'With in place evaluation, the operator can '
+                         'only return nothing (`None`) or the `out` '
+                         'parameter.')
     return out
 
 
@@ -680,7 +685,12 @@ class Operator(object):
                 raise TypeError('`out` parameter cannot be used '
                                 'when range is a field')
 
-            self._call_in_place(x, out=out, **kwargs)
+            result = self._call_in_place(x, out=out, **kwargs)
+            if result is not None and result is not out:
+                raise ValueError('`op` returned a different value than `out`.'
+                                 'With in place evaluation, the operator can '
+                                 'only return nothing (`None`) or the `out` '
+                                 'parameter.')
 
         else:  # Out-of-place evaluation
             out = self._call_out_of_place(x, **kwargs)
