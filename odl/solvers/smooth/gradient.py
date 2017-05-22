@@ -18,7 +18,7 @@ import numpy as np
 from odl.solvers.util import ConstantLineSearch
 
 
-__all__ = ('steepest_descent',)
+__all__ = ('steepest_descent', 'adam')
 
 
 # TODO: update all docs
@@ -104,6 +104,77 @@ def steepest_descent(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
 
         if projection is not None:
             projection(x)
+
+        if callback is not None:
+            callback(x)
+
+
+def adam(f, x, learning_rate=1e-3, beta1=0.9, beta2=0.999, eps=1e-8,
+         maxiter=1000, tol=1e-16, callback=None):
+    """ADAM method to minimize an objective function.
+
+    General implementation of ADAM for solving
+
+    .. math::
+        \min f(x)
+
+    The algorithm is intended for unconstrained problems.
+
+    The algorithm is described in
+    `Adam: A Method for Stochastic Optimization
+    <https://arxiv.org/abs/1412.6980>`_. All parameter names are taken from
+    that article.
+
+    Parameters
+    ----------
+    f : `Functional`
+        Goal functional. Needs to have ``f.gradient``.
+    x : ``f.domain`` element
+        Starting point of the iteration
+    learning_rate : float, optional
+        Step length of the method.
+    beta1 : float, optional
+        Update rate for first order moment estimate.
+    beta2 : float, optional
+        Update rate for second order moment estimate.
+    eps : float, optional
+        A small constant for numerical stability.
+    maxiter : int, optional
+        Maximum number of iterations.
+    tol : float, optional
+        Tolerance that should be used for terminating the iteration.
+    callback : callable, optional
+        Object executing code per iteration, e.g. plotting each iterate
+
+    See Also
+    --------
+    odl.solvers.smooth.gradient.steepest_descent : simple steepest descent
+    odl.solvers.iterative.iterative.landweber :
+        Optimized solver for the case ``f(x) = ||Ax - b||_2^2``
+    odl.solvers.iterative.iterative.conjugate_gradient :
+        Optimized solver for the case ``f(x) = x^T Ax - 2 x^T b``
+    """
+    grad = f.gradient
+    if x not in grad.domain:
+        raise TypeError('`x` {!r} is not in the domain of `grad` {!r}'
+                        ''.format(x, grad.domain))
+
+    m = grad.domain.zero()
+    v = grad.domain.zero()
+
+    grad_x = grad.range.element()
+    for _ in range(maxiter):
+        grad(x, out=grad_x)
+
+        if grad_x.norm() < tol:
+            return
+
+        m.lincomb(beta1, m, 1 - beta1, grad_x)
+        v.lincomb(beta2, v, 1 - beta2, grad_x ** 2)
+
+        step = learning_rate * np.sqrt(1 - beta2) / (1 - beta1)
+
+        x.lincomb(1, x, -step, m / np.sqrt(v + eps))
 
         if callback is not None:
             callback(x)
