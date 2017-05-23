@@ -16,7 +16,7 @@ standard_library.install_aliases()
 import numpy as np
 
 
-__all__ = ('submarine',)
+__all__ = ('submarine', 'text')
 
 
 def submarine(space, smooth=True, taper=20.0):
@@ -146,6 +146,82 @@ def _submarine_2d_nonsmooth(space):
     return out.ufuncs.minimum(1, out=out)
 
 
+def text(space, text, font='arial', scale=0.8, inverted=True):
+    """Create phantom of text.
+
+    The text is represented by an scalar image taking values in [0, 1].
+    Depending on the choice of font, the text may or may not be anti-aliased.
+    anti-aliased text can take any value between 0 and 1, while
+    non-anti-aliased text takes values exclusively in {0, 1}.
+
+    This method requires the PIL package.
+
+    Parameters
+    ----------
+    space : `DiscreteLp`
+        Discretized space in which the phantom is supposed to be created.
+        Must be two-dimensional.
+    text : str
+        The text that should be written in the phantom.
+    font : str, optional
+        The font that should be used to write the text. Available options are
+        platform dependent.
+    scale : float, optional
+        Scaling of the text. 1.0 indicates that the phantom should occupy all
+        of the space along its largest dimension.
+    inverted : bool, optional
+        If the phantoms should be given in inverted style, i.e. white on black.
+
+    Returns
+    -------
+    phantom : ``space`` element
+        The text phantom in ``space``.
+    """
+    from PIL import Image, ImageDraw, ImageFont
+
+    if space.ndim != 2:
+        raise ValueError('`space` must be two-dimensional')
+
+    text = str(text)
+
+    # Figure out what font size we should use by creating a very fine font
+    # and calculating its size
+    init_size = 1000
+    init_pil_font = ImageFont.truetype(font + ".ttf", size=init_size,
+                                       encoding="unic")
+    init_text_width, init_text_height = init_pil_font.getsize(text)
+
+    # True size is given by how much too large (or small) the example was
+    size = scale * init_size * min([space.shape[0] / init_text_width,
+                                    space.shape[1] / init_text_height])
+    size = int(size)
+
+    # Create font
+    pil_font = ImageFont.truetype(font + ".ttf", size=size,
+                                  encoding="unic")
+    text_width, text_height = pil_font.getsize(text)
+
+    # create a blank canvas with extra space between lines
+    canvas = Image.new('RGB', space.shape, (255, 255, 255))
+
+    # draw the text onto the canvas
+    draw = ImageDraw.Draw(canvas)
+    offset = ((space.shape[0] - text_width) // 2,
+              (space.shape[1] - text_height) // 2)
+    white = "#000000"
+    draw.text(offset, text, font=pil_font, fill=white)
+
+    # Convert the canvas into an array with values in [0, 1]
+    arr = np.asarray(canvas)
+    arr = np.sum(arr, -1)
+    arr = arr / np.max(arr)
+    arr = np.rot90(arr, -1)
+
+    if inverted:
+        arr = 1 - arr
+
+    return space.element(arr)
+
 if __name__ == '__main__':
     # Show the phantoms
     import odl
@@ -154,6 +230,8 @@ if __name__ == '__main__':
     submarine(space, smooth=False).show('submarine smooth=False')
     submarine(space, smooth=True).show('submarine smooth=True')
     submarine(space, smooth=True, taper=50).show('submarine taper=50')
+
+    text(space, text='phantom').show('phantom')
 
     # Run also the doctests
     # pylint: disable=wrong-import-position
