@@ -237,7 +237,7 @@ def astra_conebeam_3d_geom_to_vec(geometry):
 
     References
     ----------
-    .. _astra projection geometry documentation:
+    .. _ASTRA projection geometry documentation:
        http://www.astra-toolbox.com/docs/geom3d.html#projection-geometries
     """
     angles = geometry.angles
@@ -297,7 +297,7 @@ def astra_conebeam_2d_geom_to_vec(geometry):
 
     References
     ----------
-    .. _astra projection geometry documentation:
+    .. _ASTRA projection geometry documentation:
        http://www.astra-toolbox.com/docs/geom3d.html#projection-geometries
     """
     angles = geometry.angles
@@ -350,7 +350,7 @@ def astra_parallel_3d_geom_to_vec(geometry):
 
     References
     ----------
-    .. _astra projection geometry documentation:
+    .. _ASTRA projection geometry documentation:
        http://www.astra-toolbox.com/docs/geom3d.html#projection-geometries
     """
     angles = geometry.angles

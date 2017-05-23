@@ -237,7 +237,7 @@ class AstraCudaBackProjectorImpl(object):
 
         # Copy result to CPU memory
         if self.geometry.ndim == 2:
-            # Rotate 90 degrees counter-clockwise from coordinate system
+            # Rotate 90 degrees clockwise from coordinate system
             # (rows, cols) to (x, y)
             out[:] = np.rot90(self.out_array, -1)
         elif self.geometry.ndim == 3:
