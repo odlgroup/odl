@@ -561,7 +561,7 @@ class CallbackShow(SolverCallback):
 
     def __call__(self, x):
         """Show the current iterate."""
-        # Check if we should update the figure in place
+        # Check if we should update the figure in-place
         x_space = x.space
         update_in_place = (self.space_of_last_x == x_space)
         self.space_of_last_x = x_space
