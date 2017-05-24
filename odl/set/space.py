@@ -503,12 +503,12 @@ class LinearSpaceElement(object):
             # We do not `return NotImplemented` here since we don't want a
             # fallback for in-place. Otherwise python attempts
             # `self = self + other` which does not modify self.
-            raise TypeError('cannot add {!r} and {!r} in place'
+            raise TypeError('cannot add {!r} and {!r} in-place'
                             ''.format(self, other))
         elif other in self.space.field:
             one = getattr(self.space, 'one', None)
             if one is None:
-                raise TypeError('cannot add {!r} and {!r} in place'
+                raise TypeError('cannot add {!r} and {!r} in-place'
                                 ''.format(self, other))
             else:
                 # other --> other * space.one()
@@ -517,7 +517,7 @@ class LinearSpaceElement(object):
             try:
                 other = self.space.element(other)
             except (TypeError, ValueError):
-                raise TypeError('cannot add {!r} and {!r} in place'
+                raise TypeError('cannot add {!r} and {!r} in-place'
                                 ''.format(self, other))
             else:
                 return self.__iadd__(other)
@@ -562,12 +562,12 @@ class LinearSpaceElement(object):
             # We do not `return NotImplemented` here since we don't want a
             # fallback for in-place. Otherwise python attempts
             # `self = self - other` which does not modify self.
-            raise TypeError('cannot subtract {!r} and {!r} in place'
+            raise TypeError('cannot subtract {!r} and {!r} in-place'
                             ''.format(self, other))
         elif other in self.space.field:
             one = getattr(self.space, 'one', None)
             if one is None:
-                raise TypeError('cannot subtract {!r} and {!r} in place'
+                raise TypeError('cannot subtract {!r} and {!r} in-place'
                                 ''.format(self, other))
             else:
                 return self.space.lincomb(1, self, -other, one(), out=self)
@@ -575,7 +575,7 @@ class LinearSpaceElement(object):
             try:
                 other = self.space.element(other)
             except (TypeError, ValueError):
-                raise TypeError('cannot subtract {!r} and {!r} in place'
+                raise TypeError('cannot subtract {!r} and {!r} in-place'
                                 ''.format(self, other))
             else:
                 return self.__isub__(other)
@@ -641,13 +641,13 @@ class LinearSpaceElement(object):
             # We do not `return NotImplemented` here since we don't want a
             # fallback for in-place. Otherwise python attempts
             # `self = self * other` which does not modify self.
-            raise TypeError('cannot multiply {!r} and {!r} in place'
+            raise TypeError('cannot multiply {!r} and {!r} in-place'
                             ''.format(self, other))
         else:
             try:
                 other = self.space.element(other)
             except (TypeError, ValueError):
-                raise TypeError('cannot multiply {!r} and {!r} in place'
+                raise TypeError('cannot multiply {!r} and {!r} in-place'
                                 ''.format(self, other))
             else:
                 return self.__imul__(other)
@@ -690,13 +690,13 @@ class LinearSpaceElement(object):
             # We do not `return NotImplemented` here since we don't want a
             # fallback for in-place. Otherwise python attempts
             # `self = self / other` which does not modify self.
-            raise TypeError('cannot divide {!r} and {!r} in place'
+            raise TypeError('cannot divide {!r} and {!r} in-place'
                             ''.format(self, other))
         else:
             try:
                 other = self.space.element(other)
             except (TypeError, ValueError):
-                raise TypeError('cannot divide {!r} and {!r} in place'
+                raise TypeError('cannot divide {!r} and {!r} in-place'
                                 ''.format(self, other))
             else:
                 return self.__itruediv__(other)

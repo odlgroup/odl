@@ -137,7 +137,7 @@ def show_discrete_data(values, grid, title=None, method='',
         Axis labels, default: ['x', 'y']
 
     update_in_place : bool, optional
-        Update the content of the figure in place. Intended for faster real
+        Update the content of the figure in-place. Intended for faster real
         time plotting, typically ~5 times faster.
         This is only performed for ``method == 'imshow'`` with real data and
         ``fig != None``. Otherwise this parameter is treated as False.
@@ -182,7 +182,7 @@ def show_discrete_data(values, grid, title=None, method='',
     interp = kwargs.pop('interp', 'nearest')
     axis_fontsize = kwargs.pop('axis_fontsize', 16)
 
-    # Check if we should and can update the plot in place
+    # Check if we should and can update the plot in-place
     update_in_place = kwargs.pop('update_in_place', False)
     if (update_in_place and
             (fig is None or values_are_complex or values.ndim != 2 or

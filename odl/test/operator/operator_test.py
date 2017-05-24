@@ -74,6 +74,25 @@ def check_call(operator, point, expected):
     assert all_almost_equal(out, expected)
 
 
+def test_call_in_place_wrong_return():
+    """Test that operator with out parameter actually returns out."""
+    class BadInplaceOperator(odl.Operator):
+        def _call(self, x, out):
+            # badly implemented operator
+            out = 42
+            return out
+
+    space = odl.rn(3)
+    op = BadInplaceOperator(space, space)
+
+    with pytest.raises(ValueError):
+        op(space.zero())
+
+    with pytest.raises(ValueError):
+        out = space.zero()
+        op(space.zero(), out=out)
+
+
 def test_nonlinear_addition():
     # Test operator addition
     A = np.random.rand(4, 3)
