@@ -322,14 +322,16 @@ def as_scipy_operator(op):
 def as_scipy_functional(func, return_gradient=False):
     """Wrap ``op`` as a function operating on linear arrays.
 
-    This is intended to be used with the scipy solvers.
+    This is intended to be used with the `scipy solvers
+    <https://docs.scipy.org/doc/scipy/reference/optimize.html>`_.
 
     Parameters
     ----------
-    func : `Functional`
+    func : `Functional`.
         A functional that should be wrapped
     return_gradient : bool, optional
-        If the gradient of the functional should also be returned
+        ``True`` if the gradient of the functional should also be returned,
+        ``False`` otherwise.
 
     Returns
     -------
@@ -344,26 +346,26 @@ def as_scipy_functional(func, return_gradient=False):
     (here toy problem ``min_x ||x||^2``):
 
     >>> func = odl.solvers.L2NormSquared(odl.rn(3))
-    >>> scipy_func = as_scipy_functional(func)
+    >>> scipy_func = odl.as_scipy_functional(func)
     >>> from scipy.optimize import minimize
-    >>> result = minimize(scipy_func, [0, 1, 0])
+    >>> result = minimize(scipy_func, x0=[0, 1, 0])
     >>> np.allclose(result.x, [0, 0, 0])
     True
 
-    Can also provide gradient:
+    The gradient (jacobian) can also be provided:
 
     >>> func = odl.solvers.L2NormSquared(odl.rn(3))
-    >>> scipy_func, scipy_grad = as_scipy_functional(func, True)
+    >>> scipy_func, scipy_grad = odl.as_scipy_functional(func, True)
     >>> from scipy.optimize import minimize
-    >>> result = minimize(scipy_func, [0, 1, 0], jac=scipy_grad)
+    >>> result = minimize(scipy_func, x0=[0, 1, 0], jac=scipy_grad)
     >>> np.allclose(result.x, [0, 0, 0])
     True
 
     Notes
     -----
-    If the data representation of ``op``'s domain and range is of type
-    `NumpyFn` this incurs no significant overhead. If the space type is
-    ``CudaFn`` or some other nonlocal type, the overhead is significant.
+    If the data representation of ``op``'s domain is of type `NumpyFn` this
+    incurs no significant overhead. If the space type is ``CudaFn`` or some
+    other nonlocal type, the overhead is significant.
     """
     def as_shaped_array(arr):
         if hasattr(func.domain, 'order'):
