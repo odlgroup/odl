@@ -806,10 +806,10 @@ def pkg_supports(feature, pkg_version, pkg_feat_dict):
 
 
 class NumpyRandomSeed(object):
-    """Context manager for numpy randoms seeds."""
+    """Context manager for Numpy random seeds."""
 
     def __init__(self, seed):
-        """
+        """Initialize an instance.
 
         Parameters
         ----------
@@ -819,7 +819,7 @@ class NumpyRandomSeed(object):
 
         Examples
         --------
-        Always returns same value with same seed:
+        Use this to make drawing pseudo-random numbers repeatable:
 
         >>> with NumpyRandomSeed(42):
         ...     rand_int = np.random.randint(10)

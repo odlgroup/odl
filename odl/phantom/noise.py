@@ -36,8 +36,8 @@ def white_noise(space, mean=0, stddev=1, seed=None):
         The standard deviation of the white noise. If a scalar, it is
         interpreted as ``stddev * space.one()``.
     seed : int, optional
-        Random seed to use for generating the noise. If ``None``, uses current
-        seed.
+        Random seed to use for generating the noise.
+        For ``None``, use the current seed.
 
     Returns
     -------
@@ -82,8 +82,8 @@ def poisson_noise(intensity, seed=None):
     poisson_noise : ``intensity.space`` element
         Poisson distributed random variable.
     seed : int, optional
-        Random seed to use for generating the noise. If ``None``, uses current
-        seed.
+        Random seed to use for generating the noise.
+        For ``None``, use the current seed.
 
     Notes
     -----
@@ -141,8 +141,8 @@ def salt_pepper_noise(vector, fraction=0.05, salt_vs_pepper=0.5,
         Default: maximuim value of ``vector``. For product spaces the maximum
         value per subspace is taken.
     seed : int, optional
-        Random seed to use for generating the noise. If ``None``, uses current
-        seed.
+        Random seed to use for generating the noise.
+        For ``None``, use the current seed.
 
     Returns
     -------
