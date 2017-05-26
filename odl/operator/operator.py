@@ -689,7 +689,7 @@ class Operator(object):
 
             result = self._call_in_place(x, out=out, **kwargs)
             if result is not None and result is not out:
-                raise ValueError('`op` returned a different value than `out`.'
+                raise ValueError('`op` returned a different value than `out`. '
                                  'With in-place evaluation, the operator can '
                                  'only return nothing (`None`) or the `out` '
                                  'parameter.')
