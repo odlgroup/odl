@@ -146,15 +146,15 @@ def _submarine_2d_nonsmooth(space):
     return out.ufuncs.minimum(1, out=out)
 
 
-def text(space, text, font='arial', scale=0.8, inverted=True):
-    """Create phantom of text.
+def text(space, text, font='arial', border=0.2, inverted=True):
+    """Create phantom from text.
 
-    The text is represented by an scalar image taking values in [0, 1].
+    The text is represented by a scalar image taking values in [0, 1].
     Depending on the choice of font, the text may or may not be anti-aliased.
     anti-aliased text can take any value between 0 and 1, while
-    non-anti-aliased text takes values exclusively in {0, 1}.
+    non-anti-aliased text produces a binary image.
 
-    This method requires the PIL package.
+    This method requires the ``pillow`` package.
 
     Parameters
     ----------
@@ -162,20 +162,36 @@ def text(space, text, font='arial', scale=0.8, inverted=True):
         Discretized space in which the phantom is supposed to be created.
         Must be two-dimensional.
     text : str
-        The text that should be written in the phantom.
+        The text that should be written onto the background.
     font : str, optional
         The font that should be used to write the text. Available options are
         platform dependent.
-    scale : float, optional
-        Scaling of the text. 1.0 indicates that the phantom should occupy all
-        of the space along its largest dimension.
+    border : float, optional
+        Padding added around the text. 0.0 indicates that the phantom should
+        occupy all of the space along its largest dimension while 1.0 gives a
+        maximally padded image (text not visible).
     inverted : bool, optional
-        If the phantoms should be given in inverted style, i.e. white on black.
+        If the phantom should be given in inverted style, i.e. white on black.
 
     Returns
     -------
     phantom : ``space`` element
         The text phantom in ``space``.
+
+    Notes
+    -----
+    The set of available fonts is highly platform dependent, and there is no
+    obvious way (except from trial and error) to find what fonts are supported
+    on an arbitrary platform.
+
+    In general, the fonts ``'arial'``, ``'calibri'`` and ``'impact'`` tend to
+    be available.
+
+    Platform dependent tricks:
+
+    **Linux**::
+
+        $ find /usr/share/fonts -name "*.[to]tf"
     """
     from PIL import Image, ImageDraw, ImageFont
 
@@ -184,16 +200,17 @@ def text(space, text, font='arial', scale=0.8, inverted=True):
 
     text = str(text)
 
-    # Figure out what font size we should use by creating a very fine font
-    # and calculating its size
+    # Figure out what font size we should use by creating a very high
+    # resolution font and calculating the size of the text in this font
     init_size = 1000
     init_pil_font = ImageFont.truetype(font + ".ttf", size=init_size,
                                        encoding="unic")
     init_text_width, init_text_height = init_pil_font.getsize(text)
 
     # True size is given by how much too large (or small) the example was
-    size = scale * init_size * min([space.shape[0] / init_text_width,
-                                    space.shape[1] / init_text_height])
+    scaled_init_size = (1.0 - border) * init_size
+    size = scaled_init_size * min([space.shape[0] / init_text_width,
+                                   space.shape[1] / init_text_height])
     size = int(size)
 
     # Create font
