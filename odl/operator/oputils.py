@@ -21,7 +21,7 @@ from odl.space import ProductSpace
 from odl.util import as_flat_array
 
 __all__ = ('matrix_representation', 'power_method_opnorm', 'as_scipy_operator',
-           'as_proximal_lang_operator')
+           'as_scipy_functional', 'as_proximal_lang_operator')
 
 
 def matrix_representation(op):
@@ -317,6 +317,78 @@ def as_scipy_operator(op):
                                               matvec=matvec,
                                               rmatvec=rmatvec,
                                               dtype=dtype)
+
+
+def as_scipy_functional(func, return_gradient=False):
+    """Wrap ``op`` as a function operating on linear arrays.
+
+    This is intended to be used with the `scipy solvers
+    <https://docs.scipy.org/doc/scipy/reference/optimize.html>`_.
+
+    Parameters
+    ----------
+    func : `Functional`.
+        A functional that should be wrapped
+    return_gradient : bool, optional
+        ``True`` if the gradient of the functional should also be returned,
+        ``False`` otherwise.
+
+    Returns
+    -------
+    function : ``callable``
+        The wrapped functional.
+    gradient : ``callable``, optional
+        The wrapped gradient. Only returned if ``return_gradient`` is true.
+
+    Examples
+    --------
+    Wrap functional and solve simple problem
+    (here toy problem ``min_x ||x||^2``):
+
+    >>> func = odl.solvers.L2NormSquared(odl.rn(3))
+    >>> scipy_func = odl.as_scipy_functional(func)
+    >>> from scipy.optimize import minimize
+    >>> result = minimize(scipy_func, x0=[0, 1, 0])
+    >>> np.allclose(result.x, [0, 0, 0])
+    True
+
+    The gradient (jacobian) can also be provided:
+
+    >>> func = odl.solvers.L2NormSquared(odl.rn(3))
+    >>> scipy_func, scipy_grad = odl.as_scipy_functional(func, True)
+    >>> from scipy.optimize import minimize
+    >>> result = minimize(scipy_func, x0=[0, 1, 0], jac=scipy_grad)
+    >>> np.allclose(result.x, [0, 0, 0])
+    True
+
+    Notes
+    -----
+    If the data representation of ``op``'s domain is of type `NumpyFn` this
+    incurs no significant overhead. If the space type is ``CudaFn`` or some
+    other nonlocal type, the overhead is significant.
+    """
+    def as_shaped_array(arr):
+        if hasattr(func.domain, 'order'):
+            return np.asarray(arr).reshape(func.domain.order)
+        else:
+            return np.asarray(arr)
+
+    def as_flat_array(vec):
+        if hasattr(vec, 'order'):
+            return np.asarray(vec).ravel(vec.order)
+        else:
+            return np.asarray(vec)
+
+    def func_call(arr):
+        return func(as_shaped_array(arr))
+
+    if return_gradient:
+        def func_gradient_call(arr):
+            return as_flat_array(func.gradient(as_shaped_array(arr)))
+
+        return func_call, func_gradient_call
+    else:
+        return func_call
 
 
 def as_proximal_lang_operator(op, norm_bound=None):
