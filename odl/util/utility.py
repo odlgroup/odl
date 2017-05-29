@@ -223,31 +223,55 @@ def with_metaclass(meta, *bases):
     return metaclass('temporary_class', None, {})
 
 
+def cache_arguments(function):
+    """Decorate function to cache the result with given arguments.
+
+    This is equivalent to `functools.lru_cache` with Python 3, and currently
+    does nothing with Python 2 but this may change at some later point.
+
+    Parameters
+    ----------
+    function : `callable`
+        Function that should be wrapped.
+    """
+    try:
+        from functools import lru_cache
+        return lru_cache()(function)
+    except ImportError:
+        return function
+
+
+@cache_arguments
 def is_scalar_dtype(dtype):
     """Return ``True`` if ``dtype`` is a scalar type."""
     return np.issubsctype(dtype, np.number)
 
 
+@cache_arguments
 def is_int_dtype(dtype):
     """Return ``True`` if ``dtype`` is an integer type."""
     return np.issubsctype(dtype, np.integer)
 
 
+@cache_arguments
 def is_floating_dtype(dtype):
     """Return ``True`` if ``dtype`` is a floating point type."""
     return is_real_floating_dtype(dtype) or is_complex_floating_dtype(dtype)
 
 
+@cache_arguments
 def is_real_dtype(dtype):
     """Return ``True`` if ``dtype`` is a real (including integer) type."""
     return is_scalar_dtype(dtype) and not is_complex_floating_dtype(dtype)
 
 
+@cache_arguments
 def is_real_floating_dtype(dtype):
     """Return ``True`` if ``dtype`` is a real floating point type."""
     return np.issubsctype(dtype, np.floating)
 
 
+@cache_arguments
 def is_complex_floating_dtype(dtype):
     """Return ``True`` if ``dtype`` is a complex floating point type."""
     return np.issubsctype(dtype, np.complexfloating)
@@ -840,24 +864,6 @@ class NumpyRandomSeed(object):
         """Called upon exiting ``with`` command."""
         if self.seed is not None:
             np.random.set_state(self.startstate)
-
-
-def cache_arguments(function):
-    """Decorate function to cache the result with given arguments.
-
-    This is equivalent to `functools.lru_cache` with Python 3, and currently
-    does nothing with Python 2 but this may change at some later point.
-
-    Parameters
-    ----------
-    function : `callable`
-        Function that should be wrapped.
-    """
-    try:
-        from functools import lru_cache
-        return lru_cache()(function)
-    except ImportError:
-        return function
 
 
 if __name__ == '__main__':
