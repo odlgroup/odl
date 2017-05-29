@@ -386,7 +386,7 @@ def _interp_kernel_ft(norm_freqs, interp):
     if interp_ == 'nearest':
         pass
     elif interp_ == 'linear':
-        ker_ft **= 2
+        ker_ft *= ker_ft
     else:
         raise ValueError("`interp` '{}' not understood".format(interp))
 
