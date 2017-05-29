@@ -491,57 +491,60 @@ def _blas_is_applicable(*args):
                 for x in args))
 
 
-def _lincomb(a, x1, b, x2, out, dtype):
+def _lincomb_impl(a, x1, b, x2, out, dtype):
     """Raw linear combination depending on data type."""
 
+    size = native(x1.size)
+
     # Shortcut for small problems
-    if x1.size < 100:  # small array optimization
+    if size < 100:  # small array optimization
         out.data[:] = a * x1.data + b * x2.data
         return
 
-    # Use blas for larger problems
-    def fallback_axpy(x1, x2, n, a):
-        """Fallback axpy implementation avoiding copy."""
-        if a != 0:
-            x2 /= a
-            x2 += x1
-            x2 *= a
-        return x2
-
-    def fallback_scal(a, x, n):
-        """Fallback scal implementation."""
-        x *= a
-        return x
-
-    def fallback_copy(x1, x2, n):
-        """Fallback copy implementation."""
-        x2[...] = x1[...]
-        return x2
-
-    if _blas_is_applicable(x1, x2, out):
+    # If data is very big, use BLAS if possible
+    if size >= 50000 and _blas_is_applicable(x1, x2, out):
         axpy, scal, copy = linalg.blas.get_blas_funcs(
             ['axpy', 'scal', 'copy'], arrays=(x1.data, x2.data, out.data))
     else:
+        # Use fallbacks otherwise
+        def fallback_axpy(x1, x2, n, a):
+            """Fallback axpy implementation avoiding copy."""
+            if a != 0:
+                x2 /= a
+                x2 += x1
+                x2 *= a
+            return x2
+
+        def fallback_scal(a, x, n):
+            """Fallback scal implementation."""
+            x *= a
+            return x
+
+        def fallback_copy(x1, x2, n):
+            """Fallback copy implementation."""
+            x2[...] = x1[...]
+            return x2
+
         axpy, scal, copy = (fallback_axpy, fallback_scal, fallback_copy)
 
     if x1 is x2 and b != 0:
         # x1 is aligned with x2 -> out = (a+b)*x1
-        _lincomb(a + b, x1, 0, x1, out, dtype)
+        _lincomb_impl(a + b, x1, 0, x1, out, dtype)
     elif out is x1 and out is x2:
         # All the vectors are aligned -> out = (a+b)*out
-        scal(a + b, out.data, native(out.size))
+        scal(a + b, out.data, size)
     elif out is x1:
         # out is aligned with x1 -> out = a*out + b*x2
         if a != 1:
-            scal(a, out.data, native(out.size))
+            scal(a, out.data, size)
         if b != 0:
-            axpy(x2.data, out.data, native(out.size), b)
+            axpy(x2.data, out.data, size, b)
     elif out is x2:
         # out is aligned with x2 -> out = a*x1 + b*out
         if b != 1:
-            scal(b, out.data, native(out.size))
+            scal(b, out.data, size)
         if a != 0:
-            axpy(x1.data, out.data, native(out.size), a)
+            axpy(x1.data, out.data, size, a)
     else:
         # We have exhausted all alignment options, so x1 != x2 != out
         # We now optimize for various values of a and b
@@ -549,23 +552,23 @@ def _lincomb(a, x1, b, x2, out, dtype):
             if a == 0:  # Zero assignment -> out = 0
                 out.data[:] = 0
             else:  # Scaled copy -> out = a*x1
-                copy(x1.data, out.data, native(out.size))
+                copy(x1.data, out.data, size)
                 if a != 1:
-                    scal(a, out.data, native(out.size))
+                    scal(a, out.data, size)
         else:
             if a == 0:  # Scaled copy -> out = b*x2
-                copy(x2.data, out.data, native(out.size))
+                copy(x2.data, out.data, size)
                 if b != 1:
-                    scal(b, out.data, native(out.size))
+                    scal(b, out.data, size)
 
             elif a == 1:  # No scaling in x1 -> out = x1 + b*x2
-                copy(x1.data, out.data, native(out.size))
-                axpy(x2.data, out.data, native(out.size), b)
+                copy(x1.data, out.data, size)
+                axpy(x2.data, out.data, size, b)
             else:  # Generic case -> out = a*x1 + b*x2
-                copy(x2.data, out.data, native(out.size))
+                copy(x2.data, out.data, size)
                 if b != 1:
-                    scal(b, out.data, native(out.size))
-                axpy(x1.data, out.data, native(out.size), a)
+                    scal(b, out.data, size)
+                axpy(x1.data, out.data, size, a)
 
 
 class NumpyFn(FnBase, NumpyNtuples):
@@ -811,7 +814,7 @@ class NumpyFn(FnBase, NumpyNtuples):
         >>> out
         cn(3).element([(10-2j), (17-1j), (18.5+1.5j)])
         """
-        _lincomb(a, x1, b, x2, out, self.dtype)
+        _lincomb_impl(a, x1, b, x2, out, self.dtype)
 
     def _dist(self, x1, x2):
         """Calculate the distance between two vectors.
