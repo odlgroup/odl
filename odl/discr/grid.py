@@ -390,15 +390,22 @@ class RectGrid(Set):
         >>> g.stride
         array([  1.,  nan])
         """
-        strd = []
-        for i in range(self.ndim):
-            if not self.is_uniform_byaxis[i]:
-                strd.append(float('nan'))
-            elif self.nondegen_byaxis[i]:
-                strd.append(self.extent[i] / (self.shape[i] - 1.0))
-            else:
-                strd.append(0.0)
-        return np.array(strd)
+        # Cache for efficiency instead of re-computing
+        try:
+            strd = self.__stride
+        except AttributeError:
+            strd = []
+            for i in range(self.ndim):
+                if not self.is_uniform_byaxis[i]:
+                    strd.append(float('nan'))
+                elif self.nondegen_byaxis[i]:
+                    strd.append(self.extent[i] / (self.shape[i] - 1.0))
+                else:
+                    strd.append(0.0)
+            self.__stride = np.array(strd)
+            return self.__stride.copy()
+        else:
+            return strd.copy()
 
     @property
     def extent(self):
