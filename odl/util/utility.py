@@ -24,7 +24,7 @@ __all__ = ('array1d_repr', 'array1d_str', 'arraynd_repr', 'arraynd_str',
            'is_real_dtype', 'is_real_floating_dtype',
            'is_complex_floating_dtype', 'real_dtype', 'complex_dtype',
            'conj_exponent', 'as_flat_array', 'writable_array',
-           'run_from_ipython', 'NumpyRandomSeed')
+           'run_from_ipython', 'NumpyRandomSeed', 'cache_arguments')
 
 TYPE_MAP_R2C = {np.dtype(dtype): np.result_type(dtype, 1j)
                 for dtype in np.sctypes['float']}
@@ -840,6 +840,24 @@ class NumpyRandomSeed(object):
         """Called upon exiting ``with`` command."""
         if self.seed is not None:
             np.random.set_state(self.startstate)
+
+
+def cache_arguments(function):
+    """Decorate function to cache the result with given arguments.
+
+    This is equivalent to `functools.lru_cache` with Python 3, and currently
+    does nothing with Python 2 but this may change at some later point.
+
+    Parameters
+    ----------
+    function : `callable`
+        Function that should be wrapped.
+    """
+    try:
+        from functools import lru_cache
+        return lru_cache()(function)
+    except ImportError:
+        return function
 
 
 if __name__ == '__main__':
