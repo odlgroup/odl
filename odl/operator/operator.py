@@ -15,6 +15,7 @@ from future.utils import raise_from
 standard_library.install_aliases()
 from builtins import object, super
 
+from functools import lru_cache
 import inspect
 from numbers import Number, Integral
 import sys
@@ -123,6 +124,7 @@ def _signature_from_spec(func):
     return '{}({})'.format(func.__name__, argstr)
 
 
+@lru_cache()
 def _dispatch_call_args(cls=None, bound_call=None, unbound_call=None,
                         attr='_call'):
     """Check the arguments of ``_call()`` or similar for conformity.

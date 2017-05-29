@@ -21,6 +21,7 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import super
 
+from functools import lru_cache
 import numpy as np
 import scipy.special
 
@@ -224,6 +225,7 @@ def proximal_arg_scaling(prox_factory, scaling):
     if scaling == 0:
         return proximal_const_func(prox_factory(1.0).domain)
 
+    @lru_cache()
     def arg_scaling_prox_factory(sigma):
         """Create proximal for the translation with a given sigma.
 
@@ -295,6 +297,7 @@ def proximal_quadratic_perturbation(prox_factory, a, u=None):
         raise TypeError('`u` must be `None` or a `LinearSpaceElement` '
                         'instance, got {!r}.'.format(u))
 
+    @lru_cache()
     def quadratic_perturbation_prox_factory(sigma):
         """Create proximal for the quadratic perturbation with a given sigma.
 
