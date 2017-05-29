@@ -535,7 +535,6 @@ class DiscretizedSpaceElement(DiscretizedSetElement, FnBaseVector):
 
     def __init__(self, space, data):
         """Initialize a new instance."""
-        assert isinstance(space, DiscretizedSpace)
         DiscretizedSetElement.__init__(self, space, data)
 
     def __ipow__(self, p):
