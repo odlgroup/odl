@@ -153,7 +153,8 @@ class DiscreteLp(DiscretizedSpace):
             self.__axis_labels = tuple(str(label) for label in axis_labels)
 
         if kwargs:
-            raise ValueError('unknown arguments {}'.format(kwargs))
+            raise ValueError('got unexpected keyword arguments {}'
+                             ''.format(kwargs))
 
     @property
     def interp(self):
