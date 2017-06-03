@@ -166,13 +166,17 @@ def douglas_rachford_pd(x, f, g, L, tau, sigma, niter,
     for k in range(niter):
         lam_k = lam(k)
 
-        # Compute tmp_domain = sum(Li.adjoint(vi) for Li, vi in zip(L, v))
-        L[0].adjoint(v[0], out=tmp_domain)
-        for Li, vi in zip(L[1:], v[1:]):
-            Li.adjoint(vi, out=p1)
-            tmp_domain += p1
+        if len(L) > 0:
+            # Compute tmp_domain = sum(Li.adjoint(vi) for Li, vi in zip(L, v))
+            L[0].adjoint(v[0], out=tmp_domain)
+            for Li, vi in zip(L[1:], v[1:]):
+                Li.adjoint(vi, out=p1)
+                tmp_domain += p1
 
-        tmp_domain.lincomb(1, x, -tau / 2, tmp_domain)
+            tmp_domain.lincomb(1, x, -tau / 2, tmp_domain)
+        else:
+            tmp_domain.set_zero()
+
         f.proximal(tau)(tmp_domain, out=p1)
         w1.lincomb(2, p1, -1, x)
 
@@ -181,11 +185,15 @@ def douglas_rachford_pd(x, f, g, L, tau, sigma, niter,
             prox_cc_g[i](sigma[i])(tmp, out=p2[i])
             w2[i].lincomb(2.0, p2[i], -1, v[i])
 
-        # Compute tmp_domain = sum(Li.adjoint(wi) for Li, w2i in zip(L, w2))
-        L[0].adjoint(w2[0], out=tmp_domain)
-        for Li, w2i in zip(L[1:], w2[1:]):
-            Li.adjoint(w2i, out=z1)
-            tmp_domain += z1
+        if len(L) > 0:
+            # Compute:
+            # tmp_domain = sum(Li.adjoint(w2i) for Li, w2i in zip(L, w2))
+            L[0].adjoint(w2[0], out=tmp_domain)
+            for Li, w2i in zip(L[1:], w2[1:]):
+                Li.adjoint(w2i, out=z1)
+                tmp_domain += z1
+        else:
+            tmp_domain.set_zero()
 
         z1.lincomb(1.0, w1, - (tau / 2.0), tmp_domain)
 

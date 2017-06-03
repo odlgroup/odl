@@ -401,13 +401,13 @@ class RectGrid(Set):
 
         >>> g = RectGrid([0, 1, 2], [0, 1, 4])
         >>> g.stride
-        array([  1.,  nan])
+        array([ 1.,  nan])
 
         0.0 returned for degenerate dimension:
 
         >>> g = RectGrid([0, 1, 2], [0])
         >>> g.stride
-        array([  1.,  0.0])
+        array([ 1.,  0.])
         """
         # Cache for efficiency instead of re-computing
         if self.__stride is None:
