@@ -527,8 +527,8 @@ def _resize_discr(discr, newshp, offset, discr_kwargs):
 
     fspace = FunctionSpace(IntervalProd(new_minpt, new_maxpt),
                            out_dtype=dtype)
-    dspace = fn(np.prod(newshp), dtype=dtype, impl=impl, exponent=exponent,
-                weighting=weighting)
+    dspace = tensor_space(newshp, dtype=dtype, impl=impl, exponent=exponent,
+                          weighting=weighting)
 
     # Stack together the (unchanged) nonuniform axes and the (new) uniform
     # axes in the right order
@@ -541,8 +541,7 @@ def _resize_discr(discr, newshp, offset, discr_kwargs):
         else:
             part = part.append(discr.partition.byaxis[i])
 
-    return DiscreteLp(fspace, part, dspace, exponent=exponent, interp=interp,
-                      order=order)
+    return DiscreteLp(fspace, part, dspace, interp=interp)
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position
