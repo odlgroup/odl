@@ -494,15 +494,20 @@ def _blas_is_applicable(*args):
 def _lincomb_impl(a, x1, b, x2, out, dtype):
     """Raw linear combination depending on data type."""
 
+    # Define thresholds for when different implementations should be used
+    threshold_small = 100
+    threshold_medium = 50000
+
+    # Convert to native since BLAS needs it
     size = native(x1.size)
 
     # Shortcut for small problems
-    if size < 100:  # small array optimization
+    if size <= threshold_small:  # small array optimization
         out.data[:] = a * x1.data + b * x2.data
         return
 
     # If data is very big, use BLAS if possible
-    if size >= 50000 and _blas_is_applicable(x1, x2, out):
+    if size > threshold_medium and _blas_is_applicable(x1, x2, out):
         axpy, scal, copy = linalg.blas.get_blas_funcs(
             ['axpy', 'scal', 'copy'], arrays=(x1.data, x2.data, out.data))
     else:
