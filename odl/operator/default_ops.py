@@ -298,17 +298,24 @@ class MultiplyOperator(Operator):
         >>> op.adjoint(x)
         rn(3).element([1.0, 4.0, 9.0])
 
-        Multiply by a scalar:
+        Multiply scalars with a fixed vector:
 
         >>> op2 = MultiplyOperator(x, domain=r3.field)
         >>> op2.adjoint(x)
         14.0
+
+        Multiply vectors with a fixed scalar:
+
+        >>> op2 = MultiplyOperator(3.0, domain=r3, range=r3)
+        >>> op2.adjoint(x)
+        rn(3).element([3.0, 6.0, 9.0])
         """
         if self.__domain_is_field:
             return InnerProductOperator(self.multiplicand)
         else:
             # TODO: complex case
-            return MultiplyOperator(self.multiplicand)
+            return MultiplyOperator(self.multiplicand,
+                                    domain=self.range, range=self.domain)
 
     def __repr__(self):
         """Return ``repr(self)``."""
