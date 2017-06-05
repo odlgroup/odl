@@ -20,6 +20,8 @@ from numbers import Number, Integral
 import sys
 
 from odl.set import LinearSpace, LinearSpaceElement, Set, Field
+from odl.util.utility import with_metaclass
+from functools import wraps
 
 
 __all__ = ('Operator', 'OperatorComp', 'OperatorSum', 'OperatorVectorSum',
@@ -297,7 +299,33 @@ def _dispatch_call_args(cls=None, bound_call=None, unbound_call=None,
     return has_out, out_optional, spec
 
 
-class Operator(object):
+class OperatorMeta(type):
+
+    """Metaclass for Operators.
+
+    This metaclass wraps some methods to improve usability by users. The
+    methods that are wrapped are:
+
+    * ``derivative``
+    """
+
+    def __new__(meta, classname, bases, classDict):
+        newClassDict = dict(classDict)
+
+        if 'derivative' in classDict:
+            derivative_impl = classDict['derivative']
+
+            @wraps(derivative_impl)
+            def derivative(self, x):
+                x = self.domain.element(x)
+                return derivative_impl(self, x)
+
+            newClassDict['derivative'] = derivative
+
+        return type.__new__(meta, classname, bases, newClassDict)
+
+
+class Operator(with_metaclass(OperatorMeta)):
 
     """Abstract mathematical operator.
 
