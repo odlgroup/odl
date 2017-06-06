@@ -185,6 +185,9 @@ class RectGrid(Set):
                 raise ValueError('vector {} contains duplicates'
                                  ''.format(i + 1))
 
+        # Lazily evaluates strides when needed but stores the result
+        self.__stride = None
+
         self.__coord_vectors = vecs
 
         # Non-degenerate axes
@@ -381,24 +384,44 @@ class RectGrid(Set):
         If the grid contains axes that are not uniform, ``stride`` has
         a ``NaN`` entry.
 
+        For degenerate (length 1) axes, ``stride`` has value ``0.0``.
+
+        Returns
+        -------
+        stride : numpy.array
+            Array of dtype ``float`` and length `ndim`.
+
         Examples
         --------
         >>> rg = uniform_grid([-1.5, -1], [-0.5, 3], (2, 3))
         >>> rg.stride
         array([ 1.,  2.])
+
+        NaN returned for non-uniform dimension:
+
         >>> g = RectGrid([0, 1, 2], [0, 1, 4])
         >>> g.stride
-        array([  1.,  nan])
+        array([ 1.,  nan])
+
+        0.0 returned for degenerate dimension:
+
+        >>> g = RectGrid([0, 1, 2], [0])
+        >>> g.stride
+        array([ 1.,  0.])
         """
-        strd = []
-        for i in range(self.ndim):
-            if not self.is_uniform_byaxis[i]:
-                strd.append(float('nan'))
-            elif self.nondegen_byaxis[i]:
-                strd.append(self.extent[i] / (self.shape[i] - 1.0))
-            else:
-                strd.append(0.0)
-        return np.array(strd)
+        # Cache for efficiency instead of re-computing
+        if self.__stride is None:
+            strd = []
+            for i in range(self.ndim):
+                if not self.is_uniform_byaxis[i]:
+                    strd.append(float('nan'))
+                elif self.nondegen_byaxis[i]:
+                    strd.append(self.extent[i] / (self.shape[i] - 1.0))
+                else:
+                    strd.append(0.0)
+            self.__stride = np.array(strd)
+
+        return self.__stride.copy()
 
     @property
     def extent(self):

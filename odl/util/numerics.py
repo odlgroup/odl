@@ -244,7 +244,7 @@ def fast_1d_tensor_mult(ndarr, onedim_arrs, axes=None, out=None):
         axes[axes < 0] += out.ndim
         axes = list(axes)
 
-    if np.any(np.array(axes) >= out.ndim) or np.any(np.array(axes) < 0):
+    if not all(0 <= ai < out.ndim for ai in axes):
         raise ValueError('`axes` {} out of bounds for {} dimensions'
                          ''.format(axes_in, out.ndim))
 
@@ -269,8 +269,7 @@ def fast_1d_tensor_mult(ndarr, onedim_arrs, axes=None, out=None):
 
         # Get the axis to spare for the final multiplication, the one
         # with the largest stride.
-        axis_order = np.argsort(out.strides)
-        last_ax = axis_order[-1]
+        last_ax = np.argmax(out.strides)
         last_arr = alist[axes.index(last_ax)]
 
         # Build the semi-big array and multiply
@@ -280,14 +279,14 @@ def fast_1d_tensor_mult(ndarr, onedim_arrs, axes=None, out=None):
                 continue
 
             slc = [None] * out.ndim
-            slc[ax] = np.s_[:]
+            slc[ax] = slice(None)
             factor = factor * arr[slc]
 
         out *= factor
 
         # Finally multiply by the remaining 1d array
         slc = [None] * out.ndim
-        slc[last_ax] = np.s_[:]
+        slc[last_ax] = slice(None)
         out *= last_arr[slc]
 
     return out

@@ -160,32 +160,62 @@ def douglas_rachford_pd(x, f, g, L, tau, sigma, niter,
     w1 = x.space.zero()
     w2 = [Li.range.zero() for Li in L]
 
+    # Temporaries (not in original article)
+    tmp_domain = x.space.zero()
+
     for k in range(niter):
-        tmp_1 = sum(Li.adjoint(vi) for Li, vi in zip(L, v))
-        tmp_1.lincomb(1, x, -tau / 2, tmp_1)
-        f.proximal(tau)(tmp_1, out=p1)
+        lam_k = lam(k)
+
+        if len(L) > 0:
+            # Compute tmp_domain = sum(Li.adjoint(vi) for Li, vi in zip(L, v))
+            L[0].adjoint(v[0], out=tmp_domain)
+            for Li, vi in zip(L[1:], v[1:]):
+                Li.adjoint(vi, out=p1)
+                tmp_domain += p1
+
+            tmp_domain.lincomb(1, x, -tau / 2, tmp_domain)
+        else:
+            tmp_domain.set_zero()
+
+        f.proximal(tau)(tmp_domain, out=p1)
         w1.lincomb(2, p1, -1, x)
 
         for i in range(m):
-            prox_cc_g[i](sigma[i])(v[i] + (sigma[i] / 2.0) * L[i](w1),
-                                   out=p2[i])
+            tmp = v[i] + (sigma[i] / 2.0) * L[i](w1)
+            prox_cc_g[i](sigma[i])(tmp, out=p2[i])
             w2[i].lincomb(2.0, p2[i], -1, v[i])
 
-        tmp_2 = sum(Li.adjoint(wi) for Li, wi in zip(L, w2))
-        z1.lincomb(1.0, w1, - (tau / 2.0), tmp_2)
-        x += lam(k) * (z1 - p1)
+        if len(L) > 0:
+            # Compute:
+            # tmp_domain = sum(Li.adjoint(w2i) for Li, w2i in zip(L, w2))
+            L[0].adjoint(w2[0], out=tmp_domain)
+            for Li, w2i in zip(L[1:], w2[1:]):
+                Li.adjoint(w2i, out=z1)
+                tmp_domain += z1
+        else:
+            tmp_domain.set_zero()
 
+        z1.lincomb(1.0, w1, - (tau / 2.0), tmp_domain)
+
+        # Compute x += lam(k) * (z1 - p1)
+        x.lincomb(1, x, lam_k, z1)
+        x.lincomb(1, x, -lam_k, p1)
+
+        tmp_domain.lincomb(2, z1, -1, w1)
         for i in range(m):
-            tmp = w2[i] + (sigma[i] / 2.0) * L[i](2.0 * z1 - w1)
             if l is not None:
                 # In this case the infimal convolution is used.
+                tmp = w2[i] + (sigma[i] / 2.0) * L[i](tmp_domain)
                 prox_cc_l[i](sigma[i])(tmp, out=z2[i])
             else:
                 # If the infimal convolution is not given, prox_cc_l is the
                 # identity and hence omitted. For more details, see the
                 # documentation.
-                z2[i].assign(tmp)
-            v[i] += lam(k) * (z2[i] - p2[i])
+                z2[i].lincomb(1, w2[i], sigma[i] / 2.0, L[i](tmp_domain))
+
+            # Compute v[i] += lam(k) * (z2[i] - p2[i])
+            v[i].lincomb(1, v[i], lam_k, z2[i])
+            v[i].lincomb(1, v[i], -lam_k, p2[i])
 
         if callback is not None:
             callback(p1)

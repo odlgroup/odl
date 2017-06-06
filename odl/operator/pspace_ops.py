@@ -887,7 +887,8 @@ class ReductionOperator(Operator):
             return self.prod_op(x)[0]
         else:
             wrapped_out = self.prod_op.range.element([out], cast=False)
-            return self.prod_op(x, out=wrapped_out)
+            result = self.prod_op(x, out=wrapped_out)
+            return result[0]
 
     def derivative(self, x):
         """Derivative of the reduction operator.

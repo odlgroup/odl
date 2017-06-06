@@ -386,7 +386,7 @@ def _interp_kernel_ft(norm_freqs, interp):
     if interp_ == 'nearest':
         pass
     elif interp_ == 'linear':
-        ker_ft **= 2
+        ker_ft *= ker_ft
     else:
         raise ValueError("`interp` '{}' not understood".format(interp))
 
@@ -536,10 +536,13 @@ def dft_postprocess_data(arr, real_grid, recip_grid, shift, axes,
         freqs = np.linspace(fmin, fmax, num=len_dft)
         stride = real_grid.stride[ax]
 
+        interp_kernel = _interp_kernel_ft(freqs, intp)
+        interp_kernel *= stride
+
         if op == 'multiply':
-            onedim_arr *= stride * _interp_kernel_ft(freqs, intp)
+            onedim_arr *= interp_kernel
         else:
-            onedim_arr /= stride * _interp_kernel_ft(freqs, intp)
+            onedim_arr /= interp_kernel
 
         onedim_arrs.append(onedim_arr.astype(out.dtype, copy=False))
 

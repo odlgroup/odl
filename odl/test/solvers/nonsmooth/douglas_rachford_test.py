@@ -95,6 +95,36 @@ def test_primal_dual_l1():
     assert all_almost_equal(x, data_1, places=2)
 
 
+def test_primal_dual_no_operator():
+    """Verify that the correct value is returned when there is no operator.
+
+    Solves the optimization problem
+
+        min_x ||x - data_1||_1
+
+    which has optimum value data_1.
+    """
+
+    # Define the space
+    space = odl.rn(5)
+
+    # Operator
+    L = []
+
+    # Data
+    data_1 = odl.util.testutils.noise_element(space)
+
+    # Proximals
+    f = odl.solvers.L1Norm(space).translated(data_1)
+    g = []
+
+    # Solve with f term dominating
+    x = space.zero()
+    douglas_rachford_pd(x, f, g, L, tau=3.0, sigma=[], niter=10)
+
+    assert all_almost_equal(x, data_1, places=2)
+
+
 def test_primal_dual_with_li():
     """Test for the forward-backward solver with infimal convolution.
 

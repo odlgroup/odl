@@ -28,6 +28,7 @@ from odl.operator import (Operator, IdentityOperator, ScalingOperator,
                           ConstantOperator, DiagonalOperator)
 from odl.space import ProductSpace
 from odl.set import LinearSpaceElement
+from odl.util import cache_arguments
 
 
 __all__ = ('combine_proximals', 'proximal_cconj', 'proximal_translation',
@@ -224,6 +225,7 @@ def proximal_arg_scaling(prox_factory, scaling):
     if scaling == 0:
         return proximal_const_func(prox_factory(1.0).domain)
 
+    @cache_arguments
     def arg_scaling_prox_factory(sigma):
         """Create proximal for the translation with a given sigma.
 
@@ -295,6 +297,7 @@ def proximal_quadratic_perturbation(prox_factory, a, u=None):
         raise TypeError('`u` must be `None` or a `LinearSpaceElement` '
                         'instance, got {!r}.'.format(u))
 
+    @cache_arguments
     def quadratic_perturbation_prox_factory(sigma):
         """Create proximal for the quadratic perturbation with a given sigma.
 
