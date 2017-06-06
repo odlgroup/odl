@@ -13,6 +13,7 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
+import warnings
 import time
 import os
 import numpy as np
@@ -196,6 +197,7 @@ class CallbackStore(SolverCallback):
             List in which to store the iterates.
             Default: new list (``[]``)
         function : callable, optional
+            Deprecated, use composition instead.
             Function to be called on all incoming results before storage.
             Default: copy
         step : int, optional
@@ -215,10 +217,15 @@ class CallbackStore(SolverCallback):
         Store the norm of the results
 
         >>> norm_function = lambda x: x.norm()
-        >>> callback = CallbackStore(function=norm_function)
+        >>> callback = CallbackStore() * norm_function
         """
         self.results = [] if results is None else results
         self.function = function
+        if function is not None:
+            warnings.warn('`function` argument is deprecated and will be '
+                          'removed in a future release. Use composition '
+                          'instead.',
+                          DeprecationWarning)
         self.step = int(step)
         self.iter = 0
 
@@ -399,7 +406,7 @@ class CallbackPrintTiming(SolverCallback):
         Parameters
         ----------
         fmt : string, optional
-            Formating that should be applied. Default: print representation.
+            Formating that should be applied.
         step : positive int, optional
             Number of iterations between prints.
         """
@@ -440,6 +447,7 @@ class CallbackPrint(SolverCallback):
         Parameters
         ----------
         func : callable, optional
+            Deprecated, use composition instead.
             Functional that should be called on the current iterate before
             printing. Default: print current iterate.
         fmt : string, optional
@@ -455,22 +463,27 @@ class CallbackPrint(SolverCallback):
         >>> callback([1, 2])
         [1, 2]
 
-        Apply function before printing:
+        Apply function before printing via composition:
 
-        >>> callback = CallbackPrint(func=np.sum)
+        >>> callback = CallbackPrint() * np.sum
         >>> callback([1, 2])
         3
 
         Format to two decimal points:
 
-        >>> callback = CallbackPrint(func=np.sum, fmt='{0:.2f}')
+        >>> callback = CallbackPrint(fmt='{0:.2f}') * np.sum
         >>> callback([1, 2])
         3.00
         """
         self.func = func
-        self.fmt = str(fmt)
+        if func is not None:
+            warnings.warn('`func` argument is deprecated and will be removed '
+                          'in a future release. Use composition instead.',
+                          DeprecationWarning)
         if func is not None and not callable(func):
             raise TypeError('`func` must be `callable` or `None`')
+
+        self.fmt = str(fmt)
         self.step = int(step)
         self.iter = 0
 
