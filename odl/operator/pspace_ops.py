@@ -834,13 +834,25 @@ class ReductionOperator(Operator):
         >>> op.range
         rn(3)
 
-        Evaluating in a point gives sum:
+        Evaluating in a point gives the sum of the evaluation results of
+        the individual operators:
 
         >>> op([[1.0, 2.0, 3.0],
         ...     [4.0, 6.0, 8.0]])
         rn(3).element([9.0, 14.0, 19.0])
 
-        Can also be created using a multiple of a single operator:
+        An ``out`` argument can be given for in-place evaluation:
+
+        >>> out = op.range.element()
+        >>> result = op([[1.0, 2.0, 3.0],
+        ...              [4.0, 6.0, 8.0]], out=out)
+        >>> out
+        rn(3).element([9.0, 14.0, 19.0])
+        >>> result is out
+        True
+
+        There is a simplified syntax for the case that all operators are
+        the same:
 
         >>> op = ReductionOperator(I, 2)
         >>> op.operators
@@ -887,8 +899,8 @@ class ReductionOperator(Operator):
             return self.prod_op(x)[0]
         else:
             wrapped_out = self.prod_op.range.element([out], cast=False)
-            result = self.prod_op(x, out=wrapped_out)
-            return result[0]
+            pspace_result = self.prod_op(x, out=wrapped_out)
+            return pspace_result[0]
 
     def derivative(self, x):
         """Derivative of the reduction operator.
