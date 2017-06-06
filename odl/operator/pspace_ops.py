@@ -840,6 +840,9 @@ class ReductionOperator(Operator):
         >>> op([[1.0, 2.0, 3.0],
         ...     [4.0, 6.0, 8.0]])
         rn(3).element([9.0, 14.0, 19.0])
+
+        An ``out`` argument can be given for in-place evaluation:
+
         >>> out = op.range.element()
         >>> result = op([[1.0, 2.0, 3.0],
         ...              [4.0, 6.0, 8.0]], out=out)
@@ -896,8 +899,8 @@ class ReductionOperator(Operator):
             return self.prod_op(x)[0]
         else:
             wrapped_out = self.prod_op.range.element([out], cast=False)
-            result = self.prod_op(x, out=wrapped_out)
-            return result[0]
+            pspace_result = self.prod_op(x, out=wrapped_out)
+            return pspace_result[0]
 
     def derivative(self, x):
         """Derivative of the reduction operator.
