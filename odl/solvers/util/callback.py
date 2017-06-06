@@ -197,7 +197,7 @@ class CallbackStore(SolverCallback):
             List in which to store the iterates.
             Default: new list (``[]``)
         function : callable, optional
-            Deprecated, use composition instead.
+            Deprecated, use composition instead. See examples.
             Function to be called on all incoming results before storage.
             Default: copy
         step : int, optional
@@ -224,7 +224,8 @@ class CallbackStore(SolverCallback):
         if function is not None:
             warnings.warn('`function` argument is deprecated and will be '
                           'removed in a future release. Use composition '
-                          'instead.',
+                          'instead. '
+                          'See Examples in the documentation.',
                           DeprecationWarning)
         self.step = int(step)
         self.iter = 0
@@ -407,7 +408,11 @@ class CallbackPrintTiming(SolverCallback):
         Parameters
         ----------
         fmt : string, optional
-            Formating that should be applied.
+            Formating that should be applied. The time is printed as ::
+
+                print(fmt.format(runtime))
+
+            where ``runtime`` is the runtime since the last iterate.
         step : positive int, optional
             Number of iterations between prints.
         """
@@ -423,8 +428,6 @@ class CallbackPrintTiming(SolverCallback):
             t = time.time()
             print(self.fmt.format(t - self.time))
             self.time = t
-        else:
-            self.time = time.time()
 
         self.iter += 1
 
@@ -451,11 +454,15 @@ class CallbackPrint(SolverCallback):
         Parameters
         ----------
         func : callable, optional
-            Deprecated, use composition instead.
+            Deprecated, use composition instead. See examples.
             Functional that should be called on the current iterate before
             printing. Default: print current iterate.
         fmt : string, optional
-            Formating that should be applied. Default: print representation.
+            Formating that should be applied. Will be used as ::
+
+                print(fmt.format(x))
+
+            where ``x`` is the input to the callback.
         step : positive int, optional
             Number of iterations between prints.
 
@@ -482,7 +489,8 @@ class CallbackPrint(SolverCallback):
         self.func = func
         if func is not None:
             warnings.warn('`func` argument is deprecated and will be removed '
-                          'in a future release. Use composition instead.',
+                          'in a future release. Use composition instead. '
+                          'See Examples in the documentation.',
                           DeprecationWarning)
         if func is not None and not callable(func):
             raise TypeError('`func` must be `callable` or `None`')
