@@ -260,7 +260,8 @@ class CallbackStore(SolverCallback):
     def __repr__(self):
         """Return ``repr(self)``."""
         optargs = [('results', self.results, []),
-                   ('function', self.function, None)]
+                   ('function', self.function, None),
+                   ('step', self.step, 1)]
         inner_str = signature_string([], optargs)
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
@@ -434,7 +435,10 @@ class CallbackPrintTiming(SolverCallback):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}()'.format(self.__class__.__name__)
+        optargs = [('fmt', self.fmt, 'Time elapsed = {:<5.03f} s'),
+                   ('step', self.step, 1)]
+        inner_str = signature_string([], optargs)
+        return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
 class CallbackPrint(SolverCallback):
@@ -504,7 +508,8 @@ class CallbackPrint(SolverCallback):
     def __repr__(self):
         """Return ``repr(self)``."""
         optargs = [('func', self.func, None),
-                   ('fmt', self.fmt, '{!r}')]
+                   ('fmt', self.fmt, '{!r}'),
+                   ('step', self.step, 1)]
         inner_str = signature_string([], optargs)
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
