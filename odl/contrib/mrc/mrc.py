@@ -20,7 +20,7 @@ import numpy as np
 import struct
 import warnings
 
-from odl.tomo.data.uncompr_bin import (
+from odl.contrib.mrc.uncompr_bin import (
     FileReaderRawBinaryWithHeader, FileWriterRawBinaryWithHeader,
     header_fields_from_table)
 

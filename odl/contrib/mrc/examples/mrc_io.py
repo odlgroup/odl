@@ -17,14 +17,14 @@ import numpy as np
 import os
 import tempfile
 
-from odl.tomo.data import (
+from odl.contrib.mrc import (
     FileReaderMRC, FileWriterMRC, mrc_header_from_params)
 
 
 # --- Reading --- #
 
 file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                         'mrc', 'test.mrc')
+                         'data', 'test.mrc')
 
 # File readers can be used as context managers like `open`. As argument,
 # either a file stream or a file name string can be used.

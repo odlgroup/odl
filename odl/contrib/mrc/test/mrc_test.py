@@ -14,7 +14,8 @@ import pytest
 import numpy as np
 import tempfile
 
-from odl.tomo.data import mrc_header_from_params, FileWriterMRC, FileReaderMRC
+from odl.contrib.mrc import (
+    mrc_header_from_params, FileWriterMRC, FileReaderMRC)
 from odl.util.testutils import all_equal, simple_fixture
 
 
