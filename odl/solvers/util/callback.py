@@ -13,6 +13,7 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
+import warnings
 import time
 import os
 import numpy as np
@@ -187,7 +188,7 @@ class CallbackStore(SolverCallback):
     By default, calls the `copy()` method on the iterates before storing.
     """
 
-    def __init__(self, results=None, function=None):
+    def __init__(self, results=None, function=None, step=1):
         """Initialize a new instance.
 
         Parameters
@@ -196,8 +197,11 @@ class CallbackStore(SolverCallback):
             List in which to store the iterates.
             Default: new list (``[]``)
         function : callable, optional
+            Deprecated, use composition instead. See examples.
             Function to be called on all incoming results before storage.
             Default: copy
+        step : int, optional
+            Number of iterates between storing iterates.
 
         Examples
         --------
@@ -213,21 +217,31 @@ class CallbackStore(SolverCallback):
         Store the norm of the results
 
         >>> norm_function = lambda x: x.norm()
-        >>> callback = CallbackStore(function=norm_function)
+        >>> callback = CallbackStore() * norm_function
         """
         self.results = [] if results is None else results
         self.function = function
+        if function is not None:
+            warnings.warn('`function` argument is deprecated and will be '
+                          'removed in a future release. Use composition '
+                          'instead. '
+                          'See Examples in the documentation.',
+                          DeprecationWarning)
+        self.step = int(step)
+        self.iter = 0
 
     def __call__(self, result):
         """Append result to results list."""
-        if self.function:
-            self.results.append(self.function(result))
-        else:
-            self.results.append(result.copy())
+        if self.iter % self.step == 0:
+            if self.function:
+                self.results.append(self.function(result))
+            else:
+                self.results.append(result.copy())
 
     def reset(self):
         """Clear the `results` list."""
         self.results = []
+        self.iter = 0
 
     def __iter__(self):
         """Allow iteration over the results."""
@@ -247,7 +261,8 @@ class CallbackStore(SolverCallback):
     def __repr__(self):
         """Return ``repr(self)``."""
         optargs = [('results', self.results, []),
-                   ('function', self.function, None)]
+                   ('function', self.function, None),
+                   ('step', self.step, 1)]
         inner_str = signature_string([], optargs)
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
@@ -299,6 +314,10 @@ class CallbackApply(SolverCallback):
             self.function(result)
         self.iter += 1
 
+    def reset(self):
+        """Set `iter` to 0."""
+        self.iter = 0
+
     def __str__(self):
         """Return ``str(self)``."""
         return repr(self)
@@ -315,9 +334,7 @@ class CallbackPrintIteration(SolverCallback):
 
     """Callback for printing the iteration count."""
 
-    _default_fmt = 'iter = {}'
-
-    def __init__(self, fmt=None, step=1):
+    def __init__(self, fmt='iter = {}', step=1):
         """Initialize a new instance.
 
         Parameters
@@ -352,8 +369,8 @@ class CallbackPrintIteration(SolverCallback):
         >>> callback(None)
         Current iter is 2.
         """
+        self.fmt = str(fmt)
         self.step = int(step)
-        self.fmt = fmt if fmt is not None else self._default_fmt
         self.iter = 0
 
     def __call__(self, _):
@@ -375,7 +392,7 @@ class CallbackPrintIteration(SolverCallback):
         >>> CallbackPrintIteration(fmt='Current iter is {}.', step=2)
         CallbackPrintIteration(fmt='Current iter is {}.', step=2)
         """
-        optargs = [('fmt', self.fmt, self._default_fmt),
+        optargs = [('fmt', self.fmt, 'iter = {}'),
                    ('step', self.step, 1)]
         inner_str = signature_string([], optargs)
         return '{}({})'.format(self.__class__.__name__, inner_str)
@@ -385,39 +402,69 @@ class CallbackPrintTiming(SolverCallback):
 
     """Callback for printing the time elapsed since the previous iteration."""
 
-    def __init__(self):
-        """Initialize a new instance."""
+    def __init__(self, fmt='Time elapsed = {:<5.03f} s', step=1):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        fmt : string, optional
+            Formating that should be applied. The time is printed as ::
+
+                print(fmt.format(runtime))
+
+            where ``runtime`` is the runtime since the last iterate.
+        step : positive int, optional
+            Number of iterations between prints.
+        """
+        self.fmt = str(fmt)
+        self.step = int(step)
+        self.iter = 0
+
         self.time = time.time()
 
     def __call__(self, _):
         """Print time elapsed from the previous iteration."""
-        t = time.time()
-        print("Time elapsed = {:<5.03f} s".format(t - self.time))
-        self.time = t
+        if self.iter % self.step == 0:
+            t = time.time()
+            print(self.fmt.format(t - self.time))
+            self.time = t
+
+        self.iter += 1
 
     def reset(self):
         """Set `time` to the current time."""
         self.time = time.time()
+        self.iter = 0
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}()'.format(self.__class__.__name__)
+        optargs = [('fmt', self.fmt, 'Time elapsed = {:<5.03f} s'),
+                   ('step', self.step, 1)]
+        inner_str = signature_string([], optargs)
+        return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
 class CallbackPrint(SolverCallback):
 
     """Callback for printing the current value."""
 
-    def __init__(self, func=None, fmt='{!r}'):
+    def __init__(self, func=None, fmt='{!r}', step=1):
         """Initialize a new instance.
 
         Parameters
         ----------
         func : callable, optional
+            Deprecated, use composition instead. See examples.
             Functional that should be called on the current iterate before
             printing. Default: print current iterate.
         fmt : string, optional
-            Formating that should be applied. Default: print representation.
+            Formating that should be applied. Will be used as ::
+
+                print(fmt.format(x))
+
+            where ``x`` is the input to the callback.
+        step : positive int, optional
+            Number of iterations between prints.
 
         Examples
         --------
@@ -427,34 +474,50 @@ class CallbackPrint(SolverCallback):
         >>> callback([1, 2])
         [1, 2]
 
-        Apply function before printing:
+        Apply function before printing via composition:
 
-        >>> callback = CallbackPrint(func=np.sum)
+        >>> callback = CallbackPrint() * np.sum
         >>> callback([1, 2])
         3
 
         Format to two decimal points:
 
-        >>> callback = CallbackPrint(func=np.sum, fmt='{0:.2f}')
+        >>> callback = CallbackPrint(fmt='{0:.2f}') * np.sum
         >>> callback([1, 2])
         3.00
         """
-        self.fmt = str(fmt)
+        self.func = func
+        if func is not None:
+            warnings.warn('`func` argument is deprecated and will be removed '
+                          'in a future release. Use composition instead. '
+                          'See Examples in the documentation.',
+                          DeprecationWarning)
         if func is not None and not callable(func):
             raise TypeError('`func` must be `callable` or `None`')
-        self.func = func
+
+        self.fmt = str(fmt)
+        self.step = int(step)
+        self.iter = 0
 
     def __call__(self, result):
         """Print the current value."""
-        if self.func is not None:
-            result = self.func(result)
+        if self.iter % self.step == 0:
+            if self.func is not None:
+                result = self.func(result)
 
-        print(self.fmt.format(result))
+            print(self.fmt.format(result))
+
+        self.iter += 1
+
+    def reset(self):
+        """Set `iter` to 0."""
+        self.iter = 0
 
     def __repr__(self):
         """Return ``repr(self)``."""
         optargs = [('func', self.func, None),
-                   ('fmt', self.fmt, '{!r}')]
+                   ('fmt', self.fmt, '{!r}'),
+                   ('step', self.step, 1)]
         inner_str = signature_string([], optargs)
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
