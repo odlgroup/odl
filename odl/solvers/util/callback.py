@@ -13,6 +13,7 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
+import psutil
 import warnings
 import time
 import os
@@ -22,7 +23,8 @@ from odl.util import signature_string
 __all__ = ('CallbackStore', 'CallbackApply',
            'CallbackPrintTiming', 'CallbackPrintIteration',
            'CallbackPrint', 'CallbackPrintNorm', 'CallbackShow',
-           'CallbackSaveToDisk', 'CallbackSleep', 'CallbackShowConvergence')
+           'CallbackSaveToDisk', 'CallbackSleep', 'CallbackShowConvergence',
+           'CallbackPrintMemory')
 
 
 class SolverCallback(object):
@@ -852,6 +854,52 @@ class CallbackShowConvergence(SolverCallback):
             self.title,
             self.logx,
             self.logy)
+
+
+class CallbackPrintMemory(SolverCallback):
+
+    """Callback for printing memory and CPU usage."""
+
+    def __init__(self, step=1):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        step : positive int, optional
+            Number of iterations between output. Default: 1
+
+        Examples
+        --------
+        Print memory and CPU usage
+
+        >>> callback = CallbackPrintMemory()
+
+        Only print every tenth step
+
+        >>> callback = CallbackPrintMemory(step=10)
+        """
+        self.step = step
+        self.iter = 0
+
+    def __call__(self, _):
+        """Print the memory and CPU usage"""
+        if self.iter % self.step == 0:
+            print('CPU usage (% each core): {}'.format(
+                  psutil.cpu_percent(percpu=True)))
+            print('RAM usage: {}'.format(psutil.virtual_memory()))
+            print('SWAP usage: {}'.format(psutil.swap_memory()))
+
+        self.iter += 1
+
+    def reset(self):
+        """Set `iter` to 0."""
+        self.iter = 0
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        optargs = [('step', self.step, 1)]
+        inner_str = signature_string([], optargs)
+        return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
 if __name__ == '__main__':
