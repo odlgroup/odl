@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2019 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,16 +8,24 @@
 
 """Geometry base and mixin classes."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 from builtins import object
+
 import numpy as np
 
-from odl.discr import RectPartition
-from odl.tomo.geometry.detector import Detector
+from odl.discr import RectPartition, uniform_partition
+from odl.tomo.geometry.detector import Detector, Flat1dDetector, Flat2dDetector
 from odl.tomo.util import axis_rotation_matrix, is_inside_bounds
+from odl.util import (
+    indent_rows, normalized_scalar_param_list, safe_int_conv, signature_string)
 
-
-__all__ = ('Geometry', 'DivergentBeamGeometry', 'AxisOrientedGeometry')
+__all__ = (
+    'Geometry',
+    'DivergentBeamGeometry',
+    'AxisOrientedGeometry',
+    'VecGeometry',
+)
 
 
 class Geometry(object):
@@ -617,6 +625,436 @@ class AxisOrientedGeometry(object):
             matrix = matrix.squeeze()
 
         return matrix
+
+
+class VecGeometry(Geometry):
+
+    """Abstract 2D or 3D geometry defined by a collection of vectors.
+
+    This geometry gives maximal flexibility for representing locations
+    and orientations of ray/source and detector for parallel or cone beam
+    acquisition schemes. It is defined by a set of vectors per projection,
+    namely
+
+        - for parallel beam: ray direction (``ray``),
+        - for cone beam: source position (``src``),
+        - detector center (``d``),
+        - in 2D: vector (``u``) from the detector point with index ``0``
+          to the point with index ``1``
+        - in 3D:
+
+          * vector (``u``) from detector point ``(0, 0)`` to ``(1, 0)`` and
+          * vector (``v``) from detector point ``(0, 0)`` to ``(0, 1)``.
+
+    The vectors are given as a matrix with ``n_projs`` rows, where
+    ``n_projs`` is the number of projections. In 2D, 3 vectors have to
+    be specified, which makes for ``3 * 2 = 6`` columns::
+
+        vec_par2d = (rayX, rayY, dX, dY, uX, uY)
+        vec_cone2d = (srcX, srcY, dX, dY, uX, uY)
+
+    3D geometries require 4 vectors, resulting in ``4 * 3 = 12`` matrix
+    columns::
+
+        vec_par3d = (rayX, rayY, rayZ, dX, dY, dZ, uX, uY, uZ, vX, vY, vZ)
+        vec_cone3d = (srcX, srcY, srcZ, dX, dY, dZ, uX, uY, uZ, vX, vY, vZ)
+
+    This representation corresponds exactly to the ASTRA "vec" geometries,
+    see the `ASTRA documentation
+    <http://www.astra-toolbox.com/docs/index.html>`_.
+
+    The geometry defined by these vectors is discrete in the motion
+    parameters ("angles") since they are merely indices for the individual
+    projections. For intermediate values, linear interpolation is used,
+    which corresponds to the assumption that the system moves on piecewise
+    linear paths.
+    """
+
+    def __init__(self, det_shape, vectors):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        det_shape : positive int or sequence of positive ints
+            Number of detector pixels per axis, can be given as single
+            integer for 2D geometries (with 1D detector).
+        vectors : array-like, shape ``(N, 6)`` or ``(N, 12)``
+            Vectors defining the geometric configuration in each
+            projection. The number ``N`` of rows determines the number
+            of projections, and the number of columns the spatial
+            dimension (6 for 2D, 12 for 3D).
+        """
+        self.__vectors = np.asarray(vectors, dtype=float)
+        if self.vectors.ndim != 2:
+            raise ValueError('`vectors` must be 2-dimensional, got array '
+                             'with ndim = {}'.format(self.vectors.ndim))
+
+        num_projs = self.vectors.shape[0]
+
+        if num_projs == 0:
+            raise ValueError('`vectors` is empty')
+
+        if self.vectors.shape[1] == 6:
+            ndim = 2
+        elif self.vectors.shape[1] == 12:
+            ndim = 3
+        else:
+            raise ValueError('`vectors` must have 6 or 12 columns, got '
+                             'array with {} columns'
+                             ''.format(self.vectors.shape[1]))
+
+        # Make angle partition with spacing 1
+        mpart = uniform_partition(0, num_projs - 1, num_projs,
+                                  nodes_on_bdry=True)
+
+        # Detector is initialized using the first set of vectors. This
+        # assumes that the detector pixels do not change their physical
+        # sizes during acquisition, but has no effect on the computations.
+        # For those, only the `vectors` are used.
+        if ndim == 2:
+            det_u = self.vectors[0, 4:6]
+            det_shape = normalized_scalar_param_list(det_shape, length=1,
+                                                     param_conv=safe_int_conv)
+            det_cell_size = np.linalg.norm(det_u)
+            det_part = uniform_partition(
+                min_pt=-(det_cell_size * det_shape[0]) / 2,
+                max_pt=(det_cell_size * det_shape[0]) / 2,
+                shape=det_shape)
+            detector = Flat1dDetector(det_part, axis=det_u)
+        elif ndim == 3:
+            det_u = self.vectors[0, 6:9]
+            det_v = self.vectors[0, 9:12]
+            det_shape = normalized_scalar_param_list(det_shape, length=2,
+                                                     param_conv=safe_int_conv)
+            det_cell_sides = np.array(
+                [np.linalg.norm(det_u), np.linalg.norm(det_v)])
+            det_part = uniform_partition(
+                min_pt=-(det_cell_sides * det_shape) / 2,
+                max_pt=(det_cell_sides * det_shape) / 2,
+                shape=det_shape)
+            detector = Flat2dDetector(det_part, axes=[det_u, det_v])
+
+        Geometry.__init__(self, ndim, mpart, detector)
+
+    @property
+    def vectors(self):
+        """Array of vectors defining this geometry."""
+        return self.__vectors
+
+    @property
+    def _slice_det_center(self):
+        """Slice for the detector center part of `vectors`."""
+        if self.ndim == 2:
+            return slice(2, 4)
+        elif self.ndim == 3:
+            return slice(3, 6)
+        else:
+            raise RuntimeError('bad `ndim`')
+
+    @property
+    def _slice_det_u(self):
+        """Slice for the detector u vector part of `vectors`."""
+        if self.ndim == 2:
+            return slice(4, 6)
+        elif self.ndim == 3:
+            return slice(6, 9)
+        else:
+            raise RuntimeError('bad `ndim`')
+
+    @property
+    def _slice_det_v(self):
+        """Slice for the detector v vector part of `vectors`."""
+        if self.ndim == 3:
+            return slice(9, 12)
+        else:
+            raise RuntimeError('bad `ndim`')
+
+    def det_refpoint(self, index):
+        """Detector reference point function.
+
+        Parameters
+        ----------
+        index : `motion_params` element
+            Index of the projection. Non-integer indices result in
+            interpolation, making the reference point move on a piecewise
+            linear path.
+
+        Returns
+        -------
+        point : `numpy.ndarray`, shape (`ndim`,)
+            The reference point, an `ndim`-dimensional vector.
+
+        Examples
+        --------
+        Initialize a 2D parallel beam geometry with detector positions
+        ``(0, 1)`` and ``(-1, 0)`` (columns 2 and 3 in the vectors,
+        counting from 0):
+
+        >>> # d = refpoint
+        >>> #                 dx dy
+        >>> vecs_2d = [[0, -1, 0, 1, 1, 0],
+        ...            [1, 0, -1, 0, 0, 1]]
+        >>> det_shape_2d = 10
+        >>> geom_2d = odl.tomo.ParallelVecGeometry(det_shape_2d, vecs_2d)
+        >>> geom_2d.det_refpoint(0)
+        array([ 0., 1.])
+        >>> geom_2d.det_refpoint(1)
+        array([-1.,  0.])
+        >>> geom_2d.det_refpoint(0.5)  # mean value
+        array([-0.5,  0.5])
+
+        In 3D, columns 3 to 5 (starting at 0) determine the detector
+        reference point, here ``(0, 1, 0)`` and ``(-1, 0, 0)``:
+
+        >>> # d = refpoint
+        >>> #                    dx dy dz
+        >>> vecs_3d = [[0, -1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1],
+        ...            [1, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0, 1]]
+        >>> det_shape_3d = (10, 20)
+        >>> geom_3d = odl.tomo.ParallelVecGeometry(det_shape_3d, vecs_3d)
+        >>> geom_3d.det_refpoint(0)
+        array([ 0., 1., 0.])
+        >>> geom_3d.det_refpoint(1)
+        array([-1.,  0.,  0.])
+        >>> geom_3d.det_refpoint(0.5)  # mean value
+        array([-0.5,  0.5,  0. ])
+        """
+        if self.check_bounds and not self.motion_params.contains_all(index):
+            raise ValueError('`index` {} not in the valid range {}'
+                             ''.format(index, self.motion_params))
+
+        index = np.array(index, dtype=float, copy=False, ndmin=1)
+        int_part = index.astype(int)
+        frac_part = index - int_part
+
+        vecs = np.empty((len(index), self.ndim))
+        at_right_bdry = (int_part == self.motion_params.max_pt)
+        vecs[at_right_bdry, :] = self.vectors[int_part[at_right_bdry],
+                                              self._slice_det_center]
+
+        not_at_right_bdry = ~at_right_bdry
+        if np.any(not_at_right_bdry):
+            pt_left = self.vectors[int_part[not_at_right_bdry],
+                                   self._slice_det_center]
+            pt_right = self.vectors[int_part[not_at_right_bdry] + 1,
+                                    self._slice_det_center]
+            vecs[not_at_right_bdry, :] = (
+                pt_left +
+                frac_part[not_at_right_bdry, None] * (pt_right - pt_left))
+        return vecs.squeeze()
+
+    def det_point_position(self, index, dparam):
+        """Return the detector point at ``(index, dparam)``.
+
+        The projection ``index`` determines the location of the detector
+        reference point, and the detector parameter ``dparam`` defines
+        an intrinsic shift that is added to the reference point.
+
+        Parameters
+        ----------
+        index : `motion_params` element
+            Index of the projection. Non-integer indices result in
+            interpolated vectors.
+        dparam : `det_params` element
+            Detector parameter at which to evaluate.
+
+        Returns
+        -------
+        pos : `numpy.ndarray` (shape (`ndim`,))
+            Source position, an `ndim`-dimensional vector.
+
+        Examples
+        --------
+        Initialize a 2D parallel beam geometry with detector positions
+        ``(0, 1)`` and ``(-1, 0)``, and detector axes ``(1, 0)`` and
+        ``(0, 1)``, respectively:
+
+        >>> # d = refpoint, u = detector axis
+        >>> #                 dx dy ux uy
+        >>> vecs_2d = [[0, -1, 0, 1, 1, 0],
+        ...            [1, 0, -1, 0, 0, 1]]
+        >>> det_shape_2d = 10
+        >>> geom_2d = odl.tomo.ParallelVecGeometry(det_shape_2d, vecs_2d)
+        >>> # This is equal to d(0) = (0, 1)
+        >>> geom_2d.det_point_position(0, 0)
+        array([ 0., 1.])
+        >>> # d(0) + 2 * u(0) = (0, 1) + 2 * (1, 0)
+        >>> geom_2d.det_point_position(0, 2)
+        array([ 2., 1.])
+        >>> # d(1) + 2 * u(1) = (-1, 0) + 2 * (0, 1)
+        >>> geom_2d.det_point_position(1, 2)
+        array([-1., 2.])
+        >>> # d(0.5) + 2 * u(0.5) = (-0.5, 0.5) + 2 * (0.5, 0.5)
+        >>> geom_2d.det_point_position(0.5, 2)
+        array([ 0.5,  1.5])
+
+        Do the same in 3D, with reference points ``(0, 1, 0)`` and
+        ``(-1, 0, 0)``, and horizontal ``u``  axis vectors ``(1, 0, 0)`` and
+        ``(0, 1, 0)``. The vertical axis ``v`` is always ``(0, 0, 1)``:
+
+        >>> # d = refpoint, u = detector axis 0, v = detector axis 1
+        >>> #                    dx dy dz ux uy uz vx vy vz
+        >>> vecs_3d = [[0, -1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1],
+        ...            [1, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0, 1]]
+        >>> det_shape_3d = (10, 20)
+        >>> geom_3d = odl.tomo.ParallelVecGeometry(det_shape_3d, vecs_3d)
+        >>> # This is equal to d(0) = (0, 1, 0)
+        >>> geom_3d.det_point_position(0, [0, 0])
+        array([ 0., 1., 0.])
+        >>> # d(0) + 2 * u(0) + 1 * v(0) =
+        >>> #     (0, 1, 0) + 2 * (1, 0, 0) + 1 * (0, 0, 1)
+        >>> geom_3d.det_point_position(0, [2, 1])
+        array([ 2., 1., 1.])
+        >>> # d(1) + 2 * u(1) + 1 * v(1) =
+        >>> #     (-1, 0, 0) + 2 * (0, 1, 0) + 1 * (0, 0, 1)
+        >>> geom_3d.det_point_position(1, [2, 1])
+        array([-1., 2., 1.])
+        >>> # d(0.5) + 2 * u(0.5) = (-0.5, 0.5) + 2 * (0.5, 0.5)
+        >>> geom_3d.det_point_position(0.5, [2, 1])
+        array([ 0.5,  1.5,  1. ])
+        """
+        # TODO: vectorize!
+
+        if index not in self.motion_params:
+            raise ValueError('`index` must be contained in `motion_params` '
+                             '{}, got {}'.format(self.motion_params, index))
+        if dparam not in self.det_params:
+            raise ValueError('`dparam` must be contained in `det_params` '
+                             '{}, got {}'.format(self.det_params, dparam))
+
+        if self.ndim == 2:
+            det_shift = dparam * self.det_axis(index)
+        elif self.ndim == 3:
+            det_shift = sum(di * ax
+                            for di, ax in zip(dparam, self.det_axes(index)))
+
+        return self.det_refpoint(index) + det_shift
+
+    def det_axis(self, index):
+        """Return the detector axis at ``index`` (for 2D geometries).
+
+        Parameters
+        ----------
+        index : `motion_params` element
+            Index of the projection. Non-integer indices result in
+            interpolated vectors.
+
+        Returns
+        -------
+        axis : `numpy.ndarray`, shape ``(2,)``
+            The detector axis at ``index``.
+
+        Examples
+        --------
+        Initialize a 2D parallel beam geometry with detector axes
+        ``(1, 0)`` and ``(0, 1)`` (columns 4 and 5 in the vectors,
+        counting from 0):
+
+        >>> # d = refpoint
+        >>> #                       ux uy
+        >>> vecs_2d = [[0, -1, 0, 1, 1, 0],
+        ...            [1, 0, -1, 0, 0, 1]]
+        >>> det_shape_2d = 10
+        >>> geom_2d = odl.tomo.ParallelVecGeometry(det_shape_2d, vecs_2d)
+        >>> geom_2d.det_axis(0)
+        array([ 1., 0.])
+        >>> geom_2d.det_axis(1)
+        array([ 0., 1.])
+        >>> geom_2d.det_axis(0.5)  # mean value
+        array([ 0.5,  0.5])
+        """
+        # TODO: vectorize!
+
+        if index not in self.motion_params:
+            raise ValueError('`index` must be contained in `motion_params` '
+                             '{}, got {}'.format(self.motion_params, index))
+
+        if self.ndim != 2:
+            raise NotImplementedError(
+                '`det_axis` only valid for 2D geometries, use `det_axes` '
+                'in 3D')
+
+        index = float(index)
+        int_part = int(index)
+        frac_part = index - int_part
+        if int_part == self.motion_params.max_pt:
+            det_u = self.vectors[int_part, self._slice_det_u]
+        else:
+            det_u_left = self.vectors[int_part, self._slice_det_u]
+            det_u_right = self.vectors[int_part + 1, self._slice_det_u]
+            det_u = det_u_left + frac_part * (det_u_right - det_u_left)
+
+        return det_u
+
+    def det_axes(self, index):
+        """Return the detector axes at ``index`` (for 2D or 3D geometries).
+
+        Parameters
+        ----------
+        index : `motion_params` element
+            Index of the projection. Non-integer indices result in
+            interpolated vectors.
+
+        Returns
+        -------
+        axes : tuple of `numpy.ndarray`, shape ``(ndim,)``
+            The detector axes at ``index``.
+
+        Examples
+        --------
+        Initialize a 3D parallel beam geometry with detector axis ``u``
+        vectors ``(1, 0, 0)`` and ``(0, 1, 0)`` (columns 6 through 8 in the
+        vectors, counting from 0), and axis ``v`` equal to ``(0, 0, 1)``
+        in both cases (columns 9 through 11):
+
+        >>> # d = refpoint
+        >>> #                             ux uy uz vx vy vz
+        >>> vecs_3d = [[0, -1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1],
+        ...            [1, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0, 1]]
+        >>> det_shape_3d = (10, 20)
+        >>> geom_3d = odl.tomo.ParallelVecGeometry(det_shape_3d, vecs_3d)
+        >>> geom_3d.det_axes(0)
+        (array([ 1., 0., 0.]), array([ 0., 0., 1.]))
+        >>> geom_3d.det_axes(1)
+        (array([ 0., 1., 0.]), array([ 0., 0., 1.]))
+        >>> geom_3d.det_axes(0.5)  # mean value
+        (array([ 0.5,  0.5,  0. ]), array([ 0.,  0.,  1.]))
+        """
+        # TODO: vectorize!
+
+        if index not in self.motion_params:
+            raise ValueError('`index` must be contained in `motion_params` '
+                             '{}, got {}'.format(self.motion_params, index))
+
+        index = float(index)
+        int_part = int(index)
+        frac_part = index - int_part
+        if int_part == self.motion_params.max_pt:
+            det_u = self.vectors[int_part, self._slice_det_u]
+            if self.ndim == 2:
+                return (det_u,)
+            elif self.ndim == 3:
+                det_v = self.vectors[int_part, self._slice_det_v]
+                return (det_u, det_v)
+        else:
+            det_u_left = self.vectors[int_part, self._slice_det_u]
+            det_u_right = self.vectors[int_part + 1, self._slice_det_u]
+            det_u = det_u_left + frac_part * (det_u_right - det_u_left)
+
+            if self.ndim == 2:
+                return (det_u,)
+            elif self.ndim == 3:
+                det_v_left = self.vectors[int_part, self._slice_det_v]
+                det_v_right = self.vectors[int_part + 1, self._slice_det_v]
+                det_v = det_v_left + frac_part * (det_v_right - det_v_left)
+                return (det_u, det_v)
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        posargs = [self.det_partition.shape, self.vectors]
+        inner_str = signature_string(posargs, [], sep=',\n')
+        return '{}(\n{}\n)'.format(self.__class__.__name__,
+                                   indent_rows(inner_str))
 
 
 if __name__ == '__main__':

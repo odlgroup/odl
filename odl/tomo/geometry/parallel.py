@@ -14,14 +14,19 @@ import numpy as np
 
 from odl.discr import uniform_partition
 from odl.tomo.geometry.detector import Flat1dDetector, Flat2dDetector
-from odl.tomo.geometry.geometry import AxisOrientedGeometry, Geometry
+from odl.tomo.geometry.geometry import (
+    AxisOrientedGeometry, Geometry, VecGeometry)
 from odl.tomo.util import euler_matrix, is_inside_bounds, transform_system
 from odl.util import array_str, indent, signature_string
 
-__all__ = ('ParallelBeamGeometry',
-           'Parallel2dGeometry',
-           'Parallel3dEulerGeometry', 'Parallel3dAxisGeometry',
-           'parallel_beam_geometry')
+__all__ = (
+    'ParallelBeamGeometry',
+    'Parallel2dGeometry',
+    'Parallel3dEulerGeometry',
+    'Parallel3dAxisGeometry',
+    'ParallelVecGeometry',
+    'parallel_beam_geometry',
+)
 
 
 class ParallelBeamGeometry(Geometry):
@@ -1466,6 +1471,101 @@ class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
     # Manually override the abstract method in `Geometry` since it's found
     # first
     rotation_matrix = AxisOrientedGeometry.rotation_matrix
+
+
+class ParallelVecGeometry(VecGeometry):
+
+    """Parallel beam 2D or 3D geometry defined by a collection of vectors.
+
+    This geometry gives maximal flexibility for representing locations
+    and orientations of rays and detector for parallel beam acquisition
+    schemes. It is defined by a set of vectors per projection, namely
+
+        - ray direction (``ray``),
+        - detector center (``d``),
+        - in 2D: vector (``u``) from the detector point with index ``0``
+          to the point with index ``1``
+        - in 3D:
+
+          * vector (``u``) from detector point ``(0, 0)`` to ``(1, 0)`` and
+          * vector (``v``) from detector point ``(0, 0)`` to ``(0, 1)``.
+
+    The vectors are given as a matrix with ``n_projs`` rows, where
+    ``n_projs`` is the number of projections. In 2D, 3 vectors have to
+    be specified, which makes for ``3 * 2 = 6`` columns::
+
+        vec2d = (rayX, rayY, dX, dY, uX, uY)
+
+    3D geometries require 4 vectors, resulting in ``4 * 3 = 12`` matrix
+    columns::
+
+        vec3d = (rayX, rayY, rayZ, dX, dY, dZ, uX, uY, uZ, vX, vY, vZ)
+
+    This representation corresponds exactly to the ASTRA "vec" geometries,
+    see the `ASTRA documentation
+    <http://www.astra-toolbox.com/docs/index.html>`_.
+
+    The geometry defined by these vectors is discrete in the motion
+    parameters ("angles") since they are merely indices for the individual
+    projections. For intermediate values, linear interpolation is used,
+    which corresponds to the assumption that the system moves on piecewise
+    linear paths.
+    """
+
+    @property
+    def _slice_ray(self):
+        """Slice for the ray direction part of `vectors`."""
+        if self.ndim == 2:
+            return slice(0, 2)
+        elif self.ndim == 3:
+            return slice(0, 3)
+        else:
+            raise RuntimeError('bad `ndim`')
+
+    def det_to_src(self, index, dparam, normalized=True):
+        """Vector pointing from a detector location to the source.
+
+        A function of the motion and detector parameters.
+
+        Parameters
+        ----------
+        index : `motion_params` element
+            Index of the projection. Non-integer indices result in
+            interpolated vectors.
+        dparam : `det_params` element
+            Detector parameter at which to evaluate.
+        normalized : bool, optional
+            If ``True``, return a normalized (unit) vector.
+            The non-normalized variant is not available in parallel beam
+            geometries.
+
+        Returns
+        -------
+        vec : `numpy.ndarray`, shape (`ndim`,)
+            Unit vector pointing from the detector to the source
+        """
+        if index not in self.motion_params:
+            raise ValueError('`index` must be contained in `motion_params` '
+                             '{}, got {}'.format(self.motion_params, index))
+        if dparam not in self.det_params:
+            raise ValueError('`dparam` must be contained in `det_params` '
+                             '{}, got {}'.format(self.det_params, dparam))
+        if not normalized:
+            raise NotImplementedError('non-normalized detector-to-source '
+                                      'vector not available for parallel '
+                                      'beam geometries')
+
+        index = float(index)
+        int_part = int(index)
+        frac_part = index - int_part
+        if int_part == self.motion_params.max_pt:
+            ray_dir = self.vectors[int_part, self._slice_ray]
+        else:
+            ray_left = self.vectors[int_part, self._slice_ray]
+            ray_right = self.vectors[int_part + 1, self._slice_ray]
+            ray_dir = ray_left + frac_part * (ray_right - ray_left)
+
+        return -ray_dir / np.linalg.norm(ray_dir)
 
 
 def parallel_beam_geometry(space, num_angles=None, det_shape=None):
