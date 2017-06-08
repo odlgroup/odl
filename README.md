@@ -49,6 +49,36 @@ Resources
 - [Code Examples](examples)
 - [API reference](https://odlgroup.github.io/odl/odl.html)
 
+Applications
+============
+ODL has been used in a wide range of research and development with several scientific articles and conference contributions as well as other open source projects using ODL as a back-end. Many of these release their code publicly and can serve as examples of how to use ODL. This is a short list of such projects. If you want to add your project to the list, contact the maintainers or file a pull request.
+
+##### Articles
+
+
+| Description      |  Code  |
+|------------------|--------|
+| *High-level algorithm prototyping: an example extending the TVR-DART algorithm*. DGCI, 2017 | [GitHub](https://github.com/aringh/TVR-DART) |
+| *GPUMCI, a ﬂexible platform for x-ray imaging on the GPU*. Fully3D, 2017 |  |
+| *Spectral CT reconstruction with anti-correlated noise model and joint prior*. Fully3D, 2017 | [GitHub](https://github.com/adler-j/spectral_ct_examples) |
+| *Solving ill-posed inverse problems using iterative deep neural networks*. [Arxiv](https://arxiv.org/abs/1704.04058) | [GitHub](https://github.com/adler-j/learned_gradient_tomography) |
+| *Total variation regularization with variable Lebesgue prior*. [Arxiv](https://arxiv.org/abs/1702.08807) | [GitHub](https://github.com/kohr-h/variable_lp_paper) |
+| *Generalized Sinkhorn iterations for regularizing inverse problems using optimal mass transport*. [Arxiv](https://arxiv.org/abs/1612.02273) |   |
+| *A modified fuzzy C means algorithm for shading correction in craniofacial CBCT images*. CMBEBIH, 2017 | [GitHub](https://github.com/adler-j/mfcm_article) |
+| *Shape Based Image Reconstruction Using Linearized Deformations*. Inverse Problems, 2017. [DOI](http://iopscience.iop.org/article/10.1088/1361-6420/aa55af) | [GitHub](https://github.com/chongchenmath/odl_ld) |
+
+
+##### Other projects
+
+| Description      |  Code  |
+|------------------|--------|
+| Image reconstruction using LDDMM | [GitHub](https://github.com/chongchenmath/odl_lddmm) |
+| Multigrid CT reconstruction | [GitHub](https://github.com/kohr-h/odl-multigrid) |
+| Inverse problems over Lie groups | [GitHub](https://github.com/adler-j/lie_grp_diffeo) |
+| Bindings for the [EMRecon](http://www.uni-muenster.de/Sfbmobil/en/veroeffentlichungen/software/emrecon/index.html) package for PET |  [GitHub](https://github.com/odlgroup/odlemrecon) |
+| ADF-STEM reconstruction using nuclear norm regularization | [GitHub](https://github.com/adler-j/odl-stem-examples) |
+
+
 License
 =======
 Mozilla Public License version 2.0 or later. See the [LICENSE](LICENSE) file.
