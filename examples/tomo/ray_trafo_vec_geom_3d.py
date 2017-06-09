@@ -1,4 +1,4 @@
-"""Example using the ray transform a custom vector geometry.
+"""Example using the ray transform with a custom vector geometry.
 
 We manually build a "circle plus line trajectory" (CLT) geometry by
 extracting the vectors from a circular geometry and extending it by

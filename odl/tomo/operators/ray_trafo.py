@@ -22,7 +22,7 @@ from odl.tomo.backends import (
 from odl.tomo.backends.astra_cpu import AstraCpuImpl
 from odl.tomo.backends.astra_cuda import AstraCudaImpl
 from odl.tomo.backends.skimage_radon import SkImageImpl
-from odl.tomo.geometry import Geometry, ParallelVecGeometry
+from odl.tomo.geometry import Geometry, VecGeometry
 from odl.util import is_string
 
 # RAY_TRAFO_IMPLS are used by `RayTransform` when no `impl` is given.
@@ -115,9 +115,9 @@ class RayTransform(Operator):
             # runs (one weighting constant).
             if not vol_space.is_weighted:
                 weighting = None
-            elif isinstance(self.geometry, ParallelVecGeometry):
-                # TODO: change to weighting constant per angle when available
-                weighting = 1.0
+            elif isinstance(self.geometry, VecGeometry):
+                # No angular weighting
+                weighting = geometry.det_partition.cell_volume
             elif (
                 isinstance(vol_space.weighting, ConstWeighting)
                 and np.isclose(
@@ -125,10 +125,9 @@ class RayTransform(Operator):
                 )
             ):
                 # Approximate cell volume
-                # TODO: change to weighting constant per angle when available
-                extent = float(geometry.partition.extent.prod())
-                size = float(geometry.partition.size)
-                weighting = extent / size
+                angle_weight = float(geometry.motion_partition.extent.prod() /
+                                     geometry.motion_partition.size)
+                weighting = angle_weight * geometry.det_partition.cell_volume
             else:
                 raise NotImplementedError('unknown weighting of domain')
 
