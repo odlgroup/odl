@@ -217,21 +217,42 @@ def chambolle_pock_solver(x, f, g, L, tau, sigma, niter, **kwargs):
     # Get the proximals
     proximal_dual = f.convex_conj.proximal
     proximal_primal = g.proximal
+    proximal_constant = (gamma is None)
+    if proximal_constant:
+        # Pre-compute proximals for efficiency
+        proximal_dual_sigma = proximal_dual(sigma)
+        proximal_primal_tau = proximal_primal(tau)
 
     # Temporary copy to store previous iterate
     x_old = x.space.element()
+
+    # Temporaries
+    dual_tmp = L.range.element()
+    primal_tmp = L.domain.element()
 
     for _ in range(niter):
         # Copy required for relaxation
         x_old.assign(x)
 
         # Gradient ascent in the dual variable y
-        dual_tmp = y + sigma * L(x_relax)
-        proximal_dual(sigma)(dual_tmp, out=y)
+        # Compute dual_tmp = y + sigma * L(x_relax)
+        L(x_relax, out=dual_tmp)
+        dual_tmp.lincomb(1, y, sigma, dual_tmp)
+
+        # Apply the dual proximal
+        if not proximal_constant:
+            proximal_dual_sigma = proximal_dual(sigma)
+        proximal_dual_sigma(dual_tmp, out=y)
 
         # Gradient descent in the primal variable x
-        primal_tmp = x + (- tau) * L.derivative(x).adjoint(y)
-        proximal_primal(tau)(primal_tmp, out=x)
+        # Compute primal_tmp = x + (- tau) * L.derivative(x).adjoint(y)
+        L.derivative(x).adjoint(y, out=primal_tmp)
+        primal_tmp.lincomb(1, x, -tau, primal_tmp)
+
+        # Apply the primal proximal
+        if not proximal_constant:
+            proximal_primal_tau = proximal_primal(tau)
+        proximal_primal_tau(primal_tmp, out=x)
 
         # Acceleration
         if gamma is not None:
