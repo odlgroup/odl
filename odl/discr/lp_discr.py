@@ -820,8 +820,7 @@ class DiscreteLpElement(DiscretizedSpaceElement):
             partition = self.space.partition
             shape = self.shape
             indices = []
-            for axis, (n, coord) in enumerate(
-                    zip(shape, coords)):
+            for axis, (n, coord) in enumerate(zip(shape, coords)):
                 try:
                     coord_minp, coord_maxp = coord
                 except TypeError:
@@ -836,9 +835,9 @@ class DiscreteLpElement(DiscretizedSpaceElement):
                     coord_maxp = subpart.set.element(coord_maxp)
 
                 if len(subpart) == 0:  # trivial cases
-                    indices += [0]
+                    indices.append(0)
                 elif coord_minp is not None and coord_minp == coord_maxp:
-                    indices += [subpart.index(coord_minp)]
+                    indices.append(subpart.index(coord_minp))
                 else:
                     if coord_minp is None:
                         min_ind = 0
@@ -852,26 +851,25 @@ class DiscreteLpElement(DiscretizedSpaceElement):
                         max_ind = np.ceil(subpart.index(coord_maxp,
                                                         floating=True))
 
-                    indices += [slice(int(min_ind), int(max_ind))]
+                    indices.append(slice(int(min_ind), int(max_ind)))
 
         # Default to showing x-y slice "in the middle"
         if indices is None and self.ndim >= 3:
-            indices = [np.s_[:]] * 2
-            indices += [n // 2 for n in self.space.shape[2:]]
+            indices = ((slice(None),) * 2 +
+                       tuple(n // 2 for n in self.space.shape[2:]))
 
+        # Normalize indices
         if isinstance(indices, (Integral, slice)):
             indices = (indices,)
         elif indices is None or indices == Ellipsis:
-            indices = (np.s_[:],) * self.ndim
-        else:
-            indices = tuple(indices)
+            indices = (slice(None),) * self.ndim
 
         if Ellipsis in indices:
-            # Replace Ellipsis with the correct number of [:] expressions
+            # Replace Ellipsis with the correct number of slice(None)
             pos = indices.index(Ellipsis)
-            indices = (indices[:pos] +
-                       (np.s_[:], ) * (self.ndim - len(indices) + 1) +
-                       indices[pos + 1:])
+            indices = (tuple(indices[:pos]) +
+                       (slice(None),) * (self.ndim - len(indices) + 1) +
+                       tuple(indices[pos + 1:]))
 
         if len(indices) < self.ndim:
             raise ValueError('too few axes ({} < {})'.format(len(indices),
@@ -879,6 +877,10 @@ class DiscreteLpElement(DiscretizedSpaceElement):
         if len(indices) > self.ndim:
             raise ValueError('too many axes ({} > {})'.format(len(indices),
                                                               self.ndim))
+
+        # Map `None` to `slice(None)` in indices for syntax like `coords`
+        indices = tuple(slice(None) if idx is None else idx
+                        for idx in indices)
 
         squeezed_axes = [axis for axis in range(self.ndim)
                          if not isinstance(indices[axis], Integral)]

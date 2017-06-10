@@ -16,18 +16,16 @@ elem = pspace.element([odl.phantom.shepp_logan(space, modified=True) * i
 
 # By default 4 uniformly spaced elements are shown. Since there are 7 in
 # total, the shown components are 0, 2, 4 and 6
-elem.show(title='Default')
+elem.show('Default')
 
 # One can also use indexing by a list of indices or a slice.
-elem.show(indices=[0, 1], force_show=True,
-          title='Show first 2 elements')
+elem.show('The first 2 elements', indices=[0, 1], force_show=True)
 
-elem.show(indices=np.s_[::3], force_show=True,
-          title='Show every third element')
+elem.show('Every third element', indices=np.s_[::3], force_show=True)
 
 # Slices propagate (as in numpy): the first index in the slice applies to
 # the product space components, the other dimensions are applied to each
 # component. Here we take the second component and slice in the
 # middle along the second axis.
-elem.show(indices=np.s_[2, :, n // 2], force_show=True,
-          title='Show second element, then slice by [:, n//2]')
+elem.show('Element at index 2, sliced by [:, n//2]',
+          indices=np.s_[2, :, n // 2], force_show=True)

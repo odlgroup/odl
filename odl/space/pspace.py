@@ -873,24 +873,42 @@ class ProductSpaceElement(LinearSpaceElement):
             else:
                 indices = list(np.linspace(0, self.size - 1, 4, dtype=int))
         else:
-            if isinstance(indices, tuple):
+            if (isinstance(indices, tuple) or
+                    (isinstance(indices, list) and
+                     not all(isinstance(idx, Integral) for idx in indices))):
+                # Tuples or lists containing non-integers index by axis.
+                # We use the first index for the current pspace and pass
+                # on the rest.
                 indices, kwargs['indices'] = indices[0], indices[1:]
+
+            # Support `indices=[None, 0, None]` like syntax
+            if indices is None:
+                indices = slice(None)
 
             if isinstance(indices, slice):
                 indices = list(range(*indices.indices(self.size)))
             elif isinstance(indices, Integral):
                 indices = [indices]
-
-            # else try with indices as is
+            else:
+                # Use indices as-is
+                pass
 
         in_figs = kwargs.pop('fig', None)
         in_figs = [None] * len(indices) if in_figs is None else in_figs
 
         figs = []
-        for i, part, fig in zip(indices, self[indices], in_figs):
-            fig = part.show(title='{}. Part {}'.format(title, i), fig=fig,
-                            **kwargs)
-            figs += [fig]
+        parts = self[indices]
+        if len(parts) > 1:
+            # Give unique titles by indexed part
+            for i, part, fig in zip(indices, parts, in_figs):
+                fig = part.show(title='{}. Part {}'.format(title, i), fig=fig,
+                                **kwargs)
+                figs += [fig]
+        else:
+            # Don't extend the title if there is only one plot
+            for i, part, fig in zip(indices, parts, in_figs):
+                fig = part.show(title=title, fig=fig, **kwargs)
+                figs += [fig]
 
         return figs
 
