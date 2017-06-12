@@ -8,8 +8,9 @@
 
 from __future__ import division
 import numpy as np
-import pytest
 import operator
+from pkg_resources import parse_version
+import pytest
 import scipy
 
 import odl
@@ -24,10 +25,12 @@ from odl.space.npy_ntuples import (
 from odl.util.testutils import (almost_equal, all_almost_equal, all_equal,
                                 noise_array, noise_element,
                                 noise_elements, simple_fixture)
-from odl.util.ufuncs import UFUNCS, REDUCTIONS
+from odl.util.ufuncs import UFUNCS
 
 from sys import version_info
 PYTHON2 = version_info < (3, 0)
+USE_NEW_UFUNCS_INTERFACE = (parse_version(np.__version__) >=
+                            parse_version('1.13'))
 
 
 # --- Helper functions --- #
@@ -200,25 +203,6 @@ def test_astype():
     assert cn.astype('float32') == rn_s
     assert cn.astype('float64') == rn
     assert cn.complex_space is cn
-
-
-def test_vector_class_init(fn):
-    # Test that code runs
-    arr = noise_array(fn)
-
-    NumpyFnVector(fn, arr)
-    # Space has to be an actual space
-    for non_space in [1, complex, np.array([1, 2])]:
-        with pytest.raises(TypeError):
-            NumpyFnVector(non_space, arr)
-
-    # Data has to be a numpy array
-    with pytest.raises(TypeError):
-        NumpyFnVector(fn, list(arr))
-
-    # Data has to be a numpy array or correct dtype
-    with pytest.raises(TypeError):
-        NumpyFnVector(fn, arr.astype(int))
 
 
 def _test_lincomb(fn, a, b):
@@ -1497,7 +1481,13 @@ def test_custom_dist(fn):
 
 
 def test_ufuncs(fn, ufunc):
-    name, n_args, n_out, _ = ufunc
+    name = ufunc
+
+    # Get the ufunc from numpy as reference, plus some additional info
+    npy_ufunc = getattr(np, name)
+    nin = npy_ufunc.nin
+    nout = npy_ufunc.nout
+
     if (np.issubsctype(fn.dtype, np.floating) or
             np.issubsctype(fn.dtype, np.complexfloating)and
             name in ['bitwise_and',
@@ -1531,61 +1521,137 @@ def test_ufuncs(fn, ufunc):
         # Skip real only methods for complex
         return
 
-    # Get the ufunc from numpy as reference
-    npufunc = getattr(np, name)
-
     # Create some data
-    arrays, vectors = noise_elements(fn, n_args + n_out)
-    in_arrays = arrays[:n_args]
-    out_arrays = arrays[n_args:]
+    arrays, vectors = noise_elements(fn, nin + nout)
+    in_arrays = arrays[:nin]
+    out_arrays = arrays[nin:]
     data_vector = vectors[0]
-    in_vectors = vectors[1:n_args]
-    out_vectors = vectors[n_args:]
+    out_vectors = vectors[nin:]
+
+    if nout == 1:
+        out_arr_kwargs = {'out': out_arrays[0]}
+        out_vec_kwargs = {'out': out_vectors[0]}
+    elif nout == 2:
+        out_arr_kwargs = {'out1': out_arrays[0], 'out2': out_arrays[1]}
+        out_vec_kwargs = {'out1': out_vectors[0], 'out2': out_vectors[1]}
+    else:
+        assert False
+
+    # Get function to call, using both interfaces:
+    # - vec.ufunc(other_args)
+    # - np.ufunc(vec, other_args)
+    vec_fun_old = getattr(data_vector.ufuncs, name)
+    in_vectors_old = vectors[1:nin]
+    vec_fun_new = npy_ufunc
+    in_vectors_new = vectors[:nin]
 
     # Out-of-place:
-    np_result = npufunc(*in_arrays)
-    vec_fun = getattr(data_vector.ufuncs, name)
-    odl_result = vec_fun(*in_vectors)
-    assert all_almost_equal(np_result, odl_result)
+    npy_result = npy_ufunc(*in_arrays)
+    odl_result_old = vec_fun_old(*in_vectors_old)
+    assert all_almost_equal(npy_result, odl_result_old)
+    odl_result_new = vec_fun_new(*in_vectors_new)
+    assert all_almost_equal(npy_result, odl_result_new)
 
     # Test type of output
-    if n_out == 1:
-        assert isinstance(odl_result, fn.element_type)
-    elif n_out > 1:
-        for i in range(n_out):
-            assert isinstance(odl_result[i], fn.element_type)
+    if nout == 1:
+        assert isinstance(odl_result_old, fn.element_type)
+        assert isinstance(odl_result_new, fn.element_type)
+    elif nout > 1:
+        for i in range(nout):
+            assert isinstance(odl_result_old[i], fn.element_type)
+            assert isinstance(odl_result_new[i], fn.element_type)
 
     # In-place:
-    np_result = npufunc(*(in_arrays + out_arrays))
-    vec_fun = getattr(data_vector.ufuncs, name)
-    odl_result = vec_fun(*(in_vectors + out_vectors))
-    assert all_almost_equal(np_result, odl_result)
+    npy_result = npy_ufunc(*in_arrays, **out_arr_kwargs)
+    odl_result_old = vec_fun_old(*in_vectors_old, **out_vec_kwargs)
+    assert all_almost_equal(npy_result, odl_result_old)
+    if USE_NEW_UFUNCS_INTERFACE:
+        # In-place will not work with Numpy < 1.13
+        odl_result_new = vec_fun_new(*in_vectors_new, **out_vec_kwargs)
+        assert all_almost_equal(npy_result, odl_result_new)
 
     # Test in-place actually holds:
-    if n_out == 1:
-        assert odl_result is out_vectors[0]
-    elif n_out > 1:
-        for i in range(n_out):
-            assert odl_result[i] is out_vectors[i]
+    if nout == 1:
+        assert odl_result_old is out_vectors[0]
+        if USE_NEW_UFUNCS_INTERFACE:
+            assert odl_result_new is out_vectors[0]
+    elif nout > 1:
+        for i in range(nout):
+            assert odl_result_old[i] is out_vectors[i]
+            if USE_NEW_UFUNCS_INTERFACE:
+                assert odl_result_new[i] is out_vectors[i]
+
+    if USE_NEW_UFUNCS_INTERFACE:
+        # Check `ufunc.at`
+        indices = np.random.randint(0, in_arrays[0].size,
+                                    size=in_arrays[0].size // 2)
+
+        mod_array = in_arrays[0].copy()
+        mod_vector = in_vectors_new[0].copy()
+        if nin == 1:
+            npy_result = npy_ufunc.at(mod_array, indices)
+            odl_result = npy_ufunc.at(mod_vector, indices)
+        elif nin == 2:
+            other_array = in_arrays[1][indices]
+            other_vector = in_vectors_new[1][indices]
+            npy_result = npy_ufunc.at(mod_array, indices, other_array)
+            odl_result = npy_ufunc.at(mod_vector, indices, other_vector)
+
+        assert all_almost_equal(odl_result, npy_result)
+
+    # Check `ufunc.reduce`
+    if nin == 2 and nout == 1 and USE_NEW_UFUNCS_INTERFACE:
+        in_array = in_arrays[0]
+        in_vector = in_vectors_new[0]
+
+        # We only test along one axis since some binary ufuncs are not
+        # re-orderable, in which case Numpy raises a ValueError
+        npy_result = npy_ufunc.reduce(in_array)
+        odl_result = npy_ufunc.reduce(in_vector)
+        # This also checks that `odl_result` is scalar
+        assert odl_result == pytest.approx(npy_result)
+        odl_result_keepdims = npy_ufunc.reduce(in_vector, keepdims=True)
+        assert odl_result_keepdims.shape == (1,) + in_vector.shape[1:]
+        # In-place using `out` (with ODL vector and array)
+        out_vector = odl_result_keepdims.space.element()
+        out_array = np.empty(odl_result_keepdims.shape,
+                             dtype=odl_result_keepdims.dtype)
+        npy_ufunc.reduce(in_vector, out=out_vector, keepdims=True)
+        npy_ufunc.reduce(in_vector, out=out_array, keepdims=True)
+        assert all_almost_equal(out_vector, odl_result_keepdims)
+        assert all_almost_equal(out_array, odl_result_keepdims)
+        # Using a specific dtype
+        npy_result = npy_ufunc.reduce(in_array, dtype=complex)
+        odl_result = npy_ufunc.reduce(in_vector, dtype=complex)
+        assert odl_result.dtype == npy_result.dtype
+        assert all_almost_equal(odl_result, npy_result)
+
+    # Other ufunc method use the same interface, to we don't perform
+    # extra tests for them.
 
 
 def test_reduction(fn, reduction):
-    name, _ = reduction
-
-    ufunc = getattr(np, name)
+    name = reduction
+    reduction = getattr(np, name)
 
     # Create some data
     x_arr, x = noise_elements(fn, 1)
 
-    assert ufunc(x_arr) == getattr(x.ufuncs, name)()
+    assert reduction(x_arr) == getattr(x.ufuncs, name)()
 
 
 def test_ufunc_reduction_docs_notempty():
-    for _, __, ___, doc in UFUNCS:
-        assert doc.splitlines()[0] != ''
+    x = odl.rn(3).element()
 
-    for _, doc in REDUCTIONS:
-        assert doc.splitlines()[0] != ''
+    for name, _, __, ___ in UFUNCS:
+        ufunc = getattr(x.ufuncs, name)
+        assert ufunc.__doc__.splitlines()[0] != ''
+
+    # TODO: add more
+    for name in ['sum', 'prod', 'min', 'max']:
+        reduction = getattr(x.ufuncs, name)
+        print(name)
+        assert reduction.__doc__.splitlines()[0] != ''
 
 
 if __name__ == '__main__':

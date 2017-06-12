@@ -23,7 +23,7 @@ from odl.util.ufuncs import NtuplesBaseUfuncs
 from odl.util import (
     array1d_repr, array1d_str, dtype_repr,
     is_scalar_dtype, is_real_dtype, is_floating_dtype,
-    complex_dtype, real_dtype)
+    complex_dtype, real_dtype, writable_array)
 from odl.util.utility import with_metaclass
 
 
@@ -403,12 +403,240 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
         return '{!r}.element({})'.format(self.space,
                                          array1d_repr(self))
 
+    def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
+        """Interface to Numpy's ufunc machinery.
+
+        This method is called by Numpy version 1.13 and higher as a single
+        point for the ufunc dispatch logic. An object implementing
+        ``__array_ufunc__`` takes over control when a `numpy.ufunc` is
+        called on it, allowing it to use custom implementations and
+        output types.
+
+        This includes handling of in-place arithmetic like
+        ``npy_array += custom_obj_with_array_ufunc``: In this case,
+        the custom object's ``__array_ufunc__`` takes precedence over the
+        `numpy.ndarray` implementation. It will be called with
+        ``npy_array`` as ``out`` argument, which will ensure that the
+        returned object is a Numpy array. For this to work properly,
+        ``__array_ufunc__`` has to accept Numpy arrays as ``out`` arguments.
+
+        See the `corresponding NEP`_ and the `interface documentation`_
+        for further details. See also the `general documentation on
+        Numpy ufuncs`_.
+
+        .. note::
+            This basic implementation casts inputs and
+            outputs to Numpy arrays and evaluates ``ufunc`` on those.
+            For `numpy.ndarray` based data storage, this incurs no
+            significant overhead compared to direct usage of Numpy arrays.
+
+            For other (in particular non-local) implementations, e.g.,
+            GPU arrays or distributed memory, overhead is significant due
+            to copies to CPU main memory. In those classes, the
+            ``__array_ufunc__`` mechanism should be overridden to use
+            native implementations if possible.
+
+        .. note::
+            When using operations that alter the shape (like ``reduce``),
+            or the data type (can be any of the methods),
+            the resulting array is wrapped in a space of the same
+            type as ``self.space``, however **only** using the minimal
+            set of parameters ``size`` and ``dtype``. If more properties
+            are supposed to be propagated, this method must be overridden.
+
+        Parameters
+        ----------
+        ufunc : `numpy.ufunc`
+            Ufunc that should be called on ``self``.
+        method : str
+            Method on ``ufunc`` that should be called on ``self``.
+            Possible values:
+
+            ``'__call__'``, ``'accumulate'``, ``'at'``, ``'outer'``,
+            ``'reduce'``, ``'reduceat'``.
+
+        input1, ..., inputN:
+            Positional arguments to ``ufunc.method``.
+        kwargs:
+            Keyword arguments to ``ufunc.method``.
+
+        Returns
+        -------
+        ufunc_result : `NtuplesBaseVector` or `numpy.ndarray` or tuple
+            Result of the ufunc evaluation. If no ``out`` keyword argument
+            was given, the result is an `NtuplesBaseVector` or a tuple
+            of such, depending on the number of outputs of ``ufunc``.
+            If ``out`` was provided, the returned object or sequence members
+            refer(s) to ``out``.
+
+        Examples
+        --------
+        We apply `numpy.add` to ODL vectors, also with the optional
+        ``out`` parameter:
+
+        >>> rn = odl.rn(3)
+        >>> x = rn.element([1, 2, 3])
+        >>> y = rn.element([-1, -2, -3])
+        >>> np.add(x, y)
+        rn(3).element([0.0, 0.0, 0.0])
+        >>> out = rn.element()
+        >>> result = np.add(x, y, out=out)
+        >>> out
+        rn(3).element([0.0, 0.0, 0.0])
+        >>> result is out
+        True
+
+        The ``add.accumulate`` method retains the original shape and
+        ``dtype``. We can override the latter with the ``dtype``
+        parameter:
+
+        >>> x = rn.element([1, 2, 3])
+        >>> np.add.accumulate(x)
+        rn(3).element([1.0, 3.0, 6.0])
+        >>> np.add.accumulate(x, dtype=complex)
+        cn(3).element([(1+0j), (3+0j), (6+0j)])
+
+        The ``add.at`` method operates in-place. Here we add the second
+        operand ``[5, 10]`` to ``x`` at indices ``[0, 2]``:
+
+        >>> x = rn.element([1, 2, 3])
+        >>> np.add.at(x, [0, 2], [5, 10])
+        >>> x
+        rn(3).element([6.0, 2.0, 13.0])
+
+        Using ``add.reduce`` produces a scalar, which can be avoided by
+        using ``keepdims=True``:
+
+        >>> x = rn.element([1, 2, 3])
+        >>> np.add.reduce(x)
+        6.0
+        >>> np.add.reduce(x, keepdims=True)
+        rn(1).element([6.0])
+
+        Finally, ``add.reduceat`` is a combination of ``reduce`` and
+        ``at`` with rather flexible and complex semantics (see the
+        `reduceat documentation`_ for details):
+
+        >>> np.add.reduceat(x, [0, 1])
+        rn(2).element([1.0, 5.0])
+
+        References
+        ----------
+        .. _corresponding NEP:
+           https://github.com/numpy/numpy/blob/master/doc/neps/\
+ufunc-overrides.rst
+
+        .. _interface documentation:
+           https://github.com/charris/numpy/blob/master/doc/source/reference/\
+arrays.classes.rst#special-attributes-and-methods
+
+        .. _general documentation on Numpy ufuncs:
+           https://docs.scipy.org/doc/numpy/reference/ufuncs.html
+
+        .. _reduceat documentation:
+           https://docs.scipy.org/doc/numpy/reference/generated/\
+numpy.ufunc.reduceat.html
+        """
+        # Unwrap out if provided. The output parameters are all wrapped
+        # in one tuple, even if there is only one.
+        out_tuple = kwargs.pop('out', ())
+
+        # We allow our own vectors and `numpy.ndarray` objects as `out`
+        if not all(isinstance(out, (type(self), np.ndarray)) or out is None
+                   for out in out_tuple):
+            return NotImplemented
+
+        # Convert inputs that are ODL vectors to arrays so that the
+        # native Numpy ufunc is called later
+        inputs = tuple(
+            inp.asarray() if isinstance(inp, type(self)) else inp
+            for inp in inputs)
+
+        out = out1 = out2 = None
+        if len(out_tuple) == 1:
+            out = out_tuple[0]
+        elif len(out_tuple) == 2:
+            out1 = out_tuple[0]
+            out2 = out_tuple[1]
+
+        # Use some of the kwargs for `writable_array`
+        # TODO: propagate `order` when tensors are available
+        array_kwargs = {}
+        out_dtype = kwargs.get('dtype', None)
+        if out_dtype is not None:
+            array_kwargs['dtype'] = out_dtype
+
+        # Need new space for ufunc if dtype was changed
+        # TODO: use `shape` and `order` when tensors are available
+        if out_dtype is None or out_dtype == self.dtype:
+            out_space = self.space
+        else:
+            out_space = type(self.space)(self.size, out_dtype)
+
+        if method == '__call__':
+            if ufunc.nout == 1:
+                if out is None:
+                    out = out_space.element()
+                with writable_array(out, **array_kwargs) as out_arr:
+                    kwargs['out'] = (out_arr,)
+                    ufunc(*inputs, **kwargs)
+                return out
+
+            elif ufunc.nout == 2:
+                if out1 is None:
+                    out1 = out_space.element()
+                if out2 is None:
+                    out2 = out_space.element()
+                out1_ctx = writable_array(out1, **array_kwargs)
+                out2_ctx = writable_array(out2, **array_kwargs)
+                with out1_ctx as out1_arr, out2_ctx as out2_arr:
+                    kwargs['out'] = (out1_arr, out2_arr)
+                    ufunc(*inputs, **kwargs)
+                return out1, out2
+
+            else:
+                raise NotImplementedError('nout = {} not supported'
+                                          ''.format(ufunc.nout))
+
+        elif method == 'outer':
+            # Not supported at the moment since we only have 1-dim. spaces.
+            # We need to raise since returning `NotImplemented` will
+            # fall back to native Numpy, resulting in a `numpy.ndarray`.
+            # TODO: add when tensors are available
+            raise TypeError('`outer` not supported for 1-dimensional spaces')
+        else:
+            if out is None:
+                result = getattr(ufunc, method)(*inputs, **kwargs)
+                if np.isscalar(result):
+                    # This occurs for `reduce` with all axes
+                    return result
+                elif result is None:
+                    # Happens for in-place operations, currently only `at`
+                    return
+                else:
+                    # Wrap result in an appropriate space
+                    # TODO: use `shape` and `order` when tensors are available
+                    result_space = type(self.space)(result.size, result.dtype)
+                    return result_space.element(result.ravel())
+            else:
+                with writable_array(out) as out_arr:
+                    kwargs['out'] = (out_arr,)
+                getattr(ufunc, method)(*inputs, **kwargs)
+
+    # Old ufuncs interface, will be deprecated when Numpy 1.13 becomes minimum
+
     @property
     def ufuncs(self):
         """Internal class for access to Numpy style universal functions.
 
         These default ufuncs are always available, but may or may not be
         optimized for the specific space in use.
+
+        .. note::
+            This interface is deprecated and will be removed as soon
+            as Numpy 1.13 becomes the minimum required version.
+            Use Numpy ufuncs directly, e.g., ``np.sqrt(x)`` instead of
+            ``x.ufuncs.sqrt()``.
         """
         return NtuplesBaseUfuncs(self)
 
