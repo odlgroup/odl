@@ -293,41 +293,6 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
         """Number of bytes this vector uses in memory."""
         return self.size * self.itemsize
 
-    def __array__(self, dtype=None):
-        """Return a Numpy array containing this vector's data.
-
-        Parameters
-        ----------
-        dtype :
-            Specifier for the data type of the output array.
-
-        Returns
-        -------
-        array : `numpy.ndarray`
-        """
-        if dtype is None:
-            return self.asarray()
-        else:
-            return self.asarray().astype(dtype, copy=False)
-
-    def __array_wrap__(self, obj):
-        """Return a new vector from the data in ``obj``.
-
-        Parameters
-        ----------
-        obj : `numpy.ndarray`
-            Array that should be wrapped.
-
-        Returns
-        -------
-        vector : `NtuplesBaseVector`
-            Numpy array wrapped back into this vector's element type.
-        """
-        if obj.ndim == 0:
-            return self.space.field.element(obj)
-        else:
-            return self.space.element(obj)
-
     def __int__(self):
         """Return ``int(self)``.
 
@@ -394,14 +359,40 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
             raise TypeError('only size 1 vectors can be converted to complex')
         return complex(self[0])
 
-    def __str__(self):
-        """Return ``str(self)``."""
-        return array1d_str(self)
+    def __array__(self, dtype=None):
+        """Return a Numpy array containing this vector's data.
 
-    def __repr__(self):
-        """Return ``repr(self)``."""
-        return '{!r}.element({})'.format(self.space,
-                                         array1d_repr(self))
+        Parameters
+        ----------
+        dtype :
+            Specifier for the data type of the output array.
+
+        Returns
+        -------
+        array : `numpy.ndarray`
+        """
+        if dtype is None:
+            return self.asarray()
+        else:
+            return self.asarray().astype(dtype, copy=False)
+
+    def __array_wrap__(self, obj):
+        """Return a new vector from the data in ``obj``.
+
+        Parameters
+        ----------
+        obj : `numpy.ndarray`
+            Array that should be wrapped.
+
+        Returns
+        -------
+        vector : `NtuplesBaseVector`
+            Numpy array wrapped back into this vector's element type.
+        """
+        if obj.ndim == 0:
+            return self.space.field.element(obj)
+        else:
+            return self.space.element(obj)
 
     def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
         """Interface to Numpy's ufunc machinery.
@@ -452,8 +443,8 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
             Method on ``ufunc`` that should be called on ``self``.
             Possible values:
 
-            ``'__call__'``, ``'accumulate'``, ``'at'``, ``'outer'``,
-            ``'reduce'``, ``'reduceat'``.
+            ``'__call__'``, ``'accumulate'``, ``'at'``, ``'reduce'``,
+            ``'reduceat'``
 
         input1, ..., inputN:
             Positional arguments to ``ufunc.method``.
@@ -603,7 +594,7 @@ numpy.ufunc.reduceat.html
             # We need to raise since returning `NotImplemented` will
             # fall back to native Numpy, resulting in a `numpy.ndarray`.
             # TODO: add when tensors are available
-            raise TypeError('`outer` not supported for 1-dimensional spaces')
+            raise NotImplementedError('`outer` currently not supported')
         else:
             if out is None:
                 result = getattr(ufunc, method)(*inputs, **kwargs)
@@ -627,16 +618,15 @@ numpy.ufunc.reduceat.html
 
     @property
     def ufuncs(self):
-        """Internal class for access to Numpy style universal functions.
+        """Access to Numpy style universal functions.
 
         These default ufuncs are always available, but may or may not be
         optimized for the specific space in use.
 
         .. note::
-            This interface is deprecated and will be removed as soon
-            as Numpy 1.13 becomes the minimum required version.
-            Use Numpy ufuncs directly, e.g., ``np.sqrt(x)`` instead of
-            ``x.ufuncs.sqrt()``.
+            This interface is will be deprecated when Numpy 1.13 becomes
+            the minimum required version. Use Numpy ufuncs directly, e.g.,
+            ``np.sqrt(x)`` instead of ``x.ufuncs.sqrt()``.
         """
         return NtuplesBaseUfuncs(self)
 
@@ -691,6 +681,15 @@ numpy.ufunc.reduceat.html
     def impl(self):
         """Implementation of this vector's space."""
         return self.space.impl
+
+    def __str__(self):
+        """Return ``str(self)``."""
+        return array1d_str(self)
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{!r}.element({})'.format(self.space,
+                                         array1d_repr(self))
 
 
 class FnBase(NtuplesBase, LinearSpace):
