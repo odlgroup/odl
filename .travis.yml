@@ -54,16 +54,17 @@ script:
     - pytest --doctest-modules --cov --cov-report term-missing --pep8 $TRAVIS_BUILD_DIR/odl
     # Invoke also the alternative way of running the unit tests
     - python -c "import odl; odl.test()"
-    # Build the Sphinx doc (only for Python 3.6 and the master branch)
+    # Build the Sphinx doc (only for Python 3.6, master branch, no PR)
+    # To avoid clogging the logs, we redirect stderr to /dev/null
     - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" && "$TRAVIS_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" == "false" ]]; then
         cd $TRAVIS_BUILD_DIR/doc/source && python generate_doc.py && cd -;
-        travis-sphinx -n -s $TRAVIS_BUILD_DIR/doc/source build;
+        travis-sphinx -n -s $TRAVIS_BUILD_DIR/doc/source build 2>/dev/null;
       fi
 
 after_success:
     # Push coverage report to coveralls
     - coveralls
-    # Deploy the Sphinx doc to gh-pages (only for Python 3.6 and the master branch)
+    # Deploy the Sphinx doc to gh-pages (only for Python 3.6, master branch, no PR)
     # See https://github.com/Syntaf/travis-sphinx
     - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" && "$TRAVIS_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" == "false" ]]; then
         travis-sphinx deploy;
