@@ -404,10 +404,10 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
         output types.
 
         This includes handling of in-place arithmetic like
-        ``npy_array += custom_obj_with_array_ufunc``: In this case,
-        the custom object's ``__array_ufunc__`` takes precedence over the
+        ``npy_array += custom_obj``. In this case, the custom object's
+        ``__array_ufunc__`` takes precedence over the baseline
         `numpy.ndarray` implementation. It will be called with
-        ``npy_array`` as ``out`` argument, which will ensure that the
+        ``npy_array`` as ``out`` argument, which ensures that the
         returned object is a Numpy array. For this to work properly,
         ``__array_ufunc__`` has to accept Numpy arrays as ``out`` arguments.
 
@@ -550,21 +550,21 @@ numpy.ufunc.reduceat.html
             out1 = out_tuple[0]
             out2 = out_tuple[1]
 
-        # Use some of the kwargs for `writable_array`
-        # TODO: propagate `order` when tensors are available
-        array_kwargs = {}
-        out_dtype = kwargs.get('dtype', None)
-        if out_dtype is not None:
-            array_kwargs['dtype'] = out_dtype
-
-        # Need new space for ufunc if dtype was changed
-        # TODO: use `shape` and `order` when tensors are available
-        if out_dtype is None or out_dtype == self.dtype:
-            out_space = self.space
-        else:
-            out_space = type(self.space)(self.size, out_dtype)
-
         if method == '__call__':
+            # Use some of the kwargs for `writable_array`
+            # TODO: propagate `order` when tensors are available
+            array_kwargs = {}
+            out_dtype = kwargs.get('dtype', None)
+            if out_dtype is not None:
+                array_kwargs['dtype'] = out_dtype
+
+            # Need new space for ufunc if dtype was changed
+            # TODO: use `shape` and `order` when tensors are available
+            if out_dtype is None or out_dtype == self.dtype:
+                out_space = self.space
+            else:
+                out_space = type(self.space)(self.size, out_dtype)
+
             if ufunc.nout == 1:
                 if out is None:
                     out = out_space.element()

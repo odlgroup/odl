@@ -374,6 +374,71 @@ class DiscreteLp(DiscretizedSpace):
             arr = arr.ravel(order=self.order)
             return self.element_type(self, self.dspace.element(arr))
 
+    # TODO: this is only a quick hack, put it into a `byaxis` sliceable
+    # property
+    def __getitem__(self, indices):
+        """Return ``self[indices]``.
+
+        Retrieve subspaces by selecting axes using a list or a slice.
+        The slice is performed over the axes, hence ``indices`` must
+        be be a valid object for slicing into lists or tuples.
+        Indexing within axes, i.e., with integer tuples or multiple slices,
+        is not supported.
+
+        Parameters
+        ----------
+        indices : index expression
+            Integer, list of ints, slice or tuple with 1 entry. The
+            slicing behavior is as follows (similar to Numpy):
+
+                - int: select that axis
+                - slice: select subset of axes corresponding to the slice
+                - tuple with 1 entry: same as the entry
+                - list of ints: "stack" the space from the axes in the
+                  list (repetitions allowed)
+
+        Returns
+        -------
+        newspace : DiscreteLp
+            Space generated from ``self`` and the index expression.
+
+        Examples
+        --------
+        Slicing by integer, equivalent to slicing with a tuple containing
+        1 integer:
+
+        >>> space = odl.uniform_discr([0, 1, 2], [2, 3, 4], (4, 5, 6))
+        >>> space[0]
+        uniform_discr(0.0, 2.0, 4)
+        >>> space[2]
+        uniform_discr(2.0, 4.0, 6)
+        >>> space[(1,)]
+        uniform_discr(1.0, 3.0, 5)
+
+        Slices can be used for the usual selection of subsets:
+
+        >>> space[:2]
+        uniform_discr([0.0, 1.0], [2.0, 3.0], (4, 5))
+        >>> space[::2]
+        uniform_discr([0.0, 2.0], [2.0, 4.0], (4, 6))
+
+        With lists, axes can be combined freely:
+
+        >>> space[[0, 2, 0]]
+        uniform_discr([0.0, 2.0, 0.0], [2.0, 4.0, 2.0], (4, 6, 4))
+        """
+        axes = list(range(self.ndim))
+        if isinstance(indices, (Integral, slice)):
+            newaxes = axes[indices]
+        elif isinstance(indices, tuple):
+            indices, = indices
+            newaxes = axes[indices]
+        elif (isinstance(indices, list) and
+              all(isinstance(i, Integral) for i in indices)):
+            newaxes = [axes[i] for i in indices]
+
+        # TODO: and now??
+
     def _astype(self, dtype):
         """Internal helper for ``astype``."""
         fspace = self.uspace.astype(dtype)
@@ -704,10 +769,10 @@ class DiscreteLpElement(DiscretizedSpaceElement):
         output types.
 
         This includes handling of in-place arithmetic like
-        ``npy_array += custom_obj_with_array_ufunc``: In this case,
-        the custom object's ``__array_ufunc__`` takes precedence over the
+        ``npy_array += custom_obj``. In this case, the custom object's
+        ``__array_ufunc__`` takes precedence over the baseline
         `numpy.ndarray` implementation. It will be called with
-        ``npy_array`` as ``out`` argument, which will ensure that the
+        ``npy_array`` as ``out`` argument, which ensures that the
         returned object is a Numpy array. For this to work properly,
         ``__array_ufunc__`` has to accept Numpy arrays as ``out`` arguments.
 
@@ -761,18 +826,18 @@ class DiscreteLpElement(DiscretizedSpaceElement):
 
         Examples
         --------
-        We apply `numpy.add` to ODL vectors, also with the optional
-        ``out`` parameter:
+        We start by applying `numpy.add` to elements of a one-dimensional
+        space, also using the optional  ``out`` parameter:
 
-        >>> rn = odl.rn(3)
-        >>> x = rn.element([1, 2, 3])
-        >>> y = rn.element([-1, -2, -3])
+        >>> space = odl.uniform_discr(0, 1, 3)
+        >>> x = space.element([1, 2, 3])
+        >>> y = space.element([-1, -2, -3])
         >>> np.add(x, y)
-        rn(3).element([0.0, 0.0, 0.0])
-        >>> out = rn.element()
+        uniform_discr(0.0, 1.0, 3).element([0.0, 0.0, 0.0])
+        >>> out = space.element()
         >>> result = np.add(x, y, out=out)
         >>> out
-        rn(3).element([0.0, 0.0, 0.0])
+        uniform_discr(0.0, 1.0, 3).element([0.0, 0.0, 0.0, 0.0])
         >>> result is out
         True
 
@@ -780,28 +845,48 @@ class DiscreteLpElement(DiscretizedSpaceElement):
         ``dtype``. We can override the latter with the ``dtype``
         parameter:
 
-        >>> x = rn.element([1, 2, 3])
+        >>> x = space.element([1, 2, 3])
         >>> np.add.accumulate(x)
-        rn(3).element([1.0, 3.0, 6.0])
-        >>> np.add.accumulate(x, dtype=complex)
-        cn(3).element([(1+0j), (3+0j), (6+0j)])
+        uniform_discr(0.0, 1.0, 3).element([1.0, 3.0, 6.0])
+        >>> np.add.accumulate(x, dtype=int)
+        uniform_discr(0.0, 1.0, 3, dtype='int').element([1, 3, 6])
+
+        For spaces of dimension 2 or higher, axes can also be specified
+        for restricted accumulations:
+
+        >>> space_2d = odl.uniform_discr([0, 0], [1, 2], (2, 2))
+        >>> x = space_2d.element([[1, 2],
+        ...                       [3, 4]])
+        >>> np.add.accumulate(x, axis=1)
+        >>> uniform_discr([0.0, 0.0], [1.0, 2.0], (2, 2)).element([[1.0, 3.0],
+        ...  [3.0, 7.0]])
 
         The ``add.at`` method operates in-place. Here we add the second
         operand ``[5, 10]`` to ``x`` at indices ``[0, 2]``:
 
-        >>> x = rn.element([1, 2, 3])
+        >>> x = space.element([1, 2, 3])
         >>> np.add.at(x, [0, 2], [5, 10])
         >>> x
-        rn(3).element([6.0, 2.0, 13.0])
+        uniform_discr(0.0, 1.0, 3).element([6.0, 2.0, 13.0])
 
-        Using ``add.reduce`` produces a scalar, which can be avoided by
-        using ``keepdims=True``:
+        Using ``add.reduce`` performs reduction over the first axis by
+        default, producing and element in a lower-dimensional space for
+        ``ndim > 1`` and a scalar for ``ndim == 1``. This can be influenced
+        with the ``axis`` parameter:
 
-        >>> x = rn.element([1, 2, 3])
+        >>> x = space.element([1, 2, 3])
         >>> np.add.reduce(x)
         6.0
-        >>> np.add.reduce(x, keepdims=True)
-        rn(1).element([6.0])
+        >>> y = space_2d.element([[1, 2],
+        ...                       [3, 4]])
+        >>> np.add.reduce(y)
+        uniform_discr(0.0, 2.0, 2).element([4.0, 6.0])
+        >>> np.add.reduce(y, axis=None)  # `None` means all axes
+        10.0
+        >>> np.add.reduce(y, axis=(0, 1))
+        10.0
+        >>> np.add.reduce(y, axis=1)
+        uniform_discr(0.0, 1.0, 2).element([4.0, 6.0])
 
         References
         ----------
@@ -829,6 +914,10 @@ numpy.ufunc.reduceat.html
                    for out in out_tuple):
             return NotImplemented
 
+        # Pull out the `ntuple` attributes from DiscreteLpElement instances
+        inputs = tuple(elem.ntuple if isinstance(elem, type(self)) else elem
+                       for elem in inputs)
+
         out = out1 = out2 = None
         if len(out_tuple) == 1:
             out = out_tuple[0]
@@ -836,10 +925,12 @@ numpy.ufunc.reduceat.html
             out1 = out_tuple[0]
             out2 = out_tuple[1]
 
-        # Use some of the kwargs for `writable_array`
-        # TODO: propagate `order` when tensors are available
         out_dtype = kwargs.get('dtype', None)
-        out_order = kwargs.get('order', None)
+
+        # Not implementing this since it will be gone anyway when tensors
+        # are in
+        if 'order' in kwargs:
+            raise NotImplementedError('`order` argument not supported')
 
         """
         fspace, partition, dspace, exponent=2.0,
@@ -848,25 +939,25 @@ numpy.ufunc.reduceat.html
                  axis_labels
         """
 
-        # Need new space for ufunc if dtype or order were changed
-        if ((out_dtype is None or out_dtype == self.dtype) and
-                (out_order is None or out_order == self.order)):
-            out_space = self.space
-        else:
-            # TODO: create space with new dtype and order
-            out_space = self.space.astype()
-
         # Need to filter for `keepdims` since it's invalid (happening below)
         keepdims = kwargs.pop('keepdims', False)
 
         if method == '__call__':
+            # Need new space for ufunc if dtype was changed
+            if out_dtype is None or out_dtype == self.dtype:
+                out_space = self.space
+            else:
+                out_space = self.space.astype(out_dtype)
+
             if ufunc.nout == 1:
-                # TODO: call into self.ntuple.__array_ufunc__
                 if out is None:
                     out = out_space.element()
-                with writable_array(out, **array_kwargs) as out_arr:
-                    kwargs['out'] = (out_arr,)
-                    ufunc(*inputs, **kwargs)
+                if isinstance(out, np.ndarray):
+                    kwargs['out'] = (out,)
+                else:
+                    kwargs['out'] = (out.ntuple,)
+                self.ntuple.__array_ufunc__(ufunc, '__call__',
+                                            *inputs, **kwargs)
                 return out
 
             elif ufunc.nout == 2:
@@ -874,11 +965,22 @@ numpy.ufunc.reduceat.html
                     out1 = out_space.element()
                 if out2 is None:
                     out2 = out_space.element()
-                out1_ctx = writable_array(out1, **array_kwargs)
-                out2_ctx = writable_array(out2, **array_kwargs)
-                with out1_ctx as out1_arr, out2_ctx as out2_arr:
-                    kwargs['out'] = (out1_arr, out2_arr)
-                    ufunc(*inputs, **kwargs)
+
+                out_arg = []
+                if isinstance(out1, np.ndarray):
+                    out_arg.append(out1)
+                else:
+                    out_arg.append(out1.ntuple)
+
+                if isinstance(out2, np.ndarray):
+                    out_arg.append(out2)
+                else:
+                    out_arg.append(out2.ntuple)
+
+                kwargs['out'] = tuple(out_arg)
+
+                self.ntuple.__array_ufunc__(ufunc, '__call__',
+                                            *inputs, **kwargs)
                 return out1, out2
 
             else:
@@ -903,7 +1005,8 @@ numpy.ufunc.reduceat.html
                 'no unique function domain for the collapsed axes')
         else:
             if out is None:
-                result = getattr(ufunc, method)(*inputs, **kwargs)
+                result = self.ntuple.__array_ufunc__(ufunc, method,
+                                                     *inputs, **kwargs)
                 if np.isscalar(result):
                     # This occurs for `reduce` with all axes
                     return result
@@ -912,8 +1015,9 @@ numpy.ufunc.reduceat.html
                     return
                 else:
                     # Wrap result in an appropriate space
-                    # TODO: use `shape` and `order` when tensors are available
-                    result_space = type(self.space)(result.size, result.dtype)
+                    axis = kwargs.get('axis', 0)
+
+                    # TODO: create appropriate space
                     return result_space.element(result.ravel())
             else:
                 with writable_array(out) as out_arr:
