@@ -829,22 +829,38 @@ class ProductSpaceElement(LinearSpaceElement):
         title : string, optional
             Title of the figures
 
-        indices : index expression, optional
-            Indices can refer to parts of a `ProductSpaceElement` and slices
-            in the parts in the following way:
+        indices : int, slice, tuple or list, optional
+            Display parts of ``self`` in the way described in the following.
 
-            Single index (``indices=0``)
-            => display that part
+            A single list of integers selects the corresponding parts
+            of this vector.
 
-            Single slice (``indices=slice(None)``), or
-            index list (``indices=[0, 1, 3]``)
-            => display those parts
+            For other tuples or lists, the first entry indexes the parts of
+            this vector, and the remaining entries (if any) are used to
+            slice into the parts. Handling those remaining indices is
+            up to the ``show`` methods of the parts to be displayed.
 
-            Any tuple, for example:
-            Created by `numpy.s_` ``indices=np.s_[0, :, :]`` or
-            Using a raw tuple ``indices=([0, 3], slice(None))``
-            => take the first elements to select the parts and
-            pass the rest on to the underlying show methods.
+            The types of the first entry trigger the following behaviors:
+
+                - ``int``: take the part corresponding to this index
+                - ``slice``: take a subset of the parts
+                - ``None``: equivalent to ``slice(None)``, i.e., everything
+
+            Typical use cases are displaying of selected parts, which can
+            be achieved with a list, e.g., ``indices=[0, 2]`` for parts
+            0 and 2, and plotting of all parts sliced in a certain way,
+            e.g., ``indices=[None, 20, None]`` for showing all parts
+            sliced with indices ``[20, None]``.
+
+            A single ``int``, ``slice``, ``list`` or ``None`` object
+            indexes the parts only, i.e., is treated roughly as
+            ``(indices, Ellipsis)``. In particular, for ``None``, all
+            parts are shown with default slicing.
+
+        in_figs : sequence of `matplotlib.figure.Figure`, optional
+            Update these figures instead of creating new ones. Typically
+            the return value of an earlier call to ``show`` is used
+            for this parameter.
 
         kwargs
             Additional arguments passed on to the ``show`` methods of
@@ -852,8 +868,9 @@ class ProductSpaceElement(LinearSpaceElement):
 
         Returns
         -------
-        fig : list of `matplotlib.figure.Figure`
-            The resulting figures. It is also shown to the user.
+        figs : tuple of `matplotlib.figure.Figure`
+            The resulting figures. In an interactive shell, they are
+            automatically displayed.
 
         See Also
         --------
@@ -869,30 +886,50 @@ class ProductSpaceElement(LinearSpaceElement):
 
         if indices is None:
             if len(self) < 5:
-                indices = list(np.arange(self.size))
+                indices = list(range(self.size))
             else:
                 indices = list(np.linspace(0, self.size - 1, 4, dtype=int))
         else:
-            if isinstance(indices, tuple):
+            if (isinstance(indices, tuple) or
+                    (isinstance(indices, list) and
+                     not all(isinstance(idx, Integral) for idx in indices))):
+                # Tuples or lists containing non-integers index by axis.
+                # We use the first index for the current pspace and pass
+                # on the rest.
                 indices, kwargs['indices'] = indices[0], indices[1:]
+
+            # Support `indices=[None, 0, None]` like syntax (`indices` is
+            # the first entry as of now in that case)
+            if indices is None:
+                indices = slice(None)
 
             if isinstance(indices, slice):
                 indices = list(range(*indices.indices(self.size)))
             elif isinstance(indices, Integral):
                 indices = [indices]
-
-            # else try with indices as is
+            else:
+                # Use `indices` as-is
+                pass
 
         in_figs = kwargs.pop('fig', None)
         in_figs = [None] * len(indices) if in_figs is None else in_figs
 
         figs = []
-        for i, part, fig in zip(indices, self[indices], in_figs):
-            fig = part.show(title='{}. Part {}'.format(title, i), fig=fig,
-                            **kwargs)
-            figs += [fig]
+        parts = self[indices]
+        if len(parts) == 0:
+            return ()
+        elif len(parts) == 1:
+            # Don't extend the title if there is only one plot
+            fig = parts[0].show(title=title, fig=in_figs[0], **kwargs)
+            figs.append(fig)
+        else:
+            # Extend titles by indexed part to make them distinguishable
+            for i, part, fig in zip(indices, parts, in_figs):
+                fig = part.show(title='{}. Part {}'.format(title, i), fig=fig,
+                                **kwargs)
+                figs.append(fig)
 
-        return figs
+        return tuple(figs)
 
 
 # --- Add arithmetic operators that broadcast ---

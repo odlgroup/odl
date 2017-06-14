@@ -5,12 +5,6 @@ information on functionals, see `the ODL functional guide
 <http://odlgroup.github.io/odl/guide/in_depth/functional_guide.html>`_
 """
 
-# Imports for common Python 2/3 codebase
-from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
-from builtins import super
-
 import numpy as np
 import odl
 
@@ -24,7 +18,8 @@ class MyFunctional(odl.solvers.Functional):
         # This comand calls the init of Functional and sets a number of
         # parameters associated with a functional. All but domain have default
         # values if not set.
-        super().__init__(space=space, linear=False, grad_lipschitz=2)
+        odl.solvers.Functional.__init__(self, space=space, linear=False,
+                                        grad_lipschitz=2)
 
     def _call(self, x):
         # This is what is returned when calling my_func(x)
@@ -49,7 +44,7 @@ my_func = MyFunctional(space=space)
 
 # The functional evaluates correctly
 x = space.element(np.random.randn(n))
-print(my_func(x) == x.norm()**2)
+print(my_func(x) == x.norm() ** 2)
 
 # The gradient works
 my_gradient = my_func.gradient
@@ -62,7 +57,7 @@ print(my_deriv(p) == my_gradient(x).inner(p))
 
 # The conjugate functional works
 my_func_conj = my_func.convex_conj
-print(my_func_conj(x) == 1.0 / 4.0 * x.norm()**2)
+print(my_func_conj(x) == 1.0 / 4.0 * x.norm() ** 2)
 
 # As a final, a bit more advanced, test, this check that the a scaled and
 # translated version of the functional evalutes the gradient correctly

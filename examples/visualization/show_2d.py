@@ -15,7 +15,7 @@ phantom = odl.phantom.shepp_logan(space, modified=True)
 phantom.show(force_show=True)
 
 # We can show subsets by index
-phantom.show(indices=[slice(None), 50])
+phantom.show(indices=[None, 50])
 
 # Or we can show by coordinate
 phantom.show(coords=[None, 0.5])

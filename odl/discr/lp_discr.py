@@ -749,18 +749,15 @@ class DiscreteLpElement(DiscretizedSpaceElement):
         method : string, optional
             1d methods:
 
-            'plot' : graph plot
-
-            'scatter' : scattered 2d points
-            (2nd axis <-> value)
+            - ``'plot'`` : graph plot (default for 1d data)
+            - ``'scatter'`` : scattered 2d points (2nd axis <-> value)
 
             2d methods:
 
-            'imshow' : image plot with coloring according to value,
-            including a colorbar.
-
-            'scatter' : cloud of scattered 3d points
-            (3rd axis <-> value)
+            - ``'imshow'`` : image plot with coloring according to value,
+              including a colorbar (default for 2d data).
+            - ``'scatter'`` : cloud of scattered 3d points
+              (3rd axis <-> value)
 
         coords : `array-like`, optional
             Display a slice of the array instead of the full array.
@@ -771,17 +768,35 @@ class DiscreteLpElement(DiscretizedSpaceElement):
             If a sequence is provided, it specifies the minimum and maximum
             point to be shown, i.e. ``[None, [0, 1]]`` shows all of the
             first axis and values between 0 and 1 in the second.
-            This option is mutually exclusive to ``indices``.
+            This option is mutually exclusive with ``indices``.
 
-        indices : index expression, optional
-            Display a slice of the array instead of the full array. The
-            index expression is most easily created with the `numpy.s_`
-            constructor, i.e. supply ``np.s_[:, 1, :]`` to display the
-            first slice along the second axis.
-            For data with 3 or more dimensions, the 2d slice in the first
-            two axes at the "middle" along the remaining axes is shown
+        indices : int, slice, Ellipsis or sequence, optional
+            Display a slice of the array instead of the full array.
+            If a sequence is given, the i-th entry indexes the i-th axis,
+            with the following behavior for the different types of entries:
+
+                - ``int``: take entries with this index along axis ``i``,
+                  removing this axis from the result
+                - ``slice``: take a subset along axis ``i``, keeping it
+                  intact
+                - ``None``: equivalent to ``slice(None)``
+                - ``Ellipsis`` (``...``): equivalent to the number of
+                  ``None`` entries required to fill up the sequence to
+                  correct length.
+
+            The typical use case is to show a slice for a fixed index in
+            a specific axis, which can be done most easily by setting, e.g.,
+            ``indices=[None, 50, None]`` to take the 2d slice parallel to
+            the x-z coordinate plane at index ``y = 50``.
+
+            A single ``int`` or ``slice`` object indexes the first
+            axis, i.e., is treated as ``(int_or_slice, Ellipsis)``.
+            For the default ``None``, the array is kepty as-is for data
+            that has at most 2 dimensions. For higher-dimensional
+            data, the 2d slice in the first two axes at the middle
+            position along the remaining axes is shown
             (semantically ``[:, :, shape[2:] // 2]``).
-            This option is mutually exclusive to ``coords``.
+            This option is mutually exclusive with ``coords``.
 
         force_show : bool, optional
             Whether the plot should be forced to be shown now or deferred until
@@ -820,8 +835,7 @@ class DiscreteLpElement(DiscretizedSpaceElement):
             partition = self.space.partition
             shape = self.shape
             indices = []
-            for axis, (n, coord) in enumerate(
-                    zip(shape, coords)):
+            for axis, (n, coord) in enumerate(zip(shape, coords)):
                 try:
                     coord_minp, coord_maxp = coord
                 except TypeError:
@@ -836,9 +850,9 @@ class DiscreteLpElement(DiscretizedSpaceElement):
                     coord_maxp = subpart.set.element(coord_maxp)
 
                 if len(subpart) == 0:  # trivial cases
-                    indices += [0]
+                    indices.append(0)
                 elif coord_minp is not None and coord_minp == coord_maxp:
-                    indices += [subpart.index(coord_minp)]
+                    indices.append(subpart.index(coord_minp))
                 else:
                     if coord_minp is None:
                         min_ind = 0
@@ -852,33 +866,44 @@ class DiscreteLpElement(DiscretizedSpaceElement):
                         max_ind = np.ceil(subpart.index(coord_maxp,
                                                         floating=True))
 
-                    indices += [slice(int(min_ind), int(max_ind))]
+                    indices.append(slice(int(min_ind), int(max_ind)))
 
         # Default to showing x-y slice "in the middle"
         if indices is None and self.ndim >= 3:
-            indices = [np.s_[:]] * 2
-            indices += [n // 2 for n in self.space.shape[2:]]
+            indices = ((slice(None),) * 2 +
+                       tuple(n // 2 for n in self.space.shape[2:]))
 
+        # Normalize indices
         if isinstance(indices, (Integral, slice)):
             indices = (indices,)
         elif indices is None or indices == Ellipsis:
-            indices = (np.s_[:],) * self.ndim
-        else:
-            indices = tuple(indices)
+            indices = (slice(None),) * self.ndim
 
-        if Ellipsis in indices:
-            # Replace Ellipsis with the correct number of [:] expressions
+        # Single index or slice indexes the first axis, rest untouched
+        if len(indices) == 1:
+            indices = tuple(indices) + (Ellipsis,)
+
+        # Convert `Ellipsis` objects
+        if indices.count(Ellipsis) > 1:
+            raise ValueError('cannot use more than 1 `Ellipsis` (`...`)')
+        elif Ellipsis in indices:
+            # Replace Ellipsis with the correct number of `slice(None)`
             pos = indices.index(Ellipsis)
-            indices = (indices[:pos] +
-                       (np.s_[:], ) * (self.ndim - len(indices) + 1) +
-                       indices[pos + 1:])
+            indices = (tuple(indices[:pos]) +
+                       (slice(None),) * (self.ndim - len(indices) + 1) +
+                       tuple(indices[pos + 1:]))
 
+        # Now indices should be exactly of length `ndim`
         if len(indices) < self.ndim:
             raise ValueError('too few axes ({} < {})'.format(len(indices),
                                                              self.ndim))
         if len(indices) > self.ndim:
             raise ValueError('too many axes ({} > {})'.format(len(indices),
                                                               self.ndim))
+
+        # Map `None` to `slice(None)` in indices for syntax like `coords`
+        indices = tuple(slice(None) if idx is None else idx
+                        for idx in indices)
 
         squeezed_axes = [axis for axis in range(self.ndim)
                          if not isinstance(indices[axis], Integral)]
