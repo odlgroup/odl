@@ -2,8 +2,8 @@
 Example of how to use optimization in order to pick reconstruction parameters.
 
 In this example, we solve the tomographic inversion problem with different
-regularizers (FBP, Huber-TV and TV) and pick the "best" regularization parameter
-for each method with respect to a set of reference data.
+regularizers (FBP, Huber-TV and TV) and pick the "best" regularization
+parameter for each method with respect to a set of reference data.
 
 To find the "best" parameter we use Powell's method to optimize a figure of
 merit, here the L2-distance to the true result.
@@ -69,7 +69,7 @@ def optimal_parameters(reconstruction, fom, phantoms, data,
                    for phantomi, datai in zip(phantoms, data))
 
     # Pick resolution to fit the one used by the space
-    tol= np.finfo(phantoms[0].space.dtype).resolution * 10
+    tol = np.finfo(phantoms[0].space.dtype).resolution * 10
 
     initial_param = np.asarray(initial_param)
 
