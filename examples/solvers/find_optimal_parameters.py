@@ -2,10 +2,10 @@
 Example of how to use optimization in order to pick reconstruction parameters.
 
 In this example, we solve the tomographic inversion problem with different
-regularizers (fbp, huber and tv) and pick the "best" regularization parameter
-for each method w.r.t. a set of reference data.
+regularizers (FBP, Huber-TV and TV) and pick the "best" regularization parameter
+for each method with respect to a set of reference data.
 
-To find the "best" parameter we use Powells method to optimize a figure of
+To find the "best" parameter we use Powell's method to optimize a figure of
 merit, here the L2-distance to the true result.
 """
 
@@ -21,8 +21,8 @@ def optimal_parameters(reconstruction, fom, phantoms, data,
     Notes
     -----
     For a forward operator :math:`A : X \to Y`, a reconstruction operator
-     parametrized by :math:`\theta` is some operator :math:`R_\theta : Y \to X`
-     such that
+    parametrized by :math:`\theta` is some operator :math:`R_\theta : Y \to X`
+    such that
 
     .. math::
         R_\theta(A(x)) \approx x.
@@ -32,8 +32,7 @@ def optimal_parameters(reconstruction, fom, phantoms, data,
     .. math::
         \theta = \argmin_\theta fom(R(A(x) + noise), x)
 
-    where :math:`fom : X \times X \to \mathbb{R}` is a Figure of Merit.
-
+    where :math:`fom : X \times X \to \mathbb{R}` is a figure of merit.
 
     Parameters
     ----------
@@ -50,13 +49,18 @@ def optimal_parameters(reconstruction, fom, phantoms, data,
             * reconstructed_image
             * true_image
 
-        and returns a scalar Figure of Merit.
+        and returns a scalar figure of merit.
     phantoms : sequence
         True images.
     data : sequence
-        The data to be reconstructed.
+        The data to reconstruct from.
     initial_param : array-like
         Initial guess for the parameters.
+
+    Returns
+    -------
+    parameters : 'array'
+        The  optimal parameters for the reconstruction problem.
     """
 
     def func(lam):
@@ -69,6 +73,7 @@ def optimal_parameters(reconstruction, fom, phantoms, data,
 
     initial_param = np.asarray(initial_param)
 
+    # We use a faster optimizer for the one parameter case
     if initial_param.size == 1:
         bracket = [initial_param - tol, initial_param + tol]
         result = scipy.optimize.minimize_scalar(func,
@@ -84,10 +89,6 @@ def optimal_parameters(reconstruction, fom, phantoms, data,
                                                 ftol=tol,
                                                 disp=False)
         return parameters
-
-
-
-
 
 # USER INPUT. Pick reconstruction: 'fbp', 'huber' or 'tv'
 # 'fbp' is fast, 'huber' and 'tv' takes some time.
@@ -146,9 +147,9 @@ elif reconstruction_method == 'huber':
 
         print('lam = {}, sigma = {}'.format(lam, sigma))
 
-        # We do not allow negative paramters, so return a bogus result
+        # We do not allow negative parameters, so return a bogus result
         if lam <= 0 or sigma <= 0:
-            return np.inf *  space.one()
+            return np.inf * space.one()
 
         # Create data term ||Ax - b||_2^2
         l2_norm = odl.solvers.L2NormSquared(ray_trafo.range)
@@ -198,17 +199,19 @@ elif reconstruction_method == 'tv':
 
         g = odl.solvers.ZeroFunctional(op.domain)
 
-        l2_norm = odl.solvers.L2NormSquared(ray_trafo.range).translated(proj_data)
+        l2_norm = odl.solvers.L2NormSquared(
+                    ray_trafo.range).translated(proj_data)
         l1_norm = lam * odl.solvers.GroupL1Norm(gradient.range)
         f = odl.solvers.SeparableSum(l2_norm, l1_norm)
 
         # Select solver parameters
-        op_norm = 1.1 * odl.power_method_opnorm(op)
+        op_norm = 1.5 * odl.power_method_opnorm(op, maxiter=10)
 
         # Run the algorithm
         x = op.domain.zero()
         odl.solvers.chambolle_pock_solver(
-            x, f, g, op, tau=1.0 / op_norm, sigma=1.0 / op_norm, niter= 200, gamma= 0.3)
+            x, f, g, op, tau=1.0/op_norm, sigma=1.0/op_norm, niter=200,
+            gamma=0.3)
 
         return x
 
@@ -217,9 +220,9 @@ else:
     raise RuntimeError('unknown reconstruction method')
 
 
-def fom(I0,I1):
-    gradient = odl.Gradient(I0.space)
-    return gradient(I0-I1).norm() + I0.space.dist(I0,I1)
+def fom(reco, true_image):
+    gradient = odl.Gradient(reco.space)
+    return gradient(reco-true_image).norm() + reco.space.dist(reco, true_image)
 
 
 # Find optimal lambda
@@ -227,8 +230,12 @@ optimal_parameters = optimal_parameters(reconstruction,  fom,
                                         phantoms, data,
                                         initial_param=initial_param)
 
-reconstruction(data[0], initial_param).show(reconstruction_method+' , initial parameter')
-reconstruction(data[1], initial_param).show(reconstruction_method+' , initial parameter')
+reco_0 = reconstruction(data[0], initial_param)
+reco_0.show(reconstruction_method + ' , initial parameter')
+reco_1 = reconstruction(data[1], initial_param)
+reco_1.show(reconstruction_method + ' , initial parameter')
 
-reconstruction(data[0], optimal_parameters).show(reconstruction_method+' , optimal parameter')
-reconstruction(data[1], optimal_parameters).show(reconstruction_method+' , optimal parameter')
+reco_0_opt = reconstruction(data[0], optimal_parameters)
+reco_0_opt.show(reconstruction_method + ' , optimal parameter')
+reco_1_opt = reconstruction(data[1], optimal_parameters)
+reco_1_opt.show(reconstruction_method + ' , optimal parameter')
