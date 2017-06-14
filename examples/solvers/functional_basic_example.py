@@ -4,8 +4,6 @@ This is an example of how to implement the functional ``||x||_2^2``. For more
 information on functionals, see `the ODL functional guide
 <http://odlgroup.github.io/odl/guide/in_depth/functional_guide.html>`_
 """
-from __future__ import print_function, division
-from builtins import super
 
 import numpy as np
 import odl
@@ -20,7 +18,8 @@ class MyFunctional(odl.solvers.Functional):
         # This comand calls the init of Functional and sets a number of
         # parameters associated with a functional. All but domain have default
         # values if not set.
-        super().__init__(space=space, linear=False, grad_lipschitz=2)
+        odl.solvers.Functional.__init__(self, space=space, linear=False,
+                                        grad_lipschitz=2)
 
     def _call(self, x):
         # This is what is returned when calling my_func(x)

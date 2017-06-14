@@ -27,5 +27,5 @@ elem.show('Every third element', indices=np.s_[::3], force_show=True)
 # the product space components, the other dimensions are applied to each
 # component. Here we take the second component and slice in the
 # middle along the second axis.
-elem.show('Element at index 2, sliced by [:, n//2]',
-          indices=np.s_[2, :, n // 2], force_show=True)
+elem.show('Element at index 2, sliced by [:, n // 2]',
+          indices=[2, None, n // 2], force_show=True)
