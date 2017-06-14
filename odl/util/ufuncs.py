@@ -68,51 +68,22 @@ numpy.{}
 """.format(name)
     UFUNCS.append((name, n_in, n_out, doc))
 
-RAW_REDUCTIONS = [('sum', 'sum', 'Sum of array elements.'),
-                  ('prod', 'prod', 'Product of array elements.'),
-                  ('min', 'amin', 'Minimum value in array.'),
-                  ('max', 'amax', 'Maximum value in array.')]
-
-REDUCTIONS = []
-for name, numpyname, descr in RAW_REDUCTIONS:
-    doc = descr + """
-
-See Also
---------
-numpy.{}
-""".format(numpyname)
-    REDUCTIONS += [(name, doc)]
-
 
 # Wrap all numpy ufuncs
 
 def wrap_ufunc_base(name, n_in, n_out, doc):
     """Add ufunc methods to `NtuplesBaseUfuncs`."""
-    wrapped = getattr(np, name)
+    ufunc = getattr(np, name)
     if n_in == 1:
-        if n_out == 0:
-            def wrapper(self):
-                return wrapped(self.vector)
-
-        elif n_out == 1:
+        if n_out == 1:
             def wrapper(self, out=None):
-                if out is None:
-                    out = self.vector.space.element()
-
-                out[:] = wrapped(self.vector)
-                return out
+                return self.vector.__array_ufunc__(
+                    ufunc, '__call__', self.vector, out=(out,))
 
         elif n_out == 2:
             def wrapper(self, out1=None, out2=None):
-                if out1 is None:
-                    out1 = self.vector.space.element()
-                if out2 is None:
-                    out2 = self.vector.space.element()
-
-                [y1, y2] = wrapped(self.vector)
-                out1[:] = y1
-                out2[:] = y2
-                return out1, out2
+                return self.vector.__array_ufunc__(
+                    ufunc, '__call__', self.vector, out=(out1, out2))
 
         else:
             raise NotImplementedError
@@ -120,29 +91,13 @@ def wrap_ufunc_base(name, n_in, n_out, doc):
     elif n_in == 2:
         if n_out == 1:
             def wrapper(self, x2, out=None):
-                if out is None:
-                    return wrapped(self.vector, x2)
-                else:
-                    out[:] = wrapped(self.vector, x2)
-                    return out
+                return self.vector.__array_ufunc__(
+                    ufunc, '__call__', self.vector, x2, out=(out,))
 
         else:
             raise NotImplementedError
     else:
         raise NotImplementedError
-
-    wrapper.__name__ = name
-    wrapper.__doc__ = doc
-    return wrapper
-
-
-# Wrap reductions
-def wrap_reduction_base(name, doc):
-    """Add ufunc methods to `NtuplesBaseUfuncs`."""
-    wrapped = getattr(np, name)
-
-    def wrapper(self):
-        return wrapped(self.vector)
 
     wrapper.__name__ = name
     wrapper.__doc__ = doc
@@ -160,68 +115,60 @@ class NtuplesBaseUfuncs(object):
         """Create ufunc wrapper for vector."""
         self.vector = vector
 
+    # Reductions for backwards compatibility
+    def sum(self, axis=None, dtype=None, out=None, keepdims=False):
+        """Return the sum of ``self``.
+
+        See Also
+        --------
+        numpy.sum
+        prod
+        """
+        return self.vector.__array_ufunc__(
+            np.add, 'reduce', self.vector,
+            axis=axis, dtype=dtype, out=(out,), keepdims=keepdims)
+
+    def prod(self, axis=None, dtype=None, out=None, keepdims=False):
+        """Return the product of ``self``.
+
+        See Also
+        --------
+        numpy.prod
+        sum
+        """
+        return self.vector.__array_ufunc__(
+            np.multiply, 'reduce', self.vector,
+            axis=axis, dtype=dtype, out=(out,), keepdims=keepdims)
+
+    def min(self, axis=None, dtype=None, out=None, keepdims=False):
+        """Return the minimum of ``self``.
+
+        See Also
+        --------
+        numpy.amin
+        max
+        """
+        return self.vector.__array_ufunc__(
+            np.minimum, 'reduce', self.vector,
+            axis=axis, dtype=dtype, out=(out,), keepdims=keepdims)
+
+    def max(self, axis=None, dtype=None, out=None, keepdims=False):
+        """Return the maximum of ``self``.
+
+        See Also
+        --------
+        numpy.amax
+        min
+        """
+        return self.vector.__array_ufunc__(
+            np.maximum, 'reduce', self.vector,
+            axis=axis, dtype=dtype, out=(out,), keepdims=keepdims)
+
 
 # Add ufunc methods to ufunc class
 for name, n_in, n_out, doc in UFUNCS:
     method = wrap_ufunc_base(name, n_in, n_out, doc)
     setattr(NtuplesBaseUfuncs, name, method)
-
-# Add reduction methods to ufunc class
-for name, doc in REDUCTIONS:
-    method = wrap_reduction_base(name, doc)
-    setattr(NtuplesBaseUfuncs, name, method)
-
-
-# Optimized implementation of ufuncs since we can use the out parameter
-# as well as the data parameter to avoid one call to asarray() when using an
-# NumpyNtuplesVector
-def wrap_ufunc_ntuples(name, n_in, n_out, doc):
-    """Add ufunc methods to `NumpyNtuplesUfuncs`."""
-
-    # Get method from numpy
-    wrapped = getattr(np, name)
-    if n_in == 1:
-        if n_out == 0:
-            def wrapper(self):
-                return wrapped(self.vector)
-
-        elif n_out == 1:
-            def wrapper(self, out=None):
-                if out is None:
-                    out = self.vector.space.element()
-                wrapped(self.vector, out.data)
-                return out
-
-        elif n_out == 2:
-            def wrapper(self, out1=None, out2=None):
-                if out1 is None:
-                    out1 = self.vector.space.element()
-                if out2 is None:
-                    out2 = self.vector.space.element()
-
-                y1, y2 = wrapped(self.vector, out1.data, out2.data)
-                return out1, out2
-
-        else:
-            raise NotImplementedError
-
-    elif n_in == 2:
-        if n_out == 1:
-            def wrapper(self, x2, out=None):
-                if out is None:
-                    out = self.vector.space.element()
-
-                wrapped(self.vector, x2, out.data)
-                return out
-
-        else:
-            raise NotImplementedError
-    else:
-        raise NotImplementedError
-
-    wrapper.__name__ = name
-    wrapper.__doc__ = doc
-    return wrapper
 
 
 class NumpyNtuplesUfuncs(NtuplesBaseUfuncs):
@@ -234,7 +181,8 @@ class NumpyNtuplesUfuncs(NtuplesBaseUfuncs):
 
 # Add ufunc methods to ufunc class
 for name, n_in, n_out, doc in UFUNCS:
-    method = wrap_ufunc_ntuples(name, n_in, n_out, doc)
+    # The base implementation is already optimal for Numpy-based vectors
+    method = wrap_ufunc_base(name, n_in, n_out, doc)
     setattr(NumpyNtuplesUfuncs, name, method)
 
 
@@ -303,16 +251,6 @@ def wrap_ufunc_discretelp(name, n_in, n_out, doc):
     return wrapper
 
 
-def wrap_reduction_discretelp(name, doc):
-    def wrapper(self):
-        method = getattr(self.vector.ntuple.ufuncs, name)
-        return method()
-
-    wrapper.__name__ = name
-    wrapper.__doc__ = doc
-    return wrapper
-
-
 class DiscreteLpUfuncs(NtuplesBaseUfuncs):
 
     """Ufuncs for `DiscreteLpElement` objects.
@@ -324,10 +262,6 @@ class DiscreteLpUfuncs(NtuplesBaseUfuncs):
 # Add ufunc methods to ufunc class
 for name, n_in, n_out, doc in UFUNCS:
     method = wrap_ufunc_discretelp(name, n_in, n_out, doc)
-    setattr(DiscreteLpUfuncs, name, method)
-
-for name, doc in REDUCTIONS:
-    method = wrap_reduction_discretelp(name, doc)
     setattr(DiscreteLpUfuncs, name, method)
 
 
@@ -396,17 +330,6 @@ def wrap_ufunc_productspace(name, n_in, n_out, doc):
     return wrapper
 
 
-def wrap_reduction_productspace(name, doc):
-    """Add reduction methods to `ProductSpaceElement`."""
-    def wrapper(self):
-        results = [getattr(x.ufuncs, name)() for x in self.vector]
-        return getattr(np, name)(results)
-
-    wrapper.__name__ = name
-    wrapper.__doc__ = doc
-    return wrapper
-
-
 class ProductSpaceUfuncs(object):
 
     """Ufuncs for `ProductSpaceElement` objects.
@@ -421,10 +344,4 @@ class ProductSpaceUfuncs(object):
 # Add ufunc methods to ufunc class
 for name, n_in, n_out, doc in UFUNCS:
     method = wrap_ufunc_productspace(name, n_in, n_out, doc)
-    setattr(ProductSpaceUfuncs, name, method)
-
-
-# Add reduction methods to ufunc class
-for name, doc in REDUCTIONS:
-    method = wrap_reduction_productspace(name, doc)
     setattr(ProductSpaceUfuncs, name, method)

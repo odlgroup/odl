@@ -243,8 +243,8 @@ def cache_arguments(function):
 
 @cache_arguments
 def is_scalar_dtype(dtype):
-    """Return ``True`` if ``dtype`` is a scalar type."""
-    return np.issubsctype(dtype, np.number)
+    """Return ``True`` if ``dtype`` is a scalar type (number or bool)."""
+    return np.issubsctype(dtype, np.number) or np.issubsctype(dtype, np.bool)
 
 
 @cache_arguments

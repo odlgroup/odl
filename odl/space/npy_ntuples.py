@@ -429,9 +429,17 @@ class NumpyNtuplesVector(NtuplesBaseVector):
         else:
             self.data[indices] = values
 
+    # Old ufuncs interface, will be deprecated when Numpy 1.13 becomes minimum
+
     @property
     def ufuncs(self):
         """`NumpyNtuplesUfuncs`, access to numpy style ufuncs.
+
+        .. note::
+            This interface is deprecated and will be removed as soon
+            as Numpy 1.13 becomes the minimum required version.
+            Use Numpy ufuncs directly, e.g., ``np.sqrt(x)`` instead of
+            ``x.ufuncs.sqrt()``.
 
         Examples
         --------

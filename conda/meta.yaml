@@ -19,13 +19,13 @@ requirements:
         - setuptools
         - nomkl # [not win]
         - future >=0.14
-        - numpy >=1.9,<1.13
+        - numpy >=1.9
         - scipy >=0.14
     run:
         - python
         - future >=0.14
         - nomkl # [not win]
-        - numpy >=1.9,<1.13
+        - numpy >=1.9
         - scipy >=0.14
         - matplotlib
         - pytest >=3.0.3
