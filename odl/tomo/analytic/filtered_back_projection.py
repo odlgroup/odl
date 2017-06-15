@@ -94,7 +94,8 @@ def _fbp_filter(norm_freq, filter_type, frequency_scaling):
                          ''.format(filter_type))
 
     indicator = (norm_freq <= frequency_scaling)
-    return indicator * filt
+    filt *= indicator
+    return filt
 
 
 def tam_danielson_window(ray_trafo, smoothing_width=0.05, n_half_rot=1):
@@ -396,7 +397,13 @@ def fbp_filter_op(ray_trafo, padding=True, filter_type='Ram-Lak',
 
         # Define ramp filter
         def fourier_filter(x):
-            abs_freq = np.abs(rot_dir[0] * x[1] + rot_dir[1] * x[2])
+            # Save memory in case of axis aligned
+            if not used_axes[0]:
+                abs_freq = np.abs(rot_dir[1] * x[2])
+            elif not used_axes[1]:
+                abs_freq = np.abs(rot_dir[0] * x[1])
+            else:
+                abs_freq = np.abs(rot_dir[0] * x[1] + rot_dir[1] * x[2])
             norm_freq = abs_freq / np.max(abs_freq)
             filt = _fbp_filter(norm_freq, filter_type, frequency_scaling)
             scaling = scale / (2 * alen)
