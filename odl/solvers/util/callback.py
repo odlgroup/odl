@@ -13,7 +13,6 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-import psutil
 import warnings
 import time
 import os
@@ -24,7 +23,7 @@ __all__ = ('CallbackStore', 'CallbackApply',
            'CallbackPrintTiming', 'CallbackPrintIteration',
            'CallbackPrint', 'CallbackPrintNorm', 'CallbackShow',
            'CallbackSaveToDisk', 'CallbackSleep', 'CallbackShowConvergence',
-           'CallbackPrintMemory')
+           'CallbackPrintHardwareUsage')
 
 
 class SolverCallback(object):
@@ -856,38 +855,99 @@ class CallbackShowConvergence(SolverCallback):
             self.logy)
 
 
-class CallbackPrintMemory(SolverCallback):
+class CallbackPrintHardwareUsage(SolverCallback):
 
-    """Callback for printing memory and CPU usage."""
+    """Callback for printing memory and CPU usage.
 
-    def __init__(self, step=1):
+    To use this callback, the user needs to have the package ``psutil``
+    installed.
+    """
+
+    def __init__(self, step=1, print_cpu=True, print_mem=True,
+                 print_swap=True, fmt_cpu='CPU usage (% each core): {}',
+                 fmt_mem='RAM usage: {}', fmt_swap='SWAP usage: {}'):
         """Initialize a new instance.
 
         Parameters
         ----------
         step : positive int, optional
             Number of iterations between output. Default: 1
+        print_cpu : bool, optional
+            If ``True`` then the CPU usage is printed. Default: ``True``
+        print_mem : bool, optional
+            If ``True`` then the RAM memory usage is printed. Default: ``True``
+        print_swap : bool, optional
+            If ``True`` then the SWAP memory usage is printed.
+            Default: ``True``
+        fmt_cpu : string, optional
+            Formating that should be applied. The CPU usage is printed as ::
+
+                print(fmt_cpu.format(cpu))
+
+            where ``cpu`` is a vector with the percentage of current CPU usaged
+            for each core.
+        fmt_mem : string, optional
+            Formating that should be applied. The RAM usage is printed as ::
+
+                print(fmt_mem.format(mem))
+
+            where ``mem`` is the current RAM memory usaged.
+        fmt_swap : string, optional
+            Formating that should be applied. The SWAP usage is printed as ::
+
+                print(fmt_swap.format(swap))
+
+            where ``swap`` is the current SWAP memory usaged.
+
+        Raises
+        ------
+        ImportError
+            If the package ``psutil`` is not installed.
 
         Examples
         --------
         Print memory and CPU usage
 
-        >>> callback = CallbackPrintMemory()
+        >>> callback = CallbackPrintHardwareUsage()
 
         Only print every tenth step
 
-        >>> callback = CallbackPrintMemory(step=10)
+        >>> callback = CallbackPrintHardwareUsage(step=10)
+
+        Only print the RAM memory usage in every step, and with a non-default
+        formating
+
+        >>> callback = CallbackPrintHardwareUsage(step=1, print_cpu=False,
+        ...                                       print_mem=True,
+        ...                                       print_swap=False,
+        ...                                       fmt_mem='RAM {}')
         """
-        self.step = step
+        self.step = int(step)
+        self.print_cpu = bool(print_cpu)
+        self.print_mem = bool(print_mem)
+        self.print_swap = bool(print_swap)
+        self.fmt_cpu = str(fmt_cpu)
+        self.fmt_mem = str(fmt_mem)
+        self.fmt_swap = str(fmt_swap)
+
         self.iter = 0
 
     def __call__(self, _):
         """Print the memory and CPU usage"""
+
+        try:
+            import psutil
+        except ImportError as err:
+            raise ImportError('Need the package psutil to use the callback '
+                              'CallbackPrintHardwareUsage. {}'.format(err))
+
         if self.iter % self.step == 0:
-            print('CPU usage (% each core): {}'.format(
-                  psutil.cpu_percent(percpu=True)))
-            print('RAM usage: {}'.format(psutil.virtual_memory()))
-            print('SWAP usage: {}'.format(psutil.swap_memory()))
+            if self.print_cpu:
+                print(self.fmt_cpu.format(psutil.cpu_percent(percpu=True)))
+            if self.print_mem:
+                print(self.fmt_mem.format(psutil.virtual_memory()))
+            if self.print_swap:
+                print(self.fmt_swap.format(psutil.swap_memory()))
 
         self.iter += 1
 
