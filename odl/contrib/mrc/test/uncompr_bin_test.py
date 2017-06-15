@@ -17,7 +17,7 @@ import pytest
 import numpy as np
 import tempfile
 
-from odl.tomo.data import (
+from odl.contrib.mrc import (
     FileWriterRawBinaryWithHeader, FileReaderRawBinaryWithHeader)
 from odl.util.testutils import simple_fixture
 

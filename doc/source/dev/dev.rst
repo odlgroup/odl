@@ -18,6 +18,12 @@ If you are experienced with Git, you may want to skip directly to :ref:`the deve
 
 In order to properly follow the ODL style, we recommend that you read the :ref:`dev_document` and :ref:`dev_testing` sections.
 
+.. note::
+
+    This documentation is intended for contributions to core ODL.
+    For experimental contributions or extensions that would be too specialized for core ODL, we have the `odl/contrib <https://github.com/odlgroup/odl/tree/master/odl/contrib`_ directory that offers a "fast lane" with a more relaxed code quality and consistency policy.
+
+
 Contents
 --------
 

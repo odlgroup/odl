@@ -20,7 +20,7 @@ import numpy as np
 import scipy
 import tempfile
 
-from odl.tomo.data import (
+from odl.contrib.mrc import (
     FileReaderRawBinaryWithHeader, FileWriterRawBinaryWithHeader)
 
 

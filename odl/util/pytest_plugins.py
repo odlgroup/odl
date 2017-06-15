@@ -54,7 +54,21 @@ def pytest_addoption(parser):
 
 this_dir = os.path.dirname(__file__)
 odl_root = os.path.abspath(os.path.join(this_dir, os.pardir, os.pardir))
-collect_ignore = [os.path.join(odl_root, 'setup.py')]
+collect_ignore = [os.path.join(odl_root, 'setup.py'),
+                  os.path.join(odl_root, 'odl', 'contrib')]
+
+
+# Add example directories to `collect_ignore`
+def find_example_dirs():
+    dirs = []
+    for dirpath, dirnames, _ in os.walk(odl_root):
+        if 'examples' in dirnames:
+            dirs.append(os.path.join(dirpath, 'examples'))
+    return dirs
+
+
+collect_ignore.extend(find_example_dirs())
+
 
 if not PYFFTW_AVAILABLE:
     collect_ignore.append(
