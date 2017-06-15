@@ -20,9 +20,6 @@ __all__ += geometry.__all__
 from .parallel import *
 __all__ += parallel.__all__
 
-from .fanbeam import *
-__all__ += fanbeam.__all__
-
 from .conebeam import *
 __all__ += conebeam.__all__
 
