@@ -21,7 +21,7 @@ try:
 except ImportError:
     ASTRA_CUDA_AVAILABLE = False
 
-from odl.discr import DiscreteLp, DiscreteLpElement
+from odl.discr import DiscreteLp
 from odl.tomo.backends.astra_setup import (
     ASTRA_VERSION,
     astra_projection_geometry, astra_volume_geometry, astra_projector,
@@ -173,6 +173,9 @@ class AstraCudaProjectorImpl(object):
         if self.proj_id is not None:
             aproj.delete(self.proj_id)
             self.proj_id = None
+
+        self.in_array = None
+        self.out_array = None
 
 
 class AstraCudaBackProjectorImpl(object):
@@ -402,6 +405,5 @@ def astra_cuda_bp_scaling_factor(proj_space, reco_space, geometry):
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()
