@@ -39,12 +39,7 @@ class AstraCudaProjectorImpl(object):
 
     """Thin wrapper around ASTRA."""
 
-    algo_id = None
-    vol_id = None
-    sino_id = None
-    proj_id = None
-
-    def __init__(self, geometry, reco_space, proj_space, use_cache):
+    def __init__(self, geometry, reco_space, proj_space):
         """Initialize a new instance.
 
         Parameters
@@ -56,8 +51,6 @@ class AstraCudaProjectorImpl(object):
             projected.
         proj_space : ``DiscreteLp``
             Projection space, the space of the result.
-        use_cache : bool
-            If ``True``, data is cached.
         """
         assert isinstance(geometry, Geometry)
         assert isinstance(reco_space, DiscreteLp)
@@ -66,10 +59,8 @@ class AstraCudaProjectorImpl(object):
         self.geometry = geometry
         self.reco_space = reco_space
         self.proj_space = proj_space
-        self.use_cache = bool(use_cache)
 
-        if self.use_cache:
-            self.create_ids()
+        self.create_ids()
 
     def call_forward(self, vol_data, out=None):
         """Run an ASTRA forward projection on the given data using the GPU.
@@ -94,10 +85,6 @@ class AstraCudaProjectorImpl(object):
         else:
             out = self.proj_space.element()
 
-        # Create ids if they don't exist
-        if not self.use_cache:
-            self.create_ids()
-
         # Copy data to GPU memory
         if self.geometry.ndim == 2:
             astra.data2d.store(self.vol_id, vol_data.asarray())
@@ -119,10 +106,6 @@ class AstraCudaProjectorImpl(object):
         if isinstance(self.geometry, Parallel2dGeometry):
             # parallel2d scales with pixel stride
             out *= 1 / float(self.geometry.det_partition.cell_volume)
-
-        # Delete ASTRA ids if we should not cache
-        if not self.use_cache:
-            self.delete_ids()
 
         return out
 
@@ -166,7 +149,7 @@ class AstraCudaProjectorImpl(object):
             'forward', ndim, self.vol_id, self.sino_id,
             proj_id=self.proj_id, impl='cuda')
 
-    def delete_ids(self):
+    def __del__(self):
         """Delete ASTRA objects."""
         if self.geometry.ndim == 2:
             adata, aproj = astra.data2d, astra.projector
@@ -189,21 +172,12 @@ class AstraCudaProjectorImpl(object):
         self.in_array = None
         self.out_array = None
 
-    def __del__(self):
-        """Implement ``del self``."""
-        self.delete_ids()
-
 
 class AstraCudaBackProjectorImpl(object):
 
     """Thin wrapper around ASTRA."""
 
-    algo_id = None
-    vol_id = None
-    sino_id = None
-    proj_id = None
-
-    def __init__(self, geometry, reco_space, proj_space, use_cache):
+    def __init__(self, geometry, reco_space, proj_space):
         """Initialize a new instance.
 
         Parameters
@@ -214,8 +188,6 @@ class AstraCudaBackProjectorImpl(object):
             Reconstruction space, the space to which the backprojection maps.
         proj_space : ``DiscreteLp``
             Projection space, the space from which the backprojection maps.
-        use_cache : bool
-            If ``True``, data is cached.
         """
         assert isinstance(geometry, Geometry)
         assert isinstance(reco_space, DiscreteLp)
@@ -224,10 +196,7 @@ class AstraCudaBackProjectorImpl(object):
         self.geometry = geometry
         self.reco_space = reco_space
         self.proj_space = proj_space
-        self.use_cache = bool(use_cache)
-
-        if self.use_cache:
-            self.create_ids()
+        self.create_ids()
 
     def call_backward(self, proj_data, out=None):
         """Run an ASTRA back-projection on the given data using the GPU.
@@ -254,10 +223,6 @@ class AstraCudaBackProjectorImpl(object):
         else:
             out = self.reco_space.element()
 
-        # Create ids if they don't exist
-        if not self.use_cache:
-            self.create_ids()
-
         # Copy data to GPU memory
         if self.geometry.ndim == 2:
             astra.data2d.store(self.sino_id, proj_data.asarray())
@@ -274,10 +239,6 @@ class AstraCudaBackProjectorImpl(object):
         # Fix scaling to weight by pixel/voxel size
         out *= astra_cuda_bp_scaling_factor(
             self.proj_space, self.reco_space, self.geometry)
-
-        # Delete ASTRA ids if we should not cache
-        if not self.use_cache:
-            self.delete_ids()
 
         return out
 
@@ -320,7 +281,7 @@ class AstraCudaBackProjectorImpl(object):
             'backward', ndim, self.vol_id, self.sino_id,
             proj_id=self.proj_id, impl='cuda')
 
-    def delete_ids(self):
+    def __del__(self):
         """Delete ASTRA objects."""
         if self.geometry.ndim == 2:
             adata, aproj = astra.data2d, astra.projector
@@ -339,10 +300,6 @@ class AstraCudaBackProjectorImpl(object):
         if self.proj_id is not None:
             aproj.delete(self.proj_id)
             self.proj_id = None
-
-    def __del__(self):
-        """Implement ``del self``."""
-        self.delete_ids()
 
 
 def astra_cuda_bp_scaling_factor(proj_space, reco_space, geometry):
