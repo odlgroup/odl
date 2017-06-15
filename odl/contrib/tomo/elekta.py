@@ -17,8 +17,9 @@ __all__ = ('elekta_icon_geometry', 'elekta_icon_space',
 
 
 def elekta_icon_geometry(sad=780, sdd=1000,
-                         piercing_point=[390, 0],
-                         angles=np.linspace(1.2, 5.0, 332)):
+                         piercing_point=(390.0, 0.0),
+                         angles=np.linspace(1.2, 5.0, 332),
+                         detector_shape=(780, 720)):
     """Tomographic geometry of the Elekta Icon CBCT system.
 
     See the [whitepaper]_ for specific descriptions of each parameter.
@@ -31,13 +32,16 @@ def elekta_icon_geometry(sad=780, sdd=1000,
         Source to Axis distance.
     sdd : float, optional
         Source to Detector distance.
-    piercing_point : array-like, optional
+    piercing_point : sequence of foat
         Position in the detector (in pixel coordinates) that a beam from the
         source, passing through the axis of rotation at a straight angle,
         hits.
     angles : array-like, optional
         List of angles that the projection images were taken at.
         Given in radians.
+    detector_shape : sequence of int, optional
+        Shape of the detector (in pixels). Useful if a sub-sampled system
+        should be studied.
 
     See Also
     --------
@@ -48,7 +52,6 @@ def elekta_icon_geometry(sad=780, sdd=1000,
     .. [whitepaper] *Design and performance characteristics of a Cone Beam
        CT system for Leksell Gamma Knife Icon*
     """
-
     sad = float(sad)
     assert sad > 0
     sdd = float(sdd)
@@ -56,21 +59,22 @@ def elekta_icon_geometry(sad=780, sdd=1000,
     piercing_point = np.array(piercing_point, dtype=float)
     assert piercing_point.size == 2
     angles = np.array(angles, dtype=float)
+    detector_shape = np.array(detector_shape, dtype=int)
 
     # Constant system parameters
     pixel_size = 0.368
-    det_shape_pixels = np.array([780, 720])
+    det_shape_mm = np.array([287.04, 264.96])
 
     # Create a (possible non-uniform) partition given the angles
     angle_partition = odl.nonuniform_partition(angles)
 
     # Compute the detector partition
-    pp_mm = pixel_size * piercing_point
-    det_min_pt = -pp_mm
-    det_max_pt = det_min_pt + pixel_size * det_shape_pixels
+    piercing_point_mm = pixel_size * piercing_point
+    det_min_pt = -piercing_point_mm
+    det_max_pt = det_min_pt + det_shape_mm
     detector_partition = odl.uniform_partition(min_pt=det_min_pt,
                                                max_pt=det_max_pt,
-                                               shape=det_shape_pixels)
+                                               shape=detector_shape)
 
     # Create the geometry
     geometry = odl.tomo.CircularConeFlatGeometry(
@@ -81,13 +85,15 @@ def elekta_icon_geometry(sad=780, sdd=1000,
     return geometry
 
 
-def elekta_icon_space(**kwargs):
+def elekta_icon_space(shape=(448, 448, 448), **kwargs):
     """Default reconstruction space for the Elekta Icon CBCT.
 
     See the [whitepaper]_ for further information.
 
     Parameters
     ----------
+    shape : sequence of int, optional
+        Shape of the space, in voxels.
     kwargs :
         Keyword arguments to pass to `uniform_discr` to modify the space, e.g.
         use another backend.
@@ -102,7 +108,7 @@ def elekta_icon_space(**kwargs):
     """
     return odl.uniform_discr(min_pt=[-112.0, -112.0, 0.0],
                              max_pt=[112.0, 112.0, 224.0],
-                             shape=(448, 448, 448),
+                             shape=shape,
                              dtype='float32')
 
 
