@@ -23,9 +23,6 @@ from odl.util.testutils import simple_fixture
 
 # --- pytest fixtures --- #
 
-
-use_cache = simple_fixture('use_cache', [False, True])
-
 # Find the valid projectors
 projectors = [skip_if_no_astra_cuda('par2d'),
               skip_if_no_astra_cuda('cone2d'),
@@ -85,7 +82,7 @@ def space_and_geometry(request):
 # --- CUDA projector tests --- #
 
 
-def test_astra_cuda_projector(space_and_geometry, use_cache):
+def test_astra_cuda_projector(space_and_geometry):
     """Test ASTRA CUDA projector."""
 
     # Create reco space and a phantom
@@ -97,16 +94,14 @@ def test_astra_cuda_projector(space_and_geometry, use_cache):
                                                  dtype=reco_space.dtype)
 
     # Forward evaluation
-    projector = AstraCudaProjectorImpl(geom, reco_space, proj_space,
-                                       use_cache=use_cache)
+    projector = AstraCudaProjectorImpl(geom, reco_space, proj_space)
     proj_data = projector.call_forward(phantom)
     assert proj_data in proj_space
     assert proj_data.norm() > 0
     assert np.all(proj_data.asarray() >= 0)
 
     # Backward evaluation
-    back_projector = AstraCudaBackProjectorImpl(geom, reco_space, proj_space,
-                                                use_cache=use_cache)
+    back_projector = AstraCudaBackProjectorImpl(geom, reco_space, proj_space)
     backproj = back_projector.call_backward(proj_data)
     assert backproj in reco_space
     assert backproj.norm() > 0
