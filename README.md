@@ -58,6 +58,7 @@ ODL has been used in a wide range of research and development with several scien
 
 | Description      |  Code  |
 |------------------|--------|
+| *Indirect Image Registration with Large Diffeomorphic Deformations*. [Arxiv](https://arxiv.org/abs/1706.04048) | [GitHub](https://github.com/chongchenmath/odl_lddmm) |
 | *High-level algorithm prototyping: an example extending the TVR-DART algorithm*. DGCI, 2017 | [GitHub](https://github.com/aringh/TVR-DART) |
 | *GPUMCI, a ﬂexible platform for x-ray imaging on the GPU*. Fully3D, 2017 |  |
 | *Spectral CT reconstruction with anti-correlated noise model and joint prior*. Fully3D, 2017 | [GitHub](https://github.com/adler-j/spectral_ct_examples) |
@@ -72,7 +73,6 @@ ODL has been used in a wide range of research and development with several scien
 
 | Description      |  Code  |
 |------------------|--------|
-| Image reconstruction using LDDMM | [GitHub](https://github.com/chongchenmath/odl_lddmm) |
 | Multigrid CT reconstruction | [GitHub](https://github.com/kohr-h/odl-multigrid) |
 | Inverse problems over Lie groups | [GitHub](https://github.com/adler-j/lie_grp_diffeo) |
 | Bindings for the [EMRecon](http://www.uni-muenster.de/Sfbmobil/en/veroeffentlichungen/software/emrecon/index.html) package for PET |  [GitHub](https://github.com/odlgroup/odlemrecon) |
