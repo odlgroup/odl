@@ -251,8 +251,8 @@ def parker_weighting(ray_trafo, q=0.25):
     elif ndim == 3:
         # Find projection of axis on detector
         rot_dir = _rotation_direction_in_detector(ray_trafo.geometry)
-        # If axis is axis oriented, save some memory and time by using
-        # broadcasting
+        # If axis is aligned to a coordinate axis, save some memory and time by
+        # using broadcasting
         if rot_dir[0] == 0:
             dx = rot_dir[1] * ray_trafo.range.meshgrid[2]
         elif rot_dir[1] == 0:
@@ -397,7 +397,8 @@ def fbp_filter_op(ray_trafo, padding=True, filter_type='Ram-Lak',
 
         # Define ramp filter
         def fourier_filter(x):
-            # Save memory in case of axis aligned
+            # If axis is aligned to a coordinate axis, save some memory and
+            # time by using broadcasting
             if not used_axes[0]:
                 abs_freq = np.abs(rot_dir[1] * x[2])
             elif not used_axes[1]:

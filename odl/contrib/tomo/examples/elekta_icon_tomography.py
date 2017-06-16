@@ -1,7 +1,9 @@
 """Example of using the Elekta Icon geometry.
 
 In this example we create an Elekta Icon geometry and use it to create some
-artificial data and reconstruct it using backprojection.
+artificial data and reconstruct it using filtered backprojection.
+
+Note that this is a 3d dataset and requires some memory to run.
 """
 
 import odl
@@ -16,10 +18,9 @@ ray_transform = odl.tomo.RayTransform(space, geometry,
                                       use_cache=False)
 
 # Get default FDK reconstruction
-recon_op = tomo.elekta_icon_reconstruction(ray_transform,
-                                           parker_weighting=True)
+recon_op = tomo.elekta_icon_fbp(ray_transform)
 
-# Create simplified-phantom
+# Create simplified phantom
 phantom = odl.phantom.shepp_logan(space, modified=True)
 
 # Create artificial data
