@@ -859,12 +859,10 @@ class CallbackPrintHardwareUsage(SolverCallback):
 
     """Callback for printing memory and CPU usage.
 
-    To use this callback, the user needs to have the package ``psutil``
-    installed.
+    This callback requires the ``psutil`` package.
     """
 
-    def __init__(self, step=1, print_cpu=True, print_mem=True,
-                 print_swap=True, fmt_cpu='CPU usage (% each core): {}',
+    def __init__(self, step=1, fmt_cpu='CPU usage (% each core): {}',
                  fmt_mem='RAM usage: {}', fmt_swap='SWAP usage: {}'):
         """Initialize a new instance.
 
@@ -872,37 +870,28 @@ class CallbackPrintHardwareUsage(SolverCallback):
         ----------
         step : positive int, optional
             Number of iterations between output. Default: 1
-        print_cpu : bool, optional
-            If ``True`` then the CPU usage is printed. Default: ``True``
-        print_mem : bool, optional
-            If ``True`` then the RAM memory usage is printed. Default: ``True``
-        print_swap : bool, optional
-            If ``True`` then the SWAP memory usage is printed.
-            Default: ``True``
         fmt_cpu : string, optional
             Formating that should be applied. The CPU usage is printed as ::
 
                 print(fmt_cpu.format(cpu))
 
             where ``cpu`` is a vector with the percentage of current CPU usaged
-            for each core.
+            for each core. An empty format string disables printing of CPU
+            usage.
         fmt_mem : string, optional
             Formating that should be applied. The RAM usage is printed as ::
 
                 print(fmt_mem.format(mem))
 
-            where ``mem`` is the current RAM memory usaged.
+            where ``mem`` is the current RAM memory usaged. An empty format
+            string disables printing of RAM memory usage.
         fmt_swap : string, optional
             Formating that should be applied. The SWAP usage is printed as ::
 
                 print(fmt_swap.format(swap))
 
-            where ``swap`` is the current SWAP memory usaged.
-
-        Raises
-        ------
-        ImportError
-            If the package ``psutil`` is not installed.
+            where ``swap`` is the current SWAP memory usaged. An empty format
+            string disables printing of SWAP memory usage.
 
         Examples
         --------
@@ -915,17 +904,13 @@ class CallbackPrintHardwareUsage(SolverCallback):
         >>> callback = CallbackPrintHardwareUsage(step=10)
 
         Only print the RAM memory usage in every step, and with a non-default
-        formating
+        formatting
 
-        >>> callback = CallbackPrintHardwareUsage(step=1, print_cpu=False,
-        ...                                       print_mem=True,
-        ...                                       print_swap=False,
-        ...                                       fmt_mem='RAM {}')
+        >>> callback = CallbackPrintHardwareUsage(step=1, fmt_cpu='',
+        ...                                       fmt_mem='RAM {}',
+        ...                                       fmt_swap='')
         """
         self.step = int(step)
-        self.print_cpu = bool(print_cpu)
-        self.print_mem = bool(print_mem)
-        self.print_swap = bool(print_swap)
         self.fmt_cpu = str(fmt_cpu)
         self.fmt_mem = str(fmt_mem)
         self.fmt_swap = str(fmt_swap)
@@ -935,18 +920,14 @@ class CallbackPrintHardwareUsage(SolverCallback):
     def __call__(self, _):
         """Print the memory and CPU usage"""
 
-        try:
-            import psutil
-        except ImportError as err:
-            raise ImportError('Need the package psutil to use the callback '
-                              'CallbackPrintHardwareUsage. {}'.format(err))
+        import psutil
 
         if self.iter % self.step == 0:
-            if self.print_cpu:
+            if self.fmt_cpu:
                 print(self.fmt_cpu.format(psutil.cpu_percent(percpu=True)))
-            if self.print_mem:
+            if self.fmt_mem:
                 print(self.fmt_mem.format(psutil.virtual_memory()))
-            if self.print_swap:
+            if self.fmt_swap:
                 print(self.fmt_swap.format(psutil.swap_memory()))
 
         self.iter += 1
@@ -957,7 +938,10 @@ class CallbackPrintHardwareUsage(SolverCallback):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        optargs = [('step', self.step, 1)]
+        optargs = [('step', self.step, 1),
+                   ('fmt_cpu', self.fmt_cpu, 'CPU usage (% each core): {}'),
+                   ('fmt_mem', self.fmt_mem, 'RAM usage: {}'),
+                   ('fmt_swap', self.fmt_swap, 'SWAP usage: {}')]
         inner_str = signature_string([], optargs)
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
