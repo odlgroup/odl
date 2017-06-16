@@ -72,7 +72,10 @@ class ParallelBeamGeometry(Geometry):
     @property
     def angles(self):
         """Discrete angles given in this geometry."""
-        return self.motion_grid.coord_vectors[0]
+        if self.motion_partition.ndim == 1:
+            return self.motion_grid.coord_vectors[0]
+        else:
+            return self.motion_grid.points()
 
     def det_refpoint(self, angle):
         """Return the position of the detector ref. point at ``angles``.

@@ -226,13 +226,31 @@ class RayTransformBase(Operator):
                                                  weighting=weighting,
                                                  dtype=dtype)
 
-            if geometry.ndim == 2:
-                axis_labels = ['$\\theta$', '$s$']
-            elif geometry.ndim == 3:
-                axis_labels = ['$\\theta$', '$u$', '$v$']
+            if geometry.motion_partition.ndim == 0:
+                angle_labels = []
+            if geometry.motion_partition.ndim == 1:
+                angle_labels = ['$\\varphi$']
+            elif geometry.motion_partition.ndim == 2:
+                # TODO: check order
+                angle_labels = ['$\\vartheta$', '$\\varphi$']
+            elif geometry.motion_partition.ndim == 3:
+                # TODO: check order
+                angle_labels = ['$\\vartheta$', '$\\varphi$', '$\\psi$']
             else:
-                # TODO Add this when we add nd ray transform
+                angle_labels = None
+
+            if geometry.det_partition.ndim == 1:
+                det_labels = ['$s$']
+            elif geometry.det_partition.ndim == 2:
+                det_labels = ['$u$', '$v$']
+            else:
+                det_labels = None
+
+            if angle_labels is None or det_labels is None:
+                # Fallback for unknown configuration
                 axis_labels = None
+            else:
+                axis_labels = angle_labels + det_labels
 
             proj_interp = kwargs.get('interp', 'nearest')
             proj_space = DiscreteLp(

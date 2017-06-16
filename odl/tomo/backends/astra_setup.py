@@ -354,7 +354,7 @@ def astra_parallel_3d_geom_to_vec(geometry):
        http://www.astra-toolbox.com/docs/geom3d.html#projection-geometries
     """
     angles = geometry.angles
-    vectors = np.zeros((angles.size, 12))
+    vectors = np.zeros((angles.shape[0], 12))
 
     for ang_idx, angle in enumerate(angles):
         mid_pt = geometry.det_params.mid_pt
