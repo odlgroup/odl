@@ -175,7 +175,7 @@ def douglas_rachford_pd(x, f, g, L, tau, sigma, niter,
 
             tmp_domain.lincomb(1, x, -tau / 2, tmp_domain)
         else:
-            tmp_domain.set_zero()
+            tmp_domain.assign(x)
 
         f.proximal(tau)(tmp_domain, out=p1)
         w1.lincomb(2, p1, -1, x)
