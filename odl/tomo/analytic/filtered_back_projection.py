@@ -94,7 +94,8 @@ def _fbp_filter(norm_freq, filter_type, frequency_scaling):
                          ''.format(filter_type))
 
     indicator = (norm_freq <= frequency_scaling)
-    return indicator * filt
+    filt *= indicator
+    return filt
 
 
 def tam_danielson_window(ray_trafo, smoothing_width=0.05, n_half_rot=1):
@@ -250,8 +251,15 @@ def parker_weighting(ray_trafo, q=0.25):
     elif ndim == 3:
         # Find projection of axis on detector
         rot_dir = _rotation_direction_in_detector(ray_trafo.geometry)
-        dx = (rot_dir[0] * ray_trafo.range.meshgrid[1] +
-              rot_dir[1] * ray_trafo.range.meshgrid[2])
+        # If axis is aligned to a coordinate axis, save some memory and time by
+        # using broadcasting
+        if rot_dir[0] == 0:
+            dx = rot_dir[1] * ray_trafo.range.meshgrid[2]
+        elif rot_dir[1] == 0:
+            dx = rot_dir[0] * ray_trafo.range.meshgrid[1]
+        else:
+            dx = (rot_dir[0] * ray_trafo.range.meshgrid[1] +
+                  rot_dir[1] * ray_trafo.range.meshgrid[2])
 
     # Compute parameters
     dx_abs_max = np.max(np.abs(dx))
@@ -271,16 +279,19 @@ def parker_weighting(ray_trafo, q=0.25):
         return q * (2 * delta - 2 * alpha + epsilon)
 
     # Create weighting function
-    beta = angles - min_rot_angle  # rotation angle
-    alpha = np.arctan2(dx, src_radius + det_radius)
+    beta = np.asarray(angles - min_rot_angle,
+                      dtype=ray_trafo.range.dtype)  # rotation angle
+    alpha = np.asarray(np.arctan2(dx, src_radius + det_radius),
+                       dtype=ray_trafo.range.dtype)
 
-    S1 = S(beta / b(alpha) - 0.5)
-    S2 = S((beta - 2 * delta + 2 * alpha - epsilon) / b(alpha) + 0.5)
-    S3 = S((beta - np.pi + 2 * alpha) / b(-alpha) - 0.5)
-    S4 = S((beta - np.pi - 2 * delta - epsilon) / b(-alpha) + 0.5)
+    # Compute sum in place to save memory
+    S_sum = S(beta / b(alpha) - 0.5)
+    S_sum += S((beta - 2 * delta + 2 * alpha - epsilon) / b(alpha) + 0.5)
+    S_sum -= S((beta - np.pi + 2 * alpha) / b(-alpha) - 0.5)
+    S_sum -= S((beta - np.pi - 2 * delta - epsilon) / b(-alpha) + 0.5)
 
     scale = 0.5 * alen / np.pi
-    return ray_trafo.range.element((S1 + S2 - S3 - S4) * scale)
+    return ray_trafo.range.element(S_sum * scale)
 
 
 def fbp_filter_op(ray_trafo, padding=True, filter_type='Ram-Lak',
@@ -386,7 +397,14 @@ def fbp_filter_op(ray_trafo, padding=True, filter_type='Ram-Lak',
 
         # Define ramp filter
         def fourier_filter(x):
-            abs_freq = np.abs(rot_dir[0] * x[1] + rot_dir[1] * x[2])
+            # If axis is aligned to a coordinate axis, save some memory and
+            # time by using broadcasting
+            if not used_axes[0]:
+                abs_freq = np.abs(rot_dir[1] * x[2])
+            elif not used_axes[1]:
+                abs_freq = np.abs(rot_dir[0] * x[1])
+            else:
+                abs_freq = np.abs(rot_dir[0] * x[1] + rot_dir[1] * x[2])
             norm_freq = abs_freq / np.max(abs_freq)
             filt = _fbp_filter(norm_freq, filter_type, frequency_scaling)
             scaling = scale / (2 * alen)

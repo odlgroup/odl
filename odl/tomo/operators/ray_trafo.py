@@ -367,11 +367,15 @@ class RayTransform(RayTransformBase):
 
             elif data_impl == 'cuda':
                 if self._astra_wrapper is None:
-                    self._astra_wrapper = AstraCudaProjectorImpl(
+                    astra_wrapper = AstraCudaProjectorImpl(
                         self.geometry, self.domain.real_space,
-                        self.range.real_space, self.use_cache)
+                        self.range.real_space)
+                    if self.use_cache:
+                        self._astra_wrapper = astra_wrapper
+                else:
+                    astra_wrapper = self._astra_wrapper
 
-                return self._astra_wrapper.call_forward(x_real, out_real)
+                return astra_wrapper.call_forward(x_real, out_real)
             else:
                 # Should never happen
                 raise RuntimeError('bad `impl` {!r}'.format(self.impl))
@@ -467,11 +471,15 @@ class RayBackProjection(RayTransformBase):
                                                 out_real)
             elif data_impl == 'cuda':
                 if self._astra_wrapper is None:
-                    self._astra_wrapper = AstraCudaBackProjectorImpl(
+                    astra_wrapper = AstraCudaBackProjectorImpl(
                         self.geometry, self.range.real_space,
-                        self.domain.real_space, self.use_cache)
+                        self.domain.real_space)
+                    if self.use_cache:
+                        self._astra_wrapper = astra_wrapper
+                else:
+                    astra_wrapper = self._astra_wrapper
 
-                return self._astra_wrapper.call_backward(x_real, out_real)
+                return astra_wrapper.call_backward(x_real, out_real)
             else:
                 # Should never happen
                 raise RuntimeError('bad `impl` {!r}'.format(self.impl))
