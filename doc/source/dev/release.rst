@@ -13,6 +13,7 @@ Since this is not everyday work and may be done under the stress of a (self-impo
 
 
 .. _dev_rel_release_schedule:
+
 1. Agree on a release schedule
 ------------------------------
 This involves the "what" and "when" of the release process and fixes a feature set that is supposed to be included in the new version.
@@ -23,6 +24,7 @@ The steps are:
 
 
 .. _dev_rel_master_ok:
+
 2. Make sure tests succeed and docs are built properly
 ------------------------------------------------------
 When all required PRs are merged, ensure that the latest ``master`` branch is sane. Travis CI checks every PR, but certain things like CUDA cannot be tested there and must therefore undergo tests on a local machine, for at least Python 2.7 and one version of Python 3.
@@ -68,6 +70,7 @@ When all required PRs are merged, ensure that the latest ``master`` branch is sa
 
 
 .. _dev_rel_release_branch:
+
 3. Make a release branch off ``master``
 ---------------------------------------
 When all tests succeed and the docs are fine, start a release branch.
@@ -86,6 +89,7 @@ When all tests succeed and the docs are fine, start a release branch.
 
 
 .. _dev_rel_bump_master:
+
 4. Bump the ``master`` branch to the next development version
 -------------------------------------------------------------
 To ensure a higher version number for installations from the git master branch, the version number must be increased before merging the release branch.
@@ -111,6 +115,7 @@ To ensure a higher version number for installations from the git master branch, 
 
 
 .. _dev_rel_publish:
+
 5. Compile and publish the release
 ----------------------------------
 Back on the release branch with a ``git checkout release-X.Y.Z``, it is now time to prepare the release documents, increment the version number and make a release on GitHub.
@@ -156,6 +161,7 @@ Back on the release branch with a ``git checkout release-X.Y.Z``, it is now time
     After that, rebase the release branch(es) on the new master and continue.
 
 .. _dev_rel_create_pkgs:
+
 6. Create packages for PyPI and Conda
 -------------------------------------
 The packages should be built on the release branch to make sure that the version information is correct.
@@ -206,6 +212,7 @@ The packages should be built on the release branch to make sure that the version
 
 
 .. _dev_rel_test_pkgs:
+
 7. Test installing the local packages and check them
 ----------------------------------------------------
 Before actually uploading packages to "official" servers, first install the local packages and run the unit tests.
@@ -222,7 +229,7 @@ Before actually uploading packages to "official" servers, first install the loca
     pip install <pkg_filename>
     python -c "import odl; odl.test()"
 
-  .. warn::
+  .. warning::
 
     Make sure that you're not in the repository root directory while testing, since this can confuse the ``import odl`` command.
     The installed package should be tested, not the code repository.
@@ -239,6 +246,7 @@ Before actually uploading packages to "official" servers, first install the loca
 
 
 .. _dev_rel_upload_pkgs:
+
 8. Upload the packages to the official locations
 ------------------------------------------------
 Installing the packages works, now it's time to put them out into the wild.
@@ -273,6 +281,7 @@ Installing the packages works, now it's time to put them out into the wild.
   Talk to the maintainers to get them.
 
 .. _dev_rel_merge_release_pr:
+
 9. Merge the release branch
 ---------------------------
 Now the release branch can finally be merged.

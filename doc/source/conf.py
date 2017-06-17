@@ -78,7 +78,6 @@ def skip(app, what, name, obj, skip, options):
     if name in ['_multiply',
                 '_divide',
                 '_lincomb',
-                '_apply',
                 '_call']:
         return False
     return skip
@@ -90,12 +89,11 @@ def setup(app):
 # Autosummary
 autosummary_generate = glob.glob("./*.rst")
 
-# Default role for ambiguous ':any:' targets
-default_role = 'py:class'
-
 # Stops WARNING: toctree contains reference to nonexisting document
+# (not anymore since Sphinx 1.6)
 numpydoc_show_class_members = True
 numpydoc_show_inherited_class_members = True
+numpydoc_class_members_toctree = True
 
 # Set order to mirror source
 autodoc_member_order = 'bysource'
@@ -146,7 +144,7 @@ pygments_style = 'sphinx'
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
 
-# Warn on dead links
+# Warn on dead links and other stuff
 nitpicky = True
 nitpick_ignore = [('py:class', 'future.types.newobject.newobject')]
 
