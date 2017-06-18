@@ -10,7 +10,6 @@
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
-from builtins import int
 
 import numpy as np
 
@@ -85,53 +84,98 @@ def euler_matrix(*angles):
     return mat
 
 
-def axis_rotation(axis, angle, vectors):
+def axis_rotation(axis, angle, vectors, axis_shift=(0, 0, 0)):
     """Rotate a vector or an array of vectors around an axis in 3d.
 
-    The rotation is computed by `Rodriguez' rotation formula`_.
+    The rotation is computed by `Rodrigues' rotation formula`_.
 
     Parameters
     ----------
     axis : `array-like`, shape ``(3,)``
-        The rotation axis, assumed to be a unit vector
+        Rotation axis, assumed to be a unit vector.
     angle : float
-        The rotation angle
+        Angle of the counter-clockwise rotation.
     vectors : `array-like`, shape ``(3,)`` or ``(N, 3)``
-        The vector(s) to be rotated
+        The vector(s) to be rotated.
+    axis_shift : `array_like`, shape ``(3,)``, optional
+        Shift the rotation center by this vector. Note that only shifts
+        perpendicular to ``axis`` matter.
 
     Returns
     -------
     rot_vec : `numpy.ndarray`
-        The rotated vector(s)
+        The rotated vector(s).
 
-    .. _Rodriguez' rotation formula:
+    References
+    ----------
+    .. _Rodrigues' rotation formula:
         https://en.wikipedia.org/wiki/Rodrigues'_rotation_formula
+
+    Examples
+    --------
+    Rotating around the third coordinate axis by and angle of 90 degrees:
+
+    >>> axis = (0, 0, 1)
+    >>> rot1 = axis_rotation(axis, angle=np.pi / 2, vectors=(1, 0, 0))
+    >>> np.allclose(rot1, (0, 1, 0))
+    True
+    >>> rot2 = axis_rotation(axis, angle=np.pi / 2, vectors=(0, 1, 0))
+    >>> np.allclose(rot2, (-1, 0, 0))
+    True
+
+    The rotation can be performed with shifted rotation center. A shift
+    along the axis does not matter:
+
+    >>> rot3 = axis_rotation(axis, angle=np.pi / 2, vectors=(1, 0, 0),
+    ...                      axis_shift=(0, 0, 2))
+    >>> np.allclose(rot3, (0, 1, 0))
+    True
+
+    The distance between the rotation center and the vector to be rotated
+    determines the radius of the rotation circle:
+
+    >>> # Rotation center in the point to be rotated, should do nothing
+    >>> rot4 = axis_rotation(axis, angle=np.pi / 2, vectors=(1, 0, 0),
+    ...                      axis_shift=(1, 0, 0))
+    >>> np.allclose(rot4, (1, 0, 0))
+    True
+    >>> # Distance 2, thus rotates to (0, 2, 0) in the shifted system,
+    >>> # resulting in (-1, 2, 0) from shifting back after rotating
+    >>> rot5 = axis_rotation(axis, angle=np.pi / 2, vectors=(1, 0, 0),
+    ...                      axis_shift=(-1, 0, 0))
+    >>> np.allclose(rot5, (-1, 2, 0))
+    True
+
+    Rotation of multiple vectors can be done in bulk:
+
+    >>> vectors = [[1, 0, 0], [0, 1, 0]]
+    >>> rot = axis_rotation(axis, angle=np.pi / 2, vectors=vectors)
+    >>> np.allclose(rot[0], (0, 1, 0))
+    True
+    >>> np.allclose(rot[1], (-1, 0, 0))
+    True
     """
-    vectors = np.asarray(vectors)
-    if not (vectors.shape == (3,) or (vectors.ndim == 2 and
-                                      vectors.shape[1] == 3)):
-        raise ValueError('`vector` shape must be (3,) or (N, 3), got {}'
-                         ''.format(vectors.shape))
-
-    axis = np.asarray(axis)
-    if axis.shape != (3,):
-        raise ValueError('`axis` shape must be (3,), got {}'
-                         ''.format(axis.shape))
-
-    angle = float(angle)
-
-    if np.isclose(angle / (2 * np.pi), int(angle / (2 * np.pi)), atol=1e-15):
-        return vectors.copy()
+    rot_matrix = axis_rotation_matrix(axis, angle)
+    vectors = np.asarray(vectors, dtype=float)
+    if vectors.shape == (3,):
+        vectors = vectors[None, :]
+    elif vectors.ndim == 2 and vectors.shape[1] == 3:
+        pass
     else:
-        cos_ang = np.cos(angle)
-        sin_ang = np.sin(angle)
-        scal = np.asarray(np.dot(vectors, axis))
-        cross = np.asarray(np.cross(vectors, axis))
-        cross *= sin_ang
+        raise ValueError('`vectors` must have shape (3,) or (N, 3), got array '
+                         'with shape {}'.format(vectors.shape))
 
-        rot_vecs = cos_ang * vectors
-        rot_vecs += (1. - cos_ang) * scal[:, None] * axis[None, :]
-        rot_vecs += cross
+    # Get `axis_shift` part that is perpendicular to `axis`
+    axis_shift = np.asarray(axis_shift, dtype=float)
+    axis = np.asarray(axis, dtype=float)
+    axis_shift = axis_shift - axis.dot(axis_shift) * axis
+
+    # Shift vectors with the negative of the axis shift to move the rotation
+    # center to the origin. Then rotate and shift back.
+    centered_vecs = vectors - axis_shift[None, :]
+    # Need to transpose the vectors to make the axis of length 3 come first
+    rot_vecs = rot_matrix.dot(centered_vecs.T).T
+    return axis_shift[None, :] + rot_vecs
 
 
 def axis_rotation_matrix(axis, angle):
@@ -142,15 +186,17 @@ def axis_rotation_matrix(axis, angle):
     Parameters
     ----------
     axis : `array-like`, shape ``(3,)``
-        The rotation axis, assumed to be a unit vector
+        Rotation axis, assumed to be a unit vector.
     angle : float
-        The rotation angle
+        Angle of the counter-clockwise rotation.
 
     Returns
     -------
     mat : `numpy.ndarray`, shape ``(3, 3)``
-        The axis rotation matrix
+        The axis rotation matrix.
 
+    References
+    ----------
     .. _Rodriguez' rotation formula:
         https://en.wikipedia.org/wiki/Rodrigues'_rotation_formula
     """
