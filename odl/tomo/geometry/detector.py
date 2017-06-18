@@ -266,7 +266,9 @@ class Flat1dDetector(FlatDetector):
         return '{}({})'.format(self.__class__.__name__,
                                indent_rows(inner_str))
 
-    __str__ = __repr__
+    def __str__(self):
+        """Return ``str(self)``."""
+        return repr(self)
 
 
 class Flat2dDetector(FlatDetector):

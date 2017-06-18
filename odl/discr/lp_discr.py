@@ -517,7 +517,9 @@ class DiscreteLp(DiscretizedSpace):
 
             return '{}(\n{}\n)'.format(constructor, indent_rows(inner_str))
 
-    __str__ = __repr__
+    def __str__(self):
+        """Return ``str(self)``."""
+        return repr(self)
 
     @property
     def element_type(self):

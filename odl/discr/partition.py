@@ -870,7 +870,9 @@ class RectPartition(object):
                                        sep=[',\n', ', ', ',\n'])
             return '{}(\n{}\n)'.format(constructor, indent_rows(sig_str))
 
-    __str__ = __repr__
+    def __str__(self):
+        """Return ``str(self)``."""
+        return repr(self)
 
 
 def uniform_partition_fromintv(intv_prod, shape, nodes_on_bdry=False):

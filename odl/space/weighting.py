@@ -644,7 +644,9 @@ class ArrayWeighting(Weighting):
         return '{}(\n{}\n)'.format(self.__class__.__name__,
                                    indent_rows(inner_str))
 
-    __str__ = __repr__
+    def __str__(self):
+        """Return ``str(self)``."""
+        return repr(self)
 
 
 class ConstWeighting(Weighting):
@@ -742,7 +744,9 @@ class ConstWeighting(Weighting):
         return '{}({})'.format(self.__class__.__name__,
                                signature_string(posargs, optargs))
 
-    __str__ = __repr__
+    def __str__(self):
+        """Return ``str(self)``."""
+        return repr(self)
 
 
 class NoWeighting(ConstWeighting):
@@ -785,7 +789,9 @@ class NoWeighting(ConstWeighting):
         return '{}({})'.format(self.__class__.__name__,
                                signature_string(posargs, optargs))
 
-    __str__ = __repr__
+    def __str__(self):
+        """Return ``str(self)``."""
+        return repr(self)
 
 
 class CustomInner(Weighting):
