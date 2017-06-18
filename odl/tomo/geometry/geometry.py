@@ -38,10 +38,14 @@ class Geometry(object):
       parameters,
     * a mapping from the motion and surface parameters to the detector pixel
       direction to the source,
-    * optionally a mapping from the motion parameters to the source position
+    * optionally a mapping from the motion parameters to the source position,
+    * optionally a global translation of the geometry (shift of the origin)
+
+    For details, check `the online docs
+    <https://odlgroup.github.io/odl/guide/geometry_guide.html>`_.
     """
 
-    def __init__(self, ndim, motion_part, detector):
+    def __init__(self, ndim, motion_part, detector, translation=None):
         """Initialize a new instance.
 
         Parameters
@@ -55,10 +59,9 @@ class Geometry(object):
            The detector of this geometry
         """
         ndim, ndim_in = int(ndim), ndim
-        if ndim != ndim_in:
-            raise ValueError('`ndim` must be integer, got {}'.format(ndim_in))
-        if ndim <= 0:
-            raise ValueError('`ndim` must be positive, got {}'.format(ndim_in))
+        if ndim != ndim_in or ndim <= 0:
+            raise ValueError('`ndim` must be a positive integer, got {}'
+                             ''.format(ndim_in))
         if not isinstance(motion_part, RectPartition):
             raise TypeError('`motion_part` must be a `RectPartition`, '
                             'instance, got {!r}'.format(motion_part))
@@ -69,6 +72,16 @@ class Geometry(object):
         self.__ndim = ndim
         self.__motion_partition = motion_part
         self.__detector = detector
+
+        if translation is None:
+            self.__translation = np.zeros(self.ndim)
+        else:
+            translation = np.asarray(translation, dtype=float)
+            if translation.shape != (self.ndim,):
+                raise ValueError('`translation` must have shape ({},), got {}'
+                                 ''.format(self.ndim, translation.shape))
+            self.__translation = translation
+
         self.__implementation_cache = {}
 
     @property
@@ -115,8 +128,7 @@ class Geometry(object):
     def partition(self):
         """Joined parameter set partition for motion and detector.
 
-        A `RectPartition` with the detector partition appended to the
-        motion partition.
+        A `RectPartition` with `det_partition` appended to `motion_partition`.
         """
         return self.motion_partition.append(self.det_partition)
 
@@ -136,6 +148,11 @@ class Geometry(object):
         By convention, the motion grid comes before the detector grid.
         """
         return self.partition.grid
+
+    @property
+    def translation(self):
+        """Shift of the origin of this geometry."""
+        return self.__translation
 
     def det_refpoint(self, mpar):
         """Detector reference point function.
@@ -208,12 +225,12 @@ class Geometry(object):
 
         Returns
         -------
-        pos : `numpy.ndarray` (shape (`ndim`,))
+        pos : `numpy.ndarray`, shape ``(ndim,)``
             Source position, an `ndim`-dimensional vector.
         """
         # Offset relative to the detector reference point
         offset = self.rotation_matrix(mpar).dot(self.detector.surface(dpar))
-        return np.asarray(self.det_refpoint(mpar) + offset)
+        return self.det_refpoint(mpar) + offset
 
     @property
     def implementation_cache(self):
@@ -317,7 +334,7 @@ class AxisOrientedGeometry(object):
 
     @property
     def axis(self):
-        """Normalized axis of rotation, a 3-element vector."""
+        """Normalized axis of rotation, a 3d vector."""
         return self.__axis
 
     def rotation_matrix(self, angle):

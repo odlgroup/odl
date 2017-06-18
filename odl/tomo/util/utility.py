@@ -14,7 +14,8 @@ standard_library.install_aliases()
 import numpy as np
 
 __all__ = ('euler_matrix', 'axis_rotation', 'axis_rotation_matrix',
-           'rotation_matrix_from_to', 'perpendicular_vector')
+           'rotation_matrix_from_to', 'transform_system',
+           'perpendicular_vector')
 
 
 def euler_matrix(*angles):
@@ -219,23 +220,24 @@ def axis_rotation_matrix(axis, angle):
 
 
 def rotation_matrix_from_to(from_vec, to_vec):
-    """Return a matrix that rotates ``from_vec`` to ``to_vec`` in 3d.
+    """Return a matrix that rotates ``from_vec`` to ``to_vec`` in 2d or 3d.
 
-    Since a rotation from one vector to another has (at least) one
-    degree of freedom, this function makes deliberate but still
-    arbitrary choices to fix these free parameters. See Notes for
-    details.
+    Since a rotation from one vector to another in 3 dimensions has
+    (at least) one degree of freedom, this function makes deliberate but
+    still arbitrary choices to fix these free parameters. See Notes for
+    details. For the applied formula in 3d, see `this Wikipedia page
+    about Rodrigues' rotation formula
+    <https://en.wikipedia.org/wiki/Rodrigues'_rotation_formula>`_.
 
     Parameters
     ----------
-    from_vec, to_vec : `array-like`
+    from_vec, to_vec : `array-like`, shape ``(2,)`` or ``(3,)``
         Vectors between which the returned matrix rotates. They should not
-        be very close to zero or collinear. Their shapes must be equal
-        to ``(3,)``.
+        be very close to zero or collinear.
 
     Returns
     -------
-    matrix : `numpy.ndarray`, shape ``(3, 3)``
+    matrix : `numpy.ndarray`, shape ``(2, 2)`` or ``(3, 3)``
         A matrix rotating ``from_vec`` to ``to_vec``. Note that the
         matrix does *not* include scaling, i.e. it is not guaranteed
         that ``matrix.dot(from_vec) == to_vec``.
@@ -352,6 +354,105 @@ def rotation_matrix_from_to(from_vec, to_vec):
 
     else:
         raise RuntimeError('bad ndim')
+
+
+def transform_system(principal_vec, principal_default, other_vecs,
+                     matrix=None):
+    """Transform vectors with either ``matrix`` or based on ``principal_vec``.
+
+    The logic of this function is as follows:
+
+    - If ``matrix`` is not ``None``, transform ``principal_vec`` and
+      all vectors in ``other_vecs`` by ``matrix``, ignoring
+      ``principal_default``.
+    - If ``matrix`` is ``None``, compute the rotation matrix from
+      ``principal_default`` to ``principal_vec``, not including the
+      dilation. Apply that rotation to all vectors in ``other_vecs``.
+
+    **Note:** All vectors must have the same shape and match the shape
+    of ``matrix`` if given.
+
+    Parameters
+    ----------
+    principal_vec : `array-like`, shape ``(ndim,)``
+        Vector that defines the transformation if ``matrix`` is not
+        provided.
+    principal_default : `array-like`, shape ``(ndim,)``
+        Default value for ``principal_vec``. The deviation from this
+        determines the transformation.
+        If ``matrix`` is given, this has no effect.
+    other_vecs : sequence of ``None`` or `array-like`'s with shape ``(ndim,)``
+        The other vectors that should be transformed. ``None`` entries
+        are just appended as-is.
+    matrix : `array-like`, shape ``(ndim, ndim)``, optional
+        Explicit transformation matrix to be applied to the vectors.
+        It is allowed to include a constant scaling but shouldn't have
+        strongly varying directional scaling (bad condition).
+
+    Returns
+    -------
+    transformed_vecs : tuple of `numpy.ndarray`, shape ``(ndim,)``
+        The transformed vectors. The first entry is (the transformed)
+        ``principal_vec``, followed by the transformed ``other_vecs``.
+        Thus the length of the tuple is ``len(other_vecs) + 1``.
+    """
+    transformed_vecs = []
+    principal_vec = np.asarray(principal_vec, dtype=float)
+    ndim = principal_vec.shape[0]
+
+    if matrix is None:
+        # Separate into dilation and rotation. The dilation is only used
+        # for comparison, not in the final matrix.
+        principal_default = np.asarray(principal_default, dtype=float)
+
+        pr_norm = np.linalg.norm(principal_vec)
+        pr_default_norm = np.linalg.norm(principal_default)
+
+        if pr_default_norm == 0.0 and pr_norm != 0.0:
+            raise ValueError('no transformation from {} to {}'
+                             ''.format(principal_default, principal_vec))
+        elif pr_norm == 0.0 and pr_default_norm != 0.0:
+            raise ValueError('transformation from {} to {} is singular'
+                             ''.format(principal_default, principal_vec))
+        elif pr_norm == 0.0 and pr_default_norm == 0.0:
+            dilation = 1.0
+        else:
+            dilation = (np.linalg.norm(principal_vec) /
+                        np.linalg.norm(principal_default))
+
+        # Determine the rotation part
+        if np.allclose(principal_vec, dilation * principal_default):
+            # Dilation only
+            matrix = np.eye(ndim)
+        else:
+            matrix = rotation_matrix_from_to(principal_default, principal_vec)
+
+        # This one goes straight in
+        transformed_vecs.append(principal_vec)
+
+    else:
+        matrix = np.asarray(matrix, dtype=float)
+        if matrix.shape != (ndim, ndim):
+            raise ValueError('matrix shape must be {}, got {}'
+                             ''.format((ndim, ndim), matrix.shape))
+
+        # Check matrix condition
+        svals = np.linalg.svd(matrix, compute_uv=False)
+        condition = np.inf if 0.0 in svals else svals[0] / svals[-1]
+        if condition > 1e6:
+            raise np.linalg.LinAlgError(
+                'matrix is badly conditioned: condition number is {}'
+                ''.format(condition))
+
+        transformed_vecs.append(matrix.dot(principal_vec))
+
+    for vec in other_vecs:
+        if vec is None:
+            transformed_vecs.append(None)
+        else:
+            transformed_vecs.append(matrix.dot(vec))
+
+    return tuple(transformed_vecs)
 
 
 def is_rotation_matrix(mat, show_diff=False):

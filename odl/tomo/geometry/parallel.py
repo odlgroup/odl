@@ -6,7 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Parallel beam geometries in 2 and 3 dimensions."""
+"""Parallel beam geometries in 2 or 3 dimensions."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -19,7 +19,7 @@ import numpy as np
 from odl.discr import uniform_partition
 from odl.tomo.geometry.detector import Flat1dDetector, Flat2dDetector
 from odl.tomo.geometry.geometry import Geometry, AxisOrientedGeometry
-from odl.tomo.util import euler_matrix, rotation_matrix_from_to
+from odl.tomo.util import euler_matrix, transform_system
 from odl.util import signature_string, indent_rows
 
 
@@ -37,9 +37,12 @@ class ParallelBeamGeometry(Geometry):
     infinity, such that a unit vector from a detector point towards
     the source (`det_to_src`) is independent of the location on the
     detector.
+
+    For details, check `the online docs
+    <https://odlgroup.github.io/odl/guide/geometry_guide.html>`_.
     """
 
-    def __init__(self, ndim, apart, detector, det_pos_init):
+    def __init__(self, ndim, apart, detector, det_pos_init, **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -53,8 +56,11 @@ class ParallelBeamGeometry(Geometry):
             The detector to use in this geometry.
         det_pos_init : `array-like`
             Initial position of the detector reference point.
+        kwargs :
+            Additional parameters passed on to the ``__init__`` method
+            of `Geometry`.
         """
-        super().__init__(ndim, apart, detector)
+        super().__init__(ndim, apart, detector, **kwargs)
 
         if self.ndim not in (2, 3):
             raise ValueError('`ndim` must be 2 or 3, got {}'.format(ndim))
@@ -83,6 +89,14 @@ class ParallelBeamGeometry(Geometry):
         The reference point is given by a rotation of the initial
         position by ``angles``.
 
+        For an angle ``phi``, the detector position is given by ::
+
+            det_ref(phi) = translation +
+                           rot_matrix(phi) * (det_pos_init - translation)
+
+        where ``det_pos_init`` is the detector reference point at initial
+        state.
+
         Parameters
         ----------
         angle : float
@@ -93,11 +107,37 @@ class ParallelBeamGeometry(Geometry):
         -------
         point : `numpy.ndarray`, shape (`ndim`,)
             The reference point for the given parameter.
+
+        Examples
+        --------
+        For 2d and default arguments, the detector starts at ``e_y`` and
+        rotates to ``-e_x`` at 90 degrees:
+
+        >>> apart = odl.uniform_partition(0, np.pi, 10)
+        >>> dpart = odl.uniform_partition(-1, 1, 20)
+        >>> geom = Parallel2dGeometry(apart, dpart)
+        >>> geom.det_refpoint(0)
+        array([ 0.,  1.])
+        >>> np.allclose(geom.det_refpoint(np.pi / 2), [-1, 0])
+        True
+
+        In 3d with single rotation axis ``e_z``, we have the same situation,
+        except that the vectors have a third component equal to 0:
+
+        >>> apart = odl.uniform_partition(0, np.pi, 10)
+        >>> dpart = odl.uniform_partition([-1, -1], [1, 1], (20, 20))
+        >>> geom = Parallel3dAxisGeometry(apart, dpart)
+        >>> geom.det_refpoint(0)
+        array([ 0.,  1.,  0.])
+        >>> np.allclose(geom.det_refpoint(np.pi / 2), [-1, 0, 0])
+        True
         """
         if angle not in self.motion_params:
             raise ValueError('`angle` {} not in the valid range {}'
                              ''.format(angle, self.motion_params))
-        return self.rotation_matrix(angle).dot(self.det_pos_init)
+        rot_part = self.rotation_matrix(angle).dot(
+            self.det_pos_init - self.translation)
+        return self.translation + rot_part
 
     def det_to_src(self, angles, dpar, normalized=True):
         """Direction from a detector location to the source.
@@ -154,11 +194,14 @@ class Parallel2dGeometry(ParallelBeamGeometry):
     In the standard configuration, the detector is perpendicular to the
     ray direction, its reference point is initially at ``(0, 1)``, and
     the initial detector axis is ``(1, 0)``.
+
+    For details, check `the online docs
+    <https://odlgroup.github.io/odl/guide/geometry_guide.html>`_.
     """
 
     _default_config = dict(det_pos_init=(0, 1), det_axis_init=(1, 0))
 
-    def __init__(self, apart, dpart, **kwargs):
+    def __init__(self, apart, dpart, det_pos_init=(0, 1), **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -169,15 +212,13 @@ class Parallel2dGeometry(ParallelBeamGeometry):
             Partition of the detector parameter interval.
         det_pos_init : `array-like`, shape ``(2,)``, optional
             Initial position of the detector reference point.
-            Default: ``(0, 1)``.
         det_axis_init : `array-like` (shape ``(2,)``), optional
             Initial axis defining the detector orientation. The default
             depends on ``det_pos_init``, see Notes.
-        extra_rot : `array_like`, shape ``(2, 2)``, optional
-            Rotation matrix that should be applied at the end to the
-            configuration of ``det_pos_init`` and ``det_axis_init``.
-            The rotation is extrinsic, i.e., defined in the "world"
-            coordinate system.
+        translation : `array-like`, shape ``(2,)``, optional
+            Global translation of the geometry. This is added last in any
+            method that computes an absolute vector, e.g., `det_refpoint`,
+            and also shifts the center of rotation.
 
         Notes
         -----
@@ -198,10 +239,17 @@ class Parallel2dGeometry(ParallelBeamGeometry):
         --------
         Initialization with default parameters:
 
-        >>> e_x, e_y = np.eye(2)  # standard unit vectors
         >>> apart = odl.uniform_partition(0, np.pi, 10)
         >>> dpart = odl.uniform_partition(-1, 1, 20)
         >>> geom = Parallel2dGeometry(apart, dpart)
+        >>> np.allclose(geom.det_refpoint(0), (0, 1))
+        True
+        >>> np.allclose(geom.det_point_position(0, 1), (1, 1))
+        True
+
+        Checking the default orientation:
+
+        >>> e_x, e_y = np.eye(2)  # standard unit vectors
         >>> np.allclose(geom.det_pos_init, e_y)
         True
         >>> np.allclose(geom.det_axis_init, e_x)
@@ -229,66 +277,140 @@ class Parallel2dGeometry(ParallelBeamGeometry):
         True
         >>> np.allclose(geom.det_axis_init, e_x)
         True
-
-        A matrix can be given to perform a final rotation. This is most
-        useful to rotate non-standard ``det_axis_init``, or if full
-        control over the rotation is desired:
-
-        >>> rot_matrix = np.array([[1, 0],
-        ...                        [0, -1]])
-        >>> geom = Parallel2dGeometry(apart, dpart, extra_rot=rot_matrix)
-        >>> np.allclose(geom.det_pos_init, -e_y)
-        True
-        >>> np.allclose(geom.det_axis_init, e_x)
-        True
         """
-        default_det_pos = self._default_config['det_pos_init']
-        default_det_axis = self._default_config['det_axis_init']
+        default_det_pos_init = self._default_config['det_pos_init']
+        default_det_axis_init = self._default_config['det_axis_init']
 
-        det_pos_init = np.array(kwargs.pop('det_pos_init', default_det_pos),
-                                dtype=float)
-
+        # Handle the initial coordinate system. We need to assign `None` to
+        # the vectors first in order to signalize to the `transform_system`
+        # utility that they should be transformed from default since they
+        # were not explicitly given.
         det_axis_init = kwargs.pop('det_axis_init', None)
-        extra_rot = np.asarray(kwargs.pop('extra_rot', np.eye(2)), dtype=float)
 
-        if extra_rot.shape != (2, 2):
-            raise ValueError('`extra_rot` must have shape (2, 2), got {}'
-                             ''.format(extra_rot.shape))
-        if abs(np.linalg.det(extra_rot)) < 1e-4:
-            raise ValueError('`extra_rot` is almost singular')
-        self.__extra_rotation = extra_rot
-
-        if kwargs:
-            raise TypeError('got an unexpected keyword argument {!r}'
-                            ''.format(kwargs.popitem()[0]))
-
-        det_pos_init_norm = np.linalg.norm(det_pos_init)
-        if det_pos_init_norm == 0:
-            # No rotation if det_pos_init is zero
-            init_rot = np.eye(2)
+        # Store some stuff for repr
+        if det_pos_init is not None:
+            self._det_pos_init_arg = np.asarray(det_pos_init, dtype=float)
         else:
-            dir_deviation = det_pos_init / det_pos_init_norm - default_det_pos
-            if np.linalg.norm(dir_deviation) < 1e-4:
-                # Almost no rotation, mapped to 0 rotation due to  instability
-                init_rot = np.eye(2)
-            else:
-                init_rot = rotation_matrix_from_to(default_det_pos,
-                                                   det_pos_init)
+            self._det_pos_init_arg = None
 
+        if det_axis_init is not None:
+            self._det_axis_init_arg = np.asarray(det_axis_init, dtype=float)
+        else:
+            self._det_axis_init_arg = None
+
+        # Compute the transformed system and the transition matrix. We
+        # transform only those vectors that were not explicitly given.
+        vecs_to_transform = []
         if det_axis_init is None:
-            det_axis_init = init_rot.dot(default_det_axis)
+            vecs_to_transform.append(default_det_axis_init)
 
-        # Extra rotation of everything
-        det_pos_init = self.extra_rotation.dot(det_pos_init)
-        det_axis_init = self.extra_rotation.dot(det_axis_init)
+        transformed_vecs = transform_system(
+            det_pos_init, default_det_pos_init, vecs_to_transform)
+        transformed_vecs = list(transformed_vecs)
 
+        det_pos_init = transformed_vecs.pop(0)
+        if det_axis_init is None:
+            det_axis_init = transformed_vecs.pop(0)
+        assert transformed_vecs == []
+
+        # Translate the absolute vectors by the given translation
+        translation = np.asarray(kwargs.pop('translation', (0, 0)),
+                                 dtype=float)
+        det_pos_init += translation
+
+        # Initialize stuff. Normalization of the detector axis happens in
+        # the detector class.
         detector = Flat1dDetector(part=dpart, axis=det_axis_init)
         super().__init__(ndim=2, apart=apart, detector=detector,
-                         det_pos_init=det_pos_init)
+                         det_pos_init=det_pos_init, translation=translation)
 
         if self.motion_partition.ndim != 1:
             raise ValueError('`apart` dimension {}, expected 1'
                              ''.format(self.motion_partition.ndim))
+
+        # Make sure there are no leftover kwargs
+        if kwargs:
+            raise TypeError('got unexpected keyword arguments {}'
+                            ''.format(kwargs))
+
+    @classmethod
+    def frommatrix(cls, apart, dpart, init_matrix):
+        """Create an instance of `Parallel2dGeometry` using a matrix.
+
+        This alternative constructor uses a matrix to rotate and
+        translate the default configuration. It is most useful when
+        the transformation to be applied is already given as a matrix.
+
+        Parameters
+        ----------
+        apart : 1-dim. `RectPartition`
+            Partition of the angle interval.
+        dpart : 1-dim. `RectPartition`
+            Partition of the detector parameter interval.
+        init_matrix : `array_like`, shape ``(2, 2)`` or ``(2, 3)``, optional
+            Transformation matrix whose left ``(2, 2)`` block is multiplied
+            with the default ``det_pos_init`` and ``det_axis_init`` to
+            determine the new vectors. If present, the third column acts
+            as a translation after the initial transformation.
+            The resulting ``det_axis_init`` will be normalized.
+
+        Returns
+        -------
+        geometry : `Parallel2dGeometry`
+            The resulting geometry.
+
+        Examples
+        --------
+        Mirror the second unit vector, creating a left-handed system:
+
+        >>> apart = odl.uniform_partition(0, np.pi, 10)
+        >>> dpart = odl.uniform_partition(-1, 1, 20)
+        >>> matrix = np.array([[1, 0],
+        ...                    [0, -1]])
+        >>> geom = Parallel2dGeometry.frommatrix(apart, dpart, matrix)
+        >>> e_x, e_y = np.eye(2)  # standard unit vectors
+        >>> np.allclose(geom.det_pos_init, -e_y)
+        True
+        >>> np.allclose(geom.det_axis_init, e_x)
+        True
+        >>> np.allclose(geom.translation, (0, 0))
+        True
+
+        Adding a translation with a third matrix column:
+
+        >>> matrix = np.array([[1, 0, 1],
+        ...                    [0, -1, 1]])
+        >>> geom = Parallel2dGeometry.frommatrix(apart, dpart, matrix)
+        >>> np.allclose(geom.translation, (1, 1))
+        True
+        >>> np.allclose(geom.det_pos_init, -e_y + (1, 1))
+        True
+        """
+        # Get transformation and translation parts from `init_matrix`
+        init_matrix = np.asarray(init_matrix, dtype=float)
+        if init_matrix.shape not in ((2, 2), (2, 3)):
+            raise ValueError('`matrix` must have shape (2, 2) or (2, 3), '
+                             'got array with shape {}'
+                             ''.format(init_matrix.shape))
+        trafo_matrix = init_matrix[:, :2]
+        translation = init_matrix[:, 2:].squeeze()
+
+        # Transform the default vectors
+        default_det_pos_init = cls._default_config['det_pos_init']
+        default_det_axis_init = cls._default_config['det_axis_init']
+        vecs_to_transform = [default_det_axis_init]
+        transformed_vecs = transform_system(
+            default_det_pos_init, None, vecs_to_transform, matrix=trafo_matrix)
+
+        # Use the standard constructor with these vectors
+        det_pos, det_axis = transformed_vecs
+        if translation.size == 0:
+            kwargs = {}
+        else:
+            kwargs = {'translation': translation}
+
+        return cls(apart, dpart, det_pos,
+                   det_axis_init=det_axis, **kwargs)
 
     @property
     def det_axis_init(self):
@@ -298,15 +420,6 @@ class Parallel2dGeometry(ParallelBeamGeometry):
     def det_axis(self, angle):
         """Return the detector axis at ``angle``."""
         return self.rotation_matrix(angle).dot(self.det_axis_init)
-
-    @property
-    def extra_rotation(self):
-        """Rotation matrix to the initial detector configuration.
-
-        This rotation is applied after the initial definition of detector
-        position and axes.
-        """
-        return self.__extra_rotation
 
     def rotation_matrix(self, angle):
         """Return the rotation matrix for ``angle``.
@@ -340,33 +453,20 @@ class Parallel2dGeometry(ParallelBeamGeometry):
         posargs = [self.motion_partition, self.det_partition]
         optargs = []
 
-        if not np.allclose(self.extra_rotation, np.eye(self.ndim)):
-            inv_rot = np.linalg.inv(self.extra_rotation)
-            orig_det_pos = inv_rot.dot(self.det_pos_init)
-            orig_det_axis = inv_rot.dot(self.det_axis_init)
-        else:
-            orig_det_pos = self.det_pos_init
-            orig_det_axis = self.det_axis_init
+        if not np.allclose(self.det_pos_init - self.translation,
+                           self._default_config['det_pos_init']):
+            optargs.append(
+                ['det_pos_init', self.det_pos_init.tolist(), None])
 
-        # TODO: change array printing from tolist() to new array_str
-        def_init_pos = self._default_config['det_pos_init']
-        if not np.allclose(orig_det_pos, def_init_pos):
-            optargs.append(('det_pos_init', orig_det_pos.tolist(), None))
-            if np.linalg.norm(orig_det_pos) == 0:
-                init_rot = np.eye(self.ndim)
-            else:
-                init_rot = rotation_matrix_from_to(def_init_pos, orig_det_pos)
-            orig_det_axis = init_rot.T.dot(orig_det_axis)
+        if self._det_axis_init_arg is not None:
+            optargs.append(
+                ['det_axis_init', self._det_axis_init_arg.tolist(), None])
 
-        def_init_axis = self._default_config['det_axis_init']
-        if not np.allclose(orig_det_axis, def_init_axis):
-            det_axis_init = orig_det_axis.tolist()
-            optargs.append(('det_axis_init', det_axis_init, None))
+        if not np.array_equal(self.translation, (0, 0)):
+            optargs.append(
+                ['translation', self.translation.tolist(), None])
 
-        if not np.allclose(self.extra_rotation, np.eye(self.ndim)):
-            optargs.append(('extra_rot', self.extra_rotation.tolist(), None))
-
-        sig_str = signature_string(posargs, optargs, sep=[',\n', ',\n', ',\n'])
+        sig_str = signature_string(posargs, optargs, sep=',\n')
         return '{}(\n{}\n)'.format(self.__class__.__name__,
                                    indent_rows(sig_str))
 
@@ -381,31 +481,32 @@ class Parallel3dEulerGeometry(ParallelBeamGeometry):
     In the standard configuration, the detector reference point starts
     at ``(0, 1, 0)``, and the initial detector axes are
     ``[(1, 0, 0), (0, 0, 1)]``.
+
+    For details, check `the online docs
+    <https://odlgroup.github.io/odl/guide/geometry_guide.html>`_.
     """
 
     _default_config = dict(det_pos_init=(0, 1, 0),
                            det_axes_init=((1, 0, 0), (0, 0, 1)))
 
-    def __init__(self, apart, dpart, **kwargs):
+    def __init__(self, apart, dpart, det_pos_init=(0, 1, 0), **kwargs):
         """Initialize a new instance.
 
         Parameters
         ----------
         apart : 2- or 3-dim. `RectPartition`
-            Partition of the angle parameter set
+            Partition of the angle parameter set.
         dpart : 2-dim. `RectPartition`
-            Partition of the detector parameter interval
+            Partition of the detector parameter set.
         det_pos_init : `array-like`, shape ``(3,)``, optional
             Initial position of the detector reference point.
-            Default: ``(0, 1, 0)``
         det_axes_init : 2-tuple of `array-like`'s (shape ``(3,)``), optional
             Initial axes defining the detector orientation. The default
             depends on ``det_pos_init``, see Notes.
-        extra_rot : `array_like`, shape ``(3, 3)``, optional
-            Rotation matrix that should be applied at the end to the
-            configuration of ``det_pos_init`` and ``det_axes_init``.
-            The rotation is extrinsic, i.e., defined in the "world"
-            coordinate system.
+        translation : `array-like`, shape ``(3,)``, optional
+            Global translation of the geometry. This is added last in any
+            method that computes an absolute vector, e.g., `det_refpoint`,
+            and also shifts the center of rotation.
 
         Notes
         -----
@@ -425,11 +526,18 @@ class Parallel3dEulerGeometry(ParallelBeamGeometry):
         --------
         Initialization with default parameters and 2 Euler angles:
 
-        >>> e_x, e_y, e_z = np.eye(3)  # standard unit vectors
         >>> apart = odl.uniform_partition([0, 0], [np.pi, 2 * np.pi],
         ...                               (10, 20))
         >>> dpart = odl.uniform_partition([-1, -1], [1, 1], (20, 20))
         >>> geom = Parallel3dEulerGeometry(apart, dpart)
+        >>> geom.det_refpoint([0, 0])
+        array([ 0.,  1.,  0.])
+        >>> geom.det_point_position([0, 0], [-1, 1])
+        array([-1.,  1.,  1.])
+
+        Checking the default orientation:
+
+        >>> e_x, e_y, e_z = np.eye(3)  # standard unit vectors
         >>> np.allclose(geom.det_pos_init, e_y)
         True
         >>> np.allclose(geom.det_axes_init, (e_x, e_z))
@@ -454,72 +562,146 @@ class Parallel3dEulerGeometry(ParallelBeamGeometry):
         The initial detector axes can also be set explicitly:
 
         >>> geom = Parallel3dEulerGeometry(
-        ...     apart, dpart, det_pos_init=(0, 1, 0),
-        ...     det_axes_init=((-1, 0, 0), (0, 0, -1)))
-        >>> np.allclose(geom.det_pos_init, e_y)
+        ...     apart, dpart, det_pos_init=(-1, 0, 0),
+        ...     det_axes_init=((0, 1, 0), (0, 0, 1)))
+        >>> np.allclose(geom.det_pos_init, -e_x)
         True
-        >>> np.allclose(geom.det_axes_init, (-e_x, -e_z))
-        True
-
-        A matrix can be given to perform a final rotation. This is most
-        useful to rotate non-standard ``det_axes_init``, or if full
-        control over the rotation is desired:
-
-        >>> rot_matrix = np.array([[0, 0, -1],
-        ...                        [0, 1, 0],
-        ...                        [1, 0, 0]])
-        >>> geom = Parallel3dEulerGeometry(apart, dpart, extra_rot=rot_matrix)
-        >>> np.allclose(geom.det_pos_init, e_y)  # default
-        True
-        >>> np.allclose(geom.det_axes_init, (e_z, -e_x))
+        >>> np.allclose(geom.det_axes_init, (e_y, e_z))
         True
         """
-        default_det_pos = self._default_config['det_pos_init']
-        default_det_axes = self._default_config['det_axes_init']
+        default_det_pos_init = self._default_config['det_pos_init']
+        default_det_axes_init = self._default_config['det_axes_init']
 
-        det_pos_init = np.asarray(kwargs.pop('det_pos_init', default_det_pos),
-                                  dtype=float)
+        # Handle the initial coordinate system. We need to assign `None` to
+        # the vectors first in order to signalize to the `transform_system`
+        # utility that they should be transformed from default since they
+        # were not explicitly given.
         det_axes_init = kwargs.pop('det_axes_init', None)
-        extra_rot = np.asarray(kwargs.pop('extra_rot', np.eye(3)))
 
-        if extra_rot.shape != (3, 3):
-            raise ValueError('`extra_rot` must have shape (3, 3), got {}'
-                             ''.format(extra_rot.shape))
-        if abs(np.linalg.det(extra_rot)) < 1e-4:
-            raise ValueError('`extra_rot` is almost singular')
-        self.__extra_rotation = extra_rot
-
-        if kwargs:
-            raise TypeError('got an unexpected keyword argument {!r}'
-                            ''.format(kwargs.popitem()[0]))
-
-        det_pos_init_norm = np.linalg.norm(det_pos_init)
-        if det_pos_init_norm == 0:
-            # No rotation if det_pos_init is zero
-            init_rot = np.eye(3)
+        # Store some stuff for repr
+        if det_axes_init is not None:
+            self._det_axes_init_arg = tuple(
+                np.asarray(a, dtype=float) for a in det_axes_init)
         else:
-            dir_deviation = det_pos_init / det_pos_init_norm - default_det_pos
-            if np.linalg.norm(dir_deviation) < 1e-4:
-                # Almost no rotation, mapped to 0 rotation due to instability
-                init_rot = np.eye(3)
-            else:
-                init_rot = rotation_matrix_from_to(default_det_pos,
-                                                   det_pos_init)
+            self._det_axes_init_arg = None
 
+        # Compute the transformed system and the transition matrix. We
+        # transform only those vectors that were not explicitly given.
+        vecs_to_transform = []
         if det_axes_init is None:
-            det_axes_init = [init_rot.dot(a) for a in default_det_axes]
+            vecs_to_transform.extend(default_det_axes_init)
 
-        # Extra rotation of everything
-        det_pos_init = self.extra_rotation.dot(det_pos_init)
-        det_axes_init = [self.extra_rotation.dot(a) for a in det_axes_init]
+        transformed_vecs = transform_system(
+            det_pos_init, default_det_pos_init, vecs_to_transform)
+        transformed_vecs = list(transformed_vecs)
 
+        det_pos_init = transformed_vecs.pop(0)
+        if det_axes_init is None:
+            det_axes_init = (transformed_vecs.pop(0), transformed_vecs.pop(0))
+        assert transformed_vecs == []
+
+        # Translate the absolute vectors by the given translation
+        translation = np.asarray(kwargs.pop('translation', (0, 0, 0)),
+                                 dtype=float)
+        det_pos_init += translation
+
+        # Initialize stuff. Normalization of the detector axes happens in
+        # the detector class.
         detector = Flat2dDetector(part=dpart, axes=det_axes_init)
         super().__init__(ndim=3, apart=apart, detector=detector,
-                         det_pos_init=det_pos_init)
+                         det_pos_init=det_pos_init, translation=translation)
 
         if self.motion_partition.ndim not in (2, 3):
             raise ValueError('`apart` has dimension {}, expected '
                              '2 or 3'.format(self.motion_partition.ndim))
+
+        # Make sure there are no leftover kwargs
+        if kwargs:
+            raise TypeError('got unexpected keyword arguments {}'
+                            ''.format(kwargs))
+
+    @classmethod
+    def frommatrix(cls, apart, dpart, init_matrix):
+        """Create an instance of `Parallel3dEulerGeometry` using a matrix.
+
+        This alternative constructor uses a matrix to rotate and
+        translate the default configuration. It is most useful when
+        the transformation to be applied is already given as a matrix.
+
+        Parameters
+        ----------
+        apart : 2- or 3-dim. `RectPartition`
+            Partition of the parameter set consisting of 2 or 3
+            Euler angles.
+        dpart : 2-dim. `RectPartition`
+            Partition of the detector parameter set.
+        init_matrix : `array_like`, shape ``(3, 3)`` or ``(3, 4)``, optional
+            Transformation matrix whose left ``(3, 3)`` block is multiplied
+            with the default ``det_pos_init`` and ``det_axes_init`` to
+            determine the new vectors. If present, the fourth column acts
+            as a translation after the initial transformation.
+            The resulting ``det_axes_init`` will be normalized.
+
+        Returns
+        -------
+        geometry : `Parallel3dEulerGeometry`
+            The resulting geometry.
+
+        Examples
+        --------
+        Map unit vectors ``e_x -> e_z`` and ``e_z -> -e_x``, keeping the
+        right-handedness:
+
+        >>> apart = odl.uniform_partition([0, 0], [np.pi, 2 * np.pi],
+        ...                               (10, 20))
+        >>> dpart = odl.uniform_partition([-1, -1], [1, 1], (20, 20))
+        >>> matrix = np.array([[0, 0, -1],
+        ...                    [0, 1, 0],
+        ...                    [1, 0, 0]])
+        >>> geom = Parallel3dEulerGeometry.frommatrix(
+        ...     apart, dpart, init_matrix=matrix)
+        >>> geom.det_pos_init
+        array([ 0.,  1.,  0.])
+        >>> geom.det_axes_init
+        (array([ 0.,  0.,  1.]), array([-1.,  0.,  0.]))
+
+        Adding a translation with a fourth matrix column:
+
+        >>> matrix = np.array([[0, 0, -1, 0],
+        ...                    [0, 1, 0, 1],
+        ...                    [1, 0, 0, 1]])
+        >>> geom = Parallel3dEulerGeometry.frommatrix(apart, dpart, matrix)
+        >>> geom.translation
+        array([ 0.,  1.,  1.])
+        >>> geom.det_pos_init  # (0, 1, 0) + (0, 1, 1)
+        array([ 0.,  2.,  1.])
+        """
+        # Get transformation and translation parts from `init_matrix`
+        init_matrix = np.asarray(init_matrix, dtype=float)
+        if init_matrix.shape not in ((3, 3), (3, 4)):
+            raise ValueError('`matrix` must have shape (3, 3) or (3, 4), '
+                             'got array with shape {}'
+                             ''.format(init_matrix.shape))
+        trafo_matrix = init_matrix[:, :3]
+        translation = init_matrix[:, 3:].squeeze()
+
+        # Transform the default vectors
+        default_det_pos_init = cls._default_config['det_pos_init']
+        default_det_axes_init = cls._default_config['det_axes_init']
+        vecs_to_transform = default_det_axes_init
+        transformed_vecs = transform_system(
+            default_det_pos_init, None, vecs_to_transform, matrix=trafo_matrix)
+
+        # Use the standard constructor with these vectors
+        det_pos, det_axis_0, det_axis_1 = transformed_vecs
+        if translation.size == 0:
+            kwargs = {}
+        else:
+            kwargs = {'translation': translation}
+
+        return cls(apart, dpart, det_pos,
+                   det_axes_init=[det_axis_0, det_axis_1],
+                   **kwargs)
 
     @property
     def det_axes_init(self):
@@ -530,15 +712,6 @@ class Parallel3dEulerGeometry(ParallelBeamGeometry):
         """Return the detector axes tuple at ``angle``."""
         return tuple(self.rotation_matrix(angles).dot(axis)
                      for axis in self.det_axes_init)
-
-    @property
-    def extra_rotation(self):
-        """Rotation matrix to the initial detector configuration.
-
-        This rotation is applied after the initial definition of detector
-        position and axes.
-        """
-        return self.__extra_rotation
 
     def rotation_matrix(self, angles):
         """Matrix defining the intrinsic rotation for ``angles``.
@@ -567,33 +740,21 @@ class Parallel3dEulerGeometry(ParallelBeamGeometry):
         posargs = [self.motion_partition, self.det_partition]
         optargs = []
 
-        if not np.allclose(self.extra_rotation, np.eye(self.ndim)):
-            inv_rot = np.linalg.inv(self.extra_rotation)
-            orig_det_pos = inv_rot.dot(self.det_pos_init)
-            orig_det_axes = [inv_rot.dot(a) for a in self.det_axes_init]
-        else:
-            orig_det_pos = self.det_pos_init
-            orig_det_axes = self.det_axes_init
+        if not np.allclose(self.det_pos_init - self.translation,
+                           self._default_config['det_pos_init']):
+            optargs.append(
+                ['det_pos_init', self.det_pos_init.tolist(), None])
 
-        # TODO: change array printing from tolist() to new array_str
-        def_init_pos = self._default_config['det_pos_init']
-        if not np.allclose(orig_det_pos, def_init_pos):
-            optargs.append(('det_pos_init', orig_det_pos.tolist(), None))
-            if np.linalg.norm(orig_det_pos) == 0:
-                init_rot = np.eye(self.ndim)
-            else:
-                init_rot = rotation_matrix_from_to(def_init_pos, orig_det_pos)
-            orig_det_axes = [init_rot.T.dot(a) for a in orig_det_axes]
+        if self._det_axes_init_arg is not None:
+            optargs.append(
+                ['det_axes_init',
+                 tuple(a.tolist() for a in self._det_axes_init_arg),
+                 None])
 
-        def_init_axes = self._default_config['det_axes_init']
-        if not np.allclose(orig_det_axes, def_init_axes):
-            det_axes_init = tuple(a.tolist() for a in orig_det_axes)
-            optargs.append(('det_axes_init', det_axes_init, None))
+        if not np.array_equal(self.translation, (0, 0, 0)):
+            optargs.append(['translation', self.translation.tolist(), None])
 
-        if not np.allclose(self.extra_rotation, np.eye(self.ndim)):
-            optargs.append(('extra_rot', self.extra_rotation.tolist(), None))
-
-        sig_str = signature_string(posargs, optargs, sep=[',\n', ',\n', ',\n'])
+        sig_str = signature_string(posargs, optargs, sep=',\n')
         return '{}(\n{}\n)'.format(self.__class__.__name__,
                                    indent_rows(sig_str))
 
@@ -609,6 +770,9 @@ class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
     In the standard configuration, the rotation axis is ``(0, 0, 1)``,
     the detector reference point starts at ``(0, 1, 0)``, and the
     initial detector axes are ``[(1, 0, 0), (0, 0, 1)]``.
+
+    For details, check `the online docs
+    <https://odlgroup.github.io/odl/guide/geometry_guide.html>`_.
     """
 
     _default_config = dict(axis=(0, 0, 1),
@@ -632,11 +796,10 @@ class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
         det_axes_init : 2-tuple of `array-like`'s (shape ``(3,)``), optional
             Initial axes defining the detector orientation. The default
             depends on ``axis``, see Notes.
-        extra_rot : `array_like`, shape ``(3, 3)``, optional
-            Rotation matrix that should be applied at the end to the
-            configuration of ``det_pos_init`` and ``det_axes_init``.
-            The rotation is extrinsic, i.e., defined in the "world"
-            coordinate system.
+        translation : `array-like`, shape ``(3,)``, optional
+            Global translation of the geometry. This is added last in any
+            method that computes an absolute vector, e.g., `det_refpoint`,
+            and also shifts the axis of rotation.
 
         Notes
         -----
@@ -658,10 +821,17 @@ class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
         --------
         Initialization with default parameters:
 
-        >>> e_x, e_y, e_z = np.eye(3)  # standard unit vectors
         >>> apart = odl.uniform_partition(0, np.pi, 10)
         >>> dpart = odl.uniform_partition([-1, -1], [1, 1], (20, 20))
         >>> geom = Parallel3dAxisGeometry(apart, dpart)
+        >>> geom.det_refpoint(0)
+        array([ 0.,  1.,  0.])
+        >>> geom.det_point_position(0, [-1, 1])
+        array([-1.,  1.,  1.])
+
+        Checking the default orientation:
+
+        >>> e_x, e_y, e_z = np.eye(3)  # standard unit vectors
         >>> np.allclose(geom.axis, e_z)
         True
         >>> np.allclose(geom.det_pos_init, e_y)
@@ -698,73 +868,154 @@ class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
         True
         >>> np.allclose(geom.det_axes_init, (e_y, e_z))
         True
-
-        A matrix can be given to perform a final rotation. This is most
-        useful to rotate non-standard ``det_axes_init``, or if full
-        control over the rotation is desired:
-
-        >>> rot_matrix = np.array([[1, 0, 0],
-        ...                        [0, 0, -1],
-        ...                        [0, 1, 0]])
-        >>> geom = Parallel3dAxisGeometry(apart, dpart, extra_rot=rot_matrix)
-        >>> np.allclose(geom.axis, -e_y)
-        True
-        >>> np.allclose(geom.det_pos_init, e_z)
-        True
-        >>> np.allclose(geom.det_axes_init, (e_x, -e_y))
-        True
         """
         default_axis = self._default_config['axis']
-        default_det_pos = self._default_config['det_pos_init']
-        default_det_axes = self._default_config['det_axes_init']
+        default_det_pos_init = self._default_config['det_pos_init']
+        default_det_axes_init = self._default_config['det_axes_init']
 
+        # Handle initial coordinate system. We need to assign `None` to
+        # the vectors first since we want to check that `init_matrix`
+        # is not used together with those other parameters.
         det_pos_init = kwargs.pop('det_pos_init', None)
         det_axes_init = kwargs.pop('det_axes_init', None)
-        extra_rot = np.asarray(kwargs.pop('extra_rot', np.eye(3)))
 
-        if extra_rot.shape != (3, 3):
-            raise ValueError('`extra_rot` must have shape (3, 3), got {}'
-                             ''.format(extra_rot.shape))
-        if abs(np.linalg.det(extra_rot)) < 1e-4:
-            raise ValueError('`extra_rot` is almost singular')
-        self.__extra_rotation = extra_rot
-
-        if kwargs:
-            raise TypeError('got an unexpected keyword argument {!r}'
-                            ''.format(kwargs.popitem()[0]))
-
-        axis = np.array(axis, dtype=float)
-        axis_norm = np.linalg.norm(axis)
-        if axis_norm == 0:
-            # Invalid, but go on and let AxisOrientedGeometry.__init__ raise
-            init_rot = np.eye(3)
+        # Store some stuff for repr
+        if det_pos_init is not None:
+            self._det_pos_init_arg = np.asarray(det_pos_init, dtype=float)
         else:
-            dir_deviation = axis / axis_norm - default_axis
-            if np.linalg.norm(dir_deviation) < 1e-4:
-                # Almost no rotation, mapped to 0 rotation due to instability
-                init_rot = np.eye(3)
-            else:
-                init_rot = rotation_matrix_from_to(default_axis, axis)
+            self._det_pos_init_arg = None
 
+        if det_axes_init is not None:
+            self._det_axes_init_arg = tuple(
+                np.asarray(a, dtype=float) for a in det_axes_init)
+        else:
+            self._det_axes_init_arg = None
+
+        # Compute the transformed system and the transition matrix. We
+        # transform only those vectors that were not explicitly given.
+        vecs_to_transform = []
         if det_pos_init is None:
-            det_pos_init = init_rot.dot(default_det_pos)
-
+            vecs_to_transform.append(default_det_pos_init)
         if det_axes_init is None:
-            det_axes_init = [init_rot.dot(a) for a in default_det_axes]
+            vecs_to_transform.extend(default_det_axes_init)
 
-        # Extra rotation of everything
-        det_pos_init = self.extra_rotation.dot(det_pos_init)
-        det_axes_init = [self.extra_rotation.dot(a) for a in det_axes_init]
+        transformed_vecs = transform_system(
+            axis, default_axis, vecs_to_transform)
+        transformed_vecs = list(transformed_vecs)
 
-        axis = self.extra_rotation.dot(axis)
+        axis = transformed_vecs.pop(0)
+        if det_pos_init is None:
+            det_pos_init = transformed_vecs.pop(0)
+        if det_axes_init is None:
+            det_axes_init = (transformed_vecs.pop(0), transformed_vecs.pop(0))
+
+        assert transformed_vecs == []
+
+        # Translate the absolute vectors by the given translation
+        translation = np.asarray(kwargs.pop('translation', (0, 0, 0)),
+                                 dtype=float)
+        det_pos_init += translation
+
+        # Initialize stuff. Normalization of the detector axis happens in
+        # the detector class.
         AxisOrientedGeometry.__init__(self, axis)
-        detector = Flat2dDetector(part=dpart, axes=det_axes_init)
+        detector = Flat2dDetector(dpart, det_axes_init)
         super().__init__(ndim=3, apart=apart, detector=detector,
-                         det_pos_init=det_pos_init)
+                         det_pos_init=det_pos_init, translation=translation)
 
         if self.motion_partition.ndim != 1:
             raise ValueError('`apart` has dimension {}, expected 1'
                              ''.format(self.motion_partition.ndim))
+
+        # Make sure there are no leftover kwargs
+        if kwargs:
+            raise TypeError('got unexpected keyword arguments {}'
+                            ''.format(kwargs))
+
+    @classmethod
+    def frommatrix(cls, apart, dpart, init_matrix):
+        """Create an instance of `Parallel3dAxisGeometry` using a matrix.
+
+        This alternative constructor uses a matrix to rotate and
+        translate the default configuration. It is most useful when
+        the transformation to be applied is already given as a matrix.
+
+        Parameters
+        ----------
+        apart : 1-dim. `RectPartition`
+            Partition of the parameter interval.
+        dpart : 2-dim. `RectPartition`
+            Partition of the detector parameter set.
+        init_matrix : `array_like`, shape ``(3, 3)`` or ``(3, 4)``, optional
+            Transformation matrix whose left ``(3, 3)`` block is multiplied
+            with the default ``det_pos_init`` and ``det_axes_init`` to
+            determine the new vectors. If present, the fourth column acts
+            as a translation after the initial transformation.
+            The resulting ``det_axes_init`` will be normalized.
+
+        Returns
+        -------
+        geometry : `Parallel3dAxisGeometry`
+            The resulting geometry.
+
+        Examples
+        --------
+        Map unit vectors ``e_y -> e_z`` and ``e_z -> -e_y``, keeping the
+        right-handedness:
+
+        >>> apart = odl.uniform_partition(0, np.pi, 10)
+        >>> dpart = odl.uniform_partition([-1, -1], [1, 1], (20, 20))
+        >>> matrix = np.array([[1, 0, 0],
+        ...                    [0, 0, -1],
+        ...                    [0, 1, 0]])
+        >>> geom = Parallel3dAxisGeometry.frommatrix(
+        ...     apart, dpart, init_matrix=matrix)
+        >>> geom.axis
+        array([ 0., -1.,  0.])
+        >>> geom.det_pos_init
+        array([ 0.,  0.,  1.])
+        >>> geom.det_axes_init
+        (array([ 1.,  0.,  0.]), array([ 0., -1.,  0.]))
+
+        Adding a translation with a fourth matrix column:
+
+        >>> matrix = np.array([[0, 0, -1, 0],
+        ...                    [0, 1, 0, 1],
+        ...                    [1, 0, 0, 1]])
+        >>> geom = Parallel3dAxisGeometry.frommatrix(apart, dpart, matrix)
+        >>> geom.translation
+        array([ 0.,  1.,  1.])
+        >>> geom.det_pos_init  # (0, 1, 0) + (0, 1, 1)
+        array([ 0.,  2.,  1.])
+        """
+        # Get transformation and translation parts from `init_matrix`
+        init_matrix = np.asarray(init_matrix, dtype=float)
+        if init_matrix.shape not in ((3, 3), (3, 4)):
+            raise ValueError('`matrix` must have shape (3, 3) or (3, 4), '
+                             'got array with shape {}'
+                             ''.format(init_matrix.shape))
+        trafo_matrix = init_matrix[:, :3]
+        translation = init_matrix[:, 3:].squeeze()
+
+        # Transform the default vectors
+        default_axis = cls._default_config['axis']
+        default_det_pos_init = cls._default_config['det_pos_init']
+        default_det_axes_init = cls._default_config['det_axes_init']
+        vecs_to_transform = (default_det_pos_init,) + default_det_axes_init
+        transformed_vecs = transform_system(
+            default_axis, None, vecs_to_transform, matrix=trafo_matrix)
+
+        # Use the standard constructor with these vectors
+        axis, det_pos, det_axis_0, det_axis_1 = transformed_vecs
+        if translation.size == 0:
+            kwargs = {}
+        else:
+            kwargs = {'translation': translation}
+
+        return cls(apart, dpart, axis,
+                   det_pos_init=det_pos,
+                   det_axes_init=[det_axis_0, det_axis_1],
+                   **kwargs)
 
     @property
     def det_axes_init(self):
@@ -776,54 +1027,34 @@ class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
         return tuple(self.rotation_matrix(angles).dot(axis)
                      for axis in self.det_axes_init)
 
-    @property
-    def extra_rotation(self):
-        """Rotation matrix to the initial detector configuration.
-
-        This rotation is applied after the initial definition of axis,
-        detector position and detector axes.
-        """
-        return self.__extra_rotation
-
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = [self.motion_partition, self.det_partition]
         optargs = []
 
-        if not np.allclose(self.extra_rotation, np.eye(self.ndim)):
-            inv_rot = np.linalg.inv(self.extra_rotation)
-            orig_axis = inv_rot.dot(self.axis)
-            orig_det_pos = inv_rot.dot(self.det_pos_init)
-            orig_det_axes = [inv_rot.dot(a) for a in self.det_axes_init]
-        else:
-            orig_axis = self.axis
-            orig_det_pos = self.det_pos_init
-            orig_det_axes = self.det_axes_init
+        if not np.allclose(self.axis, self._default_config['axis']):
+            optargs.append(['axis', self.axis.tolist(), None])
 
-        default_axis = self._default_config['axis']
-        if not np.allclose(orig_axis, default_axis):
-            optargs.append(('axis', orig_axis.tolist(), None))
-            init_rot = rotation_matrix_from_to(default_axis, orig_axis)
-            orig_det_pos = init_rot.T.dot(orig_det_pos)
-            orig_det_axes = [init_rot.T.dot(a) for a in orig_det_axes]
+        if self._det_pos_init_arg is not None:
+            optargs.append(['det_pos_init',
+                            self._det_pos_init_arg.tolist(),
+                            None])
 
-        def_init_pos = self._default_config['det_pos_init']
-        if not np.allclose(orig_det_pos, def_init_pos):
-            optargs.append(('det_pos_init', orig_det_pos.tolist(), None))
+        if self._det_axes_init_arg is not None:
+            optargs.append(
+                ['det_axes_init',
+                 tuple(a.tolist() for a in self._det_axes_init_arg),
+                 None])
 
-        def_init_axes = self._default_config['det_axes_init']
-        if not np.allclose(orig_det_axes, def_init_axes):
-            det_axes_init = tuple(a.tolist() for a in orig_det_axes)
-            optargs.append(('det_axes_init', det_axes_init, None))
+        if not np.array_equal(self.translation, (0, 0, 0)):
+            optargs.append(['translation', self.translation.tolist(), None])
 
-        if not np.allclose(self.extra_rotation, np.eye(self.ndim)):
-            optargs.append(('extra_rot', self.extra_rotation.tolist(), None))
-
-        sig_str = signature_string(posargs, optargs, sep=[',\n', ',\n', ',\n'])
+        sig_str = signature_string(posargs, optargs, sep=',\n')
         return '{}(\n{}\n)'.format(self.__class__.__name__,
                                    indent_rows(sig_str))
 
-    # Fix for bug in ABC thinking this is abstract
+    # Manually override the abstract method in `Geometry` since it's found
+    # first
     rotation_matrix = AxisOrientedGeometry.rotation_matrix
 
 
