@@ -35,17 +35,6 @@ axis = simple_fixture('axis', det_pos_init_3d_params)
 shift = simple_fixture('shift', [0, 1])
 
 
-# --- helpers --- #
-
-
-def rotate(vector, axis, angle):
-    """Rotate ``vector`` about ``axis`` by ``angle`` (right-handed)."""
-    axis = np.asarray(axis) / np.linalg.norm(axis)
-    return (np.cos(angle) * vector +
-            np.sin(angle) * np.cross(axis, vector) +
-            (1 - np.cos(angle)) * np.dot(axis, vector) * axis)
-
-
 # --- tests --- #
 
 
@@ -90,12 +79,6 @@ def test_parallel_2d_props(shift):
     # Invalid parameter
     with pytest.raises(ValueError):
         geom.rotation_matrix(2 * full_angle)
-
-    # Singular rotation matrix
-    rot_matrix = [[1, 1],
-                  [1, 1]]
-    with pytest.raises(np.linalg.LinAlgError):
-        odl.tomo.Parallel2dGeometry(apart, dpart, init_matrix=rot_matrix)
 
     # check str and repr work without crashing and return a non-empty string
     assert str(geom) > ''
@@ -158,8 +141,8 @@ def test_parallel_2d_slanted_detector():
                             [-1 - sqrt_1_2, sqrt_1_2])
 
 
-def test_parallel_2d_init_matrix():
-    """Test the ``init_matrix`` parameter in 2d parallel geometry."""
+def test_parallel_2d_frommatrix():
+    """Test the ``frommatrix`` constructor in 2d parallel geometry."""
     full_angle = np.pi
     apart = odl.uniform_partition(0, full_angle, 10)
     dpart = odl.uniform_partition(0, 1, 10)
@@ -169,7 +152,7 @@ def test_parallel_2d_init_matrix():
 
     # Start at [0, 1] with extra rotation by 135 degrees, making 225 degrees
     # in total for the initial position (at the bisector in the 3rd quardant)
-    geom = odl.tomo.Parallel2dGeometry(apart, dpart, init_matrix=rot_matrix)
+    geom = odl.tomo.Parallel2dGeometry.frommatrix(apart, dpart, rot_matrix)
 
     init_pos = np.array([-1, -1], dtype=float)
     init_pos /= np.linalg.norm(init_pos)
@@ -178,6 +161,23 @@ def test_parallel_2d_init_matrix():
     norm_axis = np.array([-1, 1], dtype=float)
     norm_axis /= np.linalg.norm(norm_axis)
     assert all_almost_equal(geom.det_axis_init, norm_axis)
+
+    # With translation (1, 1)
+    matrix = np.hstack([rot_matrix, [[1], [1]]])
+    geom = odl.tomo.Parallel2dGeometry.frommatrix(apart, dpart, matrix)
+
+    assert all_almost_equal(geom.translation, [1, 1])
+
+    init_pos_from_center = np.array([-1, -1], dtype=float)
+    init_pos_from_center /= np.linalg.norm(init_pos_from_center)
+    assert all_almost_equal(geom.det_pos_init,
+                            geom.translation + init_pos_from_center)
+
+    # Singular matrix, should raise
+    sing_mat = [[1, 1],
+                [1, 1]]
+    with pytest.raises(np.linalg.LinAlgError):
+        geom = odl.tomo.Parallel2dGeometry.frommatrix(apart, dpart, sing_mat)
 
 
 def test_parallel_3d_props(shift):
@@ -321,8 +321,8 @@ def test_parallel_3d_slanted_detector():
     assert repr(geom) > ''
 
 
-def test_parallel_3d_init_matrix():
-    """Test the ``init_matrix`` parameter in 3d parallel geometry."""
+def test_parallel_3d_frommatrix():
+    """Test the ``frommatrix`` constructor in 3d parallel geometry."""
     full_angle = np.pi
     apart = odl.uniform_partition(0, full_angle, 10)
     dpart = odl.uniform_partition([0, 0], [1, 1], (10, 10))
@@ -333,9 +333,7 @@ def test_parallel_3d_init_matrix():
     rot_matrix = np.array([[0, 0, -1],
                            [1, 0, 0],
                            [0, -1, 0]], dtype=float)
-
-    geom = odl.tomo.Parallel3dAxisGeometry(apart, dpart,
-                                           init_matrix=rot_matrix)
+    geom = odl.tomo.Parallel3dAxisGeometry.frommatrix(apart, dpart, rot_matrix)
 
     # Axis was [0, 0, 1], gets mapped to [-1, 0, 0]
     assert all_almost_equal(geom.axis, [-1, 0, 0])
@@ -347,9 +345,12 @@ def test_parallel_3d_init_matrix():
     # [0, 1, 0] and [-1, 0, 0]
     assert all_almost_equal(geom.det_axes_init, ([0, 1, 0], [-1, 0, 0]))
 
-    # check str and repr work without crashing and return a non-empty string
-    assert str(geom) > ''
-    assert repr(geom) > ''
+    # With translation (1, 1, 1)
+    matrix = np.hstack([rot_matrix, [[1], [1], [1]]])
+    geom = odl.tomo.Parallel3dAxisGeometry.frommatrix(apart, dpart, matrix)
+
+    assert all_almost_equal(geom.translation, (1, 1, 1))
+    assert all_almost_equal(geom.det_pos_init, geom.translation + [0, 0, -1])
 
 
 def test_parallel_beam_geometry_helper():
@@ -465,16 +466,54 @@ def test_fanflat_props(shift):
     with pytest.raises(ValueError):
         odl.tomo.FanFlatGeometry(apart, dpart, src_radius=0, det_radius=0)
 
-    # Singular rotation matrix
-    rot_matrix = [[1, 1],
-                  [1, 1]]
-    with pytest.raises(np.linalg.LinAlgError):
-        odl.tomo.FanFlatGeometry(apart, dpart, src_rad, det_rad,
-                                 init_matrix=rot_matrix)
-
     # check str and repr work without crashing and return a non-empty string
     assert str(geom) > ''
     assert repr(geom) > ''
+
+
+def test_fanflat_frommatrix():
+    """Test the ``frommatrix`` constructor in 2d fan beam geometry."""
+    full_angle = np.pi
+    apart = odl.uniform_partition(0, full_angle, 10)
+    dpart = odl.uniform_partition(0, 1, 10)
+    src_rad = 10
+    det_rad = 5
+    angle = 3 * np.pi / 4
+    rot_matrix = np.array([[np.cos(angle), -np.sin(angle)],
+                          [np.sin(angle), np.cos(angle)]])
+
+    # Start at [0, 1] with extra rotation by 135 degrees, making 225 degrees
+    # in total for the initial position (at the bisector in the 3rd quardant)
+    geom = odl.tomo.FanFlatGeometry.frommatrix(apart, dpart, src_rad, det_rad,
+                                               rot_matrix)
+
+    init_src_to_det = np.array([-1, -1], dtype=float)
+    init_src_to_det /= np.linalg.norm(init_src_to_det)
+    assert all_almost_equal(geom.src_to_det_init, init_src_to_det)
+
+    norm_axis = np.array([-1, 1], dtype=float)
+    norm_axis /= np.linalg.norm(norm_axis)
+    assert all_almost_equal(geom.det_axis_init, norm_axis)
+
+    # With translation (1, 1)
+    matrix = np.hstack([rot_matrix, [[1], [1]]])
+    geom = odl.tomo.FanFlatGeometry.frommatrix(apart, dpart, src_rad, det_rad,
+                                               matrix)
+
+    assert all_almost_equal(geom.translation, [1, 1])
+
+    init_pos_from_center = np.array([-1, -1], dtype=float)
+    init_pos_from_center /= np.linalg.norm(init_pos_from_center)
+    init_pos_from_center *= det_rad
+    assert all_almost_equal(geom.det_refpoint(0),
+                            geom.translation + init_pos_from_center)
+
+    # Singular matrix, should raise
+    sing_mat = [[1, 1],
+                [1, 1]]
+    with pytest.raises(np.linalg.LinAlgError):
+        geom = odl.tomo.FanFlatGeometry.frommatrix(apart, dpart, src_rad,
+                                                   det_rad, sing_mat)
 
 
 def test_circular_cone_flat_props(shift):
