@@ -3,9 +3,9 @@
 In this example, a 256x256x256 image is reconstructed using the Conjugate
 Gradient Least Squares method on the GPU.
 
-In general, pure ASTRA is faster than ODL since it does not need to perform any
-copies and all arithmetic is performed on the GPU. Despite this, ODL is not
-much slower. In this example, the overhead is about x3, depending on the
+In general, pure ASTRA is faster than ODL since it does not need to perform
+any copies and all arithmetic is performed on the GPU. Despite this, ODL is
+not much slower. In this example, the overhead is about 40 %, depending on the
 hardware used.
 """
 
@@ -33,7 +33,7 @@ geometry = odl.tomo.CircularConeFlatGeometry(apart, dpart,
                                              src_radius=500, det_radius=500)
 
 
-data = odl.phantom.shepp_logan(reco_space, modified=True).asarray()
+phantom = odl.phantom.shepp_logan(reco_space, modified=True).asarray()
 
 # --- ASTRA ---
 
@@ -54,7 +54,7 @@ proj_cfg['options'] = {}
 proj_id = astra.projector3d.create(proj_cfg)
 
 # Create sinogram
-sinogram_id, sinogram = astra.create_sino3d_gpu(data,
+sinogram_id, sinogram = astra.create_sino3d_gpu(phantom,
                                                 astra_proj_geom,
                                                 astra_vol_geom)
 
@@ -89,18 +89,18 @@ astra.projector3d.delete(proj_id)
 ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl='astra_cuda')
 
 # Create sinogram
-rhs = ray_trafo(data)
+data = ray_trafo(phantom)
 
 # Solve with CGLS (aka CGN)
 x = reco_space.zero()
 with odl.util.Timer('ODL run'):
-    odl.solvers.conjugate_gradient_normal(ray_trafo, x, rhs, niter=niter)
+    odl.solvers.conjugate_gradient_normal(ray_trafo, x, data, niter=niter)
 
 coords = (slice(None), slice(None), 128)
 
 # Display results for comparison
-plt.figure('data')
-plt.imshow(data.T[coords], origin='lower', cmap='bone')
+plt.figure('Phantom')
+plt.imshow(phantom.T[coords], origin='lower', cmap='bone')
 plt.figure('ASTRA reconstruction')
 plt.imshow(rec.T[coords], origin='lower', cmap='bone')
 plt.figure('ODL reconstruction')
