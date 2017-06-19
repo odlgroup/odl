@@ -97,10 +97,7 @@ def astra_cpu_forward_projector(vol_data, geometry, proj_space, out=None):
                               impl='cpu')
 
     # Create ASTRA data structures
-    # Since ASTRA uses (rows, cols) == (-y, x) as coordinate system, we need
-    # to rotate by 90 degrees counter-clockwise to match the axes (x, y) as
-    # used in `astra_volume_geometry`.
-    vol_data_arr = np.rot90(np.asarray(vol_data), 1)
+    vol_data_arr = np.asarray(vol_data)
     vol_id = astra_data(vol_geom, datatype='volume', data=vol_data_arr,
                         allow_copy=True)
 
@@ -195,8 +192,8 @@ def astra_cpu_back_projector(proj_data, geometry, reco_space, out=None):
 
     # Convert out to correct dtype and order if needed.
     # Since we transpose, we need to use F-contiguousness.
-    with writable_array(out, dtype='float32', order='F') as out_arr:
-        vol_id = astra_data(vol_geom, datatype='volume', data=out_arr.T,
+    with writable_array(out, dtype='float32', order='C') as out_arr:
+        vol_id = astra_data(vol_geom, datatype='volume', data=out_arr,
                             ndim=reco_space.ndim)
         # Create algorithm
         algo_id = astra_algorithm('backward', ndim, vol_id, sino_id, proj_id,
@@ -204,13 +201,6 @@ def astra_cpu_back_projector(proj_data, geometry, reco_space, out=None):
 
         # Run algorithm
         astra.algorithm.run(algo_id)
-
-        # If we hadn't transposed `out_arr` we would have to rotate
-        # clockwise by 90 degrees to invert the transition from (rows, cols)
-        # to (x, y). Since transposition happens automatically when exiting
-        # this context, we need to flip vertically, because
-        # rot90(a, -1) == fliplr(a.T)
-        out_arr[:] = np.fliplr(out_arr)
 
     # Weight the adjoint by appropriate weights
     scaling_factor = float(proj_data.space.weighting.const)

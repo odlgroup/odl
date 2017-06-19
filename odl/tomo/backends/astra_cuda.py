@@ -87,10 +87,7 @@ class AstraCudaProjectorImpl(object):
 
         # Copy data to GPU memory
         if self.geometry.ndim == 2:
-            # Rotate 90 degrees counter-clockwise to transfer from coordinate
-            # system (x, y) to (rows, cols)
-            # TODO: rotate the geometry instead
-            astra.data2d.store(self.vol_id, np.rot90(vol_data.asarray(), 1))
+            astra.data2d.store(self.vol_id, vol_data.asarray())
         elif self.geometry.ndim == 3:
             astra.data3d.store(self.vol_id, vol_data.asarray())
         else:
@@ -127,8 +124,7 @@ class AstraCudaProjectorImpl(object):
 
         if proj_ndim == 2:
             astra_proj_shape = proj_shape
-            astra_vol_shape = (self.reco_space.shape[1],
-                               self.reco_space.shape[0])
+            astra_vol_shape = self.reco_space.shape
         elif proj_ndim == 3:
             astra_proj_shape = (proj_shape[2], proj_shape[0], proj_shape[1])
             astra_vol_shape = self.reco_space.shape
@@ -247,12 +243,7 @@ class AstraCudaBackProjectorImpl(object):
         astra.algorithm.run(self.algo_id)
 
         # Copy result to CPU memory
-        if self.geometry.ndim == 2:
-            # Rotate 90 degrees clockwise from coordinate system
-            # (rows, cols) to (x, y)
-            out[:] = np.rot90(self.out_array, -1)
-        elif self.geometry.ndim == 3:
-            out[:] = self.out_array
+        out[:] = self.out_array
 
         # Fix scaling to weight by pixel/voxel size
         out *= astra_cuda_bp_scaling_factor(
@@ -273,8 +264,7 @@ class AstraCudaBackProjectorImpl(object):
 
         if proj_ndim == 2:
             astra_proj_shape = proj_shape
-            astra_vol_shape = (self.reco_space.shape[1],
-                               self.reco_space.shape[0])
+            astra_vol_shape = self.reco_space.shape
         elif proj_ndim == 3:
             astra_proj_shape = (proj_shape[2], proj_shape[0], proj_shape[1])
             astra_vol_shape = self.reco_space.shape

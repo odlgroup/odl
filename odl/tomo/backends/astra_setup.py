@@ -53,6 +53,7 @@ import numpy as np
 from odl.discr import DiscreteLp, DiscreteLpElement
 from odl.tomo.geometry import (
     Geometry, DivergentBeamGeometry, ParallelBeamGeometry, FlatDetector)
+from odl.tomo.util.utility import euler_matrix
 from odl.util.utility import pkg_supports
 
 
@@ -165,17 +166,21 @@ def astra_volume_geometry(discr_reco):
                 'non-isotropic pixels in 2d volumes not supported by ASTRA '
                 'v{}'.format(ASTRA_VERSION))
         # Given a 2D array of shape (x, y), a volume geometry is created as:
-        #    astra.create_vol_geom(y, x, x_min, x_max, y_min, y_max)
+        #    astra.create_vol_geom(x, y, y_min, y_max, x_min, x_max)
         # yielding a dictionary:
-        #   {'GridRowCount': y,
-        #    'GridColCount': x,
-        #    'WindowMinX': x_min,
-        #    'WindowMaxX': x_max,
-        #    'WindowMinY': y_min,
-        #    'WindowMaxY': y_max}
-        vol_geom = astra.create_vol_geom(vol_shp[1], vol_shp[0],
-                                         vol_min[0], vol_max[0],
-                                         vol_min[1], vol_max[1])
+        #   {'GridRowCount': x,
+        #    'GridColCount': y,
+        #    'WindowMinX': y_min,
+        #    'WindowMaxX': y_max,
+        #    'WindowMinY': x_min,
+        #    'WindowMaxY': x_max}
+        #
+        # NOTE: this setting is flipped with respect to x and y. We do this
+        # as part of a global rotation of the geometry by -90 degrees, which
+        # avoids rotating the data.
+        vol_geom = astra.create_vol_geom(vol_shp[0], vol_shp[1],
+                                         vol_min[1], vol_max[1],
+                                         vol_min[0], vol_max[0])
     elif discr_reco.ndim == 3:
         # Not supported in all versions of ASTRA
         if (not discr_reco.partition.has_isotropic_cells and
@@ -300,19 +305,24 @@ def astra_conebeam_2d_geom_to_vec(geometry):
     .. _ASTRA projection geometry documentation:
        http://www.astra-toolbox.com/docs/geom3d.html#projection-geometries
     """
+    # Instead of rotating the data by 90 degrees counter-clockwise,
+    # we subtract pi/2 from the geometry angles, thereby rotating the
+    # geometry by 90 degrees clockwise
+    rot_minus_90 = euler_matrix(-np.pi / 2)
     angles = geometry.angles
     vectors = np.zeros((angles.size, 6))
 
     for ang_idx, angle in enumerate(angles):
         # Source position
-        vectors[ang_idx, 0:2] = geometry.src_position(angle)
+        vectors[ang_idx, 0:2] = rot_minus_90.dot(geometry.src_position(angle))
 
         # Center of detector
         mid_pt = geometry.det_params.mid_pt
-        vectors[ang_idx, 2:4] = geometry.det_point_position(angle, mid_pt)
+        vectors[ang_idx, 2:4] = rot_minus_90.dot(
+            geometry.det_point_position(angle, mid_pt))
 
         # Vector from detector pixel 0 to 1
-        det_axis = geometry.det_axis(angle)
+        det_axis = rot_minus_90.dot(geometry.det_axis(angle))
         px_size = geometry.det_partition.cell_sides[0]
         vectors[ang_idx, 4:6] = det_axis * px_size
 
@@ -413,7 +423,10 @@ def astra_projection_geometry(geometry):
         # TODO: change to parallel_vec when available
         det_width = geometry.det_partition.cell_sides[0]
         det_count = geometry.detector.size
-        angles = geometry.angles
+        # Instead of rotating the data by 90 degrees counter-clockwise,
+        # we subtract pi/2 from the geometry angles, thereby rotating the
+        # geometry by 90 degrees clockwise
+        angles = geometry.angles - np.pi / 2
         proj_geom = astra.create_proj_geom('parallel', det_width, det_count,
                                            angles)
 
