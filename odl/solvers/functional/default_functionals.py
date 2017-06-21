@@ -1003,7 +1003,7 @@ class KullbackLeibler(Functional):
 
     Notes
     -----
-    The functional :math:`F` with prior :math:`g>0` is given by:
+    The functional :math:`F` with target :math:`g>0` is given by:
 
     .. math::
         F(x)
@@ -1023,7 +1023,7 @@ class KullbackLeibler(Functional):
     `KullbackLeiblerCrossEntropy`. The KL cross entropy is the one
     diescribed in `this Wikipedia article
     <https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence>`_, and
-    the functional :math:`F` is obtained by switching place of the prior and
+    the functional :math:`F` is obtained by switching place of the target and
     the varialbe in the KL cross entropy functional.
 
     For a theoretical exposition, see `Csiszar1991`_.
@@ -1038,29 +1038,31 @@ class KullbackLeibler(Functional):
     .. _Csiszar1991:  http://www.jstor.org/stable/2241918
     """
 
-    def __init__(self, space, prior=None):
+    def __init__(self, space, target):
         """Initialize a new instance.
 
         Parameters
         ----------
         space : `DiscreteLp` or `FnBase`
             Domain of the functional.
-        prior : ``space`` `element-like`, optional
+        target : ``space`` `element-like`, optional
             Data term, positive.
             Default: if None it is take as the one-element.
         """
         super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
 
-        if prior is not None and prior not in self.domain:
-            raise ValueError('`prior` not in `domain`'
-                             ''.format(prior, self.domain))
+        if target not in self.domain:
+            raise ValueError('`target` not in `domain`'
+                             ''.format(target, self.domain))
 
-        self.__prior = prior
+        self.__target = target
+        self.__target_greater_zero = np.greater(self.target, 0)
+        self.__convex_conj = None
 
     @property
-    def prior(self):
-        """The prior in the Kullback-Leibler functional."""
-        return self.__prior
+    def target(self):
+        """The target in the Kullback-Leibler functional."""
+        return self.target
 
     # TODO: update when integration operator is in place: issue #440
     def _call(self, x):
@@ -1069,16 +1071,17 @@ class KullbackLeibler(Functional):
         If any components of ``x`` is non-positive, the value is positive
         infinity.
         """
-        if self.prior is None:
-            tmp = ((x - 1 - np.log(x)).inner(self.domain.one()))
-        else:
-            tmp = ((x - self.prior + self.prior * np.log(self.prior / x))
-                   .inner(self.domain.one()))
-        if np.isnan(tmp):
-            # In this case, some element was less than or equal to zero
+
+        if np.any(np.less_equal(x, 0)):
             return np.inf
         else:
-            return tmp
+            t = self.target
+            tmp = x - t
+
+            i = self.__target_greater_zero
+            tmp[i] = t[i] * np.log(t[i] / x[i])
+
+            return tmp.inner(self.domain.one())
 
     @property
     def gradient(self):
@@ -1103,10 +1106,10 @@ class KullbackLeibler(Functional):
                 The gradient is not defined in points where one or more
                 components are non-positive.
                 """
-                if functional.prior is None:
+                if functional.target is None:
                     return (-1.0) / x + 1
                 else:
-                    return (-functional.prior) / x + 1
+                    return (-functional.target) / x + 1
 
         return KLGradient()
 
@@ -1122,17 +1125,21 @@ class KullbackLeibler(Functional):
             Proximal of the convex conjugate of a functional.
         """
         return proximal_cconj(proximal_cconj_kl(space=self.domain,
-                                                g=self.prior))
+                                                g=self.target))
 
     @property
     def convex_conj(self):
         """The convex conjugate functional of the KL-functional."""
-        return KullbackLeiblerConvexConj(self.domain, self.prior)
+        if self.__convex_conj is None:
+            self.__convex_conj = \
+                KullbackLeiblerConvexConj(self.domain, self.target)
+
+        return self.__convex_conj
 
     def __repr__(self):
         """Return ``repr(self)``."""
         return '{}({!r}, {!r})'.format(self.__class__.__name__,
-                                       self.domain, self.prior)
+                                       self.domain, self.target)
 
 
 class KullbackLeiblerConvexConj(Functional):
@@ -1141,7 +1148,7 @@ class KullbackLeiblerConvexConj(Functional):
 
     Notes
     -----
-    The functional :math:`F^*` with prior :math:`g>0` is given by:
+    The functional :math:`F^*` with target :math:`g>0` is given by:
 
     .. math::
         F^*(x)
@@ -1158,29 +1165,31 @@ class KullbackLeiblerConvexConj(Functional):
     KullbackLeibler : convex conjugate functional
     """
 
-    def __init__(self, space, prior=None):
+    def __init__(self, space, target):
         """Initialize a new instance.
 
         Parameters
         ----------
         space : `DiscreteLp` or `FnBase`
             Domain of the functional.
-        prior : ``space`` `element-like`, optional
+        target : ``space`` `element-like`, optional
             Data term, positive.
             Default: if None it is take as the one-element.
         """
         super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
 
-        if prior is not None and prior not in self.domain:
-            raise ValueError('`prior` not in `domain`'
-                             ''.format(prior, self.domain))
+        if target not in self.domain:
+            raise ValueError('`target` not in `domain`'
+                             ''.format(target, self.domain))
 
-        self.__prior = prior
+        self.__target = target
+        self.__target_greater_zero = np.greater(self.target, 0)
+        self.__convex_conj = None
 
     @property
-    def prior(self):
-        """The prior in convex conjugate Kullback-Leibler functional."""
-        return self.__prior
+    def target(self):
+        """The target in convex conjugate Kullback-Leibler functional."""
+        return self.__target
 
     # TODO: update when integration operator is in place: issue #440
     def _call(self, x):
@@ -1189,15 +1198,18 @@ class KullbackLeiblerConvexConj(Functional):
         If any components of ``x`` is larger than or equal to 1, the value is
         positive infinity.
         """
-        if self.prior is None:
-            tmp = -1.0 * (np.log(1 - x)).inner(self.domain.one())
-        else:
-            tmp = (-self.prior * np.log(1 - x)).inner(self.domain.one())
-        if np.isnan(tmp):
-            # In this case, some element was larger than or equal to one
+        if np.any(np.greater(x, 1)):
+            return np.inf
+
+        i = self.__target_greater_zero
+        obj_value = -np.sum(self.target[i]*np.log(1-x[i]))
+
+        if np.isnan(obj_value):
+            # In this case, some element was one while the target was
+            # non-zero
             return np.inf
         else:
-            return tmp
+            return obj_value
 
     @property
     def gradient(self):
@@ -1223,10 +1235,10 @@ class KullbackLeiblerConvexConj(Functional):
                 The gradient is not defined in points where one or more
                 components are larger than or equal to one.
                 """
-                if functional.prior is None:
+                if functional.target is None:
                     return 1.0 / (1 - x)
                 else:
-                    return functional.prior / (1 - x)
+                    return functional.target / (1 - x)
 
         return KLCCGradient()
 
@@ -1241,17 +1253,20 @@ class KullbackLeiblerConvexConj(Functional):
         odl.solvers.nonsmooth.proximal_operators.proximal_cconj :
             Proximal of the convex conjugate of a functional.
         """
-        return proximal_cconj_kl(space=self.domain, g=self.prior)
+        return proximal_cconj_kl(space=self.domain, g=self.target)
 
     @property
     def convex_conj(self):
         """The convex conjugate functional of the conjugate KL-functional."""
-        return KullbackLeibler(self.domain, self.prior)
+        if self.__convex_conj is None:
+            self.__convex_conj = KullbackLeibler(self.domain, self.target)
+
+        return self.__convex_conj
 
     def __repr__(self):
         """Return ``repr(self)``."""
         return '{}({!r}, {!r})'.format(self.__class__.__name__,
-                                       self.domain, self.prior)
+                                       self.domain, self.target)
 
 
 class KullbackLeiblerCrossEntropy(Functional):
@@ -1260,7 +1275,7 @@ class KullbackLeiblerCrossEntropy(Functional):
 
     Notes
     -----
-    The functional :math:`F` with prior :math:`g>0` is given by:
+    The functional :math:`F` with target :math:`g>0` is given by:
 
     .. math::
         F(x)
@@ -1283,7 +1298,7 @@ class KullbackLeiblerCrossEntropy(Functional):
     another functional which is also know as KL divergence. This functional
     is often used as data discrepancy term in inverse problems, when data is
     corrupted with Poisson noise. It is obtained by changing place
-    of the prior and the variable. See the See Also section.
+    of the target and the variable. See the See Also section.
 
     For a theoretical exposition, see `Csiszar1991`_.
 
@@ -1297,29 +1312,29 @@ class KullbackLeiblerCrossEntropy(Functional):
     .. _Csiszar1991:  http://www.jstor.org/stable/2241918
     """
 
-    def __init__(self, space, prior=None):
+    def __init__(self, space, target=None):
         """Initialize a new instance.
 
         Parameters
         ----------
         space : `DiscreteLp` or `FnBase`
             Domain of the functional.
-        prior : ``space`` `element-like`, optional
+        target : ``space`` `element-like`, optional
             Data term, positive.
             Default: if None it is take as the one-element.
         """
         super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
 
-        if prior is not None and prior not in self.domain:
-            raise ValueError('`prior` not in `domain`'
-                             ''.format(prior, self.domain))
+        if target is not None and target not in self.domain:
+            raise ValueError('`target` not in `domain`'
+                             ''.format(target, self.domain))
 
-        self.__prior = prior
+        self.__target = target
 
     @property
-    def prior(self):
-        """The prior in the Kullback-Leibler functional."""
-        return self.__prior
+    def target(self):
+        """The target in the Kullback-Leibler functional."""
+        return self.__target
 
     # TODO: update when integration operator is in place: issue #440
     def _call(self, x):
@@ -1328,10 +1343,10 @@ class KullbackLeiblerCrossEntropy(Functional):
         If any components of ``x`` is non-positive, the value is positive
         infinity.
         """
-        if self.prior is None:
+        if self.target is None:
             tmp = (1 - x + scipy.special.xlogy(x, x)).inner(self.domain.one())
         else:
-            tmp = ((self.prior - x + scipy.special.xlogy(x, x / self.prior))
+            tmp = ((self.target - x + scipy.special.xlogy(x, x / self.target))
                    .inner(self.domain.one()))
         if np.isnan(tmp):
             # In this case, some element was less than or equal to zero
@@ -1363,10 +1378,10 @@ class KullbackLeiblerCrossEntropy(Functional):
                 The gradient is not defined in for points with components less
                 than or equal to zero.
                 """
-                if functional.prior is None:
+                if functional.target is None:
                     tmp = np.log(x)
                 else:
-                    tmp = np.log(x / functional.prior)
+                    tmp = np.log(x / functional.target)
 
                 if np.all(np.isfinite(tmp)):
                     return tmp
@@ -1392,17 +1407,17 @@ proximal_cconj_kl_cross_entropy :
             Proximal of the convex conjugate of a functional.
         """
         return proximal_cconj(proximal_cconj_kl_cross_entropy(
-            space=self.domain, g=self.prior))
+            space=self.domain, g=self.target))
 
     @property
     def convex_conj(self):
         """The convex conjugate functional of the KL-functional."""
-        return KullbackLeiblerCrossEntropyConvexConj(self.domain, self.prior)
+        return KullbackLeiblerCrossEntropyConvexConj(self.domain, self.target)
 
     def __repr__(self):
         """Return ``repr(self)``."""
         return '{}({!r}, {!r})'.format(self.__class__.__name__,
-                                       self.domain, self.prior)
+                                       self.domain, self.target)
 
 
 class KullbackLeiblerCrossEntropyConvexConj(Functional):
@@ -1410,7 +1425,7 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
 
     Notes
     -----
-    The functional :math:`F^*` with prior :math:`g>0` is given by
+    The functional :math:`F^*` with target :math:`g>0` is given by
 
     .. math::
         F^*(x) = \\sum_i g_i \\left(e^{x_i} - 1\\right)
@@ -1420,37 +1435,37 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
     KullbackLeiblerCrossEntropy : convex conjugate functional
     """
 
-    def __init__(self, space, prior=None):
+    def __init__(self, space, target=None):
         """Initialize a new instance.
 
         Parameters
         ----------
         space : `DiscreteLp` or `FnBase`
             Domain of the functional.
-        prior : ``space`` `element-like`, optional
+        target : ``space`` `element-like`, optional
             Data term, positive.
             Default: if None it is take as the one-element.
         """
         super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
 
-        if prior is not None and prior not in self.domain:
-            raise ValueError('`prior` not in `domain`'
-                             ''.format(prior, self.domain))
+        if target is not None and target not in self.domain:
+            raise ValueError('`target` not in `domain`'
+                             ''.format(target, self.domain))
 
-        self.__prior = prior
+        self.__target = target
 
     @property
-    def prior(self):
-        """The prior in convex conjugate Kullback-Leibler Cross Entorpy."""
-        return self.__prior
+    def target(self):
+        """The target in convex conjugate Kullback-Leibler Cross Entorpy."""
+        return self.__target
 
     # TODO: update when integration operator is in place: issue #440
     def _call(self, x):
         """Return the value in the point ``x``."""
-        if self.prior is None:
+        if self.target is None:
             tmp = (np.exp(x) - 1).inner(self.domain.one())
         else:
-            tmp = (self.prior * (np.exp(x) - 1)).inner(self.domain.one())
+            tmp = (self.target * (np.exp(x) - 1)).inner(self.domain.one())
         return tmp
 
     # TODO: replace this when UFuncOperators is in place: PL #576
@@ -1470,10 +1485,10 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
 
             def _call(self, x):
                 """Apply the gradient operator to the given point."""
-                if functional.prior is None:
+                if functional.target is None:
                     return np.exp(x)
                 else:
-                    return functional.prior * np.exp(x)
+                    return functional.target * np.exp(x)
 
         return KLCrossEntCCGradient()
 
@@ -1487,17 +1502,17 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
 proximal_cconj_kl_cross_entropy :
             `proximal factory` for convex conjugate of the KL cross entropy.
         """
-        return proximal_cconj_kl_cross_entropy(space=self.domain, g=self.prior)
+        return proximal_cconj_kl_cross_entropy(space=self.domain, g=self.target)
 
     @property
     def convex_conj(self):
         """The convex conjugate functional of the conjugate KL-functional."""
-        return KullbackLeiblerCrossEntropy(self.domain, self.prior)
+        return KullbackLeiblerCrossEntropy(self.domain, self.target)
 
     def __repr__(self):
         """Return ``repr(self)``."""
         return '{}({!r}, {!r})'.format(self.__class__.__name__,
-                                       self.domain, self.prior)
+                                       self.domain, self.target)
 
 
 class SeparableSum(Functional):
