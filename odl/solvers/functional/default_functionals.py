@@ -1056,7 +1056,8 @@ class KullbackLeibler(Functional):
                              ''.format(prior, self.domain))
 
         self.__prior = prior
-        self.__prior_greater_zero = np.greater(self.prior, 0)
+        self.__prior_greater_zero = \
+            self.domain.element(np.greater(self.prior, 0))
         self.__convex_conj = None
 
     @property
@@ -1502,8 +1503,7 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
 proximal_cconj_kl_cross_entropy :
             `proximal factory` for convex conjugate of the KL cross entropy.
         """
-        return proximal_cconj_kl_cross_entropy(space=self.domain,
-                                               g=self.prior)
+        return proximal_cconj_kl_cross_entropy(space=self.domain, g=self.prior)
 
     @property
     def convex_conj(self):
