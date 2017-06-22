@@ -1062,7 +1062,7 @@ class KullbackLeibler(Functional):
     @property
     def target(self):
         """The target in the Kullback-Leibler functional."""
-        return self.target
+        return self.__target
 
     # TODO: update when integration operator is in place: issue #440
     def _call(self, x):

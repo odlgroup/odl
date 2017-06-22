@@ -98,9 +98,9 @@ def functional(request, space):
         divisor = odl.solvers.functional.ConstantFunctional(space, 2)
         func = odl.solvers.functional.FunctionalQuotient(dividend, divisor)
     elif name == 'kl':
-        func = odl.solvers.functional.KullbackLeibler(space)
+        func = odl.solvers.functional.KullbackLeibler(space, space.one())
     elif name == 'kl_cc':
-        func = odl.solvers.KullbackLeibler(space).convex_conj
+        func = odl.solvers.KullbackLeibler(space, space.one()).convex_conj
     elif name == 'kl_cross_ent':
         func = odl.solvers.functional.KullbackLeiblerCrossEntropy(space)
     elif name == 'kl_cc_cross_ent':
