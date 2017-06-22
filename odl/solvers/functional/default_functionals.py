@@ -1202,7 +1202,7 @@ class KullbackLeiblerConvexConj(Functional):
             return np.inf
 
         i = self.__target_greater_zero
-        obj_value = -np.sum(self.target[i]*np.log(1-x[i]))
+        obj_value = -np.sum(self.target[i] * np.log(1 - x[i]))
 
         if np.isnan(obj_value):
             # In this case, some element was one while the target was
@@ -1502,7 +1502,8 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
 proximal_cconj_kl_cross_entropy :
             `proximal factory` for convex conjugate of the KL cross entropy.
         """
-        return proximal_cconj_kl_cross_entropy(space=self.domain, g=self.target)
+        return proximal_cconj_kl_cross_entropy(space=self.domain,
+                                               g=self.target)
 
     @property
     def convex_conj(self):
