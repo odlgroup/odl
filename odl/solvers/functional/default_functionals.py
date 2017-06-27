@@ -1003,18 +1003,19 @@ class KullbackLeibler(Functional):
 
     Notes
     -----
-    The functional :math:`F` with prior :math:`g>0` is given by:
+    The functional :math:`F` with prior :math:`g>=0` is given by:
 
     .. math::
         F(x)
         =
         \\begin{cases}
-            \\sum_{i} \left( x_i - g_i + g_i \log \left( \\frac{g_i}{ x_i }
+            \\sum_{i} \left( x_i - g_i + g_i \log \left( \\frac{g_i}{x_i}
             \\right) \\right) & \\text{if } x_i > 0 \\forall i
             \\\\
             +\\infty & \\text{else.}
         \\end{cases}
 
+    Note that we use the common definition 0 log(0) := 0.
     KL based objectives are common in MLEM optimization problems and are often
     used as data-matching term when data noise governed by a multivariate
     Poisson probability distribution is significant.
@@ -1046,8 +1047,29 @@ class KullbackLeibler(Functional):
         space : `DiscreteLp` or `FnBase`
             Domain of the functional.
         prior : ``space`` `element-like`, optional
-            Data term, positive.
+            Depending on the context, the prior, target or data
+            distribution. It is assumed to be nonnegative.
             Default: if None it is take as the one-element.
+
+        Examples
+        --------
+
+        Test that KullbackLeibler(x,x) = 0
+
+        >>> space = odl.rn(3)
+        >>> prior = 3 * space.one()
+        >>> func = odl.solvers.KullbackLeibler(space, prior=prior)
+        >>> func(prior)
+        0.0
+
+
+        Test that zeros in the prior are handled correctly
+
+        >>> prior = space.zero()
+        >>> func = odl.solvers.KullbackLeibler(space, prior=prior)
+        >>> x = space.one()
+        >>> func(x)
+        3.0
         """
         super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
 
@@ -1072,7 +1094,8 @@ class KullbackLeibler(Functional):
         if self.prior is None:
             tmp = ((x - 1 - np.log(x)).inner(self.domain.one()))
         else:
-            tmp = ((x - self.prior + self.prior * np.log(self.prior / x))
+            tmp = ((x - self.prior +
+                   scipy.special.xlogy(self.prior, self.prior / x))
                    .inner(self.domain.one()))
         if np.isnan(tmp):
             # In this case, some element was less than or equal to zero
@@ -1082,7 +1105,10 @@ class KullbackLeibler(Functional):
 
     @property
     def gradient(self):
-        """Gradient operator of the functional.
+        """The gradient of `KullbackLeibler` with ``prior`` :math:`g` is given as
+
+        .. math::
+            \\nabla F(x) = 1 - \frac{g}{x}.
 
         The gradient is not defined in points where one or more components
         are non-positive.
@@ -1141,7 +1167,7 @@ class KullbackLeiblerConvexConj(Functional):
 
     Notes
     -----
-    The functional :math:`F^*` with prior :math:`g>0` is given by:
+    The functional :math:`F^*` with prior :math:`g>=0` is given by:
 
     .. math::
         F^*(x)
@@ -1166,7 +1192,8 @@ class KullbackLeiblerConvexConj(Functional):
         space : `DiscreteLp` or `FnBase`
             Domain of the functional.
         prior : ``space`` `element-like`, optional
-            Data term, positive.
+            Depending on the context, the prior, target or data
+            distribution. It is assumed to be nonnegative.
             Default: if None it is take as the one-element.
         """
         super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
@@ -1192,7 +1219,8 @@ class KullbackLeiblerConvexConj(Functional):
         if self.prior is None:
             tmp = -1.0 * (np.log(1 - x)).inner(self.domain.one())
         else:
-            tmp = (-self.prior * np.log(1 - x)).inner(self.domain.one())
+            tmp = (-scipy.special.xlogy(self.prior,
+                                        1 - x)).inner(self.domain.one())
         if np.isnan(tmp):
             # In this case, some element was larger than or equal to one
             return np.inf
@@ -1305,7 +1333,8 @@ class KullbackLeiblerCrossEntropy(Functional):
         space : `DiscreteLp` or `FnBase`
             Domain of the functional.
         prior : ``space`` `element-like`, optional
-            Data term, positive.
+            Depending on the context, the prior, target or data
+            distribution. It is assumed to be nonnegative.
             Default: if None it is take as the one-element.
         """
         super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
@@ -1428,7 +1457,8 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
         space : `DiscreteLp` or `FnBase`
             Domain of the functional.
         prior : ``space`` `element-like`, optional
-            Data term, positive.
+            Depending on the context, the prior, target or data
+            distribution. It is assumed to be nonnegative.
             Default: if None it is take as the one-element.
         """
         super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
