@@ -40,6 +40,10 @@ __all__ = ('NumpyNtuples', 'NumpyNtuplesVector', 'NumpyFn', 'NumpyFnVector',
 _BLAS_DTYPES = (np.dtype('float32'), np.dtype('float64'),
                 np.dtype('complex64'), np.dtype('complex128'))
 
+# Define thresholds for when different implementations should be used
+THRESHOLD_SMALL = 100
+THRESHOLD_MEDIUM = 50000
+
 
 class NumpyNtuples(NtuplesBase):
 
@@ -493,21 +497,16 @@ def _blas_is_applicable(*args):
 
 def _lincomb_impl(a, x1, b, x2, out, dtype):
     """Raw linear combination depending on data type."""
-
-    # Define thresholds for when different implementations should be used
-    threshold_small = 100
-    threshold_medium = 50000
-
     # Convert to native since BLAS needs it
     size = native(x1.size)
 
     # Shortcut for small problems
-    if size <= threshold_small:  # small array optimization
+    if size <= THRESHOLD_SMALL:  # small array optimization
         out.data[:] = a * x1.data + b * x2.data
         return
 
     # If data is very big, use BLAS if possible
-    if size > threshold_medium and _blas_is_applicable(x1, x2, out):
+    if size > THRESHOLD_MEDIUM and _blas_is_applicable(x1, x2, out):
         axpy, scal, copy = linalg.blas.get_blas_funcs(
             ['axpy', 'scal', 'copy'], arrays=(x1.data, x2.data, out.data))
     else:
@@ -1444,15 +1443,19 @@ def _pnorm_diagweight(x, p, w):
 
 def _inner_default(x1, x2):
     """Default Euclidean inner product implementation."""
-    if _blas_is_applicable(x1, x2):
-        dotc = linalg.blas.get_blas_funcs('dotc', dtype=x1.dtype)
-        dot = partial(dotc, n=native(x1.size))
-    elif is_real_dtype(x1.dtype):
-        dot = np.dot  # still much faster than vdot
-    else:
-        dot = np.vdot  # slowest alternative
+    size = x1.size
+
     # x2 as first argument because we want linearity in x1
-    return dot(x2.data, x1.data)
+
+    if size > THRESHOLD_MEDIUM and _blas_is_applicable(x1, x2):
+        dotc = linalg.blas.get_blas_funcs('dotc', dtype=x1.dtype)
+        dot = dotc(x2.data, x1.data, n=native(size))
+    elif is_real_dtype(x1.dtype):
+        dot = np.dot(x2.data, x1.data)  # still much faster than vdot
+    else:
+        dot = np.vdot(x2.data, x1.data)  # slowest alternative
+
+    return dot
 
 
 class NumpyFnMatrixWeighting(MatrixWeighting):
