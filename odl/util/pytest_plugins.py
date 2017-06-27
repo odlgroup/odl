@@ -83,8 +83,14 @@ if not PYWT_AVAILABLE:
         os.path.join(odl_root, 'odl', 'trafos', 'wavelet.py'))
 
 
+# Remove duplicates
+collect_ignore = list(set(collect_ignore))
+collect_ignore = [os.path.normcase(ignored) for ignored in collect_ignore]
+
+
 def pytest_ignore_collect(path, config):
-    return os.path.normcase(str(path)) in collect_ignore
+    normalized = os.path.normcase(str(path))
+    return any(normalized.startswith(ignored) for ignored in collect_ignore)
 
 
 # --- Reusable fixtures ---
