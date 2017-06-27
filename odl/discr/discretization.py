@@ -246,9 +246,6 @@ class DiscretizedSetElement(NtuplesBaseVector):
 
     def __init__(self, space, ntuple):
         """Initialize a new instance."""
-        assert isinstance(space, DiscretizedSet)
-        assert ntuple in space.dspace
-
         NtuplesBaseVector.__init__(self, space)
         self.__ntuple = ntuple
 
