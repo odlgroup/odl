@@ -14,7 +14,6 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import int
 
-from abc import ABCMeta, abstractmethod
 import numpy as np
 
 from odl.set import (Set, RealNumbers, ComplexNumbers, LinearSpace,
@@ -24,7 +23,6 @@ from odl.util import (
     array1d_repr, array1d_str, dtype_repr,
     is_scalar_dtype, is_real_dtype, is_floating_dtype,
     complex_dtype, real_dtype)
-from odl.util.utility import with_metaclass
 
 
 __all__ = ('NtuplesBase', 'NtuplesBaseVector', 'FnBase', 'FnBaseVector')
@@ -159,7 +157,7 @@ class NtuplesBase(Set):
         raise NotImplementedError('abstract method')
 
 
-class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
+class NtuplesBaseVector(object):
 
     """Abstract class for `NtuplesBase` elements.
 
@@ -171,11 +169,10 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
         """Initialize a new instance."""
         self.__space = space
 
-    @abstractmethod
     def copy(self):
         """Return an identical (deep) copy of this vector."""
+        raise NotImplementedError('abstract method')
 
-    @abstractmethod
     def asarray(self, start=None, stop=None, step=None, out=None):
         """Return the data of this vector as a numpy array.
 
@@ -199,8 +196,8 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
             Numpy array of the same `dtype` as this vector. If ``out``
             was given, the returned object is a reference to it.
         """
+        raise NotImplementedError('abstract method')
 
-    @abstractmethod
     def __getitem__(self, indices):
         """Return ``self[indices]``.
 
@@ -216,8 +213,8 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
         values : `NtuplesBase.dtype` or `NtuplesBaseVector`
             Extracted entries according to ``indices``.
         """
+        raise NotImplementedError('abstract method')
 
-    @abstractmethod
     def __setitem__(self, indices, values):
         """Implement ``self[indices] = values``.
 
@@ -235,8 +232,8 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
             to the shape of the slice, i.e. same size, shape ``(1,)``
             or a single value.
         """
+        raise NotImplementedError('abstract method')
 
-    @abstractmethod
     def __eq__(self, other):
         """Return ``self == other``.
 
@@ -246,6 +243,7 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
             ``True`` if all entries of ``other`` are equal to this
             vector's entries, False otherwise.
         """
+        raise NotImplementedError('abstract method')
 
     def __ne__(self, other):
         """Return ``self != other``."""
@@ -601,21 +599,21 @@ class FnBase(NtuplesBase, LinearSpace):
 
         np.random.set_state(rand_state)
 
-    @abstractmethod
     def zero(self):
         """Return a vector of zeros."""
+        raise NotImplementedError('abstract method')
 
-    @abstractmethod
     def one(self):
         """Return a vector of ones."""
+        raise NotImplementedError('abstract method')
 
-    @abstractmethod
     def _multiply(self, x1, x2, out):
         """Implement ``out[:] = x1 * x2`` (entry-wise)."""
+        raise NotImplementedError('abstract method')
 
-    @abstractmethod
     def _divide(self, x1, x2, out):
         """Implement ``out[:] = x1 / x2`` (entry-wise)."""
+        raise NotImplementedError('abstract method')
 
     @staticmethod
     def default_dtype(field=None):

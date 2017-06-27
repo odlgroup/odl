@@ -14,19 +14,17 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import object, super
 
-from abc import ABCMeta, abstractmethod
 import numpy as np
 
 from odl.discr import RectPartition
 from odl.tomo.util.utility import perpendicular_vector
-from odl.util.utility import with_metaclass
 
 
 __all__ = ('Detector', 'FlatDetector', 'Flat1dDetector', 'Flat2dDetector',
            'CircleSectionDetector')
 
 
-class Detector(with_metaclass(ABCMeta, object)):
+class Detector(object):
 
     """Abstract detector class.
 
@@ -53,7 +51,6 @@ class Detector(with_metaclass(ABCMeta, object)):
 
         self._part = part
 
-    @abstractmethod
     def surface(self, param):
         """Parametrization of the detector reference surface.
 
@@ -68,6 +65,7 @@ class Detector(with_metaclass(ABCMeta, object)):
             Spatial location of the detector point corresponding to
             ``param``
         """
+        raise NotImplementedError('abstract method')
 
     @property
     def partition(self):

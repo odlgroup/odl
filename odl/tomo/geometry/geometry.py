@@ -14,18 +14,16 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import object
 
-from abc import ABCMeta, abstractmethod
 import numpy as np
 
 from odl.discr import RectPartition
 from odl.tomo.geometry.detector import Detector
-from odl.util.utility import with_metaclass
 
 
 __all__ = ('Geometry', 'DivergentBeamGeometry', 'AxisOrientedGeometry')
 
 
-class Geometry(with_metaclass(ABCMeta, object)):
+class Geometry(object):
 
     """Abstract geometry class.
 
@@ -138,7 +136,6 @@ class Geometry(with_metaclass(ABCMeta, object)):
         """
         return self.partition.grid
 
-    @abstractmethod
     def det_refpoint(self, mpar):
         """Detector reference point function.
 
@@ -153,8 +150,8 @@ class Geometry(with_metaclass(ABCMeta, object)):
         point : `numpy.ndarray`, shape (`ndim`,)
             The reference point, an `ndim`-dimensional vector
         """
+        raise NotImplementedError('abstract method')
 
-    @abstractmethod
     def rotation_matrix(self, mpar):
         """Detector rotation function for calculating the detector
         reference position.
@@ -173,6 +170,7 @@ class Geometry(with_metaclass(ABCMeta, object)):
             the local coordinate system of the detector reference point,
             expressed in the fixed system.
         """
+        raise NotImplementedError('abstract method')
 
     def det_to_src(self, mpar, dpar, normalized=True):
         """Vector pointing from a detector location to the source.
@@ -239,7 +237,6 @@ class DivergentBeamGeometry(Geometry):
     Special cases include fan beam in 2d and cone beam in 3d.
     """
 
-    @abstractmethod
     def src_position(self, mpar):
         """Source position function.
 
@@ -253,6 +250,7 @@ class DivergentBeamGeometry(Geometry):
         pos : `numpy.ndarray` (shape (`ndim`,))
             Source position, an `ndim`-dimensional vector
         """
+        raise NotImplementedError('abstract method')
 
     def det_to_src(self, mpar, dpar, normalized=True):
         """Vector pointing from a detector location to the source.
