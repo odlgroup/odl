@@ -1053,14 +1053,20 @@ class KullbackLeibler(Functional):
 
         Examples
         --------
+
+        Test that KullbackLeibler(x,x) = 0
+
         >>> space = odl.rn(3)
-        >>> prior = 3*space.one()
-        >>> func = KullbackLeibler(space, prior=prior)
+        >>> prior = 3 * space.one()
+        >>> func = odl.solvers.KullbackLeibler(space, prior=prior)
         >>> func(prior)
         0.0
 
+
+        Test that zeros in the prior are handled correctly
+
         >>> prior = space.zero()
-        >>> func = KullbackLeibler(space, prior=prior)
+        >>> func = odl.solvers.KullbackLeibler(space, prior=prior)
         >>> x = space.one()
         >>> func(x)
         3.0
@@ -1102,8 +1108,7 @@ class KullbackLeibler(Functional):
         """The gradient of `KullbackLeibler` with ``prior`` :math:`g` is given as
 
         .. math::
-
-        \\nabla F(x) = 1 - \frac{g}{x}.
+            \\nabla F(x) = 1 - \frac{g}{x}.
 
         The gradient is not defined in points where one or more components
         are non-positive.
