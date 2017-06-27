@@ -203,8 +203,7 @@ class LinearSpace(Set):
         """
         if out is None:
             out = self.element()
-
-        if out not in self:
+        elif out not in self:
             raise LinearSpaceTypeError('`out` {!r} is not an element of {!r}'
                                        ''.format(out, self))
         if a not in self.field:
