@@ -43,18 +43,30 @@ class Geometry(object):
     <https://odlgroup.github.io/odl/guide/geometry_guide.html>`_.
     """
 
-    def __init__(self, ndim, motion_part, detector, translation=None):
+    def __init__(self, ndim, motion_part, detector, translation=None,
+                 **kwargs):
         """Initialize a new instance.
 
         Parameters
         ----------
         ndim : positive int
             Number of dimensions of this geometry, i.e. dimensionality
-            of the physical space in which this geometry is embedded
+            of the physical space in which this geometry is embedded.
         motion_part : `RectPartition`
-           Partition for the set of "motion" parameters
+            Partition for the set of "motion" parameters.
         detector : `Detector`
-           The detector of this geometry
+            The detector of this geometry.
+        translation : `array-like`, optional
+            Global translation of the geometry. This is added last in any
+            method that computes an absolute vector, e.g., `det_refpoint`.
+            Default: zero vector of length ``ndim``
+
+        Other Parameters
+        ----------------
+        check_bounds : bool, optional
+            If ``True``, methods perform sanity checks on provided input
+            parameters.
+            Default: ``True``
         """
         ndim, ndim_in = int(ndim), ndim
         if ndim != ndim_in or ndim <= 0:
@@ -70,6 +82,7 @@ class Geometry(object):
         self.__ndim = ndim
         self.__motion_partition = motion_part
         self.__detector = detector
+        self.__check_bounds = bool(kwargs.pop('check_bounds', True))
 
         if translation is None:
             self.__translation = np.zeros(self.ndim)
@@ -82,6 +95,11 @@ class Geometry(object):
 
         # Cache geometry-related objects for backends that require computation
         self.__implementation_cache = {}
+
+        # Make sure there are no leftover kwargs
+        if kwargs:
+            raise TypeError('got unexpected keyword arguments {}'
+                            ''.format(kwargs))
 
     @property
     def ndim(self):
@@ -153,83 +171,101 @@ class Geometry(object):
         """Shift of the origin of this geometry."""
         return self.__translation
 
-    def det_refpoint(self, mpar):
+    @property
+    def check_bounds(self):
+        """Whether to check if method parameters are in the valid range."""
+        return self.__check_bounds
+
+    def det_refpoint(self, mparam):
         """Detector reference point function.
 
         Parameters
         ----------
-        mpar : `motion_params` element
-            Motion parameter for which to calculate the detector
-            reference point.
+        mparam : `array-like`
+            Motion parameter(s) at which to evaluate. An array should
+            stack parameters along axis 0.
 
         Returns
         -------
-        point : `numpy.ndarray`, shape (`ndim`,)
-            The reference point, an `ndim`-dimensional vector.
+        point : `numpy.ndarray`, shape (ndim,) or (num_params, ndim)
+            Vector(s) pointing from the origin to the detector reference
+            point at ``mparam``.
+            If ``mparam`` is a single parameter, a single vector is
+            returned, otherwise a stack of vectors along axis 0.
         """
         raise NotImplementedError('abstract method')
 
-    def rotation_matrix(self, mpar):
-        """Return the rotation matrix from initial state to state at ``mpar``.
+    def rotation_matrix(self, mparam):
+        """Return the rotation matrix to the system state at ``mparam``.
 
         Parameters
         ----------
-        mpar : `motion_params` element
-            Motion parameter for which to calculate the rotation matrix.
+        mparam : `array-like`
+            Motion parameter(s) at which to evaluate. An array should
+            stack parameters along axis 0.
 
         Returns
         -------
-        rot : `numpy.ndarray`, shape (`ndim`, `ndim`)
-            The rotation matrix mapping vectors at the initial state
-            to the ones in the state defined by ``mpar``. The rotation
-            is extrinsic, i.e., defined in the fixed ("world") coordinate
-            system.
+        rot : `numpy.ndarray`, shape (ndim, ndim) or (num_params, ndim, ndim)
+            The rotation matrix (or matrices) mapping vectors at the
+            initial state to the ones in the state defined by ``mparam``.
+            The rotation is extrinsic, i.e., defined in the "world"
+            coordinate system.
+            If ``mparam`` is a single parameter, a single matrix is
+            returned, otherwise a stack of matrices along axis 0.
         """
         raise NotImplementedError('abstract method')
 
-    def det_to_src(self, mpar, dpar, normalized=True):
+    def det_to_src(self, mparam, dparam, normalized=True):
         """Vector pointing from a detector location to the source.
 
-        A function of the motion and detector parameters.
-
         Parameters
         ----------
-        mpar : `motion_params` element
-            Motion parameter at which to evaluate.
-        dpar : `det_params` element
-            Detector parameter at which to evaluate.
+        mparam : `motion_params` element or `array-like`
+            Motion parameter(s) at which to evaluate. An array should
+            stack parameters along axis 0.
+        dparam : `det_params` element or `array-like`
+            Detector parameter(s) at which to evaluate. An array should
+            stack parameters along axis 0.
         normalized : bool, optional
-            If ``True``, return a normalized (unit) vector.
+            If ``True``, normalize the resulting vector(s) to unit length.
 
         Returns
         -------
-        vec : `numpy.ndarray`, shape (`ndim`,)
-            (Unit) vector pointing from the detector to the source
+        vec : `numpy.ndarray`, shape (ndim,) or (num_params, ndim)
+            (Unit) vector(s) pointing from the detector to the source.
+            If both ``mparam`` and ``dparam`` are single parameters, a single
+            vector is returned, otherwise a stack of vectors along axis 0.
         """
         raise NotImplementedError('abstract method')
 
-    def det_point_position(self, mpar, dpar):
-        """Return the detector point at ``(mpar, dpar)``.
+    def det_point_position(self, mparam, dparam):
+        """Return the detector point at ``(mparam, dparam)``.
 
-        The motion parameter ``mpar`` is used to move the detector
-        reference point, and the detector parameter ``dpar`` defines
+        The motion parameter ``mparam`` is used to move the detector
+        reference point, and the detector parameter ``dparam`` defines
         an intrinsic shift that is added to the reference point.
 
         Parameters
         ----------
-        mpar : `motion_params` element
-            Motion parameter at which to evaluate.
-        dpar : `det_params` element
-            Detector parameter at which to evaluate.
+        mparam : `motion_params` element or `array-like`
+            Motion parameter(s) at which to evaluate. An array should
+            stack parameters along axis 0.
+        dparam : `det_params` element or `array-like`
+            Detector parameter(s) at which to evaluate. An array should
+            stack parameters along axis 0.
 
         Returns
         -------
-        pos : `numpy.ndarray`, shape ``(ndim,)``
-            Source position, an `ndim`-dimensional vector.
+        pos : `numpy.ndarray`, shape (ndim,) or (num_params, ndim)
+            Vector(s) pointing from the origin to the detector point.
+            If both ``mparam`` and ``dparam`` are single parameters, a single
+            vector is returned, otherwise a stack of vectors along axis 0.
         """
         # Offset relative to the detector reference point
-        offset = self.rotation_matrix(mpar).dot(self.detector.surface(dpar))
-        return self.det_refpoint(mpar) + offset
+        offset = self.rotation_matrix(mparam).dot(
+            self.detector.surface(dparam))
+        return self.det_refpoint(mparam) + offset
 
     @property
     def implementation_cache(self):
@@ -249,28 +285,31 @@ class DivergentBeamGeometry(Geometry):
 
     """Abstract divergent beam geometry class.
 
-    A divergent beam geometry is characterized by the presence of a
-    point source.
+    A geometry characterized by the presence of a point-like ray source.
 
-    Special cases include fan beam in 2d and cone beam in 3d.
+    In 2D such a geometry is usually called "fan beam geometry", while
+    in 3D one speaks of "cone beam geometries".
     """
 
-    def src_position(self, mpar):
+    def src_position(self, mparam):
         """Source position function.
 
         Parameters
         ----------
-        mpar : `motion_params` element
-            Motion parameter for which to calculate the source position.
+        mparam : `array-like`
+            Motion parameter(s) at which to evaluate. An array should
+            stack parameters along axis 0.
 
         Returns
         -------
-        pos : `numpy.ndarray` (shape (`ndim`,))
-            Source position, an `ndim`-dimensional vector.
+        pos : `numpy.ndarray`, shape (ndim,) or (num_params, ndim)
+            Vector(s) pointing from the origin to the source.
+            If ``mparam`` is a single parameter, a single vector
+            is returned, otherwise a stack of vectors along axis 0.
         """
         raise NotImplementedError('abstract method')
 
-    def det_to_src(self, mpar, dpar, normalized=True):
+    def det_to_src(self, mparam, dparam, normalized=True):
         """Vector pointing from a detector location to the source.
 
         A function of the motion and detector parameters.
@@ -281,32 +320,30 @@ class DivergentBeamGeometry(Geometry):
 
         Parameters
         ----------
-        mpar : `motion_params` element
-            Motion parameter at which to evaluate.
-        dpar : `det_params` element
-            Detector parameter at which to evaluate.
+        mparam : `array-like`
+            Motion parameter(s) at which to evaluate. An array should
+            stack parameters along axis 0.
+        dparam : `array-like`
+            Detector parameter(s) at which to evaluate. An array should
+            stack parameters along axis 0.
         normalized : bool, optional
-            If ``True``, return a normalized (unit) vector.
+            If ``True``, normalize the resulting vector(s) to unit length.
 
         Returns
         -------
-        vec : `numpy.ndarray`, shape (`ndim`,)
-            (Unit) vector pointing from the detector to the source.
+        vec : `numpy.ndarray`, shape (ndim,) or (num_params, ndim)
+            (Unit) vector(s) pointing from the detector to the source.
+            If both ``mparam`` and ``dparam`` are single parameters, a single
+            vector is returned, otherwise a stack of vectors along axis 0.
         """
-        if mpar not in self.motion_params:
-            raise ValueError('`mpar` {} not in the valid range {}'
-                             ''.format(mpar, self.motion_params))
-        if dpar not in self.det_params:
-            raise ValueError('`dpar` {} not in the valid range {}'
-                             ''.format(dpar, self.det_params))
-
-        vec = self.src_position(mpar) - self.det_point_position(mpar, dpar)
+        det_to_src_vec = (self.src_position(mparam) -
+                          self.det_point_position(mparam, dparam))
 
         if normalized:
             # axis = -1 allows this to be vectorized
-            vec /= np.linalg.norm(vec, axis=-1)
+            det_to_src_vec /= np.linalg.norm(det_to_src_vec, axis=-1)
 
-        return vec
+        return det_to_src_vec
 
 
 class AxisOrientedGeometry(object):
@@ -337,7 +374,7 @@ class AxisOrientedGeometry(object):
         return self.__axis
 
     def rotation_matrix(self, angle):
-        """Return the matrix for rotating around `axis` by ``angle``.
+        """Return the rotation matrix to the system state at ``angle``.
 
         The matrix is computed according to
         `Rodrigues' rotation formula
@@ -345,24 +382,31 @@ class AxisOrientedGeometry(object):
 
         Parameters
         ----------
-        angle : float
-            Motion parameter given in radians. It must be
-            contained in this geometry's `motion_params`.
+        angle : float or `array-like`
+            Angle(s) in radians describing the counter-clockwise
+            rotation of the system around `axis`.
 
         Returns
         -------
-        rot_mat : `numpy.ndarray`, shape ``(3, 3)``
-            The rotation matrix mapping the standard basis vectors in
-            the fixed ("lab") coordinate system to the basis vectors of
-            the local coordinate system of the detector reference point,
-            expressed in the fixed system.
+        rot : `numpy.ndarray`, shape (3, 3) or (num_params, 3, 3)
+            The rotation matrix (or matrices) mapping vectors at the
+            initial state to the ones in the state defined by ``angle``.
+            The rotation is extrinsic, i.e., defined in the "world"
+            coordinate system.
+            If ``angle`` is a single parameter, a single matrix is
+            returned, otherwise a stack of matrices along axis 0.
         """
-        angle = float(angle)
-        if angle not in self.motion_params:
-            raise ValueError('`angle` {} is not in the valid range {}'
+        squeeze_out = np.isscalar(angle)
+        angle = np.array(angle, dtype=float, copy=False, ndmin=1)
+        if self.check_bounds and not self.motion_params.contains_all(angle):
+            raise ValueError('`angle` {} not in the valid range {}'
                              ''.format(angle, self.motion_params))
 
-        return axis_rotation_matrix(self.axis, angle)
+        matrix = axis_rotation_matrix(self.axis, angle)
+        if squeeze_out:
+            matrix = matrix.squeeze()
+
+        return matrix
 
 
 if __name__ == '__main__':

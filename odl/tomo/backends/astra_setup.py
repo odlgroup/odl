@@ -245,27 +245,25 @@ def astra_conebeam_3d_geom_to_vec(geometry):
     angles = geometry.angles
     vectors = np.zeros((angles.size, 12))
 
-    for ang_idx, angle in enumerate(angles):
-        # Source position
-        vectors[ang_idx, 0:3] = geometry.src_position(angle)
+    # Source position
+    vectors[:, 0:3] = geometry.src_position(angles)
 
-        # Center of detector in 3D space
-        mid_pt = geometry.det_params.mid_pt
-        vectors[ang_idx, 3:6] = geometry.det_point_position(angle, mid_pt)
+    # Center of detector in 3D space
+    mid_pt = geometry.det_params.mid_pt
+    vectors[:, 3:6] = geometry.det_point_position(angles, mid_pt)
 
-        # Vectors from detector pixel (0, 0) to (1, 0) and (0, 0) to (0, 1)
-        det_axes = geometry.det_axes(angle)
-        px_sizes = geometry.det_partition.cell_sides
-
-        # Swap detector axes to have better memory layout in  projection data.
-        # ASTRA produces `(v, theta, u)` layout, and to map to ODL layout
-        # `(theta, u, v)` a complete roll must be performed, which is the
-        # worst case (compeltely discontiguous).
-        # Instead we swap `u` and `v`, resulting in the effective ASTRA result
-        # `(u, theta, v)`. Here we only need to swap axes 0 and 1, which
-        # keeps at least contiguous blocks in `v`.
-        vectors[ang_idx, 9:12] = det_axes[0] * px_sizes[0]
-        vectors[ang_idx, 6:9] = det_axes[1] * px_sizes[1]
+    # Vectors from detector pixel (0, 0) to (1, 0) and (0, 0) to (0, 1)
+    det_axes = geometry.det_axes(angles)
+    px_sizes = geometry.det_partition.cell_sides
+    # Swap detector axes to have better memory layout in  projection data.
+    # ASTRA produces `(v, theta, u)` layout, and to map to ODL layout
+    # `(theta, u, v)` a complete roll must be performed, which is the
+    # worst case (compeltely discontiguous).
+    # Instead we swap `u` and `v`, resulting in the effective ASTRA result
+    # `(u, theta, v)`. Here we only need to swap axes 0 and 1, which
+    # keeps at least contiguous blocks in `v`.
+    vectors[:, 9:12] = det_axes[0] * px_sizes[0]
+    vectors[:, 6:9] = det_axes[1] * px_sizes[1]
 
     # ASTRA has (z, y, x) axis convention, in contrast to (x, y, z) in ODL,
     # so we need to adapt to this by changing the order.
@@ -317,19 +315,19 @@ def astra_conebeam_2d_geom_to_vec(geometry):
     angles = geometry.angles
     vectors = np.zeros((angles.size, 6))
 
-    for ang_idx, angle in enumerate(angles):
-        # Source position
-        vectors[ang_idx, 0:2] = rot_minus_90.dot(geometry.src_position(angle))
+    # Source position
+    src_pos = geometry.src_position(angles)
+    vectors[:, 0:2] = rot_minus_90.dot(src_pos.T).T  # dot along 2nd axis
 
-        # Center of detector
-        mid_pt = geometry.det_params.mid_pt
-        vectors[ang_idx, 2:4] = rot_minus_90.dot(
-            geometry.det_point_position(angle, mid_pt))
+    # Center of detector
+    mid_pt = geometry.det_params.mid_pt
+    centers = geometry.det_point_position(angles, mid_pt)
+    vectors[:, 2:4] = rot_minus_90.dot(centers.T).T
 
-        # Vector from detector pixel 0 to 1
-        det_axis = rot_minus_90.dot(geometry.det_axis(angle))
-        px_size = geometry.det_partition.cell_sides[0]
-        vectors[ang_idx, 4:6] = det_axis * px_size
+    # Vector from detector pixel 0 to 1
+    det_axis = rot_minus_90.dot(geometry.det_axis(angles).T).T
+    px_size = geometry.det_partition.cell_sides[0]
+    vectors[:, 4:6] = det_axis * px_size
 
     return vectors
 
@@ -371,28 +369,26 @@ def astra_parallel_3d_geom_to_vec(geometry):
     angles = geometry.angles
     vectors = np.zeros((angles.shape[0], 12))
 
-    for ang_idx, angle in enumerate(angles):
-        mid_pt = geometry.det_params.mid_pt
+    mid_pt = geometry.det_params.mid_pt
 
-        # Ray direction = -(detector-to-source normal vector)
-        vectors[ang_idx, 0:3] = -geometry.det_to_src(angle, mid_pt)
+    # Ray direction = -(detector-to-source normal vector)
+    vectors[:, 0:3] = -geometry.det_to_src(angles, mid_pt)
 
-        # Center of the detector in 3D space
-        vectors[ang_idx, 3:6] = geometry.det_point_position(angle, mid_pt)
+    # Center of the detector in 3D space
+    vectors[:, 3:6] = geometry.det_point_position(angles, mid_pt)
 
-        # Vectors from detector pixel (0, 0) to (1, 0) and (0, 0) to (0, 1)
-        det_axes = geometry.det_axes(angle)
-        px_sizes = geometry.det_partition.cell_sides
-
-        # Swap detector axes to have better memory layout in  projection data.
-        # ASTRA produces `(v, theta, u)` layout, and to map to ODL layout
-        # `(theta, u, v)` a complete roll must be performed, which is the
-        # worst case (compeltely discontiguous).
-        # Instead we swap `u` and `v`, resulting in the effective ASTRA result
-        # `(u, theta, v)`. Here we only need to swap axes 0 and 1, which
-        # keeps at least contiguous blocks in `v`.
-        vectors[ang_idx, 9:12] = det_axes[0] * px_sizes[0]
-        vectors[ang_idx, 6:9] = det_axes[1] * px_sizes[1]
+    # Vectors from detector pixel (0, 0) to (1, 0) and (0, 0) to (0, 1)
+    det_axes = geometry.det_axes(angles)
+    px_sizes = geometry.det_partition.cell_sides
+    # Swap detector axes to have better memory layout in  projection data.
+    # ASTRA produces `(v, theta, u)` layout, and to map to ODL layout
+    # `(theta, u, v)` a complete roll must be performed, which is the
+    # worst case (compeltely discontiguous).
+    # Instead we swap `u` and `v`, resulting in the effective ASTRA result
+    # `(u, theta, v)`. Here we only need to swap axes 0 and 1, which
+    # keeps at least contiguous blocks in `v`.
+    vectors[:, 9:12] = det_axes[0] * px_sizes[0]
+    vectors[:, 6:9] = det_axes[1] * px_sizes[1]
 
     # ASTRA has (z, y, x) axis convention, in contrast to (x, y, z) in ODL,
     # so we need to adapt to this by changing the order.

@@ -42,18 +42,18 @@ def euler_matrix(*angles):
         https://en.wikipedia.org/wiki/Euler_angles#Rotation_matrix
     """
     if len(angles) == 1:
-        phi = float(angles[0])
+        phi = np.array(angles[0], dtype=float, copy=False, ndmin=1)
         theta = psi = 0.
         ndim = 2
     elif len(angles) == 2:
-        phi = float(angles[0])
-        theta = float(angles[1])
+        phi = np.array(angles[0], dtype=float, copy=False, ndmin=1)
+        theta = np.array(angles[1], dtype=float, copy=False, ndmin=1)
         psi = 0.
         ndim = 3
     elif len(angles) == 3:
-        phi = float(angles[0])
-        theta = float(angles[1])
-        psi = float(angles[2])
+        phi = np.array(angles[0], dtype=float, copy=False, ndmin=1)
+        theta = np.array(angles[1], dtype=float, copy=False, ndmin=1)
+        psi = np.array(angles[2], dtype=float, copy=False, ndmin=1)
         ndim = 3
     else:
         raise ValueError('number of angles must be between 1 and 3')
@@ -80,7 +80,11 @@ def euler_matrix(*angles):
              sth * cps,
              cth]])
 
-    return mat
+    if np.isscalar(angles[0]):
+        return mat.squeeze()
+    else:
+        # Move third axis to the beginning
+        return np.transpose(mat, axes=(2, 0, 1))
 
 
 def axis_rotation(axis, angle, vectors, axis_shift=(0, 0, 0)):
@@ -199,12 +203,13 @@ def axis_rotation_matrix(axis, angle):
     .. _Rodriguez' rotation formula:
         https://en.wikipedia.org/wiki/Rodrigues'_rotation_formula
     """
+    scalar_out = np.isscalar(angle)
     axis = np.asarray(axis)
     if axis.shape != (3,):
         raise ValueError('`axis` shape must be (3,), got {}'
                          ''.format(axis.shape))
 
-    angle = float(angle)
+    angle = np.array(angle, dtype=float, copy=False, ndmin=1)
 
     cross_mat = np.array([[0, -axis[2], axis[1]],
                           [axis[2], 0, -axis[0]],
@@ -214,7 +219,18 @@ def axis_rotation_matrix(axis, angle):
     cos_ang = np.cos(angle)
     sin_ang = np.sin(angle)
 
-    return cos_ang * id_mat + (1. - cos_ang) * dy_mat + sin_ang * cross_mat
+    # Add extra dimensions for broadcasting
+    cross_mat = cross_mat[None, :, :]
+    dy_mat = dy_mat[None, :, :]
+    id_mat = id_mat[None, :, :]
+    cos_ang = cos_ang[:, None, None]
+    sin_ang = sin_ang[:, None, None]
+
+    axis_mat = cos_ang * id_mat + (1. - cos_ang) * dy_mat + sin_ang * cross_mat
+    if scalar_out:
+        return axis_mat.squeeze()
+    else:
+        return axis_mat
 
 
 def rotation_matrix_from_to(from_vec, to_vec):

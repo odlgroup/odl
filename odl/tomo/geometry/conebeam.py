@@ -186,7 +186,7 @@ class FanFlatGeometry(DivergentBeamGeometry):
         translation = kwargs.pop('translation', None)
         super(FanFlatGeometry, self).__init__(
             ndim=2, motion_part=apart, detector=detector,
-            translation=translation)
+            translation=translation, **kwargs)
 
         self.__src_radius = float(src_radius)
         if self.src_radius < 0:
@@ -205,13 +205,9 @@ class FanFlatGeometry(DivergentBeamGeometry):
             raise ValueError('`apart` has dimension {}, expected 1'
                              ''.format(self.motion_partition.ndim))
 
-        # Make sure there are no leftover kwargs
-        if kwargs:
-            raise TypeError('got unexpected keyword arguments {}'
-                            ''.format(kwargs))
-
     @classmethod
-    def frommatrix(cls, apart, dpart, src_radius, det_radius, init_matrix):
+    def frommatrix(cls, apart, dpart, src_radius, det_radius, init_matrix,
+                   **kwargs):
         """Create an instance of `FanFlatGeometry` using a matrix.
 
         This alternative constructor uses a matrix to rotate and
@@ -237,6 +233,8 @@ class FanFlatGeometry(DivergentBeamGeometry):
             determine the new vectors. If present, the third column acts
             as a translation after the initial transformation.
             The resulting ``det_axis_init`` will be normalized.
+        kwargs :
+            Further keyword arguments passed to the class constructor.
 
         Returns
         -------
@@ -290,9 +288,9 @@ class FanFlatGeometry(DivergentBeamGeometry):
         # Use the standard constructor with these vectors
         src_to_det, det_axis = transformed_vecs
         if translation.size == 0:
-            kwargs = {}
+            pass
         else:
-            kwargs = {'translation': translation}
+            kwargs['translation'] = translation
 
         return cls(apart, dpart, src_radius, det_radius, src_to_det,
                    det_axis_init=det_axis, **kwargs)
@@ -339,14 +337,20 @@ class FanFlatGeometry(DivergentBeamGeometry):
 
         Parameters
         ----------
-        angle : float
-            Rotation angle given in radians, must be contained in
-            this geometry's `motion_params`.
+        angle : float or `array-like`
+            Angle(s) in radians describing the counter-clockwise
+            rotation of source and detector.
 
         Returns
         -------
-        point : `numpy.ndarray`, shape ``(2,)``
-            Source position corresponding to the given angle.
+        pos : `numpy.ndarray`, shape (2,) or (num_params, 2)
+            Vector(s) pointing from the origin to the source.
+            If ``angle`` is a single parameter, a single vector
+            is returned, otherwise a stack of vectors along axis 0.
+
+        See Also
+        --------
+        det_refpoint
 
         Examples
         --------
@@ -360,17 +364,29 @@ class FanFlatGeometry(DivergentBeamGeometry):
         array([ 0., -2.])
         >>> np.allclose(geom.src_position(np.pi / 2), [2, 0])
         True
+
+        The method is vectorized, i.e., it can be called with multiple
+        angles at once:
+
+        >>> points = geom.src_position([0, np.pi / 2])
+        >>> np.allclose(points[0], [0, -2])
+        True
+        >>> np.allclose(points[1], [2, 0])
+        True
         """
-        if angle not in self.motion_params:
-            raise ValueError('`angle` {} is not in the valid range {}'
-                             ''.format(angle, self.motion_params))
+        squeeze_out = np.isscalar(angle)
+        angle = np.array(angle, dtype=float, copy=False, ndmin=1)
 
         # Initial vector from the rotation center to the source. It can be
         # computed this way since source and detector are at maximum distance,
         # i.e. the connecting line passes the origin.
         center_to_src_init = -self.src_radius * self.src_to_det_init
-        return (self.translation +
-                self.rotation_matrix(angle).dot(center_to_src_init))
+        pos_vec = (self.translation[None, :] +
+                   self.rotation_matrix(angle).dot(center_to_src_init))
+        if squeeze_out:
+            pos_vec = pos_vec.squeeze()
+
+        return pos_vec
 
     def det_refpoint(self, angle):
         """Return the detector reference point position at ``angle``.
@@ -385,18 +401,20 @@ class FanFlatGeometry(DivergentBeamGeometry):
 
         Parameters
         ----------
-        angle : float
-            Rotation angle given in radians, must be contained in
-            this geometry's `motion_params`
+        angle : float or `array-like`
+            Angle(s) in radians describing the counter-clockwise
+            rotation of source and detector.
 
         Returns
         -------
-        point : `numpy.ndarray`, shape (2,)
-            Detector reference point corresponding to the given angle
+        point : `numpy.ndarray`, shape (2,) or (num_params, 2)
+            Vector(s) pointing from the origin to the detector reference
+            point. If ``angle`` is a single parameter, a single vector
+            is returned, otherwise a stack of vectors along axis 0.
 
         See Also
         --------
-        rotation_matrix
+        src_position
 
         Examples
         --------
@@ -410,17 +428,29 @@ class FanFlatGeometry(DivergentBeamGeometry):
         array([ 0.,  5.])
         >>> np.allclose(geom.det_refpoint(np.pi / 2), [-5, 0])
         True
+
+        The method is vectorized, i.e., it can be called with multiple
+        angles at once:
+
+        >>> points = geom.det_refpoint([0, np.pi / 2])
+        >>> np.allclose(points[0], [0, 5])
+        True
+        >>> np.allclose(points[1], [-5, 0])
+        True
         """
-        if angle not in self.motion_params:
-            raise ValueError('`angle` {} is not in the valid range {}'
-                             ''.format(angle, self.motion_params))
+        squeeze_out = np.isscalar(angle)
+        angle = np.array(angle, dtype=float, copy=False, ndmin=1)
 
         # Initial vector from the rotation center to the detector. It can be
         # computed this way since source and detector are at maximum distance,
         # i.e. the connecting line passes the origin.
         center_to_det_init = self.det_radius * self.src_to_det_init
-        return (self.translation +
-                self.rotation_matrix(angle).dot(center_to_det_init))
+        refpt = (self.translation[None, :] +
+                 self.rotation_matrix(angle).dot(center_to_det_init))
+        if squeeze_out:
+            refpt = refpt.squeeze()
+
+        return refpt
 
     def rotation_matrix(self, angle):
         """Return the rotation matrix for ``angle``.
@@ -432,23 +462,31 @@ class FanFlatGeometry(DivergentBeamGeometry):
 
         Parameters
         ----------
-        angle : float
-            Rotation angle given in radians, must be contained in
-            this geometry's `motion_params`.
+        angle : float or `array-like`
+            Angle(s) in radians describing the counter-clockwise
+            rotation of source and detector.
 
         Returns
         -------
-        rot : `numpy.ndarray`, shape (2, 2)
-            The rotation matrix mapping the standard basis vectors in
-            the fixed ("lab") coordinate system to the basis vectors of
-            the local coordinate system of the detector reference point,
-            expressed in the fixed system.
+        rot : `numpy.ndarray`, shape (2, 2) or (num_params, 2, 2)
+            The rotation matrix (or matrices) mapping vectors at the
+            initial state to the ones in the state defined by ``angle``.
+            The rotation is extrinsic, i.e., defined in the "world"
+            coordinate system.
+            If ``angle`` is a single parameter, a single matrix is
+            returned, otherwise a stack of matrices along axis 0.
         """
-        angle = float(angle)
-        if angle not in self.motion_params:
+        squeeze_out = np.isscalar(angle)
+        angle = np.array(angle, dtype=float, copy=False, ndmin=1)
+        if self.check_bounds and not self.motion_params.contains_all(angle):
             raise ValueError('`angle` {} not in the valid range {}'
                              ''.format(angle, self.motion_params))
-        return euler_matrix(angle)
+
+        matrix = euler_matrix(angle)
+        if squeeze_out:
+            matrix = matrix.squeeze()
+
+        return matrix
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -578,6 +616,11 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
             Global translation of the geometry. This is added last in any
             method that computes an absolute vector, e.g., `det_refpoint`,
             and also shifts the axis of rotation.
+            Default: ``(0, 0, 0)``
+        check_bounds : bool, optional
+            If ``True``, methods perform sanity checks on provided input
+            parameters.
+            Default: ``True``
 
         Notes
         -----
@@ -712,10 +755,8 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         self.__src_to_det_init = src_to_det_init
         AxisOrientedGeometry.__init__(self, axis)
         detector = Flat2dDetector(dpart, det_axes_init)
-        translation = kwargs.pop('translation', None)
         super(ConeFlatGeometry, self).__init__(
-            ndim=3, motion_part=apart, detector=detector,
-            translation=translation)
+            ndim=3, motion_part=apart, detector=detector, **kwargs)
 
         self.__pitch = float(pitch)
         self.__offset_along_axis = float(kwargs.pop('offset_along_axis', 0))
@@ -735,11 +776,6 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         if self.motion_partition.ndim != 1:
             raise ValueError('`apart` has dimension {}, expected 1'
                              ''.format(self.motion_partition.ndim))
-
-        # Make sure there are no leftover kwargs
-        if kwargs:
-            raise TypeError('got unexpected keyword arguments {}'
-                            ''.format(kwargs))
 
     @classmethod
     def frommatrix(cls, apart, dpart, src_radius, det_radius, init_matrix,
@@ -772,11 +808,8 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
             helix traverses when increasing the angle parameter by
             ``2 * pi``. The default case ``pitch=0`` results in a circular
             cone beam geometry.
-
-        Other Parameters
-        ----------------
-        offset_along_axis : float, optional
-            Offset along the ``axis`` at angle 0. Default: 0.
+        kwargs :
+            Further keyword arguments passed to the class constructor.
 
         Returns
         -------
@@ -885,9 +918,34 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         """Discrete angles given in this geometry."""
         return self.motion_grid.coord_vectors[0]
 
-    def det_axes(self, angles):
-        """Return the detector axes tuple at ``angle``."""
-        return tuple(self.rotation_matrix(angles).dot(axis)
+    def det_axes(self, angle):
+        """Return the detector axes tuple at ``angle``.
+
+        Parameters
+        ----------
+        angles : float or `array-like`
+            Angle(s) in radians describing the counter-clockwise rotation
+            of the detector around `axis`.
+
+        Returns
+        -------
+        axes : tuple of `numpy.ndarray`'s
+            Unit vector(s) along which the detector is aligned.
+            If ``angle`` is a single parameter, a tuple of 2 arrays
+            of shape ``(3,)`` is returned, each of which stands for
+            a detector axis.
+            For multiple angle parameters, the tuple contains 2 arrays
+            of shape ``(num_params, 3)``, i.e., a stack of the respective
+            vectors along array axis 0.
+
+        Notes
+        -----
+        To get a sequence of axi pairs one can, e.g., do the following::
+
+            axis_arrays = geometry.det_axes(angles)
+            list_of_axis_pairs = list(zip(*axis_arrays))
+        """
+        return tuple(self.rotation_matrix(angle).dot(axis)
                      for axis in self.det_axes_init)
 
     def det_refpoint(self, angle):
@@ -904,18 +962,21 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
 
         Parameters
         ----------
-        angle : float
-            Rotation angle given in radians, must be contained in
-            this geometry's `motion_params`
+        angle : float or `array-like`
+            Angle(s) in radians describing the counter-clockwise
+            rotation of the detector.
 
         Returns
         -------
-        point : `numpy.ndarray`, shape (3,)
-            Detector reference point corresponding to the given angle
+        refpt : `numpy.ndarray`, shape (3,) or (num_params, 3)
+            Vector(s) pointing from the origin to the detector reference
+            point at ``angle``.
+            If ``angle`` is a single parameter, a single vector is
+            returned, otherwise a stack of vectors along axis 0.
 
         See Also
         --------
-        rotation_matrix
+        src_position
 
         Examples
         --------
@@ -931,11 +992,18 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         array([  0.,  10.,   0.])
         >>> np.allclose(geom.det_refpoint(np.pi / 2), [-10, 0, 0.5])
         True
+
+        The method is vectorized, i.e., it can be called with multiple
+        angles at once:
+
+        >>> points = geom.det_refpoint([0, np.pi / 2])
+        >>> np.allclose(points[0], [0, 10, 0])
+        True
+        >>> np.allclose(points[1], [-10, 0, 0.5])
+        True
         """
-        angle = float(angle)
-        if angle not in self.motion_params:
-            raise ValueError('`angle` {} is not in the valid range {}'
-                             ''.format(angle, self.motion_params))
+        squeeze_out = np.isscalar(angle)
+        angle = np.array(angle, dtype=float, copy=False, ndmin=1)
 
         # Initial vector from center of rotation to detector.
         # It can be computed this way since source and detector are at
@@ -945,10 +1013,15 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
 
         # Increment along the rotation axis according to pitch and
         # offset_along_axis
-        pitch_component = self.axis * (self.offset_along_axis +
-                                       self.pitch * angle / (2 * np.pi))
+        shift_along_axis = (self.offset_along_axis +
+                            self.pitch * angle / (2 * np.pi))
+        pitch_component = self.axis[None, :] * shift_along_axis[:, None]
 
-        return self.translation + circle_component + pitch_component
+        refpt = self.translation[None, :] + circle_component + pitch_component
+        if squeeze_out:
+            refpt = refpt.squeeze()
+
+        return refpt
 
     def src_position(self, angle):
         """Return the source position at ``angle``.
@@ -964,18 +1037,21 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
 
         Parameters
         ----------
-        angle : float
-            Rotation angle given in radians, must be contained in
-            this geometry's `motion_params`
+        angle : float or `array-like`
+            Angle(s) in radians describing the counter-clockwise
+            rotation of the detector.
 
         Returns
         -------
-        point : `numpy.ndarray`, shape (3,)
-            Detector reference point corresponding to the given angle
+        pos : `numpy.ndarray`, shape (3,) or (num_params, 3)
+            Vector(s) pointing from the origin to the source position
+            at ``angle``.
+            If ``angle`` is a single parameter, a single vector is
+            returned, otherwise a stack of vectors along axis 0.
 
         See Also
         --------
-        rotation_matrix
+        det_refpoint
 
         Examples
         --------
@@ -991,11 +1067,18 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         array([ 0., -5.,  0.])
         >>> np.allclose(geom.src_position(np.pi / 2), [5, 0, 0.5])
         True
+
+        The method is vectorized, i.e., it can be called with multiple
+        angles at once:
+
+        >>> points = geom.src_position([0, np.pi / 2])
+        >>> np.allclose(points[0], [0, -5, 0])
+        True
+        >>> np.allclose(points[1], [5, 0, 0.5])
+        True
         """
-        angle = float(angle)
-        if angle not in self.motion_params:
-            raise ValueError('`angle` {} is not in the valid range {}'
-                             ''.format(angle, self.motion_params))
+        squeeze_out = np.isscalar(angle)
+        angle = np.array(angle, dtype=float, copy=False, ndmin=1)
 
         # Initial vector from 0 to the source (non-translated).
         # It can be computed this way since source and detector are at
@@ -1004,10 +1087,15 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         circle_component = self.rotation_matrix(angle).dot(origin_to_src_init)
 
         # Increment by pitch (including offset)
-        pitch_component = self.axis * (self.offset_along_axis +
-                                       self.pitch * angle / (np.pi * 2))
+        shift_along_axis = (self.offset_along_axis +
+                            self.pitch * angle / (2 * np.pi))
+        pitch_component = self.axis[None, :] * shift_along_axis[:, None]
 
-        return self.translation + circle_component + pitch_component
+        pos = self.translation[None, :] + circle_component + pitch_component
+        if squeeze_out:
+            pos = pos.squeeze()
+
+        return pos
 
     def __repr__(self):
         """Return ``repr(self)``."""
