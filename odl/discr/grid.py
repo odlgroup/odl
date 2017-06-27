@@ -231,7 +231,12 @@ class RectGrid(Set):
     @property
     def shape(self):
         """Number of grid points per axis."""
-        return tuple(len(vec) for vec in self.coord_vectors)
+        try:
+            shape = self.__shape
+        except AttributeError:
+            shape = tuple(len(vec) for vec in self.coord_vectors)
+            self.__shape = shape
+        return shape
 
     @property
     def size(self):
