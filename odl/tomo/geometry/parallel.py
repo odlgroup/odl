@@ -16,7 +16,7 @@ from builtins import super
 
 import numpy as np
 
-from odl.discr import uniform_partition
+from odl.discr import uniform_partition, nonuniform_partition
 from odl.tomo.geometry.detector import Flat1dDetector, Flat2dDetector
 from odl.tomo.geometry.geometry import Geometry, AxisOrientedGeometry
 from odl.tomo.util import euler_matrix, transform_system
@@ -1058,7 +1058,7 @@ class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
     rotation_matrix = AxisOrientedGeometry.rotation_matrix
 
 
-def parallel_beam_geometry(space, angles=None, det_shape=None):
+def parallel_beam_geometry(space, num_angles=None, det_shape=None):
     """Create default parallel beam geometry from ``space``.
 
     This is intended for simple test cases where users do not need the full
@@ -1066,14 +1066,15 @@ def parallel_beam_geometry(space, angles=None, det_shape=None):
 
     This default geometry gives a fully sampled sinogram according to the
     Nyquist criterion, which in general results in a very large number of
-    samples.
+    samples. In particular, a ``space`` that is not centered at the origin
+    can result in very large detectors.
 
     Parameters
     ----------
     space : `DiscreteLp`
         Reconstruction space, the space of the volumetric data to be projected.
         Needs to be 2d or 3d.
-    angles : int, optional
+    num_angles : int, optional
         Number of angles.
         Default: Enough to fully sample the data, see Notes.
     det_shape : int or sequence of int, optional
@@ -1090,7 +1091,7 @@ def parallel_beam_geometry(space, angles=None, det_shape=None):
     --------
     Create geometry from 2d space and check the number of data points:
 
-    >>> space = odl.uniform_discr([-1, -1], [1, 1], [20, 20])
+    >>> space = odl.uniform_discr([-1, -1], [1, 1], (20, 20))
     >>> geometry = parallel_beam_geometry(space)
     >>> geometry.angles.size
     45
@@ -1099,9 +1100,9 @@ def parallel_beam_geometry(space, angles=None, det_shape=None):
 
     Notes
     -----
-    According to `Mathematical Methods in Image Reconstruction`_ (page 72), for
-    a function :math:`f : \\mathbb{R}^2 \\to \\mathbb{R}` that has compact
-    support
+    According to `Mathematical Methods in Image Reconstruction`_
+    (pages 72--74), for a function
+    :math:`f : \\mathbb{R}^2 \\to \\mathbb{R}` that has compact support
 
     .. math::
         \| x \| > \\rho  \implies f(x) = 0,
@@ -1112,14 +1113,14 @@ def parallel_beam_geometry(space, angles=None, det_shape=None):
        \| \\xi \| > \\Omega \implies \\hat{f}(\\xi) \\approx 0,
 
     then, in order to fully reconstruct the function from a parallel beam ray
-    transform the function should be sampled at an angular interval
+    transform, the function should be sampled at an angular interval
     :math:`\\Delta \psi` such that
 
     .. math::
         \\Delta \psi \leq \\frac{\\pi}{\\rho \\Omega},
 
-    and the detector should be sampled with an interval :math:`Delta s` that
-    satisfies
+    and the detector should be sampled with an interval :math:`\\Delta s`
+    that satisfies
 
     .. math::
         \\Delta s \leq \\frac{\\pi}{\\Omega}.
@@ -1145,31 +1146,33 @@ http://dx.doi.org/10.1137/1.9780898718324
     # period of twice the inter-node distance.
     min_side = min(space.partition.cell_sides[:2])
     omega = np.pi / min_side
-
-    if det_shape is None:
-        if space.ndim == 2:
-            det_shape = int(2 * rho * omega / np.pi) + 1
-        elif space.ndim == 3:
-            width = int(2 * rho * omega / np.pi) + 1
-            height = space.shape[2]
-            det_shape = [width, height]
-
-    if angles is None:
-        angles = int(omega * rho) + 1
-
-    # Define angles
-    angle_partition = uniform_partition(0, np.pi, angles)
+    num_px_horiz = int(np.ceil(2 * rho * omega / np.pi))
 
     if space.ndim == 2:
-        det_partition = uniform_partition(-rho, rho, det_shape)
-        return Parallel2dGeometry(angle_partition, det_partition)
+        det_min_pt = -rho
+        det_max_pt = rho
+        if det_shape is None:
+            det_shape = num_px_horiz
     elif space.ndim == 3:
+        num_px_vert = space.shape[2]
         min_h = space.domain.min_pt[2]
         max_h = space.domain.max_pt[2]
+        det_min_pt = [-rho, min_h]
+        det_max_pt = [rho, max_h]
+        if det_shape is None:
+            det_shape = [num_px_horiz, num_px_vert]
 
-        det_partition = uniform_partition([-rho, min_h],
-                                          [rho, max_h],
-                                          det_shape)
+    if num_angles is None:
+        num_angles = int(np.ceil(omega * rho))
+
+    angle_partition = nonuniform_partition(
+        np.linspace(0, np.pi, num_angles, endpoint=False))
+
+    det_partition = uniform_partition(det_min_pt, det_max_pt, det_shape)
+
+    if space.ndim == 2:
+        return Parallel2dGeometry(angle_partition, det_partition)
+    elif space.ndim == 3:
         return Parallel3dAxisGeometry(angle_partition, det_partition)
     else:
         raise ValueError('``space.ndim`` must be 2 or 3.')

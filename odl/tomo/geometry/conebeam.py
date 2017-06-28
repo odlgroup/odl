@@ -16,6 +16,7 @@ from builtins import super
 
 import numpy as np
 
+from odl.discr import uniform_partition, nonuniform_partition
 from odl.tomo.geometry.detector import Flat1dDetector, Flat2dDetector
 from odl.tomo.geometry.geometry import (
     DivergentBeamGeometry, AxisOrientedGeometry)
@@ -24,7 +25,8 @@ from odl.util import signature_string, indent_rows
 
 
 __all__ = ('FanFlatGeometry',
-           'CircularConeFlatGeometry', 'HelicalConeFlatGeometry',)
+           'CircularConeFlatGeometry', 'HelicalConeFlatGeometry',
+           'cone_beam_geometry')
 
 
 class FanFlatGeometry(DivergentBeamGeometry):
@@ -1235,6 +1237,178 @@ class CircularConeFlatGeometry(HelicalConeFlatGeometry):
                    src_to_det_init=src_to_det,
                    det_axes_init=[det_axis_0, det_axis_1],
                    **kwargs)
+
+
+def cone_beam_geometry(space, src_radius, det_radius, num_angles=None,
+                       det_shape=None):
+    """Create a default fan or cone beam geometry from ``space``.
+
+    This is intended for simple test cases where users do not need the full
+    flexibility of the geometries, but simply want a geometry that works.
+
+    This default geometry gives a fully sampled sinogram according to the
+    Nyquist criterion, which in general results in a very large number of
+    samples. In particular, a ``space`` that is not centered at the origin
+    can result in very large detectors.
+
+    Parameters
+    ----------
+    space : `DiscreteLp`
+        Reconstruction space, the space of the volumetric data to be
+        projected. Must be 2-dimensional.
+    src_radius : nonnegative float
+        Radius of the source circle.
+    det_radius : nonnegative float
+        Radius of the detector circle.
+    num_angles : int, optional
+        Number of angles.
+        Default: Enough to fully sample the data, see Notes.
+    det_shape : int or sequence of int, optional
+        Number of detector pixels.
+        Default: Enough to fully sample the data, see Notes.
+
+    Returns
+    -------
+    geometry : `DivergentBeamGeometry`
+        If ``space`` is 2d, return a `FanFlatGeometry`.
+        If ``space`` is 3d, return a `CircularConeFlatGeometry`.
+
+    Examples
+    --------
+    Create geometry from 2d space and check the number of data points:
+
+    >>> space = odl.uniform_discr([-1, -1], [1, 1], (20, 20))
+    >>> geometry = cone_beam_geometry(space, src_radius=5, det_radius=5)
+    >>> geometry.angles.size
+    77
+    >>> geometry.detector.size
+    28
+
+    If the source is close to the object, the detector becomes larger due
+    to more magnification:
+
+    >>> geometry = cone_beam_geometry(space, src_radius=3, det_radius=9)
+    >>> geometry.angles.size
+    79
+    >>> geometry.detector.size
+    52
+
+    Notes
+    -----
+    According to `Mathematical Methods in Image Reconstruction`_
+    (page 75--76), for a function :math:`f : \\mathbb{R}^2 \\to \\mathbb{R}`
+    that has compact support
+
+    .. math::
+        \| x \| > \\rho  \implies f(x) = 0,
+
+    and is essentially bandlimited
+
+    .. math::
+       \| \\xi \| > \\Omega \implies \\hat{f}(\\xi) \\approx 0,
+
+    then, in order to fully reconstruct the function from a fan beam ray
+    transform with source-detector distance :math:`r` (assuming all detector
+    points have the same distance to the source), the function should be
+    sampled at an angular interval :math:`\\Delta \psi` such that
+
+    .. math::
+        \\Delta \psi \leq \\frac{r + \\rho}{r}\, \\frac{\\pi}{\\rho \\Omega},
+
+    and the detector should be sampled with an angular interval
+    :math:`\\Delta \\alpha` that satisfies
+
+    .. math::
+        \\Delta \\alpha \leq \\frac{\\pi}{r \\Omega}.
+
+    For a flat detector, the angular interval is smallest in the center
+    of the fan and largest at the boundaries. The worst-case relation
+    between the linear and angular sampling intervals are
+
+    .. math::
+        \\Delta s = R \\Delta \\alpha, \quad R^2 = r^2 + (w / 2)^2,
+
+    where :math:`w` is the width of the detector.
+    Thus, to satisfy the angular detector condition one can choose
+
+    .. math::
+        \\Delta s \leq \\frac{\\pi \sqrt{r^2 + (w / 2)^2}}{r \\Omega}.
+
+    The geometry returned by this function satisfies these conditions exactly.
+
+    If the domain is 3-dimensional, a circular cone beam geometry is
+    created with the third coordinate axis as rotation axis. This does,
+    of course, not yield complete data, but is equivalent to the
+    2D fan beam case in the :math:`z = 0` slice.
+
+    References
+    ----------
+    .. _Mathematical Methods in Image Reconstruction: \
+http://dx.doi.org/10.1137/1.9780898718324
+    """
+    # Find maximum distance from rotation axis
+    corners = space.domain.corners()[:, :2]
+    rho = np.max(np.linalg.norm(corners, axis=1))
+
+    # Find default values according to Nyquist criterion.
+
+    # We assume that the function is bandlimited by a wave along the x or y
+    # axis. The highest frequency we can measure is then a standing wave with
+    # period of twice the inter-node distance.
+    min_side = min(space.partition.cell_sides[:2])
+    omega = np.pi / min_side
+
+    # Compute minimum width of the detector to cover the object. The relation
+    # used here is (w/2)/(rs+rd) = rho/rs since both are equal to tan(alpha),
+    # where alpha is the half fan angle.
+    rs = float(src_radius)
+    rd = float(det_radius)
+    r = src_radius + det_radius
+    w = 2 * rho * (rs + rd) / rs
+
+    # Compute minimum number of pixels given the constraint on the
+    # sampling interval and the computed width
+    rb = np.hypot(r, w / 2)  # length of the boundary ray to the flat detector
+    num_px_horiz = int(np.ceil(w * omega * r / (2 * np.pi * rb)))
+    delta_s = w / num_px_horiz
+
+    if space.ndim == 2:
+        det_min_pt = -w / 2
+        det_max_pt = w / 2
+        if det_shape is None:
+            det_shape = num_px_horiz
+    elif space.ndim == 3:
+        # Compute number of vertical pixels required to cover the object,
+        # using the same sampling interval vertically as horizontally.
+        # The reasoning is the same as for the computation of w.
+        corners = space.domain.corners()
+        rho_3d = np.max(np.linalg.norm(corners, axis=1))
+        h = 2 * rho_3d * (rs + rd) / rs
+        num_px_vert = int(np.ceil(h / delta_s))
+        h = num_px_vert * delta_s  # make multiple of delta_s
+
+        det_min_pt = [-w / 2, -h / 2]
+        det_max_pt = [w / 2, h / 2]
+        if det_shape is None:
+            det_shape = [num_px_horiz, num_px_vert]
+
+    if num_angles is None:
+        num_angles = int(np.ceil(2 * omega * rho) * r / (r + rho))
+
+    angle_partition = nonuniform_partition(
+        np.linspace(0, np.pi, num_angles, endpoint=False))
+
+    det_partition = uniform_partition(det_min_pt, det_max_pt, det_shape)
+
+    if space.ndim == 2:
+        return FanFlatGeometry(angle_partition, det_partition,
+                               src_radius, det_radius)
+    elif space.ndim == 3:
+        return CircularConeFlatGeometry(angle_partition, det_partition,
+                                        src_radius, det_radius)
+    else:
+        raise ValueError('``space.ndim`` must be 2 or 3.')
+
 
 if __name__ == '__main__':
     from odl.util.testutils import run_doctests
