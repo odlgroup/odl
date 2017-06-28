@@ -416,14 +416,14 @@ def show_discrete_data(values, grid, title=None, method='',
                 csub.colorbar.draw_all()
 
     # Fixes overlapping stuff at the expense of potentially squashed subplots
-    if not update_in_place:
-        fig.tight_layout()
-
     if title is not None:
         if not values_are_complex:
             # Do not overwrite title for complex values
             plt.title(title)
         fig.canvas.manager.set_window_title(title)
+
+    if not update_in_place:
+        fig.tight_layout()
 
     if updatefig or plt.isinteractive():
         # If we are running in interactive mode, we can always show the fig
