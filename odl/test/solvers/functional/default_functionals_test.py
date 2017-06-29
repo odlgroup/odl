@@ -292,8 +292,8 @@ def test_kullback_leibler(space):
 
     # The proximal operator
     sigma = np.random.rand()
-    expected_result = odl.solvers.proximal_cconj(
-        odl.solvers.proximal_cconj_kl(space, g=prior))(sigma)(x)
+    expected_result = odl.solvers.proximal_convex_conj(
+        odl.solvers.proximal_convex_conj_kl(space, g=prior))(sigma)(x)
     assert all_almost_equal(func.proximal(sigma)(x), expected_result)
 
     # The convex conjugate functional
@@ -362,8 +362,9 @@ def test_kullback_leibler_cross_entorpy(space):
 
     # The proximal operator
     sigma = np.random.rand()
-    expected_result = odl.solvers.proximal_cconj(
-        odl.solvers.proximal_cconj_kl_cross_entropy(space, g=prior))(sigma)(x)
+    prox = odl.solvers.proximal_convex_conj(
+        odl.solvers.proximal_convex_conj_kl_cross_entropy(space, g=prior))
+    expected_result = prox(sigma)(x)
     assert all_almost_equal(func.proximal(sigma)(x), expected_result)
 
     # The convex conjugate functional

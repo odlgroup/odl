@@ -17,10 +17,10 @@ import odl
 from odl.solvers.nonsmooth.proximal_operators import (
     combine_proximals, proximal_const_func,
     proximal_box_constraint, proximal_nonnegativity,
-    proximal_cconj_l1,
+    proximal_convex_conj_l1,
     proximal_l2,
-    proximal_cconj_l2_squared,
-    proximal_cconj_kl, proximal_cconj_kl_cross_entropy)
+    proximal_convex_conj_l2_squared,
+    proximal_convex_conj_kl, proximal_convex_conj_kl_cross_entropy)
 from odl.util.testutils import all_almost_equal
 
 
@@ -219,7 +219,7 @@ def test_proximal_convconj_l2_sq_wo_data():
 
     # Factory function returning the proximal operator
     lam = 2
-    prox_factory = proximal_cconj_l2_squared(space, lam=lam)
+    prox_factory = proximal_convex_conj_l2_squared(space, lam=lam)
 
     # Initialize the proximal operator
     sigma = 0.25
@@ -254,7 +254,7 @@ def test_proximal_convconj_l2_sq_with_data():
 
     # Factory function returning the proximal operator
     lam = 2
-    prox_factory = proximal_cconj_l2_squared(space, lam=lam, g=g)
+    prox_factory = proximal_convex_conj_l2_squared(space, lam=lam, g=g)
 
     # Initialize the proximal operator
     sigma = 0.25
@@ -286,7 +286,7 @@ def test_proximal_convconj_l1_simple_space_without_data():
 
     # Factory function returning the proximal operator
     lam = 2
-    prox_factory = proximal_cconj_l1(space, lam=lam)
+    prox_factory = proximal_convex_conj_l1(space, lam=lam)
 
     # Initialize the proximal operator of F^*
     sigma = 0.25
@@ -319,7 +319,7 @@ def test_proximal_convconj_l1_simple_space_with_data():
 
     # Factory function returning the proximal operator
     lam = 2
-    prox_factory = proximal_cconj_l1(space, lam=lam, g=g)
+    prox_factory = proximal_convex_conj_l1(space, lam=lam, g=g)
 
     # Initialize the proximal operator of F^*
     sigma = 0.25
@@ -357,7 +357,8 @@ def test_proximal_convconj_l1_product_space():
 
     # Factory function returning the proximal operator
     lam = 2
-    prox_factory = proximal_cconj_l1(op_domain, lam=lam, g=g, isotropic=True)
+    prox_factory = proximal_convex_conj_l1(op_domain, lam=lam, g=g,
+                                           isotropic=True)
 
     # Initialize the proximal operator
     sigma = 0.25
@@ -392,7 +393,7 @@ def test_proximal_convconj_kl_simple_space():
 
     # Factory function returning the proximal operator
     lam = 2
-    prox_factory = proximal_cconj_kl(space, lam=lam, g=g)
+    prox_factory = proximal_convex_conj_kl(space, lam=lam, g=g)
 
     # Initialize the proximal operator of F^*
     sigma = 0.25
@@ -430,7 +431,7 @@ def test_proximal_convconj_kl_product_space():
 
     # Factory function returning the proximal operator
     lam = 2
-    prox_factory = proximal_cconj_kl(op_domain, lam=lam, g=g)
+    prox_factory = proximal_convex_conj_kl(op_domain, lam=lam, g=g)
 
     # Initialize the proximal operator
     sigma = 0.25
@@ -462,7 +463,7 @@ def test_proximal_convconj_kl_cross_entropy():
 
     # Factory function returning the proximal operator
     lam = 2
-    prox_factory = proximal_cconj_kl_cross_entropy(space, lam=lam, g=g)
+    prox_factory = proximal_convex_conj_kl_cross_entropy(space, lam=lam, g=g)
 
     # Initialize the proximal operator of F^*
     sigma = 0.25

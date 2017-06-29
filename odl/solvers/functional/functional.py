@@ -20,7 +20,7 @@ from odl.operator.operator import (
 from odl.operator.default_ops import (IdentityOperator, ConstantOperator)
 from odl.solvers.nonsmooth import (proximal_arg_scaling, proximal_translation,
                                    proximal_quadratic_perturbation,
-                                   proximal_const_func, proximal_cconj)
+                                   proximal_const_func, proximal_convex_conj)
 
 
 __all__ = ('Functional', 'FunctionalLeftScalarMult',
@@ -1117,10 +1117,10 @@ class FunctionalDefaultConvexConjugate(Functional):
 
         Returns
         -------
-        proximal : proximal_cconj
+        proximal : proximal_convex_conj
             Proximal computed using the Moreu identity
         """
-        return proximal_cconj(self.convex_conj.proximal)
+        return proximal_convex_conj(self.convex_conj.proximal)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -1132,8 +1132,9 @@ class FunctionalDefaultConvexConjugate(Functional):
 
 
 def simple_functional(space, fcall=None, grad=None, prox=None, grad_lip=np.nan,
-                      cconj_fcall=None, cconj_grad=None, cconj_prox=None,
-                      cconj_grad_lip=np.nan, linear=False):
+                      convex_conj_fcall=None, convex_conj_grad=None,
+                      convex_conj_prox=None, convex_conj_grad_lip=np.nan,
+                      linear=False):
     """Simplified interface to create a functional with specific properties.
 
     Users may specify as many properties as is needed by the application.
@@ -1150,13 +1151,13 @@ def simple_functional(space, fcall=None, grad=None, prox=None, grad_lip=np.nan,
         Proximal factory for the functional.
     grad_lip : float, optional
         lipschitz constant of the functional.
-    cconj_fcall : callable, optional
+    convex_conj_fcall : callable, optional
         Function to evaluate when calling the convex conjugate functional.
-    cconj_grad : callable or `Operator`, optional
+    convex_conj_grad : callable or `Operator`, optional
         Gradient operator of the convex conjugate functional
-    cconj_prox : `proximal factory`, optional
+    convex_conj_prox : `proximal factory`, optional
         Proximal factory for the convex conjugate functional.
-    cconj_grad_lip : float, optional
+    convex_conj_grad_lip : float, optional
         lipschitz constant of the convex conjugate functional.
     linear : bool, optional
         True if the operator is linear.
@@ -1193,18 +1194,20 @@ def simple_functional(space, fcall=None, grad=None, prox=None, grad_lip=np.nan,
 
         grad = SimpleFunctionalGradient(space, space, linear=False)
 
-    if cconj_grad is not None and not isinstance(cconj_grad, Operator):
-        cconj_grad_in = cconj_grad
+    if (convex_conj_grad is not None and
+            not isinstance(convex_conj_grad, Operator)):
+        convex_conj_grad_in = convex_conj_grad
 
-        class SimpleFunctionalCConjGradient(Operator):
+        class SimpleFunctionalConvexConjGradient(Operator):
 
             """Gradient of the convex conj of a  `SimpleFunctional`."""
 
             def _call(self, x):
                 """Return ``self(x)``."""
-                return cconj_grad_in(x)
+                return convex_conj_grad_in(x)
 
-        cconj_grad = SimpleFunctionalCConjGradient(space, space, linear=False)
+        convex_conj_grad = SimpleFunctionalConvexConjGradient(space, space,
+                                                              linear=False)
 
     class SimpleFunctional(Functional):
 
@@ -1239,10 +1242,14 @@ def simple_functional(space, fcall=None, grad=None, prox=None, grad_lip=np.nan,
 
         @property
         def convex_conj(self):
-            return simple_functional(space, fcall=cconj_fcall, grad=cconj_grad,
-                                     prox=cconj_prox, grad_lip=cconj_grad_lip,
-                                     cconj_fcall=fcall, cconj_grad=grad,
-                                     cconj_prox=prox, cconj_grad_lip=grad_lip,
+            return simple_functional(space, fcall=convex_conj_fcall,
+                                     grad=convex_conj_grad,
+                                     prox=convex_conj_prox,
+                                     grad_lip=convex_conj_grad_lip,
+                                     convex_conj_fcall=fcall,
+                                     convex_conj_grad=grad,
+                                     convex_conj_prox=prox,
+                                     convex_conj_grad_lip=grad_lip,
                                      linear=linear)
 
     return SimpleFunctional()
