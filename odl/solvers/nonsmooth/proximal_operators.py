@@ -8,8 +8,8 @@
 
 """Factory functions for creating proximal operators.
 
-Functions with ``cconj`` mean the proximal of the convex conjugate and are
-provided for convenience.
+Functions with ``convex_conj`` mean the proximal of the convex conjugate and
+are provided for convenience.
 
 For more details see :ref:`proximal_operators` and references therein. For
 more details on proximal operators including how to evaluate the proximal
@@ -37,14 +37,14 @@ from odl.set import LinearSpaceElement
 from odl.util import cache_arguments
 
 
-__all__ = ('combine_proximals', 'proximal_cconj', 'proximal_translation',
+__all__ = ('combine_proximals', 'proximal_convex_conj', 'proximal_translation',
            'proximal_arg_scaling', 'proximal_quadratic_perturbation',
            'proximal_composition', 'proximal_const_func',
            'proximal_box_constraint', 'proximal_nonnegativity',
-           'proximal_l1', 'proximal_cconj_l1',
-           'proximal_l2', 'proximal_cconj_l2',
-           'proximal_l2_squared', 'proximal_cconj_l2_squared',
-           'proximal_cconj_kl', 'proximal_cconj_kl_cross_entropy')
+           'proximal_l1', 'proximal_convex_conj_l1',
+           'proximal_l2', 'proximal_convex_conj_l2',
+           'proximal_l2_squared', 'proximal_convex_conj_l2_squared',
+           'proximal_convex_conj_kl', 'proximal_convex_conj_kl_cross_entropy')
 
 
 def combine_proximals(*factory_list):
@@ -93,7 +93,7 @@ def combine_proximals(*factory_list):
     return diag_op_factory
 
 
-def proximal_cconj(prox_factory):
+def proximal_convex_conj(prox_factory):
     """Calculate the proximal of the dual using Moreau decomposition.
 
     Parameters
@@ -136,7 +136,7 @@ def proximal_cconj(prox_factory):
     algorithms for inverse problems in science and engineering, Springer,
     2011.
     """
-    def cconj_prox_factory(sigma):
+    def convex_conj_prox_factory(sigma):
         """Create proximal for the dual with a given sigma.
 
         Parameters
@@ -153,7 +153,7 @@ def proximal_cconj(prox_factory):
         prox_other = sigma * prox_factory(1.0 / sigma) * (1.0 / sigma)
         return IdentityOperator(prox_other.domain) - prox_other
 
-    return cconj_prox_factory
+    return convex_conj_prox_factory
 
 
 def proximal_translation(prox_factory, y):
@@ -609,7 +609,7 @@ def proximal_nonnegativity(space):
     return proximal_box_constraint(space, lower=0)
 
 
-def proximal_cconj_l2(space, lam=1, g=None):
+def proximal_convex_conj_l2(space, lam=1, g=None):
     """Proximal operator factory of the convex conj of the l2-norm/distance.
 
     Function for the proximal operator of the convex conjugate of the
@@ -637,7 +637,7 @@ def proximal_cconj_l2(space, lam=1, g=None):
     Notes
     -----
     Most problems are forumlated for the squared norm/distance, in that case
-    use the `proximal_cconj_l2_squared` instead.
+    use the `proximal_convex_conj_l2_squared` instead.
 
     The :math:`L_2`-norm/distance :math:`F` is given by is given by
 
@@ -668,10 +668,10 @@ def proximal_cconj_l2(space, lam=1, g=None):
     See Also
     --------
     proximal_l2 : proximal without convex conjugate
-    proximal_cconj_l2_squared : proximal for squared norm/distance
+    proximal_convex_conj_l2_squared : proximal for squared norm/distance
     """
     prox_l2 = proximal_l2(space, lam=lam, g=g)
-    return proximal_cconj(prox_l2)
+    return proximal_convex_conj(prox_l2)
 
 
 def proximal_l2(space, lam=1, g=None):
@@ -722,7 +722,7 @@ def proximal_l2(space, lam=1, g=None):
     See Also
     --------
     proximal_l2_squared : proximal for squared norm/distance
-    proximal_cconj_l2 : proximal for convex conjugate
+    proximal_convex_conj_l2 : proximal for convex conjugate
     """
     lam = float(lam)
 
@@ -777,7 +777,7 @@ def proximal_l2(space, lam=1, g=None):
     return ProximalL2
 
 
-def proximal_cconj_l2_squared(space, lam=1, g=None):
+def proximal_convex_conj_l2_squared(space, lam=1, g=None):
     """Proximal operator factory of the convex conj of the squared l2-norm/dist
 
     Function for the proximal operator of the convex conjugate of the
@@ -824,7 +824,7 @@ def proximal_cconj_l2_squared(space, lam=1, g=None):
 
     See Also
     --------
-    proximal_cconj_l2 : proximal without square
+    proximal_convex_conj_l2 : proximal without square
     proximal_l2_squared : proximal without convex conjugate
     """
     lam = float(lam)
@@ -832,7 +832,7 @@ def proximal_cconj_l2_squared(space, lam=1, g=None):
     if g is not None and g not in space:
         raise TypeError('{!r} is not an element of {!r}'.format(g, space))
 
-    class ProximalCConjL2Squared(Operator):
+    class ProximalConvexConjL2Squared(Operator):
 
         """Proximal operator of the convex conj of the squared l2-norm/dist."""
 
@@ -859,7 +859,7 @@ def proximal_cconj_l2_squared(space, lam=1, g=None):
                 out.lincomb(1.0 / (1 + 0.5 * sig / lam), x,
                             -sig / (1 + 0.5 * sig / lam), g)
 
-    return ProximalCConjL2Squared
+    return ProximalConvexConjL2Squared
 
 
 def proximal_l2_squared(space, lam=1, g=None):
@@ -904,14 +904,14 @@ def proximal_l2_squared(space, lam=1, g=None):
     See Also
     --------
     proximal_l2 : proximal without square
-    proximal_cconj_l2_squared : proximal for convex conjugate
+    proximal_convex_conj_l2_squared : proximal for convex conjugate
     """
     # TODO: optimize
-    prox_cc_l2_squared = proximal_cconj_l2_squared(space, lam=lam, g=g)
-    return proximal_cconj(prox_cc_l2_squared)
+    prox_cc_l2_squared = proximal_convex_conj_l2_squared(space, lam=lam, g=g)
+    return proximal_convex_conj(prox_cc_l2_squared)
 
 
-def proximal_cconj_l1(space, lam=1, g=None, isotropic=False):
+def proximal_convex_conj_l1(space, lam=1, g=None, isotropic=False):
     """Proximal operator factory of the convex conj of the l1-norm/distance.
 
     Function for the proximal operator of the convex conjugate of the
@@ -1006,7 +1006,7 @@ def proximal_cconj_l1(space, lam=1, g=None, isotropic=False):
         raise TypeError('`isotropic` given with non-powerspace `space`({})'
                         ''.format(space))
 
-    class ProximalCConjL1(Operator):
+    class ProximalConvexConjL1(Operator):
 
         """Proximal operator of the convex conj of the l1-norm/distance."""
 
@@ -1065,7 +1065,7 @@ def proximal_cconj_l1(space, lam=1, g=None, isotropic=False):
                 # Pointwise division
                 diff.divide(out, out=out)
 
-    return ProximalCConjL1
+    return ProximalConvexConjL1
 
 
 def proximal_l1(space, lam=1, g=None, isotropic=False):
@@ -1128,8 +1128,7 @@ def proximal_l1(space, lam=1, g=None, isotropic=False):
 
     See Also
     --------
-    proximal_cconj_l1 : proximal for convex conjugate
-
+    proximal_convex_conj_l1 : proximal for convex conjugate
 
     References
     ----------
@@ -1137,11 +1136,12 @@ def proximal_l1(space, lam=1, g=None, isotropic=False):
     monotone operator theory in Hilbert spaces*. Springer, 2011.
     """
     # TODO: optimize
-    prox_cc_l1 = proximal_cconj_l1(space, lam=lam, g=g, isotropic=isotropic)
-    return proximal_cconj(prox_cc_l1)
+    prox_cc_l1 = proximal_convex_conj_l1(space, lam=lam, g=g,
+                                         isotropic=isotropic)
+    return proximal_convex_conj(prox_cc_l1)
 
 
-def proximal_cconj_kl(space, lam=1, g=None):
+def proximal_convex_conj_kl(space, lam=1, g=None):
     """Proximal operator factory of the convex conjugate of the KL divergence.
 
     Function returning the proximal operator of the convex conjugate of the
@@ -1169,7 +1169,7 @@ def proximal_cconj_kl(space, lam=1, g=None):
 
     See Also
     --------
-    proximal_cconj_kl_cross_entropy : proximal for releated functional
+    proximal_convex_conj_kl_cross_entropy : proximal for releated functional
 
     Notes
     -----
@@ -1227,7 +1227,7 @@ def proximal_cconj_kl(space, lam=1, g=None):
     if g is not None and g not in space:
         raise TypeError('{} is not an element of {}'.format(g, space))
 
-    class ProximalCConjKL(Operator):
+    class ProximalConvexConjKL(Operator):
 
         """Proximal operator of the convex conjugate of the KL divergence."""
 
@@ -1272,10 +1272,10 @@ def proximal_cconj_kl(space, lam=1, g=None):
             # out = 1/2 * out
             out /= 2
 
-    return ProximalCConjKL
+    return ProximalConvexConjKL
 
 
-def proximal_cconj_kl_cross_entropy(space, lam=1, g=None):
+def proximal_convex_conj_kl_cross_entropy(space, lam=1, g=None):
     """Proximal factory of the convex conjugate of cross entropy KL divergence.
 
     Function returning the proximal facotry of the convex conjugate of the
@@ -1304,7 +1304,7 @@ def proximal_cconj_kl_cross_entropy(space, lam=1, g=None):
 
     See Also
     --------
-    proximal_cconj_kl : proximal for related functional
+    proximal_convex_conj_kl : proximal for related functional
 
     Notes
     -----
@@ -1362,7 +1362,7 @@ def proximal_cconj_kl_cross_entropy(space, lam=1, g=None):
     if g is not None and g not in space:
         raise TypeError('{} is not an element of {}'.format(g, space))
 
-    class ProximalCConjKLCrossEntropy(Operator):
+    class ProximalConvexConjKLCrossEntropy(Operator):
 
         """Proximal operator of conjugate of cross entropy KL divergence."""
 
@@ -1390,7 +1390,7 @@ def proximal_cconj_kl_cross_entropy(space, lam=1, g=None):
                             -lam, scipy.special.lambertw(
                                 (self.sigma / lam) * g * np.exp(x / lam)))
 
-    return ProximalCConjKLCrossEntropy
+    return ProximalConvexConjKLCrossEntropy
 
 
 if __name__ == '__main__':

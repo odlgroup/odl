@@ -148,12 +148,12 @@ def test_proximal_defintion(functional, stepsize):
         assert f_prox_x <= f_y + EPS
 
 
-def cconj_objective(functional, x, y):
+def convex_conj_objective(functional, x, y):
     """CObjective function of the convex conjugate problem."""
     return x.inner(y) - functional(x)
 
 
-def test_cconj_defintion(functional):
+def test_convex_conj_defintion(functional):
     """Test the defintion of the convex conjugate:
 
         f^*(y) = sup_x {<x, y> - f(x)}
@@ -162,25 +162,26 @@ def test_cconj_defintion(functional):
 
         <x, y> - f(x) <= f^*(y)
     """
-    f_cconj = functional.convex_conj
+    f_convex_conj = functional.convex_conj
     if isinstance(functional.convex_conj, FunctionalDefaultConvexConjugate):
         pytest.skip('functional has no convex conjugate')
         return
 
     for _ in range(100):
         y = noise_element(functional.domain)
-        f_cconj_y = f_cconj(y)
+        f_convex_conj_y = f_convex_conj(y)
 
         x = noise_element(functional.domain)
         lhs = x.inner(y) - functional(x)
 
-        if not lhs <= f_cconj_y + EPS:
-            print(repr(functional), repr(f_cconj), x, y, lhs, f_cconj_y)
+        if not lhs <= f_convex_conj_y + EPS:
+            print(repr(functional), repr(f_convex_conj), x, y, lhs,
+                  f_convex_conj_y)
 
-        assert lhs <= f_cconj_y + EPS
+        assert lhs <= f_convex_conj_y + EPS
 
 
-def test_proximal_cconj_kl_cross_entropy_solving_opt_problem():
+def test_proximal_convex_conj_kl_cross_entropy_solving_opt_problem():
     """Test for proximal operator of conjguate of 2nd kind KL-divergence.
 
     The test solves the problem
