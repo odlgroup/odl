@@ -367,10 +367,10 @@ def _ellipse_phantom_2d(space, ellipses):
             # Parentheses to get best order for broadcasting
             radius = squared_dist[0] + squared_dist[1]
 
-        # Find the pixels within the ellipse
+        # Find the points within the ellipse
         inside = radius <= 1
 
-        # Add the ellipse intensity to those pixels
+        # Add the ellipse intensity to those points
         p[idx][inside] += intensity
 
     return space.element(p)
@@ -502,10 +502,10 @@ def _ellipsoid_phantom_3d(space, ellipsoids):
             # Parentheses to get best order for broadcasting
             radius = squared_dist[0] + (squared_dist[1] + squared_dist[2])
 
-        # Find the pixels within the ellipse
+        # Find the points within the ellipse
         inside = radius <= 1
 
-        # Add the ellipse intensity to those pixels
+        # Add the ellipse intensity to those points
         p[idx][inside] += intensity
 
     return space.element(p)

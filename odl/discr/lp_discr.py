@@ -274,20 +274,20 @@ class DiscreteLp(DiscretizedSpace):
             return ProductSpace(self, self.ndim)
 
     @property
-    def is_uniform_weighting(self):
-        """If the weighting of the space is the same for all pixels."""
+    def is_uniformly_weighted(self):
+        """If the weighting of the space is the same for all points."""
         try:
-            is_uniform_weighting = self.__is_uniform_weighting
+            is_uniformly_weighted = self.__is_uniformly_weighted
         except AttributeError:
             bdry_fracs = self.partition.boundary_cell_fractions
-            is_uniform_weighting = (
+            is_uniformly_weighted = (
                 np.allclose(bdry_fracs, 1.0) or
                 self.exponent == float('inf') or
                 not getattr(self.dspace, 'is_weighted', False))
 
-            self.__is_uniform_weighting = is_uniform_weighting
+            self.__is_uniformly_weighted = is_uniformly_weighted
 
-        return is_uniform_weighting
+        return is_uniformly_weighted
 
     def element(self, inp=None, **kwargs):
         """Create an element from ``inp`` or from scratch.
@@ -407,7 +407,7 @@ class DiscreteLp(DiscretizedSpace):
     # discretized integrals need to be scaled by that fraction.
     def _inner(self, x, y):
         """Return ``self.inner(x, y)``."""
-        if self.is_uniform_weighting:
+        if self.is_uniformly_weighted:
             return super()._inner(x, y)
         else:
             # TODO: implement without copying x
@@ -419,7 +419,7 @@ class DiscreteLp(DiscretizedSpace):
 
     def _norm(self, x):
         """Return ``self.norm(x)``."""
-        if self.is_uniform_weighting:
+        if self.is_uniformly_weighted:
             return super()._norm(x)
         else:
             # TODO: implement without copying x
@@ -431,7 +431,7 @@ class DiscreteLp(DiscretizedSpace):
 
     def _dist(self, x, y):
         """Return ``self.dist(x, y)``."""
-        if self.is_uniform_weighting:
+        if self.is_uniformly_weighted:
             return super()._dist(x, y)
         else:
             # TODO: implement without copying x

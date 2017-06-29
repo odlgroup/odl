@@ -280,8 +280,7 @@ class Flat2dDetector(FlatDetector):
         Parameters
         ----------
         part : 1-dim. `RectPartition`
-            Partition of the parameter interval, corresponding to the
-            pixels
+            Partition of the parameter interval, corresponding to the pixels.
         axes : 2-tuple of `array-like`'s (shape ``(3,)``)
             Principal axes of the detector, e.g.
             ``[(0, 1, 0), (0, 0, 1)]``
