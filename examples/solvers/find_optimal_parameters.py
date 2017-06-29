@@ -1,5 +1,4 @@
-"""
-Example of how to use optimization in order to pick reconstruction parameters.
+"""Example of how to use optimization in order to pick reconstruction parameters.
 
 In this example, we solve the tomographic inversion problem with different
 regularizers (FBP, Huber-TV and TV) and pick the "best" regularization
@@ -20,19 +19,20 @@ def optimal_parameters(reconstruction, fom, phantoms, data,
 
     Notes
     -----
-    For a forward operator :math:`A : X \to Y`, a reconstruction operator
-    parametrized by :math:`\theta` is some operator :math:`R_\theta : Y \to X`
+    For a forward operator :math:`A : X \\to Y`, a reconstruction operator
+    parametrized by :math:`\\theta` is some operator 
+    :math:`R_\\theta : Y \\to X`
     such that
 
     .. math::
-        R_\theta(A(x)) \approx x.
+        R_\\theta(A(x)) \\approx x.
 
-    The optimal choice of :math:`\theta` is given by
+    The optimal choice of :math:`\\theta` is given by
 
     .. math::
-        \theta = \argmin_\theta fom(R(A(x) + noise), x)
+        \\theta = \\arg\\min_\\theta fom(R(A(x) + noise), x)
 
-    where :math:`fom : X \times X \to \mathbb{R}` is a figure of merit.
+    where :math:`fom : X \\times X \\to \mathbb{R}` is a figure of merit.
 
     Parameters
     ----------
@@ -59,7 +59,7 @@ def optimal_parameters(reconstruction, fom, phantoms, data,
 
     Returns
     -------
-    parameters : 'array'
+    parameters : 'numpy.ndarray'
         The  optimal parameters for the reconstruction problem.
     """
 
@@ -221,6 +221,7 @@ else:
 
 
 def fom(reco, true_image):
+    """Sobolev type FoM enforcing both gradient and absolute similarity."""
     gradient = odl.Gradient(reco.space)
     return gradient(reco-true_image).norm() + reco.space.dist(reco, true_image)
 
@@ -231,11 +232,11 @@ optimal_parameters = optimal_parameters(reconstruction,  fom,
                                         initial_param=initial_param)
 
 reco_0 = reconstruction(data[0], initial_param)
-reco_0.show(reconstruction_method + ' , initial parameter')
+reco_0.show(reconstruction_method + ', initial parameter')
 reco_1 = reconstruction(data[1], initial_param)
-reco_1.show(reconstruction_method + ' , initial parameter')
+reco_1.show(reconstruction_method + ', initial parameter')
 
 reco_0_opt = reconstruction(data[0], optimal_parameters)
-reco_0_opt.show(reconstruction_method + ' , optimal parameter')
+reco_0_opt.show(reconstruction_method + '  optimal parameter')
 reco_1_opt = reconstruction(data[1], optimal_parameters)
-reco_1_opt.show(reconstruction_method + ' , optimal parameter')
+reco_1_opt.show(reconstruction_method + ', optimal parameter')
