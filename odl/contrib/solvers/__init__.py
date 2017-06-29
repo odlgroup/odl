@@ -12,13 +12,3 @@ __all__ = ()
 
 from .functional import *
 __all__ += functional.__all__
-
-from .default_functionals import *
-__all__ += default_functionals.__all__
-
-from .example_funcs import *
-__all__ += example_funcs.__all__
-
-from .derivatives import *
-__all__ += derivatives.__all__
-

@@ -30,6 +30,7 @@ By using a combination of regularizers, a better result is achieved.
 
 import numpy as np
 import odl
+import odl.contrib.solvers
 
 
 # Select what type of denoising to use. Options: 'TV', 'NLM' and 'TV_NLM'
@@ -42,7 +43,8 @@ model = 'TV_NLM'
 # Discrete reconstruction space: discretized functions on the rectangle
 # [-20, 20]^2 with 256 samples per dimension.
 space = odl.uniform_discr(
-    min_pt=[-20, -20, -20], max_pt=[20, 20, 20], shape=[256, 256, 256], dtype='float32')
+    min_pt=[-20, -20, -20], max_pt=[20, 20, 20], shape=[256, 256, 256],
+    dtype='float32')
 
 # Make a parallel beam geometry with flat detector
 # Angles: uniformly spaced, n = 360, min = 0, max = pi
@@ -89,8 +91,8 @@ impl = 'opencv'
 
 # Create functionals for the regularizers and the bound constrains.
 l1_norm = odl.solvers.GroupL1Norm(gradient.range)
-nlm_func = odl.solvers.NLMRegularizer(space, h=0.02, impl=impl,
-                                      patch_size=5, patch_distance=11)
+nlm_func = odl.contrib.solvers.NLMRegularizer(space, h=0.02, impl=impl,
+                                              patch_size=5, patch_distance=11)
 f = odl.solvers.IndicatorBox(space, 0, 2)
 
 # Assemble the linear operators. Here the TV-term is represented as a
