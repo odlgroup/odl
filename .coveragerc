@@ -9,16 +9,19 @@ omit =
     */__init__.py
     odl/diagnostics/*
     odl/util/*
-    
-    # Omit until coveralls supports cuda.
-    odl/space/cu_ntuples.py
-    
+
     # Omit until coveralls supports pywt.
     odl/trafos/wavelet.py
 
     # Omit until coveralls supports astra.
-    odl/tomo/operators/xray_trafo.py
+    odl/tomo/operators/ray_trafo.py
     odl/tomo/backends/*
+
+    # Obviously we don't care about test coverage of tests
+    odl/test/*
+
+    # The contrib package does not need test coverage
+    odl/contrib/*
 
 [report]
 # Regexes for lines to exclude from consideration
