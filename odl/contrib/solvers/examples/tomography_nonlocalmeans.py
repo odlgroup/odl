@@ -34,8 +34,14 @@ import odl.contrib.solvers
 
 
 # Select what type of denoising to use. Options: 'TV', 'NLM' and 'TV_NLM'
-model = 'TV_NLM'
+model = 'TV'
 
+# The implementation of Non-Local Means transform to use, options:
+# 'skimage'                   Requires scikit-image (can be installed by
+#                             running ``pip install scikit-image``).
+# 'opencv'                    Require opencv (can be installed
+#                             by running ``pip install opencv-python``).
+impl = 'opencv'
 
 # --- Set up the forward operator (ray transform) --- #
 
@@ -43,34 +49,22 @@ model = 'TV_NLM'
 # Discrete reconstruction space: discretized functions on the rectangle
 # [-20, 20]^2 with 256 samples per dimension.
 space = odl.uniform_discr(
-    min_pt=[-20, -20, -20], max_pt=[20, 20, 20], shape=[256, 256, 256],
+    min_pt=[-20, -20], max_pt=[20, 20], shape=[256, 256],
     dtype='float32')
 
 # Make a parallel beam geometry with flat detector
-# Angles: uniformly spaced, n = 360, min = 0, max = pi
-angle_partition = odl.uniform_partition(0, np.pi, 1000)
-# Detector: uniformly sampled, n = 558, min = -30, max = 30
-detector_partition = odl.uniform_partition([-30, -30], [30, 30], [500, 500])
-geometry = odl.tomo.Parallel3dAxisGeometry(angle_partition, detector_partition)
-
-# The implementation of the ray transform to use, options:
-# 'scikit'                    Requires scikit-image (can be installed by
-#                             running ``pip install scikit-image``).
-# 'astra_cpu', 'astra_cuda'   Require astra tomography to be installed.
-#                             Astra is much faster than scikit. Webpage:
-#                             https://github.com/astra-toolbox/astra-toolbox
-impl = 'astra_cuda'
+geometry = odl.tomo.parallel_beam_geometry(space)
 
 # Create the forward operator
-ray_trafo = odl.tomo.RayTransform(space, geometry, impl=impl)
+ray_trafo = odl.tomo.RayTransform(space, geometry)
 
 
 # --- Generate artificial data --- #
 
 
 # Create phantom
-phantom = odl.phantom.shepp_logan(space)
-phantom.show('phantom', clim=[1, 1.1])
+phantom = odl.phantom.forbild(space)
+phantom.show('phantom', clim=[1.0, 1.1])
 
 # Create sinogram of forward projected phantom with noise
 data = ray_trafo(phantom)
@@ -80,14 +74,6 @@ data += odl.phantom.white_noise(ray_trafo.range) * np.mean(data) * 0.01
 # --- Set up the inverse problem --- #
 
 gradient = odl.Gradient(space)
-
-
-# The implementation of Non-Local Means transform to use, options:
-# 'skimage'                   Requires scikit-image (can be installed by
-#                             running ``pip install scikit-image``).
-# 'opencv'                    Require opencv (can be installed
-#                             by running ``pip install opencv-python``).
-impl = 'opencv'
 
 # Create functionals for the regularizers and the bound constrains.
 l1_norm = odl.solvers.GroupL1Norm(gradient.range)
@@ -120,18 +106,17 @@ l2_norm = odl.solvers.L2NormSquared(ray_trafo.range)
 h = l2_norm.translated(data) * ray_trafo
 
 # Used to display intermediate results and print iteration number.
-callback = (odl.solvers.CallbackShow(display_step=5, clim=[1, 1.1]) &
+callback = (odl.solvers.CallbackShow(step=10, clim=[1.0, 1.1]) &
             odl.solvers.CallbackPrintIteration())
 
 # Use FBP as initial guess
-fbp_op = odl.tomo.fbp_op(ray_trafo,
-                         filter_type='Hann', frequency_scaling=0.3)
+fbp_op = odl.tomo.fbp_op(ray_trafo, filter_type='Hann')
 fbp = fbp_op(data)
-fbp.show('fbp', clim=[1, 1.1])
+fbp.show('fbp', clim=[1.0, 1.1])
 
 # Call the solver. x is updated in-place with the consecutive iterates.
 x = fbp.copy()
 odl.solvers.forward_backward_pd(x, f, g, lin_ops, h, tau=0.005,
                                 sigma=sigma, niter=1000, callback=callback)
 
-x.show('final result {}'.format(model), clim=[1, 1.1])
+x.show('final result {}'.format(model), clim=[1.0, 1.1])

@@ -96,7 +96,8 @@ class NLMRegularizer(Functional):
                         x_arr,
                         patch_size=func.patch_size,
                         patch_distance=func.patch_distance,
-                        h=h)
+                        h=h,
+                        multichannel=False)
                 elif func.impl == 'opencv':
                     x_arr = x.asarray()
                     xmin, xmax = np.min(x_arr), np.max(x_arr)
