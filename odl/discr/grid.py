@@ -226,12 +226,22 @@ class RectGrid(Set):
     @property
     def ndim(self):
         """Number of dimensions of the grid."""
-        return len(self.coord_vectors)
+        try:
+            return self.__ndim
+        except AttributeError:
+            ndim = len(self.coord_vectors)
+            self.__ndim = ndim
+            return ndim
 
     @property
     def shape(self):
         """Number of grid points per axis."""
-        return tuple(len(vec) for vec in self.coord_vectors)
+        try:
+            return self.__shape
+        except AttributeError:
+            shape = tuple(len(vec) for vec in self.coord_vectors)
+            self.__shape = shape
+            return shape
 
     @property
     def size(self):

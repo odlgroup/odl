@@ -15,12 +15,9 @@ from future import standard_library
 from past.builtins import basestring
 standard_library.install_aliases()
 
-from abc import ABCMeta, abstractmethod
 from numbers import Integral, Real, Complex
 import numpy as np
-
 from odl.util import is_int_dtype, is_real_dtype, is_scalar_dtype, unique
-from odl.util.utility import with_metaclass
 
 
 __all__ = ('Set', 'EmptySet', 'UniversalSet', 'Field', 'Integers',
@@ -28,7 +25,7 @@ __all__ = ('Set', 'EmptySet', 'UniversalSet', 'Field', 'Integers',
            'SetUnion', 'SetIntersection', 'FiniteSet')
 
 
-class Set(with_metaclass(ABCMeta, object)):
+class Set(object):
 
     """An abstract set.
 
@@ -86,9 +83,9 @@ class Set(with_metaclass(ABCMeta, object)):
             Otherwise, return the element created from ``inp``.
     """
 
-    @abstractmethod
     def __contains__(self, other):
         """Return ``other in self``."""
+        raise NotImplementedError('abstract method')
 
     def contains_set(self, other):
         """Test if ``other`` is a subset of this set.
@@ -119,9 +116,9 @@ class Set(with_metaclass(ABCMeta, object)):
         """
         return all(x in self for x in other)
 
-    @abstractmethod
     def __eq__(self, other):
         """Return ``self == other``."""
+        raise NotImplementedError('abstract method')
 
     def __ne__(self, other):
         """Return ``self != other``."""

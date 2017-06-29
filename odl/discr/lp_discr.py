@@ -273,6 +273,22 @@ class DiscreteLp(DiscretizedSpace):
         else:
             return ProductSpace(self, self.ndim)
 
+    @property
+    def is_uniformly_weighted(self):
+        """If the weighting of the space is the same for all points."""
+        try:
+            is_uniformly_weighted = self.__is_uniformly_weighted
+        except AttributeError:
+            bdry_fracs = self.partition.boundary_cell_fractions
+            is_uniformly_weighted = (
+                np.allclose(bdry_fracs, 1.0) or
+                self.exponent == float('inf') or
+                not getattr(self.dspace, 'is_weighted', False))
+
+            self.__is_uniformly_weighted = is_uniformly_weighted
+
+        return is_uniformly_weighted
+
     def element(self, inp=None, **kwargs):
         """Create an element from ``inp`` or from scratch.
 
@@ -391,14 +407,11 @@ class DiscreteLp(DiscretizedSpace):
     # discretized integrals need to be scaled by that fraction.
     def _inner(self, x, y):
         """Return ``self.inner(x, y)``."""
-        bdry_fracs = self.partition.boundary_cell_fractions
-        if (np.allclose(bdry_fracs, 1.0) or
-                self.exponent == float('inf') or
-                not getattr(self.dspace, 'is_weighted', False)):
-            # no boundary weighting
+        if self.is_uniformly_weighted:
             return super()._inner(x, y)
         else:
             # TODO: implement without copying x
+            bdry_fracs = self.partition.boundary_cell_fractions
             func_list = _scaling_func_list(bdry_fracs)
 
             x_arr = apply_on_boundary(x, func=func_list, only_once=False)
@@ -406,14 +419,11 @@ class DiscreteLp(DiscretizedSpace):
 
     def _norm(self, x):
         """Return ``self.norm(x)``."""
-        bdry_fracs = self.partition.boundary_cell_fractions
-        if (np.allclose(bdry_fracs, 1.0) or
-                self.exponent == float('inf') or
-                not getattr(self.dspace, 'is_weighted', False)):
-            # no boundary weighting
+        if self.is_uniformly_weighted:
             return super()._norm(x)
         else:
             # TODO: implement without copying x
+            bdry_fracs = self.partition.boundary_cell_fractions
             func_list = _scaling_func_list(bdry_fracs, exponent=self.exponent)
 
             x_arr = apply_on_boundary(x, func=func_list, only_once=False)
@@ -421,14 +431,11 @@ class DiscreteLp(DiscretizedSpace):
 
     def _dist(self, x, y):
         """Return ``self.dist(x, y)``."""
-        bdry_fracs = self.partition.boundary_cell_fractions
-        if (np.allclose(bdry_fracs, 1.0) or
-                self.exponent == float('inf') or
-                not getattr(self.dspace, 'is_weighted', False)):
-            # no boundary weighting
+        if self.is_uniformly_weighted:
             return super()._dist(x, y)
         else:
             # TODO: implement without copying x
+            bdry_fracs = self.partition.boundary_cell_fractions
             func_list = _scaling_func_list(bdry_fracs, exponent=self.exponent)
 
             arrs = [apply_on_boundary(vec, func=func_list, only_once=False)

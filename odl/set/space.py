@@ -14,7 +14,6 @@ from builtins import object, range, str
 from future import standard_library
 standard_library.install_aliases()
 
-from abc import abstractmethod
 import numpy as np
 
 from odl.set.sets import Field, Set, UniversalSet
@@ -51,7 +50,6 @@ class LinearSpace(Set):
         """Scalar field of numbers for this vector space."""
         return self.__field
 
-    @abstractmethod
     def element(self, inp=None, **kwargs):
         """Create a `LinearSpaceElement` from ``inp`` or from scratch.
 
@@ -73,6 +71,7 @@ class LinearSpace(Set):
         element : `LinearSpaceElement`
             A new element of this space.
         """
+        raise NotImplementedError('abstract method')
 
     @property
     def examples(self):
@@ -85,13 +84,13 @@ class LinearSpace(Set):
         except NotImplementedError:
             pass
 
-    @abstractmethod
     def _lincomb(self, a, x1, b, x2, out):
         """Implement ``out[:] = a * x1 + b * x2``.
 
         This method is intended to be private. Public callers should
         resort to `lincomb` which is type-checked.
         """
+        raise NotImplementedError('abstract method')
 
     def _dist(self, x1, x2):
         """Return the distance between ``x1`` and ``x2``.
@@ -204,8 +203,7 @@ class LinearSpace(Set):
         """
         if out is None:
             out = self.element()
-
-        if out not in self:
+        elif out not in self:
             raise LinearSpaceTypeError('`out` {!r} is not an element of {!r}'
                                        ''.format(out, self))
         if a not in self.field:
