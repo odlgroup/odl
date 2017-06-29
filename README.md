@@ -1,5 +1,6 @@
 [![PyPI version](https://badge.fury.io/py/odl.svg)](https://badge.fury.io/py/odl)
 [![Build Status](https://travis-ci.org/odlgroup/odl.svg?branch=master)](https://travis-ci.org/odlgroup/odl?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/odlgroup/odl/badge.svg)](https://coveralls.io/github/odlgroup/odl)
 [![license](https://img.shields.io/badge/license-MPL--2.0-orange.svg)](https://opensource.org/licenses/MPL-2.0)
 [![DOI](https://zenodo.org/badge/45596393.svg)](https://zenodo.org/badge/latestdoi/45596393)
 
