@@ -19,7 +19,6 @@ import numpy as np
 from pkg_resources import parse_requirements
 
 
-
 __all__ = ('array1d_repr', 'array1d_str', 'arraynd_repr', 'arraynd_str',
            'dtype_repr', 'dtype_str', 'signature_string', 'indent_rows',
            'is_scalar_dtype', 'is_int_dtype', 'is_floating_dtype',
@@ -879,17 +878,20 @@ def unique(seq):
     Returns
     -------
     unique : list
-        Unique elements of seq. Order is guaranteed to be the same as in seq.
+        Unique elements of ``seq``.
+        Order is guaranteed to be the same as in seq.
 
     Examples
     --------
+    Determine unique elements in list
+
     >>> unique([1, 2, 3, 3])
     [1, 2, 3]
 
     >>> unique((1, 'str', 'str'))
     [1, 'str']
 
-    Also works with unhashable types:
+    The utility also works with unhashable types:
 
     >>> unique((1, [1], [1]))
     [1, [1]]

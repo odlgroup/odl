@@ -518,7 +518,7 @@ class CartesianProduct(Set):
 
     @property
     def sets(self):
-        """The sets of this carthesian product as a tuple."""
+        """The sets of this cartesian product as a tuple."""
         return self.__sets
 
     def __contains__(self, other):
@@ -619,6 +619,7 @@ class CartesianProduct(Set):
 
 
 class SetUnion(Set):
+
     """The union of several subsets.
 
     The elements of this set are elements of at least one of the subsets.
@@ -634,7 +635,7 @@ class SetUnion(Set):
         ----------
         set1, ..., setN : `Set`
             The sets whose union should be taken.
-            Any duplicates are be ignored.
+            Any duplicates are ignored.
 
         Examples
         --------
@@ -687,6 +688,7 @@ class SetUnion(Set):
 
     def __hash__(self):
         """Return ``hash(self)``."""
+        # Use `set` to allow permutations
         return hash((type(self), set(self.sets)))
 
     def element(self, inp=None):
@@ -694,15 +696,15 @@ class SetUnion(Set):
 
         First tries calling the first set, then the second, etc.
 
-        For more specific control, use set[i].element() to pick which subset to
-        use.
+        For more specific control, use ``set[i].element()`` to pick which
+        subset to use.
         """
         for set in self.sets:
             try:
                 return set.element(inp)
             except NotImplementedError:
                 pass
-        raise NotImplementedError('element not implemented for any of the '
+        raise NotImplementedError('`element` not implemented for any of the '
                                   'subsets')
 
     def __len__(self):
@@ -715,10 +717,10 @@ class SetUnion(Set):
         Examples
         --------
         >>> reals, complexnrs = odl.RealNumbers(), odl.ComplexNumbers()
-        >>> prod = odl.SetUnion(reals, complexnrs)
-        >>> prod[0]
+        >>> union = odl.SetUnion(reals, complexnrs)
+        >>> union[0]
         RealNumbers()
-        >>> prod[:]
+        >>> union[:]
         SetUnion(RealNumbers(), ComplexNumbers())
         """
         if isinstance(indcs, slice):
@@ -740,6 +742,7 @@ class SetUnion(Set):
 
 
 class SetIntersection(Set):
+
     """The intersection of several subsets.
 
     The elements of this set are elements of all the subsets.
@@ -755,7 +758,7 @@ class SetIntersection(Set):
         ----------
         set1, ..., setN : `Set`
             The sets whose intersection should be taken.
-            Any duplicates are be ignored.
+            Any duplicates are ignored.
 
         Examples
         --------
@@ -808,6 +811,7 @@ class SetIntersection(Set):
 
     def __hash__(self):
         """Return ``hash(self)``."""
+        # Use `set` to allow permutations
         return hash((type(self), set(self.sets)))
 
     def __len__(self):
@@ -820,10 +824,10 @@ class SetIntersection(Set):
         Examples
         --------
         >>> reals, complexnrs = odl.RealNumbers(), odl.ComplexNumbers()
-        >>> prod = odl.SetIntersection(reals, complexnrs)
-        >>> prod[0]
+        >>> intersection = odl.SetIntersection(reals, complexnrs)
+        >>> intersection[0]
         RealNumbers()
-        >>> prod[:]
+        >>> intersection[:]
         SetIntersection(RealNumbers(), ComplexNumbers())
         """
         if isinstance(indcs, slice):
@@ -845,6 +849,7 @@ class SetIntersection(Set):
 
 
 class FiniteSet(Set):
+
     """A set given by a finite number of elements."""
 
     def __init__(self, *elements):
