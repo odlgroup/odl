@@ -41,10 +41,10 @@ def steepest_descent(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
     :math:`f(x) = \infty` for :math:`x\\not\\in C`, or by providing a
     ``projection`` function that projects the iterates on :math:`C`.
 
-    The algorithm is described in [BV2004]_, section 9.3--9.4
+    The algorithm is described in [BV2004], section 9.3--9.4
     (`book available online
     <http://stanford.edu/~boyd/cvxbook/bv_cvxbook.pdf>`_),
-    [GNS2009]_, Section 12.2, and wikipedia
+    [GNS2009], Section 12.2, and wikipedia
     `Gradient_descent
     <https://en.wikipedia.org/wiki/Gradient_descent>`_.
 
@@ -74,6 +74,14 @@ def steepest_descent(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
         Optimized solver for the case ``f(x) = ||Ax - b||_2^2``
     odl.solvers.iterative.iterative.conjugate_gradient :
         Optimized solver for the case ``f(x) = x^T Ax - 2 x^T b``
+
+    References
+    ----------
+    [BV2004] Boyd, S, and Vandenberghe, L. *Convex optimization*.
+    Cambridge university press, 2004.
+
+    [GNS2009] Griva, I, Nash, S G, and Sofer, A. *Linear and nonlinear
+    optimization*. Siam, 2009.
     """
     grad = f.gradient
     if x not in grad.domain:

@@ -9,8 +9,7 @@
 """First-order primal-dual algorithm developed by Chambolle and Pock.
 
 The Chambolle-Pock algorithm is a flexible method well suited for
-non-smooth convex optimization problems in imaging. It was first
-proposed in [CP2011a]_.
+non-smooth convex optimization problems in imaging.
 """
 
 # Imports for common Python 2/3 codebase
@@ -126,6 +125,15 @@ def chambolle_pock_solver(x, f, g, L, tau, sigma, niter, **kwargs):
     :math:`F((x_1, x_2)) = \|x_1\|_2^2 + \|x_2\|_1`, :math:`G(x)=0`. See the
     examples folder for more information on how to do this.
 
+    For a more detailed documentation see :ref:`chambolle_pock`.
+
+    References on the algorithm can be found in [CP2011a] and [CP2011b].
+
+    This implementation of the CP algorithm is along the lines of
+    [Sid+2012].
+
+    The non-linear case is analyzed in [Val2014].
+
     See Also
     --------
     odl.solvers.nonsmooth.douglas_rachford.douglas_rachford_pd :
@@ -137,20 +145,24 @@ def chambolle_pock_solver(x, f, g, L, tau, sigma, niter, **kwargs):
 
     References
     ----------
-    For a more detailed documentation see :ref:`chambolle_pock`.
+    [CP2011a] Chambolle, A and Pock, T. *A First-Order
+    Primal-Dual Algorithm for Convex Problems with Applications to
+    Imaging*. Journal of Mathematical Imaging and Vision, 40 (2011),
+    pp 120-145.
 
-    References on the Chambolle-Pock algorithm can be found in [CP2011a]_ and
-    [CP2011b]_.
+    [CP2011b] Chambolle, A and Pock, T. *Diagonal
+    preconditioning for first order primal-dual algorithms in convex
+    optimization*. 2011 IEEE International Conference on Computer Vision
+    (ICCV), 2011, pp 1762-1769.
 
-    This implementation of the CP algorithm is along the lines of
-    [Sid+2012]_.
+    [Sid+2012] Sidky, E Y, Jorgensen, J H, and Pan, X.
+    *Convex optimization problem prototyping for image reconstruction in
+    computed tomography with the Chambolle-Pock algorithm*. Physics in
+    Medicine and Biology, 57 (2012), pp 3065-3091.
 
-    For more on convex analysis including convex conjugates and
-    resolvent operators see [Roc1970]_.
-
-    For more on proximal operators and algorithms see [PB2014]_.
-
-    The non-linear case is analyzed in [Val2014]_.
+    [Val2014] Valkonen, T.
+    *A primal-dual hybrid gradient method for non-linear operators with
+    applications to MRI*. Inverse Problems, 30 (2014).
     """
     # Forward operator
     if not isinstance(L, Operator):

@@ -431,7 +431,7 @@ class FileReaderMRC(MRCHeaderProperties, FileReaderRawBinaryWithHeader):
     """Reader for the MRC file format.
 
     By default, the MRC2014 format is used, see `print_mrc_2014_spec` for
-    details. See also [Che+2015]_ or the `explanations on the CCP4 homepage
+    details. See also [Che+2015] or the `explanations on the CCP4 homepage
     <http://www.ccpem.ac.uk/mrc_format/mrc2014.php>`_ for the
     text of the specification.
 
@@ -624,7 +624,7 @@ class FileWriterMRC(MRCHeaderProperties, FileWriterRawBinaryWithHeader):
 
     """Writer for the MRC file format.
 
-    See [Che+2015]_ or the `explanations on the CCP4 homepage
+    See [Che+2015] or the `explanations on the CCP4 homepage
     <http://www.ccpem.ac.uk/mrc_format/mrc2014.php>`_ for the
     text of the specification.
 
@@ -712,13 +712,13 @@ def mrc_header_from_params(shape, dtype, kind, **kwargs):
     dmin, dmax : float, optional
         Minimum and maximum values of the data, used for header entries
         ``'dmin'`` and ``'dmax'``, resp.
-        Default: 1.0, 0.0. These values indicate according to [Che+2015]_
+        Default: 1.0, 0.0. These values indicate according to [Che+2015]
         that the values are considered as undetermined.
     dmean, rms : float, optional
         Mean and variance of the data, used for header entries ``'dmean'``
         and ``'rms'``, resp.
         Default: ``min(dmin, dmax) - 1, -1.0``. These values indicate
-        according to [Che+2015]_ that the values are considered as
+        according to [Che+2015] that the values are considered as
         undetermined.
     mrc_version : 2-tuple of int, optional
         Version identifier for the MRC file, used for the ``'nversion'``

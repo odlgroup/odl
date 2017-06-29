@@ -149,10 +149,10 @@ def newtons_method(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
     of finding a root of a function.
 
     The algorithm is well-known and there is a vast literature about it.
-    Among others, the method is described in [BV2004]_, Sections 9.5
+    Among others, the method is described in [BV2004], Sections 9.5
     and 10.2 (`book available online
     <http://stanford.edu/~boyd/cvxbook/bv_cvxbook.pdf>`_),
-    [GNS2009]_,  Section 2.7 for solving nonlinear equations and Section
+    [GNS2009],  Section 2.7 for solving nonlinear equations and Section
     11.3 for its use in minimization, and wikipedia on `Newton's_method
     <https://en.wikipedia.org/wiki/Newton's_method>`_.
 
@@ -189,6 +189,14 @@ def newtons_method(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
         for computing the search direction.
     callback : callable, optional
         Object executing code per iteration, e.g. plotting each iterate
+
+    References
+    ----------
+    [BV2004] Boyd, S, and Vandenberghe, L. *Convex optimization*.
+    Cambridge university press, 2004.
+
+    [GNS2009] Griva, I, Nash, S G, and Sofer, A. *Linear and nonlinear
+    optimization*. Siam, 2009.
     """
     # TODO: update doc
     grad = f.gradient
@@ -265,7 +273,7 @@ def bfgs_method(f, x, line_search=1.0, maxiter=1000, tol=1e-15, num_store=None,
     implementation uses the rank-one BFGS update schema where the
     inverse of the Hessian is recalculated in each iteration.
 
-    The algorithm is described in [GNS2009]_, Section 12.3 and in the
+    The algorithm is described in [GNS2009], Section 12.3 and in the
     `BFGS Wikipedia article
     <https://en.wikipedia.org/wiki/Broyden%E2%80%93Fletcher%E2%80%93\
 Goldfarb%E2%80%93Shanno_algorithm>`_
@@ -293,6 +301,11 @@ Goldfarb%E2%80%93Shanno_algorithm>`_
         Default: Identity on ``f.domain``
     callback : callable, optional
         Object executing code per iteration, e.g. plotting each iterate.
+
+    References
+    ----------
+    [GNS2009] Griva, I, Nash, S G, and Sofer, A. *Linear and nonlinear
+    optimization*. Siam, 2009.
     """
     grad = f.gradient
     if x not in grad.domain:
@@ -370,7 +383,7 @@ def broydens_method(f, x, line_search=1.0, impl='first', maxiter=1000,
 
     using a Newton-type update scheme with approximate Hessian.
 
-    The algorithm is described in [Bro1965]_ and [Kva1991]_, and in a
+    The algorithm is described in [Bro1965] and [Kva1991], and in a
     `Wikipedia article
     <https://en.wikipedia.org/wiki/Broyden's_method>`_.
 
@@ -397,6 +410,15 @@ def broydens_method(f, x, line_search=1.0, impl='first', maxiter=1000,
         Default: Identity on ``f.domain``
     callback : callable, optional
         Object executing code per iteration, e.g. plotting each iterate.
+
+    References
+    ----------
+    [Bro1965] Broyden, C G. *A class of methods for solving nonlinear
+    simultaneous equations*. Mathematics of computation, 33 (1965),
+    pp 577--593.
+
+    [Kva1991] Kvaalen, E. *A faster Broyden method*. BIT Numerical
+    Mathematics 31 (1991), pp 369--372.
     """
     grad = f.gradient
     if x not in grad.domain:

@@ -421,7 +421,7 @@ def dft_postprocess_data(arr, real_grid, recip_grid, shift, axes,
         for 'shift=True'  : xi_bar[k] = -pi + pi * (2*k) / N
         for 'shift=False' : xi_bar[k] = -pi + pi * (2*k+1) / N
 
-    See [Pre+2007]_, Section 13.9 "Computing Fourier Integrals Using
+    See [Pre+2007], Section 13.9 "Computing Fourier Integrals Using
     the FFT" for a similar approach.
 
     Parameters
@@ -456,6 +456,12 @@ def dft_postprocess_data(arr, real_grid, recip_grid, shift, axes,
     out : `numpy.ndarray`
         Result of the post-processing. If ``out`` was given, the returned
         object is a reference to it.
+
+    References
+    ----------
+    [Pre+2007] Press, W H, Teukolsky, S A, Vetterling, W T, and Flannery, B P.
+    *Numerical Recipes in C - The Art of Scientific Computing* (Volume 3).
+    Cambridge University Press, 2007.
     """
     arr = np.asarray(arr)
     if is_real_floating_dtype(arr.dtype):

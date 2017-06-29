@@ -490,9 +490,17 @@ class IndicatorLpUnitBall(Functional):
         The convex conjugate functional of an ``Lp`` norm, ``p < infty`` is the
         indicator function on the unit ball defined by the corresponding dual
         norm ``q``, given by ``1/p + 1/q = 1`` and where ``q = infty`` if
-        ``p = 1`` [Roc1970]_. By the Fenchel-Moreau theorem, the convex
+        ``p = 1`` [Roc1970]. By the Fenchel-Moreau theorem, the convex
         conjugate functional of indicator function on the unit ball in ``Lq``
-        is the corresponding Lp-norm [BC2011]_.
+        is the corresponding Lp-norm [BC2011].
+
+        References
+        ----------
+        [Roc1970] Rockafellar, R. T. *Convex analysis*. Princeton
+        University Press, 1970.
+
+        [BC2011] Bauschke, H H, and Combettes, P L. *Convex analysis and
+        monotone operator theory in Hilbert spaces*. Springer, 2011.
         """
         if self.exponent == np.inf:
             return L1Norm(self.domain)
@@ -969,7 +977,12 @@ class IndicatorZero(Functional):
         Notes
         -----
         By the Fenchel-Moreau theorem the convex conjugate is the constant
-        functional [BC2011]_ with the constant value of -`constant`.
+        functional [BC2011] with the constant value of -`constant`.
+
+        References
+        ----------
+        [BC2011] Bauschke, H H, and Combettes, P L. *Convex analysis and
+        monotone operator theory in Hilbert spaces*. Springer, 2011.
         """
         return ConstantFunctional(self.domain, -self.constant)
 
@@ -1859,13 +1872,13 @@ class NuclearNorm(Functional):
     :math:`\mathbb{R}^{\min(n, m)}`.
 
     For a detailed description of its properties, e.g, its proximal, convex
-    conjugate and more, see [Du+2016]_.
+    conjugate and more, see [Du+2016].
 
     References
     ----------
-    J. Duran, M. Moeller, C. Sbert, and D. Cremers. Collaborative Total
-    Variation: A General Framework for Vectorial TV Models, SIAM Journal of
-    Imaging Sciences 9(1): 116--151, 2016.
+    [Du+2016] J. Duran, M. Moeller, C. Sbert, and D. Cremers.
+    *Collaborative Total Variation: A General Framework for Vectorial TV
+    Models* SIAM Journal of Imaging Sciences 9(1): 116--151, 2016.
     """
 
     def __init__(self, space, outer_exp=1, singular_vector_exp=2):
@@ -2092,13 +2105,13 @@ class IndicatorNuclearNormUnitBall(Functional):
     norm, that is, 0 if the nuclear norm is less than 1, and infinity else.
 
     For a detailed description of its properties, e.g, its proximal, convex
-    conjugate and more, see [Du+2016]_.
+    conjugate and more, see [Du+2016].
 
     References
     ----------
-    J. Duran, M. Moeller, C. Sbert, and D. Cremers. Collaborative Total
-    Variation: A General Framework for Vectorial TV Models, SIAM Journal of
-    Imaging Sciences 9(1): 116--151, 2016.
+    [Du+2016] J. Duran, M. Moeller, C. Sbert, and D. Cremers.
+    *Collaborative Total Variation: A General Framework for Vectorial TV
+    Models* SIAM Journal of Imaging Sciences 9(1): 116--151, 2016.
     """
 
     def __init__(self, space, outer_exp=1, singular_vector_exp=2):
