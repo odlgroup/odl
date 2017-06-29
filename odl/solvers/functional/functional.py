@@ -136,15 +136,19 @@ class Functional(Operator):
 
         The concept is also known as the Legendre transformation.
 
-        References
-        ----------
-        Wikipedia article on `Convex conjugate
-        <https://en.wikipedia.org/wiki/Convex_conjugate>`_.
-
-        Wikipedia article on `Legendre transformation
+        For literature references see, e.g., [Lue1969], [Roc1970], the
+        wikipedia article on `Convex conjugate
+        <https://en.wikipedia.org/wiki/Convex_conjugate>`_ or the wikipedia
+        article on the `Legendre transformation
         <https://en.wikipedia.org/wiki/Legendre_transformation>`_.
 
-        For literature references see, e.g., [Lue1969]_, [Roc1970]_.
+        References
+        ----------
+        [Lue1969] Luenberger, D G. *Optimization by vector space methods*.
+        Wiley, 1969.
+
+        [Roc1970] Rockafellar, R. T. *Convex analysis*. Princeton
+        University Press, 1970.
         """
         return FunctionalDefaultConvexConjugate(self)
 
@@ -794,7 +798,14 @@ class FunctionalTranslation(Functional):
         .. math::
             (f( . - y))^* (x) = f^*(x) + <y, x>.
 
-        For reference on the identity used, see [KP2015]_.
+        For reference on the identity used, see [KP2015].
+
+        References
+        ----------
+        [KP2015] Komodakis, N, and Pesquet, J-C. *Playing with Duality: An
+        overview of recent primal-dual approaches for solving large-scale
+        optimization problems*. IEEE Signal Processing Magazine, 32.6 (2015),
+        pp 31--54.
         """
         return FunctionalLinearPerturb(
             self.functional.convex_conj,
@@ -885,7 +896,14 @@ proximal_quadratic_perturbation
         .. math::
             (f(x) + <y, x>)^* (x) = f^*(x - y).
 
-        For reference on the identity used, see [KP2015]_.
+        For reference on the identity used, see [KP2015].
+
+        References
+        ----------
+        [KP2015] Komodakis, N, and Pesquet, J-C. *Playing with Duality: An
+        overview of recent primal-dual approaches for solving large-scale
+        optimization problems*. IEEE Signal Processing Magazine, 32.6 (2015),
+        pp 31--54.
         """
         return self.functional.convex_conj.translated(
             self.linear_term)

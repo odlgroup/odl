@@ -397,6 +397,8 @@ def as_proximal_lang_operator(op, norm_bound=None):
     This is intended to be used with the `ProxImaL language solvers.
     <https://github.com/comp-imaging/proximal>`_
 
+    For documentation on the proximal language (ProxImaL) see [Hei+2016].
+
     Parameters
     ----------
     op : `Operator`
@@ -419,9 +421,9 @@ def as_proximal_lang_operator(op, norm_bound=None):
 
     References
     ----------
-    For documentation on the proximal language (ProxImaL) see [Hei+2016]_.
+    [Hei+2016] Heide, F et al. *ProxImaL: Efficient Image Optimization using
+    Proximal Algorithms*. ACM Transactions on Graphics (TOG), 2016.
     """
-
     # TODO: use out parameter once "as editable array" is added
 
     def forward(inp, out):

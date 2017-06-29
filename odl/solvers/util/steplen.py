@@ -54,12 +54,20 @@ class BacktrackingLineSearch(LineSearch):
     This methods approximately finds the longest step length fulfilling
     the Armijo-Goldstein condition.
 
-    The line search algorithm is described in [BV2004]_, page 464
+    The line search algorithm is described in [BV2004], page 464
     (`book available online
     <http://stanford.edu/~boyd/cvxbook/bv_cvxbook.pdf>`_) and
-    [GNS2009]_, pages 378--379. See also
+    [GNS2009], pages 378--379. See also
     `Backtracking_line_search
     <https://en.wikipedia.org/wiki/Backtracking_line_search>`_.
+
+    References
+    ----------
+    [BV2004] Boyd, S, and Vandenberghe, L. *Convex optimization*.
+    Cambridge university press, 2004.
+
+    [GNS2009] Griva, I, Nash, S G, and Sofer, A. *Linear and nonlinear
+    optimization*. Siam, 2009.
     """
 
     def __init__(self, function, tau=0.5, discount=0.01, alpha=1.0,

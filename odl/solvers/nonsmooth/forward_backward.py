@@ -93,8 +93,8 @@ def forward_backward_pd(x, f, g, L, h, tau, sigma, niter,
     gradient, :math:`\\eta > 0`.
 
     The optional operators :math:`\\nabla l_i^*` need to be
-    :math:`\\nu_i`-Lipschitz continuous. Note that in the reference
-    [BC2015]_, the condition is formulated as :math:`l_i` being proper, lower
+    :math:`\\nu_i`-Lipschitz continuous. Note that in the paper, the condition
+    is formulated as :math:`l_i` being proper, lower
     semicontinuous, and :math:`\\nu_i^{-1}`-strongly convex, which implies that
     :math:`l_i^*` have :math:`\\nu_i`-Lipschitz continuous gradients.
 
@@ -116,6 +116,10 @@ def forward_backward_pd(x, f, g, L, h, tau, sigma, niter,
     where, if the simpler problem is considered, all :math:`\\nu_i` can be
     considered to be :math:`\\infty`.
 
+    For reference on the forward-backward primal-dual algorithm, see [BC2015].
+
+    For more on proximal operators and algorithms see [PB2014].
+
     See Also
     --------
     odl.solvers.nonsmooth.chambolle_pock.chambolle_pock_solver :
@@ -127,12 +131,12 @@ def forward_backward_pd(x, f, g, L, h, tau, sigma, niter,
 
     References
     ----------
-    For reference on the forward-backward primal-dual algorithm, see [BC2015]_.
+    [BC2015] Bot, R I, and Csetnek, E R. *On the convergence rate of
+    a forward-backward type primal-dual splitting algorithm for convex
+    optimization problems*. Optimization, 64.1 (2015), pp 5--23.
 
-    For more on convex analysis including convex conjugates and
-    resolvent operators see [Roc1970]_.
-
-    For more on proximal operators and algorithms see [PB2014]_.
+    [PB2014] Parikh, N, and Boyd, S. *Proximal Algorithms*.
+    Foundations and Trends in Optimization, 1 (2014), pp 127-239.
     """
 
     # Problem size

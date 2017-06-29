@@ -38,6 +38,8 @@ def douglas_rachford_pd(x, f, g, L, tau, sigma, niter,
 
         (g @ l)(x) = inf_y g(y) + l(x - y)
 
+    For references on the algorithm, see algorithm 3.1 in [BH2013].
+
     Parameters
     ----------
     x : `LinearSpaceElement`
@@ -114,7 +116,10 @@ def douglas_rachford_pd(x, f, g, L, tau, sigma, niter,
 
     References
     ----------
-    For references on the algorithm, see algorithm 3.1 in [BH2013]_.
+    [BH2013] Bot, R I, and Hendrich, C. *A Douglas-Rachford type
+    primal-dual method for solving inclusions with mixtures of
+    composite and parallel-sum type monotone operators*. SIAM Journal
+    on Optimization, 23.4 (2013), pp 2541--2565.
     """
 
     # Problem size

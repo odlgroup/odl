@@ -13,7 +13,13 @@ provided for convenience.
 
 For more details see :ref:`proximal_operators` and references therein. For
 more details on proximal operators including how to evaluate the proximal
-operator of a variety of functions see [PB2014]_. """
+operator of a variety of functions see [PB2014].
+
+References
+----------
+[PB2014] Parikh, N, and Boyd, S. *Proximal Algorithms*.
+Foundations and Trends in Optimization, 1 (2014), pp 127-239.
+"""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -120,7 +126,15 @@ def proximal_cconj(prox_factory):
     Note that since :math:`(F^*)^* = F`, this can be used to get the proximal
     of the original function from the proximal of the convex conjugate.
 
-    For reference on the Moreau identity, see [CP2011c]_.
+    For reference on the Moreau identity, see [CP2011c].
+
+    References
+    ----------
+    [CP2011c] Combettes, P L, and Pesquet, J-C. *Proximal splitting
+    methods in signal processing.* In:  Bauschke, H H, Burachik, R S,
+    Combettes, P L, Elser, V, Luke, D R, and Wolkowicz, H. Fixed-point
+    algorithms for inverse problems in science and engineering, Springer,
+    2011.
     """
     def cconj_prox_factory(sigma):
         """Create proximal for the dual with a given sigma.
@@ -167,7 +181,15 @@ def proximal_translation(prox_factory, y):
 
     where :math:`y` is the translation, and :math:`\\sigma` is the step size.
 
-    For reference on the identity used, see [CP2011c]_.
+    For reference on the identity used, see [CP2011c].
+
+    References
+    ----------
+    [CP2011c] Combettes, P L, and Pesquet, J-C. *Proximal splitting
+    methods in signal processing.* In:  Bauschke, H H, Burachik, R S,
+    Combettes, P L, Elser, V, Luke, D R, and Wolkowicz, H. Fixed-point
+    algorithms for inverse problems in science and engineering, Springer,
+    2011.
     """
 
     def translation_prox_factory(sigma):
@@ -218,7 +240,15 @@ def proximal_arg_scaling(prox_factory, scaling):
     where :math:`scal` is the scaling parameter, and :math:`\\sigma` is the
     step size.
 
-    For reference on the identity used, see [CP2011c]_.
+    For reference on the identity used, see [CP2011c].
+
+    References
+    ----------
+    [CP2011c] Combettes, P L, and Pesquet, J-C. *Proximal splitting
+    methods in signal processing.* In:  Bauschke, H H, Burachik, R S,
+    Combettes, P L, Elser, V, Luke, D R, and Wolkowicz, H. Fixed-point
+    algorithms for inverse problems in science and engineering, Springer,
+    2011.
     """
 
     scaling = float(scaling)
@@ -283,9 +313,17 @@ def proximal_quadratic_perturbation(prox_factory, a, u=None):
     :math:`u` is the space element defining the linear functional, and
     :math:`\\sigma` is the step size.
 
-    For reference on the identity used, see [CP2011c]_. Note that this identity
+    For reference on the identity used, see [CP2011c]. Note that this identity
     is not the exact one given in the reference, but was recalculated for
     arbitrary step lengths.
+
+    References
+    ----------
+    [CP2011c] Combettes, P L, and Pesquet, J-C. *Proximal splitting
+    methods in signal processing.* In:  Bauschke, H H, Burachik, R S,
+    Combettes, P L, Elser, V, Luke, D R, and Wolkowicz, H. Fixed-point
+    algorithms for inverse problems in science and engineering, Springer,
+    2011.
     """
 
     a = float(a)
@@ -365,7 +403,15 @@ def proximal_composition(proximal, operator, mu):
     The function cannot verify that the operator is unitary, the user needs
     to verify this.
 
-    For reference on the identity used, see [CP2011c]_.
+    For reference on the identity used, see [CP2011c].
+
+    References
+    ----------
+    [CP2011c] Combettes, P L, and Pesquet, J-C. *Proximal splitting
+    methods in signal processing.* In:  Bauschke, H H, Burachik, R S,
+    Combettes, P L, Elser, V, Luke, D R, and Wolkowicz, H. Fixed-point
+    algorithms for inverse problems in science and engineering, Springer,
+    2011.
     """
 
     def proximal_composition_factory(sigma):
@@ -1078,11 +1124,17 @@ def proximal_l1(space, lam=1, g=None, isotropic=False):
         F(x) = \\lambda \| \|x - g\|_2 \|_1
 
     The proximal can be calculated using the Moreau equality (also known as
-    Moreau decomposition or Moreau identity). See for example [BC2011]_.
+    Moreau decomposition or Moreau identity). See for example [BC2011].
 
     See Also
     --------
     proximal_cconj_l1 : proximal for convex conjugate
+
+
+    References
+    ----------
+    [BC2011] Bauschke, H H, and Combettes, P L. *Convex analysis and
+    monotone operator theory in Hilbert spaces*. Springer, 2011.
     """
     # TODO: optimize
     prox_cc_l1 = proximal_cconj_l1(space, lam=lam, g=g, isotropic=isotropic)
