@@ -1240,26 +1240,42 @@ class CircularConeFlatGeometry(HelicalConeFlatGeometry):
 
 
 def cone_beam_geometry(space, src_radius, det_radius, num_angles=None,
-                       det_shape=None):
+                       short_scan=False, det_shape=None):
     """Create a default fan or cone beam geometry from ``space``.
 
-    This is intended for simple test cases where users do not need the full
-    flexibility of the geometries, but simply want a geometry that works.
+    This function is intended for simple test cases where users do not
+    need the full flexibility of the geometries, but simply wants a
+    geometry that works.
 
-    This default geometry gives a fully sampled sinogram according to the
+    The geometry returned by this function has equidistant angles
+    that lie (strictly) between 0 and either ``2 * pi`` (full scan)
+    or ``pi + fan_angle`` (short scan).
+    The detector is centered around 0 and has square pixels (3D case).
+    Its size is chosen such that the whole ``space`` is covered with
+    lines.
+
+    The number of angles and detector elements is chosen such that
+    the resulting sinogram is fully sampled according to the
     Nyquist criterion, which in general results in a very large number of
     samples. In particular, a ``space`` that is not centered at the origin
-    can result in very large detectors.
+    can result in very large detectors since the latter is always
+    origin-centered.
+
+    See Parameters and Notes for further details.
 
     Parameters
     ----------
     space : `DiscreteLp`
         Reconstruction space, the space of the volumetric data to be
-        projected. Must be 2-dimensional.
+        projected. Must be 2- or 3-dimensional.
     src_radius : nonnegative float
         Radius of the source circle.
     det_radius : nonnegative float
         Radius of the detector circle.
+    short_scan : bool, optional
+        Use the minimum required angular range ``[0, pi + fan_angle]``.
+        For ``True``, the `parker_weighting` should be used in FBP.
+        By default, the range ``[0, 2 * pi]`` is used.
     num_angles : int, optional
         Number of angles.
         Default: Enough to fully sample the data, see Notes.
@@ -1270,34 +1286,45 @@ def cone_beam_geometry(space, src_radius, det_radius, num_angles=None,
     Returns
     -------
     geometry : `DivergentBeamGeometry`
-        If ``space`` is 2d, return a `FanFlatGeometry`.
-        If ``space`` is 3d, return a `CircularConeFlatGeometry`.
+        Projection geometry with equidistant angles and zero-centered
+        detector as determined by sampling criteria.
+
+            - If ``space`` is 2D, the result is a `FanFlatGeometry`.
+            - If ``space`` is 3D, the result is a `CircularConeFlatGeometry`.
 
     Examples
     --------
-    Create geometry from 2d space and check the number of data points:
+    Create a fan beam geometry from a 2d space:
 
     >>> space = odl.uniform_discr([-1, -1], [1, 1], (20, 20))
     >>> geometry = cone_beam_geometry(space, src_radius=5, det_radius=5)
     >>> geometry.angles.size
-    77
+    78
     >>> geometry.detector.size
-    28
+    57
+
+    For a short scan geometry (from 0 to ``pi + fan_angle``), the
+    ``short_scan`` flag can be set, resulting in a smaller number of
+    angles:
+
+    >>> geometry = cone_beam_geometry(space, src_radius=5, det_radius=5,
+    ...                               short_scan=True)
+    >>> geometry.angles.size
+    46
 
     If the source is close to the object, the detector becomes larger due
     to more magnification:
 
     >>> geometry = cone_beam_geometry(space, src_radius=3, det_radius=9)
     >>> geometry.angles.size
-    79
+    80
     >>> geometry.detector.size
-    52
+    105
 
     Notes
     -----
-    According to `Mathematical Methods in Image Reconstruction`_
-    (page 75--76), for a function :math:`f : \\mathbb{R}^2 \\to \\mathbb{R}`
-    that has compact support
+    According to [NW2001]_, pages 75--76, a function
+    :math:`f : \\mathbb{R}^2 \\to \\mathbb{R}` that has compact support
 
     .. math::
         \| x \| > \\rho  \implies f(x) = 0,
@@ -1307,15 +1334,15 @@ def cone_beam_geometry(space, src_radius, det_radius, num_angles=None,
     .. math::
        \| \\xi \| > \\Omega \implies \\hat{f}(\\xi) \\approx 0,
 
-    then, in order to fully reconstruct the function from a fan beam ray
-    transform with source-detector distance :math:`r` (assuming all detector
-    points have the same distance to the source), the function should be
-    sampled at an angular interval :math:`\\Delta \psi` such that
+    can be fully reconstructed from a fan beam ray transform with
+    source-detector distance :math:`r` (assuming all detector
+    points have the same distance to the source) if (1) the projection
+    angles are sampled with a spacing of :math:`\\Delta \psi` such that
 
     .. math::
         \\Delta \psi \leq \\frac{r + \\rho}{r}\, \\frac{\\pi}{\\rho \\Omega},
 
-    and the detector should be sampled with an angular interval
+    and (2) the detector is sampled with an angular interval
     :math:`\\Delta \\alpha` that satisfies
 
     .. math::
@@ -1343,8 +1370,10 @@ def cone_beam_geometry(space, src_radius, det_radius, num_angles=None,
 
     References
     ----------
-    .. _Mathematical Methods in Image Reconstruction: \
-http://dx.doi.org/10.1137/1.9780898718324
+    .. [NW2001] Natterer, F and Wuebbeling, F.
+       *Mathematical Methods in Image Reconstruction*.
+       SIAM, 2001.
+       https://dx.doi.org/10.1137/1.9780898718324
     """
     # Find maximum distance from rotation axis
     corners = space.domain.corners()[:, :2]
@@ -1369,7 +1398,7 @@ http://dx.doi.org/10.1137/1.9780898718324
     # Compute minimum number of pixels given the constraint on the
     # sampling interval and the computed width
     rb = np.hypot(r, w / 2)  # length of the boundary ray to the flat detector
-    num_px_horiz = int(np.ceil(w * omega * r / (2 * np.pi * rb)))
+    num_px_horiz = 2 * int(np.ceil(w * omega * r / (2 * np.pi * rb))) + 1
     delta_s = w / num_px_horiz
 
     if space.ndim == 2:
@@ -1392,12 +1421,17 @@ http://dx.doi.org/10.1137/1.9780898718324
         if det_shape is None:
             det_shape = [num_px_horiz, num_px_vert]
 
+    fan_angle = 2 * np.arctan(rho / rs)
+    if short_scan:
+        max_angle = min(np.pi + fan_angle, 2 * np.pi)
+    else:
+        max_angle = 2 * np.pi
+
     if num_angles is None:
-        num_angles = int(np.ceil(2 * omega * rho) * r / (r + rho))
+        num_angles = int(np.ceil(max_angle * omega * rho / np.pi *
+                                 r / (r + rho)))
 
-    angle_partition = nonuniform_partition(
-        np.linspace(0, np.pi, num_angles, endpoint=False))
-
+    angle_partition = uniform_partition(0, max_angle, num_angles)
     det_partition = uniform_partition(det_min_pt, det_max_pt, det_shape)
 
     if space.ndim == 2:

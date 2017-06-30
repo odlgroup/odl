@@ -1089,19 +1089,18 @@ def parallel_beam_geometry(space, num_angles=None, det_shape=None):
 
     Examples
     --------
-    Create geometry from 2d space and check the number of data points:
+    Create a parallel beam geometry from a 2d space:
 
     >>> space = odl.uniform_discr([-1, -1], [1, 1], (20, 20))
     >>> geometry = parallel_beam_geometry(space)
     >>> geometry.angles.size
     45
     >>> geometry.detector.size
-    29
+    31
 
     Notes
     -----
-    According to `Mathematical Methods in Image Reconstruction`_
-    (pages 72--74), for a function
+    According to [NW2001]_, pages 72--74, a function
     :math:`f : \\mathbb{R}^2 \\to \\mathbb{R}` that has compact support
 
     .. math::
@@ -1112,14 +1111,14 @@ def parallel_beam_geometry(space, num_angles=None, det_shape=None):
     .. math::
        \| \\xi \| > \\Omega \implies \\hat{f}(\\xi) \\approx 0,
 
-    then, in order to fully reconstruct the function from a parallel beam ray
-    transform, the function should be sampled at an angular interval
+    can be fully reconstructed from a parallel beam ray transform
+    if (1) the projection angles are sampled with a spacing of
     :math:`\\Delta \psi` such that
 
     .. math::
         \\Delta \psi \leq \\frac{\\pi}{\\rho \\Omega},
 
-    and the detector should be sampled with an interval :math:`\\Delta s`
+    and (2) the detector is sampled with an interval :math:`\\Delta s`
     that satisfies
 
     .. math::
@@ -1132,8 +1131,10 @@ def parallel_beam_geometry(space, num_angles=None, det_shape=None):
 
     References
     ----------
-    .. _Mathematical Methods in Image Reconstruction: \
-http://dx.doi.org/10.1137/1.9780898718324
+    .. [NW2001] Natterer, F and Wuebbeling, F.
+       *Mathematical Methods in Image Reconstruction*.
+       SIAM, 2001.
+       https://dx.doi.org/10.1137/1.9780898718324
     """
     # Find maximum distance from rotation axis
     corners = space.domain.corners()[:, :2]
@@ -1146,7 +1147,7 @@ http://dx.doi.org/10.1137/1.9780898718324
     # period of twice the inter-node distance.
     min_side = min(space.partition.cell_sides[:2])
     omega = np.pi / min_side
-    num_px_horiz = int(np.ceil(2 * rho * omega / np.pi))
+    num_px_horiz = 2 * int(np.ceil(rho * omega / np.pi)) + 1
 
     if space.ndim == 2:
         det_min_pt = -rho
@@ -1165,9 +1166,7 @@ http://dx.doi.org/10.1137/1.9780898718324
     if num_angles is None:
         num_angles = int(np.ceil(omega * rho))
 
-    angle_partition = nonuniform_partition(
-        np.linspace(0, np.pi, num_angles, endpoint=False))
-
+    angle_partition = uniform_partition(0, np.pi, num_angles)
     det_partition = uniform_partition(det_min_pt, det_max_pt, det_shape)
 
     if space.ndim == 2:
