@@ -100,7 +100,7 @@ class AstraCudaProjectorImpl(object):
         if self.geometry.ndim == 2:
             out[:] = self.out_array
         elif self.geometry.ndim == 3:
-            out[:] = np.rollaxis(self.out_array, 0, 3).reshape(
+            out[:] = np.swapaxes(self.out_array, 0, 1).reshape(
                 self.proj_space.shape)
 
         # Fix scaling to weight by pixel size
@@ -126,7 +126,9 @@ class AstraCudaProjectorImpl(object):
             astra_proj_shape = proj_shape
             astra_vol_shape = self.reco_space.shape
         elif proj_ndim == 3:
-            astra_proj_shape = (proj_shape[2], proj_shape[0], proj_shape[1])
+            # The `u` and `v` axes of the projection data are swapped,
+            # see explanation in `astra_*_3d_geom_to_vec`.
+            astra_proj_shape = (proj_shape[1], proj_shape[0], proj_shape[2])
             astra_vol_shape = self.reco_space.shape
 
         self.in_array = np.empty(astra_vol_shape,
@@ -236,7 +238,8 @@ class AstraCudaBackProjectorImpl(object):
         elif self.geometry.ndim == 3:
             shape = (-1,) + self.geometry.det_partition.shape
             reshaped_proj_data = proj_data.asarray().reshape(shape)
-            swapped_proj_data = np.rollaxis(reshaped_proj_data, 2, 0)
+            swapped_proj_data = np.ascontiguousarray(
+                np.swapaxes(reshaped_proj_data, 0, 1))
             astra.data3d.store(self.sino_id, swapped_proj_data)
 
         # Run algorithm
@@ -266,7 +269,9 @@ class AstraCudaBackProjectorImpl(object):
             astra_proj_shape = proj_shape
             astra_vol_shape = self.reco_space.shape
         elif proj_ndim == 3:
-            astra_proj_shape = (proj_shape[2], proj_shape[0], proj_shape[1])
+            # The `u` and `v` axes of the projection data are swapped,
+            # see explanation in `astra_*_3d_geom_to_vec`.
+            astra_proj_shape = (proj_shape[1], proj_shape[0], proj_shape[2])
             astra_vol_shape = self.reco_space.shape
 
         self.in_array = np.empty(astra_proj_shape,

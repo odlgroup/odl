@@ -259,8 +259,16 @@ def astra_conebeam_3d_geom_to_vec(geometry):
         # Vectors from detector pixel (0, 0) to (1, 0) and (0, 0) to (0, 1)
         det_axes = geometry.det_axes(angle)
         px_sizes = geometry.det_partition.cell_sides
-        vectors[ang_idx, 6:9] = det_axes[0] * px_sizes[0]
-        vectors[ang_idx, 9:12] = det_axes[1] * px_sizes[1]
+
+        # Swap detector axes to have better memory layout in  projection data.
+        # ASTRA produces `(v, theta, u)` layout, and to map to ODL layout
+        # `(theta, u, v)` a complete roll must be performed, which is the
+        # worst case (compeltely discontiguous).
+        # Instead we swap `u` and `v`, resulting in the effective ASTRA result
+        # `(u, theta, v)`. Here we only need to swap axes 0 and 1, which
+        # keeps at least contiguous blocks in `v`.
+        vectors[ang_idx, 9:12] = det_axes[0] * px_sizes[0]
+        vectors[ang_idx, 6:9] = det_axes[1] * px_sizes[1]
 
     # ASTRA has (z, y, x) axis convention, in contrast to (x, y, z) in ODL,
     # so we need to adapt to this by changing the order.
@@ -378,8 +386,16 @@ def astra_parallel_3d_geom_to_vec(geometry):
         # Vectors from detector pixel (0, 0) to (1, 0) and (0, 0) to (0, 1)
         det_axes = geometry.det_axes(angle)
         px_sizes = geometry.det_partition.cell_sides
-        vectors[ang_idx, 6:9] = det_axes[0] * px_sizes[0]
-        vectors[ang_idx, 9:12] = det_axes[1] * px_sizes[1]
+
+        # Swap detector axes to have better memory layout in  projection data.
+        # ASTRA produces `(v, theta, u)` layout, and to map to ODL layout
+        # `(theta, u, v)` a complete roll must be performed, which is the
+        # worst case (compeltely discontiguous).
+        # Instead we swap `u` and `v`, resulting in the effective ASTRA result
+        # `(u, theta, v)`. Here we only need to swap axes 0 and 1, which
+        # keeps at least contiguous blocks in `v`.
+        vectors[ang_idx, 9:12] = det_axes[0] * px_sizes[0]
+        vectors[ang_idx, 6:9] = det_axes[1] * px_sizes[1]
 
     # ASTRA has (z, y, x) axis convention, in contrast to (x, y, z) in ODL,
     # so we need to adapt to this by changing the order.
@@ -440,8 +456,9 @@ def astra_projection_geometry(geometry):
     elif (isinstance(geometry, ParallelBeamGeometry) and
           isinstance(geometry.detector, FlatDetector) and
           geometry.ndim == 3):
-        det_row_count = geometry.det_partition.shape[1]
-        det_col_count = geometry.det_partition.shape[0]
+        # Swap detector axes (see astra_*_3d_to_vec)
+        det_row_count = geometry.det_partition.shape[0]
+        det_col_count = geometry.det_partition.shape[1]
         vec = astra_parallel_3d_geom_to_vec(geometry)
         proj_geom = astra.create_proj_geom('parallel3d_vec', det_row_count,
                                            det_col_count, vec)
@@ -449,8 +466,9 @@ def astra_projection_geometry(geometry):
     elif (isinstance(geometry, DivergentBeamGeometry) and
           isinstance(geometry.detector, FlatDetector) and
           geometry.ndim == 3):
-        det_row_count = geometry.det_partition.shape[1]
-        det_col_count = geometry.det_partition.shape[0]
+        # Swap detector axes (see astra_*_3d_to_vec)
+        det_row_count = geometry.det_partition.shape[0]
+        det_col_count = geometry.det_partition.shape[1]
         vec = astra_conebeam_3d_geom_to_vec(geometry)
         proj_geom = astra.create_proj_geom('cone_vec', det_row_count,
                                            det_col_count, vec)
