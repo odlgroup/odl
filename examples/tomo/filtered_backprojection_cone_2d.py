@@ -22,8 +22,8 @@ reco_space = odl.uniform_discr(
 # Make a circular cone beam geometry with flat detector
 # Angles: uniformly spaced, n = 360, min = 0, max = 2 * pi
 angle_partition = odl.uniform_partition(0, 2 * np.pi, 360)
-# Detector: uniformly sampled, n = 558, min = -60, max = 60
-detector_partition = odl.uniform_partition(-60, 60, 558)
+# Detector: uniformly sampled, n = 512, min = -60, max = 60
+detector_partition = odl.uniform_partition(-60, 60, 512)
 # Geometry with large fan angle
 geometry = odl.tomo.FanFlatGeometry(
     angle_partition, detector_partition, src_radius=40, det_radius=40)

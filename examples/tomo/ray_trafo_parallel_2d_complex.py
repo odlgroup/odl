@@ -15,8 +15,8 @@ reco_space = odl.uniform_discr(
 # Parallel beam geometry with flat detector
 # Angles: uniformly spaced, n = 360, min = 0, max = pi
 angle_partition = odl.uniform_partition(0, np.pi, 360)
-# Detector: uniformly sampled, n = 558, min = -30, max = 30
-detector_partition = odl.uniform_partition(-30, 30, 558)
+# Detector: uniformly sampled, n = 512, min = -30, max = 30
+detector_partition = odl.uniform_partition(-30, 30, 512)
 geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 
 # Ray transform (= forward projection). The backend is set explicitly -
