@@ -58,7 +58,7 @@ sum_along_z = np.sum(phantom, axis=2)
 # %% Test case 1: axis = [0, 0, 1] -- setup
 
 
-geometry = odl.tomo.CircularConeFlatGeometry(
+geometry = odl.tomo.ConeFlatGeometry(
     angle_partition, detector_partition, src_radius, det_radius,
     axis=[0, 0, 1])
 # Check initial configuration
@@ -112,7 +112,7 @@ assert np.allclose(axes_sum_x[1], [0, 0, 1])
 # %% Test case 2: axis = [0, 1, 0] -- setup
 
 
-geometry = odl.tomo.CircularConeFlatGeometry(
+geometry = odl.tomo.ConeFlatGeometry(
     angle_partition, detector_partition, src_radius, det_radius,
     axis=[0, 1, 0])
 # Check initial configuration
@@ -166,7 +166,7 @@ assert np.allclose(axes_sum_x_T[1], [0, 1, 0])
 # %% Test case 3: axis = [1, 0, 0] -- setup
 
 
-geometry = odl.tomo.CircularConeFlatGeometry(
+geometry = odl.tomo.ConeFlatGeometry(
     angle_partition, detector_partition, src_radius, det_radius,
     axis=[1, 0, 0])
 # Check initial configuration

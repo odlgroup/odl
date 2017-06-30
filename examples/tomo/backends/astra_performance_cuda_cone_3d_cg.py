@@ -29,8 +29,8 @@ reco_space = odl.uniform_discr(-domain_size / 2, domain_size / 2, domain_size)
 apart = odl.uniform_partition(0, 2 * np.pi, n_angles)
 dpart = odl.uniform_partition([-500, -500], [500, 500],
                               [det_size, det_size])
-geometry = odl.tomo.CircularConeFlatGeometry(apart, dpart,
-                                             src_radius=500, det_radius=500)
+geometry = odl.tomo.ConeFlatGeometry(apart, dpart,
+                                     src_radius=500, det_radius=500)
 
 
 phantom = odl.phantom.shepp_logan(reco_space, modified=True).asarray()

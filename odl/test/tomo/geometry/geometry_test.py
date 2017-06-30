@@ -516,90 +516,6 @@ def test_fanflat_frommatrix():
                                                    det_rad, sing_mat)
 
 
-def test_circular_cone_flat_props(shift):
-    """Test basic properties of 3D circular cone beam geometries."""
-    full_angle = 2 * np.pi
-    apart = odl.uniform_partition(0, full_angle, 10)
-    dpart = odl.uniform_partition([0, 0], [1, 1], (10, 10))
-    src_rad = 10
-    det_rad = 5
-    translation = np.array([shift, shift, shift], dtype=float)
-    geom = odl.tomo.CircularConeFlatGeometry(apart, dpart, src_rad, det_rad,
-                                             translation=translation)
-
-    assert geom.ndim == 3
-    assert isinstance(geom.detector, odl.tomo.Flat2dDetector)
-
-    # Check defaults
-    assert all_almost_equal(geom.axis, [0, 0, 1])
-    assert all_almost_equal(geom.src_to_det_init, [0, 1, 0])
-    assert all_almost_equal(geom.src_position(0),
-                            translation + [0, -src_rad, 0])
-    assert all_almost_equal(geom.det_refpoint(0),
-                            translation + [0, det_rad, 0])
-    assert all_almost_equal(geom.det_point_position(0, [0, 0]),
-                            geom.det_refpoint(0))
-    assert all_almost_equal(geom.det_axes_init, ([1, 0, 0], [0, 0, 1]))
-    assert all_almost_equal(geom.det_axes(0), ([1, 0, 0], [0, 0, 1]))
-    assert all_almost_equal(geom.translation, translation)
-
-    # Check that we first rotate, then shift along the initial detector
-    # axes rotated according to the angle, which is equivalent to shifting
-    # first and then rotating.
-    # Here we expect to rotate the reference point to [-det_rad, 0, 0] and
-    # then shift by (1, 1) (=detector param) along the detector axes
-    # ([0, 1, 0], [0, 0, 1]) at that angle.
-    # Global translation should come last.
-    assert all_almost_equal(geom.det_point_position(np.pi / 2, [1, 1]),
-                            translation + [-det_rad, 1, 1])
-
-    # Detector to source vector. At param=0 it should be perpendicular to
-    # the detector towards the source, here at pi/2 it should point into
-    # the (+x) direction.
-    # At any other parameter, when adding the non-normalized vector to the
-    # detector point position, one should get the source position.
-    assert all_almost_equal(geom.det_to_src(np.pi / 2, [0, 0]), [1, 0, 0])
-    src_pos = (geom.det_point_position(np.pi / 2, [1, 1]) +
-               geom.det_to_src(np.pi / 2, [1, 1], normalized=False))
-    assert all_almost_equal(src_pos, geom.src_position(np.pi / 2))
-
-    # Rotation matrix, should correspond to counter-clockwise rotation
-    # arond the z axis
-    assert all_almost_equal(geom.rotation_matrix(np.pi / 2),
-                            [[0, -1, 0],
-                             [1, 0, 0],
-                             [0, 0, 1]])
-
-    # Invalid parameter
-    with pytest.raises(ValueError):
-        geom.rotation_matrix(2 * full_angle)
-
-    # Zero not allowed as axis
-    with pytest.raises(ValueError):
-        odl.tomo.CircularConeFlatGeometry(apart, dpart, src_rad, det_rad,
-                                          axis=[0, 0, 0])
-
-    # Detector axex should not be parallel or otherwise result in a
-    # linear dependent triplet
-    with pytest.raises(ValueError):
-        odl.tomo.CircularConeFlatGeometry(
-            apart, dpart, src_rad, det_rad,
-            det_axes_init=([0, 1, 0], [0, 1, 0]))
-    with pytest.raises(ValueError):
-        odl.tomo.CircularConeFlatGeometry(
-            apart, dpart, src_rad, det_rad,
-            det_axes_init=([0, 0, 0], [0, 1, 0]))
-
-    # Both radii zero
-    with pytest.raises(ValueError):
-        odl.tomo.CircularConeFlatGeometry(apart, dpart, src_radius=0,
-                                          det_radius=0)
-
-    # check str and repr work without crashing and return a non-empty string
-    assert str(geom) > ''
-    assert repr(geom) > ''
-
-
 def test_helical_cone_flat_props(shift):
     """Test basic properties of 3D helical cone beam geometries."""
     full_angle = 2 * np.pi
@@ -609,8 +525,8 @@ def test_helical_cone_flat_props(shift):
     det_rad = 5
     pitch = 2.0
     translation = np.array([shift, shift, shift], dtype=float)
-    geom = odl.tomo.HelicalConeFlatGeometry(apart, dpart, src_rad, det_rad,
-                                            pitch, translation=translation)
+    geom = odl.tomo.ConeFlatGeometry(apart, dpart, src_rad, det_rad,
+                                     pitch=pitch, translation=translation)
 
     assert geom.ndim == 3
     assert isinstance(geom.detector, odl.tomo.Flat2dDetector)
@@ -665,8 +581,8 @@ def test_helical_cone_flat_props(shift):
                              [0, 0, 1]])
 
     # pitch_offset
-    geom = odl.tomo.HelicalConeFlatGeometry(apart, dpart, src_rad, det_rad,
-                                            pitch, pitch_offset=0.5)
+    geom = odl.tomo.ConeFlatGeometry(apart, dpart, src_rad, det_rad,
+                                     pitch=pitch, pitch_offset=0.5)
     assert all_almost_equal(geom.det_refpoint(0), [0, det_rad, 0.5])
 
     # Invalid parameter
@@ -675,24 +591,24 @@ def test_helical_cone_flat_props(shift):
 
     # Zero not allowed as axis
     with pytest.raises(ValueError):
-        odl.tomo.HelicalConeFlatGeometry(apart, dpart, src_rad, det_rad,
-                                         pitch, axis=[0, 0, 0])
+        odl.tomo.ConeFlatGeometry(apart, dpart, src_rad, det_rad,
+                                  pitch=pitch, axis=[0, 0, 0])
 
     # Detector axex should not be parallel or otherwise result in a
     # linear dependent triplet
     with pytest.raises(ValueError):
-        odl.tomo.HelicalConeFlatGeometry(
-            apart, dpart, src_rad, det_rad, pitch,
+        odl.tomo.ConeFlatGeometry(
+            apart, dpart, src_rad, det_rad, pitch=pitch,
             det_axes_init=([0, 1, 0], [0, 1, 0]))
     with pytest.raises(ValueError):
-        odl.tomo.HelicalConeFlatGeometry(
-            apart, dpart, src_rad, det_rad, pitch,
+        odl.tomo.ConeFlatGeometry(
+            apart, dpart, src_rad, det_rad, pitch=pitch,
             det_axes_init=([0, 0, 0], [0, 1, 0]))
 
     # Both radii zero
     with pytest.raises(ValueError):
-        odl.tomo.HelicalConeFlatGeometry(apart, dpart, src_radius=0,
-                                         det_radius=0, pitch=pitch)
+        odl.tomo.ConeFlatGeometry(apart, dpart, src_radius=0, det_radius=0,
+                                  pitch=pitch)
 
     # check str and repr work without crashing and return a non-empty string
     assert str(geom) > ''

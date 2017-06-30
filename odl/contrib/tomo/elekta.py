@@ -45,7 +45,7 @@ def elekta_icon_geometry(sad=780.0, sdd=1000.0,
 
     Returns
     -------
-    elekta_icon_geometry : `CircularConeFlatGeometry`
+    elekta_icon_geometry : `ConeFlatGeometry`
 
     Examples
     --------
@@ -93,7 +93,7 @@ def elekta_icon_geometry(sad=780.0, sdd=1000.0,
                                                shape=detector_shape)
 
     # Create the geometry
-    geometry = odl.tomo.CircularConeFlatGeometry(
+    geometry = odl.tomo.ConeFlatGeometry(
         angle_partition, detector_partition,
         src_radius=sad, det_radius=sdd - sad,
         axis=[0, 0, 1])

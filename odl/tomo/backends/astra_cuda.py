@@ -28,7 +28,7 @@ from odl.tomo.backends.astra_setup import (
     astra_data, astra_algorithm)
 from odl.tomo.geometry import (
     Geometry, Parallel2dGeometry, FanFlatGeometry, Parallel3dAxisGeometry,
-    HelicalConeFlatGeometry)
+    ConeFlatGeometry)
 
 
 __all__ = ('ASTRA_CUDA_AVAILABLE',
@@ -363,7 +363,7 @@ def astra_cuda_bp_scaling_factor(proj_space, reco_space, geometry):
             # In 1.7, only cubic voxels are supported
             voxel_stride = reco_space.cell_sides[0]
             scaling_factor /= float(voxel_stride)
-        elif isinstance(geometry, HelicalConeFlatGeometry):
+        elif isinstance(geometry, ConeFlatGeometry):
             # Scales with 1 / cell_volume
             # In 1.7, only cubic voxels are supported
             voxel_stride = reco_space.cell_sides[0]
@@ -388,7 +388,7 @@ def astra_cuda_bp_scaling_factor(proj_space, reco_space, geometry):
             # Scales with cell volume
             # currently only square voxels are supported
             scaling_factor /= reco_space.cell_volume
-        elif isinstance(geometry, HelicalConeFlatGeometry):
+        elif isinstance(geometry, ConeFlatGeometry):
             # Scales with cell volume
             scaling_factor /= reco_space.cell_volume
             # Magnification correction (scaling = 1 / magnification ** 2)

@@ -30,7 +30,7 @@ angle_partition = odl.uniform_partition(0, 8 * 2 * np.pi, 2000)
 # n = (558, 60), min = (-30, -4), max = (30, 4)
 detector_partition = odl.uniform_partition([-40, -4], [40, 4], [558, 60])
 # Create geometry
-geometry = odl.tomo.HelicalConeFlatGeometry(
+geometry = odl.tomo.ConeFlatGeometry(
     angle_partition, detector_partition, src_radius=100, det_radius=100,
     pitch=5.0)
 

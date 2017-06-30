@@ -54,13 +54,13 @@ def geometry(request):
     elif geom == 'cone3d':
         apart = odl.uniform_partition(0, 2 * np.pi, n_angles)
         dpart = odl.uniform_partition([-60, -60], [60, 60], (m, m))
-        return odl.tomo.CircularConeFlatGeometry(apart, dpart, src_radius=200,
-                                                 det_radius=100)
+        return odl.tomo.ConeFlatGeometry(apart, dpart,
+                                         src_radius=200, det_radius=100)
     elif geom == 'helical':
         apart = odl.uniform_partition(0, 8 * 2 * np.pi, n_angles)
         dpart = odl.uniform_partition([-30, -3], [30, 3], (m, m))
-        return odl.tomo.HelicalConeFlatGeometry(apart, dpart, pitch=5.0,
-                                                src_radius=200, det_radius=100)
+        return odl.tomo.ConeFlatGeometry(apart, dpart, pitch=5.0,
+                                         src_radius=200, det_radius=100)
     else:
         raise ValueError('geom not valid')
 
@@ -161,8 +161,8 @@ def projector(request):
                                        dtype=dtype)
         # Geometry
         dpart = odl.uniform_partition([-60] * 2, [60] * 2, [m] * 2)
-        geom = odl.tomo.CircularConeFlatGeometry(apart, dpart, src_radius=200,
-                                                 det_radius=100)
+        geom = odl.tomo.ConeFlatGeometry(apart, dpart,
+                                         src_radius=200, det_radius=100)
         # Ray transform
         return odl.tomo.RayTransform(reco_space, geom, impl=impl)
 
@@ -173,8 +173,8 @@ def projector(request):
         # Geometry, overwriting angle partition
         apart = odl.uniform_partition(0, 8 * 2 * np.pi, n_angles)
         dpart = odl.uniform_partition([-30, -3], [30, 3], [m] * 2)
-        geom = odl.tomo.HelicalConeFlatGeometry(apart, dpart, pitch=5.0,
-                                                src_radius=200, det_radius=100)
+        geom = odl.tomo.ConeFlatGeometry(apart, dpart, pitch=5.0,
+                                         src_radius=200, det_radius=100)
         # Ray transform
         return odl.tomo.RayTransform(reco_space, geom, impl=impl)
     else:
@@ -218,7 +218,7 @@ def test_adjoint(projector):
     # Relative tolerance, still rather high due to imperfectly matched
     # adjoint in the cone beam case
     if (parse_version(ASTRA_VERSION) < parse_version('1.8rc1') and
-            isinstance(projector.geometry, odl.tomo.HelicalConeFlatGeometry)):
+            isinstance(projector.geometry, odl.tomo.ConeFlatGeometry)):
         rtol = 0.1
     else:
         rtol = 0.05

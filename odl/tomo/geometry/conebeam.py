@@ -24,8 +24,7 @@ from odl.tomo.util.utility import euler_matrix, transform_system
 from odl.util import signature_string, indent_rows
 
 
-__all__ = ('FanFlatGeometry',
-           'CircularConeFlatGeometry', 'HelicalConeFlatGeometry',
+__all__ = ('FanFlatGeometry', 'ConeFlatGeometry',
            'cone_beam_geometry')
 
 
@@ -471,9 +470,9 @@ class FanFlatGeometry(DivergentBeamGeometry):
                                    indent_rows(sig_str))
 
 
-class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
+class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
 
-    """Cone beam geometry with helical source curve and flat detector.
+    """Cone beam geometry with circular/helical source curve and flat detector.
 
     The source moves along a spiral oriented along a fixed ``axis``, with
     radius ``src_radius`` in the azimuthal plane and a given ``pitch``.
@@ -490,17 +489,13 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
 
     For details, check `the online docs
     <https://odlgroup.github.io/odl/guide/geometry_guide.html>`_.
-
-    See Also
-    --------
-    CircularConeFlatGeometry : Case with zero pitch
     """
 
     _default_config = dict(axis=(0, 0, 1),
                            src_to_det_init=(0, 1, 0),
                            det_axes_init=((1, 0, 0), (0, 0, 1)))
 
-    def __init__(self, apart, dpart, src_radius, det_radius, pitch,
+    def __init__(self, apart, dpart, src_radius, det_radius, pitch=0,
                  axis=(0, 0, 1), **kwargs):
         """Initialize a new instance.
 
@@ -514,9 +509,11 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
             Radius of the source circle.
         det_radius : nonnegative float
             Radius of the detector circle.
-        pitch : float
+        pitch : float, optional
             Constant vertical distance that a point on the helix
             traverses when increasing the angle parameter by ``2 * pi``.
+            The default case ``pitch=0`` results in a circular cone
+            beam geometry.
         axis : `array-like`, shape ``(3,)``, optional
             Vector defining the fixed rotation axis of this geometry.
 
@@ -559,7 +556,7 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
 
         >>> apart = odl.uniform_partition(0, 4 * np.pi, 10)
         >>> dpart = odl.uniform_partition([-1, -1], [1, 1], (20, 20))
-        >>> geom = HelicalConeFlatGeometry(
+        >>> geom = ConeFlatGeometry(
         ...     apart, dpart, src_radius=5, det_radius=10, pitch=2)
         >>> geom.src_position(0)
         array([ 0., -5.,  0.])
@@ -582,7 +579,7 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         to this position:
 
         >>> e_x, e_y, e_z = np.eye(3)  # standard unit vectors
-        >>> geom = HelicalConeFlatGeometry(
+        >>> geom = ConeFlatGeometry(
         ...     apart, dpart, src_radius=5, det_radius=10, pitch=2,
         ...     axis=(0, 1, 0))
         >>> np.allclose(geom.axis, e_y)
@@ -591,7 +588,7 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         True
         >>> np.allclose(geom.det_axes_init, (e_x, e_y))
         True
-        >>> geom = HelicalConeFlatGeometry(
+        >>> geom = ConeFlatGeometry(
         ...     apart, dpart, src_radius=5, det_radius=10, pitch=2,
         ...     axis=(1, 0, 0))
         >>> np.allclose(geom.axis, e_x)
@@ -604,7 +601,7 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         The initial source-to-detector vector and the detector axes can
         also be set explicitly:
 
-        >>> geom = HelicalConeFlatGeometry(
+        >>> geom = ConeFlatGeometry(
         ...     apart, dpart, src_radius=5, det_radius=10, pitch=2,
         ...     src_to_det_init=(-1, 0, 0),
         ...     det_axes_init=((0, 1, 0), (0, 0, 1)))
@@ -698,9 +695,9 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
                             ''.format(kwargs))
 
     @classmethod
-    def frommatrix(cls, apart, dpart, src_radius, det_radius, pitch,
-                   init_matrix, **kwargs):
-        """Create an instance of `HelicalConeFlatGeometry` using a matrix.
+    def frommatrix(cls, apart, dpart, src_radius, det_radius, init_matrix,
+                   pitch=0, **kwargs):
+        """Create an instance of `ConeFlatGeometry` using a matrix.
 
         This alternative constructor uses a matrix to rotate and
         translate the default configuration. It is most useful when
@@ -716,9 +713,11 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
             Radius of the source circle.
         det_radius : nonnegative float
             Radius of the detector circle.
-        pitch : float
+        pitch : float, optional
             Constant vertical distance that a point on the helix
             traverses when increasing the angle parameter by ``2 * pi``.
+            The default case ``pitch=0`` results in a circular cone
+            beam geometry.
         init_matrix : `array_like`, shape ``(3, 3)`` or ``(3, 4)``, optional
             Transformation matrix whose left ``(3, 3)`` block is multiplied
             with the default ``det_pos_init`` and ``det_axes_init`` to
@@ -730,8 +729,7 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
 
         Returns
         -------
-        geometry : `HelicalConeFlatGeometry`
-            The resulting geometry.
+        geometry : `ConeFlatGeometry`
 
         Examples
         --------
@@ -743,7 +741,7 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         >>> matrix = np.array([[1, 0, 0],
         ...                    [0, 0, -1],
         ...                    [0, 1, 0]])
-        >>> geom = HelicalConeFlatGeometry.frommatrix(
+        >>> geom = ConeFlatGeometry.frommatrix(
         ...     apart, dpart, src_radius=5, det_radius=10, pitch=2,
         ...     init_matrix=matrix)
         >>> geom.axis
@@ -758,7 +756,7 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         >>> matrix = np.array([[0, 0, -1, 0],
         ...                    [0, 1, 0, 1],
         ...                    [1, 0, 0, 1]])
-        >>> geom = HelicalConeFlatGeometry.frommatrix(
+        >>> geom = ConeFlatGeometry.frommatrix(
         ...     apart, dpart, src_radius=5, det_radius=10, pitch=2,
         ...     init_matrix=matrix)
         >>> geom.translation
@@ -876,7 +874,7 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
 
         >>> apart = odl.uniform_partition(0, 4 * np.pi, 10)
         >>> dpart = odl.uniform_partition([-1, -1], [1, 1], (20, 20))
-        >>> geom = HelicalConeFlatGeometry(
+        >>> geom = ConeFlatGeometry(
         ...     apart, dpart, src_radius=5, det_radius=10, pitch=2)
         >>> geom.det_refpoint(0)
         array([  0.,  10.,   0.])
@@ -935,7 +933,7 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
 
         >>> apart = odl.uniform_partition(0, 4 * np.pi, 10)
         >>> dpart = odl.uniform_partition([-1, -1], [1, 1], (20, 20))
-        >>> geom = HelicalConeFlatGeometry(
+        >>> geom = ConeFlatGeometry(
         ...     apart, dpart, src_radius=5, det_radius=10, pitch=2)
         >>> geom.src_position(0)
         array([ 0., -5.,  0.])
@@ -964,7 +962,7 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         posargs = [self.motion_partition, self.det_partition]
         optargs = [('src_radius', self.src_radius, -1),
                    ('det_radius', self.det_radius, -1),
-                   ('pitch', self.pitch, 0)  # 0 for CircularConeFlatGeometry
+                   ('pitch', self.pitch, 0)
                    ]
 
         if not np.allclose(self.axis, self._default_config['axis']):
@@ -993,250 +991,6 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
     # Manually override the abstract method in `Geometry` since it's found
     # first
     rotation_matrix = AxisOrientedGeometry.rotation_matrix
-
-
-class CircularConeFlatGeometry(HelicalConeFlatGeometry):
-
-    """Cone beam geometry with circular source curve and flat detector.
-
-    The source moves along a circle with radius ``src_radius`` in the
-    plane perpendicular to a fixed ``axis``. The detector reference
-    point is opposite to the source, i.e. in the same plane on a circle
-    with radius ``det_rad`` at maximum distance to the source. This
-    implies that it lies on the line through the source point and
-    the intersection of the ``axis`` with the azimuthal plane.
-
-    The motion parameter is the 1d rotation angle parameterizing source
-    and detector positions simultaneously.
-
-    In the standard configuration, the rotation axis is ``(0, 0, 1)``,
-    the initial source-to-detector vector is ``(0, 1, 0)``, and the
-    initial detector axes are ``[(1, 0, 0), (0, 0, 1)]``.
-
-    For details, check `the online docs
-    <https://odlgroup.github.io/odl/guide/geometry_guide.html>`_.
-
-    See Also
-    --------
-    HelicalConeFlatGeometry : General case with motion in z direction
-    """
-
-    def __init__(self, apart, dpart, src_radius, det_radius, axis=(0, 0, 1),
-                 **kwargs):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        apart : 1-dim. `RectPartition`
-            Partition of the angle interval.
-        dpart : 2-dim. `RectPartition`
-            Partition of the detector parameter rectangle.
-        src_radius : nonnegative float
-            Radius of the source circle.
-        det_radius : nonnegative float
-            Radius of the detector circle.
-        axis : `array-like`, shape ``(3,)``, optional
-            Vector defining the fixed rotation axis of this geometry.
-
-        Other Parameters
-        ----------------
-        src_to_det_init : `array-like`, shape ``(3,)``, optional
-            Initial state of the vector pointing from source to detector
-            reference point. The zero vector is not allowed.
-            The default depends on ``axis``, see Notes.
-        det_axes_init : 2-tuple of `array-like`'s (shape ``(3,)``), optional
-            Initial axes defining the detector orientation. The default
-            depends on ``axis``, see Notes.
-        init_matrix : `array_like`, shape ``(3, 3)``, optional
-            Transformation matrix that should be applied to the default
-            configuration of ``axis``, ``src_to_det_init`` and
-            ``det_axes_init``. The resulting ``src_to_det_init`` and
-            ``det_axes_init`` will be normalized.
-
-            This option cannot be used together with any of the parameters
-            ``axis``, ``src_to_det_init`` and ``det_axes_init``.
-
-        translation : `array-like`, shape ``(3,)``, optional
-            Global translation of the geometry. This is added last in any
-            method that computes an absolute vector, e.g., `det_refpoint`,
-            and also shifts the axis of rotation.
-
-        Notes
-        -----
-        In the default configuration, the rotation axis is ``(0, 0, 1)``,
-        the initial source-to-detector direction is ``(0, 1, 0)``,
-        and the default detector axes are ``[(1, 0, 0), (0, 0, 1)]``.
-        If a different ``axis`` is provided, the new default initial
-        position and the new default axes are the computed by rotating
-        the original ones by a matrix that transforms ``(0, 0, 1)`` to the
-        new (normalized) ``axis``. This matrix is calculated with the
-        `rotation_matrix_from_to` function. Expressed in code, we have ::
-
-            init_rot = rotation_matrix_from_to((0, 0, 1), axis)
-            src_to_det_init = init_rot.dot((0, 1, 0))
-            det_axes_init[0] = init_rot.dot((1, 0, 0))
-            det_axes_init[1] = init_rot.dot((0, 0, 1))
-
-        Examples
-        --------
-        Initialization with default parameters and some (arbitrary)
-        choices for the radii:
-
-        >>> apart = odl.uniform_partition(0, 4 * np.pi, 10)
-        >>> dpart = odl.uniform_partition([-1, -1], [1, 1], (20, 20))
-        >>> geom = CircularConeFlatGeometry(
-        ...     apart, dpart, src_radius=5, det_radius=10)
-        >>> geom.src_position(0)
-        array([ 0., -5.,  0.])
-        >>> geom.det_refpoint(0)
-        array([ 0., 10.,  0.])
-        >>> np.allclose(geom.src_position(2 * np.pi), geom.src_position(0))
-        True
-
-        Checking the default orientation:
-
-        >>> geom.axis
-        array([ 0.,  0.,  1.])
-        >>> geom.src_to_det_init
-        array([ 0.,  1.,  0.])
-        >>> geom.det_axes_init
-        (array([ 1.,  0.,  0.]), array([ 0.,  0.,  1.]))
-
-        Specifying an axis by default rotates the standard configuration
-        to this position:
-
-        >>> e_x, e_y, e_z = np.eye(3)  # standard unit vectors
-        >>> geom = CircularConeFlatGeometry(
-        ...     apart, dpart, src_radius=5, det_radius=10,
-        ...     axis=(0, 1, 0))
-        >>> np.allclose(geom.axis, e_y)
-        True
-        >>> np.allclose(geom.src_to_det_init, -e_z)
-        True
-        >>> np.allclose(geom.det_axes_init, (e_x, e_y))
-        True
-        >>> geom = CircularConeFlatGeometry(
-        ...     apart, dpart, src_radius=5, det_radius=10,
-        ...     axis=(1, 0, 0))
-        >>> np.allclose(geom.axis, e_x)
-        True
-        >>> np.allclose(geom.src_to_det_init, e_y)
-        True
-        >>> np.allclose(geom.det_axes_init, (-e_z, e_x))
-        True
-
-        The initial source-to-detector vector and the detector axes can
-        also be set explicitly:
-
-        >>> geom = CircularConeFlatGeometry(
-        ...     apart, dpart, src_radius=5, det_radius=10,
-        ...     src_to_det_init=(-1, 0, 0),
-        ...     det_axes_init=((0, 1, 0), (0, 0, 1)))
-        >>> np.allclose(geom.axis, e_z)
-        True
-        >>> np.allclose(geom.src_to_det_init, -e_x)
-        True
-        >>> np.allclose(geom.det_axes_init, (e_y, e_z))
-        True
-        """
-        # For a better error message
-        for key in ('pitch', 'pitch_offset'):
-            if key in kwargs:
-                raise TypeError('got an unexpected keyword argument {!r}'
-                                ''.format(key))
-
-        super().__init__(apart, dpart, src_radius, det_radius, pitch=0,
-                         axis=axis, **kwargs)
-
-    @classmethod
-    def frommatrix(cls, apart, dpart, src_radius, det_radius, init_matrix):
-        """Create an instance of `CircularConeFlatGeometry` using a matrix.
-
-        This alternative constructor uses a matrix to rotate and
-        translate the default configuration. It is most useful when
-        the transformation to be applied is already given as a matrix.
-
-        Parameters
-        ----------
-        apart : 1-dim. `RectPartition`
-            Partition of the parameter interval.
-        dpart : 2-dim. `RectPartition`
-            Partition of the detector parameter set.
-        src_radius : nonnegative float
-            Radius of the source circle.
-        det_radius : nonnegative float
-            Radius of the detector circle.
-        init_matrix : `array_like`, shape ``(3, 3)`` or ``(3, 4)``, optional
-            Transformation matrix whose left ``(3, 3)`` block is multiplied
-            with the default ``det_pos_init`` and ``det_axes_init`` to
-            determine the new vectors. If present, the fourth column acts
-            as a translation after the initial transformation.
-            The resulting ``det_axes_init`` will be normalized.
-
-        Returns
-        -------
-        geometry : `CircularConeFlatGeometry`
-            The resulting geometry.
-
-        Examples
-        --------
-        Map unit vectors ``e_y -> e_z`` and ``e_z -> -e_y``, keeping the
-        right-handedness:
-
-        >>> apart = odl.uniform_partition(0, 2 * np.pi, 10)
-        >>> dpart = odl.uniform_partition([-1, -1], [1, 1], (20, 20))
-        >>> matrix = np.array([[1, 0, 0],
-        ...                    [0, 0, -1],
-        ...                    [0, 1, 0]])
-        >>> geom = CircularConeFlatGeometry.frommatrix(
-        ...     apart, dpart, src_radius=5, det_radius=10, init_matrix=matrix)
-        >>> geom.axis
-        array([ 0., -1.,  0.])
-        >>> geom.det_refpoint(0)
-        array([  0.,   0.,  10.])
-        >>> geom.det_axes_init
-        (array([ 1.,  0.,  0.]), array([ 0., -1.,  0.]))
-
-        Adding a translation with a fourth matrix column:
-
-        >>> matrix = np.array([[0, 0, -1, 0],
-        ...                    [0, 1, 0, 1],
-        ...                    [1, 0, 0, 1]])
-        >>> geom = CircularConeFlatGeometry.frommatrix(
-        ...     apart, dpart, src_radius=5, det_radius=10, init_matrix=matrix)
-        >>> geom.translation
-        array([ 0.,  1.,  1.])
-        >>> geom.det_refpoint(0)  # (0, 10, 0) + (0, 1, 1)
-        array([  0.,  11.,   1.])
-        """
-        # Get transformation and translation parts from `init_matrix`
-        init_matrix = np.asarray(init_matrix, dtype=float)
-        if init_matrix.shape not in ((3, 3), (3, 4)):
-            raise ValueError('`matrix` must have shape (3, 3) or (3, 4), '
-                             'got array with shape {}'
-                             ''.format(init_matrix.shape))
-        trafo_matrix = init_matrix[:, :3]
-        translation = init_matrix[:, 3:].squeeze()
-
-        # Transform the default vectors
-        default_axis = cls._default_config['axis']
-        default_src_to_det_init = cls._default_config['src_to_det_init']
-        default_det_axes_init = cls._default_config['det_axes_init']
-        vecs_to_transform = (default_src_to_det_init,) + default_det_axes_init
-        transformed_vecs = transform_system(
-            default_axis, None, vecs_to_transform, matrix=trafo_matrix)
-
-        # Use the standard constructor with these vectors
-        axis, src_to_det, det_axis_0, det_axis_1 = transformed_vecs
-        if translation.size == 0:
-            kwargs = {}
-        else:
-            kwargs = {'translation': translation}
-
-        return cls(apart, dpart, src_radius, det_radius, axis,
-                   src_to_det_init=src_to_det,
-                   det_axes_init=[det_axis_0, det_axis_1],
-                   **kwargs)
 
 
 def cone_beam_geometry(space, src_radius, det_radius, num_angles=None,
@@ -1290,7 +1044,7 @@ def cone_beam_geometry(space, src_radius, det_radius, num_angles=None,
         detector as determined by sampling criteria.
 
             - If ``space`` is 2D, the result is a `FanFlatGeometry`.
-            - If ``space`` is 3D, the result is a `CircularConeFlatGeometry`.
+            - If ``space`` is 3D, the result is a `ConeFlatGeometry`.
 
     Examples
     --------
@@ -1438,8 +1192,8 @@ def cone_beam_geometry(space, src_radius, det_radius, num_angles=None,
         return FanFlatGeometry(angle_partition, det_partition,
                                src_radius, det_radius)
     elif space.ndim == 3:
-        return CircularConeFlatGeometry(angle_partition, det_partition,
-                                        src_radius, det_radius)
+        return ConeFlatGeometry(angle_partition, det_partition,
+                                src_radius, det_radius)
     else:
         raise ValueError('``space.ndim`` must be 2 or 3.')
 

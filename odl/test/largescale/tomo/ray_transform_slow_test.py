@@ -137,7 +137,7 @@ def projector(request, dtype, weighting):
 
         # Geometry
         dpart = odl.uniform_partition([-30, -30], [30, 30], [200, 200])
-        geom = tomo.CircularConeFlatGeometry(
+        geom = tomo.ConeFlatGeometry(
             apart, dpart, src_radius=200, det_radius=100, axis=[1, 0, 0])
 
         # Ray transform
@@ -154,8 +154,8 @@ def projector(request, dtype, weighting):
         n_angle = 700
         apart = odl.uniform_partition(0, 8 * 2 * np.pi, n_angle)
         dpart = odl.uniform_partition([-30, -3], [30, 3], [200, 20])
-        geom = tomo.HelicalConeFlatGeometry(apart, dpart, pitch=5.0,
-                                            src_radius=200, det_radius=100)
+        geom = tomo.ConeFlatGeometry(apart, dpart, pitch=5.0,
+                                     src_radius=200, det_radius=100)
 
         # Ray transform
         return tomo.RayTransform(discr_reco_space, geom,
@@ -173,7 +173,7 @@ def test_adjoint(projector):
     # Relative tolerance, still rather high due to imperfectly matched
     # adjoint in the cone beam case
     if (parse_version(odl.tomo.ASTRA_VERSION) < parse_version('1.8rc1') and
-            isinstance(projector.geometry, odl.tomo.HelicalConeFlatGeometry)):
+            isinstance(projector.geometry, odl.tomo.ConeFlatGeometry)):
         rtol = 0.1
     else:
         rtol = 0.05

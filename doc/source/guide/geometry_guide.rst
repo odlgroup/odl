@@ -240,8 +240,8 @@ This geometry, like all subclasses of `AxisOrientedGeometry`, has a fixed symmet
 Its motion parameter is a single rotation angle around this axis.
 The initial orientation handle :math:`v_1` is the symmetry axis, with default value :math:`v_1^{(\text{def})} = (0, 0, 1)^{\mathrm{T}}`.
 
-`CircularConeFlatGeometry`
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+`ConeFlatGeometry`
+^^^^^^^^^^^^^^^^^^
 The 3D cone beam geometry with circular acquisition curve is also an `AxisOrientedGeometry`.
 Here, the symmetry axis is perpendicular to the source and detector circles (which can be different but lie in the same plane).
 Its motion parameter is a single angle that parametrizes the position of the source on the circle, and the detector lies opposite of the source point.

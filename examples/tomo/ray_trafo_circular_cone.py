@@ -14,7 +14,7 @@ reco_space = odl.uniform_discr(
 angle_partition = odl.uniform_partition(0, 2 * np.pi, 360)
 # Detector: uniformly sampled, n = (558, 558), min = (-30, -30), max = (30, 30)
 detector_partition = odl.uniform_partition([-30, -30], [30, 30], [558, 558])
-geometry = odl.tomo.CircularConeFlatGeometry(
+geometry = odl.tomo.ConeFlatGeometry(
     angle_partition, detector_partition, src_radius=1000, det_radius=100,
     axis=[1, 0, 0])
 
