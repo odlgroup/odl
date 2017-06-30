@@ -179,9 +179,6 @@ class AstraCudaProjectorImpl(object):
             aproj.delete(self.proj_id)
             self.proj_id = None
 
-        self.in_array = None
-        self.out_array = None
-
 
 class AstraCudaBackProjectorImpl(object):
 

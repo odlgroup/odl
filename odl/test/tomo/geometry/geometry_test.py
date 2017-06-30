@@ -610,9 +610,9 @@ def test_helical_cone_flat_props(shift):
         odl.tomo.ConeFlatGeometry(apart, dpart, src_radius=0, det_radius=0,
                                   pitch=pitch)
 
-    # check str and repr work without crashing and return a non-empty string
-    assert str(geom) > ''
-    assert repr(geom) > ''
+    # check str and repr work without crashing and return something nontrivial
+    assert str(geom)
+    assert repr(geom)
 
 
 if __name__ == '__main__':

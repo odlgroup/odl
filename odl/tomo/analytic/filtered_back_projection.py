@@ -130,7 +130,10 @@ def tam_danielson_window(ray_trafo, smoothing_width=0.05, n_half_rot=1):
 
     References
     ----------
-    .. _TAM1998: http://iopscience.iop.org/article/10.1088/0031-9155/43/4/028
+    [TSS1998] Tam, K C, Samarasekera, S and Sauer, F.
+    *Exact cone beam CT with a spiral scan*.
+    Physics in Medicine & Biology 4 (1998), p 1015.
+    https://dx.doi.org/10.1088/0031-9155/43/4/028
     """
     # Extract parameters
     src_radius = ray_trafo.geometry.src_radius
