@@ -44,7 +44,7 @@ class Functional(Operator):
     The implementation of the functional class assumes that the domain
     :math:`X` is a Hilbert space and that the field of scalars :math:`F` is a
     is the real numbers. It is possible to create functions that do not fulfil
-    these assumptions, however some mathematical results might not be valide in
+    these assumptions, however some mathematical results might not be valid in
     this case. For more information, see `the ODL functional guide
     <http://odlgroup.github.io/odl/guide/in_depth/functional_guide.html>`_.
     """
@@ -1179,7 +1179,7 @@ def simple_functional(space, fcall=None, grad=None, prox=None, grad_lip=np.nan,
     >>> func([1, 2, 3])
     14.0
     >>> func.gradient([1, 2, 3])
-    rn(3).element([2.0, 4.0, 6.0])
+    rn(3).element([ 2.,  4.,  6.])
     """
     if grad is not None and not isinstance(grad, Operator):
         grad_in = grad

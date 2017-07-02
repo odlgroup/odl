@@ -14,6 +14,7 @@ import pytest
 
 import odl
 from odl.deform import LinDeformFixedTempl, LinDeformFixedDisp
+from odl.space.entry_points import TENSOR_SPACE_IMPLS
 from odl.util.testutils import almost_equal, simple_fixture
 
 
@@ -26,17 +27,18 @@ ndim = simple_fixture('ndim', [1, 2, 3])
 
 
 @pytest.fixture
-def space(request, ndim, interp, dtype, fn_impl):
+def space(request, ndim, interp, dtype, tspace_impl):
     """Example space.
 
     Generates example spaces with various implementations, dimensions, dtypes
     and interpolations.
     """
-    if np.dtype(dtype) not in odl.FN_IMPLS[fn_impl].available_dtypes():
+    dtype = np.dtype(dtype)
+    if dtype not in TENSOR_SPACE_IMPLS[tspace_impl].available_dtypes():
         pytest.skip('dtype not available for this backend')
 
     return odl.uniform_discr([-1] * ndim, [1] * ndim, [20] * ndim,
-                             interp=interp, impl=fn_impl, dtype=dtype)
+                             interp=interp, impl=tspace_impl, dtype=dtype)
 
 
 # --- Helper functions --- #
@@ -160,7 +162,7 @@ def test_fixed_templ_init():
     template = space.element(template_function)
 
     # Valid input
-    print(LinDeformFixedTempl(template))
+    LinDeformFixedTempl(template)
 
     # Invalid input
     with pytest.raises(TypeError):
@@ -186,7 +188,7 @@ def test_fixed_templ_call(space):
 
 
 def test_fixed_templ_deriv(space):
-    if not space.is_rn:
+    if not space.is_real_space:
         pytest.skip('derivative not implemented for complex dtypes')
 
     # Set up template and displacement field
@@ -218,8 +220,8 @@ def test_fixed_disp_init():
         disp_field_factory(space.ndim))
 
     # Valid input
-    print(LinDeformFixedDisp(disp_field))
-    print(LinDeformFixedDisp(disp_field, templ_space=space))
+    LinDeformFixedDisp(disp_field)
+    LinDeformFixedDisp(disp_field, templ_space=space)
 
     # Non-valid input
     with pytest.raises(TypeError):  # displacement not ProductSpaceElement

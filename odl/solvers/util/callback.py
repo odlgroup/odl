@@ -92,7 +92,7 @@ class SolverCallback(object):
         >>> operator = odl.ScalingOperator(r3, 2.0)
         >>> composed_callback = callback * operator
         >>> composed_callback([1, 2, 3])
-        rn(3).element([2.0, 4.0, 6.0])
+        rn(3).element([ 2.,  4.,  6.])
         """
         return _CallbackCompose(self, other)
 
@@ -543,7 +543,7 @@ class CallbackShow(SolverCallback):
     See Also
     --------
     odl.discr.lp_discr.DiscreteLpElement.show
-    odl.space.base_ntuples.NtuplesBaseVector.show
+    odl.space.base_tensors.Tensor.show
     """
 
     def __init__(self, title=None, step=1, saveto=None, **kwargs):

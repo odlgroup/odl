@@ -27,7 +27,7 @@ from odl.set import IntervalProd
 from odl.util import (
     normalized_index_expression, normalized_nodes_on_bdry,
     normalized_scalar_param_list, safe_int_conv,
-    signature_string, indent_rows)
+    signature_string, indent)
 
 
 __all__ = ('RectPartition', 'uniform_partition_fromintv',
@@ -287,9 +287,14 @@ class RectPartition(object):
         """
         return len(self.grid)
 
-    def points(self):
-        """Return the sampling grid points."""
-        return self.grid.points()
+    def points(self, order='C'):
+        """Return the sampling grid points.
+
+        See Also
+        --------
+        RectGrid.points
+        """
+        return self.grid.points(order)
 
     @property
     def meshgrid(self):
@@ -471,8 +476,7 @@ class RectPartition(object):
             return True
 
         # Optimized version for exact equality
-        return (isinstance(other, type(self)) and
-                isinstance(self, type(other)) and
+        return (type(other) is type(self) and
                 self.set == other.set and
                 self.grid == other.grid)
 
@@ -868,7 +872,7 @@ class RectPartition(object):
 
             sig_str = signature_string(posargs, optargs,
                                        sep=[',\n', ', ', ',\n'])
-            return '{}(\n{}\n)'.format(constructor, indent_rows(sig_str))
+            return '{}(\n{}\n)'.format(constructor, indent(sig_str))
 
     __str__ = __repr__
 

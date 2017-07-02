@@ -7,51 +7,76 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import division
-import pytest
 import numpy as np
+import pytest
 
 import odl
-from odl.discr.lp_discr import DiscreteLp
-from odl.space.base_ntuples import FnBase
+from odl.discr.lp_discr import DiscreteLp, DiscreteLpElement
+from odl.space.base_tensors import TensorSpace
+from odl.space.npy_tensors import NumpyTensor
 from odl.util.testutils import (almost_equal, all_equal, all_almost_equal,
                                 noise_elements, simple_fixture)
 
+
+# --- Pytest fixtures --- #
+
+
 exponent = simple_fixture('exponent', [2.0, 1.0, float('inf'), 0.5, 1.5])
+shape = simple_fixture('shape', [(2, 3, 4), (3, 4), (2,), (1,), (1, 1, 1)])
 
 
-def test_init(exponent):
-    # Validate that the different init patterns work and do not crash.
-    space = odl.FunctionSpace(odl.IntervalProd(0, 1))
-    part = odl.uniform_partition_fromintv(space.domain, 10)
-    rn = odl.rn(10, exponent=exponent)
-    odl.DiscreteLp(space, part, rn, exponent=exponent)
-    odl.DiscreteLp(space, part, rn, exponent=exponent, interp='linear')
+# --- DiscreteLp --- #
 
-    # Normal discretization of unit interval with complex
-    complex_space = odl.FunctionSpace(odl.IntervalProd(0, 1),
-                                      field=odl.ComplexNumbers())
 
-    cn = odl.cn(10, exponent=exponent)
-    odl.DiscreteLp(complex_space, part, cn, exponent=exponent)
+def test_discretelp_init():
+    """Test initialization and basic properties of DiscreteLp."""
+    # Real space
+    fspace = odl.FunctionSpace(odl.IntervalProd([0, 0], [1, 1]))
+    part = odl.uniform_partition_fromintv(fspace.domain, (2, 4))
+    dspace = odl.rn(part.shape)
 
-    space = odl.FunctionSpace(odl.IntervalProd([0, 0], [1, 1]))
-    part = odl.uniform_partition_fromintv(space.domain, (10, 10))
-    rn = odl.rn(100, exponent=exponent)
-    odl.DiscreteLp(space, part, rn, exponent=exponent,
-                   interp=['nearest', 'linear'])
+    discr = DiscreteLp(fspace, part, dspace)
+    assert discr.uspace == fspace
+    assert discr.dspace == dspace
+    assert discr.partition == part
+    assert discr.interp == 'nearest'
+    assert discr.interp_byaxis == ('nearest', 'nearest')
+    assert discr.exponent == dspace.exponent
+    assert discr.axis_labels == ('$x$', '$y$')
+    assert discr.is_real_space
 
-    # Real space should not work with complex
+    discr = DiscreteLp(fspace, part, dspace, interp='linear')
+    assert discr.interp == 'linear'
+    assert discr.interp_byaxis == ('linear', 'linear')
+
+    discr = DiscreteLp(fspace, part, dspace, interp=['nearest', 'linear'])
+    assert discr.interp == ('nearest', 'linear')
+    assert discr.interp_byaxis == ('nearest', 'linear')
+
+    # Complex space
+    fspace_c = odl.FunctionSpace(odl.IntervalProd([0, 0], [1, 1]),
+                                 out_dtype=complex)
+    dspace_c = odl.cn(part.shape)
+    discr = DiscreteLp(fspace_c, part, dspace_c)
+    assert discr.is_complex_space
+
+    # Make sure repr shows something
+    assert repr(discr)
+
+    # Error scenarios
     with pytest.raises(ValueError):
-        odl.DiscreteLp(space, part, cn)
+        DiscreteLp(fspace, part, dspace_c)  # mixes real & complex
 
-    # Complex space should not work with reals
     with pytest.raises(ValueError):
-        odl.DiscreteLp(complex_space, part, rn)
+        DiscreteLp(fspace_c, part, dspace)  # mixes complex & real
 
-    # Wrong size of underlying space
-    rn_wrong_size = odl.rn(20)
+    part_1d = odl.uniform_partition(0, 1, 2)
     with pytest.raises(ValueError):
-        odl.DiscreteLp(space, part, rn_wrong_size)
+        DiscreteLp(fspace, part_1d, dspace)  # wrong dimensionality
+
+    part_diffshp = odl.uniform_partition_fromintv(fspace.domain, (3, 4))
+    with pytest.raises(ValueError):
+        DiscreteLp(fspace, part_diffshp, dspace)  # shape mismatch
 
 
 def test_empty():
@@ -60,180 +85,125 @@ def test_empty():
 
     assert discr.interp == 'nearest'
     assert discr.axis_labels == ()
-    assert discr.order == 'C'
-    assert discr.exponent == 2.0
     assert discr.tangent_bundle == odl.ProductSpace(field=odl.RealNumbers())
     assert discr.complex_space == odl.uniform_discr([], [], (), dtype=complex)
     hash(discr)
     repr(discr)
 
-    elem = discr.element()
-    assert np.array_equal(elem.asarray(), [])
-    assert np.array_equal(elem.real, [])
-    assert np.array_equal(elem.imag, [])
-    assert np.array_equal(elem.conj(), [])
+    elem = discr.element(1.0)
+    assert np.array_equal(elem.asarray(), 1.0)
+    assert np.array_equal(elem.real, 1.0)
+    assert np.array_equal(elem.imag, 0.0)
+    assert np.array_equal(elem.conj(), 1.0)
 
 
-def test_factory(exponent, fn_impl):
-    discr = odl.uniform_discr(0, 1, 10, impl=fn_impl, exponent=exponent)
-
-    assert isinstance(discr.dspace, FnBase)
-    assert discr.dspace.impl == fn_impl
-    assert discr.is_rn
-    assert discr.dspace.exponent == exponent
-
-    # Complex
-    try:
-        discr = odl.uniform_discr(0, 1, 10, dtype='complex',
-                                  impl=fn_impl, exponent=exponent)
-
-        assert isinstance(discr.dspace, FnBase)
-        assert discr.dspace.impl == fn_impl
-        assert discr.is_cn
-        assert discr.dspace.exponent == exponent
-    except TypeError:
-        # Not all spaces support complex, that is fine.
-        pass
+# --- uniform_discr --- #
 
 
-def test_factory_dtypes(fn_impl):
-    real_float_dtypes = [np.float32, np.float64]
-    nonfloat_dtypes = [np.int8, np.int16, np.int32, np.int64,
-                       np.uint8, np.uint16, np.uint32, np.uint64]
-    complex_float_dtypes = [np.complex64, np.complex128]
+def test_uniform_discr_init_real(tspace_impl):
+    """Test initialization and basic properties with uniform_discr, real."""
+    # 1D
+    discr = odl.uniform_discr(0, 1, 10, impl=tspace_impl)
+    assert isinstance(discr, DiscreteLp)
+    assert isinstance(discr.dspace, TensorSpace)
+    assert discr.impl == tspace_impl
+    assert discr.is_real_space
+    assert discr.dspace.exponent == 2.0
+    assert discr.dtype == discr.dspace.default_dtype(odl.RealNumbers())
+    assert all_equal(discr.min_pt, [0])
+    assert all_equal(discr.max_pt, [1])
+    assert discr.shape == (10,)
+    assert repr(discr)
 
-    for dtype in real_float_dtypes:
-        try:
-            discr = odl.uniform_discr(0, 1, 10, impl=fn_impl, dtype=dtype)
-            assert isinstance(discr.dspace, FnBase)
-            assert discr.dspace.impl == fn_impl
-            assert discr.is_rn
-        except TypeError:
-            continue
+    discr = odl.uniform_discr(0, 1, 10, impl=tspace_impl, exponent=1.0)
+    assert discr.exponent == 1.0
 
-    for dtype in nonfloat_dtypes:
-        try:
-            discr = odl.uniform_discr(0, 1, 10, impl=fn_impl, dtype=dtype)
-            assert isinstance(discr.dspace, FnBase)
-            assert discr.dspace.impl == fn_impl
-            assert discr.dspace.element().space.dtype == dtype
-        except TypeError:
-            continue
+    discr = odl.uniform_discr(0, 1, 10, impl=tspace_impl, interp='linear')
+    assert discr.interp == 'linear'
 
-    for dtype in complex_float_dtypes:
-        try:
-            discr = odl.uniform_discr(0, 1, 10, impl=fn_impl, dtype=dtype)
-            assert isinstance(discr.dspace, FnBase)
-            assert discr.dspace.impl == fn_impl
-            assert discr.is_cn
-            assert discr.dspace.element().space.dtype == dtype
-        except TypeError:
-            continue
-
-
-def test_factory_nd(exponent):
-    # 2d
-    odl.uniform_discr([0, 0], [1, 1], [5, 5], exponent=exponent)
-    odl.uniform_discr([0, 0], [1, 1], [5, 5], exponent=exponent,
-                      interp=['linear', 'nearest'])
-
-    # 3d
-    odl.uniform_discr([0, 0, 0], [1, 1, 1], [5, 5, 5], exponent=exponent)
+    # 2D
+    discr = odl.uniform_discr([0, 0], [1, 1], (5, 5))
+    assert all_equal(discr.min_pt, np.array([0, 0]))
+    assert all_equal(discr.max_pt, np.array([1, 1]))
+    assert discr.shape == (5, 5)
 
     # nd
-    odl.uniform_discr([0] * 10, [1] * 10, [5] * 10, exponent=exponent)
+    discr = odl.uniform_discr([0] * 10, [1] * 10, (5,) * 10)
+    assert all_equal(discr.min_pt, np.zeros(10))
+    assert all_equal(discr.max_pt, np.ones(10))
+    assert discr.shape == (5,) * 10
 
 
-def test_element_1d(exponent):
-    discr = odl.uniform_discr(0, 1, 3, impl='numpy', exponent=exponent)
+def test_uniform_discr_init_complex(tspace_impl):
+    """Test initialization and basic properties with uniform_discr, complex."""
+    if tspace_impl != 'numpy':
+        pytest.xfail(reason='complex dtypes not supported')
+
+    discr = odl.uniform_discr(0, 1, 10, dtype='complex', impl=tspace_impl)
+    assert discr.is_complex_space
+    assert discr.dtype == discr.dspace.default_dtype(odl.ComplexNumbers())
+
+
+# --- DiscreteLp methods --- #
+
+
+def test_discretelp_element():
+    """Test creation and membership of DiscreteLp elements."""
+    # Creation from scratch
+    # 1D
+    discr = odl.uniform_discr(0, 1, 3)
     weight = 1.0 if exponent == float('inf') else discr.cell_volume
-    dspace = odl.rn(3, exponent=exponent, weighting=weight)
+    dspace = odl.rn(3, weighting=weight)
     elem = discr.element()
-    assert isinstance(elem, odl.DiscreteLpElement)
-    assert elem.ntuple in dspace
+    assert elem in discr
+    assert elem.tensor in dspace
 
-
-def test_element_2d(exponent):
-    discr = odl.uniform_discr([0, 0], [1, 1], [3, 3],
-                              impl='numpy', exponent=exponent)
+    # 2D
+    discr = odl.uniform_discr([0, 0], [1, 1], (3, 3))
     weight = 1.0 if exponent == float('inf') else discr.cell_volume
-    dspace = odl.rn(9, exponent=exponent, weighting=weight)
+    dspace = odl.rn((3, 3), weighting=weight)
     elem = discr.element()
-    assert isinstance(elem, odl.DiscreteLpElement)
-    assert elem.ntuple in dspace
+    assert elem in discr
+    assert elem.tensor in dspace
 
 
-def test_element_from_array_1d():
-    discr = odl.uniform_discr(0, 1, 3, impl='numpy')
+def test_discretelp_element_from_array():
+    """Test creation of DiscreteLp elements from arrays."""
+    # 1D
+    discr = odl.uniform_discr(0, 1, 3)
     elem = discr.element([1, 2, 3])
+    assert np.array_equal(elem.tensor, [1, 2, 3])
 
-    assert isinstance(elem, odl.DiscreteLpElement)
-    assert isinstance(elem.ntuple, odl.NumpyFnVector)
-    assert all_equal(elem.ntuple, [1, 2, 3])
+    assert isinstance(elem, DiscreteLpElement)
+    assert isinstance(elem.tensor, NumpyTensor)
+    assert all_equal(elem.tensor, [1, 2, 3])
 
 
-def test_element_from_array_2d():
-    # assert orderings work properly with 2d
-    discr = odl.uniform_discr([0, 0], [1, 1], [2, 2], impl='numpy', order='C')
+def test_element_from_array_2d(order):
+    """Test element in 2d with different orderings."""
+    discr = odl.uniform_discr([0, 0], [1, 1], [2, 2], impl='numpy',
+                              order=order)
     elem = discr.element([[1, 2],
-                         [3, 4]])
+                          [3, 4]])
 
-    assert isinstance(elem, odl.DiscreteLpElement)
-    assert isinstance(elem.ntuple, odl.NumpyFnVector)
+    assert isinstance(elem, DiscreteLpElement)
+    assert isinstance(elem.tensor, NumpyTensor)
+    assert all_equal(elem, [[1, 2],
+                            [3, 4]])
 
-    # Check ordering
-    assert all_equal(elem.ntuple, [1, 2, 3, 4])
-
-    # Linear creation works as well
-    linear_elem = discr.element([1, 2, 3, 4])
-    assert all_equal(linear_elem.ntuple, [1, 2, 3, 4])
-
-    # Fortran order
-    discr = odl.uniform_discr([0, 0], [1, 1], (2, 2), impl='numpy', order='F')
-    elem = discr.element([[1, 2],
-                         [3, 4]])
-
-    # Check ordering
-    assert all_equal(elem.ntuple, [1, 3, 2, 4])
-
-    # Linear creation works aswell
-    linear_elem = discr.element([1, 2, 3, 4])
-    assert all_equal(linear_elem.ntuple, [1, 2, 3, 4])
-
-    # Using broadcasting
-    broadcast_elem = discr.element([[1, 2]])
-    broadcast_expected = discr.element([[1, 2],
-                                        [1, 2]])
-    assert all_equal(broadcast_elem, broadcast_expected)
-
-    broadcast_elem = discr.element([[1], [2]])
-    broadcast_expected = discr.element([[1, 1],
-                                        [2, 2]])
-    assert all_equal(broadcast_elem, broadcast_expected)
-
-
-def test_element_from_array_2d_shape():
-    # Verify that the shape is correctly tested for
-    discr = odl.uniform_discr([0, 0], [1, 1], [3, 2], impl='numpy', order='C')
-
-    # Correct order
-    discr.element([[1, 2],
-                   [3, 4],
-                   [5, 6]])
-
-    # Wrong order, should throw
     with pytest.raises(ValueError):
-        discr.element([[1, 2, 3],
-                       [4, 5, 6]])
-
-    # Wrong number of elements, should throw
+        discr.element([1, 2, 3])  # wrong size & shape
     with pytest.raises(ValueError):
-        discr.element([[1, 2],
-                       [3, 4]])
+        discr.element([1, 2, 3, 4])  # wrong shape
+    with pytest.raises(ValueError):
+        discr.element([[1],
+                       [2],
+                       [3],
+                       [4]])  # wrong shape
 
 
 def test_element_from_function_1d():
-
+    """Test creation of DiscreteLp elements from functions in 1 dimension."""
     space = odl.uniform_discr(-1, 1, 4)
     points = space.points().squeeze()
 
@@ -282,7 +252,7 @@ def test_element_from_function_1d():
 
 
 def test_element_from_function_2d():
-
+    """Test creation of DiscreteLp elements from functions in 2 dimensions."""
     space = odl.uniform_discr([-1, -1], [1, 1], (2, 3))
     points = space.points()
 
@@ -291,7 +261,8 @@ def test_element_from_function_2d():
         return x[0] ** 2 + np.maximum(x[1], 0)
 
     elem_f = space.element(f)
-    true_elem = [x[0] ** 2 + max(x[1], 0) for x in points]
+    true_elem = np.reshape([x[0] ** 2 + max(x[1], 0) for x in points],
+                           space.shape)
     assert all_equal(elem_f, true_elem)
 
     # With parameter
@@ -300,51 +271,62 @@ def test_element_from_function_2d():
         return x[0] ** 2 + np.maximum(x[1], c)
 
     elem_f_default = space.element(f)
-    true_elem = [x[0] ** 2 + max(x[1], 0) for x in points]
+    true_elem = np.reshape([x[0] ** 2 + max(x[1], 0) for x in points],
+                           space.shape)
     assert all_equal(elem_f_default, true_elem)
 
     elem_f_2 = space.element(f, c=1)
-    true_elem = [x[0] ** 2 + max(x[1], 1) for x in points]
+    true_elem = np.reshape([x[0] ** 2 + max(x[1], 1) for x in points],
+                           space.shape)
     assert all_equal(elem_f_2, true_elem)
 
     # Using a lambda
     elem_lam = space.element(lambda x: x[0] - x[1])
-    true_elem = [x[0] - x[1] for x in points]
+    true_elem = np.reshape([x[0] - x[1] for x in points],
+                           space.shape)
     assert all_equal(elem_lam, true_elem)
 
     # Using broadcasting
     elem_lam = space.element(lambda x: x[0])
-    true_elem = [x[0] for x in points]
+    true_elem = np.reshape([x[0] for x in points],
+                           space.shape)
     assert all_equal(elem_lam, true_elem)
 
     elem_lam = space.element(lambda x: x[1])
-    true_elem = [x[1] for x in points]
+    true_elem = np.reshape([x[1] for x in points],
+                           space.shape)
     assert all_equal(elem_lam, true_elem)
 
     # Broadcast from constant function
     elem_lam = space.element(lambda x: 1.0)
-    true_elem = [1.0 for x in points]
+    true_elem = np.reshape([1.0 for x in points],
+                           space.shape)
     assert all_equal(elem_lam, true_elem)
 
     # Non vectorized
     elem_lam = space.element(lambda x: x[0] + x[1], vectorized=False)
-    true_elem = [x[0] + x[1] for x in points]
+    true_elem = np.reshape([x[0] + x[1] for x in points],
+                           space.shape)
     assert all_equal(elem_lam, true_elem)
 
 
-def test_zero():
+def test_discretelp_zero_one():
+    """Test the zero and one element creators of DiscreteLp."""
     discr = odl.uniform_discr(0, 1, 3)
+
     zero = discr.zero()
+    assert zero in discr
+    assert np.array_equal(zero, [0, 0, 0])
 
-    assert isinstance(zero, odl.DiscreteLpElement)
-    assert isinstance(zero.ntuple, odl.NumpyFnVector)
-    assert all_equal(zero, [0, 0, 0])
+    one = discr.one()
+    assert one in discr
+    assert np.array_equal(one, [1, 1, 1])
 
 
-def test_equals_space(exponent, fn_impl):
-    x1 = odl.uniform_discr(0, 1, 3, exponent=exponent, impl=fn_impl)
-    x2 = odl.uniform_discr(0, 1, 3, exponent=exponent, impl=fn_impl)
-    y = odl.uniform_discr(0, 1, 4, exponent=exponent, impl=fn_impl)
+def test_equals_space(exponent, tspace_impl):
+    x1 = odl.uniform_discr(0, 1, 3, exponent=exponent, impl=tspace_impl)
+    x2 = odl.uniform_discr(0, 1, 3, exponent=exponent, impl=tspace_impl)
+    y = odl.uniform_discr(0, 1, 4, exponent=exponent, impl=tspace_impl)
 
     assert x1 is x1
     assert x1 is not x2
@@ -356,9 +338,9 @@ def test_equals_space(exponent, fn_impl):
     assert hash(x1) != hash(y)
 
 
-def test_equals_vec(exponent, fn_impl):
-    discr = odl.uniform_discr(0, 1, 3, exponent=exponent, impl=fn_impl)
-    discr2 = odl.uniform_discr(0, 1, 4, exponent=exponent, impl=fn_impl)
+def test_equals_vec(exponent, tspace_impl):
+    discr = odl.uniform_discr(0, 1, 3, exponent=exponent, impl=tspace_impl)
+    discr2 = odl.uniform_discr(0, 1, 4, exponent=exponent, impl=tspace_impl)
     x1 = discr.element([1, 2, 3])
     x2 = discr.element([1, 2, 3])
     y = discr.element([2, 2, 3])
@@ -377,11 +359,8 @@ def _test_unary_operator(discr, function):
     # Verify that the statement y=function(x) gives equivalent results
     # to NumPy
     x_arr, x = noise_elements(discr)
-
     y_arr = function(x_arr)
-
     y = function(x)
-
     assert all_almost_equal([x, y], [x_arr, y_arr])
 
 
@@ -389,18 +368,15 @@ def _test_binary_operator(discr, function):
     # Verify that the statement z=function(x,y) gives equivalent results
     # to NumPy
     [x_arr, y_arr], [x, y] = noise_elements(discr, 2)
-
     z_arr = function(x_arr, y_arr)
     z = function(x, y)
-
     assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
 
 
-def test_operators(fn_impl):
+def test_operators(tspace_impl):
     # Test of all operator overloads against the corresponding NumPy
     # implementation
-
-    discr = odl.uniform_discr(0, 1, 10, impl=fn_impl)
+    discr = odl.uniform_discr(0, 1, 10, impl=tspace_impl)
 
     # Unary operators
     _test_unary_operator(discr, lambda x: +x)
@@ -515,13 +491,13 @@ def test_getslice():
     discr = odl.uniform_discr(0, 1, 3)
     elem = discr.element([1, 2, 3])
 
-    assert isinstance(elem[:], odl.NumpyFnVector)
+    assert isinstance(elem[:], NumpyTensor)
     assert all_equal(elem[:], [1, 2, 3])
 
     discr = odl.uniform_discr(0, 1, 3, dtype='complex')
     elem = discr.element([1 + 2j, 2 - 2j, 3])
 
-    assert isinstance(elem[:], odl.NumpyFnVector)
+    assert isinstance(elem[:], NumpyTensor)
     assert all_equal(elem[:], [1 + 2j, 2 - 2j, 3])
 
 
@@ -563,32 +539,37 @@ def test_setitem_nd():
     discr = odl.uniform_discr([0, 0], [1, 1], [3, 2])
 
     elem = discr.element([[1, 2],
-                         [3, 4],
-                         [5, 6]])
+                          [3, 4],
+                          [5, 6]])
 
     elem[:] = [[-1, -2],
                [-3, -4],
                [-5, -6]]
-    assert all_equal(elem, [-1, -2, -3, -4, -5, -6])
+    assert all_equal(elem, [[-1, -2],
+                            [-3, -4],
+                            [-5, -6]])
 
     arr = np.arange(6, 12).reshape([3, 2])
     elem[:] = arr
-    assert all_equal(elem, np.arange(6, 12))
+    assert all_equal(elem, arr)
 
     elem[:] = 0
-    assert all_equal(elem, [0] * 6)
+    assert all_equal(elem, np.zeros(elem.shape))
 
     elem[:] = [1]
-    assert all_equal(elem, [1] * 6)
+    assert all_equal(elem, np.ones(elem.shape))
 
-    with pytest.raises(ValueError):
-        elem[:] = [0, 0]  # bad shape
+    elem[:] = [0, 0]  # broadcasting assignment
+    assert all_equal(elem, np.zeros(elem.shape))
 
     with pytest.raises(ValueError):
         elem[:] = [0, 0, 0]  # bad shape
 
     with pytest.raises(ValueError):
-        elem[:] = np.arange(6)[:, np.newaxis]  # bad shape (6, 1)
+        elem[:] = np.arange(6)  # bad shape (6,)
+
+    with pytest.raises(ValueError):
+        elem[:] = np.ones((2, 3))[..., np.newaxis]  # bad shape (2, 3, 1)
 
     with pytest.raises(ValueError):
         arr = np.arange(6, 12).reshape([3, 2])
@@ -603,13 +584,13 @@ def test_setitem_nd():
     arr = np.arange(size).reshape(shape)
 
     elem[:] = arr
-    assert all_equal(elem, np.arange(size))
+    assert all_equal(elem, arr)
 
     elem[:] = 0
-    assert all_equal(elem, np.zeros(size))
+    assert all_equal(elem, np.zeros(elem.shape))
 
     elem[:] = [1]
-    assert all_equal(elem, np.ones(size))
+    assert all_equal(elem, np.ones(elem.shape))
 
     with pytest.raises(ValueError):
         # Reversed shape -> bad
@@ -624,72 +605,34 @@ def test_setslice():
     assert all_equal(elem, [4, 5, 6])
 
 
-def test_asarray_2d():
-    discr_F = odl.uniform_discr([0, 0], [1, 1], [2, 2], order='F')
-    elem_F = discr_F.element([[1, 2],
-                             [3, 4]])
+def test_asarray_2d(order):
+    """Test the asarray method for different orderings."""
+    discr = odl.uniform_discr([0, 0], [1, 1], [2, 2], order=order)
+    elem = discr.element([[1, 2],
+                          [3, 4]])
 
     # Verify that returned array equals input data
-    assert all_equal(elem_F.asarray(), [[1, 2],
-                                        [3, 4]])
+    assert all_equal(elem.asarray(), [[1, 2],
+                                      [3, 4]])
     # Check order of out array
-    assert elem_F.asarray().flags['F_CONTIGUOUS']
+    assert elem.asarray().flags[discr.default_order + '_CONTIGUOUS']
 
     # test out parameter
-    out_F = np.asfortranarray(np.empty([2, 2]))
-    result_F = elem_F.asarray(out=out_F)
-    assert result_F is out_F
-    assert all_equal(out_F, [[1, 2],
+    out_c = np.empty([2, 2], order='C')
+    result_c = elem.asarray(out=out_c)
+    assert result_c is out_c
+    assert all_equal(out_c, [[1, 2],
                              [3, 4]])
-
-    # Try discontinuous
-    out_F_wrong = np.asfortranarray(np.empty([2, 2]))[::2, :]
-    with pytest.raises(ValueError):
-        result_F = elem_F.asarray(out=out_F_wrong)
+    out_f = np.empty([2, 2], order='F')
+    result_f = elem.asarray(out=out_f)
+    assert result_f is out_f
+    assert all_equal(out_f, [[1, 2],
+                             [3, 4]])
 
     # Try wrong shape
-    out_F_wrong = np.asfortranarray(np.empty([2, 3]))
+    out_wrong_shape = np.empty([2, 3])
     with pytest.raises(ValueError):
-        result_F = elem_F.asarray(out=out_F_wrong)
-
-    # Try wrong order
-    out_F_wrong = np.empty([2, 2])
-    with pytest.raises(ValueError):
-        elem_F.asarray(out=out_F_wrong)
-
-    # Also check with C ordering
-    discr_C = odl.uniform_discr([0, 0], [1, 1], (2, 2), order='C')
-    elem_C = discr_C.element([[1, 2],
-                             [3, 4]])
-
-    # Verify that returned array equals input data
-    assert all_equal(elem_C.asarray(), [[1, 2],
-                                        [3, 4]])
-
-    # Check order of out array
-    assert elem_C.asarray().flags['C_CONTIGUOUS']
-
-    # test out parameter
-    out_C = np.empty([2, 2])
-    result_C = elem_C.asarray(out=out_C)
-    assert result_C is out_C
-    assert all_equal(out_C, [[1, 2],
-                             [3, 4]])
-
-    # Try discontinuous
-    out_C_wrong = np.empty([4, 2])[::2, :]
-    with pytest.raises(ValueError):
-        result_C = elem_C.asarray(out=out_C_wrong)
-
-    # Try wrong shape
-    out_C_wrong = np.empty([2, 3])
-    with pytest.raises(ValueError):
-        result_C = elem_C.asarray(out=out_C_wrong)
-
-    # Try wrong order
-    out_C_wrong = np.asfortranarray(np.empty([2, 2]))
-    with pytest.raises(ValueError):
-        elem_C.asarray(out=out_C_wrong)
+        elem.asarray(out=out_wrong_shape)
 
 
 def test_transpose():
@@ -761,8 +704,8 @@ def test_astype():
     assert cdiscr.real_space == rdiscr
 
 
-def test_ufunc(fn_impl, ufunc):
-    space = odl.uniform_discr([0, 0], [1, 1], (2, 2), impl=fn_impl)
+def test_ufunc(tspace_impl, ufunc):
+    space = odl.uniform_discr([0, 0], [1, 1], (2, 2), impl=tspace_impl)
     name, n_args, n_out, _ = ufunc
     if (np.issubsctype(space.dtype, np.floating) and
             name in ['bitwise_and',
@@ -829,60 +772,58 @@ def test_ufunc(fn_impl, ufunc):
             assert isinstance(odl_result[i], space.element_type)
 
 
-def test_real_imag():
-
+def test_real_imag(order):
+    """Check if real and imaginary parts can be read and written to."""
     # Get real and imag
-    cdiscr = odl.uniform_discr([0, 0], [1, 1], [2, 2], dtype=complex)
-    rdiscr = odl.uniform_discr([0, 0], [1, 1], [2, 2], dtype=float)
+    cdiscr = odl.uniform_discr([0, 0], [1, 1], (2, 2), dtype=complex,
+                               order=order)
+    rdiscr = odl.uniform_discr([0, 0], [1, 1], (2, 2), dtype=float,
+                               order=order)
 
-    x = cdiscr.element([[1 - 1j, 2 - 2j], [3 - 3j, 4 - 4j]])
+    x = cdiscr.element([[1 - 1j, 2 - 2j],
+                        [3 - 3j, 4 - 4j]])
     assert x.real in rdiscr
-    assert all_equal(x.real, [1, 2, 3, 4])
+    assert all_equal(x.real, [[1, 2],
+                              [3, 4]])
     assert x.imag in rdiscr
-    assert all_equal(x.imag, [-1, -2, -3, -4])
+    assert all_equal(x.imag, [[-1, -2],
+                              [-3, -4]])
 
     # Set with different data types and shapes
-    newreal = rdiscr.element([[2, 3], [4, 5]])
+    newreal = rdiscr.element([[2, 3],
+                              [4, 5]])
     x.real = newreal
-    assert all_equal(x.real, [2, 3, 4, 5])
-    newreal = [[3, 4], [5, 6]]
+    assert all_equal(x.real, newreal)
+    newreal = [[3, 4],
+               [5, 6]]
     x.real = newreal
-    assert all_equal(x.real, [3, 4, 5, 6])
-    newreal = [4, 5, 6, 7]
-    x.real = newreal
-    assert all_equal(x.real, [4, 5, 6, 7])
+    assert all_equal(x.real, newreal)
     newreal = 0
     x.real = newreal
-    assert all_equal(x.real, [0, 0, 0, 0])
+    assert all_equal(x.real, [[0, 0],
+                              [0, 0]])
 
-    newimag = rdiscr.element([-2, -3, -4, -5])
+    newimag = rdiscr.element([[-2, -3],
+                              [-4, -5]])
     x.imag = newimag
-    assert all_equal(x.imag, [-2, -3, -4, -5])
-    newimag = [[-3, -4], [-5, -6]]
+    assert all_equal(x.imag, newimag)
+    newimag = [[-3, -4],
+               [-5, -6]]
     x.imag = newimag
-    assert all_equal(x.imag, [-3, -4, -5, -6])
-    newimag = [-4, -5, -6, -7]
-    x.imag = newimag
-    assert all_equal(x.imag, [-4, -5, -6, -7])
+    assert all_equal(x.imag, newimag)
     newimag = -1
     x.imag = newimag
-    assert all_equal(x.imag, [-1, -1, -1, -1])
+    assert all_equal(x.imag, [[-1, -1],
+                              [-1, -1]])
 
-    # 'F' ordering
-    cdiscr = odl.uniform_discr([0, 0], [1, 1], [2, 2], dtype=complex,
-                               order='F')
-
-    x = cdiscr.element()
-    newreal = [[3, 4], [5, 6]]
-    x.real = newreal
-    assert all_equal(x.real, [3, 5, 4, 6])  # flattened in 'F' order
-    newreal = [4, 5, 6, 7]
-    x.real = newreal
-    assert all_equal(x.real, [4, 5, 6, 7])
+    with pytest.raises(ValueError):
+        x.real = [4, 5, 6, 7]  # incompatible shape
+    with pytest.raises(ValueError):
+        x.imag = [4, 5, 6, 7]  # incompatible shape
 
 
-def test_reduction(fn_impl, reduction):
-    space = odl.uniform_discr([0, 0], [1, 1], [2, 2], impl=fn_impl)
+def test_reduction(tspace_impl, reduction):
+    space = odl.uniform_discr([0, 0], [1, 1], [2, 2], impl=tspace_impl)
 
     name, _ = reduction
 
@@ -902,8 +843,8 @@ def power(request):
     return request.param
 
 
-def test_power(fn_impl, power):
-    space = odl.uniform_discr([0, 0], [1, 1], [2, 2], impl=fn_impl)
+def test_power(tspace_impl, power):
+    space = odl.uniform_discr([0, 0], [1, 1], [2, 2], impl=tspace_impl)
 
     x_arr, x = noise_elements(space, 1)
     x_pos_arr = np.abs(x_arr)
@@ -919,7 +860,7 @@ def test_power(fn_impl, power):
     true_pos_pow = np.power(x_pos_arr, power)
     true_neg_pow = np.power(x_neg_arr, power)
 
-    if int(power) != power and fn_impl == 'cuda':
+    if int(power) != power and tspace_impl == 'cuda':
         with pytest.raises(ValueError):
             x_pos ** power
         with pytest.raises(ValueError):
@@ -969,7 +910,7 @@ def test_norm_rectangle(exponent):
         assert almost_equal(discr_testfunc.norm(), true_norm, places=2)
 
 
-def test_norm_rectangle_boundary(fn_impl, exponent):
+def test_norm_rectangle_boundary(tspace_impl, exponent):
     # Check the constant function 1 in different situations regarding the
     # placement of the outermost grid points.
 
@@ -982,7 +923,7 @@ def test_norm_rectangle_boundary(fn_impl, exponent):
 
     # Standard case
     discr = odl.uniform_discr_fromspace(fspace, (4, 8),
-                                        impl=fn_impl, exponent=exponent)
+                                        impl=tspace_impl, exponent=exponent)
     if exponent == float('inf'):
         assert discr.one().norm() == 1
     else:
@@ -992,7 +933,7 @@ def test_norm_rectangle_boundary(fn_impl, exponent):
     # Nodes on the boundary (everywhere)
     discr = odl.uniform_discr_fromspace(
         fspace, (4, 8), exponent=exponent,
-        impl=fn_impl, nodes_on_bdry=True)
+        impl=tspace_impl, nodes_on_bdry=True)
 
     if exponent == float('inf'):
         assert discr.one().norm() == 1
@@ -1003,7 +944,7 @@ def test_norm_rectangle_boundary(fn_impl, exponent):
     # Nodes on the boundary (selective)
     discr = odl.uniform_discr_fromspace(
         fspace, (4, 8), exponent=exponent,
-        impl=fn_impl, nodes_on_bdry=((False, True), False))
+        impl=tspace_impl, nodes_on_bdry=((False, True), False))
 
     if exponent == float('inf'):
         assert discr.one().norm() == 1
@@ -1013,7 +954,7 @@ def test_norm_rectangle_boundary(fn_impl, exponent):
 
     discr = odl.uniform_discr_fromspace(
         fspace, (4, 8), exponent=exponent,
-        impl=fn_impl, nodes_on_bdry=(False, (True, False)))
+        impl=tspace_impl, nodes_on_bdry=(False, (True, False)))
 
     if exponent == float('inf'):
         assert discr.one().norm() == 1
@@ -1025,9 +966,9 @@ def test_norm_rectangle_boundary(fn_impl, exponent):
     grid = odl.uniform_grid([0, 0], [1, 1], (4, 4))
     part = odl.RectPartition(rect, grid)
     weight = 1.0 if exponent == float('inf') else part.cell_volume
-    dspace = odl.rn(part.size, dtype=dtype, impl=fn_impl, exponent=exponent,
-                    weighting=weight)
-    discr = DiscreteLp(fspace, part, dspace, exponent=exponent)
+    dspace = odl.rn(part.shape, dtype=dtype, impl=tspace_impl,
+                    exponent=exponent, weighting=weight)
+    discr = DiscreteLp(fspace, part, dspace)
 
     if exponent == float('inf'):
         assert discr.one().norm() == 1

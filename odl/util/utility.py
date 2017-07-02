@@ -6,7 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Utilities for internal use."""
+"""Utilities mainly for internal use."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -15,13 +15,15 @@ standard_library.install_aliases()
 
 from functools import wraps
 from collections import OrderedDict
+import inspect
 import numpy as np
 from pkg_resources import parse_requirements
+import sys
 
 
-__all__ = ('array1d_repr', 'array1d_str', 'arraynd_repr', 'arraynd_str',
-           'dtype_repr', 'dtype_str', 'signature_string', 'indent_rows',
-           'is_scalar_dtype', 'is_int_dtype', 'is_floating_dtype',
+__all__ = ('array_str', 'dtype_str', 'dtype_repr',
+           'signature_string', 'indent',
+           'is_numeric_dtype', 'is_int_dtype', 'is_floating_dtype',
            'is_real_dtype', 'is_real_floating_dtype',
            'is_complex_floating_dtype', 'real_dtype', 'complex_dtype',
            'conj_exponent', 'as_flat_array', 'writable_array',
@@ -35,131 +37,122 @@ TYPE_MAP_C2R = {cdt: np.empty(0, dtype=cdt).real.dtype
 TYPE_MAP_C2R.update({k: k for k in TYPE_MAP_R2C.keys()})
 
 
-def indent_rows(string, indent=4):
-    """Return ``string`` indented by ``indent`` spaces."""
-    return '\n'.join((' ' * indent) + row for row in string.split('\n'))
+if sys.version_info.major < 3:
+    getargspec = inspect.getargspec
+else:
+    getargspec = inspect.getfullargspec
 
 
-def array1d_repr(array, nprint=6):
-    """Stringification of a 1D array, keeping byte / unicode.
-
-    Parameters
-    ----------
-    array : `array-like`
-        The array to print
-    nprint : int, optional
-        Maximum number of elements to print
-    """
-    assert int(nprint) > 0
-
-    if len(array) <= nprint:
-        return repr(list(array))
-    else:
-        return (repr(list(array[:nprint // 2])).rstrip(']') + ', ..., ' +
-                repr(list(array[-(nprint // 2):])).lstrip('['))
+def indent(string, indent_str='    '):
+    """Return a copy of ``string`` indented by ``indent_str``."""
+    return '\n'.join(indent_str + row for row in string.split('\n'))
 
 
-def array1d_str(array, nprint=6):
-    """Stringification of a 1D array, regardless of byte or unicode.
+class npy_printoptions(object):
 
-    Parameters
-    ----------
-    array : `array-like`
-        The array to print
-    nprint : int, optional
-        Maximum number of elements to print
-    """
-    assert int(nprint) > 0
+    """Context manager to temporarily set Numpy print options.
 
-    if len(array) <= nprint:
-        inner_str = ', '.join(str(a) for a in array)
-        return '[{}]'.format(inner_str)
-    else:
-        left_str = ', '.join(str(a) for a in array[:nprint // 2])
-        right_str = ', '.join(str(a) for a in array[-(nprint // 2):])
-        return '[{}, ..., {}]'.format(left_str, right_str)
-
-
-def arraynd_repr(array, nprint=None):
-    """Stringification of an nD array, keeping byte / unicode.
-
-    Parameters
-    ----------
-    array : `array-like`
-        The array to print
-    nprint : int, optional
-        Maximum number of elements to print.
-        Default: 6 if array.ndim <= 2, else 2
+    See Also
+    --------
+    numpy.get_printoptions
+    numpy.set_printoptions
 
     Examples
     --------
-    >>> print(arraynd_repr([[1, 2, 3], [4, 5, 6]]))
-    [[1, 2, 3],
-     [4, 5, 6]]
-    >>> print(arraynd_repr([[1, 2, 3], [4, 5, 6], [7, 8, 9]]))
-    [[1, 2, 3],
-     [4, 5, 6],
-     [7, 8, 9]]
+    >>> print(np.array([np.nan, 1.00001]))
+    [     nan  1.00001]
+    >>> with npy_printoptions(precision=3):
+    ...     print(np.array([np.nan, 1.00001]))
+    [ nan   1.]
+    >>> with npy_printoptions(nanstr='whoah!'):
+    ...     print(np.array([np.nan, 1.00001]))
+    [  whoah!  1.00001]
     """
-    array = np.asarray(array)
-    if nprint is None:
-        nprint = 6 if array.ndim <= 2 else 2
-    else:
-        assert nprint > 0
 
-    if array.ndim > 1:
-        if len(array) <= nprint:
-            inner_str = ',\n '.join(arraynd_repr(a) for a in array)
-            return '[{}]'.format(inner_str)
-        else:
-            left_str = ',\n '.join(arraynd_repr(a) for a in
-                                   array[:nprint // 2])
-            right_str = ',\n '.join(arraynd_repr(a) for a in
-                                    array[-(nprint // 2):])
-            return '[{},\n ...,\n {}]'.format(left_str, right_str)
-    else:
-        return array1d_repr(array)
+    def __init__(self, **new_opts):
+        self.new_opts = new_opts
+        self.orig_opts = np.get_printoptions()
+
+    def __enter__(self):
+        np.set_printoptions(**self.new_opts)
+
+    def __exit__(self, type, value, traceback):
+        np.set_printoptions(**self.orig_opts)
 
 
-def arraynd_str(array, nprint=None):
-    """Stringification of an nD array, regardless of byte or unicode.
+def array_str(a, nprint=6):
+    """Stringification of an array.
 
     Parameters
     ----------
-    array : `array-like`
-        The array to print
+    a : `array-like`
+        The array to print.
     nprint : int, optional
-        Maximum number of elements to print.
-        Default: 6 if array.ndim <= 2, else 2
+        Maximum number of elements to print per axis in ``a``. For larger
+        arrays, a summary is printed, with ``nprint // 2`` elements on
+        each side and ``...`` in the middle (per axis).
 
     Examples
     --------
-    >>> print(arraynd_str([[1, 2, 3], [4, 5, 6]]))
-    [[1, 2, 3],
-     [4, 5, 6]]
-    >>> print(arraynd_str([[1, 2, 3], [4, 5, 6], [7, 8, 9]]))
-    [[1, 2, 3],
-     [4, 5, 6],
-     [7, 8, 9]]
-    """
-    array = np.asarray(array)
-    if nprint is None:
-        nprint = 6 if array.ndim <= 2 else 2
-    else:
-        assert nprint > 0
+    Printing 1D arrays:
 
-    if array.ndim > 1:
-        if len(array) <= nprint:
-            inner_str = ',\n '.join(arraynd_str(a) for a in array)
-            return '[{}]'.format(inner_str)
-        else:
-            left_str = ',\n'.join(arraynd_str(a) for a in
-                                  array[:nprint // 2])
-            right_str = ',\n'.join(arraynd_str(a) for a in
-                                   array[- (nprint // 2):])
-            return '[{},\n    ...,\n{}]'.format(left_str, right_str)
-    else:
-        return array1d_str(array)
+    >>> print(array_str(np.arange(4)))
+    [0, 1, 2, 3]
+    >>> print(array_str(np.arange(10)))
+    [0, 1, 2, ..., 7, 8, 9]
+    >>> print(array_str(np.arange(10), nprint=10))
+    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+    For 2D and higher, the ``nprint`` limitation applies per axis:
+
+    >>> print(array_str(np.arange(24).reshape(4, 6)))
+    [[ 0,  1,  2,  3,  4,  5],
+     [ 6,  7,  8,  9, 10, 11],
+     [12, 13, 14, 15, 16, 17],
+     [18, 19, 20, 21, 22, 23]]
+    >>> print(array_str(np.arange(32).reshape(4, 8)))
+    [[ 0,  1,  2, ...,  5,  6,  7],
+     [ 8,  9, 10, ..., 13, 14, 15],
+     [16, 17, 18, ..., 21, 22, 23],
+     [24, 25, 26, ..., 29, 30, 31]]
+    >>> print(array_str(np.arange(32).reshape(8, 4)))
+    [[ 0,  1,  2,  3],
+     [ 4,  5,  6,  7],
+     [ 8,  9, 10, 11],
+     ...,
+     [20, 21, 22, 23],
+     [24, 25, 26, 27],
+     [28, 29, 30, 31]]
+    >>> print(array_str(np.arange(64).reshape(8, 8)))
+    [[ 0,  1,  2, ...,  5,  6,  7],
+     [ 8,  9, 10, ..., 13, 14, 15],
+     [16, 17, 18, ..., 21, 22, 23],
+     ...,
+     [40, 41, 42, ..., 45, 46, 47],
+     [48, 49, 50, ..., 53, 54, 55],
+     [56, 57, 58, ..., 61, 62, 63]]
+
+    Printing of empty arrays and 0D arrays:
+
+    >>> print(array_str(np.array([])))  # 1D, size=0
+    []
+    >>> print(array_str(np.array(1.0)))  # 0D, size=1
+    1.0
+
+    Small deviations from round numbers will be suppressed:
+
+    >>> # 2.0000000000000004 in double precision
+    >>> print(array_str((np.array([2.0]) ** 0.5) ** 2))
+    [ 2.]
+    """
+    a = np.asarray(a)
+    max_shape = tuple(a.shape[i] if a.shape[i] < nprint else nprint
+                      for i in range(a.ndim))
+    with npy_printoptions(threshold=int(np.prod(max_shape)),
+                          edgeitems=nprint // 2,
+                          suppress=True):
+        a_str = np.array2string(a, separator=', ')
+    return a_str
 
 
 def dtype_repr(dtype):
@@ -171,6 +164,8 @@ def dtype_repr(dtype):
         return "'float'"
     elif dtype == np.dtype(complex):
         return "'complex'"
+    elif dtype.shape:
+        return "('{}', {})".format(dtype.base, dtype.shape)
     else:
         return "'{}'".format(dtype)
 
@@ -184,6 +179,8 @@ def dtype_str(dtype):
         return 'float'
     elif dtype == np.dtype(complex):
         return 'complex'
+    elif dtype.shape:
+        return "('{}', {})".format(dtype.base, dtype.shape)
     else:
         return '{}'.format(dtype)
 
@@ -243,15 +240,17 @@ def cache_arguments(function):
 
 
 @cache_arguments
-def is_scalar_dtype(dtype):
-    """Return ``True`` if ``dtype`` is a scalar type."""
-    return np.issubsctype(dtype, np.number)
+def is_numeric_dtype(dtype):
+    """Return ``True`` if ``dtype`` is a numeric type."""
+    dtype = np.dtype(dtype)
+    return np.issubsctype(getattr(dtype, 'base', None), np.number)
 
 
 @cache_arguments
 def is_int_dtype(dtype):
     """Return ``True`` if ``dtype`` is an integer type."""
-    return np.issubsctype(dtype, np.integer)
+    dtype = np.dtype(dtype)
+    return np.issubsctype(getattr(dtype, 'base', None), np.integer)
 
 
 @cache_arguments
@@ -263,19 +262,21 @@ def is_floating_dtype(dtype):
 @cache_arguments
 def is_real_dtype(dtype):
     """Return ``True`` if ``dtype`` is a real (including integer) type."""
-    return is_scalar_dtype(dtype) and not is_complex_floating_dtype(dtype)
+    return is_numeric_dtype(dtype) and not is_complex_floating_dtype(dtype)
 
 
 @cache_arguments
 def is_real_floating_dtype(dtype):
     """Return ``True`` if ``dtype`` is a real floating point type."""
-    return np.issubsctype(dtype, np.floating)
+    dtype = np.dtype(dtype)
+    return np.issubsctype(getattr(dtype, 'base', None), np.floating)
 
 
 @cache_arguments
 def is_complex_floating_dtype(dtype):
     """Return ``True`` if ``dtype`` is a complex floating point type."""
-    return np.issubsctype(dtype, np.complexfloating)
+    dtype = np.dtype(dtype)
+    return np.issubsctype(getattr(dtype, 'base', None), np.complexfloating)
 
 
 def real_dtype(dtype, default=None):
@@ -300,6 +301,28 @@ def real_dtype(dtype, default=None):
     ValueError
         if there is no real counterpart to the given data type and
         ``default == None``.
+
+    See Also
+    --------
+    complex_dtype
+
+    Examples
+    --------
+    Convert scalar dtypes:
+
+    >>> real_dtype(complex)
+    dtype('float64')
+    >>> real_dtype('complex64')
+    dtype('float32')
+    >>> real_dtype(float)
+    dtype('float64')
+
+    Dtypes with shape are also supported:
+
+    >>> real_dtype(np.dtype((complex, (3,))))
+    dtype(('<f8', (3,)))
+    >>> real_dtype(('complex64', (3,)))
+    dtype(('<f4', (3,)))
     """
     dtype, dtype_in = np.dtype(dtype), dtype
 
@@ -307,7 +330,7 @@ def real_dtype(dtype, default=None):
         return dtype
 
     try:
-        real_dtype = TYPE_MAP_C2R[dtype]
+        real_base_dtype = TYPE_MAP_C2R[dtype.base]
     except KeyError:
         if default is not None:
             return default
@@ -315,7 +338,7 @@ def real_dtype(dtype, default=None):
             raise ValueError('no real counterpart exists for `dtype` {}'
                              ''.format(dtype_repr(dtype_in)))
     else:
-        return real_dtype
+        return np.dtype((real_base_dtype, dtype.shape))
 
 
 def complex_dtype(dtype, default=None):
@@ -340,6 +363,24 @@ def complex_dtype(dtype, default=None):
     ValueError
         if there is no complex counterpart to the given data type and
         ``default == None``.
+
+    Examples
+    --------
+    Convert scalar dtypes:
+
+    >>> complex_dtype(float)
+    dtype('complex128')
+    >>> complex_dtype('float32')
+    dtype('complex64')
+    >>> complex_dtype(complex)
+    dtype('complex128')
+
+    Dtypes with shape are also supported:
+
+    >>> complex_dtype(np.dtype((float, (3,))))
+    dtype(('<c16', (3,)))
+    >>> complex_dtype(('float32', (3,)))
+    dtype(('<c8', (3,)))
     """
     dtype, dtype_in = np.dtype(dtype), dtype
 
@@ -347,7 +388,7 @@ def complex_dtype(dtype, default=None):
         return dtype
 
     try:
-        complex_dtype = TYPE_MAP_R2C[dtype]
+        complex_base_dtype = TYPE_MAP_R2C[dtype.base]
     except KeyError:
         if default is not None:
             return default
@@ -355,7 +396,7 @@ def complex_dtype(dtype, default=None):
             raise ValueError('no complex counterpart exists for `dtype` {}'
                              ''.format(dtype_repr(dtype_in)))
     else:
-        return complex_dtype
+        return np.dtype((complex_base_dtype, dtype.shape))
 
 
 def conj_exponent(exp):
@@ -460,12 +501,12 @@ def preload_first_arg(instance, mode):
     return decorator
 
 
-def as_flat_array(vec):
-    """Return ``vec`` as a flat array according to the order of ``vec``."""
-    if hasattr(vec, 'order'):
-        return vec.asarray().ravel(vec.order)
+def as_flat_array(x):
+    """Return ``x`` as a flat array according to its axis ordering."""
+    if hasattr(x, 'order'):
+        return x.asarray().ravel(x.order)
     else:
-        return vec.asarray().ravel()
+        return x.asarray().ravel()
 
 
 class writable_array(object):
@@ -499,7 +540,7 @@ class writable_array(object):
         >>> with writable_array(x) as arr:
         ...    arr += [1, 1, 1]
         >>> x
-        uniform_discr(0.0, 1.0, 3).element([2.0, 3.0, 4.0])
+        uniform_discr(0.0, 1.0, 3).element([ 2.,  3.,  4.])
 
         Can also be called with arguments to `numpy.asarray`
 
@@ -568,6 +609,9 @@ def signature_string(posargs, optargs, sep=', ', mod=''):
         Only those parameters that are different from the given default
         are included as ``name=value`` keyword pairs.
 
+        **Note:** The comparison is done by using ``if value == default:``,
+        which is not valid for, e.g., NumPy arrays.
+
     sep : string or sequence of strings, optional
         Separator(s) for the argument strings. A provided single string is
         used for all joining operations.
@@ -575,16 +619,26 @@ def signature_string(posargs, optargs, sep=', ', mod=''):
         The ``pos_sep`` and ``opt_sep`` strings are used for joining the
         respective sequences of argument strings, and ``part_sep`` joins
         these two joined strings.
-    mod : string or sequence, optional
-        Format modifier(s) for the argument strings. A provided single
-        string is used for all format strings.
-        A given sequence can must have 2 entries ``pos_mod, opt_mod``
-        that are either strings or sequences of strings.
-        If they are strings, they are used as modifiers for the respective
-        argument string sequences.
-        If they are sequences of strings, their lengths must match those
-        of ``posargs`` and ``optargs``, respectively, and they modify
-        the format strings in a one-to-one fashion.
+    mod : string or callable or sequence, optional
+        Format modifier(s) for the argument strings.
+        In its most general form, ``mod`` is a sequence of 2 sequences
+        ``pos_mod, opt_mod`` with ``len(pos_mod) == len(posargs)`` and
+        ``len(opt_mod) == len(optargs)``. Each entry ``m`` in those sequences
+        can be eiter a string, resulting in the following stringification
+        of ``arg``::
+
+            arg_fmt = {{{}}}.format(m)
+            arg_str = arg_fmt.format(arg)
+
+        For a callable ``to_str``, the stringification is simply
+        ``arg_str = to_str(arg)``.
+
+        The entries ``pos_mod, opt_mod`` of ``mod`` can also be strings
+        or callables instead of sequences, in which case the modifier
+        applies to all corresponding arguments.
+
+        Finally, if ``mod`` is a string or callable, it is applied to
+        all arguments.
 
     Returns
     -------
@@ -644,6 +698,13 @@ def signature_string(posargs, optargs, sep=', ', mod=''):
     >>> mod = [['', ''], [':.3', ':.2']]  # one modifier per argument
     >>> signature_string(posargs, optargs, mod=mod)
     "'hello', 2.345, extent=1.44, spacing=0.015"
+
+    Using callables for stringification:
+
+    >>> posargs = ['arg1', np.ones(3)]
+    >>> optargs = []
+    >>> signature_string(posargs, optargs, mod=[['', array_str], []])
+    "'arg1', [ 1., 1., 1.]"
     """
     # Define the separators for the two possible cases
     try:
@@ -666,10 +727,13 @@ def signature_string(posargs, optargs, sep=', ', mod=''):
         try:
             m + ''
         except TypeError:
-            if len(m) != len(args):
+            if not callable(m) and len(m) != len(args):
+                mods.append([m] * len(args))
+            elif len(m) != len(args):
                 raise ValueError('sequence length mismatch: '
                                  'len({}) != len({})'.format(m, args))
-            mods.append(m)
+            else:
+                mods.append(m)
         else:
             mods.append([m] * len(args))
 
@@ -681,19 +745,22 @@ def signature_string(posargs, optargs, sep=', ', mod=''):
     # Stringify values, treating strings specially
     posargs_conv = []
     for arg, modifier in zip(posargs, pos_mod):
-        try:
-            arg + ''
-        except TypeError:
-            # All non-string types are passed a format conversion
-            fmt = '{{{}}}'.format(modifier)
+        if callable(modifier):
+            posargs_conv.append(modifier(arg))
         else:
-            # Preserve single quotes for strings by default
-            if modifier:
+            try:
+                arg + ''
+            except TypeError:
+                # All non-string types are passed a format conversion
                 fmt = '{{{}}}'.format(modifier)
             else:
-                fmt = "'{}'"
+                # Preserve single quotes for strings by default
+                if modifier:
+                    fmt = '{{{}}}'.format(modifier)
+                else:
+                    fmt = "'{}'"
 
-        posargs_conv.append(fmt.format(arg))
+            posargs_conv.append(fmt.format(arg))
 
     if posargs_conv:
         parts.append(pos_sep.join(argstr for argstr in posargs_conv))
@@ -705,20 +772,23 @@ def signature_string(posargs, optargs, sep=', ', mod=''):
             # Don't include
             continue
 
-        # See above on str and repr
-        try:
-            value + ''
-        except TypeError:
-            fmt = '{{{}}}'.format(modifier)
+        if callable(modifier):
+            optargs_conv.append('{}={}'.format(name, modifier(value)))
         else:
-            if modifier:
+            # See above on str and repr
+            try:
+                value + ''
+            except TypeError:
                 fmt = '{{{}}}'.format(modifier)
             else:
-                fmt = "'{}'"
+                if modifier:
+                    fmt = '{{{}}}'.format(modifier)
+                else:
+                    fmt = "'{}'"
 
-        value_str = fmt.format(value)
+            value_str = fmt.format(value)
+            optargs_conv.append('{}={}'.format(name, value_str))
 
-        optargs_conv.append('{}={}'.format(name, value_str))
     if optargs_conv:
         parts.append(opt_sep.join(optargs_conv))
 

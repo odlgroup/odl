@@ -22,7 +22,7 @@ from odl.discr import (
 from odl.set import RealNumbers
 from odl.util import (
     fast_1d_tensor_mult,
-    is_real_dtype, is_scalar_dtype, is_real_floating_dtype,
+    is_real_dtype, is_numeric_dtype, is_real_floating_dtype,
     is_complex_floating_dtype, complex_dtype, dtype_repr,
     conj_exponent,
     normalized_scalar_param_list, normalized_axes_tuple)
@@ -300,8 +300,8 @@ def dft_preprocess_data(arr, shift=True, axes=None, sign='-', out=None):
     is the complex counterpart of ``arr.dtype``.
     """
     arr = np.asarray(arr)
-    if not is_scalar_dtype(arr.dtype):
-        raise ValueError('array has non-scalar data type {}'
+    if not is_numeric_dtype(arr.dtype):
+        raise ValueError('array has non-numeric data type {}'
                          ''.format(dtype_repr(arr.dtype)))
     elif is_real_dtype(arr.dtype) and not is_real_floating_dtype(arr.dtype):
         arr = arr.astype('float64')

@@ -18,7 +18,7 @@ import numpy as np
 
 from odl.solvers.functional.functional import Functional
 from odl.operator import Operator, MatrixOperator
-from odl.space.base_ntuples import FnBase
+from odl.space.base_tensors import TensorSpace
 
 
 __all__ = ('RosenbrockFunctional',)
@@ -26,21 +26,23 @@ __all__ = ('RosenbrockFunctional',)
 
 class RosenbrockFunctional(Functional):
 
-    """The well-known `Rosenbrock function`_ on ``R^n``.
+    """The well-known Rosenbrock function on ``R^n``.
 
-    This function is usually used as a test problem in smooth optimization.
+    The `Rosenbrock function`_ is often used as a test problem in
+    smooth optimization.
 
     Notes
     -----
-    The functional is defined for :math:`x` in :math:`\\mathbb{R}^n`,
+    The functional is defined for :math:`x \\in \\mathbb{R}^n`,
     :math:`n \\geq 2`, as
 
     .. math::
-        \sum_{i=1}^{n - 1} c (x_{i+1} - x_i^2)^2 + (1 - x_i)^2
+        \sum_{i=1}^{n - 1} c (x_{i+1} - x_i^2)^2 + (1 - x_i)^2,
 
-    Where :math:`c` is a constant usually set to 100 which determines how "ill-
-    behaved" the function should be.
-    It has a minimum at :math:`x = [1, \\dots, 1]`, independent of :math:`c`.
+    where :math:`c` is a constant, usually set to 100, which determines how
+    "ill-behaved" the function should be.
+    The global minimum lies at :math:`x = (1, \\dots, 1)`, independent
+    of :math:`c`.
 
     There are two definitions of the n-dimensional Rosenbrock function found in
     the literature. One is the product of 2-dimensional Rosenbrock functions,
@@ -49,7 +51,7 @@ class RosenbrockFunctional(Functional):
 
     References
     ----------
-    .. _Rosenbrock function: en.wikipedia.org/wiki/Rosenbrock_function
+    .. _Rosenbrock function: https://en.wikipedia.org/wiki/Rosenbrock_function
     """
 
     def __init__(self, space, scale=100.0):
@@ -57,11 +59,12 @@ class RosenbrockFunctional(Functional):
 
         Parameters
         ----------
-        space : `FnBase`
+        space : `TensorSpace`
             Domain of the functional.
         scale : positive float, optional
-            The scale ``c`` in the functional determining how "ill-behaved" the
-            functional should be.
+            The scale ``c`` in the functional determining how
+            "ill-behaved" the functional should be. Larger value means
+            worse behavior.
 
         Examples
         --------
@@ -81,7 +84,7 @@ class RosenbrockFunctional(Functional):
         >>> functional([1, 1, 1, 1, 1])
         0.0
 
-        We can change how much the function is ill behaved via ``scale``:
+        We can change how much the function is ill-behaved via ``scale``:
 
         >>> r2 = odl.rn(2)
         >>> functional = RosenbrockFunctional(r2, scale=2)
@@ -91,10 +94,14 @@ class RosenbrockFunctional(Functional):
         3.0
         """
         self.scale = float(scale)
-        if not isinstance(space, FnBase):
-            raise ValueError('`space` must be an `FnBase`')
+        if not isinstance(space, TensorSpace):
+            raise ValueError('`space` must be a `TensorSpace` instance, '
+                             'got {!r}'.format(space))
+        if space.ndim > 1:
+            raise ValueError('`space` cannot have more than 1 dimension')
         if space.size < 2:
-            raise ValueError('`space` must be at least two dimensional')
+            raise ValueError('`space.size` must be >= 2, got {}'
+                             ''.format(space.size))
         super().__init__(space=space, linear=False, grad_lipschitz=np.inf)
 
     def _call(self, x):
@@ -136,7 +143,6 @@ class RosenbrockFunctional(Functional):
 
                 This is also known as the Hessian.
                 """
-
                 # TODO: Implement optimized version of this that does not need
                 # a matrix.
                 shape = (functional.domain.size, functional.domain.size)

@@ -24,7 +24,7 @@ __all__ = ('diagnostics', 'discr', 'operator', 'set', 'space', 'solvers',
 from .set import *
 __all__ += set.__all__
 
-# operator must come before space because npy_ntuples imports Operator
+# operator must come before space because fspace imports Operator
 from .operator import *
 __all__ += operator.__all__
 
@@ -34,17 +34,18 @@ __all__ += space.__all__
 from .discr import *
 __all__ += discr.__all__
 
-from . import diagnostics
-from . import solvers
-from . import trafos
-from . import tomo
-from . import util
-from . import phantom
+from . import datasets
 from . import deform
+from . import diagnostics
+from . import phantom
+from . import solvers
+from . import tomo
+from . import trafos
 from . import ufunc_ops
 from . import datasets
 from . import contrib
 
+from . import util
 
 from .util import test
 __all__ += ('test',)

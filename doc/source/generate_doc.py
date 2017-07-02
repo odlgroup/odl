@@ -54,7 +54,24 @@ string = """{shortname}
 
 
 def import_submodules(package, name=None, recursive=True):
-    """ Import all submodules of a module, recursively, including subpackages
+    """Import all submodules of ``package``.
+
+    Parameters
+    ----------
+    package : `module` or string
+        Package whose submodules to import.
+    name : string, optional
+        Override the package name with this value in the full
+        submodule names. By default, ``package`` is used.
+    recursive : bool, optional
+        If ``True``, recursively import all submodules of ``package``.
+        Otherwise, import only the modules at the top level.
+
+    Returns
+    -------
+    pkg_dict : dict
+        Dictionary where keys are the full submodule names and values
+        are the corresponding module objects.
     """
     if isinstance(package, str):
         package = importlib.import_module(package)
@@ -62,32 +79,32 @@ def import_submodules(package, name=None, recursive=True):
     if name is None:
         name = package.__name__
 
-    submodules = [m[0] for m in inspect.getmembers(
-        package, inspect.ismodule) if m[1].__name__.startswith('odl')]
+    submodules = [m[0] for m in inspect.getmembers(package, inspect.ismodule)
+                  if m[1].__name__.startswith('odl')]
 
     results = {}
     for pkgname in submodules:
         full_name = name + '.' + pkgname
         try:
             results[full_name] = importlib.import_module(full_name)
-            if recursive:
-                results.update(import_submodules(full_name, full_name))
         except ImportError:
             pass
+        else:
+            if recursive:
+                results.update(import_submodules(full_name, full_name))
     return results
 
 
 def make_interface():
-    modnames = [modname for modname in import_submodules(odl)]
-
-    modnames += ['odl']
+    """Generate the RST files for the API doc of ODL."""
+    modnames = ['odl'] + list(import_submodules(odl).keys())
 
     for modname in modnames:
         if not modname.startswith('odl'):
             modname = 'odl.' + modname
 
         shortmodname = modname.split('.')[-1]
-        print('{: <16} : generated {}.rst'.format(shortmodname, modname))
+        print('{: <25} : generated {}.rst'.format(shortmodname, modname))
 
         line = '=' * len(shortmodname)
 
@@ -124,16 +141,15 @@ def make_interface():
         else:
             this_class_string = ''
 
-        text_file = open(modname + '.rst', "w")
-        text_file.write(string.format(shortname=shortmodname,
-                                      name=modname,
-                                      line=line,
-                                      docstring=docstring,
-                                      module_string=this_mod_string,
-                                      fun_string=this_fun_string,
-                                      class_string=this_class_string))
+        with open(modname + '.rst', 'w') as text_file:
+            text_file.write(string.format(shortname=shortmodname,
+                                          name=modname,
+                                          line=line,
+                                          docstring=docstring,
+                                          module_string=this_mod_string,
+                                          fun_string=this_fun_string,
+                                          class_string=this_class_string))
 
-        text_file.close()
 
 if __name__ == '__main__':
     make_interface()

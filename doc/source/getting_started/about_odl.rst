@@ -142,7 +142,7 @@ The method needs a relaxation :math:`\lambda < 2 / \lVert A\rvert^2` to converge
 
     >>> matrix = np.array([[1.0, 3.0, 2.0],
     ...                    [2.0, -1.0, 1.0]])
-    >>> matrix_op = odl.MatVecOperator(matrix)  # operator defined by the matrix
+    >>> matrix_op = odl.MatrixOperator(matrix)  # operator defined by the matrix
     >>> matrix_op.domain
     rn(3)
     >>> matrix_op.range

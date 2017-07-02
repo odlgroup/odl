@@ -36,7 +36,7 @@ def _places(a, b, default=None):
     """Return number of expected correct digits between ``a`` and ``b``.
 
     Returned numbers if one of ``a.dtype`` and ``b.dtype`` is as below:
-        2 -- for ``np.float16``
+        1 -- for ``np.float16``
 
         3 -- for ``np.float32`` or ``np.complex64``
 
@@ -137,20 +137,9 @@ def all_equal(iter1, iter2):
 
 
 def all_almost_equal_array(v1, v2, places):
-    # Ravel if has order, only DiscreteLpElement has an order
-    if hasattr(v1, 'order'):
-        v1 = v1.__array__().ravel(v1.order)
-    else:
-        v1 = v1.__array__()
-
-    if hasattr(v2, 'order'):
-        v2 = v2.__array__().ravel(v2.order)
-    else:
-        v2 = v2.__array__()
-
-    return np.all(np.isclose(v1, v2,
-                             rtol=10 ** (-places), atol=10 ** (-places),
-                             equal_nan=True))
+    return np.allclose(v1, v2,
+                       rtol=10 ** (-places), atol=10 ** (-places),
+                       equal_nan=True)
 
 
 def all_almost_equal(iter1, iter2, places=None):
@@ -164,10 +153,11 @@ def all_almost_equal(iter1, iter2, places=None):
     if iter1 is None and iter2 is None:
         return True
 
-    if places is None:
-        places = _places(iter1, iter2, None)
-
     if hasattr(iter1, '__array__') and hasattr(iter2, '__array__'):
+        # Only get default places if comparing arrays, need to keep `None`
+        # otherwise for recursive calls.
+        if places is None:
+            places = _places(iter1, iter2, None)
         return all_almost_equal_array(iter1, iter2, places)
 
     try:
@@ -198,7 +188,18 @@ def is_subdict(subdict, dictionary):
 try:
     # Try catch in case user does not have pytest
     import pytest
+except ImportError:
+    def _pass(function):
+        """Trivial decorator used if pytest marks are not available."""
+        return function
 
+    never_skip = _pass
+    skip_if_no_stir = _pass
+    skip_if_no_pywavelets = _pass
+    skip_if_no_pyfftw = _pass
+    skip_if_no_largescale = _pass
+    skip_if_no_benchmark = _pass
+else:
     # Used in lists where the elements should all be skipifs
     never_skip = pytest.mark.skipif(
         "False",
@@ -236,10 +237,10 @@ try:
         ----------
         name : str
             Name of the parameters used for the ``ids`` argument
-            to `pytest.fixture`.
+            to `pytest.fixture`_.
         params : sequence
             Values to be taken as parameters in the fixture. They are
-            used as ``params`` argument to `pytest.fixture`.
+            used as ``params`` argument to `pytest.fixture`_.
         fmt : str, optional
             Use this format string for the generation of the ``ids``.
             For each value, the id string is generated as::
@@ -250,6 +251,10 @@ try:
 
             Default: ``" {name} = '{value}' "`` for string parameters,
             otherwise ``" {name} = {value} "``
+
+        References
+        ----------
+        .. _pytest.fixture: http://doc.pytest.org/en/latest/fixture.html
         """
         if fmt is None:
             try:
@@ -264,18 +269,6 @@ try:
         ids = [fmt.format(name=name, value=value) for value in params]
         wrapper = pytest.fixture(scope='module', ids=ids, params=params)
         return wrapper(lambda request: request.param)
-
-except ImportError:
-    def _pass(function):
-        """Trivial decorator used if pytest marks are not available."""
-        return function
-
-    never_skip = _pass
-    skip_if_no_stir = _pass
-    skip_if_no_pywavelets = _pass
-    skip_if_no_pyfftw = _pass
-    skip_if_no_largescale = _pass
-    skip_if_no_benchmark = _pass
 
 
 # Helpers to generate data
@@ -324,12 +317,12 @@ def noise_array(space):
     else:
         # Generate numpy space elements, real or complex or int
         if np.issubdtype(space.dtype, np.floating):
-            arr = np.random.randn(space.size)
+            arr = np.random.randn(*space.shape)
         elif np.issubdtype(space.dtype, np.integer):
-            arr = np.random.randint(-10, 10, space.size)
+            arr = np.random.randint(-10, 10, space.shape)
         else:
-            arr = (np.random.randn(space.size) +
-                   1j * np.random.randn(space.size)) / np.sqrt(2.0)
+            arr = (np.random.randn(*space.shape) +
+                   1j * np.random.randn(*space.shape)) / np.sqrt(2.0)
 
         return arr.astype(space.dtype, copy=False)
 

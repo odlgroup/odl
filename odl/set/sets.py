@@ -17,7 +17,7 @@ standard_library.install_aliases()
 
 from numbers import Integral, Real, Complex
 import numpy as np
-from odl.util import is_int_dtype, is_real_dtype, is_scalar_dtype, unique
+from odl.util import is_int_dtype, is_real_dtype, is_numeric_dtype, unique
 
 
 __all__ = ('Set', 'EmptySet', 'UniversalSet', 'Field', 'Integers',
@@ -349,7 +349,7 @@ class ComplexNumbers(Field):
         dtype = getattr(other, 'dtype', None)
         if dtype is None:
             dtype = np.result_type(*other)
-        return is_scalar_dtype(dtype)
+        return is_numeric_dtype(dtype)
 
     def __eq__(self, other):
         """Return ``self == other``."""
@@ -365,7 +365,13 @@ class ComplexNumbers(Field):
     def element(self, inp=None):
         """Return a complex number from ``inp`` or from scratch."""
         if inp is not None:
-            return complex(inp)
+            # Workaround for missing __complex__ of numpy.ndarray
+            # for Numpy version < 1.12
+            # TODO: remove when Numpy >= 1.12 is required
+            if isinstance(inp, np.ndarray):
+                return complex(inp.reshape([1])[0])
+            else:
+                return complex(inp)
         else:
             return complex(0.0, 0.0)
 

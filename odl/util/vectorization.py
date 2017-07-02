@@ -35,7 +35,7 @@ def is_valid_input_array(x, ndim=None):
 
 def is_valid_input_meshgrid(x, ndim):
     """Test if ``x`` is a `meshgrid` sequence for points in R^d."""
-    # This case is triggered in FunctionSetElement.__call__ if the
+    # This case is triggered in FunctionSpaceElement.__call__ if the
     # domain does not have an 'ndim' attribute. We return False and
     # continue.
     if ndim is None:

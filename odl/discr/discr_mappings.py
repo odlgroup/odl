@@ -23,114 +23,102 @@ import numpy as np
 
 from odl.operator import Operator
 from odl.discr.partition import RectPartition
-from odl.space.base_ntuples import NtuplesBase, FnBase
-from odl.space import FunctionSet, FunctionSpace
+from odl.space.base_tensors import TensorSpace
+from odl.space import FunctionSpace
 from odl.util import (
-    is_valid_input_meshgrid, out_shape_from_array, out_shape_from_meshgrid)
+    is_valid_input_meshgrid, out_shape_from_array, out_shape_from_meshgrid,
+    writable_array, signature_string, indent, dtype_repr, is_numeric_dtype)
 
 
-__all__ = ('FunctionSetMapping',
+__all__ = ('FunctionSpaceMapping',
            'PointCollocation', 'NearestInterpolation', 'LinearInterpolation',
            'PerAxisInterpolation')
 
 _SUPPORTED_INTERP_SCHEMES = ['nearest', 'linear']
 
 
-class FunctionSetMapping(Operator):
+class FunctionSpaceMapping(Operator):
 
     """Abstract base class for function set discretization mappings."""
 
-    def __init__(self, map_type, fset, partition, dspace, linear=False,
-                 **kwargs):
+    def __init__(self, map_type, fspace, partition, dspace, linear=False):
         """Initialize a new instance.
 
         Parameters
         ----------
         map_type : {'sampling', 'interpolation'}
             The type of operator
-        fset : `FunctionSet`
+        fspace : `FunctionSpace`
             The non-discretized (abstract) set of functions to be
             discretized
         partition : `RectPartition`
-            Partition of (a subset of) ``fset.domain`` based on a
+            Partition of (a subset of) ``fspace.domain`` based on a
             `RectGrid`.
-        dspace : `NtuplesBase`
+        dspace : `TensorSpace`
             Data space providing containers for the values of a
-            discretized object. Its `NtuplesBase.size` must be equal
-            to the total number of grid points.
         linear : bool, optional
+            discretized object. Its `TensorSpace.shape` must be equal
+            to ``partition.shape``.
+        linear : bool
             Create a linear operator if ``True``, otherwise a non-linear
             operator.
-        order : {'C', 'F'}, optional
-            Ordering of the axes in the data storage. 'C' means the
-            first axis varies slowest, the last axis fastest;
-            vice versa for 'F'.
-            Default: 'C'
         """
-        map_type_ = str(map_type).lower()
-        if map_type_ not in ('sampling', 'interpolation'):
-            raise ValueError('`map_type` {} not understood'
-                             ''.format(map_type))
-        if not isinstance(fset, FunctionSet):
-            raise TypeError('`fset` {!r} is not a `FunctionSet` '
-                            'instance'.format(fset))
+        map_type, map_type_in = str(map_type).lower(), map_type
+        if map_type not in ('sampling', 'interpolation'):
+            raise ValueError('`map_type` {!r} not understood'
+                             ''.format(map_type_in))
+        if not isinstance(fspace, FunctionSpace):
+            raise TypeError('`fspace` {!r} is not a `FunctionSpace` '
+                            'instance'.format(fspace))
 
         if not isinstance(partition, RectPartition):
             raise TypeError('`partition` {!r} is not a `RectPartition` '
                             'instance'.format(partition))
-        if not isinstance(dspace, NtuplesBase):
-            raise TypeError('`dspace` {!r} is not an `NtuplesBase` instance'
+        if not isinstance(dspace, TensorSpace):
+            raise TypeError('`dspace` {!r} is not a `TensorSpace` instance'
                             ''.format(dspace))
 
-        if not fset.domain.contains_set(partition):
+        if not fspace.domain.contains_set(partition):
             raise ValueError('{} not contained in the domain {} '
                              'of the function set {}'
-                             ''.format(partition, fset.domain, fset))
+                             ''.format(partition, fspace.domain, fspace))
 
-        if dspace.size != partition.size:
-            raise ValueError('size {} of the data space {} not equal '
-                             'to the size {} of the partition'
-                             ''.format(dspace.size, dspace, partition.size))
+        if dspace.shape != partition.shape:
+            raise ValueError('`dspace.shape` not equal to `partition.shape`: '
+                             '{} != {}'
+                             ''.format(dspace.shape, partition.shape))
 
-        domain = fset if map_type_ == 'sampling' else dspace
-        range = dspace if map_type_ == 'sampling' else fset
+        domain = fspace if map_type == 'sampling' else dspace
+        range = dspace if map_type == 'sampling' else fspace
         Operator.__init__(self, domain, range, linear=linear)
         self.__partition = partition
 
         if self.is_linear:
-            if not isinstance(fset, FunctionSpace):
-                raise TypeError('`fset` {!r} is not a `FunctionSpace` '
-                                'instance'.format(fset))
-            if not isinstance(dspace, FnBase):
-                raise TypeError('`dspace` {!r} is not an `FnBase` instance'
-                                ''.format(dspace))
-            if fset.field != dspace.field:
-                raise ValueError('`field` {} of the function space and `field`'
-                                 ' {} of the data space are not equal'
-                                 ''.format(fset.field, dspace.field))
-
-        order = str(kwargs.pop('order', 'C'))
-        if str(order).upper() not in ('C', 'F'):
-            raise ValueError('`order` {!r} not recognized'.format(order))
-        else:
-            self.__order = str(order).upper()
+            if self.domain.field is None:
+                raise TypeError('`fspace.field` cannot be `None` for '
+                                '`linear=True`')
+            if not is_numeric_dtype(dspace.dtype):
+                raise TypeError('`dspace.dtype` must be a numeric data type '
+                                'for `linear=True`, got {}'
+                                ''.format(dtype_repr(dspace)))
+            if fspace.field != dspace.field:
+                raise ValueError('`fspace.field` not equal to `dspace.field`: '
+                                 '{} != {}'
+                                 ''.format(fspace.field, dspace.field))
 
     def __eq__(self, other):
         """Return ``self == other``."""
         if self is other:
             return True
         else:
-            return (isinstance(other, type(self)) and
-                    isinstance(self, type(other)) and
+            return (type(other) is type(self) and
                     self.domain == other.domain and
                     self.range == other.range and
-                    self.partition == other.partition and
-                    self.order == other.order)
+                    self.partition == other.partition)
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        return hash((type(self), self.domain, self.range, self.partition,
-                     self.order))
+        return hash((type(self), self.domain, self.range, self.partition))
 
     @property
     def partition(self):
@@ -142,13 +130,8 @@ class FunctionSetMapping(Operator):
         """Sampling grid."""
         return self.partition.grid
 
-    @property
-    def order(self):
-        """Axis ordering in the data storage."""
-        return self.__order
 
-
-class PointCollocation(FunctionSetMapping):
+class PointCollocation(FunctionSpaceMapping):
 
     """Function evaluation at grid points.
 
@@ -167,31 +150,26 @@ class PointCollocation(FunctionSetMapping):
     only difference being the additional information about the ordering
     of the axes in the flat storage array (C- vs. Fortran ordering).
 
-    This operator is the default 'sampling' used by all core
-    discretization classes.
+    This operator is the default `DiscretizedSet.sampling` used by all
+    core discretization classes.
     """
 
-    def __init__(self, ip_fset, partition, dspace, **kwargs):
+    def __init__(self, fspace, partition, dspace):
         """Initialize a new instance.
 
         Parameters
         ----------
-        ip_fset : `FunctionSet`
-            The non-discretized (abstract) set of functions to be
-            discretized. The function domain must provide a
+        fspace : `FunctionSpace`
+            Non-discretized (abstract) set of functions to be
+            discretized. ``fspace.domain`` must provide a
             `Set.contains_set` method.
         partition : `RectPartition`
-            Partition of (a subset of) ``ip_fset.domain`` based on a
-            `RectGrid`
-        dspace : `NtuplesBase`
+            Partition of (a subset of) ``fspace.domain`` based on a
+            `RectGrid`.
+        dspace : `TensorSpace`
             Data space providing containers for the values of a
-            discretized object. Its `NtuplesBase.size` must be equal
-            to the total number of grid points.
-        order : {'C', 'F'}, optional
-            Ordering of the axes in the data storage. 'C' means the
-            first axis varies slowest, the last axis fastest;
-            vice versa for 'F'.
-            Default: 'C'
+            discretized object. Its `TensorSpace.shape` must be equal
+            to ``partition.shape``.
 
         Examples
         --------
@@ -199,95 +177,105 @@ class PointCollocation(FunctionSetMapping):
         to the real numbers:
 
         >>> rect = odl.IntervalProd([1, 3], [2, 5])
-        >>> funcset = odl.FunctionSpace(rect)
+        >>> fspace = odl.FunctionSpace(rect)
 
         Partition the rectangle by a rectilinear grid:
 
         >>> rect = odl.IntervalProd([1, 3], [2, 5])
         >>> grid = odl.RectGrid([1, 2], [3, 4, 5])
         >>> partition = odl.RectPartition(rect, grid)
-        >>> rn = odl.rn(grid.size)
+        >>> dspace = odl.rn(grid.shape)
 
         Finally create the operator and test it on a function:
 
-        >>> coll_op = PointCollocation(funcset, partition, rn)
-        ...
-        ... # Properly vectorized function
-        >>> func_elem = funcset.element(lambda x: x[0] - x[1])
+        >>> coll_op = PointCollocation(fspace, partition, dspace)
+        >>>
+        >>> # Properly vectorized function
+        >>> func_elem = fspace.element(lambda x: x[0] - x[1])
         >>> coll_op(func_elem)
-        rn(6).element([-2.0, -3.0, -4.0, -1.0, -2.0, -3.0])
-        >>> coll_op(lambda x: x[0] - x[1])  # Works directly
-        rn(6).element([-2.0, -3.0, -4.0, -1.0, -2.0, -3.0])
-        >>> out = odl.rn(6).element()
-        >>> coll_op(func_elem, out=out)  # In-place
-        rn(6).element([-2.0, -3.0, -4.0, -1.0, -2.0, -3.0])
+        rn((2, 3)).element(
+            [[-2., -3., -4.],
+             [-1., -2., -3.]]
+        )
 
-        Fortran ordering:
+        We can use a Python function directly without creating a
+        function space element:
 
-        >>> coll_op = PointCollocation(funcset, partition, rn, order='F')
-        >>> coll_op(func_elem)
-        rn(6).element([-2.0, -1.0, -3.0, -2.0, -4.0, -3.0])
-        """
-        linear = isinstance(ip_fset, FunctionSpace)
-        FunctionSetMapping.__init__(self, 'sampling', ip_fset, partition,
-                                    dspace, linear, **kwargs)
+        >>> coll_op(lambda x: x[0] - x[1])
+        rn((2, 3)).element(
+            [[-2., -3., -4.],
+             [-1., -2., -3.]]
+        )
 
-    def _call(self, func, out=None, **kwargs):
-        """Evaluate ``func`` at the grid of this operator.
+        Broadcasting and ``out`` parameters are supported:
 
-        Parameters
-        ----------
-        func : `FunctionSetElement`
-            The function to be evaluated
-        out : `NtuplesBaseVector`, optional
-            Array to which the values are written. Its shape must be
-            ``(N,)``, where N is the total number of grid points. The
-            data type must be the same as in the ``dspace`` of this
-            mapping.
-        kwargs :
-            Additional keyword arguments, optional
+        >>> out = dspace.element()
+        >>> result = coll_op(func_elem, out=out)
+        >>> result is out
+        True
+        >>> out
+        rn((2, 3)).element(
+            [[-2., -3., -4.],
+             [-1., -2., -3.]]
+        )
 
-        Returns
-        -------
-        out : `NtuplesBaseVector`, optional
-            The function values at the grid points. If ``out`` was
-            provided, the returned object is a reference to it.
+        It is possible to use parametric functions and pass the parameters
+        during operator call:
+
+        >>> def plus_c(x, c=0):
+        ...     return x[0] - x[1] + c
+        >>> coll_op(plus_c)  # uses default c = 0
+        rn((2, 3)).element(
+            [[-2., -3., -4.],
+             [-1., -2., -3.]]
+        )
+        >>> coll_op(plus_c, c=2)
+        rn((2, 3)).element(
+            [[ 0., -1., -2.],
+             [ 1.,  0., -1.]]
+        )
 
         Notes
         -----
         This operator expects its input functions to be written in
         a vectorization-conforming manner to ensure fast evaluation.
-        See the `vectorization guide
-        <https://odlgroup.github.io/odl/guide/in_depth/\
-vectorization_guide.html>`_ for a detailed introduction.
+        See the `ODL vectorization guide`_ for a detailed introduction.
 
         See Also
         --------
         odl.discr.grid.RectGrid.meshgrid
         numpy.meshgrid
+
+        References
+        ----------
+        .. _ODL vectorization guide:
+           https://odlgroup.github.io/odl/guide/in_depth/\
+vectorization_guide.html
         """
+        linear = getattr(fspace, 'field', None) is not None
+        FunctionSpaceMapping.__init__(self, 'sampling', fspace, partition,
+                                      dspace, linear)
+
+    def _call(self, func, out=None, **kwargs):
+        """Return ``self(func[, out, **kwargs])``."""
         mesh = self.grid.meshgrid
         if out is None:
-            out = func(mesh, **kwargs).ravel(order=self.order)
+            out = func(mesh, **kwargs)
         else:
-            out[:] = np.ravel(
-                func(mesh, out=out.asarray().reshape(self.grid.shape,
-                                                     order=self.order),
-                     **kwargs),
-                order=self.order)
-
+            with writable_array(out) as out_arr:
+                func(mesh, out=out_arr, **kwargs)
         return out
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        inner_str = '\n  {!r},\n  {!r},\n  {!r}'.format(
-            self.domain, self.grid, self.range)
-        if self.order != 'C':
-            inner_str += ",\n  order='{}'".format(self.order)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        posargs = [self.range, self.grid, self.domain]
+        inner_str = signature_string(posargs, [],
+                                     sep=[',\n', ', ', ',\n'],
+                                     mod=['!r', ''])
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
 
 
-class NearestInterpolation(FunctionSetMapping):
+class NearestInterpolation(FunctionSpaceMapping):
 
     """Nearest neighbor interpolation as an `Operator`.
 
@@ -309,36 +297,28 @@ class NearestInterpolation(FunctionSetMapping):
     of the axes in the flat storage array (C- vs. Fortran ordering).
     """
 
-    def __init__(self, fset, partition, dspace, **kwargs):
+    def __init__(self, fspace, partition, dspace, variant='left'):
         """Initialize a new instance.
 
         Parameters
         ----------
-        fset : `FunctionSet`
-            The undiscretized (abstract) set of functions to be
-            discretized. The function domain must provide a
+        fspace : `FunctionSpace`
+            Non-discretized (abstract) set of functions to be
+            discretized. ``fspace.domain`` must provide a
             `Set.contains_set` method.
         partition : `RectPartition`
-            Partition of (a subset of) ``ip_fset.domain`` based on a
-            spatial grid
-        dspace : `NtuplesBase`
+            Partition of (a subset of) ``fspace.domain`` based on a
+            spatial grid.
+        dspace : `TensorSpace`
             Data space providing containers for the values of a
-            discretized object. Its `NtuplesBase.size` must be equal
-            to the total number of grid points.
-
-        Other Parameters
-        ----------------
+            discretized object. Its `TensorSpace.shape` must be equal
+            to ``partition.shape``.
         variant : {'left', 'right'}, optional
-            Behavior variant at midpoint between neighbors
+            Behavior variant at the midpoint between neighbors.
 
-            'left' : favor left neighbor (default)
+                ``'left'``: favor left neighbor (default)
 
-            'right' : favor right neighbor
-        order : {'C', 'F'}, optional
-            Ordering of the axes in the data storage. 'C' means the
-            first axis varies slowest, the last axis fastest;
-            vice versa for 'F'.
-            Default: 'C'
+                ``'right'``: favor right neighbor
 
         Examples
         --------
@@ -346,23 +326,23 @@ class NearestInterpolation(FunctionSetMapping):
         data type in 2d:
 
         >>> rect = odl.IntervalProd([0, 0], [1, 1])
-        >>> strings = odl.Strings(1)  # 1-char strings
-        >>> space = odl.FunctionSet(rect, strings)
+        >>> fspace = odl.FunctionSpace(rect, out_dtype='U1')
 
         Partitioning the domain uniformly with no nodes on the boundary
         (will shift the grid points):
 
-        >>> part = odl.uniform_partition_fromintv(rect, [4, 2],
-        ...                                       nodes_on_bdry=False)
+        >>> part = odl.uniform_partition_fromintv(rect, [4, 2])
         >>> part.grid.coord_vectors
         (array([ 0.125,  0.375,  0.625,  0.875]), array([ 0.25,  0.75]))
 
-        >>> dspace = odl.ntuples(part.size, dtype='U1')
-
         Now we initialize the operator and test it with some points:
 
-        >>> interp_op = NearestInterpolation(space, part, dspace)
-        >>> values = np.array([c for c in 'mystring'])
+        >>> dspace = odl.tensor_space(part.shape, dtype='U1')
+        >>> interp_op = NearestInterpolation(fspace, part, dspace)
+        >>> values = np.array([['m', 'y'],
+        ...                    ['s', 't'],
+        ...                    ['r', 'i'],
+        ...                    ['n', 'g']])
         >>> function = interp_op(values)
         >>> print(function([0.3, 0.6]))  # closest to index (1, 1) -> 3
         t
@@ -373,20 +353,30 @@ class NearestInterpolation(FunctionSetMapping):
         >>> all(out == ['t', 'g'])
         True
 
+        See Also
+        --------
+        LinearInterpolation : (bi-/tri-/...)linear interpolation
+
         Notes
         -----
-        The distinction between 'left' and 'right' variants is currently
-        made by changing ``<=`` to ``<`` at one place. This difference
-        may not be noticable in some situations due to rounding errors.
+        - **Important:** if called on a point array, the points are
+          assumed to be sorted in ascending order in each dimension
+          for efficiency reasons.
+        - Nearest neighbor interpolation is the only scheme which works
+          with data of non-numeric data type since it does not involve any
+          arithmetic operations on the values, in contrast to other
+          interpolation methods.
+        - The distinction between left and right variants is currently
+          made by changing ``<=`` to ``<`` at one place. This difference
+          may not be noticable in some situations due to rounding errors.
         """
-        linear = isinstance(fset, FunctionSpace)
-        FunctionSetMapping.__init__(self, 'interpolation', fset, partition,
-                                    dspace, linear, **kwargs)
+        linear = getattr(fspace, 'field', None) is not None
+        FunctionSpaceMapping.__init__(self, 'interpolation', fspace, partition,
+                                      dspace, linear)
 
-        variant = kwargs.pop('variant', 'left')
         self.__variant = str(variant).lower()
         if self.variant not in ('left', 'right'):
-            raise ValueError("`variant` '{}' not understood".format(variant))
+            raise ValueError("`variant` {!r} not understood".format(variant))
 
     @property
     def variant(self):
@@ -394,36 +384,7 @@ class NearestInterpolation(FunctionSetMapping):
         return self.__variant
 
     def _call(self, x, out=None):
-        """Create an interpolator from grid values ``x``.
-
-        Parameters
-        ----------
-        x : `NtuplesBaseVector`
-            The array of values to be interpolated
-        out : `FunctionSetElement`, optional
-            Element in which to store the interpolator
-
-        Returns
-        -------
-        out : `FunctionSetElement`
-            Nearest-neighbor interpolator for the grid of this
-            operator. If ``out`` was provided, the returned object
-            is a reference to it.
-
-        See Also
-        --------
-        LinearInterpolation : (bi-/tri-/...)linear interpolation
-
-        Notes
-        -----
-        **Important:** if called on a point array, the points are
-        assumed to be sorted in ascending order in each dimension
-        for efficiency reasons.
-
-        Nearest neighbor interpolation is the only scheme which works
-        with data of non-scalar type since it does not involve any
-        arithmetic operations on the values.
-        """
+        """Return ``self(x[, out])``."""
         # TODO: pass reasonable options on to the interpolator
         def nearest(arg, out=None):
             """Interpolating function with vectorization."""
@@ -433,9 +394,7 @@ class NearestInterpolation(FunctionSetMapping):
                 input_type = 'array'
 
             interpolator = _NearestInterpolator(
-                self.grid.coord_vectors,
-                x.asarray().reshape(self.grid.shape, order=self.order),
-                variant=self.variant,
+                self.grid.coord_vectors, x, variant=self.variant,
                 input_type=input_type)
 
             return interpolator(arg, out=out)
@@ -444,70 +403,43 @@ class NearestInterpolation(FunctionSetMapping):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        inner_str = '\n  {!r},\n  {!r},\n  {!r}'.format(
-            self.range, self.grid, self.domain)
-        sep = ',\n '
-        if self.order != 'C':
-            inner_str += sep + "order='{}'".format(self.order)
-            sep = ', '
-        if self.variant != 'left':
-            inner_str += sep + "variant='{}'".format(self.variant)
-
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        posargs = [self.range, self.grid, self.domain]
+        optargs = [('variant', self.variant, 'left')]
+        inner_str = signature_string(posargs, optargs,
+                                     sep=[',\n', ', ', ',\n'],
+                                     mod=['!r', ''])
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
 
 
-class LinearInterpolation(FunctionSetMapping):
+class LinearInterpolation(FunctionSpaceMapping):
 
     """Linear interpolation interpolation as an `Operator`."""
 
-    def __init__(self, fspace, partition, dspace, **kwargs):
+    def __init__(self, fspace, partition, dspace):
         """Initialize a new instance.
 
         Parameters
         ----------
         fspace : `FunctionSpace`
-            The undiscretized (abstract) space of functions to be
-            discretized. Its field must be the same as that of data
-            space. The function domain must provide a
+            Non-discretized (abstract) space of functions to be
+            discretized. ``fspace.domain`` must provide a
             `Set.contains_set` method.
         partition : `RectPartition`
             Partition of (a subset of) ``fspace.domain`` based on a
             `RectGrid`
-        dspace : `FnBase`
+        dspace : `TensorSpace`
             Data space providing containers for the values of a
-            discretized object. Its `NtuplesBase.size` must be equal
-            to the total number of grid points, and its `FnBase.field`
-            must be the same as that of the function space.
-        order : {'C', 'F'}, optional
-            Ordering of the axes in the data storage. 'C' means the
-            first axis varies slowest, the last axis fastest;
-            vice versa for 'F'.
-            Default: 'C'
+            discretized object. Its `TensorSpace.shape` must be equal
+            to ``partition.shape``, and its `TensorSpace.field` must
+            match ``fspace.field``.
         """
-        if not isinstance(fspace, FunctionSpace):
-            raise TypeError('`fspace` {!r} is not a `FunctionSpace` '
-                            'instance'.format(fspace))
-
-        FunctionSetMapping.__init__(self, 'interpolation', fspace, partition,
-                                    dspace, linear=True, **kwargs)
+        if getattr(fspace, 'field', None) is None:
+            raise TypeError('`fspace.field` cannot be `None`')
+        FunctionSpaceMapping.__init__(self, 'interpolation', fspace, partition,
+                                      dspace, linear=True)
 
     def _call(self, x, out=None):
-        """Create an interpolator from grid values ``x``.
-
-        Parameters
-        ----------
-        x : `FnBaseVector`
-            The array of values to be interpolated
-        out : `FunctionSpaceElement`, optional
-            Element in which to store the interpolator
-
-        Returns
-        -------
-        out : `FunctionSpaceElement`
-            Linear interpolator for the grid of this operator. If
-            ``out`` was provided, the returned object is a reference
-            to it.
-        """
+        """Return ``self(x[, out])``."""
         # TODO: pass reasonable options on to the interpolator
         def linear(arg, out=None):
             """Interpolating function with vectorization."""
@@ -517,9 +449,7 @@ class LinearInterpolation(FunctionSetMapping):
                 input_type = 'array'
 
             interpolator = _LinearInterpolator(
-                self.grid.coord_vectors,
-                x.asarray().reshape(self.grid.shape, order=self.order),
-                input_type=input_type)
+                self.grid.coord_vectors, x, input_type=input_type)
 
             return interpolator(arg, out=out)
 
@@ -527,37 +457,34 @@ class LinearInterpolation(FunctionSetMapping):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        inner_str = '\n  {!r},\n  {!r},\n  {!r}'.format(self.range,
-                                                        self.grid,
-                                                        self.domain)
-        if self.order != 'C':
-            inner_str += ",\n  order='{}'".format(self.order)
-
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        posargs = [self.range, self.grid, self.domain]
+        inner_str = signature_string(posargs, [],
+                                     sep=[',\n', ', ', ',\n'],
+                                     mod=['!r', ''])
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
 
 
-class PerAxisInterpolation(FunctionSetMapping):
+class PerAxisInterpolation(FunctionSpaceMapping):
 
     """Interpolation scheme set for each axis individually."""
 
-    def __init__(self, fspace, partition, dspace, schemes, **kwargs):
+    def __init__(self, fspace, partition, dspace, schemes, nn_variants='left'):
         """Initialize a new instance.
 
         Parameters
         ----------
         fspace : `FunctionSpace`
-            The undiscretized (abstract) space of functions to be
-            discretized. Its field must be the same as that of data
-            space. The function domain must provide a
+            Non-discretized (abstract) space of functions to be
+            discretized. ``fspace.domain`` must provide a
             `Set.contains_set` method.
         partition : `RectPartition`
             Partition of (a subset of) ``fspace.domain`` based on a
             `RectGrid`
-        dspace : `FnBase`
+        dspace : `TensorSpace`
             Data space providing containers for the values of a
-            discretized object. Its `NtuplesBase.size` must be equal
-            to the total number of grid points, and its `FnBase.field`
-            must be the same as that of the function space.
+            discretized object. Its `TensorSpace.shape` must be equal
+            to ``partition.shape``, and its `TensorSpace.field` must
+            match ``fspace.field``.
         schemes : string or sequence of strings
             Indicates which interpolation scheme to use for which axis.
             A single string is interpreted as a global scheme for all
@@ -568,19 +495,11 @@ class PerAxisInterpolation(FunctionSetMapping):
             as a global variant for all axes.
             This option has no effect for schemes other than nearest
             neighbor.
-            Default: 'left'
-        order : {'C', 'F'}, optional
-            Ordering of the axes in the data storage. 'C' means the
-            first axis varies slowest, the last axis fastest;
-            vice versa for 'F'.
-            Default: 'C'
         """
-        if not isinstance(fspace, FunctionSpace):
-            raise TypeError('`fspace` {!r} is not a `FunctionSpace` '
-                            'instance'.format(fspace))
-
-        FunctionSetMapping.__init__(self, 'interpolation', fspace, partition,
-                                    dspace, linear=True, **kwargs)
+        if getattr(fspace, 'field', None) is None:
+            raise TypeError('`fspace.field` cannot be `None`')
+        FunctionSpaceMapping.__init__(self, 'interpolation', fspace, partition,
+                                      dspace, linear=True)
 
         try:
             schemes_ = str(schemes + '').lower()  # pythonic string check
@@ -589,18 +508,17 @@ class PerAxisInterpolation(FunctionSetMapping):
             schemes_ = [str(scm).lower() if scm is not None else None
                         for scm in schemes]
 
-        nn_variants = kwargs.pop('nn_variants', None)
-        if nn_variants is None:
-            variants_ = ['left' if scm == 'nearest' else None
-                         for scm in schemes]
+        try:
+            nn_variants + ''
+        except TypeError:
+            # No string
+            variants_ = [str(var).lower() if var is not None else None
+                         for var in nn_variants]
         else:
-            try:
-                variants_ = str(nn_variants + '').lower()  # pythonic str check
-                variants_ = [variants_ if scm == 'nearest' else None
-                             for scm in schemes]
-            except TypeError:
-                variants_ = [str(var).lower() if var is not None else None
-                             for var in nn_variants]
+            # String
+            variant = str(nn_variants).lower()
+            variants_ = [variant if scm == 'nearest' else None
+                         for scm in schemes_]
 
         for i, (scm, var) in enumerate(zip(schemes_, variants_)):
             if scm not in _SUPPORTED_INTERP_SCHEMES:
@@ -631,7 +549,7 @@ class PerAxisInterpolation(FunctionSetMapping):
 
         Parameters
         ----------
-        x : `FnBaseVector`
+        x : `Tensor`
             The array of values to be interpolated
         out : `FunctionSpaceElement`, optional
             Element in which to store the interpolator
@@ -651,8 +569,7 @@ class PerAxisInterpolation(FunctionSetMapping):
                 input_type = 'array'
 
             interpolator = _PerAxisInterpolator(
-                self.grid.coord_vectors,
-                x.asarray().reshape(self.grid.shape, order=self.order),
+                self.grid.coord_vectors, x,
                 schemes=self.schemes, nn_variants=self.nn_variants,
                 input_type=input_type)
 
@@ -667,23 +584,29 @@ class PerAxisInterpolation(FunctionSetMapping):
         else:
             schemes = self.schemes
 
-        inner_str = '\n {!r},\n {!r},\n {!r},\n {!r}'.format(
-            self.range, self.grid, self.domain, schemes)
-        sep = '\n, '
-        if self.order != 'C':
-            inner_str += sep + "order='{}'".format(self.order)
-            sep = ', '
+        posargs = [self.range, self.grid, self.domain, schemes]
 
-        if all(var == self.nn_variants[0] for var in self.nn_variants):
-            variants = self.nn_variants[0]
+        nontriv_var = None
+        for var in self.nn_variants:
+            if var is not None:
+                nontriv_var = var
+                break
+
+        if nontriv_var is None:
+            variants = 'left'
+        elif all(var == nontriv_var
+                 for var in self.nn_variants
+                 if var is not None):
+            variants = nontriv_var
         else:
             variants = self.nn_variants
-            sep = ',\n '
 
-        if variants is not None:
-            inner_str += sep + 'nn_variants={}'.format(variants)
+        optargs = [('nn_variants', variants, 'left')]
 
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        inner_str = signature_string(posargs, optargs,
+                                     sep=[',\n', ', ', ',\n'],
+                                     mod=['!r', ''])
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
 
 
 class _Interpolator(object):

@@ -19,6 +19,7 @@ import numpy as np
 from odl.discr.lp_discr import DiscreteLp
 from odl.operator.tensor_ops import PointwiseTensorFieldOperator
 from odl.space import ProductSpace
+from odl.util import writable_array
 
 
 __all__ = ('PartialDerivative', 'Gradient', 'Divergence', 'Laplacian')
@@ -100,10 +101,11 @@ class PartialDerivative(PointwiseTensorFieldOperator):
         ...               [ 0.,  2.,  4.,  6.,  8.]])
         >>> discr = odl.uniform_discr([0, 0], [2, 1], f.shape)
         >>> par_deriv = PartialDerivative(discr, axis=0, pad_mode='order1')
-        >>> par_div_f = par_deriv(f)
-        >>> print(par_div_f)
-        [[0.0, 1.0, 2.0, 3.0, 4.0],
-         [0.0, 1.0, 2.0, 3.0, 4.0]]
+        >>> par_deriv(f)
+        uniform_discr([0.0, 0.0], [2.0, 1.0], (2, 5)).element(
+            [[ 0.,  1.,  2.,  3.,  4.],
+             [ 0.,  1.,  2.,  3.,  4.]]
+        )
         """
         if not isinstance(space, DiscreteLp):
             raise TypeError('`space` {!r} is not a DiscreteLp instance'
@@ -134,13 +136,10 @@ class PartialDerivative(PointwiseTensorFieldOperator):
             out = self.range.element()
 
         # TODO: this pipes CUDA arrays through NumPy. Write native operator.
-        out_arr = out.asarray()
-        finite_diff(x.asarray(), out=out_arr, axis=self.axis, dx=self.dx,
-                    method=self.method, pad_mode=self.pad_mode,
-                    pad_const=self.pad_const)
-
-        # self assignment: no overhead in the case out_arr is a view
-        out[:] = out_arr
+        with writable_array(out) as out_arr:
+            finite_diff(x.asarray(), axis=self.axis, dx=self.dx,
+                        method=self.method, pad_mode=self.pad_mode,
+                        pad_const=self.pad_const, out=out_arr)
         return out
 
     def derivative(self, point=None):
@@ -255,20 +254,26 @@ class Gradient(PointwiseTensorFieldOperator):
         >>> f = discr.element(data)
         >>> grad = Gradient(discr)
         >>> grad_f = grad(f)
-        >>> print(grad_f[0])
-        [[0.0, 1.0, 2.0, 3.0, 4.0],
-         [0.0, -2.0, -4.0, -6.0, -8.0]]
-        >>> print(grad_f[1])
-        [[1.0, 1.0, 1.0, 1.0, -4.0],
-         [2.0, 2.0, 2.0, 2.0, -8.0]]
+        >>> grad_f[0]
+        uniform_discr([0.0, 0.0], [2.0, 5.0], (2, 5)).element(
+            [[ 0.,  1.,  2.,  3.,  4.],
+             [ 0., -2., -4., -6., -8.]]
+        )
+        >>> grad_f[1]
+        uniform_discr([0.0, 0.0], [2.0, 5.0], (2, 5)).element(
+            [[ 1.,  1.,  1.,  1., -4.],
+             [ 2.,  2.,  2.,  2., -8.]]
+        )
 
         Verify adjoint:
 
         >>> g = grad.range.element((data, data ** 2))
         >>> adj_g = grad.adjoint(g)
-        >>> print(adj_g)
-        [[0.0, -2.0, -5.0, -8.0, -11.0],
-         [0.0, -5.0, -14.0, -23.0, -32.0]]
+        >>> adj_g
+        uniform_discr([0.0, 0.0], [2.0, 5.0], (2, 5)).element(
+            [[ -0.,  -2.,  -5.,  -8., -11.],
+             [ -0.,  -5., -14., -23., -32.]]
+        )
         >>> g.inner(grad_f) / f.inner(adj_g)
         1.0
         """
@@ -442,9 +447,9 @@ class Divergence(PointwiseTensorFieldOperator):
         >>> f = div.domain.element([data, data])
         >>> div_f = div(f)
         >>> print(div_f)
-        [[2.0, 2.0, 2.0, 2.0, -3.0],
-         [2.0, 2.0, 2.0, 2.0, -4.0],
-         [-1.0, -2.0, -3.0, -4.0, -12.0]]
+        [[  2.,   2.,   2.,   2.,  -3.],
+         [  2.,   2.,   2.,   2.,  -4.],
+         [ -1.,  -2.,  -3.,  -4., -12.]]
 
         Verify adjoint:
 
@@ -492,7 +497,7 @@ class Divergence(PointwiseTensorFieldOperator):
         dx = self.range.cell_sides
 
         out_arr = out.asarray()
-        tmp = np.empty(out.shape, out.dtype, order=out.space.order)
+        tmp = np.empty(out.shape, out.dtype, order=out.space.default_order)
         for axis in range(ndim):
             finite_diff(x[axis], axis=axis, dx=dx[axis], method=self.method,
                         pad_mode=self.pad_mode,
@@ -595,10 +600,12 @@ class Laplacian(PointwiseTensorFieldOperator):
         >>> space = odl.uniform_discr([0, 0], [3, 3], [3, 3])
         >>> f = space.element(data)
         >>> lap = Laplacian(space)
-        >>> print(lap(f))
-        [[0.0, 1.0, 0.0],
-         [1.0, -4.0, 1.0],
-         [0.0, 1.0, 0.0]]
+        >>> lap(f)
+        uniform_discr([0.0, 0.0], [3.0, 3.0], (3, 3)).element(
+            [[ 0.,  1.,  0.],
+             [ 1., -4.,  1.],
+             [ 0.,  1.,  0.]]
+        )
         """
         if not isinstance(space, DiscreteLp):
             raise TypeError('`space` {!r} is not a DiscreteLp instance'
@@ -627,7 +634,7 @@ class Laplacian(PointwiseTensorFieldOperator):
 
         x_arr = x.asarray()
         out_arr = out.asarray()
-        tmp = np.empty(out.shape, out.dtype, order=out.space.order)
+        tmp = np.empty(out.shape, out.dtype, order=out.space.default_order)
 
         ndim = self.domain.ndim
         dx = self.domain.cell_sides

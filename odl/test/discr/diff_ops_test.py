@@ -29,10 +29,11 @@ padding = simple_fixture('padding', [('constant', 0), ('constant', 1),
 
 
 @pytest.fixture(scope="module", params=[1, 2, 3], ids=['1d', '2d', '3d'])
-def space(request, fn_impl):
+def space(request, tspace_impl):
     ndim = request.param
 
-    return odl.uniform_discr([0] * ndim, [1] * ndim, [5] * ndim, impl=fn_impl)
+    return odl.uniform_discr([0] * ndim, [1] * ndim, [5] * ndim,
+                             impl=tspace_impl)
 
 
 # Test data
@@ -241,7 +242,7 @@ def test_part_deriv(space, method, padding):
                            pad_const=pad_const)
 
         partial_vec = partial(dom_vec)
-        assert all_almost_equal(partial_vec.asarray(), diff)
+        assert all_almost_equal(partial_vec, diff)
 
         # Test adjoint operator
         derivative = partial.derivative()

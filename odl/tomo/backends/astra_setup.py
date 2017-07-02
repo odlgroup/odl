@@ -506,7 +506,7 @@ def astra_data(astra_geom, datatype, data=None, ndim=2, allow_copy=False):
         else:
             if isinstance(data, np.ndarray):
                 return link(astra_dtype_str, astra_geom, data)
-            elif data.ntuple.impl == 'numpy':
+            elif data.tensor.impl == 'numpy':
                 return link(astra_dtype_str, astra_geom, data.asarray())
             else:
                 # Something else than NumPy data representation

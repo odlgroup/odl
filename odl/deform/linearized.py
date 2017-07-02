@@ -76,8 +76,10 @@ def _linear_deform(template, displacement, out=None):
     """
     image_pts = template.space.points()
     for i, vi in enumerate(displacement):
-        image_pts[:, i] += vi.ntuple.asarray()
-    return template.interpolation(image_pts.T, out=out, bounds_check=False)
+        image_pts[:, i] += vi.asarray().ravel(order=vi.order)
+    values = template.interpolation(image_pts.T, out=out, bounds_check=False)
+    return values.reshape(displacement.space[0].shape,
+                          order=displacement.space[0].order)
 
 
 class LinDeformFixedTempl(Operator):
@@ -136,7 +138,7 @@ class LinDeformFixedTempl(Operator):
             It must fulfill
             ``domain[0].partition == template.space.partition``, so
             this option is useful mainly when using different interpolations
-            in the displacement and template.
+            in displacement and template.
             Default: ``template.space.real_space.tangent_bundle``
 
         Examples
@@ -152,7 +154,7 @@ class LinDeformFixedTempl(Operator):
         >>> op = LinDeformFixedTempl(template)
         >>> disp_field = [[0, 0, 0, -0.2, 0]]
         >>> print(op(disp_field))
-        [0.0, 0.0, 1.0, 1.0, 0.0]
+        [ 0.,  0.,  1.,  1.,  0.]
 
         The result depends on the chosen interpolation. With 'linear'
         interpolation and an offset equal to half the distance between two
@@ -163,7 +165,7 @@ class LinDeformFixedTempl(Operator):
         >>> op = LinDeformFixedTempl(template)
         >>> disp_field = [[0, 0, 0, -0.1, 0]]
         >>> print(op(disp_field))
-        [0.0, 0.0, 1.0, 0.5, 0.0]
+        [ 0. ,  0. ,  1. ,  0.5,  0. ]
         """
         space = getattr(template, 'space', None)
         if not isinstance(space, DiscreteLp):
@@ -218,7 +220,7 @@ class LinDeformFixedTempl(Operator):
         """
         # To implement the complex case we need to be able to embed the real
         # vector field space into the range of the gradient. Issue #59.
-        if not self.range.is_rn:
+        if not self.range.is_real_space:
             raise NotImplementedError('derivative not implemented for complex '
                                       'spaces.')
 
@@ -305,7 +307,7 @@ class LinDeformFixedDisp(Operator):
         >>> op = LinDeformFixedDisp(disp_field)
         >>> template = [0, 0, 1, 0, 0]
         >>> print(op([0, 0, 1, 0, 0]))
-        [0.0, 0.0, 1.0, 1.0, 0.0]
+        [ 0.,  0.,  1.,  1.,  0.]
 
         The result depends on the chosen interpolation. With 'linear'
         interpolation and an offset equal to half the distance between two
@@ -316,7 +318,7 @@ class LinDeformFixedDisp(Operator):
         >>> op = LinDeformFixedDisp(disp_field)
         >>> template = [0, 0, 1, 0, 0]
         >>> print(op(template))
-        [0.0, 0.0, 1.0, 0.5, 0.0]
+        [ 0. ,  0. ,  1. ,  0.5,  0. ]
         """
         space = getattr(displacement, 'space', None)
         if not isinstance(space, ProductSpace):

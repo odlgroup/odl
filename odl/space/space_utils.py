@@ -13,18 +13,17 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-__all__ = ('vector', 'ntuples', 'fn', 'cn', 'rn')
-
 import numpy as np
 
 from odl.set import RealNumbers, ComplexNumbers
-from odl.space.entry_points import NTUPLES_IMPLS, FN_IMPLS
-from odl.util import (
-    is_real_floating_dtype, is_complex_floating_dtype, is_scalar_dtype)
+from odl.space.entry_points import TENSOR_SPACE_IMPLS
 
 
-def vector(array, dtype=None, impl='numpy'):
-    """Create an n-tuples type vector from an array.
+__all__ = ('vector', 'tensor_space', 'cn', 'rn')
+
+
+def vector(array, dtype=None, order=None, impl='numpy'):
+    """Create a vector from an array-like object.
 
     Parameters
     ----------
@@ -34,13 +33,18 @@ def vector(array, dtype=None, impl='numpy'):
     dtype : optional
         Set the data type of the vector manually with this option.
         By default, the space type is inferred from the input data.
-    impl : string, optional
-        The backend to use. See `odl.space.entry_points.NTUPLES_IMPLS` and
-        `odl.space.entry_points.FN_IMPLS` for available options.
+    order : {None, 'A', 'C', 'F'}, optional
+        Axis ordering of the data storage. ``'A'`` will try not to
+        modify the memory layout of ``array``.
+        For the default ``None``, the default order of the space
+        associated with ``impl`` is used.
+    impl : str, optional
+        Impmlementation back-end for the vector. See
+        `odl.space.entry_points.TENSOR_SPACE_IMPLS` for available options.
 
     Returns
     -------
-    vec : `NtuplesBaseVector`
+    vector : `Tensor`
         Vector created from the input array. Its concrete type depends
         on the provided arguments.
 
@@ -51,30 +55,33 @@ def vector(array, dtype=None, impl='numpy'):
 
     Examples
     --------
-    >>> vector([1, 2, 3])  # No automatic cast to float
-    fn(3, 'int').element([1, 2, 3])
-    >>> vector([1, 2, 3], dtype=float)
-    rn(3).element([1.0, 2.0, 3.0])
-    >>> vector([1 + 1j, 2, 3 - 2j])
-    cn(3).element([(1+1j), (2+0j), (3-2j)])
+    Create one-dimensional vectors:
+
+    >>> odl.vector([1, 2, 3])  # No automatic cast to float
+    tensor_space(3, 'int').element([1, 2, 3])
+    >>> odl.vector([1, 2, 3], dtype=float)
+    rn(3).element([ 1.,  2.,  3.])
+    >>> odl.vector([1, 2 - 1j, 3])
+    cn(3).element([ 1.+0.j,  2.-1.j,  3.+0.j])
 
     Non-scalar types are also supported:
 
-    >>> vector([True, False])
-    ntuples(2, 'bool').element([True, False])
+    >>> odl.vector([True, True, False])
+    tensor_space(3, 'bool').element([ True,  True, False])
 
-    Scalars become a one-element vector:
+    The function also supports multi-dimensional input:
 
-    >>> vector(0.0)
-    rn(1).element([0.0])
+    >>> odl.vector([[1, 2, 3],
+    ...             [4, 5, 6]])
+    tensor_space((2, 3), 'int').element(
+        [[1, 2, 3],
+         [4, 5, 6]]
+    )
     """
     # Sanitize input
-    arr = np.array(array, copy=False, ndmin=1)
-
-    # Validate input
-    if arr.ndim > 1:
-        raise ValueError('array has {} dimensions, expected 1'
-                         ''.format(arr.ndim))
+    arr = np.array(array, copy=False, order=order, ndmin=1)
+    if arr.dtype is object:
+        raise ValueError('invalid input data resulting in `dtype==object`')
 
     # Set dtype
     if dtype is not None:
@@ -82,169 +89,211 @@ def vector(array, dtype=None, impl='numpy'):
     else:
         space_dtype = arr.dtype
 
-    # Select implementation
-    if space_dtype is None or is_scalar_dtype(space_dtype):
-        space_type = fn
-    else:
-        space_type = ntuples
-
-    return space_type(len(arr), dtype=space_dtype, impl=impl).element(arr)
+    kwargs = {'order', order} if order is not None else {}
+    space = tensor_space(arr.shape, dtype=space_dtype, impl=impl, **kwargs)
+    return space.element(arr)
 
 
-def ntuples(size, dtype, impl='numpy', **kwargs):
-    """Set of tuples of a fixed size.
+def tensor_space(shape, dtype=None, order='A', impl='numpy', **kwargs):
+    """Return a tensor space with arbitrary scalar data type.
 
     Parameters
     ----------
-    size : positive int
-        The number of dimensions of the space
-    dtype : `object`
-        The data type of the storage array. Can be provided in any
-        way the `numpy.dtype` function understands, most notably
-        as built-in type, as one of NumPy's internal datatype
-        objects or as string.
-
-        Only complex floating-point data types are allowed.
-    impl : string, optional
-        The backend to use. See `odl.space.entry_points.NTUPLES_IMPLS` for
-        available options.
+    shape : positive int or sequence of positive ints
+        Number of entries per axis for elements in this space. A
+        single integer results in a space with 1 axis.
+    dtype : optional
+        Data type of each element. Can be provided in any way the
+        `numpy.dtype` function understands, e.g. as built-in type or
+        as a string.
+        For ``None``, the `TensorSpace.default_dtype` of the
+        created space is used.
+    order : {'A', 'C', 'F'}, optional
+        Axis ordering of the data storage. Only relevant for more
+        than 1 axis.
+        For ``'C'`` and ``'F'``, elements are forced to use
+        contiguous memory in the respective ordering.
+        For ``'A'`` ("any") no contiguousness is enforced.
+    impl : str, optional
+        Impmlementation back-end for the space. See
+        `odl.space.entry_points.TENSOR_SPACE_IMPLS` for available options.
     kwargs :
-        Extra keyword arguments to pass to the implmentation.
+        Extra keyword arguments passed to the space constructor.
 
     Returns
     -------
-    ntuple : `NtuplesBase`
+    space : `TensorSpace`
+
+    Examples
+    --------
+    Space of 3-tuples with ``int64`` entries (although not strictly a
+    vector space):
+
+    >>> odl.tensor_space(3, dtype='int64')
+    tensor_space(3, 'int')
+
+    2x3 tensors with same data type:
+
+    >>> odl.tensor_space((2, 3), dtype='int64')
+    tensor_space((2, 3), 'int')
+
+    The default data type depends on the implementation. For
+    ``impl='numpy'``, it is ``'float64'``:
+
+    >>> ts = odl.tensor_space((2, 3))
+    >>> ts
+    rn((2, 3))
+    >>> ts.dtype
+    dtype('float64')
 
     See Also
     --------
-    fn : n-tuples over a field with arbitrary scalar data type.
+    rn : Real tensor space.
+    cn : Complex tensor space.
     """
-    return NTUPLES_IMPLS[impl](size, dtype, **kwargs)
-
-
-def fn(size, dtype=None, impl='numpy', **kwargs):
-    """Return the space ``F^n`` for arbitrary field ``F``.
-
-    Parameters
-    ----------
-    size : positive int
-        The number of dimensions of the space
-    dtype : `object`, optional
-        The data type of the storage array. Can be provided in any
-        way the `numpy.dtype` function understands, most notably
-        as built-in type, as one of NumPy's internal datatype
-        objects or as string.
-
-        Default: default of the implementation given by calling
-        ``default_dtype()`` on the `FnBase` implementation.
-    impl : string, optional
-        The backend to use. See `odl.space.entry_points.FN_IMPLS` for
-        available options.
-    kwargs :
-        Extra keyword arguments to pass to the implmentation.
-
-    Returns
-    -------
-    fn : `FnBase`
-
-    See Also
-    --------
-    ntuples : n-tuples over a field with arbitrary data type.
-    """
-    fn_impl = FN_IMPLS[impl]
+    space_constr = TENSOR_SPACE_IMPLS[impl]
 
     if dtype is None:
-        dtype = fn_impl.default_dtype()
+        dtype = space_constr.default_dtype()
 
-    fn = fn_impl(size, dtype, **kwargs)
-
-    return fn
+    return space_constr(shape, dtype=dtype, order=order, **kwargs)
 
 
-def cn(size, dtype=None, impl='numpy', **kwargs):
-    """Return the complex vector space ``C^n``.
+def cn(shape, dtype=None, order='A', impl='numpy', **kwargs):
+    """Return a space of complex tensors.
 
     Parameters
     ----------
-    size : positive int
-        The number of dimensions of the space
-    dtype : `object`, optional
-        The data type of the storage array. Can be provided in any
-        way the `numpy.dtype` function understands, most notably
-        as built-in type, as one of NumPy's internal datatype
-        objects or as string.
-
-        Only complex floating-point data types are allowed.
-
-        Default: default of the implementation given by calling
-        ``default_dtype(ComplexNumbers())`` on the `FnBase` implementation.
-    impl : string, optional
-        The backend to use. See `odl.space.entry_points.FN_IMPLS` for
-        available options.
+    shape : positive int or sequence of positive ints
+        Number of entries per axis for elements in this space. A
+        single integer results in a space with 1 axis.
+    dtype : optional
+        Data type of each element. Can be provided in any way the
+        `numpy.dtype` function understands, e.g. as built-in type or
+        as a string. Only complex floating-point data types are allowed.
+        For ``None``, the `TensorSpace.default_dtype` of the
+        created space is used in the form
+        ``default_dtype(ComplexNumbers())``.
+    order : {'A', 'C', 'F'}, optional
+        Axis ordering of the data storage. Only relevant for more
+        than 1 axis.
+        For ``'C'`` and ``'F'``, elements are forced to use
+        contiguous memory in the respective ordering.
+        For ``'A'`` ("any") no contiguousness is enforced.
+    impl : str, optional
+        Impmlementation back-end for the space. See
+        `odl.space.entry_points.TENSOR_SPACE_IMPLS` for available options.
     kwargs :
-        Extra keyword arguments to pass to the implmentation.
+        Extra keyword arguments passed to the space constructor.
 
     Returns
     -------
-    cn : `FnBase`
+    cn : `TensorSpace`
+
+    Examples
+    --------
+    Space of complex 3-tuples with ``complex64`` entries:
+
+    >>> odl.cn(3, dtype='complex64')
+    cn(3, 'complex64')
+
+    Complex 2x3 tensors with ``complex64`` entries:
+
+    >>> odl.cn((2, 3), dtype='complex64')
+    cn((2, 3), 'complex64')
+
+    The default data type depends on the implementation. For
+    ``impl='numpy'``, it is ``'complex128'``:
+
+    >>> space = odl.cn((2, 3))
+    >>> space
+    cn((2, 3))
+    >>> space.dtype
+    dtype('complex128')
 
     See Also
     --------
-    fn : n-tuples over a field with arbitrary scalar data type.
+    tensor_space : Space of tensors with arbitrary scalar data type.
+    rn : Real tensor space.
     """
-    cn_impl = FN_IMPLS[impl]
+    cn_constr = TENSOR_SPACE_IMPLS[impl]
 
     if dtype is None:
-        dtype = cn_impl.default_dtype(ComplexNumbers())
+        dtype = cn_constr.default_dtype(ComplexNumbers())
 
-    cn = cn_impl(size, dtype, **kwargs)
-
-    if not cn.is_cn:
-        raise TypeError('data type {!r} not a complex floating-point type.'
-                        ''.format(dtype))
+    cn = cn_constr(shape, dtype=dtype, order=order, **kwargs)
+    if not cn.is_complex_space:
+        raise ValueError('data type {!r} not a complex floating-point type'
+                         ''.format(dtype))
     return cn
 
 
-def rn(size, dtype=None, impl='numpy', **kwargs):
-    """Return the real vector space ``R^n``.
+def rn(shape, dtype=None, order='A', impl='numpy', **kwargs):
+    """Return a space of real tensors.
 
     Parameters
     ----------
-    size : positive int
-        The number of dimensions of the space
-    dtype : `object`, optional
-        The data type of the storage array. Can be provided in any
-        way the `numpy.dtype` function understands, most notably
-        as built-in type, as one of NumPy's internal datatype
-        objects or as string.
-
-        Only real floating-point data types are allowed.
-        Default: default of the implementation given by calling
-        ``default_dtype(RealNumbers())`` on the `FnBase` implementation.
-    impl : string, optional
-        The backend to use. See `odl.space.entry_points.FN_IMPLS` for
-        available options.
+    shape : positive int or sequence of positive ints
+        Number of entries per axis for elements in this space. A
+        single integer results in a space with 1 axis.
+    dtype : optional
+        Data type of each element. Can be provided in any way the
+        `numpy.dtype` function understands, e.g. as built-in type or
+        as a string. Only real floating-point data types are allowed.
+        For ``None``, the `TensorSpace.default_dtype` of the
+        created space is used in the form
+        ``default_dtype(RealNumbers())``.
+    order : {'A', 'C', 'F'}, optional
+        Axis ordering of the data storage. Only relevant for more
+        than 1 axis.
+        For ``'C'`` and ``'F'``, elements are forced to use
+        contiguous memory in the respective ordering.
+        For ``'A'`` ("any") no contiguousness is enforced.
+    impl : str, optional
+        Impmlementation back-end for the space. See
+        `odl.space.entry_points.TENSOR_SPACE_IMPLS` for available options.
     kwargs :
-        Extra keyword arguments to pass to the implmentation.
+        Extra keyword arguments passed to the space constructor.
 
     Returns
     -------
-    rn : `FnBase`
+    real_space : `TensorSpace`
+
+    Examples
+    --------
+    Space of real 3-tuples with ``float32`` entries:
+
+    >>> odl.rn(3, dtype='float32')
+    rn(3, 'float32')
+
+    Real 2x3 tensors with ``float32`` entries:
+
+    >>> odl.rn((2, 3), dtype='float32')
+    rn((2, 3), 'float32')
+
+    The default data type depends on the implementation. For
+    ``impl='numpy'``, it is ``'float64'``:
+
+    >>> ts = odl.rn((2, 3))
+    >>> ts
+    rn((2, 3))
+    >>> ts.dtype
+    dtype('float64')
 
     See Also
     --------
-    fn : n-tuples over a field with arbitrary scalar data type.
+    tensor_space : Space of tensors with arbitrary scalar data type.
+    cn : Complex tensor space.
     """
-    rn_impl = FN_IMPLS[impl]
+    rn_constr = TENSOR_SPACE_IMPLS[impl]
 
     if dtype is None:
-        dtype = rn_impl.default_dtype(RealNumbers())
+        dtype = rn_constr.default_dtype(RealNumbers())
 
-    rn = rn_impl(size, dtype, **kwargs)
-
-    if not rn.is_rn:
-        raise TypeError('data type {!r} not a real floating-point type.'
-                        ''.format(dtype))
+    rn = rn_constr(shape, dtype=dtype, order=order, **kwargs)
+    if not rn.is_real_space:
+        raise ValueError('data type {!r} not a real floating-point type'
+                         ''.format(dtype))
     return rn
 
 

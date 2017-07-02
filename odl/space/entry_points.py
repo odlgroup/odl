@@ -8,27 +8,24 @@
 
 """Entry points for adding more spaces to ODL using external packages.
 
-External packages can add implementations of `NtuplesBase` and `FnBase` by
-hooking into the setuptools entry point ``'odl.space'`` and exposing the
-methods ``ntuples_impls`` and ``fn_impls``.
+External packages can add an implementation of `TensorSpace` by hooking
+into the setuptools entry point ``'odl.space'`` and exposing the method
+``tensor_space_impls``.
 
 
 Attributes
 ----------
-NTUPLES_IMPLS: dict
-    A dictionary that maps a string to an `NtuplesBase` implementation.
-FN_IMPLS: dict
-    A dictionary that maps a string to an `FnBase` implementation.
+TENSOR_SPACE_IMPLS: dict
+    A dictionary that maps a string to a `TensorSpace` implementation.
 
 Notes
 -----
-This is used with functions such as `rn`, `fn` and `uniform_discr` in order
-to allow arbitrary implementations.
+This is used with functions such as `rn`, `cn`, `tensor_space` or
+`uniform_discr` in order to allow arbitrary implementations.
 
 See Also
 --------
-NumpyFn : Numpy based implementation of `FnBase`
-NumpyNtuples : Numpy based implementation of `NtuplesBase`
+NumpyTensorSpace : Numpy based implementation of `TensorSpace`
 """
 
 # Imports for common Python 2/3 codebase
@@ -37,16 +34,15 @@ from future import standard_library
 standard_library.install_aliases()
 
 from pkg_resources import iter_entry_points
-from odl.space.npy_ntuples import NumpyNtuples, NumpyFn
+from odl.space.npy_tensors import NumpyTensorSpace
 
-__all__ = ('NTUPLES_IMPLS', 'FN_IMPLS')
+__all__ = ()
 
-NTUPLES_IMPLS = {'numpy': NumpyNtuples}
-FN_IMPLS = {'numpy': NumpyFn}
+
+TENSOR_SPACE_IMPLS = {'numpy': NumpyTensorSpace}
 for entry_point in iter_entry_points(group='odl.space', name=None):
     try:
         module = entry_point.load()
-        NTUPLES_IMPLS.update(module.ntuples_impls())
-        FN_IMPLS.update(module.fn_impls())
+        TENSOR_SPACE_IMPLS.update(module.tensor_space_impls())
     except ImportError:
         pass
