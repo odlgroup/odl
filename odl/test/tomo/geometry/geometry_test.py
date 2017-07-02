@@ -615,5 +615,74 @@ def test_helical_cone_flat_props(shift):
     assert repr(geom)
 
 
+def test_cone_beam_geometry_helper():
+    """Test that cone_beam_geometry satisfies the sampling conditions."""
+    # --- 2d case ---
+    space = odl.uniform_discr([-1, -1], [1, 1], [20, 20])
+    src_radius = 3
+    det_radius = 9
+    magnification = (src_radius + det_radius) / src_radius
+    geometry = odl.tomo.cone_beam_geometry(space, src_radius, det_radius)
+
+    rho = np.sqrt(2)
+    omega = np.pi * 10.0
+    r = src_radius + det_radius
+
+    # Validate angles
+    assert geometry.motion_partition.is_uniform
+    assert pytest.approx(geometry.motion_partition.extent, 2 * np.pi)
+    assert (geometry.motion_partition.cell_sides <=
+            (r + rho) / r * np.pi / (rho * omega))
+
+    # Validate detector
+    det_width = 2 * magnification * rho
+    R = np.hypot(r, det_width / 2)
+    assert geometry.det_partition.cell_sides <= np.pi * R / (r * omega)
+    assert pytest.approx(geometry.det_partition.extent, det_width)
+
+    # Short scan option
+    fan_angle = 2 * np.arctan(det_width / (2 * r))
+    geometry = odl.tomo.cone_beam_geometry(space, src_radius, det_radius,
+                                           short_scan=True)
+    assert pytest.approx(geometry.motion_params.extent, np.pi + fan_angle)
+
+    # --- 3d case ---
+
+    space = odl.uniform_discr([-1, -1, 0], [1, 1, 2], [20, 20, 40])
+    geometry = odl.tomo.cone_beam_geometry(space, src_radius, det_radius)
+
+    # Validate angles
+    assert geometry.motion_partition.is_uniform
+    assert pytest.approx(geometry.motion_partition.extent, 2 * np.pi)
+    assert (geometry.motion_partition.cell_sides <=
+            (r + rho) / r * np.pi / (rho * omega))
+
+    # Validate detector
+    assert np.all(geometry.det_partition.cell_sides <= np.pi * R / (r * omega))
+    rho_vert = np.sqrt(6)  # sqrt(2^2 + 1^2 + 1^2)
+    det_height = 2 * magnification * rho_vert
+    assert np.all(geometry.det_partition.extent >= [det_width, det_height])
+
+    # --- offset geometry (2d) ---
+
+    space = odl.uniform_discr([0, 0], [2, 2], [20, 20])
+    geometry = odl.tomo.cone_beam_geometry(space, src_radius, det_radius)
+
+    rho = np.sqrt(2) * 2
+    omega = np.pi * 10.0
+
+    # Validate angles
+    assert geometry.motion_partition.is_uniform
+    assert pytest.approx(geometry.motion_partition.extent, 2 * np.pi)
+    assert (geometry.motion_partition.cell_sides <=
+            (r + rho) / r * np.pi / (rho * omega))
+
+    # Validate detector
+    det_width = 2 * magnification * rho
+    R = np.hypot(r, det_width / 2)
+    assert geometry.det_partition.cell_sides <= np.pi * R / (r * omega)
+    assert pytest.approx(geometry.det_partition.extent, det_width)
+
+
 if __name__ == '__main__':
     pytest.main([str(__file__.replace('\\', '/')), '-v'])
