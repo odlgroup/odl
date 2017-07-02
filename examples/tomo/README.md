@@ -10,7 +10,6 @@ Example | Purpose | Complexity
 ------- | ------- | ----------
 [`ray_trafo_parallel_2d.py`](ray_trafo_parallel_2d.py) | Projection and back-projection in 2D parallel beam geometry | middle
 [`ray_trafo_parallel_2d_complex.py`](ray_trafo_parallel_2d_complex.py) | Projection and back-projection in 2D parallel beam geometry **with complex-valued data** | middle
-[`skimage_ray_trafo_parallel_2d.py`](skimage_ray_trafo_parallel_2d.py) | Projection and back-projection in 2D parallel beam geometry **using the `scikit-image` back-end** | middle
 [`ray_trafo_fanflat.py`](ray_trafo_fanflat.py) | Projection and back-projection in 2D fan beam geometry | middle
 
 ### 3D
