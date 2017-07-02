@@ -82,6 +82,7 @@ class Geometry(object):
                                  ''.format(self.ndim, translation.shape))
             self.__translation = translation
 
+        # Cache geometry-related objects for backends that require computation
         self.__implementation_cache = {}
 
     @property

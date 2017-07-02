@@ -191,7 +191,6 @@ def astra_cpu_back_projector(proj_data, geometry, reco_space, out=None):
                               impl='cpu')
 
     # Convert out to correct dtype and order if needed.
-    # Since we transpose, we need to use F-contiguousness.
     with writable_array(out, dtype='float32', order='C') as out_arr:
         vol_id = astra_data(vol_geom, datatype='volume', data=out_arr,
                             ndim=reco_space.ndim)

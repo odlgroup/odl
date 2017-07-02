@@ -134,8 +134,8 @@ def projector(request):
         n_angle = 2000
         apart = odl.uniform_partition(0, 8 * 2 * np.pi, n_angle)
         dpart = odl.uniform_partition([-50, -4], [50, 4], [200, 20])
-        geom = tomo.ConeFlatGeometry(apart, dpart, pitch=5.0,
-                                     src_radius=100, det_radius=100)
+        geom = tomo.ConeFlatGeometry(
+            apart, dpart, src_radius=100, det_radius=100, pitch=5.0)
 
         # Windowed ray transform
         return tomo.RayTransform(discr_reco_space, geom, impl=impl)

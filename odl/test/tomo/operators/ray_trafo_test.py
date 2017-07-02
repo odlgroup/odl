@@ -268,6 +268,7 @@ def test_angles(projector):
     result = projector(vol).asarray()
 
     # Find the angle where the projection has a maximum (along the line).
+    # TODO: center of mass would be more robust
     axes = 1 if projector.domain.ndim == 2 else (1, 2)
     ind_angle = np.argmax(np.max(result, axis=axes))
     # Restrict to [0, 2 * pi) for helical

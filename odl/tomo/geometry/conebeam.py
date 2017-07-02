@@ -64,10 +64,14 @@ class FanFlatGeometry(DivergentBeamGeometry):
         src_radius : nonnegative float
             Radius of the source circle.
         det_radius : nonnegative float
-            Radius of the detector circle.
+            Radius of the detector circle. Must be nonzero if ``src_radius``
+            is zero.
         src_to_det_init : `array-like` (shape ``(2,)``), optional
             Initial state of the vector pointing from source to detector
             reference point. The zero vector is not allowed.
+
+        Other Parameters
+        ----------------
         det_axis_init : `array-like` (shape ``(2,)``), optional
             Initial axis defining the detector orientation. The default
             depends on ``src_to_det_init``, see Notes.
@@ -218,26 +222,27 @@ class FanFlatGeometry(DivergentBeamGeometry):
 
         Parameters
         ----------
-        apart : 2- or 3-dim. `RectPartition`
-            Partition of the parameter set consisting of 2 or 3
-            Euler angles.
-        dpart : 2-dim. `RectPartition`
-            Partition of the detector parameter set.
+        Parameters
+        ----------
+        apart : 1-dim. `RectPartition`
+            Partition of the angle interval.
+        dpart : 1-dim. `RectPartition`
+            Partition of the detector parameter interval.
         src_radius : nonnegative float
             Radius of the source circle.
         det_radius : nonnegative float
-            Radius of the detector circle.
-        init_matrix : `array_like`, shape ``(3, 3)`` or ``(3, 4)``, optional
-            Transformation matrix whose left ``(3, 3)`` block is multiplied
-            with the default ``src_to_det_init`` and ``det_axes_init`` to
-            determine the new vectors. If present, the fourth column acts
+            Radius of the detector circle. Must be nonzero if ``src_radius``
+            is zero.
+        init_matrix : `array_like`, shape ``(2, 2)`` or ``(2, 3)``, optional
+            Transformation matrix whose left ``(2, 2)`` block is multiplied
+            with the default ``det_pos_init`` and ``det_axis_init`` to
+            determine the new vectors. If present, the third column acts
             as a translation after the initial transformation.
             The resulting ``det_axis_init`` will be normalized.
 
         Returns
         -------
-        geometry : `Parallel3dAxisGeometry`
-            The resulting geometry.
+        geometry : `FanFlatGeometry`
 
         Examples
         --------
@@ -508,9 +513,10 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         src_radius : nonnegative float
             Radius of the source circle.
         det_radius : nonnegative float
-            Radius of the detector circle.
+            Radius of the detector circle. Must be nonzero if ``src_radius``
+            is zero.
         pitch : float, optional
-            Constant vertical distance that a point on the helix
+            Constant distance along ``axis`` that a point on the helix
             traverses when increasing the angle parameter by ``2 * pi``.
             The default case ``pitch=0`` results in a circular cone
             beam geometry.
@@ -712,20 +718,24 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         src_radius : nonnegative float
             Radius of the source circle.
         det_radius : nonnegative float
-            Radius of the detector circle.
-        pitch : float, optional
-            Constant vertical distance that a point on the helix
-            traverses when increasing the angle parameter by ``2 * pi``.
-            The default case ``pitch=0`` results in a circular cone
-            beam geometry.
+            Radius of the detector circle. Must be nonzero if ``src_radius``
+            is zero.
         init_matrix : `array_like`, shape ``(3, 3)`` or ``(3, 4)``, optional
             Transformation matrix whose left ``(3, 3)`` block is multiplied
             with the default ``det_pos_init`` and ``det_axes_init`` to
             determine the new vectors. If present, the fourth column acts
             as a translation after the initial transformation.
             The resulting ``det_axes_init`` will be normalized.
+        pitch : float, optional
+            Constant distance along the rotation axis that a point on the
+            helix traverses when increasing the angle parameter by
+            ``2 * pi``. The default case ``pitch=0`` results in a circular
+            cone beam geometry.
+
+        Other Parameters
+        ----------------
         pitch_offset : float, optional
-            Offset along the ``axis`` at ``angle=0``. Default: 0.
+            Offset along the ``axis`` at angle 0. Default: 0.
 
         Returns
         -------

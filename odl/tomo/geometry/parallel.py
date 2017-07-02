@@ -212,6 +212,9 @@ class Parallel2dGeometry(ParallelBeamGeometry):
             Partition of the detector parameter interval.
         det_pos_init : `array-like`, shape ``(2,)``, optional
             Initial position of the detector reference point.
+
+        Other Parameters
+        ----------------
         det_axis_init : `array-like` (shape ``(2,)``), optional
             Initial axis defining the detector orientation. The default
             depends on ``det_pos_init``, see Notes.
@@ -357,7 +360,6 @@ class Parallel2dGeometry(ParallelBeamGeometry):
         Returns
         -------
         geometry : `Parallel2dGeometry`
-            The resulting geometry.
 
         Examples
         --------
@@ -500,6 +502,9 @@ class Parallel3dEulerGeometry(ParallelBeamGeometry):
             Partition of the detector parameter set.
         det_pos_init : `array-like`, shape ``(3,)``, optional
             Initial position of the detector reference point.
+
+        Other Parameters
+        ----------------
         det_axes_init : 2-tuple of `array-like`'s (shape ``(3,)``), optional
             Initial axes defining the detector orientation. The default
             depends on ``det_pos_init``, see Notes.
@@ -645,7 +650,6 @@ class Parallel3dEulerGeometry(ParallelBeamGeometry):
         Returns
         -------
         geometry : `Parallel3dEulerGeometry`
-            The resulting geometry.
 
         Examples
         --------
@@ -790,6 +794,9 @@ class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
             Partition of the detector parameter rectangle.
         axis : `array-like`, shape ``(3,)``, optional
             Vector defining the fixed rotation axis of this geometry.
+
+        Other Parameters
+        ----------------
         det_pos_init : `array-like`, shape ``(3,)``, optional
             Initial position of the detector reference point.
             The default depends on ``axis``, see Notes.
@@ -956,7 +963,6 @@ class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
         Returns
         -------
         geometry : `Parallel3dAxisGeometry`
-            The resulting geometry.
 
         Examples
         --------

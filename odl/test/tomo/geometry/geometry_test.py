@@ -76,13 +76,17 @@ def test_parallel_2d_props(shift):
     assert all_almost_equal(geom.rotation_matrix(np.pi / 2), [[0, -1],
                                                               [1, 0]])
 
+    # Make sure that the boundary cases are treated as valid
+    geom.det_point_position(0, 0)
+    geom.det_point_position(full_angle, 1)
+
     # Invalid parameter
     with pytest.raises(ValueError):
         geom.rotation_matrix(2 * full_angle)
 
-    # check str and repr work without crashing and return a non-empty string
-    assert str(geom) > ''
-    assert repr(geom) > ''
+    # Check that str and repr work without crashing and return something
+    assert str(geom)
+    assert repr(geom)
 
 
 def test_parallel_2d_orientation(det_pos_init_2d):
@@ -224,6 +228,10 @@ def test_parallel_3d_props(shift):
                              [1, 0, 0],
                              [0, 0, 1]])
 
+    # Make sure that the boundary cases are treated as valid
+    geom.det_point_position(0, [0, 0])
+    geom.det_point_position(full_angle, [1, 1])
+
     # Invalid parameter
     with pytest.raises(ValueError):
         geom.rotation_matrix(2 * full_angle)
@@ -241,9 +249,9 @@ def test_parallel_3d_props(shift):
         odl.tomo.Parallel3dAxisGeometry(
             apart, dpart, det_axes_init=([0, 0, 0], [0, 1, 0]))
 
-    # check str and repr work without crashing and return a non-empty string
-    assert str(geom) > ''
-    assert repr(geom) > ''
+    # Check that str and repr work without crashing and return something
+    assert str(geom)
+    assert repr(geom)
 
 
 def test_parallel_3d_orientation(axis):
@@ -275,8 +283,8 @@ def test_parallel_3d_orientation(axis):
         assert orient == pytest.approx(1)
 
     # check str and repr work without crashing and return a non-empty string
-    assert str(geom) > ''
-    assert repr(geom) > ''
+    assert str(geom)
+    assert repr(geom)
 
 
 def test_parallel_3d_slanted_detector():
@@ -316,9 +324,9 @@ def test_parallel_3d_slanted_detector():
     assert all_almost_equal(geom.det_point_position(np.pi / 2, [1, 1]),
                             true_det_pt)
 
-    # check str and repr work without crashing and return a non-empty string
-    assert str(geom) > ''
-    assert repr(geom) > ''
+    # Check that str and repr work without crashing and return something
+    assert str(geom)
+    assert repr(geom)
 
 
 def test_parallel_3d_frommatrix():
@@ -354,7 +362,10 @@ def test_parallel_3d_frommatrix():
 
 
 def test_parallel_beam_geometry_helper():
-    """Test that parallel_beam_geometry satisfies the sampling conditions."""
+    """Test that parallel_beam_geometry satisfies the sampling conditions.
+
+    See the `parallel_beam_geometry` documentation for the exact conditions.
+    """
     # --- 2d case ---
     space = odl.uniform_discr([-1, -1], [1, 1], [20, 20])
     geometry = odl.tomo.parallel_beam_geometry(space)
@@ -458,6 +469,10 @@ def test_fanflat_props(shift):
     assert all_almost_equal(geom.rotation_matrix(np.pi / 2), [[0, -1],
                                                               [1, 0]])
 
+    # Make sure that the boundary cases are treated as valid
+    geom.det_point_position(0, 0)
+    geom.det_point_position(full_angle, 1)
+
     # Invalid parameter
     with pytest.raises(ValueError):
         geom.rotation_matrix(2 * full_angle)
@@ -466,9 +481,9 @@ def test_fanflat_props(shift):
     with pytest.raises(ValueError):
         odl.tomo.FanFlatGeometry(apart, dpart, src_radius=0, det_radius=0)
 
-    # check str and repr work without crashing and return a non-empty string
-    assert str(geom) > ''
-    assert repr(geom) > ''
+    # Check that str and repr work without crashing and return something
+    assert str(geom)
+    assert repr(geom)
 
 
 def test_fanflat_frommatrix():
@@ -585,6 +600,10 @@ def test_helical_cone_flat_props(shift):
                                      pitch=pitch, pitch_offset=0.5)
     assert all_almost_equal(geom.det_refpoint(0), [0, det_rad, 0.5])
 
+    # Make sure that the boundary cases are treated as valid
+    geom.det_point_position(0, [0, 0])
+    geom.det_point_position(full_angle, [1, 1])
+
     # Invalid parameter
     with pytest.raises(ValueError):
         geom.rotation_matrix(2 * full_angle)
@@ -610,13 +629,16 @@ def test_helical_cone_flat_props(shift):
         odl.tomo.ConeFlatGeometry(apart, dpart, src_radius=0, det_radius=0,
                                   pitch=pitch)
 
-    # check str and repr work without crashing and return something nontrivial
+    # Check that str and repr work without crashing and return something
     assert str(geom)
     assert repr(geom)
 
 
 def test_cone_beam_geometry_helper():
-    """Test that cone_beam_geometry satisfies the sampling conditions."""
+    """Test that cone_beam_geometry satisfies the sampling conditions.
+
+    See the `cone_beam_geometry` documentation for the exact conditions.
+    """
     # --- 2d case ---
     space = odl.uniform_discr([-1, -1], [1, 1], [20, 20])
     src_radius = 3

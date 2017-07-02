@@ -18,11 +18,9 @@ ODL geometry representation to ASTRA's data structures, including:
 * projectors
 * algorithm configuration dictionaries
 
-`ASTRA documentation on Sourceforge
-<https://sourceforge.net/p/astra-toolbox/wiki>`_.
+`ASTRA documentation <http://www.astra-toolbox.com/>`_.
 
-`ASTRA on GitHub
-<https://github.com/astra-toolbox/>`_.
+`ASTRA on GitHub <https://github.com/astra-toolbox/>`_.
 """
 
 # Imports for common Python 2/3 codebase
@@ -115,7 +113,7 @@ def astra_supports(feature):
     return pkg_supports(feature, ASTRA_VERSION, ASTRA_FEATURES)
 
 
-def astra_volume_geometry(discr_reco):
+def astra_volume_geometry(reco_space):
     """Create an ASTRA volume geometry from the discretized domain.
 
     From the ASTRA documentation:
@@ -130,37 +128,36 @@ def astra_volume_geometry(discr_reco):
 
     Parameters
     ----------
-    discr_reco : `DiscreteLp`
-        Discretization of an L2 space on the reconstruction domain.
+    reco_space : `DiscreteLp`
+        Discretized space where the reconstruction (volume) lives.
         It must be 2- or 3-dimensional and uniformly discretized.
 
     Returns
     -------
     astra_geom : dict
-        The ASTRA volume geometry
 
     Raises
     ------
     NotImplementedError
-        if the cell sizes are not the same in each dimension
+        If the cell sizes are not the same in each dimension.
     """
     # TODO: allow other discretizations?
-    if not isinstance(discr_reco, DiscreteLp):
-        raise TypeError('`discr_reco` {!r} is not a DiscreteLp instance'
-                        ''.format(discr_reco))
+    if not isinstance(reco_space, DiscreteLp):
+        raise TypeError('`reco_space` {!r} is not a DiscreteLp instance'
+                        ''.format(reco_space))
 
-    if not discr_reco.is_uniform:
-        raise ValueError('`discr_reco` {} is not uniformly discretized')
+    if not reco_space.is_uniform:
+        raise ValueError('`reco_space` {} is not uniformly discretized')
 
-    vol_shp = discr_reco.partition.shape
-    vol_min = discr_reco.partition.min_pt
-    vol_max = discr_reco.partition.max_pt
+    vol_shp = reco_space.partition.shape
+    vol_min = reco_space.partition.min_pt
+    vol_max = reco_space.partition.max_pt
 
-    if discr_reco.ndim == 2:
+    if reco_space.ndim == 2:
         # ASTRA does in principle support custom minimum and maximum
         # values for the volume extent also in earlier versions, but running
         # the algorithm fails if voxels are non-isotropic.
-        if (not discr_reco.partition.has_isotropic_cells and
+        if (not reco_space.partition.has_isotropic_cells and
                 not astra_supports('anisotropic_voxels_2d')):
             raise NotImplementedError(
                 'non-isotropic pixels in 2d volumes not supported by ASTRA '
@@ -181,9 +178,9 @@ def astra_volume_geometry(discr_reco):
         vol_geom = astra.create_vol_geom(vol_shp[0], vol_shp[1],
                                          vol_min[1], vol_max[1],
                                          vol_min[0], vol_max[0])
-    elif discr_reco.ndim == 3:
+    elif reco_space.ndim == 3:
         # Not supported in all versions of ASTRA
-        if (not discr_reco.partition.has_isotropic_cells and
+        if (not reco_space.partition.has_isotropic_cells and
                 not astra_supports('anisotropic_voxels_3d')):
             raise NotImplementedError(
                 'non-isotropic voxels in 3d volumes not supported by ASTRA '
@@ -207,7 +204,7 @@ def astra_volume_geometry(discr_reco):
                                          vol_min[0], vol_max[0])
     else:
         raise ValueError('{}-dimensional volume geometries not supported '
-                         'by ASTRA'.format(discr_reco.ndim))
+                         'by ASTRA'.format(reco_space.ndim))
     return vol_geom
 
 
@@ -233,12 +230,12 @@ def astra_conebeam_3d_geom_to_vec(geometry):
     Parameters
     ----------
     geometry : `Geometry`
-        The ODL geometry instance used to create the ASTRA geometry
+        ODL projection geometry from which to create the ASTRA geometry.
 
     Returns
     -------
     vectors : `numpy.ndarray`
-        Numpy array of shape ``(number of angles, 12)``
+        Array of shape ``(num_angles, 12)`` containing the vectors.
 
     References
     ----------
@@ -301,12 +298,12 @@ def astra_conebeam_2d_geom_to_vec(geometry):
     Parameters
     ----------
     geometry : `Geometry`
-        The ODL geometry instance used to create the ASTRA geometry
+        ODL projection geometry from which to create the ASTRA geometry.
 
     Returns
     -------
     vectors : `numpy.ndarray`
-        Numpy array of shape ``(number of angles, 6)``
+        Array of shape ``(num_angles, 6)`` containing the vectors.
 
     References
     ----------
@@ -359,12 +356,12 @@ def astra_parallel_3d_geom_to_vec(geometry):
     Parameters
     ----------
     geometry : `Geometry`
-        The ODL geometry instance used to create the ASTRA geometry
+        ODL projection geometry from which to create the ASTRA geometry.
 
     Returns
     -------
     vectors : `numpy.ndarray`
-        Numpy array of shape ``(number of angles, 12)``.
+        Array of shape ``(num_angles, 12)`` containing the vectors.
 
     References
     ----------
@@ -415,7 +412,7 @@ def astra_projection_geometry(geometry):
     Parameters
     ----------
     geometry : `Geometry`
-        Object from which to create the ASTRA projection geometry.
+        ODL projection geometry from which to create the ASTRA geometry.
 
     Returns
     -------
@@ -484,30 +481,30 @@ def astra_projection_geometry(geometry):
 
 
 def astra_data(astra_geom, datatype, data=None, ndim=2, allow_copy=False):
-    """Create an ASTRA data structure.
+    """Create an ASTRA data object.
 
     Parameters
     ----------
     astra_geom : dict
         ASTRA geometry object for the data creator, must correspond to the
-        given data type
+        given ``datatype``.
     datatype : {'volume', 'projection'}
-        Type of the data container
-    data : `DiscreteLpElement`, optional
-        Data for the initialization of the data structure. If ``None``,
+        Type of the data container.
+    data : `DiscreteLpElement` or `numpy.ndarray`, optional
+        Data for the initialization of the data object. If ``None``,
         an ASTRA data object filled with zeros is created.
     ndim : {2, 3}, optional
-        Dimension of the data. If ``data`` is not ``None``, this parameter
+        Dimension of the data. If ``data`` is provided, this parameter
         has no effect.
     allow_copy : `bool`, optional
-        True if copying ``data`` should be allowed. This means that anything
-        written by ASTRA to the returned structure will not be written to
+        If ``True``, allow copying of ``data``. This means that anything
+        written by ASTRA to the returned object will not be written to
         ``data``.
 
     Returns
     -------
     id : int
-        ASTRA internal ID for the new data structure
+        Handle for the new ASTRA internal data object.
     """
     if data is not None:
         if isinstance(data, (DiscreteLpElement, np.ndarray)):
@@ -533,7 +530,7 @@ def astra_data(astra_geom, datatype, data=None, ndim=2, allow_copy=False):
         link = astra.data3d.link
         create = astra.data3d.create
     else:
-        raise ValueError('{}-dimensional data structures not supported'
+        raise ValueError('{}-dimensional data not supported'
                          ''.format(ndim))
 
     # ASTRA checks if data is c-contiguous and aligned
@@ -561,20 +558,21 @@ def astra_projector(vol_interp, astra_vol_geom, astra_proj_geom, ndim, impl):
     Parameters
     ----------
     vol_interp : {'nearest', 'linear'}
-        Interpolation type of the volume discretization
+        Interpolation type of the volume discretization. This determines
+        the projection model that is chosen.
     astra_vol_geom : dict
-        ASTRA volume geometry dictionary
+        ASTRA volume geometry.
     astra_proj_geom : dict
-        ASTRA projection geometry dictionary
+        ASTRA projection geometry.
     ndim : {2, 3}
-        Number of dimensions of the projector
+        Number of dimensions of the projector.
     impl : {'cpu', 'cuda'}
-        Implementation of the projector
+        Implementation of the projector.
 
     Returns
     -------
     proj_id : int
-        ASTRA reference ID to the ASTRA dict with initialized 'type' key
+        Handle for the created ASTRA internal projector object.
     """
     if vol_interp not in ('nearest', 'linear'):
         raise ValueError("`vol_interp` '{}' not understood"
@@ -650,23 +648,23 @@ def astra_algorithm(direction, ndim, vol_id, sino_id, proj_id, impl):
     Parameters
     ----------
     direction : {'forward', 'backward'}
-        Apply the forward projection if 'forward', otherwise the back
-        projection
+        For ``'forward'``, apply the forward projection, for ``'backward'``
+        the backprojection.
     ndim : {2, 3}
-        Number of dimensions of the projector
+        Number of dimensions of the projector.
     vol_id : int
-        ASTRA ID of the volume data object
+        Handle for the ASTRA volume data object.
     sino_id : int
-        ASTRA ID of the projection data object
+        Handle for the ASTRA projection data object.
     proj_id : int
-        ASTRA ID of the projector
+        Handle for the ASTRA projector object.
     impl : {'cpu', 'cuda'}
-        Implementation of the projector
+        Implementation of the projector.
 
     Returns
     -------
     id : int
-        ASTRA internal ID for the new algorithm structure
+        Handle for the created ASTRA internal algorithm object.
     """
     if direction not in ('forward', 'backward'):
         raise ValueError("`direction` '{}' not understood".format(direction))
@@ -700,6 +698,5 @@ def astra_algorithm(direction, ndim, vol_id, sino_id, proj_id, impl):
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()
