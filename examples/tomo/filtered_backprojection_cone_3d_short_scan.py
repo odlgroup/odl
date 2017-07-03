@@ -17,10 +17,10 @@ import numpy as np
 import odl
 
 
-# --- Set-up geometry of the problem --- #
+# --- Set up geometry of the problem --- #
 
 
-# Discrete reconstruction space: discretized functions on the cube
+# Reconstruction space: discretized functions on the cube
 # [-20, 20]^3 with 300 samples per dimension.
 reco_space = odl.uniform_discr(
     min_pt=[-20, -20, -20], max_pt=[20, 20, 20], shape=[300, 300, 300],
@@ -36,7 +36,7 @@ geometry = odl.tomo.ConeFlatGeometry(
     angle_partition, detector_partition, src_radius=80, det_radius=40)
 
 
-# --- Create Filteredback-projection (FBP) operator --- #
+# --- Create Filtered Back-projection (FBP) operator --- #
 
 
 # Ray transform (= forward projection). We use the ASTRA CUDA backend.
@@ -51,6 +51,7 @@ fbp = odl.tomo.fbp_op(ray_trafo,
 # Apply parker weighting in order to improve reconstruction
 parker_weighting = odl.tomo.parker_weighting(ray_trafo)
 parker_weighted_fbp = fbp * parker_weighting
+
 
 # --- Show some examples --- #
 

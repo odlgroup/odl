@@ -10,10 +10,10 @@ import numpy as np
 import odl
 
 
-# --- Set-up geometry of the problem --- #
+# --- Set up geometry of the problem --- #
 
 
-# Discrete reconstruction space: discretized functions on the cube
+# Reconstruction space: discretized functions on the cube
 # [-20, 20]^2 with 300 samples per dimension.
 reco_space = odl.uniform_discr(
     min_pt=[-20, -20], max_pt=[20, 20], shape=[300, 300],

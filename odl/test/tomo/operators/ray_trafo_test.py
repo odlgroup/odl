@@ -167,7 +167,7 @@ def projector(request):
         return odl.tomo.RayTransform(reco_space, geom, impl=impl)
 
     elif geom == 'helical':
-        # Discrete reconstruction space
+        # Reconstruction space
         reco_space = odl.uniform_discr([-20, -20, 0], [20, 20, 40],
                                        [n] * 3, dtype=dtype)
         # Geometry, overwriting angle partition

@@ -7,7 +7,7 @@ will trigger an error.
 import numpy as np
 import odl
 
-# Discrete reconstruction space: discretized functions on the cube
+# Reconstruction space: discretized functions on the cube
 # [-20, 20]^3 with 300 samples in x and y, and 100 samples in z direction.
 reco_space = odl.uniform_discr(
     min_pt=[-20, -20, -20], max_pt=[20, 20, 20], shape=[300, 300, 100],

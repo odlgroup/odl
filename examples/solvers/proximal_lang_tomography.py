@@ -16,7 +16,7 @@ import proximal
 # --- Set up the forward operator (ray transform) --- #
 
 
-# Discrete reconstruction space: discretized functions on the rectangle
+# Reconstruction space: discretized functions on the rectangle
 # [-20, 20]^2 with 300 samples per dimension.
 reco_space = odl.uniform_discr(
     min_pt=[-20, -20], max_pt=[20, 20], shape=[300, 300], dtype='float32')

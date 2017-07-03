@@ -88,7 +88,7 @@ def projector(request, dtype, weighting):
         raise ValueError('angle not valid')
 
     if geom == 'par2d':
-        # Discrete reconstruction space
+        # Reconstruction space
         discr_reco_space = odl.uniform_discr([-20, -20], [20, 20], [100, 100],
                                              dtype=dtype,
                                              weighting=weighting)
@@ -102,7 +102,7 @@ def projector(request, dtype, weighting):
                                  impl=impl)
 
     elif geom == 'par3d':
-        # Discrete reconstruction space
+        # Reconstruction space
         discr_reco_space = odl.uniform_discr([-20, -20, -20], [20, 20, 20],
                                              [100, 100, 100],
                                              dtype=dtype,
@@ -117,7 +117,7 @@ def projector(request, dtype, weighting):
                                  impl=impl)
 
     elif geom == 'cone2d':
-        # Discrete reconstruction space
+        # Reconstruction space
         discr_reco_space = odl.uniform_discr([-20, -20], [20, 20],
                                              [100, 100], dtype=dtype)
 
@@ -131,7 +131,7 @@ def projector(request, dtype, weighting):
                                  impl=impl)
 
     elif geom == 'cone3d':
-        # Discrete reconstruction space
+        # Reconstruction space
         discr_reco_space = odl.uniform_discr([-20, -20, -20], [20, 20, 20],
                                              [100, 100, 100], dtype=dtype)
 
@@ -145,7 +145,7 @@ def projector(request, dtype, weighting):
                                  impl=impl)
 
     elif geom == 'helical':
-        # Discrete reconstruction space
+        # Reconstruction space
         discr_reco_space = odl.uniform_discr([-20, -20, 0], [20, 20, 40],
                                              [100, 100, 100], dtype=dtype)
 
