@@ -3,7 +3,7 @@
 import numpy as np
 import odl
 
-# Discrete reconstruction space: discretized functions on the cube
+# Reconstruction space: discretized functions on the cube
 # [-20, 20]^3 with 300 samples per dimension.
 reco_space = odl.uniform_discr(
     min_pt=[-20, -20, -20], max_pt=[20, 20, 20], shape=[300, 300, 300],
@@ -12,8 +12,8 @@ reco_space = odl.uniform_discr(
 # Make a 3d single-axis parallel beam geometry with flat detector
 # Angles: uniformly spaced, n = 180, min = 0, max = pi
 angle_partition = odl.uniform_partition(0, np.pi, 180)
-# Detector: uniformly sampled, n = (558, 558), min = (-30, -30), max = (30, 30)
-detector_partition = odl.uniform_partition([-30, -30], [30, 30], [558, 558])
+# Detector: uniformly sampled, n = (512, 512), min = (-30, -30), max = (30, 30)
+detector_partition = odl.uniform_partition([-30, -30], [30, 30], [512, 512])
 geometry = odl.tomo.Parallel3dAxisGeometry(angle_partition, detector_partition)
 
 # Ray transform (= forward projection).

@@ -27,7 +27,6 @@ def skimage_theta(geometry):
 
 def skimage_sinogram_space(geometry, volume_space, sinogram_space):
     """Create a range adapted to the skimage radon geometry."""
-
     padded_size = int(np.ceil(volume_space.shape[0] * np.sqrt(2)))
     det_width = volume_space.domain.extent[0] * np.sqrt(2)
     skimage_detector_part = uniform_partition(-det_width / 2.0,
@@ -79,15 +78,16 @@ def skimage_radon_forward(volume, geometry, range, out=None):
     sinogram : ``range`` element
         Sinogram given by the projection.
     """
-
     # Check basic requirements. Fully checking should be in wrapper
     assert volume.shape[0] == volume.shape[1]
 
     theta = skimage_theta(geometry)
     skimage_range = skimage_sinogram_space(geometry, volume.space, range)
 
-    sino_arr = radon(volume.asarray(), theta=theta, circle=False).T
-    sinogram = skimage_range.element(sino_arr)
+    # Rotate volume from (x, y) to (rows, cols)
+    sino_arr = radon(np.rot90(volume.asarray(), 1),
+                     theta=theta, circle=False)
+    sinogram = skimage_range.element(sino_arr.T)
 
     if out is None:
         out = range.element()
@@ -132,8 +132,10 @@ def skimage_radon_back_projector(sinogram, geometry, range, out=None):
         # Only do asserts here since these are backend functions
         assert out in range
 
-    out[:] = iradon(skimage_sinogram.asarray().T, theta,
-                    output_size=range.shape[0], filter=None, circle=False)
+    # Rotate back from (rows, cols) to (x, y)
+    backproj = iradon(skimage_sinogram.asarray().T, theta,
+                      output_size=range.shape[0], filter=None, circle=False)
+    out[:] = np.rot90(backproj, -1)
 
     # Empirically determined value, gives correct scaling
     scaling_factor = 4.0 * float(geometry.motion_params.length) / (2 * np.pi)

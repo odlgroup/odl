@@ -23,8 +23,7 @@ __all__ = ('fbp_op', 'fbp_filter_op', 'tam_danielson_window',
 
 def _axis_in_detector(geometry):
     """A vector in the detector plane that points along the rotation axis."""
-    du = geometry.det_init_axes[0]
-    dv = geometry.det_init_axes[1]
+    du, dv = geometry.det_axes_init
     axis = geometry.axis
     c = np.array([np.vdot(axis, du), np.vdot(axis, dv)])
     cnorm = np.linalg.norm(c)
@@ -37,8 +36,7 @@ def _axis_in_detector(geometry):
 
 def _rotation_direction_in_detector(geometry):
     """A vector in the detector plane that points in the rotation direction."""
-    du = geometry.det_init_axes[0]
-    dv = geometry.det_init_axes[1]
+    du, dv = geometry.det_axes_init
     axis = geometry.axis
     det_normal = np.cross(du, dv)
     rot_dir = np.cross(axis, det_normal)
@@ -128,11 +126,14 @@ def tam_danielson_window(ray_trafo, smoothing_width=0.05, n_half_rot=1):
     --------
     fbp_op : Filtered back-projection operator from `RayTransform`
     tam_danielson_window : Weighting for short scan data
-    HelicalConeFlatGeometry : The primary use case for this window function.
+    ConeFlatGeometry : Primary use case for this window function.
 
     References
     ----------
-    .. _TAM1998: http://iopscience.iop.org/article/10.1088/0031-9155/43/4/028
+    [TSS1998] Tam, K C, Samarasekera, S and Sauer, F.
+    *Exact cone beam CT with a spiral scan*.
+    Physics in Medicine & Biology 4 (1998), p 1015.
+    https://dx.doi.org/10.1088/0031-9155/43/4/028
     """
     # Extract parameters
     src_radius = ray_trafo.geometry.src_radius
@@ -222,7 +223,7 @@ def parker_weighting(ray_trafo, q=0.25):
     fbp_op : Filtered back-projection operator from `RayTransform`
     tam_danielson_window : Indicator function for helical data
     FanFlatGeometry : Use case in 2d
-    CircularConeFlatGeometry : Use case in 3d
+    ConeFlatGeometry : Use case in 3d (for pitch 0)
 
     References
     ----------
@@ -308,13 +309,13 @@ def fbp_filter_op(ray_trafo, padding=True, filter_type='Ram-Lak',
 
         `Parallel3dAxisGeometry` : Exact reconstruction
 
-        `FanFlatGeometry` : Approximate reconstruction, correct in limit of fan
-        angle = 0.
+        `FanFlatGeometry` : Approximate reconstruction, correct in limit of
+        fan angle = 0.
 
-        `CircularConeFlatGeometry` : Approximate reconstruction, correct in
-        limit of fan angle = 0 and cone angle = 0.
+        `ConeFlatGeometry`, pitch = 0 (circular) : Approximate reconstruction,
+        correct in the limit of fan angle = 0 and cone angle = 0.
 
-        `HelicalConeFlatGeometry` : Very approximate unless a
+        `ConeFlatGeometry`, pitch > 0 (helical) : Very approximate unless a
         `tam_danielson_window` is used. Accurate with the window.
 
         Other geometries: Not supported
@@ -462,10 +463,10 @@ def fbp_op(ray_trafo, padding=True, filter_type='Ram-Lak',
         `FanFlatGeometry` : Approximate reconstruction, correct in limit of fan
         angle = 0.
 
-        `CircularConeFlatGeometry` : Approximate reconstruction, correct in
-        limit of fan angle = 0 and cone angle = 0.
+        `ConeFlatGeometry`, pitch = 0 (circular) : Approximate reconstruction,
+        correct in the limit of fan angle = 0 and cone angle = 0.
 
-        `HelicalConeFlatGeometry` : Very approximate unless a
+        `ConeFlatGeometry`, pitch > 0 (helical) : Very approximate unless a
         `tam_danielson_window` is used. Accurate with the window.
 
         Other geometries: Not supported
@@ -519,7 +520,7 @@ if __name__ == '__main__':
         min_pt=[-20, -20, 0], max_pt=[20, 20, 40], shape=[300, 300, 300])
     angle_partition = odl.uniform_partition(0, 8 * 2 * np.pi, 2000)
     detector_partition = odl.uniform_partition([-40, -4], [40, 4], [500, 500])
-    geometry = odl.tomo.HelicalConeFlatGeometry(
+    geometry = odl.tomo.ConeFlatGeometry(
         angle_partition, detector_partition, src_radius=100, det_radius=100,
         pitch=5.0)
     ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl='astra_cuda')

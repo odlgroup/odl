@@ -183,8 +183,9 @@ def indicate_proj_axis(space, scale_structures=0.5):
 
     Parameters
     ----------
-    space : `DiscretizedSpace`
-        Discretized space in which the phantom is supposed to be created
+    space : `DiscreteLp`
+        Space in which the phantom is supposed to be created, must be
+        2- or 3-dimensional.
     scale_structures : positive float in (0, 1], optional
         Scales objects (cube, cuboids)
 
@@ -195,9 +196,25 @@ def indicate_proj_axis(space, scale_structures=0.5):
 
     Examples
     --------
-    >>> space = odl.uniform_discr([0] * 3, [1] * 3, [8, 8, 8])
-    >>> phan = indicate_proj_axis(space).asarray()
-    >>> print(np.sum(phan, 0))
+    Phantom in 2D space:
+
+    >>> np.set_printoptions(edgeitems=4)  # make numpy print whole arrays
+    >>> space = odl.uniform_discr([0, 0], [1, 1], shape=(8, 8))
+    >>> phantom = indicate_proj_axis(space).asarray()
+    >>> print(phantom)
+    [[ 0.  0.  0.  0.  0.  0.  0.  0.]
+     [ 0.  0.  0.  1.  1.  0.  0.  0.]
+     [ 0.  0.  0.  1.  1.  0.  0.  0.]
+     [ 0.  0.  0.  0.  0.  0.  0.  0.]
+     [ 0.  0.  0.  0.  0.  0.  0.  0.]
+     [ 0.  0.  0.  0.  1.  0.  0.  0.]
+     [ 0.  0.  0.  1.  0.  0.  0.  0.]
+     [ 0.  0.  0.  0.  0.  0.  0.  0.]]
+
+    >>> space = odl.uniform_discr([0, 0, 0], [1, 1, 1], shape=(8, 8, 8))
+    >>> phantom = indicate_proj_axis(space).asarray()
+    >>> np.set_printoptions(edgeitems=4)  # make numpy print whole arrays
+    >>> print(np.sum(phantom, 0))
     [[ 0.  0.  0.  0.  0.  0.  0.  0.]
      [ 0.  0.  0.  0.  0.  0.  0.  0.]
      [ 0.  0.  0.  0.  0.  0.  0.  0.]
@@ -206,7 +223,7 @@ def indicate_proj_axis(space, scale_structures=0.5):
      [ 0.  0.  0.  0.  0.  0.  0.  0.]
      [ 0.  0.  0.  0.  0.  0.  0.  0.]
      [ 0.  0.  0.  0.  0.  0.  0.  0.]]
-    >>> print(np.sum(phan, 1))
+    >>> print(np.sum(phantom, 1))
     [[ 0.  0.  0.  0.  0.  0.  0.  0.]
      [ 0.  0.  0.  2.  2.  0.  0.  0.]
      [ 0.  0.  0.  2.  2.  0.  0.  0.]
@@ -215,7 +232,7 @@ def indicate_proj_axis(space, scale_structures=0.5):
      [ 0.  0.  0.  1.  1.  0.  0.  0.]
      [ 0.  0.  0.  1.  1.  0.  0.  0.]
      [ 0.  0.  0.  0.  0.  0.  0.  0.]]
-    >>> print(np.sum(phan, 2))
+    >>> print(np.sum(phantom, 2))
     [[ 0.  0.  0.  0.  0.  0.  0.  0.]
      [ 0.  0.  0.  2.  2.  0.  0.  0.]
      [ 0.  0.  0.  2.  2.  0.  0.  0.]
@@ -229,7 +246,7 @@ def indicate_proj_axis(space, scale_structures=0.5):
         raise ValueError('`scale_structures` ({}) is not in (0, 1]'
                          ''.format(scale_structures))
 
-    assert space.ndim == 3
+    assert space.ndim in (2, 3)
 
     shape = space.shape
     phan = np.zeros(shape)
@@ -238,25 +255,36 @@ def indicate_proj_axis(space, scale_structures=0.5):
     dx = np.floor(scale_structures * 0.25 * shape)
     dx[dx == 0] = 1
 
-    # cube of size 2 * dx
-    x0 = (cen - 3 * dx)[0]
-    x, y, z = cen - 1 * dx
-    phan[int(x0):int(x), int(y):int(-y), int(z):int(-z)] = 1
+    # cube of size 2 * dx, offset in x axis, symmetric in others
+    ix0 = int((cen - 3 * dx)[0])
+    if space.ndim == 2:
+        ix, iy = (cen - 1 * dx).astype(int)
+        phan[ix0:ix, iy:-iy] = 1
+    elif space.ndim == 3:
+        ix, iy, iz = (cen - 1 * dx).astype(int)
+        phan[ix0:ix, iy:-iy, iz:-iz] = 1
 
-    # 1st cuboid of size (dx[0], dx[1], 2 * dx[2])
-    x0 = (cen + 1 * dx)[1]
-    x1 = (cen + 2 * dx)[1]
-    y0 = cen[1]
-    z = (cen - dx)[2]
-    phan[int(x0):int(x1), int(y0):int(-y), int(z):int(-z)] = 1
+    # 1st cuboid of size (dx[0], dx[1], 2 * dx[2]), offset in x and y axes,
+    # symmetric in z axis
+    ix0 = int((cen + 1 * dx)[1])
+    ix1 = int((cen + 2 * dx)[1])
+    iy0 = int(cen[1])
+    if space.ndim == 2:
+        phan[ix0:ix1, iy0:-iy] = 1
+    elif space.ndim == 3:
+        iz = int((cen - dx)[2])
+        phan[ix0:ix1, iy0:-iy, iz:-iz] = 1
 
     # 2nd cuboid of (dx[0], dx[1], 2 * dx[2]) touching the first diagonally
-    # at a long edge
-    x0 = (cen + 2 * dx)[1]
-    x1 = (cen + 3 * dx)[1]
-    y1 = cen[1]
-    z = (cen - dx)[2]
-    phan[int(x0):int(x1), int(y):int(y1), int(z):int(-z)] = 1
+    # at a long edge; offset in x and y axes, symmetric in z axis
+    ix0 = int((cen + 2 * dx)[1])
+    ix1 = int((cen + 3 * dx)[1])
+    iy1 = int(cen[1])
+    if space.ndim == 2:
+        phan[ix0:ix1, iy:iy1] = 1
+    elif space.ndim == 3:
+        iz = int((cen - dx)[2])
+        phan[ix0:ix1, iy:iy1, iz:-iz] = 1
 
     return space.element(phan)
 

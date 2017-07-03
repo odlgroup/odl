@@ -18,6 +18,7 @@ import numpy as np
 
 from odl.discr import RectPartition
 from odl.tomo.geometry.detector import Detector
+from odl.tomo.util import axis_rotation_matrix
 
 
 __all__ = ('Geometry', 'DivergentBeamGeometry', 'AxisOrientedGeometry')
@@ -37,10 +38,14 @@ class Geometry(object):
       parameters,
     * a mapping from the motion and surface parameters to the detector pixel
       direction to the source,
-    * optionally a mapping from the motion parameters to the source position
+    * optionally a mapping from the motion parameters to the source position,
+    * optionally a global translation of the geometry (shift of the origin)
+
+    For details, check `the online docs
+    <https://odlgroup.github.io/odl/guide/geometry_guide.html>`_.
     """
 
-    def __init__(self, ndim, motion_part, detector):
+    def __init__(self, ndim, motion_part, detector, translation=None):
         """Initialize a new instance.
 
         Parameters
@@ -53,31 +58,42 @@ class Geometry(object):
         detector : `Detector`
            The detector of this geometry
         """
-        if int(ndim) <= 0:
-            raise ValueError('number of dimensions {} is not positive'
-                             ''.format(ndim))
+        ndim, ndim_in = int(ndim), ndim
+        if ndim != ndim_in or ndim <= 0:
+            raise ValueError('`ndim` must be a positive integer, got {}'
+                             ''.format(ndim_in))
         if not isinstance(motion_part, RectPartition):
-            raise TypeError('`motion_part` {!r} not a RectPartition instance'
-                            ''.format(motion_part))
-
+            raise TypeError('`motion_part` must be a `RectPartition`, '
+                            'instance, got {!r}'.format(motion_part))
         if not isinstance(detector, Detector):
-            raise TypeError('`detector` {!r} not a Detector instance'
-                            ''.format(detector))
+            raise TypeError('`detector` must be a `Detector` instance, '
+                            'got {!r}'.format(detector))
 
-        self._ndim = int(ndim)
-        self._motion_part = motion_part
-        self._detector = detector
-        self._implementation_cache = {}
+        self.__ndim = ndim
+        self.__motion_partition = motion_part
+        self.__detector = detector
+
+        if translation is None:
+            self.__translation = np.zeros(self.ndim)
+        else:
+            translation = np.asarray(translation, dtype=float)
+            if translation.shape != (self.ndim,):
+                raise ValueError('`translation` must have shape ({},), got {}'
+                                 ''.format(self.ndim, translation.shape))
+            self.__translation = translation
+
+        # Cache geometry-related objects for backends that require computation
+        self.__implementation_cache = {}
 
     @property
     def ndim(self):
         """Number of dimensions of the geometry."""
-        return self._ndim
+        return self.__ndim
 
     @property
     def motion_partition(self):
         """Partition of the motion parameter set into subsets."""
-        return self._motion_part
+        return self.__motion_partition
 
     @property
     def motion_params(self):
@@ -92,7 +108,7 @@ class Geometry(object):
     @property
     def detector(self):
         """Detector representation of this geometry."""
-        return self._detector
+        return self.__detector
 
     @property
     def det_partition(self):
@@ -113,11 +129,9 @@ class Geometry(object):
     def partition(self):
         """Joined parameter set partition for motion and detector.
 
-        Returns a `RectPartition` with the detector partition inserted
-        after the motion partition.
+        A `RectPartition` with `det_partition` appended to `motion_partition`.
         """
-        # TODO: change when RectPartition.append is implemented
-        return self.det_partition.insert(0, self.motion_partition)
+        return self.motion_partition.append(self.det_partition)
 
     @property
     def params(self):
@@ -136,6 +150,11 @@ class Geometry(object):
         """
         return self.partition.grid
 
+    @property
+    def translation(self):
+        """Shift of the origin of this geometry."""
+        return self.__translation
+
     def det_refpoint(self, mpar):
         """Detector reference point function.
 
@@ -143,32 +162,30 @@ class Geometry(object):
         ----------
         mpar : `motion_params` element
             Motion parameter for which to calculate the detector
-            reference point
+            reference point.
 
         Returns
         -------
         point : `numpy.ndarray`, shape (`ndim`,)
-            The reference point, an `ndim`-dimensional vector
+            The reference point, an `ndim`-dimensional vector.
         """
         raise NotImplementedError('abstract method')
 
     def rotation_matrix(self, mpar):
-        """Detector rotation function for calculating the detector
-        reference position.
+        """Return the rotation matrix from initial state to state at ``mpar``.
 
         Parameters
         ----------
         mpar : `motion_params` element
-            Motion parameter for which to calculate the detector
-            reference rotation
+            Motion parameter for which to calculate the rotation matrix.
 
         Returns
         -------
         rot : `numpy.ndarray`, shape (`ndim`, `ndim`)
-            The rotation matrix mapping the standard basis vectors in
-            the fixed ("lab") coordinate system to the basis vectors of
-            the local coordinate system of the detector reference point,
-            expressed in the fixed system.
+            The rotation matrix mapping vectors at the initial state
+            to the ones in the state defined by ``mpar``. The rotation
+            is extrinsic, i.e., defined in the fixed ("world") coordinate
+            system.
         """
         raise NotImplementedError('abstract method')
 
@@ -180,9 +197,9 @@ class Geometry(object):
         Parameters
         ----------
         mpar : `motion_params` element
-            Motion parameter at which to evaluate
+            Motion parameter at which to evaluate.
         dpar : `det_params` element
-            Detector parameter at which to evaluate
+            Detector parameter at which to evaluate.
         normalized : bool, optional
             If ``True``, return a normalized (unit) vector.
 
@@ -194,24 +211,27 @@ class Geometry(object):
         raise NotImplementedError('abstract method')
 
     def det_point_position(self, mpar, dpar):
-        """Detector point position function.
+        """Return the detector point at ``(mpar, dpar)``.
+
+        The motion parameter ``mpar`` is used to move the detector
+        reference point, and the detector parameter ``dpar`` defines
+        an intrinsic shift that is added to the reference point.
 
         Parameters
         ----------
         mpar : `motion_params` element
-            Motion parameter at which to evaluate
+            Motion parameter at which to evaluate.
         dpar : `det_params` element
-            Detector parameter at which to evaluate
+            Detector parameter at which to evaluate.
 
         Returns
         -------
-        pos : `numpy.ndarray` (shape (`ndim`,))
-            Source position, an `ndim`-dimensional vector
+        pos : `numpy.ndarray`, shape ``(ndim,)``
+            Source position, an `ndim`-dimensional vector.
         """
-        # TODO: check and write test
-        return np.asarray(
-            (self.det_refpoint(mpar) +
-             self.rotation_matrix(mpar).dot(self.detector.surface(dpar))))
+        # Offset relative to the detector reference point
+        offset = self.rotation_matrix(mpar).dot(self.detector.surface(dpar))
+        return self.det_refpoint(mpar) + offset
 
     @property
     def implementation_cache(self):
@@ -224,7 +244,7 @@ class Geometry(object):
         -------
         implementations : dict
         """
-        return self._implementation_cache
+        return self.__implementation_cache
 
 
 class DivergentBeamGeometry(Geometry):
@@ -243,12 +263,12 @@ class DivergentBeamGeometry(Geometry):
         Parameters
         ----------
         mpar : `motion_params` element
-            Motion parameter for which to calculate the source position
+            Motion parameter for which to calculate the source position.
 
         Returns
         -------
         pos : `numpy.ndarray` (shape (`ndim`,))
-            Source position, an `ndim`-dimensional vector
+            Source position, an `ndim`-dimensional vector.
         """
         raise NotImplementedError('abstract method')
 
@@ -264,22 +284,22 @@ class DivergentBeamGeometry(Geometry):
         Parameters
         ----------
         mpar : `motion_params` element
-            Motion parameter at which to evaluate
+            Motion parameter at which to evaluate.
         dpar : `det_params` element
-            Detector parameter at which to evaluate
+            Detector parameter at which to evaluate.
         normalized : bool, optional
             If ``True``, return a normalized (unit) vector.
 
         Returns
         -------
         vec : `numpy.ndarray`, shape (`ndim`,)
-            (Unit) vector pointing from the detector to the source
+            (Unit) vector pointing from the detector to the source.
         """
         if mpar not in self.motion_params:
-            raise ValueError('`mpar` {} is not in the valid range {}'
+            raise ValueError('`mpar` {} not in the valid range {}'
                              ''.format(mpar, self.motion_params))
         if dpar not in self.det_params:
-            raise ValueError('`dpar` {} is not in the valid range {}'
+            raise ValueError('`dpar` {} not in the valid range {}'
                              ''.format(dpar, self.det_params))
 
         vec = self.src_position(mpar) - self.det_point_position(mpar, dpar)
@@ -293,35 +313,33 @@ class DivergentBeamGeometry(Geometry):
 
 class AxisOrientedGeometry(object):
 
-    """Mixin class for 3d geometries oriented according to an axis."""
+    """Mixin class for 3d geometries oriented along an axis."""
 
     def __init__(self, axis):
         """Initialize a new instance.
 
         Parameters
         ----------
-        axis : `array-like` (shape ``(3,)``)
-            Vector defining the fixed rotation axis after normalization
+        axis : `array-like`, shape ``(3,)``
+            Vector defining the fixed rotation axis of this geometry.
         """
-        if np.linalg.norm(axis) <= 1e-10:
-            raise ValueError('`axis` {} too close to zero'.format(axis))
+        axis, axis_in = np.asarray(axis, dtype=float), axis
+        if axis.shape != (3,):
+            raise ValueError('`axis.shape` must be (3,), got {}'
+                             ''.format(axis.shape))
 
-        self._axis = np.asarray(axis, dtype=float) / np.linalg.norm(axis)
-        if self.axis.shape != (3,):
-            raise ValueError('`axis` has shape {}, expected (3,)'
-                             ''.format(self.axis.shape))
+        if np.linalg.norm(axis) <= 1e-10:
+            raise ValueError('`axis` {} too close to zero'.format(axis_in))
+
+        self.__axis = axis / np.linalg.norm(axis)
 
     @property
     def axis(self):
-        """Normalized axis of rotation, a 3-element vector."""
-        return self._axis
+        """Normalized axis of rotation, a 3d vector."""
+        return self.__axis
 
     def rotation_matrix(self, angle):
-        """Detector rotation function.
-
-        Returns the matrix for rotating a vector in 3d by an angle ``angle``
-        about the rotation axis given by the property `axis` according to
-        the right hand rule.
+        """Return the matrix for rotating around `axis` by ``angle``.
 
         The matrix is computed according to
         `Rodrigues' rotation formula
@@ -330,7 +348,7 @@ class AxisOrientedGeometry(object):
         Parameters
         ----------
         angle : float
-            The motion parameter given in radian. It must be
+            Motion parameter given in radians. It must be
             contained in this geometry's `motion_params`.
 
         Returns
@@ -346,20 +364,9 @@ class AxisOrientedGeometry(object):
             raise ValueError('`angle` {} is not in the valid range {}'
                              ''.format(angle, self.motion_params))
 
-        axis = self.axis
-
-        cross_mat = np.array([[0, -axis[2], axis[1]],
-                              [axis[2], 0, -axis[0]],
-                              [-axis[1], axis[0], 0]])
-        dy_mat = np.outer(axis, axis)
-        id_mat = np.eye(3)
-        cos_ang = np.cos(angle)
-        sin_ang = np.sin(angle)
-
-        return cos_ang * id_mat + (1. - cos_ang) * dy_mat + sin_ang * cross_mat
+        return axis_rotation_matrix(self.axis, angle)
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

@@ -212,15 +212,14 @@ def test_astra_projection_geometry():
     assert astra_geom['type'] == 'parallel3d_vec'
 
     # Circular conebeam flat
-    geom_ccf = odl.tomo.CircularConeFlatGeometry(apart, dpart, src_rad,
-                                                 det_rad)
+    geom_ccf = odl.tomo.ConeFlatGeometry(apart, dpart, src_rad, det_rad)
     astra_geom = odl.tomo.astra_projection_geometry(geom_ccf)
     assert astra_geom['type'] == 'cone_vec'
 
     # Helical conebeam flat
     pitch = 1
-    geom_hcf = odl.tomo.HelicalConeFlatGeometry(apart, dpart, src_rad,
-                                                det_rad, pitch)
+    geom_hcf = odl.tomo.ConeFlatGeometry(apart, dpart, src_rad, det_rad,
+                                         pitch=pitch)
     astra_geom = odl.tomo.astra_projection_geometry(geom_hcf)
     assert astra_geom['type'] == 'cone_vec'
 
@@ -386,15 +385,14 @@ def test_geom_to_vec():
 
     # Circular cone flat
     dpart = odl.uniform_partition([-40, -3], [40, 3], (10, 5))
-    geom_ccf = odl.tomo.CircularConeFlatGeometry(apart, dpart, src_rad,
-                                                 det_rad)
+    geom_ccf = odl.tomo.ConeFlatGeometry(apart, dpart, src_rad, det_rad)
     vec = odl.tomo.astra_conebeam_3d_geom_to_vec(geom_ccf)
     assert vec.shape == (apart.size, 12)
 
     # Helical cone flat
     pitch = 1
-    geom_hcf = odl.tomo.HelicalConeFlatGeometry(apart, dpart, src_rad,
-                                                det_rad, pitch)
+    geom_hcf = odl.tomo.ConeFlatGeometry(apart, dpart, src_rad, det_rad,
+                                         pitch=pitch)
     vec = odl.tomo.astra_conebeam_3d_geom_to_vec(geom_hcf)
     assert vec.shape == (apart.size, 12)
 

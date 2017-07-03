@@ -75,7 +75,7 @@ def projector(request):
         raise ValueError('angle not valid')
 
     if geom == 'par2d':
-        # Discrete reconstruction space
+        # Reconstruction space
         discr_reco_space = odl.uniform_discr([-20, -20], [20, 20],
                                              [100, 100], dtype=dtype)
 
@@ -87,7 +87,7 @@ def projector(request):
         return tomo.RayTransform(discr_reco_space, geom, impl=impl)
 
     elif geom == 'par3d':
-        # Discrete reconstruction space
+        # Reconstruction space
         discr_reco_space = odl.uniform_discr([-20, -20, -20], [20, 20, 20],
                                              [100, 100, 100], dtype=dtype)
 
@@ -99,7 +99,7 @@ def projector(request):
         return tomo.RayTransform(discr_reco_space, geom, impl=impl)
 
     elif geom == 'cone2d':
-        # Discrete reconstruction space
+        # Reconstruction space
         discr_reco_space = odl.uniform_discr([-20, -20], [20, 20],
                                              [100, 100], dtype=dtype)
 
@@ -112,20 +112,20 @@ def projector(request):
         return tomo.RayTransform(discr_reco_space, geom, impl=impl)
 
     elif geom == 'cone3d':
-        # Discrete reconstruction space
+        # Reconstruction space
         discr_reco_space = odl.uniform_discr([-20, -20, -20], [20, 20, 20],
                                              [100, 100, 100], dtype=dtype)
 
         # Geometry
         dpart = odl.uniform_partition([-50, -50], [50, 50], [200, 200])
-        geom = tomo.CircularConeFlatGeometry(
+        geom = tomo.ConeFlatGeometry(
             apart, dpart, src_radius=100, det_radius=100, axis=[1, 0, 0])
 
         # Ray transform
         return tomo.RayTransform(discr_reco_space, geom, impl=impl)
 
     elif geom == 'helical':
-        # Discrete reconstruction space
+        # Reconstruction space
         discr_reco_space = odl.uniform_discr([-20, -20, 0], [20, 20, 40],
                                              [100, 100, 100], dtype=dtype)
 
@@ -134,8 +134,8 @@ def projector(request):
         n_angle = 2000
         apart = odl.uniform_partition(0, 8 * 2 * np.pi, n_angle)
         dpart = odl.uniform_partition([-50, -4], [50, 4], [200, 20])
-        geom = tomo.HelicalConeFlatGeometry(apart, dpart, pitch=5.0,
-                                            src_radius=100, det_radius=100)
+        geom = tomo.ConeFlatGeometry(
+            apart, dpart, src_radius=100, det_radius=100, pitch=5.0)
 
         # Windowed ray transform
         return tomo.RayTransform(discr_reco_space, geom, impl=impl)
@@ -160,7 +160,7 @@ def test_fbp_reconstruction(projector):
     fbp_operator = odl.tomo.fbp_op(projector)
 
     # Add window if problem is in 3d.
-    if (isinstance(projector.geometry, odl.tomo.HelicalConeFlatGeometry) and
+    if (isinstance(projector.geometry, odl.tomo.ConeFlatGeometry) and
             projector.geometry.pitch != 0):
         fbp_operator = fbp_operator * odl.tomo.tam_danielson_window(projector)
 

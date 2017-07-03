@@ -9,106 +9,363 @@
 """Test ODL geometry objects for tomography."""
 
 from __future__ import division
+
+from itertools import permutations, product
 import pytest
 import numpy as np
 
 import odl
-from odl.util.testutils import almost_equal, all_almost_equal, all_equal
+from odl.util.testutils import all_almost_equal, all_equal, simple_fixture
 
 
-# TODO: test for rotations about arbitrary axis
+# --- pytest fixtures --- #
 
-def test_parallel_2d_geometry():
-    """General parallel 2D geometries."""
 
-    # Parameters
+det_pos_init_2d_params = list(set(permutations((1, 0))) |
+                              set(permutations((-1, 0))) |
+                              set(permutations((1, -1))))
+det_pos_init_2d = simple_fixture('det_pos_init', det_pos_init_2d_params)
+
+det_pos_init_3d_params = list(set(permutations((1, 0, 0))) |
+                              set(permutations((-1, 0, 0))) |
+                              set(permutations((1, -1, 0))) |
+                              set(product((-1, 1), repeat=3)))
+det_pos_init_3d = simple_fixture('det_pos_init', det_pos_init_3d_params)
+axis = simple_fixture('axis', det_pos_init_3d_params)
+shift = simple_fixture('shift', [0, 1])
+
+
+# --- tests --- #
+
+
+def test_parallel_2d_props(shift):
+    """Test basic properties of 2D parallel geometries."""
     full_angle = np.pi
     apart = odl.uniform_partition(0, full_angle, 10)
     dpart = odl.uniform_partition(0, 1, 10)
-    geom = odl.tomo.Parallel2dGeometry(apart, dpart)
+    translation = np.array([shift, shift], dtype=float)
+    geom = odl.tomo.Parallel2dGeometry(apart, dpart, translation=translation)
 
     assert geom.ndim == 2
     assert isinstance(geom.detector, odl.tomo.Flat1dDetector)
 
-    # detector rotation
+    # Check defaults
+    assert all_almost_equal(geom.det_pos_init, translation + [0, 1])
+    assert all_almost_equal(geom.det_refpoint(0), geom.det_pos_init)
+    assert all_almost_equal(geom.det_point_position(0, 0), geom.det_pos_init)
+    assert all_almost_equal(geom.det_axis_init, [1, 0])
+    assert all_almost_equal(geom.det_axis(0), [1, 0])
+    assert all_almost_equal(geom.translation, translation)
+
+    # Check that we first rotate, then shift along the rotated axis, which
+    # is equivalent to shifting first and then rotating.
+    # Here we expect to rotate the reference point to [-1, 0] and then shift
+    # by 1 (=detector param) along the detector axis [0, 1] at that angle.
+    # Global translation should be added afterwards.
+    assert all_almost_equal(geom.det_point_position(np.pi / 2, 1),
+                            translation + [-1, 1])
+    assert all_almost_equal(geom.det_axis(np.pi / 2), [0, 1])
+
+    # Detector to source vector, should be independent of the detector
+    # parameter and of translation.
+    # At pi/2 it should point into the (+x) direction.
+    assert all_almost_equal(geom.det_to_src(np.pi / 2, 0), [1, 0])
+    assert all_almost_equal(geom.det_to_src(np.pi / 2, 1), [1, 0])
+
+    # Rotation matrix, should correspond to counter-clockwise rotation
+    assert all_almost_equal(geom.rotation_matrix(np.pi / 2), [[0, -1],
+                                                              [1, 0]])
+
+    # Make sure that the boundary cases are treated as valid
+    geom.det_point_position(0, 0)
+    geom.det_point_position(full_angle, 1)
+
+    # Invalid parameter
     with pytest.raises(ValueError):
         geom.rotation_matrix(2 * full_angle)
 
-    rot_mat = geom.rotation_matrix(np.pi / 2)
-    assert all_almost_equal(rot_mat.dot([1, 0]), [0, 1])
-    assert all_almost_equal(rot_mat.dot([0, 1]), [-1, 0])
-
-    # check str and repr work without crashing and return something
+    # Check that str and repr work without crashing and return something
     assert str(geom)
     assert repr(geom)
 
 
-def test_parallel_3d_single_axis_geometry():
-    """General parallel 3D geometries."""
-
-    # Parameters
+def test_parallel_2d_orientation(det_pos_init_2d):
+    """Check if the orientation is positive for any ``det_pos_init``."""
     full_angle = np.pi
     apart = odl.uniform_partition(0, full_angle, 10)
-    dpart = odl.uniform_partition([0, 0], [1, 1], [10, 10])
+    dpart = odl.uniform_partition(0, 1, 10)
+    det_pos_init = det_pos_init_2d
+    geom = odl.tomo.Parallel2dGeometry(apart, dpart, det_pos_init=det_pos_init)
 
-    # Bad init
-    with pytest.raises(TypeError):
-        odl.tomo.Parallel3dAxisGeometry([0, 1], dpart)
-    with pytest.raises(TypeError):
-        odl.tomo.Parallel3dAxisGeometry(apart, [0, 1])
+    assert all_almost_equal(geom.det_pos_init, det_pos_init)
+    assert all_almost_equal(geom.det_refpoint(0), det_pos_init)
+    assert all_almost_equal(geom.det_point_position(0, 0), det_pos_init)
 
-    # Initialize
-    geom = odl.tomo.Parallel3dAxisGeometry(apart, dpart, axis=[0, 0, 1])
+    # The detector-to-source normal should always be perpendicular to the
+    # detector axis and form a positively oriented system
+    for angle in [0, np.pi / 2, 3 * np.pi / 4, np.pi]:
+        dot = np.dot(geom.det_to_src(angle, 0), geom.det_axis(angle))
+        assert dot == pytest.approx(0)
 
+        normal_det_to_src = (geom.det_to_src(angle, 0) /
+                             np.linalg.norm(geom.det_to_src(angle, 0)))
+
+        orient = np.linalg.det(np.vstack([normal_det_to_src,
+                                          geom.det_axis(angle)]))
+        assert orient == pytest.approx(1)
+
+
+def test_parallel_2d_slanted_detector():
+    """Check if non-standard detector axis is handled correctly."""
+    full_angle = np.pi
+    apart = odl.uniform_partition(0, full_angle, 10)
+    dpart = odl.uniform_partition(0, 1, 10)
+
+    # Detector forms a 45 degree angle with the x axis at initial position,
+    # with positive direction upwards
+    init_axis = [1, 1]
+    geom = odl.tomo.Parallel2dGeometry(apart, dpart, det_pos_init=[0, 1],
+                                       det_axis_init=init_axis)
+
+    assert all_almost_equal(geom.det_pos_init, [0, 1])
+
+    norm_axis = np.array(init_axis, dtype=float)
+    norm_axis /= np.linalg.norm(norm_axis)
+    assert all_almost_equal(geom.det_axis_init, norm_axis)
+
+    sqrt_1_2 = np.sqrt(1.0 / 2.0)
+    # At angle 0: detector position at param 1 should be
+    # [0, 1] + [sqrt(1/2), sqrt(1/2)]
+    assert all_almost_equal(geom.det_point_position(0, 1),
+                            [sqrt_1_2, 1 + sqrt_1_2])
+
+    # At angle pi/2: detector position at param 1 should be
+    # [-1, 0] + [-sqrt(1/2), +sqrt(1/2)]
+    assert all_almost_equal(geom.det_point_position(np.pi / 2, 1),
+                            [-1 - sqrt_1_2, sqrt_1_2])
+
+
+def test_parallel_2d_frommatrix():
+    """Test the ``frommatrix`` constructor in 2d parallel geometry."""
+    full_angle = np.pi
+    apart = odl.uniform_partition(0, full_angle, 10)
+    dpart = odl.uniform_partition(0, 1, 10)
+    angle = 3 * np.pi / 4
+    rot_matrix = np.array([[np.cos(angle), -np.sin(angle)],
+                          [np.sin(angle), np.cos(angle)]])
+
+    # Start at [0, 1] with extra rotation by 135 degrees, making 225 degrees
+    # in total for the initial position (at the bisector in the 3rd quardant)
+    geom = odl.tomo.Parallel2dGeometry.frommatrix(apart, dpart, rot_matrix)
+
+    init_pos = np.array([-1, -1], dtype=float)
+    init_pos /= np.linalg.norm(init_pos)
+    assert all_almost_equal(geom.det_pos_init, init_pos)
+
+    norm_axis = np.array([-1, 1], dtype=float)
+    norm_axis /= np.linalg.norm(norm_axis)
+    assert all_almost_equal(geom.det_axis_init, norm_axis)
+
+    # With translation (1, 1)
+    matrix = np.hstack([rot_matrix, [[1], [1]]])
+    geom = odl.tomo.Parallel2dGeometry.frommatrix(apart, dpart, matrix)
+
+    assert all_almost_equal(geom.translation, [1, 1])
+
+    init_pos_from_center = np.array([-1, -1], dtype=float)
+    init_pos_from_center /= np.linalg.norm(init_pos_from_center)
+    assert all_almost_equal(geom.det_pos_init,
+                            geom.translation + init_pos_from_center)
+
+    # Singular matrix, should raise
+    sing_mat = [[1, 1],
+                [1, 1]]
+    with pytest.raises(np.linalg.LinAlgError):
+        geom = odl.tomo.Parallel2dGeometry.frommatrix(apart, dpart, sing_mat)
+
+
+def test_parallel_3d_props(shift):
+    """Test basic properties of 3D parallel geometries."""
+    full_angle = np.pi
+    apart = odl.uniform_partition(0, full_angle, 10)
+    dpart = odl.uniform_partition([0, 0], [1, 1], (10, 10))
+    translation = np.array([shift, shift, shift], dtype=float)
+    geom = odl.tomo.Parallel3dAxisGeometry(apart, dpart,
+                                           translation=translation)
+
+    assert geom.ndim == 3
+    assert isinstance(geom.detector, odl.tomo.Flat2dDetector)
+
+    # Check defaults
+    assert all_almost_equal(geom.axis, [0, 0, 1])
+    assert all_almost_equal(geom.det_pos_init, translation + [0, 1, 0])
+    assert all_almost_equal(geom.det_refpoint(0), geom.det_pos_init)
+    assert all_almost_equal(geom.det_point_position(0, [0, 0]),
+                            geom.det_pos_init)
+    assert all_almost_equal(geom.det_axes_init, ([1, 0, 0], [0, 0, 1]))
+    assert all_almost_equal(geom.det_axes(0), ([1, 0, 0], [0, 0, 1]))
+    assert all_almost_equal(geom.translation, translation)
+
+    # Check that we first rotate, then shift along the initial detector
+    # axes rotated according to the angle, which is equivalent to shifting
+    # first and then rotating.
+    # Here we expect to rotate the reference point to [-1, 0, 0] and then
+    # shift by (1, 1) (=detector param) along the detector axes
+    # ([0, 1, 0], [0, 0, 1]) at that angle.
+    # Global translation should come last.
+    assert all_almost_equal(geom.det_point_position(np.pi / 2, [1, 1]),
+                            translation + [-1, 1, 1])
+
+    # Detector to source vector, should be independent of the detector
+    # parameter. At pi/2 it should point into the (+x) direction.
+    assert all_almost_equal(geom.det_to_src(np.pi / 2, [0, 0]), [1, 0, 0])
+    assert all_almost_equal(geom.det_to_src(np.pi / 2, [1, 1]), [1, 0, 0])
+
+    # Rotation matrix, should correspond to counter-clockwise rotation
+    # arond the z axis
+    assert all_almost_equal(geom.rotation_matrix(np.pi / 2),
+                            [[0, -1, 0],
+                             [1, 0, 0],
+                             [0, 0, 1]])
+
+    # Make sure that the boundary cases are treated as valid
+    geom.det_point_position(0, [0, 0])
+    geom.det_point_position(full_angle, [1, 1])
+
+    # Invalid parameter
     with pytest.raises(ValueError):
         geom.rotation_matrix(2 * full_angle)
 
-    # rotation of cartesian basis vectors about each other
-    coords = np.eye(3)
-
-    geom = odl.tomo.Parallel3dAxisGeometry(apart, dpart, axis=[1, 0, 0])
-    rot_mat = geom.rotation_matrix(np.pi / 2)
-    assert all_almost_equal(rot_mat.dot(coords), [[1, 0, 0],
-                                                  [0, 0, -1],
-                                                  [0, 1, 0]])
-
-    geom = odl.tomo.Parallel3dAxisGeometry(apart, dpart, axis=[0, 1, 0])
-    rot_mat = geom.rotation_matrix(np.pi / 2)
-    assert all_almost_equal(rot_mat.dot(coords), [[0, 0, 1],
-                                                  [0, 1, 0],
-                                                  [-1, 0, 0]])
-
-    geom = odl.tomo.Parallel3dAxisGeometry(apart, dpart, axis=[0, 0, 1])
-    rot_mat = geom.rotation_matrix(np.pi / 2)
-    assert all_almost_equal(rot_mat.dot(coords), [[0, -1, 0],
-                                                  [1, 0, 0],
-                                                  [0, 0, 1]])
-
-    # rotation axis
-    geom = odl.tomo.Parallel3dAxisGeometry(apart, dpart, axis=[1, 0, 0])
-    assert all_equal(geom.axis, np.array([1, 0, 0]))
-    geom = odl.tomo.Parallel3dAxisGeometry(apart, dpart, axis=[0, 1, 0])
-    assert all_equal(geom.axis, np.array([0, 1, 0]))
-    geom = odl.tomo.Parallel3dAxisGeometry(apart, dpart, axis=[0, 0, 1])
-    assert all_equal(geom.axis, np.array([0, 0, 1]))
-    geom = odl.tomo.Parallel3dAxisGeometry(apart, dpart, axis=[1, 2, 3])
-    assert all_equal(geom.axis,
-                     np.array([1, 2, 3]) / np.linalg.norm([1, 2, 3]))
-
+    # Zero not allowed as axis
     with pytest.raises(ValueError):
-        odl.tomo.Parallel3dAxisGeometry(apart, dpart, axis=(1,))
-    with pytest.raises(ValueError):
-        odl.tomo.Parallel3dAxisGeometry(apart, dpart, axis=(1, 2))
-    with pytest.raises(ValueError):
-        odl.tomo.Parallel3dAxisGeometry(apart, dpart, axis=(1, 2, 3, 4))
+        odl.tomo.Parallel3dAxisGeometry(apart, dpart, axis=[0, 0, 0])
 
-    # check str and repr work without crashing and return something
+    # Detector axex should not be parallel or otherwise result in a
+    # linear dependent triplet
+    with pytest.raises(ValueError):
+        odl.tomo.Parallel3dAxisGeometry(
+            apart, dpart, det_axes_init=([0, 1, 0], [0, 1, 0]))
+    with pytest.raises(ValueError):
+        odl.tomo.Parallel3dAxisGeometry(
+            apart, dpart, det_axes_init=([0, 0, 0], [0, 1, 0]))
+
+    # Check that str and repr work without crashing and return something
     assert str(geom)
     assert repr(geom)
+
+
+def test_parallel_3d_orientation(axis):
+    """Check if the orientation is positive for any ``axis``."""
+    full_angle = np.pi
+    apart = odl.uniform_partition(0, full_angle, 10)
+    dpart = odl.uniform_partition([0, 0], [1, 1], (10, 10))
+    geom = odl.tomo.Parallel3dAxisGeometry(apart, dpart, axis=axis)
+
+    norm_axis = np.array(axis, dtype=float) / np.linalg.norm(axis)
+    assert all_almost_equal(geom.axis, norm_axis)
+    # The symmetry axis should be the second detector axis by default
+    assert all_almost_equal(geom.axis, geom.det_axes_init[1])
+
+    # The detector-to-source normal should always be perpendicular to both
+    # detector axes, and the triplet (normal, det_ax0, det_ax1) should form
+    # a positively oriented system
+    for angle in [0, np.pi / 2, 3 * np.pi / 4, np.pi]:
+        dot0 = np.dot(geom.det_to_src(angle, [0, 0]), geom.det_axes(angle)[0])
+        dot1 = np.dot(geom.det_to_src(angle, [0, 0]), geom.det_axes(angle)[1])
+        assert dot0 == pytest.approx(0)
+        assert dot1 == pytest.approx(0)
+
+        normal_det_to_src = (geom.det_to_src(angle, [0, 0]) /
+                             np.linalg.norm(geom.det_to_src(angle, [0, 0])))
+
+        axis_0, axis_1 = geom.det_axes(angle)
+        orient = np.linalg.det(np.vstack([normal_det_to_src, axis_0, axis_1]))
+        assert orient == pytest.approx(1)
+
+    # check str and repr work without crashing and return a non-empty string
+    assert str(geom)
+    assert repr(geom)
+
+
+def test_parallel_3d_slanted_detector():
+    """Check if non-standard detector axes are handled correctly."""
+    full_angle = np.pi
+    apart = odl.uniform_partition(0, full_angle, 10)
+    dpart = odl.uniform_partition([0, 0], [1, 1], (10, 10))
+
+    # Detector axis 0 lies in the bisector of the positive quadrant of the
+    # x-y plane. Axis 1 is perpendicular to axis 0 and forms a 45 degree
+    # angle with the x-y plane.
+    init_axis_0 = [1, 1, 0]
+    init_axis_1 = [-1, 1, 1]
+    geom = odl.tomo.Parallel3dAxisGeometry(
+        apart, dpart, det_axes_init=[init_axis_0, init_axis_1])
+
+    assert all_almost_equal(geom.det_pos_init, [0, 1, 0])
+
+    norm_axis_0 = np.array(init_axis_0, dtype=float)
+    norm_axis_0 /= np.linalg.norm(norm_axis_0)
+    norm_axis_1 = np.array(init_axis_1, dtype=float)
+    norm_axis_1 /= np.linalg.norm(norm_axis_1)
+    assert all_almost_equal(geom.det_axes_init, [norm_axis_0, norm_axis_1])
+
+    # At angle 0: detector position at param (1, 1) should be
+    # [0, 1, 0] +
+    #   [sqrt(1/2), sqrt(1/2), 0] + [-sqrt(1/3), sqrt(1/3), sqrt(1/3)]
+    sqrt_1_2 = np.sqrt(1.0 / 2.0)
+    sqrt_1_3 = np.sqrt(1.0 / 3.0)
+    true_det_pt = [sqrt_1_2 - sqrt_1_3, 1 + sqrt_1_2 + sqrt_1_3, sqrt_1_3]
+    assert all_almost_equal(geom.det_point_position(0, [1, 1]), true_det_pt)
+
+    # At angle pi/2: detector position at param (1, 1) should be
+    # [-1, 0, 0] +
+    #   [-sqrt(1/2), sqrt(1/2), 0] + [-sqrt(1/3), -sqrt(1/3), sqrt(1/3)]
+    true_det_pt = [-1 - sqrt_1_2 - sqrt_1_3, sqrt_1_2 - sqrt_1_3, sqrt_1_3]
+    assert all_almost_equal(geom.det_point_position(np.pi / 2, [1, 1]),
+                            true_det_pt)
+
+    # Check that str and repr work without crashing and return something
+    assert str(geom)
+    assert repr(geom)
+
+
+def test_parallel_3d_frommatrix():
+    """Test the ``frommatrix`` constructor in 3d parallel geometry."""
+    full_angle = np.pi
+    apart = odl.uniform_partition(0, full_angle, 10)
+    dpart = odl.uniform_partition([0, 0], [1, 1], (10, 10))
+    # Need a somewhat simpler rotation in 3d to not go crazy imagining the
+    # rotation.
+    # This one rotates by +pi/2 in phi and -pi/2 in theta, resulting in the
+    # axis remapping x->y, y->-z, z->-x.
+    rot_matrix = np.array([[0, 0, -1],
+                           [1, 0, 0],
+                           [0, -1, 0]], dtype=float)
+    geom = odl.tomo.Parallel3dAxisGeometry.frommatrix(apart, dpart, rot_matrix)
+
+    # Axis was [0, 0, 1], gets mapped to [-1, 0, 0]
+    assert all_almost_equal(geom.axis, [-1, 0, 0])
+
+    # Detector position starts at [0, 1, 0] and gets mapped to [0, 0, -1]
+    assert all_almost_equal(geom.det_pos_init, [0, 0, -1])
+
+    # Detector axes start at [1, 0, 0] and [0, 0, 1], and get mapped to
+    # [0, 1, 0] and [-1, 0, 0]
+    assert all_almost_equal(geom.det_axes_init, ([0, 1, 0], [-1, 0, 0]))
+
+    # With translation (1, 1, 1)
+    matrix = np.hstack([rot_matrix, [[1], [1], [1]]])
+    geom = odl.tomo.Parallel3dAxisGeometry.frommatrix(apart, dpart, matrix)
+
+    assert all_almost_equal(geom.translation, (1, 1, 1))
+    assert all_almost_equal(geom.det_pos_init, geom.translation + [0, 0, -1])
 
 
 def test_parallel_beam_geometry_helper():
-    """Test that parallel_beam_geometry satisfies the sampling conditions."""
+    """Test that parallel_beam_geometry satisfies the sampling conditions.
+
+    See the `parallel_beam_geometry` documentation for the exact conditions.
+    """
     # --- 2d case ---
     space = odl.uniform_discr([-1, -1], [1, 1], [20, 20])
     geometry = odl.tomo.parallel_beam_geometry(space)
@@ -145,7 +402,7 @@ def test_parallel_beam_geometry_helper():
     assert pytest.approx(geometry.det_partition.min_pt[1], 0.0)
     assert pytest.approx(geometry.det_partition.max_pt[1], 2.0)
     assert geometry.det_partition.shape[1] == space.shape[2]
-    assert all_equal(geometry.det_init_axes[1], geometry.axis)
+    assert all_equal(geometry.det_axes_init[1], geometry.axis)
 
     # --- offset geometry ---
     space = odl.uniform_discr([0, 0], [2, 2], [20, 20])
@@ -164,156 +421,292 @@ def test_parallel_beam_geometry_helper():
     assert pytest.approx(geometry.det_partition.extent, 2 * rho)
 
 
-def test_fanflat():
-    """2D fanbeam geometry with 1D line detector."""
+def test_fanflat_props(shift):
+    """Test basic properties of 2d fanflat geometries."""
+    full_angle = 2 * np.pi
+    apart = odl.uniform_partition(0, full_angle, 10)
+    dpart = odl.uniform_partition(0, 1, 10)
+    src_rad = 10
+    det_rad = 5
+    translation = np.array([shift, shift], dtype=float)
+    geom = odl.tomo.FanFlatGeometry(apart, dpart, src_rad, det_rad,
+                                    translation=translation)
 
-    # Parameters
+    assert geom.ndim == 2
+    assert isinstance(geom.detector, odl.tomo.Flat1dDetector)
+
+    # Check defaults
+    assert all_almost_equal(geom.src_to_det_init, [0, 1])
+    assert all_almost_equal(geom.src_position(0), translation + [0, -src_rad])
+    assert all_almost_equal(geom.det_refpoint(0), translation + [0, det_rad])
+    assert all_almost_equal(geom.det_point_position(0, 0),
+                            geom.det_refpoint(0))
+    assert all_almost_equal(geom.det_axis_init, [1, 0])
+    assert all_almost_equal(geom.det_axis(0), [1, 0])
+    assert all_almost_equal(geom.translation, translation)
+
+    # Check that we first rotate, then shift along the rotated axis, which
+    # is equivalent to shifting first and then rotating.
+    # Here we expect to rotate the reference point to [-det_rad, 0] and then
+    # shift by 1 (=detector param) along the detector axis [0, 1] at that
+    # angle.
+    # Global translation should come afterwards.
+    assert all_almost_equal(geom.det_point_position(np.pi / 2, 1),
+                            translation + [-det_rad, 1])
+    assert all_almost_equal(geom.det_axis(np.pi / 2), [0, 1])
+
+    # Detector to source vector. At param=0 it should be perpendicular to
+    # the detector towards the source, here at pi/2 it should point into
+    # the (+x) direction.
+    # At any other parameter, when adding the non-normalized vector to the
+    # detector point position, one should get the source position.
+    assert all_almost_equal(geom.det_to_src(np.pi / 2, 0), [1, 0])
+    src_pos = (geom.det_point_position(np.pi / 2, 1) +
+               geom.det_to_src(np.pi / 2, 1, normalized=False))
+    assert all_almost_equal(src_pos, geom.src_position(np.pi / 2))
+
+    # Rotation matrix, should correspond to counter-clockwise rotation
+    assert all_almost_equal(geom.rotation_matrix(np.pi / 2), [[0, -1],
+                                                              [1, 0]])
+
+    # Make sure that the boundary cases are treated as valid
+    geom.det_point_position(0, 0)
+    geom.det_point_position(full_angle, 1)
+
+    # Invalid parameter
+    with pytest.raises(ValueError):
+        geom.rotation_matrix(2 * full_angle)
+
+    # Both radii zero
+    with pytest.raises(ValueError):
+        odl.tomo.FanFlatGeometry(apart, dpart, src_radius=0, det_radius=0)
+
+    # Check that str and repr work without crashing and return something
+    assert str(geom)
+    assert repr(geom)
+
+
+def test_fanflat_frommatrix():
+    """Test the ``frommatrix`` constructor in 2d fan beam geometry."""
     full_angle = np.pi
     apart = odl.uniform_partition(0, full_angle, 10)
     dpart = odl.uniform_partition(0, 1, 10)
     src_rad = 10
     det_rad = 5
+    angle = 3 * np.pi / 4
+    rot_matrix = np.array([[np.cos(angle), -np.sin(angle)],
+                          [np.sin(angle), np.cos(angle)]])
 
-    with pytest.raises(TypeError):
-        odl.tomo.FanFlatGeometry([0, 1], dpart, src_rad, det_rad)
-    with pytest.raises(TypeError):
-        odl.tomo.FanFlatGeometry(apart, [0, 1], src_rad, det_rad)
-    with pytest.raises(ValueError):
-        odl.tomo.FanFlatGeometry(apart, dpart, -1, det_rad)
-    with pytest.raises(ValueError):
-        odl.tomo.FanFlatGeometry(apart, dpart, src_rad, -1)
+    # Start at [0, 1] with extra rotation by 135 degrees, making 225 degrees
+    # in total for the initial position (at the bisector in the 3rd quardant)
+    geom = odl.tomo.FanFlatGeometry.frommatrix(apart, dpart, src_rad, det_rad,
+                                               rot_matrix)
 
-    # Initialize
-    geom = odl.tomo.FanFlatGeometry(apart, dpart, src_rad, det_rad)
+    init_src_to_det = np.array([-1, -1], dtype=float)
+    init_src_to_det /= np.linalg.norm(init_src_to_det)
+    assert all_almost_equal(geom.src_to_det_init, init_src_to_det)
 
-    assert all_almost_equal(geom.angles, apart.points().ravel())
+    norm_axis = np.array([-1, 1], dtype=float)
+    norm_axis /= np.linalg.norm(norm_axis)
+    assert all_almost_equal(geom.det_axis_init, norm_axis)
 
-    with pytest.raises(ValueError):
-        geom.det_refpoint(2 * full_angle)
+    # With translation (1, 1)
+    matrix = np.hstack([rot_matrix, [[1], [1]]])
+    geom = odl.tomo.FanFlatGeometry.frommatrix(apart, dpart, src_rad, det_rad,
+                                               matrix)
 
-    assert geom.det_refpoint(0)[0] == det_rad
-    assert geom.det_refpoint(np.pi)[0] == -det_rad
+    assert all_almost_equal(geom.translation, [1, 1])
 
-    assert geom.ndim == 2
-    assert isinstance(geom.detector, odl.tomo.Flat1dDetector)
+    init_pos_from_center = np.array([-1, -1], dtype=float)
+    init_pos_from_center /= np.linalg.norm(init_pos_from_center)
+    init_pos_from_center *= det_rad
+    assert all_almost_equal(geom.det_refpoint(0),
+                            geom.translation + init_pos_from_center)
 
-    # detector rotation
+    # Singular matrix, should raise
+    sing_mat = [[1, 1],
+                [1, 1]]
+    with pytest.raises(np.linalg.LinAlgError):
+        geom = odl.tomo.FanFlatGeometry.frommatrix(apart, dpart, src_rad,
+                                                   det_rad, sing_mat)
+
+
+def test_helical_cone_flat_props(shift):
+    """Test basic properties of 3D helical cone beam geometries."""
+    full_angle = 2 * np.pi
+    apart = odl.uniform_partition(0, full_angle, 10)
+    dpart = odl.uniform_partition([0, 0], [1, 1], (10, 10))
+    src_rad = 10
+    det_rad = 5
+    pitch = 2.0
+    translation = np.array([shift, shift, shift], dtype=float)
+    geom = odl.tomo.ConeFlatGeometry(apart, dpart, src_rad, det_rad,
+                                     pitch=pitch, translation=translation)
+
+    assert geom.ndim == 3
+    assert isinstance(geom.detector, odl.tomo.Flat2dDetector)
+
+    # Check defaults
+    assert all_almost_equal(geom.axis, [0, 0, 1])
+    assert all_almost_equal(geom.src_to_det_init, [0, 1, 0])
+    assert all_almost_equal(geom.src_position(0),
+                            translation + [0, -src_rad, 0])
+    assert all_almost_equal(geom.det_refpoint(0),
+                            translation + [0, det_rad, 0])
+    assert all_almost_equal(geom.det_point_position(0, [0, 0]),
+                            geom.det_refpoint(0))
+    assert all_almost_equal(geom.det_axes_init, ([1, 0, 0], [0, 0, 1]))
+    assert all_almost_equal(geom.det_axes(0), ([1, 0, 0], [0, 0, 1]))
+    assert all_almost_equal(geom.translation, translation)
+
+    # Check that we first rotate, then shift along the initial detector
+    # axes rotated according to the angle, which is equivalent to shifting
+    # first and then rotating.
+    # Here we expect to rotate the reference point to [-det_rad, 0, 0] and
+    # then shift by (1, 1) (=detector param) along the detector axes
+    # ([0, 1, 0], [0, 0, 1]) at that angle. In addition, everything is
+    # shifted along the rotation axis [0, 0, 1] by 1/4 of the pitch
+    # (since the pitch is the vertical distance after a full turn 2*pi).
+    # Global translation should come last.
+    assert all_almost_equal(geom.det_point_position(np.pi / 2, [1, 1]),
+                            translation + [-det_rad, 1, 1 + pitch / 4])
+
+    # Make sure that source and detector move at the same height and stay
+    # opposite of each other
+    src_to_det_ref = (geom.det_refpoint(np.pi / 2) -
+                      geom.src_position(np.pi / 2))
+    assert np.dot(geom.axis, src_to_det_ref) == pytest.approx(0)
+    assert np.linalg.norm(src_to_det_ref) == pytest.approx(src_rad + det_rad)
+
+    # Detector to source vector. At param=0 it should be perpendicular to
+    # the detector towards the source, here at pi/2 it should point into
+    # the (+x) direction.
+    # At any other parameter, when adding the non-normalized vector to the
+    # detector point position, one should get the source position.
+    assert all_almost_equal(geom.det_to_src(np.pi / 2, [0, 0]), [1, 0, 0])
+    src_pos = (geom.det_point_position(np.pi / 2, [1, 1]) +
+               geom.det_to_src(np.pi / 2, [1, 1], normalized=False))
+    assert all_almost_equal(src_pos, geom.src_position(np.pi / 2))
+
+    # Rotation matrix, should correspond to counter-clockwise rotation
+    # arond the z axis
+    assert all_almost_equal(geom.rotation_matrix(np.pi / 2),
+                            [[0, -1, 0],
+                             [1, 0, 0],
+                             [0, 0, 1]])
+
+    # offset_along_axis
+    geom = odl.tomo.ConeFlatGeometry(apart, dpart, src_rad, det_rad,
+                                     pitch=pitch, offset_along_axis=0.5)
+    assert all_almost_equal(geom.det_refpoint(0), [0, det_rad, 0.5])
+
+    # Make sure that the boundary cases are treated as valid
+    geom.det_point_position(0, [0, 0])
+    geom.det_point_position(full_angle, [1, 1])
+
+    # Invalid parameter
     with pytest.raises(ValueError):
         geom.rotation_matrix(2 * full_angle)
 
-    rot_mat = geom.rotation_matrix(np.pi / 2)
-    assert all_almost_equal(rot_mat.dot([1, 0]), [0, 1])
-    assert all_almost_equal(rot_mat.dot([0, 1]), [-1, 0])
+    # Zero not allowed as axis
+    with pytest.raises(ValueError):
+        odl.tomo.ConeFlatGeometry(apart, dpart, src_rad, det_rad,
+                                  pitch=pitch, axis=[0, 0, 0])
 
-    # check str and repr work without crashing and return something
+    # Detector axex should not be parallel or otherwise result in a
+    # linear dependent triplet
+    with pytest.raises(ValueError):
+        odl.tomo.ConeFlatGeometry(
+            apart, dpart, src_rad, det_rad, pitch=pitch,
+            det_axes_init=([0, 1, 0], [0, 1, 0]))
+    with pytest.raises(ValueError):
+        odl.tomo.ConeFlatGeometry(
+            apart, dpart, src_rad, det_rad, pitch=pitch,
+            det_axes_init=([0, 0, 0], [0, 1, 0]))
+
+    # Both radii zero
+    with pytest.raises(ValueError):
+        odl.tomo.ConeFlatGeometry(apart, dpart, src_radius=0, det_radius=0,
+                                  pitch=pitch)
+
+    # Check that str and repr work without crashing and return something
     assert str(geom)
     assert repr(geom)
 
 
-def test_circular_cone_flat():
-    """Conebeam geometry with circular acquisition and a flat 2D detector."""
+def test_cone_beam_geometry_helper():
+    """Test that cone_beam_geometry satisfies the sampling conditions.
 
-    # Parameters
-    full_angle = np.pi
-    apart = odl.uniform_partition(0, full_angle, 10)
-    dpart = odl.uniform_partition([0, 0], [1, 1], [10, 10])
-    src_rad = 10
-    det_rad = 5
+    See the `cone_beam_geometry` documentation for the exact conditions.
+    """
+    # --- 2d case ---
+    space = odl.uniform_discr([-1, -1], [1, 1], [20, 20])
+    src_radius = 3
+    det_radius = 9
+    magnification = (src_radius + det_radius) / src_radius
+    geometry = odl.tomo.cone_beam_geometry(space, src_radius, det_radius)
 
-    with pytest.raises(TypeError):
-        odl.tomo.CircularConeFlatGeometry([0, 1], dpart, src_rad, det_rad)
-    with pytest.raises(TypeError):
-        odl.tomo.CircularConeFlatGeometry(apart, [0, 1], src_rad, det_rad)
-    with pytest.raises(ValueError):
-        odl.tomo.CircularConeFlatGeometry(apart, dpart, -1, det_rad)
-    with pytest.raises(ValueError):
-        odl.tomo.CircularConeFlatGeometry(apart, dpart, src_rad, -1)
+    rho = np.sqrt(2)
+    omega = np.pi * 10.0
+    r = src_radius + det_radius
 
-    # Initialize
-    geom = odl.tomo.CircularConeFlatGeometry(apart, dpart, src_rad, det_rad)
+    # Validate angles
+    assert geometry.motion_partition.is_uniform
+    assert pytest.approx(geometry.motion_partition.extent, 2 * np.pi)
+    assert (geometry.motion_partition.cell_sides <=
+            (r + rho) / r * np.pi / (rho * omega))
 
-    assert all_almost_equal(geom.angles, apart.points().ravel())
+    # Validate detector
+    det_width = 2 * magnification * rho
+    R = np.hypot(r, det_width / 2)
+    assert geometry.det_partition.cell_sides <= np.pi * R / (r * omega)
+    assert pytest.approx(geometry.det_partition.extent, det_width)
 
-    with pytest.raises(ValueError):
-        geom.det_refpoint(2 * full_angle)
+    # Short scan option
+    fan_angle = 2 * np.arctan(det_width / (2 * r))
+    geometry = odl.tomo.cone_beam_geometry(space, src_radius, det_radius,
+                                           short_scan=True)
+    assert pytest.approx(geometry.motion_params.extent, np.pi + fan_angle)
 
-    assert geom.ndim == 3
-    assert np.linalg.norm(geom.det_refpoint(0)) == det_rad
-    assert np.linalg.norm(geom.src_position(np.pi)) == src_rad
-    assert isinstance(geom.detector, odl.tomo.Flat2dDetector)
+    # --- 3d case ---
 
-    # check str and repr work without crashing and return something
-    assert str(geom)
-    assert repr(geom)
+    space = odl.uniform_discr([-1, -1, 0], [1, 1, 2], [20, 20, 40])
+    geometry = odl.tomo.cone_beam_geometry(space, src_radius, det_radius)
 
+    # Validate angles
+    assert geometry.motion_partition.is_uniform
+    assert pytest.approx(geometry.motion_partition.extent, 2 * np.pi)
+    assert (geometry.motion_partition.cell_sides <=
+            (r + rho) / r * np.pi / (rho * omega))
 
-def test_helical_cone_flat():
-    """Conebeam geometry with helical acquisition and a flat 2D detector."""
+    # Validate detector
+    assert geometry.det_partition.cell_sides[0] <= np.pi * R / (r * omega)
+    half_cone_angle = np.arctan(2 / (3 - rho))
+    det_height = 2 * np.sin(half_cone_angle) * (3 + 9)
+    mag = (3 + 9) / (3 + rho)
+    delta_h = space.cell_sides[2] * mag
+    assert geometry.det_partition.cell_sides[1] == pytest.approx(delta_h)
+    assert np.all(geometry.det_partition.extent >= [det_width, det_height])
 
-    # Parameters
-    full_angle = 2 * np.pi
-    apart = odl.uniform_partition(0, full_angle, 10)
-    dpart = odl.uniform_partition([0, 0], [1, 1], [10, 10])
-    src_rad = 10.0
-    det_rad = 5.0
-    pitch = 1.5
+    # --- offset geometry (2d) ---
 
-    with pytest.raises(TypeError):
-        odl.tomo.HelicalConeFlatGeometry([0, 1], dpart,
-                                         src_rad, det_rad, pitch)
-    with pytest.raises(TypeError):
-        odl.tomo.HelicalConeFlatGeometry(apart, [0, 1],
-                                         src_rad, det_rad, pitch)
-    with pytest.raises(ValueError):
-        odl.tomo.HelicalConeFlatGeometry(apart, dpart, -1, det_rad, pitch)
-    with pytest.raises(ValueError):
-        odl.tomo.HelicalConeFlatGeometry(apart, dpart, src_rad, -1, pitch)
+    space = odl.uniform_discr([0, 0], [2, 2], [20, 20])
+    geometry = odl.tomo.cone_beam_geometry(space, src_radius, det_radius)
 
-    # Initialize
-    geom = odl.tomo.HelicalConeFlatGeometry(apart, dpart,
-                                            src_rad, det_rad, pitch)
+    rho = np.sqrt(2) * 2
+    omega = np.pi * 10.0
 
-    assert all_almost_equal(geom.angles, apart.points().ravel())
+    # Validate angles
+    assert geometry.motion_partition.is_uniform
+    assert pytest.approx(geometry.motion_partition.extent, 2 * np.pi)
+    assert (geometry.motion_partition.cell_sides <=
+            (r + rho) / r * np.pi / (rho * omega))
 
-    with pytest.raises(ValueError):
-        geom.det_refpoint(2 * full_angle)
-
-    assert np.linalg.norm(geom.det_refpoint(0)) == det_rad
-    assert almost_equal(np.linalg.norm(geom.det_refpoint(np.pi / 4)[0:2]),
-                        det_rad)
-
-    assert geom.ndim == 3
-    assert isinstance(geom.detector, odl.tomo.Flat2dDetector)
-
-    det_refpoint = geom.det_refpoint(2 * np.pi)
-    assert almost_equal(np.linalg.norm(det_refpoint[0:2]), det_rad)
-
-    angles = geom.angles
-    num_angles = geom.angles.size
-
-    src_rad = geom.src_radius
-    det_rad = geom.det_radius
-    pitch = geom.pitch
-
-    for ang_ind in range(num_angles):
-        angle = angles[ang_ind]
-        z = pitch * angle / (2 * np.pi)
-
-        # source
-        pnt = (-np.cos(angle) * src_rad, -np.sin(angle) * src_rad, z)
-        assert all_almost_equal(geom.src_position(angle), pnt)
-
-        # center of detector
-        det = geom.det_refpoint(angle)
-        src = geom.src_position(angle)
-        val0 = np.linalg.norm(src[0:2]) / src_rad
-        val1 = np.linalg.norm(det[0:2]) / det_rad
-        assert almost_equal(val0, val1)
-        assert almost_equal(src[2], det[2])
-
-    # check str and repr work without crashing and return something
-    assert str(geom)
-    assert repr(geom)
+    # Validate detector
+    det_width = 2 * magnification * rho
+    R = np.hypot(r, det_width / 2)
+    assert geometry.det_partition.cell_sides <= np.pi * R / (r * omega)
+    assert pytest.approx(geometry.det_partition.extent, det_width)
 
 
 if __name__ == '__main__':

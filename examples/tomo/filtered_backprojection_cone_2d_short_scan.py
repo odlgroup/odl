@@ -14,10 +14,10 @@ import numpy as np
 import odl
 
 
-# --- Set-up geometry of the problem --- #
+# --- Set up geometry of the problem --- #
 
 
-# Discrete reconstruction space: discretized functions on the cube
+# Reconstruction space: discretized functions on the cube
 # [-20, 20]^2 with 300 samples per dimension.
 reco_space = odl.uniform_discr(
     min_pt=[-20, -20], max_pt=[20, 20], shape=[300, 300],
@@ -26,8 +26,8 @@ reco_space = odl.uniform_discr(
 # Make a circular cone beam geometry with flat detector
 # Angles: uniformly spaced, n = 360, min = 0, max = pi + fan angle
 angle_partition = odl.uniform_partition(0, np.pi + 0.7, 360)
-# Detector: uniformly sampled, n = 558, min = -40, max = 40
-detector_partition = odl.uniform_partition(-40, 40, 558)
+# Detector: uniformly sampled, n = 512, min = -40, max = 40
+detector_partition = odl.uniform_partition(-40, 40, 512)
 # Geometry with large fan angle
 geometry = odl.tomo.FanFlatGeometry(
     angle_partition, detector_partition, src_radius=80, det_radius=40)
@@ -48,6 +48,7 @@ fbp = odl.tomo.fbp_op(ray_trafo, filter_type='Hann', frequency_scaling=0.8)
 parker_weighting = odl.tomo.parker_weighting(ray_trafo)
 parker_weighting.show()
 parker_weighted_fbp = fbp * parker_weighting
+
 
 # --- Show some examples --- #
 
