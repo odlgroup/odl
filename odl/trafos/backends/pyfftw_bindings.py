@@ -21,15 +21,20 @@ from builtins import range
 from future.utils import raise_from
 
 from multiprocessing import cpu_count
+from pkg_resources import parse_version
+import warnings
 import numpy as np
+from odl.util import (
+    is_real_dtype, dtype_repr, complex_dtype, normalized_axes_tuple)
 try:
     import pyfftw
     PYFFTW_AVAILABLE = True
+    if parse_version(pyfftw.__version__) < parse_version('0.10.4'):
+        warnings.warn('PyFFTW < 0.10.4 is known to cause problems with some '
+                      'ODL functionality, see issue #1002.',
+                      RuntimeWarning)
 except ImportError:
     PYFFTW_AVAILABLE = False
-
-from odl.util import (
-    is_real_dtype, dtype_repr, complex_dtype, normalized_axes_tuple)
 
 
 __all__ = ('pyfftw_call', 'PYFFTW_AVAILABLE')
