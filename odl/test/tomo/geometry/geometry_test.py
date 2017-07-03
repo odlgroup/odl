@@ -595,9 +595,9 @@ def test_helical_cone_flat_props(shift):
                              [1, 0, 0],
                              [0, 0, 1]])
 
-    # pitch_offset
+    # offset_along_axis
     geom = odl.tomo.ConeFlatGeometry(apart, dpart, src_rad, det_rad,
-                                     pitch=pitch, pitch_offset=0.5)
+                                     pitch=pitch, offset_along_axis=0.5)
     assert all_almost_equal(geom.det_refpoint(0), [0, det_rad, 0.5])
 
     # Make sure that the boundary cases are treated as valid

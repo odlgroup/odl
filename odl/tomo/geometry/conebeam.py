@@ -525,8 +525,11 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
 
         Other Parameters
         ----------------
-        pitch_offset : float, optional
-            Offset along the ``axis`` at ``angle=0``. Default: 0.
+        offset_along_axis : float, optional
+            Scalar offset along the ``axis`` at ``angle=0``, i.e., the
+            translation along the axis at angle 0 is
+            ``offset_along_axis * axis``.
+            Default: 0.
         src_to_det_init : `array-like`, shape ``(2,)``, optional
             Initial state of the vector pointing from source to detector
             reference point. The zero vector is not allowed.
@@ -677,7 +680,7 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
                          translation=translation)
 
         self.__pitch = float(pitch)
-        self.__pitch_offset = float(kwargs.pop('pitch_offset', 0))
+        self.__offset_along_axis = float(kwargs.pop('offset_along_axis', 0))
         self.__src_radius = float(src_radius)
         if self.src_radius < 0:
             raise ValueError('source circle radius {} is negative'
@@ -734,7 +737,7 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
 
         Other Parameters
         ----------------
-        pitch_offset : float, optional
+        offset_along_axis : float, optional
             Offset along the ``axis`` at angle 0. Default: 0.
 
         Returns
@@ -835,9 +838,9 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         return self.detector.axes
 
     @property
-    def pitch_offset(self):
-        """Vertical offset at ``angle=0``."""
-        return self.__pitch_offset
+    def offset_along_axis(self):
+        """Scalar offset along ``axis`` at ``angle=0``."""
+        return self.__offset_along_axis
 
     @property
     def angles(self):
@@ -856,7 +859,7 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
 
             det_ref(phi) = translation +
                            rot_matrix(phi) * (det_rad * src_to_det_init) +
-                           (pitch_offset + pitch * phi) * axis
+                           (offset_along_axis + pitch * phi) * axis
 
         where ``src_to_det_init`` is the initial unit vector pointing
         from source to detector.
@@ -902,8 +905,9 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         center_to_det_init = self.det_radius * self.src_to_det_init
         circle_component = self.rotation_matrix(angle).dot(center_to_det_init)
 
-        # Increment along the rotation axis according to pitch and pitch_offset
-        pitch_component = self.axis * (self.pitch_offset +
+        # Increment along the rotation axis according to pitch and
+        # offset_along_axis
+        pitch_component = self.axis * (self.offset_along_axis +
                                        self.pitch * angle / (2 * np.pi))
 
         return self.translation + circle_component + pitch_component
@@ -915,7 +919,7 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
 
             src(phi) = translation +
                        rot_matrix(phi) * (-src_rad * src_to_det_init) +
-                       (pitch_offset + pitch * phi) * axis
+                       (offset_along_axis + pitch * phi) * axis
 
         where ``src_to_det_init`` is the initial unit vector pointing
         from source to detector.
@@ -961,8 +965,8 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         origin_to_src_init = -self.src_radius * self.src_to_det_init
         circle_component = self.rotation_matrix(angle).dot(origin_to_src_init)
 
-        # Increment by pitch
-        pitch_component = self.axis * (self.pitch_offset +
+        # Increment by pitch (including offset)
+        pitch_component = self.axis * (self.offset_along_axis +
                                        self.pitch * angle / (np.pi * 2))
 
         return self.translation + circle_component + pitch_component
@@ -978,7 +982,7 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         if not np.allclose(self.axis, self._default_config['axis']):
             optargs.append(['axis', self.axis.tolist(), None])
 
-        optargs.append(['pitch_offset', self.pitch_offset, 0])
+        optargs.append(['offset_along_axis', self.offset_along_axis, 0])
 
         if self._src_to_det_init_arg is not None:
             optargs.append(['src_to_det_init',
