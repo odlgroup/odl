@@ -680,9 +680,12 @@ def test_cone_beam_geometry_helper():
             (r + rho) / r * np.pi / (rho * omega))
 
     # Validate detector
-    assert np.all(geometry.det_partition.cell_sides <= np.pi * R / (r * omega))
-    rho_vert = np.sqrt(6)  # sqrt(2^2 + 1^2 + 1^2)
-    det_height = 2 * magnification * rho_vert
+    assert geometry.det_partition.cell_sides[0] <= np.pi * R / (r * omega)
+    half_cone_angle = np.arctan(2 / (3 - rho))
+    det_height = 2 * np.sin(half_cone_angle) * (3 + 9)
+    mag = (3 + 9) / (3 + rho)
+    delta_h = space.cell_sides[2] * mag
+    assert geometry.det_partition.cell_sides[1] == pytest.approx(delta_h)
     assert np.all(geometry.det_partition.extent >= [det_width, det_height])
 
     # --- offset geometry (2d) ---

@@ -1014,9 +1014,8 @@ def cone_beam_geometry(space, src_radius, det_radius, num_angles=None,
     The geometry returned by this function has equidistant angles
     that lie (strictly) between 0 and either ``2 * pi`` (full scan)
     or ``pi + fan_angle`` (short scan).
-    The detector is centered around 0 and has square pixels (3D case).
-    Its size is chosen such that the whole ``space`` is covered with
-    lines.
+    The detector is centered around 0, and its size is chosen such that
+    the whole ``space`` is covered with lines.
 
     The number of angles and detector elements is chosen such that
     the resulting sinogram is fully sampled according to the
@@ -1025,15 +1024,15 @@ def cone_beam_geometry(space, src_radius, det_radius, num_angles=None,
     can result in very large detectors since the latter is always
     origin-centered.
 
-    See Parameters and Notes for further details.
-
     Parameters
     ----------
     space : `DiscreteLp`
         Reconstruction space, the space of the volumetric data to be
         projected. Must be 2- or 3-dimensional.
     src_radius : nonnegative float
-        Radius of the source circle.
+        Radius of the source circle. Must be larger than the radius of
+        the smallest vertical cylinder containing ``space.domain``,
+        i.e., the source must be outside the volume for all rotations.
     det_radius : nonnegative float
         Radius of the detector circle.
     short_scan : bool, optional
@@ -1043,7 +1042,7 @@ def cone_beam_geometry(space, src_radius, det_radius, num_angles=None,
     num_angles : int, optional
         Number of angles.
         Default: Enough to fully sample the data, see Notes.
-    det_shape : int or sequence of int, optional
+    det_shape : int or sequence of ints, optional
         Number of detector pixels.
         Default: Enough to fully sample the data, see Notes.
 
@@ -1130,7 +1129,11 @@ def cone_beam_geometry(space, src_radius, det_radius, num_angles=None,
     If the domain is 3-dimensional, a circular cone beam geometry is
     created with the third coordinate axis as rotation axis. This does,
     of course, not yield complete data, but is equivalent to the
-    2D fan beam case in the :math:`z = 0` slice.
+    2D fan beam case in the :math:`z = 0` slice. The vertical size of
+    the detector is chosen such that it covers the object vertically
+    with rays, using a containing cuboid
+    :math:`[-\\rho, \\rho]^2 \\times [z_{\mathrm{min}}, z_{\mathrm{min}}]`
+    to compute the cone angle.
 
     References
     ----------
@@ -1155,6 +1158,9 @@ def cone_beam_geometry(space, src_radius, det_radius, num_angles=None,
     # used here is (w/2)/(rs+rd) = rho/rs since both are equal to tan(alpha),
     # where alpha is the half fan angle.
     rs = float(src_radius)
+    if (rs <= rho):
+        raise ValueError('source too close to the object, resulting in '
+                         'infinite detector for full coverage')
     rd = float(det_radius)
     r = src_radius + det_radius
     w = 2 * rho * (rs + rd) / rs
@@ -1163,7 +1169,6 @@ def cone_beam_geometry(space, src_radius, det_radius, num_angles=None,
     # sampling interval and the computed width
     rb = np.hypot(r, w / 2)  # length of the boundary ray to the flat detector
     num_px_horiz = 2 * int(np.ceil(w * omega * r / (2 * np.pi * rb))) + 1
-    delta_s = w / num_px_horiz
 
     if space.ndim == 2:
         det_min_pt = -w / 2
@@ -1174,11 +1179,22 @@ def cone_beam_geometry(space, src_radius, det_radius, num_angles=None,
         # Compute number of vertical pixels required to cover the object,
         # using the same sampling interval vertically as horizontally.
         # The reasoning is the same as for the computation of w.
-        corners = space.domain.corners()
-        rho_3d = np.max(np.linalg.norm(corners, axis=1))
-        h = 2 * rho_3d * (rs + rd) / rs
-        num_px_vert = int(np.ceil(h / delta_s))
-        h = num_px_vert * delta_s  # make multiple of delta_s
+
+        # Minimum distance of the containing cuboid edges to the source
+        dist = rs - rho
+        # Take angle of the rays going through the top and bottom corners
+        # in that edge
+        half_cone_angle = max(np.arctan(abs(space.partition.min_pt[2]) / dist),
+                              np.arctan(abs(space.partition.max_pt[2]) / dist))
+        h = 2 * np.sin(half_cone_angle) * (rs + rd)
+
+        # Use the vertical spacing from the reco space, corrected for
+        # magnification at the "back" of the object, i.e., where it is
+        # minimal
+        min_mag = (rs + rd) / (rs + rho)
+        delta_h = min_mag * space.cell_sides[2]
+        num_px_vert = int(np.ceil(h / delta_h))
+        h = num_px_vert * delta_h  # make multiple of spacing
 
         det_min_pt = [-w / 2, -h / 2]
         det_max_pt = [w / 2, h / 2]
