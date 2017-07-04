@@ -289,9 +289,15 @@ def test_angles(projector):
     # to the same distance from the detector midpoint, with positive sign
     # if the angle is smaller than pi and negative sign otherwise.
     expected = 2 * np.sqrt(5) if maximum_angle < np.pi else -2 * np.sqrt(5)
-    # This is a bit hard to check strictly, so we mostly test for the
-    # correct side
-    assert max_pixel == pytest.approx(expected, abs=abs(max_pixel))
+
+    # We need to scale with the magnification factor if applicable
+    if isinstance(projector.geometry, odl.tomo.DivergentBeamGeometry):
+        src_to_det = (projector.geometry.src_radius +
+                      projector.geometry.det_radius)
+        magnification = src_to_det / projector.geometry.src_radius
+        expected *= magnification
+
+    assert max_pixel == pytest.approx(expected, abs=0.2)
 
 
 def test_complex(impl):
