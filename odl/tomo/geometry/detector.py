@@ -19,7 +19,8 @@ from odl.tomo.util.utility import perpendicular_vector
 from odl.util import indent_rows, signature_string
 
 
-__all__ = ('Detector', 'FlatDetector', 'Flat1dDetector', 'Flat2dDetector',
+__all__ = ('Detector',
+           'Flat1dDetector', 'Flat2dDetector',
            'CircleSectionDetector')
 
 
@@ -147,33 +148,7 @@ class Detector(object):
             raise NotImplementedError('not implemented for ndim >= 3')
 
 
-class FlatDetector(Detector):
-
-    """Abstract class for flat detectors in 2 and 3 dimensions."""
-
-    def surface_measure(self, param=None):
-        """Constant density function of the surface measure.
-
-        Parameters
-        ----------
-        param : `params` element, optional
-            Parameter value where to evaluate the function
-
-        Returns
-        -------
-        measure : float
-            Constant density 1.0
-        """
-        if param not in self.params:
-            raise ValueError('`param` {} not in the valid range '
-                             '{}'.format(param, self.params))
-        # TODO: apart from being constant, there is no big simplification
-        # in this method compared to parent. Consider removing FlatDetector
-        # altogether.
-        return super(FlatDetector, self).surface_measure(self.params.min_pt)
-
-
-class Flat1dDetector(FlatDetector):
+class Flat1dDetector(Detector):
 
     """A 1d line detector aligned with ``axis``."""
 
@@ -269,7 +244,7 @@ class Flat1dDetector(FlatDetector):
         return repr(self)
 
 
-class Flat2dDetector(FlatDetector):
+class Flat2dDetector(Detector):
 
     """A 2d flat panel detector aligned with ``axes``."""
 

@@ -50,7 +50,8 @@ import numpy as np
 
 from odl.discr import DiscreteLp, DiscreteLpElement
 from odl.tomo.geometry import (
-    Geometry, DivergentBeamGeometry, ParallelBeamGeometry, FlatDetector)
+    Geometry, DivergentBeamGeometry, ParallelBeamGeometry,
+    Flat1dDetector, Flat2dDetector)
 from odl.tomo.util.utility import euler_matrix
 
 
@@ -427,7 +428,7 @@ def astra_projection_geometry(geometry):
         raise ValueError('non-uniform detector sampling is not supported')
 
     if (isinstance(geometry, ParallelBeamGeometry) and
-            isinstance(geometry.detector, FlatDetector) and
+            isinstance(geometry.detector, (Flat1dDetector, Flat2dDetector)) and
             geometry.ndim == 2):
         # TODO: change to parallel_vec when available
         det_width = geometry.det_partition.cell_sides[0]
@@ -440,14 +441,14 @@ def astra_projection_geometry(geometry):
                                            angles)
 
     elif (isinstance(geometry, DivergentBeamGeometry) and
-          isinstance(geometry.detector, FlatDetector) and
+          isinstance(geometry.detector, (Flat1dDetector, Flat2dDetector)) and
           geometry.ndim == 2):
         det_count = geometry.detector.size
         vec = astra_conebeam_2d_geom_to_vec(geometry)
         proj_geom = astra.create_proj_geom('fanflat_vec', det_count, vec)
 
     elif (isinstance(geometry, ParallelBeamGeometry) and
-          isinstance(geometry.detector, FlatDetector) and
+          isinstance(geometry.detector, (Flat1dDetector, Flat2dDetector)) and
           geometry.ndim == 3):
         # Swap detector axes (see astra_*_3d_to_vec)
         det_row_count = geometry.det_partition.shape[0]
@@ -457,7 +458,7 @@ def astra_projection_geometry(geometry):
                                            det_col_count, vec)
 
     elif (isinstance(geometry, DivergentBeamGeometry) and
-          isinstance(geometry.detector, FlatDetector) and
+          isinstance(geometry.detector, (Flat1dDetector, Flat2dDetector)) and
           geometry.ndim == 3):
         # Swap detector axes (see astra_*_3d_to_vec)
         det_row_count = geometry.det_partition.shape[0]
