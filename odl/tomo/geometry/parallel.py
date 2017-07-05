@@ -333,8 +333,11 @@ class Parallel2dGeometry(ParallelBeamGeometry):
         det_pos_init += translation
 
         # Initialize stuff. Normalization of the detector axis happens in
-        # the detector class.
-        detector = Flat1dDetector(dpart, axis=det_axis_init)
+        # the detector class. `check_bounds` is needed for both detector
+        # and geometry.
+        check_bounds = kwargs.get('check_bounds', True)
+        detector = Flat1dDetector(dpart, axis=det_axis_init,
+                                  check_bounds=check_bounds)
         super(Parallel2dGeometry, self).__init__(
             ndim=2, apart=apart, detector=detector, det_pos_init=det_pos_init,
             translation=translation, **kwargs)
@@ -683,9 +686,12 @@ class Parallel3dEulerGeometry(ParallelBeamGeometry):
                                  dtype=float)
         det_pos_init += translation
 
-        # Initialize stuff. Normalization of the detector axes happens in
-        # the detector class.
-        detector = Flat2dDetector(dpart, axes=det_axes_init)
+        # Initialize stuff. Normalization of the detector axis happens in
+        # the detector class. `check_bounds` is needed for both detector
+        # and geometry.
+        check_bounds = kwargs.get('check_bounds', True)
+        detector = Flat2dDetector(dpart, axes=det_axes_init,
+                                  check_bounds=check_bounds)
         super(Parallel3dEulerGeometry, self).__init__(
             ndim=3, apart=apart, detector=detector, det_pos_init=det_pos_init,
             translation=translation, **kwargs)
@@ -1049,9 +1055,12 @@ class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
         det_pos_init += translation
 
         # Initialize stuff. Normalization of the detector axis happens in
-        # the detector class.
+        # the detector class. `check_bounds` is needed for both detector
+        # and geometry.
         AxisOrientedGeometry.__init__(self, axis)
-        detector = Flat2dDetector(dpart, det_axes_init)
+        check_bounds = kwargs.get('check_bounds', True)
+        detector = Flat2dDetector(dpart, axes=det_axes_init,
+                                  check_bounds=check_bounds)
         super(Parallel3dAxisGeometry, self).__init__(
             ndim=3, apart=apart, detector=detector, det_pos_init=det_pos_init,
             translation=translation)
