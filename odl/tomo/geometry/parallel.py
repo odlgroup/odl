@@ -339,8 +339,9 @@ class Parallel2dGeometry(ParallelBeamGeometry):
         detector = Flat1dDetector(dpart, axis=det_axis_init,
                                   check_bounds=check_bounds)
         super(Parallel2dGeometry, self).__init__(
-            ndim=2, apart=apart, detector=detector, det_pos_init=det_pos_init,
-            translation=translation, **kwargs)
+            ndim=2, apart=apart, detector=detector,
+            det_pos_init=det_pos_init, translation=translation,
+            **kwargs)
 
         if self.motion_partition.ndim != 1:
             raise ValueError('`apart` dimension {}, expected 1'
@@ -693,8 +694,9 @@ class Parallel3dEulerGeometry(ParallelBeamGeometry):
         detector = Flat2dDetector(dpart, axes=det_axes_init,
                                   check_bounds=check_bounds)
         super(Parallel3dEulerGeometry, self).__init__(
-            ndim=3, apart=apart, detector=detector, det_pos_init=det_pos_init,
-            translation=translation, **kwargs)
+            ndim=3, apart=apart, detector=detector,
+            det_pos_init=det_pos_init, translation=translation,
+            **kwargs)
 
         if self.motion_partition.ndim not in (2, 3):
             raise ValueError('`apart` has dimension {}, expected '
@@ -1062,17 +1064,13 @@ class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
         detector = Flat2dDetector(dpart, axes=det_axes_init,
                                   check_bounds=check_bounds)
         super(Parallel3dAxisGeometry, self).__init__(
-            ndim=3, apart=apart, detector=detector, det_pos_init=det_pos_init,
-            translation=translation)
+            ndim=3, apart=apart, detector=detector,
+            det_pos_init=det_pos_init, translation=translation,
+            **kwargs)
 
         if self.motion_partition.ndim != 1:
             raise ValueError('`apart` has dimension {}, expected 1'
                              ''.format(self.motion_partition.ndim))
-
-        # Make sure there are no leftover kwargs
-        if kwargs:
-            raise TypeError('got unexpected keyword arguments {}'
-                            ''.format(kwargs))
 
     @classmethod
     def frommatrix(cls, apart, dpart, init_matrix, **kwargs):
