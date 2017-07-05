@@ -346,7 +346,7 @@ class FanFlatGeometry(DivergentBeamGeometry):
 
         Returns
         -------
-        pos : `numpy.ndarray`, shape (2,) or (num_params, 2)
+        pos : `numpy.ndarray`, shape (2,) or (num_angles, 2)
             Vector(s) pointing from the origin to the source.
             If ``angle`` is a single parameter, a single vector
             is returned, otherwise a stack of vectors along axis 0.
@@ -410,7 +410,7 @@ class FanFlatGeometry(DivergentBeamGeometry):
 
         Returns
         -------
-        point : `numpy.ndarray`, shape (2,) or (num_params, 2)
+        point : `numpy.ndarray`, shape (2,) or (num_angles, 2)
             Vector(s) pointing from the origin to the detector reference
             point. If ``angle`` is a single parameter, a single vector
             is returned, otherwise a stack of vectors along axis 0.
@@ -471,7 +471,7 @@ class FanFlatGeometry(DivergentBeamGeometry):
 
         Returns
         -------
-        rot : `numpy.ndarray`, shape (2, 2) or (num_params, 2, 2)
+        rot : `numpy.ndarray`, shape (2, 2) or (num_angles, 2, 2)
             The rotation matrix (or matrices) mapping vectors at the
             initial state to the ones in the state defined by ``angle``.
             The rotation is extrinsic, i.e., defined in the "world"
@@ -944,7 +944,7 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
             of shape ``(3,)`` is returned, each of which stands for
             a detector axis.
             For multiple angle parameters, the tuple contains 2 arrays
-            of shape ``(num_params, 3)``, i.e., a stack of the respective
+            of shape ``(num_angles, 3)``, i.e., a stack of the respective
             vectors along array axis 0.
 
         Notes
@@ -977,7 +977,7 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
 
         Returns
         -------
-        refpt : `numpy.ndarray`, shape (3,) or (num_params, 3)
+        refpt : `numpy.ndarray`, shape (3,) or (num_angles, 3)
             Vector(s) pointing from the origin to the detector reference
             point at ``angle``.
             If ``angle`` is a single parameter, a single vector is
@@ -1052,7 +1052,7 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
 
         Returns
         -------
-        pos : `numpy.ndarray`, shape (3,) or (num_params, 3)
+        pos : `numpy.ndarray`, shape (3,) or (num_angles, 3)
             Vector(s) pointing from the origin to the source position
             at ``angle``.
             If ``angle`` is a single parameter, a single vector is

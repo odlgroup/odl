@@ -187,7 +187,7 @@ class Geometry(object):
 
         Returns
         -------
-        point : `numpy.ndarray`, shape (ndim,) or (num_params, ndim)
+        point : `numpy.ndarray`, shape (ndim,) or (num_mparams, ndim)
             Vector(s) pointing from the origin to the detector reference
             point at ``mparam``.
             If ``mparam`` is a single parameter, a single vector is
@@ -206,7 +206,7 @@ class Geometry(object):
 
         Returns
         -------
-        rot : `numpy.ndarray`, shape (ndim, ndim) or (num_params, ndim, ndim)
+        rot : `numpy.ndarray`, shape (ndim, ndim) or (num_mparams, ndim, ndim)
             The rotation matrix (or matrices) mapping vectors at the
             initial state to the ones in the state defined by ``mparam``.
             The rotation is extrinsic, i.e., defined in the "world"
@@ -232,10 +232,10 @@ class Geometry(object):
 
         Returns
         -------
-        vec : `numpy.ndarray`, shape (ndim,) or (num_params, ndim)
+        vec : `numpy.ndarray`
             (Unit) vector(s) pointing from the detector to the source.
             If both ``mparam`` and ``dparam`` are single parameters, a single
-            vector is returned, otherwise a stack of vectors along axis 0.
+            vector is returned, otherwise a stack of vectors.
         """
         raise NotImplementedError('abstract method')
 
@@ -267,10 +267,10 @@ class Geometry(object):
             The shape of the returned array is as follows:
 
             - ``mparam`` and ``dparam`` single: ``(ndim,)``
-            - ``mparam`` single, ``dparam`` stack: ``(num_dparam, ndim)``
-            - ``mparam`` stack, ``dparam`` single: ``(num_mparam, ndim)``
+            - ``mparam`` single, ``dparam`` stack: ``(num_dparams, ndim)``
+            - ``mparam`` stack, ``dparam`` single: ``(num_mparams, ndim)``
             - ``mparam`` and ``dparam`` stacks:
-              ``(num_mparam, num_dparam, ndim)``
+              ``(num_mparams, num_dparams, ndim)``
 
         Examples
         --------
@@ -313,7 +313,7 @@ class Geometry(object):
                [ 0. ,  1. ],
                [ 0.5,  1. ],
                [ 1. ,  1. ]])
-        >>> pts.shape  # (num_mparam, num_dparam, ndim)
+        >>> pts.shape  # (num_mparams, num_dparams, ndim)
         (3, 4, 2)
         """
         if self.motion_params.ndim == 1:
@@ -390,48 +390,122 @@ class DivergentBeamGeometry(Geometry):
 
         Returns
         -------
-        pos : `numpy.ndarray`, shape (ndim,) or (num_params, ndim)
+        pos : `numpy.ndarray`, shape (ndim,) or (num_mparams, ndim)
             Vector(s) pointing from the origin to the source.
             If ``mparam`` is a single parameter, a single vector
             is returned, otherwise a stack of vectors along axis 0.
         """
         raise NotImplementedError('abstract method')
 
-    def det_to_src(self, mparam, dparam, normalized=True):
-        """Vector pointing from a detector location to the source.
+    def det_to_src(self, angle, dparam, normalized=True):
+        """Vector or direction from a detector location to the source.
 
-        A function of the motion and detector parameters.
+        The unnormalized version of this vector is computed as follows::
 
-        The default implementation uses the `det_point_position` and
-        `src_position` functions. Implementations can override this, for
-        example if no source position is given.
+            vec = src_position(angle) - det_point_position(angle, dparam)
 
         Parameters
         ----------
-        mparam : `array-like`
-            Motion parameter(s) at which to evaluate. An array should
-            stack parameters along axis 0.
-        dparam : `array-like`
+        angle : `array-like`
+            One or several (Euler) angles in radians at which to
+            evaluate. An array should stack parameters along axis 0.
+        dparam : `det_params` element or `array-like`
             Detector parameter(s) at which to evaluate. An array should
             stack parameters along axis 0.
-        normalized : bool, optional
-            If ``True``, normalize the resulting vector(s) to unit length.
 
         Returns
         -------
-        vec : `numpy.ndarray`, shape (ndim,) or (num_params, ndim)
-            (Unit) vector(s) pointing from the detector to the source.
-            If both ``mparam`` and ``dparam`` are single parameters, a single
-            vector is returned, otherwise a stack of vectors along axis 0.
+        det_to_src : `numpy.ndarray`
+            Vector(s) pointing from a detector point to the source (at
+            infinity).
+            The shape of the returned array is as follows:
+
+            - ``mparam`` and ``dparam`` single: ``(ndim,)``
+            - ``mparam`` single, ``dparam`` stack: ``(num_dparams, ndim)``
+            - ``mparam`` stack, ``dparam`` single: ``(num_mparams, ndim)``
+            - ``mparam`` and ``dparam`` stacks:
+              ``(num_mparam, num_dparams, ndim)``
+
+        Examples
+        --------
+        The method works with single parameter values, in which case
+        a single vector is returned:
+
+        >>> apart = odl.uniform_partition(0, 2 * np.pi, 10)
+        >>> dpart = odl.uniform_partition(-1, 1, 20)
+        >>> geom = odl.tomo.FanFlatGeometry(apart, dpart, src_radius=2,
+        ...                                 det_radius=3)
+        >>> geom.det_to_src(0, 0)
+        array([ 0., -1.])
+        >>> geom.det_to_src(0, 0, normalized=False)
+        array([ 0., -5.])
+        >>> vec = geom.det_to_src(0, 1, normalized=False)
+        >>> np.allclose(geom.det_point_position(0, 1) + vec,
+        ...             geom.src_position(0))
+        True
+        >>> dir = geom.det_to_src(np.pi / 2, 0)
+        >>> np.allclose(dir, [1, 0])
+        True
+        >>> dir = geom.det_to_src(np.pi / 2, 0, normalized=False)
+        >>> np.allclose(dir, [5, 0])
+        True
+
+        Both variables support vectorized calls, i.e., stacks of
+        parameters can be provided. The order of axes in the output (left
+        of the ``ndim`` axis for the vector dimension) corresponds to the
+        order of arguments:
+
+        >>> dirs = geom.det_to_src(0, [-1, 0, 0.5, 1])
+        >>> dirs[1]
+        array([ 0., -1.])
+        >>> dirs.shape  # (num_dparams, ndim)
+        (4, 2)
+        >>> dirs = geom.det_to_src([0, np.pi / 2, np.pi], 0)
+        >>> np.allclose(dirs, [[0, -1],
+        ...                    [1, 0],
+        ...                    [0, 1]])
+        True
+        >>> dirs.shape  # (num_angles, ndim)
+        (3, 2)
+        >>> dirs = geom.det_to_src([0, np.pi / 2, np.pi], [-1, 0, 0.5, 1])
+        >>> dirs.shape  # (num_angles, num_dparams, ndim)
+        (3, 4, 2)
         """
-        det_to_src_vec = (self.src_position(mparam) -
-                          self.det_point_position(mparam, dparam))
+        if self.motion_params.ndim == 1:
+            squeeze_angle = np.isscalar(angle)
+            nd_angle = 1
+        else:
+            squeeze_angle = (np.shape(angle) == (self.motion_params.ndim,))
+            nd_angle = 2
+
+        if self.det_params.ndim == 1:
+            squeeze_dparam = np.isscalar(dparam)
+            nd_dparam = 1
+        else:
+            squeeze_dparam = (np.shape(dparam) == (self.det_params.ndim,))
+            nd_dparam = 2
+
+        # Always call the downstream methods with vectorized arguments
+        # to be able to reliably manipulate the final axes of the result
+        angle = np.array(angle, dtype=float, copy=False, ndmin=nd_angle)
+        dparam = np.array(dparam, dtype=float, copy=False, ndmin=nd_dparam)
+
+        src_pos = self.src_position(angle)  # shape (a, ndim)
+        det_pt_pos = self.det_point_position(angle, dparam)  # (a, d, ndim)
+        # Broadcast along middle (detector) axis
+        det_to_src = src_pos[:, None, :] - det_pt_pos
 
         if normalized:
-            # axis = -1 allows this to be vectorized
-            det_to_src_vec /= np.linalg.norm(det_to_src_vec, axis=-1)
+            det_to_src /= np.linalg.norm(det_to_src, axis=-1, keepdims=True)
 
-        return det_to_src_vec
+        # Determine final shape by inserting depending on the `squeeze_*` flags
+        final_shape = [self.ndim]
+        if not squeeze_dparam:
+            final_shape.insert(0, dparam.shape[0])
+        if not squeeze_angle:
+            final_shape.insert(0, angle.shape[0])
+
+        return det_to_src.reshape(final_shape)
 
 
 class AxisOrientedGeometry(object):
@@ -476,7 +550,7 @@ class AxisOrientedGeometry(object):
 
         Returns
         -------
-        rot : `numpy.ndarray`, shape (3, 3) or (num_params, 3, 3)
+        rot : `numpy.ndarray`, shape (3, 3) or (num_angles, 3, 3)
             The rotation matrix (or matrices) mapping vectors at the
             initial state to the ones in the state defined by ``angle``.
             The rotation is extrinsic, i.e., defined in the "world"

@@ -161,33 +161,117 @@ class ParallelBeamGeometry(Geometry):
     def det_to_src(self, angle, dparam):
         """Direction from a detector location to the source.
 
-        In parallel geometry, this function is independent of the
-        detector parameter since the (virtual) source is infinitely
-        far away.
+        The direction vector is computed as follows::
+
+            dir = rotation_matrix(angle).dot(detector.surface_normal(dparam))
+
+        Note that for flat detectors, ``surface_normal`` does not depend
+        on the parameter ``dparam``, hence this function is constant in
+        that variable.
 
         Parameters
         ----------
         angle : `array-like`
             One or several (Euler) angles in radians at which to
             evaluate. An array should stack parameters along axis 0.
-        dparam : `array-like`
+        dparam : `det_params` element or `array-like`
             Detector parameter(s) at which to evaluate. An array should
             stack parameters along axis 0.
 
         Returns
         -------
-        vec : `numpy.ndarray`, shape (ndim,) or (num_params, ndim)
-            Unit vector(s) pointing from the detector to the source.
-            If both ``angle`` and ``dparam`` are single parameters, a single
-            vector is returned, otherwise a stack of vectors along axis 0.
-        """
-        if self.check_bounds:
-            if not self.det_params.contains_all(dparam):
-                raise ValueError('`dparam` {} not in the valid range '
-                                 '{}'.format(dparam, self.det_params))
+        det_to_src : `numpy.ndarray`
+            Vector(s) pointing from a detector point to the source (at
+            infinity).
+            The shape of the returned array is as follows:
 
-        return self.rotation_matrix(angle).dot(
-            self.detector.surface_normal(dparam))
+            - ``mparam`` and ``dparam`` single: ``(ndim,)``
+            - ``mparam`` single, ``dparam`` stack: ``(num_dparams, ndim)``
+            - ``mparam`` stack, ``dparam`` single: ``(num_mparams, ndim)``
+            - ``mparam`` and ``dparam`` stacks:
+              ``(num_mparam, num_dparams, ndim)``
+
+        Examples
+        --------
+        The method works with single parameter values, in which case
+        a single vector is returned:
+
+        >>> apart = odl.uniform_partition(0, np.pi, 10)
+        >>> dpart = odl.uniform_partition(-1, 1, 20)
+        >>> geom = odl.tomo.Parallel2dGeometry(apart, dpart)
+        >>> geom.det_to_src(0, 0)
+        array([ 0., -1.])
+        >>> geom.det_to_src(0, 1)
+        array([ 0., -1.])
+        >>> dir = geom.det_to_src(np.pi / 2, 0)
+        >>> np.allclose(dir, [1, 0])
+        True
+        >>> dir = geom.det_to_src(np.pi / 2, 1)
+        >>> np.allclose(dir, [1, 0])
+        True
+
+        Both variables support vectorized calls, i.e., stacks of
+        parameters can be provided. The order of axes in the output (left
+        of the ``ndim`` axis for the vector dimension) corresponds to the
+        order of arguments:
+
+        >>> dirs = geom.det_to_src(0, [-1, 0, 0.5, 1])
+        >>> dirs
+        array([[ 0., -1.],
+               [ 0., -1.],
+               [ 0., -1.],
+               [ 0., -1.]])
+        >>> dirs.shape  # (num_dparams, ndim)
+        (4, 2)
+        >>> dirs = geom.det_to_src([0, np.pi / 2, np.pi], 0)
+        >>> np.allclose(dirs, [[0, -1],
+        ...                    [1, 0],
+        ...                    [0, 1]])
+        True
+        >>> dirs.shape  # (num_angles, ndim)
+        (3, 2)
+        >>> dirs = geom.det_to_src([0, np.pi / 2, np.pi], [-1, 0, 0.5, 1])
+        >>> dirs[0]  # Same as above with single angle, multiple dparams
+        array([[ 0., -1.],
+               [ 0., -1.],
+               [ 0., -1.],
+               [ 0., -1.]])
+        >>> dirs.shape  # (num_angles, num_dparams, ndim)
+        (3, 4, 2)
+        """
+        if self.motion_params.ndim == 1:
+            squeeze_angle = np.isscalar(angle)
+            nd_angle = 1
+        else:
+            squeeze_angle = (np.shape(angle) == (self.motion_params.ndim,))
+            nd_angle = 2
+
+        if self.det_params.ndim == 1:
+            squeeze_dparam = np.isscalar(dparam)
+            nd_dparam = 1
+        else:
+            squeeze_dparam = (np.shape(dparam) == (self.det_params.ndim,))
+            nd_dparam = 2
+
+        # Always call the downstream methods with vectorized arguments
+        # to be able to reliably manipulate the final axes of the result
+        angle = np.array(angle, dtype=float, copy=False, ndmin=nd_angle)
+        dparam = np.array(dparam, dtype=float, copy=False, ndmin=nd_dparam)
+
+        mat = self.rotation_matrix(angle)  # shape (m, ndim, ndim)
+        surf = self.detector.surface_normal(dparam)  # shape (d, ndim)
+        # Transpose to take dot along axis 1
+        det_to_src = mat.dot(surf.T)  # shape (m, ndim, d)
+        det_to_src = np.swapaxes(det_to_src, 1, 2)  # shape (m, d, ndim)
+
+        # Determine final shape by inserting depending on the `squeeze_*` flags
+        final_shape = [self.ndim]
+        if not squeeze_dparam:
+            final_shape.insert(0, dparam.shape[0])
+        if not squeeze_angle:
+            final_shape.insert(0, angle.shape[0])
+
+        return det_to_src.reshape(final_shape)
 
 
 class Parallel2dGeometry(ParallelBeamGeometry):
