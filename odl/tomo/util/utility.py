@@ -539,37 +539,60 @@ def perpendicular_vector(vec):
     Parameters
     ----------
     vec : `array-like`
-        Vector of arbitrary length.
+        Vector(s) of arbitrary length. If called with multiple vectors,
+        they must be stacked along axis 0.
 
     Returns
     -------
     perp_vec : `numpy.ndarray`
-        Array of same size such that ``<vec, perp_vec> == 0``
+        Array of same shape as ``vec`` such that ``dot(vec, perp_vec) == 0``
+        (pairwise if there are multiple vectors).
 
     Examples
     --------
     Works in 2d:
 
-    >>> perpendicular_vector([1, 0])
-    array([ 0.,  1.])
     >>> perpendicular_vector([0, 1])
     array([-1.,  0.])
+    >>> np.allclose(perpendicular_vector([1, 0]), [0, 1])  # would print -0
+    True
 
     And in 3d:
 
-    >>> perpendicular_vector([1, 0, 0])
-    array([ 0.,  1.,  0.])
     >>> perpendicular_vector([0, 1, 0])
     array([-1.,  0.,  0.])
     >>> perpendicular_vector([0, 0, 1])
     array([ 1.,  0.,  0.])
-    """
-    vec = np.asarray(vec)
+    >>> np.allclose(perpendicular_vector([1, 0, 0]), [0, 1, 0])
+    True
 
-    if np.all(vec == 0):
+    The function is vectorized, i.e., it can be called with multiple
+    vectors at once (stacked along axis 0):
+
+    >>> perpendicular_vector([[0, 1, 0], [0, 0, 1]])
+    array([[-1.,  0.,  0.],
+           [ 1.,  0.,  0.]])
+    """
+    squeeze_out = (np.ndim(vec) == 1)
+    vec = np.array(vec, dtype=float, copy=False, ndmin=2)
+
+    if np.any(np.all(vec == 0, axis=1)):
         raise ValueError('zero vector')
 
     result = np.zeros(vec.shape)
+    cond = np.any(vec[:, :2] != 0, axis=1)
+    if np.any(cond):
+        result[cond, 0] = -vec[cond, 1]
+        result[cond, 1] = vec[cond, 0]
+    if np.any(~cond):
+        result[~cond, 0] = 1
+    result / np.linalg.norm(result, axis=1, keepdims=True)
+
+    if squeeze_out:
+        result = result.squeeze()
+
+    return result
+
     if np.any(vec[:2] != 0):
         result[:2] = [-vec[1], vec[0]]
     else:
