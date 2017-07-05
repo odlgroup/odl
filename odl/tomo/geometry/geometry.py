@@ -242,9 +242,14 @@ class Geometry(object):
     def det_point_position(self, mparam, dparam):
         """Return the detector point at ``(mparam, dparam)``.
 
-        The motion parameter ``mparam`` is used to move the detector
-        reference point, and the detector parameter ``dparam`` defines
-        an intrinsic shift that is added to the reference point.
+        The position is computed as follows::
+
+            pos = refpoint(mparam) +
+                  rotation_matrix(mparam).dot(detector.surface(dparam))
+
+        In other words, the motion parameter ``mparam`` is used to move the
+        detector reference point, and the detector parameter ``dparam``
+        defines an intrinsic shift that is added to the reference point.
 
         Parameters
         ----------
@@ -257,15 +262,98 @@ class Geometry(object):
 
         Returns
         -------
-        pos : `numpy.ndarray`, shape (ndim,) or (num_params, ndim)
+        pos : `numpy.ndarray`
             Vector(s) pointing from the origin to the detector point.
-            If both ``mparam`` and ``dparam`` are single parameters, a single
-            vector is returned, otherwise a stack of vectors along axis 0.
+            The shape of the returned array is as follows:
+
+            - ``mparam`` and ``dparam`` single: ``(ndim,)``
+            - ``mparam`` single, ``dparam`` stack: ``(num_dparam, ndim)``
+            - ``mparam`` stack, ``dparam`` single: ``(num_mparam, ndim)``
+            - ``mparam`` and ``dparam`` stacks:
+              ``(num_mparam, num_dparam, ndim)``
+
+        Examples
+        --------
+        The method works with single parameter values, in which case
+        a single vector is returned:
+
+        >>> apart = odl.uniform_partition(0, np.pi, 10)
+        >>> dpart = odl.uniform_partition(-1, 1, 20)
+        >>> geom = odl.tomo.Parallel2dGeometry(apart, dpart)
+        >>> geom.det_point_position(0, 0)  # (0, 1) + 0 * (1, 0)
+        array([ 0.,  1.])
+        >>> geom.det_point_position(0, 1)  # (0, 1) + 1 * (1, 0)
+        array([ 1.,  1.])
+        >>> pt = geom.det_point_position(np.pi / 2, 0)  # (-1, 0) + 0 * (0, 1)
+        >>> np.allclose(pt, [-1, 0])
+        True
+        >>> pt = geom.det_point_position(np.pi / 2, 1)  # (-1, 0) + 1 * (0, 1)
+        >>> np.allclose(pt, [-1, 1])
+        True
+
+        Both variables support vectorized calls, i.e., stacks of
+        parameters can be provided. The order of axes in the output (left
+        of the ``ndim`` axis for the vector dimension) corresponds to the
+        order of arguments:
+
+        >>> geom.det_point_position(0, [-1, 0, 0.5, 1])
+        array([[-1. ,  1. ],
+               [ 0. ,  1. ],
+               [ 0.5,  1. ],
+               [ 1. ,  1. ]])
+        >>> pts = geom.det_point_position([0, np.pi / 2, np.pi], 0)
+        >>> np.allclose(pts, [[0, 1],
+        ...                   [-1, 0],
+        ...                   [0, -1]])
+        True
+        >>> pts = geom.det_point_position([0, np.pi / 2, np.pi],
+        ...                               [-1, 0, 0.5, 1])
+        >>> pts[0]  # Same as above with single angle, multiple dparams
+        array([[-1. ,  1. ],
+               [ 0. ,  1. ],
+               [ 0.5,  1. ],
+               [ 1. ,  1. ]])
+        >>> pts.shape  # (num_mparam, num_dparam, ndim)
+        (3, 4, 2)
         """
-        # Offset relative to the detector reference point
-        offset = self.rotation_matrix(mparam).dot(
-            self.detector.surface(dparam))
-        return self.det_refpoint(mparam) + offset
+        if self.motion_params.ndim == 1:
+            squeeze_mparam = np.isscalar(mparam)
+            nd_mparam = 1
+        else:
+            squeeze_mparam = (np.shape(mparam) == (self.motion_params.ndim,))
+            nd_mparam = 2
+
+        if self.det_params.ndim == 1:
+            squeeze_dparam = np.isscalar(dparam)
+            nd_dparam = 1
+        else:
+            squeeze_dparam = (np.shape(dparam) == (self.det_params.ndim,))
+            nd_dparam = 2
+
+        # Always call the downstream methods with vectorized arguments
+        # to be able to reliably manipulate the final axes of the result
+        mparam = np.array(mparam, dtype=float, copy=False, ndmin=nd_mparam)
+        dparam = np.array(dparam, dtype=float, copy=False, ndmin=nd_dparam)
+
+        refpt = self.det_refpoint(mparam)  # shape (m, ndim)
+
+        mat = self.rotation_matrix(mparam)  # shape (m, ndim, ndim)
+        surf = self.detector.surface(dparam)  # shape (d, ndim)
+        # Transpose to take dot along axis 1
+        offset = mat.dot(surf.T)  # shape (m, ndim, d)
+        offset = np.swapaxes(offset, 1, 2)  # shape (m, d, ndim)
+
+        # Broadcast along axis 1 (detector)
+        pos = refpt[:, None, :] + offset
+
+        # Determine final shape by inserting depending on the `squeeze_*` flags
+        final_shape = [self.ndim]
+        if not squeeze_dparam:
+            final_shape.insert(0, dparam.shape[0])
+        if not squeeze_mparam:
+            final_shape.insert(0, mparam.shape[0])
+
+        return pos.reshape(final_shape)
 
     @property
     def implementation_cache(self):

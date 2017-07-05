@@ -322,7 +322,9 @@ def astra_conebeam_2d_geom_to_vec(geometry):
 
     # Center of detector
     mid_pt = geometry.det_params.mid_pt
-    centers = geometry.det_point_position(angles, mid_pt)
+    # Need to cast `mid_pt` to float since otherwise the empty axis is
+    # not removed
+    centers = geometry.det_point_position(angles, float(mid_pt))
     vectors[:, 2:4] = rot_minus_90.dot(centers.T).T
 
     # Vector from detector pixel 0 to 1
