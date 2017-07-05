@@ -141,8 +141,14 @@ class ParallelBeamGeometry(Geometry):
         >>> np.allclose(geom.det_refpoint(np.pi / 2), [-1, 0, 0])
         True
         """
-        squeeze_out = np.isscalar(angle)
-        angle = np.array(angle, dtype=float, copy=False, ndmin=1)
+        if self.motion_params.ndim == 1:
+            squeeze_out = np.isscalar(angle)
+            nd = 1
+        else:
+            squeeze_out = (np.shape(angle) == (self.motion_params.ndim,))
+            nd = 2
+
+        angle = np.array(angle, dtype=float, copy=False, ndmin=nd)
 
         rot_part = self.rotation_matrix(angle).dot(
             self.det_pos_init - self.translation)
@@ -180,7 +186,8 @@ class ParallelBeamGeometry(Geometry):
                 raise ValueError('`dparam` {} not in the valid range '
                                  '{}'.format(dparam, self.det_params))
 
-        return self.rotation_matrix(angle).dot(self.detector.normal)
+        return self.rotation_matrix(angle).dot(
+            self.detector.surface_normal(dparam))
 
 
 class Parallel2dGeometry(ParallelBeamGeometry):
@@ -327,7 +334,7 @@ class Parallel2dGeometry(ParallelBeamGeometry):
 
         # Initialize stuff. Normalization of the detector axis happens in
         # the detector class.
-        detector = Flat1dDetector(part=dpart, axis=det_axis_init)
+        detector = Flat1dDetector(dpart, axis=det_axis_init)
         super(Parallel2dGeometry, self).__init__(
             ndim=2, apart=apart, detector=detector, det_pos_init=det_pos_init,
             translation=translation, **kwargs)
@@ -678,7 +685,7 @@ class Parallel3dEulerGeometry(ParallelBeamGeometry):
 
         # Initialize stuff. Normalization of the detector axes happens in
         # the detector class.
-        detector = Flat2dDetector(part=dpart, axes=det_axes_init)
+        detector = Flat2dDetector(dpart, axes=det_axes_init)
         super(Parallel3dEulerGeometry, self).__init__(
             ndim=3, apart=apart, detector=detector, det_pos_init=det_pos_init,
             translation=translation, **kwargs)

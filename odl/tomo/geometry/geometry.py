@@ -358,13 +358,13 @@ class AxisOrientedGeometry(object):
         axis : `array-like`, shape ``(3,)``
             Vector defining the fixed rotation axis of this geometry.
         """
-        axis, axis_in = np.asarray(axis, dtype=float), axis
+        axis = np.asarray(axis, dtype=float)
         if axis.shape != (3,):
             raise ValueError('`axis.shape` must be (3,), got {}'
                              ''.format(axis.shape))
 
-        if np.linalg.norm(axis) <= 1e-10:
-            raise ValueError('`axis` {} too close to zero'.format(axis_in))
+        if np.linalg.norm(axis) == 0:
+            raise ValueError('`axis` cannot be zero')
 
         self.__axis = axis / np.linalg.norm(axis)
 

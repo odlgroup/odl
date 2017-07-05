@@ -745,11 +745,16 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
 
         # Check and normalize `src_to_det_init`. Detector axes are
         # normalized in the detector class.
-        if np.linalg.norm(src_to_det_init) <= 1e-10:
-            raise ValueError('`src_to_det_init` norm {} too close to 0'
-                             ''.format(np.linalg.norm(src_to_det_init)))
+        if np.linalg.norm(src_to_det_init) == 0:
+            raise ValueError('`src_to_det_init` cannot be zero')
         else:
             src_to_det_init /= np.linalg.norm(src_to_det_init)
+
+        # Get stuff out of kwargs, otherwise upstream code complains
+        # about unknown parameters (rightly so)
+        self.__pitch = float(pitch)
+        self.__offset_along_axis = float(kwargs.pop('offset_along_axis', 0))
+        self.__src_radius = float(src_radius)
 
         # Initialize stuff
         self.__src_to_det_init = src_to_det_init
@@ -758,9 +763,7 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         super(ConeFlatGeometry, self).__init__(
             ndim=3, motion_part=apart, detector=detector, **kwargs)
 
-        self.__pitch = float(pitch)
-        self.__offset_along_axis = float(kwargs.pop('offset_along_axis', 0))
-        self.__src_radius = float(src_radius)
+        # Check parameters
         if self.src_radius < 0:
             raise ValueError('source circle radius {} is negative'
                              ''.format(src_radius))
