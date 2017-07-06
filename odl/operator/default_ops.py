@@ -317,7 +317,7 @@ class MultiplyOperator(Operator):
 
         >>> op2 = MultiplyOperator(3.0, domain=r3, range=r3)
         >>> op2.adjoint(x)
-        rn(3).element([3.0, 6.0, 9.0])
+        rn(3).element([ 3.,  6.,  9.])
         """
         if self.__domain_is_field:
             return InnerProductOperator(self.multiplicand)
