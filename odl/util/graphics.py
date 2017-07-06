@@ -55,8 +55,13 @@ def _colorbar_ticks(minval, maxval):
     """Return the ticks (values show) in the colorbar."""
     if not (np.isfinite(minval) and np.isfinite(maxval)):
         return [0, 0, 0]
+    elif minval == maxval:
+        return [minval]
     else:
-        return [minval, (maxval + minval) / 2., maxval]
+        # Add eps to ensure values stay inside the range of the colorbar.
+        # Otherwise they may occationally not display.
+        eps = (maxval - minval) / 1e5
+        return [minval + eps, (maxval + minval) / 2., maxval - eps]
 
 
 def _digits(minval, maxval):
