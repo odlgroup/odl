@@ -86,19 +86,20 @@ class ParallelBeamGeometry(Geometry):
         The reference point is given by a rotation of the initial
         position by ``angle``.
 
-        For an angle ``phi``, the detector position is given by ::
+        For an angle (or a vector of angles) ``phi``, the detector position
+        is given by ::
 
             det_ref(phi) = translation +
-                           rot_matrix(phi) * (det_pos_init - translation)
+                           rotation_matrix(phi) * (det_pos_init - translation)
 
         where ``det_pos_init`` is the detector reference point at initial
         state.
 
         Parameters
         ----------
-        angle : float or `array-like`
-            Angle(s) in radians describing the counter-clockwise
-            rotation of the detector.
+        angle : `array-like`
+            One or several (Euler) angles in radians at which to
+            evaluate. An array should stack parameters along axis 0.
 
         Returns
         -------
@@ -107,6 +108,10 @@ class ParallelBeamGeometry(Geometry):
             point at ``angle``.
             If ``angle`` is a single parameter, a single vector is
             returned, otherwise a stack of vectors along axis 0.
+
+        See Also
+        --------
+        rotation_matrix
 
         Examples
         --------
@@ -185,11 +190,11 @@ class ParallelBeamGeometry(Geometry):
             infinity).
             The shape of the returned array is as follows:
 
-            - ``mparam`` and ``dparam`` single: ``(ndim,)``
-            - ``mparam`` single, ``dparam`` stack: ``(num_dparams, ndim)``
-            - ``mparam`` stack, ``dparam`` single: ``(num_mparams, ndim)``
-            - ``mparam`` and ``dparam`` stacks:
-              ``(num_mparam, num_dparams, ndim)``
+            - ``angle`` and ``dparam`` single: ``(ndim,)``
+            - ``angle`` single, ``dparam`` stack: ``(num_dparams, ndim)``
+            - ``angle`` stack, ``dparam`` single: ``(num_angles, ndim)``
+            - ``angle`` and ``dparam`` stacks:
+              ``(num_angle, num_dparams, ndim)``
 
         Examples
         --------
@@ -927,25 +932,16 @@ class Parallel3dEulerGeometry(ParallelBeamGeometry):
             matrix is returned, otherwise a stack of matrices along axis 0.
         """
         squeeze_out = (np.shape(angles) == (self.motion_params.ndim,))
-        angles = np.array(angles, dtype=float, copy=False, ndmin=2)
+        # Need to transpose (IntervalProd.contains_all expects first axis
+        # to be spatial component, second axis parameter enumeration)
+        angles, angles_in = (
+            np.array(angles, dtype=float, copy=False, ndmin=2).T,
+            angles)
+        if self.check_bounds and not self.motion_params.contains_all(angles):
+            raise ValueError('`angles` {} not in the valid range '
+                             '{}'.format(angles_in, self.motion_params))
 
-        # Need custom check here until #861 is in because arrays are
-        # assumed to be flat in the "point enumeration" axis
-        # TODO: replace when #861 is in
-        def all_contained():
-            if angles.ndim != 2:
-                return False
-
-            mins = np.min(angles, axis=1)
-            maxs = np.max(angles, axis=1)
-            return (np.all(mins >= self.motion_params.min_pt) and
-                    np.all(maxs <= self.motion_params.max_pt))
-
-        if self.check_bounds and not all_contained():
-            raise ValueError('`angles` {} not in the valid range {}'
-                             ''.format(angles, self.motion_params))
-
-        matrix = euler_matrix(*angles.T)
+        matrix = euler_matrix(*angles)
         if squeeze_out:
             matrix = matrix.squeeze()
 

@@ -420,11 +420,11 @@ class DivergentBeamGeometry(Geometry):
             infinity).
             The shape of the returned array is as follows:
 
-            - ``mparam`` and ``dparam`` single: ``(ndim,)``
-            - ``mparam`` single, ``dparam`` stack: ``(num_dparams, ndim)``
-            - ``mparam`` stack, ``dparam`` single: ``(num_mparams, ndim)``
-            - ``mparam`` and ``dparam`` stacks:
-              ``(num_mparam, num_dparams, ndim)``
+            - ``angle`` and ``dparam`` single: ``(ndim,)``
+            - ``angle`` single, ``dparam`` stack: ``(num_dparams, ndim)``
+            - ``angle`` stack, ``dparam`` single: ``(num_angles, ndim)``
+            - ``angle`` and ``dparam`` stacks:
+              ``(num_angle, num_dparams, ndim)``
 
         Examples
         --------

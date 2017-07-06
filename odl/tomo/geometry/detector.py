@@ -622,9 +622,9 @@ class CircleSectionDetector(Detector):
     def surface(self, param):
         """Return the detector surface point corresponding to ``param``.
 
-        The surface point lies on a circle around ``radius * center_dir``
-        through the origin. More precisely, for a parameter ``phi``, the
-        returned point is given by ::
+        The surface point lies on a circle around `center` through the
+        origin. More precisely, for a parameter ``phi``, the returned
+        point is given by ::
 
             surf = radius * ((1 - cos(phi)) * center_dir +
                              sin(phi) * tangent_at_0)
