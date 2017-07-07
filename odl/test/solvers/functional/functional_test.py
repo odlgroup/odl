@@ -432,8 +432,8 @@ def test_translation_of_functional(space):
 
     # Test for conjugate functional
     # The helper function below is tested explicitly further down in this file
-    expected_result = odl.solvers.FunctionalLinearPerturb(
-        test_functional.convex_conj, translation)(x)
+    expected_result = odl.solvers.FunctionalQuadraticPerturb(
+        test_functional.convex_conj, linear_term=translation)(x)
     assert all_almost_equal(translated_functional.convex_conj(x),
                             expected_result, places=places)
 
@@ -511,7 +511,7 @@ def test_multiplication_with_vector(space):
                             places=places)
 
 
-def test_functional_linear_perturb(space):
+def test_functional_quadratic_perturb(space):
     """Test for the functional f(.) + <y, .>."""
     # Less strict checking for single precision
     places = 3 if space.dtype == np.float32 else 5
@@ -521,7 +521,8 @@ def test_functional_linear_perturb(space):
 
     # Creating the functional ||x||_2^2 and add the linear perturbation
     orig_func = odl.solvers.L2NormSquared(space)
-    functional = odl.solvers.FunctionalLinearPerturb(orig_func, linear_term)
+    functional = odl.solvers.FunctionalQuadraticPerturb(
+            orig_func, linear_term=linear_term)
 
     # Create an element in the space, in which to evaluate
     x = noise_element(space)

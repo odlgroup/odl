@@ -26,7 +26,7 @@ from odl.solvers.nonsmooth import (proximal_arg_scaling, proximal_translation,
 __all__ = ('Functional', 'FunctionalLeftScalarMult',
            'FunctionalRightScalarMult', 'FunctionalComp',
            'FunctionalRightVectorMult', 'FunctionalSum', 'FunctionalScalarSum',
-           'FunctionalTranslation', 'FunctionalLinearPerturb',
+           'FunctionalTranslation', 'FunctionalQuadraticPerturb',
            'FunctionalProduct', 'FunctionalQuotient', 'simple_functional')
 
 
@@ -807,9 +807,9 @@ class FunctionalTranslation(Functional):
         optimization problems*. IEEE Signal Processing Magazine, 32.6 (2015),
         pp 31--54.
         """
-        return FunctionalLinearPerturb(
+        return FunctionalQuadraticPerturb(
             self.functional.convex_conj,
-            self.translation)
+            linear_term=self.translation)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -822,19 +822,22 @@ class FunctionalTranslation(Functional):
                                           self.translation)
 
 
-class FunctionalLinearPerturb(Functional):
+class FunctionalQuadraticPerturb(Functional):
 
-    """The ``Functional`` representing ``f(.) + <linear_term, .>``."""
+    """The ``Functional`` representing ``F(.) + a * |.|^2 + <., u>``."""
 
-    def __init__(self, func, linear_term):
+    def __init__(self, func, quadratic_term=0, linear_term=None):
         """Initialize a new instance.
 
         Parameters
         ----------
         func : `Functional`
             Function corresponding to ``f``.
-        linear_term : `domain` element
+        quadratic_term : ``domain.field`` element, optional
+            Quadratic term.
+        linear_term : `domain` element, optional
             Element in domain of ``func``, corresponding to the translation.
+            Default: Zero element.
         """
         if not isinstance(func, Functional):
             raise TypeError('`func` {} is not a `Functional` instance'
@@ -850,12 +853,26 @@ class FunctionalLinearPerturb(Functional):
                                      linear_term.norm())
 
         self.__functional = func
-        self.__linear_term = func.domain.element(linear_term)
+        self.__quadratic_term = func.domain.field.element(quadratic_term)
+
+        if self.quadratic_term < 0:
+            raise TypeError('`quadratic_term` {} must be non-negative'
+                            ''.format(self.quadratic_term))
+
+        if linear_term is not None:
+            self.__linear_term = func.domain.element(linear_term)
+        else:
+            self.__linear_term = func.domain.zero()
 
     @property
     def functional(self):
         """The original functional."""
         return self.__functional
+
+    @property
+    def quadratic_term(self):
+        """The translation."""
+        return self.__quadratic_term
 
     @property
     def linear_term(self):
@@ -864,16 +881,20 @@ class FunctionalLinearPerturb(Functional):
 
     def _call(self, x):
         """Apply the functional to the given point."""
-        return self.functional(x) + x.inner(self.linear_term)
+        return (self.functional(x) +
+                self.quadratic_term * x.inner(x) +
+                x.inner(self.linear_term))
 
     @property
     def gradient(self):
         """Gradient operator of the functional."""
-        return self.functional.gradient + ConstantOperator(self.linear_term)
+        return (self.functional.gradient +
+                self.quadratic_term * IdentityOperator(self.domain) +
+                ConstantOperator(self.linear_term))
 
     @property
     def proximal(self):
-        """Proximal factory of the linearly perturbed functional.
+        """Proximal factory of the quadratically perturbed functional.
 
         See Also
         --------
@@ -881,7 +902,8 @@ class FunctionalLinearPerturb(Functional):
 proximal_quadratic_perturbation
         """
         return proximal_quadratic_perturbation(
-            self.functional.proximal, a=0, u=self.linear_term)
+            self.functional.proximal,
+            a=self.quadratic_term, u=self.linear_term)
 
     @property
     def convex_conj(self):
@@ -905,18 +927,25 @@ proximal_quadratic_perturbation
         optimization problems*. IEEE Signal Processing Magazine, 32.6 (2015),
         pp 31--54.
         """
-        return self.functional.convex_conj.translated(
-            self.linear_term)
+        if self.quadratic_term == 0:
+            return self.functional.convex_conj.translated(
+                self.linear_term)
+        else:
+            return super().convex_conj
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r}, {!r})'.format(self.__class__.__name__,
-                                       self.functional, self.linear_term)
+        return '{}({!r}, {!r}, {!r})'.format(self.__class__.__name__,
+                                             self.functional,
+                                             self.quadratic_term,
+                                             self.linear_term)
 
     def __str__(self):
         """Return ``str(self)``."""
-        return '{}({}, {})'.format(self.__class__.__name__,
-                                   self.functional, self.linear_term)
+        return '{}({}, {}, {})'.format(self.__class__.__name__,
+                                       self.functional,
+                                       self.quadratic_term,
+                                       self.linear_term)
 
 
 class FunctionalProduct(Functional, OperatorPointwiseProduct):

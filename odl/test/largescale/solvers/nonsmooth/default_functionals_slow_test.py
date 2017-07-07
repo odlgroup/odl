@@ -24,20 +24,21 @@ from odl.solvers.functional.functional import FunctionalDefaultConvexConjugate
 pytestmark = odl.util.skip_if_no_largescale
 
 stepsize = simple_fixture('stepsize', [0.1, 1.0, 10.0])
-offset = simple_fixture('offset', [False, True])
+linear_offset = simple_fixture('linear_offset', ['none', True])
+quadratic_offset = simple_fixture('quadratic_offset', [False, True])
 dual = simple_fixture('dual', [False, True])
 
 
 func_params = ['l1', 'l2', 'l2^2', 'kl', 'kl_cross_ent', 'const',
                'groupl1-1', 'groupl1-2',
-               'nuclearnorm-1-1', 'nuclearnorm-1-2', 'nuclearnorm-1-inf'
+               'nuclearnorm-1-1', 'nuclearnorm-1-2', 'nuclearnorm-1-inf',
                'quadratic', 'linear']
 
 func_ids = [' f = {} '.format(p.ljust(10)) for p in func_params]
 
 
 @pytest.fixture(scope="module", ids=func_ids, params=func_params)
-def functional(request, offset, dual):
+def functional(request, linear_offset, quadratic_offset, dual):
     """Return functional whose proximal should be tested."""
     name = request.param.strip()
 
@@ -75,7 +76,18 @@ def functional(request, offset, dual):
     else:
         assert False
 
-    if offset:
+    if quadratic_offset:
+        if linear_offset:
+            g = noise_element(space)
+            if name.startswith('kl'):
+                g = np.abs(g)
+        else:
+            g = None
+
+        quadratic_term = 1.32
+        func = odl.solvers.FunctionalQuadraticPerturb(
+                  func, quadratic_term=quadratic_term, linear_term=g)
+    elif linear_offset:
         g = noise_element(space)
         if name.startswith('kl'):
             g = np.abs(g)
@@ -110,6 +122,17 @@ def test_proximal_defintion(functional, stepsize):
 
         f(x*) + 1/2 ||x-x*||^2 <= f(y) + 1/2 ||x-y||^2
     """
+    if isinstance(functional, FunctionalDefaultConvexConjugate):
+        pytest.skip('functional has no call method')
+        return
+
+    # No implementation of the proximal for convex conj of
+    # FunctionalQuadraticPerturb unless the quadratic term is 0.
+    if (isinstance(functional, odl.solvers.FunctionalQuadraticPerturb) and
+            functional.quadratic_term != 0):
+        pytest.skip('functional has no proximal')
+        return
+
     # No implementation of the proximal for quardartic form
     if isinstance(functional, odl.solvers.QuadraticForm):
         pytest.skip('functional has no proximal')
@@ -123,7 +146,7 @@ def test_proximal_defintion(functional, stepsize):
 
     # No implementation of the proximal for convex conj of quardartic form,
     # except if the quadratic part is 0.
-    if (isinstance(functional, odl.solvers.FunctionalLinearPerturb) and
+    if (isinstance(functional, odl.solvers.FunctionalQuadraticPerturb) and
             isinstance(functional.functional, odl.solvers.QuadraticForm) and
             functional.functional.operator is not None):
         pytest.skip('functional has no proximal')
@@ -162,8 +185,12 @@ def test_convex_conj_defintion(functional):
 
         <x, y> - f(x) <= f^*(y)
     """
+    if isinstance(functional, FunctionalDefaultConvexConjugate):
+        pytest.skip('functional has no call')
+        return
+
     f_convex_conj = functional.convex_conj
-    if isinstance(functional.convex_conj, FunctionalDefaultConvexConjugate):
+    if isinstance(f_convex_conj, FunctionalDefaultConvexConjugate):
         pytest.skip('functional has no convex conjugate')
         return
 
