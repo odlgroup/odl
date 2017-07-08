@@ -707,6 +707,54 @@ class Operator(object):
                     raise_from(new_exc, err)
         return out
 
+    def norm(self, estimate=False, **kwargs):
+        """Return the operator norm of this operator.
+
+        If this operator is non-linear, this should be the Lipschitz constant.
+
+        Parameters
+        ----------
+        estimate : bool
+            If true, estimate the operator norm. By default, it is estimated
+            using `power_method_opnorm`, which is only applicable for linear
+            operators.
+            Subclasses are allowed to ignore this parameter if they can provide
+            an exact value.
+
+        Other Parameters
+        ----------------
+        kwargs :
+            If ``estimate`` is True, pass these arguments to the
+            `power_method_opnorm` call.
+
+        Returns
+        -------
+        norm : float
+
+        Examples
+        --------
+        Some operators know their own operator norm and do not need an estimate
+
+        >>> spc = odl.rn(3)
+        >>> id = odl.IdentityOperator(spc)
+        >>> id.norm(True)
+        1.0
+
+        For others, there is no closed form expression and an estimate is
+        needed:
+
+        >>> spc = odl.uniform_discr(0, 1, 3)
+        >>> grad = odl.Gradient(spc)
+        >>> opnorm = grad.norm(estimate=True)
+        """
+        if not estimate:
+            raise NotImplementedError('`Operator.norm()` not implemented, use '
+                                      '`Operator.norm(estimate=True)` to '
+                                      'obtain an estimate.')
+        else:
+            from odl.operator.oputils import power_method_opnorm
+            return power_method_opnorm(self, **kwargs)
+
     def __add__(self, other):
         """Return ``self + other``.
 

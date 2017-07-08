@@ -15,6 +15,7 @@ standard_library.install_aliases()
 from builtins import super
 
 from copy import copy
+import numpy as np
 
 from odl.operator.operator import Operator
 from odl.space import ProductSpace
@@ -110,6 +111,28 @@ class ScalingOperator(Operator):
             return self
         else:
             return ScalingOperator(self.domain, self.scalar.conjugate())
+
+    def norm(self, estimate=False, **kwargs):
+        """Return the operator norm of this operator.
+
+        Parameters
+        ----------
+        estimate, kwargs : bool
+            Ignored. Present to conform with base-class interface.
+
+        Returns
+        -------
+        norm : float
+            The operator norm, absolute value of `scalar`.
+
+        Examples
+        --------
+        >>> spc = odl.rn(3)
+        >>> scaling = odl.ScalingOperator(spc, 3.0)
+        >>> scaling.norm(True)
+        3.0
+        """
+        return np.abs(self.scalar)
 
     def __repr__(self):
         """Return ``repr(self)``."""
