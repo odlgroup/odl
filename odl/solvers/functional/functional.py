@@ -846,12 +846,6 @@ class FunctionalQuadraticPerturb(Functional):
         super().__init__(space=func.domain,
                          linear=func.is_linear)
 
-        # Only compute the grad_lipschitz if it is not inf
-        if (not func.grad_lipschitz == np.inf and
-                not np.isnan(func.grad_lipschitz)):
-            self.__grad_lipschitz = (func.grad_lipschitz +
-                                     linear_term.norm())
-
         self.__functional = func
         self.__quadratic_term = func.domain.field.element(quadratic_term)
 
@@ -863,6 +857,16 @@ class FunctionalQuadraticPerturb(Functional):
             self.__linear_term = func.domain.element(linear_term)
         else:
             self.__linear_term = func.domain.zero()
+
+        # Only compute the grad_lipschitz if it is not inf
+        if (not func.grad_lipschitz == np.inf and
+                not np.isnan(func.grad_lipschitz) and
+                self.quadratic_term == 0):
+            if linear_term is None:
+                self.__grad_lipschitz = func.grad_lipschitz
+            else:
+                self.__grad_lipschitz = (func.grad_lipschitz +
+                                         self.linear_term.norm())
 
     @property
     def functional(self):
@@ -889,7 +893,7 @@ class FunctionalQuadraticPerturb(Functional):
     def gradient(self):
         """Gradient operator of the functional."""
         return (self.functional.gradient +
-                self.quadratic_term * IdentityOperator(self.domain) +
+                (2 * self.quadratic_term) * IdentityOperator(self.domain) +
                 ConstantOperator(self.linear_term))
 
     @property

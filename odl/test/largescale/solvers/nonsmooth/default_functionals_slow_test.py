@@ -86,7 +86,7 @@ def functional(request, linear_offset, quadratic_offset, dual):
 
         quadratic_term = 1.32
         func = odl.solvers.FunctionalQuadraticPerturb(
-                  func, quadratic_term=quadratic_term, linear_term=g)
+            func, quadratic_term=quadratic_term, linear_term=g)
     elif linear_offset:
         g = noise_element(space)
         if name.startswith('kl'):

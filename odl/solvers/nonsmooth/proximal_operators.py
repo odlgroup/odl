@@ -231,11 +231,13 @@ def proximal_arg_scaling(prox_factory, scaling):
 
     Notes
     -----
-    Given a functional :math:`F`, this is calculated according to the rule
+    Given a functional :math:`F`, and scaling factor :math:`\\alpha` this is
+    calculated according to the rule
 
     .. math::
-        \mathrm{prox}_{\\sigma F( \cdot scal)}(x) =
-        \\frac{1}{scal} \mathrm{prox}_{\\sigma \, scal^2 \, F }(x \, scal)
+        \mathrm{prox}_{\\sigma F( \cdot \\alpha)}(x) =
+        \\frac{1}{\\alpha}
+        \mathrm{prox}_{\\sigma \, \\alpha^2 \, F }(x \, \\alpha)
 
     where :math:`scal` is the scaling parameter, and :math:`\\sigma` is the
     step size.
