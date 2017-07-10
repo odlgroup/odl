@@ -26,8 +26,9 @@ from odl.solvers.nonsmooth import (proximal_arg_scaling, proximal_translation,
 __all__ = ('Functional', 'FunctionalLeftScalarMult',
            'FunctionalRightScalarMult', 'FunctionalComp',
            'FunctionalRightVectorMult', 'FunctionalSum', 'FunctionalScalarSum',
-           'FunctionalTranslation', 'FunctionalQuadraticPerturb',
-           'FunctionalProduct', 'FunctionalQuotient', 'simple_functional')
+           'FunctionalTranslation', 'InfimalConvolution',
+           'FunctionalQuadraticPerturb', 'FunctionalProduct',
+           'FunctionalQuotient', 'simple_functional')
 
 
 class Functional(Operator):
@@ -820,6 +821,83 @@ class FunctionalTranslation(Functional):
         """Return ``str(self)``."""
         return '{}.translated({})'.format(self.functional,
                                           self.translation)
+
+
+class InfimalConvolution(Functional):
+
+    """The functional representing ``h(x) = inf_y f(x-y) + g(y)``."""
+
+    def __init__(self, funcA, funcB):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        funcA : `Functional`
+            Function corresponding to ``f``.
+        funcB : `Functional`
+            Function corresponding to ``g``.
+
+        Example
+        -------
+        >>> space = odl.rn(3)
+        >>> l1 = odl.solvers.L1Norm(space)
+        >>> l2 = odl.solvers.L2Norm(space)
+        >>> f = odl.solvers.InfimalConvolution(l1, l2)
+        >>> f.convex_conj(0.5*f.domain.one())
+        >>> 0
+        """
+        if not isinstance(funcA, Functional):
+            raise TypeError('`func` {} is not a `Functional` instance'
+                            ''.format(funcA))
+
+        if not isinstance(funcB, Functional):
+            raise TypeError('`func` {} is not a `Functional` instance'
+                            ''.format(funcB))
+
+        self.__functional_left = funcA
+        self.__functional_right = funcB
+
+        super().__init__(space=funcA.domain,
+                         linear=False,
+                         grad_lipschitz=np.nan)
+
+    @property
+    def functional_left(self):
+        """Left functional."""
+        return self.__functional_left
+
+    @property
+    def functional_right(self):
+        """Right functional."""
+        return self.__functional_right
+
+    @property
+    def convex_conj(self):
+        """Convex conjugate functional of the functional.
+
+        Notes
+        -----
+        The convex conjugate of the infimal convolution
+        .. math::
+            h(x) = inf_y f(x-y) + g(y)
+        is the sum of it:
+        .. math::
+            h^*(x) = f^*(x) + g(x)
+        """
+        return self.functional_left.convex_conj + \
+            self.functional_right.convex_conj
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{}({!r}, {!r})'.format(self.__class__.__name__,
+                                       self.functional_left,
+                                       self.functional_right)
+
+    def __str__(self):
+        """Return ``str(self)``."""
+        return '{}({}, {})'.format(self.__class__.__name__,
+                                   self.functional_left,
+                                   self.functional_right)
 
 
 class FunctionalQuadraticPerturb(Functional):
