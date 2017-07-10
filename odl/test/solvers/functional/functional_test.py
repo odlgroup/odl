@@ -498,10 +498,10 @@ def test_multiplication_with_vector(space):
 
 # Fixtures for test_functional_quadratic_perturb
 linear_term = simple_fixture('linear_term', [False, True])
-quadratic_term = simple_fixture('quadratic_term', [0.0, 2.13])
+quadratic_coeff = simple_fixture('quadratic_coeff', [0.0, 2.13])
 
 
-def test_functional_quadratic_perturb(space, linear_term, quadratic_term):
+def test_functional_quadratic_perturb(space, linear_term, quadratic_coeff):
     """Test for the functional f(.) + a | . |^2 + <y, .>."""
     # Less strict checking for single precision
     places = 3 if space.dtype == np.float32 else 5
@@ -516,7 +516,9 @@ def test_functional_quadratic_perturb(space, linear_term, quadratic_term):
 
     # Creating the functional ||x||_2^2 and add the quadratic perturbation
     functional = odl.solvers.FunctionalQuadraticPerturb(
-        orig_func, quadratic_term=quadratic_term, linear_term=linear_term_arg)
+        orig_func,
+        quadratic_coeff=quadratic_coeff,
+        linear_term=linear_term_arg)
 
     # Create an element in the space, in which to evaluate
     x = noise_element(space)
@@ -524,21 +526,21 @@ def test_functional_quadratic_perturb(space, linear_term, quadratic_term):
     # Test for evaluation of the functional
     assert all_almost_equal(functional(x),
                             (orig_func(x) +
-                             quadratic_term * x.inner(x) +
+                             quadratic_coeff * x.inner(x) +
                              x.inner(linear_term)),
                             places=places)
 
     # Test for the gradient
     assert all_almost_equal(functional.gradient(x),
                             (orig_func.gradient(x) +
-                             2.0 * quadratic_term * x +
+                             2.0 * quadratic_coeff * x +
                              linear_term),
                             places=places)
 
     # Test for the proximal operator if it exists
     sigma = 1.2
     # Explicit computation gives
-    c = 1 / np.sqrt(2 * sigma * quadratic_term + 1)
+    c = 1 / np.sqrt(2 * sigma * quadratic_coeff + 1)
     prox = orig_func.proximal(sigma * c ** 2)
     expected_result = prox((x - sigma * linear_term) * c ** 2)
     assert all_almost_equal(functional.proximal(sigma)(x),
@@ -546,7 +548,7 @@ def test_functional_quadratic_perturb(space, linear_term, quadratic_term):
                             places=places)
 
     # Test convex conjugate functional
-    if quadratic_term == 0:
+    if quadratic_coeff == 0:
         expected = orig_func.convex_conj.translated(linear_term)(x)
         assert almost_equal(functional.convex_conj(x),
                             expected,

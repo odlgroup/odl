@@ -84,9 +84,9 @@ def functional(request, linear_offset, quadratic_offset, dual):
         else:
             g = None
 
-        quadratic_term = 1.32
+        quadratic_coeff = 1.32
         func = odl.solvers.FunctionalQuadraticPerturb(
-            func, quadratic_term=quadratic_term, linear_term=g)
+            func, quadratic_coeff=quadratic_coeff, linear_term=g)
     elif linear_offset:
         g = noise_element(space)
         if name.startswith('kl'):
@@ -129,7 +129,7 @@ def test_proximal_defintion(functional, stepsize):
     # No implementation of the proximal for convex conj of
     # FunctionalQuadraticPerturb unless the quadratic term is 0.
     if (isinstance(functional, odl.solvers.FunctionalQuadraticPerturb) and
-            functional.quadratic_term != 0):
+            functional.quadratic_coeff != 0):
         pytest.skip('functional has no proximal')
         return
 
