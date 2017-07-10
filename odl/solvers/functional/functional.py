@@ -26,7 +26,7 @@ from odl.solvers.nonsmooth import (proximal_arg_scaling, proximal_translation,
 __all__ = ('Functional', 'FunctionalLeftScalarMult',
            'FunctionalRightScalarMult', 'FunctionalComp',
            'FunctionalRightVectorMult', 'FunctionalSum', 'FunctionalScalarSum',
-           'FunctionalTranslation', 'FunctionalLinearPerturb',
+           'FunctionalTranslation', 'FunctionalQuadraticPerturb',
            'FunctionalProduct', 'FunctionalQuotient', 'simple_functional')
 
 
@@ -807,9 +807,9 @@ class FunctionalTranslation(Functional):
         optimization problems*. IEEE Signal Processing Magazine, 32.6 (2015),
         pp 31--54.
         """
-        return FunctionalLinearPerturb(
+        return FunctionalQuadraticPerturb(
             self.functional.convex_conj,
-            self.translation)
+            linear_term=self.translation)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -822,66 +822,82 @@ class FunctionalTranslation(Functional):
                                           self.translation)
 
 
-class FunctionalLinearPerturb(Functional):
+class FunctionalQuadraticPerturb(Functional):
 
-    """The ``Functional`` representing ``f(.) + <linear_term, .>``."""
+    """The functional representing ``F(.) + a * <., .> + <., u>``."""
 
-    def __init__(self, func, linear_term):
+    def __init__(self, func, quadratic_coeff=0, linear_term=None):
         """Initialize a new instance.
 
         Parameters
         ----------
         func : `Functional`
             Function corresponding to ``f``.
-        linear_term : `domain` element
+        quadratic_coeff : ``domain.field`` element, optional
+            Coefficient of the quadratic term.
+        linear_term : `domain` element, optional
             Element in domain of ``func``, corresponding to the translation.
+            Default: Zero element.
         """
         if not isinstance(func, Functional):
             raise TypeError('`func` {} is not a `Functional` instance'
                             ''.format(func))
 
-        super().__init__(space=func.domain,
-                         linear=func.is_linear)
-
-        # Only compute the grad_lipschitz if it is not inf
-        if (not func.grad_lipschitz == np.inf and
-                not np.isnan(func.grad_lipschitz)):
-            self.__grad_lipschitz = (func.grad_lipschitz +
-                                     linear_term.norm())
-
         self.__functional = func
-        self.__linear_term = func.domain.element(linear_term)
+        self.__quadratic_coeff = func.domain.field.element(quadratic_coeff)
+
+        if linear_term is not None:
+            self.__linear_term = func.domain.element(linear_term)
+        else:
+            self.__linear_term = func.domain.zero()
+
+        if linear_term is None:
+            grad_lipschitz = func.grad_lipschitz
+        else:
+            grad_lipschitz = (func.grad_lipschitz + self.linear_term.norm())
+
+        super().__init__(space=func.domain,
+                         linear=func.is_linear and (quadratic_coeff == 0),
+                         grad_lipschitz=grad_lipschitz)
 
     @property
     def functional(self):
-        """The original functional."""
+        """Original functional."""
         return self.__functional
 
     @property
+    def quadratic_coeff(self):
+        """Cofficient of the quadratic term."""
+        return self.__quadratic_coeff
+
+    @property
     def linear_term(self):
-        """The translation."""
+        """Linear term."""
         return self.__linear_term
 
     def _call(self, x):
         """Apply the functional to the given point."""
-        return self.functional(x) + x.inner(self.linear_term)
+        return (self.functional(x) +
+                self.quadratic_coeff * x.inner(x) +
+                x.inner(self.linear_term))
 
     @property
     def gradient(self):
         """Gradient operator of the functional."""
-        return self.functional.gradient + ConstantOperator(self.linear_term)
+        return (self.functional.gradient +
+                (2 * self.quadratic_coeff) * IdentityOperator(self.domain) +
+                ConstantOperator(self.linear_term))
 
     @property
     def proximal(self):
-        """Proximal factory of the linearly perturbed functional.
+        """Proximal factory of the quadratically perturbed functional."""
+        if self.quadratic_coeff < 0:
+            raise TypeError('`quadratic_coeff` {} must be non-negative'
+                            ''.format(self.quadratic_coeff))
 
-        See Also
-        --------
-        odl.solvers.nonsmooth.proximal_operators.\
-proximal_quadratic_perturbation
-        """
         return proximal_quadratic_perturbation(
-            self.functional.proximal, a=0, u=self.linear_term)
+            self.functional.proximal,
+            a=self.quadratic_coeff, u=self.linear_term)
 
     @property
     def convex_conj(self):
@@ -905,18 +921,25 @@ proximal_quadratic_perturbation
         optimization problems*. IEEE Signal Processing Magazine, 32.6 (2015),
         pp 31--54.
         """
-        return self.functional.convex_conj.translated(
-            self.linear_term)
+        if self.quadratic_coeff == 0:
+            return self.functional.convex_conj.translated(
+                self.linear_term)
+        else:
+            return super().convex_conj
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r}, {!r})'.format(self.__class__.__name__,
-                                       self.functional, self.linear_term)
+        return '{}({!r}, {!r}, {!r})'.format(self.__class__.__name__,
+                                             self.functional,
+                                             self.quadratic_coeff,
+                                             self.linear_term)
 
     def __str__(self):
         """Return ``str(self)``."""
-        return '{}({}, {})'.format(self.__class__.__name__,
-                                   self.functional, self.linear_term)
+        return '{}({}, {}, {})'.format(self.__class__.__name__,
+                                       self.functional,
+                                       self.quadratic_coeff,
+                                       self.linear_term)
 
 
 class FunctionalProduct(Functional, OperatorPointwiseProduct):
