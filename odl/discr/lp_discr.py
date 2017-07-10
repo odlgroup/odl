@@ -396,7 +396,7 @@ class DiscreteLp(DiscretizedSpace):
         dspace = self.dspace.astype(dtype)
         return type(self)(fspace, self.partition, dspace,
                           exponent=self.exponent, interp=self.interp,
-                          order=self.order)
+                          order=self.order, axis_labels=self.axis_labels)
 
     # Overrides for space functions depending on partition
     #
