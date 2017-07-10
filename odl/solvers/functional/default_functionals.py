@@ -291,22 +291,8 @@ class GroupL1Norm(Functional):
 
             def _call(self, x):
                 """Return ``self(x)``."""
-                p = functional.pointwise_norm.exponent
-
-                if functional.pointwise_norm.exponent == 1:
-                    result = np.abs(x)
-                    np.divide(x, result, out=result, where=result != 0)
-                    return result
-                elif functional.pointwise_norm.exponent == 2:
-                    result = functional.pointwise_norm(x)
-                    np.divide(x, result, out=result, where=result != 0)
-                    return result
-                else:
-                    dividend = np.power(np.abs(x), p - 2) * x
-                    divisor = np.power(functional.pointwise_norm(x), p - 1)
-                    np.divide(dividend, divisor, out=divisor,
-                              where=divisor != 0)
-                    return divisor
+                return functional.pointwise_norm.derivative(x).adjoint(
+                    np.sign(functional.pointwise_norm(x)))
 
         return GroupL1Gradient()
 

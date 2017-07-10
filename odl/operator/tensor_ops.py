@@ -340,7 +340,12 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
         inner_vf = vf.copy()
 
         for gi in inner_vf:
-            gi /= vf_pwnorm_fac * gi ** (self.exponent - 2)
+            if self.exponent >= 2:
+                with np.errstate(invalid='ignore', divide='ignore'):
+                    gi /= vf_pwnorm_fac * gi ** (self.exponent - 2)
+                    gi = np.nan_to_num(x=gi)
+            else:
+                gi /= vf_pwnorm_fac * gi ** (self.exponent - 2)
 
         return PointwiseInner(self.domain, inner_vf, weighting=self.weights)
 
