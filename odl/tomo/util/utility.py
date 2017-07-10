@@ -16,47 +16,57 @@ __all__ = ('euler_matrix', 'axis_rotation', 'axis_rotation_matrix',
            'perpendicular_vector')
 
 
-def euler_matrix(*angles):
+def euler_matrix(phi, theta=None, psi=None):
     """Rotation matrix in 2 and 3 dimensions.
 
-    Compute the Euler rotation matrix from angles given in radians.
     Its rows represent the canonical unit vectors as seen from the
     rotated system while the columns are the rotated unit vectors as
     seen from the canonical system.
 
     Parameters
     ----------
-    angle1,...,angleN : float
-        One angle results in a (2x2) matrix representing a
-        counter-clockwise rotation. Two or three angles result in a
-        (3x3) matrix and are interpreted as Euler angles of a 3d
-        rotation according to the 'ZXZ' rotation order, see the
+    phi : float or `array-like`
+        Either 2D counter-clockwise rotation angle (in radians) or first
+        Euler angle.
+    theta, psi : float or `array-like`, optional
+        Second and third Euler angles in radians. If both are ``None``, a
+        2D rotation matrix is computed. Otherwise a 3D rotation is computed,
+        where the default ``None`` is equivalent to ``0.0``.
+        The rotation is performed in "ZXZ" rotation order, see the
         Wikipedia article `Euler angles`_.
 
     Returns
     -------
-    mat : `numpy.ndarray`, shape ``(2, 2)`` or ``(3, 3)``
-        The rotation matrix
+    mat : `numpy.ndarray`
+        Rotation matrix corresponding to the given angles. The
+        returned array has shape ``(ndim, ndim)`` if all angles represent
+        single parameters, with ``ndim == 2`` for ``phi`` only and
+        ``ndim == 3`` for 2 or 3 Euler angles.
+        If any of the angle parameters is an array, the shape of the
+        returned array is ``broadcast(phi, theta, psi).shape + (ndim, ndim)``.
 
+    References
+    ----------
     .. _Euler angles:
         https://en.wikipedia.org/wiki/Euler_angles#Rotation_matrix
     """
-    if len(angles) == 1:
-        phi = np.array(angles[0], dtype=float, copy=False, ndmin=1)
-        theta = psi = 0.
+    if theta is None and psi is None:
+        squeeze_out = (np.shape(phi) == ())
         ndim = 2
-    elif len(angles) == 2:
-        phi = np.array(angles[0], dtype=float, copy=False, ndmin=1)
-        theta = np.array(angles[1], dtype=float, copy=False, ndmin=1)
-        psi = 0.
-        ndim = 3
-    elif len(angles) == 3:
-        phi = np.array(angles[0], dtype=float, copy=False, ndmin=1)
-        theta = np.array(angles[1], dtype=float, copy=False, ndmin=1)
-        psi = np.array(angles[2], dtype=float, copy=False, ndmin=1)
-        ndim = 3
+        phi = np.array(phi, dtype=float, copy=False, ndmin=1)
+        theta = psi = 0.0
     else:
-        raise ValueError('number of angles must be between 1 and 3')
+        # `None` broadcasts like a scalar
+        squeeze_out = (np.broadcast(phi, theta, psi).shape == ())
+        ndim = 3
+        phi = np.array(phi, dtype=float, copy=False, ndmin=1)
+        if theta is None:
+            theta = 0.0
+        if psi is None:
+            psi = 0.0
+        theta = np.array(theta, dtype=float, copy=False, ndmin=1)
+        psi = np.array(psi, dtype=float, copy=False, ndmin=1)
+        ndim = 3
 
     cph = np.cos(phi)
     sph = np.sin(phi)
@@ -76,15 +86,17 @@ def euler_matrix(*angles):
             [sph * cps + cph * cth * sps,
              -sph * sps + cph * cth * cps,
              -cph * sth],
-            [sth * sps,
-             sth * cps,
-             cth]])
+            [sth * sps + 0 * cph,
+             sth * cps + 0 * cph,
+             cth + 0 * (cph + cps)]])  # Make sure all components broadcast
 
-    if np.isscalar(angles[0]):
+    if squeeze_out:
         return mat.squeeze()
     else:
-        # Move third axis to the beginning
-        return np.transpose(mat, axes=(2, 0, 1))
+        # Move the `(ndim, ndim)` axes to the end
+        extra_dims = np.broadcast(phi, theta, psi).ndim
+        newaxes = list(range(2, 2 + extra_dims)) + [0, 1]
+        return np.transpose(mat, newaxes)
 
 
 def axis_rotation(axis, angle, vectors, axis_shift=(0, 0, 0)):
@@ -190,8 +202,8 @@ def axis_rotation_matrix(axis, angle):
     ----------
     axis : `array-like`, shape ``(3,)``
         Rotation axis, assumed to be a unit vector.
-    angle : float
-        Angle of the counter-clockwise rotation.
+    angle : float or `array-like`
+        Angle(s) of counter-clockwise rotation.
 
     Returns
     -------
@@ -203,7 +215,7 @@ def axis_rotation_matrix(axis, angle):
     .. _Rodriguez' rotation formula:
         https://en.wikipedia.org/wiki/Rodrigues'_rotation_formula
     """
-    scalar_out = np.isscalar(angle)
+    scalar_out = (np.shape(angle) == ())
     axis = np.asarray(axis)
     if axis.shape != (3,):
         raise ValueError('`axis` shape must be (3,), got {}'
@@ -220,11 +232,16 @@ def axis_rotation_matrix(axis, angle):
     sin_ang = np.sin(angle)
 
     # Add extra dimensions for broadcasting
-    cross_mat = cross_mat[None, :, :]
-    dy_mat = dy_mat[None, :, :]
-    id_mat = id_mat[None, :, :]
-    cos_ang = cos_ang[:, None, None]
-    sin_ang = sin_ang[:, None, None]
+    extra_dims = cos_ang.ndim
+    mat_slc = (None,) * extra_dims + (slice(None), slice(None))
+    ang_slc = (slice(None),) * extra_dims + (None, None)
+    # Matrices will have shape (1, ..., 1, ndim, ndim)
+    cross_mat = cross_mat[mat_slc]
+    dy_mat = dy_mat[mat_slc]
+    id_mat = id_mat[mat_slc]
+    # Angle arrays will have shape (..., 1, 1)
+    cos_ang = cos_ang[ang_slc]
+    sin_ang = sin_ang[ang_slc]
 
     axis_mat = cos_ang * id_mat + (1. - cos_ang) * dy_mat + sin_ang * cross_mat
     if scalar_out:
@@ -539,14 +556,14 @@ def perpendicular_vector(vec):
     Parameters
     ----------
     vec : `array-like`
-        Vector(s) of arbitrary length. If called with multiple vectors,
-        they must be stacked along axis 0.
+        Vector(s) of arbitrary length. The axis along the vector components
+        must come last.
 
     Returns
     -------
     perp_vec : `numpy.ndarray`
         Array of same shape as ``vec`` such that ``dot(vec, perp_vec) == 0``
-        (pairwise if there are multiple vectors).
+        (along the last axis if there are multiple vectors).
 
     Examples
     --------
@@ -567,41 +584,42 @@ def perpendicular_vector(vec):
     True
 
     The function is vectorized, i.e., it can be called with multiple
-    vectors at once (stacked along axis 0):
+    vectors at once (additional axes being added to the left):
 
-    >>> perpendicular_vector([[0, 1, 0], [0, 0, 1]])
+    >>> perpendicular_vector([[0, 1, 0],
+    ...                       [0, 0, 1]])  # 2 vectors
     array([[-1.,  0.,  0.],
            [ 1.,  0.,  0.]])
+    >>> vecs = np.zeros((2, 3, 3))
+    >>> vecs[..., 1] = 1  # (2, 3) array of vectors (0, 1, 0)
+    >>> perpendicular_vector(vecs)
+    array([[[-1.,  0.,  0.],
+            [-1.,  0.,  0.],
+            [-1.,  0.,  0.]],
+    <BLANKLINE>
+           [[-1.,  0.,  0.],
+            [-1.,  0.,  0.],
+            [-1.,  0.,  0.]]])
     """
     squeeze_out = (np.ndim(vec) == 1)
     vec = np.array(vec, dtype=float, copy=False, ndmin=2)
 
-    if np.any(np.all(vec == 0, axis=1)):
+    if np.any(np.all(vec == 0, axis=-1)):
         raise ValueError('zero vector')
 
     result = np.zeros(vec.shape)
-    cond = np.any(vec[:, :2] != 0, axis=1)
-    if np.any(cond):
-        result[cond, 0] = -vec[cond, 1]
-        result[cond, 1] = vec[cond, 0]
-    if np.any(~cond):
-        result[~cond, 0] = 1
-    result / np.linalg.norm(result, axis=1, keepdims=True)
+    cond = np.any(vec[..., :2] != 0, axis=-1)
+    result[cond, 0] = -vec[cond, 1]
+    result[cond, 1] = vec[cond, 0]
+    result[~cond, 0] = 1
+    result /= np.linalg.norm(result, axis=-1, keepdims=True)
 
     if squeeze_out:
         result = result.squeeze()
 
     return result
 
-    if np.any(vec[:2] != 0):
-        result[:2] = [-vec[1], vec[0]]
-    else:
-        result[0] = 1
-
-    return result / np.linalg.norm(result)
-
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

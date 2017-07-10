@@ -95,19 +95,29 @@ class ParallelBeamGeometry(Geometry):
         where ``det_pos_init`` is the detector reference point at initial
         state.
 
+        This default implementation assumes in the case of 2 or 3 motion
+        parameters that they are to be interpreted as Euler angles.
+        Subclasses with a deviating intended interpretation should override
+        this method.
+
         Parameters
         ----------
-        angle : `array-like`
+        angle : `array-like` or sequence
             One or several (Euler) angles in radians at which to
-            evaluate. An array should stack parameters along axis 0.
+            evaluate. If ``motion_params.ndim >= 2``, a sequence of that
+            length must be provided.
 
         Returns
         -------
-        refpt : `numpy.ndarray`, shape (ndim,) or (num_params, ndim)
+        refpt : `numpy.ndarray`
             Vector(s) pointing from the origin to the detector reference
             point at ``angle``.
-            If ``angle`` is a single parameter, a single vector is
-            returned, otherwise a stack of vectors along axis 0.
+            If ``angle`` is a single parameter, the returned array has
+            shape ``(ndim,)``, otherwise
+
+            - ``angle.shape + (ndim,)`` if `motion_params` is 1D,
+            - ``broadcast(*angle).shape + (ndim,)`` if `motion_params` is 2D
+              or 3D (Euler angles).
 
         See Also
         --------
@@ -127,13 +137,15 @@ class ParallelBeamGeometry(Geometry):
         True
 
         The method is vectorized, i.e., it can be called with multiple
-        angles at once:
+        angles at once (or n-dimensional arrays of parameters):
 
         >>> points = geom.det_refpoint([0, np.pi])
         >>> np.allclose(points[0], [0, 1])
         True
         >>> np.allclose(points[1], [0, -1])
         True
+        >>> geom.det_refpoint(np.zeros((4, 5))).shape
+        (4, 5, 2)
 
         In 3d with single rotation axis ``e_z``, we have the same situation,
         except that the vectors have a third component equal to 0:
@@ -147,17 +159,27 @@ class ParallelBeamGeometry(Geometry):
         True
         """
         if self.motion_params.ndim == 1:
-            squeeze_out = np.isscalar(angle)
-            nd = 1
+            squeeze_out = (np.shape(angle) == ())
+            angle = np.array(angle, dtype=float, copy=False, ndmin=1)
+            rot_matrix = self.rotation_matrix(angle)
+            extra_dims = angle.ndim
+        elif self.motion_params.ndim in (2, 3):
+            squeeze_out = (np.broadcast(*angle).shape == ())
+            angle = tuple(np.array(a, dtype=float, copy=False, ndmin=1)
+                          for a in angle)
+            rot_matrix = self.rotation_matrix(angle)
+            extra_dims = np.broadcast(*angle).ndim
         else:
-            squeeze_out = (np.shape(angle) == (self.motion_params.ndim,))
-            nd = 2
+            raise NotImplementedError(
+                'no default implementation available for `det_refpoint` '
+                'with `motion_params.ndim == {}`'
+                ''.format(self.motion_params.ndim))
 
-        angle = np.array(angle, dtype=float, copy=False, ndmin=nd)
+        rot_part = rot_matrix.dot(self.det_pos_init - self.translation)
 
-        rot_part = self.rotation_matrix(angle).dot(
-            self.det_pos_init - self.translation)
-        refpoint = self.translation[None, :] + rot_part
+        # Broadcast along extra dimensions
+        pt_slc = (None,) * extra_dims + (slice(None),)
+        refpoint = self.translation[pt_slc] + rot_part
         if squeeze_out:
             refpoint = refpoint.squeeze()
 
@@ -176,25 +198,31 @@ class ParallelBeamGeometry(Geometry):
 
         Parameters
         ----------
-        angle : `array-like`
+        angle : `array-like` or sequence
             One or several (Euler) angles in radians at which to
-            evaluate. An array should stack parameters along axis 0.
-        dparam : `det_params` element or `array-like`
-            Detector parameter(s) at which to evaluate. An array should
-            stack parameters along axis 0.
+            evaluate. If ``motion_params.ndim >= 2``, a sequence of that
+            length must be provided.
+        dparam : `array-like` or sequence
+            Detector parameter(s) at which to evaluate. If
+            ``det_params.ndim >= 2``, a sequence of that length must be
+            provided.
 
         Returns
         -------
         det_to_src : `numpy.ndarray`
             Vector(s) pointing from a detector point to the source (at
             infinity).
-            The shape of the returned array is as follows:
+            The shape of the returned array is obtained from the
+            (broadcast) shapes of ``angle`` and ``dparam``, and
+            broadcasting is supported within both parameters and between
+            them. The precise definition of the shape is
+            ``broadcast(bcast_angle, bcast_dparam).shape + (ndim,)``,
+            where ``bcast_angle`` is
 
-            - ``angle`` and ``dparam`` single: ``(ndim,)``
-            - ``angle`` single, ``dparam`` stack: ``(num_dparams, ndim)``
-            - ``angle`` stack, ``dparam`` single: ``(num_angles, ndim)``
-            - ``angle`` and ``dparam`` stacks:
-              ``(num_angle, num_dparams, ndim)``
+            - ``angle`` if `motion_params` is 1D,
+            - ``broadcast(*angle)`` otherwise,
+
+            and ``bcast_dparam`` defined analogously.
 
         Examples
         --------
@@ -235,48 +263,58 @@ class ParallelBeamGeometry(Geometry):
         True
         >>> dirs.shape  # (num_angles, ndim)
         (3, 2)
-        >>> dirs = geom.det_to_src([0, np.pi / 2, np.pi], [-1, 0, 0.5, 1])
-        >>> dirs[0]  # Same as above with single angle, multiple dparams
-        array([[ 0., -1.],
-               [ 0., -1.],
-               [ 0., -1.],
-               [ 0., -1.]])
-        >>> dirs.shape  # (num_angles, num_dparams, ndim)
-        (3, 4, 2)
+        >>> # Providing 3 pairs of parameters, resulting in 3 vectors
+        >>> dirs = geom.det_to_src([0, np.pi / 2, np.pi], [-1, 0, 1])
+        >>> dirs[0]  # Corresponds to angle = 0, dparam = -1
+        array([ 0., -1.])
+        >>> dirs.shape
+        (3, 2)
+        >>> # Pairs of parameters arranged in arrays of same size
+        >>> geom.det_to_src(np.zeros((4, 5)), np.zeros((4, 5))).shape
+        (4, 5, 2)
+        >>> # "Outer product" type evaluation using broadcasting
+        >>> geom.det_to_src(np.zeros((4, 1)), np.zeros((1, 5))).shape
+        (4, 5, 2)
         """
-        if self.motion_params.ndim == 1:
-            squeeze_angle = np.isscalar(angle)
-            nd_angle = 1
-        else:
-            squeeze_angle = (np.shape(angle) == (self.motion_params.ndim,))
-            nd_angle = 2
-
-        if self.det_params.ndim == 1:
-            squeeze_dparam = np.isscalar(dparam)
-            nd_dparam = 1
-        else:
-            squeeze_dparam = (np.shape(dparam) == (self.det_params.ndim,))
-            nd_dparam = 2
-
         # Always call the downstream methods with vectorized arguments
         # to be able to reliably manipulate the final axes of the result
-        angle = np.array(angle, dtype=float, copy=False, ndmin=nd_angle)
-        dparam = np.array(dparam, dtype=float, copy=False, ndmin=nd_dparam)
+        if self.motion_params.ndim == 1:
+            squeeze_angle = (np.shape(angle) == ())
+            angle = np.array(angle, dtype=float, copy=False, ndmin=1)
+            matrix = self.rotation_matrix(angle)  # shape (m, ndim, ndim)
+        else:
+            squeeze_angle = (np.broadcast(*angle).shape == ())
+            angle = tuple(np.array(a, dtype=float, copy=False, ndmin=1)
+                          for a in angle)
+            matrix = self.rotation_matrix(angle)  # shape (m, ndim, ndim)
 
-        mat = self.rotation_matrix(angle)  # shape (m, ndim, ndim)
-        surf = self.detector.surface_normal(dparam)  # shape (d, ndim)
-        # Transpose to take dot along axis 1
-        det_to_src = mat.dot(surf.T)  # shape (m, ndim, d)
-        det_to_src = np.swapaxes(det_to_src, 1, 2)  # shape (m, d, ndim)
+        if self.det_params.ndim == 1:
+            squeeze_dparam = (np.shape(dparam) == ())
+            dparam = np.array(dparam, dtype=float, copy=False, ndmin=1)
+        else:
+            squeeze_dparam = (np.broadcast(*dparam).shape == ())
+            dparam = tuple(np.array(p, dtype=float, copy=False, ndmin=1)
+                           for p in dparam)
 
-        # Determine final shape by inserting depending on the `squeeze_*` flags
-        final_shape = [self.ndim]
-        if not squeeze_dparam:
-            final_shape.insert(0, dparam.shape[0])
-        if not squeeze_angle:
-            final_shape.insert(0, angle.shape[0])
+        normal = self.detector.surface_normal(dparam)  # shape (d, ndim)
 
-        return det_to_src.reshape(final_shape)
+        # Perform matrix-vector multiplication along the last axis of both
+        # `matrix` and `normal` while "zipping" all axes that do not
+        # participate in the matrix-vector product. In other words, the axes
+        # are labelled
+        # [0, 1, ..., r-1, r, r+1] for `matrix` and
+        # [0, 1, ..., r-1, r+1] for `normal`, and the output axes are set to
+        # [0, 1, ..., r-1, r]. This automatically supports broadcasting
+        # along the axes 0, ..., r-1.
+        matrix_axes = list(range(matrix.ndim))
+        normal_axes = list(range(matrix.ndim - 2)) + [matrix_axes[-1]]
+        out_axes = list(range(matrix.ndim - 1))
+        det_to_src = np.einsum(matrix, matrix_axes, normal, normal_axes,
+                               out_axes)
+        if squeeze_angle and squeeze_dparam:
+            det_to_src = det_to_src.squeeze()
+
+        return det_to_src
 
 
 class Parallel2dGeometry(ParallelBeamGeometry):
@@ -319,8 +357,8 @@ class Parallel2dGeometry(ParallelBeamGeometry):
             and also shifts the center of rotation.
             Default: ``(0, 0)``
         check_bounds : bool, optional
-            If ``True``, methods perform sanity checks on provided input
-            parameters.
+            If ``True``, methods computing vectors check input arguments.
+            Checks are vectorized and add only a small overhead.
             Default: ``True``
 
         Notes
@@ -508,9 +546,7 @@ class Parallel2dGeometry(ParallelBeamGeometry):
 
         # Use the standard constructor with these vectors
         det_pos, det_axis = transformed_vecs
-        if translation.size == 0:
-            pass
-        else:
+        if translation.size != 0:
             kwargs['translation'] = translation
 
         return cls(apart, dpart, det_pos,
@@ -532,10 +568,31 @@ class Parallel2dGeometry(ParallelBeamGeometry):
 
         Returns
         -------
-        axis : `numpy.ndarray`, shape (2,) or (num_params, 2)
+        axis : `numpy.ndarray`
             Unit vector(s) along which the detector is aligned.
-            If ``angle`` is a single parameter, a single vector is
-            returned, otherwise a stack of vectors along axis 0.
+            If ``angle`` is a single parameter, the returned array has
+            shape ``(2,)``, otherwise ``angle.shape + (2,)``.
+
+        Examples
+        --------
+        Calling the method with a single angle produces a single vector:
+
+        >>> apart = odl.uniform_partition(0, np.pi, 10)
+        >>> dpart = odl.uniform_partition(-1, 1, 20)
+        >>> geom = Parallel2dGeometry(apart, dpart)
+        >>> geom.det_axis(0)
+        array([ 1.,  0.])
+        >>> np.allclose(geom.det_axis(np.pi / 2), [0, 1])
+        True
+
+        The method is vectorized, i.e., it can be called with multiple
+        angles at once (or n-dimensional arrays of parameters):
+
+        >>> np.allclose(geom.det_axis([0, np.pi / 2]), [[1, 0],
+        ...                                             [0, 1]])
+        True
+        >>> geom.det_axis(np.zeros((4, 5))).shape
+        (4, 5, 2)
         """
         return self.rotation_matrix(angle).dot(self.det_axis_init)
 
@@ -555,24 +612,25 @@ class Parallel2dGeometry(ParallelBeamGeometry):
 
         Returns
         -------
-        rot : `numpy.ndarray`, shape (2, 2) or (num_params, 2, 2)
+        rot : `numpy.ndarray`
             The rotation matrix (or matrices) mapping vectors at the
             initial state to the ones in the state defined by ``angle``.
             The rotation is extrinsic, i.e., defined in the "world"
             coordinate system.
-            If ``angle`` is a single parameter, a single matrix is
-            returned, otherwise a stack of matrices along axis 0.
+            If ``angle`` is a single parameter, the returned array has
+            shape ``(2, 2)``, otherwise ``angle.ndim + (2, 2)``.
         """
-        squeeze_out = np.isscalar(angle)
+        squeeze_out = (np.shape(angle) == ())
         angle = np.array(angle, dtype=float, copy=False, ndmin=1)
         if (self.check_bounds and
-                not self.motion_params.contains_all(angle)):
+                not self.motion_params.contains_all(angle.ravel())):
             raise ValueError('`angle` {} not in the valid range {}'
                              ''.format(angle, self.motion_params))
 
-        matrix = euler_matrix(angle)
         if squeeze_out:
-            matrix = matrix.squeeze()
+            matrix = euler_matrix(angle).squeeze()
+        else:
+            matrix = euler_matrix(angle)
 
         return matrix
 
@@ -675,8 +733,8 @@ class Parallel3dEulerGeometry(ParallelBeamGeometry):
             and also shifts the center of rotation.
             Default: ``(0, 0, 0)``
         check_bounds : bool, optional
-            If ``True``, methods perform sanity checks on provided input
-            parameters.
+            If ``True``, methods computing vectors check input arguments.
+            Checks are vectorized and add only a small overhead.
             Default: ``True``
 
         Notes
@@ -835,7 +893,8 @@ class Parallel3dEulerGeometry(ParallelBeamGeometry):
         >>> geom.det_pos_init
         array([ 0.,  1.,  0.])
         >>> geom.det_axes_init
-        (array([ 0.,  0.,  1.]), array([-1.,  0.,  0.]))
+        array([[ 0.,  0.,  1.],
+               [-1.,  0.,  0.]])
 
         Adding a translation with a fourth matrix column:
 
@@ -866,9 +925,7 @@ class Parallel3dEulerGeometry(ParallelBeamGeometry):
 
         # Use the standard constructor with these vectors
         det_pos, det_axis_0, det_axis_1 = transformed_vecs
-        if translation.size == 0:
-            pass
-        else:
+        if translation.size != 0:
             kwargs['translation'] = translation
 
         return cls(apart, dpart, det_pos,
@@ -885,61 +942,105 @@ class Parallel3dEulerGeometry(ParallelBeamGeometry):
 
         Parameters
         ----------
-        angles : `array-like`
+        angles : `array-like` or sequence
             Euler angles in radians describing the rotation of the detector.
-            If multiple angle pairs (or triplets) are given, they must be
-            stacked along axis 0.
+            The length of the provided argument (along the first axis in
+            case of an array) must be equal to the number of Euler angles
+            in this geometry.
 
         Returns
         -------
-        axes : tuple of `numpy.ndarray`'s
+        axes : `numpy.ndarray`
             Unit vector(s) along which the detector is aligned.
             If ``angles`` is a single pair (or triplet) of Euler angles,
-            a tuple of 2 arrays of shape ``(3,)`` is returned, each of
-            which stands for a detector axis.
-            For multiple angle parameters, the tuple contains 2 arrays
-            of shape ``(num_params, 3)``, i.e., a stack of the respective
-            vectors along array axis 0.
+            the returned array has shape ``(2, 3)``, otherwise
+            is ``(2,) + broadcast(*angles).shape + (3,)``.
+            The first axis of length 2 enumerates the detector axes.
 
         Notes
         -----
-        To get a sequence of axi pairs one can, e.g., do the following::
+        To get an array that enumerates axis pairs, move the first axis
+        of the array to the second-to-last position::
 
-            axis_arrays = geometry.det_axes(angles)
-            list_of_axis_pairs = list(zip(*axis_arrays))
+            axes = det_axes(angles)
+            axes_enumeration = np.moveaxis(deriv, 0, -2)
+
+        Examples
+        --------
+        Calling the method with a single set of angles produces a
+        ``(2, 3)`` array of vertically stacked vectors:
+
+        >>> apart = odl.uniform_partition([0, 0], [np.pi, 2 * np.pi],
+        ...                               (10, 20))
+        >>> dpart = odl.uniform_partition([-1, -1], [1, 1], (20, 20))
+        >>> geom = Parallel3dEulerGeometry(apart, dpart)
+        >>> geom.det_axes([0, 0])
+        array([[ 1.,  0.,  0.],
+               [ 0.,  0.,  1.]])
+        >>> np.allclose(geom.det_axes([np.pi / 2, 0]), [[0, 1, 0],
+        ...                                             [0, 0, 1]])
+        True
+
+        The method is vectorized, i.e., it can be called with multiple
+        angle parameters at once. Each of the angle arrays can have
+        different shapes and will be broadcast against each other to
+        determine the final shape:
+
+        >>> # First array for the first Euler angle, second array for second
+        >>> np.allclose(geom.det_axes(([0, np.pi / 2], [0, 0])),
+        ...             [[[1, 0, 0],
+        ...               [0, 1, 0]],
+        ...              [[0, 0, 1],
+        ...               [0, 0, 1]]])
+        True
+        >>> # Pairs of Euler angles in a (4, 5) array each
+        >>> geom.det_axes((np.zeros((4, 5)), np.zeros((4, 5)))).shape
+        (2, 4, 5, 3)
+        >>> # Using broadcasting for "outer product" type result
+        >>> geom.det_axes((np.zeros((4, 1)), np.zeros((1, 5)))).shape
+        (2, 4, 5, 3)
         """
-        return tuple(self.rotation_matrix(angles).dot(axis)
-                     for axis in self.det_axes_init)
+        # Transpose to take dot along axis 1
+        axes = self.rotation_matrix(angles).dot(self.det_axes_init.T)
+        # `axes` has shape (a, 3, 2), need to roll the last dimensions
+        # to the first place
+        return np.rollaxis(axes, -1, 0)
 
     def rotation_matrix(self, angles):
         """Return the rotation matrix to the system state at ``angles``.
 
         Parameters
         ----------
-        angles : `array-like`
+        angles : `array-like` or sequence
             Euler angles in radians describing the rotation of the detector.
-            If multiple angle pairs (or triplets) are given, they must be
-            stacked along axis 0.
+            The length of the provided argument (along the first axis in
+            case of an array) must be equal to the number of Euler angles
+            in this geometry.
 
         Returns
         -------
-        rot : `numpy.ndarray`, shape (3, 3) or (num_params, 3, 3)
-            The rotation matrix (or matrices) mapping vectors at the
+        rot : `numpy.ndarray`
+            Rotation matrix (or matrices) mapping vectors at the
             initial state to the ones in the state defined by ``angles``.
             The rotation is extrinsic, i.e., defined in the "world"
             coordinate system.
-            If ``angles`` is a pair (or triplet) of Euler angles, a single
-            matrix is returned, otherwise a stack of matrices along axis 0.
+            If ``angles`` is a single pair (or triplet) of Euler angles,
+            an array of shape ``(3, 3)`` representing a single matrix is
+            returned. Otherwise, the shape of the returned array is
+            ``broadcast(*angles).shape + (3, 3)``.
         """
-        squeeze_out = (np.shape(angles) == (self.motion_params.ndim,))
-        # Need to transpose (IntervalProd.contains_all expects first axis
-        # to be spatial component, second axis parameter enumeration)
-        angles, angles_in = (
-            np.array(angles, dtype=float, copy=False, ndmin=2).T,
-            angles)
-        if self.check_bounds and not self.motion_params.contains_all(angles):
-            raise ValueError('`angles` {} not in the valid range '
-                             '{}'.format(angles_in, self.motion_params))
+        squeeze_out = (np.broadcast(*angles).shape == ())
+        angles_in = angles
+        angles = tuple(np.array(angle, dtype=float, copy=False, ndmin=1)
+                       for angle in angles)
+        if self.check_bounds:
+            # Flesh out and flatten to check bounds
+            bcast_angles = np.broadcast_arrays(*angles)
+            stacked_angles = np.vstack(bcast_angles)
+            flat_angles = stacked_angles.reshape(self.motion_params.ndim, -1)
+            if not self.motion_params.contains_all(flat_angles):
+                raise ValueError('`angles` {} not in the valid range '
+                                 '{}'.format(angles_in, self.motion_params))
 
         matrix = euler_matrix(*angles)
         if squeeze_out:
@@ -1017,8 +1118,8 @@ class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
             and also shifts the axis of rotation.
             Default: ``(0, 0, 0)``
         check_bounds : bool, optional
-            If ``True``, methods perform sanity checks on provided input
-            parameters.
+            If ``True``, methods computing vectors check input arguments.
+            Checks are vectorized and add only a small overhead.
             Default: ``True``
 
         Notes
@@ -1196,7 +1297,8 @@ class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
         >>> geom.det_pos_init
         array([ 0.,  0.,  1.])
         >>> geom.det_axes_init
-        (array([ 1.,  0.,  0.]), array([ 0., -1.,  0.]))
+        array([[ 1.,  0.,  0.],
+               [ 0., -1.,  0.]])
 
         Adding a translation with a fourth matrix column:
 
@@ -1228,9 +1330,7 @@ class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
 
         # Use the standard constructor with these vectors
         axis, det_pos, det_axis_0, det_axis_1 = transformed_vecs
-        if translation.size == 0:
-            pass
-        else:
+        if translation.size != 0:
             kwargs['translation'] = translation
 
         return cls(apart, dpart, axis,
@@ -1254,24 +1354,53 @@ class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
 
         Returns
         -------
-        axes : tuple of `numpy.ndarray`'s
-            Unit vector(s) along which the detector is aligned.
-            If ``angle`` is a single parameter, a tuple of 2 arrays
-            of shape ``(3,)`` is returned, each of which stands for
-            a detector axis.
-            For multiple angle parameters, the tuple contains 2 arrays
-            of shape ``(num_params, 3)``, i.e., a stack of the respective
-            vectors along array axis 0.
+        axes : `numpy.ndarray`
+            Unit vectors along which the detector is aligned.
+            If ``angle`` is a single parameter, the returned array has
+            shape ``(2, 3)``, otherwise
+            ``(2,) + broadcast(*angles).shape + (3,)``.
+            The first axis of length 2 enumerates the detector axes.
 
         Notes
         -----
-        To get a sequence of axi pairs one can, e.g., do the following::
+        To get an array that enumerates axis pairs, move the first axis
+        of the array to the second-to-last position::
 
-            axis_arrays = geometry.det_axes(angles)
-            list_of_axis_pairs = list(zip(*axis_arrays))
+            axes = det_axes(angle)
+            axes_enumeration = np.moveaxis(deriv, 0, -2)
+
+        Examples
+        --------
+        Calling the method with a single angle produces a ``(2, 3)`` array
+        of vertically stacked vectors:
+
+        >>> apart = odl.uniform_partition(0, np.pi, 10)
+        >>> dpart = odl.uniform_partition([-1, -1], [1, 1], (20, 20))
+        >>> geom = Parallel3dAxisGeometry(apart, dpart)
+        >>> geom.det_axes(0)
+        array([[ 1.,  0.,  0.],
+               [ 0.,  0.,  1.]])
+        >>> np.allclose(geom.det_axes(np.pi / 2), [[0, 1, 0],
+        ...                                        [0, 0, 1]])
+        True
+
+        The method is vectorized, i.e., it can be called with multiple
+        angles at once (or n-dimensional arrays of parameters):
+
+        >>> np.allclose(geom.det_axes([0, np.pi / 2]),
+        ...             [[[1, 0, 0],
+        ...               [0, 1, 0]],
+        ...              [[0, 0, 1],
+        ...               [0, 0, 1]]])
+        True
+        >>> geom.det_axes(np.zeros((4, 5))).shape
+        (2, 4, 5, 3)
         """
-        return tuple(self.rotation_matrix(angle).dot(axis)
-                     for axis in self.det_axes_init)
+        # Transpose to take dot along axis 1
+        axes = self.rotation_matrix(angle).dot(self.det_axes_init.T)
+        # `axes` has shape (a, 3, 2), need to roll the last dimensions
+        # to the first place
+        return np.rollaxis(axes, -1, 0)
 
     def __repr__(self):
         """Return ``repr(self)``."""

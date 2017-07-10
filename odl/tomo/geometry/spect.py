@@ -152,9 +152,7 @@ class ParallelHoleCollimatorGeometry(Parallel3dAxisGeometry):
 
         # Use the standard constructor with these vectors
         axis, orig_to_det, det_axis_0, det_axis_1 = transformed_vecs
-        if translation.size == 0:
-            pass
-        else:
+        if translation.size != 0:
             kwargs['translation'] = translation
 
         return cls(apart, dpart, det_radius, axis,

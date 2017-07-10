@@ -64,8 +64,8 @@ class Geometry(object):
         Other Parameters
         ----------------
         check_bounds : bool, optional
-            If ``True``, methods perform sanity checks on provided input
-            parameters.
+            If ``True``, methods computing vectors check input arguments.
+            Checks are vectorized and add only a small overhead.
             Default: ``True``
         """
         ndim, ndim_in = int(ndim), ndim
@@ -173,7 +173,11 @@ class Geometry(object):
 
     @property
     def check_bounds(self):
-        """Whether to check if method parameters are in the valid range."""
+        """If ``True``, methods computing vectors check input arguments.
+
+        For very large input arrays, these checks can introduce significant
+        overhead, but the overhead is kept low by vectorization.
+        """
         return self.__check_bounds
 
     def det_refpoint(self, mparam):
@@ -181,17 +185,16 @@ class Geometry(object):
 
         Parameters
         ----------
-        mparam : `array-like`
-            Motion parameter(s) at which to evaluate. An array should
-            stack parameters along axis 0.
+        mparam : `array-like` or sequence
+            Motion parameter(s) at which to evaluate. If
+            ``motion_params.ndim >= 2``, a sequence of that length must be
+            provided.
 
         Returns
         -------
-        point : `numpy.ndarray`, shape (ndim,) or (num_mparams, ndim)
+        point : `numpy.ndarray`
             Vector(s) pointing from the origin to the detector reference
             point at ``mparam``.
-            If ``mparam`` is a single parameter, a single vector is
-            returned, otherwise a stack of vectors along axis 0.
         """
         raise NotImplementedError('abstract method')
 
@@ -200,19 +203,18 @@ class Geometry(object):
 
         Parameters
         ----------
-        mparam : `array-like`
-            Motion parameter(s) at which to evaluate. An array should
-            stack parameters along axis 0.
+        mparam : `array-like` or sequence
+            Motion parameter(s) at which to evaluate. If
+            ``motion_params.ndim >= 2``, a sequence of that length must be
+            provided.
 
         Returns
         -------
-        rot : `numpy.ndarray`, shape (ndim, ndim) or (num_mparams, ndim, ndim)
+        rot : `numpy.ndarray`
             The rotation matrix (or matrices) mapping vectors at the
             initial state to the ones in the state defined by ``mparam``.
             The rotation is extrinsic, i.e., defined in the "world"
             coordinate system.
-            If ``mparam`` is a single parameter, a single matrix is
-            returned, otherwise a stack of matrices along axis 0.
         """
         raise NotImplementedError('abstract method')
 
@@ -221,12 +223,14 @@ class Geometry(object):
 
         Parameters
         ----------
-        mparam : `motion_params` element or `array-like`
-            Motion parameter(s) at which to evaluate. An array should
-            stack parameters along axis 0.
-        dparam : `det_params` element or `array-like`
-            Detector parameter(s) at which to evaluate. An array should
-            stack parameters along axis 0.
+        mparam : `array-like` or sequence
+            Motion parameter(s) at which to evaluate. If
+            ``motion_params.ndim >= 2``, a sequence of that length must be
+            provided.
+        dparam : `array-like` or sequence
+            Detector parameter(s) at which to evaluate. If
+            ``det_params.ndim >= 2``, a sequence of that length must be
+            provided.
         normalized : bool, optional
             If ``True``, normalize the resulting vector(s) to unit length.
 
@@ -234,8 +238,6 @@ class Geometry(object):
         -------
         vec : `numpy.ndarray`
             (Unit) vector(s) pointing from the detector to the source.
-            If both ``mparam`` and ``dparam`` are single parameters, a single
-            vector is returned, otherwise a stack of vectors.
         """
         raise NotImplementedError('abstract method')
 
@@ -253,24 +255,30 @@ class Geometry(object):
 
         Parameters
         ----------
-        mparam : `motion_params` element or `array-like`
-            Motion parameter(s) at which to evaluate. An array should
-            stack parameters along axis 0.
-        dparam : `det_params` element or `array-like`
-            Detector parameter(s) at which to evaluate. An array should
-            stack parameters along axis 0.
+        mparam : `array-like` or sequence
+            Motion parameter(s) at which to evaluate. If
+            ``motion_params.ndim >= 2``, a sequence of that length must be
+            provided.
+        dparam : `array-like` or sequence
+            Detector parameter(s) at which to evaluate. If
+            ``det_params.ndim >= 2``, a sequence of that length must be
+            provided.
 
         Returns
         -------
         pos : `numpy.ndarray`
             Vector(s) pointing from the origin to the detector point.
-            The shape of the returned array is as follows:
+            The shape of the returned array is obtained from the
+            (broadcast) shapes of ``mparam`` and ``dparam``, and
+            broadcasting is supported within both parameters and between
+            them. The precise definition of the shape is
+            ``broadcast(bcast_mparam, bcast_dparam).shape + (ndim,)``,
+            where ``bcast_mparam`` is
 
-            - ``mparam`` and ``dparam`` single: ``(ndim,)``
-            - ``mparam`` single, ``dparam`` stack: ``(num_dparams, ndim)``
-            - ``mparam`` stack, ``dparam`` single: ``(num_mparams, ndim)``
-            - ``mparam`` and ``dparam`` stacks:
-              ``(num_mparams, num_dparams, ndim)``
+            - ``mparam`` if `motion_params` is 1D,
+            - ``broadcast(*mparam)`` otherwise,
+
+            and ``bcast_dparam`` defined analogously.
 
         Examples
         --------
@@ -306,54 +314,88 @@ class Geometry(object):
         ...                   [-1, 0],
         ...                   [0, -1]])
         True
+        >>> # Providing 3 pairs of parameters, resulting in 3 vectors
         >>> pts = geom.det_point_position([0, np.pi / 2, np.pi],
-        ...                               [-1, 0, 0.5, 1])
-        >>> pts[0]  # Same as above with single angle, multiple dparams
-        array([[-1. ,  1. ],
-               [ 0. ,  1. ],
-               [ 0.5,  1. ],
-               [ 1. ,  1. ]])
-        >>> pts.shape  # (num_mparams, num_dparams, ndim)
-        (3, 4, 2)
+        ...                               [-1, 0, 1])
+        >>> pts[0]  # Corresponds to angle = 0, dparam = -1
+        array([-1.,  1.])
+        >>> pts.shape
+        (3, 2)
+        >>> # Pairs of parameters arranged in arrays of same size
+        >>> geom.det_point_position(np.zeros((4, 5)), np.zeros((4, 5))).shape
+        (4, 5, 2)
+        >>> # "Outer product" type evaluation using broadcasting
+        >>> geom.det_point_position(np.zeros((4, 1)), np.zeros((1, 5))).shape
+        (4, 5, 2)
+
+        More complicated 3D geometry with 2 angle variables and 2 detector
+        variables:
+
+        >>> apart = odl.uniform_partition([0, 0], [np.pi, 2 * np.pi],
+        ...                               (10, 20))
+        >>> dpart = odl.uniform_partition([-1, -1], [1, 1], (20, 20))
+        >>> geom = odl.tomo.Parallel3dEulerGeometry(apart, dpart)
+        >>> # 2 values for each variable, resulting in 2 vectors
+        >>> angles = ([0, np.pi / 2], [0, np.pi])
+        >>> dparams = ([-1, 0], [-1, 0])
+        >>> pts = geom.det_point_position(angles, dparams)
+        >>> pts[0]  # Corresponds to angle = (0, 0), dparam = (-1, -1)
+        array([-1.,  1., -1.])
+        >>> pts.shape
+        (2, 3)
+        >>> # 4 x 5 parameters for both
+        >>> angles = dparams = (np.zeros((4, 5)), np.zeros((4, 5)))
+        >>> geom.det_point_position(angles, dparams).shape
+        (4, 5, 3)
+        >>> # Broadcasting angles to shape (4, 5, 1, 1)
+        >>> angles = (np.zeros((4, 1, 1, 1)), np.zeros((1, 5, 1, 1)))
+        >>> # Broadcasting dparams to shape (1, 1, 6, 7)
+        >>> dparams = (np.zeros((1, 1, 6, 1)), np.zeros((1, 1, 1, 7)))
+        >>> # Total broadcast parameter shape is (4, 5, 6, 7)
+        >>> geom.det_point_position(angles, dparams).shape
+        (4, 5, 6, 7, 3)
         """
-        if self.motion_params.ndim == 1:
-            squeeze_mparam = np.isscalar(mparam)
-            nd_mparam = 1
-        else:
-            squeeze_mparam = (np.shape(mparam) == (self.motion_params.ndim,))
-            nd_mparam = 2
-
-        if self.det_params.ndim == 1:
-            squeeze_dparam = np.isscalar(dparam)
-            nd_dparam = 1
-        else:
-            squeeze_dparam = (np.shape(dparam) == (self.det_params.ndim,))
-            nd_dparam = 2
-
         # Always call the downstream methods with vectorized arguments
         # to be able to reliably manipulate the final axes of the result
-        mparam = np.array(mparam, dtype=float, copy=False, ndmin=nd_mparam)
-        dparam = np.array(dparam, dtype=float, copy=False, ndmin=nd_dparam)
+        if self.motion_params.ndim == 1:
+            squeeze_mparam = (np.shape(mparam) == ())
+            mparam = np.array(mparam, dtype=float, copy=False, ndmin=1)
+            matrix = self.rotation_matrix(mparam)  # shape (m, ndim, ndim)
+        else:
+            squeeze_mparam = (np.broadcast(*mparam).shape == ())
+            mparam = tuple(np.array(a, dtype=float, copy=False, ndmin=1)
+                           for a in mparam)
+            matrix = self.rotation_matrix(mparam)  # shape (m, ndim, ndim)
 
-        refpt = self.det_refpoint(mparam)  # shape (m, ndim)
+        if self.det_params.ndim == 1:
+            squeeze_dparam = (np.shape(dparam) == ())
+            dparam = np.array(dparam, dtype=float, copy=False, ndmin=1)
+        else:
+            squeeze_dparam = (np.broadcast(*dparam).shape == ())
+            dparam = tuple(np.array(p, dtype=float, copy=False, ndmin=1)
+                           for p in dparam)
 
-        mat = self.rotation_matrix(mparam)  # shape (m, ndim, ndim)
         surf = self.detector.surface(dparam)  # shape (d, ndim)
-        # Transpose to take dot along axis 1
-        offset = mat.dot(surf.T)  # shape (m, ndim, d)
-        offset = np.swapaxes(offset, 1, 2)  # shape (m, d, ndim)
 
-        # Broadcast along axis 1 (detector)
-        pos = refpt[:, None, :] + offset
+        # Perform matrix-vector multiplication along the last axis of both
+        # `matrix` and `surf` while "zipping" all axes that do not
+        # participate in the matrix-vector product. In other words, the axes
+        # are labelled
+        # [0, 1, ..., r-1, r, r+1] for `matrix` and
+        # [0, 1, ..., r-1, r+1] for `surf`, and the output axes are set to
+        # [0, 1, ..., r-1, r]. This automatically supports broadcasting
+        # along the axes 0, ..., r-1.
+        matrix_axes = list(range(matrix.ndim))
+        surf_axes = list(range(matrix.ndim - 2)) + [matrix_axes[-1]]
+        out_axes = list(range(matrix.ndim - 1))
+        det_part = np.einsum(matrix, matrix_axes, surf, surf_axes, out_axes)
 
-        # Determine final shape by inserting depending on the `squeeze_*` flags
-        final_shape = [self.ndim]
-        if not squeeze_dparam:
-            final_shape.insert(0, dparam.shape[0])
-        if not squeeze_mparam:
-            final_shape.insert(0, mparam.shape[0])
+        refpt = self.det_refpoint(mparam)
+        det_pt_pos = refpt + det_part
+        if squeeze_mparam and squeeze_dparam:
+            det_pt_pos = det_pt_pos.squeeze()
 
-        return pos.reshape(final_shape)
+        return det_pt_pos
 
     @property
     def implementation_cache(self):
@@ -379,21 +421,20 @@ class DivergentBeamGeometry(Geometry):
     in 3D one speaks of "cone beam geometries".
     """
 
-    def src_position(self, mparam):
+    def src_position(self, angle):
         """Source position function.
 
         Parameters
         ----------
-        mparam : `array-like`
-            Motion parameter(s) at which to evaluate. An array should
-            stack parameters along axis 0.
+        angle : `array-like` or sequence
+            Motion parameter(s) at which to evaluate. If
+            ``motion_params.ndim >= 2``, a sequence of that length must be
+            provided.
 
         Returns
         -------
-        pos : `numpy.ndarray`, shape (ndim,) or (num_mparams, ndim)
+        pos : `numpy.ndarray`
             Vector(s) pointing from the origin to the source.
-            If ``mparam`` is a single parameter, a single vector
-            is returned, otherwise a stack of vectors along axis 0.
         """
         raise NotImplementedError('abstract method')
 
@@ -406,25 +447,31 @@ class DivergentBeamGeometry(Geometry):
 
         Parameters
         ----------
-        angle : `array-like`
+        angle : `array-like` or sequence
             One or several (Euler) angles in radians at which to
-            evaluate. An array should stack parameters along axis 0.
-        dparam : `det_params` element or `array-like`
-            Detector parameter(s) at which to evaluate. An array should
-            stack parameters along axis 0.
+            evaluate. If ``motion_params.ndim >= 2``, a sequence of that
+            length must be provided.
+        dparam : `array-like` or sequence
+            Detector parameter(s) at which to evaluate. If
+            ``det_params.ndim >= 2``, a sequence of that length must be
+            provided.
 
         Returns
         -------
         det_to_src : `numpy.ndarray`
             Vector(s) pointing from a detector point to the source (at
             infinity).
-            The shape of the returned array is as follows:
+            The shape of the returned array is obtained from the
+            (broadcast) shapes of ``angle`` and ``dparam``, and
+            broadcasting is supported within both parameters and between
+            them. The precise definition of the shape is
+            ``broadcast(bcast_angle, bcast_dparam).shape + (ndim,)``,
+            where ``bcast_angle`` is
 
-            - ``angle`` and ``dparam`` single: ``(ndim,)``
-            - ``angle`` single, ``dparam`` stack: ``(num_dparams, ndim)``
-            - ``angle`` stack, ``dparam`` single: ``(num_angles, ndim)``
-            - ``angle`` and ``dparam`` stacks:
-              ``(num_angle, num_dparams, ndim)``
+            - ``angle`` if `motion_params` is 1D,
+            - ``broadcast(*angle)`` otherwise,
+
+            and ``bcast_dparam`` defined analogously.
 
         Examples
         --------
@@ -446,8 +493,8 @@ class DivergentBeamGeometry(Geometry):
         >>> dir = geom.det_to_src(np.pi / 2, 0)
         >>> np.allclose(dir, [1, 0])
         True
-        >>> dir = geom.det_to_src(np.pi / 2, 0, normalized=False)
-        >>> np.allclose(dir, [5, 0])
+        >>> vec = geom.det_to_src(np.pi / 2, 0, normalized=False)
+        >>> np.allclose(vec, [5, 0])
         True
 
         Both variables support vectorized calls, i.e., stacks of
@@ -467,45 +514,47 @@ class DivergentBeamGeometry(Geometry):
         True
         >>> dirs.shape  # (num_angles, ndim)
         (3, 2)
-        >>> dirs = geom.det_to_src([0, np.pi / 2, np.pi], [-1, 0, 0.5, 1])
-        >>> dirs.shape  # (num_angles, num_dparams, ndim)
-        (3, 4, 2)
+        >>> # Providing 3 pairs of parameters, resulting in 3 vectors
+        >>> dirs = geom.det_to_src([0, np.pi / 2, np.pi], [0, -1, 1])
+        >>> dirs[0]  # Corresponds to angle = 0, dparam = 0
+        array([ 0., -1.])
+        >>> dirs.shape
+        (3, 2)
+        >>> # Pairs of parameters arranged in arrays of same size
+        >>> geom.det_to_src(np.zeros((4, 5)), np.zeros((4, 5))).shape
+        (4, 5, 2)
+        >>> # "Outer product" type evaluation using broadcasting
+        >>> geom.det_to_src(np.zeros((4, 1)), np.zeros((1, 5))).shape
+        (4, 5, 2)
         """
-        if self.motion_params.ndim == 1:
-            squeeze_angle = np.isscalar(angle)
-            nd_angle = 1
-        else:
-            squeeze_angle = (np.shape(angle) == (self.motion_params.ndim,))
-            nd_angle = 2
-
-        if self.det_params.ndim == 1:
-            squeeze_dparam = np.isscalar(dparam)
-            nd_dparam = 1
-        else:
-            squeeze_dparam = (np.shape(dparam) == (self.det_params.ndim,))
-            nd_dparam = 2
-
         # Always call the downstream methods with vectorized arguments
         # to be able to reliably manipulate the final axes of the result
-        angle = np.array(angle, dtype=float, copy=False, ndmin=nd_angle)
-        dparam = np.array(dparam, dtype=float, copy=False, ndmin=nd_dparam)
+        if self.motion_params.ndim == 1:
+            squeeze_angle = (np.shape(angle) == ())
+            angle = np.array(angle, dtype=float, copy=False, ndmin=1)
+        else:
+            squeeze_angle = (np.broadcast(*angle).shape == ())
+            angle = tuple(np.array(a, dtype=float, copy=False, ndmin=1)
+                          for a in angle)
 
-        src_pos = self.src_position(angle)  # shape (a, ndim)
-        det_pt_pos = self.det_point_position(angle, dparam)  # (a, d, ndim)
-        # Broadcast along middle (detector) axis
-        det_to_src = src_pos[:, None, :] - det_pt_pos
+        if self.det_params.ndim == 1:
+            squeeze_dparam = (np.shape(dparam) == ())
+            dparam = np.array(dparam, dtype=float, copy=False, ndmin=1)
+        else:
+            squeeze_dparam = (np.broadcast(*dparam).shape == ())
+            dparam = tuple(np.array(p, dtype=float, copy=False, ndmin=1)
+                           for p in dparam)
+
+        det_to_src = (self.src_position(angle) -
+                      self.det_point_position(angle, dparam))
 
         if normalized:
             det_to_src /= np.linalg.norm(det_to_src, axis=-1, keepdims=True)
 
-        # Determine final shape by inserting depending on the `squeeze_*` flags
-        final_shape = [self.ndim]
-        if not squeeze_dparam:
-            final_shape.insert(0, dparam.shape[0])
-        if not squeeze_angle:
-            final_shape.insert(0, angle.shape[0])
+        if squeeze_angle and squeeze_dparam:
+            det_to_src = det_to_src.squeeze()
 
-        return det_to_src.reshape(final_shape)
+        return det_to_src
 
 
 class AxisOrientedGeometry(object):
@@ -550,17 +599,18 @@ class AxisOrientedGeometry(object):
 
         Returns
         -------
-        rot : `numpy.ndarray`, shape (3, 3) or (num_angles, 3, 3)
+        rot : `numpy.ndarray`
             The rotation matrix (or matrices) mapping vectors at the
             initial state to the ones in the state defined by ``angle``.
             The rotation is extrinsic, i.e., defined in the "world"
             coordinate system.
-            If ``angle`` is a single parameter, a single matrix is
-            returned, otherwise a stack of matrices along axis 0.
+            If ``angle`` is a single parameter, the returned array has
+            shape ``(3, 3)``, otherwise ``angle.shape + (3, 3)``.
         """
-        squeeze_out = np.isscalar(angle)
+        squeeze_out = (np.shape(angle) == ())
         angle = np.array(angle, dtype=float, copy=False, ndmin=1)
-        if self.check_bounds and not self.motion_params.contains_all(angle):
+        if (self.check_bounds and
+                not self.motion_params.contains_all(angle.ravel())):
             raise ValueError('`angle` {} not in the valid range {}'
                              ''.format(angle, self.motion_params))
 

@@ -34,6 +34,10 @@ class Detector(object):
     * a function mapping a surface parameter to the location of a detector
       point relative to its reference point,
     * optionally a surface measure function.
+
+    Most implementations implicitly assume that an N-dimensional detector
+    is embedded in an (N+1)-dimensional space, but subclasses can override
+    this behavior.
     """
 
     def __init__(self, partition, check_bounds=True):
@@ -45,8 +49,8 @@ class Detector(object):
            Partition of the detector parameter set (pixelization).
            It determines dimension, parameter range and discretization.
         check_bounds : bool, optional
-            If ``True``, methods perform sanity checks on provided input
-            parameters.
+            If ``True``, methods computing vectors check input arguments.
+            Checks are vectorized and add only a small overhead.
         """
         if not isinstance(partition, RectPartition):
             raise TypeError('`partition` {!r} is not a RectPartition instance'
@@ -62,13 +66,26 @@ class Detector(object):
 
     @property
     def check_bounds(self):
-        """Whether to check if method parameters are in the valid range."""
+        """If ``True``, methods computing vectors check input arguments.
+
+        For very large input arrays, these checks can introduce significant
+        overhead, but the overhead is kept low by vectorization.
+        """
         return self.__check_bounds
 
     @property
     def ndim(self):
-        """Number of dimensions of this detector (0, 1 or 2)."""
+        """Number of dimensions of the parameters (= surface dimension)."""
         return self.partition.ndim
+
+    @property
+    def space_ndim(self):
+        """Number of dimensions of the embedding space.
+
+        This default (``space_ndim = ndim + 1``) can be overridden by
+        subclasses.
+        """
+        return self.ndim + 1
 
     @property
     def params(self):
@@ -95,17 +112,14 @@ class Detector(object):
 
         Parameters
         ----------
-        param : `array-like`
-            Parameter value(s) at which to evaluate. An array should
-            stack parameters along axis 0.
+        param : `array-like` or sequence
+            Parameter value(s) at which to evaluate.
 
         Returns
         -------
-        point : `numpy.ndarray`, shape (ndim,) or (num_params, ndim)
+        point : `numpy.ndarray`
             Vector(s) pointing from the origin to the detector surface
             point at ``param``.
-            If ``param`` is a single parameter, a single vector is
-            returned, otherwise a stack of vectors along axis 0.
         """
         raise NotImplementedError('abstract method')
 
@@ -114,20 +128,15 @@ class Detector(object):
 
         Parameters
         ----------
-        param : `array-like`
-            Parameter value(s) at which to evaluate. An array should
-            stack parameters along axis 0.
+        param : `array-like` or sequence
+            Parameter value(s) at which to evaluate. If ``ndim >= 2``,
+            a sequence of length `ndim` must be provided.
 
         Returns
         -------
-        deriv : `numpy.ndarray` or tuple
-            If `ndim` is 1, an array of shape ``(ndim,)`` is returned if
-            ``param`` is a single parameter, and an array of shape
-            ``(num_params, ndim)`` for multiple parameters.
-
-            For higher `ndim`, a tuple of length `ndim` is returned,
-            where each entry is as described for the 1D case. The
-            i-th entry corresponds to the i-th partial derivative.
+        deriv : `numpy.ndarray`
+            Array of vectors representing the surface derivative(s) at
+            ``param``.
         """
         raise NotImplementedError('abstract method')
 
@@ -146,61 +155,75 @@ class Detector(object):
 
         Parameters
         ----------
-        param : float or `array-like`
-            Parameter value(s) at which to evaluate. An array should stack
-            parameters along axis 0.
+        param : `array-like` or sequence
+            Parameter value(s) at which to evaluate.  If ``ndim >= 2``,
+            a sequence of length `ndim` must be provided.
 
         Returns
         -------
-        normal : `numpy.ndarray`, shape (2,) or (num_params, 2)
+        normal : `numpy.ndarray`
             Unit vector(s) perpendicular to the detector surface at
             ``param``.
-            If ``param`` is a single parameter, a single vector is
-            returned, otherwise a stack of vectors along axis 0.
+            If ``param`` is a single parameter, an array of shape
+            ``(space_ndim,)`` representing a single vector is returned.
+            Otherwise the shape of the returned array is
+
+            - ``param.shape + (space_ndim,)`` if `ndim` is 1,
+            - ``param.shape[:-1] + (space_ndim,)`` otherwise.
         """
-        if self.ndim == 1:
+        if self.ndim == 1 and self.space_ndim == 2:
             return -perpendicular_vector(self.surface_deriv(param))
-        elif self.ndim == 2:
+        elif self.ndim == 2 and self.space_ndim == 3:
             normal = np.cross(*self.surface_deriv(param), axis=-1)
             normal /= np.linalg.norm(normal, axis=-1, keepdims=True)
             return normal
         else:
-            raise NotImplementedError('normal not defined for ndim >= 3')
+            raise NotImplementedError(
+                'no default implementation of `surface_normal` available '
+                'for `ndim = {}` and `space_ndim = {}`'
+                ''.format(self.ndim, self.space_ndim))
 
     def surface_measure(self, param):
         """Density function of the surface measure.
 
         This is the default implementation relying on the `surface_deriv`
-        method. For ``ndim == 1``, the density is given by the `Arc
-        length`_, for ``ndim == 2``, it is the length of the cross product
-        of the partial derivatives of the parametrization, see Wikipedia's
-        `Surface area`_ article.
+        method. For a detector with `ndim` equal to 1, the density is given
+        by the `Arc length`_, for a surface with `ndim` 2 in a 3D space, it
+        is the length of the cross product of the partial derivatives of the
+        parametrization, see Wikipedia's `Surface area`_ article.
 
         Parameters
         ----------
-        param : `array-like`
-            Parameter value(s) at which to evaluate. An array should
-            stack parameters along axis 0.
+        param : `array-like` or sequence
+            Parameter value(s) at which to evaluate.  If ``ndim >= 2``,
+            a sequence of length `ndim` must be provided.
 
         Returns
         -------
         measure : float or `numpy.ndarray`
-            The density value(s) at the given parameter(s).
+            The density value(s) at the given parameter(s). If a single
+            parameter is provided, a float is returned. Otherwise, an
+            array is returned with shape
 
+            - ``param.shape`` if `ndim` is 1,
+            - ``broadcast(*param).shape`` otherwise.
+
+        References
+        ----------
         .. _Arc length:
             https://en.wikipedia.org/wiki/Curve#Lengths_of_curves
         .. _Surface area:
             https://en.wikipedia.org/wiki/Surface_area
         """
         if self.ndim == 1:
-            scalar_out = np.isscalar(param)
+            scalar_out = (np.shape(param) == ())
             measure = np.linalg.norm(self.surface_deriv(param), axis=-1)
             if scalar_out:
                 measure = float(measure)
 
             return measure
 
-        elif self.ndim == 2:
+        elif self.ndim == 2 and self.space_ndim == 3:
             scalar_out = (np.shape(param) == (2,))
             deriv = self.surface_deriv(param)
             cross = np.cross(*deriv, axis=-1)
@@ -211,7 +234,10 @@ class Detector(object):
             return measure
 
         else:
-            raise NotImplementedError('not implemented for ndim >= 3')
+            raise NotImplementedError(
+                'no default implementation of `surface_measure` available '
+                'for `ndim={}` and `space_ndim={}`'
+                ''.format(self.ndim, self.space_ndim))
 
 
 class Flat1dDetector(Detector):
@@ -229,8 +255,8 @@ class Flat1dDetector(Detector):
         axis : `array-like`, shape ``(2,)``
             Fixed axis along which this detector is aligned.
         check_bounds : bool, optional
-            If ``True``, methods perform sanity checks on provided input
-            parameters.
+            If ``True``, methods computing vectors check input arguments.
+            Checks are vectorized and add only a small overhead.
 
         Examples
         --------
@@ -269,11 +295,11 @@ class Flat1dDetector(Detector):
 
         Returns
         -------
-        point : `numpy.ndarray`, shape (2,) or (num_params, 2)
+        point : `numpy.ndarray`
             Vector(s) pointing from the origin to the detector surface
             point at ``param``.
-            If ``param`` is a single parameter, a single vector is
-            returned, otherwise a stack of vectors along axis 0.
+            If ``param`` is a single parameter, the returned array has
+            shape ``(2,)``, otherwise ``param.shape + (2,)``.
 
         Examples
         --------
@@ -288,24 +314,30 @@ class Flat1dDetector(Detector):
         array([ 1.,  0.])
 
         It is also vectorized, i.e., it can be called with multiple
-        parameters at once:
+        parameters at once (or an n-dimensional array of parameters):
 
         >>> det.surface([0, 1])
         array([[ 0.,  0.],
                [ 1.,  0.]])
+        >>> det.surface(np.zeros((4, 5))).shape
+        (4, 5, 2)
         """
-        squeeze_out = np.isscalar(param)
+        squeeze_out = (np.shape(param) == ())
         param = np.array(param, dtype=float, copy=False, ndmin=1)
-        if self.check_bounds and not self.params.contains_all(param):
+        if self.check_bounds and not self.params.contains_all(param.ravel()):
+            # Allow `param` with ndim > 1 by checking the raveled array
             raise ValueError('`param` {} not in the valid range '
                              '{}'.format(param, self.params))
-        surf = param[:, None] * self.axis[None, :]
+
+        # Create outer product of `params` and `axis`, resulting in shape
+        # params.shape + axis.shape
+        surf = np.multiply.outer(param, self.axis)
         if squeeze_out:
             surf = surf.squeeze()
 
         return surf
 
-    def surface_deriv(self, param=None):
+    def surface_deriv(self, param):
         """Return the surface derivative at ``param``.
 
         This is a constant function evaluating to `axis` everywhere.
@@ -317,11 +349,10 @@ class Flat1dDetector(Detector):
 
         Returns
         -------
-        deriv : `numpy.ndarray`, shape (2,) or (num_params, 2)
-            Vector(s) representing the detector surface derivative at
-            ``param``.
-            If ``param`` is a single parameter, a single vector is
-            returned, otherwise a stack of vectors along axis 0.
+        deriv : `numpy.ndarray`
+            Array representing the derivative vector(s) at ``param``.
+            If ``param`` is a single parameter, the returned array has
+            shape ``(2,)``, otherwise ``param.shape + (2,)``.
 
         Examples
         --------
@@ -336,21 +367,28 @@ class Flat1dDetector(Detector):
         array([ 1.,  0.])
 
         It is also vectorized, i.e., it can be called with multiple
-        parameters at once:
+        parameters at once (or an n-dimensional array of parameters):
 
         >>> det.surface_deriv([0, 1])
         array([[ 1.,  0.],
                [ 1.,  0.]])
+        >>> det.surface_deriv(np.zeros((4, 5))).shape
+        (4, 5, 2)
         """
-        squeeze_out = np.isscalar(param)
+        squeeze_out = (np.shape(param) == ())
         param = np.array(param, dtype=float, copy=False, ndmin=1)
-        if self.check_bounds and not self.params.contains_all(param):
+        if self.check_bounds and not self.params.contains_all(param.ravel()):
+            # Allow `param` with ndim > 1 by checking the raveled array
             raise ValueError('`param` {} not in the valid range '
                              '{}'.format(param, self.params))
         if squeeze_out:
             return self.axis
         else:
-            return np.vstack([self.axis] * len(param))
+            # Produce array of shape `param.shape + (ndim,)` by broadcasting
+            axis_slc = (None,) * param.ndim + (slice(None),)
+            # TODO: use broadcast_to from Numpy when v1.10 is required
+            zeros = np.zeros(param.shape + (1,))
+            return self.axis[axis_slc] + zeros
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -382,15 +420,16 @@ class Flat2dDetector(Detector):
             The vectors must have shape ``(3,)`` and be linearly
             independent.
         check_bounds : bool, optional
-            If ``True``, methods perform sanity checks on provided input
-            parameters.
+            If ``True``, methods computing vectors check input arguments.
+            Checks are vectorized and add only a small overhead.
 
         Examples
         --------
         >>> part = odl.uniform_partition([0, 0], [1, 1], (10, 10))
         >>> det = Flat2dDetector(part, axes=[(1, 0, 0), (0, 0, 1)])
         >>> det.axes
-        (array([ 1.,  0.,  0.]), array([ 0.,  0.,  1.]))
+        array([[ 1.,  0.,  0.],
+               [ 0.,  0.,  1.]])
         >>> det.surface_normal([0, 0])
         array([ 0., -1.,  0.])
         """
@@ -407,12 +446,11 @@ class Flat2dDetector(Detector):
             raise ValueError('`axes` {} are linearly dependent'
                              ''.format(axes_in))
 
-        axes /= np.linalg.norm(axes, axis=1, keepdims=True)
-        self.__axes = tuple(axes)
+        self.__axes = axes / np.linalg.norm(axes, axis=1, keepdims=True)
 
     @property
     def axes(self):
-        """Fixed 2-tuple of unit vectors with which the detector is aligned."""
+        """Fixed array of unit vectors with which the detector is aligned."""
         return self.__axes
 
     def surface(self, param):
@@ -424,17 +462,17 @@ class Flat2dDetector(Detector):
 
         Parameters
         ----------
-        param : `array-like`
-            Parameter value(s) at which to evaluate. A 2D array should stack
-            parameters along axis 0.
+        param : `array-like` or sequence
+            Parameter value(s) at which to evaluate. A sequence of
+            parameters must have length 2.
 
         Returns
         -------
-        point : `numpy.ndarray`, shape (3,) or (num_params, 3)
+        point : `numpy.ndarray`
             Vector(s) pointing from the origin to the detector surface
             point at ``param``.
-            If ``param`` is a single parameter, a single vector is
-            returned, otherwise a stack of vectors along axis 0.
+            If ``param`` is a single parameter, the returned array has
+            shape ``(3,)``, otherwise ``broadcast(*param).shape + (3,)``.
 
         Examples
         --------
@@ -451,24 +489,39 @@ class Flat2dDetector(Detector):
         array([ 1.,  0.,  1.])
 
         It is also vectorized, i.e., it can be called with multiple
-        parameters at once:
+        parameters at once (or n-dimensional arrays of parameters):
 
-        >>> det.surface([[0, 0], [0, 1], [1, 1]])
+        >>> # 3 pairs of parameters, resulting in 3 vectors
+        >>> det.surface([[0, 0, 1],
+        ...              [0, 1, 1]])
         array([[ 0.,  0.,  0.],
                [ 0.,  0.,  1.],
                [ 1.,  0.,  1.]])
+        >>> # Pairs of parameters in a (4, 5) array each
+        >>> param = (np.zeros((4, 5)), np.zeros((4, 5)))
+        >>> det.surface(param).shape
+        (4, 5, 3)
+        >>> # Using broadcasting for "outer product" type result
+        >>> param = (np.zeros((4, 1)), np.zeros((1, 5)))
+        >>> det.surface(param).shape
+        (4, 5, 3)
         """
-        squeeze_out = (np.shape(param) == (2,))
-        # Need to transpose (IntervalProd.contains_all expects first axis
-        # to be spatial component, second axis parameter enumeration)
-        param, param_in = (np.array(param, dtype=float, copy=False, ndmin=2).T,
-                           param)
-        if self.check_bounds and not self.params.contains_all(param):
-            raise ValueError('`param` {} not in the valid range '
-                             '{}'.format(param_in, self.params))
+        squeeze_out = (np.broadcast(*param).shape == ())
+        param_in = param
+        param = tuple(np.array(p, dtype=float, copy=False, ndmin=1)
+                      for p in param)
+        if self.check_bounds:
+            # Flesh out and flatten to check bounds
+            bcast_param = np.broadcast_arrays(*param)
+            stacked_param = np.vstack(bcast_param)
+            flat_param = stacked_param.reshape(self.ndim, -1)
+            if not self.params.contains_all(flat_param):
+                raise ValueError('`param` {} not in the valid range '
+                                 '{}'.format(param_in, self.params))
 
-        surf = sum(ax[None, :] * p[:, None]
-                   for p, ax in zip(param, self.axes))
+        # Compute outer product of the i-th spatial component of the
+        # parameter and sum up the contributions
+        surf = sum(np.multiply.outer(p, ax) for p, ax in zip(param, self.axes))
         if squeeze_out:
             surf = surf.squeeze()
 
@@ -481,18 +534,26 @@ class Flat2dDetector(Detector):
 
         Parameters
         ----------
-        param : `array-like`
-            Parameter value(s) at which to evaluate. A 2D array should
-            stack parameters along axis 0.
+        param : `array-like` or sequence
+            Parameter value(s) at which to evaluate. A sequence of
+            parameters must have length 2.
 
         Returns
         -------
-        deriv : 2-tuple of `numpy.ndarray`
-            The i-th entry is an array representing the surface derivative
-            vector(s) at ``param`` with respect to the i-th coordinate.
-            If ``param`` is a single parameter, each entry is an array
-            of shape ``(3,)``, otherwise each entry is a stack of vectors
-            along axis 0, i.e., an array of shape ``(num_params, 3)``.
+        deriv : `numpy.ndarray`
+            Array containing the derivative vectors. The first dimension
+            enumerates the axes, i.e., has always length 2.
+            If ``param`` is a single parameter, the returned array has
+            shape ``(2, 3)``, otherwise
+            ``(2,) + broadcast(*param).shape + (3,)``.
+
+        Notes
+        -----
+        To get an array that enumerates axis pairs, move the first axis
+        of the array to the second-to-last position::
+
+            deriv = surface_deriv(param)
+            axes_enumeration = np.moveaxis(deriv, 0, -2)
 
         Examples
         --------
@@ -502,34 +563,57 @@ class Flat2dDetector(Detector):
         >>> part = odl.uniform_partition([0, 0], [1, 1], (10, 10))
         >>> det = Flat2dDetector(part, axes=[(1, 0, 0), (0, 0, 1)])
         >>> det.surface_deriv([0, 0])
-        (array([ 1.,  0.,  0.]), array([ 0.,  0.,  1.]))
+        array([[ 1.,  0.,  0.],
+               [ 0.,  0.,  1.]])
         >>> det.surface_deriv([1, 1])
-        (array([ 1.,  0.,  0.]), array([ 0.,  0.,  1.]))
+        array([[ 1.,  0.,  0.],
+               [ 0.,  0.,  1.]])
 
         It is also vectorized, i.e., it can be called with multiple
-        parameters at once:
+        parameters at once (or n-dimensional arrays of parameters):
 
-        >>> deriv = det.surface_deriv([[0, 0], [1, 1]])
-        >>> deriv[0]
+        >>> # 2 pairs of parameters, resulting in 3 vectors for each axis
+        >>> deriv = det.surface_deriv([[0, 1],
+        ...                            [0, 1]])
+        >>> deriv[0]  # vectors for first axis
         array([[ 1.,  0.,  0.],
                [ 1.,  0.,  0.]])
-        >>> deriv[1]
+        >>> deriv[1]  # vectors for second axis
         array([[ 0.,  0.,  1.],
                [ 0.,  0.,  1.]])
+        >>> # Pairs of parameters in a (4, 5) array each
+        >>> param = (np.zeros((4, 5)), np.zeros((4, 5)))  # pairs of params
+        >>> det.surface_deriv(param).shape
+        (2, 4, 5, 3)
+        >>> # Using broadcasting for "outer product" type result
+        >>> param = (np.zeros((4, 1)), np.zeros((1, 5)))  # broadcasting
+        >>> det.surface_deriv(param).shape
+        (2, 4, 5, 3)
         """
-        squeeze_out = (np.shape(param) == (2,))
-        # Need to transpose (IntervalProd expects first axis to be spatial
-        # component, not parameter enumeration)
-        param, param_in = (np.array(param, dtype=float, copy=False, ndmin=2).T,
-                           param)
-        if self.check_bounds and not self.params.contains_all(param):
-            raise ValueError('`param` {} not in the valid range '
-                             '{}'.format(param_in, self.params))
+        squeeze_out = (np.broadcast(*param).shape == ())
+        param_in = param
+        param = tuple(np.array(p, dtype=float, copy=False, ndmin=1)
+                      for p in param)
+        if self.check_bounds:
+            # Flesh out and flatten to check bounds
+            bcast_param = np.broadcast_arrays(*param)
+            stacked_param = np.vstack(bcast_param)
+            flat_param = stacked_param.reshape(self.ndim, -1)
+            if not self.params.contains_all(flat_param):
+                raise ValueError('`param` {} not in the valid range '
+                                 '{}'.format(param_in, self.params))
 
         if squeeze_out:
             return self.axes
         else:
-            return tuple(np.vstack([ax] * param.shape[1]) for ax in self.axes)
+            # Produce array of shape `(2,) + broadcast(*param).shape + (3,)`
+            # by explicit broadcasting.
+            # TODO: use broadcast_to from Numpy when v1.10 is required
+            axes_slc = ((slice(None),) +
+                        (None,) * np.broadcast(*param).ndim +
+                        (slice(None),))
+            zeros = np.zeros((1,) + np.broadcast(*param).shape + (1,))
+            return self.axes[axes_slc] + zeros
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -549,7 +633,7 @@ class CircleSectionDetector(Detector):
     """A 1d detector given by a circle section that crosses the origin.
 
     The parametrization is chosen such that parameter (=angle) 0
-    corresponds to the origin. Negative angles correspond to points
+    corresponds to the origin. Negative param correspond to points
     "left" of the line from circle center to origin, positive angles
     to points on the "right" of that line.
     """
@@ -566,8 +650,8 @@ class CircleSectionDetector(Detector):
             Center point of the circle, cannot be zero. Larger distance
             to the origin results in less curvature.
         check_bounds : bool, optional
-            If ``True``, methods perform sanity checks on provided input
-            parameters.
+            If ``True``, methods computing vectors check input arguments.
+            Checks are vectorized and add only a small overhead.
 
         Examples
         --------
@@ -638,11 +722,11 @@ class CircleSectionDetector(Detector):
 
         Returns
         -------
-        point : `numpy.ndarray`, shape (2,) or (num_params, 2)
+        point : `numpy.ndarray`
             Vector(s) pointing from the origin to the detector surface
             point at ``param``.
-            If ``param`` is a single parameter, a single vector is
-            returned, otherwise a stack of vectors along axis 0.
+            If ``param`` is a single parameter, the returned array has
+            shape ``(2,)``, otherwise ``param.shape + (2,)``.
 
         Examples
         --------
@@ -659,21 +743,28 @@ class CircleSectionDetector(Detector):
         array([ 2., -2.])
 
         It is also vectorized, i.e., it can be called with multiple
-        parameters at once:
+        parameters at once (or an n-dimensional array of parameters):
 
         >>> det.surface([-np.pi / 2, 0, np.pi / 2])
         array([[-2., -2.],
                [ 0.,  0.],
                [ 2., -2.]])
+        >>> det.surface(np.zeros((4, 5))).shape
+        (4, 5, 2)
         """
-        squeeze_out = np.isscalar(param)
+        squeeze_out = (np.shape(param) == ())
         param = np.array(param, dtype=float, copy=False, ndmin=1)
-        if self.check_bounds and not self.params.contains_all(param):
+        if self.check_bounds and not self.params.contains_all(param.ravel()):
+            # Allow `param` with ndim > 1 by checking the raveled array
             raise ValueError('`param` {} not in the valid range '
                              '{}'.format(param, self.params))
-        surf = ((1 - np.cos(param))[:, None] * self.center_dir[None, :] +
-                np.sin(param)[:, None] * self.tangent_at_0[None, :])
-        surf *= self.radius
+
+        # Compute an outer product of `(1-cos(param))` with `center_dir`
+        # and `sin(param)` with `tangent_at_0` and sum both, in order
+        # to broadcast along all axes
+        center_part = np.multiply.outer(1 - np.cos(param), self.center_dir)
+        tangent_part = np.multiply.outer(np.sin(param), self.tangent_at_0)
+        surf = self.radius * (center_part + tangent_part)
         if squeeze_out:
             surf = surf.squeeze()
 
@@ -693,11 +784,10 @@ class CircleSectionDetector(Detector):
 
         Returns
         -------
-        deriv : `numpy.ndarray`, shape (2,) or (num_params, 2)
-            Vector(s) representing the detector surface derivative at
-            ``param``.
-            If ``param`` is a single parameter, a single vector is
-            returned, otherwise a stack of vectors along axis 0.
+        deriv : `numpy.ndarray`
+            Array representing the derivative vector(s) at ``param``.
+            If ``param`` is a single parameter, the returned array has
+            shape ``(2,)``, otherwise ``param.shape + (2,)``.
 
         See Also
         --------
@@ -718,22 +808,30 @@ class CircleSectionDetector(Detector):
         True
 
         It is also vectorized, i.e., it can be called with multiple
-        parameters at once:
+        parameters at once (or an n-dimensional array of parameters):
 
         >>> deriv = det.surface_deriv([-np.pi / 2, 0, np.pi / 2])
         >>> np.allclose(deriv, [[0, 2],
         ...                     [2, 0],
         ...                     [0, -2]])
         True
+        >>> det.surface_deriv(np.zeros((4, 5))).shape
+        (4, 5, 2)
         """
-        squeeze_out = np.isscalar(param)
+        squeeze_out = (np.shape(param) == ())
         param = np.array(param, dtype=float, copy=False, ndmin=1)
-        if self.check_bounds and not self.params.contains_all(param):
+        if self.check_bounds and not self.params.contains_all(param.ravel()):
+            # Allow `param` with ndim > 1 by checking the raveled array
             raise ValueError('`param` {} not in the valid range '
                              '{}'.format(param, self.params))
-        deriv = (np.sin(param)[:, None] * self.center_dir[None, :] +
-                 np.cos(param)[:, None] * self.tangent_at_0[None, :])
-        deriv *= self.radius
+
+        # Compute an outer product of `sin(param)` with `center_dir`
+        # and `cos(param)` with `tangent_at_0`, in order
+        # to broadcast along all axes
+        center_part = np.multiply.outer(np.sin(param), self.center_dir)
+        tangent_part = np.multiply.outer(np.cos(param), self.tangent_at_0)
+        deriv = self.radius * (center_part + tangent_part)
+
         if squeeze_out:
             deriv = deriv.squeeze()
 
@@ -751,10 +849,10 @@ class CircleSectionDetector(Detector):
 
         Returns
         -------
-        deriv : float or `numpy.ndarray`
+        measure : float or `numpy.ndarray`
             Constant value(s) of the arc length measure at ``param``.
             If ``param`` is a single parameter, a float is returned,
-            otherwise a vector of the same length as ``param``.
+            otherwise an array of shape ``param.shape``.
 
         See Also
         --------
@@ -773,12 +871,14 @@ class CircleSectionDetector(Detector):
         2.0
 
         It is also vectorized, i.e., it can be called with multiple
-        parameters at once:
+        parameters at once (or an n-dimensional array of parameters):
 
         >>> det.surface_measure([0, np.pi / 2])
         array([ 2.,  2.])
+        >>> det.surface_deriv(np.zeros((4, 5))).shape
+        (4, 5, 2)
         """
-        scalar_out = np.isscalar(param)
+        scalar_out = (np.shape(param) == ())
         param = np.array(param, dtype=float, copy=False, ndmin=1)
         if self.check_bounds and not self.params.contains_all(param):
             raise ValueError('`param` {} not in the valid range '
@@ -787,7 +887,7 @@ class CircleSectionDetector(Detector):
         if scalar_out:
             return self.radius
         else:
-            return self.radius * np.ones(param.shape[0])
+            return self.radius * np.ones(param.shape)
 
     def __repr__(self):
         """Return ``repr(self)``."""
