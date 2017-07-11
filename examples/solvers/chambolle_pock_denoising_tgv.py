@@ -1,11 +1,11 @@
-"""Total generalized variation tomography using the Chambolle-Pock solver.
+"""Total generalized variation denoising using the Chambolle-Pock solver.
 
 Solves the optimization problem
 
-    min_x ||Ax - d||_2^2 + TGV_2(x)
+    min_x ||x - d||_2^2 + TGV_2(x)
 
-Where ``A`` is a parallel beam forward projector and ``d`` is given noisy data.
-TGV_2 is the second order total generalized variation of ``x``, defined as
+Where ``d`` is given noisy data TGV_2 is the second order total generalized
+variation of ``x``, defined as
 
     TGV_2(x) = min_y lam_1 ||Gx - y||_1 + lam_2 ||Ey||_1
 
@@ -17,7 +17,7 @@ of the vector y_i at location i.
 
 The problem is rewritten as
 
-    min_{x, y} ||Ax - g||_2^2 +  lam_1 ||Gx - y||_1 + lam_2 ||Ey||_1
+    min_{x, y} ||x - d||_2^2 +  lam_1 ||Gx - y||_1 + lam_2 ||Ey||_1
 
 which can then be solved with the Chambolle-Pock method.
 
@@ -31,20 +31,18 @@ on Imaging Sciences, 8(4):2851-2886, 2015.
 import numpy as np
 import odl
 
+
 # %%
-# --- Set up the forward operator (ray transform) --- #
+# --- Set up the forward operator (identity) --- #
 
 # Reconstruction space: discretized functions on the rectangle
-# [-20, 20]^2 with 100 samples per dimension.
-n = 100
-U = odl.uniform_discr(
-    min_pt=[-20, -20], max_pt=[20, 20], shape=[n, n], dtype='float32')
-
-# Make a parallel beam geometry with flat detector
-geometry = odl.tomo.parallel_beam_geometry(U)
+# [-20, 20]^2 with 300 samples per dimension.
+n = 300
+U = odl.uniform_discr(min_pt=[-20, -20], max_pt=[20, 20], shape=[n, n],
+                      dtype='float32')
 
 # Create the forward operator
-A = odl.tomo.RayTransform(U, geometry)
+A = odl.IdentityOperator(U)
 
 # %%
 # --- Generate artificial data --- #
@@ -52,7 +50,7 @@ A = odl.tomo.RayTransform(U, geometry)
 # Create phantom
 #phantom = odl.phantom.shepp_logan(U, modified=True)
 
-m = 25
+m = 75
 
 e1 = np.linspace(0, 1, n)
 e2 = np.ones([n, 1])
@@ -114,7 +112,7 @@ g = odl.solvers.ZeroFunctional(domain)
 l2_norm = odl.solvers.L2NormSquared(A.range).translated(data)
 
 # parameters
-alpha = 4e-1
+alpha = 1e-1
 beta = 1
 
 # The l1-norms scaled by regularization paramters
