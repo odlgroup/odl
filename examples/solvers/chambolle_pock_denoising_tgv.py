@@ -1,13 +1,13 @@
-"""Total generalized variation denoising using the Chambolle-Pock solver.
+"""Total Generalized Variation denoising using the Chambolle-Pock solver.
 
 Solves the optimization problem
 
-    min_x ||x - d||_2^2 + TGV_2(x)
+    min_x ||x - d||_2^2 + alpha TGV_2(x)
 
 Where ``d`` is given noisy data TGV_2 is the second order total generalized
 variation of ``x``, defined as
 
-    TGV_2(x) = min_y lam_1 ||Gx - y||_1 + lam_2 ||Ey||_1
+    TGV_2(x) = min_y ||Gx - y||_1 + beta ||Ey||_1
 
 where ``G`` is the spatial gradient operating on the scalar-field ``x`` and
 ``E`` is the symmetrized gradient operating on the vector-field ``y``.
@@ -17,7 +17,7 @@ of the vector y_i at location i.
 
 The problem is rewritten as
 
-    min_{x, y} ||x - d||_2^2 +  lam_1 ||Gx - y||_1 + lam_2 ||Ey||_1
+    min_{x, y} ||x - d||_2^2 + alpha ||Gx - y||_1 + alpha * beta ||Ey||_1
 
 which can then be solved with the Chambolle-Pock method.
 
@@ -31,8 +31,6 @@ on Imaging Sciences, 8(4):2851-2886, 2015.
 import numpy as np
 import odl
 
-
-# %%
 # --- Set up the forward operator (identity) --- #
 
 # Reconstruction space: discretized functions on the rectangle
@@ -44,51 +42,41 @@ U = odl.uniform_discr(min_pt=[-20, -20], max_pt=[20, 20], shape=[n, n],
 # Create the forward operator
 A = odl.IdentityOperator(U)
 
-# %%
 # --- Generate artificial data --- #
 
 # Create phantom
-#phantom = odl.phantom.shepp_logan(U, modified=True)
+def phantom_func(pts):
+    x, y = pts
+    sign = ((x < -10) | (x > 10) | (y < -10) | (y > 10)) * 3 - 2
+    return (x / 20.0) * sign
 
-m = 75
-
-e1 = np.linspace(0, 1, n)
-e2 = np.ones([n, 1])
-x = np.outer(e1, e2)
-
-e1 = np.linspace(1, 0, n-2*m)
-e2 = np.ones([n-2*m, 1])
-x[m:-m, m:-m] = np.outer(e1, e2)
-
-phantom = U.element(x)
-
+phantom = U.element(phantom_func)
 phantom.show(title='Phantom')
 
 # Create sinogram of forward projected phantom with noise
 data = A(phantom)
 data += odl.phantom.white_noise(A.range) * np.mean(data) * 0.1
 
-data.show(title='Simulated data (Sinogram)')
+data.show(title='Simulated data')
 
-# %%
 # --- Set up the inverse problem --- #
 
 # Initialize gradient operator
 G = odl.Gradient(U, method='forward', pad_mode='symmetric')
 V = G.range
 
-Dx = odl.discr.diff_ops.PartialDerivative(U, 0, method='backward',
-                                          pad_mode='symmetric')
-Dy = odl.discr.diff_ops.PartialDerivative(U, 1, method='backward',
-                                          pad_mode='symmetric')
+Dx = odl.PartialDerivative(U, 0, method='backward', pad_mode='symmetric')
+Dy = odl.PartialDerivative(U, 1, method='backward', pad_mode='symmetric')
 
+# Create symmetrized operator and weighted space.
+# TODO: As the weighted space is currently not supported in ODL we find a
+# workaround.
 #W = odl.ProductSpace(U, 3, weighting=[1, 1, 2])
 #sym_gradient = odl.operator.ProductSpaceOperator(
 #    [[Dx, 0], [0, Dy], [0.5*Dy, 0.5*Dx]], range=W)
-
-W = odl.ProductSpace(U, 4)
 E = odl.operator.ProductSpaceOperator(
-    [[Dx, 0], [0, Dy], [0.5*Dy, 0.5*Dx], [0.5*Dy, 0.5*Dx]], range=W)
+    [[Dx, 0], [0, Dy], [0.5*Dy, 0.5*Dx], [0.5*Dy, 0.5*Dx]])
+W = E.range
 
 # Create the domain of the problem, given by the reconstruction space and the
 # range of the gradient on the reconstruction space.
@@ -106,8 +94,6 @@ op = odl.BroadcastOperator(
 # Do not use the g functional, set it to zero.
 g = odl.solvers.ZeroFunctional(domain)
 
-# Create functionals for the dual variable
-
 # l2-squared data matching
 l2_norm = odl.solvers.L2NormSquared(A.range).translated(data)
 
@@ -122,9 +108,7 @@ l1_norm_2 = alpha * beta * odl.solvers.L1Norm(W)
 # Combine functionals, order must correspond to the operator K
 f = odl.solvers.SeparableSum(l2_norm, l1_norm_1, l1_norm_2)
 
-# %%
 # --- Select solver parameters and solve using Chambolle-Pock --- #
-
 
 # Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
 op_norm = 1.1 * odl.power_method_opnorm(op)
@@ -145,7 +129,6 @@ x = op.domain.zero()
 odl.solvers.chambolle_pock_solver(x, f, g, op, tau=tau, sigma=sigma,
                                   niter=niter, callback=callback)
 
-# %%
 # Display images
 x[0].show(title='TGV reconstruction')
 x[1].show(title='Derivatives', force_show=True)
