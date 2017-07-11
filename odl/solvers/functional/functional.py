@@ -21,6 +21,7 @@ from odl.operator.default_ops import (IdentityOperator, ConstantOperator)
 from odl.solvers.nonsmooth import (proximal_arg_scaling, proximal_translation,
                                    proximal_quadratic_perturbation,
                                    proximal_const_func, proximal_convex_conj)
+from odl.util import (signature_string, indent_rows)
 
 
 __all__ = ('Functional', 'FunctionalLeftScalarMult',
@@ -825,16 +826,16 @@ class FunctionalTranslation(Functional):
 
 class InfimalConvolution(Functional):
 
-    """The functional representing ``h(x) = inf_y f(x-y) + g(y)``."""
+    """Functional representing ``h(x) = inf_y f(x-y) + g(y)``."""
 
-    def __init__(self, funcA, funcB):
+    def __init__(self, left, right):
         """Initialize a new instance.
 
         Parameters
         ----------
-        funcA : `Functional`
+        left : `Functional`
             Function corresponding to ``f``.
-        funcB : `Functional`
+        right : `Functional`
             Function corresponding to ``g``.
 
         Example
@@ -842,34 +843,34 @@ class InfimalConvolution(Functional):
         >>> space = odl.rn(3)
         >>> l1 = odl.solvers.L1Norm(space)
         >>> l2 = odl.solvers.L2Norm(space)
-        >>> f = odl.solvers.InfimalConvolution(l1, l2)
-        >>> f.convex_conj(0.5*f.domain.one())
-        >>> 0
+        >>> f = odl.solvers.InfimalConvolution(l1.convex_conj, l2.convex_conj)
+        >>> x = f.domain.one()
+        >>> f.convex_conj(x) - (l1(x) + l2(x))
+        0.0
         """
-        if not isinstance(funcA, Functional):
+        if not isinstance(left, Functional):
             raise TypeError('`func` {} is not a `Functional` instance'
-                            ''.format(funcA))
+                            ''.format(left))
 
-        if not isinstance(funcB, Functional):
+        if not isinstance(right, Functional):
             raise TypeError('`func` {} is not a `Functional` instance'
-                            ''.format(funcB))
+                            ''.format(right))
 
-        self.__functional_left = funcA
-        self.__functional_right = funcB
+        self.__left = left
+        self.__right = right
 
-        super().__init__(space=funcA.domain,
-                         linear=False,
+        super().__init__(space=left.domain, linear=False,
                          grad_lipschitz=np.nan)
 
     @property
-    def functional_left(self):
+    def left(self):
         """Left functional."""
-        return self.__functional_left
+        return self.__left
 
     @property
-    def functional_right(self):
+    def right(self):
         """Right functional."""
-        return self.__functional_right
+        return self.__right
 
     @property
     def convex_conj(self):
@@ -878,26 +879,28 @@ class InfimalConvolution(Functional):
         Notes
         -----
         The convex conjugate of the infimal convolution
+
         .. math::
             h(x) = inf_y f(x-y) + g(y)
+
         is the sum of it:
+
         .. math::
-            h^*(x) = f^*(x) + g(x)
+            h^*(x) = f^*(x) + g^*(x)
+
         """
-        return self.functional_left.convex_conj + \
-            self.functional_right.convex_conj
+        return self.left.convex_conj + self.right.convex_conj
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r}, {!r})'.format(self.__class__.__name__,
-                                       self.functional_left,
-                                       self.functional_right)
+        posargs = [self.left, self.right]
+        inner_str = signature_string(posargs, [], sep=',\n')
+        return '{}(\n{}\n)'.format(self.__class__.__name__,
+                                   indent_rows(inner_str))
 
     def __str__(self):
         """Return ``str(self)``."""
-        return '{}({}, {})'.format(self.__class__.__name__,
-                                   self.functional_left,
-                                   self.functional_right)
+        return repr(self)
 
 
 class FunctionalQuadraticPerturb(Functional):
