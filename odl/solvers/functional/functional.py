@@ -21,13 +21,15 @@ from odl.operator.default_ops import (IdentityOperator, ConstantOperator)
 from odl.solvers.nonsmooth import (proximal_arg_scaling, proximal_translation,
                                    proximal_quadratic_perturbation,
                                    proximal_const_func, proximal_convex_conj)
+from odl.util import (signature_string, indent_rows)
 
 
 __all__ = ('Functional', 'FunctionalLeftScalarMult',
            'FunctionalRightScalarMult', 'FunctionalComp',
            'FunctionalRightVectorMult', 'FunctionalSum', 'FunctionalScalarSum',
-           'FunctionalTranslation', 'FunctionalQuadraticPerturb',
-           'FunctionalProduct', 'FunctionalQuotient', 'simple_functional')
+           'FunctionalTranslation', 'InfimalConvolution',
+           'FunctionalQuadraticPerturb', 'FunctionalProduct',
+           'FunctionalQuotient', 'simple_functional')
 
 
 class Functional(Operator):
@@ -820,6 +822,85 @@ class FunctionalTranslation(Functional):
         """Return ``str(self)``."""
         return '{}.translated({})'.format(self.functional,
                                           self.translation)
+
+
+class InfimalConvolution(Functional):
+
+    """Functional representing ``h(x) = inf_y f(x-y) + g(y)``."""
+
+    def __init__(self, left, right):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        left : `Functional`
+            Function corresponding to ``f``.
+        right : `Functional`
+            Function corresponding to ``g``.
+
+        Example
+        -------
+        >>> space = odl.rn(3)
+        >>> l1 = odl.solvers.L1Norm(space)
+        >>> l2 = odl.solvers.L2Norm(space)
+        >>> f = odl.solvers.InfimalConvolution(l1.convex_conj, l2.convex_conj)
+        >>> x = f.domain.one()
+        >>> f.convex_conj(x) - (l1(x) + l2(x))
+        0.0
+        """
+        if not isinstance(left, Functional):
+            raise TypeError('`func` {} is not a `Functional` instance'
+                            ''.format(left))
+
+        if not isinstance(right, Functional):
+            raise TypeError('`func` {} is not a `Functional` instance'
+                            ''.format(right))
+
+        self.__left = left
+        self.__right = right
+
+        super().__init__(space=left.domain, linear=False,
+                         grad_lipschitz=np.nan)
+
+    @property
+    def left(self):
+        """Left functional."""
+        return self.__left
+
+    @property
+    def right(self):
+        """Right functional."""
+        return self.__right
+
+    @property
+    def convex_conj(self):
+        """Convex conjugate functional of the functional.
+
+        Notes
+        -----
+        The convex conjugate of the infimal convolution
+
+        .. math::
+            h(x) = inf_y f(x-y) + g(y)
+
+        is the sum of it:
+
+        .. math::
+            h^*(x) = f^*(x) + g^*(x)
+
+        """
+        return self.left.convex_conj + self.right.convex_conj
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        posargs = [self.left, self.right]
+        inner_str = signature_string(posargs, [], sep=',\n')
+        return '{}(\n{}\n)'.format(self.__class__.__name__,
+                                   indent_rows(inner_str))
+
+    def __str__(self):
+        """Return ``str(self)``."""
+        return repr(self)
 
 
 class FunctionalQuadraticPerturb(Functional):
