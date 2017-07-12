@@ -50,7 +50,7 @@ A = odl.tomo.RayTransform(U, geometry)
 def phantom_func(pts):
     x, y = pts
     sign = ((x < -10) | (x > 10) | (y < -10) | (y > 10)) * 3 - 2
-    return (x / 20.0) * sign
+    return 0.5 * ((x / 20.0) * sign + 1)
 
 phantom = U.element(phantom_func)
 phantom.show(title='Phantom')
@@ -118,11 +118,10 @@ op_norm = 1.1 * odl.power_method_opnorm(op)
 niter = 100  # Number of iterations
 tau = 1.0 / op_norm  # Step size for the primal variable
 sigma = 1.0 / op_norm  # Step size for the dual variable
-gamma = 0.5
 
 # Optionally pass callback to the solver to display intermediate results
 callback = (odl.solvers.CallbackPrintIteration() &
-            odl.solvers.CallbackShow('iterates', step=10, indices=0))
+            odl.solvers.CallbackShow(step=10, indices=0))
 
 # Choose a starting point
 x = op.domain.zero()
