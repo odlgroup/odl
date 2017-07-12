@@ -15,7 +15,8 @@ standard_library.install_aliases()
 
 import numpy as np
 
-__all__ = ('cuboid', 'defrise', 'ellipsoid_phantom', 'indicate_proj_axis')
+__all__ = ('cuboid', 'defrise', 'ellipsoid_phantom', 'indicate_proj_axis',
+           'smooth_cuboid')
 
 
 def cuboid(space, min_pt=None, max_pt=None):
@@ -613,44 +614,102 @@ def ellipsoid_phantom(space, ellipsoids):
         raise ValueError('dimension not 2 or 3, no phantom available')
 
 
+def smooth_cuboid(space, min_pt=None, max_pt=None, axis=0):
+    """Rectangular cuboid with smooth variations.
+
+    Parameters
+    ----------
+    space : `DiscreteLp`
+        Discretized space in which the phantom is supposed to be created.
+    min_pt : array-like of shape ``(space.ndim,)``, optional
+        Lower left corner of the cuboid. If ``None`` is given, a quarter
+        of the extent from ``space.min_pt`` towards the inside is chosen.
+    max_pt : array-like of shape ``(space.ndim,)``, optional
+        Upper right corner of the cuboid. If ``None`` is given, ``min_pt``
+        plus half the extent is chosen.
+    axis : `int` or sequence of `int`
+        Dimension(s) along which the smooth variation should happen.
+
+    Returns
+    -------
+    phantom : ``space``-element
+        The generated cuboid phantom in ``space``.
+    """
+    dom_min_pt = np.asarray(space.domain.min())
+    dom_max_pt = np.asarray(space.domain.max())
+
+    if min_pt is None:
+        min_pt = dom_min_pt * 0.75 + dom_max_pt * 0.25
+    if max_pt is None:
+        max_pt = dom_min_pt * 0.25 + dom_max_pt * 0.75
+
+    min_pt = np.atleast_1d(min_pt)
+    max_pt = np.atleast_1d(max_pt)
+
+    axis = np.array(axis, dtype=int, ndmin=1)
+
+    if min_pt.shape != (space.ndim,):
+        raise ValueError('shape of `min_pt` must be {}, got {}'
+                         ''.format((space.ndim,), min_pt.shape))
+    if max_pt.shape != (space.ndim,):
+        raise ValueError('shape of `max_pt` must be {}, got {}'
+                         ''.format((space.ndim,), max_pt.shape))
+
+    sign = 0
+    for i, coord in enumerate(space.meshgrid):
+        sign = sign | (coord < min_pt[i]) | (coord > max_pt[i])
+
+    values = 0
+    for i in axis:
+        coord = space.meshgrid[i]
+        extent = (dom_max_pt[i] - dom_min_pt[i])
+        values = values + 2 * (coord - dom_min_pt[i]) / extent - 1
+
+    # Properly scale using sign
+    sign = (3 * sign - 2) / axis.size
+
+    return space.element(values * sign)
+
 if __name__ == '__main__':
     # Show the phantoms
     import odl
 
     # cuboid 1D
-    discr = odl.uniform_discr(-1, 1, 300)
-    cuboid(discr).show('cuboid 1d')
+    space = odl.uniform_discr(-1, 1, 300)
+    cuboid(space).show('cuboid 1d')
 
     # cuboid 2D
-    discr = odl.uniform_discr([-1, -1], [1, 1], [300, 300])
-    cuboid(discr).show('cuboid 2d')
+    space = odl.uniform_discr([-1, -1], [1, 1], [300, 300])
+    cuboid(space).show('cuboid 2d')
+    smooth_cuboid(space).show('smooth_cuboid x 2d')
+    smooth_cuboid(space, axis=[0, 1]).show('smooth_cuboid x-y 2d')
 
     # cuboid 3D
-    discr = odl.uniform_discr([-1, -1, -1], [1, 1, 1], [300, 300, 300])
-    cuboid(discr).show('cuboid 3d')
+    space = odl.uniform_discr([-1, -1, -1], [1, 1, 1], [300, 300, 300])
+    cuboid(space).show('cuboid 3d')
 
     # Indicate proj axis 3D
-    indicate_proj_axis(discr).show('indicate_proj_axis 3d')
+    indicate_proj_axis(space).show('indicate_proj_axis 3d')
 
     # ellipsoid phantom 2D
-    discr = odl.uniform_discr([-1, -1], [1, 1], [300, 300])
+    space = odl.uniform_discr([-1, -1], [1, 1], [300, 300])
     ellipses = [[1.0, 1.0, 1.0, 0.0, 0.0, 0.0],
                 [1.0, 0.6, 0.6, 0.0, 0.0, 0.0]]
-    ellipsoid_phantom(discr, ellipses).show('ellipse phantom 2d')
+    ellipsoid_phantom(space, ellipses).show('ellipse phantom 2d')
 
     # ellipsoid phantom 3D
-    discr = odl.uniform_discr([-1, -1, -1], [1, 1, 1], [300, 300, 300])
+    space = odl.uniform_discr([-1, -1, -1], [1, 1, 1], [300, 300, 300])
     ellipsoids = [[1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
                   [1.0, 0.6, 0.6, 0.6, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]
-    ellipsoid_phantom(discr, ellipsoids).show('ellipse phantom 3d')
+    ellipsoid_phantom(space, ellipsoids).show('ellipse phantom 3d')
 
     # Defrise phantom 2D
-    discr = odl.uniform_discr([-1, -1], [1, 1], [300, 300])
-    defrise(discr).show('defrise 2D')
+    space = odl.uniform_discr([-1, -1], [1, 1], [300, 300])
+    defrise(space).show('defrise 2D')
 
     # Defrise phantom 2D
-    discr = odl.uniform_discr([-1, -1, -1], [1, 1, 1], [300, 300, 300])
-    defrise(discr).show('defrise 3D', coords=[0, None, None])
+    space = odl.uniform_discr([-1, -1, -1], [1, 1, 1], [300, 300, 300])
+    defrise(space).show('defrise 3D', coords=[0, None, None])
 
     # Run also the doctests
     # pylint: disable=wrong-import-position
