@@ -16,7 +16,7 @@ standard_library.install_aliases()
 import numpy as np
 
 __all__ = ('cuboid', 'defrise', 'ellipsoid_phantom', 'indicate_proj_axis',
-           'smooth_cuboid')
+           'smooth_cuboid', 'tgv_phantom')
 
 
 def cuboid(space, min_pt=None, max_pt=None):
@@ -670,6 +670,90 @@ def smooth_cuboid(space, min_pt=None, max_pt=None, axis=0):
 
     return space.element(values * sign)
 
+
+def tgv_phantom(space):
+    """Piecewise affine phantom.
+
+    This phantom is taken from [Bre+2010] and includes both linearly varying
+    regions and sharp discontinuities. It is designed to work well with
+    Total Generalized Variation (TGV) type regularization.
+
+    Parameters
+    ----------
+    space : `DiscreteLp`, 2 dimensional
+        Discretized space in which the phantom is supposed to be created.
+        Needs to be two-dimensional.
+
+    Returns
+    -------
+    phantom : ``space``-element
+        The generated phantom in ``space``. Values have range [0, 1].
+
+    Notes
+    -----
+    The original phantom is given by a specific image. In this implementation,
+    we extracted the underlying parameters and the phantom thus works with
+    spaces of any shape. Due to this, small variations may occur when compared
+    to the original phantom.
+
+    References
+    ----------
+    [Bre+2010] K. Bredies, K. Kunisch, and T. Pock.
+    Total Generalized Variation. SIAM Journal on Imaging Sciences,
+    3(3):492–526, Jan. 2010
+    """
+    # Note that all parameters used here were extracted by hand and may not fit
+    # exactly with the reference image.
+
+    if space.ndim != 2:
+        raise ValueError('`space.ndim` must be 2, got {}'
+                         ''.format(space.ndim))
+
+    y, x = space.meshgrid
+
+    # Use a smooth sigmoid to get some anti-aliasing across edges.
+    scale = 0.1 * np.min(space.cell_sides)
+
+    def sigmoid(val):
+        val = val / scale
+        return 1 / (1 + np.exp(-val))
+
+    # Normalize to [0, 1]
+    x = (x - np.min(x)) / (np.max(x) - np.min(x))
+    y = (y - np.min(y)) / (np.max(y) - np.min(y))
+
+    # Background
+    values = -(x + y) / 2
+
+    # Square-ish region
+    indicator = np.ones(space.shape)
+    indicator *= sigmoid(-(0.015199034981905914 * x - y + 0.13896260554885403))
+    indicator *= sigmoid((0.3333333333333323 * y - x + 0.598958333333334))
+    indicator *= sigmoid((-2.4193548387096726 * y - x + 2.684979838709672))
+
+    values += indicator * 2 * (x + y - 1)
+
+    # Ellipse part
+    x_c = x - 0.71606842360499456
+    y_c = y - 0.18357884949910641
+
+    width = 0.55677657235995637
+    height = 0.37279391542283741
+    phi = 0.62911754900697558
+
+    x_c_rot = (np.cos(phi) * x_c - np.sin(phi) * y_c) / width
+    y_c_rot = (np.sin(phi) * x_c + np.cos(phi) * y_c) / height
+
+    indicator = sigmoid(np.sqrt(x_c_rot ** 2 + y_c_rot ** 2) - 1)
+
+    values = indicator * values + 1.5 * (1 - indicator) * (-x - 2 * y + 0.6)
+
+    # Normalize values
+    values = (values - np.min(values)) / (np.max(values) - np.min(values))
+
+    return space.element(values)
+
+
 if __name__ == '__main__':
     # Show the phantoms
     import odl
@@ -681,8 +765,13 @@ if __name__ == '__main__':
     # cuboid 2D
     space = odl.uniform_discr([-1, -1], [1, 1], [300, 300])
     cuboid(space).show('cuboid 2d')
+
+    # smooth cuboid
     smooth_cuboid(space).show('smooth_cuboid x 2d')
     smooth_cuboid(space, axis=[0, 1]).show('smooth_cuboid x-y 2d')
+
+    # TGV phantom
+    tgv_phantom(space).show('tgv_phantom')
 
     # cuboid 3D
     space = odl.uniform_discr([-1, -1, -1], [1, 1, 1], [300, 300, 300])
