@@ -675,7 +675,7 @@ def smooth_cuboid(space, min_pt=None, max_pt=None, axis=0):
     return space.element(values)
 
 
-def tgv_phantom(space):
+def tgv_phantom(space, edge_smoothing=0.2):
     """Piecewise affine phantom.
 
     This phantom is taken from [Bre+2010] and includes both linearly varying
@@ -687,6 +687,9 @@ def tgv_phantom(space):
     space : `DiscreteLp`, 2 dimensional
         Discretized space in which the phantom is supposed to be created.
         Needs to be two-dimensional.
+    edge_smoothness : float, optional
+        Smoothing of the edges of the phantom.
+        Given in the width of the smoothing in units of pixels.
 
     Returns
     -------
@@ -710,14 +713,22 @@ def tgv_phantom(space):
         raise ValueError('`space.ndim` must be 2, got {}'
                          ''.format(space.ndim))
 
+    edge_smoothing, edge_smoothing_in = float(edge_smoothing), edge_smoothing
+    if edge_smoothing < 0:
+        raise ValueError('`edge_smoothing` must be >= 0, got {}'
+                         ''.format(edge_smoothing_in))
+
     y, x = space.meshgrid
 
     # Use a smooth sigmoid to get some anti-aliasing across edges.
-    scale = 0.2 * np.min(space.cell_sides)
+    scale = edge_smoothing / np.min(space.shape)
 
     def sigmoid(val):
-        val = val / scale
-        return 1 / (1 + np.exp(-val))
+        if edge_smoothing != 0:
+            val = val / scale
+            return 1 / (1 + np.exp(-val))
+        else:
+            return (val > 0).astype(val.dtype)
 
     # Normalize to [0, 1]
     x = (x - np.min(x)) / (np.max(x) - np.min(x))
