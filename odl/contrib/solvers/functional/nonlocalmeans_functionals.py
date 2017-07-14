@@ -1,21 +1,12 @@
-# Copyright 2014-2016 The ODL development group
+# Copyright 2014-2017 The ODL contributors
 #
 # This file is part of ODL.
 #
-# ODL is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# ODL is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with ODL.  If not, see <http://www.gnu.org/licenses/>.
+# This Source Code Form is subject to the terms of the Mozilla Public License,
+# v. 2.0. If a copy of the MPL was not distributed with this file, You can
+# obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Default functionals defined on any space similar to R^n or L^2."""
+"""Non Local Means functionals."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -27,17 +18,26 @@ import numpy as np
 
 from odl.operator import Operator
 from odl.solvers.functional.functional import Functional
-from skimage.restoration import denoise_nl_means
-import cv2
 
 __all__ = ('NLMRegularizer',)
 
 
 class NLMRegularizer(Functional):
 
-    """The nonlocal means functional.
+    """The nonlocal means "functional".
 
-    See Buades2005_ for more information.
+    This is not a true functional in the strict sense, but regardless it
+    implements a `proximal` method and is hence usable with proximal solvers.
+    See [Heide+2015] for more information.
+
+    The functional requires an appropriate backend. To install the backends run
+
+    ===========  ===============================
+    `impl`       call
+    ===========  ===============================
+    `'skimage'`  ``$ pip install scikit-image``
+    `'opencv'`   ``$ pip install opencv-python``
+    ===========  ===============================
 
     Notes
     -----
@@ -60,12 +60,15 @@ class NLMRegularizer(Functional):
         e^{-\\frac{(G_a * |u(x + \cdot) - u(y + \cdot)|^2)(0)}{h^2}}
         dy
 
-    See FlexISP_
+    See [Buades+2005] for more information.
 
     References
     ----------
-    .. _Buades2005: http://ieeexplore.ieee.org/document/1467423/
-    .. _FlexISP: http://dl.acm.org/citation.cfm?doid=2661229.2661260
+    [Buades+2005] *A non-local algorithm for image denoising*, A. Buades,
+    B. Coll and J.-M. Morel. CVPR 2005
+
+    [Heide+2015] *FlexISP: a flexible camera image processing framework*,
+    F. Heide et. al. SIGGRAPH Asia 2014
     """
 
     def __init__(self, space, h,
@@ -91,6 +94,7 @@ class NLMRegularizer(Functional):
                 h = func.h * self.stepsize
 
                 if func.impl == 'skimage':
+                    from skimage.restoration import denoise_nl_means
                     x_arr = x.asarray()
                     return denoise_nl_means(
                         x_arr,
@@ -99,6 +103,7 @@ class NLMRegularizer(Functional):
                         h=h,
                         multichannel=False)
                 elif func.impl == 'opencv':
+                    import cv2
                     x_arr = x.asarray()
                     xmin, xmax = np.min(x_arr), np.max(x_arr)
                     x_arr = (x_arr - xmin) * 255.0 / (xmax - xmin)
