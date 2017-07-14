@@ -615,7 +615,7 @@ def ellipsoid_phantom(space, ellipsoids):
 
 
 def smooth_cuboid(space, min_pt=None, max_pt=None, axis=0):
-    """Rectangular cuboid with smooth variations.
+    """Cuboid with smooth variations.
 
     Parameters
     ----------
@@ -627,16 +627,16 @@ def smooth_cuboid(space, min_pt=None, max_pt=None, axis=0):
     max_pt : array-like of shape ``(space.ndim,)``, optional
         Upper right corner of the cuboid. If ``None`` is given, ``min_pt``
         plus half the extent is chosen.
-    axis : `int` or sequence of `int`
+    axis : int or sequence of int
         Dimension(s) along which the smooth variation should happen.
 
     Returns
     -------
     phantom : ``space``-element
-        The generated cuboid phantom in ``space``.
+        The generated cuboid phantom in ``space``. Values have range [0, 1].
     """
-    dom_min_pt = np.asarray(space.domain.min())
-    dom_max_pt = np.asarray(space.domain.max())
+    dom_min_pt = space.domain.min()
+    dom_max_pt = space.domain.max()
 
     if min_pt is None:
         min_pt = dom_min_pt * 0.75 + dom_max_pt * 0.25
@@ -668,7 +668,11 @@ def smooth_cuboid(space, min_pt=None, max_pt=None, axis=0):
     # Properly scale using sign
     sign = (3 * sign - 2) / axis.size
 
-    return space.element(values * sign)
+    # Fit in [0, 1]
+    values = values * sign
+    values = (values - np.min(values)) / (np.max(values) - np.min(values))
+
+    return space.element(values)
 
 
 def tgv_phantom(space):
@@ -699,12 +703,9 @@ def tgv_phantom(space):
     References
     ----------
     [Bre+2010] K. Bredies, K. Kunisch, and T. Pock.
-    Total Generalized Variation. SIAM Journal on Imaging Sciences,
+    *Total Generalized Variation*. SIAM Journal on Imaging Sciences,
     3(3):492–526, Jan. 2010
     """
-    # Note that all parameters used here were extracted by hand and may not fit
-    # exactly with the reference image.
-
     if space.ndim != 2:
         raise ValueError('`space.ndim` must be 2, got {}'
                          ''.format(space.ndim))
@@ -712,7 +713,7 @@ def tgv_phantom(space):
     y, x = space.meshgrid
 
     # Use a smooth sigmoid to get some anti-aliasing across edges.
-    scale = 0.1 * np.min(space.cell_sides)
+    scale = 0.2 * np.min(space.cell_sides)
 
     def sigmoid(val):
         val = val / scale
