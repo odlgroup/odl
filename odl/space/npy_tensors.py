@@ -38,6 +38,9 @@ __all__ = ('NumpyTensorSpace',)
 _BLAS_DTYPES = (np.dtype('float32'), np.dtype('float64'),
                 np.dtype('complex64'), np.dtype('complex128'))
 
+# Define size thresholds to switch implementations
+THRESHOLD_SMALL = 100
+THRESHOLD_MEDIUM = 50000
 
 class NumpyTensorSpace(TensorSpace):
 
@@ -239,8 +242,10 @@ class NumpyTensorSpace(TensorSpace):
         if exponent != 2.0 and any(x is not None for x in (dist, norm, inner)):
             raise ValueError('cannot use any of `dist`, `norm` or `inner` '
                              'for exponent != 2')
-        # Check validity of option combination (3 or 4 out of 4 must be None)
-        if (dist, norm, inner, weighting).count(None) < 3:
+        # Check validity of option combination (0 or 1 may be provided)
+        num_extra_args = sum(1 if a is not None else 0
+                             for a in (dist, norm, inner, weighting))
+        if num_extra_args > 1:
             raise ValueError('invalid combination of options `weighting`, '
                              '`dist`, `norm` and `inner`')
 
@@ -516,7 +521,7 @@ class NumpyTensorSpace(TensorSpace):
         >>> result is out
         True
         """
-        _lincomb(a, x1, b, x2, out, self.dtype)
+        _lincomb_impl(a, x1, b, x2, out)
 
     def _dist(self, x1, x2):
         """Return the distance between ``x1`` and ``x2``.
@@ -1476,6 +1481,11 @@ def _blas_is_applicable(*args):
     ----------
     x1,...,xN : `NumpyTensor`
         The tensors to be tested for BLAS conformity.
+
+    Returns
+    -------
+    blas_is_applicable : bool
+        ``True`` if all mentioned requirements are met, ``False`` otherwise.
     """
     if any(x.dtype != args[0].dtype for x in args[1:]):
         return False
@@ -1488,14 +1498,16 @@ def _blas_is_applicable(*args):
         return True
 
 
-def _lincomb(a, x1, b, x2, out, dtype):
-    """Raw linear combination depending on data type."""
-    # Shortcut for small problems
-    # if x1.size < 100:  # small array optimization
+def _lincomb_impl(a, x1, b, x2, out):
+    """Optimized implementation of ``out[:] = a * x1 + b * x2``."""
+    size = native(x1.size)
+    # TODO: this is commented out for testing
+    # if size < THRESHOLD_SMALL:  # small array optimization
     #     out.data[:] = a * x1.data + b * x2.data
     #     return
 
-    if _blas_is_applicable(x1.data, x2.data, out.data):
+    if (size > THRESHOLD_MEDIUM and
+            _blas_is_applicable(x1.data, x2.data, out.data)):
         # Need flat data for BLAS, otherwise in-place does not work.
         # Raveling must happen in fixed order for non-contiguous out,
         # otherwise 'A' is applied to arrays, which makes the outcome
@@ -1539,47 +1551,47 @@ def _lincomb(a, x1, b, x2, out, dtype):
 
     if x1 is x2 and b != 0:
         # x1 is aligned with x2 -> out = (a+b)*x1
-        _lincomb(a + b, x1, 0, x1, out, dtype)
+        _lincomb_impl(a + b, x1, 0, x1, out)
     elif out is x1 and out is x2:
         # All the vectors are aligned -> out = (a+b)*out
-        scal(a + b, out_arr, native(out_arr.size))
+        scal(a + b, out_arr, size)
     elif out is x1:
         # out is aligned with x1 -> out = a*out + b*x2
         if a != 1:
-            scal(a, out_arr, native(out_arr.size))
+            scal(a, out_arr, size)
         if b != 0:
-            axpy(x2_arr, out_arr, native(out_arr.size), b)
+            axpy(x2_arr, out_arr, size, b)
     elif out is x2:
         # out is aligned with x2 -> out = a*x1 + b*out
         if b != 1:
-            scal(b, out_arr, native(out_arr.size))
+            scal(b, out_arr, size)
         if a != 0:
-            axpy(x1_arr, out_arr, native(out_arr.size), a)
+            axpy(x1_arr, out_arr, size, a)
     else:
-        # We have exhausted all alignment options, so x1 != x2 != out
+        # We have exhausted all alignment options, so x1 is not x2 is not out
         # We now optimize for various values of a and b
         if b == 0:
             if a == 0:  # Zero assignment -> out = 0
                 out_arr[:] = 0
             else:  # Scaled copy -> out = a*x1
-                copy(x1_arr, out_arr, native(out_arr.size))
+                copy(x1_arr, out_arr, size)
                 if a != 1:
-                    scal(a, out_arr, native(out_arr.size))
+                    scal(a, out_arr, size)
 
         else:  # b != 0
             if a == 0:  # Scaled copy -> out = b*x2
-                copy(x2_arr, out_arr, native(out_arr.size))
+                copy(x2_arr, out_arr, size)
                 if b != 1:
-                    scal(b, out_arr, native(out_arr.size))
+                    scal(b, out_arr, size)
 
             elif a == 1:  # No scaling in x1 -> out = x1 + b*x2
-                copy(x1_arr, out_arr, native(out_arr.size))
-                axpy(x2_arr, out_arr, native(out_arr.size), b)
+                copy(x1_arr, out_arr, size)
+                axpy(x2_arr, out_arr, size, b)
             else:  # Generic case -> out = a*x1 + b*x2
-                copy(x2_arr, out_arr, native(out_arr.size))
+                copy(x2_arr, out_arr, size)
                 if b != 1:
-                    scal(b, out_arr, native(out_arr.size))
-                axpy(x1_arr, out_arr, native(out_arr.size), a)
+                    scal(b, out_arr, size)
+                axpy(x1_arr, out_arr, size, a)
 
 
 def _weighting(weights, exponent):
@@ -1702,7 +1714,13 @@ def _pnorm_diagweight(x, p, w):
 def _inner_default(x1, x2):
     """Default Euclidean inner product implementation."""
     if is_real_dtype(x1.dtype):
-        return np.tensordot(x1, x2, [range(x1.ndim)] * 2)
+        if x1.size > THRESHOLD_MEDIUM:
+            # This is as fast as BLAS dotc
+            return np.tensordot(x1, x2, [range(x1.ndim)] * 2)
+        else:
+            # Several times faster for small arrays
+            return np.dot(x1.data.ravel(order=x1.order),
+                          x2.data.ravel(order=x1.order))
     else:
         # x2 as first argument because we want linearity in x1
         return np.vdot(x2.data.ravel(order=x1.order),
