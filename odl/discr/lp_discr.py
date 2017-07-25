@@ -591,9 +591,286 @@ class DiscreteLpElement(DiscretizedSpaceElement):
         else:
             super().__setitem__(indices, values)
 
+    def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
+        """Interface to Numpy's ufunc machinery.
+
+        This method is called by Numpy version 1.13 and higher as a single
+        point for the ufunc dispatch logic. An object implementing
+        ``__array_ufunc__`` takes over control when a `numpy.ufunc` is
+        called on it, allowing it to use custom implementations and
+        output types.
+
+        This includes handling of in-place arithmetic like
+        ``npy_array += custom_obj``. In this case, the custom object's
+        ``__array_ufunc__`` takes precedence over the baseline
+        `numpy.ndarray` implementation. It will be called with
+        ``npy_array`` as ``out`` argument, which ensures that the
+        returned object is a Numpy array. For this to work properly,
+        ``__array_ufunc__`` has to accept Numpy arrays as ``out`` arguments.
+
+        See the `corresponding NEP`_ and the `interface documentation`_
+        for further details. See also the `general documentation on
+        Numpy ufuncs`_.
+
+        .. note::
+            This basic implementation casts inputs and
+            outputs to Numpy arrays and evaluates ``ufunc`` on those.
+            For `numpy.ndarray` based data storage, this incurs no
+            significant overhead compared to direct usage of Numpy arrays.
+
+            For other (in particular non-local) implementations, e.g.,
+            GPU arrays or distributed memory, overhead is significant due
+            to copies to CPU main memory. In those classes, the
+            ``__array_ufunc__`` mechanism should be overridden to use
+            native implementations if possible.
+
+        .. note::
+            When using operations that alter the shape (like ``reduce``),
+            or the data type (can be any of the methods),
+            the resulting array is wrapped in a space of the same
+            type as ``self.space``, however **only** using the minimal
+            set of parameters ``size`` and ``dtype``. If more properties
+            are supposed to be propagated, this method must be overridden.
+
+        Parameters
+        ----------
+        ufunc : `numpy.ufunc`
+            Ufunc that should be called on ``self``.
+        method : str
+            Method on ``ufunc`` that should be called on ``self``.
+            Possible values:
+
+            ``'__call__'``, ``'accumulate'``, ``'at'``, ``'reduce'``
+
+        input1, ..., inputN:
+            Positional arguments to ``ufunc.method``.
+        kwargs:
+            Keyword arguments to ``ufunc.method``.
+
+        Returns
+        -------
+        ufunc_result : `DiscreteLpElement`, `numpy.ndarray` or tuple
+            Result of the ufunc evaluation. If no ``out`` keyword argument
+            was given, the result is an `NtuplesBaseVector` or a tuple
+            of such, depending on the number of outputs of ``ufunc``.
+            If ``out`` was provided, the returned object or sequence members
+            refer(s) to ``out``.
+
+        Examples
+        --------
+        We start by applying `numpy.add` to elements of a one-dimensional
+        space, also using the optional  ``out`` parameter:
+
+        >>> space = odl.uniform_discr(0, 1, 3)
+        >>> x = space.element([1, 2, 3])
+        >>> y = space.element([-1, -2, -3])
+        >>> np.add(x, y)
+        uniform_discr(0.0, 1.0, 3).element([0.0, 0.0, 0.0])
+        >>> out = space.element()
+        >>> result = np.add(x, y, out=out)
+        >>> out
+        uniform_discr(0.0, 1.0, 3).element([0.0, 0.0, 0.0, 0.0])
+        >>> result is out
+        True
+
+        The ``add.accumulate`` method retains the original shape and
+        ``dtype``. We can override the latter with the ``dtype``
+        parameter:
+
+        >>> x = space.element([1, 2, 3])
+        >>> np.add.accumulate(x)
+        uniform_discr(0.0, 1.0, 3).element([1.0, 3.0, 6.0])
+        >>> np.add.accumulate(x, dtype=int)
+        uniform_discr(0.0, 1.0, 3, dtype='int').element([1, 3, 6])
+
+        For spaces of dimension 2 or higher, axes can also be specified
+        for restricted accumulations:
+
+        >>> space_2d = odl.uniform_discr([0, 0], [1, 2], (2, 2))
+        >>> x = space_2d.element([[1, 2],
+        ...                       [3, 4]])
+        >>> np.add.accumulate(x, axis=1)
+        >>> uniform_discr([0.0, 0.0], [1.0, 2.0], (2, 2)).element([[1.0, 3.0],
+        ...  [3.0, 7.0]])
+
+        The ``add.at`` method operates in-place. Here we add the second
+        operand ``[5, 10]`` to ``x`` at indices ``[0, 2]``:
+
+        >>> x = space.element([1, 2, 3])
+        >>> np.add.at(x, [0, 2], [5, 10])
+        >>> x
+        uniform_discr(0.0, 1.0, 3).element([6.0, 2.0, 13.0])
+
+        Using ``add.reduce`` performs reduction over the first axis by
+        default, producing and element in a lower-dimensional space for
+        ``ndim > 1`` and a scalar for ``ndim == 1``. This can be influenced
+        with the ``axis`` parameter:
+
+        >>> x = space.element([1, 2, 3])
+        >>> np.add.reduce(x)
+        6.0
+        >>> y = space_2d.element([[1, 2],
+        ...                       [3, 4]])
+        >>> np.add.reduce(y)
+        uniform_discr(0.0, 2.0, 2).element([4.0, 6.0])
+        >>> np.add.reduce(y, axis=None)  # `None` means all axes
+        10.0
+        >>> np.add.reduce(y, axis=(0, 1))
+        10.0
+        >>> np.add.reduce(y, axis=1)
+        uniform_discr(0.0, 1.0, 2).element([4.0, 6.0])
+
+        References
+        ----------
+        .. _corresponding NEP:
+           https://github.com/numpy/numpy/blob/master/doc/neps/\
+ufunc-overrides.rst
+
+        .. _interface documentation:
+           https://github.com/charris/numpy/blob/master/doc/source/reference/\
+arrays.classes.rst#special-attributes-and-methods
+
+        .. _general documentation on Numpy ufuncs:
+           https://docs.scipy.org/doc/numpy/reference/ufuncs.html
+
+        .. _reduceat documentation:
+           https://docs.scipy.org/doc/numpy/reference/generated/\
+numpy.ufunc.reduceat.html
+        """
+        # Unwrap out if provided. The output parameters are all wrapped
+        # in one tuple, even if there is only one.
+        out_tuple = kwargs.pop('out', ())
+
+        # We allow our own element type and `numpy.ndarray` objects as `out`
+        if not all(isinstance(out, (type(self), np.ndarray)) or out is None
+                   for out in out_tuple):
+            return NotImplemented
+
+        # Pull out the `ntuple` attributes from DiscreteLpElement instances
+        inputs = tuple(elem.ntuple if isinstance(elem, type(self)) else elem
+                       for elem in inputs)
+
+        out = out1 = out2 = None
+        if len(out_tuple) == 1:
+            out = out_tuple[0]
+        elif len(out_tuple) == 2:
+            out1 = out_tuple[0]
+            out2 = out_tuple[1]
+
+        out_dtype = kwargs.get('dtype', None)
+
+        # Not implementing this since it will be gone anyway when tensors
+        # are in
+        if 'order' in kwargs:
+            raise NotImplementedError('`order` argument not supported')
+
+        """
+        fspace, partition, dspace, exponent=2.0,
+                 interp='nearest'
+                 order
+                 axis_labels
+        """
+
+        # Need to filter for `keepdims` since it's invalid (happening below)
+        keepdims = kwargs.pop('keepdims', False)
+
+        if method == '__call__':
+            # Need new space for ufunc if dtype was changed
+            if out_dtype is None or out_dtype == self.dtype:
+                out_space = self.space
+            else:
+                out_space = self.space.astype(out_dtype)
+
+            if ufunc.nout == 1:
+                if out is None:
+                    out = out_space.element()
+                if isinstance(out, np.ndarray):
+                    kwargs['out'] = (out,)
+                else:
+                    kwargs['out'] = (out.ntuple,)
+                self.ntuple.__array_ufunc__(ufunc, '__call__',
+                                            *inputs, **kwargs)
+                return out
+
+            elif ufunc.nout == 2:
+                if out1 is None:
+                    out1 = out_space.element()
+                if out2 is None:
+                    out2 = out_space.element()
+
+                out_arg = []
+                if isinstance(out1, np.ndarray):
+                    out_arg.append(out1)
+                else:
+                    out_arg.append(out1.ntuple)
+
+                if isinstance(out2, np.ndarray):
+                    out_arg.append(out2)
+                else:
+                    out_arg.append(out2.ntuple)
+
+                kwargs['out'] = tuple(out_arg)
+
+                self.ntuple.__array_ufunc__(ufunc, '__call__',
+                                            *inputs, **kwargs)
+                return out1, out2
+
+            else:
+                raise NotImplementedError('nout = {} not supported'
+                                          ''.format(ufunc.nout))
+
+        elif method == 'outer':
+            # Not supported at the moment since we need spaces of vector-
+            # valued functions for that.
+            # We have to raise since returning `NotImplemented` will
+            # fall back to native Numpy, resulting in a `numpy.ndarray`.
+            # TODO: add when vector-valued functions are available
+            raise NotImplementedError('`outer` currently not supported')
+        elif method == 'reduceat':
+            # Makes no sense since there is no way to determine in which
+            # space the result should live, except in special cases when
+            # axes are being completely collapsed or don't change size.
+            raise ValueError('`reduceat` not supported')
+        elif method == 'reduce' and keepdims:
+            raise ValueError(
+                '`keepdims=True` cannot be used in `reduce` since there is '
+                'no unique function domain for the collapsed axes')
+        else:
+            if out is None:
+                result = self.ntuple.__array_ufunc__(ufunc, method,
+                                                     *inputs, **kwargs)
+                if np.isscalar(result):
+                    # This occurs for `reduce` with all axes
+                    return result
+                elif result is None:
+                    # Happens for in-place operations, currently only `at`
+                    return
+                else:
+                    # Wrap result in an appropriate space
+                    axis = kwargs.get('axis', 0)
+
+                    # TODO: create appropriate space
+                    return result_space.element(result.ravel())
+            else:
+                with writable_array(out) as out_arr:
+                    kwargs['out'] = (out_arr,)
+                getattr(ufunc, method)(*inputs, **kwargs)
+
+    # Old ufuncs interface, will be deprecated when Numpy 1.13 becomes minimum
+
     @property
     def ufuncs(self):
-        """`DiscreteLpUfuncs`, access to numpy style ufuncs.
+        """Access to Numpy style universal functions.
+
+        .. note::
+            This interface is will be deprecated when Numpy 1.13 becomes
+            the minimum required version. Use Numpy ufuncs directly, e.g.,
+            ``np.sqrt(x)`` instead of ``x.ufuncs.sqrt()``.
+
+        Notes
+        -----
+        These ufuncs use optimized implementations for `dspace` if
+        available and incur no significant extra overhead.
 
         Examples
         --------
