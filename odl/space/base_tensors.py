@@ -96,7 +96,7 @@ class TensorSpace(LinearSpace):
 
         self.__order = str(order).upper()
         if self.order not in ('A', 'C', 'F'):
-            raise ValueError("`order '{}' not understood".format(order))
+            raise ValueError("`order {!r} not understood".format(order))
 
         if is_real_dtype(self.dtype):
             # real includes non-floating-point like integers
@@ -754,8 +754,8 @@ class Tensor(LinearSpaceElement):
             Method on ``ufunc`` that should be called on ``self``.
             Possible values:
 
-            ``'__call__'``, ``'accumulate'``, ``'at'``, ``'reduce'``,
-            ``'reduceat'``
+            ``'__call__'``, ``'accumulate'``, ``'at'``, ``'outer'``,
+            ``'reduce'``, ``'reduceat'``
 
         input1, ..., inputN:
             Positional arguments to ``ufunc.method``.
@@ -768,7 +768,7 @@ class Tensor(LinearSpaceElement):
             Result of the ufunc evaluation. If no ``out`` keyword argument
             was given, the result is a `Tensor` or a tuple
             of such, depending on the number of outputs of ``ufunc``.
-            If ``out`` was provided, the returned object or sequence members
+            If ``out`` was provided, the returned object or tuple entries
             refer(s) to ``out``.
 
         Examples
@@ -783,7 +783,8 @@ class Tensor(LinearSpaceElement):
         >>> np.add(x, y)  # same mechanism for Numpy >= 1.13
         rn(3).element([ 0.,  0.,  0.])
 
-        As ``out``, a Numpy array or an ODL tensor can be given:
+        As ``out``, a Numpy array or an ODL tensor can be given (wrapped
+        in a sequence):
 
         >>> out = r3.element()
         >>> res = x.__array_ufunc__(np.add, '__call__', x, y, out=(out,))
@@ -838,8 +839,8 @@ class Tensor(LinearSpaceElement):
         rn(3).element([  6.,   2.,  13.])
 
         For outer-product-type operations, i.e., operations where the result
-        shape is the sum of the individual shapes, use the ``ufunc.outer``
-        method:
+        shape is the sum of the individual shapes, the ``ufunc.outer``
+        method can be used:
 
         >>> x = odl.rn(2).element([0, 3])
         >>> y = odl.rn(3).element([1, 2, 3])
@@ -919,61 +920,95 @@ numpy.ufunc.reduceat.html
             out1 = out_tuple[0]
             out2 = out_tuple[1]
 
+        # Arguments for `writable_array` and/or space constructors
+        order = str(kwargs.get('order', self.order)).upper()
+        array_kwargs = {'order': order}
+        order = 'A' if order == 'K' else order  # We don't use 'K'
+
+        out_dtype = kwargs.get('dtype', None)
+        if out_dtype is not None:
+            array_kwargs['dtype'] = out_dtype
+
+        # Trivial context to be used when an output is `None`
+        class CtxNone(object):
+            __enter__ = __exit__ = lambda *_: None
+
         if method == '__call__':
-            # Use some of the kwargs for `writable_array`
-            array_kwargs = {'order': self.order}
-            out_dtype = kwargs.get('dtype', None)
-            if out_dtype is not None:
-                array_kwargs['dtype'] = out_dtype
-
-            # Need new space for ufunc if dtype was changed
-            if out_dtype is None or out_dtype == self.dtype:
-                out_space = self.space
-            else:
-                out_space = type(self.space)(self.shape, out_dtype, self.order)
-
             if ufunc.nout == 1:
+                # Make context for output (trivial one returns `None`)
                 if out is None:
-                    out = out_space.element()
-                with writable_array(out, **array_kwargs) as out_arr:
-                    kwargs['out'] = (out_arr,)
-                    ufunc(*inputs, **kwargs)
+                    out_ctx = CtxNone()
+                else:
+                    out_ctx = writable_array(out, **array_kwargs)
+
+                # Evaluate ufunc
+                with out_ctx as out_arr:
+                    kwargs['out'] = out_arr
+                    res = ufunc(*inputs, **kwargs)
+
+                # Wrap result if necessary (lazily)
+                if out is None:
+                    out_space = type(self.space)(self.shape, res.dtype, order)
+                    out = out_space.element(res)
+
                 return out
 
             elif ufunc.nout == 2:
-                if out1 is None:
-                    out1 = out_space.element()
-                if out2 is None:
-                    out2 = out_space.element()
-                out1_ctx = writable_array(out1, **array_kwargs)
-                out2_ctx = writable_array(out2, **array_kwargs)
+                # Make contexts for outputs (trivial ones return `None`)
+                if out1 is not None:
+                    out1_ctx = writable_array(out1, **array_kwargs)
+                else:
+                    out1_ctx = CtxNone()
+                if out2 is not None:
+                    out2_ctx = writable_array(out2, **array_kwargs)
+                else:
+                    out2_ctx = CtxNone()
+
+                # Evaluate ufunc
                 with out1_ctx as out1_arr, out2_ctx as out2_arr:
                     kwargs['out'] = (out1_arr, out2_arr)
-                    ufunc(*inputs, **kwargs)
+                    res1, res2 = ufunc(*inputs, **kwargs)
+
+                # Wrap results if necessary (lazily)
+                if out1 is None:
+                    out1_space = type(self.space)(self.shape, res1.dtype,
+                                                  order)
+                    out1 = out1_space.element(res1)
+                if out2 is None:
+                    out2_space = type(self.space)(self.shape, res2.dtype,
+                                                  order)
+                    out2 = out2_space.element(res2)
+
                 return out1, out2
 
             else:
                 raise NotImplementedError('nout = {} not supported'
                                           ''.format(ufunc.nout))
 
-        else:
+        else:  # method != '__call__'
+            # Make context for output (trivial one returns `None`)
             if out is None:
-                result = getattr(ufunc, method)(*inputs, **kwargs)
-                if np.isscalar(result):
-                    # This occurs for `reduce` with all axes
-                    return result
-                elif result is None:
-                    # Happens for in-place operations, currently only `at`
-                    return
-                else:
-                    # Wrap result in an appropriate space
-                    result_space = type(self.space)(result.shape, result.dtype,
-                                                    self.order)
-                    return result_space.element(result)
+                out_ctx = CtxNone()
             else:
-                with writable_array(out) as out_arr:
-                    kwargs['out'] = (out_arr,)
-                getattr(ufunc, method)(*inputs, **kwargs)
+                out_ctx = writable_array(out, **array_kwargs)
+
+            # Evaluate ufunc method
+            with out_ctx as out_arr:
+                kwargs['out'] = out_arr
+                res = getattr(ufunc, method)(*inputs, **kwargs)
+
+            # Shortcut for scalar or no return value
+            if np.isscalar(res) or res is None:
+                # The first occurs for `reduce` with all axes,
+                # the second for in-place stuff (`at` currently)
+                return res
+
+            # Wrap result if necessary (lazily)
+            if out is None:
+                out_space = type(self.space)(res.shape, res.dtype, order)
+                out = out_space.element(res)
+
+            return out
 
     # Old ufuncs interface, will be deprecated when Numpy 1.13 becomes minimum
 

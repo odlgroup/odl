@@ -10,8 +10,9 @@
 
 from __future__ import division
 import numpy as np
-import pytest
 import operator
+from pkg_resources import parse_version
+import pytest
 import sys
 
 import odl
@@ -25,12 +26,14 @@ from odl.space.npy_tensors import (
 from odl.util.testutils import (
     all_almost_equal, all_equal, simple_fixture,
     noise_array, noise_element, noise_elements)
-from odl.util.ufuncs import UFUNCS, REDUCTIONS
+from odl.util.ufuncs import UFUNCS
 
 
 # --- Test helpers --- #
 
 PYTHON2 = sys.version_info.major < 3
+USE_ARRAY_UFUNCS_INTERFACE = (parse_version(np.__version__) >=
+                              parse_version('1.13'))
 
 
 # Helpers to generate data
@@ -1151,9 +1154,15 @@ def test_custom_dist(tspace):
 
 def test_ufuncs(tspace, ufunc):
     """Test ufuncs in x.ufunc against direct Numpy ufuncs."""
-    name, n_args, n_out, _ = ufunc
+    name = ufunc
+
+    # Get the ufunc from numpy as reference, plus some additional info
+    npy_ufunc = getattr(np, name)
+    nin = npy_ufunc.nin
+    nout = npy_ufunc.nout
+
     if (np.issubsctype(tspace.dtype, np.floating) or
-            np.issubsctype(tspace.dtype, np.complexfloating)and
+            np.issubsctype(tspace.dtype, np.complexfloating) and
             name in ['bitwise_and',
                      'bitwise_or',
                      'bitwise_xor',
@@ -1185,47 +1194,120 @@ def test_ufuncs(tspace, ufunc):
         # Skip real-only methods for complex data types
         return
 
-    # Get the ufunc from NumPy as reference
-    npufunc = getattr(np, name)
-
     # Create some data
-    arrays, vectors = noise_elements(tspace, n_args + n_out)
-    in_arrays = arrays[:n_args]
-    out_arrays = arrays[n_args:]
+    arrays, vectors = noise_elements(tspace, nin + nout)
+    in_arrays = arrays[:nin]
+    out_arrays = arrays[nin:]
     data_vector = vectors[0]
-    in_vectors = vectors[1:n_args]
-    out_vectors = vectors[n_args:]
 
-    # Out-of-place:
-    np_result = npufunc(*in_arrays)
-    vec_fun = getattr(data_vector.ufuncs, name)
-    odl_result = vec_fun(*in_vectors)
-    assert all_almost_equal(np_result, odl_result)
+    out_vectors = vectors[nin:]
+
+    if nout == 1:
+        out_arr_kwargs = {'out': out_arrays[0]}
+        out_vec_kwargs = {'out': out_vectors[0]}
+    elif nout == 2:
+        out_arr_kwargs = {'out1': out_arrays[0], 'out2': out_arrays[1]}
+        out_vec_kwargs = {'out1': out_vectors[0], 'out2': out_vectors[1]}
+    else:
+        assert False
+
+    # Get function to call, using both interfaces:
+    # - vec.ufunc(other_args)
+    # - np.ufunc(vec, other_args)
+    vec_fun_old = getattr(data_vector.ufuncs, name)
+    in_vectors_old = vectors[1:nin]
+    vec_fun_new = npy_ufunc
+    in_vectors_new = vectors[:nin]
+
+    # Out-of-place
+    npy_result = npy_ufunc(*in_arrays)
+    odl_result_old = vec_fun_old(*in_vectors_old)
+    assert all_almost_equal(npy_result, odl_result_old)
+    odl_result_new = vec_fun_new(*in_vectors_new)
+    assert all_almost_equal(npy_result, odl_result_new)
 
     # Test type of output
-    if n_out == 1:
-        assert isinstance(odl_result, tspace.element_type)
-    elif n_out > 1:
-        for i in range(n_out):
-            assert isinstance(odl_result[i], tspace.element_type)
+    if nout == 1:
+        assert isinstance(odl_result_old, tspace.element_type)
+        assert isinstance(odl_result_new, tspace.element_type)
+    elif nout > 1:
+        for i in range(nout):
+            assert isinstance(odl_result_old[i], tspace.element_type)
+            assert isinstance(odl_result_new[i], tspace.element_type)
 
-    # In-place:
-    np_result = npufunc(*(in_arrays + out_arrays))
-    vec_fun = getattr(data_vector.ufuncs, name)
-    odl_result = vec_fun(*(in_vectors + out_vectors))
-    assert all_almost_equal(np_result, odl_result)
+    # In-place
+    # TODO: test with Numpy array(s) as `out`
+    npy_result = npy_ufunc(*in_arrays, **out_arr_kwargs)
+    odl_result_old = vec_fun_old(*in_vectors_old, **out_vec_kwargs)
+    assert all_almost_equal(npy_result, odl_result_old)
+    if USE_ARRAY_UFUNCS_INTERFACE:
+        # In-place will not work with Numpy < 1.13
+        odl_result_new = vec_fun_new(*in_vectors_new, **out_vec_kwargs)
+        assert all_almost_equal(npy_result, odl_result_new)
 
-    # Test in-place actually holds:
-    if n_out == 1:
-        assert odl_result is out_vectors[0]
-    elif n_out > 1:
-        for i in range(n_out):
-            assert odl_result[i] is out_vectors[i]
+    # Check that returned stuff refers to given out
+    if nout == 1:
+        assert odl_result_old is out_vectors[0]
+        if USE_ARRAY_UFUNCS_INTERFACE:
+            assert odl_result_new is out_vectors[0]
+    elif nout > 1:
+        for i in range(nout):
+            assert odl_result_old[i] is out_vectors[i]
+            if USE_ARRAY_UFUNCS_INTERFACE:
+                assert odl_result_new[i] is out_vectors[i]
+
+    if USE_ARRAY_UFUNCS_INTERFACE:
+        # Check `ufunc.at`
+        indices = np.random.randint(0, in_arrays[0].size,
+                                    size=in_arrays[0].size // 2)
+
+        mod_array = in_arrays[0].copy()
+        mod_vector = in_vectors_new[0].copy()
+        if nin == 1:
+            npy_result = npy_ufunc.at(mod_array, indices)
+            odl_result = npy_ufunc.at(mod_vector, indices)
+        elif nin == 2:
+            other_array = in_arrays[1][indices]
+            other_vector = in_vectors_new[1][indices]
+            npy_result = npy_ufunc.at(mod_array, indices, other_array)
+            odl_result = npy_ufunc.at(mod_vector, indices, other_vector)
+
+        assert all_almost_equal(odl_result, npy_result)
+
+    # Check `ufunc.reduce`
+    if nin == 2 and nout == 1 and USE_ARRAY_UFUNCS_INTERFACE:
+        in_array = in_arrays[0]
+        in_vector = in_vectors_new[0]
+
+        # We only test along one axis since some binary ufuncs are not
+        # re-orderable, in which case Numpy raises a ValueError
+        npy_result = npy_ufunc.reduce(in_array)
+        odl_result = npy_ufunc.reduce(in_vector)
+        # This also checks that `odl_result` is scalar
+        assert odl_result == pytest.approx(npy_result)
+        odl_result_keepdims = npy_ufunc.reduce(in_vector, keepdims=True)
+        assert odl_result_keepdims.shape == (1,) + in_vector.shape[1:]
+        # In-place using `out` (with ODL vector and array)
+        out_vector = odl_result_keepdims.space.element()
+        out_array = np.empty(odl_result_keepdims.shape,
+                             dtype=odl_result_keepdims.dtype)
+        npy_ufunc.reduce(in_vector, out=out_vector, keepdims=True)
+        npy_ufunc.reduce(in_vector, out=out_array, keepdims=True)
+        assert all_almost_equal(out_vector, odl_result_keepdims)
+        assert all_almost_equal(out_array, odl_result_keepdims)
+        # Using a specific dtype
+        npy_result = npy_ufunc.reduce(in_array, dtype=complex)
+        odl_result = npy_ufunc.reduce(in_vector, dtype=complex)
+        assert odl_result.dtype == npy_result.dtype
+        assert all_almost_equal(odl_result, npy_result)
+
+    # Other ufunc method use the same interface, to we don't perform
+    # extra tests for them.
 
 
 def test_reduction(tspace, reduction):
     """Test reductions in x.ufunc against direct Numpy reduction."""
-    name, _ = reduction
+    name = reduction
     npy_reduction = getattr(np, name)
 
     x_arr, x = noise_elements(tspace, 1)
@@ -1281,15 +1363,15 @@ def test_reduction(tspace, reduction):
         assert np.allclose(out, result_npy)
 
 
-def test_reduction_with_weighting():
-    """Weightings are tricky to handle, check some cases."""
-    # Constant weighting, should propagate
+def test_reduction_no_weighting():
+    """Weightings shouldn't propagate when shapes change."""
+    # Constant weighting
     space = odl.rn((3, 4), weighting=0.5)
     x = space.one()
     red = x.ufuncs.sum(axis=0)
-    assert red.space.weighting == space.weighting
+    assert red.space.weighting == NumpyTensorSpaceNoWeighting()
 
-    # Array weighting, should result in no weighting
+    # Array weighting
     weight_arr = np.ones((3, 4)) * 0.5
     space = odl.rn((3, 4), weighting=weight_arr, exponent=1.5)
     x = space.one()
@@ -1299,11 +1381,15 @@ def test_reduction_with_weighting():
 
 def test_ufunc_reduction_docs_notempty():
     """Check that the generated docstrings are not empty."""
-    for _, __, ___, doc in UFUNCS:
-        assert doc.splitlines()[0] != ''
+    x = odl.rn(3).element()
 
-    for _, doc in REDUCTIONS:
-        assert doc.splitlines()[0] != ''
+    for name, _, __, ___ in UFUNCS:
+        ufunc = getattr(x.ufuncs, name)
+        assert ufunc.__doc__.splitlines()[0] != ''
+
+    for name in ['sum', 'prod', 'min', 'max']:
+        reduction = getattr(x.ufuncs, name)
+        assert reduction.__doc__.splitlines()[0] != ''
 
 
 if __name__ == '__main__':

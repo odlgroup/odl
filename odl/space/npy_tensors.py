@@ -13,7 +13,6 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 from future.utils import native
 standard_library.install_aliases()
-from builtins import super
 
 import ctypes
 from functools import partial
@@ -28,8 +27,8 @@ from odl.space.weighting import (
     Weighting, ArrayWeighting, ConstWeighting, NoWeighting,
     CustomInner, CustomNorm, CustomDist)
 from odl.util import (
-    dtype_str, signature_string, is_real_dtype, is_numeric_dtype)
-from odl.util.ufuncs import NumpyTensorSpaceUfuncs
+    dtype_str, signature_string, is_real_dtype, is_numeric_dtype,
+    writable_array, is_floating_dtype)
 
 
 __all__ = ('NumpyTensorSpace',)
@@ -1399,7 +1398,7 @@ class NumpyTensor(Tensor):
         """Return ``self **= other``."""
         try:
             if other == int(other):
-                return super().__ipow__(other)
+                return super(NumpyTensor, self).__ipow__(other)
         except TypeError:
             pass
 
@@ -1428,45 +1427,330 @@ class NumpyTensor(Tensor):
                             'Python scalars')
         return complex(self.data[(0,) * self.ndim])
 
-    @property
-    def ufuncs(self):
-        """`NumpyTensorSpaceUfuncs`, access to Numpy style ufuncs.
+    def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
+        """Interface to Numpy's ufunc machinery.
 
-        Notes
-        -----
-        These ufuncs are optimized for use with `NumpyTensor`'s
-        and incur practically no overhead.
+        This method is called by Numpy version 1.13 and higher as a single
+        point for the ufunc dispatch logic. An object implementing
+        ``__array_ufunc__`` takes over control when a `numpy.ufunc` is
+        called on it, allowing it to use custom implementations and
+        output types.
+
+        This includes handling of in-place arithmetic like
+        ``npy_array += custom_obj``. In this case, the custom object's
+        ``__array_ufunc__`` takes precedence over the baseline
+        `numpy.ndarray` implementation. It will be called with
+        ``npy_array`` as ``out`` argument, which ensures that the
+        returned object is a Numpy array. For this to work properly,
+        ``__array_ufunc__`` has to accept Numpy arrays as ``out`` arguments.
+
+        See the `corresponding NEP`_ and the `interface documentation`_
+        for further details. See also the `general documentation on
+        Numpy ufuncs`_.
+
+        .. note::
+            This basic implementation casts inputs and
+            outputs to Numpy arrays and evaluates ``ufunc`` on those.
+            For `numpy.ndarray` based data storage, this incurs no
+            significant overhead compared to direct usage of Numpy arrays.
+
+            For other (in particular non-local) implementations, e.g.,
+            GPU arrays or distributed memory, overhead is significant due
+            to copies to CPU main memory. In those classes, the
+            ``__array_ufunc__`` mechanism should be overridden to use
+            native implementations if possible.
+
+        .. note::
+            When using operations that alter the shape (like ``reduce``),
+            or the data type (can be any of the methods),
+            the resulting array is wrapped in a space of the same
+            type as ``self.space``, however **only** using the minimal
+            set of parameters ``shape``, ``dtype`` and ``order``. If more
+            properties (e.g. weighting) should be propagated, this method
+            must be overridden.
+
+        Parameters
+        ----------
+        ufunc : `numpy.ufunc`
+            Ufunc that should be called on ``self``.
+        method : str
+            Method on ``ufunc`` that should be called on ``self``.
+            Possible values:
+
+            ``'__call__'``, ``'accumulate'``, ``'at'``, ``'outer'``,
+            ``'reduce'``, ``'reduceat'``
+
+        input1, ..., inputN:
+            Positional arguments to ``ufunc.method``.
+        kwargs:
+            Keyword arguments to ``ufunc.method``.
+
+        Returns
+        -------
+        ufunc_result : `Tensor`, `numpy.ndarray` or tuple
+            Result of the ufunc evaluation. If no ``out`` keyword argument
+            was given, the result is a `Tensor` or a tuple
+            of such, depending on the number of outputs of ``ufunc``.
+            If ``out`` was provided, the returned object or tuple entries
+            refer(s) to ``out``.
 
         Examples
         --------
-        >>> space = odl.rn(3)
-        >>> x = space.element([1, -2, 3])
-        >>> x.ufuncs.absolute()
-        rn(3).element([ 1.,  2.,  3.])
+        We apply `numpy.add` to ODL tensors:
 
-        Broadcasting and array-like input are supported:
+        >>> r3 = odl.rn(3)
+        >>> x = r3.element([1, 2, 3])
+        >>> y = r3.element([-1, -2, -3])
+        >>> x.__array_ufunc__(np.add, '__call__', x, y)
+        rn(3).element([ 0.,  0.,  0.])
+        >>> np.add(x, y)  # same mechanism for Numpy >= 1.13
+        rn(3).element([ 0.,  0.,  0.])
 
-        >>> x.ufuncs.add(3)
-        rn(3).element([ 4.,  1.,  6.])
-        >>> x.ufuncs.subtract([0, 0, 1])
-        rn(3).element([ 1., -2.,  2.])
+        As ``out``, a Numpy array or an ODL tensor can be given (wrapped
+        in a sequence):
 
-        There is also support for various reductions (sum, prod, min, max):
-
-        >>> x.ufuncs.sum()
-        2.0
-
-        The ``out`` parameter can be used to store the result:
-
-        >>> y = space.one()
-        >>> out = space.element()
-        >>> result = x.ufuncs.add(y, out=out)
-        >>> result
-        rn(3).element([ 2., -1.,  4.])
-        >>> result is out
+        >>> out = r3.element()
+        >>> res = x.__array_ufunc__(np.add, '__call__', x, y, out=(out,))
+        >>> out
+        rn(3).element([ 0.,  0.,  0.])
+        >>> res is out
         True
+        >>> out_arr = np.empty(3)
+        >>> res = x.__array_ufunc__(np.add, '__call__', x, y, out=(out_arr,))
+        >>> out_arr
+        array([ 0.,  0.,  0.])
+        >>> res is out_arr
+        True
+
+        With multiple dimensions:
+
+        >>> r23 = odl.rn((2, 3))
+        >>> x = y = r23.one()
+        >>> x.__array_ufunc__(np.add, '__call__', x, y)
+        rn((2, 3)).element(
+            [[ 2.,  2.,  2.],
+             [ 2.,  2.,  2.]]
+        )
+
+        The ``ufunc.accumulate`` method retains the original `shape` and
+        `dtype`. The latter can be changed with the ``dtype`` parameter:
+
+        >>> x = r3.element([1, 2, 3])
+        >>> x.__array_ufunc__(np.add, 'accumulate', x)
+        rn(3).element([ 1.,  3.,  6.])
+        >>> np.add.accumulate(x)  # same mechanism for Numpy >= 1.13
+        rn(3).element([ 1.,  3.,  6.])
+        >>> x.__array_ufunc__(np.add, 'accumulate', x, dtype=complex)
+        cn(3).element([ 1.+0.j,  3.+0.j,  6.+0.j])
+
+        For multi-dimensional tensors, an optional ``axis`` parameter
+        can be provided:
+
+        >>> z = r23.one()
+        >>> z.__array_ufunc__(np.add, 'accumulate', z, axis=1)
+        rn((2, 3)).element(
+            [[ 1.,  2.,  3.],
+             [ 1.,  2.,  3.]]
+        )
+
+        The ``ufunc.at`` method operates in-place. Here we add the second
+        operand ``[5, 10]`` to ``x`` at indices ``[0, 2]``:
+
+        >>> x = r3.element([1, 2, 3])
+        >>> x.__array_ufunc__(np.add, 'at', x, [0, 2], [5, 10])
+        >>> x
+        rn(3).element([  6.,   2.,  13.])
+
+        For outer-product-type operations, i.e., operations where the result
+        shape is the sum of the individual shapes, the ``ufunc.outer``
+        method can be used:
+
+        >>> x = odl.rn(2).element([0, 3])
+        >>> y = odl.rn(3).element([1, 2, 3])
+        >>> x.__array_ufunc__(np.add, 'outer', x, y)
+        rn((2, 3)).element(
+            [[ 1.,  2.,  3.],
+             [ 4.,  5.,  6.]]
+        )
+        >>> y.__array_ufunc__(np.add, 'outer', y, x)
+        rn((3, 2)).element(
+            [[ 1.,  4.],
+             [ 2.,  5.],
+             [ 3.,  6.]]
+        )
+
+        Using ``ufunc.reduce`` produces a scalar, which can be avoided with
+        ``keepdims=True``:
+
+        >>> x = r3.element([1, 2, 3])
+        >>> x.__array_ufunc__(np.add, 'reduce', x)
+        6.0
+        >>> x.__array_ufunc__(np.add, 'reduce', x, keepdims=True)
+        rn(1).element([ 6.])
+
+        In multiple dimensions, ``axis`` can be provided for reduction over
+        selected axes:
+
+        >>> z = r23.element([[1, 2, 3],
+        ...                  [4, 5, 6]])
+        >>> z.__array_ufunc__(np.add, 'reduce', z, axis=1)
+        rn(2).element([  6.,  15.])
+
+        Finally, ``add.reduceat`` is a combination of ``reduce`` and
+        ``at`` with rather flexible and complex semantics (see the
+        `reduceat documentation`_ for details):
+
+        >>> x = r3.element([1, 2, 3])
+        >>> x.__array_ufunc__(np.add, 'reduceat', x, [0, 1])
+        rn(2).element([ 1.,  5.])
+
+        References
+        ----------
+        .. _corresponding NEP:
+           https://github.com/numpy/numpy/blob/master/doc/neps/\
+ufunc-overrides.rst
+
+        .. _interface documentation:
+           https://github.com/charris/numpy/blob/master/doc/source/reference/\
+arrays.classes.rst#special-attributes-and-methods
+
+        .. _general documentation on Numpy ufuncs:
+           https://docs.scipy.org/doc/numpy/reference/ufuncs.html
+
+        .. _reduceat documentation:
+           https://docs.scipy.org/doc/numpy/reference/generated/\
+numpy.ufunc.reduceat.html
         """
-        return NumpyTensorSpaceUfuncs(self)
+        # Unwrap out if provided. The output parameters are all wrapped
+        # in one tuple, even if there is only one.
+        out_tuple = kwargs.pop('out', ())
+
+        # We allow our own tensors and `numpy.ndarray` objects as `out`
+        if not all(isinstance(out, (type(self), np.ndarray)) or out is None
+                   for out in out_tuple):
+            return NotImplemented
+
+        # Convert inputs that are ODL tensors to arrays so that the
+        # native Numpy ufunc is called later
+        inputs = tuple(
+            inp.asarray() if isinstance(inp, type(self)) else inp
+            for inp in inputs)
+
+        out = out1 = out2 = None
+        if len(out_tuple) == 1:
+            out = out_tuple[0]
+        elif len(out_tuple) == 2:
+            out1 = out_tuple[0]
+            out2 = out_tuple[1]
+
+        # Arguments for `writable_array` and/or space constructors
+        order = str(kwargs.get('order', self.order)).upper()
+        array_kwargs = {'order': order}
+        order = 'A' if order == 'K' else order  # We don't use 'K'
+
+        out_dtype = kwargs.get('dtype', None)
+        if out_dtype is not None:
+            array_kwargs['dtype'] = out_dtype
+
+        exponent = self.space.exponent
+        weighting = self.space.weighting
+
+        # Trivial context to be used when an output is `None`
+        class CtxNone(object):
+            __enter__ = __exit__ = lambda *_: None
+
+        if method == '__call__':
+            if ufunc.nout == 1:
+                # Make context for output (trivial one returns `None`)
+                if out is None:
+                    out_ctx = CtxNone()
+                else:
+                    out_ctx = writable_array(out, **array_kwargs)
+
+                # Evaluate ufunc
+                with out_ctx as out_arr:
+                    kwargs['out'] = out_arr
+                    res = ufunc(*inputs, **kwargs)
+
+                # Wrap result if necessary (lazily)
+                if out is None:
+                    if is_floating_dtype(res.dtype):
+                        spc_kwargs = {'weighting': weighting}
+                    else:
+                        spc_kwargs = {}
+                    out_space = type(self.space)(self.shape, res.dtype, order,
+                                                 **spc_kwargs)
+                    out = out_space.element(res)
+
+                return out
+
+            elif ufunc.nout == 2:
+                # Make contexts for outputs (trivial ones return `None`)
+                if out1 is not None:
+                    out1_ctx = writable_array(out1, **array_kwargs)
+                else:
+                    out1_ctx = CtxNone()
+                if out2 is not None:
+                    out2_ctx = writable_array(out2, **array_kwargs)
+                else:
+                    out2_ctx = CtxNone()
+
+                # Evaluate ufunc
+                with out1_ctx as out1_arr, out2_ctx as out2_arr:
+                    kwargs['out'] = (out1_arr, out2_arr)
+                    res1, res2 = ufunc(*inputs, **kwargs)
+
+                # Wrap results if necessary (lazily)
+                # We don't use exponents or weightings since we don't know
+                # how to map them to the spaces
+                if out1 is None:
+                    out1_space = type(self.space)(self.shape, res1.dtype,
+                                                  order)
+                    out1 = out1_space.element(res1)
+                if out2 is None:
+                    out2_space = type(self.space)(self.shape, res2.dtype,
+                                                  order)
+                    out2 = out2_space.element(res2)
+
+                return out1, out2
+
+            else:
+                raise NotImplementedError('nout = {} not supported'
+                                          ''.format(ufunc.nout))
+
+        else:  # method != '__call__'
+            # Make context for output (trivial one returns `None`)
+            if out is None:
+                out_ctx = CtxNone()
+            else:
+                out_ctx = writable_array(out, **array_kwargs)
+
+            # Evaluate ufunc method
+            with out_ctx as out_arr:
+                kwargs['out'] = out_arr
+                res = getattr(ufunc, method)(*inputs, **kwargs)
+
+            # Shortcut for scalar or no return value
+            if np.isscalar(res) or res is None:
+                # The first occurs for `reduce` with all axes,
+                # the second for in-place stuff (`at` currently)
+                return res
+
+            # Wrap result if necessary (lazily)
+            if out is None:
+                if is_floating_dtype(res.dtype):
+                    if res.shape != self.shape:
+                        # Don't propagate weighting if shape changes
+                        weighting = NumpyTensorSpaceNoWeighting(exponent)
+                    spc_kwargs = {'weighting': weighting}
+                else:
+                    spc_kwargs = {}
+
+                out_space = type(self.space)(res.shape, res.dtype, order,
+                                             **spc_kwargs)
+                out = out_space.element(res)
+
+            return out
 
 
 def _blas_is_applicable(*args):
@@ -1798,7 +2082,8 @@ class NumpyTensorSpaceArrayWeighting(ArrayWeighting):
           it does not define an inner product or norm, respectively. This
           is not checked during initialization.
         """
-        super().__init__(array, impl='numpy', exponent=exponent)
+        super(NumpyTensorSpaceArrayWeighting, self).__init__(
+            array, impl='numpy', exponent=exponent)
 
     def __hash__(self):
         """Return ``hash(self)``."""
@@ -1907,7 +2192,8 @@ class NumpyTensorSpaceConstWeighting(ConstWeighting):
         - The constant must be positive, otherwise it does not define an
           inner product or norm, respectively.
         """
-        super().__init__(const, impl='numpy', exponent=exponent)
+        super(NumpyTensorSpaceConstWeighting, self).__init__(
+            const, impl='numpy', exponent=exponent)
 
     def inner(self, x1, x2):
         """Return the weighted inner product of ``x1`` and ``x2``.
@@ -1991,7 +2277,9 @@ class NumpyTensorSpaceNoWeighting(NoWeighting,
 
         if exponent == 2.0:
             if not cls.__instance:
-                cls.__instance = super().__new__(cls, *args, **kwargs)
+                inst = super(NoWeighting, NumpyTensorSpaceNoWeighting).__new__(
+                    cls, *args, **kwargs)
+                cls.__instance = inst
             return cls.__instance
         else:
             return super().__new__(cls, *args, **kwargs)
@@ -2005,7 +2293,8 @@ class NumpyTensorSpaceNoWeighting(NoWeighting,
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
         """
-        super().__init__(impl='numpy', exponent=exponent)
+        super(NumpyTensorSpaceNoWeighting, self).__init__(
+            impl='numpy', exponent=exponent)
 
 
 class NumpyTensorSpaceCustomInner(CustomInner):
@@ -2027,7 +2316,7 @@ class NumpyTensorSpaceCustomInner(CustomInner):
             - ``<s*x + y, z> = s * <x, z> + <y, z>``
             - ``<x, x> = 0``  if and only if  ``x = 0``
         """
-        super().__init__(inner, impl='numpy')
+        super(NumpyTensorSpaceCustomInner, self).__init__(inner, impl='numpy')
 
 
 class NumpyTensorSpaceCustomNorm(CustomNorm):
@@ -2053,7 +2342,7 @@ class NumpyTensorSpaceCustomNorm(CustomNorm):
             - ``||s * x|| = |s| * ||x||``
             - ``||x + y|| <= ||x|| + ||y||``
         """
-        super().__init__(norm, impl='numpy')
+        super(NumpyTensorSpaceCustomNorm, self).__init__(norm, impl='numpy')
 
 
 class NumpyTensorSpaceCustomDist(CustomDist):
@@ -2079,7 +2368,7 @@ class NumpyTensorSpaceCustomDist(CustomDist):
             - ``dist(x, y) = dist(y, x)``
             - ``dist(x, y) <= dist(x, z) + dist(z, y)``
         """
-        super().__init__(dist, impl='numpy')
+        super(NumpyTensorSpaceCustomDist, self).__init__(dist, impl='numpy')
 
 
 if __name__ == '__main__':

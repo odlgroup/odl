@@ -114,47 +114,10 @@ scalar_dtype = simple_fixture(name='dtype',
 
 order = simple_fixture(name='order', params=['C', 'F', 'A'])
 
+ufunc = simple_fixture('ufunc', [p[0] for p in odl.util.ufuncs.UFUNCS])
+reduction = simple_fixture('reduction', ['sum', 'prod', 'min', 'max'])
 
 # More complicated ones with non-trivial documentation
-ufunc_params = odl.util.ufuncs.UFUNCS
-ufunc_ids = [' ufunc = {} '.format(p[0]) for p in ufunc_params]
-
-
-@fixture(scope="module", ids=ufunc_ids, params=ufunc_params)
-def ufunc(request):
-    """Tuple with information on a ufunc.
-
-    Returns
-    -------
-    name : str
-        Name of the ufunc.
-    n_in : int
-        Number of input values of the ufunc.
-    n_out : int
-        Number of output values of the ufunc.
-    doc : str
-        Docstring for the ufunc.
-    """
-    return request.param
-
-
-reduction_params = odl.util.ufuncs.REDUCTIONS
-reduction_ids = [' reduction = {} '.format(p[0]) for p in reduction_params]
-
-
-@fixture(scope="module", ids=reduction_ids, params=reduction_params)
-def reduction(request):
-    """Tuple with information on a reduction.
-
-    Returns
-    -------
-    name : str
-        Name of the reduction.
-    doc : str
-        Docstring for the reduction.
-    """
-    return request.param
-
 
 arithmetic_op_par = [operator.add,
                      operator.truediv,
