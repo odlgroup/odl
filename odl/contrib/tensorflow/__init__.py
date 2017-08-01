@@ -14,7 +14,7 @@ from __future__ import absolute_import
 __all__ = ()
 
 from .layer import *
-__all__ += layer.
+__all__ += layer.__all__
 
 from .space import *
 __all__ += space.__all__
