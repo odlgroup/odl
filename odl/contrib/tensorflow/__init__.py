@@ -18,3 +18,6 @@ __all__ += layer.__all__
 
 from .space import *
 __all__ += space.__all__
+
+from .operator import *
+__all__ += operator.__all__
