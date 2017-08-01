@@ -355,12 +355,11 @@ def test_pointwise_inner_adjoint():
 
     testfunc = fspace.element(testarr)
     testfunc_pwinner_adj = pwinner.adjoint(testfunc)
-    assert all_almost_equal(testfunc_pwinner_adj,
-                            true_inner_adj.reshape([1, -1]))
+    assert all_almost_equal(testfunc_pwinner_adj, true_inner_adj)
 
     out = vfspace.element()
     pwinner.adjoint(testfunc, out=out)
-    assert all_almost_equal(out, true_inner_adj.reshape([1, -1]))
+    assert all_almost_equal(out, true_inner_adj)
 
     # 3d
     fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2), dtype=complex)
@@ -380,12 +379,11 @@ def test_pointwise_inner_adjoint():
 
     testfunc = fspace.element(testarr)
     testfunc_pwinner_adj = pwinner.adjoint(testfunc)
-    assert all_almost_equal(testfunc_pwinner_adj,
-                            true_inner_adj.reshape([3, -1]))
+    assert all_almost_equal(testfunc_pwinner_adj, true_inner_adj)
 
     out = vfspace.element()
     pwinner.adjoint(testfunc, out=out)
-    assert all_almost_equal(out, true_inner_adj.reshape([3, -1]))
+    assert all_almost_equal(out, true_inner_adj)
 
 
 def test_pointwise_inner_adjoint_weighted():
@@ -407,12 +405,11 @@ def test_pointwise_inner_adjoint_weighted():
 
     testfunc = fspace.element(testarr)
     testfunc_pwinner_adj = pwinner.adjoint(testfunc)
-    assert all_almost_equal(testfunc_pwinner_adj,
-                            true_inner_adj.reshape([3, -1]))
+    assert all_almost_equal(testfunc_pwinner_adj, true_inner_adj)
 
     out = vfspace.element()
     pwinner.adjoint(testfunc, out=out)
-    assert all_almost_equal(out, true_inner_adj.reshape([3, -1]))
+    assert all_almost_equal(out, true_inner_adj)
 
     # Using different weighting in the inner product
     pwinner = PointwiseInner(vfspace, vecfield=array, weighting=[4, 8, 12])
@@ -424,12 +421,11 @@ def test_pointwise_inner_adjoint_weighted():
 
     testfunc = fspace.element(testarr)
     testfunc_pwinner_adj = pwinner.adjoint(testfunc)
-    assert all_almost_equal(testfunc_pwinner_adj,
-                            true_inner_adj.reshape([3, -1]))
+    assert all_almost_equal(testfunc_pwinner_adj, true_inner_adj)
 
     out = vfspace.element()
     pwinner.adjoint(testfunc, out=out)
-    assert all_almost_equal(out, true_inner_adj.reshape([3, -1]))
+    assert all_almost_equal(out, true_inner_adj)
 
 
 # ---- PointwiseSum ----
