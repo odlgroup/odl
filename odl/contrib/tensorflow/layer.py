@@ -29,7 +29,7 @@ import tensorflow as tf
 from tensorflow.python.framework import ops
 
 
-__all__ = ('as_tensorflow_layer')
+__all__ = ('as_tensorflow_layer',)
 
 
 def as_tensorflow_layer(odl_op, default_name='ODLOperator',
