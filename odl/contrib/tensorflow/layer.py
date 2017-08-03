@@ -32,7 +32,7 @@ from tensorflow.python.framework import ops
 __all__ = ('as_tensorflow_layer',)
 
 
-def as_tensorflow_layer(odl_op, default_name='ODLOperator',
+def as_tensorflow_layer(odl_op, name='ODLOperator',
                         differentiable=True):
     """Convert `Operator` or `Functional` into tensorflow layer.
 
@@ -40,7 +40,7 @@ def as_tensorflow_layer(odl_op, default_name='ODLOperator',
     ----------
     odl_op : `Operator` or `Functional`
         The operator that should be wrapped to a tensorflow layer.
-    default_name : str
+    name : str
         Default name for tensorflow layers created.
     differentiable : boolean
         True if the layer should be differentiable, in which case  ``odl_op``
@@ -64,6 +64,8 @@ def as_tensorflow_layer(odl_op, default_name='ODLOperator',
 
         The `dtype` of the tensor is the same as the respective ODL spaces.
     """
+    default_name = name
+
     def py_func(func, inp, Tout, stateful=True, name=None, grad=None):
         """Define custom py_func which takes also a grad op as argument.
 

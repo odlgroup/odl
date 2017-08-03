@@ -2,8 +2,6 @@
 
 In this example we take a tensorflow layer (given by matrix multiplication)
 and convert it into an ODL operator.
-
-We also demonstrate that both the
 """
 
 import tensorflow as tf

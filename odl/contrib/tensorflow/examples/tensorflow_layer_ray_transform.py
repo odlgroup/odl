@@ -1,4 +1,8 @@
-"""Example of how to convert an ODL ray transform to a tensorflow layer."""
+"""Example of how to convert a RayTransform operator to a tensorflow layer.
+
+This example is similar to ``tensorflow_layer_matrix``, but demonstrates how
+more advanced operators, such as a ray transform, can be handled.
+"""
 
 import tensorflow as tf
 import numpy as np

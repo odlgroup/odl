@@ -1,8 +1,12 @@
-"""Example of how to convert an ODL operator to a tensorflow layer."""
+"""Example of how to convert an ODL operator to a tensorflow layer.
+
+This example is similar to ``tensorflow_layer_matrix``, but demonstrates how
+to handle product-spaces.
+"""
 
 import tensorflow as tf
-import numpy as np
 import odl
+import odl.contrib.tensorflow
 
 sess = tf.InteractiveSession()
 
@@ -25,14 +29,18 @@ odl_op_layer = odl.contrib.tensorflow.as_tensorflow_layer(
 y_tf = odl_op_layer(x_tf)
 
 # Evaluate using tensorflow
+print('Tensorflow eval:')
 print(y_tf.eval().squeeze())
 
 # Compare result with pure ODL
+print('ODL eval')
 print(odl_op(x))
 
 # Evaluate the adjoint of the derivative, called gradient in tensorflow
 scale = 1 / space.cell_volume
+print('Tensorflow adjoint of derivative (gradients):')
 print(tf.gradients(y_tf, [x_tf], z_tf)[0].eval().squeeze() * scale)
 
 # Compare result with pure ODL
+print('ODL adjoint of derivative:')
 print(odl_op.derivative(x).adjoint(z))
