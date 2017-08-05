@@ -23,8 +23,8 @@ which can then be solved with the Chambolle-Pock method.
 
 References
 ----------
-[1] K. Bredies and M. Holler. A TGV-based framework for variational image
-decompression, zooming and reconstruction. Part II: Numerics. SIAM Journal
+[1] K. Bredies and M. Holler. *A TGV-based framework for variational image
+decompression, zooming and reconstruction. Part II: Numerics.* SIAM Journal
 on Imaging Sciences, 8(4):2851-2886, 2015.
 """
 
@@ -35,8 +35,7 @@ import odl
 
 # Reconstruction space: discretized functions on the rectangle
 # [-20, 20]^2 with 300 samples per dimension.
-n = 300
-U = odl.uniform_discr(min_pt=[-20, -20], max_pt=[20, 20], shape=[n, n],
+U = odl.uniform_discr(min_pt=[-20, -20], max_pt=[20, 20], shape=[300, 300],
                       dtype='float32')
 
 # Create the forward operator
@@ -45,12 +44,7 @@ A = odl.IdentityOperator(U)
 # --- Generate artificial data --- #
 
 # Create phantom
-def phantom_func(pts):
-    x, y = pts
-    sign = ((x < -10) | (x > 10) | (y < -10) | (y > 10)) * 3 - 2
-    return 0.5 * ((x / 20.0) * sign + 1)
-
-phantom = U.element(phantom_func)
+phantom = odl.phantom.tgv_phantom(U)
 phantom.show(title='Phantom')
 
 # Create sinogram of forward projected phantom with noise
