@@ -687,9 +687,9 @@ def tgv_phantom(space, edge_smoothing=0.2):
     space : `DiscreteLp`, 2 dimensional
         Discretized space in which the phantom is supposed to be created.
         Needs to be two-dimensional.
-    edge_smoothness : float, optional
-        Smoothing of the edges of the phantom.
-        Given in the width of the smoothing in units of pixels.
+    edge_smoothness : nonnegative float, optional
+        Smoothing of the edges of the phantom, given as smoothing width in
+        units of minimum pixel size.
 
     Returns
     -------
