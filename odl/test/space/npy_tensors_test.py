@@ -1200,8 +1200,7 @@ def test_ufuncs(tspace, ufunc):
             assert isinstance(odl_result_old[i], tspace.element_type)
             assert isinstance(odl_result_new[i], tspace.element_type)
 
-    # In-place
-    # TODO: test with Numpy array(s) as `out`
+    # In-place with ODL objects as `out`
     npy_result = npy_ufunc(*in_arrays, **out_arr_kwargs)
     odl_result_old = vec_fun_old(*in_vectors_old, **out_vec_kwargs)
     assert all_almost_equal(npy_result, odl_result_old)
@@ -1220,6 +1219,24 @@ def test_ufuncs(tspace, ufunc):
             assert odl_result_old[i] is out_vectors[i]
             if USE_ARRAY_UFUNCS_INTERFACE:
                 assert odl_result_new[i] is out_vectors[i]
+
+    # In-place with Numpy array as `out` for new interface
+    if USE_ARRAY_UFUNCS_INTERFACE:
+        out_arrays_new = [np.empty_like(arr) for arr in out_arrays]
+        if nout == 1:
+            out_vec_kwargs_new = {'out': out_arrays_new[0]}
+        elif nout == 2:
+            out_vec_kwargs_new = {'out1': out_arrays_new[0],
+                                  'out2': out_arrays_new[1]}
+
+        odl_result_vec_new = vec_fun_new(*in_vectors_new, **out_vec_kwargs_new)
+        assert all_almost_equal(npy_result, odl_result_vec_new)
+
+        if nout == 1:
+            assert odl_result_vec_new is out_arrays_new[0]
+        elif nout > 1:
+            for i in range(nout):
+                assert odl_result_vec_new[i] is out_arrays_new[i]
 
     if USE_ARRAY_UFUNCS_INTERFACE:
         # Check `ufunc.at`
