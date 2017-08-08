@@ -660,8 +660,8 @@ class Tensor(LinearSpaceElement):
             For other (in particular non-local) implementations, e.g.,
             GPU arrays or distributed memory, overhead is significant due
             to copies to CPU main memory. In those classes, the
-            ``__array_ufunc__`` mechanism should be overridden to use
-            native implementations if possible.
+            ``__array_ufunc__`` mechanism should be overridden in favor of
+            a native implementations if possible.
 
         .. note::
             When using operations that alter the shape (like ``reduce``),
