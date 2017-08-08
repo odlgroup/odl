@@ -9,7 +9,7 @@
 """Universal functions (ufuncs) for ODL-wrapped arrays.
 
 These functions are internal and should only be used as methods on
-`TensorSpace` type spaces.
+`Tensor`-like classes.
 
 See `numpy.ufuncs
 <http://docs.scipy.org/doc/numpy/reference/ufuncs.html>`_
@@ -30,8 +30,7 @@ import numpy as np
 import re
 
 
-__all__ = ('TensorSpaceUfuncs', 'NumpyTensorSpaceUfuncs',
-           'DiscreteLpUfuncs', 'ProductSpaceUfuncs')
+__all__ = ('TensorSpaceUfuncs', 'DiscreteLpUfuncs', 'ProductSpaceUfuncs')
 
 
 # Some are ignored since they don't cooperate with dtypes, needs fix
@@ -173,59 +172,6 @@ class TensorSpaceUfuncs(object):
 for name, n_in, n_out, doc in UFUNCS:
     method = wrap_ufunc_base(name, n_in, n_out, doc)
     setattr(TensorSpaceUfuncs, name, method)
-
-
-def wrap_reduction_numpy(name, doc):
-    """Return reduction wrapper for Numpy-based ufunc classes."""
-    wrapped = getattr(np, name)
-
-    def wrapper(self, axis=None, out=None, keepdims=False, **kwargs):
-        from odl.space.npy_tensors import (NumpyTensorSpaceArrayWeighting,
-                                           NumpyTensorSpaceNoWeighting)
-        # Avoid giving arrays explicitly through kwargs
-        kwargs.pop('a', None)
-        kwargs.pop('b', None)
-        kwargs.pop('out', None)
-
-        # Put positional arguments with defaults into kwargs
-        if axis is not None:
-            kwargs['axis'] = axis
-        kwargs['keepdims'] = keepdims
-
-        # Get dtype parameter present in some reductions since it's
-        # relevant for the output space
-        dtype = kwargs.get('dtype', self.elem.dtype)
-
-        if out is None:
-            out_arr = wrapped(self.elem, **kwargs)
-            if np.isscalar(out_arr):
-                return out_arr
-
-            # For the TensorSpace variant, we additionally pass `exponent`
-            # and `weight` to the constructor
-            extra_args = {}
-            exponent = getattr(self.elem.space, 'exponent', None)
-            if exponent is not None:
-                extra_args['exponent'] = exponent
-            weighting = getattr(self.elem.space, 'weighting', None)
-            if weighting is not None:
-                # Array weighting cannot be propagated since sizes don't
-                # match any longer
-                if isinstance(weighting, NumpyTensorSpaceArrayWeighting):
-                    weighting = NumpyTensorSpaceNoWeighting(exponent=exponent)
-                extra_args['weighting'] = weighting
-
-            out_space_constr = type(self.elem.space)
-            out_space = out_space_constr(out_arr.shape, dtype, self.elem.order,
-                                         **extra_args)
-            return out_space.element(out_arr)
-        else:
-            wrapped(self.elem, out=out.data, **kwargs)
-            return out
-
-    wrapper.__name__ = wrapper.__qualname__ = name
-    wrapper.__doc__ = doc
-    return wrapper
 
 
 # --- Wrappers for DiscreteLp --- #
