@@ -741,33 +741,29 @@ numpy.ufunc.reduceat.html
         # in one tuple, even if there is only one.
         out_tuple = kwargs.pop('out', ())
 
-        # We allow our own element type and `numpy.ndarray` objects as `out`
-        if not all(isinstance(out, (type(self), np.ndarray)) or out is None
-                   for out in out_tuple):
+        # We allow our own element type and tensor data containers as `out`
+        if not all(isinstance(o, (type(self), type(self.tensor.data))) or
+                   o is None
+                   for o in out_tuple):
             return NotImplemented
 
-        # Pull out the `ntuple` attributes from DiscreteLpElement instances
-        inputs = tuple(elem.ntuple if isinstance(elem, type(self)) else elem
+        # Pull out the `tensor` attributes from DiscreteLpElement instances
+        inputs = tuple(elem.tensor if isinstance(elem, type(self)) else elem
                        for elem in inputs)
 
+        # Use `tensor` object for ufunc output
         out = out1 = out2 = None
         if len(out_tuple) == 1:
-            out = out_tuple[0]
+            out = getattr(out_tuple[0], 'tensor', None)
         elif len(out_tuple) == 2:
-            out1 = out_tuple[0]
-            out2 = out_tuple[1]
+            out1 = getattr(out_tuple[0], 'tensor', None)
+            out2 = getattr(out_tuple[1], 'tensor', None)
 
         out_dtype = kwargs.get('dtype', None)
-
-        # Not implementing this since it will be gone anyway when tensors
-        # are in
-        if 'order' in kwargs:
-            raise NotImplementedError('`order` argument not supported')
 
         """
         fspace, partition, dspace, exponent=2.0,
                  interp='nearest'
-                 order
                  axis_labels
         """
 
@@ -834,10 +830,10 @@ numpy.ufunc.reduceat.html
         elif method == 'reduce' and keepdims:
             raise ValueError(
                 '`keepdims=True` cannot be used in `reduce` since there is '
-                'no unique function domain for the collapsed axes')
+                'no unique function domain for collapsed axes')
         else:
             if out is None:
-                result = self.ntuple.__array_ufunc__(ufunc, method,
+                result = self.tensor.__array_ufunc__(ufunc, method,
                                                      *inputs, **kwargs)
                 if np.isscalar(result):
                     # This occurs for `reduce` with all axes
@@ -850,7 +846,7 @@ numpy.ufunc.reduceat.html
                     axis = kwargs.get('axis', 0)
 
                     # TODO: create appropriate space
-                    return result_space.element(result.ravel())
+                    return result_space.element(result)
             else:
                 with writable_array(out) as out_arr:
                     kwargs['out'] = (out_arr,)
