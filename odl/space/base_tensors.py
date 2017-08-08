@@ -828,9 +828,9 @@ numpy.ufunc.reduceat.html
         # in one tuple, even if there is only one.
         out_tuple = kwargs.pop('out', ())
 
-        # We allow our own tensors and `numpy.ndarray` objects as `out`
-        if not all(isinstance(out, (type(self), np.ndarray)) or out is None
-                   for out in out_tuple):
+        # We allow tensors and underlying data containers as `out`
+        if not all(isinstance(o, (type(self), type(self.data))) or o is None
+                   for o in out_tuple):
             return NotImplemented
 
         # Convert inputs that are ODL tensors to arrays so that the
