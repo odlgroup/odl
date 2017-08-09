@@ -1542,27 +1542,44 @@ arrays.classes.rst#special-attributes-and-methods
            https://docs.scipy.org/doc/numpy/reference/generated/\
 numpy.ufunc.reduceat.html
         """
+        # --- Process `out` --- #
+
         # Unwrap out if provided. The output parameters are all wrapped
         # in one tuple, even if there is only one.
         out_tuple = kwargs.pop('out', ())
+
+        # Check number of `out` args, depending on `method`
+        if method == '__call__' and not len(out_tuple) in (0, ufunc.nout):
+            raise TypeError(
+                "need 0 or {} `out` arguments for `method='__call__'`, "
+                'got {}'.format(ufunc.nout, len(out_tuple)))
+        elif len(out_tuple) not in (0, 1):
+            raise TypeError(
+                "need 0 or 1 `out` arguments for `method={!r}`, "
+                'got {}'.format(method, len(out_tuple)))
 
         # We allow our own tensors and `numpy.ndarray` objects as `out`
         if not all(isinstance(out, (type(self), np.ndarray)) or out is None
                    for out in out_tuple):
             return NotImplemented
 
-        # Convert inputs that are ODL tensors to arrays so that the
-        # native Numpy ufunc is called later
-        inputs = tuple(
-            inp.asarray() if isinstance(inp, type(self)) else inp
-            for inp in inputs)
-
+        # Assign to `out` or `out1` and `out2`, respectively
         out = out1 = out2 = None
         if len(out_tuple) == 1:
             out = out_tuple[0]
         elif len(out_tuple) == 2:
             out1 = out_tuple[0]
             out2 = out_tuple[1]
+
+        # --- Process `inputs` --- #
+
+        # Convert inputs that are ODL tensors to Numpy arrays so that the
+        # native Numpy ufunc is called later
+        inputs = tuple(
+            inp.asarray() if isinstance(inp, type(self)) else inp
+            for inp in inputs)
+
+        # --- Get some parameters for later --- #
 
         # Arguments for `writable_array` and/or space constructors
         order = str(kwargs.get('order', self.order)).upper()
@@ -1575,6 +1592,8 @@ numpy.ufunc.reduceat.html
 
         exponent = self.space.exponent
         weighting = self.space.weighting
+
+        # --- Evaluate ufunc --- #
 
         # Trivial context to be used when an output is `None`
         class CtxNone(object):
