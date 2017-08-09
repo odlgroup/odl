@@ -640,7 +640,8 @@ class DiscreteLpElement(DiscretizedSpaceElement):
             Method on ``ufunc`` that should be called on ``self``.
             Possible values:
 
-            ``'__call__'``, ``'accumulate'``, ``'at'``, ``'reduce'``
+            ``'__call__'``, ``'accumulate'``, ``'at'``, ``'outer'``,
+            ``'reduce'``
 
         input1, ..., inputN:
             Positional arguments to ``ufunc.method``.
@@ -737,9 +738,21 @@ arrays.classes.rst#special-attributes-and-methods
            https://docs.scipy.org/doc/numpy/reference/generated/\
 numpy.ufunc.reduceat.html
         """
+        # --- Process `out` --- #
+
         # Unwrap out if provided. The output parameters are all wrapped
         # in one tuple, even if there is only one.
         out_tuple = kwargs.pop('out', ())
+
+        # Check number of `out` args, depending on `method`
+        if method == '__call__' and not len(out_tuple) in (0, ufunc.nout):
+            raise TypeError(
+                "need 0 or {} `out` arguments for `method='__call__'`, "
+                'got {}'.format(ufunc.nout, len(out_tuple)))
+        elif len(out_tuple) not in (0, 1):
+            raise TypeError(
+                "need 0 or 1 `out` arguments for `method={!r}`, "
+                'got {}'.format(method, len(out_tuple)))
 
         # We allow our own element type and tensor data containers as `out`
         if not all(isinstance(o, (type(self), type(self.tensor.data))) or
@@ -747,110 +760,123 @@ numpy.ufunc.reduceat.html
                    for o in out_tuple):
             return NotImplemented
 
+        # Assign to `out` or `out1` and `out2`, respectively (using the
+        # `tensor` attribute if available)
+        out = out1 = out2 = None
+        if len(out_tuple) == 1:
+            out = getattr(out_tuple[0], 'tensor', out_tuple[0])
+        elif len(out_tuple) == 2:
+            out1 = getattr(out_tuple[0], 'tensor', out_tuple[0])
+            out2 = getattr(out_tuple[1], 'tensor', out_tuple[1])
+
+        # --- Process `inputs` --- #
+
         # Pull out the `tensor` attributes from DiscreteLpElement instances
         inputs = tuple(elem.tensor if isinstance(elem, type(self)) else elem
                        for elem in inputs)
 
-        # Use `tensor` object for ufunc output
-        out = out1 = out2 = None
-        if len(out_tuple) == 1:
-            out = getattr(out_tuple[0], 'tensor', None)
-        elif len(out_tuple) == 2:
-            out1 = getattr(out_tuple[0], 'tensor', None)
-            out2 = getattr(out_tuple[1], 'tensor', None)
-
-        out_dtype = kwargs.get('dtype', None)
-
-        """
-        fspace, partition, dspace, exponent=2.0,
-                 interp='nearest'
-                 axis_labels
-        """
+        # --- Get some parameters for later --- #
 
         # Need to filter for `keepdims` since it's invalid (happening below)
         keepdims = kwargs.pop('keepdims', False)
 
-        if method == '__call__':
-            # Need new space for ufunc if dtype was changed
-            if out_dtype is None or out_dtype == self.dtype:
-                out_space = self.space
-            else:
-                out_space = self.space.astype(out_dtype)
+        # Determine list of remaining axes from `axis` for `reduce`
+        axis = kwargs.pop('axis', None)
+        if axis is None:
+            reduced_axes = list(range(self.ndim))
+        else:
+            try:
+                iter(axis)
+            except TypeError:
+                axis = (int(axis),)
 
+            reduced_axes = [i for i in range(self.ndim) if i not in axis]
+
+        exponent = self.space.exponent
+        weighting = self.space.weighting
+
+        # --- Evaluate ufunc --- #
+
+        if method == '__call__':
             if ufunc.nout == 1:
+                kwargs['out'] = out
+                res_tens = self.tensor.__array_ufunc__(
+                    ufunc, '__call__', *inputs, **kwargs)
+
                 if out is None:
-                    out = out_space.element()
-                if isinstance(out, np.ndarray):
-                    kwargs['out'] = (out,)
+                    # Wrap result tensor in appropriate DiscreteLp space
+                    pass
                 else:
-                    kwargs['out'] = (out.ntuple,)
-                self.ntuple.__array_ufunc__(ufunc, '__call__',
-                                            *inputs, **kwargs)
-                return out
+                    result = out
+
+                return result
 
             elif ufunc.nout == 2:
+                kwargs['out'] = (out1, out2)
+                res1_tens, res2_tens = self.tensor.__array_ufunc__(
+                    ufunc, '__call__', *inputs, **kwargs)
+
                 if out1 is None:
-                    out1 = out_space.element()
+                    # Wrap result tensor in appropriate DiscreteLp space
+                    pass
+                else:
+                    result1 = out1
+
                 if out2 is None:
-                    out2 = out_space.element()
-
-                out_arg = []
-                if isinstance(out1, np.ndarray):
-                    out_arg.append(out1)
+                    # Wrap result tensor in appropriate DiscreteLp space
+                    pass
                 else:
-                    out_arg.append(out1.ntuple)
+                    result2 = out2
 
-                if isinstance(out2, np.ndarray):
-                    out_arg.append(out2)
-                else:
-                    out_arg.append(out2.ntuple)
-
-                kwargs['out'] = tuple(out_arg)
-
-                self.ntuple.__array_ufunc__(ufunc, '__call__',
-                                            *inputs, **kwargs)
-                return out1, out2
+                return result1, result2
 
             else:
                 raise NotImplementedError('nout = {} not supported'
                                           ''.format(ufunc.nout))
 
-        elif method == 'outer':
-            # Not supported at the moment since we need spaces of vector-
-            # valued functions for that.
-            # We have to raise since returning `NotImplemented` will
-            # fall back to native Numpy, resulting in a `numpy.ndarray`.
-            # TODO: add when vector-valued functions are available
-            raise NotImplementedError('`outer` currently not supported')
+        elif method == 'reduce' and keepdims:
+            raise ValueError(
+                '`keepdims=True` cannot be used in `reduce` since there is '
+                'no unique way to determine a function domain in collapsed '
+                'axes')
+
         elif method == 'reduceat':
             # Makes no sense since there is no way to determine in which
             # space the result should live, except in special cases when
             # axes are being completely collapsed or don't change size.
             raise ValueError('`reduceat` not supported')
-        elif method == 'reduce' and keepdims:
-            raise ValueError(
-                '`keepdims=True` cannot be used in `reduce` since there is '
-                'no unique function domain for collapsed axes')
-        else:
-            if out is None:
-                result = self.tensor.__array_ufunc__(ufunc, method,
-                                                     *inputs, **kwargs)
-                if np.isscalar(result):
-                    # This occurs for `reduce` with all axes
-                    return result
-                elif result is None:
-                    # Happens for in-place operations, currently only `at`
-                    return
-                else:
-                    # Wrap result in an appropriate space
-                    axis = kwargs.get('axis', 0)
 
-                    # TODO: create appropriate space
-                    return result_space.element(result)
-            else:
-                with writable_array(out) as out_arr:
-                    kwargs['out'] = (out_arr,)
-                getattr(ufunc, method)(*inputs, **kwargs)
+        else:  # method != '__call__', and otherwise valid
+            kwargs['out'] = out
+            res_tens = self.tensor.__array_ufunc__(
+                ufunc, method, *inputs, **kwargs)
+
+            # Shortcut for scalar or no return value
+            if np.isscalar(res_tens) or res_tens is None:
+                # The first occurs for `reduce` with all axes,
+                # the second for in-place stuff (`at` currently)
+                return res_tens
+
+            if out is None:
+                # Wrap in appropriate DiscreteLp space
+                if method == 'accumulate':
+                    # Keep everything, get `dspace` from the result tensor
+                    out_space = DiscreteLp(
+                        self.space.fspace, self.space.partition,
+                        res_tens.dspace, self.space.interp_byaxis,
+                        self.space.axis_labels)
+                    out = out_space.element(res_tens)
+                elif method == 'outer':
+                    # Concatenate domains, partitions, interp, axis_labels,
+                    # get `dspace` from result tensor
+                    pass
+                elif method == 'reduce':
+                    # Index space by axis using `reduced_axes`
+                    pass
+                else:
+                    raise RuntimeError('bad `method`')
+
+            return out
 
     # Old ufuncs interface, will be deprecated when Numpy 1.13 becomes minimum
 
