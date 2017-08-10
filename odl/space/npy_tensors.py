@@ -407,7 +407,7 @@ class NumpyTensorSpace(TensorSpace):
             arr = np.array(inp, copy=False, dtype=self.dtype, ndmin=self.ndim,
                            order=self.order)
             if arr.shape != self.shape:
-                raise ValueError('shape of `inp` not equal to space `shape`: '
+                raise ValueError('shape of `inp` not equal to space shape: '
                                  '{} != {}'.format(arr.shape, self.shape))
             return self.element_type(self, arr)
 
@@ -751,42 +751,36 @@ class NumpyTensorSpace(TensorSpace):
 
         Examples
         --------
-        Indexing can be done with any index expression that is
-        supported for indexing of ``numpy.arange(ndim)``:
+        Indexing with integers or slices:
 
         >>> space = odl.rn((2, 3, 4))
         >>> space.byaxis[0]
         rn(2)
-        >>> space.byaxis[[2, 0, 1]]
-        rn((4, 2, 3))
         >>> space.byaxis[1:]
         rn((3, 4))
+
+        Lists can be used to stack spaces arbitrarily:
+
+        >>> space.byaxis[[2, 1, 2]]
+        rn((4, 3, 4))
         """
         space = self
 
-        class byaxis(object):
+        class NpyTensorSpacebyaxis(object):
+
             """Helper class for indexing by axis."""
 
             def __getitem__(self, indices):
-                """Return space along axes in ``indices``."""
-                if isinstance(indices, np.ndarray):
-                    raise TypeError('indexing with numpy.ndarray not '
-                                    'supported')
-
-                indices = np.arange(space.ndim)[indices]
-                if indices.ndim > 1:
-                    indices = indices.squeeze()
-
-                if indices.ndim > 1:
-                    raise ValueError('index list must be one-dimensional')
-
-                if np.isscalar(indices):
-                    indices = [indices]
-
-                newshape = tuple(space.shape[i] for i in indices)
+                """Return ``self[indices]``."""
+                try:
+                    iter(indices)
+                except TypeError:
+                    newshape = space.shape[indices]
+                else:
+                    newshape = tuple(space.shape[i] for i in indices)
 
                 if isinstance(space.weighting, ArrayWeighting):
-                    new_array = np.asarray(self.weighting.array[indices])
+                    new_array = np.asarray(space.weighting.array[indices])
                     weighting = NumpyTensorSpaceArrayWeighting(
                         new_array, space.weighting.exponent)
                 else:
@@ -799,7 +793,7 @@ class NumpyTensorSpace(TensorSpace):
                 """Return ``repr(self)``."""
                 return repr(space) + '.byaxis'
 
-        return byaxis()
+        return NpyTensorSpacebyaxis()
 
     def __repr__(self):
         """Return ``repr(self)``."""
