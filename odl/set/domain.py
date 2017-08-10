@@ -619,10 +619,12 @@ class IntervalProd(Set):
         if index < 0:
             index += self.ndim
 
-        if len(intvs) > 1:
-            return self.insert(index, intvs[0]).insert(
-                index + intvs[0].ndim, *(intvs[1:]))
-        else:
+        if len(intvs) == 0:
+            # Copy of `self`
+            return IntervalProd(self.min_pt, self.max_pt)
+
+        elif len(intvs) == 1:
+            # Insert single interval product
             intv = intvs[0]
             if not isinstance(intv, IntervalProd):
                 raise TypeError('{!r} is not a `IntervalProd` instance'
@@ -639,6 +641,11 @@ class IntervalProd(Set):
                 new_max_pt[index + intv.ndim:] = self.max_pt[index:]
 
             return IntervalProd(new_min_pt, new_max_pt)
+
+        else:
+            # Recursively insert one, then rest into the result
+            return self.insert(index, intvs[0]).insert(
+                index + intvs[0].ndim, *(intvs[1:]))
 
     def append(self, *intvs):
         """Insert ``intvs`` at the end as a block.
