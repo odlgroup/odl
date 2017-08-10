@@ -1547,6 +1547,8 @@ numpy.ufunc.reduceat.html
         # Unwrap out if provided. The output parameters are all wrapped
         # in one tuple, even if there is only one.
         out_tuple = kwargs.pop('out', ())
+        if out_tuple is None:
+            out_tuple = (None,)
 
         # Check number of `out` args, depending on `method`
         if method == '__call__' and len(out_tuple) not in (0, ufunc.nout):
@@ -1668,7 +1670,9 @@ numpy.ufunc.reduceat.html
 
             # Evaluate ufunc method
             with out_ctx as out_arr:
-                kwargs['out'] = out_arr
+                if method != 'at':
+                    # No kwargs allowed for 'at'
+                    kwargs['out'] = out_arr
                 res = getattr(ufunc, method)(*inputs, **kwargs)
 
             # Shortcut for scalar or no return value
