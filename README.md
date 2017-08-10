@@ -93,13 +93,16 @@ To contact the developers either [open an issue on the issue tracker](https://gi
 - Holger Kohr ([@kohr-h](https://github.com/kohr-h))
 
 ##### Contributors
-- Ozan Öktem ([@ozanoktem](https://github.com/ozanoktem))
-- Axel Ringh ([@aringh](https://github.com/aringh))
+- Chong Chen ([@chongchenmath](https://github.com/chongchenmath))
+- Matthias J. Ehrhardt ([@MatthiasJE](https://github.com/matthiasje))
+- Johan Karlsson ([@hilding79](https://github.com/hilding79))
 - Julian Moosmann ([@moosmann](https://github.com/moosmann))
 - Kati Niinimäki ([@niinimaki](https://github.com/niinimaki))
-- Matthias J. Ehrhardt ([@MatthiasJE](https://github.com/matthiasje))
 - Willem Jan Palenstijn ([@wjp](https://github.com/wjp))
-- Chong Chen ([@chongchenmath](https://github.com/chongchenmath))
+- Axel Ringh ([@aringh](https://github.com/aringh))
+- Olivier Verdier ([@olivierverdier](https://github.com/olivierverdier))
+- Gustav Zickert ([@zickert](https://github.com/zickert))
+- Ozan Öktem ([@ozanoktem](https://github.com/ozanoktem))
 
 Funding
 -------
