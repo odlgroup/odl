@@ -326,7 +326,6 @@ class ProductSpace(LinearSpace):
         6
         """
         return 0 if self.shape == () else int(np.prod(self.shape))
->>>>>>> ENH: implement ProductSpace.shape and indexing as for TensorSpace
 
     @property
     def spaces(self):
