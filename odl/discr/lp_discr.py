@@ -933,12 +933,12 @@ numpy.ufunc.reduceat.html
 
             reduced_axes = [i for i in range(self.ndim) if i not in axis]
 
+        weighting = self.space.weighting
+
         # --- Evaluate ufunc --- #
 
-        # TODO: What to do with vector- or tensor-valued functions?
-        # Probably we want to evaluate per component, but this requires
-        # also a fix to the determination of the `out_dtype` for the
-        # function space.
+        # TODO: fix determination of `out_dtype` for the function space when
+        # fixing #908
 
         if method == '__call__':
             if ufunc.nout == 1:
@@ -1040,7 +1040,7 @@ numpy.ufunc.reduceat.html
 
                 elif method == 'outer':
                     # Concatenate domains, partitions, interp, axis_labels,
-                    # get `dspace` from result tensor
+                    # and determine `dspace` from the result tensor
                     inp1, inp2 = inputs[:2]
                     domain = inp1.space.domain.append(inp2.space.domain)
                     fspace = FunctionSpace(domain, out_dtype=res_tens.dtype)
@@ -1052,14 +1052,28 @@ numpy.ufunc.reduceat.html
                         # Duplicates, take default
                         labels = None
 
+                    # For constant weighting, use cell volume of the new
+                    # partition. The result tensor space cannot know
+                    # about the "correct" way to combine the two constants,
+                    # so we need to do it manually here.
+                    if all(isinstance(inp.space.weighting, ConstWeighting)
+                           for inp in (inp1, inp2)):
+                        weighting = part.cell_volume
+                        dspace = type(res_tens.space)(
+                            res_tens.shape, res_tens.dtype, res_tens.order,
+                            exponent=res_tens.space.exponent,
+                            weighting=weighting)
+                    else:
+                        # Otherwise `TensorSpace` knows how to handle this
+                        dspace = res_tens.space
+
                     res_space = DiscreteLp(
-                        fspace, part, res_tens.space, interp,
-                        axis_labels=labels)
+                        fspace, part, dspace, interp, axis_labels=labels)
                     result = res_space.element(res_tens)
 
                 elif method == 'reduce':
                     # Index space by axis using `reduced_axes`
-                    res_space = self.space[reduced_axes]
+                    res_space = self.space.byaxis_in[reduced_axes]
                     result = res_space.element(res_tens)
 
                 else:
