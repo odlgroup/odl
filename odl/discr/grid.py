@@ -695,10 +695,11 @@ class RectGrid(Set):
         if index < 0:
             index += self.ndim
 
-        if len(grids) > 1:
-            return self.insert(index, grids[0]).insert(
-                index + grids[0].ndim, *(grids[1:]))
-        else:
+        if len(grids) == 0:
+            # Copy of `self`
+            return RectGrid(*self.coord_vectors)
+        elif len(grids) == 1:
+            # Insert single grid
             grid = grids[0]
             if not isinstance(grid, RectGrid):
                 raise TypeError('{!r} is not a `RectGrid` instance'
@@ -706,6 +707,10 @@ class RectGrid(Set):
             new_vecs = (self.coord_vectors[:index] + grid.coord_vectors +
                         self.coord_vectors[index:])
             return RectGrid(*new_vecs)
+        else:
+            # Recursively insert first grid and the remaining into the result
+            return self.insert(index, grids[0]).insert(
+                index + grids[0].ndim, *(grids[1:]))
 
     def append(self, *grids):
         """Insert ``grids`` at the end as a block.

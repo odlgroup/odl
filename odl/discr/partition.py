@@ -627,6 +627,7 @@ class RectPartition(object):
             raise TypeError('`parts` must all be `RectPartition` instances, '
                             'got ({})'
                             ''.format(', '.join(repr(p) for p in parts)))
+
         newgrid = self.grid.insert(index, *(p.grid for p in parts))
         newset = self.set.insert(index, *(p.set for p in parts))
         return RectPartition(newset, newgrid)
