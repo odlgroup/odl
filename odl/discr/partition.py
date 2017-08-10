@@ -758,11 +758,11 @@ class RectPartition(object):
 
     @property
     def byaxis(self):
-        """Return the subpartition defined along one or several dimensions.
+        """Object to index ``self`` along axes.
 
         Examples
         --------
-        Access the subpartition along each axis:
+        Indexing with integers or slices:
 
         >>> p = odl.uniform_partition([0, 1, 2], [1, 3, 5], (3, 5, 6))
         >>> p.byaxis[0]
@@ -771,31 +771,42 @@ class RectPartition(object):
         uniform_partition(1.0, 3.0, 5)
         >>> p.byaxis[2]
         uniform_partition(2.0, 5.0, 6)
-
-        Usual numpy style advanced indexing works:
-
         >>> p.byaxis[:] == p
         True
         >>> p.byaxis[1:]
         uniform_partition([1.0, 2.0], [3.0, 5.0], (5, 6))
-        >>> p.byaxis[[0, 2]]
-        uniform_partition([0.0, 2.0], [1.0, 5.0], (3, 6))
+
+        Lists can be used to stack subpartitions arbitrarily:
+
+        >>> p.byaxis[[0, 2, 0]]
+        uniform_partition([0.0, 2.0, 0.0], [1.0, 5.0, 1.0], (3, 6, 3))
         """
         partition = self
 
         class RectPartitionByAxis(object):
-            """Helper class for accessing `RectPartition` by dimension.
 
-            See Also
-            --------
-            RectPartition.byaxis
-            """
+            """Helper class for accessing `RectPartition` by axis."""
 
-            def __getitem__(self, dim):
-                """Return ``self[dim]``."""
-                slc = np.zeros(partition.ndim, dtype=object)
-                slc[dim] = slice(None)
-                return partition[tuple(slc)].squeeze()
+            def __getitem__(self, indices):
+                """Return ``self[indices]``."""
+                try:
+                    iter(indices)
+                except TypeError:
+                    # Integer or slice
+                    slc = np.zeros(partition.ndim, dtype=object)
+                    slc[indices] = slice(None)
+                    newpart = partition[tuple(slc)].squeeze()
+                else:
+                    # Sequence, stack together from single-integer indexing
+                    indices = [int(i) for i in indices]
+                    byaxis = partition.byaxis
+                    parts = [byaxis[i] for i in indices]
+                    if not parts:
+                        newpart = uniform_partition([], [], ())
+                    else:
+                        newpart = parts[0].append(*(parts[1:]))
+
+                return newpart
 
             def __repr__(self):
                 """Return ``repr(self)``.
