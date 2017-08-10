@@ -200,8 +200,12 @@ class TensorSpace(LinearSpace):
         Subclasses with differing init parameters should overload this
         method.
         """
-        return type(self)(self.shape, dtype=dtype, order=order,
-                          weighting=getattr(self, 'weighting', None))
+        kwargs = {}
+        weighting = getattr(self, 'weighting', None)
+        if weighting is not None:
+            kwargs['weighting'] = weighting
+
+        return type(self)(self.shape, dtype=dtype, order=order, **kwargs)
 
     def astype(self, dtype, order=None):
         """Return a copy of this space with new ``dtype``.
