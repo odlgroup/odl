@@ -865,6 +865,122 @@ class FunctionSpace(LinearSpace):
             return self.element(f_conj)
 
     @property
+    def byaxis_out(self):
+        """Object to index along output dimensions.
+
+        This is only valid for non-trivial `out_shape`.
+
+        Examples
+        --------
+        Indexing with integers or slices:
+
+        >>> domain = odl.IntervalProd(0, 1)
+        >>> fspace = odl.FunctionSpace(domain, out_dtype=(float, (2, 3, 4)))
+        >>> fspace.byaxis_out[0]
+        FunctionSpace(IntervalProd(0.0, 1.0), out_dtype=('float64', (2,)))
+        >>> fspace.byaxis_out[1]
+        FunctionSpace(IntervalProd(0.0, 1.0), out_dtype=('float64', (3,)))
+        >>> fspace.byaxis_out[1:]
+        FunctionSpace(IntervalProd(0.0, 1.0), out_dtype=('float64', (3, 4)))
+
+        Lists can be used to stack spaces arbitrarily:
+
+        >>> fspace.byaxis_out[[2, 1, 2]]
+        FunctionSpace(IntervalProd(0.0, 1.0), out_dtype=('float64', (4, 3, 4)))
+        """
+        space = self
+
+        class FspaceByaxisOut(object):
+
+            """Helper class for indexing by output axes."""
+
+            def __getitem__(self, indices):
+                """Return ``self[indices]``.
+
+                Parameters
+                ----------
+                indices : index expression
+                    Object used to index the output components.
+
+                Returns
+                -------
+                space : `FunctionSpace`
+                    The resulting space with same domain and scalar output
+                    data type, but indexed output components.
+
+                Raises
+                ------
+                IndexError
+                    If this is a space of scalar-valued functions.
+                """
+                try:
+                    iter(indices)
+                except TypeError:
+                    newshape = space.out_shape[indices]
+                else:
+                    newshape = tuple(space.out_shape[int(i)] for i in indices)
+
+                dtype = (space.scalar_out_dtype, newshape)
+                return FunctionSpace(space.domain, out_dtype=dtype)
+
+            def __repr__(self):
+                """Return ``repr(self)``."""
+                return repr(space) + '.byaxis_out'
+
+        return FspaceByaxisOut()
+
+    @property
+    def byaxis_in(self):
+        """Object to index ``self`` along input dimensions.
+
+        Examples
+        --------
+        Indexing with integers or slices:
+
+        >>> domain = odl.IntervalProd([0, 0, 0], [1, 2, 3])
+        >>> fspace = odl.FunctionSpace(domain)
+        >>> fspace.byaxis_in[0]
+        FunctionSpace(IntervalProd(0.0, 1.0))
+        >>> fspace.byaxis_in[1]
+        FunctionSpace(IntervalProd(0.0, 2.0))
+        >>> fspace.byaxis_in[1:]
+        FunctionSpace(IntervalProd([ 0.,  0.], [ 2.,  3.]))
+
+        Lists can be used to stack spaces arbitrarily:
+
+        >>> fspace.byaxis_in[[2, 1, 2]]
+        FunctionSpace(IntervalProd([ 0.,  0.,  0.], [ 3.,  2.,  3.]))
+        """
+        space = self
+
+        class FspaceByaxisIn(object):
+
+            """Helper class for indexing by input axes."""
+
+            def __getitem__(self, indices):
+                """Return ``self[indices]``.
+
+                Parameters
+                ----------
+                indices : index expression
+                    Object used to index the space domain.
+
+                Returns
+                -------
+                space : `FunctionSpace`
+                    The resulting space with same output data type, but
+                    indexed domain.
+                """
+                domain = space.domain[indices]
+                return FunctionSpace(domain, out_dtype=space.out_dtype)
+
+            def __repr__(self):
+                """Return ``repr(self)``."""
+                return repr(space) + '.byaxis_in'
+
+        return FspaceByaxisIn()
+
+    @property
     def examples(self):
         """Return example functions in the space.
 
