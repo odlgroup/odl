@@ -269,7 +269,7 @@ The former should be the derivative map
         & (\partial s)_i = \frac{\partial s}{\partial u_i}
 
 from :math:`D` to the tangent bundle :math:`TM_{\mathrm{d}}` of the detector manifold :math:`M_{\mathrm{d}}`.
-This means that for each fixed :math:`u \in D`, the vectors :math:` (\partial s(u))_i` are `tangent vectors <https://en.wikipedia.org/wiki/Tangent_space`_ at the point :math:`s(u) \in M_{\mathrm{d}}`.
+This means that for each fixed :math:`u \in D`, the vectors :math:` (\partial s(u))_i` are `tangent vectors <https://en.wikipedia.org/wiki/Tangent_space>`_ at the point :math:`s(u) \in M_{\mathrm{d}}`.
 These vectors form a local coordinate system for :math:`M_{\mathrm{d}}` at :math:`s(u)` if the matrix :math:`\partial s(u)` is not rank-deficient.
 
 This derivative can be used to define a surface measure :math:`\mathrm{d}\mu(u)` such that one can integrate over the detector surface with correct weights.
