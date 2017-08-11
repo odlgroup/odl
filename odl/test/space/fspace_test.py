@@ -1098,32 +1098,33 @@ def test_fspace_elem_power(power, out_shape):
     points = _points(fspace.domain, 4)
 
     ndim = len(out_shape)
-    if ndim == 0:
-        f_elem = fspace.element(func_nd_oop)
-        true_result = func_nd_ref(points) ** power
-    elif ndim == 1:
-        f_elem = fspace.element(func_vec_nd_oop)
-        true_result = func_vec_nd_ref(points) ** power
-    elif ndim == 2:
-        f_elem = fspace.element(func_tens_oop)
-        true_result = func_tens_ref(points) ** power
-    else:
-        assert False
+    with np.errstate(all='ignore'):
+        if ndim == 0:
+            f_elem = fspace.element(func_nd_oop)
+            true_result = func_nd_ref(points) ** power
+        elif ndim == 1:
+            f_elem = fspace.element(func_vec_nd_oop)
+            true_result = func_vec_nd_ref(points) ** power
+        elif ndim == 2:
+            f_elem = fspace.element(func_tens_oop)
+            true_result = func_tens_ref(points) ** power
+        else:
+            assert False
 
-    # Out-of-place power
-    f_elem_pow = f_elem ** power
-    assert all_almost_equal(f_elem_pow(points), true_result)
-    out_arr = np.empty(out_shape + (4,))
-    f_elem_pow(points, out_arr)
-    assert all_almost_equal(out_arr, true_result)
+        # Out-of-place power
+        f_elem_pow = f_elem ** power
+        assert all_almost_equal(f_elem_pow(points), true_result)
+        out_arr = np.empty(out_shape + (4,))
+        f_elem_pow(points, out_arr)
+        assert all_almost_equal(out_arr, true_result)
 
-    # In-place power
-    f_elem_pow = f_elem.copy()
-    f_elem_pow **= power
-    assert all_almost_equal(f_elem_pow(points), true_result)
-    out_arr = np.empty(out_shape + (4,))
-    f_elem_pow(points, out_arr)
-    assert all_almost_equal(out_arr, true_result)
+        # In-place power
+        f_elem_pow = f_elem.copy()
+        f_elem_pow **= power
+        assert all_almost_equal(f_elem_pow(points), true_result)
+        out_arr = np.empty(out_shape + (4,))
+        f_elem_pow(points, out_arr)
+        assert all_almost_equal(out_arr, true_result)
 
 
 def test_fspace_elem_arithmetic(arithmetic_op, out_shape):
