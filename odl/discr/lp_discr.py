@@ -30,7 +30,6 @@ from odl.util import (
     apply_on_boundary, is_real_dtype, is_complex_floating_dtype,
     dtype_str, signature_string, indent, is_string,
     normalized_scalar_param_list, safe_int_conv, normalized_nodes_on_bdry)
-from odl.util.ufuncs import DiscreteLpUfuncs
 
 __all__ = ('DiscreteLp', 'DiscreteLpElement',
            'uniform_discr_frompartition', 'uniform_discr_fromspace',
@@ -91,10 +90,10 @@ class DiscreteLp(DiscretizedSpace):
         if not fspace.domain.contains_set(partition.set):
             raise ValueError('`partition` {} is not a subset of the function '
                              'domain {}'.format(partition, fspace.domain))
-        if fspace.out_dtype != dspace.dtype:
-            raise ValueError('`out_dtype` {} of Function Space does not match '
-                             '`dspace.dtype` {}'
-                             ''.format(fspace.out_dtype, dspace.dtype))
+        if fspace.scalar_out_dtype != dspace.dtype:
+            raise ValueError('`fspace.scalar_out_dtype` does not match '
+                             '`dspace.dtype`: {} != {}'
+                             ''.format(fspace.scalar_out_dtype, dspace.dtype))
 
         self.__partition = partition
 
@@ -870,11 +869,11 @@ numpy.ufunc.reduceat.html
         out_tuple = kwargs.pop('out', ())
 
         # Check number of `out` args, depending on `method`
-        if method == '__call__' and not len(out_tuple) in (0, ufunc.nout):
+        if method == '__call__' and len(out_tuple) not in (0, ufunc.nout):
             raise TypeError(
                 "need 0 or {} `out` arguments for `method='__call__'`, "
                 'got {}'.format(ufunc.nout, len(out_tuple)))
-        elif len(out_tuple) not in (0, 1):
+        elif method != '__call__' and len(out_tuple) not in (0, 1):
             raise TypeError(
                 "need 0 or 1 `out` arguments for `method={!r}`, "
                 'got {}'.format(method, len(out_tuple)))
@@ -927,9 +926,6 @@ numpy.ufunc.reduceat.html
 
         # --- Evaluate ufunc --- #
 
-        # TODO: fix determination of `out_dtype` for the function space when
-        # fixing #908
-
         if method == '__call__':
             if ufunc.nout == 1:
                 kwargs['out'] = (out,)
@@ -938,9 +934,14 @@ numpy.ufunc.reduceat.html
 
                 if out is None:
                     # Wrap result tensor in appropriate DiscreteLp space.
-                    # Keep everything, get `dspace` from the result tensor.
+                    # Make new function space based on result dtype,
+                    # keep everything else, and get `dspace` from the result
+                    # tensor.
+                    out_dtype = (res_tens.dtype, self.space.uspace.out_shape)
+                    fspace = FunctionSpace(self.space.uspace.domain,
+                                           out_dtype)
                     res_space = DiscreteLp(
-                        self.space.uspace, self.space.partition,
+                        fspace, self.space.partition,
                         res_tens.space, self.space.interp_byaxis,
                         axis_labels=self.space.axis_labels)
                     result = res_space.element(res_tens)
@@ -955,20 +956,30 @@ numpy.ufunc.reduceat.html
                     ufunc, '__call__', *input_tensors, **kwargs)
 
                 if out1 is None:
-                    # Wrap result tensor in appropriate DiscreteLp space
+                    # Wrap as for nout = 1
+                    out_dtype = (res1_tens.dtype, self.space.uspace.out_shape)
+                    fspace = FunctionSpace(self.space.uspace.domain,
+                                           out_dtype)
                     res_space = DiscreteLp(
-                        self.space.uspace, self.space.partition,
+                        fspace, self.space.partition,
                         res1_tens.space, self.space.interp_byaxis,
                         axis_labels=self.space.axis_labels)
-                    result1 = res_space.element(res_tens)
+                    result1 = res_space.element(res1_tens)
                 else:
-                    result1 = out1
+                    result1 = out_tuple[0]
 
                 if out2 is None:
-                    # Don't wrap since we don't know what to do here
-                    result2 = res2_tens
+                    # Wrap as for nout = 1
+                    out_dtype = (res2_tens.dtype, self.space.uspace.out_shape)
+                    fspace = FunctionSpace(self.space.uspace.domain,
+                                           out_dtype)
+                    res_space = DiscreteLp(
+                        fspace, self.space.partition,
+                        res2_tens.space, self.space.interp_byaxis,
+                        axis_labels=self.space.axis_labels)
+                    result2 = res_space.element(res2_tens)
                 else:
-                    result2 = out2
+                    result2 = out_tuple[1]
 
                 return result1, result2
 
@@ -1075,61 +1086,6 @@ numpy.ufunc.reduceat.html
                 result = out_tuple[0]
 
             return result
-
-    # Old ufuncs interface, will be deprecated when Numpy 1.13 becomes minimum
-
-    @property
-    def ufuncs(self):
-        """Access to Numpy style universal functions.
-
-        .. note::
-            This interface is will be deprecated when Numpy 1.13 becomes
-            the minimum required version. Use Numpy ufuncs directly, e.g.,
-            ``np.sqrt(x)`` instead of ``x.ufuncs.sqrt()``.
-
-        Notes
-        -----
-        These ufuncs use optimized implementations for `dspace` if
-        available and incur no significant extra overhead.
-
-        Examples
-        --------
-        >>> X = uniform_discr(0, 1, 2)
-        >>> x = X.element([1, -2])
-        >>> x.ufuncs.absolute()
-        uniform_discr(0.0, 1.0, 2).element([ 1.,  2.])
-
-        These functions can also be used with broadcasting
-
-        >>> x.ufuncs.add(3)
-        uniform_discr(0.0, 1.0, 2).element([ 4.,  1.])
-
-        and non-space elements
-
-        >>> x.ufuncs.subtract([3, 3])
-        uniform_discr(0.0, 1.0, 2).element([-2., -5.])
-
-        There is also support for various reductions (sum, prod, min, max)
-
-        >>> x.ufuncs.sum()
-        -1.0
-
-        Also supports out parameter
-
-        >>> y = X.element([3, 4])
-        >>> out = X.element()
-        >>> result = x.ufuncs.add(y, out=out)
-        >>> result
-        uniform_discr(0.0, 1.0, 2).element([ 4.,  2.])
-        >>> result is out
-        True
-
-        Notes
-        -----
-        These are optimized to use the underlying tensor space and incur no
-        overhead unless these do.
-        """
-        return DiscreteLpUfuncs(self)
 
     def show(self, title=None, method='', coords=None, indices=None,
              force_show=False, fig=None, **kwargs):
