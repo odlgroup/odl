@@ -54,15 +54,14 @@ class NumericalDerivative(Operator):
         >>> space = odl.rn(3)
         >>> func = odl.solvers.L2NormSquared(space)
         >>> hess = NumericalDerivative(func.gradient, [1, 1, 1])
-        >>> hess([0, 0, 1])
-        rn(3).element([ 0.,  0.,  2.])
+        >>> np.allclose(hess([0, 0, 1]), [0, 0, 2])
+        True
 
         Find the Hessian matrix:
 
-        >>> odl.matrix_representation(hess)
-        array([[ 2.,  0.,  0.],
-               [ 0.,  2.,  0.],
-               [ 0.,  0.,  2.]])
+        >>> hess_matrix = odl.matrix_representation(hess)
+        >>> np.allclose(hess_matrix, 2 * np.eye(3))
+        True
 
         Notes
         -----
@@ -296,20 +295,19 @@ class NumericalGradient(Operator):
         >>> func = odl.solvers.L2NormSquared(space)
         >>> grad = NumericalGradient(func)
         >>> hess = grad.derivative([1, 1, 1])
-        >>> hess([1, 0, 0])
-        rn(3).element([ 2.,  0.,  0.])
+        >>> np.allclose(hess([1, 0, 0]), [2, 0, 0])
+        True
 
         Find the Hessian matrix:
 
-        >>> odl.matrix_representation(hess)
-        array([[ 2.,  0.,  0.],
-               [ 0.,  2.,  0.],
-               [ 0.,  0.,  2.]])
+        >>> hess_matrix = odl.matrix_representation(hess)
+        >>> np.allclose(hess_matrix, 2 * np.eye(3))
+        True
         """
         return NumericalDerivative(self, point,
                                    method=self.method, step=np.sqrt(self.step))
 
+
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()
