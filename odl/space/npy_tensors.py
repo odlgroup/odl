@@ -37,6 +37,7 @@ _BLAS_DTYPES = (np.dtype('float32'), np.dtype('float64'),
 THRESHOLD_SMALL = 100
 THRESHOLD_MEDIUM = 50000
 
+
 class NumpyTensorSpace(TensorSpace):
 
     """Set of tensors of arbitrary data type, implemented with NumPy.
