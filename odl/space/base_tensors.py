@@ -841,12 +841,12 @@ numpy.ufunc.reduceat.html
 
         # Check number of `out` args, depending on `method`
         if method == '__call__' and len(out_tuple) not in (0, ufunc.nout):
-            raise TypeError(
+            raise ValueError(
                 "ufunc {}: need 0 or {} `out` arguments for "
                 "`method='__call__'`, got {}"
                 ''.format(ufunc.__name__, ufunc.nout, len(out_tuple)))
         elif method != '__call__' and len(out_tuple) not in (0, 1):
-            raise TypeError(
+            raise ValueError(
                 'ufunc {}: need 0 or 1 `out` arguments for `method={!r}`, '
                 'got {}'.format(ufunc.__name__, method, len(out_tuple)))
 
