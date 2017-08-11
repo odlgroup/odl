@@ -70,7 +70,7 @@ numpy.{}
 #  'cumprod', 'average']
 
 
-# --- Wrappers for base tensors --- #
+# --- Wrappers for `Tensor` --- #
 
 
 def wrap_ufunc_base(name, n_in, n_out, doc):
@@ -174,80 +174,7 @@ for name, n_in, n_out, doc in UFUNCS:
     setattr(TensorSpaceUfuncs, name, method)
 
 
-# --- Wrappers for DiscreteLp --- #
-
-
-# For DiscreteLP, basically the ufunc mechanism can be propagated from its
-# `tensor` attribute.
-def wrap_ufunc_discretelp(name, n_in, n_out, doc):
-    """Return ufunc wrapper for `DiscreteLpUfuncs`."""
-    if n_in == 1:
-        if n_out == 0:
-            def wrapper(self):
-                method = getattr(self.elem.tensor.ufuncs, name)
-                return self.elem.space.element(method())
-
-        elif n_out == 1:
-            def wrapper(self, out=None):
-                method = getattr(self.elem.tensor.ufuncs, name)
-                if out is None:
-                    return self.elem.space.element(method())
-                else:
-                    method(out=out.tensor)
-                    return out
-
-        elif n_out == 2:
-            def wrapper(self, out1=None, out2=None):
-                method = getattr(self.elem.tensor.ufuncs, name)
-                if out1 is None:
-                    out1 = self.elem.space.element()
-                if out2 is None:
-                    out2 = self.elem.space.element()
-
-                y1, y2 = method(out1.tensor, out2.tensor)
-                return out1, out2
-
-        else:
-            raise NotImplementedError
-
-    elif n_in == 2:
-        if n_out == 1:
-            def wrapper(self, x2, out=None):
-                if x2 in self.elem.space:
-                    x2 = x2.tensor
-
-                method = getattr(self.elem.tensor.ufuncs, name)
-                if out is None:
-                    return self.elem.space.element(method(x2))
-                else:
-                    method(x2, out.tensor)
-                    return out
-
-        else:
-            raise NotImplementedError
-    else:
-        raise NotImplementedError
-
-    wrapper.__name__ = wrapper.__qualname__ = name
-    wrapper.__doc__ = doc
-    return wrapper
-
-
-class DiscreteLpUfuncs(TensorSpaceUfuncs):
-
-    """Ufuncs for `DiscreteLpElement` objects.
-
-    Internal object, should not be created except in `DiscreteLpElement`.
-    """
-
-
-# Add ufunc methods to ufunc class
-for name, n_in, n_out, doc in UFUNCS:
-    method = wrap_ufunc_discretelp(name, n_in, n_out, doc)
-    setattr(DiscreteLpUfuncs, name, method)
-
-
-# --- Wrappers for Product space elements --- #
+# --- Wrappers for `ProductSpaceElement` --- #
 
 
 def wrap_ufunc_productspace(name, n_in, n_out, doc):
@@ -322,6 +249,50 @@ class ProductSpaceUfuncs(object):
     def __init__(self, elem):
         """Create ufunc wrapper for ``elem``."""
         self.elem = elem
+
+    def sum(self):
+        """Return the sum of ``self``.
+
+        See Also
+        --------
+        numpy.sum
+        prod
+        """
+        results = [x.ufuncs.sum() for x in self.elem]
+        return np.sum(results)
+
+    def prod(self):
+        """Return the product of ``self``.
+
+        See Also
+        --------
+        numpy.prod
+        sum
+        """
+        results = [x.ufuncs.prod() for x in self.elem]
+        return np.prod(results)
+
+    def min(self):
+        """Return the minimum of ``self``.
+
+        See Also
+        --------
+        numpy.amin
+        max
+        """
+        results = [x.ufuncs.min() for x in self.elem]
+        return np.min(results)
+
+    def max(self):
+        """Return the maximum of ``self``.
+
+        See Also
+        --------
+        numpy.amax
+        min
+        """
+        results = [x.ufuncs.max() for x in self.elem]
+        return np.max(results)
 
 
 # Add ufunc methods to ufunc class

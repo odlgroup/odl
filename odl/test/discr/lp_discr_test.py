@@ -24,6 +24,7 @@ from odl.util.testutils import (almost_equal, all_equal, all_almost_equal,
 exponent = simple_fixture('exponent', [2.0, 1.0, float('inf'), 0.5, 1.5])
 power = simple_fixture('power', [1.0, 2.0, 0.5, -0.5, -1.0, -2.0])
 shape = simple_fixture('shape', [(2, 3, 4), (3, 4), (2,), (1,), (1, 1, 1)])
+power = simple_fixture('power', [1.0, 2.0, 0.5, -0.5, -1.0, -2.0])
 
 
 # --- DiscreteLp --- #
@@ -707,7 +708,12 @@ def test_astype():
 
 def test_ufunc(tspace_impl, ufunc):
     space = odl.uniform_discr([0, 0], [1, 1], (2, 2), impl=tspace_impl)
-    name, n_args, n_out, _ = ufunc
+    name = ufunc
+
+    # Get the ufunc from numpy as reference
+    npy_ufunc = getattr(np, name)
+    nin = npy_ufunc.nin
+    nout = npy_ufunc.nout
     if (np.issubsctype(space.dtype, np.floating) and
             name in ['bitwise_and',
                      'bitwise_or',
@@ -718,58 +724,54 @@ def test_ufunc(tspace_impl, ufunc):
         # Skip integer only methods if floating point type
         return
 
-    # Get the ufunc from numpy as reference
-    ufunc = getattr(np, name)
-
     # Create some data
-    arrays, vectors = noise_elements(space, n_args + n_out)
-    in_arrays = arrays[:n_args]
-    out_arrays = arrays[n_args:]
+    arrays, vectors = noise_elements(space, nin + nout)
+    in_arrays = arrays[:nin]
+    out_arrays = arrays[nin:]
     data_vector = vectors[0]
-    in_vectors = vectors[1:n_args]
-    out_vectors = vectors[n_args:]
-
-    # Verify type
-    assert isinstance(data_vector.ufuncs,
-                      odl.util.ufuncs.DiscreteLpUfuncs)
+    in_vectors = vectors[1:nin]
+    out_vectors = vectors[nin:]
 
     # Out-of-place:
-    np_result = ufunc(*in_arrays)
-    vec_fun = getattr(data_vector.ufuncs, name)
-    odl_result = vec_fun(*in_vectors)
-    assert all_almost_equal(np_result, odl_result)
+    with np.errstate(invalid='ignore'):
+        npy_result = npy_ufunc(*in_arrays)
+        vec_fun = getattr(data_vector.ufuncs, name)
+        odl_result = vec_fun(*in_vectors)
+    assert all_almost_equal(npy_result, odl_result)
 
     # Test type of output
-    if n_out == 1:
+    if nout == 1:
         assert isinstance(odl_result, space.element_type)
-    elif n_out > 1:
-        for i in range(n_out):
+    elif nout > 1:
+        for i in range(nout):
             assert isinstance(odl_result[i], space.element_type)
 
     # In-place:
-    np_result = ufunc(*(in_arrays + out_arrays))
-    vec_fun = getattr(data_vector.ufuncs, name)
-    odl_result = vec_fun(*(in_vectors + out_vectors))
-    assert all_almost_equal(np_result, odl_result)
+    with np.errstate(invalid='ignore'):
+        npy_result = npy_ufunc(*(in_arrays + out_arrays))
+        vec_fun = getattr(data_vector.ufuncs, name)
+        odl_result = vec_fun(*(in_vectors + out_vectors))
+    assert all_almost_equal(npy_result, odl_result)
 
     # Test in-place actually holds:
-    if n_out == 1:
+    if nout == 1:
         assert odl_result is out_vectors[0]
-    elif n_out > 1:
-        for i in range(n_out):
+    elif nout > 1:
+        for i in range(nout):
             assert odl_result[i] is out_vectors[i]
 
     # Test out-of-place with np data
-    np_result = ufunc(*in_arrays)
-    vec_fun = getattr(data_vector.ufuncs, name)
-    odl_result = vec_fun(*in_arrays[1:])
-    assert all_almost_equal(np_result, odl_result)
+    with np.errstate(invalid='ignore'):
+        npy_result = npy_ufunc(*in_arrays)
+        vec_fun = getattr(data_vector.ufuncs, name)
+        odl_result = vec_fun(*in_arrays[1:])
+    assert all_almost_equal(npy_result, odl_result)
 
     # Test type of output
-    if n_out == 1:
+    if nout == 1:
         assert isinstance(odl_result, space.element_type)
-    elif n_out > 1:
-        for i in range(n_out):
+    elif nout > 1:
+        for i in range(nout):
             assert isinstance(odl_result[i], space.element_type)
 
 
@@ -840,13 +842,13 @@ def test_real_imag(fn_impl, order):
 def test_reduction(tspace_impl, reduction):
     space = odl.uniform_discr([0, 0], [1, 1], [2, 2], impl=tspace_impl)
 
-    name, _ = reduction
+    name = reduction
 
-    ufunc = getattr(np, name)
+    reduction = getattr(np, name)
 
     # Create some data
     x_arr, x = noise_elements(space, 1)
-    assert almost_equal(ufunc(x_arr), getattr(x.ufuncs, name)())
+    assert almost_equal(reduction(x_arr), getattr(x.ufuncs, name)())
 
 
 def test_power(tspace_impl, power):
@@ -863,8 +865,9 @@ def test_power(tspace_impl, power):
         for y in [x_pos_arr, x_neg_arr, x_pos, x_neg]:
             y += 0.1
 
-    true_pos_pow = np.power(x_pos_arr, power)
-    true_neg_pow = np.power(x_neg_arr, power)
+    with np.errstate(invalid='ignore'):
+        true_pos_pow = np.power(x_pos_arr, power)
+        true_neg_pow = np.power(x_neg_arr, power)
 
     if int(power) != power and tspace_impl == 'cuda':
         with pytest.raises(ValueError):
@@ -872,13 +875,14 @@ def test_power(tspace_impl, power):
         with pytest.raises(ValueError):
             x_pos **= power
     else:
-        assert all_almost_equal(x_pos ** power, true_pos_pow)
-        assert all_almost_equal(x_neg ** power, true_neg_pow)
+        with np.errstate(invalid='ignore'):
+            assert all_almost_equal(x_pos ** power, true_pos_pow)
+            assert all_almost_equal(x_neg ** power, true_neg_pow)
 
-        x_pos **= power
-        x_neg **= power
-        assert all_almost_equal(x_pos, true_pos_pow)
-        assert all_almost_equal(x_neg, true_neg_pow)
+            x_pos **= power
+            x_neg **= power
+            assert all_almost_equal(x_pos, true_pos_pow)
+            assert all_almost_equal(x_neg, true_neg_pow)
 
 
 def test_inner_nonuniform():
