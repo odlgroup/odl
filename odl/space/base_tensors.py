@@ -16,7 +16,7 @@ import numpy as np
 from odl.set.sets import RealNumbers, ComplexNumbers
 from odl.set.space import LinearSpace, LinearSpaceElement
 from odl.util import (
-    is_numeric_dtype, is_real_dtype,
+    is_numeric_dtype, is_real_dtype, is_floating_dtype,
     is_real_floating_dtype, is_complex_floating_dtype, safe_int_conv,
     array_str, dtype_str, signature_string, indent, writable_array)
 from odl.util.ufuncs import TensorSpaceUfuncs
@@ -201,9 +201,12 @@ class TensorSpace(LinearSpace):
         method.
         """
         kwargs = {}
-        weighting = getattr(self, 'weighting', None)
-        if weighting is not None:
-            kwargs['weighting'] = weighting
+        if is_floating_dtype(dtype):
+            # Use weighting only for floating-point types, otherwise, e.g.,
+            # `space.astype(bool)` would fail
+            weighting = getattr(self, 'weighting', None)
+            if weighting is not None:
+                kwargs['weighting'] = weighting
 
         return type(self)(self.shape, dtype=dtype, order=order, **kwargs)
 
