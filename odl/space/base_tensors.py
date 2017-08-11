@@ -836,8 +836,6 @@ numpy.ufunc.reduceat.html
         # Unwrap out if provided. The output parameters are all wrapped
         # in one tuple, even if there is only one.
         out_tuple = kwargs.pop('out', ())
-        if out_tuple is None:
-            out_tuple = (None,)
 
         # Check number of `out` args, depending on `method`
         if method == '__call__' and len(out_tuple) not in (0, ufunc.nout):
@@ -850,8 +848,11 @@ numpy.ufunc.reduceat.html
                 'ufunc {}: need 0 or 1 `out` arguments for `method={!r}`, '
                 'got {}'.format(ufunc.__name__, method, len(out_tuple)))
 
-        # We allow our own tensors and `numpy.ndarray` objects as `out`
-        if not all(isinstance(o, (type(self), np.ndarray)) or o is None
+        # We allow our own tensors, the data container type and
+        # `numpy.ndarray` objects as `out` (see docs for reason for the
+        # latter)
+        valid_types = (type(self), type(self.data), np.ndarray)
+        if not all(isinstance(o, valid_types) or o is None
                    for o in out_tuple):
             return NotImplemented
 
