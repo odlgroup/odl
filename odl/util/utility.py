@@ -74,7 +74,7 @@ class npy_printoptions(object):
     def __enter__(self):
         np.set_printoptions(**self.new_opts)
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, *exc_info):
         np.set_printoptions(**self.orig_opts)
 
 
