@@ -1287,6 +1287,131 @@ def test_ufuncs(tspace, ufunc):
     # extra tests for them.
 
 
+def test_ufunc_corner_cases():
+    """Check if some corner cases are handled correctly."""
+    space = odl.rn((2, 3))
+    x = space.element([[-1, 0, 1],
+                       [1, 2, 3]])
+    space_const_w = odl.rn((2, 3), weighting=2)
+    weights = [[1, 2, 1],
+               [3, 2, 1]]
+    space_arr_w = odl.rn((2, 3), weighting=weights)
+
+    # --- Ufuncs with nin = 1, nout = 1 --- #
+
+    with pytest.raises(ValueError):
+        # Too many arguments
+        x.__array_ufunc__(np.sin, '__call__', x, np.ones((2, 3)))
+
+    # Check that `out=(None,)` is the same as not providing `out`
+    res = x.__array_ufunc__(np.sin, '__call__', x, out=(None,))
+    assert all_almost_equal(res, np.sin(x.asarray()))
+    # Check that the result space is the same
+    assert res.space == space
+
+    # Check usage of `order` argument
+    for order in ('A', 'C', 'F'):
+        res = x.__array_ufunc__(np.sin, '__call__', x, order=order)
+        assert all_almost_equal(res, np.sin(x.asarray()))
+        assert res.order == order
+
+    # Check usage of `dtype` argument
+    res = x.__array_ufunc__(np.sin, '__call__', x, dtype=complex)
+    assert all_almost_equal(res, np.sin(x.asarray(), dtype=complex))
+    assert res.dtype == complex
+
+    # Check propagation of weightings
+    y = space_const_w.one()
+    res = y.__array_ufunc__(np.sin, '__call__', y)
+    assert res.space.weighting == space_const_w.weighting
+    y = space_arr_w.one()
+    res = y.__array_ufunc__(np.sin, '__call__', y)
+    assert res.space.weighting == space_arr_w.weighting
+
+    # --- Ufuncs with nin = 2, nout = 1 --- #
+
+    with pytest.raises(ValueError):
+        # Too few arguments
+        x.__array_ufunc__(np.add, '__call__', x)
+
+    with pytest.raises(ValueError):
+        # Too many outputs
+        out1, out2 = np.empty_like(x), np.empty_like(x)
+        x.__array_ufunc__(np.add, '__call__', x, x, out=(out1, out2))
+
+    # Check that npy_array += odl_vector works
+    arr = np.ones((2, 3))
+    arr += x
+    assert all_almost_equal(arr, x.asarray() + 1)
+    # For Numpy >= 1.13, this will be equivalent
+    arr = np.ones((2, 3))
+    res = x.__array_ufunc__(np.add, '__call__', arr, x, out=(arr,))
+    assert all_almost_equal(arr, x.asarray() + 1)
+    assert res is arr
+
+    # --- `accumulate` --- #
+
+    res = x.__array_ufunc__(np.add, 'accumulate', x)
+    assert all_almost_equal(res, np.add.accumulate(x.asarray()))
+    assert res.space == space
+    arr = np.empty_like(x)
+    res = x.__array_ufunc__(np.add, 'accumulate', x, out=(arr,))
+    assert all_almost_equal(arr, np.add.accumulate(x.asarray()))
+    assert res is arr
+
+    # `accumulate` with other dtype
+    res = x.__array_ufunc__(np.add, 'accumulate', x, dtype='float32')
+    assert res.dtype == 'float32'
+
+    # Error scenarios
+    with pytest.raises(ValueError):
+        # Too many `out` arguments
+        out1, out2 = np.empty_like(x), np.empty_like(x)
+        x.__array_ufunc__(np.add, 'accumulate', x, out=(out1, out2))
+
+    # --- `reduce` --- #
+
+    res = x.__array_ufunc__(np.add, 'reduce', x)
+    assert all_almost_equal(res, np.add.reduce(x.asarray()))
+
+    # With `out` argument and `axis`
+    out_ax0 = np.empty(3)
+    res = x.__array_ufunc__(np.add, 'reduce', x, axis=0, out=(out_ax0,))
+    assert all_almost_equal(out_ax0, np.add.reduce(x.asarray(), axis=0))
+    assert res is out_ax0
+    out_ax1 = odl.rn(2).element()
+    res = x.__array_ufunc__(np.add, 'reduce', x, axis=1, out=(out_ax1,))
+    assert all_almost_equal(out_ax1, np.add.reduce(x.asarray(), axis=1))
+    assert res is out_ax1
+
+    # Addition is reorderable, so we can give multiple axes
+    res = x.__array_ufunc__(np.add, 'reduce', x, axis=(0, 1))
+    assert res == pytest.approx(np.add.reduce(x.asarray(), axis=(0, 1)))
+
+    # Cannot propagate weightings in a meaningful way, check that there are
+    # none in the result
+    y = space_const_w.one()
+    res = y.__array_ufunc__(np.add, 'reduce', y, axis=0)
+    assert not res.space.is_weighted
+    y = space_arr_w.one()
+    res = y.__array_ufunc__(np.add, 'reduce', y, axis=0)
+    assert not res.space.is_weighted
+
+    # Check that `exponent` and `order` are propagated
+    space_1 = odl.rn((2, 3), exponent=1)
+    z = space_1.one()
+    res = z.__array_ufunc__(np.add, 'reduce', z, axis=0)
+    assert res.space.exponent == 1
+    space_c = odl.rn((2, 3), order='C')
+    z = space_c.one()
+    res = z.__array_ufunc__(np.add, 'reduce', z, axis=0)
+    assert res.order == 'C'
+    space_f = odl.rn((2, 3), order='F')
+    z = space_f.one()
+    res = z.__array_ufunc__(np.add, 'reduce', z, axis=0)
+    assert res.order == 'F'
+
+
 def test_reduction(tspace, reduction):
     """Test reductions in x.ufunc against direct Numpy reduction."""
     name = reduction
