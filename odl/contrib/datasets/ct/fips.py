@@ -6,10 +6,10 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Tomographic datasets."""
+"""Tomographic datasets from the Finish Inverse Problems Society (FIPS)."""
 
 import numpy as np
-from odl.datasets.util import get_data
+from odl.contrib.datasets.util import get_data
 from odl.discr import uniform_partition
 from odl.tomo import FanFlatGeometry
 
@@ -18,7 +18,7 @@ __all__ = ('walnut_data', 'walnut_geometry',
            'lotus_root_data', 'lotus_root_geometry')
 
 
-DATA_SUBSET = 'tomo'
+DATA_SUBSET = 'ct_fips'
 
 
 def walnut_data():
@@ -43,6 +43,7 @@ def walnut_data():
 
     # Change axes to match ODL definitions
     data = np.swapaxes(dct['sinogram1200'], 0, 1)[:, ::-1]
+    data = data.astype('float')
 
     # Very crude gain normalization
     data = -np.log(data / np.max(data, axis=1)[:, None])
@@ -102,6 +103,7 @@ def lotus_root_data():
 
     # Change axes to match ODL definitions
     data = np.swapaxes(dct['sinogram'], 0, 1)[::-1, :]
+    data = data.astype('float')
 
     return data
 
@@ -140,28 +142,6 @@ def lotus_root_geometry():
 
 
 if __name__ == '__main__':
-    import odl
-
-    # Walnut example
-    space = odl.uniform_discr([-20, -20], [20, 20], [2296, 2296])
-    geometry = odl.datasets.tomo.walnut_geometry()
-
-    ray_transform = odl.tomo.RayTransform(space, geometry)
-    fbp_op = odl.tomo.fbp_op(ray_transform, filter_type='Hann')
-
-    data = odl.datasets.tomo.walnut_data()
-    fbp_op(data).show('Walnut FBP reconstruction', clim=[0, 0.05])
-
-    # Lotus root example
-    space = odl.uniform_discr([-50, -50], [50, 50], [2240, 2240])
-    geometry = odl.datasets.tomo.lotus_root_geometry()
-
-    ray_transform = odl.tomo.RayTransform(space, geometry)
-    fbp_op = odl.tomo.fbp_op(ray_transform, filter_type='Hann')
-
-    data = odl.datasets.tomo.lotus_root_data()
-    fbp_op(data).show('Lotus root FBP reconstruction', clim=[0, 0.1])
-
     # Run doctests
     # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests

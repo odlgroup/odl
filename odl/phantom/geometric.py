@@ -687,7 +687,7 @@ def tgv_phantom(space, edge_smoothing=0.2):
     space : `DiscreteLp`, 2 dimensional
         Discretized space in which the phantom is supposed to be created.
         Needs to be two-dimensional.
-    edge_smoothness : nonnegative float, optional
+    edge_smoothing : nonnegative float, optional
         Smoothing of the edges of the phantom, given as smoothing width in
         units of minimum pixel size.
 
@@ -713,15 +713,10 @@ def tgv_phantom(space, edge_smoothing=0.2):
         raise ValueError('`space.ndim` must be 2, got {}'
                          ''.format(space.ndim))
 
-    edge_smoothing, edge_smoothing_in = float(edge_smoothing), edge_smoothing
-    if edge_smoothing < 0:
-        raise ValueError('`edge_smoothing` must be >= 0, got {}'
-                         ''.format(edge_smoothing_in))
-
     y, x = space.meshgrid
 
     # Use a smooth sigmoid to get some anti-aliasing across edges.
-    scale = edge_smoothing / np.min(space.shape)
+    scale = edge_smoothing * np.min(space.cell_sides)
 
     def sigmoid(val):
         if edge_smoothing != 0:

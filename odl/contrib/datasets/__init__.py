@@ -9,8 +9,3 @@
 """Access to real or simulated datasets."""
 
 from __future__ import absolute_import
-
-
-__all__ = ('tomo',)
-
-from . import tomo

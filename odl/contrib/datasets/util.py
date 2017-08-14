@@ -18,11 +18,12 @@ except ImportError:
     # Python 3+
     from urllib.request import urlopen
 
-from shutil import copyfileobj
+from shutil import copyfileobj, rmtree
 from scipy import io
+import contextlib
 
 
-__all__ = ('get_data_dir', 'get_data')
+__all__ = ('get_data_dir', 'cleanup_data_dir', 'get_data')
 
 
 def get_data_dir():
@@ -32,6 +33,11 @@ def get_data_dir():
     if not exists(data_home):
         os.makedirs(data_home)
     return data_home
+
+
+def cleanup_data_dir():
+    """Remove all data, forcing it to be reloaded."""
+    rmtree(get_data_dir())
 
 
 def get_data(filename, subset, url):
@@ -65,7 +71,7 @@ def get_data(filename, subset, url):
               ''.format(subset, filename, url))
 
         # open the url of the data
-        with urlopen(url) as data_url:
+        with contextlib.closing(urlopen(url)) as data_url:
             # store downloaded file locally
             with open(filename, 'w+b') as storage_file:
                 copyfileobj(data_url, storage_file)
