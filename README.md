@@ -59,6 +59,7 @@ ODL has been used in a wide range of research and development with several scien
 
 | Description      |  Code  |
 |------------------|--------|
+| *Learned Primal-Dual Reconstruction*. [Arxiv](https://arxiv.org/abs/1707.06474), [blog](https://adler-j.github.io/2017/07/21/Learning-to-reconstruct.html) | [GitHub](https://github.com/adler-j/learned_primal_dual) |
 | *Indirect Image Registration with Large Diffeomorphic Deformations*. [Arxiv](https://arxiv.org/abs/1706.04048) | [GitHub](https://github.com/chongchenmath/odl_lddmm) |
 | *High-level algorithm prototyping: an example extending the TVR-DART algorithm*. DGCI, 2017 | [GitHub](https://github.com/aringh/TVR-DART) |
 | *GPUMCI, a ﬂexible platform for x-ray imaging on the GPU*. Fully3D, 2017 |  |
