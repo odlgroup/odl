@@ -14,6 +14,7 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import super
 
+import numpy as np
 from copy import copy
 import numpy as np
 
@@ -25,7 +26,8 @@ from odl.set import LinearSpace, LinearSpaceElement, Field, RealNumbers
 __all__ = ('ScalingOperator', 'ZeroOperator', 'IdentityOperator',
            'LinCombOperator', 'MultiplyOperator', 'PowerOperator',
            'InnerProductOperator', 'NormOperator', 'DistOperator',
-           'ConstantOperator', 'RealPart', 'ImagPart', 'ComplexEmbedding')
+           'ConstantOperator', 'RealPart', 'ImagPart', 'ComplexEmbedding',
+           'ComplexModulus')
 
 
 class ScalingOperator(Operator):
@@ -1244,6 +1246,79 @@ class ComplexEmbedding(Operator):
         else:
             # Complex domain
             return ComplexEmbedding(self.range, self.scalar.conjugate())
+
+
+class ComplexModulus(Operator):
+
+    """Operator that computes the modolus (absolute value) of a vector."""
+
+    def __init__(self, space):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        space : `FnBase`
+            Space which real part should be taken, needs to implement
+            ``space.real_space``.
+
+        Examples
+        --------
+        Take the real part of complex vector:
+
+        >>> c2 = odl.cn(2)
+        >>> op = odl.ComplexModulus(c2)
+        >>> op([3 + 4j, 2])
+        rn(2).element([5.0, 2.0])
+
+        The operator is the absolute value on real spaces:
+
+        >>> r2 = odl.rn(2)
+        >>> op = odl.ComplexModulus(r2)
+        >>> op([1, -2])
+        rn(2).element([1.0, 2.0])
+
+        The operator also works on other `FnBase` spaces such as
+        `DiscreteLp` spaces:
+
+        >>> r2 = odl.uniform_discr(0, 1, 2, dtype=complex)
+        >>> op = odl.ComplexModulus(r2)
+        >>> op([3 + 4j, 2])
+        uniform_discr(0.0, 1.0, 2).element([5.0, 2.0])
+        """
+        real_space = space.real_space
+        linear = (space == real_space)
+        Operator.__init__(self, space, real_space, linear=linear)
+
+    def _call(self, x):
+        """Return ``self(x)``."""
+        return (x.real ** 2 + x.imag ** 2).ufuncs.sqrt()
+
+    @property
+    def inverse(self):
+        """Return the (pseudo-)inverse.
+
+        Examples
+        --------
+        The (pseudo-)inverse in the real case is the identity:
+
+        >>> r2 = odl.rn(2)
+        >>> op = ComplexModulus(r2)
+        >>> op.inverse(op([1, -2]))
+        rn(2).element([1.0, 2.0])
+
+        If the domain is complex, a pseudo-inverse is taken, assigning equal
+        positive weights to the real and complex parts:
+
+        >>> c2 = odl.cn(2)
+        >>> op = ComplexModulus(c2)
+        >>> op.inverse(op([np.sqrt(2), 2 + 2j]))
+        cn(2).element([(1+1j), (2+2j)])
+        """
+        if self.is_linear:
+            return IdentityOperator(self.domain)
+        else:
+            return ComplexEmbedding(self.range, scalar=(1 + 1j) / np.sqrt(2))
+
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position
