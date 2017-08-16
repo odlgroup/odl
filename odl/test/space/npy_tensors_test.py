@@ -1160,35 +1160,32 @@ def test_ufuncs(tspace, ufunc):
         return
 
     # Create some data
-    arrays, vectors = noise_elements(tspace, nin + nout)
+    arrays, elements = noise_elements(tspace, nin + nout)
     in_arrays = arrays[:nin]
     out_arrays = arrays[nin:]
-    data_vector = vectors[0]
+    data_elem = elements[0]
 
-    out_vectors = vectors[nin:]
+    out_elems = elements[nin:]
+    out_arr_kwargs = {'out': out_arrays[:nout]}
 
     if nout == 1:
-        out_arr_kwargs = {'out': out_arrays[0]}
-        out_vec_kwargs = {'out': out_vectors[0]}
-    elif nout == 2:
-        out_arr_kwargs = {'out1': out_arrays[0], 'out2': out_arrays[1]}
-        out_vec_kwargs = {'out1': out_vectors[0], 'out2': out_vectors[1]}
-    else:
-        assert False
+        out_elem_kwargs = {'out': out_elems[0]}
+    elif nout > 1:
+        out_elem_kwargs = {'out': out_elems[:nout]}
 
     # Get function to call, using both interfaces:
     # - vec.ufunc(other_args)
     # - np.ufunc(vec, other_args)
-    vec_fun_old = getattr(data_vector.ufuncs, name)
-    in_vectors_old = vectors[1:nin]
-    vec_fun_new = npy_ufunc
-    in_vectors_new = vectors[:nin]
+    elem_fun_old = getattr(data_elem.ufuncs, name)
+    in_elems_old = elements[1:nin]
+    elem_fun_new = npy_ufunc
+    in_elems_new = elements[:nin]
 
     # Out-of-place
     npy_result = npy_ufunc(*in_arrays)
-    odl_result_old = vec_fun_old(*in_vectors_old)
+    odl_result_old = elem_fun_old(*in_elems_old)
     assert all_almost_equal(npy_result, odl_result_old)
-    odl_result_new = vec_fun_new(*in_vectors_new)
+    odl_result_new = elem_fun_new(*in_elems_new)
     assert all_almost_equal(npy_result, odl_result_new)
 
     # Test type of output
@@ -1202,84 +1199,83 @@ def test_ufuncs(tspace, ufunc):
 
     # In-place with ODL objects as `out`
     npy_result = npy_ufunc(*in_arrays, **out_arr_kwargs)
-    odl_result_old = vec_fun_old(*in_vectors_old, **out_vec_kwargs)
+    odl_result_old = elem_fun_old(*in_elems_old, **out_elem_kwargs)
     assert all_almost_equal(npy_result, odl_result_old)
     if USE_ARRAY_UFUNCS_INTERFACE:
         # In-place will not work with Numpy < 1.13
-        odl_result_new = vec_fun_new(*in_vectors_new, **out_vec_kwargs)
+        odl_result_new = elem_fun_new(*in_elems_new, **out_elem_kwargs)
         assert all_almost_equal(npy_result, odl_result_new)
 
     # Check that returned stuff refers to given out
     if nout == 1:
-        assert odl_result_old is out_vectors[0]
+        assert odl_result_old is out_elems[0]
         if USE_ARRAY_UFUNCS_INTERFACE:
-            assert odl_result_new is out_vectors[0]
+            assert odl_result_new is out_elems[0]
     elif nout > 1:
         for i in range(nout):
-            assert odl_result_old[i] is out_vectors[i]
+            assert odl_result_old[i] is out_elems[i]
             if USE_ARRAY_UFUNCS_INTERFACE:
-                assert odl_result_new[i] is out_vectors[i]
+                assert odl_result_new[i] is out_elems[i]
 
     # In-place with Numpy array as `out` for new interface
     if USE_ARRAY_UFUNCS_INTERFACE:
         out_arrays_new = [np.empty_like(arr) for arr in out_arrays]
         if nout == 1:
-            out_vec_kwargs_new = {'out': out_arrays_new[0]}
-        elif nout == 2:
-            out_vec_kwargs_new = {'out1': out_arrays_new[0],
-                                  'out2': out_arrays_new[1]}
+            out_elem_kwargs_new = {'out': out_arrays_new[0]}
+        elif nout > 1:
+            out_elem_kwargs_new = {'out': out_arrays_new[:nout]}
 
-        odl_result_vec_new = vec_fun_new(*in_vectors_new, **out_vec_kwargs_new)
-        assert all_almost_equal(npy_result, odl_result_vec_new)
+        odl_result_elem_new = elem_fun_new(*in_elems_new,
+                                           **out_elem_kwargs_new)
+        assert all_almost_equal(npy_result, odl_result_elem_new)
 
         if nout == 1:
-            assert odl_result_vec_new is out_arrays_new[0]
+            assert odl_result_elem_new is out_arrays_new[0]
         elif nout > 1:
             for i in range(nout):
-                assert odl_result_vec_new[i] is out_arrays_new[i]
+                assert odl_result_elem_new[i] is out_arrays_new[i]
 
     if USE_ARRAY_UFUNCS_INTERFACE:
         # Check `ufunc.at`
-        indices = np.random.randint(0, in_arrays[0].size,
-                                    size=in_arrays[0].size // 2)
+        indices = [[0, 0, 1],
+                   [0, 1, 2]]
 
         mod_array = in_arrays[0].copy()
-        mod_vector = in_vectors_new[0].copy()
+        mod_elem = in_elems_new[0].copy()
         if nin == 1:
             npy_result = npy_ufunc.at(mod_array, indices)
-            odl_result = npy_ufunc.at(mod_vector, indices)
+            odl_result = npy_ufunc.at(mod_elem, indices)
         elif nin == 2:
             other_array = in_arrays[1][indices]
-            other_vector = in_vectors_new[1][indices]
+            other_elem = in_elems_new[1][indices]
             npy_result = npy_ufunc.at(mod_array, indices, other_array)
-            odl_result = npy_ufunc.at(mod_vector, indices, other_vector)
+            odl_result = npy_ufunc.at(mod_elem, indices, other_elem)
 
         assert all_almost_equal(odl_result, npy_result)
 
     # Check `ufunc.reduce`
     if nin == 2 and nout == 1 and USE_ARRAY_UFUNCS_INTERFACE:
         in_array = in_arrays[0]
-        in_vector = in_vectors_new[0]
+        in_elem = in_elems_new[0]
 
         # We only test along one axis since some binary ufuncs are not
         # re-orderable, in which case Numpy raises a ValueError
         npy_result = npy_ufunc.reduce(in_array)
-        odl_result = npy_ufunc.reduce(in_vector)
-        # This also checks that `odl_result` is scalar
-        assert odl_result == pytest.approx(npy_result)
-        odl_result_keepdims = npy_ufunc.reduce(in_vector, keepdims=True)
-        assert odl_result_keepdims.shape == (1,) + in_vector.shape[1:]
+        odl_result = npy_ufunc.reduce(in_elem)
+        assert all_almost_equal(odl_result, npy_result)
+        odl_result_keepdims = npy_ufunc.reduce(in_elem, keepdims=True)
+        assert odl_result_keepdims.shape == (1,) + in_elem.shape[1:]
         # In-place using `out` (with ODL vector and array)
-        out_vector = odl_result_keepdims.space.element()
+        out_elem = odl_result_keepdims.space.element()
         out_array = np.empty(odl_result_keepdims.shape,
                              dtype=odl_result_keepdims.dtype)
-        npy_ufunc.reduce(in_vector, out=out_vector, keepdims=True)
-        npy_ufunc.reduce(in_vector, out=out_array, keepdims=True)
-        assert all_almost_equal(out_vector, odl_result_keepdims)
+        npy_ufunc.reduce(in_elem, out=out_elem, keepdims=True)
+        npy_ufunc.reduce(in_elem, out=out_array, keepdims=True)
+        assert all_almost_equal(out_elem, odl_result_keepdims)
         assert all_almost_equal(out_array, odl_result_keepdims)
         # Using a specific dtype
         npy_result = npy_ufunc.reduce(in_array, dtype=complex)
-        odl_result = npy_ufunc.reduce(in_vector, dtype=complex)
+        odl_result = npy_ufunc.reduce(in_elem, dtype=complex)
         assert odl_result.dtype == npy_result.dtype
         assert all_almost_equal(odl_result, npy_result)
 
@@ -1339,7 +1335,7 @@ def test_ufunc_corner_cases():
         out1, out2 = np.empty_like(x), np.empty_like(x)
         x.__array_ufunc__(np.add, '__call__', x, x, out=(out1, out2))
 
-    # Check that npy_array += odl_vector works
+    # Check that npy_array += odl_elem works
     arr = np.ones((2, 3))
     arr += x
     assert all_almost_equal(arr, x.asarray() + 1)

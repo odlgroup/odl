@@ -30,7 +30,7 @@ import numpy as np
 import re
 
 
-__all__ = ('TensorSpaceUfuncs', 'DiscreteLpUfuncs', 'ProductSpaceUfuncs')
+__all__ = ('TensorSpaceUfuncs', 'ProductSpaceUfuncs')
 
 
 # Some are ignored since they don't cooperate with dtypes, needs fix
@@ -79,13 +79,20 @@ def wrap_ufunc_base(name, n_in, n_out, doc):
     if n_in == 1:
         if n_out == 1:
             def wrapper(self, out=None):
+                if out is None or isinstance(out, (type(self.elem),
+                                                   type(self.elem.data))):
+                    out = (out,)
+
                 return self.elem.__array_ufunc__(
-                    ufunc, '__call__', self.elem, out=(out,))
+                    ufunc, '__call__', self.elem, out=out)
 
         elif n_out == 2:
-            def wrapper(self, out1=None, out2=None):
+            def wrapper(self, out=None):
+                if out is None:
+                    out = (None, None)
+
                 return self.elem.__array_ufunc__(
-                    ufunc, '__call__', self.elem, out=(out1, out2))
+                    ufunc, '__call__', self.elem, out=out)
 
         else:
             raise NotImplementedError
