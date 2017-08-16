@@ -478,7 +478,7 @@ def test_proximal_convconj_kl_cross_entropy():
 
     # Explicit computation:
     x_verify = x - lam * scipy.special.lambertw(
-        sigma / lam * g * np.exp(x / lam))
+        sigma / lam * g * np.exp(x / lam)).real
 
     assert all_almost_equal(prox_val, x_verify, HIGH_ACC)
 
