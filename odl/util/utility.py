@@ -144,8 +144,7 @@ def array_str(a, nprint=6):
     [ 2.]
     """
     a = np.asarray(a)
-    max_shape = tuple(a.shape[i] if a.shape[i] < nprint else nprint
-                      for i in range(a.ndim))
+    max_shape = tuple(n if n < nprint else nprint for n in a.shape)
     with npy_printoptions(threshold=int(np.prod(max_shape)),
                           edgeitems=nprint // 2,
                           suppress=True):

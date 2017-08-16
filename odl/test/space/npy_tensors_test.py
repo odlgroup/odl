@@ -1118,7 +1118,7 @@ def test_custom_dist(tspace):
 
 
 def test_ufuncs(tspace, ufunc):
-    """Test ufuncs in x.ufunc against direct Numpy ufuncs."""
+    """Test ufuncs in ``x.ufuncs`` against direct Numpy ufuncs."""
     name = ufunc
 
     # Get the ufunc from numpy as reference, plus some additional info

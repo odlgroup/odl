@@ -22,7 +22,6 @@ from odl.util.ufuncs import UFUNCS
 
 __all__ = ()
 
-# TODO: these are implementation-dependent, add to `entry_points`?
 SUPP_TYPECODES = '?bhilqpBHILQPefdgFDG'
 SUPP_TYPECODES_TO_DTYPES = {tc: np.dtype(tc) for tc in SUPP_TYPECODES}
 

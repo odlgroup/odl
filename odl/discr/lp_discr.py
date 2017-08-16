@@ -692,24 +692,11 @@ class DiscreteLpElement(DiscretizedSpaceElement):
         Numpy ufuncs`_.
 
         .. note::
-            This basic implementation casts inputs and
-            outputs to Numpy arrays and evaluates ``ufunc`` on those.
-            For `numpy.ndarray` based data storage, this incurs no
-            significant overhead compared to direct usage of Numpy arrays.
-
-            For other (in particular non-local) implementations, e.g.,
-            GPU arrays or distributed memory, overhead is significant due
-            to copies to CPU main memory. In those classes, the
-            ``__array_ufunc__`` mechanism should be overridden to use
-            native implementations if possible.
-
-        .. note::
             When using operations that alter the shape (like ``reduce``),
             or the data type (can be any of the methods),
             the resulting array is wrapped in a space of the same
-            type as ``self.space``, however **only** using the minimal
-            set of parameters ``size`` and ``dtype``. If more properties
-            are supposed to be propagated, this method must be overridden.
+            type as ``self.space``, propagating all essential properties
+            like weighting, exponent etc. as closely as possible.
 
         Parameters
         ----------
@@ -722,16 +709,16 @@ class DiscreteLpElement(DiscretizedSpaceElement):
             ``'__call__'``, ``'accumulate'``, ``'at'``, ``'outer'``,
             ``'reduce'``
 
-        input1, ..., inputN:
+        input1, ..., inputN :
             Positional arguments to ``ufunc.method``.
-        kwargs:
+        kwargs :
             Keyword arguments to ``ufunc.method``.
 
         Returns
         -------
         ufunc_result : `DiscreteLpElement`, `numpy.ndarray` or tuple
             Result of the ufunc evaluation. If no ``out`` keyword argument
-            was given, the result is an `NtuplesBaseVector` or a tuple
+            was given, the result is a `DiscreteLpElement` or a tuple
             of such, depending on the number of outputs of ``ufunc``.
             If ``out`` was provided, the returned object or sequence members
             refer(s) to ``out``.
