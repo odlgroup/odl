@@ -36,7 +36,7 @@ install:
     - conda info -a
 
     # Install dependencies and enter test environment
-    - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION "numpy<1.13" scipy future nomkl sphinx sphinx_rtd_theme pytest pytest-pep8 pytest-cov
+    - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy future nomkl sphinx sphinx_rtd_theme pytest pytest-pep8 pytest-cov
     - source activate test-environment
 
     # Some packages which are only on PyPI, not on conda
