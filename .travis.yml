@@ -3,11 +3,13 @@ language: python
 matrix:
     include:
         - python: 2.7
+          env: NUMPY_VERSION=1.13
+
+        - python: 3.6
           env: NUMPY_VERSION=1.12
 
         - python: 3.6
-          env: NUMPY_VERSION=1.12 COVERALLS=true BUILD_DOCS=true
-
+          env: NUMPY_VERSION=1.13 COVERALLS=true BUILD_DOCS=true
 
 sudo: false
 
@@ -41,7 +43,7 @@ install:
     - conda info -a
 
     # Install dependencies and enter test environment. Use conda for the minimal stuff to
-    # make it run faster and avoid downloading bug stuff like mkl
+    # make it run faster and avoid downloading big stuff like mkl
     - conda create -n testenv python=$TRAVIS_PYTHON_VERSION nomkl pywavelets
     - source activate testenv
     # We avoid annoying issues with building pyfftw wheels by using a conda-forge version
