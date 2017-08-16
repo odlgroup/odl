@@ -273,10 +273,11 @@ def test_kullback_leibler(space):
     x = np.abs(x)
     one_elem = space.one()
 
-    # Evaluation of the functional
-    expected_result = ((x - prior + prior * np.log(prior / x))
-                       .inner(one_elem))
-    assert pytest.approx(func(x), expected_result)
+    with np.errstate(all='ignore'):
+        # Evaluation of the functional
+        expected_result = ((x - prior + prior * np.log(prior / x))
+                           .inner(one_elem))
+        assert pytest.approx(func(x), expected_result)
 
     # Check property for prior
     assert all_almost_equal(func.prior, prior)
@@ -284,17 +285,20 @@ def test_kullback_leibler(space):
     # For elements with (a) negative components it should return inf
     x_neg = noise_element(space)
     x_neg = x_neg - x_neg.ufuncs.max()
-    assert func(x_neg) == np.inf
+    with np.errstate(all='ignore'):
+        assert func(x_neg) == np.inf
 
     # The gradient
-    expected_result = 1 - prior / x
-    assert all_almost_equal(func.gradient(x), expected_result)
+    with np.errstate(all='ignore'):
+        expected_result = 1 - prior / x
+        assert all_almost_equal(func.gradient(x), expected_result)
 
     # The proximal operator
     sigma = np.random.rand()
-    expected_result = odl.solvers.proximal_convex_conj(
-        odl.solvers.proximal_convex_conj_kl(space, g=prior))(sigma)(x)
-    assert all_almost_equal(func.proximal(sigma)(x), expected_result)
+    with np.errstate(all='ignore'):
+        expected_result = odl.solvers.proximal_convex_conj(
+            odl.solvers.proximal_convex_conj_kl(space, g=prior))(sigma)(x)
+        assert all_almost_equal(func.proximal(sigma)(x), expected_result)
 
     # The convex conjugate functional
     cc_func = func.convex_conj
@@ -307,27 +311,32 @@ def test_kullback_leibler(space):
     x = x - x.ufuncs.max() + 0.99
 
     # Evaluation of convex conjugate
-    expected_result = - (prior * np.log(1 - x)).inner(one_elem)
-    assert pytest.approx(cc_func(x), expected_result)
+    with np.errstate(all='ignore'):
+        expected_result = - (prior * np.log(1 - x)).inner(one_elem)
+        assert pytest.approx(cc_func(x), expected_result)
 
     x_wrong = noise_element(space)
     x_wrong = x_wrong - x_wrong.ufuncs.max() + 1.01
     assert cc_func(x_wrong) == np.inf
 
     # The gradient of the convex conjugate
-    expected_result = prior / (1 - x)
-    assert all_almost_equal(cc_func.gradient(x), expected_result)
+    with np.errstate(all='ignore'):
+        expected_result = prior / (1 - x)
+        assert all_almost_equal(cc_func.gradient(x), expected_result)
 
     # The proximal of the convex conjugate
-    expected_result = 0.5 * (1 + x - np.sqrt((x - 1)**2 + 4 * sigma * prior))
-    assert all_almost_equal(cc_func.proximal(sigma)(x), expected_result)
+    with np.errstate(all='ignore'):
+        expected_result = 0.5 * (1 + x - np.sqrt((x - 1) ** 2 +
+                                                 4 * sigma * prior))
+        assert all_almost_equal(cc_func.proximal(sigma)(x), expected_result)
 
     # The biconjugate, which is the functional itself since it is proper,
     # convex and lower-semicontinuous
     cc_cc_func = cc_func.convex_conj
 
     # Check that they evaluate the same
-    assert pytest.approx(cc_cc_func(x), func(x))
+    with np.errstate(all='ignore'):
+        assert pytest.approx(cc_cc_func(x), func(x))
 
 
 def test_kullback_leibler_cross_entorpy(space):
@@ -384,7 +393,8 @@ def test_kullback_leibler_cross_entorpy(space):
     assert all_almost_equal(cc_func.gradient(x), expected_result)
 
     # The proximal of the convex conjugate
-    expected_result = x - scipy.special.lambertw(sigma * prior * np.exp(x))
+    expected_result = (x -
+                       scipy.special.lambertw(sigma * prior * np.exp(x)).real)
     assert all_almost_equal(cc_func.proximal(sigma)(x), expected_result)
 
     # The biconjugate, which is the functional itself since it is proper,
