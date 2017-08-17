@@ -2034,7 +2034,7 @@ class NuclearNorm(Functional):
                     abss = np.abs(s) - (self.sigma - eps)
                     sprox = np.sign(s) * np.maximum(abss, 0)
                 elif func.pwisenorm.exponent == 2:
-                    s_reordered = func._moveaxis(s, -1, 0)
+                    s_reordered = moveaxis(s, -1, 0)
                     snorm = func.pwisenorm(s_reordered).asarray()
                     snorm = np.maximum(self.sigma, snorm, out=snorm)
                     sprox = ((1 - eps) - self.sigma / snorm)[..., None] * s

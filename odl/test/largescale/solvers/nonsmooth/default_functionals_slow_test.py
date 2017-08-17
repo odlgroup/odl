@@ -24,7 +24,7 @@ from odl.solvers.functional.functional import FunctionalDefaultConvexConjugate
 pytestmark = odl.util.skip_if_no_largescale
 
 stepsize = simple_fixture('stepsize', [0.1, 1.0, 10.0])
-linear_offset = simple_fixture('linear_offset', ['none', True])
+linear_offset = simple_fixture('linear_offset', [False, True])
 quadratic_offset = simple_fixture('quadratic_offset', [False, True])
 dual = simple_fixture('dual', [False, True])
 
@@ -87,6 +87,7 @@ def functional(request, linear_offset, quadratic_offset, dual):
         quadratic_coeff = 1.32
         func = odl.solvers.FunctionalQuadraticPerturb(
             func, quadratic_coeff=quadratic_coeff, linear_term=g)
+
     elif linear_offset:
         g = noise_element(space)
         if name.startswith('kl'):
