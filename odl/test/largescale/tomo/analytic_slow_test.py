@@ -174,7 +174,8 @@ def test_fbp_reconstruction(projector):
     # Compute the FBP result
     fbp_result = fbp_operator(projections)
 
-    maxerr = vol.norm() / 5.0
+    # Allow 30 % error
+    maxerr = vol.norm() * 0.3
     error = vol.dist(fbp_result)
     assert error < maxerr
 
