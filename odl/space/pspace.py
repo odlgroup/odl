@@ -639,6 +639,12 @@ class ProductSpace(LinearSpace):
                 # in the slice, but wrapping the result into a ProductSpace.
                 spaces = self.spaces[idx]
                 rest_indcs = indices[1:]
+                if len(spaces) == 0 and rest_indcs:
+                    # Need to catch this situation since the code further
+                    # down doesn't trigger an error
+                    raise IndexError('too many indices for recursive '
+                                     'product space: remaining indices '
+                                     '{}'.format(rest_indcs))
                 if not rest_indcs:
                     return ProductSpace(*spaces)
                 elif all(isinstance(space, ProductSpace) for space in spaces):
