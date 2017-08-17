@@ -40,14 +40,15 @@ def test_element(tspace):
     x = tspace.element()
     assert x in tspace
 
-    y = tspace.element(inp=[0] * tspace.size)
+    # From array-like
+    y = tspace.element(np.zeros(tspace.shape, dtype=tspace.dtype).tolist())
     assert y in tspace
 
     # Rewrap
     y2 = tspace.element(y)
     assert y2 is y
 
-    w = tspace.element(inp=np.zeros(tspace.size, tspace.dtype))
+    w = tspace.element(np.zeros(tspace.shape, dtype=tspace.dtype))
     assert w in tspace
 
 
@@ -60,7 +61,7 @@ def test_one(tspace):
 
 
 def test_ndarray_init(tspace):
-    x0 = np.arange(tspace.size)
+    x0 = np.arange(tspace.size).reshape(tspace.shape)
     x = tspace.element(x0)
 
     assert all_almost_equal(x0, x)
@@ -68,64 +69,55 @@ def test_ndarray_init(tspace):
 
 def test_getitem(tspace):
     indices = np.random.randint(0, tspace.size - 1, 5)
+    indices = np.unravel_index(indices, tspace.shape)
 
-    x0 = np.arange(tspace.size)
+    x0 = np.arange(tspace.size).reshape(tspace.shape)
     x = tspace.element(x0)
 
-    for index in indices:
-        assert x[index] == index
+    for index in zip(*indices):
+        assert x[index] == np.ravel_multi_index(index, tspace.shape)
 
 
 def test_setitem(tspace):
     indices = np.random.randint(0, tspace.size - 1, 5)
+    indices = np.unravel_index(indices, tspace.shape)
 
-    x0 = np.arange(tspace.size)
-    x = tspace.element(x0)
+    x = tspace.zero()
 
-    for index in indices:
-        x[index] = -index
-        assert x[index] == -index
-
-
-def tspace_weighting(tspace):
-    """ Get the weighting of a tensor space """
-
-    # TODO: use actual weighting
-
-    if isinstance(tspace, odl.DiscreteLp):
-        return tspace.domain.volume / tspace.size
-    else:
-        return 1.0
+    for index in zip(*indices):
+        flat_index = np.ravel_multi_index(index, tspace.shape)
+        x[index] = -flat_index
+        assert x[index] == -flat_index
 
 
 def test_inner(tspace):
-    weighting = tspace_weighting(tspace)
+    weighting_const = tspace.weighting.const
 
     [xarr, yarr], [x, y] = noise_elements(tspace, 2)
 
-    correct_inner = np.vdot(yarr, xarr) * weighting
+    correct_inner = np.vdot(yarr, xarr) * weighting_const
 
     assert almost_equal(tspace.inner(x, y), correct_inner, places=2)
     assert almost_equal(x.inner(y), correct_inner, places=2)
 
 
 def test_norm(tspace):
-    weighting = np.sqrt(tspace_weighting(tspace))
+    weighting_const = tspace.weighting.const
 
     xarr, x = noise_elements(tspace)
 
-    correct_norm = np.linalg.norm(xarr) * weighting
+    correct_norm = np.linalg.norm(xarr) * np.sqrt(weighting_const)
 
     assert almost_equal(tspace.norm(x), correct_norm, places=2)
     assert almost_equal(x.norm(), correct_norm, places=2)
 
 
 def test_dist(tspace):
-    weighting = np.sqrt(tspace_weighting(tspace))
+    weighting_const = tspace.weighting.const
 
     [xarr, yarr], [x, y] = noise_elements(tspace, 2)
 
-    correct_dist = np.linalg.norm(xarr - yarr) * weighting
+    correct_dist = np.linalg.norm(xarr - yarr) * np.sqrt(weighting_const)
 
     assert almost_equal(tspace.dist(x, y), correct_dist, places=2)
     assert almost_equal(x.dist(y), correct_dist, places=2)
@@ -141,8 +133,7 @@ def _test_lincomb(tspace, a, b):
     z_arr[:] = a * x_arr + b * y_arr
     z.lincomb(a, x, b, y)
 
-    order = getattr(z, 'order', None)
-    assert all_almost_equal(z.asarray().ravel(order), z_arr, places=2)
+    assert all_almost_equal(z, z_arr, places=2)
 
 
 def test_lincomb(tspace):
