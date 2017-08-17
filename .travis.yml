@@ -15,8 +15,6 @@ addons:
             texlive-latex-extra
             dvipng
 
-# Enable cache for $HOME/.cache/pip (wheels and such)
-cache: pip
 
 # Setup numpy + scipy using miniconda
 # See http://conda.pydata.org/docs/travis.html
