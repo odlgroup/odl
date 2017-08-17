@@ -180,7 +180,7 @@ def test_equals_space(exponent):
     assert hash(x1) != hash(y)
 
 
-def test_equals_vec(exponent):
+def test_equals_elem(exponent):
     r3 = odl.tensor_space(3, exponent=exponent)
     r4 = odl.tensor_space(4, exponent=exponent)
     x1 = r3.element([1, 2, 3])
@@ -771,14 +771,14 @@ def test_array_weighting_init(exponent):
 def test_array_weighting_array_is_valid():
     rn = odl.rn(5)
     weight_arr = _pos_array(rn)
-    weighting_vec = NumpyTensorSpaceArrayWeighting(weight_arr)
+    weighting_arr = NumpyTensorSpaceArrayWeighting(weight_arr)
 
-    assert weighting_vec.is_valid()
+    assert weighting_arr.is_valid()
 
     # Invalid
     weight_arr[0] = 0
-    weighting_vec = NumpyTensorSpaceArrayWeighting(weight_arr)
-    assert not weighting_vec.is_valid()
+    weighting_arr = NumpyTensorSpaceArrayWeighting(weight_arr)
+    assert not weighting_arr.is_valid()
 
 
 def test_array_weighting_equals():
@@ -786,19 +786,19 @@ def test_array_weighting_equals():
     weight_arr = _pos_array(rn)
     weight_elem = rn.element(weight_arr)
 
-    weighting_vec = NumpyTensorSpaceArrayWeighting(weight_arr)
-    weighting_vec2 = NumpyTensorSpaceArrayWeighting(weight_arr)
+    weighting_arr = NumpyTensorSpaceArrayWeighting(weight_arr)
+    weighting_arr2 = NumpyTensorSpaceArrayWeighting(weight_arr)
     weighting_elem = NumpyTensorSpaceArrayWeighting(weight_elem)
     weighting_elem2 = NumpyTensorSpaceArrayWeighting(weight_elem)
-    weighting_other_vec = NumpyTensorSpaceArrayWeighting(weight_arr - 1)
+    weighting_other_arr = NumpyTensorSpaceArrayWeighting(weight_arr - 1)
     weighting_other_exp = NumpyTensorSpaceArrayWeighting(weight_arr - 1,
                                                          exponent=1)
 
-    assert weighting_vec == weighting_vec2
-    assert weighting_vec != weighting_elem
+    assert weighting_arr == weighting_arr2
+    assert weighting_arr != weighting_elem
     assert weighting_elem == weighting_elem2
-    assert weighting_vec != weighting_other_vec
-    assert weighting_vec != weighting_other_exp
+    assert weighting_arr != weighting_other_arr
+    assert weighting_arr != weighting_other_exp
 
 
 def test_array_weighting_equiv():
