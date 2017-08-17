@@ -1299,24 +1299,24 @@ class ComplexModulus(Operator):
         Parameters
         ----------
         space : `FnBase`
-            Space which real part should be taken, needs to implement
+            Space whose real part should be taken, needs to implement
             ``space.real_space``.
 
         Examples
         --------
-        Take the real part of complex vector:
+        Take the real part of a complex vector:
 
         >>> c2 = odl.cn(2)
         >>> op = odl.ComplexModulus(c2)
         >>> op([3 + 4j, 2])
-        rn(2).element([5.0, 2.0])
+        rn(2).element([ 5.,  2.])
 
         The operator is the absolute value on real spaces:
 
         >>> r2 = odl.rn(2)
         >>> op = odl.ComplexModulus(r2)
         >>> op([1, -2])
-        rn(2).element([1.0, 2.0])
+        rn(2).element([ 1.,  2.])
 
         The operator also works on other `FnBase` spaces such as
         `DiscreteLp` spaces:
@@ -1324,7 +1324,7 @@ class ComplexModulus(Operator):
         >>> r2 = odl.uniform_discr(0, 1, 2, dtype=complex)
         >>> op = odl.ComplexModulus(r2)
         >>> op([3 + 4j, 2])
-        uniform_discr(0.0, 1.0, 2).element([5.0, 2.0])
+        uniform_discr(0.0, 1.0, 2).element([ 5.,  2.])
         """
         real_space = space.real_space
         linear = (space == real_space)
@@ -1345,7 +1345,7 @@ class ComplexModulus(Operator):
         >>> r2 = odl.rn(2)
         >>> op = ComplexModulus(r2)
         >>> op.inverse(op([1, -2]))
-        rn(2).element([1.0, 2.0])
+        rn(2).element([ 1.,  2.])
 
         If the domain is complex, a pseudo-inverse is taken, assigning equal
         positive weights to the real and complex parts:
@@ -1353,7 +1353,7 @@ class ComplexModulus(Operator):
         >>> c2 = odl.cn(2)
         >>> op = ComplexModulus(c2)
         >>> op.inverse(op([np.sqrt(2), 2 + 2j]))
-        cn(2).element([(1+1j), (2+2j)])
+        cn(2).element([ 1.+1.j,  2.+2.j])
         """
         if self.is_linear:
             return IdentityOperator(self.domain)
