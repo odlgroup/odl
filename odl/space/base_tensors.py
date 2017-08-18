@@ -671,13 +671,9 @@ class Tensor(LinearSpaceElement):
             a native implementations if possible.
 
         .. note::
-            When using operations that alter the shape (like ``reduce``),
-            or the data type (can be any of the methods),
-            the resulting array is wrapped in a space of the same
-            type as ``self.space``, however **only** using the minimal
-            set of parameters ``shape``, ``dtype`` and ``order``. If more
-            properties (e.g. weighting) should be propagated, this method
-            must be overridden.
+            If no ``out`` parameter is provided, this implementation
+            just returns the raw array and does not attempt to wrap the
+            result in any kind of space.
 
         Parameters
         ----------
@@ -703,116 +699,6 @@ class Tensor(LinearSpaceElement):
             of such, depending on the number of outputs of ``ufunc``.
             If ``out`` was provided, the returned object or tuple entries
             refer(s) to ``out``.
-
-        Examples
-        --------
-        We apply `numpy.add` to ODL tensors:
-
-        >>> r3 = odl.rn(3)
-        >>> x = r3.element([1, 2, 3])
-        >>> y = r3.element([-1, -2, -3])
-        >>> x.__array_ufunc__(np.add, '__call__', x, y)
-        rn(3).element([ 0.,  0.,  0.])
-        >>> np.add(x, y)  # same mechanism for Numpy >= 1.13
-        rn(3).element([ 0.,  0.,  0.])
-
-        As ``out``, a Numpy array or an ODL tensor can be given (wrapped
-        in a sequence):
-
-        >>> out = r3.element()
-        >>> res = x.__array_ufunc__(np.add, '__call__', x, y, out=(out,))
-        >>> out
-        rn(3).element([ 0.,  0.,  0.])
-        >>> res is out
-        True
-        >>> out_arr = np.empty(3)
-        >>> res = x.__array_ufunc__(np.add, '__call__', x, y, out=(out_arr,))
-        >>> out_arr
-        array([ 0.,  0.,  0.])
-        >>> res is out_arr
-        True
-
-        With multiple dimensions:
-
-        >>> r23 = odl.rn((2, 3))
-        >>> x = y = r23.one()
-        >>> x.__array_ufunc__(np.add, '__call__', x, y)
-        rn((2, 3)).element(
-            [[ 2.,  2.,  2.],
-             [ 2.,  2.,  2.]]
-        )
-
-        The ``ufunc.accumulate`` method retains the original `shape` and
-        `dtype`. The latter can be changed with the ``dtype`` parameter:
-
-        >>> x = r3.element([1, 2, 3])
-        >>> x.__array_ufunc__(np.add, 'accumulate', x)
-        rn(3).element([ 1.,  3.,  6.])
-        >>> np.add.accumulate(x)  # same mechanism for Numpy >= 1.13
-        rn(3).element([ 1.,  3.,  6.])
-        >>> x.__array_ufunc__(np.add, 'accumulate', x, dtype=complex)
-        cn(3).element([ 1.+0.j,  3.+0.j,  6.+0.j])
-
-        For multi-dimensional tensors, an optional ``axis`` parameter
-        can be provided:
-
-        >>> z = r23.one()
-        >>> z.__array_ufunc__(np.add, 'accumulate', z, axis=1)
-        rn((2, 3)).element(
-            [[ 1.,  2.,  3.],
-             [ 1.,  2.,  3.]]
-        )
-
-        The ``ufunc.at`` method operates in-place. Here we add the second
-        operand ``[5, 10]`` to ``x`` at indices ``[0, 2]``:
-
-        >>> x = r3.element([1, 2, 3])
-        >>> x.__array_ufunc__(np.add, 'at', x, [0, 2], [5, 10])
-        >>> x
-        rn(3).element([  6.,   2.,  13.])
-
-        For outer-product-type operations, i.e., operations where the result
-        shape is the sum of the individual shapes, the ``ufunc.outer``
-        method can be used:
-
-        >>> x = odl.rn(2).element([0, 3])
-        >>> y = odl.rn(3).element([1, 2, 3])
-        >>> x.__array_ufunc__(np.add, 'outer', x, y)
-        rn((2, 3)).element(
-            [[ 1.,  2.,  3.],
-             [ 4.,  5.,  6.]]
-        )
-        >>> y.__array_ufunc__(np.add, 'outer', y, x)
-        rn((3, 2)).element(
-            [[ 1.,  4.],
-             [ 2.,  5.],
-             [ 3.,  6.]]
-        )
-
-        Using ``ufunc.reduce`` produces a scalar, which can be avoided with
-        ``keepdims=True``:
-
-        >>> x = r3.element([1, 2, 3])
-        >>> x.__array_ufunc__(np.add, 'reduce', x)
-        6.0
-        >>> x.__array_ufunc__(np.add, 'reduce', x, keepdims=True)
-        rn(1).element([ 6.])
-
-        In multiple dimensions, ``axis`` can be provided for reduction over
-        selected axes:
-
-        >>> z = r23.element([[1, 2, 3],
-        ...                  [4, 5, 6]])
-        >>> z.__array_ufunc__(np.add, 'reduce', z, axis=1)
-        rn(2).element([  6.,  15.])
-
-        Finally, ``add.reduceat`` is a combination of ``reduce`` and
-        ``at`` with rather flexible and complex semantics (see the
-        `reduceat documentation`_ for details):
-
-        >>> x = r3.element([1, 2, 3])
-        >>> x.__array_ufunc__(np.add, 'reduceat', x, [0, 1])
-        rn(2).element([ 1.,  5.])
 
         References
         ----------
@@ -902,12 +788,8 @@ numpy.ufunc.reduceat.html
                     kwargs['out'] = out_arr
                     res = ufunc(*inputs, **kwargs)
 
-                # Wrap result if necessary (lazily)
-                if out is None:
-                    out_space = type(self.space)(self.shape, res.dtype, order)
-                    out = out_space.element(res)
-
-                return out
+                # Return result (may be a raw array or a space element)
+                return res
 
             elif ufunc.nout == 2:
                 # Make contexts for outputs (trivial ones return `None`)
@@ -925,23 +807,17 @@ numpy.ufunc.reduceat.html
                     kwargs['out'] = (out1_arr, out2_arr)
                     res1, res2 = ufunc(*inputs, **kwargs)
 
-                # Wrap results if necessary (lazily)
-                if out1 is None:
-                    out1_space = type(self.space)(self.shape, res1.dtype,
-                                                  order)
-                    out1 = out1_space.element(res1)
-                if out2 is None:
-                    out2_space = type(self.space)(self.shape, res2.dtype,
-                                                  order)
-                    out2 = out2_space.element(res2)
-
-                return out1, out2
+                # Return results (may be raw arrays or space elements)
+                return res1, res2
 
             else:
                 raise NotImplementedError('nout = {} not supported'
                                           ''.format(ufunc.nout))
 
         else:  # method != '__call__'
+            # `order` keyword arg is not allowed for some methods, removing it
+            kwargs.pop('order', None)
+
             # Make context for output (trivial one returns `None`)
             if out is None:
                 out_ctx = CtxNone()
@@ -949,24 +825,16 @@ numpy.ufunc.reduceat.html
                 out_ctx = writable_array(out, **array_kwargs)
 
             # Evaluate ufunc method
-            with out_ctx as out_arr:
-                if method != 'at':
-                    # No kwargs allowed for 'at'
+            if method == 'at':
+                with writable_array(inputs[0]) as inp_arr:
+                    res = ufunc.at(inp_arr, *inputs[1:], **kwargs)
+            else:
+                with out_ctx as out_arr:
                     kwargs['out'] = out_arr
-                res = getattr(ufunc, method)(*inputs, **kwargs)
+                    res = getattr(ufunc, method)(*inputs, **kwargs)
 
-            # Shortcut for scalar or no return value
-            if np.isscalar(res) or res is None:
-                # The first occurs for `reduce` with all axes,
-                # the second for in-place stuff (`at` currently)
-                return res
-
-            # Wrap result if necessary (lazily)
-            if out is None:
-                out_space = type(self.space)(res.shape, res.dtype, order)
-                out = out_space.element(res)
-
-            return out
+            # Return result (may be scalar, raw array or space element)
+            return res
 
     # Old ufuncs interface, will be deprecated when Numpy 1.13 becomes minimum
 
