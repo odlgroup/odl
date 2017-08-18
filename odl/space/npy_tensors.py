@@ -223,6 +223,9 @@ class NumpyTensorSpace(TensorSpace):
         tensor_space((2, 3), 'int')
         """
         TensorSpace.__init__(self, shape, dtype, order)
+        if self.dtype.char not in self.available_dtypes():
+            raise ValueError('`dtype` {!r} not supported'
+                             ''.format(dtype_str(dtype)))
 
         dist = kwargs.pop('dist', None)
         norm = kwargs.pop('norm', None)
