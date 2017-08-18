@@ -707,7 +707,7 @@ def tgv_phantom(space, edge_smoothing=0.2):
     ----------
     [Bre+2010] K. Bredies, K. Kunisch, and T. Pock.
     *Total Generalized Variation*. SIAM Journal on Imaging Sciences,
-    3(3):492–526, Jan. 2010
+    3(3):492-526, Jan. 2010
     """
     if space.ndim != 2:
         raise ValueError('`space.ndim` must be 2, got {}'
