@@ -118,41 +118,45 @@ def adam(f, x, learning_rate=1e-3, beta1=0.9, beta2=0.999, eps=1e-8,
     .. math::
         \min f(x)
 
-    The algorithm is intended for unconstrained problems.
+    where :math:`f` is a differentiable functional.
 
-    The algorithm is described in
-    `Adam: A Method for Stochastic Optimization
-    <https://arxiv.org/abs/1412.6980>`_. All parameter names are taken from
-    that article.
+    The algorithm is described in [KB2015] (`arxiv
+    <https://arxiv.org/abs/1412.6980>`_). All parameter names and default
+    valuesare taken from the article.
 
     Parameters
     ----------
     f : `Functional`
         Goal functional. Needs to have ``f.gradient``.
     x : ``f.domain`` element
-        Starting point of the iteration
-    learning_rate : float, optional
+        Starting point of the iteration, updated in place.
+    learning_rate : positive float, optional
         Step length of the method.
-    beta1 : float, optional
+    beta1 : float in [0, 1), optional
         Update rate for first order moment estimate.
-    beta2 : float, optional
+    beta2 : float in [0, 1), optional
         Update rate for second order moment estimate.
-    eps : float, optional
+    eps : positive float, optional
         A small constant for numerical stability.
     maxiter : int, optional
         Maximum number of iterations.
-    tol : float, optional
+    tol : positive float, optional
         Tolerance that should be used for terminating the iteration.
     callback : callable, optional
-        Object executing code per iteration, e.g. plotting each iterate
+        Object executing code per iteration, e.g. plotting each iterate.
 
     See Also
     --------
-    odl.solvers.smooth.gradient.steepest_descent : simple steepest descent
+    odl.solvers.smooth.gradient.steepest_descent : Simple gradient descent.
     odl.solvers.iterative.iterative.landweber :
-        Optimized solver for the case ``f(x) = ||Ax - b||_2^2``
+        Optimized solver for the case ``f(x) = ||Ax - b||_2^2``.
     odl.solvers.iterative.iterative.conjugate_gradient :
-        Optimized solver for the case ``f(x) = x^T Ax - 2 x^T b``
+        Optimized solver for the case ``f(x) = x^T Ax - 2 x^T b``.
+
+    References
+    ----------
+    [KB2015] Kingma, D P and Ba, J.
+    *Adam: A Method for Stochastic Optimization*, ICLR 2015.
     """
     grad = f.gradient
     if x not in grad.domain:
@@ -174,7 +178,7 @@ def adam(f, x, learning_rate=1e-3, beta1=0.9, beta2=0.999, eps=1e-8,
 
         step = learning_rate * np.sqrt(1 - beta2) / (1 - beta1)
 
-        x.lincomb(1, x, -step, m / np.sqrt(v + eps))
+        x.lincomb(1, x, -step, m / (np.sqrt(v) + eps))
 
         if callback is not None:
             callback(x)
