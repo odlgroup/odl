@@ -633,7 +633,7 @@ class ProductSpaceElement(LinearSpaceElement):
     def shape(self):
         """Number of spaces per axis."""
         return self.space.shape
-    
+
     @property
     def size(self):
         """Number of factors of this element's space."""
@@ -715,15 +715,20 @@ class ProductSpaceElement(LinearSpaceElement):
 
     def __array__(self):
         """An array representation of ``self``.
-        
+
         Only available if `is_power_space` is True.
-        
+
+        The ordering is such that it commutes with indexing::
+
+            np.asarray(self[ind]) == np.asarray(self)[ind]
+
         Examples
         --------
-        >>> spc = odl.ProductSpace(odl.rn(2), 2)
+        >>> spc = odl.ProductSpace(odl.rn(2), 3)
         >>> x = spc.one()
         >>> np.asarray(x)
         array([[ 1.,  1.],
+               [ 1.,  1.],
                [ 1.,  1.]])
         """
         if not self.space.is_power_space:
