@@ -1383,10 +1383,8 @@ class NumpyTensor(Tensor):
             When using operations that alter the shape (like ``reduce``),
             or the data type (can be any of the methods),
             the resulting array is wrapped in a space of the same
-            type as ``self.space``, however **only** using the minimal
-            set of parameters ``shape``, ``dtype`` and ``order``. If more
-            properties (e.g. weighting) should be propagated, this method
-            must be overridden.
+            type as ``self.space``, propagating space properties like
+            `exponent` or `weighting` as closely as possible.
 
         Parameters
         ----------
@@ -1540,6 +1538,9 @@ arrays.classes.rst#special-attributes-and-methods
            https://docs.scipy.org/doc/numpy/reference/generated/\
 numpy.ufunc.reduceat.html
         """
+        # Remark: this method differs from the parent implementation only
+        # in the propagation of additional space properties.
+
         # --- Process `out` --- #
 
         # Unwrap out if provided. The output parameters are all wrapped
@@ -1557,9 +1558,12 @@ numpy.ufunc.reduceat.html
                 'ufunc {}: need 0 or 1 `out` arguments for `method={!r}`, '
                 'got {}'.format(ufunc.__name__, method, len(out_tuple)))
 
-        # We allow our own tensors and `numpy.ndarray` objects as `out`
-        if not all(isinstance(out, (type(self), np.ndarray)) or out is None
-                   for out in out_tuple):
+        # We allow our own tensors, the data container type and
+        # `numpy.ndarray` objects as `out` (see docs for reason for the
+        # latter)
+        valid_types = (type(self), type(self.data), np.ndarray)
+        if not all(isinstance(o, valid_types) or o is None
+                   for o in out_tuple):
             return NotImplemented
 
         # Assign to `out` or `out1` and `out2`, respectively
@@ -1614,8 +1618,10 @@ numpy.ufunc.reduceat.html
                 # Wrap result if necessary (lazily)
                 if out is None:
                     if is_floating_dtype(res.dtype):
+                        # Weighting contains exponent
                         spc_kwargs = {'weighting': weighting}
                     else:
+                        # No `exponent` or `weighting` applicable
                         spc_kwargs = {}
                     out_space = type(self.space)(self.shape, res.dtype, order,
                                                  **spc_kwargs)
@@ -1658,6 +1664,9 @@ numpy.ufunc.reduceat.html
                                           ''.format(ufunc.nout))
 
         else:  # method != '__call__'
+            # `order` keyword arg is not allowed for some methods, removing it
+            kwargs.pop('order', None)
+
             # Make context for output (trivial one returns `None`)
             if out is None:
                 out_ctx = CtxNone()
