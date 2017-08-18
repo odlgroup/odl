@@ -1,4 +1,4 @@
-﻿# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2017 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -716,7 +716,7 @@ def tgv_phantom(space, edge_smoothing=0.2):
     y, x = space.meshgrid
 
     # Use a smooth sigmoid to get some anti-aliasing across edges.
-    scale = edge_smoothing * np.min(space.cell_sides)
+    scale = edge_smoothing / np.min(space.shape)
 
     def sigmoid(val):
         if edge_smoothing != 0:
