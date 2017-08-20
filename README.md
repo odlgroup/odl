@@ -87,23 +87,20 @@ Mozilla Public License version 2.0 or later. See the [LICENSE](LICENSE) file.
 
 ODL developers
 --------------
-To contact the developers either [open an issue on the issue tracker](https://github.com/odlgroup/odl/issues/) or send an email to odl@math.kth.se
+The project was started is maintained by Jonas Adler ([@adler-j](https://github.com/adler-j)) and Holger Kohr ([@kohr-h](https://github.com/kohr-h)). Several others have given significant contributions, including:
 
-##### Main developers
-- Jonas Adler ([@adler-j](https://github.com/adler-j))
-- Holger Kohr ([@kohr-h](https://github.com/kohr-h))
+[Chong Chen](https://github.com/chongchenmath),
+[Matthias J. Ehrhardt](https://github.com/matthiasje),
+[Johan Karlsson](https://github.com/hilding79),
+[Julian Moosmann](https://github.com/moosmann),
+[Kati Niinimäki](https://github.com/niinimaki),
+[Willem Jan Palenstijn](https://github.com/wjp),
+[Axel Ringh](https://github.com/aringh),
+[Olivier Verdier](https://github.com/olivierverdier),
+[Gustav Zickert](https://github.com/zickert) and
+[Ozan Öktem](https://github.com/ozanoktem).
 
-##### Contributors
-- Chong Chen ([@chongchenmath](https://github.com/chongchenmath))
-- Matthias J. Ehrhardt ([@MatthiasJE](https://github.com/matthiasje))
-- Johan Karlsson ([@hilding79](https://github.com/hilding79))
-- Julian Moosmann ([@moosmann](https://github.com/moosmann))
-- Kati Niinimäki ([@niinimaki](https://github.com/niinimaki))
-- Willem Jan Palenstijn ([@wjp](https://github.com/wjp))
-- Axel Ringh ([@aringh](https://github.com/aringh))
-- Olivier Verdier ([@olivierverdier](https://github.com/olivierverdier))
-- Gustav Zickert ([@zickert](https://github.com/zickert))
-- Ozan Öktem ([@ozanoktem](https://github.com/ozanoktem))
+To contact the developers either [open an issue on the issue tracker](https://github.com/odlgroup/odl/issues/) or send an email to <odl@math.kth.se>
 
 Funding
 -------
