@@ -12,8 +12,6 @@ External packages can add implementations of `NtuplesBase` and `FnBase` by
 hooking into the setuptools entry point ``'odl.space'`` and exposing the
 methods ``ntuples_impls`` and ``fn_impls``.
 
-Notes
------
 This is used with functions such as `rn`, `fn` and `uniform_discr` in order
 to allow arbitrary implementations.
 
@@ -36,16 +34,14 @@ __all__ = ('ntuples_impl_names', 'fn_impl_names',
 
 
 IS_INITIALIZED = False
-NTUPLES_IMPLS = {}
-FN_IMPLS = {}
+NTUPLES_IMPLS = {'numpy': NumpyNtuples}
+FN_IMPLS = {'numpy': NumpyFn}
 
 
 def _initialize_if_needed():
     """Initialize ``NTUPLES_IMPLS`` and ``FN_IMPLS`` if not already done."""
     global IS_INITIALIZED, NTUPLES_IMPLS, FN_IMPLS
     if not IS_INITIALIZED:
-        NTUPLES_IMPLS = {'numpy': NumpyNtuples}
-        FN_IMPLS = {'numpy': NumpyFn}
         for entry_point in iter_entry_points(group='odl.space', name=None):
             try:
                 module = entry_point.load()
@@ -69,7 +65,7 @@ def fn_impl_names():
 
 
 def ntuples_impl(impl):
-    """Class corresponding to key.
+    """N-tuples class corresponding to key.
 
     Parameters
     ----------
@@ -81,17 +77,16 @@ def ntuples_impl(impl):
     ntuples_imple : `type`
         Class inheriting from `NtuplesBase`.
     """
-    if impl == 'numpy':
+    if impl != 'numpy':
         # Shortcut to improve "import odl" times since most users do not use
         # non-numpy backend.
-        return NumpyNtuples
-    else:
         _initialize_if_needed()
-        return NTUPLES_IMPLS[impl]
+
+    return NTUPLES_IMPLS[impl]
 
 
 def fn_impl(impl):
-    """Class corresponding to key.
+    """Fn class corresponding to key.
 
     Parameters
     ----------
@@ -103,10 +98,9 @@ def fn_impl(impl):
     ntuples_imple : `type`
         Class inheriting from `FnBase`.
     """
-    if impl == 'numpy':
+    if impl != 'numpy':
         # Shortcut to improve "import odl" times since most users do not use
         # non-numpy backend.
-        return NumpyFn
-    else:
         _initialize_if_needed()
-        return FN_IMPLS[impl]
+
+    return FN_IMPLS[impl]
