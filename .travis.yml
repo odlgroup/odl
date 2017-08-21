@@ -6,13 +6,10 @@ matrix:
           env: NUMPY_VERSION=1.13
 
         - python: 3.6
-          env: NUMPY_VERSION=1.12 ASTRA=true
+          env: NUMPY_VERSION=1.12
 
         - python: 3.6
-          env: NUMPY_VERSION=1.13 BUILD_DOC=true
-
-        - python: 3.6
-          env: NUMPY_VERSION=1.13 NODEPS=true
+          env: NUMPY_VERSION=1.13 PYGPU=true COVERALLS=true BUILD_DOC=true
 
 sudo: false
 
@@ -47,12 +44,10 @@ install:
     - conda create -n testenv python=$TRAVIS_PYTHON_VERSION nomkl "numpy=$NUMPY_VERSION" scipy future sphinx sphinx_rtd_theme pytest pytest-pep8 pytest-cov
     - source activate testenv
     # We avoid annoying issues with building pyfftw wheels by using a conda-forge version
-    - if [[ "NODEPS" == "" ]]; then
-        conda install pywavelets scikit-image;
-        conda install -c conda-forge pyfftw;
-      fi
-    - if [[ "ASTRA" == "true" ]]; then
-        conda install -c astra-toolbox astra-toolbox;
+    - conda install pywavelets scikit-image
+    - conda install -c conda-forge pyfftw
+    - if [[ "$PYGPU" == "true" ]]; then
+        conda install pygpu;
       fi
 
     # Not on conda, need to use pip
@@ -67,9 +62,9 @@ before_script:
 
 script:
     # Run tests, including PEP8 check, and produce a coverage report
-    - pytest --doctest-modules --cov --cov-report term-missing --pep8 $TRAVIS_BUILD_DIR/odl
+    - pytest --doctest-modules --cov --cov-report term-missing --pep8 $TRAVIS_BUILD_DIR/odl || exit -1
     # Invoke also the alternative way of running the unit tests
-    - python -c "import odl; odl.test()"
+    - python -c "import odl; odl.test()" || exit -1
     # Build the Sphinx doc (only for Python 3.6, master branch, no PR)
     # To avoid clogging the logs, we redirect stderr to /dev/null
     - if [[ "BUILD_DOC" == "true" && "$TRAVIS_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" == "false" ]]; then
@@ -79,7 +74,9 @@ script:
 
 after_success:
     # Push coverage report to coveralls
-    - coveralls
+    - if [[ "$COVERALLS" == "true" ]]; then
+        coveralls;
+      fi
     # Deploy the Sphinx doc to gh-pages (only for Python 3.6, master branch, no PR)
     # See https://github.com/Syntaf/travis-sphinx
     - if [[ "BUILD_DOC" == "true" && "$TRAVIS_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" == "false" ]]; then
