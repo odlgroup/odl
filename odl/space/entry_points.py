@@ -12,14 +12,6 @@ External packages can add implementations of `NtuplesBase` and `FnBase` by
 hooking into the setuptools entry point ``'odl.space'`` and exposing the
 methods ``ntuples_impls`` and ``fn_impls``.
 
-
-Attributes
-----------
-NTUPLES_IMPLS: dict
-    A dictionary that maps a string to an `NtuplesBase` implementation.
-FN_IMPLS: dict
-    A dictionary that maps a string to an `FnBase` implementation.
-
 Notes
 -----
 This is used with functions such as `rn`, `fn` and `uniform_discr` in order
@@ -39,14 +31,82 @@ standard_library.install_aliases()
 from pkg_resources import iter_entry_points
 from odl.space.npy_ntuples import NumpyNtuples, NumpyFn
 
-__all__ = ('NTUPLES_IMPLS', 'FN_IMPLS')
+__all__ = ('ntuples_impl_names', 'fn_impl_names',
+           'ntuples_impl', 'fn_impl')
 
-NTUPLES_IMPLS = {'numpy': NumpyNtuples}
-FN_IMPLS = {'numpy': NumpyFn}
-for entry_point in iter_entry_points(group='odl.space', name=None):
-    try:
-        module = entry_point.load()
-        NTUPLES_IMPLS.update(module.ntuples_impls())
-        FN_IMPLS.update(module.fn_impls())
-    except ImportError:
-        pass
+
+IS_INITIALIZED = False
+NTUPLES_IMPLS = {}
+FN_IMPLS = {}
+
+
+def _initialize_if_needed():
+    """Initialize ``NTUPLES_IMPLS`` and ``FN_IMPLS`` if not already done."""
+    global IS_INITIALIZED, NTUPLES_IMPLS, FN_IMPLS
+    if not IS_INITIALIZED:
+        NTUPLES_IMPLS = {'numpy': NumpyNtuples}
+        FN_IMPLS = {'numpy': NumpyFn}
+        for entry_point in iter_entry_points(group='odl.space', name=None):
+            try:
+                module = entry_point.load()
+                NTUPLES_IMPLS.update(module.ntuples_impls())
+                FN_IMPLS.update(module.fn_impls())
+            except ImportError:
+                pass
+        IS_INITIALIZED = True
+
+
+def ntuples_impl_names():
+    """A list of strings with valid ntuples implementation names."""
+    _initialize_if_needed()
+    return list(NTUPLES_IMPLS.keys())
+
+
+def fn_impl_names():
+    """A list of strings with valid fn implementation names."""
+    _initialize_if_needed()
+    return list(FN_IMPLS.keys())
+
+
+def ntuples_impl(impl):
+    """Class corresponding to key.
+
+    Parameters
+    ----------
+    impl : `str`
+        Name of the implementation, see `ntuples_impl_names` for full list.
+
+    Returns
+    -------
+    ntuples_imple : `type`
+        Class inheriting from `NtuplesBase`.
+    """
+    if impl == 'numpy':
+        # Shortcut to improve "import odl" times since most users do not use
+        # non-numpy backend.
+        return NumpyNtuples
+    else:
+        _initialize_if_needed()
+        return NTUPLES_IMPLS[impl]
+
+
+def fn_impl(impl):
+    """Class corresponding to key.
+
+    Parameters
+    ----------
+    impl : `str`
+        Name of the implementation, see `fn_impl_names` for full list.
+
+    Returns
+    -------
+    ntuples_imple : `type`
+        Class inheriting from `FnBase`.
+    """
+    if impl == 'numpy':
+        # Shortcut to improve "import odl" times since most users do not use
+        # non-numpy backend.
+        return NumpyFn
+    else:
+        _initialize_if_needed()
+        return FN_IMPLS[impl]

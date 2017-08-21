@@ -32,7 +32,7 @@ def space(request, ndim, interp, dtype, fn_impl):
     Generates example spaces with various implementations, dimensions, dtypes
     and interpolations.
     """
-    if np.dtype(dtype) not in odl.FN_IMPLS[fn_impl].available_dtypes():
+    if np.dtype(dtype) not in odl.fn_impl(fn_impl).available_dtypes():
         pytest.skip('dtype not available for this backend')
 
     return odl.uniform_discr([-1] * ndim, [1] * ndim, [20] * ndim,

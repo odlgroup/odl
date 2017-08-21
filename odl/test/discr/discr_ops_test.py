@@ -104,7 +104,7 @@ def test_resizing_op_raise():
 
 
 def test_resizing_op_properties(fn_impl, padding):
-    dtypes = [dt for dt in odl.FN_IMPLS[fn_impl].available_dtypes()
+    dtypes = [dt for dt in odl.fn_impl(fn_impl).available_dtypes()
               if is_scalar_dtype(dt)]
 
     pad_mode, pad_const = padding
@@ -143,7 +143,7 @@ def test_resizing_op_properties(fn_impl, padding):
 
 
 def test_resizing_op_call(fn_impl):
-    dtypes = [dt for dt in odl.FN_IMPLS[fn_impl].available_dtypes()
+    dtypes = [dt for dt in odl.fn_impl(fn_impl).available_dtypes()
               if is_scalar_dtype(dt)]
 
     for dtype in dtypes:
@@ -194,7 +194,7 @@ def test_resizing_op_deriv(padding):
 
 def test_resizing_op_inverse(padding, fn_impl):
     pad_mode, pad_const = padding
-    dtypes = [dt for dt in odl.FN_IMPLS[fn_impl].available_dtypes()
+    dtypes = [dt for dt in odl.fn_impl(fn_impl).available_dtypes()
               if is_scalar_dtype(dt)]
 
     for dtype in dtypes:
@@ -212,7 +212,7 @@ def test_resizing_op_inverse(padding, fn_impl):
 
 def test_resizing_op_adjoint(padding, fn_impl):
     pad_mode, pad_const = padding
-    dtypes = [dt for dt in odl.FN_IMPLS[fn_impl].available_dtypes()
+    dtypes = [dt for dt in odl.fn_impl(fn_impl).available_dtypes()
               if is_real_floating_dtype(dt)]
 
     for dtype in dtypes:

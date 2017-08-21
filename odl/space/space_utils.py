@@ -18,7 +18,7 @@ __all__ = ('vector', 'ntuples', 'fn', 'cn', 'rn')
 import numpy as np
 
 from odl.set import RealNumbers, ComplexNumbers
-from odl.space.entry_points import NTUPLES_IMPLS, FN_IMPLS
+from odl.space.entry_points import ntuples_impl, fn_impl
 from odl.util import (
     is_real_floating_dtype, is_complex_floating_dtype, is_scalar_dtype)
 
@@ -35,8 +35,8 @@ def vector(array, dtype=None, impl='numpy'):
         Set the data type of the vector manually with this option.
         By default, the space type is inferred from the input data.
     impl : string, optional
-        The backend to use. See `odl.space.entry_points.NTUPLES_IMPLS` and
-        `odl.space.entry_points.FN_IMPLS` for available options.
+        The backend to use. See `odl.space.entry_points.ntuples_impl_names` and
+        `odl.space.entry_points.fn_impl_names` for available options.
 
     Returns
     -------
@@ -106,7 +106,7 @@ def ntuples(size, dtype, impl='numpy', **kwargs):
 
         Only complex floating-point data types are allowed.
     impl : string, optional
-        The backend to use. See `odl.space.entry_points.NTUPLES_IMPLS` for
+        The backend to use. See `odl.space.entry_points.ntuples_impl_names` for
         available options.
     kwargs :
         Extra keyword arguments to pass to the implmentation.
@@ -119,7 +119,7 @@ def ntuples(size, dtype, impl='numpy', **kwargs):
     --------
     fn : n-tuples over a field with arbitrary scalar data type.
     """
-    return NTUPLES_IMPLS[impl](size, dtype, **kwargs)
+    return ntuples_impl(impl)(size, dtype, **kwargs)
 
 
 def fn(size, dtype=None, impl='numpy', **kwargs):
@@ -138,7 +138,7 @@ def fn(size, dtype=None, impl='numpy', **kwargs):
         Default: default of the implementation given by calling
         ``default_dtype()`` on the `FnBase` implementation.
     impl : string, optional
-        The backend to use. See `odl.space.entry_points.FN_IMPLS` for
+        The backend to use. See `odl.space.entry_points.fn_impl_names` for
         available options.
     kwargs :
         Extra keyword arguments to pass to the implmentation.
@@ -151,14 +151,12 @@ def fn(size, dtype=None, impl='numpy', **kwargs):
     --------
     ntuples : n-tuples over a field with arbitrary data type.
     """
-    fn_impl = FN_IMPLS[impl]
+    fn_cls = fn_impl(impl)
 
     if dtype is None:
         dtype = fn_impl.default_dtype()
 
-    fn = fn_impl(size, dtype, **kwargs)
-
-    return fn
+    return fn_cls(size, dtype=dtype, **kwargs)
 
 
 def cn(size, dtype=None, impl='numpy', **kwargs):
@@ -179,7 +177,7 @@ def cn(size, dtype=None, impl='numpy', **kwargs):
         Default: default of the implementation given by calling
         ``default_dtype(ComplexNumbers())`` on the `FnBase` implementation.
     impl : string, optional
-        The backend to use. See `odl.space.entry_points.FN_IMPLS` for
+        The backend to use. See `odl.space.entry_points.fn_impl_names` for
         available options.
     kwargs :
         Extra keyword arguments to pass to the implmentation.
@@ -192,12 +190,12 @@ def cn(size, dtype=None, impl='numpy', **kwargs):
     --------
     fn : n-tuples over a field with arbitrary scalar data type.
     """
-    cn_impl = FN_IMPLS[impl]
+    cn_cls = fn_impl(impl)
 
     if dtype is None:
-        dtype = cn_impl.default_dtype(ComplexNumbers())
+        dtype = cn_cls.default_dtype(ComplexNumbers())
 
-    cn = cn_impl(size, dtype, **kwargs)
+    cn = cn_cls(size, dtype, **kwargs)
 
     if not cn.is_cn:
         raise TypeError('data type {!r} not a complex floating-point type.'
@@ -222,7 +220,7 @@ def rn(size, dtype=None, impl='numpy', **kwargs):
         Default: default of the implementation given by calling
         ``default_dtype(RealNumbers())`` on the `FnBase` implementation.
     impl : string, optional
-        The backend to use. See `odl.space.entry_points.FN_IMPLS` for
+        The backend to use. See `odl.space.entry_points.fn_impl_names` for
         available options.
     kwargs :
         Extra keyword arguments to pass to the implmentation.
@@ -235,7 +233,7 @@ def rn(size, dtype=None, impl='numpy', **kwargs):
     --------
     fn : n-tuples over a field with arbitrary scalar data type.
     """
-    rn_impl = FN_IMPLS[impl]
+    rn_impl = fn_impl(impl)
 
     if dtype is None:
         dtype = rn_impl.default_dtype(RealNumbers())
