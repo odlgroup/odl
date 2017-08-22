@@ -1,4 +1,4 @@
-"""Total variation tomography using the primal-dual hybrid gradient algorithm.
+"""Total variation tomography using PDHG.
 
 Solves the optimization problem
 
@@ -8,7 +8,7 @@ Where ``A`` is a parallel beam forward projector, ``grad`` the spatial
 gradient and ``g`` is given noisy data.
 
 For further details and a description of the solution method used, see
-:ref:`chambolle_pock` in the ODL documentation.
+:ref:`PDHG` in the ODL documentation.
 """
 
 import numpy as np
@@ -79,8 +79,8 @@ callback = (odl.solvers.CallbackPrintIteration() &
 x = op.domain.zero()
 
 # Run the algorithm
-odl.solvers.primal_dual_hybrid_gradient_solver(
-    x, f, g, op, tau=tau, sigma=sigma, niter=niter, callback=callback)
+odl.solvers.pdhg(x, f, g, op, tau=tau, sigma=sigma, niter=niter,
+                 callback=callback)
 
 # Display images
 discr_phantom.show(title='Phantom')

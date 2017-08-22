@@ -6,7 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""First-order primal-dual algorithm studied by Chambolle and Pock.
+"""Primal-dual hybrid gradient (PDHG) algorithm studied by Chambolle and Pock.
 
 The primal-dual hybrid gradient algorithm is a flexible method well suited for
 non-smooth convex optimization problems in imaging.
@@ -20,14 +20,13 @@ import numpy as np
 from odl.operator import Operator
 
 
-__all__ = ('primal_dual_hybrid_gradient_solver',)
+__all__ = ('pdhg',)
 
 
 # TODO: add dual gap as convergence measure
 # TODO: diagonal preconditioning
 
-def primal_dual_hybrid_gradient_solver(x, f, g, L, tau, sigma, niter,
-                                       **kwargs):
+def pdhg(x, f, g, L, tau, sigma, niter,  **kwargs):
     """Primal-dual hybrid gradient algorithm for non-smooth convex optimization
     problems.
 
@@ -79,12 +78,14 @@ def primal_dual_hybrid_gradient_solver(x, f, g, L, tau, sigma, niter,
         causes variable relaxation parameter and step sizes to be used,
         with ``tau`` and ``sigma`` as initial values. Requires ``G`` to be
         strongly convex. ``gamma_primal`` is the strong convexity constant of
-        ``G``.
+        ``G``. Acceleration can either be done on the primal part or the dual
+        part but not on both simultaneously.
         Default: ``None``
     gamma_dual : non-negative float, optional
         Acceleration parameter as ``gamma_primal`` but for dual variable.
         Requires ``F^*`` to be strongly convex. ``gamma_dual`` is the strong
-        convexity constant of ``F^*``.
+        convexity constant of ``F^*``. Acceleration can either be done on the
+        primal part or the dual part but not on both simultaneously.
         Default: ``None`
     x_relax : ``op.domain`` element, optional
         Required to resume iteration. For ``None``, a copy of the primal
@@ -131,7 +132,7 @@ def primal_dual_hybrid_gradient_solver(x, f, g, L, tau, sigma, niter,
     :math:`F((x_1, x_2)) = \|x_1\|_2^2 + \|x_2\|_1`, :math:`G(x)=0`. See the
     examples folder for more information on how to do this.
 
-    For a more detailed documentation see :ref:`chambolle_pock`.
+    For a more detailed documentation see :ref:`PDHG`.
 
     References on the algorithm can be found in [CP2011a] and [CP2011b].
 

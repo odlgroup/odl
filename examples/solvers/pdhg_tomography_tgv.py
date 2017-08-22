@@ -1,4 +1,4 @@
-"""Total Generalized Variation tomography using the Chambolle-Pock solver.
+"""Total Generalized Variation tomography using PDHG.
 
 Solves the optimization problem
 
@@ -19,7 +19,7 @@ The problem is rewritten as
 
     min_{x, y} ||Ax - d||_2^2 + alpha ||Gx - y||_1 + alpha * beta ||Ey||_1
 
-which can then be solved with the Chambolle-Pock method.
+which can then be solved with PDHG.
 
 References
 ----------
@@ -122,8 +122,8 @@ callback = (odl.solvers.CallbackPrintIteration() &
 x = op.domain.zero()
 
 # Run the algorithm
-odl.solvers.primal_dual_hybrid_gradient_solver(x, f, g, op, tau=tau, sigma=sigma,
-                                               niter=niter, callback=callback)
+odl.solvers.pdhg(x, f, g, op, tau=tau, sigma=sigma, niter=niter,
+                 callback=callback)
 
 # Display images
 x[0].show(title='TGV reconstruction')

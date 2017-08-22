@@ -106,7 +106,7 @@ def douglas_rachford_pd(x, f, g, L, tau, sigma, niter,
 
     See Also
     --------
-    odl.solvers.nonsmooth.chambolle_pock.chambolle_pock_solver :
+    odl.solvers.nonsmooth.primal_dual_hybrid_gradient.pdhg :
         Solver for similar problems.
     odl.solvers.nonsmooth.forward_backward.forward_backward_pd :
         Solver for similar problems which can additionaly handle a

@@ -1,4 +1,4 @@
-"""Total variation denoising using the primal-dual hybrid gradient algorithm.
+"""Total variation denoising using PDHG.
 
 Solves the optimization problem
 
@@ -7,7 +7,7 @@ Solves the optimization problem
 Where ``grad`` the spatial gradient and ``g`` is given noisy data.
 
 For further details and a description of the solution method used, see
-:ref:`chambolle_pock` in the ODL documentation.
+:ref:`PDHG` in the ODL documentation.
 """
 
 import numpy as np
@@ -80,8 +80,8 @@ sigma = 1.0 / op_norm  # Step size for the dual variable
 x_alg1 = op.domain.zero()
 
 # Run algorithm (and display intermediates)
-odl.solvers.primal_dual_hybrid_gradient_solver(
-    x_alg1, f, g, op, tau=tau, sigma=sigma, niter=niter, callback=callback)
+odl.solvers.pdhg(x_alg1, f, g, op, tau=tau, sigma=sigma, niter=niter,
+                 callback=callback)
 
 
 # --- algorithm 2 and 3 --- #
@@ -109,12 +109,10 @@ x_alg2 = op.domain.zero()
 x_alg3 = op.domain.zero()
 
 # Run algorithm (and display intermediates)
-odl.solvers.primal_dual_hybrid_gradient_solver(
-    x_alg2, f, g, op, tau=tau, sigma=sigma, niter=niter, gamma_primal=0,
-    callback=callback)
-odl.solvers.primal_dual_hybrid_gradient_solver(
-    x_alg3, f, g, op, tau=tau, sigma=sigma, niter=niter, gamma_primal=0.5,
-    callback=callback)
+odl.solvers.pdhg(x_alg2, f, g, op, tau=tau, sigma=sigma, niter=niter,
+                 gamma_primal=0, callback=callback)
+odl.solvers.pdhg(x_alg3, f, g, op, tau=tau, sigma=sigma, niter=niter,
+                 gamma_primal=0.5, callback=callback)
 
 # Display images
 orig.show(title='original image')
