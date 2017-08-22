@@ -12,3 +12,6 @@ __all__ = ()
 
 from .supervised import *
 __all__ += supervised.__all__
+
+from .unsupervised import *
+__all__ += unsupervised.__all__
