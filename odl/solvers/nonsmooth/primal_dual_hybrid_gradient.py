@@ -6,9 +6,9 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""First-order primal-dual algorithm developed by Chambolle and Pock.
+"""First-order primal-dual algorithm studied by Chambolle and Pock.
 
-The Chambolle-Pock algorithm is a flexible method well suited for
+The primal-dual hybrid gradient algorithm is a flexible method well suited for
 non-smooth convex optimization problems in imaging.
 """
 
@@ -20,14 +20,15 @@ import numpy as np
 from odl.operator import Operator
 
 
-__all__ = ('chambolle_pock_solver',)
+__all__ = ('primal_dual_hybrid_gradient_solver',)
 
 
 # TODO: add dual gap as convergence measure
 # TODO: diagonal preconditioning
 
-def chambolle_pock_solver(x, f, g, L, tau, sigma, niter, **kwargs):
-    """Chambolle-Pock algorithm for non-smooth convex optimization problems.
+def primal_dual_hybrid_gradient_solver(x, f, g, L, tau, sigma, niter, **kwargs):
+    """Primal-dual hybrid gradient algorithm for non-smooth convex optimization 
+    problems.
 
     First order primal-dual hybrid-gradient method for non-smooth convex
     optimization problems with known saddle-point structure. The
@@ -37,12 +38,12 @@ def chambolle_pock_solver(x, f, g, L, tau, sigma, niter, **kwargs):
 
     where ``L`` is an operator and ``F`` and ``G`` are functionals.
 
-    The Chambolle-Pock algorithm is a primal-dual algorithm, and basically
-    consists of alternating a gradient ascent in the dual variable and a
-    gradient descent in the primal variable. The proximal operator is used to
-    generate a ascent direction for the convex conjugate of F and descent
-    direction for G. Additionally an over-relaxation in the primal variable is
-    performed.
+    The primal-dual hybrid-gradient algorithm is a primal-dual algorithm, and 
+    basically consists of alternating a gradient ascent in the dual variable 
+    and a gradient descent in the primal variable. The proximal operator is 
+    used to generate a ascent direction for the convex conjugate of F and 
+    descent direction for G. Additionally an over-relaxation in the primal 
+    variable is performed.
 
     Parameters
     ----------

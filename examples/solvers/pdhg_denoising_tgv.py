@@ -1,4 +1,5 @@
-"""Total Generalized Variation denoising using the Chambolle-Pock solver.
+"""Total Generalized Variation denoising using the primal-dual hybrid gradient 
+algorithm.
 
 Solves the optimization problem
 
@@ -119,8 +120,8 @@ callback = (odl.solvers.CallbackPrintIteration() &
 x = op.domain.zero()
 
 # Run the algorithm
-odl.solvers.chambolle_pock_solver(x, f, g, op, tau=tau, sigma=sigma,
-                                  niter=niter, callback=callback)
+odl.solvers.primal_dual_hybrid_gradient_solver(x, f, g, op, tau=tau, sigma=sigma,
+                                               niter=niter, callback=callback)
 
 # Display images
 x[0].show(title='TGV reconstruction')
