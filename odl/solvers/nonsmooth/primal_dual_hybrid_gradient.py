@@ -42,7 +42,7 @@ def primal_dual_hybrid_gradient_solver(x, f, g, L, tau, sigma, niter, **kwargs):
     basically consists of alternating a gradient ascent in the dual variable 
     and a gradient descent in the primal variable. The proximal operator is 
     used to generate a ascent direction for the convex conjugate of F and 
-    descent direction for G. Additionally an over-relaxation in the primal 
+    descent direction for G. Additionally an over-relaxation of the primal 
     variable is performed.
 
     Parameters
