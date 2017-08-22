@@ -14,9 +14,7 @@ For further details and a description of the solution method used, see
 import numpy as np
 import odl
 
-
 # --- Set up the forward operator (ray transform) --- #
-
 
 # Reconstruction space: discretized functions on the rectangle
 # [-20, 20]^2 with 300 samples per dimension.
@@ -33,9 +31,7 @@ geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 # Create the forward operator
 ray_trafo = odl.tomo.RayTransform(reco_space, geometry)
 
-
 # --- Generate artificial data --- #
-
 
 # Create phantom
 discr_phantom = odl.phantom.shepp_logan(reco_space, modified=True)
@@ -44,9 +40,7 @@ discr_phantom = odl.phantom.shepp_logan(reco_space, modified=True)
 data = ray_trafo(discr_phantom)
 data += odl.phantom.white_noise(ray_trafo.range) * np.mean(data) * 0.1
 
-
 # --- Set up the inverse problem --- #
-
 
 # Initialize gradient operator
 gradient = odl.Gradient(reco_space)
@@ -68,9 +62,7 @@ l1_norm = 0.015 * odl.solvers.L1Norm(gradient.range)
 # Combine functionals, order must correspond to the operator K
 f = odl.solvers.SeparableSum(l2_norm, l1_norm)
 
-
-# --- Select solver parameters and solve using Chambolle-Pock --- #
-
+# --- Select solver parameters and solve using PDHG --- #
 
 # Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
 op_norm = 1.1 * odl.power_method_opnorm(op)
@@ -78,7 +70,6 @@ op_norm = 1.1 * odl.power_method_opnorm(op)
 niter = 200  # Number of iterations
 tau = 1.0 / op_norm  # Step size for the primal variable
 sigma = 1.0 / op_norm  # Step size for the dual variable
-gamma = 0.5
 
 # Optionally pass callback to the solver to display intermediate results
 callback = (odl.solvers.CallbackPrintIteration() &
@@ -89,8 +80,7 @@ x = op.domain.zero()
 
 # Run the algorithm
 odl.solvers.primal_dual_hybrid_gradient_solver(
-    x, f, g, op, tau=tau, sigma=sigma, niter=niter, gamma=gamma,
-    callback=callback)
+    x, f, g, op, tau=tau, sigma=sigma, niter=niter, callback=callback)
 
 # Display images
 discr_phantom.show(title='Phantom')

@@ -61,9 +61,7 @@ l1_norm = 0.0003 * odl.solvers.L1Norm(gradient.range)
 # Make separable sum of functionals, order must be the same as in `op`
 f = odl.solvers.SeparableSum(l2_norm_squared, l1_norm)
 
-
-# --- Select solver parameters and solve using Chambolle-Pock --- #
-
+# --- Select solver parameters and solve using PDHG --- #
 
 # Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
 op_norm = 1.1 * odl.power_method_opnorm(op)

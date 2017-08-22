@@ -105,7 +105,7 @@ l1_norm_2 = alpha * beta * odl.solvers.L1Norm(W)
 # Combine functionals, order must correspond to the operator K
 f = odl.solvers.SeparableSum(l2_norm, l1_norm_1, l1_norm_2)
 
-# --- Select solver parameters and solve using Chambolle-Pock --- #
+# --- Select solver parameters and solve using PDHG --- #
 
 # Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
 op_norm = 1.1 * odl.power_method_opnorm(op)

@@ -54,9 +54,7 @@ f = odl.solvers.SeparableSum(l2_norm, l1_norm)
 # Non-negativity constraint
 g = odl.solvers.IndicatorNonnegativity(op.domain)
 
-
-# --- Select solver parameters and solve using Chambolle-Pock --- #
-
+# --- Select solver parameters and solve using PDHG --- #
 
 # Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
 op_norm = 1.1 * odl.power_method_opnorm(op, xstart=noisy)
