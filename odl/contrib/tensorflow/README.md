@@ -20,3 +20,5 @@ Specifically
 * [tensorflow_layer_ray_transform.py](examples/tensorflow_layer_ray_transform.py) shows how a `RayTransform` can be converted to a tensorflow layer.
 * [tensorflow_operator_matrix.py](examples/tensorflow_operator_matrix.py) shows how `tf.matmul` can be used as a ODL operator.
 * [tensorflow_tomography.py](examples/tensorflow_tomography.py) shows how tensorflow optimizers can be used with ODL operators to solve inverse problems.
+
+There are also some rudimentary tests in the [test](test) folder.
