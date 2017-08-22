@@ -73,12 +73,18 @@ def primal_dual_hybrid_gradient_solver(x, f, g, L, tau, sigma, niter, **kwargs):
     theta : float, optional
         Relaxation parameter, required to fulfill ``0 <= theta <= 1``.
         Default: 1
-    gamma : non-negative float, optional
+    gamma_primal : non-negative float, optional
         Acceleration parameter. If not ``None``, it overrides ``theta`` and
         causes variable relaxation parameter and step sizes to be used,
-        with ``tau`` and ``sigma`` as initial values. Requires ``G`` or
-        ``F^*`` to be uniformly convex.
+        with ``tau`` and ``sigma`` as initial values. Requires ``G`` to be 
+        strongly convex. ``gamma_primal`` is the strong convexity constant of 
+        ``G``.
         Default: ``None``
+    gamma_dual : non-negative float, optional
+        Acceleration parameter as ``gamma_primal`` but for dual variable.
+        Requires ``F^*`` to be strongly convex. ``gamma_dual`` is the strong
+        convexity constant of ``F^*``.
+        Default: ``None`
     x_relax : ``op.domain`` element, optional
         Required to resume iteration. For ``None``, a copy of the primal
         variable ``x`` is used.
@@ -195,14 +201,24 @@ def primal_dual_hybrid_gradient_solver(x, f, g, L, tau, sigma, niter, **kwargs):
         raise ValueError('`theta` {} not in [0, 1]'
                          ''.format(theta_in))
 
-    # Acceleration parameter
-    gamma = kwargs.pop('gamma', None)
-    if gamma is not None:
-        gamma, gamma_in = float(gamma), gamma
-        if gamma < 0:
-            raise ValueError('`gamma` must be non-negative, got {}'
-                             ''.format(gamma_in))
+    # Acceleration parameters
+    gamma_primal = kwargs.pop('gamma_primal', None)
+    if gamma_primal is not None:
+        gamma_primal, gamma_primal_in = float(gamma_primal), gamma_primal
+        if gamma_primal < 0:
+            raise ValueError('`gamma_primal` must be non-negative, got {}'
+                             ''.format(gamma_primal_in))
 
+    gamma_dual = kwargs.pop('gamma_dual', None)
+    if gamma_dual is not None:
+        gamma_dual, gamma_dual_in = float(gamma_dual), gamma_dual
+        if gamma_dual < 0:
+            raise ValueError('`gamma_dual` must be non-negative, got {}'
+                             ''.format(gamma_dual_in))
+
+    if gamma_primal is not None and gamma_dual is not None:
+        raise ValueError('Only one acceleration parameter can be used')
+            
     # Callback object
     callback = kwargs.pop('callback', None)
     if callback is not None and not callable(callback):
@@ -228,7 +244,7 @@ def primal_dual_hybrid_gradient_solver(x, f, g, L, tau, sigma, niter, **kwargs):
     # Get the proximals
     proximal_dual = f.convex_conj.proximal
     proximal_primal = g.proximal
-    proximal_constant = (gamma is None)
+    proximal_constant = (gamma_primal is None) and (gamma_dual is None)
     if proximal_constant:
         # Pre-compute proximals for efficiency
         proximal_dual_sigma = proximal_dual(sigma)
@@ -266,10 +282,15 @@ def primal_dual_hybrid_gradient_solver(x, f, g, L, tau, sigma, niter, **kwargs):
         proximal_primal_tau(primal_tmp, out=x)
 
         # Acceleration
-        if gamma is not None:
-            theta = float(1 / np.sqrt(1 + 2 * gamma * tau))
+        if gamma_primal is not None:
+            theta = float(1 / np.sqrt(1 + 2 * gamma_primal * tau))
             tau *= theta
             sigma /= theta
+
+        if gamma_dual is not None:
+            theta = float(1 / np.sqrt(1 + 2 * gamma_dual * sigma))
+            tau /= theta
+            sigma *= theta
 
         # Over-relaxation in the primal variable x
         x_relax.lincomb(1 + theta, x, -theta, x_old)
