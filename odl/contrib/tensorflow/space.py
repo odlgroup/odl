@@ -110,7 +110,7 @@ class TensorflowSpaceElement(LinearSpaceElement):
         self._data = value
 
     def __repr__(self):
-        return '{}.element({})'.format(self.space, self.data)
+        return '{!r}.element({!r})'.format(self.space, self.data)
 
 
 class TensorflowSpaceOperator(Operator):
