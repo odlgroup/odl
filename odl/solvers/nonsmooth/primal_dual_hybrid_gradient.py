@@ -26,8 +26,9 @@ __all__ = ('primal_dual_hybrid_gradient_solver',)
 # TODO: add dual gap as convergence measure
 # TODO: diagonal preconditioning
 
-def primal_dual_hybrid_gradient_solver(x, f, g, L, tau, sigma, niter, **kwargs):
-    """Primal-dual hybrid gradient algorithm for non-smooth convex optimization 
+def primal_dual_hybrid_gradient_solver(x, f, g, L, tau, sigma, niter,
+                                       **kwargs):
+    """Primal-dual hybrid gradient algorithm for non-smooth convex optimization
     problems.
 
     First order primal-dual hybrid-gradient method for non-smooth convex
@@ -38,11 +39,11 @@ def primal_dual_hybrid_gradient_solver(x, f, g, L, tau, sigma, niter, **kwargs):
 
     where ``L`` is an operator and ``F`` and ``G`` are functionals.
 
-    The primal-dual hybrid-gradient algorithm is a primal-dual algorithm, and 
-    basically consists of alternating a gradient ascent in the dual variable 
-    and a gradient descent in the primal variable. The proximal operator is 
-    used to generate a ascent direction for the convex conjugate of F and 
-    descent direction for G. Additionally an over-relaxation of the primal 
+    The primal-dual hybrid-gradient algorithm is a primal-dual algorithm, and
+    basically consists of alternating a gradient ascent in the dual variable
+    and a gradient descent in the primal variable. The proximal operator is
+    used to generate a ascent direction for the convex conjugate of F and
+    descent direction for G. Additionally an over-relaxation of the primal
     variable is performed.
 
     Parameters
@@ -76,8 +77,8 @@ def primal_dual_hybrid_gradient_solver(x, f, g, L, tau, sigma, niter, **kwargs):
     gamma_primal : non-negative float, optional
         Acceleration parameter. If not ``None``, it overrides ``theta`` and
         causes variable relaxation parameter and step sizes to be used,
-        with ``tau`` and ``sigma`` as initial values. Requires ``G`` to be 
-        strongly convex. ``gamma_primal`` is the strong convexity constant of 
+        with ``tau`` and ``sigma`` as initial values. Requires ``G`` to be
+        strongly convex. ``gamma_primal`` is the strong convexity constant of
         ``G``.
         Default: ``None``
     gamma_dual : non-negative float, optional
@@ -218,7 +219,7 @@ def primal_dual_hybrid_gradient_solver(x, f, g, L, tau, sigma, niter, **kwargs):
 
     if gamma_primal is not None and gamma_dual is not None:
         raise ValueError('Only one acceleration parameter can be used')
-            
+
     # Callback object
     callback = kwargs.pop('callback', None)
     if callback is not None and not callable(callback):
