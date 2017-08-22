@@ -13,7 +13,7 @@ It is a method for solving convex non-smooth problems of the form
    \min_{x \in X} f(L x) + g(x),
 
 where :math:`L` is a linear `Operator` :math:`L : X -> Y`, :math:`X` and :math:`Y` are (discretized) function spaces and :math:`g : X \mapsto [0, +\infty]` and :math:`f : Y \mapsto [0, +\infty]` are proper, convex, lower semi-continuous functionals.
-For more information on the mathematics, please see :ref:`the mathematical background article on this method <chambolle_pock_math>`.
+For more information on the mathematics, please see :ref:`the mathematical background article on this method <pdhg_math>`.
 
 
 Using the PDHG
