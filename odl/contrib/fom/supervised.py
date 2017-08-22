@@ -16,7 +16,7 @@ import numpy as np
 
 __all__ = ('mean_squared_error', 'mean_absolute_error',
            'mean_value_difference', 'standard_deviation_difference',
-           'range_difference', 'blurring', 'false_structures', 'ssim')
+           'range_difference', 'blurring', 'false_structures', 'ssim', 'psnr')
 
 
 def mean_squared_error(data, ground_truth, mask=None, normalized=False):
@@ -573,3 +573,62 @@ def ssim(data, ground_truth,
         return 0.5 - ssim / 2
     else:
         return ssim
+
+
+def psnr(data, ground_truth, normalize=False):
+    """Return the Peak Signal-to-Noise Ratio.
+
+    Parameters
+    ----------
+    data : `FnBaseVector`
+        Input data or reconstruction.
+    ground_truth : `FnBaseVector`
+        Reference to compare ``data`` to.
+    normalize : bool
+        If true, normalizes ``data`` and ``ground_truth`` to have the same mean
+        and variance before comparison.
+
+    Returns
+    -------
+    psnr : float
+
+    Examples
+    --------
+    Compute the PSNR for two vectors:
+
+    >>> spc = odl.rn(5)
+    >>> data = spc.element([1, 1, 1, 1, 1])
+    >>> ground_truth = spc.element([1, 1, 1, 1, 2])
+    >>> result = psnr(data, ground_truth)
+    >>> print('{:.3f}'.format(result))
+    6.021
+
+    If data == ground_truth, the result is positive infinity:
+
+    >>> psnr(ground_truth, ground_truth)
+    inf
+
+    With ``normalize=True``, internal scaling and constant offsets are ignored:
+
+    >>> (psnr(data, ground_truth, normalize=True) ==
+    ...  psnr(data, 3 + 4 * ground_truth, normalize=True))
+    True
+    """
+    if normalize:
+        data = odl.util.zscore(data)
+        ground_truth = odl.util.zscore(ground_truth)
+
+    mse_result = mean_squared_error(data, ground_truth)
+    max_true = np.max(np.abs(ground_truth))
+
+    if mse_result == 0:
+        return np.inf
+    elif max_true == 0:
+        return -np.inf
+    else:
+        return 20 * np.log10(max_true) - 10 * np.log10(mse_result)
+
+if __name__ == '__main__':
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()
