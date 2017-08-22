@@ -7,6 +7,7 @@ more advanced operators, such as a ray transform, can be handled.
 import tensorflow as tf
 import numpy as np
 import odl
+import odl.contrib.tensorflow
 
 sess = tf.InteractiveSession()
 

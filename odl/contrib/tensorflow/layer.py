@@ -25,43 +25,48 @@ __all__ = ('as_tensorflow_layer',)
 
 def as_tensorflow_layer(odl_op, name='ODLOperator',
                         differentiable=True):
-    """Convert `Operator` or `Functional` into tensorflow layer.
+    """Convert `Operator` or `Functional` to a tensorflow layer.
 
     Parameters
     ----------
     odl_op : `Operator` or `Functional`
-        The operator that should be wrapped to a tensorflow layer.
+        The operator that should be wrapped as a tensorflow layer.
     name : str
         Default name for tensorflow layers created.
     differentiable : boolean
-        True if the layer should be differentiable, in which case  ``odl_op``
-        should implement `Operator.derivative` which in turn implements
-        `Operator.adjoint`, it is properly wrapped in ``tensorflow_layer``, and
+        ``True`` if the layer should be differentiable, in which case
+        ``odl_op`` should implement `Operator.derivative` which in turn
+        implements `Operator.adjoint`. In this case, the adjoint of the
+        derivative is properly wrapped in ``tensorflow_layer``, and
         gradients propagate as expected.
 
-        Otherwise assumes that the derivative is everywhere zero.
+        If ``False``, the gradient is defined as everywhere zero.
 
     Returns
     -------
     tensorflow_layer : callable
-        Callable that, when called with an `tensorflow.Tensor` of shape
-        `(n, *odl_op.domain.shape, 1)` where ``n`` is the number of batches
-        returns another `tensorflow.Tensor`.
+        Callable that, when called with a `tensorflow.Tensor` of shape
+        ``(n, *odl_op.domain.shape, 1)`` where ``n`` is the batch size,
+        returns another `tensorflow.Tensor` which is a lazy evaluation of
+        ``odl_op``.
 
         If ``odl_op`` is an `Operator`, the shape of the returned tensor is
-        `(n, *odl_op.range.shape, 1)`.
+        ``(n, *odl_op.range.shape, 1)``.
 
-        Hence for each evaluation, ``odl_op`` is called a total of ``n`` times.
+        If ``odl_op`` is an `Functional`, the shape of the returned tensor is
+        ``(n,)``.
 
-        The `dtype` of the tensor is the same as the respective ODL spaces.
+        The ``dtype`` of the tensor is ``odl_op.range.dtype``.
     """
     default_name = name
 
     def py_func(func, inp, Tout, stateful=True, name=None, grad=None):
         """Define custom py_func which takes also a grad op as argument.
 
-        We need to overwrite this function since the default tensorflow py_func
-        does not support custom gradients.
+        We need to overwrite this function since the default tensorflow
+        `tf.py_func` does not support custom gradients.
+
+        See tensorflow `issue #1095`_ for more information.
 
         Parameters
         ----------
@@ -71,13 +76,17 @@ def as_tensorflow_layer(odl_op, name='ODLOperator',
             Input tensors for the function
         Tout : sequence of `tensorflow.dtype`
             Datatype of the output(s).
-        stateful : bool
+        stateful : bool, optional
             If the function has internal state, i.e. if calling the function
-            with a given input always gives the same output.
-        name : string
-            Name of the python function
-        grad : callbable
+            with a given input repeatedly could give different output.
+        name : string, optional
+            Name of the python function.
+        grad : callbable, optional
             Gradient of the function.
+
+        References
+        ----------
+        .. _issue #1095: https://github.com/tensorflow/tensorflow/issues/1095
         """
         if grad is None:
             return tf.py_func(func, inp, Tout, stateful=stateful, name=name)
@@ -97,7 +106,7 @@ def as_tensorflow_layer(odl_op, name='ODLOperator',
                 return tf.py_func(func, inp, Tout, stateful=stateful,
                                   name=name)
 
-    def tensorflow_layer_grad_impl(x, dx, name):
+    def tensorflow_layer_grad_impl(x, dy, name):
         """Implementation of the tensorflow gradient.
 
         Gradient in tensorflow is equivalent to the adjoint of the derivative
@@ -105,7 +114,7 @@ def as_tensorflow_layer(odl_op, name='ODLOperator',
 
         Returns a `tensorflow.Tensor` that represents a lazy application of ::
 
-            odl_op.derivative(x).adjoint(dx)
+            odl_op.derivative(x).adjoint(dy)
 
         Parameters
         ----------
@@ -113,18 +122,18 @@ def as_tensorflow_layer(odl_op, name='ODLOperator',
             Point(s) in which the derivative should be taken.
             If ``odl_op`` is an `Operator` the axes are:
                 0 : batch id. This is a constant if ``fixed_size`` is
-                    true, otherwise it is dynamic.
-                1, ..., N-2 : spatial dimensions of data.
+                    ``True``, otherwise it is dynamic.
+                1, ..., n-2 : spatial dimensions of data.
                 n-1 : (currently) unused data channel.
             If ``odl_op`` is a `Functional` the axes are:
                 0 : batch id.
-        dx : `tensorflow.Tensor`
+        dy : `tensorflow.Tensor`
             Point(s) in which the adjoint of the derivative of the
             operator should be evaluated.
             The axes are:
                 0 : batch id. Should be pairwise matched with ``x``.
-                1, ..., M-2 : spatial dimensions of data.
-                n-1 : (currently) unused data channel.
+                1, ..., m-2 : spatial dimensions of data.
+                m-1 : (currently) unused data channel.
         name : string
             Name of the tensor.
 
@@ -134,7 +143,7 @@ def as_tensorflow_layer(odl_op, name='ODLOperator',
             Lazy result of the computation.
             If ``odl_op`` is an `Operator` the axes are:
                 0 : batch id.
-                1, ..., N-2 : spatial dimensions of data.
+                1, ..., n-2 : spatial dimensions of data.
                 n-1 : (currently) unused data channel.
             If ``odl_op`` is a `Functional` the axes are:
                 0 : batch id.
@@ -142,7 +151,7 @@ def as_tensorflow_layer(odl_op, name='ODLOperator',
         with tf.name_scope(name):
             # Validate the input/output shape
             x_shape = x.get_shape()
-            dx_shape = dx.get_shape()
+            dy_shape = dy.get_shape()
             try:
                 # Lazy check if the first dimension is dynamic
                 n_x = int(x_shape[0])
@@ -159,16 +168,16 @@ def as_tensorflow_layer(odl_op, name='ODLOperator',
 
             assert x_shape[1:] == odl_op.domain.shape + (1,)
             if odl_op.is_functional:
-                assert dx_shape[1:] == ()
+                assert dy_shape[1:] == ()
             else:
-                assert dx_shape[1:] == odl_op.range.shape + (1,)
+                assert dy_shape[1:] == odl_op.range.shape + (1,)
 
-            def _impl(x, dx):
+            def _impl(x, dy):
                 """Implementation of the adjoint of the derivative.
 
                 Returns ::
 
-                    odl_op.derivative(x).adjoint(dx)
+                    odl_op.derivative(x).adjoint(dy)
 
                 Parameters
                 ----------
@@ -177,17 +186,17 @@ def as_tensorflow_layer(odl_op, name='ODLOperator',
                     If ``odl_op`` is an `Operator` the axes are:
                         0 : batch id. This is a constant if ``fixed_size`` is
                             true, otherwise it is dynamic.
-                        1, ..., N-2 : spatial dimensions of data.
+                        1, ..., n-2 : spatial dimensions of data.
                         n-1 : (currently) unused data channel.
                     If ``odl_op`` is a `Functional` the axes are:
                         0 : batch id.
-                dx : `numpy.ndarray`
+                dy : `numpy.ndarray`
                     Point(s) in which the adjoint of the derivative of the
                     operator should be evaluated.
                     The axes are:
                         0 : batch id. Should be pairwise matched with ``x``.
-                        1, ..., M-2 : spatial dimensions of data.
-                        n-1 : (currently) unused data channel.
+                        1, ..., m-2 : spatial dimensions of data.
+                        m-1 : (currently) unused data channel.
 
                 Returns
                 -------
@@ -196,7 +205,7 @@ def as_tensorflow_layer(odl_op, name='ODLOperator',
 
                     If ``odl_op`` is an `Operator` the axes are:
                         0 : batch id.
-                        1, ..., N-2 : spatial dimensions of data.
+                        1, ..., n-2 : spatial dimensions of data.
                         n-1 : (currently) unused data channel.
                     If ``odl_op`` is a `Functional` the axes are:
                         0 : batch id.
@@ -205,23 +214,23 @@ def as_tensorflow_layer(odl_op, name='ODLOperator',
                 if fixed_size:
                     x_out_shape = out_shape
                     assert x.shape == out_shape
-                    assert dx.shape == in_shape
+                    assert dy.shape == in_shape
                 else:
                     x_out_shape = (x.shape[0],) + out_shape[1:]
                     assert x.shape[1:] == out_shape[1:]
-                    assert dx.shape[1:] == in_shape[1:]
+                    assert dy.shape[1:] == in_shape[1:]
 
                 # Evaluate the operator on all inputs in the batch.
                 out = np.empty(x_out_shape, odl_op.domain.dtype)
                 for i in range(x_out_shape[0]):
                     if odl_op.is_functional:
                         xi = x[i, ..., 0]
-                        dxi = dx[i]
-                        out[i, ..., 0] = np.asarray(odl_op.gradient(xi)) * dxi
+                        dyi = dy[i]
+                        out[i, ..., 0] = np.asarray(odl_op.gradient(xi)) * dyi
                     else:
                         xi = x[i, ..., 0]
-                        dxi = dx[i, ..., 0]
-                        result = odl_op.derivative(xi).adjoint(dxi)
+                        dyi = dy[i, ..., 0]
+                        result = odl_op.derivative(xi).adjoint(dyi)
                         out[i, ..., 0] = np.asarray(result)
 
                 # Rescale the domain/range according to the weighting since
@@ -241,9 +250,9 @@ def as_tensorflow_layer(odl_op, name='ODLOperator',
 
                 return out
 
-            with ops.name_scope(name + '_pyfunc', values=[x, dx]) as name_call:
+            with ops.name_scope(name + '_pyfunc', values=[x, dy]) as name_call:
                 result = py_func(_impl,
-                                 [x, dx],
+                                 [x, dy],
                                  [odl_op.domain.dtype],
                                  name=name_call,
                                  stateful=False)
@@ -266,7 +275,7 @@ def as_tensorflow_layer(odl_op, name='ODLOperator',
             Point(s) to which the layer should be applied.
             The axes are:
                 0 : batch id. Can be fixed or dynamic.
-                1, ..., M-2 : spatial dimensions of data.
+                1, ..., n-2 : spatial dimensions of data.
                 n-1 : (currently) unused data channel.
         name : string
             Name of the tensor. Default: Defaultname.
@@ -277,8 +286,8 @@ def as_tensorflow_layer(odl_op, name='ODLOperator',
             Lazy result of the computation.
             If ``odl_op`` is an `Operator` the axes are:
                 0 : batch id.
-                1, ..., N-2 : spatial dimensions of data.
-                n-1 : (currently) unused data channel.
+                1, ..., m-2 : spatial dimensions of data.
+                m-1 : (currently) unused data channel.
             If ``odl_op`` is a `Functional` the axes are:
                 0 : batch id.
         """
@@ -317,7 +326,7 @@ def as_tensorflow_layer(odl_op, name='ODLOperator',
                     The axes are:
                         0 : batch id. This is a constant if ``fixed_size`` is
                             true, otherwise it is dynamic.
-                        1, ..., N-2 : spatial dimensions of data.
+                        1, ..., n-2 : spatial dimensions of data.
                         n-1 : (currently) unused data channel.
 
                 Returns
@@ -326,8 +335,8 @@ def as_tensorflow_layer(odl_op, name='ODLOperator',
                     Result of the computation.
                     The axes are:
                         0 : batch id. Data is pairwise matched with ``x``.
-                        1, ..., M-2 : spatial dimensions of data.
-                        n-1 : (currently) unused data channel.
+                        1, ..., m-2 : spatial dimensions of data.
+                        m-1 : (currently) unused data channel.
                 """
                 # Validate input shape
                 if fixed_size:
