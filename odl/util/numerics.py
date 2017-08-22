@@ -18,7 +18,8 @@ import numpy as np
 from odl.util.normalize import normalized_scalar_param_list, safe_int_conv
 
 
-__all__ = ('apply_on_boundary', 'fast_1d_tensor_mult', 'resize_array')
+__all__ = ('apply_on_boundary', 'fast_1d_tensor_mult', 'resize_array',
+           'zscore')
 
 
 _SUPPORTED_RESIZE_PAD_MODES = ('constant', 'symmetric', 'periodic',
@@ -801,6 +802,42 @@ def _apply_padding(lhs_arr, rhs_arr, offset, pad_mode, direction):
         else:
             working_slc[axis] = intersec_slc[axis]
 
+
+def zscore(arr):
+    """Return arr normalized with mean 0 and unit variance.
+
+    If the input has 0 variance, the result will also have 0 variance.
+
+    Parameters
+    ----------
+    arr : array-like
+
+    Returns
+    -------
+    zscore : array-like
+
+    Examples
+    --------
+    Compute the z score for a small array:
+
+    >>> result = zscore([1, 0])
+    >>> result
+    array([ 1., -1.])
+    >>> np.mean(result)
+    0.0
+    >>> np.std(result)
+    1.0
+
+    Does not re-scale in case the input is constant (has 0 variance):
+
+    >>> zscore([1, 1])
+    array([ 0., 0.])
+    """
+    arr = arr - np.mean(arr)
+    std = np.std(arr)
+    if std != 0:
+        arr /= std
+    return arr
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position
