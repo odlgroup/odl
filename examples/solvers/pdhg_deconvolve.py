@@ -39,9 +39,10 @@ phantom = odl.phantom.shepp_logan(space, modified=True)
 
 # Create the convolved version of the phantom
 data = convolution(phantom)
+data += odl.phantom.white_noise(convolution.range) * np.mean(data) * 0.1
 data.show('Convolved data')
 
-# Set up the Chambolle-Pock solver:
+# Set up PDHG:
 
 # Initialize gradient operator
 gradient = odl.Gradient(space, method='forward')
