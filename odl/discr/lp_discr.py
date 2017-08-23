@@ -407,33 +407,31 @@ class DiscreteLp(DiscretizedSpace):
     # discretized integrals need to be scaled by that fraction.
     def _inner(self, x, y):
         """Return ``self.inner(x, y)``."""
-        if self.is_uniformly_weighted:
-            return super()._inner(x, y)
-        else:
+        if self.is_uniform and not self.is_uniformly_weighted:
             # TODO: implement without copying x
             bdry_fracs = self.partition.boundary_cell_fractions
             func_list = _scaling_func_list(bdry_fracs)
 
             x_arr = apply_on_boundary(x, func=func_list, only_once=False)
             return super()._inner(self.element(x_arr), y)
+        else:
+            return super()._inner(x, y)
 
     def _norm(self, x):
         """Return ``self.norm(x)``."""
-        if self.is_uniformly_weighted:
-            return super()._norm(x)
-        else:
+        if self.is_uniform and not self.is_uniformly_weighted:
             # TODO: implement without copying x
             bdry_fracs = self.partition.boundary_cell_fractions
             func_list = _scaling_func_list(bdry_fracs, exponent=self.exponent)
 
             x_arr = apply_on_boundary(x, func=func_list, only_once=False)
             return super()._norm(self.element(x_arr))
+        else:
+            return super()._norm(x)
 
     def _dist(self, x, y):
         """Return ``self.dist(x, y)``."""
-        if self.is_uniformly_weighted:
-            return super()._dist(x, y)
-        else:
+        if self.is_uniform and not self.is_uniformly_weighted:
             # TODO: implement without copying x
             bdry_fracs = self.partition.boundary_cell_fractions
             func_list = _scaling_func_list(bdry_fracs, exponent=self.exponent)
@@ -442,6 +440,8 @@ class DiscreteLp(DiscretizedSpace):
                     for vec in (x, y)]
 
             return super()._dist(self.element(arrs[0]), self.element(arrs[1]))
+        else:
+            return super()._dist(x, y)
 
     def __repr__(self):
         """Return ``repr(self)``."""

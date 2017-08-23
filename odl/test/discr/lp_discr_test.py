@@ -934,6 +934,40 @@ def test_power(fn_impl, power):
         assert all_almost_equal(x_neg, true_neg_pow)
 
 
+def test_inner_nonuniform():
+    """Check if inner products are correct in non-uniform discretizations."""
+    fspace = odl.FunctionSpace(odl.IntervalProd(0, 5))
+    part = odl.nonuniform_partition([0, 2, 3, 5], min_pt=0, max_pt=5)
+    weights = part.cell_sizes_vecs[0]
+    dspace = odl.rn(part.size, weighting=weights)
+    discr = odl.DiscreteLp(fspace, part, dspace)
+
+    one = discr.one()
+    linear = discr.element(lambda x: x)
+
+    # Exact inner product is the integral from 0 to 5 of x, which is 5**2 / 2
+    exact_inner = 5 ** 2 / 2.0
+    inner = one.inner(linear)
+    assert inner == pytest.approx(exact_inner)
+
+
+def test_norm_nonuniform():
+    """Check if norms are correct in non-uniform discretizations."""
+    fspace = odl.FunctionSpace(odl.IntervalProd(0, 5))
+    part = odl.nonuniform_partition([0, 2, 3, 5], min_pt=0, max_pt=5)
+    weights = part.cell_sizes_vecs[0]
+    dspace = odl.rn(part.size, weighting=weights)
+    discr = odl.DiscreteLp(fspace, part, dspace)
+
+    sqrt = discr.element(lambda x: np.sqrt(x))
+
+    # Exact norm is the square root of the integral from 0 to 5 of x,
+    # which is sqrt(5**2 / 2)
+    exact_norm = np.sqrt(5 ** 2 / 2.0)
+    norm = sqrt.norm()
+    assert norm == pytest.approx(exact_norm)
+
+
 def test_norm_interval(exponent):
     # Test the function f(x) = x^2 on the interval (0, 1). Its
     # L^p-norm is (1 + 2*p)^(-1/p) for finite p and 1 for p=inf
