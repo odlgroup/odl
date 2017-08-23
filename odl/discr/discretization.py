@@ -565,10 +565,6 @@ def dspace_type(space, impl, dtype=None):
         Space type selected after the space's field, the backend and
         the data type
     """
-    spacetype_map = {RealNumbers: fn_impl,
-                     ComplexNumbers: fn_impl,
-                     type(None): ntuples_impl}
-
     field_type = type(getattr(space, 'field', None))
 
     if dtype is None:
@@ -592,13 +588,16 @@ def dspace_type(space, impl, dtype=None):
         raise TypeError('non-scalar data type {!r} cannot be combined with '
                         'a `LinearSpace`'.format(dtype))
 
-    try:
-        stype = spacetype_map[field_type](impl)
-    except KeyError:
+    if field_type in (RealNumbers, ComplexNumbers):
+        spacetype = fn_impl
+    elif field_type == type(None):
+        spacetype = ntuples_impl
+    else:
         raise NotImplementedError('no corresponding data space available '
                                   'for space {!r} and implementation {!r}'
                                   ''.format(space, impl))
-    return stype
+
+    return spacetype(impl)
 
 
 if __name__ == '__main__':
