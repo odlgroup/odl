@@ -566,6 +566,7 @@ def dspace_type(space, impl, dtype=None):
         the data type
     """
     field_type = type(getattr(space, 'field', None))
+    none_type = type(None)
 
     if dtype is None:
         pass
@@ -590,7 +591,7 @@ def dspace_type(space, impl, dtype=None):
 
     if field_type in (RealNumbers, ComplexNumbers):
         spacetype = fn_impl
-    elif field_type == type(None):
+    elif field_type is none_type:
         spacetype = ntuples_impl
     else:
         raise NotImplementedError('no corresponding data space available '
