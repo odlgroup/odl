@@ -45,23 +45,24 @@ def _initialize_if_needed():
         for entry_point in iter_entry_points(group='odl.space', name=None):
             try:
                 module = entry_point.load()
-                NTUPLES_IMPLS.update(module.ntuples_impls())
-                FN_IMPLS.update(module.fn_impls())
             except ImportError:
                 pass
+            else:
+                NTUPLES_IMPLS.update(module.ntuples_impls())
+                FN_IMPLS.update(module.fn_impls())
         IS_INITIALIZED = True
 
 
 def ntuples_impl_names():
-    """A list of strings with valid ntuples implementation names."""
+    """A tuple of strings with valid ntuples implementation names."""
     _initialize_if_needed()
-    return list(NTUPLES_IMPLS.keys())
+    return tuple(NTUPLES_IMPLS.keys())
 
 
 def fn_impl_names():
-    """A list of strings with valid fn implementation names."""
+    """A tuple of strings with valid fn implementation names."""
     _initialize_if_needed()
-    return list(FN_IMPLS.keys())
+    return tuple(FN_IMPLS.keys())
 
 
 def ntuples_impl(impl):
@@ -74,15 +75,24 @@ def ntuples_impl(impl):
 
     Returns
     -------
-    ntuples_imple : `type`
+    ntuples_impl : `type`
         Class inheriting from `NtuplesBase`.
+
+    Raises
+    ------
+    ValueError
+        If ``impl`` is not a valid name of a ntuples imlementation.
     """
     if impl != 'numpy':
         # Shortcut to improve "import odl" times since most users do not use
         # non-numpy backend.
         _initialize_if_needed()
 
-    return NTUPLES_IMPLS[impl]
+    try:
+        return NTUPLES_IMPLS[impl]
+    except:
+        raise ValueError("key '{}' does not correspond to a valid ntuples "
+                         "implmentation".format(impl))
 
 
 def fn_impl(impl):
@@ -95,12 +105,21 @@ def fn_impl(impl):
 
     Returns
     -------
-    ntuples_imple : `type`
+    fn_impl : `type`
         Class inheriting from `FnBase`.
+
+    Raises
+    ------
+    ValueError
+        If ``impl`` is not a valid name of a fn imlementation.
     """
     if impl != 'numpy':
         # Shortcut to improve "import odl" times since most users do not use
         # non-numpy backend.
         _initialize_if_needed()
 
-    return FN_IMPLS[impl]
+    try:
+        return FN_IMPLS[impl]
+    except:
+        raise ValueError("key '{}' does not correspond to a valid fn "
+                         "implmentation".format(impl))
