@@ -189,6 +189,7 @@ class DiscreteLp(DiscretizedSpace):
         """Boolean tuple showing uniformity of ``self.partition`` per axis."""
         return self.partition.is_uniform_byaxis
 
+    @property
     def is_uniform(self):
         """``True`` if `partition` is uniform."""
         return self.partition.is_uniform
