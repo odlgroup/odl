@@ -17,7 +17,7 @@ from builtins import super
 from odl.operator import Operator
 from odl.space.base_ntuples import (NtuplesBase, NtuplesBaseVector,
                                     FnBase, FnBaseVector)
-from odl.space import FunctionSet, FN_IMPLS, NTUPLES_IMPLS
+from odl.space import FunctionSet, fn_impl, ntuples_impl
 from odl.set import RealNumbers, ComplexNumbers, LinearSpace
 from odl.util import (
     arraynd_repr, arraynd_str,
@@ -565,11 +565,8 @@ def dspace_type(space, impl, dtype=None):
         Space type selected after the space's field, the backend and
         the data type
     """
-    spacetype_map = {RealNumbers: FN_IMPLS,
-                     ComplexNumbers: FN_IMPLS,
-                     type(None): NTUPLES_IMPLS}
-
     field_type = type(getattr(space, 'field', None))
+    none_type = type(None)
 
     if dtype is None:
         pass
@@ -592,13 +589,16 @@ def dspace_type(space, impl, dtype=None):
         raise TypeError('non-scalar data type {!r} cannot be combined with '
                         'a `LinearSpace`'.format(dtype))
 
-    stype = spacetype_map[field_type].get(impl, None)
-
-    if stype is None:
+    if field_type in (RealNumbers, ComplexNumbers):
+        spacetype = fn_impl
+    elif field_type is none_type:
+        spacetype = ntuples_impl
+    else:
         raise NotImplementedError('no corresponding data space available '
                                   'for space {!r} and implementation {!r}'
                                   ''.format(space, impl))
-    return stype
+
+    return spacetype(impl)
 
 
 if __name__ == '__main__':

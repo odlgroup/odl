@@ -95,7 +95,7 @@ def pytest_ignore_collect(path, config):
 
 # --- Reusable fixtures ---
 
-fn_impl_params = odl.FN_IMPLS.keys()
+fn_impl_params = odl.fn_impl_names()
 fn_impl_ids = [" impl = '{}' ".format(p) for p in fn_impl_params]
 
 
@@ -104,7 +104,7 @@ def fn_impl(request):
     """String with an available `FnBase` implementation name."""
     return request.param
 
-ntuples_impl_params = odl.NTUPLES_IMPLS.keys()
+ntuples_impl_params = odl.ntuples_impl_names()
 ntuples_impl_ids = [" impl = '{}' ".format(p) for p in ntuples_impl_params]
 
 
