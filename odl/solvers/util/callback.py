@@ -16,6 +16,7 @@ standard_library.install_aliases()
 import warnings
 import time
 import os
+import copy
 import numpy as np
 from odl.util import signature_string
 
@@ -237,7 +238,7 @@ class CallbackStore(SolverCallback):
             if self.function:
                 self.results.append(self.function(result))
             else:
-                self.results.append(result.copy())
+                self.results.append(copy.copy(result))
 
     def reset(self):
         """Clear the `results` list."""
