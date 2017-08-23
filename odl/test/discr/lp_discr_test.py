@@ -945,14 +945,14 @@ def test_inner_nonuniform():
     one = discr.one()
     linear = discr.element(lambda x: x)
 
-    # Exact inner product is the integral from 0 to 5 of x, which is 12.5
-    exact_inner = 12.5
+    # Exact inner product is the integral from 0 to 5 of x, which is 5**2 / 2
+    exact_inner = 5 ** 2 / 2.0
     inner = one.inner(linear)
     assert inner == pytest.approx(exact_inner)
 
 
 def test_norm_nonuniform():
-    """Check if inner products are correct in non-uniform discretizations."""
+    """Check if norms are correct in non-uniform discretizations."""
     fspace = odl.FunctionSpace(odl.IntervalProd(0, 5))
     part = odl.nonuniform_partition([0, 2, 3, 5], min_pt=0, max_pt=5)
     weights = part.cell_sizes_vecs[0]
@@ -962,8 +962,8 @@ def test_norm_nonuniform():
     sqrt = discr.element(lambda x: np.sqrt(x))
 
     # Exact norm is the square root of the integral from 0 to 5 of x,
-    # which is sqrt(12.5)
-    exact_norm = np.sqrt(12.5)
+    # which is sqrt(5**2 / 2)
+    exact_norm = np.sqrt(5 ** 2 / 2.0)
     norm = sqrt.norm()
     assert norm == pytest.approx(exact_norm)
 
