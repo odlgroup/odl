@@ -1,4 +1,4 @@
-"""Denoising using the Chambolle-Pock solver with TV & entropy-type data term.
+"""Denoising using PDHG with TV & entropy-type data term.
 
 Solves the following optimization problem:
 
@@ -65,7 +65,7 @@ callback = (odl.solvers.CallbackPrintIteration() &
             odl.solvers.CallbackShow(step=5))
 
 
-# --- Select solver parameters and solve using Chambolle-Pock --- #
+# --- Select solver parameters and solve using PDHG --- #
 
 
 # Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
