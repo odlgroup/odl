@@ -3,9 +3,13 @@
 Three different algorithms (or variants of PDHG) are compared to solve the
 ROF (Rudin-Osher-Fatemi) problem / L2-TV
 
-    min_{x >= 0}  1/2 ||x - g||_2^2 + lam || |grad(x)| ||_1
+  (ROF)    min_{x >= 0}  1/2 ||x - d||_2^2 + lam || |grad(x)| ||_1
 
-Where ``grad`` the spatial gradient and ``g`` is given noisy data.
+Where ``grad`` the spatial gradient and ``d`` is given noisy data.
+
+Algorithms 1 and 2 are two different assignments of the functional parts of ROF
+to the functions f and g of PDHG. Algorithm 3 improves upon algorithm 2 by
+making use of the strong convexity of the problem.
 
 For further details and a description of the solution method used, see
 :ref:`PDHG` in the ODL documentation.
