@@ -26,7 +26,7 @@ __all__ = ('pdhg',)
 # TODO: add dual gap as convergence measure
 # TODO: diagonal preconditioning
 
-def pdhg(x, f, g, L, tau, sigma, niter,  **kwargs):
+def pdhg(x, f, g, L, tau, sigma, niter, **kwargs):
     """Primal-dual hybrid gradient algorithm for non-smooth convex optimization
     problems.
 

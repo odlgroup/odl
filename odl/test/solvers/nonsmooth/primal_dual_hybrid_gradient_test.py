@@ -127,7 +127,7 @@ def test_pdhg_product_space():
     f = odl.solvers.ZeroFunctional(prod_op.range).convex_conj
 
     # Run the algorithm
-    pdhg(discr_vec, f, g, prod_op, tau=TAU, sigma=SIGMA, theta=THETA, 
+    pdhg(discr_vec, f, g, prod_op, tau=TAU, sigma=SIGMA, theta=THETA,
 	 niter=1)
 
     vec_expl = discr_vec_0 - TAU * SIGMA * prod_op.adjoint(
