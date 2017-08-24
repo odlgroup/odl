@@ -6,14 +6,14 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Test for the Primal-Dual Hybrid Gradient solver."""
+"""Test for the Primal-Dual Hybrid Gradient algorithm."""
 
 from __future__ import division
 import numpy as np
 import pytest
 
 import odl
-from odl.solvers import primal_dual_hybrid_gradient_solver
+from odl.solvers import pdhg
 from odl.util.testutils import all_almost_equal
 
 # Places for the accepted error when comparing results
@@ -28,7 +28,7 @@ THETA = 0.9
 DATA = np.arange(6)
 
 
-def test_primal_dual_hybrid_gradient_solver_simple_space():
+def test_pdhg_simple_space():
     """Test for the Primal-Dual Hybrid Gradient algorithm."""
 
     # Create a discretized image space
@@ -51,9 +51,8 @@ def test_primal_dual_hybrid_gradient_solver_simple_space():
     f = g.convex_conj
 
     # Run the algorithm
-    primal_dual_hybrid_gradient_solver(
-        discr_vec, f, g, op, tau=TAU, sigma=SIGMA, theta=THETA, niter=1,
-        callback=None, x_relax=discr_vec_relax, y=discr_dual)
+    pdhg(discr_vec, f, g, op, tau=TAU, sigma=SIGMA, theta=THETA, niter=1,
+         callback=None, x_relax=discr_vec_relax, y=discr_dual)
 
     # Explicit computation
     vec_expl = (1 - TAU * SIGMA) * DATA
@@ -66,17 +65,15 @@ def test_primal_dual_hybrid_gradient_solver_simple_space():
     assert all_almost_equal(discr_vec_relax, vec_relax_expl, PLACES)
 
     # Resume iteration with previous x but without previous relaxation
-    primal_dual_hybrid_gradient_solver(
-        discr_vec, f, g, op, tau=TAU, sigma=SIGMA, theta=THETA, niter=1)
+    pdhg(discr_vec, f, g, op, tau=TAU, sigma=SIGMA, theta=THETA, niter=1)
 
     vec_expl *= (1 - SIGMA * TAU)
     assert all_almost_equal(discr_vec, vec_expl, PLACES)
 
     # Resume iteration with x1 as above and with relaxation parameter
     discr_vec[:] = vec_expl
-    primal_dual_hybrid_gradient_solver(
-        discr_vec, f, g, op, tau=TAU, sigma=SIGMA, theta=THETA, niter=1,
-        x_relax=discr_vec_relax, y=discr_dual)
+    pdhg(discr_vec, f, g, op, tau=TAU, sigma=SIGMA, theta=THETA, niter=1,
+         x_relax=discr_vec_relax, y=discr_dual)
 
     vec_expl = vec_expl - TAU * SIGMA * (DATA + vec_relax_expl)
     assert all_almost_equal(discr_vec, vec_expl, PLACES)
@@ -90,27 +87,24 @@ def test_primal_dual_hybrid_gradient_solver_simple_space():
     # Relaxation parameter 1 and no acceleration
     discr_vec = op.domain.element(DATA)
     discr_vec_relax_no_gamma = op.domain.element(DATA)
-    primal_dual_hybrid_gradient_solver(
-        discr_vec, f, g, op, tau=TAU, sigma=SIGMA, theta=1, gamma_primal=None,
-        niter=1, x_relax=discr_vec_relax_no_gamma)
+    pdhg(discr_vec, f, g, op, tau=TAU, sigma=SIGMA, theta=1, gamma_primal=None,
+         niter=1, x_relax=discr_vec_relax_no_gamma)
 
     # Acceleration parameter 0, overwrites relaxation parameter
     discr_vec = op.domain.element(DATA)
     discr_vec_relax_g0 = op.domain.element(DATA)
-    primal_dual_hybrid_gradient_solver(
-        discr_vec, f, g, op, tau=TAU, sigma=SIGMA, theta=0, gamma_primal=0,
-        niter=1, x_relax=discr_vec_relax_g0)
+    pdhg(discr_vec, f, g, op, tau=TAU, sigma=SIGMA, theta=0, gamma_primal=0,
+         niter=1, x_relax=discr_vec_relax_g0)
 
     assert discr_vec != discr_vec_relax_no_gamma
     assert all_almost_equal(discr_vec_relax_no_gamma, discr_vec_relax_g0)
 
     # Test callback execution
-    primal_dual_hybrid_gradient_solver(
-        discr_vec, f, g, op, tau=TAU, sigma=SIGMA, theta=THETA, niter=1,
-        callback=odl.solvers.CallbackPrintIteration())
+    pdhg(discr_vec, f, g, op, tau=TAU, sigma=SIGMA, theta=THETA, niter=1,
+         callback=odl.solvers.CallbackPrintIteration())
 
 
-def test_primal_dual_hybrid_gradient_solver_product_space():
+def test_pdhg_product_space():
     """Test the PDHG algorithm using a product space operator."""
 
     # Create a discretized image space
@@ -133,8 +127,8 @@ def test_primal_dual_hybrid_gradient_solver_product_space():
     f = odl.solvers.ZeroFunctional(prod_op.range).convex_conj
 
     # Run the algorithm
-    primal_dual_hybrid_gradient_solver(discr_vec, f, g, prod_op, tau=TAU,
-                                       sigma=SIGMA, theta=THETA, niter=1)
+    pdhg(discr_vec, f, g, prod_op, tau=TAU, sigma=SIGMA, theta=THETA, 
+	 niter=1)
 
     vec_expl = discr_vec_0 - TAU * SIGMA * prod_op.adjoint(
         prod_op(discr_vec_0))

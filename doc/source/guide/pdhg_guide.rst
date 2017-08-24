@@ -1,10 +1,10 @@
 .. _primal_dual_hybrid_gradient_guide:
 
-#####################
-Primal-Dual Hybrid Gradient (PDHG) solver
-#####################
+############################################
+Primal-Dual Hybrid Gradient (PDHG) algorithm
+############################################
 
-The `primal_dual_hybrid_gradient_solver` was studied in 2011 by Chambolle and Pock in the paper `A first-order primal-dual algorithm for convex problems with applications to imaging
+The `primal_dual_hybrid_gradient` was studied in 2011 by Chambolle and Pock in the paper `A first-order primal-dual algorithm for convex problems with applications to imaging
 <https://hal.archives-ouvertes.fr/hal-00490826/document>`_.
 It is a method for solving convex non-smooth problems of the form
 
@@ -16,8 +16,8 @@ where :math:`L` is a linear `Operator` :math:`L : X -> Y`, :math:`X` and :math:`
 For more information on the mathematics, please see :ref:`the mathematical background article on this method <pdhg_math>`.
 
 
-Using the PDHG
-==============
+Using PDHG
+==========
 
 There are several examples in `the examples folder of ODL <https://github.com/odlgroup/odl/tree/master/examples>`_, including denoising, deblurring and tomography.
 Here, we will walk through the solution of a typical problem using the PDHG solver.
@@ -160,8 +160,7 @@ Finally, we pick a starting point (zero) and run the algorithm:
 .. code-block:: python
 
    >>> x = space.zero()
-   >>> odl.solvers.primal_dual_hybrid_gradient_solver(
-   ...     x, f, g, L, tau=tau, sigma=sigma, niter=100)
+   >>> odl.solvers.pdhg(x, f, g, L, tau=tau, sigma=sigma, niter=100)
 
 Now we check the result after 100 iterations and compare it to the original:
 
