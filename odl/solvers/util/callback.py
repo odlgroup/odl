@@ -23,7 +23,7 @@ __all__ = ('Callback', 'CallbackStore', 'CallbackApply',
            'CallbackPrintTiming', 'CallbackPrintIteration',
            'CallbackPrint', 'CallbackPrintNorm', 'CallbackShow',
            'CallbackSaveToDisk', 'CallbackSleep', 'CallbackShowConvergence',
-           'CallbackPrintHardwareUsage')
+           'CallbackPrintHardwareUsage', 'CallbackProgressBar')
 
 
 class Callback(object):
@@ -945,6 +945,65 @@ class CallbackPrintHardwareUsage(Callback):
         inner_str = signature_string([], optargs)
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
+
+class CallbackProgressBar(Callback):
+
+    """Callback for displaying a progress bar.
+
+    This callback requires the ``tqdm`` package.
+    """
+
+    def __init__(self, niter, step=1, **kwargs):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        niter : positive int, optional
+            Total number of iterations.
+        step : positive int, optional
+            Number of iterations between output. Default: 1
+        kwargs
+            Further parameters passed to ``tqdm.tqdm``.
+
+        Examples
+        --------
+        Create progress-bar with 10 iterations
+
+        >>> callback = CallbackProgressBar(niter=10)
+
+        Only print every second step
+
+        >>> callback = CallbackProgressBar(niter=10, step=2)
+        """
+        self.niter = int(niter)
+        self.step = int(step)
+        self.kwargs = kwargs
+        self.reset()
+
+    def __call__(self, _):
+        """Update the progressbar."""
+        if self.iter % self.step == 0:
+            self.pbar.update(self.step)
+
+        self.iter += 1
+
+    def reset(self):
+        """Set `iter` to 0."""
+        import tqdm
+        self.iter = 0
+        self.pbar = tqdm.tqdm(total=self.niter, **self.kwargs)
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        posargs = [self.niter]
+        optargs = [('step', self.step, 1)]
+        inner_str = signature_string(posargs, optargs)
+        if self.kwargs:
+            return '{}({}, **{})'.format(self.__class__.__name__,
+                                         inner_str)
+        else:
+            return '{}({})'.format(self.__class__.__name__,
+                                   inner_str, self.kwargs)
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position
