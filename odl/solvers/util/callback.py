@@ -19,14 +19,14 @@ import os
 import numpy as np
 from odl.util import signature_string
 
-__all__ = ('CallbackStore', 'CallbackApply',
+__all__ = ('Callback', 'CallbackStore', 'CallbackApply',
            'CallbackPrintTiming', 'CallbackPrintIteration',
            'CallbackPrint', 'CallbackPrintNorm', 'CallbackShow',
            'CallbackSaveToDisk', 'CallbackSleep', 'CallbackShowConvergence',
            'CallbackPrintHardwareUsage')
 
 
-class SolverCallback(object):
+class Callback(object):
 
     """Abstract base class for handling iterates of solvers."""
 
@@ -55,7 +55,7 @@ class SolverCallback(object):
 
         Returns
         -------
-        result : `SolverCallback`
+        result : `Callback`
             A callback whose `__call__` method calls both constituents
             `__call__`.
 
@@ -81,7 +81,7 @@ class SolverCallback(object):
 
         Returns
         -------
-        result : `SolverCallback`
+        result : `Callback`
             A callback whose `__call__` method calls first the operator, and
             then applies the callback to the result.
 
@@ -108,7 +108,7 @@ class SolverCallback(object):
         return '{}()'.format(self.__class__.__name__)
 
 
-class _CallbackAnd(SolverCallback):
+class _CallbackAnd(Callback):
 
     """Callback used for combining several callbacks."""
 
@@ -120,7 +120,7 @@ class _CallbackAnd(SolverCallback):
         callback1, ..., callbackN : callable
             Callables to be called in sequence as listed.
         """
-        callbacks = [c if isinstance(c, SolverCallback) else CallbackApply(c)
+        callbacks = [c if isinstance(c, Callback) else CallbackApply(c)
                      for c in callbacks]
 
         self.callbacks = callbacks
@@ -140,7 +140,7 @@ class _CallbackAnd(SolverCallback):
         return ' & '.join('{!r}'.format(p) for p in self.callbacks)
 
 
-class _CallbackCompose(SolverCallback):
+class _CallbackCompose(Callback):
 
     """Callback used for the composition of a callback with an operator."""
 
@@ -179,7 +179,7 @@ class _CallbackCompose(SolverCallback):
         return '{!r} * {!r}'.format(self.callback, self.operator)
 
 
-class CallbackStore(SolverCallback):
+class CallbackStore(Callback):
 
     """Callback for storing all iterates of a solver.
 
@@ -268,7 +268,7 @@ class CallbackStore(SolverCallback):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
-class CallbackApply(SolverCallback):
+class CallbackApply(Callback):
 
     """Callback for applying a custom function to iterates."""
 
@@ -331,7 +331,7 @@ class CallbackApply(SolverCallback):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
-class CallbackPrintIteration(SolverCallback):
+class CallbackPrintIteration(Callback):
 
     """Callback for printing the iteration count."""
 
@@ -399,7 +399,7 @@ class CallbackPrintIteration(SolverCallback):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
-class CallbackPrintTiming(SolverCallback):
+class CallbackPrintTiming(Callback):
 
     """Callback for printing the time elapsed since the previous iteration."""
 
@@ -445,7 +445,7 @@ class CallbackPrintTiming(SolverCallback):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
-class CallbackPrint(SolverCallback):
+class CallbackPrint(Callback):
 
     """Callback for printing the current value."""
 
@@ -523,7 +523,7 @@ class CallbackPrint(SolverCallback):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
-class CallbackPrintNorm(SolverCallback):
+class CallbackPrintNorm(Callback):
 
     """Callback for printing the current norm."""
 
@@ -536,7 +536,7 @@ class CallbackPrintNorm(SolverCallback):
         return '{}()'.format(self.__class__.__name__)
 
 
-class CallbackShow(SolverCallback):
+class CallbackShow(Callback):
 
     """Callback for showing iterates.
 
@@ -665,7 +665,7 @@ class CallbackShow(SolverCallback):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
-class CallbackSaveToDisk(SolverCallback):
+class CallbackSaveToDisk(Callback):
 
     """Callback for saving iterates to disk."""
 
@@ -757,7 +757,7 @@ class CallbackSaveToDisk(SolverCallback):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
-class CallbackSleep(SolverCallback):
+class CallbackSleep(Callback):
 
     """Callback for sleeping for a specific time span."""
 
@@ -792,7 +792,7 @@ class CallbackSleep(SolverCallback):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
-class CallbackShowConvergence(SolverCallback):
+class CallbackShowConvergence(Callback):
 
     """Displays a convergence plot."""
 
@@ -855,7 +855,7 @@ class CallbackShowConvergence(SolverCallback):
             self.logy)
 
 
-class CallbackPrintHardwareUsage(SolverCallback):
+class CallbackPrintHardwareUsage(Callback):
 
     """Callback for printing memory and CPU usage.
 
