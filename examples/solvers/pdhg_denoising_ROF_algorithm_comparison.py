@@ -32,13 +32,11 @@ image /= image.max()
 # Discretized spaces
 space = odl.uniform_discr([0, 0], shape, shape)
 
-# Original image
+# Create space element of ground truth
 orig = space.element(image.copy())
 
-# Add noise
+# Add noise and convert to space element
 image += np.random.normal(0, 0.1, shape)
-
-# Data of noisy image
 noisy = space.element(image)
 
 # Gradient operator
@@ -100,7 +98,7 @@ niter = 500
 
 # --- algorithm 1 --- #
 
-# Matrix of operators
+# Operator assignment
 op = odl.BroadcastOperator(odl.IdentityOperator(space), gradient)
 
 # Make separable sum of functionals, order must correspond to the operator K
@@ -129,13 +127,13 @@ obj_ergodic_alg1 = callback.callbacks[1].obj_function_values_ergodic
 
 # --- algorithm 2 and 3 --- #
 
-# Matrix of operators
+# Operator assignment
 op = gradient
 
-# Make separable sum of functionals, order must correspond to the operator K
+# Assign functional f
 f = l1_norm
 
-# Data fit with non-negativity constraint
+# Create new functional that combines data fit and characteritic function
 g = odl.solvers.FunctionalQuadraticPerturb(char_fun, factr, -2 * factr * noisy)
 
 # The operator norm of the gradient with forward differences is well-known
