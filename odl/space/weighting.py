@@ -13,7 +13,7 @@ from __future__ import print_function, division, absolute_import
 
 import numpy as np
 
-from odl.space.base_tensors import Tensor
+from odl.space.base_tensors import TensorSpace
 from odl.util import array_str, signature_string, indent
 
 
@@ -501,16 +501,15 @@ class ArrayWeighting(Weighting):
         """
         super(ArrayWeighting, self).__init__(impl=impl, exponent=exponent)
 
-        # We store our "own" data structures as-is to retain Numpy
-        # compatibility while avoiding copies. Other things are run through
-        # numpy.asarray.
-        if isinstance(array, Tensor):
+        # We apply array duck-typing to allow all kinds of Numpy-array-like
+        # data structures without change
+        array_attrs = ('shape', 'dtype', 'itemsize')
+        if (all(hasattr(array, attr) for attr in array_attrs) and
+                not isinstance(array, TensorSpace)):
             self.__array = array
         else:
-            self.__array = np.asarray(array)
-
-        if self.array.dtype == object:
-            raise ValueError('invalid array {}'.format(array))
+            raise TypeError('`array` {!r} does not look like a valid array'
+                            ''.format(array))
 
     @property
     def array(self):
