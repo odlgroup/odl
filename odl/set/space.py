@@ -140,7 +140,7 @@ class LinearSpace(Set):
         """Return the zero (additive unit) element of this space."""
         # Default implementation using lincomb
         tmp = self.element()
-        self.lincomb(tmp, 0, tmp, 0, tmp)
+        self.lincomb(0, tmp, 0, tmp, tmp)
         return tmp
 
     def __contains__(self, other):

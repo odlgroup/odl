@@ -121,7 +121,6 @@ def douglas_rachford_pd(x, f, g, L, tau, sigma, niter,
     composite and parallel-sum type monotone operators*. SIAM Journal
     on Optimization, 23.4 (2013), pp 2541--2565.
     """
-
     # Problem size
     m = len(L)
 

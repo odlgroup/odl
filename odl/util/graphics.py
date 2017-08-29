@@ -32,7 +32,6 @@ def warning_free_pause():
                                 message="Using default event loop until "
                                         "function specific to this GUI is "
                                         "implemented")
-
         plt.pause(0.0001)
 
 

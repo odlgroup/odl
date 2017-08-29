@@ -439,6 +439,7 @@ def as_proximal_lang_operator(op, norm_bound=None):
                                  adjoint=adjoint,
                                  norm_bound=norm_bound)
 
+
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
