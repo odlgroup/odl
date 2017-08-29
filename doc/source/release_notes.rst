@@ -220,7 +220,7 @@ Improvements
   * Major review of minor style issues. (:pull:`534`)
   * Typeset math in proximals. (:pull:`580`)
 
-- Improved installation docs and update of PDHG documentation. (:pull:`121`)
+- Improved installation docs and update of Chambolle-Pock documentation. (:pull:`121`)
 
 Changes
 --------
@@ -297,7 +297,7 @@ Improvements
   (:pull:`489`, :pull:`482`, :pull:`491`)
 - Clearer separation between attributes that are intended as part of the subclassing API and those
   that are not. (:pull:`471`)
-- PDHG accepts also non-linear operators and has better documentation now.
+- Chambolle-Pock solver accepts also non-linear operators and has better documentation now.
   (:pull:`490`)
 - Clean-up of imports. (:pull:`492`)
 - All solvers now check that the given start value ``x`` is in ``op.domain``. (:pull:`502`)
@@ -365,7 +365,8 @@ New features
 - New ``PowerOperator`` taking the power of an input function (:pull:`338`).
 - First pointwise operators acting on vector fields: ``PointwiseInner`` and ``PointwiseNorm``
   (:pull:`346`).
-- Examples for FBP reconstruction (:pull:`364`) and TV regularization using PDHG (:pull:`352`).
+- Examples for FBP reconstruction (:pull:`364`) and TV regularization using the Chambolle-Pock
+  method (:pull:`352`).
 - New ``scikit-image`` based implementation of ``RayTransform`` for 2D parallel beam tomography
   (:pull:`352`).
 - ``RectPartition`` has a new method ``append`` for simple extension (:pull:`370`).
