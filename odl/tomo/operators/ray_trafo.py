@@ -205,7 +205,7 @@ class RayTransformBase(Operator):
             proj_uspace = FunctionSpace(geometry.params, out_dtype=dtype)
 
             if isinstance(reco_space.weighting, NoWeighting):
-                weighting = 1.0
+                weighting = None
             elif (isinstance(reco_space.weighting, ConstWeighting) and
                   np.isclose(reco_space.weighting.const,
                              reco_space.cell_volume)):
