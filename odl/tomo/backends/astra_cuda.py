@@ -65,7 +65,7 @@ class AstraCudaProjectorImpl(object):
 
         # Create a mutually exclusive lock so that two callers cant use the
         # same shared resource at the same time.
-        self.mutex = Lock()
+        self._mutex = Lock()
 
     def call_forward(self, vol_data, out=None):
         """Run an ASTRA forward projection on the given data using the GPU.
@@ -84,7 +84,7 @@ class AstraCudaProjectorImpl(object):
             Projection data resulting from the application of the projector.
             If ``out`` was provided, the returned object is a reference to it.
         """
-        with self.mutex:
+        with self._mutex:
             assert vol_data in self.reco_space
             if out is not None:
                 assert out in self.proj_space
@@ -213,7 +213,7 @@ class AstraCudaBackProjectorImpl(object):
 
         # Create a mutually exclusive lock so that two callers cant use the
         # same shared resource at the same time.
-        self.mutex = Lock()
+        self._mutex = Lock()
 
     def call_backward(self, proj_data, out=None):
         """Run an ASTRA back-projection on the given data using the GPU.
@@ -233,7 +233,7 @@ class AstraCudaBackProjectorImpl(object):
             back-projector. If ``out`` was provided, the returned object is a
             reference to it.
         """
-        with self.mutex:
+        with self._mutex:
             assert proj_data in self.proj_space
             if out is not None:
                 assert out in self.reco_space

@@ -12,13 +12,13 @@ This package contains ODL functionality related to [TensorFlow](https://www.tens
 
 ## Example usage
 
-The [examples](examples) folder contains example on how to use the above functionality.
-Specifically
+The [examples](examples) folder contains examples on how to use the above functionality.
+Specifically:
 
 * [tensorflow_layer_matrix.py](examples/tensorflow_layer_matrix.py) shows how an ODL `MatrixOperator` can be converted to a tensorflow layer.
 * [tensorflow_layer_productspace.py](examples/tensorflow_layer_productspace.py) shows how an ODL operator acting on `ProductSpace`s can be converted to a tensorflow layer.
 * [tensorflow_layer_ray_transform.py](examples/tensorflow_layer_ray_transform.py) shows how a `RayTransform` can be converted to a tensorflow layer.
-* [tensorflow_operator_matrix.py](examples/tensorflow_operator_matrix.py) shows how `tf.matmul` can be used as a ODL operator.
+* [tensorflow_operator_matrix.py](examples/tensorflow_operator_matrix.py) shows how `tf.matmul` can be used as an ODL operator.
 * [tensorflow_tomography.py](examples/tensorflow_tomography.py) shows how tensorflow optimizers can be used with ODL operators to solve inverse problems.
 
 There are also some rudimentary tests in the [test](test) folder.
