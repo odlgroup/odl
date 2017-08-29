@@ -27,8 +27,7 @@ __all__ = ('pdhg',)
 # TODO: diagonal preconditioning
 
 def pdhg(x, f, g, L, tau, sigma, niter, **kwargs):
-    """Primal-dual hybrid gradient algorithm for non-smooth convex optimization
-    problems.
+    """Primal-dual hybrid gradient algorithm for convex optimization.
 
     First order primal-dual hybrid-gradient method for non-smooth convex
     optimization problems with known saddle-point structure. The
@@ -36,7 +35,7 @@ def pdhg(x, f, g, L, tau, sigma, niter, **kwargs):
 
         min_{x in X} f(L x) + g(x)
 
-    where ``L`` is an operator and ``F`` and ``G`` are functionals.
+    where ``L`` is an operator and ``f`` and ``g`` are functionals.
 
     The primal-dual hybrid-gradient algorithm is a primal-dual algorithm, and
     basically consists of alternating a gradient ascent in the dual variable
@@ -76,16 +75,17 @@ def pdhg(x, f, g, L, tau, sigma, niter, **kwargs):
     gamma_primal : non-negative float, optional
         Acceleration parameter. If not ``None``, it overrides ``theta`` and
         causes variable relaxation parameter and step sizes to be used,
-        with ``tau`` and ``sigma`` as initial values. Requires ``G`` to be
-        strongly convex. ``gamma_primal`` is the strong convexity constant of
-        ``G``. Acceleration can either be done on the primal part or the dual
-        part but not on both simultaneously.
+        with ``tau`` and ``sigma`` as initial values. Requires ``g`` to be
+        strongly convex and ``gamma_primal`` being upper bounded by the strong
+        convexity constant of ``g``. Acceleration can either be done on the
+        primal part or the dual part but not on both simultaneously.
         Default: ``None``
     gamma_dual : non-negative float, optional
         Acceleration parameter as ``gamma_primal`` but for dual variable.
-        Requires ``F^*`` to be strongly convex. ``gamma_dual`` is the strong
-        convexity constant of ``F^*``. Acceleration can either be done on the
-        primal part or the dual part but not on both simultaneously.
+        Requires ``f^*`` to be strongly convex and ``gamma_dual`` being upper
+        bounded by the strong convexity constant of ``f^*``. Acceleration can
+        either be done on the primal part or the dual part but not on both
+        simultaneously.
         Default: ``None`
     x_relax : ``op.domain`` element, optional
         Required to resume iteration. For ``None``, a copy of the primal
@@ -101,22 +101,22 @@ def pdhg(x, f, g, L, tau, sigma, niter, **kwargs):
     The problem of interest is
 
     .. math::
-        \\min_{x \\in X} F(K x) + G(x),
+        \\min_{x \\in X} f(L x) + g(x),
 
-    where the formal conditions are that :math:`K` is an operator
+    where the formal conditions are that :math:`L` is an operator
     between Hilbert spaces :math:`X` and :math:`Y`.
-    Further, :math:`G : X \\rightarrow [0, +\\infty]` and
-    :math:`F : Y \\rightarrow [0, +\\infty]` are proper, convex,
+    Further, :math:`g : X \\rightarrow [0, +\\infty]` and
+    :math:`f : Y \\rightarrow [0, +\\infty]` are proper, convex,
     lower-semicontinuous functionals.
 
-    Convergence is only guaranteed if :math:`K` is linear, :math:`X, Y`
+    Convergence is only guaranteed if :math:`L` is linear, :math:`X, Y`
     are finite dimensional and the step lengths :math:`\\sigma` and
     :math:`\\tau` satisfy
 
     .. math::
        \\tau \\sigma \|K\| < 1
 
-    where :math:`\|K\|` is the operator norm of :math:`K`.
+    where :math:`\|K\|` is the operator norm of :math:`L`.
 
     It is often of interest to study problems that involve several operators,
     for example the classical TV regularized problem
@@ -124,12 +124,12 @@ def pdhg(x, f, g, L, tau, sigma, niter, **kwargs):
     .. math::
         \\min_x \|Ax - b\|_2^2 + \|\\nabla x\|_1.
 
-    Here it is tempting to let :math:`K=A`, :math:`F(y)=||y||_2^2` and
-    :math:`G(x)=\|\\nabla x\|_1`. This is however not feasible since the
+    Here it is tempting to let :math:`L=A`, :math:`f(y)=||y||_2^2` and
+    :math:`g(x)=\|\\nabla x\|_1`. This is however not feasible since the
     proximal of :math:`||\\nabla x||_1` has no closed form expression.
 
-    Instead, the problem can be formulated :math:`K(x) = (A(x), \\nabla x)`,
-    :math:`F((x_1, x_2)) = \|x_1\|_2^2 + \|x_2\|_1`, :math:`G(x)=0`. See the
+    Instead, the problem can be formulated :math:`L(x) = (A(x), \\nabla x)`,
+    :math:`f((x_1, x_2)) = \|x_1\|_2^2 + \|x_2\|_1`, :math:`g(x)=0`. See the
     examples folder for more information on how to do this.
 
     For a more detailed documentation see :ref:`PDHG`.
