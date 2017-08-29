@@ -12,7 +12,7 @@ to the functions f and g of PDHG. Algorithm 3 improves upon algorithm 2 by
 making use of the strong convexity of the problem.
 
 For further details and a description of the solution method used, see
-:ref:`PDHG` in the ODL documentation.
+https://odlgroup.github.io/odl/guide/pdhg_guide.html in the ODL documentation.
 """
 
 import numpy as np
@@ -36,8 +36,7 @@ space = odl.uniform_discr([0, 0], shape, shape)
 orig = space.element(image.copy())
 
 # Add noise and convert to space element
-image += np.random.normal(0, 0.1, shape)
-noisy = space.element(image)
+noisy = orig + 0.1 * odl.phantom.white_noise(space)
 
 # Gradient operator
 gradient = odl.Gradient(space, method='forward')
@@ -72,7 +71,6 @@ class CallbackStore(odl.solvers.util.callback.SolverCallback):
         self.obj_function_values_ergodic = []
 
     def __call__(self, x):
-        # Fill in proper calls to functionals here
         self.iteration_count += 1
         k = self.iteration_count
 
@@ -119,7 +117,6 @@ x_start = op.domain.zero()
 # Run algorithm 1
 x_alg1 = x_start.copy()
 callback.reset()
-callback.callbacks[1].reset()
 odl.solvers.pdhg(x_alg1, f, g, op, tau=tau, sigma=sigma, niter=niter,
                  callback=callback)
 obj_alg1 = callback.callbacks[1].obj_function_values
@@ -145,7 +142,6 @@ sigma = 1.0 / op_norm  # Step size for the dual variable
 # Run algorithms 2 and 3
 x_alg2 = x_start.copy()
 callback.reset()
-callback.callbacks[1].reset()
 odl.solvers.pdhg(x_alg2, f, g, op, tau=tau, sigma=sigma, niter=niter,
                  gamma_primal=0, callback=callback)
 obj_alg2 = callback.callbacks[1].obj_function_values
@@ -153,7 +149,6 @@ obj_ergodic_alg2 = callback.callbacks[1].obj_function_values_ergodic
 
 x_alg3 = x_start.copy()
 callback.reset()
-callback.callbacks[1].reset()
 odl.solvers.pdhg(x_alg3, f, g, op, tau=tau, sigma=sigma, niter=niter,
                  gamma_primal=strong_convexity, callback=callback)
 obj_alg3 = callback.callbacks[1].obj_function_values
