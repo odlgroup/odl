@@ -15,6 +15,7 @@ import numpy as np
 import scipy as sp
 from odl.discr import ResizingOperator
 from odl.trafos import FourierTransform, PYFFTW_AVAILABLE
+from odl.space.weighting import NoWeighting
 
 
 __all__ = ('fbp_op', 'fbp_filter_op', 'tam_danielson_window',
@@ -440,7 +441,12 @@ def fbp_filter_op(ray_trafo, padding=True, filter_type='Ram-Lak',
     ramp_function = fourier.range.element(fourier_filter)
 
     # Create ramp filter via the convolution formula with fourier transforms
-    return fourier.inverse * ramp_function * fourier
+    if isinstance(ray_trafo.range.weighting, NoWeighting):
+        # Compensate for potentially unweighted range of the ray transform
+        weights = ray_trafo.range.cell_volume
+        return weights * fourier.inverse * ramp_function * fourier
+    else:
+        return fourier.inverse * ramp_function * fourier
 
 
 def fbp_op(ray_trafo, padding=True, filter_type='Ram-Lak',
