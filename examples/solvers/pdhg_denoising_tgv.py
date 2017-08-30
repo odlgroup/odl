@@ -65,11 +65,11 @@ Dy = odl.PartialDerivative(U, 1, method='backward', pad_mode='symmetric')
 # Create symmetrized operator and weighted space.
 # TODO: As the weighted space is currently not supported in ODL we find a
 # workaround.
-#W = odl.ProductSpace(U, 3, weighting=[1, 1, 2])
-#sym_gradient = odl.operator.ProductSpaceOperator(
+# W = odl.ProductSpace(U, 3, weighting=[1, 1, 2])
+# sym_gradient = odl.operator.ProductSpaceOperator(
 #    [[Dx, 0], [0, Dy], [0.5*Dy, 0.5*Dx]], range=W)
 E = odl.operator.ProductSpaceOperator(
-    [[Dx, 0], [0, Dy], [0.5*Dy, 0.5*Dx], [0.5*Dy, 0.5*Dx]])
+    [[Dx, 0], [0, Dy], [0.5 * Dy, 0.5 * Dx], [0.5 * Dy, 0.5 * Dx]])
 W = E.range
 
 # Create the domain of the problem, given by the reconstruction space and the

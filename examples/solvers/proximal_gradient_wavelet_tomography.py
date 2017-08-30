@@ -81,6 +81,7 @@ def callb(x):
     """Callback that displays the inverse wavelet transform of current iter."""
     callback(Wtrafoinv(x))
 
+
 # Run the algorithm (FISTA)
 x = data_discrepancy.domain.zero()
 odl.solvers.accelerated_proximal_gradient(

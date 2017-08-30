@@ -26,6 +26,7 @@ class Convolution(odl.Operator):
     def opnorm(self):
         return self.norm
 
+
 # Discretization
 discr_space = odl.uniform_discr(0, 10, 500, impl='numpy')
 
@@ -44,6 +45,7 @@ omega = 1 / conv.opnorm() ** 2
 # Display callback
 def callback(x):
     plt.plot(conv(x))
+
 
 # Test CGN
 plt.figure()

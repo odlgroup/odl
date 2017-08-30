@@ -79,7 +79,8 @@ callback = (odl.solvers.CallbackPrintIteration() &
 x = op.domain.zero()
 
 # Run the algorithm
-odl.solvers.pdhg(x, f, g, op, tau=tau, sigma=sigma, niter=niter, callback=callback)
+odl.solvers.pdhg(x, f, g, op, tau=tau, sigma=sigma, niter=niter,
+                 callback=callback)
 
 # Display images
 phantom.show(title='original image')

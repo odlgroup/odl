@@ -75,7 +75,7 @@ class CallbackStore(odl.solvers.util.callback.SolverCallback):
         k = self.iteration_count
 
         self.iteration_counts.append(self.iteration_count)
-        self.ergodic_iterate = (k-1)/k * self.ergodic_iterate + 1/k * x
+        self.ergodic_iterate = (k - 1) / k * self.ergodic_iterate + 1 / k * x
         self.obj_function_values.append(obj(x))
         self.obj_function_values_ergodic.append(obj(self.ergodic_iterate))
 
@@ -195,14 +195,14 @@ obj_opt = min(obj_alg1 + obj_alg2 + obj_alg3)
 
 
 def rel_fun(x):
-    return (np.array(x) - obj_opt)/(x[0] - obj_opt)
+    return (np.array(x) - obj_opt) / (x[0] - obj_opt)
 
 
 plt.loglog(i, rel_fun(obj_alg1), label='alg1')
 plt.loglog(i, rel_fun(obj_alg2), label='alg2')
 plt.loglog(i, rel_fun(obj_alg3), label='alg3')
-plt.loglog(i[1:], 1./i[1:], '--', label='1/k')
-plt.loglog(i[1:], 1./i[1:]**2, ':', label='1/k^2')
+plt.loglog(i[1:], 1. / i[1:], '--', label='1/k')
+plt.loglog(i[1:], 1. / i[1:]**2, ':', label='1/k^2')
 plt.title('Relative function values')
 plt.legend()
 
@@ -212,6 +212,6 @@ plt.clf()
 
 plt.loglog(i, rel_fun(obj_ergodic_alg1), label='alg1')
 plt.loglog(i, rel_fun(obj_ergodic_alg2), label='alg2')
-plt.loglog(i[1:], 4./i[1:], '--', label='O(1/k)')
+plt.loglog(i[1:], 4. / i[1:], '--', label='O(1/k)')
 plt.title('Relative ergodic function values')
 plt.legend()
