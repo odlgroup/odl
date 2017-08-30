@@ -57,7 +57,7 @@ g = odl.solvers.ZeroFunctional(op.domain)
 l2_norm_squared = odl.solvers.L2NormSquared(space).translated(data)
 
 # Isotropic TV-regularization i.e. the l1-norm
-l1_norm = 0.0003 * odl.solvers.L1Norm(gradient.range)
+l1_norm = 0.01 * odl.solvers.L1Norm(gradient.range)
 
 # Make separable sum of functionals, order must be the same as in `op`
 f = odl.solvers.SeparableSum(l2_norm_squared, l1_norm)
