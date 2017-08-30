@@ -45,7 +45,7 @@ gradient = odl.Gradient(space, method='forward')
 reg_param = 0.3
 
 # l2-squared data matching
-factr = 1./reg_param * 0.5
+factr = 0.5 / reg_param
 l2_norm = factr * odl.solvers.L2NormSquared(space).translated(noisy)
 
 # Isotropic TV-regularization: l1-norm of grad(x)
@@ -58,7 +58,7 @@ char_fun = odl.solvers.IndicatorNonnegativity(space)
 obj = l2_norm + l1_norm * gradient + char_fun
 
 # strong convexity of "g"
-strong_convexity = 1./reg_param
+strong_convexity = 1 / reg_param
 
 
 # define callback to store function values
@@ -194,7 +194,8 @@ plt.clf()
 obj_opt = min(obj_alg1 + obj_alg2 + obj_alg3)
 
 
-def rel_fun(x): return (np.array(x) - obj_opt)/(x[0] - obj_opt)
+def rel_fun(x):
+    return (np.array(x) - obj_opt)/(x[0] - obj_opt)
 
 
 plt.loglog(i, rel_fun(obj_alg1), label='alg1')
