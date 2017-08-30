@@ -158,23 +158,23 @@ obj_ergodic_alg3 = callback.callbacks[1].obj_function_values_ergodic
 # show images
 plt.figure(0)
 ax1 = plt.subplot(231)
-ax1.imshow(orig, clim=[0, 1])
+ax1.imshow(orig, clim=[0, 1], cmap='gray')
 ax1.title.set_text('original image')
 
 ax2 = plt.subplot(232)
-ax2.imshow(noisy, clim=[0, 1])
+ax2.imshow(noisy, clim=[0, 1], cmap='gray')
 ax2.title.set_text('noisy image')
 
 ax3 = plt.subplot(234)
-ax3.imshow(x_alg1, clim=[0, 1])
+ax3.imshow(x_alg1, clim=[0, 1], cmap='gray')
 ax3.title.set_text('alg1')
 
 ax4 = plt.subplot(235)
-ax4.imshow(x_alg2, clim=[0, 1])
+ax4.imshow(x_alg2, clim=[0, 1], cmap='gray')
 ax4.title.set_text('alg2')
 
 ax5 = plt.subplot(236)
-ax5.imshow(x_alg3, clim=[0, 1])
+ax5.imshow(x_alg3, clim=[0, 1], cmap='gray')
 ax5.title.set_text('alg3')
 
 # show function values
