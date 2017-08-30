@@ -114,7 +114,7 @@ def pdhg(x, f, g, L, tau, sigma, niter, **kwargs):
     :math:`\\tau` satisfy
 
     .. math::
-       \\tau \\sigma \|K\| < 1
+       \\tau \\sigma \|K\|^2 < 1
 
     where :math:`\|K\|` is the operator norm of :math:`L`.
 
@@ -132,7 +132,9 @@ def pdhg(x, f, g, L, tau, sigma, niter, **kwargs):
     :math:`f((x_1, x_2)) = \|x_1\|_2^2 + \|x_2\|_1`, :math:`g(x)=0`. See the
     examples folder for more information on how to do this.
 
-    For a more detailed documentation see :ref:`PDHG`.
+    For a more detailed documentation see `the PDHG guide
+    <https://odlgroup.github.io/odl/guide/pdhg_guide.html>`_ in the online
+    documentation.
 
     References on the algorithm can be found in [CP2011a] and [CP2011b].
 
