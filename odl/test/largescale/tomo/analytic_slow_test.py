@@ -27,6 +27,8 @@ filter_type = simple_fixture(
 frequency_scaling = simple_fixture(
     'frequency_scaling', [0.5, 0.9, 1.0])
 
+weighting = simple_fixture('weighting', ['const', 'none'])
+
 # Find the valid projectors
 # TODO: Add nonuniform once #671 is solved
 projectors = [skip_if_no_astra('par2d astra_cpu uniform'),
@@ -49,7 +51,7 @@ projectors = [pytest.mark.skipif(p.args[0] + largescale, p.args[1])
 
 
 @pytest.fixture(scope="module", params=projectors, ids=projector_ids)
-def projector(request):
+def projector(request, weighting):
 
     n_angles = 500
     dtype = 'float32'
@@ -77,7 +79,8 @@ def projector(request):
     if geom == 'par2d':
         # Reconstruction space
         discr_reco_space = odl.uniform_discr([-20, -20], [20, 20],
-                                             [100, 100], dtype=dtype)
+                                             [100, 100], dtype=dtype,
+                                             weighting=weighting)
 
         # Geometry
         dpart = odl.uniform_partition(-30, 30, 500)
@@ -89,7 +92,8 @@ def projector(request):
     elif geom == 'par3d':
         # Reconstruction space
         discr_reco_space = odl.uniform_discr([-20, -20, -20], [20, 20, 20],
-                                             [100, 100, 100], dtype=dtype)
+                                             [100, 100, 100], dtype=dtype,
+                                             weighting=weighting)
 
         # Geometry
         dpart = odl.uniform_partition([-30, -30], [30, 30], [200, 200])
@@ -101,7 +105,8 @@ def projector(request):
     elif geom == 'cone2d':
         # Reconstruction space
         discr_reco_space = odl.uniform_discr([-20, -20], [20, 20],
-                                             [100, 100], dtype=dtype)
+                                             [100, 100], dtype=dtype,
+                                             weighting=weighting)
 
         # Geometry
         dpart = odl.uniform_partition(-40, 40, 200)
@@ -114,7 +119,8 @@ def projector(request):
     elif geom == 'cone3d':
         # Reconstruction space
         discr_reco_space = odl.uniform_discr([-20, -20, -20], [20, 20, 20],
-                                             [100, 100, 100], dtype=dtype)
+                                             [100, 100, 100], dtype=dtype,
+                                             weighting=weighting)
 
         # Geometry
         dpart = odl.uniform_partition([-50, -50], [50, 50], [200, 200])
@@ -127,7 +133,8 @@ def projector(request):
     elif geom == 'helical':
         # Reconstruction space
         discr_reco_space = odl.uniform_discr([-20, -20, 0], [20, 20, 40],
-                                             [100, 100, 100], dtype=dtype)
+                                             [100, 100, 100], dtype=dtype,
+                                             weighting=weighting)
 
         # Geometry
         # TODO: angles
@@ -174,13 +181,14 @@ def test_fbp_reconstruction(projector):
 
 @skip_if_no_astra_cuda
 @skip_if_no_largescale
-def test_fbp_reconstruction_filters(filter_type, frequency_scaling):
+def test_fbp_reconstruction_filters(filter_type, frequency_scaling, weighting):
     """Validate that the various filters work as expected."""
 
     apart = odl.uniform_partition(0, np.pi, 500)
 
     discr_reco_space = odl.uniform_discr([-20, -20], [20, 20],
-                                         [100, 100], dtype='float32')
+                                         [100, 100], dtype='float32',
+                                         weighting=weighting)
 
     # Geometry
     dpart = odl.uniform_partition(-30, 30, 500)

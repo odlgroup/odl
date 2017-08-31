@@ -440,13 +440,19 @@ def fbp_filter_op(ray_trafo, padding=True, filter_type='Ram-Lak',
     # Create ramp in the detector direction
     ramp_function = fourier.range.element(fourier_filter)
 
-    # Create ramp filter via the convolution formula with fourier transforms
+    weight = 1
     if isinstance(ray_trafo.range.weighting, NoWeighting):
         # Compensate for potentially unweighted range of the ray transform
-        weights = ray_trafo.range.cell_volume
-        return weights * fourier.inverse * ramp_function * fourier
-    else:
-        return fourier.inverse * ramp_function * fourier
+        weight *= ray_trafo.range.cell_volume
+
+    if isinstance(ray_trafo.domain.weighting, NoWeighting):
+        # Compensate for potentially unweighted domain of the ray transform
+        weight /= ray_trafo.domain.cell_volume
+
+    ramp_function *= weight
+
+    # Create ramp filter via the convolution formula with fourier transforms
+    return fourier.inverse * ramp_function * fourier
 
 
 def fbp_op(ray_trafo, padding=True, filter_type='Ram-Lak',
