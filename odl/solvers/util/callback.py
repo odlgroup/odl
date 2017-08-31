@@ -20,14 +20,14 @@ import copy
 import numpy as np
 from odl.util import signature_string
 
-__all__ = ('CallbackStore', 'CallbackApply',
+__all__ = ('Callback', 'CallbackStore', 'CallbackApply',
            'CallbackPrintTiming', 'CallbackPrintIteration',
            'CallbackPrint', 'CallbackPrintNorm', 'CallbackShow',
            'CallbackSaveToDisk', 'CallbackSleep', 'CallbackShowConvergence',
-           'CallbackPrintHardwareUsage')
+           'CallbackPrintHardwareUsage', 'CallbackProgressBar')
 
 
-class SolverCallback(object):
+class Callback(object):
 
     """Abstract base class for handling iterates of solvers."""
 
@@ -56,7 +56,7 @@ class SolverCallback(object):
 
         Returns
         -------
-        result : `SolverCallback`
+        result : `Callback`
             A callback whose `__call__` method calls both constituents
             `__call__`.
 
@@ -82,7 +82,7 @@ class SolverCallback(object):
 
         Returns
         -------
-        result : `SolverCallback`
+        result : `Callback`
             A callback whose `__call__` method calls first the operator, and
             then applies the callback to the result.
 
@@ -109,7 +109,7 @@ class SolverCallback(object):
         return '{}()'.format(self.__class__.__name__)
 
 
-class _CallbackAnd(SolverCallback):
+class _CallbackAnd(Callback):
 
     """Callback used for combining several callbacks."""
 
@@ -121,7 +121,7 @@ class _CallbackAnd(SolverCallback):
         callback1, ..., callbackN : callable
             Callables to be called in sequence as listed.
         """
-        callbacks = [c if isinstance(c, SolverCallback) else CallbackApply(c)
+        callbacks = [c if isinstance(c, Callback) else CallbackApply(c)
                      for c in callbacks]
 
         self.callbacks = callbacks
@@ -141,7 +141,7 @@ class _CallbackAnd(SolverCallback):
         return ' & '.join('{!r}'.format(p) for p in self.callbacks)
 
 
-class _CallbackCompose(SolverCallback):
+class _CallbackCompose(Callback):
 
     """Callback used for the composition of a callback with an operator."""
 
@@ -180,7 +180,7 @@ class _CallbackCompose(SolverCallback):
         return '{!r} * {!r}'.format(self.callback, self.operator)
 
 
-class CallbackStore(SolverCallback):
+class CallbackStore(Callback):
 
     """Callback for storing all iterates of a solver.
 
@@ -269,7 +269,7 @@ class CallbackStore(SolverCallback):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
-class CallbackApply(SolverCallback):
+class CallbackApply(Callback):
 
     """Callback for applying a custom function to iterates."""
 
@@ -332,7 +332,7 @@ class CallbackApply(SolverCallback):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
-class CallbackPrintIteration(SolverCallback):
+class CallbackPrintIteration(Callback):
 
     """Callback for printing the iteration count."""
 
@@ -348,7 +348,7 @@ class CallbackPrintIteration(SolverCallback):
 
             where ``cur_iter_num`` is the current iteration number.
         step : positive int, optional
-            Number of iterations between output. Default: 1
+            Number of iterations between output.
 
         Examples
         --------
@@ -400,7 +400,7 @@ class CallbackPrintIteration(SolverCallback):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
-class CallbackPrintTiming(SolverCallback):
+class CallbackPrintTiming(Callback):
 
     """Callback for printing the time elapsed since the previous iteration."""
 
@@ -446,7 +446,7 @@ class CallbackPrintTiming(SolverCallback):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
-class CallbackPrint(SolverCallback):
+class CallbackPrint(Callback):
 
     """Callback for printing the current value."""
 
@@ -524,7 +524,7 @@ class CallbackPrint(SolverCallback):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
-class CallbackPrintNorm(SolverCallback):
+class CallbackPrintNorm(Callback):
 
     """Callback for printing the current norm."""
 
@@ -537,7 +537,7 @@ class CallbackPrintNorm(SolverCallback):
         return '{}()'.format(self.__class__.__name__)
 
 
-class CallbackShow(SolverCallback):
+class CallbackShow(Callback):
 
     """Callback for showing iterates.
 
@@ -666,7 +666,7 @@ class CallbackShow(SolverCallback):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
-class CallbackSaveToDisk(SolverCallback):
+class CallbackSaveToDisk(Callback):
 
     """Callback for saving iterates to disk."""
 
@@ -758,7 +758,7 @@ class CallbackSaveToDisk(SolverCallback):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
-class CallbackSleep(SolverCallback):
+class CallbackSleep(Callback):
 
     """Callback for sleeping for a specific time span."""
 
@@ -793,7 +793,7 @@ class CallbackSleep(SolverCallback):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
-class CallbackShowConvergence(SolverCallback):
+class CallbackShowConvergence(Callback):
 
     """Displays a convergence plot."""
 
@@ -856,7 +856,7 @@ class CallbackShowConvergence(SolverCallback):
             self.logy)
 
 
-class CallbackPrintHardwareUsage(SolverCallback):
+class CallbackPrintHardwareUsage(Callback):
 
     """Callback for printing memory and CPU usage.
 
@@ -870,7 +870,7 @@ class CallbackPrintHardwareUsage(SolverCallback):
         Parameters
         ----------
         step : positive int, optional
-            Number of iterations between output. Default: 1
+            Number of iterations between output.
         fmt_cpu : string, optional
             Formating that should be applied. The CPU usage is printed as ::
 
@@ -946,6 +946,55 @@ class CallbackPrintHardwareUsage(SolverCallback):
         inner_str = signature_string([], optargs)
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
+
+class CallbackProgressBar(Callback):
+
+    """Callback for displaying a progress bar.
+
+    This callback requires the ``tqdm`` package.
+    """
+
+    def __init__(self, niter, step=1, **kwargs):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        niter : positive int, optional
+            Total number of iterations.
+        step : positive int, optional
+            Number of iterations between output.
+        kwargs :
+            Further parameters passed to ``tqdm.tqdm``.
+        """
+        self.niter = int(niter)
+        self.step = int(step)
+        self.kwargs = kwargs
+        self.reset()
+
+    def __call__(self, _):
+        """Update the progressbar."""
+        if self.iter % self.step == 0:
+            self.pbar.update(self.step)
+
+        self.iter += 1
+
+    def reset(self):
+        """Set `iter` to 0."""
+        import tqdm
+        self.iter = 0
+        self.pbar = tqdm.tqdm(total=self.niter, **self.kwargs)
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        posargs = [self.niter]
+        optargs = [('step', self.step, 1)]
+        inner_str = signature_string(posargs, optargs)
+        if self.kwargs:
+            return '{}({}, **{})'.format(self.__class__.__name__,
+                                         inner_str, self.kwargs)
+        else:
+            return '{}({})'.format(self.__class__.__name__,
+                                   inner_str)
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position
