@@ -660,18 +660,31 @@ def test(arguments=None):
     pytest.main(args)
 
 
-def run_doctests(skip_if=False):
+def run_doctests(skip_if=False, **kwargs):
     """Run all doctests in the current module.
 
-    For ``skip_if=True``, the tests in the module are skipped.
+    This function calls ``doctest.testmod()``, by default with the options
+    ``optionflags=doctest.NORMALIZE_WHITESPACE`` and
+    ``extraglobs={'odl': odl, 'np': np}``. This can be changed with
+    keyword arguments.
+
+    Parameters
+    ----------
+    skip_if : bool
+        For ``True``, skip the doctests in this module.
+    kwargs :
+        Extra keyword arguments passed on to the ``doctest.testmod``
+        function.
     """
     from doctest import testmod, NORMALIZE_WHITESPACE, SKIP
-    optionflags = NORMALIZE_WHITESPACE
+    import odl
+    import numpy as np
+
+    optionflags = kwargs.pop('optionflags', NORMALIZE_WHITESPACE)
     if skip_if:
         optionflags |= SKIP
 
-    import odl
-    import numpy as np
+    extraglobs = kwargs.pop('extraglobs', {'odl': odl, 'np': np})
 
     if run_from_ipython():
         try:
@@ -681,13 +694,12 @@ def run_doctests(skip_if=False):
         else:
             if parse_version(spyder.__version__) < parse_version('3.1.4'):
                 warnings.warn('A bug with IPython and Spyder < 3.1.4 '
-                              'sometimes cause doctests to fail to run. '
+                              'sometimes causes doctests to fail to run. '
                               'Please upgrade Spyder or use another '
                               'interpreter if the doctests do not work.',
                               RuntimeWarning)
 
-    testmod(optionflags=optionflags,
-            extraglobs={'odl': odl, 'np': np})
+    testmod(optionflags=optionflags, extraglobs=extraglobs, **kwargs)
 
 
 if __name__ == '__main__':
