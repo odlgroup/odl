@@ -1,7 +1,7 @@
 """Example of how to convert an ODL operator to a Theano operator layer.
 
 In this example we take an ODL operator given by a `MatrixOperator` and
-convert it into a theano operator that can be used inside any theano
+convert it into a Theano operator that can be used inside any Theano
 computational graph.
 
 We also demonstrate that we can compute the gradient of the scalar-valued
@@ -25,17 +25,17 @@ odl_op = odl.MatrixOperator(matrix)
 # Define evaluation point
 x = [1., 2.]
 
-# Create theano placeholders
+# Create Theano placeholders
 x_theano = T.fvector('x')
 
-# Create theano layer from ODL operator
+# Create Theano layer from ODL operator
 odl_op_layer = odl.contrib.theano.TheanoOperator(odl_op)
 
 # Build computation graph
 y_theano = odl_op_layer(x_theano)
 y_theano_func = theano.function([x_theano], y_theano)
 
-# Evaluate using theano and compare to odl_op(x)
+# Evaluate using Theano and compare to odl_op(x)
 print('Theano eval    : ', y_theano_func(x))
 print('ODL eval       : ', odl_op(x))
 
@@ -45,7 +45,7 @@ print('ODL eval       : ', odl_op(x))
 odl_cost = odl.solvers.L2NormSquared(odl_op.range)
 odl_functional = odl_cost * odl_op
 
-# Create theano layer from ODL cost
+# Create Theano layer from ODL cost
 cost_theano_layer = odl.contrib.theano.TheanoOperator(odl_cost)
 
 # Build computation graph for the gradient of the composed cost wrt x

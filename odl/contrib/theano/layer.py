@@ -6,7 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Utilities for converting ODL operators to theano operators."""
+"""Utilities for converting ODL operators to Theano operators."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -27,11 +27,11 @@ class TheanoOperator(theano.Op):
 
     """Wrap an ODL operator as a Theano operator.
 
-    The operator works with theanos automatic differentiation if the operator
+    The operator works with Theanos automatic differentiation if the operator
     implements `Operator.derivative` and `Operator.adjoint`.
     """
 
-    # Properties used by theano for __eq__, __hash__ and __repr__
+    # Properties used by Theano for __eq__, __hash__ and __repr__
     __props__ = ('operator',)
 
     def __init__(self, operator):
@@ -164,7 +164,7 @@ class TheanoOperator(theano.Op):
         if isinstance(self.operator, Functional):
             return [()]
         else:
-            # Need to convert to native to avoid error in theano from
+            # Need to convert to native to avoid error in Theano from
             # future.int
             return [tuple(native(si) for si in self.operator.range.shape)]
 
@@ -270,7 +270,7 @@ class TheanoOperator(theano.Op):
             It uses a wrapper class ``OdlDerivativeAdjointAsTheanoROp``
             for ``(x, v) --> op.derivative(x).adjoint(v)``.
         """
-        # ODL weights spaces, theano does not. We need to handle this
+        # ODL weights spaces, Theano does not. We need to handle this
         try:
             dom_weight = self.operator.domain.weighting.const
         except AttributeError:
