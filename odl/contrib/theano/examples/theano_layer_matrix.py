@@ -4,8 +4,8 @@ In this example we take an ODL operator given by a `MatrixOperator` and
 convert it into a theano operator that can be used inside any theano
 computational graph.
 
-We also demonstrate that we can compute the "gradients" properly using the
-adjoint of the derivative.
+We also demonstrate that we can compute the gradient of the scalar-valued
+squared L2-norm function properly using either Theano or ODL.
 """
 
 import theano
@@ -14,46 +14,46 @@ import numpy as np
 import odl
 import odl.contrib.theano
 
+# --- Wrap ODL operator as Theano operator --- #
+
 # Define ODL operator
 matrix = np.array([[1., 2.],
                    [0., 0.],
                    [0., 1.]])
 odl_op = odl.MatrixOperator(matrix)
 
-# Define evaluation points
+# Define evaluation point
 x = [1., 2.]
-dy = [1., 2., 3.]
 
 # Create theano placeholders
 x_theano = T.fvector('x')
-dy_theano = T.fvector('dy')
 
-# Create theano layer from odl operator
+# Create theano layer from ODL operator
 odl_op_layer = odl.contrib.theano.TheanoOperator(odl_op)
+
+# Build computation graph
 y_theano = odl_op_layer(x_theano)
 y_theano_func = theano.function([x_theano], y_theano)
 
-# Evaluate using theano
-print('Theano eval:                  ',
-      y_theano_func(x))
+# Evaluate using theano and compare to odl_op(x)
+print('Theano eval    : ', y_theano_func(x))
+print('ODL eval       : ', odl_op(x))
 
-# Compare result with pure ODL
-print('ODL eval:                     ',
-      odl_op(x))
+# --- Wrap ODL functional as Theano operator --- #
 
-# Compute adjoint of derivative "gradients"/"Lop" using theano.
-# Note that the reuslt is indpendent of x, since the operator is linear.
-# We need to explicitly tell theano to ignore this.
-dy_theano_func = theano.function([x_theano, dy_theano],
-                                 T.Lop(y_theano,
-                                       x_theano,
-                                       dy_theano),
-                                 on_unused_input='ignore')
+# Define ODL cost and composed functional
+odl_cost = odl.solvers.L2NormSquared(odl_op.range)
+odl_functional = odl_cost * odl_op
 
-# Evaluate the adjoint of the derivative, called gradient in theano
-print('Theano adjoint of derivative: ',
-      dy_theano_func(x, dy))
+# Create theano layer from ODL cost
+cost_theano_layer = odl.contrib.theano.TheanoOperator(odl_cost)
 
-# Compare result with pure ODL
-print('ODL adjoint of derivative:    ',
-      odl_op.derivative(x).adjoint(dy))
+# Build computation graph for the gradient of the composed cost wrt x
+y_theano = odl_op_layer(x_theano)
+cost_theano = cost_theano_layer(y_theano)
+cost_grad_theano = theano.grad(cost_theano, x_theano)
+cost_theano_grad_func = theano.function([x_theano], cost_grad_theano)
+
+# Compute gradient at x and compare to ODL functional.gradient(x)
+print('Theano gradient: ', cost_theano_grad_func(x))
+print('ODL gradient   : ', odl_functional.gradient(x))

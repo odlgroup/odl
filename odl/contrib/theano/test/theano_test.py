@@ -20,6 +20,7 @@ from odl.util import all_almost_equal
 
 
 def test_theano_operator():
+    """Test the ODL->theano operator wrapper."""
     # Define ODL operator
     matrix = np.random.rand(3, 2)
     odl_op = odl.MatrixOperator(matrix)
@@ -29,18 +30,17 @@ def test_theano_operator():
     dy = [1., 2., 3.]
 
     # Create theano placeholders
-    x_theano = T.fvector('x')
-    dy_theano = T.fvector('dy')
+    x_theano = T.dvector()
+    dy_theano = T.dvector()
 
     # Create theano layer from odl operator
     odl_op_layer = odl.contrib.theano.TheanoOperator(odl_op)
+
+    # Build computation graphs
     y_theano = odl_op_layer(x_theano)
     y_theano_func = theano.function([x_theano], y_theano)
     dy_theano_func = theano.function([x_theano, dy_theano],
-                                     T.Lop(y_theano,
-                                           x_theano,
-                                           dy_theano),
-                                     on_unused_input='ignore')
+                                     T.Rop(y_theano, x_theano, dy_theano))
 
     # Evaluate using theano
     result = y_theano_func(x)
@@ -52,6 +52,44 @@ def test_theano_operator():
     result = dy_theano_func(x, dy)
     expected = odl_op.derivative(x).adjoint(dy)
 
+    assert all_almost_equal(result, expected)
+
+
+def test_theano_gradient():
+    """Test the gradient of ODL functionals wrapped as Theano Ops."""
+    # Define ODL operator
+    matrix = np.random.rand(3, 2)
+    odl_op = odl.MatrixOperator(matrix)
+
+    # Define evaluation point
+    x = [1., 2.]
+
+    # Define ODL cost and the composed functional
+    odl_cost = odl.solvers.L2NormSquared(odl_op.range)
+    odl_functional = odl_cost * odl_op
+
+    # Create theano placeholder
+    x_theano = T.dvector()
+
+    # Create theano layers from odl operators
+    odl_op_layer = odl.contrib.theano.TheanoOperator(odl_op)
+    odl_cost_layer = odl.contrib.theano.TheanoOperator(odl_cost)
+
+    # Build computation graph
+    y_theano = odl_op_layer(x_theano)
+    cost_theano = odl_cost_layer(y_theano)
+    cost_theano_func = theano.function([x_theano], cost_theano)
+    cost_grad_theano = T.grad(cost_theano, x_theano)
+    cost_grad_theano_func = theano.function([x_theano], cost_grad_theano)
+
+    # Evaluate using theano
+    result = cost_theano_func(x)
+    expected = odl_functional(x)
+    assert result == pytest.approx(expected)
+
+    # Evaluate the gradient of the cost, should be 2 * matrix^T.dot(x)
+    result = cost_grad_theano_func(x)
+    expected = odl_functional.gradient(x)
     assert all_almost_equal(result, expected)
 
 
