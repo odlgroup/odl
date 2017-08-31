@@ -347,7 +347,7 @@ class CallbackPrintIteration(Callback):
 
             where ``cur_iter_num`` is the current iteration number.
         step : positive int, optional
-            Number of iterations between output. Default: 1
+            Number of iterations between output.
 
         Examples
         --------
@@ -869,7 +869,7 @@ class CallbackPrintHardwareUsage(Callback):
         Parameters
         ----------
         step : positive int, optional
-            Number of iterations between output. Default: 1
+            Number of iterations between output.
         fmt_cpu : string, optional
             Formating that should be applied. The CPU usage is printed as ::
 
@@ -961,19 +961,9 @@ class CallbackProgressBar(Callback):
         niter : positive int, optional
             Total number of iterations.
         step : positive int, optional
-            Number of iterations between output. Default: 1
-        kwargs
+            Number of iterations between output.
+        kwargs :
             Further parameters passed to ``tqdm.tqdm``.
-
-        Examples
-        --------
-        Create progress-bar with 10 iterations
-
-        >>> callback = CallbackProgressBar(niter=10)
-
-        Only print every second step
-
-        >>> callback = CallbackProgressBar(niter=10, step=2)
         """
         self.niter = int(niter)
         self.step = int(step)
@@ -1000,10 +990,10 @@ class CallbackProgressBar(Callback):
         inner_str = signature_string(posargs, optargs)
         if self.kwargs:
             return '{}({}, **{})'.format(self.__class__.__name__,
-                                         inner_str)
+                                         inner_str, self.kwargs)
         else:
             return '{}({})'.format(self.__class__.__name__,
-                                   inner_str, self.kwargs)
+                                   inner_str)
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position
