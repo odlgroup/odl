@@ -12,8 +12,9 @@ There are several ways to extend ODL, some of which are listed below.
 
 Adding Tensor spaces
 --------------------
-The abstract `TensorSpace` is the workhorse of the ODL space machinery. It is used in the discrete :math:`R^n` case, as well as data representation for discretized function spaces such as :math:`L^2([0, 1])` in the `DiscretizedSpace` class.
-These are in general created through the `rn` and `uniform_discr` functions who take an ``impl`` parameter, allowing users to select the backend to use.
+The abstract `TensorSpace` is the workhorse of the ODL space machinery.
+It is used in the discrete :math:`R^n` case, as well as data representation for discretized function spaces such as :math:`L^2([0, 1])` in the `DiscretizedSpace` class.
+These are in general created through the `rn` and `uniform_discr` functions who take an ``impl`` parameter, allowing users to select the backend for array storage and computations.
 
 In the core ODL package, there is only a single backend available: `NumpyTensorSpace`, given by ``impl='numpy'``, which is the default choice.
 Users can add CUDA support by installing the add-on library `odlcuda`_, which contains the additional space ``CudaFn``.
@@ -27,7 +28,7 @@ There are a few steps to do this:
   The space needs to inherit from `TensorSpace` and implement all of the abstract methods in those spaces.
   See the spaces for further information on the specific methods that need to be implemented.
 * Add the methods ``tensor_space_impls()`` to a file ``odl_plugin.py`` in your library.
-  These should return a ``dict`` mapping implementation names to class names.
+  These should return a ``dict`` mapping implementation names to tensor space classes.
 * Add the following to your library's ``setup.py`` setup call: ``entry_points={'odl.space': ['mylib = mylib.odl_plugin']``, where you replace ``mylib`` with the name of your plugin.
 
 For a blueprint of all these steps, check out the implementation of the `odlcuda`_ plugin.
