@@ -220,37 +220,63 @@ def test_tspace_astype():
     assert cplx.complex_space is cplx
 
 
-def _test_lincomb(tspace, a, b):
+def _test_lincomb(space, a, b, discontig):
     """Validate lincomb against direct result using arrays."""
+    # Set slice for discontiguous arrays and get result space of slicing
+    if discontig:
+        slc = [slice(None)] * (space.ndim - 1) + [slice(None, None, 2)]
+        res_space = space.element()[slc].space
+    else:
+        res_space = space
 
     # Unaliased arguments
-    [xarr, yarr, zarr], [x, y, z] = noise_elements(tspace, 3)
+    [xarr, yarr, zarr], [x, y, z] = noise_elements(space, 3)
+    if discontig:
+        x, y, z = x[slc], y[slc], z[slc]
+        xarr, yarr, zarr = xarr[slc], yarr[slc], zarr[slc]
+
     zarr[:] = a * xarr + b * yarr
-    tspace.lincomb(a, x, b, y, out=z)
+    res_space.lincomb(a, x, b, y, out=z)
     assert all_almost_equal([x, y, z], [xarr, yarr, zarr])
 
     # First argument aliased with output
-    [xarr, yarr, zarr], [x, y, z] = noise_elements(tspace, 3)
+    [xarr, yarr, zarr], [x, y, z] = noise_elements(space, 3)
+    if discontig:
+        x, y, z = x[slc], y[slc], z[slc]
+        xarr, yarr, zarr = xarr[slc], yarr[slc], zarr[slc]
+
     zarr[:] = a * zarr + b * yarr
-    tspace.lincomb(a, z, b, y, out=z)
+    res_space.lincomb(a, z, b, y, out=z)
     assert all_almost_equal([x, y, z], [xarr, yarr, zarr])
 
     # Second argument aliased with output
-    [xarr, yarr, zarr], [x, y, z] = noise_elements(tspace, 3)
+    [xarr, yarr, zarr], [x, y, z] = noise_elements(space, 3)
+    if discontig:
+        x, y, z = x[slc], y[slc], z[slc]
+        xarr, yarr, zarr = xarr[slc], yarr[slc], zarr[slc]
+
     zarr[:] = a * xarr + b * zarr
-    tspace.lincomb(a, x, b, z, out=z)
+    res_space.lincomb(a, x, b, z, out=z)
     assert all_almost_equal([x, y, z], [xarr, yarr, zarr])
 
     # Both arguments aliased with each other
-    [xarr, yarr, zarr], [x, y, z] = noise_elements(tspace, 3)
+    [xarr, yarr, zarr], [x, y, z] = noise_elements(space, 3)
+    if discontig:
+        x, y, z = x[slc], y[slc], z[slc]
+        xarr, yarr, zarr = xarr[slc], yarr[slc], zarr[slc]
+
     zarr[:] = a * xarr + b * xarr
-    tspace.lincomb(a, x, b, x, out=z)
+    res_space.lincomb(a, x, b, x, out=z)
     assert all_almost_equal([x, y, z], [xarr, yarr, zarr])
 
     # All aliased
-    [xarr, yarr, zarr], [x, y, z] = noise_elements(tspace, 3)
+    [xarr, yarr, zarr], [x, y, z] = noise_elements(space, 3)
+    if discontig:
+        x, y, z = x[slc], y[slc], z[slc]
+        xarr, yarr, zarr = xarr[slc], yarr[slc], zarr[slc]
+
     zarr[:] = a * zarr + b * zarr
-    tspace.lincomb(a, z, b, z, out=z)
+    res_space.lincomb(a, z, b, z, out=z)
     assert all_almost_equal([x, y, z], [xarr, yarr, zarr])
 
 
@@ -259,7 +285,26 @@ def test_lincomb(tspace):
     scalar_values = [0, 1, -1, 3.41]
     for a in scalar_values:
         for b in scalar_values:
-            _test_lincomb(tspace, a, b)
+            _test_lincomb(tspace, a, b, discontig=False)
+
+
+def test_lincomb_discontig():
+    """Test lincomb with discontiguous input."""
+    scalar_values = [0, 1, -1, 3.41]
+
+    # Use small size for small array case
+    tspace = odl.rn((3, 4))
+
+    for a in scalar_values:
+        for b in scalar_values:
+            _test_lincomb(tspace, a, b, discontig=True)
+
+    # Use medium size to test fallback impls
+    tspace = odl.rn((30, 40))
+
+    for a in scalar_values:
+        for b in scalar_values:
+            _test_lincomb(tspace, a, b, discontig=True)
 
 
 def test_lincomb_raise(tspace):

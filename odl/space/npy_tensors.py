@@ -1742,34 +1742,18 @@ def _lincomb_impl(a, x1, b, x2, out):
     import scipy.linalg
 
     size = native(x1.size)
-    # TODO: this is commented out for testing
-    # if size < THRESHOLD_SMALL:  # small array optimization
-    #     out.data[:] = a * x1.data + b * x2.data
-    #     return
 
-    if (size > THRESHOLD_MEDIUM and
-            _blas_is_applicable(x1.data, x2.data, out.data)):
-        # Need flat data for BLAS, otherwise in-place does not work.
-        # Raveling must happen in fixed order for non-contiguous out,
-        # otherwise 'A' is applied to arrays, which makes the outcome
-        # dependent on their respective contiguousness.
-        if out.data.flags.f_contiguous:
-            ravel_order = 'F'
-        else:
-            ravel_order = 'C'
+    if size < THRESHOLD_SMALL:
+        # Faster for small arrays
+        out.data[:] = a * x1.data + b * x2.data
+        return
 
-        x1_arr = x1.data.ravel(order=ravel_order)
-        x2_arr = x2.data.ravel(order=ravel_order)
-        out_arr = out.data.ravel(order=ravel_order)
-        axpy, scal, copy = scipy.linalg.blas.get_blas_funcs(
-            ['axpy', 'scal', 'copy'], arrays=(x1_arr, x2_arr, out_arr))
-    else:
-        # TODO: test if these really work properly, e.g., with
-        # non-contiguous data!
+    elif (size < THRESHOLD_MEDIUM or
+          not _blas_is_applicable(x1.data, x2.data, out.data)):
+
         def fallback_axpy(x1, x2, n, a):
             """Fallback axpy implementation avoiding copy."""
             if a != 0:
-                # TODO: this could be unstable
                 x2 /= a
                 x2 += x1
                 x2 *= a
@@ -1789,6 +1773,22 @@ def _lincomb_impl(a, x1, b, x2, out):
         x1_arr = x1.data
         x2_arr = x2.data
         out_arr = out.data
+
+    else:
+        # Need flat data for BLAS, otherwise in-place does not work.
+        # Raveling must happen in fixed order for non-contiguous out,
+        # otherwise 'A' is applied to arrays, which makes the outcome
+        # dependent on their respective contiguousness.
+        if out.data.flags.f_contiguous:
+            ravel_order = 'F'
+        else:
+            ravel_order = 'C'
+
+        x1_arr = x1.data.ravel(order=ravel_order)
+        x2_arr = x2.data.ravel(order=ravel_order)
+        out_arr = out.data.ravel(order=ravel_order)
+        axpy, scal, copy = scipy.linalg.blas.get_blas_funcs(
+            ['axpy', 'scal', 'copy'], arrays=(x1_arr, x2_arr, out_arr))
 
     if x1 is x2 and b != 0:
         # x1 is aligned with x2 -> out = (a+b)*x1
