@@ -759,12 +759,15 @@ class MatrixOperator(Operator):
 
         The operator also works on `uniform_discr` type spaces. Note,
         however, that the ``weighting`` of the domain is propagated to
-        the range by default:
+        the range by default, in order to keep the correspondence between
+        adjoint and transposed matrix:
 
         >>> space = odl.uniform_discr(0, 1, 4)
         >>> op = MatrixOperator(m, domain=space)
         >>> op(space.one())
         rn(3, weighting=0.25).element([ 4.,  4.,  4.])
+        >>> np.array_equal(op.adjoint.matrix, m.T)
+        True
 
         Notes
         -----
@@ -959,7 +962,18 @@ class MatrixOperator(Operator):
 
 
 def _normalize_sampling_points(sampling_points, ndim):
-    """Normalize points to an ndim-long list of linear index arrays."""
+    """Normalize points to an ndim-long list of linear index arrays.
+
+    This helper converts sampling indices for `SamplingOperator` from
+    integers or array-like objects to a list of length ``ndim``, where
+    each entry is a `numpy.ndarray` with ``dtype=int``.
+    The function also checks if all arrays have equal lengths, and that
+    they fulfill ``array.ndim=1`` (or ``size=0`` for if ``ndim == 0``).
+
+    The result of this normalization is intended to be used for indexing
+    an ``ndim``-dimensional array at ``sampling_points`` via NumPy fancy
+    indexing, i.e., ``result = ndim_array[sampling_points]``.
+    """
     sampling_points_in = sampling_points
     if ndim == 0:
         sampling_points = [np.array(sampling_points, dtype=int, copy=False)]
@@ -1002,14 +1016,13 @@ class SamplingOperator(Operator):
 
     The operator is defined by ::
 
-        SamplingOperator(f) == c * f[indices]
+        SamplingOperator(f) == c * f[sampling_points]
 
-    with the weight c being determined by the variant. By choosing
-    c = 1, this operator approximates point evaluations or inner products
-    with dirac deltas, see option ``'point_eval'``. By choosing
-    c = cell_volume it approximates the integration of f over the cell by
-    multiplying its function valume with the cell volume, see option
-    ``'integrate'``.
+    with the weight ``c`` being determined by the variant. By choosing
+    ``c = 1``, this operator approximates point evaluations or inner
+    products with Dirac deltas, see option ``variant='point_eval'``.
+    By choosing ``c = cell_volume``, it approximates the integration of
+    ``f`` over the indexed cells, see option ``variant='integrate'``.
     """
 
     def __init__(self, domain, sampling_points, variant='point_eval'):
@@ -1069,11 +1082,11 @@ class SamplingOperator(Operator):
         ...                    [4, 5, 6]])
         >>> op(x)
         rn(1).element([ 3.])
-        >>> sampling_points = [[0, 1],  # indices (0, 2) and (1, 1)
-        ...                    [2, 1]]
+        >>> sampling_points = [[0, 1, 1],  # indices (0, 2), (1, 1), (1, 0)
+        ...                    [2, 1, 0]]
         >>> op = odl.SamplingOperator(space, sampling_points)
         >>> op(x)
-        rn(2).element([ 3.,  5.])
+        rn(3).element([ 3.,  5.,  4.])
         """
         if not isinstance(domain, TensorSpace):
             raise TypeError('`domain` must be a `TensorSpace` instance, got '
@@ -1133,7 +1146,6 @@ class SamplingOperator(Operator):
         Examples
         --------
         >>> space = odl.uniform_discr([-1, -1], [1, 1], shape=(2, 3))
-        >>> # Point (0, 0) occurs twice
         >>> sampling_points = [[0, 1, 1, 0],
         ...                    [0, 1, 2, 0]]
         >>> op = odl.SamplingOperator(space, sampling_points)
@@ -1141,16 +1153,18 @@ class SamplingOperator(Operator):
         ...                    [4, 5, 6]])
         >>> op.adjoint(op(x)).inner(x) - op(x).inner(op(x)) < 1e-10
         True
+
+        The ``'integrate'`` variant adjoint puts ones at the indices in
+        ``sampling_points``, multiplied by their multiplicity:
+
         >>> op = odl.SamplingOperator(space, sampling_points,
         ...                           variant='integrate')
-        >>> # Put ones at the indices in sampling_points, using double
-        >>> # weight at (0, 0) since it occurs twice
-        >>> op.adjoint(op.range.one())
+        >>> op.adjoint(op.range.one())  # (0, 0) occurs twice
         uniform_discr([-1.0, -1.0], [1.0, 1.0], (2, 3)).element(
             [[ 2.,  0.,  0.],
              [ 0.,  1.,  1.]]
         )
-        >>> op.adjoint(op(x)).inner(x) - op(x).inner(op(x)) < 1e-10
+        >>> abs(op.adjoint(op(x)).inner(x) - op(x).inner(op(x))) < 1e-10
         True
         """
         if self.variant == 'point_eval':

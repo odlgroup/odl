@@ -875,7 +875,7 @@ class RectPartition(object):
                    csizes_r)
 
         if self.is_uniform and default_bdry_fracs:
-            constructor = 'uniform_partition'
+            ctor = 'uniform_partition'
             if self.ndim == 1:
                 posargs = [self.min_pt[0], self.max_pt[0], self.shape[0]]
             else:
@@ -884,9 +884,9 @@ class RectPartition(object):
             optargs = [('nodes_on_bdry', self.nodes_on_bdry, False)]
 
             sig_str = signature_string(posargs, optargs)
-            return '{}({})'.format(constructor, sig_str)
+            return '{}({})'.format(ctor, sig_str)
         else:
-            constructor = 'nonuniform_partition'
+            ctor = 'nonuniform_partition'
             posargs = [list(v) for v in self.coord_vectors]
 
             optargs = []
@@ -915,7 +915,7 @@ class RectPartition(object):
 
             sig_str = signature_string(posargs, optargs,
                                        sep=[',\n', ', ', ',\n'])
-            return '{}(\n{}\n)'.format(constructor, indent(sig_str))
+            return '{}(\n{}\n)'.format(ctor, indent(sig_str))
 
     def __str__(self):
         """Return ``str(self)``."""

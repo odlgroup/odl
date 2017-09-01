@@ -753,11 +753,12 @@ def test_ufuncs(tspace_impl, ufunc):
     in_elems_new = elements[:nin]
 
     # Out-of-place
-    npy_result = npy_ufunc(*in_arrays)
-    odl_result_old = elem_fun_old(*in_elems_old)
-    assert all_almost_equal(npy_result, odl_result_old)
-    odl_result_new = elem_fun_new(*in_elems_new)
-    assert all_almost_equal(npy_result, odl_result_new)
+    with np.errstate(all='ignore'):
+        npy_result = npy_ufunc(*in_arrays)
+        odl_result_old = elem_fun_old(*in_elems_old)
+        assert all_almost_equal(npy_result, odl_result_old)
+        odl_result_new = elem_fun_new(*in_elems_new)
+        assert all_almost_equal(npy_result, odl_result_new)
 
     # Test type of output
     if nout == 1:
@@ -769,13 +770,14 @@ def test_ufuncs(tspace_impl, ufunc):
             assert isinstance(odl_result_new[i], space.element_type)
 
     # In-place with ODL objects as `out`
-    npy_result = npy_ufunc(*in_arrays, **out_arr_kwargs)
-    odl_result_old = elem_fun_old(*in_elems_old, **out_elem_kwargs)
-    assert all_almost_equal(npy_result, odl_result_old)
-    if USE_ARRAY_UFUNCS_INTERFACE:
-        # In-place will not work with Numpy < 1.13
-        odl_result_new = elem_fun_new(*in_elems_new, **out_elem_kwargs)
-        assert all_almost_equal(npy_result, odl_result_new)
+    with np.errstate(all='ignore'):
+        npy_result = npy_ufunc(*in_arrays, **out_arr_kwargs)
+        odl_result_old = elem_fun_old(*in_elems_old, **out_elem_kwargs)
+        assert all_almost_equal(npy_result, odl_result_old)
+        if USE_ARRAY_UFUNCS_INTERFACE:
+            # In-place will not work with Numpy < 1.13
+            odl_result_new = elem_fun_new(*in_elems_new, **out_elem_kwargs)
+            assert all_almost_equal(npy_result, odl_result_new)
 
     # Check that returned stuff refers to given out
     if nout == 1:
@@ -796,8 +798,9 @@ def test_ufuncs(tspace_impl, ufunc):
         elif nout > 1:
             out_arr_kwargs_new = {'out': out_arrays_new[:nout]}
 
-        odl_result_arr_new = elem_fun_new(*in_elems_new,
-                                          **out_arr_kwargs_new)
+        with np.errstate(all='ignore'):
+            odl_result_arr_new = elem_fun_new(*in_elems_new,
+                                              **out_arr_kwargs_new)
         assert all_almost_equal(npy_result, odl_result_arr_new)
 
         if nout == 1:
@@ -815,8 +818,9 @@ def test_ufuncs(tspace_impl, ufunc):
         elif nout > 1:
             out_tens_kwargs_new = {'out': out_tensors_new[:nout]}
 
-        odl_result_tens_new = elem_fun_new(*in_elems_new,
-                                           **out_tens_kwargs_new)
+        with np.errstate(all='ignore'):
+            odl_result_tens_new = elem_fun_new(*in_elems_new,
+                                               **out_tens_kwargs_new)
         assert all_almost_equal(npy_result, odl_result_tens_new)
 
         if nout == 1:
@@ -835,13 +839,15 @@ def test_ufuncs(tspace_impl, ufunc):
         if nout > 1:
             return  # currently not supported by Numpy
         if nin == 1:
-            npy_result = npy_ufunc.at(mod_array, indices)
-            odl_result = npy_ufunc.at(mod_elem, indices)
+            with np.errstate(all='ignore'):
+                npy_result = npy_ufunc.at(mod_array, indices)
+                odl_result = npy_ufunc.at(mod_elem, indices)
         elif nin == 2:
             other_array = in_arrays[1][indices]
             other_elem = in_elems_new[1][indices]
-            npy_result = npy_ufunc.at(mod_array, indices, other_array)
-            odl_result = npy_ufunc.at(mod_elem, indices, other_elem)
+            with np.errstate(all='ignore'):
+                npy_result = npy_ufunc.at(mod_array, indices, other_array)
+                odl_result = npy_ufunc.at(mod_elem, indices, other_elem)
 
         assert all_almost_equal(odl_result, npy_result)
 
@@ -852,27 +858,28 @@ def test_ufuncs(tspace_impl, ufunc):
 
         # We only test along one axis since some binary ufuncs are not
         # re-orderable, in which case Numpy raises a ValueError
-        npy_result = npy_ufunc.reduce(in_array)
-        odl_result = npy_ufunc.reduce(in_elem)
-        assert all_almost_equal(odl_result, npy_result)
-        # In-place using `out` (with ODL vector and array)
-        out_elem = odl_result.space.element()
-        out_array = np.empty(odl_result.shape,
-                             dtype=odl_result.dtype)
-        npy_ufunc.reduce(in_elem, out=out_elem)
-        npy_ufunc.reduce(in_elem, out=out_array)
-        assert all_almost_equal(out_elem, odl_result)
-        assert all_almost_equal(out_array, odl_result)
-        # Using a specific dtype
-        try:
-            npy_result = npy_ufunc.reduce(in_array, dtype=complex)
-        except TypeError:
-            # Numpy finds no matching loop, bail out
-            return
-        else:
-            odl_result = npy_ufunc.reduce(in_elem, dtype=complex)
-            assert odl_result.dtype == npy_result.dtype
+        with np.errstate(all='ignore'):
+            npy_result = npy_ufunc.reduce(in_array)
+            odl_result = npy_ufunc.reduce(in_elem)
             assert all_almost_equal(odl_result, npy_result)
+            # In-place using `out` (with ODL vector and array)
+            out_elem = odl_result.space.element()
+            out_array = np.empty(odl_result.shape,
+                                 dtype=odl_result.dtype)
+            npy_ufunc.reduce(in_elem, out=out_elem)
+            npy_ufunc.reduce(in_elem, out=out_array)
+            assert all_almost_equal(out_elem, odl_result)
+            assert all_almost_equal(out_array, odl_result)
+            # Using a specific dtype
+            try:
+                npy_result = npy_ufunc.reduce(in_array, dtype=complex)
+            except TypeError:
+                # Numpy finds no matching loop, bail out
+                return
+            else:
+                odl_result = npy_ufunc.reduce(in_elem, dtype=complex)
+                assert odl_result.dtype == npy_result.dtype
+                assert all_almost_equal(odl_result, npy_result)
 
     # Other ufunc method use the same interface, to we don't perform
     # extra tests for them.

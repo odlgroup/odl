@@ -75,8 +75,7 @@ def linear_deform(template, displacement, out=None):
     for i, vi in enumerate(displacement):
         image_pts[:, i] += vi.asarray().ravel(order=vi.order)
     values = template.interpolation(image_pts.T, out=out, bounds_check=False)
-    return values.reshape(displacement.space[0].shape,
-                          order=displacement.space[0].order)
+    return values.reshape(template.space.shape, order=template.space.order)
 
 
 class LinDeformFixedTempl(Operator):
