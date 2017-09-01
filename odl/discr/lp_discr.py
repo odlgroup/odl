@@ -25,7 +25,7 @@ from odl.discr.partition import (
 from odl.set import RealNumbers, ComplexNumbers, IntervalProd
 from odl.space import FunctionSpace, ProductSpace
 from odl.space.entry_points import tensor_space_impl
-from odl.space.weighting import Weighting, ConstWeighting
+from odl.space.weighting import ConstWeighting
 from odl.util import (
     apply_on_boundary, is_real_dtype, is_complex_floating_dtype,
     dtype_str, signature_string, indent, is_string,
@@ -49,7 +49,7 @@ class DiscreteLp(DiscretizedSpace):
         Parameters
         ----------
         fspace : `FunctionSpace`
-            The continuous space to be discretized
+            The continuous space to be discretized.
         partition : `RectPartition`
             Partition of (a subset of) ``fspace.domain``.
         dspace : `TensorSpace`
@@ -57,25 +57,18 @@ class DiscreteLp(DiscretizedSpace):
             same `TensorSpace.field` as ``fspace`` and the same
             `TensorSpace.shape` as ``partition``.
         interp : string or sequence of strings, optional
-            The interpolation type to be used for discretization.
-            A sequence is interpreted as interpolation scheme per
-            axis.
-
-            'nearest' : use nearest-neighbor interpolation (default)
-
-            'linear' : use linear interpolation
-
+            Interpolation type to be used for discretization.
+            A sequence is interpreted as interpolation scheme per axis.
+            Possible values:
+                - ``'nearest'`` : use nearest-neighbor interpolation.
+                - ``'linear'`` : use linear interpolation.
         axis_labels : sequence of str, optional
-            Names of the axes to use for plotting etc. Default:
-
-                1D: ``['$x$']``
-
-                2D: ``['$x$', '$y$']``
-
-                3D: ``['$x$', '$y$', '$z$']``
-
-                nD: ``['$x_1$', '$x_2$', ..., '$x_n$']``
-
+            Names of the axes to use for plotting etc.
+            Default:
+                - 1D: ``['$x$']``
+                - 2D: ``['$x$', '$y$']``
+                - 3D: ``['$x$', '$y$', '$z$']``
+                - nD: ``['$x_1$', '$x_2$', ..., '$x_n$']``
             Note: The ``$`` signs ensure rendering as LaTeX.
         """
         if not isinstance(fspace, FunctionSpace):
@@ -1261,56 +1254,23 @@ numpy.ufunc.reduceat.html
                                   axis_labels=axis_labels, **kwargs)
 
 
-def uniform_discr_frompartition(partition, exponent=2.0, interp='nearest',
-                                impl='numpy', **kwargs):
-    """Discretize an Lp function space given a uniform partition.
+def uniform_discr_frompartition(partition, dtype=None, impl='numpy', **kwargs):
+    """Return a uniformly discretized L^p function space.
 
     Parameters
     ----------
     partition : `RectPartition`
-        Regular (uniform) partition to be used for discretization.
-    exponent : positive float, optional
-        The parameter ``p`` in ``L^p``. If the exponent is not
-        equal to the default 2.0, the space has no inner product.
-    interp : string or sequence of strings, optional
-        Interpolation type to be used for discretization.
-        A sequence is interpreted as interpolation scheme per axis.
-        Possible values:
-
-            ``'nearest'`` : use nearest-neighbor interpolation.
-
-            ``'linear'`` : use linear interpolation.
-
+        Uniform partition to be used for discretization.
+        It defines the domain and the functions and the grid for
+        discretization.
+    dtype : optional
+        Data type for the discretized space, must be understood by the
+        `numpy.dtype` constructor. The default for ``None`` depends on the
+        ``impl`` backend, usually it is ``'float64'`` or ``'float32'``.
     impl : string, optional
-        Implementation of the data storage arrays.
-
-    Other Parameters
-    ----------------
-    order : {'A', 'C', 'F'}, optional
-        Axis ordering of the data storage. Only relevant for more
-        than 1 axis.
-        For ``'C'`` and ``'F'``, elements are forced to use
-        contiguous memory in the respective ordering.
-        For ``'A'`` ("any") no contiguousness is enforced.
-    dtype : dtype
-        Data type for the discretized space.
-
-            Default for ``'numpy'``: ``'float64'`` / ``'complex128'``
-
-            Default for ``'cuda'``: ``'float32'``
-
-    weighting : {'const', 'none', `Weighting`}, optional
-        Weighting of the discretized space functions.
-
-            ``'const'`` : weight is a constant, the cell volume (default)
-
-            ``'none'`` : no weighting
-
-            `Weighting` : Use existing weighting as-is (not checked)
-
+        Implementation of the data storage arrays
     kwargs :
-        Additional keyword parameters passed to the `DiscreteLp`
-        initializer.
+        Additional keyword parameters, see `uniform_discr` for details.
 
     Returns
     -------
@@ -1339,7 +1299,6 @@ def uniform_discr_frompartition(partition, exponent=2.0, interp='nearest',
 
     order = kwargs.pop('order', 'A')
 
-    dtype = kwargs.pop('dtype', None)
     if dtype is not None:
         dtype = np.dtype(dtype)
 
@@ -1349,85 +1308,36 @@ def uniform_discr_frompartition(partition, exponent=2.0, interp='nearest',
     if dtype is None:
         dtype = ds_type.default_dtype()
 
-    weighting = kwargs.pop('weighting', 'const')
-    if not isinstance(weighting, Weighting):
-        weighting, weighting_in = str(weighting).lower(), weighting
-        if weighting == 'none' or float(exponent) == float('inf'):
-            weighting = None
-        elif weighting == 'const':
-            weighting = 1.0 if partition.ndim == 0 else partition.cell_volume
+    weighting = kwargs.pop('weighting', None)
+    exponent = kwargs.pop('exponent', 2.0)
+    if weighting is None:
+        if exponent == float('inf') or partition.ndim == 0:
+            weighting = 1.0
         else:
-            raise ValueError("`weighting` '{}' not understood"
-                             "".format(weighting_in))
+            weighting = partition.cell_volume
 
-    dspace = ds_type(partition.shape, dtype=dtype, impl=impl, order=order,
+    dspace = ds_type(partition.shape, dtype, order, impl=impl,
                      exponent=exponent, weighting=weighting)
-    return DiscreteLp(fspace, partition, dspace, interp, **kwargs)
+    return DiscreteLp(fspace, partition, dspace, **kwargs)
 
 
-def uniform_discr_fromspace(fspace, shape, exponent=2.0, interp='nearest',
-                            impl='numpy', **kwargs):
-    """Discretize an Lp function space by uniform partition.
+def uniform_discr_fromspace(fspace, shape, dtype=None, impl='numpy', **kwargs):
+    """Return a uniformly discretized L^p function space.
 
     Parameters
     ----------
     fspace : `FunctionSpace`
-        Continuous function space. Its domain must be an
-        `IntervalProd` instance.
+        Continuous function space. Its domain must be an `IntervalProd`.
     shape : int or sequence of ints
         Number of samples per axis.
-    exponent : positive float, optional
-        The parameter ``p`` in ``L^p``. If the exponent is not
-        equal to the default 2.0, the space has no inner product.
-    interp : string or sequence of strings, optional
-        Interpolation type to be used for discretization.
-        A sequence is interpreted as interpolation scheme per axis.
-        Possible values:
-
-            ``'nearest'`` : use nearest-neighbor interpolation.
-
-            ``'linear'`` : use linear interpolation.
-
+    dtype : optional
+        Data type for the discretized space, must be understood by the
+        `numpy.dtype` constructor. The default for ``None`` depends on the
+        ``impl`` backend, usually it is ``'float64'`` or ``'float32'``.
     impl : string, optional
         Implementation of the data storage arrays
-
-    Other Parameters
-    ----------------
-    nodes_on_bdry : bool or sequence, optional
-        If a sequence is provided, it determines per axis whether to
-        place the last grid point on the boundary (``True``) or shift it
-        by half a cell size into the interior (``False``). In each axis,
-        an entry may consist in a single bool or a 2-tuple of
-        bool. In the latter case, the first tuple entry decides for
-        the left, the second for the right boundary. The length of the
-        sequence must be ``len(shape)``.
-
-        A single boolean is interpreted as a global choice for all
-        boundaries.
-
-        Default: ``False``.
-
-    order : {'A', 'C', 'F'}, optional
-        Axis ordering of the data storage. Only relevant for more
-        than 1 axis.
-        For ``'C'`` and ``'F'``, elements are forced to use
-        contiguous memory in the respective ordering.
-        For ``'A'`` ("any") no contiguousness is enforced.
-    dtype : dtype, optional
-        Data type for the discretized space. If not specified, the
-        `FunctionSpace.out_dtype` of ``fspace`` is used.
-    weighting : {'const', 'none', `Weighting`}, optional
-        Weighting of the discretized space functions.
-
-            ``'const'`` : weight is a constant, the cell volume (default)
-
-            ``'none'`` : no weighting
-
-            `Weighting` : Use existing weighting as-is (not checked)
-
     kwargs :
-        Additional keyword parameters passed to the `DiscreteLp`
-        initializer.
+        Additional keyword parameters, see `uniform_discr` for details.
 
     Returns
     -------
@@ -1458,15 +1368,13 @@ def uniform_discr_fromspace(fspace, shape, exponent=2.0, interp='nearest',
         raise TypeError('domain {!r} of the function space is not an '
                         '`IntervalProd` instance'.format(fspace.domain))
 
-    dtype = kwargs.pop('dtype', None)
-
-    # Set data type. If given check consistency with fspace's field and
+    # Set data type. If given, check consistency with fspace's field and
     # out_dtype. If not given, take the latter.
     if dtype is None:
         dtype = fspace.out_dtype
     else:
         dtype, dtype_in = np.dtype(dtype), dtype
-        if not np.can_cast(fspace.out_dtype, dtype, casting='safe'):
+        if not np.can_cast(fspace.scalar_out_dtype, dtype, casting='safe'):
             raise ValueError('cannot safely cast from output data {} type of '
                              'the function space to given data type {}'
                              ''.format(fspace.out, dtype_in))
@@ -1485,76 +1393,27 @@ def uniform_discr_fromspace(fspace, shape, exponent=2.0, interp='nearest',
     partition = uniform_partition_fromintv(fspace.domain, shape,
                                            nodes_on_bdry)
 
-    return uniform_discr_frompartition(
-        partition=partition, exponent=exponent, interp=interp, impl=impl,
-        dtype=dtype, **kwargs)
+    return uniform_discr_frompartition(partition, dtype, impl, **kwargs)
 
 
-def uniform_discr_fromintv(interval, shape, exponent=2.0, interp='nearest',
-                           impl='numpy', **kwargs):
-    """Discretize an Lp function space by uniform sampling.
+def uniform_discr_fromintv(intv_prod, shape, dtype=None, impl='numpy',
+                           **kwargs):
+    """Return a uniformly discretized L^p function space.
 
     Parameters
     ----------
-    interval : `IntervalProd`
-        The domain of the uniformly discretized space.
+    intv_prod : `IntervalProd`
+        Function domain of the uniformly discretized space.
     shape : int or sequence of ints
         Number of samples per axis.
-    exponent : positive float, optional
-        The parameter ``p`` in ``L^p``. If the exponent is not
-        equal to the default 2.0, the space has no inner product.
-    interp : string or sequence of strings, optional
-        Interpolation type to be used for discretization.
-        A sequence is interpreted as interpolation scheme per axis.
-        Possible values:
-
-            ``'nearest'`` : use nearest-neighbor interpolation.
-
-            ``'linear'`` : use linear interpolation.
-
+    dtype : optional
+        Data type for the discretized space, must be understood by the
+        `numpy.dtype` constructor. The default for ``None`` depends on the
+        ``impl`` backend, usually it is ``'float64'`` or ``'float32'``.
     impl : str, optional
         Implementation of the data storage arrays.
-
-    Other Parameters
-    ----------------
-    nodes_on_bdry : bool or sequence, optional
-        If a sequence is provided, it determines per axis whether to
-        place the last grid point on the boundary (``True``) or shift it
-        by half a cell size into the interior (``False``). In each axis,
-        an entry may consist in a single bool or a 2-tuple of
-        bool. In the latter case, the first tuple entry decides for
-        the left, the second for the right boundary. The length of the
-        sequence must be ``array.ndim``.
-
-        A single boolean is interpreted as a global choice for all
-        boundaries.
-        Default: ``False``
-
-    order : {'A', 'C', 'F'}, optional
-        Axis ordering of the data storage. Only relevant for more
-        than 1 axis.
-        For ``'C'`` and ``'F'``, elements are forced to use
-        contiguous memory in the respective ordering.
-        For ``'A'`` ("any") no contiguousness is enforced.
-    dtype : dtype
-        Data type for the discretized space.
-
-            Default for ``'numpy'``: ``'float64'`` / ``'complex128'``
-
-            Default for ``'cuda'``: ``'float32'``
-
-    weighting : {'const', 'none', `Weighting`}, optional
-        Weighting of the discretized space functions.
-
-            ``'const'`` : weight is a constant, the cell volume (default)
-
-            ``'none'`` : no weighting
-
-            `Weighting` : Use existing weighting as-is (not checked)
-
     kwargs :
-        Additional keyword parameters passed to the `DiscreteLp`
-        initializer.
+        Additional keyword parameters, see `uniform_discr` for details.
 
     Returns
     -------
@@ -1575,27 +1434,37 @@ def uniform_discr_fromintv(interval, shape, exponent=2.0, interp='nearest',
     uniform_discr_fromspace : uniform discretization from an existing
         function space
     """
-    dtype = kwargs.pop('dtype', None)
     if dtype is None:
         dtype = tensor_space_impl(str(impl).lower()).default_dtype()
 
-    fspace = FunctionSpace(interval, out_dtype=dtype)
-    return uniform_discr_fromspace(fspace, shape, exponent, interp, impl,
-                                   **kwargs)
+    fspace = FunctionSpace(intv_prod, out_dtype=dtype)
+    return uniform_discr_fromspace(fspace, shape, dtype, impl, **kwargs)
 
 
-def uniform_discr(min_pt, max_pt, shape, exponent=2.0, interp='nearest',
-                  impl='numpy', **kwargs):
-    """Discretize an Lp function space by uniform sampling.
+def uniform_discr(min_pt, max_pt, shape, dtype=None, impl='numpy', **kwargs):
+    """Return a uniformly discretized L^p function space.
 
     Parameters
     ----------
-    min_pt : float or sequence of floats
-        Maximum corners of the desired function domain.
-    max_pt : float or sequence of floats
-        Minimum corners of the desired function domain.
+    min_pt, max_pt : float or sequence of floats
+        Minimum/maximum corners of the desired function domain.
     shape : int or sequence of ints
         Number of samples per axis.
+    dtype : optional
+        Data type for the discretized space, must be understood by the
+        `numpy.dtype` constructor. The default for ``None`` depends on the
+        ``impl`` backend, usually it is ``'float64'`` or ``'float32'``.
+    impl : string, optional
+        Implementation of the data storage arrays.
+
+    Other Parameters
+    ----------------
+    order : {'A', 'C', 'F'}, optional
+        Axis ordering of the data storage. Only relevant for more
+        than 1 axis.
+        For ``'C'`` and ``'F'``, elements are forced to use
+        contiguous memory in the respective ordering.
+        For ``'A'`` ("any") no contiguousness is enforced.
     exponent : positive float, optional
         The parameter :math:`p` in :math:`L^p`. If the exponent is not
         equal to the default 2.0, the space has no inner product.
@@ -1603,29 +1472,8 @@ def uniform_discr(min_pt, max_pt, shape, exponent=2.0, interp='nearest',
         Interpolation type to be used for discretization.
         A sequence is interpreted as interpolation scheme per axis.
         Possible values:
-
-            ``'nearest'`` : use nearest-neighbor interpolation.
-
-            ``'linear'`` : use linear interpolation.
-
-    impl : string, optional
-        Implementation of the data storage arrays.
-
-    Other Parameters
-    ----------------
-    dtype : dtype
-        Data type for the discretized space.
-
-            Default for ``'numpy'``: ``'float64'`` / ``'complex128'``
-
-            Default for ``'cuda'``: ``'float32'``
-
-    order : {'A', 'C', 'F'}, optional
-        Axis ordering of the data storage. Only relevant for more
-        than 1 axis.
-        For ``'C'`` and ``'F'``, elements are forced to use
-        contiguous memory in the respective ordering.
-        For ``'A'`` ("any") no contiguousness is enforced.
+            - ``'nearest'`` : use nearest-neighbor interpolation.
+            - ``'linear'`` : use linear interpolation.
     nodes_on_bdry : bool or sequence, optional
         If a sequence is provided, it determines per axis whether to
         place the last grid point on the boundary (``True``) or shift it
@@ -1634,18 +1482,17 @@ def uniform_discr(min_pt, max_pt, shape, exponent=2.0, interp='nearest',
         bool. In the latter case, the first tuple entry decides for
         the left, the second for the right boundary. The length of the
         sequence must be ``len(shape)``.
-
         A single boolean is interpreted as a global choice for all
         boundaries.
-
         Default: ``False``.
-
-    weighting : {'const', 'none'}, optional
-        Weighting of the discretized space functions.
-
-            'const' : weight is a constant, the cell volume (default)
-
-            'none' : no weighting
+    weighting : optional
+        Use weighted inner product, norm, and dist. The following
+        types are supported as ``weighting``:
+            - ``None``: Use the cell volume as weighting constant (default).
+            - ``float``: Weighting by a constant.
+            - array-like: Point-wise weighting by an array.
+            - `Weighting`: Use weighting class as-is. Compatibility
+              with this space's elements is not checked during init.
 
     Returns
     -------
@@ -1685,44 +1532,29 @@ def uniform_discr(min_pt, max_pt, shape, exponent=2.0, interp='nearest',
     uniform_discr_fromintv : uniform discretization from an existing
         interval product
     """
-    interval = IntervalProd(min_pt, max_pt)
-    return uniform_discr_fromintv(interval, shape, exponent, interp, impl,
-                                  **kwargs)
+    intv_prod = IntervalProd(min_pt, max_pt)
+    return uniform_discr_fromintv(intv_prod, shape, dtype, impl, **kwargs)
 
 
-def discr_sequence_space(shape, exponent=2.0, impl='numpy', **kwargs):
+def discr_sequence_space(shape, dtype=None, impl='numpy', **kwargs):
     """Return an object mimicing the sequence space ``l^p(R^d)``.
 
-    The returned object is a `DiscreteLp` without sampling and
-    interpolation operators. It uses a grid with stride 1 and no
-    weighting.
+    The returned object is a `DiscreteLp` on the domain ``[0, shape - 1]``,
+    using a uniform grid with stride 1.
 
     Parameters
     ----------
     shape : int or sequence of ints
         Number of element entries per axis.
-    exponent : positive float, optional
-        The parameter ``p`` in ```l^p``. If the exponent is
-        not equal to the default 2.0, the space has no inner
-        product.
+    dtype : optional
+        Data type for the discretized space, must be understood by the
+        `numpy.dtype` constructor. The default for ``None`` depends on the
+        ``impl`` backend, usually it is ``'float64'`` or ``'float32'``.
     impl : string, optional
         Implementation of the data storage arrays.
-    dtype : dtype
-        Data type for the discretized space.
-
-            Default for ``'numpy'``: ``'float64'`` / ``'complex128'``
-
-            Default for ``'cuda'``: ``'float32'``
-
-    order : {'A', 'C', 'F'}, optional
-        Axis ordering of the data storage. Only relevant for more
-        than 1 axis.
-        For ``'C'`` and ``'F'``, elements are forced to use
-        contiguous memory in the respective ordering.
-        For ``'A'`` ("any") no contiguousness is enforced.
     kwargs :
-        Additional keyword parameters passed to the `DiscreteLp`
-        initializer.
+        Additional keyword parameters, see `uniform_discr` for details.
+        Note that ``nodes_on_bdry`` cannot be given.
 
     Returns
     -------
@@ -1738,12 +1570,9 @@ def discr_sequence_space(shape, exponent=2.0, impl='numpy', **kwargs):
     >>> seq_spc.one().norm() == 9.0
     True
     """
-    kwargs.pop('weighting', None)
-    kwargs.pop('nodes_on_bdry', None)
     shape = np.atleast_1d(shape)
-    return uniform_discr([0] * len(shape), shape - 1, shape, impl=impl,
-                         exponent=exponent, nodes_on_bdry=True,
-                         weighting='none', **kwargs)
+    return uniform_discr([0] * len(shape), shape - 1, shape, dtype, impl,
+                         nodes_on_bdry=True, **kwargs)
 
 
 def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
