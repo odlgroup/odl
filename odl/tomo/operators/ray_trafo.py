@@ -20,7 +20,7 @@ from odl.operator import Operator
 from odl.space import FunctionSpace
 from odl.tomo.geometry import (
     Geometry, Parallel2dGeometry, Parallel3dAxisGeometry)
-from odl.space.weighting import NoWeighting, ConstWeighting
+from odl.space.weighting import ConstWeighting
 from odl.tomo.backends import (
     ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE, SKIMAGE_AVAILABLE,
     astra_supports, ASTRA_VERSION,
@@ -202,7 +202,7 @@ class RayTransformBase(Operator):
             dtype = reco_space.dtype
             proj_uspace = FunctionSpace(geometry.params, out_dtype=dtype)
 
-            if isinstance(reco_space.weighting, NoWeighting):
+            if not reco_space.is_weighted:
                 weighting = None
             elif (isinstance(reco_space.weighting, ConstWeighting) and
                   np.isclose(reco_space.weighting.const,

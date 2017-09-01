@@ -20,7 +20,7 @@ from odl.set.sets import RealNumbers, ComplexNumbers
 from odl.set.space import LinearSpaceTypeError
 from odl.space.base_tensors import TensorSpace, Tensor
 from odl.space.weighting import (
-    Weighting, ArrayWeighting, ConstWeighting, NoWeighting,
+    Weighting, ArrayWeighting, ConstWeighting,
     CustomInner, CustomNorm, CustomDist)
 from odl.util import (
     dtype_str, signature_string, is_real_dtype, is_numeric_dtype,
@@ -286,7 +286,8 @@ class NumpyTensorSpace(TensorSpace):
         elif inner is not None:
             self.__weighting = NumpyTensorSpaceCustomInner(inner)
         else:
-            self.__weighting = NumpyTensorSpaceNoWeighting(exponent)
+            # No weighting, i.e., weighting with constant 1.0
+            self.__weighting = NumpyTensorSpaceConstWeighting(1.0, exponent)
 
     @property
     def impl(self):
@@ -305,8 +306,10 @@ class NumpyTensorSpace(TensorSpace):
 
     @property
     def is_weighted(self):
-        """Return ``True`` if the space has a non-trivial weighting."""
-        return not isinstance(self.weighting, NumpyTensorSpaceNoWeighting)
+        """Return ``True`` if the space is not weighted by constant 1.0."""
+        return not (
+            isinstance(self.weighting, NumpyTensorSpaceConstWeighting) and
+            self.weighting.const == 1.0)
 
     def element(self, inp=None, data_ptr=None):
         """Create a new element.
@@ -1691,7 +1694,8 @@ numpy.ufunc.reduceat.html
                 if is_floating_dtype(res.dtype):
                     if res.shape != self.shape:
                         # Don't propagate weighting if shape changes
-                        weighting = NumpyTensorSpaceNoWeighting(exponent)
+                        weighting = NumpyTensorSpaceConstWeighting(1.0,
+                                                                   exponent)
                     spc_kwargs = {'weighting': weighting}
                 else:
                     spc_kwargs = {}
@@ -1836,7 +1840,7 @@ def _weighting(weights, exponent):
     if np.isscalar(weights):
         weighting = NumpyTensorSpaceConstWeighting(weights, exponent)
     elif weights is None:
-        weighting = NumpyTensorSpaceNoWeighting(exponent)
+        weighting = NumpyTensorSpaceConstWeighting(1.0, exponent)
     else:  # last possibility: make an array
         arr = np.asarray(weights)
         weighting = NumpyTensorSpaceArrayWeighting(arr, exponent)
@@ -2213,45 +2217,6 @@ class NumpyTensorSpaceConstWeighting(ConstWeighting):
         else:
             return float((self.const ** (1 / self.exponent) *
                           _pnorm_default(x1 - x2, self.exponent)))
-
-
-class NumpyTensorSpaceNoWeighting(NoWeighting,
-                                  NumpyTensorSpaceConstWeighting):
-
-    """Weighting of a `NumpyTensorSpace` with constant 1."""
-
-    # Implement singleton pattern for efficiency in the default case
-    __instance = None
-
-    def __new__(cls, *args, **kwargs):
-        """Implement singleton pattern if ``exp==2.0``."""
-        if len(args) == 0:
-            exponent = kwargs.pop('exponent', 2.0)
-        else:
-            exponent = args[0]
-            args = args[1:]
-
-        if exponent == 2.0:
-            if not cls.__instance:
-                inst = super(NoWeighting, NumpyTensorSpaceNoWeighting).__new__(
-                    cls, *args, **kwargs)
-                cls.__instance = inst
-            return cls.__instance
-        else:
-            return super(NoWeighting, NumpyTensorSpaceNoWeighting).__new__(
-                cls, *args, **kwargs)
-
-    def __init__(self, exponent=2.0):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        exponent : positive `float`, optional
-            Exponent of the norm. For values other than 2.0, the inner
-            product is not defined.
-        """
-        super(NumpyTensorSpaceNoWeighting, self).__init__(
-            impl='numpy', exponent=exponent)
 
 
 class NumpyTensorSpaceCustomInner(CustomInner):

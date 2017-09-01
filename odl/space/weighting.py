@@ -18,7 +18,6 @@ from odl.util import array_str, signature_string, indent
 
 
 __all__ = ('MatrixWeighting', 'ArrayWeighting', 'ConstWeighting',
-           'NoWeighting',
            'CustomInner', 'CustomNorm', 'CustomDist')
 
 
@@ -670,39 +669,6 @@ class ConstWeighting(Weighting):
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = [self.const]
-        optargs = [('exponent', self.exponent, 2.0)]
-        return '{}({})'.format(self.__class__.__name__,
-                               signature_string(posargs, optargs))
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        return repr(self)
-
-
-class NoWeighting(ConstWeighting):
-
-    """Weighting with constant 1."""
-
-    def __init__(self, impl, exponent=2.0):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        impl : string
-            Specifier for the implementation backend.
-        exponent : positive float, optional
-            Exponent of the norm. For values other than 2.0, the inner
-            product is not defined.
-        """
-        # Support singleton pattern for subclasses
-        if not hasattr(self, '_initialized'):
-            ConstWeighting.__init__(self, const=1.0, impl=impl,
-                                    exponent=exponent)
-            self._initialized = True
-
-    def __repr__(self):
-        """Return ``repr(self)``."""
-        posargs = []
         optargs = [('exponent', self.exponent, 2.0)]
         return '{}({})'.format(self.__class__.__name__,
                                signature_string(posargs, optargs))

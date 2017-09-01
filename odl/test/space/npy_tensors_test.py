@@ -20,8 +20,8 @@ from odl.set.space import LinearSpaceTypeError
 from odl.space.npy_tensors import (
     NumpyTensor, NumpyTensorSpace,
     NumpyTensorSpaceConstWeighting, NumpyTensorSpaceArrayWeighting,
-    NumpyTensorSpaceNoWeighting, NumpyTensorSpaceCustomInner,
-    NumpyTensorSpaceCustomNorm, NumpyTensorSpaceCustomDist,
+    NumpyTensorSpaceCustomInner, NumpyTensorSpaceCustomNorm,
+    NumpyTensorSpaceCustomDist,
     npy_weighted_inner, npy_weighted_norm, npy_weighted_dist)
 from odl.util.testutils import (
     all_almost_equal, all_equal, simple_fixture,
@@ -56,8 +56,8 @@ getitem_indices_params = (setitem_indices_params +
 getitem_indices = simple_fixture('indices', getitem_indices_params)
 
 
-weight_params = [None, 0.5, _pos_array(odl.tensor_space((3, 4)))]
-weight_ids = [' weight = None ', ' weight = 0.5 ', ' weight = <array> ']
+weight_params = [1.0, 0.5, _pos_array(odl.tensor_space((3, 4)))]
+weight_ids = [' weight = 1.0 ', ' weight = 0.5 ', ' weight = <array> ']
 
 
 @pytest.fixture(scope='module', params=weight_params, ids=weight_ids)
@@ -130,8 +130,6 @@ def test_init_tspace_weighting(weight, exponent):
     space = odl.tensor_space((3, 4), weighting=weight, exponent=exponent)
     if isinstance(weight, np.ndarray):
         weighting = NumpyTensorSpaceArrayWeighting(weight, exponent=exponent)
-    elif weight is None:
-        weighting = NumpyTensorSpaceNoWeighting(exponent=exponent)
     else:
         weighting = NumpyTensorSpaceConstWeighting(weight, exponent=exponent)
 
@@ -1008,21 +1006,6 @@ def test_const_weighting_dist(tspace, exponent):
     assert w_const_dist(x, y) == pytest.approx(true_dist)
 
 
-def test_noweight_init():
-    """Test initialization of trivial weighting."""
-    w = NumpyTensorSpaceNoWeighting()
-    w_same1 = NumpyTensorSpaceNoWeighting()
-    w_same2 = NumpyTensorSpaceNoWeighting(2)
-    w_other_exp = NumpyTensorSpaceNoWeighting(exponent=1)
-
-    # Singleton pattern
-    assert w is w_same1
-    assert w is w_same2
-
-    # Proper creation
-    assert w != w_other_exp
-
-
 def test_custom_inner(tspace):
     """Test weighting with a custom inner product."""
     rtol = np.sqrt(np.finfo(tspace.dtype).resolution)
@@ -1472,14 +1455,15 @@ def test_reduction_no_weighting():
     space = odl.rn((3, 4), weighting=0.5)
     x = space.one()
     red = x.ufuncs.sum(axis=0)
-    assert red.space.weighting == NumpyTensorSpaceNoWeighting()
+    assert not red.space.is_weighted
 
     # Array weighting
     weight_arr = np.ones((3, 4)) * 0.5
     space = odl.rn((3, 4), weighting=weight_arr, exponent=1.5)
     x = space.one()
     red = x.ufuncs.sum(axis=0)
-    assert red.space.weighting == NumpyTensorSpaceNoWeighting(exponent=1.5)
+    assert not red.space.is_weighted
+    assert red.space.exponent == 1.5
 
 
 def test_ufunc_reduction_docs_notempty():
