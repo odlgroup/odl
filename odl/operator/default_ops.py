@@ -1194,7 +1194,7 @@ class ComplexEmbedding(Operator):
 
     def _call(self, x, out):
         """Return ``self(x)``."""
-        if self.domain.is_real_space:
+        if self.domain.is_real:
             # Real domain, multiply separately
             out.real = self.scalar.real * x
             out.imag = self.scalar.imag * x
@@ -1216,7 +1216,7 @@ class ComplexEmbedding(Operator):
         >>> op.inverse(op([1, 2, 4]))
         rn(3).element([ 1.,  2.,  4.])
         """
-        if self.domain.is_real_space:
+        if self.domain.is_real:
             # Real domain
             # Optimizations for simple cases.
             if self.scalar.real == self.scalar:
@@ -1273,7 +1273,7 @@ class ComplexEmbedding(Operator):
         >>> AtAxy == AxAy
         True
         """
-        if self.domain.is_real_space:
+        if self.domain.is_real:
             # Real domain
             # Optimizations for simple cases.
             if self.scalar.real == self.scalar:

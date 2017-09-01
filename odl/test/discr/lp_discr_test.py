@@ -50,7 +50,7 @@ def test_discretelp_init():
     assert discr.interp_byaxis == ('nearest', 'nearest')
     assert discr.exponent == dspace.exponent
     assert discr.axis_labels == ('$x$', '$y$')
-    assert discr.is_real_space
+    assert discr.is_real
 
     discr = DiscreteLp(fspace, part, dspace, interp='linear')
     assert discr.interp == 'linear'
@@ -65,7 +65,7 @@ def test_discretelp_init():
                                  out_dtype=complex)
     dspace_c = odl.cn(part.shape)
     discr = DiscreteLp(fspace_c, part, dspace_c)
-    assert discr.is_complex_space
+    assert discr.is_complex
 
     # Make sure repr shows something
     assert repr(discr)
@@ -114,7 +114,7 @@ def test_uniform_discr_init_real(tspace_impl):
     assert isinstance(discr, DiscreteLp)
     assert isinstance(discr.dspace, TensorSpace)
     assert discr.impl == tspace_impl
-    assert discr.is_real_space
+    assert discr.is_real
     assert discr.dspace.exponent == 2.0
     assert discr.dtype == discr.dspace.default_dtype(odl.RealNumbers())
     assert all_equal(discr.min_pt, [0])
@@ -147,7 +147,7 @@ def test_uniform_discr_init_complex(tspace_impl):
         pytest.xfail(reason='complex dtypes not supported')
 
     discr = odl.uniform_discr(0, 1, 10, dtype='complex', impl=tspace_impl)
-    assert discr.is_complex_space
+    assert discr.is_complex
     assert discr.dtype == discr.dspace.default_dtype(odl.ComplexNumbers())
 
 
