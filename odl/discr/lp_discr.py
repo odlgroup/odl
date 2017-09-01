@@ -1680,7 +1680,7 @@ def uniform_discr(min_pt, max_pt, shape, exponent=2.0, interp='nearest',
     array([ 0.1,  0.1])
     >>> space.dtype
     dtype('float64')
-    >>> space.is_real_space
+    >>> space.is_real
     True
 
     Create complex space by giving a dtype:
@@ -1688,7 +1688,7 @@ def uniform_discr(min_pt, max_pt, shape, exponent=2.0, interp='nearest',
     >>> space = uniform_discr([0, 0], [1, 1], (10, 10), dtype='complex')
     >>> space
     uniform_discr([0.0, 0.0], [1.0, 1.0], (10, 10), dtype='complex')
-    >>> space.is_complex_space
+    >>> space.is_complex
     True
     >>> space.real_space  # Get real counterpart
     uniform_discr([0.0, 0.0], [1.0, 1.0], (10, 10))

@@ -54,7 +54,7 @@ def white_noise(space, mean=0, stddev=1, seed=None):
             values = [white_noise(subspace, mean, stddev)
                       for subspace in space]
         else:
-            if space.is_complex_space:
+            if space.is_complex:
                 real = np.random.normal(
                     loc=mean.real, scale=stddev, size=space.shape)
                 imag = np.random.normal(

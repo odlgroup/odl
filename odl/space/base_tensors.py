@@ -129,12 +129,12 @@ class TensorSpace(LinearSpace):
         return self.__dtype
 
     @property
-    def is_real_space(self):
+    def is_real(self):
         """True if this is a space of real tensors."""
         return is_real_floating_dtype(self.dtype)
 
     @property
-    def is_complex_space(self):
+    def is_complex(self):
         """True if this is a space of complex tensors."""
         return is_complex_floating_dtype(self.dtype)
 
@@ -429,10 +429,10 @@ class TensorSpace(LinearSpace):
             yield ('Normally distributed noise',
                    self.element(np.random.standard_normal(self.shape)))
 
-        if self.is_real_space:
+        if self.is_real:
             yield ('Uniformly distributed noise',
                    self.element(np.random.uniform(size=self.shape)))
-        elif self.is_complex_space:
+        elif self.is_complex:
             yield ('Uniformly distributed noise',
                    self.element(np.random.uniform(size=self.shape) +
                                 np.random.uniform(size=self.shape) * 1j))

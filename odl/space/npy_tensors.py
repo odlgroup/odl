@@ -806,9 +806,9 @@ class NumpyTensorSpace(TensorSpace):
         else:
             posargs = [self.shape]
 
-        if self.is_real_space:
+        if self.is_real:
             constructor_name = 'rn'
-        elif self.is_complex_space:
+        elif self.is_complex:
             constructor_name = 'cn'
         else:
             constructor_name = 'tensor_space'
@@ -1151,9 +1151,9 @@ class NumpyTensor(Tensor):
         >>> x.real
         rn(3).element([ 1.,  2.,  3.])
         """
-        if self.space.is_real_space:
+        if self.space.is_real:
             return self
-        elif self.space.is_complex_space:
+        elif self.space.is_complex:
             # Definitely non-contiguous
             real_space = self.space.astype(self.space.real_dtype, order='A')
             return real_space.element(self.data.real)
@@ -1209,9 +1209,9 @@ class NumpyTensor(Tensor):
         >>> x.imag
         rn(3).element([ 1.,  0., -3.])
         """
-        if self.space.is_real_space:
+        if self.space.is_real:
             return self.space.zero()
-        elif self.space.is_complex_space:
+        elif self.space.is_complex:
             # Definitely non-contiguous
             real_space = self.space.astype(self.space.real_dtype, order='A')
             return real_space.element(self.data.imag)
@@ -1253,7 +1253,7 @@ class NumpyTensor(Tensor):
         >>> x
         cn(3).element([(1+2j), (2+3j), (3+4j)])
         """
-        if self.space.is_real_space:
+        if self.space.is_real:
             raise ValueError('cannot set imaginary part in real spaces')
         self.imag.data[:] = newimag
 
@@ -1293,7 +1293,7 @@ class NumpyTensor(Tensor):
         >>> result is x
         True
         """
-        if self.space.is_real_space:
+        if self.space.is_real:
             if out is None:
                 return self
             else:
