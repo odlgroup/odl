@@ -123,24 +123,72 @@ def test_dist(tspace):
     assert almost_equal(x.dist(y), correct_dist, places=2)
 
 
-def _test_lincomb(tspace, a, b):
-    # Validates lincomb against the result on host with randomized
-    # data and given a,b
+def _test_lincomb(space, a, b, discontig):
+    """Validate lincomb against direct result using arrays."""
+    # Set slice for discontiguous arrays and get result space of slicing
+    if discontig:
+        slc = [slice(None)] * (space.ndim - 1) + [slice(None, None, 2)]
+        res_space = space.element()[slc].space
+    else:
+        res_space = space
 
     # Unaliased arguments
-    [x_arr, y_arr, z_arr], [x, y, z] = noise_elements(tspace, 3)
+    [xarr, yarr, zarr], [x, y, z] = noise_elements(space, 3)
+    if discontig:
+        x, y, z = x[slc], y[slc], z[slc]
+        xarr, yarr, zarr = xarr[slc], yarr[slc], zarr[slc]
 
-    z_arr[:] = a * x_arr + b * y_arr
-    z.lincomb(a, x, b, y)
+    zarr[:] = a * xarr + b * yarr
+    res_space.lincomb(a, x, b, y, out=z)
+    assert all_almost_equal([x, y, z], [xarr, yarr, zarr])
 
-    assert all_almost_equal(z, z_arr, places=2)
+    # First argument aliased with output
+    [xarr, yarr, zarr], [x, y, z] = noise_elements(space, 3)
+    if discontig:
+        x, y, z = x[slc], y[slc], z[slc]
+        xarr, yarr, zarr = xarr[slc], yarr[slc], zarr[slc]
+
+    zarr[:] = a * zarr + b * yarr
+    res_space.lincomb(a, z, b, y, out=z)
+    assert all_almost_equal([x, y, z], [xarr, yarr, zarr])
+
+    # Second argument aliased with output
+    [xarr, yarr, zarr], [x, y, z] = noise_elements(space, 3)
+    if discontig:
+        x, y, z = x[slc], y[slc], z[slc]
+        xarr, yarr, zarr = xarr[slc], yarr[slc], zarr[slc]
+
+    zarr[:] = a * xarr + b * zarr
+    res_space.lincomb(a, x, b, z, out=z)
+    assert all_almost_equal([x, y, z], [xarr, yarr, zarr])
+
+    # Both arguments aliased with each other
+    [xarr, yarr, zarr], [x, y, z] = noise_elements(space, 3)
+    if discontig:
+        x, y, z = x[slc], y[slc], z[slc]
+        xarr, yarr, zarr = xarr[slc], yarr[slc], zarr[slc]
+
+    zarr[:] = a * xarr + b * xarr
+    res_space.lincomb(a, x, b, x, out=z)
+    assert all_almost_equal([x, y, z], [xarr, yarr, zarr])
+
+    # All aliased
+    [xarr, yarr, zarr], [x, y, z] = noise_elements(space, 3)
+    if discontig:
+        x, y, z = x[slc], y[slc], z[slc]
+        xarr, yarr, zarr = xarr[slc], yarr[slc], zarr[slc]
+
+    zarr[:] = a * zarr + b * zarr
+    res_space.lincomb(a, z, b, z, out=z)
+    assert all_almost_equal([x, y, z], [xarr, yarr, zarr])
 
 
 def test_lincomb(tspace):
     scalar_values = [0, 1, -1, 3.41]
     for a in scalar_values:
         for b in scalar_values:
-            _test_lincomb(tspace, a, b)
+            _test_lincomb(tspace, a, b, discontig=False)
+            _test_lincomb(tspace, a, b, discontig=True)
 
 
 def _test_member_lincomb(spc, a):
