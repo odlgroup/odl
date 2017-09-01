@@ -425,7 +425,7 @@ def conj_exponent(exp):
     if exp == 1.0:
         return float('inf')
     elif exp == float('inf'):
-        return 1.0  # This is not strictly correct in math, but anyway
+        return 1.0
     else:
         return exp / (exp - 1.0)
 

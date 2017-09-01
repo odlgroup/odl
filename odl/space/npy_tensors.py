@@ -63,6 +63,9 @@ class NumpyTensorSpace(TensorSpace):
     See also [Hac2012]_ "Part I Algebraic Tensors" for a rigorous
     treatment of tensors with a definition close to this one.
 
+    Note also that this notion of tensors is the same as in popular
+    Deep Learning frameworks.
+
     References
     ----------
     [Hac2012] Hackbusch, W. *Tensor Spaces and Numerical Tensor Calculus*.
@@ -110,9 +113,9 @@ class NumpyTensorSpace(TensorSpace):
             `Weighting`: Use this weighting as-is. Compatibility
             with this space's elements is not checked during init.
 
-            ``float``: Weighting by a constant
+            ``float``: Weighting by a constant.
 
-            array-like: Pointwise weighting by an array
+            array-like: Pointwise weighting by an array.
 
             This option cannot be combined with ``dist``,
             ``norm`` or ``inner``. It also cannot be used in case of
@@ -242,7 +245,7 @@ class NumpyTensorSpace(TensorSpace):
             raise ValueError('cannot use any of `dist`, `norm` or `inner` '
                              'for exponent != 2')
         # Check validity of option combination (0 or 1 may be provided)
-        num_extra_args = sum(1 if a is not None else 0
+        num_extra_args = sum(a is not None
                              for a in (dist, norm, inner, weighting))
         if num_extra_args > 1:
             raise ValueError('invalid combination of options `weighting`, '
@@ -744,12 +747,12 @@ class NumpyTensorSpace(TensorSpace):
         if other is self:
             return True
 
-        return (TensorSpace.__eq__(self, other) and
+        return (super(NumpyTensorSpace, self).__eq__(other) and
                 self.weighting == other.weighting)
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        return hash((type(self), self.shape, self.dtype, self.order,
+        return hash((super(NumpyTensorSpace, self).__hash__(),
                      self.weighting))
 
     @property
@@ -810,13 +813,13 @@ class NumpyTensorSpace(TensorSpace):
             posargs = [self.shape]
 
         if self.is_real:
-            constructor_name = 'rn'
+            ctor_name = 'rn'
         elif self.is_complex:
-            constructor_name = 'cn'
+            ctor_name = 'cn'
         else:
-            constructor_name = 'tensor_space'
+            ctor_name = 'tensor_space'
 
-        if (constructor_name == 'tensor_space' or
+        if (ctor_name == 'tensor_space' or
                 not is_numeric_dtype(self.dtype) or
                 self.dtype != self.default_dtype(self.field)):
             posargs.append(dtype_str(self.dtype))
@@ -827,7 +830,7 @@ class NumpyTensorSpace(TensorSpace):
         if weight_str:
             inner_str += ', ' + weight_str
 
-        return '{}({})'.format(constructor_name, inner_str)
+        return '{}({})'.format(ctor_name, inner_str)
 
     @property
     def element_type(self):
@@ -954,7 +957,7 @@ class NumpyTensor(Tensor):
             return np.array_equal(self.data, other.data)
 
     def copy(self):
-        """Create an identical (deep) copy of this vector.
+        """Return an identical (deep) copy of this tensor.
 
         Parameters
         ----------
@@ -977,7 +980,28 @@ class NumpyTensor(Tensor):
         """
         return self.space.element(self.data.copy())
 
-    __copy__ = copy
+    def __copy__(self):
+        """Return ``copy(self)``.
+
+        This implements the (shallow) copy interface of the ``copy``
+        module of the Python standard library.
+
+        See Also
+        --------
+        copy
+
+        Examples
+        --------
+        >>> from copy import copy
+        >>> space = odl.rn(3)
+        >>> x = space.element([1, 2, 3])
+        >>> y = copy(x)
+        >>> y == x
+        True
+        >>> y is x
+        False
+        """
+        return self.copy()
 
     def __getitem__(self, indices):
         """Return ``self[indices]``.
@@ -1040,6 +1064,7 @@ class NumpyTensor(Tensor):
              [-9.,  5., -9.]]
         )
         """
+        # Lazy implementation: index the array and deal with it
         arr = self.data[indices]
         if np.isscalar(arr):
             if self.space.field is not None:
@@ -1047,7 +1072,7 @@ class NumpyTensor(Tensor):
             else:
                 return arr
         else:
-            space_constructor = type(self.space)
+            space_ctor = type(self.space)
             if (self.order in ('C', 'F') and
                     arr.flags[self.order + '_CONTIGUOUS']):
                 out_spc_order = self.order
@@ -1055,7 +1080,7 @@ class NumpyTensor(Tensor):
                 # To preserve the array view for non-contiguous slices,
                 # we need to use 'A' for the space in that case.
                 out_spc_order = 'A'
-            space = space_constructor(
+            space = space_ctor(
                 arr.shape, dtype=self.dtype, order=out_spc_order,
                 exponent=self.space.exponent, weighting=self.space.weighting)
             return space.element(arr)
@@ -1334,7 +1359,7 @@ class NumpyTensor(Tensor):
     def __long__(self):
         """Return ``long(self)``.
 
-        This method is only available in Python 2.
+        This method is only useful in Python 2.
         """
         return long(self.data)
 
@@ -1347,7 +1372,7 @@ class NumpyTensor(Tensor):
         if self.size != 1:
             raise TypeError('only size-1 tensors can be converted to '
                             'Python scalars')
-        return complex(self.data[(0,) * self.ndim])
+        return complex(self.data.ravel()[0])
 
     def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
         """Interface to Numpy's ufunc machinery.
@@ -1527,12 +1552,11 @@ class NumpyTensor(Tensor):
         References
         ----------
         .. _corresponding NEP:
-           https://github.com/numpy/numpy/blob/master/doc/neps/\
-ufunc-overrides.rst
+           https://docs.scipy.org/doc/numpy/neps/ufunc-overrides.html
 
         .. _interface documentation:
-           https://github.com/charris/numpy/blob/master/doc/source/reference/\
-arrays.classes.rst#special-attributes-and-methods
+           https://docs.scipy.org/doc/numpy/reference/arrays.classes.html\
+#numpy.class.__array_ufunc__
 
         .. _general documentation on Numpy ufuncs:
            https://docs.scipy.org/doc/numpy/reference/ufuncs.html
@@ -1601,8 +1625,19 @@ numpy.ufunc.reduceat.html
 
         # --- Evaluate ufunc --- #
 
-        # Trivial context to be used when an output is `None`
+        # Trivial context used to create a single code path for the ufunc
+        # evaluation. For `None` output parameter(s), this is used instead of
+        # `writable_array`.
         class CtxNone(object):
+            """Trivial context manager class.
+
+            When used as ::
+
+                with CtxNone() as obj:
+                    # do stuff with `obj`
+
+            the returned ``obj`` is ``None``.
+            """
             __enter__ = __exit__ = lambda *_: None
 
         if method == '__call__':

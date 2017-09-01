@@ -127,7 +127,7 @@ class DiscretizedSpace(TensorSpace):
 
     @property
     def sampling(self):
-        """Operator mapping a `uspace` element to a tensor."""
+        """Operator mapping a `uspace` element to a `Tensor`."""
         if self.__sampling is not None:
             return self.__sampling
         else:
@@ -135,7 +135,7 @@ class DiscretizedSpace(TensorSpace):
 
     @property
     def interpolation(self):
-        """Operator mapping a tensor to a `uspace` element."""
+        """Operator mapping a `Tensor` to a `uspace` element."""
         if self.__interpolation is not None:
             return self.__interpolation
         else:

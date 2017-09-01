@@ -1149,10 +1149,10 @@ class ComplexEmbedding(Operator):
 
     Implements::
 
-        ComplexEmbedding(x) == x + 1j * zero()
+        ComplexEmbedding(space)(x) == space.complex_space.element(x)
     """
 
-    def __init__(self, space, scalar=1):
+    def __init__(self, space, scalar=1.0):
         """Initialize a new instance.
 
         Parameters

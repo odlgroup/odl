@@ -502,7 +502,7 @@ class DiscreteLp(DiscretizedSpace):
             use_uniform = False
 
         if use_uniform:
-            constructor = 'uniform_discr'
+            ctor = 'uniform_discr'
             if self.ndim == 1:
                 posargs = [self.min_pt[0], self.max_pt[0], self.shape[0]]
             else:
@@ -533,17 +533,17 @@ class DiscreteLp(DiscretizedSpace):
             inner_str = signature_string(posargs, optargs,
                                          mod=[['!r'] * len(posargs),
                                               [''] * len(optargs)])
-            return '{}({})'.format(constructor, inner_str)
+            return '{}({})'.format(ctor, inner_str)
 
         else:
-            constructor = self.__class__.__name__
+            ctor = self.__class__.__name__
             posargs = [self.uspace, self.partition, self.dspace]
             optargs = [('interp', self.interp, 'nearest')]
             inner_str = signature_string(posargs, optargs,
                                          sep=[',\n', ', ', ',\n'],
                                          mod=['!r', '!s'])
 
-            return '{}(\n{}\n)'.format(constructor, indent(inner_str))
+            return '{}(\n{}\n)'.format(ctor, indent(inner_str))
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -832,12 +832,11 @@ class DiscreteLpElement(DiscretizedSpaceElement):
         References
         ----------
         .. _corresponding NEP:
-           https://github.com/numpy/numpy/blob/master/doc/neps/\
-ufunc-overrides.rst
+           https://docs.scipy.org/doc/numpy/neps/ufunc-overrides.html
 
         .. _interface documentation:
-           https://github.com/charris/numpy/blob/master/doc/source/reference/\
-arrays.classes.rst#special-attributes-and-methods
+           https://docs.scipy.org/doc/numpy/reference/arrays.classes.html\
+#numpy.class.__array_ufunc__
 
         .. _general documentation on Numpy ufuncs:
            https://docs.scipy.org/doc/numpy/reference/ufuncs.html
@@ -984,17 +983,13 @@ numpy.ufunc.reduceat.html
             raise ValueError('`reduceat` not supported')
 
         elif (method == 'outer' and
-              not all(isinstance(inp, type(self)) for inp in inputs[:2])):
+              not all(isinstance(inp, type(self)) for inp in inputs)):
                 raise TypeError(
                     "inputs must be of type {} for `method='outer'`, "
                     'got types {}'
-                    ''.format(type(self),
-                              tuple(type(inp) for inp in inputs[:2])))
+                    ''.format(type(self), tuple(type(inp) for inp in inputs)))
 
         else:  # method != '__call__', and otherwise valid
-            # TODO: fix weighting for 'outer' and 'reduce' by looking at
-            # the constant(s) (if equal to cell volume, use also for new
-            # space)
 
             if method != 'at':
                 # No kwargs allowed for 'at'
@@ -1026,16 +1021,15 @@ numpy.ufunc.reduceat.html
                 elif method == 'outer':
                     # Concatenate domains, partitions, interp, axis_labels,
                     # and determine `dspace` from the result tensor
-                    inp1, inp2 = inputs[:2]
+                    inp1, inp2 = inputs
                     domain = inp1.space.domain.append(inp2.space.domain)
                     fspace = FunctionSpace(domain, out_dtype=res_tens.dtype)
                     part = inp1.space.partition.append(inp2.space.partition)
                     interp = (inp1.space.interp_byaxis +
                               inp2.space.interp_byaxis)
-                    labels = inp1.space.axis_labels + inp2.space.axis_labels
-                    if len(set(labels)) != len(labels):
-                        # Duplicates, take default
-                        labels = None
+                    labels1 = [lbl + ' (1)' for lbl in inp1.space.axis_labels]
+                    labels2 = [lbl + ' (2)' for lbl in inp2.space.axis_labels]
+                    labels = labels1 + labels2
 
                     if all(isinstance(inp.space.weighting, ConstWeighting)
                            for inp in inputs):
@@ -1804,6 +1798,5 @@ def _scaling_func_list(bdry_fracs, exponent):
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

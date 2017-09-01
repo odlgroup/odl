@@ -96,12 +96,19 @@ def _default_in_place(func, x, out, **kwargs):
 
         bcast_results = [broadcast_to(res, scalar_out_shape)
                          for res in flat_results]
+        # New array that is flat in the `out_shape` axes, reshape it
+        # to the final `out_shape + scalar_shape`, using the same
+        # order ('C') as the initial `result.ravel()`.
         result = np.array(bcast_results, dtype=func.scalar_out_dtype)
         result = result.reshape(func.out_shape + scalar_out_shape)
 
+    # The following code is required to remove extra axes, e.g., when
+    # the result has shape (2, 1, 3) but should have shape (2, 3).
+    # For those cases, broadcasting doesn't apply.
     try:
         reshaped = result.reshape(out.shape)
     except ValueError:
+        # This is the case when `result` must be broadcast
         out[:] = result
     else:
         out[:] = reshaped

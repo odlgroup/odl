@@ -602,22 +602,22 @@ class PerAxisInterpolation(FunctionSpaceMapping):
 
         posargs = [self.range, self.grid, self.domain, schemes]
 
-        nontriv_var = None
-        for var in self.nn_variants:
-            if var is not None:
-                nontriv_var = var
-                break
-
-        if nontriv_var is None:
-            variants = 'left'
-        elif all(var == nontriv_var
-                 for var in self.nn_variants
-                 if var is not None):
-            variants = nontriv_var
+        # nn_variants are displayed as:
+        # - 'left' if
+        nn_relevant = filter(lambda x: x is not None, self.nn_variants)
+        if not nn_relevant:
+            # No NN axes, ignore nn_variants
+            optargs = []
         else:
-            variants = self.nn_variants
+            # Use single string if all are equal, one per axis otherwise
+            first_relevant = next(nn_relevant)
 
-        optargs = [('nn_variants', variants, 'left')]
+            if all(var == first_relevant for var in nn_relevant):
+                variants = first_relevant
+            else:
+                variants = self.nn_variants
+
+            optargs = [('nn_variants', variants, 'left')]
 
         inner_str = signature_string(posargs, optargs,
                                      sep=[',\n', ', ', ',\n'],

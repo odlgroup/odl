@@ -1029,16 +1029,16 @@ class RectGrid(Set):
     def __repr__(self):
         """Return ``repr(self)``."""
         if self.is_uniform:
-            constructor = 'uniform_grid'
+            ctor = 'uniform_grid'
             posargs = [list(self.min_pt), list(self.max_pt), self.shape]
             inner_str = signature_string(posargs, [])
-            return '{}({})'.format(constructor, inner_str)
+            return '{}({})'.format(ctor, inner_str)
         else:
-            constructor = self.__class__.__name__
+            ctor = self.__class__.__name__
             posargs = [array_str(v) for v in self.coord_vectors]
             inner_str = signature_string(posargs, [], sep=[',\n', ', ', ', '],
                                          mod=['!s', ''])
-            return '{}(\n{}\n)'.format(constructor, indent(inner_str))
+            return '{}(\n{}\n)'.format(ctor, indent(inner_str))
 
     __str__ = __repr__
 

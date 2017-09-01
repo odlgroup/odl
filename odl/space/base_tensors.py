@@ -49,6 +49,9 @@ class TensorSpace(LinearSpace):
     See also [Hac2012]_ "Part I Algebraic Tensors" for a rigorous
     treatment of tensors with a definition close to this one.
 
+    Note also that this notion of tensors is the same as in popular
+    Deep Learning frameworks.
+
     References
     ----------
     [Hac2012] Hackbusch, W. *Tensor Spaces and Numerical Tensor Calculus*.
@@ -63,12 +66,14 @@ class TensorSpace(LinearSpace):
         Parameters
         ----------
         shape : nonnegative int or sequence of nonnegative ints
-            Number of entries per axis for elements in this space. A
+            Number of entries of type ``dtype`` per axis in this space. A
             single integer results in a space with rank 1, i.e., 1 axis.
         dtype :
-            Scalar data type of elements in this space. Can be provided
+            Data type of elements in this space. Can be provided
             in any way the `numpy.dtype` constructor understands, e.g.
             as built-in type or as a string.
+            For a data type with a ``dtype.shape``, these extra dimensions
+            are added *to the left* of ``shape``.
         order : {'A', 'C', 'F'}, optional
             Axis ordering of the data storage. Only relevant for more
             than 1 axis.
@@ -120,7 +125,7 @@ class TensorSpace(LinearSpace):
 
     @property
     def shape(self):
-        """Number of elements per axis."""
+        """Number of scalar elements per axis."""
         return self.__shape
 
     @property
@@ -274,6 +279,9 @@ class TensorSpace(LinearSpace):
 
         This is identical to `order` except for ``self.order == 'A'``,
         where ``'C'`` is returned.
+
+        This default implementation should be overridden by subclasses
+        that work better for a different ordering.
         """
         return 'C' if self.order == 'A' else self.order
 
@@ -343,7 +351,9 @@ class TensorSpace(LinearSpace):
 
         On the other hand, spaces are not unique:
 
-        >>> spc2 = odl.tensor_space((2, 3), dtype='uint64')  # same as spc
+        >>> spc2 = odl.tensor_space((2, 3), dtype='uint64')
+        >>> spc2 == spc
+        True
         >>> x2 = spc2.element([[5, 4, 3],
         ...                    [2, 1, 0]])
         >>> x2 in spc
@@ -703,12 +713,11 @@ class Tensor(LinearSpaceElement):
         References
         ----------
         .. _corresponding NEP:
-           https://github.com/numpy/numpy/blob/master/doc/neps/\
-ufunc-overrides.rst
+           https://docs.scipy.org/doc/numpy/neps/ufunc-overrides.html
 
         .. _interface documentation:
-           https://github.com/charris/numpy/blob/master/doc/source/reference/\
-arrays.classes.rst#special-attributes-and-methods
+           https://docs.scipy.org/doc/numpy/reference/arrays.classes.html\
+#numpy.class.__array_ufunc__
 
         .. _general documentation on Numpy ufuncs:
            https://docs.scipy.org/doc/numpy/reference/ufuncs.html
@@ -752,10 +761,11 @@ numpy.ufunc.reduceat.html
 
         # --- Process `inputs` --- #
 
-        # Convert inputs that are ODL tensors to Numpy arrays so that the
-        # native Numpy ufunc is called later
+        # Convert inputs that are ODL tensors or their data containers to
+        # Numpy arrays so that the native Numpy ufunc is called later
         inputs = tuple(
-            inp.asarray() if isinstance(inp, type(self)) else inp
+            np.asarray(inp) if isinstance(inp, (type(self), type(self.data)))
+            else inp
             for inp in inputs)
 
         # --- Get some parameters for later --- #
@@ -771,8 +781,19 @@ numpy.ufunc.reduceat.html
 
         # --- Evaluate ufunc --- #
 
-        # Trivial context to be used when an output is `None`
+        # Trivial context used to create a single code path for the ufunc
+        # evaluation. For `None` output parameter(s), this is used instead of
+        # `writable_array`.
         class CtxNone(object):
+            """Trivial context manager class.
+
+            When used as ::
+
+                with CtxNone() as obj:
+                    # do stuff with `obj`
+
+            the returned ``obj`` is ``None``.
+            """
             __enter__ = __exit__ = lambda *_: None
 
         if method == '__call__':
