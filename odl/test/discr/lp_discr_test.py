@@ -884,7 +884,7 @@ def test_ufunc_corner_cases(tspace_impl):
     x = space.element([[-1, 0, 1],
                        [1, 2, 3]])
     space_no_w = odl.uniform_discr([0, 0], [1, 1], (2, 3), impl=tspace_impl,
-                                   weighting='none')
+                                   weighting=1.0)
 
     # --- Ufuncs with nin = 1, nout = 1 --- #
 
@@ -909,7 +909,7 @@ def test_ufunc_corner_cases(tspace_impl):
     assert all_almost_equal(res, np.sin(x.asarray(), dtype=complex))
     assert res.dtype == complex
 
-    # Check propagation of (no) weightings
+    # Check propagation of weightings
     y = space_no_w.one()
     res = y.__array_ufunc__(np.sin, '__call__', y)
     assert res.space.weighting == space_no_w.weighting
@@ -981,13 +981,10 @@ def test_ufunc_corner_cases(tspace_impl):
     assert res == pytest.approx(np.add.reduce(x.asarray(), axis=(0, 1)))
 
     # Constant weighting should be preserved (recomputed from cell
-    # volume), and no weighting should be propagated, too
+    # volume)
     y = space.one()
     res = y.__array_ufunc__(np.add, 'reduce', y, axis=0)
     assert res.space.weighting.const == pytest.approx(space.cell_sides[1])
-    y = space_no_w.one()
-    res = y.__array_ufunc__(np.add, 'reduce', y, axis=0)
-    assert not res.space.is_weighted
 
     # Check that `exponent` and `order` are propagated
     space_1 = odl.uniform_discr([0, 0], [1, 1], (2, 3), impl=tspace_impl,
