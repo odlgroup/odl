@@ -19,7 +19,7 @@ import numpy as np
 from odl.set import LinearSpace
 from odl.set.space import LinearSpaceElement
 from odl.space.weighting import (
-    Weighting, ArrayWeighting, ConstWeighting, NoWeighting,
+    Weighting, ArrayWeighting, ConstWeighting,
     CustomInner, CustomNorm, CustomDist)
 from odl.util import is_real_dtype, signature_string, indent
 from odl.util.ufuncs import ProductSpaceUfuncs
@@ -274,7 +274,7 @@ class ProductSpace(LinearSpace):
         elif inner is not None:
             self.__weighting = ProductSpaceCustomInner(inner)
         else:  # all None -> no weighing
-            self.__weighting = ProductSpaceNoWeighting(exponent)
+            self.__weighting = ProductSpaceConstWeighting(1.0, exponent)
 
     def __len__(self):
         """Return ``len(self)``.
@@ -349,8 +349,10 @@ class ProductSpace(LinearSpace):
 
     @property
     def is_weighted(self):
-        """Return ``True`` if weighting is not `ProductSpaceNoWeighting`."""
-        return not isinstance(self.weighting, ProductSpaceNoWeighting)
+        """Return ``True`` if the space is not weighted by constant 1.0."""
+        return not (
+            isinstance(self.weighting, ProductSpaceConstWeighting) and
+            self.weighting.const == 1.0)
 
     @property
     def dtype(self):
@@ -1476,43 +1478,6 @@ class ProductSpaceConstWeighting(ConstWeighting):
         else:
             return (self.const ** (1 / self.exponent) *
                     np.linalg.norm(dnorms, ord=self.exponent))
-
-
-class ProductSpaceNoWeighting(NoWeighting, ProductSpaceConstWeighting):
-
-    """Weighting of `ProductSpace` with constant 1."""
-
-    # Implement singleton pattern for efficiency in the default case
-    _instance = None
-
-    def __new__(cls, *args, **kwargs):
-        """Implement singleton pattern if ``exp==2.0``."""
-        if len(args) == 0:
-            exponent = kwargs.pop('exponent', 2.0)
-        else:
-            exponent = args[0]
-            args = args[1:]
-
-        if exponent == 2.0:
-            if not cls._instance:
-                parent = super(NoWeighting, ProductSpaceNoWeighting)
-                cls._instance = parent.__new__(cls, *args, **kwargs)
-            return cls._instance
-        else:
-            return super(NoWeighting, ProductSpaceNoWeighting).__new__(
-                cls, *args, **kwargs)
-
-    def __init__(self, exponent=2.0):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        exponent : positive float, optional
-            Exponent of the norm. For values other than 2.0, the inner
-            product is not defined.
-        """
-        super(ProductSpaceNoWeighting, self).__init__(
-            impl='numpy', exponent=exponent)
 
 
 class ProductSpaceCustomInner(CustomInner):

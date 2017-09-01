@@ -25,7 +25,7 @@ from odl.discr.partition import (
 from odl.set import RealNumbers, ComplexNumbers, IntervalProd
 from odl.space import FunctionSpace, ProductSpace
 from odl.space.entry_points import tensor_space_impl
-from odl.space.weighting import Weighting, NoWeighting, ConstWeighting
+from odl.space.weighting import Weighting, ConstWeighting
 from odl.util import (
     apply_on_boundary, is_real_dtype, is_complex_floating_dtype,
     dtype_str, signature_string, indent, is_string,
@@ -262,7 +262,7 @@ class DiscreteLp(DiscretizedSpace):
 
     @property
     def is_uniformly_weighted(self):
-        """If the weighting of the space is the same for all points."""
+        """``True`` if the weighting is the same for all space points."""
         try:
             is_uniformly_weighted = self.__is_uniformly_weighted
         except AttributeError:
@@ -453,11 +453,7 @@ class DiscreteLp(DiscretizedSpace):
                 fspace = space.uspace.byaxis_in[indices]
                 part = space.partition.byaxis[indices]
 
-                if isinstance(space.weighting, NoWeighting):
-                    # Extra case since NoWeighting is a subclass of
-                    # ConstWeighting
-                    dspace = space.dspace.byaxis[indices]
-                elif isinstance(space.weighting, ConstWeighting):
+                if isinstance(space.weighting, ConstWeighting):
                     # Need to manually construct `dspace` since it doesn't
                     # know where its weighting factor comes from
                     try:
@@ -523,14 +519,12 @@ class DiscreteLp(DiscretizedSpace):
             default_dtype_s = dtype_str(
                 self.dspace.default_dtype(RealNumbers()))
 
-            if isinstance(self.weighting, NoWeighting):
-                weighting = 'none'
-            elif (isinstance(self.weighting, ConstWeighting) and
-                  (np.isclose(self.weighting.const, self.cell_volume))):
+            if (isinstance(self.weighting, ConstWeighting) and
+                    np.isclose(self.weighting.const, self.cell_volume)):
                 weighting = 'const'
             elif (self.ndim == 0 and
                   isinstance(self.weighting, ConstWeighting) and
-                  (np.isclose(self.weighting.const, 1.0))):
+                  np.isclose(self.weighting.const, 1.0)):
                 weighting = 'const'
             else:
                 weighting = self.weighting
@@ -1050,23 +1044,12 @@ numpy.ufunc.reduceat.html
                         # Duplicates, take default
                         labels = None
 
-                    if all(isinstance(inp.space.weighting, NoWeighting)
-                           for inp in (inp1, inp2)):
-                        # Propagate no-weighting if both have it
-                        dspace = type(res_tens.space)(
-                            res_tens.shape, res_tens.dtype, res_tens.order,
-                            exponent=res_tens.space.exponent,
-                            weighting=None)
-                    elif all(isinstance(inp.space.weighting,
-                                        ConstWeighting)
-                             for inp in (inp1, inp2)):
+                    if all(isinstance(inp.space.weighting, ConstWeighting)
+                           for inp in inputs):
                         # For constant weighting, use the product of the
                         # two weighting constants. The result tensor space
                         # cannot know about the "correct" way to combine the
                         # two constants, so we need to do it manually here.
-                        # NOTE: this includes the weighting combination
-                        # const + none, since NoWeighting is just
-                        # ConstWeighting with constant 1.
                         weighting = (inp1.space.weighting.const *
                                      inp2.space.weighting.const)
                         dspace = type(res_tens.space)(
