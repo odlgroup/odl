@@ -14,7 +14,7 @@ import numpy as np
 __all__ = ('mean_squared_error', 'mean_absolute_error',
            'mean_value_difference', 'standard_deviation_difference',
            'range_difference', 'blurring', 'false_structures', 'ssim', 'psnr',
-           'haarpsi')
+           'haarpsi', 'noise_power_spectrum')
 
 
 def mean_squared_error(data, ground_truth, mask=None, normalized=False):
@@ -715,6 +715,46 @@ def haarpsi(data, ground_truth, a=4.2, c=None):
     denom = np.sum(wmap_horiz + wmap_vert)
 
     return (scipy.special.logit(numer / denom) / a) ** 2
+
+
+def noise_power_spectrum(data, ground_truth, radial=False):
+    """Return the Noise Power Spectrum (NPS).
+
+    The NPS is given by the square of the fourier transform of the noise.
+
+    Parameters
+    ----------
+    data : `DiscreteLp`-element
+        Input data or reconstruction.
+    ground_truth : `DiscreteLp`-element
+        Reference to compare ``data`` to.
+    radial : bool
+        If true, compute the radial NPS.
+
+    Returns
+    -------
+    noise_power_spectrum : `DiscreteLp`-element
+        Noise power spectrum. The space is the fourier transform of
+        ``data.space``, and hence the axes indicate frequency.
+        If ``radial`` is True, this is an element in a one-dimensional space
+        of the same type as ``data.space``.
+    """
+    fftop = odl.trafos.FourierTransform(data.space, halfcomplex=False)
+    f1 = fftop(data - ground_truth)
+    nps = np.abs(f1).real ** 2
+
+    if radial:
+        r = np.sqrt(sum(xi ** 2 for xi in nps.space.meshgrid))
+        n_bins = max(*nps.shape)
+        radial_nps, rad = np.histogram(r, weights=nps, bins=n_bins)
+
+        out_spc = odl.uniform_discr(0, np.max(r), n_bins,
+                                    impl=f1.space.impl,
+                                    dtype=f1.space.real_dtype)
+
+        return out_spc.element(radial_nps)
+    else:
+        return nps
 
 
 if __name__ == '__main__':
