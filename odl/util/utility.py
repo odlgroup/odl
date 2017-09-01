@@ -519,20 +519,21 @@ def as_flat_array(x):
 class writable_array(object):
     """Context manager that casts obj to a `numpy.array` and saves changes."""
 
-    def __init__(self, obj, *args, **kwargs):
+    def __init__(self, obj, **kwargs):
         """initialize a new instance.
 
         Parameters
         ----------
         obj : `array-like`
-            Object that should be cast to an array, must be usable with
-            `numpy.asarray` and be set-able with ``obj[:] = arr``.
-        args, kwargs :
-            Arguments that should be passed to `numpy.asarray`.
+            Object that should be made available as writable array.
+            It must be valid as input to `numpy.asarray` and needs to
+            support the syntax ``obj[:] = arr``.
+        kwargs :
+            Keyword arguments that should be passed to `numpy.asarray`.
 
         Examples
         --------
-        Convert list to array and use with numpy
+        Convert list to array and use with numpy:
 
         >>> lst = [1, 2, 3]
         >>> with writable_array(lst) as arr:
@@ -540,7 +541,7 @@ class writable_array(object):
         >>> lst
         [2, 4, 6]
 
-        Also usable with ODL vectors
+        Usage with ODL vectors:
 
         >>> space = odl.uniform_discr(0, 1, 3)
         >>> x = space.element([1, 2, 3])
@@ -549,15 +550,15 @@ class writable_array(object):
         >>> x
         uniform_discr(0.0, 1.0, 3).element([ 2.,  3.,  4.])
 
-        Can also be called with arguments to `numpy.asarray`
+        Additional keyword arguments are passed to `numpy.asarray`:
 
         >>> lst = [1, 2, 3]
         >>> with writable_array(lst, dtype='complex') as arr:
         ...    arr  # print array
         array([ 1.+0.j,  2.+0.j,  3.+0.j])
 
-        Note that the changes are only saved once the context manger exits,
-        before, the input vector is in general unchanged
+        Note that the changes are only saved upon exiting the context
+        manger exits. Before, the input object is unchanged:
 
         >>> lst = [1, 2, 3]
         >>> with writable_array(lst) as arr:
@@ -568,7 +569,6 @@ class writable_array(object):
         [2, 4, 6]
         """
         self.obj = obj
-        self.args = args
         self.kwargs = kwargs
         self.arr = None
 
@@ -582,7 +582,7 @@ class writable_array(object):
             ``numpy.asarray``. Any changes to ``arr`` will be passed through
             to ``self.obj`` after the context manager exits.
         """
-        self.arr = np.asarray(self.obj, *self.args, **self.kwargs)
+        self.arr = np.asarray(self.obj, **self.kwargs)
         return self.arr
 
     def __exit__(self, type, value, traceback):
