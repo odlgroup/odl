@@ -12,7 +12,6 @@ from __future__ import print_function, division, absolute_import
 import numpy as np
 from odl.discr import ResizingOperator
 from odl.trafos import FourierTransform, PYFFTW_AVAILABLE
-from odl.space.weighting import NoWeighting
 
 
 __all__ = ('fbp_op', 'fbp_filter_op', 'tam_danielson_window',
@@ -441,11 +440,11 @@ def fbp_filter_op(ray_trafo, padding=True, filter_type='Ram-Lak',
     ramp_function = fourier.range.element(fourier_filter)
 
     weight = 1
-    if isinstance(ray_trafo.range.weighting, NoWeighting):
+    if not ray_trafo.range.is_weighted:
         # Compensate for potentially unweighted range of the ray transform
         weight *= ray_trafo.range.cell_volume
 
-    if isinstance(ray_trafo.domain.weighting, NoWeighting):
+    if not ray_trafo.domain.is_weighted:
         # Compensate for potentially unweighted domain of the ray transform
         weight /= ray_trafo.domain.cell_volume
 

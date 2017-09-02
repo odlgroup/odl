@@ -22,28 +22,6 @@ from odl.util.testutils import (
     all_almost_equal, all_equal, simple_fixture, noise_element, noise_elements)
 
 
-def _dense_matrix(fn):
-    """Create a dense positive definite Hermitian matrix for `fn`."""
-
-    if np.issubdtype(fn.dtype, np.floating):
-        mat = np.random.rand(fn.size, fn.size).astype(fn.dtype, copy=False)
-    elif np.issubdtype(fn.dtype, np.integer):
-        mat = np.random.randint(0, 10, (fn.size, fn.size)).astype(fn.dtype,
-                                                                  copy=False)
-    elif np.issubdtype(fn.dtype, np.complexfloating):
-        mat = (np.random.rand(fn.size, fn.size) +
-               1j * np.random.rand(fn.size, fn.size)).astype(fn.dtype,
-                                                             copy=False)
-
-    # Make symmetric and positive definite
-    return mat + mat.conj().T + fn.size * np.eye(fn.size, dtype=fn.dtype)
-
-
-def _sparse_matrix(fn):
-    """Create a sparse positive definite Hermitian matrix for `fn`."""
-    return scipy.sparse.coo_matrix(_dense_matrix(fn))
-
-
 matrix_dtype = simple_fixture(
     name='matrix_dtype',
     params=['float32', 'complex64', 'float64', 'complex128'])
@@ -61,9 +39,6 @@ def matrix(matrix_dtype):
 
 
 exponent = simple_fixture('exponent', [2.0, 1.0, float('inf'), 3.5, 1.5])
-fn = simple_fixture('fn', [odl.rn(10, np.float64), odl.rn(10, np.float32),
-                           odl.cn(10, np.complex128), odl.cn(10, np.complex64),
-                           odl.rn(100), odl.uniform_discr(0, 1, 5)])
 
 
 # ---- PointwiseNorm ----

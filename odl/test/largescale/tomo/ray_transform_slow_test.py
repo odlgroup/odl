@@ -58,7 +58,7 @@ projectors = [pytest.mark.skipif(p.args[0] + largescale, p.args[1])
               for p in projectors]
 
 
-weighting = simple_fixture('weighting', ['const', 'none'])
+weighting = simple_fixture('weighting', [None, 1.0])
 
 
 @pytest.fixture(scope="module", params=projectors, ids=projector_ids)
