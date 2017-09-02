@@ -224,8 +224,8 @@ def cn(shape, dtype=None, order='A', impl='numpy', **kwargs):
 
     cn = cn_cls(shape, dtype, order, **kwargs)
     if not cn.is_complex:
-        raise TypeError('data type {!r} not a complex floating-point type.'
-                        ''.format(dtype))
+        raise ValueError('data type {!r} not a complex floating-point type.'
+                         ''.format(dtype))
     return cn
 
 
@@ -294,8 +294,8 @@ def rn(shape, dtype=None, order='A', impl='numpy', **kwargs):
 
     rn = rn_cls(shape, dtype, order, **kwargs)
     if not rn.is_real:
-        raise TypeError('data type {!r} not a real floating-point type.'
-                        ''.format(dtype))
+        raise ValueError('data type {!r} not a real floating-point type.'
+                         ''.format(dtype))
     return rn
 
 

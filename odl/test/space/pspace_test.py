@@ -38,7 +38,7 @@ def test_RxR():
 
     # Check the basic properties
     assert len(HxH) == 2
-    assert HxH.shape == (2, 2)
+    assert HxH.shape == (2,)
     assert HxH.size == 2
     assert HxH.dtype == H.dtype
     assert HxH.spaces[0] is H

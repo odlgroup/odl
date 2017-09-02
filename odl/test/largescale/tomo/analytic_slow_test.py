@@ -27,7 +27,7 @@ filter_type = simple_fixture(
 frequency_scaling = simple_fixture(
     'frequency_scaling', [0.5, 0.9, 1.0])
 
-weighting = simple_fixture('weighting', ['const', 'none'])
+weighting = simple_fixture('weighting', [None, 1.0])
 
 # Find the valid projectors
 # TODO: Add nonuniform once #671 is solved
