@@ -416,6 +416,9 @@ class NumpyTensorSpace(TensorSpace):
             # Use `order` to preserve views if possible
             arr = np.array(inp, copy=False, dtype=self.dtype, ndmin=self.ndim,
                            order=self.order)
+            # But make sure the result is writeable (otherwise make copy)
+            if not arr.flags.writeable:
+                arr = arr.copy()
             if arr.shape != self.shape:
                 raise ValueError('shape of `inp` not equal to space shape: '
                                  '{} != {}'.format(arr.shape, self.shape))
