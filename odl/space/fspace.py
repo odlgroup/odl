@@ -1330,8 +1330,11 @@ class FunctionSpaceElement(LinearSpaceElement):
 
                 if out_shape != () and out.shape != out_shape:
                     # Broadcast the returned element, but not in the
-                    # scalar case.
+                    # scalar case. The resulting array may be read-only,
+                    # in which case we copy.
                     out = broadcast_to(out, out_shape)
+                    if not out.flags.writeable:
+                        out = out.copy()
 
             elif self.space.tensor_valued:
                 # The out object can be any array-like of objects with shapes
