@@ -1,8 +1,15 @@
 language: python
 
-python:
-  - "2.7"
-  - "3.6"
+matrix:
+    include:
+        - python: 2.7
+          env: NUMPY_VERSION=1.13
+
+        - python: 3.6
+          env: NUMPY_VERSION=1.12
+
+        - python: 3.6
+          env: NUMPY_VERSION=1.13
 
 sudo: false
 
@@ -34,7 +41,7 @@ install:
     - conda info -a
 
     # Install dependencies and enter test environment
-    - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy future nomkl sphinx sphinx_rtd_theme pytest pytest-pep8 pytest-cov
+    - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION "numpy=$NUMPY_VERSION" scipy future nomkl sphinx sphinx_rtd_theme pytest pytest-pep8 pytest-cov
     - source activate test-environment
 
     # Some packages which are only on PyPI, not on conda
