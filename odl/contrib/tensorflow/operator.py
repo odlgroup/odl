@@ -24,11 +24,10 @@ class TensorflowOperator(odl.Operator):
         self.input_tensor = input_tensor
         self.output_tensor = output_tensor
 
-        # TODO: Fix with tensors
-        domain = odl.fn(np.prod(input_tensor.shape.as_list()),
-                        dtype=input_tensor.dtype.as_numpy_dtype)
-        range = odl.fn(np.prod(output_tensor.shape.as_list()),
-                       dtype=output_tensor.dtype.as_numpy_dtype)
+        domain = odl.tensor_space(input_tensor.shape.as_list(),
+                                  dtype=input_tensor.dtype.as_numpy_dtype)
+        range = odl.tensor_space(output_tensor.shape.as_list(),
+                                 dtype=output_tensor.dtype.as_numpy_dtype)
 
         self.dx = tf.placeholder(input_tensor.dtype,
                                  shape=input_tensor.shape)
