@@ -472,6 +472,42 @@ class Parallel2dGeometry(ParallelBeamGeometry):
         return '{}(\n{}\n)'.format(self.__class__.__name__,
                                    indent_rows(sig_str))
 
+    def __getitem__(self, slc):
+        """Return self[slc]
+
+        Examples
+        --------
+        Extract sub-geometry:
+
+        >>> apart = odl.uniform_partition(0, np.pi, 4)
+        >>> dpart = odl.uniform_partition(-1, 1, 20)
+        >>> geom = Parallel2dGeometry(apart, dpart)
+        >>> geom[::2, :]
+        Parallel2dGeometry(
+            nonuniform_partition(
+                [0.39269908169872414, 1.9634954084936207],
+                min_pt=0.0, max_pt=2.35619449019
+            ),
+            uniform_partition(-1.0, 1.0, 20)
+        )
+        """
+        part = self.partition[slc]
+        apart = part.byaxis[0]
+        dpart = part.byaxis[1]
+
+        optargs = {}
+        if not np.allclose(self.det_pos_init - self.translation,
+                           self._default_config['det_pos_init']):
+            optargs['det_pos_init'] = self.det_pos_init.tolist()
+
+        if self._det_axis_init_arg is not None:
+            optargs['det_axis_init'] = self._det_axis_init_arg.tolist()
+
+        if not np.array_equal(self.translation, (0, 0)):
+            optargs['translation'] = self.translation.tolist()
+
+        return Parallel2dGeometry(apart, dpart, **optargs)
+
 
 class Parallel3dEulerGeometry(ParallelBeamGeometry):
 
@@ -1094,7 +1130,7 @@ def parallel_beam_geometry(space, num_angles=None, det_shape=None):
         If ``space`` is 3d, return a `Parallel3dAxisGeometry`.
 
     Examples
-    --------
+    --------testmod
     Create a parallel beam geometry from a 2d space:
 
     >>> space = odl.uniform_discr([-1, -1], [1, 1], (20, 20))
