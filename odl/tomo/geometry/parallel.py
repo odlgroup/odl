@@ -1130,7 +1130,7 @@ def parallel_beam_geometry(space, num_angles=None, det_shape=None):
         If ``space`` is 3d, return a `Parallel3dAxisGeometry`.
 
     Examples
-    --------testmod
+    --------
     Create a parallel beam geometry from a 2d space:
 
     >>> space = odl.uniform_discr([-1, -1], [1, 1], (20, 20))
