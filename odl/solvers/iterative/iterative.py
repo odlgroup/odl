@@ -386,7 +386,7 @@ def gauss_newton(op, x, rhs, niter, zero_seq=exp_zero_seq(2.0),
 
 
 def kaczmarz(ops, x, rhs, niter, omega=1, projection=None,
-             callback=None):
+             callback=None, callback_call='outer'):
     """Optimized implementation of Kaczmarz's method.
 
     Solves the inverse problem given by the set of equations::
@@ -418,6 +418,9 @@ def kaczmarz(ops, x, rhs, niter, omega=1, projection=None,
         argument and modify it in-place.
     callback : callable, optional
         Object executing code per iteration, e.g. plotting each iterate.
+    callback_call : {'inner', 'outer'}
+        If the callback should be called in the inner or outer loop.
+
 
     Notes
     -----
@@ -502,8 +505,10 @@ def kaczmarz(ops, x, rhs, niter, omega=1, projection=None,
             if projection is not None:
                 projection(x)
 
-            if callback is not None:
+            if callback is not None and callback_call == 'inner':
                 callback(x)
+        if callback is not None and callback_call == 'outer':
+            callback(x)
 
 
 if __name__ == '__main__':
