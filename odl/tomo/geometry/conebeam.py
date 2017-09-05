@@ -2018,7 +2018,9 @@ class ConeVecGeometry(VecGeometry):
         >>> geom_3d.src_position(0.5)  # mean value
         array([ 0.5, -0.5,  0. ])
         """
-        if self.check_bounds and not self.motion_params.contains_all(index):
+        # TODO: vectorize
+        if (self.check_bounds and
+                not is_inside_bounds(index, self.motion_params)):
             raise ValueError('`index` {} not in the valid range {}'
                              ''.format(index, self.motion_params))
 
@@ -2066,10 +2068,10 @@ class ConeVecGeometry(VecGeometry):
             (Unit) vector pointing from the detector to the source.
         """
         if self.check_bounds:
-            if not self.motion_params.contains_all(mparam):
+            if not is_inside_bounds(mparam, self.motion_params):
                 raise ValueError('`mparam` {} not in the valid range {}'
                                  ''.format(mparam, self.motion_params))
-            if not self.det_params.contains_all(dparam):
+            if not is_inside_bounds(dparam, self.det_params):
                 raise ValueError('`dparam` {} not in the valid range {}'
                                  ''.format(dparam, self.det_params))
 

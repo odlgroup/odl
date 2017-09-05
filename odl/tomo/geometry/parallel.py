@@ -1522,50 +1522,162 @@ class ParallelVecGeometry(VecGeometry):
         else:
             raise RuntimeError('bad `ndim`')
 
-    def det_to_src(self, index, dparam, normalized=True):
-        """Vector pointing from a detector location to the source.
+    def det_to_src(self, index, dparam):
+        """Direction from a detector location to the source.
 
-        A function of the motion and detector parameters.
+        The direction vector is computed as follows::
+
+            dir = rotation_matrix(angle).dot(detector.surface_normal(dparam))
+
+        Note that for flat detectors, ``surface_normal`` does not depend
+        on the parameter ``dparam``, hence this function is constant in
+        that variable.
 
         Parameters
         ----------
-        index : `motion_params` element
-            Index of the projection. Non-integer indices result in
-            interpolated vectors.
-        dparam : `det_params` element
-            Detector parameter at which to evaluate.
-        normalized : bool, optional
-            If ``True``, return a normalized (unit) vector.
-            The non-normalized variant is not available in parallel beam
-            geometries.
+        index : `array-like` or sequence
+            Index or indices of the projection. Non-integer indices
+            result in interpolated vectors.
+        dparam : `array-like` or sequence
+            Detector parameter(s) at which to evaluate. If
+            ``det_params.ndim == 2``, a sequence of that length must be
+            provided.
 
         Returns
         -------
-        vec : `numpy.ndarray`, shape (`ndim`,)
-            Unit vector pointing from the detector to the source
+        det_to_src : `numpy.ndarray`
+            Vector(s) pointing from a detector point to the source (at
+            infinity).
+            The shape of the returned array is obtained from the
+            (broadcast) shapes of ``index`` and ``dparam``, and
+            broadcasting is supported within both parameters and between
+            them. The precise definition of the shape is
+            ``broadcast(index, bcast_dparam).shape + (ndim,)``,
+            where ``bcast_dparam`` is
+
+            - ``dparam`` if `det_params` is 1D,
+            - ``broadcast(*dparam)`` otherwise.
+
+        Examples
+        --------
+        The method works with single parameter values, in which case
+        a single vector is returned:
+
+        >>> # r = ray direction
+        >>> #           rx ry
+        >>> vecs_2d = [[0, -1, 0, 1, 1, 0],
+        ...            [1, 0, -1, 0, 0, 1]]
+        >>> det_shape_2d = 10
+        >>> geom = odl.tomo.ParallelVecGeometry(det_shape_2d, vecs_2d)
+        >>> geom.det_to_src(0, 0)
+        array([-0.,  1.])
+        >>> geom.det_to_src(1, 0)
+        array([-1., -0.])
+        >>> geom.det_to_src(1, 1)  # dparam has no effect
+        array([-1., -0.])
+        >>> dir = geom.det_to_src(0.5, 0)  # interpolate
+        >>> np.allclose(dir, [-1, 1] / np.linalg.norm([-1, 1]))
+        True
+
+        Both variables support vectorized calls, i.e., stacks of
+        parameters can be provided. The order of axes in the output (left
+        of the ``ndim`` axis for the vector dimension) corresponds to the
+        order of arguments:
+        TODO: adapt this
+
+        >>> dirs = geom.det_to_src(0, [-1, 0, 0.5, 1])
+        >>> dirs
+        array([[ 0., -1.],
+               [ 0., -1.],
+               [ 0., -1.],
+               [ 0., -1.]])
+        >>> dirs.shape  # (num_dparams, ndim)
+        (4, 2)
+        >>> dirs = geom.det_to_src([0, np.pi / 2, np.pi], 0)
+        >>> np.allclose(dirs, [[0, -1],
+        ...                    [1, 0],
+        ...                    [0, 1]])
+        True
+        >>> dirs.shape  # (num_angles, ndim)
+        (3, 2)
+        >>> # Providing 3 pairs of parameters, resulting in 3 vectors
+        >>> dirs = geom.det_to_src([0, np.pi / 2, np.pi], [-1, 0, 1])
+        >>> dirs[0]  # Corresponds to angle = 0, dparam = -1
+        array([ 0., -1.])
+        >>> dirs.shape
+        (3, 2)
+        >>> # Pairs of parameters arranged in arrays of same size
+        >>> geom.det_to_src(np.zeros((4, 5)), np.zeros((4, 5))).shape
+        (4, 5, 2)
+        >>> # "Outer product" type evaluation using broadcasting
+        >>> geom.det_to_src(np.zeros((4, 1)), np.zeros((1, 5))).shape
+        (4, 5, 2)
         """
-        if index not in self.motion_params:
-            raise ValueError('`index` must be contained in `motion_params` '
-                             '{}, got {}'.format(self.motion_params, index))
-        if dparam not in self.det_params:
-            raise ValueError('`dparam` must be contained in `det_params` '
-                             '{}, got {}'.format(self.det_params, dparam))
-        if not normalized:
-            raise NotImplementedError('non-normalized detector-to-source '
-                                      'vector not available for parallel '
-                                      'beam geometries')
+        squeeze_index = (np.shape(index) == ())
+        index_in = index
+        index = np.array(index, dtype=float, copy=False, ndmin=1)
 
-        index = float(index)
-        int_part = int(index)
-        frac_part = index - int_part
-        if int_part == self.motion_params.max_pt:
-            ray_dir = self.vectors[int_part, self._slice_ray]
+        dparam_in = dparam
+        if self.det_params.ndim == 1:
+            squeeze_dparam = (np.shape(dparam) == ())
+            dparam = np.array(dparam, dtype=float, copy=False, ndmin=1)
         else:
-            ray_left = self.vectors[int_part, self._slice_ray]
-            ray_right = self.vectors[int_part + 1, self._slice_ray]
-            ray_dir = ray_left + frac_part * (ray_right - ray_left)
+            squeeze_dparam = (np.broadcast(*dparam).shape == ())
+            dparam = tuple(np.array(p, dtype=float, copy=False, ndmin=1)
+                           for p in dparam)
 
-        return -ray_dir / np.linalg.norm(ray_dir)
+        if self.check_bounds:
+            if not is_inside_bounds(index, self.motion_params):
+                raise ValueError('`index` {} not in the valid range {}'
+                                 ''.format(index_in, self.motion_params))
+
+            if not is_inside_bounds(dparam, self.det_params):
+                raise ValueError('`dparam` {} not in the valid range {}'
+                                 ''.format(dparam_in, self.det_params))
+
+        at_max_flat = (index == self.motion_params.max_pt).ravel()
+
+        if self.det_params.ndim == 1:
+            bcast_shape = np.broadcast(index, dparam).shape
+        else:
+            bcast_shape = np.broadcast(index, *dparam).shape
+
+        # TODO: shapes are not quite right here. Scalar works, but
+        # vectorized goes wrong
+        ray_dir = np.empty(bcast_shape + (self.ndim,), dtype=float)
+        print('result shape:', ray_dir.shape)
+
+        # Values at rightmost boundary, cannot interpolate due to IndexError
+        if np.any(at_max_flat):
+            print('at max bool arr:', at_max_flat)
+            vec_at_max = self.vectors[-1]
+            ray_dir[at_max_flat, ...] = vec_at_max[self._slice_ray]
+
+        # Inner part, use linear interpolation
+        if np.any(~at_max_flat):
+            print('inner bool arr:', ~at_max_flat)
+            index_int_part = index[~at_max_flat, ...].astype(int)
+            index_int_part_flat = index_int_part.ravel()
+            # Keep shape for broadcasting
+            index_frac_part = index[~at_max_flat, ...] - index_int_part
+            # Get ray direction vectors left and right of the given points
+            vecs_left = np.take(self.vectors, index_int_part_flat, axis=0)
+            ray_left = vecs_left[..., self._slice_ray]
+            vecs_right = np.take(self.vectors, index_int_part_flat + 1, axis=0)
+            ray_right = vecs_right[..., self._slice_ray]
+            print('ray_left shape:', ray_left.shape)
+            print('ray_right shape:', ray_right.shape)
+            print('index_frac_part shape:', index_frac_part.shape)
+            ray_dir[~at_max_flat, ...] = (
+                ray_left +
+                index_frac_part * (ray_right - ray_left))
+
+        ray_dir *= -1 / np.linalg.norm(ray_dir, axis=-1, keepdims=True)
+
+        if squeeze_index and squeeze_dparam:
+            ray_dir = ray_dir.squeeze()
+
+        return ray_dir
 
 
 def parallel_beam_geometry(space, num_angles=None, det_shape=None):

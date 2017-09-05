@@ -819,7 +819,8 @@ class VecGeometry(Geometry):
         >>> geom_3d.det_refpoint(0.5)  # mean value
         array([-0.5,  0.5,  0. ])
         """
-        if self.check_bounds and not self.motion_params.contains_all(index):
+        if (self.check_bounds and
+                not is_inside_bounds(index, self.motion_params)):
             raise ValueError('`index` {} not in the valid range {}'
                              ''.format(index, self.motion_params))
 
