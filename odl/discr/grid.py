@@ -747,8 +747,13 @@ class RectGrid(Set):
         """
         return self.insert(self.ndim, *grids)
 
-    def squeeze(self):
+    def squeeze(self, axis=None):
         """Return the grid with removed degenerate (length 1) dimensions.
+
+        Parameters
+        ----------
+        axis : None or index expression, optional
+            Subset of the axes to squeeze. Default: All axes.
 
         Returns
         -------
@@ -763,11 +768,15 @@ class RectGrid(Set):
             [0.0, 1.0],
             [-1.0, 0.0, 2.0]
         )
-
         """
-        nondegen_indcs = [i for i in range(self.ndim)
-                          if self.nondegen_byaxis[i]]
-        coord_vecs = [self.coord_vectors[axis] for axis in nondegen_indcs]
+        if axis is None:
+            rng = range(self.ndim)
+        else:
+            rng = list(np.atleast_1d(np.arange(self.ndim)[axis]))
+
+        new_indcs = [i for i in range(self.ndim)
+                     if i not in rng or self.nondegen_byaxis[i]]
+        coord_vecs = [self.coord_vectors[axis] for axis in new_indcs]
         return RectGrid(*coord_vecs)
 
     def points(self, order='C'):
