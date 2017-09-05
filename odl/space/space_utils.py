@@ -147,7 +147,9 @@ def tensor_space(shape, dtype=None, impl='numpy', **kwargs):
     if dtype is None:
         dtype = tspace_cls.default_dtype()
 
-    return tspace_cls(shape, dtype, **kwargs)
+    # Use args by keyword since the constructor may take other arguments
+    # by position
+    return tspace_cls(shape=shape, dtype=dtype, **kwargs)
 
 
 def cn(shape, dtype=None, impl='numpy', **kwargs):
@@ -207,7 +209,9 @@ def cn(shape, dtype=None, impl='numpy', **kwargs):
     if dtype is None:
         dtype = cn_cls.default_dtype(ComplexNumbers())
 
-    cn = cn_cls(shape, dtype, **kwargs)
+    # Use args by keyword since the constructor may take other arguments
+    # by position
+    cn = cn_cls(shape=shape, dtype=dtype, **kwargs)
     if not cn.is_complex:
         raise ValueError('data type {!r} not a complex floating-point type.'
                          ''.format(dtype))
@@ -271,7 +275,9 @@ def rn(shape, dtype=None, impl='numpy', **kwargs):
     if dtype is None:
         dtype = rn_cls.default_dtype(RealNumbers())
 
-    rn = rn_cls(shape, dtype, **kwargs)
+    # Use args by keyword since the constructor may take other arguments
+    # by position
+    rn = rn_cls(shape=shape, dtype=dtype, **kwargs)
     if not rn.is_real:
         raise ValueError('data type {!r} not a real floating-point type.'
                          ''.format(dtype))
