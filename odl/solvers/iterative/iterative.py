@@ -13,6 +13,7 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
+import numpy as np
 from odl.operator import IdentityOperator, OperatorComp, OperatorSum
 from odl.util import normalized_scalar_param_list
 
@@ -385,7 +386,7 @@ def gauss_newton(op, x, rhs, niter, zero_seq=exp_zero_seq(2.0),
             callback(x)
 
 
-def kaczmarz(ops, x, rhs, niter, omega=1, projection=None,
+def kaczmarz(ops, x, rhs, niter, omega=1, projection=None, random=False,
              callback=None, callback_call='outer'):
     """Optimized implementation of Kaczmarz's method.
 
@@ -416,6 +417,8 @@ def kaczmarz(ops, x, rhs, niter, omega=1, projection=None,
         Function that can be used to modify the iterates in each iteration,
         for example enforcing positivity. The function should take one
         argument and modify it in-place.
+    random : bool, optional
+        If `True`, the order of the operators is randomized in each iteration.
     callback : callable, optional
         Object executing code per iteration, e.g. plotting each iterate.
     callback_call : {'inner', 'outer'}
@@ -492,7 +495,12 @@ def kaczmarz(ops, x, rhs, niter, omega=1, projection=None,
 
     # Iteratively find solution
     for _ in range(niter):
-        for i in range(len(ops)):
+        if random:
+            rng = np.random.permutation(range(len(ops)))
+        else:
+            rng = range(len(ops))
+
+        for i in rng:
             # Find residual
             tmp_ran = tmp_rans[ops[i].range]
             ops[i](x, out=tmp_ran)
