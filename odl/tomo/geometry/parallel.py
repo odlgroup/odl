@@ -479,14 +479,14 @@ class Parallel2dGeometry(ParallelBeamGeometry):
         --------
         Extract sub-geometry:
 
-        >>> apart = odl.uniform_partition(0, np.pi, 4)
+        >>> apart = odl.uniform_partition(0, 4, 4)
         >>> dpart = odl.uniform_partition(-1, 1, 20)
-        >>> geom = Parallel2dGeometry(apart, dpart)
+        >>> geom = odl.tomo.Parallel2dGeometry(apart, dpart)
         >>> geom[::2, :]
         Parallel2dGeometry(
             nonuniform_partition(
-                [0.39269908169872414, 1.9634954084936207],
-                min_pt=0.0, max_pt=2.35619449019
+                [0.5, 2.5],
+                min_pt=0.0, max_pt=4.0
             ),
             uniform_partition(-1.0, 1.0, 20)
         )
