@@ -16,7 +16,7 @@ import numpy as np
 
 from odl.discr import RectPartition
 from odl.tomo.geometry.detector import Detector
-from odl.tomo.util import axis_rotation_matrix
+from odl.tomo.util import axis_rotation_matrix, is_inside_bounds
 
 
 __all__ = ('Geometry', 'DivergentBeamGeometry', 'AxisOrientedGeometry')
@@ -610,7 +610,7 @@ class AxisOrientedGeometry(object):
         squeeze_out = (np.shape(angle) == ())
         angle = np.array(angle, dtype=float, copy=False, ndmin=1)
         if (self.check_bounds and
-                not self.motion_params.contains_all(angle.ravel())):
+                not is_inside_bounds(angle, self.motion_params)):
             raise ValueError('`angle` {} not in the valid range {}'
                              ''.format(angle, self.motion_params))
 

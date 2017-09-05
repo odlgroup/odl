@@ -16,7 +16,7 @@ import numpy as np
 from odl.discr import uniform_partition
 from odl.tomo.geometry.detector import Flat1dDetector, Flat2dDetector
 from odl.tomo.geometry.geometry import Geometry, AxisOrientedGeometry
-from odl.tomo.util import euler_matrix, transform_system
+from odl.tomo.util import euler_matrix, transform_system, is_inside_bounds
 from odl.util import signature_string, indent_rows
 
 
@@ -623,7 +623,7 @@ class Parallel2dGeometry(ParallelBeamGeometry):
         squeeze_out = (np.shape(angle) == ())
         angle = np.array(angle, dtype=float, copy=False, ndmin=1)
         if (self.check_bounds and
-                not self.motion_params.contains_all(angle.ravel())):
+                not is_inside_bounds(angle, self.motion_params)):
             raise ValueError('`angle` {} not in the valid range {}'
                              ''.format(angle, self.motion_params))
 
@@ -1033,14 +1033,10 @@ class Parallel3dEulerGeometry(ParallelBeamGeometry):
         angles_in = angles
         angles = tuple(np.array(angle, dtype=float, copy=False, ndmin=1)
                        for angle in angles)
-        if self.check_bounds:
-            # Flesh out and flatten to check bounds
-            bcast_angles = np.broadcast_arrays(*angles)
-            stacked_angles = np.vstack(bcast_angles)
-            flat_angles = stacked_angles.reshape(self.motion_params.ndim, -1)
-            if not self.motion_params.contains_all(flat_angles):
-                raise ValueError('`angles` {} not in the valid range '
-                                 '{}'.format(angles_in, self.motion_params))
+        if (self.check_bounds and
+                not is_inside_bounds(angles, self.motion_params)):
+            raise ValueError('`angles` {} not in the valid range '
+                             '{}'.format(angles_in, self.motion_params))
 
         matrix = euler_matrix(*angles)
         if squeeze_out:

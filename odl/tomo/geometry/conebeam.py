@@ -17,7 +17,8 @@ from odl.discr import uniform_partition
 from odl.tomo.geometry.detector import Flat1dDetector, Flat2dDetector
 from odl.tomo.geometry.geometry import (
     DivergentBeamGeometry, AxisOrientedGeometry)
-from odl.tomo.util.utility import euler_matrix, transform_system
+from odl.tomo.util.utility import (
+    euler_matrix, transform_system, is_inside_bounds)
 from odl.util import signature_string, indent_rows
 
 
@@ -484,8 +485,7 @@ class FanFlatGeometry(DivergentBeamGeometry):
         squeeze_out = (np.shape(angle) == ())
         angle = np.array(angle, dtype=float, copy=False, ndmin=1)
         if (self.check_bounds and
-                not self.motion_params.contains_all(angle.ravel())):
-            # Allow `angle` with ndim > 1 by checking the raveled array
+                not is_inside_bounds(angle, self.motion_params)):
             raise ValueError('`angle` {} not in the valid range {}'
                              ''.format(angle, self.motion_params))
 

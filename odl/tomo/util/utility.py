@@ -13,7 +13,7 @@ import numpy as np
 
 __all__ = ('euler_matrix', 'axis_rotation', 'axis_rotation_matrix',
            'rotation_matrix_from_to', 'transform_system',
-           'perpendicular_vector')
+           'perpendicular_vector', 'is_inside_bounds')
 
 
 def euler_matrix(phi, theta=None, psi=None):
@@ -618,6 +618,60 @@ def perpendicular_vector(vec):
         result = result.squeeze()
 
     return result
+
+
+def is_inside_bounds(value, params):
+    """Return ``True`` if ``value`` is contained in ``params``.
+
+    This method supports broadcasting in the sense that for
+    ``params.ndim >= 2``, if more than one value is given, the inputs
+    are broadcast against each other.
+
+    Parameters
+    ----------
+    value : `array-like`
+        Value(s) to be checked. For several inputs, the final bool
+        tells whether all inputs pass the check or not.
+    params : `IntervalProd`
+        Set in which the value is / the values are supposed to lie.
+
+    Returns
+    -------
+    is_inside_bounds : bool
+        ``True`` is all values lie in ``params``, ``False`` otherwise.
+
+    Examples
+    --------
+    Check a single point:
+
+    >>> params = odl.IntervalProd([0, 0], [1, 2])
+    >>> is_inside_bounds([0, 0], params)
+    True
+    >>> is_inside_bounds([0, -1], params)
+    False
+
+    Using broadcasting:
+
+    >>> pts_ax0 = np.array([0, 0, 1, 0, 1])[:, None]
+    >>> pts_ax1 = np.array([2, 0, 1])[None, :]
+    >>> is_inside_bounds([pts_ax0, pts_ax1], params)
+    True
+    >>> pts_ax1 = np.array([-2, 1])[None, :]
+    >>> is_inside_bounds([pts_ax0, pts_ax1], params)
+    False
+    """
+    if value in params:
+        # Single parameter
+        return True
+    else:
+        if params.ndim == 1:
+            return params.contains_all(np.ravel(value))
+        else:
+            # Flesh out and flatten to check bounds
+            bcast_value = np.broadcast_arrays(*value)
+            stacked_value = np.vstack(bcast_value)
+            flat_value = stacked_value.reshape(params.ndim, -1)
+            return params.contains_all(flat_value)
 
 
 if __name__ == '__main__':
