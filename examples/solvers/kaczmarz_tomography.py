@@ -66,7 +66,7 @@ x = space.zero()
 # Note that using only 2 iterations still gives a decent reconstruction.
 odl.solvers.kaczmarz(
     ray_trafos, x, data, niter=2, omega=omega,
-    callback=callback, callback_call='inner')
+    callback=callback, callback_loop='inner')
 
 # Display images
 phantom.show(title='original image')
