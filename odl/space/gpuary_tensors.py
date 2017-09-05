@@ -117,6 +117,20 @@ HAVE_CUDA_CONTEXT, HAVE_OPENCL_CONTEXT = _init_gpu_context()
 HAVE_GPU_CONTEXT = HAVE_CUDA_CONTEXT or HAVE_OPENCL_CONTEXT
 
 
+def failing_doctests():
+    """Deliberately failing doctests intended to see output.
+
+    Examples
+    --------
+    >>> print(HAVE_CUDA_CONTEXT)
+
+    >>> print(HAVE_OPENCL_CONTEXT)
+
+    >>> print(HAVE_GPU_CONTEXT)
+
+    """
+    pass
+
 
 def precompile_kernels():
     """Precompile GPU kernels for linspace methods with most common dtypes."""
