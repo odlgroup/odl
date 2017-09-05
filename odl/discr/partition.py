@@ -495,6 +495,17 @@ class RectPartition(object):
 
         Examples
         --------
+        Take every second grid point. Note that is is in general non-uniform:
+
+        >>> partition = odl.uniform_partition(0, 10, 10)
+        >>> partition[::2]
+        nonuniform_partition(
+            [0.5, 2.5, 4.5, 6.5, 8.5],
+            min_pt=0.0, max_pt=10.0
+        )
+
+        A more advanced example is:
+
         >>> intvp = odl.IntervalProd([-1, 1, 4, 2], [3, 6, 5, 7])
         >>> grid = odl.RectGrid([-1, 0, 3], [2, 4], [5], [2, 4, 7])
         >>> part = odl.RectPartition(intvp, grid)
@@ -561,6 +572,12 @@ class RectPartition(object):
         for cvec, idx in zip(self.cell_boundary_vecs, indices):
             # Determine the subinterval min_pt and max_pt vectors. Take the
             # first min_pt as new min_pt and the last max_pt as new max_pt.
+            if isinstance(idx, slice):
+                # Only use the slice to extract min and max without using
+                # the step size. This is in order for expressions like
+                # self[::2] to not change the maximum.
+                idx = slice(idx.start, idx.stop, None)
+
             sub_min_pt = cvec[:-1][idx]
             sub_max_pt = cvec[1:][idx]
             new_min_pt.append(sub_min_pt[0])
