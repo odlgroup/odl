@@ -5,13 +5,13 @@ Solves the inverse problem
     A(x) = g
 
 Where ``A`` is a parallel beam forward projector, ``x`` the result and
- ``g`` is given noisy data.
+ ``g`` is given data.
 
 In order to solve this using `kaczmarz`s method, the operator is split into
-several sub-operators (each representing a subset of the angles).
+several sub-operators (each representing a subset of the angles and detector
+points). This allows a faster solution.
 """
 
-import numpy as np
 import odl
 
 
@@ -24,16 +24,24 @@ space = odl.uniform_discr(
     min_pt=[-20, -20], max_pt=[20, 20], shape=[300, 300], dtype='float32')
 
 # Make a parallel beam geometry with flat detector
-# Angles: uniformly spaced, n = 360, min = 0, max = pi
-angle_partition = odl.uniform_partition(0, np.pi, 360)
+geometry = odl.tomo.cone_beam_geometry(space,
+                                       src_radius=40, det_radius=40,
+                                       num_angles=360, det_shape=360)
 
-# Detector: uniformly sampled, n = 300, min = -30, max = 30
-detector_partition = odl.uniform_partition(-30, 30, 300)
-geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
+# Here we split the geometry according to both angular subsets and
+# detector subsets.
 
-# Create the forward operators
-n = 10  # number of sub-operators
-ray_trafos = [odl.tomo.RayTransform(space, geometry[i::n]) for i in range(n)]
+# For practical applications these choices should be fine tuned,
+# these values are selected to give an illustrative visualization.
+n = 20
+m = 1
+ns = 360 // n
+ms = 360 // m
+
+# Create the forward operators.
+ray_trafos = [odl.tomo.RayTransform(space, geometry[i * ns:(i + 1) * ns,
+                                                    j * ms:(j + 1) * ms])
+              for i in range(n) for j in range(m)]
 
 # --- Generate artificial data --- #
 
@@ -43,8 +51,6 @@ phantom = odl.phantom.shepp_logan(space, modified=True)
 
 # Create sinogram of forward projected phantom with noise
 data = [ray_trafo(phantom) for ray_trafo in ray_trafos]
-noisy_data = [d + odl.phantom.white_noise(d.space) * np.mean(d) * 0.1
-              for d in data]
 
 omega = [odl.power_method_opnorm(ray_trafo) ** (-2)
          for ray_trafo in ray_trafos]
@@ -54,13 +60,14 @@ callback = (odl.solvers.CallbackPrintIteration() &
             odl.solvers.CallbackShow())
 
 # Choose a starting point
-x = ray_trafo.domain.zero()
+x = space.zero()
 
-# Run the algorithm
+# Run the algorithm, call the callback in each iteration for visualization.
+# Note that using only 2 iterations still gives a decent reconstruction.
 odl.solvers.kaczmarz(
-    ray_trafos, x, noisy_data, niter=20, omega=omega, callback=callback)
+    ray_trafos, x, data, niter=2, omega=omega,
+    callback=callback, callback_call='inner')
 
 # Display images
 phantom.show(title='original image')
-data.show(title='sinogram')
 x.show(title='reconstructed image', force_show=True)
