@@ -472,8 +472,14 @@ class Parallel2dGeometry(ParallelBeamGeometry):
         return '{}(\n{}\n)'.format(self.__class__.__name__,
                                    indent_rows(sig_str))
 
-    def __getitem__(self, slc):
+    def __getitem__(self, indices):
         """Return self[slc]
+
+        This is defined by::
+
+            self[indices].partition == self.partition[indices]
+
+        where all other parameters are the same.
 
         Examples
         --------
@@ -491,22 +497,14 @@ class Parallel2dGeometry(ParallelBeamGeometry):
             uniform_partition(-1.0, 1.0, 20)
         )
         """
-        part = self.partition[slc]
+        part = self.partition[indices]
         apart = part.byaxis[0]
         dpart = part.byaxis[1]
 
-        optargs = {}
-        if not np.allclose(self.det_pos_init - self.translation,
-                           self._default_config['det_pos_init']):
-            optargs['det_pos_init'] = self.det_pos_init.tolist()
-
-        if self._det_axis_init_arg is not None:
-            optargs['det_axis_init'] = self._det_axis_init_arg.tolist()
-
-        if not np.array_equal(self.translation, (0, 0)):
-            optargs['translation'] = self.translation.tolist()
-
-        return Parallel2dGeometry(apart, dpart, **optargs)
+        return Parallel2dGeometry(apart, dpart,
+                                  det_pos_init=self.det_pos_init,
+                                  det_axis_init=self._det_axis_init_arg,
+                                  translation=self.translation)
 
 
 class Parallel3dEulerGeometry(ParallelBeamGeometry):
@@ -1094,6 +1092,41 @@ class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
         sig_str = signature_string(posargs, optargs, sep=',\n')
         return '{}(\n{}\n)'.format(self.__class__.__name__,
                                    indent_rows(sig_str))
+
+    def __getitem__(self, indices):
+        """Return self[indices].
+
+        This is defined by::
+
+            self[indices].partition == self.partition[indices]
+
+        where all other parameters are the same.
+
+        Examples
+        --------
+        Extract sub-geometry:
+
+        >>> apart = odl.uniform_partition(0, 4, 4)
+        >>> dpart = odl.uniform_partition([-1, -1], [1, 1], [20, 20])
+        >>> geom = odl.tomo.Parallel3dAxisGeometry(apart, dpart)
+        >>> geom[::2, :]
+        Parallel3dAxisGeometry(
+            nonuniform_partition(
+                [0.5, 2.5],
+                min_pt=0.0, max_pt=4.0
+            ),
+            uniform_partition([-1.0, -1.0], [1.0, 1.0], (20, 20))
+        )
+        """
+        part = self.partition[indices]
+        apart = part.byaxis[0]
+        dpart = part.byaxis[1:]
+
+        return Parallel3dAxisGeometry(apart, dpart,
+                                      axis=self.axis,
+                                      det_pos_init=self._det_pos_init_arg,
+                                      det_axes_init=self._det_axes_init_arg,
+                                      translation=self.translation)
 
     # Manually override the abstract method in `Geometry` since it's found
     # first

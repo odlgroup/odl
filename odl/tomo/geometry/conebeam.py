@@ -474,6 +474,44 @@ class FanFlatGeometry(DivergentBeamGeometry):
         return '{}(\n{}\n)'.format(self.__class__.__name__,
                                    indent_rows(sig_str))
 
+    def __getitem__(self, indices):
+        """Return self[indices].
+
+        This is defined by::
+
+            self[indices].partition == self.partition[indices]
+
+        where all other parameters are the same.
+
+        Examples
+        --------
+        Extract sub-geometry:
+
+        >>> apart = odl.uniform_partition(0, 4, 4)
+        >>> dpart = odl.uniform_partition(-1, 1, 20)
+        >>> geom = odl.tomo.FanFlatGeometry(apart, dpart, 50, 100)
+        >>> geom[::2, :]
+        FanFlatGeometry(
+            nonuniform_partition(
+                [0.5, 2.5],
+                min_pt=0.0, max_pt=4.0
+            ),
+            uniform_partition(-1.0, 1.0, 20),
+            src_radius=50.0,
+            det_radius=100.0
+        )
+        """
+        part = self.partition[indices]
+        apart = part.byaxis[0]
+        dpart = part.byaxis[1]
+
+        return FanFlatGeometry(apart, dpart,
+                               src_radius=self.src_radius,
+                               det_radius=self.det_radius,
+                               src_to_det_init=self.src_to_det_init,
+                               det_axis_init=self._det_axis_init_arg,
+                               translation=self.translation)
+
 
 class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
 
@@ -1001,6 +1039,46 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         sig_str = signature_string(posargs, optargs, sep=',\n')
         return '{}(\n{}\n)'.format(self.__class__.__name__,
                                    indent_rows(sig_str))
+
+    def __getitem__(self, indices):
+        """Return self[indices].
+
+        This is defined by::
+
+            self[indices].partition == self.partition[indices]
+
+        where all other parameters are the same.
+
+        Examples
+        --------
+        Extract sub-geometry:
+
+        >>> apart = odl.uniform_partition(0, 4, 4)
+        >>> dpart = odl.uniform_partition([-1, -1], [1, 1], [20, 20])
+        >>> geom = odl.tomo.ConeFlatGeometry(apart, dpart, 50, 100)
+        >>> geom[::2, :]
+        ConeFlatGeometry(
+            nonuniform_partition(
+                [0.5, 2.5],
+                min_pt=0.0, max_pt=4.0
+            ),
+            uniform_partition([-1.0, -1.0], [1.0, 1.0], (20, 20)),
+            src_radius=50.0,
+            det_radius=100.0
+        )
+        """
+        part = self.partition[indices]
+        apart = part.byaxis[0]
+        dpart = part.byaxis[1:]
+
+        return ConeFlatGeometry(apart, dpart,
+                                src_radius=self.src_radius,
+                                det_radius=self.det_radius,
+                                axis=self.axis,
+                                offset_along_axis=self.offset_along_axis,
+                                src_to_det_init=self._src_to_det_init_arg,
+                                det_axes_init=self._det_axes_init_arg,
+                                translation=self.translation)
 
     # Manually override the abstract method in `Geometry` since it's found
     # first
