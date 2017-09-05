@@ -4,10 +4,10 @@ Solves the inverse problem
 
     A(x) = g
 
-Where ``A`` is a parallel beam forward projector, ``x`` the result and
+Where ``A`` is a fan (cone) beam forward projector, ``x`` the result and
  ``g`` is given data.
 
-In order to solve this using `kaczmarz`s method, the operator is split into
+In order to solve this using `kaczmarz`'s method, the operator is split into
 several sub-operators (each representing a subset of the angles and detector
 points). This allows a faster solution.
 """
@@ -23,7 +23,7 @@ import odl
 space = odl.uniform_discr(
     min_pt=[-20, -20], max_pt=[20, 20], shape=[300, 300], dtype='float32')
 
-# Make a parallel beam geometry with flat detector
+# Make a fan (cone) beam geometry with flat detector
 geometry = odl.tomo.cone_beam_geometry(space,
                                        src_radius=40, det_radius=40,
                                        num_angles=360, det_shape=360)
@@ -52,6 +52,7 @@ phantom = odl.phantom.shepp_logan(space, modified=True)
 # Create sinogram of forward projected phantom with noise
 data = [ray_trafo(phantom) for ray_trafo in ray_trafos]
 
+# Compute steplengths
 omega = [odl.power_method_opnorm(ray_trafo) ** (-2)
          for ray_trafo in ray_trafos]
 
