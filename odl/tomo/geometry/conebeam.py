@@ -485,11 +485,12 @@ class FanFlatGeometry(DivergentBeamGeometry):
 
         Examples
         --------
-        Extract sub-geometry:
-
         >>> apart = odl.uniform_partition(0, 4, 4)
         >>> dpart = odl.uniform_partition(-1, 1, 20)
         >>> geom = odl.tomo.FanFlatGeometry(apart, dpart, 50, 100)
+
+        Extract sub-geometry with every second angle:
+
         >>> geom[::2, :]
         FanFlatGeometry(
             nonuniform_partition(
@@ -1051,12 +1052,13 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
 
         Examples
         --------
-        Extract sub-geometry:
-
         >>> apart = odl.uniform_partition(0, 4, 4)
         >>> dpart = odl.uniform_partition([-1, -1], [1, 1], [20, 20])
         >>> geom = odl.tomo.ConeFlatGeometry(apart, dpart, 50, 100)
-        >>> geom[::2, :]
+
+        Extract sub-geometry with every second angle:
+
+        >>> geom[::2]
         ConeFlatGeometry(
             nonuniform_partition(
                 [0.5, 2.5],

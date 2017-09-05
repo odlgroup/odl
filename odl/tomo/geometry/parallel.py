@@ -483,12 +483,13 @@ class Parallel2dGeometry(ParallelBeamGeometry):
 
         Examples
         --------
-        Extract sub-geometry:
-
         >>> apart = odl.uniform_partition(0, 4, 4)
         >>> dpart = odl.uniform_partition(-1, 1, 20)
         >>> geom = odl.tomo.Parallel2dGeometry(apart, dpart)
-        >>> geom[::2, :]
+
+        Extract sub-geometry with every second angle:
+
+        >>> geom[::2]
         Parallel2dGeometry(
             nonuniform_partition(
                 [0.5, 2.5],
@@ -1104,12 +1105,13 @@ class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
 
         Examples
         --------
-        Extract sub-geometry:
-
         >>> apart = odl.uniform_partition(0, 4, 4)
         >>> dpart = odl.uniform_partition([-1, -1], [1, 1], [20, 20])
         >>> geom = odl.tomo.Parallel3dAxisGeometry(apart, dpart)
-        >>> geom[::2, :]
+
+        Extract sub-geometry with every second angle:
+
+        >>> geom[::2]
         Parallel3dAxisGeometry(
             nonuniform_partition(
                 [0.5, 2.5],
