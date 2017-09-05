@@ -10,9 +10,7 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-from future.utils import raise_from, native
-standard_library.install_aliases()
+from future.utils import native
 
 import numpy as np
 
@@ -198,10 +196,9 @@ def power_method_opnorm(op, xstart=None, maxiter=100, rtol=1e-05, atol=1e-08,
     if xstart is None:
         try:
             x = op.domain.one()  # TODO: random? better choice?
-        except AttributeError as exc:
-            raise_from(
-                ValueError('`xstart` must be defined in case the '
-                           'operator domain has no `one()`'), exc)
+        except AttributeError:
+            raise ValueError('`xstart` must be defined in case the '
+                             'operator domain has no `one()`')
     else:
         # copy to ensure xstart is not modified
         x = op.domain.element(xstart).copy()
@@ -290,6 +287,9 @@ def as_scipy_operator(op):
     `NumpyFn` this incurs no significant overhead. If the space type is
     ``CudaFn`` or some other nonlocal type, the overhead is significant.
     """
+    # Lazy import to improve `import odl` time
+    import scipy.sparse
+
     if not op.is_linear:
         raise ValueError('`op` needs to be linear')
 
@@ -312,7 +312,6 @@ def as_scipy_operator(op):
     def rmatvec(v):
         return as_flat_array(op.adjoint(v))
 
-    import scipy.sparse.linalg
     return scipy.sparse.linalg.LinearOperator(shape=shape,
                                               matvec=matvec,
                                               rmatvec=rmatvec,

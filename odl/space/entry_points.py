@@ -23,15 +23,11 @@ NumpyNtuples : Numpy based implementation of `NtuplesBase`
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
 
-from pkg_resources import iter_entry_points
 from odl.space.npy_ntuples import NumpyNtuples, NumpyFn
 
 __all__ = ('ntuples_impl_names', 'fn_impl_names',
            'ntuples_impl', 'fn_impl')
-
 
 IS_INITIALIZED = False
 NTUPLES_IMPLS = {'numpy': NumpyNtuples}
@@ -42,6 +38,8 @@ def _initialize_if_needed():
     """Initialize ``NTUPLES_IMPLS`` and ``FN_IMPLS`` if not already done."""
     global IS_INITIALIZED, NTUPLES_IMPLS, FN_IMPLS
     if not IS_INITIALIZED:
+        # pkg_resources has long import time
+        from pkg_resources import iter_entry_points
         for entry_point in iter_entry_points(group='odl.space', name=None):
             try:
                 module = entry_point.load()
@@ -90,7 +88,7 @@ def ntuples_impl(impl):
 
     try:
         return NTUPLES_IMPLS[impl]
-    except:
+    except KeyError:
         raise ValueError("key '{}' does not correspond to a valid ntuples "
                          "implmentation".format(impl))
 
@@ -120,6 +118,6 @@ def fn_impl(impl):
 
     try:
         return FN_IMPLS[impl]
-    except:
+    except KeyError:
         raise ValueError("key '{}' does not correspond to a valid fn "
                          "implmentation".format(impl))

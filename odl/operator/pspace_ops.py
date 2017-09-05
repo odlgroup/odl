@@ -10,12 +10,9 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
 from builtins import super
 
 import numpy as np
-import scipy as sp
 from numbers import Integral
 
 from odl.operator.operator import Operator
@@ -144,6 +141,8 @@ class ProductSpaceOperator(Operator):
             [1.0, 2.0, 3.0]
         ])
         """
+        # Lazy import to improve `import odl` time
+        import scipy.sparse
 
         # Validate input data
         if domain is not None:
@@ -161,7 +160,7 @@ class ProductSpaceOperator(Operator):
                 raise NotImplementedError('weighted spaces not supported')
 
         # Convert ops to sparse representation
-        self.ops = sp.sparse.coo_matrix(operators)
+        self.ops = scipy.sparse.coo_matrix(operators)
 
         if not all(isinstance(op, Operator) for op in self.ops.data):
             raise TypeError('`operators` {!r} must be a matrix of Operators'
@@ -298,6 +297,9 @@ class ProductSpaceOperator(Operator):
             [0.0, 0.0, 0.0]
         ])
         """
+        # Lazy import to improve `import odl` time
+        import scipy.sparse
+
         # Short circuit optimization
         if self.is_linear:
             return self
@@ -306,7 +308,7 @@ class ProductSpaceOperator(Operator):
                                                               self.ops.col)]
         indices = [self.ops.row, self.ops.col]
         shape = self.ops.shape
-        deriv_matrix = sp.sparse.coo_matrix((deriv_ops, indices), shape)
+        deriv_matrix = scipy.sparse.coo_matrix((deriv_ops, indices), shape)
         return ProductSpaceOperator(deriv_matrix, self.domain, self.range)
 
     @property
@@ -346,10 +348,13 @@ class ProductSpaceOperator(Operator):
             [1.0, 2.0, 3.0]
         ])
         """
+        # Lazy import to improve `import odl` time
+        import scipy.sparse
+
         adjoint_ops = [op.adjoint for op in self.ops.data]
         indices = [self.ops.col, self.ops.row]  # Swap col/row -> transpose
         shape = (self.ops.shape[1], self.ops.shape[0])
-        adj_matrix = sp.sparse.coo_matrix((adjoint_ops, indices), shape)
+        adj_matrix = scipy.sparse.coo_matrix((adjoint_ops, indices), shape)
         return ProductSpaceOperator(adj_matrix, self.range, self.domain)
 
     def __getitem__(self, index):
@@ -1046,6 +1051,9 @@ class DiagonalOperator(ProductSpaceOperator):
         >>> op.operators
         (IdentityOperator(rn(3)), IdentityOperator(rn(3)))
         """
+        # Lazy import to improve `import odl` time
+        import scipy.sparse
+
         if (len(operators) == 2 and
                 isinstance(operators[0], Operator) and
                 isinstance(operators[1], Integral)):
@@ -1053,7 +1061,7 @@ class DiagonalOperator(ProductSpaceOperator):
 
         indices = [range(len(operators)), range(len(operators))]
         shape = (len(operators), len(operators))
-        op_matrix = sp.sparse.coo_matrix((operators, indices), shape)
+        op_matrix = scipy.sparse.coo_matrix((operators, indices), shape)
 
         self.__operators = tuple(operators)
 

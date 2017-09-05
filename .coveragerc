@@ -9,10 +9,10 @@ omit =
     */__init__.py
     odl/diagnostics/*
     odl/util/*
-    
+
     # Omit until coveralls supports cuda.
     odl/space/cu_ntuples.py
-    
+
     # Omit until coveralls supports pywt.
     odl/trafos/wavelet.py
 
@@ -41,7 +41,6 @@ exclude_lines =
 
     # Skip imports and __all__
     import *
-    standard_library.install_aliases()
     __all__
 
     # Decorators

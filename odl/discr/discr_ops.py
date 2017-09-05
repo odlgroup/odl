@@ -10,13 +10,11 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
 from builtins import super
 
 import numpy as np
 
-from odl.discr import DiscreteLp, uniform_partition, nonuniform_partition
+from odl.discr import DiscreteLp, uniform_partition
 from odl.operator import Operator
 from odl.set import IntervalProd
 from odl.space import FunctionSpace, fn

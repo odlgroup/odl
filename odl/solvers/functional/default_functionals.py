@@ -10,20 +10,15 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
 from builtins import super
 
 import numpy as np
-import scipy
 from numbers import Integral
 
 from odl.solvers.functional.functional import Functional
 from odl.space import ProductSpace
 from odl.operator import (Operator, ConstantOperator, ZeroOperator,
                           ScalingOperator, DiagonalOperator, PointwiseNorm)
-from odl.solvers.functional.functional import (
-    Functional, FunctionalDefaultConvexConjugate)
 from odl.solvers.nonsmooth.proximal_operators import (
     proximal_l1, proximal_convex_conj_l1, proximal_l2, proximal_convex_conj_l2,
     proximal_l2_squared, proximal_const_func, proximal_box_constraint,
@@ -1109,6 +1104,9 @@ class KullbackLeibler(Functional):
         If any components of ``x`` is non-positive, the value is positive
         infinity.
         """
+        # Lazy import to improve `import odl` time
+        import scipy.special
+
         if self.prior is None:
             tmp = ((x - 1 - np.log(x)).inner(self.domain.one()))
         else:
@@ -1234,6 +1232,9 @@ class KullbackLeiblerConvexConj(Functional):
         If any components of ``x`` is larger than or equal to 1, the value is
         positive infinity.
         """
+        # Lazy import to improve `import odl` time
+        import scipy.special
+
         if self.prior is None:
             tmp = -1.0 * (np.log(1 - x)).inner(self.domain.one())
         else:
@@ -1375,6 +1376,9 @@ class KullbackLeiblerCrossEntropy(Functional):
         If any components of ``x`` is non-positive, the value is positive
         infinity.
         """
+        # Lazy import to improve `import odl` time
+        import scipy.special
+
         if self.prior is None:
             tmp = (1 - x + scipy.special.xlogy(x, x)).inner(self.domain.one())
         else:

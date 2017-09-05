@@ -10,13 +10,10 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
 from builtins import super
 
 import numpy as np
 
-from odl.tomo.geometry.geometry import AxisOrientedGeometry
 from odl.tomo.geometry.parallel import Parallel3dAxisGeometry
 from odl.tomo.util.utility import transform_system
 from odl.util import signature_string, indent_rows

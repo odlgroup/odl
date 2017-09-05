@@ -10,13 +10,10 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
 
 from functools import wraps
 from collections import OrderedDict
 import numpy as np
-from pkg_resources import parse_requirements
 
 
 __all__ = ('array1d_repr', 'array1d_str', 'arraynd_repr', 'arraynd_str',
@@ -800,6 +797,8 @@ def pkg_supports(feature, pkg_version, pkg_feat_dict):
     >>> pkg_supports('feat5', '1.0', feat_dict)
     False
     """
+    from pkg_resources import parse_requirements
+
     feature = str(feature)
     pkg_version = str(pkg_version)
     supp_versions = pkg_feat_dict.get(feature, None)

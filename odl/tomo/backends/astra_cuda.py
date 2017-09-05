@@ -10,11 +10,8 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
 
 import numpy as np
-from pkg_resources import parse_version
 try:
     import astra
     ASTRA_CUDA_AVAILABLE = astra.astra.use_cuda()
@@ -342,6 +339,9 @@ def astra_cuda_bp_scaling_factor(proj_space, reco_space, geometry):
     Behavior of ASTRA changes slightly between versions, so we keep
     track of it and adapt the scaling accordingly.
     """
+    # Lazy import due to long import time
+    from pkg_resources import parse_version
+
     # Angular integration weighting factor
     # angle interval weight by approximate cell volume
     angle_extent = geometry.motion_partition.extent

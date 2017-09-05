@@ -25,23 +25,23 @@ ODL geometry representation to ASTRA's data structures, including:
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
 
-from pkg_resources import parse_version
 try:
     import astra
     ASTRA_AVAILABLE = True
     try:
         # Available from 1.8 on
         ASTRA_VERSION = astra.__version__
+        _maj, _min = [int(n) for n in ASTRA_VERSION.split('.')]
     except AttributeError:
-        astra_ver_num = astra.astra.version()
-        ASTRA_VERSION = '.'.join([str(astra_ver_num // 100),
-                                  str(astra_ver_num % 100)])
+        _maj = astra.astra.version() // 100
+        _min = astra.astra.version() % 100
+        ASTRA_VERSION = '.'.join([str(_maj), str(_min)])
 
-    if parse_version(ASTRA_VERSION) < parse_version('1.7'):
+    # Don't import pkg_resources only for this, it's slow
+    if (_maj, _min) < (1, 7):
         raise RuntimeError('ASTRA version < 1.7 not supported, please update')
+
 except ImportError:
     ASTRA_AVAILABLE = False
     ASTRA_VERSION = ''
@@ -52,7 +52,6 @@ from odl.discr import DiscreteLp, DiscreteLpElement
 from odl.tomo.geometry import (
     Geometry, DivergentBeamGeometry, ParallelBeamGeometry, FlatDetector)
 from odl.tomo.util.utility import euler_matrix
-from odl.util.utility import pkg_supports
 
 
 __all__ = ('ASTRA_AVAILABLE', 'ASTRA_VERSION', 'astra_supports',
@@ -110,6 +109,7 @@ def astra_supports(feature):
         ``True`` if the currently imported version of ASTRA supports the
         feature in question, ``False`` otherwise.
     """
+    from odl.util.utility import pkg_supports
     return pkg_supports(feature, ASTRA_VERSION, ASTRA_FEATURES)
 
 

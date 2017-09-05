@@ -10,8 +10,6 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
 from builtins import str, super
 
 import numpy as np
@@ -19,7 +17,7 @@ import numpy as np
 from odl.discr import DiscreteLp
 from odl.operator import Operator
 from odl.trafos.backends.pywt_bindings import (
-    PYWT_AVAILABLE, PAD_MODES_ODL2PYWT,
+    PYWT_AVAILABLE,
     pywt_pad_mode, pywt_wavelet, pywt_flat_coeff_size, pywt_coeff_shapes,
     pywt_max_nlevels, pywt_flat_array_from_coeffs, pywt_coeffs_from_flat_array,
     pywt_multi_level_decomp, pywt_multi_level_recon)

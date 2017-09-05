@@ -23,12 +23,9 @@ Foundations and Trends in Optimization, 1 (2014), pp 127-239.
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
 from builtins import super
 
 import numpy as np
-import scipy.special
 
 from odl.operator import (Operator, IdentityOperator, ScalingOperator,
                           ConstantOperator, DiagonalOperator)
@@ -1380,6 +1377,8 @@ def proximal_convex_conj_kl_cross_entropy(space, lam=1, g=None):
 
         def _call(self, x, out):
             """Apply the operator to ``x`` and stores the result in ``out``."""
+            # Lazy import to improve `import odl` time
+            import scipy.special
 
             if g is None:
                 # If g is None, it is taken as the one element

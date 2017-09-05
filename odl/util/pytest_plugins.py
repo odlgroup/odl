@@ -9,8 +9,6 @@
 """Test configuration file."""
 
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
 
 import numpy as np
 import operator
