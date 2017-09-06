@@ -8,11 +8,8 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
 
 import numpy as np
-import scipy as sp
 from odl.discr import ResizingOperator
 from odl.trafos import FourierTransform, PYFFTW_AVAILABLE
 from odl.space.weighting import NoWeighting
@@ -180,12 +177,15 @@ def tam_danielson_window(ray_trafo, smoothing_width=0.05, n_half_rot=1):
 
     # Create window function
     def window_fcn(x):
+        # Lazy import to improve `import odl` time
+        import scipy.special
+
         x_along_axis = axis_proj[0] * x[1] + axis_proj[1] * x[2]
         if smoothing_width != 0:
             lower_wndw = 0.5 * (
-                1 + sp.special.erf((x_along_axis - lower_proj) / width))
+                1 + scipy.special.erf((x_along_axis - lower_proj) / width))
             upper_wndw = 0.5 * (
-                1 + sp.special.erf((upper_proj - x_along_axis) / width))
+                1 + scipy.special.erf((upper_proj - x_along_axis) / width))
         else:
             lower_wndw = (x_along_axis >= lower_proj)
             upper_wndw = (x_along_axis <= upper_proj)

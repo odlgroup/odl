@@ -10,8 +10,6 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
 
 import tensorflow as tf
 from odl.set import LinearSpace, LinearSpaceElement, RealNumbers

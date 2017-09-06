@@ -10,23 +10,22 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
 
 import numpy as np
 from odl.set import LinearSpace, RealNumbers, Field
 from odl.space import ProductSpace, fn
 from odl.operator import Operator, MultiplyOperator
-from odl.util.utility import is_int_dtype
-from odl.util.ufuncs import UFUNCS
 from odl.solvers import (Functional, ScalingFunctional, FunctionalQuotient,
-                         ConstantFunctional, IdentityFunctional)
+                         ConstantFunctional)
+from odl.util import is_int_dtype
+from odl.util.ufuncs import UFUNCS
 
 __all__ = ()
 
 
 def _is_integer_only_ufunc(name):
     return 'shift' in name or 'bitwise' in name or name == 'invert'
+
 
 LINEAR_UFUNCS = ['negative', 'rad2deg', 'deg2rad', 'add', 'subtract']
 

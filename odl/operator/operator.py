@@ -10,9 +10,6 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-from future.utils import raise_from
-standard_library.install_aliases()
 from builtins import object, super
 
 import inspect
@@ -672,10 +669,10 @@ class Operator(object):
         if x not in self.domain:
             try:
                 x = self.domain.element(x)
-            except (TypeError, ValueError) as err:
-                raise_from(OpDomainError(
+            except (TypeError, ValueError):
+                raise OpDomainError(
                     'unable to cast {!r} to an element of '
-                    'the domain {!r}'.format(x, self.domain)), err)
+                    'the domain {!r}'.format(x, self.domain))
 
         if out is not None:  # In-place evaluation
             if out not in self.range:
@@ -700,11 +697,10 @@ class Operator(object):
             if out not in self.range:
                 try:
                     out = self.range.element(out)
-                except (TypeError, ValueError) as err:
-                    new_exc = OpRangeError(
+                except (TypeError, ValueError):
+                    raise OpRangeError(
                         'unable to cast {!r} to an element of '
                         'the range {!r}'.format(out, self.range))
-                    raise_from(new_exc, err)
         return out
 
     def norm(self, estimate=False, **kwargs):
@@ -2233,6 +2229,7 @@ class OpNotImplementedError(NotImplementedError):
     These are raised when a method in `LinearSpace` that has not been
     defined in a specific space is called.
     """
+
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position

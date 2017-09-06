@@ -11,9 +11,7 @@
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from builtins import int, object, str, zip
-from future import standard_library
 from past.builtins import basestring
-standard_library.install_aliases()
 
 from numbers import Integral, Real, Complex
 import numpy as np

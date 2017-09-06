@@ -11,9 +11,6 @@
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from builtins import super, zip
-from future import standard_library
-from future.utils import raise_from
-standard_library.install_aliases()
 
 import numpy as np
 
@@ -326,10 +323,9 @@ class IntervalProd(Set):
         try:
             return (self.approx_contains(other.min(), atol) and
                     self.approx_contains(other.max(), atol))
-        except AttributeError as err:
-            raise_from(
-                AttributeError('cannot test {!r} without `min` and `max` '
-                               'methods'.format(other)), err)
+        except AttributeError:
+            raise AttributeError('cannot test {!r} without `min` and `max` '
+                                 'methods'.format(other))
 
     def contains_all(self, other, atol=0.0):
         """Return ``True`` if all points defined by ``other`` are contained.

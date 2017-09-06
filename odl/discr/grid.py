@@ -14,16 +14,14 @@ space with a certain structure which is exploited to minimize storage.
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
-from builtins import super, range, str, zip
+from builtins import range, str, zip
 
 import numpy as np
 
 from odl.set import Set, IntervalProd
 from odl.util import (
     normalized_index_expression, normalized_scalar_param_list, safe_int_conv,
-    array1d_repr, array1d_str, signature_string, indent_rows)
+    array1d_repr, signature_string, indent_rows)
 
 
 __all__ = ('RectGrid', 'uniform_grid', 'uniform_grid_fromintv')
@@ -160,6 +158,8 @@ class RectGrid(Set):
         Ordering is only relevant when the point array is actually created;
         the grid itself is independent of this ordering.
         """
+        super(RectGrid, self).__init__()
+
         vecs = tuple(np.atleast_1d(vec).astype('float64')
                      for vec in coord_vectors)
         for i, vec in enumerate(vecs):

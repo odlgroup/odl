@@ -10,14 +10,9 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
-from future import standard_library
-standard_library.install_aliases()
 from builtins import super
 
 import numpy as np
-import scipy.linalg as linalg
-from scipy.sparse.base import isspmatrix
 
 from odl.space.base_ntuples import FnBaseVector
 from odl.util import array1d_repr, arraynd_repr, signature_string, indent_rows
@@ -258,6 +253,9 @@ class MatrixWeighting(Weighting):
 
         Depending on the matrix size, this can be rather expensive.
         """
+        # Lazy import to improve `import odl` time
+        import scipy.sparse
+
         # TODO: fix dead link `scipy.sparse.spmatrix`
         precomp_mat_pow = kwargs.pop('precomp_mat_pow', False)
         self._cache_mat_pow = bool(kwargs.pop('cache_mat_pow', True))
@@ -266,7 +264,7 @@ class MatrixWeighting(Weighting):
                          dist_using_inner=dist_using_inner)
 
         # Check and set matrix
-        if isspmatrix(matrix):
+        if scipy.sparse.isspmatrix(matrix):
             self._matrix = matrix
         else:
             self._matrix = np.asarray(matrix)
@@ -310,7 +308,8 @@ class MatrixWeighting(Weighting):
     @property
     def matrix_issparse(self):
         """Whether the representing matrix is sparse or not."""
-        return isspmatrix(self.matrix)
+        import scipy.sparse
+        return scipy.sparse.isspmatrix(self.matrix)
 
     def is_valid(self):
         """Test if the matrix is positive definite Hermitian.
@@ -362,6 +361,10 @@ class MatrixWeighting(Weighting):
         NotImplementedError
             if the matrix is sparse (not supported by scipy 0.17)
         """
+        # Lazy import to improve `import odl` time
+        import scipy.linalg
+        import scipy.sparse
+
         # TODO: fix dead link `scipy.linalg.decomp.eigh`
         if self.matrix_issparse:
             raise NotImplementedError('sparse matrix not supported')
@@ -370,7 +373,7 @@ class MatrixWeighting(Weighting):
             cache = self._cache_mat_decomp
 
         if self._eigval is None or self._eigvec is None:
-            eigval, eigvec = linalg.eigh(self.matrix)
+            eigval, eigvec = scipy.linalg.eigh(self.matrix)
             if cache:
                 self._eigval = eigval
                 self._eigvec = eigvec

@@ -11,7 +11,7 @@
 from odl.discr import uniform_discr_frompartition, uniform_partition
 import numpy as np
 try:
-    from skimage.transform import radon, iradon
+    import skimage
     SKIMAGE_AVAILABLE = True
 except ImportError:
     SKIMAGE_AVAILABLE = False
@@ -78,6 +78,9 @@ def skimage_radon_forward(volume, geometry, range, out=None):
     sinogram : ``range`` element
         Sinogram given by the projection.
     """
+    # Lazy import due to significant import time
+    from skimage.transform import radon
+
     # Check basic requirements. Fully checking should be in wrapper
     assert volume.shape[0] == volume.shape[1]
 
@@ -120,6 +123,9 @@ def skimage_radon_back_projector(sinogram, geometry, range, out=None):
     sinogram : ``range`` element
         Sinogram given by the projection.
     """
+    # Lazy import due to significant import time
+    from skimage.transform import iradon
+
     theta = skimage_theta(geometry)
     skimage_range = skimage_sinogram_space(geometry, range, sinogram.space)
 

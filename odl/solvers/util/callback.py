@@ -10,14 +10,13 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
 
 import warnings
 import time
 import os
 import copy
 import numpy as np
+
 from odl.util import signature_string
 
 __all__ = ('Callback', 'CallbackStore', 'CallbackApply',

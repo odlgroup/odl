@@ -10,18 +10,14 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
 from builtins import super
 
 import numpy as np
-import scipy
 
 from odl.operator import Operator
-from odl.set import RealNumbers, ComplexNumbers, LinearSpace
+from odl.set import RealNumbers, ComplexNumbers
 from odl.space import ProductSpace, fn
 from odl.space.base_ntuples import FnBase
-from odl.space.npy_ntuples import NumpyFn
 from odl.util import writable_array, signature_string, indent_rows
 
 
@@ -762,7 +758,9 @@ class MatrixOperator(Operator):
         >>> op(op.domain.one())
         rn(4).element([13.0, 7.0, 0.0, 5.0])
         """
-        # TODO: fix dead link `scipy.sparse.spmatrix`
+        # Lazy import to improve `import odl` time
+        import scipy.sparse
+
         if scipy.sparse.isspmatrix(matrix):
             self.__matrix = matrix
         else:
@@ -813,6 +811,8 @@ class MatrixOperator(Operator):
     @property
     def matrix_issparse(self):
         """Whether the representing matrix is sparse or not."""
+        # Lazy import to improve `import odl` time
+        import scipy.sparse
         return scipy.sparse.isspmatrix(self.matrix)
 
     @property
@@ -844,7 +844,10 @@ class MatrixOperator(Operator):
         -------
         inverse : `MatrixOperator`
         """
-        if self.matrix_issparse:
+        # Lazy import to improve `import odl` time
+        import scipy.sparse
+
+        if scipy.sparse.issparse(self.matrix):
             dense_matrix = self.matrix.toarray()
         else:
             dense_matrix = self.matrix
@@ -852,7 +855,7 @@ class MatrixOperator(Operator):
                               domain=self.range, range=self.domain)
 
     def _call(self, x, out=None):
-        """Raw apply method on input, writing to given output."""
+        """Return ``self(x[, out])``."""
         if out is None:
             return self.range.element(self.matrix.dot(x))
         else:
@@ -895,6 +898,7 @@ class MatrixOperator(Operator):
     def __str__(self):
         """Return ``str(self)``."""
         return repr(self)
+
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position

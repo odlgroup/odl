@@ -10,17 +10,14 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
 from builtins import int, object
+from future.moves.itertools import zip_longest
 
-from itertools import zip_longest
 import numpy as np
 import sys
 import os
 import warnings
 from time import time
-from pkg_resources import parse_version
 from odl.util.utility import run_from_ipython
 
 
@@ -677,6 +674,7 @@ def run_doctests(skip_if=False, **kwargs):
         function.
     """
     from doctest import testmod, NORMALIZE_WHITESPACE, SKIP
+    from pkg_resources import parse_version
     import odl
     import numpy as np
 
