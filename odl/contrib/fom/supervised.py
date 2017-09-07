@@ -69,6 +69,7 @@ def mean_squared_error(data, ground_truth, mask=None, normalized=False):
 
     diff = data - ground_truth
     fom = l2_normSquared(diff)
+    fom /= data.space.one().norm()**2
 
     if normalized:
             fom /= (l2_normSquared(data) + l2_normSquared(ground_truth))
