@@ -62,4 +62,4 @@ adj_result = deform_op.adjoint(template)
 
 # Show results
 deformed_template.show('Deformed template')
-adj_result.show('Adjoint applied to the template')
+adj_result.show('Adjoint applied to the template', force_show=True)

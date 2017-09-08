@@ -118,4 +118,4 @@ odl.solvers.douglas_rachford_pd(x, f, g, lin_ops,
 fbp_recon = odl.tomo.fbp_op(ray_trafo)(data)
 fbp_recon.show('FBP reconstruction')
 phantom.show('Phantom')
-data.show('Sinogram')
+data.show('Sinogram', force_show=True)

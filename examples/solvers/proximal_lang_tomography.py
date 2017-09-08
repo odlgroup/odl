@@ -60,4 +60,4 @@ prob.solve(verbose=True)
 
 # Convert back to odl and display result
 result_odl = reco_space.element(x.value)
-result_odl.show('ProxImaL result')
+result_odl.show('ProxImaL result', force_show=True)
