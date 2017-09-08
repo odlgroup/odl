@@ -21,6 +21,7 @@ This example shows how this can be done using a variety of solution methods.
 """
 
 import odl
+from matplotlib import pyplot as plt
 
 # Create the solution space
 space = odl.rn(2)
@@ -38,6 +39,8 @@ callback = odl.solvers.CallbackShowConvergence(f, logx=True, logy=True,
 x = space.zero()
 odl.solvers.steepest_descent(f, x, line_search=line_search,
                              callback=callback)
+legend_artists = [callback.ax.collections[-1], ]
+legend_labels = ['SD', ]
 
 # Solve problem using nonlinear conjugate gradient
 callback = odl.solvers.CallbackShowConvergence(f, logx=True, logy=True,
@@ -45,6 +48,8 @@ callback = odl.solvers.CallbackShowConvergence(f, logx=True, logy=True,
 x = space.zero()
 odl.solvers.conjugate_gradient_nonlinear(f, x, line_search=line_search,
                                          callback=callback)
+legend_artists.append(callback.ax.collections[-1])
+legend_labels.append('CG')
 
 # Solve problem using bfgs
 callback = odl.solvers.CallbackShowConvergence(f, logx=True, logy=True,
@@ -52,6 +57,8 @@ callback = odl.solvers.CallbackShowConvergence(f, logx=True, logy=True,
 x = space.zero()
 odl.solvers.bfgs_method(f, x, line_search=line_search,
                         callback=callback)
+legend_artists.append(callback.ax.collections[-1])
+legend_labels.append('BFGS')
 
 # Solve problem using newtons method
 callback = odl.solvers.CallbackShowConvergence(f, logx=True, logy=True,
@@ -59,3 +66,8 @@ callback = odl.solvers.CallbackShowConvergence(f, logx=True, logy=True,
 x = space.zero()
 odl.solvers.newtons_method(f, x, line_search=line_search,
                            callback=callback)
+legend_artists.append(callback.ax.collections[-1])
+legend_labels.append('Newton')
+
+plt.legend(legend_artists, legend_labels)
+plt.show()
