@@ -37,4 +37,5 @@ phantom.show(coords=[None, None, 20], title='Phantom, middle z slice')
 proj_data.show(coords=[2 * np.pi, None, None],
                title='Projection after exactly one turn')
 proj_data.show(coords=[None, None, 0], title='Sinogram, middle slice')
-backproj.show(coords=[None, None, 20], title='Back-projection, middle z slice')
+backproj.show(coords=[None, None, 20], title='Back-projection, middle z slice',
+              force_show=True)

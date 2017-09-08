@@ -43,4 +43,4 @@ result.show()
 
 # Also show back-projection
 back_projected = proj.adjoint(result)
-back_projected.show()
+back_projected.show(force_show=True)
