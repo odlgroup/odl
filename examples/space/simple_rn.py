@@ -80,7 +80,7 @@ ox, oy, oz = (opt_spc.element(x.copy()), opt_spc.element(y.copy()),
               opt_spc.element(z.copy()))
 sx, sy, sz = (simple_spc.element(x.copy()), simple_spc.element(y.copy()),
               simple_spc.element(z.copy()))
-if 'cuda' in odl.FN_IMPLS:
+if 'cuda' in odl.fn_impl_names():
     cu_spc = odl.rn(n, impl='cuda')
     cx, cy, cz = (cu_spc.element(x.copy()), cu_spc.element(y.copy()),
                   cu_spc.element(z.copy()))
@@ -96,7 +96,7 @@ with Timer("odl numpy"):
         opt_spc.lincomb(2.13, ox, 3.14, oy, out=oz)
 print("result: {}".format(oz[1:5]))
 
-if 'cuda' in odl.FN_IMPLS:
+if 'cuda' in odl.fn_impl_names():
     with Timer("odl cuda"):
         for _ in range(iterations):
             cu_spc.lincomb(2.13, cx, 3.14, cy, out=cz)
@@ -114,7 +114,7 @@ with Timer("odl numpy"):
         result = oz.norm()
 print("result: {}".format(result))
 
-if 'cuda' in odl.FN_IMPLS:
+if 'cuda' in odl.fn_impl_names():
     with Timer("odl cuda"):
         for _ in range(iterations):
             result = cz.norm()
@@ -132,7 +132,7 @@ with Timer("odl numpy"):
         result = oz.inner(ox)
 print("result: {}".format(result))
 
-if 'cuda' in odl.FN_IMPLS:
+if 'cuda' in odl.fn_impl_names():
     with Timer("odl cuda"):
         for _ in range(iterations):
             result = cz.inner(cx)
