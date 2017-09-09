@@ -11,7 +11,7 @@ For further details and a description of the solution method used, see
 """
 
 import numpy as np
-import scipy
+import scipy.misc
 import odl
 
 # Read test image: use only every second pixel, convert integer to float,

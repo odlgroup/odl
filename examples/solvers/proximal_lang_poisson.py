@@ -43,4 +43,4 @@ prob.solve(verbose=True)
 
 # Convert back to odl and display result
 result_odl = space.element(x.value)
-result_odl.show('result from ProxImaL')
+result_odl.show('result from ProxImaL', force_show=True)

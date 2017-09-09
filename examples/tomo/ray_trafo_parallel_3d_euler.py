@@ -49,4 +49,4 @@ proj_data.show(title='Simulated data: "cone plot" for u=0 and v=0',
 proj_data.show(title='Simulated data: projection for phi=pi/4 and theta=pi/4',
                coords=[np.pi / 4, np.pi / 4, None, None])
 
-backproj.show(title='Back-projection, slice z=0')
+backproj.show(title='Back-projection, slice z=0', force_show=True)

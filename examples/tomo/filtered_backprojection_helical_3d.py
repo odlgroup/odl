@@ -70,4 +70,5 @@ proj_data.show(title='Simulated data (sinogram)')
 fbp_reconstruction.show(title='Filtered back-projection',
                         coords=[0, None, None], clim=[-0.1, 1.1])
 w_fbp_reconstruction.show(title='Windowed filtered back-projection',
-                          coords=[0, None, None], clim=[-0.1, 1.1])
+                          coords=[0, None, None], clim=[-0.1, 1.1],
+                          force_show=True)

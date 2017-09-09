@@ -51,4 +51,4 @@ odl.solvers.douglas_rachford_pd(x, f, g, lin_ops,
                                 niter=500, callback=callback)
 
 x.show('douglas rachford result')
-ft.inverse(noisy_data).show('fourier inversion result')
+ft.inverse(noisy_data).show('fourier inversion result', force_show=True)

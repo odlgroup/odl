@@ -67,4 +67,5 @@ pw_fbp_reconstruction = parker_weighted_fbp(proj_data)
 phantom.show(title='Phantom')
 proj_data.show(title='Projection data (sinogram)')
 fbp_reconstruction.show(title='Filtered back-projection')
-pw_fbp_reconstruction.show(title='Parker weighted filtered back-projection')
+pw_fbp_reconstruction.show(title='Parker weighted filtered back-projection',
+                           force_show=True)

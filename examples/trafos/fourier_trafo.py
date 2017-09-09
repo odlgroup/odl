@@ -49,4 +49,4 @@ padding_op = odl.ResizingOperator(space, ran_shp=(768, 768))
 ft_op = odl.trafos.FourierTransform(padding_op.range)
 padded_ft_op = ft_op * padding_op
 phantom_ft_padded = padded_ft_op(phantom)
-phantom_ft_padded.show('Padded FT of the phantom')
+phantom_ft_padded.show('Padded FT of the phantom', force_show=True)

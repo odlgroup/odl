@@ -20,7 +20,7 @@ def optimal_parameters(reconstruction, fom, phantoms, data,
     Notes
     -----
     For a forward operator :math:`A : X \\to Y`, a reconstruction operator
-    parametrized by :math:`\\theta` is some operator 
+    parametrized by :math:`\\theta` is some operator
     :math:`R_\\theta : Y \\to X`
     such that
 
@@ -227,7 +227,7 @@ def fom(reco, true_image):
 
 
 # Find optimal lambda
-optimal_parameters = optimal_parameters(reconstruction,  fom,
+optimal_parameters = optimal_parameters(reconstruction, fom,
                                         phantoms, data,
                                         initial_param=initial_param)
 
@@ -239,4 +239,4 @@ reco_1.show(reconstruction_method + ', initial parameter')
 reco_0_opt = reconstruction(data[0], optimal_parameters)
 reco_0_opt.show(reconstruction_method + '  optimal parameter')
 reco_1_opt = reconstruction(data[1], optimal_parameters)
-reco_1_opt.show(reconstruction_method + ', optimal parameter')
+reco_1_opt.show(reconstruction_method + ', optimal parameter', force_show=True)

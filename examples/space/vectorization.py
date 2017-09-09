@@ -5,7 +5,7 @@ import odl
 import timeit
 
 
-def performace_example():
+def performance_example():
     # Create a space of functions on the interval [0, 1].
     fspace = odl.FunctionSpace(odl.IntervalProd(0, 1))
 
@@ -105,7 +105,7 @@ def numba_example():
 
 if __name__ == '__main__':
     print('Running vectorization performance example.')
-    performace_example()
+    performance_example()
 
     print('Running Numba example.')
     numba_example()

@@ -71,4 +71,5 @@ deriv_adj_result = deform_op_deriv.adjoint(templ_space.one())
 # Show results
 deformed_template.show('Deformed template')
 deriv_result.show('Operator derivative applied to one()')
-deriv_adj_result.show('Adjoint of the derivative applied to one()')
+deriv_adj_result.show('Adjoint of the derivative applied to one()',
+                      force_show=True)

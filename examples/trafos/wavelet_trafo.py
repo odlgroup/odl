@@ -25,4 +25,4 @@ phantom_wt_2d.show('wavelet transform in 2d')
 
 # Calculate the inverse transform.
 phantom_wt_inv = wavelet_op.inverse(phantom_wt)
-phantom_wt_inv.show(title='wavelet transform inverted')
+phantom_wt_inv.show(title='wavelet transform inverted', force_show=True)
