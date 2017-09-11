@@ -12,6 +12,7 @@
 import odl
 import numpy as np
 import pyshearlab
+from threading import Lock
 
 
 __all__ = ('PyShearlabOperator',)
@@ -21,38 +22,42 @@ class PyShearlabOperator(odl.Operator):
     def __init__(self, space, scales):
         self.shearletSystem = pyshearlab.SLgetShearletSystem2D(0, space.shape[0], space.shape[1], scales)
         range = space ** self.shearletSystem['nShearlets']
+        self.mutex = Lock()
         odl.Operator.__init__(self, space, range, True)
-        
+
     def _call(self, x):
-        result = pyshearlab.SLsheardec2D(x, self.shearletSystem)
-        return np.moveaxis(result, -1, 0)
-    
+        with self.mutex:
+            result = pyshearlab.SLsheardec2D(x, self.shearletSystem)
+            return np.moveaxis(result, -1, 0)
+
     @property
     def adjoint(self):
         op = self
-        
+
         class PyShearlabOperatorAdjoint(odl.Operator):
             def _call(self, x):
-                x = np.moveaxis(x, 0, -1)
-                return pyshearlab.SLshearadjoint2D(x, op.shearletSystem)
-            
+                with op.mutex:
+                    x = np.moveaxis(x, 0, -1)
+                    return pyshearlab.SLshearadjoint2D(x, op.shearletSystem)
+
             @property
             def adjoint(self):
                 return op
-            
+
         return PyShearlabOperatorAdjoint(self.range, self.domain, True)
-    
+
     @property
     def inverse(self):
         op = self
-        
+
         class PyShearlabOperatorInverse(odl.Operator):
             def _call(self, x):
-                x = np.moveaxis(x, 0, -1)
-                return pyshearlab.SLshearrec2D(x, op.shearletSystem)
-            
+                with op.mutex:
+                    x = np.moveaxis(x, 0, -1)
+                    return pyshearlab.SLshearrec2D(x, op.shearletSystem)
+
             @property
-            def adjoint(self):
+            def inverse(self):
                 return op
-            
+
         return PyShearlabOperatorInverse(self.range, self.domain, True)
