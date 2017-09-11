@@ -87,11 +87,13 @@ Mozilla Public License version 2.0 or later. See the [LICENSE](LICENSE) file.
 
 ODL developers
 --------------
-The project was started is maintained by Jonas Adler ([@adler-j](https://github.com/adler-j)) and Holger Kohr ([@kohr-h](https://github.com/kohr-h)). Several others have given significant contributions, including:
+The project was started by and is maintained by Jonas Adler ([@adler-j](https://github.com/adler-j)) and Holger Kohr ([@kohr-h](https://github.com/kohr-h)). Several others have given significant contributions, including:
 
 [Chong Chen](https://github.com/chongchenmath),
 [Matthias J. Ehrhardt](https://github.com/matthiasje),
+[Barbara Gris](https://github.com/bgris),
 [Johan Karlsson](https://github.com/hilding79),
+[Gregory R. Lee](https://github.com/grlee77),
 [Julian Moosmann](https://github.com/moosmann),
 [Kati Niinimäki](https://github.com/niinimaki),
 [Willem Jan Palenstijn](https://github.com/wjp),
@@ -100,7 +102,7 @@ The project was started is maintained by Jonas Adler ([@adler-j](https://github.
 [Gustav Zickert](https://github.com/zickert) and
 [Ozan Öktem](https://github.com/ozanoktem).
 
-To contact the developers either [open an issue on the issue tracker](https://github.com/odlgroup/odl/issues/) or send an email to <odl@math.kth.se>
+To contact the developers either [open an issue on the issue tracker](https://github.com/odlgroup/odl/issues/) or send an email to <odl@math.kth.se>.
 
 Funding
 -------
