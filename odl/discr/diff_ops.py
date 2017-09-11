@@ -802,7 +802,9 @@ def finite_diff(f, axis, dx=1.0, method='forward', out=None, **kwargs):
     if pad_mode not in _SUPPORTED_PAD_MODES:
         raise ValueError('`pad_mode` {} not understood'
                          ''.format(pad_mode))
-    pad_const = float(kwargs.pop('pad_const', 0))
+
+    pad_const = kwargs.pop('pad_const', 0)
+    pad_const = f.dtype.type(pad_const)
 
     if out is None:
         out = np.empty_like(f_arr)

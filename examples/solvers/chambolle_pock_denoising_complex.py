@@ -1,8 +1,8 @@
-"""Total variation denoising using the Chambolle-Pock solver.
+"""Total variation denoising of complex data using the Chambolle-Pock solver.
 
 Solves the optimization problem
 
-    min_{x >= 0}  1/2 ||x - g||_2^2 + lam || |grad(x)| ||_1
+    min_{x}  1/2 ||x - g||_2^2 + lam || |grad(x)| ||_1
 
 Where ``grad`` the spatial gradient and ``g`` is given noisy data.
 
@@ -16,23 +16,21 @@ import odl
 
 # Read test image: use only every second pixel, convert integer to float,
 # and rotate to get the image upright
-image = np.rot90(scipy.misc.ascent()[::2, ::2], 3).astype('float')
+image = np.rot90(scipy.misc.ascent()[::1, ::1], 3).astype('float32')
+image = image + 1j*image.T
 shape = image.shape
 
 # Rescale max to 1
-image /= image.max()
+image /= image.real.max()
 
 # Discretized spaces
-space = odl.uniform_discr([0, 0], shape, shape)
+space = odl.uniform_discr([0, 0], shape, shape, dtype='complex64')
 
 # Original image
 orig = space.element(image)
 
 # Add noise
-image += 0.1 * odl.phantom.white_noise(orig.space)
-
-# Data of noisy image
-noisy = space.element(image)
+noisy = image + 0.05 * odl.phantom.white_noise(orig.space)
 
 # Gradient operator
 gradient = odl.Gradient(space)
@@ -51,9 +49,7 @@ l1_norm = 0.15 * odl.solvers.L1Norm(gradient.range)
 # Make separable sum of functionals, order must correspond to the operator K
 f = odl.solvers.SeparableSum(l2_norm, l1_norm)
 
-# Non-negativity constraint
-g = odl.solvers.IndicatorNonnegativity(op.domain)
-
+g = odl.solvers.ZeroFunctional(op.domain)
 
 # --- Select solver parameters and solve using Chambolle-Pock --- #
 
