@@ -924,12 +924,10 @@ class FunctionalQuadraticPerturb(Functional):
 
         self.__functional = func
         quadratic_coeff = func.domain.field.element(quadratic_coeff)
-        if np.iscomplexobj(quadratic_coeff):
-            if quadratic_coeff.imag != 0:
-                raise ValueError(
-                    "Complex-valued quadratic coeff is not supported.")
-            quadratic_coeff = quadratic_coeff.real
-        self.__quadratic_coeff = quadratic_coeff
+        if quadratic_coeff.imag != 0:
+            raise ValueError(
+                "Complex-valued quadratic coeff is not supported.")
+        self.__quadratic_coeff = quadratic_coeff.real
 
         if linear_term is not None:
             self.__linear_term = func.domain.element(linear_term)
