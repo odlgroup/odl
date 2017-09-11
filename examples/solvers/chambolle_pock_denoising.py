@@ -29,13 +29,13 @@ space = odl.uniform_discr([0, 0], shape, shape)
 orig = space.element(image)
 
 # Add noise
-image += np.random.normal(0, 0.1, shape)
+image += 0.1 * odl.phantom.white_noise(orig.space)
 
 # Data of noisy image
 noisy = space.element(image)
 
 # Gradient operator
-gradient = odl.Gradient(space, method='forward')
+gradient = odl.Gradient(space)
 
 # Matrix of operators
 op = odl.BroadcastOperator(odl.IdentityOperator(space), gradient)

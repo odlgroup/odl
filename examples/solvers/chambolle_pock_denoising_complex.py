@@ -11,13 +11,12 @@ For further details and a description of the solution method used, see
 """
 
 import numpy as np
-import scipy
+import scipy.misc
 import odl
 
 # Read test image: use only every second pixel, convert integer to float,
 # and rotate to get the image upright
-dtype = np.complex64
-image = np.rot90(scipy.misc.ascent()[::1, ::1], 3).astype(dtype)
+image = np.rot90(scipy.misc.ascent()[::1, ::1], 3).astype('float32')
 image = image + 1j*image.T
 shape = image.shape
 
@@ -25,20 +24,16 @@ shape = image.shape
 image /= image.real.max()
 
 # Discretized spaces
-space = odl.uniform_discr([0, 0], shape, shape, dtype=dtype)
+space = odl.uniform_discr([0, 0], shape, shape, dtype='complex64')
 
 # Original image
 orig = space.element(image)
 
 # Add noise
-image += (np.random.normal(0, 0.05, shape) +
-          1j*np.random.normal(0, 0.05, shape))
-
-# Data of noisy image
-noisy = space.element(image)
+noisy = image + 0.05 * odl.phantom.white_noise(orig.space)
 
 # Gradient operator
-gradient = odl.Gradient(space, method='forward')
+gradient = odl.Gradient(space)
 
 # Matrix of operators
 op = odl.BroadcastOperator(odl.IdentityOperator(space), gradient)
