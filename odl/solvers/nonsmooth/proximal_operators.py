@@ -250,7 +250,10 @@ def proximal_arg_scaling(prox_factory, scaling):
     2011.
     """
 
-    scaling = float(scaling)
+    if scaling.imag != 0:
+        raise ValueError("complex scaling not supported.")
+    else:
+        scaling = float(scaling.real)
     if scaling == 0:
         return proximal_const_func(prox_factory(1.0).domain)
 
