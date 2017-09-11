@@ -804,10 +804,7 @@ def finite_diff(f, axis, dx=1.0, method='forward', out=None, **kwargs):
                          ''.format(pad_mode))
 
     pad_const = kwargs.pop('pad_const', 0)
-    if np.iscomplexobj(f):
-        pad_const = complex(pad_const)
-    else:
-        pad_const = float(pad_const)
+    pad_const = f.dtype.type(pad_const)
 
     if out is None:
         out = np.empty_like(f_arr)
