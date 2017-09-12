@@ -20,7 +20,8 @@ __all__ = ('PyShearlabOperator',)
 
 class PyShearlabOperator(odl.Operator):
     def __init__(self, space, scales):
-        self.shearletSystem = pyshearlab.SLgetShearletSystem2D(0, space.shape[0], space.shape[1], scales)
+        self.shearletSystem = pyshearlab.SLgetShearletSystem2D(
+            0, space.shape[0], space.shape[1], scales)
         range = space ** self.shearletSystem['nShearlets']
         self.mutex = Lock()
         odl.Operator.__init__(self, space, range, True)
@@ -32,32 +33,65 @@ class PyShearlabOperator(odl.Operator):
 
     @property
     def adjoint(self):
-        op = self
-
-        class PyShearlabOperatorAdjoint(odl.Operator):
-            def _call(self, x):
-                with op.mutex:
-                    x = np.moveaxis(x, 0, -1)
-                    return pyshearlab.SLshearadjoint2D(x, op.shearletSystem)
-
-            @property
-            def adjoint(self):
-                return op
-
-        return PyShearlabOperatorAdjoint(self.range, self.domain, True)
+        return PyShearlabOperatorAdjoint(self)
 
     @property
     def inverse(self):
-        op = self
+        return PyShearlabOperatorInverse(self)
 
-        class PyShearlabOperatorInverse(odl.Operator):
-            def _call(self, x):
-                with op.mutex:
-                    x = np.moveaxis(x, 0, -1)
-                    return pyshearlab.SLshearrec2D(x, op.shearletSystem)
 
-            @property
-            def inverse(self):
-                return op
+class PyShearlabOperatorAdjoint(odl.Operator):
+    def __init__(self, op):
+        self.op = op
+        odl.Operator.__init__(self, op.range, op.domain, True)
 
-        return PyShearlabOperatorInverse(self.range, self.domain, True)
+    def _call(self, x):
+        with self.op.mutex:
+            x = np.moveaxis(x, 0, -1)
+            return pyshearlab.SLshearadjoint2D(x, self.op.shearletSystem)
+
+    @property
+    def adjoint(self):
+        return self.op
+
+    @property
+    def inverse(self):
+        return PyShearlabOperatorAdjointInverse(self.op)
+
+
+class PyShearlabOperatorInverse(odl.Operator):
+    def __init__(self, op):
+        self.op = op
+        odl.Operator.__init__(self, op.range, op.domain, True)
+
+    def _call(self, x):
+        with self.op.mutex:
+            x = np.moveaxis(x, 0, -1)
+            return pyshearlab.SLshearrec2D(x, self.op.shearletSystem)
+
+    @property
+    def adjoint(self):
+        return PyShearlabOperatorAdjointInverse(self.op)
+
+    @property
+    def inverse(self):
+        return self.op
+
+
+class PyShearlabOperatorAdjointInverse(odl.Operator):
+    def __init__(self, op):
+        self.op = op
+        odl.Operator.__init__(self, op.domain, op.range, True)
+
+    def _call(self, x):
+        with self.op.mutex:
+            result = pyshearlab.SLshearrecadjoint2D(x, self.op.shearletSystem)
+            return np.moveaxis(result, -1, 0)
+
+    @property
+    def adjoint(self):
+        return self.op.inverse
+
+    @property
+    def inverse(self):
+        return self.op.adjoint
