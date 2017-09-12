@@ -493,6 +493,17 @@ class RectPartition(object):
 
         Examples
         --------
+        Take every second grid point. Note that is is in general non-uniform:
+
+        >>> partition = odl.uniform_partition(0, 10, 10)
+        >>> partition[::2]
+        nonuniform_partition(
+            [0.5, 2.5, 4.5, 6.5, 8.5],
+            min_pt=0.0, max_pt=10.0
+        )
+
+        A more advanced example is:
+
         >>> intvp = odl.IntervalProd([-1, 1, 4, 2], [3, 6, 5, 7])
         >>> grid = odl.RectGrid([-1, 0, 3], [2, 4], [5], [2, 4, 7])
         >>> part = odl.RectPartition(intvp, grid)
@@ -559,6 +570,12 @@ class RectPartition(object):
         for cvec, idx in zip(self.cell_boundary_vecs, indices):
             # Determine the subinterval min_pt and max_pt vectors. Take the
             # first min_pt as new min_pt and the last max_pt as new max_pt.
+            if isinstance(idx, slice):
+                # Only use the slice to extract min and max without using
+                # the step size. This is in order for expressions like
+                # self[::2] to not change the maximum.
+                idx = slice(idx.start, idx.stop, None)
+
             sub_min_pt = cvec[:-1][idx]
             sub_max_pt = cvec[1:][idx]
             new_min_pt.append(sub_min_pt[0])
@@ -637,8 +654,13 @@ class RectPartition(object):
         """
         return self.insert(self.ndim, *parts)
 
-    def squeeze(self):
+    def squeeze(self, axis=None):
         """Return the partition with removed degenerate (length 1) dimensions.
+
+        Parameters
+        ----------
+        axis : None or index expression, optional
+            Subset of the axes to squeeze. Default: All axes.
 
         Returns
         -------
@@ -650,6 +672,11 @@ class RectPartition(object):
         >>> p = odl.uniform_partition([0, -1], [1, 2], (3, 1))
         >>> p.squeeze()
         uniform_partition(0.0, 1.0, 3)
+
+        The axis argument can be used to only squeeze some axes (if applicable)
+
+        >>> p.squeeze(axis=0)
+        uniform_partition([0.0, -1.0], [1.0, 2.0], (3, 1))
 
         Notes
         -----
@@ -664,10 +691,15 @@ class RectPartition(object):
         RectGrid.squeeze
         IntervalProd.squeeze
         """
-        nondegen_indcs = [i for i in range(self.ndim)
-                          if self.grid.nondegen_byaxis[i]]
-        newset = self.set[nondegen_indcs]
-        return RectPartition(newset, self.grid.squeeze())
+        if axis is None:
+            rng = range(self.ndim)
+        else:
+            rng = list(np.atleast_1d(np.arange(self.ndim)[axis]))
+
+        new_indcs = [i for i in range(self.ndim)
+                     if i not in rng or self.grid.nondegen_byaxis[i]]
+        newset = self.set[new_indcs]
+        return RectPartition(newset, self.grid.squeeze(axis))
 
     def index(self, value, floating=False):
         """Return the index of a value in the domain.
@@ -789,7 +821,7 @@ class RectPartition(object):
                 """Return ``self[dim]``."""
                 slc = np.zeros(partition.ndim, dtype=object)
                 slc[dim] = slice(None)
-                return partition[tuple(slc)].squeeze()
+                return partition[tuple(slc)].squeeze(axis=(slc == 0))
 
             def __repr__(self):
                 """Return ``repr(self)``.
