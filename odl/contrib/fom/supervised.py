@@ -69,7 +69,10 @@ def mean_squared_error(data, ground_truth, mask=None, normalized=False):
 
     diff = data - ground_truth
     fom = l2_normSquared(diff)
-    fom /= data.space.one().norm()**2
+
+    # Volume of space
+    vol = l2_normSquared(data.space.one())
+    fom /= vol
 
     if normalized:
             fom /= (l2_normSquared(data) + l2_normSquared(ground_truth))
@@ -123,6 +126,10 @@ def mean_absolute_error(data, ground_truth, mask=None, normalized=False):
         ground_truth = ground_truth * mask
     diff = data - ground_truth
     fom = l1_norm(diff)
+
+    # Volume of space
+    vol = l1_norm(data.space.one())
+    fom /= vol
 
     if normalized:
         fom /= (l1_norm(data) + l1_norm(ground_truth))
