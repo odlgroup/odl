@@ -194,9 +194,9 @@ def elekta_icon_fbp(ray_transform,
 
 
 def elekta_xvi_geometry(sad=1000.0, sdd=1500.0,
-                         piercing_point=(512.0, 512.0),
-                         angles=np.linspace(0, 2 * np.pi, 650),
-                         detector_shape=(1024, 1024)):
+                        piercing_point=(512.0, 512.0),
+                        angles=np.linspace(0, 2 * np.pi, 650),
+                        detector_shape=(1024, 1024)):
     """Tomographic geometry of the Elekta XVI system.
 
     All measurments are given in millimeters unless otherwise stated.
@@ -220,7 +220,7 @@ def elekta_xvi_geometry(sad=1000.0, sdd=1500.0,
 
     Returns
     -------
-    elekta_icon_geometry : `ConeFlatGeometry`
+    elekta_xvi_geometry : `ConeFlatGeometry`
 
     Examples
     --------
@@ -235,8 +235,8 @@ def elekta_xvi_geometry(sad=1000.0, sdd=1500.0,
 
     See Also
     --------
-    elekta_xvi_space : Default reconstruction space for the Elekta Icon CBCT.
-    elekta_xvi_fbp: Default reconstruction method for the Elekta Icon CBCT.
+    elekta_xvi_space : Default reconstruction space for the Elekta XVI CBCT.
+    elekta_xvi_fbp: Default reconstruction method for the Elekta XVI CBCT.
     """
     sad = float(sad)
     assert sad > 0
@@ -290,7 +290,7 @@ def elekta_xvi_space(shape=(512, 512, 512), **kwargs):
     Create default space:
 
     >>> from odl.contrib import tomo
-    >>> space = tomo.elekta_icon_space()
+    >>> space = tomo.elekta_xvi_space()
 
     Create sub-sampled space:
 
@@ -308,8 +308,7 @@ def elekta_xvi_space(shape=(512, 512, 512), **kwargs):
 
 
 def elekta_xvi_fbp(ray_transform,
-                   padding=False, filter_type='Hann', frequency_scaling=0.6,
-                   parker_weighting=True):
+                   padding=False, filter_type='Hann', frequency_scaling=0.6):
     """Approximation of the FDK reconstruction used in the Elekta XVI.
 
     Parameters
@@ -323,9 +322,6 @@ def elekta_xvi_fbp(ray_transform,
         Type of filter to apply in the FBP filter.
     frequency_scaling : float, optional
         Frequency scaling for FBP filter
-    parker_weighting : bool, optional
-        Whether Parker weighting should be applied to compensate for partial
-        scan.
 
     Returns
     -------
@@ -345,9 +341,6 @@ def elekta_xvi_fbp(ray_transform,
                              padding=padding,
                              filter_type=filter_type,
                              frequency_scaling=frequency_scaling)
-    if parker_weighting:
-        parker_weighting = odl.tomo.parker_weighting(ray_transform)
-        fbp_op = fbp_op * parker_weighting
 
     return fbp_op
 
