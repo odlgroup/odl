@@ -2,6 +2,8 @@
 
 This package functionality for integrating ODL with [pytorch](http://pytorch.org/).
 
+All functionality in this subpackage assumes that the ``torch`` module in the ``pytorch`` package has been installed. See the [pytorch installation guide](https://github.com/pytorch/pytorch#installation) for further instructions.
+
 ## Content
 
 - `OperatorModule` in [`operator.py`](operator.py) wraps an ODL Operator into a pytorch ``Module``.
@@ -14,4 +16,4 @@ Specifically:
 
 - [`operator.py`](examples/operator.py) shows how an ODL `MatrixOperator` can be converted to a pytorch module and how to compute gradients using backpropagation.
 
-There are also some rudimentary tests in the [test](test) folder.
+There are also some rudimentary tests in the [`test`](test) folder.
