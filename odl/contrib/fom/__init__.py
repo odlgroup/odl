@@ -8,10 +8,12 @@
 
 from __future__ import absolute_import
 
-__all__ = ()
+__all__ = ('supervised', 'unsupervised', 'util')
 
 from .supervised import *
 __all__ += supervised.__all__
 
 from .unsupervised import *
 __all__ += unsupervised.__all__
+
+from . import util
