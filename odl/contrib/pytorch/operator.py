@@ -8,11 +8,9 @@
 
 """Utilities for converting ODL operators to pytorch layers.
 
-This requires the ``torch`` module to be available via the ``pytorch``
-package, which can be installed through ``pip`` or ``conda``
-
-See `the pytorch installation guide
-<https://github.com/pytorch/pytorch#installation>`_.
+This requires the ``torch`` module from the ``pytorch`` package,
+see `the pytorch installation guide
+<https://github.com/pytorch/pytorch#installation>`_ for instructions.
 """
 
 import numpy as np

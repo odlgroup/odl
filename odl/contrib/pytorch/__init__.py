@@ -13,5 +13,5 @@ from __future__ import absolute_import
 
 __all__ = ()
 
-from .layer import *
-__all__ += layer.__all__
+from .operator import *
+__all__ += operator.__all__
