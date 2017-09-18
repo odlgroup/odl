@@ -61,12 +61,12 @@ ODL has been used in a wide range of research and development with several scien
 |------------------|--------|
 | *Learned Primal-Dual Reconstruction*. [Arxiv](https://arxiv.org/abs/1707.06474), [blog](https://adler-j.github.io/2017/07/21/Learning-to-reconstruct.html) | [GitHub](https://github.com/adler-j/learned_primal_dual) |
 | *Indirect Image Registration with Large Diffeomorphic Deformations*. [Arxiv](https://arxiv.org/abs/1706.04048) | [GitHub](https://github.com/chongchenmath/odl_lddmm) |
-| *High-level algorithm prototyping: an example extending the TVR-DART algorithm*. DGCI, 2017 | [GitHub](https://github.com/aringh/TVR-DART) |
+| *High-level algorithm prototyping: an example extending the TVR-DART algorithm*. DGCI, 2017. [DOI](https://doi.org/10.1007/978-3-319-66272-5_10) | [GitHub](https://github.com/aringh/TVR-DART) |
 | *GPUMCI, a ﬂexible platform for x-ray imaging on the GPU*. Fully3D, 2017 |  |
 | *Spectral CT reconstruction with anti-correlated noise model and joint prior*. Fully3D, 2017 | [GitHub](https://github.com/adler-j/spectral_ct_examples) |
 | *Solving ill-posed inverse problems using iterative deep neural networks*. [Arxiv](https://arxiv.org/abs/1704.04058) | [GitHub](https://github.com/adler-j/learned_gradient_tomography) |
 | *Total variation regularization with variable Lebesgue prior*. [Arxiv](https://arxiv.org/abs/1702.08807) | [GitHub](https://github.com/kohr-h/variable_lp_paper) |
-| *Generalized Sinkhorn iterations for regularizing inverse problems using optimal mass transport*. [Arxiv](https://arxiv.org/abs/1612.02273) |   |
+| *Generalized Sinkhorn iterations for regularizing inverse problems using optimal mass transport*. [Arxiv](https://arxiv.org/abs/1612.02273) | [GitHub](https://github.com/aringh/Generalized-Sinkhorn-and-tomography) |
 | *A modified fuzzy C means algorithm for shading correction in craniofacial CBCT images*. CMBEBIH, 2017 | [GitHub](https://github.com/adler-j/mfcm_article) |
 | *Shape Based Image Reconstruction Using Linearized Deformations*. Inverse Problems, 2017. [DOI](http://iopscience.iop.org/article/10.1088/1361-6420/aa55af) | [GitHub](https://github.com/chongchenmath/odl_ld) |
 
