@@ -12,7 +12,7 @@ from __future__ import print_function
 import odl
 
 # Create square functional. It's domain is by default the real numbers.
-square = odl.ufunc_ops.square()
+square = odl.oplib.square()
 
 # Create L2 norm functionals
 space = odl.rn(3)
