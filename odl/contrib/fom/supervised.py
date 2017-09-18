@@ -607,7 +607,7 @@ def psnr(data, ground_truth, normalize=False):
     >>> ground_truth = spc.element([1, 1, 1, 1, 2])
     >>> result = psnr(data, ground_truth)
     >>> print('{:.3f}'.format(result))
-    6.021
+    13.010
 
     If data == ground_truth, the result is positive infinity:
 
