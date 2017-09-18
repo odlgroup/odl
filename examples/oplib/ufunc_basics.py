@@ -6,8 +6,8 @@ import odl
 # Trigonometric functions can be computed, along with their gradients.
 
 
-cos = odl.ufunc_ops.cos()
-sin = odl.ufunc_ops.sin()
+cos = odl.oplib.cos()
+sin = odl.oplib.sin()
 
 # Compute cosine and its gradient
 
@@ -18,7 +18,7 @@ print('cos(0)={}, cos.gradient(0.2)={}, -sin(0.2)={}'.format(
 # Other functions include the square, exponential, etc
 # Higher order derivatives are obtained via the gradient of the gradient, etc.
 
-square = odl.ufunc_ops.square()
+square = odl.oplib.square()
 
 print('[x^2](3) = {}, [d/dx x^2](3) = {}, '
       '[d^2/dx^2 x^2](3) = {}, [d^3/dx^3 x^2](3) = {}'
@@ -29,5 +29,5 @@ print('[x^2](3) = {}, [d/dx x^2](3) = {}, '
 # Can also define ufuncs on vector-spaces, then they act pointwise.
 
 r3 = odl.rn(3)
-exp_r3 = odl.ufunc_ops.exp(r3)
+exp_r3 = odl.oplib.exp(r3)
 print('e^[1, 2, 3] = {}'.format(exp_r3([1, 2, 3])))
