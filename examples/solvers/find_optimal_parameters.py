@@ -93,6 +93,7 @@ def optimal_parameters(reconstruction, fom, phantoms, data,
 # USER INPUT. Pick reconstruction: 'fbp', 'huber' or 'tv'
 # 'fbp' is fast, 'huber' and 'tv' takes some time.
 
+
 reconstruction_method = 'fbp'
 signal_to_noise = 5.0
 
@@ -173,7 +174,7 @@ elif reconstruction_method == 'huber':
         odl.solvers.bfgs_method(
             obj_fun, x, maxiter=maxiter, num_store=num_store,
             hessinv_estimate=odl.ScalingOperator(
-                    space, 1 / odl.power_method_opnorm(ray_trafo) ** 2))
+                space, 1 / odl.power_method_opnorm(ray_trafo) ** 2))
 
         return x
 
@@ -182,7 +183,7 @@ elif reconstruction_method == 'huber':
 elif reconstruction_method == 'tv':
     # Define the reconstruction operator for TV regularized reconstruction
     # The parameter to optimize is the regularization strength
-    # See chambolle_pock_tomography.py for more information.
+    # See pdhg_tomography.py for more information.
 
     def reconstruction(proj_data, lam):
         lam = float(lam)
@@ -200,7 +201,7 @@ elif reconstruction_method == 'tv':
         g = odl.solvers.ZeroFunctional(op.domain)
 
         l2_norm = odl.solvers.L2NormSquared(
-                    ray_trafo.range).translated(proj_data)
+            ray_trafo.range).translated(proj_data)
         l1_norm = lam * odl.solvers.GroupL1Norm(gradient.range)
         f = odl.solvers.SeparableSum(l2_norm, l1_norm)
 
@@ -209,9 +210,8 @@ elif reconstruction_method == 'tv':
 
         # Run the algorithm
         x = op.domain.zero()
-        odl.solvers.chambolle_pock_solver(
-            x, f, g, op, tau=1.0/op_norm, sigma=1.0/op_norm, niter=200,
-            gamma=0.3)
+        odl.solvers.pdhg(x, f, g, op, tau=1.0 / op_norm, sigma=1.0 / op_norm,
+                         niter=200)
 
         return x
 
@@ -223,7 +223,7 @@ else:
 def fom(reco, true_image):
     """Sobolev type FoM enforcing both gradient and absolute similarity."""
     gradient = odl.Gradient(reco.space)
-    return gradient(reco-true_image).norm() + reco.space.dist(reco, true_image)
+    return gradient(reco - true_image).norm() + reco.space.dist(reco, true_image)
 
 
 # Find optimal lambda

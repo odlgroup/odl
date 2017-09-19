@@ -1,4 +1,4 @@
-"""Total variation denoising using the Chambolle-Pock solver.
+"""Total variation denoising using PDHG.
 
 Solves the optimization problem
 
@@ -7,7 +7,7 @@ Solves the optimization problem
 Where ``grad`` the spatial gradient and ``g`` is given noisy data.
 
 For further details and a description of the solution method used, see
-:ref:`chambolle_pock` in the ODL documentation.
+:ref:`PDHG` in the ODL documentation.
 """
 
 import numpy as np
@@ -54,9 +54,7 @@ f = odl.solvers.SeparableSum(l2_norm, l1_norm)
 # Non-negativity constraint
 g = odl.solvers.IndicatorNonnegativity(op.domain)
 
-
-# --- Select solver parameters and solve using Chambolle-Pock --- #
-
+# --- Select solver parameters and solve using PDHG --- #
 
 # Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
 op_norm = 1.1 * odl.power_method_opnorm(op, xstart=noisy)
@@ -73,8 +71,8 @@ callback = (odl.solvers.CallbackPrintIteration() &
 x = op.domain.zero()
 
 # Run algorithm (and display intermediates)
-odl.solvers.chambolle_pock_solver(
-    x, f, g, op, tau=tau, sigma=sigma, niter=niter, callback=callback)
+odl.solvers.pdhg(x, f, g, op, tau=tau, sigma=sigma, niter=niter,
+                 callback=callback)
 
 # Display images
 orig.show(title='original image')

@@ -1,4 +1,4 @@
-"""Total Generalized Variation denoising using the Chambolle-Pock solver.
+"""Total Generalized Variation denoising using PDHG.
 
 Solves the optimization problem
 
@@ -19,7 +19,7 @@ The problem is rewritten as
 
     min_{x, y} ||x - d||_2^2 + alpha ||Gx - y||_1 + alpha * beta ||Ey||_1
 
-which can then be solved with the Chambolle-Pock method.
+which can then be solved with PDHG.
 
 References
 ----------
@@ -65,11 +65,11 @@ Dy = odl.PartialDerivative(U, 1, method='backward', pad_mode='symmetric')
 # Create symmetrized operator and weighted space.
 # TODO: As the weighted space is currently not supported in ODL we find a
 # workaround.
-#W = odl.ProductSpace(U, 3, weighting=[1, 1, 2])
-#sym_gradient = odl.operator.ProductSpaceOperator(
+# W = odl.ProductSpace(U, 3, weighting=[1, 1, 2])
+# sym_gradient = odl.operator.ProductSpaceOperator(
 #    [[Dx, 0], [0, Dy], [0.5*Dy, 0.5*Dx]], range=W)
 E = odl.operator.ProductSpaceOperator(
-    [[Dx, 0], [0, Dy], [0.5*Dy, 0.5*Dx], [0.5*Dy, 0.5*Dx]])
+    [[Dx, 0], [0, Dy], [0.5 * Dy, 0.5 * Dx], [0.5 * Dy, 0.5 * Dx]])
 W = E.range
 
 # Create the domain of the problem, given by the reconstruction space and the
@@ -102,12 +102,12 @@ l1_norm_2 = alpha * beta * odl.solvers.L1Norm(W)
 # Combine functionals, order must correspond to the operator K
 f = odl.solvers.SeparableSum(l2_norm, l1_norm_1, l1_norm_2)
 
-# --- Select solver parameters and solve using Chambolle-Pock --- #
+# --- Select solver parameters and solve using PDHG --- #
 
 # Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
 op_norm = 1.1 * odl.power_method_opnorm(op)
 
-niter = 200  # Number of iterations
+niter = 400  # Number of iterations
 tau = 1.0 / op_norm  # Step size for the primal variable
 sigma = 1.0 / op_norm  # Step size for the dual variable
 
@@ -119,8 +119,8 @@ callback = (odl.solvers.CallbackPrintIteration() &
 x = op.domain.zero()
 
 # Run the algorithm
-odl.solvers.chambolle_pock_solver(x, f, g, op, tau=tau, sigma=sigma,
-                                  niter=niter, callback=callback)
+odl.solvers.pdhg(x, f, g, op, tau=tau, sigma=sigma, niter=niter,
+                 callback=callback)
 
 # Display images
 x[0].show(title='TGV reconstruction')

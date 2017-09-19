@@ -226,7 +226,7 @@ By identification, we see that the above problem can be written in this form if 
 :math:`L_1` be the convolution operator and :math:`L_2` be the gradient operator.
 
 There are several examples available using this solver as well as similar optimization methods,
-e.g. `forward_backward_pd`, `chambolle_pock_solver`, etc in the ODL `examples/solvers <https://github.com/odlgroup/odl/tree/master/examples/solvers>`_ folder.
+e.g. `forward_backward_pd`, `pdhg`, etc in the ODL `examples/solvers <https://github.com/odlgroup/odl/tree/master/examples/solvers>`_ folder.
 
 .. code-block:: python
 

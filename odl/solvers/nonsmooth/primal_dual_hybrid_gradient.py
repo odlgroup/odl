@@ -6,9 +6,9 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""First-order primal-dual algorithm developed by Chambolle and Pock.
+"""Primal-dual hybrid gradient (PDHG) algorithm studied by Chambolle and Pock.
 
-The Chambolle-Pock algorithm is a flexible method well suited for
+The primal-dual hybrid gradient algorithm is a flexible method well suited for
 non-smooth convex optimization problems in imaging.
 """
 
@@ -20,14 +20,14 @@ import numpy as np
 from odl.operator import Operator
 
 
-__all__ = ('chambolle_pock_solver',)
+__all__ = ('pdhg',)
 
 
 # TODO: add dual gap as convergence measure
 # TODO: diagonal preconditioning
 
-def chambolle_pock_solver(x, f, g, L, tau, sigma, niter, **kwargs):
-    """Chambolle-Pock algorithm for non-smooth convex optimization problems.
+def pdhg(x, f, g, L, tau, sigma, niter, **kwargs):
+    """Primal-dual hybrid gradient algorithm for convex optimization.
 
     First order primal-dual hybrid-gradient method for non-smooth convex
     optimization problems with known saddle-point structure. The
@@ -35,14 +35,14 @@ def chambolle_pock_solver(x, f, g, L, tau, sigma, niter, **kwargs):
 
         min_{x in X} f(L x) + g(x)
 
-    where ``L`` is an operator and ``F`` and ``G`` are functionals.
+    where ``L`` is an operator and ``f`` and ``g`` are functionals.
 
-    The Chambolle-Pock algorithm is a primal-dual algorithm, and basically
-    consists of alternating a gradient ascent in the dual variable and a
-    gradient descent in the primal variable. The proximal operator is used to
-    generate a ascent direction for the convex conjugate of F and descent
-    direction for G. Additionally an over-relaxation in the primal variable is
-    performed.
+    The primal-dual hybrid-gradient algorithm is a primal-dual algorithm, and
+    basically consists of alternating a gradient ascent in the dual variable
+    and a gradient descent in the primal variable. The proximal operator is
+    used to generate a ascent direction for the convex conjugate of F and
+    descent direction for G. Additionally an over-relaxation of the primal
+    variable is performed.
 
     Parameters
     ----------
@@ -72,12 +72,21 @@ def chambolle_pock_solver(x, f, g, L, tau, sigma, niter, **kwargs):
     theta : float, optional
         Relaxation parameter, required to fulfill ``0 <= theta <= 1``.
         Default: 1
-    gamma : non-negative float, optional
+    gamma_primal : non-negative float, optional
         Acceleration parameter. If not ``None``, it overrides ``theta`` and
         causes variable relaxation parameter and step sizes to be used,
-        with ``tau`` and ``sigma`` as initial values. Requires ``G`` or
-        ``F^*`` to be uniformly convex.
+        with ``tau`` and ``sigma`` as initial values. Requires ``g`` to be
+        strongly convex and ``gamma_primal`` being upper bounded by the strong
+        convexity constant of ``g``. Acceleration can either be done on the
+        primal part or the dual part but not on both simultaneously.
         Default: ``None``
+    gamma_dual : non-negative float, optional
+        Acceleration parameter as ``gamma_primal`` but for dual variable.
+        Requires ``f^*`` to be strongly convex and ``gamma_dual`` being upper
+        bounded by the strong convexity constant of ``f^*``. Acceleration can
+        either be done on the primal part or the dual part but not on both
+        simultaneously.
+        Default: ``None`
     x_relax : ``op.domain`` element, optional
         Required to resume iteration. For ``None``, a copy of the primal
         variable ``x`` is used.
@@ -92,22 +101,22 @@ def chambolle_pock_solver(x, f, g, L, tau, sigma, niter, **kwargs):
     The problem of interest is
 
     .. math::
-        \\min_{x \\in X} F(K x) + G(x),
+        \\min_{x \\in X} f(L x) + g(x),
 
-    where the formal conditions are that :math:`K` is an operator
+    where the formal conditions are that :math:`L` is an operator
     between Hilbert spaces :math:`X` and :math:`Y`.
-    Further, :math:`G : X \\rightarrow [0, +\\infty]` and
-    :math:`F : Y \\rightarrow [0, +\\infty]` are proper, convex,
+    Further, :math:`g : X \\rightarrow [0, +\\infty]` and
+    :math:`f : Y \\rightarrow [0, +\\infty]` are proper, convex,
     lower-semicontinuous functionals.
 
-    Convergence is only guaranteed if :math:`K` is linear, :math:`X, Y`
+    Convergence is only guaranteed if :math:`L` is linear, :math:`X, Y`
     are finite dimensional and the step lengths :math:`\\sigma` and
     :math:`\\tau` satisfy
 
     .. math::
-       \\tau \\sigma \|K\| < 1
+       \\tau \\sigma \|L\|^2 < 1
 
-    where :math:`\|K\|` is the operator norm of :math:`K`.
+    where :math:`\|L\|` is the operator norm of :math:`L`.
 
     It is often of interest to study problems that involve several operators,
     for example the classical TV regularized problem
@@ -115,15 +124,17 @@ def chambolle_pock_solver(x, f, g, L, tau, sigma, niter, **kwargs):
     .. math::
         \\min_x \|Ax - b\|_2^2 + \|\\nabla x\|_1.
 
-    Here it is tempting to let :math:`K=A`, :math:`F(y)=||y||_2^2` and
-    :math:`G(x)=\|\\nabla x\|_1`. This is however not feasible since the
+    Here it is tempting to let :math:`L=A`, :math:`f(y)=||y||_2^2` and
+    :math:`g(x)=\|\\nabla x\|_1`. This is however not feasible since the
     proximal of :math:`||\\nabla x||_1` has no closed form expression.
 
-    Instead, the problem can be formulated :math:`K(x) = (A(x), \\nabla x)`,
-    :math:`F((x_1, x_2)) = \|x_1\|_2^2 + \|x_2\|_1`, :math:`G(x)=0`. See the
+    Instead, the problem can be formulated :math:`L(x) = (A(x), \\nabla x)`,
+    :math:`f((x_1, x_2)) = \|x_1\|_2^2 + \|x_2\|_1`, :math:`g(x)=0`. See the
     examples folder for more information on how to do this.
 
-    For a more detailed documentation see :ref:`chambolle_pock`.
+    For a more detailed documentation see `the PDHG guide
+    <https://odlgroup.github.io/odl/guide/pdhg_guide.html>`_ in the online
+    documentation.
 
     References on the algorithm can be found in [CP2011a] and [CP2011b].
 
@@ -194,13 +205,23 @@ def chambolle_pock_solver(x, f, g, L, tau, sigma, niter, **kwargs):
         raise ValueError('`theta` {} not in [0, 1]'
                          ''.format(theta_in))
 
-    # Acceleration parameter
-    gamma = kwargs.pop('gamma', None)
-    if gamma is not None:
-        gamma, gamma_in = float(gamma), gamma
-        if gamma < 0:
-            raise ValueError('`gamma` must be non-negative, got {}'
-                             ''.format(gamma_in))
+    # Acceleration parameters
+    gamma_primal = kwargs.pop('gamma_primal', None)
+    if gamma_primal is not None:
+        gamma_primal, gamma_primal_in = float(gamma_primal), gamma_primal
+        if gamma_primal < 0:
+            raise ValueError('`gamma_primal` must be non-negative, got {}'
+                             ''.format(gamma_primal_in))
+
+    gamma_dual = kwargs.pop('gamma_dual', None)
+    if gamma_dual is not None:
+        gamma_dual, gamma_dual_in = float(gamma_dual), gamma_dual
+        if gamma_dual < 0:
+            raise ValueError('`gamma_dual` must be non-negative, got {}'
+                             ''.format(gamma_dual_in))
+
+    if gamma_primal is not None and gamma_dual is not None:
+        raise ValueError('Only one acceleration parameter can be used')
 
     # Callback object
     callback = kwargs.pop('callback', None)
@@ -227,7 +248,7 @@ def chambolle_pock_solver(x, f, g, L, tau, sigma, niter, **kwargs):
     # Get the proximals
     proximal_dual = f.convex_conj.proximal
     proximal_primal = g.proximal
-    proximal_constant = (gamma is None)
+    proximal_constant = (gamma_primal is None) and (gamma_dual is None)
     if proximal_constant:
         # Pre-compute proximals for efficiency
         proximal_dual_sigma = proximal_dual(sigma)
@@ -265,10 +286,15 @@ def chambolle_pock_solver(x, f, g, L, tau, sigma, niter, **kwargs):
         proximal_primal_tau(primal_tmp, out=x)
 
         # Acceleration
-        if gamma is not None:
-            theta = float(1 / np.sqrt(1 + 2 * gamma * tau))
+        if gamma_primal is not None:
+            theta = float(1 / np.sqrt(1 + 2 * gamma_primal * tau))
             tau *= theta
             sigma /= theta
+
+        if gamma_dual is not None:
+            theta = float(1 / np.sqrt(1 + 2 * gamma_dual * sigma))
+            tau /= theta
+            sigma *= theta
 
         # Over-relaxation in the primal variable x
         x_relax.lincomb(1 + theta, x, -theta, x_old)

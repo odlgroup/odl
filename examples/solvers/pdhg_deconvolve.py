@@ -1,4 +1,4 @@
-"""Total variation deconvolution using the Chambolle-Pock solver.
+"""Total variation deconvolution using PDHG.
 
 Solves the optimization problem
 
@@ -8,7 +8,7 @@ Where ``A`` is a convolution operator, ``grad`` the spatial gradient and ``g``
 is given noisy data.
 
 For further details and a description of the solution method used, see
-:ref:`chambolle_pock` in the ODL documentation.
+:ref:`PDHG` in the ODL documentation.
 """
 
 import numpy as np
@@ -39,9 +39,10 @@ phantom = odl.phantom.shepp_logan(space, modified=True)
 
 # Create the convolved version of the phantom
 data = convolution(phantom)
+data += odl.phantom.white_noise(convolution.range) * np.mean(data) * 0.1
 data.show('Convolved data')
 
-# Set up the Chambolle-Pock solver:
+# Set up PDHG:
 
 # Initialize gradient operator
 gradient = odl.Gradient(space, method='forward')
@@ -56,14 +57,12 @@ g = odl.solvers.ZeroFunctional(op.domain)
 l2_norm_squared = odl.solvers.L2NormSquared(space).translated(data)
 
 # Isotropic TV-regularization i.e. the l1-norm
-l1_norm = 0.0003 * odl.solvers.L1Norm(gradient.range)
+l1_norm = 0.01 * odl.solvers.L1Norm(gradient.range)
 
 # Make separable sum of functionals, order must be the same as in `op`
 f = odl.solvers.SeparableSum(l2_norm_squared, l1_norm)
 
-
-# --- Select solver parameters and solve using Chambolle-Pock --- #
-
+# --- Select solver parameters and solve using PDHG --- #
 
 # Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
 op_norm = 1.1 * odl.power_method_opnorm(op)
@@ -80,8 +79,8 @@ callback = (odl.solvers.CallbackPrintIteration() &
 x = op.domain.zero()
 
 # Run the algorithm
-odl.solvers.chambolle_pock_solver(
-    x, f, g, op, tau=tau, sigma=sigma, niter=niter, callback=callback)
+odl.solvers.pdhg(x, f, g, op, tau=tau, sigma=sigma, niter=niter,
+                 callback=callback)
 
 # Display images
 phantom.show(title='original image')

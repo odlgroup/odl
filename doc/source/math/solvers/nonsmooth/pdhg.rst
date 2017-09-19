@@ -1,16 +1,16 @@
-.. _chambolle_pock_math:
+.. _pdhg_math:
 
-########################
-Chambolle-Pock algorithm
-########################
+############################################
+Primal-Dual Hybrid Gradient Algorithm (PDHG)
+############################################
 
-This page introduces the mathematics behind the Chambolle-Pock algorithm.
-For an applied point of view, please see :ref:`the user's guide to this method <chambolle_pock_guide>`.
+This page introduces the mathematics behind the Primal-Dual Hybrid Gradient Algorithm.
+For an applied point of view, please see :ref:`the user's guide to this method <pdhg_guide>`.
 
 The general problem
 ===================
 
-The Chambolle-Pock (CP) algorithm, as proposed in [CP2011a]_, is a first order primal-dual hybrid-gradient method for non-smooth convex optimization problems with known saddle-point structure
+The Primal-Dual Hybrid Gradient Algorithm (PDHG) algorithm, as studied in [CP2011a]_, is a first order method for non-smooth convex optimization problems with known saddle-point structure
 
 .. math::
     \max_{y \in Y} \min_{x \in X} \big( \langle L x, y\rangle_Y + g(x) - f^*(y) \big) ,
@@ -33,7 +33,7 @@ with :math:`L^*` being the adjoint of the operator :math:`L`.
 The algorithm
 =============
 
-The CP algorithm basically consists in alternating a gradient-like ascent in the dual variable :math:`y` and a gradient-like descent in the primal variable :math:`x`.
+PDHG basically consists in alternating a gradient-like ascent in the dual variable :math:`y` and a gradient-like descent in the primal variable :math:`x`.
 Additionally, an over-relaxation in the primal variable is performed.
 
 Initialization
@@ -78,4 +78,4 @@ Instead of choosing step size parameters, preconditioning techniques can be empl
 In this case the steps :math:`\tau` and :math:`\sigma` are replaced by symmetric and positive definite matrices :math:`T` and :math:`\Sigma`, respectively, and convergence holds for :math:`\| \Sigma^{1/2}\,L\, T^{1/2}\|^2 < 1`.
 
 For more on proximal operators and algorithms see [PB2014]_.
-The implementation of the CP algorithm in ODL is along the lines of [Sid+2012]_.
+The implementation of PDHG in ODL is along the lines of [Sid+2012]_.

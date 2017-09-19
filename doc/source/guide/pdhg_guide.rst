@@ -1,10 +1,10 @@
-.. _chambolle_pock_guide:
+.. _primal_dual_hybrid_gradient_guide:
 
-#####################
-Chambolle-Pock solver
-#####################
+############################################
+Primal-Dual Hybrid Gradient (PDHG) algorithm
+############################################
 
-The `chambolle_pock_solver` was introduced in 2011 by Chambolle and Pock in the paper `A first-order primal-dual algorithm for convex problems with applications to imaging
+The `primal_dual_hybrid_gradient` was studied in 2011 by Chambolle and Pock in the paper `A first-order primal-dual algorithm for convex problems with applications to imaging
 <https://hal.archives-ouvertes.fr/hal-00490826/document>`_.
 It is a method for solving convex non-smooth problems of the form
 
@@ -13,14 +13,14 @@ It is a method for solving convex non-smooth problems of the form
    \min_{x \in X} f(L x) + g(x),
 
 where :math:`L` is a linear `Operator` :math:`L : X -> Y`, :math:`X` and :math:`Y` are (discretized) function spaces and :math:`g : X \mapsto [0, +\infty]` and :math:`f : Y \mapsto [0, +\infty]` are proper, convex, lower semi-continuous functionals.
-For more information on the mathematics, please see :ref:`the mathematical background article on this method <chambolle_pock_math>`.
+For more information on the mathematics, please see :ref:`the mathematical background article on this method <pdhg_math>`.
 
 
-Using the Chambolle-Pock solver
-===============================
+Using PDHG
+==========
 
 There are several examples in `the examples folder of ODL <https://github.com/odlgroup/odl/tree/master/examples>`_, including denoising, deblurring and tomography.
-Here, we will walk through the solution of a typical problem using the Chambolle-Pock solver.
+Here, we will walk through the solution of a typical problem using the PDHG solver.
 
 Mathematical problem setup
 --------------------------
@@ -51,7 +51,7 @@ and positivity constraint enforced by the indicator function
 
 Here, :math:`\|\cdot\|_q` is the :math:`L^q` norm (:math:`q = 1,2`), :math:`\nabla` the spatial gradient, and :math:`\lambda` a regularization parameter.
 
-The standard way of fitting this problem into the Chambolle-Pock framework is to summarize both data fit and regularization terms into the composition part :math:`f \circ L` of the solver, and to set :math:`g` to the positivity constraint :math:`\iota_{[0, \infty]}`.
+The standard way of fitting this problem into the PDHG framework is to summarize both data fit and regularization terms into the composition part :math:`f \circ L` of the solver, and to set :math:`g` to the positivity constraint :math:`\iota_{[0, \infty]}`.
 By setting :math:`L = (I, \nabla): X \to X \times X^d`, where :math:`I` is the identity mapping on :math:`X`, we can write
 
 .. math::
@@ -90,7 +90,7 @@ Note that the arguments :math:`x, u` of :math:`f` are independent, i.e. the sum 
 Numerical solution using ODL
 ----------------------------
 
-Now we implement a numerical solution to the above defined problem using the Chambolle-Pock solver in ODL.
+Now we implement a numerical solution to the above defined problem using PDHG in ODL.
 
 Problem setup
 ^^^^^^^^^^^^^
@@ -144,7 +144,7 @@ Finally, we define the functional for the nonnegativity constraint, available as
 Calling the solver
 ^^^^^^^^^^^^^^^^^^
 Now that the problem is set up, we need to select some optimization parameters.
-For the Chambolle-Pock method, there is one main rule that we can use:
+For PDHG, there is one main rule that we can use: 
 The product of the primal step :math:`\tau`, the dual step :math:`\sigma` and the squared operator norm :math:`\|L\|^2` has to be smaller than 1, :math:`\tau \sigma \|L\|^2 < 1`.
 Apart from this, there are no clear rules on how to select :math:`\tau` and :math:`\sigma` -- basically we're left with trial and error.
 We decide to pick them both equal to :math:`1 / \|L\|`.
@@ -160,8 +160,7 @@ Finally, we pick a starting point (zero) and run the algorithm:
 .. code-block:: python
 
    >>> x = space.zero()
-   >>> odl.solvers.chambolle_pock_solver(
-   ...     x, f, g, L, tau=tau, sigma=sigma, niter=100)
+   >>> odl.solvers.pdhg(x, f, g, L, tau=tau, sigma=sigma, niter=100)
 
 Now we check the result after 100 iterations and compare it to the original:
 
@@ -171,8 +170,8 @@ Now we check the result after 100 iterations and compare it to the original:
 
 This yields the following images:
 
-.. image:: figures/chambolle_pock_phantom.png
+.. image:: figures/pdhg_phantom.png
 
-.. image:: figures/chambolle_pock_data.png
+.. image:: figures/pdhg_data.png
 
-.. image:: figures/chambolle_pock_result.png
+.. image:: figures/pdhg_result.png

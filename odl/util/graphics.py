@@ -325,10 +325,10 @@ def show_discrete_data(values, grid, title=None, method='',
                 minval_re, maxval_re = kwargs['clim']
 
             ticks_re = _colorbar_ticks(minval_re, maxval_re)
-            format_re = _colorbar_format(minval_re, maxval_re)
+            fmt_re = _colorbar_format(minval_re, maxval_re)
 
             plt.colorbar(csub_re, orientation='horizontal',
-                         ticks=ticks_re, format=format_re)
+                         ticks=ticks_re, format=fmt_re)
 
         # Imaginary
         if len(fig.axes) < 3:
@@ -361,10 +361,10 @@ def show_discrete_data(values, grid, title=None, method='',
                 minval_im, maxval_im = kwargs['clim']
 
             ticks_im = _colorbar_ticks(minval_im, maxval_im)
-            format_im = _colorbar_format(minval_im, maxval_im)
+            fmt_im = _colorbar_format(minval_im, maxval_im)
 
             plt.colorbar(csub_im, orientation='horizontal',
-                         ticks=ticks_im, format=format_im)
+                         ticks=ticks_im, format=fmt_im)
 
     else:
         if len(fig.axes) == 0:
@@ -420,15 +420,15 @@ def show_discrete_data(values, grid, title=None, method='',
                 minval, maxval = kwargs['clim']
 
             ticks = _colorbar_ticks(minval, maxval)
-            format = _colorbar_format(minval, maxval)
+            fmt = _colorbar_format(minval, maxval)
             if len(fig.axes) < 2:
                 # Create colorbar if none seems to exist
-                plt.colorbar(mappable=csub, ticks=ticks, format=format)
+                plt.colorbar(mappable=csub, ticks=ticks, format=fmt)
             elif update_in_place:
                 # If it exists and we should update it
                 csub.colorbar.set_clim(minval, maxval)
                 csub.colorbar.set_ticks(ticks)
-                csub.colorbar.set_ticklabels([format % tick for tick in ticks])
+                csub.colorbar.set_ticklabels([fmt.format(*ticks)])
                 csub.colorbar.draw_all()
 
     # Set title of window
