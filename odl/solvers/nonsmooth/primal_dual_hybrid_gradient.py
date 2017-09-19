@@ -114,9 +114,9 @@ def pdhg(x, f, g, L, tau, sigma, niter, **kwargs):
     :math:`\\tau` satisfy
 
     .. math::
-       \\tau \\sigma \|K\|^2 < 1
+       \\tau \\sigma \|L\|^2 < 1
 
-    where :math:`\|K\|` is the operator norm of :math:`L`.
+    where :math:`\|L\|` is the operator norm of :math:`L`.
 
     It is often of interest to study problems that involve several operators,
     for example the classical TV regularized problem
@@ -307,3 +307,4 @@ if __name__ == '__main__':
     # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()
+
