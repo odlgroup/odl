@@ -6,17 +6,15 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""
-Implementation of Figures of Merit (FOMs) for comparing reconstructions with
-a given reference.
-"""
+"""Figures of merit (FOMs) for comparison against a known ground truth."""
 
 import odl
 import numpy as np
 
 __all__ = ('mean_squared_error', 'mean_absolute_error',
            'mean_value_difference', 'standard_deviation_difference',
-           'range_difference', 'blurring', 'false_structures', 'ssim', 'psnr')
+           'range_difference', 'blurring', 'false_structures', 'ssim', 'psnr',
+           'haarpsi')
 
 
 def mean_squared_error(data, ground_truth, mask=None, normalized=False):
@@ -609,7 +607,7 @@ def psnr(data, ground_truth, normalize=False):
     >>> ground_truth = spc.element([1, 1, 1, 1, 2])
     >>> result = psnr(data, ground_truth)
     >>> print('{:.3f}'.format(result))
-    6.021
+    13.010
 
     If data == ground_truth, the result is positive infinity:
 
@@ -636,7 +634,89 @@ def psnr(data, ground_truth, normalize=False):
     else:
         return 20 * np.log10(max_true) - 10 * np.log10(mse_result)
 
+
+def haarpsi(data, ground_truth, a=4.2, c=None):
+    """Haar-Wavelet based perceptual similarity index FOM.
+
+    This function evaluates the structural similarity between two images
+    based on edge features along the coordinate axes, analyzed with two
+    wavelet filter levels. See
+    `[Rei+2016] <https://arxiv.org/abs/1607.06140>`_ and the Notes section
+    for further details.
+
+    Parameters
+    ----------
+    data : 2D array-like
+        The image to compare to the ground truth.
+    ground_truth : 2D array-like
+        The true image with which to compare ``data``. It must have the
+        same shape as ``data``.
+    a : positive float, optional
+        Parameter in the logistic function. Larger value leads to a
+        steeper curve, thus lowering the threshold for an input to
+        be mapped to an output close to 1. See Notes for details.
+        The default value 4.2 is taken from the referenced paper.
+    c : positive float, optional
+        Constant determining the score of maximally dissimilar values.
+        Smaller constant means higher penalty for dissimilarity.
+        See `haarpsi_similarity_map` for details.
+        For ``None``, the value is chosen as
+        ``3 * sqrt(max(abs(ground_truth)))``.
+
+    Returns
+    -------
+    score : float between 0 and 1
+        The similarity score. See Notes for details.
+
+    See Also
+    --------
+    haarpsi_similarity_map
+    haarpsi_weight_map
+
+    Notes
+    -----
+    For input images :math:`f_1, f_2`, the HaarPSI score is defined as
+
+    .. math::
+        \mathrm{HaarPSI}_{f_1, f_2} =
+        l_a^{-1} \\left(
+        \\frac{
+        \sum_x \sum_{k=1}^2 \mathrm{HS}_{f_1, f_2}^{(k)}(x) \cdot
+        \mathrm{W}_{f_1, f_2}^{(k)}(x)}{
+        \sum_x \sum_{k=1}^2 \mathrm{W}_{f_1, f_2}^{(k)}(x)}
+        \\right)^2
+
+    see `[Rei+2016] <https://arxiv.org/abs/1607.06140>`_ equation (12).
+
+    For the definitions of the constituting functions, see
+
+        - `haarpsi_similarity_map` for :math:`\mathrm{HS}_{f_1, f_2}^{(k)}`,
+        - `haarpsi_weight_map` for :math:`\mathrm{W}_{f_1, f_2}^{(k)}`.
+
+    References
+    ----------
+    [Rei+2016] Reisenhofer, R, Bosse, S, Kutyniok, G, and Wiegand, T.
+    *A Haar Wavelet-Based Perceptual Similarity Index for Image Quality
+    Assessment*. arXiv:1607.06140 [cs], Jul. 2016.
+    """
+    import scipy.special
+    from odl.contrib.fom.util import haarpsi_similarity_map, haarpsi_weight_map
+
+    if c is None:
+        c = 3 * np.sqrt(np.max(np.abs(ground_truth)))
+
+    lsim_horiz = haarpsi_similarity_map(data, ground_truth, axis=0, c=c, a=a)
+    lsim_vert = haarpsi_similarity_map(data, ground_truth, axis=1, c=c, a=a)
+
+    wmap_horiz = haarpsi_weight_map(data, ground_truth, axis=0)
+    wmap_vert = haarpsi_weight_map(data, ground_truth, axis=1)
+
+    numer = np.sum(lsim_horiz * wmap_horiz + lsim_vert * wmap_vert)
+    denom = np.sum(wmap_horiz + wmap_vert)
+
+    return (scipy.special.logit(numer / denom) / a) ** 2
+
+
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

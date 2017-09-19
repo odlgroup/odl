@@ -28,6 +28,8 @@ range_diff = []
 blur = []
 false_struct = []
 ssim = []
+psnr = []
+haarpsi = []
 
 # Create mask for ROI to evaluate blurring and false structures. Arbitrarily
 # chosen as bone in Shepp-Logan phantom.
@@ -36,53 +38,51 @@ mask = (np.asarray(phantom) == 1)
 for stddev in np.linspace(0.1, 10, 100):
     phantom_noisy = phantom + odl.phantom.white_noise(reco_space,
                                                       stddev=stddev)
-    mse.append(fom.mean_squared_error(phantom_noisy,
-                                      phantom,
-                                      normalized=True))
+    mse.append(
+        fom.mean_squared_error(phantom_noisy, phantom, normalized=True))
 
-    mae.append(fom.mean_absolute_error(phantom_noisy,
-                                       phantom,
-                                       normalized=True))
+    mae.append(
+        fom.mean_absolute_error(phantom_noisy, phantom, normalized=True))
 
-    mvd.append(fom.mean_value_difference(phantom_noisy,
-                                         phantom,
-                                         normalized=True))
+    mvd.append(
+        fom.mean_value_difference(phantom_noisy, phantom, normalized=True))
 
-    std_diff.append(fom.standard_deviation_difference(phantom_noisy,
-                                                      phantom,
-                                                      normalized=True))
+    std_diff.append(
+        fom.standard_deviation_difference(phantom_noisy, phantom,
+                                          normalized=True))
 
-    range_diff.append(fom.range_difference(phantom_noisy,
-                                           phantom,
-                                           normalized=True))
+    range_diff.append(
+        fom.range_difference(phantom_noisy, phantom, normalized=True))
 
-    blur.append(fom.blurring(phantom_noisy,
-                             phantom,
-                             mask,
-                             normalized=True,
+    blur.append(
+        fom.blurring(phantom_noisy, phantom, mask, normalized=True,
+                     smoothness_factor=30))
+
+    false_struct.append(
+        fom.false_structures(phantom_noisy, phantom, mask, normalized=True,
                              smoothness_factor=30))
 
-    false_struct.append(fom.false_structures(phantom_noisy,
-                                             phantom,
-                                             mask,
-                                             normalized=True,
-                                             smoothness_factor=30))
+    ssim.append(
+        fom.ssim(phantom_noisy, phantom, normalized=True))
 
-    ssim.append(fom.ssim(phantom_noisy,
-                         phantom,
-                         normalized=True))
+    psnr.append(
+        fom.psnr(phantom_noisy, phantom, normalize=True))
 
-plt.figure('Figures of merit')
-plt.plot(mse, label='Mean squared error')
-plt.plot(mae, label='Mean absolute error')
-plt.plot(mvd, label='Mean value difference')
-plt.plot(std_diff, label='Standard deviation difference')
-plt.plot(range_diff, label='Range difference')
-plt.plot(blur, label='Blurring')
-plt.plot(false_struct, label='False structures')
-plt.plot(ssim, label='Structural similarity')
+    haarpsi.append(
+        fom.haarpsi(phantom_noisy, phantom))
 
-plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15),
-           fancybox=True, shadow=True, ncol=1)
-plt.xlabel('Noise level')
-plt.ylabel('FOM')
+fig, ax = plt.subplots()
+ax.plot(mse, label='MSE')
+ax.plot(mae, label='MAE')
+ax.plot(mvd, label='MVD')
+ax.plot(std_diff, label='SDD')
+ax.plot(range_diff, label='RD')
+ax.plot(blur, label='BLUR')
+ax.plot(false_struct, label='FS')
+ax.plot(ssim, label='SSIM')
+ax.plot(haarpsi, label='HaarPSI')
+plt.legend(loc='center right', fancybox=True, shadow=True, ncol=1)
+ax.set_xlabel('Noise level')
+ax.set_ylabel('FOM')
+plt.title('Figures of merit')
+fig.show()
