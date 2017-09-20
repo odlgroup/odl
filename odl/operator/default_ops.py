@@ -171,13 +171,13 @@ class IdentityOperator(ScalingOperator):
 
 class LinCombOperator(Operator):
 
-    """Operator mapping two space elements to a linear combination::
+    """Operator mapping space elements to a linear combination::
 
-        LinCombOperator(a, b)([x, y]) == a * x + b * y
+        LinCombOperator(spc, a, b)([x, y]) == a * x + b * y
 
     In general::
 
-        LinCombOperator(*c)(*x) == sum(ci * xi for ci, xi in zip(c, x))
+        LinCombOperator(spc, *c)(*x) == sum(ci * xi for ci, xi in zip(c, x))
     """
 
     def __init__(self, space, *coeffs):
@@ -237,15 +237,91 @@ class LinCombOperator(Operator):
 
         return out
 
+    @property
+    def adjoint(self):
+        """Return the adjoint.
+
+        Examples
+        --------
+        >>> r3 = odl.rn(3)
+        >>> op = LinCombOperator(r3, 1.0, 1.0)
+        >>> op.adjoint
+        ProductSpaceEmbedding(ProductSpace(rn(3), 2), 1.0, 1.0)
+        """
+        return ProductSpaceEmbedding(self.domain, *self.coeffs)
+
     def __repr__(self):
         """Return ``repr(self)``."""
-        coeff_str = '{!r}'.join(self.coeffs)
+        coeff_str = ', '.join(str(ci) for ci in self.coeffs)
+        return '{}({!r}, {})'.format(self.__class__.__name__,
+                                     self.range, coeff_str)
+
+
+class ProductSpaceEmbedding(Operator):
+
+    """Operator mapping a vector to several copies of it::
+
+        ProductSpaceEmbedding(spc, a, b)(x) == [a * x, b * x]
+
+    In general::
+
+        ProductSpaceEmbedding(spc, *c)(x)[i] == c[i] * x
+    """
+
+    def __init__(self, space, *coeffs):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        space : `LinearSpace`
+            Space of elements which the operator is acting on.
+        coeffs : ``space.field`` elements
+            Scalars to multiply ``x[i]`` with, respectively.
+
+        Examples
+        --------
+        Compute the replication of a vector twice:
+
+        >>> r3 = odl.rn(3)
+        >>> op = ProductSpaceEmbedding(r3, 1.0, 2.0)
+        >>> op([1, 2, 3])
+        ProductSpace(rn(3), 2).element([
+            [1.0, 2.0, 3.0],
+            [2.0, 4.0, 6.0]
+        ])
+        """
+        range = ProductSpace(space, len(coeffs))
+        super().__init__(space, range, linear=True)
+        self.coeffs = coeffs
+
+    def _call(self, x, out=None):
+        """Linearly combine ``x`` and write to ``out`` if given."""
+        if out is None:
+            out = self.range.element()
+
+        for oi, ci in zip(out, self.coeffs):
+            oi.lincomb(ci, x)
+
+        return out
+
+    @property
+    def adjoint(self):
+        """Return the adjoint.
+
+        Examples
+        --------
+        >>> r3 = odl.rn(3)
+        >>> op = ProductSpaceEmbedding(r3, 1.0, 1.0)
+        >>> op.adjoint
+        LinCombOperator(rn(3), 1.0, 1.0)
+        """
+        return LinCombOperator(self.domain, *self.coeffs)
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        coeff_str = ', '.join(str(ci) for ci in self.coeffs)
         return '{}({!r}, {})'.format(self.__class__.__name__,
                                      self.domain, coeff_str)
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        return "{}*x + {}*y".format(self.a, self.b)
 
 
 class MultiplyOperator(Operator):
