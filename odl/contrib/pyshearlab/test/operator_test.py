@@ -9,7 +9,7 @@
 """Unit tests for the ODL-pyshearlab integration."""
 
 import pytest
-
+import numpy as np
 import odl
 import odl.contrib.pyshearlab
 from odl.util.testutils import all_almost_equal, simple_fixture
@@ -21,6 +21,8 @@ shape = simple_fixture('shape', [(64, 64), (128, 128)])
 
 def test_operator(dtype, shape):
     """Test PyShearlabOperator operator."""
+    rel = 100 * np.finfo('float32').resolution
+
     space = odl.uniform_discr([-1, -1], [1, 1], shape, dtype=dtype)
 
     op = odl.contrib.pyshearlab.PyShearlabOperator(space, scales=2)
@@ -29,19 +31,18 @@ def test_operator(dtype, shape):
 
     # Test evaluation
     y = op(phantom)
-    assert all_almost_equal(op.inverse(y), phantom)
 
-    # Compute <Ax, Ax> = <x, AtAx>
+    # <Ax, Ax> = <x, AtAx>
     ax = op.adjoint(y)
-    assert pytest.approx(y.inner(y), rel=1e-4) == phantom.inner(ax)
+    assert pytest.approx(y.inner(y), rel=rel) == phantom.inner(ax)
 
     # A^{-1} A x = x
     rec = op.inverse(y)
     assert all_almost_equal(op.inverse(y), phantom)
 
-    # Compute <A^{-1}y, A^{-1}y> = <y, A^{-*}A^{-1}y>
+    # <A^{-1}y, A^{-1}y> = <y, A^{-*}A^{-1}y>
     recadj = op.inverse.adjoint(rec)
-    assert pytest.approx(rec.inner(rec), rel=1e-4) == y.inner(recadj)
+    assert pytest.approx(rec.inner(rec), rel=rel) == y.inner(recadj)
 
     # A^{-*}A^*y = y
     adjinvadj = op.adjoint.inverse(op.adjoint(y))
