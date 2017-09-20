@@ -22,7 +22,7 @@ __all__ = ('elekta_icon_geometry',
 
 def elekta_icon_geometry(sad=780.0, sdd=1000.0,
                          piercing_point=(390.0, 0.0),
-                         angles=np.linspace(1.2, 5.0, 332),
+                         angles=None, num_angles=None,
                          detector_shape=(780, 720)):
     """Tomographic geometry of the Elekta Icon CBCT system.
 
@@ -38,11 +38,14 @@ def elekta_icon_geometry(sad=780.0, sdd=1000.0,
         Source to Detector distance.
     piercing_point : sequence of foat, optional
         Position in the detector (in pixel coordinates) that a beam from the
-        source, passing through the axis of rotation at a straight angle,
-        hits.
+        source, passing through the axis of rotation perpendicularly, hits.
     angles : array-like, optional
-        List of angles that the projection images were taken at.
-        Given in radians.
+        List of angles given in radians that the projection images were taken
+        at. Exclusive with num_angles.
+        Default: np.linspace(1.2, 5.0, 332)
+    num_angles : int, optional
+        Number of angles. Exclusive with angles.
+        Default: 332
     detector_shape : sequence of int, optional
         Shape of the detector (in pixels). Useful if a sub-sampled system
         should be studied.
@@ -78,7 +81,17 @@ def elekta_icon_geometry(sad=780.0, sdd=1000.0,
     assert sdd > sad
     piercing_point = np.array(piercing_point, dtype=float)
     assert piercing_point.shape == (2,)
-    angles = np.array(angles, dtype=float)
+
+    if angles is not None and num_angles is not None:
+        raise ValueError('cannot provide both `angles` and `num_angles`')
+    elif angles is not None:
+        angles = np.array(angles, dtype=float)
+        assert angles.ndim == 1
+    elif num_angles is not None:
+        angles = np.linspace(1.2, 5.0, num_angles)
+    else:
+        angles = np.linspace(1.2, 5.0, 332)
+
     detector_shape = np.array(detector_shape, dtype=int)
 
     # Constant system parameters
@@ -115,7 +128,7 @@ def elekta_icon_space(shape=(448, 448, 448), **kwargs):
         Shape of the space, in voxels.
     kwargs :
         Keyword arguments to pass to `uniform_discr` to modify the space, e.g.
-        use another backend.
+        use another backend. By default, the dtype is set to float32.
 
     Returns
     -------
@@ -142,10 +155,12 @@ def elekta_icon_space(shape=(448, 448, 448), **kwargs):
     .. [whitepaper] *Design and performance characteristics of a Cone Beam
        CT system for Leksell Gamma Knife Icon*
     """
+    if 'dtype' not in kwargs:
+        kwargs['dtype'] = 'float32'
     return odl.uniform_discr(min_pt=[-112.0, -112.0, 0.0],
                              max_pt=[112.0, 112.0, 224.0],
                              shape=shape,
-                             dtype='float32')
+                             **kwargs)
 
 
 def elekta_icon_fbp(ray_transform,
@@ -158,12 +173,12 @@ def elekta_icon_fbp(ray_transform,
     ray_transform : `RayTransform`
         The ray transform to be used, should have an Elekta Icon geometry.
     padding : bool, optional
-        If the fbp filter should use padding, increases memory use
+        Whether the FBP filter should use padding, increases memory use
         significantly.
     filter_type : str, optional
         Type of filter to apply in the FBP filter.
     frequency_scaling : float, optional
-        Frequency scaling for FBP filter
+        Frequency scaling for FBP filter.
     parker_weighting : bool, optional
         Whether Parker weighting should be applied to compensate for partial
         scan.
@@ -195,7 +210,7 @@ def elekta_icon_fbp(ray_transform,
 
 def elekta_xvi_geometry(sad=1000.0, sdd=1500.0,
                         piercing_point=(512.0, 512.0),
-                        angles=np.linspace(0, 2 * np.pi, 650),
+                        angles=None, num_angles=None,
                         detector_shape=(1024, 1024)):
     """Tomographic geometry of the Elekta XVI system.
 
@@ -209,11 +224,14 @@ def elekta_xvi_geometry(sad=1000.0, sdd=1500.0,
         Source to Detector distance.
     piercing_point : sequence of foat, optional
         Position in the detector (in pixel coordinates) that a beam from the
-        source, passing through the axis of rotation at a straight angle,
-        hits.
+        source, passing through the axis of rotation perpendicularly, hits.
     angles : array-like, optional
-        List of angles that the projection images were taken at.
-        Given in radians.
+        List of angles given in radians that the projection images were taken
+        at. Exclusive with num_angles.
+        Default: np.linspace(0, 2 * np.pi, 650, endpoint=False)
+    num_angles : int, optional
+        Number of angles. Exclusive with angles.
+        Default: 332
     detector_shape : sequence of int, optional
         Shape of the detector (in pixels). Useful if a sub-sampled system
         should be studied.
@@ -244,7 +262,17 @@ def elekta_xvi_geometry(sad=1000.0, sdd=1500.0,
     assert sdd > sad
     piercing_point = np.array(piercing_point, dtype=float)
     assert piercing_point.shape == (2,)
-    angles = np.array(angles, dtype=float)
+
+    if angles is not None and num_angles is not None:
+        raise ValueError('cannot provide both `angles` and `num_angles`')
+    elif angles is not None:
+        angles = np.array(angles, dtype=float)
+        assert angles.ndim == 1
+    elif num_angles is not None:
+        angles = np.linspace(0, 2 * np.pi, num_angles, endpoint=False)
+    else:
+        angles = np.linspace(0, 2 * np.pi, 650, endpoint=False)
+
     detector_shape = np.array(detector_shape, dtype=int)
 
     # Constant system parameters
@@ -279,7 +307,7 @@ def elekta_xvi_space(shape=(512, 512, 512), **kwargs):
         Shape of the space, in voxels.
     kwargs :
         Keyword arguments to pass to `uniform_discr` to modify the space, e.g.
-        use another backend.
+        use another backend. By default, the dtype is set to float32.
 
     Returns
     -------
@@ -301,10 +329,12 @@ def elekta_xvi_space(shape=(512, 512, 512), **kwargs):
     elekta_xvi_geometry: Geometry for the Elekta XVI CBCT.
     elekta_xvi_fbp: Default reconstruction method for the Elekta XVI CBCT.
     """
+    if 'dtype' not in kwargs:
+        kwargs['dtype'] = 'float32'
     return odl.uniform_discr(min_pt=[-128.0, -128, -128.0],
                              max_pt=[128.0, 128.0, 128.0],
                              shape=shape,
-                             dtype='float32')
+                             **kwargs)
 
 
 def elekta_xvi_fbp(ray_transform,
@@ -316,12 +346,12 @@ def elekta_xvi_fbp(ray_transform,
     ray_transform : `RayTransform`
         The ray transform to be used, should have an Elekta XVI geometry.
     padding : bool, optional
-        If the fbp filter should use padding, increases memory use
+        Whether the FBP filter should use padding, increases memory use
         significantly.
     filter_type : str, optional
         Type of filter to apply in the FBP filter.
     frequency_scaling : float, optional
-        Frequency scaling for FBP filter
+        Frequency scaling for FBP filter.
 
     Returns
     -------

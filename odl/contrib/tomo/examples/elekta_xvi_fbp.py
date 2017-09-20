@@ -14,10 +14,9 @@ geometry = tomo.elekta_xvi_geometry()
 space = tomo.elekta_xvi_space(shape=(112, 112, 112))
 
 # Create ray transform
-ray_transform = odl.tomo.RayTransform(space, geometry,
-                                      use_cache=False)
+ray_transform = odl.tomo.RayTransform(space, geometry, use_cache=False)
 
-# Get default FDK reconstruction
+# Get default FDK reconstruction operator
 recon_op = tomo.elekta_xvi_fbp(ray_transform)
 
 # Create simplified phantom
@@ -31,10 +30,10 @@ reconstruction = recon_op(projections)
 
 # Display the results
 phantom.show('phantom xz', coords=[None, 0, None])
-reconstruction.show('reconstruction yz', coords=[None, 0, None])
+reconstruction.show('reconstruction xz', coords=[None, 0, None])
 
 phantom.show('phantom xy', coords=[None, None, 0])
-reconstruction.show('reconstruction yz', coords=[None, None, 0])
+reconstruction.show('reconstruction xy', coords=[None, None, 0])
 
 phantom.show('phantom yz', coords=[0, None, None])
 reconstruction.show('reconstruction yz', coords=[0, None, None])

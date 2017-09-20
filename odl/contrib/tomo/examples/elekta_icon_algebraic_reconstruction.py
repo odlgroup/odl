@@ -1,13 +1,14 @@
 """Example of using the Elekta Icon geometry.
 
 In this example we create an Elekta Icon geometry and use it to create some
-artificial data and reconstruct it using ART, specifically kaczmarz method.
+artificial data and reconstruct it using ART, specifically kaczmarz' method.
 """
 
 import numpy as np
 import odl
 from odl.contrib import tomo
 
+# The number of subsets to use in kaczmarz' method
 subsets = 20
 
 # Get default geometry and space
@@ -22,7 +23,7 @@ geometries = [geometry[i * step:(i+1) * step] for i in range(subsets)]
 ray_transforms = [odl.tomo.RayTransform(space, geom, use_cache=False)
                   for geom in geometries]
 
-# Create simplified phantom
+# Create simple phantom
 phantom = odl.phantom.shepp_logan(space, modified=True)
 
 # Create artificial data
