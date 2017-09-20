@@ -21,19 +21,17 @@ import odl
 # Reconstruction space: discretized functions on the rectangle
 # [-20, 20]^2 with 300 samples per dimension.
 space = odl.uniform_discr(
-    min_pt=[-20, -20], max_pt=[20, 20], shape=[300, 300], dtype='float32')
+    min_pt=[-20, -20], max_pt=[20, 20], shape=[128, 128], dtype='float32')
 
-# Make a fan (cone) beam geometry with flat detector
-geometry = odl.tomo.cone_beam_geometry(space,
-                                       src_radius=40, det_radius=40,
-                                       num_angles=360, det_shape=360)
+# Make a parallel beam geometry with flat detector
+geometry = odl.tomo.parallel_beam_geometry(space)
 
 # Here we split the geometry according to both angular subsets and
 # detector subsets.
 # For practical applications these choices should be fine tuned,
 # these values are selected to give an illustrative visualization.
 
-split = 'block'
+split = 'interlaced'
 
 if split == 'block':
     # Split the data into blocks:
@@ -72,9 +70,9 @@ callback = (odl.solvers.CallbackPrintIteration() &
 x = space.zero()
 
 # Run the algorithm, call the callback in each iteration for visualization.
-# Note that using only 2 iterations still gives a decent reconstruction.
+# Note that using only 5 iterations still gives a decent reconstruction.
 odl.solvers.kaczmarz(
-    ray_trafos, x, data, niter=2, omega=omega,
+    ray_trafos, x, data, niter=5, omega=omega,
     callback=callback, callback_loop='inner')
 
 # Display images
