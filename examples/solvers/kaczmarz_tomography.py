@@ -30,18 +30,26 @@ geometry = odl.tomo.cone_beam_geometry(space,
 
 # Here we split the geometry according to both angular subsets and
 # detector subsets.
-
 # For practical applications these choices should be fine tuned,
 # these values are selected to give an illustrative visualization.
-n = 20
-m = 1
-ns = 360 // n
-ms = 360 // m
 
-# Create the forward operators.
-ray_trafos = [odl.tomo.RayTransform(space, geometry[i * ns:(i + 1) * ns,
-                                                    j * ms:(j + 1) * ms])
-              for i in range(n) for j in range(m)]
+split = 'block'
+
+if split == 'block':
+    # Split the data into blocks:
+    # 111 222 333
+    n = 20
+    ns = geometry.angles.size // n
+
+    ray_trafos = [odl.tomo.RayTransform(space, geometry[i * ns:(i + 1) * ns])
+                  for i in range(n)]
+elif split == 'interlaced':
+    # Split the data into slices:
+    # 123 123 123
+    n = 20
+
+    ray_trafos = [odl.tomo.RayTransform(space, geometry[i::n])
+                  for i in range(n)]
 
 # --- Generate artificial data --- #
 
