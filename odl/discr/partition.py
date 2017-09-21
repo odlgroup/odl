@@ -1317,6 +1317,11 @@ def nonuniform_partition(*coord_vecs, **kwargs):
         [1.0, 2.0]
     )
 
+    Partitions with a single element are by default degenerate
+
+    >>> odl.nonuniform_partition(1)
+    uniform_partition(1.0, 1.0, 1, nodes_on_bdry=True)
+
     If the endpoints should be on the boundary, the ``nodes_on_bdry`` parameter
     can be used:
 
@@ -1361,14 +1366,17 @@ def nonuniform_partition(*coord_vecs, **kwargs):
             raise ValueError('in axis {}: got both `max_pt` and '
                              '`nodes_on_bdry=True`'.format(i))
 
+        # Handle length 1 inputs
+        coords = np.array(coords, copy=False, ndmin=1)
+
         # Compute boundary position if not given by user
         if xmin is None:
-            if bdry_l:
+            if bdry_l or len(coords) == 1:
                 min_pt[i] = coords[0]
             else:
                 min_pt[i] = coords[0] - (coords[1] - coords[0]) / 2.0
         if xmax is None:
-            if bdry_r:
+            if bdry_r or len(coords) == 1:
                 max_pt[i] = coords[-1]
             else:
                 max_pt[i] = coords[-1] + (coords[-1] - coords[-2]) / 2.0
