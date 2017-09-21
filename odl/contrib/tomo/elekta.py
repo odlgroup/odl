@@ -85,21 +85,18 @@ def elekta_icon_geometry(sad=780.0, sdd=1000.0,
     if angles is not None and num_angles is not None:
         raise ValueError('cannot provide both `angles` and `num_angles`')
     elif angles is not None:
-        angles = np.array(angles, dtype=float)
+        angles = odl.nonuniform_partition(angles)
         assert angles.ndim == 1
     elif num_angles is not None:
-        angles = np.linspace(1.2, 5.0, num_angles)
+        angles = odl.uniform_partition(1.2, 5.0, num_angles)
     else:
-        angles = np.linspace(1.2, 5.0, 332)
+        angles = odl.uniform_partition(1.2, 5.0, 332)
 
     detector_shape = np.array(detector_shape, dtype=int)
 
     # Constant system parameters
     pixel_size = 0.368
     det_extent_mm = np.array([287.04, 264.96])
-
-    # Create a (possible non-uniform) partition given the angles
-    angle_partition = odl.nonuniform_partition(angles)
 
     # Compute the detector partition
     piercing_point_mm = pixel_size * piercing_point
@@ -111,7 +108,7 @@ def elekta_icon_geometry(sad=780.0, sdd=1000.0,
 
     # Create the geometry
     geometry = odl.tomo.ConeFlatGeometry(
-        angle_partition, detector_partition,
+        angles, detector_partition,
         src_radius=sad, det_radius=sdd - sad)
 
     return geometry
@@ -266,21 +263,18 @@ def elekta_xvi_geometry(sad=1000.0, sdd=1500.0,
     if angles is not None and num_angles is not None:
         raise ValueError('cannot provide both `angles` and `num_angles`')
     elif angles is not None:
-        angles = np.array(angles, dtype=float)
+        angles = odl.nonuniform_partition(angles)
         assert angles.ndim == 1
     elif num_angles is not None:
-        angles = np.linspace(0, 2 * np.pi, num_angles, endpoint=False)
+        angles = odl.uniform_partition(0, 2 * np.pi, num_angles)
     else:
-        angles = np.linspace(0, 2 * np.pi, 650, endpoint=False)
+        angles = odl.uniform_partition(0, 2 * np.pi, 650)
 
     detector_shape = np.array(detector_shape, dtype=int)
 
     # Constant system parameters
     pixel_size = 0.4
     det_extent_mm = np.array([409.6, 409.6])
-
-    # Create a (possible non-uniform) partition given the angles
-    angle_partition = odl.nonuniform_partition(angles)
 
     # Compute the detector partition
     piercing_point_mm = pixel_size * piercing_point
@@ -292,7 +286,7 @@ def elekta_xvi_geometry(sad=1000.0, sdd=1500.0,
 
     # Create the geometry
     geometry = odl.tomo.ConeFlatGeometry(
-        angle_partition, detector_partition,
+        angles, detector_partition,
         src_radius=sad, det_radius=sdd - sad)
 
     return geometry
