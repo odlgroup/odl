@@ -63,10 +63,10 @@ for stddev in np.linspace(0.1, 10, 100):
                              smoothness_factor=30))
 
     ssim.append(
-        fom.ssim(phantom_noisy, phantom, normalized=True))
+        fom.ssim(phantom_noisy, phantom))
 
     psnr.append(
-        fom.psnr(phantom_noisy, phantom, normalize=True))
+        fom.psnr(phantom_noisy, phantom, normalized=True))
 
     haarpsi.append(
         fom.haarpsi(phantom_noisy, phantom))
