@@ -20,9 +20,10 @@ This package assumes that all dependencies are installed.
 
 from __future__ import division
 import os
-import imp
 import pytest
+import sys
 import odl
+
 try:
     import matplotlib
     matplotlib.use('Agg')  # To avoid the backend freezing
@@ -30,13 +31,15 @@ try:
 except ImportError:
     pass
 
+ignore = ['stir_project.py', 'stir_reconstruct.py']
+
 # Make a fixture for all examples
-this_file_path = os.path.dirname(os.path.abspath(__file__))
+here = os.path.dirname(os.path.abspath(__file__))
 example_ids = []
 example_params = []
-for dirpath, dirnames, filenames in os.walk(this_file_path):
-    for filename in [f for f in filenames if f.endswith(".py") and
-                     not f.startswith('__init__')]:
+for dirpath, dirnames, filenames in os.walk(here):
+    for filename in [f for f in filenames
+                     if f.endswith('.py') and f not in ignore]:
         example_params.append(os.path.join(dirpath, filename))
         example_ids.append(filename[:-3])  # skip .py
 
@@ -47,7 +50,16 @@ def example(request):
 
 
 def test_example(example):
-    imp.load_source('tmp', example)
+    if (sys.version_info.major, sys.version_info.minor) <= (3, 3):
+        # The `imp` module is deprecated since 3.4
+        import imp
+        imp.load_source('tmp', example)
+    else:
+        import importlib
+        spec = importlib.util.spec_from_file_location('tmp', example)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+
     plt.close('all')
 
 
