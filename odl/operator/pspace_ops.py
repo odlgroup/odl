@@ -225,7 +225,7 @@ class ProductSpaceOperator(Operator):
             for i, j, op in zip(self.ops.row, self.ops.col, self.ops.data):
                 out[i] += op(x[j])
         else:
-            has_evaluated_row = np.zeros(self.range.size, dtype=bool)
+            has_evaluated_row = np.zeros(len(self.range), dtype=bool)
             for i, j, op in zip(self.ops.row, self.ops.col, self.ops.data):
                 if not has_evaluated_row[i]:
                     op(x[j], out=out[i])
@@ -438,7 +438,7 @@ class ProductSpaceOperator(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        aslist = [[0] * self.domain.size for _ in range(self.range.size)]
+        aslist = [[0] * len(self.domain) for _ in range(len(self.range))]
         for i, j, op in zip(self.ops.row, self.ops.col, self.ops.data):
             aslist[i][j] = op
         return '{}({!r})'.format(self.__class__.__name__, aslist)
