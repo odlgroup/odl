@@ -1,4 +1,4 @@
-"""Total variation denoising of complex data using the Chambolle-Pock solver.
+"""Total variation denoising of complex data using the PDHG solver.
 
 Solves the optimization problem
 
@@ -7,7 +7,7 @@ Solves the optimization problem
 Where ``grad`` the spatial gradient and ``g`` is given noisy data.
 
 For further details and a description of the solution method used, see
-:ref:`chambolle_pock` in the ODL documentation.
+https://odlgroup.github.io/odl/guide/pdhg_guide.html in the ODL documentation.
 """
 
 import numpy as np
