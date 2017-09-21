@@ -19,10 +19,10 @@ from odl.operator import Operator, PointwiseInner
 from odl.space import ProductSpace
 
 
-__all__ = ('LinDeformFixedTempl', 'LinDeformFixedDisp')
+__all__ = ('LinDeformFixedTempl', 'LinDeformFixedDisp', 'linear_deform')
 
 
-def _linear_deform(template, displacement, out=None):
+def linear_deform(template, displacement, out=None):
     """Linearized deformation of a template with a displacement field.
 
     The function maps a given template ``I`` and a given displacement
@@ -58,7 +58,7 @@ def _linear_deform(template, displacement, out=None):
     >>> disp_field_space = space.tangent_bundle
     >>> template = space.element([0, 0, 1, 0, 0])
     >>> displacement_field = disp_field_space.element([[0, 0, 0, -0.2, 0]])
-    >>> _linear_deform(template, displacement_field)
+    >>> linear_deform(template, displacement_field)
     array([ 0.,  0.,  1.,  1.,  0.])
 
     The result depends on the chosen interpolation. With 'linear'
@@ -69,7 +69,7 @@ def _linear_deform(template, displacement, out=None):
     >>> disp_field_space = space.tangent_bundle
     >>> template = space.element([0, 0, 1, 0, 0])
     >>> displacement_field = disp_field_space.element([[0, 0, 0, -0.1, 0]])
-    >>> _linear_deform(template, displacement_field)
+    >>> linear_deform(template, displacement_field)
     array([ 0. ,  0. ,  1. ,  0.5,  0. ])
     """
     image_pts = template.space.points()
@@ -199,7 +199,7 @@ class LinDeformFixedTempl(Operator):
 
     def _call(self, displacement, out=None):
         """Implementation of ``self(displacement[, out])``."""
-        return _linear_deform(self.template, displacement, out)
+        return linear_deform(self.template, displacement, out)
 
     def derivative(self, displacement):
         """Derivative of the operator at ``displacement``.
@@ -227,7 +227,7 @@ class LinDeformFixedTempl(Operator):
                         pad_mode='symmetric')
         grad_templ = grad(self.template)
         def_grad = self.domain.element(
-            [_linear_deform(gf, displacement) for gf in grad_templ])
+            [linear_deform(gf, displacement) for gf in grad_templ])
 
         return PointwiseInner(self.domain, def_grad)
 
@@ -349,7 +349,7 @@ class LinDeformFixedDisp(Operator):
 
     def _call(self, template, out=None):
         """Implementation of ``self(template[, out])``."""
-        return _linear_deform(template, self.displacement, out)
+        return linear_deform(template, self.displacement, out)
 
     @property
     def inverse(self):
