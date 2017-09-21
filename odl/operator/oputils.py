@@ -310,10 +310,10 @@ def as_scipy_operator(op):
     shape = (native(op.range.size), native(op.domain.size))
 
     def matvec(v):
-        return as_flat_array(op(v))
+        return as_flat_array(op(v.reshape(op.domain.shape)))
 
     def rmatvec(v):
-        return as_flat_array(op.adjoint(v))
+        return as_flat_array(op.adjoint(v.reshape(op.range.shape)))
 
     return scipy.sparse.linalg.LinearOperator(shape=shape,
                                               matvec=matvec,
