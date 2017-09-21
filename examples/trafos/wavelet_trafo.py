@@ -20,7 +20,7 @@ phantom_wt.show(title='wavelet transform')
 
 # It may however (for some choices of wbasis) be interpreted as a vector in the
 # domain of the transformation
-phantom_wt_2d = space.element(phantom_wt)
+phantom_wt_2d = space.element(phantom_wt.asarray().reshape(space.shape))
 phantom_wt_2d.show('wavelet transform in 2d')
 
 # Calculate the inverse transform.
