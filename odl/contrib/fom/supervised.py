@@ -720,13 +720,14 @@ def haarpsi(data, ground_truth, a=4.2, c=None):
 def noise_power_spectrum(data, ground_truth, radial=False):
     """Return the Noise Power Spectrum (NPS).
 
-    The NPS is given by the square of the fourier transform of the noise.
+    The NPS is given by the squared magnitude of the Fourier transform of the
+    noise.
 
     Parameters
     ----------
-    data : `DiscreteLp`-element
+    data : `DiscreteLp` element
         Input data or reconstruction.
-    ground_truth : `DiscreteLp`-element
+    ground_truth : `DiscreteLp` element
         Reference to compare ``data`` to.
     radial : bool
         If true, compute the radial NPS.
@@ -734,10 +735,10 @@ def noise_power_spectrum(data, ground_truth, radial=False):
     Returns
     -------
     noise_power_spectrum : `DiscreteLp`-element
-        Noise power spectrum. The space is the fourier transform of
-        ``data.space``, and hence the axes indicate frequency.
-        If ``radial`` is True, this is an element in a one-dimensional space
-        of the same type as ``data.space``.
+        The space is the Fourier space corresponding to ``data.space``, and
+        hence the axes indicate frequency.
+        If ``radial`` is ``True``, this is an element in a one-dimensional
+        space of the same type as ``data.space``.
     """
     fftop = odl.trafos.FourierTransform(data.space, halfcomplex=False)
     f1 = fftop(data - ground_truth)
@@ -750,7 +751,8 @@ def noise_power_spectrum(data, ground_truth, radial=False):
 
         out_spc = odl.uniform_discr(0, np.max(r), n_bins,
                                     impl=f1.space.impl,
-                                    dtype=f1.space.real_dtype)
+                                    dtype=f1.space.real_dtype,
+                                    axis_labels=['$\\^{r}$'])
 
         return out_spc.element(radial_nps)
     else:

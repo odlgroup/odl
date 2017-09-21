@@ -23,8 +23,8 @@ reconstruction.show('reconstruction')
 
 # Estimate NPS
 nps = fom.noise_power_spectrum(reconstruction, phantom)
-np.log(nps).show('log(nps)')
+np.log(nps).show('log(NPS)')
 
 # Estimate radial NPS
 radial_nps = fom.noise_power_spectrum(reconstruction, phantom, radial=True)
-radial_nps.show('radial_nps')
+radial_nps.show('radial NPS')
