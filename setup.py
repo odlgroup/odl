@@ -142,7 +142,6 @@ setup(
     package_dir={'odl': 'odl'},
     package_data={'odl': find_tests() + ['odl/pytest.ini']},
     include_package_data=True,
-    entry_points={'pytest11': ['odl_plugins = odl.util.pytest_plugins']},
 
     install_requires=[requires],
     tests_require=['pytest'],

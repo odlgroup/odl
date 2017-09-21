@@ -648,7 +648,7 @@ def test(arguments=None):
                           '\nRun `$ pip install [--user] odl[testing]` in '
                           'order to install `pytest`.')
 
-    from .pytest_plugins import collect_ignore
+    from ..conftest import collect_ignore
 
     this_dir = os.path.dirname(__file__)
     odl_root = os.path.abspath(os.path.join(this_dir, os.pardir, os.pardir))
