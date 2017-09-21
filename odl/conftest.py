@@ -51,34 +51,20 @@ def pytest_addoption(parser):
 # --- Ignored tests due to missing modules ---
 
 this_dir = os.path.dirname(__file__)
-odl_root = os.path.abspath(os.path.join(this_dir, os.pardir, os.pardir))
-collect_ignore = [os.path.join(odl_root, 'setup.py'),
-                  os.path.join(odl_root, 'odl', 'contrib')]
-
-
-# Add example directories to `collect_ignore`
-def find_example_dirs():
-    dirs = []
-    for dirpath, dirnames, _ in os.walk(odl_root):
-        if 'examples' in dirnames:
-            dirs.append(os.path.join(dirpath, 'examples'))
-    return dirs
-
-
-collect_ignore.extend(find_example_dirs())
+collect_ignore = [os.path.join(this_dir, 'contrib')]
 
 
 if not PYFFTW_AVAILABLE:
     collect_ignore.append(
-        os.path.join(odl_root, 'odl', 'trafos', 'backends',
+        os.path.join(this_dir, 'trafos', 'backends',
                      'pyfftw_bindings.py'))
 if not PYWT_AVAILABLE:
     collect_ignore.append(
-        os.path.join(odl_root, 'odl', 'trafos', 'backends',
+        os.path.join(this_dir, 'trafos', 'backends',
                      'pywt_bindings.py'))
     # Currently `pywt` is the only implementation
     collect_ignore.append(
-        os.path.join(odl_root, 'odl', 'trafos', 'wavelet.py'))
+        os.path.join(this_dir, 'trafos', 'wavelet.py'))
 
 
 # Remove duplicates

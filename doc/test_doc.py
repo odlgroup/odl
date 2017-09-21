@@ -39,9 +39,8 @@ except ImportError:
 doctest_extraglobs = {'odl': odl, 'np': numpy, 'scipy': scipy,
                       'proximal': proximal}
 
-root_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)),
-                        '../../doc/source')
-root_dir = os.path.normpath(root_dir)
+here = os.path.abspath(os.path.dirname(__file__))
+root_dir = os.path.normpath(os.path.join(here, 'source'))
 test_dirs = ['guide', 'getting_started']
 test_suffixes = ['.rst', '.py']
 exclude_files = ['faq.rst']
@@ -62,8 +61,6 @@ def doc_src_file(request):
     return request.param
 
 
-@pytest.mark.skipif("not pytest.config.getoption('--doctest-doc')",
-                    reason='Need --doctest-doc option to run')
 def test_file(doc_src_file):
     doctest.testfile(doc_src_file, module_relative=False, report=True,
                      extraglobs=doctest_extraglobs, verbose=True,

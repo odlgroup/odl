@@ -32,11 +32,9 @@ except ImportError:
 
 # Make a fixture for all examples
 this_file_path = os.path.dirname(os.path.abspath(__file__))
-examples_path = os.path.join(this_file_path,
-                             os.path.pardir, os.path.pardir, 'examples')
 example_ids = []
 example_params = []
-for dirpath, dirnames, filenames in os.walk(examples_path):
+for dirpath, dirnames, filenames in os.walk(this_file_path):
     for filename in [f for f in filenames if f.endswith(".py") and
                      not f.startswith('__init__')]:
         example_params.append(os.path.join(dirpath, filename))
@@ -48,8 +46,6 @@ def example(request):
     return request.param
 
 
-@pytest.mark.skipif("not pytest.config.getoption('--examples')",
-                    reason='Need --examples option to run')
 def test_example(example):
     imp.load_source('tmp', example)
     plt.close('all')
