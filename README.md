@@ -57,8 +57,11 @@ ODL has been used in a wide range of research and development with several scien
 ##### Articles
 
 
+
 | Description      |  Code  |
 |------------------|--------|
+| *Faster PET Reconstruction with a Stochastic Primal-Dual Hybrid Gradient Method*. [Article](https://www.spiedigitallibrary.org/conference-proceedings-of-spie/10394/103941O/Faster-PET-reconstruction-with-a-stochastic-primal-dual-hybrid-gradient/10.1117/12.2272946.full?SSO=1) |  |
+| *Stochastic Primal-Dual Hybrid Gradient Algorithm with Arbitrary Sampling and Imaging Applications*. [Arxiv](https://arxiv.org/abs/1706.04957) |  |
 | *Learned Primal-Dual Reconstruction*. [Arxiv](https://arxiv.org/abs/1707.06474), [blog](https://adler-j.github.io/2017/07/21/Learning-to-reconstruct.html) | [GitHub](https://github.com/adler-j/learned_primal_dual) |
 | *Indirect Image Registration with Large Diffeomorphic Deformations*. [Arxiv](https://arxiv.org/abs/1706.04048) | [GitHub](https://github.com/chongchenmath/odl_lddmm) |
 | *High-level algorithm prototyping: an example extending the TVR-DART algorithm*. DGCI, 2017. [DOI](https://doi.org/10.1007/978-3-319-66272-5_10) | [GitHub](https://github.com/aringh/TVR-DART) |
