@@ -31,7 +31,7 @@ try:
 except ImportError:
     pass
 
-ignore = ['stir_project.py', 'stir_reconstruct.py']
+ignore_prefix = ['stir', 'proximal_lang']
 
 # Make a fixture for all examples
 here = os.path.dirname(os.path.abspath(__file__))
@@ -40,7 +40,8 @@ example_ids = []
 example_params = []
 for dirpath, dirnames, filenames in os.walk(examples_path):
     for filename in [f for f in filenames
-                     if f.endswith('.py') and f not in ignore]:
+                     if f.endswith('.py') and
+                     not any(f.startswith(pre) for pre in ignore_prefix)]:
         example_params.append(os.path.join(dirpath, filename))
         example_ids.append(filename[:-3])  # skip .py
 
