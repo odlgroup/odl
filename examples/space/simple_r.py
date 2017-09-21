@@ -4,7 +4,7 @@
 import odl
 
 
-class Reals(odl.LinearSpace):
+class Reals(odl.set.LinearSpace):
     """The real numbers."""
 
     def __init__(self):
@@ -26,13 +26,13 @@ class Reals(odl.LinearSpace):
         return RealNumber(self, value)
 
 
-class RealNumber(odl.LinearSpaceElement):
+class RealNumber(odl.set.space.LinearSpaceElement):
     """Real vectors are floats."""
 
     __val__ = None
 
     def __init__(self, space, v):
-        super(RealNumber, self).__init__(space=space)
+        super(RealNumber, self).__init__(space)
         self.__val__ = v
 
     def __float__(self):
