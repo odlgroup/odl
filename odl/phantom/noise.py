@@ -67,6 +67,58 @@ def white_noise(space, mean=0, stddev=1, seed=None):
     return space.element(values)
 
 
+def uniform_noise(space, low=0, high=1, seed=None):
+    """Uniformly distributed noise in ``space``, pointwise ``U(low, high)``.
+
+    Parameters
+    ----------
+    space : `FnBase` or `ProductSpace`
+        The space in which the noise is created.
+    low : ``space.field`` element or ``space`` `element-like`, optional
+        The lower bound of the uniform noise. If a scalar, it is interpreted as
+        ``low * space.one()``.
+        If ``space`` is complex, the real and imaginary parts are interpreted
+        as their respective part of the noise.
+    high : ``space.field`` element or ``space`` `element-like`, optional
+        The upper bound of the uniform noise. If a scalar, it is interpreted as
+        ``high * space.one()``.
+        If ``space`` is complex, the real and imaginary parts are interpreted
+        as their respective part of the noise.
+    seed : int, optional
+        Random seed to use for generating the noise.
+        For ``None``, use the current seed.
+
+    Returns
+    -------
+    white_noise : ``space`` element
+
+    See Also
+    --------
+    poisson_noise
+    salt_pepper_noise
+    white_noise
+    numpy.random.normal
+    """
+    from odl.space import ProductSpace
+
+    with NumpyRandomSeed(seed):
+        if isinstance(space, ProductSpace):
+            values = [uniform_noise(subspace, low, high)
+                      for subspace in space]
+        else:
+            if space.is_cn:
+                real = np.random.uniform(low=low.real, high=high.real,
+                                         size=space.shape)
+                imag = np.random.uniform(low=low.imag, high=high.imag,
+                                         size=space.shape)
+                values = real + 1j * imag
+            else:
+                values = np.random.uniform(low=low, high=high,
+                                           size=space.shape)
+
+    return space.element(values)
+
+
 def poisson_noise(intensity, seed=None):
     """Poisson distributed noise with given intensity.
 
@@ -98,6 +150,7 @@ def poisson_noise(intensity, seed=None):
     --------
     white_noise
     salt_pepper_noise
+    uniform_noise
     numpy.random.poisson
     """
     from odl.space import ProductSpace
@@ -151,6 +204,7 @@ def salt_pepper_noise(vector, fraction=0.05, salt_vs_pepper=0.5,
     --------
     white_noise
     poisson_noise
+    uniform_noise
     """
     from odl.space import ProductSpace
 
@@ -199,13 +253,16 @@ if __name__ == '__main__':
 
     r100 = odl.rn(100)
     white_noise(r100).show('white_noise')
+    uniform_noise(r100).show('uniform_noise')
     white_noise(r100, mean=5).show('white_noise with mean')
 
     c100 = odl.cn(100)
     white_noise(c100).show('complex white_noise')
+    uniform_noise(c100).show('complex uniform_noise')
 
     discr = odl.uniform_discr([-1, -1], [1, 1], [300, 300])
     white_noise(discr).show('white_noise 2d')
+    uniform_noise(discr).show('uniform_noise 2d')
 
     vector = odl.phantom.shepp_logan(discr, modified=True)
     poisson_noise(vector * 100).show('poisson_noise 2d')
