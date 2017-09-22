@@ -22,6 +22,7 @@ from __future__ import division
 import os
 import imp
 import pytest
+import odl
 try:
     import matplotlib
     matplotlib.use('Agg')  # To avoid the backend freezing
@@ -55,4 +56,4 @@ def test_example(example):
 
 
 if __name__ == '__main__':
-    pytest.main([str(__file__.replace('\\', '/')), '-v', '--examples'])
+    odl.util.test_file(__file__)

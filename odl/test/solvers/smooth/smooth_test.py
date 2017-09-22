@@ -145,4 +145,4 @@ def test_conjguate_gradient_nonlinear(functional, nonlinear_cg_beta):
 
 
 if __name__ == '__main__':
-    pytest.main([str(__file__.replace('\\', '/')), '-v'])
+    odl.util.test_file(__file__)

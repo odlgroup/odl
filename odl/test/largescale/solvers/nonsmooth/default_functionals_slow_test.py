@@ -250,5 +250,6 @@ def test_proximal_convex_conj_kl_cross_entropy_solving_opt_problem():
         (g / lam_kl) * np.exp(a / lam_kl))
     assert all_almost_equal(x, x_verify, places=6)
 
+
 if __name__ == '__main__':
-    pytest.main([str(__file__.replace('\\', '/')), '-v', '--largescale'])
+    odl.util.test_file(__file__, ['--largescale'])

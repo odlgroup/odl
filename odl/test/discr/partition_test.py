@@ -483,5 +483,6 @@ def test_uniform_partition():
             min_pt=min_pt, max_pt=max_pt, shape=shape,
             cell_sides=[0.25, 0.2001])
 
+
 if __name__ == '__main__':
-    pytest.main([str(__file__.replace('\\', '/')), '-v'])
+    odl.util.test_file(__file__)

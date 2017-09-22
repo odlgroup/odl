@@ -10,6 +10,7 @@ from __future__ import division
 import numpy as np
 import pytest
 
+import odl
 from odl.discr.grid import sparse_meshgrid
 from odl.util import is_int_dtype
 from odl.util.testutils import all_equal
@@ -335,4 +336,4 @@ def test_vectorize_callable_class():
 
 
 if __name__ == '__main__':
-    pytest.main([str(__file__.replace('\\', '/')), '-v'])
+    odl.util.test_file(__file__)

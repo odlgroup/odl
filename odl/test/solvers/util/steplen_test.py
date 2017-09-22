@@ -9,7 +9,6 @@
 """Test for the smooth solvers."""
 
 from __future__ import division
-import pytest
 import odl
 
 
@@ -68,4 +67,4 @@ def test_line_search_from_iternum():
 
 
 if __name__ == '__main__':
-    pytest.main([str(__file__.replace('\\', '/')), '-v'])
+    odl.util.test_file(__file__)

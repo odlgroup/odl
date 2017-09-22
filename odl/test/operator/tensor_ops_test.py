@@ -637,4 +637,4 @@ def test_mat_op_call(fn):
 
 
 if __name__ == '__main__':
-    pytest.main([str(__file__.replace('\\', '/')), '-v'])
+    odl.util.test_file(__file__)

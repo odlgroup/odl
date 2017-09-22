@@ -907,5 +907,6 @@ def test_dispatch_call_args_class():
     with pytest.raises(TypeError):
         _dispatch_call_args(cls=WithClassMethod)
 
+
 if __name__ == '__main__':
-    pytest.main([str(__file__.replace('\\', '/')), '-v'])
+    odl.util.test_file(__file__)

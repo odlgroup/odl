@@ -138,5 +138,6 @@ def test_steepst_descent():
 
     assert all_almost_equal(x, [1, 1, 1], places=2)
 
+
 if __name__ == '__main__':
-    pytest.main([str(__file__.replace('\\', '/')), '-v'])
+    odl.util.test_file(__file__)

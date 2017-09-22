@@ -72,4 +72,4 @@ def test_file(doc_src_file):
 
 
 if __name__ == '__main__':
-    pytest.main([str(__file__.replace('\\', '/')), '-v', '--doctest-doc'])
+    odl.util.test_file(__file__)

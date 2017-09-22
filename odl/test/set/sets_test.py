@@ -9,6 +9,7 @@
 from __future__ import division
 import pytest
 
+import odl
 from odl.set.sets import (EmptySet, UniversalSet, Strings, ComplexNumbers,
                           RealNumbers, Integers)
 
@@ -192,4 +193,4 @@ def test_integers():
 
 
 if __name__ == '__main__':
-    pytest.main([str(__file__.replace('\\', '/')), '-v'])
+    odl.util.test_file(__file__)

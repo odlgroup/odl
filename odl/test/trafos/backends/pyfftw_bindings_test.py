@@ -10,6 +10,7 @@ from __future__ import division
 import numpy as np
 import pytest
 
+import odl
 from odl.trafos.backends import pyfftw_call, PYFFTW_AVAILABLE
 from odl.util import (
     is_real_dtype, complex_dtype)
@@ -381,4 +382,4 @@ def test_pyfftw_call_backward_with_plan():
 
 
 if __name__ == '__main__':
-    pytest.main([str(__file__.replace('\\', '/')), '-v'])
+    odl.util.test_file(__file__)

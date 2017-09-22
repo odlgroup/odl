@@ -10,6 +10,7 @@ from __future__ import division
 import numpy as np
 import pytest
 
+import odl
 from odl.util.normalize import (
     normalized_scalar_param_list, normalized_axes_tuple)
 from odl.util.testutils import simple_fixture
@@ -192,5 +193,6 @@ def test_normalized_axes_tuple_raise():
     with pytest.raises(ValueError):
         normalized_axes_tuple((0, 2), ndim=2)  # axis out of range
 
+
 if __name__ == '__main__':
-    pytest.main([str(__file__.replace('\\', '/')), '-v'])
+    odl.util.test_file(__file__)

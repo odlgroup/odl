@@ -251,5 +251,6 @@ def test_power_method_opnorm_exceptions():
 
         power_method_opnorm(op, maxiter=1, xstart=op.domain.one())
 
+
 if __name__ == '__main__':
-    pytest.main([str(__file__.replace('\\', '/')), '-v'])
+    odl.util.test_file(__file__)
