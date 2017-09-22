@@ -49,6 +49,9 @@ elif split == 'interlaced':
     ray_trafos = [odl.tomo.RayTransform(space, geometry[i::n])
                   for i in range(n)]
 
+# Create one large ray transform from components
+ray_trafo = odl.BroadcastOperator(*ray_trafos)
+
 # --- Generate artificial data --- #
 
 
@@ -56,11 +59,10 @@ elif split == 'interlaced':
 phantom = odl.phantom.shepp_logan(space, modified=True)
 
 # Create sinogram of forward projected phantom with noise
-data = [ray_trafo(phantom) for ray_trafo in ray_trafos]
+data = ray_trafo(phantom)
 
-# Compute steplengths
-omega = [odl.power_method_opnorm(ray_trafo) ** (-2)
-         for ray_trafo in ray_trafos]
+# Compute steplength
+omega = n * odl.power_method_opnorm(ray_trafo) ** (-2)
 
 # Optionally pass callback to the solver to display intermediate results
 callback = (odl.solvers.CallbackPrintIteration() &
