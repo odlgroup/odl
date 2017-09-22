@@ -949,7 +949,19 @@ class ProductSpaceElement(LinearSpaceElement):
 
         The ordering is such that it commutes with indexing::
 
-            np.asarray(self[ind]) == np.asarray(self)[ind]
+            self[ind].asarray() == self.asarray()[ind]
+
+        Parameters
+        ----------
+        out : `numpy.ndarray`, optional
+            Array in which the result should be written in-place.
+            Has to be contiguous and of the correct dtype and
+            shape.
+
+        Raises
+        ------
+        ValueError
+            If `is_power_space` is false.
 
         Parameters
         ----------
@@ -968,7 +980,8 @@ class ProductSpaceElement(LinearSpaceElement):
                [ 1.,  1.]])
         """
         if not self.space.is_power_space:
-            return NotImplemented
+            return ValueError('cannot use `asarray` if `space.is_power_space` '
+                              'is false')
         else:
             if out is None:
                 out = np.zeros(self.shape, self.dtype)
@@ -984,7 +997,12 @@ class ProductSpaceElement(LinearSpaceElement):
 
         The ordering is such that it commutes with indexing::
 
-            np.asarray(self[ind]) == np.asarray(self)[ind]
+            np.array(self[ind]) == np.array(self)[ind]
+
+        Raises
+        ------
+        ValueError
+            If `is_power_space` is false.
 
         Examples
         --------
