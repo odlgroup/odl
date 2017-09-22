@@ -61,27 +61,27 @@ ODL has been used in a wide range of research and development with several scien
 | Description      |  Code  |
 |------------------|--------|
 | *Faster PET Reconstruction with a Stochastic Primal-Dual Hybrid Gradient Method*. [Article](https://www.spiedigitallibrary.org/conference-proceedings-of-spie/10394/103941O/Faster-PET-reconstruction-with-a-stochastic-primal-dual-hybrid-gradient/10.1117/12.2272946.full?SSO=1) |  |
-| *Stochastic Primal-Dual Hybrid Gradient Algorithm with Arbitrary Sampling and Imaging Applications*. [Arxiv](https://arxiv.org/abs/1706.04957) |  |
-| *Learned Primal-Dual Reconstruction*. [Arxiv](https://arxiv.org/abs/1707.06474), [blog](https://adler-j.github.io/2017/07/21/Learning-to-reconstruct.html) | [GitHub](https://github.com/adler-j/learned_primal_dual) |
-| *Indirect Image Registration with Large Diffeomorphic Deformations*. [Arxiv](https://arxiv.org/abs/1706.04048) | [GitHub](https://github.com/chongchenmath/odl_lddmm) |
-| *High-level algorithm prototyping: an example extending the TVR-DART algorithm*. DGCI, 2017. [DOI](https://doi.org/10.1007/978-3-319-66272-5_10) | [GitHub](https://github.com/aringh/TVR-DART) |
+| *Stochastic Primal-Dual Hybrid Gradient Algorithm with Arbitrary Sampling and Imaging Applications*. [arXiv](https://arxiv.org/abs/1706.04957) |  |
+| *Learned Primal-Dual Reconstruction*. [arXiv](https://arxiv.org/abs/1707.06474), [blog](https://adler-j.github.io/2017/07/21/Learning-to-reconstruct.html) | [<img src="https://github.com/favicon.ico">](https://github.com/adler-j/learned_primal_dual) |
+| *Indirect Image Registration with Large Diffeomorphic Deformations*. [arXiv](https://arxiv.org/abs/1706.04048) | [<img src="https://github.com/favicon.ico">](https://github.com/chongchenmath/odl_lddmm) |
+| *High-level algorithm prototyping: an example extending the TVR-DART algorithm*. DGCI, 2017. [DOI](https://doi.org/10.1007/978-3-319-66272-5_10) | [<img src="https://github.com/favicon.ico">](https://github.com/aringh/TVR-DART) |
 | *GPUMCI, a ﬂexible platform for x-ray imaging on the GPU*. Fully3D, 2017 |  |
-| *Spectral CT reconstruction with anti-correlated noise model and joint prior*. Fully3D, 2017 | [GitHub](https://github.com/adler-j/spectral_ct_examples) |
-| *Solving ill-posed inverse problems using iterative deep neural networks*. [Arxiv](https://arxiv.org/abs/1704.04058) | [GitHub](https://github.com/adler-j/learned_gradient_tomography) |
-| *Total variation regularization with variable Lebesgue prior*. [Arxiv](https://arxiv.org/abs/1702.08807) | [GitHub](https://github.com/kohr-h/variable_lp_paper) |
-| *Generalized Sinkhorn iterations for regularizing inverse problems using optimal mass transport*. [Arxiv](https://arxiv.org/abs/1612.02273) | [GitHub](https://github.com/aringh/Generalized-Sinkhorn-and-tomography) |
-| *A modified fuzzy C means algorithm for shading correction in craniofacial CBCT images*. CMBEBIH, 2017 | [GitHub](https://github.com/adler-j/mfcm_article) |
-| *Shape Based Image Reconstruction Using Linearized Deformations*. Inverse Problems, 2017. [DOI](http://iopscience.iop.org/article/10.1088/1361-6420/aa55af) | [GitHub](https://github.com/chongchenmath/odl_ld) |
+| *Spectral CT reconstruction with anti-correlated noise model and joint prior*. Fully3D, 2017 | [<img src="https://github.com/favicon.ico">](https://github.com/adler-j/spectral_ct_examples) |
+| *Solving ill-posed inverse problems using iterative deep neural networks*. [arXiv](https://arxiv.org/abs/1704.04058) | [<img src="https://github.com/favicon.ico">](https://github.com/adler-j/learned_gradient_tomography) |
+| *Total variation regularization with variable Lebesgue prior*. [arXiv](https://arxiv.org/abs/1702.08807) | [<img src="https://github.com/favicon.ico">](https://github.com/kohr-h/variable_lp_paper) |
+| *Generalized Sinkhorn iterations for regularizing inverse problems using optimal mass transport*. [arXiv](https://arxiv.org/abs/1612.02273) | [<img src="https://github.com/favicon.ico">](https://github.com/aringh/Generalized-Sinkhorn-and-tomography) |
+| *A modified fuzzy C means algorithm for shading correction in craniofacial CBCT images*. CMBEBIH, 2017 | [<img src="https://github.com/favicon.ico">](https://github.com/adler-j/mfcm_article) |
+| *Shape Based Image Reconstruction Using Linearized Deformations*. Inverse Problems, 2017. [DOI](http://iopscience.iop.org/article/10.1088/1361-6420/aa55af) | [<img src="https://github.com/favicon.ico">](https://github.com/chongchenmath/odl_ld) |
 
 
 ##### Other projects
 
 | Description      |  Code  |
 |------------------|--------|
-| Multigrid CT reconstruction | [GitHub](https://github.com/kohr-h/odl-multigrid) |
-| Inverse problems over Lie groups | [GitHub](https://github.com/adler-j/lie_grp_diffeo) |
-| Bindings for the [EMRecon](http://www.uni-muenster.de/Sfbmobil/en/veroeffentlichungen/software/emrecon/index.html) package for PET |  [GitHub](https://github.com/odlgroup/odlemrecon) |
-| ADF-STEM reconstruction using nuclear norm regularization | [GitHub](https://github.com/adler-j/odl-stem-examples) |
+| Multigrid CT reconstruction | [<img src="https://github.com/favicon.ico">](https://github.com/kohr-h/odl-multigrid) |
+| Inverse problems over Lie groups | [<img src="https://github.com/favicon.ico">](https://github.com/adler-j/lie_grp_diffeo) |
+| Bindings for the [EMRecon](http://www.uni-muenster.de/Sfbmobil/en/veroeffentlichungen/software/emrecon/index.html) package for PET |  [<img src="https://github.com/favicon.ico">](https://github.com/odlgroup/odlemrecon) |
+| ADF-STEM reconstruction using nuclear norm regularization | [<img src="https://github.com/favicon.ico">](https://github.com/adler-j/odl-stem-examples) |
 
 
 License
