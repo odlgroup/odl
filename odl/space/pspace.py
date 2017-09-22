@@ -942,6 +942,41 @@ class ProductSpaceElement(LinearSpaceElement):
                 for p, v in zip(indexed_parts, values):
                     p[:] = v
 
+    def asarray(self, out=None):
+        """Extract the data of this vector as a numpy array.
+
+        Only available if `is_power_space` is True.
+
+        The ordering is such that it commutes with indexing::
+
+            np.asarray(self[ind]) == np.asarray(self)[ind]
+
+        Parameters
+        ----------
+        out : `numpy.ndarray`, optional
+            Array in which the result should be written in-place.
+            Has to be contiguous and of the correct dtype and
+            shape.
+
+        Examples
+        --------
+        >>> spc = odl.ProductSpace(odl.rn(2), 3)
+        >>> x = spc.one()
+        >>> x.asarray()
+        array([[ 1.,  1.],
+               [ 1.,  1.],
+               [ 1.,  1.]])
+        """
+        if not self.space.is_power_space:
+            return NotImplemented
+        else:
+            if out is None:
+                out = np.zeros(self.shape, self.dtype)
+
+            for i in range(len(self)):
+                out[i] = np.asarray(self[i])
+            return out
+
     def __array__(self):
         """An array representation of ``self``.
 
@@ -960,13 +995,7 @@ class ProductSpaceElement(LinearSpaceElement):
                [ 1.,  1.],
                [ 1.,  1.]])
         """
-        if not self.space.is_power_space:
-            return NotImplemented
-        else:
-            arr = np.zeros(self.shape, self.dtype)
-            for i in range(len(self)):
-                arr[i] = np.asarray(self[i])
-            return arr
+        return self.asarray()
 
     @property
     def ufuncs(self):
