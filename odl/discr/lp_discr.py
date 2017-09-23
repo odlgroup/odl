@@ -599,8 +599,7 @@ class DiscreteLpElement(DiscretizedSpaceElement):
     @property
     def real(self):
         """Real part of this element."""
-        rspace = self.space.astype(self.space.real_dtype)
-        return rspace.element(self.asarray().real)
+        return self.space.real_space.element(self.ntuple.real)
 
     @real.setter
     def real(self, newreal):
@@ -612,8 +611,7 @@ class DiscreteLpElement(DiscretizedSpaceElement):
     @property
     def imag(self):
         """Imaginary part of this element."""
-        rspace = self.space.astype(self.space.real_dtype)
-        return rspace.element(self.asarray().imag)
+        return self.space.real_space.element(self.ntuple.imag)
 
     @imag.setter
     def imag(self, newimag):

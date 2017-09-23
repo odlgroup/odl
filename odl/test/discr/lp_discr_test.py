@@ -829,56 +829,75 @@ def test_ufunc(fn_impl, ufunc):
             assert isinstance(odl_result[i], space.element_type)
 
 
-def test_real_imag():
-
+def test_real_imag(fn_impl):
     # Get real and imag
-    cdiscr = odl.uniform_discr([0, 0], [1, 1], [2, 2], dtype=complex)
-    rdiscr = odl.uniform_discr([0, 0], [1, 1], [2, 2], dtype=float)
+    for dtype in filter(odl.util.is_complex_floating_dtype,
+                        odl.fn_impl(fn_impl).available_dtypes()):
+        cdiscr = odl.uniform_discr([0, 0], [1, 1], [2, 2], dtype=dtype,
+                                   impl=fn_impl)
+        rdiscr = cdiscr.real_space
 
-    x = cdiscr.element([[1 - 1j, 2 - 2j], [3 - 3j, 4 - 4j]])
-    assert x.real in rdiscr
-    assert all_equal(x.real, [1, 2, 3, 4])
-    assert x.imag in rdiscr
-    assert all_equal(x.imag, [-1, -2, -3, -4])
+        x = cdiscr.element([[1 - 1j, 2 - 2j], [3 - 3j, 4 - 4j]])
+        assert x.real in rdiscr
+        assert all_equal(x.real, [1, 2, 3, 4])
+        assert x.imag in rdiscr
+        assert all_equal(x.imag, [-1, -2, -3, -4])
 
-    # Set with different data types and shapes
-    newreal = rdiscr.element([[2, 3], [4, 5]])
-    x.real = newreal
-    assert all_equal(x.real, [2, 3, 4, 5])
-    newreal = [[3, 4], [5, 6]]
-    x.real = newreal
-    assert all_equal(x.real, [3, 4, 5, 6])
-    newreal = [4, 5, 6, 7]
-    x.real = newreal
-    assert all_equal(x.real, [4, 5, 6, 7])
-    newreal = 0
-    x.real = newreal
-    assert all_equal(x.real, [0, 0, 0, 0])
+        # Set with different data types and shapes
+        for assigntype in (lambda x: x, list, tuple, rdiscr.element):
+            # Without [:] assignment
+            x = cdiscr.zero()
+            x.real = assigntype([[2, 3], [4, 5]])
+            assert all_equal(x.real, [2, 3, 4, 5])
 
-    newimag = rdiscr.element([-2, -3, -4, -5])
-    x.imag = newimag
-    assert all_equal(x.imag, [-2, -3, -4, -5])
-    newimag = [[-3, -4], [-5, -6]]
-    x.imag = newimag
-    assert all_equal(x.imag, [-3, -4, -5, -6])
-    newimag = [-4, -5, -6, -7]
-    x.imag = newimag
-    assert all_equal(x.imag, [-4, -5, -6, -7])
-    newimag = -1
-    x.imag = newimag
-    assert all_equal(x.imag, [-1, -1, -1, -1])
+            x = cdiscr.zero()
+            x.real = assigntype([4, 5, 6, 7])
+            assert all_equal(x.real, [4, 5, 6, 7])
 
-    # 'F' ordering
-    cdiscr = odl.uniform_discr([0, 0], [1, 1], [2, 2], dtype=complex,
-                               order='F')
+            x = cdiscr.zero()
+            x.imag = assigntype([[2, 3], [4, 5]])
+            assert all_equal(x.imag, [2, 3, 4, 5])
 
-    x = cdiscr.element()
-    newreal = [[3, 4], [5, 6]]
-    x.real = newreal
-    assert all_equal(x.real, [3, 5, 4, 6])  # flattened in 'F' order
-    newreal = [4, 5, 6, 7]
-    x.real = newreal
-    assert all_equal(x.real, [4, 5, 6, 7])
+            x = cdiscr.zero()
+            x.imag = assigntype([4, 5, 6, 7])
+            assert all_equal(x.imag, [4, 5, 6, 7])
+
+            # With [:] assignment
+            x = cdiscr.zero()
+            x.real[:] = assigntype([[2, 3], [4, 5]])
+            assert all_equal(x.real, [2, 3, 4, 5])
+
+            x = cdiscr.zero()
+            x.real[:] = assigntype([4, 5, 6, 7])
+            assert all_equal(x.real, [4, 5, 6, 7])
+
+            x = cdiscr.zero()
+            x.imag[:] = assigntype([[2, 3], [4, 5]])
+            assert all_equal(x.imag, [2, 3, 4, 5])
+
+            x = cdiscr.zero()
+            x.imag[:] = assigntype([4, 5, 6, 7])
+            assert all_equal(x.imag, [4, 5, 6, 7])
+
+        x = cdiscr.zero()
+        x.real = 1
+        assert all_equal(x.real, [1, 1, 1, 1])
+
+        x = cdiscr.zero()
+        x.imag = -1
+        assert all_equal(x.imag, [-1, -1, -1, -1])
+
+        # 'F' ordering
+        cdiscr = odl.uniform_discr([0, 0], [1, 1], [2, 2], dtype=dtype,
+                                   impl=fn_impl, order='F')
+
+        x = cdiscr.element()
+        newreal = [[3, 4], [5, 6]]
+        x.real = newreal
+        assert all_equal(x.real, [3, 5, 4, 6])  # flattened in 'F' order
+        newreal = [4, 5, 6, 7]
+        x.real = newreal
+        assert all_equal(x.real, [4, 5, 6, 7])
 
 
 def test_reduction(fn_impl, reduction):

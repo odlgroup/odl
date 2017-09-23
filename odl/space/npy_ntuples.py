@@ -1134,8 +1134,7 @@ class NumpyFnVector(FnBaseVector, NumpyNtuplesVector):
         >>> x
         cn(3).element([(10+1j), (6+0j), (4-2j)])
         """
-        real_space = NumpyFn(self.space.size, self.space.real_dtype)
-        return real_space.element(self.data.real)
+        return self.space.real_space.element(self.data.real)
 
     @real.setter
     def real(self, newreal):
@@ -1191,8 +1190,7 @@ class NumpyFnVector(FnBaseVector, NumpyNtuplesVector):
         >>> x
         cn(3).element([(5+2j), (3+0j), (2-4j)])
         """
-        real_space = NumpyFn(self.space.size, self.space.real_dtype)
-        return real_space.element(self.data.imag)
+        return self.space.real_space.element(self.data.imag)
 
     @imag.setter
     def imag(self, newimag):
