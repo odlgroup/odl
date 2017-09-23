@@ -37,7 +37,7 @@ def mean_squared_error(data, ground_truth, mask=None, normalized=False):
     Returns
     -------
     mse : float
-        FOM value, with higher value meaning lower correspondence.
+        FOM value, where a lower value means a better match.
 
     Notes
     -----
@@ -95,7 +95,7 @@ def mean_absolute_error(data, ground_truth, mask=None, normalized=False):
     Returns
     -------
     mae : float
-        FOM value, with higher value meaning lower correspondence.
+        FOM value, where a lower value means a better match.
 
     Notes
     -----
@@ -108,10 +108,12 @@ def mean_absolute_error(data, ground_truth, mask=None, normalized=False):
     of the functions. For :math:`\mathbb{R}^n` type spaces, this is equal
     to the number of elements :math:`n`.
 
+    The normalized form is
+
     .. math::
         \mathrm{MAE_N}(f, g) = \\frac{\| f - g \|_1}{\| f \|_1 + \| g \|_1}.
 
-    The normalized FOM takes values in [0, 1].
+    The normalized variant takes values in :math:`[0, 1]`.
     """
     l1_norm = odl.solvers.L1Norm(data.space)
     if mask is not None:
@@ -145,7 +147,7 @@ def mean_value_difference(data, ground_truth, mask=None, normalized=False):
     Returns
     -------
     mvd : float
-        FOM value, with higher value meaning lower correspondence.
+        FOM value, where a lower value means a better match.
 
     Notes
     -----
@@ -167,8 +169,7 @@ def mean_value_difference(data, ground_truth, mask=None, normalized=False):
     .. math::
         \\overline{f} = \\frac{\\langle f, 1\\rangle}{\|1|_1}.
 
-    The normalized FOM takes values in [0, 1], with higher correspondence
-    at lower FOM value.
+    The normalized variant takes values in :math:`[0, 1]`.
     """
     l1_norm = odl.solvers.L1Norm(data.space)
     if mask is not None:
@@ -207,7 +208,7 @@ def standard_deviation_difference(data, ground_truth, mask=None,
     Returns
     -------
     sdd : float
-        FOM value, with higher value meaning lower correspondence.
+        FOM value, where a lower value means a better match.
 
     Notes
     -----
@@ -231,8 +232,7 @@ def standard_deviation_difference(data, ground_truth, mask=None,
     .. math::
         \\overline{f} = \\frac{\\langle f, 1\\rangle}{\|1|_1}.
 
-    The normalized FOM takes values in [0, 1], with higher correspondence
-    at lower FOM value.
+    The normalized variant takes values in :math:`[0, 1]`.
     """
     l1_norm = odl.solvers.L1Norm(data.space)
     l2_norm = odl.solvers.L2Norm(data.space)
@@ -279,7 +279,7 @@ def range_difference(data, ground_truth, mask=None, normalized=False):
     Returns
     -------
     rd : float
-        FOM value, with higher value meaning lower correspondence.
+        FOM value, where a lower value means a better match.
 
     Notes
     -----
@@ -304,8 +304,7 @@ def range_difference(data, ground_truth, mask=None, normalized=False):
             \\big(\\max(g) - \\min(g) \\big)
             \Big|}
 
-    The normalized FOM takes values in [0, 1], with higher correspondence
-    at lower FOM value.
+    The normalized variant takes values in :math:`[0, 1]`.
     """
     if mask is None:
         data_range = np.max(data) - np.min(data)
@@ -349,7 +348,7 @@ def blurring(data, ground_truth, mask=None, normalized=False,
     Returns
     -------
     blur : float
-        FOM value, with higher value meaning lower correspondence.
+        FOM value, where a lower value means a better match.
 
     See Also
     --------
@@ -381,8 +380,7 @@ def blurring(data, ground_truth, mask=None, normalized=False,
     The weighting gives higher values to structures in the region of
     interest defined by the mask.
 
-    The normalized FOM takes values in [0, 1], with higher correspondence
-    at lower FOM value.
+    The normalized variant takes values in :math:`[0, 1]`.
     """
     from scipy.ndimage.morphology import distance_transform_edt
 
@@ -420,7 +418,7 @@ def false_structures(data, ground_truth, mask=None, normalized=False,
     Returns
     -------
     fs : float
-        FOM value, with higher value meaning lower correspondence.
+        FOM value, where a lower value means a better match.
 
     Notes
     -----
@@ -475,25 +473,31 @@ def ssim(data, ground_truth,
         Input data to compare to the ground truth.
     ground_truth : `FnBaseVector`
         Reference to compare ``data`` to.
-    size :
-        TODO...
+    size : odd int
+        Size in elements per axis of the Gaussian window that is used
+        for all smoothing operations.
+    sigma : positive float
+        Width of the Gaussian function used for smoothing.
+    K1, K2 : positive float
+        TODO
+    dynamic_range : nonnegative float
+        TODO
 
     Returns
     -------
     ssim : float
-        FOM value, with higher value meaning higher correspondence.
+        FOM value, where a higher value means a better match.
     """
     from scipy.signal import fftconvolve
 
     data = np.asarray(data)
     ground_truth = np.asarray(ground_truth)
-    ndim = data.ndim
 
-    # Compute gaussian
-    coords = np.meshgrid(*(ndim * (np.linspace(-(size - 1) / 2,
-                                               (size - 1) / 2, size),)))
+    # Compute gaussian on a `size`-sized grid in each axis
+    coords = np.linspace(-(size - 1) / 2, (size - 1) / 2, size)
+    grid = np.meshgrid(*([coords] * data.ndim), sparse=True)
 
-    window = np.exp(-(sum(xi ** 2 for xi in coords) / (2.0 * sigma ** 2)))
+    window = np.exp(-(sum(xi ** 2 for xi in grid) / (2.0 * sigma ** 2)))
     window /= np.sum(window)
 
     def smoothen(img):
@@ -541,7 +545,7 @@ def psnr(data, ground_truth, normalized=False):
     Returns
     -------
     psnr : float
-        FOM value, with higher value meaning higher correspondence.
+        FOM value, where a higher value means a better match.
 
     Examples
     --------
@@ -612,7 +616,7 @@ def haarpsi(data, ground_truth, a=4.2, c=None):
     Returns
     -------
     haarpsi : float between 0 and 1
-        The similarity score. Higher value means higher correspondence.
+        The similarity score, where a higher score means a better match.
         See Notes for details.
 
     See Also
