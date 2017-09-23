@@ -18,62 +18,59 @@ __all__ = ('mean_squared_error', 'mean_absolute_error',
 
 
 def mean_squared_error(data, ground_truth, mask=None, normalized=False):
-    """Return L2-distance between ``data`` and ``ground_truth``.
+    """Return mean squared L2 distance between ``data`` and ``ground_truth``.
 
-    Evaluates `mean squared error
-    <https://en.wikipedia.org/wiki/Mean_squared_error>`_ between
-    input (``data``) and reference (``ground_truth``) Allows for normalization
-    (``normalized``) and a masking of the two spaces (``mask``).
-
-    Notes
-    ----------
-    The FOM evaluates
-
-    .. math::
-        \| f - g \|^2_2,
-
-    or, in normalized form
-
-    .. math::
-        \\frac{\| f - g \|^2_2}{\| f \|^2_2 + \| g \|^2_2}.
-
-    The normalized FOM takes values in [0, 1].
+    See also `this Wikipedia article
+    <https://en.wikipedia.org/wiki/Mean_squared_error>`_.
 
     Parameters
     ----------
     data : `FnBaseVector`
-        Input data or reconstruction.
+        Input data to compare to the ground truth.
     ground_truth : `FnBaseVector`
         Reference to compare ``data`` to.
-    mask : `FnBaseVector`, optional
-        Mask to define ROI in which FOM evaluation is performed. The mask is
-        allowed to be weighted (i.e. non-binary), see ``blurring`` and
-        ``false_structures.``
+    mask : `array-like`, optional
+        If given, ``data * mask`` is compared to ``ground_truth * mask``.
     normalized  : bool, optional
         Boolean flag to switch between unormalized and normalized FOM.
 
     Returns
     -------
-    fom : float
-        Scalar (float) indicating mean squared error between ``data`` and
-        ``ground_truth``. In normalized form the FOM takes values in
-        [0, 1], with higher correspondance at lower FOM value.
+    mse : float
+        FOM value, where a lower value means a better match.
+
+    Notes
+    -----
+    The FOM evaluates
+
+    .. math::
+        \mathrm{MSE}(f, g) = \\frac{\| f - g \|_2^2}{\| 1 \|_2^2},
+
+    where :math:`\| 1 \|^2_2` is the volume of the domain of definition
+    of the functions. For :math:`\mathbb{R}^n` type spaces, this is equal
+    to the number of elements :math:`n`.
+
+    The normalized form is
+
+    .. math::
+        \mathrm{MSE_N} = \\frac{\| f - g \|_2^2}{(\| f \|_2 + \| g \|_2)^2}.
+
+    The normalized variant takes values in :math:`[0, 1]`.
     """
-    l2_normSquared = odl.solvers.L2NormSquared(data.space)
+    l2norm = odl.solvers.L2Norm(data.space)
+    l2norm_squared = odl.solvers.L2NormSquared(data.space)
 
     if mask is not None:
         data = data * mask
         ground_truth = ground_truth * mask
 
     diff = data - ground_truth
-    fom = l2_normSquared(diff)
-
-    # Volume of space
-    vol = l2_normSquared(data.space.one())
-    fom /= vol
+    fom = l2norm_squared(diff)
 
     if normalized:
-            fom /= (l2_normSquared(data) + l2_normSquared(ground_truth))
+        fom /= (l2norm(data) + l2norm(ground_truth)) ** 2
+    else:
+        fom /= l2norm_squared(data.space.one())
 
     return fom
 
@@ -81,56 +78,54 @@ def mean_squared_error(data, ground_truth, mask=None, normalized=False):
 def mean_absolute_error(data, ground_truth, mask=None, normalized=False):
     """Return L1-distance between ``data`` and ``ground_truth``.
 
-    Evaluates `mean absolute error
-    <https://en.wikipedia.org/wiki/Mean_absolute_error>`_ between
-    input (``data``) and reference (``ground_truth``). Allows for normalization
-    (``normalized``) and a masking of the two spaces (``mask``).
-
-    Notes
-    ----------
-    The FOM evaluates
-
-    .. math::
-        \| f - g \|_1,
-
-    or, in normalized form
-
-    .. math::
-        \\frac{\| f - g \|_1}{\| f \|_1 + \| g \|_1}.
-
-    The normalized FOM takes values in [0, 1].
+    See also `this Wikipedia article
+    <https://en.wikipedia.org/wiki/Mean_absolute_error>`_.
 
     Parameters
     ----------
     data : `FnBaseVector`
-        Input data or reconstruction.
+        Input data to compare to the ground truth.
     ground_truth : `FnBaseVector`
         Reference to compare ``data`` to.
-    mask : `FnBaseVector`, optional
-        Binary mask to define ROI in which FOM evaluation is performed.
+    mask : `array-like`, optional
+        If given, ``data * mask`` is compared to ``ground_truth * mask``.
     normalized  : bool, optional
         Boolean flag to switch between unormalized and normalized FOM.
 
     Returns
     -------
-    fom : float
-        Scalar (float) indicating mean absolute error between ``data`` and
-        ``ground_truth``. In normalized form the FOM takes values in
-        [0, 1], with higher correspondance at lower FOM value.
+    mae : float
+        FOM value, where a lower value means a better match.
+
+    Notes
+    -----
+    The FOM evaluates
+
+    .. math::
+        \mathrm{MAE}(f, g) = \\frac{\| f - g \|_1}{\| 1 \|_1},
+
+    where :math:`\| 1 \|_1` is the volume of the domain of definition
+    of the functions. For :math:`\mathbb{R}^n` type spaces, this is equal
+    to the number of elements :math:`n`.
+
+    The normalized form is
+
+    .. math::
+        \mathrm{MAE_N}(f, g) = \\frac{\| f - g \|_1}{\| f \|_1 + \| g \|_1}.
+
+    The normalized variant takes values in :math:`[0, 1]`.
     """
     l1_norm = odl.solvers.L1Norm(data.space)
-    if mask:
+    if mask is not None:
         data = data * mask
         ground_truth = ground_truth * mask
     diff = data - ground_truth
     fom = l1_norm(diff)
 
-    # Volume of space
-    vol = l1_norm(data.space.one())
-    fom /= vol
-
     if normalized:
         fom /= (l1_norm(data) + l1_norm(ground_truth))
+    else:
+        fom /= l1_norm(data.space.one())
 
     return fom
 
@@ -138,60 +133,46 @@ def mean_absolute_error(data, ground_truth, mask=None, normalized=False):
 def mean_value_difference(data, ground_truth, mask=None, normalized=False):
     """Return difference in mean value between ``data`` and ``ground_truth``.
 
-    Evaluates difference in `mean value
-    <https://en.wikipedia.org/wiki/Mean_of_a_function>`_ between input
-    (``data``) and reference (``ground_truth``). Allows for normalization
-    (``normalized``) and a masking of the two spaces (``mask``).
-
-    Notes
-    ----------
-    The FOM evaluates
-
-    .. math::
-         \\bigg \\lvert \\lvert  \\overline{f} \\rvert -
-                \\lvert \\overline{g} \\rvert \\bigg \\rvert,
-
-    or, in normalized form
-
-    .. math::
-         \\bigg \\lvert \\frac{\\lvert \\overline{f} \\rvert -
-                               \\lvert \\overline{g} \\rvert}
-                              {\\lvert \\overline{f} \\rvert +
-                               \\lvert \\overline{g} \\rvert} \\bigg \\rvert
-
-    where
-
-    .. math::
-        \\overline{f} := \\frac{1}{\|1_\Omega\|_1} \\int_\Omega f dx,
-
-    and
-
-    .. math::
-        \\overline{g} := \\frac{1}{\|1_\Omega\|_1} \\int_\Omega g dx.
-
-    The normalized FOM takes values in [0, 1], with higher correspondance
-    at lower FOM value.
-
     Parameters
     ----------
     data : `FnBaseVector`
-        Input data or reconstruction.
+        Input data to compare to the ground truth.
     ground_truth : `FnBaseVector`
         Reference to compare ``data`` to.
-    mask : `FnBaseVector`, optional
-        Binary mask to define ROI in which FOM evaluation is performed.
+    mask : `array-like`, optional
+        If given, ``data * mask`` is compared to ``ground_truth * mask``.
     normalized  : bool, optional
         Boolean flag to switch between unormalized and normalized FOM.
 
     Returns
     -------
-    fom : float
-        Scalar (float) indicating difference in mean value between
-        ``data`` and ``ground_truth``. In normalized form the FOM takes
-        values in [0, 1], with higher correspondance at lower FOM value.
+    mvd : float
+        FOM value, where a lower value means a better match.
+
+    Notes
+    -----
+    The FOM evaluates
+
+    .. math::
+         \mathrm{MVD}(f, g) =
+         \\Big| |\\overline{f}| - |\\overline{g}| \\Big|,
+
+    or, in normalized form
+
+    .. math::
+         \mathrm{MVD_N}(f, g) =
+         \\frac{\\Big| |\\overline{f}| - |\\overline{g}| \\Big|}
+               {\\Big| |\\overline{f}| + |\\overline{g}| \\Big|}
+
+    where :math:`\\overline{f}` is the mean value of :math:`f`,
+
+    .. math::
+        \\overline{f} = \\frac{\\langle f, 1\\rangle}{\|1|_1}.
+
+    The normalized variant takes values in :math:`[0, 1]`.
     """
     l1_norm = odl.solvers.L1Norm(data.space)
-    if mask:
+    if mask is not None:
         data = data * mask
         ground_truth = ground_truth * mask
 
@@ -213,61 +194,50 @@ def standard_deviation_difference(data, ground_truth, mask=None,
                                   normalized=False):
     """Return absolute difference in std between ``data`` and ``ground_truth``.
 
-    Evaluates difference in standard deviation (std) between input (``data``)
-    and reference (``ground_truth``). Allows for normalization (``normalized``)
-    and a masking of the two spaces (``mask``).
-
-    Notes
-    ----------
-    The FOM evaluates
-
-    .. math::
-         \\lvert \| f - \\overline{f} \|_2 -
-                 \| g - \\overline{g} \|_2 \\rvert,
-
-    or, in normalized form
-
-    .. math::
-        \\bigg \\lvert \\frac{\| f - \\overline{f} \|_2 -
-                              \| g - \\overline{g} \|_2}
-                             {\| f - \\overline{f} \|_2 +
-                              \| g - \\overline{g} \|_2 } \\bigg \\rvert,
-
-    where
-
-    .. math::
-        \\overline{f} := \\frac{1}{\|1_\Omega\|_1} \\int_\Omega f dx,
-
-    and
-
-    .. math::
-        \\overline{g} := \\frac{1}{\|1_\Omega\|_1} \\int_\Omega g dx.
-
-    The normalized FOM takes values in [0, 1], with higher correspondance
-    at lower FOM value.
-
     Parameters
     ----------
     data : `FnBaseVector`
-        Input data or reconstruction.
+        Input data to compare to the ground truth.
     ground_truth : `FnBaseVector`
         Reference to compare ``data`` to.
-    mask : `FnBaseVector`, optional
-        Binary mask to define ROI in which FOM evaluation is performed.
+    mask : `array-like`, optional
+        If given, ``data * mask`` is compared to ``ground_truth * mask``.
     normalized  : bool, optional
         Boolean flag to switch between unormalized and normalized FOM.
 
     Returns
     -------
-    fom : float
-        Scalar (float) indicating absolute difference in standard deviation
-        between ``data`` and ``ground_truth``. In normalized form the FOM
-        takes values in [0, 1], with higher correspondance at lower FOM value.
+    sdd : float
+        FOM value, where a lower value means a better match.
+
+    Notes
+    -----
+    The FOM evaluates
+
+    .. math::
+        \mathrm{SDD}(f, g) =
+         \Big| \| f - \\overline{f} \|_2 - \| g - \\overline{g} \|_2 \Big|,
+
+    or, in normalized form
+
+    .. math::
+        \mathrm{SDD_N}(f, g) =
+         \\frac{\Big| \| f - \\overline{f} \|_2 -
+                      \| g - \\overline{g} \|_2 \Big|}
+               {\Big| \| f - \\overline{f} \|_2 +
+                      \| g - \\overline{g} \|_2 \Big|},
+
+    where :math:`\\overline{f}` is the mean value of :math:`f`,
+
+    .. math::
+        \\overline{f} = \\frac{\\langle f, 1\\rangle}{\|1|_1}.
+
+    The normalized variant takes values in :math:`[0, 1]`.
     """
     l1_norm = odl.solvers.L1Norm(data.space)
     l2_norm = odl.solvers.L2Norm(data.space)
 
-    if mask:
+    if mask is not None:
         data = data * mask
         ground_truth = ground_truth * mask
 
@@ -288,60 +258,63 @@ def standard_deviation_difference(data, ground_truth, mask=None,
 
 
 def range_difference(data, ground_truth, mask=None, normalized=False):
-    """Return difference in range between ``data`` and ``ground_truth``.
+    """Return dynamic range difference between ``data`` and ``ground_truth``.
 
     Evaluates difference in range between input (``data``) and reference
     data (``ground_truth``). Allows for normalization (``normalized``) and a
     masking of the two spaces (``mask``).
 
-    Notes
+    Parameters
     ----------
+    data : `FnBaseVector`
+        Input data to compare to the ground truth.
+    ground_truth : `FnBaseVector`
+        Reference to compare ``data`` to.
+    mask : `array-like`, optional
+        Binary mask or index array to define ROI in which FOM evaluation
+        is performed.
+    normalized  : bool, optional
+        If ``True``, normalize the FOM to lie in [0, 1].
+
+    Returns
+    -------
+    rd : float
+        FOM value, where a lower value means a better match.
+
+    Notes
+    -----
     The FOM evaluates
 
     .. math::
-        \\lvert \\left(\\max(f) - \\min(f) \\right) -
-                \\left(\\max(g) - \\min(g) \\right) \\rvert
+        \mathrm{RD}(f, g) = \Big|
+            \\big(\\max(f) - \\min(f) \\big) -
+            \\big(\\max(g) - \\min(g) \\big)
+            \Big|
 
     or, in normalized form
 
     .. math::
-        \\bigg \\lvert \\frac{\\left(\\max(f) - \\min(f) \\right) -
-                              \\left(\\max(g) - \\min(g)\\right)}
-                             {\\left(\\max(f) - \\min(f)\\right) +
-                              \\left(\\max(g) - \\min(g)\\right)}
-        \\bigg \\rvert
+        \mathrm{RD_N}(f, g) = \\frac{
+            \Big|
+            \\big(\\max(f) - \\min(f) \\big) -
+            \\big(\\max(g) - \\min(g) \\big)
+            \Big|}{
+            \Big|
+            \\big(\\max(f) - \\min(f) \\big) +
+            \\big(\\max(g) - \\min(g) \\big)
+            \Big|}
 
-    The normalized FOM takes values in [0, 1], with higher correspondance
-    at lower FOM value.
-
-    Parameters
-    ----------
-    data : `FnBaseVector`
-        Input data or reconstruction.
-    ground_truth : `FnBaseVector`
-        Reference to compare ``data`` to.
-    mask : `FnBaseVector`, optional
-        Binary mask to define ROI in which FOM evaluation is performed.
-    normalized  : bool, optional
-        Boolean flag to switch between unormalized and normalized
-        FOM.alse_structures.
-
-    Returns
-    -------
-    fom : float
-        Scalar (float) indicating absolute difference in range between
-        ``data`` and ``ground_truth``. In normalized form the FOM takes
-        values in [0, 1], with higher correspondance at lower FOM value.
+    The normalized variant takes values in :math:`[0, 1]`.
     """
-    if mask:
-        indices = np.where(mask is True)
-        data_range = (np.max(data.asarray()[indices]) -
-                      np.min(data.asarray()[indices]))
-        ground_truth_range = (np.max(ground_truth.asarray()[indices]) -
-                              np.min(ground_truth.asarray()[indices]))
-    else:
+    if mask is None:
         data_range = np.max(data) - np.min(data)
         ground_truth_range = np.max(ground_truth) - np.min(ground_truth)
+    else:
+        mask = np.asarray(mask)
+        data_range = (np.max(data.asarray()[mask]) -
+                      np.min(data.asarray()[mask]))
+        ground_truth_range = (np.max(ground_truth.asarray()[mask]) -
+                              np.min(ground_truth.asarray()[mask]))
 
     fom = np.abs(data_range - ground_truth_range)
 
@@ -353,201 +326,178 @@ def range_difference(data, ground_truth, mask=None, normalized=False):
 
 def blurring(data, ground_truth, mask=None, normalized=False,
              smoothness_factor=None):
-    """Return weighted L2-distance, emphasizing regions defined by ``mask``.
+    """Return weighted L2 distance, emphasizing regions defined by ``mask``.
 
-    Evaluates `mean squared error
-    <https://en.wikipedia.org/wiki/Mean_squared_error>`_ between input
-    (``data``) and reference data (``ground_truth``) using an added binary
-    mask (``mask``), such that the error is weighted with higher importance
-    given to the defined structure-of-interest. Allows for normalization
-    (``normalized``).
-
-    .. note:: If omitting the mask argument, the blurring FOM is equivalent
-              to the mean squared error FOM.
-
-    Notes
-    ----------
-    The FOM evaluates
-
-    .. math::
-        \|\\alpha (f - g) \|^2_2,
-
-    or, in normalized form
-
-    .. math::
-        \\frac{\| \\alpha (f - g) \|^2_2}{\| \\alpha f \|^2_2 +
-                                  \| \\alpha  g \|^2_2},
-
-    where :math:`\\alpha` is a weighting function with higher values near a
-    structure of interest defined by ``mask``. The weighting function is given
-    as
-
-    .. math::
-        \\alpha = e^{-\\frac{1}{k} \\beta},
-
-    where :math:`\\beta(x)` is the Euclidian distance from :math:`x` to the
-    complement of the structure of interest, and :math:`k`
-    (``smoothness_factor``) is a positive real number that controls the
-    'smoothness' of the weighting function :math:`\\alpha`.
-
-    The normalized FOM takes values in [0, 1], with higher correspondance
-    at lower FOM value.
+    .. note::
+        If the mask argument is omitted, this FOM is equivalent to the
+        mean squared error.
 
     Parameters
     ----------
     data : `FnBaseVector`
-        Input data or reconstruction.
+        Input data to compare to the ground truth.
     ground_truth : `FnBaseVector`
         Reference to compare ``data`` to.
-    mask : `FnBaseVector`, optional
+    mask : `array-like`, optional
         Binary mask to define ROI in which FOM evaluation is performed.
     normalized  : bool, optional
         Boolean flag to switch between unormalized and normalized FOM.
     smoothness_factor : float, optional
-        Positive real number. Higher values gives smoother weighting.
+        Positive real number. Higher value gives smoother weighting.
 
     Returns
     -------
-    fom : float
-        Scalar (float) indicating weighted mean squared error between
-        ``data`` and ``ground_truth``. In normalized form the FOM takes
-        values in [0, 1], with higher correspondance at lower FOM value.
+    blur : float
+        FOM value, where a lower value means a better match.
+
+    See Also
+    --------
+    false_structures
+    mean_squared_error
+
+    Notes
+    -----
+    The FOM evaluates
+
+    .. math::
+        \mathrm{BLUR}(f, g) = \|\\alpha (f - g) \|_2^2,
+
+    or, in normalized form
+
+    .. math::
+        \mathrm{BLUR_N}(f, g) =
+            \\frac{\|\\alpha(f - g)\|^2_2}
+                  {\|\\alpha f\|^2_2 + \|\\alpha g\|^2_2}.
+
+    The weighting function :math:`\\alpha` is given as
+
+    .. math::
+        \\alpha(x) = e^{-\\frac{1}{k} \\beta_m(x)},
+
+    where :math:`\\beta_m(x)` is the Euclidian distance transform of a
+    given binary mask :math:`m`, and :math:`k` positive real number that
+    controls the smoothness of the weighting function :math:`\\alpha`.
+    The weighting gives higher values to structures in the region of
+    interest defined by the mask.
+
+    The normalized variant takes values in :math:`[0, 1]`.
     """
-    import scipy.ndimage.morphology as scimorph
+    from scipy.ndimage.morphology import distance_transform_edt
 
     if smoothness_factor is None:
         smoothness_factor = np.mean(data.space.shape) / 10
 
     if mask is not None:
-        mask = scimorph.distance_transform_edt(1 - mask)
+        mask = distance_transform_edt(1 - mask)
         mask = np.exp(-mask / smoothness_factor)
 
-    fom = mean_squared_error(data,
-                             ground_truth,
-                             mask=mask,
-                             normalized=normalized)
-
-    return fom
+    return mean_squared_error(data, ground_truth, mask, normalized)
 
 
 def false_structures(data, ground_truth, mask=None, normalized=False,
                      smoothness_factor=None):
-    """Return weighted L2-distance, de-emphasizing regions defined by ``mask``.
+    """Return weighted L2 distance, de-emphasizing regions defined by ``mask``.
 
-    Evaluates `mean squared error
-    <https://en.wikipedia.org/wiki/Mean_squared_error>`_ between input
-    (``data``) and reference data (``ground_truth``) using an added binary
-    mask (``mask``), such that the error is weighted with lower importance
-    given to the defined structure-of-interest. Allows for normalization
-    (``normalized``).
-
-    .. note:: If omitting the mask argument, the false structures FOM is
-              equivalent to the mean squared error FOM.
-
-    Notes
-    ----------
-    The FOM evaluates
-
-    .. math::
-        \\bigg \| \\frac{1}{\\alpha} (f - g) \\bigg \|^2_2,
-
-    or, in normalized form
-
-    .. math::
-        \\frac{\\bigg \| \\frac{1}{\\alpha} (f - g) \\bigg \|^2_2}
-              {\\bigg \| \\frac{1}{\\alpha} f \\bigg \|^2_2 +
-               \\bigg \| \\frac{1}{\\alpha} g \\bigg \|^2_2},
-
-    where :math:`\\alpha` is a weighting function with higher values near a
-    structure of interest defined by ``mask``. The weighting function is given
-    as
-
-    .. math::
-        \\alpha = e^{-\\frac{1}{k} \\beta},
-
-    where :math:`\\beta(x)` is the Euclidian distance from :math:`x` to the
-    complement of the structure of interest, and :math:`k`
-    (``smoothness_factor``) is a positive real number that controls the
-    'smoothness' of the weighting function :math:`\\alpha`.
-
-    The normalized FOM takes values in [0, 1], with higher correspondance
-    at lower FOM value.
+    .. note::
+        If the mask argument is omitted, this FOM is equivalent to the
+        mean squared error.
 
     Parameters
     ----------
     data : `FnBaseVector`
-        Input data or reconstruction.
+        Input data to compare to the ground truth.
     ground_truth : `FnBaseVector`
-        Reference to compare 'data' to.
-    mask : `FnBaseVector`, optional
+        Reference to compare ``data`` to.
+    mask : `array-like`, optional
         Binary mask to define ROI in which FOM evaluation is performed.
     normalized  : bool, optional
         Boolean flag to switch between unormalized and normalized FOM.
     smoothness_factor : float, optional
-        Positive real number. Higher values gives smoother weighting.
+        Positive real number. Higher value gives smoother weighting.
 
     Returns
     -------
-    fom : float
-        Scalar (float) indicating weighted mean squared error between
-        ``data`` and ``ground_truth``. In normalized form the FOM takes
-        values in [0, 1], with higher correspondance at lower FOM value.
+    fs : float
+        FOM value, where a lower value means a better match.
+
+    Notes
+    -----
+    The FOM evaluates
+
+    .. math::
+        \mathrm{FS} = \\big \| \\alpha^{-1} (f - g) \\big \|^2_2,
+
+    or, in normalized form
+
+    .. math::
+        \mathrm{FS_N} = \\frac{\\big \| \\alpha^{-1}(f - g)\\big \|^2_2}
+                              {\\big \| \\alpha^{-1} f \\big \|^2_2 +
+                               \\big \| \\alpha^{-1} g \\big \|^2_2}.
+
+    The weighting function :math:`\\alpha` is given as
+
+    .. math::
+        \\alpha(x) = e^{-\\frac{1}{k} \\beta_m(x)},
+
+    where :math:`\\beta_m(x)` is the Euclidian distance transform of a
+    given binary mask :math:`m`, and :math:`k` positive real number that
+    controls the smoothness of the weighting function :math:`\\alpha`.
+    The weighting gives higher values to structures outside the region
+    of interest defined by the mask.
     """
-    import scipy.ndimage.morphology as scimorph
+    from scipy.ndimage.morphology import distance_transform_edt
 
     if smoothness_factor is None:
         smoothness_factor = np.mean(data.space.shape) / 10
 
     if mask is not None:
-        mask = scimorph.distance_transform_edt(1 - mask)
+        mask = distance_transform_edt(1 - mask)
         mask = np.exp(mask / smoothness_factor)
 
-    fom = mean_squared_error(data,
-                             ground_truth,
-                             mask=mask,
-                             normalized=normalized)
-
-    return fom
+    return mean_squared_error(data, ground_truth, mask, normalized)
 
 
 def ssim(data, ground_truth,
-         size=11, sigma=1.5, K1=0.01, K2=0.03, dynamic_range=None,
-         normalized=False):
+         size=11, sigma=1.5, K1=0.01, K2=0.03, dynamic_range=None):
     """Structural SIMilarity between ``data`` and ``ground_truth``.
 
-    Evaluates `structural similarity
-    <https://en.wikipedia.org/wiki/Structural_similarity>`_ between
-    input (``data``) and reference (``ground_truth``).
+    The SSIM takes value -1 for maximum dissimilarity and +1 for maximum
+    similarity.
+
+    See also `this Wikipedia article
+    <https://en.wikipedia.org/wiki/Structural_similarity>`_.
 
     Parameters
     ----------
     data : `FnBaseVector`
-        Input data or reconstruction.
+        Input data to compare to the ground truth.
     ground_truth : `FnBaseVector`
         Reference to compare ``data`` to.
-    normalized : bool
-        TEXT
+    size : odd int
+        Size in elements per axis of the Gaussian window that is used
+        for all smoothing operations.
+    sigma : positive float
+        Width of the Gaussian function used for smoothing.
+    K1, K2 : positive float
+        TODO
+    dynamic_range : nonnegative float
+        TODO
 
     Returns
     -------
-    fom : float
-        Scalar (float) indicating structural similarity between ``data`` and
-        ``ground_truth``. Takes values in [-1, 1], with -1 indicating full
-        dis-similarity and 1 full similarity. Uncorrelated images will have
-        similarity index 0. In normalized form the FOM values are rescaled to
-        [0, 1], with higher correspondance at lower FOM value.
+    ssim : float
+        FOM value, where a higher value means a better match.
     """
     from scipy.signal import fftconvolve
 
     data = np.asarray(data)
     ground_truth = np.asarray(ground_truth)
-    ndim = data.ndim
 
-    # Compute gaussian
-    coords = np.meshgrid(*(ndim * (np.linspace(-(size - 1) / 2,
-                                               (size - 1) / 2, size),)))
+    # Compute gaussian on a `size`-sized grid in each axis
+    coords = np.linspace(-(size - 1) / 2, (size - 1) / 2, size)
+    grid = np.meshgrid(*([coords] * data.ndim), sparse=True)
 
-    window = np.exp(-(sum(xi**2 for xi in coords) / (2.0 * sigma**2)))
+    window = np.exp(-(sum(xi ** 2 for xi in grid) / (2.0 * sigma ** 2)))
     window /= np.sum(window)
 
     def smoothen(img):
@@ -556,8 +506,8 @@ def ssim(data, ground_truth,
     if dynamic_range is None:
         dynamic_range = np.max(ground_truth) - np.min(ground_truth)
 
-    C1 = (K1 * dynamic_range)**2
-    C2 = (K2 * dynamic_range)**2
+    C1 = (K1 * dynamic_range) ** 2
+    C2 = (K2 * dynamic_range) ** 2
     mu1 = smoothen(data)
     mu2 = smoothen(ground_truth)
 
@@ -573,30 +523,29 @@ def ssim(data, ground_truth,
     denom = (mu1_sq + mu2_sq + C1) * (sigma1_sq + sigma2_sq + C2)
     pointwise_ssim = nom / denom
 
-    ssim = np.mean(pointwise_ssim)
-
-    if normalized:
-        return 0.5 - ssim / 2
-    else:
-        return ssim
+    return np.mean(pointwise_ssim)
 
 
-def psnr(data, ground_truth, normalize=False):
-    """Return the Peak Signal-to-Noise Ratio.
+def psnr(data, ground_truth, normalized=False):
+    """Return the Peak Signal-to-Noise Ratio of ``data`` wrt ``ground_truth``.
+
+    See also `this Wikipedia article
+    <https://en.wikipedia.org/wiki/Peak_signal-to-noise_ratio>`_.
 
     Parameters
     ----------
     data : `FnBaseVector`
-        Input data or reconstruction.
+        Input data to compare to the ground truth.
     ground_truth : `FnBaseVector`
         Reference to compare ``data`` to.
-    normalize : bool
-        If true, normalizes ``data`` and ``ground_truth`` to have the same mean
-        and variance before comparison.
+    normalized : bool
+        If true, normalize ``data`` and ``ground_truth`` to have the
+        same mean and variance before comparison.
 
     Returns
     -------
     psnr : float
+        FOM value, where a higher value means a better match.
 
     Examples
     --------
@@ -614,25 +563,26 @@ def psnr(data, ground_truth, normalize=False):
     >>> psnr(ground_truth, ground_truth)
     inf
 
-    With ``normalize=True``, internal scaling and constant offsets are ignored:
+    With ``normalized=True``, scaling differences and constant offsets
+    are ignored:
 
-    >>> (psnr(data, ground_truth, normalize=True) ==
-    ...  psnr(data, 3 + 4 * ground_truth, normalize=True))
+    >>> (psnr(data, ground_truth, normalized=True) ==
+    ...  psnr(data, 3 + 4 * ground_truth, normalized=True))
     True
     """
-    if normalize:
+    if normalized:
         data = odl.util.zscore(data)
         ground_truth = odl.util.zscore(ground_truth)
 
-    mse_result = mean_squared_error(data, ground_truth)
+    mse = mean_squared_error(data, ground_truth)
     max_true = np.max(np.abs(ground_truth))
 
-    if mse_result == 0:
+    if mse == 0:
         return np.inf
     elif max_true == 0:
         return -np.inf
     else:
-        return 20 * np.log10(max_true) - 10 * np.log10(mse_result)
+        return 20 * np.log10(max_true) - 10 * np.log10(mse)
 
 
 def haarpsi(data, ground_truth, a=4.2, c=None):
@@ -665,8 +615,9 @@ def haarpsi(data, ground_truth, a=4.2, c=None):
 
     Returns
     -------
-    score : float between 0 and 1
-        The similarity score. See Notes for details.
+    haarpsi : float between 0 and 1
+        The similarity score, where a higher score means a better match.
+        See Notes for details.
 
     See Also
     --------
