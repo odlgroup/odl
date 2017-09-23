@@ -9,8 +9,7 @@ from odl.util.testutils import simple_fixture
 
 fft_impl = simple_fixture('fft_impl',
                           [odl.util.testutils.never_skip('numpy'),
-                           odl.util.testutils.skip_if_no_pyfftw('pyfftw')],
-                          fmt=" {name} = '{value.args[1]}' ")
+                           odl.util.testutils.skip_if_no_pyfftw('pyfftw')])
 space = simple_fixture('space',
                        [odl.rn(3),
                         odl.uniform_discr(0, 1, 10)])
