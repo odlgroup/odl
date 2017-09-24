@@ -10,6 +10,7 @@ from __future__ import division
 import numpy as np
 import pytest
 
+import odl
 from odl.util import (
     apply_on_boundary, fast_1d_tensor_mult, resize_array, is_real_dtype)
 from odl.util.numerics import _SUPPORTED_RESIZE_PAD_MODES
@@ -477,5 +478,6 @@ def test_resize_array_raise():
     with pytest.raises(ValueError):
         resize_array(small_arr, (3, 4), offset=(0, 1), pad_mode='periodic')
 
+
 if __name__ == '__main__':
-    pytest.main([str(__file__.replace('\\', '/')), '-v'])
+    odl.util.test_file(__file__)

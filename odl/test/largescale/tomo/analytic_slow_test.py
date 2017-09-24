@@ -216,4 +216,4 @@ def test_fbp_reconstruction_filters(filter_type, frequency_scaling, weighting):
 
 
 if __name__ == '__main__':
-    pytest.main([str(__file__.replace('\\', '/')), '-v', '--largescale'])
+    odl.util.test_file(__file__, ['--largescale'])

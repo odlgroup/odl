@@ -7,7 +7,7 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import division
-import pytest
+import odl
 import numpy as np
 
 from odl.util.utility import (
@@ -50,4 +50,4 @@ def test_is_complex_floating_dtype():
 
 
 if __name__ == '__main__':
-    pytest.main([str(__file__.replace('\\', '/')), '-v'])
+    odl.util.test_file(__file__)

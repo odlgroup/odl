@@ -844,5 +844,6 @@ def test_fourier_trafo_completely():
     assert np.allclose(ft_f_s, fhat(recip_s.coord_vectors[0]))
     assert np.allclose(ft_f_n, fhat(recip_n.coord_vectors[0]))
 
+
 if __name__ == '__main__':
-    pytest.main([str(__file__.replace('\\', '/')), '-v'])
+    odl.util.test_file(__file__)

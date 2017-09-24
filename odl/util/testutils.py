@@ -26,7 +26,7 @@ __all__ = ('almost_equal', 'all_equal', 'all_almost_equal', 'never_skip',
            'skip_if_no_pyfftw', 'skip_if_no_largescale',
            'noise_array', 'noise_element', 'noise_elements',
            'Timer', 'timeit', 'ProgressBar', 'ProgressRange',
-           'test', 'run_doctests')
+           'test', 'run_doctests', 'test_file')
 
 
 def _places(a, b, default=None):
@@ -698,6 +698,23 @@ def run_doctests(skip_if=False, **kwargs):
                               RuntimeWarning)
 
     testmod(optionflags=optionflags, extraglobs=extraglobs, **kwargs)
+
+
+def test_file(file, args=None):
+    """Run tests in file with proper default arguments."""
+    try:
+        import pytest
+    except ImportError:
+        raise ImportError('ODL tests cannot be run without `pytest` installed.'
+                          '\nRun `$ pip install [--user] odl[testing]` in '
+                          'order to install `pytest`.')
+
+    if args is None:
+        args = []
+
+    args.extend([str(file.replace('\\', '/')), '-v', '--capture=sys'])
+
+    pytest.main(args)
 
 
 if __name__ == '__main__':

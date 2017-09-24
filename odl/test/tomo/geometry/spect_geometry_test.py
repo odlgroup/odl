@@ -9,7 +9,6 @@
 """Test ODL geometry objects for SPECT."""
 
 from __future__ import division
-import pytest
 import numpy as np
 
 import odl
@@ -35,4 +34,4 @@ def test_spect():
 
 
 if __name__ == '__main__':
-    pytest.main([str(__file__.replace('\\', '/')), '-vs'])
+    odl.util.test_file(__file__)

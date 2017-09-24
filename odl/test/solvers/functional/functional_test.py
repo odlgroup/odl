@@ -563,4 +563,4 @@ def test_functional_quadratic_perturb(space, linear_term, quadratic_coeff):
 
 
 if __name__ == '__main__':
-    pytest.main([str(__file__.replace('\\', '/')), '-v'])
+    odl.util.test_file(__file__)
