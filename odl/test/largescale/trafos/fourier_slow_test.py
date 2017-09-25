@@ -30,17 +30,17 @@ pytestmark = odl.util.skip_if_no_largescale
 # bug in pytest (ignores pytestmark) forces us to do this this
 impl_params = [never_skip('numpy'), skip_if_no_pyfftw('pyfftw')]
 largescale = " or not pytest.config.getoption('--largescale')"
-impl_params = [pytest.mark.skipif(p.args[0] + largescale, p.args[1])
-               for p in impl_params]
-impl = simple_fixture('impl', impl_params)
+impl = simple_fixture('impl',
+                      [pytest.mark.skipif(p.args[0] + largescale, p.args[1])
+                       for p in impl_params])
 
-dom_params = [odl.uniform_discr(-2, 2, 10 ** 5),
-              odl.uniform_discr([-2, -2, -2], [2, 2, 2], [200, 200, 200]),
-              odl.uniform_discr(-2, 2, 10 ** 5, dtype='complex'),
-              odl.uniform_discr([-2, -2, -2], [2, 2, 2], [200, 200, 200],
-                                dtype='complex')]
-
-domain = simple_fixture('domain', dom_params)
+domain = simple_fixture(
+    name='domain',
+    params=[odl.uniform_discr(-2, 2, 10 ** 5),
+            odl.uniform_discr([-2, -2, -2], [2, 2, 2], [200, 200, 200]),
+            odl.uniform_discr(-2, 2, 10 ** 5, dtype='complex'),
+            odl.uniform_discr([-2, -2, -2], [2, 2, 2], [200, 200, 200],
+                              dtype='complex')])
 
 
 # --- FourierTransform tests --- #

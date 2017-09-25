@@ -34,7 +34,7 @@ func_params = ['l1', 'l2', 'l2^2', 'kl', 'kl_cross_ent', 'const',
                'nuclearnorm-1-1', 'nuclearnorm-1-2', 'nuclearnorm-1-inf',
                'quadratic', 'linear']
 
-func_ids = [' f = {} '.format(p.ljust(10)) for p in func_params]
+func_ids = [" functional='{}' ".format(p) for p in func_params]
 
 
 @pytest.fixture(scope="module", ids=func_ids, params=func_params)

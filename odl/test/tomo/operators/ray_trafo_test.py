@@ -23,13 +23,13 @@ from odl.util.testutils import almost_equal, all_almost_equal, simple_fixture
 # --- pytest fixtures --- #
 
 
-impl_params = [skip_if_no_astra('astra_cpu'),
-               skip_if_no_astra_cuda('astra_cuda'),
-               skip_if_no_skimage('skimage')]
-impl = simple_fixture('impl', impl_params)
+impl = simple_fixture(
+    name='impl', params=[skip_if_no_astra('astra_cpu'),
+                         skip_if_no_astra_cuda('astra_cuda'),
+                         skip_if_no_skimage('skimage')])
 
 geometry_params = ['par2d', 'par3d', 'cone2d', 'cone3d', 'helical']
-geometry_ids = [' geometry = {} '.format(p) for p in geometry_params]
+geometry_ids = [" geometry='{}' ".format(p) for p in geometry_params]
 
 
 @pytest.fixture(scope='module', ids=geometry_ids, params=geometry_params)
@@ -90,7 +90,7 @@ projectors = [skip_if_no_astra('par2d astra_cpu uniform'),
               skip_if_no_skimage('par2d skimage half_uniform')]
 
 
-projector_ids = [" geom = {}, impl = '{}', angles = {} "
+projector_ids = [" geom='{}' - impl='{}' - angles='{}' "
                  ''.format(*p.args[1].split()) for p in projectors]
 
 

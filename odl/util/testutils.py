@@ -261,14 +261,15 @@ def simple_fixture(name, params, fmt=None):
         hence the format string must use ``{name}`` and ``{value}``.
         Default format strings are:
 
-            - ``" {name} = '{value}' "`` for string parameters,
-            - ``" {name} = {value} "`` for other types.
+            - ``" {name}='{value}' "`` for string parameters,
+            - ``" {name}={value} "`` for other types.
     """
     import _pytest
 
     if fmt is None:
-        fmt_str = " {name} = '{value}' "
-        fmt_default = " {name} = {value} "
+        # Use some intelligence to make good format strings
+        fmt_str = " {name}='{value}' "
+        fmt_default = " {name}={value} "
 
         ids = []
         for p in params:

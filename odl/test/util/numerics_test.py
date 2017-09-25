@@ -23,9 +23,9 @@ from odl.util.testutils import all_equal, almost_equal, simple_fixture
 paddings = list(_SUPPORTED_RESIZE_PAD_MODES)
 paddings.remove('constant')
 paddings.extend([('constant', 0), ('constant', 1)])
-padding_ids = [" pad_mode = '{}' {} ".format(*p)
+padding_ids = [" pad_mode='{}'-{} ".format(*p)
                if isinstance(p, tuple)
-               else " pad_mode = '{}' ".format(p)
+               else " pad_mode='{}' ".format(p)
                for p in paddings]
 
 

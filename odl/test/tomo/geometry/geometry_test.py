@@ -21,15 +21,17 @@ from odl.util.testutils import all_almost_equal, all_equal, simple_fixture
 # --- pytest fixtures --- #
 
 
-det_pos_init_2d_params = list(set(permutations((1, 0))) |
-                              set(permutations((-1, 0))) |
-                              set(permutations((1, -1))))
-det_pos_init_2d = simple_fixture('det_pos_init', det_pos_init_2d_params)
-
-det_pos_init_3d_params = list(set(permutations((1, 0, 0))) |
-                              set(permutations((-1, 0, 0))) |
-                              set(permutations((1, -1, 0))) |
-                              set(product((-1, 1), repeat=3)))
+det_pos_init_2d = simple_fixture(
+    name='det_pos_init',
+    params=list(set(permutations([1, 0])) |
+                set(permutations([-1, 0])) |
+                set(permutations([1, -1]))
+                )
+    )
+det_pos_init_3d_params = list(set(permutations([1, 0, 0])) |
+                              set(permutations([-1, 0, 0])) |
+                              set(permutations([1, -1, 0])) |
+                              set(product([-1, 1], repeat=3)))
 det_pos_init_3d = simple_fixture('det_pos_init', det_pos_init_3d_params)
 axis = simple_fixture('axis', det_pos_init_3d_params)
 shift = simple_fixture('shift', [0, 1])

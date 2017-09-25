@@ -30,7 +30,7 @@ projectors = [skip_if_no_astra_cuda('par2d'),
               skip_if_no_astra_cuda('helical')]
 
 
-space_and_geometry_ids = ['geom = {}'.format(p.args[1]) for p in projectors]
+space_and_geometry_ids = [" geom='{}' ".format(p.args[1]) for p in projectors]
 
 
 @pytest.fixture(scope="module", params=projectors, ids=space_and_geometry_ids)
