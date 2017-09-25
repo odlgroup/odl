@@ -1030,12 +1030,13 @@ def test_ufunc_corner_cases(tspace_impl):
     assert not res.space.is_weighted
 
 
-def test_real_imag(fn_impl, order):
+def test_real_imag(tspace_impl, order):
     """Check if real and imaginary parts can be read and written to."""
+    tspace_cls = odl.space.entry_points.tensor_space_impl(tspace_impl)
     for dtype in filter(odl.util.is_complex_floating_dtype,
-                        odl.fn_impl(fn_impl).available_dtypes()):
+                        tspace_cls.available_dtypes()):
         cdiscr = odl.uniform_discr([0, 0], [1, 1], [2, 2], dtype=dtype,
-                                   impl=fn_impl, order=order)
+                                   impl=tspace_impl, order=order)
         rdiscr = cdiscr.real_space
 
         # Get real and imag
@@ -1049,8 +1050,9 @@ def test_real_imag(fn_impl, order):
                                   [-3, -4]])
 
         # Set with different data types and shapes
-        for assigntype in (lambda x: x, list, tuple, rdiscr.element):
-            # Without [:] assignment
+        for assigntype in (lambda x: x, tuple, rdiscr.element):
+
+            # Using setters
             x = cdiscr.zero()
             x.real = assigntype([[2, 3],
                                  [4, 5]])
@@ -1063,18 +1065,20 @@ def test_real_imag(fn_impl, order):
             assert all_equal(x.imag, [[4, 5],
                                       [6, 7]])
 
-            # With [:] assignment
-            x = cdiscr.zero()
-            x.real[:] = assigntype([[2, 3],
-                                    [4, 5]])
-            assert all_equal(x.real, [[2, 3],
-                                      [4, 5]])
+            # With [:] assignment (only for 'A' ordering, otherwise the
+            # `real` part is forced to be contiguous, requiring a copy)
+            if order == 'A':
+                x = cdiscr.zero()
+                x.real[:] = assigntype([[2, 3],
+                                        [4, 5]])
+                assert all_equal(x.real, [[2, 3],
+                                          [4, 5]])
 
-            x = cdiscr.zero()
-            x.imag[:] = assigntype([[2, 3],
-                                    [4, 5]])
-            assert all_equal(x.imag, [[2, 3],
-                                      [4, 5]])
+                x = cdiscr.zero()
+                x.imag[:] = assigntype([[2, 3],
+                                        [4, 5]])
+                assert all_equal(x.imag, [[2, 3],
+                                          [4, 5]])
 
         # Setting with scalars
         x = cdiscr.zero()
