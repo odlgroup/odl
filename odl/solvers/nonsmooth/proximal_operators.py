@@ -1280,8 +1280,8 @@ def proximal_convex_conj_kl(space, lam=1, g=None):
 def proximal_convex_conj_kl_cross_entropy(space, lam=1, g=None):
     """Proximal factory of the convex conjugate of cross entropy KL divergence.
 
-    Function returning the proximal facotry of the convex conjugate of the
-    functional F, where F is the corss entorpy Kullback-Leibler (KL)
+    Function returning the proximal factory of the convex conjugate of the
+    functional F, where F is the cross entropy Kullback-Leibler (KL)
     divergence given by::
 
         F(x) = sum_i (x_i ln(pos(x_i)) - x_i ln(g_i) + g_i - x_i) + ind_P(x)

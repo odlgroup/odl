@@ -76,7 +76,7 @@ def landweber(op, x, rhs, niter, omega=1, projection=None, callback=None):
         x_{k+1} = x_k -
                   \omega \ \partial \mathcal{A}(x)^* (\mathcal{A}(x_k) - y),
 
-    where :math:`\partial \mathcal{A}(x)` is the Frechet derivativ
+    where :math:`\partial \mathcal{A}(x)` is the Frechet derivative
     of :math:`\mathcal{A}` at :math:`x` and :math:`\omega` is a
     relaxation parameter. For linear problems, a choice
     :math:`0 < \omega < 2/\\lVert \mathcal{A}^2\\rVert` guarantees
@@ -471,7 +471,7 @@ def kaczmarz(ops, x, rhs, niter, omega=1, projection=None, random=False,
     """
     domain = ops[0].domain
     if any(domain != opi.domain for opi in ops):
-        raise ValueError('`opi[i].domain` are not all equal')
+        raise ValueError('domains of `ops` are not all equal')
 
     if x not in domain:
         raise TypeError('`x` {!r} is not in the domain of `ops` {!r}'
