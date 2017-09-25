@@ -9,8 +9,8 @@
 from __future__ import division
 import numpy as np
 from past.builtins import basestring
-import pytest
 
+import odl
 from odl import vector
 from odl.space.npy_tensors import NumpyTensor
 from odl.util.testutils import all_equal
