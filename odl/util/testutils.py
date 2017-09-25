@@ -18,7 +18,7 @@ import sys
 import os
 import warnings
 from time import time
-from odl.util.utility import run_from_ipython
+from odl.util.utility import run_from_ipython, is_string
 
 
 __all__ = ('almost_equal', 'all_equal', 'all_almost_equal', 'never_skip',
@@ -276,24 +276,17 @@ def simple_fixture(name, params, fmt=None):
             if (isinstance(p, _pytest.mark.MarkDecorator) and
                     p.name == 'skipif'):
                 # Unwrap the wrapped object in the decorator
-                try:
-                    p.args[1] + ''
-                except TypeError:
-                    ids.append(fmt_default.format(name=name,
-                                                  value=p.args[1]))
+                if is_string(p.args[1]):
+                    ids.append(fmt_str.format(name=name, value=p.args[1]))
                 else:
-                    ids.append(fmt_str.format(name=name,
-                                              value=p.args[1]))
+                    ids.append(fmt_default.format(name=name, value=p.args[1]))
             else:
-                try:
-                    p + ''
-                except TypeError:
-                    ids.append(fmt_default.format(name=name,
-                                                  value=p))
+                if is_string(p):
+                    ids.append(fmt_str.format(name=name, value=p))
                 else:
-                    ids.append(fmt_str.format(name=name,
-                                              value=p))
+                    ids.append(fmt_default.format(name=name, value=p))
     else:
+        # Use provided `fmt` for everything
         ids = [fmt.format(name=name, value=p) for p in params]
 
     wrapper = pytest.fixture(scope='module', ids=ids, params=params)

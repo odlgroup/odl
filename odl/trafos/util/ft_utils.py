@@ -19,10 +19,10 @@ from odl.discr import (
     uniform_discr_frompartition)
 from odl.set import RealNumbers
 from odl.util import (
-    fast_1d_tensor_mult,
+    fast_1d_tensor_mult, conj_exponent,
     is_real_dtype, is_scalar_dtype, is_real_floating_dtype,
     is_complex_floating_dtype, complex_dtype, dtype_repr,
-    conj_exponent,
+    is_string,
     normalized_scalar_param_list, normalized_axes_tuple)
 
 
@@ -496,12 +496,7 @@ def dft_postprocess_data(arr, real_grid, recip_grid, shift, axes,
         raise ValueError("kernel `op` '{}' not understood".format(op_in))
 
     # Make a list from interp if that's not the case already
-    try:
-        # Duck-typed string check
-        interp + ''
-    except TypeError:
-        pass
-    else:
+    if is_string(interp):
         interp = [str(interp).lower()] * arr.ndim
 
     onedim_arrs = []

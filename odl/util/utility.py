@@ -20,7 +20,9 @@ __all__ = ('array1d_repr', 'array1d_str', 'arraynd_repr', 'arraynd_str',
            'dtype_repr', 'dtype_str', 'signature_string', 'indent_rows',
            'is_scalar_dtype', 'is_int_dtype', 'is_floating_dtype',
            'is_real_dtype', 'is_real_floating_dtype',
-           'is_complex_floating_dtype', 'real_dtype', 'complex_dtype',
+           'is_complex_floating_dtype',
+           'is_string',
+           'real_dtype', 'complex_dtype',
            'conj_exponent', 'as_flat_array', 'writable_array',
            'run_from_ipython', 'NumpyRandomSeed', 'cache_arguments', 'unique')
 
@@ -273,6 +275,16 @@ def is_real_floating_dtype(dtype):
 def is_complex_floating_dtype(dtype):
     """Return ``True`` if ``dtype`` is a complex floating point type."""
     return np.issubsctype(dtype, np.complexfloating)
+
+
+def is_string(obj):
+    """Return ``True`` if ``obj`` behaves like a string, ``False`` else."""
+    try:
+        obj + ''
+    except TypeError:
+        return False
+    else:
+        return True
 
 
 def real_dtype(dtype, default=None):
@@ -643,32 +655,26 @@ def signature_string(posargs, optargs, sep=', ', mod=''):
     "'hello', 2.345, extent=1.44, spacing=0.015"
     """
     # Define the separators for the two possible cases
-    try:
-        sep + ''
-    except TypeError:
-        pos_sep, opt_sep, part_sep = sep
-    else:
+    if is_string(sep):
         pos_sep = opt_sep = part_sep = sep
+    else:
+        pos_sep, opt_sep, part_sep = sep
 
     # Convert modifiers to 2-sequence of sequence of strings
-    try:
-        mod + ''
-    except TypeError:
-        pos_mod, opt_mod = mod
-    else:
+    if is_string(mod):
         pos_mod = opt_mod = mod
+    else:
+        pos_mod, opt_mod = mod
 
     mods = []
     for m, args in zip((pos_mod, opt_mod), (posargs, optargs)):
-        try:
-            m + ''
-        except TypeError:
+        if is_string(m):
+            mods.append([m] * len(args))
+        else:
             if len(m) != len(args):
                 raise ValueError('sequence length mismatch: '
                                  'len({}) != len({})'.format(m, args))
             mods.append(m)
-        else:
-            mods.append([m] * len(args))
 
     pos_mod, opt_mod = mods
 
@@ -678,17 +684,15 @@ def signature_string(posargs, optargs, sep=', ', mod=''):
     # Stringify values, treating strings specially
     posargs_conv = []
     for arg, modifier in zip(posargs, pos_mod):
-        try:
-            arg + ''
-        except TypeError:
-            # All non-string types are passed a format conversion
-            fmt = '{{{}}}'.format(modifier)
-        else:
+        if is_string(arg):
             # Preserve single quotes for strings by default
             if modifier:
                 fmt = '{{{}}}'.format(modifier)
             else:
                 fmt = "'{}'"
+        else:
+            # All non-string types are passed a format conversion
+            fmt = '{{{}}}'.format(modifier)
 
         posargs_conv.append(fmt.format(arg))
 
@@ -703,15 +707,13 @@ def signature_string(posargs, optargs, sep=', ', mod=''):
             continue
 
         # See above on str and repr
-        try:
-            value + ''
-        except TypeError:
-            fmt = '{{{}}}'.format(modifier)
-        else:
+        if is_string(value):
             if modifier:
                 fmt = '{{{}}}'.format(modifier)
             else:
                 fmt = "'{}'"
+        else:
+            fmt = '{{{}}}'.format(modifier)
 
         value_str = fmt.format(value)
 
@@ -805,12 +807,7 @@ def pkg_supports(feature, pkg_version, pkg_feat_dict):
     if supp_versions is None:
         return False
 
-    # Make sequence from single string
-    try:
-        supp_versions + ''
-    except TypeError:
-        pass
-    else:
+    if is_string(supp_versions):
         supp_versions = [supp_versions]
 
     # Make valid package requirements
