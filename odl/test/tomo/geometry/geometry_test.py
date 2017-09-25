@@ -27,7 +27,7 @@ det_pos_init_2d = simple_fixture(
                 set(permutations([-1, 0])) |
                 set(permutations([1, -1]))
                 )
-    )
+)
 det_pos_init_3d_params = list(set(permutations([1, 0, 0])) |
                               set(permutations([-1, 0, 0])) |
                               set(permutations([1, -1, 0])) |
