@@ -29,3 +29,5 @@ __all__ += forward_backward.__all__
 
 from .proximal_gradient_solvers import *
 __all__ += proximal_gradient_solvers.__all__
+
+from .adupdates import *
