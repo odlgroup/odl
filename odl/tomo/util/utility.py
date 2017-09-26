@@ -13,50 +13,60 @@ import numpy as np
 
 __all__ = ('euler_matrix', 'axis_rotation', 'axis_rotation_matrix',
            'rotation_matrix_from_to', 'transform_system',
-           'perpendicular_vector')
+           'perpendicular_vector', 'is_inside_bounds')
 
 
-def euler_matrix(*angles):
+def euler_matrix(phi, theta=None, psi=None):
     """Rotation matrix in 2 and 3 dimensions.
 
-    Compute the Euler rotation matrix from angles given in radians.
     Its rows represent the canonical unit vectors as seen from the
     rotated system while the columns are the rotated unit vectors as
     seen from the canonical system.
 
     Parameters
     ----------
-    angle1,...,angleN : float
-        One angle results in a (2x2) matrix representing a
-        counter-clockwise rotation. Two or three angles result in a
-        (3x3) matrix and are interpreted as Euler angles of a 3d
-        rotation according to the 'ZXZ' rotation order, see the
+    phi : float or `array-like`
+        Either 2D counter-clockwise rotation angle (in radians) or first
+        Euler angle.
+    theta, psi : float or `array-like`, optional
+        Second and third Euler angles in radians. If both are ``None``, a
+        2D rotation matrix is computed. Otherwise a 3D rotation is computed,
+        where the default ``None`` is equivalent to ``0.0``.
+        The rotation is performed in "ZXZ" rotation order, see the
         Wikipedia article `Euler angles`_.
 
     Returns
     -------
-    mat : `numpy.ndarray`, shape ``(2, 2)`` or ``(3, 3)``
-        The rotation matrix
+    mat : `numpy.ndarray`
+        Rotation matrix corresponding to the given angles. The
+        returned array has shape ``(ndim, ndim)`` if all angles represent
+        single parameters, with ``ndim == 2`` for ``phi`` only and
+        ``ndim == 3`` for 2 or 3 Euler angles.
+        If any of the angle parameters is an array, the shape of the
+        returned array is ``broadcast(phi, theta, psi).shape + (ndim, ndim)``.
 
+    References
+    ----------
     .. _Euler angles:
         https://en.wikipedia.org/wiki/Euler_angles#Rotation_matrix
     """
-    if len(angles) == 1:
-        phi = float(angles[0])
-        theta = psi = 0.
+    if theta is None and psi is None:
+        squeeze_out = (np.shape(phi) == ())
         ndim = 2
-    elif len(angles) == 2:
-        phi = float(angles[0])
-        theta = float(angles[1])
-        psi = 0.
-        ndim = 3
-    elif len(angles) == 3:
-        phi = float(angles[0])
-        theta = float(angles[1])
-        psi = float(angles[2])
-        ndim = 3
+        phi = np.array(phi, dtype=float, copy=False, ndmin=1)
+        theta = psi = 0.0
     else:
-        raise ValueError('number of angles must be between 1 and 3')
+        # `None` broadcasts like a scalar
+        squeeze_out = (np.broadcast(phi, theta, psi).shape == ())
+        ndim = 3
+        phi = np.array(phi, dtype=float, copy=False, ndmin=1)
+        if theta is None:
+            theta = 0.0
+        if psi is None:
+            psi = 0.0
+        theta = np.array(theta, dtype=float, copy=False, ndmin=1)
+        psi = np.array(psi, dtype=float, copy=False, ndmin=1)
+        ndim = 3
 
     cph = np.cos(phi)
     sph = np.sin(phi)
@@ -76,11 +86,17 @@ def euler_matrix(*angles):
             [sph * cps + cph * cth * sps,
              -sph * sps + cph * cth * cps,
              -cph * sth],
-            [sth * sps,
-             sth * cps,
-             cth]])
+            [sth * sps + 0 * cph,
+             sth * cps + 0 * cph,
+             cth + 0 * (cph + cps)]])  # Make sure all components broadcast
 
-    return mat
+    if squeeze_out:
+        return mat.squeeze()
+    else:
+        # Move the `(ndim, ndim)` axes to the end
+        extra_dims = np.broadcast(phi, theta, psi).ndim
+        newaxes = list(range(2, 2 + extra_dims)) + [0, 1]
+        return np.transpose(mat, newaxes)
 
 
 def axis_rotation(axis, angle, vectors, axis_shift=(0, 0, 0)):
@@ -186,8 +202,8 @@ def axis_rotation_matrix(axis, angle):
     ----------
     axis : `array-like`, shape ``(3,)``
         Rotation axis, assumed to be a unit vector.
-    angle : float
-        Angle of the counter-clockwise rotation.
+    angle : float or `array-like`
+        Angle(s) of counter-clockwise rotation.
 
     Returns
     -------
@@ -199,12 +215,13 @@ def axis_rotation_matrix(axis, angle):
     .. _Rodriguez' rotation formula:
         https://en.wikipedia.org/wiki/Rodrigues'_rotation_formula
     """
+    scalar_out = (np.shape(angle) == ())
     axis = np.asarray(axis)
     if axis.shape != (3,):
         raise ValueError('`axis` shape must be (3,), got {}'
                          ''.format(axis.shape))
 
-    angle = float(angle)
+    angle = np.array(angle, dtype=float, copy=False, ndmin=1)
 
     cross_mat = np.array([[0, -axis[2], axis[1]],
                           [axis[2], 0, -axis[0]],
@@ -214,7 +231,23 @@ def axis_rotation_matrix(axis, angle):
     cos_ang = np.cos(angle)
     sin_ang = np.sin(angle)
 
-    return cos_ang * id_mat + (1. - cos_ang) * dy_mat + sin_ang * cross_mat
+    # Add extra dimensions for broadcasting
+    extra_dims = cos_ang.ndim
+    mat_slc = (None,) * extra_dims + (slice(None), slice(None))
+    ang_slc = (slice(None),) * extra_dims + (None, None)
+    # Matrices will have shape (1, ..., 1, ndim, ndim)
+    cross_mat = cross_mat[mat_slc]
+    dy_mat = dy_mat[mat_slc]
+    id_mat = id_mat[mat_slc]
+    # Angle arrays will have shape (..., 1, 1)
+    cos_ang = cos_ang[ang_slc]
+    sin_ang = sin_ang[ang_slc]
+
+    axis_mat = cos_ang * id_mat + (1. - cos_ang) * dy_mat + sin_ang * cross_mat
+    if scalar_out:
+        return axis_mat.squeeze()
+    else:
+        return axis_mat
 
 
 def rotation_matrix_from_to(from_vec, to_vec):
@@ -523,46 +556,124 @@ def perpendicular_vector(vec):
     Parameters
     ----------
     vec : `array-like`
-        Vector of arbitrary length.
+        Vector(s) of arbitrary length. The axis along the vector components
+        must come last.
 
     Returns
     -------
     perp_vec : `numpy.ndarray`
-        Array of same size such that ``<vec, perp_vec> == 0``
+        Array of same shape as ``vec`` such that ``dot(vec, perp_vec) == 0``
+        (along the last axis if there are multiple vectors).
 
     Examples
     --------
     Works in 2d:
 
-    >>> perpendicular_vector([1, 0])
-    array([ 0.,  1.])
     >>> perpendicular_vector([0, 1])
     array([-1.,  0.])
+    >>> np.allclose(perpendicular_vector([1, 0]), [0, 1])  # would print -0
+    True
 
     And in 3d:
 
-    >>> perpendicular_vector([1, 0, 0])
-    array([ 0.,  1.,  0.])
     >>> perpendicular_vector([0, 1, 0])
     array([-1.,  0.,  0.])
     >>> perpendicular_vector([0, 0, 1])
     array([ 1.,  0.,  0.])
-    """
-    vec = np.asarray(vec)
+    >>> np.allclose(perpendicular_vector([1, 0, 0]), [0, 1, 0])
+    True
 
-    if np.all(vec == 0):
+    The function is vectorized, i.e., it can be called with multiple
+    vectors at once (additional axes being added to the left):
+
+    >>> perpendicular_vector([[0, 1, 0],
+    ...                       [0, 0, 1]])  # 2 vectors
+    array([[-1.,  0.,  0.],
+           [ 1.,  0.,  0.]])
+    >>> vecs = np.zeros((2, 3, 3))
+    >>> vecs[..., 1] = 1  # (2, 3) array of vectors (0, 1, 0)
+    >>> perpendicular_vector(vecs)
+    array([[[-1.,  0.,  0.],
+            [-1.,  0.,  0.],
+            [-1.,  0.,  0.]],
+    <BLANKLINE>
+           [[-1.,  0.,  0.],
+            [-1.,  0.,  0.],
+            [-1.,  0.,  0.]]])
+    """
+    squeeze_out = (np.ndim(vec) == 1)
+    vec = np.array(vec, dtype=float, copy=False, ndmin=2)
+
+    if np.any(np.all(vec == 0, axis=-1)):
         raise ValueError('zero vector')
 
     result = np.zeros(vec.shape)
-    if np.any(vec[:2] != 0):
-        result[:2] = [-vec[1], vec[0]]
-    else:
-        result[0] = 1
+    cond = np.any(vec[..., :2] != 0, axis=-1)
+    result[cond, 0] = -vec[cond, 1]
+    result[cond, 1] = vec[cond, 0]
+    result[~cond, 0] = 1
+    result /= np.linalg.norm(result, axis=-1, keepdims=True)
 
-    return result / np.linalg.norm(result)
+    if squeeze_out:
+        result = result.squeeze()
+
+    return result
+
+
+def is_inside_bounds(value, params):
+    """Return ``True`` if ``value`` is contained in ``params``.
+
+    This method supports broadcasting in the sense that for
+    ``params.ndim >= 2``, if more than one value is given, the inputs
+    are broadcast against each other.
+
+    Parameters
+    ----------
+    value : `array-like`
+        Value(s) to be checked. For several inputs, the final bool
+        tells whether all inputs pass the check or not.
+    params : `IntervalProd`
+        Set in which the value is / the values are supposed to lie.
+
+    Returns
+    -------
+    is_inside_bounds : bool
+        ``True`` is all values lie in ``params``, ``False`` otherwise.
+
+    Examples
+    --------
+    Check a single point:
+
+    >>> params = odl.IntervalProd([0, 0], [1, 2])
+    >>> is_inside_bounds([0, 0], params)
+    True
+    >>> is_inside_bounds([0, -1], params)
+    False
+
+    Using broadcasting:
+
+    >>> pts_ax0 = np.array([0, 0, 1, 0, 1])[:, None]
+    >>> pts_ax1 = np.array([2, 0, 1])[None, :]
+    >>> is_inside_bounds([pts_ax0, pts_ax1], params)
+    True
+    >>> pts_ax1 = np.array([-2, 1])[None, :]
+    >>> is_inside_bounds([pts_ax0, pts_ax1], params)
+    False
+    """
+    if value in params:
+        # Single parameter
+        return True
+    else:
+        if params.ndim == 1:
+            return params.contains_all(np.ravel(value))
+        else:
+            # Flesh out and flatten to check bounds
+            bcast_value = np.broadcast_arrays(*value)
+            stacked_value = np.vstack(bcast_value)
+            flat_value = stacked_value.reshape(params.ndim, -1)
+            return params.contains_all(flat_value)
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

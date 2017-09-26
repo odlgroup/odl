@@ -41,6 +41,9 @@ class ParallelHoleCollimatorGeometry(Parallel3dAxisGeometry):
             Radius of the circular detector orbit.
         axis : `array-like`, shape ``(3,)``, optional
             Vector defining the fixed rotation axis of this geometry.
+
+        Other Parameters
+        ----------------
         orig_to_det_init : `array-like`, shape ``(3,)``, optional
             Vector pointing towards the initial position of the detector
             reference point. The default depends on ``axis``, see Notes.
@@ -52,6 +55,11 @@ class ParallelHoleCollimatorGeometry(Parallel3dAxisGeometry):
             Global translation of the geometry. This is added last in any
             method that computes an absolute vector, e.g., `det_refpoint`,
             and also shifts the axis of rotation.
+            Default: ``(0, 0, 0)``
+        check_bounds : bool, optional
+            If ``True``, methods perform sanity checks on provided input
+            parameters.
+            Default: ``True``
 
         Notes
         -----
@@ -92,7 +100,7 @@ class ParallelHoleCollimatorGeometry(Parallel3dAxisGeometry):
             apart, dpart, axis, **kwargs)
 
     @classmethod
-    def frommatrix(cls, apart, dpart, det_radius, init_matrix):
+    def frommatrix(cls, apart, dpart, det_radius, init_matrix, **kwargs):
         """Create a `ParallelHoleCollimatorGeometry` using a matrix.
 
         This alternative constructor uses a matrix to rotate and
@@ -113,6 +121,8 @@ class ParallelHoleCollimatorGeometry(Parallel3dAxisGeometry):
             determine the new vectors. If present, the fourth column acts
             as a translation after the initial transformation.
             The resulting ``det_axes_init`` will be normalized.
+        kwargs :
+            Further keyword arguments passed to the class constructor.
 
         Returns
         -------
@@ -142,10 +152,8 @@ class ParallelHoleCollimatorGeometry(Parallel3dAxisGeometry):
 
         # Use the standard constructor with these vectors
         axis, orig_to_det, det_axis_0, det_axis_1 = transformed_vecs
-        if translation.size == 0:
-            kwargs = {}
-        else:
-            kwargs = {'translation': translation}
+        if translation.size != 0:
+            kwargs['translation'] = translation
 
         return cls(apart, dpart, det_radius, axis,
                    orig_to_det_init=orig_to_det,
