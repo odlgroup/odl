@@ -10,7 +10,7 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from builtins import super
+
 import numpy as np
 
 from odl.operator.operator import Operator
@@ -85,7 +85,7 @@ class SamplingOperator(Operator):
             self.__indices_flat = self.sampling_points
 
         range = fn(self.indices_flat.size, dtype=domain.dtype)
-        super().__init__(domain, range, linear=True)
+        super(SamplingOperator, self).__init__(domain, range, linear=True)
 
     @property
     def variant(self):
@@ -216,7 +216,8 @@ class WeightedSumSamplingOperator(Operator):
             self.__indices_flat = self.sampling_points
 
         domain = fn(self.indices_flat.size, dtype=range.dtype)
-        super().__init__(domain, range, linear=True)
+        super(WeightedSumSamplingOperator, self).__init__(
+            domain, range, linear=True)
 
     @property
     def variant(self):
@@ -329,7 +330,7 @@ class FlatteningOperator(Operator):
 
         self.__order = order
         range = fn(domain.size, dtype=domain.dtype)
-        super().__init__(domain, range, linear=True)
+        super(FlatteningOperator, self).__init__(domain, range, linear=True)
 
     def _call(self, x, out=None):
         """Collect indices"""
@@ -416,7 +417,8 @@ class FlatteningOperatorAdjoint(Operator):
                             'instance'.format(range))
 
         domain = fn(range.size, dtype=range.dtype)
-        super().__init__(domain, range, linear=True)
+        super(FlatteningOperatorAdjoint, self).__init__(
+            domain, range, linear=True)
 
     def _call(self, x, out=None):
         """Create a new element with the known coefficients."""

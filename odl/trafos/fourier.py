@@ -10,7 +10,6 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from builtins import super
 
 import numpy as np
 
@@ -139,9 +138,11 @@ class DiscreteFourierTransformBase(Operator):
                                            dtype_repr(range.dtype)))
 
         if inverse:
-            super().__init__(range, domain, linear=True)
+            super(DiscreteFourierTransformBase, self).__init__(
+                range, domain, linear=True)
         else:
-            super().__init__(domain, range, linear=True)
+            super(DiscreteFourierTransformBase, self).__init__(
+                domain, range, linear=True)
         self._fftw_plan = None
 
     def _call(self, x, out, **kwargs):
@@ -436,8 +437,9 @@ class DiscreteFourierTransform(DiscreteFourierTransformBase):
         >>> fft.domain.shape
         (2, 3, 4)
         """
-        super().__init__(inverse=False, domain=domain, range=range, axes=axes,
-                         sign=sign, halfcomplex=halfcomplex, impl=impl)
+        super(DiscreteFourierTransform, self).__init__(
+            inverse=False, domain=domain, range=range, axes=axes,
+            sign=sign, halfcomplex=halfcomplex, impl=impl)
 
     def _call_numpy(self, x):
         """Return ``self(x)`` using numpy.
@@ -586,8 +588,9 @@ class DiscreteFourierTransformInverse(DiscreteFourierTransformBase):
         >>> ifft.range.shape
         (2, 3, 4)
         """
-        super().__init__(inverse=True, domain=range, range=domain, axes=axes,
-                         sign=sign, halfcomplex=halfcomplex, impl=impl)
+        super(DiscreteFourierTransformInverse, self).__init__(
+            inverse=True, domain=range, range=domain, axes=axes,
+            sign=sign, halfcomplex=halfcomplex, impl=impl)
 
     def _call_numpy(self, x):
         """Return ``self(x)`` using numpy.
@@ -844,9 +847,11 @@ class FourierTransformBase(Operator):
                                      shift=self.shifts)
 
         if inverse:
-            super().__init__(range, domain, linear=True)
+            super(FourierTransformBase, self).__init__(
+                range, domain, linear=True)
         else:
-            super().__init__(domain, range, linear=True)
+            super(FourierTransformBase, self).__init__(
+                domain, range, linear=True)
         self._fftw_plan = None
 
         # Storing temporaries directly as arrays
@@ -1231,8 +1236,8 @@ class FourierTransform(FourierTransformBase):
           <odlgroup.github.io/odl/math/trafos/fourier_transform.html#adjoint>`_
           for details.
         """
-        super().__init__(inverse=False, domain=domain, range=range,
-                         impl=impl, **kwargs)
+        super(FourierTransform, self).__init__(
+            inverse=False, domain=domain, range=range, impl=impl, **kwargs)
 
     def _preprocess(self, x, out=None):
         """Return the pre-processed version of ``x``.
@@ -1468,9 +1473,8 @@ class FourierTransformInverse(FourierTransformBase):
           <odlgroup.github.io/odl/math/trafos/fourier_transform.html#adjoint>`_
           for details.
         """
-        # TODO: variants wrt placement of 2*pi
-        super().__init__(inverse=True, domain=range, range=domain,
-                         impl=impl, **kwargs)
+        super(FourierTransformInverse, self).__init__(
+            inverse=True, domain=range, range=domain, impl=impl, **kwargs)
 
     def _preprocess(self, x, out=None):
         """Return the pre-processed version of ``x``.

@@ -976,7 +976,7 @@ class UniversalSpace(LinearSpace):
 
     def __init__(self):
         """Initialize a new instance."""
-        LinearSpace.__init__(self, field=UniversalSet())
+        super(UniversalSpace, self).__init__(field=UniversalSet())
 
     def element(self, inp=None):
         """Dummy element creation method.

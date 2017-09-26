@@ -10,7 +10,7 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from builtins import super, zip
+from builtins import zip
 
 import numpy as np
 
@@ -49,6 +49,7 @@ class IntervalProd(Set):
         >>> rbox
         IntervalProd([-1.0, 2.5, 70.0, 80.0], [-0.5, 10.0, 75.0, 90.0])
         """
+        super(IntervalProd, self).__init__()
         self.__min_pt = np.atleast_1d(min_pt).astype('float64')
         self.__max_pt = np.atleast_1d(max_pt).astype('float64')
 
@@ -73,7 +74,6 @@ class IntervalProd(Set):
                                  'end ({} < {})'.format(axis, xmax, xmin))
 
         self.__nondegen_byaxis = (self.min_pt != self.max_pt)
-        super().__init__()
 
     @property
     def min_pt(self):

@@ -10,7 +10,6 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from builtins import super
 
 import numpy as np
 
@@ -77,7 +76,8 @@ class NLMRegularizer(Functional):
         self.impl = impl
         self.patch_size = patch_size
         self.patch_distance = patch_distance
-        super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
+        super(NLMRegularizer, self).__init__(
+            space=space, linear=False, grad_lipschitz=np.nan)
 
     @property
     def proximal(self):
@@ -85,7 +85,8 @@ class NLMRegularizer(Functional):
 
         class NLMProximal(Operator):
             def __init__(self, stepsize):
-                Operator.__init__(self, func.domain, func.domain, False)
+                super(NLMProximal, self).__init__(
+                    func.domain, func.domain, linear=False)
                 self.stepsize = stepsize
 
             def _call(self, x):

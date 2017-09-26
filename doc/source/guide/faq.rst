@@ -98,27 +98,18 @@ General errors
 Errors related to Python 2/3
 ----------------------------
 
-#. **Q:** I follow your recommendation to call ``super().__init__(domain, range)``
-   in the ``__init__()`` method of ``MyOperator``, but I get the following
-   error::
+#. **Q:** I follow your recommendation to call ``super().__init__(domain, range)`` in the ``__init__()`` method of ``MyOperator``, but I get the following error::
 
-    File <...>, line ..., in __init__
-		super().__init__(dom, ran)
+       File <...>, line ..., in __init__
+		    super().__init__(dom, ran)
 
-	TypeError: super() takes at least 1 argument (0 given)
+	   TypeError: super() takes at least 1 argument (0 given)
 
    What is this error related to and how can I fix it?
 
-   **P:** The ``super()`` function `in Python 2
-   <https://docs.python.org/2/library/functions.html#super>`_ has to
-   be called with a type as first argument, whereas
-   `in Python 3
-   <https://docs.python.org/3/library/functions.html#super>`_, the
-   type argument is optional and usually not needed.
+   **P:** The ``super()`` function `in Python 2 <https://docs.python.org/2/library/functions.html#super>`_ has to be called with a type as first argument, whereas `in Python 3    <https://docs.python.org/3/library/functions.html#super>`_, the type argument is optional and usually not needed.
 
-   **S:** We recommend to include ``from builtins import super`` in your
-   module to backport the new Py3 ``super()`` function. This way, your code
-   will run in both Python 2 and 3.
+   **S:** We recommend to use the explicit ``super(MyOperator, self)`` since it works in both Python 2 and 3.
 
 
 Usage

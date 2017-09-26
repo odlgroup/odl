@@ -12,8 +12,8 @@ class Convolution(odl.Operator):
         self.adjkernel = (adjkernel if adjkernel is not None
                           else kernel.space.element(kernel[::-1].copy()))
         self.norm = float(np.sum(np.abs(self.kernel.ntuple)))
-        odl.Operator.__init__(self, domain=kernel.space, range=kernel.space,
-                              linear=True)
+        super(Convolution, self).__init__(
+            domain=kernel.space, range=kernel.space, linear=True)
 
     def _call(self, rhs, out):
         ndimage.convolve(rhs.ntuple.data, self.kernel.ntuple.data,

@@ -8,7 +8,6 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from builtins import super
 
 import numpy as np
 
@@ -62,8 +61,10 @@ class Functional(Operator):
         grad_lipschitz : float, optional
             The Lipschitz constant of the gradient. Default: ``nan``
         """
-        Operator.__init__(self, domain=space,
-                          range=space.field, linear=linear)
+        # Cannot use `super(Functional, self)` here since that breaks
+        # subclasses with multiple inheritance (at least those where both
+        # parents implement `__init__`, e.g., in `ScalingFunctional`)
+        Operator.__init__(self, domain=space, range=space.field, linear=linear)
         self.__grad_lipschitz = float(grad_lipschitz)
 
     @property
@@ -257,7 +258,7 @@ class Functional(Operator):
         elif other in self.domain:
             return FunctionalRightVectorMult(self, other)
         else:
-            return super().__mul__(other)
+            return super(Functional, self).__mul__(other)
 
     def __rmul__(self, other):
         """Return ``other * self``.
@@ -317,7 +318,7 @@ class Functional(Operator):
             else:
                 return FunctionalLeftScalarMult(self, other)
         else:
-            return super().__rmul__(other)
+            return super(Functional, self).__rmul__(other)
 
     def __add__(self, other):
         """Return ``self + other``.
@@ -357,7 +358,7 @@ class Functional(Operator):
         elif isinstance(other, Functional):
             return FunctionalSum(self, other)
         else:
-            return super().__add__(other)
+            return super(Functional, self).__add__(other)
 
     # Since addition is commutative, right and left addition is the same
     __radd__ = __add__
@@ -393,10 +394,9 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
             raise TypeError('`func` {!r} is not a `Functional` instance'
                             ''.format(func))
 
-        Functional.__init__(self, space=func.domain, linear=func.is_linear,
-                            grad_lipschitz=(
-                                np.abs(scalar) * func.grad_lipschitz))
-
+        Functional.__init__(
+            self, space=func.domain, linear=func.is_linear,
+            grad_lipschitz=np.abs(scalar) * func.grad_lipschitz)
         OperatorLeftScalarMult.__init__(self, operator=func, scalar=scalar)
 
     @property
@@ -486,10 +486,9 @@ class FunctionalRightScalarMult(Functional, OperatorRightScalarMult):
 
         scalar = func.domain.field.element(scalar)
 
-        Functional.__init__(self, space=func.domain, linear=func.is_linear,
-                            grad_lipschitz=(
-                                np.abs(scalar) * func.grad_lipschitz))
-
+        Functional.__init__(
+            self, space=func.domain, linear=func.is_linear,
+            grad_lipschitz=np.abs(scalar) * func.grad_lipschitz)
         OperatorRightScalarMult.__init__(self, operator=func, scalar=scalar)
 
     @property
@@ -548,7 +547,6 @@ class FunctionalComp(Functional, OperatorComp):
                             ''.format(func))
 
         OperatorComp.__init__(self, left=func, right=op)
-
         Functional.__init__(self, space=op.domain,
                             linear=(func.is_linear and op.is_linear),
                             grad_lipschitz=np.nan)
@@ -565,7 +563,8 @@ class FunctionalComp(Functional, OperatorComp):
 
             def __init__(self):
                 """Initialize a new instance."""
-                super().__init__(op.domain, op.domain, linear=False)
+                super(FunctionalCompositionGradient, self).__init__(
+                    op.domain, op.domain, linear=False)
 
             def _call(self, x):
                 """Apply the gradient operator to the given point."""
@@ -610,7 +609,6 @@ class FunctionalRightVectorMult(Functional, OperatorRightVectorMult):
                             ''.format(func))
 
         OperatorRightVectorMult.__init__(self, operator=func, vector=vector)
-
         Functional.__init__(self, space=func.domain)
 
     @property
@@ -654,12 +652,11 @@ class FunctionalSum(Functional, OperatorSum):
             raise TypeError('`right` {!r} is not a `Functional` instance'
                             ''.format(right))
 
+        Functional.__init__(
+            self, space=left.domain,
+            linear=(left.is_linear and right.is_linear),
+            grad_lipschitz=left.grad_lipschitz + right.grad_lipschitz)
         OperatorSum.__init__(self, left, right)
-
-        Functional.__init__(self, space=left.domain,
-                            linear=(left.is_linear and right.is_linear),
-                            grad_lipschitz=(left.grad_lipschitz +
-                                            right.grad_lipschitz))
 
     @property
     def gradient(self):
@@ -695,9 +692,9 @@ class FunctionalScalarSum(FunctionalSum):
             raise TypeError('`scalar` {} is not in the range of '
                             '`func` {!r}'.format(scalar, func))
 
-        FunctionalSum.__init__(self, left=func,
-                               right=ConstantFunctional(space=func.domain,
-                                                        constant=scalar))
+        super(FunctionalScalarSum, self).__init__(
+            left=func,
+            right=ConstantFunctional(space=func.domain, constant=scalar))
 
     @property
     def scalar(self):
@@ -742,8 +739,9 @@ class FunctionalTranslation(Functional):
 
         translation = func.domain.element(translation)
 
-        super().__init__(space=func.domain, linear=False,
-                         grad_lipschitz=func.grad_lipschitz)
+        super(FunctionalTranslation, self).__init__(
+            space=func.domain, linear=False,
+            grad_lipschitz=func.grad_lipschitz)
 
         # TODO: Add case if we have translation -> scaling -> translation?
         if isinstance(func, FunctionalTranslation):
@@ -854,11 +852,10 @@ class InfimalConvolution(Functional):
             raise TypeError('`func` {} is not a `Functional` instance'
                             ''.format(right))
 
+        super(InfimalConvolution, self).__init__(
+            space=left.domain, linear=False, grad_lipschitz=np.nan)
         self.__left = left
         self.__right = right
-
-        super().__init__(space=left.domain, linear=False,
-                         grad_lipschitz=np.nan)
 
     @property
     def left(self):
@@ -939,9 +936,10 @@ class FunctionalQuadraticPerturb(Functional):
         else:
             grad_lipschitz = (func.grad_lipschitz + self.linear_term.norm())
 
-        super().__init__(space=func.domain,
-                         linear=func.is_linear and (quadratic_coeff == 0),
-                         grad_lipschitz=grad_lipschitz)
+        super(FunctionalQuadraticPerturb, self).__init__(
+            space=func.domain,
+            linear=func.is_linear and (quadratic_coeff == 0),
+            grad_lipschitz=grad_lipschitz)
 
     @property
     def functional(self):
@@ -1008,7 +1006,7 @@ class FunctionalQuadraticPerturb(Functional):
             return self.functional.convex_conj.translated(
                 self.linear_term)
         else:
-            return super().convex_conj
+            return super(FunctionalQuadraticPerturb, self).convex_conj
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -1120,8 +1118,8 @@ class FunctionalQuotient(Functional):
         self.__dividend = dividend
         self.__divisor = divisor
 
-        Functional.__init__(self, dividend.domain, linear=False,
-                            grad_lipschitz=np.nan)
+        super(FunctionalQuotient, self).__init__(
+            dividend.domain, linear=False, grad_lipschitz=np.nan)
 
     @property
     def dividend(self):
@@ -1207,9 +1205,8 @@ class FunctionalDefaultConvexConjugate(Functional):
             raise TypeError('`func` {} is not a `Functional` instance'
                             ''.format(func))
 
-        super().__init__(space=func.domain,
-                         linear=func.is_linear)
-
+        super(FunctionalDefaultConvexConjugate, self).__init__(
+            space=func.domain, linear=func.is_linear)
         self.__convex_conj = func
 
     @property
@@ -1312,8 +1309,8 @@ def simple_functional(space, fcall=None, grad=None, prox=None, grad_lip=np.nan,
                 """Return ``self(x)``."""
                 return convex_conj_grad_in(x)
 
-        convex_conj_grad = SimpleFunctionalConvexConjGradient(space, space,
-                                                              linear=False)
+        convex_conj_grad = SimpleFunctionalConvexConjGradient(
+            space, space, linear=False)
 
     class SimpleFunctional(Functional):
 
@@ -1321,7 +1318,8 @@ def simple_functional(space, fcall=None, grad=None, prox=None, grad_lip=np.nan,
 
         def __init__(self):
             """Initialize an instance."""
-            super().__init__(space, linear=linear, grad_lipschitz=grad_lip)
+            super(SimpleFunctional, self).__init__(
+                space, linear=linear, grad_lipschitz=grad_lip)
 
         def _call(self, x):
             """Return ``self(x)``."""

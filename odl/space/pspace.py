@@ -10,13 +10,13 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from builtins import range, str, super, zip
+from builtins import range, str, zip
 
 from numbers import Integral
 from itertools import product
 import numpy as np
 
-from odl.set import LinearSpace, LinearSpaceElement, RealNumbers
+from odl.set import LinearSpace, LinearSpaceElement
 from odl.space.weighting import (
     Weighting, ArrayWeighting, ConstWeighting, NoWeighting,
     CustomInner, CustomNorm, CustomDist)
@@ -260,7 +260,7 @@ class ProductSpace(LinearSpace):
         self.__is_power_space = all(spc == self.spaces[0]
                                     for spc in self.spaces[1:])
 
-        super().__init__(field)
+        super(ProductSpace, self).__init__(field)
 
         # Assign weighting
         if weighting is not None:
@@ -619,7 +619,7 @@ class ProductSpaceElement(LinearSpaceElement):
 
     def __init__(self, space, parts):
         """Initialize a new instance."""
-        super().__init__(space)
+        super(ProductSpaceElement, self).__init__(space)
         self.__parts = tuple(parts)
 
     @property
@@ -1083,8 +1083,9 @@ class ProductSpaceArrayWeighting(ArrayWeighting):
           define an inner product or norm, respectively. This is not checked
           during initialization.
         """
-        super().__init__(array, impl='numpy', exponent=exponent,
-                         dist_using_inner=dist_using_inner)
+        super(ProductSpaceArrayWeighting, self).__init__(
+            array, impl='numpy', exponent=exponent,
+            dist_using_inner=dist_using_inner)
 
     def inner(self, x1, x2):
         """Calculate the array-weighted inner product of two elements.
@@ -1201,8 +1202,9 @@ class ProductSpaceConstWeighting(ConstWeighting):
         - The constant must be positive, otherwise it does not define an
           inner product or norm, respectively.
         """
-        super().__init__(constant, impl='numpy', exponent=exponent,
-                         dist_using_inner=dist_using_inner)
+        super(ProductSpaceConstWeighting, self).__init__(
+            constant, impl='numpy', exponent=exponent,
+            dist_using_inner=dist_using_inner)
 
     def inner(self, x1, x2):
         """Calculate the constant-weighted inner product of two elements.
@@ -1324,10 +1326,12 @@ class ProductSpaceNoWeighting(NoWeighting, ProductSpaceConstWeighting):
 
         if exponent == 2.0 and not dist_using_inner:
             if not cls._instance:
-                cls._instance = super().__new__(cls, *args, **kwargs)
+                parent = super(NoWeighting, ProductSpaceNoWeighting)
+                cls._instance = parent.__new__(cls, *args, **kwargs)
             return cls._instance
         else:
-            return super().__new__(cls, *args, **kwargs)
+            return super(NoWeighting, ProductSpaceNoWeighting).__new__(
+                cls, *args, **kwargs)
 
     def __init__(self, exponent=2.0, dist_using_inner=False):
         """Initialize a new instance.
@@ -1348,8 +1352,8 @@ class ProductSpaceNoWeighting(NoWeighting, ProductSpaceConstWeighting):
 
             Can only be used if ``exponent`` is 2.0.
         """
-        super().__init__(impl='numpy', exponent=exponent,
-                         dist_using_inner=dist_using_inner)
+        super(ProductSpaceNoWeighting, self).__init__(
+            impl='numpy', exponent=exponent, dist_using_inner=dist_using_inner)
 
 
 class ProductSpaceCustomInner(CustomInner):
@@ -1383,8 +1387,9 @@ class ProductSpaceCustomInner(CustomInner):
 
             Can only be used if ``exponent`` is 2.0.
         """
-        super().__init__(impl='numpy', inner=inner,
-                         dist_using_inner=dist_using_inner)
+        super(ProductSpaceCustomInner, self).__init__(
+            impl='numpy', inner=inner,
+            dist_using_inner=dist_using_inner)
 
 
 class ProductSpaceCustomNorm(CustomNorm):
@@ -1410,7 +1415,7 @@ class ProductSpaceCustomNorm(CustomNorm):
             - ``||s * x|| = |s| * ||x||``
             - ``||x + y|| <= ||x|| + ||y||``
         """
-        super().__init__(norm, impl='numpy')
+        super(ProductSpaceCustomNorm, self).__init__(norm, impl='numpy')
 
 
 class ProductSpaceCustomDist(CustomDist):
@@ -1436,7 +1441,7 @@ class ProductSpaceCustomDist(CustomDist):
             - ``dist(x, y) = dist(y, x)``
             - ``dist(x, y) <= dist(x, z) + dist(z, y)``
         """
-        super().__init__(dist, impl='numpy')
+        super(ProductSpaceCustomDist, self).__init__(dist, impl='numpy')
 
 
 def _strip_space(x):

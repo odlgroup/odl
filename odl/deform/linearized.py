@@ -10,7 +10,6 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from builtins import super
 
 import numpy as np
 
@@ -188,9 +187,8 @@ class LinDeformFixedTempl(Operator):
                     'partiton ({!r} != {!r})'
                     ''.format(template.space.partition, domain[0].partition))
 
-        super().__init__(domain=domain,
-                         range=self.template.space,
-                         linear=False)
+        super(LinDeformFixedTempl, self).__init__(
+            domain=domain, range=self.template.space, linear=False)
 
     @property
     def template(self):
@@ -339,8 +337,9 @@ class LinDeformFixedDisp(Operator):
                     'partiton ({!r} != {!r})'
                     ''.format(templ_space.partition, space[0].partition))
 
+        super(LinDeformFixedDisp, self).__init__(
+            domain=templ_space, range=templ_space, linear=True)
         self.__displacement = displacement
-        super().__init__(domain=templ_space, range=templ_space, linear=True)
 
     @property
     def displacement(self):

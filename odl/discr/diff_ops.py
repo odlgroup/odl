@@ -10,7 +10,6 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from builtins import super
 
 import numpy as np
 
@@ -109,8 +108,8 @@ class PartialDerivative(PointwiseTensorFieldOperator):
 
         # Method is affine if nonzero padding is given.
         linear = not (pad_mode == 'constant' and pad_const != 0)
-        super().__init__(domain=space, range=space, base_space=space,
-                         linear=linear)
+        super(PartialDerivative, self).__init__(
+            domain=space, range=space, base_space=space, linear=linear)
         self.axis = int(axis)
         self.dx = space.cell_sides[axis]
 
@@ -286,7 +285,8 @@ class Gradient(PointwiseTensorFieldOperator):
             range = ProductSpace(domain, domain.ndim)
 
         linear = not (pad_mode == 'constant' and pad_const != 0)
-        super().__init__(domain, range, base_space=domain, linear=linear)
+        super(Gradient, self).__init__(
+            domain, range, base_space=domain, linear=linear)
 
         self.method, method_in = str(method).lower(), method
         if method not in _SUPPORTED_DIFF_METHODS:
@@ -467,7 +467,8 @@ class Divergence(PointwiseTensorFieldOperator):
             range = domain[0]
 
         linear = not (pad_mode == 'constant' and pad_const != 0)
-        super().__init__(domain, range, base_space=range, linear=linear)
+        super(Divergence, self).__init__(
+            domain, range, base_space=range, linear=linear)
 
         self.method, method_in = str(method).lower(), method
         if method not in _SUPPORTED_DIFF_METHODS:
@@ -601,8 +602,8 @@ class Laplacian(PointwiseTensorFieldOperator):
         if not isinstance(space, DiscreteLp):
             raise TypeError('`space` {!r} is not a DiscreteLp instance'
                             ''.format(space))
-        super().__init__(domain=space, range=space, base_space=space,
-                         linear=True)
+        super(Laplacian, self).__init__(
+            domain=space, range=space, base_space=space, linear=True)
 
         self.pad_mode, pad_mode_in = str(pad_mode).lower(), pad_mode
         if pad_mode not in _SUPPORTED_PAD_MODES:

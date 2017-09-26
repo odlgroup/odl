@@ -24,7 +24,7 @@ class TensorflowSpace(LinearSpace):
     """A space of tensorflow Tensors."""
 
     def __init__(self, shape, name='ODLTensorflowSpace'):
-        LinearSpace.__init__(self, RealNumbers())
+        super(TensorflowSpace, self).__init__(RealNumbers())
         self.shape = tuple(tf.Dimension(si) if not isinstance(si, tf.Dimension)
                            else si
                            for si in shape)
@@ -94,7 +94,7 @@ class TensorflowSpaceElement(LinearSpaceElement):
     """Elements in TensorflowSpace."""
 
     def __init__(self, space, data):
-        LinearSpaceElement.__init__(self, space)
+        super(TensorflowSpaceElement, self).__init__(space)
         self.data = data
 
     @property
@@ -116,7 +116,7 @@ class TensorflowSpaceOperator(Operator):
     """Wrap ODL operator so that it acts on TensorflowSpace elements."""
 
     def __init__(self, domain, range, func, adjoint=None, linear=False):
-        Operator.__init__(self, domain, range, linear)
+        super(TensorflowSpaceOperator, self).__init__(domain, range, linear)
         self.func = func
         self.adjoint_func = adjoint
 

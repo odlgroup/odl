@@ -88,8 +88,8 @@ To solve the above issue, it is often useful to write an `Operator` wrapping Num
    ...
    ...         # Initialize operator base class.
    ...         # This operator maps from the space of vector to the same space and is linear
-   ...         odl.Operator.__init__(self, domain=vector.space, range=vector.space,
-   ...                               linear=True)
+   ...         super(MyConvolution, self).__init__(
+   ...             domain=vector.space, range=vector.space, linear=True)
    ...
    ...     def _call(self, x):
    ...         # The output of an Operator is automatically cast to an ODL vector

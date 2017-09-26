@@ -14,7 +14,7 @@ operators.
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from builtins import str, super, zip
+from builtins import str, zip
 
 from itertools import product
 import numpy as np
@@ -93,7 +93,7 @@ class FunctionSetMapping(Operator):
 
         domain = fset if map_type_ == 'sampling' else dspace
         range = dspace if map_type_ == 'sampling' else fset
-        Operator.__init__(self, domain, range, linear=linear)
+        super(FunctionSetMapping, self).__init__(domain, range, linear=linear)
         self.__partition = partition
 
         if self.is_linear:
@@ -228,8 +228,8 @@ class PointCollocation(FunctionSetMapping):
         rn(6).element([-2.0, -1.0, -3.0, -2.0, -4.0, -3.0])
         """
         linear = isinstance(ip_fset, FunctionSpace)
-        FunctionSetMapping.__init__(self, 'sampling', ip_fset, partition,
-                                    dspace, linear, **kwargs)
+        super(PointCollocation, self).__init__(
+            'sampling', ip_fset, partition, dspace, linear, **kwargs)
 
     def _call(self, func, out=None, **kwargs):
         """Evaluate ``func`` at the grid of this operator.
@@ -379,8 +379,8 @@ class NearestInterpolation(FunctionSetMapping):
         may not be noticable in some situations due to rounding errors.
         """
         linear = isinstance(fset, FunctionSpace)
-        FunctionSetMapping.__init__(self, 'interpolation', fset, partition,
-                                    dspace, linear, **kwargs)
+        super(NearestInterpolation, self).__init__(
+            'interpolation', fset, partition, dspace, linear, **kwargs)
 
         variant = kwargs.pop('variant', 'left')
         self.__variant = str(variant).lower()
@@ -487,8 +487,8 @@ class LinearInterpolation(FunctionSetMapping):
             raise TypeError('`fspace` {!r} is not a `FunctionSpace` '
                             'instance'.format(fspace))
 
-        FunctionSetMapping.__init__(self, 'interpolation', fspace, partition,
-                                    dspace, linear=True, **kwargs)
+        super(LinearInterpolation, self).__init__(
+            'interpolation', fspace, partition, dspace, linear=True, **kwargs)
 
     def _call(self, x, out=None):
         """Create an interpolator from grid values ``x``.
@@ -578,8 +578,8 @@ class PerAxisInterpolation(FunctionSetMapping):
             raise TypeError('`fspace` {!r} is not a `FunctionSpace` '
                             'instance'.format(fspace))
 
-        FunctionSetMapping.__init__(self, 'interpolation', fspace, partition,
-                                    dspace, linear=True, **kwargs)
+        super(PerAxisInterpolation, self).__init__(
+            'interpolation', fspace, partition, dspace, linear=True, **kwargs)
 
         schemes_in = schemes
         if is_string(schemes):
@@ -844,7 +844,8 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
         variant : {'left', 'right'}
             Indicates which neighbor to prefer in the interpolation
         """
-        super().__init__(coord_vecs, values, input_type)
+        super(_NearestInterpolator, self).__init__(
+            coord_vecs, values, input_type)
         variant_ = str(variant).lower()
         if variant_ not in ('left', 'right'):
             raise ValueError("variant '{}' not understood".format(variant_))
@@ -978,7 +979,8 @@ class _PerAxisInterpolator(_Interpolator):
             This option has no effect for schemes other than nearest
             neighbor.
         """
-        super().__init__(coord_vecs, values, input_type)
+        super(_PerAxisInterpolator, self).__init__(
+            coord_vecs, values, input_type)
         self.schemes = schemes
         self.nn_variants = nn_variants
 
@@ -1039,9 +1041,10 @@ class _LinearInterpolator(_PerAxisInterpolator):
         input_type : {'array', 'meshgrid'}
             Type of expected input values in ``__call__``
         """
-        super().__init__(coord_vecs, values, input_type,
-                         schemes=['linear'] * len(coord_vecs),
-                         nn_variants=[None] * len(coord_vecs))
+        super(_LinearInterpolator, self).__init__(
+            coord_vecs, values, input_type,
+            schemes=['linear'] * len(coord_vecs),
+            nn_variants=[None] * len(coord_vecs))
 
 
 if __name__ == '__main__':

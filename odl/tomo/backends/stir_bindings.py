@@ -28,7 +28,6 @@ the STIR classes used here.
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from builtins import super
 
 try:
     import stir
@@ -107,7 +106,8 @@ class ForwardProjectorByBinWrapper(Operator):
                              ''.format(range.shape, proj_shape))
 
         # Set domain, range etc
-        super().__init__(domain, range, True)
+        super(ForwardProjectorByBinWrapper, self).__init__(
+            domain, range, linear=True)
 
         # Read template of the projection
         self.proj_data = proj_data
@@ -206,7 +206,8 @@ class BackProjectorByBinWrapper(Operator):
                              ''.format(range.shape, proj_shape))
 
         # Set range domain
-        super().__init__(domain, range, True)
+        super(BackProjectorByBinWrapper, self).__init__(
+            domain, range, linear=True)
 
         # Read template of the projection
         self.proj_data = proj_data
