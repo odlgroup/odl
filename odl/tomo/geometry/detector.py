@@ -40,14 +40,17 @@ class Detector(object):
     this behavior.
     """
 
-    def __init__(self, partition, check_bounds=True):
+    def __init__(self, partition, space_ndim=None, check_bounds=True):
         """Initialize a new instance.
 
         Parameters
         ----------
         partition : `RectPartition`
-           Partition of the detector parameter set (pixelization).
-           It determines dimension, parameter range and discretization.
+            Partition of the detector parameter set (pixelization).
+            It determines dimension, parameter range and discretization.
+        space_ndim : positive int, optional
+            Number of dimensions of the embedding space.
+            Default: ``partition.ndim + 1``
         check_bounds : bool, optional
             If ``True``, methods computing vectors check input arguments.
             Checks are vectorized and add only a small overhead.
@@ -55,6 +58,14 @@ class Detector(object):
         if not isinstance(partition, RectPartition):
             raise TypeError('`partition` {!r} is not a RectPartition instance'
                             ''.format(partition))
+
+        if space_ndim is None:
+            self.__space_ndim = partition.ndim + 1
+        else:
+            self.__space_ndim = int(space_ndim)
+            if self.space_ndim <= 0:
+                raise ValueError('`space_ndim` must be postitive, got {}'
+                                 ''.format(space_ndim))
 
         self.__partition = partition
         self.__check_bounds = bool(check_bounds)
@@ -85,7 +96,7 @@ class Detector(object):
         This default (``space_ndim = ndim + 1``) can be overridden by
         subclasses.
         """
-        return self.ndim + 1
+        return self.__space_ndim
 
     @property
     def params(self):
@@ -244,7 +255,7 @@ class Detector(object):
 
 class Flat1dDetector(Detector):
 
-    """A 1d line detector aligned with a given axis."""
+    """A 1d line detector aligned with a given axis in 2D space."""
 
     def __init__(self, partition, axis, check_bounds=True):
         """Initialize a new instance.
@@ -269,7 +280,7 @@ class Flat1dDetector(Detector):
         >>> np.allclose(det.surface_normal(0), [0, -1])
         True
         """
-        super(Flat1dDetector, self).__init__(partition, check_bounds)
+        super(Flat1dDetector, self).__init__(partition, 2, check_bounds)
         if self.ndim != 1:
             raise ValueError('`partition` must be 1-dimensional, got ndim={}'
                              ''.format(self.ndim))
@@ -405,7 +416,7 @@ class Flat1dDetector(Detector):
 
 class Flat2dDetector(Detector):
 
-    """A 2d flat panel detector aligned two given axes."""
+    """A 2D flat panel detector aligned two given axes in 3D space."""
 
     def __init__(self, partition, axes, check_bounds=True):
         """Initialize a new instance.
@@ -433,7 +444,7 @@ class Flat2dDetector(Detector):
         >>> det.surface_normal([0, 0])
         array([ 0., -1.,  0.])
         """
-        super(Flat2dDetector, self).__init__(partition, check_bounds)
+        super(Flat2dDetector, self).__init__(partition, 3, check_bounds)
         if self.ndim != 2:
             raise ValueError('`partition` must be 2-dimensional, got ndim={}'
                              ''.format(self.ndim))
@@ -620,7 +631,7 @@ class Flat2dDetector(Detector):
 
 class CircleSectionDetector(Detector):
 
-    """A 1d detector given by a circle section that crosses the origin.
+    """A 1D detector on a circle section crossing the origin in 2D space.
 
     The parametrization is chosen such that parameter (=angle) 0
     corresponds to the origin. Negative param correspond to points
@@ -657,7 +668,7 @@ class CircleSectionDetector(Detector):
         >>> det.tangent_at_0
         array([ 1.,  0.])
         """
-        super(CircleSectionDetector, self).__init__(partition, check_bounds)
+        super(CircleSectionDetector, self).__init__(partition, 2, check_bounds)
         if self.ndim != 1:
             raise ValueError('`partition` must be 1-dimensional, got ndim={}'
                              ''.format(self.ndim))
