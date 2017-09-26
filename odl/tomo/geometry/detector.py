@@ -186,7 +186,11 @@ class Detector(object):
         if self.ndim == 1 and self.space_ndim == 2:
             return -perpendicular_vector(self.surface_deriv(param))
         elif self.ndim == 2 and self.space_ndim == 3:
-            normal = np.cross(*self.surface_deriv(param), axis=-1)
+            deriv = self.surface_deriv(param)
+            if deriv.ndim > 2:
+                # Vectorized, need to reshape (N, 2, 3) to (2, N, 3)
+                deriv = np.moveaxis(deriv, -2, 0)
+            normal = np.cross(*deriv, axis=-1)
             normal /= np.linalg.norm(normal, axis=-1, keepdims=True)
             return normal
         else:
@@ -239,6 +243,9 @@ class Detector(object):
         elif self.ndim == 2 and self.space_ndim == 3:
             scalar_out = (np.shape(param) == (2,))
             deriv = self.surface_deriv(param)
+            if deriv.ndim > 2:
+                # Vectorized, need to reshape (N, 2, 3) to (2, N, 3)
+                deriv = np.moveaxis(deriv, -2, 0)
             cross = np.cross(*deriv, axis=-1)
             measure = np.linalg.norm(cross, axis=-1)
             if scalar_out:
@@ -551,15 +558,15 @@ class Flat2dDetector(Detector):
             enumerates the axes, i.e., has always length 2.
             If ``param`` is a single parameter, the returned array has
             shape ``(2, 3)``, otherwise
-            ``(2,) + broadcast(*param).shape + (3,)``.
+            ``broadcast(*param).shape + (2, 3)``.
 
         Notes
         -----
-        To get an array that enumerates axis pairs, move the first axis
-        of the array to the second-to-last position::
+        To get an array that enumerates the derivative vectors in the first
+        dimension, move the second-to-last axis to the first position::
 
             deriv = surface_deriv(param)
-            axes_enumeration = np.moveaxis(deriv, 0, -2)
+            axes_enumeration = np.moveaxis(deriv, -2, 0)
 
         Examples
         --------
@@ -581,20 +588,20 @@ class Flat2dDetector(Detector):
         >>> # 2 pairs of parameters, resulting in 3 vectors for each axis
         >>> deriv = det.surface_deriv([[0, 1],
         ...                            [0, 1]])
-        >>> deriv[0]  # vectors for first axis
+        >>> deriv[0]  # first pair of vectors
         array([[ 1.,  0.,  0.],
-               [ 1.,  0.,  0.]])
-        >>> deriv[1]  # vectors for second axis
-        array([[ 0.,  0.,  1.],
+               [ 0.,  0.,  1.]])
+        >>> deriv[1]  # second pair of vectors
+        array([[ 1.,  0.,  0.],
                [ 0.,  0.,  1.]])
         >>> # Pairs of parameters in a (4, 5) array each
         >>> param = (np.zeros((4, 5)), np.zeros((4, 5)))  # pairs of params
         >>> det.surface_deriv(param).shape
-        (2, 4, 5, 3)
+        (4, 5, 2, 3)
         >>> # Using broadcasting for "outer product" type result
         >>> param = (np.zeros((4, 1)), np.zeros((1, 5)))  # broadcasting
         >>> det.surface_deriv(param).shape
-        (2, 4, 5, 3)
+        (4, 5, 2, 3)
         """
         squeeze_out = (np.broadcast(*param).shape == ())
         param_in = param
@@ -607,13 +614,12 @@ class Flat2dDetector(Detector):
         if squeeze_out:
             return self.axes
         else:
-            # Produce array of shape `(2,) + broadcast(*param).shape + (3,)`
+            # Produce array of shape `broadcast(*param).shape + (2, 3)`
             # by explicit broadcasting.
             # TODO: use broadcast_to from Numpy when v1.10 is required
-            axes_slc = ((slice(None),) +
-                        (None,) * np.broadcast(*param).ndim +
-                        (slice(None),))
-            zeros = np.zeros((1,) + np.broadcast(*param).shape + (1,))
+            axes_slc = ((None,) * np.broadcast(*param).ndim +
+                        (slice(None), slice(None)))
+            zeros = np.zeros(np.broadcast(*param).shape + (1, 1))
             return self.axes[axes_slc] + zeros
 
     def __repr__(self):
