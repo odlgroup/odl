@@ -17,6 +17,7 @@ from odl.util.testutils import (almost_equal, all_equal, all_almost_equal,
                                 noise_elements, simple_fixture)
 
 exponent = simple_fixture('exponent', [2.0, 1.0, float('inf'), 0.5, 1.5])
+power = simple_fixture('power', [1.0, 2.0, 0.5, -0.5, -1.0, -2.0])
 
 
 def test_init(exponent):
@@ -910,15 +911,6 @@ def test_reduction(fn_impl, reduction):
     # Create some data
     x_arr, x = noise_elements(space, 1)
     assert almost_equal(ufunc(x_arr), getattr(x.ufuncs, name)())
-
-
-powers = [1.0, 2.0, 0.5, -0.5, -1.0, -2.0]
-power_ids = [' power = {} '.format(p) for p in powers]
-
-
-@pytest.fixture(scope='module', ids=power_ids, params=powers)
-def power(request):
-    return request.param
 
 
 def test_power(fn_impl, power):

@@ -18,7 +18,7 @@ import sys
 import os
 import warnings
 from time import time
-from odl.util.utility import run_from_ipython
+from odl.util.utility import run_from_ipython, is_string
 
 
 __all__ = ('almost_equal', 'all_equal', 'all_almost_equal', 'never_skip',
@@ -226,42 +226,6 @@ try:
         reason='Need --benchmark option to run'
     )
 
-    def simple_fixture(name, params, fmt=None):
-        """Helper to create a pytest fixture using only name and params.
-
-        Parameters
-        ----------
-        name : str
-            Name of the parameters used for the ``ids`` argument
-            to `pytest.fixture`.
-        params : sequence
-            Values to be taken as parameters in the fixture. They are
-            used as ``params`` argument to `pytest.fixture`.
-        fmt : str, optional
-            Use this format string for the generation of the ``ids``.
-            For each value, the id string is generated as::
-
-                fmt.format(name=name, value=value)
-
-            hence the format string must use ``{name}`` and ``{value}``.
-
-            Default: ``" {name} = '{value}' "`` for string parameters,
-            otherwise ``" {name} = {value} "``
-        """
-        if fmt is None:
-            try:
-                params[0] + ''
-            except TypeError:
-                # Not a string type
-                fmt = " {name} = {value} "
-            else:
-                # String type
-                fmt = " {name} = '{value}' "
-
-        ids = [fmt.format(name=name, value=value) for value in params]
-        wrapper = pytest.fixture(scope='module', ids=ids, params=params)
-        return wrapper(lambda request: request.param)
-
 except ImportError:
     def _pass(function):
         """Trivial decorator used if pytest marks are not available."""
@@ -273,6 +237,61 @@ except ImportError:
     skip_if_no_pyfftw = _pass
     skip_if_no_largescale = _pass
     skip_if_no_benchmark = _pass
+
+
+def simple_fixture(name, params, fmt=None):
+    """Helper to create a pytest fixture using only name and params.
+
+    Parameters
+    ----------
+    name : str
+        Name of the parameters used for the ``ids`` argument
+        to `pytest.fixture`.
+    params : sequence
+        Values to be taken as parameters in the fixture. They are
+        used as ``params`` argument to `_pytest.fixtures.fixture`.
+        Arguments wrapped in a ``pytest.skipif`` decorator are
+        unwrapped for the generation of the test IDs.
+    fmt : str, optional
+        Use this format string for the generation of the ``ids``.
+        For each value, the id string is generated as ::
+
+            fmt.format(name=name, value=value)
+
+        hence the format string must use ``{name}`` and ``{value}``.
+        Default format strings are:
+
+            - ``" {name}='{value}' "`` for string parameters,
+            - ``" {name}={value} "`` for other types.
+    """
+    import _pytest
+
+    if fmt is None:
+        # Use some intelligence to make good format strings
+        fmt_str = " {name}='{value}' "
+        fmt_default = " {name}={value} "
+
+        ids = []
+        for p in params:
+            # TODO: other types of decorators?
+            if (isinstance(p, _pytest.mark.MarkDecorator) and
+                    p.name == 'skipif'):
+                # Unwrap the wrapped object in the decorator
+                if is_string(p.args[1]):
+                    ids.append(fmt_str.format(name=name, value=p.args[1]))
+                else:
+                    ids.append(fmt_default.format(name=name, value=p.args[1]))
+            else:
+                if is_string(p):
+                    ids.append(fmt_str.format(name=name, value=p))
+                else:
+                    ids.append(fmt_default.format(name=name, value=p))
+    else:
+        # Use provided `fmt` for everything
+        ids = [fmt.format(name=name, value=p) for p in params]
+
+    wrapper = pytest.fixture(scope='module', ids=ids, params=params)
+    return wrapper(lambda request: request.param)
 
 
 # Helpers to generate data

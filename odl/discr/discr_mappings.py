@@ -24,7 +24,8 @@ from odl.discr.partition import RectPartition
 from odl.space.base_ntuples import NtuplesBase, FnBase
 from odl.space import FunctionSet, FunctionSpace
 from odl.util import (
-    is_valid_input_meshgrid, out_shape_from_array, out_shape_from_meshgrid)
+    is_valid_input_meshgrid, out_shape_from_array, out_shape_from_meshgrid,
+    is_string)
 
 
 __all__ = ('FunctionSetMapping',
@@ -580,39 +581,53 @@ class PerAxisInterpolation(FunctionSetMapping):
         FunctionSetMapping.__init__(self, 'interpolation', fspace, partition,
                                     dspace, linear=True, **kwargs)
 
-        try:
-            schemes_ = str(schemes + '').lower()  # pythonic string check
-            schemes_ = [schemes_] * self.grid.ndim
-        except TypeError:
-            schemes_ = [str(scm).lower() if scm is not None else None
-                        for scm in schemes]
+        schemes_in = schemes
+        if is_string(schemes):
+            scheme = str(schemes).lower()
+            if scheme not in _SUPPORTED_INTERP_SCHEMES:
+                raise ValueError('`schemes` {!r} not understood'
+                                 ''.format(schemes_in))
+            schemes = [scheme] * self.grid.ndim
+        else:
+            schemes = [str(scm).lower() if scm is not None else None
+                       for scm in schemes]
 
         nn_variants = kwargs.pop('nn_variants', None)
+        nn_variants_in = nn_variants
         if nn_variants is None:
-            variants_ = ['left' if scm == 'nearest' else None
-                         for scm in schemes]
+            nn_variants = ['left' if scm == 'nearest' else None
+                           for scm in schemes]
         else:
-            try:
-                variants_ = str(nn_variants + '').lower()  # pythonic str check
-                variants_ = [variants_ if scm == 'nearest' else None
-                             for scm in schemes]
-            except TypeError:
-                variants_ = [str(var).lower() if var is not None else None
-                             for var in nn_variants]
+            if is_string(nn_variants):
+                # Make list with `nn_variants` where `schemes == 'nearest'`,
+                # else `None` (variants only applies to axes with nn
+                # interpolation)
+                nn_variants = [nn_variants if scm == 'nearest' else None
+                               for scm in schemes]
+                if str(nn_variants_in).lower() not in ('left', 'right'):
+                    raise ValueError('`nn_variants` {!r} not understood'
+                                     ''.format(nn_variants_in))
+            else:
+                nn_variants = [str(var).lower() if var is not None else None
+                               for var in nn_variants]
 
-        for i, (scm, var) in enumerate(zip(schemes_, variants_)):
-            if scm not in _SUPPORTED_INTERP_SCHEMES:
-                raise ValueError("interpolation scheme '{}' at index {} not "
-                                 "understood".format(scm, i))
-            if scm == 'nearest' and var not in ('left', 'right'):
-                raise ValueError("nearest neighbor variant '{}' at index {} "
-                                 "not understood".format(var, i))
-            elif scm != 'nearest' and var is not None:
-                raise ValueError('option nn_variants used in axis {} with '
-                                 'scheme {!r}'.format(i, scm))
+        for i in range(self.grid.ndim):
+            # Reaching a raise condition here only happens for invalid
+            # sequences of inputs, single-input case has been checked above
+            if schemes[i] not in _SUPPORTED_INTERP_SCHEMES:
+                raise ValueError('`interp[{}]={!r}` not understood'
+                                 ''.format(schemes_in[i], i))
+            if (schemes[i] == 'nearest' and
+                    nn_variants[i] not in ('left', 'right')):
+                raise ValueError('`nn_variants[{}]={!r}` not understood'
+                                 ''.format(nn_variants_in[i], i))
+            elif schemes[i] != 'nearest' and nn_variants[i] is not None:
+                raise ValueError('in axis {}: `nn_variants` cannot be used '
+                                 'with `interp={!r}'
+                                 ''.format(i, schemes_in[i]))
 
-        self.__schemes = schemes_
-        self.__nn_variants = variants_
+        self.__schemes = schemes
+        self.__nn_variants = nn_variants
 
     @property
     def schemes(self):

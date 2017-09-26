@@ -30,7 +30,7 @@ exponent = simple_fixture('sigma', [1, 2, 1.5, 2.5, -1.6])
 
 
 space_params = ['r10', 'uniform_discr']
-space_ids = [' space = {}'.format(p.ljust(10)) for p in space_params]
+space_ids = [' space={} '.format(p) for p in space_params]
 
 
 @pytest.fixture(scope="module", ids=space_ids, params=space_params)

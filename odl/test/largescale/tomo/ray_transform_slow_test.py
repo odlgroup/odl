@@ -49,7 +49,7 @@ projectors = [skip_if_no_astra('par2d astra_cpu uniform'),
               skip_if_no_astra_cuda('helical astra_cuda uniform'),
               skip_if_no_skimage('par2d skimage uniform')]
 
-projector_ids = ['geom={}, impl={}, angles={}'
+projector_ids = [" geom='{}' - impl='{}' - angles='{}' "
                  ''.format(*p.args[1].split()) for p in projectors]
 
 

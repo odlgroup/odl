@@ -27,7 +27,7 @@ from odl.space import FunctionSpace, ProductSpace, fn_impl
 from odl.space.weighting import Weighting, NoWeighting, ConstWeighting
 from odl.util import (
     apply_on_boundary, is_real_dtype, is_complex_floating_dtype,
-    dtype_str, signature_string, indent_rows,
+    dtype_str, signature_string, indent_rows, is_string,
     normalized_scalar_param_list, safe_int_conv, normalized_nodes_on_bdry)
 from odl.util.ufuncs import DiscreteLpUfuncs
 
@@ -105,23 +105,22 @@ class DiscreteLp(DiscretizedSpace):
                              'dspace dtype {}'
                              ''.format(fspace.out_dtype, dspace.dtype))
 
-        try:
-            # Got single string
-            interp, interp_in = str(interp + '').lower(), interp
+        if is_string(interp):
+            interp, interp_in = str(interp).lower(), interp
             if interp not in _SUPPORTED_INTERP:
-                raise ValueError("`interp` type '{}' not understood"
-                                 "".format(interp_in))
+                raise ValueError('`interp={!r}` not understood'
+                                 ''.format(interp_in))
             # Ensure that there is 1 entry for ndim == 0
             self.__interp_byaxis = (interp,) * max(partition.ndim, 1)
-        except TypeError:
+        else:
             # Got sequence of strings
             if len(interp) != partition.ndim:
-                raise ValueError('expected {} (ndim) entries in interp, '
+                raise ValueError('expected {} (ndim) entries in `interp`, '
                                  'got {}'.format(partition.ndim, len(interp)))
 
             self.__interp_byaxis = tuple(str(s).lower() for s in interp)
             if any(s not in _SUPPORTED_INTERP for s in self.interp_byaxis):
-                raise ValueError('interp sequence {} contains illegal '
+                raise ValueError('`interp` sequence {} contains illegal '
                                  'values'.format(interp))
 
         order = str(kwargs.pop('order', 'C'))

@@ -32,7 +32,7 @@ scalar = simple_fixture('scalar', [0.01, 2.7, 10, -2, -0.2, -7.1, 0])
 sigma = simple_fixture('sigma', [0.001, 2.7, np.array(0.5), 10])
 
 space_params = ['r10', 'uniform_discr']
-space_ids = [' space = {} '.format(p) for p in space_params]
+space_ids = [' space={} '.format(p) for p in space_params]
 
 
 @pytest.fixture(scope="module", ids=space_ids, params=space_params)
@@ -50,7 +50,7 @@ func_params = ['l1 ', 'l2', 'l2^2', 'constant', 'zero', 'ind_unit_ball_1',
                'ind_unit_ball_2', 'ind_unit_ball_pi', 'ind_unit_ball_inf',
                'product', 'quotient', 'kl', 'kl_cc', 'kl_cross_ent',
                'kl_cc_cross_ent']
-func_ids = [' f = {} '.format(p.ljust(17)) for p in func_params]
+func_ids = [" functional='{}' ".format(p) for p in func_params]
 
 
 @pytest.fixture(scope="module", ids=func_ids, params=func_params)
