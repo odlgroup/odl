@@ -10,7 +10,7 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from builtins import object, super
+from builtins import object
 
 import inspect
 from numbers import Number, Integral
@@ -331,12 +331,11 @@ class Operator(object):
         The set this operator maps to
 
     It is **highly** recommended to call
-    ``super().__init__(domain, range)`` (Note: add
-    ``from builtins import super`` in Python 2) in the ``__init__()``
-    method of any subclass, where ``domain`` and ``range`` are the arguments
-    specifying domain and range of the new operator. In that case, the
-    attributes `Operator.domain` and `Operator.range` are automatically
-    provided by the parent class `Operator`.
+    ``super(MyOp, self).__init__(domain, range)``  in the ``__init__()``
+    method of any subclass  ``MyOp``, where ``domain`` and ``range`` are
+    the arguments specifying domain and range of the new operator. In that
+    case, the attributes `Operator.domain` and `Operator.range` are
+    automatically provided by the parent class `Operator`.
 
     In addition, any subclass **must** implement the private method
     `Operator._call()`. It signature determines how it is interpreted:
@@ -1132,8 +1131,9 @@ class OperatorSum(Operator):
                                 'operator domain {!r}'
                                 ''.format(tmp_dom, left.domain))
 
-        super().__init__(left.domain, left.range,
-                         linear=left.is_linear and right.is_linear)
+        super(OperatorSum, self).__init__(
+            left.domain, left.range,
+            linear=left.is_linear and right.is_linear)
         self.__left = left
         self.__right = right
         self.__tmp_ran = tmp_ran
@@ -1249,9 +1249,10 @@ class OperatorVectorSum(Operator):
             raise TypeError('`op.range` {!r} not a LinearSpace instance'
                             ''.format(operator.range))
 
+        super(OperatorVectorSum, self).__init__(
+            operator.domain, operator.range)
         self.__operator = operator
         self.__vector = operator.range.element(vector)
-        super().__init__(operator.domain, operator.range)
 
     @property
     def operator(self):
@@ -1341,8 +1342,9 @@ class OperatorComp(Operator):
                                 'operator domain {!r}'
                                 ''.format(tmp, left.domain))
 
-        super().__init__(right.domain, left.range,
-                         linear=left.is_linear and right.is_linear)
+        super(OperatorComp, self).__init__(
+            right.domain, left.range,
+            linear=left.is_linear and right.is_linear)
         self.__left = left
         self.__right = right
         self.__tmp = tmp
@@ -1471,7 +1473,8 @@ class OperatorPointwiseProduct(Operator):
             raise OpTypeError('operator domains {!r} and {!r} do not match'
                               ''.format(left.domain, right.domain))
 
-        super().__init__(left.domain, left.range, linear=False)
+        super(OperatorPointwiseProduct, self).__init__(
+            left.domain, left.range, linear=False)
         self.__left = left
         self.__right = right
 
@@ -1560,8 +1563,8 @@ class OperatorLeftScalarMult(Operator):
             scalar = scalar * operator.scalar
             operator = operator.operator
 
-        super().__init__(operator.domain, operator.range,
-                         linear=operator.is_linear)
+        super(OperatorLeftScalarMult, self).__init__(
+            operator.domain, operator.range, linear=operator.is_linear)
         self.__operator = operator
         self.__scalar = scalar
 
@@ -1730,7 +1733,8 @@ class OperatorRightScalarMult(Operator):
             scalar = scalar * operator.scalar
             operator = operator.operator
 
-        super().__init__(operator.domain, operator.range, operator.is_linear)
+        super(OperatorRightScalarMult, self).__init__(
+            operator.domain, operator.range, operator.is_linear)
         self.__operator = operator
         self.__scalar = scalar
         self.__tmp = tmp
@@ -1767,7 +1771,7 @@ class OperatorRightScalarMult(Operator):
             return OperatorRightScalarMult(self.operator, self.scalar * other,
                                            self.__tmp)
         else:
-            return super().__rmul__(other)
+            return super(OperatorRightScalarMult, self).__rmul__(other)
 
     @property
     def inverse(self):
@@ -1900,8 +1904,8 @@ class FunctionalLeftVectorMult(Operator):
             raise OpTypeError('range {!r} not is not vector.space.field {!r}'
                               ''.format(functional.range, vector.space.field))
 
-        super().__init__(functional.domain, vector.space,
-                         linear=functional.is_linear)
+        super(FunctionalLeftVectorMult, self).__init__(
+            functional.domain, vector.space, linear=functional.is_linear)
         self.__functional = functional
         self.__vector = vector
 
@@ -1994,8 +1998,8 @@ class OperatorLeftVectorMult(Operator):
             raise OpRangeError('`vector` {!r} not in operator.range {!r}'
                                ''.format(vector, operator.range))
 
-        super().__init__(operator.domain, operator.range,
-                         linear=operator.is_linear)
+        super(OperatorLeftVectorMult, self).__init__(
+            operator.domain, operator.range, linear=operator.is_linear)
         self.__operator = operator
         self.__vector = vector
 
@@ -2110,8 +2114,8 @@ class OperatorRightVectorMult(Operator):
             raise OpDomainError('`vector` {!r} not in operator.domain {!r}'
                                 ''.format(vector.space, operator.domain))
 
-        super().__init__(operator.domain, operator.range,
-                         linear=operator.is_linear)
+        super(OperatorRightVectorMult, self).__init__(
+            operator.domain, operator.range, linear=operator.is_linear)
         self.__operator = operator
         self.__vector = vector
 

@@ -10,7 +10,6 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from builtins import super
 
 import numpy as np
 
@@ -80,7 +79,8 @@ class Resampling(Operator):
                              '`range.uspace` ({})'
                              ''.format(domain.uspace, range.uspace))
 
-        super().__init__(domain=domain, range=range, linear=True)
+        super(Resampling, self).__init__(
+            domain=domain, range=range, linear=True)
 
     def _call(self, x, out=None):
         """Apply resampling operator.
@@ -313,7 +313,8 @@ class ResizingOperatorBase(Operator):
         # padding mode 'constant' with `pad_const != 0` is not linear
         linear = (self.pad_mode != 'constant' or self.pad_const == 0.0)
 
-        super().__init__(domain, range, linear=linear)
+        super(ResizingOperatorBase, self).__init__(
+            domain, range, linear=linear)
 
     @property
     def offset(self):

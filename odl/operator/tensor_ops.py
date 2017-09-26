@@ -10,7 +10,6 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from builtins import super
 
 import numpy as np
 
@@ -78,7 +77,8 @@ class PointwiseTensorFieldOperator(Operator):
                                 'nor a nonempty power space of it'
                                 ''.format(range, base_space))
 
-        super().__init__(domain=domain, range=range, linear=linear)
+        super(PointwiseTensorFieldOperator, self).__init__(
+            domain=domain, range=range, linear=linear)
         self.__base_space = base_space
 
     @property
@@ -162,8 +162,9 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
         if not isinstance(vfspace, ProductSpace):
             raise TypeError('`vfspace` {!r} is not a ProductSpace '
                             'instance'.format(vfspace))
-        super().__init__(domain=vfspace, range=vfspace[0],
-                         base_space=vfspace[0], linear=False)
+        super(PointwiseNorm, self).__init__(
+            domain=vfspace, range=vfspace[0], base_space=vfspace[0],
+            linear=False)
 
         # Need to check for product space shape once higher order tensors
         # are implemented
@@ -377,11 +378,13 @@ class PointwiseInnerBase(PointwiseTensorFieldOperator):
             raise TypeError('`vfsoace` {!r} is not a ProductSpace '
                             'instance'.format(vfspace))
         if adjoint:
-            super().__init__(domain=vfspace[0], range=vfspace,
-                             base_space=vfspace[0], linear=True)
+            super(PointwiseInnerBase, self).__init__(
+                domain=vfspace[0], range=vfspace, base_space=vfspace[0],
+                linear=True)
         else:
-            super().__init__(domain=vfspace, range=vfspace[0],
-                             base_space=vfspace[0], linear=True)
+            super(PointwiseInnerBase, self).__init__(
+                domain=vfspace, range=vfspace[0], base_space=vfspace[0],
+                linear=True)
 
         # Bail out if the space is complex but we cannot take the complex
         # conjugate.
@@ -490,8 +493,9 @@ class PointwiseInner(PointwiseInnerBase):
         >>> print(pw_inner(x))
         [[0.0, -7.0]]
         """
-        super().__init__(adjoint=False, vfspace=vfspace, vecfield=vecfield,
-                         weighting=weighting)
+        super(PointwiseInner, self).__init__(
+            adjoint=False, vfspace=vfspace, vecfield=vecfield,
+            weighting=weighting)
 
     @property
     def vecfield(self):
@@ -590,8 +594,9 @@ class PointwiseInnerAdjoint(PointwiseInnerBase):
                 raise ValueError('base space of the range is different from '
                                  'the given scalar space ({!r} != {!r})'
                                  ''.format(vfspace[0], sspace))
-        super().__init__(adjoint=True, vfspace=vfspace, vecfield=vecfield,
-                         weighting=weighting)
+        super(PointwiseInnerAdjoint, self).__init__(
+            adjoint=True, vfspace=vfspace, vecfield=vecfield,
+            weighting=weighting)
 
         # Get weighting from range
         if hasattr(self.range.weighting, 'array'):
@@ -624,7 +629,7 @@ class PointwiseInnerAdjoint(PointwiseInnerBase):
                               weighting=self.weights)
 
 
-# TODO: Optimize this to an optimized operator on its own.
+# TODO: Make this an optimized operator on its own.
 class PointwiseSum(PointwiseInner):
 
     """Take the point-wise sum of a vector field.
@@ -680,7 +685,8 @@ class PointwiseSum(PointwiseInner):
                             'instance'.format(vfspace))
 
         ones = vfspace.one()
-        super().__init__(vfspace, vecfield=ones, weighting=weighting)
+        super(PointwiseSum, self).__init__(
+            vfspace, vecfield=ones, weighting=weighting)
 
 
 class MatrixOperator(Operator):
@@ -801,7 +807,7 @@ class MatrixOperator(Operator):
                             'range data type {!r}.'
                             ''.format(matrix.dtype, range.dtype))
 
-        super().__init__(domain, range, linear=True)
+        super(MatrixOperator, self).__init__(domain, range, linear=True)
 
     @property
     def matrix(self):

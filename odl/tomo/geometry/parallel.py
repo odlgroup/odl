@@ -10,7 +10,6 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from builtins import super
 
 import numpy as np
 
@@ -58,7 +57,8 @@ class ParallelBeamGeometry(Geometry):
             Additional parameters passed on to the ``__init__`` method
             of `Geometry`.
         """
-        super().__init__(ndim, apart, detector, **kwargs)
+        super(ParallelBeamGeometry, self).__init__(
+            ndim, apart, detector, **kwargs)
 
         if self.ndim not in (2, 3):
             raise ValueError('`ndim` must be 2 or 3, got {}'.format(ndim))
@@ -322,8 +322,9 @@ class Parallel2dGeometry(ParallelBeamGeometry):
         # Initialize stuff. Normalization of the detector axis happens in
         # the detector class.
         detector = Flat1dDetector(part=dpart, axis=det_axis_init)
-        super().__init__(ndim=2, apart=apart, detector=detector,
-                         det_pos_init=det_pos_init, translation=translation)
+        super(Parallel2dGeometry, self).__init__(
+            ndim=2, apart=apart, detector=detector, det_pos_init=det_pos_init,
+            translation=translation)
 
         if self.motion_partition.ndim != 1:
             raise ValueError('`apart` dimension {}, expected 1'
@@ -646,8 +647,9 @@ class Parallel3dEulerGeometry(ParallelBeamGeometry):
         # Initialize stuff. Normalization of the detector axes happens in
         # the detector class.
         detector = Flat2dDetector(part=dpart, axes=det_axes_init)
-        super().__init__(ndim=3, apart=apart, detector=detector,
-                         det_pos_init=det_pos_init, translation=translation)
+        super(Parallel3dEulerGeometry, self).__init__(
+            ndim=3, apart=apart, detector=detector, det_pos_init=det_pos_init,
+            translation=translation)
 
         if self.motion_partition.ndim not in (2, 3):
             raise ValueError('`apart` has dimension {}, expected '
@@ -960,8 +962,9 @@ class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
         # the detector class.
         AxisOrientedGeometry.__init__(self, axis)
         detector = Flat2dDetector(dpart, det_axes_init)
-        super().__init__(ndim=3, apart=apart, detector=detector,
-                         det_pos_init=det_pos_init, translation=translation)
+        super(Parallel3dAxisGeometry, self).__init__(
+            ndim=3, apart=apart, detector=detector, det_pos_init=det_pos_init,
+            translation=translation)
 
         if self.motion_partition.ndim != 1:
             raise ValueError('`apart` has dimension {}, expected 1'

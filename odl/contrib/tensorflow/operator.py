@@ -53,7 +53,7 @@ class TensorflowOperator(odl.Operator):
         else:
             self.sess = sess
 
-        odl.Operator.__init__(self, domain, range, linear=linear)
+        super(TensorflowOperator, self).__init__(domain, range, linear=linear)
 
     def _call(self, x):
         result = self.sess.run(self.output_tensor,

@@ -10,7 +10,7 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from builtins import str, super
+from builtins import str
 
 import numpy as np
 import warnings
@@ -281,9 +281,11 @@ class RayTransformBase(Operator):
 
         # Finally, initialize the Operator structure
         if variant == 'forward':
-            super().__init__(domain=reco_space, range=proj_space, linear=True)
+            super(RayTransformBase, self).__init__(
+                domain=reco_space, range=proj_space, linear=True)
         elif variant == 'backward':
-            super().__init__(domain=proj_space, range=reco_space, linear=True)
+            super(RayTransformBase, self).__init__(
+                domain=proj_space, range=reco_space, linear=True)
 
     @property
     def impl(self):
@@ -365,8 +367,9 @@ class RayTransform(RayTransformBase):
         and storage order 'C'. Otherwise copies will be needed.
         """
         range = kwargs.pop('range', None)
-        super().__init__(reco_space=domain, proj_space=range,
-                         geometry=geometry, variant='forward', **kwargs)
+        super(RayTransform, self).__init__(
+            reco_space=domain, proj_space=range, geometry=geometry,
+            variant='forward', **kwargs)
 
     def _call_real(self, x_real, out_real):
         """Real-space forward projection for the current set-up.
@@ -470,8 +473,9 @@ class RayBackProjection(RayTransformBase):
         and storage order 'C'. Otherwise copies will be needed.
         """
         domain = kwargs.pop('domain', None)
-        super().__init__(reco_space=range, proj_space=domain,
-                         geometry=geometry, variant='backward', **kwargs)
+        super(RayBackProjection, self).__init__(
+            reco_space=range, proj_space=domain, geometry=geometry,
+            variant='backward', **kwargs)
 
     def _call_real(self, x_real, out_real):
         """Real-space back-projection for the current set-up.

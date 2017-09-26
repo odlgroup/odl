@@ -10,7 +10,6 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from builtins import super
 
 import numpy as np
 from numbers import Integral
@@ -213,7 +212,8 @@ class ProductSpaceOperator(Operator):
         # Set linearity
         linear = all(op.is_linear for op in self.ops.data)
 
-        super().__init__(domain=domain, range=range, linear=linear)
+        super(ProductSpaceOperator, self).__init__(
+            domain=domain, range=range, linear=linear)
 
     def _call(self, x, out=None):
         """Call the operators on the parts of ``x``."""
@@ -501,7 +501,8 @@ class ComponentProjection(Operator):
         ])
         """
         self.__index = index
-        super().__init__(space, space[index], linear=True)
+        super(ComponentProjection, self).__init__(
+            space, space[index], linear=True)
 
     @property
     def index(self):
@@ -594,7 +595,8 @@ class ComponentProjectionAdjoint(Operator):
         ])
         """
         self.__index = index
-        super().__init__(space[index], space, linear=True)
+        super(ComponentProjectionAdjoint, self).__init__(
+            space[index], space, linear=True)
 
     @property
     def index(self):
@@ -694,10 +696,9 @@ class BroadcastOperator(Operator):
 
         self.__operators = operators
         self.__prod_op = ProductSpaceOperator([[op] for op in operators])
-
-        super().__init__(self.prod_op.domain[0],
-                         self.prod_op.range,
-                         self.prod_op.is_linear)
+        super(BroadcastOperator, self).__init__(
+            self.prod_op.domain[0], self.prod_op.range,
+            linear=self.prod_op.is_linear)
 
     @property
     def prod_op(self):
@@ -871,9 +872,9 @@ class ReductionOperator(Operator):
         self.__operators = operators
         self.__prod_op = ProductSpaceOperator([operators])
 
-        super().__init__(self.prod_op.domain,
-                         self.prod_op.range[0],
-                         self.prod_op.is_linear)
+        super(ReductionOperator, self).__init__(
+            self.prod_op.domain, self.prod_op.range[0],
+            linear=self.prod_op.is_linear)
 
     @property
     def prod_op(self):
@@ -1062,10 +1063,9 @@ class DiagonalOperator(ProductSpaceOperator):
         indices = [range(len(operators)), range(len(operators))]
         shape = (len(operators), len(operators))
         op_matrix = scipy.sparse.coo_matrix((operators, indices), shape)
+        super(DiagonalOperator, self).__init__(op_matrix, **kwargs)
 
         self.__operators = tuple(operators)
-
-        super().__init__(op_matrix, **kwargs)
 
     @property
     def operators(self):

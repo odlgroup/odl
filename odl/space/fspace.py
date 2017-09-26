@@ -10,7 +10,6 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from builtins import super
 
 from inspect import isfunction
 import numpy as np
@@ -222,8 +221,9 @@ class FunctionSetElement(Operator):
             It must return a `FunctionSet.range` element or a
             `numpy.ndarray` of such (vectorized call).
         """
+        super(FunctionSetElement, self).__init__(
+            fset.domain, fset.range, linear=False)
         self.__space = fset
-        super().__init__(self.space.domain, self.space.range, linear=False)
 
         # Determine which type of implementation fcall is
         if isinstance(fcall, FunctionSetElement):
@@ -1188,6 +1188,7 @@ class FunctionSpaceElement(LinearSpaceElement, FunctionSetElement):
     def __repr__(self):
         """Return ``repr(self)``."""
         return 'FunctionSpaceElement'
+
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position

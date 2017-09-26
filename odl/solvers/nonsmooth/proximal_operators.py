@@ -23,7 +23,6 @@ Foundations and Trends in Optimization, 1 (2014), pp 127-239.
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from builtins import super
 
 import numpy as np
 
@@ -569,7 +568,8 @@ def proximal_box_constraint(space, lower=None, upper=None):
             sigma : positive float
                 Step size parameter, not used.
             """
-            super().__init__(domain=space, range=space, linear=False)
+            super(ProxOpBoxConstraint, self).__init__(
+                domain=space, range=space, linear=False)
 
         def _call(self, x, out):
             """Apply the operator to ``x`` and store the result in ``out``."""
@@ -743,8 +743,9 @@ def proximal_l2(space, lam=1, g=None):
             sigma : positive float
                 Step size parameter
             """
+            super(ProximalL2, self).__init__(
+                domain=space, range=space, linear=False)
             self.sigma = float(sigma)
-            super().__init__(domain=space, range=space, linear=False)
 
         def _call(self, x, out):
             """Apply the operator to ``x`` and stores the result in ``out``."""
@@ -846,8 +847,9 @@ def proximal_convex_conj_l2_squared(space, lam=1, g=None):
             sigma : positive float
                 Step size parameter
             """
+            super(ProximalConvexConjL2Squared, self).__init__(
+                domain=space, range=space, linear=g is None)
             self.sigma = float(sigma)
-            super().__init__(domain=space, range=space, linear=g is None)
 
         def _call(self, x, out):
             """Apply the operator to ``x`` and stores the result in ``out``"""
@@ -1021,11 +1023,12 @@ def proximal_convex_conj_l1(space, lam=1, g=None, isotropic=False):
                 Step size parameter
             """
             # sigma is not used
+            super(ProximalConvexConjL1, self).__init__(
+                domain=space, range=space, linear=False)
             self.sigma = float(sigma)
-            super().__init__(domain=space, range=space, linear=False)
 
         def _call(self, x, out):
-            """Apply the operator to ``x`` and stores the result in ``out``."""
+            """Apply the operator to ``x`` and store the result in ``out``."""
 
             # lam * (x - sigma * g) / max(lam, |x - sigma * g|)
 
@@ -1240,8 +1243,9 @@ def proximal_convex_conj_kl(space, lam=1, g=None):
             ----------
             sigma : positive float
             """
+            super(ProximalConvexConjKL, self).__init__(
+                domain=space, range=space, linear=False)
             self.sigma = float(sigma)
-            super().__init__(domain=space, range=space, linear=False)
 
         def _call(self, x, out):
             """Apply the operator to ``x`` and stores the result in ``out``."""
@@ -1376,7 +1380,8 @@ def proximal_convex_conj_kl_cross_entropy(space, lam=1, g=None):
             sigma : positive float
             """
             self.sigma = float(sigma)
-            super().__init__(domain=space, range=space, linear=False)
+            super(ProximalConvexConjKLCrossEntropy, self).__init__(
+                domain=space, range=space, linear=False)
 
         def _call(self, x, out):
             """Apply the operator to ``x`` and stores the result in ``out``."""

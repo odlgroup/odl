@@ -10,7 +10,6 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from builtins import super
 
 import numpy as np
 
@@ -260,8 +259,8 @@ class MatrixWeighting(Weighting):
         precomp_mat_pow = kwargs.pop('precomp_mat_pow', False)
         self._cache_mat_pow = bool(kwargs.pop('cache_mat_pow', True))
         self._cache_mat_decomp = bool(kwargs.pop('cache_mat_decomp', False))
-        super().__init__(impl=impl, exponent=exponent,
-                         dist_using_inner=dist_using_inner)
+        super(MatrixWeighting, self).__init__(
+            impl=impl, exponent=exponent, dist_using_inner=dist_using_inner)
 
         # Check and set matrix
         if scipy.sparse.isspmatrix(matrix):
@@ -398,13 +397,14 @@ class MatrixWeighting(Weighting):
         if other is self:
             return True
 
-        return (super().__eq__(other) and
+        return (super(MatrixWeighting, self).__eq__(other) and
                 self.matrix is getattr(other, 'matrix', None))
 
     def __hash__(self):
         """Return ``hash(self)``."""
         # TODO: Better hash for matrix?
-        return super().__hash__() ^ hash(self.matrix.tostring())
+        return hash((super(MatrixWeighting, self).__hash__(),
+                     self.matrix.tobytes()))
 
     def equiv(self, other):
         """Test if other is an equivalent weighting.
@@ -552,8 +552,8 @@ class ArrayWeighting(Weighting):
 
             This option can only be used if ``exponent`` is 2.0.
         """
-        super().__init__(impl=impl, exponent=exponent,
-                         dist_using_inner=dist_using_inner)
+        super(ArrayWeighting, self).__init__(
+            impl=impl, exponent=exponent, dist_using_inner=dist_using_inner)
 
         # We store our "own" data structures as-is to retain Numpy
         # compatibility while avoiding copies. Other things are run through
@@ -595,13 +595,14 @@ class ArrayWeighting(Weighting):
         if other is self:
             return True
 
-        return (super().__eq__(other) and
+        return (super(ArrayWeighting, self).__eq__(other) and
                 self.array is getattr(other, 'array', None))
 
     def __hash__(self):
         """Return ``hash(self)``."""
         # TODO: Better hash for array?
-        return super().__hash__() ^ hash(self.array.tostring())
+        return hash((super(ArrayWeighting, self).__hash__(),
+                     self.array.tobytes()))
 
     def equiv(self, other):
         """Return True if other is an equivalent weighting.
@@ -679,8 +680,8 @@ class ConstWeighting(Weighting):
 
             This option can only be used if ``exponent`` is 2.0.
         """
-        super().__init__(impl=impl, exponent=exponent,
-                         dist_using_inner=dist_using_inner)
+        super(ConstWeighting, self).__init__(
+            impl=impl, exponent=exponent, dist_using_inner=dist_using_inner)
         self._const = float(const)
         if self.const <= 0:
             raise ValueError('expected positive constant, got {}'
@@ -705,12 +706,12 @@ class ConstWeighting(Weighting):
         if other is self:
             return True
 
-        return (super().__eq__(other) and
+        return (super(ConstWeighting, self).__eq__(other) and
                 self.const == getattr(other, 'const', None))
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        return super().__hash__() ^ hash(self.const)
+        return hash((super(ConstWeighting, self).__hash__(), self.const))
 
     def equiv(self, other):
         """Test if other is an equivalent weighting.
@@ -830,8 +831,8 @@ class CustomInner(Weighting):
 
             Can only be used if ``exponent`` is 2.0.
         """
-        super().__init__(impl=impl, exponent=2.0,
-                         dist_using_inner=dist_using_inner)
+        super(CustomInner, self).__init__(
+            impl=impl, exponent=2.0, dist_using_inner=dist_using_inner)
 
         if not callable(inner):
             raise TypeError('`inner` {!r} is not callable'
@@ -852,11 +853,12 @@ class CustomInner(Weighting):
             ``True`` if other is a `CustomInner`
             instance with the same inner product, ``False`` otherwise.
         """
-        return super().__eq__(other) and self.inner == other.inner
+        return (super(CustomInner, self).__eq__(other) and
+                self.inner == other.inner)
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        return super().__hash__() ^ hash(self.inner)
+        return hash((super(CustomInner, self).__hash__(), self.inner))
 
     @property
     def repr_part(self):
@@ -898,7 +900,8 @@ class CustomNorm(Weighting):
         impl : string
             Specifier for the implementation backend
         """
-        super().__init__(impl=impl, exponent=1.0, dist_using_inner=False)
+        super(CustomNorm, self).__init__(
+            impl=impl, exponent=1.0, dist_using_inner=False)
 
         if not callable(norm):
             raise TypeError('`norm` {!r} is not callable'
@@ -923,11 +926,12 @@ class CustomNorm(Weighting):
             ``True`` if other is a `CustomNorm` instance with the same
             norm, ``False`` otherwise.
         """
-        return super().__eq__(other) and self.norm == other.norm
+        return (super(CustomNorm, self).__eq__(other) and
+                self.norm == other.norm)
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        return super().__hash__() ^ hash(self.norm)
+        return hash((super(CustomNorm, self).__hash__(), self.norm))
 
     @property
     def repr_part(self):
@@ -971,7 +975,8 @@ class CustomDist(Weighting):
         impl : string
             Specifier for the implementation backend
         """
-        super().__init__(impl=impl, exponent=1.0, dist_using_inner=False)
+        super(CustomDist, self).__init__(
+            impl=impl, exponent=1.0, dist_using_inner=False)
 
         if not callable(dist):
             raise TypeError('`dist` {!r} is not callable'
@@ -1000,11 +1005,12 @@ class CustomDist(Weighting):
             ``True`` if other is a `CustomDist` instance with the same
             dist, ``False`` otherwise.
         """
-        return super().__eq__(other) and self.dist == other.dist
+        return (super(CustomDist, self).__eq__(other) and
+                self.dist == other.dist)
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        return super().__hash__() ^ hash(self.dist)
+        return hash((super(CustomDist, self).__hash__(), self.dist))
 
     @property
     def repr_part(self):

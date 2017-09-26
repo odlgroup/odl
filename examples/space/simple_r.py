@@ -8,7 +8,7 @@ class Reals(odl.LinearSpace):
     """The real numbers."""
 
     def __init__(self):
-        odl.LinearSpace.__init__(self, field=odl.RealNumbers())
+        super(Reals, self).__init__(field=odl.RealNumbers())
 
     def _inner(self, x1, x2):
         return x1.__val__ * x2.__val__
@@ -32,7 +32,7 @@ class RealNumber(odl.LinearSpaceElement):
     __val__ = None
 
     def __init__(self, space, v):
-        odl.LinearSpaceElement.__init__(self, space=space)
+        super(RealNumber, self).__init__(space=space)
         self.__val__ = v
 
     def __float__(self):

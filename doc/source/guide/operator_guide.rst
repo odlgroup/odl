@@ -33,7 +33,7 @@ for a matrix :math:`A\in \mathbb{R}^{n\times m}` as follows::
             self.matrix = matrix
             dom = odl.rn(matrix.shape[1])
             ran = odl.rn(matrix.shape[0])
-            odl.Operator.__init__(self, dom, ran)
+            super(MatVecOperator, self).__init__(dom, ran)
 
 In addition, an `Operator` needs at least one way of
 evaluation, *in-place* or *out-of-place*.

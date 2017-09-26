@@ -13,8 +13,8 @@ class MyFunctional(odl.solvers.Functional):
         # This comand calls the init of Functional and sets a number of
         # parameters associated with a functional. All but domain have default
         # values if not set.
-        odl.solvers.Functional.__init__(self, space=space, linear=False,
-                                        grad_lipschitz=2)
+        super(MyFunctional, self).__init__(
+            space=space, linear=False, grad_lipschitz=2)
 
         # We need to check that linear_term is in the domain. Then we store the
         # value of linear_term for future use.
@@ -43,8 +43,8 @@ class MyFunctional(odl.solvers.Functional):
 
             def __init__(self):
                 """Initialize a new instance."""
-                super().__init__(domain=functional.domain,
-                                 range=functional.domain)
+                super(MyGradientOperator, self).__init__(
+                    domain=functional.domain, range=functional.domain)
 
             def _call(self, x):
                 """Evaluate the gradient."""
@@ -79,8 +79,8 @@ class MyFunctionalConjugate(odl.solvers.Functional):
 
     def __init__(self, space, y):
         """initialize a new instance."""
-        odl.solvers.Functional.__init__(self, space=space, linear=False,
-                                        grad_lipschitz=2)
+        super(MyFunctionalConjugate, self).__init__(
+            space=space, linear=False, grad_lipschitz=2)
 
         if y not in space:
             raise TypeError('y is not in the domain!')

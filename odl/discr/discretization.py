@@ -10,7 +10,6 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from builtins import super
 
 from odl.operator import Operator
 from odl.space.base_ntuples import (NtuplesBase, NtuplesBaseVector,
@@ -109,7 +108,7 @@ class DiscretizedSet(NtuplesBase):
                                  'the undiscretized space {}'
                                  ''.format(interpol.range, uspace))
 
-        super().__init__(dspace.size, dspace.dtype)
+        super(DiscretizedSet, self).__init__(dspace.size, dspace.dtype)
         self.__uspace = uspace
         self.__dspace = dspace
         self.__sampling = sampling
@@ -244,7 +243,7 @@ class DiscretizedSetElement(NtuplesBaseVector):
 
     def __init__(self, space, ntuple):
         """Initialize a new instance."""
-        NtuplesBaseVector.__init__(self, space)
+        super(DiscretizedSetElement, self).__init__(space)
         self.__ntuple = ntuple
 
     @property

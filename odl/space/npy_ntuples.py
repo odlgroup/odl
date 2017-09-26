@@ -11,7 +11,6 @@
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future.utils import native
-from builtins import super
 
 import ctypes
 from functools import partial
@@ -181,9 +180,8 @@ class NumpyNtuplesVector(NtuplesBaseVector):
 
     def __init__(self, space, data):
         """Initialize a new instance."""
+        super(NumpyNtuplesVector, self).__init__(space)
         self.__data = data
-
-        NtuplesBaseVector.__init__(self, space)
 
     @property
     def data(self):
@@ -1265,7 +1263,7 @@ class NumpyFnVector(FnBaseVector, NumpyNtuplesVector):
         """Return ``self **= other``."""
         try:
             if other == int(other):
-                return super().__ipow__(other)
+                return super(NumpyFnVector, self).__ipow__(other)
         except TypeError:
             pass
 
@@ -1527,8 +1525,9 @@ class NumpyFnMatrixWeighting(MatrixWeighting):
         Depending on the matrix size, this can be rather expensive.
         """
         # TODO: fix dead link `scipy.sparse.spmatrix`
-        super().__init__(matrix, impl='numpy', exponent=exponent,
-                         dist_using_inner=dist_using_inner, **kwargs)
+        super(NumpyFnMatrixWeighting, self).__init__(
+            matrix, impl='numpy', exponent=exponent,
+            dist_using_inner=dist_using_inner, **kwargs)
 
     def inner(self, x1, x2):
         """Calculate the matrix-weighted inner product of two vectors.
@@ -1674,8 +1673,9 @@ class NumpyFnArrayWeighting(ArrayWeighting):
           not define an inner product or norm, respectively. This is not
           checked during initialization.
         """
-        super().__init__(array, impl='numpy', exponent=exponent,
-                         dist_using_inner=dist_using_inner)
+        super(NumpyFnArrayWeighting, self).__init__(
+            array, impl='numpy', exponent=exponent,
+            dist_using_inner=dist_using_inner)
 
     def inner(self, x1, x2):
         """Return the weighted inner product of two vectors.
@@ -1789,8 +1789,9 @@ class NumpyFnConstWeighting(ConstWeighting):
         - The constant must be positive, otherwise it does not define an
           inner product or norm, respectively.
         """
-        super().__init__(constant, impl='numpy', exponent=exponent,
-                         dist_using_inner=dist_using_inner)
+        super(NumpyFnConstWeighting, self).__init__(
+            constant, impl='numpy', exponent=exponent,
+            dist_using_inner=dist_using_inner)
 
     def inner(self, x1, x2):
         """Calculate the constant-weighted inner product of two vectors.
@@ -1893,11 +1894,12 @@ class NumpyFnNoWeighting(NoWeighting, NumpyFnConstWeighting):
             args = args[2:]
 
         if exponent == 2.0 and not dist_using_inner:
-            if not cls._instance:
-                cls._instance = super().__new__(cls, *args, **kwargs)
+            if cls._instance is None:
+                cls._instance = super(NoWeighting, cls).__new__(
+                    cls, *args, **kwargs)
             return cls._instance
         else:
-            return super().__new__(cls, *args, **kwargs)
+            return super(NoWeighting, cls).__new__(cls, *args, **kwargs)
 
     def __init__(self, exponent=2.0, dist_using_inner=False):
         """Initialize a new instance.
@@ -1918,8 +1920,8 @@ class NumpyFnNoWeighting(NoWeighting, NumpyFnConstWeighting):
 
             This option can only be used if ``exponent`` is 2.0.
         """
-        super().__init__(impl='numpy', exponent=exponent,
-                         dist_using_inner=dist_using_inner)
+        super(NumpyFnNoWeighting, self).__init__(
+            impl='numpy', exponent=exponent, dist_using_inner=dist_using_inner)
 
 
 class NumpyFnCustomInner(CustomInner):
@@ -1950,8 +1952,8 @@ class NumpyFnCustomInner(CustomInner):
             for large arrays. On the downside, it will not evaluate to
             exactly zero for equal (but not identical) ``x`` and ``y``.
         """
-        super().__init__(inner, impl='numpy',
-                         dist_using_inner=dist_using_inner)
+        super(NumpyFnCustomInner, self).__init__(
+            inner, impl='numpy', dist_using_inner=dist_using_inner)
 
 
 class NumpyFnCustomNorm(CustomNorm):
@@ -1976,7 +1978,7 @@ class NumpyFnCustomNorm(CustomNorm):
             - ``||s * x|| = |s| * ||x||``
             - ``||x + y|| <= ||x|| + ||y||``
         """
-        super().__init__(norm, impl='numpy')
+        super(NumpyFnCustomNorm, self).__init__(norm, impl='numpy')
 
 
 class NumpyFnCustomDist(CustomDist):
@@ -2002,7 +2004,7 @@ class NumpyFnCustomDist(CustomDist):
             - ``dist(x, y) = dist(y, x)``
             - ``dist(x, y) <= dist(x, z) + dist(z, y)``
         """
-        super().__init__(dist, impl='numpy')
+        super(NumpyFnCustomDist, self).__init__(dist, impl='numpy')
 
 
 if __name__ == '__main__':

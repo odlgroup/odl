@@ -13,7 +13,7 @@ class SimpleRn(FnBase):
     """The real space R^n, non-optimized implmentation."""
 
     def __init__(self, size):
-        FnBase.__init__(self, size, np.float)
+        super(SimpleRn, self).__init__(size, np.float)
 
     def zero(self):
         return self.element(np.zeros(self.size))
@@ -51,7 +51,7 @@ class SimpleRn(FnBase):
 
 class RnVector(FnBaseVector):
     def __init__(self, space, data):
-        FnBaseVector.__init__(self, space)
+        super(RnVector, self).__init__(space)
         self.data = data
 
     def __getitem__(self, index):
@@ -65,7 +65,7 @@ class RnVector(FnBaseVector):
 
 
 r5 = SimpleRn(5)
-#odl.diagnostics.SpaceTest(r5).run_tests()
+# odl.diagnostics.SpaceTest(r5).run_tests()
 
 # Do some tests to compare
 n = 10**7

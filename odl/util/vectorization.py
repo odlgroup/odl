@@ -10,7 +10,6 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from builtins import super
 
 from functools import wraps
 import numpy as np
@@ -135,7 +134,7 @@ class OptionalArgDecorator(object):
            the stored ``dec_args`` and ``dec_kwargs``.
         """
         # Decorating without arguments: return wrapper w/o args directly
-        instance = super().__new__(cls)
+        instance = super(OptionalArgDecorator, cls).__new__(cls)
 
         if (not kwargs and
                 len(args) == 1 and
@@ -250,6 +249,7 @@ class _NumpyVectorizeWrapper(object):
         vect_kwargs :
             keyword arguments for `numpy.vectorize`
         """
+        super(_NumpyVectorizeWrapper, self).__init__()
         self.func = func
         self.vfunc = None
         self.vect_args = vect_args

@@ -62,7 +62,7 @@ strong_convexity = 1 / reg_param
 
 
 # define callback to store function values
-class CallbackStore(odl.solvers.util.callback.SolverCallback):
+class CallbackStore(odl.solvers.util.callback.Callback):
     def __init__(self):
         self.iteration_count = 0
         self.iteration_counts = []

@@ -16,7 +16,7 @@ of partitions of intervals.
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from builtins import object, range, super, zip
+from builtins import object, range, zip
 
 import numpy as np
 
@@ -57,6 +57,8 @@ class RectPartition(object):
             Spatial points supporting the partition. They must be
             contained in ``intv_prod``.
         """
+        super(RectPartition, self).__init__()
+
         if not isinstance(intv_prod, IntervalProd):
             raise TypeError('{!r} is not an IntervalProd instance'
                             ''.format(intv_prod))
@@ -75,7 +77,6 @@ class RectPartition(object):
             raise ValueError('{} is not contained in {}'
                              ''.format(grid, intv_prod))
 
-        super().__init__()
         self.__set = intv_prod
         self.__grid = grid
 

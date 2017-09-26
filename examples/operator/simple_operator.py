@@ -5,7 +5,7 @@ import odl
 
 class AddOp(odl.Operator):
     def __init__(self, space, add_this):
-        odl.Operator.__init__(self, domain=space, range=space)
+        super(AddOp, self).__init__(domain=space, range=space)
         self.add_this = add_this
 
     def _call(self, x):

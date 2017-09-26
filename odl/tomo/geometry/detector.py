@@ -10,7 +10,7 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from builtins import object, super
+from builtins import object
 
 import numpy as np
 
@@ -170,7 +170,7 @@ class FlatDetector(Detector):
         # TODO: apart from being constant, there is no big simplification
         # in this method compared to parent. Consider removing FlatDetector
         # altogether.
-        return super().surface_measure(self.params.min_pt)
+        return super(FlatDetector, self).surface_measure(self.params.min_pt)
 
 
 class Flat1dDetector(FlatDetector):
@@ -188,7 +188,7 @@ class Flat1dDetector(FlatDetector):
         axis : `array-like`, shape ``(2,)``
             Principal axis of the detector.
         """
-        super().__init__(part)
+        super(Flat1dDetector, self).__init__(part)
         if self.ndim != 1:
             raise ValueError('expected partition to have 1 dimension, '
                              'got {}'.format(self.ndim))
@@ -285,7 +285,7 @@ class Flat2dDetector(FlatDetector):
             Principal axes of the detector, e.g.
             ``[(0, 1, 0), (0, 0, 1)]``.
         """
-        super().__init__(part)
+        super(Flat2dDetector, self).__init__(part)
         if self.ndim != 2:
             raise ValueError('expected partition to have 2 dimensions, '
                              'got {}'.format(self.ndim))
@@ -395,7 +395,7 @@ class CircleSectionDetector(Detector):
         circ_rad : positive float
             Radius of the circle along which the detector is curved.
         """
-        super().__init__(part)
+        super(CircleSectionDetector, self).__init__(part)
         if self.ndim != 1:
             raise ValueError('expected `part` to have 1 dimension, '
                              'got {}'.format(self.ndim))

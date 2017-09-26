@@ -119,8 +119,8 @@ class NumericalDerivative(Operator):
         if self.method not in ('backward', 'forward', 'central'):
             raise ValueError("`method` '{}' not understood").format(method_in)
 
-        Operator.__init__(self, operator.domain, operator.range,
-                          linear=True)
+        super(NumericalDerivative, self).__init__(
+            operator.domain, operator.range, linear=True)
 
     def _call(self, dx):
         """Return ``self(x)``."""
@@ -238,8 +238,8 @@ class NumericalGradient(Operator):
         if self.method not in ('backward', 'forward', 'central'):
             raise ValueError("`method` '{}' not understood").format(method_in)
 
-        Operator.__init__(self, functional.domain, functional.domain,
-                          linear=functional.is_linear)
+        super(NumericalGradient, self).__init__(
+            functional.domain, functional.domain, linear=functional.is_linear)
 
     def _call(self, x):
         """Return ``self(x)``."""

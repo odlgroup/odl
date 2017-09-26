@@ -10,7 +10,7 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from builtins import super, str
+from builtins import str
 
 import numpy as np
 from numbers import Integral
@@ -143,7 +143,7 @@ class DiscreteLp(DiscretizedSpace):
                 fspace, self.partition, dspace, self.interp_byaxis,
                 order=self.order)
 
-        DiscretizedSpace.__init__(self, fspace, dspace, sampling, interpol)
+        super(DiscreteLp, self).__init__(fspace, dspace, sampling, interpol)
         self.__exponent = float(exponent)
         if (hasattr(self.dspace, 'exponent') and
                 self.exponent != dspace.exponent):
@@ -410,9 +410,9 @@ class DiscreteLp(DiscretizedSpace):
             func_list = _scaling_func_list(bdry_fracs)
 
             x_arr = apply_on_boundary(x, func=func_list, only_once=False)
-            return super()._inner(self.element(x_arr), y)
+            return super(DiscreteLp, self)._inner(self.element(x_arr), y)
         else:
-            return super()._inner(x, y)
+            return super(DiscreteLp, self)._inner(x, y)
 
     def _norm(self, x):
         """Return ``self.norm(x)``."""
@@ -422,9 +422,9 @@ class DiscreteLp(DiscretizedSpace):
             func_list = _scaling_func_list(bdry_fracs, exponent=self.exponent)
 
             x_arr = apply_on_boundary(x, func=func_list, only_once=False)
-            return super()._norm(self.element(x_arr))
+            return super(DiscreteLp, self)._norm(self.element(x_arr))
         else:
-            return super()._norm(x)
+            return super(DiscreteLp, self)._norm(x)
 
     def _dist(self, x, y):
         """Return ``self.dist(x, y)``."""
@@ -436,9 +436,10 @@ class DiscreteLp(DiscretizedSpace):
             arrs = [apply_on_boundary(vec, func=func_list, only_once=False)
                     for vec in (x, y)]
 
-            return super()._dist(self.element(arrs[0]), self.element(arrs[1]))
+            return super(DiscreteLp, self)._dist(
+                self.element(arrs[0]), self.element(arrs[1]))
         else:
-            return super()._dist(x, y)
+            return super(DiscreteLp, self)._dist(x, y)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -566,7 +567,8 @@ class DiscreteLpElement(DiscretizedSpaceElement):
                                  'expected {!r}'
                                  ''.format(self.space.order, out_order))
 
-            super().asarray(out=out.ravel(order=self.space.order))
+            super(DiscreteLpElement, self).asarray(
+                out=out.ravel(order=self.space.order))
             return out
 
     @property
@@ -696,7 +698,7 @@ class DiscreteLpElement(DiscretizedSpaceElement):
                                                self.space.shape))
                 values = values.ravel(order=self.space.order)
 
-            super().__setitem__(indices, values)
+            super(DiscreteLpElement, self).__setitem__(indices, values)
 
     @property
     def ufuncs(self):

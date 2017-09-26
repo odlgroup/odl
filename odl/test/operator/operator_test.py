@@ -7,7 +7,6 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import division
-from builtins import super
 import pytest
 import numpy as np
 import sys
@@ -31,7 +30,7 @@ class MultiplyAndSquareOp(Operator):
         ran = (odl.rn(matrix.shape[0])
                if range is None else range)
 
-        super().__init__(dom, ran)
+        super(MultiplyAndSquareOp, self).__init__(dom, ran)
         self.matrix = matrix
 
     def _call(self, rhs, out=None):
@@ -481,7 +480,7 @@ class SumFunctional(Operator):
     """Sum of elements."""
 
     def __init__(self, domain):
-        super().__init__(domain, domain.field, linear=True)
+        super(SumFunctional, self).__init__(domain, domain.field, linear=True)
 
     def _call(self, x):
         return np.sum(x)
@@ -496,7 +495,7 @@ class ConstantVector(Operator):
     """Vector times a scalar."""
 
     def __init__(self, domain):
-        super().__init__(domain.field, domain, linear=True)
+        super(ConstantVector, self).__init__(domain.field, domain, linear=True)
 
     def _call(self, x):
         return self.range.element(np.ones(self.range.size) * x)
@@ -675,7 +674,8 @@ class SumSquaredFunctional(Operator):
     """Sum of the squared elements."""
 
     def __init__(self, domain):
-        super().__init__(domain, domain.field, linear=False)
+        super(SumSquaredFunctional, self).__init__(
+            domain, domain.field, linear=False)
 
     def _call(self, x):
         return np.sum(x ** 2)

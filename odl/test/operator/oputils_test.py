@@ -7,9 +7,8 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import division
-from builtins import super
-import pytest
 import numpy as np
+import pytest
 
 import odl
 from odl.operator.oputils import matrix_representation, power_method_opnorm
@@ -95,7 +94,7 @@ def test_matrix_representation_product_to_product():
     ran_and_dom = ProductSpace(rn, rm)
 
     AB_matrix = np.vstack([np.hstack([A, np.zeros((n, m))]),
-                          np.hstack([np.zeros((m, n)), B])])
+                           np.hstack([np.zeros((m, n)), B])])
     ABop = ProductSpaceOperator([[Aop, 0],
                                  [0, Bop]],
                                 ran_and_dom, ran_and_dom)
@@ -118,7 +117,7 @@ def test_matrix_representation_product_to_product_two():
     ran_and_dom = ProductSpace(rn, 2)
 
     AB_matrix = np.vstack([np.hstack([A, np.zeros((n, n))]),
-                          np.hstack([np.zeros((n, n)), B])])
+                           np.hstack([np.zeros((n, n)), B])])
     ABop = ProductSpaceOperator([[Aop, 0],
                                  [0, Bop]],
                                 ran_and_dom, ran_and_dom)
@@ -129,52 +128,52 @@ def test_matrix_representation_product_to_product_two():
 
 def test_matrix_representation_not_linear_op():
     # Verify that the matrix representation function gives correct error
-    class small_nonlin_op(odl.Operator):
-        """Small nonlinear test operator"""
+    class MyNonLinOp(odl.Operator):
+        """Small nonlinear test operator."""
         def __init__(self):
-            super().__init__(domain=odl.rn(3), range=odl.rn(4), linear=False)
+            super(MyNonLinOp, self).__init__(
+                domain=odl.rn(3), range=odl.rn(4), linear=False)
 
         def _call(self, x):
-            return x
+            return x ** 2
 
-    nonlin_op = small_nonlin_op()
+    nonlin_op = MyNonLinOp()
     with pytest.raises(ValueError):
         matrix_representation(nonlin_op)
 
 
 def test_matrix_representation_wrong_domain():
     # Verify that the matrix representation function gives correct error
-    class small_op(odl.Operator):
-        """Small nonlinear test operator"""
+    class MyOp(odl.Operator):
+        """Small test operator."""
         def __init__(self):
-            super().__init__(domain=ProductSpace(odl.rn(3),
-                                                 ProductSpace(odl.rn(3),
-                                                              odl.rn(3))),
-                             range=odl.rn(4), linear=True)
+            super(MyOp, self).__init__(
+                domain=odl.rn(3) * odl.rn(3) ** 2,
+                range=odl.rn(4),
+                linear=True)
 
         def _call(self, x, out):
             return odl.rn(np.random.rand(4))
 
-    nonlin_op = small_op()
+    nonlin_op = MyOp()
     with pytest.raises(TypeError):
         matrix_representation(nonlin_op)
 
 
 def test_matrix_representation_wrong_range():
     # Verify that the matrix representation function gives correct error
-    class small_op(odl.Operator):
-        """Small nonlinear test operator"""
+    class MyOp(odl.Operator):
+        """Small test operator."""
         def __init__(self):
-            super().__init__(domain=odl.rn(3),
-                             range=ProductSpace(odl.rn(3),
-                                                ProductSpace(odl.rn(3),
-                                                             odl.rn(3))),
-                             linear=True)
+            super(MyOp, self).__init__(
+                domain=odl.rn(3),
+                range=odl.rn(3) * odl.rn(3) ** 2,
+                linear=True)
 
         def _call(self, x, out):
             return odl.rn(np.random.rand(4))
 
-    nonlin_op = small_op()
+    nonlin_op = MyOp()
     with pytest.raises(TypeError):
         matrix_representation(nonlin_op)
 

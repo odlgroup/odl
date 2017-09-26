@@ -10,7 +10,7 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from builtins import str, super
+from builtins import str
 
 import numpy as np
 
@@ -140,9 +140,11 @@ class WaveletTransformBase(Operator):
         self.__variant = variant
 
         if variant == 'forward':
-            super().__init__(domain=space, range=coeff_space, linear=True)
+            super(WaveletTransformBase, self).__init__(
+                domain=space, range=coeff_space, linear=True)
         else:
-            super().__init__(domain=coeff_space, range=space, linear=True)
+            super(WaveletTransformBase, self).__init__(
+                domain=coeff_space, range=space, linear=True)
 
     @property
     def impl(self):
@@ -295,9 +297,9 @@ class WaveletTransform(WaveletTransformBase):
         >>> decomp.shape
         (16,)
         """
-        super().__init__(space=domain, wavelet=wavelet, nlevels=nlevels,
-                         variant='forward', pad_mode=pad_mode,
-                         pad_const=pad_const, impl=impl)
+        super(WaveletTransform, self).__init__(
+            space=domain, wavelet=wavelet, nlevels=nlevels, variant='forward',
+            pad_mode=pad_mode, pad_const=pad_const, impl=impl)
 
     def _call(self, x):
         """Return wavelet transform of ``x``."""
@@ -328,7 +330,7 @@ class WaveletTransform(WaveletTransformBase):
             return scale * self.inverse
         else:
             # TODO: put adjoint here
-            return super().adjoint
+            return super(WaveletTransform, self).adjoint
 
     @property
     def inverse(self):
@@ -437,9 +439,9 @@ class WaveletTransformInverse(WaveletTransformBase):
         >>> np.allclose(recon, orig_array)
         True
         """
-        super().__init__(space=range, wavelet=wavelet, variant='inverse',
-                         nlevels=nlevels, pad_mode=pad_mode,
-                         pad_const=pad_const, impl=impl)
+        super(WaveletTransformInverse, self).__init__(
+            space=range, wavelet=wavelet, variant='inverse', nlevels=nlevels,
+            pad_mode=pad_mode, pad_const=pad_const, impl=impl)
 
     def _call(self, coeffs):
         """Return the inverse wavelet transform of ``coeffs``."""
@@ -476,7 +478,7 @@ class WaveletTransformInverse(WaveletTransformBase):
             return scale * self.inverse
         else:
             # TODO: put adjoint here
-            return super().adjoint
+            return super(WaveletTransformInverse, self).adjoint
 
     @property
     def inverse(self):

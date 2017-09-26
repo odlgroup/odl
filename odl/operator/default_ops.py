@@ -10,7 +10,6 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from builtins import super
 
 from copy import copy
 import numpy as np
@@ -61,7 +60,7 @@ class ScalingOperator(Operator):
             raise TypeError('`space` {!r} not a `LinearSpace` or `Field` '
                             'instance'.format(domain))
 
-        super().__init__(domain, domain, linear=True)
+        super(ScalingOperator, self).__init__(domain, domain, linear=True)
         self.__scalar = domain.field.element(scalar)
 
     @property
@@ -158,7 +157,7 @@ class IdentityOperator(ScalingOperator):
         space : `LinearSpace`
             Space of elements which the operator is acting on.
         """
-        super().__init__(space, 1)
+        super(IdentityOperator, self).__init__(space, 1)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -199,7 +198,7 @@ class LinCombOperator(Operator):
         rn(3).element([2.0, 4.0, 6.0])
         """
         domain = ProductSpace(space, space)
-        super().__init__(domain, space, linear=True)
+        super(LinCombOperator, self).__init__(domain, space, linear=True)
         self.a = a
         self.b = b
 
@@ -275,10 +274,11 @@ class MultiplyOperator(Operator):
         if range is None:
             range = multiplicand.space
 
+        super(MultiplyOperator, self).__init__(domain, range, linear=True)
+
         self.__multiplicand = multiplicand
         self.__domain_is_field = isinstance(domain, Field)
         self.__range_is_field = isinstance(range, Field)
-        super().__init__(domain, range, linear=True)
 
     @property
     def multiplicand(self):
@@ -383,10 +383,10 @@ class PowerOperator(Operator):
         >>> op(2.0)
         4.0
         """
-
+        super(PowerOperator, self).__init__(
+            domain, domain, linear=(exponent == 1))
         self.__exponent = float(exponent)
         self.__domain_is_field = isinstance(domain, Field)
-        super().__init__(domain, domain, linear=(exponent == 1))
 
     @property
     def exponent(self):
@@ -477,8 +477,9 @@ class InnerProductOperator(Operator):
         >>> op(r3.element([1, 2, 3]))
         14.0
         """
+        super(InnerProductOperator, self).__init__(
+            vector.space, vector.space.field, linear=True)
         self.__vector = vector
-        super().__init__(vector.space, vector.space.field, linear=True)
 
     @property
     def vector(self):
@@ -566,7 +567,7 @@ class NormOperator(Operator):
         >>> op([3, 4])
         5.0
         """
-        super().__init__(space, RealNumbers(), linear=False)
+        super(NormOperator, self).__init__(space, RealNumbers(), linear=False)
 
     def _call(self, x):
         """Return the norm of ``x``."""
@@ -656,8 +657,9 @@ class DistOperator(Operator):
         >>> op([4, 5])
         5.0
         """
+        super(DistOperator, self).__init__(
+            vector.space, RealNumbers(), linear=False)
         self.__vector = vector
-        super().__init__(vector.space, RealNumbers(), linear=False)
 
     @property
     def vector(self):
@@ -769,7 +771,7 @@ class ConstantOperator(Operator):
 
         self.__constant = range.element(constant)
         linear = self.constant.norm() == 0
-        super().__init__(domain, range, linear=linear)
+        super(ConstantOperator, self).__init__(domain, range, linear=linear)
 
     @property
     def constant(self):
@@ -849,7 +851,7 @@ class ZeroOperator(Operator):
         if range is None:
             range = domain
 
-        super().__init__(domain, range, linear=True)
+        super(ZeroOperator, self).__init__(domain, range, linear=True)
 
     def _call(self, x, out=None):
         """Return the zero vector or assign it to ``out``."""
@@ -923,7 +925,7 @@ class RealPart(Operator):
         """
         real_space = space.real_space
         linear = (space == real_space)
-        Operator.__init__(self, space, real_space, linear=linear)
+        super(RealPart, self).__init__(space, real_space, linear=linear)
 
     def _call(self, x):
         """Return ``self(x)``."""
@@ -1001,8 +1003,11 @@ class RealPart(Operator):
 
 
 class ImagPart(Operator):
+
+    """Operator that extracts the imaginary part of a vector."""
+
     def __init__(self, space):
-        """Operator that extracts the imaginary part of a vector.
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -1028,7 +1033,7 @@ class ImagPart(Operator):
         """
         real_space = space.real_space
         linear = (space == real_space)
-        Operator.__init__(self, space, real_space, linear=linear)
+        super(ImagPart, self).__init__(space, real_space, linear=linear)
 
     def _call(self, x):
         """Return ``self(x)``."""
@@ -1146,7 +1151,8 @@ class ComplexEmbedding(Operator):
         """
         complex_space = space.complex_space
         self.scalar = complex_space.field.element(scalar)
-        Operator.__init__(self, space, complex_space, linear=True)
+        super(ComplexEmbedding, self).__init__(
+            space, complex_space, linear=True)
 
     def _call(self, x, out):
         """Return ``self(x)``."""
@@ -1284,7 +1290,7 @@ class ComplexModulus(Operator):
         """
         real_space = space.real_space
         linear = (space == real_space)
-        Operator.__init__(self, space, real_space, linear=linear)
+        super(ComplexModulus, self).__init__(space, real_space, linear=linear)
 
     def _call(self, x):
         """Return ``self(x)``."""

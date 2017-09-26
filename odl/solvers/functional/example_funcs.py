@@ -10,7 +10,6 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from builtins import super
 
 import numpy as np
 
@@ -93,7 +92,8 @@ class RosenbrockFunctional(Functional):
             raise ValueError('`space` must be an `FnBase`')
         if space.size < 2:
             raise ValueError('`space` must be at least two dimensional')
-        super().__init__(space=space, linear=False, grad_lipschitz=np.inf)
+        super(RosenbrockFunctional, self).__init__(
+            space=space, linear=False, grad_lipschitz=np.inf)
 
     def _call(self, x):
         """Return ``self(x)``."""
@@ -116,8 +116,8 @@ class RosenbrockFunctional(Functional):
 
             def __init__(self):
                 """Initialize a new instance."""
-                super().__init__(functional.domain, functional.domain,
-                                 linear=False)
+                super(RosenbrockGradient, self).__init__(
+                    functional.domain, functional.domain, linear=False)
 
             def _call(self, x, out):
                 """Apply the gradient operator to the given point."""
