@@ -94,7 +94,7 @@ def test_matrix_representation_product_to_product():
     ran_and_dom = ProductSpace(rn, rm)
 
     AB_matrix = np.vstack([np.hstack([A, np.zeros((n, m))]),
-                          np.hstack([np.zeros((m, n)), B])])
+                           np.hstack([np.zeros((m, n)), B])])
     ABop = ProductSpaceOperator([[Aop, 0],
                                  [0, Bop]],
                                 ran_and_dom, ran_and_dom)
@@ -117,7 +117,7 @@ def test_matrix_representation_product_to_product_two():
     ran_and_dom = ProductSpace(rn, 2)
 
     AB_matrix = np.vstack([np.hstack([A, np.zeros((n, n))]),
-                          np.hstack([np.zeros((n, n)), B])])
+                           np.hstack([np.zeros((n, n)), B])])
     ABop = ProductSpaceOperator([[Aop, 0],
                                  [0, Bop]],
                                 ran_and_dom, ran_and_dom)
@@ -148,8 +148,7 @@ def test_matrix_representation_wrong_domain():
         """Small test operator."""
         def __init__(self):
             super(MyOp, self).__init__(
-                domain=ProductSpace(odl.rn(3),
-                                    ProductSpace(odl.rn(3), odl.rn(3))),
+                domain=odl.rn(3) * odl.rn(3) ** 2,
                 range=odl.rn(4),
                 linear=True)
 
@@ -168,8 +167,7 @@ def test_matrix_representation_wrong_range():
         def __init__(self):
             super(MyOp, self).__init__(
                 domain=odl.rn(3),
-                range=ProductSpace(odl.rn(3),
-                                   ProductSpace(odl.rn(3), odl.rn(3))),
+                range=odl.rn(3) * odl.rn(3) ** 2,
                 linear=True)
 
         def _call(self, x, out):
