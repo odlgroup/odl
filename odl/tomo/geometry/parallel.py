@@ -954,16 +954,15 @@ class Parallel3dEulerGeometry(ParallelBeamGeometry):
             Unit vector(s) along which the detector is aligned.
             If ``angles`` is a single pair (or triplet) of Euler angles,
             the returned array has shape ``(2, 3)``, otherwise
-            is ``(2,) + broadcast(*angles).shape + (3,)``.
-            The first axis of length 2 enumerates the detector axes.
+            ``broadcast(*angles).shape + (2, 3)``.
 
         Notes
         -----
-        To get an array that enumerates axis pairs, move the first axis
-        of the array to the second-to-last position::
+        To get an array that enumerates the detector axes in the first
+        dimension, move the second-to-last axis to the first position:
 
-            axes = det_axes(angles)
-            axes_enumeration = np.moveaxis(deriv, 0, -2)
+            axes = det_axes(angle)
+            axes_enumeration = np.moveaxis(deriv, -2, 0)
 
         Examples
         --------
@@ -986,25 +985,25 @@ class Parallel3dEulerGeometry(ParallelBeamGeometry):
         different shapes and will be broadcast against each other to
         determine the final shape:
 
-        >>> # First array for the first Euler angle, second array for second
+        >>> # The first axis enumerates the angles
         >>> np.allclose(geom.det_axes(([0, np.pi / 2], [0, 0])),
         ...             [[[1, 0, 0],
-        ...               [0, 1, 0]],
-        ...              [[0, 0, 1],
+        ...               [0, 0, 1]],
+        ...              [[0, 1, 0],
         ...               [0, 0, 1]]])
         True
         >>> # Pairs of Euler angles in a (4, 5) array each
         >>> geom.det_axes((np.zeros((4, 5)), np.zeros((4, 5)))).shape
-        (2, 4, 5, 3)
+        (4, 5, 2, 3)
         >>> # Using broadcasting for "outer product" type result
         >>> geom.det_axes((np.zeros((4, 1)), np.zeros((1, 5)))).shape
-        (2, 4, 5, 3)
+        (4, 5, 2, 3)
         """
         # Transpose to take dot along axis 1
         axes = self.rotation_matrix(angles).dot(self.det_axes_init.T)
         # `axes` has shape (a, 3, 2), need to roll the last dimensions
-        # to the first place
-        return np.rollaxis(axes, -1, 0)
+        # to the second to last place
+        return np.rollaxis(axes, -1, -2)
 
     def rotation_matrix(self, angles):
         """Return the rotation matrix to the system state at ``angles``.
@@ -1344,7 +1343,7 @@ class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
 
         Parameters
         ----------
-        angles : float or `array-like`
+        angle : float or `array-like`
             Angle(s) in radians describing the counter-clockwise rotation
             of the detector around `axis`.
 
@@ -1354,16 +1353,15 @@ class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
             Unit vectors along which the detector is aligned.
             If ``angle`` is a single parameter, the returned array has
             shape ``(2, 3)``, otherwise
-            ``(2,) + broadcast(*angles).shape + (3,)``.
-            The first axis of length 2 enumerates the detector axes.
+            ``broadcast(*angle).shape + (2, 3)``.
 
         Notes
         -----
-        To get an array that enumerates axis pairs, move the first axis
-        of the array to the second-to-last position::
+        To get an array that enumerates the detector axes in the first
+        dimension, move the second-to-last axis to the first position:
 
             axes = det_axes(angle)
-            axes_enumeration = np.moveaxis(deriv, 0, -2)
+            axes_enumeration = np.moveaxis(deriv, -2, 0)
 
         Examples
         --------
@@ -1385,18 +1383,18 @@ class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
 
         >>> np.allclose(geom.det_axes([0, np.pi / 2]),
         ...             [[[1, 0, 0],
-        ...               [0, 1, 0]],
-        ...              [[0, 0, 1],
+        ...               [0, 0, 1]],
+        ...              [[0, 1, 0],
         ...               [0, 0, 1]]])
         True
         >>> geom.det_axes(np.zeros((4, 5))).shape
-        (2, 4, 5, 3)
+        (4, 5, 2, 3)
         """
         # Transpose to take dot along axis 1
         axes = self.rotation_matrix(angle).dot(self.det_axes_init.T)
         # `axes` has shape (a, 3, 2), need to roll the last dimensions
-        # to the first place
-        return np.rollaxis(axes, -1, 0)
+        # to the second to last place
+        return np.rollaxis(axes, -1, -2)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -1427,7 +1425,7 @@ class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
     def __getitem__(self, indices):
         """Return self[indices].
 
-        This is defined by::
+        This is defined by ::
 
             self[indices].partition == self.partition[indices]
 

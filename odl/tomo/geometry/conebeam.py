@@ -333,7 +333,7 @@ class FanFlatGeometry(DivergentBeamGeometry):
     def src_position(self, angle):
         """Return the source position at ``angle``.
 
-        For an angle ``phi``, the source position is given by::
+        For an angle ``phi``, the source position is given by ::
 
             src(phi) = translation +
                        rot_matrix(phi) * (-src_rad * src_to_det_init)
@@ -520,7 +520,7 @@ class FanFlatGeometry(DivergentBeamGeometry):
     def __getitem__(self, indices):
         """Return self[indices].
 
-        This is defined by::
+        This is defined by ::
 
             self[indices].partition == self.partition[indices]
 
@@ -949,27 +949,26 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
             Unit vectors along which the detector is aligned.
             If ``angle`` is a single parameter, the returned array has
             shape ``(2, 3)``, otherwise
-            ``(2,) + broadcast(*angles).shape + (3,)``.
-            The first axis of length 2 enumerates the detector axes.
+            ``broadcast(*angles).shape + (2, 3)``.
 
         Notes
         -----
-        To get an array that enumerates axis pairs, move the first axis
-        of the array to the second-to-last position::
+        To get an array that enumerates the detector axes in the first
+        dimension, move the second-to-last axis to the first position:
 
             axes = det_axes(angle)
-            axes_enumeration = np.moveaxis(deriv, 0, -2)
+            axes_enumeration = np.moveaxis(deriv, -2, 0)
         """
         # Transpose to take dot along axis 1
         axes = self.rotation_matrix(angle).dot(self.det_axes_init.T)
         # `axes` has shape (a, 3, 2), need to roll the last dimensions
-        # to the first place
-        return np.rollaxis(axes, -1, 0)
+        # to the second-to-last place
+        return np.rollaxis(axes, -1, -2)
 
     def det_refpoint(self, angle):
         """Return the detector reference point position at ``angle``.
 
-        For an angle ``phi``, the detector position is given by::
+        For an angle ``phi``, the detector position is given by ::
 
             det_ref(phi) = translation +
                            rot_matrix(phi) * (det_rad * src_to_det_init) +
@@ -1055,7 +1054,7 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
     def src_position(self, angle):
         """Return the source position at ``angle``.
 
-        For an angle ``phi``, the source position is given by::
+        For an angle ``phi``, the source position is given by ::
 
             src(phi) = translation +
                        rot_matrix(phi) * (-src_rad * src_to_det_init) +
@@ -1172,7 +1171,7 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
     def __getitem__(self, indices):
         """Return self[indices].
 
-        This is defined by::
+        This is defined by ::
 
             self[indices].partition == self.partition[indices]
 
