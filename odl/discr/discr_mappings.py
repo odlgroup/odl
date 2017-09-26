@@ -583,10 +583,11 @@ class PerAxisInterpolation(FunctionSetMapping):
 
         schemes_in = schemes
         if is_string(schemes):
-            schemes = [str(schemes).lower()] * self.grid.ndim
-            if schemes[0] not in _SUPPORTED_INTERP_SCHEMES:
+            scheme = str(schemes).lower()
+            if scheme not in _SUPPORTED_INTERP_SCHEMES:
                 raise ValueError('`schemes` {!r} not understood'
                                  ''.format(schemes_in))
+            schemes = [scheme] * self.grid.ndim
         else:
             schemes = [str(scm).lower() if scm is not None else None
                        for scm in schemes]
