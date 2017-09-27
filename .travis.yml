@@ -6,10 +6,13 @@ matrix:
           env: NUMPY_VERSION=1.13
 
         - python: 3.6
-          env: NUMPY_VERSION=1.12
+          env: NUMPY_VERSION=1.12 ASTRA=true
 
         - python: 3.6
           env: NUMPY_VERSION=1.13 BUILD_DOC=true
+
+        - python: 3.6
+          env: NUMPY_VERSION=1.13 NODEPS=true
 
 sudo: false
 
@@ -41,11 +44,19 @@ install:
     - conda info -a
 
     # Install dependencies and enter test environment
-    - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION "numpy=$NUMPY_VERSION" scipy future nomkl sphinx sphinx_rtd_theme pytest pytest-pep8 pytest-cov
-    - source activate test-environment
+    - conda create -n testenv python=$TRAVIS_PYTHON_VERSION nomkl "numpy=$NUMPY_VERSION" scipy future sphinx sphinx_rtd_theme pytest pytest-pep8 pytest-cov
+    - source activate testenv
+    # We avoid annoying issues with building pyfftw wheels by using a conda-forge version
+    - if [[ "NODEPS" == "" ]]; then
+        conda install pywavelets scikit-image;
+        conda install -c conda-forge pyfftw;
+      fi
+    - if [[ "ASTRA" == "true" ]]; then
+        conda install -c astra-toolbox astra-toolbox;
+      fi
 
-    # Some packages which are only on PyPI, not on conda
-    - pip install pyfftw pywavelets travis-sphinx
+    # Not on conda, need to use pip
+    - pip install travis-sphinx
 
     # Install our package
     - pip install -e .
