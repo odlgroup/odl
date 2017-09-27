@@ -478,7 +478,6 @@ def _resize_discr(discr, newshp, offset, discr_kwargs):
     impl = discr_kwargs.pop('impl', discr.impl)
     exponent = discr_kwargs.pop('exponent', discr.exponent)
     interp = discr_kwargs.pop('interp', discr.interp)
-    order = discr_kwargs.pop('order', discr.order)
     weighting = discr_kwargs.pop('weighting', discr.weighting)
 
     affected = np.not_equal(newshp, discr.shape)

@@ -640,20 +640,19 @@ class Laplacian(PointwiseTensorFieldOperator):
 
         for axis in range(ndim):
             # TODO: this can be optimized
-
             finite_diff(x_arr, axis=axis, dx=dx[axis] ** 2,
                         method='forward',
                         pad_mode=self.pad_mode,
                         pad_const=self.pad_const, out=tmp)
 
-            out_arr[:] += tmp
+            out_arr += tmp
 
             finite_diff(x_arr, axis=axis, dx=dx[axis] ** 2,
                         method='backward',
                         pad_mode=self.pad_mode,
                         pad_const=self.pad_const, out=tmp)
 
-            out_arr[:] -= tmp
+            out_arr -= tmp
 
         out[:] = out_arr
         return out

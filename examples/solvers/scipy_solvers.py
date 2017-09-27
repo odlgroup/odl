@@ -24,7 +24,7 @@ rhs = space.element(lambda x: np.exp(-(x[0]**2 + x[1]**2) / 0.1**2))
 scipy_laplacian = odl.operator.oputils.as_scipy_operator(laplacian)
 
 # Convert to array and flatten
-rhs_arr = rhs.asarray().ravel(space.order)
+rhs_arr = rhs.asarray().ravel()
 
 # Solve using scipy
 result, info = sl.cg(scipy_laplacian, rhs_arr)

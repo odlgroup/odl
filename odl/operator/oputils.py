@@ -16,7 +16,6 @@ import numpy as np
 
 from odl.space.base_tensors import TensorSpace
 from odl.space import ProductSpace
-from odl.util import as_flat_array
 
 __all__ = ('matrix_representation', 'power_method_opnorm', 'as_scipy_operator',
            'as_scipy_functional', 'as_proximal_lang_operator')
@@ -99,10 +98,10 @@ def matrix_representation(op):
                 tmp_idx = 0
                 for k in range(num_ran):
                     matrix[tmp_idx: tmp_idx + op.range[k].size, index] = (
-                        as_flat_array(tmp_ran[k]))
+                        (tmp_ran[k]).asarray().ravel())
                     tmp_idx += op.range[k].size
             else:
-                matrix[:, index] = as_flat_array(tmp_ran)
+                matrix[:, index] = tmp_ran.asarray().ravel()
             index += 1
             last_j = j
             last_i = i
@@ -301,19 +300,13 @@ def as_scipy_operator(op):
         raise ValueError('dtypes of ``op.domain`` and ``op.range`` needs to '
                          'match')
 
-    def as_flat_array(arr):
-        if hasattr(arr, 'order'):
-            return arr.asarray().ravel(arr.order)
-        else:
-            return arr.asarray()
-
     shape = (native(op.range.size), native(op.domain.size))
 
     def matvec(v):
-        return as_flat_array(op(v.reshape(op.domain.shape)))
+        return (op(v.reshape(op.domain.shape))).asarray().ravel()
 
     def rmatvec(v):
-        return as_flat_array(op.adjoint(v.reshape(op.range.shape)))
+        return (op.adjoint(v.reshape(op.range.shape))).asarray().ravel()
 
     return scipy.sparse.linalg.LinearOperator(shape=shape,
                                               matvec=matvec,

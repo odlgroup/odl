@@ -74,7 +74,7 @@ class NumpyTensorSpace(TensorSpace):
     .. _Wikipedia article on tensors: https://en.wikipedia.org/wiki/Tensor
     """
 
-    def __init__(self, shape, dtype=None, order='A', **kwargs):
+    def __init__(self, shape, dtype=None, **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -87,12 +87,6 @@ class NumpyTensorSpace(TensorSpace):
             way the `numpy.dtype` function understands, e.g.
             as built-in type or as a string. For ``None``,
             the `default_dtype` of this space (``float64``) is used.
-        order : {'A', 'C', 'F'}, optional
-            Axis ordering of the data storage. Only relevant for more
-            than 1 axis.
-            For ``'C'`` and ``'F'``, elements are forced to use
-            contiguous memory in the respective ordering.
-            For ``'A'`` ("any") no contiguousness is enforced.
         exponent : positive float, optional
             Exponent of the norm. For values other than 2.0, no
             inner product is defined.
@@ -225,7 +219,7 @@ class NumpyTensorSpace(TensorSpace):
         >>> space
         tensor_space((2, 3), 'int')
         """
-        TensorSpace.__init__(self, shape, dtype, order)
+        super(NumpyTensorSpace, self).__init__(shape, dtype)
         if self.dtype.char not in self.available_dtypes():
             raise ValueError('`dtype` {!r} not supported'
                              ''.format(dtype_str(dtype)))
@@ -292,10 +286,19 @@ class NumpyTensorSpace(TensorSpace):
             # No weighting, i.e., weighting with constant 1.0
             self.__weighting = NumpyTensorSpaceConstWeighting(1.0, exponent)
 
+        # Make sure there are no leftover kwargs
+        if kwargs:
+            raise TypeError('got unknown keyword arguments {}'.format(kwargs))
+
     @property
     def impl(self):
         """Name of the implementation back-end: ``'numpy'``."""
         return 'numpy'
+
+    @property
+    def default_order(self):
+        """Default storage order for new elements in this space: ``'C'``."""
+        return 'C'
 
     @property
     def exponent(self):
@@ -314,7 +317,7 @@ class NumpyTensorSpace(TensorSpace):
             isinstance(self.weighting, NumpyTensorSpaceConstWeighting) and
             self.weighting.const == 1.0)
 
-    def element(self, inp=None, data_ptr=None):
+    def element(self, inp=None, data_ptr=None, order=None):
         """Create a new element.
 
         Parameters
@@ -324,28 +327,29 @@ class NumpyTensorSpace(TensorSpace):
 
             If ``inp`` is `None`, an empty element is created with no
             guarantee of its state (memory allocation only).
+            The new element will use ``order`` as storage order if
+            provided, otherwise `default_order`.
 
-            If ``inp`` is a `numpy.ndarray` of the same `shape` and
-            `dtype` as this space, or if ``inp`` already lies in this
-            space, it is wrapped, not copied.
-            Other array-like objects are always copied.
+            Otherwise, a copy is avoided whenever possible. This requires
+            correct `shape` and `dtype`, and if ``order`` is provided,
+            also contiguousness in that ordering. If any of these
+            conditions is not met, a copy is made.
 
         data_ptr : int, optional
             Pointer to the start memory address of a contiguous Numpy array
             or an equivalent raw container with the same total number of
-            bytes. This option can only be used if `order` is ``'C'`` or
-            ``'F'``, otherwise contiguousness cannot be guaranteed.
+            bytes. For this option, ``order`` must be either ``'C'`` or
+            ``'F'``.
             The option is also mutually exclusive with ``inp``.
+        order : {'C', 'F'}, optional
+            Storage order of the returned element. For ``'C'`` and ``'F'``,
+            contiguous memory in the respective ordering is enforced.
+            The default ``None`` enforces no contiguousness.
 
         Returns
         -------
         element : `NumpyTensor`
-            The new element created (from ``inp``).
-
-        Notes
-        -----
-        This method preserves "array views" of correct size and type,
-        see the examples below.
+            The new element, created from ``inp`` or from scratch.
 
         Examples
         --------
@@ -377,13 +381,13 @@ class NumpyTensorSpace(TensorSpace):
         Elements can also be constructed from a data pointer, resulting
         again in shared memory:
 
-        >>> int_space = odl.tensor_space((2, 3), dtype=int, order='F')
+        >>> int_space = odl.tensor_space((2, 3), dtype=int)
         >>> arr = np.array([[1, 2, 3],
         ...                 [4, 5, 6]], dtype=int, order='F')
         >>> ptr = arr.ctypes.data
-        >>> y = int_space.element(data_ptr=ptr)
+        >>> y = int_space.element(data_ptr=ptr, order='F')
         >>> y
-        tensor_space((2, 3), 'int', order='F').element(
+        tensor_space((2, 3), 'int').element(
             [[1, 2, 3],
              [4, 5, 6]]
         )
@@ -392,31 +396,41 @@ class NumpyTensorSpace(TensorSpace):
         array([[ 1, -1,  3],
                [ 4,  5,  6]])
         """
+        if order is not None and str(order).upper() not in ('C', 'F'):
+            raise ValueError("`order` {!r} not understood".format(order))
+
         if inp is None and data_ptr is None:
-            arr = np.empty(self.shape, dtype=self.dtype,
-                           order=self.default_order)
+            if order is None:
+                arr = np.empty(self.shape, dtype=self.dtype,
+                               order=self.default_order)
+            else:
+                arr = np.empty(self.shape, dtype=self.dtype, order=order)
+
             return self.element_type(self, arr)
 
         elif inp is None and data_ptr is not None:
-            if self.order == 'A':
-                raise ValueError("`data_ptr` cannot be used with 'A' "
-                                 "ordering")
+            if order is None:
+                raise ValueError('`order` cannot be None for element '
+                                 'creation from pointer')
+
             ctype_array_def = ctypes.c_byte * self.nbytes
             as_ctype_array = ctype_array_def.from_address(data_ptr)
             as_numpy_array = np.ctypeslib.as_array(as_ctype_array)
             arr = as_numpy_array.view(dtype=self.dtype)
-            arr = arr.reshape(self.shape, order=self.order)
+            arr = arr.reshape(self.shape, order=order)
             return self.element_type(self, arr)
 
         elif inp is not None and data_ptr is None:
-            if inp in self:
-                # Short-circuit for space elements
+            if inp in self and order is None:
+                # Short-circuit for space elements and no enforced ordering
                 return inp
 
-            # Use `order` to preserve views if possible
+            # Try to not copy but require dtype and order if given
+            # (`order=None` is ok as np.array argument)
             arr = np.array(inp, copy=False, dtype=self.dtype, ndmin=self.ndim,
-                           order=self.order)
-            # But make sure the result is writeable (otherwise make copy)
+                           order=order)
+            # Make sure the result is writeable, if not make copy.
+            # This happens for e.g. results of `np.broadcast_to()`.
             if not arr.flags.writeable:
                 arr = arr.copy()
             if arr.shape != self.shape:
@@ -425,7 +439,7 @@ class NumpyTensorSpace(TensorSpace):
             return self.element_type(self, arr)
 
         else:
-            raise ValueError('cannot provide both `inp` and `data_ptr`')
+            raise TypeError('cannot provide both `inp` and `data_ptr`')
 
     def zero(self):
         """Return a tensor of all zeros.
@@ -710,8 +724,7 @@ class NumpyTensorSpace(TensorSpace):
         -------
         equals : bool
             True if ``other`` is an instance of ``type(self)``
-            with the same `NumpyTensorSpace.shape`,
-            `NumpyTensorSpace.dtype`, `NumpyTensorSpace.order`
+            with the same `NumpyTensorSpace.shape`, `NumpyTensorSpace.dtype`
             and `NumpyTensorSpace.weighting`, otherwise False.
 
         Examples
@@ -721,8 +734,8 @@ class NumpyTensorSpace(TensorSpace):
         >>> same_space == space
         True
 
-        Different `shape`, `exponent`, `dtype` or `order` all result in
-        different spaces:
+        Different `shape`, `exponent` or `dtype` all result in different
+        spaces:
 
         >>> diff_space = odl.rn((3, 4))
         >>> diff_space == space
@@ -735,17 +748,6 @@ class NumpyTensorSpace(TensorSpace):
         False
         >>> space == object
         False
-        >>> space_a = odl.rn((2, 3), order='A')  # default
-        >>> space_c = odl.rn((2, 3), order='C')  # default
-        >>> space_a == space_c
-        False
-
-        A `NumpyTensorSpace` with the same properties is considered
-        equal:
-
-        >>> same_space = odl.NumpyTensorSpace((2, 3), dtype='float64')
-        >>> same_space == space_a
-        True
         """
         if other is self:
             return True
@@ -799,8 +801,7 @@ class NumpyTensorSpace(TensorSpace):
                 else:
                     weighting = space.weighting
 
-                return type(space)(newshape, space.dtype, space.order,
-                                   weighting=weighting)
+                return type(space)(newshape, space.dtype, weighting=weighting)
 
             def __repr__(self):
                 """Return ``repr(self)``."""
@@ -827,8 +828,7 @@ class NumpyTensorSpace(TensorSpace):
                 self.dtype != self.default_dtype(self.field)):
             posargs.append(dtype_str(self.dtype))
 
-        optargs = [('order', self.order, 'A')]
-        inner_str = signature_string(posargs, optargs)
+        inner_str = signature_string(posargs, [])
         weight_str = self.weighting.repr_part
         if weight_str:
             inner_str += ', ' + weight_str
@@ -1075,17 +1075,9 @@ class NumpyTensor(Tensor):
             else:
                 return arr
         else:
-            space_ctor = type(self.space)
-            if (self.order in ('C', 'F') and
-                    arr.flags[self.order + '_CONTIGUOUS']):
-                out_spc_order = self.order
-            else:
-                # To preserve the array view for non-contiguous slices,
-                # we need to use 'A' for the space in that case.
-                out_spc_order = 'A'
-            space = space_ctor(
-                arr.shape, dtype=self.dtype, order=out_spc_order,
-                exponent=self.space.exponent, weighting=self.space.weighting)
+            space = type(self.space)(
+                arr.shape, dtype=self.dtype, exponent=self.space.exponent,
+                weighting=self.space.weighting)
             return space.element(arr)
 
     def __setitem__(self, indices, values):
@@ -1185,8 +1177,7 @@ class NumpyTensor(Tensor):
         if self.space.is_real:
             return self
         elif self.space.is_complex:
-            # Definitely non-contiguous
-            real_space = self.space.astype(self.space.real_dtype, order='A')
+            real_space = self.space.astype(self.space.real_dtype)
             return real_space.element(self.data.real)
         else:
             raise NotImplementedError('`real` not defined for non-numeric '
@@ -1243,8 +1234,7 @@ class NumpyTensor(Tensor):
         if self.space.is_real:
             return self.space.zero()
         elif self.space.is_complex:
-            # Definitely non-contiguous
-            real_space = self.space.astype(self.space.real_dtype, order='A')
+            real_space = self.space.astype(self.space.real_dtype)
             return real_space.element(self.data.imag)
         else:
             raise NotImplementedError('`imag` not defined for non-numeric '
@@ -1615,13 +1605,11 @@ numpy.ufunc.reduceat.html
         # --- Get some parameters for later --- #
 
         # Arguments for `writable_array` and/or space constructors
-        order = str(kwargs.get('order', self.order)).upper()
-        array_kwargs = {'order': order}
-        order = 'A' if order == 'K' else order  # We don't use 'K'
-
         out_dtype = kwargs.get('dtype', None)
-        if out_dtype is not None:
-            array_kwargs['dtype'] = out_dtype
+        if out_dtype is None:
+            array_kwargs = {}
+        else:
+            array_kwargs = {'dtype': out_dtype}
 
         exponent = self.space.exponent
         weighting = self.space.weighting
@@ -1664,7 +1652,7 @@ numpy.ufunc.reduceat.html
                     else:
                         # No `exponent` or `weighting` applicable
                         spc_kwargs = {}
-                    out_space = type(self.space)(self.shape, res.dtype, order,
+                    out_space = type(self.space)(self.shape, res.dtype,
                                                  **spc_kwargs)
                     out = out_space.element(res)
 
@@ -1690,12 +1678,10 @@ numpy.ufunc.reduceat.html
                 # We don't use exponents or weightings since we don't know
                 # how to map them to the spaces
                 if out1 is None:
-                    out1_space = type(self.space)(self.shape, res1.dtype,
-                                                  order)
+                    out1_space = type(self.space)(self.shape, res1.dtype)
                     out1 = out1_space.element(res1)
                 if out2 is None:
-                    out2_space = type(self.space)(self.shape, res2.dtype,
-                                                  order)
+                    out2_space = type(self.space)(self.shape, res2.dtype)
                     out2 = out2_space.element(res2)
 
                 return out1, out2
@@ -1705,9 +1691,6 @@ numpy.ufunc.reduceat.html
                                           ''.format(ufunc.nout))
 
         else:  # method != '__call__'
-            # `order` keyword arg is not allowed for some methods, removing it
-            kwargs.pop('order', None)
-
             # Make context for output (trivial one returns `None`)
             if out is None:
                 out_ctx = CtxNone()
@@ -1738,7 +1721,7 @@ numpy.ufunc.reduceat.html
                 else:
                     spc_kwargs = {}
 
-                out_space = type(self.space)(res.shape, res.dtype, order,
+                out_space = type(self.space)(res.shape, res.dtype,
                                              **spc_kwargs)
                 out = out_space.element(res)
 
@@ -1971,42 +1954,48 @@ def _norm_default(x):
         norm = partial(nrm2, n=native(x.size))
     else:
         norm = np.linalg.norm
-    return norm(x.data.ravel(order=x.order))
+    return norm(x.data.ravel())
 
 
 def _pnorm_default(x, p):
     """Default p-norm implementation."""
-    return np.linalg.norm(x.data.ravel(order=x.order), ord=p)
+    return np.linalg.norm(x.data.ravel(), ord=p)
 
 
 def _pnorm_diagweight(x, p, w):
     """Diagonally weighted p-norm implementation."""
+    # Ravel both in the same order (w is a numpy array)
+    order = 'F' if all(a.flags.f_contiguous for a in (x.data, w)) else 'C'
+
     # This is faster than first applying the weights and then summing with
     # BLAS dot or nrm2
-    xp = np.abs(x.data.ravel(order=x.order))
+    xp = np.abs(x.data.ravel(order))
     if p == float('inf'):
-        xp *= w.ravel(order=x.order)  # w is a plain NumPy array
+        xp *= w.ravel(order)
         return np.max(xp)
     else:
         xp = np.power(xp, p, out=xp)
-        xp *= w.ravel(order=x.order)
+        xp *= w.ravel(order)
         return np.sum(xp) ** (1 / p)
 
 
 def _inner_default(x1, x2):
     """Default Euclidean inner product implementation."""
+    # Ravel both in the same order
+    order = 'F' if all(a.data.flags.f_contiguous for a in (x1, x2)) else 'C'
+
     if is_real_dtype(x1.dtype):
         if x1.size > THRESHOLD_MEDIUM:
             # This is as fast as BLAS dotc
             return np.tensordot(x1, x2, [range(x1.ndim)] * 2)
         else:
             # Several times faster for small arrays
-            return np.dot(x1.data.ravel(order=x1.order),
-                          x2.data.ravel(order=x1.order))
+            return np.dot(x1.data.ravel(order),
+                          x2.data.ravel(order))
     else:
         # x2 as first argument because we want linearity in x1
-        return np.vdot(x2.data.ravel(order=x1.order),
-                       x1.data.ravel(order=x1.order))
+        return np.vdot(x2.data.ravel(order),
+                       x1.data.ravel(order))
 
 
 # TODO: implement intermediate weighting schemes with arrays that are

@@ -22,9 +22,8 @@ __all__ = ('array_str', 'dtype_str', 'dtype_repr',
            'signature_string', 'indent',
            'is_numeric_dtype', 'is_int_dtype', 'is_floating_dtype',
            'is_real_dtype', 'is_real_floating_dtype',
-           'is_complex_floating_dtype',
-           'real_dtype', 'complex_dtype',
-           'is_string', 'conj_exponent', 'as_flat_array', 'writable_array',
+           'is_complex_floating_dtype', 'real_dtype', 'complex_dtype',
+           'is_string', 'conj_exponent', 'writable_array',
            'run_from_ipython', 'NumpyRandomSeed', 'cache_arguments', 'unique')
 
 TYPE_MAP_R2C = {np.dtype(dtype): np.result_type(dtype, 1j)
@@ -506,14 +505,6 @@ def preload_first_arg(instance, mode):
             raise ValueError('bad mode {!r}'.format(mode))
 
     return decorator
-
-
-def as_flat_array(x):
-    """Return ``x`` as a flat array according to its axis ordering."""
-    if hasattr(x, 'order'):
-        return x.asarray().ravel(x.order)
-    else:
-        return x.asarray().ravel()
 
 
 class writable_array(object):

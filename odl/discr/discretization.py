@@ -103,8 +103,7 @@ class DiscretizedSpace(TensorSpace):
                                  'the undiscretized space {}'
                                  ''.format(interpol.range, uspace))
 
-        super(DiscretizedSpace, self).__init__(
-            dspace.shape, dspace.dtype, dspace.order)
+        super(DiscretizedSpace, self).__init__(dspace.shape, dspace.dtype)
         self.__uspace = uspace
         self.__dspace = dspace
         self.__sampling = sampling
@@ -141,7 +140,7 @@ class DiscretizedSpace(TensorSpace):
         else:
             raise NotImplementedError('no interpolation operator provided')
 
-    def element(self, inp=None, **kwargs):
+    def element(self, inp=None, order=None, **kwargs):
         """Create an element from ``inp`` or from scratch.
 
         Parameters
@@ -166,13 +165,16 @@ class DiscretizedSpace(TensorSpace):
         sampling : create a discrete element from an undiscretized one
         """
         if inp is None:
-            return self.element_type(self, self.dspace.element())
-        elif inp in self:
+            return self.element_type(self, self.dspace.element(order=order))
+        elif inp in self and order is None:
             return inp
         elif callable(inp):
-            return self.element_type(self, self.sampling(inp, **kwargs))
+            sampled = self.sampling(inp, **kwargs)
+            return self.element_type(self,
+                                     self.dspace.element(sampled, order=order))
         else:
-            return self.element_type(self, self.dspace.element(inp))
+            return self.element_type(self,
+                                     self.dspace.element(inp, order=order))
 
     def __eq__(self, other):
         """Return ``self == other``.

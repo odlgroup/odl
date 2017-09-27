@@ -61,7 +61,7 @@ class TensorSpace(LinearSpace):
     .. _Wikipedia article on tensors: https://en.wikipedia.org/wiki/Tensor
     """
 
-    def __init__(self, shape, dtype, order='A'):
+    def __init__(self, shape, dtype):
         """Initialize a new instance.
 
         Parameters
@@ -75,12 +75,6 @@ class TensorSpace(LinearSpace):
             as built-in type or as a string.
             For a data type with a ``dtype.shape``, these extra dimensions
             are added *to the left* of ``shape``.
-        order : {'A', 'C', 'F'}, optional
-            Axis ordering of the data storage. Only relevant for more
-            than 1 axis.
-            For ``'C'`` and ``'F'``, elements are forced to use
-            contiguous memory in the respective ordering.
-            For ``'A'`` ("any") no contiguousness is enforced.
         """
         # Handle shape and dtype, taking care also of dtypes with shape
         try:
@@ -91,15 +85,12 @@ class TensorSpace(LinearSpace):
             raise ValueError('`shape` must have only nonnegative entries, got '
                              '{}'.format(shape_in))
         dtype = np.dtype(dtype)
+
         # We choose this order in contrast to Numpy, since we usually want
         # to represent discretizations of vector- or tensor-valued functions,
         # i.e., if dtype.shape == (3,) we expect f[0] to have shape `shape`.
         self.__shape = dtype.shape + shape
         self.__dtype = dtype.base
-
-        self.__order = str(order).upper()
-        if self.order not in ('A', 'C', 'F'):
-            raise ValueError("`order {!r} not understood".format(order))
 
         if is_real_dtype(self.dtype):
             # real includes non-floating-point like integers
@@ -121,7 +112,10 @@ class TensorSpace(LinearSpace):
 
     @property
     def impl(self):
-        """Name of the implementation back-end of this tensor set."""
+        """Name of the implementation back-end of this tensor set.
+
+        This property should be overridden by subclasses.
+        """
         raise NotImplementedError('abstract method')
 
     @property
@@ -200,7 +194,7 @@ class TensorSpace(LinearSpace):
                 '`complex_space` not defined for non-numeric `dtype`')
         return self.astype(self.complex_dtype)
 
-    def _astype(self, dtype, order):
+    def _astype(self, dtype):
         """Internal helper for `astype`.
 
         Subclasses with differing init parameters should overload this
@@ -214,9 +208,9 @@ class TensorSpace(LinearSpace):
             if weighting is not None:
                 kwargs['weighting'] = weighting
 
-        return type(self)(self.shape, dtype=dtype, order=order, **kwargs)
+        return type(self)(self.shape, dtype=dtype, **kwargs)
 
-    def astype(self, dtype, order=None):
+    def astype(self, dtype):
         """Return a copy of this space with new ``dtype``.
 
         Parameters
@@ -226,13 +220,6 @@ class TensorSpace(LinearSpace):
             in any way the `numpy.dtype` constructor understands, e.g.
             as built-in type or as a string. Data types with non-trivial
             shapes are not allowed.
-        order : {'A', 'C', 'F'}, optional
-            Axis ordering of the data storage. Only relevant for more
-            than 1 axis.
-            For ``'C'`` and ``'F'``, elements are forced to use
-            contiguous memory in the respective ordering.
-            For ``'A'`` ("any") no contiguousness is enforced.
-            The default ``None`` is equivalent to ``self.order``.
 
         Returns
         -------
@@ -243,48 +230,32 @@ class TensorSpace(LinearSpace):
             # Need to filter this out since Numpy iterprets it as 'float'
             raise ValueError('`None` is not a valid data type')
 
-        if order is None:
-            order = self.order
-
         dtype = np.dtype(dtype)
-        if dtype == self.dtype and order == self.order:
+        if dtype == self.dtype:
             return self
 
         if is_numeric_dtype(self.dtype):
             # Caching for real and complex versions (exact dtype mappings)
-            if dtype == self.__real_dtype and order == self.order:
+            if dtype == self.__real_dtype:
                 if self.__real_space is None:
-                    self.__real_space = self._astype(dtype, self.order)
+                    self.__real_space = self._astype(dtype)
                 return self.__real_space
-            elif dtype == self.__complex_dtype and order == self.order:
+            elif dtype == self.__complex_dtype:
                 if self.__complex_space is None:
-                    self.__complex_space = self._astype(dtype, self.order)
+                    self.__complex_space = self._astype(dtype)
                 return self.__complex_space
             else:
-                return self._astype(dtype, order)
+                return self._astype(dtype)
         else:
-            return self._astype(dtype, order)
-
-    @property
-    def order(self):
-        """Guaranteed data storage order in this space.
-
-        This is one of ``('A', 'C', 'F')``, where ``'A'`` means "any",
-        i.e. "no guarantee".
-        """
-        return self.__order
+            return self._astype(dtype)
 
     @property
     def default_order(self):
-        """Storage order for new elements in this space.
+        """Default storage order for new elements in this space.
 
-        This is identical to `order` except for ``self.order == 'A'``,
-        where ``'C'`` is returned.
-
-        This default implementation should be overridden by subclasses
-        that work better for a different ordering.
+        This property should be overridden by subclasses.
         """
-        return 'C' if self.order == 'A' else self.order
+        raise NotImplementedError('abstract method')
 
     @property
     def size(self):
@@ -381,7 +352,7 @@ class TensorSpace(LinearSpace):
         -------
         equals : bool
             True if ``self`` and ``other`` have the same type, `shape`
-            `dtype` and `order`, otherwise ``False``.
+            and `dtype`, otherwise ``False``.
 
         Examples
         --------
@@ -409,19 +380,17 @@ class TensorSpace(LinearSpace):
 
         return (type(other) is type(self) and
                 self.shape == other.shape and
-                self.dtype == other.dtype and
-                self.order == other.order)
+                self.dtype == other.dtype)
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        return hash((type(self), self.shape, self.dtype, self.order))
+        return hash((type(self), self.shape, self.dtype))
 
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = [self.shape, dtype_str(self.dtype)]
-        optargs = [('order', self.order, 'A')]
         return "{}({})".format(self.__class__.__name__,
-                               signature_string(posargs, optargs))
+                               signature_string(posargs, []))
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -455,24 +424,48 @@ class TensorSpace(LinearSpace):
         np.random.set_state(rand_state)
 
     def zero(self):
-        """Return a tensor of all zeros."""
+        """Return a tensor of all zeros.
+
+        This method should be overridden by subclasses.
+
+        Returns
+        -------
+        zero : Tensor
+            A tensor of all zeros.
+        """
         raise NotImplementedError('abstract method')
 
     def one(self):
-        """Return a tensor of all ones."""
+        """Return a tensor of all ones.
+
+        This method should be overridden by subclasses.
+
+        Returns
+        -------
+        one : Tensor
+            A tensor of all one.
+        """
         raise NotImplementedError('abstract method')
 
     def _multiply(self, x1, x2, out):
-        """The entry-wise product of two tensors, assigned to ``out``."""
+        """The entry-wise product of two tensors, assigned to ``out``.
+
+        This method should be overridden by subclasses.
+        """
         raise NotImplementedError('abstract method')
 
     def _divide(self, x1, x2, out):
-        """The entry-wise quotient of two tensors, assigned to ``out``."""
+        """The entry-wise quotient of two tensors, assigned to ``out``.
+
+        This method should be overridden by subclasses.
+        """
         raise NotImplementedError('abstract method')
 
     @staticmethod
     def default_dtype(field=None):
         """Return the default data type for a given field.
+
+        This method should be overridden by subclasses.
 
         Parameters
         ----------
@@ -488,12 +481,15 @@ class TensorSpace(LinearSpace):
 
     @staticmethod
     def available_dtypes():
-        """Return the set of data types available in this implementation."""
+        """Return the set of data types available in this implementation.
+
+        This method should be overridden by subclasses.
+        """
         raise NotImplementedError('abstract method')
 
     @property
     def element_type(self):
-        """Type of elements in this set: `Tensor`."""
+        """Type of elements in this space: `Tensor`."""
         return Tensor
 
 
@@ -503,6 +499,8 @@ class Tensor(LinearSpaceElement):
 
     def asarray(self, out=None):
         """Extract the data of this tensor as a Numpy array.
+
+        This method should be overridden by subclasses.
 
         Parameters
         ----------
@@ -521,6 +519,8 @@ class Tensor(LinearSpaceElement):
     def __getitem__(self, indices):
         """Return ``self[indices]``.
 
+        This method should be overridden by subclasses.
+
         Parameters
         ----------
         indices : index expression
@@ -538,6 +538,8 @@ class Tensor(LinearSpaceElement):
 
     def __setitem__(self, indices, values):
         """Implement ``self[indices] = values``.
+
+        This method should be overridden by subclasses.
 
         Parameters
         ----------
@@ -568,11 +570,6 @@ class Tensor(LinearSpaceElement):
     def dtype(self):
         """Data type of each entry."""
         return self.space.dtype
-
-    @property
-    def order(self):
-        """Data storage order, either ``'A'``, ``'C'`` or ``'F'``."""
-        return self.space.order
 
     @property
     def size(self):
@@ -772,13 +769,11 @@ numpy.ufunc.reduceat.html
         # --- Get some parameters for later --- #
 
         # Arguments for `writable_array` and/or space constructors
-        order = str(kwargs.get('order', self.order)).upper()
-        array_kwargs = {'order': order}
-        order = 'A' if order == 'K' else order  # We don't use 'K'
-
         out_dtype = kwargs.get('dtype', None)
-        if out_dtype is not None:
-            array_kwargs['dtype'] = out_dtype
+        if out_dtype is None:
+            array_kwargs = {}
+        else:
+            array_kwargs = {'dtype': out_dtype}
 
         # --- Evaluate ufunc --- #
 
@@ -837,9 +832,6 @@ numpy.ufunc.reduceat.html
                                           ''.format(ufunc.nout))
 
         else:  # method != '__call__'
-            # `order` keyword arg is not allowed for some methods, removing it
-            kwargs.pop('order', None)
-
             # Make context for output (trivial one returns `None`)
             if out is None:
                 out_ctx = CtxNone()
