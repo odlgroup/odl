@@ -788,8 +788,7 @@ class MatrixOperator(Operator):
         if scipy.sparse.isspmatrix(matrix):
             self.__matrix = matrix
         else:
-            order = getattr(domain, 'order', None)
-            self.__matrix = np.array(matrix, copy=False, order=order, ndmin=2)
+            self.__matrix = np.array(matrix, copy=False, ndmin=2)
 
         self.__axis, axis_in = int(axis), axis
         if self.axis != axis_in:
@@ -831,7 +830,7 @@ class MatrixOperator(Operator):
             else:
                 weighting = domain.weighting
             range = tensor_space(range_shape, dtype=range_dtype,
-                                 order=domain.order, weighting=weighting,
+                                 weighting=weighting,
                                  exponent=domain.exponent)
         else:
             # Check consistency of range
@@ -1399,18 +1398,17 @@ class FlatteningOperator(Operator):
     the domain is a discrete function space.
     """
 
-    def __init__(self, domain, order=None):
+    def __init__(self, domain, order='C'):
         """Initialize a new instance.
 
         Parameters
         ----------
         domain : `TensorSpace`
             Set of elements on which this operator acts.
-        order : {None, 'C', 'F'}, optional
+        order : {'C', 'F'}, optional
             If provided, flattening is performed in this order. ``'C'``
             means that that the last index is changing fastest, while in
             ``'F'`` ordering, the first index changes fastest.
-            By default, ``domain.order`` is used.
 
         Examples
         --------
@@ -1430,12 +1428,9 @@ class FlatteningOperator(Operator):
             raise TypeError('`domain` must be a `TensorSpace` instance, got '
                             '{!r}'.format(domain))
 
-        if order is None:
-            self.__order = domain.order
-        else:
-            self.__order = str(order).upper()
-            if self.order not in ('C', 'F'):
-                raise ValueError('`order` {!r} not understood'.format(order))
+        self.__order = str(order).upper()
+        if self.order not in ('C', 'F'):
+            raise ValueError('`order` {!r} not understood'.format(order))
 
         range = tensor_space(domain.size, dtype=domain.dtype)
         super().__init__(domain, range, linear=True)
@@ -1538,7 +1533,7 @@ class FlatteningOperator(Operator):
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = [self.domain]
-        optargs = [('order', self.order, self.domain.order)]
+        optargs = [('order', self.order, 'C')]
         sig_str = signature_string(posargs, optargs, mod=['!r', ''],
                                    sep=['', '', ',\n'])
         return '{}(\n{}\n)'.format(self.__class__.__name__, indent(sig_str))

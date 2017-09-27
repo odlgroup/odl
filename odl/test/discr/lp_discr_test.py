@@ -186,17 +186,21 @@ def test_discretelp_element_from_array():
     assert all_equal(elem.tensor, [1, 2, 3])
 
 
-def test_element_from_array_2d(order):
+def test_element_from_array_2d(elem_order):
     """Test element in 2d with different orderings."""
-    discr = odl.uniform_discr([0, 0], [1, 1], [2, 2], impl='numpy',
-                              order=order)
+    discr = odl.uniform_discr([0, 0], [1, 1], [2, 2])
     elem = discr.element([[1, 2],
-                          [3, 4]])
+                          [3, 4]], order=elem_order)
 
     assert isinstance(elem, DiscreteLpElement)
     assert isinstance(elem.tensor, NumpyTensor)
     assert all_equal(elem, [[1, 2],
                             [3, 4]])
+
+    if elem_order is None:
+        assert elem.tensor.data.flags[discr.default_order + '_CONTIGUOUS']
+    else:
+        assert elem.tensor.data.flags[elem_order + '_CONTIGUOUS']
 
     with pytest.raises(ValueError):
         discr.element([1, 2, 3])  # wrong size & shape
@@ -612,17 +616,19 @@ def test_setslice():
     assert all_equal(elem, [4, 5, 6])
 
 
-def test_asarray_2d(order):
-    """Test the asarray method for different orderings."""
-    discr = odl.uniform_discr([0, 0], [1, 1], [2, 2], order=order)
+def test_asarray_2d(elem_order):
+    """Test the asarray method."""
+    discr = odl.uniform_discr([0, 0], [1, 1], [2, 2])
     elem = discr.element([[1, 2],
-                          [3, 4]])
+                          [3, 4]], order=elem_order)
 
-    # Verify that returned array equals input data
-    assert all_equal(elem.asarray(), [[1, 2],
-                                      [3, 4]])
-    # Check order of out array
-    assert elem.asarray().flags[discr.default_order + '_CONTIGUOUS']
+    arr = elem.asarray()
+    assert all_equal(arr, [[1, 2],
+                           [3, 4]])
+    if elem_order is None:
+        assert arr.flags[discr.default_order + '_CONTIGUOUS']
+    else:
+        assert arr.flags[elem_order + '_CONTIGUOUS']
 
     # test out parameter
     out_c = np.empty([2, 2], order='C')
@@ -643,7 +649,7 @@ def test_asarray_2d(order):
 
 
 def test_transpose():
-    discr = odl.uniform_discr([0, 0], [1, 1], [2, 2], order='F')
+    discr = odl.uniform_discr([0, 0], [1, 1], [2, 2])
     x = discr.element([[1, 2], [3, 4]])
     y = discr.element([[5, 6], [7, 8]])
 
@@ -906,10 +912,10 @@ def test_ufunc_corner_cases(tspace_impl):
     assert res.space == space
 
     # Check usage of `order` argument
-    for order in ('A', 'C', 'F'):
+    for order in ('C', 'F'):
         res = x.__array_ufunc__(np.sin, '__call__', x, order=order)
         assert all_almost_equal(res, np.sin(x.asarray()))
-        assert res.order == order
+        assert res.tensor.data.flags[order + '_CONTIGUOUS']
 
     # Check usage of `dtype` argument
     res = x.__array_ufunc__(np.sin, '__call__', x, dtype=complex)
@@ -993,22 +999,12 @@ def test_ufunc_corner_cases(tspace_impl):
     res = y.__array_ufunc__(np.add, 'reduce', y, axis=0)
     assert res.space.weighting.const == pytest.approx(space.cell_sides[1])
 
-    # Check that `exponent` and `order` are propagated
+    # Check that `exponent` is propagated
     space_1 = odl.uniform_discr([0, 0], [1, 1], (2, 3), impl=tspace_impl,
                                 exponent=1)
     z = space_1.one()
     res = z.__array_ufunc__(np.add, 'reduce', z, axis=0)
     assert res.space.exponent == 1
-    space_c = odl.uniform_discr([0, 0], [1, 1], (2, 3), impl=tspace_impl,
-                                order='C')
-    z = space_c.one()
-    res = z.__array_ufunc__(np.add, 'reduce', z, axis=0)
-    assert res.order == 'C'
-    space_f = odl.uniform_discr([0, 0], [1, 1], (2, 3), impl=tspace_impl,
-                                order='F')
-    z = space_f.one()
-    res = z.__array_ufunc__(np.add, 'reduce', z, axis=0)
-    assert res.order == 'F'
 
     # --- `outer` --- #
 
@@ -1030,18 +1026,18 @@ def test_ufunc_corner_cases(tspace_impl):
     assert not res.space.is_weighted
 
 
-def test_real_imag(tspace_impl, order):
+def test_real_imag(tspace_impl, elem_order):
     """Check if real and imaginary parts can be read and written to."""
     tspace_cls = odl.space.entry_points.tensor_space_impl(tspace_impl)
     for dtype in filter(odl.util.is_complex_floating_dtype,
                         tspace_cls.available_dtypes()):
         cdiscr = odl.uniform_discr([0, 0], [1, 1], [2, 2], dtype=dtype,
-                                   impl=tspace_impl, order=order)
+                                   impl=tspace_impl)
         rdiscr = cdiscr.real_space
 
         # Get real and imag
         x = cdiscr.element([[1 - 1j, 2 - 2j],
-                            [3 - 3j, 4 - 4j]])
+                            [3 - 3j, 4 - 4j]], order=elem_order)
         assert x.real in rdiscr
         assert all_equal(x.real, [[1, 2],
                                   [3, 4]])
@@ -1065,20 +1061,18 @@ def test_real_imag(tspace_impl, order):
             assert all_equal(x.imag, [[4, 5],
                                       [6, 7]])
 
-            # With [:] assignment (only for 'A' ordering, otherwise the
-            # `real` part is forced to be contiguous, requiring a copy)
-            if order == 'A':
-                x = cdiscr.zero()
-                x.real[:] = assigntype([[2, 3],
-                                        [4, 5]])
-                assert all_equal(x.real, [[2, 3],
-                                          [4, 5]])
+            # With [:] assignment
+            x = cdiscr.zero()
+            x.real[:] = assigntype([[2, 3],
+                                    [4, 5]])
+            assert all_equal(x.real, [[2, 3],
+                                      [4, 5]])
 
-                x = cdiscr.zero()
-                x.imag[:] = assigntype([[2, 3],
-                                        [4, 5]])
-                assert all_equal(x.imag, [[2, 3],
-                                          [4, 5]])
+            x = cdiscr.zero()
+            x.imag[:] = assigntype([[2, 3],
+                                    [4, 5]])
+            assert all_equal(x.imag, [[2, 3],
+                                      [4, 5]])
 
         # Setting with scalars
         x = cdiscr.zero()

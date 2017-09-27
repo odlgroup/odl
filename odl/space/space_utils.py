@@ -31,11 +31,9 @@ def vector(array, dtype=None, order=None, impl='numpy'):
     dtype : optional
         Set the data type of the vector manually with this option.
         By default, the space type is inferred from the input data.
-    order : {None, 'A', 'C', 'F'}, optional
-        Axis ordering of the data storage. ``'A'`` will try not to
-        modify the memory layout of ``array``.
-        For the default ``None``, the default order of the space
-        associated with ``impl`` is used.
+    order : {None, 'C', 'F'}, optional
+        Axis ordering of the data storage. For the default ``None``,
+        no contiguousness is enforced, avoiding a copy if possible.
     impl : str, optional
         Impmlementation back-end for the space. See
         `odl.space.entry_points.tensor_space_impl_names` for available
@@ -88,12 +86,11 @@ def vector(array, dtype=None, order=None, impl='numpy'):
     else:
         space_dtype = arr.dtype
 
-    kwargs = {'order', order} if order is not None else {}
-    space = tensor_space(arr.shape, dtype=space_dtype, impl=impl, **kwargs)
+    space = tensor_space(arr.shape, dtype=space_dtype, impl=impl)
     return space.element(arr)
 
 
-def tensor_space(shape, dtype=None, order='A', impl='numpy', **kwargs):
+def tensor_space(shape, dtype=None, impl='numpy', **kwargs):
     """Return a tensor space with arbitrary scalar data type.
 
     Parameters
@@ -107,12 +104,6 @@ def tensor_space(shape, dtype=None, order='A', impl='numpy', **kwargs):
         as a string.
         For ``None``, the `TensorSpace.default_dtype` of the
         created space is used.
-    order : {'A', 'C', 'F'}, optional
-        Axis ordering of the data storage. Only relevant for more
-        than 1 axis.
-        For ``'C'`` and ``'F'``, elements are forced to use
-        contiguous memory in the respective ordering.
-        For ``'A'`` ("any") no contiguousness is enforced.
     impl : str, optional
         Impmlementation back-end for the space. See
         `odl.space.entry_points.tensor_space_impl_names` for available
@@ -156,10 +147,10 @@ def tensor_space(shape, dtype=None, order='A', impl='numpy', **kwargs):
     if dtype is None:
         dtype = tspace_cls.default_dtype()
 
-    return tspace_cls(shape, dtype, order, **kwargs)
+    return tspace_cls(shape, dtype, **kwargs)
 
 
-def cn(shape, dtype=None, order='A', impl='numpy', **kwargs):
+def cn(shape, dtype=None, impl='numpy', **kwargs):
     """Return a space of complex tensors.
 
     Parameters
@@ -174,12 +165,6 @@ def cn(shape, dtype=None, order='A', impl='numpy', **kwargs):
         For ``None``, the `TensorSpace.default_dtype` of the
         created space is used in the form
         ``default_dtype(ComplexNumbers())``.
-    order : {'A', 'C', 'F'}, optional
-        Axis ordering of the data storage. Only relevant for more
-        than 1 axis.
-        For ``'C'`` and ``'F'``, elements are forced to use
-        contiguous memory in the respective ordering.
-        For ``'A'`` ("any") no contiguousness is enforced.
     impl : str, optional
         Impmlementation back-end for the space. See
         `odl.space.entry_points.tensor_space_impl_names` for available
@@ -222,14 +207,14 @@ def cn(shape, dtype=None, order='A', impl='numpy', **kwargs):
     if dtype is None:
         dtype = cn_cls.default_dtype(ComplexNumbers())
 
-    cn = cn_cls(shape, dtype, order, **kwargs)
+    cn = cn_cls(shape, dtype, **kwargs)
     if not cn.is_complex:
         raise ValueError('data type {!r} not a complex floating-point type.'
                          ''.format(dtype))
     return cn
 
 
-def rn(shape, dtype=None, order='A', impl='numpy', **kwargs):
+def rn(shape, dtype=None, impl='numpy', **kwargs):
     """Return a space of real tensors.
 
     Parameters
@@ -244,12 +229,6 @@ def rn(shape, dtype=None, order='A', impl='numpy', **kwargs):
         For ``None``, the `TensorSpace.default_dtype` of the
         created space is used in the form
         ``default_dtype(RealNumbers())``.
-    order : {'A', 'C', 'F'}, optional
-        Axis ordering of the data storage. Only relevant for more
-        than 1 axis.
-        For ``'C'`` and ``'F'``, elements are forced to use
-        contiguous memory in the respective ordering.
-        For ``'A'`` ("any") no contiguousness is enforced.
     impl : str, optional
         Impmlementation back-end for the space. See
         `odl.space.entry_points.tensor_space_impl_names` for available
@@ -292,7 +271,7 @@ def rn(shape, dtype=None, order='A', impl='numpy', **kwargs):
     if dtype is None:
         dtype = rn_cls.default_dtype(RealNumbers())
 
-    rn = rn_cls(shape, dtype, order, **kwargs)
+    rn = rn_cls(shape, dtype, **kwargs)
     if not rn.is_real:
         raise ValueError('data type {!r} not a real floating-point type.'
                          ''.format(dtype))

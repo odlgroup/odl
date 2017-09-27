@@ -80,7 +80,6 @@ def test_init_tspace():
     NumpyTensorSpace((3, 4), dtype=int)
     NumpyTensorSpace((3, 4), dtype=float)
     NumpyTensorSpace((3, 4), dtype=complex)
-    NumpyTensorSpace((3, 4), dtype=complex, order='F')
     NumpyTensorSpace((3, 4), dtype=complex, exponent=1.0)
     NumpyTensorSpace((3, 4), dtype=complex, exponent=float('inf'))
     NumpyTensorSpace((3, 4), dtype='S1')
@@ -88,7 +87,6 @@ def test_init_tspace():
     # Alternative constructor
     odl.tensor_space((3, 4))
     odl.tensor_space((3, 4), dtype=int)
-    odl.tensor_space((3, 4), order='F')
     odl.tensor_space((3, 4), exponent=1.0)
 
     # Constructors for real spaces
@@ -161,6 +159,71 @@ def test_properties():
     assert x.shape == space.shape == (3, 4)
     assert x.itemsize == 16
     assert x.nbytes == 16 * 3 * 4
+
+
+def test_element(tspace, elem_order):
+    """Test creation of space elements."""
+    # From scratch
+    elem = tspace.element(order=elem_order)
+    assert elem.shape == elem.data.shape
+    assert elem.dtype == tspace.dtype == elem.data.dtype
+    if elem_order is not None:
+        assert elem.data.flags[elem_order + '_CONTIGUOUS']
+
+    # From space elements
+    other_elem = tspace.element(np.ones(tspace.shape))
+    elem = tspace.element(other_elem, order=elem_order)
+    assert all_equal(elem, other_elem)
+    if elem_order is None:
+        assert elem is other_elem
+    else:
+        assert elem.data.flags[elem_order + '_CONTIGUOUS']
+
+    # From Numpy array (C order)
+    arr_c = np.random.rand(*tspace.shape).astype(tspace.dtype)
+    elem = tspace.element(arr_c, order=elem_order)
+    assert all_equal(elem, arr_c)
+    assert elem.shape == elem.data.shape
+    assert elem.dtype == tspace.dtype == elem.data.dtype
+    if elem_order is None or elem_order == 'C':
+        # None or same order should not lead to copy
+        assert np.may_share_memory(elem.data, arr_c)
+    if elem_order is not None:
+        # Contiguousness in explicitly provided order should be guaranteed
+        assert elem.data.flags[elem_order + '_CONTIGUOUS']
+
+    # From Numpy array (F order)
+    arr_f = np.asfortranarray(arr_c)
+    elem = tspace.element(arr_f, order=elem_order)
+    assert all_equal(elem, arr_f)
+    assert elem.shape == elem.data.shape
+    assert elem.dtype == tspace.dtype == elem.data.dtype
+    if elem_order is None or elem_order == 'F':
+        # None or same order should not lead to copy
+        assert np.may_share_memory(elem.data, arr_f)
+    if elem_order is not None:
+        # Contiguousness in explicitly provided order should be guaranteed
+        assert elem.data.flags[elem_order + '_CONTIGUOUS']
+
+    # From pointer
+    arr_c_ptr = arr_c.ctypes.data
+    elem = tspace.element(data_ptr=arr_c_ptr, order='C')
+    assert all_equal(elem, arr_c)
+    assert np.may_share_memory(elem.data, arr_c)
+    arr_f_ptr = arr_f.ctypes.data
+    elem = tspace.element(data_ptr=arr_f_ptr, order='F')
+    assert all_equal(elem, arr_f)
+    assert np.may_share_memory(elem.data, arr_f)
+
+    # Check errors
+    with pytest.raises(ValueError):
+        tspace.element(order='A')  # only 'C' or 'F' valid
+
+    with pytest.raises(ValueError):
+        tspace.element(data_ptr=arr_c_ptr)  # need order argument
+
+    with pytest.raises(TypeError):
+        tspace.element(arr_c, arr_c_ptr)  # forbidden to give both
 
 
 def test_equals_space(exponent):
@@ -624,30 +687,6 @@ def test_element_setitem(setitem_indices):
     x_arr[setitem_indices] = rhs_list
     x[setitem_indices] = rhs_list
     assert all_equal(x, x_arr)
-
-
-def test_order(order):
-    """Check if axis ordering is handled properly."""
-    space = odl.tensor_space((3, 4), order=order)
-    assert space.order == order
-
-    x = noise_element(space)
-    assert x.order == order
-    if order in ('C', 'F'):
-        assert x.data.flags[order + '_CONTIGUOUS']
-
-    # getitem with contiguous chunks should preserve order
-    if order in ('C', 'A'):
-        assert x[0, 1:3].order == order
-        assert x[1:2, :].order == order
-    if order in ('F', 'A'):
-        assert x[1:3, 0].order == order
-        assert x[:, 1:2].order == order
-
-    assert x[...] in space
-
-    # non-contiguous slices result in 'A' ordering
-    assert x[::2, :].order == 'A'
 
 
 def test_transpose():
@@ -1334,10 +1373,10 @@ def test_ufunc_corner_cases():
     assert res.space == space
 
     # Check usage of `order` argument
-    for order in ('A', 'C', 'F'):
+    for order in ('C', 'F'):
         res = x.__array_ufunc__(np.sin, '__call__', x, order=order)
         assert all_almost_equal(res, np.sin(x.asarray()))
-        assert res.order == order
+        assert res.data.flags[order + '_CONTIGUOUS']
 
     # Check usage of `dtype` argument
     res = x.__array_ufunc__(np.sin, '__call__', x, dtype=complex)
@@ -1421,19 +1460,11 @@ def test_ufunc_corner_cases():
     res = y.__array_ufunc__(np.add, 'reduce', y, axis=0)
     assert not res.space.is_weighted
 
-    # Check that `exponent` and `order` are propagated
+    # Check that `exponent` is propagated
     space_1 = odl.rn((2, 3), exponent=1)
     z = space_1.one()
     res = z.__array_ufunc__(np.add, 'reduce', z, axis=0)
     assert res.space.exponent == 1
-    space_c = odl.rn((2, 3), order='C')
-    z = space_c.one()
-    res = z.__array_ufunc__(np.add, 'reduce', z, axis=0)
-    assert res.order == 'C'
-    space_f = odl.rn((2, 3), order='F')
-    z = space_f.one()
-    res = z.__array_ufunc__(np.add, 'reduce', z, axis=0)
-    assert res.order == 'F'
 
 
 def test_reduction(tspace, reduction):

@@ -110,7 +110,7 @@ scalar_dtype = simple_fixture(name='dtype',
                               params=scalar_dtype_params,
                               fmt=' {name} = np.{value.name} ')
 
-order = simple_fixture(name='order', params=['C', 'F', 'A'])
+elem_order = simple_fixture(name='order', params=[None, 'C', 'F'])
 
 ufunc = simple_fixture('ufunc', [p[0] for p in odl.util.ufuncs.UFUNCS])
 reduction = simple_fixture('reduction', ['sum', 'prod', 'min', 'max'])

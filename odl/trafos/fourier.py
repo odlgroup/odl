@@ -127,7 +127,7 @@ class DiscreteFourierTransformBase(Operator):
 
             range = discr_sequence_space(
                 ran_shape, ran_dtype, impl,
-                exponent=conj_exponent(domain.exponent), order=domain.order)
+                exponent=conj_exponent(domain.exponent))
         else:
             if range.shape != ran_shape:
                 raise ValueError('expected range shape {}, got {}.'

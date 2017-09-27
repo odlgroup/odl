@@ -222,14 +222,13 @@ class DiscreteLp(DiscretizedSpace):
         """All sampling points in the partition as a sparse meshgrid."""
         return self.partition.meshgrid
 
-    def points(self, order=None):
+    def points(self, order='C'):
         """All sampling points in the partition.
 
         Parameters
         ----------
-        order : {None, 'C', 'F'}
-            Axis ordering in the resulting point array. For the default
-            ``None``, `default_order` is used.
+        order : {'C', 'F'}
+            Axis ordering in the resulting point array.
 
         Returns
         -------
@@ -237,7 +236,15 @@ class DiscreteLp(DiscretizedSpace):
             The shape of the array is ``size x ndim``, i.e. the points
             are stored as rows.
         """
-        return self.partition.points(order=self.default_order)
+        return self.partition.points(order)
+
+    @property
+    def default_order(self):
+        """Default storage order for new elements in this space.
+
+        This is equal to the default order of `dspace`.
+        """
+        return self.dspace.default_order
 
     @property
     def tangent_bundle(self):
@@ -269,31 +276,44 @@ class DiscreteLp(DiscretizedSpace):
 
         return is_uniformly_weighted
 
-    def element(self, inp=None, **kwargs):
+    def element(self, inp=None, order=None, **kwargs):
         """Create an element from ``inp`` or from scratch.
 
         Parameters
         ----------
         inp : optional
-            Input data to create an element from.
+            Input used to initialize the new element. The following options
+            are available:
 
-            If ``inp`` is callable, it needs to be understood by the
-            ``uspace.element`` method.
+            - ``None``: an empty element is created with no guarantee of
+              its state (memory allocation only). The new element will
+              use ``order`` as storage order if provided, otherwise
+              `default_order`
 
-            Otherwise, it has to be understood by the ``dspace.element``
-            method.
+            - array-like: an element wrapping a `tensor` is created,
+              where a copy is avoided whenever possible. This usually
+              requires correct `shape`, `dtype` and `impl` if applicable,
+              and if ``order`` is provided, also contiguousness in that
+              ordering. See the ``element`` method of `dspace` for more
+              information.
+
+              If any of these conditions is not met, a copy is made.
+
+            - callable: a new element is created by sampling the function
+              using the `sampling` operator.
+
+        order : {'C', 'F'}, optional
+            Storage order of the returned element. For ``'C'`` and ``'F'``,
+            contiguous memory in the respective ordering is enforced.
+            The default ``None`` enforces no contiguousness.
+        vectorized : bool, optional
+            If ``True``, assume that a provided callable ``inp`` supports
+            vectorized evaluation. Otherwise, wrap it in a vectorizer.
+            Default: ``True``.
         kwargs :
             Additional arguments passed on to `sampling` when called
             on ``inp``, in the form ``sampling(inp, **kwargs)``.
             This can be used e.g. for functions with parameters.
-
-        Other Parameters
-        ----------------
-        vectorized : bool
-            Can only be used if ``inp`` is callable, in which case it
-            indicates whether ``inp`` is vectorized. If not, it will be
-            wrapped with a vectorizer.
-            Default: True
 
         Returns
         -------
@@ -323,8 +343,7 @@ class DiscreteLp(DiscretizedSpace):
         through keyword arguments (not positional arguments with
         defaults):
 
-        >>> def f(x, **kwargs):
-        ...     c = kwargs.pop('c', 0.0)
+        >>> def f(x, c=0.0):
         ...     return np.maximum(x, c)
         ...
         >>> space = odl.uniform_discr(-1, 1, 4)
@@ -336,24 +355,27 @@ class DiscreteLp(DiscretizedSpace):
         sampling : create a discrete element from an undiscretized one
         """
         if inp is None:
-            return self.element_type(self, self.dspace.element())
-        elif inp in self:
+            return self.element_type(self, self.dspace.element(order=order))
+        elif inp in self and order is None:
             return inp
-        elif inp in self.dspace:
+        elif inp in self.dspace and order is None:
             return self.element_type(self, inp)
         elif callable(inp):
             vectorized = kwargs.pop('vectorized', True)
             # uspace element -> discretize
             inp_elem = self.uspace.element(inp, vectorized=vectorized)
-            return self.element_type(self, self.sampling(inp_elem, **kwargs))
+            sampled = self.sampling(inp_elem, **kwargs)
+            return self.element_type(self, self.dspace.element(sampled,
+                                                               order=order))
         else:
             # Sequence-type input
-            return self.element_type(self, self.dspace.element(inp))
+            return self.element_type(self, self.dspace.element(inp,
+                                                               order=order))
 
-    def _astype(self, dtype, order):
+    def _astype(self, dtype):
         """Internal helper for ``astype``."""
         fspace = self.uspace.astype(dtype)
-        dspace = self.dspace.astype(dtype, order)
+        dspace = self.dspace.astype(dtype)
         return type(self)(fspace, self.partition, dspace, interp=self.interp,
                           axis_labels=self.axis_labels)
 
@@ -458,7 +480,7 @@ class DiscreteLp(DiscretizedSpace):
 
                     weighting = part.cell_volume
                     dspace = type(space.dspace)(
-                        newshape, space.dtype, space.order,
+                        newshape, space.dtype,
                         exponent=space.exponent, weighting=weighting)
                 else:
                     # Other weighting schemes are handled correctly by
@@ -527,7 +549,6 @@ class DiscreteLp(DiscretizedSpace):
                        ('impl', self.impl, 'numpy'),
                        ('nodes_on_bdry', nodes_on_bdry, False),
                        ('dtype', dtype_s, default_dtype_s),
-                       ('order', self.order, 'A'),
                        ('weighting', weighting, 'const')]
 
             inner_str = signature_string(posargs, optargs,
@@ -1040,7 +1061,7 @@ numpy.ufunc.reduceat.html
                         weighting = (inp1.space.weighting.const *
                                      inp2.space.weighting.const)
                         dspace = type(res_tens.space)(
-                            res_tens.shape, res_tens.dtype, res_tens.order,
+                            res_tens.shape, res_tens.dtype,
                             exponent=res_tens.space.exponent,
                             weighting=weighting)
                     else:
@@ -1291,8 +1312,6 @@ def uniform_discr_frompartition(partition, dtype=None, impl='numpy', **kwargs):
     if not partition.is_uniform:
         raise ValueError('`partition` is not uniform')
 
-    order = kwargs.pop('order', 'A')
-
     if dtype is not None:
         dtype = np.dtype(dtype)
 
@@ -1310,8 +1329,8 @@ def uniform_discr_frompartition(partition, dtype=None, impl='numpy', **kwargs):
         else:
             weighting = partition.cell_volume
 
-    dspace = ds_type(partition.shape, dtype, order, impl=impl,
-                     exponent=exponent, weighting=weighting)
+    dspace = ds_type(partition.shape, dtype, exponent=exponent,
+                     weighting=weighting)
     return DiscreteLp(fspace, partition, dspace, **kwargs)
 
 
@@ -1453,12 +1472,6 @@ def uniform_discr(min_pt, max_pt, shape, dtype=None, impl='numpy', **kwargs):
 
     Other Parameters
     ----------------
-    order : {'A', 'C', 'F'}, optional
-        Axis ordering of the data storage. Only relevant for more
-        than 1 axis.
-        For ``'C'`` and ``'F'``, elements are forced to use
-        contiguous memory in the respective ordering.
-        For ``'A'`` ("any") no contiguousness is enforced.
     exponent : positive float, optional
         The parameter :math:`p` in :math:`L^p`. If the exponent is not
         equal to the default 2.0, the space has no inner product.

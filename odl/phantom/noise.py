@@ -12,7 +12,7 @@
 from __future__ import print_function, division, absolute_import
 
 import numpy as np
-from odl.util import as_flat_array, NumpyRandomSeed
+from odl.util import NumpyRandomSeed
 
 
 __all__ = ('white_noise', 'poisson_noise', 'salt_pepper_noise')
@@ -225,7 +225,7 @@ def salt_pepper_noise(vector, fraction=0.05, salt_vs_pepper=0.5,
                       for subintensity in vector]
         else:
             # Extract vector of values
-            values = as_flat_array(vector).copy()
+            values = vector.asarray().flatten()
 
             # Determine fill-in values if not given
             if low_val is None:
