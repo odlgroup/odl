@@ -54,4 +54,4 @@ def test_estimate_noise_std_normal_large_1d():
 
 
 if __name__ == '__main__':
-    pytest.main([str(__file__.replace('\\', '/')), '-v'])
+    odl.util.test_file(__file__)

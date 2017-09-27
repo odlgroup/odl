@@ -50,7 +50,6 @@ def test_as_tensorflow_layer():
     assert all_almost_equal(result, expected)
 
 
-
 if __name__ == '__main__':
     with tf.Session():
-        pytest.main([str(__file__.replace('\\', '/')), '-v'])
+        odl.util.test_file(__file__)
