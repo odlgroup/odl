@@ -1105,7 +1105,7 @@ class SamplingOperator(Operator):
             raise ValueError('`variant` {!r} not understood'.format(variant))
 
         ran = tensor_space(self.sampling_points[0].size, dtype=domain.dtype)
-        super().__init__(domain, ran, linear=True)
+        super(SamplingOperator, self).__init__(domain, ran, linear=True)
 
     @property
     def variant(self):
@@ -1303,7 +1303,8 @@ class WeightedSumSamplingOperator(Operator):
             raise ValueError('`variant` {!r} not understood'.format(variant))
 
         domain = tensor_space(self.sampling_points[0].size, dtype=range.dtype)
-        super().__init__(domain, range, linear=True)
+        super(WeightedSumSamplingOperator, self).__init__(
+            domain, range, linear=True)
 
     @property
     def variant(self):
@@ -1433,7 +1434,7 @@ class FlatteningOperator(Operator):
             raise ValueError('`order` {!r} not understood'.format(order))
 
         range = tensor_space(domain.size, dtype=domain.dtype)
-        super().__init__(domain, range, linear=True)
+        super(FlatteningOperator, self).__init__(domain, range, linear=True)
 
     def _call(self, x):
         """Flatten ``x``."""
@@ -1505,7 +1506,8 @@ class FlatteningOperator(Operator):
 
             def __init__(self):
                 """Initialize a new instance."""
-                super().__init__(op.range, op.domain, linear=True)
+                super(FlatteningOperatorInverse, self).__init__(
+                    op.range, op.domain, linear=True)
 
             def _call(self, x):
                 """Reshape ``x`` back to n-dim. shape."""

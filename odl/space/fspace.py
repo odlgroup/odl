@@ -1112,7 +1112,7 @@ class FunctionSpaceElement(LinearSpaceElement):
             form, and return (or write to the ``out`` array) an
             array of appropriate shape.
         """
-        super().__init__(fspace)
+        super(FunctionSpaceElement, self).__init__(fspace)
         self._call_has_out, self._call_out_optional = _fcall_out_type(fcall)
 
         if not self._call_has_out:
