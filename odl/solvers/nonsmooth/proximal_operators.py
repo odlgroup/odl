@@ -77,15 +77,19 @@ def combine_proximals(*factory_list):
 
         Parameters
         ----------
-        sigma : positive float
-            Step size parameter
+        sigma : positive float or list of positive floats
+            Step size parameter(s), if a list, the length must match the length of the `factory_list`
+        
 
         Returns
         -------
         diag_op : `DiagonalOperator`
         """
+        if np.isscalar(sigma):
+            sigma = [sigma]*len(factory_list)
+
         return DiagonalOperator(
-            *[factory(sigma) for factory in factory_list])
+            *[factory(sigmai) for (sigmai,factory) in zip(sigma, factory_list)])
 
     return diag_op_factory
 
