@@ -32,8 +32,8 @@ class Resampling(Operator):
     The operator uses the underlying `DiscretizedSet.sampling` and
     `DiscretizedSet.interpolation` operators to achieve this.
 
-    The spaces need to have the same `DiscretizedSet.uspace` in order
-    for this to work. The data space implementations may be different,
+    The spaces need to have the same `DiscretizedSet.fspace` in order
+    for this to work. The tensor space implementations may be different,
     although performance may suffer drastically due to translation
     steps.
     """
@@ -74,10 +74,10 @@ class Resampling(Operator):
         >>> print(linear_resampling([0, 1, 0]))
         [ 0.  ,  0.25,  0.75,  0.75,  0.25,  0.  ]
         """
-        if domain.uspace != range.uspace:
-            raise ValueError('`domain.uspace` ({}) does not match '
-                             '`range.uspace` ({})'
-                             ''.format(domain.uspace, range.uspace))
+        if domain.fspace != range.fspace:
+            raise ValueError('`domain.fspace` ({}) does not match '
+                             '`range.fspace` ({})'
+                             ''.format(domain.fspace, range.fspace))
 
         super(Resampling, self).__init__(
             domain=domain, range=range, linear=True)
@@ -525,7 +525,7 @@ def _resize_discr(discr, newshp, offset, discr_kwargs):
 
     fspace = FunctionSpace(IntervalProd(new_minpt, new_maxpt),
                            out_dtype=dtype)
-    dspace = tensor_space(newshp, dtype=dtype, impl=impl, exponent=exponent,
+    tspace = tensor_space(newshp, dtype=dtype, impl=impl, exponent=exponent,
                           weighting=weighting)
 
     # Stack together the (unchanged) nonuniform axes and the (new) uniform
@@ -539,7 +539,8 @@ def _resize_discr(discr, newshp, offset, discr_kwargs):
         else:
             part = part.append(discr.partition.byaxis[i])
 
-    return DiscreteLp(fspace, part, dspace, interp=interp)
+    return DiscreteLp(fspace, part, tspace, interp=interp)
+
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position

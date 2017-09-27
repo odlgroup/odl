@@ -129,7 +129,7 @@ class WaveletTransformBase(Operator):
             self.pywt_wavelet = pywt_wavelet(self.wavelet)
             coeff_size = pywt_flat_coeff_size(space.shape, wavelet,
                                               self.nlevels, self.pywt_pad_mode)
-            coeff_space = space.dspace_type(coeff_size, dtype=space.dtype)
+            coeff_space = space.tspace_type(coeff_size, dtype=space.dtype)
         else:
             raise RuntimeError("bad `impl` '{}'".format(self.impl))
 

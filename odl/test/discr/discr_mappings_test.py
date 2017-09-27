@@ -28,8 +28,8 @@ def test_nearest_interpolation_1d_complex(tspace_impl):
     # [0.1, 0.3, 0.5, 0.7, 0.9]
 
     fspace = odl.FunctionSpace(intv, out_dtype=complex)
-    dspace = odl.cn(part.shape)
-    interp_op = NearestInterpolation(fspace, part, dspace)
+    tspace = odl.cn(part.shape)
+    interp_op = NearestInterpolation(fspace, part, tspace)
     function = interp_op([0 + 1j, 1 + 2j, 2 + 3j, 3 + 4j, 4 + 5j])
 
     # Evaluate at single point
@@ -62,10 +62,10 @@ def test_nearest_interpolation_1d_variants():
     # [0.1, 0.3, 0.5, 0.7, 0.9]
 
     fspace = odl.FunctionSpace(intv)
-    dspace = odl.rn(part.shape)
+    tspace = odl.rn(part.shape)
 
     # 'left' variant
-    interp_op = NearestInterpolation(fspace, part, dspace, variant='left')
+    interp_op = NearestInterpolation(fspace, part, tspace, variant='left')
     function = interp_op([0, 1, 2, 3, 4])
 
     # Testing two midpoints and the extreme values
@@ -74,7 +74,7 @@ def test_nearest_interpolation_1d_variants():
     assert all_equal(function(pts), true_arr)
 
     # 'right' variant
-    interp_op = NearestInterpolation(fspace, part, dspace, variant='right')
+    interp_op = NearestInterpolation(fspace, part, tspace, variant='right')
     function = interp_op([0, 1, 2, 3, 4])
 
     # Testing two midpoints and the extreme values
@@ -91,8 +91,8 @@ def test_nearest_interpolation_2d_float():
     # [0.125, 0.375, 0.625, 0.875], [0.25, 0.75]
 
     fspace = odl.FunctionSpace(rect)
-    dspace = odl.rn(part.shape)
-    interp_op = NearestInterpolation(fspace, part, dspace)
+    tspace = odl.rn(part.shape)
+    interp_op = NearestInterpolation(fspace, part, tspace)
     function = interp_op(np.reshape([0, 1, 2, 3, 4, 5, 6, 7], part.shape))
 
     # Evaluate at single point
@@ -125,9 +125,9 @@ def test_nearest_interpolation_2d_string():
     # [0.125, 0.375, 0.625, 0.875], [0.25, 0.75]
 
     fspace = odl.FunctionSpace(rect, out_dtype='U1')
-    dspace = odl.tensor_space(part.shape, dtype='U1')
-    interp_op = NearestInterpolation(fspace, part, dspace)
-    values = np.array([c for c in 'mystring']).reshape(dspace.shape)
+    tspace = odl.tensor_space(part.shape, dtype='U1')
+    interp_op = NearestInterpolation(fspace, part, tspace)
+    values = np.array([c for c in 'mystring']).reshape(tspace.shape)
     function = interp_op(values)
 
     # Evaluate at single point
@@ -160,8 +160,8 @@ def test_linear_interpolation_1d():
     # [0.1, 0.3, 0.5, 0.7, 0.9]
 
     fspace = odl.FunctionSpace(intv)
-    dspace = odl.rn(part.shape)
-    interp_op = LinearInterpolation(fspace, part, dspace)
+    tspace = odl.rn(part.shape)
+    interp_op = LinearInterpolation(fspace, part, tspace)
     function = interp_op([1, 2, 3, 4, 5])
 
     # Evaluate at single point
@@ -183,8 +183,8 @@ def test_linear_interpolation_2d():
     # [0.125, 0.375, 0.625, 0.875], [0.25, 0.75]
 
     fspace = odl.FunctionSpace(rect)
-    dspace = odl.rn(part.shape)
-    interp_op = LinearInterpolation(fspace, part, dspace)
+    tspace = odl.rn(part.shape)
+    interp_op = LinearInterpolation(fspace, part, tspace)
     values = np.arange(1, 9, dtype='float64').reshape(part.shape)
     function = interp_op(values)
     rvals = values.reshape([4, 2])
@@ -253,10 +253,10 @@ def test_per_axis_interpolation():
     # [0.125, 0.375, 0.625, 0.875], [0.25, 0.75]
 
     fspace = odl.FunctionSpace(rect)
-    dspace = odl.rn(part.shape)
+    tspace = odl.rn(part.shape)
     schemes = ['linear', 'nearest']
     variants = [None, 'right']
-    interp_op = PerAxisInterpolation(fspace, part, dspace, schemes=schemes,
+    interp_op = PerAxisInterpolation(fspace, part, tspace, schemes=schemes,
                                      nn_variants=variants)
     values = np.arange(1, 9, dtype='float64').reshape(part.shape)
     function = interp_op(values)
@@ -310,17 +310,17 @@ def test_collocation_interpolation_identity():
     rect = odl.IntervalProd([0, 0], [1, 1])
     part = odl.uniform_partition_fromintv(rect, [4, 2])
     space = odl.FunctionSpace(rect)
-    dspace = odl.rn(part.shape)
+    tspace = odl.rn(part.shape)
 
-    coll_op = PointCollocation(space, part, dspace)
+    coll_op = PointCollocation(space, part, tspace)
     interp_ops = [
-        NearestInterpolation(space, part, dspace, variant='left'),
-        NearestInterpolation(space, part, dspace, variant='right'),
-        LinearInterpolation(space, part, dspace),
-        PerAxisInterpolation(space, part, dspace,
+        NearestInterpolation(space, part, tspace, variant='left'),
+        NearestInterpolation(space, part, tspace, variant='right'),
+        LinearInterpolation(space, part, tspace),
+        PerAxisInterpolation(space, part, tspace,
                              schemes=['linear', 'nearest'])]
 
-    values = np.arange(1, 9, dtype='float64').reshape(dspace.shape)
+    values = np.arange(1, 9, dtype='float64').reshape(tspace.shape)
 
     for interp_op in interp_ops:
         ident_values = coll_op(interp_op(values))

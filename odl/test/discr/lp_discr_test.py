@@ -40,31 +40,31 @@ def test_discretelp_init():
     # Real space
     fspace = odl.FunctionSpace(odl.IntervalProd([0, 0], [1, 1]))
     part = odl.uniform_partition_fromintv(fspace.domain, (2, 4))
-    dspace = odl.rn(part.shape)
+    tspace = odl.rn(part.shape)
 
-    discr = DiscreteLp(fspace, part, dspace)
-    assert discr.uspace == fspace
-    assert discr.dspace == dspace
+    discr = DiscreteLp(fspace, part, tspace)
+    assert discr.fspace == fspace
+    assert discr.tspace == tspace
     assert discr.partition == part
     assert discr.interp == 'nearest'
     assert discr.interp_byaxis == ('nearest', 'nearest')
-    assert discr.exponent == dspace.exponent
+    assert discr.exponent == tspace.exponent
     assert discr.axis_labels == ('$x$', '$y$')
     assert discr.is_real
 
-    discr = DiscreteLp(fspace, part, dspace, interp='linear')
+    discr = DiscreteLp(fspace, part, tspace, interp='linear')
     assert discr.interp == 'linear'
     assert discr.interp_byaxis == ('linear', 'linear')
 
-    discr = DiscreteLp(fspace, part, dspace, interp=['nearest', 'linear'])
+    discr = DiscreteLp(fspace, part, tspace, interp=['nearest', 'linear'])
     assert discr.interp == ('nearest', 'linear')
     assert discr.interp_byaxis == ('nearest', 'linear')
 
     # Complex space
     fspace_c = odl.FunctionSpace(odl.IntervalProd([0, 0], [1, 1]),
                                  out_dtype=complex)
-    dspace_c = odl.cn(part.shape)
-    discr = DiscreteLp(fspace_c, part, dspace_c)
+    tspace_c = odl.cn(part.shape)
+    discr = DiscreteLp(fspace_c, part, tspace_c)
     assert discr.is_complex
 
     # Make sure repr shows something
@@ -72,18 +72,18 @@ def test_discretelp_init():
 
     # Error scenarios
     with pytest.raises(ValueError):
-        DiscreteLp(fspace, part, dspace_c)  # mixes real & complex
+        DiscreteLp(fspace, part, tspace_c)  # mixes real & complex
 
     with pytest.raises(ValueError):
-        DiscreteLp(fspace_c, part, dspace)  # mixes complex & real
+        DiscreteLp(fspace_c, part, tspace)  # mixes complex & real
 
     part_1d = odl.uniform_partition(0, 1, 2)
     with pytest.raises(ValueError):
-        DiscreteLp(fspace, part_1d, dspace)  # wrong dimensionality
+        DiscreteLp(fspace, part_1d, tspace)  # wrong dimensionality
 
     part_diffshp = odl.uniform_partition_fromintv(fspace.domain, (3, 4))
     with pytest.raises(ValueError):
-        DiscreteLp(fspace, part_diffshp, dspace)  # shape mismatch
+        DiscreteLp(fspace, part_diffshp, tspace)  # shape mismatch
 
 
 def test_empty():
@@ -112,11 +112,11 @@ def test_uniform_discr_init_real(tspace_impl):
     # 1D
     discr = odl.uniform_discr(0, 1, 10, impl=tspace_impl)
     assert isinstance(discr, DiscreteLp)
-    assert isinstance(discr.dspace, TensorSpace)
+    assert isinstance(discr.tspace, TensorSpace)
     assert discr.impl == tspace_impl
     assert discr.is_real
-    assert discr.dspace.exponent == 2.0
-    assert discr.dtype == discr.dspace.default_dtype(odl.RealNumbers())
+    assert discr.tspace.exponent == 2.0
+    assert discr.dtype == discr.tspace.default_dtype(odl.RealNumbers())
     assert all_equal(discr.min_pt, [0])
     assert all_equal(discr.max_pt, [1])
     assert discr.shape == (10,)
@@ -148,7 +148,7 @@ def test_uniform_discr_init_complex(tspace_impl):
 
     discr = odl.uniform_discr(0, 1, 10, dtype='complex', impl=tspace_impl)
     assert discr.is_complex
-    assert discr.dtype == discr.dspace.default_dtype(odl.ComplexNumbers())
+    assert discr.dtype == discr.tspace.default_dtype(odl.ComplexNumbers())
 
 
 # --- DiscreteLp methods --- #
@@ -160,18 +160,18 @@ def test_discretelp_element():
     # 1D
     discr = odl.uniform_discr(0, 1, 3)
     weight = 1.0 if exponent == float('inf') else discr.cell_volume
-    dspace = odl.rn(3, weighting=weight)
+    tspace = odl.rn(3, weighting=weight)
     elem = discr.element()
     assert elem in discr
-    assert elem.tensor in dspace
+    assert elem.tensor in tspace
 
     # 2D
     discr = odl.uniform_discr([0, 0], [1, 1], (3, 3))
     weight = 1.0 if exponent == float('inf') else discr.cell_volume
-    dspace = odl.rn((3, 3), weighting=weight)
+    tspace = odl.rn((3, 3), weighting=weight)
     elem = discr.element()
     assert elem in discr
-    assert elem.tensor in dspace
+    assert elem.tensor in tspace
 
 
 def test_discretelp_element_from_array():
@@ -817,7 +817,7 @@ def test_ufuncs(tspace_impl, ufunc):
 
     # In-place with data container (tensor) as `out` for new interface
     if USE_ARRAY_UFUNCS_INTERFACE:
-        out_tensors_new = tuple(space.dspace.element(np.empty_like(arr))
+        out_tensors_new = tuple(space.tspace.element(np.empty_like(arr))
                                 for arr in out_arrays)
         if nout == 1:
             out_tens_kwargs_new = {'out': out_tensors_new[0]}
@@ -1143,8 +1143,8 @@ def test_inner_nonuniform():
     fspace = odl.FunctionSpace(odl.IntervalProd(0, 5))
     part = odl.nonuniform_partition([0, 2, 3, 5], min_pt=0, max_pt=5)
     weights = part.cell_sizes_vecs[0]
-    dspace = odl.rn(part.size, weighting=weights)
-    discr = odl.DiscreteLp(fspace, part, dspace)
+    tspace = odl.rn(part.size, weighting=weights)
+    discr = odl.DiscreteLp(fspace, part, tspace)
 
     one = discr.one()
     linear = discr.element(lambda x: x)
@@ -1160,8 +1160,8 @@ def test_norm_nonuniform():
     fspace = odl.FunctionSpace(odl.IntervalProd(0, 5))
     part = odl.nonuniform_partition([0, 2, 3, 5], min_pt=0, max_pt=5)
     weights = part.cell_sizes_vecs[0]
-    dspace = odl.rn(part.size, weighting=weights)
-    discr = odl.DiscreteLp(fspace, part, dspace)
+    tspace = odl.rn(part.size, weighting=weights)
+    discr = odl.DiscreteLp(fspace, part, tspace)
 
     sqrt = discr.element(lambda x: np.sqrt(x))
 
@@ -1263,9 +1263,9 @@ def test_norm_rectangle_boundary(tspace_impl, exponent):
     grid = odl.uniform_grid([0, 0], [1, 1], (4, 4))
     part = odl.RectPartition(rect, grid)
     weight = 1.0 if exponent == float('inf') else part.cell_volume
-    dspace = odl.rn(part.shape, dtype=dtype, impl=tspace_impl,
+    tspace = odl.rn(part.shape, dtype=dtype, impl=tspace_impl,
                     exponent=exponent, weighting=weight)
-    discr = DiscreteLp(fspace, part, dspace)
+    discr = DiscreteLp(fspace, part, tspace)
 
     if exponent == float('inf'):
         assert discr.one().norm() == 1

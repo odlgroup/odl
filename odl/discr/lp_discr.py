@@ -16,7 +16,7 @@ import numpy as np
 from numbers import Integral
 
 from odl.discr.discretization import (
-    DiscretizedSpace, DiscretizedSpaceElement, dspace_type)
+    DiscretizedSpace, DiscretizedSpaceElement, tspace_type)
 from odl.discr.discr_mappings import (
     PointCollocation, NearestInterpolation, LinearInterpolation,
     PerAxisInterpolation)
@@ -43,7 +43,7 @@ class DiscreteLp(DiscretizedSpace):
 
     """Discretization of a Lebesgue :math:`L^p` space."""
 
-    def __init__(self, fspace, partition, dspace, interp='nearest', **kwargs):
+    def __init__(self, fspace, partition, tspace, interp='nearest', **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -52,7 +52,7 @@ class DiscreteLp(DiscretizedSpace):
             The continuous space to be discretized.
         partition : `RectPartition`
             Partition of (a subset of) ``fspace.domain``.
-        dspace : `TensorSpace`
+        tspace : `TensorSpace`
             Space of elements used for data storage. It must have the
             same `TensorSpace.field` as ``fspace`` and the same
             `TensorSpace.shape` as ``partition``.
@@ -83,10 +83,10 @@ class DiscreteLp(DiscretizedSpace):
         if not fspace.domain.contains_set(partition.set):
             raise ValueError('`partition` {} is not a subset of the function '
                              'domain {}'.format(partition, fspace.domain))
-        if fspace.scalar_out_dtype != dspace.dtype:
+        if fspace.scalar_out_dtype != tspace.dtype:
             raise ValueError('`fspace.scalar_out_dtype` does not match '
-                             '`dspace.dtype`: {} != {}'
-                             ''.format(fspace.scalar_out_dtype, dspace.dtype))
+                             '`tspace.dtype`: {} != {}'
+                             ''.format(fspace.scalar_out_dtype, tspace.dtype))
 
         self.__partition = partition
 
@@ -110,16 +110,16 @@ class DiscreteLp(DiscretizedSpace):
                                  'values'.format(interp))
 
         # Assign sampling and interpolation operators
-        sampling = PointCollocation(fspace, self.partition, dspace)
+        sampling = PointCollocation(fspace, self.partition, tspace)
         if all(s == 'nearest' for s in self.interp_byaxis):
-            interpol = NearestInterpolation(fspace, self.partition, dspace)
+            interpol = NearestInterpolation(fspace, self.partition, tspace)
         elif all(s == 'linear' for s in self.interp_byaxis):
-            interpol = LinearInterpolation(fspace, self.partition, dspace)
+            interpol = LinearInterpolation(fspace, self.partition, tspace)
         else:
             interpol = PerAxisInterpolation(
-                fspace, self.partition, dspace, self.interp_byaxis)
+                fspace, self.partition, tspace, self.interp_byaxis)
 
-        super(DiscreteLp, self).__init__(fspace, dspace, sampling, interpol)
+        super(DiscreteLp, self).__init__(fspace, tspace, sampling, interpol)
 
         # Set axis labels
         axis_labels = kwargs.pop('axis_labels', None)
@@ -165,7 +165,7 @@ class DiscreteLp(DiscretizedSpace):
     @property
     def exponent(self):
         """Exponent of this space, the ``p`` in ``L^p``."""
-        return self.dspace.exponent
+        return self.tspace.exponent
 
     @property
     def min_pt(self):
@@ -242,9 +242,9 @@ class DiscreteLp(DiscretizedSpace):
     def default_order(self):
         """Default storage order for new elements in this space.
 
-        This is equal to the default order of `dspace`.
+        This is equal to the default order of `tspace`.
         """
-        return self.dspace.default_order
+        return self.tspace.default_order
 
     @property
     def tangent_bundle(self):
@@ -270,7 +270,7 @@ class DiscreteLp(DiscretizedSpace):
             is_uniformly_weighted = (
                 np.allclose(bdry_fracs, 1.0) or
                 self.exponent == float('inf') or
-                not getattr(self.dspace, 'is_weighted', False))
+                not getattr(self.tspace, 'is_weighted', False))
 
             self.__is_uniformly_weighted = is_uniformly_weighted
 
@@ -294,7 +294,7 @@ class DiscreteLp(DiscretizedSpace):
               where a copy is avoided whenever possible. This usually
               requires correct `shape`, `dtype` and `impl` if applicable,
               and if ``order`` is provided, also contiguousness in that
-              ordering. See the ``element`` method of `dspace` for more
+              ordering. See the ``element`` method of `tspace` for more
               information.
 
               If any of these conditions is not met, a copy is made.
@@ -319,7 +319,7 @@ class DiscreteLp(DiscretizedSpace):
         -------
         element : `DiscreteLpElement`
             The discretized element, calculated as ``sampling(inp)`` or
-            ``dspace.element(inp)``, tried in this order.
+            ``tspace.element(inp)``, tried in this order.
 
         Examples
         --------
@@ -352,31 +352,31 @@ class DiscreteLp(DiscretizedSpace):
 
         See Also
         --------
-        sampling : create a discrete element from an undiscretized one
+        sampling : create a discrete element from a non-discretized one
         """
         if inp is None:
-            return self.element_type(self, self.dspace.element(order=order))
+            return self.element_type(self, self.tspace.element(order=order))
         elif inp in self and order is None:
             return inp
-        elif inp in self.dspace and order is None:
+        elif inp in self.tspace and order is None:
             return self.element_type(self, inp)
         elif callable(inp):
             vectorized = kwargs.pop('vectorized', True)
-            # uspace element -> discretize
-            inp_elem = self.uspace.element(inp, vectorized=vectorized)
+            # fspace element -> discretize
+            inp_elem = self.fspace.element(inp, vectorized=vectorized)
             sampled = self.sampling(inp_elem, **kwargs)
-            return self.element_type(self, self.dspace.element(sampled,
+            return self.element_type(self, self.tspace.element(sampled,
                                                                order=order))
         else:
             # Sequence-type input
-            return self.element_type(self, self.dspace.element(inp,
+            return self.element_type(self, self.tspace.element(inp,
                                                                order=order))
 
     def _astype(self, dtype):
         """Internal helper for ``astype``."""
-        fspace = self.uspace.astype(dtype)
-        dspace = self.dspace.astype(dtype)
-        return type(self)(fspace, self.partition, dspace, interp=self.interp,
+        fspace = self.fspace.astype(dtype)
+        tspace = self.tspace.astype(dtype)
+        return type(self)(fspace, self.partition, tspace, interp=self.interp,
                           axis_labels=self.axis_labels)
 
     # Overrides for space functions depending on partition
@@ -465,11 +465,11 @@ class DiscreteLp(DiscretizedSpace):
                     The resulting space with indexed domain and otherwise
                     same properties (except possibly weighting).
                 """
-                fspace = space.uspace.byaxis_in[indices]
+                fspace = space.fspace.byaxis_in[indices]
                 part = space.partition.byaxis[indices]
 
                 if isinstance(space.weighting, ConstWeighting):
-                    # Need to manually construct `dspace` since it doesn't
+                    # Need to manually construct `tspace` since it doesn't
                     # know where its weighting factor comes from
                     try:
                         iter(indices)
@@ -479,13 +479,13 @@ class DiscreteLp(DiscretizedSpace):
                         newshape = tuple(space.shape[int(i)] for i in indices)
 
                     weighting = part.cell_volume
-                    dspace = type(space.dspace)(
+                    tspace = type(space.tspace)(
                         newshape, space.dtype,
                         exponent=space.exponent, weighting=weighting)
                 else:
                     # Other weighting schemes are handled correctly by
                     # the tensor space
-                    dspace = space.dspace.byaxis[indices]
+                    tspace = space.tspace.byaxis[indices]
 
                 try:
                     iter(indices)
@@ -498,7 +498,7 @@ class DiscreteLp(DiscretizedSpace):
                     labels = tuple(space.axis_labels[int(i)]
                                    for i in indices)
 
-                return DiscreteLp(fspace, part, dspace, interp,
+                return DiscreteLp(fspace, part, tspace, interp,
                                   axis_labels=labels)
 
             def __repr__(self):
@@ -511,12 +511,12 @@ class DiscreteLp(DiscretizedSpace):
         """Return ``repr(self)``."""
         # Clunky check if the factory repr can be used
         if (uniform_partition_fromintv(
-                self.uspace.domain, self.shape,
+                self.fspace.domain, self.shape,
                 nodes_on_bdry=False) == self.partition):
             use_uniform = True
             nodes_on_bdry = False
         elif (uniform_partition_fromintv(
-                self.uspace.domain, self.shape,
+                self.fspace.domain, self.shape,
                 nodes_on_bdry=True) == self.partition):
             use_uniform = True
             nodes_on_bdry = True
@@ -532,7 +532,7 @@ class DiscreteLp(DiscretizedSpace):
                 posargs.append(self.shape)
 
             default_dtype_s = dtype_str(
-                self.dspace.default_dtype(RealNumbers()))
+                self.tspace.default_dtype(RealNumbers()))
 
             if (isinstance(self.weighting, ConstWeighting) and
                     np.isclose(self.weighting.const, self.cell_volume)):
@@ -558,7 +558,7 @@ class DiscreteLp(DiscretizedSpace):
 
         else:
             ctor = self.__class__.__name__
-            posargs = [self.uspace, self.partition, self.dspace]
+            posargs = [self.fspace, self.partition, self.tspace]
             optargs = [('interp', self.interp, 'nearest')]
             inner_str = signature_string(posargs, optargs,
                                          sep=[',\n', ', ', ',\n'],
@@ -939,10 +939,10 @@ numpy.ufunc.reduceat.html
                 if out is None:
                     # Wrap result tensor in appropriate DiscreteLp space.
                     # Make new function space based on result dtype,
-                    # keep everything else, and get `dspace` from the result
+                    # keep everything else, and get `tspace` from the result
                     # tensor.
-                    out_dtype = (res_tens.dtype, self.space.uspace.out_shape)
-                    fspace = FunctionSpace(self.space.uspace.domain,
+                    out_dtype = (res_tens.dtype, self.space.fspace.out_shape)
+                    fspace = FunctionSpace(self.space.fspace.domain,
                                            out_dtype)
                     res_space = DiscreteLp(
                         fspace, self.space.partition,
@@ -961,8 +961,8 @@ numpy.ufunc.reduceat.html
 
                 if out1 is None:
                     # Wrap as for nout = 1
-                    out_dtype = (res1_tens.dtype, self.space.uspace.out_shape)
-                    fspace = FunctionSpace(self.space.uspace.domain,
+                    out_dtype = (res1_tens.dtype, self.space.fspace.out_shape)
+                    fspace = FunctionSpace(self.space.fspace.domain,
                                            out_dtype)
                     res_space = DiscreteLp(
                         fspace, self.space.partition,
@@ -974,8 +974,8 @@ numpy.ufunc.reduceat.html
 
                 if out2 is None:
                     # Wrap as for nout = 1
-                    out_dtype = (res2_tens.dtype, self.space.uspace.out_shape)
-                    fspace = FunctionSpace(self.space.uspace.domain,
+                    out_dtype = (res2_tens.dtype, self.space.fspace.out_shape)
+                    fspace = FunctionSpace(self.space.fspace.domain,
                                            out_dtype)
                     res_space = DiscreteLp(
                         fspace, self.space.partition,
@@ -1028,7 +1028,7 @@ numpy.ufunc.reduceat.html
             if out is None:
                 # Wrap in appropriate DiscreteLp space depending on `method`
                 if method == 'accumulate':
-                    # Make `fspace` with appropriate dtype, get `dspace`
+                    # Make `fspace` with appropriate dtype, get `tspace`
                     # from the result tensor and keep the rest
                     fspace = FunctionSpace(self.space.domain,
                                            out_dtype=res_tens.dtype)
@@ -1041,7 +1041,7 @@ numpy.ufunc.reduceat.html
 
                 elif method == 'outer':
                     # Concatenate domains, partitions, interp, axis_labels,
-                    # and determine `dspace` from the result tensor
+                    # and determine `tspace` from the result tensor
                     inp1, inp2 = inputs
                     domain = inp1.space.domain.append(inp2.space.domain)
                     fspace = FunctionSpace(domain, out_dtype=res_tens.dtype)
@@ -1060,16 +1060,16 @@ numpy.ufunc.reduceat.html
                         # two constants, so we need to do it manually here.
                         weighting = (inp1.space.weighting.const *
                                      inp2.space.weighting.const)
-                        dspace = type(res_tens.space)(
+                        tspace = type(res_tens.space)(
                             res_tens.shape, res_tens.dtype,
                             exponent=res_tens.space.exponent,
                             weighting=weighting)
                     else:
                         # Otherwise `TensorSpace` knows how to handle this
-                        dspace = res_tens.space
+                        tspace = res_tens.space
 
                     res_space = DiscreteLp(
-                        fspace, part, dspace, interp, axis_labels=labels)
+                        fspace, part, tspace, interp, axis_labels=labels)
                     result = res_space.element(res_tens)
 
                 elif method == 'reduce':
@@ -1316,7 +1316,7 @@ def uniform_discr_frompartition(partition, dtype=None, impl='numpy', **kwargs):
         dtype = np.dtype(dtype)
 
     fspace = FunctionSpace(partition.set, out_dtype=dtype)
-    ds_type = dspace_type(fspace, impl, dtype)
+    ds_type = tspace_type(fspace, impl, dtype)
 
     if dtype is None:
         dtype = ds_type.default_dtype()
@@ -1329,9 +1329,9 @@ def uniform_discr_frompartition(partition, dtype=None, impl='numpy', **kwargs):
         else:
             weighting = partition.cell_volume
 
-    dspace = ds_type(partition.shape, dtype, exponent=exponent,
+    tspace = ds_type(partition.shape, dtype, exponent=exponent,
                      weighting=weighting)
-    return DiscreteLp(fspace, partition, dspace, **kwargs)
+    return DiscreteLp(fspace, partition, tspace, **kwargs)
 
 
 def uniform_discr_fromspace(fspace, shape, dtype=None, impl='numpy', **kwargs):
