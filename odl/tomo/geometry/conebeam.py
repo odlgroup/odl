@@ -1484,12 +1484,12 @@ def helical_geometry(space, src_radius, det_radius, num_turns,
     Create a helical beam geometry from space:
 
     >>> space = odl.uniform_discr([-1, -1, -1], [1, 1, 1], (20, 20, 20))
-    >>> geometry = cone_beam_geometry(space, src_radius=5, det_radius=5,
-    ...                               num_turns=3)
+    >>> geometry = helical_geometry(space, src_radius=5, det_radius=5,
+    ...                             num_turns=3)
     >>> geometry.angles.size
-    78
-    >>> geometry.detector.size
-    57
+    234
+    >>> geometry.detector.shape
+    (57, 10)
 
     Notes
     -----
@@ -1528,20 +1528,22 @@ def helical_geometry(space, src_radius, det_radius, num_turns,
     rb = np.hypot(r, w / 2)  # length of the boundary ray to the flat detector
     num_px_horiz = 2 * int(np.ceil(w * omega * r / (2 * np.pi * rb))) + 1
 
-    # Compute the vertical size needed in order to get a full sampling according
-    # to the Tuy condition
+    # Compute the vertical size needed in order to get a full sampling
+    # according to the Tuy condition
     theta = 2 * np.arctan((w / 2) / (src_radius + det_radius))
 
     # Compute lower and upper bound
-    source_to_line_distance = src_radius + src_radius * np.cos(theta)
+    source_to_line_distance = src_radius * (1 + np.cos(theta))
     scale = (src_radius + det_radius) / source_to_line_distance
 
-    source_to_line_lower = pitch * (num_turns * np.pi / 2 - theta) / (2 * np.pi)
-    h = source_to_line_lower * scale
+    source_to_line_lower = (pitch *
+                            (num_turns * np.pi / 2 - theta) / (2 * np.pi))
+    h = 2 * source_to_line_lower * scale
 
     # Compute number of pixels
-    min_mag = (rs + rd) / (2 * rs)
-    num_px_vert = int(np.ceil(space.partition.extent[2] / min_mag))
+    min_mag = (rs + rd) / rs
+    dh = 0.5 * space.partition.cell_sides[2] * min_mag
+    num_px_vert = int(np.ceil(h / dh))
 
     det_min_pt = [-w / 2, -h / 2]
     det_max_pt = [w / 2, h / 2]

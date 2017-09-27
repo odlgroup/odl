@@ -710,5 +710,41 @@ def test_cone_beam_geometry_helper():
     assert geometry.det_partition.extent == pytest.approx(det_width)
 
 
+def test_helical_geometry_helper():
+    """Test that helical_geometry satisfies the sampling conditions.
+
+    See the `helical_geometry` documentation for the exact conditions.
+    """
+    # Parameters
+    src_radius = 3
+    det_radius = 9
+    num_turns = 4
+
+    magnification = (src_radius + det_radius) / src_radius
+    rho = np.sqrt(2)
+    omega = np.pi * 10.0
+    r = src_radius + det_radius
+
+    # Create object
+    space = odl.uniform_discr([-1, -1, -2], [1, 1, 2], [20, 20, 40])
+    geometry = odl.tomo.helical_geometry(space, src_radius, det_radius,
+                                         num_turns=num_turns)
+
+    # Validate angles
+    assert geometry.motion_partition.is_uniform
+    assert (geometry.motion_partition.extent ==
+            pytest.approx(num_turns * 2 * np.pi))
+    assert (geometry.motion_partition.cell_sides <=
+            (r + rho) / r * np.pi / (rho * omega))
+
+    # Validate detector
+    det_width = 2 * magnification * rho
+    R = np.hypot(r, det_width / 2)
+    assert geometry.det_partition.cell_sides[0] <= np.pi * R / (r * omega)
+    mag = (3 + 9) / (3 + rho)
+    delta_h = space.cell_sides[2] * mag
+    assert geometry.det_partition.cell_sides[1] <= delta_h
+
+
 if __name__ == '__main__':
     odl.util.test_file(__file__)
