@@ -56,8 +56,8 @@ def test_L1_norm(space, sigma):
     x = noise_element(space)
 
     # Test functional evaluation
-    expected_result = func.domain.element(np.abs(x)).inner(space.one())
-    assert pytest.approx(func(x), expected_result)
+    expected_result = np.abs(x).inner(space.one())
+    assert func(x) == pytest.approx(expected_result)
 
     # Test gradient - expecting sign function
     expected_result = func.domain.element(np.sign(x))
@@ -125,7 +125,7 @@ def test_L2_norm(space, sigma):
 
     # Test functional evaluation
     expected_result = np.sqrt((x ** 2).inner(space.one()))
-    assert pytest.approx(func(x), expected_result)
+    assert func(x) == pytest.approx(expected_result)
 
     # Test gradient
     if x_norm > 0:
@@ -172,7 +172,7 @@ def test_L2_norm(space, sigma):
 
     # Verify that the biconjugate is the functional itself
     func_cc_cc = func_cc.convex_conj
-    assert pytest.approx(func_cc_cc(x), func(x))
+    assert func_cc_cc(x) == pytest.approx(func(x))
 
 
 def test_L2_norm_squared(space, sigma):
@@ -183,7 +183,7 @@ def test_L2_norm_squared(space, sigma):
 
     # Test functional evaluation
     expected_result = x_norm ** 2
-    assert pytest.approx(func(x), expected_result)
+    assert func(x) == pytest.approx(expected_result)
 
     # Test gradient
     expected_result = 2.0 * x
@@ -198,7 +198,7 @@ def test_L2_norm_squared(space, sigma):
 
     # Test evaluation of the convex conjugate
     expected_result = x_norm ** 2 / 4.0
-    assert pytest.approx(func_cc(x), expected_result)
+    assert func_cc(x) == pytest.approx(expected_result)
 
     # Test gradient of the convex conjugate
     expected_result = x / 2.0
@@ -212,7 +212,7 @@ def test_L2_norm_squared(space, sigma):
     func_cc_cc = func_cc.convex_conj
 
     # Check that they evaluate to the same value
-    assert pytest.approx(func_cc_cc(x), func(x))
+    assert func_cc_cc(x) == pytest.approx(func(x))
 
     # Check that their gradients evaluate to the same value
     assert all_almost_equal(func_cc_cc.gradient(x), func.gradient(x))
@@ -281,7 +281,7 @@ def test_kullback_leibler(space):
         # Evaluation of the functional
         expected_result = ((x - prior + prior * np.log(prior / x))
                            .inner(one_elem))
-        assert pytest.approx(func(x), expected_result)
+        assert func(x) == pytest.approx(expected_result)
 
     # Check property for prior
     assert all_almost_equal(func.prior, prior)
@@ -317,7 +317,7 @@ def test_kullback_leibler(space):
     # Evaluation of convex conjugate
     with np.errstate(all='ignore'):
         expected_result = - (prior * np.log(1 - x)).inner(one_elem)
-        assert pytest.approx(cc_func(x), expected_result)
+        assert cc_func(x) == pytest.approx(expected_result)
 
     x_wrong = noise_element(space)
     x_wrong = x_wrong - x_wrong.ufuncs.max() + 1.01
@@ -340,7 +340,7 @@ def test_kullback_leibler(space):
 
     # Check that they evaluate the same
     with np.errstate(all='ignore'):
-        assert pytest.approx(cc_cc_func(x), func(x))
+        assert cc_cc_func(x) == pytest.approx(func(x))
 
 
 def test_kullback_leibler_cross_entorpy(space):
@@ -359,7 +359,7 @@ def test_kullback_leibler_cross_entorpy(space):
     # Evaluation of the functional
     expected_result = ((prior - x + x * np.log(x / prior))
                        .inner(one_elem))
-    assert pytest.approx(func(x), expected_result)
+    assert func(x) == pytest.approx(expected_result)
 
     # Check property for prior
     assert all_almost_equal(func.prior, prior)
@@ -390,7 +390,7 @@ def test_kullback_leibler_cross_entorpy(space):
 
     # Evaluation of convex conjugate
     expected_result = (prior * (np.exp(x) - 1)).inner(one_elem)
-    assert pytest.approx(cc_func(x), expected_result)
+    assert cc_func(x) == pytest.approx(expected_result)
 
     # The gradient of the convex conjugate
     expected_result = prior * np.exp(x)
@@ -406,7 +406,7 @@ def test_kullback_leibler_cross_entorpy(space):
     cc_cc_func = cc_func.convex_conj
 
     # Check that they evaluate the same
-    assert pytest.approx(cc_cc_func(x), func(x))
+    assert cc_cc_func(x) == pytest.approx(func(x))
 
 
 def test_quadratic_form(space):
@@ -425,7 +425,7 @@ def test_quadratic_form(space):
 
     # Evaluation of the functional
     expected_result = x.inner(operator(x)) + vector.inner(x) + constant
-    assert pytest.approx(func(x), expected_result)
+    assert func(x) == pytest.approx(expected_result)
 
     # The gradient
     expected_gradient = 2 * operator(x) + vector
@@ -438,7 +438,7 @@ def test_quadratic_form(space):
     func_no_operator = odl.solvers.QuadraticForm(vector=vector,
                                                  constant=constant)
     expected_result = vector.inner(x) + constant
-    assert pytest.approx(func_no_operator(x), expected_result)
+    assert func_no_operator(x) == pytest.approx(expected_result)
 
     expected_gradient = vector
     assert all_almost_equal(func_no_operator.gradient(x), expected_gradient)
@@ -455,7 +455,7 @@ def test_quadratic_form(space):
     # Test with no offset
     func_no_offset = odl.solvers.QuadraticForm(operator, constant=constant)
     expected_result = x.inner(operator(x)) + constant
-    assert pytest.approx(func_no_offset(x), expected_result)
+    assert func_no_offset(x) == pytest.approx(expected_result)
 
 
 def test_separable_sum(space):

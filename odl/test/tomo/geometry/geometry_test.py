@@ -376,12 +376,12 @@ def test_parallel_beam_geometry_helper():
 
     # Validate angles
     assert geometry.motion_partition.is_uniform
-    assert pytest.approx(geometry.motion_partition.extent, np.pi)
+    assert geometry.motion_partition.extent == pytest.approx(np.pi)
     assert geometry.motion_partition.cell_sides <= np.pi / (rho * omega)
 
     # Validate detector
     assert geometry.det_partition.cell_sides <= np.pi / omega
-    assert pytest.approx(geometry.det_partition.extent, 2 * rho)
+    assert geometry.det_partition.extent == pytest.approx(2 * rho)
 
     # --- 3d case ---
 
@@ -390,18 +390,18 @@ def test_parallel_beam_geometry_helper():
 
     # Validate angles
     assert geometry.motion_partition.is_uniform
-    assert pytest.approx(geometry.motion_partition.extent, np.pi)
+    assert geometry.motion_partition.extent == pytest.approx(np.pi)
     assert geometry.motion_partition.cell_sides <= np.pi / (rho * omega)
 
     # Validate detector
     assert geometry.det_partition.cell_sides[0] <= np.pi / omega
-    assert pytest.approx(geometry.det_partition.cell_sides[0], 0.05)
-    assert pytest.approx(geometry.det_partition.extent[0], 2 * rho)
+    assert geometry.det_partition.cell_sides[1] == pytest.approx(0.05)
+    assert geometry.det_partition.extent[0] == pytest.approx(2 * rho)
 
     # Validate that new detector axis is correctly aligned with the rotation
     # axis and that there is one detector row per slice
-    assert pytest.approx(geometry.det_partition.min_pt[1], 0.0)
-    assert pytest.approx(geometry.det_partition.max_pt[1], 2.0)
+    assert geometry.det_partition.min_pt[1] == pytest.approx(0.0)
+    assert geometry.det_partition.max_pt[1] == pytest.approx(2.0)
     assert geometry.det_partition.shape[1] == space.shape[2]
     assert all_equal(geometry.det_axes_init[1], geometry.axis)
 
@@ -414,12 +414,12 @@ def test_parallel_beam_geometry_helper():
 
     # Validate angles
     assert geometry.motion_partition.is_uniform
-    assert pytest.approx(geometry.motion_partition.extent, np.pi)
+    assert geometry.motion_partition.extent == pytest.approx(np.pi)
     assert geometry.motion_partition.cell_sides <= np.pi / (rho * omega)
 
     # Validate detector
     assert geometry.det_partition.cell_sides <= np.pi / omega
-    assert pytest.approx(geometry.det_partition.extent, 2 * rho)
+    assert geometry.det_partition.extent == pytest.approx(2 * rho)
 
 
 def test_fanflat_props(shift):
@@ -653,7 +653,7 @@ def test_cone_beam_geometry_helper():
 
     # Validate angles
     assert geometry.motion_partition.is_uniform
-    assert pytest.approx(geometry.motion_partition.extent, 2 * np.pi)
+    assert geometry.motion_partition.extent == pytest.approx(2 * np.pi)
     assert (geometry.motion_partition.cell_sides <=
             (r + rho) / r * np.pi / (rho * omega))
 
@@ -661,13 +661,13 @@ def test_cone_beam_geometry_helper():
     det_width = 2 * magnification * rho
     R = np.hypot(r, det_width / 2)
     assert geometry.det_partition.cell_sides <= np.pi * R / (r * omega)
-    assert pytest.approx(geometry.det_partition.extent, det_width)
+    assert geometry.det_partition.extent == pytest.approx(det_width)
 
     # Short scan option
     fan_angle = 2 * np.arctan(det_width / (2 * r))
     geometry = odl.tomo.cone_beam_geometry(space, src_radius, det_radius,
                                            short_scan=True)
-    assert pytest.approx(geometry.motion_params.extent, np.pi + fan_angle)
+    assert geometry.motion_params.extent == pytest.approx(np.pi + fan_angle)
 
     # --- 3d case ---
 
@@ -676,7 +676,7 @@ def test_cone_beam_geometry_helper():
 
     # Validate angles
     assert geometry.motion_partition.is_uniform
-    assert pytest.approx(geometry.motion_partition.extent, 2 * np.pi)
+    assert geometry.motion_partition.extent == pytest.approx(2 * np.pi)
     assert (geometry.motion_partition.cell_sides <=
             (r + rho) / r * np.pi / (rho * omega))
 
@@ -699,7 +699,7 @@ def test_cone_beam_geometry_helper():
 
     # Validate angles
     assert geometry.motion_partition.is_uniform
-    assert pytest.approx(geometry.motion_partition.extent, 2 * np.pi)
+    assert geometry.motion_partition.extent == pytest.approx(2 * np.pi)
     assert (geometry.motion_partition.cell_sides <=
             (r + rho) / r * np.pi / (rho * omega))
 
@@ -707,7 +707,7 @@ def test_cone_beam_geometry_helper():
     det_width = 2 * magnification * rho
     R = np.hypot(r, det_width / 2)
     assert geometry.det_partition.cell_sides <= np.pi * R / (r * omega)
-    assert pytest.approx(geometry.det_partition.extent, det_width)
+    assert geometry.det_partition.extent == pytest.approx(det_width)
 
 
 if __name__ == '__main__':
