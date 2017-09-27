@@ -72,8 +72,8 @@ def test_resizing_op_raise():
     grid = odl.RectGrid([0, 2, 3])
     part = odl.RectPartition(odl.IntervalProd(0, 3), grid)
     fspace = odl.FunctionSpace(odl.IntervalProd(0, 3))
-    dspace = odl.rn(3)
-    space = odl.DiscreteLp(fspace, part, dspace)
+    tspace = odl.rn(3)
+    space = odl.DiscreteLp(fspace, part, tspace)
     with pytest.raises(ValueError):
         odl.ResizingOperator(space, ran_shp=(10,))
 
@@ -248,8 +248,8 @@ def test_resizing_op_mixed_uni_nonuni():
     uni_part = odl.uniform_partition(-1, 1, 4)
     part = uni_part.append(nonuni_part, uni_part, nonuni_part)
     fspace = odl.FunctionSpace(odl.IntervalProd(part.min_pt, part.max_pt))
-    dspace = odl.rn(part.shape)
-    space = odl.DiscreteLp(fspace, part, dspace)
+    tspace = odl.rn(part.shape)
+    space = odl.DiscreteLp(fspace, part, tspace)
 
     # Keep non-uniform axes fixed
     res_op = odl.ResizingOperator(space, ran_shp=(6, 3, 6, 3))
@@ -260,8 +260,8 @@ def test_resizing_op_mixed_uni_nonuni():
     # Evaluation test with a simpler case
     part = uni_part.append(nonuni_part)
     fspace = odl.FunctionSpace(odl.IntervalProd(part.min_pt, part.max_pt))
-    dspace = odl.rn(part.shape)
-    space = odl.DiscreteLp(fspace, part, dspace)
+    tspace = odl.rn(part.shape)
+    space = odl.DiscreteLp(fspace, part, tspace)
     res_op = odl.ResizingOperator(space, ran_shp=(6, 3))
     result = res_op(space.one())
     true_result = [[0, 0, 0],

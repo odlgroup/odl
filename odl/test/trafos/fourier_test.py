@@ -87,10 +87,10 @@ def test_dft_init_raise():
 
     # Bad types
     with pytest.raises(TypeError):
-        DiscreteFourierTransform(dom.dspace)
+        DiscreteFourierTransform(dom.tspace)
 
     with pytest.raises(TypeError):
-        DiscreteFourierTransform(dom, dom.dspace)
+        DiscreteFourierTransform(dom, dom.tspace)
 
     # Illegal arguments
     with pytest.raises(ValueError):

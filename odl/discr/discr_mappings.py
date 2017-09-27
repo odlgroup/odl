@@ -40,7 +40,7 @@ class FunctionSpaceMapping(Operator):
 
     """Abstract base class for function set discretization mappings."""
 
-    def __init__(self, map_type, fspace, partition, dspace, linear=False):
+    def __init__(self, map_type, fspace, partition, tspace, linear=False):
         """Initialize a new instance.
 
         Parameters
@@ -53,12 +53,11 @@ class FunctionSpaceMapping(Operator):
         partition : `RectPartition`
             Partition of (a subset of) ``fspace.domain`` based on a
             `RectGrid`.
-        dspace : `TensorSpace`
-            Data space providing containers for the values of a
-        linear : bool, optional
+        tspace : `TensorSpace`
+            Space providing containers for the values/coefficients of a
             discretized object. Its `TensorSpace.shape` must be equal
             to ``partition.shape``.
-        linear : bool
+        linear : bool, optional
             Create a linear operator if ``True``, otherwise a non-linear
             operator.
         """
@@ -73,39 +72,38 @@ class FunctionSpaceMapping(Operator):
         if not isinstance(partition, RectPartition):
             raise TypeError('`partition` {!r} is not a `RectPartition` '
                             'instance'.format(partition))
-        if not isinstance(dspace, TensorSpace):
-            raise TypeError('`dspace` {!r} is not a `TensorSpace` instance'
-                            ''.format(dspace))
+        if not isinstance(tspace, TensorSpace):
+            raise TypeError('`tspace` {!r} is not a `TensorSpace` instance'
+                            ''.format(tspace))
 
         if not fspace.domain.contains_set(partition):
             raise ValueError('{} not contained in the domain {} '
                              'of the function set {}'
                              ''.format(partition, fspace.domain, fspace))
 
-        if dspace.shape != partition.shape:
-            raise ValueError('`dspace.shape` not equal to `partition.shape`: '
+        if tspace.shape != partition.shape:
+            raise ValueError('`tspace.shape` not equal to `partition.shape`: '
                              '{} != {}'
-                             ''.format(dspace.shape, partition.shape))
+                             ''.format(tspace.shape, partition.shape))
 
-        domain = fspace if map_type == 'sampling' else dspace
-        range = dspace if map_type == 'sampling' else fspace
+        domain = fspace if map_type == 'sampling' else tspace
+        range = tspace if map_type == 'sampling' else fspace
         super(FunctionSpaceMapping, self).__init__(
             domain, range, linear=linear)
-
         self.__partition = partition
 
         if self.is_linear:
             if self.domain.field is None:
                 raise TypeError('`fspace.field` cannot be `None` for '
                                 '`linear=True`')
-            if not is_numeric_dtype(dspace.dtype):
-                raise TypeError('`dspace.dtype` must be a numeric data type '
+            if not is_numeric_dtype(tspace.dtype):
+                raise TypeError('`tspace.dtype` must be a numeric data type '
                                 'for `linear=True`, got {}'
-                                ''.format(dtype_repr(dspace)))
-            if fspace.field != dspace.field:
-                raise ValueError('`fspace.field` not equal to `dspace.field`: '
+                                ''.format(dtype_repr(tspace)))
+            if fspace.field != tspace.field:
+                raise ValueError('`fspace.field` not equal to `tspace.field`: '
                                  '{} != {}'
-                                 ''.format(fspace.field, dspace.field))
+                                 ''.format(fspace.field, tspace.field))
 
     def __eq__(self, other):
         """Return ``self == other``."""
@@ -155,7 +153,7 @@ class PointCollocation(FunctionSpaceMapping):
     core discretization classes.
     """
 
-    def __init__(self, fspace, partition, dspace):
+    def __init__(self, fspace, partition, tspace):
         """Initialize a new instance.
 
         Parameters
@@ -167,8 +165,8 @@ class PointCollocation(FunctionSpaceMapping):
         partition : `RectPartition`
             Partition of (a subset of) ``fspace.domain`` based on a
             `RectGrid`.
-        dspace : `TensorSpace`
-            Data space providing containers for the values of a
+        tspace : `TensorSpace`
+            Space providing containers for the values/coefficients of a
             discretized object. Its `TensorSpace.shape` must be equal
             to ``partition.shape``.
 
@@ -185,11 +183,11 @@ class PointCollocation(FunctionSpaceMapping):
         >>> rect = odl.IntervalProd([1, 3], [2, 5])
         >>> grid = odl.RectGrid([1, 2], [3, 4, 5])
         >>> partition = odl.RectPartition(rect, grid)
-        >>> dspace = odl.rn(grid.shape)
+        >>> tspace = odl.rn(grid.shape)
 
         Finally create the operator and test it on a function:
 
-        >>> coll_op = PointCollocation(fspace, partition, dspace)
+        >>> coll_op = PointCollocation(fspace, partition, tspace)
         >>>
         >>> # Properly vectorized function
         >>> func_elem = fspace.element(lambda x: x[0] - x[1])
@@ -210,7 +208,7 @@ class PointCollocation(FunctionSpaceMapping):
 
         Broadcasting and ``out`` parameters are supported:
 
-        >>> out = dspace.element()
+        >>> out = tspace.element()
         >>> result = coll_op(func_elem, out=out)
         >>> result is out
         True
@@ -255,7 +253,7 @@ vectorization_guide.html
         """
         linear = getattr(fspace, 'field', None) is not None
         FunctionSpaceMapping.__init__(self, 'sampling', fspace, partition,
-                                      dspace, linear)
+                                      tspace, linear)
 
     def _call(self, func, out=None, **kwargs):
         """Return ``self(func[, out, **kwargs])``."""
@@ -298,7 +296,7 @@ class NearestInterpolation(FunctionSpaceMapping):
     of the axes in the flat storage array (C- vs. Fortran ordering).
     """
 
-    def __init__(self, fspace, partition, dspace, variant='left'):
+    def __init__(self, fspace, partition, tspace, variant='left'):
         """Initialize a new instance.
 
         Parameters
@@ -310,8 +308,8 @@ class NearestInterpolation(FunctionSpaceMapping):
         partition : `RectPartition`
             Partition of (a subset of) ``fspace.domain`` based on a
             spatial grid.
-        dspace : `TensorSpace`
-            Data space providing containers for the values of a
+        tspace : `TensorSpace`
+            Space providing containers for the values/coefficients of a
             discretized object. Its `TensorSpace.shape` must be equal
             to ``partition.shape``.
         variant : {'left', 'right'}, optional
@@ -338,8 +336,8 @@ class NearestInterpolation(FunctionSpaceMapping):
 
         Now we initialize the operator and test it with some points:
 
-        >>> dspace = odl.tensor_space(part.shape, dtype='U1')
-        >>> interp_op = NearestInterpolation(fspace, part, dspace)
+        >>> tspace = odl.tensor_space(part.shape, dtype='U1')
+        >>> interp_op = NearestInterpolation(fspace, part, tspace)
         >>> values = np.array([['m', 'y'],
         ...                    ['s', 't'],
         ...                    ['r', 'i'],
@@ -373,7 +371,7 @@ class NearestInterpolation(FunctionSpaceMapping):
         """
         linear = getattr(fspace, 'field', None) is not None
         super(NearestInterpolation, self).__init__(
-            'interpolation', fspace, partition, dspace, linear)
+            'interpolation', fspace, partition, tspace, linear)
 
         self.__variant = str(variant).lower()
         if self.variant not in ('left', 'right'):
@@ -416,7 +414,7 @@ class LinearInterpolation(FunctionSpaceMapping):
 
     """Linear interpolation interpolation as an `Operator`."""
 
-    def __init__(self, fspace, partition, dspace):
+    def __init__(self, fspace, partition, tspace):
         """Initialize a new instance.
 
         Parameters
@@ -428,8 +426,8 @@ class LinearInterpolation(FunctionSpaceMapping):
         partition : `RectPartition`
             Partition of (a subset of) ``fspace.domain`` based on a
             `RectGrid`
-        dspace : `TensorSpace`
-            Data space providing containers for the values of a
+        tspace : `TensorSpace`
+            Space providing containers for the values/coefficients of a
             discretized object. Its `TensorSpace.shape` must be equal
             to ``partition.shape``, and its `TensorSpace.field` must
             match ``fspace.field``.
@@ -437,7 +435,7 @@ class LinearInterpolation(FunctionSpaceMapping):
         if getattr(fspace, 'field', None) is None:
             raise TypeError('`fspace.field` cannot be `None`')
         super(LinearInterpolation, self).__init__(
-            'interpolation', fspace, partition, dspace, linear=True)
+            'interpolation', fspace, partition, tspace, linear=True)
 
     def _call(self, x, out=None):
         """Return ``self(x[, out])``."""
@@ -469,7 +467,7 @@ class PerAxisInterpolation(FunctionSpaceMapping):
 
     """Interpolation scheme set for each axis individually."""
 
-    def __init__(self, fspace, partition, dspace, schemes, nn_variants='left'):
+    def __init__(self, fspace, partition, tspace, schemes, nn_variants='left'):
         """Initialize a new instance.
 
         Parameters
@@ -481,8 +479,8 @@ class PerAxisInterpolation(FunctionSpaceMapping):
         partition : `RectPartition`
             Partition of (a subset of) ``fspace.domain`` based on a
             `RectGrid`
-        dspace : `TensorSpace`
-            Data space providing containers for the values of a
+        tspace : `TensorSpace`
+            Space providing containers for the values/coefficients of a
             discretized object. Its `TensorSpace.shape` must be equal
             to ``partition.shape``, and its `TensorSpace.field` must
             match ``fspace.field``.
@@ -501,7 +499,7 @@ class PerAxisInterpolation(FunctionSpaceMapping):
             raise TypeError('`fspace.field` cannot be `None`')
 
         super(PerAxisInterpolation, self).__init__(
-            'interpolation', fspace, partition, dspace, linear=True)
+            'interpolation', fspace, partition, tspace, linear=True)
 
         schemes_in = schemes
         if is_string(schemes):
