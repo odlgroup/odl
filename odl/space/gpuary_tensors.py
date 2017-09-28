@@ -147,22 +147,22 @@ def precompile_kernels():
         out_arg = pygpu.elemwise.as_argument(out, 'out', write=True)
 
         # scal
-        args = [a_arg, x_arg, out_arg]
+        args = [out_arg, a_arg, x_arg]
         oper = 'out = a * x'
         pygpu.elemwise.GpuElemwise(out.context, oper, args)
 
         # axpy
-        args = [a_arg, x_arg, out_arg]
+        args = [out_arg, a_arg, x_arg]
         oper = 'out = a * x + out'
         pygpu.elemwise.GpuElemwise(out.context, oper, args)
 
         # axpby
-        args = [a_arg, x_arg, b_arg, out_arg]
+        args = [out_arg, a_arg, x_arg, b_arg]
         oper = 'out = a * x + b * out'
         pygpu.elemwise.GpuElemwise(out.context, oper, args)
 
         # lico
-        args = [a_arg, x_arg, b_arg, y_arg, out_arg]
+        args = [out_arg, a_arg, x_arg, b_arg, y_arg]
         oper = 'out = a * x + b * y'
         pygpu.elemwise.GpuElemwise(out.context, oper, args)
 
@@ -172,16 +172,14 @@ def precompile_kernels():
 # --- GPU kernels for linspace methods --- #
 
 
-def scal(a, x, out):
-    """Implement ``out <-- a * x`` using an elementwise GPU kernel.
+def scal(a, out):
+    """Implement ``out <-- a * out`` using an elementwise GPU kernel.
 
     Parameters
     ----------
     a : scalar, `array-like` or `pygpu.gpuarray.GpuArray`
         Factor ``a`` in the scaling. If non-scalar, its shape must be
         broadcastable with ``x.shape``.
-    x : `pgpu.gpuarray.GpuArray`
-        Array ``x`` in the scaling.
     out : `pgpu.gpuarray.GpuArray`
         Output array. Its shape must be equal to the broadcast shape of
         ``a`` and ``x``.
@@ -190,25 +188,19 @@ def scal(a, x, out):
     --------
     numpy.broadcast : helper to calculate properties of broadcast objects
     """
-    assert isinstance(x, gpuary.GpuArray)
     assert isinstance(out, gpuary.GpuArray)
-    if not isinstance(a, gpuary.GpuArray) and not np.isscalar(a):
-        if out.flags.f_contiguous and not out.flags.c_contiguous:
-            order = 'F'
-        else:
-            order = 'C'
-        a = gpuary.array(a, dtype=out.dtype, order=order, context=x.context)
+    if not isinstance(a, gpuary.GpuArray):
+        a = np.asarray(a)
 
+    out_arg = pygpu.elemwise.as_argument(out, 'out', read=True, write=True)
     a_arg = pygpu.elemwise.as_argument(a, 'a', read=True)
-    x_arg = pygpu.elemwise.as_argument(x, 'x', read=True)
-    out_arg = pygpu.elemwise.as_argument(out, 'out', write=True)
-    args = [a_arg, x_arg, out_arg]
+    args = [out_arg, a_arg]
 
-    oper = 'out = a * x'
+    oper = 'out = a * out'
     # TODO: check what to do with `convert_f16`
     kernel = pygpu.elemwise.GpuElemwise(out.context, oper, args,
                                         convert_f16=True)
-    kernel(a, x, out, broadcast=True)
+    kernel(out, a, broadcast=True)
 
 
 def axpy(a, x, out):
@@ -231,18 +223,13 @@ def axpy(a, x, out):
     """
     assert isinstance(x, gpuary.GpuArray)
     assert isinstance(out, gpuary.GpuArray)
-    if not isinstance(a, gpuary.GpuArray) and not np.isscalar(a):
-        if out.flags.f_contiguous and not out.flags.c_contiguous:
-            a_order = 'F'
-        else:
-            a_order = 'C'
-        a = gpuary.array(a, dtype=out.dtype, order=a_order,
-                         context=out.context)
+    if not isinstance(a, gpuary.GpuArray):
+        a = np.asarray(a)
 
+    out_arg = pygpu.elemwise.as_argument(out, 'out', read=True, write=True)
     a_arg = pygpu.elemwise.as_argument(a, 'a', read=True)
     x_arg = pygpu.elemwise.as_argument(x, 'x', read=True)
-    out_arg = pygpu.elemwise.as_argument(out, 'out', read=True, write=True)
-    args = [a_arg, x_arg, out_arg]
+    args = [out_arg, a_arg, x_arg]
 
     oper = 'out = a * x + out'
     # TODO: check what to do with `convert_f16`
@@ -274,31 +261,22 @@ def axpby(a, x, b, out):
     """
     assert isinstance(x, gpuary.GpuArray)
     assert isinstance(out, gpuary.GpuArray)
-    if out.flags.f_contiguous and not out.flags.c_contiguous:
-        out_order = 'F'
-    else:
-        out_order = 'C'
-    if not isinstance(a, gpuary.GpuArray) and not np.isscalar(a):
-        a = gpuary.array(a, dtype=out.dtype, order=out_order,
-                         context=out.context)
-    if not isinstance(b, gpuary.GpuArray) and not np.isscalar(b):
-        b = gpuary.array(b, dtype=out.dtype, order=out_order,
-                         context=out.context)
+    if not isinstance(a, gpuary.GpuArray):
+        a = np.asarray(a)
+    if not isinstance(b, gpuary.GpuArray):
+        b = np.asarray(b)
 
+    out_arg = pygpu.elemwise.as_argument(out, 'out', read=True, write=True)
     a_arg = pygpu.elemwise.as_argument(a, 'a', read=True)
     x_arg = pygpu.elemwise.as_argument(x, 'x', read=True)
     b_arg = pygpu.elemwise.as_argument(b, 'b', read=True)
-    out_arg = pygpu.elemwise.as_argument(out, 'out', read=True, write=True)
-    args = [a_arg, x_arg, b_arg, out_arg]
+    args = [out_arg, a_arg, x_arg, b_arg]
 
-    print('in axpby: out = ', out)
     oper = 'out = a * x + b * out'
     # TODO: check what to do with `convert_f16`
     kernel = pygpu.elemwise.GpuElemwise(out.context, oper, args,
                                         convert_f16=True)
-    print('in axpby: out = ', out)
-    kernel(a, x, b, out, broadcast=True)
-    print('in axpby: out = ', out)
+    kernel(out, a, x, b, broadcast=True)
 
 
 def lico(a, x, b, y, out):
@@ -327,29 +305,23 @@ def lico(a, x, b, y, out):
     assert isinstance(x, gpuary.GpuArray)
     assert isinstance(y, gpuary.GpuArray)
     assert isinstance(out, gpuary.GpuArray)
-    if out.flags.f_contiguous and not out.flags.c_contiguous:
-        out_order = 'F'
-    else:
-        out_order = 'C'
-    if not isinstance(a, gpuary.GpuArray) and not np.isscalar(a):
-        a = gpuary.array(a, dtype=out.dtype, order=out_order,
-                         context=out.context)
-    if not isinstance(b, gpuary.GpuArray) and not np.isscalar(b):
-        b = gpuary.array(b, dtype=out.dtype, order=out_order,
-                         context=out.context)
+    if not isinstance(a, gpuary.GpuArray):
+        a = np.asarray(a)
+    if not isinstance(b, gpuary.GpuArray):
+        b = np.asarray(b)
 
+    out_arg = pygpu.elemwise.as_argument(out, 'out', write=True)
     a_arg = pygpu.elemwise.as_argument(a, 'a', read=True)
     x_arg = pygpu.elemwise.as_argument(x, 'x', read=True)
     b_arg = pygpu.elemwise.as_argument(b, 'b', read=True)
     y_arg = pygpu.elemwise.as_argument(y, 'y', read=True)
-    out_arg = pygpu.elemwise.as_argument(out, 'out', write=True)
-    args = [a_arg, x_arg, b_arg, y_arg, out_arg]
+    args = [out_arg, a_arg, x_arg, b_arg, y_arg]
 
     oper = 'out = a * x + b * y'
     # TODO: check what to do with `convert_f16`
     kernel = pygpu.elemwise.GpuElemwise(out.context, oper, args,
                                         convert_f16=True)
-    kernel(a, x, b, y, out, broadcast=True)
+    kernel(out, a, x, b, y, broadcast=True)
 
 
 # --- Space method implementations --- #
@@ -357,40 +329,48 @@ def lico(a, x, b, y, out):
 
 def _lincomb_impl(a, x1, b, x2, out):
     """Raw linear combination, assuming types have been checked."""
-    print('in _lincomb_impl')
     if x1 is x2 and b != 0:
-        print('option 1 scal')
         # x1 is aligned with x2 =>  out <-- (a + b) * x1
-        scal(a + b, x1.data, out.data)
+        axpby(a + b, x1.data, 0, out.data)
     elif out is x1 and out is x2:
-        print('option 2 scal')
         # All the arrays are aligned =>  out <-- (a + b) * out
-        scal(a + b, out.data, out.data)
+        scal(a + b, out.data)
     elif out is x1:
         # out is aligned with x1 =>  out <-- a * out + b * x2
-        print('option 1 axpby')
-        print('args:', b, x2.data, a, out.data)
+        if b == 0:
+            scal(a, out.data)
+        else:
+            if ((not (out.data.flags.c_contiguous or
+                      out.data.flags.f_contiguous)) and
+                    (a != int(a) or b != int(b))):
+                # Workaround
+                scal(a, out.data)
+                tmp = out.data._empty_like_me()
+                axpby(b, x2.data, 0, tmp)
+                out.data[:] += tmp
+
         axpby(b, x2.data, a, out.data)
     elif out is x2:
         # out is aligned with x2 =>  out <-- a * x1 + b * out
         if a == 0:
             # Use in-place  out <-- b * out directly
-            scal(b, out.data, out.data)
-        elif b == 0:  # out <-- a * x1
-            scal(a, x1.data, out.data)
-        else:  # out <-- a * x1 + b * out
-            print('option 2 axpy')
+            scal(b, out.data)
+        else:
+            # out <-- a * x1 + b * out
             axpby(a, x1.data, b, out.data)
     else:
         # We have exhausted all alignment options, so x1 != x2 != out
         # We now optimize for various values of a and b
         if b == 0:
-            if a == 0:  # Zero assignment  out <-- 0
+            if a == 0:
+                # Zero assignment  out <-- 0
                 out.data[:] = 0
-            elif a == 1:  # Copy  out <-- x1
+            elif a == 1:
+                # Copy  out <-- x1
                 out.data[:] = x1.data
-            else:  # Scaled copy  out <-- a * x1
-                scal(a, x1.data, out.data)
+            else:
+                # Scaled copy  out <-- a * x1
+                axpby(a, x1.data, 0, out.data)
         else:
             if a == 0:
                 if b == 1:
@@ -398,9 +378,20 @@ def _lincomb_impl(a, x1, b, x2, out):
                     out.data[:] = x2.data
                 else:
                     # Scaled copy  out <-- b * x2
-                    scal(b, x2.data, out.data)
-            else:  # General case  out <-- a * x1 + b * x2
-                lico(a, x1.data, b, x2.data, out.data)
+                    axpby(b, x2.data, 0, out.data)
+            else:
+                # General case  out <-- a * x1 + b * x2
+                if ((not (out.data.flags.c_contiguous or
+                          out.data.flags.f_contiguous)) and
+                        (a != int(a) or b != int(b))):
+                    # TODO: this is a pretty lame workaround for an issue
+                    # with discontiguous memory
+                    axpby(a, x1.data, 0, out.data)
+                    tmp = out.data._empty_like_me()
+                    axpby(b, x2.data, 0, tmp)
+                    out.data[:] += tmp
+                else:
+                    lico(a, x1.data, b, x2.data, out.data)
 
 
 # --- Space and element classes --- #
