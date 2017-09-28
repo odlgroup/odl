@@ -291,11 +291,14 @@ def axpby(a, x, b, out):
     out_arg = pygpu.elemwise.as_argument(out, 'out', read=True, write=True)
     args = [a_arg, x_arg, b_arg, out_arg]
 
+    print('in axpby: out = ', out)
     oper = 'out = a * x + b * out'
     # TODO: check what to do with `convert_f16`
     kernel = pygpu.elemwise.GpuElemwise(out.context, oper, args,
                                         convert_f16=True)
+    print('in axpby: out = ', out)
     kernel(a, x, b, out, broadcast=True)
+    print('in axpby: out = ', out)
 
 
 def lico(a, x, b, y, out):
@@ -354,14 +357,19 @@ def lico(a, x, b, y, out):
 
 def _lincomb_impl(a, x1, b, x2, out):
     """Raw linear combination, assuming types have been checked."""
+    print('in _lincomb_impl')
     if x1 is x2 and b != 0:
+        print('option 1 scal')
         # x1 is aligned with x2 =>  out <-- (a + b) * x1
         scal(a + b, x1.data, out.data)
     elif out is x1 and out is x2:
+        print('option 2 scal')
         # All the arrays are aligned =>  out <-- (a + b) * out
         scal(a + b, out.data, out.data)
     elif out is x1:
         # out is aligned with x1 =>  out <-- a * out + b * x2
+        print('option 1 axpby')
+        print('args:', b, x2.data, a, out.data)
         axpby(b, x2.data, a, out.data)
     elif out is x2:
         # out is aligned with x2 =>  out <-- a * x1 + b * out
@@ -371,6 +379,7 @@ def _lincomb_impl(a, x1, b, x2, out):
         elif b == 0:  # out <-- a * x1
             scal(a, x1.data, out.data)
         else:  # out <-- a * x1 + b * out
+            print('option 2 axpy')
             axpby(a, x1.data, b, out.data)
     else:
         # We have exhausted all alignment options, so x1 != x2 != out
