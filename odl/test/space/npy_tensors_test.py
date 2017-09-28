@@ -847,7 +847,7 @@ def test_array_weighting_init(exponent):
                                                     exponent=exponent)
 
     assert isinstance(weighting_arr.array, np.ndarray)
-    assert isinstance(weighting_elem.array, NumpyTensor)
+    assert isinstance(weighting_elem.array, np.ndarray)
 
 
 def test_array_weighting_array_is_valid():
@@ -871,13 +871,15 @@ def test_array_weighting_equals():
     weighting_arr = NumpyTensorSpaceArrayWeighting(weight_arr)
     weighting_arr2 = NumpyTensorSpaceArrayWeighting(weight_arr)
     weighting_elem = NumpyTensorSpaceArrayWeighting(weight_elem)
+    weighting_elem_copy = NumpyTensorSpaceArrayWeighting(weight_elem.copy())
     weighting_elem2 = NumpyTensorSpaceArrayWeighting(weight_elem)
     weighting_other_arr = NumpyTensorSpaceArrayWeighting(weight_arr - 1)
     weighting_other_exp = NumpyTensorSpaceArrayWeighting(weight_arr - 1,
                                                          exponent=1)
 
     assert weighting_arr == weighting_arr2
-    assert weighting_arr != weighting_elem
+    assert weighting_arr == weighting_elem
+    assert weighting_arr != weighting_elem_copy
     assert weighting_elem == weighting_elem2
     assert weighting_arr != weighting_other_arr
     assert weighting_arr != weighting_other_exp
