@@ -301,11 +301,6 @@ class NumpyTensorSpace(TensorSpace):
         return 'C'
 
     @property
-    def exponent(self):
-        """Exponent of the norm and the distance."""
-        return self.weighting.exponent
-
-    @property
     def weighting(self):
         """This space's weighting scheme."""
         return self.__weighting
@@ -316,6 +311,11 @@ class NumpyTensorSpace(TensorSpace):
         return not (
             isinstance(self.weighting, NumpyTensorSpaceConstWeighting) and
             self.weighting.const == 1.0)
+
+    @property
+    def exponent(self):
+        """Exponent of the norm and the distance."""
+        return self.weighting.exponent
 
     def element(self, inp=None, data_ptr=None, order=None):
         """Create a new element.
@@ -341,7 +341,7 @@ class NumpyTensorSpace(TensorSpace):
             bytes. For this option, ``order`` must be either ``'C'`` or
             ``'F'``.
             The option is also mutually exclusive with ``inp``.
-        order : {'C', 'F'}, optional
+        order : {None, 'C', 'F'}, optional
             Storage order of the returned element. For ``'C'`` and ``'F'``,
             contiguous memory in the respective ordering is enforced.
             The default ``None`` enforces no contiguousness.
