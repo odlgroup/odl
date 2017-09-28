@@ -2069,6 +2069,10 @@ class NumpyTensorSpaceArrayWeighting(ArrayWeighting):
           it does not define an inner product or norm, respectively. This
           is not checked during initialization.
         """
+        if isinstance(array, NumpyTensor):
+            array = array.data
+        elif not isinstance(array, np.ndarray):
+            array = np.asarray(array)
         super(NumpyTensorSpaceArrayWeighting, self).__init__(
             array, impl='numpy', exponent=exponent)
 
