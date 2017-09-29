@@ -95,16 +95,20 @@ def almost_equal(a, b, places=None):
 
 def all_equal(iter1, iter2):
     """Return ``True`` if all elements in ``a`` and ``b`` are equal."""
-    # Direct comparison for scalars, tuples or lists
-    try:
-        if iter1 == iter2:
-            return True
-    except ValueError:  # Raised by NumPy when comparing arrays
-        pass
-
     # Special case for None
     if iter1 is None and iter2 is None:
         return True
+
+    # Shortcut for scalars, lists and tuples
+    try:
+        if iter1 is iter2 or iter1 == iter2:
+            return True
+    except ValueError:  # raised by numpy
+        pass
+
+    # Compare array objects like this
+    if hasattr(iter1, '__array__') and hasattr(iter2, '__array__'):
+        return np.array_equal(iter1, iter2)
 
     # If one nested iterator is exhausted, go to direct comparison
     try:
@@ -116,15 +120,14 @@ def all_equal(iter1, iter2):
         except ValueError:  # Raised by NumPy when comparing arrays
             return False
 
-    diff_length_sentinel = object()
+    sentinel = object()
 
     # Compare element by element and return False if the sequences have
     # different lengths
-    for [ip1, ip2] in zip_longest(it1, it2,
-                                  fillvalue=diff_length_sentinel):
+    for [ip1, ip2] in zip_longest(it1, it2, fillvalue=sentinel):
         # Verify that none of the lists has ended (then they are not the
         # same size)
-        if ip1 is diff_length_sentinel or ip2 is diff_length_sentinel:
+        if ip1 is sentinel or ip2 is sentinel:
             return False
 
         if not all_equal(ip1, ip2):
