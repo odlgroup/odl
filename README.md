@@ -71,6 +71,7 @@ ODL has been used in a wide range of research and development with several scien
 | *Total variation regularization with variable Lebesgue prior*. [arXiv](https://arxiv.org/abs/1702.08807) | [<img src="https://github.com/favicon.ico" width="24">](https://github.com/kohr-h/variable_lp_paper) |
 | *Generalized Sinkhorn iterations for regularizing inverse problems using optimal mass transport*. [arXiv](https://arxiv.org/abs/1612.02273) | [<img src="https://github.com/favicon.ico" width="24">](https://github.com/aringh/Generalized-Sinkhorn-and-tomography) |
 | *A modified fuzzy C means algorithm for shading correction in craniofacial CBCT images*. CMBEBIH, 2017 | [<img src="https://github.com/favicon.ico" width="24">](https://github.com/adler-j/mfcm_article) |
+| *The MAX IV imaging concept*. [Article](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5133273/) | |
 | *Shape Based Image Reconstruction Using Linearized Deformations*. Inverse Problems, 2017. [DOI](http://iopscience.iop.org/article/10.1088/1361-6420/aa55af) | [<img src="https://github.com/favicon.ico" width="24">](https://github.com/chongchenmath/odl_ld) |
 
 
