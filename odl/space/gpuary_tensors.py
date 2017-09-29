@@ -673,6 +673,9 @@ class GpuTensorSpace(TensorSpace):
             bytes. For this option,
             ``order`` must be either ``'C'`` or ``'F'``.
             The option is also mutually exclusive with ``inp``.
+
+            .. note:: This is not implemented and will raise an exception.
+
         order : {None, 'C', 'F'}, optional
             Storage order of the returned element. For ``'C'`` and ``'F'``,
             contiguous memory in the respective ordering is enforced.
@@ -728,7 +731,12 @@ class GpuTensorSpace(TensorSpace):
                 raise ValueError('`order` cannot be None for element '
                                  'creation from pointer')
 
-            # TODO: make this work
+            # TODO: this currently results in a segfault, no idea why.
+            # The documentation of the `from_gpudata` function also says
+            # that the function may be removed.
+            raise NotImplementedError('construction from pointer not '
+                                      'supported yet')
+
             if str(order).upper() == 'C':
                 strides = [self.dtype.itemsize *
                            int(np.prod(self.shape[self.ndim - i:]))
@@ -738,8 +746,8 @@ class GpuTensorSpace(TensorSpace):
                            int(np.prod(self.shape[:i]))
                            for i in range(self.ndim)]
             arr = gpuary.from_gpudata(
-                data_ptr, 0, self.dtype, self.shape, strides=strides,
-                cls=ndgpuarray)
+                data_ptr, 0, self.dtype, self.shape, self.context,
+                strides, writable=True, cls=ndgpuarray)
             return self.element_type(self, arr)
 
         elif inp is not None and data_ptr is None:
