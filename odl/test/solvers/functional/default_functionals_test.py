@@ -515,23 +515,21 @@ def test_moreau_envelope_l2_sq(space, sigma):
     assert all_almost_equal(smoothed_l2_sq.gradient(x),
                             x * 2 / (1 + 2 * sigma))
 
-def test_weighted_proximal():
-    """Test for the weighted proximal of a SeparableSum functional."""
 
-    space = odl.space.rn(2)
+def test_weighted_proximal(space):
+    """Test for the weighted proximal of a SeparableSum functional."""
 
     l1 = odl.solvers.L1Norm(space)
     l2 = odl.solvers.L2Norm(space)
-
-    x = space.one()
-    y = space.one()
-
     func = odl.solvers.SeparableSum(l1, l2)
+
+    x = func.domain.one()
 
     sigma = [0.5, 1.0]
 
-    prox = func.proximal(sigma)([x, y])
-    assert all_almost_equal(prox, [l1.proximal(0.5)(x), l2.proximal(1.0)(y)])
+    prox = func.proximal(sigma)(x)
+    assert all_almost_equal(prox, [l1.proximal(sigma[0])(x[0]),
+                                   l2.proximal(sigma[1])(x[1])])
 
 if __name__ == '__main__':
     odl.util.test_file(__file__)
