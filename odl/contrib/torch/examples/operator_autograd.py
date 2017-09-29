@@ -4,13 +4,17 @@ This example shows how to wrap an ODL ``Operator`` as a
 ``torch.autograd.Function`` that supports forward evaluation on
 pytorch ``Tensor`` objects and backpropagation using automatic
 differentiation.
+
+The ``OperatorAsAutogradFunction`` class is typically not used directly,
+but rather as an evalation and automatic differentiation backend for a
+layer (=``Module``) in a neural network.
 """
 
 from __future__ import print_function
 import numpy as np
 import torch
 import odl
-from odl.contrib import pytorch
+from odl.contrib import torch as odl_torch
 
 # --- Forward --- #
 
@@ -19,8 +23,8 @@ matrix = np.array([[1, 2, 3],
                    [4, 5, 6]], dtype=float)
 odl_op = odl.MatrixOperator(matrix)
 
-# Wrap as torch operator
-op_func = pytorch.OperatorAsAutogradFunction(odl_op)
+# Wrap as autograd function
+op_func = odl_torch.OperatorAsAutogradFunction(odl_op)
 
 # Define evaluation point and wrap into a variable. Mark as
 # `requires_gradient`, otherwise `backward()` doesn't do anything.
@@ -43,7 +47,7 @@ print('ODL result    : ', odl_res.asarray())
 odl_cost = odl.solvers.L2NormSquared(odl_op.range)
 
 # Wrap with torch
-functional_cost = pytorch.OperatorAsAutogradFunction(odl_cost)
+functional_cost = odl_torch.OperatorAsAutogradFunction(odl_cost)
 
 # Compute forward pass
 res_var = functional_cost(op_func(x_var))
@@ -68,8 +72,8 @@ odl_cost = odl.solvers.L2NormSquared(odl_op.range)
 odl_functional = odl_cost * odl_op
 
 # Torch part
-op_func = pytorch.OperatorAsAutogradFunction(odl_op)
-functional_cost = pytorch.OperatorAsAutogradFunction(odl_cost)
+op_func = odl_torch.OperatorAsAutogradFunction(odl_op)
+functional_cost = odl_torch.OperatorAsAutogradFunction(odl_cost)
 
 x = torch.ones((3,)).type(torch.DoubleTensor)
 x_var = torch.autograd.Variable(x, requires_grad=True)

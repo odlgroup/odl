@@ -9,12 +9,11 @@
 """Unit tests for the ODL-pytorch integration."""
 
 import numpy as np
-import pytest
 import torch
 from torch import autograd, nn
 
 import odl
-from odl.contrib import pytorch
+from odl.contrib import torch as odl_torch
 from odl.util.testutils import all_almost_equal, simple_fixture
 
 
@@ -33,7 +32,7 @@ def test_autograd_function_forward(dtype, use_cuda):
     odl_op = odl.MatrixOperator(matrix)
 
     # Wrap as torch autograd function
-    torch_op = pytorch.OperatorAsAutogradFunction(odl_op)
+    torch_op = odl_torch.OperatorAsAutogradFunction(odl_op)
 
     # Define evaluation point and wrap into a variable
     x = torch.from_numpy(np.ones(3, dtype=dtype))
@@ -50,6 +49,10 @@ def test_autograd_function_forward(dtype, use_cuda):
     assert res_var.data.cpu().numpy().dtype == dtype
     assert all_almost_equal(res_var.data.cpu().numpy(), odl_res)
 
+    # Make sure data stays on the GPU
+    if use_cuda:
+        assert res_var.is_cuda
+
 
 def test_autograd_function_backward(dtype, use_cuda):
     """Test backprop with operators/functionals as autograd functions."""
@@ -60,8 +63,8 @@ def test_autograd_function_backward(dtype, use_cuda):
     odl_functional = odl_cost * odl_op
 
     # Wrap operator and cost with pytorch
-    torch_op = pytorch.OperatorAsAutogradFunction(odl_op)
-    torch_cost = pytorch.OperatorAsAutogradFunction(odl_cost)
+    torch_op = odl_torch.OperatorAsAutogradFunction(odl_op)
+    torch_cost = odl_torch.OperatorAsAutogradFunction(odl_cost)
 
     # Define evaluation point and wrap into a variable. Mark as
     # `requires_gradient`, otherwise `backward()` doesn't do anything.
@@ -85,13 +88,17 @@ def test_autograd_function_backward(dtype, use_cuda):
     assert torch_grad.data.cpu().numpy().dtype == dtype
     assert all_almost_equal(torch_grad.data.cpu().numpy(), odl_grad)
 
+    # Make sure data stays on the GPU
+    if use_cuda:
+        assert torch_grad.is_cuda
+
 
 def test_module_forward(shape, use_cuda):
     """Test forward evaluation with operators as modules."""
     ndim = len(shape)
     space = odl.uniform_discr([0] * ndim, shape, shape)
     odl_op = odl.ScalingOperator(space, 2)
-    op_mod = pytorch.OperatorAsModule(odl_op)
+    op_mod = odl_torch.OperatorAsModule(odl_op)
 
     x = torch.from_numpy(np.ones(shape))
     if use_cuda:
@@ -113,12 +120,16 @@ def test_module_forward(shape, use_cuda):
     assert all_almost_equal(y_var.data.cpu().numpy(),
                             2 * np.ones((1, 1) + shape))
 
+    # Make sure data stays on the GPU
+    if use_cuda:
+        assert y_var.is_cuda
+
 
 def test_module_forward_diff_shapes():
     """Test operator module with different shapes of input and output."""
     matrix = np.random.rand(2, 3)
     odl_op = odl.MatrixOperator(matrix)
-    op_mod = pytorch.OperatorAsModule(odl_op)
+    op_mod = odl_torch.OperatorAsModule(odl_op)
 
     x = torch.from_numpy(np.ones(3))
     if use_cuda:
@@ -143,7 +154,7 @@ def test_module_backward(use_cuda):
     """Test backpropagation with operators as modules."""
     matrix = np.random.rand(2, 3).astype('float32')
     odl_op = odl.MatrixOperator(matrix)
-    op_mod = pytorch.OperatorAsModule(odl_op)
+    op_mod = odl_torch.OperatorAsModule(odl_op)
     loss_fun = nn.MSELoss()
 
     # Test with linear layers (1 extra dim)
@@ -185,6 +196,10 @@ def test_module_backward(use_cuda):
     loss = loss_fun(model(x_var), target_var)
     loss.backward()
     assert all(p is not None for p in model.parameters())
+
+    # Make sure data stays on the GPU
+    if use_cuda:
+        assert x_var.is_cuda
 
 
 if __name__ == '__main__':

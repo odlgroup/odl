@@ -292,6 +292,11 @@ class OperatorAsModule(torch.nn.Module):
         super(OperatorAsModule, self).__init__()
         self.op_func = OperatorAsAutogradFunction(operator)
 
+    @property
+    def operator(self):
+        """The wrapped ODL operator."""
+        return self.op_func.operator
+
     def forward(self, x):
         """Compute forward-pass of this module on ``x``.
 
