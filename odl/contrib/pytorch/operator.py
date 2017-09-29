@@ -376,7 +376,8 @@ class OperatorAsModule(torch.nn.Module):
                              'with shape {}'.format(shp_str, in_shape))
 
         # Flatten extra axes, then do one entry at a time
-        x_flat_xtra = x.view(-1, *op_in_shape)
+        newshape = (int(np.prod(extra_shape)),) + op_in_shape
+        x_flat_xtra = x.resize(*newshape)
         results = []
         for i in range(x_flat_xtra.data.shape[0]):
             results.append(self.op_func(x_flat_xtra[i]))
