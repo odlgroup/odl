@@ -329,6 +329,14 @@ def lico(a, x, b, y, out):
 
 def _lincomb_impl(a, x1, b, x2, out):
     """Raw linear combination, assuming types have been checked."""
+    if not (out.data.flags.c_contiguous or out.data.flags.f_contiguous):
+        # Workaround for libgpuarray issue with discontiguous out:
+        # https://github.com/Theano/libgpuarray/issues/541
+        out, out_orig = out.copy(), out
+        write_back = True
+    else:
+        write_back = False
+
     if x1 is x2 and b != 0:
         # x1 is aligned with x2 =>  out <-- (a + b) * x1
         axpby(a + b, x1.data, 0, out.data)
@@ -340,16 +348,7 @@ def _lincomb_impl(a, x1, b, x2, out):
         if b == 0:
             scal(a, out.data)
         else:
-            if ((not (out.data.flags.c_contiguous or
-                      out.data.flags.f_contiguous)) and
-                    (a != int(a) or b != int(b))):
-                # Workaround
-                scal(a, out.data)
-                tmp = out.data._empty_like_me()
-                axpby(b, x2.data, 0, tmp)
-                out.data[:] += tmp
-
-        axpby(b, x2.data, a, out.data)
+            axpby(b, x2.data, a, out.data)
     elif out is x2:
         # out is aligned with x2 =>  out <-- a * x1 + b * out
         if a == 0:
@@ -381,17 +380,11 @@ def _lincomb_impl(a, x1, b, x2, out):
                     axpby(b, x2.data, 0, out.data)
             else:
                 # General case  out <-- a * x1 + b * x2
-                if ((not (out.data.flags.c_contiguous or
-                          out.data.flags.f_contiguous)) and
-                        (a != int(a) or b != int(b))):
-                    # TODO: this is a pretty lame workaround for an issue
-                    # with discontiguous memory
-                    axpby(a, x1.data, 0, out.data)
-                    tmp = out.data._empty_like_me()
-                    axpby(b, x2.data, 0, tmp)
-                    out.data[:] += tmp
-                else:
-                    lico(a, x1.data, b, x2.data, out.data)
+                lico(a, x1.data, b, x2.data, out.data)
+
+    if write_back:
+        print('writing back')
+        out_orig[:] = out
 
 
 # --- Space and element classes --- #
