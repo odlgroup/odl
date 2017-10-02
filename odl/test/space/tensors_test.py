@@ -17,6 +17,12 @@ import sys
 
 import odl
 from odl.set.space import LinearSpaceTypeError
+from odl.space.torch_tensors import (
+    TORCH_AVAILABLE,
+    TorchTensor, TorchTensorSpace,
+    TorchTensorSpaceConstWeighting, TorchTensorSpaceArrayWeighting,
+    TorchTensorSpaceCustomInner, TorchTensorSpaceCustomNorm,
+    TorchTensorSpaceCustomDist)
 from odl.space.npy_tensors import (
     NumpyTensor, NumpyTensorSpace,
     NumpyTensorSpaceConstWeighting, NumpyTensorSpaceArrayWeighting,
@@ -26,6 +32,8 @@ from odl.util.testutils import (
     all_almost_equal, all_equal, simple_fixture,
     noise_array, noise_element, noise_elements)
 from odl.util.ufuncs import UFUNCS
+if TORCH_AVAILABLE:
+    import torch
 
 
 # --- Test helpers --- #
@@ -40,13 +48,18 @@ USE_ARRAY_UFUNCS_INTERFACE = (parse_version(np.__version__) >=
 
 def _pos_array(space):
     """Create an array with positive real entries in ``space``."""
-    return np.abs(noise_array(space)) + 0.1
+    array = np.abs(noise_array(space)) + 0.1
+    if space.impl == 'torch':
+        array = torch.FloatTensor(array)
+    return array
 
 
 def _array_cls(impl):
     """Return the array class for given impl."""
     if impl == 'numpy':
         return np.ndarray
+    elif impl == 'torch':
+        return torch.tensor._TensorBase
     else:
         assert False
 
@@ -55,6 +68,8 @@ def _odl_tensor_cls(impl):
     """Return the ODL tensor class for given impl."""
     if impl == 'numpy':
         return NumpyTensor
+    elif impl == 'torch':
+        return TorchTensor
     else:
         assert False
 
@@ -74,6 +89,28 @@ def _weighting_cls(impl, kind):
             return NumpyTensorSpaceCustomDist
         else:
             assert False
+    elif impl == 'torch':
+        if kind == 'array':
+            return TorchTensorSpaceArrayWeighting
+        elif kind == 'const':
+            return TorchTensorSpaceConstWeighting
+        elif kind == 'inner':
+            return TorchTensorSpaceCustomInner
+        elif kind == 'norm':
+            return TorchTensorSpaceCustomNorm
+        elif kind == 'dist':
+            return TorchTensorSpaceCustomDist
+        else:
+            assert False
+    else:
+        assert False
+
+
+def _is_contiguous(x, order='C'):
+    if isinstance(x, np.ndarray):
+        return x.flags[order + '_CONTIGUOUS']
+    elif isinstance(x, torch._TensorBase):
+        return x.is_contiguous()
     else:
         assert False
 
@@ -158,21 +195,60 @@ def test_init_npy_tspace():
     odl.rn((3, 4), weighting=weight_arr)
 
 
+def test_init_torch_tspace():
+    """Test initialization patterns and options for ``TorchTensorSpace``."""
+    # Basic class constructor
+    TorchTensorSpace((3, 4))
+    TorchTensorSpace((3, 4), dtype=int)
+    TorchTensorSpace((3, 4), dtype=float)
+    TorchTensorSpace((3, 4), dtype=float, exponent=1.0)
+    TorchTensorSpace((3, 4), dtype=float, exponent=float('inf'))
+
+    with pytest.raises(ValueError):
+        TorchTensorSpace((3, 4), dtype=complex)
+
+    with pytest.raises(ValueError):
+        TorchTensorSpace((3, 4), dtype='S1')
+
+    # Alternative constructor
+    odl.tensor_space((3, 4), impl='torch')
+    odl.tensor_space((3, 4), dtype=int, impl='torch')
+    odl.tensor_space((3, 4), exponent=1.0, impl='torch')
+
+    # Constructors for real spaces
+    odl.rn((3, 4), impl='torch')
+    odl.rn((3, 4), dtype='float32', impl='torch')
+    odl.rn(3, impl='torch')
+    odl.rn(3, dtype='float32', impl='torch')
+
+    # Works only for real data types
+    with pytest.raises(ValueError):
+        odl.rn((3, 4), dtype=int)
+
+    # Init with weights or custom space functions
+    weight_const = 1.5
+    weight_arr = _pos_array(odl.rn((3, 4), impl='torch'))
+
+    odl.rn((3, 4), weighting=weight_const)
+    odl.rn((3, 4), weighting=weight_arr)
+
+
 def test_init_tspace_weighting(weight, exponent, tspace_impl):
     """Test if weightings during init give the correct weighting classes."""
+    # Need to do this before since weighting equality checks returns `True`
+    # only for identical arrays (`a is b`)
+    if tspace_impl == 'torch' and isinstance(weight, np.ndarray):
+        weight = torch.FloatTensor(weight)
+
     space = odl.tensor_space((3, 4), weighting=weight, exponent=exponent,
                              impl=tspace_impl)
 
-    if tspace_impl == 'numpy':
-        if isinstance(weight, np.ndarray):
-            weighting_cls = _weighting_cls(tspace_impl, 'array')
-        else:
-            weighting_cls = _weighting_cls(tspace_impl, 'const')
+    if isinstance(weight, (np.ndarray, torch.tensor._TensorBase)):
+        weighting_cls = _weighting_cls(tspace_impl, 'array')
     else:
-        assert False
+        weighting_cls = _weighting_cls(tspace_impl, 'const')
 
     weighting = weighting_cls(weight, exponent)
-
     assert space.weighting == weighting
 
     # Using a weighting instance
@@ -183,6 +259,8 @@ def test_init_tspace_weighting(weight, exponent, tspace_impl):
     # Errors for bad input
     with pytest.raises(ValueError):
         badly_sized = np.ones((2, 4))
+        if tspace_impl == 'torch':
+            badly_sized = torch.FloatTensor(badly_sized)
         odl.tensor_space((3, 4), weighting=badly_sized, impl=tspace_impl)
 
     if tspace_impl == 'numpy':
@@ -210,12 +288,14 @@ def test_properties(tspace_impl):
 
 def test_element(tspace, elem_order):
     """Test creation of space elements."""
+    if tspace.impl == 'torch' and elem_order:
+        pytest.skip('Fortran ordering not supported by torch')
     # From scratch
     elem = tspace.element(order=elem_order)
     assert elem.shape == elem.data.shape
     assert elem.dtype == tspace.dtype == elem.data.dtype
     if elem_order is not None:
-        assert elem.data.flags[elem_order + '_CONTIGUOUS']
+        assert _is_contiguous(elem.data, elem_order)
 
     # From space elements
     other_elem = tspace.element(np.ones(tspace.shape))
@@ -224,7 +304,7 @@ def test_element(tspace, elem_order):
     if elem_order is None:
         assert elem is other_elem
     else:
-        assert elem.data.flags[elem_order + '_CONTIGUOUS']
+        assert _is_contiguous(elem.data, elem_order)
 
     # From Numpy array (C order)
     arr_c = np.random.rand(*tspace.shape).astype(tspace.dtype)
@@ -237,7 +317,7 @@ def test_element(tspace, elem_order):
         assert np.may_share_memory(elem.data, arr_c)
     if elem_order is not None:
         # Contiguousness in explicitly provided order should be guaranteed
-        assert elem.data.flags[elem_order + '_CONTIGUOUS']
+        assert _is_contiguous(elem.data, elem_order)
 
     # From Numpy array (F order)
     arr_f = np.asfortranarray(arr_c)
@@ -250,7 +330,7 @@ def test_element(tspace, elem_order):
         assert np.may_share_memory(elem.data, arr_f)
     if elem_order is not None:
         # Contiguousness in explicitly provided order should be guaranteed
-        assert elem.data.flags[elem_order + '_CONTIGUOUS']
+        assert _is_contiguous(elem.data, elem_order)
 
     # From pointer
     arr_c_ptr = arr_c.ctypes.data
@@ -306,8 +386,8 @@ def test_equals_elem(tspace_impl):
 
 def test_tspace_astype(tspace_impl):
     """Test creation of a space counterpart with new dtype."""
-    if tspace_impl == 'gpuarray':
-        pytest.xfail(reason='complex spaces not implemented for GPU arrays')
+    if tspace_impl == 'torch':
+        pytest.xfail(reason='complex spaces not implemented in torch')
 
     real_space = odl.rn((3, 4), impl=tspace_impl)
     int_space = odl.tensor_space((3, 4), dtype=int, impl=tspace_impl)
@@ -692,9 +772,6 @@ def test_pdist(tspace_impl, exponent):
 
 def test_element_getitem(tspace_impl, getitem_indices):
     """Check if getitem produces correct values, shape and other stuff."""
-    if tspace_impl == 'gpuarray' and np.ndim(getitem_indices) > 1:
-        pytest.xfail(reason='fancy indexing not supported in pygpu')
-
     space = odl.tensor_space((2, 3, 4), dtype='float32', exponent=1,
                              weighting=2)
     x_arr, x = noise_elements(space)
@@ -725,9 +802,6 @@ def test_element_getitem(tspace_impl, getitem_indices):
 
 def test_element_setitem(tspace_impl, setitem_indices):
     """Check if setitem produces the same result as NumPy."""
-    if tspace_impl == 'gpuarray' and np.ndim(getitem_indices) > 1:
-        pytest.xfail(reason='fancy indexing not supported in pygpu')
-
     space = odl.tensor_space((2, 3, 4), dtype='float32', exponent=1,
                              weighting=2)
     x_arr, x = noise_elements(space)
@@ -1437,10 +1511,13 @@ def test_ufunc_corner_cases(tspace_impl):
     assert res.space == space
 
     # Check usage of `order` argument
-    for order in ('C', 'F'):
+    orders = ['C']
+    if tspace_impl == 'numpy':
+        orders.append('F')
+    for order in orders:
         res = x.__array_ufunc__(np.sin, '__call__', x, order=order)
         assert all_almost_equal(res, np.sin(x.asarray()))
-        assert res.data.flags[order + '_CONTIGUOUS']
+        assert _is_contiguous(res.data, order)
 
     # Check usage of `dtype` argument
     res = x.__array_ufunc__(np.sin, '__call__', x, dtype='float32')
