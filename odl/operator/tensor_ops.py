@@ -8,9 +8,8 @@
 
 """Operators defined for tensor fields."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
+from builtins import str, zip
 from numbers import Integral
 import numpy as np
 

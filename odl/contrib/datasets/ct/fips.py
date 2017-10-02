@@ -8,6 +8,7 @@
 
 """Tomographic datasets from the Finish Inverse Problems Society (FIPS)."""
 
+from __future__ import division
 import numpy as np
 from odl.contrib.datasets.util import get_data
 from odl.discr import uniform_partition
@@ -142,7 +143,5 @@ def lotus_root_geometry():
 
 
 if __name__ == '__main__':
-    # Run doctests
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

@@ -644,7 +644,6 @@ def test_element_getitem_multi():
                                  [5, 6]],
                                 [[7],
                                  [8, 9]]])
-    print(z[0, 1:, 1])
     assert all_equal(z[0, 1:, 1], [[5, 6],
                                    [8, 9]])
     assert all_equal(z[0, 1:, :, 0], [[[4],

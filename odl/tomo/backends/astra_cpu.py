@@ -8,14 +8,12 @@
 
 """Backend for ASTRA using CPU."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
+import numpy as np
 try:
     import astra
 except ImportError:
     pass
-import numpy as np
 
 from odl.discr import DiscreteLp, DiscreteLpElement
 from odl.tomo.backends.astra_setup import (

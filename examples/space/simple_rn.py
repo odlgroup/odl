@@ -3,6 +3,7 @@
 Including some benchmarks with an optimized version.
 """
 
+from __future__ import print_function
 import numpy as np
 import odl
 from odl.space.base_tensors import TensorSpace, Tensor

@@ -1,5 +1,6 @@
 """Demonstration of basic ODL->pytorch integration functionality."""
 
+from __future__ import print_function
 import numpy as np
 import torch
 import odl

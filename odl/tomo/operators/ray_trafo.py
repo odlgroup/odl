@@ -8,10 +8,8 @@
 
 """Ray transforms."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from builtins import str
-
 import numpy as np
 import warnings
 
@@ -532,6 +530,5 @@ class RayBackProjection(RayTransformBase):
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

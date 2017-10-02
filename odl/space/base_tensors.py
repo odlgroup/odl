@@ -8,9 +8,8 @@
 
 """Base classes for implementations of tensor spaces."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
+from builtins import object
 from numbers import Integral
 import numpy as np
 

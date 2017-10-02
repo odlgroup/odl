@@ -8,6 +8,7 @@ L2NormSquared functional, and also by composing the square ufunc with the
 L2Norm functional.
 """
 
+from __future__ import print_function
 import odl
 
 # Create square functional. It's domain is by default the real numbers.

@@ -14,10 +14,8 @@ considered here are based on hypercubes, i.e. the tensor products
 of partitions of intervals.
 """
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from builtins import object, range, zip
-
 import numpy as np
 
 from odl.discr.grid import RectGrid, uniform_grid_fromintv
@@ -1404,6 +1402,5 @@ def nonuniform_partition(*coord_vecs, **kwargs):
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

@@ -8,10 +8,8 @@
 
 """Abstract mathematical operators."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from builtins import object
-
+from builtins import object, str, zip
 import inspect
 from numbers import Number, Integral
 import sys
@@ -976,7 +974,7 @@ class Operator(object):
         >>> x = rn.element([1, 2, 3])
         >>> op(x)
         rn(3).element([ 3.,  6.,  9.])
-        >>> squared = op**2
+        >>> squared = op ** 2
         >>> squared(x)
         rn(3).element([  9.,  18.,  27.])
         >>> squared = op**3
@@ -2230,6 +2228,5 @@ class OpNotImplementedError(NotImplementedError):
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

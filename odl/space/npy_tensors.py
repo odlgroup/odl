@@ -8,10 +8,9 @@
 
 """NumPy implementation of tensor spaces."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future.utils import native
-
+from builtins import object, range, str
 import ctypes
 from functools import partial
 import numpy as np

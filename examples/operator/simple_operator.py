@@ -1,5 +1,6 @@
 """An example of a very simple operator on rn."""
 
+from __future__ import print_function
 import odl
 
 

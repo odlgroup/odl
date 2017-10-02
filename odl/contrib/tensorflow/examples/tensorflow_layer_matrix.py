@@ -8,8 +8,10 @@ We also demonstrate that we can compute the "gradients" properly using the
 adjoint of the derivative.
 """
 
+from __future__ import print_function
 import tensorflow as tf
 import numpy as np
+
 import odl
 import odl.contrib.tensorflow
 

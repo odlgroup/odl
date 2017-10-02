@@ -5,6 +5,7 @@ Here, we minimize the logarithm of the rosenbrock function:
     min_x log(rosenbrock(x) + 0.1)
 """
 
+from __future__ import print_function
 import odl
 
 # Create space and functionals

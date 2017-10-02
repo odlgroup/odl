@@ -8,8 +8,10 @@
 
 """Figures of merit (FOMs) for comparison against a known ground truth."""
 
-import odl
+from __future__ import division
 import numpy as np
+
+import odl
 
 __all__ = ('mean_squared_error', 'mean_absolute_error',
            'mean_value_difference', 'standard_deviation_difference',

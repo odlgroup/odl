@@ -8,6 +8,7 @@ We also demonstrate that we can compute the gradient of the scalar-valued
 squared L2-norm function properly using either Theano or ODL.
 """
 
+from __future__ import print_function
 import theano
 import theano.tensor as T
 import numpy as np

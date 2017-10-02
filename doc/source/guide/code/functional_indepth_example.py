@@ -1,5 +1,6 @@
 """Example of how to implement and use functionals."""
 
+from __future__ import division, print_function
 import odl
 
 
@@ -26,7 +27,7 @@ class MyFunctional(odl.solvers.Functional):
     # the functional and always needs to be implemented.
     def _call(self, x):
         """Evaluate the functional."""
-        return x.norm()**2 + x.inner(self.y)
+        return x.norm() ** 2 + x.inner(self.y)
 
     # Next we define the gradient. Note that this is a property.
     @property

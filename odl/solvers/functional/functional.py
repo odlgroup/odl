@@ -6,9 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 import numpy as np
 
 from odl.operator.operator import (
@@ -1359,6 +1357,5 @@ def simple_functional(space, fcall=None, grad=None, prox=None, grad_lip=np.nan,
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

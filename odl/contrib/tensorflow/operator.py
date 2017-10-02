@@ -8,11 +8,10 @@
 
 """Utilities for converting ODL spaces to tensorflow layers."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 import tensorflow as tf
 import numpy as np
+
 import odl
 
 
@@ -92,6 +91,5 @@ class TensorflowOperator(odl.Operator):
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

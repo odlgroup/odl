@@ -6,10 +6,9 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 import numpy as np
+
 from odl.discr import ResizingOperator
 from odl.trafos import FourierTransform, PYFFTW_AVAILABLE
 from odl.util.npy_compat import broadcast_to
@@ -514,6 +513,7 @@ def fbp_op(ray_trafo, padding=True, filter_type='Ram-Lak',
 if __name__ == '__main__':
     import odl
     import matplotlib.pyplot as plt
+    from odl.util.testutils import run_doctests
 
     # Display the various filters
     x = np.linspace(0, 1, 100)
@@ -555,6 +555,5 @@ if __name__ == '__main__':
     parker_weighting = parker_weighting(ray_trafo)
     parker_weighting.show('Parker weighting')
 
-    # pylint: disable=wrong-import-position
-    from odl.util.testutils import run_doctests
+    # Also run the doctests
     run_doctests()

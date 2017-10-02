@@ -8,10 +8,10 @@
 
 """Simple iterative type optimization schemes."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
+from builtins import next, range
 import numpy as np
+
 from odl.operator import IdentityOperator, OperatorComp, OperatorSum
 from odl.util import normalized_scalar_param_list
 
@@ -518,6 +518,5 @@ def kaczmarz(ops, x, rhs, niter, omega=1, projection=None, random=False,
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

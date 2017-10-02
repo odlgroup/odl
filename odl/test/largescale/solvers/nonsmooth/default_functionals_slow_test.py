@@ -8,10 +8,11 @@
 
 """Tests for the factory functions to create proximal operators."""
 
-from __future__ import division
+from __future__ import division, print_function
 import numpy as np
 import pytest
 import scipy.special
+
 import odl
 from odl.util.testutils import (noise_element, all_almost_equal,
                                 simple_fixture)

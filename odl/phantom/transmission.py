@@ -8,12 +8,12 @@
 
 """Phantoms typically used in transmission tomography."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
+from builtins import range, zip
+import numpy as np
 
 from odl.discr import DiscreteLp
 from odl.phantom.geometric import ellipsoid_phantom
-import numpy as np
 
 
 __all__ = ('shepp_logan_ellipsoids', 'shepp_logan', 'forbild')
@@ -391,6 +391,7 @@ def forbild(space, resolution=False, ear=True, value_type='density',
 if __name__ == '__main__':
     # Show the phantoms
     import odl
+    from odl.util.testutils import run_doctests
 
     # 2D
     discr = odl.uniform_discr([-1, -1], [1, 1], [1000, 1000])
@@ -405,6 +406,4 @@ if __name__ == '__main__':
     shepp_logan(discr, modified=False).show('shepp_logan 3d modified=False')
 
     # Run also the doctests
-    # pylint: disable=wrong-import-position
-    from odl.util.testutils import run_doctests
     run_doctests()

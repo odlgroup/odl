@@ -8,12 +8,10 @@
 
 """Lebesgue L^p type discretizations of function spaces."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from builtins import str
-
-import numpy as np
+from builtins import object, range, str, zip
 from numbers import Integral
+import numpy as np
 
 from odl.discr.discretization import (
     DiscretizedSpace, DiscretizedSpaceElement, tspace_type)

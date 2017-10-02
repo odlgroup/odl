@@ -23,9 +23,8 @@ dispatch machinery `introduced in Numpy 1.13
 arrays.classes.rst#special-attributes-and-methods>`_.
 """
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
+from builtins import object, zip
 import numpy as np
 import re
 

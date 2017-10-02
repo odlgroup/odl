@@ -8,8 +8,8 @@
 
 """(Fast) Iterative shrinkage-thresholding algorithm."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
+from builtins import range
 
 import numpy as np
 
@@ -216,6 +216,5 @@ def accelerated_proximal_gradient(x, f, g, gamma, niter, callback=None,
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

@@ -8,9 +8,8 @@
 
 """Gradient-based optimization schemes."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
+from builtins import range
 import numpy as np
 
 from odl.solvers.util import ConstantLineSearch
@@ -183,6 +182,5 @@ def adam(f, x, learning_rate=1e-3, beta1=0.9, beta2=0.999, eps=1e-8,
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

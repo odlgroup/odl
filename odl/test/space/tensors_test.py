@@ -14,6 +14,7 @@ import operator
 from pkg_resources import parse_version
 import pytest
 import sys
+
 import odl
 from odl.set.space import LinearSpaceTypeError
 from odl.space.npy_tensors import (

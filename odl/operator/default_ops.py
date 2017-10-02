@@ -8,9 +8,7 @@
 
 """Default operators defined on any (reasonable) space."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 from copy import copy
 import numpy as np
 
@@ -1362,6 +1360,5 @@ class ComplexModulus(Operator):
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

@@ -4,6 +4,7 @@ This example is similar to ``tensorflow_layer_matrix``, but demonstrates how
 more advanced operators, such as a ray transform, can be handled.
 """
 
+from __future__ import print_function
 import tensorflow as tf
 import numpy as np
 import odl

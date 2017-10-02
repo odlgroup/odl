@@ -8,10 +8,10 @@
 
 """(Quasi-)Newton schemes to find zeros of functionals."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
+from builtins import range
 import numpy as np
+
 from odl.solvers.util import ConstantLineSearch
 from odl.solvers.iterative.iterative import conjugate_gradient
 
@@ -488,6 +488,5 @@ def broydens_method(f, x, line_search=1.0, impl='first', maxiter=1000,
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

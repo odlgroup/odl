@@ -5,6 +5,7 @@ information on functionals, see `the ODL functional guide
 <http://odlgroup.github.io/odl/guide/in_depth/functional_guide.html>`_
 """
 
+from __future__ import print_function
 import numpy as np
 import odl
 

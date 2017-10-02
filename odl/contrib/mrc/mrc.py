@@ -8,10 +8,8 @@
 
 """Specification and reader for the MRC2014 file format."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from builtins import int
-
+from builtins import int, object, range, str
 from collections import OrderedDict
 from itertools import permutations
 import numpy as np

@@ -8,9 +8,8 @@
 
 """Miscellaneous phantoms that do not fit in other categories."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
+from builtins import str, zip
 import numpy as np
 import sys
 
@@ -252,9 +251,11 @@ def text(space, text, font=None, border=0.2, inverted=True):
 
     return space.element(arr)
 
+
 if __name__ == '__main__':
     # Show the phantoms
     import odl
+    from odl.util.testutils import run_doctests
 
     space = odl.uniform_discr([-1, -1], [1, 1], [300, 300])
     submarine(space, smooth=False).show('submarine smooth=False')
@@ -264,6 +265,4 @@ if __name__ == '__main__':
     text(space, text='phantom').show('phantom')
 
     # Run also the doctests
-    # pylint: disable=wrong-import-position
-    from odl.util.testutils import run_doctests
     run_doctests()
