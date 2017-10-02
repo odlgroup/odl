@@ -101,10 +101,10 @@ def _tensor___getitem__(self, indices):
 def _tensor___setitem__(self, indices, values):
     """Implement assignment with Numpy arrays and sequences."""
     if isinstance(indices, list) and not all(np.isscalar(i) for i in indices):
-        # For list of lists, or lists of slices, remove the "outer list".
-        # This makes things like `x[[[0, 1], [1, 1]]] = 1` or
-        # x[[slice(None), slice(None, None, 2)]] = 3` work like in Numpy.
-        # Torch uses the syntax `x[[0, 1], [1, 1]] = 1`.
+        # For list of lists, lists of slices etc., remove the "outer list".
+        # This makes things like `x[[list1, list2]] = values` or
+        # x[[slice1, slice2]] = values` work like in Numpy.
+        # Torch uses the syntax `x[list1, list2] = values`.
         indices = tuple(indices)
 
     if isinstance(values, np.ndarray):
@@ -720,10 +720,7 @@ class TorchTensorSpace(TensorSpace):
         elif order is not None and order != 'C':
             raise ValueError("`order` {!r} not understood".format(order_in))
 
-        if self.data_loc.startswith('CPU'):
-            tens_cls = _tensor_cls(self.dtype, use_cuda=False)
-        else:
-            tens_cls = _tensor_cls(self.dtype, use_cuda=True)
+        tens_cls = _tensor_cls(self.dtype, use_cuda=(self.data_loc == 'GPU'))
 
         # --- Make element --- #
 
@@ -738,9 +735,15 @@ class TorchTensorSpace(TensorSpace):
             if inp in self and order is None:
                 return inp
 
-            # Correct tensor class, shape and contiguousness (if required),
-            # and in the right memory type -> wrap it
+            # Arguments for the constructor
+            if self.gpu_id is None:
+                constr_kwargs = {}
+            else:
+                constr_kwargs = {'device', self.gpu_id}
+
             if isinstance(inp, tens_cls):
+                # Correct tensor class, shape and contiguousness (if required),
+                # and in the right memory type -> wrap it
                 if inp.shape != self.shape:
                     raise ValueError(
                         'expected `inp` of shape {}, got shape {}'
@@ -749,38 +752,60 @@ class TorchTensorSpace(TensorSpace):
                         (order is None or inp.is_contiguous())):
                     return self.element_type(self, inp)
 
-            # Numpy array, create tensor first, using the ndarray
-            # memory if possible
-            if isinstance(inp, np.ndarray):
+            elif isinstance(inp, np.ndarray):
+                # Numpy array, create tensor first, using the ndarray
+                # memory if possible
                 if inp.shape != self.shape:
                     raise ValueError(
                         'expected `inp` of shape {}, got shape {}'
                         ''.format(self.shape, inp.shape))
-                if order is None or inp.flags.c_contiguous:
-                    # TODO: this seems to be really slow, make benchmarks!
+
+                if self.dtype == 'float16':
+                    # `from_numpy` not supported for float16, need to
+                    # go through a tensor with float32 dtype
+                    inp = inp.astype('float32', copy=False)
+                    conv_cls = _tensor_cls(
+                        'float32', use_cuda=(self.data_loc == 'GPU'))
+                    tens = conv_cls(inp, **constr_kwargs)
+                    tens = tens.type(tens_cls)
+
+                elif order is None:
+                    # TODO: this seems to be really slow sometimes,
+                    # make benchmarks!
                     tens = torch.from_numpy(inp)
+
                 else:
-                    # Make a copy
                     tens = tens_cls(inp)
 
-            # Otherwise, call the class constructor on the input, but
-            # don't crash when receiving scalar input. Initialize with
-            # device ID directly if we use GPU.
-            if self.gpu_id is None:
-                constr_kwargs = {}
+                if self.is_pinned:
+                    tens = tens.pin_memory()
+
+                return self.element_type(self, tens)
+
             else:
-                constr_kwargs = {'device', self.gpu_id}
+                # Call the class constructor on the input
 
-            if np.isscalar(inp):
-                tens = tens_cls([inp], **constr_kwargs)
-            else:
-                tens = tens_cls(inp, **constr_kwargs)
+                # float16 needs some special care, direct construction of
+                # tensors is barely working. We go through a float32 tensor
+                # to avoid those issues
+                if self.dtype == 'float16':
+                    conv_cls = _tensor_cls(
+                        'float32', use_cuda=(self.data_loc == 'GPU'))
+                else:
+                    conv_cls = tens_cls
 
-            # Perform memory pinning if desired
-            if self.is_pinned:
-                tens = tens.pin_memory()
+                if np.isscalar(inp):
+                    tens = conv_cls([inp], **constr_kwargs)
+                else:
+                    tens = conv_cls(inp, **constr_kwargs)
 
-            return self.element_type(self, tens)
+                if self.dtype == 'float16':
+                    tens = tens.type(tens_cls)
+
+                if self.is_pinned:
+                    tens = tens.pin_memory()
+
+                return self.element_type(self, tens)
 
     def zero(self):
         """Create a tensor filled with zeros.
@@ -1201,7 +1226,12 @@ class TorchTensor(Tensor):
         True
         """
         if out is None:
-            return self.data.cpu().numpy()
+            if self.dtype == 'float16':
+                # numpy() not implemented, need workaround
+                self_as_float = self.data.type(torch.FloatTensor)
+                return self_as_float.numpy().astype('float16')
+            else:
+                return self.data.cpu().numpy()
         else:
             # This variant is about 30 % slower on CPU but uses less memory
             # than the alternative `out[:] = self.data.cpu().numpy()`.
