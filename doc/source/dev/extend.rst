@@ -17,7 +17,6 @@ It is used in the discrete :math:`R^n` case, as well as data representation for 
 These are in general created through the `rn` and `uniform_discr` functions who take an ``impl`` parameter, allowing users to select the backend for array storage and computations.
 
 In the core ODL package, there is only a single backend available: `NumpyTensorSpace`, given by ``impl='numpy'``, which is the default choice.
-Users can add CUDA support by installing the add-on library `odlcuda`_, which contains the additional space ``CudaFn``.
 By using the `rn`/`uniform_discr` functions, users can then seamlessly change the backend of their spaces.
 
 As an advanced user, you may need to add additional spaces of this type that can be used inside ODL, perhaps to add `MPI`_ support.

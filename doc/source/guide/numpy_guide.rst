@@ -56,9 +56,9 @@ For example, in discretizations, a two-dimensional array can be used::
 Using ODL vectors with NumPy functions
 ======================================
 A very convenient feature of ODL is its seamless interaction with NumPy functions.
-For universal functions (`ufuncs <http://docs.scipy.org/doc/numpy/reference/ufuncs.html>`_) this is supported by several mechanisms as explained below.
+For universal functions or `ufuncs <http://docs.scipy.org/doc/numpy/reference/ufuncs.html>`_, this is supported by several mechanisms as explained below.
 
-Evaluating a NumPy ufunc works as expected::
+Evaluating a NumPy ufunc on an ODL vector works as expected::
 
    >>> r3 = odl.rn(3)
    >>> x = r3.element([1, 2, 3])
@@ -73,9 +73,9 @@ Before NumPy 1.13, the sequence of actions triggered by the call ``np.negative(x
 4. Return ``res``.
 
 This method has two major drawbacks, namely (1) users cannot override the ufunc that is being called, and (2) custom objects are not accepted as ``out`` parameters.
-Therefore, a new ``__array_ufunc__`` mechanism was introduced in NumPy 1.13 that removes these limitations.
+Therefore, a new ``__array_ufunc__`` mechanism was [introduced in NumPy 1.13](https://docs.scipy.org/doc/numpy/release.html#array-ufunc-added) that removes these limitations.
 It is used whenever a NumPy ufunc is called on an object implementing this method, which then takes full control of the ufunc mechanism.
-For details, check out the `NEP <https://github.com/numpy/numpy/blob/master/doc/neps/ufunc-overrides.rst>`_ describing the logic, or the `interface documentation <https://github.com/charris/numpy/blob/master/doc/source/reference/arrays.classes.rst#special-attributes-and-methods>`_.
+For details, check out the `NEP <https://github.com/numpy/numpy/blob/master/doc/neps/ufunc-overrides.rst>`_ describing the logic, or the `interface documentation <https://docs.scipy.org/doc/numpy/reference/arrays.classes.html#numpy.class.__array_ufunc__>`_.
 See also `NumPy's general documentation on ufuncs <https://docs.scipy.org/doc/numpy/reference/ufuncs.html>`_
 
 .. note::
