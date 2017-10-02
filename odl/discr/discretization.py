@@ -151,6 +151,10 @@ class DiscretizedSpace(TensorSpace):
             Input data to create an element from. It needs to be
             understood by either the `sampling` operator of this
             instance or by its ``tspace.element`` method.
+        order : {None, 'C', 'F'}, optional
+            Storage order of the returned element. For ``'C'`` and ``'F'``,
+            contiguous memory in the respective ordering is enforced.
+            The default ``None`` enforces no contiguousness.
         kwargs :
             Additional arguments passed on to `sampling` when called
             on ``inp``, in the form ``sampling(inp, **kwargs)``.

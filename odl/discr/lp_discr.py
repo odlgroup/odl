@@ -288,7 +288,7 @@ class DiscreteLp(DiscretizedSpace):
             - ``None``: an empty element is created with no guarantee of
               its state (memory allocation only). The new element will
               use ``order`` as storage order if provided, otherwise
-              `default_order`
+              `default_order`.
 
             - array-like: an element wrapping a `tensor` is created,
               where a copy is avoided whenever possible. This usually
@@ -302,7 +302,7 @@ class DiscreteLp(DiscretizedSpace):
             - callable: a new element is created by sampling the function
               using the `sampling` operator.
 
-        order : {'C', 'F'}, optional
+        order : {None, 'C', 'F'}, optional
             Storage order of the returned element. For ``'C'`` and ``'F'``,
             contiguous memory in the respective ordering is enforced.
             The default ``None`` enforces no contiguousness.
