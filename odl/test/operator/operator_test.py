@@ -149,16 +149,16 @@ def test_nonlinear_scale():
     wrongscalars = [1j, [1, 2], (1, 2)]
     for wrongscalar in wrongscalars:
         with pytest.raises(TypeError):
-            print(OperatorLeftScalarMult(Aop, wrongscalar))
+            OperatorLeftScalarMult(Aop, wrongscalar)
 
         with pytest.raises(TypeError):
-            print(OperatorRightScalarMult(Aop, wrongscalar))
+            OperatorRightScalarMult(Aop, wrongscalar)
 
         with pytest.raises(TypeError):
-            print(Aop * wrongscalar)
+            Aop * wrongscalar
 
         with pytest.raises(TypeError):
-            print(wrongscalar * Aop)
+            wrongscalar * Aop
 
 
 def test_nonlinear_vector_mult():
@@ -698,7 +698,7 @@ def test_nonlinear_functional_out():
     out = op.range.element()
 
     with pytest.raises(TypeError):
-        print(op(x, out=out))
+        op(x, out=out)
 
 
 def test_nonlinear_functional_operators():

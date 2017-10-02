@@ -8,9 +8,8 @@
 
 """Operators defined on `DiscreteLp`."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
+from builtins import range, str, zip
 import numpy as np
 
 from odl.discr import DiscreteLp, uniform_partition
@@ -545,6 +544,5 @@ def _resize_discr(discr, newshp, offset, discr_kwargs):
                       order=order)
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

@@ -12,10 +12,8 @@ Includes grid evaluation (collocation) and various interpolation
 operators.
 """
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from builtins import str, zip
-
+from builtins import object, range, str, zip
 from itertools import product
 import numpy as np
 
@@ -672,14 +670,13 @@ class PerAxisInterpolation(FunctionSpaceMapping):
         else:
             schemes = self.schemes
 
-        if all(var == self.nn_variants[0] for var in self.nn_variants):
-            variants = self.nn_variants[0]
-        else:
-            variants = self.nn_variants
-
         posargs = [self.range, self.grid, self.domain, schemes]
-        optargs = [('order', self.order, 'C'),
-                   ('nn_variants', variants, 'left')]
+
+        optargs = [('order', self.order, 'C')]
+        nn_relevant = [x for x in self.nn_variants if x is not None]
+        if nn_relevant:
+            optargs.append(('nn_variants', self.nn_variants, 'left'))
+
         inner_str = signature_string(posargs, optargs,
                                      sep=[',\n', ', ', ',\n'],
                                      mod=['!r', ''])
@@ -1035,6 +1032,5 @@ class _LinearInterpolator(_PerAxisInterpolator):
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

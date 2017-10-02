@@ -8,9 +8,7 @@
 
 """Operators and functions for linearized deformation."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 import numpy as np
 
 from odl.discr import DiscreteLp, Gradient, Divergence
@@ -383,7 +381,7 @@ class LinDeformFixedDisp(Operator):
 
         return '{}({})'.format(self.__class__.__name__, arg_str)
 
+
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

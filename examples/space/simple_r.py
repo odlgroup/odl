@@ -1,6 +1,6 @@
 ﻿"""An example of a very simple space, the real numbers."""
 
-
+from __future__ import print_function
 import odl
 
 

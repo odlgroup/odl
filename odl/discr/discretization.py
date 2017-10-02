@@ -8,7 +8,6 @@
 
 """Base classes for discretization."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 import numpy as np
 

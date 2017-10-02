@@ -8,9 +8,8 @@
 
 """Operators defined for tensor fields."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
+from builtins import range, str
 import numpy as np
 
 from odl.discr.lp_discr import DiscreteLp
@@ -873,9 +872,9 @@ def finite_diff(f, axis, dx=1.0, method='forward', out=None, **kwargs):
 
     Central differences and different edge orders:
 
-    >>> finite_diff(0.5 * f**2, axis=0, method='central', pad_mode='order1')
+    >>> finite_diff(0.5 * f ** 2, axis=0, method='central', pad_mode='order1')
     array([ 0.5,  1. ,  2. ,  3. ,  4. ,  5. ,  6. ,  7. ,  8. ,  8.5])
-    >>> finite_diff(0.5 * f**2, axis=0, method='central', pad_mode='order2')
+    >>> finite_diff(0.5 * f ** 2, axis=0, method='central', pad_mode='order2')
     array([-0.,  1.,  2.,  3.,  4.,  5.,  6.,  7.,  8.,  9.])
 
     In-place evaluation:
@@ -1136,6 +1135,5 @@ def finite_diff(f, axis, dx=1.0, method='forward', out=None, **kwargs):
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

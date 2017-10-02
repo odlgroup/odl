@@ -8,17 +8,16 @@
 
 """Ufunc operators for ODL vectors."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 import numpy as np
+
 from odl.set import LinearSpace, RealNumbers, Field
 from odl.space import ProductSpace, fn
 from odl.operator import Operator, MultiplyOperator
 from odl.solvers import (Functional, ScalingFunctional, FunctionalQuotient,
                          ConstantFunctional)
-from odl.util import is_int_dtype
 from odl.util.ufuncs import UFUNCS
+from odl.util.utility import is_int_dtype
 
 __all__ = ()
 

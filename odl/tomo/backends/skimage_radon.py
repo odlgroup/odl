@@ -8,13 +8,15 @@
 
 """Radon transform (ray transform) in 2d using skimage.transform."""
 
-from odl.discr import uniform_discr_frompartition, uniform_partition
+from __future__ import division
 import numpy as np
 try:
     import skimage
     SKIMAGE_AVAILABLE = True
 except ImportError:
     SKIMAGE_AVAILABLE = False
+
+from odl.discr import uniform_discr_frompartition, uniform_partition
 
 __all__ = ('skimage_radon_forward', 'skimage_radon_back_projector',
            'SKIMAGE_AVAILABLE')

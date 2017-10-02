@@ -23,9 +23,8 @@ and then apply a ufunc to it. Afterwards, ``FnBaseVector.__array_wrap__``
 is used to re-wrap the data into the appropriate space.
 """
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
+from builtins import object, zip
 import numpy as np
 import re
 

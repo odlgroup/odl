@@ -8,9 +8,7 @@
 
 """Base classes for implementations of n-tuples."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 import numpy as np
 import sys
 

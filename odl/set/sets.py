@@ -8,13 +8,12 @@
 
 """Basic abstract and concrete sets."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from builtins import int, object, str, zip
-from past.builtins import basestring
-
 from numbers import Integral, Real, Complex
+from past.builtins import basestring
 import numpy as np
+
 from odl.util import is_int_dtype, is_real_dtype, is_numeric_dtype, unique
 
 
@@ -948,6 +947,5 @@ class FiniteSet(Set):
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

@@ -8,9 +8,8 @@
 
 """Utilities for normalization of user input."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
+from builtins import zip
 import numpy as np
 
 
@@ -395,6 +394,5 @@ def safe_int_conv(number):
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

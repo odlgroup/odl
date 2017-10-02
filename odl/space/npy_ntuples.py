@@ -8,11 +8,9 @@
 
 """CPU implementations of ``n``-dimensional Cartesian spaces."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future.utils import native
 import builtins
-
 import ctypes
 from functools import partial
 from numbers import Integral

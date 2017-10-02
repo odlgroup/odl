@@ -1,3 +1,14 @@
+# Copyright 2014-2017 The ODL contributors
+#
+# This file is part of ODL.
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License,
+# v. 2.0. If a copy of the MPL was not distributed with this file, You can
+# obtain one at https://mozilla.org/MPL/2.0/.
+
+"""Tests for supervised FoMs."""
+
+from __future__ import division
 import numpy as np
 import pytest
 import scipy.signal
@@ -63,7 +74,7 @@ def test_psnr(space):
 
     mse = np.mean((true - data) ** 2)
     maxi = np.max(np.abs(true))
-    expected = 10 * np.log10(maxi**2 / mse)
+    expected = 10 * np.log10(maxi ** 2 / mse)
 
     assert result == pytest.approx(expected)
 

@@ -8,10 +8,9 @@
 
 """Functions to create noise samples of different distributions."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 import numpy as np
+
 from odl.util import as_flat_array, NumpyRandomSeed
 
 
@@ -250,6 +249,7 @@ def salt_pepper_noise(vector, fraction=0.05, salt_vs_pepper=0.5,
 if __name__ == '__main__':
     # Show the phantoms
     import odl
+    from odl.util.testutils import run_doctests
 
     r100 = odl.rn(100)
     white_noise(r100).show('white_noise')
@@ -269,6 +269,4 @@ if __name__ == '__main__':
     salt_pepper_noise(vector).show('salt_pepper_noise 2d')
 
     # Run also the doctests
-    # pylint: disable=wrong-import-position
-    from odl.util.testutils import run_doctests
     run_doctests()

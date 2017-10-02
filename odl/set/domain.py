@@ -8,10 +8,8 @@
 
 """Domains for continuous functions. """
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from builtins import zip
-
 import numpy as np
 
 from odl.set.sets import Set
@@ -848,6 +846,5 @@ class IntervalProd(Set):
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

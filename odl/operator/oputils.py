@@ -8,10 +8,9 @@
 
 """Convenience functions for operators."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
+from builtins import range
 from future.utils import native
-
 import numpy as np
 
 from odl.space.base_ntuples import FnBase

@@ -8,10 +8,8 @@
 
 """Abstract linear vector spaces."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from builtins import object, range
-
+from builtins import object, range, str
 import numpy as np
 
 from odl.set.sets import Field, Set, UniversalSet
@@ -1057,6 +1055,5 @@ class LinearSpaceNotImplementedError(NotImplementedError):
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

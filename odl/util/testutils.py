@@ -8,16 +8,15 @@
 
 """Utilities for internal use."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from builtins import int, object
+from builtins import int, object, range, str
 from future.moves.itertools import zip_longest
-
 import numpy as np
 import sys
 import os
 import warnings
 from time import time
+
 from odl.util.utility import run_from_ipython, is_string
 
 

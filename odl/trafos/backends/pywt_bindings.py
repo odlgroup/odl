@@ -13,12 +13,10 @@ for wavelet transforms in arbitrary dimensions, featuring a large number
 of built-in wavelet filters.
 """
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
+from builtins import range, str, zip
 from itertools import product
 import numpy as np
-
 try:
     import pywt
     PYWT_AVAILABLE = True
@@ -812,6 +810,5 @@ modes.html
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests(skip_if=not PYWT_AVAILABLE)

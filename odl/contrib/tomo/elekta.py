@@ -370,7 +370,5 @@ def elekta_xvi_fbp(ray_transform,
 
 
 if __name__ == '__main__':
-    # Run doctests
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

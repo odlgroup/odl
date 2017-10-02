@@ -8,11 +8,10 @@
 
 """Default operators defined on any `ProductSpace`."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
-import numpy as np
+from builtins import range, zip
 from numbers import Integral
+import numpy as np
 
 from odl.operator.operator import Operator
 from odl.operator.default_ops import ZeroOperator
@@ -1200,6 +1199,5 @@ class DiagonalOperator(ProductSpaceOperator):
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

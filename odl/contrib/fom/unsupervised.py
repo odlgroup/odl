@@ -8,6 +8,7 @@
 
 """Figures of Merit (FOMs) for measuring image quality without a reference."""
 
+from __future__ import division
 import numpy as np
 
 __all__ = ('estimate_noise_std',)
@@ -76,6 +77,5 @@ def estimate_noise_std(img, average=True):
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

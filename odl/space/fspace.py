@@ -8,9 +8,8 @@
 
 """Spaces of functions with common domain and range."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
+from builtins import range, str, zip, object
 from inspect import isfunction
 import numpy as np
 

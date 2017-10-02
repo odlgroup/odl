@@ -8,9 +8,8 @@
 
 """Weightings for finite-dimensional spaces."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
+from builtins import object, str
 import numpy as np
 
 from odl.space.base_ntuples import FnBaseVector

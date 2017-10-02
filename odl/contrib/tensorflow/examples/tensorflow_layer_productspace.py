@@ -4,6 +4,7 @@ This example is similar to ``tensorflow_layer_matrix``, but demonstrates how
 to handle product-spaces.
 """
 
+from __future__ import print_function
 import tensorflow as tf
 import odl
 import odl.contrib.tensorflow

@@ -8,9 +8,8 @@
 
 """Parallel beam geometries in 2 or 3 dimensions."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
+from builtins import range
 import numpy as np
 
 from odl.discr import uniform_partition
