@@ -22,7 +22,8 @@ from odl.space.torch_tensors import (
     TorchTensor, TorchTensorSpace,
     TorchTensorSpaceConstWeighting, TorchTensorSpaceArrayWeighting,
     TorchTensorSpaceCustomInner, TorchTensorSpaceCustomNorm,
-    TorchTensorSpaceCustomDist)
+    TorchTensorSpaceCustomDist,
+    _numpy_dtype)
 from odl.space.npy_tensors import (
     NumpyTensor, NumpyTensorSpace,
     NumpyTensorSpaceConstWeighting, NumpyTensorSpaceArrayWeighting,
@@ -30,10 +31,13 @@ from odl.space.npy_tensors import (
     NumpyTensorSpaceCustomDist)
 from odl.util.testutils import (
     all_almost_equal, all_equal, simple_fixture,
-    noise_array, noise_element, noise_elements)
+    noise_array, noise_element, noise_elements, never_skip)
 from odl.util.ufuncs import UFUNCS
 if TORCH_AVAILABLE:
     import torch
+    TORCH_CUDA_AVAILABLE = torch.cuda.is_available()
+else:
+    TORCH_CUDA_AVAILABLE = False
 
 
 # --- Test helpers --- #
@@ -118,6 +122,9 @@ def _is_contiguous(x, order='C'):
 # --- Pytest fixtures --- #
 
 exponent = simple_fixture('exponent', [2.0, 1.0, float('inf'), 0.5, 1.5])
+lico_a = simple_fixture('a', [0, 1, -1, 3.41])
+lico_b = simple_fixture('b', [0, 1, -1, 3.41])
+discontiguous = simple_fixture('discontiguous', [False, True])
 
 setitem_indices_params = [
     0, [1], (1,), (0, 1), (0, 1, 2), slice(None), slice(None, None, 2),
@@ -137,9 +144,39 @@ def weight(request):
     return request.param
 
 
+skip_if_no_torch = pytest.mark.skipif('not TORCH_AVAILABLE',
+                                      reason='torch not available')
+skip_if_no_torch_cuda = pytest.mark.skipif('not TORCH_CUDA_AVAILABLE',
+                                           reason='torch CUDA not available')
+tspace_variant = simple_fixture(
+    name='tspace_variant',
+    params=[never_skip('numpy'),
+            skip_if_no_torch('torch_cpu'),
+            skip_if_no_torch_cuda('torch_cuda')])
+
+
 @pytest.fixture(scope='module')
-def tspace(floating_dtype, tspace_impl):
-    return odl.tensor_space(shape=(3, 4), dtype=floating_dtype)
+def tspace(floating_dtype, tspace_variant):
+    parts = tspace_variant.split('_')
+    impl = parts[0]
+
+    tspace_cls = odl.space.entry_points.tensor_space_impl(impl)
+    if floating_dtype not in tspace_cls.available_dtypes():
+        pytest.skip('dtype {} not supported by impl {!r}'
+                    ''.format(floating_dtype, impl))
+
+    if impl == 'torch' and len(parts) == 2:
+        if parts[1] == 'cpu':
+            kwargs = {'data_loc': 'CPU'}
+        elif parts[1] == 'cuda':
+            kwargs = {'data_loc': 'GPU'}
+        else:
+            assert False
+    else:
+        kwargs = {}
+
+    return odl.tensor_space(shape=(3, 4), dtype=floating_dtype, impl=impl,
+                            **kwargs)
 
 
 # --- Space classes --- #
@@ -290,10 +327,11 @@ def test_element(tspace, elem_order):
     """Test creation of space elements."""
     if tspace.impl == 'torch' and elem_order:
         pytest.skip('Fortran ordering not supported by torch')
+
     # From scratch
     elem = tspace.element(order=elem_order)
     assert elem.shape == elem.data.shape
-    assert elem.dtype == tspace.dtype == elem.data.dtype
+    assert elem.dtype == tspace.dtype == _numpy_dtype(elem.data)
     if elem_order is not None:
         assert _is_contiguous(elem.data, elem_order)
 
@@ -311,7 +349,7 @@ def test_element(tspace, elem_order):
     elem = tspace.element(arr_c, order=elem_order)
     assert all_equal(elem, arr_c)
     assert elem.shape == elem.data.shape
-    assert elem.dtype == tspace.dtype == elem.data.dtype
+    assert elem.dtype == tspace.dtype == _numpy_dtype(elem.data)
     if elem_order is None or elem_order == 'C':
         # None or same order should not lead to copy
         assert np.may_share_memory(elem.data, arr_c)
@@ -324,7 +362,7 @@ def test_element(tspace, elem_order):
     elem = tspace.element(arr_f, order=elem_order)
     assert all_equal(elem, arr_f)
     assert elem.shape == elem.data.shape
-    assert elem.dtype == tspace.dtype == elem.data.dtype
+    assert elem.dtype == tspace.dtype == _numpy_dtype(elem.data)
     if elem_order is None or elem_order == 'F':
         # None or same order should not lead to copy
         assert np.may_share_memory(elem.data, arr_f)
@@ -476,31 +514,15 @@ def _test_lincomb(space, a, b, discontig):
     assert all_almost_equal([x, y, z], [xarr, yarr, zarr])
 
 
-def test_lincomb(tspace):
+def test_lincomb(tspace, lico_a, lico_b, discontiguous):
     """Validate lincomb against direct result using arrays and some scalars."""
-    scalar_values = [0, 1, -1, 3.41]
-    for a in scalar_values:
-        for b in scalar_values:
-            _test_lincomb(tspace, a, b, discontig=False)
+    _test_lincomb(tspace, lico_a, lico_b, discontiguous)
 
 
-def test_lincomb_discontig(tspace_impl):
-    """Test lincomb with discontiguous input."""
-    scalar_values = [0, 1, -1, 3.41]
-
-    # Use small size for small array case
-    tspace = odl.rn((3, 4), impl=tspace_impl)
-
-    for a in scalar_values:
-        for b in scalar_values:
-            _test_lincomb(tspace, a, b, discontig=True)
-
-    # Use medium size to test fallback impls
-    tspace = odl.rn((30, 40), impl=tspace_impl)
-
-    for a in scalar_values:
-        for b in scalar_values:
-            _test_lincomb(tspace, a, b, discontig=True)
+def test_lincomb_medium_size(lico_a, lico_b, discontiguous):
+    """Test lincomb with Numpy and medium-sized arrays for other impl."""
+    tspace = odl.rn((30, 40))
+    _test_lincomb(tspace, lico_a, lico_b, discontiguous)
 
 
 def test_lincomb_raise(tspace):
