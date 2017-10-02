@@ -23,12 +23,15 @@ NumpyTensorSpace : Numpy-based implementation of `TensorSpace`
 from __future__ import print_function, division, absolute_import
 
 from odl.space.npy_tensors import NumpyTensorSpace
+from odl.space.torch_tensors import TorchTensorSpace, TORCH_AVAILABLE
 
 # We don't expose anything to odl.space
 __all__ = ()
 
 IS_INITIALIZED = False
 TENSOR_SPACE_IMPLS = {'numpy': NumpyTensorSpace}
+if TORCH_AVAILABLE:
+    TENSOR_SPACE_IMPLS['torch'] = TorchTensorSpace
 
 
 def _initialize_if_needed():

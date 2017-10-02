@@ -33,6 +33,13 @@ def add_doctest_np_odl(doctest_namespace):
     doctest_namespace['np'] = np
     doctest_namespace['odl'] = odl
 
+    try:
+        import pygpu
+    except ImportError:
+        pass
+    else:
+        doctest_namespace['pygpu'] = pygpu
+
 
 def pytest_addoption(parser):
     parser.addoption('--largescale', action='store_true',
