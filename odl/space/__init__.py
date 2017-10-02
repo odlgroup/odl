@@ -19,6 +19,9 @@ from . import weighting
 from .npy_tensors import *
 __all__ += npy_tensors.__all__
 
+from .torch_tensors import *
+__all__ += torch_tensors.__all__
+
 from .pspace import *
 __all__ += pspace.__all__
 

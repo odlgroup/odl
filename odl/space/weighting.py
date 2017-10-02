@@ -499,11 +499,8 @@ class ArrayWeighting(Weighting):
         """
         super(ArrayWeighting, self).__init__(impl=impl, exponent=exponent)
 
-        # We apply array duck-typing to allow all kinds of Numpy-array-like
-        # data structures without change
-        array_attrs = ('shape', 'dtype', 'itemsize')
-        if (all(hasattr(array, attr) for attr in array_attrs) and
-                not isinstance(array, TensorSpace)):
+        # We allow all kinds of shaped arrays without change
+        if hasattr(array, 'shape') and not isinstance(array, TensorSpace):
             self.__array = array
         else:
             raise TypeError('`array` {!r} does not look like a valid array'
