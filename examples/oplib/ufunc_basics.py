@@ -22,9 +22,9 @@ print('cos(0)={}, cos.gradient(0.2)={}, -sin(0.2)={}'.format(
 square = odl.oplib.square()
 
 print('[x^2](3) = {}, [d/dx x^2](3) = {}, '
-      '[d^2/dx^2 x^2](3) = {}, [d^3/dx^3 x^2](3) = {}'.format(
-    square(3), square.gradient(3),
-    square.gradient.gradient(3), square.gradient.gradient.gradient(3)))
+      '[d^2/dx^2 x^2](3) = {}, [d^3/dx^3 x^2](3) = {}'
+      ''.format(square(3), square.gradient(3), square.gradient.gradient(3),
+                square.gradient.gradient.gradient(3)))
 
 
 # Can also define ufuncs on vector-spaces, then they act pointwise.
