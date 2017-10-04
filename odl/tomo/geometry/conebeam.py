@@ -1181,7 +1181,7 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         --------
         >>> apart = odl.uniform_partition(0, 4, 4)
         >>> dpart = odl.uniform_partition([-1, -1], [1, 1], [20, 20])
-        >>> geom = odl.tomo.ConeFlatGeometry(apart, dpart, 50, 100)
+        >>> geom = odl.tomo.ConeFlatGeometry(apart, dpart, 50, 100, pitch=2)
 
         Extract sub-geometry with every second angle:
 
@@ -1193,7 +1193,8 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
             ),
             uniform_partition([-1.0, -1.0], [1.0, 1.0], (20, 20)),
             src_radius=50.0,
-            det_radius=100.0
+            det_radius=100.0,
+            pitch=2.0
         )
         """
         part = self.partition[indices]
@@ -1203,6 +1204,7 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         return ConeFlatGeometry(apart, dpart,
                                 src_radius=self.src_radius,
                                 det_radius=self.det_radius,
+                                pitch=self.pitch,
                                 axis=self.axis,
                                 offset_along_axis=self.offset_along_axis,
                                 src_to_det_init=self._src_to_det_init_arg,
