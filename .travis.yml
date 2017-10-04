@@ -45,7 +45,7 @@ install:
     - conda create -n testenv python=$TRAVIS_PYTHON_VERSION nomkl pywavelets
     - source activate testenv
     # We avoid annoying issues with building pyfftw wheels by using a conda-forge version
-    - pip install "numpy==$NUMPY_VERSION" scipy future scikit-image pytest pytest-pep8 pytest-cov  # faster than conda
+    - pip install "numpy==$NUMPY_VERSION" scipy future scikit-image pytest pytest-cov  # faster than conda
     - conda install -c conda-forge pyfftw  # compilation sometimes breaks on pip, using conda therefore
 
     # Doc dependencies
@@ -60,10 +60,10 @@ before_script:
     - pip install -r test_requirements.txt
 
 script:
-    # Run tests, including PEP8 check, and produce a coverage report.
+    # Run tests and produce a coverage report.
     # Also invoke the alternative way of running the unit tests.
     # Fail immediately after first failure to speed up the whole thing.
-    - pytest --doctest-modules --cov --cov-report term-missing --pep8 $TRAVIS_BUILD_DIR/odl || exit -1
+    - pytest --doctest-modules --cov --cov-report term-missing $TRAVIS_BUILD_DIR/odl || exit -1
     - python -c "import odl; odl.test()" || exit -1
     # Build the Sphinx doc (only for one specific build, master branch, no PR)
     # To avoid clogging the logs, we redirect stderr to /dev/null

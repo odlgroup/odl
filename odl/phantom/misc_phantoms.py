@@ -252,6 +252,7 @@ def text(space, text, font=None, border=0.2, inverted=True):
 
     return space.element(arr)
 
+
 if __name__ == '__main__':
     # Show the phantoms
     import odl
