@@ -21,8 +21,9 @@ from odl.util import signature_string
 
 __all__ = ('Callback', 'CallbackStore', 'CallbackApply', 'CallbackPrintTiming',
            'CallbackPrintIteration', 'CallbackPrint', 'CallbackPrintNorm',
-           'CallbackShow', 'CallbackSaveToDisk', 'CallbackShowConvergence',
-           'CallbackPrintHardwareUsage', 'CallbackProgressBar')
+           'CallbackShow', 'CallbackSaveToDisk', 'CallbackSleep',
+           'CallbackShowConvergence', 'CallbackPrintHardwareUsage',
+           'CallbackProgressBar')
 
 
 class Callback(object):
