@@ -10,7 +10,7 @@
 
 from __future__ import absolute_import
 
-__all__ = ()
+__all__ = ('convolution', 'ufunc_ops')
 
 from .ufunc_ops import *
-__all__ = ufunc_ops.__all__
+__all__ += ufunc_ops.__all__
