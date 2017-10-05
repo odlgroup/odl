@@ -19,12 +19,10 @@ import numpy as np
 
 from odl.util import signature_string
 
-__all__ = ('Callback', 'CallbackStore', 'CallbackApply',
-           'CallbackPrintTiming', 'CallbackPrintTotalTime',
+__all__ = ('Callback', 'CallbackStore', 'CallbackApply', 'CallbackPrintTiming',
            'CallbackPrintIteration', 'CallbackPrint', 'CallbackPrintNorm',
-           'CallbackShow', 'CallbackSaveToDisk', 'CallbackSleep',
-           'CallbackShowConvergence', 'CallbackPrintHardwareUsage',
-           'CallbackProgressBar')
+           'CallbackShow', 'CallbackSaveToDisk', 'CallbackShowConvergence',
+           'CallbackPrintHardwareUsage', 'CallbackProgressBar')
 
 
 class Callback(object):
@@ -410,7 +408,8 @@ class CallbackPrintTiming(Callback):
 
     """Callback for printing the time elapsed since the previous iteration."""
 
-    def __init__(self, fmt='Time elapsed = {:<5.03f} s', step=1, **kwargs):
+    def __init__(self, fmt='Time elapsed = {:<5.03f} s', step=1,
+                 cumulative=False, **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -432,79 +431,33 @@ class CallbackPrintTiming(Callback):
         self.fmt = str(fmt)
         self.step = int(step)
         self.iter = 0
-        self.time = time.time()
+        self.cumulative = cumulative
+        self.base_time = time.time()
+        self.time = 0
         self.kwargs = kwargs
 
     def __call__(self, _):
         """Print time elapsed from the previous iteration."""
         if self.iter % self.step == 0:
             t = time.time()
-            print(self.fmt.format(t - self.time), **self.kwargs)
-            self.time = t
+            self.time = t - self.base_time
+
+            if not self.cumulative:
+                self.base_time = t
+
+            print(self.fmt.format(self.time), **self.kwargs)
 
         self.iter += 1
 
     def reset(self):
         """Set `time` to the current time."""
-        self.time = time.time()
+        self.base_time = time.time()
+        self.time = 0
         self.iter = 0
 
     def __repr__(self):
         """Return ``repr(self)``."""
         optargs = [('fmt', self.fmt, 'Time elapsed = {:<5.03f} s'),
-                   ('step', self.step, 1)]
-        inner_str = signature_string([], optargs)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
-
-
-class CallbackPrintTotalTime(Callback):
-
-    """Callback for printing the total runtime at each iteration."""
-
-    def __init__(self, fmt='Total time elapsed = {:<5.03f} s', step=1,
-                 **kwargs):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        fmt : string, optional
-            Formating that should be applied. The time is printed as ::
-
-                print(fmt.format(totaltime))
-
-            where ``totaltime`` is the total runtime.
-        step : positive int, optional
-            Number of iterations between prints.
-
-        Other Parameters
-        ----------------
-        kwargs :
-            Key word arguments passed to the print function.
-        """
-        self.fmt = str(fmt)
-        self.step = int(step)
-        self.iter = 0
-        self.total_time = 0
-        self.time = time.time()
-        self.kwargs = kwargs
-
-    def __call__(self, _):
-        """Print time elapsed from the previous iteration."""
-        if self.iter % self.step == 0:
-            self.total_time = time.time() - self.time
-            print(self.fmt.format(self.total_time), **self.kwargs)
-
-        self.iter += 1
-
-    def reset(self):
-        """Set `time` to the current time."""
-        self.time = time.time()
-        self.iter = 0
-        self.total_time = 0
-
-    def __repr__(self):
-        """Return ``repr(self)``."""
-        optargs = [('fmt', self.fmt, 'Total time elapsed = {:<5.03f} s'),
                    ('step', self.step, 1)]
         inner_str = signature_string([], optargs)
         return '{}({})'.format(self.__class__.__name__, inner_str)
