@@ -13,7 +13,7 @@ import numpy as np
 __all__ = ('estimate_noise_std',)
 
 
-def estimate_noise_std(img):
+def estimate_noise_std(img, average=True):
     """Estimate standard deviation of noise in ``img``.
 
     The algorithm, given in [Immerkaer1996], estimates the noise in an image
@@ -22,6 +22,10 @@ def estimate_noise_std(img):
     Parameters
     ----------
     img : array-like
+        Array to estimate noise in.
+    average : bool
+        If ``True``, return the mean noise in the image, otherwise give a
+        pointwise estimate.
 
     Returns
     -------
@@ -39,6 +43,12 @@ def estimate_noise_std(img):
     >>> img = np.random.randn(3, 3, 3)
     >>> result = estimate_noise_std(img)
 
+    The method can also estimate the noise pointwise (but with high
+    uncertainity):
+
+    >>> img = np.random.randn(3, 3, 3)
+    >>> result = estimate_noise_std(img, average=False)
+
     References
     ----------
     [Immerkaer1996] Immerkaer, J. *Fast Noise Variance Estimation*.
@@ -51,9 +61,15 @@ def estimate_noise_std(img):
     M = functools.reduce(np.add.outer, [[-1, 2, -1]] * img.ndim)
 
     convolved = scipy.signal.fftconvolve(img, M, mode='valid')
-    conv_var = np.sum(convolved ** 2)
+    if average:
+        conv_var = np.sum(convolved ** 2) / convolved.size
+    else:
+        conv_var = convolved ** 2
 
-    scale = np.sum(np.square(M)) * convolved.size
+        # Pad in order to retain shape
+        conv_var = np.pad(conv_var, pad_width=1, mode='edge')
+
+    scale = np.sum(np.square(M))
     sigma = np.sqrt(conv_var / scale)
 
     return sigma

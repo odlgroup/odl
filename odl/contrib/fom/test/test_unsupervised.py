@@ -53,5 +53,16 @@ def test_estimate_noise_std_normal_large_1d():
     assert pytest.approx(result, abs=0.01) == expected
 
 
+def test_estimate_noise_std_normal_2d_pointwise():
+    """Verify ``estimate_noise_std(N(0, 1)) == 1`` in 2d."""
+    img = np.random.randn(10, 10)
+    result = odl.contrib.fom.estimate_noise_std(img, average=False)
+    result_mean = np.mean(result)
+    expected = np.std(img)
+    assert result.shape == img.shape
+    assert result.dtype == result.dtype
+    assert pytest.approx(result_mean, abs=0.2) == expected
+
+
 if __name__ == '__main__':
-    pytest.main([str(__file__.replace('\\', '/')), '-v'])
+    odl.util.test_file(__file__)

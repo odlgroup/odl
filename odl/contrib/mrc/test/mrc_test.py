@@ -216,4 +216,4 @@ def test_mrc_io(shape, mrc_mode_dtype, ispg_kind, axis_order):
 
 
 if __name__ == '__main__':
-    pytest.main([str(__file__.replace('\\', '/')), '-v'])
+    odl.util.test_file(__file__)
