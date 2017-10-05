@@ -57,7 +57,7 @@ def test_dconv_init_and_properties():
     assert conv.impl == 'fft'
     assert conv.real_impl is None
 
-    ran = odl.cn(3, dtype=complex)
+    ran = odl.rn(3, dtype=float)
     conv = DiscreteConvolution(r3, [1, 1], range=ran)
     assert conv.range == ran
 
@@ -85,6 +85,11 @@ def test_dconv_init_and_properties():
                                  [1, 1]])  # kernel has too many dims
     with pytest.raises(ValueError):
         DiscreteConvolution(r3, [1, 1, 1, 1])  # kernel too large
+    with pytest.raises(ValueError):
+        DiscreteConvolution(r3, [1j, 1j])  # complex kernel with real domain
+    with pytest.raises(ValueError):
+        # Real to complex not supported
+        DiscreteConvolution(r3, [1, 1], range=odl.cn(3, dtype=complex))
     with pytest.raises(ValueError):
         DiscreteConvolution(r3, [1, 1], axis=1)  # axis out of bounds
     with pytest.raises(ValueError):
@@ -114,7 +119,7 @@ def test_dconv_init_and_properties():
     assert conv.kernel.space == odl.rn((2, 2))
     assert conv.axes == (0, 1)
 
-    ran = odl.cn((3, 4), dtype=complex)
+    ran = odl.rn((3, 4), dtype=float)
     conv = DiscreteConvolution(rn, kernel_full, range=ran)
     assert conv.range == ran
 
@@ -371,6 +376,16 @@ def test_dconv_2d(shape_2d, kernel_1d, conv_type, conv_impl, floating_dtype):
     out = conv.range.element()
     conv(inp, out=out)
     assert all_almost_equal(out, expected.astype(conv_res.dtype))
+
+
+def test_dconv_kernel_caching():
+    """Check if the kernel caching in DiscreteConvolution works."""
+    rn = odl.rn((3, 4))
+    conv = DiscreteConvolution(rn, [[1, 1],
+                                    [1, 1]], cache_kernel_ft=True, impl='fft')
+
+    conv(rn.one())
+    assert conv._kernel_ft is not None
 
 
 if __name__ == '__main__':

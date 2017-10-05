@@ -191,9 +191,12 @@ class DiscreteConvolution(Operator):
                             ''.format(type(domain)))
 
         if not isinstance(kernel, Tensor):
-            with np.warnings.catch_warnings():
-                np.warnings.filterwarnings('error', category=np.ComplexWarning)
+            try:
                 kernel = np.asarray(kernel, dtype=domain.dtype)
+            except TypeError:
+                raise ValueError(
+                    'cannot use a complex `kernel` with a real `domain`; '
+                    'use a complex `domain` instead')
 
             ker_space = tensor_space(kernel.shape, kernel.dtype)
             kernel = ker_space.element(kernel)
