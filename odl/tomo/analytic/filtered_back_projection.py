@@ -36,7 +36,7 @@ def _rotation_direction_in_detector(geometry):
     """A vector in the detector plane that points in the rotation direction."""
     du, dv = geometry.det_axes_init
     axis = geometry.axis
-    det_normal = np.cross(du, dv)
+    det_normal = np.cross(dv, du)
     rot_dir = np.cross(axis, det_normal)
     c = np.array([np.vdot(rot_dir, du), np.vdot(rot_dir, dv)])
     cnorm = np.linalg.norm(c)
