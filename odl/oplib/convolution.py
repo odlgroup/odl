@@ -14,6 +14,7 @@ import numpy as np
 from odl.operator import Operator
 from odl.space import tensor_space
 from odl.space.base_tensors import TensorSpace, Tensor
+from odl.space.space_utils import auto_weighting
 from odl.trafos.backends import PYFFTW_AVAILABLE
 from odl.util import is_real_dtype, is_floating_dtype, dtype_str
 
@@ -85,6 +86,10 @@ class DiscreteConvolution(Operator):
         padded_shape : sequence of ints, optional
             Apply zero-padding with this target shape. Cannot be used
             together with ``padding``.
+        variant : {'forward', 'adjoint'}
+            Convolution variant, mostly for internal use in the adjoint
+            operator.
+            Default: ``'forward'``
         cache_kernel_ft : bool, optional
             If ``True``, store the Fourier transform of the kernel for
             later reuse.
@@ -319,6 +324,15 @@ class DiscreteConvolution(Operator):
         self.__cache_kernel_ft = bool(kwargs.pop('cache_kernel_ft', False))
         self._kernel_ft = None
 
+        variant = kwargs.pop('variant', 'forward')
+        self.__variant, variant_in = str(variant).lower(), variant
+        if self.variant not in ('forward', 'adjoint'):
+            raise ValueError('`variant` {!r} not understood'
+                             ''.format(variant_in))
+
+        # Caching
+        self._adjoint = None
+
         if kwargs:
             raise TypeError('got unexpected kwargs {}'.format(kwargs))
 
@@ -353,35 +367,58 @@ class DiscreteConvolution(Operator):
         return self.__padded_shape
 
     @property
+    def variant(self):
+        """Convolution variant, ``'forward'`` or ``'adjoint'``."""
+        return self.__variant
+
+    @property
     def cache_kernel_ft(self):
         """If ``True``, the kernel FT is cached for later reuse."""
         return self.__cache_kernel_ft
 
-    def _call(self, x, out=None):
+    def _call(self, x):
         """Perform convolution of ``f`` with `kernel`."""
         if self.impl == 'real' and self.real_impl == 'scipy':
-            return self._call_scipy_convolve(x, out)
+            return self._call_scipy_convolve(x)
         elif self.impl == 'fft' and self.fft_impl == 'numpy':
-            return self._call_numpy_fft(x, out)
+            return self._call_numpy_fft(x)
         elif self.impl == 'fft' and self.fft_impl == 'pyfftw':
-            return self._call_pyfftw(x, out)
+            # TODO: add and use `out` if padding == 0
+            return self._call_pyfftw(x)
         else:
             raise RuntimeError('bad `impl` {!r} or `fft_impl` {!r}'
                                ''.format(self.impl, self.fft_impl))
 
-    def _call_scipy_convolve(self, x, out=None):
+    def _call_scipy_convolve(self, x):
         """Perform real-space convolution using ``scipy.signal.convolve``."""
         import scipy.signal
 
-        conv = scipy.signal.convolve(x, self.kernel, mode='same',
-                                     method='direct')
-        if out is None:
-            out = conv
-        else:
-            out[:] = conv
-        return out
+        if self.variant == 'forward':
+            conv = scipy.signal.convolve(x, self.kernel, mode='same',
+                                         method='direct')
+        elif self.variant == 'adjoint':
+            # We need the 'upper same' part of the correlation, not the
+            # lower one as in the 'same' mode. Unfortunately that mode
+            # doesn't exist so we implement it ourselves.
+            conv_full = scipy.signal.correlate(x, self.kernel, mode='full',
+                                               method='direct')
+            slc = []
+            for i in range(self.domain.ndim):
+                if i in self.axes:
+                    n_extra = self.kernel.shape[i] - 1
+                    right = n_extra // 2
+                    left = n_extra - right
+                    slc.append(slice(left, conv_full.shape[i] - right))
+                else:
+                    slc.append(slice(None))
+            conv = conv_full[slc]
 
-    def _call_numpy_fft(self, x, out=None):
+        else:
+            raise RuntimeError('bad `variant` {!r}'.format(self.variant))
+
+        return conv
+
+    def _call_numpy_fft(self, x):
         """Perform FFT-based convolution using NumPy's backend."""
         # Use real-to-complex FFT if possible, it's faster
         if (is_real_dtype(self.kernel.dtype) and
@@ -392,12 +429,6 @@ class DiscreteConvolution(Operator):
             fft = np.fft.fftn
             ifft = np.fft.ifftn
 
-        # Prepare kernel, preserving length-1 axes for broadcasting
-        ker_padded_shp = [1 if self.kernel.shape[i] == 1
-                          else self.padded_shape[i]
-                          for i in range(self.domain.ndim)]
-        kernel_prep = prepare_for_fft(self.kernel, ker_padded_shp, self.axes)
-
         # Pad the input with zeros
         paddings = []
         for i in range(self.domain.ndim):
@@ -406,7 +437,10 @@ class DiscreteConvolution(Operator):
             right = diff - left
             paddings.append((left, right))
 
-        x_prep = np.pad(x, paddings, 'constant')
+        if any(p != (0, 0) for p in paddings):
+            x_prep = np.pad(x, paddings, 'constant')
+        else:
+            x_prep = np.asarray(x)
 
         # Perform FFTs of x and kernel (or retrieve from cache)
         x_ft = fft(x_prep, axes=self.axes)
@@ -414,6 +448,24 @@ class DiscreteConvolution(Operator):
         if self._kernel_ft is not None:
             kernel_ft = self._kernel_ft
         else:
+            if self.variant == 'forward':
+                kernel = self.kernel
+            elif self.variant == 'adjoint':
+                # Flip kernel in conv axes for adjoint
+                slc = [slice(None, None, -1) if i in self.axes else slice(None)
+                       for i in range(self.domain.ndim)]
+                kernel = self.kernel[slc]
+            else:
+                raise RuntimeError('bad `variant` {!r}'.format(self.variant))
+
+            # Prepare kernel, preserving length-1 axes for broadcasting
+            ker_padded_shp = [1 if self.kernel.shape[i] == 1
+                              else self.padded_shape[i]
+                              for i in range(self.domain.ndim)]
+
+            kernel_prep = _prepare_for_fft(kernel, ker_padded_shp, self.axes,
+                                           self.variant)
+
             kernel_ft = fft(kernel_prep, axes=self.axes)
             if self.cache_kernel_ft:
                 self._kernel_ft = kernel_ft
@@ -429,14 +481,9 @@ class DiscreteConvolution(Operator):
 
         # Unpad to get the "relevant" part
         slc = [slice(l, n - r) for (l, r), n in zip(paddings, x_prep.shape)]
-        if out is None:
-            out = ifft_x[slc]
-        else:
-            out[:] = ifft_x[slc]
+        return ifft_x[slc]
 
-        return out
-
-    def _call_pyfftw(self, x, out=None):
+    def _call_pyfftw(self, x):
         """Perform FFT-based convolution using the pyfftw backend."""
         import multiprocessing
         import pyfftw
@@ -449,7 +496,10 @@ class DiscreteConvolution(Operator):
             right = diff - left
             paddings.append((left, right))
 
-        x_prep = np.pad(x, paddings, 'constant')
+        if any(p != (0, 0) for p in paddings):
+            x_prep = np.pad(x, paddings, 'constant')
+        else:
+            x_prep = np.asarray(x)
         x_prep_shape = x_prep.shape
 
         # Real-to-halfcomplex only if both domain and kernel are eligible
@@ -486,17 +536,26 @@ class DiscreteConvolution(Operator):
         if self._kernel_ft is not None:
             kernel_ft = self._kernel_ft
         else:
-            # Prepare kernel, preserving length-1 axes for broadcasting
-            if is_floating_dtype(self.kernel.dtype):
+            if self.variant == 'forward':
                 kernel = self.kernel
+            elif self.variant == 'adjoint':
+                # Flip kernel in conv axes for adjoint
+                slc = [slice(None, None, -1) if i in self.axes else slice(None)
+                       for i in range(self.domain.ndim)]
+                kernel = self.kernel[slc]
             else:
+                raise RuntimeError('bad `variant` {!r}'.format(self.variant))
+
+            # Prepare kernel, preserving length-1 axes for broadcasting
+            if not is_floating_dtype(self.kernel.dtype):
                 flt_dtype = np.result_type(self.kernel.dtype, np.float16)
-                kernel = np.asarray(self.kernel, dtype=flt_dtype)
+                kernel = np.asarray(kernel, dtype=flt_dtype)
 
             ker_padded_shp = [1 if self.kernel.shape[i] == 1
                               else self.padded_shape[i]
                               for i in range(self.domain.ndim)]
-            kernel_prep = prepare_for_fft(kernel, ker_padded_shp, self.axes)
+            kernel_prep = _prepare_for_fft(kernel, ker_padded_shp, self.axes,
+                                           self.variant)
             kernel = None  # can be gc'ed
 
             kernel_ft = fft_out_array(kernel_prep, use_halfcx)
@@ -542,15 +601,34 @@ class DiscreteConvolution(Operator):
 
         # Unpad to get the "relevant" part
         slc = [slice(l, n - r) for (l, r), n in zip(paddings, x_prep_shape)]
-        if out is None:
-            out = x_ift[slc]
-        else:
-            out[:] = x_ift[slc]
+        return x_ift[slc]
 
-        return out
+    @property
+    @auto_weighting
+    def adjoint(self):
+        """Adjoint of the convolution operator.
+
+        The adjoint convolution is a convolution with the adjoint
+        kernel, which is the (complex conjugate of the) original kernel,
+        (roughly) flipped in the convolution axes. See Notes.
+
+        Examples
+        --------
+        >>> conv = DiscreteConvolution(odl.rn(3), [1, -1])
+        >>> conv.adjoint.kernel
+        rn(2).element([-1.,  1.])
+        """
+        if self._adjoint is None:
+            adj_variant = 'adjoint' if self.variant == 'forward' else 'forward'
+            self._adjoint = DiscreteConvolution(
+                self.range, self.kernel, range=self.domain, axis=self.axes,
+                impl=self.impl, padded_shape=self.padded_shape,
+                variant=adj_variant)
+
+        return self._adjoint
 
 
-def prepare_for_fft(kernel, padded_shape, axes=None):
+def _prepare_for_fft(kernel, padded_shape, axes=None, variant='forward'):
     """Return a kernel with desired shape with middle entry at index 0.
 
     This function applies the appropriate steps to prepare a kernel for
@@ -567,6 +645,8 @@ def prepare_for_fft(kernel, padded_shape, axes=None):
         The target shape to be reached by zero-padding.
     axes : sequence of ints, optional
         Dimensions in which to perform shifting. ``None`` means all axes.
+    variant : {'forward', 'adjoint'}
+        Convolution variant for which the kernel should be prepared.
 
     Returns
     -------
@@ -577,12 +657,12 @@ def prepare_for_fft(kernel, padded_shape, axes=None):
     --------
     >>> kernel = np.array([[1, 2, 3],
     ...                    [4, 5, 6]])  # middle element is 2
-    >>> prepare_for_fft(kernel, padded_shape=(4, 4))
+    >>> _prepare_for_fft(kernel, padded_shape=(4, 4))
     array([[2, 3, 0, 1],
            [5, 6, 0, 4],
            [0, 0, 0, 0],
            [0, 0, 0, 0]])
-    >>> prepare_for_fft(kernel, padded_shape=(5, 5))
+    >>> _prepare_for_fft(kernel, padded_shape=(5, 5))
     array([[2, 3, 0, 0, 1],
            [5, 6, 0, 0, 4],
            [0, 0, 0, 0, 0],
@@ -609,10 +689,20 @@ def prepare_for_fft(kernel, padded_shape, axes=None):
 
     orig_slc = [slice(n) for n in kernel.shape]
     padded[orig_slc] = kernel
-    # This shift makes sure that the middle element is shifted to index 0
-    shift = [-((kernel.shape[i] - 1) // 2) if i in axes else 0
-             for i in range(kernel.ndim)]
-    return np.roll(padded, shift, axis=axes)
+    # This shift makes sure that the middle element is shifted to index 0,
+    # where "middle" means
+    #   - actually middle (n-1)/2 for an odd number n
+    #   - one below middle (n/2 - 1) for even n and 'forward'
+    #   - one above middle (n/2) for even n and 'adjoint'
+    shifts = []
+    for ax in axes:
+        if kernel.shape[ax] % 2 == 0 and variant == 'forward':
+            shifts.append(-(kernel.shape[ax] // 2 - 1))
+        elif kernel.shape[ax] % 2 == 0 and variant == 'adjoint':
+            shifts.append(-(kernel.shape[ax] // 2))
+        else:
+            shifts.append(-((kernel.shape[ax] - 1) // 2))
+    return np.roll(padded, shifts, axis=axes)
 
 
 if __name__ == '__main__':
