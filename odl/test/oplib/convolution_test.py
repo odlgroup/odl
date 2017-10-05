@@ -13,7 +13,8 @@ import scipy.signal
 
 import odl
 from odl.oplib import DiscreteConvolution
-from odl.util.testutils import simple_fixture, noise_elements, all_almost_equal
+from odl.util.testutils import (
+    simple_fixture, noise_elements, all_almost_equal, noise_element)
 
 
 # --- pytest fixtures --- #
@@ -386,6 +387,49 @@ def test_dconv_kernel_caching():
 
     conv(rn.one())
     assert conv._kernel_ft is not None
+
+
+def test_dconv_adjoint(shape_2d, kernel_1d, conv_type, floating_dtype,
+                       conv_impl):
+    """Check if the adjoint of DiscreteConvolution is correct."""
+    ker_kind, ker_1d = kernel_1d
+
+    if conv_type.startswith('stack') and conv_impl == 'real':
+        pytest.skip('stacked kernels not supported in real-space convolution')
+
+    if floating_dtype == 'float16' and conv_impl == 'real':
+        pytest.xfail('bug in scipy.signal.convolve for half float')
+
+    if conv_type == 'full':
+        axis = None
+    else:
+        axis = int(conv_type[-1])
+
+    spc = odl.tensor_space(shape_2d, dtype=floating_dtype)
+    spc_w = odl.tensor_space(shape_2d, dtype=floating_dtype, weighting=2.0)
+    if conv_type == 'full':
+        kernel = np.outer(ker_1d, ker_1d)
+    elif conv_type == 'bcast0':
+        kernel = ker_1d[:, None]
+    elif conv_type == 'bcast1':
+        kernel = ker_1d[None, :]
+    elif conv_type == 'stack0':
+        kernel = ker_1d[:, None] * np.arange(shape_2d[1])[None, :]
+    elif conv_type == 'stack1':
+        kernel = ker_1d[None, :] * np.arange(shape_2d[0])[:, None]
+    else:
+        assert False
+
+    # Use enough padding so the adjoint convolution isn't too far off
+    kwargs = {'padding': 4} if conv_impl == 'fft' else {}
+    conv = DiscreteConvolution(spc, kernel, axis=axis, range=spc_w,
+                               impl=conv_impl, **kwargs)
+    dom_el = noise_element(conv.domain)
+    ran_el = noise_element(conv.range)
+    # Don't be too harsh when comparing
+    rtol = 2 * np.prod(shape_2d) * np.finfo(floating_dtype).resolution
+    assert (conv(dom_el).inner(ran_el) ==
+            pytest.approx(dom_el.inner(conv.adjoint(ran_el)), rel=rtol))
 
 
 if __name__ == '__main__':
