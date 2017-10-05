@@ -8,11 +8,11 @@
 
 """Numerical helper functions for convenience or speed."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 import numpy as np
 
 from odl.util.normalize import normalized_scalar_param_list, safe_int_conv
-
 
 __all__ = ('apply_on_boundary', 'fast_1d_tensor_mult', 'resize_array',
            'zscore')

@@ -8,12 +8,13 @@
 
 """Convenience functions for operators."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
 from future.utils import native
+
 import numpy as np
 
 from odl.space.base_tensors import TensorSpace
-from odl.space import ProductSpace
+from odl.space.pspace import ProductSpace
 from odl.util import nd_iterator
 
 __all__ = ('matrix_representation', 'power_method_opnorm', 'as_scipy_operator',

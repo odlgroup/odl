@@ -23,11 +23,12 @@ dispatch machinery `introduced in Numpy 1.13
 arrays.classes.rst#special-attributes-and-methods>`_.
 """
 
-from __future__ import print_function, division, absolute_import
-from builtins import object
-import numpy as np
-import re
+from __future__ import absolute_import, division, print_function
 
+import re
+from builtins import object
+
+import numpy as np
 
 __all__ = ('TensorSpaceUfuncs', 'ProductSpaceUfuncs')
 

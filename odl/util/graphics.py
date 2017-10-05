@@ -8,13 +8,14 @@
 
 """Functions for graphical output."""
 
-from __future__ import print_function, division, absolute_import
-import numpy as np
+from __future__ import absolute_import, division, print_function
+
 import warnings
+
+import numpy as np
 
 from odl.util.testutils import run_doctests
 from odl.util.utility import is_real_dtype
-
 
 __all__ = ('show_discrete_data',)
 

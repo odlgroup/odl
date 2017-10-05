@@ -8,18 +8,20 @@
 
 """Operators defined for tensor fields."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 from numbers import Integral
+
 import numpy as np
 
 from odl.operator.operator import Operator
-from odl.set import RealNumbers, ComplexNumbers
+from odl.set import ComplexNumbers, RealNumbers
 from odl.space import ProductSpace, tensor_space
 from odl.space.base_tensors import TensorSpace
 from odl.space.weighting import ArrayWeighting
 from odl.util import (
-    signature_string, indent, dtype_repr, moveaxis, writable_array)
-
+    REPR_PRECISION, array_str, attribute_repr_string, dtype_repr, moveaxis,
+    npy_printoptions, repr_string, signature_string_parts, writable_array)
 
 __all__ = ('PointwiseNorm', 'PointwiseInner', 'PointwiseSum', 'MatrixOperator',
            'SamplingOperator', 'WeightedSumSamplingOperator',
@@ -109,7 +111,7 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
     ``d``.
     """
 
-    def __init__(self, vfspace, exponent=None, weighting=None):
+    def __init__(self, vfspace, range=None, exponent=None, weighting=None):
         """Initialize a new instance.
 
         Parameters
@@ -118,6 +120,10 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
             Space of vector fields on which the operator acts.
             It has to be a product space of identical spaces, i.e. a
             power space.
+        range : `TensorSpace`, optional
+            Scalar space to which the operator maps, must be compatible
+            with ``vfspace``'s shape.
+            Default: ``vfspace[0]``
         exponent : non-zero float, optional
             Exponent of the norm in each point. Values between
             0 and 1 are currently not supported due to numerical
@@ -138,7 +144,7 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
         maps a vector field to a scalar function:
 
         >>> spc = odl.uniform_discr([-1, -1], [1, 1], (1, 2))
-        >>> vfspace = odl.ProductSpace(spc, 2)
+        >>> vfspace = spc ** 2
         >>> pw_norm = odl.PointwiseNorm(vfspace)
         >>> pw_norm.range == spc
         True
@@ -147,27 +153,29 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
 
         >>> x = vfspace.element([[[1, -4]],
         ...                      [[0, 3]]])
-        >>> print(pw_norm(x))
-        [[ 1.,  5.]]
+        >>> pw_norm(x)
+        uniform_discr([-1., -1.], [ 1.,  1.], (1, 2)).element([[ 1.,  5.]])
 
         We can change the exponent either in the vector field space
         or in the operator directly:
 
         >>> vfspace = odl.ProductSpace(spc, 2, exponent=1)
-        >>> pw_norm = PointwiseNorm(vfspace)
-        >>> print(pw_norm(x))
-        [[ 1.,  7.]]
+        >>> pw_norm = odl.PointwiseNorm(vfspace)
+        >>> pw_norm(x)
+        uniform_discr([-1., -1.], [ 1.,  1.], (1, 2)).element([[ 1.,  7.]])
         >>> vfspace = odl.ProductSpace(spc, 2)
         >>> pw_norm = PointwiseNorm(vfspace, exponent=1)
-        >>> print(pw_norm(x))
-        [[ 1.,  7.]]
+        >>> pw_norm(x)
+        uniform_discr([-1., -1.], [ 1.,  1.], (1, 2)).element([[ 1.,  7.]])
         """
+        # TODO: allow `Tensorspace` and `DiscreteLp` with shaped dtype
         if not isinstance(vfspace, ProductSpace):
             raise TypeError('`vfspace` {!r} is not a ProductSpace '
                             'instance'.format(vfspace))
+        if range is None:
+            range = vfspace[0]
         super(PointwiseNorm, self).__init__(
-            domain=vfspace, range=vfspace[0], base_space=vfspace[0],
-            linear=False)
+            domain=vfspace, range=range, base_space=vfspace[0], linear=False)
 
         # Need to check for product space shape once higher order tensors
         # are implemented
@@ -176,13 +184,13 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
             if self.domain.exponent is None:
                 raise ValueError('cannot determine `exponent` from {}'
                                  ''.format(self.domain))
-            self._exponent = self.domain.exponent
+            self.__exponent = self.domain.exponent
         elif exponent < 1:
             raise ValueError('`exponent` smaller than 1 not allowed')
         else:
-            self._exponent = float(exponent)
+            self.__exponent = float(exponent)
 
-        # Handle weighting, including sanity checks
+        # Weighting checks
         if weighting is None:
             # TODO: find a more robust way of getting the weights as an array
             if hasattr(self.domain.weighting, 'array'):
@@ -210,7 +218,7 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
     @property
     def exponent(self):
         """Exponent ``p`` of this norm."""
-        return self._exponent
+        return self.__exponent
 
     @property
     def weights(self):
@@ -353,107 +361,40 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
 
         return PointwiseInner(self.domain, inner_vf, weighting=self.weights)
 
+    def __repr__(self):
+        """Return ``repr(self)``.
 
-class PointwiseInnerBase(PointwiseTensorFieldOperator):
-    """Base class for `PointwiseInner` and `PointwiseInnerAdjoint`.
-
-    Implemented to allow code reuse between the classes.
-    """
-
-    def __init__(self, adjoint, vfspace, vecfield, weighting=None):
-        """Initialize a new instance.
-
-        All parameters are given according to the specifics of the "usual"
-        operator. The ``adjoint`` parameter is used to control conversions
-        for the inverse transform.
-
-        Parameters
-        ----------
-        adjoint : bool
-            ``True`` if the operator should be the adjoint, ``False``
-            otherwise.
-        vfspace : `ProductSpace`
-            Space of vector fields on which the operator acts.
-            It has to be a product space of identical spaces, i.e. a
-            power space.
-        vecfield : ``vfspace`` `element-like`
-            Vector field with which to calculate the point-wise inner
-            product of an input vector field
-        weighting : `array-like` or float, optional
-            Weighting array or constant for the norm. If an array is
-            given, its length must be equal to ``len(domain)``.
-            By default, the weights are is taken from
-            ``domain.weighting``. Note that this excludes unusual
-            weightings with custom inner product, norm or dist.
+        Examples
+        --------
+        >>> spc = odl.uniform_discr([-1, -1], [1, 1], (1, 2))
+        >>> vfspace = spc ** 2
+        >>> pw_norm = odl.PointwiseNorm(vfspace)
+        >>> pw_norm
+        PointwiseNorm(
+            ProductSpace(uniform_discr([-1., -1.], [ 1.,  1.], (1, 2)), 2)
+        )
         """
-        if not isinstance(vfspace, ProductSpace):
-            raise TypeError('`vfsoace` {!r} is not a ProductSpace '
-                            'instance'.format(vfspace))
-        if adjoint:
-            super(PointwiseInnerBase, self).__init__(
-                domain=vfspace[0], range=vfspace, base_space=vfspace[0],
-                linear=True)
-        else:
-            super(PointwiseInnerBase, self).__init__(
-                domain=vfspace, range=vfspace[0], base_space=vfspace[0],
-                linear=True)
-
-        # Bail out if the space is complex but we cannot take the complex
-        # conjugate.
-        if (vfspace.field == ComplexNumbers() and
-                not hasattr(self.base_space.element_type, 'conj')):
-            raise NotImplementedError(
-                'base space element type {!r} does not implement conj() '
-                'method required for complex inner products'
-                ''.format(self.base_space.element_type))
-
-        self._vecfield = vfspace.element(vecfield)
-
-        # Handle weighting, including sanity checks
-        if weighting is None:
-            if hasattr(vfspace.weighting, 'array'):
-                self.__weights = vfspace.weighting.array
-            elif hasattr(vfspace.weighting, 'const'):
-                self.__weights = (vfspace.weighting.const *
-                                  np.ones(len(vfspace)))
-            else:
-                raise ValueError('weighting scheme {!r} of the domain does '
-                                 'not define a weighting array or constant'
-                                 ''.format(vfspace.weighting))
-        elif np.isscalar(weighting):
-            self.__weights = float(weighting) * np.ones(len(vfspace))
-        else:
-            self.__weights = np.asarray(weighting, dtype='float64')
-        self.__is_weighted = not np.array_equiv(self.weights, 1.0)
-
-    @property
-    def vecfield(self):
-        """Fixed vector field ``G`` of this inner product."""
-        return self._vecfield
-
-    @property
-    def weights(self):
-        """Weighting array of this operator."""
-        return self.__weights
-
-    @property
-    def is_weighted(self):
-        """``True`` if weighting is not 1 or all ones."""
-        return self.__is_weighted
-
-    @property
-    def adjoint(self):
-        """Adjoint operator."""
-        raise NotImplementedError('abstract method')
+        posargs = [self.domain]
+        optargs = [('range', self.range, self.domain[0]),
+                   ('exponent', self.exponent, self.domain.exponent)]
+        optmod = ['!r', '!r']
+        if self.is_weighted:
+            optargs.append(('weighting', array_str(self.weights), ''))
+            optmod.append('!s')
+        with npy_printoptions(precision=REPR_PRECISION):
+            inner_parts = signature_string_parts(posargs, optargs,
+                                                 mod=['!r', optmod])
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
 
-class PointwiseInner(PointwiseInnerBase):
+class PointwiseInner(PointwiseTensorFieldOperator):
 
     """Take the point-wise inner product with a given vector field.
 
     This operator takes the (weighted) inner product ::
 
-        <F(x), G(x)> = sum_j ( w_j * F_j(x) * conj(G_j(x)) )
+        P[F](x) = <F(x), G(x)> = sum_j ( w_j * F_j(x) * conj(G_j(x)) )
 
     for a given vector field ``G``, where ``F`` is the vector field
     acting as a variable to this operator.
@@ -491,10 +432,10 @@ class PointwiseInner(PointwiseInnerBase):
         The operator maps a vector field to a scalar function:
 
         >>> spc = odl.uniform_discr([-1, -1], [1, 1], (1, 2))
-        >>> vfspace = odl.ProductSpace(spc, 2)
+        >>> vfspace = spc ** 2
         >>> fixed_vf = np.array([[[0, 1]],
         ...                      [[1, -1]]])
-        >>> pw_inner = PointwiseInner(vfspace, fixed_vf)
+        >>> pw_inner = odl.PointwiseInner(vfspace, fixed_vf)
         >>> pw_inner.range == spc
         True
 
@@ -502,24 +443,65 @@ class PointwiseInner(PointwiseInnerBase):
 
         >>> x = vfspace.element([[[1, -4]],
         ...                      [[0, 3]]])
-        >>> print(pw_inner(x))
-        [[ 0., -7.]]
+        >>> pw_inner(x)
+        uniform_discr([-1., -1.], [ 1.,  1.], (1, 2)).element([[ 0., -7.]])
         """
+        if not isinstance(vfspace, ProductSpace):
+            raise TypeError('`vfsoace` {!r} is not a ProductSpace '
+                            'instance'.format(vfspace))
+        # TODO: custom range
         super(PointwiseInner, self).__init__(
-            adjoint=False, vfspace=vfspace, vecfield=vecfield,
-            weighting=weighting)
+            vfspace, vfspace[0], base_space=vfspace[0], linear=True)
+
+        # Bail out if the space is complex but we cannot take the complex
+        # conjugate.
+        if (vfspace.field == ComplexNumbers() and
+                not hasattr(self.base_space.element_type, 'conj')):
+            raise NotImplementedError(
+                'base space element type {!r} does not implement conj() '
+                'method required for complex inner products'
+                ''.format(self.base_space.element_type))
+
+        self.__vecfield = vfspace.element(vecfield)
+
+        # Handle weighting, including sanity checks
+        if weighting is None:
+            if hasattr(vfspace.weighting, 'array'):
+                self.__weights = vfspace.weighting.array
+            elif hasattr(vfspace.weighting, 'const'):
+                self.__weights = (vfspace.weighting.const *
+                                  np.ones(len(vfspace)))
+            else:
+                raise ValueError('weighting scheme {!r} of the domain does '
+                                 'not define a weighting array or constant'
+                                 ''.format(vfspace.weighting))
+        elif np.isscalar(weighting):
+            self.__weights = float(weighting) * np.ones(len(vfspace))
+        else:
+            self.__weights = np.asarray(weighting, dtype='float64')
+        self.__is_weighted = not np.array_equiv(self.weights, 1.0)
 
     @property
     def vecfield(self):
         """Fixed vector field ``G`` of this inner product."""
-        return self._vecfield
+        return self.__vecfield
+
+    @property
+    def weights(self):
+        """Weighting array of this operator."""
+        return self.__weights
+
+    @property
+    def is_weighted(self):
+        """``True`` if weighting is not 1 or all ones."""
+        return self.__is_weighted
 
     def _call(self, vf, out):
         """Implement ``self(vf, out)``."""
         if self.domain.field == ComplexNumbers():
-            vf[0].multiply(self._vecfield[0].conj(), out=out)
+            vf[0].multiply(self.vecfield[0].conj(), out=out)
         else:
-            vf[0].multiply(self._vecfield[0], out=out)
+            vf[0].multiply(self.vecfield[0], out=out)
 
         if self.is_weighted:
             out *= self.weights[0]
@@ -544,101 +526,90 @@ class PointwiseInner(PointwiseInnerBase):
     def adjoint(self):
         """Adjoint of this operator.
 
-        Returns
-        -------
-        adjoint : `PointwiseInnerAdjoint`
+        The adjoint operator is given by mapping a scalar-valued function
+        ``h`` and multiplying it with each component of the vector field
+        ``G``, scaled inversely by the weights::
+
+            P^*[h]_j(x) = h(x) * G_j(x) / w_j
+
+        Examples
+        --------
+        >>> spc = odl.uniform_discr([-1, -1], [1, 1], (1, 2))
+        >>> vfspace = spc ** 2
+        >>> fixed_vf = np.array([[[0, 1]],
+        ...                      [[1, -1]]])
+        >>> pw_inner = odl.PointwiseInner(vfspace, fixed_vf)
+        >>> y = spc.element([[1, 2]])
+        >>> pw_inner.adjoint(y)
+        ProductSpace(uniform_discr([-1., -1.], [ 1.,  1.], (1, 2)), 2).element(
+            [
+              [[ 0.,  2.]],
+              [[ 1., -2.]]
+            ]
+        )
         """
-        return PointwiseInnerAdjoint(
-            sspace=self.base_space, vecfield=self.vecfield,
-            vfspace=self.domain, weighting=self.weights)
+        op = self
 
+        class PointwiseInnerAdjoint(PointwiseTensorFieldOperator):
 
-class PointwiseInnerAdjoint(PointwiseInnerBase):
+            """Adjoint of the point-wise inner product operator."""
 
-    """Adjoint of the point-wise inner product operator.
+            def __init__(self):
+                """Initialize a new instance."""
+                super(PointwiseInnerAdjoint, self).__init__(
+                    domain=op.range, range=op.domain,
+                    base_space=op.base_space, linear=True)
 
-    The adjoint of the inner product operator is a mapping ::
+            def _call(self, f, out):
+                """Implement ``self(vf, out)``."""
+                for vfi, oi, wi in zip(op.vecfield, out, op.weights):
+                    vfi.multiply(f, out=oi)
+                    if not np.isclose(wi, 1.0):
+                        oi *= wi
 
-        A^* : X --> X^d
+            @property
+            def adjoint(self):
+                """Adjoint of this operator.
 
-    If the vector field space ``X^d`` is weighted by a vector ``v``,
-    the adjoint, applied to a function ``h`` from ``X`` is the vector
-    field ::
+                Returns
+                -------
+                adjoint : `PointwiseInner`
+                """
+                return op
 
-        x --> h(x) * (w / v) * G(x),
+        return PointwiseInnerAdjoint()
 
-    where ``G`` and ``w`` are the vector field and weighting from the
-    inner product operator, resp., and all multiplications are understood
-    component-wise.
-    """
+    def __repr__(self):
+        """Return ``repr(self)``.
 
-    def __init__(self, sspace, vecfield, vfspace=None, weighting=None):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        sspace : `LinearSpace`
-            "Scalar" space on which the operator acts
-        vecfield : range `element-like`
-            Vector field of the point-wise inner product operator
-        vfspace : `ProductSpace`, optional
-            Space of vector fields to which the operator maps. It must
-            be a power space with ``sspace`` as base space.
-            This option is intended to enforce an operator range
-            with a certain weighting.
-            Default: ``ProductSpace(space, len(vecfield),
-            weighting=weighting)``
-        weighting : `array-like` or float, optional
-            Weighting array or constant of the inner product operator.
-            If an array is given, its length must be equal to
-            ``len(vecfield)``.
-            By default, the weights are is taken from
-            ``range.weighting`` if applicable. Note that this excludes
-            unusual weightings with custom inner product, norm or dist.
+        Examples
+        --------
+        >>> spc = odl.rn((1, 2))
+        >>> vfspace = spc ** 2
+        >>> fixed_vf = np.array([[[0, 1]],
+        ...                      [[1, -1]]])
+        >>> pw_inner = odl.PointwiseInner(vfspace, fixed_vf)
+        >>> pw_inner
+        PointwiseInner(
+            ProductSpace(rn((1, 2)), 2),
+            ProductSpace(rn((1, 2)), 2).element(
+                [
+                  [[ 0.,  1.]],
+                  [[ 1., -1.]]
+                ]
+            )
+        )
         """
-        if vfspace is None:
-            vfspace = ProductSpace(sspace, len(vecfield), weighting=weighting)
-        else:
-            if not isinstance(vfspace, ProductSpace):
-                raise TypeError('`vfspace` {!r} is not a '
-                                'ProductSpace instance'.format(vfspace))
-            if vfspace[0] != sspace:
-                raise ValueError('base space of the range is different from '
-                                 'the given scalar space ({!r} != {!r})'
-                                 ''.format(vfspace[0], sspace))
-        super(PointwiseInnerAdjoint, self).__init__(
-            adjoint=True, vfspace=vfspace, vecfield=vecfield,
-            weighting=weighting)
-
-        # Get weighting from range
-        if hasattr(self.range.weighting, 'array'):
-            self.__ran_weights = self.range.weighting.array
-        elif hasattr(self.range.weighting, 'const'):
-            self.__ran_weights = (self.range.weighting.const *
-                                  np.ones(len(self.range)))
-        else:
-            raise ValueError('weighting scheme {!r} of the range does '
-                             'not define a weighting array or constant'
-                             ''.format(self.range.weighting))
-
-    def _call(self, f, out):
-        """Implement ``self(vf, out)``."""
-        for vfi, oi, ran_wi, dom_wi in zip(self.vecfield, out,
-                                           self.__ran_weights, self.weights):
-            vfi.multiply(f, out=oi)
-            if not np.isclose(ran_wi, dom_wi):
-                oi *= dom_wi / ran_wi
-
-    @property
-    def adjoint(self):
-        """Adjoint of this operator.
-
-        Returns
-        -------
-        adjoint : `PointwiseInner`
-        """
-        return PointwiseInner(vfspace=self.range, vecfield=self.vecfield,
-                              weighting=self.weights)
+        posargs = [self.domain, self.vecfield]
+        optargs = []
+        optmod = []
+        if self.is_weighted:
+            optargs.append(('weighting', array_str(self.weights), ''))
+            optmod.append('!s')
+        inner_parts = signature_string_parts(posargs, optargs,
+                                             mod=['!r', optmod])
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
 
 # TODO: Make this an optimized operator on its own.
@@ -681,7 +652,7 @@ class PointwiseSum(PointwiseInner):
 
         >>> spc = odl.uniform_discr([-1, -1], [1, 1], (1, 2))
         >>> vfspace = odl.ProductSpace(spc, 2)
-        >>> pw_sum = PointwiseSum(vfspace)
+        >>> pw_sum = odl.PointwiseSum(vfspace)
         >>> pw_sum.range == spc
         True
 
@@ -696,9 +667,32 @@ class PointwiseSum(PointwiseInner):
             raise TypeError('`vfspace` {!r} is not a ProductSpace '
                             'instance'.format(vfspace))
 
-        ones = vfspace.one()
         super(PointwiseSum, self).__init__(
-            vfspace, vecfield=ones, weighting=weighting)
+            vfspace, vecfield=vfspace.one(), weighting=weighting)
+
+    def __repr__(self):
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> spc = odl.uniform_discr([-1, -1], [1, 1], (1, 2))
+        >>> vfspace = odl.ProductSpace(spc, 2)
+        >>> pw_sum = odl.PointwiseSum(vfspace)
+        >>> pw_sum
+        PointwiseSum(
+            ProductSpace(uniform_discr([-1., -1.], [ 1.,  1.], (1, 2)), 2)
+        )
+        """
+        posargs = [self.domain]
+        optargs = []
+        optmod = []
+        if self.is_weighted:
+            optargs.append(('weighting', array_str(self.weights), ''))
+            optmod.append('!s')
+        inner_parts = signature_string_parts(posargs, optargs,
+                                             mod=['!r', optmod])
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
 
 class MatrixOperator(Operator):
@@ -741,7 +735,7 @@ class MatrixOperator(Operator):
         By default, ``domain`` and ``range`` are spaces of with one axis:
 
         >>> m = np.ones((3, 4))
-        >>> op = MatrixOperator(m)
+        >>> op = odl.MatrixOperator(m)
         >>> op.domain
         rn(4)
         >>> op.range
@@ -755,7 +749,7 @@ class MatrixOperator(Operator):
         domain shape entry in the given axis:
 
         >>> dom = odl.rn((5, 4, 4))  # can use axis=1 or axis=2
-        >>> op = MatrixOperator(m, domain=dom, axis=1)
+        >>> op = odl.MatrixOperator(m, domain=dom, axis=1)
         >>> op(dom.one()).shape
         (5, 3, 4)
         >>> op = MatrixOperator(m, domain=dom, axis=2)
@@ -941,7 +935,22 @@ class MatrixOperator(Operator):
         return out
 
     def __repr__(self):
-        """Return ``repr(self)``."""
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> m = np.ones((3, 4))
+        >>> dom = odl.rn((5, 4, 4))
+        >>> op = odl.MatrixOperator(m, domain=dom, axis=1)
+        >>> op
+        MatrixOperator(
+            [[ 1.,  1.,  1.,  1.],
+             [ 1.,  1.,  1.,  1.],
+             [ 1.,  1.,  1.,  1.]],
+            domain=rn((5, 4, 4)),
+            axis=1
+        )
+        """
         # Lazy import to improve `import odl` time
         import scipy.sparse
 
@@ -964,9 +973,10 @@ class MatrixOperator(Operator):
             ('axis', self.axis, 0)
         ]
 
-        inner_str = signature_string(posargs, optargs, sep=[', ', ', ', ',\n'],
-                                     mod=[['!s'], ['!r', '!r', '']])
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
+        inner_parts = signature_string_parts(posargs, optargs,
+                                             mod=[['!s'], ['!r', '!r', '']])
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -1193,12 +1203,25 @@ class SamplingOperator(Operator):
         """Return ``repr(self)``."""
         posargs = [self.domain, self.sampling_points]
         optargs = [('variant', self.variant, 'point_eval')]
-        sig_str = signature_string(posargs, optargs, mod=['!r', ''],
-                                   sep=[',\n', '', ',\n'])
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(sig_str))
+        inner_parts = signature_string_parts(posargs, optargs, mod=['!r', ''])
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
     def __str__(self):
-        """Return ``str(self)``."""
+        """Return ``str(self)``.
+
+        Examples
+        --------
+        >>> space = odl.uniform_discr(0, 1, 4)
+        >>> op = odl.SamplingOperator(space, sampling_points=[1, 2, 1],
+        ...                           variant='integrate')
+        >>> op
+        SamplingOperator(
+            uniform_discr(0.0, 1.0, 4),
+            [array([1, 2, 1])],
+            variant='integrate'
+        )
+        """
         return repr(self)
 
 
@@ -1388,12 +1411,26 @@ class WeightedSumSamplingOperator(Operator):
         return SamplingOperator(self.range, self.sampling_points, variant)
 
     def __repr__(self):
-        """Return ``repr(self)``."""
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> space = odl.uniform_discr(0, 1, 4)
+        >>> op = odl.WeightedSumSamplingOperator(space, sampling_points=1)
+        >>> op = odl.WeightedSumSamplingOperator(
+        ...     space, sampling_points=[1, 2, 1], variant='dirac')
+        >>> op
+        WeightedSumSamplingOperator(
+            uniform_discr(0.0, 1.0, 4),
+            [array([1, 2, 1])],
+            variant='dirac'
+        )
+        """
         posargs = [self.range, self.sampling_points]
         optargs = [('variant', self.variant, 'char_fun')]
-        sig_str = signature_string(posargs, optargs, mod=['!r', ''],
-                                   sep=[',\n', '', ',\n'])
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(sig_str))
+        inner_parts = signature_string_parts(posargs, optargs, mod=['!r', ''])
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -1479,8 +1516,7 @@ class FlatteningOperator(Operator):
         >>> abs(op.adjoint(op(x)).inner(x) - op(x).inner(op(x))) < 1e-10
         True
         """
-        scaling = getattr(self.domain, 'cell_volume', 1.0)
-        return 1 / scaling * self.inverse
+        return self.inverse
 
     @property
     def inverse(self):
@@ -1506,7 +1542,6 @@ class FlatteningOperator(Operator):
         True
         """
         op = self
-        scaling = getattr(self.domain, 'cell_volume', 1.0)
 
         class FlatteningOperatorInverse(Operator):
 
@@ -1528,16 +1563,16 @@ class FlatteningOperator(Operator):
                                   order=op.order)
 
             def adjoint(self):
-                """Adjoint of this operator, a scaled `FlatteningOperator`."""
-                return scaling * op
+                """Adjoint of this operator, the original operator."""
+                return op
 
             def inverse(self):
-                """Inverse of this operator."""
+                """Inverse of this operator, the original operator."""
                 return op
 
             def __repr__(self):
                 """Return ``repr(self)``."""
-                return '{!r}.inverse'.format(op)
+                return attribute_repr_string(repr(op), 'inverse')
 
             def __str__(self):
                 """Return ``str(self)``."""
@@ -1546,12 +1581,20 @@ class FlatteningOperator(Operator):
         return FlatteningOperatorInverse()
 
     def __repr__(self):
-        """Return ``repr(self)``."""
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> space = odl.uniform_discr([-1, -1], [1, 1], shape=(2, 3))
+        >>> op = odl.FlatteningOperator(space)
+        >>> op
+        FlatteningOperator(uniform_discr([-1., -1.], [ 1.,  1.], (2, 3)))
+        """
         posargs = [self.domain]
         optargs = [('order', self.order, 'C')]
-        sig_str = signature_string(posargs, optargs, mod=['!r', ''],
-                                   sep=['', '', ',\n'])
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(sig_str))
+        inner_parts = signature_string_parts(posargs, optargs, mod=['!r', ''])
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -1617,12 +1660,18 @@ def is_compatible_space(space, base_space):
             return is_compatible_space(space[0], base_space)
     else:
         if hasattr(space, 'astype') and hasattr(base_space, 'dtype'):
-            # TODO: maybe only the shape should play a role?
             comp_space = space.astype(base_space.dtype)
+            if (hasattr(comp_space, 'asweighted') and
+                    hasattr(base_space, 'asweighted')):
+                comp_space = comp_space.asweighted(None)
+                comp_base = base_space.asweighted(None)
+            else:
+                comp_base = base_space
         else:
             comp_space = space
+            comp_base = base_space
 
-        return comp_space == base_space
+        return comp_space == comp_base
 
 
 if __name__ == '__main__':

@@ -37,8 +37,8 @@ class TheanoOperator(theano.Op):
         Parameters
         ----------
         operator : `Operator`
-            The operator that should be wrapped, must map `FnBase` spaces to
-            `FnBase` spaces.
+            The operator that should be wrapped, must map `TensorSpace`'s to
+            `TensorSpace`'s.
 
         Examples
         --------

@@ -1705,7 +1705,7 @@ def proximal_huber(space, gamma):
 
     Parameters
     ----------
-    space : `FnBase`
+    space : `TensorSpace`
         The domain of the functional
     gamma : float
         The smoothing parameter of the Huber norm functional.

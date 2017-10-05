@@ -8,25 +8,30 @@
 
 """Utilities mainly for internal use."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
+import inspect
+import sys
 from builtins import object
 from collections import OrderedDict
 from functools import wraps
 from itertools import product
-import inspect
+
 import numpy as np
-import sys
+
+__all__ = (
+    'array_str', 'dtype_str', 'dtype_repr', 'npy_printoptions',
+    'signature_string', 'signature_string_parts', 'repr_string',
+    'indent', 'dedent', 'attribute_repr_string', 'element_repr_string',
+    'is_numeric_dtype', 'is_int_dtype', 'is_floating_dtype', 'is_real_dtype',
+    'is_real_floating_dtype', 'is_complex_floating_dtype',
+    'real_dtype', 'complex_dtype', 'is_string', 'nd_iterator', 'conj_exponent',
+    'writable_array', 'run_from_ipython', 'NumpyRandomSeed',
+    'cache_arguments', 'unique',
+    'REPR_PRECISION')
 
 
-__all__ = ('array_str', 'dtype_str', 'dtype_repr', 'npy_printoptions',
-           'signature_string', 'indent',
-           'is_numeric_dtype', 'is_int_dtype', 'is_floating_dtype',
-           'is_real_dtype', 'is_real_floating_dtype',
-           'is_complex_floating_dtype', 'real_dtype', 'complex_dtype',
-           'is_string', 'nd_iterator', 'conj_exponent', 'writable_array',
-           'run_from_ipython', 'NumpyRandomSeed', 'cache_arguments', 'unique')
-
-
+REPR_PRECISION = 4  # For printing scalars and array entries
 TYPE_MAP_R2C = {np.dtype(dtype): np.result_type(dtype, 1j)
                 for dtype in np.sctypes['float']}
 
@@ -72,12 +77,80 @@ def indent(string, indent_str='    '):
 
     Indenting by random stuff:
 
-    >>> print(indent(text, indent_str='|----|'))
-    |----|This is line 1.
-    |----|Next line.
-    |----|And another one.
+    >>> print(indent(text, indent_str='<->'))
+    <->This is line 1.
+    <->Next line.
+    <->And another one.
     """
-    return '\n'.join(indent_str + row for row in string.split('\n'))
+    return '\n'.join(indent_str + row for row in string.splitlines())
+
+
+def dedent(string, indent_str='   ', max_levels=None):
+    """Revert the effect of indentation.
+
+    Examples
+    --------
+    Remove a simple one-level indentation:
+
+    >>> text = '''<->This is line 1.
+    ... <->Next line.
+    ... <->And another one.'''
+    >>> print(text)
+    <->This is line 1.
+    <->Next line.
+    <->And another one.
+    >>> print(dedent(text, '<->'))
+    This is line 1.
+    Next line.
+    And another one.
+
+    Multiple levels of indentation:
+
+    >>> text = '''<->Level 1.
+    ... <-><->Level 2.
+    ... <-><-><->Level 3.'''
+    >>> print(text)
+    <->Level 1.
+    <-><->Level 2.
+    <-><-><->Level 3.
+    >>> print(dedent(text, '<->'))
+    Level 1.
+    <->Level 2.
+    <-><->Level 3.
+    >>> text = '''<-><->Level 2.
+    ... <-><-><->Level 3.'''
+    >>> print(text)
+    <-><->Level 2.
+    <-><-><->Level 3.
+    >>> print(dedent(text, '<->'))
+    Level 2.
+    <->Level 3.
+    >>> print(dedent(text, '<->', max_levels=1))
+    <->Level 2.
+    <-><->Level 3.
+    """
+    lines = string.splitlines()
+
+    # Determine common (minumum) number of indentation levels, capped at
+    # `max_levels` if given
+    def num_indents(line):
+        nindents = 0
+        while True:
+            if line.startswith(indent_str):
+                nindents += 1
+                line = line[len(indent_str):]
+            else:
+                break
+
+        return nindents
+
+    num_levels = num_indents(min(lines, key=num_indents))
+    if max_levels is not None:
+        num_levels = min(num_levels, max_levels)
+
+    # Dedent
+    dedent_len = num_levels * len(indent_str)
+    return '\n'.join(line[dedent_len:] for line in lines)
 
 
 class npy_printoptions(object):
@@ -650,7 +723,7 @@ class writable_array(object):
         self.arr = None
 
 
-def signature_string(posargs, optargs, sep=', ', mod=''):
+def signature_string(posargs, optargs, sep=', ', mod='!r'):
     """Return a stringified signature from given arguments.
 
     Parameters
@@ -699,6 +772,11 @@ def signature_string(posargs, optargs, sep=', ', mod=''):
 
         Finally, if ``mod`` is a string or callable, it is applied to
         all arguments.
+
+        The default behavior is to apply the "{!r}" (``repr``) conversion.
+        For floating point scalars, the number of digits printed is
+        determined by the ``precision`` value in NumPy's printing options,
+        which can be temporarily modified with `npy_printoptions`.
 
     Returns
     -------
@@ -765,6 +843,18 @@ def signature_string(posargs, optargs, sep=', ', mod=''):
     >>> optargs = []
     >>> signature_string(posargs, optargs, mod=[['', array_str], []])
     "'arg1', [ 1., 1., 1.]"
+
+    The number of printed digits in floating point numbers can be changed
+    with `npy_printoptions`:
+
+    >>> posargs = ['hello', 0.123456789012345]
+    >>> optargs = [('extent', 1.234567890123456, 1.0)]
+    >>> signature_string(posargs, optargs)  # default is 8 digits
+    "'hello', 0.12345679, extent=1.2345679"
+    >>> with npy_printoptions(precision=2):
+    ...     sig_str = signature_string(posargs, optargs)
+    >>> sig_str
+    "'hello', 0.12, extent=1.2"
     """
     # Define the separators for the two possible cases
     if is_string(sep):
@@ -772,6 +862,72 @@ def signature_string(posargs, optargs, sep=', ', mod=''):
     else:
         pos_sep, opt_sep, part_sep = sep
 
+    # Get the stringified parts
+    posargs_conv, optargs_conv = signature_string_parts(posargs, optargs, mod)
+
+    # Join the arguments using the separators
+    parts = []
+    if posargs_conv:
+        parts.append(pos_sep.join(argstr for argstr in posargs_conv))
+    if optargs_conv:
+        parts.append(opt_sep.join(optargs_conv))
+
+    return part_sep.join(parts)
+
+
+def signature_string_parts(posargs, optargs, mod='!r'):
+    """Return stringified arguments as tuples.
+
+    Parameters
+    ----------
+    posargs : sequence
+        Positional argument values, always included in the returned string
+        tuple.
+    optargs : sequence of 3-tuples
+        Optional arguments with names and defaults, given in the form::
+
+            [(name1, value1, default1), (name2, value2, default2), ...]
+
+        Only those parameters that are different from the given default
+        are included as ``name=value`` keyword pairs.
+
+        **Note:** The comparison is done by using ``if value == default:``,
+        which is not valid for, e.g., NumPy arrays.
+
+    mod : string or callable or sequence, optional
+        Format modifier(s) for the argument strings.
+        In its most general form, ``mod`` is a sequence of 2 sequences
+        ``pos_mod, opt_mod`` with ``len(pos_mod) == len(posargs)`` and
+        ``len(opt_mod) == len(optargs)``. Each entry ``m`` in those sequences
+        can be a string, resulting in the following stringification
+        of ``arg``::
+
+            arg_fmt = {{{}}}.format(m)
+            arg_str = arg_fmt.format(arg)
+
+        For a callable ``to_str``, the stringification is simply
+        ``arg_str = to_str(arg)``.
+
+        The entries ``pos_mod, opt_mod`` of ``mod`` can also be strings
+        or callables instead of sequences, in which case the modifier
+        applies to all corresponding arguments.
+
+        Finally, if ``mod`` is a string or callable, it is applied to
+        all arguments.
+
+        The default behavior is to apply the "{!r}" (``repr``) conversion.
+        For floating point scalars, the number of digits printed is
+        determined by the ``precision`` value in NumPy's printing options,
+        which can be temporarily modified with `npy_printoptions`.
+
+    Returns
+    -------
+    pos_strings : tuple of str
+        The stringified positional arguments.
+    opt_strings : tuple of str
+        The stringified optional arguments, not including the ones
+        equal to their respective defaults.
+    """
     # Convert modifiers to 2-sequence of sequence of strings
     if is_string(mod) or callable(mod):
         pos_mod = opt_mod = mod
@@ -792,9 +948,7 @@ def signature_string(posargs, optargs, sep=', ', mod=''):
                                  'len({}) != len({})'.format(m, args))
 
     pos_mod, opt_mod = mods
-
-    # Convert the arguments to strings
-    parts = []
+    precision = np.get_printoptions()['precision']
 
     # Stringify values, treating strings specially
     posargs_conv = []
@@ -808,13 +962,16 @@ def signature_string(posargs, optargs, sep=', ', mod=''):
             else:
                 fmt = "'{}'"
             posargs_conv.append(fmt.format(arg))
+        elif (np.isscalar(arg) and
+              np.array(arg).real.astype('int64') != arg and
+              modifier in ('', '!s', '!r')):
+            # Floating point value, use Numpy print option 'precision'
+            fmt = '{{:.{}}}'.format(precision)
+            posargs_conv.append(fmt.format(arg))
         else:
             # All non-string types are passed through a format conversion
             fmt = '{{{}}}'.format(modifier)
             posargs_conv.append(fmt.format(arg))
-
-    if posargs_conv:
-        parts.append(pos_sep.join(argstr for argstr in posargs_conv))
 
     # Build 'key=value' strings for values that are not equal to default
     optargs_conv = []
@@ -833,15 +990,337 @@ def signature_string(posargs, optargs, sep=', ', mod=''):
                 fmt = "'{}'"
             value_str = fmt.format(value)
             optargs_conv.append('{}={}'.format(name, value_str))
+        elif (np.isscalar(value) and
+              np.array(value).real.astype('int64') != value and
+              modifier in ('', '!s', '!r')):
+            fmt = '{{:.{}}}'.format(precision)
+            value_str = fmt.format(value)
+            optargs_conv.append('{}={}'.format(name, value_str))
         else:
             fmt = '{{{}}}'.format(modifier)
             value_str = fmt.format(value)
             optargs_conv.append('{}={}'.format(name, value_str))
 
-    if optargs_conv:
-        parts.append(opt_sep.join(optargs_conv))
+    return tuple(posargs_conv), tuple(optargs_conv)
 
-    return part_sep.join(parts)
+
+def _separators(strings, linewidth):
+    """Return separators that keep joined strings within the line width."""
+    if len(strings) <= 1:
+        return ()
+
+    indent_len = 4
+    separators = []
+    cur_line_len = indent_len + len(strings[0]) + 1
+    if cur_line_len + 2 <= linewidth and '\n' not in strings[0]:
+        # Next string might fit on same line
+        separators.append(', ')
+        cur_line_len += 1  # for the extra space
+    else:
+        # Use linebreak if string contains newline or doesn't fit
+        separators.append(',\n')
+        cur_line_len = indent_len
+
+    for i, s in enumerate(strings[1:-1]):
+
+        cur_line_len += len(s) + 1
+
+        if '\n' in s:
+            # Use linebreak before and after if string contains newline
+            separators[i] = ',\n'
+            cur_line_len = indent_len
+            separators.append(',\n')
+
+        elif cur_line_len + 2 <= linewidth:
+            # This string fits, next one might also fit on same line
+            separators.append(', ')
+            cur_line_len += 1  # for the extra space
+
+        elif cur_line_len <= linewidth:
+            # This string fits, but next one won't
+            separators.append(',\n')
+            cur_line_len = indent_len
+
+        else:
+            # This string doesn't fit but has no newlines in it
+            separators[i] = ',\n'
+            cur_line_len = indent_len + len(s) + 1
+
+            # Need to determine again what should come next
+            if cur_line_len + 2 <= linewidth:
+                # Next string might fit on same line
+                separators.append(', ')
+            else:
+                separators.append(',\n')
+
+    cur_line_len += len(strings[-1])
+    if cur_line_len + 1 > linewidth or '\n' in strings[-1]:
+        # This string and a comma don't fit on this line
+        separators[-1] = ',\n'
+
+    return tuple(separators)
+
+
+def repr_string(outer_string, inner_strings, allow_mixed_seps=True):
+    """Return a pretty string for ``repr``.
+
+    The returned string is formatted such that it does not extend
+    beyond the line boundary if avoidable. The line width is taken from
+    NumPy's printing options that can be retrieved with
+    ``np.get_printoptions()``. They can be temporarily overridden
+    using the `npy_printoptions` context manager. See Examples for details.
+
+    Parameters
+    ----------
+    outer_str : str
+        Name of the class or function that should be printed outside
+        the parentheses.
+    inner_strings : sequence of sequence of str
+        Stringifications of the positional and optional arguments.
+        This is usually the return value of `signature_string_parts`.
+    allow_mixed_seps : bool, optional
+        If ``False`` and the string does not fit on one line, use
+        ``',\\n'`` to separate all strings.
+        By default, a mixture of ``', '`` and ``,\\n`` is used to fit
+        as much on one line as possible.
+
+    Returns
+    -------
+    repr_string : str
+        Full string that can be returned by a class' ``repr`` method.
+
+    Examples
+    --------
+    Things that fit into one line are printed on one line:
+
+    >>> outer_string = 'MyClass'
+    >>> inner_strings = [('1', "'hello'", 'None'),
+    ...                  ("dtype='float32'",)]
+    >>> print(repr_string(outer_string, inner_strings))
+    MyClass(1, 'hello', None, dtype='float32')
+
+    Otherwise, if a part of ``inner_strings`` fits on a line of its own,
+    it is printed on one line, but separated from the other part with
+    a line break:
+
+    >>> outer_string = 'MyClass'
+    >>> inner_strings = [('2.0', "'this_is_a_very_long_argument_string'"),
+    ...                  ("long_opt_arg='another_quite_long_string'",)]
+    >>> print(repr_string(outer_string, inner_strings))
+    MyClass(
+        2.0, 'this_is_a_very_long_argument_string',
+        long_opt_arg='another_quite_long_string'
+    )
+
+    If those parts are themselves too long, they are broken down into
+    several lines:
+
+    >>> outer_string = 'MyClass'
+    >>> inner_strings = [("'this_is_a_very_long_argument_string'",
+    ...                   "'another_very_long_argument_string'"),
+    ...                  ("long_opt_arg='another_quite_long_string'",
+    ...                   "long_opt2_arg='this_wont_fit_on_one_line_either'")]
+    >>> print(repr_string(outer_string, inner_strings))
+    MyClass(
+        'this_is_a_very_long_argument_string',
+        'another_very_long_argument_string',
+        long_opt_arg='another_quite_long_string',
+        long_opt2_arg='this_wont_fit_on_one_line_either'
+    )
+
+    The usage of mixed separators to optimally use horizontal space can
+    be disabled by setting ``allow_mixed_seps=False``:
+
+    >>> outer_string = 'MyClass'
+    >>> inner_strings = [('2.0', "'this_is_a_very_long_argument_string'"),
+    ...                  ("long_opt_arg='another_quite_long_string'",)]
+    >>> print(repr_string(outer_string, inner_strings, allow_mixed_seps=False))
+    MyClass(
+        2.0,
+        'this_is_a_very_long_argument_string',
+        long_opt_arg='another_quite_long_string'
+    )
+
+    With the ``npy_printoptions`` context manager, the available line
+    width can be changed:
+
+    >>> outer_string = 'MyClass'
+    >>> inner_strings = [('1', "'hello'", 'None'),
+    ...                  ("dtype='float32'",)]
+    >>> with npy_printoptions(linewidth=20):
+    ...     print(repr_string(outer_string, inner_strings))
+    MyClass(
+        1, 'hello',
+        None,
+        dtype='float32'
+    )
+    """
+    linewidth = np.get_printoptions()['linewidth']
+    pos_strings, opt_strings = inner_strings
+    # Length of the positional and optional argument parts of the signature,
+    # including separators `', '`
+    pos_sig_len = (sum(len(pstr) for pstr in pos_strings) +
+                   2 * max((len(pos_strings) - 1), 0))
+    opt_sig_len = (sum(len(pstr) for pstr in opt_strings) +
+                   2 * max((len(opt_strings) - 1), 0))
+
+    # Length of the one-line string, including 2 for the parentheses and
+    # 2 for the joining ', '
+    repr_len = len(outer_string) + 2 + pos_sig_len + 2 + opt_sig_len
+
+    if repr_len <= linewidth and not any('\n' in s
+                                         for s in pos_strings + opt_strings):
+        # Everything fits on one line
+        fmt = '{}({})'
+        pos_str = ', '.join(pos_strings)
+        opt_str = ', '.join(opt_strings)
+        parts_sep = ', '
+    else:
+        # Need to split lines in some way
+        fmt = '{}(\n{}\n)'
+
+        if not allow_mixed_seps:
+            pos_separators = [',\n'] * (len(pos_strings) - 1)
+        else:
+            pos_separators = _separators(pos_strings, linewidth)
+        if len(pos_strings) == 0:
+            pos_str = ''
+        else:
+            pos_str = pos_strings[0]
+            for s, sep in zip(pos_strings[1:], pos_separators):
+                pos_str = sep.join([pos_str, s])
+
+        if not allow_mixed_seps:
+            opt_separators = [',\n'] * (len(opt_strings) - 1)
+        else:
+            opt_separators = _separators(opt_strings, linewidth)
+        if len(opt_strings) == 0:
+            opt_str = ''
+        else:
+            opt_str = opt_strings[0]
+            for s, sep in zip(opt_strings[1:], opt_separators):
+                opt_str = sep.join([opt_str, s])
+
+        # Check if we can put both parts on one line. This requires their
+        # concatenation including 4 for indentation and 2 for ', ' to
+        # be less than the line width. And they should contain no newline.
+        if pos_str and opt_str:
+            inner_len = 4 + len(pos_str) + 2 + len(opt_str)
+        elif (pos_str and not opt_str) or (opt_str and not pos_str):
+            inner_len = 4 + len(pos_str) + len(opt_str)
+        else:
+            inner_len = 0
+
+        if (not allow_mixed_seps or
+                any('\n' in s for s in [pos_str, opt_str]) or
+                inner_len > linewidth):
+            parts_sep = ',\n'
+            pos_str = indent(pos_str)
+            opt_str = indent(opt_str)
+        else:
+            parts_sep = ', '
+            pos_str = indent(pos_str)
+            # Don't indent `opt_str`
+
+    parts = [s for s in [pos_str, opt_str] if s.strip()]  # ignore empty
+    inner_string = parts_sep.join(parts)
+    return fmt.format(outer_string, inner_string)
+
+
+def attribute_repr_string(instance_str, attr_str):
+    """Return a repr string for an attribute that respects line width.
+
+    Parameters
+    ----------
+    instance_str : str
+        Stringification of a class instance.
+    attr_str : str
+        Name of the attribute (not including the ``'.'``).
+
+    Returns
+    -------
+    attr_repr_str : str
+        Concatenation of the two strings in a way that the line width
+        is respected.
+
+    Examples
+    --------
+    >>> inst_str = 'rn((2, 3))'
+    >>> attr_str = 'byaxis'
+    >>> print(attribute_repr_string(inst_str, attr_str))
+    rn((2, 3)).byaxis
+    >>> long_inst_str = (
+    ...     "MyClass('long string that will definitely trigger a line break')"
+    ... )
+    >>> long_attr_str = 'long_attribute_name'
+    >>> print(attribute_repr_string(long_inst_str, long_attr_str))
+    MyClass(
+        'long string that will definitely trigger a line break'
+    ).long_attribute_name
+    """
+    linewidth = np.get_printoptions()['linewidth']
+    if len(instance_str) + len(attr_str) + 1 <= linewidth:
+        parts = [instance_str, attr_str]
+    else:
+        left, rest = instance_str.split('(', maxsplit=1)
+        right, middle = rest[::-1].split(')', maxsplit=1)
+        middle, right = middle[::-1], right[::-1]
+        new_instance_str = '(\n'.join([left, indent(middle)]) + '\n)' + right
+        parts = [new_instance_str, attr_str]
+
+    return '.'.join(parts)
+
+
+def element_repr_string(space_str, data_str):
+    """Return a repr string for a space element that respects line width.
+
+    Parameters
+    ----------
+    space_str : str
+        Stringification of the space in which the element lives.
+    data_str : str
+        Stringification of the data that the element contains.
+
+    Returns
+    -------
+    elem_repr_str : str
+        Stringification of the element in a way that the line width
+        is respected.
+
+    Examples
+    --------
+    >>> space_str = 'rn(3)'
+    >>> data_str = array_str([1.0, 0.0, 1.0])
+    >>> print(element_repr_string(space_str, data_str))
+    rn(3).element([ 1.,  0.,  1.])
+    >>> space_str = (
+    ...     'uniform_discr([ 0.,  0.], [ 1.,  1.], (2, 2), dtype=complex)'
+    ... )
+    >>> long_data_str = array_str([[1.0, 2.0],
+    ...                            [3.0, 4.0]])
+    >>> print(element_repr_string(space_str, long_data_str))
+    uniform_discr([ 0.,  0.], [ 1.,  1.], (2, 2), dtype=complex).element(
+        [[ 1.,  2.],
+         [ 3.,  4.]]
+    )
+    """
+    linewidth = np.get_printoptions()['linewidth']
+
+    spc_len = len(space_str) + len('.element(')
+    if spc_len <= linewidth:
+        # Can fit the 'space.element(' part on one line
+        spc_part = space_str + '.element('
+    else:
+        left, rest = space_str.split('(', maxsplit=1)
+        right, middle = rest[::-1].split(')', maxsplit=1)
+        middle, right = middle[::-1], right[::-1]
+        spc_part = ('(\n'.join([left, indent(middle)]) + '\n)' + right +
+                    '.element(')
+
+    if '\n' in data_str or len(spc_part) + len(data_str) + 1 > linewidth:
+        return spc_part + '\n' + indent(data_str) + '\n)'
+    else:
+        return spc_part + data_str + ')'
 
 
 def run_from_ipython():

@@ -8,19 +8,22 @@
 
 """Cartesian products of `LinearSpace` instances."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 from itertools import product
 from numbers import Integral
+
 import numpy as np
 
 from odl.set import LinearSpace
 from odl.set.space import LinearSpaceElement
 from odl.space.weighting import (
-    Weighting, ArrayWeighting, ConstWeighting,
-    CustomInner, CustomNorm, CustomDist)
-from odl.util import is_real_dtype, signature_string, indent
+    ArrayWeighting, ConstWeighting, CustomDist, CustomInner, CustomNorm,
+    Weighting)
+from odl.util import (
+    dedent, element_repr_string, indent, is_real_dtype, repr_string,
+    signature_string_parts)
 from odl.util.ufuncs import ProductSpaceUfuncs
-
 
 __all__ = ('ProductSpace',)
 
@@ -127,11 +130,11 @@ class ProductSpace(LinearSpace):
         --------
         Product of two rn spaces
 
-        >>> r2x3 = ProductSpace(odl.rn(2), odl.rn(3))
+        >>> r2x3 = odl.ProductSpace(odl.rn(2), odl.rn(3))
 
         Powerspace of rn space
 
-        >>> r2x2x2 = ProductSpace(odl.rn(2), 3)
+        >>> r2x2x2 = odl.ProductSpace(odl.rn(2), 3)
 
         Notes
         -----
@@ -446,7 +449,7 @@ class ProductSpace(LinearSpace):
         --------
         >>> r2, r3 = odl.rn(2), odl.rn(3)
         >>> vec_2, vec_3 = r2.element(), r3.element()
-        >>> r2x3 = ProductSpace(r2, r3)
+        >>> r2x3 = odl.ProductSpace(r2, r3)
         >>> vec_2x3 = r2x3.element()
         >>> vec_2.space == vec_2x3[0].space
         True
@@ -456,15 +459,17 @@ class ProductSpace(LinearSpace):
         Create an element of the product space
 
         >>> r2, r3 = odl.rn(2), odl.rn(3)
-        >>> prod = ProductSpace(r2, r3)
+        >>> prod = odl.ProductSpace(r2, r3)
         >>> x2 = r2.element([1, 2])
         >>> x3 = r3.element([1, 2, 3])
         >>> x = prod.element([x2, x3])
         >>> x
-        ProductSpace(rn(2), rn(3)).element([
-            [ 1.,  2.],
-            [ 1.,  2.,  3.]
-        ])
+        ProductSpace(rn(2), rn(3)).element(
+            [
+              [ 1.,  2.],
+              [ 1.,  2.,  3.]
+            ]
+        )
         """
         # If data is given as keyword arg, prefer it over arg list
         if inp is None:
@@ -517,7 +522,7 @@ class ProductSpace(LinearSpace):
         --------
         >>> r2, r3 = odl.rn(2), odl.rn(3)
         >>> zero_2, zero_3 = r2.zero(), r3.zero()
-        >>> r2x3 = ProductSpace(r2, r3)
+        >>> r2x3 = odl.ProductSpace(r2, r3)
         >>> zero_2x3 = r2x3.zero()
         >>> zero_2 == zero_2x3[0]
         True
@@ -545,7 +550,7 @@ class ProductSpace(LinearSpace):
         --------
         >>> r2, r3 = odl.rn(2), odl.rn(3)
         >>> one_2, one_3 = r2.one(), r3.one()
-        >>> r2x3 = ProductSpace(r2, r3)
+        >>> r2x3 = odl.ProductSpace(r2, r3)
         >>> one_2x3 = r2x3.one()
         >>> one_2 == one_2x3[0]
         True
@@ -597,13 +602,13 @@ class ProductSpace(LinearSpace):
         --------
         >>> r2, r3 = odl.rn(2), odl.rn(3)
         >>> rn, rm = odl.rn(2), odl.rn(3)
-        >>> r2x3, rnxm = ProductSpace(r2, r3), ProductSpace(rn, rm)
+        >>> r2x3, rnxm = odl.ProductSpace(r2, r3), odl.ProductSpace(rn, rm)
         >>> r2x3 == rnxm
         True
-        >>> r3x2 = ProductSpace(r3, r2)
+        >>> r3x2 = odl.ProductSpace(r3, r2)
         >>> r2x3 == r3x2
         False
-        >>> r5 = ProductSpace(*[odl.rn(1)]*5)
+        >>> r5 = odl.ProductSpace(*[odl.rn(1)]*5)
         >>> r2x3 == r5
         False
         >>> r5 = odl.rn(5)
@@ -723,7 +728,7 @@ class ProductSpace(LinearSpace):
         elif self.is_power_space:
             return '({}) ** {}'.format(self.spaces[0], len(self))
         else:
-            return ' x '.join(str(space) for space in self.spaces)
+            return ' * '.join(str(space) for space in self.spaces)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -733,40 +738,29 @@ class ProductSpace(LinearSpace):
             posargs = []
             posmod = ''
             optargs = [('field', self.field, None)]
-            oneline = True
+            optmod = ['']
         elif self.is_power_space:
             posargs = [self.spaces[0], len(self)]
             posmod = '!r'
-            optargs = []
-            oneline = True
+            optargs = optmod = []
         elif self.size <= 2 * edgeitems:
             posargs = self.spaces
             posmod = '!r'
-            optargs = []
-            argstr = ', '.join(repr(s) for s in self.spaces)
-            oneline = (len(argstr + weight_str) <= 40 and
-                       '\n' not in argstr + weight_str)
+            optargs = optmod = []
         else:
             posargs = (self.spaces[:edgeitems] +
                        ('...',) +
                        self.spaces[-edgeitems:])
             posmod = ['!r'] * edgeitems + ['!s'] + ['!r'] * edgeitems
-            optargs = []
-            oneline = False
+            optargs = optmod = []
 
-        if oneline:
-            inner_str = signature_string(posargs, optargs, sep=', ',
-                                         mod=[posmod, '!r'])
-            if weight_str:
-                inner_str = ', '.join([inner_str, weight_str])
-            return '{}({})'.format(self.__class__.__name__, inner_str)
-        else:
-            inner_str = signature_string(posargs, optargs, sep=',\n',
-                                         mod=[posmod, '!r'])
-            if weight_str:
-                inner_str = ',\n'.join([inner_str, weight_str])
-            return '{}(\n{}\n)'.format(self.__class__.__name__,
-                                       indent(inner_str))
+        inner_parts = signature_string_parts(posargs, optargs,
+                                             mod=[posmod, optmod])
+        inner_parts = [list(p) for p in inner_parts]
+        if weight_str:
+            inner_parts[1].append(weight_str)
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
     @property
     def element_type(self):
@@ -1074,24 +1068,30 @@ class ProductSpaceElement(LinearSpaceElement):
         >>> r22 = odl.ProductSpace(odl.rn(2), 2)
         >>> x = r22.element([[1, -2], [-3, 4]])
         >>> x.ufuncs.absolute()
-        ProductSpace(rn(2), 2).element([
-            [ 1.,  2.],
-            [ 3.,  4.]
-        ])
+        ProductSpace(rn(2), 2).element(
+            [
+              [ 1.,  2.],
+              [ 3.,  4.]
+            ]
+        )
 
         These functions can also be used with non-vector arguments and
         support broadcasting, per component and even recursively:
 
         >>> x.ufuncs.add([1, 2])
-        ProductSpace(rn(2), 2).element([
-            [ 2.,  0.],
-            [-2.,  6.]
-        ])
+        ProductSpace(rn(2), 2).element(
+            [
+              [ 2.,  0.],
+              [-2.,  6.]
+            ]
+        )
         >>> x.ufuncs.subtract(1)
-        ProductSpace(rn(2), 2).element([
-            [ 0., -3.],
-            [-4.,  3.]
-        ])
+        ProductSpace(rn(2), 2).element(
+            [
+              [ 0., -3.],
+              [-4.,  3.]
+            ]
+        )
 
         There is also support for various reductions (sum, prod, min, max):
 
@@ -1103,10 +1103,12 @@ class ProductSpaceElement(LinearSpaceElement):
         >>> y = r22.element()
         >>> result = x.ufuncs.absolute(out=y)
         >>> result
-        ProductSpace(rn(2), 2).element([
-            [ 1.,  2.],
-            [ 3.,  4.]
-        ])
+        ProductSpace(rn(2), 2).element(
+            [
+              [ 1.,  2.],
+              [ 3.,  4.]
+            ]
+        )
         >>> result is y
         True
 
@@ -1300,53 +1302,59 @@ class ProductSpaceElement(LinearSpaceElement):
 
         Examples
         --------
-        >>> from odl import rn  # need to import rn into namespace
         >>> r2, r3 = odl.rn(2), odl.rn(3)
-        >>> r2x3 = ProductSpace(r2, r3)
+        >>> r2x3 = odl.ProductSpace(r2, r3)
         >>> x = r2x3.element([[1, 2], [3, 4, 5]])
-        >>> eval(repr(x)) == x
-        True
 
         The result is readable:
 
         >>> x
-        ProductSpace(rn(2), rn(3)).element([
-            [ 1.,  2.],
-            [ 3.,  4.,  5.]
-        ])
-
-        Nestled spaces work as well:
-
-        >>> X = ProductSpace(r2x3, r2x3)
-        >>> x = X.element([[[1, 2], [3, 4, 5]],[[1, 2], [3, 4, 5]]])
-        >>> eval(repr(x)) == x
-        True
-        >>> x
-        ProductSpace(ProductSpace(rn(2), rn(3)), 2).element([
+        ProductSpace(rn(2), rn(3)).element(
             [
-                [ 1.,  2.],
-                [ 3.,  4.,  5.]
-            ],
-            [
-                [ 1.,  2.],
-                [ 3.,  4.,  5.]
+              [ 1.,  2.],
+              [ 3.,  4.,  5.]
             ]
-        ])
+        )
+
+        Nested spaces work as well:
+
+        >>> pspace = odl.ProductSpace(r2x3, r2x3)
+        >>> x = pspace.element([[[1, 2],
+        ...                      [3, 4, 5]],
+        ...                     [[1, 2],
+        ...                      [3, 4, 5]]])
+        >>> x
+        ProductSpace(ProductSpace(rn(2), rn(3)), 2).element(
+            [
+               [
+                 [ 1.,  2.],
+                 [ 3.,  4.,  5.]
+               ],
+               [
+                 [ 1.,  2.],
+                 [ 3.,  4.,  5.]
+               ]
+            ]
+        )
         """
-        inner_str = '[\n'
-        if len(self) < 5:
-            inner_str += ',\n'.join('{}'.format(
-                _indent(_strip_space(part))) for part in self.parts)
+        data_str = '[\n'
+        edgeitems = np.get_printoptions()['edgeitems']
+        if len(self) <= 2 * edgeitems:
+            data_str += ',\n'.join(
+                '{}'.format(indent(_strip_space(part), '  '))
+                for part in self.parts)
         else:
-            inner_str += ',\n'.join('{}'.format(
-                _indent(_strip_space(part))) for part in self.parts[:3])
-            inner_str += ',\n    ...\n'
-            inner_str += ',\n'.join('{}'.format(
-                _indent(_strip_space(part))) for part in self.parts[-1:])
+            data_str += ',\n'.join(
+                '{}'.format(indent(_strip_space(part), '  '))
+                for part in self.parts[:edgeitems])
+            data_str += ',\n    ...\n'
+            data_str += ',\n'.join(
+                '{}'.format(indent(_strip_space(part), '  '))
+                for part in self.parts[-edgeitems:])
 
-        inner_str += '\n]'
+        data_str += '\n]'
 
-        return '{!r}.element({})'.format(self.space, inner_str)
+        return element_repr_string(repr(self.space), data_str)
 
     def show(self, title=None, indices=None, **kwargs):
         """Display the parts of this product space element graphically.
@@ -1459,7 +1467,9 @@ class ProductSpaceElement(LinearSpaceElement):
         return tuple(figs)
 
 
-# --- Add arithmetic operators that broadcast ---
+# --- Add arithmetic operators that broadcast --- #
+
+
 def _broadcast_arithmetic(op):
     """Return ``op(self, other)`` with broadcasting.
 
@@ -1486,25 +1496,33 @@ def _broadcast_arithmetic(op):
     layer" broadcasting, i.e., we do not support broadcasting over several
     product spaces at once.
     """
-    def _broadcast_arithmetic_impl(self, other):
-        if (self.space.is_power_space and other in self.space[0]):
+    def broadcast_arithmetic_wrapper(self, other):
+        """Wrapper function for the arithmetic operation."""
+        if other in self.space:
+            return getattr(LinearSpaceElement, op)(self, other)
+
+        elif self.space.is_power_space and other in self.space[0]:
+            # Implement broadcasting along implicit axes "to the left" --
+            # corresponding to Numpy broadcasting of the shapes
+            # (M, N) and (N,)
             results = []
-            for xi in self:
-                res = getattr(xi, op)(other)
+            for self_i in self:
+                res = getattr(self_i, op)(other)
                 if res is NotImplemented:
                     return NotImplemented
                 else:
                     results.append(res)
 
             return self.space.element(results)
+
         else:
             return getattr(LinearSpaceElement, op)(self, other)
 
     # Set docstring
-    docstring = """Broadcasted {op}.""".format(op=op)
-    _broadcast_arithmetic_impl.__doc__ = docstring
+    docstring = """Broadcasting ``{}``.""".format(op)
+    broadcast_arithmetic_wrapper.__doc__ = docstring
 
-    return _broadcast_arithmetic_impl
+    return broadcast_arithmetic_wrapper
 
 
 for op in ['add', 'sub', 'mul', 'div', 'truediv']:
@@ -1837,15 +1855,10 @@ def _strip_space(x):
     space_repr = '{!r}.element('.format(x.space)
     if r.startswith(space_repr) and r.endswith(')'):
         r = r[len(space_repr):-1]
+    if r.startswith('\n'):
+        r = r.strip('\n')
+        r = dedent(r, max_levels=1)
     return r
-
-
-def _indent(x):
-    """Indent a string by 4 characters."""
-    lines = x.splitlines()
-    for i, line in enumerate(lines):
-        lines[i] = '    ' + line
-    return '\n'.join(lines)
 
 
 if __name__ == '__main__':

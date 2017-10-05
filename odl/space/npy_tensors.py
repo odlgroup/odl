@@ -22,8 +22,8 @@ from odl.space.weighting import (
     Weighting, ArrayWeighting, ConstWeighting,
     CustomInner, CustomNorm, CustomDist)
 from odl.util import (
-    dtype_str, signature_string, is_real_dtype, is_numeric_dtype,
-    writable_array, is_floating_dtype)
+    dtype_str, signature_string_parts, repr_string, attribute_repr_string,
+    is_real_dtype, is_numeric_dtype, writable_array, is_floating_dtype)
 
 
 __all__ = ('NumpyTensorSpace',)
@@ -807,7 +807,7 @@ class NumpyTensorSpace(TensorSpace):
 
             def __repr__(self):
                 """Return ``repr(self)``."""
-                return repr(space) + '.byaxis'
+                return attribute_repr_string(repr(space), 'byaxis')
 
         return NpyTensorSpacebyaxis()
 
@@ -837,12 +837,14 @@ class NumpyTensorSpace(TensorSpace):
             optargs = []
             optmod = ''
 
-        inner_str = signature_string(posargs, optargs, mod=['', optmod])
+        inner_parts = signature_string_parts(posargs, optargs,
+                                             mod=['', optmod])
+        inner_parts = [list(p) for p in inner_parts]
         weight_str = self.weighting.repr_part
         if weight_str:
-            inner_str += ', ' + weight_str
+            inner_parts[1].append(weight_str)
 
-        return '{}({})'.format(ctor_name, inner_str)
+        return repr_string(ctor_name, inner_parts)
 
     @property
     def element_type(self):

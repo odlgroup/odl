@@ -38,6 +38,9 @@ try:
 except TypeError:
     pass
 
+# Set printing linewidth to 71 to allow method docstrings to not extend
+# beyond 79 characters (2 times indent of 4)
+np.set_printoptions(linewidth=71)
 
 # Propagate names defined in` __all__` of all "core" subpackages into
 # the top-level namespace

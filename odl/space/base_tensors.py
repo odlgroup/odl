@@ -18,7 +18,8 @@ from odl.set.space import LinearSpace, LinearSpaceElement
 from odl.util import (
     is_numeric_dtype, is_real_dtype, is_floating_dtype,
     is_real_floating_dtype, is_complex_floating_dtype, safe_int_conv,
-    array_str, dtype_str, signature_string, indent, writable_array)
+    array_str, dtype_str, signature_string_parts, repr_string,
+    element_repr_string, writable_array)
 from odl.util.ufuncs import TensorSpaceUfuncs
 from odl.util.utility import TYPE_MAP_R2C, TYPE_MAP_C2R
 
@@ -258,6 +259,21 @@ class TensorSpace(LinearSpace):
         else:
             return self._astype(dtype)
 
+    def asweighted(self, weighting):
+        """Return a copy of this space with new ``weighting``."""
+        if weighting == self.weighting:  # let `AttributeError` bubble up
+            return self
+        else:
+            return self._asweighted(weighting)
+
+    def _asweighted(self, weighting):
+        """Internal helper for `asweighted`.
+
+        Subclasses with differing init parameters should overload this
+        method.
+        """
+        return type(self)(self.shape, dtype=self.dtype, weighting=weighting)
+
     @property
     def default_order(self):
         """Default storage order for new elements in this space.
@@ -398,8 +414,8 @@ class TensorSpace(LinearSpace):
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = [self.shape, dtype_str(self.dtype)]
-        return "{}({})".format(self.__class__.__name__,
-                               signature_string(posargs, []))
+        inner_parts = signature_string_parts(posargs, [])
+        return repr_string(self.__class__.__name__, inner_parts)
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -629,10 +645,7 @@ class Tensor(LinearSpaceElement):
         """Return ``repr(self)``."""
         maxsize_full_print = 2 * np.get_printoptions()['edgeitems']
         self_str = array_str(self, nprint=maxsize_full_print)
-        if self.ndim == 1 and self.size <= maxsize_full_print:
-            return '{!r}.element({})'.format(self.space, self_str)
-        else:
-            return '{!r}.element(\n{}\n)'.format(self.space, indent(self_str))
+        return element_repr_string(repr(self.space), self_str)
 
     def __str__(self):
         """Return ``str(self)``."""

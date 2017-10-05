@@ -21,7 +21,7 @@ This is a brief description of the content of each submodule, see the individual
 * [phantom](phantom) Standardized test images. Functions for generating standardized test examples such as `shepp_logan`.
 * [set](set) Sets of objects. Defines the abstract class `Set` and `LinearSpace` as well as some concrete implementations such as `RealNumbers`.
 * [solvers](solvers) Solution of equations and optimization. Contains both general solvers for problems of the form `A(x) = b` where `A` is an `Operator` as well as solvers of minimization problems. In addition, it defines the class `Functional` with several concrete implementations such as `L2Norm`.
-* [space](space) Concrete vector spaces. Contains concrete implementations of `LinearSpace`, including `NumpyFnBase` and `ProductSpace`.
+* [space](space) Concrete vector spaces. Contains concrete implementations of `LinearSpace`, including `NumpyTensorSpace` and `ProductSpace`.
 * [test](test) Tests for the ODL package. This contains automated tests for all other ODL functionality. In general, users should not be calling anything from this submoduel.
 * [tomo](tomo) Tomography. Defines the operator `RayTransform` as well as `Geometry` along with subclasses and utilities. Also defines problem dependent direct reconstruction such as `fbp_op`.
 * [trafos](trafos) Transformations between spaces. Defines `FourierTransform` and `WaveletTransform`.
