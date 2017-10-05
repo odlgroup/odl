@@ -418,7 +418,7 @@ class CallbackPrintTiming(Callback):
         fmt : string, optional
             Formating that should be applied. The time is printed as ::
 
-                print(fmt.format(runtime, totaltime))
+                print(fmt.format(runtime))
 
             where ``runtime`` is the runtime since the last iterate.
         step : positive int, optional
@@ -432,7 +432,6 @@ class CallbackPrintTiming(Callback):
         self.fmt = str(fmt)
         self.step = int(step)
         self.iter = 0
-        self.total_time = 0
         self.time = time.time()
         self.kwargs = kwargs
 
@@ -440,9 +439,7 @@ class CallbackPrintTiming(Callback):
         """Print time elapsed from the previous iteration."""
         if self.iter % self.step == 0:
             t = time.time()
-            dt = t - self.time
-            self.total_time += dt
-            print(self.fmt.format(dt, self.total_time), **self.kwargs)
+            print(self.fmt.format(t - self.time), **self.kwargs)
             self.time = t
 
         self.iter += 1
@@ -451,7 +448,6 @@ class CallbackPrintTiming(Callback):
         """Set `time` to the current time."""
         self.time = time.time()
         self.iter = 0
-        self.total_time = 0
 
     def __repr__(self):
         """Return ``repr(self)``."""
