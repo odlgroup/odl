@@ -16,7 +16,8 @@ from odl.space import tensor_space
 from odl.space.base_tensors import TensorSpace, Tensor
 from odl.space.space_utils import auto_weighting
 from odl.trafos.backends import PYFFTW_AVAILABLE
-from odl.util import is_real_dtype, is_floating_dtype, dtype_str
+from odl.util import (
+    is_real_dtype, is_floating_dtype, dtype_str, writable_array)
 
 __all__ = ('DiscreteConvolution',)
 
@@ -97,8 +98,9 @@ class DiscreteConvolution(Operator):
 
         Notes
         -----
-        - In general, the out-of-place call (no ``out`` parameter) is
-          expected to be faster for this operator for a variety of reasons:
+        - In general, if nonzero padding is used, the out-of-place call
+          (no ``out`` parameter) is expected to be faster for this operator
+          for a variety of reasons:
 
           * The ``impl='real'`` backend does not support an `out` argument
             and will thus create a new array anyway. Providing `out` will
@@ -108,6 +110,14 @@ class DiscreteConvolution(Operator):
             size and/or dtype do not match the requirements.
             In addition, the Numpy FFT backend does not support an
             `out` parameter.
+
+        - Providing ``out`` will be faster and more memory-efficient
+          for ``impl='fft'`` and ``pyfftw`` backend with ``padding=0``,
+          since this is the only case when the final inverse FFT can be
+          written to ``out`` directly.
+
+          This fact can be exploited by padding the input beforehand and
+          then using no padding in this operator.
 
         - ``scipy.convolve`` does not support an ``axis`` parameter.
           However, a convolution along axes with a lower-dimensional
@@ -376,18 +386,22 @@ class DiscreteConvolution(Operator):
         """If ``True``, the kernel FT is cached for later reuse."""
         return self.__cache_kernel_ft
 
-    def _call(self, x):
+    def _call(self, x, out=None):
         """Perform convolution of ``f`` with `kernel`."""
         if self.impl == 'real' and self.real_impl == 'scipy':
-            return self._call_scipy_convolve(x)
+            res = self._call_scipy_convolve(x)
         elif self.impl == 'fft' and self.fft_impl == 'numpy':
-            return self._call_numpy_fft(x)
+            res = self._call_numpy_fft(x)
         elif self.impl == 'fft' and self.fft_impl == 'pyfftw':
-            # TODO: add and use `out` if padding == 0
-            return self._call_pyfftw(x)
+            res = self._call_pyfftw(x, out=out)
         else:
             raise RuntimeError('bad `impl` {!r} or `fft_impl` {!r}'
                                ''.format(self.impl, self.fft_impl))
+        if out is None:
+            out = res
+        else:
+            out[:] = res
+        return out
 
     def _call_scipy_convolve(self, x):
         """Perform real-space convolution using ``scipy.signal.convolve``."""
@@ -483,7 +497,7 @@ class DiscreteConvolution(Operator):
         slc = [slice(l, n - r) for (l, r), n in zip(paddings, x_prep.shape)]
         return ifft_x[slc]
 
-    def _call_pyfftw(self, x):
+    def _call_pyfftw(self, x, out=None):
         """Perform FFT-based convolution using the pyfftw backend."""
         import multiprocessing
         import pyfftw
@@ -586,22 +600,34 @@ class DiscreteConvolution(Operator):
             x_ft *= kernel_ft
 
         # Perform inverse FFT
-        if use_halfcx:
-            x_ift_dtype = np.empty(0, dtype=x_ft.dtype).real.dtype
+        if all(p == (0, 0) for p in paddings) and out is not None:
+            # No padding used, can write directly to `out`
+            with writable_array(out) as out_arr:
+                plan_ift = pyfftw.FFTW(x_ft, out_arr, axes=self.axes,
+                                       direction='FFTW_BACKWARD',
+                                       flags=['FFTW_ESTIMATE'],
+                                       threads=multiprocessing.cpu_count())
+                plan_ift(x_ft, out_arr)
+            return out
         else:
-            x_ift_dtype = x_ft.dtype
-        x_ift = np.empty(x_prep_shape, x_ift_dtype)
-        plan_ift = pyfftw.FFTW(x_ft, x_ift, axes=self.axes,
-                               direction='FFTW_BACKWARD',
-                               flags=['FFTW_ESTIMATE'],
-                               threads=multiprocessing.cpu_count())
+            if use_halfcx:
+                x_ift_dtype = np.empty(0, dtype=x_ft.dtype).real.dtype
+            else:
+                x_ift_dtype = x_ft.dtype
+            x_ift = np.empty(x_prep_shape, x_ift_dtype)
+            plan_ift = pyfftw.FFTW(x_ft, x_ift, axes=self.axes,
+                                   direction='FFTW_BACKWARD',
+                                   flags=['FFTW_ESTIMATE'],
+                                   threads=multiprocessing.cpu_count())
 
-        plan_ift(x_ft, x_ift)
-        x_ft = None  # can be gc'ed
+            plan_ift(x_ft, x_ift)
+            x_ft = None  # can be gc'ed
 
-        # Unpad to get the "relevant" part
-        slc = [slice(l, n - r) for (l, r), n in zip(paddings, x_prep_shape)]
-        return x_ift[slc]
+            # Unpad to get the "relevant" part
+            slc = [slice(l, n - r)
+                   for (l, r), n in zip(paddings, x_prep_shape)]
+
+            return x_ift[slc]
 
     @property
     @auto_weighting
@@ -616,7 +642,7 @@ class DiscreteConvolution(Operator):
         --------
         >>> conv = DiscreteConvolution(odl.rn(3), [1, -1])
         >>> conv.adjoint.kernel
-        rn(2).element([-1.,  1.])
+        rn(2).element([ 1., -1.])
         """
         if self._adjoint is None:
             adj_variant = 'adjoint' if self.variant == 'forward' else 'forward'
