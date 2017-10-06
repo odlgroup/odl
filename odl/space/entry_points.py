@@ -23,12 +23,15 @@ NumpyTensorSpace : Numpy-based implementation of `TensorSpace`
 from __future__ import print_function, division, absolute_import
 
 from odl.space.npy_tensors import NumpyTensorSpace
+from odl.space.cupy_tensors import CUPY_AVAILABLE, CupyTensorSpace
 
 # We don't expose anything to odl.space
 __all__ = ()
 
 IS_INITIALIZED = False
 TENSOR_SPACE_IMPLS = {'numpy': NumpyTensorSpace}
+if CUPY_AVAILABLE:
+    TENSOR_SPACE_IMPLS['cupy'] = CupyTensorSpace
 
 
 def _initialize_if_needed():
