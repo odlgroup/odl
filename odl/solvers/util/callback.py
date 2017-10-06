@@ -459,7 +459,8 @@ class CallbackPrintTiming(Callback):
     def __repr__(self):
         """Return ``repr(self)``."""
         optargs = [('fmt', self.fmt, 'Time elapsed = {:<5.03f} s'),
-                   ('step', self.step, 1)]
+                   ('step', self.step, 1),
+                   ('cumulative', self.cumulative, False)]
         inner_str = signature_string([], optargs)
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
