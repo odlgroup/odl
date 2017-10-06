@@ -423,6 +423,8 @@ class CallbackPrintTiming(Callback):
             where ``runtime`` is the runtime since the last iterate.
         step : positive int, optional
             Number of iterations between prints.
+        cumulative : boolean, optional
+            Print the time since the initialization instead of the last call.
 
         Other Parameters
         ----------------
@@ -433,27 +435,25 @@ class CallbackPrintTiming(Callback):
         self.step = int(step)
         self.iter = 0
         self.cumulative = cumulative
-        self.base_time = time.time()
-        self.time = 0
+        self.start_time = time.time()
         self.kwargs = kwargs
 
     def __call__(self, _):
         """Print time elapsed from the previous iteration."""
         if self.iter % self.step == 0:
-            t = time.time()
-            self.time = t - self.base_time
+            current_time = time.time()
+
+            print(self.fmt.format(current_time - self.start_time),
+                  **self.kwargs)
 
             if not self.cumulative:
-                self.base_time = t
-
-            print(self.fmt.format(self.time), **self.kwargs)
+                self.start_time = current_time
 
         self.iter += 1
 
     def reset(self):
         """Set `time` to the current time."""
-        self.base_time = time.time()
-        self.time = 0
+        self.start_time = time.time()
         self.iter = 0
 
     def __repr__(self):
