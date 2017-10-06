@@ -14,7 +14,7 @@ import scipy.signal
 import odl
 from odl.oplib import DiscreteConvolution
 from odl.util.testutils import (
-    simple_fixture, noise_elements, all_almost_equal, noise_element)
+    simple_fixture, noise_elements, all_equal, all_almost_equal, noise_element)
 
 
 # --- pytest fixtures --- #
@@ -377,6 +377,27 @@ def test_dconv_2d(shape_2d, kernel_1d, conv_type, conv_impl, floating_dtype):
     out = conv.range.element()
     conv(inp, out=out)
     assert all_almost_equal(out, expected.astype(conv_res.dtype))
+
+
+def test_dconv_no_padding_out():
+    """Test special case of no padding with direct writing to out."""
+    rn = odl.rn((3, 4))
+    conv = DiscreteConvolution(rn, [[1, 1],
+                                    [1, 1]], impl='fft')
+    out = conv.range.element()
+    x = noise_element(conv.domain)
+    conv_x = conv(x)
+    conv(x, out=out)
+    assert all_equal(conv_x, out)
+
+    cn = odl.cn((3, 4))
+    conv = DiscreteConvolution(cn, [[1, 1],
+                                    [1, 1]], impl='fft')
+    out = conv.range.element()
+    x = noise_element(conv.domain)
+    conv_x = conv(x)
+    conv(x, out=out)
+    assert all_equal(conv_x, out)
 
 
 def test_dconv_kernel_caching():
