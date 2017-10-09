@@ -1035,7 +1035,11 @@ def proximal_convex_conj_l1(space, lam=1, g=None, isotropic=False):
             if g is not None:
                 diff = x - self.sigma * g
             else:
-                diff = x
+                if x is out:
+                    # Handle aliased data properly
+                    diff = x.copy()
+                else:
+                    diff = x
 
             if isotropic:
                 # Calculate |x| = pointwise 2-norm of x
