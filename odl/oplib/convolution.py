@@ -11,6 +11,7 @@
 from __future__ import division
 import numpy as np
 
+from odl.discr.lp_discr import DiscreteLpElement
 from odl.operator import Operator
 from odl.space import tensor_space
 from odl.space.base_tensors import TensorSpace, Tensor
@@ -19,7 +20,7 @@ from odl.trafos.backends import PYFFTW_AVAILABLE
 from odl.util import (
     is_real_dtype, is_floating_dtype, dtype_str, writable_array)
 
-__all__ = ('DiscreteConvolution',)
+__all__ = ('DiscreteConvolution', 'Convolution')
 
 
 class DiscreteConvolution(Operator):
@@ -729,6 +730,53 @@ def _prepare_for_fft(kernel, padded_shape, axes=None, variant='forward'):
         else:
             shifts.append(-((kernel.shape[ax] - 1) // 2))
     return np.roll(padded, shifts, axis=axes)
+
+
+class Convolution(Operator):
+
+    """Discretized continuous convolution."""
+
+    def __init__(self, domain, kernel, range=None, axis=None, impl='fft',
+                 **kwargs):
+
+        if isinstance(kernel, DiscreteLpElement):
+            min_above_mid = []
+            for v, mid in zip(kernel.space.grid.coord_vectors,
+                              kernel.space.partition.mid_pt):
+                min_above_mid.append(np.min(v[v >= mid]))
+
+            shift = min_above_mid - kernel.space.partition.mid_pt
+            atol = 1e-5 * np.min(kernel.space.grid.stride)
+            if np.allclose(shift, 0, atol=atol):
+                dconv_kernel = kernel
+            else:
+                # TODO: axes
+                weight_right = shift / kernel.space.grid.stride
+                weight_left = 1 - weight_right
+                print(weight_left)
+                print(weight_right)
+                dconv_kernel = np.prod(weight_left) * kernel
+                slc_lhs = [slice(None, -1)] * kernel.ndim
+                slc_rhs = [slice(1, None)] * kernel.ndim
+                dconv_kernel[slc_lhs] += (np.prod(weight_right) *
+                                          kernel[slc_rhs])
+
+        else:
+            dconv_kernel = kernel
+
+        self.__discr_conv = DiscreteConvolution(
+            domain, dconv_kernel, range, axis, impl, **kwargs)
+
+        super(Convolution, self).__init__(
+            self.discr_conv.domain, self.discr_conv.range, linear=True)
+
+    @property
+    def discr_conv(self):
+        """The discrete convolution used as backend."""
+        return self.__discr_conv
+
+    def _call(self, x, out=None):
+        return self.discr_conv(x, out)
 
 
 if __name__ == '__main__':
