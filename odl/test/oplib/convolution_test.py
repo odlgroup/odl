@@ -448,7 +448,7 @@ def test_dconv_adjoint(shape_2d, kernel_1d, conv_type, floating_dtype,
     dom_el = noise_element(conv.domain)
     ran_el = noise_element(conv.range)
     # Don't be too harsh when comparing
-    rtol = 2 * np.prod(shape_2d) * np.finfo(floating_dtype).resolution
+    rtol = 10 * np.prod(shape_2d) * np.finfo(floating_dtype).resolution
     assert (conv(dom_el).inner(ran_el) ==
             pytest.approx(dom_el.inner(conv.adjoint(ran_el)), rel=rtol))
 
