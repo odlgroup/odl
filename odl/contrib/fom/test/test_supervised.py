@@ -16,14 +16,45 @@ import scipy.misc
 import odl
 import odl.contrib.fom
 from odl.contrib.fom.util import filter_image_sep2d
-from odl.util.testutils import simple_fixture
+from odl.util.testutils import simple_fixture, noise_element
 
 fft_impl = simple_fixture('fft_impl',
                           [odl.util.testutils.never_skip('numpy'),
                            odl.util.testutils.skip_if_no_pyfftw('pyfftw')])
+
 space = simple_fixture('space',
                        [odl.rn(3),
-                        odl.uniform_discr(0, 1, 10)])
+                        odl.uniform_discr(0, 1, 10),
+                        odl.uniform_discr([0, 0], [1, 1], [5, 5])])
+
+scalar_fom = simple_fixture('FOM',
+                            [odl.contrib.fom.mean_squared_error,
+                             odl.contrib.fom.mean_absolute_error,
+                             odl.contrib.fom.mean_value_difference,
+                             odl.contrib.fom.standard_deviation_difference,
+                             odl.contrib.fom.range_difference,
+                             odl.contrib.fom.blurring,
+                             odl.contrib.fom.false_structures])
+
+
+def test_general(space, scalar_fom):
+    """Test general properties of FOMs."""
+    for name, ground_truth in space.examples:
+        ground_truth = np.abs(ground_truth)
+        scale = np.max(ground_truth) - np.min(ground_truth)
+        noise = scale * np.abs(noise_element(space))
+        data = ground_truth + noise
+
+        # Check that range is a real number
+        assert np.isscalar(scalar_fom(data, ground_truth))
+
+        # Check that FOM is minimal when ground truth is comared with itself
+        assert (scalar_fom(ground_truth, ground_truth) <=
+                scalar_fom(data, ground_truth))
+
+        # Check that FOM is monotonic wrt noise level
+        assert (scalar_fom(ground_truth + noise, ground_truth) <=
+                scalar_fom(ground_truth + 2 * noise, ground_truth))
 
 
 def filter_image(image, fh, fv):
