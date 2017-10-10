@@ -79,5 +79,16 @@ def test_psnr(space):
     assert result == pytest.approx(expected)
 
 
+def test_mean_value_difference_sign():
+    space = odl.uniform_discr(0, 1, 10)
+    I0 = space.one()
+    I1 = -I0.copy()
+    assert np.abs(odl.contrib.fom.mean_value_difference(I0, I1)) > 0.1
+    assert np.abs(odl.contrib.fom.mean_value_difference(I0, I1,
+                  normalized=True)) > 0.1
+
+
+
+
 if __name__ == '__main__':
     odl.util.test_file(__file__)
