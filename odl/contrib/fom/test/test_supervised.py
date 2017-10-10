@@ -132,7 +132,18 @@ def test_mean_value_difference_range_value(space):
     assert odl.contrib.fom.mean_value_difference(I0, I1) <= max(max0 - min1,
                                                 max1 - min0)
     assert pytest.approx(odl.contrib.fom.mean_value_difference(I0, I0)) == 0
-    assert odl.contrib.fom.mean_value_difference(10*I0, I0, normalized=True) <= 1.0
+    assert odl.contrib.fom.mean_value_difference(10*I0, I0,
+                                                 normalized=True) <= 1.0
+
+
+def test_standard_deviation_difference_range_value(space):
+    I0 = space.element(np.random.normal(0, 1, size=space.shape))
+    const=np.random.normal(0, 10)
+
+    assert pytest.approx(odl.contrib.fom.standard_deviation_difference(I0, I0)) == 0
+    assert odl.contrib.fom.standard_deviation_difference(10*I0, I0,
+                                                 normalized=True) <= 1.0
+    assert pytest.approx(odl.contrib.fom.standard_deviation_difference(I0, I0+ const)) == 0
 
 
 
