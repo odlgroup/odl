@@ -530,7 +530,7 @@ def ssim(data, ground_truth,
     return np.mean(pointwise_ssim)
 
 
-def psnr(data, ground_truth, normalized=False):
+def psnr(data, ground_truth, use_zscore=False, force_lower_is_better=False):
     """Return the Peak Signal-to-Noise Ratio of ``data`` wrt ``ground_truth``.
 
     See also `this Wikipedia article
@@ -542,9 +542,12 @@ def psnr(data, ground_truth, normalized=False):
         Input data to compare to the ground truth.
     ground_truth : `Tensor`
         Reference to compare ``data`` to.
-    normalized : bool
-        If true, normalize ``data`` and ``ground_truth`` to have the
-        same mean and variance before comparison.
+    use_zscore : bool
+        If true, normalize ``data`` and ``ground_truth`` to have zero mean and
+        unit variance before comparison.
+    force_lower_is_better : bool
+        If true, then lower value indicates better fit. In this case the output
+        is negated
 
     Returns
     -------
@@ -567,14 +570,14 @@ def psnr(data, ground_truth, normalized=False):
     >>> psnr(ground_truth, ground_truth)
     inf
 
-    With ``normalized=True``, scaling differences and constant offsets
+    With ``use_zscore=True``, scaling differences and constant offsets
     are ignored:
 
-    >>> (psnr(data, ground_truth, normalized=True) ==
-    ...  psnr(data, 3 + 4 * ground_truth, normalized=True))
+    >>> (psnr(data, ground_truth, use_zscore=True) ==
+    ...  psnr(data, 3 + 4 * ground_truth, use_zscore=True))
     True
     """
-    if normalized:
+    if use_zscore:
         data = odl.util.zscore(data)
         ground_truth = odl.util.zscore(ground_truth)
 
@@ -582,11 +585,16 @@ def psnr(data, ground_truth, normalized=False):
     max_true = np.max(np.abs(ground_truth))
 
     if mse == 0:
-        return np.inf
+        result = np.inf
     elif max_true == 0:
-        return -np.inf
+        result = -np.inf
     else:
-        return 20 * np.log10(max_true) - 10 * np.log10(mse)
+        result = 20 * np.log10(max_true) - 10 * np.log10(mse)
+
+    if force_lower_is_better:
+        return -result
+    else:
+        return result
 
 
 def haarpsi(data, ground_truth, a=4.2, c=None):
