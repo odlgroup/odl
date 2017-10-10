@@ -13,6 +13,7 @@ fft_impl = simple_fixture('fft_impl',
 
 space = simple_fixture('space',
                        [odl.rn(3),
+                        odl.rn(3, dtype='float32'),
                         odl.uniform_discr(0, 1, 10),
                         odl.uniform_discr([0, 0], [1, 1], [5, 5])])
 
@@ -87,16 +88,31 @@ def test_mean_absolute_error(space):
 
 
 def test_psnr(space):
+    """Test the ``psnr`` fom."""
     true = odl.phantom.white_noise(space)
     data = odl.phantom.white_noise(space)
 
-    result = odl.contrib.fom.psnr(data, true)
-
+    # Compute the true value
     mse = np.mean((true - data) ** 2)
     maxi = np.max(np.abs(true))
     expected = 10 * np.log10(maxi**2 / mse)
 
+    # Test regular call
+    result = odl.contrib.fom.psnr(data, true)
     assert result == pytest.approx(expected)
+
+    # Test with force_lower_is_better giving negative of expected
+    result = odl.contrib.fom.psnr(data, true,
+                                  force_lower_is_better=True)
+    assert result == pytest.approx(-expected)
+
+    # Test with Z-score that result is independent of affine transformation
+    result = odl.contrib.fom.psnr(data * 3.7 + 1.234, true,
+                                  use_zscore=True)
+    expected = odl.contrib.fom.psnr(data, true,
+                                    use_zscore=True)
+    assert result == pytest.approx(expected)
+
 
 
 if __name__ == '__main__':
