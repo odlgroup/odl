@@ -251,12 +251,17 @@ def standard_deviation_difference(data, ground_truth, mask=None,
     data_mean = data.inner(data.space.one()) / vol
     ground_truth_mean = ground_truth.inner(ground_truth.space.one()) / vol
 
-    fom = np.abs((l2_norm(data - data_mean) -
-                  l2_norm(ground_truth - ground_truth_mean)))
+    deviation_data = l2_norm(data - data_mean)
+    deviation_ground_truth = l2_norm(ground_truth - ground_truth_mean)
+    fom = np.abs(deviation_data - deviation_ground_truth)
 
     if normalized:
-        fom /= (l2_norm(data - data_mean) +
-                l2_norm(ground_truth - ground_truth_mean))
+        sum_deviation = deviation_data + deviation_ground_truth
+        fom /=  sum_deviation
+        if np.isnan(fom):
+            fom = 0
+
+
 
     return fom
 
