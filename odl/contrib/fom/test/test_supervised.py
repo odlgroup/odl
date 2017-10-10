@@ -154,14 +154,16 @@ def test_mean_value_difference_range_value(space):
 
 def test_standard_deviation_difference_range_value(space):
     I0 = space.element(np.random.normal(0, 1, size=space.shape))
-    const=np.random.normal(0, 10)
+    const = np.random.normal(0, 10)
 
-    assert pytest.approx(odl.contrib.fom.standard_deviation_difference(I0, I0)) == 0
+    assert pytest.approx(odl.contrib.fom.standard_deviation_difference(
+            I0, I0)) == 0
     assert odl.contrib.fom.standard_deviation_difference(10*I0, I0,
-                                                 normalized=True) <= 1.0
-    assert pytest.approx(odl.contrib.fom.standard_deviation_difference(I0, I0+ const)) == 0
+            normalized=True) <= 1.0
+    assert pytest.approx(odl.contrib.fom.standard_deviation_difference(
+            I0, I0 + const)) == 0
     test_value = odl.contrib.fom.standard_deviation_difference(
-            space.one(),space.zero(), normalized=True)
+            space.one(), space.zero(), normalized=True)
     assert pytest.approx(test_value) == 0
 
 def test_range_difference(space):
