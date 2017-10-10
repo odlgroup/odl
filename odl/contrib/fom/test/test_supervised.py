@@ -106,6 +106,22 @@ def test_standard_deviation_difference_range_value(space):
             space.one(),space.zero(), normalized=True)
     assert pytest.approx(test_value) == 0
 
+def test_range_difference(space):
+    I0 = space.element(np.random.normal(0, 1, size=space.shape))
+    I1 = space.element(np.random.normal(0, 1, size=space.shape))
+    const = np.random.normal(0, 10)
+
+    assert pytest.approx(odl.contrib.fom.range_difference(
+            I0, I0)) == 0
+    assert pytest.approx(odl.contrib.fom.range_difference(
+            I0 + const, I0)) == 0
+    aconst=np.abs(const)
+    eval0=aconst * odl.contrib.fom.range_difference(I0, I1)
+    eval1=odl.contrib.fom.range_difference(aconst*I0, aconst*I1)
+    assert pytest.approx(eval0) == pytest.approx(eval1)
+
+
+
 
 if __name__ == '__main__':
     odl.util.test_file(__file__)
