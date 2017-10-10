@@ -132,7 +132,8 @@ def mean_absolute_error(data, ground_truth, mask=None, normalized=False):
     return fom
 
 
-def mean_value_difference(data, ground_truth, mask=None, normalized=False):
+def mean_value_difference(data, ground_truth, mask=None, normalized=False,
+                          force_lower_is_better=False):
     """Return difference in mean value between ``data`` and ``ground_truth``.
 
     Parameters
@@ -189,11 +190,12 @@ def mean_value_difference(data, ground_truth, mask=None, normalized=False):
     if normalized:
         fom /= (np.abs(data_mean) + np.abs(ground_truth_mean))
 
+
     return fom
 
 
 def standard_deviation_difference(data, ground_truth, mask=None,
-                                  normalized=False):
+                                  normalized=False, force_lower_is_better=False):
     """Return absolute difference in std between ``data`` and ``ground_truth``.
 
     Parameters
