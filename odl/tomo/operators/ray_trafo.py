@@ -361,6 +361,14 @@ class RayTransform(RayTransformBase):
             are stored. That may be prohibitive in 3D.
             Default: True
 
+        Examples
+        --------
+        Create a ray transform for a parallel beam geometry in 2d:
+
+        >>> space = odl.uniform_discr([-1, -1], [1, 1], [128, 128])
+        >>> geometry = odl.tomo.parallel_beam_geometry(space)
+        >>> ray_transform = odl.tomo.RayTransform(space, geometry)
+
         Notes
         -----
         The ASTRA backend is faster if data is given with ``dtype`` 'float32'
@@ -466,6 +474,14 @@ class RayBackProjection(RayTransformBase):
             and on the CPU, since a full volume and a projection dataset
             are stored. That may be prohibitive in 3D.
             Default: True
+
+        Examples
+        --------
+        Create a back-projection for a parallel beam geometry in 2d:
+
+        >>> space = odl.uniform_discr([-1, -1], [1, 1], [128, 128])
+        >>> geometry = odl.tomo.parallel_beam_geometry(space)
+        >>> back_projection = odl.tomo.RayBackProjection(space, geometry)
 
         Notes
         -----
