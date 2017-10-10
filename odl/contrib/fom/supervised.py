@@ -466,8 +466,9 @@ def false_structures_mask(foreground, smoothness_factor=None):
     return space.element(result)
 
 
-def ssim(data, ground_truth,
-         size=11, sigma=1.5, K1=0.01, K2=0.03, dynamic_range=None):
+# TODO Add details on the computation in the docstring.
+def ssim(data, ground_truth, size=11, sigma=1.5, K1=0.01, K2=0.03,
+         dynamic_range=None, normalized=False, force_lower_is_better=False):
     """Structural SIMilarity between ``data`` and ``ground_truth``.
 
     The SSIM takes value -1 for maximum dissimilarity and +1 for maximum
@@ -482,20 +483,41 @@ def ssim(data, ground_truth,
         Input data to compare to the ground truth.
     ground_truth : `Tensor`
         Reference to compare ``data`` to.
-    size : odd int
+    size : odd int, optional
         Size in elements per axis of the Gaussian window that is used
         for all smoothing operations.
-    sigma : positive float
+    sigma : positive float, optional
         Width of the Gaussian function used for smoothing.
-    K1, K2 : positive float
-        TODO
-    dynamic_range : nonnegative float
-        TODO
+    K1, K2 : positive float, optional
+        Small constants to stabilize the result. See [Wan+2004] for details.
+    dynamic_range : nonnegative float, optional
+        Difference between the maximum and minimum value that the pixels
+        can attain. Use 255 if pixel range is :math:`[0, 255]` and 1 if
+        it is :math:`[0, 1]`. Default: `None`, obtain maximum and minimum
+        from the ground truth.
+    normalized  : bool, optional
+        Boolean flag to switch between unormalized and normalized FOM.
+        See `Notes` for details.
+    force_lower_is_better : bool, optional
+        Boolean flag which enforces that lower values correspond to better
+        matches by returning the negative of the (possibly normalized) SSIM.
 
     Returns
     -------
     ssim : float
         FOM value, where a higher value means a better match.
+
+    Notes
+    -----
+    The unnormalized values are in the interval :math:`[-1, 1]`, where 1
+    corresponds to a perfect match. The normalized values are obtained by
+    adding 1 and dividing by 2.
+
+    References
+    ----------
+    [Wan+2004] Wang, Z, Bovik, AC, Sheikh, HR, and Simoncelli, EP.
+    *Image Quality Assessment: From Error Visibility to Structural Similarity*.
+    IEEE Transactions on Image Processing, 13.4 (2004), pp 600--612.
     """
     from scipy.signal import fftconvolve
 
@@ -533,7 +555,15 @@ def ssim(data, ground_truth,
     denom = (mu1_sq + mu2_sq + C1) * (sigma1_sq + sigma2_sq + C2)
     pointwise_ssim = num / denom
 
-    return np.mean(pointwise_ssim)
+    result = np.mean(pointwise_ssim)
+
+    if normalized:
+        result = (result + 1.0)/2.0
+
+    if force_lower_is_better:
+        result = -result
+
+    return result
 
 
 def psnr(data, ground_truth, use_zscore=False, force_lower_is_better=False):
