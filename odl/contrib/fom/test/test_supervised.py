@@ -135,6 +135,23 @@ def test_psnr(space):
     assert result == pytest.approx(expected)
 
 
+def test_ssim(space):
+    ground_truth = odl.phantom.white_noise(space)
+
+    # SSIM of true image should be one.
+    result = odl.contrib.fom.ssim(ground_truth, ground_truth)
+    assert pytest.approx(result) == 1
+
+    # SSIM with ground truth zero should always give zero.
+    data = odl.phantom.white_noise(space)
+    result = odl.contrib.fom.ssim(data, space.zero())
+    assert pytest.approx(result) == 0
+
+    # SSIM should be symmetric if the dynamic range is set explicitly.
+    result1 = odl.contrib.fom.ssim(data, ground_truth, dynamic_range=1)
+    result2 = odl.contrib.fom.ssim(ground_truth, data, dynamic_range=1)
+    assert pytest.approx(result1) == result2
+
 
 if __name__ == '__main__':
     odl.util.test_file(__file__)

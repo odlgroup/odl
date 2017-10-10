@@ -510,6 +510,7 @@ def ssim(data, ground_truth,
     window /= np.sum(window)
 
     def smoothen(img):
+        """Smoothes an image by convolving with a window function."""
         return fftconvolve(window, img, mode='valid')
 
     if dynamic_range is None:
@@ -528,9 +529,9 @@ def ssim(data, ground_truth,
     sigma2_sq = smoothen(ground_truth * ground_truth) - mu2_sq
     sigma12 = smoothen(data * ground_truth) - mu1_mu2
 
-    nom = (2 * mu1_mu2 + C1) * (2 * sigma12 + C2)
+    num = (2 * mu1_mu2 + C1) * (2 * sigma12 + C2)
     denom = (mu1_sq + mu2_sq + C1) * (sigma1_sq + sigma2_sq + C2)
-    pointwise_ssim = nom / denom
+    pointwise_ssim = num / denom
 
     return np.mean(pointwise_ssim)
 
