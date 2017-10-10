@@ -9,9 +9,13 @@ space = simple_fixture('space',
                         odl.uniform_discr([0, 0], [1, 1], [9, 11]),
                         odl.uniform_discr(0, 1, 10)])
 
-def test_optimal_parameters(space):
+fom = simple_fixture('fom',
+                     [odl.contrib.fom.mean_squared_error,
+                      odl.contrib.fom.mean_absolute_error])
+
+def test_optimal_parameters_one_parameter(space, fom):
     """Tests if optimal_parameters works for some simple examples."""
-    fom = odl.contrib.fom.mean_squared_error
+#    fom = odl.contrib.fom.mean_squared_error
     mynoise = odl.phantom.white_noise(space)
     phantoms = [mynoise]
     data = [mynoise]
@@ -22,7 +26,7 @@ def test_optimal_parameters(space):
 
     result = odl.contrib.param_opt.optimal_parameters(reconstruction, fom,
                                                       phantoms, data, 1)
-    assert result == pytest.approx(0)
+    assert result == pytest.approx(0, abs=1e-4)
 
 
 if __name__ == '__main__':
