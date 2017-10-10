@@ -102,7 +102,9 @@ def test_standard_deviation_difference_range_value(space):
     assert odl.contrib.fom.standard_deviation_difference(10*I0, I0,
                                                  normalized=True) <= 1.0
     assert pytest.approx(odl.contrib.fom.standard_deviation_difference(I0, I0+ const)) == 0
-
+    test_value = odl.contrib.fom.standard_deviation_difference(
+            space.one(),space.zero(), normalized=True)
+    assert pytest.approx(test_value) == 0
 
 
 if __name__ == '__main__':
