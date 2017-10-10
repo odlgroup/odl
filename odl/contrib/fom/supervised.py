@@ -155,13 +155,13 @@ def mean_value_difference(data, ground_truth, mask=None, normalized=False):
 
     .. math::
          \mathrm{MVD}(f, g) =
-         \\Big| |\\overline{f}| - |\\overline{g}| \\Big|,
+         \\Big| \\overline{f} - \\overline{g} \\Big|,
 
     or, in normalized form
 
     .. math::
          \mathrm{MVD_N}(f, g) =
-         \\frac{\\Big| |\\overline{f}| - |\\overline{g}| \\Big|}
+         \\frac{\\Big| \\overline{f} - \\overline{g} \\Big|}
                {\\Big| |\\overline{f}| + |\\overline{g}| \\Big|}
 
     where :math:`\\overline{f}` is the mean value of :math:`f`,
@@ -182,7 +182,7 @@ def mean_value_difference(data, ground_truth, mask=None, normalized=False):
     data_mean = data.inner(data.space.one()) / vol
     ground_truth_mean = ground_truth.inner(ground_truth.space.one()) / vol
 
-    fom = np.abs(np.abs(data_mean) - np.abs(ground_truth_mean))
+    fom = np.abs(data_mean - ground_truth_mean)
 
     if normalized:
         fom /= (np.abs(data_mean) + np.abs(ground_truth_mean))
