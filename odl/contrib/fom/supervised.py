@@ -17,7 +17,8 @@ __all__ = ('mean_squared_error', 'mean_absolute_error',
            'psnr', 'haarpsi', 'noise_power_spectrum')
 
 
-def mean_squared_error(data, ground_truth, mask=None, normalized=False):
+def mean_squared_error(data, ground_truth, mask=None,
+                       normalized=False, force_lower_is_better=False):
     """Return mean squared L2 distance between ``data`` and ``ground_truth``.
 
     See also `this Wikipedia article
@@ -30,9 +31,14 @@ def mean_squared_error(data, ground_truth, mask=None, normalized=False):
     ground_truth : `FnBaseVector`
         Reference to compare ``data`` to.
     mask : `array-like`, optional
-        If given, ``data * mask`` is compared to ``ground_truth * mask``.
+        If given, ``data * mask`` is compared to ``ground_truth * mask``,
+        where multiplication is pointwise.
     normalized  : bool, optional
         Boolean flag to switch between unormalized and normalized FOM.
+        See `Notes` for details.
+    force_lower_is_better : bool, optional
+        Boolean flag which enforces that lower values correspond to better
+        matches.
 
     Returns
     -------
@@ -72,10 +78,15 @@ def mean_squared_error(data, ground_truth, mask=None, normalized=False):
     else:
         fom /= l2norm_squared(data.space.one())
 
+    # The mean squared error is already in the desired order.
+    if force_lower_is_better:
+        pass
+
     return fom
 
 
-def mean_absolute_error(data, ground_truth, mask=None, normalized=False):
+def mean_absolute_error(data, ground_truth, mask=None,
+                        normalized=False, force_lower_is_better=False):
     """Return L1-distance between ``data`` and ``ground_truth``.
 
     See also `this Wikipedia article
@@ -88,9 +99,14 @@ def mean_absolute_error(data, ground_truth, mask=None, normalized=False):
     ground_truth : `FnBaseVector`
         Reference to compare ``data`` to.
     mask : `array-like`, optional
-        If given, ``data * mask`` is compared to ``ground_truth * mask``.
+        If given, ``data * mask`` is compared to ``ground_truth * mask``,
+        where multiplication is pointwise.
     normalized  : bool, optional
         Boolean flag to switch between unormalized and normalized FOM.
+        See `Notes` for details.
+    force_lower_is_better : bool, optional
+        Boolean flag which enforces that lower values correspond to better
+        matches.
 
     Returns
     -------
@@ -126,6 +142,10 @@ def mean_absolute_error(data, ground_truth, mask=None, normalized=False):
         fom /= (l1_norm(data) + l1_norm(ground_truth))
     else:
         fom /= l1_norm(data.space.one())
+
+    # The mean absolute error is already in the desired order.
+    if force_lower_is_better:
+        pass
 
     return fom
 
