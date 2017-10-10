@@ -238,7 +238,5 @@ def test_range_difference(space):
     assert pytest.approx(eval0) == pytest.approx(eval1)
 
 
-
-
 if __name__ == '__main__':
     odl.util.test_file(__file__)
