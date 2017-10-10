@@ -23,8 +23,7 @@ scalar_fom = simple_fixture('FOM',
                              odl.contrib.fom.mean_value_difference,
                              odl.contrib.fom.standard_deviation_difference,
                              odl.contrib.fom.range_difference,
-                             odl.contrib.fom.blurring,
-                             odl.contrib.fom.false_structures])
+                             odl.contrib.fom.blurring])
 
 
 def test_general(space, scalar_fom):
@@ -89,8 +88,19 @@ def test_mean_absolute_error(space):
 
 def test_psnr(space):
     """Test the ``psnr`` fom."""
+
     true = odl.phantom.white_noise(space)
     data = odl.phantom.white_noise(space)
+    zero = space.zero()
+
+    # Test psnr of image with itself is infinity
+    assert odl.contrib.fom.psnr(true, true) == np.inf
+
+    # Test psnr with both constants is infinity
+    assert odl.contrib.fom.psnr(zero, zero) == np.inf
+
+    # Test psnr with ground truth constant is negative infinity
+    assert odl.contrib.fom.psnr(data, zero) == -np.inf
 
     # Compute the true value
     mse = np.mean((true - data) ** 2)

@@ -13,8 +13,8 @@ import numpy as np
 
 __all__ = ('mean_squared_error', 'mean_absolute_error',
            'mean_value_difference', 'standard_deviation_difference',
-           'range_difference', 'blurring', 'false_structures', 'ssim', 'psnr',
-           'haarpsi', 'noise_power_spectrum')
+           'range_difference', 'blurring', 'false_structures_mask', 'ssim',
+           'psnr', 'haarpsi', 'noise_power_spectrum')
 
 
 def mean_squared_error(data, ground_truth, mask=None, normalized=False):
@@ -394,67 +394,54 @@ def blurring(data, ground_truth, mask=None, normalized=False,
     return mean_squared_error(data, ground_truth, mask, normalized)
 
 
-def false_structures(data, ground_truth, mask=None, normalized=False,
-                     smoothness_factor=None):
-    """Return weighted L2 distance, de-emphasizing regions defined by ``mask``.
-
-    .. note::
-        If the mask argument is omitted, this FOM is equivalent to the
-        mean squared error.
+def false_structures_mask(foreground, smoothness_factor=None):
+    """Return mask empasizing areas outside ``foreground``.
 
     Parameters
     ----------
-    data : `FnBaseVector`
-        Input data to compare to the ground truth.
-    ground_truth : `FnBaseVector`
-        Reference to compare ``data`` to.
-    mask : `array-like`, optional
-        Binary mask to define ROI in which FOM evaluation is performed.
-    normalized  : bool, optional
-        Boolean flag to switch between unormalized and normalized FOM.
+    foreground : `FnBaseVector`
+        The region that should be de-emphasised
     smoothness_factor : float, optional
-        Positive real number. Higher value gives smoother weighting.
+        Positive real number. Higher value gives smoother transition
+        between foreground and its complement.
 
     Returns
     -------
-    fs : float
-        FOM value, where a lower value means a better match.
+    result : `FnBaseVector`
+         Euclidean distances of elements in ``foreground``.
+
+    Examples
+    --------
+    >>> space = odl.uniform_discr(0, 1, 5)
+    >>> foreground = space.element([0, 0, 1.0, 0, 0])
+    >>> mask = false_structures_mask(foreground)
+    >>> np.asarray(mask)
+    array([ 0.4,  0.2,  0. ,  0.2,  0.4])
+
+    Raises
+    ------
+    ValueError
+        If foreground is all zero or contains values not in {0, 1}.
 
     Notes
     -----
-    The FOM evaluates
+    This helper function computes the euclidean distance transform from each
+    point in ``foreground.space`` to ``foreground``.
 
-    .. math::
-        \mathrm{FS} = \\big \| \\alpha^{-1} (f - g) \\big \|^2_2,
-
-    or, in normalized form
-
-    .. math::
-        \mathrm{FS_N} = \\frac{\\big \| \\alpha^{-1}(f - g)\\big \|^2_2}
-                              {\\big \| \\alpha^{-1} f \\big \|^2_2 +
-                               \\big \| \\alpha^{-1} g \\big \|^2_2}.
-
-    The weighting function :math:`\\alpha` is given as
-
-    .. math::
-        \\alpha(x) = e^{-\\frac{1}{k} \\beta_m(x)},
-
-    where :math:`\\beta_m(x)` is the Euclidian distance transform of a
-    given binary mask :math:`m`, and :math:`k` positive real number that
-    controls the smoothness of the weighting function :math:`\\alpha`.
-    The weighting gives higher values to structures outside the region
-    of interest defined by the mask.
+    The weighting gives higher values to structures outside the foreground
+    as defined by the mask.
     """
     from scipy.ndimage.morphology import distance_transform_edt
+    space = foreground.space
 
-    if smoothness_factor is None:
-        smoothness_factor = np.mean(data.space.shape) / 10
+    unique = np.unique(foreground)
+    if not np.array_equiv(unique, [0., 1.]):
+        raise ValueError('`foreground` contains values not in [0, 1] or has '
+                          'no true values {!r}'.format(unique))
 
-    if mask is not None:
-        mask = distance_transform_edt(1 - mask)
-        mask = np.exp(mask / smoothness_factor)
-
-    return mean_squared_error(data, ground_truth, mask, normalized)
+    result = distance_transform_edt(1.0 - foreground,
+                                    sampling=space.cell_sides)
+    return space.element(result)
 
 
 def ssim(data, ground_truth,
