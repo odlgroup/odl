@@ -130,7 +130,8 @@ def mean_absolute_error(data, ground_truth, mask=None, normalized=False):
     return fom
 
 
-def mean_value_difference(data, ground_truth, mask=None, normalized=False):
+def mean_value_difference(data, ground_truth, mask=None, normalized=False,
+                          force_lower_is_better=False):
     """Return difference in mean value between ``data`` and ``ground_truth``.
 
     Parameters
@@ -155,13 +156,13 @@ def mean_value_difference(data, ground_truth, mask=None, normalized=False):
 
     .. math::
          \mathrm{MVD}(f, g) =
-         \\Big| |\\overline{f}| - |\\overline{g}| \\Big|,
+         \\Big| \\overline{f} - \\overline{g} \\Big|,
 
     or, in normalized form
 
     .. math::
          \mathrm{MVD_N}(f, g) =
-         \\frac{\\Big| |\\overline{f}| - |\\overline{g}| \\Big|}
+         \\frac{\\Big| \\overline{f} - \\overline{g} \\Big|}
                {\\Big| |\\overline{f}| + |\\overline{g}| \\Big|}
 
     where :math:`\\overline{f}` is the mean value of :math:`f`,
@@ -182,16 +183,17 @@ def mean_value_difference(data, ground_truth, mask=None, normalized=False):
     data_mean = data.inner(data.space.one()) / vol
     ground_truth_mean = ground_truth.inner(ground_truth.space.one()) / vol
 
-    fom = np.abs(np.abs(data_mean) - np.abs(ground_truth_mean))
+    fom = np.abs(data_mean - ground_truth_mean)
 
     if normalized:
         fom /= (np.abs(data_mean) + np.abs(ground_truth_mean))
+
 
     return fom
 
 
 def standard_deviation_difference(data, ground_truth, mask=None,
-                                  normalized=False):
+                                  normalized=False, force_lower_is_better=False):
     """Return absolute difference in std between ``data`` and ``ground_truth``.
 
     Parameters
@@ -247,12 +249,17 @@ def standard_deviation_difference(data, ground_truth, mask=None,
     data_mean = data.inner(data.space.one()) / vol
     ground_truth_mean = ground_truth.inner(ground_truth.space.one()) / vol
 
-    fom = np.abs((l2_norm(data - data_mean) -
-                  l2_norm(ground_truth - ground_truth_mean)))
+    deviation_data = l2_norm(data - data_mean)
+    deviation_ground_truth = l2_norm(ground_truth - ground_truth_mean)
+    fom = np.abs(deviation_data - deviation_ground_truth)
 
     if normalized:
-        fom /= (l2_norm(data - data_mean) +
-                l2_norm(ground_truth - ground_truth_mean))
+        sum_deviation = deviation_data + deviation_ground_truth
+        fom /=  sum_deviation
+        if np.isnan(fom):
+            fom = 0
+
+
 
     return fom
 
