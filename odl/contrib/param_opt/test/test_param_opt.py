@@ -25,10 +25,9 @@ fom = simple_fixture('fom',
 
 def test_optimal_parameters_one_parameter(space, fom):
     """Tests if optimal_parameters works for some simple examples."""
-#    fom = odl.contrib.fom.mean_squared_error
-    mynoise = odl.phantom.white_noise(space)
-    phantoms = [mynoise]
-    data = [mynoise]
+    mynoise = [odl.phantom.white_noise(space) for _ in range(2)]
+    phantoms = mynoise.copy()
+    data = mynoise.copy()
 
     def reconstruction(data, lam):
         """Perturbs the data by adding lam to it."""
@@ -41,10 +40,9 @@ def test_optimal_parameters_one_parameter(space, fom):
 
 def test_optimal_parameters_two_parameters(space, fom):
     """Tests if optimal_parameters works for some simple examples."""
-#    fom = odl.contrib.fom.mean_squared_error
-    mynoise = odl.phantom.white_noise(space)
-    phantoms = [mynoise]
-    data = [mynoise]
+    mynoise = [odl.phantom.white_noise(space) for _ in range(2)]
+    phantoms = mynoise.copy()
+    data = mynoise.copy()
 
     def reconstruction1(data, params):
         """Perturbs the data by adding the sum of squares of params to it."""
