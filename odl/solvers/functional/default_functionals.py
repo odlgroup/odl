@@ -14,7 +14,8 @@ from __future__ import print_function, division, absolute_import
 import numpy as np
 from numbers import Integral
 
-from odl.solvers.functional.functional import Functional
+from odl.solvers.functional.functional import (Functional,
+                                               FunctionalQuadraticPerturb)
 from odl.space import ProductSpace
 from odl.operator import (Operator, ConstantOperator, ZeroOperator,
                           ScalingOperator, DiagonalOperator, PointwiseNorm)
@@ -35,7 +36,7 @@ __all__ = ('LpNorm', 'L1Norm', 'L2Norm', 'L2NormSquared',
            'QuadraticForm',
            'NuclearNorm', 'IndicatorNuclearNormUnitBall',
            'ScalingFunctional', 'IdentityFunctional',
-           'MoreauEnvelope')
+           'MoreauEnvelope', 'HuberL1L2')
 
 
 class LpNorm(Functional):
@@ -2290,6 +2291,82 @@ https://web.stanford.edu/~boyd/papers/pdf/prox_algs.pdf
         """The gradient operator."""
         return (ScalingOperator(self.domain, 1 / self.sigma) -
                 (1 / self.sigma) * self.functional.proximal(self.sigma))
+
+
+class HuberL1L2(Functional):
+    """The functional corresponding to the Huberized L1-norm."""
+
+    def __init__(self, space, gamma):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        space : `DiscreteLp` or `FnBase`
+            Domain of the functional.
+        gamma : float
+            Smoothing parameter of Huberization. If gamma = 0, then functional
+            is non-smooth corresponds to the usual L1 norm. For gamma > 0, it
+            has a 1/gamma-Lipschitz gradient so that its convex conjugate is
+            gamma-strongly convex.
+
+        Examples
+        --------
+
+        Compare HuberL1 and L1 for vanishing smoothing gamma=0
+
+        >>> import odl
+        >>> X = odl.uniform_discr([0, 0], [1, 1], [5, 5])
+        >>> x = odl.phantom.white_noise(X)
+        >>> alpha = 2
+        >>> gamma = 0
+        >>> H = alpha * odl.solvers.HuberL1L2(X, gamma)
+        >>> L1 = alpha * odl.solvers.GroupL1Norm(X, 2)
+        >>> abs(H(x) - L1(x)) < 1e-10
+        """
+        self.gamma = float(gamma)
+        self.strong_convexity = 0
+
+        if self.gamma > 0:
+            grad_lipschitz = 1 / self.gamma
+        else:
+            grad_lipschitz = np.inf
+
+        super().__init__(space=space, linear=False,
+                         grad_lipschitz=grad_lipschitz)
+
+    def _call(self, x):
+        '''Return the HuberL1-norm of ``x``.'''
+
+        n = PointwiseNorm(self.domain, 2)(x)
+
+        if self.gamma > 0:
+            i = n.ufuncs.less(self.gamma)
+            n = (i * (1 / (2 * self.gamma) * n**2 + self.gamma / 2)
+                 + i.ufuncs.logical_not() * n)
+
+        return n.inner(n.space.one())
+
+    @property
+    def convex_conj(self):
+        '''The convex conjugate'''
+        return FunctionalQuadraticPerturb(GroupL1Norm(self.domain,
+                                                      2).convex_conj,
+                                          quadratic_coeff=self.gamma / 2)
+
+    @property
+    def proximal(self):
+        '''The proximal operator'''
+        raise NotImplementedError('Not yet implement. To be done.')
+
+    @property
+    def gradient(self):
+        '''Gradient operator of the functional.'''
+        raise NotImplementedError('Not yet implement. To be done.')
+
+    def __repr__(self):
+        '''Return ``repr(self)``.'''
+        return '{}({!r}, {!r})'.format(self.__class__.__name__, self.domain,
+                                       self.gamma)
 
 
 if __name__ == '__main__':
