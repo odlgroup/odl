@@ -2341,8 +2341,8 @@ class HuberL1L2(Functional):
 
         if self.gamma > 0:
             i = n.ufuncs.less(self.gamma)
-            n = (i * (1 / (2 * self.gamma) * n**2 + self.gamma / 2)
-                 + i.ufuncs.logical_not() * n)
+            n = (i * (1 / (2 * self.gamma) * n**2 + self.gamma / 2) +
+                 i.ufuncs.logical_not() * n)
 
         return n.inner(n.space.one())
 
