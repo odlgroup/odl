@@ -36,12 +36,13 @@ def mean_squared_error(data, ground_truth, mask=None,
         If given, ``data * mask`` is compared to ``ground_truth * mask``,
         where multiplication is pointwise.
     normalized  : bool, optional
-        Boolean flag to switch between unormalized and normalized FOM.
-        See `Notes` for details.
+        If ``True``, the output values are mapped to the interval
+        :math:`[0, 1]` (see `Notes` for details), otherwise return the
+        original mean squared error.
     force_lower_is_better : bool, optional
-        Boolean flag which enforces that lower values correspond to better
-        matches.
-
+        If ``True``, it is ensured that lower values correspond to better
+        matches. For the mean squared error, this is already the case, and
+        the flag is only present for compatibility to other figures of merit.
     Returns
     -------
     mse : float
@@ -81,8 +82,8 @@ def mean_squared_error(data, ground_truth, mask=None,
         fom /= l2norm_squared(data.space.one())
 
     # The mean squared error is already in the desired order.
-    if force_lower_is_better:
-        pass
+    # The output does not need to be changed depending on the
+    # force_lower_is_better flag.
 
     return fom
 
@@ -104,11 +105,13 @@ def mean_absolute_error(data, ground_truth, mask=None,
         If given, ``data * mask`` is compared to ``ground_truth * mask``,
         where multiplication is pointwise.
     normalized  : bool, optional
-        Boolean flag to switch between unormalized and normalized FOM.
-        See `Notes` for details.
+        If ``True``, the output values are mapped to the interval
+        :math:`[0, 1]` (see `Notes` for details), otherwise return the
+        original mean absolute error.
     force_lower_is_better : bool, optional
-        Boolean flag which enforces that lower values correspond to better
-        matches.
+        If ``True``, it is ensured that lower values correspond to better
+        matches. For the mean absolute error, this is already the case, and
+        the flag is only present for compatibility to other figures of merit.
 
     Returns
     -------
@@ -146,8 +149,8 @@ def mean_absolute_error(data, ground_truth, mask=None,
         fom /= l1_norm(data.space.one())
 
     # The mean absolute error is already in the desired order.
-    if force_lower_is_better:
-        pass
+    # The output does not need to be changed depending on the
+    # force_lower_is_better flag.
 
     return fom
 
@@ -496,16 +499,22 @@ def ssim(data, ground_truth, size=11, sigma=1.5, K1=0.01, K2=0.03,
         it is :math:`[0, 1]`. Default: `None`, obtain maximum and minimum
         from the ground truth.
     normalized  : bool, optional
-        Boolean flag to switch between unormalized and normalized FOM.
-        See `Notes` for details.
+        If ``True``, the output values are mapped to the interval
+        :math:`[0, 1]` (see `Notes` for details), otherwise return the
+        original SSIM.
     force_lower_is_better : bool, optional
-        Boolean flag which enforces that lower values correspond to better
-        matches by returning the negative of the (possibly normalized) SSIM.
+        If ``True``, it is ensured that lower values correspond to better
+        matches by returning the negative of the SSIM, otherwise the (possibly
+        normalized) SSIM is returned. If both `normalized` and
+        `force_lower_is_better` are ``True``, then the order is reversed before
+        mapping the outputs, so that the latter are still in the interval
+        :math:`[0, 1]`.
 
     Returns
     -------
     ssim : float
-        FOM value, where a higher value means a better match.
+        FOM value, where a higher value means a better match
+        if `force_lower_is_better` is ``False``.
 
     Notes
     -----
@@ -558,7 +567,7 @@ def ssim(data, ground_truth, size=11, sigma=1.5, K1=0.01, K2=0.03,
     result = np.mean(pointwise_ssim)
 
     if normalized:
-        result = (result + 1.0)/2.0
+        result = (result + 1.0) / 2.0
 
     if force_lower_is_better:
         result = -result
