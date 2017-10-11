@@ -2331,8 +2331,8 @@ class HuberL1L2(Functional):
         else:
             grad_lipschitz = np.inf
 
-        super().__init__(space=space, linear=False,
-                         grad_lipschitz=grad_lipschitz)
+        super(self).__init__(space=space, linear=False,
+                             grad_lipschitz=grad_lipschitz)
 
     def _call(self, x):
         '''Return the HuberL1-norm of ``x``.'''
