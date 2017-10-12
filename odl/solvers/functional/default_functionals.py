@@ -2294,25 +2294,41 @@ https://web.stanford.edu/~boyd/papers/pdf/prox_algs.pdf
 
 
 class HuberL1L2(Functional):
-    """The functional corresponding to the Huberized L1-norm."""
+    """The functional corresponding to the Huberized L1L2-norm.
 
-    def __init__(self, space, gamma):
+    Notes
+    -----
+    It is defined as
+    :math:`\\text{HuberL1L2}(x) = \\sum_i \\eta_\\gamma(||x_i||_2)`
+
+    where :math:`\eta_\gamma` denotes the Huber function defined as
+
+    .. math::
+        \\eta_\\gamma(x) =
+        \\begin{cases}
+            \\frac{1}{2 \\gamma} x^2 + \\frac{\\gamma}{2}
+                & \\text{if } |x| \leq \\gamma \\\\
+            |x|
+                & \\text{else}
+        \\end{cases}.
+    """
+
+    def __init__(self, space, gamma, exponent=2):
         """Initialize a new instance.
 
         Parameters
         ----------
-        space : `DiscreteLp` or `FnBase`
+        space : `FnBase`
             Domain of the functional.
         gamma : float
-            Smoothing parameter of Huberization. If gamma = 0, then functional
-            is non-smooth corresponds to the usual L1 norm. For gamma > 0, it
-            has a 1/gamma-Lipschitz gradient so that its convex conjugate is
-            gamma-strongly convex.
+            Smoothing parameter of Huberization. If ``gamma = 0``, then
+            functional is non-smooth corresponds to the usual L1 norm. For
+            ``gamma > 0``, it has a ``1/gamma``-Lipschitz gradient so that its
+            convex conjugate is ``gamma``-strongly convex.
 
         Examples
         --------
-
-        Compare HuberL1 and L1 for vanishing smoothing gamma=0
+        Compare HuberL1L2 and L1 for vanishing smoothing ``\\gamma=0``
 
         >>> import odl
         >>> X = odl.uniform_discr([0, 0], [1, 1], [5, 5])
@@ -2331,8 +2347,8 @@ class HuberL1L2(Functional):
         else:
             grad_lipschitz = np.inf
 
-        super(self).__init__(space=space, linear=False,
-                             grad_lipschitz=grad_lipschitz)
+        super(HuberL1L2, self).__init__(space=space, linear=False,
+                                        grad_lipschitz=grad_lipschitz)
 
     def _call(self, x):
         '''Return the HuberL1-norm of ``x``.'''
@@ -2349,9 +2365,9 @@ class HuberL1L2(Functional):
     @property
     def convex_conj(self):
         '''The convex conjugate'''
-        return FunctionalQuadraticPerturb(GroupL1Norm(self.domain,
-                                                      2).convex_conj,
-                                          quadratic_coeff=self.gamma / 2)
+        return FunctionalQuadraticPerturb(
+                GroupL1Norm(self.domain, 2).convex_conj,
+                quadratic_coeff=self.gamma / 2)
 
     @property
     def proximal(self):
