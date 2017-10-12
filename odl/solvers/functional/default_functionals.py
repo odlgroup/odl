@@ -1121,7 +1121,7 @@ class KullbackLeibler(Functional):
             tmp = ((x - 1 - np.log(x)).inner(self.domain.one()))
         else:
             tmp = ((x - self.prior +
-                   scipy.special.xlogy(self.prior, self.prior / x))
+                    scipy.special.xlogy(self.prior, self.prior / x))
                    .inner(self.domain.one()))
         if np.isnan(tmp):
             # In this case, some element was less than or equal to zero
@@ -2036,6 +2036,7 @@ class NuclearNorm(Functional):
 
         class NuclearNormProximal(Operator):
             """Proximal operator of `NuclearNorm`."""
+
             def __init__(self, sigma):
                 self.sigma = float(sigma)
                 super(NuclearNormProximal, self).__init__(
@@ -2336,7 +2337,19 @@ class HuberL1L2(Functional):
         >>> alpha = 2
         >>> gamma = 0
         >>> H = alpha * odl.solvers.HuberL1L2(X, gamma)
-        >>> L1 = alpha * odl.solvers.GroupL1Norm(X, 2)
+        >>> L1 = alpha * odl.solvers.L1Norm(X)
+        >>> abs(H(x) - L1(x)) < 1e-10
+
+        Redo previous example for a product space
+
+        >>> import odl
+        >>> X = odl.uniform_discr([0, 0], [1, 1], [5, 5])
+        >>> Y = odl.ProductSpace(X, 2)
+        >>> x = odl.phantom.white_noise(Y)
+        >>> alpha = 2
+        >>> gamma = 0
+        >>> H = alpha * odl.solvers.HuberL1L2(Y, gamma)
+        >>> L1 = alpha * odl.solvers.GroupL1Norm(Y, 2)
         >>> abs(H(x) - L1(x)) < 1e-10
         """
         self.gamma = float(gamma)
@@ -2351,9 +2364,11 @@ class HuberL1L2(Functional):
                                         grad_lipschitz=grad_lipschitz)
 
     def _call(self, x):
-        '''Return the HuberL1-norm of ``x``.'''
-
-        n = PointwiseNorm(self.domain, 2)(x)
+        '''Return the HuberL1L2-norm of ``x``.'''
+        if isinstance(self.domain, ProductSpace):
+            n = PointwiseNorm(self.domain, 2)(x)
+        else:
+            n = x.ufuncs.absolute()
 
         if self.gamma > 0:
             i = n.ufuncs.less(self.gamma)
@@ -2366,8 +2381,8 @@ class HuberL1L2(Functional):
     def convex_conj(self):
         '''The convex conjugate'''
         return FunctionalQuadraticPerturb(
-                GroupL1Norm(self.domain, 2).convex_conj,
-                quadratic_coeff=self.gamma / 2)
+            GroupL1Norm(self.domain, 2).convex_conj,
+            quadratic_coeff=self.gamma / 2)
 
     @property
     def proximal(self):
