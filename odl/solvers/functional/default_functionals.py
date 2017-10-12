@@ -2339,6 +2339,7 @@ class HuberL1L2(Functional):
         >>> H = alpha * odl.solvers.HuberL1L2(X, gamma)
         >>> L1 = alpha * odl.solvers.L1Norm(X)
         >>> abs(H(x) - L1(x)) < 1e-10
+        True
 
         Redo previous example for a product space
 
@@ -2351,6 +2352,7 @@ class HuberL1L2(Functional):
         >>> H = alpha * odl.solvers.HuberL1L2(Y, gamma)
         >>> L1 = alpha * odl.solvers.GroupL1Norm(Y, 2)
         >>> abs(H(x) - L1(x)) < 1e-10
+        True
         """
         self.gamma = float(gamma)
         self.strong_convexity = 0
