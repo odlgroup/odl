@@ -9,7 +9,6 @@
 """Method(s) to find optimal reconstruction/regularization parameters with
 respect to given figures of merit."""
 
-# import odl
 import numpy as np
 import scipy
 
@@ -57,8 +56,8 @@ def optimal_parameters(reconstruction, fom, phantoms, data,
         True images.
     data : sequence
         The data to reconstruct from.
-    initial_param : array-like
-        Initial guess for the parameters.
+    initial_param : array-like, optional
+        Initial guess for the parameters, default is zero.
 
     Returns
     -------
