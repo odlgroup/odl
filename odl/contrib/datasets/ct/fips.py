@@ -42,7 +42,7 @@ def walnut_data():
     dct = get_data('walnut.mat', subset=DATA_SUBSET, url=url)
 
     # Change axes to match ODL definitions
-    data = np.swapaxes(dct['sinogram1200'], 0, 1)[:, ::-1]
+    data = np.swapaxes(dct['sinogram1200'], 0, 1)[::-1, ::-1]
     data = data.astype('float')
 
     # Very crude gain normalization
@@ -102,7 +102,7 @@ def lotus_root_data():
     dct = get_data('lotus_root.mat', subset=DATA_SUBSET, url=url)
 
     # Change axes to match ODL definitions
-    data = np.swapaxes(dct['sinogram'], 0, 1)[::-1, :]
+    data = np.swapaxes(dct['sinogram'], 0, 1)[:, :]
     data = data.astype('float')
 
     return data
