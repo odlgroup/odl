@@ -1032,7 +1032,10 @@ def proximal_convex_conj_l1(space, lam=1, g=None):
             """
             super(ProximalConvexConjL1, self).__init__(
                 domain=space, range=space, linear=False)
-            self.sigma = float(sigma)
+            if np.isscalar(sigma):
+                self.sigma = float(sigma)
+            else:
+                self.sigma = space.element(sigma)
 
         def _call(self, x, out):
             """Return ``self(x, out=out)``."""
