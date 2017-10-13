@@ -2055,8 +2055,15 @@ class OperatorLeftVectorMult(Operator):
     def adjoint(self):
         """Adjoint of this operator.
 
-        The adjoint of the operator vector multiplication is the
-        vector multiplication of the operator adjoint:
+        For real spaces, the adjoint of the operator left vector multiplication
+        is the right multiplication of the given operator by the given vector.
+
+            ``OperatorLeftVectorMult(op, y).adjoint ==
+            OperatorRightVectorMult(op.adjoint, y)``
+
+        For complex spaces, the adjoint of the operator left vector
+        multiplication is the right multiplication of the given operator
+        by the complex conjugate of the given vector.
 
             ``OperatorLeftVectorMult(op, y).adjoint ==
             OperatorRightVectorMult(op.adjoint, y.conj())``
@@ -2173,8 +2180,15 @@ class OperatorRightVectorMult(Operator):
     def adjoint(self):
         """Adjoint of this operator.
 
-        The adjoint of the operator vector multiplication is the
-        vector multiplication of the operator adjoint:
+        For real spaces, the adjoint of the operator right multiplication
+        is the left multiplication of the given operator by the given vector.
+
+            ``OperatorRightVectorMult(op, y).adjoint ==
+            OperatorLeftVectorMult(op.adjoint, y)``
+
+        For complex spaces, the adjoint of the operator right vector
+        multiplication is the left multiplication of the given operator
+        by the complex conjugate of the given vector.
 
             ``OperatorRightVectorMult(op, y).adjoint ==
             OperatorLeftVectorMult(op.adjoint, y.conj())``
