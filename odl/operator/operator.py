@@ -2055,11 +2055,12 @@ class OperatorLeftVectorMult(Operator):
     def adjoint(self):
         """Adjoint of this operator.
 
-        The adjoint of the operator vector multiplication is the
-        vector multiplication of the operator adjoint:
+        The adjoint of the operator left vector multiplication is the right
+        multiplication of the given operator by the complex conjugate of the
+        given vector.
 
             ``OperatorLeftVectorMult(op, y).adjoint ==
-            OperatorRightVectorMult(op.adjoint, y)``
+            OperatorRightVectorMult(op.adjoint, y.conj())``
 
         Returns
         -------
@@ -2073,8 +2074,11 @@ class OperatorLeftVectorMult(Operator):
         if not self.is_linear:
             raise OpNotImplementedError('nonlinear operators have no adjoint')
 
-        # TODO: handle complex vectors
-        return self.operator.adjoint * self.vector
+        if self.vector.space.is_rn:
+            # The complex conjugate of a real vector is the vector itself.
+            return self.operator.adjoint * self.vector
+        else:
+            return self.operator.adjoint * self.vector.conj()
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -2171,11 +2175,12 @@ class OperatorRightVectorMult(Operator):
     def adjoint(self):
         """Adjoint of this operator.
 
-        The adjoint of the operator vector multiplication is the
-        vector multiplication of the operator adjoint:
+        The adjoint of the operator right vector multiplication is the left
+        multiplication of the given operator by the complex conjugate of the
+        given vector.
 
             ``OperatorRightVectorMult(op, y).adjoint ==
-            OperatorLeftVectorMult(op.adjoint, y)``
+            OperatorLeftVectorMult(op.adjoint, y.conj())``
 
         Returns
         -------
@@ -2189,8 +2194,11 @@ class OperatorRightVectorMult(Operator):
         if not self.is_linear:
             raise OpNotImplementedError('nonlinear operators have no adjoint')
 
-        # TODO: handle complex vectors
-        return self.vector * self.operator.adjoint
+        if self.vector.space.is_rn:
+            # The complex conjugate of a real vector is the vector itself.
+            return self.vector * self.operator.adjoint
+        else:
+            return self.vector.conj() * self.operator.adjoint
 
     def __repr__(self):
         """Return ``repr(self)``."""
