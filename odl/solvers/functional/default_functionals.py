@@ -2292,10 +2292,35 @@ https://web.stanford.edu/~boyd/papers/pdf/prox_algs.pdf
                 (1 / self.sigma) * self.functional.proximal(self.sigma))
 
 
-# TODO: Update doc, etsc.
 class HuberNorm(Functional):
 
-    """..."""
+    """The Huber norm functional.
+
+    Notes
+    -----
+    The functional :math:`F` with smoothing :math:`\\epsilon>0` is given by
+
+    .. math::
+        F(x)
+        =
+        \\begin{cases}
+            \\frac{1}{2 \\epsilon} x^2 & \\text{if } |x| \leq \\epsilon
+            \\\\
+            |x| - \\frac{\\epsilon}{2} & \\text{if } |x| > \\epsilon,
+        \\end{cases}
+
+    and the Huber norm is the integral of this functional over the domain,
+    i.e., the Huber norm is given by
+
+    .. math::
+        \\int_\Omega F(x) dx.
+
+    In the discrete case, this becomes
+
+    .. math::
+        \\sum_{i=1}^n F(x_i).
+
+    """
 
     def __init__(self, space, epsilon):
         """Initialize a new instance.
@@ -2304,21 +2329,47 @@ class HuberNorm(Functional):
         ----------
         space : `DiscreteLp` or `FnBase`
             Domain of the functional.
+        epsilon : float
+            The parameter of the Huber norm functional.
+
+        Examples
+        --------
+        Example of initializing the Huber norm functional
+
+        >>> space = odl.uniform_discr(0, 1, 14)
+        >>> epsilon = 0.1
+        >>> huber_norm = odl.solvers.HuberNorm(space, epsilon)
+
+        Check that if all elements are > epsilon we get the L1-norm modified
+        epsilon/2 * the mass of the space
+        >>> l1_norm = odl.solvers.L1Norm(space)
+        >>> element = space.one()
+        >>> constant = epsilon/2 * element.inner(element)
+        >>> (huber_norm(element) - (l1_norm(element) - constant)) < 1e-5
+        True
+
+        Check that if all elements are < epsilon we get the L2-norm modified
+        with weight 1/(2*epsilon)
+        >>> l2_norm = odl.solvers.L2Norm(space)
+        >>> element = (epsilon/2) * space.one()
+        >>> (huber_norm(element) - 1/(2*epsilon) * l2_norm(element)) < 1e-5
+        True
         """
         self.__epsilon = float(epsilon)
         super().__init__(space=space, linear=False, grad_lipschitz=2)
 
     @property
     def epsilon(self):
+        """The smoothing parameter of the Huber norm functional."""
         return self.__epsilon
 
     def _call(self, x):
-        """Return the squared L2-norm of ``x``."""
-        indices = x.ufunc.absolute() < self.epsilon
+        """Return ``self(x)``."""
+        indices = x.ufuncs.absolute().asarray() < self.epsilon
         indices = np.float32(indices)
 
         tmp = ((x * indices)**2 / (2.0 * self.epsilon) +
-               ((x).ufunc.absolute() - self.epsilon / 2.0) * (1-indices))
+               (x.ufuncs.absolute() - self.epsilon / 2.0) * (1-indices))
 
         return tmp.inner(self.domain.one())
 
@@ -2339,19 +2390,21 @@ class HuberNorm(Functional):
             # TODO: Update this call. Might not work for PorductSpaces
             def _call(self, x):
                 """Apply the gradient operator to the given point."""
-                indices = x.ufunc.absolute().asarray() < functional.epsilon
+                indices = x.ufuncs.absolute().asarray() < functional.epsilon
                 indices = np.float32(indices)
 
-                tmp = ((x * indices) / (functional.epsilon) +
-                       (x).ufunc.sign() * (1-indices))
+                to_return = ((x * indices) / (functional.epsilon) +
+                             (x).ufuncs.sign() * (1-indices))
 
-                return tmp
+                return to_return
 
         return HuberNormGradient()
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r})'.format(self.__class__.__name__, self.domain)
+        return '{}({!r}, {})'.format(self.__class__.__name__,
+                                     self.domain,
+                                     self.epsilon)
 
 
 if __name__ == '__main__':
