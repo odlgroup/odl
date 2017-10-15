@@ -22,7 +22,7 @@ from odl.solvers.nonsmooth.proximal_operators import (
     proximal_l1, proximal_convex_conj_l1, proximal_l2, proximal_convex_conj_l2,
     proximal_l2_squared, proximal_const_func, proximal_box_constraint,
     proximal_convex_conj, proximal_convex_conj_kl,
-    proximal_convex_conj_kl_cross_entropy,
+    proximal_convex_conj_kl_cross_entropy, proximal_huber_norm,
     combine_proximals)
 from odl.util import conj_exponent
 
@@ -2356,7 +2356,8 @@ class HuberNorm(Functional):
         True
         """
         self.__epsilon = float(epsilon)
-        super().__init__(space=space, linear=False, grad_lipschitz=2)
+        super(HuberNorm, self).__init__(space=space, linear=False,
+                                        grad_lipschitz=2)
 
     @property
     def epsilon(self):
@@ -2399,6 +2400,17 @@ class HuberNorm(Functional):
                 return to_return
 
         return HuberNormGradient()
+
+    @property
+    def proximal(self):
+        """Return the ``proximal factory`` of the functional.
+
+        See Also
+        --------
+        odl.solvers.proximal_huber_norm : `proximal factory` for the Huber
+            norm.
+        """
+        return proximal_huber_norm(space=self.domain, epsilon=self.epsilon)
 
     def __repr__(self):
         """Return ``repr(self)``."""
