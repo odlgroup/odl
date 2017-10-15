@@ -192,6 +192,65 @@ def test_pointwise_norm_weighted(exponent):
     assert all_almost_equal(out, true_norm)
 
 
+def test_pointwise_norm_gradient_real(exponent):
+    # The operator is not differentiable for exponent 'inf'
+    if exponent == float('inf'):
+        fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2))
+        vfspace = ProductSpace(fspace, 1)
+        pwnorm = PointwiseNorm(vfspace, exponent)
+        point = vfspace.one()
+        with pytest.raises(NotImplementedError):
+            pwnorm.derivative(point)
+        return
+
+    # TODO: implement good tests also for the 'normal behaviour'
+
+    # The gradient is only well-defined in all points if the exponent is >= 2
+    if exponent < 2:
+        pytest.skip('differential of operator has singularity for this '
+                    'exponent')
+
+    # 1d
+    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2))
+    vfspace = ProductSpace(fspace, 1)
+    pwnorm = PointwiseNorm(vfspace, exponent)
+
+    test_point = np.array([[[0, 0],  # This makes the point singular for p < 2
+                            [1, 2]]])
+    test_direction = np.array([[[1, 2],
+                                [4, 5]]])
+
+    point = vfspace.element(test_point)
+    direction = vfspace.element(test_direction)
+    func_pwnorm = pwnorm.derivative(point)
+
+    assert not any(np.isnan(func_pwnorm(direction)))
+
+    # 3d
+    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2))
+    vfspace = ProductSpace(fspace, 3)
+    pwnorm = PointwiseNorm(vfspace, exponent)
+
+    test_point = np.array([[[0, 0],  # This makes the point singular for p < 2
+                            [1, 2]],
+                           [[3, 4],
+                            [0, 0]],  # This makes the point singular for p < 2
+                           [[5, 6],
+                            [7, 8]]])
+    test_direction = np.array([[[0, 1],
+                                [2, 3]],
+                               [[4, 5],
+                                [6, 7]],
+                               [[8, 9],
+                                [0, 1]]])
+
+    point = vfspace.element(test_point)
+    direction = vfspace.element(test_direction)
+    func_pwnorm = pwnorm.derivative(point)
+
+    assert not any(np.isnan(func_pwnorm(direction)))
+
+
 # ---- PointwiseInner ----
 
 
