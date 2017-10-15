@@ -341,10 +341,11 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
 
         for gi in inner_vf:
             if self.exponent >= 2:
-                with np.errstate(invalid='ignore', divide='ignore'):
-                    tmp = vf_pwnorm_fac * gi ** (self.exponent - 2)
-                    # Any component that is zero is not divided with
-                    gi /= tmp if not tmp else 1
+                tmp = vf_pwnorm_fac * gi ** (self.exponent - 2)
+                # Any component that is zero is not divided with
+                for i, val in zip(np.arange(len(tmp)), tmp):
+                    if not val == 0.0:
+                        gi[i] /= val
             else:
                 gi /= vf_pwnorm_fac * gi ** (self.exponent - 2)
 
