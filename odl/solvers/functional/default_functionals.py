@@ -2385,8 +2385,9 @@ class HuberNorm(Functional):
 
             def __init__(self):
                 """Initialize a new instance."""
-                super().__init__(functional.domain, functional.domain,
-                                 linear=False)
+                super(HuberNormGradient, self).__init__(functional.domain,
+                                                        functional.domain,
+                                                        linear=False)
 
             # TODO: Update this call. Might not work for PorductSpaces
             def _call(self, x):
