@@ -220,22 +220,28 @@ def test_proximal_convconj_l2_sq_wo_data():
     lam = 2
     prox_factory = proximal_convex_conj_l2_squared(space, lam=lam)
 
-    # Initialize the proximal operator
-    sigma = 0.25
+    # Initialize the proximal operators
+    sigma = 0.25 * space.one()
+    sigmav = sigma * space.one()
     prox = prox_factory(sigma)
+    proxv = prox_factory(sigmav)
 
     assert isinstance(prox, odl.Operator)
+    assert isinstance(proxv, odl.Operator)
 
-    # Allocate output element
+    # Allocate output elements
     x_out = space.element()
+    x_out2 = space.element()
 
     # Optimal point returned by the proximal operator
     prox(x, x_out)
+    proxv(x, x_out2)
 
     # Explicit computation: x / (1 + sigma / (2 * lambda))
     x_verify = x / (1 + sigma / (2 * lam))
 
     assert all_almost_equal(x_out, x_verify, HIGH_ACC)
+    assert all_almost_equal(x_out2, x_verify, HIGH_ACC)
 
 
 def test_proximal_convconj_l2_sq_with_data():

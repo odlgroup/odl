@@ -151,7 +151,10 @@ def proximal_convex_conj(prox_factory):
         proximal : `Operator`
             The proximal operator of ``s * F^*`` where ``s`` is the step size
         """
-        sigma = float(sigma)
+        if np.isscalar(sigma):
+            sigma = float(sigma)
+        else:
+            sigma = prox_factory.domain.element(sigma)
         prox_other = sigma * prox_factory(1.0 / sigma) * (1.0 / sigma)
         return IdentityOperator(prox_other.domain) - prox_other
 
@@ -849,17 +852,27 @@ def proximal_convex_conj_l2_squared(space, lam=1, g=None):
             """
             super(ProximalConvexConjL2Squared, self).__init__(
                 domain=space, range=space, linear=g is None)
-            self.sigma = float(sigma)
+            if np.isscalar(sigma):
+                self.sigma = float(sigma)
+            else:
+                self.sigma = space.element(sigma)
 
         def _call(self, x, out):
             """Apply the operator to ``x`` and store the result in ``out``"""
             # (x - sig*g) / (1 + sig/(2 lam))
             sig = self.sigma
-            if g is None:
-                out.lincomb(1.0 / (1 + 0.5 * sig / lam), x)
-            else:
-                out.lincomb(1.0 / (1 + 0.5 * sig / lam), x,
-                            -sig / (1 + 0.5 * sig / lam), g)
+            if np.isscalar(sig):
+                if g is None:
+                    out.lincomb(1.0 / (1 + 0.5 * sig / lam), x)
+                else:
+                    out.lincomb(1.0 / (1 + 0.5 * sig / lam), x,
+                                -sig / (1 + 0.5 * sig / lam), g)
+            elif sig in space:
+                if g is None:
+                    x.divide(space.one() + 0.5/lam * sig, out)
+                else:
+                    sigma.multiply(g, out)
+                    out.divide(space.one() + 0.5/lam * sig, out)
 
     return ProximalConvexConjL2Squared
 
