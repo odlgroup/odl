@@ -71,10 +71,10 @@ l2_norm = (1 / (2 * reg_param) *
            odl.solvers.L2NormSquared(space).translated(noisy))
 
 # HuberTV-regularization
-huber_l1_norm = odl.solvers.HuberL1L2(gradient.range, gamma=.01)
+huber = odl.solvers.Huber(gradient.range, gamma=.01)
 
 # define objective
-obj_fun = l2_norm + huber_l1_norm * gradient
+obj_fun = l2_norm + huber * gradient
 
 
 # define callback to store function values
@@ -102,12 +102,12 @@ niter = 200
 
 # Assign operator and functionals
 op = gradient
-f = huber_l1_norm
+f = huber
 g = l2_norm
 
 # strong convexity of "f*" and "g"
 mu_g = 1 / reg_param
-mu_f = 1 / huber_l1_norm.grad_lipschitz
+mu_f = 1 / huber.grad_lipschitz
 
 # parameters for algorithm 1
 # slightly smaller than condition number of the problem

@@ -58,13 +58,13 @@ reg_param = 1
 l1_norm = 1 / reg_param * odl.solvers.L1Norm(space).translated(noisy)
 
 # HuberTV-regularization
-huber_l1_norm = odl.solvers.HuberL1L2(gradient.range, gamma=.1)
+huber = odl.solvers.Huber(gradient.range, gamma=.1)
 
 # Define objective
-obj_fun = l1_norm + huber_l1_norm * gradient
+obj_fun = l1_norm + huber * gradient
 
 # Strong convexity of "f*"
-strong_convexity = 1 / huber_l1_norm.grad_lipschitz
+strong_convexity = 1 / huber.grad_lipschitz
 
 
 # Define callback to store function values
@@ -92,7 +92,7 @@ niter = 500
 
 # Assign operator and functionals
 op = gradient
-f = huber_l1_norm
+f = huber
 g = l1_norm
 
 tau = 1.0 / gradient.norm  # Step size for primal variable

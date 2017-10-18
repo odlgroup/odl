@@ -36,7 +36,7 @@ __all__ = ('LpNorm', 'L1Norm', 'L2Norm', 'L2NormSquared',
            'QuadraticForm',
            'NuclearNorm', 'IndicatorNuclearNormUnitBall',
            'ScalingFunctional', 'IdentityFunctional',
-           'MoreauEnvelope', 'HuberL1L2')
+           'MoreauEnvelope', 'Huber')
 
 
 class LpNorm(Functional):
@@ -2294,13 +2294,13 @@ https://web.stanford.edu/~boyd/papers/pdf/prox_algs.pdf
                 (1 / self.sigma) * self.functional.proximal(self.sigma))
 
 
-class HuberL1L2(Functional):
+class Huber(Functional):
     """The functional corresponding to the Huberized L1L2-norm.
 
     Notes
     -----
     It is defined as
-    :math:`\\text{HuberL1L2}(x) = \\sum_i \\eta_\\gamma(||x_i||_2)`
+    :math:`\\text{Huber}(x) = \\sum_i \\eta_\\gamma(||x_i||_2)`
 
     where :math:`\eta_\gamma` denotes the Huber function defined as
 
@@ -2314,7 +2314,7 @@ class HuberL1L2(Functional):
         \\end{cases}.
     """
 
-    def __init__(self, space, gamma, exponent=2):
+    def __init__(self, space, gamma):
         """Initialize a new instance.
 
         Parameters
@@ -2332,25 +2332,21 @@ class HuberL1L2(Functional):
         Compare HuberL1L2 and L1 for vanishing smoothing ``\\gamma=0``
 
         >>> import odl
-        >>> X = odl.uniform_discr([0, 0], [1, 1], [5, 5])
-        >>> x = odl.phantom.white_noise(X)
-        >>> alpha = 2
-        >>> gamma = 0
-        >>> H = alpha * odl.solvers.HuberL1L2(X, gamma)
-        >>> L1 = alpha * odl.solvers.L1Norm(X)
+        >>> space = odl.uniform_discr([0, 0], [1, 1], [5, 5])
+        >>> x = odl.phantom.white_noise(space)
+        >>> H = odl.solvers.Huber(space, gamma=0)
+        >>> L1 = odl.solvers.L1Norm(space)
         >>> abs(H(x) - L1(x)) < 1e-10
         True
 
         Redo previous example for a product space
 
         >>> import odl
-        >>> X = odl.uniform_discr([0, 0], [1, 1], [5, 5])
-        >>> Y = odl.ProductSpace(X, 2)
-        >>> x = odl.phantom.white_noise(Y)
-        >>> alpha = 2
-        >>> gamma = 0
-        >>> H = alpha * odl.solvers.HuberL1L2(Y, gamma)
-        >>> L1 = alpha * odl.solvers.GroupL1Norm(Y, 2)
+        >>> space = odl.uniform_discr([0, 0], [1, 1], [5, 5])
+        >>> space2 = odl.ProductSpace(space, 2)
+        >>> x = odl.phantom.white_noise(space2)
+        >>> H = odl.solvers.Huber(space2, gamma=0)
+        >>> L1 = odl.solvers.GroupL1Norm(space2, 2)
         >>> abs(H(x) - L1(x)) < 1e-10
         True
         """
@@ -2362,11 +2358,11 @@ class HuberL1L2(Functional):
         else:
             grad_lipschitz = np.inf
 
-        super(HuberL1L2, self).__init__(space=space, linear=False,
-                                        grad_lipschitz=grad_lipschitz)
+        super(Huber, self).__init__(space=space, linear=False,
+                                    grad_lipschitz=grad_lipschitz)
 
     def _call(self, x):
-        '''Return the HuberL1L2-norm of ``x``.'''
+        '''Return the Huber-norm of ``x``.'''
         if isinstance(self.domain, ProductSpace):
             n = PointwiseNorm(self.domain, 2)(x)
         else:
