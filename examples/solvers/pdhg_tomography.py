@@ -72,8 +72,8 @@ tau = 1.0 / op_norm  # Step size for the primal variable
 sigma = 1.0 / op_norm  # Step size for the dual variable
 
 # Optionally pass callback to the solver to display intermediate results
-callback = (odl.solvers.CallbackPrintIteration() &
-            odl.solvers.CallbackShow())
+callback = (odl.solvers.CallbackPrintIteration(step=10) &
+            odl.solvers.CallbackShow(step=10))
 
 # Choose a starting point
 x = op.domain.zero()
