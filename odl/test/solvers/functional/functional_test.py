@@ -498,6 +498,7 @@ def test_multiplication_with_vector(space):
     assert all_almost_equal(y_other_times_func(x), expected_result,
                             places=places)
 
+
 # Fixtures for test_functional_quadratic_perturb
 linear_term = simple_fixture('linear_term', [False, True])
 quadratic_coeff = simple_fixture('quadratic_coeff', [0.0, 2.13])
