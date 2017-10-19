@@ -2343,30 +2343,33 @@ class Huber(Functional):
         >>> gamma = 0.1
         >>> huber_norm = odl.solvers.Huber(space, gamma=0.1)
 
-        Check that if all elements are > ``gamma`` we get the L1-norm.
+        Check that if all elements are > ``gamma`` we get the L1-norm up to a
+        constant.
 
-        >>> l1_norm = odl.solvers.L1Norm(space)
-        >>> x = space.one()
+        >>> x = 2 * gamma * space.one()
         >>> tol = 1e-5
+        >>> constant = gamma / 2 * space.one().inner(space.one())
+        >>> l1_norm = odl.solvers.L1Norm(space) - constant
         >>> abs(huber_norm(x) - l1_norm(x)) < tol
         True
 
-        Check that if all elements are < ``gamma`` we get the L2-norm
-        modified with weight 1/(2*gamma)
+        Check that if all elements are < ``gamma`` we get the squared L2-norm
+        times the weight 1/(2*gamma).
 
-        >>> l2_norm = odl.solvers.L2Norm(space)
-        >>> x = (gamma / 2) * space.one()
-        >>> abs(huber_norm(element) - 1 / (2 * gamma) * l2_norm(x)) < tol
+        >>> x = gamma / 2 * space.one()
+        >>> l2_norm = 1 / (2 * gamma) * odl.solvers.L2NormSquared(space)
+        >>> abs(huber_norm(x) - l2_norm(x)) < tol
         True
 
-        Compare Huber- and L1-norm for vanishing smoothing ``gamma=0``
+        Compare Huber- and L1-norm for vanishing smoothing ``gamma=0``.
 
         >>> x = odl.phantom.white_noise(space)
         >>> huber_norm = odl.solvers.Huber(space, gamma=0)
+        >>> l1_norm = odl.solvers.L1Norm(space)
         >>> abs(huber_norm(x) - l1_norm(x)) < tol
         True
 
-        Redo previous example for a product space in two dimensions
+        Redo previous example for a product space in two dimensions.
 
         >>> domain = odl.uniform_discr([0, 0], [1, 1], [5, 5])
         >>> space = odl.ProductSpace(domain, 2)
@@ -2393,13 +2396,13 @@ class Huber(Functional):
         """The smoothing parameter of the Huber norm functional."""
         return self.__gamma
 
-    def __local_norm(self, x):
+    def local_norm(self, x):
         if isinstance(self.domain, ProductSpace):
             return PointwiseNorm(self.domain, 2)(x)
         else:
             return x.ufuncs.absolute()
 
-    def __local_norm_operator(self):
+    def local_norm_operator(self):
         if isinstance(self.domain, ProductSpace):
             return GroupL1Norm(self.domain, 2)
         else:
@@ -2407,7 +2410,7 @@ class Huber(Functional):
 
     def _call(self, x):
         """Return ``self(x)``."""
-        n = self.__local_norm(x)
+        n = self.local_norm(x)
 
         if self.gamma > 0:
             i = n.ufuncs.less(self.gamma)
@@ -2415,13 +2418,15 @@ class Huber(Functional):
 
             i.ufuncs.logical_not(out=i)
             out += i * (n - self.gamma / 2)
+        else:
+            out = n
 
-        return out.inner(self.domain.one())
+        return out.inner(out.space.one())
 
     @property
     def convex_conj(self):
         '''The convex conjugate'''
-        n = self.__local_norm_operator()
+        n = self.local_norm_operator()
         f = FunctionalQuadraticPerturb(n.convex_conj,
                                        quadratic_coeff=self.gamma / 2)
 
@@ -2442,7 +2447,34 @@ class Huber(Functional):
 
     @property
     def gradient(self):
-        """Gradient operator of the functional."""
+        """Gradient operator of the functional.
+
+        Examples
+        --------
+        Check that the gradient norm is less than the norm of the one element.
+
+        >>> space = odl.uniform_discr(0, 1, 14)
+        >>> norm_one = space.one().norm()
+        >>> x = odl.phantom.white_noise(space)
+        >>> huber_norm = odl.solvers.Huber(space, gamma=0.1)
+        >>> grad = huber_norm.gradient(x)
+        >>> tol = 1e-5
+        >>> grad.norm() <=  norm_one + tol
+        True
+
+        Redo previous example for a product space in two dimensions.
+
+        >>> domain = odl.uniform_discr([0, 0], [1, 1], [5, 5])
+        >>> space = odl.ProductSpace(domain, 2)
+        >>> norm_one = space.one().norm()
+        >>> x = odl.phantom.white_noise(space)
+        >>> huber_norm = odl.solvers.Huber(space, gamma=0.2)
+        >>> grad = huber_norm.gradient(x)
+        >>> tol = 1e-5
+        >>> grad.norm() <=  norm_one + tol
+        True
+        """
+
         functional = self
 
         class HuberGradient(Operator):
@@ -2457,7 +2489,7 @@ class Huber(Functional):
 
             def _call(self, x):
                 """Apply the gradient operator to the given point."""
-                n = self.__local_norm(x)
+                n = functional.local_norm(x)
 
                 i = n.ufuncs.less(functional.gamma)
                 grad = i * x / functional.gamma
