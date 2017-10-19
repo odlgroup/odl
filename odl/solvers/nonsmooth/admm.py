@@ -108,36 +108,52 @@ def admm_linearized(x, f, g, L, tau, sigma, niter, **kwargs):
     if callback is not None and not callable(callback):
         raise TypeError('`callback` {} is not callable'.format(callback))
 
-    # Initialize dual variables
-    dual_z = L.range.zero()
-    dual_u = L.range.zero()
+    # Initialize range variables
+    z = L.range.zero()
+    u = L.range.zero()
 
     # Temporary for Lx + u [- z]
     tmp_ran = L(x)
     # Temporary for L^*(Lx + u - z)
-    tmp_dom = L.adjoint(tmp_ran)
+    tmp_dom = L.domain.element()
 
     for _ in range(niter):
-        # L x^k + u^k - z^k
-        L(x, out=tmp_ran)
-        tmp_ran += dual_u
-        tmp_ran -= dual_z
-        # L^*(L x^k + u^k - z^k)
+        # tmp_ran has value L x^k here
+        # tmp_dom <- L^*(L x^k + u^k - z^k)
+        tmp_ran += u
+        tmp_ran -= z
         L.adjoint(tmp_ran, out=tmp_dom)
 
-        # x^k - (tau/sigma) L^*(Lx^k + u^k - z^k)
+        # x <- x^k - (tau/sigma) L^*(Lx^k + u^k - z^k)
         x.lincomb(1, x, -tau / sigma, tmp_dom)
-        # x^(k+1) = prox[tau*f](_)
+        # x^(k+1) <- prox[tau*f](x)
         f.proximal(tau)(x, out=x)
 
-        # L x^(k+1) + u^k
+        # tmp_ran <- L x^(k+1)
         L(x, out=tmp_ran)
-        tmp_ran += dual_u
-        # z^(k+1) = prox[sigma*g](_)
-        g.proximal(sigma)(tmp_ran, out=dual_z)
+        # z^(k+1) <- prox[sigma*g](L x^(k+1) + u^k)
+        g.proximal(sigma)(tmp_ran + u, out=z)  # 1 copy here
 
-        # u^(k+1) = L x^(k+1) + u^k - z^(k+1)
-        dual_u.lincomb(1, tmp_ran, -1, dual_z)
+        # u^(k+1) = u^k + L x^(k+1) - z^(k+1)
+        u += tmp_ran
+        u -= z
 
+        if callback is not None:
+            callback(x)
+
+
+def admm_linearized_simple(x, f, g, L, tau, sigma, niter, **kwargs):
+    """Non-optimized version of ``admm_linearized``.
+
+    This function is intended for debugging. It makes a lot of copies and
+    performs no error checking.
+    """
+    callback = kwargs.pop('callback', None)
+    z = L.range.zero()
+    u = L.range.zero()
+    for _ in range(niter):
+        x[:] = f.proximal(tau)(x - tau / sigma * L.adjoint(L(x) + u - z))
+        z = g.proximal(sigma)(L(x) + u)
+        u = L(x) + u - z
         if callback is not None:
             callback(x)
