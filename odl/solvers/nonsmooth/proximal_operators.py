@@ -27,7 +27,7 @@ from __future__ import print_function, division, absolute_import
 import numpy as np
 
 from odl.operator import (Operator, IdentityOperator, ScalingOperator,
-                          ConstantOperator, DiagonalOperator)
+                          ConstantOperator, DiagonalOperator, PointwiseNorm)
 from odl.space import ProductSpace
 from odl.set import LinearSpaceElement
 from odl.util import cache_arguments
@@ -40,7 +40,8 @@ __all__ = ('combine_proximals', 'proximal_convex_conj', 'proximal_translation',
            'proximal_l1', 'proximal_convex_conj_l1',
            'proximal_l2', 'proximal_convex_conj_l2',
            'proximal_l2_squared', 'proximal_convex_conj_l2_squared',
-           'proximal_convex_conj_kl', 'proximal_convex_conj_kl_cross_entropy')
+           'proximal_convex_conj_kl', 'proximal_convex_conj_kl_cross_entropy',
+           'proximal_huber')
 
 
 def combine_proximals(*factory_list):
@@ -1404,6 +1405,77 @@ def proximal_convex_conj_kl_cross_entropy(space, lam=1, g=None):
                                 (self.sigma / lam) * g * np.exp(x / lam)))
 
     return ProximalConvexConjKLCrossEntropy
+
+
+def proximal_huber(space, gamma):
+    """Proximal factory of the Huber norm.
+
+    Parameters
+    ----------
+    space : `FnBase`
+        Space X which is the domain of the functional F
+    gamma : float
+        The smoothing parameter of the Huber norm functional.
+
+    Returns
+    -------
+    prox_factory : function
+        Factory for the proximal operator to be initialized.
+
+    See Also
+    --------
+    odl.solvers.Huber : the Huber norm functional
+
+    Notes
+    -----
+    The proximal operator is given by given by the proximal operator of
+    1/(2*gamma) * L2 norm in points that are <= gamma, and by the
+    proximal operator of the l1 norm in points that are > gamma.
+    """
+
+    gamma = float(gamma)
+
+    class ProximalHuber(Operator):
+
+        """Proximal operator of conjugate of cross entropy KL divergence."""
+
+        def __init__(self, sigma):
+            """Initialize a new instance.
+
+            Parameters
+            ----------
+            sigma : positive float
+            """
+            self.sigma = float(sigma)
+            super(ProximalHuber, self).__init__(domain=space, range=space,
+                                                linear=False)
+
+        def __local_norm(self, x):
+            if isinstance(self.domain, ProductSpace):
+                return PointwiseNorm(self.domain, 2)(x)
+            else:
+                return x.ufuncs.absolute()
+
+        def _call(self, x, out):
+            if isinstance(x.space, ProductSpace):
+                raise NotImplementedError('`proximal` not yet implemented for'
+                                          'product spaces')
+
+            """Apply the operator to ``x`` and stores the result in ``out``."""
+            n = self.__local_norm(x)
+
+            i = n.ufuncs.less_equal(gamma + self.sigma)
+            tmp = i * gamma / (gamma + self.sigma) * x
+
+            i.ufuncs.logical_not(out=i)
+            j = x.ufuncs.sign()
+            tmp += i * (x - j * self.sigma)
+
+            out.assign(tmp)
+
+            return out
+
+    return ProximalHuber
 
 
 if __name__ == '__main__':

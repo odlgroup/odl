@@ -24,7 +24,7 @@ from odl.solvers.nonsmooth.proximal_operators import (
     proximal_l2_squared, proximal_const_func, proximal_box_constraint,
     proximal_convex_conj, proximal_convex_conj_kl,
     proximal_convex_conj_kl_cross_entropy,
-    combine_proximals)
+    combine_proximals, proximal_huber)
 from odl.util import conj_exponent
 
 
@@ -2295,23 +2295,31 @@ https://web.stanford.edu/~boyd/papers/pdf/prox_algs.pdf
 
 
 class Huber(Functional):
-    """The functional corresponding to the Huberized L1L2-norm.
+    """The Huber norm functional.
 
     Notes
     -----
-    It is defined as
-    :math:`\\text{Huber}(x) = \\sum_i \\eta_\\gamma(||x_i||_2)`
-
-    where :math:`\eta_\gamma` denotes the Huber function defined as
+    The functional :math:`f` with smoothing :math:`\\gamma` is given by
 
     .. math::
-        \\eta_\\gamma(x) =
+        f_\\gamma(t) =
         \\begin{cases}
-            \\frac{1}{2 \\gamma} x^2 + \\frac{\\gamma}{2}
-                & \\text{if } |x| \leq \\gamma \\\\
-            |x|
+            \\frac{1}{2 \\gamma} t^2 + \\frac{\\gamma}{2}
+                & \\text{if } |t| \leq \\gamma \\\\
+            |t|
                 & \\text{else}
         \\end{cases}.
+
+    and the Huber norm is the integral of this functional over the domain,
+    i.e., the Huber norm is given by
+
+    .. math::
+        \\int_\Omega f_\\gamma(||x||_2) dx.
+
+    In the discrete case, this becomes
+
+    .. math::
+        \\sum_{i=1}^n f_\\gamma(||x_i||_2).
     """
 
     def __init__(self, space, gamma):
@@ -2324,33 +2332,52 @@ class Huber(Functional):
         gamma : float
             Smoothing parameter of Huberization. If ``gamma = 0``, then
             functional is non-smooth corresponds to the usual L1 norm. For
-            ``gamma > 0``, it has a ``1/gamma``-Lipschitz gradient so that its
-            convex conjugate is ``gamma``-strongly convex.
+            ``gamma > 0``, it has a ``1/gamma``-Lipschitz gradient so that
+            its convex conjugate is ``gamma``-strongly convex.
 
         Examples
         --------
-        Compare HuberL1L2 and L1 for vanishing smoothing ``\\gamma=0``
+        Example of initializing the Huber norm functional
 
-        >>> import odl
-        >>> space = odl.uniform_discr([0, 0], [1, 1], [5, 5])
-        >>> x = odl.phantom.white_noise(space)
-        >>> H = odl.solvers.Huber(space, gamma=0)
-        >>> L1 = odl.solvers.L1Norm(space)
-        >>> abs(H(x) - L1(x)) < 1e-10
+        >>> space = odl.uniform_discr(0, 1, 14)
+        >>> gamma = 0.1
+        >>> huber_norm = odl.solvers.Huber(space, gamma=0.1)
+
+        Check that if all elements are > ``gamma`` we get the L1-norm.
+
+        >>> l1_norm = odl.solvers.L1Norm(space)
+        >>> x = space.one()
+        >>> tol = 1e-5
+        >>> abs(huber_norm(x) - l1_norm(x)) < tol
         True
 
-        Redo previous example for a product space
+        Check that if all elements are < ``gamma`` we get the L2-norm
+        modified with weight 1/(2*gamma)
 
-        >>> import odl
-        >>> space = odl.uniform_discr([0, 0], [1, 1], [5, 5])
-        >>> space2 = odl.ProductSpace(space, 2)
-        >>> x = odl.phantom.white_noise(space2)
-        >>> H = odl.solvers.Huber(space2, gamma=0)
-        >>> L1 = odl.solvers.GroupL1Norm(space2, 2)
-        >>> abs(H(x) - L1(x)) < 1e-10
+        >>> l2_norm = odl.solvers.L2Norm(space)
+        >>> x = (gamma / 2) * space.one()
+        >>> abs(huber_norm(element) - 1 / (2 * gamma) * l2_norm(x)) < tol
+        True
+
+        Compare Huber- and L1-norm for vanishing smoothing ``gamma=0``
+
+        >>> x = odl.phantom.white_noise(space)
+        >>> huber_norm = odl.solvers.Huber(space, gamma=0)
+        >>> abs(huber_norm(x) - l1_norm(x)) < tol
+        True
+
+        Redo previous example for a product space in two dimensions
+
+        >>> domain = odl.uniform_discr([0, 0], [1, 1], [5, 5])
+        >>> space = odl.ProductSpace(domain, 2)
+        >>> x = odl.phantom.white_noise(space)
+        >>> huber_norm = odl.solvers.Huber(space, gamma=0)
+        >>> l1_norm = odl.solvers.GroupL1Norm(space, 2)
+        >>> abs(huber_norm(x) - l1_norm(x)) < tol
         True
         """
-        self.gamma = float(gamma)
+
+        self.__gamma = float(gamma)
         self.strong_convexity = 0
 
         if self.gamma > 0:
@@ -2361,36 +2388,86 @@ class Huber(Functional):
         super(Huber, self).__init__(space=space, linear=False,
                                     grad_lipschitz=grad_lipschitz)
 
-    def _call(self, x):
-        '''Return the Huber-norm of ``x``.'''
+    @property
+    def gamma(self):
+        """The smoothing parameter of the Huber norm functional."""
+        return self.__gamma
+
+    def __local_norm(self, x):
         if isinstance(self.domain, ProductSpace):
-            n = PointwiseNorm(self.domain, 2)(x)
+            return PointwiseNorm(self.domain, 2)(x)
         else:
-            n = x.ufuncs.absolute()
+            return x.ufuncs.absolute()
+
+    def __local_norm_operator(self):
+        if isinstance(self.domain, ProductSpace):
+            return GroupL1Norm(self.domain, 2)
+        else:
+            return L1Norm(self.domain)
+
+    def _call(self, x):
+        """Return ``self(x)``."""
+        n = self.__local_norm(x)
 
         if self.gamma > 0:
             i = n.ufuncs.less(self.gamma)
-            n = (i * (1 / (2 * self.gamma) * n**2 + self.gamma / 2) +
-                 i.ufuncs.logical_not() * n)
+            out = i * 1 / (2 * self.gamma) * n**2
 
-        return n.inner(n.space.one())
+            i.ufuncs.logical_not(out=i)
+            out += i * (n - self.gamma / 2)
+
+        return out.inner(self.domain.one())
 
     @property
     def convex_conj(self):
         '''The convex conjugate'''
-        return FunctionalQuadraticPerturb(
-            GroupL1Norm(self.domain, 2).convex_conj,
-            quadratic_coeff=self.gamma / 2)
+        n = self.__local_norm_operator()
+        f = FunctionalQuadraticPerturb(n.convex_conj,
+                                       quadratic_coeff=self.gamma / 2)
+
+        f.strong_convexity = 1 / self.grad_lipschitz
+
+        return f
 
     @property
     def proximal(self):
-        '''The proximal operator'''
-        raise NotImplementedError('Not yet implement. To be done.')
+        """Return the ``proximal factory`` of the functional.
+
+        See Also
+        --------
+        odl.solvers.proximal_huber : `proximal factory` for the Huber
+            norm.
+        """
+        return proximal_huber(space=self.domain, gamma=self.gamma)
 
     @property
     def gradient(self):
-        '''Gradient operator of the functional.'''
-        raise NotImplementedError('Not yet implement. To be done.')
+        """Gradient operator of the functional."""
+        functional = self
+
+        class HuberGradient(Operator):
+
+            """The gradient operator of this functional."""
+
+            def __init__(self):
+                """Initialize a new instance."""
+                super(HuberGradient, self).__init__(functional.domain,
+                                                    functional.domain,
+                                                    linear=False)
+
+            def _call(self, x):
+                """Apply the gradient operator to the given point."""
+                n = self.__local_norm(x)
+
+                i = n.ufuncs.less(functional.gamma)
+                grad = i * x / functional.gamma
+
+                i.ufuncs.logical_not(out=i)
+                grad += i * x.ufuncs.sign()
+
+                return grad
+
+        return HuberGradient()
 
     def __repr__(self):
         '''Return ``repr(self)``.'''
