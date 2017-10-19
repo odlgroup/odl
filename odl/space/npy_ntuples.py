@@ -468,6 +468,8 @@ def _blas_is_applicable(*args):
     float or complex data only. If the arrays are non-contiguous,
     BLAS methods are usually slower, and array-writing routines do
     not work at all. Hence, only contiguous arrays are allowed.
+    Furthermore, BLAS uses 32-bit integers internally for indexing,
+    which makes it unusable for arrays lager than ``2 ** 31 - 1``.
 
     Parameters
     ----------
@@ -476,7 +478,8 @@ def _blas_is_applicable(*args):
     """
     return (all(x.dtype == args[0].dtype and
                 x.dtype in _BLAS_DTYPES and
-                x.data.flags.contiguous
+                x.data.flags.contiguous and
+                x.size <= np.iinfo('int32').max
                 for x in args))
 
 
