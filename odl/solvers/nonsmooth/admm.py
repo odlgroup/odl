@@ -1,7 +1,7 @@
 """Alternating Direction method of Multipliers (ADMM) method variants."""
 
 from __future__ import division
-from odl.operator import Operator
+from odl.operator import Operator, OpDomainError
 
 
 __all__ = ('admm_linearized',)
@@ -78,30 +78,26 @@ def admm_linearized(x, f, g, L, tau, sigma, niter, **kwargs):
     [PB2014] Parikh, N and Boyd, S. *Proximal Algorithms*. Foundations and
     Trends in Optimization, 1(3) (2014), pp 123-231.
     """
-    # Forward operator
     if not isinstance(L, Operator):
         raise TypeError('`op` {!r} is not an `Operator` instance'
                         ''.format(L))
 
-    # Starting point
     if x not in L.domain:
-        raise TypeError('`x` {!r} is not in the domain of `op` {!r}'
-                        ''.format(x, L.domain))
+        raise OpDomainError('`x` {!r} is not in the domain of `op` {!r}'
+                            ''.format(x, L.domain))
 
-    # Step size parameter
     tau, tau_in = float(tau), tau
     if tau <= 0:
         raise ValueError('`tau` must be positive, got {}'.format(tau_in))
 
-    # Step size parameter
     sigma, sigma_in = float(sigma), sigma
     if sigma <= 0:
         raise ValueError('`sigma` must be positive, got {}'.format(sigma_in))
 
-    # Number of iterations
-    if not isinstance(niter, int) or niter < 0:
-        raise ValueError('`niter` {} not understood'
-                         ''.format(niter))
+    niter, niter_in = int(niter), niter
+    if niter < 0 or niter != niter_in:
+        raise ValueError('`niter` must be a non-negative integer, got {}'
+                         ''.format(niter_in))
 
     # Callback object
     callback = kwargs.pop('callback', None)
