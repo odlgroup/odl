@@ -40,7 +40,8 @@ __all__ = ('combine_proximals', 'proximal_convex_conj', 'proximal_translation',
            'proximal_l1', 'proximal_convex_conj_l1',
            'proximal_l2', 'proximal_convex_conj_l2',
            'proximal_l2_squared', 'proximal_convex_conj_l2_squared',
-           'proximal_convex_conj_kl', 'proximal_convex_conj_kl_cross_entropy')
+           'proximal_convex_conj_kl', 'proximal_convex_conj_kl_cross_entropy',
+           'proximal_huber_norm')
 
 
 def combine_proximals(*factory_list):
@@ -1404,6 +1405,67 @@ def proximal_convex_conj_kl_cross_entropy(space, lam=1, g=None):
                                 (self.sigma / lam) * g * np.exp(x / lam)))
 
     return ProximalConvexConjKLCrossEntropy
+
+
+def proximal_huber_norm(space, epsilon):
+    """Proximal factory of the Huber norm.
+
+    Parameters
+    ----------
+    space : `FnBase`
+        Space X which is the domain of the functional F
+    epsilon : float
+        The parameter of the Huber norm functional.
+
+    Returns
+    -------
+    prox_factory : function
+        Factory for the proximal operator to be initialized.
+
+    See Also
+    --------
+    odl.solvers.HuberNorm : the Huber norm functional
+
+    Notes
+    -----
+    The proximal operator is given by given by the proximal operator of
+    1/(2 * epsilon) * L2 norm in points that are <= epsilon, and by the
+    proximal operator of the l1 norm in points that are > epsilon.
+    """
+
+    epsilon = float(epsilon)
+
+    class ProximalHuberNorm(Operator):
+
+        """Proximal operator of conjugate of cross entropy KL divergence."""
+
+        def __init__(self, sigma):
+            """Initialize a new instance.
+
+            Parameters
+            ----------
+            sigma : positive float
+            """
+            self.sigma = float(sigma)
+            super(ProximalHuberNorm, self).__init__(
+                domain=space, range=space, linear=False)
+
+        def _call(self, x, out):
+            """Apply the operator to ``x`` and stores the result in ``out``."""
+            l2_indices = x.ufuncs.absolute().asarray() < epsilon + self.sigma
+            l2_indices = np.float32(l2_indices)
+
+            pos_indices = np.float32(x.asarray() > 0)
+
+            tmp = (epsilon / (epsilon + self.sigma) * x * l2_indices +
+                   (x - self.sigma) * (1 - l2_indices) * pos_indices +
+                   (x + self.sigma) * (1 - l2_indices) * (1 - pos_indices))
+
+            out.assign(tmp)
+
+            return out
+
+    return ProximalHuberNorm
 
 
 if __name__ == '__main__':

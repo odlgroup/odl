@@ -49,7 +49,7 @@ def space(request, fn_impl):
 func_params = ['l1 ', 'l2', 'l2^2', 'constant', 'zero', 'ind_unit_ball_1',
                'ind_unit_ball_2', 'ind_unit_ball_pi', 'ind_unit_ball_inf',
                'product', 'quotient', 'kl', 'kl_cc', 'kl_cross_ent',
-               'kl_cc_cross_ent']
+               'kl_cc_cross_ent', 'huber']
 func_ids = [" functional='{}' ".format(p) for p in func_params]
 
 
@@ -91,6 +91,8 @@ def functional(request, space):
         func = odl.solvers.functional.KullbackLeiblerCrossEntropy(space)
     elif name == 'kl_cc_cross_ent':
         func = odl.solvers.KullbackLeiblerCrossEntropy(space).convex_conj
+    elif name == 'huber':
+        func = odl.solvers.HuberNorm(space, epsilon=0.1)
     else:
         assert False
 
