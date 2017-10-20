@@ -1,13 +1,24 @@
-"""Total variation tomography using ADMM.
+"""Total variation tomography using linearized ADMM.
 
 Solves the optimization problem
 
-    min_x  1/2 ||A(x) - g||_2^2 + lam || |grad(x)| ||_1
+    min_x  ||A(x) - y||_2^2 + lam * ||grad(x)||_1
 
 Where ``A`` is a parallel beam ray transform, ``grad`` the spatial
-gradient and ``g`` is given noisy data.
+gradient and ``y`` is given noisy data.
 
-See the documentation of the `admm` method for further details.
+The problem is rewritten in decoupled form as
+
+    min_x g(L(x))
+
+with a separable sum ``g`` of functionals and the stacked operator ``L``:
+
+    g(z) = ||z_1 - g||_2^2 + lam * ||z_2||_1,
+
+               ( A(x)    )
+    z = L(x) = ( grad(x) ).
+
+See the documentation of the `admm_linearized` method for further details.
 """
 
 import numpy as np
@@ -15,73 +26,60 @@ import odl
 
 # --- Set up the forward operator (ray transform) --- #
 
-# Reconstruction space: discretized functions on the rectangle
-# [-20, 20]^2 with 300 samples per dimension.
+# Reconstruction space: functions on the rectangle [-20, 20]^2
+# discretized with 300 samples per dimension
 reco_space = odl.uniform_discr(
     min_pt=[-20, -20], max_pt=[20, 20], shape=[300, 300], dtype='float32')
 
-# Make a parallel beam geometry with flat detector
-# Angles: uniformly spaced, n = 360, min = 0, max = pi
-angle_partition = odl.uniform_partition(0, np.pi, 360)
-# Detector: uniformly sampled, n = 512, min = -30, max = 30
-detector_partition = odl.uniform_partition(-30, 30, 512)
-geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
+# Make a parallel beam geometry with flat detector, using 360 angles
+geometry = odl.tomo.parallel_beam_geometry(reco_space, num_angles=180)
 
 # Create the forward operator
 ray_trafo = odl.tomo.RayTransform(reco_space, geometry)
 
 # --- Generate artificial data --- #
 
-# Create phantom
-discr_phantom = odl.phantom.shepp_logan(reco_space, modified=True)
-
-# Create sinogram of forward projected phantom with noise
-data = ray_trafo(discr_phantom)
+# Create phantom and noisy projection data
+phantom = odl.phantom.shepp_logan(reco_space, modified=True)
+data = ray_trafo(phantom)
 data += odl.phantom.white_noise(ray_trafo.range) * np.mean(data) * 0.1
 
 # --- Set up the inverse problem --- #
 
-# Initialize gradient operator
-gradient = odl.Gradient(reco_space)
+# Gradient operator for the TV part
+grad = odl.Gradient(reco_space)
 
-# Column vector of two operators
-op = odl.BroadcastOperator(ray_trafo, gradient)
+# Stacking of the two operators
+L = odl.BroadcastOperator(ray_trafo, grad)
 
-# Do not use the f functional, set it to zero.
-f = odl.solvers.ZeroFunctional(op.domain)
+# Data matching and regularization functionals
+data_fit = odl.solvers.L2NormSquared(ray_trafo.range).translated(data)
+reg_func = 0.015 * odl.solvers.L1Norm(grad.range)
+g = odl.solvers.SeparableSum(data_fit, reg_func)
 
-# Create functionals for the dual variable
+# We don't use the f functional, setting it to zero
+f = odl.solvers.ZeroFunctional(L.domain)
 
-# l2-squared data matching
-l2_norm = odl.solvers.L2NormSquared(ray_trafo.range).translated(data)
+# --- Select parameters and solve using ADMM --- #
 
-# Isotropic TV-regularization i.e. the l1-norm
-l1_norm = 0.015 * odl.solvers.L1Norm(gradient.range)
-
-# Combine functionals, order must correspond to the operator K
-g = odl.solvers.SeparableSum(l2_norm, l1_norm)
-
-# --- Select solver parameters and solve using PDHG --- #
-
-# Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
-op_norm = 1.1 * odl.power_method_opnorm(op)
+# Estimated operator norm, add 10 percent for some safety margin
+op_norm = 1.1 * odl.power_method_opnorm(L, maxiter=20)
 
 niter = 200  # Number of iterations
-sigma = 2.0  # Step size for the dual variable
-tau = sigma / op_norm ** 2  # Step size for the primal variable
+sigma = 2.0  # Step size for g.proximal
+tau = sigma / op_norm ** 2  # Step size for f.proximal
 
-# Optionally pass callback to the solver to display intermediate results
+# Optionally pass a callback to the solver to display intermediate results
 callback = (odl.solvers.CallbackPrintIteration(step=10) &
             odl.solvers.CallbackShow(step=10))
 
 # Choose a starting point
-x = op.domain.zero()
+x = L.domain.zero()
 
 # Run the algorithm
-odl.solvers.admm_linearized(x, f, g, op, tau=tau, sigma=sigma, niter=niter,
-                            callback=callback)
+odl.solvers.admm_linearized(x, f, g, L, tau, sigma, niter, callback=callback)
 
 # Display images
-discr_phantom.show(title='Phantom')
+phantom.show(title='Phantom')
 data.show(title='Simulated data (Sinogram)')
 x.show(title='TV reconstruction', force_show=True)
