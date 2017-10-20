@@ -2299,27 +2299,22 @@ class Huber(Functional):
 
     Notes
     -----
-    The functional :math:`f` with smoothing :math:`\\gamma` is given by
+    The Huber norm is the integral over a smoothed norm. In detail, it is given
+    by
 
     .. math::
-        f_\\gamma(t) =
+        F(x) = \\int_\Omega f_{\\gamma}(||x(y)||_2) dy
+
+    where ``||.||_2`` denotes the Euclidean norm for vector-valued functions
+    which reduces to the absolute value for scalar-valued functions.
+    The function :math:`f` with smoothing :math:`\\gamma` is given by
+
+    .. math::
+        f_{\\gamma}(t) =
         \\begin{cases}
-            \\frac{1}{2 \\gamma} t^2 + \\frac{\\gamma}{2}
-                & \\text{if } |t| \leq \\gamma \\\\
-            |t|
-                & \\text{else}
+            \\frac{1}{2 \\gamma} t^2 & \\text{if } |t| \leq \\gamma \\\\
+            |t| - \\frac{\\gamma}{2} & \\text{else}
         \\end{cases}.
-
-    and the Huber norm is the integral of this functional over the domain,
-    i.e., the Huber norm is given by
-
-    .. math::
-        \\int_\Omega f_\\gamma(||x||_2) dx.
-
-    In the discrete case, this becomes
-
-    .. math::
-        \\sum_{i=1}^n f_\\gamma(||x_i||_2).
     """
 
     def __init__(self, space, gamma):
@@ -2337,7 +2332,7 @@ class Huber(Functional):
 
         Examples
         --------
-        Example of initializing the Huber norm functional
+        Example of initializing the Huber norm functional.
 
         >>> space = odl.uniform_discr(0, 1, 14)
         >>> gamma = 0.1
@@ -2349,16 +2344,16 @@ class Huber(Functional):
         >>> x = 2 * gamma * space.one()
         >>> tol = 1e-5
         >>> constant = gamma / 2 * space.one().inner(space.one())
-        >>> l1_norm = odl.solvers.L1Norm(space) - constant
-        >>> abs(huber_norm(x) - l1_norm(x)) < tol
+        >>> f = odl.solvers.L1Norm(space) - constant
+        >>> abs(huber_norm(x) - f(x)) < tol
         True
 
         Check that if all elements are < ``gamma`` we get the squared L2-norm
         times the weight 1/(2*gamma).
 
         >>> x = gamma / 2 * space.one()
-        >>> l2_norm = 1 / (2 * gamma) * odl.solvers.L2NormSquared(space)
-        >>> abs(huber_norm(x) - l2_norm(x)) < tol
+        >>> f = 1 / (2 * gamma) * odl.solvers.L2NormSquared(space)
+        >>> abs(huber_norm(x) - f(x)) < tol
         True
 
         Compare Huber- and L1-norm for vanishing smoothing ``gamma=0``.
@@ -2381,7 +2376,6 @@ class Huber(Functional):
         """
 
         self.__gamma = float(gamma)
-        self.strong_convexity = 0
 
         if self.gamma > 0:
             grad_lipschitz = 1 / self.gamma
@@ -2396,43 +2390,34 @@ class Huber(Functional):
         """The smoothing parameter of the Huber norm functional."""
         return self.__gamma
 
-    def local_norm(self, x):
-        if isinstance(self.domain, ProductSpace):
-            return PointwiseNorm(self.domain, 2)(x)
-        else:
-            return x.ufuncs.absolute()
-
-    def local_norm_operator(self):
-        if isinstance(self.domain, ProductSpace):
-            return GroupL1Norm(self.domain, 2)
-        else:
-            return L1Norm(self.domain)
-
     def _call(self, x):
         """Return ``self(x)``."""
-        n = self.local_norm(x)
+        if isinstance(self.domain, ProductSpace):
+            norm = PointwiseNorm(self.domain, 2)(x)
+        else:
+            norm = x.ufuncs.absolute()
 
         if self.gamma > 0:
-            i = n.ufuncs.less(self.gamma)
-            out = i * 1 / (2 * self.gamma) * n**2
+            index = norm.ufuncs.less(self.gamma)
+            out = index * 1 / (2 * self.gamma) * norm**2
 
-            i.ufuncs.logical_not(out=i)
-            out += i * (n - self.gamma / 2)
+            index.ufuncs.logical_not(out=index)
+            out += index * (norm - self.gamma / 2)
         else:
-            out = n
+            out = norm
 
         return out.inner(out.space.one())
 
     @property
     def convex_conj(self):
         '''The convex conjugate'''
-        n = self.local_norm_operator()
-        f = FunctionalQuadraticPerturb(n.convex_conj,
-                                       quadratic_coeff=self.gamma / 2)
+        if isinstance(self.domain, ProductSpace):
+            norm = GroupL1Norm(self.domain, 2)
+        else:
+            norm = L1Norm(self.domain)
 
-        f.strong_convexity = 1 / self.grad_lipschitz
-
-        return f
+        return FunctionalQuadraticPerturb(norm.convex_conj,
+                                          quadratic_coeff=self.gamma / 2)
 
     @property
     def proximal(self):
@@ -2448,6 +2433,15 @@ class Huber(Functional):
     @property
     def gradient(self):
         """Gradient operator of the functional.
+
+        The gradient of the Huber functional is given by
+
+            .. math::
+                \\nabla f_{\\gamma}(x) =
+                \\begin{cases}
+                \\frac{1}{\\gamma} x & \\text{if } \|x\|_2 \leq \\gamma \\\\
+                \\frac{1}{\|x\|_2} x & \\text{else}
+                \\end{cases}.
 
         Examples
         --------
@@ -2489,13 +2483,16 @@ class Huber(Functional):
 
             def _call(self, x):
                 """Apply the gradient operator to the given point."""
-                n = functional.local_norm(x)
+                if isinstance(self.domain, ProductSpace):
+                    norm = PointwiseNorm(self.domain, 2)(x)
+                else:
+                    norm = x.ufuncs.absolute()
 
-                i = n.ufuncs.less(functional.gamma)
-                grad = i * x / functional.gamma
+                index = norm.ufuncs.less(functional.gamma)
+                grad = index * x / functional.gamma
 
-                i.ufuncs.logical_not(out=i)
-                grad += i * x.ufuncs.sign()
+                index.ufuncs.logical_not(out=index)
+                grad += index * x / norm
 
                 return grad
 

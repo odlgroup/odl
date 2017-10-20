@@ -1413,7 +1413,7 @@ def proximal_huber(space, gamma):
     Parameters
     ----------
     space : `FnBase`
-        Space X which is the domain of the functional F
+        The domain of the functional
     gamma : float
         The smoothing parameter of the Huber norm functional.
 
@@ -1429,15 +1429,15 @@ def proximal_huber(space, gamma):
     Notes
     -----
     The proximal operator is given by given by the proximal operator of
-    1/(2*gamma) * L2 norm in points that are <= gamma, and by the
-    proximal operator of the l1 norm in points that are > gamma.
+    ``1/(2*gamma) * L2 norm`` in points that are ``<= gamma``, and by the
+    proximal operator of the l1 norm in points that are ``> gamma``.
     """
 
     gamma = float(gamma)
 
     class ProximalHuber(Operator):
 
-        """Proximal operator of conjugate of cross entropy KL divergence."""
+        """Proximal operator of Huber norm."""
 
         def __init__(self, sigma):
             """Initialize a new instance.
@@ -1450,28 +1450,23 @@ def proximal_huber(space, gamma):
             super(ProximalHuber, self).__init__(domain=space, range=space,
                                                 linear=False)
 
-        def __local_norm(self, x):
-            if isinstance(self.domain, ProductSpace):
-                return PointwiseNorm(self.domain, 2)(x)
-            else:
-                return x.ufuncs.absolute()
-
         def _call(self, x, out):
             if isinstance(x.space, ProductSpace):
                 raise NotImplementedError('`proximal` not yet implemented for'
                                           'product spaces')
 
             """Apply the operator to ``x`` and stores the result in ``out``."""
-            n = self.__local_norm(x)
+            if isinstance(self.domain, ProductSpace):
+                norm = PointwiseNorm(self.domain, 2)(x)
+            else:
+                norm = x.ufuncs.absolute()
 
-            i = n.ufuncs.less_equal(gamma + self.sigma)
-            tmp = i * gamma / (gamma + self.sigma) * x
+            i = norm.ufuncs.less_equal(gamma + self.sigma)
+            out.assign(i * gamma / (gamma + self.sigma) * x)
 
             i.ufuncs.logical_not(out=i)
             j = x.ufuncs.sign()
-            tmp += i * (x - j * self.sigma)
-
-            out.assign(tmp)
+            out += i * (x - j * self.sigma)
 
             return out
 

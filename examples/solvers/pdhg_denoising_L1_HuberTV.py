@@ -1,22 +1,12 @@
 """Total variation denoising using PDHG.
 
-This exhaustive example solve the L1-HuberTV problem
+This exhaustive example solves the L1-HuberTV problem
 
-    .. math::
-        \\min_{x >= 0} ||x - d||_1
-            + \\lambda \\sum_i \\eta_\\gamma(||grad(x)_i||_2)
+        min_{x >= 0} ||x - d||_1
+            + lam * sum_i eta_gamma(||grad(x)_i||_2)
 
-where ``grad`` the spatial gradient and ``d`` is given noisy data. Here
-``\\eta_\\gamma`` denotes the Huber function defined as
-
-    .. math::
-        \\eta_\\gamma(x) =
-        \\begin{cases}
-            \\frac{1}{2 \\gamma} x^2 + \\frac{gamma}{2}
-                & \\text{if } |x| \leq \\gamma \\\\
-            |x|
-                & \\text{if } |x| > \\gamma,
-        \\end{cases}.
+where grad the spatial gradient and d is given noisy data. Here eta_gamma
+denotes the Huber function. For more details, see the Huber documentation.
 
 For further details and a description of the solution method used, see
 https://odlgroup.github.io/odl/guide/pdhg_guide.html in the ODL documentation.
@@ -29,46 +19,27 @@ import matplotlib.pyplot as plt
 
 # --- define setting --- #
 
-# Read test image: use only every second pixel, convert integer to float
+# Define ground truth, space and noisy data
 image = np.rot90(scipy.misc.ascent()[::2, ::2].astype('float'), 3)
 shape = image.shape
-
-# Rescale max to 1
 image /= image.max()
-
-# Discretized space
 space = odl.uniform_discr([0, 0], shape, shape)
-
-# Create space element of ground truth
 orig = space.element(image.copy())
+d = odl.phantom.salt_pepper_noise(orig)
 
-# Create noisy image
-noisy = odl.phantom.salt_pepper_noise(orig)
+# Define objective functional
+op = odl.Gradient(space)  # operator
+op.norm = np.sqrt(8) + 1e-4  # norm with forward differences is well-known
+lam = 1  # Regularization parameter
+g = 1 / lam * odl.solvers.L1Norm(space).translated(d)  # data fit
+f = odl.solvers.Huber(op.range, gamma=.1)  # regularization
+obj_fun = f * op + g  # combined functional
+mu_f = 1 / f.grad_lipschitz  # Strong convexity of "f*"
 
-# Gradient operator
-gradient = odl.Gradient(space)
-
-# The operator norm of the gradient with forward differences is well-known
-gradient.norm = np.sqrt(8) + 1e-4
-
-# Regularization parameter
-reg_param = 1
-
-# l1 data matching
-l1_norm = 1 / reg_param * odl.solvers.L1Norm(space).translated(noisy)
-
-# HuberTV-regularization
-huber = odl.solvers.Huber(gradient.range, gamma=.1)
-
-# Define objective
-obj_fun = l1_norm + huber * gradient
-
-# Strong convexity of "f*"
-strong_convexity = 1 / huber.grad_lipschitz
+# Define algorithm parameters
 
 
-# Define callback to store function values
-class CallbackStore(odl.solvers.Callback):
+class CallbackStore(odl.solvers.Callback):  # Callback to store function values
     def __init__(self):
         self.iteration_count = 0
         self.iteration_counts = []
@@ -85,23 +56,15 @@ class CallbackStore(odl.solvers.Callback):
         self.obj_function_values = []
 
 
-callback = (odl.solvers.CallbackPrintIteration() & CallbackStore())
+callback = (odl.solvers.CallbackPrintIteration(step=10) & CallbackStore())
+niter = 500  # Number of iterations
+tau = 1.0 / op.norm  # Step size for primal variable
+sigma = 1.0 / op.norm  # Step size for dual variable
 
-# Number of iterations
-niter = 500
-
-# Assign operator and functionals
-op = gradient
-f = huber
-g = l1_norm
-
-tau = 1.0 / gradient.norm  # Step size for primal variable
-sigma = 1.0 / gradient.norm  # Step size for dual variable
-
-# Run algorithms 2 and 3
+# Run algorithm
 x = space.zero()
-callback(x)
-odl.solvers.pdhg(x, f, g, op, tau, sigma, niter, gamma_dual=strong_convexity,
+callback(x)  # store values for initialization
+odl.solvers.pdhg(x, f, g, op, tau, sigma, niter, gamma_dual=mu_f,
                  callback=callback)
 obj = callback.callbacks[1].obj_function_values
 
@@ -111,7 +74,7 @@ clim = [0, 1]
 cmap = 'gray'
 
 orig.show('original', clim=clim, cmap=cmap)
-noisy.show('noisy', clim=clim, cmap=cmap)
+d.show('noisy', clim=clim, cmap=cmap)
 x.show('denoised', clim=clim, cmap=cmap)
 
 
@@ -123,13 +86,12 @@ def rel_fun(x):
 
 i = np.array(callback.callbacks[1].iteration_counts)
 
-plt.figure(1)
-plt.clf()
-plt.loglog(i, rel_fun(obj), label='alg')
+plt.figure()
+plt.loglog(i, rel_fun(obj), label='pdhg')
 plt.loglog(i[1:], 1. / i[1:], '--', label='$O(1/k)$')
-plt.loglog(i[1:], 4. / i[1:]**2, ':', label='$O(1/k^2)$')
+plt.loglog(i[1:], 4. / i[1:] ** 2, ':', label='$O(1/k^2)$')
 rho = 0.97
-plt.loglog(i[1:], rho**i[1:], '-',
+plt.loglog(i[1:], rho ** i[1:], '-',
            label='$O(\\rho^k), \\rho={:3.2f}$'.format(rho))
 plt.title('Function values')
 plt.legend()

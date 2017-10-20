@@ -1,22 +1,12 @@
 """Linearly convergent total variation denoising using PDHG.
 
-This exhaustive example solve the L2-HuberTV problem
+This exhaustive example solves the L2-HuberTV problem
 
-    .. math::
-        \\min_{x >= 0}  1/2 ||x - d||_2^2
-            + \\lambda \\sum_i \\eta_\\gamma(||grad(x)_i||_2)
+        min_{x >= 0}  1/2 ||x - d||_2^2
+            + lam * sum_i eta_gamma(||grad(x)_i||_2)
 
-where ``grad`` the spatial gradient and ``d`` is given noisy data. Here
-``\\eta_\\gamma`` denotes the Huber function defined as
-
-    .. math::
-        \\eta_\\gamma(x) =
-        \\begin{cases}
-            \\frac{1}{2 \\gamma} x^2 + \\frac{gamma}{2}
-                & \\text{if } |x| \leq \\gamma \\\\
-            |x|
-                & \\text{if } |x| > \\gamma,
-        \\end{cases}.
+where grad the spatial gradient and d is given noisy data. Here eta_gamma
+denotes the Huber function. For more details, see the Huber documentation.
 
 We compare two different step size rules as described in
 
@@ -41,44 +31,28 @@ import matplotlib.pyplot as plt
 
 # --- define setting --- #
 
-# Read test image: use only every second pixel, convert integer to float
+# Define ground truth, space and noisy data
 image = np.rot90(scipy.misc.ascent()[::2, ::2].astype('float'), 3)
 shape = image.shape
-
-# Rescale max to 1
 image /= image.max()
-
-# Discretized space
 space = odl.uniform_discr([0, 0], shape, shape)
-
-# Create space element of ground truth
 orig = space.element(image.copy())
+d = odl.phantom.white_noise(space, orig, 0.1)
 
-# Create noisy observation
-noisy = odl.phantom.white_noise(space, orig, 0.1)
+# Define objective functional
+op = odl.Gradient(space)  # operator
+op.norm = np.sqrt(8) + 1e-4  # norm with forward differences is well-known
+lam = 0.1  # Regularization parameter
+g = 1 / (2 * lam) * odl.solvers.L2NormSquared(space).translated(d)  # data fit
+f = odl.solvers.Huber(op.range, gamma=.01)  # regularization
+obj_fun = f * op + g  # combined functional
+mu_g = 1 / lam  # strong convexity of "g"
+mu_f = 1 / f.grad_lipschitz  # strong convexity of "f*"
 
-# Gradient operator
-gradient = odl.Gradient(space)
-
-# The operator norm of the gradient with forward differences is well-known
-gradient.norm = np.sqrt(8) + 1e-4
-
-# regularization parameter
-reg_param = 0.1
-
-# l2 data matching
-l2_norm = (1 / (2 * reg_param) *
-           odl.solvers.L2NormSquared(space).translated(noisy))
-
-# HuberTV-regularization
-huber = odl.solvers.Huber(gradient.range, gamma=.01)
-
-# define objective
-obj_fun = l2_norm + huber * gradient
+# Define algorithm parameters
 
 
-# define callback to store function values
-class CallbackStore(odl.solvers.Callback):
+class CallbackStore(odl.solvers.Callback):  # Callback to store function values
     def __init__(self):
         self.iteration_count = 0
         self.iteration_counts = []
@@ -95,39 +69,27 @@ class CallbackStore(odl.solvers.Callback):
         self.obj_function_values = []
 
 
-callback = (odl.solvers.CallbackPrintIteration() & CallbackStore())
+callback = (odl.solvers.CallbackPrintIteration(step=10) & CallbackStore())
+niter = 200  # number of iterations
 
-# number of iterations
-niter = 200
 
-# Assign operator and functionals
-op = gradient
-f = huber
-g = l2_norm
+# Parameters for algorithm 1
+# Related to root of problem condition number
+kappa1 = np.sqrt(1 + 0.999 * op.norm ** 2 / (mu_g * mu_f))
+tau1 = 1 / (mu_g * (kappa1 - 1))  # Primal step size
+sigma1 = 1 / (mu_f * (kappa1 - 1))  # Dual step size
+theta1 = 1 - 2 / (1 + kappa1)  # Extrapolation constant
 
-# strong convexity of "f*" and "g"
-mu_g = 1 / reg_param
-mu_f = 1 / huber.grad_lipschitz
-
-# parameters for algorithm 1
-# slightly smaller than condition number of the problem
-kappa1 = 0.999 * gradient.norm**2 / (mu_g * mu_f)
-
-tau1 = 1 / (mu_g * (np.sqrt(1 + kappa1) - 1))  # Primal step size
-sigma1 = 1 / (mu_f * (np.sqrt(1 + kappa1) - 1))  # Dual step size
-theta1 = 1 - 2 / (1 + np.sqrt(1 + kappa1))  # Extrapolation constant
-
-# parameters for algorithm 2
-# square root of usual condition number
-kappa2 = gradient.norm / np.sqrt(mu_f * mu_g)
-
-tau2 = 1 / gradient.norm * np.sqrt(mu_f / mu_g)  # Primal step size
-sigma2 = 1 / gradient.norm * np.sqrt(mu_g / mu_f)  # Dual step size
-theta2 = 1 - 1 / (1 + 0.5 * kappa2)  # Extrapolation constant
+# Parameters for algorithm 2
+# Square root of problem condition number
+kappa2 = op.norm / np.sqrt(mu_f * mu_g)
+tau2 = 1 / op.norm * np.sqrt(mu_f / mu_g)  # Primal step size
+sigma2 = 1 / op.norm * np.sqrt(mu_g / mu_f)  # Dual step size
+theta2 = 1 - 2 / (2 + kappa2)  # Extrapolation constant
 
 # Run linearly convergent algorithm 1
 x1 = space.zero()
-callback(x1)
+callback(x1)  # store values for initialization
 odl.solvers.pdhg(x1, f, g, op, tau1, sigma1, niter, theta=theta1,
                  callback=callback)
 obj1 = callback.callbacks[1].obj_function_values
@@ -135,7 +97,7 @@ obj1 = callback.callbacks[1].obj_function_values
 # Run linearly convergent algorithm 2
 callback.reset()
 x2 = space.zero()
-callback(x2)
+callback(x2)  # store values for initialization
 odl.solvers.pdhg(x2, f, g, op, tau2, sigma2, niter, theta=theta2,
                  callback=callback)
 obj2 = callback.callbacks[1].obj_function_values
@@ -146,7 +108,7 @@ clim = [0, 1]
 cmap = 'gray'
 
 orig.show('original', clim=clim, cmap=cmap)
-noisy.show('noisy', clim=clim, cmap=cmap)
+d.show('noisy', clim=clim, cmap=cmap)
 x1.show('denoised, alg1', clim=clim, cmap=cmap)
 x2.show('denoised, alg2', clim=clim, cmap=cmap)
 
@@ -161,17 +123,16 @@ def rel_fun(x):
 
 i = np.array(callback.callbacks[1].iteration_counts)
 
-plt.figure(1)
-plt.clf()
+plt.figure()
 plt.semilogy(i, rel_fun(obj1), color='red',
              label='alg1, Chambolle et al 2017')
 plt.semilogy(i, rel_fun(obj2), color='blue',
              label='alg2, Chambolle and Pock 2011')
 rho = theta1
-plt.semilogy(i[1:], rho**i[1:], '--', color='red',
+plt.semilogy(i[1:], rho ** i[1:], '--', color='red',
              label='$O(\\rho_1^k), \\rho_1={:3.2f}$'.format(rho))
 rho = theta2
-plt.semilogy(i[1:], rho**i[1:], '--', color='blue',
+plt.semilogy(i[1:], rho ** i[1:], '--', color='blue',
              label='$O(\\rho_2^k), \\rho_2={:3.2f}$'.format(rho))
 plt.title('Function values + theoretical upper bounds')
 plt.ylim((1e-16, 1))
