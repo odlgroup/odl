@@ -28,9 +28,9 @@ def admm_linearized(x, f, g, L, tau, sigma, niter, **kwargs):
         The functions ``f`` and ``g`` in the problem definition. They
         need to implement the ``proximal`` method.
     L : linear `Operator`
-        The linear operator that should be applied before ``f``. Its range
-        must match the domain of ``f``, and its domain must match the domain
-        of ``g``.
+        The linear operator that is composed with ``g`` in the problem
+        definition. It must fulfill ``L.domain == f.domain`` and
+        ``L.range == g.domain``.
     tau, sigma : positive float
         Step size parameters for the update of the variables.
     niter : non-negative int
@@ -43,7 +43,9 @@ def admm_linearized(x, f, g, L, tau, sigma, niter, **kwargs):
 
     Notes
     -----
-    The ADMM method applies the following iteration:
+    Given :math:`x^{(0)}` (the provided ``x``) and
+    :math:`u^{(0)} = z^{(0)} = 0`, linearized ADMM applies the following
+    iteration:
 
     .. math::
         x^{(k+1)} &= \mathrm{prox}_{\\tau f} \\left[
@@ -113,9 +115,13 @@ def admm_linearized(x, f, g, L, tau, sigma, niter, **kwargs):
     # Temporary for L^*(Lx + u - z)
     tmp_dom = L.domain.element()
 
+    # Store proximals since their initialization may involve computation
+    prox_tau_f = f.proximal(tau)
+    prox_sigma_g = g.proximal(sigma)
+
     for _ in range(niter):
-        # tmp_ran has value L x^k here
-        # tmp_dom <- L^*(L x^k + u^k - z^k)
+        # tmp_ran has value Lx^k here
+        # tmp_dom <- L^*(Lx^k + u^k - z^k)
         tmp_ran += u
         tmp_ran -= z
         L.adjoint(tmp_ran, out=tmp_dom)
@@ -123,14 +129,14 @@ def admm_linearized(x, f, g, L, tau, sigma, niter, **kwargs):
         # x <- x^k - (tau/sigma) L^*(Lx^k + u^k - z^k)
         x.lincomb(1, x, -tau / sigma, tmp_dom)
         # x^(k+1) <- prox[tau*f](x)
-        f.proximal(tau)(x, out=x)
+        prox_tau_f(x, out=x)
 
-        # tmp_ran <- L x^(k+1)
+        # tmp_ran <- Lx^(k+1)
         L(x, out=tmp_ran)
-        # z^(k+1) <- prox[sigma*g](L x^(k+1) + u^k)
-        g.proximal(sigma)(tmp_ran + u, out=z)  # 1 copy here
+        # z^(k+1) <- prox[sigma*g](Lx^(k+1) + u^k)
+        prox_sigma_g(tmp_ran + u, out=z)  # 1 copy here
 
-        # u^(k+1) = u^k + L x^(k+1) - z^(k+1)
+        # u^(k+1) = u^k + Lx^(k+1) - z^(k+1)
         u += tmp_ran
         u -= z
 

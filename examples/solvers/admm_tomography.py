@@ -1,11 +1,11 @@
 """Total variation tomography using linearized ADMM.
 
-Solves the optimization problem
+In this example we solve the optimization problem
 
     min_x  ||A(x) - y||_2^2 + lam * ||grad(x)||_1
 
 Where ``A`` is a parallel beam ray transform, ``grad`` the spatial
-gradient and ``y`` is given noisy data.
+gradient and ``y`` given noisy data.
 
 The problem is rewritten in decoupled form as
 
@@ -18,7 +18,7 @@ with a separable sum ``g`` of functionals and the stacked operator ``L``:
                ( A(x)    )
     z = L(x) = ( grad(x) ).
 
-See the documentation of the `admm_linearized` method for further details.
+See the documentation of the `admm_linearized` solver for further details.
 """
 
 import numpy as np
