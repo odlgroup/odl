@@ -35,58 +35,6 @@ __all__ = ('TorchTensorSpace',)
 # --- Evil monkey-patching of torch --- #
 
 
-def _tensor___array__(self, dtype=None):
-    """Return a Numpy array from this tensor.
-
-    Parameters
-    ----------
-    dtype :
-        Specifier for the data type of the output array.
-
-    Returns
-    -------
-    array : `numpy.ndarray`
-    """
-    if dtype is None:
-        return self.cpu().numpy()
-    else:
-        return self.cpu().numpy().astype(dtype, copy=False)
-
-
-def _tensor___array_wrap__(self, array):
-    """Return a new tensor wrapping the ``array``.
-
-    Parameters
-    ----------
-    array : `numpy.ndarray`
-        Array to be wrapped.
-
-    Returns
-    -------
-    wrapper : `Tensor`
-        Tensor wrapping ``array``.
-    """
-    if array.ndim == 0:
-        if array.dtype.kind == 'b':
-            return bool(array)
-        elif array.dtype.kind in ('i', 'u'):
-            return int(array)
-        elif array.dtype.kind == 'f':
-            return float(array)
-        elif array.dtype.kind == 'c':
-            return complex(array)
-        else:
-            raise RuntimeError('bad array {!r}'.format(array))
-    else:
-        if array.dtype == bool:
-            # Workaround, torch has no built-in bool tensor
-            cls = torch.ByteTensor
-            array = array.astype('uint8')
-        else:
-            cls = _tensor_cls(array.dtype, use_cuda=self.is_cuda)
-        return cls(array)
-
-
 def _tensor___getitem__(self, indices):
     """Implement indexing with lists."""
     if isinstance(indices, list) and not all(np.isscalar(i) for i in indices):
@@ -137,8 +85,6 @@ def _tensor___setitem__(self, indices, values):
 
 if TORCH_AVAILABLE:
     for cls in torch._tensor_classes:
-        setattr(cls, '__array__', _tensor___array__)
-        setattr(cls, '__array_wrap__', _tensor___array_wrap__)
         setattr(cls, '__getitem__', _tensor___getitem__)
         setattr(cls, '__setitem__', _tensor___setitem__)
 
@@ -760,20 +706,10 @@ class TorchTensorSpace(TensorSpace):
                         'expected `inp` of shape {}, got shape {}'
                         ''.format(self.shape, inp.shape))
 
-                if self.dtype == 'float16':
-                    # `from_numpy` not supported for float16, need to
-                    # go through a tensor with float32 dtype
-                    inp = inp.astype('float32', copy=False)
-                    conv_cls = _tensor_cls(
-                        'float32', use_cuda=(self.data_loc == 'GPU'))
-                    tens = conv_cls(inp, **constr_kwargs)
-                    tens = tens.type(tens_cls)
-
-                elif order is None:
+                if order is None:
                     # TODO: this seems to be really slow sometimes,
                     # make benchmarks!
                     tens = torch.from_numpy(inp)
-
                 else:
                     tens = tens_cls(inp)
 
