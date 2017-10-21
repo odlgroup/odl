@@ -35,14 +35,13 @@ def test_admm_lin_input_handling():
 
     # Check that a provided callback is actually called
     class CallbackTest(Callback):
-
-        def __init__(self):
-            self.was_called = False
+        was_called = False
 
         def __call__(self, *args, **kwargs):
             self.was_called = True
 
     callback = CallbackTest()
+    assert not callback.was_called
     admm_linearized(x, f, g, L, tau=1.0, sigma=1.0, niter=niter,
                     callback=callback)
     assert callback.was_called
