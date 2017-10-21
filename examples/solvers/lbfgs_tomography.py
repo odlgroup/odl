@@ -56,8 +56,8 @@ opnorm = odl.power_method_opnorm(ray_trafo)
 hessinv_estimate = odl.ScalingOperator(reco_space, 1 / opnorm ** 2)
 
 # Optionally pass callback to the solver to display intermediate results
-callback = (odl.solvers.CallbackPrintIteration() &
-            odl.solvers.CallbackShow())
+callback = (odl.solvers.CallbackPrintIteration(step=10) &
+            odl.solvers.CallbackShow(step=10))
 
 # Pick parameters
 maxiter = 20
