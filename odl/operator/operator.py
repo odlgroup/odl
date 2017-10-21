@@ -1154,8 +1154,10 @@ class OperatorSum(Operator):
         else:
             tmp = (self.__tmp_ran if self.__tmp_ran is not None
                    else self.range.element())
-            self.left(x, out=out)
-            self.right(x, out=tmp)
+            # Write to `tmp` first, otherwise aliased `x` and `out` lead
+            # to wrong result
+            self.left(x, out=tmp)
+            self.right(x, out=out)
             out += tmp
 
     def derivative(self, x):
@@ -1492,8 +1494,10 @@ class OperatorPointwiseProduct(Operator):
             return self.left(x) * self.right(x)
         else:
             tmp = self.right.range.element()
-            self.left(x, out=out)
-            self.right(x, out=tmp)
+            # Write to `tmp` first, otherwise aliased `x` and `out` lead
+            # to wrong result
+            self.left(x, out=tmp)
+            self.right(x, out=out)
             out *= tmp
 
     def derivative(self, x):
