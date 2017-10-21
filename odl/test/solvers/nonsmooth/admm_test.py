@@ -10,7 +10,7 @@
 
 from __future__ import division
 import odl
-from odl.solvers import admm_linearized, Callback
+from odl.solvers import admm_linearized, admm_precon_nonlinear, Callback
 
 from odl.util.testutils import all_almost_equal, noise_element
 
@@ -70,6 +70,34 @@ def test_admm_lin_l1():
     admm_linearized(x, f, g, L, tau=1.0, sigma=2.0, niter=10)
 
     assert all_almost_equal(x, data_1, places=2)
+
+
+def test_admm_nonlin_affine_l1():
+    """Verify that the correct value is returned for l1 dist optimization.
+
+    Solves the optimization problem
+
+        min_x ||L(x) - y_1||_1 + 0.5 ||L(x) - y_2||_1
+
+    with ``L(x) = x + 1``, which has optimum value ``x_1 = y_1 - 1`` since the
+    first term dominates.
+    """
+    space = odl.rn(5)
+
+    L = odl.IdentityOperator(space) + space.one()
+
+    x1 = odl.util.testutils.noise_element(space)
+    x2 = odl.util.testutils.noise_element(space)
+    y1 = L(x1)
+    y2 = L(x2)
+
+    f = odl.solvers.L1Norm(space).translated(y1)
+    g = 0.5 * odl.solvers.L1Norm(space).translated(y2)
+
+    x = space.zero()
+    admm_precon_nonlinear(x, f, g, L, delta=1.0, niter=10)
+
+    assert all_almost_equal(x, x, places=2)
 
 
 if __name__ == '__main__':
