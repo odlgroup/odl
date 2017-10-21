@@ -753,8 +753,12 @@ class TorchTensorSpace(TensorSpace):
         >>> x
         rn(3, impl='torch').element([ 0.,  0.,  0.])
         """
-        empty = _empty(self.shape, self.dtype, self.is_pinned, self.gpu_id)
-        return self.element(empty.fill_(0))
+        init_dtype = 'float32' if self.dtype == 'float16' else self.dtype
+        empty = _empty(self.shape, init_dtype, self.is_pinned, self.gpu_id)
+        zero_tens = empty.fill_(0)
+        if self.dtype == 'float16':
+            zero_tens = zero_tens.type(torch.HalfTensor)
+        return self.element(zero_tens)
 
     def one(self, gpu=False):
         """Create a tensor filled with ones.
@@ -766,8 +770,12 @@ class TorchTensorSpace(TensorSpace):
         >>> x
         rn(3, impl='torch').element([ 1.,  1.,  1.])
         """
-        empty = _empty(self.shape, self.dtype, self.is_pinned, self.gpu_id)
-        return self.element(empty.fill_(1))
+        init_dtype = 'float32' if self.dtype == 'float16' else self.dtype
+        empty = _empty(self.shape, init_dtype, self.is_pinned, self.gpu_id)
+        one_tens = empty.fill_(1)
+        if self.dtype == 'float16':
+            one_tens = one_tens.type(torch.HalfTensor)
+        return self.element(one_tens)
 
     def __eq__(self, other):
         """Return ``self == other``.
@@ -1231,7 +1239,11 @@ class TorchTensor(Tensor):
         elif other not in self.space:
             return False
         else:
-            return torch.equal(self.data, other.data)
+            if self.dtype == 'float16':
+                return torch.equal(self.data.type(torch.FloatTensor),
+                                   other.data.type(torch.FloatTensor))
+            else:
+                return torch.equal(self.data, other.data)
 
     def copy(self, async=False):
         """Create an identical (deep) copy of this tensor.
@@ -1242,7 +1254,7 @@ class TorchTensor(Tensor):
             Use asynchronous CPU<->GPU copies. See
             `the pytorch documentation
             <http://pytorch.org/docs/master/notes/cuda.html\
-#use-pinned-memory-buffers>`_ for more deteils.
+#use-pinned-memory-buffers>`_ for more details.
 
         Returns
         -------
