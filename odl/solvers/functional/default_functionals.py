@@ -864,20 +864,10 @@ class IndicatorBox(Functional):
 
     def _call(self, x):
         """Apply the functional to the given point."""
-        # Compute the projection of x onto the box, if this is equal to x we
-        # know x is inside the box.
-        tmp = self.domain.element()
-        if self.lower is not None and self.upper is None:
-            x.ufuncs.maximum(self.lower, out=tmp)
-        elif self.lower is None and self.upper is not None:
-            x.ufuncs.minimum(self.upper, out=tmp)
-        elif self.lower is not None and self.upper is not None:
-            x.ufuncs.maximum(self.lower, out=tmp)
-            tmp.ufuncs.minimum(self.upper, out=tmp)
-        else:
-            tmp.assign(x)
-
-        return np.inf if x.dist(tmp) > 0 else 0
+        # Since the proximal projects onto our feasible set we can simply
+        # check if it changes anything
+        proj = self.proximal(1)(x)
+        return np.inf if x.dist(proj) > 0 else 0
 
     @property
     def proximal(self):
