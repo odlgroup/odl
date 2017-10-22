@@ -25,7 +25,7 @@ from odl.space.base_ntuples import NtuplesBase, FnBase
 from odl.space import FunctionSet, FunctionSpace
 from odl.util import (
     is_valid_input_meshgrid, out_shape_from_array, out_shape_from_meshgrid,
-    is_string)
+    is_string, signature_string, indent)
 
 
 __all__ = ('FunctionSetMapping',
@@ -214,18 +214,18 @@ class PointCollocation(FunctionSetMapping):
         ... # Properly vectorized function
         >>> func_elem = funcset.element(lambda x: x[0] - x[1])
         >>> coll_op(func_elem)
-        rn(6).element([-2.0, -3.0, -4.0, -1.0, -2.0, -3.0])
+        rn(6).element([-2., -3., -4., -1., -2., -3.])
         >>> coll_op(lambda x: x[0] - x[1])  # Works directly
-        rn(6).element([-2.0, -3.0, -4.0, -1.0, -2.0, -3.0])
+        rn(6).element([-2., -3., -4., -1., -2., -3.])
         >>> out = odl.rn(6).element()
         >>> coll_op(func_elem, out=out)  # In-place
-        rn(6).element([-2.0, -3.0, -4.0, -1.0, -2.0, -3.0])
+        rn(6).element([-2., -3., -4., -1., -2., -3.])
 
         Fortran ordering:
 
         >>> coll_op = PointCollocation(funcset, partition, rn, order='F')
         >>> coll_op(func_elem)
-        rn(6).element([-2.0, -1.0, -3.0, -2.0, -4.0, -3.0])
+        rn(6).element([-2., -1., -3., -2., -4., -3.])
         """
         linear = isinstance(ip_fset, FunctionSpace)
         super(PointCollocation, self).__init__(
@@ -279,11 +279,12 @@ vectorization_guide.html>`_ for a detailed introduction.
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        inner_str = '\n  {!r},\n  {!r},\n  {!r}'.format(
-            self.domain, self.grid, self.range)
-        if self.order != 'C':
-            inner_str += ",\n  order='{}'".format(self.order)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        posargs = [self.range, self.grid, self.domain]
+        optargs = [('order', self.order, 'C')]
+        inner_str = signature_string(posargs, optargs,
+                                     sep=[',\n', ', ', ',\n'],
+                                     mod=['!r'])
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
 
 
 class NearestInterpolation(FunctionSetMapping):
@@ -443,16 +444,13 @@ class NearestInterpolation(FunctionSetMapping):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        inner_str = '\n  {!r},\n  {!r},\n  {!r}'.format(
-            self.range, self.grid, self.domain)
-        sep = ',\n '
-        if self.order != 'C':
-            inner_str += sep + "order='{}'".format(self.order)
-            sep = ', '
-        if self.variant != 'left':
-            inner_str += sep + "variant='{}'".format(self.variant)
-
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        posargs = [self.range, self.grid, self.domain]
+        optargs = [('variant', self.variant, 'left'),
+                   ('order', self.order, 'C')]
+        inner_str = signature_string(posargs, optargs,
+                                     sep=[',\n', ', ', ',\n'],
+                                     mod=['!r', ''])
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
 
 
 class LinearInterpolation(FunctionSetMapping):
@@ -526,13 +524,12 @@ class LinearInterpolation(FunctionSetMapping):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        inner_str = '\n  {!r},\n  {!r},\n  {!r}'.format(self.range,
-                                                        self.grid,
-                                                        self.domain)
-        if self.order != 'C':
-            inner_str += ",\n  order='{}'".format(self.order)
-
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        posargs = [self.range, self.grid, self.domain]
+        optargs = [('order', self.order, 'C')]
+        inner_str = signature_string(posargs, optargs,
+                                     sep=[',\n', ', ', ',\n'],
+                                     mod=['!r', ''])
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
 
 
 class PerAxisInterpolation(FunctionSetMapping):
@@ -680,23 +677,18 @@ class PerAxisInterpolation(FunctionSetMapping):
         else:
             schemes = self.schemes
 
-        inner_str = '\n {!r},\n {!r},\n {!r},\n {!r}'.format(
-            self.range, self.grid, self.domain, schemes)
-        sep = '\n, '
-        if self.order != 'C':
-            inner_str += sep + "order='{}'".format(self.order)
-            sep = ', '
-
         if all(var == self.nn_variants[0] for var in self.nn_variants):
             variants = self.nn_variants[0]
         else:
             variants = self.nn_variants
-            sep = ',\n '
 
-        if variants is not None:
-            inner_str += sep + 'nn_variants={}'.format(variants)
-
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        posargs = [self.range, self.grid, self.domain, schemes]
+        optargs = [('order', self.order, 'C'),
+                   ('nn_variants', variants, 'left')]
+        inner_str = signature_string(posargs, optargs,
+                                     sep=[',\n', ', ', ',\n'],
+                                     mod=['!r', ''])
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
 
 
 class _Interpolator(object):

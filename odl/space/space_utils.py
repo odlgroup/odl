@@ -17,8 +17,7 @@ import numpy as np
 
 from odl.set import RealNumbers, ComplexNumbers
 from odl.space.entry_points import ntuples_impl, fn_impl
-from odl.util import (
-    is_real_floating_dtype, is_complex_floating_dtype, is_scalar_dtype)
+from odl.util import is_numeric_dtype
 
 
 def vector(array, dtype=None, impl='numpy'):
@@ -52,19 +51,19 @@ def vector(array, dtype=None, impl='numpy'):
     >>> vector([1, 2, 3])  # No automatic cast to float
     fn(3, 'int').element([1, 2, 3])
     >>> vector([1, 2, 3], dtype=float)
-    rn(3).element([1.0, 2.0, 3.0])
+    rn(3).element([ 1.,  2.,  3.])
     >>> vector([1 + 1j, 2, 3 - 2j])
-    cn(3).element([(1+1j), (2+0j), (3-2j)])
+    cn(3).element([ 1.+1.j,  2.+0.j,  3.-2.j])
 
     Non-scalar types are also supported:
 
     >>> vector([True, False])
-    ntuples(2, 'bool').element([True, False])
+    ntuples(2, 'bool').element([ True, False])
 
     Scalars become a one-element vector:
 
     >>> vector(0.0)
-    rn(1).element([0.0])
+    rn(1).element([ 0.])
     """
     # Sanitize input
     arr = np.array(array, copy=False, ndmin=1)
@@ -81,7 +80,7 @@ def vector(array, dtype=None, impl='numpy'):
         space_dtype = arr.dtype
 
     # Select implementation
-    if space_dtype is None or is_scalar_dtype(space_dtype):
+    if space_dtype is None or is_numeric_dtype(space_dtype):
         space_type = fn
     else:
         space_type = ntuples

@@ -14,7 +14,7 @@ from __future__ import print_function, division, absolute_import
 import numpy as np
 
 from odl.space.base_ntuples import FnBaseVector
-from odl.util import array1d_repr, arraynd_repr, signature_string, indent_rows
+from odl.util import array_str, signature_string, indent
 
 
 __all__ = ('MatrixWeighting', 'ArrayWeighting', 'ConstWeighting',
@@ -472,7 +472,7 @@ class MatrixWeighting(Weighting):
         if self.matrix_issparse:
             part = 'weighting={}'.format(self.matrix)
         else:
-            part = 'weighting={}'.format(arraynd_repr(self.matrix, nprint=10))
+            part = 'weighting={}'.format(array_str(self.matrix, nprint=10))
         if self.exponent != 2.0:
             part += ', exponent={}'.format(self.exponent)
         if self.dist_using_inner:
@@ -631,7 +631,7 @@ class ArrayWeighting(Weighting):
     @property
     def repr_part(self):
         """String usable in a space's ``__repr__`` method."""
-        optargs = [('weighting', array1d_repr(self.array, nprint=10), ''),
+        optargs = [('weighting', array_str(self.array, nprint=10), ''),
                    ('exponent', self.exponent, 2.0),
                    ('dist_using_inner', self.dist_using_inner, False)]
         return signature_string([], optargs, sep=[',\n', ', ', ',\n'],
@@ -639,14 +639,13 @@ class ArrayWeighting(Weighting):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        posargs = [self.array]
+        posargs = [array_str(self.array)]
         optargs = [('exponent', self.exponent, 2.0),
                    ('dist_using_inner', self.dist_using_inner, False)]
         inner_str = signature_string(posargs, optargs,
                                      sep=[', ', ', ', ',\n'],
-                                     mod=['!r', ''])
-        return '{}(\n{}\n)'.format(self.__class__.__name__,
-                                   indent_rows(inner_str))
+                                     mod=['!s', ''])
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
 
     def __str__(self):
         """Return ``str(self)``."""

@@ -14,7 +14,7 @@ import numpy as np
 
 import odl
 from odl.discr.discr_ops import _SUPPORTED_RESIZE_PAD_MODES
-from odl.util import is_scalar_dtype, is_real_floating_dtype
+from odl.util import is_numeric_dtype, is_real_floating_dtype
 from odl.util.testutils import almost_equal, noise_element, dtype_places
 
 
@@ -105,7 +105,7 @@ def test_resizing_op_raise():
 
 def test_resizing_op_properties(fn_impl, padding):
     dtypes = [dt for dt in odl.fn_impl(fn_impl).available_dtypes()
-              if is_scalar_dtype(dt)]
+              if is_numeric_dtype(dt)]
 
     pad_mode, pad_const = padding
 
@@ -144,7 +144,7 @@ def test_resizing_op_properties(fn_impl, padding):
 
 def test_resizing_op_call(fn_impl):
     dtypes = [dt for dt in odl.fn_impl(fn_impl).available_dtypes()
-              if is_scalar_dtype(dt)]
+              if is_numeric_dtype(dt)]
 
     for dtype in dtypes:
         # Minimal test since this operator only wraps resize_array
@@ -195,7 +195,7 @@ def test_resizing_op_deriv(padding):
 def test_resizing_op_inverse(padding, fn_impl):
     pad_mode, pad_const = padding
     dtypes = [dt for dt in odl.fn_impl(fn_impl).available_dtypes()
-              if is_scalar_dtype(dt)]
+              if is_numeric_dtype(dt)]
 
     for dtype in dtypes:
         space = odl.uniform_discr([0, -1], [1, 1], (4, 5), dtype=dtype,

@@ -11,7 +11,7 @@ import odl
 import numpy as np
 
 from odl.util.utility import (
-    is_scalar_dtype, is_real_dtype, is_real_floating_dtype,
+    is_numeric_dtype, is_real_dtype, is_real_floating_dtype,
     is_complex_floating_dtype)
 
 
@@ -29,9 +29,9 @@ nonscalar_dtypes = [np.dtype('S1'), np.dtype('<U2'), np.dtype(object),
 # ---- Data type helpers ---- #
 
 
-def test_is_scalar_dtype():
+def test_is_numeric_dtype():
     for dtype in scalar_dtypes:
-        assert is_scalar_dtype(dtype)
+        assert is_numeric_dtype(dtype)
 
 
 def test_is_real_dtype():

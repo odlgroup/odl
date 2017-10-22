@@ -19,7 +19,7 @@ from odl.tomo.geometry.geometry import (
     DivergentBeamGeometry, AxisOrientedGeometry)
 from odl.tomo.util.utility import (
     euler_matrix, transform_system, is_inside_bounds)
-from odl.util import signature_string, indent_rows
+from odl.util import signature_string, indent, array_str
 
 
 __all__ = ('FanFlatGeometry', 'ConeFlatGeometry',
@@ -504,18 +504,17 @@ class FanFlatGeometry(DivergentBeamGeometry):
         if not np.allclose(self.src_to_det_init,
                            self._default_config['src_to_det_init']):
             optargs.append(
-                ['src_to_det_init', self.src_to_det_init.tolist(), None])
+                ['src_to_det_init', array_str(self.src_to_det_init), ''])
 
         if self._det_axis_init_arg is not None:
             optargs.append(
-                ['det_axis_init', self._det_axis_init_arg.tolist(), None])
+                ['det_axis_init', array_str(self._det_axis_init_arg), ''])
 
         if not np.array_equal(self.translation, (0, 0)):
-            optargs.append(['translation', self.translation.tolist(), None])
+            optargs.append(['translation', array_str(self.translation), ''])
 
         sig_str = signature_string(posargs, optargs, sep=',\n')
-        return '{}(\n{}\n)'.format(self.__class__.__name__,
-                                   indent_rows(sig_str))
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(sig_str))
 
     def __getitem__(self, indices):
         """Return self[indices].
@@ -537,7 +536,7 @@ class FanFlatGeometry(DivergentBeamGeometry):
         >>> geom[::2, :]
         FanFlatGeometry(
             nonuniform_partition(
-                [0.5, 2.5],
+                [ 0.5,  2.5],
                 min_pt=0.0, max_pt=4.0
             ),
             uniform_partition(-1.0, 1.0, 20),
@@ -1146,27 +1145,26 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
                    ]
 
         if not np.allclose(self.axis, self._default_config['axis']):
-            optargs.append(['axis', self.axis.tolist(), None])
+            optargs.append(['axis', array_str(self.axis), ''])
 
         optargs.append(['offset_along_axis', self.offset_along_axis, 0])
 
         if self._src_to_det_init_arg is not None:
             optargs.append(['src_to_det_init',
-                            self._src_to_det_init_arg.tolist(),
+                            array_str(self._src_to_det_init_arg),
                             None])
 
         if self._det_axes_init_arg is not None:
             optargs.append(
                 ['det_axes_init',
-                 tuple(a.tolist() for a in self._det_axes_init_arg),
+                 tuple(array_str(a) for a in self._det_axes_init_arg),
                  None])
 
         if not np.array_equal(self.translation, (0, 0, 0)):
-            optargs.append(['translation', self.translation.tolist(), None])
+            optargs.append(['translation', array_str(self.translation), ''])
 
         sig_str = signature_string(posargs, optargs, sep=',\n')
-        return '{}(\n{}\n)'.format(self.__class__.__name__,
-                                   indent_rows(sig_str))
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(sig_str))
 
     def __getitem__(self, indices):
         """Return self[indices].
@@ -1188,10 +1186,10 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         >>> geom[::2]
         ConeFlatGeometry(
             nonuniform_partition(
-                [0.5, 2.5],
+                [ 0.5,  2.5],
                 min_pt=0.0, max_pt=4.0
             ),
-            uniform_partition([-1.0, -1.0], [1.0, 1.0], (20, 20)),
+            uniform_partition([-1., -1.], [ 1.,  1.], (20, 20)),
             src_radius=50.0,
             det_radius=100.0,
             pitch=2.0

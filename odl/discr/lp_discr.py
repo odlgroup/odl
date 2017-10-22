@@ -26,8 +26,8 @@ from odl.set import RealNumbers, ComplexNumbers, IntervalProd
 from odl.space import FunctionSpace, ProductSpace, fn_impl
 from odl.space.weighting import Weighting, NoWeighting, ConstWeighting
 from odl.util import (
-    apply_on_boundary, is_real_dtype, is_complex_floating_dtype,
-    dtype_str, signature_string, indent_rows, is_string,
+    apply_on_boundary, is_real_dtype, is_complex_floating_dtype, is_string,
+    dtype_str, signature_string, array_str, indent, npy_printoptions,
     normalized_scalar_param_list, safe_int_conv, normalized_nodes_on_bdry)
 from odl.util.ufuncs import DiscreteLpUfuncs
 
@@ -325,10 +325,10 @@ class DiscreteLp(DiscretizedSpace):
 
         >>> space = odl.uniform_discr(-1, 1, 4)
         >>> space.element([1, 2, 3, 4])
-        uniform_discr(-1.0, 1.0, 4).element([1.0, 2.0, 3.0, 4.0])
+        uniform_discr(-1.0, 1.0, 4).element([ 1.,  2.,  3.,  4.])
         >>> vector = odl.rn(4).element([0, 1, 2, 3])
         >>> space.element(vector)
-        uniform_discr(-1.0, 1.0, 4).element([0.0, 1.0, 2.0, 3.0])
+        uniform_discr(-1.0, 1.0, 4).element([ 0.,  1.,  2.,  3.])
 
         On the other hand, non-discretized objects like Python functions
         can be discretized "on the fly":
@@ -346,7 +346,7 @@ class DiscreteLp(DiscretizedSpace):
         ...
         >>> space = odl.uniform_discr(-1, 1, 4)
         >>> space.element(f, c=0.5)
-        uniform_discr(-1.0, 1.0, 4).element([0.5, 0.5, 0.5, 0.75])
+        uniform_discr(-1.0, 1.0, 4).element([ 0.5 ,  0.5 ,  0.5 ,  0.75])
 
         See Also
         --------
@@ -467,9 +467,10 @@ class DiscreteLp(DiscretizedSpace):
             constructor = 'uniform_discr'
             if self.ndim == 1:
                 posargs = [self.min_pt[0], self.max_pt[0], self.shape[0]]
+                posmod = [':.4', ':.4', '']
             else:
-                posargs = [list(a) for a in [self.min_pt, self.max_pt]]
-                posargs.append(self.shape)
+                posargs = [self.min_pt, self.max_pt, self.shape]
+                posmod = [array_str, array_str, '']
 
             default_dtype_s = dtype_str(
                 self.dspace.default_dtype(RealNumbers()))
@@ -496,9 +497,9 @@ class DiscreteLp(DiscretizedSpace):
                        ('weighting', weighting, 'const'),
                        ('axis_labels', self.axis_labels, default_ax_lbl)]
 
-            inner_str = signature_string(posargs, optargs,
-                                         mod=[['!r'] * len(posargs),
-                                              [''] * len(optargs)])
+            with npy_printoptions(precision=4):
+                inner_str = signature_string(posargs, optargs,
+                                             mod=[posmod, [''] * len(optargs)])
             return '{}({})'.format(constructor, inner_str)
 
         else:
@@ -509,11 +510,12 @@ class DiscreteLp(DiscretizedSpace):
                        ('axis_labels', self.axis_labels, default_ax_lbl),
                        ('order', self.order, 'C')]
 
-            inner_str = signature_string(posargs, optargs,
-                                         sep=[',\n', ', ', ',\n'],
-                                         mod=['!r', '!s'])
+            with npy_printoptions(precision=4):
+                inner_str = signature_string(posargs, optargs,
+                                             sep=[',\n', ', ', ',\n'],
+                                             mod=['!r', '!s'])
 
-            return '{}(\n{}\n)'.format(constructor, indent_rows(inner_str))
+            return '{}({})'.format(constructor, indent(inner_str))
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -640,21 +642,24 @@ class DiscreteLpElement(DiscretizedSpaceElement):
         --------
         >>> discr = uniform_discr(0, 1, 4, dtype='complex')
         >>> x = discr.element([5+1j, 3, 2-2j, 1j])
-        >>> y = x.conj(); print(y)
-        [(5-1j), (3-0j), (2+2j), -1j]
+        >>> y = x.conj()
+        >>> print(y)
+        [ 5.-1.j,  3.-0.j,  2.+2.j,  0.-1.j]
 
         The out parameter allows you to avoid a copy:
 
         >>> z = discr.element()
-        >>> z_out = x.conj(out=z); print(z)
-        [(5-1j), (3-0j), (2+2j), -1j]
+        >>> z_out = x.conj(out=z)
+        >>> print(z)
+        [ 5.-1.j,  3.-0.j,  2.+2.j,  0.-1.j]
         >>> z_out is z
         True
 
         It can also be used for in-place conjugation:
 
-        >>> x_out = x.conj(out=x); print(x)
-        [(5-1j), (3-0j), (2+2j), -1j]
+        >>> x_out = x.conj(out=x)
+        >>> print(x)
+        [ 5.-1.j,  3.-0.j,  2.+2.j,  0.-1.j]
         >>> x_out is x
         True
         """
@@ -709,17 +714,17 @@ class DiscreteLpElement(DiscretizedSpaceElement):
         >>> X = uniform_discr(0, 1, 2)
         >>> x = X.element([1, -2])
         >>> x.ufuncs.absolute()
-        uniform_discr(0.0, 1.0, 2).element([1.0, 2.0])
+        uniform_discr(0.0, 1.0, 2).element([ 1.,  2.])
 
         These functions can also be used with broadcasting
 
         >>> x.ufuncs.add(3)
-        uniform_discr(0.0, 1.0, 2).element([4.0, 1.0])
+        uniform_discr(0.0, 1.0, 2).element([ 4.,  1.])
 
         and non-space elements
 
         >>> x.ufuncs.subtract([3, 3])
-        uniform_discr(0.0, 1.0, 2).element([-2.0, -5.0])
+        uniform_discr(0.0, 1.0, 2).element([-2., -5.])
 
         There is also support for various reductions (sum, prod, min, max)
 
@@ -732,7 +737,7 @@ class DiscreteLpElement(DiscretizedSpaceElement):
         >>> out = X.element()
         >>> result = x.ufuncs.add(y, out=out)
         >>> result
-        uniform_discr(0.0, 1.0, 2).element([4.0, 2.0])
+        uniform_discr(0.0, 1.0, 2).element([ 4.,  2.])
         >>> result is out
         True
 
@@ -1287,12 +1292,12 @@ def uniform_discr(min_pt, max_pt, shape, exponent=2.0, interp='nearest',
     Create real space:
 
     >>> uniform_discr([0, 0], [1, 1], [10, 10])
-    uniform_discr([0.0, 0.0], [1.0, 1.0], (10, 10))
+    uniform_discr([ 0.,  0.], [ 1.,  1.], (10, 10))
 
     Can create complex space by giving a dtype
 
     >>> uniform_discr([0, 0], [1, 1], [10, 10], dtype='complex')
-    uniform_discr([0.0, 0.0], [1.0, 1.0], (10, 10), dtype='complex')
+    uniform_discr([ 0.,  0.], [ 1.,  1.], (10, 10), dtype='complex')
 
     See Also
     --------
@@ -1483,13 +1488,13 @@ def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
     is kept but re-partitioned:
 
     >>> odl.uniform_discr_fromdiscr(discr, min_pt=[1, 1])
-    uniform_discr([1.0, 1.0], [2.0, 3.0], (10, 5))
+    uniform_discr([ 1.,  1.], [ 2.,  3.], (10, 5))
     >>> odl.uniform_discr_fromdiscr(discr, max_pt=[0, 0])
-    uniform_discr([-1.0, -2.0], [0.0, 0.0], (10, 5))
+    uniform_discr([-1., -2.], [ 0.,  0.], (10, 5))
     >>> odl.uniform_discr_fromdiscr(discr, cell_sides=[1, 1])
-    uniform_discr([0.0, 0.0], [1.0, 2.0], (1, 2))
+    uniform_discr([ 0.,  0.], [ 1.,  2.], (1, 2))
     >>> odl.uniform_discr_fromdiscr(discr, shape=[5, 5])
-    uniform_discr([0.0, 0.0], [1.0, 2.0], (5, 5))
+    uniform_discr([ 0.,  0.], [ 1.,  2.], (5, 5))
     >>> odl.uniform_discr_fromdiscr(discr, shape=[5, 5]).cell_sides
     array([ 0.2,  0.4])
 
@@ -1503,7 +1508,7 @@ def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
     ...                                         max_pt=[3, None],
     ...                                         cell_sides=[None, 0.25])
     >>> new_discr
-    uniform_discr([2.0, 1.0], [3.0, 2.25], (10, 5))
+    uniform_discr([ 2.,  1.], [ 3.  ,  2.25], (10, 5))
     >>> new_discr.cell_sides
     array([ 0.1 ,  0.25])
 
@@ -1515,7 +1520,7 @@ def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
     ...                                         shape=[5, 5],
     ...                                         cell_sides=[None, 0.25])
     >>> new_discr
-    uniform_discr([2.5, 1.0], [3.0, 2.25], (5, 5))
+    uniform_discr([ 2.5,  1. ], [ 3.  ,  2.25], (5, 5))
     >>> new_discr.cell_sides
     array([ 0.1 ,  0.25])
     """

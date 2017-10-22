@@ -55,7 +55,7 @@ class NumericalDerivative(Operator):
         >>> func = odl.solvers.L2NormSquared(space)
         >>> hess = NumericalDerivative(func.gradient, [1, 1, 1])
         >>> hess([0, 0, 1])
-        rn(3).element([0.0, 0.0, 2.0])
+        rn(3).element([ 0.,  0.,  2.])
 
         Find the Hessian matrix:
 
@@ -174,7 +174,7 @@ class NumericalGradient(Operator):
         >>> func = odl.solvers.L2NormSquared(space)
         >>> grad = NumericalGradient(func)
         >>> grad([1, 1, 1])
-        rn(3).element([2.0, 2.0, 2.0])
+        rn(3).element([ 2.,  2.,  2.])
 
         The gradient gives the correct value with sufficiently small step size:
 
@@ -185,13 +185,13 @@ class NumericalGradient(Operator):
 
         >>> grad = NumericalGradient(func, step=0.5)
         >>> grad([1, 1, 1])
-        rn(3).element([2.5, 2.5, 2.5])
+        rn(3).element([ 2.5,  2.5,  2.5])
 
         But it can be improved by using the more accurate ``method='central'``:
 
         >>> grad = NumericalGradient(func, method='central', step=0.5)
         >>> grad([1, 1, 1])
-        rn(3).element([2.0, 2.0, 2.0])
+        rn(3).element([ 2.,  2.,  2.])
 
         Notes
         -----
@@ -297,7 +297,7 @@ class NumericalGradient(Operator):
         >>> grad = NumericalGradient(func)
         >>> hess = grad.derivative([1, 1, 1])
         >>> hess([1, 0, 0])
-        rn(3).element([2.0, 0.0, 0.0])
+        rn(3).element([ 2.,  0.,  0.])
 
         Find the Hessian matrix:
 

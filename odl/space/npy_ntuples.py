@@ -74,12 +74,12 @@ class NumpyNtuples(NtuplesBase):
 
         Examples
         --------
-        >>> strings3 = NumpyNtuples(3, dtype='U1')  # 1-char strings
-        >>> x = strings3.element(['w', 'b', 'w'])
-        >>> print(x)
-        [w, b, w]
+        >>> bool3 = NumpyNtuples(3, dtype=bool)
+        >>> x = bool3.element([True, True, False])
+        >>> x
+        ntuples(3, 'bool').element([ True,  True, False])
         >>> x.space
-        ntuples(3, '<U1')
+        ntuples(3, 'bool')
 
         Construction from data pointer:
 
@@ -122,10 +122,10 @@ class NumpyNtuples(NtuplesBase):
 
         Examples
         --------
-        >>> c3 = NumpyNtuples(3, dtype=complex)
-        >>> x = c3.zero()
+        >>> r3 = odl.rn(3)
+        >>> x = r3.zero()
         >>> x
-        ntuples(3, 'complex').element([0j, 0j, 0j])
+        rn(3).element([ 0.,  0.,  0.])
         """
         return self.element(np.zeros(self.size, dtype=self.dtype))
 
@@ -134,10 +134,10 @@ class NumpyNtuples(NtuplesBase):
 
         Examples
         --------
-        >>> c3 = NumpyNtuples(3, dtype=complex)
-        >>> x = c3.one()
+        >>> r3 = odl.rn(3)
+        >>> x = r3.one()
         >>> x
-        ntuples(3, 'complex').element([(1+0j), (1+0j), (1+0j)])
+        rn(3).element([ 1.,  1.,  1.])
         """
         return self.element(np.ones(self.size, dtype=self.dtype))
 
@@ -332,14 +332,12 @@ class NumpyNtuplesVector(NtuplesBaseVector):
 
         Examples
         --------
-        >>> str_3 = NumpyNtuples(3, dtype='U6')  # 6-char unicode
-        >>> x = str_3.element(['a', 'Hello!', '0'])
-        >>> print(x[0])
-        a
-        >>> print(x[1:3])
-        [Hello!, 0]
-        >>> x[1:3].space
-        ntuples(2, '<U6')
+        >>> bool3 = odl.ntuples(4, dtype=bool)
+        >>> x = bool3.element([True, False, True, True])
+        >>> x[0]
+        True
+        >>> x[1:3]
+        ntuples(2, 'bool').element([False,  True])
         """
         if isinstance(indices, Integral):
             return self.data[indices]  # single index
@@ -393,7 +391,7 @@ class NumpyNtuplesVector(NtuplesBaseVector):
 
         >>> x[1:3] = -2.
         >>> x
-        ntuples(3, 'int').element([0, -2, -2])
+        ntuples(3, 'int').element([ 0, -2, -2])
 
         Array views are preserved:
 
@@ -427,17 +425,17 @@ class NumpyNtuplesVector(NtuplesBaseVector):
         >>> r2 = NumpyFn(2)
         >>> x = r2.element([1, -2])
         >>> x.ufuncs.absolute()
-        rn(2).element([1.0, 2.0])
+        rn(2).element([ 1.,  2.])
 
         These functions can also be used with broadcasting
 
         >>> x.ufuncs.add(3)
-        rn(2).element([4.0, 1.0])
+        rn(2).element([ 4.,  1.])
 
         and non-space elements
 
         >>> x.ufuncs.subtract([3, 3])
-        rn(2).element([-2.0, -5.0])
+        rn(2).element([-2., -5.])
 
         There is also support for various reductions (sum, prod, min, max)
 
@@ -450,7 +448,7 @@ class NumpyNtuplesVector(NtuplesBaseVector):
         >>> out = r2.element()
         >>> result = x.ufuncs.add(y, out=out)
         >>> result
-        rn(2).element([4.0, 2.0])
+        rn(2).element([ 4.,  2.])
         >>> result is out
         True
 
@@ -802,9 +800,9 @@ class NumpyFn(FnBase, NumpyNtuples):
         >>> y = c3.element([4+0j, 5, 6+0.5j])
         >>> out = c3.element()
         >>> c3.lincomb(2j, x, 3-1j, y, out)  # out is returned
-        cn(3).element([(10-2j), (17-1j), (18.5+1.5j)])
+        cn(3).element([ 10.0-2.j ,  17.0-1.j ,  18.5+1.5j])
         >>> out
-        cn(3).element([(10-2j), (17-1j), (18.5+1.5j)])
+        cn(3).element([ 10.0-2.j ,  17.0-1.j ,  18.5+1.5j])
         """
         _lincomb_impl(a, x1, b, x2, out, self.dtype)
 
@@ -943,9 +941,9 @@ class NumpyFn(FnBase, NumpyNtuples):
         >>> y = c3.element([1, 2+1j, 3-1j])
         >>> out = c3.element()
         >>> c3.multiply(x, y, out)  # out is returned
-        cn(3).element([(5+1j), (6+3j), (4-8j)])
+        cn(3).element([ 5.+1.j,  6.+3.j,  4.-8.j])
         >>> out
-        cn(3).element([(5+1j), (6+3j), (4-8j)])
+        cn(3).element([ 5.+1.j,  6.+3.j,  4.-8.j])
         """
         np.multiply(x1.data, x2.data, out=out.data)
 
@@ -970,9 +968,9 @@ class NumpyFn(FnBase, NumpyNtuples):
         >>> y = r3.element([1, 2, 2])
         >>> out = r3.element()
         >>> r3.divide(x, y, out)  # out is returned
-        rn(3).element([3.0, 2.5, 3.0])
+        rn(3).element([ 3. ,  2.5,  3. ])
         >>> out
-        rn(3).element([3.0, 2.5, 3.0])
+        rn(3).element([ 3. ,  2.5,  3. ])
         """
         np.divide(x1.data, x2.data, out=out.data)
 
@@ -1123,17 +1121,16 @@ class NumpyFnVector(FnBaseVector, NumpyNtuplesVector):
 
         Examples
         --------
-        >>> c3 = NumpyFn(3, dtype=complex)
-        >>> x = c3.element([5+1j, 3, 2-2j])
+        >>> x = odl.cn(3).element([5+1j, 3, 2-2j])
         >>> x.real
-        rn(3).element([5.0, 3.0, 2.0])
+        rn(3).element([ 5.,  3.,  2.])
 
-        The `rn` vector is really a view, so changes affect
+        The `real` vector is really a view, so changes affect
         the original array:
 
         >>> x.real *= 2
         >>> x
-        cn(3).element([(10+1j), (6+0j), (4-2j)])
+        cn(3).element([ 10.+1.j,   6.+0.j,   4.-2.j])
         """
         return self.space.real_space.element(self.data.real)
 
@@ -1150,21 +1147,20 @@ class NumpyFnVector(FnBaseVector, NumpyNtuplesVector):
 
         Examples
         --------
-        >>> c3 = NumpyFn(3, dtype=complex)
-        >>> x = c3.element([5+1j, 3, 2-2j])
-        >>> a = NumpyFn(3).element([0, 0, 0])
+        >>> x = odl.cn(3).element([5+1j, 3, 2-2j])
+        >>> a = odl.rn(3).element([0, 0, 0])
         >>> x.real = a
         >>> x
-        cn(3).element([1j, 0j, -2j])
+        cn(3).element([ 0.+1.j,  0.+0.j,  0.-2.j])
 
         Other array-like types and broadcasting:
 
         >>> x.real = 1.0
         >>> x
-        cn(3).element([(1+1j), (1+0j), (1-2j)])
+        cn(3).element([ 1.+1.j,  1.+0.j,  1.-2.j])
         >>> x.real = [0, 2, -1]
         >>> x
-        cn(3).element([1j, (2+0j), (-1-2j)])
+        cn(3).element([ 0.+1.j,  2.+0.j, -1.-2.j])
         """
         self.real.data[:] = newreal
 
@@ -1179,17 +1175,16 @@ class NumpyFnVector(FnBaseVector, NumpyNtuplesVector):
 
         Examples
         --------
-        >>> c3 = NumpyFn(3, dtype=complex)
-        >>> x = c3.element([5+1j, 3, 2-2j])
+        >>> x = odl.cn(3).element([5+1j, 3, 2-2j])
         >>> x.imag
-        rn(3).element([1.0, 0.0, -2.0])
+        rn(3).element([ 1.,  0., -2.])
 
-        The `rn` vector is really a view, so changes affect
+        The `imag` vector is really a view, so changes affect
         the original array:
 
         >>> x.imag *= 2
         >>> x
-        cn(3).element([(5+2j), (3+0j), (2-4j)])
+        cn(3).element([ 5.+2.j,  3.+0.j,  2.-4.j])
         """
         return self.space.real_space.element(self.data.imag)
 
@@ -1206,17 +1201,20 @@ class NumpyFnVector(FnBaseVector, NumpyNtuplesVector):
 
         Examples
         --------
-        >>> x = cn(3).element([5+1j, 3, 2-2j])
-        >>> a = NumpyFn(3).element([0, 0, 0])
-        >>> x.imag = a; print(x)
-        [(5+0j), (3+0j), (2+0j)]
+        >>> x = odl.cn(3).element([5+1j, 3, 2-2j])
+        >>> a = odl.rn(3).element([0, 0, 0])
+        >>> x.imag = a
+        >>> x
+        cn(3).element([ 5.+0.j,  3.+0.j,  2.+0.j])
 
         Other array-like types and broadcasting:
 
-        >>> x.imag = 1.0; print(x)
-        [(5+1j), (3+1j), (2+1j)]
-        >>> x.imag = [0, 2, -1]; print(x)
-        [(5+0j), (3+2j), (2-1j)]
+        >>> x.imag = 1.0
+        >>> x
+        cn(3).element([ 5.+1.j,  3.+1.j,  2.+1.j])
+        >>> x.imag = [0, 2, -1]
+        >>> x
+        cn(3).element([ 5.+0.j,  3.+2.j,  2.-1.j])
         """
         self.imag.data[:] = newimag
 
@@ -1237,22 +1235,26 @@ class NumpyFnVector(FnBaseVector, NumpyNtuplesVector):
 
         Examples
         --------
-        >>> x = NumpyFn(3, dtype=complex).element([5+1j, 3, 2-2j])
-        >>> y = x.conj(); print(y)
-        [(5-1j), (3-0j), (2+2j)]
+        Default usage:
 
-        The out parameter allows you to avoid a copy
+        >>> x = odl.cn(3).element([5+1j, 3, 2-2j])
+        >>> x.conj()
+        cn(3).element([ 5.-1.j,  3.-0.j,  2.+2.j])
 
-        >>> z = NumpyFn(3, dtype=complex).element()
-        >>> z_out = x.conj(out=z); print(z)
-        [(5-1j), (3-0j), (2+2j)]
+        The out parameter allows you to avoid a copy:
+
+        >>> z = odl.cn(3).element()
+        >>> z_out = x.conj(out=z)
+        >>> z
+        cn(3).element([ 5.-1.j,  3.-0.j,  2.+2.j])
         >>> z_out is z
         True
 
-        It can also be used for in-place conj
+        It can also be used for in-place conjugation:
 
-        >>> x_out = x.conj(out=x); print(x)
-        [(5-1j), (3-0j), (2+2j)]
+        >>> x_out = x.conj(out=x)
+        >>> x
+        cn(3).element([ 5.-1.j,  3.-0.j,  2.+2.j])
         >>> x_out is x
         True
         """

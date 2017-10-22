@@ -20,7 +20,7 @@ from odl.set import LinearSpace, LinearSpaceElement
 from odl.space.weighting import (
     Weighting, ArrayWeighting, ConstWeighting, NoWeighting,
     CustomInner, CustomNorm, CustomDist)
-from odl.util import is_real_dtype, signature_string, indent_rows
+from odl.util import is_real_dtype, signature_string, indent
 from odl.util.ufuncs import ProductSpaceUfuncs
 
 
@@ -397,9 +397,8 @@ class ProductSpace(LinearSpace):
         >>> x3 = r3.element([1, 2, 3])
         >>> x = prod.element([x2, x3])
         >>> print(x)
-        {[1.0, 2.0], [1.0, 2.0, 3.0]}
+        {[ 1.,  2.], [ 1.,  2.,  3.]}
         """
-
         # If data is given as keyword arg, prefer it over arg list
         if inp is None:
             inp = [space.element() for space in self.spaces]
@@ -580,32 +579,45 @@ class ProductSpace(LinearSpace):
     def __repr__(self):
         """Return ``repr(self)``."""
         weight_str = self.weighting.repr_part
+        edgeitems = np.get_printoptions()['edgeitems']
         if self.size == 0:
             posargs = []
+            posmod = ''
             optargs = [('field', self.field, None)]
             oneline = True
         elif self.is_power_space:
             posargs = [self.spaces[0], self.size]
+            posmod = '!r'
             optargs = []
             oneline = True
-        else:
+        elif self.size <= 2 * edgeitems:
             posargs = self.spaces
+            posmod = '!r'
             optargs = []
             argstr = ', '.join(repr(s) for s in self.spaces)
             oneline = (len(argstr + weight_str) <= 40 and
                        '\n' not in argstr + weight_str)
+        else:
+            posargs = (self.spaces[:edgeitems] +
+                       ('...',) +
+                       self.spaces[-edgeitems:])
+            posmod = ['!r'] * edgeitems + ['!s'] + ['!r'] * edgeitems
+            optargs = []
+            oneline = False
 
         if oneline:
-            inner_str = signature_string(posargs, optargs, sep=', ', mod='!r')
+            inner_str = signature_string(posargs, optargs, sep=', ',
+                                         mod=[posmod, '!r'])
             if weight_str:
                 inner_str = ', '.join([inner_str, weight_str])
             return '{}({})'.format(self.__class__.__name__, inner_str)
         else:
-            inner_str = signature_string(posargs, optargs, sep=',\n', mod='!r')
+            inner_str = signature_string(posargs, optargs, sep=',\n',
+                                         mod=[posmod, '!r'])
             if weight_str:
                 inner_str = ',\n'.join([inner_str, weight_str])
             return '{}(\n{}\n)'.format(self.__class__.__name__,
-                                       indent_rows(inner_str))
+                                       indent(inner_str))
 
     @property
     def element_type(self):
@@ -750,8 +762,8 @@ class ProductSpaceElement(LinearSpaceElement):
         >>> x = r22.element([[1, -2], [-3, 4]])
         >>> x.ufuncs.absolute()
         ProductSpace(rn(2), 2).element([
-            [1.0, 2.0],
-            [3.0, 4.0]
+            [ 1.,  2.],
+            [ 3.,  4.]
         ])
 
         These functions can also be used with non-vector arguments and
@@ -759,13 +771,13 @@ class ProductSpaceElement(LinearSpaceElement):
 
         >>> x.ufuncs.add([1, 2])
         ProductSpace(rn(2), 2).element([
-            [2.0, 0.0],
-            [-2.0, 6.0]
+            [ 2.,  0.],
+            [-2.,  6.]
         ])
         >>> x.ufuncs.subtract(1)
         ProductSpace(rn(2), 2).element([
-            [0.0, -3.0],
-            [-4.0, 3.0]
+            [ 0., -3.],
+            [-4.,  3.]
         ])
 
         There is also support for various reductions (sum, prod, min, max):
@@ -779,8 +791,8 @@ class ProductSpaceElement(LinearSpaceElement):
         >>> result = x.ufuncs.absolute(out=y)
         >>> result
         ProductSpace(rn(2), 2).element([
-            [1.0, 2.0],
-            [3.0, 4.0]
+            [ 1.,  2.],
+            [ 3.,  4.]
         ])
         >>> result is y
         True
@@ -816,11 +828,11 @@ class ProductSpaceElement(LinearSpaceElement):
 
         >>> x
         ProductSpace(rn(2), rn(3)).element([
-            [1.0, 2.0],
-            [3.0, 4.0, 5.0]
+            [ 1.,  2.],
+            [ 3.,  4.,  5.]
         ])
 
-        Nestled spaces work as well
+        Nestled spaces work as well:
 
         >>> X = ProductSpace(r2x3, r2x3)
         >>> x = X.element([[[1, 2], [3, 4, 5]],[[1, 2], [3, 4, 5]]])
@@ -829,12 +841,12 @@ class ProductSpaceElement(LinearSpaceElement):
         >>> x
         ProductSpace(ProductSpace(rn(2), rn(3)), 2).element([
             [
-                [1.0, 2.0],
-                [3.0, 4.0, 5.0]
+                [ 1.,  2.],
+                [ 3.,  4.,  5.]
             ],
             [
-                [1.0, 2.0],
-                [3.0, 4.0, 5.0]
+                [ 1.,  2.],
+                [ 3.,  4.,  5.]
             ]
         ])
         """

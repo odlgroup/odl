@@ -25,7 +25,7 @@ from odl.set import IntervalProd
 from odl.util import (
     normalized_index_expression, normalized_nodes_on_bdry,
     normalized_scalar_param_list, safe_int_conv,
-    signature_string, indent_rows)
+    signature_string, indent, array_str, npy_printoptions)
 
 
 __all__ = ('RectPartition', 'uniform_partition_fromintv',
@@ -499,7 +499,7 @@ class RectPartition(object):
         >>> partition = odl.uniform_partition(0, 10, 10)
         >>> partition[::2]
         nonuniform_partition(
-            [0.5, 2.5, 4.5, 6.5, 8.5],
+            [ 0.5,  2.5,  4.5,  6.5,  8.5],
             min_pt=0.0, max_pt=10.0
         )
 
@@ -510,11 +510,11 @@ class RectPartition(object):
         >>> part = odl.RectPartition(intvp, grid)
         >>> part
         nonuniform_partition(
-            [-1.0, 0.0, 3.0],
-            [2.0, 4.0],
-            [5.0],
-            [2.0, 4.0, 7.0],
-            min_pt=[-1.0, 1.0, 4.0, 2.0], max_pt=[3.0, 6.0, 5.0, 7.0]
+            [-1.,  0.,  3.],
+            [ 2.,  4.],
+            [ 5.],
+            [ 2.,  4.,  7.],
+            min_pt=[-1.,  1.,  4.,  2.], max_pt=[ 3.,  6.,  5.,  7.]
         )
 
         Take an advanced slice (every second along the first axis,
@@ -522,22 +522,22 @@ class RectPartition(object):
 
         >>> part[::2, ..., -1]
         nonuniform_partition(
-            [-1.0, 3.0],
-            [2.0, 4.0],
-            [5.0],
-            [7.0],
-            min_pt=[-1.0, 1.0, 4.0, 5.5], max_pt=[3.0, 6.0, 5.0, 7.0]
+            [-1.,  3.],
+            [ 2.,  4.],
+            [ 5.],
+            [ 7.],
+            min_pt=[-1. ,  1. ,  4. ,  5.5], max_pt=[ 3.,  6.,  5.,  7.]
         )
 
         Too few indices are filled up with an ellipsis from the right:
 
         >>> part[1]
         nonuniform_partition(
-            [0.0],
-            [2.0, 4.0],
-            [5.0],
-            [2.0, 4.0, 7.0],
-            min_pt=[-0.5, 1.0, 4.0, 2.0], max_pt=[1.5, 6.0, 5.0, 7.0]
+            [ 0.],
+            [ 2.,  4.],
+            [ 5.],
+            [ 2.,  4.,  7.],
+            min_pt=[-0.5,  1. ,  4. ,  2. ], max_pt=[ 1.5,  6. ,  5. ,  7. ]
         )
 
         Colons etc work as expected:
@@ -613,7 +613,7 @@ class RectPartition(object):
         >>> part1 = odl.uniform_partition([0, -1], [1, 2], (3, 3))
         >>> part2 = odl.uniform_partition(0, 1, 5)
         >>> part1.insert(1, part2)
-        uniform_partition([0.0, 0.0, -1.0], [1.0, 1.0, 2.0], (3, 5, 3))
+        uniform_partition([ 0.,  0., -1.], [ 1.,  1.,  2.], (3, 5, 3))
 
         See Also
         --------
@@ -645,9 +645,9 @@ class RectPartition(object):
         >>> part1 = odl.uniform_partition(-1, 2, 3)
         >>> part2 = odl.uniform_partition(0, 1, 5)
         >>> part1.append(part2)
-        uniform_partition([-1.0, 0.0], [2.0, 1.0], (3, 5))
+        uniform_partition([-1.,  0.], [ 2.,  1.], (3, 5))
         >>> part1.append(part2, part2)
-        uniform_partition([-1.0, 0.0, 0.0], [2.0, 1.0, 1.0], (3, 5, 5))
+        uniform_partition([-1.,  0.,  0.], [ 2.,  1.,  1.], (3, 5, 5))
 
         See Also
         --------
@@ -677,7 +677,7 @@ class RectPartition(object):
         The axis argument can be used to only squeeze some axes (if applicable)
 
         >>> p.squeeze(axis=0)
-        uniform_partition([0.0, -1.0], [1.0, 2.0], (3, 1))
+        uniform_partition([ 0., -1.], [ 1.,  2.], (3, 1))
 
         Notes
         -----
@@ -755,7 +755,7 @@ class RectPartition(object):
         >>> p.index([0.5, 2])
         (2, 0)
         >>> p[p.index([0.5, 2])]
-        uniform_partition([0.5, -1.0], [0.75, 2.0], (1, 1))
+        uniform_partition([ 0.5, -1. ], [ 0.75,  2.  ], (1, 1))
         """
         value = np.atleast_1d(self.set.element(value))
         result = []
@@ -804,9 +804,9 @@ class RectPartition(object):
         >>> p.byaxis[:] == p
         True
         >>> p.byaxis[1:]
-        uniform_partition([1.0, 2.0], [3.0, 5.0], (5, 6))
+        uniform_partition([ 1.,  2.], [ 3.,  5.], (5, 6))
         >>> p.byaxis[[0, 2]]
-        uniform_partition([0.0, 2.0], [1.0, 5.0], (3, 6))
+        uniform_partition([ 0.,  2.], [ 1.,  5.], (3, 6))
         """
         partition = self
 
@@ -862,16 +862,20 @@ class RectPartition(object):
             constructor = 'uniform_partition'
             if self.ndim == 1:
                 posargs = [self.min_pt[0], self.max_pt[0], self.shape[0]]
+                posmod = [':.4', ':.4', '']
             else:
-                posargs = [list(self.min_pt), list(self.max_pt), self.shape]
+                posargs = [self.min_pt, self.max_pt, self.shape]
+                posmod = [array_str, array_str, '']
 
             optargs = [('nodes_on_bdry', self.nodes_on_bdry, False)]
 
-            sig_str = signature_string(posargs, optargs)
+            with npy_printoptions(precision=4):
+                sig_str = signature_string(posargs, optargs, mod=[posmod, ''])
             return '{}({})'.format(constructor, sig_str)
         else:
             constructor = 'nonuniform_partition'
-            posargs = [list(v) for v in self.coord_vectors]
+            posargs = self.coord_vectors
+            posmod = array_str
 
             optargs = []
             # Defaults with and without nodes_on_bdry option
@@ -882,24 +886,39 @@ class RectPartition(object):
 
             # Since min/max_pt and nodes_on_bdry are mutex, we need a
             # couple of cases here
+            optmod = []
             if (np.allclose(self.min_pt, nodes_def_min_pt) and
                     np.allclose(self.max_pt, nodes_def_max_pt)):
                 # Append nodes_on_bdry to list of optional args
                 optargs.append(('nodes_on_bdry', self.nodes_on_bdry, False))
+                optmod.append('')
             else:
                 # Append min/max_pt to list of optional args if not
-                # default (need check here because array comparison is
+                # default (need check manually because array comparison is
                 # ambiguous)
                 if not np.allclose(self.min_pt, def_min_pt):
-                    p = self.min_pt[0] if self.ndim == 1 else list(self.min_pt)
-                    optargs.append((('min_pt', p, None)))
-                if not np.allclose(self.max_pt, def_max_pt):
-                    p = self.max_pt[0] if self.ndim == 1 else list(self.max_pt)
-                    optargs.append((('max_pt', p, None)))
+                    if self.ndim == 1:
+                        optargs.append(('min_pt', self.min_pt[0], None))
+                        optmod.append(':.4')
+                    else:
+                        with npy_printoptions(precision=4):
+                            optargs.append(
+                                ('min_pt', array_str(self.min_pt), ''))
+                        optmod.append('!s')
 
-            sig_str = signature_string(posargs, optargs,
+                if not np.allclose(self.max_pt, def_max_pt):
+                    if self.ndim == 1:
+                        optargs.append(('max_pt', self.max_pt[0], None))
+                        optmod.append(':.4')
+                    else:
+                        with npy_printoptions(precision=4):
+                            optargs.append(
+                                ('max_pt', array_str(self.max_pt), ''))
+                        optmod.append('!s')
+
+            sig_str = signature_string(posargs, optargs, mod=[posmod, optmod],
                                        sep=[',\n', ', ', ',\n'])
-            return '{}(\n{}\n)'.format(constructor, indent_rows(sig_str))
+            return '{}(\n{}\n)'.format(constructor, indent(sig_str))
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -1298,7 +1317,7 @@ def nonuniform_partition(*coord_vecs, **kwargs):
     >>> odl.nonuniform_partition([0, 1, 2, 3])
     uniform_partition(-0.5, 3.5, 4)
     >>> odl.nonuniform_partition([0, 1, 2, 3], [1, 2])
-    uniform_partition([-0.5, 0.5], [3.5, 2.5], (4, 2))
+    uniform_partition([-0.5,  0.5], [ 3.5,  2.5], (4, 2))
 
     If the points are not uniformly spaced, a nonuniform partition is
     created. Note that the containing interval is calculated by assuming
@@ -1306,7 +1325,7 @@ def nonuniform_partition(*coord_vecs, **kwargs):
 
     >>> odl.nonuniform_partition([0, 1, 3])
     nonuniform_partition(
-        [0.0, 1.0, 3.0]
+        [ 0.,  1.,  3.]
     )
 
     Higher dimensional partitions are created by specifying the gridpoints
@@ -1314,8 +1333,8 @@ def nonuniform_partition(*coord_vecs, **kwargs):
 
     >>> odl.nonuniform_partition([0, 1, 3], [1, 2])
     nonuniform_partition(
-        [0.0, 1.0, 3.0],
-        [1.0, 2.0]
+        [ 0.,  1.,  3.],
+        [ 1.,  2.]
     )
 
     Partitions with a single element are by default degenerate
@@ -1328,7 +1347,7 @@ def nonuniform_partition(*coord_vecs, **kwargs):
 
     >>> odl.nonuniform_partition([0, 1, 3], nodes_on_bdry=True)
     nonuniform_partition(
-        [0.0, 1.0, 3.0],
+        [ 0.,  1.,  3.],
         nodes_on_bdry=True
     )
 
@@ -1337,7 +1356,7 @@ def nonuniform_partition(*coord_vecs, **kwargs):
 
     >>> odl.nonuniform_partition([0, 1, 3], min_pt=-2, max_pt=3)
     nonuniform_partition(
-        [0.0, 1.0, 3.0],
+        [ 0.,  1.,  3.],
         min_pt=-2.0, max_pt=3.0
     )
     """

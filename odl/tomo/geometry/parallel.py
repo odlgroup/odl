@@ -17,7 +17,7 @@ from odl.discr import uniform_partition
 from odl.tomo.geometry.detector import Flat1dDetector, Flat2dDetector
 from odl.tomo.geometry.geometry import Geometry, AxisOrientedGeometry
 from odl.tomo.util import euler_matrix, transform_system, is_inside_bounds
-from odl.util import signature_string, indent_rows
+from odl.util import signature_string, indent, array_str
 
 
 __all__ = ('ParallelBeamGeometry',
@@ -642,19 +642,18 @@ class Parallel2dGeometry(ParallelBeamGeometry):
         if not np.allclose(self.det_pos_init - self.translation,
                            self._default_config['det_pos_init']):
             optargs.append(
-                ['det_pos_init', self.det_pos_init.tolist(), None])
+                ['det_pos_init', array_str(self.det_pos_init), ''])
 
         if self._det_axis_init_arg is not None:
             optargs.append(
-                ['det_axis_init', self._det_axis_init_arg.tolist(), None])
+                ['det_axis_init', array_str(self._det_axis_init_arg), ''])
 
         if not np.array_equal(self.translation, (0, 0)):
             optargs.append(
-                ['translation', self.translation.tolist(), None])
+                ['translation', array_str(self.translation), ''])
 
         sig_str = signature_string(posargs, optargs, sep=',\n')
-        return '{}(\n{}\n)'.format(self.__class__.__name__,
-                                   indent_rows(sig_str))
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(sig_str))
 
     def __getitem__(self, indices):
         """Return self[slc]
@@ -676,7 +675,7 @@ class Parallel2dGeometry(ParallelBeamGeometry):
         >>> geom[::2]
         Parallel2dGeometry(
             nonuniform_partition(
-                [0.5, 2.5],
+                [ 0.5,  2.5],
                 min_pt=0.0, max_pt=4.0
             ),
             uniform_partition(-1.0, 1.0, 20)
@@ -1051,20 +1050,19 @@ class Parallel3dEulerGeometry(ParallelBeamGeometry):
         if not np.allclose(self.det_pos_init - self.translation,
                            self._default_config['det_pos_init']):
             optargs.append(
-                ['det_pos_init', self.det_pos_init.tolist(), None])
+                ['det_pos_init', array_str(self.det_pos_init), ''])
 
         if self._det_axes_init_arg is not None:
             optargs.append(
-                ['det_axes_init',
-                 tuple(a.tolist() for a in self._det_axes_init_arg),
-                 None])
+                [('det_axes_init',
+                  tuple(array_str(a) for a in self._det_axes_init_arg),
+                  None)])
 
         if not np.array_equal(self.translation, (0, 0, 0)):
-            optargs.append(['translation', self.translation.tolist(), None])
+            optargs.append(['translation', array_str(self.translation), ''])
 
         sig_str = signature_string(posargs, optargs, sep=',\n')
-        return '{}(\n{}\n)'.format(self.__class__.__name__,
-                                   indent_rows(sig_str))
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(sig_str))
 
 
 class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
@@ -1402,25 +1400,24 @@ class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
         optargs = []
 
         if not np.allclose(self.axis, self._default_config['axis']):
-            optargs.append(['axis', self.axis.tolist(), None])
+            optargs.append(['axis', array_str(self.axis), ''])
 
         if self._det_pos_init_arg is not None:
             optargs.append(['det_pos_init',
-                            self._det_pos_init_arg.tolist(),
+                            array_str(self._det_pos_init_arg),
                             None])
 
         if self._det_axes_init_arg is not None:
             optargs.append(
                 ['det_axes_init',
-                 tuple(a.tolist() for a in self._det_axes_init_arg),
+                 tuple(array_str(a) for a in self._det_axes_init_arg),
                  None])
 
         if not np.array_equal(self.translation, (0, 0, 0)):
-            optargs.append(['translation', self.translation.tolist(), None])
+            optargs.append(['translation', array_str(self.translation), ''])
 
         sig_str = signature_string(posargs, optargs, sep=',\n')
-        return '{}(\n{}\n)'.format(self.__class__.__name__,
-                                   indent_rows(sig_str))
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(sig_str))
 
     def __getitem__(self, indices):
         """Return self[indices].
@@ -1442,10 +1439,10 @@ class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
         >>> geom[::2]
         Parallel3dAxisGeometry(
             nonuniform_partition(
-                [0.5, 2.5],
+                [ 0.5,  2.5],
                 min_pt=0.0, max_pt=4.0
             ),
-            uniform_partition([-1.0, -1.0], [1.0, 1.0], (20, 20))
+            uniform_partition([-1., -1.], [ 1.,  1.], (20, 20))
         )
         """
         part = self.partition[indices]
