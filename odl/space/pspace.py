@@ -579,6 +579,7 @@ class ProductSpace(LinearSpace):
     def __repr__(self):
         """Return ``repr(self)``."""
         weight_str = self.weighting.repr_part
+        edgeitems = np.get_printoptions()['edgeitems']
         if self.size == 0:
             posargs = []
             posmod = ''
@@ -589,7 +590,7 @@ class ProductSpace(LinearSpace):
             posmod = '!r'
             optargs = []
             oneline = True
-        elif self.size <= 6:
+        elif self.size <= 2 * edgeitems:
             posargs = self.spaces
             posmod = '!r'
             optargs = []
@@ -597,8 +598,10 @@ class ProductSpace(LinearSpace):
             oneline = (len(argstr + weight_str) <= 40 and
                        '\n' not in argstr + weight_str)
         else:
-            posargs = self.spaces[:3] + ('...',) + self.spaces[-3:]
-            posmod = ['!r'] * 3 + ['!s'] + ['!r'] * 3
+            posargs = (self.spaces[:edgeitems] +
+                       ('...',) +
+                       self.spaces[-edgeitems:])
+            posmod = ['!r'] * edgeitems + ['!s'] + ['!r'] * edgeitems
             optargs = []
             oneline = False
 
