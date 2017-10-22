@@ -1238,7 +1238,7 @@ class ProductSpaceConstWeighting(ConstWeighting):
             dtype=x1[0].space.dtype, count=len(x1))
 
         inner = self.const * np.sum(inners)
-        return x1.space.field.element(inner.real)
+        return x1.space.field.element(inner)
 
     def norm(self, x):
         """Calculate the constant-weighted norm of an element.
