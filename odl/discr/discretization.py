@@ -397,11 +397,11 @@ class DiscretizedSetElement(NtuplesBaseVector):
     def __repr__(self):
         """Return ``repr(self)``."""
         maxsize_full_print = 2 * np.get_printoptions()['edgeitems']
+        self_str = array_str(self, nprint=maxsize_full_print)
         if self.ndim == 1 and self.size <= maxsize_full_print:
-            return '{!r}.element({})'.format(self.space, array_str(self))
+            return '{!r}.element({})'.format(self.space, self_str)
         else:
-            return '{!r}.element(\n{}\n)'.format(self.space,
-                                                 indent(array_str(self)))
+            return '{!r}.element(\n{}\n)'.format(self.space, indent(self_str))
 
 
 class DiscretizedSpace(DiscretizedSet, FnBase):
