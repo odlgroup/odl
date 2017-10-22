@@ -107,7 +107,7 @@ def test_init():
     from builtins import int as future_int
     import sys
     if sys.version_info.major != 3:
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             NumpyFn(3, future_int)
 
     # Init with weights or custom space functions

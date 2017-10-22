@@ -11,6 +11,7 @@
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future.utils import native
+import builtins
 
 import ctypes
 from functools import partial
@@ -18,6 +19,7 @@ from numbers import Integral
 import numpy as np
 import scipy.linalg as linalg
 from scipy.sparse.base import isspmatrix
+import sys
 
 from odl.set import RealNumbers, ComplexNumbers
 from odl.space.base_ntuples import FnBase, FnBaseVector
@@ -182,6 +184,10 @@ class NumpyFn(FnBase):
         rn(3, weighting=[1, 2, 3])
         """
         # TODO: fix dead link `scipy.sparse.spmatrix`
+        if sys.version_info.major < 3 and dtype is builtins.int:
+            raise TypeError('cannot use `builtins.int` as `dtype` since '
+                            'Numpy does not recognize it as int')
+
         if np.dtype(dtype).char not in self.available_dtypes():
             raise ValueError('`dtype` {!r} not supported'.format(dtype))
         super(NumpyFn, self).__init__(size, dtype)
