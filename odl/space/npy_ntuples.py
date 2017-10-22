@@ -74,12 +74,12 @@ class NumpyNtuples(NtuplesBase):
 
         Examples
         --------
-        >>> strings3 = NumpyNtuples(3, dtype='U1')  # 1-char strings
-        >>> x = strings3.element(['w', 'b', 'w'])
-        >>> print(x)
-        ['w', 'b', 'w']
+        >>> bool3 = NumpyNtuples(3, dtype=bool)
+        >>> x = bool3.element([True, True, False])
+        >>> x
+        ntuples(3, 'bool').element([ True,  True, False])
         >>> x.space
-        ntuples(3, '<U1')
+        ntuples(3, 'bool')
 
         Construction from data pointer:
 
@@ -332,14 +332,12 @@ class NumpyNtuplesVector(NtuplesBaseVector):
 
         Examples
         --------
-        >>> str_3 = odl.ntuples(3, dtype='U6')  # 6-char unicode
-        >>> x = str_3.element(['a', 'Hello!', '0'])
-        >>> print(x[0])
-        a
-        >>> print(x[1:3])
-        ['Hello!', '0']
-        >>> x[1:3].space
-        ntuples(2, '<U6')
+        >>> bool3 = odl.ntuples(4, dtype=bool)
+        >>> x = bool3.element([True, False, True, True])
+        >>> x[0]
+        True
+        >>> x[1:3]
+        ntuples(2, 'bool').element([False,  True])
         """
         if isinstance(indices, Integral):
             return self.data[indices]  # single index
