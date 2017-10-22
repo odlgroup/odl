@@ -42,21 +42,24 @@ def cuboid(space, min_pt=None, max_pt=None):
     middle of the space domain and extends halfway towards all sides:
 
     >>> space = odl.uniform_discr([0, 0], [1, 1], [4, 6])
-    >>> cuboid = odl.phantom.cuboid(space)
-    >>> print(odl.util.array_str(cuboid, nprint=10))
-    [[ 0.,  0.,  0.,  0.,  0.,  0.],
-     [ 0.,  1.,  1.,  1.,  1.,  0.],
-     [ 0.,  1.,  1.,  1.,  1.,  0.],
-     [ 0.,  0.,  0.,  0.,  0.,  0.]]
+    >>> odl.phantom.cuboid(space)
+    uniform_discr([ 0.,  0.], [ 1.,  1.], (4, 6)).element(
+        [[ 0.,  0.,  0.,  0.,  0.,  0.],
+         [ 0.,  1.,  1.,  1.,  1.,  0.],
+         [ 0.,  1.,  1.,  1.,  1.,  0.],
+         [ 0.,  0.,  0.,  0.,  0.,  0.]]
+    )
 
-    By specifying the corners, the cuboid can be arbitrarily shaped:
+    By specifying the corners, the cuboid can be arbitrarily placed and
+    scaled:
 
-    >>> other_cuboid = odl.phantom.cuboid(space, [0.25, 0], [0.75, 0.5])
-    >>> print(odl.util.array_str(other_cuboid, nprint=10))
-    [[ 0.,  0.,  0.,  0.,  0.,  0.],
-     [ 1.,  1.,  1.,  0.,  0.,  0.],
-     [ 1.,  1.,  1.,  0.,  0.,  0.],
-     [ 0.,  0.,  0.,  0.,  0.,  0.]]
+    >>> odl.phantom.cuboid(space, [0.25, 0], [0.75, 0.5])
+    uniform_discr([ 0.,  0.], [ 1.,  1.], (4, 6)).element(
+        [[ 0.,  0.,  0.,  0.,  0.,  0.],
+         [ 1.,  1.,  1.,  0.,  0.,  0.],
+         [ 1.,  1.,  1.,  0.,  0.,  0.],
+         [ 0.,  0.,  0.,  0.,  0.,  0.]]
+    )
     """
     dom_min_pt = np.asarray(space.domain.min())
     dom_max_pt = np.asarray(space.domain.max())

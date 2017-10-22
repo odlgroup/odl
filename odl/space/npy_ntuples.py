@@ -1238,8 +1238,7 @@ class NumpyFnVector(FnBaseVector, NumpyNtuplesVector):
         Default usage:
 
         >>> x = odl.cn(3).element([5+1j, 3, 2-2j])
-        >>> y = x.conj()
-        >>> y
+        >>> x.conj()
         cn(3).element([ 5.-1.j,  3.-0.j,  2.+2.j])
 
         The out parameter allows you to avoid a copy:

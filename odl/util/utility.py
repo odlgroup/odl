@@ -35,7 +35,42 @@ TYPE_MAP_C2R.update({k: k for k in TYPE_MAP_R2C.keys()})
 
 
 def indent(string, indent_str='    '):
-    """Return a copy of ``string`` indented by ``indent_str``."""
+    """Return a copy of ``string`` indented by ``indent_str``.
+
+    Parameters
+    ----------
+    string : str
+        Text that should be indented.
+    indent_str : str, optional
+        String to be inserted before each new line. The default is to
+        indent by 4 spaces.
+
+    Returns
+    -------
+    indented : str
+        The indented text.
+
+    Examples
+    --------
+    >>> text = '''This is line 1.
+    ... Next line.
+    ... And another one.'''
+    >>> print(text)
+    This is line 1.
+    Next line.
+    And another one.
+    >>> print(indent(text))
+        This is line 1.
+        Next line.
+        And another one.
+
+    Indenting by random stuff:
+
+    >>> print(indent(text, indent_str='|----|'))
+    |----|This is line 1.
+    |----|Next line.
+    |----|And another one.
+    """
     return '\n'.join(indent_str + row for row in string.split('\n'))
 
 
