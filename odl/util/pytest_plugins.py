@@ -103,16 +103,6 @@ def fn_impl(request):
     return request.param
 
 
-ntuples_impl_params = odl.ntuples_impl_names()
-ntuples_impl_ids = [" impl='{}' ".format(p) for p in ntuples_impl_params]
-
-
-@fixture(scope="module", ids=ntuples_impl_ids, params=ntuples_impl_params)
-def ntuples_impl(request):
-    """String with an available `NtuplesBase` implementation name."""
-    return request.param
-
-
 floating_dtype_params = np.sctypes['float'] + np.sctypes['complex']
 floating_dtype_ids = [' dtype={} '.format(dtype_repr(dt))
                       for dt in floating_dtype_params]

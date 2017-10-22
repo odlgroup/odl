@@ -9,7 +9,7 @@
 """Ufuncs for ODL vectors.
 
 These functions are internal and should only be used as methods on
-`NtuplesBaseVector` type spaces.
+`FnBaseVector` type spaces.
 
 See `numpy.ufuncs
 <http://docs.scipy.org/doc/numpy/reference/ufuncs.html>`_
@@ -18,8 +18,8 @@ for more information.
 Notes
 -----
 The default implementation of these methods make heavy use of the
-``NtuplesBaseVector.__array__`` to extract a `numpy.ndarray` from the vector,
-and then apply a ufunc to it. Afterwards, ``NtuplesBaseVector.__array_wrap__``
+``FnBaseVector.__array__`` to extract a `numpy.ndarray` from the vector,
+and then apply a ufunc to it. Afterwards, ``FnBaseVector.__array_wrap__``
 is used to re-wrap the data into the appropriate space.
 """
 
@@ -30,7 +30,7 @@ import numpy as np
 import re
 
 
-__all__ = ('NtuplesBaseUfuncs', 'NumpyNtuplesUfuncs',
+__all__ = ('FnBaseUfuncs', 'NumpyFnUfuncs',
            'DiscreteLpUfuncs', 'ProductSpaceUfuncs')
 
 
@@ -85,7 +85,7 @@ numpy.{}
 # Wrap all numpy ufuncs
 
 def wrap_ufunc_base(name, n_in, n_out, doc):
-    """Add ufunc methods to `NtuplesBaseUfuncs`."""
+    """Add ufunc methods to `FnBaseUfuncs`."""
     wrapped = getattr(np, name)
     if n_in == 1:
         if n_out == 0:
@@ -136,7 +136,7 @@ def wrap_ufunc_base(name, n_in, n_out, doc):
 
 # Wrap reductions
 def wrap_reduction_base(name, doc):
-    """Add ufunc methods to `NtuplesBaseUfuncs`."""
+    """Add ufunc methods to `FnBaseUfuncs`."""
     wrapped = getattr(np, name)
 
     def wrapper(self):
@@ -147,11 +147,11 @@ def wrap_reduction_base(name, doc):
     return wrapper
 
 
-class NtuplesBaseUfuncs(object):
+class FnBaseUfuncs(object):
 
-    """Ufuncs for `NtuplesBaseVector` objects.
+    """Ufuncs for `FnBaseVector` objects.
 
-    Internal object, should not be created except in `NtuplesBaseVector`.
+    Internal object, should not be created except in `FnBaseVector`.
     """
 
     def __init__(self, vector):
@@ -162,19 +162,19 @@ class NtuplesBaseUfuncs(object):
 # Add ufunc methods to ufunc class
 for name, n_in, n_out, doc in UFUNCS:
     method = wrap_ufunc_base(name, n_in, n_out, doc)
-    setattr(NtuplesBaseUfuncs, name, method)
+    setattr(FnBaseUfuncs, name, method)
 
 # Add reduction methods to ufunc class
 for name, doc in REDUCTIONS:
     method = wrap_reduction_base(name, doc)
-    setattr(NtuplesBaseUfuncs, name, method)
+    setattr(FnBaseUfuncs, name, method)
 
 
 # Optimized implementation of ufuncs since we can use the out parameter
-# as well as the data parameter to avoid one call to asarray() when using an
-# NumpyNtuplesVector
-def wrap_ufunc_ntuples(name, n_in, n_out, doc):
-    """Add ufunc methods to `NumpyNtuplesUfuncs`."""
+# as well as the data parameter to avoid one call to asarray() when using a
+# NumpyFnVector
+def wrap_ufunc_fn(name, n_in, n_out, doc):
+    """Add ufunc methods to `NumpyFnUfuncs`."""
 
     # Get method from numpy
     wrapped = getattr(np, name)
@@ -222,23 +222,23 @@ def wrap_ufunc_ntuples(name, n_in, n_out, doc):
     return wrapper
 
 
-class NumpyNtuplesUfuncs(NtuplesBaseUfuncs):
+class NumpyFnUfuncs(FnBaseUfuncs):
 
-    """Ufuncs for `NumpyNtuplesVector` objects.
+    """Ufuncs for `NumpyFnVector` objects.
 
-    Internal object, should not be created except in `NumpyNtuplesVector`.
+    Internal object, should not be created except in `NumpyFnVector`.
     """
 
 
 # Add ufunc methods to ufunc class
 for name, n_in, n_out, doc in UFUNCS:
-    method = wrap_ufunc_ntuples(name, n_in, n_out, doc)
-    setattr(NumpyNtuplesUfuncs, name, method)
+    method = wrap_ufunc_fn(name, n_in, n_out, doc)
+    setattr(NumpyFnUfuncs, name, method)
 
 
 # Optimized implementation of ufuncs since we can use the out parameter
 # as well as the data parameter to avoid one call to asarray() when using a
-# NumpyNtuplesVector
+# NumpyFnVector
 def wrap_ufunc_discretelp(name, n_in, n_out, doc):
     """Add ufunc methods to `DiscreteLpUfuncs`."""
 
@@ -311,7 +311,7 @@ def wrap_reduction_discretelp(name, doc):
     return wrapper
 
 
-class DiscreteLpUfuncs(NtuplesBaseUfuncs):
+class DiscreteLpUfuncs(FnBaseUfuncs):
 
     """Ufuncs for `DiscreteLpElement` objects.
 

@@ -14,21 +14,22 @@ from builtins import int
 
 import numpy as np
 
-from odl.set import (Set, RealNumbers, ComplexNumbers, LinearSpace,
-                     LinearSpaceElement)
-from odl.util.ufuncs import NtuplesBaseUfuncs
+from odl.set import (
+    RealNumbers, ComplexNumbers, LinearSpace, LinearSpaceElement)
+from odl.util.ufuncs import FnBaseUfuncs
 from odl.util import (
     array_str, dtype_repr, indent,
-    is_numeric_dtype, is_real_dtype, is_floating_dtype,
-    complex_dtype, real_dtype)
+    is_real_dtype, is_complex_floating_dtype, is_floating_dtype,
+    complex_dtype, real_dtype,
+    NumpyRandomSeed)
 
 
-__all__ = ('NtuplesBase', 'NtuplesBaseVector', 'FnBase', 'FnBaseVector')
+__all__ = ('FnBase', 'FnBaseVector')
 
 
-class NtuplesBase(Set):
+class FnBase(LinearSpace):
 
-    """Base class for sets of n-tuples independent of implementation."""
+    """Base class for n-tuples over a field independent of implementation."""
 
     def __init__(self, size, dtype):
         """Initialize a new instance.
@@ -49,6 +50,36 @@ class NtuplesBase(Set):
                              ''.format(size))
         self.__dtype = np.dtype(dtype)
 
+        if is_real_dtype(self.dtype):
+            field = RealNumbers()
+            self.__is_real = True
+            self.__is_complex = False
+            self.__real_dtype = self.dtype
+            self.__real_space = self
+            try:
+                self.__complex_dtype = complex_dtype(self.dtype)
+            except ValueError:
+                self.__complex_dtype = None
+            self.__complex_space = None  # Set in first call of astype
+        elif is_complex_floating_dtype(self.dtype):
+            field = ComplexNumbers()
+            self.__is_real = False
+            self.__is_complex = True
+            try:
+                self.__real_dtype = real_dtype(self.dtype)
+            except ValueError:
+                self.__real_dtype = None
+            self.__real_space = None  # Set in first call of astype
+            self.__complex_dtype = self.dtype
+            self.__complex_space = self
+        else:
+            field = None
+            self.__is_real = False
+            self.__is_complex = False
+
+        super(FnBase, self).__init__(field)
+        self.__is_floating = is_floating_dtype(self.dtype)
+
     @property
     def dtype(self):
         """Data type of each entry."""
@@ -64,23 +95,180 @@ class NtuplesBase(Set):
         """Shape ``(size,)`` of this space."""
         return (self.size,)
 
+    @property
+    def is_real(self):
+        """``True`` if the space represents R^n, i.e. real tuples."""
+        return self.__is_real and self.__is_floating
+
+    @property
+    def is_complex(self):
+        """``True`` if the space represents C^n, i.e. complex tuples."""
+        return (not self.__is_real) and self.__is_floating
+
+    @property
+    def is_numeric(self):
+        """``True`` if `dtype` is numeric, otherwise ``False``."""
+        return self.__is_real or self.__is_complex
+
+    @property
+    def real_dtype(self):
+        """The real dtype corresponding to this space's `dtype`.
+
+        Raises
+        ------
+        NotImplementedError
+            If `dtype` is not a numeric data type.
+        """
+        if not self.is_numeric:
+            raise NotImplementedError(
+                '`real_dtype` not defined for non-numeric `dtype`')
+        return self.__real_dtype
+
+    @property
+    def complex_dtype(self):
+        """The complex dtype corresponding to this space's `dtype`.
+
+        Raises
+        ------
+        NotImplementedError
+            If `dtype` is not a numeric data type.
+        """
+        if not self.is_numeric:
+            raise NotImplementedError(
+                '`complex_dtype` not defined for non-numeric `dtype`')
+        return self.__complex_dtype
+
+    @property
+    def real_space(self):
+        """The space corresponding to this space's `real_dtype`.
+
+        Raises
+        ------
+        NotImplementedError
+            If `dtype` is not a numeric data type.
+        """
+        return self.astype(self.real_dtype)
+
+    @property
+    def complex_space(self):
+        """The space corresponding to this space's `complex_dtype`.
+
+        Raises
+        ------
+        NotImplementedError
+            If `dtype` is not a numeric data type.
+        """
+        return self.astype(self.complex_dtype)
+
+    def _astype(self, dtype):
+        """Internal helper for ``astype``. Can be overridden by subclasses."""
+        return type(self)(self.size, dtype=dtype, weighting=self.weighting)
+
+    def astype(self, dtype):
+        """Return a copy of this space with new ``dtype``.
+
+        Parameters
+        ----------
+        dtype :
+            Data type of the returned space. Can be given in any way
+            `numpy.dtype` understands, e.g. as string ('complex64')
+            or data type (complex).
+
+        Returns
+        -------
+        newspace : `FnBase`
+            The version of this space with given data type.
+        """
+        if dtype is None:
+            # Need to filter this out since Numpy iterprets it as 'float'
+            raise ValueError('unknown data type `None`')
+
+        dtype = np.dtype(dtype)
+        if dtype == self.dtype:
+            return self
+
+        if not self.is_numeric:
+            # No caching
+            return self._astype(dtype)
+
+        # Caching for real and complex versions (exact dtype mappings)
+        if dtype == self.real_dtype:
+            if self.__real_space is None:
+                self.__real_space = self._astype(dtype)
+            return self.__real_space
+        elif dtype == self.complex_dtype:
+            if self.__complex_space is None:
+                self.__complex_space = self._astype(dtype)
+            return self.__complex_space
+        else:
+            return self._astype(dtype)
+
+    @property
+    def examples(self):
+        """Example random vectors."""
+        # Always return the same numbers
+        with NumpyRandomSeed(123):
+            yield ('Linspaced', self.element(np.linspace(0, 1, self.size)))
+
+            if self.is_real:
+                yield ('Random noise', self.element(np.random.rand(self.size)))
+            elif self.is_complex:
+                rnd = (np.random.rand(self.size) +
+                       1j * np.random.rand(self.size))
+                yield ('Random noise', self.element(rnd))
+
+            yield ('Normally distributed random noise',
+                   self.element(np.random.randn(self.size)))
+
+    def zero(self):
+        """Return a vector of zeros."""
+        raise NotImplementedError('abstract method')
+
+    def one(self):
+        """Return a vector of ones."""
+        raise NotImplementedError('abstract method')
+
+    def _multiply(self, x1, x2, out):
+        """Implement ``out[:] = x1 * x2`` (entry-wise)."""
+        raise NotImplementedError('abstract method')
+
+    def _divide(self, x1, x2, out):
+        """Implement ``out[:] = x1 / x2`` (entry-wise)."""
+        raise NotImplementedError('abstract method')
+
+    @staticmethod
+    def default_dtype(field=None):
+        """Return the default data type for a given field.
+
+        Parameters
+        ----------
+        field : `Field`, optional
+            Set of numbers to be represented by a data type.
+
+        Returns
+        -------
+        dtype :
+            Numpy data type specifier. The returned defaults are:
+        """
+        raise NotImplementedError('abstract method')
+
     def __contains__(self, other):
         """Return ``other in self``.
 
         Returns
         -------
         contains : bool
-            ``True`` if ``other`` is an `NtuplesBaseVector` instance and
+            ``True`` if ``other`` is an `FnBaseVector` instance and
             ``other.space`` is equal to this space, ``False`` otherwise.
 
         Examples
         --------
-        >>> long_3 = odl.ntuples(3, dtype='int64')
+        >>> long_3 = odl.fn(3, dtype='int64')
         >>> long_3.element() in long_3
         True
-        >>> long_3.element() in odl.ntuples(3, dtype='int32')
+        >>> long_3.element() in odl.fn(3, dtype='int32')
         False
-        >>> long_3.element() in odl.ntuples(3, dtype='float64')
+        >>> long_3.element() in odl.fn(3, dtype='float64')
         False
         """
         return getattr(other, 'space', None) == self
@@ -96,22 +284,22 @@ class NtuplesBase(Set):
 
         Examples
         --------
-        >>> int_3 = odl.ntuples(3, dtype=int)
+        >>> int_3 = odl.fn(3, dtype=int)
         >>> int_3 == int_3
         True
 
         Equality is not identity:
 
-        >>> int_3a, int_3b = odl.ntuples(3, int), odl.ntuples(3, int)
+        >>> int_3a, int_3b = odl.fn(3, int), odl.fn(3, int)
         >>> int_3a == int_3b
         True
         >>> int_3a is int_3b
         False
 
-        >>> int_3, int_4 = odl.ntuples(3, int), odl.ntuples(4, int)
+        >>> int_3, int_4 = odl.fn(3, int), odl.fn(4, int)
         >>> int_3 == int_4
         False
-        >>> int_3, str_3 = odl.ntuples(3, 'int'), odl.ntuples(3, 'S2')
+        >>> int_3, str_3 = odl.fn(3, 'int'), odl.fn(3, 'S2')
         >>> int_3 == str_3
         False
         """
@@ -139,11 +327,6 @@ class NtuplesBase(Set):
         """Return ``str(self)``."""
         return repr(self)
 
-    @property
-    def element_type(self):
-        """Type of elements in this space."""
-        raise NotImplementedError('abstract method')
-
     @staticmethod
     def available_dtypes():
         """Available data types for this space type.
@@ -154,10 +337,15 @@ class NtuplesBase(Set):
         """
         raise NotImplementedError('abstract method')
 
+    @property
+    def element_type(self):
+        """Type of elements in this space: `FnBaseVector`."""
+        return FnBaseVector
 
-class NtuplesBaseVector(object):
 
-    """Abstract class for `NtuplesBase` elements.
+class FnBaseVector(LinearSpaceElement):
+
+    """Abstract class for `FnBase` elements.
 
     Do not use this class directly -- to create an element of a vector
     space, call the space's `LinearSpace.element` method instead.
@@ -166,10 +354,6 @@ class NtuplesBaseVector(object):
     def __init__(self, space, *args, **kwargs):
         """Initialize a new instance."""
         self.__space = space
-
-    def copy(self):
-        """Return an identical (deep) copy of this vector."""
-        raise NotImplementedError('abstract method')
 
     def asarray(self, start=None, stop=None, step=None, out=None):
         """Return the data of this vector as a numpy array.
@@ -208,7 +392,7 @@ class NtuplesBaseVector(object):
 
         Returns
         -------
-        values : `NtuplesBase.dtype` or `NtuplesBaseVector`
+        values : `FnBase.dtype` or `FnBaseVector`
             Extracted entries according to ``indices``.
         """
         raise NotImplementedError('abstract method')
@@ -220,7 +404,7 @@ class NtuplesBaseVector(object):
         ----------
         indices : int or `slice`
             The position(s) that should be assigned to.
-        values : scalar, `array-like` or `NtuplesBaseVector`
+        values : scalar, `array-like` or `FnBaseVector`
             The value(s) that are to be assigned.
 
             If ``index`` is an integer, ``value`` must be a single
@@ -316,7 +500,7 @@ class NtuplesBaseVector(object):
 
         Returns
         -------
-        vector : `NtuplesBaseVector`
+        vector : `FnBaseVector`
             Numpy array wrapped back into this vector's element type.
         """
         if obj.ndim == 0:
@@ -410,7 +594,7 @@ class NtuplesBaseVector(object):
         These default ufuncs are always available, but may or may not be
         optimized for the specific space in use.
         """
-        return NtuplesBaseUfuncs(self)
+        return FnBaseUfuncs(self)
 
     def show(self, title=None, method='scatter', force_show=False, fig=None,
              **kwargs):
@@ -463,187 +647,6 @@ class NtuplesBaseVector(object):
     def impl(self):
         """Implementation of this vector's space."""
         return self.space.impl
-
-
-class FnBase(NtuplesBase, LinearSpace):
-
-    """Base class for n-tuples over a field independent of implementation."""
-
-    def __init__(self, size, dtype):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        size : non-negative int
-            Number of entries in a tuple.
-        dtype :
-            Data type for each tuple entry. Can be provided in any
-            way the `numpy.dtype` function understands, most notably
-            as built-in type, as one of NumPy's internal datatype
-            objects or as string.
-            Only scalar data types (numbers) are allowed.
-        """
-        NtuplesBase.__init__(self, size, dtype)
-
-        if not is_numeric_dtype(self.dtype):
-            raise TypeError('{!r} is not a scalar data type'.format(dtype))
-
-        if is_real_dtype(self.dtype):
-            field = RealNumbers()
-            self.__is_real = True
-            self.__real_dtype = self.dtype
-            self.__real_space = self
-            try:
-                self.__complex_dtype = complex_dtype(self.dtype)
-            except ValueError:
-                self.__complex_dtype = None
-            self.__complex_space = None  # Set in first call of astype
-        else:
-            field = ComplexNumbers()
-            self.__is_real = False
-            try:
-                self.__real_dtype = real_dtype(self.dtype)
-            except ValueError:
-                self.__real_dtype = None
-            self.__real_space = None  # Set in first call of astype
-            self.__complex_dtype = self.dtype
-            self.__complex_space = self
-
-        self.__is_floating = is_floating_dtype(self.dtype)
-        LinearSpace.__init__(self, field)
-
-    @property
-    def is_rn(self):
-        """``True`` if the space represents R^n, i.e. real tuples."""
-        return self.__is_real and self.__is_floating
-
-    @property
-    def is_cn(self):
-        """``True`` if the space represents C^n, i.e. complex tuples."""
-        return (not self.__is_real) and self.__is_floating
-
-    @property
-    def real_dtype(self):
-        """The real dtype corresponding to this space's `dtype`."""
-        return self.__real_dtype
-
-    @property
-    def complex_dtype(self):
-        """The complex dtype corresponding to this space's `dtype`."""
-        return self.__complex_dtype
-
-    @property
-    def real_space(self):
-        """The space corresponding to this space's `real_dtype`."""
-        return self.astype(self.real_dtype)
-
-    @property
-    def complex_space(self):
-        """The space corresponding to this space's `complex_dtype`."""
-        return self.astype(self.complex_dtype)
-
-    def _astype(self, dtype):
-        """Internal helper for ``astype``. Can be overridden by subclasses."""
-        return type(self)(self.size, dtype=dtype, weighting=self.weighting)
-
-    def astype(self, dtype):
-        """Return a copy of this space with new ``dtype``.
-
-        Parameters
-        ----------
-        dtype :
-            Data type of the returned space. Can be given in any way
-            `numpy.dtype` understands, e.g. as string ('complex64')
-            or data type (complex).
-
-        Returns
-        -------
-        newspace : `FnBase`
-            The version of this space with given data type.
-        """
-        if dtype is None:
-            # Need to filter this out since Numpy iterprets it as 'float'
-            raise ValueError('unknown data type `None`')
-
-        dtype = np.dtype(dtype)
-        if dtype == self.dtype:
-            return self
-
-        # Caching for real and complex versions (exact dtype mappings)
-        if dtype == self.real_dtype:
-            if self.__real_space is None:
-                self.__real_space = self._astype(dtype)
-            return self.__real_space
-        elif dtype == self.complex_dtype:
-            if self.__complex_space is None:
-                self.__complex_space = self._astype(dtype)
-            return self.__complex_space
-        else:
-            return self._astype(dtype)
-
-    @property
-    def examples(self):
-        """Example random vectors."""
-        # Always return the same numbers
-        rand_state = np.random.get_state()
-        np.random.seed(1337)
-
-        yield ('Linspaced', self.element(np.linspace(0, 1, self.size)))
-
-        if self.is_rn:
-            yield ('Random noise', self.element(np.random.rand(self.size)))
-        elif self.is_cn:
-            rnd = np.random.rand(self.size) + np.random.rand(self.size) * 1j
-            yield ('Random noise', self.element(rnd))
-
-        yield ('Normally distributed random noise',
-               self.element(np.random.randn(self.size)))
-
-        np.random.set_state(rand_state)
-
-    def zero(self):
-        """Return a vector of zeros."""
-        raise NotImplementedError('abstract method')
-
-    def one(self):
-        """Return a vector of ones."""
-        raise NotImplementedError('abstract method')
-
-    def _multiply(self, x1, x2, out):
-        """Implement ``out[:] = x1 * x2`` (entry-wise)."""
-        raise NotImplementedError('abstract method')
-
-    def _divide(self, x1, x2, out):
-        """Implement ``out[:] = x1 / x2`` (entry-wise)."""
-        raise NotImplementedError('abstract method')
-
-    @staticmethod
-    def default_dtype(field=None):
-        """Return the default data type for a given field.
-
-        Parameters
-        ----------
-        field : `Field`, optional
-            Set of numbers to be represented by a data type.
-
-        Returns
-        -------
-        dtype :
-            Numpy data type specifier. The returned defaults are:
-        """
-        raise NotImplementedError('abstract method')
-
-
-class FnBaseVector(NtuplesBaseVector, LinearSpaceElement):
-
-    """Abstract class for `NtuplesBase` elements.
-
-    Do not use this class directly -- to create an element of a vector
-    space, call the space's `LinearSpace.element` method instead.
-    """
-
-    __eq__ = LinearSpaceElement.__eq__
-    copy = LinearSpaceElement.copy
 
 
 if __name__ == '__main__':

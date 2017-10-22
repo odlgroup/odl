@@ -30,7 +30,7 @@ def test_init(exponent):
 
     # Normal discretization of unit interval with complex
     complex_space = odl.FunctionSpace(odl.IntervalProd(0, 1),
-                                      field=odl.ComplexNumbers())
+                                      out_dtype=complex)
 
     cn = odl.cn(10, exponent=exponent)
     odl.DiscreteLp(complex_space, part, cn, exponent=exponent)
@@ -80,7 +80,7 @@ def test_factory(exponent, fn_impl):
 
     assert isinstance(discr.dspace, FnBase)
     assert discr.dspace.impl == fn_impl
-    assert discr.is_rn
+    assert discr.is_real
     assert discr.dspace.exponent == exponent
 
     # Complex
@@ -90,7 +90,7 @@ def test_factory(exponent, fn_impl):
 
         assert isinstance(discr.dspace, FnBase)
         assert discr.dspace.impl == fn_impl
-        assert discr.is_cn
+        assert discr.is_complex
         assert discr.dspace.exponent == exponent
     except TypeError:
         # Not all spaces support complex, that is fine.
@@ -108,7 +108,7 @@ def test_factory_dtypes(fn_impl):
             discr = odl.uniform_discr(0, 1, 10, impl=fn_impl, dtype=dtype)
             assert isinstance(discr.dspace, FnBase)
             assert discr.dspace.impl == fn_impl
-            assert discr.is_rn
+            assert discr.is_real
         except TypeError:
             continue
 
@@ -126,7 +126,7 @@ def test_factory_dtypes(fn_impl):
             discr = odl.uniform_discr(0, 1, 10, impl=fn_impl, dtype=dtype)
             assert isinstance(discr.dspace, FnBase)
             assert discr.dspace.impl == fn_impl
-            assert discr.is_cn
+            assert discr.is_complex
             assert discr.dspace.element().space.dtype == dtype
         except TypeError:
             continue

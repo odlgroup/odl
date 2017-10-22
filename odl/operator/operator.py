@@ -2074,7 +2074,7 @@ class OperatorLeftVectorMult(Operator):
         if not self.is_linear:
             raise OpNotImplementedError('nonlinear operators have no adjoint')
 
-        if self.vector.space.is_rn:
+        if self.vector.space.is_real:
             # The complex conjugate of a real vector is the vector itself.
             return self.operator.adjoint * self.vector
         else:
@@ -2194,7 +2194,7 @@ class OperatorRightVectorMult(Operator):
         if not self.is_linear:
             raise OpNotImplementedError('nonlinear operators have no adjoint')
 
-        if self.vector.space.is_rn:
+        if self.vector.space.is_real:
             # The complex conjugate of a real vector is the vector itself.
             return self.vector * self.operator.adjoint
         else:
