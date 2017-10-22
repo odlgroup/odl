@@ -10,6 +10,7 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
+import numpy as np
 
 from odl.operator import Operator
 from odl.space.base_ntuples import (NtuplesBase, NtuplesBaseVector,
@@ -395,7 +396,8 @@ class DiscretizedSetElement(NtuplesBaseVector):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        if self.ndim == 1 and self.size <= 6:
+        maxsize_full_print = 2 * np.get_printoptions()['edgeitems']
+        if self.ndim == 1 and self.size <= maxsize_full_print:
             return '{!r}.element({})'.format(self.space, array_str(self))
         else:
             return '{!r}.element(\n{}\n)'.format(self.space,

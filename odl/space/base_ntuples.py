@@ -396,7 +396,8 @@ class NtuplesBaseVector(object):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        if self.size <= 6:
+        maxsize_full_print = 2 * np.get_printoptions()['edgeitems']
+        if self.size <= maxsize_full_print:
             return '{!r}.element({})'.format(self.space, array_str(self))
         else:
             return '{!r}.element(\n{}\n)'.format(self.space,
