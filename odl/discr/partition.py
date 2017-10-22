@@ -25,7 +25,7 @@ from odl.set import IntervalProd
 from odl.util import (
     normalized_index_expression, normalized_nodes_on_bdry,
     normalized_scalar_param_list, safe_int_conv,
-    signature_string, indent, array_str)
+    signature_string, indent, array_str, npy_printoptions)
 
 
 __all__ = ('RectPartition', 'uniform_partition_fromintv',
@@ -869,7 +869,8 @@ class RectPartition(object):
 
             optargs = [('nodes_on_bdry', self.nodes_on_bdry, False)]
 
-            sig_str = signature_string(posargs, optargs, mod=[posmod, ''])
+            with npy_printoptions(precision=4):
+                sig_str = signature_string(posargs, optargs, mod=[posmod, ''])
             return '{}({})'.format(constructor, sig_str)
         else:
             constructor = 'nonuniform_partition'
@@ -893,14 +894,16 @@ class RectPartition(object):
                 optmod.append('')
             else:
                 # Append min/max_pt to list of optional args if not
-                # default (need check here because array comparison is
+                # default (need check manually because array comparison is
                 # ambiguous)
                 if not np.allclose(self.min_pt, def_min_pt):
                     if self.ndim == 1:
                         optargs.append(('min_pt', self.min_pt[0], None))
                         optmod.append(':.4')
                     else:
-                        optargs.append(('min_pt', array_str(self.min_pt), ''))
+                        with npy_printoptions(precision=4):
+                            optargs.append(
+                                ('min_pt', array_str(self.min_pt), ''))
                         optmod.append('!s')
 
                 if not np.allclose(self.max_pt, def_max_pt):
@@ -908,7 +911,9 @@ class RectPartition(object):
                         optargs.append(('max_pt', self.max_pt[0], None))
                         optmod.append(':.4')
                     else:
-                        optargs.append(('max_pt', array_str(self.max_pt), ''))
+                        with npy_printoptions(precision=4):
+                            optargs.append(
+                                ('max_pt', array_str(self.max_pt), ''))
                         optmod.append('!s')
 
             sig_str = signature_string(posargs, optargs, mod=[posmod, optmod],

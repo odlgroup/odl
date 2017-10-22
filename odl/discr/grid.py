@@ -21,7 +21,7 @@ import numpy as np
 from odl.set import Set, IntervalProd
 from odl.util import (
     normalized_index_expression, normalized_scalar_param_list, safe_int_conv,
-    array_str, signature_string, indent)
+    array_str, signature_string, indent, npy_printoptions)
 
 
 __all__ = ('RectGrid', 'uniform_grid', 'uniform_grid_fromintv')
@@ -1027,7 +1027,8 @@ class RectGrid(Set):
             constructor = 'uniform_grid'
             posargs = [self.min_pt, self.max_pt, self.shape]
             posmod = [array_str, array_str, '']
-            inner_str = signature_string(posargs, [], mod=[posmod, ''])
+            with npy_printoptions(precision=4):
+                inner_str = signature_string(posargs, [], mod=[posmod, ''])
             return '{}({})'.format(constructor, inner_str)
         else:
             constructor = self.__class__.__name__
