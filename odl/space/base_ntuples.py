@@ -10,7 +10,6 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from builtins import int
 
 import numpy as np
 
@@ -44,6 +43,8 @@ class FnBase(LinearSpace):
             as built-in type, as one of NumPy's internal datatype
             objects or as string.
         """
+        # Make sure that huge sizes don't overflow in Py2
+        from builtins import int
         self.__size = int(size)
         if self.size < 0:
             raise ValueError('`size` must be non-negative, got {}'
