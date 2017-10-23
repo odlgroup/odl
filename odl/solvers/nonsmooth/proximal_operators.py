@@ -24,10 +24,9 @@ Foundations and Trends in Optimization, 1 (2014), pp 127-239.
 from __future__ import print_function, division, absolute_import
 import numpy as np
 
-from odl.operator import (
-    Operator, IdentityOperator, ScalingOperator, ConstantOperator,
-    DiagonalOperator, PointwiseNorm)
-from odl.set.space import LinearSpaceElement
+from odl.operator import (Operator, IdentityOperator, ScalingOperator,
+                          ConstantOperator, DiagonalOperator, PointwiseNorm,
+                          OperatorComp, MultiplyOperator)
 from odl.space import ProductSpace
 from odl.util import cache_arguments
 
@@ -153,10 +152,14 @@ def proximal_convex_conj(prox_factory):
         """
         if np.isscalar(sigma):
             sigma = float(sigma)
+            prox_other = sigma * prox_factory(1.0 / sigma) * (1.0 / sigma)
+            return IdentityOperator(prox_other.domain) - prox_other
         else:
-            sigma = prox_factory.domain.element(sigma)
-        prox_other = sigma * prox_factory(1.0 / sigma) * (1.0 / sigma)
-        return IdentityOperator(prox_other.domain) - prox_other
+            space = prox_factory(sigma).domain
+            sigma = space.element(sigma)
+            return IdentityOperator(space) - OperatorComp(OperatorComp(
+                MultiplyOperator(sigma), prox_factory(1.0 / sigma)),
+                MultiplyOperator(1.0 / sigma))
 
     return convex_conj_prox_factory
 
