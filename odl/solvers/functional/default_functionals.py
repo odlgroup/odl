@@ -2295,7 +2295,7 @@ https://web.stanford.edu/~boyd/papers/pdf/prox_algs.pdf
 
 
 class Huber(Functional):
-    """The Huber norm functional.
+    """The Huber functional.
 
     Notes
     -----
@@ -2325,21 +2325,21 @@ class Huber(Functional):
         space : `FnBase`
             Domain of the functional.
         gamma : float
-            Smoothing parameter of Huberization. If ``gamma = 0``, then
-            functional is non-smooth corresponds to the usual L1 norm. For
+            Smoothing parameter of the Huber functional. If ``gamma = 0``, then
+            functional is non-smooth and corresponds to the usual L1 norm. For
             ``gamma > 0``, it has a ``1/gamma``-Lipschitz gradient so that
             its convex conjugate is ``gamma``-strongly convex.
 
         Examples
         --------
-        Example of initializing the Huber norm functional.
+        Example of initializing the Huber functional:
 
         >>> space = odl.uniform_discr(0, 1, 14)
         >>> gamma = 0.1
         >>> huber_norm = odl.solvers.Huber(space, gamma=0.1)
 
         Check that if all elements are > ``gamma`` we get the L1-norm up to a
-        constant.
+        constant:
 
         >>> x = 2 * gamma * space.one()
         >>> tol = 1e-5
@@ -2349,14 +2349,14 @@ class Huber(Functional):
         True
 
         Check that if all elements are < ``gamma`` we get the squared L2-norm
-        times the weight 1/(2*gamma).
+        times the weight ``1/(2*gamma)``:
 
         >>> x = gamma / 2 * space.one()
         >>> f = 1 / (2 * gamma) * odl.solvers.L2NormSquared(space)
         >>> abs(huber_norm(x) - f(x)) < tol
         True
 
-        Compare Huber- and L1-norm for vanishing smoothing ``gamma=0``.
+        Compare Huber- and L1-norm for vanishing smoothing ``gamma=0``:
 
         >>> x = odl.phantom.white_noise(space)
         >>> huber_norm = odl.solvers.Huber(space, gamma=0)
@@ -2364,7 +2364,7 @@ class Huber(Functional):
         >>> abs(huber_norm(x) - l1_norm(x)) < tol
         True
 
-        Redo previous example for a product space in two dimensions.
+        Redo previous example for a product space in two dimensions:
 
         >>> domain = odl.uniform_discr([0, 0], [1, 1], [5, 5])
         >>> space = odl.ProductSpace(domain, 2)
@@ -2445,7 +2445,7 @@ class Huber(Functional):
 
         Examples
         --------
-        Check that the gradient norm is less than the norm of the one element.
+        Check that the gradient norm is less than the norm of the one element:
 
         >>> space = odl.uniform_discr(0, 1, 14)
         >>> norm_one = space.one().norm()
@@ -2456,7 +2456,7 @@ class Huber(Functional):
         >>> grad.norm() <=  norm_one + tol
         True
 
-        Redo previous example for a product space in two dimensions.
+        Redo previous example for a product space in two dimensions:
 
         >>> domain = odl.uniform_discr([0, 0], [1, 1], [5, 5])
         >>> space = odl.ProductSpace(domain, 2)

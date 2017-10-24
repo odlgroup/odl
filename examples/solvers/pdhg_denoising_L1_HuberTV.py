@@ -5,8 +5,9 @@ This exhaustive example solves the L1-HuberTV problem
         min_{x >= 0} ||x - d||_1
             + lam * sum_i eta_gamma(||grad(x)_i||_2)
 
-where grad the spatial gradient and d is given noisy data. Here eta_gamma
-denotes the Huber function. For more details, see the Huber documentation.
+where ``grad`` is the spatial gradient and ``d`` is given noisy data. Here
+``eta_gamma`` denotes the Huber function. For more details, see the Huber
+documentation.
 
 For further details and a description of the solution method used, see
 https://odlgroup.github.io/odl/guide/pdhg_guide.html in the ODL documentation.
@@ -29,7 +30,7 @@ d = odl.phantom.salt_pepper_noise(orig)
 
 # Define objective functional
 op = odl.Gradient(space)  # operator
-op.norm = np.sqrt(8) + 1e-4  # norm with forward differences is well-known
+norm_op = np.sqrt(8) + 1e-4  # norm with forward differences is well-known
 lam = 1  # Regularization parameter
 g = 1 / lam * odl.solvers.L1Norm(space).translated(d)  # data fit
 f = odl.solvers.Huber(op.range, gamma=.1)  # regularization
@@ -56,10 +57,10 @@ class CallbackStore(odl.solvers.Callback):  # Callback to store function values
         self.obj_function_values = []
 
 
-callback = (odl.solvers.CallbackPrintIteration(step=10) & CallbackStore())
+callback = odl.solvers.CallbackPrintIteration(step=10) & CallbackStore()
 niter = 500  # Number of iterations
-tau = 1.0 / op.norm  # Step size for primal variable
-sigma = 1.0 / op.norm  # Step size for dual variable
+tau = 1.0 / norm_op  # Step size for primal variable
+sigma = 1.0 / norm_op  # Step size for dual variable
 
 # Run algorithm
 x = space.zero()

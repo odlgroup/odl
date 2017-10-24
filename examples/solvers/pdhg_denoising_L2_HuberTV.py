@@ -5,8 +5,9 @@ This exhaustive example solves the L2-HuberTV problem
         min_{x >= 0}  1/2 ||x - d||_2^2
             + lam * sum_i eta_gamma(||grad(x)_i||_2)
 
-where grad the spatial gradient and d is given noisy data. Here eta_gamma
-denotes the Huber function. For more details, see the Huber documentation.
+where ``grad`` is the spatial gradient and ``d`` is given noisy data. Here
+``eta_gamma`` denotes the Huber function. For more details, see the Huber
+documentation.
 
 We compare two different step size rules as described in
 
@@ -41,7 +42,7 @@ d = odl.phantom.white_noise(space, orig, 0.1)
 
 # Define objective functional
 op = odl.Gradient(space)  # operator
-op.norm = np.sqrt(8) + 1e-4  # norm with forward differences is well-known
+norm_op = np.sqrt(8) + 1e-4  # norm with forward differences is well-known
 lam = 0.1  # Regularization parameter
 g = 1 / (2 * lam) * odl.solvers.L2NormSquared(space).translated(d)  # data fit
 f = odl.solvers.Huber(op.range, gamma=.01)  # regularization
@@ -69,22 +70,22 @@ class CallbackStore(odl.solvers.Callback):  # Callback to store function values
         self.obj_function_values = []
 
 
-callback = (odl.solvers.CallbackPrintIteration(step=10) & CallbackStore())
+callback = odl.solvers.CallbackPrintIteration(step=10) & CallbackStore()
 niter = 200  # number of iterations
 
 
 # Parameters for algorithm 1
 # Related to root of problem condition number
-kappa1 = np.sqrt(1 + 0.999 * op.norm ** 2 / (mu_g * mu_f))
+kappa1 = np.sqrt(1 + 0.999 * norm_op ** 2 / (mu_g * mu_f))
 tau1 = 1 / (mu_g * (kappa1 - 1))  # Primal step size
 sigma1 = 1 / (mu_f * (kappa1 - 1))  # Dual step size
 theta1 = 1 - 2 / (1 + kappa1)  # Extrapolation constant
 
 # Parameters for algorithm 2
 # Square root of problem condition number
-kappa2 = op.norm / np.sqrt(mu_f * mu_g)
-tau2 = 1 / op.norm * np.sqrt(mu_f / mu_g)  # Primal step size
-sigma2 = 1 / op.norm * np.sqrt(mu_g / mu_f)  # Dual step size
+kappa2 = norm_op / np.sqrt(mu_f * mu_g)
+tau2 = 1 / norm_op * np.sqrt(mu_f / mu_g)  # Primal step size
+sigma2 = 1 / norm_op * np.sqrt(mu_g / mu_f)  # Dual step size
 theta2 = 1 - 2 / (2 + kappa2)  # Extrapolation constant
 
 # Run linearly convergent algorithm 1
