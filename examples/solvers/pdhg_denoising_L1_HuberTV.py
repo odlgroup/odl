@@ -14,26 +14,24 @@ https://odlgroup.github.io/odl/guide/pdhg_guide.html in the ODL documentation.
 """
 
 import numpy as np
-import scipy
 import odl
 import matplotlib.pyplot as plt
 
 # --- define setting --- #
 
 # Define ground truth, space and noisy data
-image = np.rot90(scipy.misc.ascent()[::2, ::2].astype('float'), 3)
-shape = image.shape
-image /= image.max()
+shape = [100, 100]
 space = odl.uniform_discr([0, 0], shape, shape)
-orig = space.element(image.copy())
-d = odl.phantom.salt_pepper_noise(orig)
+orig = odl.phantom.smooth_cuboid(space)
+d = odl.phantom.salt_pepper_noise(orig, fraction=0.2)
 
 # Define objective functional
 op = odl.Gradient(space)  # operator
 norm_op = np.sqrt(8) + 1e-4  # norm with forward differences is well-known
-lam = 1  # Regularization parameter
-g = 1 / lam * odl.solvers.L1Norm(space).translated(d)  # data fit
-f = odl.solvers.Huber(op.range, gamma=.1)  # regularization
+lam = 2  # Regularization parameter
+const = 0.5
+g = const / lam * odl.solvers.L1Norm(space).translated(d)  # data fit
+f = const * odl.solvers.Huber(op.range, gamma=.01)  # regularization
 obj_fun = f * op + g  # combined functional
 mu_f = 1 / f.grad_lipschitz  # Strong convexity of "f*"
 
@@ -89,10 +87,6 @@ i = np.array(callback.callbacks[1].iteration_counts)
 
 plt.figure()
 plt.loglog(i, rel_fun(obj), label='pdhg')
-plt.loglog(i[1:], 1. / i[1:], '--', label='$O(1/k)$')
-plt.loglog(i[1:], 4. / i[1:] ** 2, ':', label='$O(1/k^2)$')
-rho = 0.97
-plt.loglog(i[1:], rho ** i[1:], '-',
-           label='$O(\\rho^k), \\rho={:3.2f}$'.format(rho))
+plt.loglog(i[1:], 20. / i[1:] ** 2, ':', label='$O(1/k^2)$')
 plt.title('Function values')
 plt.legend()
