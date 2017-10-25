@@ -404,12 +404,12 @@ def blurring(data, ground_truth, mask=None, normalized=False,
 
 
 def false_structures_mask(foreground, smoothness_factor=None):
-    """Return mask empasizing areas outside ``foreground``.
+    """Return mask emphasizing areas outside ``foreground``.
 
     Parameters
     ----------
     foreground : `FnBaseVector`
-        The region that should be de-emphasised
+        The region that should be de-emphasized.
     smoothness_factor : float, optional
         Positive real number. Higher value gives smoother transition
         between foreground and its complement.
@@ -434,7 +434,7 @@ def false_structures_mask(foreground, smoothness_factor=None):
 
     Notes
     -----
-    This helper function computes the euclidean distance transform from each
+    This helper function computes the Euclidean distance transform from each
     point in ``foreground.space`` to ``foreground``.
 
     The weighting gives higher values to structures outside the foreground
@@ -445,7 +445,7 @@ def false_structures_mask(foreground, smoothness_factor=None):
 
     unique = np.unique(foreground)
     if not np.array_equiv(unique, [0., 1.]):
-        raise ValueError('`foreground` contains values not in [0, 1] or has '
+        raise ValueError('`foreground` is not a binary mask or has '
                           'no true values {!r}'.format(unique))
 
     result = distance_transform_edt(1.0 - foreground,
@@ -535,10 +535,10 @@ def psnr(data, ground_truth, use_zscore=False, force_lower_is_better=False):
     ground_truth : `Tensor`
         Reference to compare ``data`` to.
     use_zscore : bool
-        If true, normalize ``data`` and ``ground_truth`` to have zero mean and
+        If ``true``, normalize ``data`` and ``ground_truth`` to have zero mean and
         unit variance before comparison.
     force_lower_is_better : bool
-        If true, then lower value indicates better fit. In this case the output
+        If ``true``, then lower value indicates better fit. In this case the output
         is negated
 
     Returns
@@ -685,7 +685,7 @@ def noise_power_spectrum(data, ground_truth, radial=False):
     ground_truth : `DiscreteLp` element
         Reference to compare ``data`` to.
     radial : bool
-        If true, compute the radial NPS.
+        If ``true``, compute the radial NPS.
 
     Returns
     -------
