@@ -1,6 +1,6 @@
 """Total variation denoising using PDHG.
 
-This exhaustive example solves the L1-HuberTV problem
+This example solves the L1-HuberTV problem
 
         min_{x >= 0} ||x - d||_1
             + lam * sum_i eta_gamma(||grad(x)_i||_2)
@@ -16,8 +16,6 @@ https://odlgroup.github.io/odl/guide/pdhg_guide.html in the ODL documentation.
 import numpy as np
 import odl
 import matplotlib.pyplot as plt
-
-# --- define setting --- #
 
 # Define ground truth, space and noisy data
 shape = [100, 100]

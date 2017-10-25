@@ -2305,8 +2305,8 @@ class Huber(Functional):
     .. math::
         F(x) = \\int_\Omega f_{\\gamma}(||x(y)||_2) dy
 
-    where ``||.||_2`` denotes the Euclidean norm for vector-valued functions
-    which reduces to the absolute value for scalar-valued functions.
+    where :mth:`||\cdot||_2` denotes the Euclidean norm for vector-valued
+    functions which reduces to the absolute value for scalar-valued functions.
     The function :math:`f` with smoothing :math:`\\gamma` is given by
 
     .. math::
@@ -2325,9 +2325,9 @@ class Huber(Functional):
         space : `FnBase`
             Domain of the functional.
         gamma : float
-            Smoothing parameter of the Huber functional. If ``gamma = 0``, then
-            functional is non-smooth and corresponds to the usual L1 norm. For
-            ``gamma > 0``, it has a ``1/gamma``-Lipschitz gradient so that
+            Smoothing parameter of the Huber functional. If ``gamma = 0``,
+            the functional is non-smooth and corresponds to the usual L1 norm.
+            For ``gamma > 0``, it has a ``1/gamma``-Lipschitz gradient so that
             its convex conjugate is ``gamma``-strongly convex.
 
         Examples
@@ -2410,7 +2410,7 @@ class Huber(Functional):
 
     @property
     def convex_conj(self):
-        '''The convex conjugate'''
+        """The convex conjugate"""
         if isinstance(self.domain, ProductSpace):
             norm = GroupL1Norm(self.domain, 2)
         else:
