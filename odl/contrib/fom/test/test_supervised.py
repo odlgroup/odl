@@ -105,7 +105,7 @@ def test_psnr(space):
     # Compute the true value
     mse = np.mean((true - data) ** 2)
     maxi = np.max(np.abs(true))
-    expected = 10 * np.log10(maxi**2 / mse)
+    expected = 10 * np.log10(maxi ** 2 / mse)
 
     # Test regular call
     result = odl.contrib.fom.psnr(data, true)
