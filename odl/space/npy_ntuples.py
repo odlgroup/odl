@@ -47,8 +47,8 @@ class NumpyFn(FnBase):
 
     """Set of n-tuples of arbitrary type.
 
-    This space implements n-tuples of elements from a `Field` ``F``,
-    which is usually the real or complex numbers.
+    This space implements n-tuples of elements from a `Field`, which is
+    usually the real or complex numbers.
 
     Its elements are represented as instances of the `NumpyFnVector` class.
     """

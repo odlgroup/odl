@@ -12,6 +12,7 @@
 from __future__ import print_function, division, absolute_import
 
 import numpy as np
+import sys
 
 from odl.set import (
     RealNumbers, ComplexNumbers, LinearSpace, LinearSpaceElement)
@@ -44,13 +45,23 @@ class FnBase(LinearSpace):
             objects or as string.
         """
         # Make sure that huge sizes don't overflow in Py2
-        from builtins import int
-        self.__size = int(size)
+        if sys.version_info.major < 3:
+            self.__size = long(size)
+        else:
+            self.__size = int(size)
+
         if self.size < 0:
             raise ValueError('`size` must be non-negative, got {}'
                              ''.format(size))
         self.__dtype = np.dtype(dtype)
 
+        # Determine what kind of space we create, i.e., real vs. complex
+        # vs. something else
+        # The attributes `__real_space`, `__real_dtype`, `__complex_space` and
+        # `__complex_dtype` act as cache for the `astype` method. We set
+        # everything except the converted spaces already here for efficiency.
+        # Since determining the converted spaces might take more effort,
+        # we leave them uninitialized.
         if is_real_dtype(self.dtype):
             field = RealNumbers()
             self.__is_real = True
@@ -168,6 +179,8 @@ class FnBase(LinearSpace):
     def astype(self, dtype):
         """Return a copy of this space with new ``dtype``.
 
+        See Notes for details on the subclassing interface.
+
         Parameters
         ----------
         dtype :
@@ -179,6 +192,36 @@ class FnBase(LinearSpace):
         -------
         newspace : `FnBase`
             The version of this space with given data type.
+
+        Examples
+        --------
+        Change the floating point precision:
+
+        >>> rn = odl.rn(3, dtype='float64')
+        >>> rn.astype('float32')
+        rn(3, 'float32')
+
+        Change from single precision real to double precision complex:
+
+        >>> rn = odl.rn(3, dtype='float32')
+        >>> rn.astype('complex128')
+        cn(3)
+
+        Notes
+        -----
+        The conversion between "similar" spaces is split into a high-level
+        (`astype`) and a low-level (`_astype`) interface.
+
+        The high-level method takes care of the input value processing and
+        caching and then calls the low-level method to create the space.
+
+        The low-level method `_astype` only calls the space class
+        constructor with the provided arguments.
+
+        The reason for this split is that when subclassing, the high-level
+        method usually requires no change at all, and in the the low-level
+        part, changes in the constructor signature can be registered by
+        overriding the `_astype` method.
         """
         if dtype is None:
             # Need to filter this out since Numpy iterprets it as 'float'

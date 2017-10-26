@@ -14,14 +14,15 @@ from __future__ import print_function, division, absolute_import
 from inspect import isfunction
 import numpy as np
 
-from odl.operator.operator import Operator, _dispatch_call_args
+from odl.operator.operator import _dispatch_call_args
 from odl.set import (RealNumbers, ComplexNumbers, Set, LinearSpace,
                      LinearSpaceElement)
 from odl.util import (
-    is_real_dtype, is_complex_floating_dtype, dtype_repr,
+    is_real_dtype, is_complex_floating_dtype, dtype_str,
     complex_dtype, real_dtype,
     is_valid_input_array, is_valid_input_meshgrid,
-    out_shape_from_array, out_shape_from_meshgrid, vectorize)
+    out_shape_from_array, out_shape_from_meshgrid, vectorize,
+    signature_string)
 from odl.util.utility import preload_first_arg
 
 
@@ -85,6 +86,14 @@ class FunctionSpace(LinearSpace):
             space. Can be provided in any way the `numpy.dtype`
             constructor understands, e.g. as built-in type or as a string.
             For ``None``, dtypes of results are inferred lazily at runtime.
+
+        Examples
+        --------
+        >>> domain = odl.IntervalProd(0, 1)
+        >>> odl.FunctionSpace(domain)
+        FunctionSpace(IntervalProd(0.0, 1.0))
+        >>> odl.FunctionSpace(domain, out_dtype='float32')
+        FunctionSpace(IntervalProd(0.0, 1.0), out_dtype='float32')
         """
         if not isinstance(domain, Set):
             raise TypeError('`domain` {!r} not a `Set` instance'
@@ -654,49 +663,14 @@ class FunctionSpace(LinearSpace):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        inner_str = '{!r}'.format(self.domain)
-        dtype_str = dtype_repr(self.out_dtype)
-
-        if self.field == RealNumbers():
-            if self.out_dtype == np.dtype('float64'):
-                pass
-            else:
-                inner_str += ', out_dtype={}'.format(dtype_str)
-
-        elif self.field == ComplexNumbers():
-            if self.out_dtype == np.dtype('complex128'):
-                inner_str += ', field={!r}'.format(self.field)
-            else:
-                inner_str += ', out_dtype={}'.format(dtype_str)
-
-        else:  # different field, name explicitly
-            inner_str += ', field={!r}'.format(self.field)
-            inner_str += ', out_dtype={}'.format(dtype_str)
-
+        posargs = [self.domain]
+        optargs = [('out_dtype', dtype_str(self.out_dtype), 'float')]
+        inner_str = signature_string(posargs, optargs, mod=['!r', ''])
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
     def __str__(self):
         """Return ``str(self)``."""
-        inner_str = '{}'.format(self.domain)
-        dtype_str = dtype_repr(self.out_dtype)
-
-        if self.field == RealNumbers():
-            if self.out_dtype == np.dtype('float64'):
-                pass
-            else:
-                inner_str += ', out_dtype={}'.format(dtype_str)
-
-        elif self.field == ComplexNumbers():
-            if self.out_dtype == np.dtype('complex128'):
-                inner_str += ', field={!r}'.format(self.field)
-            else:
-                inner_str += ', out_dtype={}'.format(dtype_str)
-
-        else:  # different field, name explicitly
-            inner_str += ', field={!r}'.format(self.field)
-            inner_str += ', out_dtype={}'.format(dtype_str)
-
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        return repr(self)
 
     @property
     def element_type(self):
@@ -719,6 +693,15 @@ class FunctionSpaceElement(LinearSpaceElement):
             The actual instruction for out-of-place evaluation.
             It must return a `FunctionSpace.range` element or a
             `numpy.ndarray` of such (vectorized call).
+
+        Examples
+        --------
+        >>> fspace = odl.FunctionSpace(odl.IntervalProd(0, 1))
+        >>> sin = fspace.element(np.sin)
+        >>> sin
+        FunctionSpace(IntervalProd(0.0, 1.0)).element(<ufunc 'sin'>)
+        >>> print(sin)
+        sin: [0.0, 1.0] --> float64
         """
         super(FunctionSpaceElement, self).__init__(fspace)
 
@@ -726,18 +709,16 @@ class FunctionSpaceElement(LinearSpaceElement):
         if isinstance(fcall, FunctionSpaceElement):
             call_has_out, call_out_optional, _ = _dispatch_call_args(
                 bound_call=fcall._call)
-
-        # Numpy Ufuncs and similar objects (e.g. Numba DUfuncs)
         elif hasattr(fcall, 'nin') and hasattr(fcall, 'nout'):
+            # Numpy Ufuncs and similar objects (e.g. Numba DUfuncs)
+            fname = getattr(fcall, '__name__', str(fcall))
             if fcall.nin != 1:
                 raise ValueError('ufunc {} has {} input parameter(s), '
-                                 'expected 1'
-                                 ''.format(fcall.__name__, fcall.nin))
-            if fcall.nout > 1:
+                                 'expected 1'.format(fname, fcall.nin))
+            if fcall.nout != 1:
                 raise ValueError('ufunc {} has {} output parameter(s), '
-                                 'expected at most 1'
-                                 ''.format(fcall.__name__, fcall.nout))
-            call_has_out = call_out_optional = (fcall.nout == 1)
+                                 'expected 1'.format(fname, fcall.nout))
+            call_has_out = call_out_optional = True
         elif isfunction(fcall):
             call_has_out, call_out_optional, _ = _dispatch_call_args(
                 unbound_call=fcall)
@@ -1028,7 +1009,11 @@ class FunctionSpaceElement(LinearSpaceElement):
             func = self._call_in_place
         else:
             func = self._call_out_of_place
-        return '{}: {} --> {}'.format(func, self.domain, self.range)
+
+        # Try to get a pretty-print name of the function
+        fname = getattr(func, '__name__', getattr(func, 'name', str(func)))
+
+        return '{}: {} --> {}'.format(fname, self.domain, self.out_dtype)
 
     def __repr__(self):
         """Return ``repr(self)``."""
