@@ -94,7 +94,7 @@ def euler_matrix(phi, theta=None, psi=None):
         return mat.squeeze()
     else:
         # Move the `(ndim, ndim)` axes to the end
-        extra_dims = np.broadcast(phi, theta, psi).ndim
+        extra_dims = len(np.broadcast(phi, theta, psi).shape)
         newaxes = list(range(2, 2 + extra_dims)) + [0, 1]
         return np.transpose(mat, newaxes)
 
