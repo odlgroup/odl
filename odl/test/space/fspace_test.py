@@ -11,7 +11,7 @@ import pytest
 import numpy as np
 
 import odl
-from odl import FunctionSet, FunctionSpace
+from odl import FunctionSpace
 from odl.discr.grid import sparse_meshgrid
 from odl.util.testutils import (all_almost_equal, all_equal, almost_equal,
                                 simple_fixture)
@@ -20,41 +20,38 @@ from odl.util.testutils import (all_almost_equal, all_equal, almost_equal,
 def test_fspace_init():
     intv = odl.IntervalProd(0, 1)
     FunctionSpace(intv)
-    FunctionSpace(intv, field=odl.RealNumbers())
-    FunctionSpace(intv, field=odl.ComplexNumbers())
+    FunctionSpace(intv, out_dtype=float)
+    FunctionSpace(intv, out_dtype=complex)
 
     rect = odl.IntervalProd([0, 0], [1, 2])
     FunctionSpace(rect)
-    FunctionSpace(rect, field=odl.RealNumbers())
-    FunctionSpace(rect, field=odl.ComplexNumbers())
+    FunctionSpace(rect, out_dtype=float)
+    FunctionSpace(rect, out_dtype=complex)
 
     cube = odl.IntervalProd([0, 0, 0], [1, 2, 3])
     FunctionSpace(cube)
-    FunctionSpace(cube, field=odl.RealNumbers())
-    FunctionSpace(cube, field=odl.ComplexNumbers())
+    FunctionSpace(cube, out_dtype=float)
+    FunctionSpace(cube, out_dtype=complex)
 
     ndbox = odl.IntervalProd([0] * 10, np.arange(1, 11))
     FunctionSpace(ndbox)
-    FunctionSpace(ndbox, field=odl.RealNumbers())
-    FunctionSpace(ndbox, field=odl.ComplexNumbers())
+    FunctionSpace(ndbox, out_dtype=float)
+    FunctionSpace(ndbox, out_dtype=complex)
 
-
-def test_fset_init():
     str3 = odl.Strings(3)
-    ints = odl.Integers()
-    FunctionSet(str3, ints)
+    FunctionSpace(str3, out_dtype=int)
 
 
 def test_fspace_simple_attributes():
     intv = odl.IntervalProd(0, 1)
     fspace = FunctionSpace(intv)
-    fspace_r = FunctionSpace(intv, field=odl.RealNumbers())
-    fspace_c = FunctionSpace(intv, field=odl.ComplexNumbers())
+    fspace_r = FunctionSpace(intv, out_dtype=float)
+    fspace_c = FunctionSpace(intv, out_dtype=complex)
 
     assert fspace.domain == intv
-    assert fspace.range == odl.RealNumbers()
-    assert fspace_r.range == odl.RealNumbers()
-    assert fspace_c.range == odl.ComplexNumbers()
+    assert fspace.field == odl.RealNumbers()
+    assert fspace_r.field == odl.RealNumbers()
+    assert fspace_c.field == odl.ComplexNumbers()
 
 
 def _test_eq(x, y):
@@ -76,8 +73,8 @@ def test_equals():
     intv = odl.IntervalProd(0, 1)
     intv2 = odl.IntervalProd(-1, 1)
     fspace = FunctionSpace(intv)
-    fspace_r = FunctionSpace(intv, field=odl.RealNumbers())
-    fspace_c = FunctionSpace(intv, field=odl.ComplexNumbers())
+    fspace_r = FunctionSpace(intv, out_dtype=float)
+    fspace_c = FunctionSpace(intv, out_dtype=complex)
     fspace_intv2 = FunctionSpace(intv2)
 
     _test_eq(fspace, fspace)
@@ -130,7 +127,7 @@ def test_fspace_vector_init():
     fspace.element(func_2d_vec_dual, vectorized=True)
 
     # 2d, complex
-    fspace = FunctionSpace(rect, field=odl.ComplexNumbers())
+    fspace = FunctionSpace(rect, out_dtype=complex)
     fspace.element(cfunc_2d_novec, vectorized=False)
     fspace.element(cfunc_2d_vec_oop)
     fspace.element(cfunc_2d_vec_oop, vectorized=True)
@@ -138,10 +135,9 @@ def test_fspace_vector_init():
     fspace.element(cfunc_2d_vec_dual, vectorized=True)
 
 
-def test_fset_vector_eval():
+def test_fspace_vector_eval():
     str3 = odl.Strings(3)
-    ints = odl.Integers()
-    fset = FunctionSet(str3, ints)
+    fset = FunctionSpace(str3, out_dtype=int)
     strings = np.array(['aa', 'b', 'cab', 'aba'])
     out_vec = np.empty((4,), dtype=int)
 
@@ -184,7 +180,7 @@ def test_fspace_out_dtype():
 def test_fspace_astype():
 
     rspace = FunctionSpace(odl.IntervalProd(0, 1))
-    cspace = FunctionSpace(odl.IntervalProd(0, 1), field=odl.ComplexNumbers())
+    cspace = FunctionSpace(odl.IntervalProd(0, 1), out_dtype=complex)
     rspace_s = FunctionSpace(odl.IntervalProd(0, 1), out_dtype='float32')
     cspace_s = FunctionSpace(odl.IntervalProd(0, 1), out_dtype='complex64')
 
@@ -262,7 +258,7 @@ def test_fspace_vector_eval_real():
 def test_fspace_vector_eval_complex():
     rect, points, mg = _standard_setup_2d()
 
-    fspace = FunctionSpace(rect, field=odl.ComplexNumbers())
+    fspace = FunctionSpace(rect, out_dtype=complex)
     f_novec = fspace.element(cfunc_2d_novec, vectorized=False)
     f_vec_oop = fspace.element(cfunc_2d_vec_oop, vectorized=True)
     f_vec_ip = fspace.element(cfunc_2d_vec_ip, vectorized=True)
@@ -402,7 +398,7 @@ def test_fspace_vector_copy():
 
 def test_fspace_vector_real_imag():
     rect, _, mg = _standard_setup_2d()
-    cspace = FunctionSpace(rect, field=odl.ComplexNumbers())
+    cspace = FunctionSpace(rect, out_dtype=complex)
     f = cspace.element(cfunc_2d_vec_oop)
 
     # real / imag on complex functions
@@ -441,7 +437,7 @@ def test_fspace_zero():
     assert all_equal(zero_vec(mg), np.zeros((2, 3), dtype=float))
 
     # complex
-    fspace = FunctionSpace(rect, field=odl.ComplexNumbers())
+    fspace = FunctionSpace(rect, out_dtype=complex)
     zero_vec = fspace.zero()
 
     assert zero_vec([0.5, 1.5]) == 0.0 + 1j * 0.0
@@ -461,7 +457,7 @@ def test_fspace_one():
     assert all_equal(one_vec(mg), np.ones((2, 3), dtype=float))
 
     # complex
-    fspace = FunctionSpace(rect, field=odl.ComplexNumbers())
+    fspace = FunctionSpace(rect, out_dtype=complex)
     one_vec = fspace.one()
 
     assert one_vec([0.5, 1.5]) == 1.0 + 1j * 0.0

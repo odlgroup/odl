@@ -9,7 +9,6 @@
 """Unit tests for `discr_mappings`."""
 
 from __future__ import division
-import pytest
 import numpy as np
 
 import odl
@@ -27,7 +26,7 @@ def test_nearest_interpolation_1d_complex(fn_impl):
     # Coordinate vectors are:
     # [0.1, 0.3, 0.5, 0.7, 0.9]
 
-    space = odl.FunctionSpace(intv, field=odl.ComplexNumbers())
+    space = odl.FunctionSpace(intv, out_dtype=complex)
     dspace = odl.cn(part.size)
     interp_op = NearestInterpolation(space, part, dspace)
     function = interp_op([0 + 1j, 1 + 2j, 2 + 3j, 3 + 4j, 4 + 5j])
@@ -121,8 +120,8 @@ def test_nearest_interpolation_2d_string():
     # Coordinate vectors are:
     # [0.125, 0.375, 0.625, 0.875], [0.25, 0.75]
 
-    space = odl.FunctionSet(rect, odl.Strings(1))
-    dspace = odl.ntuples(part.size, dtype='U1')
+    space = odl.FunctionSpace(rect, out_dtype='U1')
+    dspace = odl.fn(part.size, dtype='U1')
     interp_op = NearestInterpolation(space, part, dspace)
     values = np.array([c for c in 'mystring'])
     function = interp_op(values)

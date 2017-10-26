@@ -214,7 +214,7 @@ class LinDeformFixedTempl(Operator):
         """
         # To implement the complex case we need to be able to embed the real
         # vector field space into the range of the gradient. Issue #59.
-        if not self.range.is_rn:
+        if not self.range.is_real:
             raise NotImplementedError('derivative not implemented for complex '
                                       'spaces.')
 

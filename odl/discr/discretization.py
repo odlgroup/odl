@@ -13,25 +13,24 @@ from __future__ import print_function, division, absolute_import
 import numpy as np
 
 from odl.operator import Operator
-from odl.space.base_ntuples import (NtuplesBase, NtuplesBaseVector,
-                                    FnBase, FnBaseVector)
-from odl.space import FunctionSet, fn_impl, ntuples_impl
-from odl.set import RealNumbers, ComplexNumbers, LinearSpace
+from odl.space.base_ntuples import FnBase, FnBaseVector
+from odl.space import fn_impl
+from odl.set import RealNumbers, ComplexNumbers
+from odl.set.sets import Set
 from odl.util import (
     array_str, indent,
     is_real_floating_dtype, is_complex_floating_dtype, is_numeric_dtype)
 
 
-__all__ = ('DiscretizedSet', 'DiscretizedSetElement',
-           'DiscretizedSpace', 'DiscretizedSpaceElement')
+__all__ = ('DiscretizedSpace', 'DiscretizedSpaceElement')
 
 
-class DiscretizedSet(NtuplesBase):
+class DiscretizedSpace(FnBase):
 
-    """Abstract discretization class for general sets.
+    """Abstract discretization class for general sets or spaces.
 
     A discretization in ODL is a way to encode the transition from
-    an arbitrary set to a set of n-tuples explicitly representable
+    an arbitrary set to a set of discrete values explicitly representable
     in a computer. The most common use case is the discretization of
     an infinite-dimensional vector space of functions by means of
     storing coefficients in a finite basis.
@@ -58,7 +57,7 @@ class DiscretizedSet(NtuplesBase):
 
         Parameters
         ----------
-        uspace : `FunctionSet`
+        uspace : `FunctionSpace`
             The undiscretized (abstract) set to be discretized
         dspace : `NtuplesBase`
             Data space providing containers for the values of a
@@ -72,10 +71,10 @@ class DiscretizedSet(NtuplesBase):
             Must satisfy ``interpol.domain == dspace``,
             ``interpol.range == uspace``.
             """
-        if not isinstance(uspace, FunctionSet):
-            raise TypeError('`uspace` {!r} not a `Set` instance'
+        if not isinstance(uspace, Set):
+            raise TypeError('`uspace` {!r} is not a `Set` instance'
                             ''.format(uspace))
-        if not isinstance(dspace, NtuplesBase):
+        if not isinstance(dspace, FnBase):
             raise TypeError('`dspace` {!r} not an `NtuplesBase` instance'
                             ''.format(dspace))
 
@@ -109,7 +108,7 @@ class DiscretizedSet(NtuplesBase):
                                  'the undiscretized space {}'
                                  ''.format(interpol.range, uspace))
 
-        super(DiscretizedSet, self).__init__(dspace.size, dspace.dtype)
+        super(DiscretizedSpace, self).__init__(dspace.size, dspace.dtype)
         self.__uspace = uspace
         self.__dspace = dspace
         self.__sampling = sampling
@@ -121,7 +120,7 @@ class DiscretizedSet(NtuplesBase):
 
         Returns
         -------
-        uspace : `FunctionSet`
+        uspace : `FunctionSpace`
         """
         return self.__uspace
 
@@ -172,7 +171,7 @@ class DiscretizedSet(NtuplesBase):
 
         Returns
         -------
-        element : `DiscretizedSetElement`
+        element : `DiscretizedSpaceElement`
             The discretized element, calculated as ``sampling(inp)`` or
             ``dspace.element(inp)``, tried in this order.
 
@@ -195,9 +194,9 @@ class DiscretizedSet(NtuplesBase):
         Returns
         -------
         equals : bool
-            ``True`` if ``other`` is a `DiscretizedSet`
+            ``True`` if ``other`` is a `DiscretizedSpace`
             instance and all attributes `uspace`, `dspace`,
-            `DiscretizedSet.sampling` and `DiscretizedSet.interpolation`
+            `DiscretizedSpace.sampling` and `DiscretizedSpace.interpolation`
             of ``other`` and this discretization are equal, ``False``
             otherwise.
         """
@@ -207,7 +206,7 @@ class DiscretizedSet(NtuplesBase):
         elif other is None:
             return False
         else:
-            return (NtuplesBase.__eq__(self, other) and
+            return (super(DiscretizedSpace, self).__eq__(other) and
                     other.uspace == self.uspace and
                     other.dspace == self.dspace and
                     other.sampling == self.sampling and
@@ -216,256 +215,21 @@ class DiscretizedSet(NtuplesBase):
     def __hash__(self):
         """Return ``hash(self)``."""
 
-        return hash((NtuplesBase.__hash__(self),
+        return hash((super(DiscretizedSpace, self).__hash__(),
                      self.uspace, self.dspace, self.__sampling,
                      self.__interpolation))
-
-    @property
-    def impl(self):
-        """Underlying implmentation type for the dspace."""
-        return self.dspace.impl
 
     @property
     def domain(self):
         """Domain of the continuous space."""
         return self.uspace.domain
 
-    @property
-    def element_type(self):
-        """`DiscretizedSetElement`"""
-        return DiscretizedSetElement
-
-
-class DiscretizedSetElement(NtuplesBaseVector):
-
-    """Representation of a `DiscretizedSet` element.
-
-    Basically only a wrapper class for dspace's element class."""
-
-    def __init__(self, space, ntuple):
-        """Initialize a new instance."""
-        super(DiscretizedSetElement, self).__init__(space)
-        self.__ntuple = ntuple
-
-    @property
-    def ntuple(self):
-        """Structure for data storage."""
-        return self.__ntuple
-
-    @property
-    def dtype(self):
-        """Type of data storage."""
-        return self.ntuple.dtype
-
-    @property
-    def size(self):
-        """Size of data storage."""
-        return self.ntuple.size
-
-    def __len__(self):
-        """Return ``len(self)``.
-
-        Size of data storage.
-        """
-        return self.size
-
-    def copy(self):
-        """Create an identical (deep) copy of this element."""
-        return self.space.element(self.ntuple.copy())
-
-    def asarray(self, out=None):
-        """Extract the data of this array as a numpy array.
-
-        Parameters
-        ----------
-        out : `numpy.ndarray`, optional
-            Array in which the result should be written in-place.
-            Has to be contiguous and of the correct dtype.
-        """
-        return self.ntuple.asarray(out=out)
-
-    def __eq__(self, other):
-        """Return ``self == other``.
-
-        Returns
-        -------
-        equals : bool
-            ``True`` if all entries of ``other`` are equal to this
-            element's entries, ``False`` otherwise.
-        """
-        return (other in self.space and
-                self.ntuple == other.ntuple)
-
-    def __getitem__(self, indices):
-        """Return ``self[indices]``.
-
-        Parameters
-        ----------
-        indices : int or `slice`
-            The position(s) that should be accessed
-
-        Returns
-        -------
-        values : `NtuplesBaseVector`
-            The value(s) at the index (indices)
-        """
-        return self.ntuple.__getitem__(indices)
-
-    def __setitem__(self, indices, values):
-        """Implement ``self[indices] = values``.
-
-        Parameters
-        ----------
-        indices : int or `slice`
-            The position(s) that should be set
-        values : scalar, `array-like` or `NtuplesBaseVector`
-            The value(s) that are to be assigned.
-
-            If ``index`` is an int, ``value`` must be single value.
-
-            If ``index`` is a slice, ``value`` must be broadcastable
-            to the size of the slice (same size, shape (1,)
-            or single value).
-        """
-        input_data = getattr(values, 'ntuple', values)
-        self.ntuple.__setitem__(indices, input_data)
-
-    def sampling(self, ufunc, **kwargs):
-        """Sample a continuous function and assign to this element.
-
-        Parameters
-        ----------
-        ufunc : ``self.space.uspace`` element
-            The continuous function that should be samplingicted.
-        kwargs :
-            Additional arugments for the sampling operator implementation
-
-        Examples
-        --------
-        >>> space = odl.uniform_discr(0, 1, 5)
-        >>> x = space.element()
-
-        Assign x according to a continuous function:
-
-        >>> x.sampling(lambda t: t)
-        >>> x  # Print values at grid points (which are centered)
-        uniform_discr(0.0, 1.0, 5).element([ 0.1,  0.3,  0.5,  0.7,  0.9])
-
-        See Also
-        --------
-        DiscretizedSet.sampling : For full description
-        """
-        self.space.sampling(ufunc, out=self.ntuple, **kwargs)
-
-    @property
-    def interpolation(self):
-        """Interpolation operator associated with this element.
-
-        Returns
-        -------
-        interpolation_op : `FunctionSetMapping`
-            Operatior representing a continuous interpolation of this
-            element.
-
-        Examples
-        --------
-        Create continuous version of a discrete 1d function with nearest
-        neighbour interpolation:
-
-        >>> X = odl.uniform_discr(0, 1, 3, nodes_on_bdry=True)
-        >>> x = X.element([0, 1, 0])
-        >>> x.interpolation(np.array([0.24, 0.26]))
-        array([ 0.,  1.])
-
-        Linear interpolation:
-
-        >>> X = odl.uniform_discr(0, 1, 3, nodes_on_bdry=True, interp='linear')
-        >>> x = X.element([0, 1, 0])
-        >>> x.interpolation(np.array([0.24, 0.26]))
-        array([ 0.48,  0.52])
-
-        See Also
-        --------
-        DiscretizedSet.interpolation : For full description
-        """
-        return self.space.interpolation(self.ntuple)
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        return array_str(self)
-
-    def __repr__(self):
-        """Return ``repr(self)``."""
-        maxsize_full_print = 2 * np.get_printoptions()['edgeitems']
-        self_str = array_str(self, nprint=maxsize_full_print)
-        if self.ndim == 1 and self.size <= maxsize_full_print:
-            return '{!r}.element({})'.format(self.space, self_str)
-        else:
-            return '{!r}.element(\n{}\n)'.format(self.space, indent(self_str))
-
-
-class DiscretizedSpace(DiscretizedSet, FnBase):
-
-    """Abstract class for discretizations of linear vector spaces.
-
-    This variant of `DiscretizedSet` adds linear structure
-    to all its members. The `DiscretizedSet.uspace` is a
-    `LinearSpace`, the `DiscretizedSet.dspace`
-    for the data representation is an implementation of
-    :math:`\mathbb{F}^n`, where :math:`\mathbb{F}` is some
-    `Field`, and both `DiscretizedSet.sampling`
-    and `DiscretizedSet.interpolation` are linear
-    `Operator`'s.
-    """
-
-    def __init__(self, uspace, dspace, sampling=None, interpol=None):
-        """Abstract initialization method.
-
-        Intended to be called by subclasses for proper type checking
-        and setting of attributes.
-
-        Parameters
-        ----------
-        uspace : `LinearSpace`
-            The (abstract) space to be discretized
-        dspace : `FnBase`
-            Data space providing containers for the values of a
-            discretized object. Its `FnBase.field` attribute
-            must be the same as ``uspace.field``.
-        sampling : `Operator`, linear, optional
-            Operator mapping a `DiscretizedSet.uspace` element
-            to a `DiscretizedSet.dspace` element. Must satisfy
-            ``sampling.domain == uspace``, ``sampling.range == dspace``
-        interpol : `Operator`, linear, optional
-            Operator mapping a `DiscretizedSet.dspace` element
-            to a `DiscretizedSet.uspace` element. Must satisfy
-            ``interpol.domain == dspace``, ``interpol.range == uspace``.
-        """
-        DiscretizedSet.__init__(self, uspace, dspace, sampling, interpol)
-        FnBase.__init__(self, dspace.size, dspace.dtype)
-
-        if not isinstance(uspace, LinearSpace):
-            raise TypeError('`uspace` {!r} not a LinearSpace '
-                            'instance'.format(uspace))
-
-        if not isinstance(dspace, FnBase):
-            raise TypeError('`dspace` {!r} not an FnBase instance'
-                            ''.format(dspace))
-
-        if uspace.field != dspace.field:
-            raise ValueError('fields {} and {} of the undiscretized and '
-                             'data spaces, resp., are not equal'
-                             ''.format(uspace.field, dspace.field))
-
-        if sampling is not None and not sampling.is_linear:
-            raise TypeError('`sampling` {!r} is not linear'
-                            ''.format(sampling))
-
-        if interpol is not None and not interpol.is_linear:
-            raise TypeError('`interpol` {!r} is not linear'
-                            ''.format(interpol))
-
     # Pass-through attributes of the wrapped ``dspace``
+    @property
+    def impl(self):
+        """Underlying implmentation type for the dspace."""
+        return self.dspace.impl
+
     def zero(self):
         """Return the element of all zeros."""
         return self.element_type(self, self.dspace.zero())
@@ -524,17 +288,164 @@ class DiscretizedSpace(DiscretizedSet, FnBase):
 
     @property
     def element_type(self):
-        """`DiscretizedSpaceElement`"""
+        """Type of elements in this space: `DiscretizedSpaceElement`."""
         return DiscretizedSpaceElement
 
 
-class DiscretizedSpaceElement(DiscretizedSetElement, FnBaseVector):
+class DiscretizedSpaceElement(FnBaseVector):
 
-    """Representation of a `DiscretizedSpace` element."""
+    """Representation of a `DiscretizedSpace` element.
 
-    def __init__(self, space, data):
+    Basically only a wrapper class for dspace's element class.
+    """
+
+    def __init__(self, space, ntuple):
         """Initialize a new instance."""
-        DiscretizedSetElement.__init__(self, space, data)
+        super(DiscretizedSpaceElement, self).__init__(space)
+        self.__ntuple = ntuple
+
+    @property
+    def ntuple(self):
+        """Structure for data storage."""
+        return self.__ntuple
+
+    @property
+    def dtype(self):
+        """Type of data storage."""
+        return self.ntuple.dtype
+
+    @property
+    def size(self):
+        """Size of data storage."""
+        return self.ntuple.size
+
+    def __len__(self):
+        """Return ``len(self)``.
+
+        Size of data storage.
+        """
+        return self.size
+
+    def copy(self):
+        """Create an identical (deep) copy of this element."""
+        return self.space.element(self.ntuple.copy())
+
+    def asarray(self, out=None):
+        """Extract the data of this array as a numpy array.
+
+        Parameters
+        ----------
+        out : `numpy.ndarray`, optional
+            Array in which the result should be written in-place.
+            Has to be contiguous and of the correct dtype.
+        """
+        return self.ntuple.asarray(out=out)
+
+    def __eq__(self, other):
+        """Return ``self == other``.
+
+        Returns
+        -------
+        equals : bool
+            ``True`` if all entries of ``other`` are equal to this
+            element's entries, ``False`` otherwise.
+        """
+        return (other in self.space and
+                self.ntuple == other.ntuple)
+
+    def __getitem__(self, indices):
+        """Return ``self[indices]``.
+
+        Parameters
+        ----------
+        indices : int or `slice`
+            The position(s) that should be accessed.
+
+        Returns
+        -------
+        values : `FnBaseVector`
+            The value(s) at the index (indices).
+        """
+        return self.ntuple.__getitem__(indices)
+
+    def __setitem__(self, indices, values):
+        """Implement ``self[indices] = values``.
+
+        Parameters
+        ----------
+        indices : int or `slice`
+            The position(s) that should be set
+        values : scalar, `array-like` or `FnBaseVector`
+            The value(s) that are to be assigned.
+
+            If ``index`` is an int, ``value`` must be single value.
+
+            If ``index`` is a slice, ``value`` must be broadcastable
+            to the size of the slice (same size, shape (1,)
+            or single value).
+        """
+        input_data = getattr(values, 'ntuple', values)
+        self.ntuple.__setitem__(indices, input_data)
+
+    def sampling(self, ufunc, **kwargs):
+        """Sample a continuous function and assign to this element.
+
+        Parameters
+        ----------
+        ufunc : ``self.space.uspace`` element
+            The continuous function that should be samplingicted.
+        kwargs :
+            Additional arugments for the sampling operator implementation
+
+        Examples
+        --------
+        >>> space = odl.uniform_discr(0, 1, 5)
+        >>> x = space.element()
+
+        Assign x according to a continuous function:
+
+        >>> x.sampling(lambda t: t)
+        >>> x  # Print values at grid points (which are centered)
+        uniform_discr(0.0, 1.0, 5).element([ 0.1,  0.3,  0.5,  0.7,  0.9])
+
+        See Also
+        --------
+        DiscretizedSpace.sampling : For full description
+        """
+        self.space.sampling(ufunc, out=self.ntuple, **kwargs)
+
+    @property
+    def interpolation(self):
+        """Interpolation operator associated with this element.
+
+        Returns
+        -------
+        interpolation_op : `FunctionSpaceMapping`
+            Operatior representing a continuous interpolation of this
+            element.
+
+        Examples
+        --------
+        Create continuous version of a discrete 1d function with nearest
+        neighbour interpolation:
+
+        >>> X = odl.uniform_discr(0, 1, 3, nodes_on_bdry=True)
+        >>> x = X.element([0, 1, 0])
+        >>> x.interpolation(np.array([0.24, 0.26]))
+        array([ 0.,  1.])
+
+        Linear interpolation:
+
+        >>> X = odl.uniform_discr(0, 1, 3, nodes_on_bdry=True, interp='linear')
+        >>> x = X.element([0, 1, 0])
+        >>> x.interpolation(np.array([0.24, 0.26]))
+        array([ 0.48,  0.52])
+
+        See Also
+        --------
+        DiscretizedSpace.interpolation : For full description
+        """
+        return self.space.interpolation(self.ntuple)
 
     def __ipow__(self, p):
         """Implement ``self **= p``."""
@@ -542,6 +453,19 @@ class DiscretizedSpaceElement(DiscretizedSetElement, FnBaseVector):
         # has no own `__ipow__`. The fallback only works for integer `p`.
         self.ntuple.__ipow__(p)
         return self
+
+    def __str__(self):
+        """Return ``str(self)``."""
+        return array_str(self)
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        maxsize_full_print = 2 * np.get_printoptions()['edgeitems']
+        self_str = array_str(self, nprint=maxsize_full_print)
+        if self.ndim == 1 and self.size <= maxsize_full_print:
+            return '{!r}.element({})'.format(self.space, self_str)
+        else:
+            return '{!r}.element(\n{}\n)'.format(self.space, indent(self_str))
 
 
 def dspace_type(space, impl, dtype=None):
@@ -568,7 +492,6 @@ def dspace_type(space, impl, dtype=None):
         the data type
     """
     field_type = type(getattr(space, 'field', None))
-    none_type = type(None)
 
     if dtype is None:
         pass
@@ -591,16 +514,12 @@ def dspace_type(space, impl, dtype=None):
         raise TypeError('non-scalar data type {!r} cannot be combined with '
                         'a `LinearSpace`'.format(dtype))
 
-    if field_type in (RealNumbers, ComplexNumbers):
-        spacetype = fn_impl
-    elif field_type is none_type:
-        spacetype = ntuples_impl
-    else:
+    try:
+        return fn_impl(impl)
+    except ValueError:
         raise NotImplementedError('no corresponding data space available '
                                   'for space {!r} and implementation {!r}'
                                   ''.format(space, impl))
-
-    return spacetype(impl)
 
 
 if __name__ == '__main__':

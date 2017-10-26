@@ -21,25 +21,25 @@ import numpy as np
 
 from odl.operator import Operator
 from odl.discr.partition import RectPartition
-from odl.space.base_ntuples import NtuplesBase, FnBase
-from odl.space import FunctionSet, FunctionSpace
+from odl.space.base_ntuples import FnBase
+from odl.space import FunctionSpace
 from odl.util import (
     is_valid_input_meshgrid, out_shape_from_array, out_shape_from_meshgrid,
     is_string, signature_string, indent)
 
 
-__all__ = ('FunctionSetMapping',
+__all__ = ('FunctionSpaceMapping',
            'PointCollocation', 'NearestInterpolation', 'LinearInterpolation',
            'PerAxisInterpolation')
 
 _SUPPORTED_INTERP_SCHEMES = ['nearest', 'linear']
 
 
-class FunctionSetMapping(Operator):
+class FunctionSpaceMapping(Operator):
 
     """Abstract base class for function set discretization mappings."""
 
-    def __init__(self, map_type, fset, partition, dspace, linear=False,
+    def __init__(self, map_type, fspace, partition, dspace, linear=False,
                  **kwargs):
         """Initialize a new instance.
 
@@ -47,15 +47,15 @@ class FunctionSetMapping(Operator):
         ----------
         map_type : {'sampling', 'interpolation'}
             The type of operator
-        fset : `FunctionSet`
+        fspace : `FunctionSpace`
             The non-discretized (abstract) set of functions to be
             discretized
         partition : `RectPartition`
-            Partition of (a subset of) ``fset.domain`` based on a
+            Partition of (a subset of) ``fspace.domain`` based on a
             `RectGrid`.
-        dspace : `NtuplesBase`
+        dspace : `FnBase`
             Data space providing containers for the values of a
-            discretized object. Its `NtuplesBase.size` must be equal
+            discretized object. Its `FnBase.size` must be equal
             to the total number of grid points.
         linear : bool, optional
             Create a linear operator if ``True``, otherwise a non-linear
@@ -70,43 +70,41 @@ class FunctionSetMapping(Operator):
         if map_type_ not in ('sampling', 'interpolation'):
             raise ValueError('`map_type` {} not understood'
                              ''.format(map_type))
-        if not isinstance(fset, FunctionSet):
-            raise TypeError('`fset` {!r} is not a `FunctionSet` '
-                            'instance'.format(fset))
+        if not isinstance(fspace, FunctionSpace):
+            raise TypeError('`fspace` {!r} is not a `FunctionSpace` '
+                            'instance'.format(fspace))
 
         if not isinstance(partition, RectPartition):
             raise TypeError('`partition` {!r} is not a `RectPartition` '
                             'instance'.format(partition))
-        if not isinstance(dspace, NtuplesBase):
-            raise TypeError('`dspace` {!r} is not an `NtuplesBase` instance'
+        if not isinstance(dspace, FnBase):
+            raise TypeError('`dspace` {!r} is not an `FnBase` instance'
                             ''.format(dspace))
 
-        if not fset.domain.contains_set(partition):
+        if not fspace.domain.contains_set(partition):
             raise ValueError('{} not contained in the domain {} '
                              'of the function set {}'
-                             ''.format(partition, fset.domain, fset))
+                             ''.format(partition, fspace.domain, fspace))
 
         if dspace.size != partition.size:
             raise ValueError('size {} of the data space {} not equal '
                              'to the size {} of the partition'
                              ''.format(dspace.size, dspace, partition.size))
 
-        domain = fset if map_type_ == 'sampling' else dspace
-        range = dspace if map_type_ == 'sampling' else fset
-        super(FunctionSetMapping, self).__init__(domain, range, linear=linear)
+        domain = fspace if map_type_ == 'sampling' else dspace
+        range = dspace if map_type_ == 'sampling' else fspace
+        super(FunctionSpaceMapping, self).__init__(
+            domain, range, linear=linear)
         self.__partition = partition
 
         if self.is_linear:
-            if not isinstance(fset, FunctionSpace):
-                raise TypeError('`fset` {!r} is not a `FunctionSpace` '
-                                'instance'.format(fset))
             if not isinstance(dspace, FnBase):
                 raise TypeError('`dspace` {!r} is not an `FnBase` instance'
                                 ''.format(dspace))
-            if fset.field != dspace.field:
+            if fspace.field != dspace.field:
                 raise ValueError('`field` {} of the function space and `field`'
                                  ' {} of the data space are not equal'
-                                 ''.format(fset.field, dspace.field))
+                                 ''.format(fspace.field, dspace.field))
 
         order = str(kwargs.pop('order', 'C'))
         if str(order).upper() not in ('C', 'F'):
@@ -147,7 +145,7 @@ class FunctionSetMapping(Operator):
         return self.__order
 
 
-class PointCollocation(FunctionSetMapping):
+class PointCollocation(FunctionSpaceMapping):
 
     """Function evaluation at grid points.
 
@@ -170,21 +168,21 @@ class PointCollocation(FunctionSetMapping):
     discretization classes.
     """
 
-    def __init__(self, ip_fset, partition, dspace, **kwargs):
+    def __init__(self, fspace, partition, dspace, **kwargs):
         """Initialize a new instance.
 
         Parameters
         ----------
-        ip_fset : `FunctionSet`
+        fspace : `FunctionSpace`
             The non-discretized (abstract) set of functions to be
             discretized. The function domain must provide a
             `Set.contains_set` method.
         partition : `RectPartition`
-            Partition of (a subset of) ``ip_fset.domain`` based on a
+            Partition of (a subset of) ``fspace.domain`` based on a
             `RectGrid`
-        dspace : `NtuplesBase`
+        dspace : `FnBase`
             Data space providing containers for the values of a
-            discretized object. Its `NtuplesBase.size` must be equal
+            discretized object. Its `FnBase.size` must be equal
             to the total number of grid points.
         order : {'C', 'F'}, optional
             Ordering of the axes in the data storage. 'C' means the
@@ -227,18 +225,17 @@ class PointCollocation(FunctionSetMapping):
         >>> coll_op(func_elem)
         rn(6).element([-2., -1., -3., -2., -4., -3.])
         """
-        linear = isinstance(ip_fset, FunctionSpace)
         super(PointCollocation, self).__init__(
-            'sampling', ip_fset, partition, dspace, linear, **kwargs)
+            'sampling', fspace, partition, dspace, linear=True, **kwargs)
 
     def _call(self, func, out=None, **kwargs):
         """Evaluate ``func`` at the grid of this operator.
 
         Parameters
         ----------
-        func : `FunctionSetElement`
+        func : `FunctionSpaceElement`
             The function to be evaluated
-        out : `NtuplesBaseVector`, optional
+        out : `FnBaseVector`, optional
             Array to which the values are written. Its shape must be
             ``(N,)``, where N is the total number of grid points. The
             data type must be the same as in the ``dspace`` of this
@@ -248,7 +245,7 @@ class PointCollocation(FunctionSetMapping):
 
         Returns
         -------
-        out : `NtuplesBaseVector`, optional
+        out : `FnBaseVector`, optional
             The function values at the grid points. If ``out`` was
             provided, the returned object is a reference to it.
 
@@ -287,7 +284,7 @@ vectorization_guide.html>`_ for a detailed introduction.
         return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
 
 
-class NearestInterpolation(FunctionSetMapping):
+class NearestInterpolation(FunctionSpaceMapping):
 
     """Nearest neighbor interpolation as an `Operator`.
 
@@ -309,21 +306,21 @@ class NearestInterpolation(FunctionSetMapping):
     of the axes in the flat storage array (C- vs. Fortran ordering).
     """
 
-    def __init__(self, fset, partition, dspace, **kwargs):
+    def __init__(self, fspace, partition, dspace, **kwargs):
         """Initialize a new instance.
 
         Parameters
         ----------
-        fset : `FunctionSet`
+        fspace : `FunctionSpace`
             The undiscretized (abstract) set of functions to be
             discretized. The function domain must provide a
             `Set.contains_set` method.
         partition : `RectPartition`
-            Partition of (a subset of) ``ip_fset.domain`` based on a
+            Partition of (a subset of) ``fspace.domain`` based on a
             spatial grid
-        dspace : `NtuplesBase`
+        dspace : `FnBase`
             Data space providing containers for the values of a
-            discretized object. Its `NtuplesBase.size` must be equal
+            discretized object. Its `FnBase.size` must be equal
             to the total number of grid points.
 
         Other Parameters
@@ -346,8 +343,7 @@ class NearestInterpolation(FunctionSetMapping):
         data type in 2d:
 
         >>> rect = odl.IntervalProd([0, 0], [1, 1])
-        >>> strings = odl.Strings(1)  # 1-char strings
-        >>> space = odl.FunctionSet(rect, strings)
+        >>> space = odl.FunctionSpace(rect, out_dtype='U1')
 
         Partitioning the domain uniformly with no nodes on the boundary
         (will shift the grid points):
@@ -357,7 +353,7 @@ class NearestInterpolation(FunctionSetMapping):
         >>> part.grid.coord_vectors
         (array([ 0.125,  0.375,  0.625,  0.875]), array([ 0.25,  0.75]))
 
-        >>> dspace = odl.ntuples(part.size, dtype='U1')
+        >>> dspace = odl.fn(part.size, dtype='U1')
 
         Now we initialize the operator and test it with some points:
 
@@ -379,9 +375,8 @@ class NearestInterpolation(FunctionSetMapping):
         made by changing ``<=`` to ``<`` at one place. This difference
         may not be noticable in some situations due to rounding errors.
         """
-        linear = isinstance(fset, FunctionSpace)
         super(NearestInterpolation, self).__init__(
-            'interpolation', fset, partition, dspace, linear, **kwargs)
+            'interpolation', fspace, partition, dspace, linear=True, **kwargs)
 
         variant = kwargs.pop('variant', 'left')
         self.__variant = str(variant).lower()
@@ -398,14 +393,14 @@ class NearestInterpolation(FunctionSetMapping):
 
         Parameters
         ----------
-        x : `NtuplesBaseVector`
+        x : `FnBaseVector`
             The array of values to be interpolated
-        out : `FunctionSetElement`, optional
+        out : `FunctionSpaceElement`, optional
             Element in which to store the interpolator
 
         Returns
         -------
-        out : `FunctionSetElement`
+        out : `FunctionSpaceElement`
             Nearest-neighbor interpolator for the grid of this
             operator. If ``out`` was provided, the returned object
             is a reference to it.
@@ -453,7 +448,7 @@ class NearestInterpolation(FunctionSetMapping):
         return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
 
 
-class LinearInterpolation(FunctionSetMapping):
+class LinearInterpolation(FunctionSpaceMapping):
 
     """Linear interpolation interpolation as an `Operator`."""
 
@@ -472,7 +467,7 @@ class LinearInterpolation(FunctionSetMapping):
             `RectGrid`
         dspace : `FnBase`
             Data space providing containers for the values of a
-            discretized object. Its `NtuplesBase.size` must be equal
+            discretized object. Its `FnBase.size` must be equal
             to the total number of grid points, and its `FnBase.field`
             must be the same as that of the function space.
         order : {'C', 'F'}, optional
@@ -532,7 +527,7 @@ class LinearInterpolation(FunctionSetMapping):
         return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
 
 
-class PerAxisInterpolation(FunctionSetMapping):
+class PerAxisInterpolation(FunctionSpaceMapping):
 
     """Interpolation scheme set for each axis individually."""
 
@@ -551,7 +546,7 @@ class PerAxisInterpolation(FunctionSetMapping):
             `RectGrid`
         dspace : `FnBase`
             Data space providing containers for the values of a
-            discretized object. Its `NtuplesBase.size` must be equal
+            discretized object. Its `FnBase.size` must be equal
             to the total number of grid points, and its `FnBase.field`
             must be the same as that of the function space.
         schemes : string or sequence of strings

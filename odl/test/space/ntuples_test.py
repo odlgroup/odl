@@ -13,7 +13,7 @@ import operator
 import scipy
 
 import odl
-from odl import NumpyNtuples, NumpyFn, NumpyFnVector
+from odl import NumpyFn, NumpyFnVector
 from odl.operator.operator import Operator
 from odl.set.space import LinearSpaceTypeError
 from odl.space.npy_ntuples import (
@@ -69,43 +69,37 @@ fn = simple_fixture('fn', [odl.rn(10, np.float64), odl.rn(10, np.float32),
 exponent = simple_fixture('exponent', [2.0, 1.0, float('inf'), 0.5, 1.5])
 
 
-# ---- Tests of Ntuples, Rn and Cn ---- #
+# ---- Tests of Fn, Rn and Cn ---- #
 
 
 def test_init():
-    # Test run
-    NumpyNtuples(3, int)
-    NumpyNtuples(3, float)
-    NumpyNtuples(3, complex)
-    NumpyNtuples(3, 'S1')
-
     # Fn
     NumpyFn(3, int)
     NumpyFn(3, float)
     NumpyFn(3, complex)
+    NumpyFn(3, 'S1')
 
-    # Fn only works on scalars
-    with pytest.raises(TypeError):
-        NumpyFn(3, 'S1')
+    with pytest.raises(ValueError):
+        NumpyFn(3, np.void)
 
     # Rn
     odl.rn(3, float)
 
     # Rn only works on reals
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         odl.rn(3, complex)
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         odl.rn(3, 'S1')
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         odl.rn(3, int)
 
     # Cn
     odl.cn(3, complex)
 
     # Cn only works on reals
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         odl.cn(3, float)
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         odl.cn(3, 'S1')
 
     # Backported int from future fails (not recognized by numpy.dtype())
