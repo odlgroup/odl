@@ -142,8 +142,10 @@ def proximal_convex_conj(prox_factory):
 
         Parameters
         ----------
-        sigma : positive float
-            Step size parameter
+        sigma : positive float or componentwise positive space element
+                or list of positive floats
+            Step size parameter. Can be non-float if `prox_factory`
+            supports that.
 
         Returns
         -------
@@ -850,8 +852,9 @@ def proximal_convex_conj_l2_squared(space, lam=1, g=None):
 
             Parameters
             ----------
-            sigma : positive float
-                Step size parameter
+            sigma : positive float and componentwise positive space.element
+                Step size parameter. If not a float, then it is assumed to be
+                a vector which contains stepsizes for each component.
             """
             super(ProximalConvexConjL2Squared, self).__init__(
                 domain=space, range=space, linear=g is None)
