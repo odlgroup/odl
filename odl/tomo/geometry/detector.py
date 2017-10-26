@@ -616,7 +616,7 @@ class Flat2dDetector(Detector):
             # Produce array of shape `broadcast(*param).shape + (2, 3)`
             # by explicit broadcasting.
             # TODO: use broadcast_to from Numpy when v1.10 is required
-            axes_slc = ((None,) * np.broadcast(*param).ndim +
+            axes_slc = ((None,) * len(np.broadcast(*param).shape) +
                         (slice(None), slice(None)))
             zeros = np.zeros(np.broadcast(*param).shape + (1, 1))
             return self.axes[axes_slc] + zeros
