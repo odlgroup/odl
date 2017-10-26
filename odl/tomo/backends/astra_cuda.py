@@ -36,7 +36,12 @@ __all__ = ('ASTRA_CUDA_AVAILABLE',
 class AstraCudaProjectorImpl(object):
 
     """Thin wrapper around ASTRA."""
-
+    
+    algo_id = None
+    vol_id = None
+    sino_id = None
+    proj_id = None
+            
     def __init__(self, geometry, reco_space, proj_space):
         """Initialize a new instance.
 
@@ -186,7 +191,12 @@ class AstraCudaProjectorImpl(object):
 class AstraCudaBackProjectorImpl(object):
 
     """Thin wrapper around ASTRA."""
-
+    
+    algo_id = None
+    vol_id = None
+    sino_id = None
+    proj_id = None
+    
     def __init__(self, geometry, reco_space, proj_space):
         """Initialize a new instance.
 
