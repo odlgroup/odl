@@ -32,7 +32,7 @@ dual = simple_fixture('dual', [False, True])
 func_params = ['l1', 'l2', 'l2^2', 'kl', 'kl_cross_ent', 'const',
                'groupl1-1', 'groupl1-2',
                'nuclearnorm-1-1', 'nuclearnorm-1-2', 'nuclearnorm-1-inf',
-               'quadratic', 'linear']
+               'quadratic', 'linear', 'huber']
 
 func_ids = [" functional='{}' ".format(p) for p in func_params]
 
@@ -73,6 +73,8 @@ def functional(request, linear_offset, quadratic_offset, dual):
                                          vector=space.one(), constant=0.623)
     elif name == 'linear':
         func = odl.solvers.QuadraticForm(vector=space.one(), constant=0.623)
+    elif name == 'huber':
+        func = odl.solvers.Huber(space, gamma=0.162)
     else:
         assert False
 
