@@ -564,11 +564,11 @@ def ssim(data, ground_truth, size=11, sigma=1.5, K1=0.01, K2=0.03,
 
     result = np.mean(pointwise_ssim)
 
-    if normalized:
-        result = (result + 1.0) / 2.0
-
     if force_lower_is_better:
         result = -result
+
+    if normalized:
+        result = (result + 1.0) / 2.0
 
     return result
 
