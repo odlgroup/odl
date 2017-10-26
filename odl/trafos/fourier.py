@@ -812,15 +812,16 @@ class FourierTransformBase(Operator):
         self.__impl = impl
 
         # Handle half-complex yes/no and shifts
+        halfcomplex = kwargs.pop('halfcomplex', True)
+        shift = kwargs.pop('shift', True)
         if all(domain.grid.is_uniform_byaxis[i] for i in self.axes):
             if domain.field == ComplexNumbers():
                 self.__halfcomplex = False
             else:
-                self.__halfcomplex = bool(kwargs.pop('halfcomplex', True))
+                self.__halfcomplex = bool(halfcomplex)
 
             self.__shifts = normalized_scalar_param_list(
-                kwargs.pop('shift', True), length=len(self.axes),
-                param_conv=bool)
+                shift, length=len(self.axes), param_conv=bool)
         else:
             raise NotImplementedError('non-uniform grids not yet supported')
 
@@ -840,6 +841,16 @@ class FourierTransformBase(Operator):
             raise ValueError('`shift` must be `True` in the halved (last) '
                              'axis in half-complex transforms')
 
+        # Storing temporaries directly as arrays
+        tmp_r = kwargs.pop('tmp_r', None)
+        tmp_f = kwargs.pop('tmp_f', None)
+
+        # Before starting to calculate stuff, we check for bad arguments
+        if kwargs:
+            raise TypeError('got unexpected keyword arguments: {}'
+                            ''.format(kwargs))
+
+        # Infer the range if necessary
         if range is None:
             # self._halfcomplex and self._axes need to be set for this
             range = reciprocal_space(domain, axes=self.axes,
@@ -853,10 +864,6 @@ class FourierTransformBase(Operator):
             super(FourierTransformBase, self).__init__(
                 domain, range, linear=True)
         self._fftw_plan = None
-
-        # Storing temporaries directly as arrays
-        tmp_r = kwargs.pop('tmp_r', None)
-        tmp_f = kwargs.pop('tmp_f', None)
 
         if tmp_r is not None:
             tmp_r = domain.element(tmp_r).asarray()
