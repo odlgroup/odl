@@ -784,10 +784,12 @@ def test_matrix_init(fn, exponent):
     sparse_mat = _sparse_matrix(fn)
     dense_mat = _dense_matrix(fn)
 
-    # Just test if the code runs
-    NumpyFnMatrixWeighting(dense_mat, exponent=exponent)
+    # Just test if the code runs and if repr returns something
+    weighting_de = NumpyFnMatrixWeighting(dense_mat, exponent=exponent)
+    assert repr(weighting_de) != ''
     if exponent in (1.0, 2.0, float('inf')):
-        NumpyFnMatrixWeighting(sparse_mat, exponent=exponent)
+        weighting_sp = NumpyFnMatrixWeighting(sparse_mat, exponent=exponent)
+        assert repr(weighting_sp) != ''
     else:
         with pytest.raises(NotImplementedError):
             NumpyFnMatrixWeighting(sparse_mat, exponent=exponent)
@@ -1036,26 +1038,6 @@ def test_matrix_dist(fn, exponent):
     assert almost_equal(w_dense_dist(x, y), true_dist_dense)
 
 
-def test_matrix_dist_using_inner(fn):
-    [xarr, yarr], [x, y] = noise_elements(fn, 2)
-    mat = _dense_matrix(fn)
-
-    w = NumpyFnMatrixWeighting(mat, dist_using_inner=True)
-
-    true_dist = np.sqrt(np.vdot(xarr - yarr, np.dot(mat, xarr - yarr)))
-    # Using 3 places (single precision default) since the result is always
-    # double even if the underlying computation was only single precision
-    assert almost_equal(w.dist(x, y), true_dist, places=3)
-
-    # Only possible for exponent=2
-    with pytest.raises(ValueError):
-        NumpyFnMatrixWeighting(mat, exponent=1, dist_using_inner=True)
-
-    # With free function
-    w_dist = npy_weighted_dist(mat, use_inner=True)
-    assert almost_equal(w_dist(x, y), true_dist)
-
-
 def test_array_init(exponent):
     rn = odl.rn(5)
     weight_arr = _pos_array(rn)
@@ -1205,26 +1187,6 @@ def test_array_dist(fn, exponent):
     assert almost_equal(pdist_vec(x, y), true_dist)
 
 
-def test_array_dist_using_inner(fn):
-    [xarr, yarr], [x, y] = noise_elements(fn, 2)
-
-    weight_arr = _pos_array(fn)
-    w = NumpyFnArrayWeighting(weight_arr)
-
-    true_dist = np.linalg.norm(np.sqrt(weight_arr) * (xarr - yarr))
-    # Using 3 places (single precision default) since the result is always
-    # double even if the underlying computation was only single precision
-    assert almost_equal(w.dist(x, y), true_dist, places=3)
-
-    # Only possible for exponent=2
-    with pytest.raises(ValueError):
-        NumpyFnArrayWeighting(weight_arr, exponent=1, dist_using_inner=True)
-
-    # With free function
-    w_dist = npy_weighted_dist(weight_arr, use_inner=True)
-    assert almost_equal(w_dist(x, y), true_dist, places=3)
-
-
 def test_constant_init(exponent):
     constant = 1.5
 
@@ -1346,45 +1308,19 @@ def test_constant_dist(fn, exponent):
     assert almost_equal(w_const_dist(x, y), true_dist)
 
 
-def test_const_dist_using_inner(fn):
-    [xarr, yarr], [x, y] = noise_elements(fn, 2)
-
-    constant = 1.5
-    w = NumpyFnConstWeighting(constant)
-
-    true_dist = np.sqrt(constant) * np.linalg.norm(xarr - yarr)
-    # Using 3 places (single precision default) since the result is always
-    # double even if the underlying computation was only single precision
-    assert almost_equal(w.dist(x, y), true_dist, places=3)
-
-    # Only possible for exponent=2
-    with pytest.raises(ValueError):
-        NumpyFnConstWeighting(constant, exponent=1, dist_using_inner=True)
-
-    # With free function
-    w_dist = npy_weighted_dist(constant, use_inner=True)
-    assert almost_equal(w_dist(x, y), true_dist, places=3)
-
-
 def test_noweight():
     w = NumpyFnNoWeighting()
     w_same1 = NumpyFnNoWeighting()
     w_same2 = NumpyFnNoWeighting(2)
-    w_same3 = NumpyFnNoWeighting(2, False)
-    w_same4 = NumpyFnNoWeighting(2, dist_using_inner=False)
-    w_same5 = NumpyFnNoWeighting(exponent=2, dist_using_inner=False)
     w_other_exp = NumpyFnNoWeighting(exponent=1)
-    w_dist_inner = NumpyFnNoWeighting(dist_using_inner=True)
 
     # Singleton pattern
-    for same in (w_same1, w_same2, w_same3, w_same4, w_same5):
+    for same in (w_same1, w_same2):
         assert w is same
 
     # Proper creation
     assert w is not w_other_exp
-    assert w is not w_dist_inner
     assert w != w_other_exp
-    assert w != w_dist_inner
 
 
 def test_custom_inner(fn):
@@ -1396,12 +1332,10 @@ def test_custom_inner(fn):
     w = NumpyFnCustomInner(inner)
     w_same = NumpyFnCustomInner(inner)
     w_other = NumpyFnCustomInner(np.dot)
-    w_d = NumpyFnCustomInner(inner, dist_using_inner=False)
 
     assert w == w
     assert w == w_same
     assert w != w_other
-    assert w != w_d
 
     true_inner = inner(xarr, yarr)
     assert almost_equal(w.inner(x, y), true_inner)
@@ -1413,10 +1347,9 @@ def test_custom_inner(fn):
     # Using 3 places (single precision default) since the result is always
     # double even if the underlying computation was only single precision
     assert almost_equal(w.dist(x, y), true_dist, places=3)
-    assert almost_equal(w_d.dist(x, y), true_dist)
 
     with pytest.raises(TypeError):
-        NumpyFnCustomInner(1)
+        NumpyFnCustomInner(1)  # wrong type
 
 
 def test_custom_norm(fn):
