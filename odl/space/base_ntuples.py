@@ -45,8 +45,9 @@ class FnBase(LinearSpace):
             objects or as string.
         """
         # Make sure that huge sizes don't overflow in Py2
+        import builtins
         if sys.version_info.major < 3:
-            self.__size = long(size)
+            self.__size = builtins.int(size)
         else:
             self.__size = int(size)
 
@@ -99,7 +100,15 @@ class FnBase(LinearSpace):
 
     @property
     def size(self):
-        """Number of entries per tuple."""
+        """Number of entries per tuple.
+
+        .. note::
+            In Python 2, the returned type is ``builtins.int`` from the
+            ``future`` library, to mimic the auto-width behavior of Python 3
+            ``int``. This avoids different printing between Python versions
+            while ensuring that sizes larger than ``2 ** 31 - 1`` do not
+            overflow.
+        """
         return self.__size
 
     @property
