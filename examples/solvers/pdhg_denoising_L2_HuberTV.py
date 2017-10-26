@@ -30,8 +30,6 @@ import scipy
 import odl
 import matplotlib.pyplot as plt
 
-# --- define setting --- #
-
 # Define ground truth, space and noisy data
 image = np.rot90(scipy.misc.ascent()[::2, ::2].astype('float'), 3)
 shape = image.shape
@@ -75,14 +73,14 @@ niter = 200  # number of iterations
 
 
 # Parameters for algorithm 1
-# Related to root of problem condition number
+# Related to the root of the problem condition number
 kappa1 = np.sqrt(1 + 0.999 * norm_op ** 2 / (mu_g * mu_f))
 tau1 = 1 / (mu_g * (kappa1 - 1))  # Primal step size
 sigma1 = 1 / (mu_f * (kappa1 - 1))  # Dual step size
 theta1 = 1 - 2 / (1 + kappa1)  # Extrapolation constant
 
 # Parameters for algorithm 2
-# Square root of problem condition number
+# Square root of the problem condition number
 kappa2 = norm_op / np.sqrt(mu_f * mu_g)
 tau2 = 1 / norm_op * np.sqrt(mu_f / mu_g)  # Primal step size
 sigma2 = 1 / norm_op * np.sqrt(mu_g / mu_f)  # Dual step size
@@ -104,7 +102,7 @@ odl.solvers.pdhg(x2, f, g, op, tau2, sigma2, niter, theta=theta2,
 obj2 = callback.callbacks[1].obj_function_values
 
 # %% Display results
-# show images
+# Show images
 clim = [0, 1]
 cmap = 'gray'
 
@@ -113,7 +111,7 @@ d.show('noisy', clim=clim, cmap=cmap)
 x1.show('denoised, alg1', clim=clim, cmap=cmap)
 x2.show('denoised, alg2', clim=clim, cmap=cmap)
 
-# show convergence rate
+# Show convergence rate
 min_obj = min(obj1 + obj2)
 
 
@@ -122,18 +120,18 @@ def rel_fun(x):
     return (x - min_obj) / (x[0] - min_obj)
 
 
-i = np.array(callback.callbacks[1].iteration_counts)
+iters = np.array(callback.callbacks[1].iteration_counts)
 
 plt.figure()
-plt.semilogy(i, rel_fun(obj1), color='red',
+plt.semilogy(iters, rel_fun(obj1), color='red',
              label='alg1, Chambolle et al 2017')
-plt.semilogy(i, rel_fun(obj2), color='blue',
+plt.semilogy(iters, rel_fun(obj2), color='blue',
              label='alg2, Chambolle and Pock 2011')
 rho = theta1
-plt.semilogy(i[1:], rho ** i[1:], '--', color='red',
+plt.semilogy(iters[1:], rho ** iters[1:], '--', color='red',
              label='$O(\\rho_1^k), \\rho_1={:3.2f}$'.format(rho))
 rho = theta2
-plt.semilogy(i[1:], rho ** i[1:], '--', color='blue',
+plt.semilogy(iters[1:], rho ** iters[1:], '--', color='blue',
              label='$O(\\rho_2^k), \\rho_2={:3.2f}$'.format(rho))
 plt.title('Function values + theoretical upper bounds')
 plt.ylim((1e-16, 1))
