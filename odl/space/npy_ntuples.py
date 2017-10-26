@@ -115,8 +115,6 @@ class NumpyFn(FnBase):
             - ``dist(x, y) <= dist(x, z) + dist(z, y)``
 
             By default, ``dist(x, y)`` is calculated as ``norm(x - y)``.
-            This creates an intermediate array ``x - y``, which can be
-            avoided by choosing ``dist_using_inner=True``.
 
             This option cannot be combined with ``weighting``,
             ``norm`` or ``inner``.
@@ -151,19 +149,6 @@ class NumpyFn(FnBase):
             This option cannot be combined with ``weighting``,
             ``dist`` or ``norm``.
 
-        dist_using_inner : bool, optional
-            Calculate ``dist`` using the formula
-
-                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
-
-            This avoids the creation of new arrays and is thus faster
-            for large arrays. On the downside, it will not evaluate to
-            exactly zero for equal (but not identical) ``x`` and ``y``.
-
-            This option can only be used if ``exponent`` is 2.0.
-
-            Default: ``False``.
-
         kwargs :
             Further keyword arguments are passed to the weighting
             classes.
@@ -197,7 +182,6 @@ class NumpyFn(FnBase):
         inner = kwargs.pop('inner', None)
         weighting = kwargs.pop('weighting', None)
         exponent = kwargs.pop('exponent', 2.0)
-        dist_using_inner = bool(kwargs.pop('dist_using_inner', False))
 
         # Check validity of option combination (3 or 4 out of 4 must be None)
         if sum(x is None for x in (dist, norm, inner, weighting)) < 3:
@@ -214,14 +198,13 @@ class NumpyFn(FnBase):
                 self.__weighting = weighting
             elif np.isscalar(weighting):
                 self.__weighting = NumpyFnConstWeighting(
-                    weighting, exponent, dist_using_inner=dist_using_inner)
+                    weighting, exponent, **kwargs)
             elif weighting is None:
                 # Need to wait until dist, norm and inner are handled
                 pass
             elif isspmatrix(weighting):
                 self.__weighting = NumpyFnMatrixWeighting(
-                    weighting, exponent, dist_using_inner=dist_using_inner,
-                    **kwargs)
+                    weighting, exponent, **kwargs)
             else:  # last possibility: make a matrix
                 arr = np.asarray(weighting)
                 if arr.dtype == object:
@@ -229,11 +212,10 @@ class NumpyFn(FnBase):
                                      ''.format(weighting))
                 if arr.ndim == 1:
                     self.__weighting = NumpyFnArrayWeighting(
-                        arr, exponent, dist_using_inner=dist_using_inner)
+                        arr, exponent, **kwargs)
                 elif arr.ndim == 2:
                     self.__weighting = NumpyFnMatrixWeighting(
-                        arr, exponent, dist_using_inner=dist_using_inner,
-                        **kwargs)
+                        arr, exponent, **kwargs)
                 else:
                     raise ValueError('array-like input {} is not 1- or '
                                      '2-dimensional'.format(weighting))
@@ -245,8 +227,7 @@ class NumpyFn(FnBase):
         elif inner is not None:
             self.__weighting = NumpyFnCustomInner(inner)
         else:  # all None -> no weighing
-            self.__weighting = NumpyFnNoWeighting(
-                exponent, dist_using_inner=dist_using_inner)
+            self.__weighting = NumpyFnNoWeighting(exponent)
 
     @property
     def exponent(self):
@@ -1136,24 +1117,20 @@ class NumpyFnVector(FnBaseVector):
         return self
 
 
-def _weighting(weights, exponent, dist_using_inner=False):
+def _weighting(weights, exponent):
     """Return a weighting whose type is inferred from the arguments."""
     if np.isscalar(weights):
-        weighting = NumpyFnConstWeighting(
-            weights, exponent=exponent, dist_using_inner=dist_using_inner)
+        weighting = NumpyFnConstWeighting(weights, exponent=exponent)
     elif isspmatrix(weights):
-        weighting = NumpyFnMatrixWeighting(
-            weights, exponent=exponent, dist_using_inner=dist_using_inner)
+        weighting = NumpyFnMatrixWeighting(weights, exponent=exponent)
     else:
         weights, weights_in = np.asarray(weights), weights
         if weights.dtype == object:
             raise ValueError('bad weights {}'.format(weights_in))
         if weights.ndim == 1:
-            weighting = NumpyFnArrayWeighting(
-                weights, exponent=exponent, dist_using_inner=dist_using_inner)
+            weighting = NumpyFnArrayWeighting(weights, exponent=exponent)
         elif weights.ndim == 2:
-            weighting = NumpyFnMatrixWeighting(
-                weights, exponent=exponent, dist_using_inner=dist_using_inner)
+            weighting = NumpyFnMatrixWeighting(weights, exponent=exponent)
         else:
             raise ValueError('array-like `weights` must have 1 or 2 '
                              'dimensions, but {} has {} dimensions'
@@ -1228,16 +1205,6 @@ def npy_weighted_dist(weights, exponent=2.0, use_inner=False):
     exponent : positive float, optional
         Exponent of the norm. If ``weight`` is a sparse matrix, only
         1.0, 2.0 and ``inf`` are allowed.
-    use_inner : bool, optional
-        Calculate ``dist`` using the formula
-
-            ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
-
-        This avoids the creation of new arrays and is thus faster
-        for large arrays. On the downside, it will not evaluate to
-        exactly zero for equal (but not identical) ``x`` and ``y``.
-
-        Can only be used if ``exponent`` is 2.0.
 
     Returns
     -------
@@ -1252,8 +1219,7 @@ def npy_weighted_dist(weights, exponent=2.0, use_inner=False):
     NumpyFnArrayWeighting
     NumpyFnMatrixWeighting
     """
-    return _weighting(weights, exponent=exponent,
-                      dist_using_inner=use_inner).dist
+    return _weighting(weights, exponent=exponent).dist
 
 
 def _norm_default(x):
@@ -1334,7 +1300,7 @@ class NumpyFnMatrixWeighting(MatrixWeighting):
     checked during initialization.
     """
 
-    def __init__(self, matrix, exponent=2.0, dist_using_inner=False, **kwargs):
+    def __init__(self, matrix, exponent=2.0, **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -1346,16 +1312,6 @@ class NumpyFnMatrixWeighting(MatrixWeighting):
             product is not defined.
             If ``matrix`` is a sparse matrix, only 1.0, 2.0 and ``inf``
             are allowed.
-        dist_using_inner : bool, optional
-            Calculate ``dist`` using the formula
-
-                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
-
-            This avoids the creation of new arrays and is thus faster
-            for large arrays. On the downside, it will not evaluate to
-            exactly zero for equal (but not identical) ``x`` and ``y``.
-
-            This option can only be used if ``exponent`` is 2.0.
         precomp_mat_pow : bool, optional
             If ``True``, precompute the matrix power ``W ** (1/p)``
             during initialization. This has no effect if ``exponent``
@@ -1391,8 +1347,7 @@ class NumpyFnMatrixWeighting(MatrixWeighting):
         """
         # TODO: fix dead link `scipy.sparse.spmatrix`
         super(NumpyFnMatrixWeighting, self).__init__(
-            matrix, impl='numpy', exponent=exponent,
-            dist_using_inner=dist_using_inner, **kwargs)
+            matrix, impl='numpy', exponent=exponent, **kwargs)
 
     def inner(self, x1, x2):
         """Calculate the matrix-weighted inner product of two vectors.
@@ -1475,7 +1430,7 @@ class NumpyFnArrayWeighting(ArrayWeighting):
     See ``Notes`` for mathematical details.
     """
 
-    def __init__(self, array, exponent=2.0, dist_using_inner=False):
+    def __init__(self, array, exponent=2.0):
         """Initialize a new instance.
 
         Parameters
@@ -1485,16 +1440,6 @@ class NumpyFnArrayWeighting(ArrayWeighting):
         exponent : positive float, optional
             Exponent of the norm. For values other than 2.0, no inner
             product is defined.
-        dist_using_inner : bool, optional
-            Calculate ``dist`` using the formula
-
-                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
-
-            This avoids the creation of new arrays and is thus faster
-            for large arrays. On the downside, it will not evaluate to
-            exactly zero for equal (but not identical) ``x`` and ``y``.
-
-            This option can only be used if ``exponent`` is 2.0.
 
         Notes
         -----
@@ -1539,8 +1484,7 @@ class NumpyFnArrayWeighting(ArrayWeighting):
           checked during initialization.
         """
         super(NumpyFnArrayWeighting, self).__init__(
-            array, impl='numpy', exponent=exponent,
-            dist_using_inner=dist_using_inner)
+            array, impl='numpy', exponent=exponent)
 
     def inner(self, x1, x2):
         """Return the weighted inner product of two vectors.
@@ -1596,7 +1540,7 @@ class NumpyFnConstWeighting(ConstWeighting):
     See ``Notes`` for mathematical details.
     """
 
-    def __init__(self, constant, exponent=2.0, dist_using_inner=False):
+    def __init__(self, constant, exponent=2.0):
         """Initialize a new instance.
 
         Parameters
@@ -1606,16 +1550,6 @@ class NumpyFnConstWeighting(ConstWeighting):
         exponent : positive float, optional
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
-        dist_using_inner : bool, optional
-            Calculate ``dist`` using the formula
-
-                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
-
-            This avoids the creation of new arrays and is thus faster
-            for large arrays. On the downside, it will not evaluate to
-            exactly zero for equal (but not identical) ``x`` and ``y``.
-
-            This option can only be used if ``exponent`` is 2.0.
 
         Notes
         -----
@@ -1655,8 +1589,7 @@ class NumpyFnConstWeighting(ConstWeighting):
           inner product or norm, respectively.
         """
         super(NumpyFnConstWeighting, self).__init__(
-            constant, impl='numpy', exponent=exponent,
-            dist_using_inner=dist_using_inner)
+            constant, impl='numpy', exponent=exponent)
 
     def inner(self, x1, x2):
         """Calculate the constant-weighted inner product of two vectors.
@@ -1713,13 +1646,7 @@ class NumpyFnConstWeighting(ConstWeighting):
         dist : float
             The distance between the vectors
         """
-        if self.dist_using_inner:
-            dist_squared = (_norm_default(x1) ** 2 + _norm_default(x2) ** 2 -
-                            2 * _inner_default(x1, x2).real)
-            if dist_squared < 0.0:  # Compensate for numerical error
-                dist_squared = 0.0
-            return np.sqrt(self.const) * float(np.sqrt(dist_squared))
-        elif self.exponent == 2.0:
+        if self.exponent == 2.0:
             return np.sqrt(self.const) * _norm_default(x1 - x2)
         elif self.exponent == float('inf'):
             return self.const * float(_pnorm_default(x1 - x2, self.exponent))
@@ -1748,17 +1675,11 @@ class NumpyFnNoWeighting(NoWeighting, NumpyFnConstWeighting):
         """Implement singleton pattern if ``exp==2.0``."""
         if len(args) == 0:
             exponent = kwargs.pop('exponent', 2.0)
-            dist_using_inner = kwargs.pop('dist_using_inner', False)
-        elif len(args) == 1:
-            exponent = args[0]
-            args = args[1:]
-            dist_using_inner = kwargs.pop('dist_using_inner', False)
         else:
             exponent = args[0]
-            dist_using_inner = args[1]
-            args = args[2:]
+            args = args[1:]
 
-        if exponent == 2.0 and not dist_using_inner:
+        if exponent == 2.0:
             if cls._instance is None:
                 cls._instance = super(NoWeighting, cls).__new__(
                     cls, *args, **kwargs)
@@ -1766,7 +1687,7 @@ class NumpyFnNoWeighting(NoWeighting, NumpyFnConstWeighting):
         else:
             return super(NoWeighting, cls).__new__(cls, *args, **kwargs)
 
-    def __init__(self, exponent=2.0, dist_using_inner=False):
+    def __init__(self, exponent=2.0):
         """Initialize a new instance.
 
         Parameters
@@ -1774,26 +1695,16 @@ class NumpyFnNoWeighting(NoWeighting, NumpyFnConstWeighting):
         exponent : positive float, optional
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
-        dist_using_inner : bool, optional
-            Calculate ``dist`` using the formula
-
-                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
-
-            This avoids the creation of new arrays and is thus faster
-            for large arrays. On the downside, it will not evaluate to
-            exactly zero for equal (but not identical) ``x`` and ``y``.
-
-            This option can only be used if ``exponent`` is 2.0.
         """
         super(NumpyFnNoWeighting, self).__init__(
-            impl='numpy', exponent=exponent, dist_using_inner=dist_using_inner)
+            impl='numpy', exponent=exponent)
 
 
 class NumpyFnCustomInner(CustomInner):
 
     """Class for handling a user-specified inner product in `NumpyFn`."""
 
-    def __init__(self, inner, dist_using_inner=True):
+    def __init__(self, inner):
         """Initialize a new instance.
 
         Parameters
@@ -1807,18 +1718,8 @@ class NumpyFnCustomInner(CustomInner):
             - ``<x, y> = conj(<y, x>)``
             - ``<s*x + y, z> = s * <x, z> + <y, z>``
             - ``<x, x> = 0``  if and only if  ``x = 0``
-
-        dist_using_inner : bool, optional
-            Calculate ``dist`` using the formula
-
-                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
-
-            This avoids the creation of new arrays and is thus faster
-            for large arrays. On the downside, it will not evaluate to
-            exactly zero for equal (but not identical) ``x`` and ``y``.
         """
-        super(NumpyFnCustomInner, self).__init__(
-            inner, impl='numpy', dist_using_inner=dist_using_inner)
+        super(NumpyFnCustomInner, self).__init__(inner, impl='numpy')
 
 
 class NumpyFnCustomNorm(CustomNorm):

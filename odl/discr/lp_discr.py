@@ -1020,10 +1020,10 @@ def uniform_discr_frompartition(partition, exponent=2.0, interp='nearest',
                              "".format(weighting_in))
 
     if dtype is not None:
-        dspace = ds_type(partition.size, dtype=dtype, impl=impl,
+        dspace = ds_type(partition.size, dtype=dtype,
                          weighting=weighting, exponent=exponent)
     else:
-        dspace = ds_type(partition.size, impl=impl, weighting=weighting,
+        dspace = ds_type(partition.size, weighting=weighting,
                          exponent=exponent)
 
     return DiscreteLp(fspace, partition, dspace, exponent, interp, order=order,
