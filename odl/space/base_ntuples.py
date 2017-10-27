@@ -117,6 +117,11 @@ class FnBase(LinearSpace):
         return (self.size,)
 
     @property
+    def ndim(self):
+        """Number of axes, currently always 1."""
+        return 1
+
+    @property
     def is_real(self):
         """``True`` if the space represents R^n, i.e. real tuples."""
         return self.__is_real and self.__is_floating
