@@ -20,7 +20,7 @@ DATA_SUBSET = 'images_cambridge'
 URL_CAM = 'http://store.maths.cam.ac.uk/DAMTP/me404/data_sets/'
 
 
-def convert(image, shape, gray=None, dtype='float64', normalize='max'):
+def convert(image, shape, gray=False, dtype='float64', normalize='max'):
     """Convert image to standardized format.
 
     Several properties of the input image may be changed including the shape,
@@ -30,17 +30,20 @@ def convert(image, shape, gray=None, dtype='float64', normalize='max'):
 
     image.astype(dtype)
 
-    if gray is not None and gray:
-        image = np.mean(image, 2)
+    if gray:
+        image[..., 0] *= 0.2126
+        image[..., 1] *= 0.7152
+        image[..., 2] *= 0.0722
+        image = np.sum(image, axis=2)
 
     if shape is not None:
         image = imresize(image, shape)
 
     if normalize == 'max':
-        image = image / image.max()
+        image /= image.max()
 
     elif normalize == 'sum':
-        image = image / image.sum()
+        image /= image.sum()
 
     return image
 
@@ -48,7 +51,9 @@ def convert(image, shape, gray=None, dtype='float64', normalize='max'):
 def brain_phantom(shape=None):
     """Brain phantom for FDG PET simulations.
 
-    Output:
+    Returns
+    -------
+    An image with the following properties:
         image type: gray scales
         shape: [1024, 1024] (if not specified by `size`)
         scale: [0, 1]
@@ -66,7 +71,9 @@ def brain_phantom(shape=None):
 def resolution_phantom(shape=None):
     """Resolution phantom for tomographic simulations.
 
-    Output:
+    Returns
+    -------
+    An image with the following properties:
         image type: gray scales
         shape: [1024, 1024] (if not specified by `size`)
         scale: [0, 1]
@@ -85,7 +92,9 @@ def resolution_phantom(shape=None):
 def building(shape=None, gray=False):
     """Photo of the Centre for Mathematical Sciences in Cambridge.
 
-    Output:
+    Returns
+    -------
+    An image with the following properties:
         image type: color (or gray scales if `gray=True`)
         size: [442, 331] (if not specified by `size`)
         scale: [0, 1]
@@ -103,7 +112,9 @@ def building(shape=None, gray=False):
 def rings(shape=None, gray=False):
     """Photo of married couple holding hands.
 
-    Output:
+    Returns
+    -------
+    An image with the following properties:
         image type: color (or gray scales if `gray=True`)
         size: [3264, 2448] (if not specified by `size`)
         scale: [0, 1]
@@ -123,7 +134,9 @@ def blurring_kernel(shape=None):
 
     The kernel is scaled to sum to one.
 
-    Output:
+    Returns
+    -------
+    An image with the following properties:
         image type: gray scales
         size: [100, 100] (if not specified by `size`)
         scale: [0, 1]
