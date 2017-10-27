@@ -16,6 +16,7 @@ import numpy as np
 from odl.discr.lp_discr import DiscreteLp
 from odl.operator.tensor_ops import PointwiseTensorFieldOperator
 from odl.space import ProductSpace
+from odl.util import writable_array, signature_string, indent
 
 
 __all__ = ('PartialDerivative', 'Gradient', 'Divergence', 'Laplacian')
@@ -52,17 +53,21 @@ class PartialDerivative(PointwiseTensorFieldOperator):
     Preserves the shape of the underlying grid.
     """
 
-    def __init__(self, space, axis, method='forward', pad_mode='constant',
-                 pad_const=0):
+    def __init__(self, domain, axis, range=None, method='forward',
+                 pad_mode='constant', pad_const=0):
         """Initialize a new instance.
 
         Parameters
         ----------
-        space : `DiscreteLp`
-            Space of elements which the operator is acting on.
-        axis : int, optional
+        domain : `DiscreteLp`
+            Space of elements on which the operator can act.
+        axis : int
             Axis along which the partial derivative is evaluated.
-        method : {'central', 'forward', 'backward'}, optional
+        range : `DiscreteLp`, optional
+            Space of elements to which the operator maps, must have the
+            same shape as ``domain``.
+            For the default ``None``, the range is the same as ``domain``.
+        method : {'forward', 'backward', 'central'}, optional
             Finite difference method which is used in the interior of the
             domain of ``f``.
         pad_mode : string, optional
@@ -103,16 +108,19 @@ class PartialDerivative(PointwiseTensorFieldOperator):
              [ 0.,  1.,  2.,  3.,  4.]]
         )
         """
-        if not isinstance(space, DiscreteLp):
-            raise TypeError('`space` {!r} is not a DiscreteLp instance'
-                            ''.format(space))
+        if not isinstance(domain, DiscreteLp):
+            raise TypeError('`domain` {!r} is not a DiscreteLp instance'
+                            ''.format(domain))
+
+        if range is None:
+            range = domain
 
         # Method is affine if nonzero padding is given.
         linear = not (pad_mode == 'constant' and pad_const != 0)
         super(PartialDerivative, self).__init__(
-            domain=space, range=space, base_space=space, linear=linear)
+            domain, range, base_space=domain, linear=linear)
         self.axis = int(axis)
-        self.dx = space.cell_sides[axis]
+        self.dx = self.domain.cell_sides[axis]
 
         self.method, method_in = str(method).lower(), method
         if method not in _SUPPORTED_DIFF_METHODS:
@@ -124,7 +132,7 @@ class PartialDerivative(PointwiseTensorFieldOperator):
             raise ValueError('`pad_mode` {} not understood'
                              ''.format(pad_mode_in))
 
-        self.pad_const = space.field.element(pad_const)
+        self.pad_const = self.domain.field.element(pad_const)
 
     def _call(self, x, out=None):
         """Calculate partial derivative of ``x``."""
@@ -132,13 +140,10 @@ class PartialDerivative(PointwiseTensorFieldOperator):
             out = self.range.element()
 
         # TODO: this pipes CUDA arrays through NumPy. Write native operator.
-        out_arr = out.asarray()
-        finite_diff(x.asarray(), out=out_arr, axis=self.axis, dx=self.dx,
-                    method=self.method, pad_mode=self.pad_mode,
-                    pad_const=self.pad_const)
-
-        # self assignment: no overhead in the case out_arr is a view
-        out[:] = out_arr
+        with writable_array(out) as out_arr:
+            finite_diff(x.asarray(), out=out_arr, axis=self.axis, dx=self.dx,
+                        method=self.method, pad_mode=self.pad_mode,
+                        pad_const=self.pad_const)
         return out
 
     def derivative(self, point=None):
@@ -155,8 +160,8 @@ class PartialDerivative(PointwiseTensorFieldOperator):
             since the operator is affine.
         """
         if self.pad_mode == 'constant' and self.pad_const != 0:
-            return PartialDerivative(self.domain, self.axis, self.method,
-                                     self.pad_mode, 0)
+            return PartialDerivative(self.domain, self.axis, self.range,
+                                     self.method, self.pad_mode, 0)
         else:
             return self
 
@@ -168,10 +173,27 @@ class PartialDerivative(PointwiseTensorFieldOperator):
                              ' linear and has no adjoint'
                              ''.format(self.pad_const))
 
-        return -PartialDerivative(self.domain, self.axis,
+        return -PartialDerivative(self.range, self.axis, self.domain,
                                   _ADJ_METHOD[self.method],
                                   _ADJ_PADDING[self.pad_mode],
                                   self.pad_const)
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        posargs = [self.domain]
+        optargs = [('axis', self.axis, None),
+                   ('range', self.range, self.domain),
+                   ('method', self.method, 'forward'),
+                   ('pad_mode', self.pad_mode, 'constant'),
+                   ('pad_const', self.pad_const, 0)]
+        inner_str = signature_string(posargs, optargs,
+                                     sep=',\n', mod=['!r', ''])
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
+
+    def __str__(self):
+        """Return ``str(self)``."""
+        dom_ran_str = '\n-->\n'.join([repr(self.domain), repr(self.range)])
+        return '{}:\n{}'.format(self.__class__.__name__, indent(dom_ran_str))
 
 
 class Gradient(PointwiseTensorFieldOperator):
@@ -199,8 +221,8 @@ class Gradient(PointwiseTensorFieldOperator):
         range : power space of `DiscreteLp`, optional
             Space of elements to which the operator maps.
             This is required if ``domain`` is not given.
-        method : {'central', 'forward', 'backward'}, optional
-            Finite difference method to be used
+        method : {'forward', 'backward', 'central'}, optional
+            Finite difference method to be used.
         pad_mode : string, optional
             The padding mode to use outside the domain.
 
@@ -280,16 +302,31 @@ class Gradient(PointwiseTensorFieldOperator):
             raise ValueError('either `domain` or `range` must be specified')
 
         if domain is None:
-            if not isinstance(range, ProductSpace):
-                raise TypeError('`range` {!r} is not a ProductSpace instance'
-                                ''.format(range))
-            domain = range[0]
+            try:
+                domain = range[0]
+            except TypeError:
+                pass
 
         if range is None:
-            if not isinstance(domain, DiscreteLp):
-                raise TypeError('`domain` {!r} is not a `DiscreteLp` '
-                                'instance'.format(domain))
             range = ProductSpace(domain, domain.ndim)
+
+        # Check range first since `domain` may end up to be `None` in
+        # the case filtered out here (see above)
+        if not isinstance(range, ProductSpace):
+            raise TypeError('`range` {!r} is not a `ProductSpace` instance'
+                            ''.format(range))
+        elif not range.is_power_space:
+            raise ValueError('`range` {!r} is not a power space'
+                             ''.format(range))
+
+        if not isinstance(domain, DiscreteLp):
+            raise TypeError('`domain` {!r} is not a `DiscreteLp` '
+                            'instance'.format(domain))
+
+        if len(range) != domain.ndim:
+            raise ValueError('`range` must be a power space of length n = {},'
+                             'with `n == domain.ndim`, got n = {} instead'
+                             ''.format(domain.ndim, len(range)))
 
         linear = not (pad_mode == 'constant' and pad_const != 0)
         super(Gradient, self).__init__(
@@ -317,15 +354,11 @@ class Gradient(PointwiseTensorFieldOperator):
         dx = self.domain.cell_sides
 
         for axis in range(ndim):
-            out_arr = out[axis].asarray()
-
-            finite_diff(x_arr, axis=axis, dx=dx[axis], method=self.method,
-                        pad_mode=self.pad_mode,
-                        pad_const=self.pad_const,
-                        out=out_arr)
-
-            out[axis][:] = out_arr
-
+            with writable_array(out[axis]) as out_arr:
+                finite_diff(x_arr, axis=axis, dx=dx[axis], method=self.method,
+                            pad_mode=self.pad_mode,
+                            pad_const=self.pad_const,
+                            out=out_arr)
         return out
 
     def derivative(self, point=None):
@@ -369,6 +402,23 @@ class Gradient(PointwiseTensorFieldOperator):
                             pad_mode=_ADJ_PADDING[self.pad_mode],
                             pad_const=self.pad_const)
 
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        posargs = [self.domain]
+        optargs = [('range', self.range, self.domain ** self.domain.ndim),
+                   ('method', self.method, 'forward'),
+                   ('pad_mode', self.pad_mode, 'constant'),
+                   ('pad_const', self.pad_const, 0)]
+        inner_str = signature_string(posargs, optargs,
+                                     sep=[',\n', ', ', ',\n'],
+                                     mod=['!r', ''])
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
+
+    def __str__(self):
+        """Return ``str(self)``."""
+        dom_ran_str = '\n-->\n'.join([repr(self.domain), repr(self.range)])
+        return '{}:\n{}'.format(self.__class__.__name__, indent(dom_ran_str))
+
 
 class Divergence(PointwiseTensorFieldOperator):
 
@@ -394,7 +444,7 @@ class Divergence(PointwiseTensorFieldOperator):
         range : `DiscreteLp`, optional
             Space of elements to which the operator maps.
             This is required if ``domain`` is not given.
-        method : {'central', 'forward', 'backward'}, optional
+        method : {'forward', 'backward', 'central'}, optional
             Finite difference method to be used
         pad_mode : string, optional
             The padding mode to use outside the domain.
@@ -462,16 +512,31 @@ class Divergence(PointwiseTensorFieldOperator):
             raise ValueError('either `domain` or `range` must be specified')
 
         if domain is None:
-            if not isinstance(range, DiscreteLp):
-                raise TypeError('`range` {!r} is not a DiscreteLp instance'
-                                ''.format(range))
             domain = ProductSpace(range, range.ndim)
 
         if range is None:
-            if not isinstance(domain, ProductSpace):
-                raise TypeError('`domain` {!r} is not a ProductSpace instance'
-                                ''.format(domain))
-            range = domain[0]
+            try:
+                range = domain[0]
+            except TypeError:
+                pass
+
+        # Check `domain` first since `range` may end up to be `None` in
+        # the case filtered out here (see above)
+        if not isinstance(domain, ProductSpace):
+            raise TypeError('`domain` {!r} is not a `ProductSpace` instance'
+                            ''.format(domain))
+        elif not domain.is_power_space:
+            raise ValueError('`domain` {!r} is not a power space'
+                             ''.format(domain))
+
+        if not isinstance(range, DiscreteLp):
+            raise TypeError('`range` {!r} is not a `DiscreteLp` '
+                            'instance'.format(range))
+
+        if len(domain) != range.ndim:
+            raise ValueError('`domain` must be a power space of length n = {},'
+                             'with `n == range.ndim`, got n = {} instead'
+                             ''.format(range.ndim, len(domain)))
 
         linear = not (pad_mode == 'constant' and pad_const != 0)
         super(Divergence, self).__init__(
@@ -497,20 +562,18 @@ class Divergence(PointwiseTensorFieldOperator):
         ndim = self.range.ndim
         dx = self.range.cell_sides
 
-        out_arr = out.asarray()
         tmp = np.empty(out.shape, out.dtype, order=out.space.order)
-        for axis in range(ndim):
-            finite_diff(x[axis], axis=axis, dx=dx[axis], method=self.method,
-                        pad_mode=self.pad_mode,
-                        pad_const=self.pad_const,
-                        out=tmp)
-            if axis == 0:
-                out_arr[:] = tmp
-            else:
-                out_arr += tmp
+        with writable_array(out) as out_arr:
+            for axis in range(ndim):
+                finite_diff(x[axis], axis=axis, dx=dx[axis],
+                            method=self.method, pad_mode=self.pad_mode,
+                            pad_const=self.pad_const,
+                            out=tmp)
+                if axis == 0:
+                    out_arr[:] = tmp
+                else:
+                    out_arr += tmp
 
-        # self assignment: no overhead in the case asarray is a view
-        out[:] = out_arr
         return out
 
     def derivative(self, point=None):
@@ -528,8 +591,7 @@ class Divergence(PointwiseTensorFieldOperator):
         """
         if self.pad_mode == 'constant' and self.pad_const != 0:
             return Divergence(self.domain, self.range, self.method,
-                              pad_mode=self.pad_mode,
-                              pad_const=0)
+                              pad_mode=self.pad_mode, pad_const=0)
         else:
             return self
 
@@ -545,9 +607,26 @@ class Divergence(PointwiseTensorFieldOperator):
                              ' linear and has no adjoint'
                              ''.format(self.pad_const))
 
-        return - Gradient(domain=self.range, range=self.domain,
+        return - Gradient(self.range, self.domain,
                           method=_ADJ_METHOD[self.method],
                           pad_mode=_ADJ_PADDING[self.pad_mode])
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        posargs = [self.domain]
+        optargs = [('range', self.range, self.domain[0]),
+                   ('method', self.method, 'forward'),
+                   ('pad_mode', self.pad_mode, 'constant'),
+                   ('pad_const', self.pad_const, 0)]
+        inner_str = signature_string(posargs, optargs,
+                                     sep=[',\n', ', ', ',\n'],
+                                     mod=['!r', ''])
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
+
+    def __str__(self):
+        """Return ``str(self)``."""
+        dom_ran_str = '\n-->\n'.join([repr(self.domain), repr(self.range)])
+        return '{}:\n{}'.format(self.__class__.__name__, indent(dom_ran_str))
 
 
 class Laplacian(PointwiseTensorFieldOperator):
@@ -560,12 +639,12 @@ class Laplacian(PointwiseTensorFieldOperator):
     Outside the domain zero padding is assumed.
     """
 
-    def __init__(self, space, pad_mode='constant', pad_const=0):
+    def __init__(self, domain, range=None, pad_mode='constant', pad_const=0):
         """Initialize a new instance.
 
         Parameters
         ----------
-        space : `DiscreteLp`
+        domain : `DiscreteLp`
             Space of elements which the operator is acting on.
         pad_mode : string, optional
             The padding mode to use outside the domain.
@@ -608,11 +687,15 @@ class Laplacian(PointwiseTensorFieldOperator):
              [ 0.,  1.,  0.]]
         )
         """
-        if not isinstance(space, DiscreteLp):
-            raise TypeError('`space` {!r} is not a DiscreteLp instance'
-                            ''.format(space))
+        if not isinstance(domain, DiscreteLp):
+            raise TypeError('`domain` {!r} is not a DiscreteLp instance'
+                            ''.format(domain))
+
+        if range is None:
+            range = domain
+
         super(Laplacian, self).__init__(
-            domain=space, range=space, base_space=space, linear=True)
+            domain, range, base_space=domain, linear=True)
 
         self.pad_mode, pad_mode_in = str(pad_mode).lower(), pad_mode
         if pad_mode not in _SUPPORTED_PAD_MODES:
@@ -624,7 +707,7 @@ class Laplacian(PointwiseTensorFieldOperator):
             raise ValueError('`pad_mode` {} not implemented for Laplacian.'
                              ''.format(pad_mode_in))
 
-        self.pad_const = space.field.element(pad_const)
+        self.pad_const = self.domain.field.element(pad_const)
 
     def _call(self, x, out=None):
         """Calculate the spatial Laplacian of ``x``."""
@@ -634,30 +717,28 @@ class Laplacian(PointwiseTensorFieldOperator):
             out.set_zero()
 
         x_arr = x.asarray()
-        out_arr = out.asarray()
         tmp = np.empty(out.shape, out.dtype, order=out.space.order)
 
         ndim = self.domain.ndim
         dx = self.domain.cell_sides
 
-        for axis in range(ndim):
-            # TODO: this can be optimized
+        with writable_array(out) as out_arr:
+            for axis in range(ndim):
+                # TODO: this can be optimized
+                finite_diff(x_arr, axis=axis, dx=dx[axis] ** 2,
+                            method='forward',
+                            pad_mode=self.pad_mode,
+                            pad_const=self.pad_const, out=tmp)
 
-            finite_diff(x_arr, axis=axis, dx=dx[axis] ** 2,
-                        method='forward',
-                        pad_mode=self.pad_mode,
-                        pad_const=self.pad_const, out=tmp)
+                out_arr[:] += tmp
 
-            out_arr[:] += tmp
+                finite_diff(x_arr, axis=axis, dx=dx[axis] ** 2,
+                            method='backward',
+                            pad_mode=self.pad_mode,
+                            pad_const=self.pad_const, out=tmp)
 
-            finite_diff(x_arr, axis=axis, dx=dx[axis] ** 2,
-                        method='backward',
-                        pad_mode=self.pad_mode,
-                        pad_const=self.pad_const, out=tmp)
+                out_arr[:] -= tmp
 
-            out_arr[:] -= tmp
-
-        out[:] = out_arr
         return out
 
     def derivative(self, point=None):
@@ -674,9 +755,8 @@ class Laplacian(PointwiseTensorFieldOperator):
             since the operator is affine.
         """
         if self.pad_mode == 'constant' and self.pad_const != 0:
-            return Laplacian(self.domain,
-                             pad_mode=self.pad_mode,
-                             pad_const=0)
+            return Laplacian(self.domain, self.range,
+                             pad_mode=self.pad_mode, pad_const=0)
         else:
             return self
 
@@ -686,7 +766,24 @@ class Laplacian(PointwiseTensorFieldOperator):
 
         The laplacian is self-adjoint, so this returns ``self``.
         """
-        return self
+        return Laplacian(self.range, self.domain,
+                         pad_mode=self.pad_mode, pad_const=0)
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        posargs = [self.domain]
+        optargs = [('range', self.range, self.domain ** self.domain.ndim),
+                   ('pad_mode', self.pad_mode, 'constant'),
+                   ('pad_const', self.pad_const, 0)]
+        inner_str = signature_string(posargs, optargs,
+                                     sep=[',\n', ', ', ',\n'],
+                                     mod=['!r', ''])
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
+
+    def __str__(self):
+        """Return ``str(self)``."""
+        dom_ran_str = '\n-->\n'.join([repr(self.domain), repr(self.range)])
+        return '{}:\n{}'.format(self.__class__.__name__, indent(dom_ran_str))
 
 
 def finite_diff(f, axis, dx=1.0, method='forward', out=None, **kwargs):
