@@ -14,6 +14,7 @@ import numpy as np
 from odl.discr import DiscreteLp, Gradient, Divergence
 from odl.operator import Operator, PointwiseInner
 from odl.space import ProductSpace
+from odl.util import signature_string, indent
 
 
 __all__ = ('LinDeformFixedTempl', 'LinDeformFixedDisp', 'linear_deform')
@@ -229,12 +230,10 @@ class LinDeformFixedTempl(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        arg_reprs = [repr(self.template)]
-        if self.domain != self.__displacement.space[0]:
-            arg_reprs.append('domain={!r}'.format(self.domain))
-        arg_str = ', '.join(arg_reprs)
-
-        return '{}({})'.format(self.__class__.__name__, arg_str)
+        posargs = [self.template]
+        optargs = [('domain', self.domain, self.template.space)]
+        inner_str = signature_string(posargs, optargs, mod='!r', sep=',\n')
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
 
 
 class LinDeformFixedDisp(Operator):
@@ -374,12 +373,10 @@ class LinDeformFixedDisp(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        arg_reprs = [repr(self.displacement)]
-        if self.domain != self.__displacement.space[0]:
-            arg_reprs.append('templ_space={!r}'.format(self.domain))
-        arg_str = ', '.join(arg_reprs)
-
-        return '{}({})'.format(self.__class__.__name__, arg_str)
+        posargs = [self.displacement]
+        optargs = [('templ_space', self.domain, self.displacement.space[0])]
+        inner_str = signature_string(posargs, optargs, mod='!r', sep=',\n')
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
 
 
 if __name__ == '__main__':

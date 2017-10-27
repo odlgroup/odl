@@ -160,7 +160,10 @@ def test_fixed_templ_init():
     template = space.element(template_function)
 
     # Valid input
-    repr(LinDeformFixedTempl(template))
+    op = LinDeformFixedTempl(template)
+    assert repr(op) != ''
+    op = LinDeformFixedTempl(template, domain=space.astype('float32'))
+    assert repr(op) != ''
 
     # Invalid input
     with pytest.raises(TypeError):
@@ -218,8 +221,10 @@ def test_fixed_disp_init():
         disp_field_factory(space.ndim))
 
     # Valid input
-    repr(LinDeformFixedDisp(disp_field))
-    repr(LinDeformFixedDisp(disp_field, templ_space=space))
+    op = LinDeformFixedDisp(disp_field)
+    assert repr(op) != ''
+    op = LinDeformFixedDisp(disp_field, templ_space=space)
+    assert repr(op) != ''
 
     # Non-valid input
     with pytest.raises(TypeError):  # displacement not ProductSpaceElement
