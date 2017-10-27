@@ -9,7 +9,6 @@
 """Images provided by the University of Cambridge."""
 
 import numpy as np
-import odl
 from odl.contrib.datasets.util import get_data
 from scipy.misc import imresize
 
@@ -21,13 +20,12 @@ DATA_SUBSET = 'images_cambridge'
 URL_CAM = 'http://store.maths.cam.ac.uk/DAMTP/me404/data_sets/'
 
 
-def convert(image, shape, to_odl, gray=None, dtype='float64', normalize='max'):
-    """Convert image an ODL object in standardized format.
+def convert(image, shape, gray=None, dtype='float64', normalize='max'):
+    """Convert image to standardized format.
 
-    In addition several properties of the input image may be changed including
-    the shape, data type and maximal value of the image. In addition, this
-    function may convert the image into an ODL object and/or a gray scale
-    image.
+    Several properties of the input image may be changed including the shape,
+    data type and maximal value of the image. In addition, this function may
+    convert the image into an ODL object and/or a gray scale image.
     """
 
     image.astype(dtype)
@@ -44,23 +42,10 @@ def convert(image, shape, to_odl, gray=None, dtype='float64', normalize='max'):
     elif normalize == 'sum':
         image = image / image.sum()
 
-    if to_odl:
-        shape = image.shape
-
-        if len(shape) == 2:
-            space = odl.uniform_discr([0, 0], shape, shape)
-        elif len(shape) == 3:
-            d = shape[2]
-            shape = shape[:2]
-            image = np.transpose(image, (2, 0, 1))
-            space = odl.uniform_discr([0, 0], shape, shape) ** d
-
-        image = space.element(image)
-
     return image
 
 
-def brain_phantom(shape=None, to_odl=True):
+def brain_phantom(shape=None):
     """Brain phantom for FDG PET simulations.
 
     Output:
@@ -75,10 +60,10 @@ def brain_phantom(shape=None, to_odl=True):
     dct = get_data(name, subset=DATA_SUBSET, url=url)
     im = np.rot90(dct['im'], k=3)
 
-    return convert(im, shape, to_odl)
+    return convert(im, shape)
 
 
-def resolution_phantom(shape=None, to_odl=True):
+def resolution_phantom(shape=None):
     """Resolution phantom for tomographic simulations.
 
     Output:
@@ -94,10 +79,10 @@ def resolution_phantom(shape=None, to_odl=True):
     dct = get_data(name, subset=DATA_SUBSET, url=url)
     im = np.rot90(dct['im'], k=3)
 
-    return convert(im, shape, to_odl)
+    return convert(im, shape)
 
 
-def building(shape=None, gray=False, to_odl=True):
+def building(shape=None, gray=False):
     """Photo of the Centre for Mathematical Sciences in Cambridge.
 
     Output:
@@ -112,10 +97,10 @@ def building(shape=None, gray=False, to_odl=True):
     dct = get_data(name, subset=DATA_SUBSET, url=url)
     im = np.rot90(dct['im'], k=3)
 
-    return convert(im, shape, to_odl, gray=gray)
+    return convert(im, shape, gray=gray)
 
 
-def rings(shape=None, gray=False, to_odl=True):
+def rings(shape=None, gray=False):
     """Photo of married couple holding hands.
 
     Output:
@@ -130,10 +115,10 @@ def rings(shape=None, gray=False, to_odl=True):
     dct = get_data(name, subset=DATA_SUBSET, url=url)
     im = np.rot90(dct['im'], k=2)
 
-    return convert(im, shape, to_odl, gray=gray)
+    return convert(im, shape, gray=gray)
 
 
-def blurring_kernel(shape=None, to_odl=True):
+def blurring_kernel(shape=None):
     """Blurring kernel for convolution simulations.
 
     The kernel is scaled to sum to one.
@@ -150,7 +135,7 @@ def blurring_kernel(shape=None, to_odl=True):
     url = URL_CAM + name
     dct = get_data(name, subset=DATA_SUBSET, url=url)
 
-    return convert(255 - dct['im'], shape, to_odl, normalize='sum')
+    return convert(255 - dct['im'], shape, normalize='sum')
 
 
 if __name__ == '__main__':
