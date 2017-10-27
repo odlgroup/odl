@@ -21,3 +21,14 @@ Reference datasets with accompanying ODL geometries etc.
     CT data as provided by FIPS. The data is non-human and high resolution.
     * `walnut_data`
     * `lotus_root_data`
+* `images`
+
+  Two dimensional images.
+  * `cambridge`
+
+    Various images as provided by the University of Cambridge, see http://store.maths.cam.ac.uk/DAMTP/me404/data_sets/
+    * `brain_phantom`
+    * `resolution_phantom`
+    * `building`
+    * `rings`
+    * `blurring_kernel`
