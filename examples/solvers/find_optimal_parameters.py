@@ -8,7 +8,6 @@ To find the "best" parameter we use Powell's method to optimize a figure of
 merit, here the L2-distance to the true result.
 """
 
-from __future__ import print_function
 import numpy as np
 import scipy
 import odl

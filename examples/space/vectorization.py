@@ -1,6 +1,5 @@
 """Example showing how to use vectorization of `FunctionSpaceElement`'s."""
 
-from __future__ import print_function
 import numpy as np
 import odl
 import timeit

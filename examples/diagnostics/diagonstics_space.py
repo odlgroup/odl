@@ -1,6 +1,5 @@
 """Run the standardized diagonstics suite on some of the spaces."""
 
-from __future__ import print_function
 import odl
 
 print('\n\n TESTING FOR Lp SPACE \n\n')

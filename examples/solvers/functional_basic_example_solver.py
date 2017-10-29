@@ -15,7 +15,6 @@ where ( )_+ denotes the positive part of the element, i.e.,
 (z_i)_+ = max(z_i, 0).
 """
 
-from __future__ import print_function
 import numpy as np
 import odl
 

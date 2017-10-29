@@ -13,7 +13,6 @@ the problem can be written as:
     min_{x in R^2}  sum_i inf_{z \in Omega_i} ||x - z||.
 """
 
-from __future__ import print_function
 import matplotlib.pyplot as plt
 import numpy as np
 import odl
