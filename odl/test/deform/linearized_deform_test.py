@@ -162,7 +162,7 @@ def test_fixed_templ_init():
     # Valid input
     op = LinDeformFixedTempl(template)
     assert repr(op) != ''
-    op = LinDeformFixedTempl(template, domain=space.astype('float32'))
+    op = LinDeformFixedTempl(template, domain=space.astype('float32') ** 1)
     assert repr(op) != ''
 
     # Invalid input

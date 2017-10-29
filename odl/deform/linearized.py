@@ -171,6 +171,7 @@ class LinDeformFixedTempl(Operator):
             domain = self.template.space.real_space.tangent_bundle
         else:
             if not isinstance(domain, ProductSpace):
+                # TODO: allow non-product spaces in the 1D case
                 raise TypeError('`domain` must be a `ProductSpace` '
                                 'instance, got {!r}'.format(domain))
             if not domain.is_power_space:
