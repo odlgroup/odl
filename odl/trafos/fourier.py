@@ -9,7 +9,6 @@
 """Discretized Fourier transform on L^p spaces."""
 
 from __future__ import print_function, division, absolute_import
-from builtins import str
 import numpy as np
 
 from odl.discr import DiscreteLp, discr_sequence_space

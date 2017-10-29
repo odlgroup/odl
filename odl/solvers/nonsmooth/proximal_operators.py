@@ -22,7 +22,6 @@ Foundations and Trends in Optimization, 1 (2014), pp 127-239.
 """
 
 from __future__ import print_function, division, absolute_import
-from builtins import zip
 import numpy as np
 
 from odl.operator import (Operator, IdentityOperator, ScalingOperator,

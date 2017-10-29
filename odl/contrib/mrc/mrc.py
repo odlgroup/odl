@@ -9,7 +9,7 @@
 """Specification and reader for the MRC2014 file format."""
 
 from __future__ import print_function, division, absolute_import
-from builtins import int, object, range, str
+from builtins import int, object
 from collections import OrderedDict
 from itertools import permutations
 import numpy as np

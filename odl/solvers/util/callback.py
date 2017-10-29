@@ -9,7 +9,7 @@
 """Callback objects for per-iterate actions in iterative methods."""
 
 from __future__ import print_function, division, absolute_import
-from builtins import object, str
+from builtins import object
 import copy
 import numpy as np
 import os

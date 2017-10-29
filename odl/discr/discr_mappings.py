@@ -13,7 +13,7 @@ operators.
 """
 
 from __future__ import print_function, division, absolute_import
-from builtins import object, range, str, zip
+from builtins import object
 from itertools import product
 import numpy as np
 

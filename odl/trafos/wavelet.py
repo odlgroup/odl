@@ -9,7 +9,6 @@
 """Discrete wavelet transformation on L2 spaces."""
 
 from __future__ import print_function, division, absolute_import
-from builtins import range, str
 import numpy as np
 
 from odl.discr import DiscreteLp

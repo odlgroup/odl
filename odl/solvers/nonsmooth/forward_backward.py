@@ -9,7 +9,6 @@
 """Optimization methods based on a forward-backward splitting scheme."""
 
 from __future__ import print_function, division, absolute_import
-from builtins import range, zip
 
 from odl.operator import Operator
 

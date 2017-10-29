@@ -9,7 +9,6 @@
 """Maximum Likelihood Expectation Maximization algorithm."""
 
 from __future__ import print_function, division, absolute_import
-from builtins import range, str
 import numpy as np
 
 __all__ = ('mlem', 'osmlem', 'loglikelihood')

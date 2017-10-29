@@ -15,7 +15,7 @@ of partitions of intervals.
 """
 
 from __future__ import print_function, division, absolute_import
-from builtins import object, range, zip
+from builtins import object
 import numpy as np
 
 from odl.discr.grid import RectGrid, uniform_grid_fromintv

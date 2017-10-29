@@ -9,7 +9,6 @@
 """Utilities for converting ODL operators to tensorflow layers."""
 
 from __future__ import print_function, division, absolute_import
-from builtins import range, str
 import numpy as np
 import uuid
 import tensorflow as tf

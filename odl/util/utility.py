@@ -9,7 +9,7 @@
 """Utilities mainly for internal use."""
 
 from __future__ import print_function, division, absolute_import
-from builtins import object, range, str, zip
+from builtins import object
 from collections import OrderedDict
 from functools import wraps
 import numpy as np

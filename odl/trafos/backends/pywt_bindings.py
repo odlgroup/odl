@@ -14,7 +14,6 @@ of built-in wavelet filters.
 """
 
 from __future__ import print_function, division, absolute_import
-from builtins import range, str, zip
 from itertools import product
 import numpy as np
 try:

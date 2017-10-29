@@ -9,7 +9,7 @@
 """Basic abstract and concrete sets."""
 
 from __future__ import print_function, division, absolute_import
-from builtins import int, object, str, zip
+from builtins import int, object
 from numbers import Integral, Real, Complex
 from past.builtins import basestring
 import numpy as np

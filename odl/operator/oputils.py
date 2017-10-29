@@ -9,7 +9,6 @@
 """Convenience functions for operators."""
 
 from __future__ import print_function, division, absolute_import
-from builtins import range
 from future.utils import native
 import numpy as np
 

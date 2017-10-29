@@ -9,7 +9,7 @@
 """Utilities and class for reading uncompressed binary files with header."""
 
 from __future__ import print_function, division, absolute_import
-from builtins import int, object, open, str
+from builtins import int, object
 from collections import OrderedDict
 import csv
 import numpy as np

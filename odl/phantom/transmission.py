@@ -9,7 +9,6 @@
 """Phantoms typically used in transmission tomography."""
 
 from __future__ import print_function, division, absolute_import
-from builtins import range, zip
 import numpy as np
 
 from odl.discr import DiscreteLp

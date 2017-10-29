@@ -9,7 +9,6 @@
 """Phantoms given by simple geometric objects such as cubes or spheres."""
 
 from __future__ import print_function, division, absolute_import
-from builtins import range, zip
 import numpy as np
 
 __all__ = ('cuboid', 'defrise', 'ellipsoid_phantom', 'indicate_proj_axis',

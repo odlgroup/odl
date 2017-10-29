@@ -7,7 +7,6 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import print_function, division, absolute_import
-from builtins import range
 import numpy as np
 
 __all__ = ('euler_matrix', 'axis_rotation', 'axis_rotation_matrix',

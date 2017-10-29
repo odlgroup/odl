@@ -9,7 +9,6 @@
 """Utility functions for FOMs."""
 
 import numpy as np
-from builtins import str
 
 from odl.trafos.backends import PYFFTW_AVAILABLE
 

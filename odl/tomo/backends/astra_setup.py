@@ -24,7 +24,6 @@ ODL geometry representation to ASTRA's data structures, including:
 """
 
 from __future__ import print_function, division, absolute_import
-from builtins import range, str
 import numpy as np
 try:
     import astra

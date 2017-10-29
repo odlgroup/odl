@@ -9,7 +9,7 @@
 """Spaces of functions with common domain and range."""
 
 from __future__ import print_function, division, absolute_import
-from builtins import range, str, zip, object
+from builtins import object
 from inspect import isfunction
 import numpy as np
 

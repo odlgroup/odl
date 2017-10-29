@@ -9,7 +9,7 @@
 """Utilities for internal use."""
 
 from __future__ import print_function, division, absolute_import
-from builtins import int, object, range, str
+from builtins import object
 from future.moves.itertools import zip_longest
 import numpy as np
 import sys

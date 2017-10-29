@@ -9,7 +9,7 @@
 """Simple iterative type optimization schemes."""
 
 from __future__ import print_function, division, absolute_import
-from builtins import next, range
+from builtins import next
 import numpy as np
 
 from odl.operator import IdentityOperator, OperatorComp, OperatorSum

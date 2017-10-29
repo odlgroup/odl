@@ -9,7 +9,6 @@
 """Cartesian products of `LinearSpace` instances."""
 
 from __future__ import print_function, division, absolute_import
-from builtins import range, str, zip
 from itertools import product
 from numbers import Integral
 import numpy as np

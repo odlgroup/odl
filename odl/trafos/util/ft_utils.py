@@ -9,7 +9,6 @@
 """Utility functions for Fourier transforms on regularly sampled data."""
 
 from __future__ import print_function, division, absolute_import
-from builtins import str, range, zip
 import numpy as np
 
 from odl.discr import (

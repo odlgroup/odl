@@ -9,7 +9,7 @@
 """Abstract mathematical operators."""
 
 from __future__ import print_function, division, absolute_import
-from builtins import object, str, zip
+from builtins import object
 import inspect
 from numbers import Number, Integral
 import sys

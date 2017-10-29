@@ -24,7 +24,7 @@ is used to re-wrap the data into the appropriate space.
 """
 
 from __future__ import print_function, division, absolute_import
-from builtins import object, zip
+from builtins import object
 import numpy as np
 import re
 

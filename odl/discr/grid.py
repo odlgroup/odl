@@ -13,7 +13,6 @@ space with a certain structure which is exploited to minimize storage.
 """
 
 from __future__ import print_function, division, absolute_import
-from builtins import range, str, zip
 import numpy as np
 
 from odl.set import Set, IntervalProd

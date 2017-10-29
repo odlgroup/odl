@@ -9,7 +9,6 @@
 """:math:`L^p` type discretizations of function spaces."""
 
 from __future__ import print_function, division, absolute_import
-from builtins import object, range, str, zip
 from numbers import Integral
 import numpy as np
 
