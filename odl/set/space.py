@@ -163,7 +163,7 @@ class LinearSpace(Set):
 
             ``out[:] = a * x1``
 
-        or, if ``b`` and ``y`` are given,
+        or, if ``b`` and ``x2`` are given,
 
             ``out = a * x1 + b * x2``.
 
@@ -191,11 +191,11 @@ class LinearSpace(Set):
         -----
         The elements ``out``, ``x1`` and ``x2`` may be aligned, thus a call
 
-            ``space.lincomb(x, 2, x, 3.14, out=x)``
+            ``space.lincomb(2, x, 3.14, x, out=x)``
 
         is (mathematically) equivalent to
 
-            ``x = x * (1 + 2 + 3.14)``.
+            ``x = x * (2 + 3.14)``.
         """
         if out is None:
             out = self.element()
