@@ -127,14 +127,38 @@ def test_psnr(space):
 def test_ssim(space):
     ground_truth = odl.phantom.white_noise(space)
 
-    # SSIM of true image should be one.
+    # SSIM of true image should be either
+    # * 1 with force_lower_is_better == False,
+    # * -1 with force_lower_is_better == True and normalized == False,
+    # * 0 with force_lower_is_better == True and normalized == True.
     result = odl.contrib.fom.ssim(ground_truth, ground_truth)
+    result_normalized = odl.contrib.fom.ssim(ground_truth, ground_truth,
+                                             normalized=True)
+    result_flib = odl.contrib.fom.ssim(ground_truth, ground_truth,
+                                       force_lower_is_better=True)
+    result_nf = odl.contrib.fom.ssim(ground_truth, ground_truth,
+                                     normalized=True,
+                                     force_lower_is_better=True)
     assert pytest.approx(result) == 1
+    assert pytest.approx(result_normalized) == 1
+    assert pytest.approx(result_flib) == -1
+    assert pytest.approx(result_nf) == 0
 
-    # SSIM with ground truth zero should always give zero.
+    # SSIM with ground truth zero should always give zero if not normalized
+    # and 1/2 otherwise.
     data = odl.phantom.white_noise(space)
     result = odl.contrib.fom.ssim(data, space.zero())
+    result_normalized = odl.contrib.fom.ssim(data, space.zero(),
+                                             normalized=True)
+    result_flib = odl.contrib.fom.ssim(data, space.zero(),
+                                       force_lower_is_better=True)
+    result_nf = odl.contrib.fom.ssim(data, space.zero(),
+                                     normalized=True,
+                                     force_lower_is_better=True)
     assert pytest.approx(result) == 0
+    assert pytest.approx(result_normalized) == 0.5
+    assert pytest.approx(result_flib) == 0
+    assert pytest.approx(result_nf) == 0.5
 
     # SSIM should be symmetric if the dynamic range is set explicitly.
     result1 = odl.contrib.fom.ssim(data, ground_truth, dynamic_range=1)
