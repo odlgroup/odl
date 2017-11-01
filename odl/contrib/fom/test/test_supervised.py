@@ -37,7 +37,7 @@ def test_general(space, scalar_fom):
         # Check that range is a real number
         assert np.isscalar(scalar_fom(data, ground_truth))
 
-        # Check that FOM is minimal when ground truth is comared with itself
+        # Check that FOM is minimal when ground truth is compared with itself
         assert (scalar_fom(ground_truth, ground_truth) <=
                 scalar_fom(data, ground_truth))
 
