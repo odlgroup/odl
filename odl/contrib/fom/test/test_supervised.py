@@ -172,9 +172,15 @@ def test_ssim(space):
     assert pytest.approx(result_nf) == 0.5
 
     # SSIM should be symmetric if the dynamic range is set explicitly.
-    result1 = odl.contrib.fom.ssim(data, ground_truth, dynamic_range=1)
-    result2 = odl.contrib.fom.ssim(ground_truth, data, dynamic_range=1)
-    assert pytest.approx(result1) == result2
+    for nor in [True, False]:
+        for flib in [True, False]:
+            result1 = odl.contrib.fom.ssim(data, ground_truth, dynamic_range=1,
+                                           normalized=nor,
+                                           force_lower_is_better=flib)
+            result2 = odl.contrib.fom.ssim(ground_truth, data, dynamic_range=1,
+                                           normalized=nor,
+                                           force_lower_is_better=flib)
+            assert pytest.approx(result1) == result2
 
 
 if __name__ == '__main__':
