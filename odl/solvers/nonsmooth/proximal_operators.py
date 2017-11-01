@@ -85,7 +85,7 @@ def combine_proximals(*factory_list):
         diag_op : `DiagonalOperator`
         """
         if np.isscalar(sigma):
-            sigma = [sigma]*len(factory_list)
+            sigma = [sigma] * len(factory_list)
 
         return DiagonalOperator(
             *[factory(sigmai)
@@ -152,16 +152,17 @@ def proximal_convex_conj(prox_factory):
         proximal : `Operator`
             The proximal operator of ``s * F^*`` where ``s`` is the step size
         """
-        if np.isscalar(sigma):
-            sigma = float(sigma)
-            prox_other = sigma * prox_factory(1.0 / sigma) * (1.0 / sigma)
-            return IdentityOperator(prox_other.domain) - prox_other
-        else:
-            space = prox_factory(sigma).domain
-            sigma = space.element(sigma)
-            return IdentityOperator(space) - OperatorComp(OperatorComp(
-                MultiplyOperator(sigma), prox_factory(1.0 / sigma)),
-                MultiplyOperator(1.0 / sigma))
+
+        # Get the underlying space. At the same time, check if the given
+        # prox_factory accepts stepsize objects of the type given by sigma.
+        space = prox_factory(sigma).domain
+
+        mult_inner = MultiplyOperator(1.0 / sigma, domain=space, range=space)
+        mult_outer = MultiplyOperator(sigma, domain=space, range=space)
+        result = IdentityOperator(space) \
+            - OperatorComp(OperatorComp(
+                mult_outer, prox_factory(1.0 / sigma)), mult_inner)
+        return result
 
     return convex_conj_prox_factory
 
@@ -875,10 +876,10 @@ def proximal_convex_conj_l2_squared(space, lam=1, g=None):
                                 -sig / (1 + 0.5 * sig / lam), g)
             elif sig in space:
                 if g is None:
-                    x.divide(space.one() + 0.5/lam * sig, out)
+                    x.divide(1 + 0.5 / lam * sig, out)
                 else:
                     sigma.multiply(g, out)
-                    out.divide(space.one() + 0.5/lam * sig, out)
+                    out.divide(1 + 0.5 / lam * sig, out)
 
     return ProximalConvexConjL2Squared
 
