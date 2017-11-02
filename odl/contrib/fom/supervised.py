@@ -17,7 +17,8 @@ __all__ = ('mean_squared_error', 'mean_absolute_error',
            'psnr', 'haarpsi', 'noise_power_spectrum')
 
 
-def mean_squared_error(data, ground_truth, mask=None, normalized=False):
+def mean_squared_error(data, ground_truth, mask=None,
+                       normalized=False, force_lower_is_better=False):
     """Return mean squared L2 distance between ``data`` and ``ground_truth``.
 
     See also `this Wikipedia article
@@ -30,10 +31,16 @@ def mean_squared_error(data, ground_truth, mask=None, normalized=False):
     ground_truth : `FnBaseVector`
         Reference to compare ``data`` to.
     mask : `array-like`, optional
-        If given, ``data * mask`` is compared to ``ground_truth * mask``.
+        If given, ``data * mask`` is compared to ``ground_truth * mask``,
+        where multiplication is pointwise.
     normalized  : bool, optional
-        Boolean flag to switch between unormalized and normalized FOM.
-
+        If ``True``, the output values are mapped to the interval
+        :math:`[0, 1]` (see `Notes` for details), otherwise return the
+        original mean squared error.
+    force_lower_is_better : bool, optional
+        If ``True``, it is ensured that lower values correspond to better
+        matches. For the mean squared error, this is already the case, and
+        the flag is only present for compatibility to other figures of merit.
     Returns
     -------
     mse : float
@@ -72,10 +79,15 @@ def mean_squared_error(data, ground_truth, mask=None, normalized=False):
     else:
         fom /= l2norm_squared(data.space.one())
 
+    # The mean squared error is already in the desired order.
+    # The output does not need to be changed depending on the
+    # force_lower_is_better flag.
+
     return fom
 
 
-def mean_absolute_error(data, ground_truth, mask=None, normalized=False):
+def mean_absolute_error(data, ground_truth, mask=None,
+                        normalized=False, force_lower_is_better=False):
     """Return L1-distance between ``data`` and ``ground_truth``.
 
     See also `this Wikipedia article
@@ -88,9 +100,16 @@ def mean_absolute_error(data, ground_truth, mask=None, normalized=False):
     ground_truth : `FnBaseVector`
         Reference to compare ``data`` to.
     mask : `array-like`, optional
-        If given, ``data * mask`` is compared to ``ground_truth * mask``.
+        If given, ``data * mask`` is compared to ``ground_truth * mask``,
+        where multiplication is pointwise.
     normalized  : bool, optional
-        Boolean flag to switch between unormalized and normalized FOM.
+        If ``True``, the output values are mapped to the interval
+        :math:`[0, 1]` (see `Notes` for details), otherwise return the
+        original mean absolute error.
+    force_lower_is_better : bool, optional
+        If ``True``, it is ensured that lower values correspond to better
+        matches. For the mean absolute error, this is already the case, and
+        the flag is only present for compatibility to other figures of merit.
 
     Returns
     -------
@@ -126,6 +145,10 @@ def mean_absolute_error(data, ground_truth, mask=None, normalized=False):
         fom /= (l1_norm(data) + l1_norm(ground_truth))
     else:
         fom /= l1_norm(data.space.one())
+
+    # The mean absolute error is already in the desired order.
+    # The output does not need to be changed depending on the
+    # force_lower_is_better flag.
 
     return fom
 
@@ -444,8 +467,9 @@ def false_structures_mask(foreground, smoothness_factor=None):
     return space.element(result)
 
 
-def ssim(data, ground_truth,
-         size=11, sigma=1.5, K1=0.01, K2=0.03, dynamic_range=None):
+# TODO Add details on the computation in the docstring.
+def ssim(data, ground_truth, size=11, sigma=1.5, K1=0.01, K2=0.03,
+         dynamic_range=None, normalized=False, force_lower_is_better=False):
     """Structural SIMilarity between ``data`` and ``ground_truth``.
 
     The SSIM takes value -1 for maximum dissimilarity and +1 for maximum
@@ -460,20 +484,47 @@ def ssim(data, ground_truth,
         Input data to compare to the ground truth.
     ground_truth : `FnBaseVector`
         Reference to compare ``data`` to.
-    size : odd int
+    size : odd int, optional
         Size in elements per axis of the Gaussian window that is used
         for all smoothing operations.
-    sigma : positive float
+    sigma : positive float, optional
         Width of the Gaussian function used for smoothing.
-    K1, K2 : positive float
-        TODO
-    dynamic_range : nonnegative float
-        TODO
+    K1, K2 : positive float, optional
+        Small constants to stabilize the result. See [Wan+2004] for details.
+    dynamic_range : nonnegative float, optional
+        Difference between the maximum and minimum value that the pixels
+        can attain. Use 255 if pixel range is :math:`[0, 255]` and 1 if
+        it is :math:`[0, 1]`. Default: `None`, obtain maximum and minimum
+        from the ground truth.
+    normalized  : bool, optional
+        If ``True``, the output values are mapped to the interval
+        :math:`[0, 1]` (see `Notes` for details), otherwise return the
+        original SSIM.
+    force_lower_is_better : bool, optional
+        If ``True``, it is ensured that lower values correspond to better
+        matches by returning the negative of the SSIM, otherwise the (possibly
+        normalized) SSIM is returned. If both `normalized` and
+        `force_lower_is_better` are ``True``, then the order is reversed before
+        mapping the outputs, so that the latter are still in the interval
+        :math:`[0, 1]`.
 
     Returns
     -------
     ssim : float
-        FOM value, where a higher value means a better match.
+        FOM value, where a higher value means a better match
+        if `force_lower_is_better` is ``False``.
+
+    Notes
+    -----
+    The unnormalized values are in the interval :math:`[-1, 1]`, where 1
+    corresponds to a perfect match. The normalized values are obtained by
+    adding 1 and dividing by 2.
+
+    References
+    ----------
+    [Wan+2004] Wang, Z, Bovik, AC, Sheikh, HR, and Simoncelli, EP.
+    *Image Quality Assessment: From Error Visibility to Structural Similarity*.
+    IEEE Transactions on Image Processing, 13.4 (2004), pp 600--612.
     """
     from scipy.signal import fftconvolve
 
@@ -488,6 +539,7 @@ def ssim(data, ground_truth,
     window /= np.sum(window)
 
     def smoothen(img):
+        """Smoothes an image by convolving with a window function."""
         return fftconvolve(window, img, mode='valid')
 
     if dynamic_range is None:
@@ -506,11 +558,19 @@ def ssim(data, ground_truth,
     sigma2_sq = smoothen(ground_truth * ground_truth) - mu2_sq
     sigma12 = smoothen(data * ground_truth) - mu1_mu2
 
-    nom = (2 * mu1_mu2 + C1) * (2 * sigma12 + C2)
+    num = (2 * mu1_mu2 + C1) * (2 * sigma12 + C2)
     denom = (mu1_sq + mu2_sq + C1) * (sigma1_sq + sigma2_sq + C2)
-    pointwise_ssim = nom / denom
+    pointwise_ssim = num / denom
 
-    return np.mean(pointwise_ssim)
+    result = np.mean(pointwise_ssim)
+
+    if force_lower_is_better:
+        result = -result
+
+    if normalized:
+        result = (result + 1.0) / 2.0
+
+    return result
 
 
 def psnr(data, ground_truth, use_zscore=False, force_lower_is_better=False):
