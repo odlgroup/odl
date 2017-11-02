@@ -28,7 +28,7 @@ def convert(image, shape, gray=False, dtype='float64', normalize='max'):
     convert the image into an ODL object and/or a gray scale image.
     """
 
-    image.astype(dtype)
+    image = image.astype(dtype)
 
     if gray:
         image[..., 0] *= 0.2126
@@ -37,13 +37,14 @@ def convert(image, shape, gray=False, dtype='float64', normalize='max'):
         image = np.sum(image, axis=2)
 
     if shape is not None:
-        image = imresize(image, shape)
+        image = imresize(image, shape).astype(dtype)
 
     if normalize == 'max':
         image /= image.max()
-
     elif normalize == 'sum':
         image /= image.sum()
+    else:
+        assert False
 
     return image
 
