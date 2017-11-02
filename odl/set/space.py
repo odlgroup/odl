@@ -36,12 +36,14 @@ class LinearSpace(Set):
 
         Parameters
         ----------
-        field : `Field`
+        field : `Field` or None
             Scalar field of numbers for this space.
         """
-        if not isinstance(field, Field):
-            raise TypeError('`field` {!r} is not a `Field` instance')
-        self.__field = field
+        if field is None or isinstance(field, Field):
+            self.__field = field
+        else:
+            raise TypeError('`field` must be a `Field` instance or `None`, '
+                            'got {!r}'.format(field))
 
     @property
     def field(self):
@@ -96,7 +98,6 @@ class LinearSpace(Set):
         This method is intended to be private. Public callers should
         resort to `dist` which is type-checked.
         """
-        # default implementation
         return self.norm(x1 - x2)
 
     def _norm(self, x):
@@ -105,7 +106,6 @@ class LinearSpace(Set):
         This method is intended to be private. Public callers should
         resort to `norm` which is type-checked.
         """
-        # default implementation
         return float(np.sqrt(self.inner(x, x).real))
 
     def _inner(self, x1, x2):
@@ -114,7 +114,6 @@ class LinearSpace(Set):
         This method is intended to be private. Public callers should
         resort to `inner` which is type-checked.
         """
-        # No default implementation possible
         raise LinearSpaceNotImplementedError(
             'inner product not implemented in space {!r}'.format(self))
 
@@ -124,7 +123,6 @@ class LinearSpace(Set):
         This method is intended to be private. Public callers should
         resort to `multiply` which is type-checked.
         """
-        # No default implementation possible
         raise LinearSpaceNotImplementedError(
             'multiplication not implemented in space {!r}'.format(self))
 
@@ -165,7 +163,7 @@ class LinearSpace(Set):
 
             ``out[:] = a * x1``
 
-        or, if ``b`` and ``y`` are given,
+        or, if ``b`` and ``x2`` are given,
 
             ``out = a * x1 + b * x2``.
 
@@ -193,18 +191,18 @@ class LinearSpace(Set):
         -----
         The elements ``out``, ``x1`` and ``x2`` may be aligned, thus a call
 
-            ``space.lincomb(x, 2, x, 3.14, out=x)``
+            ``space.lincomb(2, x, 3.14, x, out=x)``
 
         is (mathematically) equivalent to
 
-            ``x = x * (1 + 2 + 3.14)``.
+            ``x = x * (2 + 3.14)``.
         """
         if out is None:
             out = self.element()
         elif out not in self:
             raise LinearSpaceTypeError('`out` {!r} is not an element of {!r}'
                                        ''.format(out, self))
-        if a not in self.field:
+        if self.field is not None and a not in self.field:
             raise LinearSpaceTypeError('`a` {!r} not an element of the field '
                                        '{!r} of {!r}'
                                        ''.format(a, self.field, self))
@@ -219,7 +217,7 @@ class LinearSpace(Set):
             return out
 
         else:  # Two elements
-            if b not in self.field:
+            if self.field is not None and b not in self.field:
                 raise LinearSpaceTypeError('`b` {!r} not an element of the '
                                            'field {!r} of {!r}'
                                            ''.format(b, self.field, self))
@@ -250,7 +248,6 @@ class LinearSpace(Set):
         if x2 not in self:
             raise LinearSpaceTypeError('`x2` {!r} is not an element of '
                                        '{!r}'.format(x2, self))
-
         return float(self._dist(x1, x2))
 
     def norm(self, x):
@@ -269,7 +266,6 @@ class LinearSpace(Set):
         if x not in self:
             raise LinearSpaceTypeError('`x` {!r} is not an element of '
                                        '{!r}'.format(x, self))
-
         return float(self._norm(x))
 
     def inner(self, x1, x2):
@@ -291,8 +287,11 @@ class LinearSpace(Set):
         if x2 not in self:
             raise LinearSpaceTypeError('`x2` {!r} is not an element of '
                                        '{!r}'.format(x2, self))
-
-        return self.field.element(self._inner(x1, x2))
+        inner = self._inner(x1, x2)
+        if self.field is None:
+            return inner
+        else:
+            return self.field.element(self._inner(x1, x2))
 
     def multiply(self, x1, x2, out=None):
         """Return the pointwise product of ``x1`` and ``x2``.

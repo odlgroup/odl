@@ -49,7 +49,7 @@ factr = 0.5 / reg_param
 l2_norm = factr * odl.solvers.L2NormSquared(space).translated(noisy)
 
 # Isotropic TV-regularization: l1-norm of grad(x)
-l1_norm = reg_param * odl.solvers.L1Norm(gradient.range)
+l1_norm = odl.solvers.GroupL1Norm(gradient.range, 2)
 
 # characteristic function
 char_fun = odl.solvers.IndicatorNonnegativity(space)

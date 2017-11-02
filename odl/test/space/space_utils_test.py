@@ -53,19 +53,19 @@ def test_vector_numpy():
     inp = [1, 2, 3]
 
     x = vector(inp)
-    assert isinstance(x, odl.NumpyNtuplesVector)
+    assert isinstance(x, odl.NumpyFnVector)
     assert x.dtype == np.dtype('int')
     assert all_equal(x, inp)
 
     # Ntuples
     inp = ['a', 'b', 'c']
     x = vector(inp)
-    assert isinstance(x, odl.NumpyNtuplesVector)
+    assert isinstance(x, odl.NumpyFnVector)
     assert np.issubdtype(x.dtype, basestring)
     assert all_equal(x, inp)
 
     x = vector([1, 2, 'inf'])  # Becomes string type
-    assert isinstance(x, odl.NumpyNtuplesVector)
+    assert isinstance(x, odl.NumpyFnVector)
     assert np.issubdtype(x.dtype, basestring)
     assert all_equal(x, ['1', '2', 'inf'])
 

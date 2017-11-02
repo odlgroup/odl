@@ -14,7 +14,8 @@ from __future__ import print_function, division, absolute_import
 import numpy as np
 from numbers import Integral
 
-from odl.solvers.functional.functional import Functional
+from odl.solvers.functional.functional import (Functional,
+                                               FunctionalQuadraticPerturb)
 from odl.space import ProductSpace
 from odl.operator import (Operator, ConstantOperator, ZeroOperator,
                           ScalingOperator, DiagonalOperator, PointwiseNorm)
@@ -23,7 +24,7 @@ from odl.solvers.nonsmooth.proximal_operators import (
     proximal_l2_squared, proximal_const_func, proximal_box_constraint,
     proximal_convex_conj, proximal_convex_conj_kl,
     proximal_convex_conj_kl_cross_entropy,
-    combine_proximals)
+    combine_proximals, proximal_huber)
 from odl.util import conj_exponent
 
 
@@ -35,7 +36,7 @@ __all__ = ('LpNorm', 'L1Norm', 'L2Norm', 'L2NormSquared',
            'QuadraticForm',
            'NuclearNorm', 'IndicatorNuclearNormUnitBall',
            'ScalingFunctional', 'IdentityFunctional',
-           'MoreauEnvelope')
+           'MoreauEnvelope', 'Huber')
 
 
 class LpNorm(Functional):
@@ -1120,7 +1121,7 @@ class KullbackLeibler(Functional):
             tmp = ((x - 1 - np.log(x)).inner(self.domain.one()))
         else:
             tmp = ((x - self.prior +
-                   scipy.special.xlogy(self.prior, self.prior / x))
+                    scipy.special.xlogy(self.prior, self.prior / x))
                    .inner(self.domain.one()))
         if np.isnan(tmp):
             # In this case, some element was less than or equal to zero
@@ -2035,6 +2036,7 @@ class NuclearNorm(Functional):
 
         class NuclearNormProximal(Operator):
             """Proximal operator of `NuclearNorm`."""
+
             def __init__(self, sigma):
                 self.sigma = float(sigma)
                 super(NuclearNormProximal, self).__init__(
@@ -2290,6 +2292,216 @@ https://web.stanford.edu/~boyd/papers/pdf/prox_algs.pdf
         """The gradient operator."""
         return (ScalingOperator(self.domain, 1 / self.sigma) -
                 (1 / self.sigma) * self.functional.proximal(self.sigma))
+
+
+class Huber(Functional):
+    """The Huber functional.
+
+    Notes
+    -----
+    The Huber norm is the integral over a smoothed norm. In detail, it is given
+    by
+
+    .. math::
+        F(x) = \\int_\Omega f_{\\gamma}(||x(y)||_2) dy
+
+    where :mth:`||\cdot||_2` denotes the Euclidean norm for vector-valued
+    functions which reduces to the absolute value for scalar-valued functions.
+    The function :math:`f` with smoothing :math:`\\gamma` is given by
+
+    .. math::
+        f_{\\gamma}(t) =
+        \\begin{cases}
+            \\frac{1}{2 \\gamma} t^2 & \\text{if } |t| \leq \\gamma \\\\
+            |t| - \\frac{\\gamma}{2} & \\text{else}
+        \\end{cases}.
+    """
+
+    def __init__(self, space, gamma):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        space : `FnBase`
+            Domain of the functional.
+        gamma : float
+            Smoothing parameter of the Huber functional. If ``gamma = 0``,
+            the functional is non-smooth and corresponds to the usual L1 norm.
+            For ``gamma > 0``, it has a ``1/gamma``-Lipschitz gradient so that
+            its convex conjugate is ``gamma``-strongly convex.
+
+        Examples
+        --------
+        Example of initializing the Huber functional:
+
+        >>> space = odl.uniform_discr(0, 1, 14)
+        >>> gamma = 0.1
+        >>> huber_norm = odl.solvers.Huber(space, gamma=0.1)
+
+        Check that if all elements are > ``gamma`` we get the L1-norm up to a
+        constant:
+
+        >>> x = 2 * gamma * space.one()
+        >>> tol = 1e-5
+        >>> constant = gamma / 2 * space.one().inner(space.one())
+        >>> f = odl.solvers.L1Norm(space) - constant
+        >>> abs(huber_norm(x) - f(x)) < tol
+        True
+
+        Check that if all elements are < ``gamma`` we get the squared L2-norm
+        times the weight ``1/(2*gamma)``:
+
+        >>> x = gamma / 2 * space.one()
+        >>> f = 1 / (2 * gamma) * odl.solvers.L2NormSquared(space)
+        >>> abs(huber_norm(x) - f(x)) < tol
+        True
+
+        Compare Huber- and L1-norm for vanishing smoothing ``gamma=0``:
+
+        >>> x = odl.phantom.white_noise(space)
+        >>> huber_norm = odl.solvers.Huber(space, gamma=0)
+        >>> l1_norm = odl.solvers.L1Norm(space)
+        >>> abs(huber_norm(x) - l1_norm(x)) < tol
+        True
+
+        Redo previous example for a product space in two dimensions:
+
+        >>> domain = odl.uniform_discr([0, 0], [1, 1], [5, 5])
+        >>> space = odl.ProductSpace(domain, 2)
+        >>> x = odl.phantom.white_noise(space)
+        >>> huber_norm = odl.solvers.Huber(space, gamma=0)
+        >>> l1_norm = odl.solvers.GroupL1Norm(space, 2)
+        >>> abs(huber_norm(x) - l1_norm(x)) < tol
+        True
+        """
+
+        self.__gamma = float(gamma)
+
+        if self.gamma > 0:
+            grad_lipschitz = 1 / self.gamma
+        else:
+            grad_lipschitz = np.inf
+
+        super(Huber, self).__init__(space=space, linear=False,
+                                    grad_lipschitz=grad_lipschitz)
+
+    @property
+    def gamma(self):
+        """The smoothing parameter of the Huber norm functional."""
+        return self.__gamma
+
+    def _call(self, x):
+        """Return ``self(x)``."""
+        if isinstance(self.domain, ProductSpace):
+            norm = PointwiseNorm(self.domain, 2)(x)
+        else:
+            norm = x.ufuncs.absolute()
+
+        if self.gamma > 0:
+            index = norm.ufuncs.less(self.gamma)
+            out = index * 1 / (2 * self.gamma) * norm**2
+
+            index.ufuncs.logical_not(out=index)
+            out += index * (norm - self.gamma / 2)
+        else:
+            out = norm
+
+        return out.inner(out.space.one())
+
+    @property
+    def convex_conj(self):
+        """The convex conjugate"""
+        if isinstance(self.domain, ProductSpace):
+            norm = GroupL1Norm(self.domain, 2)
+        else:
+            norm = L1Norm(self.domain)
+
+        return FunctionalQuadraticPerturb(norm.convex_conj,
+                                          quadratic_coeff=self.gamma / 2)
+
+    @property
+    def proximal(self):
+        """Return the ``proximal factory`` of the functional.
+
+        See Also
+        --------
+        odl.solvers.proximal_huber : `proximal factory` for the Huber
+            norm.
+        """
+        return proximal_huber(space=self.domain, gamma=self.gamma)
+
+    @property
+    def gradient(self):
+        """Gradient operator of the functional.
+
+        The gradient of the Huber functional is given by
+
+            .. math::
+                \\nabla f_{\\gamma}(x) =
+                \\begin{cases}
+                \\frac{1}{\\gamma} x & \\text{if } \|x\|_2 \leq \\gamma \\\\
+                \\frac{1}{\|x\|_2} x & \\text{else}
+                \\end{cases}.
+
+        Examples
+        --------
+        Check that the gradient norm is less than the norm of the one element:
+
+        >>> space = odl.uniform_discr(0, 1, 14)
+        >>> norm_one = space.one().norm()
+        >>> x = odl.phantom.white_noise(space)
+        >>> huber_norm = odl.solvers.Huber(space, gamma=0.1)
+        >>> grad = huber_norm.gradient(x)
+        >>> tol = 1e-5
+        >>> grad.norm() <=  norm_one + tol
+        True
+
+        Redo previous example for a product space in two dimensions:
+
+        >>> domain = odl.uniform_discr([0, 0], [1, 1], [5, 5])
+        >>> space = odl.ProductSpace(domain, 2)
+        >>> norm_one = space.one().norm()
+        >>> x = odl.phantom.white_noise(space)
+        >>> huber_norm = odl.solvers.Huber(space, gamma=0.2)
+        >>> grad = huber_norm.gradient(x)
+        >>> tol = 1e-5
+        >>> grad.norm() <=  norm_one + tol
+        True
+        """
+
+        functional = self
+
+        class HuberGradient(Operator):
+
+            """The gradient operator of this functional."""
+
+            def __init__(self):
+                """Initialize a new instance."""
+                super(HuberGradient, self).__init__(functional.domain,
+                                                    functional.domain,
+                                                    linear=False)
+
+            def _call(self, x):
+                """Apply the gradient operator to the given point."""
+                if isinstance(self.domain, ProductSpace):
+                    norm = PointwiseNorm(self.domain, 2)(x)
+                else:
+                    norm = x.ufuncs.absolute()
+
+                index = norm.ufuncs.less(functional.gamma)
+                grad = index * x / functional.gamma
+
+                index.ufuncs.logical_not(out=index)
+                grad += index * x / norm
+
+                return grad
+
+        return HuberGradient()
+
+    def __repr__(self):
+        '''Return ``repr(self)``.'''
+        return '{}({!r}, {!r})'.format(self.__class__.__name__, self.domain,
+                                       self.gamma)
 
 
 if __name__ == '__main__':

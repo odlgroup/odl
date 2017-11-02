@@ -168,7 +168,7 @@ class ParallelBeamGeometry(Geometry):
             angle = tuple(np.array(a, dtype=float, copy=False, ndmin=1)
                           for a in angle)
             rot_matrix = self.rotation_matrix(angle)
-            extra_dims = np.broadcast(*angle).ndim
+            extra_dims = len(np.broadcast(*angle).shape)
         else:
             raise NotImplementedError(
                 'no default implementation available for `det_refpoint` '

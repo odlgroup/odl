@@ -11,13 +11,12 @@
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 
-__all__ = ('vector', 'ntuples', 'fn', 'cn', 'rn')
+__all__ = ('vector', 'fn', 'cn', 'rn')
 
 import numpy as np
 
 from odl.set import RealNumbers, ComplexNumbers
-from odl.space.entry_points import ntuples_impl, fn_impl
-from odl.util import is_numeric_dtype
+from odl.space.entry_points import fn_impl
 
 
 def vector(array, dtype=None, impl='numpy'):
@@ -32,12 +31,12 @@ def vector(array, dtype=None, impl='numpy'):
         Set the data type of the vector manually with this option.
         By default, the space type is inferred from the input data.
     impl : string, optional
-        The backend to use. See `odl.space.entry_points.ntuples_impl_names` and
-        `odl.space.entry_points.fn_impl_names` for available options.
+        The backend to use. See `odl.space.entry_points.fn_impl_names`
+        for available options.
 
     Returns
     -------
-    vec : `NtuplesBaseVector`
+    vec : `FnBaseVector`
         Vector created from the input array. Its concrete type depends
         on the provided arguments.
 
@@ -58,7 +57,7 @@ def vector(array, dtype=None, impl='numpy'):
     Non-scalar types are also supported:
 
     >>> vector([True, False])
-    ntuples(2, 'bool').element([ True, False])
+    fn(2, 'bool').element([ True, False])
 
     Scalars become a one-element vector:
 
@@ -79,44 +78,7 @@ def vector(array, dtype=None, impl='numpy'):
     else:
         space_dtype = arr.dtype
 
-    # Select implementation
-    if space_dtype is None or is_numeric_dtype(space_dtype):
-        space_type = fn
-    else:
-        space_type = ntuples
-
-    return space_type(len(arr), dtype=space_dtype, impl=impl).element(arr)
-
-
-def ntuples(size, dtype, impl='numpy', **kwargs):
-    """Set of tuples of a fixed size.
-
-    Parameters
-    ----------
-    size : positive int
-        The number of dimensions of the space
-    dtype : `object`
-        The data type of the storage array. Can be provided in any
-        way the `numpy.dtype` function understands, most notably
-        as built-in type, as one of NumPy's internal datatype
-        objects or as string.
-
-        Only complex floating-point data types are allowed.
-    impl : string, optional
-        The backend to use. See `odl.space.entry_points.ntuples_impl_names` for
-        available options.
-    kwargs :
-        Extra keyword arguments to pass to the implmentation.
-
-    Returns
-    -------
-    ntuple : `NtuplesBase`
-
-    See Also
-    --------
-    fn : n-tuples over a field with arbitrary scalar data type.
-    """
-    return ntuples_impl(impl)(size, dtype, **kwargs)
+    return fn(len(arr), dtype=space_dtype, impl=impl).element(arr)
 
 
 def fn(size, dtype=None, impl='numpy', **kwargs):
@@ -146,7 +108,7 @@ def fn(size, dtype=None, impl='numpy', **kwargs):
 
     See Also
     --------
-    ntuples : n-tuples over a field with arbitrary data type.
+    rn, cn : Constructors for real and complex spaces
     """
     fn_cls = fn_impl(impl)
 
@@ -194,9 +156,9 @@ def cn(size, dtype=None, impl='numpy', **kwargs):
 
     cn = cn_cls(size, dtype, **kwargs)
 
-    if not cn.is_cn:
-        raise TypeError('data type {!r} not a complex floating-point type.'
-                        ''.format(dtype))
+    if not cn.is_complex:
+        raise ValueError('data type {!r} not a complex floating-point type.'
+                         ''.format(dtype))
     return cn
 
 
@@ -237,9 +199,9 @@ def rn(size, dtype=None, impl='numpy', **kwargs):
 
     rn = rn_impl(size, dtype, **kwargs)
 
-    if not rn.is_rn:
-        raise TypeError('data type {!r} not a real floating-point type.'
-                        ''.format(dtype))
+    if not rn.is_real:
+        raise ValueError('data type {!r} not a real floating-point type.'
+                         ''.format(dtype))
     return rn
 
 

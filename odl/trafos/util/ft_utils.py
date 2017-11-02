@@ -108,7 +108,8 @@ def reciprocal_grid(grid, shift=True, axes=None, halfcomplex=False):
                                               param_conv=bool)
 
     # Full-length vectors
-    stride = grid.stride
+    stride = grid.stride.copy()
+    stride[stride == 0] = 1
     shape = np.array(grid.shape)
     rmin = grid.min_pt.copy()
     rmax = grid.max_pt.copy()
@@ -625,13 +626,17 @@ def reciprocal_space(space, axes=None, halfcomplex=False, shift=True,
     recip_grid = reciprocal_grid(space.grid, shift=shift,
                                  halfcomplex=halfcomplex, axes=axes)
 
+    # Need to do this for axes of length 1 that are not transformed
+    non_axes = [i for i in range(space.ndim) if i not in axes]
+    min_pt = {i: space.min_pt[i] for i in non_axes}
+    max_pt = {i: space.max_pt[i] for i in non_axes}
+
     # Make a partition with nodes on the boundary in the last transform axis
     # if `halfcomplex == True`, otherwise a standard partition.
     if halfcomplex:
-        max_pt = {axes[-1]: recip_grid.max_pt[axes[-1]]}
-        part = uniform_partition_fromgrid(recip_grid, max_pt=max_pt)
-    else:
-        part = uniform_partition_fromgrid(recip_grid)
+        max_pt[axes[-1]] = recip_grid.max_pt[axes[-1]]
+
+    part = uniform_partition_fromgrid(recip_grid, min_pt, max_pt)
 
     # Use convention of adding a hat to represent fourier transform of variable
     axis_labels = list(space.axis_labels)

@@ -40,6 +40,11 @@ class PointwiseTensorFieldOperator(Operator):
     ``d``. It is also possible to have tensor fields over tensor fields, i.e.
     ``ProductSpace(ProductSpace(X, n), m)``.
 
+    .. note::
+        It is allowed that ``domain``, ``range`` and ``base_space`` use
+        different ``dtype``. Correctness for, e.g., real-to-complex mappings
+        is not guaranteed in that case.
+
     See Also
     --------
     ProductSpace
@@ -53,29 +58,22 @@ class PointwiseTensorFieldOperator(Operator):
         domain, range : {`ProductSpace`, `LinearSpace`}
             Spaces of vector fields between which the operator maps.
             They have to be either power spaces of the same base space
-            ``X`` or the base space itself (only one of them).
+            ``X`` (up to ``dtype``), or the base space itself.
             Empty product spaces are not allowed.
         base_space : `LinearSpace`
             The base space ``X``.
         linear : bool, optional
             If ``True``, assume that the operator is linear.
         """
-        if domain != base_space:
-            if (not isinstance(domain, ProductSpace) or
-                    not domain.is_power_space or
-                    domain.size == 0):
-                raise TypeError('`domain` {!r} is neither `base_space` {!r} '
-                                'nor a nonempty power space of it'
-                                ''.format(domain, base_space))
+        if not is_compatible_space(domain, base_space):
+            raise ValueError(
+                '`domain` {!r} is not compatible with `base_space` {!r}'
+                ''.format(domain, base_space))
 
-        if range != base_space:
-            if (not isinstance(range, ProductSpace) or
-                    not range.is_power_space or
-                    range.size == 0 or
-                    range[0] != base_space):
-                raise TypeError('`range` {!r} is neither `base_space` {!r} '
-                                'nor a nonempty power space of it'
-                                ''.format(range, base_space))
+        if not is_compatible_space(range, base_space):
+            raise ValueError(
+                '`range` {!r} is not compatible with `base_space` {!r}'
+                ''.format(range, base_space))
 
         super(PointwiseTensorFieldOperator, self).__init__(
             domain=domain, range=range, linear=linear)
@@ -903,6 +901,73 @@ class MatrixOperator(Operator):
     def __str__(self):
         """Return ``str(self)``."""
         return repr(self)
+
+
+def is_compatible_space(space, base_space):
+    """Check compatibility of a (power) space with a base space.
+
+    Compatibility here means that the spaces are equal or ``space``
+    is a non-empty power space of ``base_space`` up to different
+    data types.
+
+    Parameters
+    ----------
+    space, base_space : `LinearSpace`
+        Spaces to check for compatibility. ``base_space`` cannot be a
+        `ProductSpace`.
+
+    Returns
+    -------
+    is_compatible : bool
+        ``True`` if
+
+        - ``space == base_space`` or
+        - ``space.astype(base_space.dtype) == base_space``, provided that
+          these properties exist, or
+        - ``space`` is a power space of nonzero length and one of the three
+          situations applies to ``space[0]`` (recursively).
+
+        Otherwise ``False``.
+
+    Examples
+    --------
+    Scalar spaces:
+
+    >>> base = odl.rn(2)
+    >>> is_compatible_space(odl.rn(2), base)
+    True
+    >>> is_compatible_space(odl.rn(3), base)
+    False
+    >>> is_compatible_space(odl.rn(2, dtype='float32'), base)
+    True
+
+    Power spaces:
+
+    >>> is_compatible_space(odl.rn(2) ** 2, base)
+    True
+    >>> is_compatible_space(odl.rn(2) * odl.rn(3), base)  # no power space
+    False
+    >>> is_compatible_space(odl.rn(2, dtype='float32') ** 2, base)
+    True
+    """
+    if isinstance(base_space, ProductSpace):
+        return False
+
+    if isinstance(space, ProductSpace):
+        if not space.is_power_space:
+            return False
+        elif len(space) == 0:
+            return False
+        else:
+            return is_compatible_space(space[0], base_space)
+    else:
+        if hasattr(space, 'astype') and hasattr(base_space, 'dtype'):
+            # TODO: maybe only the shape should play a role?
+            comp_space = space.astype(base_space.dtype)
+        else:
+            comp_space = space
+
+        return comp_space == base_space
 
 
 if __name__ == '__main__':

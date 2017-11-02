@@ -688,7 +688,7 @@ class DiscreteLpElement(DiscretizedSpaceElement):
             shape is allowed as ``values``.
         """
         if values in self.space:
-            # For DiscretizedSetElement of the same type, use ntuple directly
+            # For DiscretizedSpaceElement of the same type, use ntuple directly
             self.ntuple[indices] = values.ntuple
         else:
             # Other sequence types are piped through a Numpy array. Equivalent
@@ -995,7 +995,9 @@ def uniform_discr_frompartition(partition, exponent=2.0, interp='nearest',
         raise ValueError('`partition` is not uniform')
 
     dtype = kwargs.pop('dtype', None)
-    if dtype is not None:
+    if dtype is None:
+        dtype = fn_impl(impl).default_dtype(RealNumbers())
+    else:
         dtype = np.dtype(dtype)
 
     fspace = FunctionSpace(partition.set, out_dtype=dtype)
@@ -1018,10 +1020,10 @@ def uniform_discr_frompartition(partition, exponent=2.0, interp='nearest',
                              "".format(weighting_in))
 
     if dtype is not None:
-        dspace = ds_type(partition.size, dtype=dtype, impl=impl,
+        dspace = ds_type(partition.size, dtype=dtype,
                          weighting=weighting, exponent=exponent)
     else:
-        dspace = ds_type(partition.size, impl=impl, weighting=weighting,
+        dspace = ds_type(partition.size, weighting=weighting,
                          exponent=exponent)
 
     return DiscreteLp(fspace, partition, dspace, exponent, interp, order=order,

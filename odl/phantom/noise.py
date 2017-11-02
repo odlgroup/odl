@@ -54,7 +54,7 @@ def white_noise(space, mean=0, stddev=1, seed=None):
             values = [white_noise(subspace, mean, stddev)
                       for subspace in space]
         else:
-            if space.is_cn:
+            if space.is_complex:
                 real = np.random.normal(
                     loc=mean.real, scale=stddev, size=space.shape)
                 imag = np.random.normal(
@@ -106,7 +106,7 @@ def uniform_noise(space, low=0, high=1, seed=None):
             values = [uniform_noise(subspace, low, high)
                       for subspace in space]
         else:
-            if space.is_cn:
+            if space.is_complex:
                 real = np.random.uniform(low=low.real, high=high.real,
                                          size=space.shape)
                 imag = np.random.uniform(low=low.imag, high=high.imag,

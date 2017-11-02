@@ -36,7 +36,7 @@ class Weighting(object):
     functions are being used.
     """
 
-    def __init__(self, impl, exponent=2.0, dist_using_inner=False):
+    def __init__(self, impl, exponent=2.0):
         """Initialize a new instance.
 
         Parameters
@@ -46,28 +46,12 @@ class Weighting(object):
         exponent : positive float, optional
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
-        dist_using_inner : bool, optional
-            Calculate `dist` using the formula
-
-                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
-
-            This avoids the creation of new arrays and is thus faster
-            for large arrays. On the downside, it will not evaluate to
-            exactly zero for equal (but not identical) ``x`` and ``y``.
-
-            This option can only be used if ``exponent`` is 2.0.
-
-            Default: False.
         """
         self.__impl = str(impl).lower()
         self.__exponent = float(exponent)
-        self.__dist_using_inner = bool(dist_using_inner)
         if self.exponent <= 0:
             raise ValueError('only positive exponents or inf supported, '
                              'got {}'.format(exponent))
-        elif self.exponent != 2.0 and self.dist_using_inner:
-            raise ValueError('`dist_using_inner` can only be used if the '
-                             'exponent is 2.0')
 
     @property
     def impl(self):
@@ -78,11 +62,6 @@ class Weighting(object):
     def exponent(self):
         """Exponent of this weighting."""
         return self.__exponent
-
-    @property
-    def dist_using_inner(self):
-        """``True`` if the distance should be calculated using inner."""
-        return self.__dist_using_inner
 
     def __eq__(self, other):
         """Return ``self == other``.
@@ -101,13 +80,11 @@ class Weighting(object):
         """
         return (isinstance(other, Weighting) and
                 self.impl == other.impl and
-                self.exponent == other.exponent and
-                self.dist_using_inner == other.dist_using_inner)
+                self.exponent == other.exponent)
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        return hash((type(self), self.impl, self.exponent,
-                     self.dist_using_inner))
+        return hash((type(self), self.impl, self.exponent))
 
     def equiv(self, other):
         """Test if ``other`` is an equivalent weighting.
@@ -172,14 +149,7 @@ class Weighting(object):
         dist : float
             The distance between the elements.
         """
-        if self.dist_using_inner:
-            dist_squared = (self.norm(x1) ** 2 + self.norm(x2) ** 2 -
-                            2 * self.inner(x1, x2).real)
-            if dist_squared < 0:  # Compensate for numerical error
-                dist_squared = 0.0
-            return float(np.sqrt(dist_squared))
-        else:
-            return self.norm(x1 - x2)
+        return self.norm(x1 - x2)
 
 
 class MatrixWeighting(Weighting):
@@ -194,8 +164,7 @@ class MatrixWeighting(Weighting):
     checked during initialization.
     """
 
-    def __init__(self, matrix, impl, exponent=2.0, dist_using_inner=False,
-                 **kwargs):
+    def __init__(self, matrix, impl, exponent=2.0, **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -209,16 +178,6 @@ class MatrixWeighting(Weighting):
             product is not defined.
             If ``matrix`` is a sparse matrix, only 1.0, 2.0 and ``inf``
             are allowed.
-        dist_using_inner : bool, optional
-            Calculate `dist` using the following formula::
-
-                ||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>
-
-            This avoids the creation of new arrays and is thus faster
-            for large arrays. On the downside, it will not evaluate to
-            exactly zero for equal (but not identical) ``x`` and ``y``.
-
-            This option can only be used if ``exponent`` is 2.0.
         precomp_mat_pow : bool, optional
             If ``True``, precompute the matrix power ``W ** (1/p)``
             during initialization. This has no effect if ``exponent``
@@ -260,7 +219,7 @@ class MatrixWeighting(Weighting):
         self._cache_mat_pow = bool(kwargs.pop('cache_mat_pow', True))
         self._cache_mat_decomp = bool(kwargs.pop('cache_mat_decomp', False))
         super(MatrixWeighting, self).__init__(
-            impl=impl, exponent=exponent, dist_using_inner=dist_using_inner)
+            impl=impl, exponent=exponent)
 
         # Check and set matrix
         if scipy.sparse.isspmatrix(matrix):
@@ -470,49 +429,30 @@ class MatrixWeighting(Weighting):
     def repr_part(self):
         """Return a string usable in a space's ``__repr__`` method."""
         if self.matrix_issparse:
-            part = 'weighting={}'.format(self.matrix)
+            optargs = [('matrix', str(self.matrix), '')]
         else:
-            part = 'weighting={}'.format(array_str(self.matrix, nprint=10))
-        if self.exponent != 2.0:
-            part += ', exponent={}'.format(self.exponent)
-        if self.dist_using_inner:
-            part += ', dist_using_inner=True'
-        return part
+            optargs = [('matrix', array_str(self.matrix, nprint=10), '')]
+
+        optargs.append(('exponent', self.exponent, 2.0))
+        return signature_string([], optargs, mod=[[], ['!s', ':.4']])
 
     def __repr__(self):
         """Return ``repr(self)``."""
         if self.matrix_issparse:
-            inner_fstr = ('<{shape} sparse matrix, format {fmt!r}, {nnz} '
-                          'stored entries>')
-            fmt = self.matrix.format
-            nnz = self.matrix.nnz
-            if self.exponent != 2.0:
-                inner_fstr += ', exponent={ex}'
-            if self.dist_using_inner:
-                inner_fstr += ', dist_using_inner=True'
+            posargs = ['<{} sparse matrix, format {}, {} nonzero entries>'
+                       ''.format(self.matrix.shape, self.matrix.format,
+                                 self.matrix.nnz)]
         else:
-            inner_fstr = '\n{matrix!r}'
-            fmt = ''
-            nnz = 0
-            if self.exponent != 2.0:
-                inner_fstr += ',\nexponent={ex}'
-            if self.dist_using_inner:
-                inner_fstr += ',\ndist_using_inner=True'
-            else:
-                inner_fstr += '\n'
+            posargs = [array_str(self.matrix, nprint=10)]
 
-        inner_str = inner_fstr.format(shape=self.matrix.shape, fmt=fmt,
-                                      nnz=nnz, ex=self.exponent,
-                                      matrix=self.matrix)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        optargs = [('exponent', self.exponent, 2.0)]
+        inner_str = signature_string(posargs, optargs, sep=',\n',
+                                     mod=['!s', ''])
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
 
     def __str__(self):
         """Return ``str(self)``."""
-        if self.exponent == 2.0:
-            return 'Weighting: matrix =\n{}'.format(self.matrix)
-        else:
-            return 'Weighting: p = {}, matrix =\n{}'.format(self.exponent,
-                                                            self.matrix)
+        return repr(self)
 
 
 class ArrayWeighting(Weighting):
@@ -527,7 +467,7 @@ class ArrayWeighting(Weighting):
     during initialization.
     """
 
-    def __init__(self, array, impl, exponent=2.0, dist_using_inner=False):
+    def __init__(self, array, impl, exponent=2.0):
         """Initialize a new instance.
 
         Parameters
@@ -541,19 +481,8 @@ class ArrayWeighting(Weighting):
         exponent : positive float, optional
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
-        dist_using_inner : bool, optional
-            Calculate `dist` using the formula
-
-                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``.
-
-            This avoids the creation of new arrays and is thus faster
-            for large arrays. On the downside, it will not evaluate to
-            exactly zero for equal (but not identical) ``x`` and ``y``.
-
-            This option can only be used if ``exponent`` is 2.0.
         """
-        super(ArrayWeighting, self).__init__(
-            impl=impl, exponent=exponent, dist_using_inner=dist_using_inner)
+        super(ArrayWeighting, self).__init__(impl=impl, exponent=exponent)
 
         # We store our "own" data structures as-is to retain Numpy
         # compatibility while avoiding copies. Other things are run through
@@ -632,19 +561,16 @@ class ArrayWeighting(Weighting):
     def repr_part(self):
         """String usable in a space's ``__repr__`` method."""
         optargs = [('weighting', array_str(self.array, nprint=10), ''),
-                   ('exponent', self.exponent, 2.0),
-                   ('dist_using_inner', self.dist_using_inner, False)]
-        return signature_string([], optargs, sep=[',\n', ', ', ',\n'],
-                                mod=[[], ['!s', '', '']])
+                   ('exponent', self.exponent, 2.0)]
+        return signature_string([], optargs, sep=',\n',
+                                mod=[[], ['!s', ':.4']])
 
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = [array_str(self.array)]
-        optargs = [('exponent', self.exponent, 2.0),
-                   ('dist_using_inner', self.dist_using_inner, False)]
-        inner_str = signature_string(posargs, optargs,
-                                     sep=[', ', ', ', ',\n'],
-                                     mod=['!s', ''])
+        optargs = [('exponent', self.exponent, 2.0)]
+        inner_str = signature_string(posargs, optargs, sep=',\n',
+                                     mod=['!s', ':.4'])
         return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
 
     def __str__(self):
@@ -656,7 +582,7 @@ class ConstWeighting(Weighting):
 
     """Weighting of a space by a constant."""
 
-    def __init__(self, const, impl, exponent=2.0, dist_using_inner=False):
+    def __init__(self, const, impl, exponent=2.0):
         """Initialize a new instance.
 
         Parameters
@@ -668,19 +594,8 @@ class ConstWeighting(Weighting):
         exponent : positive float, optional
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
-        dist_using_inner : bool, optional
-            Calculate `dist` using the formula
-
-                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``.
-
-            This avoids the creation of new arrays and is thus faster
-            for large arrays. On the downside, it will not evaluate to
-            exactly zero for equal (but not identical) ``x`` and ``y``.
-
-            This option can only be used if ``exponent`` is 2.0.
         """
-        super(ConstWeighting, self).__init__(
-            impl=impl, exponent=exponent, dist_using_inner=dist_using_inner)
+        super(ConstWeighting, self).__init__(impl=impl, exponent=exponent)
         self._const = float(const)
         if self.const <= 0:
             raise ValueError('expected positive constant, got {}'
@@ -734,18 +649,15 @@ class ConstWeighting(Weighting):
     def repr_part(self):
         """String usable in a space's ``__repr__`` method."""
         optargs = [('weighting', self.const, 1.0),
-                   ('exponent', self.exponent, 2.0),
-                   ('dist_using_inner', self.dist_using_inner, False)]
-        return signature_string([], optargs,
-                                mod=[[], [':.4', '', '']])
+                   ('exponent', self.exponent, 2.0)]
+        return signature_string([], optargs, mod=':.4')
 
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = [self.const]
-        optargs = [('exponent', self.exponent, 2.0),
-                   ('dist_using_inner', self.dist_using_inner, False)]
-        return '{}({})'.format(self.__class__.__name__,
-                               signature_string(posargs, optargs))
+        optargs = [('exponent', self.exponent, 2.0)]
+        inner_str = signature_string(posargs, optargs, mod=':.4')
+        return '{}({})'.format(self.__class__.__name__, inner_str)
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -756,7 +668,7 @@ class NoWeighting(ConstWeighting):
 
     """Weighting with constant 1."""
 
-    def __init__(self, impl, exponent=2.0, dist_using_inner=False):
+    def __init__(self, impl, exponent=2.0):
         """Initialize a new instance.
 
         Parameters
@@ -766,31 +678,19 @@ class NoWeighting(ConstWeighting):
         exponent : positive float, optional
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
-        dist_using_inner : bool, optional
-            Calculate `dist` using the formula
-
-                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``.
-
-            This avoids the creation of new arrays and is thus faster
-            for large arrays. On the downside, it will not evaluate to
-            exactly zero for equal (but not identical) ``x`` and ``y``.
-
-            This option can only be used if ``exponent`` is 2.0.
         """
         # Support singleton pattern for subclasses
         if not hasattr(self, '_initialized'):
             ConstWeighting.__init__(
-                self, const=1.0, impl=impl, exponent=exponent,
-                dist_using_inner=dist_using_inner)
+                self, const=1.0, impl=impl, exponent=exponent)
             self._initialized = True
 
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = []
-        optargs = [('exponent', self.exponent, 2.0),
-                   ('dist_using_inner', self.dist_using_inner, False)]
-        return '{}({})'.format(self.__class__.__name__,
-                               signature_string(posargs, optargs))
+        optargs = [('exponent', self.exponent, 2.0)]
+        inner_str = signature_string(posargs, optargs, mod=':.4')
+        return '{}({})'.format(self.__class__.__name__, inner_str)
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -801,7 +701,7 @@ class CustomInner(Weighting):
 
     """Class for handling a user-specified inner product."""
 
-    def __init__(self, inner, impl, dist_using_inner=False):
+    def __init__(self, inner, impl):
         """Initialize a new instance.
 
         Parameters
@@ -819,19 +719,8 @@ class CustomInner(Weighting):
 
         impl : string
             Specifier for the implementation backend.
-        dist_using_inner : bool, optional
-            Calculate `dist` using the formula
-
-                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``.
-
-            This avoids the creation of new arrays and is thus faster
-            for large arrays. On the downside, it will not evaluate to
-            exactly zero for equal (but not identical) ``x`` and ``y``.
-
-            Can only be used if ``exponent`` is 2.0.
         """
-        super(CustomInner, self).__init__(
-            impl=impl, exponent=2.0, dist_using_inner=dist_using_inner)
+        super(CustomInner, self).__init__(impl=impl, exponent=2.0)
 
         if not callable(inner):
             raise TypeError('`inner` {!r} is not callable'
@@ -862,15 +751,14 @@ class CustomInner(Weighting):
     @property
     def repr_part(self):
         """String usable in a space's ``__repr__`` method."""
-        optargs = [('inner', self.inner, ''),
-                   ('dist_using_inner', self.dist_using_inner, False)]
-        return signature_string([], optargs, mod=[[], ['!r', '']])
+        optargs = [('inner', self.inner, '')]
+        return signature_string([], optargs, mod='!r')
 
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = [self.inner]
-        optargs = [('dist_using_inner', self.dist_using_inner, False)]
-        inner_str = signature_string(posargs, optargs, mod=['!r', ''])
+        optargs = []
+        inner_str = signature_string(posargs, optargs, mod='!r')
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
@@ -899,8 +787,7 @@ class CustomNorm(Weighting):
         impl : string
             Specifier for the implementation backend
         """
-        super(CustomNorm, self).__init__(
-            impl=impl, exponent=1.0, dist_using_inner=False)
+        super(CustomNorm, self).__init__(impl=impl, exponent=1.0)
 
         if not callable(norm):
             raise TypeError('`norm` {!r} is not callable'
@@ -936,16 +823,14 @@ class CustomNorm(Weighting):
     def repr_part(self):
         """Return a string usable in a space's ``__repr__`` method."""
         optargs = [('norm', self.norm, ''),
-                   ('exponent', self.exponent, 2.0),
-                   ('dist_using_inner', self.dist_using_inner, False)]
-        return signature_string([], optargs, mod=[[], ['!r', '', '']])
+                   ('exponent', self.exponent, 2.0)]
+        return signature_string([], optargs, mod=[[], ['!r', ':.4']])
 
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = [self.norm]
-        optargs = [('exponent', self.exponent, 2.0),
-                   ('dist_using_inner', self.dist_using_inner, False)]
-        inner_str = signature_string(posargs, optargs, mod=['!r', ''])
+        optargs = [('exponent', self.exponent, 2.0)]
+        inner_str = signature_string(posargs, optargs, mod=['!r', ':.4'])
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
@@ -974,18 +859,17 @@ class CustomDist(Weighting):
         impl : string
             Specifier for the implementation backend
         """
-        super(CustomDist, self).__init__(
-            impl=impl, exponent=1.0, dist_using_inner=False)
+        super(CustomDist, self).__init__(impl=impl, exponent=1.0)
 
         if not callable(dist):
             raise TypeError('`dist` {!r} is not callable'
                             ''.format(dist))
-        self._dist = dist
+        self.__dist = dist
 
     @property
     def dist(self):
         """Custom distance of this instance.."""
-        return self._dist
+        return self.__dist
 
     def inner(self, x1, x2):
         """Inner product is not defined for custom distance."""

@@ -29,10 +29,10 @@ class Resampling(Operator):
 
     """An operator that resamples on a different grid in the same set.
 
-    The operator uses the underlying `DiscretizedSet.sampling` and
-    `DiscretizedSet.interpolation` operators to achieve this.
+    The operator uses the underlying `DiscretizedSpace.sampling` and
+    `DiscretizedSpace.interpolation` operators to achieve this.
 
-    The spaces need to have the same `DiscretizedSet.uspace` in order
+    The spaces need to have the same `DiscretizedSpace.uspace` in order
     for this to work. The data space implementations may be different,
     although performance may suffer drastically due to translation
     steps.
@@ -43,9 +43,9 @@ class Resampling(Operator):
 
         Parameters
         ----------
-        domain : `DiscretizedSet`
+        domain : `DiscretizedSpace`
             Set of elements that are to be resampled.
-        range : `DiscretizedSet`
+        range : `DiscretizedSpace`
             Set in which the resampled elements lie.
 
         Examples
