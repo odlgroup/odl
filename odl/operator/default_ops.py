@@ -293,7 +293,7 @@ class MultiplyOperator(Operator):
             if self.__domain_is_field:
                 out.lincomb(x, self.multiplicand)
             else:
-                x.multiply(self.multiplicand, out=out)
+                out.assign(self.multiplicand * x)
         else:
             raise ValueError('can only use `out` with `LinearSpace` range')
 
