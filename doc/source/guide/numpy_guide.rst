@@ -63,65 +63,84 @@ A very convenient feature of ODL is its seamless interaction with NumPy function
 This method always uses the NumPy implementation, which can involve overhead in case the data is not stored in a CPU space. To always enable optimized code, users can call the member `NtuplesBaseVector.ufunc`::
 
    >>> x.ufuncs.negative()
-   rn(3).element([-1.0, -2.0, -3.0])
+   rn(3).element([-1., -2., -3.])
+   >>> out = odl.rn(3).element()
+   >>> result = x.ufuncs.negative(out=out)
+   >>> out
+   rn(3).element([-1., -2., -3.])
+   >>> result is out
+   True
 
-For other arbitrary functions, ODL vector space elements are generally accepted as input, but the output is often of `numpy.ndarray` type::
+For other arbitrary functions, ODL vector space elements are usually accepted as input, but the output is usually of type `numpy.ndarray`, i.e., the result will not be not re-wrapped::
 
    >>> np.convolve(x, x, mode='same')
    array([  4.,  10.,  12.])
 
-Implementation notes
---------------------
-The fact that the ``x.ufuncs.negative()`` interface is needed is a known issue with NumPy and a `fix is underway
-<http://docs.scipy.org/doc/numpy-dev/neps/ufunc-overrides.html>`_. As of April 2016, this is not yet available.
+In such a case, or if a space element has to be modified in-place using some NumPy function (or any function defined on arrays), we have the `writable_array` context manager that exposes a NumPy array which gets automatically assigned back to the ODL object::
+
+    >>> with odl.util.writable_array(x) as x_arr:
+    ...     np.cumsum(x_arr, out=x_arr)
+    >>> x
+    rn(3).element([ 1.,  3.,  6.])
+
+.. note::
+    The re-assignment is a no-op if ``x`` has a NumPy array as its data container, hence the operation will be as fast as manipulating ``x`` directly.
+    The same syntax also works with other data containers, but in this case, copies to and from a NumPy array are usually necessary.
+
 
 NumPy functions as Operators
 ============================
-To solve the above issue, it is often useful to write an `Operator` wrapping NumPy functions, thus allowing full access to the ODL ecosystem. To wrap the convolution operation, you could write a new class:
+To solve the above issue, it is often useful to write an `Operator` wrapping NumPy functions, thus allowing full access to the ODL ecosystem.
+The convolution operation, written as ODL operator, could look like this::
 
    >>> class MyConvolution(odl.Operator):
-   ...     """Operator for convolving with a given vector."""
+   ...     """Operator for convolving with a given kernel."""
    ...
-   ...     def __init__(self, vector):
+   ...     def __init__(self, kernel):
    ...         """Initialize the convolution."""
-   ...         self.vector = vector
+   ...         self.kernel = kernel
    ...
    ...         # Initialize operator base class.
    ...         # This operator maps from the space of vector to the same space and is linear
    ...         super(MyConvolution, self).__init__(
-   ...             domain=vector.space, range=vector.space, linear=True)
+   ...             domain=kernel.space, range=kernel.space, linear=True)
    ...
    ...     def _call(self, x):
-   ...         # The output of an Operator is automatically cast to an ODL vector
-   ...         return np.convolve(x, self.vector, mode='same')
+   ...         # The output of an Operator is automatically cast to an ODL object
+   ...         return np.convolve(x, self.kernel, mode='same')
 
-This could then be called as an ODL Operator::
+This operator can then be called on its domain elements::
 
-   >>> op = MyConvolution(x)
-   >>> op(x)
-   rn(3).element([4.0, 10.0, 12.0])
+   >>> kernel = odl.rn(3).element([1, 2, 1])
+   >>> conv_op = MyConvolution(kernel)
+   >>> x = odl.rn(3).element([1, 2, 3])
+   >>> conv_op(x)
+   rn(3).element([ 4.,  8.,  8.])
 
-Since this is an ODL Operator, it can be used with any of the ODL functionalities such as multiplication with scalar, composition, etc::
+It can be also be used with any of the ODL operator functionalities such as multiplication with scalar, composition, etc::
 
-   >>> scaled_op = 2 * op  # scale by scalar
+   >>> scaled_op = 2 * conv_op  # scale output by 2
    >>> scaled_op(x)
-   rn(3).element([8.0, 20.0, 24.0])
-   >>> y = r3.element([1, 1, 1])
+   rn(3).element([  8.,  16.,  16.])
+   >>> y = odl.rn(3).element([1, 1, 1])
    >>> inner_product_op = odl.InnerProductOperator(y)
-   >>> composed_op = inner_product_op * op  # create composition with inner product with vector [1, 1, 1]
+   >>> # Create composition with inner product operator with [1, 1, 1].
+   >>> # The result should be the sum of the convolved vector.
+   >>> composed_op = inner_product_op * conv_op
    >>> composed_op(x)
-   26.0
+   20.0
 
 For more information on ODL Operators, how to implement them and their features, see the guide on `operators_in_depth`.
 
 Using ODL with SciPy linear solvers
 ===================================
-SciPy includes `a series of very competent solvers
-<http://docs.scipy.org/doc/scipy/reference/sparse.linalg.html>`_ that may be useful in solving some linear problems. If you have invested some effort into writing an ODL operator, or perhaps wish to use a pre-existing operator then the function `as_scipy_operator` creates a Python object that can be used in SciPy's linear solvers. Here is a simple example of solving Poisson's equation equation on an interval (:math:`- \Delta x = rhs`)::
+SciPy includes `a series of very competent solvers <http://docs.scipy.org/doc/scipy/reference/sparse.linalg.html>`_ that may be useful in solving some linear problems.
+If you have invested some effort into writing an ODL operator, or perhaps wish to use a pre-existing operator, then the function `as_scipy_operator` creates a Python object that can be used in SciPy's linear solvers.
+Here is a simple example of solving Poisson's equation :math:`- \Delta u = f` on the interval :math:`[0, 1]`::
 
    >>> space = odl.uniform_discr(0, 1, 5)
    >>> op = -odl.Laplacian(space)
-   >>> rhs = space.element(lambda x: (x>0.4) & (x<0.6))  # indicator function on [0.4, 0.6]
-   >>> result, status = scipy.sparse.linalg.cg(odl.as_scipy_operator(op), rhs)
-   >>> result
+   >>> f = space.element(lambda x: (x > 0.4) & (x < 0.6))  # indicator function on [0.4, 0.6]
+   >>> u, status = scipy.sparse.linalg.cg(odl.as_scipy_operator(op), rhs)
+   >>> u
    array([ 0.02,  0.04,  0.06,  0.04,  0.02])
