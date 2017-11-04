@@ -27,8 +27,8 @@ import numpy as np
 from odl.operator import (
     Operator, IdentityOperator, ScalingOperator, ConstantOperator,
     DiagonalOperator, PointwiseNorm)
+from odl.set.space import LinearSpaceElement
 from odl.space import ProductSpace
-from odl.set import LinearSpaceElement
 from odl.util import cache_arguments
 
 
@@ -1416,7 +1416,7 @@ def proximal_convex_conj_kl(space, lam=1, g=None):
     The convex conjugate :math:`F^*` of :math:`F` is
 
     .. math::
-        F^*(p) = \\sum_i (-g_i \\ln(pos({1_X}_i - p_i))) +
+        F^*(p) = \\sum_i (-g_i \\ln(\\text{pos}({1_X}_i - p_i))) +
         I_{1_X - p \geq 0}(p)
 
     where :math:`p` is the variable dual to :math:`x`, and :math:`1_X` is an
@@ -1443,7 +1443,7 @@ def proximal_convex_conj_kl(space, lam=1, g=None):
 
     This functional :math:`F`, described above, is related to the
     Kullback-Leibler cross entropy functional. The KL cross entropy is the one
-    diescribed in `this Wikipedia article
+    described in `this Wikipedia article
     <https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence>`_, and
     the functional :math:`F` is obtained by switching place of the prior and
     the varialbe in the KL cross entropy functional. See the See Also section.
@@ -1609,13 +1609,17 @@ def proximal_convex_conj_kl_cross_entropy(space, lam=1, g=None):
             if g is None:
                 # If g is None, it is taken as the one element
                 # Different branches of lambertw is not an issue, see Notes
-                out.lincomb(1, x, -lam, scipy.special.lambertw(
-                    (self.sigma / lam) * np.exp(x / lam)))
+                lambw = scipy.special.lambertw(
+                    (self.sigma / lam) * np.exp(x / lam))
             else:
                 # Different branches of lambertw is not an issue, see Notes
-                out.lincomb(1, x,
-                            -lam, scipy.special.lambertw(
-                                (self.sigma / lam) * g * np.exp(x / lam)))
+                lambw = scipy.special.lambertw(
+                    (self.sigma / lam) * g * np.exp(x / lam))
+
+            if not np.issubsctype(self.domain.dtype, np.complexfloating):
+                lambw = lambw.real
+
+            out.lincomb(1, x, -lam, lambw)
 
     return ProximalConvexConjKLCrossEntropy
 

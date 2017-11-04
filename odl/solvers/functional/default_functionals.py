@@ -808,7 +808,7 @@ class IdentityFunctional(ScalingFunctional):
 
     See Also
     --------
-    IdentityOperator
+    odl.operator.IdentityOperator
     """
 
     def __init__(self, field):
@@ -2365,7 +2365,6 @@ class Huber(Functional):
         >>> abs(huber_norm(x) - l1_norm(x)) < tol
         True
         """
-
         self.__gamma = float(gamma)
 
         if self.gamma > 0:

@@ -38,5 +38,5 @@ result, info = sl.cg(scipy_laplacian, rhs_arr)
 
 # Convert back to odl and display result
 result_odl = space.element(result)
-result_odl.show('result')
-(rhs - laplacian(result_odl)).show('residual', force_show=True)
+result_odl.show('Result')
+(rhs - laplacian(result_odl)).show('Residual', force_show=True)

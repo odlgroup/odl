@@ -13,7 +13,8 @@ from itertools import product
 from numbers import Integral
 import numpy as np
 
-from odl.set import LinearSpace, LinearSpaceElement
+from odl.set import LinearSpace
+from odl.set.space import LinearSpaceElement
 from odl.space.weighting import (
     Weighting, ArrayWeighting, ConstWeighting, NoWeighting,
     CustomInner, CustomNorm, CustomDist)
@@ -21,7 +22,7 @@ from odl.util import is_real_dtype, signature_string, indent
 from odl.util.ufuncs import ProductSpaceUfuncs
 
 
-__all__ = ('ProductSpace', 'ProductSpaceElement')
+__all__ = ('ProductSpace',)
 
 
 class ProductSpace(LinearSpace):
@@ -210,34 +211,34 @@ class ProductSpace(LinearSpace):
             raise ValueError('`exponent` cannot be used together with '
                              'inner, norm or dist')
 
-        # Make a power space if the second argument is an integer
-        if (len(spaces) == 2 and
-                isinstance(spaces[0], LinearSpace) and
-                isinstance(spaces[1], Integral)):
+        # Make a power space if the second argument is an integer.
+        # For the case that the integer is 0, we already set the field here.
+        if len(spaces) == 2 and isinstance(spaces[1], Integral):
+            field = spaces[0].field
             spaces = [spaces[0]] * spaces[1]
 
         # Validate the space arguments
-        wrong_spaces = [spc for spc in spaces
-                        if not isinstance(spc, LinearSpace)]
-        if wrong_spaces:
-            raise TypeError('{!r} not LinearSpace instance(s)'
-                            ''.format(wrong_spaces))
-
+        if not all(isinstance(spc, LinearSpace) for spc in spaces):
+            raise TypeError(
+                'all arguments must be `LinearSpace` instances, or the '
+                'first argument must be `LinearSpace` and the second '
+                'integer; got {!r}'.format(spaces))
         if not all(spc.field == spaces[0].field for spc in spaces):
             raise ValueError('all spaces must have the same field')
 
         # Assign spaces and field
         self.__spaces = tuple(spaces)
-        self.__size = len(spaces)
-        if field is None:
-            if self.size == 0:
-                raise ValueError('no spaces provided, cannot deduce field')
-            else:
-                field = self.spaces[0].field
 
         # Cache for efficiency
         self.__is_power_space = all(spc == self.spaces[0]
                                     for spc in self.spaces[1:])
+
+        # Assing or infer field
+        if field is None:
+            if len(self) == 0:
+                raise ValueError('no spaces provided, cannot deduce field')
+            else:
+                field = self.spaces[0].field
 
         super(ProductSpace, self).__init__(field)
 
@@ -279,7 +280,7 @@ class ProductSpace(LinearSpace):
 
     def __len__(self):
         """Return ``len(self)``."""
-        return self.size
+        return len(self.spaces)
 
     @property
     def shape(self):
@@ -374,8 +375,11 @@ class ProductSpace(LinearSpace):
         >>> x2 = r2.element([1, 2])
         >>> x3 = r3.element([1, 2, 3])
         >>> x = prod.element([x2, x3])
-        >>> print(x)
-        {[ 1.,  2.], [ 1.,  2.,  3.]}
+        >>> x
+        ProductSpace(rn(2), rn(3)).element([
+            [ 1.,  2.],
+            [ 1.,  2.,  3.]
+        ])
         """
         # If data is given as keyword arg, prefer it over arg list
         if inp is None:
@@ -547,10 +551,10 @@ class ProductSpace(LinearSpace):
 
     def __str__(self):
         """Return ``str(self)``."""
-        if self.size == 0:
+        if len(self) == 0:
             return '{}'
-        elif all(self.spaces[0] == space for space in self.spaces):
-            return '{' + str(self.spaces[0]) + '}^' + str(self.size)
+        elif self.is_power_space:
+            return '({}) ** {}'.format(self.spaces[0], len(self))
         else:
             return ' x '.join(str(space) for space in self.spaces)
 
@@ -558,13 +562,13 @@ class ProductSpace(LinearSpace):
         """Return ``repr(self)``."""
         weight_str = self.weighting.repr_part
         edgeitems = np.get_printoptions()['edgeitems']
-        if self.size == 0:
+        if len(self) == 0:
             posargs = []
             posmod = ''
             optargs = [('field', self.field, None)]
             oneline = True
         elif self.is_power_space:
-            posargs = [self.spaces[0], self.size]
+            posargs = [self.spaces[0], len(self)]
             posmod = '!r'
             optargs = []
             oneline = True
@@ -787,8 +791,7 @@ class ProductSpaceElement(LinearSpaceElement):
 
     def __str__(self):
         """Return ``str(self)``."""
-        inner_str = ', '.join(str(part) for part in self.parts)
-        return '{{{}}}'.format(inner_str)
+        return repr(self)
 
     def __repr__(self):
         """Return ``repr(self)``.
@@ -908,9 +911,9 @@ class ProductSpaceElement(LinearSpaceElement):
 
         if indices is None:
             if len(self) < 5:
-                indices = list(range(self.size))
+                indices = list(range(len(self)))
             else:
-                indices = list(np.linspace(0, self.size - 1, 4, dtype=int))
+                indices = list(np.linspace(0, len(self) - 1, 4, dtype=int))
         else:
             if (isinstance(indices, tuple) or
                     (isinstance(indices, list) and
@@ -926,7 +929,7 @@ class ProductSpaceElement(LinearSpaceElement):
                 indices = slice(None)
 
             if isinstance(indices, slice):
-                indices = list(range(*indices.indices(self.size)))
+                indices = list(range(*indices.indices(len(self))))
             elif isinstance(indices, Integral):
                 indices = [indices]
             else:

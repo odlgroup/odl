@@ -132,7 +132,7 @@ class LinDeformFixedTempl(Operator):
             It must fulfill
             ``domain[0].partition == template.space.partition``, so
             this option is useful mainly when using different interpolations
-            in the displacement and template.
+            in displacement and template.
             Default: ``template.space.real_space.tangent_bundle``
 
         Examples
