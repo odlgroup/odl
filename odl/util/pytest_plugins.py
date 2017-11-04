@@ -14,8 +14,9 @@ import operator
 import os
 
 import odl
+from odl.space.entry_points import tensor_space_impl_names
 from odl.trafos.backends import PYFFTW_AVAILABLE, PYWT_AVAILABLE
-from odl.util import dtype_repr
+from odl.util.testutils import simple_fixture
 
 try:
     from pytest import fixture
@@ -92,80 +93,28 @@ def pytest_ignore_collect(path, config):
 
 # --- Reusable fixtures ---
 
-fn_impl_params = odl.fn_impl_names()
-fn_impl_ids = [" impl='{}' ".format(p) for p in fn_impl_params]
+# Simple ones, use helper
+tspace_impl = simple_fixture(name='tspace_impl',
+                             params=tensor_space_impl_names())
 
+floating_dtypes = np.sctypes['float'] + np.sctypes['complex']
+floating_dtype_params = [np.dtype(dt) for dt in floating_dtypes]
+floating_dtype = simple_fixture(name='dtype',
+                                params=floating_dtype_params,
+                                fmt=' {name} = np.{value.name} ')
 
-@fixture(scope="module", ids=fn_impl_ids, params=fn_impl_params)
-def fn_impl(request):
-    """String with an available `FnBase` implementation name."""
-    return request.param
+scalar_dtypes = floating_dtype_params + np.sctypes['int'] + np.sctypes['uint']
+scalar_dtype_params = [np.dtype(dt) for dt in floating_dtypes]
+scalar_dtype = simple_fixture(name='dtype',
+                              params=scalar_dtype_params,
+                              fmt=' {name} = np.{value.name} ')
 
+elem_order = simple_fixture(name='order', params=[None, 'C', 'F'])
 
-floating_dtype_params = np.sctypes['float'] + np.sctypes['complex']
-floating_dtype_ids = [' dtype={} '.format(dtype_repr(dt))
-                      for dt in floating_dtype_params]
+ufunc = simple_fixture('ufunc', [p[0] for p in odl.util.ufuncs.UFUNCS])
+reduction = simple_fixture('reduction', ['sum', 'prod', 'min', 'max'])
 
-
-@fixture(scope="module", ids=floating_dtype_ids, params=floating_dtype_params)
-def floating_dtype(request):
-    """Floating point (real or complex) dtype."""
-    return request.param
-
-
-scalar_dtype_params = (floating_dtype_params +
-                       np.sctypes['int'] +
-                       np.sctypes['uint'])
-scalar_dtype_ids = [' dtype={} '.format(dtype_repr(dt))
-                    for dt in scalar_dtype_params]
-
-
-@fixture(scope="module", ids=scalar_dtype_ids, params=scalar_dtype_params)
-def scalar_dtype(request):
-    """Scalar (integers or real or complex) dtype."""
-    return request.param
-
-
-ufunc_params = odl.util.ufuncs.UFUNCS
-ufunc_ids = [' ufunc={} '.format(p[0]) for p in ufunc_params]
-
-
-@fixture(scope="module", ids=ufunc_ids, params=ufunc_params)
-def ufunc(request):
-    """Tuple with information on a ufunc.
-
-    Returns
-    -------
-    name : str
-        Name of the ufunc.
-    n_in : int
-        Number of input values of the ufunc.
-    n_out : int
-        Number of output values of the ufunc.
-    doc : str
-        Docstring for the ufunc.
-    """
-    return request.param
-
-
-reduction_params = odl.util.ufuncs.REDUCTIONS
-reduction_ids = [' reduction={} '.format(p[0]) for p in reduction_params]
-
-
-@fixture(scope="module", ids=reduction_ids, params=reduction_params)
-def reduction(request):
-    """Tuple with information on a reduction.
-
-    Returns
-    -------
-    name : str
-        Name of the reduction.
-    doc : str
-        Docstring for the reduction.
-    """
-    return request.param
-
-
+# More complicated ones with non-trivial documentation
 arithmetic_op_par = [operator.add,
                      operator.truediv,
                      operator.mul,

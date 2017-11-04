@@ -27,7 +27,7 @@ filter_type = simple_fixture(
 frequency_scaling = simple_fixture(
     'frequency_scaling', [0.5, 0.9, 1.0])
 
-weighting = simple_fixture('weighting', ['const', 'none'])
+weighting = simple_fixture('weighting', [None, 1.0])
 
 # Find the valid projectors
 # TODO: Add nonuniform once #671 is solved
@@ -174,7 +174,8 @@ def test_fbp_reconstruction(projector):
     # Compute the FBP result
     fbp_result = fbp_operator(projections)
 
-    maxerr = vol.norm() / 5.0
+    # Allow 30 % error
+    maxerr = vol.norm() * 0.3
     error = vol.dist(fbp_result)
     assert error < maxerr
 

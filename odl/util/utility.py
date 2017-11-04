@@ -195,6 +195,8 @@ def dtype_repr(dtype):
         return "'float'"
     elif dtype == np.dtype(complex):
         return "'complex'"
+    elif dtype.shape:
+        return "('{}', {})".format(dtype.base, dtype.shape)
     else:
         return "'{}'".format(dtype)
 
@@ -208,6 +210,8 @@ def dtype_str(dtype):
         return 'float'
     elif dtype == np.dtype(complex):
         return 'complex'
+    elif dtype.shape:
+        return "('{}', {})".format(dtype.base, dtype.shape)
     else:
         return '{}'.format(dtype)
 
@@ -343,6 +347,13 @@ def real_dtype(dtype, default=None):
     dtype('float32')
     >>> real_dtype(float)
     dtype('float64')
+
+    Dtypes with shape are also supported:
+
+    >>> real_dtype(np.dtype((complex, (3,))))
+    dtype(('<f8', (3,)))
+    >>> real_dtype(('complex64', (3,)))
+    dtype(('<f4', (3,)))
     """
     dtype, dtype_in = np.dtype(dtype), dtype
 
@@ -350,7 +361,7 @@ def real_dtype(dtype, default=None):
         return dtype
 
     try:
-        real_dtype = TYPE_MAP_C2R[dtype.base]
+        real_base_dtype = TYPE_MAP_C2R[dtype.base]
     except KeyError:
         if default is not None:
             return default
@@ -358,7 +369,7 @@ def real_dtype(dtype, default=None):
             raise ValueError('no real counterpart exists for `dtype` {}'
                              ''.format(dtype_repr(dtype_in)))
     else:
-        return real_dtype
+        return np.dtype((real_base_dtype, dtype.shape))
 
 
 def complex_dtype(dtype, default=None):
@@ -394,6 +405,13 @@ def complex_dtype(dtype, default=None):
     dtype('complex64')
     >>> complex_dtype(complex)
     dtype('complex128')
+
+    Dtypes with shape are also supported:
+
+    >>> complex_dtype(np.dtype((float, (3,))))
+    dtype(('<c16', (3,)))
+    >>> complex_dtype(('float32', (3,)))
+    dtype(('<c8', (3,)))
     """
     dtype, dtype_in = np.dtype(dtype), dtype
 
@@ -401,7 +419,7 @@ def complex_dtype(dtype, default=None):
         return dtype
 
     try:
-        complex_dtype = TYPE_MAP_R2C[dtype]
+        complex_base_dtype = TYPE_MAP_R2C[dtype.base]
     except KeyError:
         if default is not None:
             return default
@@ -409,7 +427,7 @@ def complex_dtype(dtype, default=None):
             raise ValueError('no complex counterpart exists for `dtype` {}'
                              ''.format(dtype_repr(dtype_in)))
     else:
-        return complex_dtype
+        return np.dtype((complex_base_dtype, dtype.shape))
 
 
 def is_string(obj):
@@ -522,14 +540,6 @@ def preload_first_arg(instance, mode):
             raise ValueError('bad mode {!r}'.format(mode))
 
     return decorator
-
-
-def as_flat_array(vec):
-    """Return ``vec`` as a flat array according to the order of ``vec``."""
-    if hasattr(vec, 'order'):
-        return vec.asarray().ravel(vec.order)
-    else:
-        return vec.asarray().ravel()
 
 
 class writable_array(object):

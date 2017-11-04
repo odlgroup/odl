@@ -12,7 +12,7 @@ from __future__ import print_function, division, absolute_import
 from builtins import object
 import numpy as np
 
-from odl.space.base_ntuples import FnBaseVector
+from odl.space.base_tensors import TensorSpace
 from odl.util import array_str, signature_string, indent
 
 
@@ -472,10 +472,9 @@ class ArrayWeighting(Weighting):
 
         Parameters
         ----------
-        array : 1-dim. `array-like`
+        array : `array-like`
             Weighting array of inner product, norm and distance.
-            Native `FnBaseVector` instances are stored
-            as-is without copying.
+            Native `Tensor` instances are stored as-is without copying.
         impl : string
             Specifier for the implementation backend.
         exponent : positive float, optional
@@ -484,20 +483,15 @@ class ArrayWeighting(Weighting):
         """
         super(ArrayWeighting, self).__init__(impl=impl, exponent=exponent)
 
-        # We store our "own" data structures as-is to retain Numpy
-        # compatibility while avoiding copies. Other things are run through
-        # numpy.asarray.
-        if isinstance(array, FnBaseVector):
+        # We apply array duck-typing to allow all kinds of Numpy-array-like
+        # data structures without change
+        array_attrs = ('shape', 'dtype', 'itemsize')
+        if (all(hasattr(array, attr) for attr in array_attrs) and
+                not isinstance(array, TensorSpace)):
             self.__array = array
         else:
-            self.__array = np.asarray(array)
-
-        if self.array.dtype == object:
-            raise ValueError('invalid array {}'.format(array))
-        elif self.array.ndim != 1:
-            raise ValueError('array {} is {}-dimensional instead of '
-                             '1-dimensional'
-                             ''.format(array, self._array.ndim))
+            raise TypeError('`array` {!r} does not look like a valid array'
+                            ''.format(array))
 
     @property
     def array(self):

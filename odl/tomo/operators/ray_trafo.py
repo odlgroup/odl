@@ -197,7 +197,7 @@ class RayTransformBase(Operator):
         proj_space = kwargs.pop('proj_space', None)
         if proj_space is None:
             dtype = reco_space.dtype
-            proj_uspace = FunctionSpace(geometry.params, out_dtype=dtype)
+            proj_fspace = FunctionSpace(geometry.params, out_dtype=dtype)
 
             if not reco_space.is_weighted:
                 weighting = None
@@ -217,7 +217,7 @@ class RayTransformBase(Operator):
             else:
                 raise NotImplementedError('unknown weighting of domain')
 
-            proj_dspace = reco_space.dspace_type(geometry.partition.size,
+            proj_tspace = reco_space.tspace_type(geometry.partition.shape,
                                                  weighting=weighting,
                                                  dtype=dtype)
 
@@ -249,9 +249,8 @@ class RayTransformBase(Operator):
 
             proj_interp = kwargs.get('interp', 'nearest')
             proj_space = DiscreteLp(
-                proj_uspace, geometry.partition, proj_dspace,
-                interp=proj_interp, order=reco_space.order,
-                axis_labels=axis_labels)
+                proj_fspace, geometry.partition, proj_tspace,
+                interp=proj_interp, axis_labels=axis_labels)
 
         else:
             # proj_space was given, checking some stuff

@@ -17,10 +17,11 @@ from odl import (Operator, OperatorSum, OperatorComp,
                  FunctionalLeftVectorMult, OperatorRightVectorMult,
                  MatrixOperator, OperatorLeftVectorMult,
                  OpTypeError, OpDomainError, OpRangeError)
-from odl.operator.operator import _signature_from_spec, _dispatch_call_args
+from odl.operator.operator import _function_signature, _dispatch_call_args
 from odl.util.testutils import (
     almost_equal, all_almost_equal, noise_element, noise_elements,
     simple_fixture)
+from odl.util.utility import getargspec
 
 
 # --- Fixtures --- #
@@ -902,25 +903,20 @@ def func(request):
     return request.param
 
 
-def test_signature_from_spec(func):
+def test_function_signature(func):
 
     true_sig = func.__doc__.splitlines()[0].strip()
-    sig = _signature_from_spec(func)
+    sig = _function_signature(func)
     assert true_sig == sig
 
 
 def test_dispatch_call_args(func):
-    import inspect
-
-    py3 = sys.version_info.major > 2
-    getspec = inspect.getfullargspec if py3 else inspect.getargspec
-
     # Unbound functions
     true_has, true_opt = eval(func.__doc__.splitlines()[1].strip())
     good = func.__doc__.splitlines()[2].strip() == 'good'
 
     if good:
-        truespec = getspec(func)
+        truespec = getargspec(func)
         truespec.args.insert(0, 'self')
 
         has, opt, spec = _dispatch_call_args(unbound_call=func)

@@ -219,7 +219,7 @@ def ufunc_class_factory(name, nargin, nargout, docstring):
 
         Parameters
         ----------
-        space : `FnBase`
+        space : `TensorSpace`
             The domain of the operator.
         """
         if not isinstance(space, LinearSpace):
@@ -250,6 +250,8 @@ def ufunc_class_factory(name, nargin, nargout, docstring):
 
     def _call(self, x, out=None):
         """Return ``self(x)``."""
+        # TODO: use `__array_ufunc__` when implemented on `ProductSpace`,
+        # or try both
         if out is None:
             if nargin == 1:
                 return getattr(x.ufuncs, name)()
@@ -271,7 +273,7 @@ def ufunc_class_factory(name, nargin, nargout, docstring):
     else:
         dtype = float
 
-    space = fn(3, dtype=dtype)
+    space = tensor_space(3, dtype=dtype)
     if nargin == 1:
         vec = space.element([-1, 1, 2])
         arg = '{}'.format(vec)
@@ -384,7 +386,7 @@ Create functional with domain/range as real numbers:
 """
 
 RAW_UFUNC_FACTORY_OPERATOR_DOCSTRING = """
-Create operator that acts pointwise on a `FnBase`
+Create operator that acts pointwise on a `TensorSpace`
 
 >>> space = odl.rn(3)
 >>> op = odl.ufunc_ops.{name}(space)

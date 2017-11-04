@@ -14,9 +14,9 @@ import numpy as np
 from odl.discr import DiscreteLp, uniform_partition
 from odl.operator import Operator
 from odl.set import IntervalProd
-from odl.space import FunctionSpace, fn
+from odl.space import FunctionSpace, tensor_space
 from odl.util import (
-    normalized_scalar_param_list, safe_int_conv, resize_array)
+    normalized_scalar_param_list, safe_int_conv, writable_array, resize_array)
 from odl.util.numerics import _SUPPORTED_RESIZE_PAD_MODES
 
 
@@ -30,8 +30,8 @@ class Resampling(Operator):
     The operator uses the underlying `DiscretizedSpace.sampling` and
     `DiscretizedSpace.interpolation` operators to achieve this.
 
-    The spaces need to have the same `DiscretizedSpace.uspace` in order
-    for this to work. The data space implementations may be different,
+    The spaces need to have the same `DiscretizedSet.fspace` in order
+    for this to work. The tensor space implementations may be different,
     although performance may suffer drastically due to translation
     steps.
     """
@@ -72,10 +72,10 @@ class Resampling(Operator):
         >>> print(linear_resampling([0, 1, 0]))
         [ 0.  ,  0.25,  0.75,  0.75,  0.25,  0.  ]
         """
-        if domain.uspace != range.uspace:
-            raise ValueError('`domain.uspace` ({}) does not match '
-                             '`range.uspace` ({})'
-                             ''.format(domain.uspace, range.uspace))
+        if domain.fspace != range.fspace:
+            raise ValueError('`domain.fspace` ({}) does not match '
+                             '`range.fspace` ({})'
+                             ''.format(domain.fspace, range.fspace))
 
         super(Resampling, self).__init__(
             domain=domain, range=range, linear=True)
@@ -359,11 +359,10 @@ class ResizingOperator(ResizingOperatorBase):
 
     def _call(self, x, out):
         """Implement ``self(x, out)``."""
-        # TODO: simplify once context manager is available
-        out[:] = resize_array(x.asarray(), self.range.shape,
-                              offset=self.offset, pad_mode=self.pad_mode,
-                              pad_const=self.pad_const, direction='forward',
-                              out=out.asarray())
+        with writable_array(out) as out_arr:
+            resize_array(x.asarray(), self.range.shape, offset=self.offset,
+                         pad_mode=self.pad_mode, pad_const=self.pad_const,
+                         direction='forward', out=out_arr)
 
     def derivative(self, point):
         """Derivative of this operator at ``point``.
@@ -400,11 +399,11 @@ class ResizingOperator(ResizingOperatorBase):
 
             def _call(self, x, out):
                 """Implement ``self(x, out)``."""
-                # TODO: simplify once context manager is available
-                out[:] = resize_array(
-                    x.asarray(), self.range.shape, offset=self.offset,
-                    pad_mode=self.pad_mode, pad_const=0, direction='adjoint',
-                    out=out.asarray())
+                with writable_array(out) as out_arr:
+                    resize_array(x.asarray(), self.range.shape,
+                                 offset=self.offset, pad_mode=self.pad_mode,
+                                 pad_const=0, direction='adjoint',
+                                 out=out_arr)
 
             @property
             def adjoint(self):
@@ -479,7 +478,6 @@ def _resize_discr(discr, newshp, offset, discr_kwargs):
     impl = discr_kwargs.pop('impl', discr.impl)
     exponent = discr_kwargs.pop('exponent', discr.exponent)
     interp = discr_kwargs.pop('interp', discr.interp)
-    order = discr_kwargs.pop('order', discr.order)
     weighting = discr_kwargs.pop('weighting', discr.weighting)
 
     affected = np.not_equal(newshp, discr.shape)
@@ -527,8 +525,8 @@ def _resize_discr(discr, newshp, offset, discr_kwargs):
 
     fspace = FunctionSpace(IntervalProd(new_minpt, new_maxpt),
                            out_dtype=dtype)
-    dspace = fn(np.prod(newshp), dtype=dtype, impl=impl, exponent=exponent,
-                weighting=weighting)
+    tspace = tensor_space(newshp, dtype=dtype, impl=impl, exponent=exponent,
+                          weighting=weighting)
 
     # Stack together the (unchanged) nonuniform axes and the (new) uniform
     # axes in the right order
@@ -541,8 +539,8 @@ def _resize_discr(discr, newshp, offset, discr_kwargs):
         else:
             part = part.append(discr.partition.byaxis[i])
 
-    return DiscreteLp(fspace, part, dspace, exponent=exponent, interp=interp,
-                      order=order)
+    return DiscreteLp(fspace, part, tspace, interp=interp)
+
 
 if __name__ == '__main__':
     from odl.util.testutils import run_doctests

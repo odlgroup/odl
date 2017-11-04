@@ -139,9 +139,9 @@ class PartialDerivative(PointwiseTensorFieldOperator):
 
         # TODO: this pipes CUDA arrays through NumPy. Write native operator.
         with writable_array(out) as out_arr:
-            finite_diff(x.asarray(), out=out_arr, axis=self.axis, dx=self.dx,
+            finite_diff(x.asarray(), axis=self.axis, dx=self.dx,
                         method=self.method, pad_mode=self.pad_mode,
-                        pad_const=self.pad_const)
+                        pad_const=self.pad_const, out=out_arr)
         return out
 
     def derivative(self, point=None):
@@ -560,7 +560,7 @@ class Divergence(PointwiseTensorFieldOperator):
         ndim = self.range.ndim
         dx = self.range.cell_sides
 
-        tmp = np.empty(out.shape, out.dtype, order=out.space.order)
+        tmp = np.empty(out.shape, out.dtype, order=out.space.default_order)
         with writable_array(out) as out_arr:
             for axis in range(ndim):
                 finite_diff(x[axis], axis=axis, dx=dx[axis],
@@ -715,7 +715,8 @@ class Laplacian(PointwiseTensorFieldOperator):
             out.set_zero()
 
         x_arr = x.asarray()
-        tmp = np.empty(out.shape, out.dtype, order=out.space.order)
+        out_arr = out.asarray()
+        tmp = np.empty(out.shape, out.dtype, order=out.space.default_order)
 
         ndim = self.domain.ndim
         dx = self.domain.cell_sides
@@ -728,14 +729,14 @@ class Laplacian(PointwiseTensorFieldOperator):
                             pad_mode=self.pad_mode,
                             pad_const=self.pad_const, out=tmp)
 
-                out_arr[:] += tmp
+                out_arr += tmp
 
                 finite_diff(x_arr, axis=axis, dx=dx[axis] ** 2,
                             method='backward',
                             pad_mode=self.pad_mode,
                             pad_const=self.pad_const, out=tmp)
 
-                out_arr[:] -= tmp
+                out_arr -= tmp
 
         return out
 

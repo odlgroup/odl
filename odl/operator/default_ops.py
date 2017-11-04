@@ -921,8 +921,8 @@ class RealPart(Operator):
 
         Parameters
         ----------
-        space : `FnBase`
-            Space which real part should be taken, needs to implement
+        space : `TensorSpace`
+            Space in which the real part should be taken, needs to implement
             ``space.real_space``.
 
         Examples
@@ -941,7 +941,7 @@ class RealPart(Operator):
         >>> op([1, 2, 3])
         rn(3).element([ 1.,  2.,  3.])
 
-        The operator also works on other `FnBase` spaces such as
+        The operator also works on other `TensorSpace` spaces such as
         `DiscreteLp` spaces:
 
         >>> r3 = odl.uniform_discr(0, 1, 3, dtype=complex)
@@ -1042,9 +1042,9 @@ class ImagPart(Operator):
 
         Parameters
         ----------
-        space : `FnBase`
-            Space which imaginary part should be taken, needs to implement
-            ``space.real_space``.
+        space : `TensorSpace`
+            Space in which the imaginary part should be taken, needs to
+            implement ``space.real_space``.
 
         Examples
         --------
@@ -1143,18 +1143,23 @@ class ImagPart(Operator):
 
 class ComplexEmbedding(Operator):
 
-    """Operator that embeds a vector into a complex space."""
+    """Operator that embeds a vector into a complex space.
 
-    def __init__(self, space, scalar=1):
+    Implements::
+
+        ComplexEmbedding(space)(x) <==> space.complex_space.element(x)
+    """
+
+    def __init__(self, space, scalar=1.0):
         """Initialize a new instance.
 
         Parameters
         ----------
-        space : `FnBase`
-            Space which real part should be taken, needs to implement
-            ``space.complex_space``.
+        space : `TensorSpace`
+            Space that should be embedded into its complex counterpart.
+            It must implement `TensorSpace.complex_space`.
         scalar : ``space.complex_space.field`` element, optional
-            Scalar which the incomming vectors should be multiplied by in order
+            Scalar to be multiplied with incoming vectors in order
             to get the complex vector.
 
         Examples

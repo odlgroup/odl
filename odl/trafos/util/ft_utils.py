@@ -297,7 +297,7 @@ def dft_preprocess_data(arr, shift=True, axes=None, sign='-', out=None):
     """
     arr = np.asarray(arr)
     if not is_numeric_dtype(arr.dtype):
-        raise ValueError('array has non-scalar data type {}'
+        raise ValueError('array has non-numeric data type {}'
                          ''.format(dtype_repr(arr.dtype)))
     elif is_real_dtype(arr.dtype) and not is_real_floating_dtype(arr.dtype):
         arr = arr.astype('float64')
