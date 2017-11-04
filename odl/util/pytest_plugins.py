@@ -174,8 +174,8 @@ arithmetic_op_par = [operator.add,
                      operator.itruediv,
                      operator.imul,
                      operator.isub]
-arithmetic_op_ids = [' + ', ' / ', ' * ', ' - ',
-                     ' += ', ' /= ', ' *= ', ' -= ']
+arithmetic_op_ids = [" op = '{}' ".format(op)
+                     for op in ['+', '/', '*', '-', '+=', '/=', '*=', '-=']]
 
 
 @fixture(ids=arithmetic_op_ids, params=arithmetic_op_par)
