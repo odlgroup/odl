@@ -208,8 +208,10 @@ class DiscretizedSpace(FnBase):
             return (super(DiscretizedSpace, self).__eq__(other) and
                     other.uspace == self.uspace and
                     other.dspace == self.dspace and
-                    other.sampling == self.sampling and
-                    other.interpolation == self.interpolation)
+                    (getattr(other, 'sampling', None) ==
+                     getattr(self, 'sampling', None)) and
+                    (getattr(other, 'interpolation', None) ==
+                     getattr(self, 'interpolation', None)))
 
     def __hash__(self):
         """Return ``hash(self)``."""
@@ -488,7 +490,7 @@ def dspace_type(space, impl, dtype=None):
     -------
     stype : type
         Space type selected after the space's field, the backend and
-        the data type
+        the data type.
     """
     field_type = type(getattr(space, 'field', None))
 

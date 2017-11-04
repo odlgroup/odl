@@ -6,16 +6,15 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Spaces of functions with common domain and range."""
+"""Spaces of scalar-, vector- and tensor-valued functions on a given domain."""
 
 from __future__ import print_function, division, absolute_import
 from builtins import object
 from inspect import isfunction
 import numpy as np
 
-from odl.operator.operator import _dispatch_call_args
-from odl.set import (RealNumbers, ComplexNumbers, Set, LinearSpace,
-                     LinearSpaceElement)
+from odl.set import RealNumbers, ComplexNumbers, Set, LinearSpace
+from odl.set.space import LinearSpaceElement
 from odl.util import (
     is_real_dtype, is_complex_floating_dtype, dtype_str,
     complex_dtype, real_dtype,
