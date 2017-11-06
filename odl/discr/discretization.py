@@ -9,7 +9,6 @@
 """Base classes for discretization."""
 
 from __future__ import print_function, division, absolute_import
-import numpy as np
 
 from odl.operator import Operator
 from odl.set.sets import Set
@@ -17,7 +16,6 @@ from odl.space.base_tensors import TensorSpace, Tensor
 from odl.space.entry_points import tensor_space_impl
 from odl.set import RealNumbers, ComplexNumbers
 from odl.util import (
-    array_str, indent,
     is_real_floating_dtype, is_complex_floating_dtype, is_numeric_dtype)
 
 
@@ -480,19 +478,6 @@ class DiscretizedSpaceElement(Tensor):
         # `LinearSpaceElement.__ipow__` which only works for integer `p`.
         self.tensor.__ipow__(p)
         return self
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        return array_str(self)
-
-    def __repr__(self):
-        """Return ``repr(self)``."""
-        maxsize_full_print = 2 * np.get_printoptions()['edgeitems']
-        self_str = array_str(self, nprint=maxsize_full_print)
-        if self.ndim == 1 and self.size <= maxsize_full_print:
-            return '{!r}.element({})'.format(self.space, self_str)
-        else:
-            return '{!r}.element(\n{}\n)'.format(self.space, indent(self_str))
 
 
 def tspace_type(space, impl, dtype=None):

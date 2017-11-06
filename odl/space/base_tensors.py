@@ -617,11 +617,12 @@ class Tensor(LinearSpaceElement):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        if self.ndim == 1:
-            inner_str = array_str(self)
+        maxsize_full_print = 2 * np.get_printoptions()['edgeitems']
+        self_str = array_str(self, nprint=maxsize_full_print)
+        if self.ndim == 1 and self.size <= maxsize_full_print:
+            return '{!r}.element({})'.format(self.space, self_str)
         else:
-            inner_str = '\n' + indent(array_str(self)) + '\n'
-        return '{!r}.element({})'.format(self.space, inner_str)
+            return '{!r}.element(\n{}\n)'.format(self.space, indent(self_str))
 
     def __str__(self):
         """Return ``str(self)``."""

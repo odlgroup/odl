@@ -1782,6 +1782,10 @@ def _blas_is_applicable(*args):
     elif not (all(x.flags.f_contiguous for x in args) or
               all(x.flags.c_contiguous for x in args)):
         return False
+    elif any(x.size > np.iinfo('int32').max for x in args):
+        # Temporary fix for 32 bit int overflow in BLAS
+        # TODO: use chunking instead
+        return False
     else:
         return True
 
