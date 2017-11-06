@@ -53,50 +53,52 @@ For example, in discretizations, a two-dimensional array can be used::
           [ 4.,  5.,  6.],
           [ 7.,  8.,  9.]])
 
-Using ODL vectors with NumPy functions
+Using ODL objects with NumPy functions
 ======================================
 A very convenient feature of ODL is its seamless interaction with NumPy functions.
 For universal functions or `ufuncs <http://docs.scipy.org/doc/numpy/reference/ufuncs.html>`_, this is supported by several mechanisms as explained below.
 
-Evaluating a NumPy ufunc on an ODL vector works as expected::
+Evaluating a NumPy ufunc on an ODL object works as expected::
 
    >>> r3 = odl.rn(3)
    >>> x = r3.element([1, 2, 3])
    >>> np.negative(x)
    rn(3).element([-1., -2., -3.])
 
-Before NumPy 1.13, the sequence of actions triggered by the call ``np.negative(x)`` would be like this:
+It is also possible to use an ODL object as ``out`` parameter::
 
-1. Cast ``x`` to a NumPy array by ``x_arr = x.__array__()``.
-2. Run the ufunc on the array, ``res_arr = np.negative(x_arr)``.
-3. Re-wrap the result as ``res = x.__array_wrap__(res_arr)``.
-4. Return ``res``.
-
-This method has two major drawbacks, namely (1) users cannot override the ufunc that is being called, and (2) custom objects are not accepted as ``out`` parameters.
-Therefore, a new ``__array_ufunc__`` mechanism was [introduced in NumPy 1.13](https://docs.scipy.org/doc/numpy/release.html#array-ufunc-added) that removes these limitations.
-It is used whenever a NumPy ufunc is called on an object implementing this method, which then takes full control of the ufunc mechanism.
-For details, check out the `NEP <https://github.com/numpy/numpy/blob/master/doc/neps/ufunc-overrides.rst>`_ describing the logic, or the `interface documentation <https://docs.scipy.org/doc/numpy/reference/arrays.classes.html#numpy.class.__array_ufunc__>`_.
-See also `NumPy's general documentation on ufuncs <https://docs.scipy.org/doc/numpy/reference/ufuncs.html>`_
-
-.. note::
-    The ``__array_ufunc__`` mechanism is triggered by calls like ``np.negative(x)`` **only by NumPy 1.13 and later versions**.
-    Ufuncs called from earlier versions will use the old implementation with the mentioned limitations.
-
-ODL space elements implement an own unified `Tensor.ufuncs` interface that works with any NumPy version.
-(It may be dropped in favor of direct NumPy ufunc calls in the future when NumPy 1.13 becomes the minimum requirement.)
-This interface uses optimized code for non-NumPy data storage if available and falls back to NumPy otherwise.
-It also supports ODL vectors as ``out``::
-
-   >>> x.ufuncs.negative()
+   >>> out = r3.element()
+   >>> result = np.negative(x, out=out)  # variant 1
+   >>> out
    rn(3).element([-1., -2., -3.])
-   >>> out = odl.rn(3).element()
-   >>> result = x.ufuncs.negative(out=out)
+   >>> result is out
+   True
+   >>> out = r3.element()
+   >>> result = x.ufuncs.negative(x, out=out)  # variant 2
    >>> out
    rn(3).element([-1., -2., -3.])
    >>> result is out
    True
 
-For other arbitrary functions, ODL vector space elements are usually accepted as input, but the output is usually of type `numpy.ndarray`, i.e., the result will not be not re-wrapped::
+.. note::
+  Using ``out`` of type other than `numpy.ndarray` in NumPy ufuncs (variant 1 above) **only works with NumPy version 1.13 or higher**.
+  Variant 2 also works with older versions, but the interface may be removed in a future version of ODL.
+
+  Before NumPy 1.13, the sequence of actions triggered by the call ``np.negative(x)`` would be like this:
+
+  1. Cast ``x`` to a NumPy array by ``x_arr = x.__array__()``.
+  2. Run the ufunc on the array, ``res_arr = np.negative(x_arr)``.
+  3. Re-wrap the result as ``res = x.__array_wrap__(res_arr)``.
+  4. Return ``res``.
+
+  This method has two major drawbacks, namely (1) users cannot override the ufunc that is being called, and (2) custom objects are not accepted as ``out`` parameters.
+  Therefore, a new ``__array_ufunc__`` mechanism was [introduced in NumPy 1.13](https://docs.scipy.org/doc/numpy/release.html#array-ufunc-added) that removes these limitations.
+  It is used whenever a NumPy ufunc is called on an object implementing this method, which then takes full control of the ufunc mechanism.
+  For details, check out the `NEP <https://github.com/numpy/numpy/blob/master/doc/neps/ufunc-overrides.rst>`_ describing the logic, or the `interface documentation <https://docs.scipy.org/doc/numpy/reference/arrays.classes.html#numpy.class.__array_ufunc__>`_.
+  See also `NumPy's general documentation on ufuncs <https://docs.scipy.org/doc/numpy/reference/ufuncs.html>`_
+
+
+For other functions that are not ufuncs, ODL vector space elements are usually accepted as input, but the output is typically of type `numpy.ndarray`, i.e., the result will not be not re-wrapped::
 
    >>> np.convolve(x, x, mode='same')
    array([  4.,  10.,  12.])
@@ -138,21 +140,21 @@ This operator can then be called on its domain elements::
 
    >>> kernel = odl.rn(3).element([1, 2, 1])
    >>> conv_op = MyConvolution(kernel)
-   >>> x = odl.rn(3).element([1, 2, 3])
-   >>> conv_op(x)
+   >>> conv_op([1, 2, 3])
    rn(3).element([ 4.,  8.,  8.])
 
 It can be also be used with any of the ODL operator functionalities such as multiplication with scalar, composition, etc::
 
    >>> scaled_op = 2 * conv_op  # scale output by 2
-   >>> scaled_op(x)
+   >>> scaled_op([1, 2, 3])
    rn(3).element([  8.,  16.,  16.])
    >>> y = odl.rn(3).element([1, 1, 1])
    >>> inner_product_op = odl.InnerProductOperator(y)
    >>> # Create composition with inner product operator with [1, 1, 1].
-   >>> # The result should be the sum of the convolved vector.
+   >>> # When called on a vector, the result should be the sum of the
+   >>> # convolved vector.
    >>> composed_op = inner_product_op * conv_op
-   >>> composed_op(x)
+   >>> composed_op([1, 2, 3])
    20.0
 
 For more information on ODL Operators, how to implement them and their features, see the guide on `operators_in_depth`.
