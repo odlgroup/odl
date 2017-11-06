@@ -326,14 +326,19 @@ def noise_array(space):
     if isinstance(space, ProductSpace):
         return np.array([noise_array(si) for si in space])
     else:
-        # Generate numpy space elements, real or complex or int
-        if np.issubdtype(space.dtype, np.floating):
-            arr = np.random.randn(*space.shape)
-        elif np.issubdtype(space.dtype, np.integer):
+        if space.dtype == bool:
+            arr = np.random.randint(0, 2, size=space.shape, dtype=bool)
+        elif np.issubdtype(space.dtype, np.unsignedinteger):
+            arr = np.random.randint(0, 10, space.shape)
+        elif np.issubdtype(space.dtype, np.signedinteger):
             arr = np.random.randint(-10, 10, space.shape)
-        else:
+        elif np.issubdtype(space.dtype, np.floating):
+            arr = np.random.randn(*space.shape)
+        elif np.issubdtype(space.dtype, np.complexfloating):
             arr = (np.random.randn(*space.shape) +
                    1j * np.random.randn(*space.shape)) / np.sqrt(2.0)
+        else:
+            raise ValueError('bad dtype {}'.format(space.dtype))
 
         return arr.astype(space.dtype, copy=False)
 

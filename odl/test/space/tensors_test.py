@@ -753,6 +753,55 @@ def test_element_setitem(tspace_impl, setitem_indices):
     assert all_equal(x, x_arr)
 
 
+def test_element_getitem_bool_array(tspace_impl):
+    """Check if getitem with boolean array yields the same result as NumPy."""
+    space = odl.tensor_space((2, 3, 4), dtype='float32', exponent=1,
+                             weighting=2)
+    bool_space = odl.tensor_space((2, 3, 4), dtype=bool)
+    x_arr, x = noise_elements(space)
+    cond_arr, cond = noise_elements(bool_space)
+
+    x_arr_sliced = x_arr[cond_arr]
+    x_sliced = x[cond]
+    assert all_equal(x_arr_sliced, x_sliced)
+
+    # Check that the space properties are preserved
+    sliced_spc = x_sliced.space
+    assert sliced_spc.shape == x_arr_sliced.shape
+    assert sliced_spc.dtype == space.dtype
+    assert sliced_spc.exponent == space.exponent
+    assert sliced_spc.weighting == space.weighting
+
+
+def test_element_setitem_bool_array(tspace_impl):
+    """Check if setitem produces the same result as NumPy."""
+    space = odl.tensor_space((2, 3, 4), dtype='float32', exponent=1,
+                             weighting=2)
+    bool_space = odl.tensor_space((2, 3, 4), dtype=bool)
+    x_arr, x = noise_elements(space)
+    cond_arr, cond = noise_elements(bool_space)
+
+    x_arr_sliced = x_arr[cond_arr]
+    sliced_shape = x_arr_sliced.shape
+
+    # Setting values with scalars
+    x_arr[cond_arr] = 2.3
+    x[cond] = 2.3
+    assert all_equal(x, x_arr)
+
+    # Setting values with arrays
+    rhs_arr = np.ones(sliced_shape)
+    x_arr[cond_arr] = rhs_arr
+    x[cond] = rhs_arr
+    assert all_equal(x, x_arr)
+
+    # Using a list of lists
+    rhs_list = (-np.ones(sliced_shape)).tolist()
+    x_arr[cond_arr] = rhs_list
+    x[cond] = rhs_list
+    assert all_equal(x, x_arr)
+
+
 def test_transpose(tspace_impl):
     """Test the .T property of tensors against plain inner product."""
     spaces = [odl.rn((3, 4), impl=tspace_impl)]
