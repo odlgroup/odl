@@ -532,7 +532,7 @@ def test_weighted_proximal(space):
                                    l2.proximal(sigma[1])(x[1])])
 
 
-def test_weighted_proximal_L2_norms_squared(space):
+def test_weighted_proximal_L2_norm_squared(space):
     """Test for the weighted proximal of the squared L2 norm"""
 
     # Define the functional on the space.
@@ -555,6 +555,34 @@ def test_weighted_proximal_L2_norms_squared(space):
 
     # Check if the subdifferential inequalities are satisfied.
     # p = prox_{sigma * f}(x) iff (x - p)/sigma = grad f(p)
+    assert all_almost_equal(func.gradient(p1), space.divide(x - p1, sigma))
+
+
+def test_weighted_proximal_L1_norm(space):
+    """Test for the weighted proximal of the L1 norm"""
+
+    # Define the functional on the space.
+    func = odl.solvers.L1Norm(space)
+
+    # Set the stepsize as a random element of the spaces
+    # with elements between 1 and 10.
+    sigma = odl.phantom.noise.uniform_noise(space, 1, 10)
+
+    # Start for away from zero so that the L1 norm will be differentiable
+    # at the result.
+    x = 100 * space.one()
+
+    # Calculate the proximal point inline and non-inline
+    p1 = space.element()
+    func.proximal(sigma)(x, out=p1)
+    p2 = func.proximal(sigma)(x)
+
+    # Both should contain the same vector now.
+    assert all_almost_equal(p1, p2)
+
+    # Check if the subdifferential inequalities are satisfied.
+    # p = prox_{sigma * f}(x) iff (x - p)/sigma = grad f(p)
+    print(func.gradient(p1))
     assert all_almost_equal(func.gradient(p1), space.divide(x - p1, sigma))
 
 
