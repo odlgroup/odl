@@ -797,7 +797,7 @@ def test_ufuncs(tspace_impl, ufunc):
     in_elems_new = elements[:nin]
 
     # Out-of-place
-    with np.errstate(all='ignore'):
+    with np.errstate(all='ignore'):  # avoid pytest warnings
         npy_result = npy_ufunc(*in_arrays)
         odl_result_old = elem_fun_old(*in_elems_old)
         assert all_almost_equal(npy_result, odl_result_old)
@@ -814,7 +814,7 @@ def test_ufuncs(tspace_impl, ufunc):
             assert isinstance(odl_result_new[i], space.element_type)
 
     # In-place with ODL objects as `out`
-    with np.errstate(all='ignore'):
+    with np.errstate(all='ignore'):  # avoid pytest warnings
         npy_result = npy_ufunc(*in_arrays, **out_arr_kwargs)
         odl_result_old = elem_fun_old(*in_elems_old, **out_elem_kwargs)
         assert all_almost_equal(npy_result, odl_result_old)
@@ -842,7 +842,7 @@ def test_ufuncs(tspace_impl, ufunc):
         elif nout > 1:
             out_arr_kwargs_new = {'out': out_arrays_new[:nout]}
 
-        with np.errstate(all='ignore'):
+        with np.errstate(all='ignore'):  # avoid pytest warnings
             odl_result_arr_new = elem_fun_new(*in_elems_new,
                                               **out_arr_kwargs_new)
         assert all_almost_equal(npy_result, odl_result_arr_new)
@@ -862,7 +862,7 @@ def test_ufuncs(tspace_impl, ufunc):
         elif nout > 1:
             out_tens_kwargs_new = {'out': out_tensors_new[:nout]}
 
-        with np.errstate(all='ignore'):
+        with np.errstate(all='ignore'):  # avoid pytest warnings
             odl_result_tens_new = elem_fun_new(*in_elems_new,
                                                **out_tens_kwargs_new)
         assert all_almost_equal(npy_result, odl_result_tens_new)
@@ -883,13 +883,13 @@ def test_ufuncs(tspace_impl, ufunc):
         if nout > 1:
             return  # currently not supported by Numpy
         if nin == 1:
-            with np.errstate(all='ignore'):
+            with np.errstate(all='ignore'):  # avoid pytest warnings
                 npy_result = npy_ufunc.at(mod_array, indices)
                 odl_result = npy_ufunc.at(mod_elem, indices)
         elif nin == 2:
             other_array = in_arrays[1][indices]
             other_elem = in_elems_new[1][indices]
-            with np.errstate(all='ignore'):
+            with np.errstate(all='ignore'):  # avoid pytest warnings
                 npy_result = npy_ufunc.at(mod_array, indices, other_array)
                 odl_result = npy_ufunc.at(mod_elem, indices, other_elem)
 
@@ -902,7 +902,7 @@ def test_ufuncs(tspace_impl, ufunc):
 
         # We only test along one axis since some binary ufuncs are not
         # re-orderable, in which case Numpy raises a ValueError
-        with np.errstate(all='ignore'):
+        with np.errstate(all='ignore'):  # avoid pytest warnings
             npy_result = npy_ufunc.reduce(in_array)
             odl_result = npy_ufunc.reduce(in_elem)
             assert all_almost_equal(odl_result, npy_result)

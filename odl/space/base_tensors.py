@@ -119,7 +119,17 @@ class TensorSpace(LinearSpace):
 
     @property
     def shape(self):
-        """Number of scalar elements per axis."""
+        """Number of scalar elements per axis.
+
+        .. note::
+            If `dtype` has a shape, we add it to the **left** of the given
+            ``shape`` in the class creation. This is in contrast to NumPy,
+            which adds extra axes to the **right**. We do this since we
+            usually want to represent discretizations of vector- or
+            tensor-valued functions by this, i.e., if
+            ``dtype.shape == (3,)`` we expect ``f[0]`` to have shape
+            ``shape``.
+        """
         return self.__shape
 
     @property
@@ -429,7 +439,7 @@ class TensorSpace(LinearSpace):
 
         Returns
         -------
-        zero : Tensor
+        zero : `Tensor`
             A tensor of all zeros.
         """
         raise NotImplementedError('abstract method')
@@ -441,7 +451,7 @@ class TensorSpace(LinearSpace):
 
         Returns
         -------
-        one : Tensor
+        one : `Tensor`
             A tensor of all one.
         """
         raise NotImplementedError('abstract method')

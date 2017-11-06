@@ -1154,7 +1154,7 @@ class SamplingOperator(Operator):
         >>> op = odl.SamplingOperator(space, sampling_points)
         >>> x = space.element([[1, 2, 3],
         ...                    [4, 5, 6]])
-        >>> op.adjoint(op(x)).inner(x) - op(x).inner(op(x)) < 1e-10
+        >>> abs(op.adjoint(op(x)).inner(x) - op(x).inner(op(x))) < 1e-10
         True
 
         The ``'integrate'`` variant adjoint puts ones at the indices in
@@ -1361,11 +1361,11 @@ class WeightedSumSamplingOperator(Operator):
         >>> op.adjoint(y)
         rn(4).element([ 1.,  5.,  6.,  1.])
         >>> x = op.domain.element([1, 2, 3, 4])
-        >>> op.adjoint(op(x)).inner(x) - op(x).inner(op(x)) < 1e-10
+        >>> abs(op.adjoint(op(x)).inner(x) - op(x).inner(op(x))) < 1e-10
         True
         >>> op = odl.WeightedSumSamplingOperator(space, sampling_points,
         ...                                      variant='char_fun')
-        >>> op.adjoint(op(x)).inner(x) - op(x).inner(op(x)) < 1e-10
+        >>> abs(op.adjoint(op(x)).inner(x) - op(x).inner(op(x))) < 1e-10
         True
         """
         if self.variant == 'dirac':
@@ -1467,7 +1467,7 @@ class FlatteningOperator(Operator):
         )
         >>> x = space.element([[1, 2, 3, 4],
         ...                    [5, 6, 7, 8]])
-        >>> op.adjoint(op(x)).inner(x) - op(x).inner(op(x)) < 1e-10
+        >>> abs(op.adjoint(op(x)).inner(x) - op(x).inner(op(x))) < 1e-10
         True
         """
         scaling = getattr(self.domain, 'cell_volume', 1.0)

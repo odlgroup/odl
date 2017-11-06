@@ -363,19 +363,20 @@ class DiscreteLp(DiscretizedSpace):
             # fspace element -> discretize
             inp_elem = self.fspace.element(inp, vectorized=vectorized)
             sampled = self.sampling(inp_elem, **kwargs)
-            return self.element_type(self, self.tspace.element(sampled,
-                                                               order=order))
+            return self.element_type(
+                self, self.tspace.element(sampled, order=order))
         else:
             # Sequence-type input
-            return self.element_type(self, self.tspace.element(inp,
-                                                               order=order))
+            return self.element_type(
+                self, self.tspace.element(inp, order=order))
 
     def _astype(self, dtype):
         """Internal helper for ``astype``."""
         fspace = self.fspace.astype(dtype)
         tspace = self.tspace.astype(dtype)
-        return type(self)(fspace, self.partition, tspace, interp=self.interp,
-                          axis_labels=self.axis_labels)
+        return type(self)(
+            fspace, self.partition, tspace, interp=self.interp,
+            axis_labels=self.axis_labels)
 
     # Overrides for space functions depending on partition
     #

@@ -510,6 +510,8 @@ def test_fspace_scal_elem_eval(fspace_scal, func_nd):
     assert all_almost_equal(result_mesh, true_values_mesh)
     assert result_points.dtype == fspace_scal.scalar_out_dtype
     assert result_mesh.dtype == fspace_scal.scalar_out_dtype
+    assert result_points.flags.writeable
+    assert result_mesh.flags.writeable
 
     # In place
     out_points = np.empty(3, dtype=fspace_scal.scalar_out_dtype)
@@ -592,6 +594,8 @@ def test_fspace_vec_elem_eval(func_vec_nd, out_dtype):
     assert all_almost_equal(result_mesh, true_values_mesh)
     assert result_points.dtype == fspace_vec.scalar_out_dtype
     assert result_mesh.dtype == fspace_vec.scalar_out_dtype
+    assert result_points.flags.writeable
+    assert result_mesh.flags.writeable
 
     # In place
     out_points = np.empty(values_points_shape,
@@ -637,6 +641,9 @@ def test_fspace_tens_eval(func_tens):
     assert all_almost_equal(result_points, true_result_points)
     assert all_almost_equal(result_mesh, true_result_mesh)
     assert all_almost_equal(result_point, true_result_point)
+    assert result_points.flags.writeable
+    assert result_mesh.flags.writeable
+    assert result_point.flags.writeable
 
     out_points = np.empty(values_points_shape, dtype=float)
     out_mesh = np.empty(values_mesh_shape, dtype=float)

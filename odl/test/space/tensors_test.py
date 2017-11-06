@@ -306,9 +306,6 @@ def test_equals_elem(tspace_impl):
 
 def test_tspace_astype(tspace_impl):
     """Test creation of a space counterpart with new dtype."""
-    if tspace_impl == 'gpuarray':
-        pytest.xfail(reason='complex spaces not implemented for GPU arrays')
-
     real_space = odl.rn((3, 4), impl=tspace_impl)
     int_space = odl.tensor_space((3, 4), dtype=int, impl=tspace_impl)
     assert real_space.astype(int) == int_space
@@ -692,9 +689,6 @@ def test_pdist(tspace_impl, exponent):
 
 def test_element_getitem(tspace_impl, getitem_indices):
     """Check if getitem produces correct values, shape and other stuff."""
-    if tspace_impl == 'gpuarray' and np.ndim(getitem_indices) > 1:
-        pytest.xfail(reason='fancy indexing not supported in pygpu')
-
     space = odl.tensor_space((2, 3, 4), dtype='float32', exponent=1,
                              weighting=2)
     x_arr, x = noise_elements(space)
@@ -725,9 +719,6 @@ def test_element_getitem(tspace_impl, getitem_indices):
 
 def test_element_setitem(tspace_impl, setitem_indices):
     """Check if setitem produces the same result as NumPy."""
-    if tspace_impl == 'gpuarray' and np.ndim(getitem_indices) > 1:
-        pytest.xfail(reason='fancy indexing not supported in pygpu')
-
     space = odl.tensor_space((2, 3, 4), dtype='float32', exponent=1,
                              weighting=2)
     x_arr, x = noise_elements(space)
