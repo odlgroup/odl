@@ -32,8 +32,10 @@ try:
     try:
         # Available from 1.8 on
         ASTRA_VERSION = astra.__version__
-        _maj, _min = [int(n) for n in ASTRA_VERSION.split('.')]
+        # 1.8.3 and later exposes also the patch version, need only first two
+        _maj, _min = [int(n) for n in ASTRA_VERSION.split('.')][:2]
     except AttributeError:
+        # Below version 1.8
         _maj = astra.astra.version() // 100
         _min = astra.astra.version() % 100
         ASTRA_VERSION = '.'.join([str(_maj), str(_min)])
