@@ -1626,6 +1626,5 @@ def _scaling_func_list(bdry_fracs, exponent=1.0):
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

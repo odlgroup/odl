@@ -706,6 +706,5 @@ class FnBaseVector(LinearSpaceElement):
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

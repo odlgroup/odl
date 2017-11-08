@@ -307,7 +307,7 @@ class NumericalGradient(Operator):
         return NumericalDerivative(self, point,
                                    method=self.method, step=np.sqrt(self.step))
 
+
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()
