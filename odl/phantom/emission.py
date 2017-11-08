@@ -8,7 +8,6 @@
 
 """Phantoms used in emission tomography."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 
 from odl.phantom.geometric import ellipsoid_phantom
@@ -125,6 +124,8 @@ def derenzo_sources(space):
 if __name__ == '__main__':
     # Show the phantoms
     import odl
+    from odl.util.testutils import run_doctests
+
     n = 300
 
     # 2D
@@ -136,6 +137,4 @@ if __name__ == '__main__':
     derenzo_sources(discr).show('derenzo_sources 3d')
 
     # Run also the doctests
-    # pylint: disable=wrong-import-position
-    from odl.util.testutils import run_doctests
     run_doctests()

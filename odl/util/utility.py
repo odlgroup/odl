@@ -8,11 +8,10 @@
 
 """Utilities mainly for internal use."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
-from functools import wraps
+from builtins import object
 from collections import OrderedDict
+from functools import wraps
 import numpy as np
 
 
@@ -955,6 +954,5 @@ def unique(seq):
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

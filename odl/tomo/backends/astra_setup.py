@@ -23,9 +23,8 @@ ODL geometry representation to ASTRA's data structures, including:
 `ASTRA on GitHub <https://github.com/astra-toolbox/>`_.
 """
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
+import numpy as np
 try:
     import astra
     ASTRA_AVAILABLE = True
@@ -43,12 +42,9 @@ try:
     # Don't import pkg_resources only for this, it's slow
     if (_maj, _min) < (1, 7):
         raise RuntimeError('ASTRA version < 1.7 not supported, please update')
-
 except ImportError:
     ASTRA_AVAILABLE = False
     ASTRA_VERSION = ''
-
-import numpy as np
 
 from odl.discr import DiscreteLp, DiscreteLpElement
 from odl.tomo.geometry import (

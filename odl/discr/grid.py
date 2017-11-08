@@ -12,10 +12,7 @@ Sampling grids are collections of points in an n-dimensional coordinate
 space with a certain structure which is exploited to minimize storage.
 """
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from builtins import range, str, zip
-
 import numpy as np
 
 from odl.set import Set, IntervalProd
@@ -1230,6 +1227,5 @@ def uniform_grid(min_pt, max_pt, shape, nodes_on_bdry=True):
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

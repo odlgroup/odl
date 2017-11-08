@@ -1,6 +1,5 @@
 ﻿"""An example of a very simple space, the real numbers."""
 
-
 import odl
 
 

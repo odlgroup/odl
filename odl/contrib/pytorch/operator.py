@@ -13,6 +13,7 @@ see `the pytorch installation guide
 <https://github.com/pytorch/pytorch#installation>`_ for instructions.
 """
 
+from __future__ import division
 import numpy as np
 import torch
 

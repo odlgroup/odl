@@ -52,6 +52,8 @@ def test_nearest_interpolation_1d_complex(fn_impl):
     function(mg, out=out)
     assert all_equal(out, true_mg)
 
+    assert repr(interp_op) != ''
+
 
 def test_nearest_interpolation_1d_variants():
     intv = odl.IntervalProd(0, 1)
@@ -64,6 +66,7 @@ def test_nearest_interpolation_1d_variants():
 
     # 'left' variant
     interp_op = NearestInterpolation(space, part, dspace, variant='left')
+    assert repr(interp_op) != ''
     function = interp_op([0, 1, 2, 3, 4])
 
     # Testing two midpoints and the extreme values
@@ -73,6 +76,7 @@ def test_nearest_interpolation_1d_variants():
 
     # 'right' variant
     interp_op = NearestInterpolation(space, part, dspace, variant='right')
+    assert repr(interp_op) != ''
     function = interp_op([0, 1, 2, 3, 4])
 
     # Testing two midpoints and the extreme values
@@ -113,6 +117,8 @@ def test_nearest_interpolation_2d_float():
     function(mg, out=out)
     assert all_equal(out, true_mg)
 
+    assert repr(interp_op) != ''
+
 
 def test_nearest_interpolation_2d_string():
     rect = odl.IntervalProd([0, 0], [1, 1])
@@ -146,6 +152,8 @@ def test_nearest_interpolation_2d_string():
     out = np.empty((2, 2), dtype='U1')
     function(mg, out=out)
     assert all_equal(out, true_mg)
+
+    assert repr(interp_op) != ''
 
 
 def test_linear_interpolation_1d():
@@ -238,6 +246,8 @@ def test_linear_interpolation_2d():
     function(mg, out=out)
     assert all_equal(out, true_mg)
 
+    assert repr(interp_op) != ''
+
 
 def test_per_axis_interpolation():
     rect = odl.IntervalProd([0, 0], [1, 1])
@@ -294,6 +304,8 @@ def test_per_axis_interpolation():
     out = np.empty((2, 2), dtype='float64')
     function(mg, out=out)
     assert all_equal(out, true_mg)
+
+    assert repr(interp_op) != ''
 
 
 def test_collocation_interpolation_identity():

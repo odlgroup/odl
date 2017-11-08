@@ -8,10 +8,8 @@
 
 """Convenience functions for operators."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future.utils import native
-
 import numpy as np
 
 from odl.space.base_ntuples import FnBase
@@ -440,6 +438,5 @@ def as_proximal_lang_operator(op, norm_bound=None):
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

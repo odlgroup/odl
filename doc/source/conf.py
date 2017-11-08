@@ -6,6 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
+from __future__ import print_function
 from distutils.version import StrictVersion
 import sphinx
 import glob
@@ -22,8 +23,8 @@ try:
     # Verify that we can import odl
     import odl
 except Exception as e:
-    print('Failed importing odl, exiting')
-    print(e)
+    print('Failed importing odl, exiting', file=sys.stderr)
+    print(e, file=sys.stderr)
     sys.exit(1)
 
 
@@ -85,6 +86,7 @@ def skip(app, what, name, obj, skip, options):
 
 def setup(app):
     app.connect("autodoc-skip-member", skip)
+
 
 # Autosummary
 autosummary_generate = glob.glob("./*.rst")

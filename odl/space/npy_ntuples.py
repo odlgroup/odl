@@ -8,11 +8,9 @@
 
 """CPU implementations of ``n``-dimensional Cartesian spaces."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future.utils import native
 import builtins
-
 import ctypes
 from functools import partial
 from numbers import Integral
@@ -1879,6 +1877,5 @@ def _lincomb_impl(a, x1, b, x2, out, dtype):
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

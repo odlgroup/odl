@@ -4,6 +4,7 @@ In this example we take a tensorflow layer (given by matrix multiplication)
 and convert it into an ODL operator.
 """
 
+from __future__ import print_function
 import tensorflow as tf
 import numpy as np
 import odl

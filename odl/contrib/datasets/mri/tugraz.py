@@ -205,10 +205,3 @@ platform_aktuell.html
     trafo = odl.trafos.FourierTransform(space)
 
     return odl.ReductionOperator(odl.ComplexModulus(space) * trafo.inverse, 8)
-
-
-if __name__ == '__main__':
-    # Run doctests
-    # pylint: disable=wrong-import-position
-    from odl.util.testutils import run_doctests
-    run_doctests()

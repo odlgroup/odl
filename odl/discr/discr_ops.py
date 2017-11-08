@@ -8,9 +8,7 @@
 
 """Operators defined on `DiscreteLp`."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 import numpy as np
 
 from odl.discr import DiscreteLp, uniform_partition
@@ -258,7 +256,9 @@ class ResizingOperatorBase(Operator):
          [ 5.,  6.,  7.,  8.],
          [ 1.,  2.,  3.,  4.]]
         """
-        from builtins import range as builtin_range
+        # Swap names to be able to use the range iterator without worries
+        import builtins
+        ran, range = range, builtins.range
 
         if not isinstance(domain, DiscreteLp):
             raise TypeError('`domain` must be a `DiscreteLp` instance, '
@@ -267,34 +267,34 @@ class ResizingOperatorBase(Operator):
         offset = kwargs.pop('offset', None)
         discr_kwargs = kwargs.pop('discr_kwargs', {})
 
-        if range is None:
+        if ran is None:
             if ran_shp is None:
-                raise ValueError('either `range` or `ran_shp` must be '
+                raise ValueError('either `ran` or `ran_shp` must be '
                                  'given')
 
             offset = normalized_scalar_param_list(
                 offset, domain.ndim, param_conv=safe_int_conv, keep_none=True)
 
-            range = _resize_discr(domain, ran_shp, offset, discr_kwargs)
-            self.__offset = tuple(_offset_from_spaces(domain, range))
+            ran = _resize_discr(domain, ran_shp, offset, discr_kwargs)
+            self.__offset = tuple(_offset_from_spaces(domain, ran))
 
         elif ran_shp is None:
             if offset is not None:
                 raise ValueError('`offset` can only be combined with '
                                  '`ran_shp`')
 
-            for i in builtin_range(domain.ndim):
-                if (range.is_uniform_byaxis[i] and
+            for i in range(domain.ndim):
+                if (ran.is_uniform_byaxis[i] and
                     domain.is_uniform_byaxis[i] and
-                        not np.isclose(range.cell_sides[i],
+                        not np.isclose(ran.cell_sides[i],
                                        domain.cell_sides[i])):
                     raise ValueError(
                         'in axis {}: cell sides of domain and range differ '
                         'significantly: (difference {})'
                         ''.format(i,
-                                  range.cell_sides[i] - domain.cell_sides[i]))
+                                  ran.cell_sides[i] - domain.cell_sides[i]))
 
-            self.__offset = _offset_from_spaces(domain, range)
+            self.__offset = _offset_from_spaces(domain, ran)
 
         else:
             raise ValueError('cannot combine `range` with `ran_shape`')
@@ -308,13 +308,13 @@ class ResizingOperatorBase(Operator):
         self.__pad_mode = pad_mode
         # Store constant in a way that ensures safe casting (one-element array)
         self.__pad_const = np.array(kwargs.pop('pad_const', 0),
-                                    dtype=range.dtype)
+                                    dtype=ran.dtype)
 
         # padding mode 'constant' with `pad_const != 0` is not linear
         linear = (self.pad_mode != 'constant' or self.pad_const == 0.0)
 
         super(ResizingOperatorBase, self).__init__(
-            domain, range, linear=linear)
+            domain, ran, linear=linear)
 
     @property
     def offset(self):
@@ -545,6 +545,5 @@ def _resize_discr(discr, newshp, offset, discr_kwargs):
                       order=order)
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

@@ -1,6 +1,7 @@
 """Example of using the TU Graz datasets."""
 
 import odl.contrib.datasets.mri.tugraz as tugraz
+from odl.util.testutils import run_doctests
 
 # 4-channel head example
 data = tugraz.mri_head_data_4_channel()
@@ -24,6 +25,4 @@ reconstruction = pseudo_inv(data)
 reconstruction.show(clim=[0, 1])
 
 # Run doctests
-# pylint: disable=wrong-import-position
-from odl.util.testutils import run_doctests
 run_doctests()

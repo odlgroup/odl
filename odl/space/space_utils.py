@@ -8,15 +8,13 @@
 
 """Utility functions for space implementations."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
-__all__ = ('vector', 'fn', 'cn', 'rn')
-
 import numpy as np
 
 from odl.set import RealNumbers, ComplexNumbers
 from odl.space.entry_points import fn_impl
+
+__all__ = ('vector', 'fn', 'cn', 'rn')
 
 
 def vector(array, dtype=None, impl='numpy'):
@@ -206,6 +204,5 @@ def rn(size, dtype=None, impl='numpy', **kwargs):
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

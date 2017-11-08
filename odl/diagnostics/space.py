@@ -8,10 +8,8 @@
 
 """Standardized tests for `LinearSpace`'s."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from builtins import object
-
 from copy import copy, deepcopy
 
 from odl.set import Field
@@ -1003,7 +1001,6 @@ class SpaceTest(object):
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl import rn, uniform_discr
     SpaceTest(rn(10), verbose=False).run_tests()
     SpaceTest(uniform_discr([0, 0], [1, 1], [5, 5])).run_tests()

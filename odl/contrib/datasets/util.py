@@ -8,16 +8,10 @@
 
 """Utilities for datasets."""
 
+from __future__ import print_function
 import os
 from os.path import join, expanduser, exists
-
-try:
-    # Python 2
-    from urllib2 import urlopen
-except ImportError:
-    # Python 3+
-    from urllib.request import urlopen
-
+from future.moves.urllib.request import urlopen
 from shutil import copyfileobj, rmtree
 from scipy import io
 import contextlib
@@ -82,7 +76,7 @@ def get_data(filename, subset, url):
 
     return data_dict
 
+
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

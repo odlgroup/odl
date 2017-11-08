@@ -8,11 +8,9 @@
 
 """Default functionals defined on any space similar to R^n or L^2."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
-import numpy as np
 from numbers import Integral
+import numpy as np
 
 from odl.solvers.functional.functional import (Functional,
                                                FunctionalQuadraticPerturb)
@@ -2505,6 +2503,5 @@ class Huber(Functional):
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

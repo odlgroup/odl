@@ -8,9 +8,7 @@
 
 """Utilities for computing the gradient and Hessian of functionals."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 import numpy as np
 
 from odl.solvers.functional.functional import Functional
@@ -309,7 +307,7 @@ class NumericalGradient(Operator):
         return NumericalDerivative(self, point,
                                    method=self.method, step=np.sqrt(self.step))
 
+
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

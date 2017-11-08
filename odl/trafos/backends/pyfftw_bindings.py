@@ -13,15 +13,10 @@ wrapper around the well-known `FFTW <http://fftw.org/>`_ library for fast
 Fourier transforms.
 """
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from builtins import range
-
 from multiprocessing import cpu_count
-import warnings
 import numpy as np
-from odl.util import (
-    is_real_dtype, dtype_repr, complex_dtype, normalized_axes_tuple)
+import warnings
 try:
     import pyfftw
     PYFFTW_AVAILABLE = True
@@ -33,6 +28,9 @@ else:
         warnings.warn('PyFFTW < 0.10.4 is known to cause problems with some '
                       'ODL functionality, see issue #1002.',
                       RuntimeWarning)
+
+from odl.util import (
+    is_real_dtype, dtype_repr, complex_dtype, normalized_axes_tuple)
 
 __all__ = ('pyfftw_call', 'PYFFTW_AVAILABLE')
 
@@ -300,6 +298,5 @@ def _pyfftw_check_args(arr_in, arr_out, axes, halfcomplex, direction):
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests(skip_if=not PYFFTW_AVAILABLE)

@@ -1,4 +1,4 @@
-"""Example of how to use optimization in order to pick reconstruction parameters.
+"""Example of using optimization to pick reconstruction parameters.
 
 In this example, we solve the tomographic inversion problem with different
 regularizers (FBP, Huber-TV and TV) and pick the "best" regularization
@@ -9,8 +9,8 @@ merit, here the L2-distance to the true result.
 """
 
 import numpy as np
-import odl
 import scipy
+import odl
 
 
 def optimal_parameters(reconstruction, fom, phantoms, data,
@@ -223,7 +223,8 @@ else:
 def fom(reco, true_image):
     """Sobolev type FoM enforcing both gradient and absolute similarity."""
     gradient = odl.Gradient(reco.space)
-    return gradient(reco - true_image).norm() + reco.space.dist(reco, true_image)
+    return (gradient(reco - true_image).norm() +
+            reco.space.dist(reco, true_image))
 
 
 # Find optimal lambda

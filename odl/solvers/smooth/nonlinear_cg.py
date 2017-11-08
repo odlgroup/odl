@@ -8,7 +8,6 @@
 
 """Nonlinear version of the conjugate gradient method."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 
 from odl.solvers.util import ConstantLineSearch

@@ -8,9 +8,8 @@
 
 """Weightings for finite-dimensional spaces."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
+from builtins import object
 import numpy as np
 
 from odl.space.base_ntuples import FnBaseVector
@@ -910,6 +909,5 @@ class CustomDist(Weighting):
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

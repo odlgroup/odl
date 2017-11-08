@@ -8,12 +8,9 @@
 
 """:math:`L^p` type discretizations of function spaces."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from builtins import str
-
-import numpy as np
 from numbers import Integral
+import numpy as np
 
 from odl.discr.discretization import (
     DiscretizedSpace, DiscretizedSpaceElement, dspace_type)
@@ -1629,6 +1626,5 @@ def _scaling_func_list(bdry_fracs, exponent=1.0):
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

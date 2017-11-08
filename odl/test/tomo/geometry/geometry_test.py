@@ -9,7 +9,6 @@
 """Test ODL geometry objects for tomography."""
 
 from __future__ import division
-
 from itertools import permutations, product
 import pytest
 import numpy as np

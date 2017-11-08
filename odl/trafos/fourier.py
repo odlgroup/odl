@@ -8,9 +8,7 @@
 
 """Discretized Fourier transform on L^p spaces."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 import numpy as np
 
 from odl.discr import DiscreteLp, discr_sequence_space
@@ -1646,6 +1644,5 @@ class FourierTransformInverse(FourierTransformBase):
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()
