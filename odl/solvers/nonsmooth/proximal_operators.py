@@ -236,8 +236,7 @@ def proximal_arg_scaling(prox_factory, scaling):
         \\frac{1}{\\alpha}
         \mathrm{prox}_{\\sigma \\alpha^2 F(\cdot) }(\\alpha x)
 
-    where :math:`scal` is the scaling parameter, and :math:`\\sigma` is the
-    step size.
+    where :math:`\\sigma` is the step size.
 
     For reference on the identity used, see [CP2011c].
 
