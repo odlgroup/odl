@@ -88,8 +88,6 @@ def test_vector_numpy():
 
 def test_auto_weighting(call_variant, weighting, auto_weighting_optimize):
     """Test the auto_weighting decorator for different adjoint variants."""
-    rn = odl.rn(2)
-    rn_w = odl.rn(2, weighting=weighting)
 
     class ScalingOpBase(odl.Operator):
 
@@ -141,8 +139,23 @@ def test_auto_weighting(call_variant, weighting, auto_weighting_optimize):
     else:
         assert False
 
+    # Test Rn space
+    rn = odl.rn(2)
+    rn_w = odl.rn(2, weighting=weighting)
     op1 = ScalingOp(rn, rn_w, 1.5)
     op2 = ScalingOp(rn_w, rn, 1.5)
+
+    for op in [op1, op2]:
+        dom_el = noise_element(op.domain)
+        ran_el = noise_element(op.range)
+        assert pytest.approx(op(dom_el).inner(ran_el),
+                             dom_el.inner(op.adjoint(ran_el)))
+
+    # Test product space
+    pspace = odl.ProductSpace(odl.rn(3), 2)
+    pspace_w = odl.ProductSpace(odl.rn(3), 2, weighting=weighting)
+    op1 = ScalingOp(pspace, pspace_w, 1.5)
+    op2 = ScalingOp(pspace_w, pspace, 1.5)
 
     for op in [op1, op2]:
         dom_el = noise_element(op.domain)
@@ -244,7 +257,7 @@ def test_auto_weighting_raise_on_return_self():
         def adjoint(self):
             return self
 
-    # This would be a vaild situation for adjont just returning self
+    # This would be a vaild situation for adjoint just returning self
     op = InvalidScalingOp(rn, rn, 1.5)
     with pytest.raises(TypeError):
         op.adjoint
