@@ -858,6 +858,8 @@ class MatrixOperator(Operator):
 
     def _call(self, x, out=None):
         """Return ``self(x[, out])``."""
+        from pkg_resources import parse_version
+
         if out is None:
             return self.range.element(self.matrix.dot(x))
         else:
@@ -866,8 +868,14 @@ class MatrixOperator(Operator):
                 # sparse matrices
                 out[:] = self.matrix.dot(x)
             else:
-                with writable_array(out) as out_arr:
-                    self.matrix.dot(x, out=out_arr)
+                if (parse_version(np.__version__) < parse_version('1.13.0') and
+                        x is out):
+                    # Workaround for bug in Numpy < 1.13 with aliased in and
+                    # out in np.dot
+                    out[:] = self.matrix.dot(x)
+                else:
+                    with writable_array(out) as out_arr:
+                        self.matrix.dot(x, out=out_arr)
 
     def __repr__(self):
         """Return ``repr(self)``."""
