@@ -1232,7 +1232,9 @@ class ProductSpaceElement(LinearSpaceElement):
         return tuple(figs)
 
 
-# --- Add arithmetic operators that broadcast ---
+# --- Add arithmetic operators that broadcast --- #
+
+
 def _broadcast_arithmetic(op):
     """Return ``op(self, other)`` with broadcasting.
 
@@ -1259,25 +1261,33 @@ def _broadcast_arithmetic(op):
     layer" broadcasting, i.e., we do not support broadcasting over several
     product spaces at once.
     """
-    def _broadcast_arithmetic_impl(self, other):
-        if (self.space.is_power_space and other in self.space[0]):
+    def broadcast_arithmetic_wrapper(self, other):
+        """Wrapper function for the arithmetic operation."""
+        if other in self.space:
+            return getattr(LinearSpaceElement, op)(self, other)
+
+        elif self.space.is_power_space and other in self.space[0]:
+            # Implement broadcasting along implicit axes "to the left" --
+            # corresponding to Numpy broadcasting of the shapes
+            # (M, N) and (N,)
             results = []
-            for xi in self:
-                res = getattr(xi, op)(other)
+            for self_i in self:
+                res = getattr(self_i, op)(other)
                 if res is NotImplemented:
                     return NotImplemented
                 else:
                     results.append(res)
 
             return self.space.element(results)
+
         else:
             return getattr(LinearSpaceElement, op)(self, other)
 
     # Set docstring
-    docstring = """Broadcasted {op}.""".format(op=op)
-    _broadcast_arithmetic_impl.__doc__ = docstring
+    docstring = """Broadcasting ``{}``.""".format(op)
+    broadcast_arithmetic_wrapper.__doc__ = docstring
 
-    return _broadcast_arithmetic_impl
+    return broadcast_arithmetic_wrapper
 
 
 for op in ['add', 'sub', 'mul', 'div', 'truediv']:
