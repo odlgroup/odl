@@ -111,7 +111,7 @@ def shepp_logan_ellipsoids(ndim, modified=False):
     return ellipsoids
 
 
-def shepp_logan(space, modified=False):
+def shepp_logan(space, modified=False, min_pt=None, max_pt=None):
     """Standard `Shepp-Logan phantom`_ in 2 or 3 dimensions.
 
     Parameters
@@ -124,6 +124,19 @@ def shepp_logan(space, modified=False):
         True if the modified Shepp-Logan phantom should be given.
         The modified phantom has greatly amplified contrast to aid
         visualization.
+    min_pt, max_pt : array-like, optional
+        If provided, use these vectors to determine the bounding box of the
+        phantom instead of ``space.min_pt`` and ``space.max_pt``.
+        It is currently required that ``min_pt >= space.min_pt`` and
+        ``max_pt <= space.max_pt``, i.e., shifting or scaling outside the
+        original space is not allowed.
+
+        Providing one of them results in a shift, e.g., for ``min_pt``::
+
+            new_min_pt = min_pt
+            new_max_pt = space.max_pt + (min_pt - space.min_pt)
+
+        Providing both results in a scaled version of the phantom.
 
     See Also
     --------
@@ -138,8 +151,7 @@ def shepp_logan(space, modified=False):
     .. _Shepp-Logan phantom: en.wikipedia.org/wiki/Shepp–Logan_phantom
     """
     ellipsoids = shepp_logan_ellipsoids(space.ndim, modified)
-
-    return ellipsoid_phantom(space, ellipsoids)
+    return ellipsoid_phantom(space, ellipsoids, min_pt, max_pt)
 
 
 def _analytical_forbild_phantom(resolution, ear):

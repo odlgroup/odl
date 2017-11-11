@@ -11,6 +11,9 @@
 from __future__ import print_function, division, absolute_import
 import numpy as np
 
+from odl.discr.lp_discr import uniform_discr_fromdiscr
+from odl.util.numerics import resize_array
+
 __all__ = ('cuboid', 'defrise', 'ellipsoid_phantom', 'indicate_proj_axis',
            'smooth_cuboid', 'tgv_phantom')
 
@@ -20,8 +23,8 @@ def cuboid(space, min_pt=None, max_pt=None):
 
     Parameters
     ----------
-    space : `DiscretizedSpace`
-        Discretized space in which the phantom is supposed to be created.
+    space : `DiscreteLp`
+        Space in which the phantom should be created.
     min_pt : array-like of shape ``(space.ndim,)``, optional
         Lower left corner of the cuboid. If ``None`` is given, a quarter
         of the extent from ``space.min_pt`` towards the inside is chosen.
@@ -88,22 +91,35 @@ def cuboid(space, min_pt=None, max_pt=None):
     return space.element(phantom)
 
 
-def defrise(space, nellipses=8, alternating=False):
+def defrise(space, nellipses=8, alternating=False, min_pt=None, max_pt=None):
     """Phantom with regularily spaced ellipses.
 
     This phantom is often used to verify cone-beam algorithms.
 
     Parameters
     ----------
-    space : `DiscretizedSpace`
-        Discretized space in which the phantom is supposed to be created.
-        Needs to be 2d or 3d.
+    space : `DiscreteLp`
+        Space in which the phantom should be created, must be 2- or
+        3-dimensional.
     nellipses : int, optional
         Number of ellipses. If more ellipses are used, each ellipse becomes
         thinner.
     alternating : bool, optional
         True if the ellipses should have alternating densities (+1, -1),
         otherwise all ellipses have value +1.
+    min_pt, max_pt : array-like, optional
+        If provided, use these vectors to determine the bounding box of the
+        phantom instead of ``space.min_pt`` and ``space.max_pt``.
+        It is currently required that ``min_pt >= space.min_pt`` and
+        ``max_pt <= space.max_pt``, i.e., shifting or scaling outside the
+        original space is not allowed.
+
+        Providing one of them results in a shift, e.g., for ``min_pt``::
+
+            new_min_pt = min_pt
+            new_max_pt = space.max_pt + (min_pt - space.min_pt)
+
+        Providing both results in a scaled version of the phantom.
 
     Returns
     -------
@@ -116,8 +132,7 @@ def defrise(space, nellipses=8, alternating=False):
     """
     ellipses = defrise_ellipses(space.ndim, nellipses=nellipses,
                                 alternating=alternating)
-
-    return ellipsoid_phantom(space, ellipses)
+    return ellipsoid_phantom(space, ellipses, min_pt, max_pt)
 
 
 def defrise_ellipses(ndim, nellipses=8, alternating=False):
@@ -126,7 +141,7 @@ def defrise_ellipses(ndim, nellipses=8, alternating=False):
     Parameters
     ----------
     ndim : {2, 3}
-        Dimension of the space the ellipses should be in.
+        Dimension of the space for the ellipses/ellipsoids.
     nellipses : int, optional
         Number of ellipses. If more ellipses are used, each ellipse becomes
         thinner.
@@ -186,8 +201,8 @@ def indicate_proj_axis(space, scale_structures=0.5):
     Parameters
     ----------
     space : `DiscreteLp`
-        Space in which the phantom is supposed to be created, must be
-        2- or 3-dimensional.
+        Space in which the phantom should be created, must be 2- or
+        3-dimensional.
     scale_structures : positive float in (0, 1], optional
         Scales objects (cube, cuboids)
 
@@ -297,8 +312,8 @@ def _getshapes_2d(center, max_radius, shape):
     index_mean = shape * center
     index_radius = max_radius / 2.0 * np.array(shape)
 
-    min_idx = np.floor(index_mean - index_radius).astype(int)
-    min_idx = np.maximum(min_idx, 0)  # avoid negative indices
+    # Avoid negative indices
+    min_idx = np.maximum(np.floor(index_mean - index_radius), 0).astype(int)
     max_idx = np.ceil(index_mean + index_radius).astype(int)
     idx = [slice(minx, maxx) for minx, maxx in zip(min_idx, max_idx)]
     shapes = [(idx[0], slice(None)),
@@ -312,12 +327,21 @@ def _ellipse_phantom_2d(space, ellipses):
     Parameters
     ----------
     space : `DiscreteLp`
-        Space the phantom should be generated in. If ``space.shape`` is
-        1 in an axis, a corresponding slice of the phantom is created.
+        Uniformly discretized space in which the phantom should be generated.
+        If ``space.shape`` is 1 in an axis, a corresponding slice of the
+        phantom is created (instead of squashing the whole phantom into the
+        slice).
     ellipses : list of lists
-        Each row should contain:
-        'value', 'axis_1', 'axis_2', 'center_x', 'center_y', 'rotation'
-        The ellipses should be contained the he rectangle [-1, -1] x [1, 1].
+        Each row should contain the entries ::
+
+            'value',
+            'axis_1', 'axis_2',
+            'center_x', 'center_y',
+            'rotation'
+
+        The provided ellipses need to be specified relative to the
+        reference rectangle ``[-1, -1] x [1, 1]``. Angles are to be given
+        in radians.
 
     Returns
     -------
@@ -328,24 +352,24 @@ def _ellipse_phantom_2d(space, ellipses):
     --------
     shepp_logan : The typical use-case for this function.
     """
-
     # Blank image
     p = np.zeros(space.shape, dtype=space.dtype)
 
+    minp = space.grid.min_pt
+    maxp = space.grid.max_pt
+
     # Create the pixel grid
     grid_in = space.grid.meshgrid
-    minp = space.grid.min()
-    maxp = space.grid.max()
 
     # move points to [-1, 1]
     grid = []
     for i in range(2):
-        meani = (minp[i] + maxp[i]) / 2.0
-        # Where space.shape = 1, we have minp = maxp, so we set diffi = 1
+        mean_i = (minp[i] + maxp[i]) / 2.0
+        # Where space.shape = 1, we have minp = maxp, so we set diff_i = 1
         # to avoid division by zero. Effectively, this allows constructing
         # a slice of a 2D phantom.
-        diffi = (maxp[i] - minp[i]) / 2.0 or 1.0
-        grid += [(grid_in[i] - meani) / diffi]
+        diff_i = (maxp[i] - minp[i]) / 2.0 or 1.0
+        grid.append((grid_in[i] - mean_i) / diff_i)
 
     for ellip in ellipses:
         assert len(ellip) == 6
@@ -377,7 +401,7 @@ def _ellipse_phantom_2d(space, ellipses):
             idx, shapes = _getshapes_2d(center, max_radius, space.shape)
 
             subgrid = [g[idi] for g, idi in zip(grid, shapes)]
-            offset_points = [vec * (xi - x0i)[..., np.newaxis]
+            offset_points = [vec * (xi - x0i)[..., None]
                              for xi, vec, x0i in zip(subgrid,
                                                      mat.T,
                                                      [x0, y0])]
@@ -428,15 +452,20 @@ def _ellipsoid_phantom_3d(space, ellipsoids):
     Parameters
     ----------
     space : `DiscreteLp`
-        Space the phantom should be generated in. If ``space.shape`` is
-        1 in an axis, a corresponding slice of the phantom is created.
+        Space in which the phantom should be generated. If ``space.shape`` is
+        1 in an axis, a corresponding slice of the phantom is created
+        (instead of squashing the whole phantom into the slice).
     ellipsoids : list of lists
-        Each row should contain:
-        'value', 'axis_1', 'axis_2', 'axis_3',
-        'center_x', 'center_y', 'center_z',
-        'rotation_phi', 'rotation_theta', 'rotation_psi'
-        The ellipsoids should be contained in the rectangle
-        [-1, -1, -1] x [1, 1, 1].
+        Each row should contain the entries ::
+
+            'value',
+            'axis_1', 'axis_2', 'axis_3',
+            'center_x', 'center_y', 'center_z',
+            'rotation_phi', 'rotation_theta', 'rotation_psi'
+
+        The provided ellipsoids need to be specified relative to the
+        reference cube ``[-1, -1, -1] x [1, 1, 1]``. Angles are to be given
+        in radians.
 
     Returns
     -------
@@ -447,24 +476,24 @@ def _ellipsoid_phantom_3d(space, ellipsoids):
     --------
     shepp_logan : The typical use-case for this function.
     """
+    # Blank volume
+    p = np.zeros(space.shape, dtype=space.dtype)
 
-    # Blank image
-    p = np.zeros(space.shape)
+    minp = space.grid.min_pt
+    maxp = space.grid.max_pt
 
     # Create the pixel grid
     grid_in = space.grid.meshgrid
-    minp = space.grid.min()
-    maxp = space.grid.max()
 
-    # move points to [-1, 1]
+    # Move points to [-1, 1]
     grid = []
     for i in range(3):
-        meani = (minp[i] + maxp[i]) / 2.0
-        # Where space.shape = 1, we have minp = maxp, so we set diffi = 1
+        mean_i = (minp[i] + maxp[i]) / 2.0
+        # Where space.shape = 1, we have minp = maxp, so we set diff_i = 1
         # to avoid division by zero. Effectively, this allows constructing
         # a slice of a 3D phantom.
-        diffi = (maxp[i] - minp[i]) / 2.0 or 1.0
-        grid += [(grid_in[i] - meani) / diffi]
+        diff_i = (maxp[i] - minp[i]) / 2.0 or 1.0
+        grid.append((grid_in[i] - mean_i) / diff_i)
 
     for ellip in ellipsoids:
         assert len(ellip) == 10
@@ -506,13 +535,12 @@ def _ellipsoid_phantom_3d(space, ellipsoids):
             # Calculate the points that could possibly be inside the volume
             # Since the points are rotated, we cannot do anything directional
             # without more logic
-
             max_radius = np.sqrt(
                 np.abs(mat).dot([a_squared, b_squared, c_squared]))
             idx, shapes = _getshapes_3d(center, max_radius, space.shape)
 
             subgrid = [g[idi] for g, idi in zip(grid, shapes)]
-            offset_points = [vec * (xi - x0i)[..., np.newaxis]
+            offset_points = [vec * (xi - x0i)[..., None]
                              for xi, vec, x0i in zip(subgrid,
                                                      mat.T,
                                                      [x0, y0, z0])]
@@ -542,36 +570,57 @@ def _ellipsoid_phantom_3d(space, ellipsoids):
     return space.element(p)
 
 
-def ellipsoid_phantom(space, ellipsoids):
+def ellipsoid_phantom(space, ellipsoids, min_pt=None, max_pt=None):
     """Return a phantom given by ellipsoids.
 
     Parameters
     ----------
     space : `DiscreteLp`
-        Space in which the phantom is created, must be 2- or 3-dimensional.
-        If ``space.shape`` is 1 in an axis, a corresponding slice of the
-        phantom is created.
+        Space in which the phantom should be created, must be 2- or
+        3-dimensional. If ``space.shape`` is 1 in an axis, a corresponding
+        slice of the phantom is created (instead of squashing the whole
+        phantom into the slice).
     ellipsoids : sequence of sequences
-        If ``space`` is 2-dimensional each row should contain:
+        If ``space`` is 2-dimensional, each row should contain the entries ::
 
-        'value', 'axis_1', 'axis_2', 'center_x', 'center_y', 'rotation'
+            'value',
+            'axis_1', 'axis_2',
+            'center_x', 'center_y',
+            'rotation'
 
-        If ``space`` is 3-dimensional each row should contain:
+        If ``space`` is 3-dimensional, each row should contain the entries ::
 
-        'value', 'axis_1', 'axis_2', 'axis_3',
-        'center_x', 'center_y', 'center_z',
-        'rotation_phi', 'rotation_theta', 'rotation_psi'
+            'value',
+            'axis_1', 'axis_2', 'axis_3',
+            'center_x', 'center_y', 'center_z',
+            'rotation_phi', 'rotation_theta', 'rotation_psi'
 
-        The ellipsoids need to be given such that the ellipsoids fall in the
-        rectangle [-1, -1] x [1, 1] or equivalent in 3d.
+        The provided ellipsoids need to be specified relative to the
+        reference rectangle ``[-1, -1] x [1, 1]``, or analogously in 3d.
+        The angles are to be given in radians.
 
-        The angles are given in radians.
+    min_pt, max_pt : array-like, optional
+        If provided, use these vectors to determine the bounding box of the
+        phantom instead of ``space.min_pt`` and ``space.max_pt``.
+        It is currently required that ``min_pt >= space.min_pt`` and
+        ``max_pt <= space.max_pt``, i.e., shifting or scaling outside the
+        original space is not allowed.
+
+        Providing one of them results in a shift, e.g., for ``min_pt``::
+
+            new_min_pt = min_pt
+            new_max_pt = space.max_pt + (min_pt - space.min_pt)
+
+        Providing both results in a scaled version of the phantom.
 
     Notes
     -----
-    The phantom is created by adding the values of each ellipse. The ellipses
-    are defined by a center point (center_x, center_y, [center_z]) and the
-    length of its principial axes (axis_1, axis_2, [axis_2]) and euler angles.
+    The phantom is created by adding the values of each ellipse. The
+    ellipses are defined by a center point
+    ``(center_x, center_y, [center_z])``, the lengths of its principial
+    axes ``(axis_1, axis_2, [axis_2])``, and a rotation angle ``rotation``
+    in 2D or Euler angles ``(rotation_phi, rotation_theta, rotation_psi)``
+    in 3D.
 
     This function is heavily optimized, achieving runtimes about 20 times
     faster than "trivial" implementations. It is therefore recommended to use
@@ -609,13 +658,49 @@ def ellipsoid_phantom(space, ellipsoids):
     odl.phantom.geometric.defrise_ellipses : Ellipses for the
         Defrise phantom
     """
-
     if space.ndim == 2:
-        return _ellipse_phantom_2d(space, ellipsoids)
+        _phantom = _ellipse_phantom_2d
     elif space.ndim == 3:
-        return _ellipsoid_phantom_3d(space, ellipsoids)
+        _phantom = _ellipsoid_phantom_3d
     else:
         raise ValueError('dimension not 2 or 3, no phantom available')
+
+    if min_pt is None and max_pt is None:
+        return _phantom(space, ellipsoids)
+
+    else:
+        # Generate a temporary space with given `min_pt` and `max_pt`
+        # (snapped to the cell grid), create the phantom in that space and
+        # resize to the target size for `space`.
+        # The snapped points are constructed by finding the index of
+        # `min/max_pt` in the space partition, indexing the partition with
+        # that index, yielding a single-cell partition, and then taking
+        # the lower-left/upper-right corner of that cell.
+        if min_pt is None:
+            snapped_min_pt = space.min_pt
+        else:
+            min_pt_cell = space.partition[space.partition.index(min_pt)]
+            snapped_min_pt = min_pt_cell.min_pt
+
+        if max_pt is None:
+            snapped_max_pt = space.max_pt
+        else:
+            max_pt_cell = space.partition[space.partition.index(max_pt)]
+            snapped_max_pt = max_pt_cell.max_pt
+            # Avoid snapping to the next cell where max_pt falls exactly on
+            # a boundary
+            for i in range(space.ndim):
+                if max_pt[i] in space.partition.cell_boundary_vecs[i]:
+                    snapped_max_pt[i] = max_pt[i]
+
+        tmp_space = uniform_discr_fromdiscr(
+            space, min_pt=snapped_min_pt, max_pt=snapped_max_pt,
+            cell_sides=space.cell_sides)
+
+        tmp_phantom = _phantom(tmp_space, ellipsoids)
+        offset = space.partition.index(tmp_space.min_pt)
+        return space.element(
+            resize_array(tmp_phantom, space.shape, offset))
 
 
 def smooth_cuboid(space, min_pt=None, max_pt=None, axis=0):
@@ -801,7 +886,7 @@ if __name__ == '__main__':
     space = odl.uniform_discr([-1, -1, -1], [1, 1, 1], [300, 300, 300])
     ellipsoids = [[1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
                   [1.0, 0.6, 0.6, 0.6, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]
-    ellipsoid_phantom(space, ellipsoids).show('ellipse phantom 3d')
+    ellipsoid_phantom(space, ellipsoids).show('ellipsoid phantom 3d')
 
     # Defrise phantom 2D
     space = odl.uniform_discr([-1, -1], [1, 1], [300, 300])
