@@ -13,6 +13,7 @@ import numpy as np
 
 from odl.set import RealNumbers, ComplexNumbers
 from odl.space.entry_points import tensor_space_impl
+from odl.space.pspace import ProductSpaceElement
 from odl.space.weighting import ArrayWeighting, ConstWeighting
 from odl.util import OptionalArgDecorator
 
@@ -453,14 +454,31 @@ class auto_weighting(OptionalArgDecorator):
         # Define the new `_call` depending on original signature
         self = unweighted_adjoint
 
+        def mul_weight(x, w):
+            """Multiplication with weights that works in product spaces."""
+            if not isinstance(x, ProductSpaceElement) or np.isscalar(w):
+                return w * x
+            else:
+                # Product space, array weight
+                return x.space.element([wi * xi for xi, wi in zip(x, w)])
+
+        def idiv_weight(x, w):
+            """In-place division by weights that works in product spaces."""
+            if not isinstance(x, ProductSpaceElement) or np.isscalar(w):
+                x /= w
+            else:
+                # Product space, array weight
+                for xi, wi in zip(x, w):
+                    xi /= wi
+
         # Monkey-patching starts here
         if self._call_has_out and self._call_out_optional:
             def _call(x, out=None):
                 if not skip_ran:
-                    x = new_ran_w * x
+                    x = mul_weight(x, new_ran_w)
                 out = self._call_unweighted(x, out=out)
                 if not skip_dom:
-                    out /= new_dom_w
+                    idiv_weight(out, new_dom_w)
                 return out
 
             self._call_unweighted = self._call_in_place
@@ -469,10 +487,10 @@ class auto_weighting(OptionalArgDecorator):
         elif self._call_has_out and not self._call_out_optional:
             def _call(x, out):
                 if not skip_ran:
-                    x = new_ran_w * x
+                    x = mul_weight(x, new_ran_w)
                 self._call_unweighted(x, out=out)
                 if not skip_dom:
-                    out /= new_dom_w
+                    idiv_weight(out, new_dom_w)
                 return out
 
             self._call_unweighted = self._call_in_place
@@ -481,10 +499,10 @@ class auto_weighting(OptionalArgDecorator):
         else:
             def _call(x):
                 if not skip_ran:
-                    x = new_ran_w * x
+                    x = mul_weight(x, new_ran_w)
                 out = self._call_unweighted(x)
                 if not skip_dom:
-                    out /= new_dom_w
+                    idiv_weight(out, new_dom_w)
                 return out
 
             self._call_unweighted = self._call_out_of_place
