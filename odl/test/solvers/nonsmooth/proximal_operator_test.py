@@ -16,7 +16,7 @@ import odl
 from odl.solvers.nonsmooth.proximal_operators import (
     combine_proximals, proximal_const_func,
     proximal_box_constraint, proximal_nonnegativity,
-    proximal_convex_conj_l1,
+    proximal_convex_conj_l1, proximal_convex_conj_l1_l2,
     proximal_l2,
     proximal_convex_conj_l2_squared,
     proximal_convex_conj_kl, proximal_convex_conj_kl_cross_entropy)
@@ -365,8 +365,7 @@ def test_proximal_convconj_l1_product_space():
 
     # Factory function returning the proximal operator
     lam = 2
-    prox_factory = proximal_convex_conj_l1(op_domain, lam=lam, g=g,
-                                           isotropic=True)
+    prox_factory = proximal_convex_conj_l1_l2(op_domain, lam=lam, g=g)
 
     # Initialize the proximal operator
     sigma = 0.25

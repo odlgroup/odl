@@ -18,8 +18,10 @@ from odl.space import ProductSpace
 from odl.operator import (Operator, ConstantOperator, ZeroOperator,
                           ScalingOperator, DiagonalOperator, PointwiseNorm)
 from odl.solvers.nonsmooth.proximal_operators import (
-    proximal_l1, proximal_l1_l2, proximal_convex_conj_l1, proximal_huber,
+    proximal_l1, proximal_convex_conj_l1,
+    proximal_l1_l2, proximal_convex_conj_l1_l2,
     proximal_l2, proximal_convex_conj_l2, proximal_l2_squared,
+    proximal_huber,
     proximal_const_func, proximal_box_constraint,
     proximal_convex_conj_kl, proximal_convex_conj_kl_cross_entropy,
     combine_proximals, proximal_convex_conj)
@@ -405,7 +407,7 @@ class IndicatorGroupL1UnitBall(Functional):
         if self.pointwise_norm.exponent == np.inf:
             return proximal_convex_conj_l1(space=self.domain)
         elif self.pointwise_norm.exponent == 2:
-            return proximal_convex_conj_l1(space=self.domain, isotropic=True)
+            return proximal_convex_conj_l1_l2(space=self.domain)
         else:
             raise NotImplementedError('`proximal` only implemented for p = 1 '
                                       'or 2')
