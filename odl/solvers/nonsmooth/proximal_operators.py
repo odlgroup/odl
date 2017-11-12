@@ -1324,7 +1324,10 @@ def proximal_convex_conj_kl(space, lam=1, g=None):
             # (x + lam - sqrt((x - lam)^2 + 4*lam*sig*g)) / 2
 
             # out = (x - lam)^2
-            out.assign(x)
+            if x is out:
+                x = x.copy()
+            else:
+                out.assign(x)
             out -= lam
             out.ufuncs.square(out=out)
 
