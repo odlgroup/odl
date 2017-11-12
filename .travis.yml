@@ -69,7 +69,7 @@ script:
     # To avoid clogging the logs, we redirect stderr to /dev/null
     - if [[ "$BUILD_DOCS" == "true" && "$TRAVIS_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" == "false" ]]; then
         cd $TRAVIS_BUILD_DIR/doc/source && python generate_doc.py && cd -;
-        travis-sphinx -n -s $TRAVIS_BUILD_DIR/doc/source build 2>/dev/null;
+        travis-sphinx build -n -s $TRAVIS_BUILD_DIR/doc/source 2>/dev/null;
       fi
 
 after_success:
