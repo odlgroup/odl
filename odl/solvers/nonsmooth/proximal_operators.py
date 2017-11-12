@@ -1082,15 +1082,14 @@ def proximal_convex_conj_l1(space, lam=1, g=None, isotropic=False):
     return ProximalConvexConjL1
 
 
-def proximal_l1(space, lam=1, g=None, isotropic=False):
-    """Proximal operator factory of the l1-norm/distance.
+def proximal_l1(space, lam=1, g=None):
+    """Proximal operator factory of the L1 norm/distance.
 
-    Function for the proximal operator of the functional F where F is an
-    l1-norm (or distance to g, if given)::
+    Implements the proximal operator of the functional ::
 
         F(x) = lam ||x - g||_1
 
-    with x and g elements in ``space``, and scaling factor lam.
+    with ``x`` and ``g`` elements in ``space``, and scaling factor ``lam``.
 
     Parameters
     ----------
@@ -1099,11 +1098,8 @@ def proximal_l1(space, lam=1, g=None, isotropic=False):
     lam : positive float, optional
         Scaling factor or regularization parameter.
     g : ``space`` element, optional
-        An element in ``space``. Default: ``space.zero``.
-    isotropic : bool, optional
-        If ``True``, take the vectorial 2-norm point-wise. Otherwise,
-        use the vectorial 1-norm. Only available if ``space`` is a
-        `ProductSpace`.
+        Element to which the L1 distance is taken.
+        Default: ``space.zero``.
 
     Returns
     -------
@@ -1112,13 +1108,13 @@ def proximal_l1(space, lam=1, g=None, isotropic=False):
 
     Notes
     -----
-    The :math:`L_1`-norm/distance :math:`F` is the functional
+    For the functional
 
     .. math::
-        F(x) = \\lambda \|x - g\|_1.
+        F(x) = \\lambda \|x - g\|_1,
 
-    For a step size :math:`\\sigma`, the proximal operator of :math:`\\sigma F`
-    is the "soft-shrinkage" operator
+    and a step size :math:`\\sigma`, the proximal operator of
+    :math:`\\sigma F` is given as the "soft-shrinkage" operator
 
     .. math::
         \mathrm{prox}_{\\sigma F}(x) =
@@ -1129,30 +1125,21 @@ def proximal_l1(space, lam=1, g=None, isotropic=False):
 
     Here, all operations are to be read pointwise.
 
-    An alternative formulation is available for `ProductSpace`'s, where the
-    the ``isotropic`` parameter can be used, i.e.,
+    For vector-valued :math:`x` and :math:`g`, the (non-isotropic) proximal
+    operator is the component-wise scalar proximal:
 
     .. math::
-        F(x) = \\lambda \| |x - g|_2 \|_1
+        \mathrm{prox}_{\\sigma F}(x) = \\left(
+            \mathrm{prox}_{\\sigma F}(x_1), \dots,
+            \mathrm{prox}_{\\sigma F}(x_d)
+            \\right),
 
-    with the pointwise Euclidean norm :math:`|\cdot|_2`. For this case, one
-    gets
-
-    .. math::
-        \mathrm{prox}_{\\sigma F}(x) =
-        \\begin{cases}
-            g, & \\text{where } |x - g|_2 \\leq \sigma\\lambda, \\\\
-            x - \sigma\\lambda \\frac{x - g}{|x - g|_2}, & \\text{elsewhere.}
-        \\end{cases}
+    where :math:`d` is the number of components of :math:`x`.
 
     See Also
     --------
     proximal_convex_conj_l1 : proximal for convex conjugate
-
-    References
-    ----------
-    [BC2011] Bauschke, H H, and Combettes, P L. *Convex analysis and
-    monotone operator theory in Hilbert spaces*. Springer, 2011.
+    proximal_l1_isotropic : isotropic variant of the group L1 norm proximal
     """
     lam = float(lam)
 
@@ -1161,7 +1148,7 @@ def proximal_l1(space, lam=1, g=None, isotropic=False):
 
     class ProximalL1(Operator):
 
-        """Proximal operator of the l1-norm/distance."""
+        """Proximal operator of the L1 norm/distance."""
 
         def __init__(self, sigma):
             """Initialize a new instance.
@@ -1169,53 +1156,136 @@ def proximal_l1(space, lam=1, g=None, isotropic=False):
             Parameters
             ----------
             sigma : positive float
-                Step size parameter
+                Step size parameter.
             """
             super(ProximalL1, self).__init__(
                 domain=space, range=space, linear=False)
             self.sigma = float(sigma)
 
         def _call(self, x, out):
-            """Apply the operator to ``x`` and stores the result in ``out``."""
+            """Return ``self(x, out=out)``."""
             # diff = x - g
             if g is not None:
                 diff = x - g
             else:
                 if x is out:
-                    # Handle aliased data properly
+                    # Handle aliased `x` and `out` (original `x` needed later)
                     diff = x.copy()
                 else:
                     diff = x
 
-            if isotropic:
-                # We write the operator as
-                # x - (x - g) / max(|x - g|_2 / sig*lam, 1)
-                pwnorm = PointwiseNorm(self.domain, exponent=2)
-                denom = pwnorm(diff)
-                denom /= self.sigma * lam
-                denom.ufuncs.maximum(1, out=denom)
+            # We write the operator as
+            # x - (x - g) / max(|x - g| / sig*lam, 1)
+            denom = diff.ufuncs.absolute()
+            denom /= self.sigma * lam
+            denom.ufuncs.maximum(1, out=denom)
 
-                # out = (x - g) / denom
-                for out_i, diff_i in zip(out, diff):
-                    diff_i.divide(denom, out=out_i)
+            # out = (x - g) / denom
+            diff.ufuncs.divide(denom, out=out)
 
-                # out = x - ...
-                out.lincomb(1, x, -1, out)
-
-            else:
-                # We write the operator as
-                # x - (x - g) / max(|x - g| / sig*lam, 1)
-                denom = diff.ufuncs.absolute()
-                denom /= self.sigma * lam
-                denom.ufuncs.maximum(1, out=denom)
-
-                # out = (x - g) / denom
-                diff.ufuncs.divide(denom, out=out)
-
-                # out = x - ...
-                out.lincomb(1, x, -1, out)
+            # out = x - ...
+            out.lincomb(1, x, -1, out)
 
     return ProximalL1
+
+
+def proximal_l1_l2(space, lam=1, g=None):
+    """Proximal operator factory of the group-L1-L2 norm/distance.
+
+    Implements the proximal operator of the functional ::
+
+        F(x) = lam || |x - g|_2 ||_1
+
+    with ``x`` and ``g`` elements in ``space``, and scaling factor ``lam``.
+    Here, ``|.|_2`` is the pointwise Euclidean norm of a vector-valued
+    function.
+
+    Parameters
+    ----------
+    space : `LinearSpace` or `ProductSpace`
+        Domain of the functional.
+    lam : positive float, optional
+        Scaling factor or regularization parameter.
+    g : ``space`` element, optional
+        Element to which the L1-L2 distance is taken.
+        Default: ``space.zero``.
+
+    Returns
+    -------
+    prox_factory : function
+        Factory for the proximal operator to be initialized
+
+    Notes
+    -----
+    For the functional
+
+    .. math::
+        F(x) = \\lambda \| |x - g|_2 \|_1,
+
+    and a step size :math:`\\sigma`, the proximal operator of
+    :math:`\\sigma F` is given as the "soft-shrinkage" operator
+
+    .. math::
+        \mathrm{prox}_{\\sigma F}(x) =
+        \\begin{cases}
+            g, & \\text{where } |x - g|_2 \\leq \sigma\\lambda, \\\\
+            x - \sigma\\lambda \\frac{x - g}{|x - g|_2}, & \\text{elsewhere.}
+        \\end{cases}
+
+    Here, all operations are to be read pointwise.
+
+    See Also
+    --------
+    proximal_l1 : Scalar or non-isotropic vectorial variant
+    """
+    lam = float(lam)
+
+    if g is not None and g not in space:
+        raise TypeError('{!r} is not an element of {!r}'.format(g, space))
+
+    class ProximalL1L2(Operator):
+
+        """Proximal operator of the group-L1-L2 norm/distance."""
+
+        def __init__(self, sigma):
+            """Initialize a new instance.
+
+            Parameters
+            ----------
+            sigma : positive float
+                Step size parameter.
+            """
+            super(ProximalL1L2, self).__init__(
+                domain=space, range=space, linear=False)
+            self.sigma = float(sigma)
+
+        def _call(self, x, out):
+            """Return ``self(x, out=out)``."""
+            # diff = x - g
+            if g is not None:
+                diff = x - g
+            else:
+                if x is out:
+                    # Handle aliased `x` and `out` (original `x` needed later)
+                    diff = x.copy()
+                else:
+                    diff = x
+
+            # We write the operator as
+            # x - (x - g) / max(|x - g|_2 / sig*lam, 1)
+            pwnorm = PointwiseNorm(self.domain, exponent=2)
+            denom = pwnorm(diff)
+            denom /= self.sigma * lam
+            denom.ufuncs.maximum(1, out=denom)
+
+            # out = (x - g) / denom
+            for out_i, diff_i in zip(out, diff):
+                diff_i.divide(denom, out=out_i)
+
+            # out = x - ...
+            out.lincomb(1, x, -1, out)
+
+    return ProximalL1L2
 
 
 def proximal_convex_conj_kl(space, lam=1, g=None):
@@ -1320,11 +1390,12 @@ def proximal_convex_conj_kl(space, lam=1, g=None):
             self.sigma = float(sigma)
 
         def _call(self, x, out):
-            """Apply the operator to ``x`` and stores the result in ``out``."""
+            """Return ``self(x, out=out)``."""
             # (x + lam - sqrt((x - lam)^2 + 4*lam*sig*g)) / 2
 
             # out = (x - lam)^2
             if x is out:
+                # Handle aliased `x` and `out` (need original `x` later on)
                 x = x.copy()
             else:
                 out.assign(x)
@@ -1452,7 +1523,7 @@ def proximal_convex_conj_kl_cross_entropy(space, lam=1, g=None):
                 domain=space, range=space, linear=False)
 
         def _call(self, x, out):
-            """Apply the operator to ``x`` and stores the result in ``out``."""
+            """Return ``self(x, out=out)``."""
             # Lazy import to improve `import odl` time
             import scipy.special
 
@@ -1514,11 +1585,7 @@ def proximal_huber(space, gamma):
                                                 linear=False)
 
         def _call(self, x, out):
-            if isinstance(x.space, ProductSpace):
-                raise NotImplementedError('`proximal` not yet implemented for'
-                                          'product spaces')
-
-            """Apply the operator to ``x`` and stores the result in ``out``."""
+            """Return ``self(x, out=out)``."""
             if isinstance(self.domain, ProductSpace):
                 norm = PointwiseNorm(self.domain, 2)(x)
             else:

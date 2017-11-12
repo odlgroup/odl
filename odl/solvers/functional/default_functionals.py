@@ -18,23 +18,24 @@ from odl.space import ProductSpace
 from odl.operator import (Operator, ConstantOperator, ZeroOperator,
                           ScalingOperator, DiagonalOperator, PointwiseNorm)
 from odl.solvers.nonsmooth.proximal_operators import (
-    proximal_l1, proximal_convex_conj_l1, proximal_l2, proximal_convex_conj_l2,
-    proximal_l2_squared, proximal_const_func, proximal_box_constraint,
-    proximal_convex_conj, proximal_convex_conj_kl,
-    proximal_convex_conj_kl_cross_entropy,
-    combine_proximals, proximal_huber)
+    proximal_l1, proximal_l1_l2, proximal_convex_conj_l1, proximal_huber,
+    proximal_l2, proximal_convex_conj_l2, proximal_l2_squared,
+    proximal_const_func, proximal_box_constraint,
+    proximal_convex_conj_kl, proximal_convex_conj_kl_cross_entropy,
+    combine_proximals, proximal_convex_conj)
 from odl.util import conj_exponent
 
 
-__all__ = ('LpNorm', 'L1Norm', 'L2Norm', 'L2NormSquared',
-           'ZeroFunctional', 'ConstantFunctional', 'IndicatorLpUnitBall',
-           'GroupL1Norm', 'IndicatorGroupL1UnitBall', 'IndicatorZero',
-           'IndicatorBox', 'IndicatorNonnegativity', 'KullbackLeibler',
-           'KullbackLeiblerCrossEntropy', 'SeparableSum',
+__all__ = ('ZeroFunctional', 'ConstantFunctional', 'ScalingFunctional',
+           'IdentityFunctional',
+           'LpNorm', 'L1Norm', 'GroupL1Norm', 'L2Norm', 'L2NormSquared',
+           'Huber', 'NuclearNorm',
+           'IndicatorZero', 'IndicatorBox', 'IndicatorNonnegativity',
+           'IndicatorLpUnitBall', 'IndicatorGroupL1UnitBall',
+           'IndicatorNuclearNormUnitBall',
+           'KullbackLeibler', 'KullbackLeiblerCrossEntropy',
            'QuadraticForm',
-           'NuclearNorm', 'IndicatorNuclearNormUnitBall',
-           'ScalingFunctional', 'IdentityFunctional',
-           'MoreauEnvelope', 'Huber')
+           'SeparableSum', 'MoreauEnvelope')
 
 
 class LpNorm(Functional):
@@ -318,7 +319,7 @@ class GroupL1Norm(Functional):
         if self.pointwise_norm.exponent == 1:
             return proximal_l1(space=self.domain)
         elif self.pointwise_norm.exponent == 2:
-            return proximal_l1(space=self.domain, isotropic=True)
+            return proximal_l1_l2(space=self.domain)
         else:
             raise NotImplementedError('`proximal` only implemented for p = 1 '
                                       'or 2')
