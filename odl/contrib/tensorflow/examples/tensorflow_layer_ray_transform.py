@@ -28,11 +28,11 @@ odl_op_layer = odl.contrib.tensorflow.as_tensorflow_layer(
 
 
 # Add empty axes for batch and channel
-x = x[None, ..., None]
-z = z[None, ..., None]
+x_reshaped = x[None, ..., None]
+z_reshaped = z[None, ..., None]
 
 # Lazily apply operator in tensorflow
-y = odl_op_layer(x)
+y = odl_op_layer(x_reshaped)
 
 # Evaluate using tensorflow
 print(y.eval())
@@ -44,7 +44,7 @@ print(ray_transform(x.eval()))
 # We need to scale by cell size to get correct value since the derivative
 # in tensorflow uses unweighted spaces.
 scale = ray_transform.range.cell_volume / ray_transform.domain.cell_volume
-print(tf.gradients(y, [x], z)[0].eval() * scale)
+print(tf.gradients(y, [x_reshaped], z_reshaped)[0].eval() * scale)
 
 # Compare result with pure ODL
 print(ray_transform.derivative(x.eval()).adjoint(z.eval()))

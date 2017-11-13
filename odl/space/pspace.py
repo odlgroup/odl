@@ -283,7 +283,7 @@ class ProductSpace(LinearSpace):
 
     @property
     def shape(self):
-        """Total spaces per axis spaces, computed recursively.
+        """Total spaces per axis, computed recursively.
 
         The recursion ends at the fist level that does not comprise
         a *power* space, i.e., which is not made of equal spaces.

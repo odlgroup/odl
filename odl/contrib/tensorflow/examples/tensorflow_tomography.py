@@ -37,12 +37,12 @@ x = tf.Variable(tf.zeros(shape=space.shape), name="x")
 y = tf.constant(np.asarray(noisy_data))
 
 # Add empty axes for batch and channel
-x = x[None, ..., None]
-y = y[None, ..., None]
+x_reshaped = x[None, ..., None]
+y_reshaped = y[None, ..., None]
 
 # Define loss function
-loss = (tf.reduce_sum((ray_transform_layer(x) - y) ** 2) +
-        50 * tf.reduce_sum(tf.abs(grad_layer(x))))
+loss = (tf.reduce_sum((ray_transform_layer(x_reshaped) - y_reshaped) ** 2) +
+        50 * tf.reduce_sum(tf.abs(grad_layer(x_reshaped))))
 
 # Train using the ADAM optimizer
 optimizer = tf.train.AdamOptimizer(1e-1).minimize(loss)
