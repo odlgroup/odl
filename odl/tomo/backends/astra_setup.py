@@ -369,9 +369,9 @@ def astra_parallel_3d_geom_to_vec(geometry):
        http://www.astra-toolbox.com/docs/geom3d.html#projection-geometries
     """
     angles = geometry.angles
-    vectors = np.zeros((angles.shape[0], 12))
-
     mid_pt = geometry.det_params.mid_pt
+
+    vectors = np.zeros((angles.shape[-1], 12))
 
     # Ray direction = -(detector-to-source normal vector)
     vectors[:, 0:3] = -geometry.det_to_src(angles, mid_pt)
