@@ -12,12 +12,11 @@ from __future__ import print_function, division, absolute_import
 from builtins import object
 import numpy as np
 
-from odl.space.base_ntuples import FnBaseVector
+from odl.space.base_tensors import TensorSpace
 from odl.util import array_str, signature_string, indent
 
 
 __all__ = ('MatrixWeighting', 'ArrayWeighting', 'ConstWeighting',
-           'NoWeighting',
            'CustomInner', 'CustomNorm', 'CustomDist')
 
 
@@ -217,8 +216,7 @@ class MatrixWeighting(Weighting):
         precomp_mat_pow = kwargs.pop('precomp_mat_pow', False)
         self._cache_mat_pow = bool(kwargs.pop('cache_mat_pow', True))
         self._cache_mat_decomp = bool(kwargs.pop('cache_mat_decomp', False))
-        super(MatrixWeighting, self).__init__(
-            impl=impl, exponent=exponent)
+        super(MatrixWeighting, self).__init__(impl=impl, exponent=exponent)
 
         # Check and set matrix
         if scipy.sparse.isspmatrix(matrix):
@@ -236,7 +234,7 @@ class MatrixWeighting(Weighting):
             raise ValueError('matrix has shape {}, expected a square matrix'
                              ''.format(self._matrix.shape))
 
-        if (self.matrix_issparse and
+        if (scipy.sparse.isspmatrix(self.matrix) and
                 self.exponent not in (1.0, 2.0, float('inf'))):
             raise NotImplementedError('sparse matrices only supported for '
                                       'exponent 1.0, 2.0 or `inf`')
@@ -262,12 +260,6 @@ class MatrixWeighting(Weighting):
         """Weighting matrix of this inner product."""
         return self._matrix
 
-    @property
-    def matrix_issparse(self):
-        """Whether the representing matrix is sparse or not."""
-        import scipy.sparse
-        return scipy.sparse.isspmatrix(self.matrix)
-
     def is_valid(self):
         """Test if the matrix is positive definite Hermitian.
 
@@ -277,7 +269,10 @@ class MatrixWeighting(Weighting):
         which can be very time-consuming for large matrices. Sparse
         matrices are not supported.
         """
-        if self.matrix_issparse:
+        # Lazy import to improve `import odl` time
+        import scipy.sparse
+
+        if scipy.sparse.isspmatrix(self.matrix):
             raise NotImplementedError('validation not supported for sparse '
                                       'matrices')
         elif self._eigval is not None:
@@ -323,7 +318,7 @@ class MatrixWeighting(Weighting):
         import scipy.sparse
 
         # TODO: fix dead link `scipy.linalg.decomp.eigh`
-        if self.matrix_issparse:
+        if scipy.sparse.isspmatrix(self.matrix):
             raise NotImplementedError('sparse matrix not supported')
 
         if cache is None:
@@ -370,11 +365,14 @@ class MatrixWeighting(Weighting):
         Returns
         -------
         equivalent : bool
-            ``True`` if other is a `Weighting` instance with the same
+            ``True`` if ``other`` is a `Weighting` instance with the same
             `Weighting.impl`, which yields the same result as this
             weighting for any input, ``False`` otherwise. This is checked
             by entry-wise comparison of matrices/arrays/constants.
         """
+        # Lazy import to improve `import odl` time
+        import scipy.sparse
+
         # Optimization for equality
         if self == other:
             return True
@@ -386,7 +384,7 @@ class MatrixWeighting(Weighting):
             if self.matrix.shape != other.matrix.shape:
                 return False
 
-            if self.matrix_issparse:
+            if scipy.sparse.isspmatrix(self.matrix):
                 if other.matrix_issparse:
                     # Optimization for different number of nonzero elements
                     if self.matrix.nnz != other.matrix.nnz:
@@ -404,7 +402,7 @@ class MatrixWeighting(Weighting):
                     return np.array_equal(self.matrix, other.matrix)
 
         elif isinstance(other, ArrayWeighting):
-            if self.matrix_issparse:
+            if scipy.sparse.isspmatrix(self.matrix):
                 return (np.array_equiv(self.matrix.diagonal(),
                                        other.array) and
                         np.array_equal(self.matrix.asformat('dia').offsets,
@@ -414,7 +412,7 @@ class MatrixWeighting(Weighting):
                     self.matrix, other.array * np.eye(self.matrix.shape[0]))
 
         elif isinstance(other, ConstWeighting):
-            if self.matrix_issparse:
+            if scipy.sparse.isspmatrix(self.matrix):
                 return (np.array_equiv(self.matrix.diagonal(), other.const) and
                         np.array_equal(self.matrix.asformat('dia').offsets,
                                        np.array([0])))
@@ -427,7 +425,10 @@ class MatrixWeighting(Weighting):
     @property
     def repr_part(self):
         """Return a string usable in a space's ``__repr__`` method."""
-        if self.matrix_issparse:
+        # Lazy import to improve `import odl` time
+        import scipy.sparse
+
+        if scipy.sparse.isspmatrix(self.matrix):
             optargs = [('matrix', str(self.matrix), '')]
         else:
             optargs = [('matrix', array_str(self.matrix, nprint=10), '')]
@@ -471,10 +472,9 @@ class ArrayWeighting(Weighting):
 
         Parameters
         ----------
-        array : 1-dim. `array-like`
+        array : `array-like`
             Weighting array of inner product, norm and distance.
-            Native `FnBaseVector` instances are stored
-            as-is without copying.
+            Native `Tensor` instances are stored as-is without copying.
         impl : string
             Specifier for the implementation backend.
         exponent : positive float, optional
@@ -483,24 +483,19 @@ class ArrayWeighting(Weighting):
         """
         super(ArrayWeighting, self).__init__(impl=impl, exponent=exponent)
 
-        # We store our "own" data structures as-is to retain Numpy
-        # compatibility while avoiding copies. Other things are run through
-        # numpy.asarray.
-        if isinstance(array, FnBaseVector):
+        # We apply array duck-typing to allow all kinds of Numpy-array-like
+        # data structures without change
+        array_attrs = ('shape', 'dtype', 'itemsize')
+        if (all(hasattr(array, attr) for attr in array_attrs) and
+                not isinstance(array, TensorSpace)):
             self.__array = array
         else:
-            self.__array = np.asarray(array)
-
-        if self.array.dtype == object:
-            raise ValueError('invalid array {}'.format(array))
-        elif self.array.ndim != 1:
-            raise ValueError('array {} is {}-dimensional instead of '
-                             '1-dimensional'
-                             ''.format(array, self._array.ndim))
+            raise TypeError('`array` {!r} does not look like a valid array'
+                            ''.format(array))
 
     @property
     def array(self):
-        """Weighting array of this inner instance."""
+        """Weighting array of this instance."""
         return self.__array
 
     def is_valid(self):
@@ -513,8 +508,8 @@ class ArrayWeighting(Weighting):
         Returns
         -------
         equals : bool
-            ``True`` if other is a `ArrayWeighting` instance with
-            **identical** array, ``False`` otherwise.
+            ``True`` if ``other`` is an `ArrayWeighting` instance with
+            **identical** array, False otherwise.
 
         See Also
         --------
@@ -538,10 +533,10 @@ class ArrayWeighting(Weighting):
         Returns
         -------
         equivalent : bool
-            ``True`` if other is a `Weighting` instance with the same
+            ``True`` if ``other`` is a `Weighting` instance with the same
             `Weighting.impl`, which yields the same result as this
             weighting for any input, ``False`` otherwise. This is checked
-            by entry-wise comparison of matrices/arrays/constants.
+            by entry-wise comparison of arrays/constants.
         """
         # Optimization for equality
         if self == other:
@@ -595,7 +590,8 @@ class ConstWeighting(Weighting):
             product is not defined.
         """
         super(ConstWeighting, self).__init__(impl=impl, exponent=exponent)
-        self._const = float(const)
+        self.__const = float(const)
+
         if self.const <= 0:
             raise ValueError('expected positive constant, got {}'
                              ''.format(const))
@@ -605,7 +601,7 @@ class ConstWeighting(Weighting):
     @property
     def const(self):
         """Weighting constant of this inner product."""
-        return self._const
+        return self.__const
 
     def __eq__(self, other):
         """Return ``self == other``.
@@ -613,7 +609,7 @@ class ConstWeighting(Weighting):
         Returns
         -------
         equal : bool
-            ``True`` if other is a `ConstWeighting` instance with the
+            ``True`` if ``other`` is a `ConstWeighting` instance with the
             same constant, ``False`` otherwise.
         """
         if other is self:
@@ -655,41 +651,8 @@ class ConstWeighting(Weighting):
         """Return ``repr(self)``."""
         posargs = [self.const]
         optargs = [('exponent', self.exponent, 2.0)]
-        inner_str = signature_string(posargs, optargs, mod=':.4')
-        return '{}({})'.format(self.__class__.__name__, inner_str)
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        return repr(self)
-
-
-class NoWeighting(ConstWeighting):
-
-    """Weighting with constant 1."""
-
-    def __init__(self, impl, exponent=2.0):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        impl : string
-            Specifier for the implementation backend.
-        exponent : positive float, optional
-            Exponent of the norm. For values other than 2.0, the inner
-            product is not defined.
-        """
-        # Support singleton pattern for subclasses
-        if not hasattr(self, '_initialized'):
-            ConstWeighting.__init__(
-                self, const=1.0, impl=impl, exponent=exponent)
-            self._initialized = True
-
-    def __repr__(self):
-        """Return ``repr(self)``."""
-        posargs = []
-        optargs = [('exponent', self.exponent, 2.0)]
-        inner_str = signature_string(posargs, optargs, mod=':.4')
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        return '{}({})'.format(self.__class__.__name__,
+                               signature_string(posargs, optargs))
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -724,12 +687,12 @@ class CustomInner(Weighting):
         if not callable(inner):
             raise TypeError('`inner` {!r} is not callable'
                             ''.format(inner))
-        self._inner = inner
+        self.__inner = inner
 
     @property
     def inner(self):
         """Custom inner product of this instance.."""
-        return self._inner
+        return self.__inner
 
     def __eq__(self, other):
         """Return ``self == other``.
@@ -791,7 +754,7 @@ class CustomNorm(Weighting):
         if not callable(norm):
             raise TypeError('`norm` {!r} is not callable'
                             ''.format(norm))
-        self._norm = norm
+        self.__norm = norm
 
     def inner(self, x1, x2):
         """Inner product is not defined for custom distance."""
@@ -800,7 +763,7 @@ class CustomNorm(Weighting):
     @property
     def norm(self):
         """Custom norm of this instance.."""
-        return self._norm
+        return self.__norm
 
     def __eq__(self, other):
         """Return ``self == other``.

@@ -426,7 +426,11 @@ def show_discrete_data(values, grid, title=None, method='',
                 # If it exists and we should update it
                 csub.colorbar.set_clim(minval, maxval)
                 csub.colorbar.set_ticks(ticks)
-                csub.colorbar.set_ticklabels([fmt % t for t in ticks])
+                if '%' not in fmt:
+                    labels = [fmt] * len(ticks)
+                else:
+                    labels = [fmt % t for t in ticks]
+                csub.colorbar.set_ticklabels(labels)
                 csub.colorbar.draw_all()
 
     # Set title of window

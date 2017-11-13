@@ -72,11 +72,21 @@ class ParallelBeamGeometry(Geometry):
 
     @property
     def angles(self):
-        """Discrete angles given in this geometry."""
+        """All angles of this geometry as an array.
+
+        If ``motion_params.ndim == 1``, the array has shape ``(N,)``,
+        where ``N`` is the number of angles.
+        Otherwise, the array shape is ``(ndim, N)``, where ``N`` is the
+        total number of angles, and ``ndim`` is ``motion_partitioin.ndim``.
+
+        The order of axes is chosen such that ``geometry.angles`` can be
+        used directly as input to any of the other methods of the
+        geometry.
+        """
         if self.motion_partition.ndim == 1:
             return self.motion_grid.coord_vectors[0]
         else:
-            return self.motion_grid.points()
+            return self.motion_grid.points().T
 
     def det_refpoint(self, angle):
         """Return the position(s) of the detector ref. point at ``angle``.

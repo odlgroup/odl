@@ -394,7 +394,7 @@ def forbild(space, resolution=False, ear=True, value_type='density',
 
         return space.element(materials)
     elif value_type == 'density':
-        return space.element(image)
+        return space.element(image.reshape(space.shape))
     else:
         raise ValueError('unknown `value_type` {}'.format(value_type))
 

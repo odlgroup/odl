@@ -121,11 +121,11 @@ class DiscreteFourierTransformBase(Operator):
             domain.grid, shift=False, halfcomplex=halfcomplex, axes=axes).shape
 
         if range is None:
-            impl = domain.dspace.impl
+            impl = domain.tspace.impl
 
             range = discr_sequence_space(
-                ran_shape, conj_exponent(domain.exponent), impl=impl,
-                dtype=ran_dtype, order=domain.order)
+                ran_shape, ran_dtype, impl,
+                exponent=conj_exponent(domain.exponent))
         else:
             if range.shape != ran_shape:
                 raise ValueError('expected range shape {}, got {}.'
@@ -795,7 +795,7 @@ class FourierTransformBase(Operator):
         if domain.impl != 'numpy':
             raise NotImplementedError(
                 'Only Numpy-based data spaces are supported, got {}'
-                ''.format(domain.dspace))
+                ''.format(domain.tspace))
 
         # axes
         axes = kwargs.pop('axes', np.arange(domain.ndim))

@@ -497,7 +497,7 @@ class RectGrid(Set):
         if other is self:
             return True
 
-        return (isinstance(other, RectGrid) and
+        return (type(other) is type(self) and
                 self.ndim == other.ndim and
                 self.shape == other.shape and
                 all(np.allclose(vec_s, vec_o, atol=atol, rtol=0.0)
@@ -511,7 +511,7 @@ class RectGrid(Set):
         if other is self:
             return True
 
-        return (isinstance(other, RectGrid) and
+        return (type(other) is type(self) and
                 self.shape == other.shape and
                 all(np.array_equal(vec_s, vec_o)
                     for (vec_s, vec_o) in zip(self.coord_vectors,
@@ -520,7 +520,7 @@ class RectGrid(Set):
     def __hash__(self):
         """Return ``hash(self)``."""
         # TODO: update with #841
-        coord_vec_str = tuple(cv.tostring() for cv in self.coord_vectors)
+        coord_vec_str = tuple(cv.tobytes() for cv in self.coord_vectors)
         return hash((type(self), coord_vec_str))
 
     def approx_contains(self, other, atol):
@@ -692,10 +692,11 @@ class RectGrid(Set):
         if index < 0:
             index += self.ndim
 
-        if len(grids) > 1:
-            return self.insert(index, grids[0]).insert(
-                index + grids[0].ndim, *(grids[1:]))
-        else:
+        if len(grids) == 0:
+            # Copy of `self`
+            return RectGrid(*self.coord_vectors)
+        elif len(grids) == 1:
+            # Insert single grid
             grid = grids[0]
             if not isinstance(grid, RectGrid):
                 raise TypeError('{!r} is not a `RectGrid` instance'
@@ -703,6 +704,10 @@ class RectGrid(Set):
             new_vecs = (self.coord_vectors[:index] + grid.coord_vectors +
                         self.coord_vectors[index:])
             return RectGrid(*new_vecs)
+        else:
+            # Recursively insert first grid and the remaining into the result
+            return self.insert(index, grids[0]).insert(
+                index + grids[0].ndim, *(grids[1:]))
 
     def append(self, *grids):
         """Insert ``grids`` at the end as a block.
@@ -782,7 +787,7 @@ class RectGrid(Set):
         Parameters
         ----------
         order : {'C', 'F'}, optional
-            Axis ordering in the resulting point array
+            Axis ordering in the resulting point array.
 
         Returns
         -------
@@ -1021,19 +1026,19 @@ class RectGrid(Set):
     def __repr__(self):
         """Return ``repr(self)``."""
         if self.is_uniform:
-            constructor = 'uniform_grid'
+            ctor = 'uniform_grid'
             posargs = [self.min_pt, self.max_pt, self.shape]
             posmod = [array_str, array_str, '']
             with npy_printoptions(precision=4):
                 inner_str = signature_string(posargs, [], mod=[posmod, ''])
-            return '{}({})'.format(constructor, inner_str)
+            return '{}({})'.format(ctor, inner_str)
         else:
-            constructor = self.__class__.__name__
+            ctor = self.__class__.__name__
             posargs = self.coord_vectors
             posmod = array_str
             inner_str = signature_string(posargs, [], sep=[',\n', ', ', ', '],
                                          mod=[posmod, ''])
-            return '{}(\n{}\n)'.format(constructor, indent(inner_str))
+            return '{}(\n{}\n)'.format(ctor, indent(inner_str))
 
     __str__ = __repr__
 

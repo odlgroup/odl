@@ -9,8 +9,8 @@
 """Images provided by the University of Cambridge."""
 
 import numpy as np
+import skimage.transform
 from odl.contrib.datasets.util import get_data
-from scipy.misc import imresize
 
 __all__ = ('brain_phantom', 'resolution_phantom', 'building', 'rings',
            'blurring_kernel')
@@ -37,7 +37,8 @@ def convert(image, shape, gray=False, dtype='float64', normalize='max'):
         image = np.sum(image, axis=2)
 
     if shape is not None:
-        image = imresize(image, shape).astype(dtype)
+        image = skimage.transform.resize(image, shape, mode='constant')
+        image = image.astype(dtype)
 
     if normalize == 'max':
         image /= image.max()

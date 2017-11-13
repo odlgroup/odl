@@ -10,6 +10,7 @@
 
 from __future__ import print_function, division, absolute_import
 import numpy as np
+import odl
 import uuid
 import tensorflow as tf
 from tensorflow.python.framework import ops
@@ -41,12 +42,12 @@ def as_tensorflow_layer(odl_op, name='ODLOperator',
     -------
     tensorflow_layer : callable
         Callable that, when called with a `tensorflow.Tensor` of shape
-        ``(n, *odl_op.domain.shape, 1)`` where ``n`` is the batch size,
+        ``(n,) + odl_op.domain.shape + (1,)`` where ``n`` is the batch size,
         returns another `tensorflow.Tensor` which is a lazy evaluation of
         ``odl_op``.
 
         If ``odl_op`` is an `Operator`, the shape of the returned tensor is
-        ``(n, *odl_op.range.shape, 1)``.
+        ``(n,) + odl_op.range.shape + (1,)``.
 
         If ``odl_op`` is an `Functional`, the shape of the returned tensor is
         ``(n,)``.
@@ -158,14 +159,14 @@ def as_tensorflow_layer(odl_op, name='ODLOperator',
             if odl_op.is_functional:
                 in_shape = (n_x,)
             else:
-                in_shape = (n_x,) + odl_op.range.shape + (1,)
-            out_shape = (n_x,) + odl_op.domain.shape + (1,)
+                in_shape = (n_x,) + space_shape(odl_op.range) + (1,)
+            out_shape = (n_x,) + space_shape(odl_op.domain) + (1,)
 
-            assert x_shape[1:] == odl_op.domain.shape + (1,)
+            assert x_shape[1:] == space_shape(odl_op.domain) + (1,)
             if odl_op.is_functional:
                 assert dy_shape[1:] == ()
             else:
-                assert dy_shape[1:] == odl_op.range.shape + (1,)
+                assert dy_shape[1:] == space_shape(odl_op.range) + (1,)
 
             def _impl(x, dy):
                 """Implementation of the adjoint of the derivative.
@@ -300,13 +301,13 @@ def as_tensorflow_layer(odl_op, name='ODLOperator',
                 n_x = x_shape[0]
                 fixed_size = False
 
-            in_shape = (n_x,) + odl_op.domain.shape + (1,)
+            in_shape = (n_x,) + space_shape(odl_op.domain) + (1,)
             if odl_op.is_functional:
                 out_shape = (n_x,)
             else:
-                out_shape = (n_x,) + odl_op.range.shape + (1,)
+                out_shape = (n_x,) + space_shape(odl_op.range) + (1,)
 
-            assert x_shape[1:] == odl_op.domain.shape + (1,)
+            assert x_shape[1:] == space_shape(odl_op.domain) + (1,)
 
             out_dtype = getattr(odl_op.range, 'dtype',
                                 odl_op.domain.dtype)
@@ -375,6 +376,18 @@ def as_tensorflow_layer(odl_op, name='ODLOperator',
                 return result
 
     return tensorflow_layer
+
+
+def space_shape(space):
+    """Return ``space.shape``, including power space base shape.
+
+    If ``space`` is a power space, return ``(len(space),) + space[0].shape``,
+    otherwise return ``space.shape``.
+    """
+    if isinstance(space, odl.ProductSpace) and space.is_power_space:
+        return (len(space),) + space[0].shape
+    else:
+        return space.shape
 
 
 if __name__ == '__main__':

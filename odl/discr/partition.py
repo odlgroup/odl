@@ -284,9 +284,14 @@ class RectPartition(object):
         """
         return len(self.grid)
 
-    def points(self):
-        """Return the sampling grid points."""
-        return self.grid.points()
+    def points(self, order='C'):
+        """Return the sampling grid points.
+
+        See Also
+        --------
+        RectGrid.points
+        """
+        return self.grid.points(order)
 
     @property
     def meshgrid(self):
@@ -468,8 +473,7 @@ class RectPartition(object):
             return True
 
         # Optimized version for exact equality
-        return (isinstance(other, type(self)) and
-                isinstance(self, type(other)) and
+        return (type(other) is type(self) and
                 self.set == other.set and
                 self.grid == other.grid)
 
@@ -621,6 +625,7 @@ class RectPartition(object):
             raise TypeError('`parts` must all be `RectPartition` instances, '
                             'got ({})'
                             ''.format(', '.join(repr(p) for p in parts)))
+
         newgrid = self.grid.insert(index, *(p.grid for p in parts))
         newset = self.set.insert(index, *(p.set for p in parts))
         return RectPartition(newset, newgrid)
@@ -783,11 +788,11 @@ class RectPartition(object):
 
     @property
     def byaxis(self):
-        """Return the subpartition defined along one or several dimensions.
+        """Object to index ``self`` along axes.
 
         Examples
         --------
-        Access the subpartition along each axis:
+        Indexing with integers or slices:
 
         >>> p = odl.uniform_partition([0, 1, 2], [1, 3, 5], (3, 5, 6))
         >>> p.byaxis[0]
@@ -796,31 +801,42 @@ class RectPartition(object):
         uniform_partition(1.0, 3.0, 5)
         >>> p.byaxis[2]
         uniform_partition(2.0, 5.0, 6)
-
-        Usual numpy style advanced indexing works:
-
         >>> p.byaxis[:] == p
         True
         >>> p.byaxis[1:]
         uniform_partition([ 1.,  2.], [ 3.,  5.], (5, 6))
-        >>> p.byaxis[[0, 2]]
-        uniform_partition([ 0.,  2.], [ 1.,  5.], (3, 6))
+
+        Lists can be used to stack subpartitions arbitrarily:
+
+        >>> p.byaxis[[0, 2, 0]]
+        uniform_partition([ 0.,  2.,  0.], [ 1.,  5.,  1.], (3, 6, 3))
         """
         partition = self
 
         class RectPartitionByAxis(object):
-            """Helper class for accessing `RectPartition` by dimension.
 
-            See Also
-            --------
-            RectPartition.byaxis
-            """
+            """Helper class for accessing `RectPartition` by axis."""
 
-            def __getitem__(self, dim):
-                """Return ``self[dim]``."""
-                slc = np.zeros(partition.ndim, dtype=object)
-                slc[dim] = slice(None)
-                return partition[tuple(slc)].squeeze(axis=(slc == 0))
+            def __getitem__(self, indices):
+                """Return ``self[indices]``."""
+                try:
+                    iter(indices)
+                except TypeError:
+                    # Integer or slice
+                    slc = np.zeros(partition.ndim, dtype=object)
+                    slc[indices] = slice(None)
+                    newpart = partition[tuple(slc)].squeeze()
+                else:
+                    # Sequence, stack together from single-integer indexing
+                    indices = [int(i) for i in indices]
+                    byaxis = partition.byaxis
+                    parts = [byaxis[i] for i in indices]
+                    if not parts:
+                        newpart = uniform_partition([], [], ())
+                    else:
+                        newpart = parts[0].append(*(parts[1:]))
+
+                return newpart
 
             def __repr__(self):
                 """Return ``repr(self)``.
@@ -857,7 +873,7 @@ class RectPartition(object):
                    csizes_r)
 
         if self.is_uniform and default_bdry_fracs:
-            constructor = 'uniform_partition'
+            ctor = 'uniform_partition'
             if self.ndim == 1:
                 posargs = [self.min_pt[0], self.max_pt[0], self.shape[0]]
                 posmod = [':.4', ':.4', '']
@@ -869,9 +885,9 @@ class RectPartition(object):
 
             with npy_printoptions(precision=4):
                 sig_str = signature_string(posargs, optargs, mod=[posmod, ''])
-            return '{}({})'.format(constructor, sig_str)
+            return '{}({})'.format(ctor, sig_str)
         else:
-            constructor = 'nonuniform_partition'
+            ctor = 'nonuniform_partition'
             posargs = self.coord_vectors
             posmod = array_str
 
@@ -916,7 +932,7 @@ class RectPartition(object):
 
             sig_str = signature_string(posargs, optargs, mod=[posmod, optmod],
                                        sep=[',\n', ', ', ',\n'])
-            return '{}(\n{}\n)'.format(constructor, indent(sig_str))
+            return '{}(\n{}\n)'.format(ctor, indent(sig_str))
 
     def __str__(self):
         """Return ``str(self)``."""

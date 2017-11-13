@@ -11,7 +11,7 @@
 from __future__ import print_function, division, absolute_import
 import numpy as np
 
-from odl.util import as_flat_array, NumpyRandomSeed
+from odl.util import NumpyRandomSeed
 
 
 __all__ = ('white_noise', 'poisson_noise', 'salt_pepper_noise')
@@ -22,7 +22,7 @@ def white_noise(space, mean=0, stddev=1, seed=None):
 
     Parameters
     ----------
-    space : `FnBase` or `ProductSpace`
+    space : `TensorSpace` or `ProductSpace`
         The space in which the noise is created.
     mean : ``space.field`` element or ``space`` `element-like`, optional
         The mean of the white noise. If a scalar, it is interpreted as
@@ -123,7 +123,7 @@ def poisson_noise(intensity, seed=None):
 
     Parameters
     ----------
-    intensity : `FnBase` element or `ProductSpace` element
+    intensity : `TensorSpace` or `ProductSpace` element
         The intensity (usually called lambda) parameter of the noise.
 
     Returns
@@ -173,19 +173,18 @@ def salt_pepper_noise(vector, fraction=0.05, salt_vs_pepper=0.5,
 
     Parameters
     ----------
-    vector : `FnBase` or `ProductSpace`
+    vector : `TensorSpaceElement` or `ProductSpaceElement`
         The vector that noise should be added to.
     fraction : float, optional
         The propotion of the elements in ``vector`` that should be converted
         to noise.
     salt_vs_pepper : float, optional
-        Relative aboundance of salt (high) vs pepper (low) noise. A high value
+        Relative abundance of salt (high) vs pepper (low) noise. A high value
         means more salt than pepper noise.
     low_val : float, optional
         The "pepper" color in the noise.
         Default: minimum value of ``vector``. For product spaces the minimum
         value per subspace is taken.
-        each sub-space.
     high_val : float, optional
         The "salt" value in the noise.
         Default: maximuim value of ``vector``. For product spaces the maximum
@@ -225,7 +224,7 @@ def salt_pepper_noise(vector, fraction=0.05, salt_vs_pepper=0.5,
                       for subintensity in vector]
         else:
             # Extract vector of values
-            values = as_flat_array(vector).copy()
+            values = vector.asarray().flatten()
 
             # Determine fill-in values if not given
             if low_val is None:
@@ -242,6 +241,7 @@ def salt_pepper_noise(vector, fraction=0.05, salt_vs_pepper=0.5,
 
             values[salt_indices] = high_val
             values[pepper_indices] = -low_val
+            values = values.reshape(vector.space.shape)
 
     return vector.space.element(values)
 

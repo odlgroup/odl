@@ -17,20 +17,20 @@ from odl.util.utility import (
 
 real_float_dtypes = np.sctypes['float']
 complex_float_dtypes = np.sctypes['complex']
-nonfloat_scalar_dtypes = np.sctypes['uint'] + np.sctypes['int']
-scalar_dtypes = (real_float_dtypes + complex_float_dtypes +
-                 nonfloat_scalar_dtypes)
-real_dtypes = real_float_dtypes + nonfloat_scalar_dtypes
+nonfloat_numeric_dtypes = np.sctypes['uint'] + np.sctypes['int']
+numeric_dtypes = (real_float_dtypes + complex_float_dtypes +
+                  nonfloat_numeric_dtypes)
+real_dtypes = real_float_dtypes + nonfloat_numeric_dtypes
 # Need to make concrete instances here (with string lengths)
-nonscalar_dtypes = [np.dtype('S1'), np.dtype('<U2'), np.dtype(object),
-                    np.dtype(bool), np.void]
+nonnumeric_dtypes = [np.dtype('S1'), np.dtype('<U2'), np.dtype(object),
+                     np.dtype(bool), np.void]
 
 
 # ---- Data type helpers ---- #
 
 
 def test_is_numeric_dtype():
-    for dtype in scalar_dtypes:
+    for dtype in numeric_dtypes:
         assert is_numeric_dtype(dtype)
 
 

@@ -12,17 +12,17 @@ from __future__ import print_function, division, absolute_import
 from builtins import object
 from collections import OrderedDict
 from functools import wraps
+import inspect
 import numpy as np
+import sys
 
 
 __all__ = ('array_str', 'dtype_str', 'dtype_repr', 'npy_printoptions',
            'signature_string', 'indent',
            'is_numeric_dtype', 'is_int_dtype', 'is_floating_dtype',
            'is_real_dtype', 'is_real_floating_dtype',
-           'is_complex_floating_dtype',
-           'is_string',
-           'real_dtype', 'complex_dtype',
-           'conj_exponent', 'as_flat_array', 'writable_array',
+           'is_complex_floating_dtype', 'real_dtype', 'complex_dtype',
+           'is_string', 'conj_exponent', 'writable_array',
            'run_from_ipython', 'NumpyRandomSeed', 'cache_arguments', 'unique')
 
 TYPE_MAP_R2C = {np.dtype(dtype): np.result_type(dtype, 1j)
@@ -31,6 +31,11 @@ TYPE_MAP_R2C = {np.dtype(dtype): np.result_type(dtype, 1j)
 TYPE_MAP_C2R = {cdt: np.empty(0, dtype=cdt).real.dtype
                 for rdt, cdt in TYPE_MAP_R2C.items()}
 TYPE_MAP_C2R.update({k: k for k in TYPE_MAP_R2C.keys()})
+
+if sys.version_info.major < 3:
+    getargspec = inspect.getargspec
+else:
+    getargspec = inspect.getfullargspec
 
 
 def indent(string, indent_str='    '):
@@ -173,8 +178,7 @@ def array_str(a, nprint=6):
     [ 2.]
     """
     a = np.asarray(a)
-    max_shape = tuple(a.shape[i] if a.shape[i] < nprint else nprint
-                      for i in range(a.ndim))
+    max_shape = tuple(n if n < nprint else nprint for n in a.shape)
     with npy_printoptions(threshold=int(np.prod(max_shape)),
                           edgeitems=nprint // 2,
                           suppress=True):
@@ -191,6 +195,8 @@ def dtype_repr(dtype):
         return "'float'"
     elif dtype == np.dtype(complex):
         return "'complex'"
+    elif dtype.shape:
+        return "('{}', {})".format(dtype.base, dtype.shape)
     else:
         return "'{}'".format(dtype)
 
@@ -204,6 +210,8 @@ def dtype_str(dtype):
         return 'float'
     elif dtype == np.dtype(complex):
         return 'complex'
+    elif dtype.shape:
+        return "('{}', {})".format(dtype.base, dtype.shape)
     else:
         return '{}'.format(dtype)
 
@@ -265,13 +273,15 @@ def cache_arguments(function):
 @cache_arguments
 def is_numeric_dtype(dtype):
     """Return ``True`` if ``dtype`` is a numeric type."""
-    return np.issubsctype(dtype, np.number)
+    dtype = np.dtype(dtype)
+    return np.issubsctype(getattr(dtype, 'base', None), np.number)
 
 
 @cache_arguments
 def is_int_dtype(dtype):
     """Return ``True`` if ``dtype`` is an integer type."""
-    return np.issubsctype(dtype, np.integer)
+    dtype = np.dtype(dtype)
+    return np.issubsctype(getattr(dtype, 'base', None), np.integer)
 
 
 @cache_arguments
@@ -289,23 +299,15 @@ def is_real_dtype(dtype):
 @cache_arguments
 def is_real_floating_dtype(dtype):
     """Return ``True`` if ``dtype`` is a real floating point type."""
-    return np.issubsctype(dtype, np.floating)
+    dtype = np.dtype(dtype)
+    return np.issubsctype(getattr(dtype, 'base', None), np.floating)
 
 
 @cache_arguments
 def is_complex_floating_dtype(dtype):
     """Return ``True`` if ``dtype`` is a complex floating point type."""
-    return np.issubsctype(dtype, np.complexfloating)
-
-
-def is_string(obj):
-    """Return ``True`` if ``obj`` behaves like a string, ``False`` else."""
-    try:
-        obj + ''
-    except TypeError:
-        return False
-    else:
-        return True
+    dtype = np.dtype(dtype)
+    return np.issubsctype(getattr(dtype, 'base', None), np.complexfloating)
 
 
 def real_dtype(dtype, default=None):
@@ -330,6 +332,28 @@ def real_dtype(dtype, default=None):
     ValueError
         if there is no real counterpart to the given data type and
         ``default == None``.
+
+    See Also
+    --------
+    complex_dtype
+
+    Examples
+    --------
+    Convert scalar dtypes:
+
+    >>> real_dtype(complex)
+    dtype('float64')
+    >>> real_dtype('complex64')
+    dtype('float32')
+    >>> real_dtype(float)
+    dtype('float64')
+
+    Dtypes with shape are also supported:
+
+    >>> real_dtype(np.dtype((complex, (3,))))
+    dtype(('<f8', (3,)))
+    >>> real_dtype(('complex64', (3,)))
+    dtype(('<f4', (3,)))
     """
     dtype, dtype_in = np.dtype(dtype), dtype
 
@@ -337,7 +361,7 @@ def real_dtype(dtype, default=None):
         return dtype
 
     try:
-        real_dtype = TYPE_MAP_C2R[dtype]
+        real_base_dtype = TYPE_MAP_C2R[dtype.base]
     except KeyError:
         if default is not None:
             return default
@@ -345,7 +369,7 @@ def real_dtype(dtype, default=None):
             raise ValueError('no real counterpart exists for `dtype` {}'
                              ''.format(dtype_repr(dtype_in)))
     else:
-        return real_dtype
+        return np.dtype((real_base_dtype, dtype.shape))
 
 
 def complex_dtype(dtype, default=None):
@@ -370,6 +394,24 @@ def complex_dtype(dtype, default=None):
     ValueError
         if there is no complex counterpart to the given data type and
         ``default == None``.
+
+    Examples
+    --------
+    Convert scalar dtypes:
+
+    >>> complex_dtype(float)
+    dtype('complex128')
+    >>> complex_dtype('float32')
+    dtype('complex64')
+    >>> complex_dtype(complex)
+    dtype('complex128')
+
+    Dtypes with shape are also supported:
+
+    >>> complex_dtype(np.dtype((float, (3,))))
+    dtype(('<c16', (3,)))
+    >>> complex_dtype(('float32', (3,)))
+    dtype(('<c8', (3,)))
     """
     dtype, dtype_in = np.dtype(dtype), dtype
 
@@ -377,7 +419,7 @@ def complex_dtype(dtype, default=None):
         return dtype
 
     try:
-        complex_dtype = TYPE_MAP_R2C[dtype]
+        complex_base_dtype = TYPE_MAP_R2C[dtype.base]
     except KeyError:
         if default is not None:
             return default
@@ -385,7 +427,17 @@ def complex_dtype(dtype, default=None):
             raise ValueError('no complex counterpart exists for `dtype` {}'
                              ''.format(dtype_repr(dtype_in)))
     else:
-        return complex_dtype
+        return np.dtype((complex_base_dtype, dtype.shape))
+
+
+def is_string(obj):
+    """Return ``True`` if ``obj`` behaves like a string, ``False`` else."""
+    try:
+        obj + ''
+    except TypeError:
+        return False
+    else:
+        return True
 
 
 def conj_exponent(exp):
@@ -407,7 +459,7 @@ def conj_exponent(exp):
     if exp == 1.0:
         return float('inf')
     elif exp == float('inf'):
-        return 1.0  # This is not strictly correct in math, but anyway
+        return 1.0
     else:
         return exp / (exp - 1.0)
 
@@ -490,31 +542,24 @@ def preload_first_arg(instance, mode):
     return decorator
 
 
-def as_flat_array(vec):
-    """Return ``vec`` as a flat array according to the order of ``vec``."""
-    if hasattr(vec, 'order'):
-        return vec.asarray().ravel(vec.order)
-    else:
-        return vec.asarray().ravel()
-
-
 class writable_array(object):
     """Context manager that casts obj to a `numpy.array` and saves changes."""
 
-    def __init__(self, obj, *args, **kwargs):
+    def __init__(self, obj, **kwargs):
         """initialize a new instance.
 
         Parameters
         ----------
         obj : `array-like`
-            Object that should be cast to an array, must be usable with
-            `numpy.asarray` and be set-able with ``obj[:] = arr``.
-        args, kwargs :
-            Arguments that should be passed to `numpy.asarray`.
+            Object that should be made available as writable array.
+            It must be valid as input to `numpy.asarray` and needs to
+            support the syntax ``obj[:] = arr``.
+        kwargs :
+            Keyword arguments that should be passed to `numpy.asarray`.
 
         Examples
         --------
-        Convert list to array and use with numpy
+        Convert list to array and use with numpy:
 
         >>> lst = [1, 2, 3]
         >>> with writable_array(lst) as arr:
@@ -522,7 +567,7 @@ class writable_array(object):
         >>> lst
         [2, 4, 6]
 
-        Also usable with ODL vectors
+        Usage with ODL vectors:
 
         >>> space = odl.uniform_discr(0, 1, 3)
         >>> x = space.element([1, 2, 3])
@@ -531,15 +576,15 @@ class writable_array(object):
         >>> x
         uniform_discr(0.0, 1.0, 3).element([ 2.,  3.,  4.])
 
-        Can also be called with arguments to `numpy.asarray`
+        Additional keyword arguments are passed to `numpy.asarray`:
 
         >>> lst = [1, 2, 3]
         >>> with writable_array(lst, dtype='complex') as arr:
         ...    arr  # print array
         array([ 1.+0.j,  2.+0.j,  3.+0.j])
 
-        Note that the changes are only saved once the context manger exits,
-        before, the input vector is in general unchanged
+        Note that the changes are only saved upon exiting the context
+        manger exits. Before, the input object is unchanged:
 
         >>> lst = [1, 2, 3]
         >>> with writable_array(lst) as arr:
@@ -550,7 +595,6 @@ class writable_array(object):
         [2, 4, 6]
         """
         self.obj = obj
-        self.args = args
         self.kwargs = kwargs
         self.arr = None
 
@@ -564,7 +608,7 @@ class writable_array(object):
             ``numpy.asarray``. Any changes to ``arr`` will be passed through
             to ``self.obj`` after the context manager exits.
         """
-        self.arr = np.asarray(self.obj, *self.args, **self.kwargs)
+        self.arr = np.asarray(self.obj, **self.kwargs)
         return self.arr
 
     def __exit__(self, type, value, traceback):
@@ -856,6 +900,7 @@ def pkg_supports(feature, pkg_version, pkg_feat_dict):
     if supp_versions is None:
         return False
 
+    # Make sequence from single string
     if is_string(supp_versions):
         supp_versions = [supp_versions]
 

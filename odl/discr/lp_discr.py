@@ -6,27 +6,28 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-""":math:`L^p` type discretizations of function spaces."""
+"""Lebesgue L^p type discretizations of function spaces."""
 
 from __future__ import print_function, division, absolute_import
 from numbers import Integral
 import numpy as np
 
 from odl.discr.discretization import (
-    DiscretizedSpace, DiscretizedSpaceElement, dspace_type)
+    DiscretizedSpace, DiscretizedSpaceElement, tspace_type)
 from odl.discr.discr_mappings import (
     PointCollocation, NearestInterpolation, LinearInterpolation,
     PerAxisInterpolation)
 from odl.discr.partition import (
     RectPartition, uniform_partition_fromintv, uniform_partition)
 from odl.set import RealNumbers, ComplexNumbers, IntervalProd
-from odl.space import FunctionSpace, ProductSpace, fn_impl
-from odl.space.weighting import Weighting, NoWeighting, ConstWeighting
+from odl.space import FunctionSpace, ProductSpace
+from odl.space.entry_points import tensor_space_impl
+from odl.space.weighting import ConstWeighting
 from odl.util import (
     apply_on_boundary, is_real_dtype, is_complex_floating_dtype, is_string,
-    dtype_str, signature_string, array_str, indent, npy_printoptions,
+    is_floating_dtype, is_numeric_dtype,
+    dtype_str, array_str, signature_string, indent, npy_printoptions,
     normalized_scalar_param_list, safe_int_conv, normalized_nodes_on_bdry)
-from odl.util.ufuncs import DiscreteLpUfuncs
 
 __all__ = ('DiscreteLp', 'DiscreteLpElement',
            'uniform_discr_frompartition', 'uniform_discr_fromspace',
@@ -40,49 +41,32 @@ class DiscreteLp(DiscretizedSpace):
 
     """Discretization of a Lebesgue :math:`L^p` space."""
 
-    def __init__(self, fspace, partition, dspace, exponent=2.0,
-                 interp='nearest', **kwargs):
+    def __init__(self, fspace, partition, tspace, interp='nearest', **kwargs):
         """Initialize a new instance.
 
         Parameters
         ----------
         fspace : `FunctionSpace`
-            The continuous space to be discretized
+            The continuous space to be discretized.
         partition : `RectPartition`
-            Partition of (a subset of) ``fspace.domain`` based on a
-            `RectGrid`.
-        dspace : `FnBase`
+            Partition of (a subset of) ``fspace.domain``.
+        tspace : `TensorSpace`
             Space of elements used for data storage. It must have the
-            same `FnBase.field` as ``fspace``
-        exponent : positive float, optional
-            The parameter :math:`p` in :math:`L^p`. If the exponent is
-            not equal to the default 2.0, the space has no inner
-            product.
+            same `TensorSpace.field` as ``fspace`` and the same
+            `TensorSpace.shape` as ``partition``.
         interp : string or sequence of strings, optional
-            The interpolation type to be used for discretization.
-            A sequence is interpreted as interpolation scheme per
-            axis.
-
-            'nearest' : use nearest-neighbor interpolation (default)
-
-            'linear' : use linear interpolation
-
-        order : {'C', 'F'}, optional
-            Ordering of the axes in the data storage. 'C' means the
-            first axis varies slowest, the last axis fastest;
-            vice versa for 'F'.
-            Default: 'C'
+            Interpolation type to be used for discretization.
+            A sequence is interpreted as interpolation scheme per axis.
+            Possible values:
+                - ``'nearest'`` : use nearest-neighbor interpolation.
+                - ``'linear'`` : use linear interpolation.
         axis_labels : sequence of str, optional
-            Names of the axes to use for plotting etc. Default:
-
-                1D: ``['$x$']``
-
-                2D: ``['$x$', '$y$']``
-
-                3D: ``['$x$', '$y$', '$z$']``
-
-                nD: ``['$x_1$', '$x_2$', ..., '$x_n$']``
-
+            Names of the axes to use for plotting etc.
+            Default:
+                - 1D: ``['$x$']``
+                - 2D: ``['$x$', '$y$']``
+                - 3D: ``['$x$', '$y$', '$z$']``
+                - nD: ``['$x_1$', '$x_2$', ..., '$x_n$']``
             Note: The ``$`` signs ensure rendering as LaTeX.
         """
         if not isinstance(fspace, FunctionSpace):
@@ -97,15 +81,18 @@ class DiscreteLp(DiscretizedSpace):
         if not fspace.domain.contains_set(partition.set):
             raise ValueError('`partition` {} is not a subset of the function '
                              'domain {}'.format(partition, fspace.domain))
-        if fspace.out_dtype != dspace.dtype:
-            raise ValueError('`out_dtype` of Function Space {} does not match '
-                             'dspace dtype {}'
-                             ''.format(fspace.out_dtype, dspace.dtype))
+        if fspace.scalar_out_dtype != tspace.dtype:
+            raise ValueError('`fspace.scalar_out_dtype` does not match '
+                             '`tspace.dtype`: {} != {}'
+                             ''.format(fspace.scalar_out_dtype, tspace.dtype))
 
+        self.__partition = partition
+
+        # Handle interp
         if is_string(interp):
             interp, interp_in = str(interp).lower(), interp
             if interp not in _SUPPORTED_INTERP:
-                raise ValueError('`interp={!r}` not understood'
+                raise ValueError('`interp` {!r} not understood'
                                  ''.format(interp_in))
             # Ensure that there is 1 entry for ndim == 0
             self.__interp_byaxis = (interp,) * max(partition.ndim, 1)
@@ -120,33 +107,19 @@ class DiscreteLp(DiscretizedSpace):
                 raise ValueError('`interp` sequence {} contains illegal '
                                  'values'.format(interp))
 
-        order = str(kwargs.pop('order', 'C'))
-        if str(order).upper() not in ('C', 'F'):
-            raise ValueError('`order` {!r} not recognized'.format(order))
-        else:
-            self.__order = str(order).upper()
-
-        self.__partition = partition
-        sampling = PointCollocation(fspace, self.partition, dspace,
-                                    order=self.order)
+        # Assign sampling and interpolation operators
+        sampling = PointCollocation(fspace, self.partition, tspace)
         if all(s == 'nearest' for s in self.interp_byaxis):
-            interpol = NearestInterpolation(fspace, self.partition, dspace,
-                                            order=self.order)
+            interpol = NearestInterpolation(fspace, self.partition, tspace)
         elif all(s == 'linear' for s in self.interp_byaxis):
-            interpol = LinearInterpolation(fspace, self.partition, dspace,
-                                           order=self.order)
+            interpol = LinearInterpolation(fspace, self.partition, tspace)
         else:
             interpol = PerAxisInterpolation(
-                fspace, self.partition, dspace, self.interp_byaxis,
-                order=self.order)
+                fspace, self.partition, tspace, self.interp_byaxis)
 
-        super(DiscreteLp, self).__init__(fspace, dspace, sampling, interpol)
-        self.__exponent = float(exponent)
-        if (hasattr(self.dspace, 'exponent') and
-                self.exponent != dspace.exponent):
-            raise ValueError('`exponent` {} not equal to data space exponent '
-                             '{}'.format(self.exponent, dspace.exponent))
+        super(DiscreteLp, self).__init__(fspace, tspace, sampling, interpol)
 
+        # Set axis labels
         axis_labels = kwargs.pop('axis_labels', None)
         if axis_labels is None:
             if self.ndim <= 3:
@@ -158,13 +131,16 @@ class DiscreteLp(DiscretizedSpace):
             self.__axis_labels = tuple(str(label) for label in axis_labels)
 
         if kwargs:
-            raise ValueError('unknown arguments {}'.format(kwargs))
+            raise ValueError('got unexpected keyword arguments {}'
+                             ''.format(kwargs))
 
     @property
     def interp(self):
         """Interpolation type of this discretization."""
-        if all(interp == self.interp_byaxis[0]
-               for interp in self.interp_byaxis):
+        if self.ndim == 0:
+            return 'nearest'
+        elif all(interp == self.interp_byaxis[0]
+                 for interp in self.interp_byaxis):
             return self.interp_byaxis[0]
         else:
             return self.interp_byaxis
@@ -180,6 +156,16 @@ class DiscreteLp(DiscretizedSpace):
         return self.__axis_labels
 
     @property
+    def partition(self):
+        """`RectPartition` of the function domain."""
+        return self.__partition
+
+    @property
+    def exponent(self):
+        """Exponent of this space, the ``p`` in ``L^p``."""
+        return self.tspace.exponent
+
+    @property
     def min_pt(self):
         """Vector of minimal coordinates of the function domain."""
         return self.partition.min_pt
@@ -188,16 +174,6 @@ class DiscreteLp(DiscretizedSpace):
     def max_pt(self):
         """Vector of maximal coordinates of the function domain."""
         return self.partition.max_pt
-
-    @property
-    def order(self):
-        """Axis ordering for array flattening."""
-        return self.__order
-
-    @property
-    def partition(self):
-        """`RectPartition` of the domain."""
-        return self.__partition
 
     @property
     def is_uniform_byaxis(self):
@@ -221,7 +197,7 @@ class DiscreteLp(DiscretizedSpace):
 
     @property
     def ndim(self):
-        """Number of dimensions."""
+        """Number of dimensions (= number of axes)."""
         return self.partition.ndim
 
     @property
@@ -236,7 +212,7 @@ class DiscreteLp(DiscretizedSpace):
 
     @property
     def cell_volume(self):
-        """Cell volume of an underlying regular partition."""
+        """Cell volume of an underlying *uniform* partition."""
         return self.partition.cell_volume
 
     @property
@@ -244,14 +220,29 @@ class DiscreteLp(DiscretizedSpace):
         """All sampling points in the partition as a sparse meshgrid."""
         return self.partition.meshgrid
 
-    def points(self):
-        """All sampling points in the partition."""
-        return self.partition.points()
+    def points(self, order='C'):
+        """All sampling points in the partition.
+
+        Parameters
+        ----------
+        order : {'C', 'F'}
+            Axis ordering in the resulting point array.
+
+        Returns
+        -------
+        points : `numpy.ndarray`
+            The shape of the array is ``size x ndim``, i.e. the points
+            are stored as rows.
+        """
+        return self.partition.points(order)
 
     @property
-    def exponent(self):
-        """Exponent ``p`` in ``L^p``."""
-        return self.__exponent
+    def default_order(self):
+        """Default storage order for new elements in this space.
+
+        This is equal to the default order of `tspace`.
+        """
+        return self.tspace.default_order
 
     @property
     def tangent_bundle(self):
@@ -269,7 +260,7 @@ class DiscreteLp(DiscretizedSpace):
 
     @property
     def is_uniformly_weighted(self):
-        """If the weighting of the space is the same for all points."""
+        """``True`` if the weighting is the same for all space points."""
         try:
             is_uniformly_weighted = self.__is_uniformly_weighted
         except AttributeError:
@@ -277,43 +268,56 @@ class DiscreteLp(DiscretizedSpace):
             is_uniformly_weighted = (
                 np.allclose(bdry_fracs, 1.0) or
                 self.exponent == float('inf') or
-                not getattr(self.dspace, 'is_weighted', False))
+                not getattr(self.tspace, 'is_weighted', False))
 
             self.__is_uniformly_weighted = is_uniformly_weighted
 
         return is_uniformly_weighted
 
-    def element(self, inp=None, **kwargs):
+    def element(self, inp=None, order=None, **kwargs):
         """Create an element from ``inp`` or from scratch.
 
         Parameters
         ----------
         inp : optional
-            Input data to create an element from.
+            Input used to initialize the new element. The following options
+            are available:
 
-            If ``inp`` is callable, it needs to be understood by the
-            ``uspace.element`` method.
+            - ``None``: an empty element is created with no guarantee of
+              its state (memory allocation only). The new element will
+              use ``order`` as storage order if provided, otherwise
+              `default_order`.
 
-            Otherwise, it has to be understood by the ``dspace.element``
-            method.
+            - array-like: an element wrapping a `tensor` is created,
+              where a copy is avoided whenever possible. This usually
+              requires correct `shape`, `dtype` and `impl` if applicable,
+              and if ``order`` is provided, also contiguousness in that
+              ordering. See the ``element`` method of `tspace` for more
+              information.
+
+              If any of these conditions is not met, a copy is made.
+
+            - callable: a new element is created by sampling the function
+              using the `sampling` operator.
+
+        order : {None, 'C', 'F'}, optional
+            Storage order of the returned element. For ``'C'`` and ``'F'``,
+            contiguous memory in the respective ordering is enforced.
+            The default ``None`` enforces no contiguousness.
+        vectorized : bool, optional
+            If ``True``, assume that a provided callable ``inp`` supports
+            vectorized evaluation. Otherwise, wrap it in a vectorizer.
+            Default: ``True``.
         kwargs :
             Additional arguments passed on to `sampling` when called
             on ``inp``, in the form ``sampling(inp, **kwargs)``.
             This can be used e.g. for functions with parameters.
 
-        Other Parameters
-        ----------------
-        vectorized : bool
-            Can only be used if ``inp`` is callable, in which case it
-            indicates if ``inp`` is vectorized. If not, it will be wrapped
-            with a vectorizer.
-            Default: True
-
         Returns
         -------
         element : `DiscreteLpElement`
             The discretized element, calculated as ``sampling(inp)`` or
-            ``dspace.element(inp)``, tried in this order.
+            ``tspace.element(inp)``, tried in this order.
 
         Examples
         --------
@@ -337,8 +341,7 @@ class DiscreteLp(DiscretizedSpace):
         through keyword arguments (not positional arguments with
         defaults):
 
-        >>> def f(x, **kwargs):
-        ...     c = kwargs.pop('c', 0.0)
+        >>> def f(x, c=0.0):
         ...     return np.maximum(x, c)
         ...
         >>> space = odl.uniform_discr(-1, 1, 4)
@@ -347,50 +350,33 @@ class DiscreteLp(DiscretizedSpace):
 
         See Also
         --------
-        sampling : create a discrete element from an undiscretized one
+        sampling : create a discrete element from a non-discretized one
         """
         if inp is None:
-            return self.element_type(self, self.dspace.element())
-        elif inp in self:
+            return self.element_type(self, self.tspace.element(order=order))
+        elif inp in self and order is None:
             return inp
-        elif inp in self.dspace:
+        elif inp in self.tspace and order is None:
             return self.element_type(self, inp)
         elif callable(inp):
             vectorized = kwargs.pop('vectorized', True)
-            # uspace element -> discretize
-            inp_elem = self.uspace.element(inp, vectorized=vectorized)
-            return self.element_type(self, self.sampling(inp_elem, **kwargs))
+            # fspace element -> discretize
+            inp_elem = self.fspace.element(inp, vectorized=vectorized)
+            sampled = self.sampling(inp_elem, **kwargs)
+            return self.element_type(
+                self, self.tspace.element(sampled, order=order))
         else:
             # Sequence-type input
-            arr = np.asarray(inp, dtype=self.dtype, order=self.order)
-            input_shape = arr.shape
-
-            # Attempt to handle some cases with exact match
-            if arr.ndim > 1 and self.ndim == 1:
-                arr = np.squeeze(arr)  # Squeeze could solve the problem
-                if arr.shape != self.shape:
-                    raise ValueError(
-                        'input shape {} does not match grid shape {}'
-                        ''.format(input_shape, self.shape))
-            elif arr.shape != self.shape and arr.ndim == self.ndim:
-                # Try to broadcast the array if possible
-                try:
-                    arr = np.broadcast_to(arr, self.shape)
-                except AttributeError:
-                    # The above requires numpy 1.10, fallback impl else
-                    shape = [m if n == 1 and m != 1 else 1
-                             for n, m in zip(arr.shape, self.shape)]
-                    arr = arr + np.zeros(shape, dtype=arr.dtype)
-            arr = arr.ravel(order=self.order)
-            return self.element_type(self, self.dspace.element(arr))
+            return self.element_type(
+                self, self.tspace.element(inp, order=order))
 
     def _astype(self, dtype):
         """Internal helper for ``astype``."""
-        fspace = self.uspace.astype(dtype)
-        dspace = self.dspace.astype(dtype)
-        return type(self)(fspace, self.partition, dspace,
-                          exponent=self.exponent, interp=self.interp,
-                          order=self.order, axis_labels=self.axis_labels)
+        fspace = self.fspace.astype(dtype)
+        tspace = self.tspace.astype(dtype)
+        return type(self)(
+            fspace, self.partition, tspace, interp=self.interp,
+            axis_labels=self.axis_labels)
 
     # Overrides for space functions depending on partition
     #
@@ -404,8 +390,7 @@ class DiscreteLp(DiscretizedSpace):
         if self.is_uniform and not self.is_uniformly_weighted:
             # TODO: implement without copying x
             bdry_fracs = self.partition.boundary_cell_fractions
-            func_list = _scaling_func_list(bdry_fracs)
-
+            func_list = _scaling_func_list(bdry_fracs, exponent=1.0)
             x_arr = apply_on_boundary(x, func=func_list, only_once=False)
             return super(DiscreteLp, self)._inner(self.element(x_arr), y)
         else:
@@ -417,7 +402,6 @@ class DiscreteLp(DiscretizedSpace):
             # TODO: implement without copying x
             bdry_fracs = self.partition.boundary_cell_fractions
             func_list = _scaling_func_list(bdry_fracs, exponent=self.exponent)
-
             x_arr = apply_on_boundary(x, func=func_list, only_once=False)
             return super(DiscreteLp, self)._norm(self.element(x_arr))
         else:
@@ -426,10 +410,8 @@ class DiscreteLp(DiscretizedSpace):
     def _dist(self, x, y):
         """Return ``self.dist(x, y)``."""
         if self.is_uniform and not self.is_uniformly_weighted:
-            # TODO: implement without copying x
             bdry_fracs = self.partition.boundary_cell_fractions
             func_list = _scaling_func_list(bdry_fracs, exponent=self.exponent)
-
             arrs = [apply_on_boundary(vec, func=func_list, only_once=False)
                     for vec in (x, y)]
 
@@ -438,30 +420,110 @@ class DiscreteLp(DiscretizedSpace):
         else:
             return super(DiscreteLp, self)._dist(x, y)
 
+    # TODO: add byaxis_out when discretized tensor-valued functions are
+    # available
+
+    @property
+    def byaxis_in(self):
+        """Object to index along input (domain) dimensions.
+
+        Examples
+        --------
+        Indexing with integers or slices:
+
+        >>> space = odl.uniform_discr([0, 0, 0], [1, 2, 3], (5, 10, 15))
+        >>> space.byaxis_in[0]
+        uniform_discr(0.0, 1.0, 5)
+        >>> space.byaxis_in[1]
+        uniform_discr(0.0, 2.0, 10)
+        >>> space.byaxis_in[1:]
+        uniform_discr([ 0.,  0.], [ 2.,  3.], (10, 15))
+
+        Lists can be used to stack spaces arbitrarily:
+
+        >>> space.byaxis_in[[2, 1, 2]]
+        uniform_discr([ 0.,  0.,  0.], [ 3.,  2.,  3.], (15, 10, 15))
+        """
+        space = self
+
+        class DiscreteLpByaxisIn(object):
+
+            """Helper class for indexing by domain axes."""
+
+            def __getitem__(self, indices):
+                """Return ``self[indices]``.
+
+                Parameters
+                ----------
+                indices : index expression
+                    Object used to index the space domain.
+
+                Returns
+                -------
+                space : `DiscreteLp`
+                    The resulting space with indexed domain and otherwise
+                    same properties (except possibly weighting).
+                """
+                fspace = space.fspace.byaxis_in[indices]
+                part = space.partition.byaxis[indices]
+
+                if isinstance(space.weighting, ConstWeighting):
+                    # Need to manually construct `tspace` since it doesn't
+                    # know where its weighting factor comes from
+                    try:
+                        iter(indices)
+                    except TypeError:
+                        newshape = space.shape[indices]
+                    else:
+                        newshape = tuple(space.shape[int(i)] for i in indices)
+
+                    weighting = part.cell_volume
+                    tspace = type(space.tspace)(
+                        newshape, space.dtype,
+                        exponent=space.exponent, weighting=weighting)
+                else:
+                    # Other weighting schemes are handled correctly by
+                    # the tensor space
+                    tspace = space.tspace.byaxis[indices]
+
+                try:
+                    iter(indices)
+                except TypeError:
+                    interp = space.interp_byaxis[indices]
+                    labels = space.axis_labels[indices]
+                else:
+                    interp = tuple(space.interp_byaxis[int(i)]
+                                   for i in indices)
+                    labels = tuple(space.axis_labels[int(i)]
+                                   for i in indices)
+
+                return DiscreteLp(fspace, part, tspace, interp,
+                                  axis_labels=labels)
+
+            def __repr__(self):
+                """Return ``repr(self)``."""
+                return repr(space) + '.byaxis_in'
+
+        return DiscreteLpByaxisIn()
+
     def __repr__(self):
         """Return ``repr(self)``."""
         # Clunky check if the factory repr can be used
         if (uniform_partition_fromintv(
-                self.uspace.domain, self.shape,
+                self.fspace.domain, self.shape,
                 nodes_on_bdry=False) == self.partition):
             use_uniform = True
             nodes_on_bdry = False
         elif (uniform_partition_fromintv(
-                self.uspace.domain, self.shape,
+                self.fspace.domain, self.shape,
                 nodes_on_bdry=True) == self.partition):
             use_uniform = True
             nodes_on_bdry = True
         else:
             use_uniform = False
 
-        if self.ndim <= 3:
-            default_ax_lbl = ('$x$', '$y$', '$z$')[:self.ndim]
-        else:
-            default_ax_lbl = tuple('$x_{}$'.format(i)
-                                   for i in range(self.ndim))
-
         if use_uniform:
-            constructor = 'uniform_discr'
+            ctor = 'uniform_discr'
             if self.ndim == 1:
                 posargs = [self.min_pt[0], self.max_pt[0], self.shape[0]]
                 posmod = [':.4', ':.4', '']
@@ -470,49 +532,48 @@ class DiscreteLp(DiscretizedSpace):
                 posmod = [array_str, array_str, '']
 
             default_dtype_s = dtype_str(
-                self.dspace.default_dtype(RealNumbers()))
-
-            if isinstance(self.weighting, NoWeighting):
-                weighting = 'none'
-            elif (isinstance(self.weighting, ConstWeighting) and
-                  (np.isclose(self.weighting.const, self.cell_volume))):
-                weighting = 'const'
-            elif (self.ndim == 0 and
-                  isinstance(self.weighting, ConstWeighting) and
-                  (np.isclose(self.weighting.const, 1.0))):
-                weighting = 'const'
-            else:
-                weighting = self.weighting
+                self.tspace.default_dtype(RealNumbers()))
 
             dtype_s = dtype_str(self.dtype)
-            optargs = [('exponent', self.exponent, 2.0),
-                       ('interp', self.interp, 'nearest'),
+            optargs = [('interp', self.interp, 'nearest'),
                        ('impl', self.impl, 'numpy'),
                        ('nodes_on_bdry', nodes_on_bdry, False),
-                       ('dtype', dtype_s, default_dtype_s),
-                       ('order', self.order, 'C'),
-                       ('weighting', weighting, 'const'),
-                       ('axis_labels', self.axis_labels, default_ax_lbl)]
+                       ('dtype', dtype_s, default_dtype_s)]
+
+            # Add weighting stuff if not equal to default
+            if (self.exponent == float('inf') or
+                    self.ndim == 0 or
+                    not is_floating_dtype(self.dtype)):
+                # In these cases, weighting constant 1 is the default
+                if (not isinstance(self.weighting, ConstWeighting) or
+                        not np.isclose(self.weighting.const, 1.0)):
+                    optargs.append(('weighting', self.weighting.const, None))
+            else:
+                if (not isinstance(self.weighting, ConstWeighting) or
+                        not np.isclose(self.weighting.const,
+                                       self.cell_volume)):
+                    optargs.append(('weighting', self.weighting.const, None))
+
+            optmod = [''] * len(optargs)
+            if self.dtype in (float, complex, int, bool):
+                optmod[3] = '!s'
 
             with npy_printoptions(precision=4):
                 inner_str = signature_string(posargs, optargs,
-                                             mod=[posmod, [''] * len(optargs)])
-            return '{}({})'.format(constructor, inner_str)
+                                             mod=[posmod, optmod])
+            return '{}({})'.format(ctor, inner_str)
 
         else:
-            constructor = self.__class__.__name__
-            posargs = [self.uspace, self.partition, self.dspace]
-
-            optargs = [('interp', self.interp, 'nearest'),
-                       ('axis_labels', self.axis_labels, default_ax_lbl),
-                       ('order', self.order, 'C')]
+            ctor = self.__class__.__name__
+            posargs = [self.fspace, self.partition, self.tspace]
+            optargs = [('interp', self.interp, 'nearest')]
 
             with npy_printoptions(precision=4):
                 inner_str = signature_string(posargs, optargs,
                                              sep=[',\n', ', ', ',\n'],
                                              mod=['!r', '!s'])
 
-            return '{}({})'.format(constructor, indent(inner_str))
+            return '{}({})'.format(ctor, indent(inner_str))
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -528,59 +589,6 @@ class DiscreteLpElement(DiscretizedSpaceElement):
 
     """Representation of a `DiscreteLp` element."""
 
-    def asarray(self, out=None):
-        """Extract the data of this array as a numpy array.
-
-        Parameters
-        ----------
-        out : `numpy.ndarray`, optional
-            Array in which the result should be written in-place.
-            Has to be contiguous and of the correct dtype and
-            shape.
-        """
-        if out is None:
-            if self.space.ndim == 0:
-                out = DiscretizedSpaceElement.asarray(self)
-            else:
-                out = DiscretizedSpaceElement.asarray(self).reshape(
-                    self.shape, order=self.space.order)
-            return out
-
-        else:
-            if out.shape not in (self.space.shape, (self.space.size,)):
-                raise ValueError('output array has shape {}, expected '
-                                 '{} or ({},)'
-                                 ''.format(out.shape, self.space.shape,
-                                           self.space.size))
-            out_r = out.reshape(self.space.shape,
-                                order=self.space.order)
-            if out_r.flags.c_contiguous:
-                out_order = 'C'
-            elif out_r.flags.f_contiguous:
-                out_order = 'F'
-            else:
-                raise ValueError('output array not contiguous')
-
-            if out_order != self.space.order:
-                raise ValueError('output array has ordering {!r}, '
-                                 'expected {!r}'
-                                 ''.format(self.space.order, out_order))
-
-            super(DiscreteLpElement, self).asarray(
-                out=out.ravel(order=self.space.order))
-            return out
-
-    @property
-    def ndim(self):
-        """Number of dimensions."""
-        return self.space.ndim
-
-    @property
-    def shape(self):
-        """Multi-dimensional shape of this discrete function."""
-        # override shape
-        return self.space.shape
-
     @property
     def cell_sides(self):
         """Side lengths of a cell in an underlying *uniform* partition."""
@@ -592,33 +600,29 @@ class DiscreteLpElement(DiscretizedSpaceElement):
         return self.space.cell_volume
 
     @property
-    def order(self):
-        """Axis ordering for array flattening."""
-        return self.space.order
+    def data(self):
+        """Data container of ``self``, depends on ``space.impl``."""
+        return self.tensor.data
 
     @property
     def real(self):
         """Real part of this element."""
-        return self.space.real_space.element(self.ntuple.real)
+        return self.space.real_space.element(self.tensor.real)
 
     @real.setter
     def real(self, newreal):
         """Set the real part of this element to ``newreal``."""
-        newreal_flat = np.asarray(newreal, order=self.space.order).reshape(
-            -1, order=self.space.order)
-        self.ntuple.real = newreal_flat
+        self.tensor.real = newreal
 
     @property
     def imag(self):
         """Imaginary part of this element."""
-        return self.space.real_space.element(self.ntuple.imag)
+        return self.space.real_space.element(self.tensor.imag)
 
     @imag.setter
     def imag(self, newimag):
         """Set the imaginary part of this element to ``newimag``."""
-        newimag_flat = np.asarray(newimag, order=self.space.order).reshape(
-            -1, order=self.space.order)
-        self.ntuple.imag = newimag_flat
+        self.tensor.imag = newimag
 
     def conj(self, out=None):
         """Complex conjugate of this element.
@@ -637,7 +641,7 @@ class DiscreteLpElement(DiscretizedSpaceElement):
 
         Examples
         --------
-        >>> discr = uniform_discr(0, 1, 4, dtype='complex')
+        >>> discr = uniform_discr(0, 1, 4, dtype=complex)
         >>> x = discr.element([5+1j, 3, 2-2j, 1j])
         >>> y = x.conj()
         >>> print(y)
@@ -661,9 +665,9 @@ class DiscreteLpElement(DiscretizedSpaceElement):
         True
         """
         if out is None:
-            return self.space.element(self.ntuple.conj())
+            return self.space.element(self.tensor.conj())
         else:
-            self.ntuple.conj(out=out.ntuple)
+            self.tensor.conj(out=out.tensor)
             return out
 
     def __setitem__(self, indices, values):
@@ -685,65 +689,412 @@ class DiscreteLpElement(DiscretizedSpaceElement):
             shape is allowed as ``values``.
         """
         if values in self.space:
-            # For DiscretizedSpaceElement of the same type, use ntuple directly
-            self.ntuple[indices] = values.ntuple
+            self.tensor[indices] = values.tensor
         else:
-            # Other sequence types are piped through a Numpy array. Equivalent
-            # views are optimized for in Numpy.
-            if indices == slice(None):
-                values = np.atleast_1d(values)
-                if (values.ndim > 1 and
-                        values.shape != self.space.shape):
-                    raise ValueError('shape {} of value array {} not equal '
-                                     'to sampling grid shape {}'
-                                     ''.format(values.shape, values,
-                                               self.space.shape))
-                values = values.ravel(order=self.space.order)
-
             super(DiscreteLpElement, self).__setitem__(indices, values)
 
-    @property
-    def ufuncs(self):
-        """`DiscreteLpUfuncs`, access to numpy style ufuncs.
+    def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
+        """Interface to Numpy's ufunc machinery.
+
+        This method is called by Numpy version 1.13 and higher as a single
+        point for the ufunc dispatch logic. An object implementing
+        ``__array_ufunc__`` takes over control when a `numpy.ufunc` is
+        called on it, allowing it to use custom implementations and
+        output types.
+
+        This includes handling of in-place arithmetic like
+        ``npy_array += custom_obj``. In this case, the custom object's
+        ``__array_ufunc__`` takes precedence over the baseline
+        `numpy.ndarray` implementation. It will be called with
+        ``npy_array`` as ``out`` argument, which ensures that the
+        returned object is a Numpy array. For this to work properly,
+        ``__array_ufunc__`` has to accept Numpy arrays as ``out`` arguments.
+
+        See the `corresponding NEP`_ and the `interface documentation`_
+        for further details. See also the `general documentation on
+        Numpy ufuncs`_.
+
+        .. note::
+            When using operations that alter the shape (like ``reduce``),
+            or the data type (can be any of the methods),
+            the resulting array is wrapped in a space of the same
+            type as ``self.space``, propagating all essential properties
+            like weighting, exponent etc. as closely as possible.
+
+        Parameters
+        ----------
+        ufunc : `numpy.ufunc`
+            Ufunc that should be called on ``self``.
+        method : str
+            Method on ``ufunc`` that should be called on ``self``.
+            Possible values:
+
+            ``'__call__'``, ``'accumulate'``, ``'at'``, ``'outer'``,
+            ``'reduce'``
+
+        input1, ..., inputN :
+            Positional arguments to ``ufunc.method``.
+        kwargs :
+            Keyword arguments to ``ufunc.method``.
+
+        Returns
+        -------
+        ufunc_result : `DiscreteLpElement`, `numpy.ndarray` or tuple
+            Result of the ufunc evaluation. If no ``out`` keyword argument
+            was given, the result is a `DiscreteLpElement` or a tuple
+            of such, depending on the number of outputs of ``ufunc``.
+            If ``out`` was provided, the returned object or sequence members
+            refer(s) to ``out``.
 
         Examples
         --------
-        >>> X = uniform_discr(0, 1, 2)
-        >>> x = X.element([1, -2])
-        >>> x.ufuncs.absolute()
-        uniform_discr(0.0, 1.0, 2).element([ 1.,  2.])
+        We apply `numpy.add` to elements of a one-dimensional space:
 
-        These functions can also be used with broadcasting
+        >>> space = odl.uniform_discr(0, 1, 3)
+        >>> x = space.element([1, 2, 3])
+        >>> y = space.element([-1, -2, -3])
+        >>> x.__array_ufunc__(np.add, '__call__', x, y)
+        uniform_discr(0.0, 1.0, 3).element([ 0.,  0.,  0.])
+        >>> np.add(x, y)  # same mechanism for Numpy >= 1.13
+        uniform_discr(0.0, 1.0, 3).element([ 0.,  0.,  0.])
 
-        >>> x.ufuncs.add(3)
-        uniform_discr(0.0, 1.0, 2).element([ 4.,  1.])
+        As ``out``, a `DiscreteLpElement` can be provided as well as a
+        `Tensor` of appropriate type, or its underlying data container
+        type (wrapped in a sequence):
 
-        and non-space elements
-
-        >>> x.ufuncs.subtract([3, 3])
-        uniform_discr(0.0, 1.0, 2).element([-2., -5.])
-
-        There is also support for various reductions (sum, prod, min, max)
-
-        >>> x.ufuncs.sum()
-        -1.0
-
-        Also supports out parameter
-
-        >>> y = X.element([3, 4])
-        >>> out = X.element()
-        >>> result = x.ufuncs.add(y, out=out)
-        >>> result
-        uniform_discr(0.0, 1.0, 2).element([ 4.,  2.])
-        >>> result is out
+        >>> out = space.element()
+        >>> res = x.__array_ufunc__(np.add, '__call__', x, y, out=(out,))
+        >>> out
+        uniform_discr(0.0, 1.0, 3).element([ 0.,  0.,  0.])
+        >>> res is out
+        True
+        >>> out_tens = odl.rn(3).element()
+        >>> res = x.__array_ufunc__(np.add, '__call__', x, y, out=(out_tens,))
+        >>> out_tens
+        rn(3).element([ 0.,  0.,  0.])
+        >>> res is out_tens
+        True
+        >>> out_arr = np.empty(3)
+        >>> res = x.__array_ufunc__(np.add, '__call__', x, y, out=(out_arr,))
+        >>> out_arr
+        array([ 0.,  0.,  0.])
+        >>> res is out_arr
         True
 
-        Notes
-        -----
-        These are optimized to use the underlying ntuple space and incur no
-        overhead unless these do.
+        With multiple dimensions:
+
+        >>> space_2d = odl.uniform_discr([0, 0], [1, 2], (2, 3))
+        >>> x = y = space_2d.one()
+        >>> x.__array_ufunc__(np.add, '__call__', x, y)
+        uniform_discr([ 0.,  0.], [ 1.,  2.], (2, 3)).element(
+            [[ 2.,  2.,  2.],
+             [ 2.,  2.,  2.]]
+        )
+
+        The ``ufunc.accumulate`` method retains the original space:
+
+        >>> x = space.element([1, 2, 3])
+        >>> x.__array_ufunc__(np.add, 'accumulate', x)
+        uniform_discr(0.0, 1.0, 3).element([ 1.,  3.,  6.])
+        >>> np.add.accumulate(x)  # same mechanism for Numpy >= 1.13
+        uniform_discr(0.0, 1.0, 3).element([ 1.,  3.,  6.])
+
+        For multi-dimensional space elements, an optional ``axis`` parameter
+        can be provided (default is 0):
+
+        >>> z = space_2d.one()
+        >>> z.__array_ufunc__(np.add, 'accumulate', z, axis=1)
+        uniform_discr([ 0.,  0.], [ 1.,  2.], (2, 3)).element(
+            [[ 1.,  2.,  3.],
+             [ 1.,  2.,  3.]]
+        )
+
+        The method also takes a ``dtype`` parameter:
+
+        >>> z.__array_ufunc__(np.add, 'accumulate', z, dtype=complex)
+        uniform_discr([ 0.,  0.], [ 1.,  2.], (2, 3), dtype=complex).element(
+            [[ 1.+0.j,  1.+0.j,  1.+0.j],
+             [ 2.+0.j,  2.+0.j,  2.+0.j]]
+        )
+
+        The ``ufunc.at`` method operates in-place. Here we add the second
+        operand ``[5, 10]`` to ``x`` at indices ``[0, 2]``:
+
+        >>> x = space.element([1, 2, 3])
+        >>> x.__array_ufunc__(np.add, 'at', x, [0, 2], [5, 10])
+        >>> x
+        uniform_discr(0.0, 1.0, 3).element([  6.,   2.,  13.])
+
+        For outer-product-type operations, i.e., operations where the result
+        shape is the sum of the individual shapes, the ``ufunc.outer``
+        method can be used:
+
+        >>> space1 = odl.uniform_discr(0, 1, 2)
+        >>> space2 = odl.uniform_discr(0, 2, 3)
+        >>> x = space1.element([0, 3])
+        >>> y = space2.element([1, 2, 3])
+        >>> x.__array_ufunc__(np.add, 'outer', x, y)
+        uniform_discr([ 0.,  0.], [ 1.,  2.], (2, 3)).element(
+            [[ 1.,  2.,  3.],
+             [ 4.,  5.,  6.]]
+        )
+        >>> y.__array_ufunc__(np.add, 'outer', y, x)
+        uniform_discr([ 0.,  0.], [ 2.,  1.], (3, 2)).element(
+            [[ 1.,  4.],
+             [ 2.,  5.],
+             [ 3.,  6.]]
+        )
+
+        Using ``ufunc.reduce`` in 1D produces a scalar:
+
+        >>> x = space.element([1, 2, 3])
+        >>> x.__array_ufunc__(np.add, 'reduce', x)
+        6.0
+
+        In multiple dimensions, ``axis`` can be provided for reduction over
+        selected axes:
+
+        >>> z = space_2d.element([[1, 2, 3],
+        ...                       [4, 5, 6]])
+        >>> z.__array_ufunc__(np.add, 'reduce', z, axis=1)
+        uniform_discr(0.0, 1.0, 2).element([  6.,  15.])
+
+        References
+        ----------
+        .. _corresponding NEP:
+           https://docs.scipy.org/doc/numpy/neps/ufunc-overrides.html
+
+        .. _interface documentation:
+           https://docs.scipy.org/doc/numpy/reference/arrays.classes.html\
+#numpy.class.__array_ufunc__
+
+        .. _general documentation on Numpy ufuncs:
+           https://docs.scipy.org/doc/numpy/reference/ufuncs.html
+
+        .. _reduceat documentation:
+           https://docs.scipy.org/doc/numpy/reference/generated/\
         """
-        return DiscreteLpUfuncs(self)
+        # --- Process `out` --- #
+
+        # Unwrap out if provided. The output parameters are all wrapped
+        # in one tuple, even if there is only one.
+        out_tuple = kwargs.pop('out', ())
+
+        # Check number of `out` args, depending on `method`
+        if method == '__call__' and len(out_tuple) not in (0, ufunc.nout):
+            raise ValueError(
+                "need 0 or {} `out` arguments for `method='__call__'`, "
+                'got {}'.format(ufunc.nout, len(out_tuple)))
+        elif method != '__call__' and len(out_tuple) not in (0, 1):
+            raise ValueError(
+                "need 0 or 1 `out` arguments for `method={!r}`, "
+                'got {}'.format(method, len(out_tuple)))
+
+        # We allow our own element type, tensors and their data containers
+        # as `out`
+        valid_out_types = (type(self),
+                           type(self.tensor),
+                           type(self.tensor.data))
+        if not all(isinstance(o, valid_out_types) or o is None
+                   for o in out_tuple):
+            return NotImplemented
+
+        # Assign to `out` or `out1` and `out2`, respectively (using the
+        # `tensor` attribute if available)
+        out = out1 = out2 = None
+        if len(out_tuple) == 1:
+            out = getattr(out_tuple[0], 'tensor', out_tuple[0])
+        elif len(out_tuple) == 2:
+            out1 = getattr(out_tuple[0], 'tensor', out_tuple[0])
+            out2 = getattr(out_tuple[1], 'tensor', out_tuple[1])
+
+        # --- Process `inputs` --- #
+
+        # Pull out the `tensor` attributes from DiscreteLpElement instances
+        # since we want to pass them to `self.tensor.__array_ufunc__`
+        input_tensors = tuple(
+            elem.tensor if isinstance(elem, type(self)) else elem
+            for elem in inputs)
+
+        # --- Get some parameters for later --- #
+
+        # Need to filter for `keepdims` in case `method='reduce'` since it's
+        # invalid (happening below)
+        keepdims = kwargs.pop('keepdims', False)
+
+        # Determine list of remaining axes from `axis` for `'reduce'`
+        axis = kwargs.get('axis', None)
+        if axis is None:
+            reduced_axes = list(range(1, self.ndim))
+        else:
+            try:
+                iter(axis)
+            except TypeError:
+                axis = (int(axis),)
+
+            reduced_axes = [i for i in range(self.ndim) if i not in axis]
+
+        weighting = self.space.weighting
+
+        # --- Evaluate ufunc --- #
+
+        if method == '__call__':
+            if ufunc.nout == 1:
+                kwargs['out'] = (out,)
+                res_tens = self.tensor.__array_ufunc__(
+                    ufunc, '__call__', *input_tensors, **kwargs)
+
+                if out is None:
+                    # Wrap result tensor in appropriate DiscreteLp space.
+                    # Make new function space based on result dtype,
+                    # keep everything else, and get `tspace` from the result
+                    # tensor.
+                    out_dtype = (res_tens.dtype, self.space.fspace.out_shape)
+                    fspace = FunctionSpace(self.space.fspace.domain,
+                                           out_dtype)
+                    res_space = DiscreteLp(
+                        fspace, self.space.partition,
+                        res_tens.space, self.space.interp_byaxis,
+                        axis_labels=self.space.axis_labels)
+                    result = res_space.element(res_tens)
+                else:
+                    result = out_tuple[0]
+
+                return result
+
+            elif ufunc.nout == 2:
+                kwargs['out'] = (out1, out2)
+                res1_tens, res2_tens = self.tensor.__array_ufunc__(
+                    ufunc, '__call__', *input_tensors, **kwargs)
+
+                if out1 is None:
+                    # Wrap as for nout = 1
+                    out_dtype = (res1_tens.dtype, self.space.fspace.out_shape)
+                    fspace = FunctionSpace(self.space.fspace.domain,
+                                           out_dtype)
+                    res_space = DiscreteLp(
+                        fspace, self.space.partition,
+                        res1_tens.space, self.space.interp_byaxis,
+                        axis_labels=self.space.axis_labels)
+                    result1 = res_space.element(res1_tens)
+                else:
+                    result1 = out_tuple[0]
+
+                if out2 is None:
+                    # Wrap as for nout = 1
+                    out_dtype = (res2_tens.dtype, self.space.fspace.out_shape)
+                    fspace = FunctionSpace(self.space.fspace.domain,
+                                           out_dtype)
+                    res_space = DiscreteLp(
+                        fspace, self.space.partition,
+                        res2_tens.space, self.space.interp_byaxis,
+                        axis_labels=self.space.axis_labels)
+                    result2 = res_space.element(res2_tens)
+                else:
+                    result2 = out_tuple[1]
+
+                return result1, result2
+
+            else:
+                raise NotImplementedError('nout = {} not supported'
+                                          ''.format(ufunc.nout))
+
+        elif method == 'reduce' and keepdims:
+            raise ValueError(
+                '`keepdims=True` cannot be used in `reduce` since there is '
+                'no unique way to determine a function domain in collapsed '
+                'axes')
+
+        elif method == 'reduceat':
+            # Makes no sense since there is no way to determine in which
+            # space the result should live, except in special cases when
+            # axes are being completely collapsed or don't change size.
+            raise ValueError('`reduceat` not supported')
+
+        elif (method == 'outer' and
+              not all(isinstance(inp, type(self)) for inp in inputs)):
+                raise TypeError(
+                    "inputs must be of type {} for `method='outer'`, "
+                    'got types {}'
+                    ''.format(type(self), tuple(type(inp) for inp in inputs)))
+
+        else:  # method != '__call__', and otherwise valid
+
+            if method != 'at':
+                # No kwargs allowed for 'at'
+                kwargs['out'] = (out,)
+
+            res_tens = self.tensor.__array_ufunc__(
+                ufunc, method, *input_tensors, **kwargs)
+
+            # Shortcut for scalar or no return value
+            if np.isscalar(res_tens) or res_tens is None:
+                # The first occurs for `reduce` with all axes,
+                # the second for in-place stuff (`at` currently)
+                return res_tens
+
+            if out is None:
+                # Wrap in appropriate DiscreteLp space depending on `method`
+                if method == 'accumulate':
+                    # Make `fspace` with appropriate dtype, get `tspace`
+                    # from the result tensor and keep the rest
+                    fspace = FunctionSpace(self.space.domain,
+                                           out_dtype=res_tens.dtype)
+
+                    res_space = DiscreteLp(
+                        fspace, self.space.partition, res_tens.space,
+                        self.space.interp_byaxis,
+                        axis_labels=self.space.axis_labels)
+                    result = res_space.element(res_tens)
+
+                elif method == 'outer':
+                    # Concatenate domains, partitions, interp, axis_labels,
+                    # and determine `tspace` from the result tensor
+                    inp1, inp2 = inputs
+                    domain = inp1.space.domain.append(inp2.space.domain)
+                    fspace = FunctionSpace(domain, out_dtype=res_tens.dtype)
+                    part = inp1.space.partition.append(inp2.space.partition)
+                    interp = (inp1.space.interp_byaxis +
+                              inp2.space.interp_byaxis)
+                    labels1 = [lbl + ' (1)' for lbl in inp1.space.axis_labels]
+                    labels2 = [lbl + ' (2)' for lbl in inp2.space.axis_labels]
+                    labels = labels1 + labels2
+
+                    if all(isinstance(inp.space.weighting, ConstWeighting)
+                           for inp in inputs):
+                        # For constant weighting, use the product of the
+                        # two weighting constants. The result tensor space
+                        # cannot know about the "correct" way to combine the
+                        # two constants, so we need to do it manually here.
+                        weighting = (inp1.space.weighting.const *
+                                     inp2.space.weighting.const)
+                        tspace = type(res_tens.space)(
+                            res_tens.shape, res_tens.dtype,
+                            exponent=res_tens.space.exponent,
+                            weighting=weighting)
+                    else:
+                        # Otherwise `TensorSpace` knows how to handle this
+                        tspace = res_tens.space
+
+                    res_space = DiscreteLp(
+                        fspace, part, tspace, interp, axis_labels=labels)
+                    result = res_space.element(res_tens)
+
+                elif method == 'reduce':
+                    # Index space by axis using `reduced_axes`
+                    res_space = self.space.byaxis_in[reduced_axes].astype(
+                        res_tens.dtype)
+                    result = res_space.element(res_tens)
+
+                else:
+                    raise RuntimeError('bad `method`')
+
+            else:
+                # `out` may be `out_tuple[0].tensor`, but we want to return
+                # the original one
+                result = out_tuple[0]
+
+            return result
 
     def show(self, title=None, method='', coords=None, indices=None,
              force_show=False, fig=None, **kwargs):
@@ -926,50 +1277,28 @@ class DiscreteLpElement(DiscretizedSpaceElement):
                                   axis_labels=axis_labels, **kwargs)
 
 
-def uniform_discr_frompartition(partition, exponent=2.0, interp='nearest',
-                                impl='numpy', **kwargs):
-    """Discretize an Lp function space given a uniform partition.
+def uniform_discr_frompartition(partition, dtype=None, impl='numpy', **kwargs):
+    """Return a uniformly discretized L^p function space.
 
     Parameters
     ----------
     partition : `RectPartition`
-        Regular (uniform) partition to be used for discretization
-    exponent : positive float, optional
-        The parameter ``p`` in ``L^p``. If the exponent is not
-        equal to the default 2.0, the space has no inner product.
-    interp : string or sequence of strings, optional
-        Interpolation type to be used for discretization.
-        A sequence is interpreted as interpolation scheme per axis.
-
-            'nearest' : use nearest-neighbor interpolation
-
-            'linear' : use linear interpolation
-
+        Uniform partition to be used for discretization.
+        It defines the domain and the functions and the grid for
+        discretization.
+    dtype : optional
+        Data type for the discretized space, must be understood by the
+        `numpy.dtype` constructor. The default for ``None`` depends on the
+        ``impl`` backend, usually it is ``'float64'`` or ``'float32'``.
     impl : string, optional
         Implementation of the data storage arrays
-
-    Other Parameters
-    ----------------
-    order : {'C', 'F'}, optional
-        Axis ordering in the data storage. Default: 'C'
-    dtype : dtype
-        Data type for the discretized space
-
-            Default for 'numpy': 'float64' / 'complex128'
-
-            Default for 'cuda': 'float32'
-
-    weighting : {'const', 'none'}, optional
-        Weighting of the discretized space functions.
-
-            'const' : weight is a constant, the cell volume (default)
-
-            'none' : no weighting
+    kwargs :
+        Additional keyword parameters, see `uniform_discr` for details.
 
     Returns
     -------
     discr : `DiscreteLp`
-        The uniformly discretized function space
+        The uniformly discretized function space.
 
     Examples
     --------
@@ -991,94 +1320,45 @@ def uniform_discr_frompartition(partition, exponent=2.0, interp='nearest',
     if not partition.is_uniform:
         raise ValueError('`partition` is not uniform')
 
-    dtype = kwargs.pop('dtype', None)
-    if dtype is None:
-        dtype = fn_impl(impl).default_dtype(RealNumbers())
-    else:
+    if dtype is not None:
         dtype = np.dtype(dtype)
 
     fspace = FunctionSpace(partition.set, out_dtype=dtype)
-    ds_type = dspace_type(fspace, impl, dtype)
+    ds_type = tspace_type(fspace, impl, dtype)
 
     if dtype is None:
         dtype = ds_type.default_dtype()
 
-    order = kwargs.pop('order', 'C')
-
-    weighting = kwargs.pop('weighting', 'const')
-    if not isinstance(weighting, Weighting):
-        weighting, weighting_in = str(weighting).lower(), weighting
-        if weighting == 'none' or float(exponent) == float('inf'):
-            weighting = None
-        elif weighting == 'const':
-            weighting = 1.0 if partition.ndim == 0 else partition.cell_volume
+    weighting = kwargs.pop('weighting', None)
+    exponent = kwargs.pop('exponent', 2.0)
+    if weighting is None and is_numeric_dtype(dtype):
+        if exponent == float('inf') or partition.ndim == 0:
+            weighting = 1.0
         else:
-            raise ValueError("`weighting` '{}' not understood"
-                             "".format(weighting_in))
+            weighting = partition.cell_volume
 
-    if dtype is not None:
-        dspace = ds_type(partition.size, dtype=dtype,
-                         weighting=weighting, exponent=exponent)
-    else:
-        dspace = ds_type(partition.size, weighting=weighting,
-                         exponent=exponent)
-
-    return DiscreteLp(fspace, partition, dspace, exponent, interp, order=order,
-                      **kwargs)
+    tspace = ds_type(partition.shape, dtype, exponent=exponent,
+                     weighting=weighting)
+    return DiscreteLp(fspace, partition, tspace, **kwargs)
 
 
-def uniform_discr_fromspace(fspace, shape, exponent=2.0, interp='nearest',
-                            impl='numpy', **kwargs):
-    """Discretize an Lp function space by uniform partition.
+def uniform_discr_fromspace(fspace, shape, dtype=None, impl='numpy', **kwargs):
+    """Return a uniformly discretized L^p function space.
 
     Parameters
     ----------
     fspace : `FunctionSpace`
-        Continuous function space. Its domain must be an
-        `IntervalProd` instance.
+        Continuous function space. Its domain must be an `IntervalProd`.
     shape : int or sequence of ints
         Number of samples per axis.
-    exponent : positive float, optional
-        The parameter ``p`` in ``L^p``. If the exponent is not
-        equal to the default 2.0, the space has no inner product.
-    interp : string or sequence of strings, optional
-        Interpolation type to be used for discretization.
-        A sequence is interpreted as interpolation scheme per axis.
-
-            'nearest' : use nearest-neighbor interpolation
-
-            'linear' : use linear interpolation
-
+    dtype : optional
+        Data type for the discretized space, must be understood by the
+        `numpy.dtype` constructor. The default for ``None`` depends on the
+        ``impl`` backend, usually it is ``'float64'`` or ``'float32'``.
     impl : string, optional
         Implementation of the data storage arrays
-
-    Other Parameters
-    ----------------
-    nodes_on_bdry : bool or sequence, optional
-        If a sequence is provided, it determines per axis whether to
-        place the last grid point on the boundary (``True``) or shift it
-        by half a cell size into the interior (``False``). In each axis,
-        an entry may consist in a single bool or a 2-tuple of
-        bool. In the latter case, the first tuple entry decides for
-        the left, the second for the right boundary. The length of the
-        sequence must be ``len(shape)``.
-
-        A single boolean is interpreted as a global choice for all
-        boundaries.
-
-        Default: ``False``.
-
-    order : {'C', 'F'}, optional
-        Axis ordering in the data storage. Default: 'C'
-    dtype : dtype, optional
-        Data type for the discretized space. If not specified, the
-        `FunctionSpace.out_dtype` of ``fspace`` is used.
-    weighting : {'const', 'none'}, optional
-        Weighting of the discretized space functions.
-
-            'const' : Weight is a constant, the cell volume (default).
-
-            'none' : No weighting.
+    kwargs :
+        Additional keyword parameters, see `uniform_discr` for details.
 
     Returns
     -------
@@ -1109,15 +1389,13 @@ def uniform_discr_fromspace(fspace, shape, exponent=2.0, interp='nearest',
         raise TypeError('domain {!r} of the function space is not an '
                         '`IntervalProd` instance'.format(fspace.domain))
 
-    dtype = kwargs.pop('dtype', None)
-
-    # Set data type. If given check consistency with fspace's field and
+    # Set data type. If given, check consistency with fspace's field and
     # out_dtype. If not given, take the latter.
     if dtype is None:
         dtype = fspace.out_dtype
     else:
         dtype, dtype_in = np.dtype(dtype), dtype
-        if not np.can_cast(fspace.out_dtype, dtype, casting='safe'):
+        if not np.can_cast(fspace.scalar_out_dtype, dtype, casting='safe'):
             raise ValueError('cannot safely cast from output data {} type of '
                              'the function space to given data type {}'
                              ''.format(fspace.out, dtype_in))
@@ -1136,64 +1414,27 @@ def uniform_discr_fromspace(fspace, shape, exponent=2.0, interp='nearest',
     partition = uniform_partition_fromintv(fspace.domain, shape,
                                            nodes_on_bdry)
 
-    return uniform_discr_frompartition(partition, exponent, interp, impl,
-                                       dtype=dtype, **kwargs)
+    return uniform_discr_frompartition(partition, dtype, impl, **kwargs)
 
 
-def uniform_discr_fromintv(interval, shape, exponent=2.0, interp='nearest',
-                           impl='numpy', **kwargs):
-    """Discretize an Lp function space by uniform sampling.
+def uniform_discr_fromintv(intv_prod, shape, dtype=None, impl='numpy',
+                           **kwargs):
+    """Return a uniformly discretized L^p function space.
 
     Parameters
     ----------
-    interval : `IntervalProd`
-        The domain of the uniformly discretized space.
+    intv_prod : `IntervalProd`
+        Function domain of the uniformly discretized space.
     shape : int or sequence of ints
         Number of samples per axis.
-    exponent : positive float, optional
-        The parameter :math:`p` in :math:`L^p`. If the exponent is not
-        equal to the default 2.0, the space has no inner product.
-    interp : string or sequence of strings, optional
-        Interpolation type to be used for discretization.
-        A sequence is interpreted as interpolation scheme per axis.
-
-            'nearest' : use nearest-neighbor interpolation
-
-            'linear' : use linear interpolation
-
+    dtype : optional
+        Data type for the discretized space, must be understood by the
+        `numpy.dtype` constructor. The default for ``None`` depends on the
+        ``impl`` backend, usually it is ``'float64'`` or ``'float32'``.
     impl : str, optional
         Implementation of the data storage arrays.
-    nodes_on_bdry : bool or sequence, optional
-        If a sequence is provided, it determines per axis whether to
-        place the last grid point on the boundary (``True``) or shift it
-        by half a cell size into the interior (``False``). In each axis,
-        an entry may consist in a single bool or a 2-tuple of
-        bool. In the latter case, the first tuple entry decides for
-        the left, the second for the right boundary. The length of the
-        sequence must be ``array.ndim``.
-
-        A single boolean is interpreted as a global choice for all
-        boundaries.
-        Default: ``False``
-
-    dtype : dtype, optional
-        Data type for the discretized space
-
-            Default for 'numpy': 'float64' / 'complex128'
-
-            Default for 'cuda': 'float32'
-
-    order : {'C', 'F'}, optional
-        Ordering of the axes in the data storage. 'C' means the
-        first axis varies slowest, the last axis fastest;
-        vice versa for 'F'.
-        Default: 'C'
-    weighting : {'const', 'none'}, optional
-        Weighting of the discretized space functions.
-
-            'const' : weight is a constant, the cell volume (default)
-
-            'none' : no weighting
+    kwargs :
+        Additional keyword parameters, see `uniform_discr` for details.
 
     Returns
     -------
@@ -1214,40 +1455,40 @@ def uniform_discr_fromintv(interval, shape, exponent=2.0, interp='nearest',
     uniform_discr_fromspace : uniform discretization from an existing
         function space
     """
-    dtype = kwargs.pop('dtype', None)
     if dtype is None:
-        dtype = fn_impl(impl).default_dtype()
+        dtype = tensor_space_impl(str(impl).lower()).default_dtype()
 
-    fspace = FunctionSpace(interval, out_dtype=dtype)
-    return uniform_discr_fromspace(fspace, shape, exponent, interp, impl,
-                                   **kwargs)
+    fspace = FunctionSpace(intv_prod, out_dtype=dtype)
+    return uniform_discr_fromspace(fspace, shape, dtype, impl, **kwargs)
 
 
-def uniform_discr(min_pt, max_pt, shape, exponent=2.0, interp='nearest',
-                  impl='numpy', **kwargs):
-    """Discretize an Lp function space by uniform sampling.
+def uniform_discr(min_pt, max_pt, shape, dtype=None, impl='numpy', **kwargs):
+    """Return a uniformly discretized L^p function space.
 
     Parameters
     ----------
-    min_pt : float or sequence of floats
-        Maximum corners of the desired function domain.
-    max_pt : float or sequence of floats
-        Minimum corners of the desired function domain.
+    min_pt, max_pt : float or sequence of floats
+        Minimum/maximum corners of the desired function domain.
     shape : int or sequence of ints
         Number of samples per axis.
+    dtype : optional
+        Data type for the discretized space, must be understood by the
+        `numpy.dtype` constructor. The default for ``None`` depends on the
+        ``impl`` backend, usually it is ``'float64'`` or ``'float32'``.
+    impl : string, optional
+        Implementation of the data storage arrays.
+
+    Other Parameters
+    ----------------
     exponent : positive float, optional
         The parameter :math:`p` in :math:`L^p`. If the exponent is not
         equal to the default 2.0, the space has no inner product.
     interp : string or sequence of strings, optional
         Interpolation type to be used for discretization.
         A sequence is interpreted as interpolation scheme per axis.
-
-            'nearest' : use nearest-neighbor interpolation
-
-            'linear' : use linear interpolation
-
-    impl : string, optional
-        Implementation of the data storage arrays.
+        Possible values:
+            - ``'nearest'`` : use nearest-neighbor interpolation.
+            - ``'linear'`` : use linear interpolation.
     nodes_on_bdry : bool or sequence, optional
         If a sequence is provided, it determines per axis whether to
         place the last grid point on the boundary (``True``) or shift it
@@ -1256,30 +1497,17 @@ def uniform_discr(min_pt, max_pt, shape, exponent=2.0, interp='nearest',
         bool. In the latter case, the first tuple entry decides for
         the left, the second for the right boundary. The length of the
         sequence must be ``len(shape)``.
-
         A single boolean is interpreted as a global choice for all
         boundaries.
-
         Default: ``False``.
-
-    dtype : dtype, optional
-        Data type for the discretized space
-
-            Default for 'numpy': 'float64' / 'complex128'
-
-            Default for 'cuda': 'float32'
-
-    order : {'C', 'F'}, optional
-        Ordering of the axes in the data storage. 'C' means the
-        first axis varies slowest, the last axis fastest;
-        vice versa for 'F'.
-        Default: 'C'
-    weighting : {'const', 'none'}, optional
-        Weighting of the discretized space functions.
-
-            'const' : weight is a constant, the cell volume (default)
-
-            'none' : no weighting
+    weighting : optional
+        Use weighted inner product, norm, and dist. The following
+        types are supported as ``weighting``:
+            - ``None``: Use the cell volume as weighting constant (default).
+            - ``float``: Weighting by a constant.
+            - array-like: Point-wise weighting by an array.
+            - `Weighting`: Use weighting class as-is. Compatibility
+              with this space's elements is not checked during init.
 
     Returns
     -------
@@ -1290,13 +1518,25 @@ def uniform_discr(min_pt, max_pt, shape, exponent=2.0, interp='nearest',
     --------
     Create real space:
 
-    >>> uniform_discr([0, 0], [1, 1], [10, 10])
+    >>> space = uniform_discr([0, 0], [1, 1], (10, 10))
+    >>> space
     uniform_discr([ 0.,  0.], [ 1.,  1.], (10, 10))
+    >>> space.cell_sides
+    array([ 0.1,  0.1])
+    >>> space.dtype
+    dtype('float64')
+    >>> space.is_real
+    True
 
-    Can create complex space by giving a dtype
+    Create complex space by giving a dtype:
 
-    >>> uniform_discr([0, 0], [1, 1], [10, 10], dtype='complex')
-    uniform_discr([ 0.,  0.], [ 1.,  1.], (10, 10), dtype='complex')
+    >>> space = uniform_discr([0, 0], [1, 1], (10, 10), dtype=complex)
+    >>> space
+    uniform_discr([ 0.,  0.], [ 1.,  1.], (10, 10), dtype=complex)
+    >>> space.is_complex
+    True
+    >>> space.real_space  # Get real counterpart
+    uniform_discr([ 0.,  0.], [ 1.,  1.], (10, 10))
 
     See Also
     --------
@@ -1307,40 +1547,29 @@ def uniform_discr(min_pt, max_pt, shape, exponent=2.0, interp='nearest',
     uniform_discr_fromintv : uniform discretization from an existing
         interval product
     """
-    interval = IntervalProd(min_pt, max_pt)
-    return uniform_discr_fromintv(interval, shape, exponent, interp, impl,
-                                  **kwargs)
+    intv_prod = IntervalProd(min_pt, max_pt)
+    return uniform_discr_fromintv(intv_prod, shape, dtype, impl, **kwargs)
 
 
-def discr_sequence_space(shape, exponent=2.0, impl='numpy', **kwargs):
+def discr_sequence_space(shape, dtype=None, impl='numpy', **kwargs):
     """Return an object mimicing the sequence space ``l^p(R^d)``.
 
-    The returned object is a `DiscreteLp` without sampling and
-    interpolation operators. It uses a grid with stride 1 and no
-    weighting.
+    The returned object is a `DiscreteLp` on the domain ``[0, shape - 1]``,
+    using a uniform grid with stride 1.
 
     Parameters
     ----------
     shape : int or sequence of ints
         Number of element entries per axis.
-    exponent : positive float, optional
-        The parameter ``p`` in ```L^p``. If the exponent is
-        not equal to the default 2.0, the space has no inner
-        product.
+    dtype : optional
+        Data type for the discretized space, must be understood by the
+        `numpy.dtype` constructor. The default for ``None`` depends on the
+        ``impl`` backend, usually it is ``'float64'`` or ``'float32'``.
     impl : string, optional
-        Implementation of the data storage arrays
-    dtype : dtype, optional
-        Data type for the discretized space
-
-            Default for 'numpy': 'float64'
-
-            Default for 'cuda': 'float32'
-
-    order : {'C', 'F'}, optional
-        Ordering of the axes in the data storage. 'C' means the
-        first axis varies slowest, the last axis fastest;
-        vice versa for 'F'.
-        Default: 'C'
+        Implementation of the data storage arrays.
+    kwargs :
+        Additional keyword parameters, see `uniform_discr` for details.
+        Note that ``nodes_on_bdry`` cannot be given.
 
     Returns
     -------
@@ -1356,17 +1585,13 @@ def discr_sequence_space(shape, exponent=2.0, impl='numpy', **kwargs):
     >>> seq_spc.one().norm() == 9.0
     True
     """
-    kwargs.pop('weighting', None)
-    kwargs.pop('nodes_on_bdry', None)
     shape = np.atleast_1d(shape)
-    return uniform_discr([0] * len(shape), shape - 1, shape, impl=impl,
-                         exponent=exponent, nodes_on_bdry=True,
-                         weighting='none', **kwargs)
+    return uniform_discr([0] * len(shape), shape - 1, shape, dtype, impl,
+                         nodes_on_bdry=True, **kwargs)
 
 
 def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
-                            shape=None, cell_sides=None, exponent=2.0,
-                            interp='nearest', impl='numpy', **kwargs):
+                            shape=None, cell_sides=None, **kwargs):
     """Return a discretization based on an existing one.
 
     The parameters that are explicitly given are used to create the
@@ -1377,35 +1602,17 @@ def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
     ----------
     discr : `DiscreteLp`
         Uniformly discretized space used as a template.
-    min_pt : float or sequence of floats, optional
-        Minimum corners of the desired function domain.
-    max_pt : float or sequence of floats, optional
-        Maximum corners of the desired function domain.
+    min_pt, max_pt: float or sequence of floats, optional
+        Desired minimum/maximum corners of the new space domain.
     shape : int or sequence of ints, optional
-        Number of samples per axis.
-    cell_sides : array-like, optional
-        Side length of each cell.
-    exponent : positive float, optional
-        The parameter :math:`p` in :math:`L^p`. If the exponent is not
-        equal to the default 2.0, the space has no inner product.
-    interp : string or sequence of strings, optional
-        Interpolation type to be used for discretization.
-        A sequence is interpreted as interpolation scheme per axis.
-
-            'nearest' : use nearest-neighbor interpolation
-
-            'linear' : use linear interpolation
-
-    impl : string, optional
-        Implementation of the data storage arrays. See
+        Desired number of samples per axis of the new space.
+    cell_sides : float or sequence of floats, optional
+        Desired cell side lenghts of the new space's partition.
     nodes_on_bdry : bool or sequence, optional
-        Specifies whether to put the outmost grid nodes on the
-        boundary of the domain.
-
         If a sequence is provided, it determines per axis whether to
         place the last grid point on the boundary (``True``) or shift it
         by half a cell size into the interior (``False``). In each axis,
-        an entry may consist in a single boolean or a 2-tuple of
+        an entry may consist in a single bool or a 2-tuple of
         bool. In the latter case, the first tuple entry decides for
         the left, the second for the right boundary. The length of the
         sequence must be ``discr.ndim``.
@@ -1415,24 +1622,9 @@ def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
 
         Default: ``False``.
 
-    dtype : optional
-        Data type for the discretized space.
-
-            Default for 'numpy': 'float64' / 'complex128'
-
-            Default for 'cuda': 'float32'
-
-    order : {'C', 'F'}, optional
-        Ordering of the axes in the data storage. 'C' means the
-        first axis varies slowest, the last axis fastest;
-        vice versa for 'F'.
-        Default: 'C'
-    weighting : {'const', 'none'}, optional
-        Weighting of the discretized space functions.
-
-            'const' : weight is a constant, the cell volume (default)
-
-            'none' : no weighting
+    kwargs :
+        Additional keyword parameters passed to the `DiscreteLp`
+        initializer.
 
     Notes
     -----
@@ -1465,6 +1657,7 @@ def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
 
     See Also
     --------
+    uniform_discr : implicit uniform Lp discretization
     odl.discr.partition.uniform_partition :
         underlying domain partitioning scheme
 
@@ -1601,7 +1794,7 @@ def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
                                        **kwargs)
 
 
-def _scaling_func_list(bdry_fracs, exponent=1.0):
+def _scaling_func_list(bdry_fracs, exponent):
     """Return a list of lists of scaling functions for the boundary."""
     def scaling(factor):
         def scaling_func(x):
