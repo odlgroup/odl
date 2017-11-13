@@ -79,10 +79,11 @@ class FunctionSpaceMapping(Operator):
                              'of the function set {}'
                              ''.format(partition, fspace.domain, fspace))
 
-        if tspace.shape != partition.shape:
-            raise ValueError('`tspace.shape` not equal to `partition.shape`: '
-                             '{} != {}'
-                             ''.format(tspace.shape, partition.shape))
+        if tspace.shape != fspace.out_shape + partition.shape:
+            raise ValueError(
+                '`tspace.shape` not equal to '
+                '`fspace.out_shape +  partition.shape`: {} != {}'
+                ''.format(tspace.shape, partition.shape))
 
         domain = fspace if map_type == 'sampling' else tspace
         range = tspace if map_type == 'sampling' else fspace

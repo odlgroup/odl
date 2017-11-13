@@ -18,6 +18,7 @@ from odl.set.space import LinearSpace, LinearSpaceElement
 from odl.util import (
     is_numeric_dtype, is_real_dtype, is_floating_dtype,
     is_real_floating_dtype, is_complex_floating_dtype, safe_int_conv,
+    simulate_slicing,
     array_str, dtype_str, signature_string, indent, writable_array)
 from odl.util.ufuncs import TensorSpaceUfuncs
 from odl.util.utility import TYPE_MAP_R2C, TYPE_MAP_C2R
@@ -91,18 +92,18 @@ class TensorSpace(LinearSpace):
         self.__shape = dtype.shape + shape
         self.__dtype = dtype.base
 
-        if is_real_dtype(self.dtype):
+        if is_real_dtype(self.__dtype):
             # real includes non-floating-point like integers
             field = RealNumbers()
-            self.__real_dtype = self.dtype
+            self.__real_dtype = self.__dtype
             self.__real_space = self
-            self.__complex_dtype = TYPE_MAP_R2C.get(self.dtype, None)
+            self.__complex_dtype = TYPE_MAP_R2C.get(self.__dtype, None)
             self.__complex_space = None  # Set in first call of astype
-        elif is_complex_floating_dtype(self.dtype):
+        elif is_complex_floating_dtype(self.__dtype):
             field = ComplexNumbers()
-            self.__real_dtype = TYPE_MAP_C2R[self.dtype]
+            self.__real_dtype = TYPE_MAP_C2R[self.__dtype]
             self.__real_space = None  # Set in first call of astype
-            self.__complex_dtype = self.dtype
+            self.__complex_dtype = self.__dtype
             self.__complex_space = self
         else:
             field = None

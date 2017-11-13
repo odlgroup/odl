@@ -9,8 +9,9 @@
 """NumPy implementation of tensor spaces."""
 
 from __future__ import print_function, division, absolute_import
-from future.utils import native
 from builtins import object
+from future.utils import native
+from future.moves.itertools import zip_longest
 import ctypes
 from functools import partial
 import numpy as np
@@ -19,11 +20,12 @@ from odl.set.sets import RealNumbers, ComplexNumbers
 from odl.set.space import LinearSpaceTypeError
 from odl.space.base_tensors import TensorSpace, Tensor
 from odl.space.weighting import (
-    Weighting, ArrayWeighting, ConstWeighting,
+    Weighting, ArrayWeighting, ConstWeighting, PerAxisWeighting,
     CustomInner, CustomNorm, CustomDist)
 from odl.util import (
-    dtype_str, signature_string, is_real_dtype, is_numeric_dtype,
-    writable_array, is_floating_dtype)
+    dtype_str, signature_string, is_real_dtype, is_numeric_dtype, array_str,
+    indent, fast_1d_tensor_mult, writable_array, is_floating_dtype,
+    simulate_slicing, normalized_index_expression)
 
 
 __all__ = ('NumpyTensorSpace',)
@@ -101,14 +103,14 @@ class NumpyTensorSpace(TensorSpace):
             Use weighted inner product, norm, and dist. The following
             types are supported as ``weighting``:
 
-            ``None``: no weighting, i.e. weighting with ``1.0`` (default).
-
-            `Weighting`: Use this weighting as-is. Compatibility
-            with this space's elements is not checked during init.
-
-            ``float``: Weighting by a constant.
-
-            array-like: Pointwise weighting by an array.
+            - ``None``: No weighting, i.e. weighting with ``1.0`` (default).
+            - ``float``: Weighting by a constant.
+            - sequence of length ``ndim``: Separate weighting per axis.
+              Entries can be constants or 1D arrays.
+            - array-like: Pointwise weighting by an array of the same
+              ``shape`` as this space.
+            - `Weighting`: Use this weighting as-is. Compatibility
+              with this space is not checked during init.
 
             This option cannot be combined with ``dist``,
             ``norm`` or ``inner``. It also cannot be used in case of
@@ -160,9 +162,9 @@ class NumpyTensorSpace(TensorSpace):
 
         Notes
         -----
-        - A distance function or metric on a space :math:`\mathcal{X}`
+        - A distance function or metric on a space :math:`X`
           is a mapping
-          :math:`d:\mathcal{X} \\times \mathcal{X} \\to \mathbb{R}`
+          :math:`d:X \\times X \\to \mathbb{R}`
           satisfying the following conditions for all space elements
           :math:`x, y, z`:
 
@@ -171,8 +173,8 @@ class NumpyTensorSpace(TensorSpace):
           * :math:`d(x, y) = d(y, x)`,
           * :math:`d(x, y) \\leq d(x, z) + d(z, y)`.
 
-        - A norm on a space :math:`\mathcal{X}` is a mapping
-          :math:`\| \cdot \|:\mathcal{X} \\to \mathbb{R}`
+        - A norm on a space :math:`X` is a mapping
+          :math:`\| \cdot \|:X \\to \mathbb{R}`
           satisfying the following conditions for all
           space elements :math:`x, y`: and scalars :math:`s`:
 
@@ -182,11 +184,11 @@ class NumpyTensorSpace(TensorSpace):
           * :math:`\| x+y\| \\leq \| x\| +
             \| y\|`.
 
-        - An inner product on a space :math:`\mathcal{X}` over a field
+        - An inner product on a space :math:`X` over a field
           :math:`\mathbb{F} = \mathbb{R}` or :math:`\mathbb{C}` is a
           mapping
-          :math:`\\langle\cdot, \cdot\\rangle: \mathcal{X} \\times
-          \mathcal{X} \\to \mathbb{F}`
+          :math:`\\langle\cdot, \cdot\\rangle: X \\times
+          X \\to \mathbb{F}`
           satisfying the following conditions for all
           space elements :math:`x, y, z`: and scalars :math:`s`:
 
@@ -245,6 +247,7 @@ class NumpyTensorSpace(TensorSpace):
 
         # Set the weighting
         if weighting is not None:
+
             if isinstance(weighting, Weighting):
                 if weighting.impl != 'numpy':
                     raise ValueError("`weighting.impl` must be 'numpy', "
@@ -254,25 +257,51 @@ class NumpyTensorSpace(TensorSpace):
                                      '`exponent`: {} != {}'
                                      ''.format(weighting.exponent, exponent))
                 self.__weighting = weighting
+
+            elif np.isscalar(weighting):
+                if self.ndim == 1:
+                    # Prefer per-axis weighting if possible, it behaves better
+                    self.__weighting = NumpyTensorSpacePerAxisWeighting(
+                        [weighting], exponent)
+                else:
+                    self.__weighting = NumpyTensorSpaceConstWeighting(
+                        weighting, exponent)
+
+            elif len(weighting) == self.ndim:
+                self.__weighting = NumpyTensorSpacePerAxisWeighting(
+                    weighting, exponent)
+
             else:
-                self.__weighting = _weighting(weighting, exponent)
+                array = np.asarray(weighting)
+                if array.dtype == object:
+                    raise ValueError(
+                        'invalid `weighting` provided; valid inputs are '
+                        '`None`, constants, sequences of length `ndim` '
+                        "and array-like objects of this space's `shape`")
+                self.__weighting = NumpyTensorSpaceArrayWeighting(
+                    array, exponent)
 
             # Check (afterwards) that the weighting input was sane
-            if isinstance(self.weighting, NumpyTensorSpaceArrayWeighting):
-                if self.weighting.array.dtype == object:
-                    raise ValueError('invalid `weighting` argument: {}'
-                                     ''.format(weighting))
-                elif not np.can_cast(self.weighting.array.dtype, self.dtype):
+            if isinstance(self.__weighting, NumpyTensorSpaceArrayWeighting):
+                if not np.can_cast(self.__weighting.array.dtype, self.dtype):
                     raise ValueError(
                         'cannot cast from `weighting` data type {} to '
                         'the space `dtype` {}'
-                        ''.format(dtype_str(self.weighting.array.dtype),
+                        ''.format(dtype_str(self.__weighting.array.dtype),
                                   dtype_str(self.dtype)))
-                if self.weighting.array.shape != self.shape:
+                if self.__weighting.array.shape != self.shape:
                     raise ValueError('array-like weights must have same '
                                      'shape {} as this space, got {}'
                                      ''.format(self.shape,
-                                               self.weighting.array.shape))
+                                               self.__weighting.array.shape))
+
+            elif isinstance(self.__weighting,
+                            NumpyTensorSpacePerAxisWeighting):
+                if len(self.__weighting.factors) != self.ndim:
+                    raise ValueError(
+                        'per-axis weighting must have {} (=ndim) factors, '
+                        'got {}'.format(self.ndim,
+                                        len(self.__weighting.factors)))
 
         elif dist is not None:
             self.__weighting = NumpyTensorSpaceCustomDist(dist)
@@ -544,7 +573,7 @@ class NumpyTensorSpace(TensorSpace):
         >>> result is out
         True
         """
-        _lincomb_impl(a, x1, b, x2, out)
+        _lincomb_impl(a, x1.data, b, x2.data, out.data)
 
     def _dist(self, x1, x2):
         """Return the distance between ``x1`` and ``x2``.
@@ -761,6 +790,79 @@ class NumpyTensorSpace(TensorSpace):
         return hash((super(NumpyTensorSpace, self).__hash__(),
                      self.weighting))
 
+    def __getitem__(self, indices):
+        """Return ``self[indices]``.
+
+        For all supported cases, indexing is implemented such that for an
+        element ``x in space``, the statement ::
+
+            x[indices] in space[indices]
+
+        is ``True``.
+
+        Space indexing works with
+
+        - integers,
+        - `slice` objects,
+        - index arrays, i.e., 1D array-like objects containing integers,
+
+        and combinations of the above. It does not work with boolean arrays
+        or more advanced "fancy indexing".
+
+        .. note::
+            This method is a default implementation that propagates only
+            ``shape`` and ``dtype``. Subclasses with more properties
+            need to override the method.
+
+        Examples
+        --------
+        A single integer slices along the first axis (index does not
+        matter as long as it lies within the bounds):
+
+        >>> rn = odl.rn((3, 4, 5, 6))
+        >>> rn[0]
+        rn((4, 5, 6))
+        >>> rn[2]
+        rn((4, 5, 6))
+
+        Multiple indices slice into corresponding axes from the left:
+
+        >>> rn[0, 0]
+        rn((5, 6))
+        >>> rn[0, 1, 1]
+        rn(6)
+
+        Ellipsis (``...``) and ``slice(None)`` (``:``) can be used to keep
+        one or several axes intact:
+
+        >>> rn[0, :, 1, :]
+        rn((4, 6))
+        >>> rn[..., 0, 0]
+        rn((3, 4))
+
+        With slices, parts of axes can be selected:
+
+        >>> rn[0, :3, 1:4, ::2]
+        rn((3, 3, 3))
+
+        Array-like objects (must all have the same 1D shape) of integers are
+        treated as follows: if their common length is ``n``, a new axis
+        of length ``n`` is created at the position of the leftmost index
+        array, and all index array axes are collapsed (Note: this is
+        not so useful for spaces, more so for elements):
+
+        >>> rn[0, 0, [0, 1, 0, 2], :]
+        rn((4, 6))
+        >>> rn[:, [1, 1], [0, 2], :]
+        rn((3, 2, 6))
+        >>> rn[[2, 0], [3, 3], [0, 1], [5, 2]]
+        rn(2)
+        """
+        new_shape, removed_axes, _ = simulate_slicing(self.shape, indices)
+        weighting = slice_weighting(self.weighting, self.shape, indices)
+        return type(self)(shape=new_shape, dtype=self.dtype,
+                          weighting=weighting, exponent=self.exponent)
+
     @property
     def byaxis(self):
         """Return the subspace defined along one or several dimensions.
@@ -782,7 +884,7 @@ class NumpyTensorSpace(TensorSpace):
         """
         space = self
 
-        class NpyTensorSpacebyaxis(object):
+        class NpyTensorSpaceByAxis(object):
 
             """Helper class for indexing by axis."""
 
@@ -791,24 +893,25 @@ class NumpyTensorSpace(TensorSpace):
                 try:
                     iter(indices)
                 except TypeError:
-                    newshape = space.shape[indices]
+                    # Integer, slice or Ellipsis
+                    indices = list(range(space.ndim))[indices]
+                    if not isinstance(indices, list):
+                        indices = [indices]
                 else:
-                    newshape = tuple(space.shape[i] for i in indices)
+                    indices = [int(i) for i in indices]
 
-                if isinstance(space.weighting, ArrayWeighting):
-                    new_array = np.asarray(space.weighting.array[indices])
-                    weighting = NumpyTensorSpaceArrayWeighting(
-                        new_array, space.weighting.exponent)
-                else:
-                    weighting = space.weighting
-
-                return type(space)(newshape, space.dtype, weighting=weighting)
+                new_shape = tuple(space.shape[i] for i in indices)
+                new_weighting = slice_weighting_by_axis(space.weighting,
+                                                        space.shape, indices)
+                return type(space)(new_shape, space.dtype,
+                                   weighting=new_weighting,
+                                   exponent=space.exponent)
 
             def __repr__(self):
                 """Return ``repr(self)``."""
                 return repr(space) + '.byaxis'
 
-        return NpyTensorSpacebyaxis()
+        return NpyTensorSpaceByAxis()
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -1091,26 +1194,37 @@ class NumpyTensor(Tensor):
             [[-9.,  2., -9.],
              [-9.,  5., -9.]]
         )
+
+        More advanced indexing:
+
+        >>> x = space.element([[1, 2, 3],
+        ...                    [4, 5, 6]])
+        >>> x[[0, 0, 1], [2, 1, 0]]  # entries (0, 2), (0, 1) and (1, 0)
+        rn(3).element([ 3.,  2.,  4.])
+        >>> bool_elem = x.ufuncs.less(3)
+        >>> x[bool_elem]
+        rn(2).element([ 1.,  2.])
         """
-        # Lazy implementation: index the array and deal with it
         if isinstance(indices, NumpyTensor):
             indices = indices.data
-        arr = self.data[indices]
+        res_arr = self.data[indices]
 
-        if np.isscalar(arr):
+        if np.isscalar(res_arr):
             if self.space.field is not None:
-                return self.space.field.element(arr)
+                return self.space.field.element(res_arr)
             else:
-                return arr
+                return res_arr
         else:
-            if is_numeric_dtype(self.dtype):
-                weighting = self.space.weighting
-            else:
-                weighting = None
-            space = type(self.space)(
-                arr.shape, dtype=self.dtype, exponent=self.space.exponent,
-                weighting=weighting)
-            return space.element(arr)
+            # If possible, ensure that
+            # `self.space[indices].shape == self[indices].shape`
+            try:
+                res_space = self.space[indices]
+            except TypeError:
+                # No weighting
+                res_space = type(self.space)(
+                    res_arr.shape, dtype=self.dtype,
+                    exponent=self.space.exponent)
+            return res_space.element(res_arr)
 
     def __setitem__(self, indices, values):
         """Implement ``self[indices] = values``.
@@ -1632,14 +1746,6 @@ numpy.ufunc.reduceat.html
             out1 = out_tuple[0]
             out2 = out_tuple[1]
 
-        # --- Process `inputs` --- #
-
-        # Convert inputs that are ODL tensors to Numpy arrays so that the
-        # native Numpy ufunc is called later
-        inputs = tuple(
-            inp.asarray() if isinstance(inp, type(self)) else inp
-            for inp in inputs)
-
         # --- Get some parameters for later --- #
 
         # Arguments for `writable_array` and/or space constructors
@@ -1651,6 +1757,18 @@ numpy.ufunc.reduceat.html
 
         exponent = self.space.exponent
         weighting = self.space.weighting
+        try:
+            weighting2 = inputs[1].space.weighting
+        except (IndexError, AttributeError):
+            weighting2 = None
+
+        # --- Process `inputs` --- #
+
+        # Convert inputs that are ODL tensors to Numpy arrays so that the
+        # native Numpy ufunc is called later
+        inputs = tuple(
+            inp.asarray() if isinstance(inp, type(self)) else inp
+            for inp in inputs)
 
         # --- Evaluate ufunc --- #
 
@@ -1751,12 +1869,76 @@ numpy.ufunc.reduceat.html
             # Wrap result if necessary (lazily)
             if out is None:
                 if is_floating_dtype(res.dtype):
-                    if res.shape != self.shape:
-                        # Don't propagate weighting if shape changes
-                        weighting = NumpyTensorSpaceConstWeighting(1.0,
-                                                                   exponent)
+
+                    # For weighting, we need to check which axes remain in
+                    # the result and slice the weighting accordingly
+                    if method == 'reduce':
+                        axis = kwargs.get('axis', 0)
+                        try:
+                            iter(axis)
+                        except TypeError:
+                            axis = [axis]
+
+                        if kwargs.get('keepdims', False):
+                            reduced_axes = []
+                        else:
+                            reduced_axes = [i for i in range(self.ndim)
+                                            if i not in axis]
+                        weighting = slice_weighting_by_axis(
+                            weighting, self.shape, reduced_axes)
+
+                    elif method == 'outer':
+                        # Stack the weightings as well if possible. Stacking
+                        # makes sense for per-axis weighting and constant
+                        # weighting for 1D inputs. An input that has no
+                        # weighting results in per-axis weighting with
+                        # constants 1.
+                        can_stack = True
+                        if isinstance(weighting,
+                                      NumpyTensorSpacePerAxisWeighting):
+                            factors = weighting.factors
+                        elif (isinstance(weighting,
+                                         NumpyTensorSpaceConstWeighting) and
+                              inputs[0].ndim == 1):
+                            factors = (weighting.const,)
+                        else:
+                            can_stack = False
+
+                        if weighting2 is None:
+                            factors = (1.0,) * (res.ndim - inputs[0].ndim)
+                        elif isinstance(weighting2,
+                                        NumpyTensorSpacePerAxisWeighting):
+                            factors2 = weighting2.factors
+                        elif (isinstance(weighting2,
+                                         NumpyTensorSpaceConstWeighting) and
+                              inputs[1].ndim == 1):
+                            factors2 = (weighting2.const,)
+                        elif (isinstance(weighting2,
+                                         NumpyTensorSpaceConstWeighting) and
+                              weighting2.const == 1):
+                            factors2 = (1.0,) * inputs[1].ndim
+                        else:
+                            can_stack = False
+
+                        if can_stack:
+                            weighting = NumpyTensorSpacePerAxisWeighting(
+                                factors + factors2,
+                                exponent=weighting.exponent)
+                        else:
+                            weighting = NumpyTensorSpaceConstWeighting(
+                                1.0, exponent)
+
+                    elif (res.shape != self.shape and
+                          not isinstance(weighting,
+                                         NumpyTensorSpaceConstWeighting)):
+                        # For other cases, preserve constant weighting, and
+                        # preserve other weightings if the shape is unchanged
+                        weighting = NumpyTensorSpaceConstWeighting(
+                            1.0, exponent)
+
                     spc_kwargs = {'weighting': weighting}
-                else:
+
+                else:  # not is_floating_dtype(res.dtype)
                     spc_kwargs = {}
 
                 out_space = type(self.space)(res.shape, res.dtype,
@@ -1764,6 +1946,9 @@ numpy.ufunc.reduceat.html
                 out = out_space.element(res)
 
             return out
+
+
+# --- Implementations of low-level functions --- #
 
 
 def _blas_is_applicable(*args):
@@ -1776,8 +1961,8 @@ def _blas_is_applicable(*args):
 
     Parameters
     ----------
-    x1,...,xN : `NumpyTensor`
-        The tensors to be tested for BLAS conformity.
+    x1,...,xN : `numpy.ndarray`
+        The arrays to be tested for BLAS conformity.
 
     Returns
     -------
@@ -1805,14 +1990,13 @@ def _lincomb_impl(a, x1, b, x2, out):
     import scipy.linalg
 
     size = native(x1.size)
-
     if size < THRESHOLD_SMALL:
         # Faster for small arrays
-        out.data[:] = a * x1.data + b * x2.data
+        out[:] = a * x1 + b * x2
         return
 
     elif (size < THRESHOLD_MEDIUM or
-          not _blas_is_applicable(x1.data, x2.data, out.data)):
+          not _blas_is_applicable(x1, x2, out)):
 
         def fallback_axpy(x1, x2, n, a):
             """Fallback axpy implementation avoiding copy."""
@@ -1833,25 +2017,22 @@ def _lincomb_impl(a, x1, b, x2, out):
             return x2
 
         axpy, scal, copy = (fallback_axpy, fallback_scal, fallback_copy)
-        x1_arr = x1.data
-        x2_arr = x2.data
-        out_arr = out.data
 
     else:
         # Need flat data for BLAS, otherwise in-place does not work.
         # Raveling must happen in fixed order for non-contiguous out,
         # otherwise 'A' is applied to arrays, which makes the outcome
         # dependent on their respective contiguousness.
-        if out.data.flags.f_contiguous:
+        if out.flags.f_contiguous:
             ravel_order = 'F'
         else:
             ravel_order = 'C'
 
-        x1_arr = x1.data.ravel(order=ravel_order)
-        x2_arr = x2.data.ravel(order=ravel_order)
-        out_arr = out.data.ravel(order=ravel_order)
+        x1 = x1.ravel(order=ravel_order)
+        x2 = x2.ravel(order=ravel_order)
+        out = out.ravel(order=ravel_order)
         axpy, scal, copy = scipy.linalg.blas.get_blas_funcs(
-            ['axpy', 'scal', 'copy'], arrays=(x1_arr, x2_arr, out_arr))
+            ['axpy', 'scal', 'copy'], arrays=(x1, x2, out))
 
     if x1 is x2 and b != 0:
         # x1 is aligned with x2 -> out = (a+b)*x1
@@ -1859,162 +2040,74 @@ def _lincomb_impl(a, x1, b, x2, out):
     elif out is x1 and out is x2:
         # All the vectors are aligned -> out = (a+b)*out
         if (a + b) != 0:
-            scal(a + b, out_arr, size)
+            scal(a + b, out, size)
         else:
-            out_arr[:] = 0
+            out[:] = 0
     elif out is x1:
         # out is aligned with x1 -> out = a*out + b*x2
         if a != 1:
-            scal(a, out_arr, size)
+            scal(a, out, size)
         if b != 0:
-            axpy(x2_arr, out_arr, size, b)
+            axpy(x2, out, size, b)
     elif out is x2:
         # out is aligned with x2 -> out = a*x1 + b*out
         if b != 1:
-            scal(b, out_arr, size)
+            scal(b, out, size)
         if a != 0:
-            axpy(x1_arr, out_arr, size, a)
+            axpy(x1, out, size, a)
     else:
         # We have exhausted all alignment options, so x1 is not x2 is not out
         # We now optimize for various values of a and b
         if b == 0:
             if a == 0:  # Zero assignment -> out = 0
-                out_arr[:] = 0
+                out[:] = 0
             else:  # Scaled copy -> out = a*x1
-                copy(x1_arr, out_arr, size)
+                copy(x1, out, size)
                 if a != 1:
-                    scal(a, out_arr, size)
+                    scal(a, out, size)
 
         else:  # b != 0
             if a == 0:  # Scaled copy -> out = b*x2
-                copy(x2_arr, out_arr, size)
+                copy(x2, out, size)
                 if b != 1:
-                    scal(b, out_arr, size)
+                    scal(b, out, size)
 
             elif a == 1:  # No scaling in x1 -> out = x1 + b*x2
-                copy(x1_arr, out_arr, size)
-                axpy(x2_arr, out_arr, size, b)
+                copy(x1, out, size)
+                axpy(x2, out, size, b)
             else:  # Generic case -> out = a*x1 + b*x2
-                copy(x2_arr, out_arr, size)
+                copy(x2, out, size)
                 if b != 1:
-                    scal(b, out_arr, size)
-                axpy(x1_arr, out_arr, size, a)
+                    scal(b, out, size)
+                axpy(x1, out, size, a)
 
 
-def _weighting(weights, exponent):
-    """Return a weighting whose type is inferred from the arguments."""
-    if np.isscalar(weights):
-        weighting = NumpyTensorSpaceConstWeighting(weights, exponent)
-    elif weights is None:
-        weighting = NumpyTensorSpaceConstWeighting(1.0, exponent)
-    else:  # last possibility: make an array
-        arr = np.asarray(weights)
-        weighting = NumpyTensorSpaceArrayWeighting(arr, exponent)
-    return weighting
-
-
-def npy_weighted_inner(weights):
-    """Weighted inner product on `TensorSpace`'s as free function.
-
-    Parameters
-    ----------
-    weights : scalar or `array-like`
-        Weights of the inner product. A scalar is interpreted as a
-        constant weight, a 1-dim. array as a weighting vector.
-
-    Returns
-    -------
-    inner : `callable`
-        Inner product function with given weight. Constant weightings
-        are applicable to spaces of any size, for arrays the sizes
-        of the weighting and the space must match.
-
-    See Also
-    --------
-    NumpyTensorSpaceConstWeighting
-    NumpyTensorSpaceArrayWeighting
-    """
-    return _weighting(weights, exponent=2.0).inner
-
-
-def npy_weighted_norm(weights, exponent=2.0):
-    """Weighted norm on `TensorSpace`'s as free function.
-
-    Parameters
-    ----------
-    weights : scalar or `array-like`
-        Weights of the norm. A scalar is interpreted as a
-        constant weight, a 1-dim. array as a weighting vector.
-    exponent : positive `float`
-        Exponent of the norm.
-
-    Returns
-    -------
-    norm : `callable`
-        Norm function with given weight. Constant weightings
-        are applicable to spaces of any size, for arrays the sizes
-        of the weighting and the space must match.
-
-    See Also
-    --------
-    NumpyTensorSpaceConstWeighting
-    NumpyTensorSpaceArrayWeighting
-    """
-    return _weighting(weights, exponent=exponent).norm
-
-
-def npy_weighted_dist(weights, exponent=2.0):
-    """Weighted distance on `TensorSpace`'s as free function.
-
-    Parameters
-    ----------
-    weights : scalar or `array-like`
-        Weights of the distance. A scalar is interpreted as a
-        constant weight, a 1-dim. array as a weighting vector.
-    exponent : positive `float`
-        Exponent of the norm.
-
-    Returns
-    -------
-    dist : `callable`
-        Distance function with given weight. Constant weightings
-        are applicable to spaces of any size, for arrays the sizes
-        of the weighting and the space must match.
-
-    See Also
-    --------
-    NumpyTensorSpaceConstWeighting
-    NumpyTensorSpaceArrayWeighting
-    """
-    return _weighting(weights, exponent=exponent).dist
-
-
-def _norm_default(x):
+def _norm_impl(x):
     """Default Euclidean norm implementation."""
     # Lazy import to improve `import odl` time
     import scipy.linalg
 
-    if _blas_is_applicable(x.data):
+    if _blas_is_applicable(x):
         nrm2 = scipy.linalg.blas.get_blas_funcs('nrm2', dtype=x.dtype)
         norm = partial(nrm2, n=native(x.size))
     else:
         norm = np.linalg.norm
-    return norm(x.data.ravel())
+    return norm(x.ravel())
 
 
-def _pnorm_default(x, p):
+def _pnorm_impl(x, p):
     """Default p-norm implementation."""
-    return np.linalg.norm(x.data.ravel(), ord=p)
+    return np.linalg.norm(x.ravel(), ord=p)
 
 
-def _pnorm_diagweight(x, p, w):
+def _pnorm_diagweight_impl(x, p, w):
     """Diagonally weighted p-norm implementation."""
     # Ravel both in the same order (w is a numpy array)
-    order = 'F' if all(a.flags.f_contiguous for a in (x.data, w)) else 'C'
+    order = 'F' if all(a.flags.f_contiguous for a in (x, w)) else 'C'
 
     # This is faster than first applying the weights and then summing with
     # BLAS dot or nrm2
-    xp = np.abs(x.data.ravel(order))
+    xp = np.abs(x.ravel(order))
     if p == float('inf'):
         xp *= w.ravel(order)
         return np.max(xp)
@@ -2024,10 +2117,10 @@ def _pnorm_diagweight(x, p, w):
         return np.sum(xp) ** (1 / p)
 
 
-def _inner_default(x1, x2):
+def _inner_impl(x1, x2):
     """Default Euclidean inner product implementation."""
     # Ravel both in the same order
-    order = 'F' if all(a.data.flags.f_contiguous for a in (x1, x2)) else 'C'
+    order = 'F' if all(a.flags.f_contiguous for a in (x1, x2)) else 'C'
 
     if is_real_dtype(x1.dtype):
         if x1.size > THRESHOLD_MEDIUM:
@@ -2035,16 +2128,101 @@ def _inner_default(x1, x2):
             return np.tensordot(x1, x2, [range(x1.ndim)] * 2)
         else:
             # Several times faster for small arrays
-            return np.dot(x1.data.ravel(order),
-                          x2.data.ravel(order))
+            return np.dot(x1.ravel(order), x2.ravel(order))
     else:
         # x2 as first argument because we want linearity in x1
-        return np.vdot(x2.data.ravel(order),
-                       x1.data.ravel(order))
+        return np.vdot(x2.ravel(order), x1.ravel(order))
 
 
-# TODO: implement intermediate weighting schemes with arrays that are
-# broadcast, i.e. between scalar and full-blown in dimensionality?
+# --- Weightings --- #
+
+
+def slice_weighting(weighting, space_shape, indices):
+    """Return a weighting for a space after indexing.
+
+    The different types of weightings behave as follows:
+
+    - ``ConstWeighting``: preserved
+    - ``PerAxisWeighting``: preserved, where factors are discarded for
+      removed axes and sliced for other axes in which an array is used
+    - ``ArrayWeighting``: preserved, using the sliced array for the
+      new weighting
+    - Other: not preserved, mapped to ``None``.
+    """
+    indices = normalized_index_expression(indices, space_shape)
+    # Use `None`-free `indices` to simulate slicing
+    indices_no_none = [i for i in indices if i is not None]
+    new_shape, removed_axes, _ = simulate_slicing(space_shape, indices_no_none)
+
+    if isinstance(weighting, NumpyTensorSpaceConstWeighting):
+        new_weighting = weighting
+
+    elif isinstance(weighting, NumpyTensorSpacePerAxisWeighting):
+        # Determine factors without `None` components
+        factors = []
+        for i, (fac, idx) in enumerate(zip_longest(weighting.factors,
+                                                   indices_no_none,
+                                                   fillvalue=slice(None))):
+            if i in removed_axes:
+                continue
+
+            if fac.ndim == 0:
+                factors.append(fac)
+            else:
+                factors.append(fac[idx])
+
+        # Add 1.0 where `None` is in `indices`
+        for i, idx in enumerate(indices):
+            if idx is None:
+                factors.insert(i, 1.0)
+
+        new_weighting = NumpyTensorSpacePerAxisWeighting(
+            factors, weighting.exponent)
+
+    elif isinstance(weighting, NumpyTensorSpaceArrayWeighting):
+        array = weighting.array[indices]
+        new_weighting = NumpyTensorSpaceArrayWeighting(
+            array, weighting.exponent)
+    else:
+        new_weighting = None
+
+    return new_weighting
+
+
+def slice_weighting_by_axis(weighting, space_shape, indices):
+    """Return a weighting for a space after indexing by axis.
+
+    The different types of weightings behave as follows:
+
+    - ``ConstWeighting``: preserved
+    - ``PerAxisWeighting``: preserved, where factors are discarded for
+      removed axes, repeated for repeated axes, and set to 1 for new
+      axes
+    - ``ArrayWeighting``: not preserved, no meaningful way to slice by axis
+    - Other: not preserved, mapped to ``None``.
+    """
+    try:
+        iter(indices)
+    except TypeError:
+        # Integer, slice or Ellipsis
+        indices = list(range(len(space_shape)))[indices]
+        if not isinstance(indices, list):
+            indices = [indices]
+    else:
+        indices = [int(i) for i in indices]
+
+    if isinstance(weighting, NumpyTensorSpaceConstWeighting):
+        new_weighting = weighting
+
+    elif isinstance(weighting, NumpyTensorSpacePerAxisWeighting):
+        factors = [weighting.factors[i] for i in indices]
+        new_weighting = NumpyTensorSpacePerAxisWeighting(
+            factors, weighting.exponent)
+
+    else:
+        new_weighting = None
+
+    return new_weighting
 
 
 class NumpyTensorSpaceArrayWeighting(ArrayWeighting):
@@ -2115,9 +2293,12 @@ class NumpyTensorSpaceArrayWeighting(ArrayWeighting):
           is not checked during initialization.
         """
         if isinstance(array, NumpyTensor):
-            array = array.data
-        elif not isinstance(array, np.ndarray):
-            array = np.asarray(array)
+            array = array
+
+        array = np.asarray(array)
+        if array.dtype == object:
+            raise ValueError('got invalid `array` as input')
+
         super(NumpyTensorSpaceArrayWeighting, self).__init__(
             array, impl='numpy', exponent=exponent)
 
@@ -2143,7 +2324,7 @@ class NumpyTensorSpaceArrayWeighting(ArrayWeighting):
                                       'exponent != 2 (got {})'
                                       ''.format(self.exponent))
         else:
-            inner = _inner_default(x1 * self.array, x2)
+            inner = _inner_impl(x1.data * self.array, x2.data)
             if is_real_dtype(x1.dtype):
                 return float(inner)
             else:
@@ -2163,12 +2344,286 @@ class NumpyTensorSpaceArrayWeighting(ArrayWeighting):
             The norm of the provided tensor.
         """
         if self.exponent == 2.0:
-            norm_squared = self.inner(x, x).real  # TODO: optimize?!
+            norm_squared = self.inner(x, x).real  # TODO: optimize?
             if norm_squared < 0:
                 norm_squared = 0.0  # Compensate for numerical error
             return float(np.sqrt(norm_squared))
         else:
-            return float(_pnorm_diagweight(x, self.exponent, self.array))
+            return float(_pnorm_diagweight_impl(x.data, self.exponent,
+                                                self.array))
+
+
+class NumpyTensorSpacePerAxisWeighting(PerAxisWeighting):
+
+    """Weighting of a space with one weight per axis.
+
+    See Notes for mathematical details.
+    """
+
+    def __init__(self, factors, exponent=2.0):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        factors : sequence of `array-like`
+            Weighting factors, one per axis. The factors can be constants
+            or one-dimensional array-like objects.
+        exponent : positive float, optional
+            Exponent of the norm. For values other than 2.0, the inner
+            product is not defined.
+
+        Notes
+        -----
+        We consider a tensor space :math:`\mathbb{F}^n` of shape
+        :math:`n \in \mathbb{N}^d` over a field :math:`\mathbb{F}`.
+        If :math:`0 < v^{(i)} \in \mathbb{R}^{n_i}` are vectors of length
+        equal to the corresponding axis, their outer product
+
+        .. math::
+            v_{k} = \prod_{i=0}^d v^{(i)}_{k_i}
+
+        defines a tensor of shape :math:`n`. With this tensor
+        we can define a weighted space as follows.
+
+        - For exponent 2.0, a new weighted inner product is given as
+
+          .. math::
+              \\langle a, b\\rangle_v :=
+              \\langle v \odot a, b\\rangle =
+              b^{\mathrm{H}} (v \odot a),
+
+          where :math:`b^{\mathrm{H}}` stands for transposed complex
+          conjugate and ":math:`\odot`" for pointwise product.
+
+        - For other exponents, only norm and dist are defined. In the
+          case of exponent :math:`\\infty`, the weighted norm is defined
+          as
+
+          .. math::
+              \| a \|_{v, \\infty} := \| a \|_{\\infty},
+
+          otherwise it is
+
+          .. math::
+              \| a \|_{v, p} := \| v^{1/p} \odot a \|_{p}.
+
+          Note that this definition is chosen such that the limit
+          property in :math:`p` holds, i.e.
+
+          .. math::
+              \| a\|_{v, p} \\to
+              \| a \|_{v, \\infty} \quad (p \\to \\infty).
+        """
+        # TODO: allow 3-tuples for `bdry, inner, bdry` type factors
+        conv_factors = []
+        for factor in factors:
+            factor = np.asarray(factor)
+            if factor.ndim not in (0, 1):
+                raise ValueError(
+                    '`factors` must all be scalar or 1-dim. vectors, got '
+                    '{}-dim. entries'.format(factor.ndim))
+
+            conv_factors.append(factor)
+
+        super(NumpyTensorSpacePerAxisWeighting, self).__init__(
+            conv_factors, impl='numpy', exponent=exponent)
+
+    @property
+    def const_axes(self):
+        """Tuple of indices in which the factors are constants."""
+        return tuple(i for i, fac in enumerate(self.factors) if fac.ndim == 0)
+
+    @property
+    def consts(self):
+        """Tuple containing those factors that are constants."""
+        return tuple(fac for fac in self.factors if fac.ndim == 0)
+
+    @property
+    def const(self):
+        """For one constant factor, this is the unwrapped factor."""
+        if len(self.factors) == 1 and len(self.consts) == 1:
+            return self.consts[0]
+        else:
+            raise TypeError('`const` only defined for a single scalar factor')
+
+    @property
+    def array_axes(self):
+        """Tuple of indices in which the factors are arrays."""
+        return tuple(i for i, fac in enumerate(self.factors) if fac.ndim == 1)
+
+    @property
+    def arrays(self):
+        """Tuple containing those factors that are arrays."""
+        return tuple(fac for fac in self.factors if fac.ndim == 1)
+
+    def inner(self, x1, x2):
+        """Return the weighted inner product of ``x1`` and ``x2``.
+
+        Parameters
+        ----------
+        x1, x2 : `NumpyTensor`
+            Tensors whose inner product is calculated.
+
+        Returns
+        -------
+        inner : float or complex
+            The inner product of the two provided tensors.
+        """
+        if self.exponent != 2.0:
+            raise NotImplementedError('no inner product defined for '
+                                      'exponent != 2 (got {})'
+                                      ''.format(self.exponent))
+
+        const = np.prod(self.consts)
+        x1_w = fast_1d_tensor_mult(x1.data, self.arrays, axes=self.array_axes)
+        inner = const * _inner_impl(x1_w, x2.data)
+        if x1.space.field is None:
+            return inner
+        else:
+            return x1.space.field.element(inner)
+
+    def norm(self, x):
+        """Return the weighted norm of ``x``.
+
+        Parameters
+        ----------
+        x1 : `NumpyTensor`
+            Tensor whose norm is calculated.
+
+        Returns
+        -------
+        norm : float
+            The norm of the tensor.
+        """
+        const = np.prod(self.consts)
+
+        if self.exponent == 2.0:
+            arrays = [np.sqrt(arr) for arr in self.arrays]
+            x_w = fast_1d_tensor_mult(x.data, arrays, axes=self.array_axes)
+            return float(np.sqrt(const) * _norm_impl(x_w))
+        elif self.exponent == float('inf'):
+            return float(_pnorm_impl(x.data, float('inf')))
+        else:
+            arrays = [np.power(arr, 1 / self.exponent) for arr in self.arrays]
+            x_w = fast_1d_tensor_mult(x.data, arrays, axes=self.array_axes)
+            return float(const ** (1 / self.exponent) *
+                         _pnorm_impl(x_w, self.exponent))
+
+    def dist(self, x1, x2):
+        """Return the weighted distance between ``x1`` and ``x2``.
+
+        Parameters
+        ----------
+        x1, x2 : `NumpyTensor`
+            Tensors whose mutual distance is calculated.
+
+        Returns
+        -------
+        dist : float
+            The distance between the tensors.
+        """
+        const = np.prod(self.consts)
+        diff = (x1 - x2).data
+
+        if self.exponent == 2.0:
+            arrays = [np.sqrt(arr) for arr in self.arrays]
+            fast_1d_tensor_mult(diff, arrays, axes=self.array_axes, out=diff)
+            return float(np.sqrt(const) * _norm_impl(diff))
+        elif self.exponent == float('inf'):
+            return float(_pnorm_impl(diff, float('inf')))
+        else:
+            arrays = [np.power(arr, 1 / self.exponent) for arr in self.arrays]
+            fast_1d_tensor_mult(diff, arrays, axes=self.array_axes, out=diff)
+            return float(const ** (1 / self.exponent) *
+                         _pnorm_impl(diff, self.exponent))
+
+    def __eq__(self, other):
+        """Return ``self == other``.
+
+        Returns
+        -------
+        equal : bool
+            ``True`` if ``other`` is a `NumpyTensorSpacePerAxisWeighting`
+            instance with the same factors (equal for constants,
+            *identical* for arrays), ``False`` otherwise.
+        """
+        if other is self:
+            return True
+
+        if isinstance(other, ConstWeighting):
+            # Consider per-axis weighting in 1 axis with a constant to
+            # be equal to constant weighting
+            return (len(self.factors) == 1 and
+                    self.factors[0].ndim == 0 and
+                    self.factors[0] == other.const)
+        elif not isinstance(other, NumpyTensorSpacePerAxisWeighting):
+            return False
+
+        same_const_idcs = (other.const_axes == self.const_axes)
+        consts_equal = (self.consts == other.consts)
+        arrs_ident = (a is b for a, b in zip(self.arrays, other.arrays))
+
+        return (super(NumpyTensorSpacePerAxisWeighting, self).__eq__(other) and
+                same_const_idcs and
+                consts_equal and
+                arrs_ident)
+
+    def __hash__(self):
+        """Return ``hash(self)``."""
+        return hash(
+            (super(NumpyTensorSpacePerAxisWeighting, self).__hash__(),) +
+            tuple(fac.tobytes() for fac in self.factors))
+
+    @property
+    def repr_part(self):
+        """String usable in a space's ``__repr__`` method."""
+        max_elems = 2 * np.get_printoptions()['edgeitems']
+
+        def factors_repr(factors):
+            factor_strs = []
+            for fac in factors:
+                if fac.ndim == 0:
+                    factor_strs.append('{:.4}'.format(float(fac)))
+                else:
+                    factor_strs.append(array_str(fac, nprint=max_elems))
+            if len(factor_strs) == 1:
+                return factor_strs[0]
+            else:
+                return '({})'.format(', '.join(factor_strs))
+
+        optargs = []
+        optmod = []
+        if not all(fac.ndim == 0 and fac == 1.0 for fac in self.factors):
+            optargs.append(('weighting', factors_repr(self.factors), ''))
+            optmod.append('!s')
+
+        optargs.append(('exponent', self.exponent, 2.0))
+        optmod.append('')
+
+        return signature_string([], optargs, mod=[[], optmod])
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        max_elems = 2 * np.get_printoptions()['edgeitems']
+
+        def factors_repr(factors):
+            factor_strs = []
+            for fac in factors:
+                if fac.ndim == 0:
+                    factor_strs.append('{:.4}'.format(float(fac)))
+                else:
+                    factor_strs.append(array_str(fac, nprint=max_elems))
+            return '({})'.format(', '.join(factor_strs))
+
+        posargs = [factors_repr(self.factors)]
+        optargs = [('exponent', self.exponent, 2.0)]
+
+        inner_str = signature_string(posargs, optargs, mod=['!s', ''])
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
+
+    def __str__(self):
+        """Return ``str(self)``."""
+        return repr(self)
 
 
 class NumpyTensorSpaceConstWeighting(ConstWeighting):
@@ -2248,12 +2703,12 @@ class NumpyTensorSpaceConstWeighting(ConstWeighting):
             raise NotImplementedError('no inner product defined for '
                                       'exponent != 2 (got {})'
                                       ''.format(self.exponent))
+
+        inner = self.const * _inner_impl(x1.data, x2.data)
+        if x1.space.field is None:
+            return inner
         else:
-            inner = self.const * _inner_default(x1, x2)
-            if x1.space.field is None:
-                return inner
-            else:
-                return x1.space.field.element(inner)
+            return x1.space.field.element(inner)
 
     def norm(self, x):
         """Return the weighted norm of ``x``.
@@ -2269,12 +2724,12 @@ class NumpyTensorSpaceConstWeighting(ConstWeighting):
             The norm of the tensor.
         """
         if self.exponent == 2.0:
-            return float(np.sqrt(self.const) * _norm_default(x))
+            return float(np.sqrt(self.const) * _norm_impl(x.data))
         elif self.exponent == float('inf'):
-            return float(self.const * _pnorm_default(x, self.exponent))
+            return float(_pnorm_impl(x.data, self.exponent))
         else:
-            return float((self.const ** (1 / self.exponent) *
-                          _pnorm_default(x, self.exponent)))
+            return float(self.const ** (1 / self.exponent) *
+                         _pnorm_impl(x.data, self.exponent))
 
     def dist(self, x1, x2):
         """Return the weighted distance between ``x1`` and ``x2``.
@@ -2290,12 +2745,12 @@ class NumpyTensorSpaceConstWeighting(ConstWeighting):
             The distance between the tensors.
         """
         if self.exponent == 2.0:
-            return float(np.sqrt(self.const) * _norm_default(x1 - x2))
+            return float(np.sqrt(self.const) * _norm_impl((x1 - x2).data))
         elif self.exponent == float('inf'):
-            return float(self.const * _pnorm_default(x1 - x2, self.exponent))
+            return float(_pnorm_impl((x1 - x2).data, self.exponent))
         else:
             return float((self.const ** (1 / self.exponent) *
-                          _pnorm_default(x1 - x2, self.exponent)))
+                          _pnorm_impl((x1 - x2).data, self.exponent)))
 
 
 class NumpyTensorSpaceCustomInner(CustomInner):

@@ -15,7 +15,7 @@ import odl
 from odl.discr.lp_discr import DiscreteLp, DiscreteLpElement
 from odl.space.base_tensors import TensorSpace
 from odl.space.npy_tensors import NumpyTensor
-from odl.space.weighting import ConstWeighting
+from odl.space.weighting import PerAxisWeighting
 from odl.util.testutils import (
     all_equal, all_almost_equal, noise_elements, simple_fixture)
 
@@ -30,6 +30,9 @@ exponent = simple_fixture('exponent', [2.0, 1.0, float('inf'), 0.5, 1.5])
 power = simple_fixture('power', [1.0, 2.0, 0.5, -0.5, -1.0, -2.0])
 shape = simple_fixture('shape', [(2, 3, 4), (3, 4), (2,), (1,), (1, 1, 1)])
 power = simple_fixture('power', [1.0, 2.0, 0.5, -0.5, -1.0, -2.0])
+shaped_dtype = simple_fixture(
+    'shaped_dtype',
+    [('float', ()), ('float32', (3,)), ('float', (2, 3))])
 
 
 # --- DiscreteLp --- #
@@ -86,28 +89,10 @@ def test_discretelp_init():
         DiscreteLp(fspace, part_diffshp, tspace)  # shape mismatch
 
 
-def test_empty():
-    """Check if empty spaces behave as expected and all methods work."""
-    discr = odl.uniform_discr([], [], ())
-
-    assert discr.interp == 'nearest'
-    assert discr.axis_labels == ()
-    assert discr.tangent_bundle == odl.ProductSpace(field=odl.RealNumbers())
-    assert discr.complex_space == odl.uniform_discr([], [], (), dtype=complex)
-    hash(discr)
-    assert repr(discr) != ''
-
-    elem = discr.element(1.0)
-    assert np.array_equal(elem.asarray(), 1.0)
-    assert np.array_equal(elem.real, 1.0)
-    assert np.array_equal(elem.imag, 0.0)
-    assert np.array_equal(elem.conj(), 1.0)
-
-
 # --- uniform_discr --- #
 
 
-def test_factory_dtypes(odl_tspace_impl):
+def test_uniform_discr_dtypes(odl_tspace_impl):
     impl = odl_tspace_impl
     real_float_dtypes = [np.float32, np.float64]
     nonfloat_dtypes = [np.int8, np.int16, np.int32, np.int64,
@@ -195,6 +180,66 @@ def test_uniform_discr_init_complex(odl_tspace_impl):
     assert discr.dtype == discr.tspace.default_dtype(odl.ComplexNumbers())
 
 
+def test_uniform_discr_empty():
+    """Check if empty spaces behave as expected and all methods work."""
+    discr = odl.uniform_discr([], [], ())
+
+    assert discr.interp == 'nearest'
+    assert discr.axis_labels == ()
+    assert discr.tangent_bundle == odl.ProductSpace(field=odl.RealNumbers())
+    assert discr.complex_space == odl.uniform_discr([], [], (), dtype=complex)
+    assert hash(discr) == hash(discr)
+    assert repr(discr) != ''
+
+    elem = discr.element(1.0)
+    assert np.array_equal(elem.asarray(), 1.0)
+    assert np.array_equal(elem.real, 1.0)
+    assert np.array_equal(elem.imag, 0.0)
+    assert np.array_equal(elem.conj(), 1.0)
+
+
+def test_uniform_discr_shaped_dtypes(shaped_dtype):
+    """Check handling of dtypes with shape in uniform_discr."""
+    discr = odl.uniform_discr([0, 0], [1, 1], shape=(3, 4), dtype=shaped_dtype)
+
+    # Check space shape
+    shaped_dtype = np.dtype(shaped_dtype)
+    assert discr.dtype == shaped_dtype
+    assert discr.scalar_dtype == shaped_dtype.base
+    assert discr.shape == shaped_dtype.shape + (3, 4)
+
+    # Create new element
+    x = discr.zero()
+    assert x.shape == shaped_dtype.shape + (3, 4)
+    assert x in discr
+    assert x.tensor in discr.tspace
+
+    # Create element from array
+    x = discr.element(np.ones(shaped_dtype.shape + (3, 4)))
+    assert x in discr
+
+    # Create element from function
+    def f_scal(x):
+        return x[0] ** 2 + 1
+
+    def f_vec(x):
+        return [x[1] + 2, 1, x[0] + x[1]]
+
+    def f_tens(x):
+        return [[0, x[0], x[1]],
+                [x[0] - x[1] ** 2, 1, x[1]]]
+
+    if shaped_dtype.shape == ():
+        x = discr.element(f_scal)
+    elif shaped_dtype.shape == (3,):
+        x = discr.element(f_vec)
+    elif shaped_dtype.shape == (2, 3):
+        x = discr.element(f_tens)
+    else:
+        assert False
+
+    assert x in discr
+
 # --- DiscreteLp methods --- #
 
 
@@ -211,7 +256,7 @@ def test_discretelp_element():
 
     # 2D
     discr = odl.uniform_discr([0, 0], [1, 1], (3, 3))
-    weight = 1.0 if exponent == float('inf') else discr.cell_volume
+    weight = 1.0 if exponent == float('inf') else discr.cell_sides
     tspace = odl.rn((3, 3), weighting=weight)
     elem = discr.element()
     assert elem in discr
@@ -550,13 +595,13 @@ def test_getslice():
     discr = odl.uniform_discr(0, 1, 3)
     elem = discr.element([1, 2, 3])
 
-    assert isinstance(elem[:], NumpyTensor)
+    assert isinstance(elem[:], DiscreteLpElement)
     assert all_equal(elem[:], [1, 2, 3])
 
     discr = odl.uniform_discr(0, 1, 3, dtype='complex')
     elem = discr.element([1 + 2j, 2 - 2j, 3])
 
-    assert isinstance(elem[:], NumpyTensor)
+    assert isinstance(elem[:], DiscreteLpElement)
     assert all_equal(elem[:], [1 + 2j, 2 - 2j, 3])
 
 
@@ -635,15 +680,15 @@ def test_setitem_nd():
         elem[:] = arr.T  # bad shape (2, 3)
 
     # nD
-    shape = (3,) * 3 + (4,) * 3
-    discr = odl.uniform_discr([0] * 6, [1] * 6, shape)
+    shape = (3, 4, 5)
+    discr = odl.uniform_discr([0] * 3, [1] * 3, shape)
     size = np.prod(shape)
     elem = discr.element(np.zeros(shape))
 
     arr = np.arange(size).reshape(shape)
 
     elem[:] = arr
-    assert all_equal(elem, arr)
+    assert np.array_equal(elem, arr)
 
     elem[:] = 0
     assert all_equal(elem, np.zeros(elem.shape))
@@ -1053,13 +1098,13 @@ def test_ufunc_corner_cases(odl_tspace_impl):
     res = x.__array_ufunc__(np.add, 'reduce', x, axis=(0, 1))
     assert res == pytest.approx(np.add.reduce(x.asarray(), axis=(0, 1)))
 
-    # Constant weighting should be preserved (recomputed from cell
-    # volume)
+    # Per-axis weighting should be sliced accordingly
     y = space.one()
     res = y.__array_ufunc__(np.add, 'reduce', y, axis=0)
-    assert res.space.weighting.const == pytest.approx(space.cell_sides[1])
+    assert isinstance(res.space.weighting, PerAxisWeighting)
+    assert res.space.weighting.factors == pytest.approx([space.cell_sides[1]])
 
-    # Check that `exponent` is propagated
+    # Check that `exponent` is being propagated
     space_1 = odl.uniform_discr([0, 0], [1, 1], (2, 3), impl=impl,
                                 exponent=1)
     z = space_1.one()
@@ -1069,21 +1114,42 @@ def test_ufunc_corner_cases(odl_tspace_impl):
     # --- `outer` --- #
 
     # Check that weightings are propagated correctly
+    # Same space -> concatenate factors
     x = y = space.one()
     res = x.__array_ufunc__(np.add, 'outer', x, y)
-    assert isinstance(res.space.weighting, ConstWeighting)
-    assert res.space.weighting.const == pytest.approx(x.space.weighting.const *
-                                                      y.space.weighting.const)
+    assert isinstance(res.space.weighting, PerAxisWeighting)
+    true_factors = x.space.weighting.factors * 2
+    assert res.space.weighting.factors == pytest.approx(true_factors)
 
+    # Other space 2D and const weighting != 1 -> const weighting 1
     x = space.one()
-    y = space_no_w.one()
-    res = x.__array_ufunc__(np.add, 'outer', x, y)
-    assert isinstance(res.space.weighting, ConstWeighting)
-    assert res.space.weighting.const == pytest.approx(x.space.weighting.const)
-
-    x = y = space_no_w.one()
+    y = odl.uniform_discr([0, 0], [1, 1], (2, 3), weighting=0.5).one()
     res = x.__array_ufunc__(np.add, 'outer', x, y)
     assert not res.space.is_weighted
+
+    # Other space 2D and const weighting == 1 -> concatenate with per-axis 1
+    x = space.one()
+    y = odl.uniform_discr([0, 0], [1, 1], (2, 3), weighting=1).one()
+    res = x.__array_ufunc__(np.add, 'outer', x, y)
+    assert isinstance(res.space.weighting, PerAxisWeighting)
+    true_factors = x.space.weighting.factors + (1, 1)
+    assert res.space.weighting.factors == pytest.approx(true_factors)
+
+    # Other space 2D and per-axis weighhting -> concatenate
+    x = space.one()
+    y = odl.uniform_discr([0, 0], [1, 1], (2, 3), weighting=(0.5, 1.5)).one()
+    res = x.__array_ufunc__(np.add, 'outer', x, y)
+    assert isinstance(res.space.weighting, PerAxisWeighting)
+    true_factors = x.space.weighting.factors + y.space.weighting.factors
+    assert res.space.weighting.factors == pytest.approx(true_factors)
+
+    # Other space 1D and const weighhting -> concatenate
+    x = space.one()
+    y = odl.uniform_discr(0, 1, 2, weighting=0.5).one()
+    res = x.__array_ufunc__(np.add, 'outer', x, y)
+    assert isinstance(res.space.weighting, PerAxisWeighting)
+    true_factors = x.space.weighting.factors + (y.space.weighting.const,)
+    assert res.space.weighting.factors == pytest.approx(true_factors)
 
 
 def test_real_imag(odl_tspace_impl, odl_elem_order):

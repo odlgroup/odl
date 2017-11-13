@@ -375,6 +375,13 @@ class DiscretizedSpaceElement(Tensor):
     def __getitem__(self, indices):
         """Return ``self[indices]``.
 
+        .. note::
+            This is a basic implementation that does little more than
+            propagating the indexing to the `tensor` attribute. In
+            particular, the result will **not** be wrapped as a
+            `DiscretizedSpaceElement` again. Subclasses should take
+            care of that by overriding ``__getitem__``.
+
         Parameters
         ----------
         indices : int or `slice`
@@ -417,9 +424,9 @@ class DiscretizedSpaceElement(Tensor):
         Parameters
         ----------
         ufunc : ``self.space.fspace`` element
-            The continuous function that should be samplingicted.
+            The continuous function that should be sampled.
         kwargs :
-            Additional arugments for the sampling operator implementation
+            Additional arguments for the sampling operator implementation.
 
         Examples
         --------
@@ -445,7 +452,7 @@ class DiscretizedSpaceElement(Tensor):
         Returns
         -------
         interpolation_op : `FunctionSpaceMapping`
-            Operatior representing a continuous interpolation of this
+            Operator representing a continuous interpolation of this
             element.
 
         Examples

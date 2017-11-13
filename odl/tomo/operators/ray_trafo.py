@@ -17,7 +17,7 @@ from odl.operator import Operator
 from odl.space import FunctionSpace
 from odl.tomo.geometry import (
     Geometry, Parallel2dGeometry, Parallel3dAxisGeometry)
-from odl.space.weighting import ConstWeighting
+from odl.space.weighting import PerAxisWeighting
 from odl.tomo.backends import (
     ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE, SKIMAGE_AVAILABLE,
     astra_supports, ASTRA_VERSION,
@@ -213,27 +213,11 @@ class RayTransformBase(Operator):
         if proj_space is None:
             dtype = reco_space.dtype
             proj_fspace = FunctionSpace(geometry.params, out_dtype=dtype)
-
-            if not reco_space.is_weighted:
-                weighting = None
-            elif (isinstance(reco_space.weighting, ConstWeighting) and
-                  np.isclose(reco_space.weighting.const,
-                             reco_space.cell_volume)):
-                # Approximate cell volume
-                # TODO: find a way to treat angles and detector differently
-                # regarding weighting. While the detector should be uniformly
-                # discretized, the angles do not have to and often are not.
-                # The needed partition property is available since
-                # commit a551190d, but weighting is not adapted yet.
-                # See also issue #286
-                extent = float(geometry.partition.extent.prod())
-                size = float(geometry.partition.size)
-                weighting = extent / size
-            else:
-                raise NotImplementedError('unknown weighting of domain')
-
+            # TODO: handle uniform angles with modified endpoints
+            # (scale projections in backproj)
+            proj_weighting = proj_space_weighting(reco_space, geometry)
             proj_tspace = reco_space.tspace_type(geometry.partition.shape,
-                                                 weighting=weighting,
+                                                 weighting=proj_weighting,
                                                  dtype=dtype)
 
             if geometry.motion_partition.ndim == 0:
@@ -543,6 +527,75 @@ class RayBackProjection(RayTransformBase):
                                      use_cache=self.use_cache,
                                      **kwargs)
         return self._adjoint
+
+
+def proj_space_weighting(reco_space, geometry):
+    """Determine a weighting for the range of a ray transform.
+
+    If ``reco_space`` is weighted with the cell sides, and if ``geometry``
+    represents an acquisition with a continuous curve or surface of motion,
+    then the projection space will be weighted per axis, where in
+    the angle axis (axes), non-uniform sampling is allowed and taken
+    into account, and in the detector axis (axes), uniform sampling is
+    mandatory.
+    For a 1D angle partition, the weights are given by ::
+
+        angle_weights[1:-1] = (angles[2:] - angles[:-2]) / 2
+
+    in the inner part and
+
+        angle_weights[0] = angles[1] - angles[2],
+        angle_weights[-1] = angles[-1] - angles[-2]
+
+    at the boundaries. This corresponds to the summed trapezoidal rule
+    for non-uniform nodes.
+
+    Parameters
+    ----------
+    reco_space : `DiscreteLp`
+        Reconstruction space, domain of the `RayTransform`.
+    geometry : `Geometry`
+        Acquisition geometry to be used to create the `RayTransform`.
+
+    Returns
+    -------
+    proj_space_weighting : `~odl.space.weighting.Weighting`
+        Weighting determined from the parameters. If ``reco_space.weighting``
+        is a `~odl.space.weighting.PerAxisWeighting` where the weight
+        factors correspond to the cell sides, the resulting weighting
+        is also a `PerAxisWeighting`, with factors
+        ``(angle_weights,) + tuple(geometry.det_partition.cell_sides)``.
+
+        Otherwise, no weighting will be applied, and ``None`` is returned.
+    """
+    if (isinstance(reco_space.weighting, PerAxisWeighting) and
+            reco_space.weighting.array_axes == () and
+            np.allclose(reco_space.weighting.consts, reco_space.cell_sides) and
+            hasattr(geometry, 'angles')):
+
+        angle_vecs = geometry.motion_partition.coord_vectors
+        angle_cell_vecs = geometry.motion_partition.cell_sizes_vecs
+        angles_uniform = geometry.motion_partition.is_uniform_byaxis
+        weights = []
+
+        for i in range(len(angle_vecs)):
+            if angles_uniform[i]:
+                weights.append(angle_cell_vecs[i][0])
+            else:
+                weight = np.empty_like(angle_vecs[i])
+                weight[1:-1] = (angle_vecs[i][2:] - angle_vecs[i][:-2]) / 2
+                weight[0] = angle_cell_vecs[i][0]
+                weight[-1] = angle_cell_vecs[i][-1]
+
+                weights.append(weight)
+
+        weights.extend(geometry.det_partition.cell_sides)
+
+        # Use impl-specific weighting class
+        return type(reco_space.weighting)(weights)
+
+    else:
+        return None
 
 
 if __name__ == '__main__':

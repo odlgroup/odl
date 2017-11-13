@@ -13,11 +13,12 @@ from builtins import object
 import numpy as np
 
 from odl.space.base_tensors import TensorSpace
-from odl.util import array_str, signature_string, indent
+from odl.util import (
+    array_str, signature_string, indent, fast_1d_tensor_mult, writable_array)
 
 
 __all__ = ('MatrixWeighting', 'ArrayWeighting', 'ConstWeighting',
-           'CustomInner', 'CustomNorm', 'CustomDist')
+           'CustomInner', 'CustomNorm', 'CustomDist', 'adjoint_weightings')
 
 
 class Weighting(object):
@@ -83,20 +84,6 @@ class Weighting(object):
     def __hash__(self):
         """Return ``hash(self)``."""
         return hash((type(self), self.impl, self.exponent))
-
-    def equiv(self, other):
-        """Test if ``other`` is an equivalent weighting.
-
-        Should be overridden, default tests for equality.
-
-        Returns
-        -------
-        equivalent : bool
-            ``True`` if ``other`` is a `Weighting` instance which
-            yields the same result as this inner product for any
-            input, ``False`` otherwise.
-        """
-        return self == other
 
     def inner(self, x1, x2):
         """Return the inner product of two elements.
@@ -359,69 +346,6 @@ class MatrixWeighting(Weighting):
         return hash((super(MatrixWeighting, self).__hash__(),
                      self.matrix.tobytes()))
 
-    def equiv(self, other):
-        """Test if other is an equivalent weighting.
-
-        Returns
-        -------
-        equivalent : bool
-            ``True`` if ``other`` is a `Weighting` instance with the same
-            `Weighting.impl`, which yields the same result as this
-            weighting for any input, ``False`` otherwise. This is checked
-            by entry-wise comparison of matrices/arrays/constants.
-        """
-        # Lazy import to improve `import odl` time
-        import scipy.sparse
-
-        # Optimization for equality
-        if self == other:
-            return True
-
-        elif self.exponent != getattr(other, 'exponent', -1):
-            return False
-
-        elif isinstance(other, MatrixWeighting):
-            if self.matrix.shape != other.matrix.shape:
-                return False
-
-            if scipy.sparse.isspmatrix(self.matrix):
-                if other.matrix_issparse:
-                    # Optimization for different number of nonzero elements
-                    if self.matrix.nnz != other.matrix.nnz:
-                        return False
-                    else:
-                        # Most efficient out-of-the-box comparison
-                        return (self.matrix != other.matrix).nnz == 0
-                else:  # Worst case: compare against dense matrix
-                    return np.array_equal(self.matrix.todense(), other.matrix)
-
-            else:  # matrix of `self` is dense
-                if other.matrix_issparse:
-                    return np.array_equal(self.matrix, other.matrix.todense())
-                else:
-                    return np.array_equal(self.matrix, other.matrix)
-
-        elif isinstance(other, ArrayWeighting):
-            if scipy.sparse.isspmatrix(self.matrix):
-                return (np.array_equiv(self.matrix.diagonal(),
-                                       other.array) and
-                        np.array_equal(self.matrix.asformat('dia').offsets,
-                                       np.array([0])))
-            else:
-                return np.array_equal(
-                    self.matrix, other.array * np.eye(self.matrix.shape[0]))
-
-        elif isinstance(other, ConstWeighting):
-            if scipy.sparse.isspmatrix(self.matrix):
-                return (np.array_equiv(self.matrix.diagonal(), other.const) and
-                        np.array_equal(self.matrix.asformat('dia').offsets,
-                                       np.array([0])))
-            else:
-                return np.array_equal(
-                    self.matrix, other.const * np.eye(self.matrix.shape[0]))
-        else:
-            return False
-
     @property
     def repr_part(self):
         """Return a string usable in a space's ``__repr__`` method."""
@@ -527,30 +451,6 @@ class ArrayWeighting(Weighting):
         return hash((super(ArrayWeighting, self).__hash__(),
                      self.array.tobytes()))
 
-    def equiv(self, other):
-        """Return True if other is an equivalent weighting.
-
-        Returns
-        -------
-        equivalent : bool
-            ``True`` if ``other`` is a `Weighting` instance with the same
-            `Weighting.impl`, which yields the same result as this
-            weighting for any input, ``False`` otherwise. This is checked
-            by entry-wise comparison of arrays/constants.
-        """
-        # Optimization for equality
-        if self == other:
-            return True
-        elif (not isinstance(other, Weighting) or
-              self.exponent != other.exponent):
-            return False
-        elif isinstance(other, MatrixWeighting):
-            return other.equiv(self)
-        elif isinstance(other, ConstWeighting):
-            return np.array_equiv(self.array, other.const)
-        else:
-            return np.array_equal(self.array, other.array)
-
     @property
     def repr_part(self):
         """String usable in a space's ``__repr__`` method."""
@@ -570,6 +470,40 @@ class ArrayWeighting(Weighting):
     def __str__(self):
         """Return ``str(self)``."""
         return repr(self)
+
+
+class PerAxisWeighting(Weighting):
+
+    """Weighting of a space with one weight per axis."""
+
+    def __init__(self, factors, impl, exponent=2.0):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        factors : sequence of `array-like`
+            Weighting factors, one per axis. The factors can be constants
+            or one-dimensional array-like objects.
+        impl : string
+            Specifier for the implementation backend.
+        exponent : positive float, optional
+            Exponent of the norm. For values other than 2.0, the inner
+            product is not defined.
+        """
+        super(PerAxisWeighting, self).__init__(impl=impl, exponent=exponent)
+        try:
+            iter(factors)
+        except TypeError:
+            raise TypeError('`factors` {!r} is not a sequence'.format(factors))
+        self.__factors = tuple(factors)
+
+    @property
+    def factors(self):
+        """Tuple of weighting factors for inner product, norm and distance."""
+        return self.__factors
+
+    # No further methods implemented here since that will require some
+    # knowledge on the array type
 
 
 class ConstWeighting(Weighting):
@@ -621,24 +555,6 @@ class ConstWeighting(Weighting):
     def __hash__(self):
         """Return ``hash(self)``."""
         return hash((super(ConstWeighting, self).__hash__(), self.const))
-
-    def equiv(self, other):
-        """Test if other is an equivalent weighting.
-
-        Returns
-        -------
-        equivalent : bool
-            ``True`` if other is a `Weighting` instance with the same
-            `Weighting.impl`, which yields the same result as this
-            weighting for any input, ``False`` otherwise. This is checked
-            by entry-wise comparison of matrices/arrays/constants.
-        """
-        if isinstance(other, ConstWeighting):
-            return self == other
-        elif isinstance(other, (ArrayWeighting, MatrixWeighting)):
-            return other.equiv(self)
-        else:
-            return False
 
     @property
     def repr_part(self):
@@ -869,6 +785,207 @@ class CustomDist(Weighting):
         optargs = []
         inner_str = signature_string(posargs, optargs, mod=['!r', ''])
         return '{}({})'.format(self.__class__.__name__, inner_str)
+
+
+def adjoint_weightings(adj_domain, adj_range, extra_factor=1.0,
+                       merge_1d_arrs=False):
+    """Return functions that together implement correct adjoint weighting.
+
+    This function determines the (presumably) best strategy to merge
+    weights and distribute the constant, depending on the involved
+    weighting types and space sizes.
+
+    Generally, the domain weighting factors are multiplied with, and the
+    range weighting factors appear as reciprocals.
+
+    The optimization logic is thus as follows:
+
+    1. For both domain and range, constant factors, 1D arrays and nD arrays
+       are determined.
+    2. The constants are merged into ``const = dom_const / ran_const``.
+    3. If either domain or range have 1D weighting arrays, the constant
+       is merged into the smallest of those.
+       Otherwise, the constant is used as multiplicative factor in the
+       smaller of the two spaces.
+    4. If desired, 1D arrays are merged and used on the smaller space.
+    5. Two functions are returned that implement the optimized domain
+       and range weightings. They have ``out`` parameters that let them
+       operate in-place if necessary.
+
+    Parameters
+    ----------
+    adj_domain, adj_range : `TensorSpace`
+        Domain and range of an adjoint operator for which the weighting
+        strategy should be determined.
+    extra_factor : float, optional
+        Multiply the determined weighting constant by this value. This is for
+        situations where additional scalar corrections are necessary.
+    merge_1d_arrs : bool, optional
+        If ``True``, try to merge the 1D arrays in axes where they occur
+        in both domain and range. This is intended as an optimization for
+        operators that have identical (or compatible) domain and range,
+        at least in the axes in question.
+
+    Returns
+    -------
+    apply_dom_weighting, apply_ran_weighting : function
+        Python functions with signature ``apply(x, out=None)`` that
+        implement the optimized strategy for domain and range, returning
+        a Numpy array. If a function does not do anything, it returns its
+        input ``x`` as Numpy array without making a copy.
+    """
+    dom_w = adj_domain.weighting
+    ran_w = adj_range.weighting
+    dom_size = adj_domain.size
+    ran_size = adj_range.size
+    const = extra_factor
+
+    # Get relevant factors from the weightings
+
+    # Domain weightings go in as multiplicative factors
+    if isinstance(dom_w, ArrayWeighting):
+        const *= 1.0
+        dom_ndarr = dom_w.array
+        dom_1darrs = []
+        dom_1darr_axes = []
+    elif isinstance(dom_w, PerAxisWeighting):
+        const *= np.prod(dom_w.consts)
+        dom_ndarr = None
+        dom_1darrs = list(dom_w.arrays)
+        dom_1darr_axes = list(dom_w.array_axes)
+    elif isinstance(dom_w, ConstWeighting):
+        const *= dom_w.const
+        dom_ndarr = None
+        dom_1darrs = []
+        dom_1darr_axes = []
+    else:
+        raise TypeError('weighting type {} of the adjoint domain not '
+                        'supported'.format(type(dom_w)))
+
+    # Range weightings go in as reciprocal factors. For the later merging
+    # of constants and arrays we proceed with the reciprocal factors.
+    if isinstance(ran_w, ArrayWeighting):
+        const /= 1.0
+        ran_ndarr = ran_w.array
+        ran_1darrs_recip = []
+        ran_1darr_axes = []
+    elif isinstance(ran_w, PerAxisWeighting):
+        const /= np.prod(ran_w.consts)
+        ran_ndarr = None
+        ran_1darrs_recip = [1 / arr for arr in ran_w.arrays]
+        ran_1darr_axes = list(ran_w.array_axes)
+    elif isinstance(ran_w, ConstWeighting):
+        const /= ran_w.const
+        ran_ndarr = None
+        ran_1darrs_recip = []
+        ran_1darr_axes = []
+    else:
+        raise TypeError('weighting type {} of the adjoint range not '
+                        'supported'.format(type(ran_w)))
+
+    # Put constant where it "hurts least", i.e., to the smaller space if
+    # both use constant weighting or if an array weighting is involved;
+    # if 1d arrays are in play, multiply the constant with one of them.
+    if const == 1.0:
+        dom_const = ran_const = 1.0
+    elif dom_1darrs != []:
+        idx_smallest = np.argmin([len(arr) for arr in dom_1darrs])
+        dom_1darrs[idx_smallest] = dom_1darrs[idx_smallest] * const
+        dom_const = ran_const = 1.0
+    elif ran_1darrs_recip != []:
+        idx_smallest = np.argmin([len(arr) for arr in ran_1darrs_recip])
+        ran_1darrs_recip[idx_smallest] *= const  # has been copied already
+        dom_const = ran_const = 1.0
+    else:
+        if dom_size < ran_size:
+            dom_const = const
+            ran_const = 1.0
+        else:
+            dom_const = 1.0
+            ran_const = const
+
+    # If desired, merge 1d arrays; this works if domain and range have the
+    # same shape
+    if merge_1d_arrs:
+        if adj_domain.ndim != adj_range.ndim:
+            raise ValueError('merging only works with domain and range of '
+                             'the same number of dimensions')
+
+        for i in range(adj_domain.ndim):
+            if i in dom_1darr_axes and i in ran_1darr_axes:
+                if dom_size < ran_size:
+                    dom_1darrs[i] = dom_1darrs[i] * ran_1darrs_recip[i]
+                    ran_1darrs_recip.pop(ran_1darr_axes.index(i))
+                    ran_1darr_axes.remove(i)
+                else:
+                    ran_1darrs_recip[i] *= dom_1darrs[i]  # already copied
+                    dom_1darrs.pop(dom_1darr_axes.index(i))
+                    dom_1darr_axes.remove(i)
+
+    # Define weighting functions and return them
+    def apply_dom_weighting(x, out=None):
+        inp = x
+        if dom_ndarr is not None:
+            # TODO: use first variant when Numpy 1.13 is minimum
+            if isinstance(x, np.ndarray):
+                out = np.multiply(x, dom_ndarr, out=out)
+            else:
+                out = x.ufuncs.multiply(dom_ndarr, out=out)
+            inp = out
+        if dom_const != 1.0:
+            if isinstance(x, np.ndarray):
+                out = np.multiply(x, dom_const, out=out)
+            else:
+                out = inp.ufuncs.multiply(dom_const, out=out)
+            inp = out
+        if dom_1darrs != []:
+            if out is None:
+                out = fast_1d_tensor_mult(inp, dom_1darrs, dom_1darr_axes)
+            else:
+                # TODO: use impl when available
+                with writable_array(out) as out_arr:
+                    fast_1d_tensor_mult(inp, dom_1darrs, dom_1darr_axes,
+                                        out=out_arr)
+
+        if out is None:
+            # Nothing has been done, return input as Numpy array. This will
+            # not copy.
+            return np.asarray(x)
+        else:
+            return np.asarray(out)
+
+    def apply_ran_weighting(x, out=None):
+        inp = x
+        if ran_ndarr is not None:
+            # TODO: use first variant when Numpy 1.13 is minimum
+            if isinstance(x, np.ndarray):
+                out = np.divide(x, ran_ndarr, out=out)
+            else:
+                out = x.ufuncs.divide(ran_ndarr, out=out)
+            inp = out
+        if ran_const != 1.0:
+            if isinstance(x, np.ndarray):
+                out = np.multiply(x, ran_const, out=out)
+            else:
+                out = inp.ufuncs.multiply(ran_const, out=out)
+            inp = out
+        if ran_1darrs_recip != []:
+            if out is None:
+                out = fast_1d_tensor_mult(inp, ran_1darrs_recip,
+                                          ran_1darr_axes)
+            else:
+                with writable_array(out) as out_arr:
+                    fast_1d_tensor_mult(inp, ran_1darrs_recip, ran_1darr_axes,
+                                        out=out_arr)
+
+        if out is None:
+            # Nothing has been done, return input as Numpy array. This will
+            # not copy.
+            return np.asarray(x)
+        else:
+            return np.asarray(out)
+
+    return apply_dom_weighting, apply_ran_weighting
 
 
 if __name__ == '__main__':

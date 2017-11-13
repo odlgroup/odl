@@ -1346,8 +1346,14 @@ class FunctionSpaceElement(LinearSpaceElement):
 
             elif self.space.tensor_valued:
                 # The out object can be any array-like of objects with shapes
-                # that should all be broadcastable to scalar_out_shape.
-                results = np.array(out)
+                # that should all be broadcastable to scalar_out_shape
+                try:
+                    results = np.array(out)
+                except ValueError:
+                    # For some broadcasting sitations, the above call fails.
+                    # We need to use `object` explicitly then
+                    results = np.array(out, dtype=object)
+
                 if results.dtype == object or scalar_in:
                     # Some results don't have correct shape, need to
                     # broadcast

@@ -16,6 +16,7 @@ except ImportError:
     pass
 
 from odl.discr import DiscreteLp, DiscreteLpElement
+from odl.space.weighting import adjoint_weightings
 from odl.tomo.backends.astra_setup import (
     astra_projection_geometry, astra_volume_geometry, astra_data,
     astra_projector, astra_algorithm)
@@ -121,11 +122,11 @@ def astra_cpu_back_projector(proj_data, geometry, reco_space, out=None):
     Parameters
     ----------
     proj_data : `DiscreteLpElement`
-        Projection data to which the back-projector is applied
+        Projection data to which the back-projector is applied.
     geometry : `Geometry`
-        Geometry defining the tomographic setup
+        Geometry defining the tomographic setup.
     reco_space : `DiscreteLp`
-        Space to which the calling operator maps
+        Space to which the calling operator maps.
     out : ``reco_space`` element, optional
         Element of the reconstruction space to which the result is written.
         If ``None``, an element in ``reco_space`` is created.
@@ -170,9 +171,20 @@ def astra_cpu_back_projector(proj_data, geometry, reco_space, out=None):
     vol_geom = astra_volume_geometry(reco_space)
     proj_geom = astra_projection_geometry(geometry)
 
+    # Get adjoint weighting functions
+    apply_dom_weighting, apply_ran_weighting = adjoint_weightings(
+        proj_data.space, reco_space)
+
+    # Weight data out-of-place. If no weighting is applied, the returned
+    # element is aligned with the input.
+    proj_data_weighted = apply_dom_weighting(proj_data)
+    # If a copy was made, it's already contiguous and no copy should be
+    # needed. Otherwise, a copy may be required.
+    allow_copy = (proj_data_weighted is proj_data)
+
     # Create ASTRA data structure
-    sino_id = astra_data(proj_geom, datatype='projection', data=proj_data,
-                         allow_copy=True)
+    sino_id = astra_data(proj_geom, datatype='projection',
+                         data=proj_data_weighted, allow_copy=allow_copy)
 
     # Create projector
     # TODO: implement with different schemes for angles and detector
@@ -196,11 +208,8 @@ def astra_cpu_back_projector(proj_data, geometry, reco_space, out=None):
         # Run algorithm
         astra.algorithm.run(algo_id)
 
-    # Weight the adjoint by appropriate weights
-    scaling_factor = float(proj_data.space.weighting.const)
-    scaling_factor /= float(reco_space.weighting.const)
-
-    out *= scaling_factor
+    # Weight output in-place
+    apply_ran_weighting(out, out=out)
 
     # Delete ASTRA objects
     astra.algorithm.delete(algo_id)

@@ -9,13 +9,15 @@
 """Numerical helper functions for convenience or speed."""
 
 from __future__ import print_function, division, absolute_import
+from numbers import Integral
 import numpy as np
 
-from odl.util.normalize import normalized_scalar_param_list, safe_int_conv
+from odl.util.normalize import (
+    normalized_scalar_param_list, safe_int_conv, normalized_index_expression)
 
 
 __all__ = ('apply_on_boundary', 'fast_1d_tensor_mult', 'resize_array',
-           'zscore')
+           'zscore', 'simulate_slicing')
 
 
 _SUPPORTED_RESIZE_PAD_MODES = ('constant', 'symmetric', 'periodic',
@@ -226,10 +228,10 @@ def fast_1d_tensor_mult(ndarr, onedim_arrs, axes=None, out=None):
     if out is None:
         out = np.array(ndarr, copy=True)
     else:
-        out[:] = ndarr  # Self-assignment is free if out is ndarr
+        out[:] = ndarr  # Self-assignment is free if `out is ndarr`
 
     if not onedim_arrs:
-        raise ValueError('no 1d arrays given')
+        return out
 
     if axes is None:
         axes = list(range(out.ndim - len(onedim_arrs), out.ndim))
@@ -845,6 +847,162 @@ def zscore(arr):
     if std != 0:
         arr /= std
     return arr
+
+
+def simulate_slicing(shape, indices):
+    """Simulate slicing into a Numpy array with given indices.
+
+    This function is intended to simulate indexing of a Numpy array
+    without actually performing the indexing. Its typical usage is to
+    determine the shape of a result space after indexing.
+
+    The function works with
+
+    - integers,
+    - `slice` objects,
+    - index arrays, i.e., 1D array-like objects containing integers,
+
+    and combinations of the above. It does not work with boolean arrays
+    or more advanced "fancy indexing".
+
+    Parameters
+    ----------
+    shape : sequence of ints
+        Number of entries per axis in the "simulated" array.
+    indices : index expression
+        Single instance or sequence of integer, `slice` and/or `array-like`
+        objects that should be used to simulate indexing of an array.
+        If index arrays are used, they must all be one-dimensional and have
+        the same length.
+
+    Returns
+    -------
+    sliced_shape : tuple of ints
+        The shape after simulated indexing.
+    collapsed_axes : tuple of ints
+        The axes that will be gone after indexing.
+    leftmost_index_array_axis : int or None
+        Index of the leftmost index array in the provided ``indices``,
+        or ``None`` if there is no index array.
+
+    Raises
+    ------
+    TypeError
+        If an invalid type of indexing object is used. This can be caught
+        by upstream code to switch to lazy indexing.
+
+    Examples
+    --------
+    A single integer slices along the first axis (index does not
+    matter as long as it lies within the bounds):
+
+    >>> shape = (3, 4, 5, 6)
+    >>> simulate_slicing(shape, 0)  # arr[0]
+    ((4, 5, 6), (0,), None)
+
+    Multiple indices slice into corresponding axes from the left:
+
+    >>> simulate_slicing(shape, (0, 0))  # arr[0, 0]
+    ((5, 6), (0, 1), None)
+    >>> simulate_slicing(shape, (0, 1, 1))  # arr[0, 1, 1]
+    ((6,), (0, 1, 2), None)
+
+    Ellipsis (``...``) and ``slice(None)`` (``:``) can be used to keep
+    one or several axes intact:
+
+    >>> # arr[0, :, 1, :]
+    >>> simulate_slicing(shape, (0, np.s_[:], 1, np.s_[:]))
+    ((4, 6), (0, 2), None)
+    >>> simulate_slicing(shape, (np.s_[...], 0, 0))  # arr[..., 0, 0]
+    ((3, 4), (2, 3), None)
+
+    With slices, parts of axes can be selected:
+
+    >>> # arr[0, :3, 1:4, ::2]
+    >>> simulate_slicing(shape, (0, np.s_[:3], np.s_[1:4], np.s_[::2]))
+    ((3, 3, 3), (0,), None)
+
+    Array-like objects (must all have the same 1D shape) of integers are
+    treated as follows: if their common length is ``n``, a new axis
+    of length ``n`` is created at the position of the leftmost index
+    array, and all index array axes are collapsed (Note: this is
+    not so useful for spaces, more so for elements):
+
+    >>> # arr[0, 0, [0, 1, 0, 2], :]
+    >>> simulate_slicing(shape, (0, 0, [0, 1, 0, 2], np.s_[:]))
+    ((4, 6), (0, 1), 2)
+    >>> # arr[:, [1, 1], [0, 2], :]
+    >>> simulate_slicing(shape, (np.s_[:], [1, 1], [0, 2], np.s_[:]))
+    ((3, 2, 6), (2,), 1)
+    >>> # arr[[2, 0], [3, 3], [0, 1], [5, 2]]
+    >>> simulate_slicing(shape, ([2, 0], [3, 3], [0, 1], [5, 2]))
+    ((2,), (1, 2, 3), 0)
+    """
+    if getattr(indices, 'dtype', object) == bool:
+        # Raising here as signal for upstream code.
+        # This is an optimization that avoids counting the number of
+        # `True` entries here *and* in the actual indexing operation.
+        raise TypeError('cannot index space with a boolean element or '
+                        'array')
+
+    indices = normalized_index_expression(indices, shape)
+    ndim = len(shape)
+
+    # Go through the indices and process the index arrays, checking if
+    # they are all one-dimensional and have the same length.
+    # Note: this will not catch nested lists or tuples, since doing such
+    # a check could be expensive.
+    leftmost_index_array_index = None
+    index_array_len = None
+    for i in range(ndim):
+        if (isinstance(indices[i], (tuple, list)) or
+                hasattr(indices[i], 'ndim')):
+            if getattr(indices[i], 'ndim', 1) != 1:
+                # ValueError will typically not be caught upstream (in
+                # contrast to TypeError), indicating a true error
+                raise ValueError('index arrays must be 1-dimensional, '
+                                 'got {}-dim. array in axis {}'
+                                 ''.format(indices[i].ndim, i))
+
+            if leftmost_index_array_index is None:
+                leftmost_index_array_index = i
+            if index_array_len is None:
+                index_array_len = len(indices[i])
+            elif len(indices[i]) != index_array_len:
+                raise ValueError('index arrays must all have the same '
+                                 'length, got lengths {} and {}'
+                                 ''.format(index_array_len,
+                                           len(indices[i])))
+
+    new_shape = list(shape)  # a copy
+
+    # Replace shape entries by -1 to signal collapsing, or by the true
+    # length after indexing
+    for i in range(len(indices)):
+        if isinstance(indices[i], Integral):
+            # Collapse
+            new_shape[i] = -1
+        elif isinstance(indices[i], slice):
+            # Lenght of the axis after applying the slice
+            start, stop, step = indices[i].indices(shape[i])
+            new_shape[i] = int(np.ceil((stop - start) / step))
+        elif (isinstance(indices[i], (tuple, list)) or
+              hasattr(indices[i], 'ndim')):
+            # Add index array length at leftmost position, collapse
+            # otherwise
+            if i == leftmost_index_array_index:
+                new_shape[i] = index_array_len
+            else:
+                new_shape[i] = -1
+        else:
+            raise TypeError('got invalid element {!r} in `indices`'
+                            ''.format(indices[i]))
+
+    # Collect axes to collapse into a list and remove them from `new_shape`
+    collapsed_axes = [i for i in range(len(new_shape)) if new_shape[i] == -1]
+    new_shape = [n for n in new_shape if n != -1]
+
+    return tuple(new_shape), tuple(collapsed_axes), leftmost_index_array_index
 
 
 if __name__ == '__main__':

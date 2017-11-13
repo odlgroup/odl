@@ -234,6 +234,11 @@ def test_fast_1d_tensor_mult():
     fast_1d_tensor_mult(test_arr, [x, y, z], out=out)
     assert all_equal(out, true_result)
 
+    # Empty array sequence results in no-op
+    test_arr = np.ones(shape)
+    out = fast_1d_tensor_mult(test_arr, [])
+    assert all_equal(out, test_arr)
+
     # Different orderings
     test_arr = np.ones(shape)
     out = fast_1d_tensor_mult(test_arr, [y, x, z], axes=(1, 0, 2))
@@ -289,10 +294,6 @@ def test_fast_1d_tensor_mult_error():
     # No ndarray to operate on
     with pytest.raises(TypeError):
         fast_1d_tensor_mult([[0, 0], [0, 0]], [x, x])
-
-    # No 1d arrays given
-    with pytest.raises(ValueError):
-        fast_1d_tensor_mult(test_arr, [])
 
     # Length or dimension mismatch
     with pytest.raises(ValueError):

@@ -7,6 +7,7 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import division
+from numbers import Integral
 import pytest
 try:
     import pywt
@@ -111,14 +112,17 @@ def _grouped_and_flat_arrays(shapes, dtype):
     i.e. the array with shape ``shapes[0]`` appears once, while the
     others appear ``2 ** ndim - 1`` times each.
     """
-    space = odl.discr_sequence_space(shape=shapes[0], dtype=dtype)
+    shapes = [[shape] if isinstance(shape, Integral) else shape
+              for shape in shapes]
+    space = odl.uniform_discr([0] * len(shapes[0]), shapes[0], shapes[0],
+                              dtype=dtype)
     array = noise_array(space).reshape(space.shape)
     grouped_list = [array]
     flat_list = [array.ravel()]
     ndim = space.ndim
 
     for shape in shapes[1:]:
-        space = odl.discr_sequence_space(shape=shape, dtype=dtype)
+        space = odl.uniform_discr([0] * len(shape), shape, shape, dtype=dtype)
         arrays = [noise_array(space).reshape(shape)
                   for _ in range(2 ** ndim - 1)]
         grouped_list.append(tuple(arrays))
