@@ -21,7 +21,7 @@ geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 
 # Ray transform (= forward projection). The backend is set explicitly -
 # possible choices are 'astra_cpu', 'astra_cuda' and 'skimage'.
-ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl='skimage')
+ray_trafo = odl.tomo.RayTransform(reco_space, geometry)
 
 # Create a discretized phantom that is a Shepp-Logan phantom in the real
 # part and a cuboid in the imaginary part
