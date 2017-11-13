@@ -9,8 +9,14 @@
 """MRI datasets provided by TU Graz."""
 
 import numpy as np
+from pkg_resources import parse_version
+
 from odl.contrib.datasets.util import get_data
 import odl
+if parse_version(np.__version__) < parse_version('1.12'):
+    flip = odl.util.npy_compat.flip
+else:
+    flip = np.flip
 
 
 __all__ = ('mri_head_data_4_channel', 'mri_head_reco_op_4_channel',
@@ -26,8 +32,8 @@ def mri_head_data_4_channel():
 
     This is a T2 weighted TSE scan of a healthy volunteer.
 
-    The data has been rescaled so that the reconstruction fits approximately in
-    [0, 1].
+    The data has been rescaled so that the reconstruction fits approximately
+    in [0, 1].
 
     See the data source with DOI `10.5281/zenodo.800525`_ or the
     `project webpage`_ for further information.
@@ -47,7 +53,7 @@ platform_aktuell.html
     dct = get_data('1_rawdata_brainT2_4ch.mat', subset=DATA_SUBSET, url=url)
 
     # Change axes to match ODL definitions
-    data = np.flip(np.swapaxes(dct['rawdata'], 0, -1) * 4e4, 2)
+    data = flip(np.swapaxes(dct['rawdata'], 0, -1) * 4e4, 2)
 
     return data
 
@@ -109,7 +115,7 @@ platform_aktuell.html
     dct = get_data('2_rawdata_brainT2_32ch.mat', subset=DATA_SUBSET, url=url)
 
     # Change axes to match ODL definitions
-    data = np.flip(np.swapaxes(dct['rawdata'], 0, -1) * 7e3, 2)
+    data = flip(np.swapaxes(dct['rawdata'], 0, -1) * 7e3, 2)
 
     return data
 
@@ -171,7 +177,7 @@ platform_aktuell.html
     dct = get_data('3_rawdata_knee_8ch.mat', subset=DATA_SUBSET, url=url)
 
     # Change axes to match ODL definitions
-    data = np.flip(np.swapaxes(dct['rawdata'], 0, -1) * 9e3, 2)
+    data = flip(np.swapaxes(dct['rawdata'], 0, -1) * 9e3, 2)
 
     return data
 

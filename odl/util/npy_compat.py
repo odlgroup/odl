@@ -15,7 +15,7 @@ import numpy as np
 __all__ = ('broadcast_to', 'moveaxis')
 
 
-# TODO: Remove when numpy 1.10 is an ODL dependency
+# TODO: Remove when Numpy 1.10 is an ODL dependency
 def broadcast_to(array, shape):
     """Broadcast an array to a new shape.
 
@@ -36,7 +36,7 @@ def broadcast_to(array, shape):
         return array + np.zeros(shape, dtype=array.dtype)
 
 
-# TODO: Remove when numpy 1.11 is an ODL dependency
+# TODO: Remove when Numpy 1.11 is an ODL dependency
 def moveaxis(a, source, destination):
     """Move axes of an array to new positions.
 
@@ -71,6 +71,27 @@ def moveaxis(a, source, destination):
         order.insert(dest, src)
 
     return a.transpose(order)
+
+
+# TODO: Remove when Numpy 1.12 is an ODL dependency
+def flip(a, axis):
+    """Reverse the order of elements in an array along the given axis.
+
+    This function is a backport of `numpy.flip` introduced in NumPy 1.12.
+
+    See Also
+    --------
+    numpy.flip
+    """
+    if not hasattr(a, 'ndim'):
+        a = np.asarray(a)
+    indexer = [slice(None)] * a.ndim
+    try:
+        indexer[axis] = slice(None, None, -1)
+    except IndexError:
+        raise ValueError('axis={} is invalid for the {}-dimensional input '
+                         'array'.format(axis, a.ndim))
+    return a[tuple(indexer)]
 
 
 if __name__ == '__main__':
