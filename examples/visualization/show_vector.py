@@ -1,6 +1,6 @@
 """Example for using `Tensor.show`.
 
-The ``show`` method is implemented for all types of n-tuples and displays
+The ``show`` method is implemented for all types of vectors and displays
 the data as a scatter plot.
 """
 
