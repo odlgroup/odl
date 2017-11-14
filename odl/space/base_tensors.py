@@ -638,6 +638,15 @@ class Tensor(LinearSpaceElement):
         """Return ``str(self)``."""
         return array_str(self)
 
+    def __bool__(self):
+        """Return ``bool(self)``."""
+        if self.size > 1:
+            raise ValueError('The truth value of an array with more than one '
+                             'element is ambiguous. '
+                             'Use np.any(a) or np.all(a)')
+        else:
+            return bool(self.asarray())
+
     def __array__(self, dtype=None):
         """Return a Numpy array from this tensor.
 
