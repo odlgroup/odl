@@ -904,7 +904,7 @@ def test_conversion_to_scalar(tspace_impl):
 
 
 def test_bool_conversion(tspace_impl):
-    """Verify that the __array__ interface for NumPy works."""
+    """Verify that the __bool__ function works."""
     space = odl.tensor_space(2, dtype='float32', impl=tspace_impl)
     x = space.element([0, 1])
 
