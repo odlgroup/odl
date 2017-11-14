@@ -340,14 +340,15 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
         inner_vf = vf.copy()
 
         for gi in inner_vf:
+            gi *= np.abs(gi) ** (self.exponent - 2)
             if self.exponent >= 2:
-                tmp = vf_pwnorm_fac * np.abs(gi) ** (2 - self.exponent)
                 # Any component that is zero is not divided with
-                nz = (tmp.asarray() != 0)
-                gi[nz] /= tmp[nz]
-
+                nz = (vf_pwnorm_fac.asarray() != 0)
+                gi[nz] /= vf_pwnorm_fac[nz]
             else:
-                gi *= np.abs(gi) ** (self.exponent - 2) / vf_pwnorm_fac
+                # For exponents < 2, there will be a singularity if any
+                # component is zero
+                gi /= vf_pwnorm_fac
 
         return PointwiseInner(self.domain, inner_vf, weighting=self.weights)
 
