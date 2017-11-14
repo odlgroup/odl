@@ -13,5 +13,5 @@ from __future__ import absolute_import
 
 __all__ = ()
 
-from .operator import *
-__all__ += operator.__all__
+from .pyshearlab_operator import *
+__all__ += pyshearlab_operator.__all__

@@ -10,10 +10,10 @@ op = odl.contrib.pyshearlab.PyShearlabOperator(space, scales=2)
 phantom = odl.phantom.shepp_logan(space, True)
 
 y = op(phantom)
-y.show('shearlet coefficients')
+y.show('Shearlet coefficients')
 
 z = op.inverse(y)
-z.show('reconstruction')
+z.show('Reconstruction')
 
 z = op.adjoint(y)
-z.show('adjoint')
+z.show('Adjoint')
