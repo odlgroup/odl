@@ -13,10 +13,10 @@ the raw binary data I/O here.
 """
 
 from __future__ import division
-import pytest
 import numpy as np
 import tempfile
 
+import odl
 from odl.contrib.mrc import (
     FileWriterRawBinaryWithHeader, FileReaderRawBinaryWithHeader)
 from odl.util.testutils import simple_fixture
@@ -81,4 +81,4 @@ def test_uncompr_bin_io_without_header(shape, floating_dtype, order):
 
 
 if __name__ == '__main__':
-    pytest.main([str(__file__.replace('\\', '/')), '-v'])
+    odl.util.test_file(__file__)

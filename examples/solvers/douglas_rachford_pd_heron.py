@@ -56,6 +56,7 @@ def print_objective(x):
         value += (x - x_proj).norm()
     print('point = [{:.4f}, {:.4f}], value = {:.4f}'.format(x[0], x[1], value))
 
+
 # Solve
 x = space.zero()
 odl.solvers.douglas_rachford_pd(x, f, g, lin_ops,

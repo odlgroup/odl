@@ -8,12 +8,9 @@
 
 """Miscellaneous phantoms that do not fit in other categories."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
-
 import numpy as np
+import sys
 
 
 __all__ = ('submarine', 'text')
@@ -146,7 +143,7 @@ def _submarine_2d_nonsmooth(space):
     return out.ufuncs.minimum(1, out=out)
 
 
-def text(space, text, font='arial', border=0.2, inverted=True):
+def text(space, text, font=None, border=0.2, inverted=True):
     """Create phantom from text.
 
     The text is represented by a scalar image taking values in [0, 1].
@@ -166,6 +163,8 @@ def text(space, text, font='arial', border=0.2, inverted=True):
     font : str, optional
         The font that should be used to write the text. Available options are
         platform dependent.
+        Default: Platform dependent. 'arial' for windows,
+        'LiberationSans-Regular' for linux and 'Helvetica' for OSX
     border : float, optional
         Padding added around the text. 0.0 indicates that the phantom should
         occupy all of the space along its largest dimension while 1.0 gives a
@@ -185,7 +184,7 @@ def text(space, text, font='arial', border=0.2, inverted=True):
     on an arbitrary platform.
 
     In general, the fonts ``'arial'``, ``'calibri'`` and ``'impact'`` tend to
-    be available.
+    be available on windows.
 
     Platform dependent tricks:
 
@@ -197,6 +196,18 @@ def text(space, text, font='arial', border=0.2, inverted=True):
 
     if space.ndim != 2:
         raise ValueError('`space` must be two-dimensional')
+
+    if font is None:
+        platform = sys.platform
+        if platform == 'win32':
+            # Windows
+            font = 'arial'
+        elif platform == 'darwin':
+            # Mac OSX
+            font = 'Helvetica'
+        else:
+            # Assume platform is linux
+            font = 'LiberationSans-Regular'
 
     text = str(text)
 
@@ -239,9 +250,11 @@ def text(space, text, font='arial', border=0.2, inverted=True):
 
     return space.element(arr)
 
+
 if __name__ == '__main__':
     # Show the phantoms
     import odl
+    from odl.util.testutils import run_doctests
 
     space = odl.uniform_discr([-1, -1], [1, 1], [300, 300])
     submarine(space, smooth=False).show('submarine smooth=False')
@@ -251,6 +264,4 @@ if __name__ == '__main__':
     text(space, text='phantom').show('phantom')
 
     # Run also the doctests
-    # pylint: disable=wrong-import-position
-    from odl.util.testutils import run_doctests
     run_doctests()

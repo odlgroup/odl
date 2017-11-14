@@ -10,6 +10,7 @@ from __future__ import division
 import pytest
 import numpy as np
 
+import odl
 from odl.discr.grid import sparse_meshgrid
 from odl.set.domain import IntervalProd
 from odl.util.testutils import almost_equal, all_equal
@@ -423,4 +424,4 @@ def test_rectangle_area():
 
 
 if __name__ == '__main__':
-    pytest.main([str(__file__.replace('\\', '/')), '-v'])
+    odl.util.test_file(__file__)

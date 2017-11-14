@@ -8,12 +8,8 @@
 
 """Specification and reader for the MRC2014 file format."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
-from builtins import int, super
-
+from builtins import int, object
 from collections import OrderedDict
 from itertools import permutations
 import numpy as np
@@ -472,7 +468,9 @@ class FileReaderMRC(MRCHeaderProperties, FileReaderRawBinaryWithHeader):
                 keys=MRC_SPEC_KEYS,
                 dtype_map=MRC_DTYPE_TO_NPY_DTYPE)
 
-        super().__init__(file, header_fields)
+        # `MRCHeaderProperties` has no `__init__`, so this calls
+        # `FileReaderRawBinaryWithHeader.__init__`
+        super(FileReaderMRC, self).__init__(file, header_fields)
 
     def read_extended_header(self, groupby='field', force_type=''):
         """Read the extended header according to `extended_header_type`.
@@ -612,8 +610,8 @@ extended-mrc-format-not-used-by-2dx
         data : `numpy.ndarray`
             The data read from `file`.
         """
-        data = super().read_data(dstart, dend).reshape(self.data_shape,
-                                                       order='F')
+        data = super(FileReaderMRC, self).read_data(dstart, dend)
+        data = data.reshape(self.data_shape, order='F')
         if swap_axes:
             data = np.transpose(data, axes=self.data_axis_order)
             assert data.shape == self.data_shape

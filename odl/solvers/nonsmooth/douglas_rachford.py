@@ -8,10 +8,7 @@
 
 """Douglas-Rachford splitting algorithm for convex optimization."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
 
 from odl.operator import Operator
 
@@ -50,11 +47,11 @@ def douglas_rachford_pd(x, f, g, L, tau, sigma, niter,
         Sequence of of the functions ``g_i``. Needs to have
         ``g[i].convex_conj.proximal``.
     L : sequence of `Operator`'s
-        Sequence of `Opeartor`s` with as many elements as ``g``.
+        Sequence of `Opeartor`'s with as many elements as ``g``.
     tau : float
         Step size parameter for ``f``.
     sigma : sequence of floats
-        Step size parameters for the ``g_i``s.
+        Step size parameters for the ``g_i``'s.
     niter : int
         Number of iterations.
     callback : callable, optional
@@ -62,7 +59,7 @@ def douglas_rachford_pd(x, f, g, L, tau, sigma, niter,
 
     Other Parameters
     ----------------
-    l : sequence of `Functionals`'s, optional
+    l : sequence of `Functional`'s, optional
         Sequence of of the functions ``l_i``. Needs to have
         ``l[i].convex_conj.proximal``.
         If omitted, the simpler problem without ``l_i``  will be considered.
@@ -108,7 +105,7 @@ def douglas_rachford_pd(x, f, g, L, tau, sigma, niter,
 
     See Also
     --------
-    odl.solvers.nonsmooth.chambolle_pock.chambolle_pock_solver :
+    odl.solvers.nonsmooth.primal_dual_hybrid_gradient.pdhg :
         Solver for similar problems.
     odl.solvers.nonsmooth.forward_backward.forward_backward_pd :
         Solver for similar problems which can additionaly handle a
@@ -121,7 +118,6 @@ def douglas_rachford_pd(x, f, g, L, tau, sigma, niter,
     composite and parallel-sum type monotone operators*. SIAM Journal
     on Optimization, 23.4 (2013), pp 2541--2565.
     """
-
     # Problem size
     m = len(L)
 

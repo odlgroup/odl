@@ -8,20 +8,14 @@
 
 """Abstract linear vector spaces."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from builtins import object, range, str
-from future import standard_library
-standard_library.install_aliases()
-
-from abc import abstractmethod
+from builtins import object
 import numpy as np
 
 from odl.set.sets import Field, Set, UniversalSet
 
 
-__all__ = ('LinearSpace', 'LinearSpaceElement', 'UniversalSpace',
-           'LinearSpaceTypeError', 'LinearSpaceTypeError')
+__all__ = ('LinearSpace', 'UniversalSpace')
 
 
 class LinearSpace(Set):
@@ -39,19 +33,20 @@ class LinearSpace(Set):
 
         Parameters
         ----------
-        field : `Field`
+        field : `Field` or None
             Scalar field of numbers for this space.
         """
-        if not isinstance(field, Field):
-            raise TypeError('`field` {!r} is not a `Field` instance')
-        self.__field = field
+        if field is None or isinstance(field, Field):
+            self.__field = field
+        else:
+            raise TypeError('`field` must be a `Field` instance or `None`, '
+                            'got {!r}'.format(field))
 
     @property
     def field(self):
         """Scalar field of numbers for this vector space."""
         return self.__field
 
-    @abstractmethod
     def element(self, inp=None, **kwargs):
         """Create a `LinearSpaceElement` from ``inp`` or from scratch.
 
@@ -73,6 +68,7 @@ class LinearSpace(Set):
         element : `LinearSpaceElement`
             A new element of this space.
         """
+        raise NotImplementedError('abstract method')
 
     @property
     def examples(self):
@@ -85,13 +81,13 @@ class LinearSpace(Set):
         except NotImplementedError:
             pass
 
-    @abstractmethod
     def _lincomb(self, a, x1, b, x2, out):
         """Implement ``out[:] = a * x1 + b * x2``.
 
         This method is intended to be private. Public callers should
         resort to `lincomb` which is type-checked.
         """
+        raise NotImplementedError('abstract method')
 
     def _dist(self, x1, x2):
         """Return the distance between ``x1`` and ``x2``.
@@ -99,7 +95,6 @@ class LinearSpace(Set):
         This method is intended to be private. Public callers should
         resort to `dist` which is type-checked.
         """
-        # default implementation
         return self.norm(x1 - x2)
 
     def _norm(self, x):
@@ -108,7 +103,6 @@ class LinearSpace(Set):
         This method is intended to be private. Public callers should
         resort to `norm` which is type-checked.
         """
-        # default implementation
         return float(np.sqrt(self.inner(x, x).real))
 
     def _inner(self, x1, x2):
@@ -117,7 +111,6 @@ class LinearSpace(Set):
         This method is intended to be private. Public callers should
         resort to `inner` which is type-checked.
         """
-        # No default implementation possible
         raise LinearSpaceNotImplementedError(
             'inner product not implemented in space {!r}'.format(self))
 
@@ -127,7 +120,6 @@ class LinearSpace(Set):
         This method is intended to be private. Public callers should
         resort to `multiply` which is type-checked.
         """
-        # No default implementation possible
         raise LinearSpaceNotImplementedError(
             'multiplication not implemented in space {!r}'.format(self))
 
@@ -139,9 +131,8 @@ class LinearSpace(Set):
     # Default methods
     def zero(self):
         """Return the zero (additive unit) element of this space."""
-        # Default implementation using lincomb
         tmp = self.element()
-        self.lincomb(tmp, 0, tmp, 0, tmp)
+        self.lincomb(0, tmp, 0, tmp, tmp)
         return tmp
 
     def __contains__(self, other):
@@ -168,7 +159,7 @@ class LinearSpace(Set):
 
             ``out[:] = a * x1``
 
-        or, if ``b`` and ``y`` are given,
+        or, if ``b`` and ``x2`` are given,
 
             ``out = a * x1 + b * x2``.
 
@@ -196,19 +187,18 @@ class LinearSpace(Set):
         -----
         The elements ``out``, ``x1`` and ``x2`` may be aligned, thus a call
 
-            ``space.lincomb(x, 2, x, 3.14, out=x)``
+            ``space.lincomb(2, x, 3.14, x, out=x)``
 
         is (mathematically) equivalent to
 
-            ``x = x * (1 + 2 + 3.14)``.
+            ``x = x * (2 + 3.14)``.
         """
         if out is None:
             out = self.element()
-
-        if out not in self:
+        elif out not in self:
             raise LinearSpaceTypeError('`out` {!r} is not an element of {!r}'
                                        ''.format(out, self))
-        if a not in self.field:
+        if self.field is not None and a not in self.field:
             raise LinearSpaceTypeError('`a` {!r} not an element of the field '
                                        '{!r} of {!r}'
                                        ''.format(a, self.field, self))
@@ -223,7 +213,7 @@ class LinearSpace(Set):
             return out
 
         else:  # Two elements
-            if b not in self.field:
+            if self.field is not None and b not in self.field:
                 raise LinearSpaceTypeError('`b` {!r} not an element of the '
                                            'field {!r} of {!r}'
                                            ''.format(b, self.field, self))
@@ -254,7 +244,6 @@ class LinearSpace(Set):
         if x2 not in self:
             raise LinearSpaceTypeError('`x2` {!r} is not an element of '
                                        '{!r}'.format(x2, self))
-
         return float(self._dist(x1, x2))
 
     def norm(self, x):
@@ -273,7 +262,6 @@ class LinearSpace(Set):
         if x not in self:
             raise LinearSpaceTypeError('`x` {!r} is not an element of '
                                        '{!r}'.format(x, self))
-
         return float(self._norm(x))
 
     def inner(self, x1, x2):
@@ -295,8 +283,11 @@ class LinearSpace(Set):
         if x2 not in self:
             raise LinearSpaceTypeError('`x2` {!r} is not an element of '
                                        '{!r}'.format(x2, self))
-
-        return self.field.element(self._inner(x1, x2))
+        inner = self._inner(x1, x2)
+        if self.field is None:
+            return inner
+        else:
+            return self.field.element(self._inner(x1, x2))
 
     def multiply(self, x1, x2, out=None):
         """Return the pointwise product of ``x1`` and ``x2``.
@@ -326,7 +317,6 @@ class LinearSpace(Set):
         if x2 not in self:
             raise LinearSpaceTypeError('`x2` {!r} is not an element of '
                                        '{!r}'.format(x2, self))
-
         self._multiply(x1, x2, out)
         return out
 
@@ -360,7 +350,6 @@ class LinearSpace(Set):
         if x2 not in self:
             raise LinearSpaceTypeError('`x2` {!r} is not an element of '
                                        '{!r}'.format(x2, self))
-
         self._divide(x1, x2, out)
         return out
 
@@ -428,6 +417,10 @@ class LinearSpace(Set):
 
         return ProductSpace(self, other)
 
+    def __str__(self):
+        """Return ``str(self)``."""
+        return repr(self)
+
 
 class LinearSpaceElement(object):
 
@@ -443,9 +436,6 @@ class LinearSpaceElement(object):
         All deriving classes must call this method to set the `space`
         property.
         """
-        if not isinstance(space, LinearSpace):
-            raise TypeError('`space` {!r} is not a `LinearSpace` instance'
-                            ''.format(space))
         self.__space = space
 
     @property
@@ -497,7 +487,9 @@ class LinearSpaceElement(object):
     # Convenience methods
     def __iadd__(self, other):
         """Implement ``self += other``."""
-        if other in self.space:
+        if self.space.field is None:
+            return NotImplemented
+        elif other in self.space:
             return self.space.lincomb(1, self, 1, other, out=self)
         elif isinstance(other, LinearSpaceElement):
             # We do not `return NotImplemented` here since we don't want a
@@ -527,6 +519,8 @@ class LinearSpaceElement(object):
         # Instead of using __iadd__ we duplicate code here for performance
         if getattr(other, '__array_priority__', 0) > self.__array_priority__:
             return other.__radd__(self)
+        elif self.space.field is None:
+            return NotImplemented
         elif other in self.space:
             tmp = self.space.element()
             return self.space.lincomb(1, self, 1, other, out=tmp)
@@ -556,7 +550,9 @@ class LinearSpaceElement(object):
 
     def __isub__(self, other):
         """Implement ``self -= other``."""
-        if other in self.space:
+        if self.space.field is None:
+            return NotImplemented
+        elif other in self.space:
             return self.space.lincomb(1, self, -1, other, out=self)
         elif isinstance(other, LinearSpaceElement):
             # We do not `return NotImplemented` here since we don't want a
@@ -564,6 +560,8 @@ class LinearSpaceElement(object):
             # `self = self - other` which does not modify self.
             raise TypeError('cannot subtract {!r} and {!r} in-place'
                             ''.format(self, other))
+        elif self.space.field is None:
+            return NotImplemented
         elif other in self.space.field:
             one = getattr(self.space, 'one', None)
             if one is None:
@@ -585,6 +583,8 @@ class LinearSpaceElement(object):
         # Instead of using __isub__ we duplicate code here for performance
         if getattr(other, '__array_priority__', 0) > self.__array_priority__:
             return other.__rsub__(self)
+        elif self.space.field is None:
+            return NotImplemented
         elif other in self.space:
             tmp = self.space.element()
             return self.space.lincomb(1, self, -1, other, out=tmp)
@@ -609,6 +609,8 @@ class LinearSpaceElement(object):
         """Return ``other - self``."""
         if getattr(other, '__array_priority__', 0) > self.__array_priority__:
             return other.__sub__(self)
+        elif self.space.field is None:
+            return NotImplemented
         elif other in self.space:
             tmp = self.space.element()
             return self.space.lincomb(1, other, -1, self, out=tmp)
@@ -633,7 +635,9 @@ class LinearSpaceElement(object):
 
     def __imul__(self, other):
         """Implement ``self *= other``."""
-        if other in self.space.field:
+        if self.space.field is None:
+            return NotImplemented
+        elif other in self.space.field:
             return self.space.lincomb(other, self, out=self)
         elif other in self.space:
             return self.space.multiply(other, self, out=self)
@@ -657,6 +661,8 @@ class LinearSpaceElement(object):
         # Instead of using __imul__ we duplicate code here for performance
         if getattr(other, '__array_priority__', 0) > self.__array_priority__:
             return other.__rmul__(self)
+        elif self.space.field is None:
+            return NotImplemented
         elif other in self.space.field:
             tmp = self.space.element()
             return self.space.lincomb(other, self, out=tmp)
@@ -682,6 +688,8 @@ class LinearSpaceElement(object):
 
     def __itruediv__(self, other):
         """Implement ``self /= other``."""
+        if self.space.field is None:
+            return NotImplemented
         if other in self.space.field:
             return self.space.lincomb(1.0 / other, self, out=self)
         elif other in self.space:
@@ -707,6 +715,8 @@ class LinearSpaceElement(object):
         """Return ``self / other``."""
         if getattr(other, '__array_priority__', 0) > self.__array_priority__:
             return other.__rtruediv__(self)
+        elif self.space.field is None:
+            return NotImplemented
         elif other in self.space.field:
             tmp = self.space.element()
             return self.space.lincomb(1.0 / other, self, out=tmp)
@@ -729,6 +739,8 @@ class LinearSpaceElement(object):
         """Return ``other / self``."""
         if getattr(other, '__array_priority__', 0) > self.__array_priority__:
             return other.__truediv__(self)
+        elif self.space.field is None:
+            return NotImplemented
         elif other in self.space.field:
             one = getattr(self.space, 'one', None)
             if one is None:
@@ -757,6 +769,8 @@ class LinearSpaceElement(object):
         """Implement ``self ** p``.
 
         This is only defined for integer ``p``."""
+        if self.space.field is None:
+            return NotImplemented
         p, p_in = int(p), p
         if p != p_in:
             raise ValueError('expected integer `p`, got {}'.format(p_in))
@@ -782,12 +796,16 @@ class LinearSpaceElement(object):
 
     def __pow__(self, p):
         """Return ``self ** p``."""
+        if self.space.field is None:
+            return NotImplemented
         tmp = self.copy()
         tmp.__ipow__(p)
         return tmp
 
     def __neg__(self):
         """Return ``-self``."""
+        if self.space.field is None:
+            return NotImplemented
         return (-1) * self
 
     def __pos__(self):
@@ -857,20 +875,8 @@ class LinearSpaceElement(object):
     __hash__ = None
 
     def __str__(self):
-        """Return ``str(self)``.
-
-        This is a default implementation that does not print any
-        information about the contents of the element.
-        """
-        return str(self.space) + 'Element'
-
-    def __repr__(self):
-        """Return ``repr(self)``.
-
-        This is a default implementation that does not print any
-        information about the contents of the element.
-        """
-        return repr(self.space) + 'Element'
+        """Return ``str(self)``."""
+        return repr(self)
 
     def __copy__(self):
         """Return a copy of this element.
@@ -980,7 +986,7 @@ class UniversalSpace(LinearSpace):
 
     def __init__(self):
         """Initialize a new instance."""
-        LinearSpace.__init__(self, field=UniversalSet())
+        super(UniversalSpace, self).__init__(field=UniversalSet())
 
     def element(self, inp=None):
         """Dummy element creation method.
@@ -1062,6 +1068,5 @@ class LinearSpaceNotImplementedError(NotImplementedError):
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

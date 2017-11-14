@@ -8,14 +8,11 @@
 
 """Phantoms typically used in transmission tomography."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
+import numpy as np
 
 from odl.discr import DiscreteLp
 from odl.phantom.geometric import ellipsoid_phantom
-import numpy as np
 
 
 __all__ = ('shepp_logan_ellipsoids', 'shepp_logan', 'forbild')
@@ -27,11 +24,12 @@ def _shepp_logan_ellipse_2d():
     This assumes that the ellipses are contained in the square
     [-1, -1]x[-1, -1].
     """
+    rad18 = np.deg2rad(18.0)
     #       value  axisx  axisy     x       y  rotation
     return [[2.00, .6900, .9200, 0.0000, 0.0000, 0],
             [-.98, .6624, .8740, 0.0000, -.0184, 0],
-            [-.02, .1100, .3100, 0.2200, 0.0000, -18],
-            [-.02, .1600, .4100, -.2200, 0.0000, 18],
+            [-.02, .1100, .3100, 0.2200, 0.0000, -rad18],
+            [-.02, .1600, .4100, -.2200, 0.0000, rad18],
             [0.01, .2100, .2500, 0.0000, 0.3500, 0],
             [0.01, .0460, .0460, 0.0000, 0.1000, 0],
             [0.01, .0460, .0460, 0.0000, -.1000, 0],
@@ -46,11 +44,12 @@ def _shepp_logan_ellipsoids_3d():
     This assumes that the ellipses are contained in the cube
     [-1, -1, -1]x[1, 1, 1].
     """
+    rad18 = np.deg2rad(18.0)
     #       value  axisx  axisy  axisz,  x        y      z    rotation
     return [[2.00, .6900, .9200, .810, 0.0000, 0.0000, 0.00, 0.0, 0, 0],
             [-.98, .6624, .8740, .780, 0.0000, -.0184, 0.00, 0.0, 0, 0],
-            [-.02, .1100, .3100, .220, 0.2200, 0.0000, 0.00, -18, 0, 0],
-            [-.02, .1600, .4100, .280, -.2200, 0.0000, 0.00, 18., 0, 0],
+            [-.02, .1100, .3100, .220, 0.2200, 0.0000, 0.00, -rad18, 0, 0],
+            [-.02, .1600, .4100, .280, -.2200, 0.0000, 0.00, rad18, 0, 0],
             [0.01, .2100, .2500, .410, 0.0000, 0.3500, 0.00, 0.0, 0, 0],
             [0.01, .0460, .0460, .050, 0.0000, 0.1000, 0.00, 0.0, 0, 0],
             [0.01, .0460, .0460, .050, 0.0000, -.1000, 0.00, 0.0, 0, 0],
@@ -112,7 +111,7 @@ def shepp_logan_ellipsoids(ndim, modified=False):
     return ellipsoids
 
 
-def shepp_logan(space, modified=False):
+def shepp_logan(space, modified=False, min_pt=None, max_pt=None):
     """Standard `Shepp-Logan phantom`_ in 2 or 3 dimensions.
 
     Parameters
@@ -125,6 +124,19 @@ def shepp_logan(space, modified=False):
         True if the modified Shepp-Logan phantom should be given.
         The modified phantom has greatly amplified contrast to aid
         visualization.
+    min_pt, max_pt : array-like, optional
+        If provided, use these vectors to determine the bounding box of the
+        phantom instead of ``space.min_pt`` and ``space.max_pt``.
+        It is currently required that ``min_pt >= space.min_pt`` and
+        ``max_pt <= space.max_pt``, i.e., shifting or scaling outside the
+        original space is not allowed.
+
+        Providing one of them results in a shift, e.g., for ``min_pt``::
+
+            new_min_pt = min_pt
+            new_max_pt = space.max_pt + (min_pt - space.min_pt)
+
+        Providing both results in a scaled version of the phantom.
 
     See Also
     --------
@@ -139,8 +151,7 @@ def shepp_logan(space, modified=False):
     .. _Shepp-Logan phantom: en.wikipedia.org/wiki/Shepp–Logan_phantom
     """
     ellipsoids = shepp_logan_ellipsoids(space.ndim, modified)
-
-    return ellipsoid_phantom(space, ellipsoids)
+    return ellipsoid_phantom(space, ellipsoids, min_pt, max_pt)
 
 
 def _analytical_forbild_phantom(resolution, ear):
@@ -383,7 +394,7 @@ def forbild(space, resolution=False, ear=True, value_type='density',
 
         return space.element(materials)
     elif value_type == 'density':
-        return space.element(image)
+        return space.element(image.reshape(space.shape))
     else:
         raise ValueError('unknown `value_type` {}'.format(value_type))
 
@@ -391,6 +402,7 @@ def forbild(space, resolution=False, ear=True, value_type='density',
 if __name__ == '__main__':
     # Show the phantoms
     import odl
+    from odl.util.testutils import run_doctests
 
     # 2D
     discr = odl.uniform_discr([-1, -1], [1, 1], [1000, 1000])
@@ -405,6 +417,4 @@ if __name__ == '__main__':
     shepp_logan(discr, modified=False).show('shepp_logan 3d modified=False')
 
     # Run also the doctests
-    # pylint: disable=wrong-import-position
-    from odl.util.testutils import run_doctests
     run_doctests()

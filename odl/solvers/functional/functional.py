@@ -6,12 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
-from builtins import super
-
 import numpy as np
 
 from odl.operator.operator import (
@@ -20,14 +15,16 @@ from odl.operator.operator import (
 from odl.operator.default_ops import (IdentityOperator, ConstantOperator)
 from odl.solvers.nonsmooth import (proximal_arg_scaling, proximal_translation,
                                    proximal_quadratic_perturbation,
-                                   proximal_const_func, proximal_cconj)
+                                   proximal_const_func, proximal_convex_conj)
+from odl.util import signature_string, indent
 
 
 __all__ = ('Functional', 'FunctionalLeftScalarMult',
            'FunctionalRightScalarMult', 'FunctionalComp',
            'FunctionalRightVectorMult', 'FunctionalSum', 'FunctionalScalarSum',
-           'FunctionalTranslation', 'FunctionalLinearPerturb',
-           'FunctionalProduct', 'FunctionalQuotient', 'simple_functional')
+           'FunctionalTranslation', 'InfimalConvolution',
+           'FunctionalQuadraticPerturb', 'FunctionalProduct',
+           'FunctionalQuotient', 'simple_functional')
 
 
 class Functional(Operator):
@@ -44,7 +41,7 @@ class Functional(Operator):
     The implementation of the functional class assumes that the domain
     :math:`X` is a Hilbert space and that the field of scalars :math:`F` is a
     is the real numbers. It is possible to create functions that do not fulfil
-    these assumptions, however some mathematical results might not be valide in
+    these assumptions, however some mathematical results might not be valid in
     this case. For more information, see `the ODL functional guide
     <http://odlgroup.github.io/odl/guide/in_depth/functional_guide.html>`_.
     """
@@ -62,8 +59,10 @@ class Functional(Operator):
         grad_lipschitz : float, optional
             The Lipschitz constant of the gradient. Default: ``nan``
         """
-        Operator.__init__(self, domain=space,
-                          range=space.field, linear=linear)
+        # Cannot use `super(Functional, self)` here since that breaks
+        # subclasses with multiple inheritance (at least those where both
+        # parents implement `__init__`, e.g., in `ScalingFunctional`)
+        Operator.__init__(self, domain=space, range=space.field, linear=linear)
         self.__grad_lipschitz = float(grad_lipschitz)
 
     @property
@@ -257,7 +256,7 @@ class Functional(Operator):
         elif other in self.domain:
             return FunctionalRightVectorMult(self, other)
         else:
-            return super().__mul__(other)
+            return super(Functional, self).__mul__(other)
 
     def __rmul__(self, other):
         """Return ``other * self``.
@@ -317,7 +316,7 @@ class Functional(Operator):
             else:
                 return FunctionalLeftScalarMult(self, other)
         else:
-            return super().__rmul__(other)
+            return super(Functional, self).__rmul__(other)
 
     def __add__(self, other):
         """Return ``self + other``.
@@ -357,7 +356,7 @@ class Functional(Operator):
         elif isinstance(other, Functional):
             return FunctionalSum(self, other)
         else:
-            return super().__add__(other)
+            return super(Functional, self).__add__(other)
 
     # Since addition is commutative, right and left addition is the same
     __radd__ = __add__
@@ -393,10 +392,9 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
             raise TypeError('`func` {!r} is not a `Functional` instance'
                             ''.format(func))
 
-        Functional.__init__(self, space=func.domain, linear=func.is_linear,
-                            grad_lipschitz=(
-                                np.abs(scalar) * func.grad_lipschitz))
-
+        Functional.__init__(
+            self, space=func.domain, linear=func.is_linear,
+            grad_lipschitz=np.abs(scalar) * func.grad_lipschitz)
         OperatorLeftScalarMult.__init__(self, operator=func, scalar=scalar)
 
     @property
@@ -486,10 +484,9 @@ class FunctionalRightScalarMult(Functional, OperatorRightScalarMult):
 
         scalar = func.domain.field.element(scalar)
 
-        Functional.__init__(self, space=func.domain, linear=func.is_linear,
-                            grad_lipschitz=(
-                                np.abs(scalar) * func.grad_lipschitz))
-
+        Functional.__init__(
+            self, space=func.domain, linear=func.is_linear,
+            grad_lipschitz=np.abs(scalar) * func.grad_lipschitz)
         OperatorRightScalarMult.__init__(self, operator=func, scalar=scalar)
 
     @property
@@ -548,7 +545,6 @@ class FunctionalComp(Functional, OperatorComp):
                             ''.format(func))
 
         OperatorComp.__init__(self, left=func, right=op)
-
         Functional.__init__(self, space=op.domain,
                             linear=(func.is_linear and op.is_linear),
                             grad_lipschitz=np.nan)
@@ -565,7 +561,8 @@ class FunctionalComp(Functional, OperatorComp):
 
             def __init__(self):
                 """Initialize a new instance."""
-                super().__init__(op.domain, op.domain, linear=False)
+                super(FunctionalCompositionGradient, self).__init__(
+                    op.domain, op.domain, linear=False)
 
             def _call(self, x):
                 """Apply the gradient operator to the given point."""
@@ -610,7 +607,6 @@ class FunctionalRightVectorMult(Functional, OperatorRightVectorMult):
                             ''.format(func))
 
         OperatorRightVectorMult.__init__(self, operator=func, vector=vector)
-
         Functional.__init__(self, space=func.domain)
 
     @property
@@ -654,12 +650,11 @@ class FunctionalSum(Functional, OperatorSum):
             raise TypeError('`right` {!r} is not a `Functional` instance'
                             ''.format(right))
 
+        Functional.__init__(
+            self, space=left.domain,
+            linear=(left.is_linear and right.is_linear),
+            grad_lipschitz=left.grad_lipschitz + right.grad_lipschitz)
         OperatorSum.__init__(self, left, right)
-
-        Functional.__init__(self, space=left.domain,
-                            linear=(left.is_linear and right.is_linear),
-                            grad_lipschitz=(left.grad_lipschitz +
-                                            right.grad_lipschitz))
 
     @property
     def gradient(self):
@@ -695,9 +690,9 @@ class FunctionalScalarSum(FunctionalSum):
             raise TypeError('`scalar` {} is not in the range of '
                             '`func` {!r}'.format(scalar, func))
 
-        FunctionalSum.__init__(self, left=func,
-                               right=ConstantFunctional(space=func.domain,
-                                                        constant=scalar))
+        super(FunctionalScalarSum, self).__init__(
+            left=func,
+            right=ConstantFunctional(space=func.domain, constant=scalar))
 
     @property
     def scalar(self):
@@ -742,8 +737,9 @@ class FunctionalTranslation(Functional):
 
         translation = func.domain.element(translation)
 
-        super().__init__(space=func.domain, linear=False,
-                         grad_lipschitz=func.grad_lipschitz)
+        super(FunctionalTranslation, self).__init__(
+            space=func.domain, linear=False,
+            grad_lipschitz=func.grad_lipschitz)
 
         # TODO: Add case if we have translation -> scaling -> translation?
         if isinstance(func, FunctionalTranslation):
@@ -807,9 +803,9 @@ class FunctionalTranslation(Functional):
         optimization problems*. IEEE Signal Processing Magazine, 32.6 (2015),
         pp 31--54.
         """
-        return FunctionalLinearPerturb(
+        return FunctionalQuadraticPerturb(
             self.functional.convex_conj,
-            self.translation)
+            linear_term=self.translation)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -822,66 +818,164 @@ class FunctionalTranslation(Functional):
                                           self.translation)
 
 
-class FunctionalLinearPerturb(Functional):
+class InfimalConvolution(Functional):
 
-    """The ``Functional`` representing ``f(.) + <linear_term, .>``."""
+    """Functional representing ``h(x) = inf_y f(x-y) + g(y)``."""
 
-    def __init__(self, func, linear_term):
+    def __init__(self, left, right):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        left : `Functional`
+            Function corresponding to ``f``.
+        right : `Functional`
+            Function corresponding to ``g``.
+
+        Example
+        -------
+        >>> space = odl.rn(3)
+        >>> l1 = odl.solvers.L1Norm(space)
+        >>> l2 = odl.solvers.L2Norm(space)
+        >>> f = odl.solvers.InfimalConvolution(l1.convex_conj, l2.convex_conj)
+        >>> x = f.domain.one()
+        >>> f.convex_conj(x) - (l1(x) + l2(x))
+        0.0
+        """
+        if not isinstance(left, Functional):
+            raise TypeError('`func` {} is not a `Functional` instance'
+                            ''.format(left))
+
+        if not isinstance(right, Functional):
+            raise TypeError('`func` {} is not a `Functional` instance'
+                            ''.format(right))
+
+        super(InfimalConvolution, self).__init__(
+            space=left.domain, linear=False, grad_lipschitz=np.nan)
+        self.__left = left
+        self.__right = right
+
+    @property
+    def left(self):
+        """Left functional."""
+        return self.__left
+
+    @property
+    def right(self):
+        """Right functional."""
+        return self.__right
+
+    @property
+    def convex_conj(self):
+        """Convex conjugate functional of the functional.
+
+        Notes
+        -----
+        The convex conjugate of the infimal convolution
+
+        .. math::
+            h(x) = inf_y f(x-y) + g(y)
+
+        is the sum of it:
+
+        .. math::
+            h^*(x) = f^*(x) + g^*(x)
+
+        """
+        return self.left.convex_conj + self.right.convex_conj
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        posargs = [self.left, self.right]
+        inner_str = signature_string(posargs, [], sep=',\n')
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
+
+    def __str__(self):
+        """Return ``str(self)``."""
+        return repr(self)
+
+
+class FunctionalQuadraticPerturb(Functional):
+
+    """The functional representing ``F(.) + a * <., .> + <., u>``."""
+
+    def __init__(self, func, quadratic_coeff=0, linear_term=None):
         """Initialize a new instance.
 
         Parameters
         ----------
         func : `Functional`
             Function corresponding to ``f``.
-        linear_term : `domain` element
+        quadratic_coeff : ``domain.field`` element, optional
+            Coefficient of the quadratic term.
+        linear_term : `domain` element, optional
             Element in domain of ``func``, corresponding to the translation.
+            Default: Zero element.
         """
         if not isinstance(func, Functional):
             raise TypeError('`func` {} is not a `Functional` instance'
                             ''.format(func))
 
-        super().__init__(space=func.domain,
-                         linear=func.is_linear)
-
-        # Only compute the grad_lipschitz if it is not inf
-        if (not func.grad_lipschitz == np.inf and
-                not np.isnan(func.grad_lipschitz)):
-            self.__grad_lipschitz = (func.grad_lipschitz +
-                                     linear_term.norm())
-
         self.__functional = func
-        self.__linear_term = func.domain.element(linear_term)
+        quadratic_coeff = func.domain.field.element(quadratic_coeff)
+        if quadratic_coeff.imag != 0:
+            raise ValueError(
+                "Complex-valued quadratic coeff is not supported.")
+        self.__quadratic_coeff = quadratic_coeff.real
+
+        if linear_term is not None:
+            self.__linear_term = func.domain.element(linear_term)
+        else:
+            self.__linear_term = func.domain.zero()
+
+        if linear_term is None:
+            grad_lipschitz = func.grad_lipschitz
+        else:
+            grad_lipschitz = (func.grad_lipschitz + self.linear_term.norm())
+
+        super(FunctionalQuadraticPerturb, self).__init__(
+            space=func.domain,
+            linear=func.is_linear and (quadratic_coeff == 0),
+            grad_lipschitz=grad_lipschitz)
 
     @property
     def functional(self):
-        """The original functional."""
+        """Original functional."""
         return self.__functional
 
     @property
+    def quadratic_coeff(self):
+        """Cofficient of the quadratic term."""
+        return self.__quadratic_coeff
+
+    @property
     def linear_term(self):
-        """The translation."""
+        """Linear term."""
         return self.__linear_term
 
     def _call(self, x):
         """Apply the functional to the given point."""
-        return self.functional(x) + x.inner(self.linear_term)
+        return (self.functional(x) +
+                self.quadratic_coeff * x.inner(x) +
+                x.inner(self.linear_term))
 
     @property
     def gradient(self):
         """Gradient operator of the functional."""
-        return self.functional.gradient + ConstantOperator(self.linear_term)
+        return (self.functional.gradient +
+                (2 * self.quadratic_coeff) * IdentityOperator(self.domain) +
+                ConstantOperator(self.linear_term))
 
     @property
     def proximal(self):
-        """Proximal factory of the linearly perturbed functional.
+        """Proximal factory of the quadratically perturbed functional."""
+        if self.quadratic_coeff < 0:
+            raise TypeError('`quadratic_coeff` {} must be non-negative'
+                            ''.format(self.quadratic_coeff))
 
-        See Also
-        --------
-        odl.solvers.nonsmooth.proximal_operators.\
-proximal_quadratic_perturbation
-        """
         return proximal_quadratic_perturbation(
-            self.functional.proximal, a=0, u=self.linear_term)
+            self.functional.proximal,
+            a=self.quadratic_coeff, u=self.linear_term)
 
     @property
     def convex_conj(self):
@@ -905,18 +999,25 @@ proximal_quadratic_perturbation
         optimization problems*. IEEE Signal Processing Magazine, 32.6 (2015),
         pp 31--54.
         """
-        return self.functional.convex_conj.translated(
-            self.linear_term)
+        if self.quadratic_coeff == 0:
+            return self.functional.convex_conj.translated(
+                self.linear_term)
+        else:
+            return super(FunctionalQuadraticPerturb, self).convex_conj
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r}, {!r})'.format(self.__class__.__name__,
-                                       self.functional, self.linear_term)
+        return '{}({!r}, {!r}, {!r})'.format(self.__class__.__name__,
+                                             self.functional,
+                                             self.quadratic_coeff,
+                                             self.linear_term)
 
     def __str__(self):
         """Return ``str(self)``."""
-        return '{}({}, {})'.format(self.__class__.__name__,
-                                   self.functional, self.linear_term)
+        return '{}({}, {}, {})'.format(self.__class__.__name__,
+                                       self.functional,
+                                       self.quadratic_coeff,
+                                       self.linear_term)
 
 
 class FunctionalProduct(Functional, OperatorPointwiseProduct):
@@ -1014,8 +1115,8 @@ class FunctionalQuotient(Functional):
         self.__dividend = dividend
         self.__divisor = divisor
 
-        Functional.__init__(self, dividend.domain, linear=False,
-                            grad_lipschitz=np.nan)
+        super(FunctionalQuotient, self).__init__(
+            dividend.domain, linear=False, grad_lipschitz=np.nan)
 
     @property
     def dividend(self):
@@ -1101,9 +1202,8 @@ class FunctionalDefaultConvexConjugate(Functional):
             raise TypeError('`func` {} is not a `Functional` instance'
                             ''.format(func))
 
-        super().__init__(space=func.domain,
-                         linear=func.is_linear)
-
+        super(FunctionalDefaultConvexConjugate, self).__init__(
+            space=func.domain, linear=func.is_linear)
         self.__convex_conj = func
 
     @property
@@ -1117,10 +1217,10 @@ class FunctionalDefaultConvexConjugate(Functional):
 
         Returns
         -------
-        proximal : proximal_cconj
+        proximal : proximal_convex_conj
             Proximal computed using the Moreu identity
         """
-        return proximal_cconj(self.convex_conj.proximal)
+        return proximal_convex_conj(self.convex_conj.proximal)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -1132,8 +1232,9 @@ class FunctionalDefaultConvexConjugate(Functional):
 
 
 def simple_functional(space, fcall=None, grad=None, prox=None, grad_lip=np.nan,
-                      cconj_fcall=None, cconj_grad=None, cconj_prox=None,
-                      cconj_grad_lip=np.nan, linear=False):
+                      convex_conj_fcall=None, convex_conj_grad=None,
+                      convex_conj_prox=None, convex_conj_grad_lip=np.nan,
+                      linear=False):
     """Simplified interface to create a functional with specific properties.
 
     Users may specify as many properties as is needed by the application.
@@ -1150,13 +1251,13 @@ def simple_functional(space, fcall=None, grad=None, prox=None, grad_lip=np.nan,
         Proximal factory for the functional.
     grad_lip : float, optional
         lipschitz constant of the functional.
-    cconj_fcall : callable, optional
+    convex_conj_fcall : callable, optional
         Function to evaluate when calling the convex conjugate functional.
-    cconj_grad : callable or `Operator`, optional
+    convex_conj_grad : callable or `Operator`, optional
         Gradient operator of the convex conjugate functional
-    cconj_prox : `proximal factory`, optional
+    convex_conj_prox : `proximal factory`, optional
         Proximal factory for the convex conjugate functional.
-    cconj_grad_lip : float, optional
+    convex_conj_grad_lip : float, optional
         lipschitz constant of the convex conjugate functional.
     linear : bool, optional
         True if the operator is linear.
@@ -1178,7 +1279,7 @@ def simple_functional(space, fcall=None, grad=None, prox=None, grad_lip=np.nan,
     >>> func([1, 2, 3])
     14.0
     >>> func.gradient([1, 2, 3])
-    rn(3).element([2.0, 4.0, 6.0])
+    rn(3).element([ 2.,  4.,  6.])
     """
     if grad is not None and not isinstance(grad, Operator):
         grad_in = grad
@@ -1193,18 +1294,20 @@ def simple_functional(space, fcall=None, grad=None, prox=None, grad_lip=np.nan,
 
         grad = SimpleFunctionalGradient(space, space, linear=False)
 
-    if cconj_grad is not None and not isinstance(cconj_grad, Operator):
-        cconj_grad_in = cconj_grad
+    if (convex_conj_grad is not None and
+            not isinstance(convex_conj_grad, Operator)):
+        convex_conj_grad_in = convex_conj_grad
 
-        class SimpleFunctionalCConjGradient(Operator):
+        class SimpleFunctionalConvexConjGradient(Operator):
 
             """Gradient of the convex conj of a  `SimpleFunctional`."""
 
             def _call(self, x):
                 """Return ``self(x)``."""
-                return cconj_grad_in(x)
+                return convex_conj_grad_in(x)
 
-        cconj_grad = SimpleFunctionalCConjGradient(space, space, linear=False)
+        convex_conj_grad = SimpleFunctionalConvexConjGradient(
+            space, space, linear=False)
 
     class SimpleFunctional(Functional):
 
@@ -1212,7 +1315,8 @@ def simple_functional(space, fcall=None, grad=None, prox=None, grad_lip=np.nan,
 
         def __init__(self):
             """Initialize an instance."""
-            super().__init__(space, linear=linear, grad_lipschitz=grad_lip)
+            super(SimpleFunctional, self).__init__(
+                space, linear=linear, grad_lipschitz=grad_lip)
 
         def _call(self, x):
             """Return ``self(x)``."""
@@ -1239,16 +1343,19 @@ def simple_functional(space, fcall=None, grad=None, prox=None, grad_lip=np.nan,
 
         @property
         def convex_conj(self):
-            return simple_functional(space, fcall=cconj_fcall, grad=cconj_grad,
-                                     prox=cconj_prox, grad_lip=cconj_grad_lip,
-                                     cconj_fcall=fcall, cconj_grad=grad,
-                                     cconj_prox=prox, cconj_grad_lip=grad_lip,
+            return simple_functional(space, fcall=convex_conj_fcall,
+                                     grad=convex_conj_grad,
+                                     prox=convex_conj_prox,
+                                     grad_lip=convex_conj_grad_lip,
+                                     convex_conj_fcall=fcall,
+                                     convex_conj_grad=grad,
+                                     convex_conj_prox=prox,
+                                     convex_conj_grad_lip=grad_lip,
                                      linear=linear)
 
     return SimpleFunctional()
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

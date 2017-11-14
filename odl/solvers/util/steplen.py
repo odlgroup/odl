@@ -8,26 +8,19 @@
 
 """Step length computation for optimization schemes."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
-
-from abc import ABCMeta, abstractmethod
+from builtins import object
 import numpy as np
-
-from odl.util.utility import with_metaclass
 
 
 __all__ = ('LineSearch', 'BacktrackingLineSearch', 'ConstantLineSearch',
            'LineSearchFromIterNum')
 
 
-class LineSearch(with_metaclass(ABCMeta, object)):
+class LineSearch(object):
 
     """Abstract base class for line search step length methods."""
 
-    @abstractmethod
     def __call__(self, x, direction, dir_derivative):
         """Calculate step length in direction.
 
@@ -45,6 +38,7 @@ class LineSearch(with_metaclass(ABCMeta, object)):
         step : float
             Computed step length.
         """
+        raise NotImplementedError('abstract method')
 
 
 class BacktrackingLineSearch(LineSearch):
@@ -295,6 +289,5 @@ class LineSearchFromIterNum(LineSearch):
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

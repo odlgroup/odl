@@ -2,7 +2,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy import ndimage
+import scipy.signal
 import odl
 
 
@@ -11,13 +11,12 @@ class Convolution(odl.Operator):
         self.kernel = kernel
         self.adjkernel = (adjkernel if adjkernel is not None
                           else kernel.space.element(kernel[::-1].copy()))
-        self.norm = float(np.sum(np.abs(self.kernel.ntuple)))
-        odl.Operator.__init__(self, domain=kernel.space, range=kernel.space,
-                              linear=True)
+        self.norm = float(np.sum(np.abs(self.kernel)))
+        super(Convolution, self).__init__(
+            domain=kernel.space, range=kernel.space, linear=True)
 
-    def _call(self, rhs, out):
-        ndimage.convolve(rhs.ntuple.data, self.kernel.ntuple.data,
-                         output=out.ntuple.data, mode='wrap')
+    def _call(self, x):
+        return scipy.signal.convolve(x, self.kernel, mode='same')
 
     @property
     def adjoint(self):
@@ -25,6 +24,7 @@ class Convolution(odl.Operator):
 
     def opnorm(self):
         return self.norm
+
 
 # Discretization
 discr_space = odl.uniform_discr(0, 10, 500, impl='numpy')
@@ -44,6 +44,7 @@ omega = 1 / conv.opnorm() ** 2
 # Display callback
 def callback(x):
     plt.plot(conv(x))
+
 
 # Test CGN
 plt.figure()

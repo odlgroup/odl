@@ -14,6 +14,7 @@ import pytest
 import numpy as np
 import tempfile
 
+import odl
 from odl.contrib.mrc import (
     mrc_header_from_params, FileWriterMRC, FileReaderMRC)
 from odl.util.testutils import all_equal, simple_fixture
@@ -31,6 +32,7 @@ mode_dtype_ids = [" mode = {p[0]}, dtype = '{p[1]}' ".format(p=p)
 def mrc_mode_dtype(request):
     mode, dtype = request.param
     return mode, np.dtype(dtype)
+
 
 axis_order = simple_fixture(
     name='axis_order',
@@ -216,4 +218,4 @@ def test_mrc_io(shape, mrc_mode_dtype, ispg_kind, axis_order):
 
 
 if __name__ == '__main__':
-    pytest.main([str(__file__.replace('\\', '/')), '-v'])
+    odl.util.test_file(__file__)

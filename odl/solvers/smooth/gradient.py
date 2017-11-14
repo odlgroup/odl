@@ -8,17 +8,13 @@
 
 """Gradient-based optimization schemes."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
-
-
 import numpy as np
+
 from odl.solvers.util import ConstantLineSearch
 
 
-__all__ = ('steepest_descent',)
+__all__ = ('steepest_descent', 'adam')
 
 
 # TODO: update all docs
@@ -109,7 +105,81 @@ def steepest_descent(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
             callback(x)
 
 
+def adam(f, x, learning_rate=1e-3, beta1=0.9, beta2=0.999, eps=1e-8,
+         maxiter=1000, tol=1e-16, callback=None):
+    """ADAM method to minimize an objective function.
+
+    General implementation of ADAM for solving
+
+    .. math::
+        \min f(x)
+
+    where :math:`f` is a differentiable functional.
+
+    The algorithm is described in [KB2015] (`arxiv
+    <https://arxiv.org/abs/1412.6980>`_). All parameter names and default
+    valuesare taken from the article.
+
+    Parameters
+    ----------
+    f : `Functional`
+        Goal functional. Needs to have ``f.gradient``.
+    x : ``f.domain`` element
+        Starting point of the iteration, updated in place.
+    learning_rate : positive float, optional
+        Step length of the method.
+    beta1 : float in [0, 1), optional
+        Update rate for first order moment estimate.
+    beta2 : float in [0, 1), optional
+        Update rate for second order moment estimate.
+    eps : positive float, optional
+        A small constant for numerical stability.
+    maxiter : int, optional
+        Maximum number of iterations.
+    tol : positive float, optional
+        Tolerance that should be used for terminating the iteration.
+    callback : callable, optional
+        Object executing code per iteration, e.g. plotting each iterate.
+
+    See Also
+    --------
+    odl.solvers.smooth.gradient.steepest_descent : Simple gradient descent.
+    odl.solvers.iterative.iterative.landweber :
+        Optimized solver for the case ``f(x) = ||Ax - b||_2^2``.
+    odl.solvers.iterative.iterative.conjugate_gradient :
+        Optimized solver for the case ``f(x) = x^T Ax - 2 x^T b``.
+
+    References
+    ----------
+    [KB2015] Kingma, D P and Ba, J.
+    *Adam: A Method for Stochastic Optimization*, ICLR 2015.
+    """
+    grad = f.gradient
+    if x not in grad.domain:
+        raise TypeError('`x` {!r} is not in the domain of `grad` {!r}'
+                        ''.format(x, grad.domain))
+
+    m = grad.domain.zero()
+    v = grad.domain.zero()
+
+    grad_x = grad.range.element()
+    for _ in range(maxiter):
+        grad(x, out=grad_x)
+
+        if grad_x.norm() < tol:
+            return
+
+        m.lincomb(beta1, m, 1 - beta1, grad_x)
+        v.lincomb(beta2, v, 1 - beta2, grad_x ** 2)
+
+        step = learning_rate * np.sqrt(1 - beta2) / (1 - beta1)
+
+        x.lincomb(1, x, -step, m / (np.sqrt(v) + eps))
+
+        if callback is not None:
+            callback(x)
+
+
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

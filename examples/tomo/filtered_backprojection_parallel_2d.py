@@ -16,10 +16,10 @@ import numpy as np
 import odl
 
 
-# --- Set-up geometry of the problem --- #
+# --- Set up geometry of the problem --- #
 
 
-# Discrete reconstruction space: discretized functions on the rectangle
+# Reconstruction space: discretized functions on the rectangle
 # [-20, 20]^2 with 300 samples per dimension.
 reco_space = odl.uniform_discr(
     min_pt=[-20, -20], max_pt=[20, 20], shape=[300, 300], dtype='float32')
@@ -70,4 +70,4 @@ fbp_reconstruction = fbp(proj_data)
 phantom.show(title='Phantom')
 proj_data.show(title='Projection data (sinogram)')
 fbp_reconstruction.show(title='Filtered back-projection')
-(phantom - fbp_reconstruction).show(title='Error')
+(phantom - fbp_reconstruction).show(title='Error', force_show=True)

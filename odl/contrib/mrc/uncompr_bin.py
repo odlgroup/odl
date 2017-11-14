@@ -8,12 +8,8 @@
 
 """Utilities and class for reading uncompressed binary files with header."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
-from builtins import int, object, open
-
+from builtins import int, object
 from collections import OrderedDict
 import csv
 import numpy as np

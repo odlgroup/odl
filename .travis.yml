@@ -1,8 +1,15 @@
 language: python
 
-python:
-  - "2.7"
-  - "3.6"
+matrix:
+    include:
+        - python: 2.7
+          env: NUMPY_VERSION=1.13
+
+        - python: 3.6
+          env: NUMPY_VERSION=1.12
+
+        - python: 3.6
+          env: NUMPY_VERSION=1.13 COVERALLS=true BUILD_DOCS=true
 
 sudo: false
 
@@ -15,8 +22,6 @@ addons:
             texlive-latex-extra
             dvipng
 
-# Enable cache for $HOME/.cache/pip (wheels and such)
-cache: pip
 
 # Setup numpy + scipy using miniconda
 # See http://conda.pydata.org/docs/travis.html
@@ -31,41 +36,49 @@ install:
     - export PATH="$HOME/miniconda/bin:$PATH"
     - hash -r
     - conda config --set always_yes yes --set changeps1 no
-    - conda update -q conda
+    - conda install "conda<=4.3.25"  # newer version 4.3.27 is broken, waiting for fix
     # Useful for debugging any issues with conda
     - conda info -a
 
-    # Install dependencies and enter test environment
-    - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION "numpy<1.13" scipy future nomkl sphinx sphinx_rtd_theme pytest pytest-pep8 pytest-cov
-    - source activate test-environment
+    # Install dependencies and enter test environment. Use conda for the minimal stuff to
+    # make it run faster and avoid downloading big stuff like mkl
+    - conda create -n testenv python=$TRAVIS_PYTHON_VERSION nomkl pywavelets
+    - source activate testenv
+    # We avoid annoying issues with building pyfftw wheels by using a conda-forge version
+    - pip install "numpy==$NUMPY_VERSION" scipy future scikit-image pytest pytest-cov  # faster than conda
+    - conda install -c conda-forge pyfftw  # compilation sometimes breaks on pip, using conda therefore
 
-    # Some packages which are only on PyPI, not on conda
-    - pip install pyfftw pywavelets travis-sphinx
+    # Doc dependencies
+    - if [[ "$BUILD_DOCS" == "true" ]]; then
+        pip install sphinx sphinx_rtd_theme travis-sphinx;
+      fi
 
     # Install our package
     - pip install -e .
-
 
 before_script:
     - pip install -r test_requirements.txt
 
 script:
-    # Run tests, including PEP8 check, and produce a coverage report
-    - pytest --doctest-modules --cov --cov-report term-missing --pep8 $TRAVIS_BUILD_DIR/odl
-    # Invoke also the alternative way of running the unit tests
-    - python -c "import odl; odl.test()"
-    # Build the Sphinx doc (only for Python 3.6, master branch, no PR)
+    # Run tests and produce a coverage report.
+    # Also invoke the alternative way of running the unit tests.
+    # Fail immediately after first failure to speed up the whole thing.
+    - pytest --doctest-modules --cov --cov-report term-missing $TRAVIS_BUILD_DIR/odl || exit -1
+    - python -c "import odl; odl.test()" || exit -1
+    # Build the Sphinx doc (only for one specific build, master branch, no PR)
     # To avoid clogging the logs, we redirect stderr to /dev/null
-    - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" && "$TRAVIS_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" == "false" ]]; then
+    - if [[ "$BUILD_DOCS" == "true" && "$TRAVIS_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" == "false" ]]; then
         cd $TRAVIS_BUILD_DIR/doc/source && python generate_doc.py && cd -;
-        travis-sphinx -n -s $TRAVIS_BUILD_DIR/doc/source build 2>/dev/null;
+        travis-sphinx build -n -s $TRAVIS_BUILD_DIR/doc/source 2>/dev/null;
       fi
 
 after_success:
-    # Push coverage report to coveralls
-    - coveralls
-    # Deploy the Sphinx doc to gh-pages (only for Python 3.6, master branch, no PR)
+    # Push coverage report to coveralls, but only the one with most dependencies installed
+    - if [[ "$COVERALLS" == "true" ]]; then
+        coveralls;
+      fi
+    # Deploy the Sphinx doc to gh-pages (only for one specific build, master branch, no PR)
     # See https://github.com/Syntaf/travis-sphinx
-    - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" && "$TRAVIS_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" == "false" ]]; then
+    - if [[ "$BUILD_DOCS" == "true" && "$TRAVIS_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" == "false" ]]; then
         travis-sphinx deploy;
       fi

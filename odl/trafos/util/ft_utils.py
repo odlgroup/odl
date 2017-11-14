@@ -8,12 +8,7 @@
 
 """Utility functions for Fourier transforms on regularly sampled data."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
-from builtins import range
-
 import numpy as np
 
 from odl.discr import (
@@ -21,10 +16,10 @@ from odl.discr import (
     uniform_discr_frompartition)
 from odl.set import RealNumbers
 from odl.util import (
-    fast_1d_tensor_mult,
-    is_real_dtype, is_scalar_dtype, is_real_floating_dtype,
+    fast_1d_tensor_mult, conj_exponent,
+    is_real_dtype, is_numeric_dtype, is_real_floating_dtype,
     is_complex_floating_dtype, complex_dtype, dtype_repr,
-    conj_exponent,
+    is_string,
     normalized_scalar_param_list, normalized_axes_tuple)
 
 
@@ -110,7 +105,8 @@ def reciprocal_grid(grid, shift=True, axes=None, halfcomplex=False):
                                               param_conv=bool)
 
     # Full-length vectors
-    stride = grid.stride
+    stride = grid.stride.copy()
+    stride[stride == 0] = 1
     shape = np.array(grid.shape)
     rmin = grid.min_pt.copy()
     rmax = grid.max_pt.copy()
@@ -300,8 +296,8 @@ def dft_preprocess_data(arr, shift=True, axes=None, sign='-', out=None):
     is the complex counterpart of ``arr.dtype``.
     """
     arr = np.asarray(arr)
-    if not is_scalar_dtype(arr.dtype):
-        raise ValueError('array has non-scalar data type {}'
+    if not is_numeric_dtype(arr.dtype):
+        raise ValueError('array has non-numeric data type {}'
                          ''.format(dtype_repr(arr.dtype)))
     elif is_real_dtype(arr.dtype) and not is_real_floating_dtype(arr.dtype):
         arr = arr.astype('float64')
@@ -498,12 +494,7 @@ def dft_postprocess_data(arr, real_grid, recip_grid, shift, axes,
         raise ValueError("kernel `op` '{}' not understood".format(op_in))
 
     # Make a list from interp if that's not the case already
-    try:
-        # Duck-typed string check
-        interp + ''
-    except TypeError:
-        pass
-    else:
+    if is_string(interp):
         interp = [str(interp).lower()] * arr.ndim
 
     onedim_arrs = []
@@ -632,13 +623,17 @@ def reciprocal_space(space, axes=None, halfcomplex=False, shift=True,
     recip_grid = reciprocal_grid(space.grid, shift=shift,
                                  halfcomplex=halfcomplex, axes=axes)
 
+    # Need to do this for axes of length 1 that are not transformed
+    non_axes = [i for i in range(space.ndim) if i not in axes]
+    min_pt = {i: space.min_pt[i] for i in non_axes}
+    max_pt = {i: space.max_pt[i] for i in non_axes}
+
     # Make a partition with nodes on the boundary in the last transform axis
     # if `halfcomplex == True`, otherwise a standard partition.
     if halfcomplex:
-        max_pt = {axes[-1]: recip_grid.max_pt[axes[-1]]}
-        part = uniform_partition_fromgrid(recip_grid, max_pt=max_pt)
-    else:
-        part = uniform_partition_fromgrid(recip_grid)
+        max_pt[axes[-1]] = recip_grid.max_pt[axes[-1]]
+
+    part = uniform_partition_fromgrid(recip_grid, min_pt, max_pt)
 
     # Use convention of adding a hat to represent fourier transform of variable
     axis_labels = list(space.axis_labels)

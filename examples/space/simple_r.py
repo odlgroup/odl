@@ -1,14 +1,13 @@
 ﻿"""An example of a very simple space, the real numbers."""
 
-
 import odl
 
 
-class Reals(odl.LinearSpace):
+class Reals(odl.set.LinearSpace):
     """The real numbers."""
 
     def __init__(self):
-        odl.LinearSpace.__init__(self, field=odl.RealNumbers())
+        super(Reals, self).__init__(field=odl.RealNumbers())
 
     def _inner(self, x1, x2):
         return x1.__val__ * x2.__val__
@@ -26,13 +25,13 @@ class Reals(odl.LinearSpace):
         return RealNumber(self, value)
 
 
-class RealNumber(odl.LinearSpaceElement):
+class RealNumber(odl.set.space.LinearSpaceElement):
     """Real vectors are floats."""
 
     __val__ = None
 
     def __init__(self, space, v):
-        odl.LinearSpaceElement.__init__(self, space=space)
+        super(RealNumber, self).__init__(space)
         self.__val__ = v
 
     def __float__(self):

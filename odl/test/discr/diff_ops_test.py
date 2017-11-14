@@ -29,10 +29,11 @@ padding = simple_fixture('padding', [('constant', 0), ('constant', 1),
 
 
 @pytest.fixture(scope="module", params=[1, 2, 3], ids=['1d', '2d', '3d'])
-def space(request, fn_impl):
+def space(request, tspace_impl):
     ndim = request.param
 
-    return odl.uniform_discr([0] * ndim, [1] * ndim, [5] * ndim, impl=fn_impl)
+    return odl.uniform_discr([0] * ndim, [1] * ndim, [5] * ndim,
+                             impl=tspace_impl)
 
 
 # Test data
@@ -213,22 +214,37 @@ def test_finite_diff_periodic_padding():
 # --- PartialDerivative --- #
 
 
-def test_part_deriv(space, method, padding):
-    """Discretized partial derivative."""
+def test_part_deriv_init():
+    """Check initialization of ``PartialDerivative``."""
+    space = odl.uniform_discr([0, 0], [1, 1], (4, 5))
+
+    op = PartialDerivative(space, axis=0)
+    assert repr(op) != ''
+    op = PartialDerivative(space, axis=1)
+    assert repr(op) != ''
+    op = PartialDerivative(space, axis=0, range=space.astype('float32'))
+    assert repr(op) != ''
+    op = PartialDerivative(space, axis=0, method='central')
+    assert repr(op) != ''
+    op = PartialDerivative(space, axis=0, pad_const=1)
+    assert repr(op) != ''
+    op = PartialDerivative(space, axis=0, pad_mode='order1')
+    assert repr(op) != ''
 
     with pytest.raises(TypeError):
         PartialDerivative(odl.rn(1))
 
+
+def test_part_deriv(space, method, padding):
+    """Discretized partial derivative."""
     if isinstance(padding, tuple):
         pad_mode, pad_const = padding
     else:
         pad_mode, pad_const = padding, 0
 
-    # discretized space
     dom_vec = noise_element(space)
     dom_vec_arr = dom_vec.asarray()
 
-    # operator
     for axis in range(space.ndim):
         partial = PartialDerivative(space, axis=axis, method=method,
                                     pad_mode=pad_mode,
@@ -241,7 +257,7 @@ def test_part_deriv(space, method, padding):
                            pad_const=pad_const)
 
         partial_vec = partial(dom_vec)
-        assert all_almost_equal(partial_vec.asarray(), diff)
+        assert all_almost_equal(partial_vec, diff)
 
         # Test adjoint operator
         derivative = partial.derivative()
@@ -258,6 +274,34 @@ def test_part_deriv(space, method, padding):
 
 
 # --- Gradient --- #
+
+
+def test_gradient_init():
+    """Check initialization of ``Gradient``."""
+    space = odl.uniform_discr([0, 0], [1, 1], (4, 5))
+    vspace = space ** 2
+
+    op = Gradient(space)
+    assert repr(op) != ''
+    op = Gradient(range=vspace)
+    assert repr(op) != ''
+    op = Gradient(space, range=space.astype('float32') ** 2)
+    assert repr(op) != ''
+    op = Gradient(space, method='central')
+    assert repr(op) != ''
+    op = Gradient(space, pad_const=1)
+    assert repr(op) != ''
+    op = Gradient(space, pad_mode='order1')
+    assert repr(op) != ''
+
+    with pytest.raises(TypeError):
+        Gradient(odl.rn(1))
+
+    with pytest.raises(TypeError):
+        Gradient(space, range=space)
+
+    with pytest.raises(ValueError):
+        Gradient(space, range=space ** 3)
 
 
 def test_gradient(space, method, padding):
@@ -305,21 +349,45 @@ def test_gradient(space, method, padding):
     assert rhs != 0
     assert almost_equal(lhs, rhs, places=places)
 
-    # higher dimensional arrays
+    # Higher-dimensional arrays
     lin_size = 3
     for ndim in [1, 3, 6]:
-
-        # DiscreteLpElement
         space = odl.uniform_discr([0.] * ndim, [1.] * ndim, [lin_size] * ndim)
         dom_vec = odl.phantom.cuboid(space, [0.2] * ndim, [0.8] * ndim)
 
-        # gradient
-        grad = Gradient(space, method=method,
-                        pad_mode=pad_mode,
+        grad = Gradient(space, method=method, pad_mode=pad_mode,
                         pad_const=pad_const)
         grad(dom_vec)
 
 # --- Divergence --- #
+
+
+def test_divergence_init():
+    """Check initialization of ``Divergence``."""
+    space = odl.uniform_discr([0, 0], [1, 1], (4, 5))
+    vspace = space ** 2
+
+    op = Divergence(vspace)
+    assert repr(op) != ''
+    op = Divergence(range=space)
+    assert repr(op) != ''
+    op = Divergence(vspace, range=space.astype('float32'))
+    assert repr(op) != ''
+    op = Divergence(vspace, method='central')
+    assert repr(op) != ''
+    op = Divergence(vspace, pad_const=1)
+    assert repr(op) != ''
+    op = Divergence(vspace, pad_mode='order1')
+    assert repr(op) != ''
+
+    with pytest.raises(TypeError):
+        Divergence(odl.rn(1) ** 2)
+
+    with pytest.raises(TypeError):
+        Divergence(vspace, range=vspace)
+
+    with pytest.raises(ValueError):
+        Divergence(space ** 3, range=space)
 
 
 def test_divergence(space, method, padding):
@@ -373,13 +441,27 @@ def test_divergence(space, method, padding):
         space = odl.uniform_discr([0.] * ndim, [1.] * ndim, [lin_size] * ndim)
 
 
+# --- Laplacian --- #
+
+def test_laplacian_init():
+    """Check initialization of ``Laplacian``."""
+    space = odl.uniform_discr([0, 0], [1, 1], (4, 5))
+
+    op = Laplacian(space)
+    assert repr(op) != ''
+    op = Laplacian(space, range=space.astype('float32'))
+    assert repr(op) != ''
+    op = Laplacian(space, pad_const=1)
+    assert repr(op) != ''
+    op = Laplacian(space, pad_mode='order0')
+    assert repr(op) != ''
+
+    with pytest.raises(TypeError):
+        Laplacian(odl.rn(1))
+
+
 def test_laplacian(space, padding):
     """Discretized spatial laplacian operator."""
-
-    # Invalid space
-    with pytest.raises(TypeError):
-        Laplacian(range=odl.rn(1))
-
     if isinstance(padding, tuple):
         pad_mode, pad_const = padding
     else:
@@ -425,4 +507,4 @@ def test_laplacian(space, padding):
 
 
 if __name__ == '__main__':
-    pytest.main([str(__file__.replace('\\', '/')), '-v'])
+    odl.util.test_file(__file__)

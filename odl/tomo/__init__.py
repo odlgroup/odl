@@ -24,6 +24,3 @@ __all__ += operators.__all__
 
 from .analytic import *
 __all__ += analytic.__all__
-
-from .data import *
-__all__ += data.__all__

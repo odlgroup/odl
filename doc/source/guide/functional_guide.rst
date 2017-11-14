@@ -51,7 +51,7 @@ To define your own functional, start by writing::
 
         def __init__(self, space):
             # Sets `Operator.domain` to `space` and `Operator.range` to `space.field`
-            odl.solvers.Functional.__init__(self, space)
+            super(MyFunctional, self).__init__(space)
 
         ...
 

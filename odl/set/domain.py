@@ -8,18 +8,12 @@
 
 """Domains for continuous functions. """
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from builtins import super, zip
-from future import standard_library
-from future.utils import raise_from
-standard_library.install_aliases()
-
 import numpy as np
 
 from odl.set.sets import Set
 from odl.util import (
-    array1d_repr, is_valid_input_array, is_valid_input_meshgrid, safe_int_conv)
+    array_str, is_valid_input_array, is_valid_input_meshgrid, safe_int_conv)
 
 
 __all__ = ('IntervalProd',)
@@ -47,11 +41,12 @@ class IntervalProd(Set):
 
         Examples
         --------
-        >>> min_pt, max_pt = [-1, 2.5, 70, 80], [-0.5, 10, 75, 90]
+        >>> min_pt, max_pt = [-1, 2.5, 70], [-0.5, 10, 75]
         >>> rbox = odl.IntervalProd(min_pt, max_pt)
         >>> rbox
-        IntervalProd([-1.0, 2.5, 70.0, 80.0], [-0.5, 10.0, 75.0, 90.0])
+        IntervalProd([ -1. ,   2.5,  70. ], [ -0.5,  10. ,  75. ])
         """
+        super(IntervalProd, self).__init__()
         self.__min_pt = np.atleast_1d(min_pt).astype('float64')
         self.__max_pt = np.atleast_1d(max_pt).astype('float64')
 
@@ -76,7 +71,6 @@ class IntervalProd(Set):
                                  'end ({} < {})'.format(axis, xmax, xmin))
 
         self.__nondegen_byaxis = (self.min_pt != self.max_pt)
-        super().__init__()
 
     @property
     def min_pt(self):
@@ -326,10 +320,9 @@ class IntervalProd(Set):
         try:
             return (self.approx_contains(other.min(), atol) and
                     self.approx_contains(other.max(), atol))
-        except AttributeError as err:
-            raise_from(
-                AttributeError('cannot test {!r} without `min` and `max` '
-                               'methods'.format(other)), err)
+        except AttributeError:
+            raise AttributeError('cannot test {!r} without `min` and `max` '
+                                 'methods'.format(other))
 
     def contains_all(self, other, atol=0.0):
         """Return ``True`` if all points defined by ``other`` are contained.
@@ -523,9 +516,9 @@ class IntervalProd(Set):
         >>> min_pt, max_pt = [-1, 0, 2], [-0.5, 1, 3]
         >>> rbox = IntervalProd(min_pt, max_pt)
         >>> rbox.collapse(1, 0)
-        IntervalProd([-1.0, 0.0, 2.0], [-0.5, 0.0, 3.0])
+        IntervalProd([-1.,  0.,  2.], [-0.5,  0. ,  3. ])
         >>> rbox.collapse([1, 2], [0, 2.5])
-        IntervalProd([-1.0, 0.0, 2.5], [-0.5, 0.0, 2.5])
+        IntervalProd([-1. ,  0. ,  2.5], [-0.5,  0. ,  2.5])
         """
         indices = np.atleast_1d(indices).astype('int64', casting='safe')
         values = np.atleast_1d(values)
@@ -572,7 +565,7 @@ class IntervalProd(Set):
         >>> min_pt, max_pt = [-1, 0, 2], [-0.5, 1, 3]
         >>> rbox = IntervalProd(min_pt, max_pt)
         >>> rbox.collapse(1, 0).squeeze()
-        IntervalProd([-1.0, 2.0], [-0.5, 3.0])
+        IntervalProd([-1.,  2.], [-0.5,  3. ])
         >>> rbox.collapse([1, 2], [0, 2.5]).squeeze()
         IntervalProd(-1.0, -0.5)
         >>> rbox.collapse([0, 1, 2], [-1, 0, 2.5]).squeeze()
@@ -609,11 +602,11 @@ class IntervalProd(Set):
         >>> intv = IntervalProd([-1, 2], [-0.5, 3])
         >>> intv2 = IntervalProd(0, 1)
         >>> intv.insert(0, intv2)
-        IntervalProd([0.0, -1.0, 2.0], [1.0, -0.5, 3.0])
+        IntervalProd([ 0., -1.,  2.], [ 1. , -0.5,  3. ])
         >>> intv.insert(-1, intv2)
-        IntervalProd([-1.0, 0.0, 2.0], [-0.5, 1.0, 3.0])
+        IntervalProd([-1.,  0.,  2.], [-0.5,  1. ,  3. ])
         >>> intv.insert(1, intv2, intv2)
-        IntervalProd([-1.0, 0.0, 0.0, 2.0], [-0.5, 1.0, 1.0, 3.0])
+        IntervalProd([-1.,  0.,  0.,  2.], [-0.5,  1. ,  1. ,  3. ])
         """
         index, index_in = safe_int_conv(index), index
 
@@ -623,10 +616,12 @@ class IntervalProd(Set):
         if index < 0:
             index += self.ndim
 
-        if len(intvs) > 1:
-            return self.insert(index, intvs[0]).insert(
-                index + intvs[0].ndim, *(intvs[1:]))
-        else:
+        if len(intvs) == 0:
+            # Copy of `self`
+            return IntervalProd(self.min_pt, self.max_pt)
+
+        elif len(intvs) == 1:
+            # Insert single interval product
             intv = intvs[0]
             if not isinstance(intv, IntervalProd):
                 raise TypeError('{!r} is not a `IntervalProd` instance'
@@ -643,6 +638,11 @@ class IntervalProd(Set):
                 new_max_pt[index + intv.ndim:] = self.max_pt[index:]
 
             return IntervalProd(new_min_pt, new_max_pt)
+
+        else:
+            # Recursively insert one, then rest into the result
+            return self.insert(index, intvs[0]).insert(
+                index + intvs[0].ndim, *(intvs[1:]))
 
     def append(self, *intvs):
         """Insert ``intvs`` at the end as a block.
@@ -662,9 +662,9 @@ class IntervalProd(Set):
         >>> intv = IntervalProd([-1, 2], [-0.5, 3])
         >>> intv2 = IntervalProd(0, 1)
         >>> intv.append(intv2)
-        IntervalProd([-1.0, 2.0, 0.0], [-0.5, 3.0, 1.0])
+        IntervalProd([-1.,  2.,  0.], [-0.5,  3. ,  1. ])
         >>> intv.append(intv2, intv2)
-        IntervalProd([-1.0, 2.0, 0.0, 0.0], [-0.5, 3.0, 1.0, 1.0])
+        IntervalProd([-1.,  2.,  0.,  0.], [-0.5,  3. ,  1. ,  1. ])
 
         See Also
         --------
@@ -691,20 +691,22 @@ class IntervalProd(Set):
 
         Examples
         --------
-        >>> rbox = IntervalProd([-1, 2, 0], [-0.5, 3, 0.5])
-        >>> rbox.corners()
+        >>> intv = IntervalProd([-1, 2, 0], [-0.5, 3, 0.5])
+        >>> intv.corners()
         array([[-1. ,  2. ,  0. ],
                [-1. ,  2. ,  0.5],
                [-1. ,  3. ,  0. ],
-               ...,
+               [-1. ,  3. ,  0.5],
+               [-0.5,  2. ,  0. ],
                [-0.5,  2. ,  0.5],
                [-0.5,  3. ,  0. ],
                [-0.5,  3. ,  0.5]])
-        >>> rbox.corners(order='F')
+        >>> intv.corners(order='F')
         array([[-1. ,  2. ,  0. ],
                [-0.5,  2. ,  0. ],
                [-1. ,  3. ,  0. ],
-               ...,
+               [-0.5,  3. ,  0. ],
+               [-1. ,  2. ,  0.5],
                [-0.5,  2. ,  0.5],
                [-1. ,  3. ,  0.5],
                [-0.5,  3. ,  0.5]])
@@ -750,14 +752,14 @@ class IntervalProd(Set):
         With slices, multiple axes can be selected:
 
         >>> rbox[:]
-        IntervalProd([-1.0, 2.0, 0.0], [-0.5, 3.0, 0.5])
+        IntervalProd([-1.,  2.,  0.], [-0.5,  3. ,  0.5])
         >>> rbox[::2]
-        IntervalProd([-1.0, 0.0], [-0.5, 0.5])
+        IntervalProd([-1.,  0.], [-0.5,  0.5])
 
         A list of integers can be used for free combinations of axes:
 
         >>> rbox[[0, 1, 0]]
-        IntervalProd([-1.0, 2.0, -1.0], [-0.5, 3.0, -0.5])
+        IntervalProd([-1.,  2., -1.], [-0.5,  3. , -0.5])
         """
         return IntervalProd(self.min_pt[indices], self.max_pt[indices])
 
@@ -836,13 +838,12 @@ class IntervalProd(Set):
     def __repr__(self):
         """Return ``repr(self)``."""
         if self.ndim == 1:
-            return '{}({!r}, {!r})'.format(self.__class__.__name__,
-                                           self.min_pt[0],
-                                           self.max_pt[0])
+            return '{}({:.4}, {:.4})'.format(self.__class__.__name__,
+                                             self.min_pt[0], self.max_pt[0])
         else:
             return '{}({}, {})'.format(self.__class__.__name__,
-                                       array1d_repr(self.min_pt),
-                                       array1d_repr(self.max_pt))
+                                       array_str(self.min_pt),
+                                       array_str(self.max_pt))
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -851,6 +852,5 @@ class IntervalProd(Set):
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

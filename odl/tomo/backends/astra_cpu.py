@@ -8,11 +8,8 @@
 
 """Backend for ASTRA using CPU."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
-
+import numpy as np
 try:
     import astra
 except ImportError:
@@ -57,18 +54,17 @@ def astra_cpu_forward_projector(vol_data, geometry, proj_space, out=None):
         raise TypeError('volume data {!r} is not a `DiscreteLpElement` '
                         'instance.'.format(vol_data))
     if vol_data.space.impl != 'numpy':
-        raise TypeError('dspace {!r} of the volume is not an '
-                        'instance of `NumpyNtuples`'
-                        ''.format(vol_data.space.dspace))
+        raise TypeError("`vol_data.space.impl` must be 'numpy', got {!r}"
+                        "".format(vol_data.space.impl))
     if not isinstance(geometry, Geometry):
         raise TypeError('geometry  {!r} is not a Geometry instance'
                         ''.format(geometry))
     if not isinstance(proj_space, DiscreteLp):
-        raise TypeError('projection space {!r} is not a DiscreteLp '
+        raise TypeError('`proj_space` {!r} is not a DiscreteLp '
                         'instance.'.format(proj_space))
     if proj_space.impl != 'numpy':
-        raise TypeError('data type {!r} of the reconstruction space is not an '
-                        'instance of NumpyNtuples'.format(proj_space.dspace))
+        raise TypeError("`proj_space.impl` must be 'numpy', got {!r}"
+                        "".format(proj_space.impl))
     if vol_data.ndim != geometry.ndim:
         raise ValueError('dimensions {} of volume data and {} of geometry '
                          'do not match'
@@ -96,11 +92,12 @@ def astra_cpu_forward_projector(vol_data, geometry, proj_space, out=None):
                               impl='cpu')
 
     # Create ASTRA data structures
-    vol_id = astra_data(vol_geom, datatype='volume', data=vol_data,
+    vol_data_arr = np.asarray(vol_data)
+    vol_id = astra_data(vol_geom, datatype='volume', data=vol_data_arr,
                         allow_copy=True)
 
-    with writable_array(out, dtype='float32', order='C') as arr:
-        sino_id = astra_data(proj_geom, datatype='projection', data=arr,
+    with writable_array(out, dtype='float32', order='C') as out_arr:
+        sino_id = astra_data(proj_geom, datatype='projection', data=out_arr,
                              ndim=proj_space.ndim)
 
         # Create algorithm
@@ -144,9 +141,9 @@ def astra_cpu_back_projector(proj_data, geometry, reco_space, out=None):
         raise TypeError('projection data {!r} is not a DiscreteLpElement '
                         'instance'.format(proj_data))
     if proj_data.space.impl != 'numpy':
-        raise TypeError('data type {!r} of the projection space is not an '
-                        'instance of NumpyNtuples'
-                        ''.format(proj_data.shape.dspace))
+        raise TypeError('`proj_data` must be a `numpy.ndarray` based, '
+                        "container got `impl` {!r}"
+                        "".format(proj_data.space.impl))
     if not isinstance(geometry, Geometry):
         raise TypeError('geometry  {!r} is not a Geometry instance'
                         ''.format(geometry))
@@ -154,8 +151,8 @@ def astra_cpu_back_projector(proj_data, geometry, reco_space, out=None):
         raise TypeError('reconstruction space {!r} is not a DiscreteLp '
                         'instance'.format(reco_space))
     if reco_space.impl != 'numpy':
-        raise TypeError('data type {!r} of the reconstruction space is not an '
-                        'instance of NumpyNtuples'.format(reco_space.dspace))
+        raise TypeError("`reco_space.impl` must be 'numpy', got {!r}"
+                        "".format(reco_space.impl))
     if reco_space.ndim != geometry.ndim:
         raise ValueError('dimensions {} of reconstruction space and {} of '
                          'geometry do not match'.format(
@@ -188,15 +185,15 @@ def astra_cpu_back_projector(proj_data, geometry, reco_space, out=None):
     proj_id = astra_projector(proj_interp, vol_geom, proj_geom, ndim,
                               impl='cpu')
 
-    # convert out to correct dtype and order if needed
-    with writable_array(out, dtype='float32', order='C') as arr:
-        vol_id = astra_data(vol_geom, datatype='volume', data=arr,
+    # Convert out to correct dtype and order if needed.
+    with writable_array(out, dtype='float32', order='C') as out_arr:
+        vol_id = astra_data(vol_geom, datatype='volume', data=out_arr,
                             ndim=reco_space.ndim)
         # Create algorithm
         algo_id = astra_algorithm('backward', ndim, vol_id, sino_id, proj_id,
                                   impl='cpu')
 
-        # Run algorithm and delete it
+        # Run algorithm
         astra.algorithm.run(algo_id)
 
     # Weight the adjoint by appropriate weights
@@ -214,6 +211,5 @@ def astra_cpu_back_projector(proj_data, geometry, reco_space, out=None):
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

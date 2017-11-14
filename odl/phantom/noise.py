@@ -8,13 +8,10 @@
 
 """Functions to create noise samples of different distributions."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
-
 import numpy as np
-from odl.util import as_flat_array, NumpyRandomSeed
+
+from odl.util import NumpyRandomSeed
 
 
 __all__ = ('white_noise', 'poisson_noise', 'salt_pepper_noise')
@@ -25,7 +22,7 @@ def white_noise(space, mean=0, stddev=1, seed=None):
 
     Parameters
     ----------
-    space : `FnBase` or `ProductSpace`
+    space : `TensorSpace` or `ProductSpace`
         The space in which the noise is created.
     mean : ``space.field`` element or ``space`` `element-like`, optional
         The mean of the white noise. If a scalar, it is interpreted as
@@ -56,7 +53,7 @@ def white_noise(space, mean=0, stddev=1, seed=None):
             values = [white_noise(subspace, mean, stddev)
                       for subspace in space]
         else:
-            if space.is_cn:
+            if space.is_complex:
                 real = np.random.normal(
                     loc=mean.real, scale=stddev, size=space.shape)
                 imag = np.random.normal(
@@ -69,12 +66,64 @@ def white_noise(space, mean=0, stddev=1, seed=None):
     return space.element(values)
 
 
+def uniform_noise(space, low=0, high=1, seed=None):
+    """Uniformly distributed noise in ``space``, pointwise ``U(low, high)``.
+
+    Parameters
+    ----------
+    space : `FnBase` or `ProductSpace`
+        The space in which the noise is created.
+    low : ``space.field`` element or ``space`` `element-like`, optional
+        The lower bound of the uniform noise. If a scalar, it is interpreted as
+        ``low * space.one()``.
+        If ``space`` is complex, the real and imaginary parts are interpreted
+        as their respective part of the noise.
+    high : ``space.field`` element or ``space`` `element-like`, optional
+        The upper bound of the uniform noise. If a scalar, it is interpreted as
+        ``high * space.one()``.
+        If ``space`` is complex, the real and imaginary parts are interpreted
+        as their respective part of the noise.
+    seed : int, optional
+        Random seed to use for generating the noise.
+        For ``None``, use the current seed.
+
+    Returns
+    -------
+    white_noise : ``space`` element
+
+    See Also
+    --------
+    poisson_noise
+    salt_pepper_noise
+    white_noise
+    numpy.random.normal
+    """
+    from odl.space import ProductSpace
+
+    with NumpyRandomSeed(seed):
+        if isinstance(space, ProductSpace):
+            values = [uniform_noise(subspace, low, high)
+                      for subspace in space]
+        else:
+            if space.is_complex:
+                real = np.random.uniform(low=low.real, high=high.real,
+                                         size=space.shape)
+                imag = np.random.uniform(low=low.imag, high=high.imag,
+                                         size=space.shape)
+                values = real + 1j * imag
+            else:
+                values = np.random.uniform(low=low, high=high,
+                                           size=space.shape)
+
+    return space.element(values)
+
+
 def poisson_noise(intensity, seed=None):
     """Poisson distributed noise with given intensity.
 
     Parameters
     ----------
-    intensity : `FnBase` element or `ProductSpace` element
+    intensity : `TensorSpace` or `ProductSpace` element
         The intensity (usually called lambda) parameter of the noise.
 
     Returns
@@ -100,6 +149,7 @@ def poisson_noise(intensity, seed=None):
     --------
     white_noise
     salt_pepper_noise
+    uniform_noise
     numpy.random.poisson
     """
     from odl.space import ProductSpace
@@ -123,19 +173,18 @@ def salt_pepper_noise(vector, fraction=0.05, salt_vs_pepper=0.5,
 
     Parameters
     ----------
-    vector : `FnBase` or `ProductSpace`
+    vector : `TensorSpaceElement` or `ProductSpaceElement`
         The vector that noise should be added to.
     fraction : float, optional
         The propotion of the elements in ``vector`` that should be converted
         to noise.
     salt_vs_pepper : float, optional
-        Relative aboundance of salt (high) vs pepper (low) noise. A high value
+        Relative abundance of salt (high) vs pepper (low) noise. A high value
         means more salt than pepper noise.
     low_val : float, optional
         The "pepper" color in the noise.
         Default: minimum value of ``vector``. For product spaces the minimum
         value per subspace is taken.
-        each sub-space.
     high_val : float, optional
         The "salt" value in the noise.
         Default: maximuim value of ``vector``. For product spaces the maximum
@@ -153,6 +202,7 @@ def salt_pepper_noise(vector, fraction=0.05, salt_vs_pepper=0.5,
     --------
     white_noise
     poisson_noise
+    uniform_noise
     """
     from odl.space import ProductSpace
 
@@ -174,7 +224,7 @@ def salt_pepper_noise(vector, fraction=0.05, salt_vs_pepper=0.5,
                       for subintensity in vector]
         else:
             # Extract vector of values
-            values = as_flat_array(vector).copy()
+            values = vector.asarray().flatten()
 
             # Determine fill-in values if not given
             if low_val is None:
@@ -191,6 +241,7 @@ def salt_pepper_noise(vector, fraction=0.05, salt_vs_pepper=0.5,
 
             values[salt_indices] = high_val
             values[pepper_indices] = -low_val
+            values = values.reshape(vector.space.shape)
 
     return vector.space.element(values)
 
@@ -198,22 +249,24 @@ def salt_pepper_noise(vector, fraction=0.05, salt_vs_pepper=0.5,
 if __name__ == '__main__':
     # Show the phantoms
     import odl
+    from odl.util.testutils import run_doctests
 
     r100 = odl.rn(100)
     white_noise(r100).show('white_noise')
+    uniform_noise(r100).show('uniform_noise')
     white_noise(r100, mean=5).show('white_noise with mean')
 
     c100 = odl.cn(100)
     white_noise(c100).show('complex white_noise')
+    uniform_noise(c100).show('complex uniform_noise')
 
     discr = odl.uniform_discr([-1, -1], [1, 1], [300, 300])
     white_noise(discr).show('white_noise 2d')
+    uniform_noise(discr).show('uniform_noise 2d')
 
     vector = odl.phantom.shepp_logan(discr, modified=True)
     poisson_noise(vector * 100).show('poisson_noise 2d')
     salt_pepper_noise(vector).show('salt_pepper_noise 2d')
 
     # Run also the doctests
-    # pylint: disable=wrong-import-position
-    from odl.util.testutils import run_doctests
     run_doctests()

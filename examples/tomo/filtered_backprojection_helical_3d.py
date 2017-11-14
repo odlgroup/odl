@@ -27,10 +27,10 @@ reco_space = odl.uniform_discr(
 # This gives 8 full turns of the helix.
 angle_partition = odl.uniform_partition(0, 8 * 2 * np.pi, 2000)
 # Detector: uniformly sampled with a small height,
-# n = (558, 60), min = (-30, -4), max = (30, 4)
-detector_partition = odl.uniform_partition([-40, -4], [40, 4], [558, 60])
+# n = (512, 64), min = (-30, -4), max = (30, 4)
+detector_partition = odl.uniform_partition([-40, -4], [40, 4], [512, 64])
 # Create geometry
-geometry = odl.tomo.HelicalConeFlatGeometry(
+geometry = odl.tomo.ConeFlatGeometry(
     angle_partition, detector_partition, src_radius=100, det_radius=100,
     pitch=5.0)
 
@@ -70,4 +70,5 @@ proj_data.show(title='Simulated data (sinogram)')
 fbp_reconstruction.show(title='Filtered back-projection',
                         coords=[0, None, None], clim=[-0.1, 1.1])
 w_fbp_reconstruction.show(title='Windowed filtered back-projection',
-                          coords=[0, None, None], clim=[-0.1, 1.1])
+                          coords=[0, None, None], clim=[-0.1, 1.1],
+                          force_show=True)

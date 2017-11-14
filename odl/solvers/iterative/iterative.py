@@ -8,10 +8,9 @@
 
 """Simple iterative type optimization schemes."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
+from builtins import next
+import numpy as np
 
 from odl.operator import IdentityOperator, OperatorComp, OperatorSum
 from odl.util import normalized_scalar_param_list
@@ -77,7 +76,7 @@ def landweber(op, x, rhs, niter, omega=1, projection=None, callback=None):
         x_{k+1} = x_k -
                   \omega \ \partial \mathcal{A}(x)^* (\mathcal{A}(x_k) - y),
 
-    where :math:`\partial \mathcal{A}(x)` is the Frechet derivativ
+    where :math:`\partial \mathcal{A}(x)` is the Frechet derivative
     of :math:`\mathcal{A}` at :math:`x` and :math:`\omega` is a
     relaxation parameter. For linear problems, a choice
     :math:`0 < \omega < 2/\\lVert \mathcal{A}^2\\rVert` guarantees
@@ -385,8 +384,8 @@ def gauss_newton(op, x, rhs, niter, zero_seq=exp_zero_seq(2.0),
             callback(x)
 
 
-def kaczmarz(ops, x, rhs, niter, omega=1, projection=None,
-             callback=None):
+def kaczmarz(ops, x, rhs, niter, omega=1, projection=None, random=False,
+             callback=None, callback_loop='outer'):
     """Optimized implementation of Kaczmarz's method.
 
     Solves the inverse problem given by the set of equations::
@@ -416,8 +415,13 @@ def kaczmarz(ops, x, rhs, niter, omega=1, projection=None,
         Function that can be used to modify the iterates in each iteration,
         for example enforcing positivity. The function should take one
         argument and modify it in-place.
+    random : bool, optional
+        If `True`, the order of the operators is randomized in each iteration.
     callback : callable, optional
         Object executing code per iteration, e.g. plotting each iterate.
+    callback_loop : {'inner', 'outer'}
+        Whether the callback should be called in the inner or outer loop.
+
 
     Notes
     -----
@@ -467,7 +471,7 @@ def kaczmarz(ops, x, rhs, niter, omega=1, projection=None,
     """
     domain = ops[0].domain
     if any(domain != opi.domain for opi in ops):
-        raise ValueError('`opi[i].domain` are not all equal')
+        raise ValueError('domains of `ops` are not all equal')
 
     if x not in domain:
         raise TypeError('`x` {!r} is not in the domain of `ops` {!r}'
@@ -489,7 +493,12 @@ def kaczmarz(ops, x, rhs, niter, omega=1, projection=None,
 
     # Iteratively find solution
     for _ in range(niter):
-        for i in range(len(ops)):
+        if random:
+            rng = np.random.permutation(range(len(ops)))
+        else:
+            rng = range(len(ops))
+
+        for i in rng:
             # Find residual
             tmp_ran = tmp_rans[ops[i].range]
             ops[i](x, out=tmp_ran)
@@ -502,11 +511,12 @@ def kaczmarz(ops, x, rhs, niter, omega=1, projection=None,
             if projection is not None:
                 projection(x)
 
-            if callback is not None:
+            if callback is not None and callback_loop == 'inner':
                 callback(x)
+        if callback is not None and callback_loop == 'outer':
+            callback(x)
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

@@ -13,24 +13,24 @@ wrapper around the well-known `FFTW <http://fftw.org/>`_ library for fast
 Fourier transforms.
 """
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
-from builtins import range
-from future.utils import raise_from
-
 from multiprocessing import cpu_count
 import numpy as np
+import warnings
 try:
     import pyfftw
     PYFFTW_AVAILABLE = True
 except ImportError:
     PYFFTW_AVAILABLE = False
+else:
+    _maj, _min, _patch = [int(n) for n in pyfftw.__version__.split('.')[:3]]
+    if (_maj, _min, _patch) < (0, 10, 4):
+        warnings.warn('PyFFTW < 0.10.4 is known to cause problems with some '
+                      'ODL functionality, see issue #1002.',
+                      RuntimeWarning)
 
 from odl.util import (
     is_real_dtype, dtype_repr, complex_dtype, normalized_axes_tuple)
-
 
 __all__ = ('pyfftw_call', 'PYFFTW_AVAILABLE')
 
@@ -244,11 +244,10 @@ def _pyfftw_check_args(arr_in, arr_out, axes, halfcomplex, direction):
         if halfcomplex:
             try:
                 out_shape[axes[-1]] = arr_in.shape[axes[-1]] // 2 + 1
-            except IndexError as err:
-                raise_from(IndexError('axis index {} out of range for array '
-                                      'with {} axes'
-                                      ''.format(axes[-1], arr_in.ndim)),
-                           err)
+            except IndexError:
+                raise IndexError('axis index {} out of range for array '
+                                 'with {} axes'
+                                 ''.format(axes[-1], arr_in.ndim))
 
         if arr_out.shape != tuple(out_shape):
             raise ValueError('expected output shape {}, got {}'
@@ -273,10 +272,9 @@ def _pyfftw_check_args(arr_in, arr_out, axes, halfcomplex, direction):
             try:
                 in_shape[axes[-1]] = arr_out.shape[axes[-1]] // 2 + 1
             except IndexError as err:
-                raise_from(IndexError('axis index {} out of range for array '
-                                      'with {} axes'
-                                      ''.format(axes[-1], arr_out.ndim)),
-                           err)
+                raise IndexError('axis index {} out of range for array '
+                                 'with {} axes'
+                                 ''.format(axes[-1], arr_out.ndim))
 
         if arr_in.shape != tuple(in_shape):
             raise ValueError('expected input shape {}, got {}'
@@ -300,6 +298,5 @@ def _pyfftw_check_args(arr_in, arr_out, axes, halfcomplex, direction):
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests(skip_if=not PYFFTW_AVAILABLE)

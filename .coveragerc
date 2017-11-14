@@ -44,7 +44,6 @@ exclude_lines =
 
     # Skip imports and __all__
     import *
-    standard_library.install_aliases()
     __all__
 
     # Decorators

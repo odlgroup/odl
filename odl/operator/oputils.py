@@ -8,17 +8,12 @@
 
 """Convenience functions for operators."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-from future.utils import raise_from, native
-standard_library.install_aliases()
-
+from future.utils import native
 import numpy as np
 
-from odl.space.base_ntuples import FnBase
+from odl.space.base_tensors import TensorSpace
 from odl.space import ProductSpace
-from odl.util import as_flat_array
 
 __all__ = ('matrix_representation', 'power_method_opnorm', 'as_scipy_operator',
            'as_scipy_functional', 'as_proximal_lang_operator')
@@ -46,17 +41,19 @@ def matrix_representation(op):
     if not op.is_linear:
         raise ValueError('the operator is not linear')
 
-    if not (isinstance(op.domain, FnBase) or
+    if not (isinstance(op.domain, TensorSpace) or
             (isinstance(op.domain, ProductSpace) and
-             all(isinstance(spc, FnBase) for spc in op.domain))):
-        raise TypeError('operator domain {!r} is not FnBase, nor ProductSpace '
-                        'with only FnBase components'.format(op.domain))
+             all(isinstance(spc, TensorSpace) for spc in op.domain))):
+        raise TypeError('operator domain {!r} is neither `TensorSpace` '
+                        'nor `ProductSpace` with only `TensorSpace` '
+                        'components'.format(op.domain))
 
-    if not (isinstance(op.range, FnBase) or
+    if not (isinstance(op.range, TensorSpace) or
             (isinstance(op.range, ProductSpace) and
-             all(isinstance(spc, FnBase) for spc in op.range))):
-        raise TypeError('operator range {!r} is not FnBase, nor ProductSpace '
-                        'with only FnBase components'.format(op.range))
+             all(isinstance(spc, TensorSpace) for spc in op.range))):
+        raise TypeError('operator range {!r} is neither `TensorSpace` '
+                        'nor `ProductSpace` with only `TensorSpace` '
+                        'components'.format(op.range))
 
     # Get the size of the range, and handle ProductSpace
     # Store for reuse in loop
@@ -99,10 +96,10 @@ def matrix_representation(op):
                 tmp_idx = 0
                 for k in range(num_ran):
                     matrix[tmp_idx: tmp_idx + op.range[k].size, index] = (
-                        as_flat_array(tmp_ran[k]))
+                        (tmp_ran[k]).asarray().ravel())
                     tmp_idx += op.range[k].size
             else:
-                matrix[:, index] = as_flat_array(tmp_ran)
+                matrix[:, index] = tmp_ran.asarray().ravel()
             index += 1
             last_j = j
             last_i = i
@@ -198,10 +195,9 @@ def power_method_opnorm(op, xstart=None, maxiter=100, rtol=1e-05, atol=1e-08,
     if xstart is None:
         try:
             x = op.domain.one()  # TODO: random? better choice?
-        except AttributeError as exc:
-            raise_from(
-                ValueError('`xstart` must be defined in case the '
-                           'operator domain has no `one()`'), exc)
+        except AttributeError:
+            raise ValueError('`xstart` must be defined in case the '
+                             'operator domain has no `one()`')
     else:
         # copy to ensure xstart is not modified
         x = op.domain.element(xstart).copy()
@@ -287,9 +283,13 @@ def as_scipy_operator(op):
     Notes
     -----
     If the data representation of ``op``'s domain and range is of type
-    `NumpyFn` this incurs no significant overhead. If the space type is
-    ``CudaFn`` or some other nonlocal type, the overhead is significant.
+    `NumpyTensorSpace` this incurs no significant overhead. If the space
+    type is ``CudaFn`` or some other nonlocal type, the overhead is
+    significant.
     """
+    # Lazy import to improve `import odl` time
+    import scipy.sparse
+
     if not op.is_linear:
         raise ValueError('`op` needs to be linear')
 
@@ -298,21 +298,14 @@ def as_scipy_operator(op):
         raise ValueError('dtypes of ``op.domain`` and ``op.range`` needs to '
                          'match')
 
-    def as_flat_array(arr):
-        if hasattr(arr, 'order'):
-            return arr.asarray().ravel(arr.order)
-        else:
-            return arr.asarray()
-
     shape = (native(op.range.size), native(op.domain.size))
 
     def matvec(v):
-        return as_flat_array(op(v))
+        return (op(v.reshape(op.domain.shape))).asarray().ravel()
 
     def rmatvec(v):
-        return as_flat_array(op.adjoint(v))
+        return (op.adjoint(v.reshape(op.range.shape))).asarray().ravel()
 
-    import scipy.sparse.linalg
     return scipy.sparse.linalg.LinearOperator(shape=shape,
                                               matvec=matvec,
                                               rmatvec=rmatvec,
@@ -367,24 +360,13 @@ def as_scipy_functional(func, return_gradient=False):
     incurs no significant overhead. If the space type is ``CudaFn`` or some
     other nonlocal type, the overhead is significant.
     """
-    def as_shaped_array(arr):
-        if hasattr(func.domain, 'order'):
-            return np.asarray(arr).reshape(func.domain.order)
-        else:
-            return np.asarray(arr)
-
-    def as_flat_array(vec):
-        if hasattr(vec, 'order'):
-            return np.asarray(vec).ravel(vec.order)
-        else:
-            return np.asarray(vec)
-
     def func_call(arr):
-        return func(as_shaped_array(arr))
+        return func(np.asarray(arr).reshape(func.domain.shape))
 
     if return_gradient:
         def func_gradient_call(arr):
-            return as_flat_array(func.gradient(as_shaped_array(arr)))
+            return np.asarray(
+                func.gradient(np.asarray(arr).reshape(func.domain.shape)))
 
         return func_call, func_gradient_call
     else:
@@ -416,8 +398,9 @@ def as_proximal_lang_operator(op, norm_bound=None):
     Notes
     -----
     If the data representation of ``op``'s domain and range is of type
-    `NumpyFn` this incurs no significant overhead. If the data space is
-    ``CudaFn`` or some other nonlocal type, the overhead is significant.
+    `NumpyTensorSpace` this incurs no significant overhead. If the data
+    space is implemented with CUDA or some other non-local representation,
+    the overhead is significant.
 
     References
     ----------
@@ -439,7 +422,7 @@ def as_proximal_lang_operator(op, norm_bound=None):
                                  adjoint=adjoint,
                                  norm_bound=norm_bound)
 
+
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

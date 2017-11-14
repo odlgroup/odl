@@ -123,6 +123,15 @@ def test_steepest_descent(functional):
     assert functional(x) < 1e-3
 
 
+def test_adam(functional):
+    """Test the ``adam`` solver."""
+
+    x = functional.domain.one()
+    odl.solvers.adam(functional, x, tol=1e-2, learning_rate=0.5)
+
+    assert functional(x) < 1e-3
+
+
 def test_conjguate_gradient_nonlinear(functional, nonlinear_cg_beta):
     """Test the ``conjugate_gradient_nonlinear`` solver."""
     line_search = odl.solvers.BacktrackingLineSearch(functional)
@@ -136,4 +145,4 @@ def test_conjguate_gradient_nonlinear(functional, nonlinear_cg_beta):
 
 
 if __name__ == '__main__':
-    pytest.main([str(__file__.replace('\\', '/')), '-v'])
+    odl.util.test_file(__file__)

@@ -8,20 +8,16 @@
 
 """Utilities for internal use."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
-from builtins import int, object
-
-from itertools import zip_longest
+from builtins import object
+from future.moves.itertools import zip_longest
 import numpy as np
 import sys
 import os
 import warnings
 from time import time
-from pkg_resources import parse_version
-from odl.util.utility import run_from_ipython
+
+from odl.util.utility import run_from_ipython, is_string
 
 
 __all__ = ('almost_equal', 'all_equal', 'all_almost_equal', 'never_skip',
@@ -29,14 +25,14 @@ __all__ = ('almost_equal', 'all_equal', 'all_almost_equal', 'never_skip',
            'skip_if_no_pyfftw', 'skip_if_no_largescale',
            'noise_array', 'noise_element', 'noise_elements',
            'Timer', 'timeit', 'ProgressBar', 'ProgressRange',
-           'test', 'run_doctests')
+           'test', 'run_doctests', 'test_file')
 
 
 def _places(a, b, default=None):
     """Return number of expected correct digits between ``a`` and ``b``.
 
     Returned numbers if one of ``a.dtype`` and ``b.dtype`` is as below:
-        2 -- for ``np.float16``
+        1 -- for ``np.float16``
 
         3 -- for ``np.float32`` or ``np.complex64``
 
@@ -137,20 +133,9 @@ def all_equal(iter1, iter2):
 
 
 def all_almost_equal_array(v1, v2, places):
-    # Ravel if has order, only DiscreteLpElement has an order
-    if hasattr(v1, 'order'):
-        v1 = v1.__array__().ravel(v1.order)
-    else:
-        v1 = v1.__array__()
-
-    if hasattr(v2, 'order'):
-        v2 = v2.__array__().ravel(v2.order)
-    else:
-        v2 = v2.__array__()
-
-    return np.all(np.isclose(v1, v2,
-                             rtol=10 ** (-places), atol=10 ** (-places),
-                             equal_nan=True))
+    return np.allclose(v1, v2,
+                       rtol=10 ** (-places), atol=10 ** (-places),
+                       equal_nan=True)
 
 
 def all_almost_equal(iter1, iter2, places=None):
@@ -164,10 +149,11 @@ def all_almost_equal(iter1, iter2, places=None):
     if iter1 is None and iter2 is None:
         return True
 
-    if places is None:
-        places = _places(iter1, iter2, None)
-
     if hasattr(iter1, '__array__') and hasattr(iter2, '__array__'):
+        # Only get default places if comparing arrays, need to keep `None`
+        # otherwise for recursive calls.
+        if places is None:
+            places = _places(iter1, iter2, None)
         return all_almost_equal_array(iter1, iter2, places)
 
     try:
@@ -198,7 +184,18 @@ def is_subdict(subdict, dictionary):
 try:
     # Try catch in case user does not have pytest
     import pytest
+except ImportError:
+    def _pass(function):
+        """Trivial decorator used if pytest marks are not available."""
+        return function
 
+    never_skip = _pass
+    skip_if_no_stir = _pass
+    skip_if_no_pywavelets = _pass
+    skip_if_no_pyfftw = _pass
+    skip_if_no_largescale = _pass
+    skip_if_no_benchmark = _pass
+else:
     # Used in lists where the elements should all be skipifs
     never_skip = pytest.mark.skipif(
         "False",
@@ -229,53 +226,60 @@ try:
         reason='Need --benchmark option to run'
     )
 
-    def simple_fixture(name, params, fmt=None):
-        """Helper to create a pytest fixture using only name and params.
 
-        Parameters
-        ----------
-        name : str
-            Name of the parameters used for the ``ids`` argument
-            to `pytest.fixture`.
-        params : sequence
-            Values to be taken as parameters in the fixture. They are
-            used as ``params`` argument to `pytest.fixture`.
-        fmt : str, optional
-            Use this format string for the generation of the ``ids``.
-            For each value, the id string is generated as::
+def simple_fixture(name, params, fmt=None):
+    """Helper to create a pytest fixture using only name and params.
 
-                fmt.format(name=name, value=value)
+    Parameters
+    ----------
+    name : str
+        Name of the parameters used for the ``ids`` argument
+        to `pytest.fixture`.
+    params : sequence
+        Values to be taken as parameters in the fixture. They are
+        used as ``params`` argument to `_pytest.fixtures.fixture`.
+        Arguments wrapped in a ``pytest.skipif`` decorator are
+        unwrapped for the generation of the test IDs.
+    fmt : str, optional
+        Use this format string for the generation of the ``ids``.
+        For each value, the id string is generated as ::
 
-            hence the format string must use ``{name}`` and ``{value}``.
+            fmt.format(name=name, value=value)
 
-            Default: ``" {name} = '{value}' "`` for string parameters,
-            otherwise ``" {name} = {value} "``
-        """
-        if fmt is None:
-            try:
-                params[0] + ''
-            except TypeError:
-                # Not a string type
-                fmt = " {name} = {value} "
+        hence the format string must use ``{name}`` and ``{value}``.
+        Default format strings are:
+
+            - ``" {name}='{value}' "`` for string parameters,
+            - ``" {name}={value} "`` for other types.
+    """
+    import _pytest
+
+    if fmt is None:
+        # Use some intelligence to make good format strings
+        fmt_str = " {name}='{value}' "
+        fmt_default = " {name}={value} "
+
+        ids = []
+        for p in params:
+            # TODO: other types of decorators?
+            if (isinstance(p, _pytest.mark.MarkDecorator) and
+                    p.name == 'skipif'):
+                # Unwrap the wrapped object in the decorator
+                if is_string(p.args[1]):
+                    ids.append(fmt_str.format(name=name, value=p.args[1]))
+                else:
+                    ids.append(fmt_default.format(name=name, value=p.args[1]))
             else:
-                # String type
-                fmt = " {name} = '{value}' "
+                if is_string(p):
+                    ids.append(fmt_str.format(name=name, value=p))
+                else:
+                    ids.append(fmt_default.format(name=name, value=p))
+    else:
+        # Use provided `fmt` for everything
+        ids = [fmt.format(name=name, value=p) for p in params]
 
-        ids = [fmt.format(name=name, value=value) for value in params]
-        wrapper = pytest.fixture(scope='module', ids=ids, params=params)
-        return wrapper(lambda request: request.param)
-
-except ImportError:
-    def _pass(function):
-        """Trivial decorator used if pytest marks are not available."""
-        return function
-
-    never_skip = _pass
-    skip_if_no_stir = _pass
-    skip_if_no_pywavelets = _pass
-    skip_if_no_pyfftw = _pass
-    skip_if_no_largescale = _pass
-    skip_if_no_benchmark = _pass
+    wrapper = pytest.fixture(scope='module', ids=ids, params=params)
+    return wrapper(lambda request: request.param)
 
 
 # Helpers to generate data
@@ -322,14 +326,19 @@ def noise_array(space):
     if isinstance(space, ProductSpace):
         return np.array([noise_array(si) for si in space])
     else:
-        # Generate numpy space elements, real or complex or int
-        if np.issubdtype(space.dtype, np.floating):
-            arr = np.random.randn(space.size)
-        elif np.issubdtype(space.dtype, np.integer):
-            arr = np.random.randint(-10, 10, space.size)
+        if space.dtype == bool:
+            arr = np.random.randint(0, 2, size=space.shape, dtype=bool)
+        elif np.issubdtype(space.dtype, np.unsignedinteger):
+            arr = np.random.randint(0, 10, space.shape)
+        elif np.issubdtype(space.dtype, np.signedinteger):
+            arr = np.random.randint(-10, 10, space.shape)
+        elif np.issubdtype(space.dtype, np.floating):
+            arr = np.random.randn(*space.shape)
+        elif np.issubdtype(space.dtype, np.complexfloating):
+            arr = (np.random.randn(*space.shape) +
+                   1j * np.random.randn(*space.shape)) / np.sqrt(2.0)
         else:
-            arr = (np.random.randn(space.size) +
-                   1j * np.random.randn(space.size)) / np.sqrt(2.0)
+            raise ValueError('bad dtype {}'.format(space.dtype))
 
         return arr.astype(space.dtype, copy=False)
 
@@ -660,18 +669,32 @@ def test(arguments=None):
     pytest.main(args)
 
 
-def run_doctests(skip_if=False):
+def run_doctests(skip_if=False, **kwargs):
     """Run all doctests in the current module.
 
-    For ``skip_if=True``, the tests in the module are skipped.
+    This function calls ``doctest.testmod()``, by default with the options
+    ``optionflags=doctest.NORMALIZE_WHITESPACE`` and
+    ``extraglobs={'odl': odl, 'np': np}``. This can be changed with
+    keyword arguments.
+
+    Parameters
+    ----------
+    skip_if : bool
+        For ``True``, skip the doctests in this module.
+    kwargs :
+        Extra keyword arguments passed on to the ``doctest.testmod``
+        function.
     """
     from doctest import testmod, NORMALIZE_WHITESPACE, SKIP
-    optionflags = NORMALIZE_WHITESPACE
+    from pkg_resources import parse_version
+    import odl
+    import numpy as np
+
+    optionflags = kwargs.pop('optionflags', NORMALIZE_WHITESPACE)
     if skip_if:
         optionflags |= SKIP
 
-    import odl
-    import numpy as np
+    extraglobs = kwargs.pop('extraglobs', {'odl': odl, 'np': np})
 
     if run_from_ipython():
         try:
@@ -681,13 +704,29 @@ def run_doctests(skip_if=False):
         else:
             if parse_version(spyder.__version__) < parse_version('3.1.4'):
                 warnings.warn('A bug with IPython and Spyder < 3.1.4 '
-                              'sometimes cause doctests to fail to run. '
+                              'sometimes causes doctests to fail to run. '
                               'Please upgrade Spyder or use another '
                               'interpreter if the doctests do not work.',
                               RuntimeWarning)
 
-    testmod(optionflags=optionflags,
-            extraglobs={'odl': odl, 'np': np})
+    testmod(optionflags=optionflags, extraglobs=extraglobs, **kwargs)
+
+
+def test_file(file, args=None):
+    """Run tests in file with proper default arguments."""
+    try:
+        import pytest
+    except ImportError:
+        raise ImportError('ODL tests cannot be run without `pytest` installed.'
+                          '\nRun `$ pip install [--user] odl[testing]` in '
+                          'order to install `pytest`.')
+
+    if args is None:
+        args = []
+
+    args.extend([str(file.replace('\\', '/')), '-v', '--capture=sys'])
+
+    pytest.main(args)
 
 
 if __name__ == '__main__':

@@ -8,12 +8,8 @@
 
 """Utilities for internal functionality connected to vectorization."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
-from builtins import super
-
+from builtins import object
 from functools import wraps
 import numpy as np
 
@@ -35,7 +31,7 @@ def is_valid_input_array(x, ndim=None):
 
 def is_valid_input_meshgrid(x, ndim):
     """Test if ``x`` is a `meshgrid` sequence for points in R^d."""
-    # This case is triggered in FunctionSetElement.__call__ if the
+    # This case is triggered in FunctionSpaceElement.__call__ if the
     # domain does not have an 'ndim' attribute. We return False and
     # continue.
     if ndim is None:
@@ -137,7 +133,7 @@ class OptionalArgDecorator(object):
            the stored ``dec_args`` and ``dec_kwargs``.
         """
         # Decorating without arguments: return wrapper w/o args directly
-        instance = super().__new__(cls)
+        instance = super(OptionalArgDecorator, cls).__new__(cls)
 
         if (not kwargs and
                 len(args) == 1 and
@@ -252,6 +248,7 @@ class _NumpyVectorizeWrapper(object):
         vect_kwargs :
             keyword arguments for `numpy.vectorize`
         """
+        super(_NumpyVectorizeWrapper, self).__init__()
         self.func = func
         self.vfunc = None
         self.vect_args = vect_args
@@ -293,6 +290,5 @@ class _NumpyVectorizeWrapper(object):
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

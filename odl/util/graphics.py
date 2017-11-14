@@ -8,11 +8,7 @@
 
 """Functions for graphical output."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
-
 import numpy as np
 import warnings
 
@@ -32,7 +28,6 @@ def warning_free_pause():
                                 message="Using default event loop until "
                                         "function specific to this GUI is "
                                         "implemented")
-
         plt.pause(0.0001)
 
 
@@ -55,8 +50,13 @@ def _colorbar_ticks(minval, maxval):
     """Return the ticks (values show) in the colorbar."""
     if not (np.isfinite(minval) and np.isfinite(maxval)):
         return [0, 0, 0]
+    elif minval == maxval:
+        return [minval]
     else:
-        return [minval, (maxval + minval) / 2., maxval]
+        # Add eps to ensure values stay inside the range of the colorbar.
+        # Otherwise they may occationally not display.
+        eps = (maxval - minval) / 1e5
+        return [minval + eps, (maxval + minval) / 2., maxval - eps]
 
 
 def _digits(minval, maxval):
@@ -323,10 +323,10 @@ def show_discrete_data(values, grid, title=None, method='',
                 minval_re, maxval_re = kwargs['clim']
 
             ticks_re = _colorbar_ticks(minval_re, maxval_re)
-            format_re = _colorbar_format(minval_re, maxval_re)
+            fmt_re = _colorbar_format(minval_re, maxval_re)
 
             plt.colorbar(csub_re, orientation='horizontal',
-                         ticks=ticks_re, format=format_re)
+                         ticks=ticks_re, format=fmt_re)
 
         # Imaginary
         if len(fig.axes) < 3:
@@ -359,10 +359,10 @@ def show_discrete_data(values, grid, title=None, method='',
                 minval_im, maxval_im = kwargs['clim']
 
             ticks_im = _colorbar_ticks(minval_im, maxval_im)
-            format_im = _colorbar_format(minval_im, maxval_im)
+            fmt_im = _colorbar_format(minval_im, maxval_im)
 
             plt.colorbar(csub_im, orientation='horizontal',
-                         ticks=ticks_im, format=format_im)
+                         ticks=ticks_im, format=fmt_im)
 
     else:
         if len(fig.axes) == 0:
@@ -418,15 +418,19 @@ def show_discrete_data(values, grid, title=None, method='',
                 minval, maxval = kwargs['clim']
 
             ticks = _colorbar_ticks(minval, maxval)
-            format = _colorbar_format(minval, maxval)
+            fmt = _colorbar_format(minval, maxval)
             if len(fig.axes) < 2:
                 # Create colorbar if none seems to exist
-                plt.colorbar(mappable=csub, ticks=ticks, format=format)
+                plt.colorbar(mappable=csub, ticks=ticks, format=fmt)
             elif update_in_place:
                 # If it exists and we should update it
                 csub.colorbar.set_clim(minval, maxval)
                 csub.colorbar.set_ticks(ticks)
-                csub.colorbar.set_ticklabels([format % tick for tick in ticks])
+                if '%' not in fmt:
+                    labels = [fmt] * len(ticks)
+                else:
+                    labels = [fmt % t for t in ticks]
+                csub.colorbar.set_ticklabels(labels)
                 csub.colorbar.draw_all()
 
     # Set title of window

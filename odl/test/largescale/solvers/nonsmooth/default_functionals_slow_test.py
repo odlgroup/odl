@@ -8,10 +8,11 @@
 
 """Tests for the factory functions to create proximal operators."""
 
-from __future__ import division
+from __future__ import division, print_function
 import numpy as np
 import pytest
 import scipy.special
+
 import odl
 from odl.util.testutils import (noise_element, all_almost_equal,
                                 simple_fixture)
@@ -24,20 +25,21 @@ from odl.solvers.functional.functional import FunctionalDefaultConvexConjugate
 pytestmark = odl.util.skip_if_no_largescale
 
 stepsize = simple_fixture('stepsize', [0.1, 1.0, 10.0])
-offset = simple_fixture('offset', [False, True])
+linear_offset = simple_fixture('linear_offset', [False, True])
+quadratic_offset = simple_fixture('quadratic_offset', [False, True])
 dual = simple_fixture('dual', [False, True])
 
 
 func_params = ['l1', 'l2', 'l2^2', 'kl', 'kl_cross_ent', 'const',
                'groupl1-1', 'groupl1-2',
-               'nuclearnorm-1-1', 'nuclearnorm-1-2', 'nuclearnorm-1-inf'
-               'quadratic', 'linear']
+               'nuclearnorm-1-1', 'nuclearnorm-1-2', 'nuclearnorm-1-inf',
+               'quadratic', 'linear', 'huber']
 
-func_ids = [' f = {} '.format(p.ljust(10)) for p in func_params]
+func_ids = [" functional='{}' ".format(p) for p in func_params]
 
 
 @pytest.fixture(scope="module", ids=func_ids, params=func_params)
-def functional(request, offset, dual):
+def functional(request, linear_offset, quadratic_offset, dual):
     """Return functional whose proximal should be tested."""
     name = request.param.strip()
 
@@ -72,10 +74,24 @@ def functional(request, offset, dual):
                                          vector=space.one(), constant=0.623)
     elif name == 'linear':
         func = odl.solvers.QuadraticForm(vector=space.one(), constant=0.623)
+    elif name == 'huber':
+        func = odl.solvers.Huber(space, gamma=0.162)
     else:
         assert False
 
-    if offset:
+    if quadratic_offset:
+        if linear_offset:
+            g = noise_element(space)
+            if name.startswith('kl'):
+                g = np.abs(g)
+        else:
+            g = None
+
+        quadratic_coeff = 1.32
+        func = odl.solvers.FunctionalQuadraticPerturb(
+            func, quadratic_coeff=quadratic_coeff, linear_term=g)
+
+    elif linear_offset:
         g = noise_element(space)
         if name.startswith('kl'):
             g = np.abs(g)
@@ -110,6 +126,17 @@ def test_proximal_defintion(functional, stepsize):
 
         f(x*) + 1/2 ||x-x*||^2 <= f(y) + 1/2 ||x-y||^2
     """
+    if isinstance(functional, FunctionalDefaultConvexConjugate):
+        pytest.skip('functional has no call method')
+        return
+
+    # No implementation of the proximal for convex conj of
+    # FunctionalQuadraticPerturb unless the quadratic term is 0.
+    if (isinstance(functional, odl.solvers.FunctionalQuadraticPerturb) and
+            functional.quadratic_coeff != 0):
+        pytest.skip('functional has no proximal')
+        return
+
     # No implementation of the proximal for quardartic form
     if isinstance(functional, odl.solvers.QuadraticForm):
         pytest.skip('functional has no proximal')
@@ -123,7 +150,7 @@ def test_proximal_defintion(functional, stepsize):
 
     # No implementation of the proximal for convex conj of quardartic form,
     # except if the quadratic part is 0.
-    if (isinstance(functional, odl.solvers.FunctionalLinearPerturb) and
+    if (isinstance(functional, odl.solvers.FunctionalQuadraticPerturb) and
             isinstance(functional.functional, odl.solvers.QuadraticForm) and
             functional.functional.operator is not None):
         pytest.skip('functional has no proximal')
@@ -148,12 +175,12 @@ def test_proximal_defintion(functional, stepsize):
         assert f_prox_x <= f_y + EPS
 
 
-def cconj_objective(functional, x, y):
+def convex_conj_objective(functional, x, y):
     """CObjective function of the convex conjugate problem."""
     return x.inner(y) - functional(x)
 
 
-def test_cconj_defintion(functional):
+def test_convex_conj_defintion(functional):
     """Test the defintion of the convex conjugate:
 
         f^*(y) = sup_x {<x, y> - f(x)}
@@ -162,25 +189,30 @@ def test_cconj_defintion(functional):
 
         <x, y> - f(x) <= f^*(y)
     """
-    f_cconj = functional.convex_conj
-    if isinstance(functional.convex_conj, FunctionalDefaultConvexConjugate):
+    if isinstance(functional, FunctionalDefaultConvexConjugate):
+        pytest.skip('functional has no call')
+        return
+
+    f_convex_conj = functional.convex_conj
+    if isinstance(f_convex_conj, FunctionalDefaultConvexConjugate):
         pytest.skip('functional has no convex conjugate')
         return
 
     for _ in range(100):
         y = noise_element(functional.domain)
-        f_cconj_y = f_cconj(y)
+        f_convex_conj_y = f_convex_conj(y)
 
         x = noise_element(functional.domain)
         lhs = x.inner(y) - functional(x)
 
-        if not lhs <= f_cconj_y + EPS:
-            print(repr(functional), repr(f_cconj), x, y, lhs, f_cconj_y)
+        if not lhs <= f_convex_conj_y + EPS:
+            print(repr(functional), repr(f_convex_conj), x, y, lhs,
+                  f_convex_conj_y)
 
-        assert lhs <= f_cconj_y + EPS
+        assert lhs <= f_convex_conj_y + EPS
 
 
-def test_proximal_cconj_kl_cross_entropy_solving_opt_problem():
+def test_proximal_convex_conj_kl_cross_entropy_solving_opt_problem():
     """Test for proximal operator of conjguate of 2nd kind KL-divergence.
 
     The test solves the problem
@@ -222,5 +254,6 @@ def test_proximal_cconj_kl_cross_entropy_solving_opt_problem():
         (g / lam_kl) * np.exp(a / lam_kl))
     assert all_almost_equal(x, x_verify, places=6)
 
+
 if __name__ == '__main__':
-    pytest.main([str(__file__.replace('\\', '/')), '-v', '--largescale'])
+    odl.util.test_file(__file__, ['--largescale'])

@@ -8,20 +8,15 @@
 
 """Operators defined on `DiscreteLp`."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
-from builtins import super
-
 import numpy as np
 
-from odl.discr import DiscreteLp, uniform_partition, nonuniform_partition
+from odl.discr import DiscreteLp, uniform_partition
 from odl.operator import Operator
 from odl.set import IntervalProd
-from odl.space import FunctionSpace, fn
+from odl.space import FunctionSpace, tensor_space
 from odl.util import (
-    normalized_scalar_param_list, safe_int_conv, resize_array)
+    normalized_scalar_param_list, safe_int_conv, writable_array, resize_array)
 from odl.util.numerics import _SUPPORTED_RESIZE_PAD_MODES
 
 
@@ -32,11 +27,11 @@ class Resampling(Operator):
 
     """An operator that resamples on a different grid in the same set.
 
-    The operator uses the underlying `DiscretizedSet.sampling` and
-    `DiscretizedSet.interpolation` operators to achieve this.
+    The operator uses the underlying `DiscretizedSpace.sampling` and
+    `DiscretizedSpace.interpolation` operators to achieve this.
 
-    The spaces need to have the same `DiscretizedSet.uspace` in order
-    for this to work. The data space implementations may be different,
+    The spaces need to have the same `DiscretizedSet.fspace` in order
+    for this to work. The tensor space implementations may be different,
     although performance may suffer drastically due to translation
     steps.
     """
@@ -46,9 +41,9 @@ class Resampling(Operator):
 
         Parameters
         ----------
-        domain : `DiscretizedSet`
+        domain : `DiscretizedSpace`
             Set of elements that are to be resampled.
-        range : `DiscretizedSet`
+        range : `DiscretizedSpace`
             Set in which the resampled elements lie.
 
         Examples
@@ -67,7 +62,7 @@ class Resampling(Operator):
         Apply the corresponding resampling operator to an element:
 
         >>> print(resampling([0, 1, 0]))
-        [0.0, 0.0, 1.0, 1.0, 0.0, 0.0]
+        [ 0.,  0.,  1.,  1.,  0.,  0.]
 
         The result depends on the interpolation chosen for the underlying
         spaces:
@@ -75,14 +70,15 @@ class Resampling(Operator):
         >>> coarse_discr = odl.uniform_discr(0, 1, 3, interp='linear')
         >>> linear_resampling = odl.Resampling(coarse_discr, fine_discr)
         >>> print(linear_resampling([0, 1, 0]))
-        [0.0, 0.25, 0.75, 0.75, 0.25, 0.0]
+        [ 0.  ,  0.25,  0.75,  0.75,  0.25,  0.  ]
         """
-        if domain.uspace != range.uspace:
-            raise ValueError('`domain.uspace` ({}) does not match '
-                             '`range.uspace` ({})'
-                             ''.format(domain.uspace, range.uspace))
+        if domain.fspace != range.fspace:
+            raise ValueError('`domain.fspace` ({}) does not match '
+                             '`range.fspace` ({})'
+                             ''.format(domain.fspace, range.fspace))
 
-        super().__init__(domain=domain, range=range, linear=True)
+        super(Resampling, self).__init__(
+            domain=domain, range=range, linear=True)
 
     def _call(self, x, out=None):
         """Apply resampling operator.
@@ -134,13 +130,13 @@ class Resampling(Operator):
 
         >>> x = [0.0, 1.0, 0.0]
         >>> print(resampling_inv(resampling(x)))
-        [0.0, 1.0, 0.0]
+        [ 0.,  1.,  0.]
 
         However, it can fail in the other direction:
 
         >>> y = [0.0, 0.0, 0.0, 1.0, 0.0, 0.0]
         >>> print(resampling(resampling_inv(y)))
-        [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        [ 0.,  0.,  0.,  0.,  0.,  0.]
         """
         return self.inverse
 
@@ -214,7 +210,7 @@ class ResizingOperatorBase(Operator):
         >>> space = odl.uniform_discr([0, 0], [1, 1], (2, 4))
         >>> resize_op = odl.ResizingOperator(space, ran_shp=(4, 4))
         >>> resize_op.range
-        uniform_discr([-0.5, 0.0], [1.5, 1.0], (4, 4))
+        uniform_discr([-0.5,  0. ], [ 1.5,  1. ], (4, 4))
 
         Testing different padding methods in the first axis (zero padding
         is the default):
@@ -223,28 +219,28 @@ class ResizingOperatorBase(Operator):
         ...      [5, 6, 7, 8]]
         >>> resize_op = odl.ResizingOperator(space, ran_shp=(4, 4))
         >>> print(resize_op(x))
-        [[0.0, 0.0, 0.0, 0.0],
-         [1.0, 2.0, 3.0, 4.0],
-         [5.0, 6.0, 7.0, 8.0],
-         [0.0, 0.0, 0.0, 0.0]]
+        [[ 0.,  0.,  0.,  0.],
+         [ 1.,  2.,  3.,  4.],
+         [ 5.,  6.,  7.,  8.],
+         [ 0.,  0.,  0.,  0.]]
         >>>
         >>> resize_op = odl.ResizingOperator(space, ran_shp=(4, 4),
         ...                                  offset=(0, 0),
         ...                                  pad_mode='periodic')
         >>> print(resize_op(x))
-        [[1.0, 2.0, 3.0, 4.0],
-         [5.0, 6.0, 7.0, 8.0],
-         [1.0, 2.0, 3.0, 4.0],
-         [5.0, 6.0, 7.0, 8.0]]
+        [[ 1.,  2.,  3.,  4.],
+         [ 5.,  6.,  7.,  8.],
+         [ 1.,  2.,  3.,  4.],
+         [ 5.,  6.,  7.,  8.]]
         >>>
         >>> resize_op = odl.ResizingOperator(space, ran_shp=(4, 4),
         ...                                  offset=(0, 0),
         ...                                  pad_mode='order0')
         >>> print(resize_op(x))
-        [[1.0, 2.0, 3.0, 4.0],
-         [5.0, 6.0, 7.0, 8.0],
-         [5.0, 6.0, 7.0, 8.0],
-         [5.0, 6.0, 7.0, 8.0]]
+        [[ 1.,  2.,  3.,  4.],
+         [ 5.,  6.,  7.,  8.],
+         [ 5.,  6.,  7.,  8.],
+         [ 5.,  6.,  7.,  8.]]
 
         Alternatively, the range of the operator can be provided directly.
         This requires that the partitions match, i.e. that the cell sizes
@@ -255,12 +251,14 @@ class ResizingOperatorBase(Operator):
         >>> resize_op = odl.ResizingOperator(space, large_spc,
         ...                                  pad_mode='periodic')
         >>> print(resize_op(x))
-        [[5.0, 6.0, 7.0, 8.0],
-         [1.0, 2.0, 3.0, 4.0],
-         [5.0, 6.0, 7.0, 8.0],
-         [1.0, 2.0, 3.0, 4.0]]
+        [[ 5.,  6.,  7.,  8.],
+         [ 1.,  2.,  3.,  4.],
+         [ 5.,  6.,  7.,  8.],
+         [ 1.,  2.,  3.,  4.]]
         """
-        from builtins import range as builtin_range
+        # Swap names to be able to use the range iterator without worries
+        import builtins
+        ran, range = range, builtins.range
 
         if not isinstance(domain, DiscreteLp):
             raise TypeError('`domain` must be a `DiscreteLp` instance, '
@@ -269,34 +267,34 @@ class ResizingOperatorBase(Operator):
         offset = kwargs.pop('offset', None)
         discr_kwargs = kwargs.pop('discr_kwargs', {})
 
-        if range is None:
+        if ran is None:
             if ran_shp is None:
-                raise ValueError('either `range` or `ran_shp` must be '
+                raise ValueError('either `ran` or `ran_shp` must be '
                                  'given')
 
             offset = normalized_scalar_param_list(
                 offset, domain.ndim, param_conv=safe_int_conv, keep_none=True)
 
-            range = _resize_discr(domain, ran_shp, offset, discr_kwargs)
-            self.__offset = tuple(_offset_from_spaces(domain, range))
+            ran = _resize_discr(domain, ran_shp, offset, discr_kwargs)
+            self.__offset = tuple(_offset_from_spaces(domain, ran))
 
         elif ran_shp is None:
             if offset is not None:
                 raise ValueError('`offset` can only be combined with '
                                  '`ran_shp`')
 
-            for i in builtin_range(domain.ndim):
-                if (range.is_uniform_byaxis[i] and
+            for i in range(domain.ndim):
+                if (ran.is_uniform_byaxis[i] and
                     domain.is_uniform_byaxis[i] and
-                        not np.isclose(range.cell_sides[i],
+                        not np.isclose(ran.cell_sides[i],
                                        domain.cell_sides[i])):
                     raise ValueError(
                         'in axis {}: cell sides of domain and range differ '
                         'significantly: (difference {})'
                         ''.format(i,
-                                  range.cell_sides[i] - domain.cell_sides[i]))
+                                  ran.cell_sides[i] - domain.cell_sides[i]))
 
-            self.__offset = _offset_from_spaces(domain, range)
+            self.__offset = _offset_from_spaces(domain, ran)
 
         else:
             raise ValueError('cannot combine `range` with `ran_shape`')
@@ -310,12 +308,13 @@ class ResizingOperatorBase(Operator):
         self.__pad_mode = pad_mode
         # Store constant in a way that ensures safe casting (one-element array)
         self.__pad_const = np.array(kwargs.pop('pad_const', 0),
-                                    dtype=range.dtype)
+                                    dtype=ran.dtype)
 
         # padding mode 'constant' with `pad_const != 0` is not linear
         linear = (self.pad_mode != 'constant' or self.pad_const == 0.0)
 
-        super().__init__(domain, range, linear=linear)
+        super(ResizingOperatorBase, self).__init__(
+            domain, ran, linear=linear)
 
     @property
     def offset(self):
@@ -360,11 +359,10 @@ class ResizingOperator(ResizingOperatorBase):
 
     def _call(self, x, out):
         """Implement ``self(x, out)``."""
-        # TODO: simplify once context manager is available
-        out[:] = resize_array(x.asarray(), self.range.shape,
-                              offset=self.offset, pad_mode=self.pad_mode,
-                              pad_const=self.pad_const, direction='forward',
-                              out=out.asarray())
+        with writable_array(out) as out_arr:
+            resize_array(x.asarray(), self.range.shape, offset=self.offset,
+                         pad_mode=self.pad_mode, pad_const=self.pad_const,
+                         direction='forward', out=out_arr)
 
     def derivative(self, point):
         """Derivative of this operator at ``point``.
@@ -401,11 +399,11 @@ class ResizingOperator(ResizingOperatorBase):
 
             def _call(self, x, out):
                 """Implement ``self(x, out)``."""
-                # TODO: simplify once context manager is available
-                out[:] = resize_array(
-                    x.asarray(), self.range.shape, offset=self.offset,
-                    pad_mode=self.pad_mode, pad_const=0, direction='adjoint',
-                    out=out.asarray())
+                with writable_array(out) as out_arr:
+                    resize_array(x.asarray(), self.range.shape,
+                                 offset=self.offset, pad_mode=self.pad_mode,
+                                 pad_const=0, direction='adjoint',
+                                 out=out_arr)
 
             @property
             def adjoint(self):
@@ -480,7 +478,6 @@ def _resize_discr(discr, newshp, offset, discr_kwargs):
     impl = discr_kwargs.pop('impl', discr.impl)
     exponent = discr_kwargs.pop('exponent', discr.exponent)
     interp = discr_kwargs.pop('interp', discr.interp)
-    order = discr_kwargs.pop('order', discr.order)
     weighting = discr_kwargs.pop('weighting', discr.weighting)
 
     affected = np.not_equal(newshp, discr.shape)
@@ -528,8 +525,8 @@ def _resize_discr(discr, newshp, offset, discr_kwargs):
 
     fspace = FunctionSpace(IntervalProd(new_minpt, new_maxpt),
                            out_dtype=dtype)
-    dspace = fn(np.prod(newshp), dtype=dtype, impl=impl, exponent=exponent,
-                weighting=weighting)
+    tspace = tensor_space(newshp, dtype=dtype, impl=impl, exponent=exponent,
+                          weighting=weighting)
 
     # Stack together the (unchanged) nonuniform axes and the (new) uniform
     # axes in the right order
@@ -542,10 +539,9 @@ def _resize_discr(discr, newshp, offset, discr_kwargs):
         else:
             part = part.append(discr.partition.byaxis[i])
 
-    return DiscreteLp(fspace, part, dspace, exponent=exponent, interp=interp,
-                      order=order)
+    return DiscreteLp(fspace, part, tspace, interp=interp)
+
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

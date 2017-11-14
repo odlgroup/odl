@@ -9,7 +9,6 @@
 """Test ODL geometry objects for SPECT."""
 
 from __future__ import division
-import pytest
 import numpy as np
 
 import odl
@@ -29,11 +28,10 @@ def test_spect():
                                   [det_nx_pix, det_ny_pix])
 
     apart = odl.uniform_partition(0, 2 * np.pi, n_proj)
-    geom = ParallelHoleCollimatorGeometry(
-        apart, dpart, det_rad=det_radius)
+    geom = ParallelHoleCollimatorGeometry(apart, dpart, det_radius)
     assert isinstance(geom.detector, odl.tomo.Flat2dDetector)
     assert all_equal(geom.det_radius, det_radius)
 
 
 if __name__ == '__main__':
-    pytest.main([str(__file__.replace('\\', '/')), '-vs'])
+    odl.util.test_file(__file__)

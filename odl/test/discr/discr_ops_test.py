@@ -14,7 +14,8 @@ import numpy as np
 
 import odl
 from odl.discr.discr_ops import _SUPPORTED_RESIZE_PAD_MODES
-from odl.util import is_scalar_dtype, is_real_floating_dtype
+from odl.space.entry_points import tensor_space_impl
+from odl.util import is_numeric_dtype, is_real_floating_dtype
 from odl.util.testutils import almost_equal, noise_element, dtype_places
 
 
@@ -24,9 +25,9 @@ from odl.util.testutils import almost_equal, noise_element, dtype_places
 paddings = list(_SUPPORTED_RESIZE_PAD_MODES)
 paddings.remove('constant')
 paddings.extend([('constant', 0), ('constant', 1)])
-padding_ids = [" pad_mode = '{}' {} ".format(*p)
+padding_ids = [" pad_mode='{}'-{} ".format(*p)
                if isinstance(p, tuple)
-               else " pad_mode = '{}' ".format(p)
+               else " pad_mode='{}' ".format(p)
                for p in paddings]
 
 
@@ -44,13 +45,14 @@ def padding(request):
 # --- ResizingOperator tests --- #
 
 
-def test_resizing_op_init(fn_impl, padding):
+def test_resizing_op_init(tspace_impl, padding):
+
     # Test if the different init patterns run
 
     pad_mode, pad_const = padding
 
-    space = odl.uniform_discr([0, -1], [1, 1], (10, 5), impl=fn_impl)
-    res_space = odl.uniform_discr([0, -3], [2, 3], (20, 15), impl=fn_impl)
+    space = odl.uniform_discr([0, -1], [1, 1], (10, 5), impl=tspace_impl)
+    res_space = odl.uniform_discr([0, -3], [2, 3], (20, 15), impl=tspace_impl)
 
     odl.ResizingOperator(space, res_space)
     odl.ResizingOperator(space, ran_shp=(20, 15))
@@ -70,8 +72,8 @@ def test_resizing_op_raise():
     grid = odl.RectGrid([0, 2, 3])
     part = odl.RectPartition(odl.IntervalProd(0, 3), grid)
     fspace = odl.FunctionSpace(odl.IntervalProd(0, 3))
-    dspace = odl.rn(3)
-    space = odl.DiscreteLp(fspace, part, dspace)
+    tspace = odl.rn(3)
+    space = odl.DiscreteLp(fspace, part, tspace)
     with pytest.raises(ValueError):
         odl.ResizingOperator(space, ran_shp=(10,))
 
@@ -103,9 +105,10 @@ def test_resizing_op_raise():
         odl.ResizingOperator(space, res_space, pad_mode='something')
 
 
-def test_resizing_op_properties(fn_impl, padding):
-    dtypes = [dt for dt in odl.FN_IMPLS[fn_impl].available_dtypes()
-              if is_scalar_dtype(dt)]
+def test_resizing_op_properties(tspace_impl, padding):
+
+    dtypes = [dt for dt in tensor_space_impl(tspace_impl).available_dtypes()
+              if is_numeric_dtype(dt)]
 
     pad_mode, pad_const = padding
 
@@ -142,15 +145,16 @@ def test_resizing_op_properties(fn_impl, padding):
             assert res_op.is_linear
 
 
-def test_resizing_op_call(fn_impl):
-    dtypes = [dt for dt in odl.FN_IMPLS[fn_impl].available_dtypes()
-              if is_scalar_dtype(dt)]
+def test_resizing_op_call(tspace_impl):
+
+    dtypes = [dt for dt in tensor_space_impl(tspace_impl).available_dtypes()
+              if is_numeric_dtype(dt)]
 
     for dtype in dtypes:
         # Minimal test since this operator only wraps resize_array
-        space = odl.uniform_discr([0, -1], [1, 1], (4, 5), impl=fn_impl)
+        space = odl.uniform_discr([0, -1], [1, 1], (4, 5), impl=tspace_impl)
         res_space = odl.uniform_discr([0, -0.6], [2, 0.2], (8, 2),
-                                      impl=fn_impl)
+                                      impl=tspace_impl)
         res_op = odl.ResizingOperator(space, res_space)
         out = res_op(space.one())
         true_res = np.zeros((8, 2))
@@ -161,9 +165,10 @@ def test_resizing_op_call(fn_impl):
         res_op(space.one(), out=out)
         assert np.array_equal(out, true_res)
 
-        # Test also mapping to default impl for other 'fn_impl'
-        if fn_impl != 'numpy':
-            space = odl.uniform_discr([0, -1], [1, 1], (4, 5), impl=fn_impl)
+        # Test also mapping to default impl for other 'tspace_impl'
+        if tspace_impl != 'numpy':
+            space = odl.uniform_discr([0, -1], [1, 1], (4, 5),
+                                      impl=tspace_impl)
             res_space = odl.uniform_discr([0, -0.6], [2, 0.2], (8, 2))
             res_op = odl.ResizingOperator(space, res_space)
             out = res_op(space.one())
@@ -192,16 +197,17 @@ def test_resizing_op_deriv(padding):
         assert res_op_deriv is res_op
 
 
-def test_resizing_op_inverse(padding, fn_impl):
+def test_resizing_op_inverse(padding, tspace_impl):
+
     pad_mode, pad_const = padding
-    dtypes = [dt for dt in odl.FN_IMPLS[fn_impl].available_dtypes()
-              if is_scalar_dtype(dt)]
+    dtypes = [dt for dt in tensor_space_impl(tspace_impl).available_dtypes()
+              if is_numeric_dtype(dt)]
 
     for dtype in dtypes:
         space = odl.uniform_discr([0, -1], [1, 1], (4, 5), dtype=dtype,
-                                  impl=fn_impl)
+                                  impl=tspace_impl)
         res_space = odl.uniform_discr([0, -1.4], [1.5, 1.4], (6, 7),
-                                      dtype=dtype, impl=fn_impl)
+                                      dtype=dtype, impl=tspace_impl)
         res_op = odl.ResizingOperator(space, res_space, pad_mode=pad_mode,
                                       pad_const=pad_const)
 
@@ -210,16 +216,17 @@ def test_resizing_op_inverse(padding, fn_impl):
         assert res_op.inverse(res_op(x)) == x
 
 
-def test_resizing_op_adjoint(padding, fn_impl):
+def test_resizing_op_adjoint(padding, tspace_impl):
+
     pad_mode, pad_const = padding
-    dtypes = [dt for dt in odl.FN_IMPLS[fn_impl].available_dtypes()
+    dtypes = [dt for dt in tensor_space_impl(tspace_impl).available_dtypes()
               if is_real_floating_dtype(dt)]
 
     for dtype in dtypes:
         space = odl.uniform_discr([0, -1], [1, 1], (4, 5), dtype=dtype,
-                                  impl=fn_impl)
+                                  impl=tspace_impl)
         res_space = odl.uniform_discr([0, -1.4], [1.5, 1.4], (6, 7),
-                                      dtype=dtype, impl=fn_impl)
+                                      dtype=dtype, impl=tspace_impl)
         res_op = odl.ResizingOperator(space, res_space, pad_mode=pad_mode,
                                       pad_const=pad_const)
 
@@ -241,8 +248,8 @@ def test_resizing_op_mixed_uni_nonuni():
     uni_part = odl.uniform_partition(-1, 1, 4)
     part = uni_part.append(nonuni_part, uni_part, nonuni_part)
     fspace = odl.FunctionSpace(odl.IntervalProd(part.min_pt, part.max_pt))
-    dspace = odl.rn(part.size)
-    space = odl.DiscreteLp(fspace, part, dspace)
+    tspace = odl.rn(part.shape)
+    space = odl.DiscreteLp(fspace, part, tspace)
 
     # Keep non-uniform axes fixed
     res_op = odl.ResizingOperator(space, ran_shp=(6, 3, 6, 3))
@@ -253,8 +260,8 @@ def test_resizing_op_mixed_uni_nonuni():
     # Evaluation test with a simpler case
     part = uni_part.append(nonuni_part)
     fspace = odl.FunctionSpace(odl.IntervalProd(part.min_pt, part.max_pt))
-    dspace = odl.rn(part.size)
-    space = odl.DiscreteLp(fspace, part, dspace)
+    tspace = odl.rn(part.shape)
+    space = odl.DiscreteLp(fspace, part, tspace)
     res_op = odl.ResizingOperator(space, ran_shp=(6, 3))
     result = res_op(space.one())
     true_result = [[0, 0, 0],
@@ -274,4 +281,4 @@ def test_resizing_op_mixed_uni_nonuni():
 
 
 if __name__ == '__main__':
-    pytest.main([str(__file__.replace('\\', '/')), '-v'])
+    odl.util.test_file(__file__)

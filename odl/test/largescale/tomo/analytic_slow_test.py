@@ -27,6 +27,8 @@ filter_type = simple_fixture(
 frequency_scaling = simple_fixture(
     'frequency_scaling', [0.5, 0.9, 1.0])
 
+weighting = simple_fixture('weighting', [None, 1.0])
+
 # Find the valid projectors
 # TODO: Add nonuniform once #671 is solved
 projectors = [skip_if_no_astra('par2d astra_cpu uniform'),
@@ -38,7 +40,7 @@ projectors = [skip_if_no_astra('par2d astra_cpu uniform'),
               skip_if_no_astra_cuda('helical astra_cuda uniform'),
               skip_if_no_skimage('par2d skimage uniform')]
 
-projector_ids = ['geom={}, impl={}, angles={}'
+projector_ids = [" geom='{}' - impl='{}' - angles='{}' "
                  ''.format(*p.args[1].split()) for p in projectors]
 
 
@@ -49,7 +51,7 @@ projectors = [pytest.mark.skipif(p.args[0] + largescale, p.args[1])
 
 
 @pytest.fixture(scope="module", params=projectors, ids=projector_ids)
-def projector(request):
+def projector(request, weighting):
 
     n_angles = 500
     dtype = 'float32'
@@ -75,9 +77,10 @@ def projector(request):
         raise ValueError('angle not valid')
 
     if geom == 'par2d':
-        # Discrete reconstruction space
+        # Reconstruction space
         discr_reco_space = odl.uniform_discr([-20, -20], [20, 20],
-                                             [100, 100], dtype=dtype)
+                                             [100, 100], dtype=dtype,
+                                             weighting=weighting)
 
         # Geometry
         dpart = odl.uniform_partition(-30, 30, 500)
@@ -87,9 +90,10 @@ def projector(request):
         return tomo.RayTransform(discr_reco_space, geom, impl=impl)
 
     elif geom == 'par3d':
-        # Discrete reconstruction space
+        # Reconstruction space
         discr_reco_space = odl.uniform_discr([-20, -20, -20], [20, 20, 20],
-                                             [100, 100, 100], dtype=dtype)
+                                             [100, 100, 100], dtype=dtype,
+                                             weighting=weighting)
 
         # Geometry
         dpart = odl.uniform_partition([-30, -30], [30, 30], [200, 200])
@@ -99,9 +103,10 @@ def projector(request):
         return tomo.RayTransform(discr_reco_space, geom, impl=impl)
 
     elif geom == 'cone2d':
-        # Discrete reconstruction space
+        # Reconstruction space
         discr_reco_space = odl.uniform_discr([-20, -20], [20, 20],
-                                             [100, 100], dtype=dtype)
+                                             [100, 100], dtype=dtype,
+                                             weighting=weighting)
 
         # Geometry
         dpart = odl.uniform_partition(-40, 40, 200)
@@ -112,30 +117,32 @@ def projector(request):
         return tomo.RayTransform(discr_reco_space, geom, impl=impl)
 
     elif geom == 'cone3d':
-        # Discrete reconstruction space
+        # Reconstruction space
         discr_reco_space = odl.uniform_discr([-20, -20, -20], [20, 20, 20],
-                                             [100, 100, 100], dtype=dtype)
+                                             [100, 100, 100], dtype=dtype,
+                                             weighting=weighting)
 
         # Geometry
         dpart = odl.uniform_partition([-50, -50], [50, 50], [200, 200])
-        geom = tomo.CircularConeFlatGeometry(
+        geom = tomo.ConeFlatGeometry(
             apart, dpart, src_radius=100, det_radius=100, axis=[1, 0, 0])
 
         # Ray transform
         return tomo.RayTransform(discr_reco_space, geom, impl=impl)
 
     elif geom == 'helical':
-        # Discrete reconstruction space
+        # Reconstruction space
         discr_reco_space = odl.uniform_discr([-20, -20, 0], [20, 20, 40],
-                                             [100, 100, 100], dtype=dtype)
+                                             [100, 100, 100], dtype=dtype,
+                                             weighting=weighting)
 
         # Geometry
         # TODO: angles
         n_angle = 2000
         apart = odl.uniform_partition(0, 8 * 2 * np.pi, n_angle)
         dpart = odl.uniform_partition([-50, -4], [50, 4], [200, 20])
-        geom = tomo.HelicalConeFlatGeometry(apart, dpart, pitch=5.0,
-                                            src_radius=100, det_radius=100)
+        geom = tomo.ConeFlatGeometry(
+            apart, dpart, src_radius=100, det_radius=100, pitch=5.0)
 
         # Windowed ray transform
         return tomo.RayTransform(discr_reco_space, geom, impl=impl)
@@ -160,27 +167,29 @@ def test_fbp_reconstruction(projector):
     fbp_operator = odl.tomo.fbp_op(projector)
 
     # Add window if problem is in 3d.
-    if (isinstance(projector.geometry, odl.tomo.HelicalConeFlatGeometry) and
+    if (isinstance(projector.geometry, odl.tomo.ConeFlatGeometry) and
             projector.geometry.pitch != 0):
         fbp_operator = fbp_operator * odl.tomo.tam_danielson_window(projector)
 
     # Compute the FBP result
     fbp_result = fbp_operator(projections)
 
-    maxerr = vol.norm() / 5.0
+    # Allow 30 % error
+    maxerr = vol.norm() * 0.3
     error = vol.dist(fbp_result)
     assert error < maxerr
 
 
 @skip_if_no_astra_cuda
 @skip_if_no_largescale
-def test_fbp_reconstruction_filters(filter_type, frequency_scaling):
+def test_fbp_reconstruction_filters(filter_type, frequency_scaling, weighting):
     """Validate that the various filters work as expected."""
 
     apart = odl.uniform_partition(0, np.pi, 500)
 
     discr_reco_space = odl.uniform_discr([-20, -20], [20, 20],
-                                         [100, 100], dtype='float32')
+                                         [100, 100], dtype='float32',
+                                         weighting=weighting)
 
     # Geometry
     dpart = odl.uniform_partition(-30, 30, 500)
@@ -208,4 +217,4 @@ def test_fbp_reconstruction_filters(filter_type, frequency_scaling):
 
 
 if __name__ == '__main__':
-    pytest.main([str(__file__.replace('\\', '/')), '-v', '--largescale'])
+    odl.util.test_file(__file__, ['--largescale'])

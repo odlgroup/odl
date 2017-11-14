@@ -8,12 +8,8 @@
 
 """Standardized tests for `Operator`'s."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
 from builtins import object
-
 import numpy as np
 
 from odl.diagnostics.examples import samples
@@ -379,9 +375,8 @@ class OperatorTest(object):
     def __repr__(self):
         return '{}({!r})'.format(self.__class__.__name__, self.operator)
 
-if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
 
+if __name__ == '__main__':
     import odl
     space = odl.uniform_discr([0, 0], [1, 1], [3, 3])
     # Linear operator

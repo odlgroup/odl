@@ -8,30 +8,30 @@
 
 """Default operators defined on any (reasonable) space."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
-from builtins import super
-
 from copy import copy
+import numpy as np
 
 from odl.operator.operator import Operator
+from odl.set import LinearSpace, Field, RealNumbers
+from odl.set.space import LinearSpaceElement
 from odl.space import ProductSpace
-from odl.set import LinearSpace, LinearSpaceElement, Field, RealNumbers
 
 
 __all__ = ('ScalingOperator', 'ZeroOperator', 'IdentityOperator',
            'LinCombOperator', 'MultiplyOperator', 'PowerOperator',
            'InnerProductOperator', 'NormOperator', 'DistOperator',
-           'ConstantOperator', 'RealPart', 'ImagPart', 'ComplexEmbedding')
+           'ConstantOperator', 'RealPart', 'ImagPart', 'ComplexEmbedding',
+           'ComplexModulus')
 
 
 class ScalingOperator(Operator):
 
     """Operator of multiplication with a scalar.
 
-        ``ScalingOperator(s)(x) == s * x``
+    Implements::
+
+        ScalingOperator(s)(x) == s * x
     """
 
     def __init__(self, domain, scalar):
@@ -51,17 +51,17 @@ class ScalingOperator(Operator):
         >>> out = r3.element()
         >>> op = ScalingOperator(r3, 2.0)
         >>> op(vec, out)  # In-place, Returns out
-        rn(3).element([2.0, 4.0, 6.0])
+        rn(3).element([ 2.,  4.,  6.])
         >>> out
-        rn(3).element([2.0, 4.0, 6.0])
+        rn(3).element([ 2.,  4.,  6.])
         >>> op(vec)  # Out-of-place
-        rn(3).element([2.0, 4.0, 6.0])
+        rn(3).element([ 2.,  4.,  6.])
         """
         if not isinstance(domain, (LinearSpace, Field)):
             raise TypeError('`space` {!r} not a `LinearSpace` or `Field` '
                             'instance'.format(domain))
 
-        super().__init__(domain, domain, linear=True)
+        super(ScalingOperator, self).__init__(domain, domain, linear=True)
         self.__scalar = domain.field.element(scalar)
 
     @property
@@ -111,6 +111,28 @@ class ScalingOperator(Operator):
         else:
             return ScalingOperator(self.domain, self.scalar.conjugate())
 
+    def norm(self, estimate=False, **kwargs):
+        """Return the operator norm of this operator.
+
+        Parameters
+        ----------
+        estimate, kwargs : bool
+            Ignored. Present to conform with base-class interface.
+
+        Returns
+        -------
+        norm : float
+            The operator norm, absolute value of `scalar`.
+
+        Examples
+        --------
+        >>> spc = odl.rn(3)
+        >>> scaling = odl.ScalingOperator(spc, 3.0)
+        >>> scaling.norm(True)
+        3.0
+        """
+        return np.abs(self.scalar)
+
     def __repr__(self):
         """Return ``repr(self)``."""
         return '{}({!r}, {!r})'.format(self.__class__.__name__,
@@ -125,7 +147,9 @@ class IdentityOperator(ScalingOperator):
 
     """Operator mapping each element to itself.
 
-        ``IdentityOperator()(x) == x``
+    Implements::
+
+        IdentityOperator()(x) == x
     """
 
     def __init__(self, space):
@@ -136,7 +160,7 @@ class IdentityOperator(ScalingOperator):
         space : `LinearSpace`
             Space of elements which the operator is acting on.
         """
-        super().__init__(space, 1)
+        super(IdentityOperator, self).__init__(space, 1)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -149,7 +173,9 @@ class IdentityOperator(ScalingOperator):
 
 class LinCombOperator(Operator):
 
-    """Operator mapping two space elements to a linear combination::
+    """Operator mapping two space elements to a linear combination.
+
+    Implements::
 
         LinCombOperator(a, b)([x, y]) == a * x + b * y
     """
@@ -172,12 +198,12 @@ class LinCombOperator(Operator):
         >>> z = r3.element()
         >>> op = LinCombOperator(r3, 1.0, 1.0)
         >>> op(xy, out=z)  # Returns z
-        rn(3).element([2.0, 4.0, 6.0])
+        rn(3).element([ 2.,  4.,  6.])
         >>> z
-        rn(3).element([2.0, 4.0, 6.0])
+        rn(3).element([ 2.,  4.,  6.])
         """
         domain = ProductSpace(space, space)
-        super().__init__(domain, space, linear=True)
+        super(LinCombOperator, self).__init__(domain, space, linear=True)
         self.a = a
         self.b = b
 
@@ -202,7 +228,9 @@ class MultiplyOperator(Operator):
 
     """Operator multiplying by a fixed space or field element.
 
-        ``MultiplyOperator(y)(x) == x * y``
+    Implements::
+
+        MultiplyOperator(y)(x) == x * y
 
     Here, ``y`` is a `LinearSpaceElement` or `Field` element and
     ``x`` is a `LinearSpaceElement`.
@@ -233,19 +261,19 @@ class MultiplyOperator(Operator):
 
         >>> op = MultiplyOperator(x)
         >>> op(x)
-        rn(3).element([1.0, 4.0, 9.0])
+        rn(3).element([ 1.,  4.,  9.])
         >>> out = r3.element()
         >>> op(x, out)
-        rn(3).element([1.0, 4.0, 9.0])
+        rn(3).element([ 1.,  4.,  9.])
 
         Multiply by scalar:
 
         >>> op2 = MultiplyOperator(x, domain=r3.field)
         >>> op2(3)
-        rn(3).element([3.0, 6.0, 9.0])
+        rn(3).element([ 3.,  6.,  9.])
         >>> out = r3.element()
         >>> op2(3, out)
-        rn(3).element([3.0, 6.0, 9.0])
+        rn(3).element([ 3.,  6.,  9.])
         """
         if domain is None:
             domain = multiplicand.space
@@ -253,10 +281,11 @@ class MultiplyOperator(Operator):
         if range is None:
             range = multiplicand.space
 
+        super(MultiplyOperator, self).__init__(domain, range, linear=True)
+
         self.__multiplicand = multiplicand
         self.__domain_is_field = isinstance(domain, Field)
         self.__range_is_field = isinstance(range, Field)
-        super().__init__(domain, range, linear=True)
 
     @property
     def multiplicand(self):
@@ -271,7 +300,7 @@ class MultiplyOperator(Operator):
             if self.__domain_is_field:
                 out.lincomb(x, self.multiplicand)
             else:
-                x.multiply(self.multiplicand, out=out)
+                out.assign(self.multiplicand * x)
         else:
             raise ValueError('can only use `out` with `LinearSpace` range')
 
@@ -296,7 +325,7 @@ class MultiplyOperator(Operator):
         >>> op = MultiplyOperator(x)
         >>> out = r3.element()
         >>> op.adjoint(x)
-        rn(3).element([1.0, 4.0, 9.0])
+        rn(3).element([ 1.,  4.,  9.])
 
         Multiply scalars with a fixed vector:
 
@@ -308,7 +337,7 @@ class MultiplyOperator(Operator):
 
         >>> op2 = MultiplyOperator(3.0, domain=r3, range=r3)
         >>> op2.adjoint(x)
-        rn(3).element([3.0, 6.0, 9.0])
+        rn(3).element([ 3.,  6.,  9.])
         """
         if self.__domain_is_field:
             return InnerProductOperator(self.multiplicand)
@@ -330,7 +359,9 @@ class PowerOperator(Operator):
 
     """Operator taking a fixed power of a space or field element.
 
-        ``PowerOperator(p)(x) == x ** p``
+    Implements::
+
+        PowerOperator(p)(x) == x ** p
 
     Here, ``x`` is a `LinearSpaceElement` or `Field` element and ``p`` is
     a number. Hence, this operator can be defined either on a
@@ -353,7 +384,7 @@ class PowerOperator(Operator):
 
         >>> op = PowerOperator(odl.rn(3), exponent=2)
         >>> op([1, 2, 3])
-        rn(3).element([1.0, 4.0, 9.0])
+        rn(3).element([ 1.,  4.,  9.])
 
         or scalars
 
@@ -361,10 +392,10 @@ class PowerOperator(Operator):
         >>> op(2.0)
         4.0
         """
-
+        super(PowerOperator, self).__init__(
+            domain, domain, linear=(exponent == 1))
         self.__exponent = float(exponent)
         self.__domain_is_field = isinstance(domain, Field)
-        super().__init__(domain, domain, linear=(exponent == 1))
 
     @property
     def exponent(self):
@@ -403,7 +434,7 @@ class PowerOperator(Operator):
         >>> op = PowerOperator(odl.rn(3), exponent=2)
         >>> dop = op.derivative(op.domain.element([1, 2, 3]))
         >>> dop([1, 1, 1])
-        rn(3).element([2.0, 4.0, 6.0])
+        rn(3).element([ 2.,  4.,  6.])
 
         Use with scalars:
 
@@ -429,7 +460,9 @@ class PowerOperator(Operator):
 class InnerProductOperator(Operator):
     """Operator taking the inner product with a fixed space element.
 
-        ``InnerProductOperator(y)(x) <==> y.inner(x)``
+    Implements::
+
+        InnerProductOperator(y)(x) <==> y.inner(x)
 
     This is only applicable in inner product spaces.
 
@@ -455,8 +488,9 @@ class InnerProductOperator(Operator):
         >>> op(r3.element([1, 2, 3]))
         14.0
         """
+        super(InnerProductOperator, self).__init__(
+            vector.space, vector.space.field, linear=True)
         self.__vector = vector
-        super().__init__(vector.space, vector.space.field, linear=True)
 
     @property
     def vector(self):
@@ -482,7 +516,7 @@ class InnerProductOperator(Operator):
         >>> x = r3.element([1, 2, 3])
         >>> op = InnerProductOperator(x)
         >>> op.adjoint(2.0)
-        rn(3).element([2.0, 4.0, 6.0])
+        rn(3).element([ 2.,  4.,  6.])
         """
         return MultiplyOperator(self.vector, self.vector.space.field)
 
@@ -500,9 +534,9 @@ class InnerProductOperator(Operator):
         >>> r3 = odl.rn(3)
         >>> x = r3.element([1, 2, 3])
         >>> x.T
-        InnerProductOperator(rn(3).element([1.0, 2.0, 3.0]))
+        InnerProductOperator(rn(3).element([ 1.,  2.,  3.]))
         >>> x.T.T
-        rn(3).element([1.0, 2.0, 3.0])
+        rn(3).element([ 1.,  2.,  3.])
         """
         return self.vector
 
@@ -519,9 +553,12 @@ class NormOperator(Operator):
 
     """Vector space norm as an operator.
 
-        ``NormOperator()(x) <==> x.norm()``
+    Implements::
 
-    This is only applicable in normed spaces.
+        NormOperator()(x) <==> x.norm()
+
+    This is only applicable in normed spaces, i.e., spaces implementing
+    a `LinearSpace.norm` method.
 
     See Also
     --------
@@ -544,7 +581,7 @@ class NormOperator(Operator):
         >>> op([3, 4])
         5.0
         """
-        super().__init__(space, RealNumbers(), linear=False)
+        super(NormOperator, self).__init__(space, RealNumbers(), linear=False)
 
     def _call(self, x):
         """Return the norm of ``x``."""
@@ -608,9 +645,12 @@ class DistOperator(Operator):
 
     """Operator taking the distance to a fixed space element.
 
-        ``DistOperator(y)(x) == y.dist(x)``
+    Implements::
 
-    This is only applicable in metric spaces.
+        DistOperator(y)(x) == y.dist(x)
+
+    This is only applicable in metric spaces, i.e., spaces implementing
+    a `LinearSpace.dist` method.
 
     See Also
     --------
@@ -634,8 +674,9 @@ class DistOperator(Operator):
         >>> op([4, 5])
         5.0
         """
+        super(DistOperator, self).__init__(
+            vector.space, RealNumbers(), linear=False)
         self.__vector = vector
-        super().__init__(vector.space, RealNumbers(), linear=False)
 
     @property
     def vector(self):
@@ -708,7 +749,9 @@ class ConstantOperator(Operator):
 
     """Operator that always returns the same value.
 
-        ``ConstantOperator(y)(x) == y``
+    Implements::
+
+        ConstantOperator(y)(x) == y
     """
 
     def __init__(self, constant, domain=None, range=None):
@@ -731,7 +774,7 @@ class ConstantOperator(Operator):
         >>> x = r3.element([1, 2, 3])
         >>> op = ConstantOperator(x)
         >>> op(x, out=r3.element())
-        rn(3).element([1.0, 2.0, 3.0])
+        rn(3).element([ 1.,  2.,  3.])
         """
 
         if ((domain is None or range is None) and
@@ -747,7 +790,7 @@ class ConstantOperator(Operator):
 
         self.__constant = range.element(constant)
         linear = self.constant.norm() == 0
-        super().__init__(domain, range, linear=linear)
+        super(ConstantOperator, self).__init__(domain, range, linear=linear)
 
     @property
     def constant(self):
@@ -782,7 +825,7 @@ class ConstantOperator(Operator):
         >>> op = ConstantOperator(x)
         >>> deriv = op.derivative([1, 1, 1])
         >>> deriv([2, 2, 2])
-        rn(3).element([0.0, 0.0, 0.0])
+        rn(3).element([ 0.,  0.,  0.])
         """
         return ZeroOperator(domain=self.domain, range=self.range)
 
@@ -797,7 +840,9 @@ class ConstantOperator(Operator):
 
 class ZeroOperator(Operator):
 
-    """Operator mapping each element to the zero element::
+    """Operator mapping each element to the zero element.
+
+    Implements::
 
         ZeroOperator(space)(x) == space.zero()
     """
@@ -816,18 +861,18 @@ class ZeroOperator(Operator):
         --------
         >>> op = odl.ZeroOperator(odl.rn(3))
         >>> op([1, 2, 3])
-        rn(3).element([0.0, 0.0, 0.0])
+        rn(3).element([ 0.,  0.,  0.])
 
         Also works with domain != range:
 
         >>> op = odl.ZeroOperator(odl.rn(3), odl.cn(4))
         >>> op([1, 2, 3])
-        cn(4).element([0j, 0j, 0j, 0j])
+        cn(4).element([ 0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j])
         """
         if range is None:
             range = domain
 
-        super().__init__(domain, range, linear=True)
+        super(ZeroOperator, self).__init__(domain, range, linear=True)
 
     def _call(self, x, out=None):
         """Return the zero vector or assign it to ``out``."""
@@ -864,15 +909,20 @@ class ZeroOperator(Operator):
 
 class RealPart(Operator):
 
-    """Operator that extracts the real part of a vector."""
+    """Operator that extracts the real part of a vector.
+
+    Implements::
+
+        RealPart(x) == x.real
+    """
 
     def __init__(self, space):
         """Initialize a new instance.
 
         Parameters
         ----------
-        space : `FnBase`
-            Space which real part should be taken, needs to implement
+        space : `TensorSpace`
+            Space in which the real part should be taken, needs to implement
             ``space.real_space``.
 
         Examples
@@ -882,26 +932,26 @@ class RealPart(Operator):
         >>> c3 = odl.cn(3)
         >>> op = RealPart(c3)
         >>> op([1 + 2j, 2, 3 - 1j])
-        rn(3).element([1.0, 2.0, 3.0])
+        rn(3).element([ 1.,  2.,  3.])
 
         The operator is the identity on real spaces:
 
         >>> r3 = odl.rn(3)
         >>> op = RealPart(r3)
         >>> op([1, 2, 3])
-        rn(3).element([1.0, 2.0, 3.0])
+        rn(3).element([ 1.,  2.,  3.])
 
-        The operator also works on other `FnBase` spaces such as
+        The operator also works on other `TensorSpace` spaces such as
         `DiscreteLp` spaces:
 
         >>> r3 = odl.uniform_discr(0, 1, 3, dtype=complex)
         >>> op = RealPart(r3)
         >>> op([1, 2, 3])
-        uniform_discr(0.0, 1.0, 3).element([1.0, 2.0, 3.0])
+        uniform_discr(0.0, 1.0, 3).element([ 1.,  2.,  3.])
         """
         real_space = space.real_space
         linear = (space == real_space)
-        Operator.__init__(self, space, real_space, linear=linear)
+        super(RealPart, self).__init__(space, real_space, linear=linear)
 
     def _call(self, x):
         """Return ``self(x)``."""
@@ -918,7 +968,7 @@ class RealPart(Operator):
         >>> r3 = odl.rn(3)
         >>> op = RealPart(r3)
         >>> op.inverse(op([1, 2, 3]))
-        rn(3).element([1.0, 2.0, 3.0])
+        rn(3).element([ 1.,  2.,  3.])
 
         This is not a true inverse, only a pseudoinverse, the complex part
         will by necessity be lost.
@@ -926,7 +976,7 @@ class RealPart(Operator):
         >>> c3 = odl.cn(3)
         >>> op = RealPart(c3)
         >>> op.inverse(op([1 + 2j, 2, 3 - 1j]))
-        cn(3).element([(1+0j), (2+0j), (3+0j)])
+        cn(3).element([ 1.+0.j,  2.+0.j,  3.+0.j])
         """
         if self.is_linear:
             return self
@@ -943,12 +993,12 @@ class RealPart(Operator):
         space, this does not satisfy the usual adjoint equation:
 
         .. math::
-            \langle Ax, y \rangle = \langle x, A^*y \rangle
+            \langle Ax, y \\rangle = \langle x, A^*y \\rangle
 
         Instead it is an adjoint in a weaker sense as follows:
 
         .. math::
-            \langle AA^*x, y \rangle = \langle A^*x, A^*y \rangle
+            \langle AA^*x, y \\rangle = \langle A^*x, A^*y \\rangle
 
         Examples
         --------
@@ -979,14 +1029,22 @@ class RealPart(Operator):
 
 
 class ImagPart(Operator):
+
+    """Operator that extracts the imaginary part of a vector.
+
+    Implements::
+
+        ImagPart(x) == x.imag
+    """
+
     def __init__(self, space):
-        """Operator that extracts the imaginary part of a vector.
+        """Initialize a new instance.
 
         Parameters
         ----------
-        space : `FnBase`
-            Space which imaginary part should be taken, needs to implement
-            ``space.real_space``.
+        space : `TensorSpace`
+            Space in which the imaginary part should be taken, needs to
+            implement ``space.real_space``.
 
         Examples
         --------
@@ -995,18 +1053,18 @@ class ImagPart(Operator):
         >>> c3 = odl.cn(3)
         >>> op = ImagPart(c3)
         >>> op([1 + 2j, 2, 3 - 1j])
-        rn(3).element([2.0, 0.0, -1.0])
+        rn(3).element([ 2.,  0., -1.])
 
         The operator is the zero operator on real spaces:
 
         >>> r3 = odl.rn(3)
         >>> op = ImagPart(r3)
         >>> op([1, 2, 3])
-        rn(3).element([0.0, 0.0, 0.0])
+        rn(3).element([ 0.,  0.,  0.])
         """
         real_space = space.real_space
         linear = (space == real_space)
-        Operator.__init__(self, space, real_space, linear=linear)
+        super(ImagPart, self).__init__(space, real_space, linear=linear)
 
     def _call(self, x):
         """Return ``self(x)``."""
@@ -1023,7 +1081,7 @@ class ImagPart(Operator):
         >>> r3 = odl.rn(3)
         >>> op = ImagPart(r3)
         >>> op.inverse(op([1, 2, 3]))
-        rn(3).element([0.0, 0.0, 0.0])
+        rn(3).element([ 0.,  0.,  0.])
 
         This is not a true inverse, only a pseudoinverse, the real part
         will by necessity be lost.
@@ -1031,7 +1089,7 @@ class ImagPart(Operator):
         >>> c3 = odl.cn(3)
         >>> op = ImagPart(c3)
         >>> op.inverse(op([1 + 2j, 2, 3 - 1j]))
-        cn(3).element([2j, 0j, (-0-1j)])
+        cn(3).element([ 0.+2.j,  0.+0.j, -0.-1.j])
         """
         if self.is_linear:
             return ZeroOperator(self.domain)
@@ -1048,12 +1106,12 @@ class ImagPart(Operator):
         space, this does not satisfy the usual adjoint equation:
 
         .. math::
-            \langle Ax, y \rangle = \langle x, A^*y \rangle
+            \langle Ax, y \\rangle = \langle x, A^*y \\rangle
 
         Instead it is an adjoint in a weaker sense as follows:
 
         .. math::
-            \langle AA^*x, y \rangle = \langle A^*x, A^*y \rangle
+            \langle AA^*x, y \\rangle = \langle A^*x, A^*y \\rangle
 
         Examples
         --------
@@ -1085,18 +1143,23 @@ class ImagPart(Operator):
 
 class ComplexEmbedding(Operator):
 
-    """Operator that embeds a vector into a complex space."""
+    """Operator that embeds a vector into a complex space.
 
-    def __init__(self, space, scalar=1):
+    Implements::
+
+        ComplexEmbedding(space)(x) <==> space.complex_space.element(x)
+    """
+
+    def __init__(self, space, scalar=1.0):
         """Initialize a new instance.
 
         Parameters
         ----------
-        space : `FnBase`
-            Space which real part should be taken, needs to implement
-            ``space.complex_space``.
+        space : `TensorSpace`
+            Space that should be embedded into its complex counterpart.
+            It must implement `TensorSpace.complex_space`.
         scalar : ``space.complex_space.field`` element, optional
-            Scalar which the incomming vectors should be multiplied by in order
+            Scalar to be multiplied with incoming vectors in order
             to get the complex vector.
 
         Examples
@@ -1106,13 +1169,13 @@ class ComplexEmbedding(Operator):
         >>> r3 = odl.rn(3)
         >>> op = ComplexEmbedding(r3)
         >>> op([1, 2, 3])
-        cn(3).element([(1+0j), (2+0j), (3+0j)])
+        cn(3).element([ 1.+0.j,  2.+0.j,  3.+0.j])
 
         Embed real vector as imaginary part into complex space:
 
         >>> op = ComplexEmbedding(r3, scalar=1j)
         >>> op([1, 2, 3])
-        cn(3).element([1j, 2j, 3j])
+        cn(3).element([ 0.+1.j,  0.+2.j,  0.+3.j])
 
         On complex spaces the operator is the same as simple multiplication by
         scalar:
@@ -1120,15 +1183,16 @@ class ComplexEmbedding(Operator):
         >>> c3 = odl.cn(3)
         >>> op = ComplexEmbedding(c3, scalar=1 + 2j)
         >>> op([1 + 1j, 2 + 2j, 3 + 3j])
-        cn(3).element([(-1+3j), (-2+6j), (-3+9j)])
+        cn(3).element([-1.+3.j, -2.+6.j, -3.+9.j])
         """
         complex_space = space.complex_space
         self.scalar = complex_space.field.element(scalar)
-        Operator.__init__(self, space, complex_space, linear=True)
+        super(ComplexEmbedding, self).__init__(
+            space, complex_space, linear=True)
 
     def _call(self, x, out):
         """Return ``self(x)``."""
-        if self.domain.is_rn:
+        if self.domain.is_real:
             # Real domain, multiply separately
             out.real = self.scalar.real * x
             out.imag = self.scalar.imag * x
@@ -1148,9 +1212,9 @@ class ComplexEmbedding(Operator):
         >>> r3 = odl.rn(3)
         >>> op = ComplexEmbedding(r3, scalar=1)
         >>> op.inverse(op([1, 2, 4]))
-        rn(3).element([1.0, 2.0, 4.0])
+        rn(3).element([ 1.,  2.,  4.])
         """
-        if self.domain.is_rn:
+        if self.domain.is_real:
             # Real domain
             # Optimizations for simple cases.
             if self.scalar.real == self.scalar:
@@ -1176,12 +1240,12 @@ class ComplexEmbedding(Operator):
         space, this does not satisfy the usual adjoint equation:
 
         .. math::
-            \langle Ax, y \rangle = \langle x, A^*y \rangle
+            \langle Ax, y \\rangle = \langle x, A^*y \\rangle
 
         Instead it is an adjoint in a weaker sense as follows:
 
         .. math::
-            \langle A^*Ax, y \rangle = \langle Ax, Ay \rangle
+            \langle A^*Ax, y \\rangle = \langle Ax, Ay \\rangle
 
         Examples
         --------
@@ -1207,7 +1271,7 @@ class ComplexEmbedding(Operator):
         >>> AtAxy == AxAy
         True
         """
-        if self.domain.is_rn:
+        if self.domain.is_real:
             # Real domain
             # Optimizations for simple cases.
             if self.scalar.real == self.scalar:
@@ -1222,7 +1286,79 @@ class ComplexEmbedding(Operator):
             # Complex domain
             return ComplexEmbedding(self.range, self.scalar.conjugate())
 
+
+class ComplexModulus(Operator):
+
+    """Operator that computes the modolus (absolute value) of a vector."""
+
+    def __init__(self, space):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        space : `FnBase`
+            Space whose real part should be taken, needs to implement
+            ``space.real_space``.
+
+        Examples
+        --------
+        Take the real part of a complex vector:
+
+        >>> c2 = odl.cn(2)
+        >>> op = odl.ComplexModulus(c2)
+        >>> op([3 + 4j, 2])
+        rn(2).element([ 5.,  2.])
+
+        The operator is the absolute value on real spaces:
+
+        >>> r2 = odl.rn(2)
+        >>> op = odl.ComplexModulus(r2)
+        >>> op([1, -2])
+        rn(2).element([ 1.,  2.])
+
+        The operator also works on other `FnBase` spaces such as
+        `DiscreteLp` spaces:
+
+        >>> r2 = odl.uniform_discr(0, 1, 2, dtype=complex)
+        >>> op = odl.ComplexModulus(r2)
+        >>> op([3 + 4j, 2])
+        uniform_discr(0.0, 1.0, 2).element([ 5.,  2.])
+        """
+        real_space = space.real_space
+        linear = (space == real_space)
+        super(ComplexModulus, self).__init__(space, real_space, linear=linear)
+
+    def _call(self, x):
+        """Return ``self(x)``."""
+        return (x.real ** 2 + x.imag ** 2).ufuncs.sqrt()
+
+    @property
+    def inverse(self):
+        """Return the (pseudo-)inverse.
+
+        Examples
+        --------
+        The (pseudo-)inverse in the real case is the identity:
+
+        >>> r2 = odl.rn(2)
+        >>> op = ComplexModulus(r2)
+        >>> op.inverse(op([1, -2]))
+        rn(2).element([ 1.,  2.])
+
+        If the domain is complex, a pseudo-inverse is taken, assigning equal
+        positive weights to the real and complex parts:
+
+        >>> c2 = odl.cn(2)
+        >>> op = ComplexModulus(c2)
+        >>> op.inverse(op([np.sqrt(2), 2 + 2j]))
+        cn(2).element([ 1.+1.j,  2.+2.j])
+        """
+        if self.is_linear:
+            return IdentityOperator(self.domain)
+        else:
+            return ComplexEmbedding(self.range, scalar=(1 + 1j) / np.sqrt(2))
+
+
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

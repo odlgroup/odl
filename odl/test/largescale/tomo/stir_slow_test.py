@@ -11,7 +11,6 @@
 from __future__ import division
 import os.path as pth
 import odl
-import pytest
 from odl.tomo.backends.stir_bindings import stir_projector_from_file
 
 
@@ -47,4 +46,4 @@ def test_from_file():
 
 
 if __name__ == '__main__':
-    pytest.main([str(__file__.replace('\\', '/')), '-v', '--largescale'])
+    odl.util.test_file(__file__, ['--largescale'])

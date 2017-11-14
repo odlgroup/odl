@@ -8,16 +8,12 @@
 
 """Utilities for computing the gradient and Hessian of functionals."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
-
 import numpy as np
 
 from odl.solvers.functional.functional import Functional
 from odl.operator import Operator
-from odl.space.base_ntuples import FnBase
+from odl.space.base_tensors import TensorSpace
 
 
 __all__ = ('NumericalDerivative', 'NumericalGradient',)
@@ -39,7 +35,7 @@ class NumericalDerivative(Operator):
         ----------
         operator : `Operator`
             The operator whose derivative should be computed numerically. Its
-            domain and range must be `FnBase` spaces.
+            domain and range must be `TensorSpace` spaces.
         point : ``operator.domain`` `element-like`
             The point to compute the derivative in.
         method : {'backward', 'forward', 'central'}, optional
@@ -57,14 +53,13 @@ class NumericalDerivative(Operator):
         >>> func = odl.solvers.L2NormSquared(space)
         >>> hess = NumericalDerivative(func.gradient, [1, 1, 1])
         >>> hess([0, 0, 1])
-        rn(3).element([0.0, 0.0, 2.0])
+        rn(3).element([ 0.,  0.,  2.])
 
         Find the Hessian matrix:
 
-        >>> odl.matrix_representation(hess)
-        array([[ 2.,  0.,  0.],
-               [ 0.,  2.,  0.],
-               [ 0.,  0.,  2.]])
+        >>> hess_matrix = odl.matrix_representation(hess)
+        >>> np.allclose(hess_matrix, 2 * np.eye(3))
+        True
 
         Notes
         -----
@@ -99,11 +94,11 @@ class NumericalDerivative(Operator):
         if not isinstance(operator, Operator):
             raise TypeError('`operator` has to be an `Operator` instance')
 
-        if not isinstance(operator.domain, FnBase):
-            raise TypeError('`operator.domain` has to be an `FnBase` '
+        if not isinstance(operator.domain, TensorSpace):
+            raise TypeError('`operator.domain` must be a `TensorSpace` '
                             'instance')
-        if not isinstance(operator.range, FnBase):
-            raise TypeError('`operator.range` has to be an `FnBase` '
+        if not isinstance(operator.range, TensorSpace):
+            raise TypeError('`operator.range` must be a `TensorSpace` '
                             'instance')
 
         self.operator = operator
@@ -121,8 +116,8 @@ class NumericalDerivative(Operator):
         if self.method not in ('backward', 'forward', 'central'):
             raise ValueError("`method` '{}' not understood").format(method_in)
 
-        Operator.__init__(self, operator.domain, operator.range,
-                          linear=True)
+        super(NumericalDerivative, self).__init__(
+            operator.domain, operator.range, linear=True)
 
     def _call(self, dx):
         """Return ``self(x)``."""
@@ -163,7 +158,7 @@ class NumericalGradient(Operator):
         ----------
         functional : `Functional`
             The functional whose gradient should be computed. Its domain must
-            be an `FnBase` space.
+            be a `TensorSpace`.
         method : {'backward', 'forward', 'central'}, optional
             The method to use to compute the gradient.
         step : float, optional
@@ -176,7 +171,7 @@ class NumericalGradient(Operator):
         >>> func = odl.solvers.L2NormSquared(space)
         >>> grad = NumericalGradient(func)
         >>> grad([1, 1, 1])
-        rn(3).element([2.0, 2.0, 2.0])
+        rn(3).element([ 2.,  2.,  2.])
 
         The gradient gives the correct value with sufficiently small step size:
 
@@ -187,13 +182,13 @@ class NumericalGradient(Operator):
 
         >>> grad = NumericalGradient(func, step=0.5)
         >>> grad([1, 1, 1])
-        rn(3).element([2.5, 2.5, 2.5])
+        rn(3).element([ 2.5,  2.5,  2.5])
 
         But it can be improved by using the more accurate ``method='central'``:
 
         >>> grad = NumericalGradient(func, method='central', step=0.5)
         >>> grad([1, 1, 1])
-        rn(3).element([2.0, 2.0, 2.0])
+        rn(3).element([ 2.,  2.,  2.])
 
         Notes
         -----
@@ -223,8 +218,8 @@ class NumericalGradient(Operator):
         if not isinstance(functional, Functional):
             raise TypeError('`functional` has to be a `Functional` instance')
 
-        if not isinstance(functional.domain, FnBase):
-            raise TypeError('`functional.domain` has to be an `FnBase` '
+        if not isinstance(functional.domain, TensorSpace):
+            raise TypeError('`functional.domain` must be a `TensorSpace` '
                             'instance')
 
         self.functional = functional
@@ -240,8 +235,8 @@ class NumericalGradient(Operator):
         if self.method not in ('backward', 'forward', 'central'):
             raise ValueError("`method` '{}' not understood").format(method_in)
 
-        Operator.__init__(self, functional.domain, functional.domain,
-                          linear=functional.is_linear)
+        super(NumericalGradient, self).__init__(
+            functional.domain, functional.domain, linear=functional.is_linear)
 
     def _call(self, x):
         """Return ``self(x)``."""
@@ -299,19 +294,18 @@ class NumericalGradient(Operator):
         >>> grad = NumericalGradient(func)
         >>> hess = grad.derivative([1, 1, 1])
         >>> hess([1, 0, 0])
-        rn(3).element([2.0, 0.0, 0.0])
+        rn(3).element([ 2.,  0.,  0.])
 
         Find the Hessian matrix:
 
-        >>> odl.matrix_representation(hess)
-        array([[ 2.,  0.,  0.],
-               [ 0.,  2.,  0.],
-               [ 0.,  0.,  2.]])
+        >>> hess_matrix = odl.matrix_representation(hess)
+        >>> np.allclose(hess_matrix, 2 * np.eye(3))
+        True
         """
         return NumericalDerivative(self, point,
                                    method=self.method, step=np.sqrt(self.step))
 
+
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

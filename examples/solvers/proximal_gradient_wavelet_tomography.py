@@ -17,7 +17,7 @@ import numpy as np
 # --- Set up problem definition --- #
 
 
-# Discrete reconstruction space: discretized functions on the rectangle
+# Reconstruction space: discretized functions on the rectangle
 # [-20, 20]^2 with 256 samples per dimension.
 space = odl.uniform_discr(
     min_pt=[-20, -20], max_pt=[20, 20], shape=[256, 256], dtype='float32')
@@ -81,6 +81,7 @@ def callb(x):
     """Callback that displays the inverse wavelet transform of current iter."""
     callback(Wtrafoinv(x))
 
+
 # Run the algorithm (FISTA)
 x = data_discrepancy.domain.zero()
 odl.solvers.accelerated_proximal_gradient(
@@ -90,4 +91,4 @@ odl.solvers.accelerated_proximal_gradient(
 # Display images
 data.show(title='Data')
 x.show(title='Wavelet coefficients')
-Wtrafoinv(x).show('Wavelet regularized reconstruction')
+Wtrafoinv(x).show('Wavelet regularized reconstruction', force_show=True)

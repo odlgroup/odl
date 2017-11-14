@@ -8,18 +8,13 @@
 
 """Discrete wavelet transformation on L2 spaces."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str, super
-
 import numpy as np
 
 from odl.discr import DiscreteLp
 from odl.operator import Operator
 from odl.trafos.backends.pywt_bindings import (
-    PYWT_AVAILABLE, PAD_MODES_ODL2PYWT,
+    PYWT_AVAILABLE,
     pywt_pad_mode, pywt_wavelet, pywt_flat_coeff_size, pywt_coeff_shapes,
     pywt_max_nlevels, pywt_flat_array_from_coeffs, pywt_coeffs_from_flat_array,
     pywt_multi_level_decomp, pywt_multi_level_recon)
@@ -131,7 +126,7 @@ class WaveletTransformBase(Operator):
             self.pywt_wavelet = pywt_wavelet(self.wavelet)
             coeff_size = pywt_flat_coeff_size(space.shape, wavelet,
                                               self.nlevels, self.pywt_pad_mode)
-            coeff_space = space.dspace_type(coeff_size, dtype=space.dtype)
+            coeff_space = space.tspace_type(coeff_size, dtype=space.dtype)
         else:
             raise RuntimeError("bad `impl` '{}'".format(self.impl))
 
@@ -142,9 +137,11 @@ class WaveletTransformBase(Operator):
         self.__variant = variant
 
         if variant == 'forward':
-            super().__init__(domain=space, range=coeff_space, linear=True)
+            super(WaveletTransformBase, self).__init__(
+                domain=space, range=coeff_space, linear=True)
         else:
-            super().__init__(domain=coeff_space, range=space, linear=True)
+            super(WaveletTransformBase, self).__init__(
+                domain=coeff_space, range=space, linear=True)
 
     @property
     def impl(self):
@@ -293,13 +290,13 @@ class WaveletTransform(WaveletTransformBase):
         ...                         [0, 0, 1, 1],
         ...                         [1, 0, 1, 0]])
         >>> print(decomp)
-        [1.0, 1.0, 0.5, ..., 0.0, -0.5, -0.5]
+        [ 1. ,  1. ,  0.5, ...,  0. , -0.5, -0.5]
         >>> decomp.shape
         (16,)
         """
-        super().__init__(space=domain, wavelet=wavelet, nlevels=nlevels,
-                         variant='forward', pad_mode=pad_mode,
-                         pad_const=pad_const, impl=impl)
+        super(WaveletTransform, self).__init__(
+            space=domain, wavelet=wavelet, nlevels=nlevels, variant='forward',
+            pad_mode=pad_mode, pad_const=pad_const, impl=impl)
 
     def _call(self, x):
         """Return wavelet transform of ``x``."""
@@ -330,7 +327,7 @@ class WaveletTransform(WaveletTransformBase):
             return scale * self.inverse
         else:
             # TODO: put adjoint here
-            return super().adjoint
+            return super(WaveletTransform, self).adjoint
 
     @property
     def inverse(self):
@@ -439,9 +436,9 @@ class WaveletTransformInverse(WaveletTransformBase):
         >>> np.allclose(recon, orig_array)
         True
         """
-        super().__init__(space=range, wavelet=wavelet, variant='inverse',
-                         nlevels=nlevels, pad_mode=pad_mode,
-                         pad_const=pad_const, impl=impl)
+        super(WaveletTransformInverse, self).__init__(
+            space=range, wavelet=wavelet, variant='inverse', nlevels=nlevels,
+            pad_mode=pad_mode, pad_const=pad_const, impl=impl)
 
     def _call(self, coeffs):
         """Return the inverse wavelet transform of ``coeffs``."""
@@ -478,7 +475,7 @@ class WaveletTransformInverse(WaveletTransformBase):
             return scale * self.inverse
         else:
             # TODO: put adjoint here
-            return super().adjoint
+            return super(WaveletTransformInverse, self).adjoint
 
     @property
     def inverse(self):
@@ -498,6 +495,5 @@ class WaveletTransformInverse(WaveletTransformBase):
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests(skip_if=not PYWT_AVAILABLE)

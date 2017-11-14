@@ -8,39 +8,36 @@
 
 """Default functionals defined on any space similar to R^n or L^2."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
-from builtins import super
-
-import numpy as np
-import scipy
 from numbers import Integral
+import numpy as np
 
-from odl.solvers.functional.functional import Functional
+from odl.solvers.functional.functional import (Functional,
+                                               FunctionalQuadraticPerturb)
 from odl.space import ProductSpace
 from odl.operator import (Operator, ConstantOperator, ZeroOperator,
                           ScalingOperator, DiagonalOperator, PointwiseNorm)
-from odl.solvers.functional.functional import (
-    Functional, FunctionalDefaultConvexConjugate)
 from odl.solvers.nonsmooth.proximal_operators import (
-    proximal_l1, proximal_cconj_l1, proximal_l2, proximal_cconj_l2,
-    proximal_l2_squared, proximal_const_func, proximal_box_constraint,
-    proximal_cconj, proximal_cconj_kl, proximal_cconj_kl_cross_entropy,
-    combine_proximals)
-from odl.util import conj_exponent
+    proximal_l1, proximal_convex_conj_l1,
+    proximal_l1_l2, proximal_convex_conj_l1_l2,
+    proximal_l2, proximal_convex_conj_l2, proximal_l2_squared,
+    proximal_huber,
+    proximal_const_func, proximal_box_constraint,
+    proximal_convex_conj_kl, proximal_convex_conj_kl_cross_entropy,
+    combine_proximals, proximal_convex_conj)
+from odl.util import conj_exponent, moveaxis
 
 
-__all__ = ('LpNorm', 'L1Norm', 'L2Norm', 'L2NormSquared',
-           'ZeroFunctional', 'ConstantFunctional', 'IndicatorLpUnitBall',
-           'GroupL1Norm', 'IndicatorGroupL1UnitBall', 'IndicatorZero',
-           'IndicatorBox', 'IndicatorNonnegativity', 'KullbackLeibler',
-           'KullbackLeiblerCrossEntropy', 'SeparableSum',
+__all__ = ('ZeroFunctional', 'ConstantFunctional', 'ScalingFunctional',
+           'IdentityFunctional',
+           'LpNorm', 'L1Norm', 'GroupL1Norm', 'L2Norm', 'L2NormSquared',
+           'Huber', 'NuclearNorm',
+           'IndicatorZero', 'IndicatorBox', 'IndicatorNonnegativity',
+           'IndicatorLpUnitBall', 'IndicatorGroupL1UnitBall',
+           'IndicatorNuclearNormUnitBall',
+           'KullbackLeibler', 'KullbackLeiblerCrossEntropy',
            'QuadraticForm',
-           'NuclearNorm', 'IndicatorNuclearNormUnitBall',
-           'ScalingFunctional', 'IdentityFunctional',
-           'MoreauEnvelope')
+           'SeparableSum', 'MoreauEnvelope')
 
 
 class LpNorm(Functional):
@@ -67,13 +64,14 @@ class LpNorm(Functional):
 
         Parameters
         ----------
-        space : `DiscreteLp` or `FnBase`
+        space : `DiscreteLp` or `TensorSpace`
             Domain of the functional.
         exponent : float
             Exponent for the norm (``p``).
         """
+        super(LpNorm, self).__init__(
+            space=space, linear=False, grad_lipschitz=np.nan)
         self.exponent = float(exponent)
-        super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
 
     # TODO: update when integration operator is in place: issue #440
     def _call(self, x):
@@ -136,14 +134,19 @@ class LpNorm(Functional):
 
                 def __init__(self):
                     """Initialize a new instance."""
-                    super().__init__(functional.domain, functional.domain,
-                                     linear=False)
+                    super(L1Gradient, self).__init__(
+                        functional.domain, functional.domain, linear=False)
 
                 def _call(self, x):
                     """Apply the gradient operator to the given point."""
                     return x.ufuncs.sign()
 
+                def derivative(self, x):
+                    """Derivative is a.e. zero."""
+                    return ZeroOperator(self.domain)
+
             return L1Gradient()
+
         elif self.exponent == 2:
             class L2Gradient(Operator):
 
@@ -151,8 +154,8 @@ class LpNorm(Functional):
 
                 def __init__(self):
                     """Initialize a new instance."""
-                    super().__init__(functional.domain, functional.domain,
-                                     linear=False)
+                    super(L2Gradient, self).__init__(
+                        functional.domain, functional.domain, linear=False)
 
                 def _call(self, x):
                     """Apply the gradient operator to the given point.
@@ -166,6 +169,7 @@ class LpNorm(Functional):
                         return x / norm_of_x
 
             return L2Gradient()
+
         else:
             raise NotImplementedError('`gradient` only implemented for p=1 or '
                                       'p=2')
@@ -238,8 +242,10 @@ class GroupL1Norm(Functional):
             raise TypeError('`space` must be a `ProductSpace`')
         if not vfspace.is_power_space:
             raise TypeError('`space.is_power_space` must be `True`')
+
+        super(GroupL1Norm, self).__init__(
+            space=vfspace, linear=False, grad_lipschitz=np.nan)
         self.pointwise_norm = PointwiseNorm(vfspace, exponent)
-        super().__init__(space=vfspace, linear=False, grad_lipschitz=np.nan)
 
     def _call(self, x):
         """Return the group L1-norm of ``x``."""
@@ -280,8 +286,8 @@ class GroupL1Norm(Functional):
 
             def __init__(self):
                 """Initialize a new instance."""
-                super().__init__(functional.domain, functional.domain,
-                                 linear=False)
+                super(GroupL1Gradient, self).__init__(
+                    functional.domain, functional.domain, linear=False)
 
             def _call(self, x):
                 """Return ``self(x)``."""
@@ -315,7 +321,7 @@ class GroupL1Norm(Functional):
         if self.pointwise_norm.exponent == 1:
             return proximal_l1(space=self.domain)
         elif self.pointwise_norm.exponent == 2:
-            return proximal_l1(space=self.domain, isotropic=True)
+            return proximal_l1_l2(space=self.domain)
         else:
             raise NotImplementedError('`proximal` only implemented for p = 1 '
                                       'or 2')
@@ -375,8 +381,10 @@ class IndicatorGroupL1UnitBall(Functional):
             raise TypeError('`space` must be a `ProductSpace`')
         if not vfspace.is_power_space:
             raise TypeError('`space.is_power_space` must be `True`')
+
+        super(IndicatorGroupL1UnitBall, self).__init__(
+            space=vfspace, linear=False, grad_lipschitz=np.nan)
         self.pointwise_norm = PointwiseNorm(vfspace, exponent)
-        super().__init__(space=vfspace, linear=False, grad_lipschitz=np.nan)
 
     def _call(self, x):
         """Return ``self(x)``."""
@@ -393,13 +401,13 @@ class IndicatorGroupL1UnitBall(Functional):
 
         See Also
         --------
-        proximal_cconj_l1 : `proximal factory` for the L1-norms convex
+        proximal_convex_conj_l1 : `proximal factory` for the L1-norms convex
                             conjugate.
         """
         if self.pointwise_norm.exponent == np.inf:
-            return proximal_cconj_l1(space=self.domain)
+            return proximal_convex_conj_l1(space=self.domain)
         elif self.pointwise_norm.exponent == 2:
-            return proximal_cconj_l1(space=self.domain, isotropic=True)
+            return proximal_convex_conj_l1_l2(space=self.domain)
         else:
             raise NotImplementedError('`proximal` only implemented for p = 1 '
                                       'or 2')
@@ -460,12 +468,12 @@ class IndicatorLpUnitBall(Functional):
 
         Parameters
         ----------
-        space : `DiscreteLp` or `FnBase`
+        space : `DiscreteLp` or `TensorSpace`
             Domain of the functional.
         exponent : int or infinity
             Specifies wich norm to use.
         """
-        super().__init__(space=space, linear=False)
+        super(IndicatorLpUnitBall, self).__init__(space=space, linear=False)
         self.__norm = LpNorm(space, exponent)
         self.__exponent = float(exponent)
 
@@ -515,15 +523,15 @@ class IndicatorLpUnitBall(Functional):
 
         See Also
         --------
-        odl.solvers.nonsmooth.proximal_operators.proximal_cconj_l1 :
+        odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_l1 :
             `proximal factory` for convex conjuagte of L1-norm.
-        odl.solvers.nonsmooth.proximal_operators.proximal_cconj_l2 :
+        odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_l2 :
             `proximal factory` for convex conjuagte of L2-norm.
         """
         if self.exponent == np.inf:
-            return proximal_cconj_l1(space=self.domain)
+            return proximal_convex_conj_l1(space=self.domain)
         elif self.exponent == 2:
-            return proximal_cconj_l2(space=self.domain)
+            return proximal_convex_conj_l2(space=self.domain)
         else:
             raise NotImplementedError('`gradient` only implemented for p=2 or '
                                       'p=inf')
@@ -560,10 +568,10 @@ class L1Norm(LpNorm):
 
         Parameters
         ----------
-        space : `DiscreteLp` or `FnBase`
+        space : `DiscreteLp` or `TensorSpace`
             Domain of the functional.
         """
-        super().__init__(space=space, exponent=1)
+        super(L1Norm, self).__init__(space=space, exponent=1)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -598,10 +606,10 @@ class L2Norm(LpNorm):
 
         Parameters
         ----------
-        space : `DiscreteLp` or `FnBase`
+        space : `DiscreteLp` or `TensorSpace`
             Domain of the functional.
         """
-        super().__init__(space=space, exponent=2)
+        super(L2Norm, self).__init__(space=space, exponent=2)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -636,10 +644,11 @@ class L2NormSquared(Functional):
 
         Parameters
         ----------
-        space : `DiscreteLp` or `FnBase`
+        space : `DiscreteLp` or `TensorSpace`
             Domain of the functional.
         """
-        super().__init__(space=space, linear=False, grad_lipschitz=2)
+        super(L2NormSquared, self).__init__(
+            space=space, linear=False, grad_lipschitz=2)
 
     # TODO: update when integration operator is in place: issue #440
     def _call(self, x):
@@ -695,7 +704,8 @@ class ConstantFunctional(Functional):
         constant : element in ``domain.field``
             The constant value of the functional
         """
-        super().__init__(space=space, linear=(constant == 0), grad_lipschitz=0)
+        super(ConstantFunctional, self).__init__(
+            space=space, linear=(constant == 0), grad_lipschitz=0)
         self.__constant = self.range.element(constant)
 
     @property
@@ -751,7 +761,7 @@ class ZeroFunctional(ConstantFunctional):
         space : `LinearSpace`
             Domain of the functional.
         """
-        super().__init__(space=space, constant=0)
+        super(ZeroFunctional, self).__init__(space=space, constant=0)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -778,7 +788,6 @@ class ScalingFunctional(Functional, ScalingOperator):
 
         Examples
         --------
-        >>> import odl
         >>> field = odl.RealNumbers()
         >>> func = ScalingFunctional(field, 3)
         >>> func(5)
@@ -799,7 +808,7 @@ class IdentityFunctional(ScalingFunctional):
 
     See Also
     --------
-    IdentityOperator
+    odl.operator.IdentityOperator
     """
 
     def __init__(self, field):
@@ -810,7 +819,7 @@ class IdentityFunctional(ScalingFunctional):
         field : `Field`
             Domain of the functional.
         """
-        ScalingFunctional.__init__(self, field, 1.0)
+        super(IdentityFunctional, self).__init__(field, 1.0)
 
 
 class IndicatorBox(Functional):
@@ -852,26 +861,16 @@ class IndicatorBox(Functional):
         >>> func([0, 1, 3])  # one point outside
         inf
         """
-        Functional.__init__(self, space, linear=False)
+        super(IndicatorBox, self).__init__(space, linear=False)
         self.lower = lower
         self.upper = upper
 
     def _call(self, x):
         """Apply the functional to the given point."""
-        # Compute the projection of x onto the box, if this is equal to x we
-        # know x is inside the box.
-        tmp = self.domain.element()
-        if self.lower is not None and self.upper is None:
-            x.ufuncs.maximum(self.lower, out=tmp)
-        elif self.lower is None and self.upper is not None:
-            x.ufuncs.minimum(self.upper, out=tmp)
-        elif self.lower is not None and self.upper is not None:
-            x.ufuncs.maximum(self.lower, out=tmp)
-            tmp.ufuncs.minimum(self.upper, out=tmp)
-        else:
-            tmp.assign(x)
-
-        return np.inf if x.dist(tmp) > 0 else 0
+        # Since the proximal projects onto our feasible set we can simply
+        # check if it changes anything
+        proj = self.proximal(1)(x)
+        return np.inf if x.dist(proj) > 0 else 0
 
     @property
     def proximal(self):
@@ -917,7 +916,8 @@ class IndicatorNonnegativity(IndicatorBox):
         >>> func([0, 1, -3])  # one point negative
         inf
         """
-        IndicatorBox.__init__(self, space, lower=0, upper=None)
+        super(IndicatorNonnegativity, self).__init__(
+            space, lower=0, upper=None)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -954,8 +954,8 @@ class IndicatorZero(Functional):
         >>> func([0, 0, 0])
         2
         """
+        super(IndicatorZero, self).__init__(space, linear=False)
         self.__constant = constant
-        super().__init__(space, linear=False)
 
     @property
     def constant(self):
@@ -1057,7 +1057,7 @@ class KullbackLeibler(Functional):
 
         Parameters
         ----------
-        space : `DiscreteLp` or `FnBase`
+        space : `DiscreteLp` or `TensorSpace`
             Domain of the functional.
         prior : ``space`` `element-like`, optional
             Depending on the context, the prior, target or data
@@ -1084,7 +1084,8 @@ class KullbackLeibler(Functional):
         >>> func(x)
         3.0
         """
-        super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
+        super(KullbackLeibler, self).__init__(
+            space=space, linear=False, grad_lipschitz=np.nan)
 
         if prior is not None and prior not in self.domain:
             raise ValueError('`prior` not in `domain`'
@@ -1104,11 +1105,14 @@ class KullbackLeibler(Functional):
         If any components of ``x`` is non-positive, the value is positive
         infinity.
         """
+        # Lazy import to improve `import odl` time
+        import scipy.special
+
         if self.prior is None:
             tmp = ((x - 1 - np.log(x)).inner(self.domain.one()))
         else:
             tmp = ((x - self.prior +
-                   scipy.special.xlogy(self.prior, self.prior / x))
+                    scipy.special.xlogy(self.prior, self.prior / x))
                    .inner(self.domain.one()))
         if np.isnan(tmp):
             # In this case, some element was less than or equal to zero
@@ -1134,8 +1138,8 @@ class KullbackLeibler(Functional):
 
             def __init__(self):
                 """Initialize a new instance."""
-                super().__init__(functional.domain, functional.domain,
-                                 linear=False)
+                super(KLGradient, self).__init__(
+                    functional.domain, functional.domain, linear=False)
 
             def _call(self, x):
                 """Apply the gradient operator to the given point.
@@ -1155,13 +1159,13 @@ class KullbackLeibler(Functional):
 
         See Also
         --------
-        odl.solvers.nonsmooth.proximal_operators.proximal_cconj_kl :
+        odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_kl :
             `proximal factory` for convex conjugate of KL.
-        odl.solvers.nonsmooth.proximal_operators.proximal_cconj :
+        odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj :
             Proximal of the convex conjugate of a functional.
         """
-        return proximal_cconj(proximal_cconj_kl(space=self.domain,
-                                                g=self.prior))
+        return proximal_convex_conj(proximal_convex_conj_kl(space=self.domain,
+                                                            g=self.prior))
 
     @property
     def convex_conj(self):
@@ -1202,14 +1206,15 @@ class KullbackLeiblerConvexConj(Functional):
 
         Parameters
         ----------
-        space : `DiscreteLp` or `FnBase`
+        space : `DiscreteLp` or `TensorSpace`
             Domain of the functional.
         prior : ``space`` `element-like`, optional
             Depending on the context, the prior, target or data
             distribution. It is assumed to be nonnegative.
             Default: if None it is take as the one-element.
         """
-        super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
+        super(KullbackLeiblerConvexConj, self).__init__(
+            space=space, linear=False, grad_lipschitz=np.nan)
 
         if prior is not None and prior not in self.domain:
             raise ValueError('`prior` not in `domain`'
@@ -1229,6 +1234,9 @@ class KullbackLeiblerConvexConj(Functional):
         If any components of ``x`` is larger than or equal to 1, the value is
         positive infinity.
         """
+        # Lazy import to improve `import odl` time
+        import scipy.special
+
         if self.prior is None:
             tmp = -1.0 * (np.log(1 - x)).inner(self.domain.one())
         else:
@@ -1255,8 +1263,8 @@ class KullbackLeiblerConvexConj(Functional):
 
             def __init__(self):
                 """Initialize a new instance."""
-                super().__init__(functional.domain, functional.domain,
-                                 linear=False)
+                super(KLCCGradient, self).__init__(
+                    functional.domain, functional.domain, linear=False)
 
             def _call(self, x):
                 """Apply the gradient operator to the given point.
@@ -1277,12 +1285,12 @@ class KullbackLeiblerConvexConj(Functional):
 
         See Also
         --------
-        odl.solvers.nonsmooth.proximal_operators.proximal_cconj_kl :
+        odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_kl :
             `proximal factory` for convex conjugate of KL.
-        odl.solvers.nonsmooth.proximal_operators.proximal_cconj :
+        odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj :
             Proximal of the convex conjugate of a functional.
         """
-        return proximal_cconj_kl(space=self.domain, g=self.prior)
+        return proximal_convex_conj_kl(space=self.domain, g=self.prior)
 
     @property
     def convex_conj(self):
@@ -1343,14 +1351,15 @@ class KullbackLeiblerCrossEntropy(Functional):
 
         Parameters
         ----------
-        space : `DiscreteLp` or `FnBase`
+        space : `DiscreteLp` or `TensorSpace`
             Domain of the functional.
         prior : ``space`` `element-like`, optional
             Depending on the context, the prior, target or data
             distribution. It is assumed to be nonnegative.
             Default: if None it is take as the one-element.
         """
-        super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
+        super(KullbackLeiblerCrossEntropy, self).__init__(
+            space=space, linear=False, grad_lipschitz=np.nan)
 
         if prior is not None and prior not in self.domain:
             raise ValueError('`prior` not in `domain`'
@@ -1370,6 +1379,9 @@ class KullbackLeiblerCrossEntropy(Functional):
         If any components of ``x`` is non-positive, the value is positive
         infinity.
         """
+        # Lazy import to improve `import odl` time
+        import scipy.special
+
         if self.prior is None:
             tmp = (1 - x + scipy.special.xlogy(x, x)).inner(self.domain.one())
         else:
@@ -1396,8 +1408,8 @@ class KullbackLeiblerCrossEntropy(Functional):
 
             def __init__(self):
                 """Initialize a new instance."""
-                super().__init__(functional.domain, functional.domain,
-                                 linear=False)
+                super(KLCrossEntropyGradient, self).__init__(
+                    functional.domain, functional.domain, linear=False)
 
             def _call(self, x):
                 """Apply the gradient operator to the given point.
@@ -1428,12 +1440,12 @@ class KullbackLeiblerCrossEntropy(Functional):
         See Also
         --------
         odl.solvers.nonsmooth.proximal_operators.\
-proximal_cconj_kl_cross_entropy :
+proximal_convex_conj_kl_cross_entropy :
             `proximal factory` for convex conjugate of the KL cross entropy.
-        odl.solvers.nonsmooth.proximal_operators.proximal_cconj :
+        odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj :
             Proximal of the convex conjugate of a functional.
         """
-        return proximal_cconj(proximal_cconj_kl_cross_entropy(
+        return proximal_convex_conj(proximal_convex_conj_kl_cross_entropy(
             space=self.domain, g=self.prior))
 
     @property
@@ -1467,14 +1479,15 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
 
         Parameters
         ----------
-        space : `DiscreteLp` or `FnBase`
+        space : `DiscreteLp` or `TensorSpace`
             Domain of the functional.
         prior : ``space`` `element-like`, optional
             Depending on the context, the prior, target or data
             distribution. It is assumed to be nonnegative.
             Default: if None it is take as the one-element.
         """
-        super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
+        super(KullbackLeiblerCrossEntropyConvexConj, self).__init__(
+            space=space, linear=False, grad_lipschitz=np.nan)
 
         if prior is not None and prior not in self.domain:
             raise ValueError('`prior` not in `domain`'
@@ -1508,8 +1521,8 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
 
             def __init__(self):
                 """Initialize a new instance."""
-                super().__init__(functional.domain, functional.domain,
-                                 linear=False)
+                super(KLCrossEntCCGradient, self).__init__(
+                    functional.domain, functional.domain, linear=False)
 
             def _call(self, x):
                 """Apply the gradient operator to the given point."""
@@ -1527,10 +1540,11 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
         See Also
         --------
         odl.solvers.nonsmooth.proximal_operators.\
-proximal_cconj_kl_cross_entropy :
+proximal_convex_conj_kl_cross_entropy :
             `proximal factory` for convex conjugate of the KL cross entropy.
         """
-        return proximal_cconj_kl_cross_entropy(space=self.domain, g=self.prior)
+        return proximal_convex_conj_kl_cross_entropy(space=self.domain,
+                                                     g=self.prior)
 
     @property
     def convex_conj(self):
@@ -1616,9 +1630,8 @@ class SeparableSum(Functional):
         domain = ProductSpace(*domains)
         linear = all(func.is_linear for func in functionals)
 
+        super(SeparableSum, self).__init__(space=domain, linear=linear)
         self.__functionals = tuple(functionals)
-
-        super().__init__(space=domain, linear=linear)
 
     def _call(self, x):
         """Return the separable sum evaluated in ``x``."""
@@ -1738,12 +1751,12 @@ class QuadraticForm(Functional):
             raise ValueError('domain of `operator` and space of `vector` need '
                              'to match')
 
+        super(QuadraticForm, self).__init__(
+            space=domain, linear=(operator is None and constant == 0))
+
         self.__operator = operator
         self.__vector = vector
         self.__constant = constant
-
-        super().__init__(space=domain,
-                         linear=(operator is None and constant == 0))
 
         if self.constant not in self.range:
             raise ValueError('`constant` must be an element in the range of '
@@ -1886,7 +1899,7 @@ class NuclearNorm(Functional):
 
         Parameters
         ----------
-        space : `ProductSpace` of `ProductSpace` of `FnBase`
+        space : `ProductSpace` of `ProductSpace` of `TensorSpace`
             Domain of the functional.
         outer_exp : {1, 2, inf}, optional
             Exponent for the outer norm.
@@ -1910,40 +1923,15 @@ class NuclearNorm(Functional):
             raise TypeError('`space` must be a `ProductSpace` of '
                             '`ProductSpace`s')
         if (not space.is_power_space or not space[0].is_power_space):
-            raise TypeError('`space` must be of the form `FnBase^(nxm)`')
+            raise TypeError('`space` must be of the form `TensorSpace^(nxm)`')
 
-        super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
+        super(NuclearNorm, self).__init__(
+            space=space, linear=False, grad_lipschitz=np.nan)
 
-        self.outernorm = LpNorm(self.domain[0][0], exponent=outer_exp)
+        self.outernorm = LpNorm(self.domain[0, 0], exponent=outer_exp)
         self.pwisenorm = PointwiseNorm(self.domain[0],
                                        exponent=singular_vector_exp)
-        self.pshape = (self.domain.size, self.domain[0].size)
-
-    # TODO: Remove when numpy 1.11 is required by ODL
-    def _moveaxis(self, arr, source, dest):
-        """Implementation of `numpy.moveaxis`.
-
-        Needed since `numpy.moveaxis` requires numpy 1.11, which ODL doesn't
-        have as a dependency.
-        """
-        try:
-            source = list(source)
-        except TypeError:
-            source = [source]
-        try:
-            dest = list(dest)
-        except TypeError:
-            dest = [dest]
-
-        source = [a + arr.ndim if a < 0 else a for a in source]
-        dest = [a + arr.ndim if a < 0 else a for a in dest]
-
-        order = [n for n in range(arr.ndim) if n not in source]
-
-        for dest, src in sorted(zip(dest, source)):
-            order.insert(dest, src)
-
-        return arr.transpose(order)
+        self.pshape = (len(self.domain), len(self.domain[0]))
 
     def _asarray(self, vec):
         """Convert ``x`` to an array.
@@ -1953,7 +1941,7 @@ class NuclearNorm(Functional):
 
         This is the inverse of `_asvector`.
         """
-        shape = self.domain[0][0].shape + self.pshape
+        shape = self.domain[0, 0].shape + self.pshape
         arr = np.empty(shape, dtype=self.domain.dtype)
         for i, xi in enumerate(vec):
             for j, xij in enumerate(xi):
@@ -1962,11 +1950,11 @@ class NuclearNorm(Functional):
         return arr
 
     def _asvector(self, arr):
-        """Convert ``vec`` to a `domain` element.
+        """Convert ``arr`` to a `domain` element.
 
         This is the inverse of `_asarray`.
         """
-        result = self._moveaxis(arr, [-2, -1], [0, 1])
+        result = moveaxis(arr, [-2, -1], [0, 1])
         return self.domain.element(result)
 
     def _call(self, x):
@@ -1977,7 +1965,7 @@ class NuclearNorm(Functional):
         svd_diag = np.linalg.svd(arr, compute_uv=False)
 
         # Rotate the axes so the svd-direction is first
-        s_reordered = self._moveaxis(svd_diag, -1, 0)
+        s_reordered = moveaxis(svd_diag, -1, 0)
 
         # Return nuclear norm
         return self.outernorm(self.pwisenorm(s_reordered))
@@ -2013,9 +2001,11 @@ class NuclearNorm(Functional):
 
         class NuclearNormProximal(Operator):
             """Proximal operator of `NuclearNorm`."""
+
             def __init__(self, sigma):
                 self.sigma = float(sigma)
-                Operator.__init__(self, func.domain, func.domain, linear=False)
+                super(NuclearNormProximal, self).__init__(
+                    func.domain, func.domain, linear=False)
 
             def _call(self, x):
                 """Return ``self(x)``."""
@@ -2037,7 +2027,7 @@ class NuclearNorm(Functional):
                     abss = np.abs(s) - (self.sigma - eps)
                     sprox = np.sign(s) * np.maximum(abss, 0)
                 elif func.pwisenorm.exponent == 2:
-                    s_reordered = func._moveaxis(s, -1, 0)
+                    s_reordered = moveaxis(s, -1, 0)
                     snorm = func.pwisenorm(s_reordered).asarray()
                     snorm = np.maximum(self.sigma, snorm, out=snorm)
                     sprox = ((1 - eps) - self.sigma / snorm)[..., None] * s
@@ -2119,7 +2109,7 @@ class IndicatorNuclearNormUnitBall(Functional):
 
         Parameters
         ----------
-        space : `ProductSpace` of `ProductSpace` of `FnBase`
+        space : `ProductSpace` of `ProductSpace` of `TensorSpace`
             Domain of the functional.
         outer_exp : {1, 2, inf}, optional
             Exponent for the outer norm.
@@ -2139,8 +2129,9 @@ class IndicatorNuclearNormUnitBall(Functional):
         >>> norm(space.one())
         inf
         """
+        super(IndicatorNuclearNormUnitBall, self).__init__(
+            space=space, linear=False, grad_lipschitz=np.nan)
         self.__norm = NuclearNorm(space, outer_exp, singular_vector_exp)
-        super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
 
     def _call(self, x):
         """Return ``self(x)``."""
@@ -2155,7 +2146,7 @@ class IndicatorNuclearNormUnitBall(Functional):
     def proximal(self):
         """The proximal operator."""
         # Implement proximal via duality
-        return proximal_cconj(self.convex_conj.proximal)
+        return proximal_convex_conj(self.convex_conj.proximal)
 
     @property
     def convex_conj(self):
@@ -2246,10 +2237,10 @@ https://web.stanford.edu/~boyd/papers/pdf/prox_algs.pdf
         >>> l1_norm = odl.solvers.L1Norm(space)
         >>> smoothed_l1 = MoreauEnvelope(l1_norm)
         """
+        super(MoreauEnvelope, self).__init__(
+            space=functional.domain, linear=False)
         self.__functional = functional
         self.__sigma = sigma
-        super().__init__(space=functional.domain,
-                         linear=False)
 
     @property
     def functional(self):
@@ -2268,7 +2259,217 @@ https://web.stanford.edu/~boyd/papers/pdf/prox_algs.pdf
                 (1 / self.sigma) * self.functional.proximal(self.sigma))
 
 
+class Huber(Functional):
+    """The Huber functional.
+
+    Notes
+    -----
+    The Huber norm is the integral over a smoothed norm. In detail, it is given
+    by
+
+    .. math::
+        F(x) = \\int_\Omega f_{\\gamma}(||x(y)||_2) dy
+
+    where :mth:`||\cdot||_2` denotes the Euclidean norm for vector-valued
+    functions which reduces to the absolute value for scalar-valued functions.
+    The function :math:`f` with smoothing :math:`\\gamma` is given by
+
+    .. math::
+        f_{\\gamma}(t) =
+        \\begin{cases}
+            \\frac{1}{2 \\gamma} t^2 & \\text{if } |t| \leq \\gamma \\\\
+            |t| - \\frac{\\gamma}{2} & \\text{else}
+        \\end{cases}.
+    """
+
+    def __init__(self, space, gamma):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        space : `FnBase`
+            Domain of the functional.
+        gamma : float
+            Smoothing parameter of the Huber functional. If ``gamma = 0``,
+            the functional is non-smooth and corresponds to the usual L1 norm.
+            For ``gamma > 0``, it has a ``1/gamma``-Lipschitz gradient so that
+            its convex conjugate is ``gamma``-strongly convex.
+
+        Examples
+        --------
+        Example of initializing the Huber functional:
+
+        >>> space = odl.uniform_discr(0, 1, 14)
+        >>> gamma = 0.1
+        >>> huber_norm = odl.solvers.Huber(space, gamma=0.1)
+
+        Check that if all elements are > ``gamma`` we get the L1-norm up to a
+        constant:
+
+        >>> x = 2 * gamma * space.one()
+        >>> tol = 1e-5
+        >>> constant = gamma / 2 * space.one().inner(space.one())
+        >>> f = odl.solvers.L1Norm(space) - constant
+        >>> abs(huber_norm(x) - f(x)) < tol
+        True
+
+        Check that if all elements are < ``gamma`` we get the squared L2-norm
+        times the weight ``1/(2*gamma)``:
+
+        >>> x = gamma / 2 * space.one()
+        >>> f = 1 / (2 * gamma) * odl.solvers.L2NormSquared(space)
+        >>> abs(huber_norm(x) - f(x)) < tol
+        True
+
+        Compare Huber- and L1-norm for vanishing smoothing ``gamma=0``:
+
+        >>> x = odl.phantom.white_noise(space)
+        >>> huber_norm = odl.solvers.Huber(space, gamma=0)
+        >>> l1_norm = odl.solvers.L1Norm(space)
+        >>> abs(huber_norm(x) - l1_norm(x)) < tol
+        True
+
+        Redo previous example for a product space in two dimensions:
+
+        >>> domain = odl.uniform_discr([0, 0], [1, 1], [5, 5])
+        >>> space = odl.ProductSpace(domain, 2)
+        >>> x = odl.phantom.white_noise(space)
+        >>> huber_norm = odl.solvers.Huber(space, gamma=0)
+        >>> l1_norm = odl.solvers.GroupL1Norm(space, 2)
+        >>> abs(huber_norm(x) - l1_norm(x)) < tol
+        True
+        """
+        self.__gamma = float(gamma)
+
+        if self.gamma > 0:
+            grad_lipschitz = 1 / self.gamma
+        else:
+            grad_lipschitz = np.inf
+
+        super(Huber, self).__init__(
+            space=space, linear=False, grad_lipschitz=grad_lipschitz)
+
+    @property
+    def gamma(self):
+        """The smoothing parameter of the Huber norm functional."""
+        return self.__gamma
+
+    def _call(self, x):
+        """Return ``self(x)``."""
+        if isinstance(self.domain, ProductSpace):
+            norm = PointwiseNorm(self.domain, 2)(x)
+        else:
+            norm = x.ufuncs.absolute()
+
+        if self.gamma > 0:
+            tmp = norm.ufuncs.square()
+            tmp *= 1 / (2 * self.gamma)
+
+            index = norm.ufuncs.greater_equal(self.gamma)
+            tmp[index] = norm[index] - self.gamma / 2
+        else:
+            tmp = norm
+
+        return tmp.inner(tmp.space.one())
+
+    @property
+    def convex_conj(self):
+        """The convex conjugate"""
+        if isinstance(self.domain, ProductSpace):
+            norm = GroupL1Norm(self.domain, 2)
+        else:
+            norm = L1Norm(self.domain)
+
+        return FunctionalQuadraticPerturb(norm.convex_conj,
+                                          quadratic_coeff=self.gamma / 2)
+
+    @property
+    def proximal(self):
+        """Return the ``proximal factory`` of the functional.
+
+        See Also
+        --------
+        odl.solvers.proximal_huber : `proximal factory` for the Huber
+            norm.
+        """
+        return proximal_huber(space=self.domain, gamma=self.gamma)
+
+    @property
+    def gradient(self):
+        """Gradient operator of the functional.
+
+        The gradient of the Huber functional is given by
+
+            .. math::
+                \\nabla f_{\\gamma}(x) =
+                \\begin{cases}
+                \\frac{1}{\\gamma} x & \\text{if } \|x\|_2 \leq \\gamma \\\\
+                \\frac{1}{\|x\|_2} x & \\text{else}
+                \\end{cases}.
+
+        Examples
+        --------
+        Check that the gradient norm is less than the norm of the one element:
+
+        >>> space = odl.uniform_discr(0, 1, 14)
+        >>> norm_one = space.one().norm()
+        >>> x = odl.phantom.white_noise(space)
+        >>> huber_norm = odl.solvers.Huber(space, gamma=0.1)
+        >>> grad = huber_norm.gradient(x)
+        >>> tol = 1e-5
+        >>> grad.norm() <=  norm_one + tol
+        True
+
+        Redo previous example for a product space in two dimensions:
+
+        >>> domain = odl.uniform_discr([0, 0], [1, 1], [5, 5])
+        >>> space = odl.ProductSpace(domain, 2)
+        >>> norm_one = space.one().norm()
+        >>> x = odl.phantom.white_noise(space)
+        >>> huber_norm = odl.solvers.Huber(space, gamma=0.2)
+        >>> grad = huber_norm.gradient(x)
+        >>> tol = 1e-5
+        >>> grad.norm() <=  norm_one + tol
+        True
+        """
+
+        functional = self
+
+        class HuberGradient(Operator):
+
+            """The gradient operator of this functional."""
+
+            def __init__(self):
+                """Initialize a new instance."""
+                super(HuberGradient, self).__init__(
+                    functional.domain, functional.domain, linear=False)
+
+            def _call(self, x):
+                """Apply the gradient operator to the given point."""
+                if isinstance(self.domain, ProductSpace):
+                    norm = PointwiseNorm(self.domain, 2)(x)
+                else:
+                    norm = x.ufuncs.absolute()
+
+                grad = x / functional.gamma
+
+                index = norm.ufuncs.greater_equal(functional.gamma)
+                if isinstance(self.domain, ProductSpace):
+                    for xi, gi in zip(x, grad):
+                        gi[index] = xi[index] / norm[index]
+                else:
+                    grad[index] = x[index] / norm[index]
+
+                return grad
+
+        return HuberGradient()
+
+    def __repr__(self):
+        '''Return ``repr(self)``.'''
+        return '{}({!r}, {!r})'.format(self.__class__.__name__, self.domain,
+                                       self.gamma)
+
+
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

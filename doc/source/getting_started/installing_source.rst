@@ -20,7 +20,9 @@ Instructions for the impatient:
   .. code-block:: bash
 
     $ cd odl
-    $ pip install --user --editable .
+    $ pip install [--user] --editable .
+
+  Don't use the ``--user`` option together with ``conda``.
 
 - Install the :ref:`extensions you want<Extra dependencies>`.
 

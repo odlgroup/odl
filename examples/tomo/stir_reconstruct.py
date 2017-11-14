@@ -35,4 +35,4 @@ omega = 0.5 / op_norm_est_squared
 # Reconstruct using the STIR forward projector in the ODL reconstruction scheme
 recon = proj.domain.zero()
 odl.solvers.landweber(proj, recon, projections, niter=50, omega=omega)
-recon.show()
+recon.show(force_show=True)

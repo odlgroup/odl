@@ -8,23 +8,19 @@
 
 """Operators and functions for linearized deformation."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
-from builtins import super
-
 import numpy as np
 
 from odl.discr import DiscreteLp, Gradient, Divergence
 from odl.operator import Operator, PointwiseInner
 from odl.space import ProductSpace
+from odl.util import signature_string, indent
 
 
-__all__ = ('LinDeformFixedTempl', 'LinDeformFixedDisp')
+__all__ = ('LinDeformFixedTempl', 'LinDeformFixedDisp', 'linear_deform')
 
 
-def _linear_deform(template, displacement, out=None):
+def linear_deform(template, displacement, out=None):
     """Linearized deformation of a template with a displacement field.
 
     The function maps a given template ``I`` and a given displacement
@@ -60,7 +56,7 @@ def _linear_deform(template, displacement, out=None):
     >>> disp_field_space = space.tangent_bundle
     >>> template = space.element([0, 0, 1, 0, 0])
     >>> displacement_field = disp_field_space.element([[0, 0, 0, -0.2, 0]])
-    >>> _linear_deform(template, displacement_field)
+    >>> linear_deform(template, displacement_field)
     array([ 0.,  0.,  1.,  1.,  0.])
 
     The result depends on the chosen interpolation. With 'linear'
@@ -71,13 +67,14 @@ def _linear_deform(template, displacement, out=None):
     >>> disp_field_space = space.tangent_bundle
     >>> template = space.element([0, 0, 1, 0, 0])
     >>> displacement_field = disp_field_space.element([[0, 0, 0, -0.1, 0]])
-    >>> _linear_deform(template, displacement_field)
+    >>> linear_deform(template, displacement_field)
     array([ 0. ,  0. ,  1. ,  0.5,  0. ])
     """
     image_pts = template.space.points()
     for i, vi in enumerate(displacement):
-        image_pts[:, i] += vi.ntuple.asarray()
-    return template.interpolation(image_pts.T, out=out, bounds_check=False)
+        image_pts[:, i] += vi.asarray().ravel()
+    values = template.interpolation(image_pts.T, out=out, bounds_check=False)
+    return values.reshape(template.space.shape)
 
 
 class LinDeformFixedTempl(Operator):
@@ -136,7 +133,7 @@ class LinDeformFixedTempl(Operator):
             It must fulfill
             ``domain[0].partition == template.space.partition``, so
             this option is useful mainly when using different interpolations
-            in the displacement and template.
+            in displacement and template.
             Default: ``template.space.real_space.tangent_bundle``
 
         Examples
@@ -152,7 +149,7 @@ class LinDeformFixedTempl(Operator):
         >>> op = LinDeformFixedTempl(template)
         >>> disp_field = [[0, 0, 0, -0.2, 0]]
         >>> print(op(disp_field))
-        [0.0, 0.0, 1.0, 1.0, 0.0]
+        [ 0.,  0.,  1.,  1.,  0.]
 
         The result depends on the chosen interpolation. With 'linear'
         interpolation and an offset equal to half the distance between two
@@ -163,7 +160,7 @@ class LinDeformFixedTempl(Operator):
         >>> op = LinDeformFixedTempl(template)
         >>> disp_field = [[0, 0, 0, -0.1, 0]]
         >>> print(op(disp_field))
-        [0.0, 0.0, 1.0, 0.5, 0.0]
+        [ 0. ,  0. ,  1. ,  0.5,  0. ]
         """
         space = getattr(template, 'space', None)
         if not isinstance(space, DiscreteLp):
@@ -175,6 +172,7 @@ class LinDeformFixedTempl(Operator):
             domain = self.template.space.real_space.tangent_bundle
         else:
             if not isinstance(domain, ProductSpace):
+                # TODO: allow non-product spaces in the 1D case
                 raise TypeError('`domain` must be a `ProductSpace` '
                                 'instance, got {!r}'.format(domain))
             if not domain.is_power_space:
@@ -190,9 +188,8 @@ class LinDeformFixedTempl(Operator):
                     'partiton ({!r} != {!r})'
                     ''.format(template.space.partition, domain[0].partition))
 
-        super().__init__(domain=domain,
-                         range=self.template.space,
-                         linear=False)
+        super(LinDeformFixedTempl, self).__init__(
+            domain=domain, range=self.template.space, linear=False)
 
     @property
     def template(self):
@@ -201,7 +198,7 @@ class LinDeformFixedTempl(Operator):
 
     def _call(self, displacement, out=None):
         """Implementation of ``self(displacement[, out])``."""
-        return _linear_deform(self.template, displacement, out)
+        return linear_deform(self.template, displacement, out)
 
     def derivative(self, displacement):
         """Derivative of the operator at ``displacement``.
@@ -218,7 +215,7 @@ class LinDeformFixedTempl(Operator):
         """
         # To implement the complex case we need to be able to embed the real
         # vector field space into the range of the gradient. Issue #59.
-        if not self.range.is_rn:
+        if not self.range.is_real:
             raise NotImplementedError('derivative not implemented for complex '
                                       'spaces.')
 
@@ -229,18 +226,16 @@ class LinDeformFixedTempl(Operator):
                         pad_mode='symmetric')
         grad_templ = grad(self.template)
         def_grad = self.domain.element(
-            [_linear_deform(gf, displacement) for gf in grad_templ])
+            [linear_deform(gf, displacement) for gf in grad_templ])
 
         return PointwiseInner(self.domain, def_grad)
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        arg_reprs = [repr(self.template)]
-        if self.domain != self.__displacement.space[0]:
-            arg_reprs.append('domain={!r}'.format(self.domain))
-        arg_str = ', '.join(arg_reprs)
-
-        return '{}({})'.format(self.__class__.__name__, arg_str)
+        posargs = [self.template]
+        optargs = [('domain', self.domain, self.template.space)]
+        inner_str = signature_string(posargs, optargs, mod='!r', sep=',\n')
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
 
 
 class LinDeformFixedDisp(Operator):
@@ -305,7 +300,7 @@ class LinDeformFixedDisp(Operator):
         >>> op = LinDeformFixedDisp(disp_field)
         >>> template = [0, 0, 1, 0, 0]
         >>> print(op([0, 0, 1, 0, 0]))
-        [0.0, 0.0, 1.0, 1.0, 0.0]
+        [ 0.,  0.,  1.,  1.,  0.]
 
         The result depends on the chosen interpolation. With 'linear'
         interpolation and an offset equal to half the distance between two
@@ -316,7 +311,7 @@ class LinDeformFixedDisp(Operator):
         >>> op = LinDeformFixedDisp(disp_field)
         >>> template = [0, 0, 1, 0, 0]
         >>> print(op(template))
-        [0.0, 0.0, 1.0, 0.5, 0.0]
+        [ 0. ,  0. ,  1. ,  0.5,  0. ]
         """
         space = getattr(displacement, 'space', None)
         if not isinstance(space, ProductSpace):
@@ -341,8 +336,9 @@ class LinDeformFixedDisp(Operator):
                     'partiton ({!r} != {!r})'
                     ''.format(templ_space.partition, space[0].partition))
 
+        super(LinDeformFixedDisp, self).__init__(
+            domain=templ_space, range=templ_space, linear=True)
         self.__displacement = displacement
-        super().__init__(domain=templ_space, range=templ_space, linear=True)
 
     @property
     def displacement(self):
@@ -351,7 +347,7 @@ class LinDeformFixedDisp(Operator):
 
     def _call(self, template, out=None):
         """Implementation of ``self(template[, out])``."""
-        return _linear_deform(template, self.displacement, out)
+        return linear_deform(template, self.displacement, out)
 
     @property
     def inverse(self):
@@ -379,14 +375,12 @@ class LinDeformFixedDisp(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        arg_reprs = [repr(self.displacement)]
-        if self.domain != self.__displacement.space[0]:
-            arg_reprs.append('templ_space={!r}'.format(self.domain))
-        arg_str = ', '.join(arg_reprs)
+        posargs = [self.displacement]
+        optargs = [('templ_space', self.domain, self.displacement.space[0])]
+        inner_str = signature_string(posargs, optargs, mod='!r', sep=',\n')
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
 
-        return '{}({})'.format(self.__class__.__name__, arg_str)
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

@@ -8,25 +8,85 @@
 
 """Ufunc operators for ODL vectors."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
-
 import numpy as np
+
 from odl.set import LinearSpace, RealNumbers, Field
-from odl.space import ProductSpace, fn
+from odl.space import ProductSpace, tensor_space
 from odl.operator import Operator, MultiplyOperator
-from odl.util.utility import is_int_dtype
-from odl.util.ufuncs import UFUNCS
 from odl.solvers import (Functional, ScalingFunctional, FunctionalQuotient,
-                         ConstantFunctional, IdentityFunctional)
+                         ConstantFunctional)
+from odl.util.ufuncs import UFUNCS
 
 __all__ = ()
+
+SUPP_TYPECODES = '?bhilqpBHILQPefdgFDG'
+SUPP_TYPECODES_TO_DTYPES = {tc: np.dtype(tc) for tc in SUPP_TYPECODES}
+
+
+def find_min_signature(ufunc, dtypes_in):
+    """Determine the minimum matching ufunc signature for given dtypes.
+
+    Parameters
+    ----------
+    ufunc : str or numpy.ufunc
+        Ufunc whose signatures are to be considered.
+    dtypes_in :
+        Sequence of objects specifying input dtypes. Its length must match
+        the number of inputs of ``ufunc``, and its entries must be understood
+        by `numpy.dtype`.
+
+    Returns
+    -------
+    signature : str
+        Minimum matching ufunc signature, see, e.g., ``np.add.types``
+        for examples.
+
+    Raises
+    ------
+    TypeError
+        If no valid signature is found.
+    """
+    if not isinstance(ufunc, np.ufunc):
+        ufunc = getattr(np, str(ufunc))
+
+    dtypes_in = [np.dtype(dt_in) for dt_in in dtypes_in]
+    tcs_in = [dt.base.char for dt in dtypes_in]
+
+    if len(tcs_in) != ufunc.nin:
+        raise ValueError('expected {} input dtype(s) for {}, got {}'
+                         ''.format(ufunc.nin, ufunc, len(tcs_in)))
+
+    valid_sigs = []
+    for sig in ufunc.types:
+        sig_tcs_in, sig_tcs_out = sig.split('->')
+        if all(np.dtype(tc_in) <= np.dtype(sig_tc_in) and
+               sig_tc_in in SUPP_TYPECODES
+               for tc_in, sig_tc_in in zip(tcs_in, sig_tcs_in)):
+            valid_sigs.append(sig)
+
+    if not valid_sigs:
+        raise TypeError('no valid signature found for {} and input dtypes {}'
+                        ''.format(ufunc, tuple(dt.name for dt in dtypes_in)))
+
+    def in_dtypes(sig):
+        """Comparison key function for input dtypes of a signature."""
+        sig_tcs_in = sig.split('->')[0]
+        return tuple(np.dtype(tc) for tc in sig_tcs_in)
+
+    return min(valid_sigs, key=in_dtypes)
+
+
+def dtypes_out(ufunc, dtypes_in):
+    """Return the result dtype(s) of ``ufunc`` with inputs of given dtypes."""
+    sig = find_min_signature(ufunc, dtypes_in)
+    tcs_out = sig.split('->')[1]
+    return tuple(np.dtype(tc) for tc in tcs_out)
 
 
 def _is_integer_only_ufunc(name):
     return 'shift' in name or 'bitwise' in name or name == 'invert'
+
 
 LINEAR_UFUNCS = ['negative', 'rad2deg', 'deg2rad', 'add', 'subtract']
 
@@ -159,31 +219,39 @@ def ufunc_class_factory(name, nargin, nargout, docstring):
 
         Parameters
         ----------
-        space : `FnBase`
+        space : `TensorSpace`
             The domain of the operator.
         """
         if not isinstance(space, LinearSpace):
             raise TypeError('`space` {!r} not a `LinearSpace`'.format(space))
 
-        if _is_integer_only_ufunc(name) and not is_int_dtype(space.dtype):
-            raise ValueError("ufunc '{}' only defined with integral dtype"
-                             "".format(name))
-
         if nargin == 1:
+            domain = space0 = space
+            dtypes = [space.dtype]
+        elif nargin == len(space) == 2 and isinstance(space, ProductSpace):
             domain = space
+            space0 = space[0]
+            dtypes = [space[0].dtype, space[1].dtype]
         else:
             domain = ProductSpace(space, nargin)
+            space0 = space
+            dtypes = [space.dtype, space.dtype]
+
+        dts_out = dtypes_out(name, dtypes)
 
         if nargout == 1:
-            range = space
+            range = space0.astype(dts_out[0])
         else:
-            range = ProductSpace(space, nargout)
+            range = ProductSpace(space0.astype(dts_out[0]),
+                                 space0.astype(dts_out[1]))
 
         linear = name in LINEAR_UFUNCS
         Operator.__init__(self, domain=domain, range=range, linear=linear)
 
     def _call(self, x, out=None):
         """Return ``self(x)``."""
+        # TODO: use `__array_ufunc__` when implemented on `ProductSpace`,
+        # or try both
         if out is None:
             if nargin == 1:
                 return getattr(x.ufuncs, name)()
@@ -205,7 +273,7 @@ def ufunc_class_factory(name, nargin, nargout, docstring):
     else:
         dtype = float
 
-    space = fn(3, dtype=dtype)
+    space = tensor_space(3, dtype=dtype)
     if nargin == 1:
         vec = space.element([-1, 1, 2])
         arg = '{}'.format(vec)
@@ -219,7 +287,8 @@ def ufunc_class_factory(name, nargin, nargout, docstring):
             result = getattr(vec.ufuncs, name)(vec2)
 
     if nargout == 2:
-        result = '{{{}, {}}}'.format(result[0], result[1])
+        result_space = ProductSpace(vec.space, 2)
+        result = repr(result_space.element(result))
 
     examples_docstring = RAW_EXAMPLES_DOCSTRING.format(space=space, name=name,
                                                        arg=arg, result=result)
@@ -317,7 +386,7 @@ Create functional with domain/range as real numbers:
 """
 
 RAW_UFUNC_FACTORY_OPERATOR_DOCSTRING = """
-Create operator that acts pointwise on a `FnBase`
+Create operator that acts pointwise on a `TensorSpace`
 
 >>> space = odl.rn(3)
 >>> op = odl.ufunc_ops.{name}(space)
@@ -369,6 +438,5 @@ for name, nargin, nargout, docstring in UFUNCS:
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

@@ -10,17 +10,16 @@
 
 from __future__ import division
 import numpy as np
-import pytest
 import scipy.special
 
 import odl
 from odl.solvers.nonsmooth.proximal_operators import (
     combine_proximals, proximal_const_func,
     proximal_box_constraint, proximal_nonnegativity,
-    proximal_cconj_l1,
+    proximal_convex_conj_l1, proximal_convex_conj_l1_l2,
     proximal_l2,
-    proximal_cconj_l2_squared,
-    proximal_cconj_kl, proximal_cconj_kl_cross_entropy)
+    proximal_convex_conj_l2_squared,
+    proximal_convex_conj_kl, proximal_convex_conj_kl_cross_entropy)
 from odl.util.testutils import all_almost_equal
 
 
@@ -219,7 +218,7 @@ def test_proximal_convconj_l2_sq_wo_data():
 
     # Factory function returning the proximal operator
     lam = 2
-    prox_factory = proximal_cconj_l2_squared(space, lam=lam)
+    prox_factory = proximal_convex_conj_l2_squared(space, lam=lam)
 
     # Initialize the proximal operator
     sigma = 0.25
@@ -254,7 +253,7 @@ def test_proximal_convconj_l2_sq_with_data():
 
     # Factory function returning the proximal operator
     lam = 2
-    prox_factory = proximal_cconj_l2_squared(space, lam=lam, g=g)
+    prox_factory = proximal_convex_conj_l2_squared(space, lam=lam, g=g)
 
     # Initialize the proximal operator
     sigma = 0.25
@@ -286,7 +285,7 @@ def test_proximal_convconj_l1_simple_space_without_data():
 
     # Factory function returning the proximal operator
     lam = 2
-    prox_factory = proximal_cconj_l1(space, lam=lam)
+    prox_factory = proximal_convex_conj_l1(space, lam=lam)
 
     # Initialize the proximal operator of F^*
     sigma = 0.25
@@ -295,14 +294,23 @@ def test_proximal_convconj_l1_simple_space_without_data():
     assert isinstance(prox, odl.Operator)
 
     # Apply the proximal operator returning its optimal point
-    x_opt = space.element()
-    prox(x, x_opt)
-
     # Explicit computation: x / max(lam, |x|)
     denom = np.maximum(lam, np.sqrt(x_arr ** 2))
-    x_verify = lam * x_arr / denom
+    x_exact = lam * x_arr / denom
 
-    assert all_almost_equal(x_opt, x_verify, HIGH_ACC)
+    # Using out
+    x_opt = space.element()
+    x_result = prox(x, x_opt)
+    assert x_result is x_opt
+    assert all_almost_equal(x_opt, x_exact, HIGH_ACC)
+
+    # Without out
+    x_result = prox(x)
+    assert all_almost_equal(x_result, x_exact, HIGH_ACC)
+
+    # With aliased out
+    x_result = prox(x, x)
+    assert all_almost_equal(x_result, x_exact, HIGH_ACC)
 
 
 def test_proximal_convconj_l1_simple_space_with_data():
@@ -319,7 +327,7 @@ def test_proximal_convconj_l1_simple_space_with_data():
 
     # Factory function returning the proximal operator
     lam = 2
-    prox_factory = proximal_cconj_l1(space, lam=lam, g=g)
+    prox_factory = proximal_convex_conj_l1(space, lam=lam, g=g)
 
     # Initialize the proximal operator of F^*
     sigma = 0.25
@@ -357,7 +365,7 @@ def test_proximal_convconj_l1_product_space():
 
     # Factory function returning the proximal operator
     lam = 2
-    prox_factory = proximal_cconj_l1(op_domain, lam=lam, g=g, isotropic=True)
+    prox_factory = proximal_convex_conj_l1_l2(op_domain, lam=lam, g=g)
 
     # Initialize the proximal operator
     sigma = 0.25
@@ -392,7 +400,7 @@ def test_proximal_convconj_kl_simple_space():
 
     # Factory function returning the proximal operator
     lam = 2
-    prox_factory = proximal_cconj_kl(space, lam=lam, g=g)
+    prox_factory = proximal_convex_conj_kl(space, lam=lam, g=g)
 
     # Initialize the proximal operator of F^*
     sigma = 0.25
@@ -430,7 +438,7 @@ def test_proximal_convconj_kl_product_space():
 
     # Factory function returning the proximal operator
     lam = 2
-    prox_factory = proximal_cconj_kl(op_domain, lam=lam, g=g)
+    prox_factory = proximal_convex_conj_kl(op_domain, lam=lam, g=g)
 
     # Initialize the proximal operator
     sigma = 0.25
@@ -462,7 +470,7 @@ def test_proximal_convconj_kl_cross_entropy():
 
     # Factory function returning the proximal operator
     lam = 2
-    prox_factory = proximal_cconj_kl_cross_entropy(space, lam=lam, g=g)
+    prox_factory = proximal_convex_conj_kl_cross_entropy(space, lam=lam, g=g)
 
     # Initialize the proximal operator of F^*
     sigma = 0.25
@@ -477,7 +485,7 @@ def test_proximal_convconj_kl_cross_entropy():
 
     # Explicit computation:
     x_verify = x - lam * scipy.special.lambertw(
-        sigma / lam * g * np.exp(x / lam))
+        sigma / lam * g * np.exp(x / lam)).real
 
     assert all_almost_equal(prox_val, x_verify, HIGH_ACC)
 
@@ -489,4 +497,4 @@ def test_proximal_convconj_kl_cross_entropy():
 
 
 if __name__ == '__main__':
-    pytest.main([str(__file__.replace('\\', '/')), '-v'])
+    odl.util.test_file(__file__)

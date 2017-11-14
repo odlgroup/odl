@@ -6,10 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
 
 __all__ = ('skip_if_no_astra', 'skip_if_no_astra_cuda', 'skip_if_no_skimage')
 

@@ -17,7 +17,7 @@ import pytest
 import numpy as np
 
 import odl
-from odl.util.testutils import almost_equal, never_skip
+from odl.util.testutils import almost_equal, never_skip, simple_fixture
 
 skip_if_no_pyfftw = pytest.mark.skipif("not odl.trafos.PYFFTW_AVAILABLE",
                                        reason='pyfftw not available')
@@ -27,33 +27,20 @@ pytestmark = odl.util.skip_if_no_largescale
 # --- pytest fixtures --- #
 
 
-impl_params = [never_skip('numpy'), skip_if_no_pyfftw('pyfftw')]
-impl_ids = [" impl = '{}'".format(p.args[1]) for p in impl_params]
-
-
 # bug in pytest (ignores pytestmark) forces us to do this this
+impl_params = [never_skip('numpy'), skip_if_no_pyfftw('pyfftw')]
 largescale = " or not pytest.config.getoption('--largescale')"
-impl_params = [pytest.mark.skipif(p.args[0] + largescale, p.args[1])
-               for p in impl_params]
+impl = simple_fixture('impl',
+                      [pytest.mark.skipif(p.args[0] + largescale, p.args[1])
+                       for p in impl_params])
 
-
-@pytest.fixture(scope="module", ids=impl_ids, params=impl_params)
-def impl(request):
-    return request.param
-
-
-dom_params = [odl.uniform_discr(-2, 2, 10 ** 5),
-              odl.uniform_discr([-2, -2, -2], [2, 2, 2], [200, 200, 200]),
-              odl.uniform_discr(-2, 2, 10 ** 5, dtype='complex'),
-              odl.uniform_discr([-2, -2, -2], [2, 2, 2], [200, 200, 200],
-                                dtype='complex')]
-
-dom_ids = [' {!r} '.format(dom) for dom in dom_params]
-
-
-@pytest.fixture(scope="module", ids=dom_ids, params=dom_params)
-def domain(request):
-    return request.param
+domain = simple_fixture(
+    name='domain',
+    params=[odl.uniform_discr(-2, 2, 10 ** 5),
+            odl.uniform_discr([-2, -2, -2], [2, 2, 2], [200, 200, 200]),
+            odl.uniform_discr(-2, 2, 10 ** 5, dtype='complex'),
+            odl.uniform_discr([-2, -2, -2], [2, 2, 2], [200, 200, 200],
+                              dtype='complex')])
 
 
 # --- FourierTransform tests --- #
@@ -67,7 +54,7 @@ def test_dft_forward(domain, impl):
     out = dft.range.element()
 
     dft(one, out=out)
-    assert out[0] == domain.size
+    assert out[(0,) * out.ndim] == domain.size
 
 
 def test_fourier_trafo_forward_complex(domain, impl):
@@ -96,4 +83,4 @@ def test_fourier_trafo_forward_complex(domain, impl):
 
 
 if __name__ == '__main__':
-    pytest.main([str(__file__.replace('\\', '/')), '-v', '--largescale'])
+    odl.util.test_file(__file__, ['--largescale'])

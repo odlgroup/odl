@@ -54,3 +54,5 @@ callback = (odl.solvers.CallbackShow(step=20, clim=[0, 255]) &
 # Call the solver. x is updated in-place with the consecutive iterates.
 odl.solvers.forward_backward_pd(x, f, g, lin_ops, h, tau=1.0,
                                 sigma=[0.01], niter=1000, callback=callback)
+
+x.show(title='reconstruction', force_show=True)

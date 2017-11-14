@@ -15,13 +15,13 @@ reco_space = odl.uniform_discr(
 # Parallel beam geometry with flat detector
 # Angles: uniformly spaced, n = 360, min = 0, max = pi
 angle_partition = odl.uniform_partition(0, np.pi, 360)
-# Detector: uniformly sampled, n = 558, min = -30, max = 30
-detector_partition = odl.uniform_partition(-30, 30, 558)
+# Detector: uniformly sampled, n = 512, min = -30, max = 30
+detector_partition = odl.uniform_partition(-30, 30, 512)
 geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 
 # Ray transform (= forward projection). The backend is set explicitly -
 # possible choices are 'astra_cpu', 'astra_cuda' and 'skimage'.
-ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl='skimage')
+ray_trafo = odl.tomo.RayTransform(reco_space, geometry)
 
 # Create a discretized phantom that is a Shepp-Logan phantom in the real
 # part and a cuboid in the imaginary part
@@ -41,4 +41,4 @@ backproj = ray_trafo.adjoint(proj_data)
 # Show phantom, sinogram, and back-projected sinogram
 phantom.show(title='Phantom')
 proj_data.show(title='Projection data (sinogram)')
-backproj.show(title='Back-projected data')
+backproj.show(title='Back-projected data', force_show=True)

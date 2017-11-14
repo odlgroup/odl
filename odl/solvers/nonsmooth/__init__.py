@@ -15,8 +15,11 @@ __all__ = ()
 from .proximal_operators import *
 __all__ += proximal_operators.__all__
 
-from .chambolle_pock import *
-__all__ += chambolle_pock.__all__
+from .admm import *
+__all__ += admm.__all__
+
+from .primal_dual_hybrid_gradient import *
+__all__ += primal_dual_hybrid_gradient.__all__
 
 from .douglas_rachford import *
 __all__ += douglas_rachford.__all__

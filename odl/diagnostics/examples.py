@@ -8,11 +8,7 @@
 
 """Functions for generating standardized examples in spaces."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
-
 from itertools import product
 
 __all__ = ('samples',)
@@ -45,6 +41,5 @@ def samples(*sets):
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

@@ -17,7 +17,7 @@ from odl.solvers.nonsmooth.proximal_operators import (
     proximal_arg_scaling, proximal_composition,
     proximal_quadratic_perturbation, proximal_translation,
     proximal_l2_squared)
-from odl.util.testutils import all_almost_equal, noise_element
+from odl.util.testutils import all_almost_equal, noise_element, simple_fixture
 
 # Places for the accepted error when comparing results
 PLACES = 8
@@ -27,41 +27,12 @@ PLACES = 8
 
 
 scalar_params = [0.01, 2.7, np.array(5.0), 10, -2, -0.2, -np.array(7.1), 0]
-scalar_ids = [' scalar={} '.format(s) for s in scalar_params]
-
-
-@pytest.fixture(scope='module', params=scalar_params, ids=scalar_ids)
-def scalar(request):
-    return request.param
-
-
-nonneg_scalar_params = [s for s in scalar_params if s >= 0]
-nonneg_scalar_ids = [' nonneg_scalar={} '.format(s)
-                     for s in nonneg_scalar_params]
-
-
-@pytest.fixture(scope='module', params=nonneg_scalar_params,
-                ids=nonneg_scalar_ids)
-def nonneg_scalar(request):
-    return request.param
-
-
-pos_scalar_params = [s for s in scalar_params if s > 0]
-pos_scalar_ids = [' pos_scalar={} '.format(s) for s in pos_scalar_params]
-
-
-@pytest.fixture(scope='module', params=pos_scalar_params, ids=pos_scalar_ids)
-def pos_scalar(request):
-    return request.param
-
-
-sigma_params = [0.001, 2.7, np.array(0.5), 10]
-sigma_ids = [' sigma={} '.format(s) for s in sigma_params]
-
-
-@pytest.fixture(scope='module', params=sigma_params, ids=sigma_ids)
-def sigma(request):
-    return request.param
+scalar = simple_fixture('scalar', scalar_params)
+nonneg_scalar = simple_fixture('nonneg_scalar',
+                               [s for s in scalar_params if s >= 0])
+pos_scalar = simple_fixture('pos_scalar',
+                            [s for s in scalar_params if s > 0])
+sigma = simple_fixture('sigma', [0.001, 2.7, np.array(0.5), 10])
 
 
 # --- proximal utils tests --- #
@@ -158,4 +129,4 @@ def test_proximal_composition(pos_scalar, sigma):
 
 
 if __name__ == '__main__':
-    pytest.main([str(__file__.replace('\\', '/')), '-v'])
+    odl.util.test_file(__file__)

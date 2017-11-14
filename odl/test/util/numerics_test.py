@@ -10,6 +10,7 @@ from __future__ import division
 import numpy as np
 import pytest
 
+import odl
 from odl.util import (
     apply_on_boundary, fast_1d_tensor_mult, resize_array, is_real_dtype)
 from odl.util.numerics import _SUPPORTED_RESIZE_PAD_MODES
@@ -22,9 +23,9 @@ from odl.util.testutils import all_equal, almost_equal, simple_fixture
 paddings = list(_SUPPORTED_RESIZE_PAD_MODES)
 paddings.remove('constant')
 paddings.extend([('constant', 0), ('constant', 1)])
-padding_ids = [" pad_mode = '{}' {} ".format(*p)
+padding_ids = [" pad_mode='{}'-{} ".format(*p)
                if isinstance(p, tuple)
-               else " pad_mode = '{}' ".format(p)
+               else " pad_mode='{}' ".format(p)
                for p in paddings]
 
 
@@ -477,5 +478,6 @@ def test_resize_array_raise():
     with pytest.raises(ValueError):
         resize_array(small_arr, (3, 4), offset=(0, 1), pad_mode='periodic')
 
+
 if __name__ == '__main__':
-    pytest.main([str(__file__.replace('\\', '/')), '-v'])
+    odl.util.test_file(__file__)

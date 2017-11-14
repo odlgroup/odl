@@ -18,8 +18,8 @@ class MyFunctional(odl.solvers.Functional):
         # This comand calls the init of Functional and sets a number of
         # parameters associated with a functional. All but domain have default
         # values if not set.
-        odl.solvers.Functional.__init__(self, space=space, linear=False,
-                                        grad_lipschitz=2)
+        super(MyFunctional, self).__init__(
+            space=space, linear=False, grad_lipschitz=2)
 
     def _call(self, x):
         # This is what is returned when calling my_func(x)

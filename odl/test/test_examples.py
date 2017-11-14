@@ -20,8 +20,10 @@ This package assumes that all dependencies are installed.
 
 from __future__ import division
 import os
-import imp
 import pytest
+import sys
+import odl
+
 try:
     import matplotlib
     matplotlib.use('Agg')  # To avoid the backend freezing
@@ -29,15 +31,17 @@ try:
 except ImportError:
     pass
 
+ignore_prefix = ['stir', 'proximal_lang']
+
 # Make a fixture for all examples
-this_file_path = os.path.dirname(os.path.abspath(__file__))
-examples_path = os.path.join(this_file_path,
-                             os.path.pardir, os.path.pardir, 'examples')
+here = os.path.dirname(os.path.abspath(__file__))
+examples_path = os.path.join(here, os.path.pardir, os.path.pardir, 'examples')
 example_ids = []
 example_params = []
 for dirpath, dirnames, filenames in os.walk(examples_path):
-    for filename in [f for f in filenames if f.endswith(".py") and
-                     not f.startswith('__init__')]:
+    for filename in [f for f in filenames
+                     if f.endswith('.py') and
+                     not any(f.startswith(pre) for pre in ignore_prefix)]:
         example_params.append(os.path.join(dirpath, filename))
         example_ids.append(filename[:-3])  # skip .py
 
@@ -50,9 +54,18 @@ def example(request):
 @pytest.mark.skipif("not pytest.config.getoption('--examples')",
                     reason='Need --examples option to run')
 def test_example(example):
-    imp.load_source('tmp', example)
+    if (sys.version_info.major, sys.version_info.minor) <= (3, 3):
+        # The `imp` module is deprecated since 3.4
+        import imp
+        imp.load_source('tmp', example)
+    else:
+        import importlib
+        spec = importlib.util.spec_from_file_location('tmp', example)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+
     plt.close('all')
 
 
 if __name__ == '__main__':
-    pytest.main([str(__file__.replace('\\', '/')), '-v', '--examples'])
+    odl.util.test_file(__file__)

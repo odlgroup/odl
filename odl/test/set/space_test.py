@@ -20,10 +20,10 @@ normed_spaces = [odl.rn(3, exponent=1)] + hilbert_spaces
 metric_spaces = normed_spaces
 linear_spaces = metric_spaces
 
-hilbert_space = simple_fixture('space', hilbert_spaces)
-normed_space = simple_fixture('space', normed_spaces)
-metric_space = simple_fixture('space', metric_spaces)
-linear_space = simple_fixture('space', linear_spaces)
+hilbert_space = simple_fixture('hilbert_space', hilbert_spaces)
+normed_space = simple_fixture('normed_space', normed_spaces)
+metric_space = simple_fixture('metric_space', metric_spaces)
+linear_space = simple_fixture('linear_space', linear_spaces)
 
 
 # --- LinearSpace tests --- #
@@ -76,4 +76,4 @@ def test_comparsion(linear_space):
 
 
 if __name__ == '__main__':
-    pytest.main([str(__file__.replace('\\', '/')), '-v'])
+    odl.util.test_file(__file__)

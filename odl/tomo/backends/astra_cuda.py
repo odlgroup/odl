@@ -8,27 +8,24 @@
 
 """Backend for ASTRA using CUDA."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
-
+from builtins import object
 import numpy as np
-from pkg_resources import parse_version
 try:
     import astra
     ASTRA_CUDA_AVAILABLE = astra.astra.use_cuda()
 except ImportError:
     ASTRA_CUDA_AVAILABLE = False
 
-from odl.discr import DiscreteLp, DiscreteLpElement
+from odl.discr import DiscreteLp
 from odl.tomo.backends.astra_setup import (
     ASTRA_VERSION,
     astra_projection_geometry, astra_volume_geometry, astra_projector,
     astra_data, astra_algorithm)
 from odl.tomo.geometry import (
     Geometry, Parallel2dGeometry, FanFlatGeometry, Parallel3dAxisGeometry,
-    HelicalConeFlatGeometry)
+    ConeFlatGeometry)
+from multiprocessing import Lock
 
 
 __all__ = ('ASTRA_CUDA_AVAILABLE',
@@ -38,7 +35,12 @@ __all__ = ('ASTRA_CUDA_AVAILABLE',
 class AstraCudaProjectorImpl(object):
 
     """Thin wrapper around ASTRA."""
-
+    
+    algo_id = None
+    vol_id = None
+    sino_id = None
+    proj_id = None
+            
     def __init__(self, geometry, reco_space, proj_space):
         """Initialize a new instance.
 
@@ -62,6 +64,10 @@ class AstraCudaProjectorImpl(object):
 
         self.create_ids()
 
+        # Create a mutually exclusive lock so that two callers cant use the
+        # same shared resource at the same time.
+        self._mutex = Lock()
+
     def call_forward(self, vol_data, out=None):
         """Run an ASTRA forward projection on the given data using the GPU.
 
@@ -79,49 +85,60 @@ class AstraCudaProjectorImpl(object):
             Projection data resulting from the application of the projector.
             If ``out`` was provided, the returned object is a reference to it.
         """
-        assert vol_data in self.reco_space
-        if out is not None:
-            assert out in self.proj_space
-        else:
-            out = self.proj_space.element()
+        with self._mutex:
+            assert vol_data in self.reco_space
+            if out is not None:
+                assert out in self.proj_space
+            else:
+                out = self.proj_space.element()
 
-        # Copy data to GPU memory
-        if self.geometry.ndim == 2:
-            astra.data2d.store(self.vol_id, vol_data.asarray())
-        elif self.geometry.ndim == 3:
-            astra.data3d.store(self.vol_id, vol_data.asarray())
-        else:
-            raise RuntimeError('unknown ndim')
+            # Copy data to GPU memory
+            if self.geometry.ndim == 2:
+                astra.data2d.store(self.vol_id, vol_data.asarray())
+            elif self.geometry.ndim == 3:
+                astra.data3d.store(self.vol_id, vol_data.asarray())
+            else:
+                raise RuntimeError('unknown ndim')
 
-        # Run algorithm
-        astra.algorithm.run(self.algo_id)
+            # Run algorithm
+            astra.algorithm.run(self.algo_id)
 
-        # Copy result to host
-        if self.geometry.ndim == 2:
-            out[:] = self.out_array
-        elif self.geometry.ndim == 3:
-            out[:] = np.rollaxis(self.out_array, 0, 3)
+            # Copy result to host
+            if self.geometry.ndim == 2:
+                out[:] = self.out_array
+            elif self.geometry.ndim == 3:
+                out[:] = np.swapaxes(self.out_array, 0, 1).reshape(
+                    self.proj_space.shape)
 
-        # Fix scaling to weight by pixel size
-        if isinstance(self.geometry, Parallel2dGeometry):
-            # parallel2d scales with pixel stride
-            out *= 1 / float(self.geometry.det_partition.cell_volume)
+            # Fix scaling to weight by pixel size
+            if isinstance(self.geometry, Parallel2dGeometry):
+                # parallel2d scales with pixel stride
+                out *= 1 / float(self.geometry.det_partition.cell_volume)
 
-        return out
+            return out
 
     def create_ids(self):
         """Create ASTRA objects."""
-        ndim = self.geometry.ndim
-
         # Create input and output arrays
-        if ndim == 2:
-            astra_proj_shape = self.proj_space.shape
-        elif ndim == 3:
-            astra_proj_shape = (self.proj_space.shape[2],
-                                self.proj_space.shape[0],
-                                self.proj_space.shape[1])
+        if self.geometry.motion_partition.ndim == 1:
+            motion_shape = self.geometry.motion_partition.shape
+        else:
+            # Need to flatten 2- or 3-dimensional angles into one axis
+            motion_shape = (np.prod(self.geometry.motion_partition.shape),)
 
-        self.in_array = np.empty(self.reco_space.shape,
+        proj_shape = motion_shape + self.geometry.det_partition.shape
+        proj_ndim = len(proj_shape)
+
+        if proj_ndim == 2:
+            astra_proj_shape = proj_shape
+            astra_vol_shape = self.reco_space.shape
+        elif proj_ndim == 3:
+            # The `u` and `v` axes of the projection data are swapped,
+            # see explanation in `astra_*_3d_geom_to_vec`.
+            astra_proj_shape = (proj_shape[1], proj_shape[0], proj_shape[2])
+            astra_vol_shape = self.reco_space.shape
+
+        self.in_array = np.empty(astra_vol_shape,
                                  dtype='float32', order='C')
         self.out_array = np.empty(astra_proj_shape,
                                   dtype='float32', order='C')
@@ -136,17 +153,17 @@ class AstraCudaProjectorImpl(object):
                                  allow_copy=False)
 
         self.proj_id = astra_projector('nearest', vol_geom, proj_geom,
-                                       ndim, impl='cuda')
+                                       ndim=proj_ndim, impl='cuda')
 
         self.sino_id = astra_data(proj_geom,
                                   datatype='projection',
-                                  ndim=self.proj_space.ndim,
+                                  ndim=proj_ndim,
                                   data=self.out_array,
                                   allow_copy=False)
 
         # Create algorithm
         self.algo_id = astra_algorithm(
-            'forward', ndim, self.vol_id, self.sino_id,
+            'forward', proj_ndim, self.vol_id, self.sino_id,
             proj_id=self.proj_id, impl='cuda')
 
     def __del__(self):
@@ -173,7 +190,12 @@ class AstraCudaProjectorImpl(object):
 class AstraCudaBackProjectorImpl(object):
 
     """Thin wrapper around ASTRA."""
-
+    
+    algo_id = None
+    vol_id = None
+    sino_id = None
+    proj_id = None
+    
     def __init__(self, geometry, reco_space, proj_space):
         """Initialize a new instance.
 
@@ -195,6 +217,10 @@ class AstraCudaBackProjectorImpl(object):
         self.proj_space = proj_space
         self.create_ids()
 
+        # Create a mutually exclusive lock so that two callers cant use the
+        # same shared resource at the same time.
+        self._mutex = Lock()
+
     def call_backward(self, proj_data, out=None):
         """Run an ASTRA back-projection on the given data using the GPU.
 
@@ -213,46 +239,58 @@ class AstraCudaBackProjectorImpl(object):
             back-projector. If ``out`` was provided, the returned object is a
             reference to it.
         """
+        with self._mutex:
+            assert proj_data in self.proj_space
+            if out is not None:
+                assert out in self.reco_space
+            else:
+                out = self.reco_space.element()
 
-        assert proj_data in self.proj_space
-        if out is not None:
-            assert out in self.reco_space
-        else:
-            out = self.reco_space.element()
+            # Copy data to GPU memory
+            if self.geometry.ndim == 2:
+                astra.data2d.store(self.sino_id, proj_data.asarray())
+            elif self.geometry.ndim == 3:
+                shape = (-1,) + self.geometry.det_partition.shape
+                reshaped_proj_data = proj_data.asarray().reshape(shape)
+                swapped_proj_data = np.ascontiguousarray(
+                    np.swapaxes(reshaped_proj_data, 0, 1))
+                astra.data3d.store(self.sino_id, swapped_proj_data)
 
-        # Copy data to GPU memory
-        if self.geometry.ndim == 2:
-            astra.data2d.store(self.sino_id, proj_data.asarray())
-        elif self.geometry.ndim == 3:
-            swapped_proj_data = np.rollaxis(proj_data.asarray(), 2, 0)
-            astra.data3d.store(self.sino_id, swapped_proj_data)
+            # Run algorithm
+            astra.algorithm.run(self.algo_id)
 
-        # Run algorithm
-        astra.algorithm.run(self.algo_id)
+            # Copy result to CPU memory
+            out[:] = self.out_array
 
-        # Copy result to CPU memory
-        out[:] = self.out_array
+            # Fix scaling to weight by pixel/voxel size
+            out *= astra_cuda_bp_scaling_factor(
+                self.proj_space, self.reco_space, self.geometry)
 
-        # Fix scaling to weight by pixel/voxel size
-        out *= astra_cuda_bp_scaling_factor(
-            self.proj_space, self.reco_space, self.geometry)
-
-        return out
+            return out
 
     def create_ids(self):
         """Create ASTRA objects."""
-        ndim = self.geometry.ndim
+        if self.geometry.motion_partition.ndim == 1:
+            motion_shape = self.geometry.motion_partition.shape
+        else:
+            # Need to flatten 2- or 3-dimensional angles into one axis
+            motion_shape = (np.prod(self.geometry.motion_partition.shape),)
 
-        if ndim == 2:
-            astra_proj_shape = self.proj_space.shape
-        elif ndim == 3:
-            astra_proj_shape = (self.proj_space.shape[2],
-                                self.proj_space.shape[0],
-                                self.proj_space.shape[1])
+        proj_shape = motion_shape + self.geometry.det_partition.shape
+        proj_ndim = len(proj_shape)
+
+        if proj_ndim == 2:
+            astra_proj_shape = proj_shape
+            astra_vol_shape = self.reco_space.shape
+        elif proj_ndim == 3:
+            # The `u` and `v` axes of the projection data are swapped,
+            # see explanation in `astra_*_3d_geom_to_vec`.
+            astra_proj_shape = (proj_shape[1], proj_shape[0], proj_shape[2])
+            astra_vol_shape = self.reco_space.shape
 
         self.in_array = np.empty(astra_proj_shape,
                                  dtype='float32', order='C')
-        self.out_array = np.empty(self.reco_space.shape,
+        self.out_array = np.empty(astra_vol_shape,
                                   dtype='float32', order='C')
 
         # Create ASTRA data structures
@@ -261,11 +299,11 @@ class AstraCudaBackProjectorImpl(object):
         self.sino_id = astra_data(proj_geom,
                                   datatype='projection',
                                   data=self.in_array,
-                                  ndim=self.proj_space.ndim,
+                                  ndim=proj_ndim,
                                   allow_copy=False)
 
         self.proj_id = astra_projector('nearest', vol_geom, proj_geom,
-                                       ndim, impl='cuda')
+                                       proj_ndim, impl='cuda')
 
         self.vol_id = astra_data(vol_geom,
                                  datatype='volume',
@@ -275,7 +313,7 @@ class AstraCudaBackProjectorImpl(object):
 
         # Create algorithm
         self.algo_id = astra_algorithm(
-            'backward', ndim, self.vol_id, self.sino_id,
+            'backward', proj_ndim, self.vol_id, self.sino_id,
             proj_id=self.proj_id, impl='cuda')
 
     def __del__(self):
@@ -310,11 +348,16 @@ def astra_cuda_bp_scaling_factor(proj_space, reco_space, geometry):
     Behavior of ASTRA changes slightly between versions, so we keep
     track of it and adapt the scaling accordingly.
     """
+    # Lazy import due to long import time
+    from pkg_resources import parse_version
+
     # Angular integration weighting factor
     # angle interval weight by approximate cell volume
-    angle_extent = float(geometry.motion_partition.extent)
-    num_angles = float(geometry.motion_partition.size)
-    scaling_factor = angle_extent / num_angles
+    angle_extent = geometry.motion_partition.extent
+    num_angles = geometry.motion_partition.shape
+    # TODO: this gives the wrong factor for Parallel3dEulerGeometry with
+    # 2 angles
+    scaling_factor = (angle_extent / num_angles).prod()
 
     # Correct in case of non-weighted spaces
     proj_extent = float(proj_space.partition.extent.prod())
@@ -342,7 +385,7 @@ def astra_cuda_bp_scaling_factor(proj_space, reco_space, geometry):
             # In 1.7, only cubic voxels are supported
             voxel_stride = reco_space.cell_sides[0]
             scaling_factor /= float(voxel_stride)
-        elif isinstance(geometry, HelicalConeFlatGeometry):
+        elif isinstance(geometry, ConeFlatGeometry):
             # Scales with 1 / cell_volume
             # In 1.7, only cubic voxels are supported
             voxel_stride = reco_space.cell_sides[0]
@@ -367,15 +410,18 @@ def astra_cuda_bp_scaling_factor(proj_space, reco_space, geometry):
             # Scales with cell volume
             # currently only square voxels are supported
             scaling_factor /= reco_space.cell_volume
-        elif isinstance(geometry, HelicalConeFlatGeometry):
+        elif isinstance(geometry, ConeFlatGeometry):
             # Scales with cell volume
             scaling_factor /= reco_space.cell_volume
-            # Magnification correction
+            # Magnification correction (scaling = 1 / magnification ** 2)
             src_radius = geometry.src_radius
             det_radius = geometry.det_radius
             scaling_factor *= ((src_radius + det_radius) / src_radius) ** 2
 
-            # Correction for scaled 1/r^2 factor in ASTRA's density weighting
+            # Correction for scaled 1/r^2 factor in ASTRA's density weighting.
+            # This compensates for scaled voxels and pixels, as well as a
+            # missing factor src_radius ** 2 in the ASTRA BP with
+            # density weighting.
             det_px_area = geometry.det_partition.cell_volume
             scaling_factor *= (src_radius ** 2 * det_px_area ** 2 /
                                reco_space.cell_volume ** 2)
@@ -386,6 +432,5 @@ def astra_cuda_bp_scaling_factor(proj_space, reco_space, geometry):
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

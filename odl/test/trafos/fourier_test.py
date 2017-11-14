@@ -87,10 +87,10 @@ def test_dft_init_raise():
 
     # Bad types
     with pytest.raises(TypeError):
-        DiscreteFourierTransform(dom.dspace)
+        DiscreteFourierTransform(dom.tspace)
 
     with pytest.raises(TypeError):
-        DiscreteFourierTransform(dom, dom.dspace)
+        DiscreteFourierTransform(dom, dom.tspace)
 
     # Illegal arguments
     with pytest.raises(ValueError):
@@ -509,8 +509,7 @@ def test_fourier_trafo_scaling():
     def char_interval_ft(x):
         return np.exp(-1j * x / 2) * sinc(x / 2) / np.sqrt(2 * np.pi)
 
-    fspace = odl.FunctionSpace(odl.IntervalProd(-2, 2),
-                               field=odl.ComplexNumbers())
+    fspace = odl.FunctionSpace(odl.IntervalProd(-2, 2), out_dtype=complex)
     discr = odl.uniform_discr_fromspace(fspace, 40, impl='numpy')
     dft = FourierTransform(discr)
 
@@ -844,5 +843,6 @@ def test_fourier_trafo_completely():
     assert np.allclose(ft_f_s, fhat(recip_s.coord_vectors[0]))
     assert np.allclose(ft_f_n, fhat(recip_n.coord_vectors[0]))
 
+
 if __name__ == '__main__':
-    pytest.main([str(__file__.replace('\\', '/')), '-v'])
+    odl.util.test_file(__file__)

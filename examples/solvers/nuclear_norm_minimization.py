@@ -58,3 +58,5 @@ x = data.copy()
 odl.solvers.douglas_rachford_pd(x, f, g, lin_ops,
                                 tau=1e-2, sigma=[1.0, 1e-3],
                                 niter=2000, callback=callback)
+
+x.show('douglas rachford result', force_show=True)

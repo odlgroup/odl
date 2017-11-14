@@ -8,12 +8,7 @@
 
 """Ray transforms."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str, super
-
 import numpy as np
 import warnings
 
@@ -22,7 +17,7 @@ from odl.operator import Operator
 from odl.space import FunctionSpace
 from odl.tomo.geometry import (
     Geometry, Parallel2dGeometry, Parallel3dAxisGeometry)
-from odl.space.weighting import NoWeighting, ConstWeighting
+from odl.space.weighting import ConstWeighting
 from odl.tomo.backends import (
     ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE, SKIMAGE_AVAILABLE,
     astra_supports, ASTRA_VERSION,
@@ -202,10 +197,10 @@ class RayTransformBase(Operator):
         proj_space = kwargs.pop('proj_space', None)
         if proj_space is None:
             dtype = reco_space.dtype
-            proj_uspace = FunctionSpace(geometry.params, out_dtype=dtype)
+            proj_fspace = FunctionSpace(geometry.params, out_dtype=dtype)
 
-            if isinstance(reco_space.weighting, NoWeighting):
-                weighting = 1.0
+            if not reco_space.is_weighted:
+                weighting = None
             elif (isinstance(reco_space.weighting, ConstWeighting) and
                   np.isclose(reco_space.weighting.const,
                              reco_space.cell_volume)):
@@ -222,23 +217,40 @@ class RayTransformBase(Operator):
             else:
                 raise NotImplementedError('unknown weighting of domain')
 
-            proj_dspace = reco_space.dspace_type(geometry.partition.size,
+            proj_tspace = reco_space.tspace_type(geometry.partition.shape,
                                                  weighting=weighting,
                                                  dtype=dtype)
 
-            if geometry.ndim == 2:
-                axis_labels = ['$\\theta$', '$s$']
-            elif geometry.ndim == 3:
-                axis_labels = ['$\\theta$', '$u$', '$v$']
+            if geometry.motion_partition.ndim == 0:
+                angle_labels = []
+            if geometry.motion_partition.ndim == 1:
+                angle_labels = ['$\\varphi$']
+            elif geometry.motion_partition.ndim == 2:
+                # TODO: check order
+                angle_labels = ['$\\vartheta$', '$\\varphi$']
+            elif geometry.motion_partition.ndim == 3:
+                # TODO: check order
+                angle_labels = ['$\\vartheta$', '$\\varphi$', '$\\psi$']
             else:
-                # TODO Add this when we add nd ray transform
+                angle_labels = None
+
+            if geometry.det_partition.ndim == 1:
+                det_labels = ['$s$']
+            elif geometry.det_partition.ndim == 2:
+                det_labels = ['$u$', '$v$']
+            else:
+                det_labels = None
+
+            if angle_labels is None or det_labels is None:
+                # Fallback for unknown configuration
                 axis_labels = None
+            else:
+                axis_labels = angle_labels + det_labels
 
             proj_interp = kwargs.get('interp', 'nearest')
             proj_space = DiscreteLp(
-                proj_uspace, geometry.partition, proj_dspace,
-                interp=proj_interp, order=reco_space.order,
-                axis_labels=axis_labels)
+                proj_fspace, geometry.partition, proj_tspace,
+                interp=proj_interp, axis_labels=axis_labels)
 
         else:
             # proj_space was given, checking some stuff
@@ -265,9 +277,11 @@ class RayTransformBase(Operator):
 
         # Finally, initialize the Operator structure
         if variant == 'forward':
-            super().__init__(domain=reco_space, range=proj_space, linear=True)
+            super(RayTransformBase, self).__init__(
+                domain=reco_space, range=proj_space, linear=True)
         elif variant == 'backward':
-            super().__init__(domain=proj_space, range=reco_space, linear=True)
+            super(RayTransformBase, self).__init__(
+                domain=proj_space, range=reco_space, linear=True)
 
     @property
     def impl(self):
@@ -281,10 +295,10 @@ class RayTransformBase(Operator):
 
     def _call(self, x, out=None):
         """Return ``self(x[, out])``."""
-        if self.domain.is_rn:
+        if self.domain.is_real:
             return self._call_real(x, out)
 
-        elif self.domain.is_cn:
+        elif self.domain.is_complex:
             result_parts = [
                 self._call_real(x.real, getattr(out, 'real', None)),
                 self._call_real(x.imag, getattr(out, 'imag', None))]
@@ -349,8 +363,9 @@ class RayTransform(RayTransformBase):
         and storage order 'C'. Otherwise copies will be needed.
         """
         range = kwargs.pop('range', None)
-        super().__init__(reco_space=domain, proj_space=range,
-                         geometry=geometry, variant='forward', **kwargs)
+        super(RayTransform, self).__init__(
+            reco_space=domain, proj_space=range, geometry=geometry,
+            variant='forward', **kwargs)
 
     def _call_real(self, x_real, out_real):
         """Real-space forward projection for the current set-up.
@@ -454,8 +469,9 @@ class RayBackProjection(RayTransformBase):
         and storage order 'C'. Otherwise copies will be needed.
         """
         domain = kwargs.pop('domain', None)
-        super().__init__(reco_space=range, proj_space=domain,
-                         geometry=geometry, variant='backward', **kwargs)
+        super(RayBackProjection, self).__init__(
+            reco_space=range, proj_space=domain, geometry=geometry,
+            variant='backward', **kwargs)
 
     def _call_real(self, x_real, out_real):
         """Real-space back-projection for the current set-up.
@@ -513,6 +529,5 @@ class RayBackProjection(RayTransformBase):
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()

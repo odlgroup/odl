@@ -14,6 +14,7 @@ import pytest
 
 import odl
 from odl.deform import LinDeformFixedTempl, LinDeformFixedDisp
+from odl.space.entry_points import tensor_space_impl
 from odl.util.testutils import almost_equal, simple_fixture
 
 
@@ -26,17 +27,18 @@ ndim = simple_fixture('ndim', [1, 2, 3])
 
 
 @pytest.fixture
-def space(request, ndim, interp, dtype, fn_impl):
+def space(request, ndim, interp, dtype, tspace_impl):
     """Example space.
 
     Generates example spaces with various implementations, dimensions, dtypes
     and interpolations.
     """
-    if np.dtype(dtype) not in odl.FN_IMPLS[fn_impl].available_dtypes():
+    supported_dtypes = tensor_space_impl(tspace_impl).available_dtypes()
+    if np.dtype(dtype) not in supported_dtypes:
         pytest.skip('dtype not available for this backend')
 
     return odl.uniform_discr([-1] * ndim, [1] * ndim, [20] * ndim,
-                             interp=interp, impl=fn_impl, dtype=dtype)
+                             interp=interp, impl=tspace_impl, dtype=dtype)
 
 
 # --- Helper functions --- #
@@ -160,7 +162,10 @@ def test_fixed_templ_init():
     template = space.element(template_function)
 
     # Valid input
-    print(LinDeformFixedTempl(template))
+    op = LinDeformFixedTempl(template)
+    assert repr(op) != ''
+    op = LinDeformFixedTempl(template, domain=space.astype('float32') ** 1)
+    assert repr(op) != ''
 
     # Invalid input
     with pytest.raises(TypeError):
@@ -186,7 +191,7 @@ def test_fixed_templ_call(space):
 
 
 def test_fixed_templ_deriv(space):
-    if not space.is_rn:
+    if not space.is_real:
         pytest.skip('derivative not implemented for complex dtypes')
 
     # Set up template and displacement field
@@ -218,8 +223,10 @@ def test_fixed_disp_init():
         disp_field_factory(space.ndim))
 
     # Valid input
-    print(LinDeformFixedDisp(disp_field))
-    print(LinDeformFixedDisp(disp_field, templ_space=space))
+    op = LinDeformFixedDisp(disp_field)
+    assert repr(op) != ''
+    op = LinDeformFixedDisp(disp_field, templ_space=space)
+    assert repr(op) != ''
 
     # Non-valid input
     with pytest.raises(TypeError):  # displacement not ProductSpaceElement
@@ -307,4 +314,4 @@ def test_fixed_disp_adj(space):
 
 
 if __name__ == '__main__':
-    pytest.main([str(__file__.replace('\\', '/')), '-v'])
+    odl.util.test_file(__file__)

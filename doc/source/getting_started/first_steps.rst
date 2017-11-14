@@ -54,8 +54,8 @@ and create a wrapping `Operator` for it in ODL.
            # Initialize the Operator class by calling its __init__ method.
            # This sets properties such as domain and range and allows the other
            # operator convenience functions to work.
-           odl.Operator.__init__(self, domain=kernel.space, range=kernel.space,
-                                 linear=True)
+           super(Convolution, self).__init__(
+               domain=kernel.space, range=kernel.space, linear=True)
 
        def _call(self, x):
            """Implement calling the operator by calling scipy."""
@@ -226,7 +226,7 @@ By identification, we see that the above problem can be written in this form if 
 :math:`L_1` be the convolution operator and :math:`L_2` be the gradient operator.
 
 There are several examples available using this solver as well as similar optimization methods,
-e.g. `forward_backward_pd`, `chambolle_pock_solver`, etc in the ODL `examples/solvers <https://github.com/odlgroup/odl/tree/master/examples/solvers>`_ folder.
+e.g. `forward_backward_pd`, `pdhg`, etc in the ODL `examples/solvers <https://github.com/odlgroup/odl/tree/master/examples/solvers>`_ folder.
 
 .. code-block:: python
 

@@ -8,10 +8,7 @@
 
 """Phantoms used in emission tomography."""
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
 
 from odl.phantom.geometric import ellipsoid_phantom
 from odl.phantom.phantom_utils import cylinders_from_ellipses
@@ -107,19 +104,46 @@ def _derenzo_sources_2d():
             [1.0, 0.023968, 0.023968, 0.88528, -0.11791, 0.0]]
 
 
-def derenzo_sources(space):
+def derenzo_sources(space, min_pt=None, max_pt=None):
     """Create the PET/SPECT Derenzo sources phantom.
 
     The Derenzo phantom contains a series of circles of decreasing size.
 
     In 3d the phantom is simply the 2d phantom extended in the z direction as
     cylinders.
+
+    Parameters
+    ----------
+    space : `DiscreteLp`
+        Space in which the phantom should be created, must be 2- or
+        3-dimensional. If ``space.shape`` is 1 in an axis, a corresponding
+        slice of the phantom is created (instead of squashing the whole
+        phantom into the slice).
+    min_pt, max_pt : array-like, optional
+        If provided, use these vectors to determine the bounding box of the
+        phantom instead of ``space.min_pt`` and ``space.max_pt``.
+        It is currently required that ``min_pt >= space.min_pt`` and
+        ``max_pt <= space.max_pt``, i.e., shifting or scaling outside the
+        original space is not allowed.
+
+        Providing one of them results in a shift, e.g., for ``min_pt``::
+
+            new_min_pt = min_pt
+            new_max_pt = space.max_pt + (min_pt - space.min_pt)
+
+        Providing both results in a scaled version of the phantom.
+
+    Returns
+    -------
+    phantom : ``space`` element
+        The Derenzo source phantom in the given space.
     """
     if space.ndim == 2:
-        return ellipsoid_phantom(space, _derenzo_sources_2d())
+        return ellipsoid_phantom(space, _derenzo_sources_2d(), min_pt, max_pt)
     if space.ndim == 3:
         return ellipsoid_phantom(
-            space, cylinders_from_ellipses(_derenzo_sources_2d()))
+            space, cylinders_from_ellipses(_derenzo_sources_2d()),
+            min_pt, max_pt)
     else:
         raise ValueError('dimension not 2, no phantom available')
 
@@ -127,6 +151,8 @@ def derenzo_sources(space):
 if __name__ == '__main__':
     # Show the phantoms
     import odl
+    from odl.util.testutils import run_doctests
+
     n = 300
 
     # 2D
@@ -138,6 +164,4 @@ if __name__ == '__main__':
     derenzo_sources(discr).show('derenzo_sources 3d')
 
     # Run also the doctests
-    # pylint: disable=wrong-import-position
-    from odl.util.testutils import run_doctests
     run_doctests()

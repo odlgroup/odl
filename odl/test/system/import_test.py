@@ -8,10 +8,10 @@
 
 from __future__ import division
 import pytest
+import odl
 
 
 def test_all_imports():
-    import odl
     # Create Cn
     odl.cn(3)
     odl.space.cn(3)
@@ -23,10 +23,10 @@ def test_all_imports():
     odl.operator.default_ops.IdentityOperator(C3)
 
     # Test that utility needs to be explicitly imported
-    odl.util.utility.array1d_repr
+    odl.util.utility.array_str
     with pytest.raises(AttributeError):
-        odl.array1d_repr
+        odl.array_str
 
 
 if __name__ == '__main__':
-    pytest.main([str(__file__.replace('\\', '/')), '-v'])
+    odl.util.test_file(__file__)

@@ -18,6 +18,7 @@ import numpy as np
 # Find the valid projectors
 @pytest.fixture(scope="module",
                 params=['steepest_descent',
+                        'adam',
                         'landweber',
                         'conjugate_gradient',
                         'conjugate_gradient_normal',
@@ -34,6 +35,12 @@ def iterative_solver(request):
             func = odl.solvers.L2NormSquared(op.domain) * (op - rhs)
 
             odl.solvers.steepest_descent(func, x, line_search=0.5 / norm2)
+    elif solver_name == 'adam':
+        def solver(op, x, rhs):
+            norm2 = op.adjoint(op(x)).norm() / x.norm()
+            func = odl.solvers.L2NormSquared(op.domain) * (op - rhs)
+
+            odl.solvers.adam(func, x, learning_rate=4.0 / norm2, maxiter=150)
     elif solver_name == 'landweber':
         def solver(op, x, rhs):
             norm2 = op.adjoint(op(x)).norm() / x.norm()
@@ -131,5 +138,6 @@ def test_steepst_descent():
 
     assert all_almost_equal(x, [1, 1, 1], places=2)
 
+
 if __name__ == '__main__':
-    pytest.main([str(__file__.replace('\\', '/')), '-v'])
+    odl.util.test_file(__file__)

@@ -30,7 +30,7 @@ import odl
 # --- Set up the forward operator (ray transform) --- #
 
 
-# Discrete reconstruction space: discretized functions on the rectangle
+# Reconstruction space: discretized functions on the rectangle
 # [-20, 20]^2 with 100 samples per dimension.
 space = odl.uniform_discr(
     min_pt=[-20, -20], max_pt=[20, 20], shape=[100, 100], dtype='float32')
@@ -97,3 +97,5 @@ x = forward_op.domain.zero()
 odl.solvers.douglas_rachford_pd(x, f, g, lin_ops,
                                 tau=0.5, sigma=[0.01, 0.1],
                                 niter=100, callback=callback)
+
+x.show('douglas rachford result', force_show=True)
