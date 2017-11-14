@@ -25,7 +25,7 @@ def test_operator(dtype, shape):
 
     space = odl.uniform_discr([-1, -1], [1, 1], shape, dtype=dtype)
 
-    op = odl.contrib.pyshearlab.PyShearlabOperator(space, scales=2)
+    op = odl.contrib.pyshearlab.PyShearlabOperator(space, num_scales=2)
 
     phantom = odl.phantom.shepp_logan(space, True)
 
@@ -54,4 +54,4 @@ def test_operator(dtype, shape):
 
 
 if __name__ == '__main__':
-    pytest.main([str(__file__.replace('\\', '/')), '-v'])
+    odl.util.test_file(__file__)

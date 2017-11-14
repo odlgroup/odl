@@ -21,7 +21,7 @@ noise = odl.phantom.white_noise(space) * 0.001
 noisy_data = img + noise
 
 # Create shearlet and wavelet transforms
-shear_op = PyShearlabOperator(space, scales=2)
+shear_op = PyShearlabOperator(space, num_scales=2)
 wave_op = odl.trafos.WaveletTransform(space, 'haar', nlevels=2)
 wave_op = wave_op / wave_op.norm(estimate=True)
 

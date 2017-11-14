@@ -5,7 +5,7 @@ import odl.contrib.pyshearlab
 
 space = odl.uniform_discr([-1, -1], [1, 1], [128, 128])
 
-op = odl.contrib.pyshearlab.PyShearlabOperator(space, scales=2)
+op = odl.contrib.pyshearlab.PyShearlabOperator(space, num_scales=2)
 
 phantom = odl.phantom.shepp_logan(space, True)
 
