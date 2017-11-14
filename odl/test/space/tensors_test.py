@@ -903,6 +903,27 @@ def test_conversion_to_scalar(tspace_impl):
             long(element)
 
 
+def test_bool_conversion(tspace_impl):
+    """Verify that the __bool__ function works."""
+    space = odl.tensor_space(2, dtype='float32', impl=tspace_impl)
+    x = space.element([0, 1])
+
+    with pytest.raises(ValueError):
+        bool(x)
+    assert np.any(x)
+    assert any(x)
+    assert not np.all(x)
+    assert not all(x)
+
+    space = odl.tensor_space(1, dtype='float32', impl=tspace_impl)
+    x = space.one()
+
+    assert np.any(x)
+    assert any(x)
+    assert np.all(x)
+    assert all(x)
+
+
 def test_numpy_array_interface(tspace_impl):
     """Verify that the __array__ interface for NumPy works."""
     space = odl.tensor_space((3, 4), dtype='float32', exponent=1, weighting=2,
@@ -1643,4 +1664,4 @@ def test_ufunc_reduction_docs_notempty(tspace_impl):
 
 
 if __name__ == '__main__':
-    pytest.main([str(__file__.replace('\\', '/')), '-v'])
+    odl.util.test_file(__file__)

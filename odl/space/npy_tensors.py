@@ -1105,9 +1105,13 @@ class NumpyTensor(Tensor):
             else:
                 return arr
         else:
+            if is_numeric_dtype(self.dtype):
+                weighting = self.space.weighting
+            else:
+                weighting = None
             space = type(self.space)(
                 arr.shape, dtype=self.dtype, exponent=self.space.exponent,
-                weighting=self.space.weighting)
+                weighting=weighting)
             return space.element(arr)
 
     def __setitem__(self, indices, values):
