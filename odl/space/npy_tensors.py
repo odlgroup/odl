@@ -482,6 +482,9 @@ class NumpyTensorSpace(TensorSpace):
             for dtype in lst:
                 if dtype not in (np.object, np.void):
                     all_dtypes.append(np.dtype(dtype))
+        # Need to add these manually since np.sctypes['others'] will only
+        # contain one of them (depending on Python version)
+        lst.extend([np.dtype('S'), np.dtype('U')])
         return tuple(sorted(set(all_dtypes)))
 
     @staticmethod
