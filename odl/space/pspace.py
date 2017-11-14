@@ -972,19 +972,19 @@ class ProductSpaceElement(LinearSpaceElement):
 
         Examples
         --------
-        >>> spc = odl.ProductSpace(odl.rn(2), 3)
-        >>> x = spc.one()
+        >>> spc = odl.ProductSpace(odl.rn(3), 2)
+        >>> x = spc.element([[ 1.,  2.,  3.],
+        ...                  [ 4.,  5.,  6.]])
         >>> x.asarray()
-        array([[ 1.,  1.],
-               [ 1.,  1.],
-               [ 1.,  1.]])
+        array([[ 1.,  2.,  3.],
+               [ 4.,  5.,  6.]])
         """
         if not self.space.is_power_space:
             return ValueError('cannot use `asarray` if `space.is_power_space` '
-                              'is false')
+                              'is `False`')
         else:
             if out is None:
-                out = np.zeros(self.shape, self.dtype)
+                out = np.empty(self.shape, self.dtype)
 
             for i in range(len(self)):
                 out[i] = np.asarray(self[i])
@@ -1006,12 +1006,12 @@ class ProductSpaceElement(LinearSpaceElement):
 
         Examples
         --------
-        >>> spc = odl.ProductSpace(odl.rn(2), 3)
-        >>> x = spc.one()
+        >>> spc = odl.ProductSpace(odl.rn(3), 2)
+        >>> x = spc.element([[ 1.,  2.,  3.],
+        ...                  [ 4.,  5.,  6.]])
         >>> np.asarray(x)
-        array([[ 1.,  1.],
-               [ 1.,  1.],
-               [ 1.,  1.]])
+        array([[ 1.,  2.,  3.],
+               [ 4.,  5.,  6.]])
         """
         return self.asarray()
 
