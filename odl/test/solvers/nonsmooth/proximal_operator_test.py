@@ -502,5 +502,35 @@ def test_proximal_convconj_kl_cross_entropy():
     assert all_almost_equal(x_inplace, x_verify, HIGH_ACC)
 
 
+def test_proximal_arg_scaling():
+    """Test for proximal argument scaling."""
+
+    # Set the underlying space.
+    space = odl.uniform_discr(0, 1, 10)
+
+    # Set the functional and the prox factory.
+    func = odl.solvers.L2NormSquared(space)
+    prox_factory = odl.solvers.proximal_l2_squared(space)
+
+    # Set the point where the proximal operator will be evaluated.
+    x = space.one()
+
+    # Set the scaling parameters.
+    for alpha in [2, odl.phantom.noise.uniform_noise(space, 1, 10)]:
+        # Scale the proximal factories
+        prox_scaled = odl.solvers.proximal_arg_scaling(prox_factory, alpha)
+
+        # Set the step size.
+        for sigma in [2, odl.phantom.noise.uniform_noise(space, 1, 10)]:
+            # Evaluation of the proximals
+            p = prox_scaled(sigma)(x)
+
+            # Now we know that p = Prox_{sigma g}(x) where g(x) = f(alpha x),
+            # i.e., (x - p)/sigma = grad g(p) = alpha * grad f(alpha p).
+            lhs = (x - p) / sigma
+            rhs = alpha * func.gradient(alpha * p)
+            assert all_almost_equal(lhs, rhs)
+
+
 if __name__ == '__main__':
     odl.util.test_file(__file__)

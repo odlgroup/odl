@@ -231,8 +231,9 @@ def proximal_arg_scaling(prox_factory, scaling):
     prox_factory : callable
         A factory function that, when called with a step size, returns the
         proximal operator of ``F``
-    scaling : float
-        Scaling parameter
+    scaling : float or list of floats or space element
+        Scaling parameter. The permissible types depent on the stepsizes
+        accepted by prox_factory.
 
     Returns
     -------
@@ -262,11 +263,9 @@ def proximal_arg_scaling(prox_factory, scaling):
     2011.
     """
 
-    if scaling.imag != 0:
-        raise ValueError("complex scaling not supported.")
-    else:
-        scaling = float(scaling.real)
-    if scaling == 0:
+    if scaling.imag != 0 * scaling:
+        raise ValueError("Complex scaling not supported.")
+    if scaling == 0 * scaling:
         return proximal_const_func(prox_factory(1.0).domain)
 
     def arg_scaling_prox_factory(sigma):
@@ -283,8 +282,17 @@ def proximal_arg_scaling(prox_factory, scaling):
             The proximal operator of ``sigma * F( . * a)`` where ``sigma`` is
             the step size
         """
-        prox = prox_factory(sigma * scaling ** 2)
-        return (1 / scaling) * prox * scaling
+        scaling_square = scaling * scaling
+# TODO Catch division by zero errors. The following doesn't work:
+#        if not scaling_square > 0 * scaling:
+#            raise NotImplementedError("Proximal scaling: "
+#                                      "Vector-valued scaling "
+#                                      "with zeros not yet supported.")
+        prox = prox_factory(sigma * scaling_square)
+        space = prox.domain
+        mult_inner = MultiplyOperator(scaling, domain=space, range=space)
+        mult_outer = MultiplyOperator(1 / scaling, domain=space, range=space)
+        return OperatorComp(OperatorComp(mult_outer, prox), mult_inner)
 
     return arg_scaling_prox_factory
 
