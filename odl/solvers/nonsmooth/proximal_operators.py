@@ -374,7 +374,10 @@ def proximal_quadratic_perturbation(prox_factory, a, u=None):
         prox = proximal_arg_scaling(prox_factory, const)(sigma)
         if u is not None:
             return (const * prox *
-                    (ScalingOperator(u.space, const) - sigma * const * u))
+                    (MultiplyOperator(const,
+                                      domain=u.space,
+                                      range=u.space) -
+                     sigma * const * u))
         else:
             return const * prox * const
 
