@@ -32,8 +32,8 @@ def call_callback(callback, x, **kwargs):
 
     Parameters
     ----------
-    callback : callable
-        Function taking at least one argument.
+    callback : callable or None
+        Function taking at least one argument. If `None`, does nothing.
     x :
         The main object to call the callback with, typically the current
         iterate.
@@ -59,6 +59,9 @@ def call_callback(callback, x, **kwargs):
     >>> call_callback(other_callback, 'arg', b='other_arg')
     arg other_arg
     """
+    if callback is None:
+        return
+
     if sys.version_info.major > 2:
         sig = inspect.signature(callback)
         filter_keys = [param.name for param in sig.parameters.values()
