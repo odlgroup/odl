@@ -28,7 +28,7 @@ from odl.operator import (Operator, IdentityOperator, ScalingOperator,
                           ConstantOperator, DiagonalOperator, PointwiseNorm,
                           OperatorComp, MultiplyOperator)
 from odl.space import ProductSpace
-from odl.set import LinearSpaceElement
+from odl.set.space import LinearSpaceElement
 
 
 __all__ = ('combine_proximals', 'proximal_convex_conj', 'proximal_translation',
