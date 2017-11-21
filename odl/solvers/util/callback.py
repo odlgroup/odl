@@ -13,8 +13,10 @@ from builtins import object
 import copy
 import numpy as np
 import os
+import sys
 import time
 import warnings
+import inspect
 
 from odl.util import signature_string
 
@@ -23,6 +25,59 @@ __all__ = ('Callback', 'CallbackStore', 'CallbackApply', 'CallbackPrintTiming',
            'CallbackShow', 'CallbackSaveToDisk', 'CallbackSleep',
            'CallbackShowConvergence', 'CallbackPrintHardwareUsage',
            'CallbackProgressBar')
+
+
+def call_callback(callback, x, **kwargs):
+    """Call a callback with optional arguments.
+
+    Parameters
+    ----------
+    callback : callable
+        Function taking at least one argument.
+    x :
+        The main object to call the callback with, typically the current
+        iterate.
+    kwargs :
+        Other parameters that should be called. These are only used if the
+        callback accepts them.
+
+    Examples
+    --------
+    Simple usage:
+
+    >>> def callback(x):
+    ...     print(x)
+    >>> call_callback(callback, 'arg')
+    arg
+
+    Optionally ignore one argument:
+
+    >>> call_callback(callback, 'arg', b='other_arg')
+    arg
+    >>> def other_callback(x, b=None):
+    ...     print(x, b)
+    >>> call_callback(other_callback, 'arg', b='other_arg')
+    arg other_arg
+    """
+    if sys.version_info.major > 2:
+        sig = inspect.signature(callback)
+        filter_keys = [param.name for param in sig.parameters.values()
+                       if param.kind == param.POSITIONAL_OR_KEYWORD]
+        filtered_kwargs = {filter_key: kwargs[filter_key]
+                           for filter_key in filter_keys
+                           if filter_key in kwargs}
+        callback(x, **filtered_kwargs)
+    else:
+        spec = inspect.getargspec(callback)
+        func_kwargs = spec.keywords
+
+        if func_kwargs:
+            callback(x, **kwargs)
+        else:
+            filtered_kwargs = {filter_key: kwargs[filter_key]
+                               for filter_key in filter_keys
+                               if filter_key in kwargs}
+            callback(x, **filtered_kwargs)
 
 
 class Callback(object):
