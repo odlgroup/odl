@@ -78,12 +78,7 @@ proj_data = ray_trafo(phantom)
 # axis = [0, 0, 1], 0 degrees
 proj_data.show(indices=[0, None, None],
                title='Projection at 0 degrees, axis [0, 0, 1], u = x, v = z')
-fig, ax = plt.subplots()
-ax.imshow(sum_along_y.T, cmap='bone', origin='lower')
-ax.set_xlabel('x')
-ax.set_ylabel('z')
-plt.title('Sum along y axis')
-plt.show()
+sum_along_y.show('Sum along y axis')
 # Check axes in geometry
 axes_sum_y = geometry.det_axes(np.deg2rad(0))
 assert np.allclose(axes_sum_y[0], [1, 0, 0])
@@ -97,12 +92,7 @@ assert np.allclose(axes_sum_y[1], [0, 0, 1])
 # axis = [0, 0, 1], 90 degrees
 proj_data.show(indices=[1, None, None],
                title='Projection at 90 degrees, axis [0, 0, 1], u = y, v = z')
-fig, ax = plt.subplots()
-ax.imshow(sum_along_x.T, cmap='bone', origin='lower')
-ax.set_xlabel('y')
-ax.set_ylabel('z')
-plt.title('Sum along x axis')
-plt.show()
+sum_along_x.show('Sum along x axis')
 # Check axes in geometry
 axes_sum_x = geometry.det_axes(np.deg2rad(90))
 assert np.allclose(axes_sum_x[0], [0, 1, 0])
@@ -132,12 +122,7 @@ proj_data = ray_trafo(phantom)
 # axis = [0, 1, 0], 0 degrees
 proj_data.show(indices=[0, None, None],
                title='Projection at 0 degrees, axis [0, 1, 0], u = x, v = y')
-fig, ax = plt.subplots()
-ax.imshow(sum_along_z.T, cmap='bone', origin='lower')
-ax.set_xlabel('x')
-ax.set_ylabel('y')
-plt.title('Sum along z axis')
-plt.show()
+sum_along_z.show('Sum along z axis')
 # Check geometry axes
 axes_sum_z = geometry.det_axes(np.deg2rad(0))
 assert np.allclose(axes_sum_z[0], [1, 0, 0])
