@@ -887,7 +887,8 @@ def proximal_convex_conj_l2_squared(space, lam=1, g=None):
                 if g is None:
                     x.divide(1 + 0.5 / lam * sig, out)
                 else:
-                    sigma.multiply(g, out)
+                    sig.multiply(g, out)
+                    out.lincomb(1.0, x, -1.0, out)
                     out.divide(1 + 0.5 / lam * sig, out)
 
     return ProximalConvexConjL2Squared
@@ -952,17 +953,28 @@ def proximal_l2_squared(space, lam=1, g=None):
             """
             super(ProximalL2Squared, self).__init__(
                 domain=space, range=space, linear=g is None)
-            self.sigma = float(sigma)
+            if np.isscalar(sigma):
+                self.sigma = float(sigma)
+            else:
+                self.sigma = space.element(sigma)
 
         def _call(self, x, out):
             """Apply the operator to ``x`` and store the result in ``out``"""
             # (x + 2*sig*lam*g) / (1 + 2*sig*lam))
             sig = self.sigma
-            if g is None:
-                out.lincomb(1.0 / (1 + 2 * sig * lam), x)
-            else:
-                out.lincomb(1.0 / (1 + 2 * sig * lam), x,
-                            2 * sig * lam / (1 + 2 * sig * lam), g)
+            if np.isscalar(sig):
+                if g is None:
+                    out.lincomb(1.0 / (1 + 2 * sig * lam), x)
+                else:
+                    out.lincomb(1.0 / (1 + 2 * sig * lam), x,
+                                2 * sig * lam / (1 + 2 * sig * lam), g)
+            else:   # sig in space
+                if g is None:
+                    x.divide(1.0 + 2.0 * sig * lam, out=out)
+                else:
+                    sig.multiply(2.0 * lam * g, out=out)
+                    out.lincomb(1.0, x, 1.0, out)
+                    out.divide(1.0 + 2 * sig * lam, out)
 
     return ProximalL2Squared
 
@@ -1276,7 +1288,10 @@ def proximal_l1(space, lam=1, g=None):
             """
             super(ProximalL1, self).__init__(
                 domain=space, range=space, linear=False)
-            self.sigma = float(sigma)
+            if np.isscalar(sigma):
+                self.sigma = float(sigma)
+            else:
+                self.sigma = space.element(sigma)
 
         def _call(self, x, out):
             """Return ``self(x, out=out)``."""
