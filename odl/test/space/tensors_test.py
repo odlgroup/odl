@@ -22,10 +22,19 @@ from odl.space.npy_tensors import (
     NumpyTensorSpaceConstWeighting, NumpyTensorSpaceArrayWeighting,
     NumpyTensorSpaceCustomInner, NumpyTensorSpaceCustomNorm,
     NumpyTensorSpaceCustomDist)
+from odl.space.cupy_tensors import (
+    CupyTensor, CupyTensorSpace,
+    CupyTensorSpaceConstWeighting, CupyTensorSpaceArrayWeighting,
+    CupyTensorSpaceCustomInner, CupyTensorSpaceCustomNorm,
+    CupyTensorSpaceCustomDist,
+    CUPY_AVAILABLE)
 from odl.util.testutils import (
     all_almost_equal, all_equal, simple_fixture,
     noise_array, noise_element, noise_elements)
 from odl.util.ufuncs import UFUNCS
+
+if CUPY_AVAILABLE:
+    import cupy
 
 
 # --- Test helpers --- #
@@ -39,14 +48,22 @@ USE_ARRAY_UFUNCS_INTERFACE = (parse_version(np.__version__) >=
 # when a new impl is available.
 
 def _pos_array(space):
-    """Create an array with positive real entries in ``space``."""
-    return np.abs(noise_array(space)) + 0.1
+    """Create a Numpy array with positive real entries for ``space``."""
+    arr = np.abs(noise_array(space)) + 0.1
+    if space.impl == 'numpy':
+        return arr
+    elif space.impl == 'cupy':
+        return cupy.asarray(arr)
+    else:
+        assert False
 
 
 def _array_cls(impl):
     """Return the array class for given impl."""
     if impl == 'numpy':
         return np.ndarray
+    elif impl == 'cupy':
+        return cupy.ndarray
     else:
         assert False
 
@@ -55,6 +72,8 @@ def _odl_tensor_cls(impl):
     """Return the ODL tensor class for given impl."""
     if impl == 'numpy':
         return NumpyTensor
+    elif impl == 'cupy':
+        return CupyTensor
     else:
         assert False
 
@@ -74,6 +93,21 @@ def _weighting_cls(impl, kind):
             return NumpyTensorSpaceCustomDist
         else:
             assert False
+
+    elif impl == 'cupy':
+        if kind == 'array':
+            return CupyTensorSpaceArrayWeighting
+        elif kind == 'const':
+            return CupyTensorSpaceConstWeighting
+        elif kind == 'inner':
+            return CupyTensorSpaceCustomInner
+        elif kind == 'norm':
+            return CupyTensorSpaceCustomNorm
+        elif kind == 'dist':
+            return CupyTensorSpaceCustomDist
+        else:
+            assert False
+
     else:
         assert False
 
@@ -121,6 +155,9 @@ def test_init_npy_tspace():
     NumpyTensorSpace((3, 4), dtype=complex, exponent=float('inf'))
     NumpyTensorSpace((3, 4), dtype='S1')
 
+    with pytest.raises(ValueError):
+        NumpyTensorSpace((3, 4), dtype=object)
+
     # Alternative constructor
     odl.tensor_space((3, 4))
     odl.tensor_space((3, 4), dtype=int)
@@ -160,19 +197,73 @@ def test_init_npy_tspace():
     odl.rn((3, 4), weighting=weight_arr)
 
 
-def test_init_tspace_weighting(weight, exponent, odl_tspace_impl):
-    """Test if weightings during init give the correct weighting classes."""
-    impl = odl_tspace_impl
-    space = odl.tensor_space((3, 4), weighting=weight, exponent=exponent,
-                             impl=impl)
+def test_init_cupy_tspace():
+    """Test initialization patterns and options for ``CupyTensorSpace``."""
+    if not CUPY_AVAILABLE:
+        pytest.skip('cupy backend not available')
 
-    if impl == 'numpy':
-        if isinstance(weight, np.ndarray):
-            weighting_cls = _weighting_cls(impl, 'array')
-        else:
-            weighting_cls = _weighting_cls(impl, 'const')
+    # Basic class constructor
+    CupyTensorSpace((3, 4))
+    CupyTensorSpace((3, 4), dtype=int)
+    CupyTensorSpace((3, 4), dtype=float)
+    CupyTensorSpace((3, 4), dtype=complex)
+    CupyTensorSpace((3, 4), dtype=complex, exponent=1.0)
+    CupyTensorSpace((3, 4), dtype=complex, exponent=float('inf'))
+
+    with pytest.raises(ValueError):
+        CupyTensorSpace((3, 4), dtype='S1')
+    with pytest.raises(ValueError):
+        CupyTensorSpace((3, 4), dtype=object)
+
+    # Alternative constructor
+    odl.tensor_space((3, 4), impl='cupy')
+    odl.tensor_space((3, 4), dtype=int, impl='cupy')
+    odl.tensor_space((3, 4), exponent=1.0, impl='cupy')
+
+    # Constructors for real spaces
+    odl.rn((3, 4), impl='cupy')
+    odl.rn((3, 4), dtype='float32', impl='cupy')
+    odl.rn(3, impl='cupy')
+    odl.rn(3, dtype='float32', impl='cupy')
+
+    # Works only for real data types
+    with pytest.raises(ValueError):
+        odl.rn((3, 4), complex, impl='cupy')
+    with pytest.raises(ValueError):
+        odl.rn(3, int, impl='cupy')
+    with pytest.raises(ValueError):
+        odl.rn(3, 'S1', impl='cupy')
+
+    # Constructors for complex spaces
+    odl.cn((3, 4), impl='cupy')
+    odl.cn((3, 4), dtype='complex64', impl='cupy')
+    odl.cn(3, impl='cupy')
+    odl.cn(3, dtype='complex64', impl='cupy')
+
+    # Works only for complex data types
+    with pytest.raises(ValueError):
+        odl.cn((3, 4), float, impl='cupy')
+    with pytest.raises(ValueError):
+        odl.cn(3, 'S1', impl='cupy')
+
+    # Init with weights or custom space functions
+    weight_const = 1.5
+    weight_arr = _pos_array(odl.rn((3, 4), float))
+
+    odl.rn((3, 4), weighting=weight_const, impl='cupy')
+    odl.rn((3, 4), weighting=weight_arr, impl='cupy')
+
+
+def test_init_tspace_weighting(weight, exponent, tspace_impl):
+    """Test if weightings during init give the correct weighting classes."""
+    if tspace_impl == 'cupy' and isinstance(weight, np.ndarray):
+        # Need cast before using in space creation since
+        # ArrayWeighting.__eq__ uses `arr1 is arr2` to check arrays
+        weight = cupy.asarray(weight)
+    elif isinstance(weight, _array_cls(tspace_impl)):
+        weighting_cls = _weighting_cls(tspace_impl, 'array')
     else:
-        assert False
+        weighting_cls = _weighting_cls(tspace_impl, 'const')
 
     weighting = weighting_cls(weight, exponent)
 
@@ -193,8 +284,8 @@ def test_init_tspace_weighting(weight, exponent, odl_tspace_impl):
             bad_dtype = np.ones((3, 4), dtype=complex)
             odl.tensor_space((3, 4), weighting=bad_dtype)
 
-        with pytest.raises(TypeError):
-            odl.tensor_space((3, 4), weighting=1j)  # float() conversion
+    with pytest.raises(TypeError):
+        odl.tensor_space((3, 4), weighting=1j)  # float() conversion
 
 
 def test_properties(odl_tspace_impl):
