@@ -22,7 +22,8 @@ from odl.space.weighting import (
     Weighting, ArrayWeighting, ConstWeighting,
     CustomInner, CustomNorm, CustomDist)
 from odl.util import (
-    array_str, dtype_str, is_floating_dtype, signature_string, indent)
+    array_str, dtype_str, is_floating_dtype, real_dtype,
+    signature_string, indent)
 
 try:
     import cupy
@@ -1853,6 +1854,15 @@ def _weighting(weights, exponent):
 
 
 # Kernels for space functions
+#
+# T = generic type
+# R = real floating point type, usually for norm or dist output
+# W = real type for weights, can be floating point or integer
+#
+# Note: the kernels with an output type that does not also occur as an input
+# type must be called with output argument since the output type cannot be
+# inferred. The ouptut array must have shape `()` for full reduction.
+
 
 if CUPY_AVAILABLE:
     dotw = cupy.ReductionKernel(in_params='T x, T y, W w',
@@ -1864,7 +1874,7 @@ if CUPY_AVAILABLE:
                                 name='dotw')
 
     nrm0 = cupy.ReductionKernel(in_params='T x',
-                                out_params='int64 res',
+                                out_params='R res',
                                 map_expr='x != 0',
                                 reduce_expr='a + b',
                                 post_map_expr='res = a',
@@ -1872,7 +1882,7 @@ if CUPY_AVAILABLE:
                                 name='nrm0')
 
     nrm1 = cupy.ReductionKernel(in_params='T x',
-                                out_params='T res',
+                                out_params='R res',
                                 map_expr='abs(x)',
                                 reduce_expr='a + b',
                                 post_map_expr='res = a',
@@ -1880,7 +1890,7 @@ if CUPY_AVAILABLE:
                                 name='nrm1w')
 
     nrm1w = cupy.ReductionKernel(in_params='T x, W w',
-                                 out_params='T res',
+                                 out_params='R res',
                                  map_expr='abs(x) * w',
                                  reduce_expr='a + b',
                                  post_map_expr='res = a',
@@ -1888,7 +1898,7 @@ if CUPY_AVAILABLE:
                                  name='nrm1w')
 
     nrm2 = cupy.ReductionKernel(in_params='T x',
-                                out_params='T res',
+                                out_params='R res',
                                 map_expr='x * x',
                                 reduce_expr='a + b',
                                 post_map_expr='res = sqrt(a)',
@@ -1896,7 +1906,7 @@ if CUPY_AVAILABLE:
                                 name='nrm2')
 
     nrm2w = cupy.ReductionKernel(in_params='T x, W w',
-                                 out_params='T res',
+                                 out_params='R res',
                                  map_expr='x * x * w',
                                  reduce_expr='a + b',
                                  post_map_expr='res = sqrt(a)',
@@ -1904,7 +1914,7 @@ if CUPY_AVAILABLE:
                                  name='nrm2w')
 
     nrminf = cupy.ReductionKernel(in_params='T x',
-                                  out_params='T res',
+                                  out_params='R res',
                                   map_expr='abs(x)',
                                   reduce_expr='a > b ? a : b',
                                   post_map_expr='res = a',
@@ -1912,23 +1922,23 @@ if CUPY_AVAILABLE:
                                   name='nrminf')
 
     nrmneginf = cupy.ReductionKernel(in_params='T x',
-                                     out_params='T res',
+                                     out_params='R res',
                                      map_expr='abs(x)',
                                      reduce_expr='a > b ? b : a',
                                      post_map_expr='res = a',
                                      identity='0',
                                      name='nrmneginf')
 
-    nrmp = cupy.ReductionKernel(in_params='T x, T p',
-                                out_params='T res',
+    nrmp = cupy.ReductionKernel(in_params='T x, R p',
+                                out_params='R res',
                                 map_expr='pow(abs(x), p)',
                                 reduce_expr='a + b',
                                 post_map_expr='res = pow(a, 1 / p)',
                                 identity='0',
                                 name='nrmp')
 
-    nrmpw = cupy.ReductionKernel(in_params='T x, T p, W w',
-                                 out_params='T res',
+    nrmpw = cupy.ReductionKernel(in_params='T x, R p, W w',
+                                 out_params='R res',
                                  map_expr='pow(abs(x), p) * w',
                                  reduce_expr='a + b',
                                  post_map_expr='res = pow(a, 1 / p)',
@@ -1936,7 +1946,7 @@ if CUPY_AVAILABLE:
                                  name='nrmpw')
 
     dist0 = cupy.ReductionKernel(in_params='T x, T y',
-                                 out_params='int64 res',
+                                 out_params='R res',
                                  map_expr='x != y',
                                  reduce_expr='a + b',
                                  post_map_expr='res = a',
@@ -1944,7 +1954,7 @@ if CUPY_AVAILABLE:
                                  name='dist0')
 
     dist1 = cupy.ReductionKernel(in_params='T x, T y',
-                                 out_params='T res',
+                                 out_params='R res',
                                  map_expr='abs(x - y)',
                                  reduce_expr='a + b',
                                  post_map_expr='res = a',
@@ -1960,23 +1970,23 @@ if CUPY_AVAILABLE:
                                   name='dist1w')
 
     dist2 = cupy.ReductionKernel(in_params='T x, T y',
-                                 out_params='T res',
-                                 map_expr='(x - y) * (x - y)',
+                                 out_params='R res',
+                                 map_expr='abs(x - y) * abs(x - y)',
                                  reduce_expr='a + b',
                                  post_map_expr='res = sqrt(a)',
                                  identity='0',
                                  name='dist2')
 
     dist2w = cupy.ReductionKernel(in_params='T x, T y, W w',
-                                  out_params='T res',
-                                  map_expr='(x - y) * (x - y) * w',
+                                  out_params='R res',
+                                  map_expr='abs(x - y) * abs(x - y) * w',
                                   reduce_expr='a + b',
                                   post_map_expr='res = sqrt(a)',
                                   identity='0',
                                   name='dist2w')
 
     distinf = cupy.ReductionKernel(in_params='T x, T y',
-                                   out_params='T res',
+                                   out_params='R res',
                                    map_expr='abs(x - y)',
                                    reduce_expr='a > b ? a : b',
                                    post_map_expr='res = a',
@@ -1984,23 +1994,23 @@ if CUPY_AVAILABLE:
                                    name='distinf')
 
     distneginf = cupy.ReductionKernel(in_params='T x, T y',
-                                      out_params='T res',
+                                      out_params='R res',
                                       map_expr='abs(x - y)',
                                       reduce_expr='a > b ? b : a',
                                       post_map_expr='res = a',
                                       identity='0',
                                       name='distneginf')
 
-    distp = cupy.ReductionKernel(in_params='T x, T y, T p',
-                                 out_params='T res',
+    distp = cupy.ReductionKernel(in_params='T x, T y, R p',
+                                 out_params='R res',
                                  map_expr='pow(abs(x - y), p)',
                                  reduce_expr='a + b',
                                  post_map_expr='res = pow(a, 1 / p)',
                                  identity='0',
                                  name='distp')
 
-    distpw = cupy.ReductionKernel(in_params='T x, T y, T p, W w',
-                                  out_params='T res',
+    distpw = cupy.ReductionKernel(in_params='T x, T y, R p, W w',
+                                  out_params='R res',
                                   map_expr='pow(abs(x - y), p) * w',
                                   reduce_expr='a + b',
                                   post_map_expr='res = pow(a, 1 / p)',
@@ -2066,18 +2076,26 @@ class CupyTensorSpaceArrayWeighting(ArrayWeighting):
         norm : float
             The norm of the provided tensor.
         """
-        if self.exponent == 0:
-            return float(nrm0(x.data))
-        elif self.exponent == 1:
-            return float(nrm1w(x.data, self.array))
-        elif self.exponent == 2:
-            return float(nrm2w(x.data, self.array))
-        elif self.exponent == float('inf'):
-            return float(nrminf(x.data))
-        elif self.exponent == -float('inf'):
-            return float(nrmneginf(x.data))
+        # Define scalar output array
+        if is_floating_dtype(x.dtype):
+            out_dtype = real_dtype(x.dtype)
         else:
-            return float(nrmpw(x.data, self.exponent, self.array))
+            out_dtype = float
+        out = cupy.empty((), dtype=out_dtype)
+
+        # Run reduction kernel (returns the output)
+        if self.exponent == 0:
+            return float(nrm0(x.data, out))
+        elif self.exponent == 1:
+            return float(nrm1w(x.data, self.array, out))
+        elif self.exponent == 2:
+            return float(nrm2w(x.data, self.array, out))
+        elif self.exponent == float('inf'):
+            return float(nrminf(x.data, out))
+        elif self.exponent == -float('inf'):
+            return float(nrmneginf(x.data, out))
+        else:
+            return float(nrmpw(x.data, self.exponent, self.array, out))
 
     def dist(self, x1, x2):
         """Return the weighted distance of two tensors.
@@ -2092,18 +2110,27 @@ class CupyTensorSpaceArrayWeighting(ArrayWeighting):
         dist : float
             The distance between the provided tensors.
         """
-        if self.exponent == 0:
-            return float(dist0(x1.data, x2.data))
-        elif self.exponent == 1:
-            return float(dist1w(x1.data, x2.data, self.array))
-        elif self.exponent == 2:
-            return float(dist2w(x1.data, x2.data, self.array))
-        elif self.exponent == float('inf'):
-            return float(distinf(x1.data, x2.data, self.array))
-        elif self.exponent == -float('inf'):
-            return float(distneginf(x1.data, x2.data, self.array))
+        # Define scalar output array
+        if is_floating_dtype(x1.dtype):
+            out_dtype = real_dtype(x1.dtype)
         else:
-            return float(distpw(x1.data, x2.data, self.exponent, self.array))
+            out_dtype = float
+        out = cupy.empty((), dtype=out_dtype)
+
+        # Run reduction kernel (returns the output)
+        if self.exponent == 0:
+            return float(dist0(x1.data, x2.data, out))
+        elif self.exponent == 1:
+            return float(dist1w(x1.data, x2.data, self.array, out))
+        elif self.exponent == 2:
+            return float(dist2w(x1.data, x2.data, self.array, out))
+        elif self.exponent == float('inf'):
+            return float(distinf(x1.data, x2.data, out))
+        elif self.exponent == -float('inf'):
+            return float(distneginf(x1.data, x2.data, out))
+        else:
+            return float(distpw(x1.data, x2.data, self.exponent, self.array,
+                                out))
 
     # TODO: remove repr_part and __repr__ when cupy.ndarray.__array__
     # is implemented. See
@@ -2111,8 +2138,9 @@ class CupyTensorSpaceArrayWeighting(ArrayWeighting):
     @property
     def repr_part(self):
         """String usable in a space's ``__repr__`` method."""
-        # TODO: use edgeitems
-        arr_str = array_str(cupy.asnumpy(self.array), nprint=10)
+        maxsize_full_print = 2 * np.get_printoptions()['edgeitems']
+        arr_str = array_str(cupy.asnumpy(self.array),
+                            nprint=maxsize_full_print)
         optargs = [('weighting', arr_str, ''),
                    ('exponent', self.exponent, 2.0)]
         return signature_string([], optargs, sep=',\n',
@@ -2120,8 +2148,10 @@ class CupyTensorSpaceArrayWeighting(ArrayWeighting):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        # TODO: use edgeitems
-        posargs = [array_str(cupy.asnumpy(self.array), nprint=10)]
+        maxsize_full_print = 2 * np.get_printoptions()['edgeitems']
+        arr_str = array_str(cupy.asnumpy(self.array),
+                            nprint=maxsize_full_print)
+        posargs = [arr_str]
         optargs = [('exponent', self.exponent, 2.0)]
         inner_str = signature_string(posargs, optargs, sep=',\n',
                                      mod=['!s', ':.4'])
@@ -2183,10 +2213,18 @@ class CupyTensorSpaceConstWeighting(ConstWeighting):
         norm : float
             The norm of the tensor.
         """
+        # Define scalar output array
+        if is_floating_dtype(x.dtype):
+            out_dtype = real_dtype(x.dtype)
+        else:
+            out_dtype = float
+        out = cupy.empty((), dtype=out_dtype)
+
+        # Run reduction kernel (returns the output)
         if self.exponent == 0:
-            return float(nrm0(x.data))
+            return float(nrm0(x.data, out))
         elif self.exponent == 1:
-            return float(self.const * nrm1(x.data))
+            return float(self.const * nrm1(x.data, out))
         elif self.exponent == 2:
             # We try to use cuBLAS nrm2
             try:
@@ -2208,14 +2246,14 @@ class CupyTensorSpaceConstWeighting(ConstWeighting):
                     return float(np.sqrt(self.const) * norm)
 
             # Cannot use cuBLAS, fall back to custom kernel
-            return float(np.sqrt(self.const) * nrm2(x.data))
+            return float(np.sqrt(self.const) * nrm2(x.data, out))
         elif self.exponent == float('inf'):
-            return float(nrminf(x.data))
+            return float(nrminf(x.data, out))
         elif self.exponent == -float('inf'):
-            return float(nrmneginf(x.data))
+            return float(nrmneginf(x.data, out))
         else:
             return float(self.const ** (1 / self.exponent) *
-                         nrmp(x, self.exponent))
+                         nrmp(x, self.exponent, out))
 
     def dist(self, x1, x2):
         """Return the weighted distance between two tensors.
@@ -2230,21 +2268,29 @@ class CupyTensorSpaceConstWeighting(ConstWeighting):
         dist : float
             The distance between the tensors.
         """
+        # Define scalar output array
+        if is_floating_dtype(x1.dtype):
+            out_dtype = real_dtype(x1.dtype)
+        else:
+            out_dtype = float
+        out = cupy.empty((), dtype=out_dtype)
+
+        # Run reduction kernel (returns the output)
         if self.exponent == 0:
-            return float(dist0(x1.data, x2.data))
+            return float(dist0(x1.data, x2.data, out))
         elif self.exponent == 1:
-            return float(self.const * dist1(x1.data, x2.data))
+            return float(self.const * dist1(x1.data, x2.data, out))
         elif self.exponent == 2:
             # cuBLAS nrm2(x1 - x2) would probably be faster, but would
             # require a copy, so we don't do it
-            return float(np.sqrt(self.const) * dist2(x1.data, x2.data))
+            return float(np.sqrt(self.const) * dist2(x1.data, x2.data, out))
         elif self.exponent == float('inf'):
-            return float(distinf(x1.data, x2.data))
+            return float(distinf(x1.data, x2.data, out))
         elif self.exponent == -float('inf'):
-            return float(distneginf(x1.data, x2.data))
+            return float(distneginf(x1.data, x2.data, out))
         else:
             return float(self.const ** (1 / self.exponent) *
-                         distp(x1.data, x2.data, self.exponent))
+                         distp(x1.data, x2.data, self.exponent, out))
 
 
 class CupyTensorSpaceCustomInner(CustomInner):
