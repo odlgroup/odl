@@ -25,32 +25,35 @@ ODL geometry representation to ASTRA's data structures, including:
 
 from __future__ import print_function, division, absolute_import
 import numpy as np
+import warnings
 try:
     import astra
-    ASTRA_AVAILABLE = True
-    try:
-        # Available from 1.8 on
-        ASTRA_VERSION = astra.__version__
-        # 1.8.3 and later exposes also the patch version, need only first two
-        _maj, _min = [int(n) for n in ASTRA_VERSION.split('.')][:2]
-    except AttributeError:
-        # Below version 1.8
-        _maj = astra.astra.version() // 100
-        _min = astra.astra.version() % 100
-        ASTRA_VERSION = '.'.join([str(_maj), str(_min)])
-
-    # Don't import pkg_resources only for this, it's slow
-    if (_maj, _min) < (1, 7):
-        raise RuntimeError('ASTRA version < 1.7 not supported, please update')
 except ImportError:
     ASTRA_AVAILABLE = False
     ASTRA_VERSION = ''
+else:
+    ASTRA_AVAILABLE = True
 
 from odl.discr import DiscreteLp, DiscreteLpElement
 from odl.tomo.geometry import (
     Geometry, DivergentBeamGeometry, ParallelBeamGeometry,
     Flat1dDetector, Flat2dDetector)
 from odl.tomo.util.utility import euler_matrix
+
+# Make sure that ASTRA >= 1.7 is used
+if ASTRA_AVAILABLE:
+    try:
+        # Available from 1.8 on
+        ASTRA_VERSION = astra.__version__
+    except AttributeError:
+        # Below version 1.8
+        _maj = astra.astra.version() // 100
+        _min = astra.astra.version() % 100
+        ASTRA_VERSION = '.'.join([str(_maj), str(_min)])
+        if (_maj, _min) < (1, 7):
+            warnings.warn(
+                'your version {}.{} of ASTRA is unsupported, please upgrade '
+                'to 1.7 or higher'.format(_maj, _min), RuntimeWarning)
 
 
 __all__ = ('ASTRA_AVAILABLE', 'ASTRA_VERSION', 'astra_supports',
@@ -61,35 +64,52 @@ __all__ = ('ASTRA_AVAILABLE', 'ASTRA_VERSION', 'astra_supports',
            'astra_parallel_3d_geom_to_vec')
 
 
-# Dictionary specifying which ASTRA versions support which feature. The dict
-# values must be specified as valid setuptools package requirements without
-# package name, e.g., as exact version '==1.7', as inequality '>=1.7' or as
-# several requirements that need to be satisfied simultaneously, e.g.,
-# '>=1.8,<=2.0'.
+# ASTRA_FEATURES contains a set of features along with version specifiers
+# to track ASTRA support for those features. The version specifiers must
+# be valid setuptools package requirements (without package name), e.g.,
+# as exact version '==1.7', as inequality '>=1.7' or as several requirements
+# that need to be satisfied simultaneously, e.g., '>=1.8,<=2.0'.
 # To give multiple requirements that should be OR-ed together, use a
 # sequence instead of a single string in the dictionary, e.g.,
 # ['==1.7', '>=1.8,<=2.0'].
+
 ASTRA_FEATURES = {
-    # Cell sizes not equal in both axes in 2d, currently crashes
+    # Cell sizes not equal in both axes in 2d, currently crashes.
     'anisotropic_voxels_2d': None,
-    # Cell sizes not equal all 3 axes in 3d, see ASTRA PR #41
+
+    # Cell sizes not equal all 3 axes in 3d, see
+    # https://github.com/astra-toolbox/astra-toolbox/pull/41
     'anisotropic_voxels_3d': '>=1.8',
-    # ASTRA geometry defined by vectors not supported yet, see ASTRA issue #54
-    'parallel2d_vec_geometry': None,
+
+    # ASTRA geometry defined by vectors supported in the current
+    # development version, will be in the next release. See
+    # https://github.com/astra-toolbox/astra-toolbox/issues/54
+    'par2d_vec_geometry': '>1.8.3',
+
     # Density weighting for cone 2d (fan beam), not supported yet,
-    # see the discussion in ASTRA issue #71
+    # see the discussion in
+    # https://github.com/astra-toolbox/astra-toolbox/issues/71
     'cone2d_density_weighting': None,
+
     # Hacky version of ray-density weighting in cone beam backprojection for
-    # constant source-detector distance, see ASTRA issue #71 and ASTRA PR #84
+    # constant source-detector distance, see
+    # https://github.com/astra-toolbox/astra-toolbox/issues/71
+    # and
+    # https://github.com/astra-toolbox/astra-toolbox/pull/84
     'cone3d_hacky_density_weighting': '>=1.8',
-    # General case not supported yet, see the discussion in ASTRA issue #71
+
+    # General case not supported yet, see the discussion in
+    # https://github.com/astra-toolbox/astra-toolbox/issues/71
     'cone3d_density_weighting': None,
+
     # Fix for division by zero with detector midpoint normal perpendicular
-    # to geometry axis in parallel 3d, see ASTRA issue #18
+    # to geometry axis in parallel 3d, see
+    # https://github.com/astra-toolbox/astra-toolbox/issues/18
     'par3d_det_mid_pt_perp_to_axis': '>=1.7.2',
-    # Linking instead of copying of GPU memory, see ASTRA issue #93.
-    # This will probably be in the next release.
-    'gpulink': None,
+
+    # Linking instead of copying of GPU memory, see
+    # https://github.com/astra-toolbox/astra-toolbox/pull/93
+    'gpulink': '>=1.8.3',
 }
 
 
@@ -140,7 +160,6 @@ def astra_volume_geometry(reco_space):
     NotImplementedError
         If the cell sizes are not the same in each dimension.
     """
-    # TODO: allow other discretizations?
     if not isinstance(reco_space, DiscreteLp):
         raise TypeError('`reco_space` {!r} is not a DiscreteLp instance'
                         ''.format(reco_space))
@@ -174,9 +193,12 @@ def astra_volume_geometry(reco_space):
         # NOTE: this setting is flipped with respect to x and y. We do this
         # as part of a global rotation of the geometry by -90 degrees, which
         # avoids rotating the data.
+        # NOTE: We need to flip the sign of the (ODL) x component since
+        # ASTRA seems to move it in the other direction. Not quite clear
+        # why.
         vol_geom = astra.create_vol_geom(vol_shp[0], vol_shp[1],
                                          vol_min[1], vol_max[1],
-                                         vol_min[0], vol_max[0])
+                                         -vol_max[0], -vol_min[0])
     elif reco_space.ndim == 3:
         # Not supported in all versions of ASTRA
         if (not reco_space.partition.has_isotropic_cells and
@@ -306,7 +328,7 @@ def astra_conebeam_2d_geom_to_vec(geometry):
     References
     ----------
     .. _ASTRA projection geometry documentation:
-       http://www.astra-toolbox.com/docs/geom3d.html#projection-geometries
+       http://www.astra-toolbox.com/docs/geom2d.html#projection-geometries
     """
     # Instead of rotating the data by 90 degrees counter-clockwise,
     # we subtract pi/2 from the geometry angles, thereby rotating the

@@ -65,6 +65,10 @@ def geometry(request):
         raise ValueError('geom not valid')
 
 
+geometry_type = simple_fixture('geometry_type', ['par2d', 'par3d',
+                                                 'cone2d', 'cone3d'])
+
+
 # Find the valid projectors
 projectors = [skip_if_no_astra('par2d astra_cpu uniform'),
               skip_if_no_astra('par2d astra_cpu nonuniform'),
@@ -349,6 +353,100 @@ def test_anisotropic_voxels(geometry):
         assert backproj.norm() > 0
     else:
         assert False
+
+
+def test_shifted_volume(geometry_type):
+    """Check that geometry shifts are handled correctly.
+
+    We forward project a square/cube of all ones and check that the
+    correct portion of the detector gets nonzero values. In the default
+    setup, at angle 0, the source (if existing) is at (0, -s[, 0]), and
+    the detector at (0, +d[, 0]) with the positive x axis as (first)
+    detector axis. Thus, when shifting enough in the negative x direction,
+    the object should be visible at the left half of the detector only.
+    A shift in y should not influence the result (much).
+
+    At +90 degrees, a shift in the negative y direction should have the same
+    effect.
+    """
+    apart = odl.nonuniform_partition([0, np.pi / 2, np.pi, 3 * np.pi / 2])
+    if geometry_type == 'par2d' and odl.tomo.ASTRA_AVAILABLE:
+        ndim = 2
+        dpart = odl.uniform_partition(-30, 30, 30)
+        geometry = odl.tomo.Parallel2dGeometry(apart, dpart)
+    elif geometry_type == 'par3d' and odl.tomo.ASTRA_CUDA_AVAILABLE:
+        ndim = 3
+        dpart = odl.uniform_partition([-30, -30], [30, 30], (30, 30))
+        geometry = odl.tomo.Parallel3dAxisGeometry(apart, dpart)
+    if geometry_type == 'cone2d' and odl.tomo.ASTRA_AVAILABLE:
+        ndim = 2
+        dpart = odl.uniform_partition(-30, 30, 30)
+        geometry = odl.tomo.FanFlatGeometry(apart, dpart,
+                                            src_radius=200, det_radius=100)
+    elif geometry_type == 'cone3d' and odl.tomo.ASTRA_CUDA_AVAILABLE:
+        ndim = 3
+        dpart = odl.uniform_partition([-30, -30], [30, 30], (30, 30))
+        geometry = odl.tomo.ConeFlatGeometry(apart, dpart,
+                                             src_radius=200, det_radius=100)
+    else:
+        pytest.skip('no projector available for geometry type')
+
+    min_pt = np.array([-5.0] * ndim)
+    max_pt = np.array([5.0] * ndim)
+    shift_len = 6  # enough to move the projection to one side of the detector
+
+    # Shift along axis 0
+    shift = np.zeros(ndim)
+    shift[0] = -shift_len
+
+    # Generate 4 projections with 90 degrees increment
+    space = odl.uniform_discr(min_pt + shift, max_pt + shift, [10] * ndim)
+    ray_trafo = odl.tomo.RayTransform(space, geometry)
+    proj = ray_trafo(space.one())
+
+    # Check that the object is projected to the correct place. With the
+    # chosen setup, at least one ray should go through a substantial
+    # part of the volume, yielding a value around 10 (=side length).
+
+    # 0 degrees: All on the left
+    assert np.max(proj[0, :15]) > 5
+    assert np.max(proj[0, 15:]) == 0
+
+    # 90 degrees: Left and right
+    assert np.max(proj[1, :15]) > 5
+    assert np.max(proj[1, 15:]) > 5
+
+    # 180 degrees: All on the right
+    assert np.max(proj[2, :15]) == 0
+    assert np.max(proj[2, 15:]) > 5
+
+    # 270 degrees: Left and right
+    assert np.max(proj[3, :15]) > 5
+    assert np.max(proj[3, 15:]) > 5
+
+    # Do the same for axis 1
+    shift = np.zeros(ndim)
+    shift[1] = -shift_len
+
+    space = odl.uniform_discr(min_pt + shift, max_pt + shift, [10] * ndim)
+    ray_trafo = odl.tomo.RayTransform(space, geometry)
+    proj = ray_trafo(space.one())
+
+    # 0 degrees: Left and right
+    assert np.max(proj[0, :15]) > 5
+    assert np.max(proj[0, 15:]) > 5
+
+    # 90 degrees: All on the left
+    assert np.max(proj[1, :15]) > 5
+    assert np.max(proj[1, 15:]) == 0
+
+    # 180 degrees: Left and right
+    assert np.max(proj[2, :15]) > 5
+    assert np.max(proj[2, 15:]) > 5
+
+    # 270 degrees: All on the right
+    assert np.max(proj[3, :15]) == 0
+    assert np.max(proj[3, 15:]) > 5
 
 
 if __name__ == '__main__':

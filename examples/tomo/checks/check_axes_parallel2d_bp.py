@@ -34,6 +34,6 @@ geometry = odl.tomo.parallel_beam_geometry(reco_space, num_angles=360)
 # Test back-projection
 ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl=impl)
 proj_data = ray_trafo(phantom)
-back_proj = ray_trafo.adjoint(proj_data)
-back_proj.show('Back-projection')
+backproj = ray_trafo.adjoint(proj_data)
+backproj.show('Back-projection')
 phantom.show('Phantom')

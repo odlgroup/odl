@@ -913,7 +913,7 @@ def pkg_supports(feature, pkg_version, pkg_feat_dict):
 
     # If one of the requirements in the list is met, return True
     for req in ver_reqs:
-        if req.specifier.contains(pkg_version):
+        if req.specifier.contains(pkg_version, prereleases=True):
             return True
 
     # No match
