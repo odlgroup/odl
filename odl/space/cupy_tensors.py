@@ -16,12 +16,13 @@ from __future__ import print_function, division, absolute_import
 import numpy as np
 import warnings
 
-from odl.set import RealNumbers
+from odl.set import RealNumbers, ComplexNumbers
 from odl.space.base_tensors import TensorSpace, Tensor
 from odl.space.weighting import (
     Weighting, ArrayWeighting, ConstWeighting,
     CustomInner, CustomNorm, CustomDist)
-from odl.util import dtype_str, is_floating_dtype, signature_string
+from odl.util import (
+    array_str, dtype_str, is_floating_dtype, signature_string, indent)
 
 try:
     import cupy
@@ -599,13 +600,14 @@ class CupyTensorSpace(TensorSpace):
         >>> same_space == space
         True
         """
-        return (super().__eq__(other) and
+        return (super(CupyTensorSpace, self).__eq__(other) and
                 self.device == other.device and
                 self.weighting == other.weighting)
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        return hash((super().__hash__(), self.device, self.weighting))
+        return hash((super(CupyTensorSpace, self).__hash__(), self.device,
+                     self.weighting))
 
     def _lincomb(self, a, x1, b, x2, out):
         """Linear combination of ``x1`` and ``x2``.
@@ -874,12 +876,16 @@ class CupyTensorSpace(TensorSpace):
         dtype : `numpy.dtype`
             Numpy data type specifier. The returned defaults are:
 
-            ``RealNumbers()`` : ``np.dtype('float64')``
+            - ``RealNumbers()`` or ``None`` : ``np.dtype('float64')``
+            - ``ComplexNumbers()`` : ``np.dtype('complex128')``
 
-            ``ComplexNumbers()`` : not supported
+            These choices correspond to the defaults of the ``cupy``
+            library.
         """
         if field is None or field == RealNumbers():
             return np.dtype('float64')
+        elif field == ComplexNumbers():
+            return np.dtype('complex128')
         else:
             raise ValueError('no default data type defined for field {}.'
                              ''.format(field))
@@ -1029,7 +1035,7 @@ class CupyTensor(Tensor):
 
         Returns
         -------
-        copy : `pygpu._array.ndgpuarray`
+        copy : `CupyTensor`
             A deep copy.
 
         Examples
@@ -1056,7 +1062,7 @@ class CupyTensor(Tensor):
 
         Returns
         -------
-        values : scalar or `pygpu._array.ndgpuarray`
+        values : scalar or `cupy.core.core.ndarray`
             The value(s) at the index (indices).
 
         Examples
@@ -1107,11 +1113,11 @@ class CupyTensor(Tensor):
         arr = self.data[indices]
         if arr.shape == ():
             if arr.dtype.kind == 'f':
-                return float(np.asarray(arr))
+                return float(cupy.asnumpy(arr))
             elif arr.dtype.kind == 'c':
-                return complex(np.asarray(arr))
+                return complex(cupy.asnumpy(arr))
             elif arr.dtype.kind in ('u', 'i'):
-                return int(np.asarray(arr))
+                return int(cupy.asnumpy(arr))
             else:
                 raise RuntimeError("no conversion for dtype {}"
                                    "".format(arr.dtype))
@@ -1280,12 +1286,22 @@ class CupyTensor(Tensor):
         for further details. See also the `general documentation on
         Numpy ufuncs`_.
 
-        .. note::
-            This implementation looks for native ufuncs in ``pygpu.ufuncs``
-            and falls back to the basic implementation with Numpy arrays
-            in case no native ufunc is available. That fallback version
-            comes with significant overhead due to data copies between
-            host and device.
+        .. warning::
+            Apart from ``'__call__'`` (invoked by, e.g., ``np.add(x, y))``,
+            CuPy has no native implementation of ufunc methods like
+            ``'reduce'`` or ``'accumulate'``. We manually implement the
+            mappings (covering most use cases)
+
+            - ``np.add.reduce`` -> ``cupy.sum``
+            - ``np.add.accumulate`` -> ``cupy.cumsum``
+            - ``np.multiply.reduce`` -> ``cupy.prod``
+            - ``np.multiply.reduce`` -> ``cupy.cumprod``.
+
+            **All other such methods will run Numpy code and be slow**!
+
+            Please consult the `CuPy documentation on ufuncs
+            <https://docs-cupy.chainer.org/en/stable/reference/ufunc.html>`_
+            to check the current state of the library.
 
         .. note::
             When an ``out`` parameter is specified, and (one of) it has
@@ -1507,10 +1523,10 @@ numpy.ufunc.reduceat.html
             inp.data if isinstance(inp, type(self)) else inp
             for inp in inputs)
 
-        # For native ufuncs, we turn non-scalar inputs into cupy arrays,
-        # as a workaround for https://github.com/cupy/cupy/issues/594
-        # TODO: remove code when the upstream issue is fixed
         if use_native:
+            # TODO: remove when upstream issue is fixed
+            # For native ufuncs, we turn non-scalar inputs into cupy arrays,
+            # as a workaround for https://github.com/cupy/cupy/issues/594
             inputs, orig_inputs = [], inputs
             for inp in orig_inputs:
                 if (isinstance(inp, cupy.ndarray) or
@@ -1519,6 +1535,20 @@ numpy.ufunc.reduceat.html
                     inputs.append(inp)
                 else:
                     inputs.append(cupy.array(inp))
+        elif method != 'at':
+            # TODO: remove when upstream issue is fixed
+            # For non-native ufuncs (except `at`), we need ot cast our tensors
+            # and Cupy arrays to Numpy arrays explicitly, since `__array__`
+            # and friends are not implemented. See
+            # https://github.com/cupy/cupy/issues/589
+            inputs, orig_inputs = [], inputs
+            for inp in orig_inputs:
+                if isinstance(inp, cupy.ndarray):
+                    inputs.append(cupy.asnumpy(inp))
+                elif isinstance(inp, CupyTensor):
+                    inputs.append(cupy.asnumpy(inp.data))
+                else:
+                    inputs.append(inp)
 
         # --- Get some parameters for later --- #
 
@@ -1595,20 +1625,19 @@ numpy.ufunc.reduceat.html
             def eval_at_via_npy(*inputs, **kwargs):
                 import ctypes
                 cupy_arr = inputs[0]
-                npy_arr = np.asarray(cupy_arr)
+                npy_arr = cupy.asnumpy(cupy_arr)
                 new_inputs = (npy_arr,) + inputs[1:]
                 super(CupyTensor, self).__array_ufunc__(
                     ufunc, method, *new_inputs, **kwargs)
                 # Workaround for https://github.com/cupy/cupy/issues/593
-                # TODO: use cupy_arr[:] = npy_arr when it's fixed and not
-                # slower
+                # TODO: use cupy_arr[:] = npy_arr when available
                 cupy_arr.data.copy_from_host(
                     npy_arr.ctypes.data_as(ctypes.c_void_p), npy_arr.nbytes)
 
             if use_native:
                 # Native method could exist but raise `NotImplementedError`
-                # or return `NotImplemented`, falling back to Numpy case
-                # then, too
+                # or return `NotImplemented`. We fall back to Numpy also in
+                # that situation.
                 try:
                     res = native_method(*inputs, **kwargs)
                 except NotImplementedError:
@@ -1626,8 +1655,8 @@ numpy.ufunc.reduceat.html
 
             if use_native:
                 # Native method could exist but raise `NotImplementedError`
-                # or return `NotImplemented`, falling back to base case
-                # then, too
+                # or return `NotImplemented`. We fall back to Numpy also in
+                # that situation.
                 try:
                     res = native_method(*inputs, **kwargs)
                 except NotImplementedError:
@@ -1653,8 +1682,8 @@ numpy.ufunc.reduceat.html
                 if is_floating_dtype(res.dtype):
                     if res.shape != self.shape:
                         # Don't propagate weighting if shape changes
-                        weighting = CupyTensorSpaceConstWeighting(1.0,
-                                                                  exponent)
+                        weighting = CupyTensorSpaceConstWeighting(
+                            1.0, exponent)
                     spc_kwargs = {'weighting': weighting}
                 else:
                     spc_kwargs = {}
@@ -1723,8 +1752,10 @@ numpy.ufunc.reduceat.html
         real : `CupyTensor` view with real dtype
             The real part of this tensor as an element of an `rn` space.
         """
-        # Only real dtypes currently
-        return self
+        if self.space.is_real:
+            return self
+        else:
+            return self.space.real_space.element(self.data.real)
 
     @real.setter
     def real(self, newreal):
@@ -1737,7 +1768,7 @@ numpy.ufunc.reduceat.html
         newreal : `array-like` or scalar
             The new real part for this tensor.
         """
-        self.real.data[:] = newreal
+        self.data.real[:] = newreal
 
     @property
     def imag(self):
@@ -1748,8 +1779,10 @@ numpy.ufunc.reduceat.html
         imag : `CupyTensor`
             The imaginary part of this tensor as an element of an `rn` space.
         """
-        # Only real dtypes currently
-        return self.space.zero()
+        if self.space.is_real:
+            return self.space.zero()
+        else:
+            return self.space.real_space.element(self.data.imag)
 
     @imag.setter
     def imag(self, newimag):
@@ -1762,7 +1795,7 @@ numpy.ufunc.reduceat.html
         newimag : `array-like` or scalar
             The new imaginary part for this tensor.
         """
-        raise NotImplementedError('complex dtypes not supported')
+        self.data.imag[:] = newimag
 
     def conj(self, out=None):
         """Complex conjugate of this tensor.
@@ -1779,11 +1812,17 @@ numpy.ufunc.reduceat.html
             The complex conjugate tensor. If ``out`` was provided,
             the returned object is a reference to it.
         """
-        # Only real dtypes currently
         if out is None:
-            return self.copy()
+            if self.space.is_real:
+                return self.copy()
+            else:
+                return self.space.element(self.data.conj())
         else:
-            self.assign(out)
+            if self.space.is_real:
+                self.assign(out)
+            else:
+                # In-place not available as it seems
+                out[:] = self.data.conj()
             return out
 
     def __ipow__(self, other):
@@ -1806,7 +1845,8 @@ def _weighting(weights, exponent):
     if np.isscalar(weights):
         weighting = CupyTensorSpaceConstWeighting(weights, exponent=exponent)
     else:
-        # TODO: sequence of 1D array-likes
+        # TODO: sequence of 1D array-likes, see
+        # https://github.com/odlgroup/odl/pull/1238
         weights = cupy.array(weights, copy=False)
         weighting = CupyTensorSpaceArrayWeighting(weights, exponent=exponent)
     return weighting
@@ -2064,6 +2104,28 @@ class CupyTensorSpaceArrayWeighting(ArrayWeighting):
             return float(distneginf(x1.data, x2.data, self.array))
         else:
             return float(distpw(x1.data, x2.data, self.exponent, self.array))
+
+    # TODO: remove repr_part and __repr__ when cupy.ndarray.__array__
+    # is implemented. See
+    # https://github.com/cupy/cupy/issues/589
+    @property
+    def repr_part(self):
+        """String usable in a space's ``__repr__`` method."""
+        # TODO: use edgeitems
+        arr_str = array_str(cupy.asnumpy(self.array), nprint=10)
+        optargs = [('weighting', arr_str, ''),
+                   ('exponent', self.exponent, 2.0)]
+        return signature_string([], optargs, sep=',\n',
+                                mod=[[], ['!s', ':.4']])
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        # TODO: use edgeitems
+        posargs = [array_str(cupy.asnumpy(self.array), nprint=10)]
+        optargs = [('exponent', self.exponent, 2.0)]
+        inner_str = signature_string(posargs, optargs, sep=',\n',
+                                     mod=['!s', ':.4'])
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
 
 
 class CupyTensorSpaceConstWeighting(ConstWeighting):
