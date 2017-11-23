@@ -304,7 +304,7 @@ def noise_array(space):
 
     Returns
     -------
-    noise_array : `numpy.ndarray` element
+    noise_array : `numpy.ndarray`
         Array with white noise such that ``space.element``'s can be created
         from it.
 
