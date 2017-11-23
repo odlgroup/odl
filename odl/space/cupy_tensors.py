@@ -6,10 +6,15 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Implementation of tensor spaces using ``pygpu``."""
+"""Implementation of tensor spaces using CuPy.
+
+See https://cupy.chainer.org/ or https://github.com/cupy/cupy for details
+on the backend.
+"""
 
 from __future__ import print_function, division, absolute_import
 import numpy as np
+import warnings
 
 from odl.set import RealNumbers
 from odl.space.base_tensors import TensorSpace, Tensor
@@ -23,9 +28,11 @@ try:
 except ImportError:
     CUPY_AVAILABLE = False
 else:
-    from pkg_resources import parse_version
-    if parse_version(cupy.__version__) < parse_version('2.0.0rc1'):
-        raise ImportError('cupy <2.0.0rc1 not supported')
+    _maj = int(cupy.__version__.split('.')[0])
+    if _maj < 2:
+        raise warnings.warn(
+            'your version {} of CuPy is not supported; please upgrade to '
+            'version 2.0.0 or higher'.format(cupy.__version__), RuntimeWarning)
     CUPY_AVAILABLE = True
 
 
@@ -35,10 +42,11 @@ __all__ = ('CupyTensorSpace',)
 # --- Space method implementations --- #
 
 
-lico = cupy.ElementwiseKernel(in_params='T a, T x, T b, T y',
-                              out_params='T z',
-                              operation='z = a * x + b * y;',
-                              name='lico')
+if CUPY_AVAILABLE:
+    lico = cupy.ElementwiseKernel(in_params='T a, T x, T b, T y',
+                                  out_params='T z',
+                                  operation='z = a * x + b * y;',
+                                  name='lico')
 
 
 def fallback_scal(a, x):
@@ -77,12 +85,17 @@ def _cublas_func(name, dtype):
     ValueError :
         If the data type is not supported by cuBLAS.
     """
-    if np.dtype(dtype) == 'float32':
+    dtype, dtype_in = np.dtype(dtype), dtype
+    if dtype == 'float32':
         prefix = 's'
-    elif np.dtype(dtype) == 'float64':
+    elif dtype == 'float64':
         prefix = 'd'
+    elif dtype == 'complex64':
+        prefix = 'c'
+    elif dtype == 'complex128':
+        prefix = 'z'
     else:
-        raise ValueError('dtype {!r} not supported by cuBLAS'.format(dtype))
+        raise ValueError('dtype {!r} not supported by cuBLAS'.format(dtype_in))
 
     return getattr(cupy.cuda.cublas, prefix + name)
 
@@ -197,13 +210,15 @@ def _lincomb_impl(a, x1, b, x2, out):
 
 class CupyTensorSpace(TensorSpace):
 
-    """Tensor space implemented with GPU arrays.
+    """Tensor space implemented with CUDA arrays using the CuPy library.
 
     This space implements tensors of arbitrary rank over a `Field` ``F``,
     which is either the real or complex numbers.
 
     Its elements are represented as instances of the
     `CupyTensor` class.
+
+    See https://github.com/cupy/cupy for details on the backend.
     """
 
     def __init__(self, shape, dtype='float64', device=None, **kwargs):
@@ -1799,157 +1814,158 @@ def _weighting(weights, exponent):
 
 # Kernels for space functions
 
-dotw = cupy.ReductionKernel(in_params='T x, T y, W w',
-                            out_params='T res',
-                            map_expr='x * y * w',
-                            reduce_expr='a + b',
-                            post_map_expr='res = a',
-                            identity='0',
-                            name='dotw')
+if CUPY_AVAILABLE:
+    dotw = cupy.ReductionKernel(in_params='T x, T y, W w',
+                                out_params='T res',
+                                map_expr='x * y * w',
+                                reduce_expr='a + b',
+                                post_map_expr='res = a',
+                                identity='0',
+                                name='dotw')
 
-nrm0 = cupy.ReductionKernel(in_params='T x',
-                            out_params='int64 res',
-                            map_expr='x != 0',
-                            reduce_expr='a + b',
-                            post_map_expr='res = a',
-                            identity='0',
-                            name='nrm0')
+    nrm0 = cupy.ReductionKernel(in_params='T x',
+                                out_params='int64 res',
+                                map_expr='x != 0',
+                                reduce_expr='a + b',
+                                post_map_expr='res = a',
+                                identity='0',
+                                name='nrm0')
 
-nrm1 = cupy.ReductionKernel(in_params='T x',
-                            out_params='T res',
-                            map_expr='abs(x)',
-                            reduce_expr='a + b',
-                            post_map_expr='res = a',
-                            identity='0',
-                            name='nrm1w')
+    nrm1 = cupy.ReductionKernel(in_params='T x',
+                                out_params='T res',
+                                map_expr='abs(x)',
+                                reduce_expr='a + b',
+                                post_map_expr='res = a',
+                                identity='0',
+                                name='nrm1w')
 
-nrm1w = cupy.ReductionKernel(in_params='T x, W w',
-                             out_params='T res',
-                             map_expr='abs(x) * w',
-                             reduce_expr='a + b',
-                             post_map_expr='res = a',
-                             identity='0',
-                             name='nrm1w')
-
-nrm2 = cupy.ReductionKernel(in_params='T x',
-                            out_params='T res',
-                            map_expr='x * x',
-                            reduce_expr='a + b',
-                            post_map_expr='res = sqrt(a)',
-                            identity='0',
-                            name='nrm2')
-
-nrm2w = cupy.ReductionKernel(in_params='T x, W w',
-                             out_params='T res',
-                             map_expr='x * x * w',
-                             reduce_expr='a + b',
-                             post_map_expr='res = sqrt(a)',
-                             identity='0',
-                             name='nrm2w')
-
-nrminf = cupy.ReductionKernel(in_params='T x',
-                              out_params='T res',
-                              map_expr='abs(x)',
-                              reduce_expr='a > b ? a : b',
-                              post_map_expr='res = a',
-                              identity='0',
-                              name='nrminf')
-
-nrmneginf = cupy.ReductionKernel(in_params='T x',
+    nrm1w = cupy.ReductionKernel(in_params='T x, W w',
                                  out_params='T res',
-                                 map_expr='abs(x)',
-                                 reduce_expr='a > b ? b : a',
+                                 map_expr='abs(x) * w',
+                                 reduce_expr='a + b',
                                  post_map_expr='res = a',
                                  identity='0',
-                                 name='nrmneginf')
+                                 name='nrm1w')
 
-nrmp = cupy.ReductionKernel(in_params='T x, T p',
-                            out_params='T res',
-                            map_expr='pow(abs(x), p)',
-                            reduce_expr='a + b',
-                            post_map_expr='res = pow(a, 1 / p)',
-                            identity='0',
-                            name='nrmp')
+    nrm2 = cupy.ReductionKernel(in_params='T x',
+                                out_params='T res',
+                                map_expr='x * x',
+                                reduce_expr='a + b',
+                                post_map_expr='res = sqrt(a)',
+                                identity='0',
+                                name='nrm2')
 
-nrmpw = cupy.ReductionKernel(in_params='T x, T p, W w',
-                             out_params='T res',
-                             map_expr='pow(abs(x), p) * w',
-                             reduce_expr='a + b',
-                             post_map_expr='res = pow(a, 1 / p)',
-                             identity='0',
-                             name='nrmpw')
+    nrm2w = cupy.ReductionKernel(in_params='T x, W w',
+                                 out_params='T res',
+                                 map_expr='x * x * w',
+                                 reduce_expr='a + b',
+                                 post_map_expr='res = sqrt(a)',
+                                 identity='0',
+                                 name='nrm2w')
 
-dist0 = cupy.ReductionKernel(in_params='T x, T y',
-                             out_params='int64 res',
-                             map_expr='x != y',
-                             reduce_expr='a + b',
-                             post_map_expr='res = a',
-                             identity='0',
-                             name='dist0')
-
-dist1 = cupy.ReductionKernel(in_params='T x, T y',
-                             out_params='T res',
-                             map_expr='abs(x - y)',
-                             reduce_expr='a + b',
-                             post_map_expr='res = a',
-                             identity='0',
-                             name='dist1')
-
-dist1w = cupy.ReductionKernel(in_params='T x, T y, W w',
-                              out_params='T res',
-                              map_expr='abs(x - y) * w',
-                              reduce_expr='a + b',
-                              post_map_expr='res = a',
-                              identity='0',
-                              name='dist1w')
-
-dist2 = cupy.ReductionKernel(in_params='T x, T y',
-                             out_params='T res',
-                             map_expr='(x - y) * (x - y)',
-                             reduce_expr='a + b',
-                             post_map_expr='res = sqrt(a)',
-                             identity='0',
-                             name='dist2')
-
-dist2w = cupy.ReductionKernel(in_params='T x, T y, W w',
-                              out_params='T res',
-                              map_expr='(x - y) * (x - y) * w',
-                              reduce_expr='a + b',
-                              post_map_expr='res = sqrt(a)',
-                              identity='0',
-                              name='dist2w')
-
-distinf = cupy.ReductionKernel(in_params='T x, T y',
-                               out_params='T res',
-                               map_expr='abs(x - y)',
-                               reduce_expr='a > b ? a : b',
-                               post_map_expr='res = a',
-                               identity='0',
-                               name='distinf')
-
-distneginf = cupy.ReductionKernel(in_params='T x, T y',
+    nrminf = cupy.ReductionKernel(in_params='T x',
                                   out_params='T res',
-                                  map_expr='abs(x - y)',
-                                  reduce_expr='a > b ? b : a',
+                                  map_expr='abs(x)',
+                                  reduce_expr='a > b ? a : b',
                                   post_map_expr='res = a',
                                   identity='0',
-                                  name='distneginf')
+                                  name='nrminf')
 
-distp = cupy.ReductionKernel(in_params='T x, T y, T p',
-                             out_params='T res',
-                             map_expr='pow(abs(x - y), p)',
-                             reduce_expr='a + b',
-                             post_map_expr='res = pow(a, 1 / p)',
-                             identity='0',
-                             name='distp')
+    nrmneginf = cupy.ReductionKernel(in_params='T x',
+                                     out_params='T res',
+                                     map_expr='abs(x)',
+                                     reduce_expr='a > b ? b : a',
+                                     post_map_expr='res = a',
+                                     identity='0',
+                                     name='nrmneginf')
 
-distpw = cupy.ReductionKernel(in_params='T x, T y, T p, W w',
-                              out_params='T res',
-                              map_expr='pow(abs(x - y), p) * w',
-                              reduce_expr='a + b',
-                              post_map_expr='res = pow(a, 1 / p)',
-                              identity='0',
-                              name='distpw')
+    nrmp = cupy.ReductionKernel(in_params='T x, T p',
+                                out_params='T res',
+                                map_expr='pow(abs(x), p)',
+                                reduce_expr='a + b',
+                                post_map_expr='res = pow(a, 1 / p)',
+                                identity='0',
+                                name='nrmp')
+
+    nrmpw = cupy.ReductionKernel(in_params='T x, T p, W w',
+                                 out_params='T res',
+                                 map_expr='pow(abs(x), p) * w',
+                                 reduce_expr='a + b',
+                                 post_map_expr='res = pow(a, 1 / p)',
+                                 identity='0',
+                                 name='nrmpw')
+
+    dist0 = cupy.ReductionKernel(in_params='T x, T y',
+                                 out_params='int64 res',
+                                 map_expr='x != y',
+                                 reduce_expr='a + b',
+                                 post_map_expr='res = a',
+                                 identity='0',
+                                 name='dist0')
+
+    dist1 = cupy.ReductionKernel(in_params='T x, T y',
+                                 out_params='T res',
+                                 map_expr='abs(x - y)',
+                                 reduce_expr='a + b',
+                                 post_map_expr='res = a',
+                                 identity='0',
+                                 name='dist1')
+
+    dist1w = cupy.ReductionKernel(in_params='T x, T y, W w',
+                                  out_params='T res',
+                                  map_expr='abs(x - y) * w',
+                                  reduce_expr='a + b',
+                                  post_map_expr='res = a',
+                                  identity='0',
+                                  name='dist1w')
+
+    dist2 = cupy.ReductionKernel(in_params='T x, T y',
+                                 out_params='T res',
+                                 map_expr='(x - y) * (x - y)',
+                                 reduce_expr='a + b',
+                                 post_map_expr='res = sqrt(a)',
+                                 identity='0',
+                                 name='dist2')
+
+    dist2w = cupy.ReductionKernel(in_params='T x, T y, W w',
+                                  out_params='T res',
+                                  map_expr='(x - y) * (x - y) * w',
+                                  reduce_expr='a + b',
+                                  post_map_expr='res = sqrt(a)',
+                                  identity='0',
+                                  name='dist2w')
+
+    distinf = cupy.ReductionKernel(in_params='T x, T y',
+                                   out_params='T res',
+                                   map_expr='abs(x - y)',
+                                   reduce_expr='a > b ? a : b',
+                                   post_map_expr='res = a',
+                                   identity='0',
+                                   name='distinf')
+
+    distneginf = cupy.ReductionKernel(in_params='T x, T y',
+                                      out_params='T res',
+                                      map_expr='abs(x - y)',
+                                      reduce_expr='a > b ? b : a',
+                                      post_map_expr='res = a',
+                                      identity='0',
+                                      name='distneginf')
+
+    distp = cupy.ReductionKernel(in_params='T x, T y, T p',
+                                 out_params='T res',
+                                 map_expr='pow(abs(x - y), p)',
+                                 reduce_expr='a + b',
+                                 post_map_expr='res = pow(a, 1 / p)',
+                                 identity='0',
+                                 name='distp')
+
+    distpw = cupy.ReductionKernel(in_params='T x, T y, T p, W w',
+                                  out_params='T res',
+                                  map_expr='pow(abs(x - y), p) * w',
+                                  reduce_expr='a + b',
+                                  post_map_expr='res = pow(a, 1 / p)',
+                                  identity='0',
+                                  name='distpw')
 
 
 class CupyTensorSpaceArrayWeighting(ArrayWeighting):
