@@ -438,7 +438,7 @@ def real_dtype(dtype, default=None):
     """
     dtype, dtype_in = np.dtype(dtype), dtype
 
-    if is_real_floating_dtype(dtype):
+    if is_real_dtype(dtype):
         return dtype
 
     try:
