@@ -51,24 +51,176 @@ if CUPY_AVAILABLE:
                                   name='lico')
 
 
-def fallback_scal(a, x):
+def _fallback_scal(a, x):
+    """Fallback implementation of ``scal`` when cuBLAS is not applicable."""
     x *= a
     return x
 
 
-def fallback_axpy(a, x, y):
+def _fallback_axpy(a, x, y):
+    """Fallback implementation of ``axpy`` when cuBLAS is not applicable."""
     return lico(a, x, 1, y, y)
 
 
-def _flat_inc(arr):
-    """Compute the flat element stride for cuBLAS if possible, else raise."""
-    flat_inc = min(arr.strides) // arr.itemsize
-    stride = min(arr.strides)
-    for n, s in zip(sorted(arr.shape)[:-1], sorted(arr.strides)[1:]):
-        next_stride = stride * n
-        if s != next_stride:
+def _get_flat_inc(arr1, arr2=None):
+    """Return flat index increment(s) for cuBLAS, raise if not applicable.
+
+    This function checks if the array stride(s) allow usage of cuBLAS
+    and returns the ``incx`` (and ``incy``) parameters needed for the
+    cuBLAS functions. If the array strides ar such that cuBLAS cannot
+    be applied, a ``ValueError`` is raised, triggering a fallback
+    implementation.
+
+    For **1 array**, the conditions to be fulfilled are
+
+    - the strides do not contain 0 and
+    - the memory of the array has constant stride.
+
+    The second point applies to
+
+    - contiguous arrays,
+    - chunks of arrays along the **slowest-varying axis** (``arr[1:5, ...]``
+      for C-contiguous ``arr``), and
+    - strided slices along the **fastest-varying axis** (``arr[..., ::2]``
+      for C-contiguous ``arr``).
+
+    For **2 arrays**, both arrays must
+
+    - fulfill the "1 array" conditions individually,
+    - have the same total size, and
+    - the axis order of both must be the same in the sense that the same
+      index array sorts the strides of both arrays in ascending order.
+
+    Parameters
+    ----------
+    arr1 : cupy.core.core.ndarray
+        Array to check for compatibility.
+    arr2 : cupy.core.core.ndarray, optional
+        Second array to check for compatibility, by itself and with ``arr1``.
+
+    Returns
+    -------
+    flat_inc1 : int
+        Memory stride (in terms of elements, not bytes) of ``arr1``.
+    flat_inc2 : int or None
+        Memory stride of ``arr2`` if provided, otherwise ``None``.
+
+    Raises
+    ------
+    ValueError
+        If the conditions for cuBLAS compatibility are not met.
+
+    Examples
+    --------
+    >>> arr_c = cupy.zeros((4, 4, 4))
+    >>> arr_c.strides
+    (128, 32, 8)
+    >>> arr_f = cupy.asfortranarray(arr_c)
+    >>> arr_f.strides
+    (8, 32, 128)
+
+    Contiguous arrays are compatible by and with themselves, but not with
+    arrays that are contiguous in a different ordering:
+
+    >>> _get_flat_inc(arr_c)
+    1
+    >>> _get_flat_inc(arr_c, arr_c)
+    (1, 1)
+    True
+    >>> _get_flat_inc(arr_f)
+    1
+    >>> _get_flat_inc(arr_f, arr_f)
+    (1, 1)
+    >>> _get_flat_inc(arr_c, arr_f)
+    Traceback (most recent call last):
+        ...
+    ValueError
+
+    Slicing in the **fastest** axis is allowed as it results in a constant
+    stride in the flat memory. Slicing with stride in any other axis is
+    results in incompatibility.
+
+    C ordering (last axis fastest):
+
+    >>> half_arr_0_c = cupy.zeros((2, 4, 4))
+    >>> half_arr_1_c = cupy.zeros((4, 2, 4))
+    >>> half_arr_2_c = cupy.zeros((4, 4, 2))
+    >>> _get_flat_inc(arr_c[::2, :, :], half_arr_0_c)
+    Traceback (most recent call last):
+        ...
+    ValueError
+    >>> _get_flat_inc(arr_c[:, ::2, :], half_arr_1_c)
+    Traceback (most recent call last):
+        ...
+    ValueError
+    >>> _get_flat_inc(arr_c[:, :, ::2], half_arr_2_c)
+    (2, 1)
+
+    Fortran ordering (first axis fastest):
+
+    >>> half_arr_0_f = cupy.asfortranarray(half_arr_0_c)
+    >>> half_arr_1_f = cupy.asfortranarray(half_arr_1_c)
+    >>> half_arr_2_f = cupy.asfortranarray(half_arr_2_c)
+    >>> _get_flat_inc(arr_f[::2, :, :], half_arr_0_f)
+    (2, 1)
+    >>> _get_flat_inc(arr_f[:, ::2, :], half_arr_1_f)
+    Traceback (most recent call last):
+        ...
+    ValueError
+    >>> _get_flat_inc(arr_f[:, :, ::2], half_arr_2_f)
+    Traceback (most recent call last):
+        ...
+    ValueError
+
+    Axes swapped (middle axis fastest):
+
+    >>> arr_s = cupy.swapaxes(arr_c, 1, 2)
+    >>> arr_s.strides
+    (128, 8, 32)
+    >>> half_arr_0_s = cupy.swapaxes(half_arr_0_c, 1, 2)
+    >>> half_arr_1_s = cupy.swapaxes(half_arr_1_c, 1, 2)
+    >>> half_arr_2_s = cupy.swapaxes(half_arr_2_c, 1, 2)
+    >>> _get_flat_inc(arr_s[:, :, ::2], half_arr_0_s)
+    Traceback (most recent call last):
+        ...
+    ValueError
+    >>> _get_flat_inc(arr_s[:, ::2, :], half_arr_1_s)
+    (2, 1)
+    >>> _get_flat_inc(arr_s[:, :, ::2], half_arr_2_s)
+    Traceback (most recent call last):
+        ...
+    ValueError
+    """
+    # Zero strides not allowed
+    if 0 in arr1.strides:
+        raise ValueError
+    if arr2 is not None and 0 in arr2.strides:
+        raise ValueError
+
+    # Candidate for flat_inc of array 1
+    arr1_flat_inc = min(arr1.strides) // arr1.itemsize
+
+    # Check if the strides are as in a contiguous array (after reordering
+    # the axes), except for the fastest axis. We allow arbitrary axis order
+    # for operations on the whole array at once, as long as it can be
+    # indexed with a single flat index and stride.
+    arr1_ax_order = np.argsort(arr1.strides)  # ascending
+    arr1_sorted_shape = np.take(arr1.shape, arr1_ax_order)
+    arr1_sorted_shape[0] *= arr1_flat_inc
+    arr1_elem_strides = np.take(arr1.strides, arr1_ax_order) // arr1.itemsize
+    if np.any(np.cumprod(arr1_sorted_shape[:-1]) != arr1_elem_strides[1:]):
+        raise ValueError
+
+    if arr2 is None:
+        return arr1_flat_inc
+    else:
+        arr2_flat_inc = _get_flat_inc(arr2)
+        if arr1.size != arr2.size:
             raise ValueError
-    return flat_inc
+        if np.any(np.diff(np.take(arr2.strides, arr1_ax_order)) < 0):
+            # Strides of arr2 are not sorted by axis order of arr1
+            raise ValueError
+        return arr1_flat_inc, arr2_flat_inc
 
 
 def _cublas_func(name, dtype):
@@ -80,11 +232,11 @@ def _cublas_func(name, dtype):
         Raw function name without prefix, e.g., ``'axpy'``.
     dtype :
         Numpy dtype specifier for which the cuBLAS function should be
-        used. Must be either single or double precision float.
+        used. Must be single or double precision float or complex.
 
     Raises
     ------
-    ValueError :
+    ValueError
         If the data type is not supported by cuBLAS.
     """
     dtype, dtype_in = np.dtype(dtype), dtype
@@ -103,7 +255,16 @@ def _cublas_func(name, dtype):
 
 
 def _get_scal_axpy(x1, x2):
-    """Return implementations of scal and axpy suitable for the inputs."""
+    """Return implementations of scal and axpy suitable for the inputs.
+
+    If the inputs are suitable, a cuBLAS implementation is returned, otherwise
+    a fallback implementation. To be suitable for cuBLAS, both arrays
+    must
+
+    - have single or double precision float or complex data type and
+    - have a single integer stride when flattened, i.e., be contiguous
+      or (this allows using)
+    """
     try:
         incx1 = _flat_inc(x1.data)
         incx2 = _flat_inc(x2.data)
