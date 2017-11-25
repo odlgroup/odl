@@ -885,11 +885,11 @@ def proximal_convex_conj_l2_squared(space, lam=1, g=None):
                                 -sig / (1 + 0.5 * sig / lam), g)
             elif sig in space:
                 if g is None:
-                    x.divide(1 + 0.5 / lam * sig, out)
+                    x.divide(1 + 0.5 / lam * sig, out=out)
                 else:
-                    sig.multiply(g, out)
-                    out.lincomb(1.0, x, -1.0, out)
-                    out.divide(1 + 0.5 / lam * sig, out)
+                    sig.multiply(g, out=out)
+                    out.lincomb(1.0, x, -1.0, out=out)
+                    out.divide(1 + 0.5 / lam * sig, out=out)
 
     return ProximalConvexConjL2Squared
 
@@ -973,8 +973,8 @@ def proximal_l2_squared(space, lam=1, g=None):
                     x.divide(1.0 + 2.0 * sig * lam, out=out)
                 else:
                     sig.multiply(2.0 * lam * g, out=out)
-                    out.lincomb(1.0, x, 1.0, out)
-                    out.divide(1.0 + 2 * sig * lam, out)
+                    out.lincomb(1.0, x, 1.0, out=out)
+                    out.divide(1.0 + 2 * sig * lam, out=out)
 
     return ProximalL2Squared
 
