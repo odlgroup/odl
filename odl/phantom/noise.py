@@ -14,7 +14,8 @@ import numpy as np
 from odl.util import NumpyRandomSeed
 
 
-__all__ = ('white_noise', 'poisson_noise', 'salt_pepper_noise')
+__all__ = ('white_noise', 'poisson_noise', 'salt_pepper_noise',
+           'uniform_noise')
 
 
 def white_noise(space, mean=0, stddev=1, seed=None):

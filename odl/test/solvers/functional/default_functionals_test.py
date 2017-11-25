@@ -540,7 +540,7 @@ def test_weighted_proximal_L2_norm_squared(space):
 
     # Set the stepsize as a random element of the spaces
     # with elements between 1 and 10.
-    sigma = odl.phantom.noise.uniform_noise(space, 1, 10)
+    sigma = odl.phantom.uniform_noise(space, 1, 10)
 
     # Start at the one vector.
     x = space.one()
