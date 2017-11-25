@@ -502,9 +502,10 @@ class NumpyTensorSpace(TensorSpace):
         dtype : `numpy.dtype`
             Numpy data type specifier. The returned defaults are:
 
-                ``RealNumbers()`` : ``np.dtype('float64')``
+            - ``RealNumbers()`` : ``np.dtype('float64')``
+            - ``ComplexNumbers()`` : ``np.dtype('complex128')``
 
-                ``ComplexNumbers()`` : ``np.dtype('complex128')``
+            These choices correspond to the defaults of the NumPy library.
         """
         if field is None or field == RealNumbers():
             return np.dtype('float64')
