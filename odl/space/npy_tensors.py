@@ -2014,7 +2014,6 @@ def _pnorm_diagweight(x, p, w):
     # BLAS dot or nrm2
     xp = np.abs(x.data.ravel(order))
     if p == float('inf'):
-        xp *= w.ravel(order)
         return np.max(xp)
     else:
         xp = np.power(xp, p, out=xp)
@@ -2269,7 +2268,7 @@ class NumpyTensorSpaceConstWeighting(ConstWeighting):
         if self.exponent == 2.0:
             return float(np.sqrt(self.const) * _norm_default(x))
         elif self.exponent == float('inf'):
-            return float(self.const * _pnorm_default(x, self.exponent))
+            return float(_pnorm_default(x, self.exponent))
         else:
             return float((self.const ** (1 / self.exponent) *
                           _pnorm_default(x, self.exponent)))
@@ -2290,7 +2289,7 @@ class NumpyTensorSpaceConstWeighting(ConstWeighting):
         if self.exponent == 2.0:
             return float(np.sqrt(self.const) * _norm_default(x1 - x2))
         elif self.exponent == float('inf'):
-            return float(self.const * _pnorm_default(x1 - x2, self.exponent))
+            return float(_pnorm_default(x1 - x2, self.exponent))
         else:
             return float((self.const ** (1 / self.exponent) *
                           _pnorm_default(x1 - x2, self.exponent)))
