@@ -14,6 +14,7 @@ import operator
 import os
 
 import odl
+from odl.space.cupy_tensors import CUPY_AVAILABLE
 from odl.space.entry_points import tensor_space_impl_names
 from odl.trafos.backends import PYFFTW_AVAILABLE, PYWT_AVAILABLE
 from odl.util.testutils import simple_fixture
@@ -79,6 +80,10 @@ if not PYWT_AVAILABLE:
     # Currently `pywt` is the only implementation
     collect_ignore.append(
         os.path.join(odl_root, 'odl', 'trafos', 'wavelet.py'))
+
+if not CUPY_AVAILABLE:
+    collect_ignore.append(
+        os.path.join(odl_root, 'odl', 'space', 'cupy_tensors.py'))
 
 
 # Remove duplicates
