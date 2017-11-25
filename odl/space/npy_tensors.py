@@ -1108,6 +1108,14 @@ class NumpyTensor(Tensor):
                 weighting = self.space.weighting
             else:
                 weighting = None
+
+            if isinstance(weighting, NumpyTensorSpaceArrayWeighting):
+                weighting = weighting.array[indices]
+            elif isinstance(weighting, NumpyTensorSpaceConstWeighting):
+                # Axes were removed, cannot infer new constant
+                if arr.ndim != self.ndim:
+                    weighting = None
+
             space = type(self.space)(
                 arr.shape, dtype=self.dtype, exponent=self.space.exponent,
                 weighting=weighting)
@@ -1123,11 +1131,6 @@ class NumpyTensor(Tensor):
             of the data array which should be written to.
         values : scalar, array-like or `NumpyTensor`
             The value(s) that are to be assigned.
-
-            If ``index`` is an integer, ``value`` must be a scalar.
-
-            If ``index`` is a slice or a sequence of slices, ``value``
-            must be broadcastable to the shape of the slice.
 
         Examples
         --------

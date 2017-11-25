@@ -22,7 +22,7 @@ from odl.space.weighting import (
     Weighting, ArrayWeighting, ConstWeighting,
     CustomInner, CustomNorm, CustomDist)
 from odl.util import (
-    array_str, dtype_str, is_floating_dtype, real_dtype,
+    array_str, dtype_str, is_floating_dtype, is_numeric_dtype, real_dtype,
     signature_string, indent)
 
 try:
@@ -45,8 +45,8 @@ __all__ = ('CupyTensorSpace',)
 
 
 if CUPY_AVAILABLE:
-    lico = cupy.ElementwiseKernel(in_params='T a, T x, T b, T y',
-                                  out_params='T z',
+    lico = cupy.ElementwiseKernel(in_params='X a, X x, Y b, Y y',
+                                  out_params='Z z',
                                   operation='z = a * x + b * y;',
                                   name='lico')
 
@@ -102,8 +102,8 @@ def _get_flat_inc(arr1, arr2=None):
     -------
     flat_inc1 : int
         Memory stride (in terms of elements, not bytes) of ``arr1``.
-    flat_inc2 : int or None
-        Memory stride of ``arr2`` if provided, otherwise ``None``.
+    flat_inc2 : int or None, optional
+        Memory stride of ``arr2``. Returned only if ``arr2`` was provided.
 
     Raises
     ------
@@ -126,7 +126,6 @@ def _get_flat_inc(arr1, arr2=None):
     1
     >>> _get_flat_inc(arr_c, arr_c)
     (1, 1)
-    True
     >>> _get_flat_inc(arr_f)
     1
     >>> _get_flat_inc(arr_f, arr_f)
@@ -254,51 +253,113 @@ def _cublas_func(name, dtype):
     return getattr(cupy.cuda.cublas, prefix + name)
 
 
-def _get_scal_axpy(x1, x2):
-    """Return implementations of scal and axpy suitable for the inputs.
+def _get_scal(arr):
+    """Return a ``scal`` implementation suitable for the input.
 
-    If the inputs are suitable, a cuBLAS implementation is returned, otherwise
-    a fallback implementation. To be suitable for cuBLAS, both arrays
-    must
+    If possible, a cuBLAS implementation is returned, otherwise a fallback.
 
-    - have single or double precision float or complex data type and
-    - have a single integer stride when flattened, i.e., be contiguous
-      or (this allows using)
+    In general, cuBLAS requires single or double precision float or complex
+    data type, and operates on linear memory with constant stride.
+    The latter is the case for
+
+    - contiguous arrays,
+    - chunks of arrays along the **slowest-varying axis** (``arr[1:5, ...]``
+      for C-contiguous ``arr``), and
+    - strided slices along the **fastest-varying axis** (``arr[..., ::2]``
+      for C-contiguous ``arr``).
+
+    Note that CuPy's cuBLAS wrapper does not necessarily implement all
+    functions for all four data types. See
+    https://github.com/cupy/cupy/blob/master/cupy/cuda/cublas.pyx
+    for details.
+
+    Parameters
+    ----------
+    arr : cupy.core.core.ndarray
+        Array to which ``scal`` should be applied.
+
+    Returns
+    -------
+    scal : callable
+        Implementation of ``x <- a * x``.
     """
     try:
-        incx1 = _flat_inc(x1.data)
-        incx2 = _flat_inc(x2.data)
+        incx = _get_flat_inc(arr)
     except ValueError:
-        use_cublas = False
-    else:
-        use_cublas = True
+        return _fallback_scal
 
-    if use_cublas:
-        try:
-            scal_cublas = _cublas_func('scal', x1.dtype)
-        except (ValueError, AttributeError):
-            scal = fallback_scal
-        else:
-            def scal(a, x):
-                with cupy.cuda.Device(x1.device) as dev:
-                    return scal_cublas(
-                        dev.cublas_handle, x.data.size, a, x.data.ptr, incx1)
+    try:
+        _cublas_scal = _cublas_func('scal', arr.dtype)
+    except (ValueError, AttributeError):
+        return _fallback_scal
 
-        try:
-            axpy_cublas = _cublas_func('axpy', x1.dtype)
-        except (ValueError, AttributeError):
-            axpy = fallback_axpy
-        else:
-            def axpy(a, x, y):
-                with cupy.cuda.Device(x1.device) as dev:
-                    return axpy_cublas(
-                        dev.cublas_handle, x.data.size, a,
-                        x.data.ptr, incx1, y.data.ptr, incx2)
-    else:
-        scal = fallback_scal
-        axpy = fallback_axpy
+    def scal(a, x):
+        """Implement ``x <- a * x`` with constant ``a``."""
+        return _cublas_scal(
+            x.data.device.cublas_handle, x.size, a, x.data.ptr, incx)
 
-    return scal, axpy
+    scal.__name__ = scal.__qualname__ = '_cublas_scal'
+    return scal
+
+
+def _get_axpy(arr1, arr2):
+    """Return an ``axpy`` implementation suitable for the inputs.
+
+    If possible, a cuBLAS implementation is returned, otherwise a fallback.
+
+    In general, cuBLAS requires single or double precision float or complex
+    data type, and operates on linear memory with constant stride.
+    The latter is the case for
+
+    - contiguous arrays,
+    - chunks of arrays along the **slowest-varying axis** (``arr[1:5, ...]``
+      for C-contiguous ``arr``), and
+    - strided slices along the **fastest-varying axis** (``arr[..., ::2]``
+      for C-contiguous ``arr``).
+
+    Furthermore, the two arrays must
+
+    - be on the same device,
+    - have the same total size, and
+    - the axis order of both must be the same in the sense that the same
+      index array sorts the strides of both arrays in ascending order.
+
+    Note that CuPy's cuBLAS wrapper does not necessarily implement all
+    functions for all four data types. See
+    https://github.com/cupy/cupy/blob/master/cupy/cuda/cublas.pyx
+    for details.
+
+    Parameters
+    ----------
+    arr1, arr2 : cupy.core.core.ndarray
+        Arrays to which ``axpy`` should be applied.
+
+    Returns
+    -------
+    axpy : callable
+        Implementation of ``y <- a * x + y``.
+    """
+    if arr1.dtype != arr2.dtype or arr1.device != arr2.device:
+        return _fallback_axpy
+
+    try:
+        incx1, incx2 = _get_flat_inc(arr1, arr2)
+    except ValueError:
+        return _fallback_axpy
+
+    try:
+        _cublas_axpy = _cublas_func('axpy', arr1.dtype)
+    except (ValueError, AttributeError):
+        return _fallback_axpy
+
+    def axpy(a, x, y):
+        """Implement ``y <- a * x + y`` with constant ``a``."""
+        return _cublas_axpy(
+            x.data.device.cublas_handle, x.size, a, x.data.ptr, incx1,
+            y.data.ptr, incx2)
+
+    axpy.__name__ = axpy.__qualname__ = '_cublas_axpy'
+    return axpy
 
 
 def _lincomb_impl(a, x1, b, x2, out):
@@ -307,7 +368,9 @@ def _lincomb_impl(a, x1, b, x2, out):
     This implementation is a highly optimized, considering all special
     cases of array alignment and special scalar values 0 and 1 separately.
     """
-    scal, axpy = _get_scal_axpy(x1, x2)
+    scal1 = _get_scal(x1.data)
+    scal2 = _get_scal(x2.data)
+    axpy = _get_axpy(x1.data, x2.data)
 
     if a == 0 and b == 0:
         # out <- 0
@@ -320,7 +383,7 @@ def _lincomb_impl(a, x1, b, x2, out):
             if b == 1:
                 pass
             else:
-                scal(b, out.data)
+                scal2(b, out.data)
         else:
             # out <- b * x2
             if b == 1:
@@ -335,7 +398,7 @@ def _lincomb_impl(a, x1, b, x2, out):
             if a == 1:
                 pass
             else:
-                scal(a, out.data)
+                scal1(a, out.data)
         else:
             # out <- a * x1
             if a == 1:
@@ -354,7 +417,7 @@ def _lincomb_impl(a, x1, b, x2, out):
             elif a + b == 1:
                 pass
             else:
-                scal(a + b, out.data)
+                scal1(a + b, out.data)
         elif out is x1 and a == 1:
             # out <-- out + b * x2
             axpy(b, x2.data, out.data)
@@ -1284,8 +1347,20 @@ class CupyTensor(Tensor):
                 raise RuntimeError("no conversion for dtype {}"
                                    "".format(arr.dtype))
         else:
+            if is_numeric_dtype(self.dtype):
+                weighting = self.space.weighting
+            else:
+                weighting = None
+
+            if isinstance(weighting, CupyTensorSpaceArrayWeighting):
+                weighting = weighting.array[indices]
+            elif isinstance(weighting, CupyTensorSpaceConstWeighting):
+                # Axes were removed, cannot infer new constant
+                if arr.ndim != self.ndim:
+                    weighting = None
+
             space = type(self.space)(arr.shape, dtype=self.dtype,
-                                     device=self.device)
+                                     device=self.device, weighting=weighting)
             return space.element(arr)
 
     def __setitem__(self, indices, values):
@@ -1657,8 +1732,13 @@ numpy.ufunc.reduceat.html
             use_native = False
         else:
             native_ufunc = getattr(cupy, ufunc.__name__, None)
-            use_native = (native_ufunc is not None and
-                          hasattr(native_ufunc, method))
+            # Manual assignment for sum, cumsum, prod and cumprod
+            if (ufunc in (np.add, np.multiply) and
+                    method in ('reduce', 'accumulate')):
+                use_native = native_ufunc is not None
+            else:
+                use_native = (native_ufunc is not None and
+                              hasattr(native_ufunc, method))
 
         # Assign to `out` or `out1` and `out2`, respectively, unwrapping the
         # data container
@@ -1687,8 +1767,10 @@ numpy.ufunc.reduceat.html
 
         if use_native:
             # TODO: remove when upstream issue is fixed
-            # For native ufuncs, we turn non-scalar inputs into cupy arrays,
-            # as a workaround for https://github.com/cupy/cupy/issues/594
+            # For native ufuncs, we turn non-scalar inputs into cupy arrays
+            # since cupy ufuncs do not accept array-like input. See
+            # https://github.com/cupy/cupy/issues/594 and
+            # https://github.com/odlgroup/odl/issues/1248
             inputs, orig_inputs = [], inputs
             for inp in orig_inputs:
                 if (isinstance(inp, cupy.ndarray) or
@@ -1697,12 +1779,13 @@ numpy.ufunc.reduceat.html
                     inputs.append(inp)
                 else:
                     inputs.append(cupy.array(inp))
-        elif method != 'at':
+        elif not use_native and method != 'at':
             # TODO: remove when upstream issue is fixed
             # For non-native ufuncs (except `at`), we need ot cast our tensors
             # and Cupy arrays to Numpy arrays explicitly, since `__array__`
             # and friends are not implemented. See
-            # https://github.com/cupy/cupy/issues/589
+            # https://github.com/cupy/cupy/issues/589 and
+            # https://github.com/odlgroup/odl/issues/1248
             inputs, orig_inputs = [], inputs
             for inp in orig_inputs:
                 if isinstance(inp, cupy.ndarray):
@@ -1791,8 +1874,10 @@ numpy.ufunc.reduceat.html
                 new_inputs = (npy_arr,) + inputs[1:]
                 super(CupyTensor, self).__array_ufunc__(
                     ufunc, method, *new_inputs, **kwargs)
-                # Workaround for https://github.com/cupy/cupy/issues/593
-                # TODO: use cupy_arr[:] = npy_arr when available
+                # Workaround for assignment cupy_arr[:] = npy_arr not
+                # working. See
+                # https://github.com/cupy/cupy/issues/593 and
+                # https://github.com/odlgroup/odl/issues/1248
                 cupy_arr.data.copy_from_host(
                     npy_arr.ctypes.data_as(ctypes.c_void_p), npy_arr.nbytes)
 
@@ -1809,6 +1894,41 @@ numpy.ufunc.reduceat.html
                         eval_at_via_npy(*inputs, **kwargs)
             else:
                 eval_at_via_npy(*inputs, **kwargs)
+
+        elif (ufunc in (np.add, np.multiply) and
+              method in ('reduce', 'accumulate')):
+            # These cases are implemented but not available as methods
+            # of cupy.ufunc. We do the manual assignment
+            if ufunc == np.add:
+                function = cupy.sum if method == 'reduce' else cupy.cumsum
+            else:
+                function = cupy.prod if method == 'reduce' else cupy.cumprod
+
+            res = function(*inputs, **kwargs)
+
+            # Shortcut for scalar or no return value
+            if np.isscalar(res):
+                # Happens for `reduce` with all axes
+                return res
+
+            # Wrap result if necessary (lazily)
+            if out is None:
+                if is_floating_dtype(res.dtype):
+                    if res.shape != self.shape:
+                        # Don't propagate weighting if shape changes
+                        weighting = CupyTensorSpaceConstWeighting(
+                            1.0, exponent)
+                    spc_kwargs = {'weighting': weighting}
+                else:
+                    spc_kwargs = {}
+
+                res_space = type(self.space)(
+                    res.shape, res.dtype, self.device, **spc_kwargs)
+                result = res_space.element(res)
+            else:
+                result = out_tuple[0]
+
+            return result
 
         else:  # method != '__call__'
             kwargs['out'] = (out,)
@@ -2389,7 +2509,7 @@ class CupyTensorSpaceConstWeighting(ConstWeighting):
         elif self.exponent == 2:
             # We try to use cuBLAS nrm2
             try:
-                incx = _flat_inc(x.data)
+                incx = _get_flat_inc(x.data)
             except ValueError:
                 use_cublas = False
             else:
@@ -2397,13 +2517,12 @@ class CupyTensorSpaceConstWeighting(ConstWeighting):
 
             if use_cublas:
                 try:
-                    nrm2_cublas = _cublas_func('nrm2', x.dtype)
+                    _cublas_nrm2 = _cublas_func('nrm2', x.dtype)
                 except (ValueError, AttributeError):
                     pass
                 else:
-                    with cupy.cuda.Device(x.device) as dev:
-                        norm = nrm2_cublas(
-                            dev.cublas_handle, x.size, x.data_ptr, incx)
+                    norm = _cublas_nrm2(
+                        x.data.device.cublas_handle, x.size, x.data_ptr, incx)
                     return float(np.sqrt(self.const) * norm)
 
             # Cannot use cuBLAS, fall back to custom kernel
