@@ -28,6 +28,7 @@ from odl.util import (
 try:
     import cupy
 except ImportError:
+    cupy = None
     CUPY_AVAILABLE = False
 else:
     _maj = int(cupy.__version__.split('.')[0])
@@ -1356,6 +1357,7 @@ class CupyTensor(Tensor):
         changes do not affect the original array:
 
         >>> idcs = [0, 3, 2, 1, 2]
+        >>> x = r5.element([1, 2, 3, 4, 5])
         >>> x_part = x[[0, 3, 2, 1, 2]]
         >>> x_part
         rn(5, impl='cupy').element([ 1.,  4.,  3.,  2.,  3.])
