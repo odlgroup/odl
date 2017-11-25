@@ -1141,8 +1141,7 @@ class CupyTensorSpace(TensorSpace):
             - ``RealNumbers()`` or ``None`` : ``np.dtype('float64')``
             - ``ComplexNumbers()`` : ``np.dtype('complex128')``
 
-            These choices correspond to the defaults of the ``cupy``
-            library.
+            These choices correspond to the defaults of the CuPy library.
         """
         if field is None or field == RealNumbers():
             return np.dtype('float64')
@@ -1225,7 +1224,7 @@ class CupyTensor(Tensor):
             return cupy.asnumpy(self.data)
         else:
             if not isinstance(out, np.ndarray):
-                raise TypeError('`out` must be a `numpy.ndarray´, got type '
+                raise TypeError('`out` must be a `numpy.ndarray`, got type '
                                 '{}'.format(type(out)))
             if out.shape != self.shape:
                 raise ValueError('`out` must have shape {}, got shape {}'
