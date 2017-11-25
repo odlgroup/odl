@@ -282,11 +282,11 @@ def proximal_arg_scaling(prox_factory, scaling):
             the step size
         """
         scaling_square = scaling * scaling
-# TODO Catch division by zero errors. The following doesn't work:
-#        if not scaling_square > 0 * scaling:
-#            raise NotImplementedError("Proximal scaling: "
-#                                      "Vector-valued scaling "
-#                                      "with zeros not yet supported.")
+#       TODO Catch division by zero errors. The following doesn't work:
+#       if not scaling_square > 0 * scaling:
+#           raise NotImplementedError("Proximal scaling: "
+#                                     "Vector-valued scaling "
+#                                     "with zeros not yet supported.")
         prox = prox_factory(sigma * scaling_square)
         space = prox.domain
         mult_inner = MultiplyOperator(scaling, domain=space, range=space)

@@ -545,7 +545,7 @@ def test_weighted_proximal_L2_norm_squared(space):
     # Start at the one vector.
     x = space.one()
 
-    # Calculate the proximal point inline and non-inline
+    # Calculate the proximal point in-place and out-of-place
     p1 = space.element()
     func.proximal(sigma)(x, out=p1)
     p2 = func.proximal(sigma)(x)
@@ -569,7 +569,7 @@ def test_weighted_proximal_L1_norm(space):
     # with elements between 1 and 10.
     sigma = odl.phantom.noise.uniform_noise(space, 1, 10)
 
-    # Start for away from zero so that the L1 norm will be differentiable
+    # Start far away from zero so that the L1 norm will be differentiable
     # at the result.
     x = 100 * space.one()
 
@@ -583,7 +583,6 @@ def test_weighted_proximal_L1_norm(space):
 
     # Check if the subdifferential inequalities are satisfied.
     # p = prox_{sigma * f}(x) iff (x - p)/sigma = grad f(p)
-    print(func.gradient(p1))
     assert all_almost_equal(func.gradient(p1), space.divide(x - p1, sigma))
 
 
