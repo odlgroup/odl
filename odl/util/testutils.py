@@ -687,12 +687,14 @@ def run_doctests(skip_if=False, **kwargs):
         Extra keyword arguments passed on to the ``doctest.testmod``
         function.
     """
-    from doctest import testmod, NORMALIZE_WHITESPACE, SKIP
+    from doctest import (
+        testmod, NORMALIZE_WHITESPACE, SKIP, IGNORE_EXCEPTION_DETAIL)
     from pkg_resources import parse_version
     import odl
     import numpy as np
 
-    optionflags = kwargs.pop('optionflags', NORMALIZE_WHITESPACE)
+    optionflags = kwargs.pop('optionflags',
+                             NORMALIZE_WHITESPACE | IGNORE_EXCEPTION_DETAIL)
     if skip_if:
         optionflags |= SKIP
 
