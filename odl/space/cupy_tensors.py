@@ -431,6 +431,25 @@ def _lincomb_impl(a, x1, b, x2, out):
             lico(a, x1.data, b, x2.data, out.data)
 
 
+def _python_scalar(arr):
+    """Convert a CuPy array to a Python scalar.
+
+    The shape of the array must be ``()`` or ``(1,)``, otherwise an
+    error is raised.
+    """
+    if arr.dtype.kind == 'f':
+        return float(cupy.asnumpy(arr))
+    elif arr.dtype.kind == 'c':
+        return complex(cupy.asnumpy(arr))
+    elif arr.dtype.kind in ('u', 'i'):
+        return int(cupy.asnumpy(arr))
+    elif arr.dtype.kind == 'b':
+        return bool(cupy.asnumpy(arr))
+    else:
+        raise RuntimeError("no conversion for dtype {}"
+                           "".format(arr.dtype))
+
+
 # --- Space and element classes --- #
 
 
@@ -1337,15 +1356,7 @@ class CupyTensor(Tensor):
         """
         arr = self.data[indices]
         if arr.shape == ():
-            if arr.dtype.kind == 'f':
-                return float(cupy.asnumpy(arr))
-            elif arr.dtype.kind == 'c':
-                return complex(cupy.asnumpy(arr))
-            elif arr.dtype.kind in ('u', 'i'):
-                return int(cupy.asnumpy(arr))
-            else:
-                raise RuntimeError("no conversion for dtype {}"
-                                   "".format(arr.dtype))
+            return _python_scalar(arr)
         else:
             if is_numeric_dtype(self.dtype):
                 weighting = self.space.weighting
@@ -1898,7 +1909,7 @@ numpy.ufunc.reduceat.html
         elif (ufunc in (np.add, np.multiply) and
               method in ('reduce', 'accumulate')):
             # These cases are implemented but not available as methods
-            # of cupy.ufunc. We do the manual assignment
+            # of cupy.ufunc. We map the implementation by hand.
             if ufunc == np.add:
                 function = cupy.sum if method == 'reduce' else cupy.cumsum
             else:
@@ -1906,10 +1917,10 @@ numpy.ufunc.reduceat.html
 
             res = function(*inputs, **kwargs)
 
-            # Shortcut for scalar or no return value
-            if np.isscalar(res):
+            # Shortcut for scalar return value
+            if getattr(res, 'shape', ()) == ():
                 # Happens for `reduce` with all axes
-                return res
+                return _python_scalar(res)
 
             # Wrap result if necessary (lazily)
             if out is None:
@@ -2647,6 +2658,5 @@ class CupyTensorSpaceCustomDist(CustomDist):
 
 
 if __name__ == '__main__':
-    if CUPY_AVAILABLE:
-        from odl.util.testutils import run_doctests
-        run_doctests()
+    from odl.util.testutils import run_doctests
+    run_doctests()
