@@ -50,6 +50,14 @@ if CUPY_AVAILABLE:
                                   operation='z = a * x + b * y;',
                                   name='lico')
 
+    all_equal = cupy.ReductionKernel(in_params='T x, T y',
+                                     out_params='R res',
+                                     map_expr='x == y',
+                                     reduce_expr='a && b',
+                                     post_map_expr='res = a',
+                                     identity='1',
+                                     name='all_equal')
+
 
 def _fallback_scal(a, x):
     """Fallback implementation of ``scal`` when cuBLAS is not applicable."""
@@ -731,17 +739,21 @@ class CupyTensorSpace(TensorSpace):
              [ 4.,  5.,  6.]]
         )
         """
-        if order is None:
-            order_in = order
-        else:
+        if order is not None:
+            # Need to keep `order=None` intact
             order, order_in = str(order).upper(), order
-
-        if order is not None and order not in ('C', 'F'):
-            raise ValueError("`order` {!r} not understood".format(order_in))
+            if order not in ('C', 'F'):
+                raise ValueError('`order` {!r} not understood'
+                                 ''.format(order_in))
 
         with cupy.cuda.Device(self.device):
             if inp is None:
                 if order is None:
+                    # TODO: remove when fix is available
+                    # `order=None` is not understood by cupy 2.1.0, for new
+                    # elements it means to use default order. See
+                    # https://github.com/cupy/cupy/issues/590
+                    # (fixed on master)
                     order = self.default_order
                 arr = cupy.empty(self.shape, dtype=self.dtype, order=order)
 
@@ -755,16 +767,22 @@ class CupyTensorSpace(TensorSpace):
                                      ''.format(self.shape, inp.shape))
 
                 if isinstance(inp, cupy.ndarray):
-                    # Workaround for https://github.com/cupy/cupy/issues/590
-                    # TODO: remove when solved
-                    if (inp.dtype == self.dtype and
-                            inp.device.id == self.device):
-                        arr = inp
+                    # Copies to current device if necessary
+                    # TODO: remove first case when `order=None` fix is
+                    # available (see above)
+                    if order is None:
+                        arr = inp.astype(self.dtype, copy=False)
                     else:
-                        arr = inp.astype(self.dtype)
+                        arr = inp.astype(self.dtype, order=order, copy=False)
                 else:
-                    arr = cupy.array(inp, copy=False, dtype=self.dtype,
-                                     ndmin=self.ndim, order=order)
+                    # TODO: remove first case when `order=None` fix is
+                    # available (see above)
+                    if order is None:
+                        arr = cupy.array(inp, copy=False, dtype=self.dtype,
+                                         ndmin=self.ndim)
+                    else:
+                        arr = cupy.array(inp, copy=False, dtype=self.dtype,
+                                         ndmin=self.ndim, order=order)
 
                 # If the result has a 0 stride, make a copy since it would
                 # produce all kinds of nasty problems. This happens for e.g.
@@ -1206,6 +1224,9 @@ class CupyTensor(Tensor):
         if out is None:
             return cupy.asnumpy(self.data)
         else:
+            if not isinstance(out, np.ndarray):
+                raise TypeError('`out` must be a `numpy.ndarray´, got type '
+                                '{}'.format(type(out)))
             if out.shape != self.shape:
                 raise ValueError('`out` must have shape {}, got shape {}'
                                  ''.format(self.shape, out.shape))
@@ -1219,7 +1240,7 @@ class CupyTensor(Tensor):
 
     @property
     def data_ptr(self):
-        """A raw pointer to the data container.
+        """Memory address of the data container as 64-bit integer.
 
         Examples
         --------
@@ -1272,7 +1293,8 @@ class CupyTensor(Tensor):
         elif other not in self.space:
             return False
         else:
-            return bool((self.data == other.data).all())
+            out = cupy.empty((), dtype=bool)
+            return bool(all_equal(self.data, other.data, out))
 
     def copy(self):
         """Create an identical (deep) copy of this tensor.
@@ -1321,8 +1343,8 @@ class CupyTensor(Tensor):
         >>> x[::2]
         rn(3, impl='cupy').element([ 1.,  3.,  5.])
 
-        The returned views are writable, so modificatons alter the
-        original array:
+        If integers and slices are used, the returned "views" are writable,
+        hence modificatons alter the original array:
 
         >>> view = x[1:4]
         >>> view[:] = -1
@@ -1330,6 +1352,17 @@ class CupyTensor(Tensor):
         rn(3, impl='cupy').element([-1., -1., -1.])
         >>> x
         rn(5, impl='cupy').element([ 1., -1., -1., -1.,  5.])
+
+        For lists, index arrays or boolean arrays, a copy is made, i.e.,
+        changes do not affect the original array:
+
+        >>> idcs = [0, 3, 2, 1, 2]
+        >>> x_part = x[[0, 3, 2, 1, 2]]
+        >>> x_part
+        rn(5, impl='cupy').element([ 1.,  4.,  3.,  2.,  3.])
+        >>> x_part[:] = 0
+        >>> x
+        rn(5, impl='cupy').element([ 1.,  2.,  3.,  4.,  5.])
 
         Multi-indexing is also directly supported:
 

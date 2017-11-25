@@ -927,7 +927,7 @@ class NumpyTensor(Tensor):
 
     @property
     def data_ptr(self):
-        """A raw pointer to the data container of ``self``.
+        """Memory address of the data container as 64-bit integer.
 
         Examples
         --------
