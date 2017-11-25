@@ -1387,6 +1387,9 @@ class CupyTensor(Tensor):
              [ 0.,  5.,  0.]]
         )
         """
+        if isinstance(indices, CupyTensor):
+            indices = indices.data
+
         arr = self.data[indices]
         if arr.shape == ():
             return _python_scalar(arr)
