@@ -159,9 +159,8 @@ def proximal_convex_conj(prox_factory):
 
         mult_inner = MultiplyOperator(1.0 / sigma, domain=space, range=space)
         mult_outer = MultiplyOperator(sigma, domain=space, range=space)
-        result = IdentityOperator(space) \
-            - OperatorComp(OperatorComp(
-                mult_outer, prox_factory(1.0 / sigma)), mult_inner)
+        result = IdentityOperator(space) - OperatorComp(OperatorComp(
+            mult_outer, prox_factory(1.0 / sigma)), mult_inner)
         return result
 
     return convex_conj_prox_factory

@@ -555,7 +555,8 @@ def test_weighted_proximal_L2_norm_squared(space):
 
     # Check if the subdifferential inequalities are satisfied.
     # p = prox_{sigma * f}(x) iff (x - p)/sigma = grad f(p)
-    assert all_almost_equal(func.gradient(p1), space.divide(x - p1, sigma))
+    assert all_almost_equal(func.gradient(p1),
+                            (x - p1) / sigma)
 
 
 def test_weighted_proximal_L1_norm(space):
