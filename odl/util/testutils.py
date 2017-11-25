@@ -91,6 +91,19 @@ def dtype_tol(dtype, default=None):
 
 def all_equal(iter1, iter2):
     """Return ``True`` if all elements in ``a`` and ``b`` are equal."""
+    # Transfer cupy arrays to CPU for faster comparison
+    from odl.space.cupy_tensors import CUPY_AVAILABLE, CupyTensor, cupy
+    if CUPY_AVAILABLE:
+        if isinstance(iter1, CupyTensor):
+            iter1 = iter1.asarray()
+        elif isinstance(iter1, cupy.ndarray):
+            iter1 = cupy.asnumpy(iter1)
+
+        if isinstance(iter2, CupyTensor):
+            iter2 = iter2.asarray()
+        elif isinstance(iter2, cupy.ndarray):
+            iter2 = cupy.asnumpy(iter2)
+
     # Direct comparison for scalars, tuples or lists
     try:
         if iter1 == iter2:
@@ -137,6 +150,19 @@ def all_almost_equal_array(v1, v2, ndigits):
 
 def all_almost_equal(iter1, iter2, ndigits=None):
     """Return ``True`` if all elements in ``a`` and ``b`` are almost equal."""
+    # Transfer cupy arrays to CPU for faster comparison
+    from odl.space.cupy_tensors import CUPY_AVAILABLE, CupyTensor, cupy
+    if CUPY_AVAILABLE:
+        if isinstance(iter1, CupyTensor):
+            iter1 = iter1.asarray()
+        elif isinstance(iter1, cupy.ndarray):
+            iter1 = cupy.asnumpy(iter1)
+
+        if isinstance(iter2, CupyTensor):
+            iter2 = iter2.asarray()
+        elif isinstance(iter2, cupy.ndarray):
+            iter2 = cupy.asnumpy(iter2)
+
     try:
         if iter1 is iter2 or iter1 == iter2:
             return True
@@ -323,9 +349,11 @@ def noise_array(space):
     odl.set.space.LinearSpace.examples : Examples of elements
         typical to the space.
     """
-    from odl.space import ProductSpace
+    from odl.space.pspace import ProductSpace
+    from odl.space.cupy_tensors import cupy
+
     if isinstance(space, ProductSpace):
-        return np.array([noise_array(si) for si in space])
+        return [noise_array(si) for si in space]
     else:
         if space.dtype == bool:
             # TODO(kohr-h): use `randint(..., dtype=bool)` from Numpy 1.11 on
@@ -342,7 +370,13 @@ def noise_array(space):
         else:
             raise ValueError('bad dtype {}'.format(space.dtype))
 
-        return arr.astype(space.dtype, copy=False)
+        arr = arr.astype(space.dtype, copy=False)
+        if space.impl == 'numpy':
+            return arr
+        elif space.impl == 'cupy':
+            return cupy.asarray(arr)
+        else:
+            raise RuntimeError('bad `impl` {!r}'.format(space.impl))
 
 
 def noise_element(space):
@@ -557,23 +591,23 @@ class ProgressBar(object):
     Usage:
 
     >>> progress = ProgressBar('Reading data', 10)
-    \rReading data: [                              ] Starting
+    Reading data: [                              ] Starting
     >>> progress.update(4) #halfway, zero indexing
-    \rReading data: [###############               ] 50.0%
+    Reading data: [###############               ] 50.0%
 
     Multi-indices, from slowest to fastest:
 
     >>> progress = ProgressBar('Reading data', 10, 10)
-    \rReading data: [                              ] Starting
+    Reading data: [                              ] Starting
     >>> progress.update(9, 8)
-    \rReading data: [############################# ] 99.0%
+    Reading data: [############################# ] 99.0%
 
     Supports simply calling update, which moves the counter forward:
 
     >>> progress = ProgressBar('Reading data', 10, 10)
-    \rReading data: [                              ] Starting
+    Reading data: [                              ] Starting
     >>> progress.update()
-    \rReading data: [                              ]  1.0%
+    Reading data: [                              ]  1.0%
     """
 
     def __init__(self, text='progress', *njobs):
