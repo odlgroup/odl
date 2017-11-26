@@ -163,7 +163,7 @@ def all_almost_equal(iter1, iter2, places=None):
     try:
         if iter1 is iter2 or iter1 == iter2:
             return True
-    except ValueError:
+    except (ValueError, TypeError):
         pass
 
     if iter1 is None and iter2 is None:
