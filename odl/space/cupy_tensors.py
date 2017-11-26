@@ -22,8 +22,8 @@ from odl.space.weighting import (
     Weighting, ArrayWeighting, ConstWeighting,
     CustomInner, CustomNorm, CustomDist)
 from odl.util import (
-    array_str, dtype_str, is_floating_dtype, is_numeric_dtype, real_dtype,
-    signature_string, indent)
+    array_str, dtype_str, is_floating_dtype, is_numeric_dtype, is_real_dtype,
+    real_dtype, signature_string, indent)
 
 try:
     import cupy
@@ -2163,7 +2163,7 @@ numpy.ufunc.reduceat.html
         except TypeError:
             pass
 
-        self.ufuncs.power(self.data, other, out=self.data)
+        self.ufuncs.power(other, out=self)
         return self
 
 
@@ -2216,7 +2216,7 @@ if CUPY_AVAILABLE:
                                 reduce_expr='a + b',
                                 post_map_expr='res = a',
                                 identity='0',
-                                name='nrm1w')
+                                name='nrm1')
 
     nrm1w = cupy.ReductionKernel(in_params='T x, W w',
                                  out_params='R res',
@@ -2228,7 +2228,7 @@ if CUPY_AVAILABLE:
 
     nrm2 = cupy.ReductionKernel(in_params='T x',
                                 out_params='R res',
-                                map_expr='x * x',
+                                map_expr='abs(x * x)',
                                 reduce_expr='a + b',
                                 post_map_expr='res = sqrt(a)',
                                 identity='0',
@@ -2236,7 +2236,7 @@ if CUPY_AVAILABLE:
 
     nrm2w = cupy.ReductionKernel(in_params='T x, W w',
                                  out_params='R res',
-                                 map_expr='x * x * w',
+                                 map_expr='abs(x * x) * w',
                                  reduce_expr='a + b',
                                  post_map_expr='res = sqrt(a)',
                                  identity='0',
@@ -2291,7 +2291,7 @@ if CUPY_AVAILABLE:
                                  name='dist1')
 
     dist1w = cupy.ReductionKernel(in_params='T x, T y, W w',
-                                  out_params='T res',
+                                  out_params='R res',
                                   map_expr='abs(x - y) * w',
                                   reduce_expr='a + b',
                                   post_map_expr='res = a',
@@ -2360,7 +2360,8 @@ class CupyTensorSpaceArrayWeighting(ArrayWeighting):
         Parameters
         ----------
         array : `array-like`, one-dim.
-            Weighting array of the inner product, norm and distance.
+            Weighting array of the inner product, norm and distance,
+            must have real data type and should only have positive entries.
         exponent : positive float
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
@@ -2369,6 +2370,11 @@ class CupyTensorSpaceArrayWeighting(ArrayWeighting):
             array = array.data
         elif not isinstance(array, cupy.ndarray):
             array = cupy.array(array, copy=False)
+
+        if not is_real_dtype(array.dtype):
+            raise ValueError('`array.dtype` must be real, got {}'
+                             ''.format(dtype_str(array.dtype)))
+
         super(CupyTensorSpaceArrayWeighting, self).__init__(
             array, impl='cupy', exponent=exponent)
 
@@ -2390,7 +2396,10 @@ class CupyTensorSpaceArrayWeighting(ArrayWeighting):
                                       'exponent != 2 (got {})'
                                       ''.format(self.exponent))
         else:
-            return x1.space.field.element(dotw(x1.data, x2.data, self.array))
+            # complex(cupy_complex_scalar) not implemented, see
+            # https://github.com/cupy/cupy/issues/782
+            return x1.space.field.element(
+                cupy.asnumpy(dotw(x2.data.conj(), x1.data, self.array)))
 
     def norm(self, x):
         """Return the weighted norm of a tensor.
@@ -2526,8 +2535,14 @@ class CupyTensorSpaceConstWeighting(ConstWeighting):
                                       'exponent != 2 (got {})'
                                       ''.format(self.exponent))
         else:
-            return x1.space.field.element(
-                self.const * cupy.dot(x1.data, x2.data))
+            if np.issubsctype(x1.dtype, np.complexfloating):
+                dot = cupy.vdot(x2.data, x1.data)
+            else:
+                dot = cupy.dot(x2.data, x1.data)
+
+            # complex(cupy_complex_scalar) not implemented, see
+            # https://github.com/cupy/cupy/issues/782
+            return x1.space.field.element(self.const * cupy.asnumpy(dot))
 
     def norm(self, x):
         """Return the constant-weighted norm of a tensor.
@@ -2570,7 +2585,8 @@ class CupyTensorSpaceConstWeighting(ConstWeighting):
                     pass
                 else:
                     norm = _cublas_nrm2(
-                        x.data.device.cublas_handle, x.size, x.data_ptr, incx)
+                        x.data.data.device.cublas_handle, x.size,
+                        x.data.data.ptr, incx)
                     return float(np.sqrt(self.const) * norm)
 
             # Cannot use cuBLAS, fall back to custom kernel
@@ -2581,7 +2597,7 @@ class CupyTensorSpaceConstWeighting(ConstWeighting):
             return float(nrmneginf(x.data, out))
         else:
             return float(self.const ** (1 / self.exponent) *
-                         nrmp(x, self.exponent, out))
+                         nrmp(x.data, self.exponent, out))
 
     def dist(self, x1, x2):
         """Return the weighted distance between two tensors.
