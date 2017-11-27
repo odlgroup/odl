@@ -608,13 +608,14 @@ class CupyTensorSpace(TensorSpace):
         norm = kwargs.pop('norm', None)
         inner = kwargs.pop('inner', None)
         weighting = kwargs.pop('weighting', None)
-        exponent = kwargs.pop('exponent', 2.0)
+        exponent = kwargs.pop('exponent', None)
 
         # Check validity of option combination (3 or 4 out of 4 must be None)
         if sum(x is None for x in (dist, norm, inner, weighting)) < 3:
             raise ValueError('invalid combination of options `weighting`, '
                              '`dist`, `norm` and `inner`')
-        if any(x is not None for x in (dist, norm, inner)) and exponent != 2.0:
+        if (any(x is not None for x in (dist, norm, inner)) and
+                exponent is not None):
             raise ValueError('`exponent` cannot be used together with '
                              '`dist`, `norm` and `inner`')
 
@@ -624,7 +625,7 @@ class CupyTensorSpace(TensorSpace):
                 if weighting.impl != 'cupy':
                     raise ValueError("`weighting.impl` must be 'cupy', "
                                      '`got {!r}'.format(weighting.impl))
-                if weighting.exponent != exponent:
+                if exponent is not None and weighting.exponent != exponent:
                     raise ValueError('`weighting.exponent` conflicts with '
                                      '`exponent`: {} != {}'
                                      ''.format(weighting.exponent, exponent))
@@ -653,7 +654,7 @@ class CupyTensorSpace(TensorSpace):
         elif inner is not None:
             self.__weighting = CupyTensorSpaceCustomInner(inner)
         else:  # all None -> no weighing
-            self.__weighting = CupyTensorSpaceConstWeighting(1.0, exponent)
+            self.__weighting = _weighting(1.0, exponent)
 
     @property
     def device(self):
@@ -1400,15 +1401,18 @@ class CupyTensor(Tensor):
             else:
                 weighting = None
 
+            kwargs = {}
             if isinstance(weighting, CupyTensorSpaceArrayWeighting):
                 weighting = weighting.array[indices]
             elif isinstance(weighting, CupyTensorSpaceConstWeighting):
                 # Axes were removed, cannot infer new constant
                 if arr.ndim != self.ndim:
                     weighting = None
+                    kwargs['exponent'] = self.space.exponent
 
             space = type(self.space)(arr.shape, dtype=self.dtype,
-                                     device=self.device, weighting=weighting)
+                                     device=self.device, weighting=weighting,
+                                     **kwargs)
             return space.element(arr)
 
     def __setitem__(self, indices, values):
@@ -1770,6 +1774,12 @@ numpy.ufunc.reduceat.html
                 "need 0 or 1 `out` arguments for `method={!r}`, "
                 'got {}'.format(method, len(out_tuple)))
 
+        # Catch wrong number of inputs
+        if method == '__call__' and len(inputs) != ufunc.nin:
+            raise ValueError(
+                "need {} inputs for `method='__call__'`, got {}"
+                ''.format(ufunc.nin, len(inputs)))
+
         # We allow our own tensors, the data container type and
         # `numpy.ndarray` objects as `out` (see docs for reason for the
         # latter)
@@ -1777,27 +1787,6 @@ numpy.ufunc.reduceat.html
         if not all(isinstance(o, valid_types) or o is None
                    for o in out_tuple):
             return NotImplemented
-
-        # Determine native ufunc vs. Numpy ufunc
-        if any(isinstance(o, np.ndarray) for o in out_tuple):
-            native_ufunc = None
-            use_native = False
-        else:
-            native_ufunc = getattr(cupy, ufunc.__name__, None)
-            # Manual assignment for sum, cumsum, prod and cumprod
-            if (ufunc in (np.add, np.multiply) and
-                    method in ('reduce', 'accumulate')):
-                use_native = native_ufunc is not None
-            else:
-                use_native = (native_ufunc is not None and
-                              hasattr(native_ufunc, method))
-
-        force_native = kwargs.pop('force_native', False)
-        if force_native and not use_native:
-            raise ValueError(
-                'no native function available to evaluate `{}.{}` with '
-                'inputs {!r}, kwargs {!r} and `out` {!r}'
-                ''.format(ufunc.__name__, method, inputs, kwargs, out_tuple))
 
         # Assign to `out` or `out1` and `out2`, respectively, unwrapping the
         # data container
@@ -1823,6 +1812,30 @@ numpy.ufunc.reduceat.html
         inputs = tuple(
             inp.data if isinstance(inp, type(self)) else inp
             for inp in inputs)
+
+        # Determine native ufunc vs. Numpy ufunc
+        if any(isinstance(o, np.ndarray) for o in out_tuple):
+            native_ufunc = None
+            use_native = False
+        elif any(not isinstance(inp, type(self.data)) for inp in inputs):
+            native_ufunc = None
+            use_native = False
+        else:
+            native_ufunc = getattr(cupy, ufunc.__name__, None)
+            # Manual assignment for sum, cumsum, prod and cumprod
+            if (ufunc in (np.add, np.multiply) and
+                    method in ('reduce', 'accumulate')):
+                use_native = native_ufunc is not None
+            else:
+                use_native = (native_ufunc is not None and
+                              hasattr(native_ufunc, method))
+
+        force_native = kwargs.pop('force_native', False)
+        if force_native and not use_native:
+            raise ValueError(
+                'no native function available to evaluate `{}.{}` with '
+                'inputs {!r}, kwargs {!r} and `out` {!r}'
+                ''.format(ufunc.__name__, method, inputs, kwargs, out_tuple))
 
         if use_native:
             # TODO: remove when upstream issue is fixed
@@ -2200,6 +2213,9 @@ numpy.ufunc.reduceat.html
 
 def _weighting(weights, exponent):
     """Return a weighting whose type is inferred from the arguments."""
+    if exponent is None:
+        exponent = 2.0
+
     if np.isscalar(weights):
         weighting = CupyTensorSpaceConstWeighting(weights, exponent=exponent)
     else:
@@ -2497,6 +2513,12 @@ class CupyTensorSpaceArrayWeighting(ArrayWeighting):
         else:
             return float(distpw(x1.data, x2.data, self.exponent, self.array,
                                 out))
+
+    def __hash__(self):
+        """Return ``hash(self)``."""
+        # CuPy array has no `tobytes`
+        return hash((super(ArrayWeighting, self).__hash__(),
+                     cupy.asnumpy(self.array).tobytes()))
 
     # TODO: remove repr_part and __repr__ when cupy.ndarray.__array__
     # is implemented. See

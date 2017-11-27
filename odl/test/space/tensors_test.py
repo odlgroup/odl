@@ -864,13 +864,14 @@ def test_element_setitem(tspace_impl, setitem_indices):
     assert all_equal(x, x_arr)
 
     # Setting values with arrays
-    rhs_arr = np.ones(sliced_shape)
+    rhs_arr = _module(tspace_impl).ones(sliced_shape)
     x_arr[setitem_indices] = rhs_arr
     x[setitem_indices] = rhs_arr
     assert all_equal(x, x_arr)
 
     # Using a list of lists
     rhs_list = (-np.ones(sliced_shape)).tolist()
+    x_arr = _as_numpy(x_arr)
     x_arr[setitem_indices] = rhs_list
     x[setitem_indices] = rhs_list
     assert all_equal(x, x_arr)
@@ -1078,7 +1079,7 @@ def test_array_wrap_method(tspace_impl):
     space = odl.tensor_space((3, 4), dtype='float32', exponent=1, weighting=2,
                              impl=tspace_impl)
     x_arr, x = noise_elements(space)
-    y_arr = np.sin(x_arr)
+    y_arr = _module(tspace_impl).sin(x_arr)
     y = np.sin(x)  # Should yield again an ODL tensor
 
     assert all_equal(y, y_arr)
@@ -1544,6 +1545,7 @@ def test_ufuncs(tspace, ufunc):
     _check_result_type(result, tspace.element_type)
 
     # In-place -- in = elements -- out = elements -- ufunc = method or numpy
+    print('************************')
     result = ufunc_method(*in_elems_method, **kwargs_elem)
     assert all_almost_equal(result_npy, result)
     _check_result_is_out(result, out_elems[:nout])
@@ -1636,12 +1638,23 @@ def test_ufunc_cupy_force_native():
     if not USE_ARRAY_UFUNCS_INTERFACE:
         pytest.skip('`force_native` option only used in __array_ufuncs__')
 
+    space = odl.rn((3, 4), impl='cupy')
 
-
-    ufuncs = [np.sin, np.absolute, np.add, np.ldexp, np.frexp]
-    for ufunc in ufuncs:
+    # Make sure we call native code for supported ufuncs
+    for ufunc in [np.sin, np.absolute, np.add, np.remainder, np.fmod]:
+        print(ufunc)
+        print('*****')
         nin, nout = ufunc.nin, ufunc.nout
-        in_arrays, in_elems = noise_elements()
+        _, in_elems = noise_elements(space, n=2)
+        out_arrays, out_elems = noise_elements(space, n=2)
+        ufunc(*in_elems[:nin], out=out_elems[:nout], force_native=True)
+        ufunc(*in_elems[:nin], out=out_arrays[:nout], force_native=True)
+
+    # These have explicit native implementations
+    for ufunc in [np.add, np.multiply]:
+        for method in ['reduce', 'accumulate']:
+            in_elem = noise_element(space)
+            getattr(ufunc, method)(in_elem, force_native=True)
 
 
 def test_ufunc_corner_cases(tspace_impl):
@@ -1666,11 +1679,12 @@ def test_ufunc_corner_cases(tspace_impl):
     # Check that the result space is the same
     assert res.space == space
 
-    # Check usage of `order` argument
+    # Check usage of `order` argument (not available in cupy)
     for order in ('C', 'F'):
-        res = x.__array_ufunc__(np.sin, '__call__', x, order=order)
-        assert all_almost_equal(res, np.sin(x.asarray()))
-        assert res.data.flags[order + '_CONTIGUOUS']
+        if tspace_impl == 'numpy':
+            res = x.__array_ufunc__(np.sin, '__call__', x, order=order)
+            assert all_almost_equal(res, np.sin(x.asarray()))
+            assert res.data.flags[order + '_CONTIGUOUS']
 
     # Check usage of `dtype` argument
     res = x.__array_ufunc__(np.sin, '__call__', x, dtype='float32')
@@ -1711,7 +1725,7 @@ def test_ufunc_corner_cases(tspace_impl):
     res = x.__array_ufunc__(np.add, 'accumulate', x)
     assert all_almost_equal(res, np.add.accumulate(x.asarray()))
     assert res.space == space
-    arr = np.empty_like(x)
+    arr = _module(tspace_impl).empty_like(x)
     res = x.__array_ufunc__(np.add, 'accumulate', x, out=(arr,))
     assert all_almost_equal(arr, np.add.accumulate(x.asarray()))
     assert res is arr
@@ -1732,7 +1746,7 @@ def test_ufunc_corner_cases(tspace_impl):
     assert all_almost_equal(res, np.add.reduce(x.asarray()))
 
     # With `out` argument and `axis`
-    out_ax0 = np.empty(3)
+    out_ax0 = _module(tspace_impl).empty(3)
     res = x.__array_ufunc__(np.add, 'reduce', x, axis=0, out=(out_ax0,))
     assert all_almost_equal(out_ax0, np.add.reduce(x.asarray(), axis=0))
     assert res is out_ax0
