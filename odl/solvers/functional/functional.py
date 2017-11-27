@@ -116,6 +116,41 @@ class Functional(Operator):
         given optimization problem take a `proximal factory` as input,
         i.e., a function returning a proximal operator. See for example
         `forward_backward_pd`.
+
+        In general, the step length :math:`\\sigma` is expected to be a
+        positive float, but certain functionals might accept more types of
+        objects as a stepsize:
+
+        * If a functional is a `SeparableSum`, then, instead of a positive
+        float, one may call the `proximal factory` with a list of positive
+        floats, and the stepsize are applied to each component individually.
+
+        * For certain special functionals like `l1_norm` and `l2_norm_squared`,
+        which are not implemented as a `SeparableSum`, the proximal factory
+        will accept a `space.element`, where `space` is the domain of the
+        functional. Its components must be strictly positive floats.
+
+        A stepsize like :math:`(\\sigma_1, \\ldots, \\sigma_n)`  coincides
+        with a matrix-valued distance according to Section XV.4 of _[HL1993]
+        and the rule
+
+        .. math::
+            M = \\mathrm{diag}(\\sigma_1^{-1}, \\ldots, \\sigma_n^{-1})
+
+        or the Bregman-proximal according to _[E1993] and the rule
+
+        .. math::
+            h(x) = \langle x, M x \rangle.
+
+        References
+        ----------
+        [HL1993] Hiriart-Urruty J-B, and Lemaréchal C. *Convex analysis and
+        minimization algorithms II. Advanced theory and bundle methods.*
+        Springer, 1993.
+
+        [E1993] Eckstein J. *Nonlinear proximal point algorithms using Bregman
+        functions, with applications to convex programming.* Mathematics of
+        Operations Research, 18.1 (1993), pp 202--226.
         """
         raise NotImplementedError(
             'no proximal operator implemented for functional {!r}'
