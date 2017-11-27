@@ -32,25 +32,35 @@ import re
 __all__ = ('TensorSpaceUfuncs', 'ProductSpaceUfuncs')
 
 
-# Some are ignored since they don't cooperate with dtypes, needs fix
-RAW_UFUNCS = ['absolute', 'add', 'arccos', 'arccosh', 'arcsin', 'arcsinh',
-              'arctan', 'arctan2', 'arctanh', 'bitwise_and', 'bitwise_or',
-              'bitwise_xor', 'ceil', 'conj', 'copysign', 'cos', 'cosh',
-              'deg2rad', 'divide', 'equal', 'exp', 'exp2', 'expm1', 'floor',
-              'floor_divide', 'fmax', 'fmin', 'fmod', 'greater',
-              'greater_equal', 'hypot', 'invert', 'isfinite', 'isinf', 'isnan',
-              'left_shift', 'less', 'less_equal', 'log', 'log10', 'log1p',
-              'log2', 'logaddexp', 'logaddexp2', 'logical_and', 'logical_not',
-              'logical_or', 'logical_xor', 'maximum', 'minimum', 'mod', 'modf',
-              'multiply', 'negative', 'not_equal', 'power',
-              'rad2deg', 'reciprocal', 'remainder', 'right_shift', 'rint',
-              'sign', 'signbit', 'sin', 'sinh', 'sqrt', 'square', 'subtract',
-              'tan', 'tanh', 'true_divide', 'trunc']
-# ,'isreal', 'iscomplex', 'ldexp', 'frexp'
+_npy_maj, _npy_min = [int(n) for n in np.__version__.split('.')[:2]]
+
+# Supported by Numpy 1.9 and higher
+UFUNC_NAMES = [
+    'absolute', 'add', 'arccos', 'arccosh', 'arcsin', 'arcsinh', 'arctan',
+    'arctan2', 'arctanh', 'bitwise_and', 'bitwise_or', 'bitwise_xor', 'ceil',
+    'conj', 'conjugate', 'copysign', 'cos', 'cosh', 'deg2rad', 'degrees',
+    'divide', 'equal', 'exp', 'exp2', 'expm1', 'fabs', 'floor', 'floor_divide',
+    'fmax', 'fmin', 'fmod', 'frexp', 'greater', 'greater_equal', 'hypot',
+    'invert', 'isfinite', 'isinf', 'isnan', 'ldexp', 'left_shift', 'less',
+    'less_equal', 'log', 'log10', 'log1p', 'log2', 'logaddexp', 'logaddexp2',
+    'logical_and', 'logical_not', 'logical_or', 'logical_xor', 'maximum',
+    'minimum', 'mod', 'modf', 'multiply', 'negative', 'nextafter',
+    'not_equal', 'power', 'rad2deg', 'radians', 'reciprocal', 'remainder',
+    'right_shift', 'rint', 'sign', 'signbit', 'sin', 'sinh', 'sqrt',
+    'square', 'spacing', 'subtract', 'tan', 'tanh', 'true_divide', 'trunc']
+
+if (_npy_maj, _npy_min) >= (1, 10):
+    UFUNC_NAMES.extend(['abs', 'cbrt', 'bitwise_not'])
+
+if (_npy_maj, _npy_min) >= (1, 12):
+    UFUNC_NAMES.extend(['float_power'])
+
+if (_npy_maj, _npy_min) >= (1, 13):
+    UFUNC_NAMES.extend(['divmod', 'heaviside', 'positive'])
 
 # Add some standardized information
 UFUNCS = []
-for name in RAW_UFUNCS:
+for name in UFUNC_NAMES:
     ufunc = getattr(np, name)
     n_in, n_out = ufunc.nin, ufunc.nout
     descr = ufunc.__doc__.splitlines()[2]
@@ -101,6 +111,14 @@ def wrap_ufunc_base(name, n_in, n_out, doc):
             def wrapper(self, x2, out=None, **kwargs):
                 return self.elem.__array_ufunc__(
                     ufunc, '__call__', self.elem, x2, out=(out,), **kwargs)
+
+        elif n_out == 2:
+            def wrapper(self, x2, out=None, **kwargs):
+                if out is None:
+                    out = (None, None)
+
+                return self.elem.__array_ufunc__(
+                    ufunc, '__call__', self.elem, x2, out=out, **kwargs)
 
         else:
             raise NotImplementedError
@@ -188,24 +206,35 @@ def wrap_ufunc_productspace(name, n_in, n_out, doc):
     if n_in == 1:
         if n_out == 1:
             def wrapper(self, out=None, **kwargs):
+                from odl.space.pspace import ProductSpace
                 if out is None:
-                    result = [getattr(x.ufuncs, name)(**kwargs)
-                              for x in self.elem]
-                    return self.elem.space.element(result)
-                else:
-                    for x, out_x in zip(self.elem, out):
-                        getattr(x.ufuncs, name)(out=out_x, **kwargs)
-                    return out
+                    out = [None] * len(self.elem.space)
+
+                res = []
+                for xi, out_i in zip(self.elem, out):
+                    r = getattr(xi.ufuncs, name)(out=out_i, **kwargs)
+                    res.append(r)
+                out_space = ProductSpace(*[r.space for r in res])
+                return out_space.element(res)
 
         elif n_out == 2:
             def wrapper(self, out1=None, out2=None, **kwargs):
+                from odl.space.pspace import ProductSpace
                 if out1 is None:
-                    out1 = self.elem.space.element()
+                    out1 = [None] * len(self.elem.space)
                 if out2 is None:
-                    out2 = self.elem.space.element()
-                for x, out1_x, out2_x in zip(self.elem, out1, out2):
-                    getattr(x.ufuncs, name)(out1=out1_x, out2=out2_x, **kwargs)
-                return out1, out2
+                    out2 = [None] * len(self.elem.space)
+
+                res1, res2 = [], []
+                for xi, out1_i, out2_i in zip(self.elem, out1, out2):
+                    r1, r2 = getattr(xi.ufuncs, name)(out1=out1_i,
+                                                      out2=out2_i,
+                                                      **kwargs)
+                    res1.append(r1)
+                    res2.append(r2)
+                out_space_1 = ProductSpace(*[r.space for r in res1])
+                out_space_2 = ProductSpace(*[r.space for r in res2])
+                return out_space_1.element(res1), out_space_2.element(res2)
 
         else:
             raise NotImplementedError
@@ -213,24 +242,36 @@ def wrap_ufunc_productspace(name, n_in, n_out, doc):
     elif n_in == 2:
         if n_out == 1:
             def wrapper(self, x2, out=None, **kwargs):
-                if x2 in self.elem.space:
-                    if out is None:
-                        result = [getattr(x.ufuncs, name)(x2p, **kwargs)
-                                  for x, x2p in zip(self.elem, x2)]
-                        return self.elem.space.element(result)
-                    else:
-                        for x, x2p, outp in zip(self.elem, x2, out):
-                            getattr(x.ufuncs, name)(x2p, out=outp, **kwargs)
-                        return out
-                else:
-                    if out is None:
-                        result = [getattr(x.ufuncs, name)(x2, **kwargs)
-                                  for x in self.elem]
-                        return self.elem.space.element(result)
-                    else:
-                        for x, outp in zip(self.elem, out):
-                            getattr(x.ufuncs, name)(x2, out=outp, **kwargs)
-                        return out
+                from odl.space.pspace import ProductSpace
+                if out is None:
+                    out = [None] * len(self.elem.space)
+
+                res = []
+                for x1_i, x2_i, out_i in zip(self.elem, x2, out):
+                    r = getattr(x1_i.ufuncs, name)(x2_i, out=out_i, **kwargs)
+                    res.append(r)
+                out_space = ProductSpace(*[r.space for r in res])
+                return out_space.element(res)
+
+        elif n_out == 2:
+            def wrapper(self, x2, out1=None, out2=None, **kwargs):
+                from odl.space.pspace import ProductSpace
+                if out1 is None:
+                    out1 = [None] * len(self.elem.space)
+                if out2 is None:
+                    out2 = [None] * len(self.elem.space)
+
+                res1, res2 = [], []
+                for x1_i, x2_i, out1_i, out2_i in zip(self.elem, x2, out1,
+                                                      out2):
+                    r1, r2 = getattr(x1_i.ufuncs, name)(x2_i, out1=out1_i,
+                                                        out2=out2_i,
+                                                        **kwargs)
+                    res1.append(r1)
+                    res2.append(r2)
+                out_space_1 = ProductSpace(*[r.space for r in res1])
+                out_space_2 = ProductSpace(*[r.space for r in res2])
+                return out_space_1.element(res1), out_space_2.element(res2)
 
         else:
             raise NotImplementedError
