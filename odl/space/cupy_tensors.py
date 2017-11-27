@@ -1613,8 +1613,12 @@ class CupyTensor(Tensor):
 
         input1, ..., inputN :
             Positional arguments to ``ufunc.method``.
+        force_native : bool, optional
+            If ``True``, raise a ``ValueError`` if there is no native CuPy
+            function available for the given ``ufunc``, ``method`` and inputs.
+            Default : ``False``
         kwargs :
-            Keyword arguments to ``ufunc.method``.
+            Further keyword arguments passed to ``ufunc.method``.
 
         Returns
         -------
@@ -1788,6 +1792,13 @@ numpy.ufunc.reduceat.html
                 use_native = (native_ufunc is not None and
                               hasattr(native_ufunc, method))
 
+        force_native = kwargs.pop('force_native', False)
+        if force_native and not use_native:
+            raise ValueError(
+                'no native function available to evaluate `{}.{}` with '
+                'inputs {!r}, kwargs {!r} and `out` {!r}'
+                ''.format(ufunc.__name__, method, inputs, kwargs, out_tuple))
+
         # Assign to `out` or `out1` and `out2`, respectively, unwrapping the
         # data container
         out = out1 = out2 = None
@@ -1916,18 +1927,30 @@ numpy.ufunc.reduceat.html
             use_native = (use_native and native_method is not None)
 
             def eval_at_via_npy(*inputs, **kwargs):
+                """Use Numpy to evaluate ufunc.at, converting the inputs."""
                 import ctypes
-                cupy_arr = inputs[0]
-                npy_arr = cupy.asnumpy(cupy_arr)
-                new_inputs = (npy_arr,) + inputs[1:]
+
+                if force_native:
+                    raise ValueError(
+                        'no native function available to evaluate `{}.at` '
+                        'with inputs {!r} and kwargs {!r}'
+                        ''.format(ufunc.__name__, inputs, kwargs))
+                new_inputs = [cupy.asnumpy(inputs[0]), inputs[1]]
+                if ufunc.nin == 2:
+                    new_inputs.append(cupy.asnumpy(inputs[2]))
+
+                # Shouldn't exist, but let upstream code raise
+                new_inputs.extend(inputs[3:])
+
                 super(CupyTensor, self).__array_ufunc__(
                     ufunc, method, *new_inputs, **kwargs)
                 # Workaround for assignment cupy_arr[:] = npy_arr not
                 # working. See
                 # https://github.com/cupy/cupy/issues/593 and
                 # https://github.com/odlgroup/odl/issues/1248
-                cupy_arr.data.copy_from_host(
-                    npy_arr.ctypes.data_as(ctypes.c_void_p), npy_arr.nbytes)
+                inputs[0].data.copy_from_host(
+                    new_inputs[0].ctypes.data_as(ctypes.c_void_p),
+                    new_inputs[0].nbytes)
 
             if use_native:
                 # Native method could exist but raise `NotImplementedError`
@@ -1952,6 +1975,11 @@ numpy.ufunc.reduceat.html
             else:
                 function = cupy.prod if method == 'reduce' else cupy.cumprod
 
+            # Make 0 the default for `axis` as the ufunc methods. The default
+            # for `[cum]sum` and `[cum]prod` is to reduce over all axes
+            axis = kwargs.pop('axis', 0)
+            kwargs['axis'] = axis
+            kwargs['out'] = out
             res = function(*inputs, **kwargs)
 
             # Shortcut for scalar return value
