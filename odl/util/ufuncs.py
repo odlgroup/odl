@@ -96,12 +96,9 @@ def wrap_ufunc_base(name, n_in, n_out, doc):
                     ufunc, '__call__', self.elem, out=out, **kwargs)
 
         elif n_out == 2:
-            def wrapper(self, out=None, **kwargs):
-                if out is None:
-                    out = (None, None)
-
+            def wrapper(self, out1=None, out2=None, **kwargs):
                 return self.elem.__array_ufunc__(
-                    ufunc, '__call__', self.elem, out=out, **kwargs)
+                    ufunc, '__call__', self.elem, out=(out1, out2), **kwargs)
 
         else:
             raise NotImplementedError
@@ -109,16 +106,18 @@ def wrap_ufunc_base(name, n_in, n_out, doc):
     elif n_in == 2:
         if n_out == 1:
             def wrapper(self, x2, out=None, **kwargs):
-                return self.elem.__array_ufunc__(
-                    ufunc, '__call__', self.elem, x2, out=(out,), **kwargs)
-
-        elif n_out == 2:
-            def wrapper(self, x2, out=None, **kwargs):
-                if out is None:
-                    out = (None, None)
+                if out is None or isinstance(out, (type(self.elem),
+                                                   type(self.elem.data))):
+                    out = (out,)
 
                 return self.elem.__array_ufunc__(
                     ufunc, '__call__', self.elem, x2, out=out, **kwargs)
+
+        elif n_out == 2:
+            def wrapper(self, x2, out1=None, out2=None, **kwargs):
+                return self.elem.__array_ufunc__(
+                    ufunc, '__call__', self.elem, x2, out=(out1, out2),
+                    **kwargs)
 
         else:
             raise NotImplementedError

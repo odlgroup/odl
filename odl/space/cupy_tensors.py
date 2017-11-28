@@ -1802,30 +1802,40 @@ numpy.ufunc.reduceat.html
             else:
                 out1 = out_tuple[0]
             if isinstance(out_tuple[1], type(self)):
-                out1 = out_tuple[1].data
+                out2 = out_tuple[1].data
             else:
-                out1 = out_tuple[1]
+                out2 = out_tuple[1]
 
         # --- Process `inputs` --- #
 
         # Pull out the data container of the inputs if necessary
-        inputs = tuple(
-            inp.data if isinstance(inp, type(self)) else inp
-            for inp in inputs)
+        inputs = [inp.data if isinstance(inp, type(self)) else inp
+                  for inp in inputs]
 
         # Determine native ufunc vs. Numpy ufunc
         if any(isinstance(o, np.ndarray) for o in out_tuple):
             native_ufunc = None
             use_native = False
-        elif any(not isinstance(inp, type(self.data)) for inp in inputs):
+        elif not all(isinstance(inp, type(self.data)) or np.isscalar(inp)
+                     for inp in inputs):
             native_ufunc = None
             use_native = False
         else:
             native_ufunc = getattr(cupy, ufunc.__name__, None)
-            # Manual assignment for sum, cumsum, prod and cumprod
-            if (ufunc in (np.add, np.multiply) and
-                    method in ('reduce', 'accumulate')):
-                use_native = native_ufunc is not None
+
+            # Manually implemented cases
+            if (
+                    (ufunc in (np.add, np.multiply) and
+                     method in ('reduce', 'accumulate')
+                     ) or
+                    (ufunc in (np.minimum, np.maximum) and
+                     method == 'reduce'
+                     ) or
+                    (ufunc == np.add and
+                     method == 'at'
+                     )
+                    ):
+                use_native = native_ufunc is not None  # should be True
             else:
                 use_native = (native_ufunc is not None and
                               hasattr(native_ufunc, method))
@@ -1843,35 +1853,63 @@ numpy.ufunc.reduceat.html
             # since cupy ufuncs do not accept array-like input. See
             # https://github.com/cupy/cupy/issues/594 and
             # https://github.com/odlgroup/odl/issues/1248
-            inputs, orig_inputs = [], inputs
-            for inp in orig_inputs:
-                if (isinstance(inp, cupy.ndarray) or
-                        np.isscalar(inp) or
-                        inp is None):
-                    inputs.append(inp)
-                else:
-                    inputs.append(cupy.array(inp))
+            for i in range(len(inputs)):
+                if not (isinstance(inputs[i], cupy.ndarray) or
+                        np.isscalar(inputs[i]) or
+                        inputs[i] is None):
+                    inputs[i] = cupy.array(inputs[i])
+            assert native_ufunc is not None
+
         elif not use_native and method != 'at':
             # TODO: remove when upstream issue is fixed
-            # For non-native ufuncs (except `at`), we need ot cast our tensors
+            # For non-native ufuncs, we need ot cast our tensors
             # and Cupy arrays to Numpy arrays explicitly, since `__array__`
             # and friends are not implemented. See
             # https://github.com/cupy/cupy/issues/589 and
             # https://github.com/odlgroup/odl/issues/1248
-            inputs, orig_inputs = [], inputs
-            for inp in orig_inputs:
-                if isinstance(inp, cupy.ndarray):
-                    inputs.append(cupy.asnumpy(inp))
-                elif isinstance(inp, CupyTensor):
-                    inputs.append(cupy.asnumpy(inp.data))
+            # We must exclude 'at' since it's in-place, thus we're not allowed
+            # to change the input.
+            for i in range(len(inputs)):
+                if isinstance(inputs[i], cupy.ndarray):
+                    inputs[i] = cupy.asnumpy(inputs[i])
+                elif isinstance(inputs[i], CupyTensor):
+                    inputs[i] = cupy.asnumpy(inputs[i].data)
+
+        # For debugging
+        if use_native:
+            assert all(isinstance(i, cupy.ndarray) or
+                       np.isscalar(i) or
+                       i is None
+                       for i in inputs)
+            assert all(isinstance(o, cupy.ndarray) or o is None
+                       for o in (out1, out2))
+
+        elif not use_native and method != 'at':
+            assert not any(isinstance(i, cupy.ndarray) for i in inputs)
+            # `out` handled below, we don't want to mess with it here
+
+        # --- For later --- #
+
+        # Wrap the result in an appropriate space, propagating weighting
+        # if possible
+        def space_element(res, use_weighting=True):
+            if use_weighting and is_floating_dtype(res.dtype):
+                if res.shape == self.shape:
+                    weighting = self.space.weighting
                 else:
-                    inputs.append(inp)
+                    # Don't propagate weighting if shape changes
+                    # (but keep the exponent)
+                    weighting = CupyTensorSpaceConstWeighting(
+                        1.0, self.space.exponent)
 
-        # --- Get some parameters for later --- #
+                spc_kwargs = {'weighting': weighting}
+            else:
+                # No `exponent` or `weighting` applicable
+                spc_kwargs = {}
 
-        # Arguments for space constructors
-        exponent = self.space.exponent
-        weighting = self.space.weighting
+            res_space = type(self.space)(
+                res.shape, res.dtype, self.device, **spc_kwargs)
+            return res_space.element(res)
 
         # --- Evaluate ufunc --- #
 
@@ -1881,51 +1919,67 @@ numpy.ufunc.reduceat.html
                     kwargs['out'] = out  # No tuple packing for cupy
                     res = native_ufunc(*inputs, **kwargs)
                 else:
-                    kwargs['out'] = (out,)
-                    # Everything is cast to Numpy arrays by the parent method;
-                    # the result can be a Numpy array or a tensor
+                    # We need to explicitly cast `out` to Numpy array since
+                    # the upstream `np.asarray` won't work. See
+                    # https://github.com/cupy/cupy/issues/589 and
+                    # https://github.com/odlgroup/odl/issues/1248
+                    if isinstance(out, cupy.ndarray):
+                        out_npy = cupy.asnumpy(out)
+                    else:
+                        out_npy = out
+
+                    kwargs['out'] = (out_npy,)
                     res = super(CupyTensor, self).__array_ufunc__(
                         ufunc, '__call__', *inputs, **kwargs)
 
-                # Wrap result if necessary (lazily)
+                    if isinstance(out, cupy.ndarray):
+                        out[:] = cupy.asarray(res)
+
                 if out is None:
-                    if is_floating_dtype(res.dtype):
-                        # Weighting contains exponent
-                        spc_kwargs = {'weighting': weighting}
-                    else:
-                        # No `exponent` or `weighting` applicable
-                        spc_kwargs = {}
-                    out_space = type(self.space)(
-                        self.shape, res.dtype, self.device, **spc_kwargs)
-                    return out_space.element(res)
+                    result = space_element(res, use_weighting=True)
                 else:
-                    # `out` may be the unwrapped version, return the original
-                    return out_tuple[0]
+                    result = out_tuple[0]
+
+                return result
 
             elif ufunc.nout == 2:
-                kwargs['out'] = (out1, out2)
                 if use_native:
-                    res1, res2 = native_ufunc(*inputs, **kwargs)
+                    # cupy ufuncs with 2 outputs don't support writing to
+                    # `out`
+                    res1, res2 = native_ufunc(*inputs)
+                    if out1 is not None:
+                        out1[:] = res1
+                    if out2 is not None:
+                        out2[:] = res2
                 else:
-                    # Everything is cast to Numpy arrays by the parent method;
-                    # the results can be Numpy arrays or tensors
+                    # See case nout == 1 for comments
+                    if isinstance(out1, cupy.ndarray):
+                        out1_npy = cupy.asnumpy(out1)
+                    else:
+                        out1_npy = out1
+                    if isinstance(out2, cupy.ndarray):
+                        out2_npy = cupy.asnumpy(out2)
+                    else:
+                        out2_npy = out2
+
+                    kwargs['out'] = (out1_npy, out2_npy)
                     res1, res2 = super(CupyTensor, self).__array_ufunc__(
                         ufunc, '__call__', *inputs, **kwargs)
 
-                # Wrap results if necessary (lazily)
-                # We don't use exponents or weightings since we don't know
+                    if isinstance(out1, cupy.ndarray):
+                        out1[:] = cupy.asarray(res1)
+                    if isinstance(out2, cupy.ndarray):
+                        out2[:] = cupy.asarray(res2)
+
+                # Don't use exponents or weightings since we don't know
                 # how to map them to the spaces
                 if out1 is None:
-                    res_space = type(self.space)(
-                        self.shape, res1.dtype, self.device)
-                    result1 = res_space.element(res1)
+                    result1 = space_element(res1, use_weighting=False)
                 else:
                     result1 = out_tuple[0]
 
                 if out2 is None:
-                    res_space = type(self.space)(
-                        self.shape, res2.dtype, self.device)
-                    result2 = res_space.element(res2)
+                    result2 = space_element(res2, use_weighting=False)
                 else:
                     result2 = out_tuple[1]
 
@@ -1935,6 +1989,53 @@ numpy.ufunc.reduceat.html
                 raise NotImplementedError('nout = {} not supported'
                                           ''.format(ufunc.nout))
 
+        # Special case 1
+        elif (use_native and
+              (ufunc in (np.add, np.multiply) and
+               method in ('reduce', 'accumulate')
+               ) or
+              (ufunc in (np.minimum, np.maximum) and
+               method == 'reduce')
+              ):
+            # These cases are implemented but not available as methods
+            # of cupy.ufunc. We map the implementation by hand.
+            if ufunc == np.add:
+                function = cupy.sum if method == 'reduce' else cupy.cumsum
+            elif ufunc == np.multiply:
+                function = cupy.prod if method == 'reduce' else cupy.cumprod
+            elif ufunc == np.minimum and method == 'reduce':
+                function = cupy.min
+            elif ufunc == np.maximum and method == 'reduce':
+                function = cupy.max
+            else:
+                raise RuntimeError('no native {}.{}'
+                                   ''.format(ufunc.__name__, method))
+
+            # Make 0 the default for `axis` as the ufunc methods. The default
+            # is to reduce/accumulate over all axes.
+            axis = kwargs.pop('axis', 0)
+            kwargs['axis'] = axis
+            kwargs['out'] = out
+            res = function(*inputs, **kwargs)
+
+            # Shortcut for scalar return value
+            if getattr(res, 'shape', ()) == ():
+                # Happens for `reduce` with all axes
+                return _python_scalar(res)
+
+            if out is None:
+                result = space_element(res, use_weighting=True)
+            else:
+                result = out_tuple[0]
+
+            return result
+
+        # Special case 2
+        elif use_native and ufunc == np.add and method == 'at':
+            cupy.scatter_add(*inputs, **kwargs)
+            return
+
+        # Separate handling of 'at' since input is unchanged
         elif method == 'at':
             native_method = getattr(native_ufunc, 'at', None)
             use_native = (use_native and native_method is not None)
@@ -1979,45 +2080,7 @@ numpy.ufunc.reduceat.html
             else:
                 eval_at_via_npy(*inputs, **kwargs)
 
-        elif (ufunc in (np.add, np.multiply) and
-              method in ('reduce', 'accumulate')):
-            # These cases are implemented but not available as methods
-            # of cupy.ufunc. We map the implementation by hand.
-            if ufunc == np.add:
-                function = cupy.sum if method == 'reduce' else cupy.cumsum
-            else:
-                function = cupy.prod if method == 'reduce' else cupy.cumprod
-
-            # Make 0 the default for `axis` as the ufunc methods. The default
-            # for `[cum]sum` and `[cum]prod` is to reduce over all axes
-            axis = kwargs.pop('axis', 0)
-            kwargs['axis'] = axis
-            kwargs['out'] = out
-            res = function(*inputs, **kwargs)
-
-            # Shortcut for scalar return value
-            if getattr(res, 'shape', ()) == ():
-                # Happens for `reduce` with all axes
-                return _python_scalar(res)
-
-            # Wrap result if necessary (lazily)
-            if out is None:
-                if is_floating_dtype(res.dtype):
-                    if res.shape != self.shape:
-                        # Don't propagate weighting if shape changes
-                        weighting = CupyTensorSpaceConstWeighting(
-                            1.0, exponent)
-                    spc_kwargs = {'weighting': weighting}
-                else:
-                    spc_kwargs = {}
-
-                res_space = type(self.space)(
-                    res.shape, res.dtype, self.device, **spc_kwargs)
-                result = res_space.element(res)
-            else:
-                result = out_tuple[0]
-
-            return result
+            return
 
         else:  # method != '__call__'
             kwargs['out'] = (out,)
@@ -2025,7 +2088,7 @@ numpy.ufunc.reduceat.html
             use_native = (use_native and native_method is not None)
 
             if use_native:
-                # Native method could exist but raise `NotImplementedError`
+                # A native method could exist but raise `NotImplementedError`
                 # or return `NotImplemented`. We fall back to Numpy also in
                 # that situation.
                 try:
@@ -2039,29 +2102,26 @@ numpy.ufunc.reduceat.html
                             ufunc, method, *inputs, **kwargs)
 
             else:
+                # See case `method == '__call__', nout == 1` for details
+                if isinstance(out, cupy.ndarray):
+                    out_npy = cupy.asnumpy(out)
+                else:
+                    out_npy = out
+
+                kwargs['out'] = (out_npy,)
                 res = super(CupyTensor, self).__array_ufunc__(
                     ufunc, method, *inputs, **kwargs)
 
+                if isinstance(out, cupy.ndarray):
+                    out[:] = cupy.asarray(res)
+
             # Shortcut for scalar or no return value
-            if np.isscalar(res) or res is None:
-                # The first occurs for `reduce` with all axes,
-                # the second for in-place stuff (`at` currently)
-                return res
+            if getattr(res, 'shape', ()) == ():
+                # Occurs for `reduce` with all axes
+                return _python_scalar(res)
 
-            # Wrap result if necessary (lazily)
             if out is None:
-                if is_floating_dtype(res.dtype):
-                    if res.shape != self.shape:
-                        # Don't propagate weighting if shape changes
-                        weighting = CupyTensorSpaceConstWeighting(
-                            1.0, exponent)
-                    spc_kwargs = {'weighting': weighting}
-                else:
-                    spc_kwargs = {}
-
-                res_space = type(self.space)(
-                    res.shape, res.dtype, self.device, **spc_kwargs)
-                result = res_space.element(res)
+                result = space_element(res, use_weighting=True)
             else:
                 result = out_tuple[0]
 
@@ -2190,7 +2250,7 @@ numpy.ufunc.reduceat.html
                 return self.space.element(self.data.conj())
         else:
             if self.space.is_real:
-                self.assign(out)
+                out.assign(self)
             else:
                 # In-place not available as it seems
                 out[:] = self.data.conj()
@@ -2200,7 +2260,7 @@ numpy.ufunc.reduceat.html
         """Return ``self **= other``."""
         try:
             if other == int(other):
-                return super(CupyTensorSpace, self).__ipow__(other)
+                return super(CupyTensor, self).__ipow__(other)
         except TypeError:
             pass
 
@@ -2588,6 +2648,8 @@ class CupyTensorSpaceConstWeighting(ConstWeighting):
             if np.issubsctype(x1.dtype, np.complexfloating):
                 dot = cupy.vdot(x2.data, x1.data)
             else:
+                # Ravels in C order, no other supported currently
+                # TODO: ravel in most efficient ordering when available
                 dot = cupy.dot(x2.data.ravel(), x1.data.ravel())
 
             # complex(cupy_complex_scalar) not implemented, see
