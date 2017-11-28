@@ -17,13 +17,14 @@ import sys
 
 import odl
 from odl.set.space import LinearSpaceTypeError
+from odl.space.entry_points import tensor_space_impl
 from odl.space.npy_tensors import (
-    NumpyTensor, NumpyTensorSpace,
+    NumpyTensorSpace,
     NumpyTensorSpaceConstWeighting, NumpyTensorSpaceArrayWeighting,
     NumpyTensorSpaceCustomInner, NumpyTensorSpaceCustomNorm,
     NumpyTensorSpaceCustomDist)
 from odl.space.cupy_tensors import (
-    CupyTensor, CupyTensorSpace,
+    CupyTensorSpace,
     CupyTensorSpaceConstWeighting, CupyTensorSpaceArrayWeighting,
     CupyTensorSpaceCustomInner, CupyTensorSpaceCustomNorm,
     CupyTensorSpaceCustomDist,
@@ -84,16 +85,6 @@ def _pos_array(space):
     return _module(space.impl).abs(noise_array(space)) + 0.1
 
 
-def _odl_tensor_cls(impl):
-    """Return the ODL tensor class for given impl."""
-    if impl == 'numpy':
-        return NumpyTensor
-    elif impl == 'cupy':
-        return CupyTensor
-    else:
-        assert False
-
-
 def _weighting_cls(impl, kind):
     """Return the weighting class for given impl and kind."""
     if impl == 'numpy':
@@ -152,8 +143,7 @@ def weight(request):
 
 @pytest.fixture(scope='module')
 def tspace(floating_dtype, tspace_impl):
-    cls = odl.space.entry_points.tensor_space_impl(tspace_impl)
-    if floating_dtype not in cls.available_dtypes():
+    if floating_dtype not in tensor_space_impl(tspace_impl).available_dtypes():
         pytest.skip('dtype {} not supported by impl {!r}'
                     ''.format(floating_dtype, tspace_impl))
     else:
@@ -830,7 +820,7 @@ def test_element_getitem(tspace_impl, getitem_indices):
     sliced_shape = x_arr_sliced.shape
     x_sliced = x[getitem_indices]
 
-    if np.isscalar(x_arr_sliced):
+    if np.isscalar(x_sliced):
         assert x_arr_sliced == x_sliced
     else:
         assert x_sliced.shape == sliced_shape
@@ -1475,38 +1465,16 @@ def test_ufuncs(tspace, ufunc):
         else:
             assert False
 
-    if (np.issubsctype(tspace.dtype, np.floating) or
-            np.issubsctype(tspace.dtype, np.complexfloating) and
-            name in ['bitwise_and',
-                     'bitwise_or',
-                     'bitwise_xor',
-                     'invert',
-                     'left_shift',
-                     'right_shift']):
-        # Skip integer only methods for floating point data types
-        return
-
-    if (np.issubsctype(tspace.dtype, np.complexfloating) and
-            name in ['remainder',
-                     'trunc',
-                     'signbit',
-                     'invert',
-                     'left_shift',
-                     'right_shift',
-                     'rad2deg',
-                     'deg2rad',
-                     'copysign',
-                     'mod',
-                     'modf',
-                     'fmod',
-                     'logaddexp2',
-                     'logaddexp',
-                     'hypot',
-                     'arctan2',
-                     'floor',
-                     'ceil']):
-        # Skip real-only methods for complex data types
-        return
+    # See https://github.com/cupy/cupy/issues/794
+    cupy_ufuncs_broken_complex = [
+        'expm1', 'floor_divide', 'fmin', 'fmax',
+        'greater', 'greater_equal', 'less', 'less_equal', 'log1p', 'log2',
+        'logical_and', 'logical_or', 'logical_not', 'logical_xor', 'minimum',
+        'maximum', 'rint', 'sign', 'square']
+    if (tspace.impl == 'cupy' and
+            tspace.dtype.kind == 'c' and
+            ufunc in cupy_ufuncs_broken_complex):
+        pytest.xfail('ufunc {} broken for complex input in cupy'.format(ufunc))
 
     # Create some data
     arrays, elements = noise_elements(tspace, nin + nout)
@@ -1514,12 +1482,6 @@ def test_ufuncs(tspace, ufunc):
     in_arrays_own = arrays[:nin]
     in_arrays_npy = [_as_numpy(arr) for arr in arrays[:nin]]
     data_elem = elements[0]
-    out_elems = elements[nin:]
-
-    if nout == 1:
-        kwargs_elem = {'out': out_elems[0]}
-    elif nout > 1:
-        kwargs_elem = {'out': out_elems[:nout]}
 
     # Get function to call, using both interfaces:
     # - vec.ufunc(*other_args)
@@ -1527,12 +1489,23 @@ def test_ufuncs(tspace, ufunc):
     ufunc_method = getattr(data_elem.ufuncs, name)
     in_elems_method = elements[1:nin]
     in_elems_npy = elements[:nin]
-    result_npy = ufunc_npy(*in_arrays_npy)
+    try:
+        result_npy = ufunc_npy(*in_arrays_npy)
+    except TypeError:
+        pytest.xfail('numpy ufunc not valid for inputs')
 
     # Out-of-place -- in = elements -- ufunc = method or numpy
     result = ufunc_method(*in_elems_method)
     assert all_almost_equal(result_npy, result)
     _check_result_type(result, tspace.element_type)
+
+    # Get element(s) in the right space for in-place later
+    if nout == 1:
+        out_elems = [result.space.element()]
+    elif nout == 2:
+        out_elems = [res.space.element() for res in result]
+    else:
+        assert False
 
     result = ufunc_npy(*in_elems_npy)
     assert all_almost_equal(result_npy, result)
@@ -1548,12 +1521,23 @@ def test_ufuncs(tspace, ufunc):
     _check_result_type(result, tspace.element_type)
 
     # In-place -- in = elements -- out = elements -- ufunc = method or numpy
-    result = ufunc_method(*in_elems_method, **kwargs_elem)
+    if nout == 1:
+        kwargs_out = {'out': out_elems[0]}
+    elif nout == 2:
+        kwargs_out = {'out1': out_elems[0], 'out2': out_elems[1]}
+
+    result = ufunc_method(*in_elems_method, **kwargs_out)
     assert all_almost_equal(result_npy, result)
     _check_result_is_out(result, out_elems[:nout])
     if USE_ARRAY_UFUNCS_INTERFACE:
         # Custom objects not allowed as `out` for numpy < 1.13
-        result = ufunc_npy(*in_elems_npy, **kwargs_elem)
+
+        if nout == 1:
+            kwargs_out = {'out': out_elems[0]}
+        elif nout == 2:
+            kwargs_out = {'out': (out_elems[0], out_elems[1])}
+
+        result = ufunc_npy(*in_elems_npy, **kwargs_out)
         assert all_almost_equal(result_npy, result)
         _check_result_is_out(result, out_elems[:nout])
 
@@ -1572,7 +1556,11 @@ def test_ufuncs(tspace, ufunc):
             kwargs_npy = {'out': out_arrays_npy[:nout]}
             kwargs_own = {'out': out_arrays_own[:nout]}
 
-        result_out_npy = ufunc_npy(*in_elems_npy, **kwargs_npy)
+        try:
+            result_out_npy = ufunc_npy(*in_elems_npy, **kwargs_npy)
+        except TypeError:
+            pytest.xfail('numpy ufunc not valid for inputs')
+
         result_out_own = ufunc_npy(*in_elems_npy, **kwargs_own)
         assert all_almost_equal(result_out_npy, result_npy)
         assert all_almost_equal(result_out_own, result_npy)
@@ -1587,12 +1575,21 @@ def test_ufuncs(tspace, ufunc):
         mod_array = in_arrays_npy[0].copy()
         mod_elem = in_elems_npy[0].copy()
         if nin == 1:
-            result_npy = ufunc_npy.at(mod_array, indices)
+            try:
+                result_npy = ufunc_npy.at(mod_array, indices)
+            except TypeError:
+                pytest.xfail('numpy ufunc.at not valid for inputs')
+
             result = ufunc_npy.at(mod_elem, indices)
+
         elif nin == 2:
             other_array = in_arrays_npy[1][indices]
             other_elem = in_elems_npy[1][indices]
-            result_npy = ufunc_npy.at(mod_array, indices, other_array)
+            try:
+                result_npy = ufunc_npy.at(mod_array, indices, other_array)
+            except TypeError:
+                pytest.xfail('numpy ufunc.at not valid for inputs')
+
             result = ufunc_npy.at(mod_elem, indices, other_elem)
 
         assert all_almost_equal(result, result_npy)
@@ -1605,8 +1602,12 @@ def test_ufuncs(tspace, ufunc):
         # We only test along one axis since some binary ufuncs are not
         # re-orderable, in which case Numpy raises a ValueError
 
+        try:
+            result_npy = ufunc_npy.reduce(in_array)
+        except TypeError:
+            pytest.xfail('numpy ufunc.reduce not valid for inputs')
+
         # Out-of-place -- in = element
-        result_npy = ufunc_npy.reduce(in_array)
         result = ufunc_npy.reduce(in_elem)
         assert all_almost_equal(result, result_npy)
         result_keepdims = ufunc_npy.reduce(in_elem, keepdims=True)
@@ -1626,7 +1627,14 @@ def test_ufuncs(tspace, ufunc):
         assert all_almost_equal(out_array_own, result_keepdims)
 
         # Using a specific dtype
-        result_npy = ufunc_npy.reduce(in_array, dtype=complex)
+        try:
+            result_npy = ufunc_npy.reduce(in_array, dtype=complex)
+        except TypeError:
+            pytest.xfail('numpy ufunc.reduce not valid for complex dtype')
+
+        if tspace.impl == 'cupy':
+            pytest.xfail('cupy ufunc.reduce raises error for complex dtype')
+
         result = ufunc_npy.reduce(in_elem, dtype=complex)
         assert result.dtype == result_npy.dtype
         assert all_almost_equal(result, result_npy)
@@ -1655,6 +1663,10 @@ def test_ufunc_cupy_force_native():
         for method in ['reduce', 'accumulate']:
             in_elem = noise_element(space)
             getattr(ufunc, method)(in_elem, force_native=True)
+
+    for ufunc in [np.minimum, np.maximum]:
+        in_elem = noise_element(space)
+        ufunc.reduce(in_elem, force_native=True)
 
 
 def test_ufunc_corner_cases(tspace_impl):
@@ -1789,51 +1801,60 @@ def test_reduction(tspace, reduction):
     # Should be equal theoretically, but summation order, other stuff, ...,
     # hence we use approx
 
+    if (tspace.impl == 'cupy' and
+            reduction in ('min', 'max') and
+            tspace.dtype.kind == 'c'):
+        pytest.xfail('Cupy does not accept complex input to `min` and `max`')
+
     # Full reduction, produces scalar
-    result_npy = npy_reduction(x_arr)
+    result_npy = npy_reduction(_as_numpy(x_arr))
     result = x_reduction()
     assert result == pytest.approx(result_npy)
     result = x_reduction(axis=(0, 1))
     assert result == pytest.approx(result_npy)
 
     # Reduction along axes, produces element in reduced space
-    result_npy = npy_reduction(x_arr, axis=0)
+    result_npy = npy_reduction(_as_numpy(x_arr), axis=0)
     result = x_reduction(axis=0)
-    assert isinstance(result, NumpyTensor)
+    assert isinstance(result, tspace.element_type)
     assert result.shape == result_npy.shape
     assert result.dtype == x.dtype
-    assert np.allclose(result, result_npy)
+    assert all_almost_equal(result, result_npy)
     # Check reduced space properties
-    assert isinstance(result.space, NumpyTensorSpace)
+    assert type(result.space) is type(tspace)
     assert result.space.exponent == x.space.exponent
     assert result.space.weighting == x.space.weighting  # holds true here
     # Evaluate in-place
     out = result.space.element()
     x_reduction(axis=0, out=out)
-    assert np.allclose(out, result_npy)
+    assert all_almost_equal(out, result_npy)
 
     # Use keepdims parameter
-    result_npy = npy_reduction(x_arr, axis=1, keepdims=True)
+    result_npy = npy_reduction(_as_numpy(x_arr), axis=1, keepdims=True)
     result = x_reduction(axis=1, keepdims=True)
     assert result.shape == result_npy.shape
-    assert np.allclose(result, result_npy)
+    assert all_almost_equal(result, result_npy)
     # Evaluate in-place
     out = result.space.element()
     x_reduction(axis=1, keepdims=True, out=out)
-    assert np.allclose(out, result_npy)
+    assert all_almost_equal(out, result_npy)
 
     # Use dtype parameter
     # These reductions have a `dtype` parameter
     if name in ('cumprod', 'cumsum', 'mean', 'prod', 'std', 'sum',
                 'trace', 'var'):
-        result_npy = npy_reduction(x_arr, axis=1, dtype='complex64')
+        if tspace.impl == 'cupy' and tspace.dtype == 'float16':
+            # See https://github.com/cupy/cupy/issues/795
+            pytest.xfail('reduction with complex fails for float16 in cupy')
+
+        result_npy = npy_reduction(_as_numpy(x_arr), axis=1, dtype='complex64')
         result = x_reduction(axis=1, dtype='complex64')
         assert result.dtype == np.dtype('complex64')
-        assert np.allclose(result, result_npy)
+        assert all_almost_equal(result, result_npy)
         # Evaluate in-place
         out = result.space.element()
         x_reduction(axis=1, dtype='complex64', out=out)
-        assert np.allclose(out, result_npy)
+        assert all_almost_equal(out, result_npy)
 
 
 def test_ufunc_reduction_docs_notempty(tspace_impl):
