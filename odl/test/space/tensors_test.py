@@ -979,6 +979,9 @@ def test_transpose(odl_tspace_impl):
         assert x.T.is_linear
 
         # Check result
+        print(x.shape, x.dtype)
+        print(y.shape, y.dtype)
+        print('****************')
         assert x.T(y) == pytest.approx(y.inner(x))
         assert all_equal(x.T.adjoint(1.0), x)
 
@@ -1739,6 +1742,9 @@ def test_ufunc_corner_cases(odl_tspace_impl):
             res = x.__array_ufunc__(np.sin, '__call__', x, order=order)
             assert all_almost_equal(res, np.sin(x.asarray()))
             assert res.data.flags[order + '_CONTIGUOUS']
+        elif tspace_impl == 'cupy':
+            with pytest.xfail(reason='cupy does not accept `order` in ufuncs'):
+                res = x.__array_ufunc__(np.sin, '__call__', x, order=order)
 
     # Check usage of `dtype` argument
     res = x.__array_ufunc__(np.sin, '__call__', x, dtype='float32')

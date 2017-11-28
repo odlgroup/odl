@@ -2588,7 +2588,7 @@ class CupyTensorSpaceConstWeighting(ConstWeighting):
             if np.issubsctype(x1.dtype, np.complexfloating):
                 dot = cupy.vdot(x2.data, x1.data)
             else:
-                dot = cupy.dot(x2.data, x1.data)
+                dot = cupy.dot(x2.data.ravel(), x1.data.ravel())
 
             # complex(cupy_complex_scalar) not implemented, see
             # https://github.com/cupy/cupy/issues/782
