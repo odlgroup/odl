@@ -941,6 +941,9 @@ def test_transpose(tspace_impl):
         assert x.T.is_linear
 
         # Check result
+        print(x.shape, x.dtype)
+        print(y.shape, y.dtype)
+        print('****************')
         assert x.T(y) == pytest.approx(y.inner(x))
         assert all_equal(x.T.adjoint(1.0), x)
 
@@ -1545,7 +1548,6 @@ def test_ufuncs(tspace, ufunc):
     _check_result_type(result, tspace.element_type)
 
     # In-place -- in = elements -- out = elements -- ufunc = method or numpy
-    print('************************')
     result = ufunc_method(*in_elems_method, **kwargs_elem)
     assert all_almost_equal(result_npy, result)
     _check_result_is_out(result, out_elems[:nout])
@@ -1642,8 +1644,6 @@ def test_ufunc_cupy_force_native():
 
     # Make sure we call native code for supported ufuncs
     for ufunc in [np.sin, np.absolute, np.add, np.remainder, np.fmod]:
-        print(ufunc)
-        print('*****')
         nin, nout = ufunc.nin, ufunc.nout
         _, in_elems = noise_elements(space, n=2)
         out_arrays, out_elems = noise_elements(space, n=2)
@@ -1685,6 +1685,9 @@ def test_ufunc_corner_cases(tspace_impl):
             res = x.__array_ufunc__(np.sin, '__call__', x, order=order)
             assert all_almost_equal(res, np.sin(x.asarray()))
             assert res.data.flags[order + '_CONTIGUOUS']
+        elif tspace_impl == 'cupy':
+            with pytest.xfail(reason='cupy does not accept `order` in ufuncs'):
+                res = x.__array_ufunc__(np.sin, '__call__', x, order=order)
 
     # Check usage of `dtype` argument
     res = x.__array_ufunc__(np.sin, '__call__', x, dtype='float32')
