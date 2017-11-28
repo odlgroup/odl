@@ -285,8 +285,7 @@ class ProductSpace(LinearSpace):
     def shape(self):
         """Total spaces per axis, computed recursively.
 
-        The recursion ends at the fist level that does not comprise
-        a *power* space, i.e., which is not made of equal spaces.
+        The recursion ends at the fist level that does not have a shape.
 
         Examples
         --------
@@ -297,13 +296,25 @@ class ProductSpace(LinearSpace):
         >>> pspace2 = odl.ProductSpace(pspace, 3)
         >>> pspace2.shape
         (3, 2)
+
+        If the space is a "pure" product space, shape recurses all the way
+        into the components
+
+        >>> r2_2 = odl.ProductSpace(r2, 3)
+        >>> r2_2.shape
+        (3, 2)
         """
         if len(self) == 0:
             return ()
-        elif self.is_power_space and isinstance(self.spaces[0], ProductSpace):
-            return (len(self),) + self.spaces[0].shape
+        elif self.is_power_space:
+            try:
+                sub_shape = self[0].shape
+            except AttributeError:
+                sub_shape = ()
         else:
-            return (len(self),)
+            sub_shape = ()
+
+        return (len(self),) + sub_shape
 
     @property
     def size(self):
@@ -732,8 +743,6 @@ class ProductSpaceElement(LinearSpaceElement):
         """Initialize a new instance."""
         super(ProductSpaceElement, self).__init__(space)
         self.__parts = tuple(parts)
-        # Cache shape for efficiency
-        self.__shape = None
 
     @property
     def parts(self):
@@ -744,8 +753,7 @@ class ProductSpaceElement(LinearSpaceElement):
     def shape(self):
         """Number of values per axis in ``self``, computed recursively.
 
-        This is only valid if all product spaces are power spaces,
-        since otherwise the notion "number of values" is ambiguous.
+        The recursion ends at the fist level that does not have a shape.
 
         Raises
         ------
@@ -767,17 +775,7 @@ class ProductSpaceElement(LinearSpaceElement):
         >>> y.shape
         (2, 3, 4)
         """
-        if self.__shape is not None:
-            return self.__shape
-
-        if len(self) == 0:
-            self.__shape = ()
-        elif self.space.is_power_space:
-            self.__shape = (len(self),) + self[0].shape
-        else:
-            raise ValueError('{!r} is not a power space'
-                             ''.format(self.space))
-        return self.__shape
+        return self.space.shape
 
     @property
     def ndim(self):
@@ -980,8 +978,8 @@ class ProductSpaceElement(LinearSpaceElement):
                [ 4.,  5.,  6.]])
         """
         if not self.space.is_power_space:
-            return ValueError('cannot use `asarray` if `space.is_power_space` '
-                              'is `False`')
+            raise ValueError('cannot use `asarray` if `space.is_power_space` '
+                             'is `False`')
         else:
             if out is None:
                 out = np.empty(self.shape, self.dtype)

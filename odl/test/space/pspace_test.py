@@ -38,8 +38,8 @@ def test_RxR():
 
     # Check the basic properties
     assert len(HxH) == 2
-    assert HxH.shape == (2,)
-    assert HxH.size == 2
+    assert HxH.shape == (2, 2)
+    assert HxH.size == 4
     assert HxH.dtype == H.dtype
     assert HxH.spaces[0] is H
     assert HxH.spaces[1] is H
@@ -432,6 +432,24 @@ def test_power_RxR():
     assert all_equal([v1, v2], u)
 
 
+def _test_shape(space, expected_shape):
+    """Helper to validate shape of space."""
+    space_el = space.element()
+
+    assert space.shape == expected_shape
+    assert space_el.shape == expected_shape
+    try:
+        arr = space_el.asarray()
+    except ValueError:
+        pass  # could not convert to array
+    else:
+        assert arr.shape == expected_shape
+    assert space.size == np.prod(expected_shape)
+    assert space_el.size == np.prod(expected_shape)
+    assert len(space) == expected_shape[0]
+    assert len(space_el) == expected_shape[0]
+
+
 def test_power_shape():
     """Check if shape and size are correct for higher-order power spaces."""
     r2 = odl.rn(2)
@@ -442,17 +460,17 @@ def test_power_shape():
     assert empty.shape == empty2.shape == ()
     assert empty.size == empty2.size == 0
 
+    r2_3 = odl.ProductSpace(r2, 3)
+    _test_shape(r2_3, (3, 2))
+
     r2xr3 = odl.ProductSpace(r2, r3)
-    assert r2xr3.shape == (2,)
-    assert r2xr3.size == 2
+    _test_shape(r2xr3, (2,))
 
     r2xr3_4 = odl.ProductSpace(r2xr3, 4)
-    assert r2xr3_4.shape == (4, 2)
-    assert r2xr3_4.size == 8
+    _test_shape(r2xr3_4, (4, 2))
 
     r2xr3_4_5 = odl.ProductSpace(r2xr3_4, 5)
-    assert r2xr3_4_5.shape == (5, 4, 2)
-    assert r2xr3_4_5.size == 40
+    _test_shape(r2xr3_4_5, (5, 4, 2))
 
 
 def test_power_lincomb():
