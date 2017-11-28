@@ -1,3 +1,5 @@
+# coding=utf-8
+
 # Copyright 2014-2017 The ODL contributors
 #
 # This file is part of ODL.
