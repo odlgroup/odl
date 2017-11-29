@@ -3,7 +3,7 @@
 In this example we define the shearlet transform S, the wavelet transform W and
 use them to separate a signal according to
 
-    min_{w,s}  ||W(w)||_1 + a ||S(s)||_1 + b ||w + s||_2^2
+    min_{w,s}  ||W(w)||_1 + a ||S(s)||_1 + b ||w + s - x||_2^2
 
 Here we expect the shearlet coefficients to contain the edges, and the wavelet
 coefficients to contain the square.
