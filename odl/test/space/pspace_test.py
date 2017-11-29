@@ -944,6 +944,23 @@ def test_ufuncs():
     assert w is z
     assert all_almost_equal(z, [[5], [7, 9]])
 
+    # Broadcasting
+    pow_space = odl.rn(4) ** (2, 3)  # corresponds to rn((2, 3, 4))
+    x = pow_space.one()
+    x_arr = np.ones((2, 3, 4))
+    y = x.ufuncs.add([1, 2, 3, 4])  # bcast along axes 0 and 1
+    y_arr = np.add(x_arr, [1, 2, 3, 4])
+    assert all_almost_equal(y, y_arr)
+    y = x.ufuncs.add(np.ones((3, 4)))  # bcast along axis 0
+    y_arr = np.add(x_arr, np.ones((3, 4)))
+    assert all_almost_equal(y, y_arr)
+    y = x.ufuncs.add(np.ones((2, 1, 4)))  # bcast along axis 1
+    y_arr = np.add(x_arr, np.ones((2, 1, 4)))
+    assert all_almost_equal(y, y_arr)
+    y = x.ufuncs.add((odl.rn(4) ** 3).one())  # bcast along axis 0
+    y_arr = np.add(x_arr, np.ones((3, 4)))
+    assert all_almost_equal(y, y_arr)
+
 
 def test_reductions():
     H = odl.ProductSpace(odl.rn(1), odl.rn(2))
