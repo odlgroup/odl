@@ -657,17 +657,21 @@ def preload_first_arg(instance, mode):
 
 
 class writable_array(object):
+
     """Context manager that casts obj to a `numpy.array` and saves changes."""
 
-    def __init__(self, obj, **kwargs):
-        """initialize a new instance.
+    def __init__(self, obj, impl='numpy', **kwargs):
+        """Initialize a new instance.
 
         Parameters
         ----------
         obj : `array-like`
             Object that should be made available as writable array.
             It must be valid as input to `numpy.asarray` and needs to
-            support the syntax ``obj[:] = arr``.
+            support assignment ``obj[:] = arr``.
+        impl : str, optional
+            Array backend for the exposed ndarray.
+
         kwargs :
             Keyword arguments that should be passed to `numpy.asarray`.
 
@@ -710,31 +714,45 @@ class writable_array(object):
         """
         self.obj = obj
         self.kwargs = kwargs
+        self.impl = impl
         self.arr = None
 
     def __enter__(self):
-        """called by ``with writable_array(obj):``.
+        """Called by ``with writable_array(obj):``.
 
         Returns
         -------
-        arr : `numpy.ndarray`
-            Array representing ``self.obj``, created by calling
-            ``numpy.asarray``. Any changes to ``arr`` will be passed through
-            to ``self.obj`` after the context manager exits.
+        arr : ndarray
+            Array representing ``self.obj``, created by calling ``asarray``
+            corresponding to the chosen ``impl``, e.g., ``numpy.asarray``.
+            Any changes to ``arr`` will be passed through to ``self.obj``
+            when the context manager exits.
         """
-        self.arr = np.asarray(self.obj, **self.kwargs)
+        self.arr = array_module(self.impl).asarray(self.obj, **self.kwargs)
         return self.arr
 
-    def __exit__(self, type, value, traceback):
-        """called when ``with writable_array(obj):`` ends.
+    def __exit__(self, *args, **kwargs):
+        """Called when ``with writable_array(obj):`` ends.
 
         Saves any changes to ``self.arr`` to ``self.obj``, also "frees"
         self.arr in case the manager is used multiple times.
 
         Extra arguments are ignored, any exceptions are passed through.
         """
-        self.obj[:] = self.arr
-        self.arr = None
+        # Some extra care for Numpy and Cupy arrays
+        from odl.space.npy_tensors import NumpyTensor
+        from odl.space.cupy_tensors import cupy
+
+        obj_is_npy = isinstance(self.obj, (NumpyTensor, np.ndarray))
+        arr_is_cupy = isinstance(self.arr,
+                                 getattr(cupy, 'ndarray', type(None)))
+        if obj_is_npy and arr_is_cupy:
+            arr = cupy.asnumpy(self.arr)
+        else:
+            arr = self.arr
+
+        self.obj[:] = arr
+        self.arr = None  # gc
 
 
 class none_context(object):
