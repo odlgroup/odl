@@ -14,7 +14,7 @@ import numpy as np
 from odl.discr.lp_discr import DiscreteLp
 from odl.operator.tensor_ops import PointwiseTensorFieldOperator
 from odl.space import ProductSpace
-from odl.util import writable_array, signature_string, indent
+from odl.util import writable_array, signature_string, indent, array_module
 
 
 __all__ = ('PartialDerivative', 'Gradient', 'Divergence', 'Laplacian')
@@ -137,9 +137,9 @@ class PartialDerivative(PointwiseTensorFieldOperator):
         if out is None:
             out = self.range.element()
 
-        # TODO: this pipes CUDA arrays through NumPy. Write native operator.
-        with writable_array(out) as out_arr:
-            finite_diff(x.asarray(), axis=self.axis, dx=self.dx,
+        impl = self.domain.impl
+        with writable_array(out, impl=impl) as out_arr:
+            finite_diff(x.asarray(), axis=self.axis, dx=self.dx, impl=impl,
                         method=self.method, pad_mode=self.pad_mode,
                         pad_const=self.pad_const, out=out_arr)
         return out
@@ -350,13 +350,13 @@ class Gradient(PointwiseTensorFieldOperator):
         x_arr = x.asarray()
         ndim = self.domain.ndim
         dx = self.domain.cell_sides
+        impl = self.domain.impl
 
         for axis in range(ndim):
-            with writable_array(out[axis]) as out_arr:
-                finite_diff(x_arr, axis=axis, dx=dx[axis], method=self.method,
-                            pad_mode=self.pad_mode,
-                            pad_const=self.pad_const,
-                            out=out_arr)
+            with writable_array(out[axis], impl=impl) as out_arr:
+                finite_diff(x_arr, axis=axis, dx=dx[axis], impl=impl,
+                            method=self.method, pad_mode=self.pad_mode,
+                            pad_const=self.pad_const, out=out_arr)
         return out
 
     def derivative(self, point=None):
@@ -559,11 +559,13 @@ class Divergence(PointwiseTensorFieldOperator):
 
         ndim = self.range.ndim
         dx = self.range.cell_sides
+        impl = self.range.impl
 
-        tmp = np.empty(out.shape, out.dtype, order=out.space.default_order)
-        with writable_array(out) as out_arr:
+        tmp = array_module(impl).empty(
+            out.shape, out.dtype, order=out.space.default_order)
+        with writable_array(out, impl=impl) as out_arr:
             for axis in range(ndim):
-                finite_diff(x[axis], axis=axis, dx=dx[axis],
+                finite_diff(x[axis], axis=axis, dx=dx[axis], impl=impl,
                             method=self.method, pad_mode=self.pad_mode,
                             pad_const=self.pad_const,
                             out=tmp)
@@ -714,24 +716,26 @@ class Laplacian(PointwiseTensorFieldOperator):
         else:
             out.set_zero()
 
-        x_arr = x.asarray()
-        out_arr = out.asarray()
-        tmp = np.empty(out.shape, out.dtype, order=out.space.default_order)
-
         ndim = self.domain.ndim
         dx = self.domain.cell_sides
+        impl = self.domain.impl
 
-        with writable_array(out) as out_arr:
+        x_arr = x.asarray(impl=impl)
+        out_arr = out.asarray(impl=impl)
+        tmp = array_module(impl).empty(
+            out.shape, out.dtype, order=out.space.default_order)
+
+        with writable_array(out, impl=impl) as out_arr:
             for axis in range(ndim):
                 # TODO: this can be optimized
-                finite_diff(x_arr, axis=axis, dx=dx[axis] ** 2,
+                finite_diff(x_arr, axis=axis, dx=dx[axis] ** 2, impl=impl,
                             method='forward',
                             pad_mode=self.pad_mode,
                             pad_const=self.pad_const, out=tmp)
 
                 out_arr += tmp
 
-                finite_diff(x_arr, axis=axis, dx=dx[axis] ** 2,
+                finite_diff(x_arr, axis=axis, dx=dx[axis] ** 2, impl=impl,
                             method='backward',
                             pad_mode=self.pad_mode,
                             pad_const=self.pad_const, out=tmp)
@@ -785,7 +789,8 @@ class Laplacian(PointwiseTensorFieldOperator):
         return '{}:\n{}'.format(self.__class__.__name__, indent(dom_ran_str))
 
 
-def finite_diff(f, axis, dx=1.0, method='forward', out=None, **kwargs):
+def finite_diff(f, axis, dx=1.0, method='forward', out=None, impl='numpy',
+                **kwargs):
     """Calculate the partial derivative of ``f`` along a given ``axis``.
 
     In the interior of the domain of f, the partial derivative is computed
@@ -819,6 +824,9 @@ def finite_diff(f, axis, dx=1.0, method='forward', out=None, **kwargs):
     out : `numpy.ndarray`, optional
          An N-dimensional array to which the output is written. Has to have
          the same shape as the input array ``f``.
+    impl : str, optional
+        Implementation backend for array manipulations. Usually handled by
+        the calling code.
     pad_mode : string, optional
         The padding mode to use outside the domain.
 
@@ -883,7 +891,8 @@ def finite_diff(f, axis, dx=1.0, method='forward', out=None, **kwargs):
     >>> out is finite_diff(f, axis=0, out=out)
     True
     """
-    f_arr = np.asarray(f)
+    arrmod = array_module(impl)
+    f_arr = arrmod.asarray(f)
     ndim = f_arr.ndim
 
     if f_arr.shape[axis] < 2:
@@ -913,7 +922,7 @@ def finite_diff(f, axis, dx=1.0, method='forward', out=None, **kwargs):
     pad_const = f.dtype.type(pad_const)
 
     if out is None:
-        out = np.empty_like(f_arr)
+        out = arrmod.empty_like(f_arr)
     else:
         if out.shape != f.shape:
             raise ValueError('expected output shape {}, got {}'
@@ -931,24 +940,24 @@ def finite_diff(f, axis, dx=1.0, method='forward', out=None, **kwargs):
 
     # create slice objects: initially all are [:, :, ..., :]
 
-    # Swap axes so that the axis of interest is first. This is a O(1)
+    # Swap axes so that the axis of interest is first. This is an O(1)
     # operation and is done to simplify the code below.
-    out, out_in = np.swapaxes(out, 0, axis), out
-    f_arr = np.swapaxes(f_arr, 0, axis)
+    out, out_in = arrmod.swapaxes(out, 0, axis), out
+    f_arr = arrmod.swapaxes(f_arr, 0, axis)
 
     # Interior of the domain of f
     if method == 'central':
         # 1D equivalent: out[1:-1] = (f[2:] - f[:-2])/2.0
-        np.subtract(f_arr[2:], f_arr[:-2], out=out[1:-1])
+        arrmod.subtract(f_arr[2:], f_arr[:-2], out=out[1:-1])
         out[1:-1] /= 2.0
 
     elif method == 'forward':
         # 1D equivalent: out[1:-1] = (f[2:] - f[1:-1])
-        np.subtract(f_arr[2:], f_arr[1:-1], out=out[1:-1])
+        arrmod.subtract(f_arr[2:], f_arr[1:-1], out=out[1:-1])
 
     elif method == 'backward':
         # 1D equivalent: out[1:-1] = (f[1:-1] - f[:-2])
-        np.subtract(f_arr[1:-1], f_arr[:-2], out=out[1:-1])
+        arrmod.subtract(f_arr[1:-1], f_arr[:-2], out=out[1:-1])
 
     # Boundaries
     if pad_mode == 'constant':
