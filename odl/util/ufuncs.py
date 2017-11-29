@@ -224,20 +224,140 @@ for name, n_in, n_out, doc in UFUNCS:
 # --- Wrappers for `ProductSpaceElement` --- #
 
 
+def _add_leading_dims(x2, pspace):
+    """Add leading dimensions to an input of a binary product space ufunc.
+
+    Parameters
+    ----------
+    x2
+        Input to a binary ufunc.
+    pspace : `ProductSpace`
+        Spac on which the ufunc is evaluated.
+
+    Returns
+    -------
+    x2_extra_dims
+        Variant of ``x2`` with extra leading dimensions appropriate for
+        ``pspace``.
+
+    Examples
+    --------
+    Product space elements, arrays and nested sequences can be rewrapped
+    such that they have leading dimensions of size 1 for broadcasting:
+
+    >>> pspace = odl.rn(2) ** (3, 4)
+    >>> reshaped = _add_leading_dims([0, 0], pspace)
+    >>> np.shape([0, 0])
+    (2,)
+    >>> reshaped
+    [[[0, 0]]]
+    >>> np.shape(reshaped)
+    (1, 1, 2)
+    >>> reshaped = _add_leading_dims(np.zeros(2), pspace)
+    >>> reshaped
+    array([[[ 0.,  0.]]])
+    >>> reshaped.shape
+    (1, 1, 2)
+    >>> reshaped = _add_leading_dims(odl.rn(2).zero(), pspace)
+    >>> reshaped  # returning array for simplicity
+    array([[[ 0.,  0.]]])
+    >>> reshaped.shape
+    (1, 1, 2)
+    >>> reshaped = _add_leading_dims((odl.rn(2) ** 4).zero(), pspace)
+    >>> reshaped  # Broadcasting along outer dimension of size 3
+    ProductSpace(ProductSpace(rn(2), 4), 1).element([
+        [
+            [ 0.,  0.],
+            [ 0.,  0.],
+            [ 0.,  0.],
+            [ 0.,  0.]
+        ]
+    ])
+    """
+    from odl.space.pspace import ProductSpace, ProductSpaceElement
+    from odl.space.base_tensors import Tensor
+
+    # Workaround for `shape` not using the base space shape of a
+    # power space
+    # TODO: remove when fixed, see
+    # https://github.com/odlgroup/odl/pull/1152
+    num_levels_pspace = 0
+    tmp_pspace = pspace
+    while True:
+        if isinstance(tmp_pspace, ProductSpace):
+            tmp_pspace = tmp_pspace[0]
+            num_levels_pspace += 1
+        else:
+            base_ndim_pspace = len(getattr(tmp_pspace, 'shape', ()))
+            break
+
+    pspace_ndim = num_levels_pspace + base_ndim_pspace
+
+    if isinstance(x2, ProductSpaceElement):
+        # Workaround for `shape` not using the base space shape of a
+        # power space element
+        # TODO: remove when fixed, see
+        # https://github.com/odlgroup/odl/pull/1152
+        num_levels_x2 = 0
+        tmp_x2 = x2
+        while True:
+            if isinstance(tmp_x2, ProductSpaceElement):
+                tmp_x2 = tmp_x2[0]
+                num_levels_x2 += 1
+            else:
+                base_ndim_x2 = len(getattr(tmp_x2, 'shape', ()))
+                break
+
+        x2_ndim = num_levels_x2 + base_ndim_x2
+
+        # TODO: replace by `pspace.ndim` and `x2.ndim` when fixed, see
+        # https://github.com/odlgroup/odl/pull/1152
+        for _ in range(pspace_ndim - x2_ndim):
+            x2 = (x2.space ** 1).element([x2])
+
+        return x2
+
+    if isinstance(x2, Tensor):
+        # Work with array directly
+        x2 = x2.data
+
+    if hasattr(x2, 'shape'):
+        # Some type of array
+        x2_ndim = len(x2.shape)
+
+        slc = (None,) * (pspace_ndim - x2_ndim) + (slice(None),) * x2_ndim
+        x2 = x2[slc]
+
+        # Downstream code will raise in case of bad shape
+        return x2
+
+    else:
+        # Array-like
+        x2_ndim = np.ndim(x2)
+
+        for _ in range(pspace_ndim - x2_ndim):
+            x2 = [x2]
+
+        # Downstream code will raise in case of bad shape
+        return x2
+
+
 def wrap_ufunc_productspace(name, n_in, n_out, doc):
     """Return ufunc wrapper for `ProductSpaceUfuncs`."""
     if n_in == 1:
         if n_out == 1:
             def wrapper(self, out=None, **kwargs):
-                from odl.space.pspace import ProductSpace
+                from odl.space.pspace import ProductSpace, ProductSpaceElement
                 if out is None:
                     out_seq = [None] * len(self.elem.space)
                 else:
+                    assert isinstance(out, ProductSpaceElement)
                     out_seq = out
 
                 res = []
                 for xi, out_i in zip(self.elem, out_seq):
-                    r = getattr(xi.ufuncs, name)(out=out_i, **kwargs)
+                    ufunc = getattr(xi.ufuncs, name)
+                    r = ufunc(out=out_i, **kwargs)
                     res.append(r)
 
                 if out is None:
@@ -248,21 +368,22 @@ def wrap_ufunc_productspace(name, n_in, n_out, doc):
 
         elif n_out == 2:
             def wrapper(self, out1=None, out2=None, **kwargs):
-                from odl.space.pspace import ProductSpace
+                from odl.space.pspace import ProductSpace, ProductSpaceElement
                 if out1 is None:
                     out1_seq = [None] * len(self.elem.space)
                 else:
+                    assert isinstance(out1, ProductSpaceElement)
                     out1_seq = out1
                 if out2 is None:
                     out2_seq = [None] * len(self.elem.space)
                 else:
+                    assert isinstance(out2, ProductSpaceElement)
                     out2_seq = out2
 
                 res1, res2 = [], []
                 for xi, out1_i, out2_i in zip(self.elem, out1_seq, out2_seq):
-                    r1, r2 = getattr(xi.ufuncs, name)(out1=out1_i,
-                                                      out2=out2_i,
-                                                      **kwargs)
+                    ufunc = getattr(xi.ufuncs, name)
+                    r1, r2 = ufunc(out1=out1_i, out2=out2_i, **kwargs)
                     res1.append(r1)
                     res2.append(r2)
 
@@ -281,15 +402,22 @@ def wrap_ufunc_productspace(name, n_in, n_out, doc):
     elif n_in == 2:
         if n_out == 1:
             def wrapper(self, x2, out=None, **kwargs):
-                from odl.space.pspace import ProductSpace
+                from odl.space.pspace import ProductSpace, ProductSpaceElement
                 if out is None:
                     out_seq = [None] * len(self.elem.space)
                 else:
+                    assert isinstance(out, ProductSpaceElement)
                     out_seq = out
+
+                # Implement broadcasting
+                x2 = _add_leading_dims(x2, self.elem.space)
+                if len(x2) == 1 and len(self.elem.space) != 1:
+                    x2 = [x2[0]] * len(self.elem.space)
 
                 res = []
                 for x1_i, x2_i, out_i in zip(self.elem, x2, out_seq):
-                    r = getattr(x1_i.ufuncs, name)(x2_i, out=out_i, **kwargs)
+                    ufunc = getattr(x1_i.ufuncs, name)
+                    r = ufunc(x2_i, out=out_i, **kwargs)
                     res.append(r)
 
                 if out is None:
@@ -300,22 +428,27 @@ def wrap_ufunc_productspace(name, n_in, n_out, doc):
 
         elif n_out == 2:
             def wrapper(self, x2, out1=None, out2=None, **kwargs):
-                from odl.space.pspace import ProductSpace
+                from odl.space.pspace import ProductSpace, ProductSpaceElement
                 if out1 is None:
                     out1_seq = [None] * len(self.elem.space)
                 else:
+                    assert isinstance(out1, ProductSpaceElement)
                     out1_seq = out1
                 if out2 is None:
                     out2_seq = [None] * len(self.elem.space)
                 else:
                     out2_seq = out2
 
+                # Implement broadcasting
+                x2 = _add_leading_dims(x2, self.elem.space)
+                if len(x2) == 1 and len(self.elem.space) != 1:
+                    x2 = [x2[0]] * len(self.elem.space)
+
                 res1, res2 = [], []
                 for x1_i, x2_i, out1_i, out2_i in zip(self.elem, x2,
                                                       out1_seq, out2_seq):
-                    r1, r2 = getattr(x1_i.ufuncs, name)(x2_i, out1=out1_i,
-                                                        out2=out2_i,
-                                                        **kwargs)
+                    ufunc = getattr(x1_i.ufuncs, name)
+                    r1, r2 = ufunc(x2_i, out1=out1_i, out2=out2_i, **kwargs)
                     res1.append(r1)
                     res2.append(r2)
 
