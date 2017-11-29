@@ -78,6 +78,31 @@ def test_matrix_representation_product_to_product():
     matrix representation will be ``(2, 3, 2, 3)``.
     """
     n = 3
+    rn = odl.rn(n)
+    A = np.random.rand(n, n)
+    Aop = odl.MatrixOperator(A)
+
+    m = 2
+    rm = odl.rn(m)
+    B = np.random.rand(m, m)
+    Bop = odl.MatrixOperator(B)
+
+    ran_and_dom = ProductSpace(rn, rm)
+
+    AB_matrix = np.vstack([np.hstack([A, np.zeros((n, m))]),
+                           np.hstack([np.zeros((m, n)), B])])
+    ABop = ProductSpaceOperator([[Aop, 0],
+                                 [0, Bop]],
+                                ran_and_dom, ran_and_dom)
+    matrix_repr = matrix_representation(ABop)
+
+    assert all_almost_equal(AB_matrix, matrix_repr)
+
+
+def test_matrix_representation_product_to_product_two():
+    # Verify that the matrix representation function returns the correct matrix
+    n = 3
+    rn = odl.rn(n)
     A = np.random.rand(n, n)
     Aop = odl.MatrixOperator(A)
 

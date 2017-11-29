@@ -16,8 +16,9 @@ from odl.discr.lp_discr import DiscreteLp, DiscreteLpElement
 from odl.space.base_tensors import TensorSpace
 from odl.space.npy_tensors import NumpyTensor
 from odl.space.weighting import ConstWeighting
+from odl.util import array_module, as_numpy
 from odl.util.testutils import (
-    all_equal, all_almost_equal, noise_elements, simple_fixture)
+    all_equal, all_almost_equal, noise_elements, simple_fixture, xfail_if)
 
 
 USE_ARRAY_UFUNCS_INTERFACE = (parse_version(np.__version__) >=
@@ -107,7 +108,8 @@ def test_empty():
 # --- uniform_discr --- #
 
 
-def test_factory_dtypes(odl_tspace_impl):
+def test_uniform_discr_dtypes(odl_tspace_impl):
+    """Test basic properties of spaces created by uniform_discr."""
     impl = odl_tspace_impl
     real_float_dtypes = [np.float32, np.float64]
     nonfloat_dtypes = [np.int8, np.int16, np.int32, np.int64,
@@ -198,40 +200,39 @@ def test_uniform_discr_init_complex(odl_tspace_impl):
 # --- DiscreteLp methods --- #
 
 
-def test_discretelp_element():
+def test_discretelp_element(tspace_impl):
     """Test creation and membership of DiscreteLp elements."""
     # Creation from scratch
     # 1D
-    discr = odl.uniform_discr(0, 1, 3)
+    discr = odl.uniform_discr(0, 1, 3, impl=tspace_impl)
     weight = 1.0 if exponent == float('inf') else discr.cell_volume
-    tspace = odl.rn(3, weighting=weight)
+    tspace = odl.rn(3, weighting=weight, impl=tspace_impl)
     elem = discr.element()
     assert elem in discr
     assert elem.tensor in tspace
 
     # 2D
-    discr = odl.uniform_discr([0, 0], [1, 1], (3, 3))
+    discr = odl.uniform_discr([0, 0], [1, 1], (3, 3), impl=tspace_impl)
     weight = 1.0 if exponent == float('inf') else discr.cell_volume
-    tspace = odl.rn((3, 3), weighting=weight)
+    tspace = odl.rn((3, 3), weighting=weight, impl=tspace_impl)
     elem = discr.element()
     assert elem in discr
     assert elem.tensor in tspace
 
 
-def test_discretelp_element_from_array():
+def test_discretelp_element_from_array(tspace_impl):
     """Test creation of DiscreteLp elements from arrays."""
     # 1D
-    discr = odl.uniform_discr(0, 1, 3)
+    discr = odl.uniform_discr(0, 1, 3, impl=tspace_impl)
     elem = discr.element([1, 2, 3])
     assert np.array_equal(elem.tensor, [1, 2, 3])
-
     assert isinstance(elem, DiscreteLpElement)
-    assert isinstance(elem.tensor, NumpyTensor)
     assert all_equal(elem.tensor, [1, 2, 3])
 
 
-def test_element_from_array_2d(odl_elem_order):
+def test_element_from_array_2d(odl_tspace_impl, odl_elem_order):
     """Test element in 2d with different orderings."""
+    impl = odl_tspace_impl
     order = odl_elem_order
     discr = odl.uniform_discr([0, 0], [1, 1], [2, 2])
     elem = discr.element([[1, 2],
@@ -258,9 +259,9 @@ def test_element_from_array_2d(odl_elem_order):
                        [4]])  # wrong shape
 
 
-def test_element_from_function_1d():
+def test_element_from_function_1d(tspace_impl):
     """Test creation of DiscreteLp elements from functions in 1 dimension."""
-    space = odl.uniform_discr(-1, 1, 4)
+    space = odl.uniform_discr(-1, 1, 4, impl=tspace_impl)
     points = space.points().squeeze()
 
     # Without parameter
@@ -307,9 +308,9 @@ def test_element_from_function_1d():
     assert all_equal(elem_lam, points)
 
 
-def test_element_from_function_2d():
+def test_element_from_function_2d(tspace_impl):
     """Test creation of DiscreteLp elements from functions in 2 dimensions."""
-    space = odl.uniform_discr([-1, -1], [1, 1], (2, 3))
+    space = odl.uniform_discr([-1, -1], [1, 1], (2, 3), impl=tspace_impl)
     points = space.points()
 
     # Without parameter
@@ -366,9 +367,9 @@ def test_element_from_function_2d():
     assert all_equal(elem_lam, true_elem)
 
 
-def test_discretelp_zero_one():
+def test_discretelp_zero_one(tspace_impl):
     """Test the zero and one element creators of DiscreteLp."""
-    discr = odl.uniform_discr(0, 1, 3)
+    discr = odl.uniform_discr(0, 1, 3, impl=tspace_impl)
 
     zero = discr.zero()
     assert zero in discr
@@ -742,12 +743,16 @@ def test_cell_volume():
     assert elem.cell_volume == 0.5
 
 
-def test_astype():
+def test_astype(tspace_impl):
 
-    rdiscr = odl.uniform_discr([0, 0], [1, 1], [2, 2], dtype='float64')
-    cdiscr = odl.uniform_discr([0, 0], [1, 1], [2, 2], dtype='complex128')
-    rdiscr_s = odl.uniform_discr([0, 0], [1, 1], [2, 2], dtype='float32')
-    cdiscr_s = odl.uniform_discr([0, 0], [1, 1], [2, 2], dtype='complex64')
+    rdiscr = odl.uniform_discr([0, 0], [1, 1], [2, 2], dtype='float64',
+                               impl=tspace_impl)
+    cdiscr = odl.uniform_discr([0, 0], [1, 1], [2, 2], dtype='complex128',
+                               impl=tspace_impl)
+    rdiscr_s = odl.uniform_discr([0, 0], [1, 1], [2, 2], dtype='float32',
+                                 impl=tspace_impl)
+    cdiscr_s = odl.uniform_discr([0, 0], [1, 1], [2, 2], dtype='complex64',
+                                 impl=tspace_impl)
 
     # Real
     assert rdiscr.astype('float32') == rdiscr_s
@@ -781,173 +786,201 @@ def testodl_ufuncs(odl_tspace_impl, odl_ufunc):
     space = odl.uniform_discr([0, 0], [1, 1], (2, 3), impl=impl)
     name = odl_ufunc
 
-    # Get the ufunc from numpy as reference
-    npy_ufunc = getattr(np, name)
-    nin = npy_ufunc.nin
-    nout = npy_ufunc.nout
-    if (np.issubsctype(space.dtype, np.floating) and
-            name in ['bitwise_and',
-                     'bitwise_or',
-                     'bitwise_xor',
-                     'invert',
-                     'left_shift',
-                     'right_shift']):
-        # Skip integer only methods if floating point type
-        return
+    # Get the ufunc from numpy as reference, plus some additional info
+    ufunc_npy = getattr(np, name)
+    nin = ufunc_npy.nin
+    nout = ufunc_npy.nout
+
+    # Disable Numpy warnings for the time being
+    npy_err_orig = np.geterr()
+    np.seterr(all='ignore')
+
+    def _check_result_type(result, expected_type):
+        if nout == 1:
+            assert isinstance(result, space.element_type)
+        elif nout > 1:
+            for i in range(nout):
+                assert isinstance(result[i], space.element_type)
+        else:
+            assert False
+
+    def _check_result_is_out(result, out_seq):
+        if nout == 1:
+            assert result is out_seq[0]
+        elif nout > 1:
+            for i in range(nout):
+                assert result[i] is out_seq[i]
+        else:
+            assert False
+
+    # See https://github.com/cupy/cupy/issues/794
+    cupy_ufuncs_broken_complex = [
+        'expm1', 'floor_divide', 'fmin', 'fmax',
+        'greater', 'greater_equal', 'less', 'less_equal', 'log1p', 'log2',
+        'logical_and', 'logical_or', 'logical_not', 'logical_xor', 'minimum',
+        'maximum', 'rint', 'sign', 'square']
+    if (space.impl == 'cupy' and
+            space.dtype.kind == 'c' and
+            ufunc in cupy_ufuncs_broken_complex):
+        pytest.xfail('ufunc {} broken for complex input in cupy'.format(ufunc))
 
     # Create some data
     arrays, elements = noise_elements(space, nin + nout)
-    in_arrays = arrays[:nin]
-    out_arrays = arrays[nin:]
+    # Arrays of the space's own data storage type
+    in_arrays_own = arrays[:nin]
+    in_arrays_npy = [as_numpy(arr) for arr in arrays[:nin]]
     data_elem = elements[0]
-    out_elems = elements[nin:]
-
-    if nout == 1:
-        out_arr_kwargs = {'out': out_arrays[0]}
-        out_elem_kwargs = {'out': out_elems[0]}
-    elif nout > 1:
-        out_arr_kwargs = {'out': out_arrays[:nout]}
-        out_elem_kwargs = {'out': out_elems[:nout]}
 
     # Get function to call, using both interfaces:
-    # - vec.ufunc(other_args)
-    # - np.ufunc(vec, other_args)
-    elem_fun_old = getattr(data_elem.ufuncs, name)
-    in_elems_old = elements[1:nin]
-    elem_fun_new = npy_ufunc
-    in_elems_new = elements[:nin]
+    # - vec.ufunc(*other_args)
+    # - np.ufunc(vec, *other_args)
+    ufunc_method = getattr(data_elem.ufuncs, name)
+    in_elems_method = elements[1:nin]
+    in_elems_npy = elements[:nin]
 
-    # Out-of-place
-    with np.errstate(all='ignore'):  # avoid pytest warnings
-        npy_result = npy_ufunc(*in_arrays)
-        odl_result_old = elem_fun_old(*in_elems_old)
-        assert all_almost_equal(npy_result, odl_result_old)
-        odl_result_new = elem_fun_new(*in_elems_new)
-        assert all_almost_equal(npy_result, odl_result_new)
+    # If Numpy fails, mark the test as xfail (same below)
+    try:
+        result_npy = ufunc_npy(*in_arrays_npy)
+    except TypeError:
+        pytest.xfail('numpy ufunc not valid for inputs')
 
-    # Test type of output
+    # Out-of-place -- in = elements -- ufunc = method or numpy
+    result = ufunc_method(*in_elems_method)
+    assert all_almost_equal(result_npy, result)
+    _check_result_type(result, space.element_type)
+
+    # Get element(s) in the right space for in-place later
     if nout == 1:
-        assert isinstance(odl_result_old, space.element_type)
-        assert isinstance(odl_result_new, space.element_type)
-    elif nout > 1:
-        for i in range(nout):
-            assert isinstance(odl_result_old[i], space.element_type)
-            assert isinstance(odl_result_new[i], space.element_type)
+        out_elems = [result.space.element()]
+    elif nout == 2:
+        out_elems = [res.space.element() for res in result]
+    else:
+        assert False
 
-    # In-place with ODL objects as `out`
-    with np.errstate(all='ignore'):  # avoid pytest warnings
-        npy_result = npy_ufunc(*in_arrays, **out_arr_kwargs)
-        odl_result_old = elem_fun_old(*in_elems_old, **out_elem_kwargs)
-        assert all_almost_equal(npy_result, odl_result_old)
-        if USE_ARRAY_UFUNCS_INTERFACE:
-            # In-place will not work with Numpy < 1.13
-            odl_result_new = elem_fun_new(*in_elems_new, **out_elem_kwargs)
-            assert all_almost_equal(npy_result, odl_result_new)
+    result = ufunc_npy(*in_elems_npy)
+    assert all_almost_equal(result_npy, result)
+    _check_result_type(result, space.element_type)
 
-    # Check that returned stuff refers to given out
+    # Out-of-place -- in = numpy or own arrays -- ufunc = method
+    result = ufunc_method(*in_arrays_npy[1:])
+    assert all_almost_equal(result_npy, result)
+    _check_result_type(result, space.element_type)
+
+    result = ufunc_method(*in_arrays_own[1:])
+    assert all_almost_equal(result_npy, result)
+    _check_result_type(result, space.element_type)
+
+    # In-place -- in = elements -- out = elements -- ufunc = method or numpy
     if nout == 1:
-        assert odl_result_old is out_elems[0]
-        if USE_ARRAY_UFUNCS_INTERFACE:
-            assert odl_result_new is out_elems[0]
-    elif nout > 1:
-        for i in range(nout):
-            assert odl_result_old[i] is out_elems[i]
-            if USE_ARRAY_UFUNCS_INTERFACE:
-                assert odl_result_new[i] is out_elems[i]
+        kwargs_out = {'out': out_elems[0]}
+    elif nout == 2:
+        kwargs_out = {'out1': out_elems[0], 'out2': out_elems[1]}
 
-    # In-place with Numpy array as `out` for new interface
+    result = ufunc_method(*in_elems_method, **kwargs_out)
+    assert all_almost_equal(result_npy, result)
+    _check_result_is_out(result, out_elems[:nout])
     if USE_ARRAY_UFUNCS_INTERFACE:
-        out_arrays_new = tuple(np.empty_like(arr) for arr in out_arrays)
-        if nout == 1:
-            out_arr_kwargs_new = {'out': out_arrays_new[0]}
-        elif nout > 1:
-            out_arr_kwargs_new = {'out': out_arrays_new[:nout]}
-
-        with np.errstate(all='ignore'):  # avoid pytest warnings
-            odl_result_arr_new = elem_fun_new(*in_elems_new,
-                                              **out_arr_kwargs_new)
-        assert all_almost_equal(npy_result, odl_result_arr_new)
+        # Custom objects not allowed as `out` for numpy < 1.13
 
         if nout == 1:
-            assert odl_result_arr_new is out_arrays_new[0]
-        elif nout > 1:
-            for i in range(nout):
-                assert odl_result_arr_new[i] is out_arrays_new[i]
+            kwargs_out = {'out': out_elems[0]}
+        elif nout == 2:
+            kwargs_out = {'out': (out_elems[0], out_elems[1])}
 
-    # In-place with data container (tensor) as `out` for new interface
+        result = ufunc_npy(*in_elems_npy, **kwargs_out)
+        assert all_almost_equal(result_npy, result)
+        _check_result_is_out(result, out_elems[:nout])
+
+    # In-place -- in = elements -- out = numpy or own arrays -- ufunc = numpy
+    # This case is only supported with the new interface
     if USE_ARRAY_UFUNCS_INTERFACE:
-        out_tensors_new = tuple(space.tspace.element(np.empty_like(arr))
-                                for arr in out_arrays)
+        # Fresh arrays for output
+        out_arrays_npy = [np.empty_like(as_numpy(arr))
+                          for arr in arrays[nin:]]
+        out_arrays_own = [array_module(space.impl).empty_like(arr)
+                          for arr in arrays[nin:]]
         if nout == 1:
-            out_tens_kwargs_new = {'out': out_tensors_new[0]}
+            kwargs_npy = {'out': out_arrays_npy[0]}
+            kwargs_own = {'out': out_arrays_own[0]}
         elif nout > 1:
-            out_tens_kwargs_new = {'out': out_tensors_new[:nout]}
+            kwargs_npy = {'out': out_arrays_npy[:nout]}
+            kwargs_own = {'out': out_arrays_own[:nout]}
 
-        with np.errstate(all='ignore'):  # avoid pytest warnings
-            odl_result_tens_new = elem_fun_new(*in_elems_new,
-                                               **out_tens_kwargs_new)
-        assert all_almost_equal(npy_result, odl_result_tens_new)
+        try:
+            result_out_npy = ufunc_npy(*in_elems_npy, **kwargs_npy)
+        except TypeError:
+            pytest.xfail('numpy ufunc not valid for inputs')
 
-        if nout == 1:
-            assert odl_result_tens_new is out_tensors_new[0]
-        elif nout > 1:
-            for i in range(nout):
-                assert odl_result_tens_new[i] is out_tensors_new[i]
+        result_out_own = ufunc_npy(*in_elems_npy, **kwargs_own)
+        assert all_almost_equal(result_out_npy, result_npy)
+        assert all_almost_equal(result_out_own, result_npy)
+        _check_result_is_out(result_out_npy, out_arrays_npy)
+        _check_result_is_out(result_out_own, out_arrays_own)
 
     if USE_ARRAY_UFUNCS_INTERFACE:
         # Check `ufunc.at`
         indices = [[0, 0, 1],
                    [0, 1, 2]]
 
-        mod_array = in_arrays[0].copy()
-        mod_elem = in_elems_new[0].copy()
-        if nout > 1:
-            return  # currently not supported by Numpy
+        mod_array = in_arrays_npy[0].copy()
+        mod_elem = in_elems_npy[0].copy()
         if nin == 1:
-            with np.errstate(all='ignore'):  # avoid pytest warnings
-                npy_result = npy_ufunc.at(mod_array, indices)
-                odl_result = npy_ufunc.at(mod_elem, indices)
-        elif nin == 2:
-            other_array = in_arrays[1][indices]
-            other_elem = in_elems_new[1][indices]
-            with np.errstate(all='ignore'):  # avoid pytest warnings
-                npy_result = npy_ufunc.at(mod_array, indices, other_array)
-                odl_result = npy_ufunc.at(mod_elem, indices, other_elem)
+            try:
+                result_npy = ufunc_npy.at(mod_array, indices)
+            except TypeError:
+                pytest.xfail('numpy ufunc.at not valid for inputs')
 
-        assert all_almost_equal(odl_result, npy_result)
+            result = ufunc_npy.at(mod_elem, indices)
+
+        elif nin == 2:
+            other_array = in_arrays_npy[1][indices]
+            other_elem = in_elems_npy[1][indices]
+            try:
+                result_npy = ufunc_npy.at(mod_array, indices, other_array)
+            except TypeError:
+                pytest.xfail('numpy ufunc.at not valid for inputs')
+
+            result = ufunc_npy.at(mod_elem, indices, other_elem)
+
+        assert all_almost_equal(result, result_npy)
 
     # Check `ufunc.reduce`
     if nin == 2 and nout == 1 and USE_ARRAY_UFUNCS_INTERFACE:
-        in_array = in_arrays[0]
-        in_elem = in_elems_new[0]
+        in_array = in_arrays_npy[0]
+        in_elem = in_elems_npy[0]
 
         # We only test along one axis since some binary ufuncs are not
         # re-orderable, in which case Numpy raises a ValueError
-        with np.errstate(all='ignore'):  # avoid pytest warnings
-            npy_result = npy_ufunc.reduce(in_array)
-            odl_result = npy_ufunc.reduce(in_elem)
-            assert all_almost_equal(odl_result, npy_result)
-            # In-place using `out` (with ODL vector and array)
-            out_elem = odl_result.space.element()
-            out_array = np.empty(odl_result.shape,
-                                 dtype=odl_result.dtype)
-            npy_ufunc.reduce(in_elem, out=out_elem)
-            npy_ufunc.reduce(in_elem, out=out_array)
-            assert all_almost_equal(out_elem, odl_result)
-            assert all_almost_equal(out_array, odl_result)
-            # Using a specific dtype
-            try:
-                npy_result = npy_ufunc.reduce(in_array, dtype=complex)
-            except TypeError:
-                # Numpy finds no matching loop, bail out
-                return
-            else:
-                odl_result = npy_ufunc.reduce(in_elem, dtype=complex)
-                assert odl_result.dtype == npy_result.dtype
-                assert all_almost_equal(odl_result, npy_result)
+
+        try:
+            result_npy = ufunc_npy.reduce(in_array)
+        except TypeError:
+            pytest.xfail('numpy ufunc.reduce not valid for inputs')
+
+        # Out-of-place -- in = element
+        result = ufunc_npy.reduce(in_elem)
+        assert all_almost_equal(result, result_npy)
+        # keepdims not allowed
+        with pytest.raises(ValueError):
+            ufunc_npy.reduce(in_elem, keepdims=True)
+
+        # Using a specific dtype
+        try:
+            result_npy = ufunc_npy.reduce(in_array, dtype=complex)
+        except TypeError:
+            pytest.xfail('numpy ufunc.reduce not valid for complex dtype')
+
+        with xfail_if(space.impl == 'cupy',
+                      reason='complex reduce is broken in cupy'):
+            result = ufunc_npy.reduce(in_elem, dtype=complex)
+            assert result.dtype == result_npy.dtype
+            assert all_almost_equal(result, result_npy)
 
     # Other ufunc method use the same interface, to we don't perform
     # extra tests for them.
+
+    # Reset Numpy err handling
+    np.seterr(**npy_err_orig)
 
 
 def test_ufunc_corner_cases(odl_tspace_impl):
@@ -972,10 +1005,12 @@ def test_ufunc_corner_cases(odl_tspace_impl):
     assert res.space == space
 
     # Check usage of `order` argument
-    for order in ('C', 'F'):
-        res = x.__array_ufunc__(np.sin, '__call__', x, order=order)
-        assert all_almost_equal(res, np.sin(x.asarray()))
-        assert res.tensor.data.flags[order + '_CONTIGUOUS']
+    with xfail_if(tspace_impl == 'cupy',
+                  reason='cupy does not accept `order` in ufuncs'):
+        for order in ('C', 'F'):
+            res = x.__array_ufunc__(np.sin, '__call__', x, order=order)
+            assert all_almost_equal(res, np.sin(x.asarray()))
+            assert res.tensor.data.flags[order + '_CONTIGUOUS']
 
     # Check usage of `dtype` argument
     res = x.__array_ufunc__(np.sin, '__call__', x, dtype=complex)
@@ -1125,16 +1160,20 @@ def test_real_imag(odl_tspace_impl, odl_elem_order):
 
             # With [:] assignment
             x = cdiscr.zero()
-            x.real[:] = assigntype([[2, 3],
-                                    [4, 5]])
-            assert all_equal(x.real, [[2, 3],
-                                      [4, 5]])
+            with xfail_if(tspace_impl == 'cupy',
+                          reason='cupy x.real[:] does not mutate x'):
+                x.real[:] = assigntype([[2, 3],
+                                        [4, 5]])
+                assert all_equal(x.real, [[2, 3],
+                                          [4, 5]])
 
             x = cdiscr.zero()
-            x.imag[:] = assigntype([[2, 3],
-                                    [4, 5]])
-            assert all_equal(x.imag, [[2, 3],
-                                      [4, 5]])
+            with xfail_if(tspace_impl == 'cupy',
+                          reason='cupy x.imag[:] does not mutate x'):
+                x.imag[:] = assigntype([[2, 3],
+                                        [4, 5]])
+                assert all_equal(x.imag, [[2, 3],
+                                          [4, 5]])
 
         # Setting with scalars
         x = cdiscr.zero()
@@ -1163,7 +1202,8 @@ def test_reduction(odl_tspace_impl, odl_reduction):
 
     # Create some data
     x_arr, x = noise_elements(space, 1)
-    assert reduction(x_arr) == pytest.approx(getattr(x.ufuncs, name)())
+    assert (reduction(as_numpy(x_arr)) ==
+            pytest.approx(getattr(x.ufuncs, name)()))
 
 
 def test_power(odl_tspace_impl, power):
@@ -1171,9 +1211,9 @@ def test_power(odl_tspace_impl, power):
     space = odl.uniform_discr([0, 0], [1, 1], [2, 2], impl=impl)
 
     x_arr, x = noise_elements(space, 1)
-    x_pos_arr = np.abs(x_arr)
+    x_pos_arr = array_module(tspace_impl).abs(x_arr)
     x_neg_arr = -x_pos_arr
-    x_pos = np.abs(x)
+    x_pos = x.ufuncs.absolute()
     x_neg = -x_pos
 
     if int(power) != power:
@@ -1182,8 +1222,8 @@ def test_power(odl_tspace_impl, power):
             y += 0.1
 
     with np.errstate(invalid='ignore'):
-        true_pos_pow = np.power(x_pos_arr, power)
-        true_neg_pow = np.power(x_neg_arr, power)
+        true_pos_pow = array_module(tspace_impl).power(x_pos_arr, power)
+        true_neg_pow = array_module(tspace_impl).power(x_neg_arr, power)
 
     if int(power) != power and impl == 'cuda':
         with pytest.raises(ValueError):

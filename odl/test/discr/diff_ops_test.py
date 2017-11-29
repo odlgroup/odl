@@ -430,6 +430,12 @@ def test_divergence(space, method, padding):
     assert rhs != 0
     assert lhs == pytest.approx(rhs, rel=dtype_tol(space.dtype))
 
+    # Higher dimensional arrays
+    for ndim in range(1, 6):
+        # DiscreteLpElement
+        lin_size = 3
+        space = odl.uniform_discr([0.] * ndim, [1.] * ndim, [lin_size] * ndim)
+
 
 # --- Laplacian --- #
 

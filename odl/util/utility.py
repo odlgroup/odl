@@ -31,6 +31,14 @@ __all__ = (
     'cache_arguments', 'unique',
     'REPR_PRECISION')
 
+__all__ = ('array_str', 'dtype_str', 'dtype_repr', 'npy_printoptions',
+           'signature_string', 'indent',
+           'is_numeric_dtype', 'is_int_dtype', 'is_floating_dtype',
+           'is_real_dtype', 'is_real_floating_dtype',
+           'is_complex_floating_dtype', 'real_dtype', 'complex_dtype',
+           'is_string', 'conj_exponent', 'writable_array', 'none_context',
+           'array_module', 'array_cls', 'as_numpy',
+           'run_from_ipython', 'NumpyRandomSeed', 'cache_arguments', 'unique')
 
 REPR_PRECISION = 4  # For printing scalars and array entries
 TYPE_MAP_R2C = {np.dtype(dtype): np.result_type(dtype, 1j)
@@ -727,6 +735,58 @@ class writable_array(object):
         """
         self.obj[:] = self.arr
         self.arr = None
+
+
+class none_context(object):
+    """Trivial context manager class.
+
+    When used as ::
+
+        with none_context(*args, **kwargs) as obj:
+            # do stuff with `obj`
+
+    the returned ``obj`` is ``None``.
+    """
+    def __init__(self, *args, **kwargs):
+        # Ignore all arguments
+        pass
+
+    def __enter__(self):
+        return None
+
+    def __exit__(self, type, value, traceback):
+        return None
+
+
+def array_module(impl):
+    """Return the array module for ``impl``."""
+    from odl.space.cupy_tensors import cupy
+    if impl == 'numpy':
+        return np
+    elif impl == 'cupy':
+        return cupy
+    else:
+        raise ValueError('`impl` {!r} not understood'.format(impl))
+
+
+def array_cls(impl):
+    """Return the array class for given ``impl``."""
+    return array_module(impl).ndarray
+
+
+def as_numpy(array):
+    """Return a ``numpy.ndarray`` from the given array.
+
+    This is intended for casting from other array implementations to
+    Numpy, not for ODL tensors.
+    """
+    from odl.space.cupy_tensors import cupy
+    if isinstance(array, np.ndarray):
+        return array
+    elif isinstance(array, cupy.ndarray):
+        return cupy.asnumpy(array)
+    else:
+        raise TypeError('type {} not understood'.format(type(array)))
 
 
 def signature_string(posargs, optargs, sep=', ', mod='!r'):

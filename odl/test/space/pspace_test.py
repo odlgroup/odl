@@ -250,24 +250,29 @@ def test_metric():
     HxH = odl.ProductSpace(H, H, exponent=1.0)
     w1 = HxH.element([v11, v12])
     w2 = HxH.element([v21, v22])
-    assert (HxH.dist(w1, w2) ==
-            pytest.approx(H.dist(v11, v21) + H.dist(v12, v22)))
+
+    dist = HxH.dist(w1, w2)
+    expected_dist = sum([H.dist(v11, v21), H.dist(v12, v22)])
+    assert dist == pytest.approx(expected_dist)
 
     # 2-norm
     HxH = odl.ProductSpace(H, H, exponent=2.0)
     w1 = HxH.element([v11, v12])
     w2 = HxH.element([v21, v22])
-    assert (
-        HxH.dist(w1, w2) ==
-        pytest.approx((H.dist(v11, v21) ** 2 + H.dist(v12, v22) ** 2) ** 0.5)
-    )
+
+    dist = HxH.dist(w1, w2)
+    expected_dist = np.sqrt(
+        sum(d ** 2) for d in (H.dist(v11, v21), H.dist(v12, v22)))
+    assert dist == pytest.approx(expected_dist)
 
     # inf norm
     HxH = odl.ProductSpace(H, H, exponent=float('inf'))
     w1 = HxH.element([v11, v12])
     w2 = HxH.element([v21, v22])
-    assert (HxH.dist(w1, w2) ==
-            pytest.approx(max(H.dist(v11, v21), H.dist(v12, v22))))
+
+    dist = HxH.dist(w1, w2)
+    expected_dist = max(H.dist(v11, v21), H.dist(v12, v22))
+    assert dist == pytest.approx(expected_dist)
 
 
 def test_norm():
@@ -278,18 +283,27 @@ def test_norm():
     # 1-norm
     HxH = odl.ProductSpace(H, H, exponent=1.0)
     w = HxH.element([v1, v2])
-    assert HxH.norm(w) == pytest.approx(H.norm(v1) + H.norm(v2))
+
+    norm = HxH.norm(w)
+    expected_norm = sum([H.norm(v1), H.norm(v2)])
+    assert norm == pytest.approx(expected_norm)
 
     # 2-norm
     HxH = odl.ProductSpace(H, H, exponent=2.0)
     w = HxH.element([v1, v2])
-    assert (HxH.norm(w) ==
-            pytest.approx((H.norm(v1) ** 2 + H.norm(v2) ** 2) ** (1 / 2.0)))
+
+    norm = HxH.norm(w)
+    expected_norm = np.sqrt(
+        sum(n ** 2) for n in (H.norm(v1), H.norm(v2)))
+    assert norm == pytest.approx(expected_norm)
 
     # inf norm
     HxH = odl.ProductSpace(H, H, exponent=float('inf'))
     w = HxH.element([v1, v2])
-    assert HxH.norm(w) == pytest.approx(max(H.norm(v1), H.norm(v2)))
+
+    norm = HxH.norm(w)
+    expected_norm = max([H.norm(v1), H.norm(v2)])
+    assert norm == pytest.approx(expected_norm)
 
 
 def test_inner():
@@ -303,7 +317,10 @@ def test_inner():
     HxH = odl.ProductSpace(H, H)
     v = HxH.element([v1, v2])
     u = HxH.element([u1, u2])
-    assert HxH.inner(v, u) == pytest.approx(H.inner(v1, u1) + H.inner(v2, u2))
+
+    inner = HxH.inner(v, u)
+    expected_inner = sum([H.inner(v1, u1), H.inner(v2, u2)])
+    assert inner == pytest.approx(expected_inner)
 
 
 def test_vector_weighting(exponent):

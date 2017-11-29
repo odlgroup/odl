@@ -53,6 +53,9 @@ def test_min_pt():
     set_ = IntervalProd([1], [2])
     assert set_.min_pt == 1
 
+    set_ = IntervalProd(1, 2)
+    assert set_.min_pt == 1
+
     set_ = IntervalProd([1, 2, 3], [5, 6, 7])
     assert all_equal(set_.min_pt, [1, 2, 3])
 

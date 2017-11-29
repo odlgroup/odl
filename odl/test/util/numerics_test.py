@@ -355,9 +355,9 @@ def test_resize_array_adj(resize_setup, odl_floating_dtype):
     resized_adj = resize_array(other_arr, array.shape, offset, pad_mode,
                                pad_const, direction='adjoint')
 
-    assert (np.vdot(resized.ravel(), other_arr.ravel()) ==
-            pytest.approx(np.vdot(array.ravel(), resized_adj.ravel()),
-                          rel=dtype_tol(dtype)))
+    dot = np.vdot(resized.ravel(), other_arr.ravel())
+    expected_dot = np.vdot(array.ravel(), resized_adj.ravel())
+    assert dot == pytest.approx(expected_dot)
 
 
 def test_resize_array_corner_cases(odl_scalar_dtype, padding):
