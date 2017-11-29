@@ -579,7 +579,7 @@ def test_multiply(tspace):
 
 def test_multiply_exceptions(tspace):
     """Test if multiply raises correctly for bad input."""
-    other_space = odl.rn((4, 3))
+    other_space = odl.rn((4, 3), impl=tspace.impl)
 
     other_x = other_space.zero()
     x, y = tspace.zero(), tspace.zero()
@@ -719,16 +719,16 @@ def test_inner(tspace):
     """Test the inner method against numpy.vdot."""
     xd = noise_element(tspace)
     yd = noise_element(tspace)
-
-    # TODO: add weighting
     correct_inner = np.vdot(yd, xd)
-    assert tspace.inner(xd, yd) == pytest.approx(correct_inner)
-    assert xd.inner(yd) == pytest.approx(correct_inner)
+
+    # Allow some error for single and half precision
+    assert tspace.inner(xd, yd) == pytest.approx(correct_inner, rel=1e-2)
+    assert xd.inner(yd) == pytest.approx(correct_inner, rel=1e-2)
 
 
 def test_inner_exceptions(tspace):
     """Test if inner raises correctly for bad input."""
-    other_space = odl.rn((4, 3))
+    other_space = odl.rn((4, 3), impl=tspace.impl)
     other_x = other_space.zero()
     x = tspace.zero()
 
@@ -742,15 +742,16 @@ def test_inner_exceptions(tspace):
 def test_norm(tspace):
     """Test the norm method against numpy.linalg.norm."""
     xarr, x = noise_elements(tspace)
-
     correct_norm = np.linalg.norm(_as_numpy(xarr.ravel()))
-    assert tspace.norm(x) == pytest.approx(correct_norm)
-    assert x.norm() == pytest.approx(correct_norm)
+
+    # Allow some error for single and half precision
+    assert tspace.norm(x) == pytest.approx(correct_norm, rel=1e-2)
+    assert x.norm() == pytest.approx(correct_norm, rel=1e-2)
 
 
 def test_norm_exceptions(tspace):
     """Test if norm raises correctly for bad input."""
-    other_space = odl.rn((4, 3))
+    other_space = odl.rn((4, 3), impl=tspace.impl)
     other_x = other_space.zero()
 
     with pytest.raises(LinearSpaceTypeError):
@@ -775,15 +776,16 @@ def test_pnorm(exponent, tspace_impl):
 def test_dist(tspace):
     """Test the dist method against numpy.linalg.norm of the difference."""
     [xarr, yarr], [x, y] = noise_elements(tspace, n=2)
-
     correct_dist = np.linalg.norm(_as_numpy((xarr - yarr).ravel()))
-    assert tspace.dist(x, y) == pytest.approx(correct_dist)
+
+    # Allow some error for single and half precision
+    assert tspace.dist(x, y) == pytest.approx(correct_dist, rel=1e-2)
     assert x.dist(y) == pytest.approx(correct_dist)
 
 
 def test_dist_exceptions(tspace):
     """Test if dist raises correctly for bad input."""
-    other_space = odl.rn((4, 3))
+    other_space = odl.rn((4, 3), impl=tspace.impl)
     other_x = other_space.zero()
     x = tspace.zero()
 
@@ -859,7 +861,7 @@ def test_element_setitem(tspace_impl, setitem_indices):
     x[setitem_indices] = rhs_arr
     assert all_equal(x, x_arr)
 
-    # Using a list of lists
+    # Setting values with a list of lists
     rhs_list = (-np.ones(sliced_shape)).tolist()
     x_arr = _as_numpy(x_arr)
     x_arr[setitem_indices] = rhs_list
@@ -931,9 +933,6 @@ def test_transpose(tspace_impl):
         assert x.T.is_linear
 
         # Check result
-        print(x.shape, x.dtype)
-        print(y.shape, y.dtype)
-        print('****************')
         assert x.T(y) == pytest.approx(y.inner(x))
         assert all_equal(x.T.adjoint(1.0), x)
 
@@ -993,8 +992,8 @@ def test_python_copy(tspace_impl):
 
 def test_conversion_to_scalar(tspace_impl):
     """Test conversion of size-1 vectors/tensors to scalars."""
-    space = odl.rn(1, impl=tspace_impl)
     # Size 1 real space
+    space = odl.rn(1, impl=tspace_impl)
     value = 1.5
     element = space.element(value)
 
@@ -1049,8 +1048,8 @@ def test_bool_conversion(tspace_impl):
     assert all(x)
 
 
-def test_numpy_array_interface(tspace_impl):
-    """Verify that the __array__ interface for NumPy works."""
+def test___array__(tspace_impl):
+    """Verify that the __array__ method for NumPy works."""
     space = odl.tensor_space((3, 4), dtype='float32', exponent=1, weighting=2,
                              impl=tspace_impl)
     x = space.one()
@@ -1067,7 +1066,7 @@ def test_numpy_array_interface(tspace_impl):
     assert np.array_equal(x_as_any_arr, np.ones(x.shape))
 
 
-def test_array_wrap_method(tspace_impl):
+def test___array_wrap__(tspace_impl):
     """Verify that the __array_wrap__ method for NumPy works."""
     space = odl.tensor_space((3, 4), dtype='float32', exponent=1, weighting=2,
                              impl=tspace_impl)
@@ -1092,7 +1091,7 @@ def test_conj(tspace):
     assert all_equal(y, xarr.conj())
 
 
-# --- Weightings (Numpy) --- #
+# --- Weightings --- #
 
 
 def test_array_weighting_init(tspace_impl, exponent):
@@ -1192,8 +1191,9 @@ def test_array_weighting_inner(tspace):
     weight_arr = _pos_array(tspace)
     weighting_cls = _weighting_cls(tspace.impl, 'array')
     weighting = weighting_cls(weight_arr)
-
     true_inner = np.vdot(_as_numpy(yarr), _as_numpy(xarr * weight_arr))
+
+    # Allow some error for single and half precision
     assert weighting.inner(x, y) == pytest.approx(true_inner, rel=1e-2)
 
     # Exponent != 2 -> no inner product, should raise
@@ -1208,7 +1208,6 @@ def test_array_weighting_norm(tspace, exponent):
     weight_arr = _pos_array(tspace)
     weighting_cls = _weighting_cls(tspace.impl, 'array')
     weighting = weighting_cls(weight_arr, exponent=exponent)
-
     if exponent == float('inf'):
         true_norm = np.linalg.norm(_as_numpy(xarr.ravel()), ord=float('inf'))
     else:
@@ -1216,6 +1215,7 @@ def test_array_weighting_norm(tspace, exponent):
             _as_numpy((weight_arr ** (1 / exponent) * xarr).ravel()),
             ord=exponent)
 
+    # Allow some error for single and half precision
     assert weighting.norm(x) == pytest.approx(true_norm, rel=1e-2)
 
 
@@ -1226,7 +1226,6 @@ def test_array_weighting_dist(tspace, exponent):
     weight_arr = _pos_array(tspace)
     weighting_cls = _weighting_cls(tspace.impl, 'array')
     weighting = weighting_cls(weight_arr, exponent=exponent)
-
     if exponent == float('inf'):
         true_dist = np.linalg.norm(_as_numpy((xarr - yarr).ravel()),
                                    ord=float('inf'))
@@ -1235,6 +1234,7 @@ def test_array_weighting_dist(tspace, exponent):
             _as_numpy((weight_arr ** (1 / exponent) * (xarr - yarr)).ravel()),
             ord=exponent)
 
+    # Allow some error for single and half precision
     assert weighting.dist(x, y) == pytest.approx(true_dist, rel=1e-2)
 
 
@@ -1299,8 +1299,9 @@ def test_const_weighting_inner(tspace):
     constant = 1.5
     weighting_cls = _weighting_cls(tspace.impl, 'const')
     weighting = weighting_cls(constant)
-
     true_inner = constant * np.vdot(_as_numpy(yarr), _as_numpy(xarr))
+
+    # Allow some error for single and half precision
     assert weighting.inner(x, y) == pytest.approx(true_inner, rel=1e-2)
 
     # Exponent != 2 -> no inner
@@ -1316,12 +1317,13 @@ def test_const_weighting_norm(tspace, exponent):
     constant = 1.5
     weighting_cls = _weighting_cls(tspace.impl, 'const')
     weighting = weighting_cls(constant, exponent=exponent)
-
     if exponent == float('inf'):
         factor = 1.0
     else:
         factor = constant ** (1 / exponent)
     true_norm = factor * np.linalg.norm(_as_numpy(xarr.ravel()), ord=exponent)
+
+    # Allow some error for single and half precision
     assert weighting.norm(x) == pytest.approx(true_norm, rel=1e-2)
 
 
@@ -1332,13 +1334,14 @@ def test_const_weighting_dist(tspace, exponent):
     constant = 1.5
     weighting_cls = _weighting_cls(tspace.impl, 'const')
     weighting = weighting_cls(constant, exponent=exponent)
-
     if exponent == float('inf'):
         factor = 1.0
     else:
         factor = constant ** (1 / exponent)
     true_dist = factor * np.linalg.norm(_as_numpy((xarr - yarr).ravel()),
                                         ord=exponent)
+
+    # Allow some error for single and half precision
     assert weighting.dist(x, y) == pytest.approx(true_dist, rel=1e-2)
 
 
@@ -1359,12 +1362,12 @@ def test_custom_inner(tspace):
     assert w != w_other
 
     true_inner = np.vdot(_as_numpy(yarr), _as_numpy(xarr))
-    assert w.inner(x, y) == pytest.approx(true_inner, rel=1e-2)
-
     true_norm = np.linalg.norm(_as_numpy(xarr.ravel()))
-    assert w.norm(x) == pytest.approx(true_norm, rel=1e-2)
-
     true_dist = np.linalg.norm(_as_numpy((xarr - yarr).ravel()))
+
+    # Allow some error for single and half precision
+    assert w.inner(x, y) == pytest.approx(true_inner, rel=1e-2)
+    assert w.norm(x) == pytest.approx(true_norm, rel=1e-2)
     assert w.dist(x, y) == pytest.approx(true_dist, rel=1e-2)
 
     with pytest.raises(TypeError):
@@ -1390,14 +1393,15 @@ def test_custom_norm(tspace):
     assert w == w_same
     assert w != w_other
 
+    true_norm = np.linalg.norm(_as_numpy(xarr.ravel()))
+    true_dist = np.linalg.norm(_as_numpy((xarr - yarr).ravel()))
+
+    # Allow some error for single and half precision
+    assert w.norm(x) == pytest.approx(true_norm, rel=1e-2)
+    assert w.dist(x, y) == pytest.approx(true_dist, rel=1e-2)
+
     with pytest.raises(NotImplementedError):
         w.inner(x, y)
-
-    true_norm = np.linalg.norm(_as_numpy(xarr.ravel()))
-    assert w.norm(x) == pytest.approx(true_norm, rel=1e-2)
-
-    true_dist = np.linalg.norm(_as_numpy((xarr - yarr).ravel()))
-    assert w.dist(x, y) == pytest.approx(true_dist, rel=1e-2)
 
     with pytest.raises(TypeError):
         weighting_cls(1)
@@ -1422,14 +1426,16 @@ def test_custom_dist(tspace):
     assert w == w_same
     assert w != w_other
 
+    true_dist = np.linalg.norm(_as_numpy((xarr - yarr).ravel()))
+
+    # Allow some error for single and half precision
+    assert w.dist(x, y) == pytest.approx(true_dist, rel=1e-2)
+
     with pytest.raises(NotImplementedError):
         w.inner(x, y)
 
     with pytest.raises(NotImplementedError):
         w.norm(x)
-
-    true_dist = np.linalg.norm(_as_numpy((xarr - yarr).ravel()))
-    assert w.dist(x, y) == pytest.approx(true_dist, rel=1e-2)
 
     with pytest.raises(TypeError):
         weighting_cls(1)
@@ -1446,6 +1452,10 @@ def test_ufuncs(tspace, ufunc):
     ufunc_npy = getattr(np, name)
     nin = ufunc_npy.nin
     nout = ufunc_npy.nout
+
+    # Disable Numpy warnings for the time being
+    npy_err_orig = np.geterr()
+    np.seterr(all='ignore')
 
     def _check_result_type(result, expected_type):
         if nout == 1:
@@ -1641,6 +1651,9 @@ def test_ufuncs(tspace, ufunc):
 
     # Other ufunc method use the same interface, to we don't perform
     # extra tests for them.
+
+    # Reset Numpy err handling
+    np.seterr(**npy_err_orig)
 
 
 def test_ufunc_cupy_force_native():

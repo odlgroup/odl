@@ -154,6 +154,18 @@ class TensorSpaceUfuncs(object):
             np.add, 'reduce', self.elem,
             axis=axis, dtype=dtype, out=(out,), keepdims=keepdims)
 
+    def cumsum(self, axis=None, dtype=None, out=None):
+        """Return the cumulative sum of ``self``.
+
+        See Also
+        --------
+        numpy.cumsum
+        cumprod
+        """
+        return self.elem.__array_ufunc__(
+            np.add, 'accumulate', self.elem,
+            axis=axis, dtype=dtype, out=(out,))
+
     def prod(self, axis=None, dtype=None, out=None, keepdims=False):
         """Return the product of ``self``.
 
@@ -165,6 +177,18 @@ class TensorSpaceUfuncs(object):
         return self.elem.__array_ufunc__(
             np.multiply, 'reduce', self.elem,
             axis=axis, dtype=dtype, out=(out,), keepdims=keepdims)
+
+    def cumprod(self, axis=None, dtype=None, out=None):
+        """Return the cumulative product of ``self``.
+
+        See Also
+        --------
+        numpy.cumprod
+        cumsum
+        """
+        return self.elem.__array_ufunc__(
+            np.multiply, 'accumulate', self.elem,
+            axis=axis, dtype=dtype, out=(out,))
 
     def min(self, axis=None, dtype=None, out=None, keepdims=False):
         """Return the minimum of ``self``.
@@ -207,33 +231,49 @@ def wrap_ufunc_productspace(name, n_in, n_out, doc):
             def wrapper(self, out=None, **kwargs):
                 from odl.space.pspace import ProductSpace
                 if out is None:
-                    out = [None] * len(self.elem.space)
+                    out_seq = [None] * len(self.elem.space)
+                else:
+                    out_seq = out
 
                 res = []
-                for xi, out_i in zip(self.elem, out):
+                for xi, out_i in zip(self.elem, out_seq):
                     r = getattr(xi.ufuncs, name)(out=out_i, **kwargs)
                     res.append(r)
-                out_space = ProductSpace(*[r.space for r in res])
-                return out_space.element(res)
+
+                if out is None:
+                    out_space = ProductSpace(*[r.space for r in res])
+                    out = out_space.element(res)
+
+                return out
 
         elif n_out == 2:
             def wrapper(self, out1=None, out2=None, **kwargs):
                 from odl.space.pspace import ProductSpace
                 if out1 is None:
-                    out1 = [None] * len(self.elem.space)
+                    out1_seq = [None] * len(self.elem.space)
+                else:
+                    out1_seq = out1
                 if out2 is None:
-                    out2 = [None] * len(self.elem.space)
+                    out2_seq = [None] * len(self.elem.space)
+                else:
+                    out2_seq = out2
 
                 res1, res2 = [], []
-                for xi, out1_i, out2_i in zip(self.elem, out1, out2):
+                for xi, out1_i, out2_i in zip(self.elem, out1_seq, out2_seq):
                     r1, r2 = getattr(xi.ufuncs, name)(out1=out1_i,
                                                       out2=out2_i,
                                                       **kwargs)
                     res1.append(r1)
                     res2.append(r2)
-                out_space_1 = ProductSpace(*[r.space for r in res1])
-                out_space_2 = ProductSpace(*[r.space for r in res2])
-                return out_space_1.element(res1), out_space_2.element(res2)
+
+                if out1 is None:
+                    out_space_1 = ProductSpace(*[r.space for r in res1])
+                    out1 = out_space_1.element(res1)
+                if out2 is None:
+                    out_space_2 = ProductSpace(*[r.space for r in res2])
+                    out2 = out_space_2.element(res2)
+
+                return out1, out2
 
         else:
             raise NotImplementedError
@@ -243,34 +283,50 @@ def wrap_ufunc_productspace(name, n_in, n_out, doc):
             def wrapper(self, x2, out=None, **kwargs):
                 from odl.space.pspace import ProductSpace
                 if out is None:
-                    out = [None] * len(self.elem.space)
+                    out_seq = [None] * len(self.elem.space)
+                else:
+                    out_seq = out
 
                 res = []
-                for x1_i, x2_i, out_i in zip(self.elem, x2, out):
+                for x1_i, x2_i, out_i in zip(self.elem, x2, out_seq):
                     r = getattr(x1_i.ufuncs, name)(x2_i, out=out_i, **kwargs)
                     res.append(r)
-                out_space = ProductSpace(*[r.space for r in res])
-                return out_space.element(res)
+
+                if out is None:
+                    out_space = ProductSpace(*[r.space for r in res])
+                    out = out_space.element(res)
+
+                return out
 
         elif n_out == 2:
             def wrapper(self, x2, out1=None, out2=None, **kwargs):
                 from odl.space.pspace import ProductSpace
                 if out1 is None:
-                    out1 = [None] * len(self.elem.space)
+                    out1_seq = [None] * len(self.elem.space)
+                else:
+                    out1_seq = out1
                 if out2 is None:
-                    out2 = [None] * len(self.elem.space)
+                    out2_seq = [None] * len(self.elem.space)
+                else:
+                    out2_seq = out2
 
                 res1, res2 = [], []
-                for x1_i, x2_i, out1_i, out2_i in zip(self.elem, x2, out1,
-                                                      out2):
+                for x1_i, x2_i, out1_i, out2_i in zip(self.elem, x2,
+                                                      out1_seq, out2_seq):
                     r1, r2 = getattr(x1_i.ufuncs, name)(x2_i, out1=out1_i,
                                                         out2=out2_i,
                                                         **kwargs)
                     res1.append(r1)
                     res2.append(r2)
-                out_space_1 = ProductSpace(*[r.space for r in res1])
-                out_space_2 = ProductSpace(*[r.space for r in res2])
-                return out_space_1.element(res1), out_space_2.element(res2)
+
+                if out1 is None:
+                    out_space_1 = ProductSpace(*[r.space for r in res1])
+                    out1 = out_space_1.element(res1)
+                if out2 is None:
+                    out_space_2 = ProductSpace(*[r.space for r in res2])
+                    out2 = out_space_2.element(res2)
+
+                return out1, out2
 
         else:
             raise NotImplementedError

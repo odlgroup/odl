@@ -348,7 +348,23 @@ def noise_array(space):
     from odl.space.cupy_tensors import cupy
 
     if isinstance(space, ProductSpace):
-        return [noise_array(si) for si in space]
+        arr_list = [noise_array(si) for si in space]
+        try:
+            impl = space[0].impl
+        except (IndexError, AttributeError):
+            impl = 'numpy'
+
+        if space.is_power_space:
+            if impl == 'numpy':
+                return np.vstack(arr_list)
+            elif impl == 'cupy':
+                return cupy.vstack(arr_list)
+            else:
+                raise RuntimeError('bad `impl` {!r}'.format(impl))
+
+        else:
+            return tuple(arr_list)
+
     else:
         if space.dtype == bool:
             arr = np.random.randint(0, 2, size=space.shape, dtype=bool)
@@ -365,12 +381,13 @@ def noise_array(space):
             raise ValueError('bad dtype {}'.format(space.dtype))
 
         arr = arr.astype(space.dtype, copy=False)
-        if space.impl == 'numpy':
+        impl = getattr(space, 'impl', 'numpy')
+        if impl == 'numpy':
             return arr
-        elif space.impl == 'cupy':
+        elif impl == 'cupy':
             return cupy.asarray(arr)
         else:
-            raise RuntimeError('bad `impl` {!r}'.format(space.impl))
+            raise RuntimeError('bad `impl` {!r}'.format(impl))
 
 
 def noise_element(space):
