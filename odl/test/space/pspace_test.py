@@ -12,8 +12,8 @@ import pytest
 import operator
 
 import odl
-from odl.util.testutils import (all_equal, all_almost_equal, almost_equal,
-                                noise_elements, simple_fixture)
+from odl.util.testutils import (
+    all_equal, all_almost_equal, noise_elements, simple_fixture)
 
 
 exponent = simple_fixture('exponent', [2.0, 1.0, float('inf'), 0.5, 1.5])
@@ -192,24 +192,26 @@ def test_metric():
     HxH = odl.ProductSpace(H, H, exponent=1.0)
     w1 = HxH.element([v11, v12])
     w2 = HxH.element([v21, v22])
-    assert almost_equal(HxH.dist(w1, w2),
-                        H.dist(v11, v21) + H.dist(v12, v22))
+    dist = HxH.dist(w1, w2)
+    expected_dist = sum([H.dist(v11, v21), H.dist(v12, v22)])
+    assert dist == pytest.approx(expected_dist)
 
     # 2-norm
     HxH = odl.ProductSpace(H, H, exponent=2.0)
     w1 = HxH.element([v11, v12])
     w2 = HxH.element([v21, v22])
-    assert almost_equal(
-        HxH.dist(w1, w2),
-        (H.dist(v11, v21) ** 2 + H.dist(v12, v22) ** 2) ** (1 / 2.0))
+    dist = HxH.dist(w1, w2)
+    expected_dist = np.sqrt(
+        sum(d ** 2) for d in (H.dist(v11, v21), H.dist(v12, v22)))
+    assert dist == pytest.approx(expected_dist)
 
     # inf norm
     HxH = odl.ProductSpace(H, H, exponent=float('inf'))
     w1 = HxH.element([v11, v12])
     w2 = HxH.element([v21, v22])
-    assert almost_equal(
-        HxH.dist(w1, w2),
-        max(H.dist(v11, v21), H.dist(v12, v22)))
+    dist = HxH.dist(w1, w2)
+    expected_dist = max(H.dist(v11, v21), H.dist(v12, v22))
+    assert dist == pytest.approx(expected_dist)
 
 
 def test_norm():
@@ -220,18 +222,24 @@ def test_norm():
     # 1-norm
     HxH = odl.ProductSpace(H, H, exponent=1.0)
     w = HxH.element([v1, v2])
-    assert almost_equal(HxH.norm(w), H.norm(v1) + H.norm(v2))
+    norm = HxH.norm(w)
+    expected_norm = sum([H.norm(v1), H.norm(v2)])
+    assert norm == pytest.approx(expected_norm)
 
     # 2-norm
     HxH = odl.ProductSpace(H, H, exponent=2.0)
     w = HxH.element([v1, v2])
-    assert almost_equal(
-        HxH.norm(w), (H.norm(v1) ** 2 + H.norm(v2) ** 2) ** (1 / 2.0))
+    norm = HxH.norm(w)
+    expected_norm = np.sqrt(
+        sum(n ** 2) for n in (H.norm(v1), H.norm(v2)))
+    assert norm == pytest.approx(expected_norm)
 
     # inf norm
     HxH = odl.ProductSpace(H, H, exponent=float('inf'))
     w = HxH.element([v1, v2])
-    assert almost_equal(HxH.norm(w), max(H.norm(v1), H.norm(v2)))
+    norm = HxH.norm(w)
+    expected_norm = max([H.norm(v1), H.norm(v2)])
+    assert norm == pytest.approx(expected_norm)
 
 
 def test_inner():
@@ -245,7 +253,9 @@ def test_inner():
     HxH = odl.ProductSpace(H, H)
     v = HxH.element([v1, v2])
     u = HxH.element([u1, u2])
-    assert almost_equal(HxH.inner(v, u), H.inner(v1, u1) + H.inner(v2, u2))
+    inner = HxH.inner(v, u)
+    expected_inner = sum([H.inner(v1, u1), H.inner(v2, u2)])
+    assert inner == pytest.approx(expected_inner)
 
 
 def test_vector_weighting(exponent):
@@ -378,7 +388,7 @@ def test_custom_funcs():
     pspace_custom = odl.ProductSpace(r2, r3, inner=custom_inner)
     xc = pspace_custom.element((r2x, r3x))
     yc = pspace_custom.element((r2y, r3y))
-    assert almost_equal(x.inner(y), xc.inner(yc))
+    assert x.inner(y) == pytest.approx(xc.inner(yc))
 
     pspace_1 = odl.ProductSpace(r2, r3, exponent=1.0)
     x = pspace_1.element((r2x, r3x))
@@ -386,12 +396,12 @@ def test_custom_funcs():
 
     pspace_custom = odl.ProductSpace(r2, r3, norm=custom_norm)
     xc = pspace_custom.element((r2x, r3x))
-    assert almost_equal(x.norm(), xc.norm())
+    assert x.norm() == pytest.approx(xc.norm())
 
     pspace_custom = odl.ProductSpace(r2, r3, dist=custom_dist)
     xc = pspace_custom.element((r2x, r3x))
     yc = pspace_custom.element((r2y, r3y))
-    assert almost_equal(x.dist(y), xc.dist(yc))
+    assert x.dist(y) == pytest.approx(xc.dist(yc))
 
     with pytest.raises(TypeError):
         odl.ProductSpace(r2, r3, a=1)  # extra keyword argument

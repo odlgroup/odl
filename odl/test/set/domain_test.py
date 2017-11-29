@@ -13,13 +13,13 @@ import numpy as np
 import odl
 from odl.discr.grid import sparse_meshgrid
 from odl.set.domain import IntervalProd
-from odl.util.testutils import almost_equal, all_equal
+from odl.util.testutils import all_equal
 
 
-def random_point(set_):
-    if isinstance(set_, IntervalProd):
-        return (set_.min_pt +
-                np.random.rand(set_.ndim) * (set_.max_pt - set_.min_pt))
+def random_point(intv):
+    if isinstance(intv, IntervalProd):
+        return (intv.min_pt +
+                np.random.rand(intv.ndim) * (intv.max_pt - intv.min_pt))
     else:
         raise NotImplementedError("unknown type")
 
@@ -44,124 +44,124 @@ def test_init():
 
 
 def test_min_pt():
-    set_ = IntervalProd(1, 2)
-    assert almost_equal(set_.min_pt, 1)
+    intv = IntervalProd(1, 2)
+    assert intv.min_pt == 1
 
-    set_ = IntervalProd(-np.inf, 0)
-    assert almost_equal(set_.min_pt, -np.inf)
+    intv = IntervalProd(-np.inf, 0)
+    assert intv.min_pt == -np.inf
 
-    set_ = IntervalProd([1], [2])
-    assert almost_equal(set_.min_pt, 1)
+    intv = IntervalProd([1], [2])
+    assert intv.min_pt == 1
 
-    set_ = IntervalProd([1, 2, 3], [5, 6, 7])
-    assert all_equal(set_.min_pt, [1, 2, 3])
+    intv = IntervalProd([1, 2, 3], [5, 6, 7])
+    assert all_equal(intv.min_pt, [1, 2, 3])
 
 
 def test_max_pt():
-    set_ = IntervalProd(1, 2)
-    assert almost_equal(set_.max_pt, 2)
+    intv = IntervalProd(1, 2)
+    assert intv.max_pt == 2
 
-    set_ = IntervalProd(0, np.inf)
-    assert almost_equal(set_.max_pt, np.inf)
+    intv = IntervalProd(0, np.inf)
+    assert intv.max_pt == np.inf
 
-    set_ = IntervalProd([1], [2])
-    assert almost_equal(set_.max_pt, 2)
+    intv = IntervalProd([1], [2])
+    assert intv.max_pt == 2
 
-    set_ = IntervalProd([1, 2, 3], [5, 6, 7])
-    assert all_equal(set_.max_pt, [5, 6, 7])
+    intv = IntervalProd([1, 2, 3], [5, 6, 7])
+    assert all_equal(intv.max_pt, [5, 6, 7])
 
 
 def test_ndim():
-    set_ = IntervalProd(1, 2)
-    assert set_.ndim == 1
+    intv = IntervalProd(1, 2)
+    assert intv.ndim == 1
 
-    set_ = IntervalProd(1, 1)
-    assert set_.ndim == 1
+    intv = IntervalProd(1, 1)
+    assert intv.ndim == 1
 
-    set_ = IntervalProd(0, np.inf)
-    assert set_.ndim == 1
+    intv = IntervalProd(0, np.inf)
+    assert intv.ndim == 1
 
-    set_ = IntervalProd([1], [2])
-    assert set_.ndim == 1
+    intv = IntervalProd([1], [2])
+    assert intv.ndim == 1
 
-    set_ = IntervalProd([1, 2, 3], [5, 6, 7])
-    assert set_.ndim == 3
+    intv = IntervalProd([1, 2, 3], [5, 6, 7])
+    assert intv.ndim == 3
 
-    set_ = IntervalProd([1, 2, 3], [1, 6, 7])
-    assert set_.ndim == 3
+    intv = IntervalProd([1, 2, 3], [1, 6, 7])
+    assert intv.ndim == 3
 
 
 def test_true_ndim():
-    set_ = IntervalProd(1, 2)
-    assert set_.true_ndim == 1
+    intv = IntervalProd(1, 2)
+    assert intv.true_ndim == 1
 
-    set_ = IntervalProd(1, 1)
-    assert set_.true_ndim == 0
+    intv = IntervalProd(1, 1)
+    assert intv.true_ndim == 0
 
-    set_ = IntervalProd(0, np.inf)
-    assert set_.true_ndim == 1
+    intv = IntervalProd(0, np.inf)
+    assert intv.true_ndim == 1
 
-    set_ = IntervalProd([1], [2])
-    assert set_.true_ndim == 1
+    intv = IntervalProd([1], [2])
+    assert intv.true_ndim == 1
 
-    set_ = IntervalProd([1, 2, 3], [5, 6, 7])
-    assert set_.true_ndim == 3
+    intv = IntervalProd([1, 2, 3], [5, 6, 7])
+    assert intv.true_ndim == 3
 
-    set_ = IntervalProd([1, 2, 3], [1, 6, 7])
-    assert set_.true_ndim == 2
+    intv = IntervalProd([1, 2, 3], [1, 6, 7])
+    assert intv.true_ndim == 2
 
 
 def test_extent():
-    set_ = IntervalProd(1, 2)
-    assert set_.extent == 1
+    intv = IntervalProd(1, 2)
+    assert intv.extent == 1
 
-    set_ = IntervalProd(1, 1)
-    assert set_.extent == 0
+    intv = IntervalProd(1, 1)
+    assert intv.extent == 0
 
-    set_ = IntervalProd(0, np.inf)
-    assert set_.extent == np.inf
+    intv = IntervalProd(0, np.inf)
+    assert intv.extent == np.inf
 
-    set_ = IntervalProd(-np.inf, 0)
-    assert set_.extent == np.inf
+    intv = IntervalProd(-np.inf, 0)
+    assert intv.extent == np.inf
 
-    set_ = IntervalProd(-np.inf, np.inf)
-    assert set_.extent == np.inf
+    intv = IntervalProd(-np.inf, np.inf)
+    assert intv.extent == np.inf
 
-    set_ = IntervalProd([1, 2, 3], [5, 6, 7])
-    assert list(set_.extent) == [4, 4, 4]
+    intv = IntervalProd([1, 2, 3], [5, 6, 7])
+    assert list(intv.extent) == [4, 4, 4]
 
 
 def test_volume():
-    set_ = IntervalProd(1, 2)
-    assert set_.volume == 2 - 1
+    intv = IntervalProd(1, 2)
+    assert intv.volume == 2 - 1
 
-    set_ = IntervalProd(0, np.inf)
-    assert set_.volume == np.inf
+    intv = IntervalProd(0, np.inf)
+    assert intv.volume == np.inf
 
-    set_ = IntervalProd([1, 2, 3], [5, 6, 7])
-    assert almost_equal(set_.volume, (5 - 1) * (6 - 2) * (7 - 3))
+    intv = IntervalProd([1, 2, 3], [5, 6, 7])
+    assert intv.volume == pytest.approx((5 - 1) * (6 - 2) * (7 - 3))
 
 
 def test_mid_pt():
-    set_ = IntervalProd(1, 2)
-    assert set_.mid_pt == 1.5
+    intv = IntervalProd(1, 2)
+    assert intv.mid_pt == 1.5
 
-    set_ = IntervalProd(0, np.inf)
-    assert set_.mid_pt == np.inf
+    intv = IntervalProd(0, np.inf)
+    assert intv.mid_pt == np.inf
 
-    set_ = IntervalProd([1, 2, 3], [5, 6, 7])
-    assert all_equal(set_.mid_pt, [3, 4, 5])
+    intv = IntervalProd([1, 2, 3], [5, 6, 7])
+    assert all_equal(intv.mid_pt, [3, 4, 5])
 
 
 def test_element():
-    set_ = IntervalProd(1, 2)
-    assert set_.element() in set_
+    intv = IntervalProd(1, 2)
+    assert intv.element() in intv
 
-    set_ = IntervalProd(0, np.inf)
-    assert set_.element() in set_
+    intv = IntervalProd(0, np.inf)
+    assert intv.element() in intv
 
-    set_ = IntervalProd([1, 2, 3], [5, 6, 7])
-    assert set_.element() in set_
+    intv = IntervalProd([1, 2, 3], [5, 6, 7])
+    assert intv.element() in intv
 
 
 def _test_eq(x, y):
@@ -213,15 +213,15 @@ def test_equals():
 
 
 def test_contains():
-    set_ = IntervalProd(1, 2)
+    intv = IntervalProd(1, 2)
 
-    assert 1 in set_
-    assert 2 in set_
-    assert 1.5 in set_
-    assert 3 not in set_
-    assert 'string' not in set_
-    assert [1, 2] not in set_
-    assert np.nan not in set_
+    assert 1 in intv
+    assert 2 in intv
+    assert 1.5 in intv
+    assert 3 not in intv
+    assert 'string' not in intv
+    assert [1, 2] not in intv
+    assert np.nan not in intv
 
     positive_reals = IntervalProd(0, np.inf)
     assert 1 in positive_reals
@@ -231,26 +231,26 @@ def test_contains():
 
 
 def test_contains_set():
-    set_ = IntervalProd(1, 2)
+    intv = IntervalProd(1, 2)
 
     for sub_set in [np.array([1, 1.1, 1.2, 1.3, 1.4]),
                     IntervalProd(1.2, 2),
                     IntervalProd(1, 1.5),
                     IntervalProd(1.2, 1.2)]:
-        assert set_.contains_set(sub_set)
+        assert intv.contains_set(sub_set)
 
     for non_sub_set in [np.array([0, 1, 1.1, 1.2, 1.3, 1.4]),
                         np.array([np.nan, 1.1, 1.3]),
                         IntervalProd(1.2, 3),
                         IntervalProd(0, 1.5),
                         IntervalProd(3, 4)]:
-        assert not set_.contains_set(non_sub_set)
+        assert not intv.contains_set(non_sub_set)
 
     for non_set in [1,
                     [1, 2],
                     {'hello': 1.0}]:
         with pytest.raises(AttributeError):
-            set_.contains_set(non_set)
+            intv.contains_set(non_set)
 
 
 def test_contains_all():
@@ -319,16 +319,16 @@ def test_insert():
 
 
 def test_dist():
-    set_ = IntervalProd(1, 2)
+    intv = IntervalProd(1, 2)
 
     for interior in [1.0, 1.1, 2.0]:
-        assert set_.dist(interior) == 0.0
+        assert intv.dist(interior) == 0.0
 
     for exterior in [0.0, 2.0, np.inf]:
-        assert set_.dist(exterior) == min(abs(set_.min_pt - exterior),
-                                          abs(exterior - set_.max_pt))
+        assert intv.dist(exterior) == min(abs(intv.min_pt - exterior),
+                                          abs(exterior - intv.max_pt))
 
-    assert set_.dist(np.NaN) == np.inf
+    assert intv.dist(np.NaN) == np.inf
 
 
 # Set arithmetic
@@ -412,15 +412,15 @@ def test_div():
 
 
 def test_interval_length():
-    set_ = IntervalProd(1, 2)
-    assert set_.length == set_.volume
-    assert set_.length == 1
+    intv = IntervalProd(1, 2)
+    assert intv.length == intv.volume
+    assert intv.length == 1
 
 
 def test_rectangle_area():
-    set_ = IntervalProd([1, 2], [3, 4])
-    assert set_.area == set_.volume
-    assert set_.area == (3 - 1) * (4 - 2)
+    intv = IntervalProd([1, 2], [3, 4])
+    assert intv.area == intv.volume
+    assert intv.area == (3 - 1) * (4 - 2)
 
 
 if __name__ == '__main__':

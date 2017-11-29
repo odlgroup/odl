@@ -13,7 +13,7 @@ import numpy as np
 import pytest
 
 import odl
-from odl.util.testutils import all_almost_equal, almost_equal, noise_elements
+from odl.util.testutils import all_almost_equal, noise_elements
 
 pytestmark = odl.util.skip_if_no_largescale
 
@@ -97,8 +97,8 @@ def test_inner(tspace):
 
     correct_inner = np.vdot(yarr, xarr) * weighting_const
 
-    assert almost_equal(tspace.inner(x, y), correct_inner, places=2)
-    assert almost_equal(x.inner(y), correct_inner, places=2)
+    assert tspace.inner(x, y) == pytest.approx(correct_inner, rel=1e-2)
+    assert x.inner(y) == pytest.approx(correct_inner, rel=1e-2)
 
 
 def test_norm(tspace):
@@ -108,8 +108,8 @@ def test_norm(tspace):
 
     correct_norm = np.linalg.norm(xarr) * np.sqrt(weighting_const)
 
-    assert almost_equal(tspace.norm(x), correct_norm, places=2)
-    assert almost_equal(x.norm(), correct_norm, places=2)
+    assert tspace.norm(x) == pytest.approx(correct_norm, rel=1e-2)
+    assert x.norm() == pytest.approx(correct_norm, rel=1e-2)
 
 
 def test_dist(tspace):
@@ -119,8 +119,8 @@ def test_dist(tspace):
 
     correct_dist = np.linalg.norm(xarr - yarr) * np.sqrt(weighting_const)
 
-    assert almost_equal(tspace.dist(x, y), correct_dist, places=2)
-    assert almost_equal(x.dist(y), correct_dist, places=2)
+    assert tspace.dist(x, y) == pytest.approx(correct_dist, rel=1e-2)
+    assert x.dist(y) == pytest.approx(correct_dist, rel=1e-2)
 
 
 def _test_lincomb(space, a, b, discontig):

@@ -17,7 +17,7 @@ import os
 import warnings
 from time import time
 
-from odl.util.utility import run_from_ipython, is_string
+from odl.util.utility import run_from_ipython, is_string, none_context
 
 
 __all__ = ('almost_equal', 'all_equal', 'all_almost_equal', 'never_skip',
@@ -203,6 +203,14 @@ def is_subdict(subdict, dictionary):
     return all(item in dictionary.items() for item in subdict.items())
 
 
+def xfail_if(condition, reason=''):
+    """Return a ``pytest.xfail`` object if ``condition`` is ``True``."""
+    if condition:
+        return pytest.xfail(reason)
+    else:
+        return none_context()
+
+
 try:
     # Try catch in case user does not have pytest
     import pytest
@@ -348,20 +356,12 @@ def noise_array(space):
     from odl.space.cupy_tensors import cupy
 
     if isinstance(space, ProductSpace):
-        arr_list = [noise_array(si) for si in space]
-        try:
-            impl = space[0].impl
-        except (IndexError, AttributeError):
-            impl = 'numpy'
-
+        arr_list = [noise_array(spc_i) for spc_i in space]
         if space.is_power_space:
-            if impl == 'numpy':
-                return np.vstack(arr_list)
-            elif impl == 'cupy':
-                return cupy.vstack(arr_list)
-            else:
-                raise RuntimeError('bad `impl` {!r}'.format(impl))
-
+            arr = np.empty((len(arr_list),) + arr_list[0].shape,
+                           dtype=space.dtype)
+            for i in range(len(arr)):
+                arr[i] = arr_list[i]
         else:
             return tuple(arr_list)
 
@@ -380,14 +380,7 @@ def noise_array(space):
         else:
             raise ValueError('bad dtype {}'.format(space.dtype))
 
-        arr = arr.astype(space.dtype, copy=False)
-        impl = getattr(space, 'impl', 'numpy')
-        if impl == 'numpy':
-            return arr
-        elif impl == 'cupy':
-            return cupy.asarray(arr)
-        else:
-            raise RuntimeError('bad `impl` {!r}'.format(impl))
+        return arr.astype(space.dtype, copy=False)
 
 
 def noise_element(space):
@@ -480,10 +473,12 @@ def noise_elements(space, n=1):
     noise_array
     noise_element
     """
-    arrs = tuple(noise_array(space) for _ in range(n))
+    npy_arrs = [noise_array(space) for _ in range(n)]
 
-    # Make space elements from arrays
-    elems = tuple(space.element(arr.copy()) for arr in arrs)
+    # Make space elements from Numpy arrays
+    elems = tuple(space.element(arr) for arr in npy_arrs)
+    # Make copies of the arrays
+    arrs = tuple(elem.data.copy() for elem in elems)
 
     if n == 1:
         return tuple(arrs + elems)
