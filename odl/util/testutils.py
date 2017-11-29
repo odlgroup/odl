@@ -19,7 +19,6 @@ from time import time
 
 from odl.util.utility import run_from_ipython, is_string, none_context
 
-
 __all__ = (
     'all_equal', 'all_almost_equal', 'dtype_ndigits', 'dtype_tol',
     'never_skip', 'skip_if_no_stir', 'skip_if_no_pywavelets',
@@ -27,7 +26,6 @@ __all__ = (
     'noise_element', 'noise_elements', 'Timer', 'timeit', 'ProgressBar',
     'ProgressRange', 'test', 'run_doctests', 'test_file'
 )
-
 
 def _ndigits(a, b, default=None):
     """Return number of expected correct digits comparing ``a`` and ``b``.
@@ -225,6 +223,7 @@ except ImportError:
         return function
 
     never_skip = _pass
+    skip_if_no_cupy = _pass
     skip_if_no_stir = _pass
     skip_if_no_pywavelets = _pass
     skip_if_no_pyfftw = _pass
@@ -240,6 +239,11 @@ else:
     skip_if_no_stir = pytest.mark.skipif(
         "not odl.tomo.backends.stir_bindings.STIR_AVAILABLE",
         reason='STIR not available'
+    )
+
+    skip_if_no_cupy = pytest.mark.skipif(
+        "not odl.space.cupy_tensors.CUPY_AVAILABLE",
+        reason='CuPy not available'
     )
 
     skip_if_no_pywavelets = pytest.mark.skipif(

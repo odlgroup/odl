@@ -864,24 +864,24 @@ class NumpyTensor(Tensor):
         """The `numpy.ndarray` representing the data of ``self``."""
         return self.__data
 
-    def asarray(self, out=None):
-        """Extract the data of this array as a ``numpy.ndarray``.
+    def asarray(self, out=None, impl='numpy'):
+        """Extract the data of this array as an ndarray.
 
-        This method is invoked when calling `numpy.asarray` on this
-        tensor.
+        This method is invoked when calling `numpy.asarray` on this tensor.
 
         Parameters
         ----------
-        out : `numpy.ndarray`, optional
-            Array in which the result should be written in-place.
-            Has to be contiguous and of the correct dtype.
+        out : ndarray, optional
+            Array into which the result should be written. Must be contiguous
+            and of the correct dtype.
+        impl : str, optional
+            Array backend for the output, used when ``out`` is not given.
 
         Returns
         -------
-        asarray : `numpy.ndarray`
-            Numpy array with the same data type as ``self``. If
-            ``out`` was given, the returned object is a reference
-            to it.
+        asarray : ndarray
+            Array with the same data type as ``self``. If ``out`` was given,
+            the returned object is a reference to it.
 
         Examples
         --------
@@ -902,10 +902,45 @@ class NumpyTensor(Tensor):
         array([[ 1.,  1.,  1.],
                [ 1.,  1.,  1.]])
         """
+        from odl.space.cupy_tensors import cupy, CUPY_AVAILABLE
+        import ctypes
+
+        impl, impl_in = str(impl).lower(), impl
         if out is None:
-            return self.data
+            if impl == 'numpy':
+                return self.data
+            elif impl == 'cupy':
+                if CUPY_AVAILABLE:
+                    return cupy.array(self.data)
+                else:
+                    raise ValueError("`impl` 'cupy' not available")
+            else:
+                raise ValueError('`impl` {!r} not understood'.format(impl_in))
+
         else:
-            out[:] = self.data
+            if not (out.flags.c_contiguous or out.flags.f_contiguous):
+                raise ValueError('`out` must be contiguous')
+            if out.shape != self.shape:
+                raise ValueError('`out` must have shape {}, got shape {}'
+                                 ''.format(self.shape, out.shape))
+            if out.dtype != self.dtype:
+                raise ValueError('`out` must have dtype {}, got dtype {}'
+                                 ''.format(self.dtype, out.dtype))
+
+            if CUPY_AVAILABLE and isinstance(out, cupy.ndarray):
+                # Use efficient copy by ensuring contiguous memory
+                if self.data.flags.contiguous:
+                    self_contig_arr = self.data
+                else:
+                    self_contig_arr = np.ascontiguousarray(self.data)
+
+                out.data.copy_from_host(
+                    self_contig_arr.ctypes.data_as(ctypes.c_void_p),
+                    self.size * self.itemsize)
+
+            else:
+                out[:] = self.data
+
             return out
 
     def astype(self, dtype):

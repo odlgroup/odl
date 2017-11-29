@@ -792,6 +792,11 @@ class CupyTensorSpace(TensorSpace):
                 if 0 in arr.strides:
                     arr = arr.copy()
 
+                # Make sure the shape is ok
+                if arr.shape != self.shape:
+                    raise ValueError('`inp` must have shape {}, got shape {}'
+                                     ''.format(self.shape, arr.shape))
+
             return self.element_type(self, arr)
 
     def zero(self):
@@ -1178,19 +1183,23 @@ class CupyTensor(Tensor):
         """The GPU device on which this tensor lies."""
         return self.space.device
 
-    def asarray(self, out=None):
-        """Extract the data of this element as a `numpy.ndarray`.
+    def asarray(self, out=None, impl='numpy'):
+        """Extract the data of this element as an ndarray.
+
+        This method is invoked when calling `numpy.asarray` on this tensor.
 
         Parameters
         ----------
-        out : `numpy.ndarray`, optional
-            Array to which the result should be written.
-            Has to be contiguous and of the correct data type.
+        out : ndarray, optional
+            Array into which the result should be written. Must be contiguous
+            and of the correct dtype.
+        impl : str, optional
+            Array backend for the output, used when ``out`` is not given.
 
         Returns
         -------
-        asarray : `numpy.ndarray`
-            Numpy array of the same `dtype` and `shape` this tensor.
+        asarray : ndarray
+            Array of the same `dtype` and `shape` this tensor.
             If ``out`` was given, the returned object is a reference to it.
 
         Examples
@@ -1222,21 +1231,36 @@ class CupyTensor(Tensor):
         >>> result is out
         True
         """
+        impl, impl_in = str(impl).lower(), impl
         if out is None:
-            return cupy.asnumpy(self.data)
+            if impl == 'numpy':
+                return cupy.asnumpy(self.data)
+            elif impl == 'cupy':
+                return self.data
+            else:
+                raise ValueError('`impl` {!r} not understood'.format(impl_in))
         else:
-            if not isinstance(out, np.ndarray):
-                raise TypeError('`out` must be a `numpy.ndarray`, got type '
-                                '{}'.format(type(out)))
+            if not (out.flags.c_contiguous or out.flags.f_contiguous):
+                raise ValueError('`out` must be contiguous')
             if out.shape != self.shape:
                 raise ValueError('`out` must have shape {}, got shape {}'
                                  ''.format(self.shape, out.shape))
             if out.dtype != self.dtype:
                 raise ValueError('`out` must have dtype {}, got dtype {}'
                                  ''.format(self.dtype, out.dtype))
-            self.data.data.copy_to_host(
-                out.ctypes.data_as(np.ctypeslib.ctypes.c_void_p),
-                self.size * self.itemsize)
+
+            if isinstance(out, np.ndarray):
+                if (self.data.flags.c_contiguous or
+                        self.data.flags.f_contiguous):
+                    # Use efficient copy for contiguous memory
+                    self.data.data.copy_to_host(
+                        out.ctypes.data_as(np.ctypeslib.ctypes.c_void_p),
+                        self.size * self.itemsize)
+                else:
+                    out[:] = cupy.asnumpy(self.data)
+            else:
+                out[:] = self.data
+
             return out
 
     @property
@@ -1473,7 +1497,7 @@ class CupyTensor(Tensor):
         """
         if isinstance(values, CupyTensor):
             self.data[indices] = values.data
-        elif np.isscalar(values):
+        elif isinstance(values, cupy.ndarray) or np.isscalar(values):
             self.data[indices] = values
         else:
             values = cupy.array(values, dtype=self.dtype, copy=False)
@@ -2128,53 +2152,6 @@ numpy.ufunc.reduceat.html
             return result
 
     @property
-    def ufuncs(self):
-        """Access to NumPy style ufuncs.
-
-        Examples
-        --------
-        >>> r2 = odl.rn(2, impl='cupy')
-        >>> x = r2.element([1, -2])
-        >>> x.ufuncs.absolute()
-        rn(2, impl='cupy').element([ 1.,  2.])
-
-        These functions can also be used with broadcasting or
-        array-like input:
-
-        >>> x.ufuncs.add(3)
-        rn(2, impl='cupy').element([ 4.,  1.])
-        >>> x.ufuncs.subtract([3, 3])
-        rn(2, impl='cupy').element([-2., -5.])
-
-        There is also support for various reductions
-        (sum, prod, amin, amax):
-
-        >>> x.ufuncs.sum()
-        -1.0
-        >>> x.ufuncs.prod()
-        -2.0
-
-        They also support an out parameter
-
-        >>> y = r2.element([3, 4])
-        >>> out = r2.element()
-        >>> result = x.ufuncs.add(y, out=out)
-        >>> result
-        rn(2, impl='cupy').element([ 4.,  2.])
-        >>> result is out
-        True
-
-        Notes
-        -----
-        Those ufuncs which are implemented natively on the GPU incur no
-        significant overhead. However, for missing functions, a fallback
-        Numpy implementation is used which causes significant overhead
-        due to data copies between host and device.
-        """
-        # TODO: Test with some native ufuncs, then remove this attribute
-        return super(CupyTensor, self).ufuncs
-
-    @property
     def real(self):
         """Real part of this tensor.
 
@@ -2199,7 +2176,13 @@ numpy.ufunc.reduceat.html
         newreal : `array-like` or scalar
             The new real part for this tensor.
         """
-        self.data.real[:] = newreal
+        # Assignment with array-likes does not work directly, see
+        # https://github.com/cupy/cupy/issues/593
+        if np.isscalar(newreal):
+            self.data.real = newreal
+        else:
+            # Avoid compile errors for complex right-hand sides
+            self.data.real = cupy.asarray(newreal).real
 
     @property
     def imag(self):
@@ -2226,7 +2209,13 @@ numpy.ufunc.reduceat.html
         newimag : `array-like` or scalar
             The new imaginary part for this tensor.
         """
-        self.data.imag[:] = newimag
+        # Assignment with array-likes does not work directly, see
+        # https://github.com/cupy/cupy/issues/593
+        if np.isscalar(newimag):
+            self.data.imag = newimag
+        else:
+            # Avoid compile errors for complex right-hand sides
+            self.data.imag = cupy.asarray(newimag).real
 
     def conj(self, out=None):
         """Complex conjugate of this tensor.

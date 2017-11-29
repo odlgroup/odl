@@ -331,16 +331,18 @@ class DiscretizedSpaceElement(Tensor):
         """Create an identical (deep) copy of this element."""
         return self.space.element(self.tensor.copy())
 
-    def asarray(self, out=None):
-        """Extract the data of this array as a numpy array.
+    def asarray(self, out=None, impl='numpy'):
+        """Extract the data of this element as an array.
 
         Parameters
         ----------
-        out : `numpy.ndarray`, optional
-            Array in which the result should be written in-place.
-            Has to be contiguous and of the correct dtype.
+        out : ndarray, optional
+            Array into which the result should be written. Must be contiguous
+            and of the correct dtype.
+        impl : str, optional
+            Array backend for the output, used when ``out`` is not given.
         """
-        return self.tensor.asarray(out=out)
+        return self.tensor.asarray(out=out, impl=impl)
 
     def astype(self, dtype):
         """Return a copy of this element with new ``dtype``.

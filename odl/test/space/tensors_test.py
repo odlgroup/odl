@@ -31,7 +31,7 @@ from odl.space.cupy_tensors import (
     CUPY_AVAILABLE, cupy)
 from odl.util import array_module, array_cls, as_numpy
 from odl.util.testutils import (
-    all_almost_equal, all_equal, simple_fixture,
+    all_almost_equal, all_equal, simple_fixture, skip_if_no_cupy,
     noise_array, noise_element, noise_elements, xfail_if)
 from odl.util.ufuncs import UFUNCS
 
@@ -58,7 +58,7 @@ def _data_ptr(array):
 
 def _pos_array(space):
     """Create an array with positive real entries for ``space``."""
-    return array_module(space.impl).abs(noise_array(space)) + 0.1
+    return array_module(space.impl).asarray(abs(noise_array(space)) + 0.1)
 
 
 def _weighting_cls(impl, kind):
@@ -331,7 +331,8 @@ def test_element(tspace, odl_elem_order):
         assert elem.data.flags[order + '_CONTIGUOUS']
 
     # From array (C order)
-    arr_c = array_module(tspace.impl).ascontiguousarray(noise_array(tspace))
+    arr_c = array_module(tspace.impl).asarray(
+        np.ascontiguousarray(noise_array(tspace)))
     elem = tspace.element(arr_c, order=order)
     assert all_equal(elem, arr_c)
     assert elem.shape == elem.data.shape
@@ -346,7 +347,8 @@ def test_element(tspace, odl_elem_order):
         assert elem.data.flags[order + '_CONTIGUOUS']
 
     # From array (F order)
-    arr_f = array_module(tspace.impl).asfortranarray(noise_array(tspace))
+    arr_f = array_module(tspace.impl).asarray(
+        np.asfortranarray(noise_array(tspace)))
     elem = tspace.element(arr_f, order=order)
     assert all_equal(elem, arr_f)
     assert elem.shape == elem.data.shape
@@ -929,7 +931,79 @@ def test_element_setitem_bool_array(odl_tspace_impl):
     assert all_equal(x, x_arr)
 
 
+<<<<<<< e3e364b7a968160309e60aa4c2959d48fa2b6d7b
 def test_transpose(odl_tspace_impl):
+=======
+@skip_if_no_cupy
+def test_asarray_numpy_to_cupy(floating_dtype):
+    """Test x.asarray with numpy x and cupy impl and out."""
+    space = odl.tensor_space((2, 3), dtype=floating_dtype)
+
+    with xfail_if(floating_dtype in ('float128', 'complex256'),
+                  reason='quad precision types not available in cupy'):
+        # Make new array, contiguous
+        x = space.one()
+        x_cpy = x.asarray(impl='cupy')
+        assert isinstance(x_cpy, cupy.ndarray)
+        assert all_equal(x_cpy, x)
+
+        # Write to existing, contiguous
+        out_cpy = cupy.empty((2, 3), dtype=floating_dtype)
+        x_cpy = x.asarray(out=out_cpy)
+        assert x_cpy is out_cpy
+        assert all_equal(out_cpy, x)
+
+        # Make new array, discontiguous
+        arr = np.arange(12).astype(floating_dtype).reshape((2, 6))[:, ::2]
+        x = space.element(arr)
+        assert not (x.data.flags.c_contiguous or x.data.flags.f_contiguous)
+        x_cpy = x.asarray(impl='cupy')
+        assert isinstance(x_cpy, cupy.ndarray)
+        assert all_equal(x_cpy, x)
+
+        # Write to existing, contiguous
+        out_cpy = cupy.empty((2, 3), dtype=floating_dtype)
+        x_cpy = x.asarray(out=out_cpy)
+        assert x_cpy is out_cpy
+        assert all_equal(out_cpy, x)
+
+
+@skip_if_no_cupy
+def test_asarray_cupy_to_numpy(floating_dtype):
+    """Test x.asarray with cupy x and numpy impl and out."""
+    with xfail_if(floating_dtype in ('float128', 'complex256'),
+                  reason='quad precision types not available in cupy'):
+        space = odl.tensor_space((2, 3), dtype=floating_dtype, impl='cupy')
+
+        # Make new array, contiguous
+        x = space.one()
+        x_npy = x.asarray(impl='numpy')
+        assert isinstance(x_npy, np.ndarray)
+        assert all_equal(x_npy, x)
+
+        # Write to existing, contiguous
+        out_npy = np.empty((2, 3), dtype=floating_dtype)
+        x_npy = x.asarray(out=out_npy)
+        assert x_npy is out_npy
+        assert all_equal(out_npy, x)
+
+        # Make new array, discontiguous
+        arr = cupy.arange(12).astype(floating_dtype).reshape((2, 6))[:, ::2]
+        x = space.element(arr)
+        assert not (x.data.flags.c_contiguous or x.data.flags.f_contiguous)
+        x_npy = x.asarray(impl='numpy')
+        assert isinstance(x_npy, np.ndarray)
+        assert all_equal(x_npy, x)
+
+        # Write to existing, contiguous
+        out_npy = np.empty((2, 3), dtype=floating_dtype)
+        x_npy = x.asarray(out=out_npy)
+        assert x_npy is out_npy
+        assert all_equal(out_npy, x)
+
+
+def test_transpose(tspace_impl):
+>>>>>>> ENH: add impl to asarray, tests, and fix real and imag for cupy
     """Test the .T property of tensors against plain inner product."""
     impl = odl_tspace_impl
     spaces = [odl.rn((3, 4), impl=impl)]
