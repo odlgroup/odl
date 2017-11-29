@@ -160,7 +160,7 @@ def test_is_power_space():
 
 
 def test_mixed_space():
-    """Verify that a mixed productspace is handled properly."""
+    """Verify that a mixed product space is handled properly."""
     r2_1 = odl.rn(2, dtype='float64')
     r2_2 = odl.rn(2, dtype='float32')
     pspace = odl.ProductSpace(r2_1, r2_2)
@@ -837,8 +837,7 @@ def test_element_setitem_broadcast():
 
 
 def test_unary_ops():
-    # Verify that the unary operators (`+x` and `-x`) work as expected
-
+    """Verify that the unary operators ``+x`` and ``-x`` work as expected."""
     space = odl.rn(3)
     pspace = odl.ProductSpace(space, 2)
 
