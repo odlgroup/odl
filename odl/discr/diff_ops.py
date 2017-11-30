@@ -140,7 +140,7 @@ class PartialDerivative(PointwiseTensorFieldOperator):
 
         impl = self.domain.impl
         with writable_array(out, impl=impl) as out_arr:
-            finite_diff(x.asarray(), axis=self.axis, dx=self.dx, impl=impl,
+            finite_diff(x, axis=self.axis, dx=self.dx, impl=impl,
                         method=self.method, pad_mode=self.pad_mode,
                         pad_const=self.pad_const, out=out_arr)
         return out
@@ -492,10 +492,12 @@ class Divergence(PointwiseTensorFieldOperator):
         ...                  [2., 3., 4., 5., 6.]])
         >>> f = div.domain.element([data, data])
         >>> div_f = div(f)
-        >>> print(div_f)
-        [[  2.,   2.,   2.,   2.,  -3.],
-         [  2.,   2.,   2.,   2.,  -4.],
-         [ -1.,  -2.,  -3.,  -4., -12.]]
+        >>> div_f
+        uniform_discr([ 0.,  0.], [ 3.,  5.], (3, 5)).element(
+            [[  2.,   2.,   2.,   2.,  -3.],
+             [  2.,   2.,   2.,   2.,  -4.],
+             [ -1.,  -2.,  -3.,  -4., -12.]]
+        )
 
         Verify adjoint:
 
