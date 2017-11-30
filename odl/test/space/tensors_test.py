@@ -931,9 +931,6 @@ def test_element_setitem_bool_array(odl_tspace_impl):
     assert all_equal(x, x_arr)
 
 
-<<<<<<< e3e364b7a968160309e60aa4c2959d48fa2b6d7b
-def test_transpose(odl_tspace_impl):
-=======
 @skip_if_no_cupy
 def test_asarray_numpy_to_cupy(floating_dtype):
     """Test x.asarray with numpy x and cupy impl and out."""
@@ -1002,8 +999,7 @@ def test_asarray_cupy_to_numpy(floating_dtype):
         assert all_equal(out_npy, x)
 
 
-def test_transpose(tspace_impl):
->>>>>>> ENH: add impl to asarray, tests, and fix real and imag for cupy
+def test_transpose(odl_tspace_impl):
     """Test the .T property of tensors against plain inner product."""
     impl = odl_tspace_impl
     spaces = [odl.rn((3, 4), impl=impl)]

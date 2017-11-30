@@ -14,7 +14,8 @@ import numpy as np
 from odl.discr.lp_discr import DiscreteLp
 from odl.operator.tensor_ops import PointwiseTensorFieldOperator
 from odl.space import ProductSpace
-from odl.util import writable_array, signature_string, indent, array_module
+from odl.util import (
+    writable_array, asarray, array_module, signature_string, indent)
 
 
 __all__ = ('PartialDerivative', 'Gradient', 'Divergence', 'Laplacian')
@@ -190,8 +191,7 @@ class PartialDerivative(PointwiseTensorFieldOperator):
 
     def __str__(self):
         """Return ``str(self)``."""
-        dom_ran_str = '\n-->\n'.join([repr(self.domain), repr(self.range)])
-        return '{}:\n{}'.format(self.__class__.__name__, indent(dom_ran_str))
+        return repr(self)
 
 
 class Gradient(PointwiseTensorFieldOperator):
@@ -347,14 +347,13 @@ class Gradient(PointwiseTensorFieldOperator):
         if out is None:
             out = self.range.element()
 
-        x_arr = x.asarray()
         ndim = self.domain.ndim
         dx = self.domain.cell_sides
         impl = self.domain.impl
 
         for axis in range(ndim):
             with writable_array(out[axis], impl=impl) as out_arr:
-                finite_diff(x_arr, axis=axis, dx=dx[axis], impl=impl,
+                finite_diff(x, axis=axis, dx=dx[axis], impl=impl,
                             method=self.method, pad_mode=self.pad_mode,
                             pad_const=self.pad_const, out=out_arr)
         return out
@@ -414,8 +413,7 @@ class Gradient(PointwiseTensorFieldOperator):
 
     def __str__(self):
         """Return ``str(self)``."""
-        dom_ran_str = '\n-->\n'.join([repr(self.domain), repr(self.range)])
-        return '{}:\n{}'.format(self.__class__.__name__, indent(dom_ran_str))
+        return repr(self)
 
 
 class Divergence(PointwiseTensorFieldOperator):
@@ -625,8 +623,7 @@ class Divergence(PointwiseTensorFieldOperator):
 
     def __str__(self):
         """Return ``str(self)``."""
-        dom_ran_str = '\n-->\n'.join([repr(self.domain), repr(self.range)])
-        return '{}:\n{}'.format(self.__class__.__name__, indent(dom_ran_str))
+        return repr(self)
 
 
 class Laplacian(PointwiseTensorFieldOperator):
@@ -719,23 +716,20 @@ class Laplacian(PointwiseTensorFieldOperator):
         ndim = self.domain.ndim
         dx = self.domain.cell_sides
         impl = self.domain.impl
-
-        x_arr = x.asarray(impl=impl)
-        out_arr = out.asarray(impl=impl)
         tmp = array_module(impl).empty(
             out.shape, out.dtype, order=out.space.default_order)
 
         with writable_array(out, impl=impl) as out_arr:
             for axis in range(ndim):
                 # TODO: this can be optimized
-                finite_diff(x_arr, axis=axis, dx=dx[axis] ** 2, impl=impl,
+                finite_diff(x, axis=axis, dx=dx[axis] ** 2, impl=impl,
                             method='forward',
                             pad_mode=self.pad_mode,
                             pad_const=self.pad_const, out=tmp)
 
                 out_arr += tmp
 
-                finite_diff(x_arr, axis=axis, dx=dx[axis] ** 2, impl=impl,
+                finite_diff(x, axis=axis, dx=dx[axis] ** 2, impl=impl,
                             method='backward',
                             pad_mode=self.pad_mode,
                             pad_const=self.pad_const, out=tmp)
@@ -785,8 +779,7 @@ class Laplacian(PointwiseTensorFieldOperator):
 
     def __str__(self):
         """Return ``str(self)``."""
-        dom_ran_str = '\n-->\n'.join([repr(self.domain), repr(self.range)])
-        return '{}:\n{}'.format(self.__class__.__name__, indent(dom_ran_str))
+        return repr(self)
 
 
 def finite_diff(f, axis, dx=1.0, method='forward', out=None, impl='numpy',
@@ -891,8 +884,7 @@ def finite_diff(f, axis, dx=1.0, method='forward', out=None, impl='numpy',
     >>> out is finite_diff(f, axis=0, out=out)
     True
     """
-    arrmod = array_module(impl)
-    f_arr = arrmod.asarray(f)
+    f_arr = asarray(f, impl=impl)
     ndim = f_arr.ndim
 
     if f_arr.shape[axis] < 2:
@@ -921,6 +913,7 @@ def finite_diff(f, axis, dx=1.0, method='forward', out=None, impl='numpy',
     pad_const = kwargs.pop('pad_const', 0)
     pad_const = f.dtype.type(pad_const)
 
+    arrmod = array_module(impl)
     if out is None:
         out = arrmod.empty_like(f_arr)
     else:
