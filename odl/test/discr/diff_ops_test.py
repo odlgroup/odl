@@ -28,7 +28,7 @@ padding = simple_fixture('padding', [('constant', 0), ('constant', 1),
                                      'order0', 'order1', 'order2'])
 
 
-@pytest.fixture(scope="module", params=[1, 2, 3], ids=['1d', '2d', '3d'])
+@pytest.fixture(scope="module", params=[1, 2, 3], ids=[' 1d ', ' 2d ', ' 3d '])
 def space(request, tspace_impl):
     ndim = request.param
 

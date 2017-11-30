@@ -17,14 +17,34 @@ import numpy as np
 import sys
 
 
-__all__ = ('array_str', 'dtype_str', 'dtype_repr', 'npy_printoptions',
-           'signature_string', 'indent',
-           'is_numeric_dtype', 'is_int_dtype', 'is_floating_dtype',
-           'is_real_dtype', 'is_real_floating_dtype',
-           'is_complex_floating_dtype', 'real_dtype', 'complex_dtype',
-           'is_string', 'conj_exponent', 'writable_array', 'none_context',
-           'array_module', 'array_cls', 'as_numpy',
-           'run_from_ipython', 'NumpyRandomSeed', 'cache_arguments', 'unique')
+__all__ = (
+    'NumpyRandomSeed',
+    'array_cls',
+    'array_module',
+    'array_str',
+    'as_numpy',
+    'asarray',
+    'cache_arguments',
+    'complex_dtype',
+    'conj_exponent',
+    'dtype_repr',
+    'dtype_str',
+    'indent',
+    'is_complex_floating_dtype',
+    'is_floating_dtype',
+    'is_int_dtype',
+    'is_numeric_dtype',
+    'is_real_dtype',
+    'is_real_floating_dtype',
+    'is_string',
+    'none_context',
+    'npy_printoptions',
+    'real_dtype',
+    'run_from_ipython',
+    'signature_string',
+    'unique',
+    'writable_array'
+    )
 
 TYPE_MAP_R2C = {np.dtype(dtype): np.result_type(dtype, 1j)
                 for dtype in np.sctypes['float']}
@@ -541,6 +561,78 @@ def preload_first_arg(instance, mode):
             raise ValueError('bad mode {!r}'.format(mode))
 
     return decorator
+
+
+def asarray(obj, dtype=None, impl='numpy'):
+    """Convert ``obj`` to an ``impl`` type array as fast as possible.
+
+    Parameters
+    ----------
+    obj : array_like
+        Object to be converted to an array.
+    dtype : data-type, optional
+        Desired data type of the array.
+    impl : str, optional
+        Array backend used to create the array.
+
+    Returns
+    -------
+    array : ndarray
+        Array with data type ``dtype`` created from ``obj`` using ``impl``
+        as backend.
+
+    Examples
+    --------
+    >>> a = asarray([1, 2])
+    >>> a
+    array([1, 2])
+    >>> type(a)
+    numpy.ndarray
+    >>> a = asarray(odl.rn(3).one())
+    >>> a
+    array([ 1.,  1.,  1.])
+    >>> type(a)
+    numpy.ndarray
+
+    Notes
+    -----
+    For ODL tensors, there are specific implementation of the conversion
+    to different types of arrays that are not necessarily invoked by
+    the ``asarray`` methods of array libraries.
+    While ``numpy.asarray`` uses the ``__array__`` method to "ask" the
+    object for an array, there is no such dedicated interface for other
+    implementations. As a result, an intermediate Numpy array is typically
+    created, which, for instance, for ``impl='cupy'`` leads to transfers
+    GPU->CPU->GPU.
+    This function bypasses this detour and uses the optimized
+    ``Tensor.asarray()`` method.
+    """
+    from odl.space.cupy_tensors import cupy, CUPY_AVAILABLE
+    impl, impl_in = str(impl).lower(), impl
+
+    if impl == 'numpy':
+        if CUPY_AVAILABLE and isinstance(obj, cupy.ndarray):
+            # __array__ of cupy.ndarray does not return a Numpy array, see
+            # https://github.com/cupy/cupy/issues/589
+            obj = cupy.asnumpy(obj)
+        return np.asarray(obj, dtype=dtype)
+
+    elif impl == 'cupy':
+        if CUPY_AVAILABLE:
+            try:
+                arr = obj.asarray(impl='cupy')
+            except AttributeError:
+                arr = cupy.asarray(obj, dtype=dtype)
+            else:
+                arr = arr.astype(dtype, copy=False)
+
+            return arr
+
+        else:
+            raise ValueError("`impl` 'cupy' not available")
+
+    else:
+        raise ValueError('`impl` {!r} not understood'.format(impl_in))
 
 
 class writable_array(object):
