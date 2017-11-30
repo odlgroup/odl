@@ -262,7 +262,8 @@ def test_metric():
 
     dist = HxH.dist(w1, w2)
     expected_dist = np.sqrt(
-        sum(d ** 2) for d in (H.dist(v11, v21), H.dist(v12, v22)))
+        sum(d ** 2 for d in (H.dist(v11, v21), H.dist(v12, v22)))
+    )
     assert dist == pytest.approx(expected_dist)
 
     # inf norm
@@ -294,7 +295,8 @@ def test_norm():
 
     norm = HxH.norm(w)
     expected_norm = np.sqrt(
-        sum(n ** 2) for n in (H.norm(v1), H.norm(v2)))
+        sum(n ** 2 for n in (H.norm(v1), H.norm(v2)))
+    )
     assert norm == pytest.approx(expected_norm)
 
     # inf norm
