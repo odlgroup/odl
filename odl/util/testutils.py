@@ -17,7 +17,7 @@ import os
 import warnings
 from time import time
 
-from odl.util.utility import run_from_ipython, is_string, none_context
+from odl.util.utility import run_from_ipython, is_string, none_context, asarray
 
 __all__ = (
     'all_equal', 'all_almost_equal', 'dtype_ndigits', 'dtype_tol',
@@ -362,17 +362,19 @@ def noise_array(space):
         typical to the space.
     """
     from odl.space.pspace import ProductSpace
-    from odl.space.cupy_tensors import cupy
 
     if isinstance(space, ProductSpace):
         arr_list = [noise_array(spc_i) for spc_i in space]
         if space.is_power_space:
             arr = np.empty((len(arr_list),) + arr_list[0].shape,
-                           dtype=space.dtype)
-            for i in range(len(arr)):
-                arr[i] = arr_list[i]
+                           dtype=space[0].dtype)
         else:
-            return tuple(arr_list)
+            arr = np.empty((len(arr_list),) + arr_list[0].shape,
+                           dtype=object)
+        for i in range(len(arr)):
+            arr[i] = arr_list[i]
+
+        return arr
 
     else:
         if space.dtype == bool:
@@ -483,15 +485,21 @@ def noise_elements(space, n=1):
     noise_array
     noise_element
     """
-    npy_arrs = [noise_array(space) for _ in range(n)]
+    from odl.space.pspace import ProductSpace
 
-    # Make space elements from Numpy arrays
-    elems = tuple(space.element(arr) for arr in npy_arrs)
-    # Make copies of the arrays
-    arrs = tuple(elem.data.copy() for elem in elems)
+    if isinstance(space, ProductSpace) and not space.is_power_space:
+        raise ValueError('`space` cannot be a non-power product space')
+
+    if isinstance(space, ProductSpace):
+        impl = space[0].impl
+    else:
+        impl = space.impl
+
+    arrs = tuple(asarray(noise_array(space), impl=impl) for _ in range(n))
+    elems = tuple(space.element(arr) for arr in arrs)
 
     if n == 1:
-        return tuple(arrs + elems)
+        return arrs + elems
     else:
         return arrs, elems
 
