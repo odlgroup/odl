@@ -41,7 +41,7 @@ UFUNC_NAMES = [
     'conj', 'conjugate', 'copysign', 'cos', 'cosh', 'deg2rad', 'degrees',
     'divide', 'equal', 'exp', 'exp2', 'expm1', 'fabs', 'floor', 'floor_divide',
     'fmax', 'fmin', 'fmod', 'frexp', 'greater', 'greater_equal', 'hypot',
-    'invert', 'isfinite', 'isinf', 'isnan', 'ldexp', 'left_shift', 'less',
+    'invert', 'isfinite', 'isinf', 'isnan', 'left_shift', 'less',
     'less_equal', 'log', 'log10', 'log1p', 'log2', 'logaddexp', 'logaddexp2',
     'logical_and', 'logical_not', 'logical_or', 'logical_xor', 'maximum',
     'minimum', 'mod', 'modf', 'multiply', 'negative', 'nextafter',
