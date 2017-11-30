@@ -587,12 +587,12 @@ def asarray(obj, dtype=None, impl='numpy'):
     >>> a
     array([1, 2])
     >>> type(a)
-    numpy.ndarray
+    <class 'numpy.ndarray'>
     >>> a = asarray(odl.rn(3).one())
     >>> a
     array([ 1.,  1.,  1.])
     >>> type(a)
-    numpy.ndarray
+    <class 'numpy.ndarray'>
 
     Notes
     -----
