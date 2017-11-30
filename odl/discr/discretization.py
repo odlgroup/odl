@@ -411,7 +411,7 @@ class DiscretizedSpaceElement(Tensor):
             indices = indices.tensor
         if isinstance(values, type(self)):
             values = values.tensor
-        self.tensor.__setitem__(indices, values)
+        self.tensor[indices] = values
 
     def sampling(self, ufunc, **kwargs):
         """Sample a continuous function and assign to this element.

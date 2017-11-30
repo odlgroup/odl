@@ -1495,6 +1495,9 @@ class CupyTensor(Tensor):
         >>> x[0]
         4294967295
         """
+        if isinstance(indices, CupyTensor):
+            indices = indices.data
+
         if isinstance(values, CupyTensor):
             self.data[indices] = values.data
         elif isinstance(values, cupy.ndarray) or np.isscalar(values):
