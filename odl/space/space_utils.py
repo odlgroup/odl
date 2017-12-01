@@ -333,6 +333,8 @@ class auto_weighting(OptionalArgDecorator):
 
     Notes
     -----
+    **Mathematical background:**
+
     Consider a linear operator :math:`A: X_w \\to Y_v` between spaces with
     weights :math:`w` and :math:`v`, respectively, along with the same
     operator :math:`B: X \\to Y` defined between the unweighted variants of
@@ -350,6 +352,41 @@ class auto_weighting(OptionalArgDecorator):
 
     Thus, from the existing unweighted adjoint :math:`B^*` one can compute
     the weighted one as :math:`A^* = w^{-1}\, B^*(v\, \cdot)`.
+
+    **Example:**
+
+    Consider the integration operator
+
+    .. math::
+        A: L^2(I) \\to \mathbb{R},\quad
+        A(f) = \int_I f(x)\, \mathrm{d}x
+
+    discretized as
+
+    .. math::
+        A_h: L^2_h(I) \\to \mathbb{R},\quad
+        A_h(f) = h \sum_{i=1}^n f(x_i).
+
+    We can interpret :math:`L^2_h(I)` as weighted space
+    :math:`\mathbb{R}^n_w` with :math:`w = h`, and the operator as
+    :math:`A_h(y) = h \sum_{i=1}^n y_i`.
+
+    Now the unweighted adjoint is the adjoint of the same operator defined
+    on unweighted spaces, i.e.,
+
+    .. math::
+        &B: \mathbb{R}^n \\to \mathbb{R},\quad
+        B(y) = h \sum_{i=1}^n y_i,
+
+        &B^*: \mathbb{R} \\to \mathbb{R}^n,\quad
+        B^*(c) = h\, (c, \dots, c).
+
+    The weighted adjoint is given by the formula
+
+    .. math::
+        A_h^*(c) = w^{-1} B^*(c) = (c, \dots, c)
+
+    as expected.
 
     **Rules for weight simplification:**
 
