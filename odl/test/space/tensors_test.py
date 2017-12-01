@@ -1758,6 +1758,7 @@ def testodl_ufuncs(tspace, odl_ufunc):
     np.seterr(**npy_err_orig)
 
 
+@skip_if_no_cupy
 def test_ufunc_cupy_force_native():
     """Test the ``force_native`` flag for cupy based ufuncs."""
     if not USE_ARRAY_UFUNCS_INTERFACE:
