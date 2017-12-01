@@ -163,6 +163,20 @@ def test_auto_weighting(call_variant, weighting, auto_weighting_optimize):
         assert pytest.approx(op(dom_el).inner(ran_el),
                              dom_el.inner(op.adjoint(ran_el)))
 
+    # Test product space of product space
+    ppspace = odl.ProductSpace(odl.ProductSpace(odl.rn(3), 2), 2)
+    ppspace_w = odl.ProductSpace(
+        odl.ProductSpace(odl.rn(3), 2, weighting=weighting),
+        2, weighting=weighting)
+    op1 = ScalingOp(ppspace, ppspace_w, 1.5)
+    op2 = ScalingOp(ppspace_w, ppspace, 1.5)
+
+    for op in [op1, op2]:
+        dom_el = noise_element(op.domain)
+        ran_el = noise_element(op.range)
+        assert pytest.approx(op(dom_el).inner(ran_el),
+                             dom_el.inner(op.adjoint(ran_el)))
+
 
 def test_auto_weighting_noarg():
     """Test the auto_weighting decorator without the optimize argument."""

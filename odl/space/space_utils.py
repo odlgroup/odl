@@ -492,7 +492,8 @@ class auto_weighting(OptionalArgDecorator):
                 return w * x
             else:
                 # Product space, array weight
-                return x.space.element([wi * xi for xi, wi in zip(x, w)])
+                return x.space.element([mul_weight(xi, wi)
+                                        for xi, wi in zip(x, w)])
 
         def idiv_weight(x, w):
             """In-place division by weights that works in product spaces."""
@@ -501,7 +502,7 @@ class auto_weighting(OptionalArgDecorator):
             else:
                 # Product space, array weight
                 for xi, wi in zip(x, w):
-                    xi /= wi
+                    idiv_weight(xi, wi)
 
         # Monkey-patching starts here
         if self._call_has_out and self._call_out_optional:
