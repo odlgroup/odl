@@ -288,6 +288,71 @@ class auto_weighting(OptionalArgDecorator):
 
     """Make an unweighted adjoint automatically account for weightings.
 
+    This decorator can be used in `Operator` subclasses to automatically
+    perform weighting of the adjoint operator based on the space
+    weightings. It is used as ::
+
+        class MyOperator(odl.Operator):
+
+            @auto_weighting
+            @property
+            def adjoint(self):
+                return MyOperatorUnweightedAdjoint(...)
+
+    In this context, the term "unweighted adjoint" of an operator ``A``
+    refers to the the adjoint of ``A`` defined between **unweighted
+    Euclidean spaces**. In particular, discretized ``L^p`` type spaces are
+    interpreted as weighted variants of ``R^n`` or ``C^n`` spaces.
+
+    For instance, an (m x n) real matrix ``M`` is also an operator
+    ``M: R^n -> R^m``, and its unweighted adjoint is defined by the
+    transposed matrix ``M^T: R^m -> R^n``.
+
+    Similarly, when an integration operator ``A: L^2(I) -> R`` on an
+    interval ``I`` is discretized using ``n`` grid points, it can be seen
+    as a summation operator ``S: R^n -> R, S(x) = dx * sum(x)`` scaled
+    by the subinterval size ``dx``.
+    Here, the unweighted adjoint is the adjoint ``S^*: R -> R^n`` of ``S``,
+    given by ``S^*(c) = dx * (c, ..., c)``.
+    The weighting to correctly define the *weighted* adjoint
+    ``A^*: R -> L^2(I)`` is taken care of by this decorator.
+
+    Parameters
+    ----------
+    unweighted_adjoint : `Operator`
+        Unweighted variant of the adjoint. It will be patched with a
+        new ``_call()`` method.
+        The weightings of ``domain`` and ``range`` of the operator
+        must be `ArrayWeighting` or `ConstWeighting`.
+    optimize : bool, optional
+        If ``True``, merge and move around constant weightings for
+        highest expected efficiency.
+
+        **Note:** Merging of a constant weight and an array weight will
+        result in a copy of the array, doubling the amount of required memory.
+
+    Notes
+    -----
+    Consider a linear operator :math:`A: X_w \\to Y_v` between spaces with
+    weights :math:`w` and :math:`v`, respectively, along with the same
+    operator :math:`B: X \\to Y` defined between the unweighted variants of
+    the spaces. (This means that :math:`B f = A f` for all
+    :math:`f \\in X \cong X_w`).
+
+    Then, the adjoint of :math:`A` is related to the adjoint of :math:`B`
+    as follows:
+
+    .. math::
+        \\langle Af, g \\rangle_{Y_v} =
+        \\langle Bf, v \cdot g \\rangle_Y =
+        \\langle f, B^*(v \cdot g) \\rangle_X =
+        \\langle f, w^{-1}\, B^*(v \cdot g) \\rangle_{X_w}.
+
+    Thus, from the existing unweighted adjoint :math:`B^*` one can compute
+    the weighted one as :math:`A^* = w^{-1}\, B^*(v\, \cdot)`.
+
+    **Rules for weight simplification:**
+
     Depending on the weightings, the correction is achieved by composing
     the unweighted operator with either `ScalingOperator` or
     `ConstantOperator`. The following rules are applied for the domain
@@ -318,39 +383,6 @@ class auto_weighting(OptionalArgDecorator):
 
     To avoid the inconvenience of dealing with `OperatorComp` objects,
     the given operator is monkey-patched instead of composed.
-
-    Parameters
-    ----------
-    unweighted_adjoint : `Operator`
-        Unweighted variant of the adjoint. It will be patched with a
-        new ``_call()`` method.
-        The weightings of ``domain`` and ``range`` of the operator
-        must be `ArrayWeighting` or `ConstWeighting`.
-    optimize : bool, optional
-        If ``True``, merge and move around constant weightings for
-        highest expected efficiency.
-
-    Notes
-    -----
-    Consider a linear operator :math:`A: X_w \\to Y_v` between spaces with
-    weights :math:`w` and :math:`v`, respectively, along with the same
-    operator :math:`B: X \\to Y` defined between the unweighted variants of
-    the spaces. (This means that :math:`B f = A f` for all
-    :math:`f \\in X \cong X_w`).
-
-    Then, the adjoint of :math:`A` is related to the adjoint of :math:`B`
-    as follows:
-
-    .. math::
-        \\langle Af, g \\rangle_{Y_v} =
-        \\langle Bf, v \cdot g \\rangle_Y =
-        \\langle f, B^*(v \cdot g) \\rangle_X =
-        \\langle f, w^{-1}\, B^*(v \cdot g) \\rangle_{X_w}.
-
-    Thus, from the existing unweighted adjoint :math:`B^*` one can compute
-    the weighted one as :math:`A^* = w^{-1}\, B^*(v\, \cdot)`.
-    Depending on the types of weighting, this expression can be simplified
-    further, e.g., a constant weight can be absorbed into the other weight.
     """
 
     @staticmethod
@@ -424,8 +456,8 @@ class auto_weighting(OptionalArgDecorator):
         # skipped
         if not optimize:
             new_dom_w, new_ran_w = dom_w, ran_w
-            skip_dom = dom_w_type == 'const' and dom_w == 1.0
-            skip_ran = ran_w_type == 'const' and ran_w == 1.0
+            skip_dom = (dom_w_type == 'const' and dom_w == 1.0)
+            skip_ran = (ran_w_type == 'const' and ran_w == 1.0)
         elif dom_w_type == 'array' and ran_w_type == 'array':
             new_dom_w, new_ran_w = dom_w, ran_w
             skip_dom = skip_ran = False
