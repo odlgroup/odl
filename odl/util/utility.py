@@ -586,13 +586,13 @@ def asarray(obj, dtype=None, impl='numpy'):
     >>> a = asarray([1, 2])
     >>> a
     array([1, 2])
-    >>> type(a)
-    <class 'numpy.ndarray'>
+    >>> isinstance(a, np.ndarray)
+    True
     >>> a = asarray(odl.rn(3).one())
     >>> a
     array([ 1.,  1.,  1.])
-    >>> type(a)
-    <class 'numpy.ndarray'>
+    >>> isinstance(a, np.ndarray)
+    True
 
     Notes
     -----
