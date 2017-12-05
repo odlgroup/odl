@@ -298,7 +298,7 @@ class ProductSpace(LinearSpace):
         (3, 2)
 
         If the space is a "pure" product space, shape recurses all the way
-        into the components
+        into the components:
 
         >>> r2_2 = odl.ProductSpace(r2, 3)
         >>> r2_2.shape
