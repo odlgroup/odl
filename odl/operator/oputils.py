@@ -90,7 +90,7 @@ def matrix_representation(op):
     # Store for reuse in loop
     op_dom_is_prod_space = isinstance(op.domain, ProductSpace)
     if op_dom_is_prod_space:
-        num_dom = op.domain.shape[0]
+        num_dom = len(op.domain)
         m = [dom.size for dom in op.domain]
     else:
         num_dom = 1
