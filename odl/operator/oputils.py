@@ -80,7 +80,7 @@ def matrix_representation(op):
     # Store for reuse in loop
     op_ran_is_prod_space = isinstance(op.range, ProductSpace)
     if op_ran_is_prod_space:
-        num_ran = op.range.shape[0]
+        num_ran = len(op.range)
         n = [ran.size for ran in op.range]
     else:
         num_ran = 1

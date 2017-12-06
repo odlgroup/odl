@@ -469,8 +469,8 @@ def test_power_shape():
     r2xr3_4 = odl.ProductSpace(r2xr3, 4)
     _test_shape(r2xr3_4, (4, 2))
 
-    r2xr3_4_5 = odl.ProductSpace(r2xr3_4, 5)
-    _test_shape(r2xr3_4_5, (5, 4, 2))
+    r2xr3_5_4 = odl.ProductSpace(r2xr3_4, 5)
+    _test_shape(r2xr3_5_4, (5, 4, 2))
 
 
 def test_power_lincomb():
