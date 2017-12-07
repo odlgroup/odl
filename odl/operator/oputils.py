@@ -28,9 +28,30 @@ def matrix_representation(op):
         The linear operator of which one wants a matrix representation.
 
     Returns
-    ----------
+    -------
     matrix : `numpy.ndarray`
         The matrix representation of the operator.
+
+    Examples
+    --------
+    Approximate a matrix on its own:
+
+    >>> mat = np.array([[1, 2, 3],
+    ...                 [4, 5, 6],
+    ...                 [7, 8, 9]])
+    >>> op = odl.MatrixOperator(mat)
+    >>> matrix_representation(op)
+    array([[1, 2, 3],
+           [4, 5, 6],
+           [7, 8, 9]])
+
+    Works with product spaces:
+
+    >>> prod_ft = odl.DiagonalOperator(op)
+    >>> matrix_representation(op)
+    array([[1, 2, 3],
+           [4, 5, 6],
+           [7, 8, 9]])
 
     Notes
     ----------
@@ -59,7 +80,7 @@ def matrix_representation(op):
     # Store for reuse in loop
     op_ran_is_prod_space = isinstance(op.range, ProductSpace)
     if op_ran_is_prod_space:
-        num_ran = op.range.size
+        num_ran = len(op.range)
         n = [ran.size for ran in op.range]
     else:
         num_ran = 1
@@ -69,7 +90,7 @@ def matrix_representation(op):
     # Store for reuse in loop
     op_dom_is_prod_space = isinstance(op.domain, ProductSpace)
     if op_dom_is_prod_space:
-        num_dom = op.domain.size
+        num_dom = len(op.domain)
         m = [dom.size for dom in op.domain]
     else:
         num_dom = 1

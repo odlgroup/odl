@@ -125,7 +125,7 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
             Default: ``vfspace.exponent``
         weighting : `array-like` or positive float, optional
             Weighting array or constant for the norm. If an array is
-            given, its length must be equal to ``domain.size``, and
+            given, its length must be equal to ``len(domain)``, and
             all entries must be positive.
             By default, the weights are is taken from
             ``domain.weighting``. Note that this excludes unusual
@@ -198,7 +198,7 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
             if weighting <= 0:
                 raise ValueError('weighting constant must be positive, got '
                                  '{}'.format(weighting))
-            self.__weights = float(weighting) * np.ones(self.domain.size)
+            self.__weights = float(weighting) * np.ones(len(self.domain))
         else:
             self.__weights = np.asarray(weighting, dtype='float64')
             if (not np.all(self.weights > 0) or
@@ -237,7 +237,7 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
         if self.is_weighted:
             out *= self.weights[0]
 
-        if self.domain.size == 1:
+        if len(self.domain) == 1:
             return
 
         tmp = self.range.element()
@@ -253,7 +253,7 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
         if self.is_weighted:
             out *= self.weights[0]
 
-        if self.domain.size == 1:
+        if len(self.domain) == 1:
             return
 
         tmp = self.range.element()
@@ -266,7 +266,7 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
     def _call_vecfield_p(self, vf, out):
         """Implement ``self(vf, out)`` for exponent 1 < p < ``inf``."""
         # Optimization for 1 component - just absolute value (maybe weighted)
-        if self.domain.size == 1:
+        if len(self.domain) == 1:
             vf[0].ufuncs.absolute(out=out)
             if self.is_weighted:
                 out *= self.weights[0] ** (1 / self.exponent)
@@ -372,7 +372,7 @@ class PointwiseInnerBase(PointwiseTensorFieldOperator):
             product of an input vector field
         weighting : `array-like` or float, optional
             Weighting array or constant for the norm. If an array is
-            given, its length must be equal to ``domain.size``.
+            given, its length must be equal to ``len(domain)``.
             By default, the weights are is taken from
             ``domain.weighting``. Note that this excludes unusual
             weightings with custom inner product, norm or dist.
@@ -412,7 +412,7 @@ class PointwiseInnerBase(PointwiseTensorFieldOperator):
                                  'not define a weighting array or constant'
                                  ''.format(vfspace.weighting))
         elif np.isscalar(weighting):
-            self.__weights = float(weighting) * np.ones(vfspace.size)
+            self.__weights = float(weighting) * np.ones(len(vfspace))
         else:
             self.__weights = np.asarray(weighting, dtype='float64')
         self.__is_weighted = not np.array_equiv(self.weights, 1.0)
@@ -469,7 +469,7 @@ class PointwiseInner(PointwiseInnerBase):
             product of an input vector field
         weighting : `array-like` or float, optional
             Weighting array or constant for the norm. If an array is
-            given, its length must be equal to ``domain.size``, and
+            given, its length must be equal to ``len(domain)``, and
             all entries must be positive.
             By default, the weights are is taken from
             ``domain.weighting``. Note that this excludes unusual
@@ -515,7 +515,7 @@ class PointwiseInner(PointwiseInnerBase):
         if self.is_weighted:
             out *= self.weights[0]
 
-        if self.domain.size == 1:
+        if len(self.domain) == 1:
             return
 
         tmp = self.range.element()
@@ -659,7 +659,7 @@ class PointwiseSum(PointwiseInner):
             power space.
         weighting : `array-like` or float, optional
             Weighting array or constant for the sum. If an array is
-            given, its length must be equal to ``domain.size``.
+            given, its length must be equal to ``len(domain)``.
             By default, the weights are is taken from
             ``domain.weighting``. Note that this excludes unusual
             weightings with custom inner product, norm or dist.
