@@ -832,8 +832,8 @@ class InfimalConvolution(Functional):
         right : `Functional`
             Function corresponding to ``g``.
 
-        Example
-        -------
+        Examples
+        --------
         >>> space = odl.rn(3)
         >>> l1 = odl.solvers.L1Norm(space)
         >>> l2 = odl.solvers.L2Norm(space)

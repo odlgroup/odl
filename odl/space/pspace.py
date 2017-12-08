@@ -961,13 +961,6 @@ class ProductSpaceElement(LinearSpaceElement):
         ValueError
             If `is_power_space` is false.
 
-        Parameters
-        ----------
-        out : `numpy.ndarray`, optional
-            Array in which the result should be written in-place.
-            Has to be contiguous and of the correct dtype and
-            shape.
-
         Examples
         --------
         >>> spc = odl.ProductSpace(odl.rn(3), 2)
