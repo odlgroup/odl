@@ -24,7 +24,7 @@ Instructions for the impatient:
 
   Don't use the ``--user`` option together with ``conda``.
 
-- Install the :ref:`extensions you want<Extra dependencies>`.
+- Install the :ref:`extensions you want <installing_odl_extensions>`.
 
 
 Introduction
@@ -34,7 +34,7 @@ You also need `pip`_ to perform the installation.
 
 .. note::
     You should consider performing all described steps in a `conda environment <http://conda.pydata.org/docs/using/envs.html>`_ -- it gives you the same encapsulation benefits as developer that you would enjoy also as a user (no conflicting packages, free to choose Python version, ...).
-    See the :ref:`Installing Anaconda` section for setup instructions.
+    See the :ref:`installing_odl_conda__installing_anaconda` section for setup instructions.
 
 To get ODL, navigate to a folder where you want the ODL repository to be stored and clone the repository with the command
 
@@ -47,7 +47,7 @@ No GitHub account is required for this step.
 
 In a conda environment
 ======================
-This part assumes that you have activated a conda environment before (see :ref:`installing_odl_conda`).
+This part assumes that you have activated a conda environment before (see :ref:`installing_odl_conda__installing_anaconda`).
 
 You can choose to install dependencies first:
 
@@ -105,7 +105,7 @@ You may also want to install optional dependencies:
 Extra dependencies
 ------------------
 As a developer, you may want to install further optional dependencies.
-Consult the :ref:`pip<installing_odl_pip_extensions>` or :ref:`conda<installing_odl_conda_extensions>` guide for further instructions.
+Consult the :ref:`pip <installing_odl_pip__extensions>` or :ref:`conda <installing_odl_conda__extensions>` guide for further instructions.
 
 Running the tests
 =================

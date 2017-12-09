@@ -14,4 +14,8 @@ Here you can find an overview over the basics of ODL, a step-by-step installatio
 
    about_odl
    installing
+   installing_conda
+   installing_pip
+   installing_source
+   installing_extensions
    first_steps

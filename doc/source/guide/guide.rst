@@ -18,4 +18,4 @@ It is intended to familiarize you with important concepts that can be hard to in
     geometry_guide
     functional_guide
     proximal_lang_guide
-    primal_dual_hybrid_gradient_guide
+    pdhg_guide

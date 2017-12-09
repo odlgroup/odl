@@ -317,7 +317,7 @@ This release marks the removal of ``odlpp`` from the core library. It has instea
 
 New features
 ------------
-- To enable cuda backends for the odl spaces, an entry point ``'odl.space'`` has been added where external libraries can hook in to add `FnBase` and `NtuplesBase` type spaces.
+- To enable cuda backends for the odl spaces, an entry point ``'odl.space'`` has been added where external libraries can hook in to add ``FnBase`` and ``NtuplesBase`` type spaces.
 - Add pytest fixtures ``'fn_impl'`` and ``'ntuple_impl'`` to the test config ``conf.py``. These can now be accessed from any test.
 - Allow creation of general spaces using the ``fn``, ``cn`` and ``rn`` factories. These functions now take an ``impl`` parameter which defaults to ``'numpy'`` but with odlcuda installed it may also be set to ``'cuda'``. The old numpy specific ``Fn``, ``Cn`` and ``Rn`` functions have been removed.
 
@@ -458,15 +458,15 @@ New Features
 ------------
 
 - Add ``FourierTransform`` and ``DiscreteFourierTransform``, where the latter is the fully discrete version not accounting for shift and scaling, and the former approximates the integral transform by taking shifted and scaled grids into account. (:pull:`120`)
-- The ``weighting`` attribute in `FnBase` is now public and can be used to initialize a new space.
-- The `FnBase` classes now have a ``default_dtype`` static method.
-- A `discr_sequence_space` has been added as a simple implementation of finite sequences with
+- The ``weighting`` attribute in ``FnBase`` is now public and can be used to initialize a new space.
+- The ``FnBase`` classes now have a ``default_dtype`` static method.
+- A ``discr_sequence_space`` has been added as a simple implementation of finite sequences with
   multi-indexing.
-- `DiscreteLp` and `FunctionSpace` elements now have ``real`` and ``imag`` with setters as well as a
+- ``DiscreteLp`` and ``FunctionSpace`` elements now have ``real`` and ``imag`` with setters as well as a
   ``conj()`` method.
-- `FunctionSpace` explicitly handles output data type and allows this attribute to be chosen during
+- ``FunctionSpace`` explicitly handles output data type and allows this attribute to be chosen during
   initialization.
-- `FunctionSpace`, `FnBase` and `DiscreteLp` spaces support creation of a copy with different data type
+- ``FunctionSpace``, ``FnBase`` and ``DiscreteLp`` spaces support creation of a copy with different data type
   via the ``astype()`` method.
 - New ``conj_exponent()`` utility to get the conjugate of a given exponent.
 

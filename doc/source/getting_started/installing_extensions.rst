@@ -1,11 +1,20 @@
 .. _installing_odl_extensions:
 
+#########################
+Installing ODL extensions
+#########################
+
+
+.. _installing_odl_extensions__compiled:
+
 Compiled extensions
 ===================
 There are several compiled extensions to ODL.
 Some of them can be installed using ``conda`` or `pip`_, others require manual compilation.
 This section assumes that you have a working installation of python and ODL.
 
+
+.. _installing_odl_extensions__astra:
 
 ASTRA for X-ray tomography
 ==========================
@@ -29,6 +38,12 @@ Support for STIR is currently very limited.
 
 CUDA backend for linear arrays
 ==============================
+
+.. warning::
+    This plugin is dysfunctional with ODL master since the API change introduced by :pull:`1088`.
+    It can be used with older versions of ODL (e.g., with the current release).
+    The plugin will be replaced by CuPy in short (:pull:`1231`).
+
 The `odlcuda`_ backend for fast array calculations on CUDA requires the `CUDA toolkit`_ (on Linux: use your distro package manager) and a CUDA capable graphics card with compute capability of at least 3.0.
 Search `this table <https://en.wikipedia.org/wiki/CUDA#GPUs_supported>`_ for your model.
 
@@ -46,7 +61,7 @@ For both, first clone the ``odlcuda`` GitHub repository and enter the new direct
 
    This is the simpler option and should work on any Linux or MacOS system (we currently have no Windows build recipe, sorry).
 
-   To build the conda recipe, you should be **in the root conda environment** (see :ref:`installing_anaconda` for details) and in the top-level directory of your ``odlcuda`` clone.
+   To build the conda recipe, you should be **in the root conda environment** (see :ref:`installing_odl_conda__installing_anaconda` for details) and in the top-level directory of your ``odlcuda`` clone.
    You also need the ``conda-build`` package, which is installed by
 
    .. code-block:: bash
