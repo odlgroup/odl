@@ -8,6 +8,9 @@ Anaconda is a binary distribution package that allows user to install pre-compil
 It works on all platforms and is the recommended way of installing ODL as a user.
 If you already have anaconda installed, you can go directly to `Installing ODL and its dependencies`_, otherwise you need to begin by installing anaconda.
 
+
+.. _installing_odl_conda__tldr:
+
 TL;DR
 =====
 Instructions for the impatient:
@@ -22,7 +25,7 @@ Instructions for the impatient:
 - Activate the conda enviroment and start working!
 
 
-.. _installing_anaconda:
+.. _installing_odl_conda__installing_anaconda:
 
 Installing Anaconda
 ===================
@@ -58,7 +61,7 @@ If you want to exit later on, run ``source deactivate`` (Linux/MacOS) or ``deact
 See the `Managing conda environments`_ documentation for further information.
 
 .. note::
-    If you want to use `Spyder`_ as integrated development environment (IDE, see `Development enviroment`_) on Linux or MacOS, you should also install it in the new conda environment and run it from there.
+    If you want to use `Spyder`_ as integrated development environment (IDE, see :ref:`installing_odl__development_environment`) on Linux or MacOS, you should also install it in the new conda environment and run it from there.
     Otherwise, Spyder may not able to use the packages in the conda environment:
 
     .. code-block:: bash
@@ -90,7 +93,8 @@ Install ODL and all its (minimal) dependencies in a ``conda`` environment of you
 
     After that, ``conda install odl`` and ``conda update odl`` work without the ``-c`` option.
 
-.. _installing_odl_conda_extensions:
+
+.. _installing_odl_conda__extensions:
 
 Extra dependencies
 ------------------
@@ -133,7 +137,7 @@ further instructions.
 
     $ conda install -c astra-toolbox astra-toolbox
 
-  If this doesn't work, or if you want a more recent version, check out the :ref:`ASTRA for X-ray tomography` section below.
+  If this doesn't work, or if you want a more recent version, see `the ASTRA GitHub page <https://github.com/astra-toolbox/astra-toolbox>`_.
 
 - Bindings to the `ProxImaL`_ convex optimization package, an extension of `CVXPY`_:
 
@@ -142,6 +146,9 @@ further instructions.
     $ pip install proximal
 
 More information can be found in :ref:`installing_odl_extensions`.
+
+
+.. _installing_odl_conda__running tests:
 
 Running the tests
 =================

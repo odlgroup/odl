@@ -3,6 +3,7 @@
 ========================
 Installing ODL using pip
 ========================
+
 `pip`_ is a package manager that works on all major platforms and allows user to install python packages in a very simple manner.
 If you already have python and pip installed, you can go directly to `Installing ODL and its dependencies`_, otherwise you need to begin by installing python and pip.
 
@@ -10,6 +11,9 @@ If you already have python and pip installed, you can go directly to `Installing
 
     Correctly installing ODL's dependencies on Windows, especially `Numpy`_ and other compiled dependencies, can be quite a hassle, and we therefore discourage this variant.
     You should really consider :ref:`using Anaconda instead <installing_odl_conda>`.
+
+
+.. _installing_odl_pip__tldr:
 
 TL;DR
 =====
@@ -21,6 +25,9 @@ Instructions for the impatient:
   .. code-block:: bash
 
     $ pip install odl[show,pywavelets,scikit,proximal,testing]
+
+
+.. _installing_odl_pip__python:
 
 Installing a Python interpreter
 ===============================
@@ -42,6 +49,8 @@ Python installers can be downloaded from `this link <https://www.python.org/down
 Pick the latest release for your favorite version (2 or 3).
 
 
+.. _installing_odl_pip__installing:
+
 Installing ODL and its dependencies
 ===================================
 You may need to `install pip`_ to be able to install ODL and its dependencies from the `Python Package Index`_ (PyPI).
@@ -53,7 +62,8 @@ For basic installation without extra dependencies, run
 
    $ pip install --user odl
 
-.. _installing_odl_pip_extensions:
+
+.. _installing_odl_pip__extensions:
 
 Extra dependencies
 ------------------
@@ -72,12 +82,15 @@ Possible choices:
 - ``pywavelets`` : Install `PyWavelets`_ for wavelet transforms.
 - ``scikit`` : Install `scikit-image`_ as a simple backend for ray transforms.
 - ``proximal``: Install the `ProxImaL`_ convex optimization package.
-- ``testing``: Pull in the dependencies for unit tests (see :ref:`running_the_tests`)
+- ``testing``: Pull in the dependencies for unit tests (see :ref:`installing_odl_pip__running_the_tests`)
 
 These dependencies are optional and may not be easy to install on your system (especially on Windows).
 In general, a clean ODL installation is enough for most users' initial needs.
 
 More information can be found in :ref:`installing_odl_extensions`.
+
+
+.. _installing_odl_pip__running_the_tests:
 
 Running the tests
 =================

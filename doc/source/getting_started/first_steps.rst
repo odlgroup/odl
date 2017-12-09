@@ -109,7 +109,7 @@ The adjoint is a generalization of the transpose of a matrix and defined as the 
     \langle Ax, y \rangle = \langle x, A^*y \rangle
 
 where :math:`\langle x, y \rangle` is the inner product.
-It is implemented in odl as `Operator.adjoint`.
+It is implemented in odl as `~odl.operator.operator.Operator.adjoint`.
 Luckily, the convolution operator is self adjoint if the kernel is symmetric, so we can add:
 
 .. code-block:: python
@@ -220,7 +220,7 @@ Consulting the `douglas_rachford_pd` documentation we see that it solves problem
     \min_x f(x) + \sum_{i=1}^n g_i(L_i x),
 
 where :math:`f`, :math:`g_i` are convex functions, :math:`L_i` are linear `Operator`'s.
-By identification, we see that the above problem can be written in this form if we let math:`f` be the indicator function on :math:`[0, 1]`,
+By identification, we see that the above problem can be written in this form if we let :math:`f` be the indicator function on :math:`[0, 1]`,
 :math:`g_1` be the squared l2 distance :math:`\| \cdot - g\|_2^2`,
 :math:`g_2` be the norm :math:`\| \cdot \|_1`,
 :math:`L_1` be the convolution operator and :math:`L_2` be the gradient operator.

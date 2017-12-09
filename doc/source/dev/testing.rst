@@ -4,27 +4,27 @@
 Testing in ODL
 ##############
 
-ODL is tested using pytest_ and has four main types of tests and verification measures that are supposed to test the code in different ways. 
-These are listed below along with the command to run them.
+ODL tests are run using pytest_, and there are several types:
+
 
 ==============  =========================  =======
 Name            Command                    Description
 ==============  =========================  =======
-Unit tests      `pytest`                   Test "micro-features" of the code, like testing that each parameter combination works, that the correct exceptions are raised, that the code works correctly in corner cases and with a wide range of input.
-Large-scale     `pytest --largescale`      Verify that the functionality works well in more complicated and realistic conditions with potentially large input data and longer running times.
-Doctests        `pytest`                   Run the code in the docstring examples and check the output against the documented ones. Mainly intended to validate the examples.
-Examples        `pytest --examples`        Run all examples in the `examples`_ folder. These are copy-paste friendly examples on how to use a function in a more complete context.
-Documentation   `pytest --documentation`   Run all examples in the documentation. Examples are occasionally used in the documentation to demonstrate a concept. Here we only check that the code is valid and actually runs.
+Unit tests      ``pytest``                 Test "micro-features" of the code
+Large-scale     ``pytest --largescale``    Unit tests with large inputs and more cases
+Doctests        ``pytest``                 Validate usage examples in docstrings
+Examples        ``pytest --examples``      Run all examples in the `examples`_ folder
+Documentation   ``pytest --doctest-doc``   Run the doctest examples in the Sphinx documentation
 ==============  =========================  =======
 
 Unit tests
 ~~~~~~~~~~
-All unit tests in ODL are contained in the `tests`_ folder, where each ODL sub-package has a test file on its own. 
-Any major ODL functionality should have unit tests covering all of the use cases that are implied in the documentation. 
-In addition to this, the tests should be quick to run, preferably at most a few milliseconds per test. 
+All unit tests in ODL are contained in the `test`_ folder, where each sub-package has a test file on its own.
+Any major ODL functionality should have unit tests covering all of the use cases that are implied in the documentation.
+In addition to this, the tests should be quick to run, preferably at most a few milliseconds per test.
 If the test suite takes too long to run, users and developers won't run them as often as necessary to make sure that they didn't break any functionality.
 
-A short example of testing a function is given below. 
+A short example of testing a function is given below.
 For more information consult the `pytest`_ documentation and look at existing tests in the `test`_ folder.
 
 .. code:: python
@@ -75,7 +75,7 @@ It may also be the case that some functions accept a very large number of possib
 
 Doctests
 ~~~~~~~~
-Doctests are the simplest type of test used in ODL, and are snippets of code that document the usage of functions and classes and can be run as small tests at the same time. 
+Doctests are the simplest type of test used in ODL, and are snippets of code that document the usage of functions and classes and can be run as small tests at the same time.
 They can be included by using the Examples header in an usual docstring, as shown below:
 
 .. code:: python
@@ -108,12 +108,12 @@ All ODL source files should also contain the lines:
         from odl.util.testutils import run_doctests
         run_doctests()
 
-which mean that if a ODL source file is executed in isolation, all the doctests in the file are run. 
+which mean that if a ODL source file is executed in isolation, all the doctests in the file are run.
 This can be useful during development in order to quickly see if some functionality works as expected.
 
 Examples
 ~~~~~~~~
-Examples, while not technically tests in the traditional sense, still constitute a part of the test framework for ODL by showing how different parts of ODL work together and by ensuring that functions that depend on each other work as expected. 
+Examples, while not technically tests in the traditional sense, still constitute a part of the test framework for ODL by showing how different parts of ODL work together and by ensuring that functions that depend on each other work as expected.
 The main purpose of the examples is however to show ODL from a users perspective and particular care should be taken to keep them readable and working since this is often the first thing users see when they start using ODL.
 
 It is even possible to run all examples as part of the test suite by running ``pytest --examples``, but be aware that this requires all ODL dependencies to be installed and that plotting windows can be opened during execution.

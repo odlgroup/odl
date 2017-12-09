@@ -1,10 +1,10 @@
-.. _primal_dual_hybrid_gradient_guide:
+.. _pdhg_guide:
 
-############################################
-Primal-Dual Hybrid Gradient (PDHG) algorithm
-############################################
+#####################################
+Primal-Dual Hybrid Gradient algorithm
+#####################################
 
-The `primal_dual_hybrid_gradient` was studied in 2011 by Chambolle and Pock in the paper `A first-order primal-dual algorithm for convex problems with applications to imaging
+The Primal-Dual Hybrid Gradient (PDHG) algorithm was studied in 2011 by Chambolle and Pock in the paper `A first-order primal-dual algorithm for convex problems with applications to imaging
 <https://hal.archives-ouvertes.fr/hal-00490826/document>`_.
 It is a method for solving convex non-smooth problems of the form
 
@@ -144,7 +144,7 @@ Finally, we define the functional for the nonnegativity constraint, available as
 Calling the solver
 ^^^^^^^^^^^^^^^^^^
 Now that the problem is set up, we need to select some optimization parameters.
-For PDHG, there is one main rule that we can use: 
+For PDHG, there is one main rule that we can use:
 The product of the primal step :math:`\tau`, the dual step :math:`\sigma` and the squared operator norm :math:`\|L\|^2` has to be smaller than 1, :math:`\tau \sigma \|L\|^2 < 1`.
 Apart from this, there are no clear rules on how to select :math:`\tau` and :math:`\sigma` -- basically we're left with trial and error.
 We decide to pick them both equal to :math:`1 / \|L\|`.
