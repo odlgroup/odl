@@ -49,6 +49,7 @@ Resources
 - [Getting Started](https://odlgroup.github.io/odl/getting_started/getting_started.html)
 - [Code Examples](examples)
 - [API reference](https://odlgroup.github.io/odl/odl.html)
+- [ODL Course Material](https://github.com/adler-j/odlworkshop)
 
 Applications
 ============
