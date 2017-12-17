@@ -1,15 +1,27 @@
-"""Example demonstrating the usage of the ``auto_weighting`` decorator."""
+"""Example demonstrating the usage of ``auto_adjoint_weighting``.
+
+This is an advanced example showing how the `auto_adjoint_weighting`
+can be used to automatically perform the correct weighting of the
+adjoint of an `Operator`, depending on the weightings used in the
+operator domain and range.
+
+The general idea is that users implement the adjoint for the operator
+variant that maps between ``R^n`` or ``C^n`` type spaces that have no
+weightings associated with them. The `auto_adjoint_weighting` decorator then
+implements the adjoint weighting for operator variants between spaces
+that are "similar" to ``R^n`` or ``C^n``, but are weighted, for instance
+discretized ``L^p`` function spaces.
+
+See the `auto_adjoint_weighting` documentation for more details.
+"""
 
 import odl
-from odl.space.space_utils import auto_weighting
-
-
-# --- Operator using auto-weighting --- #
+from odl.operator.oputils import auto_adjoint_weighting
 
 
 class ScalingOp(odl.Operator):
 
-    """Operator that scales input by a constant."""
+    """Operator that scales its input by a constant."""
 
     def __init__(self, dom, ran, c):
         super(ScalingOp, self).__init__(dom, ran, linear=True)
@@ -19,8 +31,13 @@ class ScalingOp(odl.Operator):
         return self.c * x
 
     @property
-    @auto_weighting
+    @auto_adjoint_weighting
     def adjoint(self):
+        """Adjoint of the scaling operator.
+
+        Note that we return the adjoint for the scaling operator
+        ``S: R^n -> R^n``, and the decorator implements the other cases.
+        """
         return ScalingOp(self.range, self.domain, self.c)
 
 
