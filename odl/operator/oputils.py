@@ -482,9 +482,9 @@ class auto_adjoint_weighting(OptionalArgDecorator):
 
     Parameters
     ----------
-    unweighted_adjoint : `Operator`
-        Unweighted variant of the adjoint. It will be patched with a
-        new ``_call()`` method.
+    unweighted_adjoint : function
+        Method on an `Operator` class that returns the unweighted variant
+        of the adjoint. It will be patched with a new ``_call()`` method.
         The weightings of ``domain`` and ``range`` of the operator
         must be `ArrayWeighting` or `ConstWeighting`.
     optimize : bool, optional
@@ -492,7 +492,8 @@ class auto_adjoint_weighting(OptionalArgDecorator):
         highest expected efficiency.
 
         **Note:** Merging of a constant weight and an array weight will
-        result in a copy of the array, doubling the amount of required memory.
+        result in a copy of the array, doubling the amount of required
+        memory.
 
     Notes
     -----
