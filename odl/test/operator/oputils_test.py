@@ -449,5 +449,61 @@ def test_auto_weighting_raise_on_return_self():
         op.adjoint
 
 
+def test_auto_weighting_double_decorate():
+    """Check that decorating twice doesn't do bad things.
+
+    This happens when an operator defines an adjoint in terms of another
+    type of operator which may already have the decorator on its adjoint.
+    """
+    rn = odl.rn(2)
+    weighting_const = np.random.uniform(0.5, 2)
+    rn_w = odl.rn(2, weighting=weighting_const)
+
+    class ScalingOp(odl.Operator):
+
+        def __init__(self, dom, ran, c):
+            super(ScalingOp, self).__init__(dom, ran, linear=True)
+            self.c = c
+            self._adjoint = None
+
+        def _call(self, x):
+            return self.c * x
+
+        @property
+        @auto_adjoint_weighting
+        def adjoint(self):
+            if self._adjoint is None:
+                self._adjoint = ScalingOp(self.range, self.domain, self.c)
+            return self._adjoint
+
+    class ScalingOp2(odl.Operator):
+
+        def __init__(self, dom, ran, c):
+            super(ScalingOp2, self).__init__(dom, ran, linear=True)
+            self.c = c
+            self._adjoint = None
+
+        def _call(self, x):
+            return self.c * x
+
+        @property
+        @auto_adjoint_weighting
+        def adjoint(self):
+            return ScalingOp(self.range, self.domain, self.c)
+
+    op1 = ScalingOp2(rn, rn, np.random.uniform(-2, 2))
+    op2 = ScalingOp2(rn_w, rn_w, np.random.uniform(-2, 2))
+    op3 = ScalingOp2(rn, rn_w, np.random.uniform(-2, 2))
+    op4 = ScalingOp2(rn_w, rn, np.random.uniform(-2, 2))
+
+    for op in [op1, op2, op3, op4]:
+        dom_el = noise_element(op.domain)
+        ran_el = noise_element(op.range)
+        assert pytest.approx(op(dom_el).inner(ran_el),
+                             dom_el.inner(op.adjoint(ran_el)))
+        assert pytest.approx(op.adjoint.adjoint(dom_el).inner(ran_el),
+                             dom_el.inner(op.adjoint(ran_el)))
+
+
 if __name__ == '__main__':
     odl.util.test_file(__file__)
