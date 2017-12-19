@@ -6,14 +6,14 @@
 
 ODL
 ===
+*Operator Discretization Library* (ODL) is a Python library that enable research in inverse problems on realistic or real data. The framework allows to encapsulate a physical model into an `Operator` that can be used like a mathematical object in, e.g., optimization methods. Furthermore, ODL makes it easy to experiment with reconstruction methods and optimization algorithms for variational regularization, all without sacrificing performance.
 
-Operator Discretization Library (ODL) is a Python library for fast prototyping focusing on (but not restricted to) inverse problems being developed at [KTH Royal Institute of Technology, Stockholm](https://www.kth.se/en/sci/institutioner/math) and [Centrum Wiskunde & Informatica (CWI), Amsterdam](https://www.cwi.nl).
+For more details and an introduction into the inner workings of ODL, please refer to the [documentation](https://odlgroup.github.io/odl/).
 
-Features
-========
-- Efficient and well-tested data containers based on [NumPy](https://github.com/numpy/numpy) or CUDA
-- Objects to represent mathematical notions like vector spaces and operators, including properties as expected from mathematics (inner product, norm, operator composition, ...)
-- A versatile and pluggable library of optimization routines for smooth and non-smooth problems, such as CGLS, BFGS, PDHG and Douglas-Rachford splitting.
+Highlights
+==========
+- Efficient and well-tested data containers based on [NumPy](https://github.com/numpy/numpy) or CUDA allow high performance computing with minimal effort.
+- A versatile and efficient library of optimization routines for smooth and non-smooth problems, such as CGLS, BFGS, PDHG and Douglas-Rachford splitting.
 - Support for tomographic imaging with a unified geometry representation and bindings to external libraries for efficient computation of projections and back-projections.
 - And much more, including support for deep learning libraries, figures of merits, phantom generation, data handling, etc.
 
@@ -81,6 +81,7 @@ To contact the developers either open an issue on the issue tracker or send an e
 
 Funding
 -------
-Development of ODL is financially supported by the Swedish Foundation for Strategic Research as part of the project "Low complexity image reconstruction in medical imaging".
+ODL has primarily been developed at [KTH Royal Institute of Technology, Stockholm](https://www.kth.se/en/sci/institutioner/math) and [Centrum Wiskunde & Informatica (CWI), Amsterdam](https://www.cwi.nl).
+It is financially supported by the Swedish Foundation for Strategic Research as part of the project "Low complexity image reconstruction in medical imaging". 
 
 Some development time has also been financed by [Elekta](https://www.elekta.com/).
