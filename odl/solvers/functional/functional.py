@@ -127,10 +127,10 @@ class Functional(Operator):
         float, one may call the `proximal factory` with a list of positive
         floats, and the stepsize are applied to each component individually.
 
-        * For certain special functionals like `l1_norm` and `l2_norm_squared`,
+        * For certain special functionals like `L1Norm` and `L2NormSquared`,
         which are not implemented as a `SeparableSum`, the proximal factory
-        will accept a `space.element`, where `space` is the domain of the
-        functional. Its components must be strictly positive floats.
+        will accept an argument which is `element-like` regarding the domain
+        of the functional. Its components must be strictly positive floats.
 
         A stepsize like :math:`(\\sigma_1, \\ldots, \\sigma_n)`  coincides
         with a matrix-valued distance according to Section XV.4 of _[HL1993]

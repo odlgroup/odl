@@ -76,8 +76,8 @@ def combine_proximals(*factory_list):
 
         Parameters
         ----------
-        sigma : positive float or list of positive floats
-            Step size parameter(s), if a list, the length must match
+        sigma : positive float or sequence of positive floats
+            Step size parameter(s), if a sequence, the length must match
             the length of the `factory_list`
 
         Returns
@@ -230,7 +230,7 @@ def proximal_arg_scaling(prox_factory, scaling):
     prox_factory : callable
         A factory function that, when called with a step size, returns the
         proximal operator of ``F``
-    scaling : float or list of floats or space element
+    scaling : float or sequence of floats or space element
         Scaling parameter. The permissible types depent on the stepsizes
         accepted by prox_factory.
 
@@ -861,9 +861,9 @@ def proximal_convex_conj_l2_squared(space, lam=1, g=None):
 
             Parameters
             ----------
-            sigma : positive float and componentwise positive space.element
+            sigma : positive float and pointwise positive space.element
                 Step size parameter. If not a float, then it is assumed to be
-                a vector which contains stepsizes for each component.
+                a vector which contains stepsizes for each point.
             """
             super(ProximalConvexConjL2Squared, self).__init__(
                 domain=space, range=space, linear=g is None)
