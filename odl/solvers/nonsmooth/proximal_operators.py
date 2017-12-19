@@ -89,7 +89,7 @@ def combine_proximals(*factory_list):
 
         return DiagonalOperator(
             *[factory(sigmai)
-              for (sigmai, factory) in zip(sigma, factory_list)])
+              for sigmai, factory in zip(sigma, factory_list)])
 
     return diag_op_factory
 
