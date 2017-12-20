@@ -516,7 +516,7 @@ def test_moreau_envelope_l2_sq(space, sigma):
                             x * 2 / (1 + 2 * sigma))
 
 
-def test_weighted_proximal(space):
+def test_weighted_separablesum(space):
     """Test for the weighted proximal of a SeparableSum functional."""
 
     l1 = odl.solvers.L1Norm(space)
@@ -546,17 +546,17 @@ def test_weighted_proximal_L2_norm_squared(space):
     x = space.one()
 
     # Calculate the proximal point in-place and out-of-place
-    p1 = space.element()
-    func.proximal(sigma)(x, out=p1)
-    p2 = func.proximal(sigma)(x)
+    p_ip = space.element()
+    func.proximal(sigma)(x, out=p_ip)
+    p_oop = func.proximal(sigma)(x)
 
     # Both should contain the same vector now.
-    assert all_almost_equal(p1, p2)
+    assert all_almost_equal(p_ip, p_oop)
 
     # Check if the subdifferential inequalities are satisfied.
     # p = prox_{sigma * f}(x) iff (x - p)/sigma = grad f(p)
-    assert all_almost_equal(func.gradient(p1),
-                            (x - p1) / sigma)
+    assert all_almost_equal(func.gradient(p_ip),
+                            (x - p_ip) / sigma)
 
 
 def test_weighted_proximal_L1_norm(space):
@@ -573,17 +573,17 @@ def test_weighted_proximal_L1_norm(space):
     # at the result.
     x = 100 * space.one()
 
-    # Calculate the proximal point inline and non-inline
-    p1 = space.element()
-    func.proximal(sigma)(x, out=p1)
-    p2 = func.proximal(sigma)(x)
+    # Calculate the proximal point in-place and out-of-place
+    p_ip = space.element()
+    func.proximal(sigma)(x, out=p_ip)
+    p_oop = func.proximal(sigma)(x)
 
     # Both should contain the same vector now.
-    assert all_almost_equal(p1, p2)
+    assert all_almost_equal(p_ip, p_oop)
 
     # Check if the subdifferential inequalities are satisfied.
     # p = prox_{sigma * f}(x) iff (x - p)/sigma = grad f(p)
-    assert all_almost_equal(func.gradient(p1), (x - p1) / sigma)
+    assert all_almost_equal(func.gradient(p_ip), (x - p_ip) / sigma)
 
 
 if __name__ == '__main__':

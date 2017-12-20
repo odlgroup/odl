@@ -231,17 +231,17 @@ def test_proximal_convconj_l2_sq_wo_data():
 
     # Allocate output elements
     x_out = space.element()
-    x_out2 = space.element()
+    x_outv = space.element()
 
     # Optimal point returned by the proximal operator
     prox(x, x_out)
-    proxv(x, x_out2)
+    proxv(x, x_outv)
 
     # Explicit computation: x / (1 + sigma / (2 * lambda))
     x_verify = x / (1 + sigma / (2 * lam))
 
     assert all_almost_equal(x_out, x_verify, HIGH_ACC)
-    assert all_almost_equal(x_out2, x_verify, HIGH_ACC)
+    assert all_almost_equal(x_outv, x_verify, HIGH_ACC)
 
 
 def test_proximal_convconj_l2_sq_with_data():
