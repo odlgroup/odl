@@ -291,8 +291,11 @@ class GroupL1Norm(Functional):
 
             def _call(self, x):
                 """Return ``self(x)``."""
-                return functional.pointwise_norm.derivative(x).adjoint(
-                    np.sign(functional.pointwise_norm(x)))
+                to_return = functional.pointwise_norm(x)
+                to_return.ufuncs.sign(out=to_return)
+                functional.pointwise_norm.derivative(x).adjoint(to_return,
+                                                                out=to_return)
+                return to_return
 
         return GroupL1Gradient()
 

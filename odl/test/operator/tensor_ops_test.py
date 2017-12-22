@@ -203,10 +203,50 @@ def test_pointwise_norm_gradient_real(exponent):
             pwnorm.derivative(point)
         return
 
-    # TODO: implement good tests also for the 'normal behaviour'
+    # 1d
+    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2))
+    vfspace = ProductSpace(fspace, 1)
+    pwnorm = PointwiseNorm(vfspace, exponent)
 
-    # The gradient is only well-defined in all points if the exponent is >= 2
-    if exponent < 2:
+    point = noise_element(vfspace)
+    direction = noise_element(vfspace)
+
+    # Computing expected result
+    tmp = pwnorm(point).ufuncs.power(1 - exponent)
+    v_field = vfspace.element()
+    for i in range(len(v_field)):
+        v_field[i] = tmp * point[i] * np.abs(point[i])**(exponent - 2)
+    pwinner = odl.PointwiseInner(vfspace, v_field)
+    expected_result = pwinner(direction)
+
+    func_pwnorm = pwnorm.derivative(point)
+
+    assert all_almost_equal(func_pwnorm(direction), expected_result)
+
+    # 3d
+    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2))
+    vfspace = ProductSpace(fspace, 3)
+    pwnorm = PointwiseNorm(vfspace, exponent)
+
+    point = noise_element(vfspace)
+    direction = noise_element(vfspace)
+
+    # Computing expected result
+    tmp = pwnorm(point).ufuncs.power(1 - exponent)
+    v_field = vfspace.element()
+    for i in range(len(v_field)):
+        v_field[i] = tmp * point[i] * np.abs(point[i])**(exponent - 2)
+    pwinner = odl.PointwiseInner(vfspace, v_field)
+    expected_result = pwinner(direction)
+
+    func_pwnorm = pwnorm.derivative(point)
+    assert all_almost_equal(func_pwnorm(direction), expected_result)
+
+
+def test_pointwise_norm_gradient_real_with_zeros(exponent):
+    # The gradient is only well-defined in points with zeros if the exponent is
+    # >= 2 and < inf
+    if exponent < 2 or exponent == float('inf'):
         pytest.skip('differential of operator has singularity for this '
                     'exponent')
 
@@ -224,7 +264,7 @@ def test_pointwise_norm_gradient_real(exponent):
     direction = vfspace.element(test_direction)
     func_pwnorm = pwnorm.derivative(point)
 
-    assert not np.isnan(func_pwnorm(direction)).asarray().any()
+    assert not np.any(np.isnan(func_pwnorm(direction)))
 
     # 3d
     fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2))
@@ -248,8 +288,7 @@ def test_pointwise_norm_gradient_real(exponent):
     direction = vfspace.element(test_direction)
     func_pwnorm = pwnorm.derivative(point)
 
-    assert not np.isnan(func_pwnorm(direction)).asarray().any()
-
+    assert not np.any(np.isnan(func_pwnorm(direction)))
 
 # ---- PointwiseInner ----
 
