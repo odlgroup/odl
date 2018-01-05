@@ -22,7 +22,7 @@ from odl.util import (
 from odl.util.npy_compat import roll
 
 
-__all__ = ('DiscreteConvolution', 'convolve')
+__all__ = ('DiscreteConvolution', 'convolve', 'correlate')
 
 
 class DiscreteConvolution(Operator):
@@ -735,7 +735,7 @@ def _prepare_for_fft(kernel, padded_shape, axes=None, variant='forward'):
 
 
 def convolve(x, y, out=None, **kwargs):
-    """Return the convolution ``x * y``.
+    """Return the convolution of ``x`` and ``y``.
 
     This is a convenience function for quickly computing a convolution
     without having to explicitly create a `DiscreteConvolution` instance.
@@ -791,6 +791,11 @@ def convolve(x, y, out=None, **kwargs):
     padded_shape : sequence of ints, optional
         Apply zero-padding with this target shape. Cannot be used
         together with ``padding``.
+
+    See Also
+    --------
+    correlate
+    DiscreteConvolution
     """
     y = np.asarray(y)
     y_is_complex = issubclass(y.dtype.type, np.complexfloating)
@@ -824,6 +829,31 @@ def convolve(x, y, out=None, **kwargs):
         conv(x, out=res)
 
     return out
+
+
+def correlate(x, y, out=None, **kwargs):
+    """Return the cross-correlation of ``x`` and ``y``.
+
+    This function computes the cross-correlation defined in continuum as
+
+    .. math::
+        [x \star y](t) = \int x(t + s)\, y(s)\, \,\mathrm{d}s.
+
+    The order of ``x`` and ``y`` matters, i.e., this operation is
+    not commutative.
+
+    For details on the function arguments, see `convolve`.
+
+    See Also
+    --------
+    convolve
+    DiscreteConvolution
+    """
+    if 'variant' in kwargs:
+        raise TypeError('cannot use `variant` argument in `correlate`')
+
+    kwargs['variant'] = 'adjoint'
+    return convolve(x, y, out, **kwargs)
 
 
 if __name__ == '__main__':
