@@ -18,6 +18,7 @@ from odl.space.space_utils import auto_weighting
 from odl.trafos.backends import PYFFTW_AVAILABLE
 from odl.util import (
     is_real_dtype, is_floating_dtype, dtype_str, writable_array)
+from odl.util.npy_compat import roll
 
 __all__ = ('DiscreteConvolution',)
 
@@ -728,7 +729,7 @@ def _prepare_for_fft(kernel, padded_shape, axes=None, variant='forward'):
             shifts.append(-(kernel.shape[ax] // 2))
         else:
             shifts.append(-((kernel.shape[ax] - 1) // 2))
-    return np.roll(padded, shifts, axis=axes)
+    return roll(padded, shifts, axis=axes)
 
 
 if __name__ == '__main__':
