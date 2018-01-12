@@ -78,7 +78,7 @@ def combine_proximals(*factory_list):
         ----------
         sigma : positive float or sequence of positive floats
             Step size parameter(s), if a sequence, the length must match
-            the length of the `factory_list`
+            the length of the ``factory_list``.
 
         Returns
         -------
@@ -142,10 +142,9 @@ def proximal_convex_conj(prox_factory):
 
         Parameters
         ----------
-        sigma : positive float or componentwise positive space element
-                or list of positive floats
-            Step size parameter. Can be non-float if `prox_factory`
-            supports that.
+        sigma : positive float or array-like
+            Step size parameter. Can be a pointwise positive space element or
+            a sequence of positive floats if `prox_factory` supports that.
 
         Returns
         -------
@@ -868,9 +867,9 @@ def proximal_convex_conj_l2_squared(space, lam=1, g=None):
 
             Parameters
             ----------
-            sigma : positive float and pointwise positive space.element
-                Step size parameter. If not a float, then it is assumed to be
-                a vector which contains stepsizes for each point.
+            sigma : positive float or pointwise positive space.element
+                Step size parameter. If scalar, it contains a global stepsize,
+                otherwise the space.element defines a stepsize for each point.
             """
             super(ProximalConvexConjL2Squared, self).__init__(
                 domain=space, range=space, linear=g is None)
@@ -957,8 +956,9 @@ def proximal_l2_squared(space, lam=1, g=None):
 
             Parameters
             ----------
-            sigma : positive float
-                Step size parameter
+            sigma : positive float or pointwise positive space.element
+                Step size parameter. If scalar, it contains a global stepsize,
+                otherwise the space.element defines a stepsize for each point.
             """
             super(ProximalL2Squared, self).__init__(
                 domain=space, range=space, linear=g is None)
@@ -1077,8 +1077,9 @@ def proximal_convex_conj_l1(space, lam=1, g=None):
 
             Parameters
             ----------
-            sigma : positive float
-                Step size parameter.
+            sigma : positive float or pointwise positive space.element
+                Step size parameter. If scalar, it contains a global stepsize,
+                otherwise the space.element defines a stepsize for each point.
             """
             super(ProximalConvexConjL1, self).__init__(
                 domain=space, range=space, linear=False)
@@ -1292,8 +1293,9 @@ def proximal_l1(space, lam=1, g=None):
 
             Parameters
             ----------
-            sigma : positive float
-                Step size parameter.
+            sigma : positive float or pointwise positive space.element
+                Step size parameter. If scalar, it contains a global stepsize,
+                otherwise the space.element defines a stepsize for each point.
             """
             super(ProximalL1, self).__init__(
                 domain=space, range=space, linear=False)
