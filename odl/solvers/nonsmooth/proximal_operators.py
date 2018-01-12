@@ -896,6 +896,9 @@ def proximal_convex_conj_l2_squared(space, lam=1, g=None):
                     sig.multiply(g, out=out)
                     out.lincomb(1.0, x, -1.0, out=out)
                     out.divide(1 + 0.5 / lam * sig, out=out)
+            else:
+                raise RuntimeError('Error in ProximalConvexConjL2Squared: sig '
+                                   'is neither a scalar nor a space element.')
 
     return ProximalConvexConjL2Squared
 
