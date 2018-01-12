@@ -29,7 +29,7 @@ def adupdates(funcs, ops, x, stepsize, majs, niter, random=False,
         min_x sum_i f_i(L_i x)
 
     where ``f_i`` are proper, convex and lower semicontinuous functions and
-    ``L_i`` are linear `Operator`s
+    ``L_i`` are linear `Operator`s.
 
     Parameters
     ----------
@@ -47,12 +47,12 @@ def adupdates(funcs, ops, x, stepsize, majs, niter, random=False,
     niter : int
         Number of (outer) iterations.
     random : bool, optional
-        If `True`, the order of the dual upgdates is chosen arbitrarily,
+        If `True`, the order of the dual upgdates is chosen randomly,
         otherwise the order provided by the lists `funcs`, `ops` and `majs`
         is used.
     callback : callable, optional
         Function called with the current iterate after each iteration.
-    callback_loop : string, optional
+    callback_loop : {'inner', 'outer'}, optional
        If 'inner', the `callback` function is called after each inner
        iteration, i.e., after each dual update. If 'outer', the `callback`
        function is called after each outer iteration, i.e., after each primal
