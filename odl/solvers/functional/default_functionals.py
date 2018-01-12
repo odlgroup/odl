@@ -651,8 +651,8 @@ class L2NormSquared(Functional):
     >>> space = odl.rn(3)
     >>> f = odl.solvers.L2NormSquared(space)
     >>> x = space.one()
-    >>> f.proximal([0.5, 1.0, 1.5])(x)
-    rn(3).element([ 0.5       ,  0.33333333,  0.25      ])
+    >>> f.proximal([0.5, 1.5, 2.0])(x)
+    rn(3).element([ 0.5 ,  0.25,  0.2 ])
     """
 
     def __init__(self, space):
