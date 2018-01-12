@@ -26,7 +26,7 @@ import numpy as np
 
 from odl.operator import (Operator, IdentityOperator, ScalingOperator,
                           ConstantOperator, DiagonalOperator, PointwiseNorm,
-                          OperatorComp, MultiplyOperator)
+                          MultiplyOperator)
 from odl.space import ProductSpace
 from odl.set.space import LinearSpaceElement
 
@@ -158,8 +158,8 @@ def proximal_convex_conj(prox_factory):
 
         mult_inner = MultiplyOperator(1.0 / sigma, domain=space, range=space)
         mult_outer = MultiplyOperator(sigma, domain=space, range=space)
-        result = IdentityOperator(space) - OperatorComp(OperatorComp(
-            mult_outer, prox_factory(1.0 / sigma)), mult_inner)
+        result = IdentityOperator(space) \
+            - mult_outer * prox_factory(1.0 / sigma) * mult_inner
         return result
 
     return convex_conj_prox_factory
@@ -297,7 +297,7 @@ def proximal_arg_scaling(prox_factory, scaling):
         space = prox.domain
         mult_inner = MultiplyOperator(scaling, domain=space, range=space)
         mult_outer = MultiplyOperator(1 / scaling, domain=space, range=space)
-        return OperatorComp(OperatorComp(mult_outer, prox), mult_inner)
+        return mult_outer * prox * mult_inner
 
     return arg_scaling_prox_factory
 
