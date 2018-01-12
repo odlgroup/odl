@@ -559,8 +559,8 @@ def test_weighted_proximal_L2_norm_squared(space):
                             (x - p_ip) / sigma)
 
 
-def test_weighted_proximal_L1_norm(space):
-    """Test for the weighted proximal of the L1 norm"""
+def test_weighted_proximal_L1_norm_far(space):
+    """Test for the weighted proximal of the L1 norm away from zero"""
 
     # Define the functional on the space.
     func = odl.solvers.L1Norm(space)
@@ -584,6 +584,34 @@ def test_weighted_proximal_L1_norm(space):
     # Check if the subdifferential inequalities are satisfied.
     # p = prox_{sigma * f}(x) iff (x - p)/sigma = grad f(p)
     assert all_almost_equal(func.gradient(p_ip), (x - p_ip) / sigma)
+
+
+def test_weighted_proximal_L1_norm_close(space):
+    """Test for the weighted proximal of the L1 norm near zero"""
+
+    # Set the space.
+    space = odl.rn(5)
+
+    # Define the functional on the space.
+    func = odl.solvers.L1Norm(space)
+
+    # Set the stepsize.
+    sigma = [0.1, 0.2, 0.5, 1.0, 2.0]
+
+    # Set the starting point.
+    x = 0.5 * space.one()
+
+    # Calculate the proximal point in-place and out-of-place
+    p_ip = space.element()
+    func.proximal(sigma)(x, out=p_ip)
+    p_oop = func.proximal(sigma)(x)
+
+    # Both should contain the same vector now.
+    assert all_almost_equal(p_ip, p_oop)
+
+    # Check if this equals the expected result.
+    expected_result = [0.4, 0.3, 0.0, 0.0, 0.0]
+    assert all_almost_equal(expected_result, p_ip)
 
 
 if __name__ == '__main__':
