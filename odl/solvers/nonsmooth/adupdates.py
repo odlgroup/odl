@@ -6,10 +6,10 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Alternating dual (AD) upgrade algorithm studied by McGaffin and Fessler.
+"""Alternating dual (AD) update algorithm studied by McGaffin and Fessler.
 
 The alternating dual upgrade method is reported to be a flexible method which
-allows an acceleration by permitting efficient calculations on a graphics card.
+allows an acceleration by permitting efficient calculations on a GPU.
 """
 
 from __future__ import print_function, division, absolute_import
@@ -23,8 +23,9 @@ def adupdates(funcs, ops, x, stepsize, majs, niter, random=False,
               callback=None, callback_loop='outer'):
     """Alternating Dual updates method.
 
-    The Alternating Dual (AD) updates method of McGaffin and Fessler is
-    designed to solve an optimization problem of the form
+    The Alternating Dual (AD) updates method of McGaffin and Fessler `[MF2015]
+    <http://ieeexplore.ieee.org/document/7271047/>`_ is designed to solve an
+    optimization problem of the form
 
         min_x sum_i f_i(L_i x)
 
