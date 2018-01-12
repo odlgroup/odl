@@ -12,7 +12,6 @@ The alternating dual upgrade method is reported to be a flexible method which
 allows an acceleration by permitting efficient calculations on a graphics card.
 """
 
-# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 
 import numpy as np
