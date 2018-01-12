@@ -155,20 +155,20 @@ def adupdates(funcs, ops, x, stepsize, majs, niter, random=False,
         # Update x = x - 1/stepsize * sum([ops[i].adjoint(duals[i])
         # for i in range(length)])
         for i in range(length):
-            x -= 1.0 / stepsize * ops[i].adjoint(duals[i])
+            x -= (1.0 / stepsize) * ops[i].adjoint(duals[i])
 
         if random:
             rng = np.random.permutation(range(len(ops)))
         else:
             rng = range(len(ops))
 
-        for i in rng:
-            step = stepsize / majs[i]
-            arg = duals[i] + step * ops[i](x)
-            tmp_ran = tmp_rans[ops[i].range]
-            proxs[i](arg, out=tmp_ran)
-            x -= 1.0 / stepsize * ops[i].adjoint(tmp_ran - duals[i])
-            duals[i] = tmp_ran.copy()
+        for j in rng:
+            step = stepsize / majs[j]
+            arg = duals[j] + step * ops[j](x)
+            tmp_ran = tmp_rans[ops[j].range]
+            proxs[j](arg, out=tmp_ran)
+            x -= 1.0 / stepsize * ops[j].adjoint(tmp_ran - duals[j])
+            duals[j].assign(tmp_ran)
 
             if callback is not None and callback_loop == 'inner':
                 callback(x)
