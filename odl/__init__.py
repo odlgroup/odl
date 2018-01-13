@@ -13,6 +13,7 @@ restricted to) inverse problems.
 """
 
 from __future__ import absolute_import
+import numpy as np
 
 __version__ = '0.6.1.dev0'
 __all__ = ('set',
@@ -29,6 +30,14 @@ __all__ = ('set',
            'ufunc_ops',
            'util',
            )
+
+# Set old Numpy printing behavior as to not invalidate all doctests.
+# TODO: switch to new behavior when Numpy 1.14 is minimum
+try:
+    np.set_printoptions(legacy='1.13')
+except TypeError:
+    pass
+
 
 # Propagate names defined in` __all__` of all "core" subpackages into
 # the top-level namespace
