@@ -49,7 +49,8 @@ def space(request, tspace_impl):
 func_params = ['l1 ', 'l2', 'l2^2', 'constant', 'zero', 'ind_unit_ball_1',
                'ind_unit_ball_2', 'ind_unit_ball_pi', 'ind_unit_ball_inf',
                'product', 'quotient', 'kl', 'kl_cc', 'kl_cross_ent',
-               'kl_cc_cross_ent', 'huber', 'groupl1']
+               'kl_cc_cross_ent', 'huber', 'groupl1', 'bregman_l2squared',
+               'bregman_l1']
 
 func_ids = [" functional='{}' ".format(p) for p in func_params]
 
@@ -97,6 +98,14 @@ def functional(request, space):
     elif name == 'groupl1':
         space = odl.ProductSpace(space, 3)
         func = odl.solvers.GroupL1Norm(space)
+    elif name == 'bregman_l2squared':
+        point = noise_element(space)
+        l2_squared = odl.solvers.L2NormSquared(space)
+        func = odl.solvers.BregmanDistance(l2_squared, point)
+    elif name == 'bregman_l1':
+        point = noise_element(space)
+        l1 = odl.solvers.L1Norm(space)
+        func = odl.solvers.BregmanDistance(l1, point)
     else:
         assert False
 
