@@ -234,7 +234,7 @@ def proximal_arg_scaling(prox_factory, scaling):
         accepted by prox_factory. It may not contain any nonzero imaginary
         parts. If it is a scalar, it may be zero, in which case the
         resulting proxmial operator is the identity. If not a scalar,
-        it may not contain any nonzero components.
+        it may not contain any zero components.
 
     Returns
     -------
@@ -273,10 +273,15 @@ def proximal_arg_scaling(prox_factory, scaling):
     #   the others.
     # Since these checks are computationally expensive, we do not execute them
     # unconditionally, but only if the scaling factor is a scalar:
-    if np.isscalar(scaling) and scaling.imag != 0:
-        raise ValueError("complex scaling not supported.")
-    if np.isscalar(scaling) and scaling == 0:
-        return proximal_const_func(prox_factory(1.0).domain)
+    if np.isscalar(scaling):
+        if scaling == 0:
+            return proximal_const_func(prox_factory(1.0).domain)
+        elif scaling.imag != 0:
+            raise ValueError("Complex scaling not supported.")
+        else:
+            scaling = float(scaling)
+    else:
+        scaling = np.asarray(scaling)
 
     def arg_scaling_prox_factory(sigma):
         """Create proximal for the translation with a given sigma.
