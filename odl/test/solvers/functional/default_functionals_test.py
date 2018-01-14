@@ -614,12 +614,11 @@ def test_weighted_proximal_L1_norm_close(space):
     assert all_almost_equal(expected_result, p_ip)
 
 
-def test_bregman_functional_no_gradient():
+def test_bregman_functional_no_gradient(space):
     """Test that the Bregman distance functional fails if the underlying
     functional does not have a gradient and no subgradient operator is
     given."""
 
-    space = odl.uniform_discr(0, 1, 3)
     ind_func = odl.solvers.IndicatorNonnegativity(space)
     point = noise_element(space)
 
@@ -631,7 +630,13 @@ def test_bregman_functional_no_gradient():
     # If a subgradient operator is given separately, it is possible to create
     # an instance of the functional
     subgrad_op = odl.IdentityOperator(space)
-    odl.solvers.BregmanDistance(ind_func, point, subgrad_op)
+    bregman_dist = odl.solvers.BregmanDistance(ind_func, point, subgrad_op)
+
+    # In this case we should be able to call the gradient of the bregman
+    # distance, which would give us a subgradient
+    x = np.abs(noise_element(space))
+    expected_result = subgrad_op(x) - subgrad_op(point)
+    assert all_almost_equal(bregman_dist.gradient(x), expected_result)
 
 
 def test_bregman_functional_l2_squared(space, sigma):

@@ -2575,14 +2575,14 @@ class BregmanDistance(Functional):
                                 '``Operator``'.format(subgradient_op))
             if not self.__functional.domain == subgradient_op.domain:
                 raise ValueError('`functional.domain` {} is not the same as '
-                                 '`subgradient_op.domain` {}'.format(
-                                        self.__functional.domain,
-                                        subgradient_op.domain))
+                                 '`subgradient_op.domain` {}'
+                                 ''.format(self.__functional.domain,
+                                           subgradient_op.domain))
             if not self.__functional.domain == subgradient_op.range:
                 raise ValueError('`functional.domain` {} is not the same as '
-                                 '`subgradient_op.range` {}'.format(
-                                        self.__functional.domain,
-                                        subgradient_op.range))
+                                 '`subgradient_op.range` {}'
+                                 ''.format(self.__functional.domain,
+                                           subgradient_op.range))
             self.__subgradient_op = subgradient_op
 
         self.__subgrad_eval = self.__subgradient_op(self.__point)
@@ -2626,7 +2626,7 @@ class BregmanDistance(Functional):
     @property
     def gradient(self):
         """Gradient operator of the functional."""
-        return self.__bregman_dist.gradient
+        return self.subgradient_op - ConstantOperator(self.__subgrad_eval)
 
     def __repr__(self):
         '''Return ``repr(self)``.'''
