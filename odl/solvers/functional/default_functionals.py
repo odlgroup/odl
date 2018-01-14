@@ -289,13 +289,14 @@ class GroupL1Norm(Functional):
                 super(GroupL1Gradient, self).__init__(
                     functional.domain, functional.domain, linear=False)
 
-            def _call(self, x):
+            def _call(self, x, out):
                 """Return ``self(x)``."""
-                to_return = functional.pointwise_norm(x)
-                to_return.ufuncs.sign(out=to_return)
-                functional.pointwise_norm.derivative(x).adjoint(to_return,
-                                                                out=to_return)
-                return to_return
+                pwnorm_x = functional.pointwise_norm(x)
+                pwnorm_x.ufuncs.sign(out=pwnorm_x)
+                functional.pointwise_norm.derivative(x).adjoint(pwnorm_x,
+                                                                out=out)
+
+                return out
 
         return GroupL1Gradient()
 
