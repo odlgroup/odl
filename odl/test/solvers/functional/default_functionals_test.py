@@ -614,5 +614,56 @@ def test_weighted_proximal_L1_norm_close(space):
     assert all_almost_equal(expected_result, p_ip)
 
 
+def test_bregman_functional_no_gradient():
+    """Test that the Bregman distance functional fails if the underlying
+    functional does not have a gradient and no subgradient operator is
+    given."""
+
+    space = odl.uniform_discr(0, 1, 3)
+    ind_func = odl.solvers.IndicatorNonnegativity(space)
+    point = noise_element(space)
+
+    # Indicator function has no gradient, hence one cannot create a bregman
+    # distance functional
+    with pytest.raises(NotImplementedError):
+        odl.solvers.BregmanDistance(ind_func, point)
+
+    # If a subgradient operator is given separately, it is possible to create
+    # an instance of the functional
+    subgrad_op = odl.IdentityOperator(space)
+    odl.solvers.BregmanDistance(ind_func, point, subgrad_op)
+
+
+def test_bregman_functional_l2_squared(space, sigma):
+    """Test for the Bregman distance functional, using l2 norm squared as
+    underlying functional."""
+    sigma = float(sigma)
+
+    l2_sq = odl.solvers.L2NormSquared(space)
+    point = noise_element(space)
+    subgrad_op = odl.ScalingOperator(space, 2.0)
+    bregman_dist = odl.solvers.BregmanDistance(l2_sq, point, subgrad_op)
+
+    expected_func = odl.solvers.L2NormSquared(space).translated(point)
+
+    x = noise_element(space)
+
+    # Function evaluation
+    assert all_almost_equal(bregman_dist(x), expected_func(x))
+
+    # Gradient evaluation
+    assert all_almost_equal(bregman_dist(x), expected_func(x))
+
+    # Convex conjugate
+    cc_bregman_dist = bregman_dist.convex_conj
+    cc_expected_func = expected_func.convex_conj
+    assert all_almost_equal(cc_bregman_dist(x), cc_expected_func(x))
+
+    # Proximal operator
+    prox_bregman_dist = bregman_dist.proximal(sigma)
+    prox_expected_func = expected_func.proximal(sigma)
+    assert all_almost_equal(prox_bregman_dist(x), prox_expected_func(x))
+
+
 if __name__ == '__main__':
     odl.util.test_file(__file__)
