@@ -2548,11 +2548,13 @@ class BregmanDistance(Functional):
         2.0
         """
         if not isinstance(functional, Functional):
-            raise TypeError('...')
+            raise TypeError('`functional` {} not an instance of ``Functional``'
+                            ''.format(functional))
         self.__functional = functional
 
         if point not in functional.domain:
-            raise TypeError('...')
+            raise ValueError('`point` {} is not in `functional.domain` {}'
+                             ''.format(point, functional.domain))
         self.__point = point
 
         if subgradient_op is None:
@@ -2569,11 +2571,18 @@ class BregmanDistance(Functional):
             # Check that given subgradient is an operator that maps from the
             # domain of the functional to the domain of the functional
             if not isinstance(subgradient_op, Operator):
-                raise TypeError('...')
+                raise TypeError('`subgradient_op` {} is not an instance of '
+                                '``Operator``'.format(subgradient_op))
             if not self.__functional.domain == subgradient_op.domain:
-                raise TypeError('...')
+                raise ValueError('`functional.domain` {} is not the same as '
+                                 '`subgradient_op.domain` {}'.format(
+                                        self.__functional.domain,
+                                        subgradient_op.domain))
             if not self.__functional.domain == subgradient_op.range:
-                raise TypeError('...')
+                raise ValueError('`functional.domain` {} is not the same as '
+                                 '`subgradient_op.range` {}'.format(
+                                        self.__functional.domain,
+                                        subgradient_op.range))
             self.__subgradient_op = subgradient_op
 
         self.__subgrad_eval = self.__subgradient_op(self.__point)
