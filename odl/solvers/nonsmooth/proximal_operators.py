@@ -24,12 +24,11 @@ Foundations and Trends in Optimization, 1 (2014), pp 127-239.
 from __future__ import print_function, division, absolute_import
 import numpy as np
 
-from odl.operator import (
-    Operator, IdentityOperator, ScalingOperator, ConstantOperator,
-    DiagonalOperator, PointwiseNorm)
-from odl.set.space import LinearSpaceElement
+from odl.operator import (Operator, IdentityOperator, ScalingOperator,
+                          ConstantOperator, DiagonalOperator, PointwiseNorm,
+                          MultiplyOperator)
 from odl.space import ProductSpace
-from odl.util import cache_arguments
+from odl.set.space import LinearSpaceElement
 
 
 __all__ = ('combine_proximals', 'proximal_convex_conj', 'proximal_translation',
@@ -77,15 +76,20 @@ def combine_proximals(*factory_list):
 
         Parameters
         ----------
-        sigma : positive float
-            Step size parameter
+        sigma : positive float or sequence of positive floats
+            Step size parameter(s), if a sequence, the length must match
+            the length of the ``factory_list``.
 
         Returns
         -------
         diag_op : `DiagonalOperator`
         """
+        if np.isscalar(sigma):
+            sigma = [sigma] * len(factory_list)
+
         return DiagonalOperator(
-            *[factory(sigma) for factory in factory_list])
+            *[factory(sigmai)
+              for sigmai, factory in zip(sigma, factory_list)])
 
     return diag_op_factory
 
@@ -138,17 +142,25 @@ def proximal_convex_conj(prox_factory):
 
         Parameters
         ----------
-        sigma : positive float
-            Step size parameter
+        sigma : positive float or array-like
+            Step size parameter. Can be a pointwise positive space element or
+            a sequence of positive floats if `prox_factory` supports that.
 
         Returns
         -------
         proximal : `Operator`
             The proximal operator of ``s * F^*`` where ``s`` is the step size
         """
-        sigma = float(sigma)
-        prox_other = sigma * prox_factory(1.0 / sigma) * (1.0 / sigma)
-        return IdentityOperator(prox_other.domain) - prox_other
+
+        # Get the underlying space. At the same time, check if the given
+        # prox_factory accepts stepsize objects of the type given by sigma.
+        space = prox_factory(sigma).domain
+
+        mult_inner = MultiplyOperator(1.0 / sigma, domain=space, range=space)
+        mult_outer = MultiplyOperator(sigma, domain=space, range=space)
+        result = (IdentityOperator(space) -
+                  mult_outer * prox_factory(1.0 / sigma) * mult_inner)
+        return result
 
     return convex_conj_prox_factory
 
@@ -217,8 +229,12 @@ def proximal_arg_scaling(prox_factory, scaling):
     prox_factory : callable
         A factory function that, when called with a step size, returns the
         proximal operator of ``F``
-    scaling : float
-        Scaling parameter
+    scaling : float or sequence of floats or space element
+        Scaling parameter. The permissible types depent on the stepsizes
+        accepted by prox_factory. It may not contain any nonzero imaginary
+        parts. If it is a scalar, it may be zero, in which case the
+        resulting proxmial operator is the identity. If not a scalar,
+        it may not contain any zero components.
 
     Returns
     -------
@@ -248,14 +264,25 @@ def proximal_arg_scaling(prox_factory, scaling):
     2011.
     """
 
-    if scaling.imag != 0:
-        raise ValueError("complex scaling not supported.")
+    # To begin, we could check for two things:
+    # * Currently, we do not support complex scaling. We could therefore catch
+    #   nonempty imaginary parts.
+    # * If some components of scaling are zero, then the following routine will
+    #   crash with a division-by-zero error. The correct solution would be to
+    #   just keep these components and do the following computations only for
+    #   the others.
+    # Since these checks are computationally expensive, we do not execute them
+    # unconditionally, but only if the scaling factor is a scalar:
+    if np.isscalar(scaling):
+        if scaling == 0:
+            return proximal_const_func(prox_factory(1.0).domain)
+        elif scaling.imag != 0:
+            raise ValueError("Complex scaling not supported.")
+        else:
+            scaling = float(scaling)
     else:
-        scaling = float(scaling.real)
-    if scaling == 0:
-        return proximal_const_func(prox_factory(1.0).domain)
+        scaling = np.asarray(scaling)
 
-    @cache_arguments
     def arg_scaling_prox_factory(sigma):
         """Create proximal for the translation with a given sigma.
 
@@ -270,8 +297,12 @@ def proximal_arg_scaling(prox_factory, scaling):
             The proximal operator of ``sigma * F( . * a)`` where ``sigma`` is
             the step size
         """
-        prox = prox_factory(sigma * scaling ** 2)
-        return (1 / scaling) * prox * scaling
+        scaling_square = scaling * scaling
+        prox = prox_factory(sigma * scaling_square)
+        space = prox.domain
+        mult_inner = MultiplyOperator(scaling, domain=space, range=space)
+        mult_outer = MultiplyOperator(1 / scaling, domain=space, range=space)
+        return mult_outer * prox * mult_inner
 
     return arg_scaling_prox_factory
 
@@ -335,7 +366,6 @@ def proximal_quadratic_perturbation(prox_factory, a, u=None):
         raise TypeError('`u` must be `None` or a `LinearSpaceElement` '
                         'instance, got {!r}.'.format(u))
 
-    @cache_arguments
     def quadratic_perturbation_prox_factory(sigma):
         """Create proximal for the quadratic perturbation with a given sigma.
 
@@ -354,7 +384,10 @@ def proximal_quadratic_perturbation(prox_factory, a, u=None):
         prox = proximal_arg_scaling(prox_factory, const)(sigma)
         if u is not None:
             return (const * prox *
-                    (ScalingOperator(u.space, const) - sigma * const * u))
+                    (MultiplyOperator(const,
+                                      domain=u.space,
+                                      range=u.space) -
+                     sigma * const * u))
         else:
             return const * prox * const
 
@@ -839,22 +872,37 @@ def proximal_convex_conj_l2_squared(space, lam=1, g=None):
 
             Parameters
             ----------
-            sigma : positive float
-                Step size parameter
+            sigma : positive float or pointwise positive space.element
+                Step size parameter. If scalar, it contains a global stepsize,
+                otherwise the space.element defines a stepsize for each point.
             """
             super(ProximalConvexConjL2Squared, self).__init__(
                 domain=space, range=space, linear=g is None)
-            self.sigma = float(sigma)
+            if np.isscalar(sigma):
+                self.sigma = float(sigma)
+            else:
+                self.sigma = space.element(sigma)
 
         def _call(self, x, out):
             """Apply the operator to ``x`` and store the result in ``out``"""
             # (x - sig*g) / (1 + sig/(2 lam))
             sig = self.sigma
-            if g is None:
-                out.lincomb(1.0 / (1 + 0.5 * sig / lam), x)
+            if np.isscalar(sig):
+                if g is None:
+                    out.lincomb(1.0 / (1 + 0.5 * sig / lam), x)
+                else:
+                    out.lincomb(1.0 / (1 + 0.5 * sig / lam), x,
+                                -sig / (1 + 0.5 * sig / lam), g)
+            elif sig in space:
+                if g is None:
+                    x.divide(1 + 0.5 / lam * sig, out=out)
+                else:
+                    sig.multiply(g, out=out)
+                    out.lincomb(1.0, x, -1.0, out=out)
+                    out.divide(1 + 0.5 / lam * sig, out=out)
             else:
-                out.lincomb(1.0 / (1 + 0.5 * sig / lam), x,
-                            -sig / (1 + 0.5 * sig / lam), g)
+                raise RuntimeError('Error in ProximalConvexConjL2Squared: sig '
+                                   'is neither a scalar nor a space element.')
 
     return ProximalConvexConjL2Squared
 
@@ -913,22 +961,34 @@ def proximal_l2_squared(space, lam=1, g=None):
 
             Parameters
             ----------
-            sigma : positive float
-                Step size parameter
+            sigma : positive float or pointwise positive space.element
+                Step size parameter. If scalar, it contains a global stepsize,
+                otherwise the space.element defines a stepsize for each point.
             """
             super(ProximalL2Squared, self).__init__(
                 domain=space, range=space, linear=g is None)
-            self.sigma = float(sigma)
+            if np.isscalar(sigma):
+                self.sigma = float(sigma)
+            else:
+                self.sigma = space.element(sigma)
 
         def _call(self, x, out):
             """Apply the operator to ``x`` and store the result in ``out``"""
             # (x + 2*sig*lam*g) / (1 + 2*sig*lam))
             sig = self.sigma
-            if g is None:
-                out.lincomb(1.0 / (1 + 2 * sig * lam), x)
-            else:
-                out.lincomb(1.0 / (1 + 2 * sig * lam), x,
-                            2 * sig * lam / (1 + 2 * sig * lam), g)
+            if np.isscalar(sig):
+                if g is None:
+                    out.lincomb(1.0 / (1 + 2 * sig * lam), x)
+                else:
+                    out.lincomb(1.0 / (1 + 2 * sig * lam), x,
+                                2 * sig * lam / (1 + 2 * sig * lam), g)
+            else:   # sig in space
+                if g is None:
+                    x.divide(1.0 + 2.0 * sig * lam, out=out)
+                else:
+                    sig.multiply(2.0 * lam * g, out=out)
+                    out.lincomb(1.0, x, 1.0, out=out)
+                    out.divide(1.0 + 2 * sig * lam, out=out)
 
     return ProximalL2Squared
 
@@ -1022,12 +1082,16 @@ def proximal_convex_conj_l1(space, lam=1, g=None):
 
             Parameters
             ----------
-            sigma : positive float
-                Step size parameter.
+            sigma : positive float or pointwise positive space.element
+                Step size parameter. If scalar, it contains a global stepsize,
+                otherwise the space.element defines a stepsize for each point.
             """
             super(ProximalConvexConjL1, self).__init__(
                 domain=space, range=space, linear=False)
-            self.sigma = float(sigma)
+            if np.isscalar(sigma):
+                self.sigma = float(sigma)
+            else:
+                self.sigma = space.element(sigma)
 
         def _call(self, x, out):
             """Return ``self(x, out=out)``."""
@@ -1234,12 +1298,16 @@ def proximal_l1(space, lam=1, g=None):
 
             Parameters
             ----------
-            sigma : positive float
-                Step size parameter.
+            sigma : positive float or pointwise positive space.element
+                Step size parameter. If scalar, it contains a global stepsize,
+                otherwise the space.element defines a stepsize for each point.
             """
             super(ProximalL1, self).__init__(
                 domain=space, range=space, linear=False)
-            self.sigma = float(sigma)
+            if np.isscalar(sigma):
+                self.sigma = float(sigma)
+            else:
+                self.sigma = space.element(sigma)
 
         def _call(self, x, out):
             """Return ``self(x, out=out)``."""

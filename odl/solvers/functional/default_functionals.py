@@ -551,6 +551,14 @@ class L1Norm(LpNorm):
 
     .. math::
         \| x \|_1 = \\int_\Omega |x(t)| dt.
+
+    The `proximal` factory allows using vector-valued stepsizes:
+
+    >>> space = odl.rn(3)
+    >>> f = odl.solvers.L1Norm(space)
+    >>> x = space.one()
+    >>> f.proximal([0.5, 1.0, 1.5])(x)
+    rn(3).element([ 0.5,  0. ,  0. ])
     """
 
     def __init__(self, space):
@@ -627,6 +635,14 @@ class L2NormSquared(Functional):
 
     .. math::
         \| x \|_2^2 = \\int_\Omega |x(t)|^2 dt.
+
+    The `proximal` factory allows using vector-valued stepsizes:
+
+    >>> space = odl.rn(3)
+    >>> f = odl.solvers.L2NormSquared(space)
+    >>> x = space.one()
+    >>> f.proximal([0.5, 1.5, 2.0])(x)
+    rn(3).element([ 0.5 ,  0.25,  0.2 ])
     """
 
     def __init__(self, space):
@@ -1584,8 +1600,17 @@ class SeparableSum(Functional):
         [\mathrm{prox}_{\\sigma f_1}(x_1),
          \mathrm{prox}_{\\sigma f_2}(x_2),
          ...,
-         \mathrm{prox}_{\\sigma f_n}(x_n)]
+         \mathrm{prox}_{\\sigma f_n}(x_n)].
 
+    If :math:`\\sigma = (\\sigma_1, \\sigma_2, \\ldots, \\sigma_n)` is a list
+    of positive `float`s, then it distributes, too:
+
+    .. math::
+        \mathrm{prox}_{\\sigma h}(x_1, x_2, ..., x_n) =
+        [\mathrm{prox}_{\\sigma_1 f_1}(x_1),
+         \mathrm{prox}_{\\sigma_2 f_2}(x_2),
+         ...,
+         \mathrm{prox}_{\\sigma_n f_n}(x_n)].
     """
 
     def __init__(self, *functionals):
@@ -1606,6 +1631,15 @@ class SeparableSum(Functional):
         >>> l1 = odl.solvers.L1Norm(space)
         >>> l2 = odl.solvers.L2Norm(space)
         >>> f_sum = odl.solvers.SeparableSum(l1, l2)
+
+        The `proximal` factory allows using vector-valued stepsizes:
+
+        >>> x = f_sum.domain.one()
+        >>> f_sum.proximal([0.5, 2.0])(x)
+        ProductSpace(rn(3), 2).element([
+            [ 0.5,  0.5,  0.5],
+            [ 0.,  0.,  0.]
+        ])
 
         Create functional ``f([x1, ... ,xn]) = \sum_i ||xi||_1``:
 

@@ -25,7 +25,7 @@ from odl.solvers.functional.default_functionals import (
 
 scalar = simple_fixture('scalar', [0.01, 2.7, np.array(5.0), 10, -2, -0.2,
                                    -np.array(7.1), 0])
-sigma = simple_fixture('sigma', [0.001, 2.7, np.array(0.5), 10])
+sigma = simple_fixture('sigma', [0.001, 2.7, 10])
 exponent = simple_fixture('sigma', [1, 2, 1.5, 2.5, -1.6])
 
 
@@ -514,6 +514,104 @@ def test_moreau_envelope_l2_sq(space, sigma):
     x = noise_element(space)
     assert all_almost_equal(smoothed_l2_sq.gradient(x),
                             x * 2 / (1 + 2 * sigma))
+
+
+def test_weighted_separablesum(space):
+    """Test for the weighted proximal of a SeparableSum functional."""
+
+    l1 = odl.solvers.L1Norm(space)
+    l2 = odl.solvers.L2Norm(space)
+    func = odl.solvers.SeparableSum(l1, l2)
+
+    x = func.domain.one()
+
+    sigma = [0.5, 1.0]
+
+    prox = func.proximal(sigma)(x)
+    assert all_almost_equal(prox, [l1.proximal(sigma[0])(x[0]),
+                                   l2.proximal(sigma[1])(x[1])])
+
+
+def test_weighted_proximal_L2_norm_squared(space):
+    """Test for the weighted proximal of the squared L2 norm"""
+
+    # Define the functional on the space.
+    func = odl.solvers.L2NormSquared(space)
+
+    # Set the stepsize as a random element of the spaces
+    # with elements between 1 and 10.
+    sigma = odl.phantom.uniform_noise(space, 1, 10)
+
+    # Start at the one vector.
+    x = space.one()
+
+    # Calculate the proximal point in-place and out-of-place
+    p_ip = space.element()
+    func.proximal(sigma)(x, out=p_ip)
+    p_oop = func.proximal(sigma)(x)
+
+    # Both should contain the same vector now.
+    assert all_almost_equal(p_ip, p_oop)
+
+    # Check if the subdifferential inequalities are satisfied.
+    # p = prox_{sigma * f}(x) iff (x - p)/sigma = grad f(p)
+    assert all_almost_equal(func.gradient(p_ip),
+                            (x - p_ip) / sigma)
+
+
+def test_weighted_proximal_L1_norm_far(space):
+    """Test for the weighted proximal of the L1 norm away from zero"""
+
+    # Define the functional on the space.
+    func = odl.solvers.L1Norm(space)
+
+    # Set the stepsize as a random element of the spaces
+    # with elements between 1 and 10.
+    sigma = odl.phantom.noise.uniform_noise(space, 1, 10)
+
+    # Start far away from zero so that the L1 norm will be differentiable
+    # at the result.
+    x = 100 * space.one()
+
+    # Calculate the proximal point in-place and out-of-place
+    p_ip = space.element()
+    func.proximal(sigma)(x, out=p_ip)
+    p_oop = func.proximal(sigma)(x)
+
+    # Both should contain the same vector now.
+    assert all_almost_equal(p_ip, p_oop)
+
+    # Check if the subdifferential inequalities are satisfied.
+    # p = prox_{sigma * f}(x) iff (x - p)/sigma = grad f(p)
+    assert all_almost_equal(func.gradient(p_ip), (x - p_ip) / sigma)
+
+
+def test_weighted_proximal_L1_norm_close(space):
+    """Test for the weighted proximal of the L1 norm near zero"""
+
+    # Set the space.
+    space = odl.rn(5)
+
+    # Define the functional on the space.
+    func = odl.solvers.L1Norm(space)
+
+    # Set the stepsize.
+    sigma = [0.1, 0.2, 0.5, 1.0, 2.0]
+
+    # Set the starting point.
+    x = 0.5 * space.one()
+
+    # Calculate the proximal point in-place and out-of-place
+    p_ip = space.element()
+    func.proximal(sigma)(x, out=p_ip)
+    p_oop = func.proximal(sigma)(x)
+
+    # Both should contain the same vector now.
+    assert all_almost_equal(p_ip, p_oop)
+
+    # Check if this equals the expected result.
+    expected_result = [0.4, 0.3, 0.0, 0.0, 0.0]
+    assert all_almost_equal(expected_result, p_ip)
 
 
 if __name__ == '__main__':
