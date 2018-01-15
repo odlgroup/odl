@@ -215,7 +215,7 @@ def test_pointwise_norm_gradient_real(exponent):
     tmp = pwnorm(point).ufuncs.power(1 - exponent)
     v_field = vfspace.element()
     for i in range(len(v_field)):
-        v_field[i] = tmp * point[i] * np.abs(point[i])**(exponent - 2)
+        v_field[i] = tmp * point[i] * np.abs(point[i]) ** (exponent - 2)
     pwinner = odl.PointwiseInner(vfspace, v_field)
     expected_result = pwinner(direction)
 
@@ -235,7 +235,7 @@ def test_pointwise_norm_gradient_real(exponent):
     tmp = pwnorm(point).ufuncs.power(1 - exponent)
     v_field = vfspace.element()
     for i in range(len(v_field)):
-        v_field[i] = tmp * point[i] * np.abs(point[i])**(exponent - 2)
+        v_field[i] = tmp * point[i] * np.abs(point[i]) ** (exponent - 2)
     pwinner = odl.PointwiseInner(vfspace, v_field)
     expected_result = pwinner(direction)
 

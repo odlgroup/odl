@@ -347,7 +347,7 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
                 gi[nz] /= vf_pwnorm_fac[nz]
             else:
                 # For exponents < 2 there will be a singularity if any
-                # component is zero. This reullts in inf or nan. See the
+                # component is zero. This results in inf or nan. See the
                 # documentation for further details.
                 gi /= vf_pwnorm_fac
 
