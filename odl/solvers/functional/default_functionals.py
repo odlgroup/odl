@@ -2500,11 +2500,11 @@ class BregmanDistance(Functional):
     Notes
     -----
     Given a functional :math:`f`, which has a (sub)gradient :math:`\partial f`,
-    and given a point :math:`y`, the Bregman distance functional :math:`D_f`
-    in a point :math:`x` is given by
+    and given a point :math:`y`, the Bregman distance functional
+    :math:`D_f(\cdot, y)` in a point :math:`x` is given by
 
     .. math::
-        D_f(x) = f(x) - f(y) - \langle \partial f(y), x - y \\rangle.
+        D_f(x, y) = f(x) - f(y) - \langle \partial f(y), x - y \\rangle.
 
 
     References
@@ -2527,7 +2527,7 @@ class BregmanDistance(Functional):
             optional argument `subgradient_op` is not given, the functional
             needs to implement `functional.gradient`.
         point : element of ``functional.domain``
-            The point from which to define the Bregman distance
+            The point from which to define the Bregman distance.
         subgradient_op : `Operator`, optional
             The operator that takes an element in `functional.domain` and
             returns a subgradient of the functional in that point.
@@ -2537,15 +2537,16 @@ class BregmanDistance(Functional):
         --------
         Example of initializing the Bregman distance functional:
 
-        >>> space = odl.uniform_discr(0, 2, 14)
+        >>> space = odl.uniform_discr(0, 1, 10)
         >>> l2_squared = odl.solvers.L2NormSquared(space)
         >>> point = space.one()
         >>> Bregman_dist = odl.solvers.BregmanDistance(l2_squared, point)
 
-        This is gives the shifted L2 norm squared ||x - 1||:
+        This is gives the shifted L2 norm squared ||x - 1||^2:
 
-        >>> Bregman_dist(space.zero())
-        2.0
+        >>> expected_value = l2_squared(space.one())
+        >>> Bregman_dist(space.zero()) == expected_value
+        True
         """
         if not isinstance(functional, Functional):
             raise TypeError('`functional` {} not an instance of ``Functional``'
@@ -2569,16 +2570,16 @@ class BregmanDistance(Functional):
                                           ''.format(functional))
         else:
             # Check that given subgradient is an operator that maps from the
-            # domain of the functional to the domain of the functional
+            # domain of the functional to itself
             if not isinstance(subgradient_op, Operator):
                 raise TypeError('`subgradient_op` {} is not an instance of '
                                 '``Operator``'.format(subgradient_op))
-            if not self.__functional.domain == subgradient_op.domain:
+            if not subgradient_op.domain == self.__functional.domain:
                 raise ValueError('`functional.domain` {} is not the same as '
                                  '`subgradient_op.domain` {}'
                                  ''.format(self.__functional.domain,
                                            subgradient_op.domain))
-            if not self.__functional.domain == subgradient_op.range:
+            if not subgradient_op.range == self.__functional.domain:
                 raise ValueError('`functional.domain` {} is not the same as '
                                  '`subgradient_op.range` {}'
                                  ''.format(self.__functional.domain,
@@ -2592,7 +2593,8 @@ class BregmanDistance(Functional):
 
         super(BregmanDistance, self).__init__(
             space=functional.domain, linear=False,
-            grad_lipschitz=self.__functional.grad_lipschitz)
+            grad_lipschitz=(self.__functional.grad_lipschitz +
+                            self.__subgrad_eval.norm()))
 
     @property
     def functional(self):
@@ -2630,11 +2632,9 @@ class BregmanDistance(Functional):
 
     def __repr__(self):
         '''Return ``repr(self)``.'''
-        return '{}({!r}, {!r}, {!r}, {!r})'.format(self.__class__.__name__,
-                                                   self.domain,
-                                                   self.functional,
-                                                   self.point,
-                                                   self.subgradient_op)
+        return '{}({!r}, {!r}, {!r})'.format(self.__class__.__name__,
+                                             self.functional, self.point,
+                                             self.subgradient_op)
 
 
 if __name__ == '__main__':
