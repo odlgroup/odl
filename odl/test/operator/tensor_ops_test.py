@@ -192,6 +192,104 @@ def test_pointwise_norm_weighted(exponent):
     assert all_almost_equal(out, true_norm)
 
 
+def test_pointwise_norm_gradient_real(exponent):
+    # The operator is not differentiable for exponent 'inf'
+    if exponent == float('inf'):
+        fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2))
+        vfspace = ProductSpace(fspace, 1)
+        pwnorm = PointwiseNorm(vfspace, exponent)
+        point = vfspace.one()
+        with pytest.raises(NotImplementedError):
+            pwnorm.derivative(point)
+        return
+
+    # 1d
+    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2))
+    vfspace = ProductSpace(fspace, 1)
+    pwnorm = PointwiseNorm(vfspace, exponent)
+
+    point = noise_element(vfspace)
+    direction = noise_element(vfspace)
+
+    # Computing expected result
+    tmp = pwnorm(point).ufuncs.power(1 - exponent)
+    v_field = vfspace.element()
+    for i in range(len(v_field)):
+        v_field[i] = tmp * point[i] * np.abs(point[i]) ** (exponent - 2)
+    pwinner = odl.PointwiseInner(vfspace, v_field)
+    expected_result = pwinner(direction)
+
+    func_pwnorm = pwnorm.derivative(point)
+
+    assert all_almost_equal(func_pwnorm(direction), expected_result)
+
+    # 3d
+    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2))
+    vfspace = ProductSpace(fspace, 3)
+    pwnorm = PointwiseNorm(vfspace, exponent)
+
+    point = noise_element(vfspace)
+    direction = noise_element(vfspace)
+
+    # Computing expected result
+    tmp = pwnorm(point).ufuncs.power(1 - exponent)
+    v_field = vfspace.element()
+    for i in range(len(v_field)):
+        v_field[i] = tmp * point[i] * np.abs(point[i]) ** (exponent - 2)
+    pwinner = odl.PointwiseInner(vfspace, v_field)
+    expected_result = pwinner(direction)
+
+    func_pwnorm = pwnorm.derivative(point)
+    assert all_almost_equal(func_pwnorm(direction), expected_result)
+
+
+def test_pointwise_norm_gradient_real_with_zeros(exponent):
+    # The gradient is only well-defined in points with zeros if the exponent is
+    # >= 2 and < inf
+    if exponent < 2 or exponent == float('inf'):
+        pytest.skip('differential of operator has singularity for this '
+                    'exponent')
+
+    # 1d
+    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2))
+    vfspace = ProductSpace(fspace, 1)
+    pwnorm = PointwiseNorm(vfspace, exponent)
+
+    test_point = np.array([[[0, 0],  # This makes the point singular for p < 2
+                            [1, 2]]])
+    test_direction = np.array([[[1, 2],
+                                [4, 5]]])
+
+    point = vfspace.element(test_point)
+    direction = vfspace.element(test_direction)
+    func_pwnorm = pwnorm.derivative(point)
+
+    assert not np.any(np.isnan(func_pwnorm(direction)))
+
+    # 3d
+    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2))
+    vfspace = ProductSpace(fspace, 3)
+    pwnorm = PointwiseNorm(vfspace, exponent)
+
+    test_point = np.array([[[0, 0],  # This makes the point singular for p < 2
+                            [1, 2]],
+                           [[3, 4],
+                            [0, 0]],  # This makes the point singular for p < 2
+                           [[5, 6],
+                            [7, 8]]])
+    test_direction = np.array([[[0, 1],
+                                [2, 3]],
+                               [[4, 5],
+                                [6, 7]],
+                               [[8, 9],
+                                [0, 1]]])
+
+    point = vfspace.element(test_point)
+    direction = vfspace.element(test_direction)
+    func_pwnorm = pwnorm.derivative(point)
+
+    assert not np.any(np.isnan(func_pwnorm(direction)))
+
 # ---- PointwiseInner ----
 
 
