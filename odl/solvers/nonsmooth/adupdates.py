@@ -42,9 +42,13 @@ def adupdates(funcs, ops, x, stepsize, majs, niter, random=False,
     x : `LinearSpaceElement`
         Initial point, updated in-place.
     stepsize : positive float
-        The stepsize for the outer (proximal point) iteration.
+        The stepsize for the outer (proximal point) iteration. The theory
+        guarantees convergence for any positive real number, but the
+        performance might depend on the choice of a good stepsize.
     majs : sequence of majorizers
-        See the Notes section for details.
+        Parameters determining the stepsizes for the inner iterations. Must be
+        matched with the norms of `ops`, and convergence is guaranteed if
+        `majs` are large enough. See the Notes section for details.
     niter : int
         Number of (outer) iterations.
     random : bool, optional
