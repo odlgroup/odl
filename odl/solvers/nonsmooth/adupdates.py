@@ -19,7 +19,7 @@ import numpy as np
 __all__ = ('adupdates',)
 
 
-def adupdates(funcs, ops, x, stepsize, majs, niter, random=False,
+def adupdates(x, g, L, stepsize, majs, niter, random=False,
               callback=None, callback_loop='outer'):
     """Alternating Dual updates method.
 
@@ -27,18 +27,18 @@ def adupdates(funcs, ops, x, stepsize, majs, niter, random=False,
     <http://ieeexplore.ieee.org/document/7271047/>`_ is designed to solve an
     optimization problem of the form
 
-        min_x sum_i f_i(L_i x)
+        min_x sum_i g_i(L_i x)
 
-    where ``f_i`` are proper, convex and lower semicontinuous functions and
+    where ``g_i`` are proper, convex and lower semicontinuous functions and
     ``L_i`` are linear `Operator`s.
 
     Parameters
     ----------
-    funcs : sequence of `Functional`s
+    g : sequence of `Functional`s
         All functions need to provide a `convex_conj` with a
         `proximal` factory.
-    ops : sequence of `Operator`s
-        Needs to provide as many elements as `funcs`.
+    L : sequence of `Operator`s
+        Needs to provide as many elements as `g`.
     x : `LinearSpaceElement`
         Initial point, updated in-place.
     stepsize : positive float
@@ -47,13 +47,13 @@ def adupdates(funcs, ops, x, stepsize, majs, niter, random=False,
         performance might depend on the choice of a good stepsize.
     majs : sequence of majorizers
         Parameters determining the stepsizes for the inner iterations. Must be
-        matched with the norms of `ops`, and convergence is guaranteed if
+        matched with the norms of `L`, and convergence is guaranteed if
         `majs` are large enough. See the Notes section for details.
     niter : int
         Number of (outer) iterations.
     random : bool, optional
         If `True`, the order of the dual upgdates is chosen randomly,
-        otherwise the order provided by the lists `funcs`, `ops` and `majs`
+        otherwise the order provided by the lists `g`, `L` and `majs`
         is used.
     callback : callable, optional
         Function called with the current iterate after each iteration.
@@ -69,24 +69,24 @@ def adupdates(funcs, ops, x, stepsize, majs, niter, random=False,
     where it is applied to a tomography problem. It solves the problem
 
     .. math::
-        \min_x \sum_{i=1}^m f_i(L_i x),
+        \min_x \sum_{i=1}^m g_i(L_i x),
 
-    where :math:`f_i` are proper, convex and lower semicontinuous functions
+    where :math:`g_i` are proper, convex and lower semicontinuous functions
     and :math:`L_i` are linear, continuous operators for
     :math:`i = 1, \ldots, m`. In an outer iteration, the solution is found
     iteratively by an iteration
 
     .. math::
-        x_{n+1} = \mathrm{arg\,min}_x \sum_{i=1}^m f_i(L_i x)
+        x_{n+1} = \mathrm{arg\,min}_x \sum_{i=1}^m g_i(L_i x)
             + \frac{\mu}{2} \|x - x_n\|^2
 
-    according to the proximal point algorithm. In the inner iteration, dual
-    variables are introduces for each of the components of the sum. The
-    Lagrangian of the problem is given by
+    with some :math:`\mu > 0` according to the proximal point algorithm.
+    In the inner iteration, dual variables are introduces for each of the
+    components of the sum. The Lagrangian of the problem is given by
 
     .. math::
         S_n(x; v_1, \ldots, v_m) = \sum_{i=1}^m (\langle v_i, L_i x \rangle
-            - f_i^*(v_i)) + \frac{\mu}{2} \|x - x_n\|^2.
+            - g_i^*(v_i)) + \frac{\mu}{2} \|x - x_n\|^2.
 
     Given the dual variables, the new primal variable :math:`\tilde x_{n+1}`
     can be calculated by directly minimizing :math:`S_n` with respect to
@@ -98,7 +98,7 @@ def adupdates(funcs, ops, x, stepsize, majs, niter, random=False,
     The dual updates are executed according to the following rule:
 
     .. math::
-        v_j^+ = \mathrm{Prox}_{\mu M_j^{-1}}
+        v_j^+ = \mathrm{Prox}^{\mu M_j^{-1}}_{g_j^*}
             (v_j + \mu M_j^{-1} L_j \tilde x_{n+1}),
 
     where :math:`M_j` is a diagonal matrix with positive diagonal entries such
@@ -109,13 +109,13 @@ def adupdates(funcs, ops, x, stepsize, majs, niter, random=False,
     * Setting `majs[i]` a positive float :math:`\gamma` corresponds to the
     choice :math:`M_i = \gamma \mathrm{Id}`.
 
-    * Assume that `f_j` is a `SeparableSum`, then setting `majs[i]` a list
+    * Assume that `g_j` is a `SeparableSum`, then setting `majs[i]` a list
     :math:`(\gamma_1, \ldots, \gamma_k)`of positive floats corresponds to the
     choice of a block-diagonal matrix :math:`M_j`, where each block corresponds
     to one of the space components and equals :math:`\gamma_i \mathrm{Id}`.
 
-    * Assume that `f_j` is a `L1_norm` or a `L2_norm_squared`, then setting
-    `majs[i]` a `f_j.domain.element` :math:`z` corresponds to the choice
+    * Assume that `g_j` is a `L1_norm` or a `L2_norm_squared`, then setting
+    `majs[i]` a `g_j.domain.element` :math:`z` corresponds to the choice
     :math:`\mathrm{diag}(z)`.
 
     References
@@ -125,21 +125,21 @@ def adupdates(funcs, ops, x, stepsize, majs, niter, random=False,
     on Computational Imaging, 1.3 (2015), pp 186--199.
     """
     # Check the lenghts of the lists (= number of dual variables)
-    length = len(funcs)
-    if not len(funcs) == len(ops):
+    length = len(g)
+    if not len(g) == len(L):
         raise ValueError('Number of `ops` {} and number '
                          'of `funcs` {} do not agree.'
-                         ''.format(len(ops), len(funcs)))
+                         ''.format(len(L), len(g)))
 
     # Check if operators have a common domain
     # (the space of the primal variable):
-    domain = ops[0].domain
-    if any(domain != opi.domain for opi in ops):
+    domain = L[0].domain
+    if any(domain != opi.domain for opi in L):
         raise ValueError('Domains of `ops` are not all equal.')
 
     # Check if range of the operators equals domain of the functionals
-    ranges = [opi.range for opi in ops]
-    if any(ops[i].range != funcs[i].domain for i in range(length)):
+    ranges = [opi.range for opi in L]
+    if any(L[i].range != g[i].domain for i in range(length)):
         raise ValueError('Ranges of operators and domains'
                          'of functionals do not agree.')
 
@@ -153,26 +153,26 @@ def adupdates(funcs, ops, x, stepsize, majs, niter, random=False,
     # Prepare the proximal operators. Since the stepsize does not vary over
     # the iterations, we always use the same proximal operator.
     proxs = [func.convex_conj.proximal(stepsize / maj)
-             for (func, maj) in zip(funcs, majs)]
+             for (func, maj) in zip(g, majs)]
 
     # Iteratively find a solution
     for _ in range(niter):
         # Update x = x - 1/stepsize * sum([ops[i].adjoint(duals[i])
         # for i in range(length)])
         for i in range(length):
-            x -= (1.0 / stepsize) * ops[i].adjoint(duals[i])
+            x -= (1.0 / stepsize) * L[i].adjoint(duals[i])
 
         if random:
-            rng = np.random.permutation(range(len(ops)))
+            rng = np.random.permutation(range(len(L)))
         else:
-            rng = range(len(ops))
+            rng = range(len(L))
 
         for j in rng:
             step = stepsize / majs[j]
-            arg = duals[j] + step * ops[j](x)
-            tmp_ran = tmp_rans[ops[j].range]
+            arg = duals[j] + step * L[j](x)
+            tmp_ran = tmp_rans[L[j].range]
             proxs[j](arg, out=tmp_ran)
-            x -= 1.0 / stepsize * ops[j].adjoint(tmp_ran - duals[j])
+            x -= 1.0 / stepsize * L[j].adjoint(tmp_ran - duals[j])
             duals[j].assign(tmp_ran)
 
             if callback is not None and callback_loop == 'inner':

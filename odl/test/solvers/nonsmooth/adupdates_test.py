@@ -95,7 +95,7 @@ def test_adupdates():
     # Do 100 iterations
     niter = 100
 
-    adupdates(funcs, ops, x, stepsize, majs, niter)
+    adupdates(x, funcs, ops, stepsize, majs, niter)
     assert domain.dist(x, expected_solution) < 1e-3
 
 
