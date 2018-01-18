@@ -12,9 +12,9 @@ from __future__ import division
 # import pytest
 import odl
 # import numpy as np
-from odl.solvers.nonsmooth import adupdates
+from odl.solvers.nonsmooth import adupdates, adupdates_simple
 
-# from odl.util.testutils import all_almost_equal, noise_element
+from odl.util.testutils import all_almost_equal
 
 
 # Places for the accepted error when comparing results
@@ -88,6 +88,7 @@ def test_adupdates():
 
     # Start from zero
     x = tv1.domain.zero()
+    x_simple = tv1.domain.zero()
 
     # Select stepsize one
     stepsize = 1
@@ -96,6 +97,8 @@ def test_adupdates():
     niter = 100
 
     adupdates(x, funcs, ops, stepsize, majs, niter)
+    adupdates_simple(x_simple, funcs, ops, stepsize, majs, niter)
+    assert all_almost_equal(x, x_simple)
     assert domain.dist(x, expected_solution) < 1e-3
 
 

@@ -16,7 +16,7 @@ from __future__ import print_function, division, absolute_import
 
 import numpy as np
 
-__all__ = ('adupdates',)
+__all__ = ('adupdates', 'adupdates_simple')
 
 
 def adupdates(x, g, L, stepsize, majs, niter, random=False,
@@ -179,3 +179,30 @@ def adupdates(x, g, L, stepsize, majs, niter, random=False,
                 callback(x)
         if callback is not None and callback_loop == 'outer':
             callback(x)
+
+
+def adupdates_simple(x, g, L, stepsize, majs, niter, random=False):
+    """Non-optimized version of ``adupdates``.
+    This function is intended for debugging. It makes a lot of copies and
+    performs no error checking.
+    """
+    # Initializations
+    length = len(g)
+    ranges = [Li.range for Li in L]
+    duals = [space.zero() for space in ranges]
+
+    # Iteratively find a solution
+    for _ in range(niter):
+        # Update x = x - 1/stepsize * sum([ops[i].adjoint(duals[i])
+        # for i in range(length)])
+        for i in range(length):
+            x -= (1.0 / stepsize) * L[i].adjoint(duals[i])
+
+        rng = np.random.permutation(range(length)) if random else range(length)
+
+        for j in rng:
+            dual_tmp = ranges[j].element()
+            dual_tmp = (g[j].convex_conj.proximal(stepsize / majs[j])
+                        (duals[j] + stepsize / majs[j] * L[j](x)))
+            x -= 1.0 / stepsize * L[j].adjoint(dual_tmp - duals[j])
+            duals[j].assign(dual_tmp)
