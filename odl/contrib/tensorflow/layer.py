@@ -218,6 +218,7 @@ def as_tensorflow_layer(odl_op, name='ODLOperator',
 
                 # Evaluate the operator on all inputs in the batch.
                 out = np.empty(x_out_shape, odl_op.domain.dtype)
+                out_element = odl_op.domain.element()
                 for i in range(x_out_shape[0]):
                     if odl_op.is_functional:
                         xi = x[i, ..., 0]
@@ -226,8 +227,9 @@ def as_tensorflow_layer(odl_op, name='ODLOperator',
                     else:
                         xi = x[i, ..., 0]
                         dyi = dy[i, ..., 0]
-                        result = odl_op.derivative(xi).adjoint(dyi)
-                        out[i, ..., 0] = np.asarray(result)
+                        odl_op.derivative(xi).adjoint(dyi,
+                                                      out=out_element)
+                        out[i, ..., 0] = np.asarray(out_element)
 
                 # Rescale the domain/range according to the weighting since
                 # tensorflow does not have weighted spaces.
@@ -344,11 +346,13 @@ def as_tensorflow_layer(odl_op, name='ODLOperator',
 
                 # Evaluate the operator on all inputs in the batch.
                 out = np.empty(x_out_shape, out_dtype)
+                out_element = odl_op.range.element()
                 for i in range(x_out_shape[0]):
                     if odl_op.is_functional:
                         out[i] = odl_op(x[i, ..., 0])
                     else:
-                        out[i, ..., 0] = np.asarray(odl_op(x[i, ..., 0]))
+                        odl_op(x[i, ..., 0], out=out_element)
+                        out[i, ..., 0] = np.asarray(out_element)
 
                 return out
 
