@@ -1493,9 +1493,25 @@ def helical_geometry(space, src_radius, det_radius, num_turns,
 
     Notes
     -----
-    See `cone_beam_geometry` for a description on the mathematics in 2d.
+    In the "fan beam direction", the sampling exactly follows the
+    two-dimensional case see `cone_beam_geometry` for a description.
 
-    This geometry adds the Tuy condition.
+    In the "axial direction", e.g. along the [0, 0, 1] axis, the geometry is
+    sampled according to two criteria. First, the bounds of the detector
+    are chosen to satisfy the tuy condition.
+    See TSS1998_ for a full description.
+
+    Second, the sampling rate is selected according to the nyquist criterion
+    to give a full sampling. This is done by sampling such that the pixel
+    size is half of the size of the projection of the smallest voxel onto the
+    detector.
+
+    References
+    ----------
+    [TSS1998] Tam, K C, Samarasekera, S and Sauer, F.
+    *Exact cone beam CT with a spiral scan*.
+    Physics in Medicine & Biology 4 (1998), p 1015.
+    https://dx.doi.org/10.1088/0031-9155/43/4/028
     """
     # Find maximum distance from rotation axis
     corners = space.domain.corners()[:, :2]
@@ -1520,7 +1536,7 @@ def helical_geometry(space, src_radius, det_radius, num_turns,
         raise ValueError('source too close to the object, resulting in '
                          'infinite detector for full coverage')
     rd = float(det_radius)
-    r = src_radius + det_radius
+    r = rs + rd
     w = 2 * rho * (rs + rd) / rs
 
     # Compute minimum number of pixels given the constraint on the
@@ -1530,18 +1546,22 @@ def helical_geometry(space, src_radius, det_radius, num_turns,
 
     # Compute the vertical size needed in order to get a full sampling
     # according to the Tuy condition
-    theta = 2 * np.arctan((w / 2) / (src_radius + det_radius))
+    theta = 2 * np.arctan((w / 2) / r)
 
-    # Compute lower and upper bound
-    source_to_line_distance = src_radius * (1 + np.cos(theta))
-    scale = (src_radius + det_radius) / source_to_line_distance
+    # Compute lower and upper bound needed to fully sample the object.
+    # In particular, since in a helical geometry several turns are used,
+    # this is selected so that the field of view of two opposing projections,
+    # separated by theta = 180 deg, overlap, but as little as possible.
+    # See `tam_danielson_window` for more information.
+    source_to_line_distance = rs * (1 + np.cos(theta))
+    scale = r / source_to_line_distance
 
     source_to_line_lower = (pitch *
                             (num_turns * np.pi / 2 - theta) / (2 * np.pi))
     h = 2 * source_to_line_lower * scale
 
     # Compute number of pixels
-    min_mag = (rs + rd) / rs
+    min_mag = r / rs
     dh = 0.5 * space.partition.cell_sides[2] * min_mag
     num_px_vert = int(np.ceil(h / dh))
 
