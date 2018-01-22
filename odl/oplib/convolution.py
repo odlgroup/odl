@@ -792,6 +792,13 @@ def convolve(x, y, out=None, **kwargs):
         Apply zero-padding with this target shape. Cannot be used
         together with ``padding``.
 
+    Returns
+    -------
+    convolved : `Tensor`
+        The convolution of ``x`` and ``y``. If ``x`` is of type
+        `DiscreteLpElement`, so is the result. Otherwise the returned
+        type is `NumpyTensor`.
+
     See Also
     --------
     correlate
