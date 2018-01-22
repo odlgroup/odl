@@ -1856,7 +1856,10 @@ def _lincomb_impl(a, x1, b, x2, out):
         _lincomb_impl(a + b, x1, 0, x1, out)
     elif out is x1 and out is x2:
         # All the vectors are aligned -> out = (a+b)*out
-        scal(a + b, out_arr, size)
+        if (a + b) != 0:
+            scal(a + b, out_arr, size)
+        else:
+            out_arr[:] = 0
     elif out is x1:
         # out is aligned with x1 -> out = a*out + b*x2
         if a != 1:
