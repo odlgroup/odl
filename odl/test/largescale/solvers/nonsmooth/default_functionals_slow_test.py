@@ -198,6 +198,12 @@ def test_convex_conj_defintion(functional):
         pytest.skip('functional has no convex conjugate')
         return
 
+    if (isinstance(f_convex_conj, odl.solvers.FunctionalTranslation) and
+            isinstance(f_convex_conj.functional,
+                       FunctionalDefaultConvexConjugate)):
+        pytest.skip('functional has no convex conjugate with call')
+        return
+
     for _ in range(100):
         y = noise_element(functional.domain)
         f_convex_conj_y = f_convex_conj(y)
