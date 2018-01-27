@@ -934,9 +934,10 @@ class InfimalConvolution(Functional):
 
 class FunctionalQuadraticPerturb(Functional):
 
-    """The functional representing ``F(.) + a * <., .> + <., u>``."""
+    """The functional representing ``F(.) + a * <., .> + <., u> + c``."""
 
-    def __init__(self, func, quadratic_coeff=0, linear_term=None):
+    def __init__(self, func, quadratic_coeff=0, linear_term=None,
+                 constant_coeff=0):
         """Initialize a new instance.
 
         Parameters
@@ -944,10 +945,12 @@ class FunctionalQuadraticPerturb(Functional):
         func : `Functional`
             Function corresponding to ``f``.
         quadratic_coeff : ``domain.field`` element, optional
-            Coefficient of the quadratic term.
+            Coefficient of the quadratic term. Default: zero.
         linear_term : `domain` element, optional
             Element in domain of ``func``, corresponding to the translation.
             Default: Zero element.
+        constant_coeff : ``domain.field`` element, optional
+            The constant coefficient. Default: zero.
         """
         if not isinstance(func, Functional):
             raise TypeError('`func` {} is not a `Functional` instance'
@@ -957,7 +960,7 @@ class FunctionalQuadraticPerturb(Functional):
         quadratic_coeff = func.domain.field.element(quadratic_coeff)
         if quadratic_coeff.imag != 0:
             raise ValueError(
-                "Complex-valued quadratic coeff is not supported.")
+                "Complex-valued quadratic coefficient is not supported.")
         self.__quadratic_coeff = quadratic_coeff.real
 
         if linear_term is not None:
@@ -969,6 +972,12 @@ class FunctionalQuadraticPerturb(Functional):
             grad_lipschitz = func.grad_lipschitz
         else:
             grad_lipschitz = (func.grad_lipschitz + self.linear_term.norm())
+
+        constant_coeff = func.domain.field.element(constant_coeff)
+        if constant_coeff.imag != 0:
+            raise ValueError(
+                "Complex-valued constant coefficient is not supported.")
+        self.__constant_coeff = constant_coeff.real
 
         super(FunctionalQuadraticPerturb, self).__init__(
             space=func.domain,
@@ -990,11 +999,16 @@ class FunctionalQuadraticPerturb(Functional):
         """Linear term."""
         return self.__linear_term
 
+    @property
+    def constant_coeff(self):
+        """The constant coefficient."""
+        return self.__constant_coeff
+
     def _call(self, x):
         """Apply the functional to the given point."""
         return (self.functional(x) +
                 self.quadratic_coeff * x.inner(x) +
-                x.inner(self.linear_term))
+                x.inner(self.linear_term) + self.constant_coeff)
 
     @property
     def gradient(self):
@@ -1025,9 +1039,14 @@ class FunctionalQuadraticPerturb(Functional):
         the convex conjugate of :math:`f`:
 
         .. math::
-            (f(x) + <y, x>)^* (x) = f^*(x - y).
+            (f(x) + <y, x>)^* (x^*) = f^*(x^* - y).
 
-        For reference on the identity used, see [KP2015].
+        For reference on the identity used, see [KP2015]. Moreover, the convex
+        conjugate of :math:`f + c` is by definition
+
+        .. math::
+            (f(x) + c)^* (x^*) = f^*(x^*) - c.
+
 
         References
         ----------
@@ -1037,24 +1056,26 @@ class FunctionalQuadraticPerturb(Functional):
         pp 31--54.
         """
         if self.quadratic_coeff == 0:
-            return self.functional.convex_conj.translated(
-                self.linear_term)
+            return (self.functional.convex_conj.translated(
+                self.linear_term) - self.constant_coeff)
         else:
             return super(FunctionalQuadraticPerturb, self).convex_conj
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r}, {!r}, {!r})'.format(self.__class__.__name__,
-                                             self.functional,
-                                             self.quadratic_coeff,
-                                             self.linear_term)
+        return '{}({!r}, {!r}, {!r}, {!r})'.format(self.__class__.__name__,
+                                                   self.functional,
+                                                   self.quadratic_coeff,
+                                                   self.linear_term,
+                                                   self.constant_coeff)
 
     def __str__(self):
         """Return ``str(self)``."""
-        return '{}({}, {}, {})'.format(self.__class__.__name__,
-                                       self.functional,
-                                       self.quadratic_coeff,
-                                       self.linear_term)
+        return '{}({}, {}, {}, {})'.format(self.__class__.__name__,
+                                           self.functional,
+                                           self.quadratic_coeff,
+                                           self.linear_term,
+                                           self.constant_coeff)
 
 
 class FunctionalProduct(Functional, OperatorPointwiseProduct):

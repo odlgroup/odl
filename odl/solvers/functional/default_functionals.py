@@ -2587,9 +2587,11 @@ class BregmanDistance(Functional):
             self.__subgradient_op = subgradient_op
 
         self.__subgrad_eval = self.__subgradient_op(self.__point)
-        self.__bregman_dist = (FunctionalQuadraticPerturb(
-            self.__functional, linear_term=-self.__subgrad_eval) -
-            self.__functional(point) + self.__subgrad_eval.inner(point))
+        self.__constant = (-self.__functional(point) +
+                           self.__subgrad_eval.inner(point))
+        self.__bregman_dist = FunctionalQuadraticPerturb(
+            self.__functional, linear_term=-self.__subgrad_eval,
+            constant_coeff=self.__constant)
 
         super(BregmanDistance, self).__init__(
             space=functional.domain, linear=False,
