@@ -25,7 +25,7 @@ from odl.solvers.nonsmooth.proximal_operators import (
     proximal_const_func, proximal_box_constraint,
     proximal_convex_conj_kl, proximal_convex_conj_kl_cross_entropy,
     combine_proximals, proximal_convex_conj)
-from odl.util import conj_exponent, moveaxis
+from odl.util import conj_exponent, moveaxis, signature_string, indent
 
 
 __all__ = ('ZeroFunctional', 'ConstantFunctional', 'ScalingFunctional',
@@ -2574,12 +2574,12 @@ class BregmanDistance(Functional):
             if not isinstance(subgradient_op, Operator):
                 raise TypeError('`subgradient_op` {} is not an instance of '
                                 '``Operator``'.format(subgradient_op))
-            if not subgradient_op.domain == self.__functional.domain:
+            if subgradient_op.domain != self.__functional.domain:
                 raise ValueError('`functional.domain` {} is not the same as '
                                  '`subgradient_op.domain` {}'
                                  ''.format(self.__functional.domain,
                                            subgradient_op.domain))
-            if not subgradient_op.range == self.__functional.domain:
+            if subgradient_op.range != self.__functional.domain:
                 raise ValueError('`functional.domain` {} is not the same as '
                                  '`subgradient_op.range` {}'
                                  ''.format(self.__functional.domain,
@@ -2634,9 +2634,11 @@ class BregmanDistance(Functional):
 
     def __repr__(self):
         '''Return ``repr(self)``.'''
-        return '{}({!r}, {!r}, {!r})'.format(self.__class__.__name__,
-                                             self.functional, self.point,
-                                             self.subgradient_op)
+        posargs = [self.functional, self.point]
+        subgrad_op_default = getattr(self.functional, 'gradient', None)
+        optargs = [('subgradient_op', self.subgradient_op, subgrad_op_default)]
+        inner_str = signature_string(posargs, optargs, sep=',\n')
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
 
 
 if __name__ == '__main__':
