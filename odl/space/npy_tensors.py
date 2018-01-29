@@ -858,7 +858,7 @@ class NumpyTensorSpace(TensorSpace):
         >>> rn[[2, 0], [3, 3], [0, 1], [5, 2]]
         rn(2)
         """
-        new_shape, removed_axes, _ = simulate_slicing(self.shape, indices)
+        new_shape, removed_axes, _, _ = simulate_slicing(self.shape, indices)
         weighting = slice_weighting(self.weighting, self.shape, indices)
         return type(self)(shape=new_shape, dtype=self.dtype,
                           weighting=weighting, exponent=self.exponent)
@@ -2150,9 +2150,8 @@ def slice_weighting(weighting, space_shape, indices):
     - Other: not preserved, mapped to ``None``.
     """
     indices = normalized_index_expression(indices, space_shape)
-    # Use `None`-free `indices` to simulate slicing
-    indices_no_none = [i for i in indices if i is not None]
-    new_shape, removed_axes, _ = simulate_slicing(space_shape, indices_no_none)
+    new_shape, removed_axes, new_axes, _ = simulate_slicing(
+        space_shape, indices)
 
     if isinstance(weighting, NumpyTensorSpaceConstWeighting):
         new_weighting = weighting
@@ -2160,6 +2159,7 @@ def slice_weighting(weighting, space_shape, indices):
     elif isinstance(weighting, NumpyTensorSpacePerAxisWeighting):
         # Determine factors without `None` components
         factors = []
+        indices_no_none = [i for i in indices if i is not None]
         for i, (fac, idx) in enumerate(zip_longest(weighting.factors,
                                                    indices_no_none,
                                                    fillvalue=slice(None))):
@@ -2171,10 +2171,9 @@ def slice_weighting(weighting, space_shape, indices):
             else:
                 factors.append(fac[idx])
 
-        # Add 1.0 where `None` is in `indices`
-        for i, idx in enumerate(indices):
-            if idx is None:
-                factors.insert(i, 1.0)
+        # Add 1.0 for new axes
+        for newax in new_axes:
+            factors.insert(newax, 1.0)
 
         new_weighting = NumpyTensorSpacePerAxisWeighting(
             factors, weighting.exponent)

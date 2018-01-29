@@ -493,13 +493,17 @@ class DiscreteLp(DiscretizedSpace):
 
             x[indices] in space[indices]
 
-        Space indexing does not work with index arrays, boolean arrays and
-        "fancy indexing".
+        Space indexing does not work with index arrays or "fancy indexing".
 
-        .. note::
-            This method is a default implementation that propagates only
-            ``shape`` and ``dtype``. Subclasses with more properties
-            need to override the method.
+        Notes
+        -----
+        New axes can be created, however not within the axes that
+        correspond to the function domain, only as new output axes.
+        In other words, a scalar function can be turned into a
+        ``(1, ..., 1)`` tensor-valued function this way by adding new axes
+        of size 1, or a vector-valued function into a tensor-valued one
+        with sizes 1 in the new axes. This is useful for broadcasting,
+        see Examples.
 
         Examples
         --------
@@ -574,25 +578,33 @@ class DiscreteLp(DiscretizedSpace):
         # Normalize the index expression based on the full shape, and
         # split into "in" and "out" parts
         indices = normalized_index_expression(indices, self.shape)
-        # Avoid array comparison with `==` if `indices.contains()` is used
-        if any(idx is None for idx in indices):
-            raise ValueError('creating new axes is not supported.')
 
-        indices_out = indices[:len(self.shape_out)]
-        indices_in = indices[len(self.shape_out):]
+        # New axes can be added to `indices_out`, so we can only use
+        # `indices_in` as fixed in length
+        indices_out = indices[:len(indices) - self.ndim_in]
+        indices_in = indices[len(indices) - self.ndim_in:]
+        # Now `indices_in` shouldn't contain any `None` since we don't
+        # allow new axes there; we cannot use `indices.contains()` for
+        # that check since it uses the `==` operator which will fail if
+        # one of the indices is a Numpy array
+        if any(idx is None for idx in indices_in):
+            raise ValueError('new axes can be created only with respect to '
+                             'the "output" dimensions, see the documentation')
 
         # Index tensor space
         res_tspace = self.tspace[indices]
 
         # Index partition, manually removing collapsed axes
         res_part = self.partition[indices_in]
-        _, collapsed_axes_in, _ = simulate_slicing(self.shape_in, indices_in)
+        _, collapsed_axes_in, _, _ = simulate_slicing(
+            self.shape_in, indices_in)
         remaining_axes_in = [i for i in range(len(self.shape_in))
                              if i not in collapsed_axes_in]
         res_part = res_part.byaxis[remaining_axes_in]
 
         # Determine new fspace
-        sliced_shape_out, _, _ = simulate_slicing(self.shape_out, indices_out)
+        sliced_shape_out, _, _, _ = simulate_slicing(
+            self.shape_out, indices_out)
         res_fspace = FunctionSpace(
             res_part.set,
             out_dtype=(self.fspace.scalar_out_dtype, sliced_shape_out))
@@ -959,8 +971,19 @@ class DiscreteLpElement(DiscretizedSpaceElement):
         values : `DiscreteLpElement`
             The value(s) at the index (indices).
 
+        Notes
+        -----
+        New axes can be created, however not within the axes that
+        correspond to the function domain, only as new output axes.
+        In other words, a scalar function can be turned into a
+        ``(1, ..., 1)`` tensor-valued function this way by adding new axes
+        of size 1, or a vector-valued function into a tensor-valued one
+        with sizes 1 in the new axes. This is useful for broadcasting,
+        see Examples.
+
         Examples
         --------
+        # TODO: write example
         """
         if isinstance(indices, type(self)):
             indices = indices.tensor.data
@@ -968,13 +991,22 @@ class DiscreteLpElement(DiscretizedSpaceElement):
         try:
             iter(indices)
         except TypeError:
-            if indices is None:
-                raise ValueError('creating new axes is not supported.')
-        else:
-            # Avoid array comparison with `==` that happens with
-            # `indices.contains()`
-            if any(idx is None for idx in indices):
-                raise ValueError('creating new axes is not supported.')
+            pass
+
+        # Normalize the index expression based on the full shape, and
+        # split into "in" and "out" parts
+        indices = normalized_index_expression(indices, self.shape)
+
+        # New axes can be added to the output part, so we can only use
+        # `indices_in` as fixed in length
+        indices_in = indices[len(indices) - self.ndim_in:]
+        # Now `indices_in` shouldn't contain any `None` since we don't
+        # allow new axes there; we cannot use `indices.contains()` for
+        # that check since it uses the `==` operator which will fail if
+        # one of the indices is a Numpy array
+        if any(idx is None for idx in indices_in):
+            raise ValueError('new axes can be created only with respect to '
+                             'the "output" dimensions, see the documentation')
 
         res_tens = self.tensor[indices]
         if np.isscalar(res_tens):

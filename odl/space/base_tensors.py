@@ -18,7 +18,6 @@ from odl.set.space import LinearSpace, LinearSpaceElement
 from odl.util import (
     is_numeric_dtype, is_real_dtype, is_floating_dtype,
     is_real_floating_dtype, is_complex_floating_dtype, safe_int_conv,
-    simulate_slicing,
     array_str, dtype_str, signature_string, indent, writable_array)
 from odl.util.ufuncs import TensorSpaceUfuncs
 from odl.util.utility import TYPE_MAP_R2C, TYPE_MAP_C2R
