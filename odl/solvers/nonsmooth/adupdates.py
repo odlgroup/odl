@@ -138,13 +138,12 @@ def adupdates(x, g, L, stepsize, majs, niter, random=False,
     # (the space of the primal variable):
     domain = L[0].domain
     if any(domain != opi.domain for opi in L):
-        raise ValueError('Domains of `ops` are not all equal.')
+        raise ValueError('Domains of `L` are not all equal.')
 
     # Check if range of the operators equals domain of the functionals
     ranges = [opi.range for opi in L]
     if any(L[i].range != g[i].domain for i in range(length)):
-        raise ValueError('Ranges of operators and domains'
-                         'of functionals do not agree.')
+        raise ValueError('Ranges of `L` and domains of `g` do not agree.')
 
     # Initialization of the dual variables
     duals = [space.zero() for space in ranges]
