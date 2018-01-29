@@ -126,10 +126,13 @@ def adupdates(x, g, L, stepsize, majs, niter, random=False,
     """
     # Check the lenghts of the lists (= number of dual variables)
     length = len(g)
-    if not len(g) == len(L):
-        raise ValueError('Number of `ops` {} and number '
-                         'of `funcs` {} do not agree.'
-                         ''.format(len(L), len(g)))
+    if not len(L) == length:
+        raise ValueError('Number of `L` {} and number of `g` {} do not agree.'
+                         ''.format(len(L), length))
+
+    if not len(majs) == length:
+        raise ValueError('Number of `majs` {} and number of `g` {} do not'
+                         ' agree.'.format(len(majs), length))
 
     # Check if operators have a common domain
     # (the space of the primal variable):
@@ -163,9 +166,9 @@ def adupdates(x, g, L, stepsize, majs, niter, random=False,
             x -= (1.0 / stepsize) * L[i].adjoint(duals[i])
 
         if random:
-            rng = np.random.permutation(range(len(L)))
+            rng = np.random.permutation(range(length))
         else:
-            rng = range(len(L))
+            rng = range(length)
 
         for j in rng:
             step = stepsize / majs[j]
