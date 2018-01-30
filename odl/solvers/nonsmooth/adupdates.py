@@ -21,24 +21,24 @@ __all__ = ('adupdates_method',)
 
 def adupdates_method(x, g, L, stepsize, majs, niter, random=False,
                      callback=None, callback_loop='outer'):
-    """Alternating Dual updates method.
+    r"""Alternating Dual updates method.
 
     The Alternating Dual (AD) updates method of McGaffin and Fessler `[MF2015]
     <http://ieeexplore.ieee.org/document/7271047/>`_ is designed to solve an
-    optimization problem of the form
+    optimization problem of the form ::
 
-        min_x sum_i g_i(L_i x)
+        min_x [ sum_i g_i(L_i x) ]
 
     where ``g_i`` are proper, convex and lower semicontinuous functions and
-    ``L_i`` are linear `Operator`s.
+    ``L_i`` are linear `Operator` s.
 
     Parameters
     ----------
-    g : sequence of `Functional`s
-        All functions need to provide a `convex_conj` with a
-        `proximal` factory.
-    L : sequence of `Operator`s
-        Needs to provide as many elements as `g`.
+    g : sequence of `Functional` s
+        All functions need to provide a `Functional.convex_conj` with a
+        `Functional.proximal` factory.
+    L : sequence of `Operator` s
+        Needs to provide as many elements as ``g``.
     x : `LinearSpaceElement`
         Initial point, updated in-place.
     stepsize : positive float
@@ -47,19 +47,19 @@ def adupdates_method(x, g, L, stepsize, majs, niter, random=False,
         performance might depend on the choice of a good stepsize.
     majs : sequence of majorizers
         Parameters determining the stepsizes for the inner iterations. Must be
-        matched with the norms of `L`, and convergence is guaranteed if
-        `majs` are large enough. See the Notes section for details.
+        matched with the norms of ``L``, and convergence is guaranteed if
+        ``majs`` are large enough. See the Notes section for details.
     niter : int
         Number of (outer) iterations.
     random : bool, optional
         If `True`, the order of the dual upgdates is chosen randomly,
-        otherwise the order provided by the lists `g`, `L` and `majs`
+        otherwise the order provided by the lists ``g``, ``L`` and ``majs``
         is used.
     callback : callable, optional
         Function called with the current iterate after each iteration.
     callback_loop : {'inner', 'outer'}, optional
-       If 'inner', the `callback` function is called after each inner
-       iteration, i.e., after each dual update. If 'outer', the `callback`
+       If 'inner', the ``callback`` function is called after each inner
+       iteration, i.e., after each dual update. If 'outer', the ``callback``
        function is called after each outer iteration, i.e., after each primal
        update.
 
@@ -103,20 +103,19 @@ def adupdates_method(x, g, L, stepsize, majs, niter, random=False,
 
     where :math:`M_j` is a diagonal matrix with positive diagonal entries such
     that :math:`M_j - L_j L_j^*` is positive semidefinite. The matrix
-    :math:`M_j` is incorporated into this function via the variable `majs` in
+    :math:`M_j` is incorporated into this function via the variable ``majs`` in
     one of the following ways:
 
-    * Setting `majs[i]` a positive float :math:`\gamma` corresponds to the
-    choice :math:`M_i = \gamma \mathrm{Id}`.
-
-    * Assume that `g_j` is a `SeparableSum`, then setting `majs[i]` a list
-    :math:`(\gamma_1, \ldots, \gamma_k)`of positive floats corresponds to the
-    choice of a block-diagonal matrix :math:`M_j`, where each block corresponds
-    to one of the space components and equals :math:`\gamma_i \mathrm{Id}`.
-
-    * Assume that `g_j` is a `L1_norm` or a `L2_norm_squared`, then setting
-    `majs[i]` a `g_j.domain.element` :math:`z` corresponds to the choice
-    :math:`\mathrm{diag}(z)`.
+    * Setting ``majs[i]`` a positive float :math:`\gamma` corresponds to the
+      choice :math:`M_i = \gamma \mathrm{Id}`.
+    * Assume that ``g_j`` is a `SeparableSum`, then setting ``majs[i]`` a
+      list :math:`(\gamma_1, \ldots, \gamma_k)` of positive floats corresponds
+      to the choice of a block-diagonal matrix :math:`M_j`, where each block
+      corresponds to one of the space components and
+      equals :math:`\gamma_i \mathrm{Id}`.
+    * Assume that ``g_j`` is an `L1Norm` or an `L2NormSquared`, then setting
+      ``majs[i]`` a ``g_j.domain.element`` :math:`z` corresponds to the choice
+      :math:`\mathrm{diag}(z)`.
 
     References
     ----------
