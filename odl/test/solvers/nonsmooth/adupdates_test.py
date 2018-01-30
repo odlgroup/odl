@@ -70,30 +70,22 @@ def test_adupdates():
 
     expected_solution = domain.element([1, 1, 1, 1])
     # Create right-hand-sides of the equation
-    rhs1 = mat1op.range.element(mat1op(expected_solution))
-    rhs2 = mat2op.range.element(mat2op(expected_solution))
+    rhs1 = mat1op(expected_solution)
+    rhs2 = mat2op(expected_solution)
 
     # Create the functionals
-    fid1 = odl.solvers.functional.functional.FunctionalTranslation(
-        odl.solvers.functional.default_functionals.L2NormSquared(
-            mat1op.range), rhs1)
-    fid2 = odl.solvers.functional.functional.FunctionalTranslation(
-        odl.solvers.functional.default_functionals.L2NormSquared(
-            mat2op.range), rhs2)
-    reg1 = odl.solvers.functional.default_functionals.L1Norm(tv1.range)
-    reg2 = odl.solvers.functional.default_functionals.L1Norm(tv2.range)
-    ind = odl.solvers.functional.default_functionals.IndicatorNonnegativity(
-        nneg.range)
+    fid1 = odl.solvers.L2NormSquared(mat1op.range).translated(rhs1)
+    fid2 = odl.solvers.L2NormSquared(mat2op.range).translated(rhs2)
+    reg1 = odl.solvers.L1Norm(tv1.range)
+    reg2 = odl.solvers.L1Norm(tv2.range)
+    ind = odl.solvers.IndicatorNonnegativity(nneg.range)
     funcs = [fid1, fid2, reg1, reg2, ind]
 
     # Start from zero
     x = tv1.domain.zero()
     x_simple = tv1.domain.zero()
 
-    # Select stepsize one
     stepsize = 1
-
-    # Do 100 iterations
     niter = 100
 
     adupdates_method(x, funcs, ops, stepsize, majs, niter)
