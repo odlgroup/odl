@@ -54,7 +54,8 @@ def test_adupdates():
     mat1op = odl.MatrixOperator(mat1)
     mat2op = odl.MatrixOperator(mat2)
     domain = mat1op.domain
-    tv1 = odl.MatrixOperator([[1.0, -1.0, 0.0, 0.0], [0.0, 0.0, 1.0, -1.0]])
+    tv1 = odl.MatrixOperator([[1.0, -1.0, 0.0, 0.0],
+                              [0.0, 0.0, 1.0, -1.0]])
     tv2 = odl.MatrixOperator([[0.0, 1.0, -1.0, 0.0]])
     nneg = odl.IdentityOperator(domain)
     ops = [mat1op, mat2op, tv1, tv2, nneg]
