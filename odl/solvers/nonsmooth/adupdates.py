@@ -16,11 +16,11 @@ from __future__ import print_function, division, absolute_import
 
 import numpy as np
 
-__all__ = ('adupdates',)
+__all__ = ('adupdates_method',)
 
 
-def adupdates(x, g, L, stepsize, majs, niter, random=False,
-              callback=None, callback_loop='outer'):
+def adupdates_method(x, g, L, stepsize, majs, niter, random=False,
+                     callback=None, callback_loop='outer'):
     """Alternating Dual updates method.
 
     The Alternating Dual (AD) updates method of McGaffin and Fessler `[MF2015]
@@ -183,7 +183,7 @@ def adupdates(x, g, L, stepsize, majs, niter, random=False,
             callback(x)
 
 
-def adupdates_simple(x, g, L, stepsize, majs, niter, random=False):
+def adupdates_method_simple(x, g, L, stepsize, majs, niter, random=False):
     """Non-optimized version of ``adupdates``.
     This function is intended for debugging. It makes a lot of copies and
     performs no error checking.

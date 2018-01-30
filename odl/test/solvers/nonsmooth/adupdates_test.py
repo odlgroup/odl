@@ -12,8 +12,8 @@ from __future__ import division
 # import pytest
 import odl
 # import numpy as np
-from odl.solvers.nonsmooth import adupdates
-from odl.solvers.nonsmooth.adupdates import adupdates_simple
+from odl.solvers.nonsmooth import adupdates_method
+from odl.solvers.nonsmooth.adupdates import adupdates_method_simple
 
 from odl.util.testutils import all_almost_equal
 
@@ -97,8 +97,8 @@ def test_adupdates():
     # Do 100 iterations
     niter = 100
 
-    adupdates(x, funcs, ops, stepsize, majs, niter)
-    adupdates_simple(x_simple, funcs, ops, stepsize, majs, niter)
+    adupdates_method(x, funcs, ops, stepsize, majs, niter)
+    adupdates_method_simple(x_simple, funcs, ops, stepsize, majs, niter)
     assert all_almost_equal(x, x_simple)
     assert domain.dist(x, expected_solution) < 1e-3
 
