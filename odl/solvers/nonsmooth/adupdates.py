@@ -125,18 +125,18 @@ def adupdates_method(x, g, L, stepsize, majs, niter, random=False,
     """
     # Check the lenghts of the lists (= number of dual variables)
     length = len(g)
-    if not len(L) == length:
+    if len(L) != length:
         raise ValueError('Number of `L` {} and number of `g` {} do not agree.'
                          ''.format(len(L), length))
 
-    if not len(majs) == length:
+    if len(majs) != length:
         raise ValueError('Number of `majs` {} and number of `g` {} do not'
                          ' agree.'.format(len(majs), length))
 
     # Check if operators have a common domain
     # (the space of the primal variable):
     domain = L[0].domain
-    if any(domain != opi.domain for opi in L):
+    if any(opi.domain != domain for opi in L):
         raise ValueError('Domains of `L` are not all equal.')
 
     # Check if range of the operators equals domain of the functionals
