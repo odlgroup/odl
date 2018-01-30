@@ -38,7 +38,7 @@ def adupdates_method(x, g, L, stepsize, majs, niter, random=False,
         All functions need to provide a `Functional.convex_conj` with a
         `Functional.proximal` factory.
     L : sequence of `Operator` s
-        Needs to provide as many elements as ``g``.
+        Length of ``L`` must equal the length of ``g``.
     x : `LinearSpaceElement`
         Initial point, updated in-place.
     stepsize : positive float
@@ -126,23 +126,23 @@ def adupdates_method(x, g, L, stepsize, majs, niter, random=False,
     # Check the lenghts of the lists (= number of dual variables)
     length = len(g)
     if len(L) != length:
-        raise ValueError('Number of `L` {} and number of `g` {} do not agree.'
+        raise ValueError('`len(L)` should equal `len(g)`, but {} != {}'
                          ''.format(len(L), length))
 
     if len(majs) != length:
-        raise ValueError('Number of `majs` {} and number of `g` {} do not'
-                         ' agree.'.format(len(majs), length))
+        raise ValueError('len(`majs`) should equal `len(g)`, but {} != {}'
+                         ''.format(len(majs), length))
 
     # Check if operators have a common domain
     # (the space of the primal variable):
     domain = L[0].domain
     if any(opi.domain != domain for opi in L):
-        raise ValueError('Domains of `L` are not all equal.')
+        raise ValueError('domains of `L` are not all equal')
 
     # Check if range of the operators equals domain of the functionals
     ranges = [opi.range for opi in L]
     if any(L[i].range != g[i].domain for i in range(length)):
-        raise ValueError('Ranges of `L` and domains of `g` do not agree.')
+        raise ValueError('L[i].range` should equal `g.domain`')
 
     # Initialization of the dual variables
     duals = [space.zero() for space in ranges]
