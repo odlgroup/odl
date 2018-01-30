@@ -159,7 +159,7 @@ class ScalingOperator(Operator):
         posargs = [self.domain]
         optargs = [('scalar', self.scalar, None),
                    ('range', self.range, self.domain)]
-        with npy_printoptions(precision=4):
+        with npy_printoptions(precision=REPR_PRECISION):
             inner_parts = signature_string_parts(posargs, optargs)
         return repr_string(self.__class__.__name__, inner_parts)
 
