@@ -7,7 +7,6 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import division
-from numbers import Integral
 import pytest
 try:
     import pywt
@@ -23,6 +22,7 @@ from odl.trafos.backends.pywt_bindings import (
     pywt_flat_array_from_coeffs, pywt_coeffs_from_flat_array,
     pywt_single_level_decomp,
     pywt_multi_level_decomp, pywt_multi_level_recon)
+from odl.util import is_int
 from odl.util.testutils import (all_almost_equal, all_equal, noise_array,
                                 simple_fixture)
 
@@ -112,7 +112,7 @@ def _grouped_and_flat_arrays(shapes, dtype):
     i.e. the array with shape ``shapes[0]`` appears once, while the
     others appear ``2 ** ndim - 1`` times each.
     """
-    shapes = [[shape] if isinstance(shape, Integral) else shape
+    shapes = [[int(shape)] if is_int(shape) else shape
               for shape in shapes]
     space = odl.uniform_discr([0] * len(shapes[0]), shapes[0], shapes[0],
                               dtype=dtype)

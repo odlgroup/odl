@@ -9,11 +9,11 @@
 """Numerical helper functions for convenience or speed."""
 
 from __future__ import print_function, division, absolute_import
-from numbers import Integral
 import numpy as np
 
 from odl.util.normalize import (
     normalized_scalar_param_list, safe_int_conv, normalized_index_expression)
+from odl.util.utility import is_int
 
 
 __all__ = ('apply_on_boundary', 'fast_1d_tensor_mult', 'resize_array',
@@ -952,12 +952,22 @@ def simulate_slicing(shape, indices):
     >>> simulate_slicing(shape, ([2, 0], [3, 3], [0, 1], [5, 2]))
     ((2,), (1, 2, 3), (), 0)
     """
+    # Raising in the case of bool indexing as a signal for upstream code.
+    # This is an optimization that avoids counting the number of
+    # `True` entries here *and* in the actual indexing operation.
     if getattr(indices, 'dtype', object) == bool:
-        # Raising here as signal for upstream code.
-        # This is an optimization that avoids counting the number of
-        # `True` entries here *and* in the actual indexing operation.
         raise TypeError('cannot index space with a boolean element or '
                         'array')
+
+    # Handle also bool array wrapped in a sequence
+    try:
+        length = len(indices)
+    except TypeError:
+        pass
+    else:
+        if length > 0 and getattr(indices[0], 'dtype', object) == bool:
+            raise TypeError('cannot index space with a boolean element or '
+                            'array')
 
     indices = normalized_index_expression(indices, shape)
 
@@ -979,7 +989,7 @@ def simulate_slicing(shape, indices):
             new_shape.append(1)
             new_axes.append(i_none)
             i_none += 1
-        elif isinstance(idx, Integral):
+        elif is_int(idx):
             # Collapse axis
             collapsed_axes.append(i)
         elif isinstance(idx, slice):

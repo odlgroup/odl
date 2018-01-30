@@ -11,12 +11,12 @@
 from __future__ import print_function, division, absolute_import
 from builtins import object
 import inspect
-from numbers import Number, Integral
+from numbers import Number
 import sys
 
 from odl.set import LinearSpace, Set, Field
 from odl.set.space import LinearSpaceElement
-from odl.util import cache_arguments
+from odl.util import cache_arguments, is_int
 
 
 __all__ = ('Operator', 'OperatorComp', 'OperatorSum', 'OperatorVectorSum',
@@ -986,7 +986,7 @@ class Operator(object):
         >>> squared(x)
         rn(3).element([ 27.,  54.,  81.])
         """
-        if isinstance(n, Integral) and n > 0:
+        if is_int(n) and n > 0:
             op = self
             while n > 1:
                 op = OperatorComp(self, op)

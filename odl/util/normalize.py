@@ -9,8 +9,9 @@
 """Utilities for normalization of user input."""
 
 from __future__ import print_function, division, absolute_import
-from numbers import Integral
 import numpy as np
+
+from odl.util.utility import is_int
 
 
 __all__ = ('normalized_scalar_param_list', 'normalized_index_expression',
@@ -205,7 +206,9 @@ def normalized_index_expression(indices, shape, int_to_slice=False):
     elif (isinstance(indices, slice) or
           indices is Ellipsis or
           (isinstance(indices, list) and
-           all(isinstance(idx, Integral) for idx in indices))):
+           all(is_int(idx) for idx in indices))):
+        indices = [indices]
+    elif getattr(indices, 'dtype', object) == bool:
         indices = [indices]
 
     indices = list(indices)
@@ -224,12 +227,8 @@ def normalized_index_expression(indices, shape, int_to_slice=False):
             else:
                 ell_idx = i
 
-    # Count number of new axes, they should not count towards the ellipsis
-    # axes
-    num_newaxes = 0
-    for idx in indices:
-        if idx is None:
-            num_newaxes += 1
+    # New axes don't count towards the ellipsis axes
+    num_newaxes = sum(idx is None for idx in indices)
 
     if ell_idx is not None:
         extra_dims = ndim - (len(indices) - num_newaxes) + 1

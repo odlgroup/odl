@@ -10,11 +10,12 @@
 
 from __future__ import print_function, division, absolute_import
 from builtins import int, object
-from numbers import Integral, Real, Complex
+from numbers import Real, Complex
 from past.types.basestring import basestring
 import numpy as np
 
-from odl.util import is_int_dtype, is_real_dtype, is_numeric_dtype, unique
+from odl.util import (
+    is_int_dtype, is_real_dtype, is_numeric_dtype, unique, is_int)
 
 
 __all__ = ('Set', 'EmptySet', 'UniversalSet', 'Field', 'Integers',
@@ -446,7 +447,7 @@ class Integers(Set):
 
     def __contains__(self, other):
         """Return ``other in self``."""
-        return isinstance(other, Integral)
+        return is_int(other)
 
     def contains_set(self, other):
         """Test if ``other`` is a subset of the integers.

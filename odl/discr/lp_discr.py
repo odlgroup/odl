@@ -10,7 +10,6 @@
 
 from __future__ import print_function, division, absolute_import
 from builtins import int
-from numbers import Integral
 import numpy as np
 
 from odl.discr.discretization import (
@@ -26,7 +25,7 @@ from odl.space.entry_points import tensor_space_impl
 from odl.space.weighting import ConstWeighting, PerAxisWeighting
 from odl.util import (
     apply_on_boundary, is_real_dtype, is_complex_floating_dtype, is_string,
-    is_floating_dtype, is_numeric_dtype,
+    is_floating_dtype, is_numeric_dtype, is_int,
     dtype_str, array_str, signature_string, indent, npy_printoptions,
     normalized_scalar_param_list, safe_int_conv, normalized_nodes_on_bdry,
     normalized_index_expression, simulate_slicing)
@@ -986,7 +985,11 @@ class DiscreteLpElement(DiscretizedSpaceElement):
         # TODO: write example
         """
         if isinstance(indices, type(self)):
-            indices = indices.tensor.data
+            indices = indices.tensor
+        if isinstance(indices, type(self.tensor)):
+            indices = indices.data
+        if isinstance(indices, type(self.tensor.data)):
+            return self.tensor[indices]
 
         try:
             iter(indices)
@@ -1549,7 +1552,7 @@ class DiscreteLpElement(DiscretizedSpaceElement):
                        tuple(n // 2 for n in self.space.shape[2:]))
 
         # Normalize indices
-        if isinstance(indices, (Integral, slice)):
+        if is_int(indices) or isinstance(indices, slice):
             indices = (indices,)
         elif indices is None or indices == Ellipsis:
             indices = (slice(None),) * self.ndim
@@ -1581,7 +1584,7 @@ class DiscreteLpElement(DiscretizedSpaceElement):
                         for idx in indices)
 
         squeezed_axes = [axis for axis in range(self.ndim)
-                         if not isinstance(indices[axis], Integral)]
+                         if is_int(indices[axis])]
         axis_labels = [self.space.axis_labels[axis] for axis in squeezed_axes]
 
         # Squeeze grid and values according to the index expression

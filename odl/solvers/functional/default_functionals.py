@@ -9,7 +9,6 @@
 """Default functionals defined on any space similar to R^n or L^2."""
 
 from __future__ import print_function, division, absolute_import
-from numbers import Integral
 import numpy as np
 
 from odl.solvers.functional.functional import (Functional,
@@ -27,7 +26,8 @@ from odl.solvers.nonsmooth.proximal_operators import (
     proximal_const_func, proximal_box_constraint,
     proximal_convex_conj_kl, proximal_convex_conj_kl_cross_entropy,
     combine_proximals, proximal_convex_conj)
-from odl.util import conj_exponent, moveaxis
+from odl.util import conj_exponent, is_int
+from odl.util.npy_compat import moveaxis
 
 
 __all__ = ('ZeroFunctional', 'ConstantFunctional', 'ScalingFunctional',
@@ -1658,8 +1658,8 @@ class SeparableSum(Functional):
         """
         # Make a power space if the second argument is an integer
         if (len(functionals) == 2 and
-                isinstance(functionals[1], Integral)):
-            functionals = [functionals[0]] * functionals[1]
+                is_int(functionals[1])):
+            functionals = [functionals[0]] * int(functionals[1])
 
         domains = [func.domain for func in functionals]
         domain = ProductSpace(*domains)
