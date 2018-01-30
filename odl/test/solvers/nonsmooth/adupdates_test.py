@@ -6,12 +6,10 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Test for the Fessler alternating dual updates solver."""
+"""Test for the alternating dual updates solver."""
 
 from __future__ import division
-# import pytest
 import odl
-# import numpy as np
 from odl.solvers.nonsmooth import adupdates_method
 from odl.solvers.nonsmooth.adupdates import adupdates_method_simple
 
