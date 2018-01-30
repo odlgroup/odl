@@ -16,7 +16,7 @@ from __future__ import print_function, division, absolute_import
 
 import numpy as np
 
-__all__ = ('adupdates', 'adupdates_simple')
+__all__ = ('adupdates',)
 
 
 def adupdates(x, g, L, stepsize, majs, niter, random=False,

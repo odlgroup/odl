@@ -12,7 +12,8 @@ from __future__ import division
 # import pytest
 import odl
 # import numpy as np
-from odl.solvers.nonsmooth import adupdates, adupdates_simple
+from odl.solvers.nonsmooth import adupdates
+from odl.solvers.nonsmooth.adupdates import adupdates_simple
 
 from odl.util.testutils import all_almost_equal
 
