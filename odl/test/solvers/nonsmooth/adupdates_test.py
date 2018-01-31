@@ -60,13 +60,13 @@ def test_adupdates():
     nneg = odl.IdentityOperator(domain)
     ops = [mat1op, mat2op, tv1, tv2, nneg]
 
-    # Create majorizers for linear operators
-    mat1m = mat1op(mat1op.adjoint(mat1op.range.one()))
-    mat2m = mat2op(mat2op.adjoint(mat2op.range.one()))
-    tv1m = tv1.range.element([2.0, 2.0])
-    tv2m = 2.0
-    nnegm = nneg.range.element([1.0, 1.0, 1.0, 1.0])
-    majs = [mat1m, mat2m, tv1m, tv2m, nnegm]
+    # Create inner stepsizes for linear operators
+    mat1s = 1 / mat1op(mat1op.adjoint(mat1op.range.one()))
+    mat2s = 1 / mat2op(mat2op.adjoint(mat2op.range.one()))
+    tv1s = tv1.range.element([0.5, 0.5])
+    tv2s = 0.5
+    nnegs = nneg.range.element([1.0, 1.0, 1.0, 1.0])
+    inner_stepsizes = [mat1s, mat2s, tv1s, tv2s, nnegs]
 
     expected_solution = domain.element([1, 1, 1, 1])
     # Create right-hand-sides of the equation
@@ -88,8 +88,9 @@ def test_adupdates():
     stepsize = 1
     niter = 100
 
-    adupdates_method(x, funcs, ops, stepsize, majs, niter)
-    adupdates_method_simple(x_simple, funcs, ops, stepsize, majs, niter)
+    adupdates_method(x, funcs, ops, stepsize, inner_stepsizes, niter)
+    adupdates_method_simple(x_simple, funcs, ops, stepsize,
+                            inner_stepsizes, niter)
     assert all_almost_equal(x, x_simple)
     assert domain.dist(x, expected_solution) < 1e-3
 
