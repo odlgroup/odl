@@ -17,8 +17,10 @@ from odl.discr.discretization import (
 from odl.discr.discr_mappings import (
     PointCollocation, NearestInterpolation, LinearInterpolation,
     PerAxisInterpolation)
+from odl.discr.grid import uniform_grid
 from odl.discr.partition import (
-    RectPartition, uniform_partition_fromintv, uniform_partition)
+    RectPartition, uniform_partition_fromintv, uniform_partition_fromgrid,
+    uniform_partition)
 from odl.set import RealNumbers, ComplexNumbers, IntervalProd
 from odl.space import FunctionSpace, ProductSpace
 from odl.space.entry_points import tensor_space_impl
@@ -127,12 +129,19 @@ class DiscreteLp(DiscretizedSpace):
         # Set axis labels
         axis_labels = kwargs.pop('axis_labels', None)
         if axis_labels is None:
-            if self.ndim <= 3:
-                self.__axis_labels = ('$x$', '$y$', '$z$')[:self.ndim]
+            axis_labels_out = tuple('$i_{}$'.format(ax)
+                                    for ax in range(self.ndim_out))
+            if self.ndim_in <= 3:
+                axis_labels_in = ('$x$', '$y$', '$z$')[:self.ndim_in]
             else:
-                self.__axis_labels = tuple('$x_{}$'.format(axis)
-                                           for axis in range(self.ndim))
+                axis_labels_in = tuple('$x_{}$'.format(ax)
+                                       for ax in range(self.ndim_in))
+            self.__axis_labels = axis_labels_out + axis_labels_in
         else:
+            if len(axis_labels) != self.ndim:
+                raise ValueError(
+                    '`axis_labels` should be equal to the number of axes, '
+                    'but {} != {}'.format(len(axis_labels), self.ndim))
             self.__axis_labels = tuple(str(label) for label in axis_labels)
 
         if kwargs:
@@ -791,6 +800,8 @@ class DiscreteLpElement(DiscretizedSpaceElement):
 
     """Representation of a `DiscreteLp` element."""
 
+    # TODO: ndim_in, ndim_out, shape_in, shape_out
+
     @property
     def cell_sides(self):
         """Side lengths of a cell in an underlying *uniform* partition."""
@@ -1002,7 +1013,7 @@ class DiscreteLpElement(DiscretizedSpaceElement):
 
         # New axes can be added to the output part, so we can only use
         # `indices_in` as fixed in length
-        indices_in = indices[len(indices) - self.ndim_in:]
+        indices_in = indices[len(indices) - self.space.ndim_in:]
         # Now `indices_in` shouldn't contain any `None` since we don't
         # allow new axes there; we cannot use `indices.contains()` for
         # that check since it uses the `==` operator which will fail if
@@ -1587,8 +1598,14 @@ class DiscreteLpElement(DiscretizedSpaceElement):
                          if is_int(indices[axis])]
         axis_labels = [self.space.axis_labels[axis] for axis in squeezed_axes]
 
-        # Squeeze grid and values according to the index expression
-        part = self.space.partition[indices].squeeze()
+        # Extend partition (trivially) to output axes
+        part_out = uniform_partition_fromgrid(
+            uniform_grid([0] * self.space.ndim_out, self.space.shape_out,
+                         self.space.shape_out))
+        part = part_out.append(self.space.partition)
+
+        # Squeeze partition and values according to the index expression
+        part = part[indices].squeeze()
         values = self.asarray()[indices].squeeze()
 
         return show_discrete_data(values, part, title=title, method=method,
