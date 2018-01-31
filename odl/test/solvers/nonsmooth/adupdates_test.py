@@ -37,12 +37,15 @@ def test_adupdates():
     (c) = (19/20)         then       (x_3) = (1)
     (d)   (319/420),                 (x_4) = (1).
 
-    We therefore solve the problem
+    We solve the problem
 
     min ||Ax - b||^2 + TV(x) s.t. x >= 0
 
-    for the matrix A, the r.h.s. b as above and the total variation TV.
-    The solution of this problem is clearly x = (1, 1, 1, 1).
+    for the matrix A, the r.h.s. b as above and the total variation TV, which
+    is given as the sum of the absoulute values of consecutive entries of the
+    solution. The solution of this problem is clearly x = (1, 1, 1, 1), since
+    it satisfies the additional constraint and minimizes both terms of the
+    objective function.
     """
 
     mat1 = [[1, 1 / 2, 1 / 3, 1 / 4],
