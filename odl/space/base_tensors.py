@@ -808,11 +808,11 @@ numpy.ufunc.reduceat.html
         # --- Get some parameters for later --- #
 
         # Arguments for `writable_array` and/or space constructors
-        out_dtype = kwargs.get('dtype', None)
-        if out_dtype is None:
+        dtype_out = kwargs.get('dtype', None)
+        if dtype_out is None:
             array_kwargs = {}
         else:
-            array_kwargs = {'dtype': out_dtype}
+            array_kwargs = {'dtype': dtype_out}
 
         # --- Evaluate ufunc --- #
 

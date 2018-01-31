@@ -212,7 +212,7 @@ class RayTransformBase(Operator):
         proj_space = kwargs.pop('proj_space', None)
         if proj_space is None:
             dtype = reco_space.dtype
-            proj_fspace = FunctionSpace(geometry.params, out_dtype=dtype)
+            proj_fspace = FunctionSpace(geometry.params, dtype_out=dtype)
             # TODO: handle uniform angles with modified endpoints
             # (scale projections in backproj)
             proj_weighting = proj_space_weighting(reco_space, geometry)

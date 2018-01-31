@@ -79,11 +79,11 @@ class FunctionSpaceMapping(Operator):
                              'of the function set {}'
                              ''.format(partition, fspace.domain, fspace))
 
-        if tspace.shape != fspace.out_shape + partition.shape:
+        if tspace.shape != fspace.shape_out + partition.shape:
             raise ValueError(
                 '`tspace.shape` not equal to '
-                '`fspace.out_shape +  partition.shape`: {} != {}'
-                ''.format(tspace.shape, fspace.out_shape + partition.shape))
+                '`fspace.shape_out +  partition.shape`: {} != {}'
+                ''.format(tspace.shape, fspace.shape_out + partition.shape))
 
         domain = fspace if map_type == 'sampling' else tspace
         range = tspace if map_type == 'sampling' else fspace
@@ -324,7 +324,7 @@ class NearestInterpolation(FunctionSpaceMapping):
         data type in 2d:
 
         >>> rect = odl.IntervalProd([0, 0], [1, 1])
-        >>> fspace = odl.FunctionSpace(rect, out_dtype='U1')
+        >>> fspace = odl.FunctionSpace(rect, dtype_out='U1')
 
         Partitioning the domain uniformly with no nodes on the boundary
         (will shift the grid points):

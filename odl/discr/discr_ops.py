@@ -524,7 +524,7 @@ def _resize_discr(discr, newshp, offset, discr_kwargs):
             new_maxpt.append(grid_max[axis] + (num_r + 0.5) * cell_size[axis])
 
     fspace = FunctionSpace(IntervalProd(new_minpt, new_maxpt),
-                           out_dtype=dtype)
+                           dtype_out=dtype)
     tspace = tensor_space(newshp, dtype=dtype, impl=impl, exponent=exponent,
                           weighting=weighting)
 

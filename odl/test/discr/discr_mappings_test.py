@@ -28,7 +28,7 @@ def test_nearest_interpolation_1d_complex(odl_tspace_impl):
     # Coordinate vectors are:
     # [0.1, 0.3, 0.5, 0.7, 0.9]
 
-    fspace = odl.FunctionSpace(intv, out_dtype=complex)
+    fspace = odl.FunctionSpace(intv, dtype_out=complex)
     tspace = odl.cn(part.shape)
     interp_op = NearestInterpolation(fspace, part, tspace)
     function = interp_op([0 + 1j, 1 + 2j, 2 + 3j, 3 + 4j, 4 + 5j])
@@ -131,7 +131,7 @@ def test_nearest_interpolation_2d_string():
     # Coordinate vectors are:
     # [0.125, 0.375, 0.625, 0.875], [0.25, 0.75]
 
-    fspace = odl.FunctionSpace(rect, out_dtype='U1')
+    fspace = odl.FunctionSpace(rect, dtype_out='U1')
     tspace = odl.tensor_space(part.shape, dtype='U1')
     interp_op = NearestInterpolation(fspace, part, tspace)
     values = np.array([c for c in 'mystring']).reshape(tspace.shape)

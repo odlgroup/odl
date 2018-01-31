@@ -65,7 +65,7 @@ def test_discretelp_init():
 
     # Complex space
     fspace_c = odl.FunctionSpace(odl.IntervalProd([0, 0], [1, 1]),
-                                 out_dtype=complex)
+                                 dtype_out=complex)
     tspace_c = odl.cn(part.shape)
     discr = DiscreteLp(fspace_c, part, tspace_c)
     assert discr.is_complex
@@ -1343,7 +1343,7 @@ def test_norm_rectangle_boundary(odl_tspace_impl, exponent):
 
     dtype = 'float32'
     rect = odl.IntervalProd([-1, -2], [1, 2])
-    fspace = odl.FunctionSpace(rect, out_dtype=dtype)
+    fspace = odl.FunctionSpace(rect, dtype_out=dtype)
 
     # Standard case
     discr = odl.uniform_discr_fromspace(fspace, (4, 8), impl=impl,
