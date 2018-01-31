@@ -865,8 +865,6 @@ class NumpyTensorSpace(TensorSpace):
         >>> rn[[2, 0], [3, 3], [0, 1], [5, 2]]
         rn(2)
         """
-        #print(type(indices))
-        #print(indices)
         new_shape, removed_axes, _, _ = simulate_slicing(self.shape, indices)
         weighting = slice_weighting(self.weighting, self.shape, indices)
         return type(self)(shape=new_shape, dtype=self.dtype,
@@ -2445,14 +2443,6 @@ class NumpyTensorSpacePerAxisWeighting(PerAxisWeighting):
     def consts(self):
         """Tuple containing those factors that are constants."""
         return tuple(fac for fac in self.factors if fac.ndim == 0)
-
-    @property
-    def const(self):
-        """For one constant factor, this is the unwrapped factor."""
-        if len(self.factors) == 1 and len(self.consts) == 1:
-            return self.consts[0]
-        else:
-            raise TypeError('`const` only defined for a single scalar factor')
 
     @property
     def array_axes(self):
