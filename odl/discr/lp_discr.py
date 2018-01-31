@@ -442,11 +442,24 @@ class DiscreteLp(DiscretizedSpace):
 
     def _astype(self, dtype):
         """Internal helper for ``astype``."""
+        dtype = np.dtype(dtype)
         fspace = self.fspace.astype(dtype)
-        tspace = self.tspace.astype(dtype)
+
+        # If `dtype` has a shape, we remove the old output axes and insert
+        # the new ones
+        if dtype.shape == ():
+            tspace = self.tspace.astype(dtype)
+            axis_labels_new = self.axis_labels
+        else:
+            tspace = self.tspace.byaxis[self.ndim_out:].astype(dtype)
+            axis_labels_extra = tuple('$i_{}$'.format(ax)
+                                      for ax in range(len(dtype.shape)))
+            axis_labels_new = (axis_labels_extra +
+                               self.axis_labels[self.ndim_out:])
+
         return type(self)(
             fspace, self.partition, tspace, interp=self.interp,
-            axis_labels=self.axis_labels)
+            axis_labels=axis_labels_new)
 
     # Overrides for space functions depending on partition
     #

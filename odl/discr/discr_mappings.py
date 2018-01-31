@@ -83,7 +83,7 @@ class FunctionSpaceMapping(Operator):
             raise ValueError(
                 '`tspace.shape` not equal to '
                 '`fspace.out_shape +  partition.shape`: {} != {}'
-                ''.format(tspace.shape, partition.shape))
+                ''.format(tspace.shape, fspace.out_shape + partition.shape))
 
         domain = fspace if map_type == 'sampling' else tspace
         range = tspace if map_type == 'sampling' else fspace

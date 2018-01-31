@@ -243,8 +243,9 @@ class TensorSpace(LinearSpace):
         if dtype == self.dtype:
             return self
 
-        if is_numeric_dtype(self.dtype):
-            # Caching for real and complex versions (exact dtype mappings)
+        # Invoke caching for real and complex versions (exact dtype mappings)
+        # if the provided dtype has no shape
+        if is_numeric_dtype(self.dtype) and dtype.shape == ():
             if dtype == self.__real_dtype:
                 if self.__real_space is None:
                     self.__real_space = self._astype(dtype)
