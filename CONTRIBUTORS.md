@@ -5,11 +5,12 @@ We are grateful for contributions and would like to acknowledge all people who h
 ## Contributors in alphabetic order
 
 * [Jonas Adler](https://github.com/adler-j). Package maintainer. Created much of the `Set`, `LinearSpace` and `Operator` structure including utilities. Has also contributed to most other submodules.
+* [Sebastian Banert](https://github.com/sbanert). Contributions to `odl.solvers`.
 * [Chong Chen](https://github.com/chongchenmath). Started work on the `odl.deform` package.
 * [Matthias J. Ehrhardt](https://github.com/matthiasje). Several contributions to `odl.solvers`, in addition to general bug fixes and improvements.
 * [Barbara Gris](https://github.com/bgris). Added `examples/solvers/find_optimal_parameters`.
 * [Johan Karlsson](https://github.com/hilding79). Contributions to `odl.solvers`.
-* [Holger Kohr](https://github.com/adler-j). Package maintainer. Was part of the design of ODL and created several of the submodules, including `odl.discr`, `odl.trafos` and `odl.tomo`. Has contributed to most modules.
+* [Holger Kohr](https://github.com/kohr-h). Package maintainer. Was part of the design of ODL and created several of the submodules, including `odl.discr`, `odl.trafos` and `odl.tomo`. Has contributed to most modules.
 * [Gregory R. Lee](https://github.com/grlee77). Bugfixes.
 * [Julian Moosmann](https://github.com/moosmann). Significant work on the initial `odl.tomo` module.
 * [Kati Niinimäki](https://github.com/niinimaki). Implemented the `WaveletTransform`.
