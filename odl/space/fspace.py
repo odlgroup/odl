@@ -21,7 +21,8 @@ from odl.util import (
     is_real_dtype, is_complex_floating_dtype, dtype_repr, dtype_str,
     complex_dtype, real_dtype, signature_string, is_real_floating_dtype,
     is_valid_input_array, is_valid_input_meshgrid,
-    out_shape_from_array, out_shape_from_meshgrid, vectorize, writable_array)
+    out_shape_from_array, out_shape_from_meshgrid, vectorize,
+    writable_array, is_int, normalized_axis_indices)
 from odl.util.utility import preload_first_arg, getargspec
 
 
@@ -889,6 +890,75 @@ class FunctionSpace(LinearSpace):
             return self.element(f_conj)
 
     @property
+    def byaxis(self):
+        """Object to index along output and input dimensions.
+
+        Note that the output dimensions come first, such that a ``F[0]``
+        for a vector-valued function gives the first vector component
+        function.
+
+        See Also
+        --------
+        byaxis_out : index along output axes only
+        byaxis_in : index along input axes only
+
+        Examples
+        --------
+        Indexing with integers or slices:
+
+        >>> domain = odl.IntervalProd(0, 1)
+        >>> fspace = odl.FunctionSpace(domain, out_dtype=(float, (2, 3, 4)))
+        >>> fspace.byaxis[1:]
+        FunctionSpace(IntervalProd(0.0, 1.0), out_dtype=('float64', (3, 4)))
+        """
+        space = self
+
+        class FspaceByaxis(object):
+
+            """Helper class for indexing by axes."""
+
+            def __getitem__(self, indices):
+                """Return ``self[indices]``.
+
+                Parameters
+                ----------
+                indices : index expression
+                    Object used to select axes. This can be either an int,
+                    slice or sequence of integers.
+
+                Returns
+                -------
+                space : `FunctionSpace`
+                    The resulting space with roughly the same properties.
+                """
+                ndim_out = len(space.out_shape)
+                ndim = ndim_out + space.domain.ndim
+
+                if is_int(indices):
+                    indices = [indices]
+                elif isinstance(indices, slice):
+                    indices = list(range(ndim))[indices]
+
+                if any(not is_int(i) for i in indices):
+                    raise TypeError('sequence may only contain integers, '
+                                    'got {}'.format(indices))
+
+                indices = [i + ndim if i < 0 else i for i in indices]
+                idcs_out = [i for i in indices if i < ndim_out]
+                idcs_in = [i - ndim_out for i in indices if i >= ndim_out]
+
+                domain = space.domain[idcs_in]
+                out_shape = tuple(space.out_shape[i] for i in idcs_out)
+                out_dtype = (space.scalar_out_dtype, out_shape)
+                return FunctionSpace(domain, out_dtype)
+
+            def __repr__(self):
+                """Return ``repr(self)``."""
+                return repr(space) + '.byaxis'
+
+        return FspaceByaxis()
+
+    @property
     def byaxis_out(self):
         """Object to index along output dimensions.
 
@@ -911,6 +981,10 @@ class FunctionSpace(LinearSpace):
 
         >>> fspace.byaxis_out[[2, 1, 2]]
         FunctionSpace(IntervalProd(0.0, 1.0), out_dtype=('float64', (4, 3, 4)))
+
+        See Also
+        --------
+        byaxis_in : index along input axes
         """
         space = self
 
@@ -937,15 +1011,11 @@ class FunctionSpace(LinearSpace):
                 IndexError
                     If this is a space of scalar-valued functions.
                 """
-                try:
-                    iter(indices)
-                except TypeError:
-                    newshape = space.out_shape[indices]
-                else:
-                    newshape = tuple(space.out_shape[int(i)] for i in indices)
-
-                dtype = (space.scalar_out_dtype, newshape)
-                return FunctionSpace(space.domain, out_dtype=dtype)
+                ndim_out = len(space.out_shape)
+                ndim = ndim_out + space.domain.ndim
+                idcs_out = normalized_axis_indices(indices, ndim_out)
+                idcs_in = tuple(range(ndim_out, ndim))
+                return space.byaxis[idcs_out + idcs_in]
 
             def __repr__(self):
                 """Return ``repr(self)``."""
@@ -974,6 +1044,10 @@ class FunctionSpace(LinearSpace):
 
         >>> fspace.byaxis_in[[2, 1, 2]]
         FunctionSpace(IntervalProd([ 0.,  0.,  0.], [ 3.,  2.,  3.]))
+
+        See Also
+        --------
+        byaxis_out : index along output axes
         """
         space = self
 

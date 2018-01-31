@@ -16,7 +16,7 @@ from odl.util.utility import is_int
 
 __all__ = ('normalized_scalar_param_list', 'normalized_index_expression',
            'normalized_nodes_on_bdry', 'normalized_axes_tuple',
-           'safe_int_conv')
+           'normalized_axis_indices', 'safe_int_conv')
 
 
 def normalized_scalar_param_list(param, length, param_conv=None,
@@ -331,6 +331,49 @@ def normalized_nodes_on_bdry(nodes_on_bdry, length):
     return out_list
 
 
+def normalized_axis_indices(indices, ndim):
+    """Turn the given indices into a tuple of indices in the valid range.
+
+    This helper is intended for index normalization when indexing along
+    an object with ``ndim`` axes along the axes, e.g., in `DiscreteLp.byaxis`.
+    A slice is turned into a corresponding tuple of integers, and
+    a single integer is wrapped into a tuple. Negative indices are
+    incremented by ``ndim``.
+
+    Parameters
+    ----------
+    indices : slice, int or sequence of int
+        Object for indexing along axes.
+    ndim : positive int
+        Number of available axes determining the valid axis range.
+
+    Returns
+    -------
+    norm_idcs : tuple of int
+        The normalized indices that all satisfy ``0 <= i < ndim``.
+
+    Raises
+    ------
+    ValueError
+        If a given sequence contains non-integers.
+    """
+    indices_in = indices
+
+    if isinstance(indices, slice):
+        indices = list(range(ndim))[indices]
+
+    try:
+        iter(indices)
+    except TypeError:
+        indices = [indices]
+
+    if any(not is_int(i) for i in indices):
+        raise ValueError('only slice, int or sequence of int is allowed, '
+                         'got {}'.format(indices_in))
+
+    return tuple(i + ndim if i < 0 else i for i in indices)
+
+
 def normalized_axes_tuple(axes, ndim):
     """Return a tuple of ``axes`` converted to positive integers.
 
@@ -339,7 +382,7 @@ def normalized_axes_tuple(axes, ndim):
 
     Parameters
     ----------
-    axes : int or sequence of ints
+    axes : int or sequence of int
         Single integer or integer sequence of arbitrary length.
         Duplicate entries are not allowed. All entries must fulfill
         ``-ndim <= axis <= ndim - 1``.
@@ -348,7 +391,7 @@ def normalized_axes_tuple(axes, ndim):
 
     Returns
     -------
-    axes_list : tuple of ints
+    axes_list : tuple of int
         The converted tuple of axes.
 
     Examples

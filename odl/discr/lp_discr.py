@@ -30,7 +30,7 @@ from odl.util import (
     is_floating_dtype, is_numeric_dtype, is_int,
     dtype_str, array_str, signature_string, indent, npy_printoptions,
     normalized_scalar_param_list, safe_int_conv, normalized_nodes_on_bdry,
-    normalized_index_expression, simulate_slicing)
+    normalized_index_expression, simulate_slicing, normalized_axis_indices)
 
 __all__ = ('DiscreteLp', 'DiscreteLpElement',
            'uniform_discr_frompartition', 'uniform_discr_fromspace',
@@ -645,6 +645,119 @@ class DiscreteLp(DiscretizedSpace):
                           axis_labels=res_labels)
 
     @property
+    def byaxis(self):
+        """Object to index along (input and output) axes.
+
+        Examples
+        --------
+        Indexing with integers or slices:
+
+        >>> space = odl.uniform_discr([0, 0, 0], [1, 2, 3], (5, 10, 15),
+        ...                           dtype=(float, (2, 3)))
+        >>> space.byaxis[0]
+        uniform_discr(0.0, 1.0, 5)
+        >>> space.byaxis_in[1]
+        uniform_discr(0.0, 2.0, 10)
+        >>> space.byaxis_in[1:]
+        uniform_discr([ 0.,  0.], [ 2.,  3.], (10, 15))
+
+        Lists can be used to stack spaces arbitrarily:
+
+        >>> space.byaxis_in[[2, 1, 2]]
+        uniform_discr([ 0.,  0.,  0.], [ 3.,  2.,  3.], (15, 10, 15))
+        """
+        space = self
+
+        class DiscreteLpByaxis(object):
+
+            """Helper class for indexing by axes."""
+
+            def __getitem__(self, indices):
+                """Return ``self[indices]``.
+
+                Parameters
+                ----------
+                indices : index expression
+                    Object used to index the space.
+
+                Returns
+                -------
+                space : `DiscreteLp`
+                    The resulting space after indexing along axes, with
+                    roughly the same properties except possibly weighting.
+                """
+                indices = normalized_axis_indices(indices, space.ndim)
+                idcs_in = [i - space.ndim_out for i in indices
+                           if i >= space.ndim_out]
+
+                fspace = space.fspace.byaxis[indices]
+                part = space.partition.byaxis[idcs_in]
+                tspace = space.tspace.byaxis[indices]
+
+                interp = tuple(space.interp_byaxis[int(i)]
+                               for i in idcs_in)
+                labels = tuple(space.axis_labels[int(i)]
+                               for i in indices)
+
+                return DiscreteLp(fspace, part, tspace, interp,
+                                  axis_labels=labels)
+
+            def __repr__(self):
+                """Return ``repr(self)``."""
+                return repr(space) + '.byaxis'
+
+        return DiscreteLpByaxis()
+
+    @property
+    def byaxis_out(self):
+        """Object to index along output (tensor component) dimensions.
+
+        Examples
+        --------
+        Indexing with integers or slices:
+
+        >>> space = odl.uniform_discr(0, 1, 5, dtype=(float, (2, 3, 4)))
+        >>> space.byaxis_out[0]
+        uniform_discr(0.0, 1.0, 5, dtype=('float64', (2,)))
+        >>> space.byaxis_out[1:]
+        uniform_discr(0.0, 1.0, 5, dtype=('float64', (3, 4)))
+
+        Lists can be used to stack spaces arbitrarily:
+
+        >>> space.byaxis_out[[2, 1, 2]]
+        uniform_discr(0.0, 1.0, 5, dtype=('float64', (4, 3, 4)))
+        """
+        space = self
+
+        class DiscreteLpByaxisOut(object):
+
+            """Helper class for indexing by output axes."""
+
+            def __getitem__(self, indices):
+                """Return ``self[indices]``.
+
+                Parameters
+                ----------
+                indices : index expression
+                    Object used to index the output axes.
+
+                Returns
+                -------
+                space : `DiscreteLp`
+                    The resulting space with indexed output components and
+                    otherwise same properties (except possibly weighting).
+                """
+                idcs_out = normalized_axis_indices(indices, space.ndim_out)
+                idcs_in = tuple(range(space.ndim_out, space.ndim))
+                return space.byaxis[idcs_out + idcs_in]
+
+            def __repr__(self):
+                """Return ``repr(self)``."""
+                return repr(space) + '.byaxis_out'
+
+        return DiscreteLpByaxisOut()
+
+    @property
     def byaxis_in(self):
         """Object to index along input (domain) dimensions.
 
@@ -685,23 +798,10 @@ class DiscreteLp(DiscretizedSpace):
                     The resulting space with indexed domain and otherwise
                     same properties (except possibly weighting).
                 """
-                fspace = space.fspace.byaxis_in[indices]
-                part = space.partition.byaxis[indices]
-                tspace = space.tspace.byaxis[indices]
-
-                try:
-                    iter(indices)
-                except TypeError:
-                    interp = space.interp_byaxis[indices]
-                    labels = space.axis_labels[indices]
-                else:
-                    interp = tuple(space.interp_byaxis[int(i)]
-                                   for i in indices)
-                    labels = tuple(space.axis_labels[int(i)]
-                                   for i in indices)
-
-                return DiscreteLp(fspace, part, tspace, interp,
-                                  axis_labels=labels)
+                indices = normalized_axis_indices(indices, space.ndim_in)
+                idcs_out = list(range(space.ndim_out))
+                idcs_in = [i + space.ndim_out for i in indices]
+                return space.byaxis[idcs_out + idcs_in]
 
             def __repr__(self):
                 """Return ``repr(self)``."""
