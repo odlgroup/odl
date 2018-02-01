@@ -159,7 +159,9 @@ def adupdates_method(x, g, L, stepsize, inner_stepsizes, niter, random=False,
 
     # Prepare the proximal operators. Since the stepsize does not vary over
     # the iterations, we always use the same proximal operator.
-    proxs = [func.convex_conj.proximal(stepsize * inner_ss)
+    proxs = [func.convex_conj.proximal(stepsize * inner_ss
+                                       if np.isscalar(inner_ss)
+                                       else stepsize * np.asarray(inner_ss))
              for (func, inner_ss) in zip(g, inner_stepsizes)]
 
     # Iteratively find a solution
@@ -175,7 +177,9 @@ def adupdates_method(x, g, L, stepsize, inner_stepsizes, niter, random=False,
             rng = range(length)
 
         for j in rng:
-            step = stepsize * inner_stepsizes[j]
+            step = (stepsize * inner_stepsizes[j]
+                    if np.isscalar(inner_stepsizes[j])
+                    else stepsize * np.asarray(inner_stepsizes[j]))
             arg = duals[j] + step * L[j](x)
             tmp_ran = tmp_rans[L[j].range]
             proxs[j](arg, out=tmp_ran)
@@ -211,7 +215,12 @@ def adupdates_method_simple(x, g, L, stepsize, inner_stepsizes, niter,
         for j in rng:
             dual_tmp = ranges[j].element()
             dual_tmp = (g[j].convex_conj.proximal
-                        (stepsize * inner_stepsizes[j])
-                        (duals[j] + stepsize * inner_stepsizes[j] * L[j](x)))
+                        (stepsize * inner_stepsizes[j]
+                         if np.isscalar(inner_stepsizes[j])
+                         else stepsize * np.asarray(inner_stepsizes[j]))
+                        (duals[j] + stepsize * inner_stepsizes[j] * L[j](x)
+                         if np.isscalar(inner_stepsizes[j])
+                         else duals[j] + stepsize *
+                         np.asarray(inner_stepsizes[j]) * L[j](x)))
             x -= 1.0 / stepsize * L[j].adjoint(dual_tmp - duals[j])
             duals[j].assign(dual_tmp)

@@ -57,16 +57,16 @@ def test_adupdates():
     mat1op = odl.MatrixOperator(mat1)
     mat2op = odl.MatrixOperator(mat2)
     domain = mat1op.domain
-    tv1 = odl.MatrixOperator([[1.0, -1.0, 0.0, 0.0],
-                              [0.0, 0.0, 1.0, -1.0]])
-    tv2 = odl.MatrixOperator([[0.0, 1.0, -1.0, 0.0]])
+    tv1 = odl.MatrixOperator([[1.0, -1.0, 0.0, 0.0]])
+    tv2 = odl.MatrixOperator([[0.0, 0.0, 1.0, -1.0]])
+    tv3 = odl.MatrixOperator([[0.0, 1.0, -1.0, 0.0]])
     nneg = odl.IdentityOperator(domain)
-    ops = [mat1op, mat2op, tv1, tv2, nneg]
+    ops = [mat1op, mat2op, odl.BroadcastOperator(tv1, tv2), tv3, nneg]
 
     # Create inner stepsizes for linear operators
     mat1s = 1 / mat1op(mat1op.adjoint(mat1op.range.one()))
     mat2s = 1 / mat2op(mat2op.adjoint(mat2op.range.one()))
-    tv1s = tv1.range.element([0.5, 0.5])
+    tv1s = [0.5, 0.5]
     tv2s = 0.5
     nnegs = nneg.range.element([1.0, 1.0, 1.0, 1.0])
     inner_stepsizes = [mat1s, mat2s, tv1s, tv2s, nnegs]
@@ -81,14 +81,15 @@ def test_adupdates():
     fid2 = odl.solvers.L2NormSquared(mat2op.range).translated(rhs2)
     reg1 = odl.solvers.L1Norm(tv1.range)
     reg2 = odl.solvers.L1Norm(tv2.range)
+    reg3 = odl.solvers.L1Norm(tv3.range)
     ind = odl.solvers.IndicatorNonnegativity(nneg.range)
-    funcs = [fid1, fid2, reg1, reg2, ind]
+    funcs = [fid1, fid2, odl.solvers.SeparableSum(reg1, reg2), reg3, ind]
 
     # Start from zero
     x = tv1.domain.zero()
     x_simple = tv1.domain.zero()
 
-    stepsize = 1
+    stepsize = 1.0
     niter = 100
 
     adupdates_method(x, funcs, ops, stepsize, inner_stepsizes, niter)
