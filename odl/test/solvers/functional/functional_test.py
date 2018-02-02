@@ -578,5 +578,35 @@ def test_functional_quadratic_perturb(space, linear_term, quadratic_coeff):
         places=places)
 
 
+def test_bregman(functional):
+    """Test for the Bregman distance of a functional."""
+    if isinstance(functional, odl.solvers.functional.IndicatorLpUnitBall):
+        # IndicatorFunction has no derivative
+        with pytest.raises(NotImplementedError):
+            functional.derivative(functional.domain.zero())
+        return
+
+    y = noise_element(functional.domain)
+    x = noise_element(functional.domain)
+
+    if (isinstance(functional, odl.solvers.KullbackLeibler) or
+            isinstance(functional, odl.solvers.KullbackLeiblerCrossEntropy)):
+        # The functional is not defined for values <= 0
+        x = x.ufuncs.absolute()
+        y = y.ufuncs.absolute()
+
+    if isinstance(functional, KullbackLeiblerConvexConj):
+        # The functional is not defined for values >= 1
+        x = x - x.ufuncs.max() + 0.99
+        y = y - y.ufuncs.max() + 0.99
+
+    grad = functional.gradient(y)
+    quadratic_func = odl.solvers.QuadraticForm(
+        vector=-grad, constant=-functional(y) + grad.inner(y))
+    expected_func = functional + quadratic_func
+
+    assert almost_equal(functional.bregman(y)(x), expected_func(x))
+
+
 if __name__ == '__main__':
     odl.util.test_file(__file__)
