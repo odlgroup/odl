@@ -2504,8 +2504,10 @@ class BregmanDistance(Functional):
     :math:`D_f(\cdot, y)` in a point :math:`x` is given by
 
     .. math::
-        D_f(x, y) = f(x) - f(y) - \langle \partial f(y), x - y \\rangle.
+        D_f(x, y) = f(x) - f(y) - \\langle \partial f(y), x - y \\rangle.
 
+
+    For mathematical details, see `[Bur2016]`_.
 
     References
     ----------
@@ -2513,24 +2515,26 @@ class BregmanDistance(Functional):
 
     [Bur2016] Burger, M. *Bregman Distances in Inverse Problems and Partial
     Differential Equation*. In: Advances in Mathematical Modeling, Optimization
-    and Optimal Control, 2016. p. 3-33. Arxiv version online at
-    https://arxiv.org/abs/1505.05191
+    and Optimal Control, 2016. p. 3-33.
+
+    .. _[Bur2016]:  https://arxiv.org/abs/1505.05191
     """
 
-    def __init__(self, functional, point, subgradient_op=None):
+    def __init__(self, functional, point, subgrad=None):
         """Initialize a new instance.
 
         Parameters
         ----------
         functional : `Functional`
-            The functional on which to base the Bregman distance. If the
-            optional argument `subgradient_op` is not given, the functional
+            Functional on which to base the Bregman distance. If the
+            optional argument `subgrad` is not given, the functional
             needs to implement `functional.gradient`.
         point : element of ``functional.domain``
-            The point from which to define the Bregman distance.
-        subgradient_op : `Operator`, optional
-            The operator that takes an element in `functional.domain` and
-            returns a subgradient of the functional in that point.
+            Point from which to define the Bregman distance.
+        subgrad : `Operator`, optional
+            A subgradient operator. Operator which that takes an element in
+            `functional.domain` and returns a subdifferential of the functional
+            in that point.
             Default: ``functional.gradient``.
 
         Examples
@@ -2542,10 +2546,10 @@ class BregmanDistance(Functional):
         >>> point = space.one()
         >>> Bregman_dist = odl.solvers.BregmanDistance(l2_squared, point)
 
-        This is gives the shifted L2 norm squared ||x - 1||^2:
+        This is gives squared L2 distance to the given point, ||x - 1||^2:
 
-        >>> expected_value = l2_squared(space.one())
-        >>> Bregman_dist(space.zero()) == expected_value
+        >>> expected_functional = L2NormSquared(space).translated(point)
+        >>> Bregman_dist(space.zero()) == expected_functional(space.zero())
         True
         """
         if not isinstance(functional, Functional):
@@ -2558,40 +2562,40 @@ class BregmanDistance(Functional):
                              ''.format(point, functional.domain))
         self.__point = point
 
-        if subgradient_op is None:
+        if subgrad is None:
             # If the subgradient is not given, assign the gradient of the
             # functional
             try:
-                self.__subgradient_op = self.__functional.gradient
+                self.__subgrad = self.__functional.gradient
             except NotImplementedError:
-                raise NotImplementedError('`subgradient` not given, and the '
-                                          '`functional` {} does not implement '
-                                          '`functional.gradient`'
-                                          ''.format(functional))
+                raise NotImplementedError(
+                    '`subgradient` not given, and the `functional` {} does '
+                    'not implement `functional.gradient`'.format(functional))
         else:
             # Check that given subgradient is an operator that maps from the
             # domain of the functional to itself
-            if not isinstance(subgradient_op, Operator):
-                raise TypeError('`subgradient_op` {} is not an instance of '
-                                '``Operator``'.format(subgradient_op))
-            if subgradient_op.domain != self.__functional.domain:
+            if not isinstance(subgrad, Operator):
+                raise TypeError(
+                    '`subgrad` must be an instance of ``Operator``, got {}'
+                    ''.format(subgrad))
+            if subgrad.domain != self.__functional.domain:
                 raise ValueError('`functional.domain` {} is not the same as '
-                                 '`subgradient_op.domain` {}'
+                                 '`subgrad.domain` {}'
                                  ''.format(self.__functional.domain,
-                                           subgradient_op.domain))
-            if subgradient_op.range != self.__functional.domain:
+                                           subgrad.domain))
+            if subgrad.range != self.__functional.domain:
                 raise ValueError('`functional.domain` {} is not the same as '
-                                 '`subgradient_op.range` {}'
+                                 '`subgrad.range` {}'
                                  ''.format(self.__functional.domain,
-                                           subgradient_op.range))
-            self.__subgradient_op = subgradient_op
+                                           subgrad.range))
+            self.__subgrad = subgrad
 
-        self.__subgrad_eval = self.__subgradient_op(self.__point)
+        self.__subgrad_eval = self.__subgrad(self.__point)
         self.__constant = (-self.__functional(point) +
                            self.__subgrad_eval.inner(point))
         self.__bregman_dist = FunctionalQuadraticPerturb(
             self.__functional, linear_term=-self.__subgrad_eval,
-            constant_coeff=self.__constant)
+            constant=self.__constant)
 
         super(BregmanDistance, self).__init__(
             space=functional.domain, linear=False,
@@ -2600,18 +2604,18 @@ class BregmanDistance(Functional):
 
     @property
     def functional(self):
-        """The underlying functional for the Bregman distance."""
+        """The functional for the Bregman distance."""
         return self.__functional
 
     @property
     def point(self):
-        """The underlying point for the Bregman distance."""
+        """The point for the Bregman distance."""
         return self.__point
 
     @property
-    def subgradient_op(self):
-        """The underlying subgradient operator for the Bregman distance."""
-        return self.__subgradient_op
+    def subgrad(self):
+        """The subgradient operator for the Bregman distance."""
+        return self.__subgrad
 
     def _call(self, x):
         """Return ``self(x)``."""
@@ -2630,13 +2634,13 @@ class BregmanDistance(Functional):
     @property
     def gradient(self):
         """Gradient operator of the functional."""
-        return self.subgradient_op - ConstantOperator(self.__subgrad_eval)
+        return self.subgrad - ConstantOperator(self.__subgrad_eval)
 
     def __repr__(self):
         '''Return ``repr(self)``.'''
         posargs = [self.functional, self.point]
         subgrad_op_default = getattr(self.functional, 'gradient', None)
-        optargs = [('subgradient_op', self.subgradient_op, subgrad_op_default)]
+        optargs = [('subgrad', self.subgrad, subgrad_op_default)]
         inner_str = signature_string(posargs, optargs, sep=',\n')
         return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
 

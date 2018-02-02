@@ -937,7 +937,7 @@ class FunctionalQuadraticPerturb(Functional):
     """The functional representing ``F(.) + a * <., .> + <., u> + c``."""
 
     def __init__(self, func, quadratic_coeff=0, linear_term=None,
-                 constant_coeff=0):
+                 constant=0):
         """Initialize a new instance.
 
         Parameters
@@ -949,7 +949,7 @@ class FunctionalQuadraticPerturb(Functional):
         linear_term : `domain` element, optional
             Element in domain of ``func``, corresponding to the translation.
             Default: Zero element.
-        constant_coeff : ``domain.field`` element, optional
+        constant : ``domain.field`` element, optional
             The constant coefficient. Default: zero.
         """
         if not isinstance(func, Functional):
@@ -973,11 +973,11 @@ class FunctionalQuadraticPerturb(Functional):
         else:
             grad_lipschitz = (func.grad_lipschitz + self.linear_term.norm())
 
-        constant_coeff = func.domain.field.element(constant_coeff)
-        if constant_coeff.imag != 0:
+        constant = func.domain.field.element(constant)
+        if constant.imag != 0:
             raise ValueError(
                 "Complex-valued constant coefficient is not supported.")
-        self.__constant_coeff = constant_coeff.real
+        self.__constant = constant.real
 
         super(FunctionalQuadraticPerturb, self).__init__(
             space=func.domain,
@@ -1000,15 +1000,15 @@ class FunctionalQuadraticPerturb(Functional):
         return self.__linear_term
 
     @property
-    def constant_coeff(self):
+    def constant(self):
         """The constant coefficient."""
-        return self.__constant_coeff
+        return self.__constant
 
     def _call(self, x):
         """Apply the functional to the given point."""
         return (self.functional(x) +
                 self.quadratic_coeff * x.inner(x) +
-                x.inner(self.linear_term) + self.constant_coeff)
+                x.inner(self.linear_term) + self.constant)
 
     @property
     def gradient(self):
@@ -1039,13 +1039,13 @@ class FunctionalQuadraticPerturb(Functional):
         the convex conjugate of :math:`f`:
 
         .. math::
-            (f(x) + <y, x>)^* (x^*) = f^*(x^* - y).
+            (f + \\langle y, \cdot \\rangle)^* (x^*) = f^*(x^* - y).
 
-        For reference on the identity used, see [KP2015]. Moreover, the convex
-        conjugate of :math:`f + c` is by definition
+        For reference on the identity used, see `[KP2015]`_. Moreover, the
+        convex conjugate of :math:`f + c` is by definition
 
         .. math::
-            (f(x) + c)^* (x^*) = f^*(x^*) - c.
+            (f + c)^* (x^*) = f^*(x^*) - c.
 
 
         References
@@ -1054,10 +1054,12 @@ class FunctionalQuadraticPerturb(Functional):
         overview of recent primal-dual approaches for solving large-scale
         optimization problems*. IEEE Signal Processing Magazine, 32.6 (2015),
         pp 31--54.
+
+        .. _[KP2015]:  https://arxiv.org/abs/1406.5429
         """
         if self.quadratic_coeff == 0:
             return (self.functional.convex_conj.translated(
-                self.linear_term) - self.constant_coeff)
+                self.linear_term) - self.constant)
         else:
             return super(FunctionalQuadraticPerturb, self).convex_conj
 
@@ -1067,7 +1069,7 @@ class FunctionalQuadraticPerturb(Functional):
                                                    self.functional,
                                                    self.quadratic_coeff,
                                                    self.linear_term,
-                                                   self.constant_coeff)
+                                                   self.constant)
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -1075,7 +1077,7 @@ class FunctionalQuadraticPerturb(Functional):
                                            self.functional,
                                            self.quadratic_coeff,
                                            self.linear_term,
-                                           self.constant_coeff)
+                                           self.constant)
 
 
 class FunctionalProduct(Functional, OperatorPointwiseProduct):
