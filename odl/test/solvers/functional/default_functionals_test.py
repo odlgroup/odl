@@ -657,14 +657,24 @@ def test_bregman_functional_l2_squared(space, sigma):
     # Function evaluation
     assert all_almost_equal(bregman_dist(x), expected_func(x))
 
+    # Create new functionals to test initialization before each test
+    bregman_dist = odl.solvers.BregmanDistance(l2_sq, point)
+    expected_func = odl.solvers.L2NormSquared(space).translated(point)
+
     # Gradient evaluation
     assert all_almost_equal(bregman_dist.gradient(x),
                             expected_func.gradient(x))
+
+    bregman_dist = odl.solvers.BregmanDistance(l2_sq, point)
+    expected_func = odl.solvers.L2NormSquared(space).translated(point)
 
     # Convex conjugate
     cc_bregman_dist = bregman_dist.convex_conj
     cc_expected_func = expected_func.convex_conj
     assert all_almost_equal(cc_bregman_dist(x), cc_expected_func(x))
+
+    bregman_dist = odl.solvers.BregmanDistance(l2_sq, point)
+    expected_func = odl.solvers.L2NormSquared(space).translated(point)
 
     # Proximal operator
     prox_bregman_dist = bregman_dist.proximal(sigma)

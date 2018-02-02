@@ -2590,17 +2590,9 @@ class BregmanDistance(Functional):
                                            subgrad.range))
             self.__subgrad = subgrad
 
-        self.__subgrad_eval = self.__subgrad(self.__point)
-        self.__constant = (-self.__functional(point) +
-                           self.__subgrad_eval.inner(point))
-        self.__bregman_dist = FunctionalQuadraticPerturb(
-            self.__functional, linear_term=-self.__subgrad_eval,
-            constant=self.__constant)
-
-        super(BregmanDistance, self).__init__(
-            space=functional.domain, linear=False,
-            grad_lipschitz=(self.__functional.grad_lipschitz +
-                            self.__subgrad_eval.norm()))
+        self.__initialized = False
+        super(BregmanDistance, self).__init__(space=functional.domain,
+                                              linear=False)
 
     @property
     def functional(self):
@@ -2617,23 +2609,55 @@ class BregmanDistance(Functional):
         """The subgradient operator for the Bregman distance."""
         return self.__subgrad
 
+    @property
+    def initialized(self):
+        """Flag for if the Bregman distance functional is initialized."""
+        return self.__initialized
+
+    def _initialize(self):
+        """Helper function to initialize the functional."""
+
+        self.__subgrad_eval = self.subgrad(self.point)
+        self.__constant = (-self.functional(self.point) +
+                           self.subgrad_eval.inner(self.point))
+        self.__bregman_dist = FunctionalQuadraticPerturb(
+            self.functional, linear_term=-self.__subgrad_eval,
+            constant=self.__constant)
+
+        self.grad_lipschitz = (self.functional.grad_lipschitz +
+                               self.__subgrad_eval.norm())
+
+        self.__initialized = True
+
     def _call(self, x):
         """Return ``self(x)``."""
+        if not self.initialized:
+            self._initialize()
+
         return self.__bregman_dist(x)
 
     @property
     def convex_conj(self):
         """The convex conjugate"""
+        if not self.initialized:
+            self._initialize()
+
         return self.__bregman_dist.convex_conj
 
     @property
     def proximal(self):
         """Return the ``proximal factory`` of the functional."""
+        if not self.initialized:
+            self._initialize()
+
         return self.__bregman_dist.proximal
 
     @property
     def gradient(self):
         """Gradient operator of the functional."""
+        if not self.initialized:
+            self._initialize()
+
         return self.subgrad - ConstantOperator(self.__subgrad_eval)
 
     def __repr__(self):
