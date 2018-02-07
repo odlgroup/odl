@@ -42,10 +42,10 @@ def test_adupdates():
     min ||Ax - b||^2 + TV(x) s.t. x >= 0
 
     for the matrix A, the r.h.s. b as above and the total variation TV, which
-    is given as the sum of the absoulute values of consecutive entries of the
-    solution. The solution of this problem is clearly x = (1, 1, 1, 1), since
-    it satisfies the additional constraint and minimizes both terms of the
-    objective function.
+    is given as the (non-cyclic) sum of the distances of consecutive entries
+    of the solution. The solution of this problem is clearly x = (1, 1, 1, 1),
+    since it satisfies the additional constraint and minimizes both terms of
+    the objective function.
     """
 
     mat1 = [[1, 1 / 2, 1 / 3, 1 / 4],
