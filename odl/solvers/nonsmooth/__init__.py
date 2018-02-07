@@ -30,5 +30,5 @@ __all__ += forward_backward.__all__
 from .proximal_gradient_solvers import *
 __all__ += proximal_gradient_solvers.__all__
 
-from .adupdates import *
-__all__ += adupdates.__all__
+from .alternating_dual_updates import *
+__all__ += alternating_dual_updates.__all__
