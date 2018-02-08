@@ -150,11 +150,11 @@ class RectPartition(object):
 
         nodes_on_bdry = []
         for on_bdry in self.nodes_on_bdry_byaxis:
-            l, r = on_bdry
-            if l == r:
-                nodes_on_bdry.append(l)
+            left, right = on_bdry
+            if left == right:
+                nodes_on_bdry.append(left)
             else:
-                nodes_on_bdry.append((l, r))
+                nodes_on_bdry.append((left, right))
         if all(on_bdry == nodes_on_bdry[0] for on_bdry in nodes_on_bdry[1:]):
             return nodes_on_bdry[0]
         else:
