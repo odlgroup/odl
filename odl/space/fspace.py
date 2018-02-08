@@ -702,17 +702,24 @@ class FunctionSpace(LinearSpace):
         if out_dtype == self.out_dtype:
             return self
 
-        # Caching for real and complex versions (exact dtyoe mappings)
-        if out_dtype == self.real_out_dtype:
-            if self.__real_space is None:
-                self.__real_space = self._astype(out_dtype)
-            return self.__real_space
-        elif out_dtype == self.complex_out_dtype:
-            if self.__complex_space is None:
-                self.__complex_space = self._astype(out_dtype)
-            return self.__complex_space
-        else:
+        # Try to use caching for real and complex versions (exact dtype
+        # mappings). This may fail for certain dtype, in which case we
+        # just go to `_astype` directly.
+        try:
+            real_dtype = self.real_out_dtype
+        except TypeError:
             return self._astype(out_dtype)
+        else:
+            if out_dtype == real_dtype:
+                if self.__real_space is None:
+                    self.__real_space = self._astype(out_dtype)
+                return self.__real_space
+            elif out_dtype == self.complex_out_dtype:
+                if self.__complex_space is None:
+                    self.__complex_space = self._astype(out_dtype)
+                return self.__complex_space
+            else:
+                return self._astype(out_dtype)
 
     def _lincomb(self, a, f1, b, f2, out):
         """Linear combination of ``f1`` and ``f2``.

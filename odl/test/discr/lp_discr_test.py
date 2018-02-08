@@ -754,6 +754,15 @@ def test_astype():
     assert cdiscr.astype('float64') == rdiscr
     assert cdiscr.real_space == rdiscr
 
+    # More exotic dtype
+    discr = odl.uniform_discr([0, 0], [1, 1], [2, 2], dtype=bool)
+    as_float = discr.astype(float)
+    assert as_float.dtype == float
+    assert not as_float.is_weighted
+    as_complex = discr.astype(complex)
+    assert as_complex.dtype == complex
+    assert not as_complex.is_weighted
+
 
 def test_ufuncs(tspace_impl, ufunc):
     """Test ufuncs in ``x.ufuncs`` against direct Numpy ufuncs."""
