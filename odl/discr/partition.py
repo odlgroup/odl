@@ -822,10 +822,11 @@ class RectPartition(object):
                 try:
                     iter(indices)
                 except TypeError:
-                    # Integer or slice
+                    # Slice or integer
                     slc = np.zeros(partition.ndim, dtype=object)
                     slc[indices] = slice(None)
-                    newpart = partition[tuple(slc)].squeeze()
+                    squeeze_axes = np.where(slc == 0)[0]
+                    newpart = partition[tuple(slc)].squeeze(squeeze_axes)
                 else:
                     # Sequence, stack together from single-integer indexing
                     indices = [int(i) for i in indices]
