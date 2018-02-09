@@ -279,7 +279,9 @@ class FunctionSpace(LinearSpace):
     def real_out_dtype(self):
         """The real dtype corresponding to this space's `out_dtype`."""
         if self.__real_out_dtype is None:
-            raise TypeError('no real variant of output dtype defined')
+            raise AttributeError(
+                'no real variant of output dtype {} defined'
+                ''.format(dtype_repr(self.scalar_out_dtype)))
         else:
             return self.__real_out_dtype
 
@@ -287,7 +289,9 @@ class FunctionSpace(LinearSpace):
     def complex_out_dtype(self):
         """The complex dtype corresponding to this space's `out_dtype`."""
         if self.__complex_out_dtype is None:
-            raise TypeError('no complex variant of output dtype defined')
+            raise AttributeError(
+                'no complex variant of output dtype {} defined'
+                ''.format(dtype_repr(self.scalar_out_dtype)))
         else:
             return self.__complex_out_dtype
 
@@ -705,9 +709,8 @@ class FunctionSpace(LinearSpace):
         # Try to use caching for real and complex versions (exact dtype
         # mappings). This may fail for certain dtype, in which case we
         # just go to `_astype` directly.
-        try:
-            real_dtype = self.real_out_dtype
-        except TypeError:
+        real_dtype = getattr(self, 'real_out_dtype', None)
+        if real_dtype is None:
             return self._astype(out_dtype)
         else:
             if out_dtype == real_dtype:
