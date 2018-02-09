@@ -150,11 +150,11 @@ class RectPartition(object):
 
         nodes_on_bdry = []
         for on_bdry in self.nodes_on_bdry_byaxis:
-            l, r = on_bdry
-            if l == r:
-                nodes_on_bdry.append(l)
+            left, right = on_bdry
+            if left == right:
+                nodes_on_bdry.append(left)
             else:
-                nodes_on_bdry.append((l, r))
+                nodes_on_bdry.append((left, right))
         if all(on_bdry == nodes_on_bdry[0] for on_bdry in nodes_on_bdry[1:]):
             return nodes_on_bdry[0]
         else:
@@ -822,10 +822,11 @@ class RectPartition(object):
                 try:
                     iter(indices)
                 except TypeError:
-                    # Integer or slice
+                    # Slice or integer
                     slc = np.zeros(partition.ndim, dtype=object)
                     slc[indices] = slice(None)
-                    newpart = partition[tuple(slc)].squeeze()
+                    squeeze_axes = np.where(slc == 0)[0]
+                    newpart = partition[tuple(slc)].squeeze(squeeze_axes)
                 else:
                     # Sequence, stack together from single-integer indexing
                     indices = [int(i) for i in indices]
