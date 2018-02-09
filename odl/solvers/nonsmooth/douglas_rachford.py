@@ -16,9 +16,9 @@ from odl.operator import Operator
 __all__ = ('douglas_rachford_pd',)
 
 
-def douglas_rachford_pd(x, f, g, L, tau, sigma, niter,
+def douglas_rachford_pd(x, f, g, L, niter, tau=None, sigma=None,
                         callback=None, **kwargs):
-    """Douglas-Rachford primal-dual splitting algorithm.
+    r"""Douglas-Rachford primal-dual splitting algorithm.
 
     Minimizes the sum of several convex functions composed with linear
     operators::
@@ -48,12 +48,14 @@ def douglas_rachford_pd(x, f, g, L, tau, sigma, niter,
         ``g[i].convex_conj.proximal``.
     L : sequence of `Operator`'s
         Sequence of `Opeartor`'s with as many elements as ``g``.
-    tau : float
-        Step size parameter for ``f``.
-    sigma : sequence of floats
-        Step size parameters for the ``g_i``'s.
     niter : int
         Number of iterations.
+    tau : float, optional
+        Step size parameter for ``f``.
+        Default: Sufficient for convergence, see Notes.
+    sigma : sequence of floats, optional
+        Step size parameters for the ``g_i``'s.
+        Default: Sufficient for convergence, see Notes.
     callback : callable, optional
         Function called with the current iterate after each iteration.
 
@@ -89,19 +91,28 @@ def douglas_rachford_pd(x, f, g, L, tau, sigma, niter,
     can be obtained by setting
 
     .. math::
-        l(x) = 0 \\text{ if } x = 0, \infty \\text{ else.}
+        l(x) = 0 \text{ if } x = 0, \infty \text{ else.}
 
-    To guarantee convergence, the parameters :math:`\\tau`, :math:`\\sigma_i`
+    To guarantee convergence, the parameters :math:`\tau`, :math:`\sigma_i`
     and :math:`L_i` need to satisfy
 
     .. math::
-       \\tau \\sum_{i=1}^n \\sigma_i ||L_i||^2 < 4
+       \tau \sum_{i=1}^n \sigma_i ||L_i||^2 < 4
 
-    The parameter :math:`\\lambda` needs to satisfy :math:`0 < \\lambda < 2`
+    An example of such a choice is
+
+    .. math::
+        \tau = \frac{1}{\sum_{i=1}^n ||L_i||},
+        \quad
+        \sigma = \frac{2}{n \tau \|L_i\|^2}
+
+    which are the defaults for this implementation.
+
+    The parameter :math:`\lambda` needs to satisfy :math:`0 < \lambda < 2`
     and if it is given as a function it needs to satisfy
 
     .. math::
-        \\sum_{n=1}^\infty \\lambda_n (2 - \\lambda_n) = +\infty.
+        \sum_{n=1}^\infty \lambda_n (2 - \lambda_n) = +\infty.
 
     See Also
     --------
@@ -128,10 +139,16 @@ def douglas_rachford_pd(x, f, g, L, tau, sigma, niter,
         raise ValueError('not all operators in `L` are linear')
     if not all(x in op.domain for op in L):
         raise ValueError('`x` not in the domain of all operators')
-    if len(sigma) != m:
-        raise ValueError('len(sigma) != len(L)')
     if len(g) != m:
         raise ValueError('len(prox_cc_g) != len(L)')
+
+    if tau is None:
+        tau = 1 / sum(l.norm(estimate=True) for l in L)
+
+    if sigma is None:
+        sigma = [(2.0 / m) / (tau * l.norm(estimate=True) ** 2) for l in L]
+    elif len(sigma) != m:
+        raise ValueError('len(sigma) != len(L)')
 
     prox_cc_g = [gi.convex_conj.proximal for gi in g]
 
