@@ -1244,7 +1244,8 @@ class KullbackLeiblerConvexConj(Functional):
         import scipy.special
 
         if self.prior is None:
-            tmp = -1.0 * (np.log(1 - x)).inner(self.domain.one())
+            tmp = self.domain.element(
+                -1.0 * (np.log(1 - x))).inner(self.domain.one())
         else:
             tmp = (-scipy.special.xlogy(self.prior,
                                         1 - x)).inner(self.domain.one())
@@ -1510,7 +1511,7 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
     def _call(self, x):
         """Return the value in the point ``x``."""
         if self.prior is None:
-            tmp = (np.exp(x) - 1).inner(self.domain.one())
+            tmp = self.domain.element((np.exp(x) - 1)).inner(self.domain.one())
         else:
             tmp = (self.prior * (np.exp(x) - 1)).inner(self.domain.one())
         return tmp
