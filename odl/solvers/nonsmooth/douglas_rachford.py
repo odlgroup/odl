@@ -10,10 +10,12 @@
 
 from __future__ import print_function, division, absolute_import
 
+import numpy as np
+
 from odl.operator import Operator
 
 
-__all__ = ('douglas_rachford_pd',)
+__all__ = ('douglas_rachford_pd', 'douglas_rachford_pd_stepsize')
 
 
 def douglas_rachford_pd(x, f, g, L, niter, tau=None, sigma=None,
@@ -97,12 +99,12 @@ def douglas_rachford_pd(x, f, g, L, niter, tau=None, sigma=None,
     and :math:`L_i` need to satisfy
 
     .. math::
-       \tau \sum_{i=1}^n \sigma_i ||L_i||^2 < 4
+       \tau \sum_{i=1}^n \sigma_i \|L_i\|^2 < 4
 
     An example of such a choice is
 
     .. math::
-        \tau = \frac{1}{\sum_{i=1}^n ||L_i||},
+        \tau = \frac{1}{\sum_{i=1}^n \|L_i\|},
         \quad
         \sigma = \frac{2}{n \tau \|L_i\|^2}
 
@@ -129,10 +131,8 @@ def douglas_rachford_pd(x, f, g, L, niter, tau=None, sigma=None,
     composite and parallel-sum type monotone operators*. SIAM Journal
     on Optimization, 23.4 (2013), pp 2541--2565.
     """
-    # Problem size
-    m = len(L)
-
     # Validate input
+    m = len(L)
     if not all(isinstance(op, Operator) for op in L):
         raise ValueError('`L` not a sequence of operators')
     if not all(op.is_linear for op in L):
@@ -142,11 +142,14 @@ def douglas_rachford_pd(x, f, g, L, niter, tau=None, sigma=None,
     if len(g) != m:
         raise ValueError('len(prox_cc_g) != len(L)')
 
+    if tau is None or sigma is None:
+        tau_default, sigma_default = douglas_rachford_pd_stepsize(L, tau)
+
     if tau is None:
-        tau = 1 / sum(l.norm(estimate=True) for l in L)
+        tau = tau_default
 
     if sigma is None:
-        sigma = [(2.0 / m) / (tau * l.norm(estimate=True) ** 2) for l in L]
+        sigma = sigma_default
     elif len(sigma) != m:
         raise ValueError('len(sigma) != len(L)')
 
@@ -167,7 +170,7 @@ def douglas_rachford_pd(x, f, g, L, niter, tau=None, sigma=None,
 
     # Check for unused parameters
     if kwargs:
-        raise TypeError('unexpected keyword argument: {}'.format(kwargs))
+        raise TypeError('got unexpected keyword arguments: {}'.format(kwargs))
 
     # Pre-allocate values
     v = [Li.range.zero() for Li in L]
@@ -241,3 +244,61 @@ def douglas_rachford_pd(x, f, g, L, niter, tau=None, sigma=None,
     # The final result is actually in p1 according to the algorithm, so we need
     # to assign here.
     x.assign(p1)
+
+
+def douglas_rachford_pd_stepsize(L, tau=None):
+    r"""Compute defautl step sizes for the Douglas-Rachford solver.
+
+    Parameters
+    ----------
+    L : sequence of `Operator` or float
+        The operators or the norms of the operators that are used in the
+        `douglas_rachford_pd` method. For `Operator` entries, the norm
+        is computed with `power_method_opnorm`.
+    tau : positive float, optional
+        Use this value for ``tau`` instead of computing it from the
+        operator norms, see Notes.
+
+    Returns
+    -------
+    tau : float
+        The ``tau`` step size parameter for the primal update.
+    sigma : tuple of float
+        The ``sigma`` step size parameters for the dual update.
+
+    Notes
+    -----
+    To guarantee convergence, the parameters :math:`\tau`, :math:`\sigma_i`
+    and :math:`L_i` need to satisfy
+
+    .. math::
+       \tau \sum_{i=1}^n \sigma_i \|L_i\|^2 < 4.
+
+    An example of such a choice is
+
+    .. math::
+        \tau = \frac{1}{\sum_{i=1}^n \|L_i\|},
+        \quad
+        \sigma = \frac{2}{n \tau \|L_i\|^2}
+
+    which are the defaults for this implementation.
+    """
+    L_norms = []
+    for Li in L:
+        if np.isscalar(Li):
+            L_norms.append(float(Li))
+        elif isinstance(Li, Operator):
+            L_norms.append(Li.norm(estimate=True))
+        else:
+            raise TypeError('invalid entry {!r} in `L`'.format(Li))
+
+    if tau is None:
+        norm_sum = sum(L_norms)
+        tau = 1 / norm_sum if norm_sum != 0 else 1.0
+    else:
+        tau = float(tau)
+
+    sigma = [2.0 / (len(L_norms) * tau * Li_norm ** 2) if Li_norm != 0 else 1.0
+             for Li_norm in L_norms]
+
+    return tau, tuple(sigma)
