@@ -29,7 +29,7 @@ sigma = simple_fixture('sigma', [0.001, 2.7, 10])
 exponent = simple_fixture('sigma', [1, 2, 1.5, 2.5, -1.6])
 
 
-space_params = ['r10', 'uniform_discr']
+space_params = ['r10', 'uniform_discr', 'power_space_unif_discr']
 space_ids = [' space={} '.format(p) for p in space_params]
 
 
@@ -41,7 +41,10 @@ def space(request, tspace_impl):
         return odl.rn(10, impl=tspace_impl)
     elif name == 'uniform_discr':
         return odl.uniform_discr(0, 1, 7, impl=tspace_impl)
-
+    elif name == 'power_space_unif_discr':
+        # Discretization parameters
+        space = odl.uniform_discr(0, 1, 7, impl=tspace_impl)
+        return odl.ProductSpace(space, 2)
 
 # --- functional tests --- #
 
@@ -53,18 +56,18 @@ def test_L1_norm(space, sigma):
     x = noise_element(space)
 
     # Test functional evaluation
-    expected_result = (np.abs(x)).inner(space.one())
+    expected_result = func.domain.element(np.abs(x)).inner(space.one())
     assert pytest.approx(func(x), expected_result)
 
     # Test gradient - expecting sign function
-    expected_result = np.sign(x)
+    expected_result = func.domain.element(np.sign(x))
     assert all_almost_equal(func.gradient(x), expected_result)
 
     # Test proximal - expecting the following:
     #                            |  x_i + sigma, if x_i < -sigma
     #                      z_i = {  0,           if -sigma <= x_i <= sigma
     #                            |  x_i - sigma, if x_i > sigma
-    tmp = np.zeros(space.size)
+    tmp = np.zeros(space.shape)
     orig = x.asarray()
     tmp[orig > sigma] = orig[orig > sigma] - sigma
     tmp[orig < -sigma] = orig[orig < -sigma] + sigma
@@ -103,8 +106,9 @@ def test_indicator_lp_unit_ball(space, sigma, exponent):
     func = odl.solvers.IndicatorLpUnitBall(space, exponent)
 
     # Test functional evaluation
-    p_norm_x = np.power(np.power(np.abs(x), exponent).inner(one_elem),
-                        1.0 / exponent)
+    p_norm_x = np.power(
+        func.domain.element(np.power(np.abs(x), exponent)).inner(one_elem),
+        1.0 / exponent)
 
     norm_larger_than_one = 1.01 * x / p_norm_x
     assert func(norm_larger_than_one) == np.inf
@@ -264,13 +268,13 @@ def test_kullback_leibler(space):
     """Test the kullback leibler functional and its convex conjugate."""
     # The prior needs to be positive
     prior = noise_element(space)
-    prior = np.abs(prior)
+    prior = space.element(np.abs(prior))
 
     func = odl.solvers.KullbackLeibler(space, prior)
 
     # The fucntional is only defined for positive elements
     x = noise_element(space)
-    x = np.abs(x)
+    x = func.domain.element(np.abs(x))
     one_elem = space.one()
 
     with np.errstate(all='ignore'):
@@ -343,13 +347,13 @@ def test_kullback_leibler_cross_entorpy(space):
     """Test the kullback leibler cross entropy and its convex conjugate."""
     # The prior needs to be positive
     prior = noise_element(space)
-    prior = np.abs(prior)
+    prior = space.element(np.abs(prior))
 
     func = odl.solvers.KullbackLeiblerCrossEntropy(space, prior)
 
     # The fucntional is only defined for positive elements
     x = noise_element(space)
-    x = np.abs(x)
+    x = func.domain.element(np.abs(x))
     one_elem = space.one()
 
     # Evaluation of the functional

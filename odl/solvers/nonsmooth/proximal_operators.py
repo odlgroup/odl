@@ -1693,6 +1693,8 @@ def proximal_convex_conj_kl_cross_entropy(space, lam=1, g=None):
             if not np.issubsctype(self.domain.dtype, np.complexfloating):
                 lambw = lambw.real
 
+            lambw = x.space.element(lambw)
+
             out.lincomb(1, x, -lam, lambw)
 
     return ProximalConvexConjKLCrossEntropy

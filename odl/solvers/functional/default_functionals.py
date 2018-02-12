@@ -1244,10 +1244,11 @@ class KullbackLeiblerConvexConj(Functional):
         import scipy.special
 
         if self.prior is None:
-            tmp = -1.0 * (np.log(1 - x)).inner(self.domain.one())
+            tmp = self.domain.element(
+                -1.0 * (np.log(1 - x))).inner(self.domain.one())
         else:
-            tmp = (-scipy.special.xlogy(self.prior,
-                                        1 - x)).inner(self.domain.one())
+            tmp = self.domain.element(-scipy.special.xlogy(
+                self.prior, 1 - x)).inner(self.domain.one())
         if np.isnan(tmp):
             # In this case, some element was larger than or equal to one
             return np.inf
@@ -1510,7 +1511,7 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
     def _call(self, x):
         """Return the value in the point ``x``."""
         if self.prior is None:
-            tmp = (np.exp(x) - 1).inner(self.domain.one())
+            tmp = self.domain.element((np.exp(x) - 1)).inner(self.domain.one())
         else:
             tmp = (self.prior * (np.exp(x) - 1)).inner(self.domain.one())
         return tmp
@@ -1533,7 +1534,7 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
             def _call(self, x):
                 """Apply the gradient operator to the given point."""
                 if functional.prior is None:
-                    return np.exp(x)
+                    return self.domain.element(np.exp(x))
                 else:
                     return functional.prior * np.exp(x)
 
