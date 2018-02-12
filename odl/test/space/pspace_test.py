@@ -900,5 +900,16 @@ def test_reductions():
     assert x.ufuncs.max() == 3.0
 
 
+def test_array_wrap_method():
+    """Verify that the __array_wrap__ method for NumPy works."""
+    space = odl.ProductSpace(odl.uniform_discr(0, 1, 10), 2)
+    x_arr, x = noise_elements(space)
+    y_arr = np.sin(x_arr)
+    y = np.sin(x)  # Should yield again an ODL product space element
+
+    assert all_equal(y, y_arr)
+    assert y in space
+
+
 if __name__ == '__main__':
     odl.util.test_file(__file__)

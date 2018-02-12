@@ -1006,6 +1006,23 @@ class ProductSpaceElement(LinearSpaceElement):
         """
         return self.asarray()
 
+    def __array_wrap__(self, array):
+        """Return a new product space element wrapping the ``array``.
+
+        Only available if `is_power_space` is True.
+
+        Parameters
+        ----------
+        array : `numpy.ndarray`
+            Array to be wrapped.
+
+        Returns
+        -------
+        wrapper : `ProductSpaceElement`
+            Product space element wrapping ``array``.
+        """
+        return self.space.element(array)
+
     @property
     def ufuncs(self):
         """`ProductSpaceUfuncs`, access to Numpy style ufuncs.
