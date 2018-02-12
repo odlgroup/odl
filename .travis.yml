@@ -39,7 +39,6 @@ install:
     - export PATH="$HOME/miniconda/bin:$PATH"
     - hash -r
     - conda config --set always_yes yes --set changeps1 no
-    - conda install "conda<=4.3.25"  # newer version 4.3.27 is broken, waiting for fix
     # Useful for debugging any issues with conda
     - conda info -a
 
@@ -53,7 +52,7 @@ install:
 
     # Doc dependencies
     - if [[ "$BUILD_DOCS" == "true" ]]; then
-        pip install sphinx sphinx_rtd_theme travis-sphinx;
+        pip install "sphinx<1.7" sphinx_rtd_theme travis-sphinx;
       fi
 
     # Install our package
