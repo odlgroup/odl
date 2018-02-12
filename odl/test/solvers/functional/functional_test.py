@@ -449,6 +449,31 @@ def test_translation_of_functional(space):
                         places=places)
 
 
+def test_translation_proximal_stepsizes():
+    """Test for stepsize types for proximal of a translated functional."""
+    # Set up space, functional and a point where to evaluate the proximal.
+    space = odl.rn(2)
+    functional = odl.solvers.L2NormSquared(space)
+    translation = functional.translated([0.5, 0.5])
+    x = space.one()
+
+    # Define different forms of the same stepsize.
+    stepsize = space.element([0.5, 2.0])
+    stepsize_list = [0.5, 2.0]
+    stepsize_array = np.asarray([0.5, 2.0])
+
+    # Calculate the proximals for each of the stepsizes.
+    y = translation.convex_conj.proximal(stepsize)(x)
+    y_list = translation.convex_conj.proximal(stepsize_list)(x)
+    y_array = translation.convex_conj.proximal(stepsize_array)(x)
+    expected_result = [0.6, 0.0]
+
+    # Now, all the results should be equal to the expected result.
+    assert all_almost_equal(y, expected_result)
+    assert all_almost_equal(y_list, expected_result)
+    assert all_almost_equal(y_array, expected_result)
+
+
 def test_multiplication_with_vector(space):
     """Test for multiplying a functional with a vector, both left and right."""
     # Less strict checking for single precision
