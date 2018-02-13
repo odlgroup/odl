@@ -18,8 +18,11 @@ from odl.set.space import LinearSpaceElement
 from odl.space.weighting import (
     Weighting, ArrayWeighting, ConstWeighting,
     CustomInner, CustomNorm, CustomDist)
-from odl.util import is_real_dtype, signature_string, indent
+from odl.util import (
+    is_real_dtype, signature_string, indent, is_numeric_dtype,
+    is_complex_floating_dtype)
 from odl.util.ufuncs import ProductSpaceUfuncs
+from odl.util.utility import TYPE_MAP_R2C, TYPE_MAP_C2R
 
 
 __all__ = ('ProductSpace',)
@@ -380,6 +383,83 @@ class ProductSpace(LinearSpace):
             return dtypes[0]
         else:
             raise AttributeError("`dtype`'s of subspaces not equal")
+
+    @property
+    def real_space(self):
+        """The space corresponding to this space's real dtype.
+
+        Raises
+        ------
+        NotImplementedError
+            If `dtype` is not a numeric data type.
+        TypeError
+            If `dtype` is not a real or complex type.
+        """
+        if not is_numeric_dtype(self.dtype):
+            raise NotImplementedError(
+                '`real_space` not defined for non-numeric `dtype`')
+
+        if is_real_dtype(self.dtype):
+            return self
+        elif is_complex_floating_dtype(self.dtype):
+            new_dtype = TYPE_MAP_C2R.get(self.dtype, 'None')
+            return self.astype(new_dtype)
+        else:
+            raise TypeError('`real_space` is only defined for space with '
+                            'real or complex `dtype`, got {}'
+                            ''.format(self.dtype))
+
+    @property
+    def complex_space(self):
+        """The space corresponding to this space's complex dtype.
+
+        Raises
+        ------
+        NotImplementedError
+            If `dtype` is not a numeric data type.
+        TypeError
+            If `dtype` is not a real or complex type.
+        """
+        if not is_numeric_dtype(self.dtype):
+            raise NotImplementedError(
+                '`complex_space` not defined for non-numeric `dtype`')
+
+        if is_real_dtype(self.dtype):
+            new_dtype = TYPE_MAP_R2C.get(self.dtype, 'None')
+            return self.astype(new_dtype)
+        elif is_complex_floating_dtype(self.dtype):
+            return self
+        else:
+            raise TypeError('`complex_space` is only defined for space with '
+                            'real or complex `dtype`, got {}'
+                            ''.format(self.dtype))
+
+    def astype(self, dtype):
+        """Return a copy of this space with new ``dtype``.
+
+        Parameters
+        ----------
+        dtype :
+            Scalar data type of the returned space. Can be provided
+            in any way the `numpy.dtype` constructor understands, e.g.
+            as built-in type or as a string. Data types with non-trivial
+            shapes are not allowed.
+
+        Returns
+        -------
+        newspace : `ProductSpace`
+            Version of this space with given data type.
+        """
+        if dtype is None:
+            # Need to filter this out since Numpy iterprets it as 'float'
+            raise ValueError('`None` is not a valid data type')
+
+        dtype = np.dtype(dtype)
+        if dtype == self.dtype:
+            return self
+        else:
+            return ProductSpace(*[space.astype(dtype)
+                                  for space in self.spaces])
 
     def element(self, inp=None, cast=True):
         """Create an element in the product space.
@@ -1083,28 +1163,41 @@ class ProductSpaceElement(LinearSpaceElement):
 
     @property
     def real(self):
-        """Real part of the element."""
-        size = len(self)
-        real_part = [None] * size
-        for i, part in enumerate(self.parts):
-            real_part[i] = part.real
-        return self.space.element(real_part)
+        """Real part of the element.
+
+        Examples
+        --------
+        >>> space = odl.ProductSpace(odl.cn(3), odl.cn(2))
+        >>> x = space.element([[1 + 1j, 2, 3 - 3j], [-1+2j, -2-3j]])
+        >>> x_real = x.real
+        >>> real_space = odl.ProductSpace(odl.rn(3), odl.rn(2))
+        >>> expected_result = real_space.element([[1, 2, 3], [-1, -2]])
+        >>> x_real == expected_result
+        True
+        """
+        real_part = [part.real for part in self.parts]
+        return self.space.real_space.element(real_part)
 
     @property
     def imag(self):
-        """Imaginary part of the element."""
-        size = len(self)
-        imag_part = [None] * size
-        for i, part in enumerate(self.parts):
-            imag_part[i] = part.imag
-        return self.space.element(imag_part)
+        """Imaginary part of the element.
+
+        Examples
+        --------
+        >>> space = odl.ProductSpace(odl.cn(3), odl.cn(2))
+        >>> x = space.element([[1 + 1j, 2, 3 - 3j], [-1+2j, -2-3j]])
+        >>> x_imag = x.imag
+        >>> real_space = odl.ProductSpace(odl.rn(3), odl.rn(2))
+        >>> expected_result = real_space.element([[1, 0, -3], [2, -3]])
+        >>> x_imag == expected_result
+        True
+        """
+        imag_part = [part.imag for part in self.parts]
+        return self.space.real_space.element(imag_part)
 
     def conj(self):
         """Complex conjugate of the element."""
-        size = len(self)
-        complex_conj = [None] * size
-        for i, part in enumerate(self.parts):
-            complex_conj[i] = part.conj()
+        complex_conj = [part.conj() for part in self.parts]
         return self.space.element(complex_conj)
 
     def __str__(self):

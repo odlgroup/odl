@@ -918,11 +918,11 @@ def test_real_imag_and_conj():
     x = noise_element(space)
 
     # Test real
-    expected_result = space.element([np.real(x[0]), np.real(x[1])])
+    expected_result = space.real_space.element([np.real(x[0]), np.real(x[1])])
     assert x.real == expected_result
 
     # Test imag
-    expected_result = space.element([np.imag(x[0]), np.imag(x[1])])
+    expected_result = space.real_space.element([np.imag(x[0]), np.imag(x[1])])
     assert x.imag == expected_result
 
     # Test conj. Note that ProductSpace does not implement asarray if
