@@ -386,28 +386,39 @@ class ProductSpace(LinearSpace):
 
     @property
     def real_space(self):
-        """The space corresponding to this space's real dtype.
+        """Variant of this space with real dtype.
 
         Raises
         ------
-        NotImplementedError
-            If `dtype` is not a numeric data type.
-        TypeError
-            If `dtype` is not a real or complex type.
+        ValueError
+            Raised if the underlying spaces have different `dtype`, if `dtype`
+            is not a numeric data type, if `dtype` is not a real or complex
+            type, and if `dtype` is complex but cannot be mapped to a real
+            type.
         """
-        if not is_numeric_dtype(self.dtype):
-            raise NotImplementedError(
+        try:
+            current_dtype = self.dtype
+        except(AttributeError):
+            raise ValueError(
+                'dtypes of underlying spaces are not the same and therefore '
+                '`real_space` is not well-defined')
+
+        if not is_numeric_dtype(current_dtype):
+            raise ValueError(
                 '`real_space` not defined for non-numeric `dtype`')
 
-        if is_real_dtype(self.dtype):
+        if is_real_dtype(current_dtype):
             return self
-        elif is_complex_floating_dtype(self.dtype):
-            new_dtype = TYPE_MAP_C2R.get(self.dtype, 'None')
+        elif is_complex_floating_dtype(current_dtype):
+            new_dtype = TYPE_MAP_C2R.get(current_dtype, 'None')
+            if new_dtype is None:
+                raise ValueError('complex type `self.dtype` {} not possible '
+                                 'to map to a real type'.format(self.dtype))
             return self.astype(new_dtype)
         else:
-            raise TypeError('`real_space` is only defined for space with '
-                            'real or complex `dtype`, got {}'
-                            ''.format(self.dtype))
+            raise ValueError(
+                '`real_space` is only defined for space with real or complex '
+                '`dtype`, got {}'.format(current_dtype))
 
     @property
     def complex_space(self):
@@ -415,24 +426,35 @@ class ProductSpace(LinearSpace):
 
         Raises
         ------
-        NotImplementedError
-            If `dtype` is not a numeric data type.
-        TypeError
-            If `dtype` is not a real or complex type.
+        ValueError
+            Raised if the underlying spaces have different `dtype`, if `dtype`
+            is not a numeric data type, if `dtype` is not a real or complex
+            type, and if `dtype` is real but cannot be mapped to a complex
+            type.
         """
-        if not is_numeric_dtype(self.dtype):
-            raise NotImplementedError(
+        try:
+            current_dtype = self.dtype
+        except(AttributeError):
+            raise ValueError(
+                'dtypes of underlying spaces are not the same and therefore '
+                '`complex_space` is not well-defined')
+
+        if not is_numeric_dtype(current_dtype):
+            raise ValueError(
                 '`complex_space` not defined for non-numeric `dtype`')
 
-        if is_real_dtype(self.dtype):
+        if is_real_dtype(current_dtype):
             new_dtype = TYPE_MAP_R2C.get(self.dtype, 'None')
+            if new_dtype is None:
+                raise ValueError('real type `self.dtype` {} not possible to '
+                                 'map to a complex type'.format(self.dtype))
             return self.astype(new_dtype)
-        elif is_complex_floating_dtype(self.dtype):
+        elif is_complex_floating_dtype(current_dtype):
             return self
         else:
-            raise TypeError('`complex_space` is only defined for space with '
-                            'real or complex `dtype`, got {}'
-                            ''.format(self.dtype))
+            raise ValueError(
+                '`complex_space` is only defined for space with real or '
+                'complex `dtype`, got {}'.format(current_dtype))
 
     def astype(self, dtype):
         """Return a copy of this space with new ``dtype``.
@@ -455,7 +477,9 @@ class ProductSpace(LinearSpace):
             raise ValueError('`None` is not a valid data type')
 
         dtype = np.dtype(dtype)
-        if dtype == self.dtype:
+        current_dtype = getattr(self, 'dtype', None)
+
+        if dtype == current_dtype:
             return self
         else:
             return ProductSpace(*[space.astype(dtype)
@@ -1207,20 +1231,39 @@ class ProductSpaceElement(LinearSpaceElement):
         >>> x
         space.element([[2 + 1j, 3, 4 - 3j], [5 + 1j, 6]])
         """
-        if newreal in self.space.field:
+        try:
+            iter(newreal)
+        except TypeError:
             for part in self.parts:
-                part.real.data[:] = newreal
-        elif newreal in self.space.real_space or newreal in self.space:
-            for part, newreal_subpart in zip(self.parts, newreal):
-                part.real.data[:] = newreal_subpart.real.data[:]
-        elif self.space.shape[0] == np.shape(newreal)[0]:
-            for part, newreal_subpart in zip(self.parts, newreal):
-                part.real.data[:] = np.real(newreal_subpart)
+                part.real = newreal
+            return
+
+        if self.space.is_power_space:
+            try:
+                for part in self.parts:
+                    part.real = newreal
+            except (ValueError, TypeError):  # maybe need to catch more, e.g. `LinearSpaceTypeError`
+                pass
+        elif len(newreal) == len(self):
+            for part, new_re in zip(self.parts, newreal):
+                part.real = new_re
         else:
-            raise ValueError('new real part does not the correct first '
-                             'dimension, expected {} but got {}'
-                             ''.format(self.space.shape[0],
-                                       np.shape(newreal)[0]))
+            raise ValueError('invalid')  # better error
+
+#        if newreal in self.space.field:
+#            for part in self.parts:
+#                part.real.data[:] = newreal
+#        elif newreal in self.space.real_space or newreal in self.space:
+#            for part, newreal_subpart in zip(self.parts, newreal):
+#                part.real.data[:] = newreal_subpart.real.data[:]
+#        elif self.space.shape[0] == np.shape(newreal)[0]:
+#            for part, newreal_subpart in zip(self.parts, newreal):
+#                part.real.data[:] = np.real(newreal_subpart)
+#        else:
+#            raise ValueError('new real part does not the correct first '
+#                             'dimension, expected {} but got {}'
+#                             ''.format(self.space.shape[0],
+#                                       np.shape(newreal)[0]))
 
     @property
     def imag(self):
