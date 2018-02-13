@@ -907,8 +907,8 @@ def test_array_wrap_method():
     y_arr = np.sin(x_arr)
     y = np.sin(x)  # Should yield again an ODL product space element
 
-    assert all_equal(y, y_arr)
     assert y in space
+    assert all_equal(y, y_arr)
 
 
 def test_real_imag_and_conj():
@@ -918,18 +918,19 @@ def test_real_imag_and_conj():
     x = noise_element(space)
 
     # Test real
-    expected_result = space.real_space.element([np.real(x[0]), np.real(x[1])])
+    expected_result = space.real_space.element([x[0].real, x[1].real])
     assert x.real == expected_result
 
     # Test imag
-    expected_result = space.real_space.element([np.imag(x[0]), np.imag(x[1])])
+    expected_result = space.real_space.element([x[0].imag, x[1].imag])
     assert x.imag == expected_result
 
     # Test conj. Note that ProductSpace does not implement asarray if
     # is_power_space is false. Hence the construction below
-    expected_result = space.element([np.conj(x[0]), np.conj(x[1])])
-    assert all_almost_equal((x.conj())[0], expected_result[0])
-    assert all_almost_equal((x.conj())[1], expected_result[1])
+    expected_result = space.element([x[0].conj(), x[1].conj()])
+    x_conj = x.conj()
+    assert x_conj[0] == expected_result[0]
+    assert x_conj[1] == expected_result[1]
 
 
 if __name__ == '__main__':
