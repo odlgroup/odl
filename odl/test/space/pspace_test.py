@@ -13,7 +13,7 @@ import operator
 
 import odl
 from odl.util.testutils import (all_equal, all_almost_equal, almost_equal,
-                                noise_elements, simple_fixture)
+                                noise_elements, noise_element, simple_fixture)
 
 
 exponent = simple_fixture('exponent', [2.0, 1.0, float('inf'), 0.5, 1.5])
@@ -909,6 +909,27 @@ def test_array_wrap_method():
 
     assert all_equal(y, y_arr)
     assert y in space
+
+
+def test_real_imag_and_conj():
+    """..."""
+    space = odl.ProductSpace(odl.uniform_discr(0, 1, 3, dtype=complex),
+                             odl.cn(2))
+    x = noise_element(space)
+
+    # Test real
+    expected_result = space.element([np.real(x[0]), np.real(x[1])])
+    assert x.real == expected_result
+
+    # Test imag
+    expected_result = space.element([np.imag(x[0]), np.imag(x[1])])
+    assert x.imag == expected_result
+
+    # Test conj. Note that ProductSpace does not implement asarray if
+    # is_power_space is false. Hence the construction below
+    expected_result = space.element([np.conj(x[0]), np.conj(x[1])])
+    assert all_almost_equal((x.conj())[0], expected_result[0])
+    assert all_almost_equal((x.conj())[1], expected_result[1])
 
 
 if __name__ == '__main__':

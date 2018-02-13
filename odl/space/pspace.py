@@ -1081,6 +1081,32 @@ class ProductSpaceElement(LinearSpaceElement):
         """
         return ProductSpaceUfuncs(self)
 
+    @property
+    def real(self):
+        """Pointwise real part of the element."""
+        size = self.space.shape[0]
+        to_return = [None] * size
+        for (i, part) in zip(range(size), self.__parts):
+            to_return[i] = part.real
+        return self.space.element(to_return)
+
+    @property
+    def imag(self):
+        """Pointwise imaginary part of the element."""
+        size = self.space.shape[0]
+        to_return = [None] * size
+        for (i, part) in zip(range(size), self.__parts):
+            to_return[i] = part.imag
+        return self.space.element(to_return)
+
+    def conj(self):
+        """Pointwise complex conjugate of the element."""
+        size = self.space.shape[0]
+        to_return = [None] * size
+        for (i, part) in zip(range(size), self.__parts):
+            to_return[i] = part.conj()
+        return self.space.element(to_return)
+
     def __str__(self):
         """Return ``str(self)``."""
         return repr(self)
