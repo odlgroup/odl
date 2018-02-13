@@ -46,7 +46,7 @@ def test_matrix_representation_product_to_lin_space():
     ran = ProductSpace(rn, 1)
 
     AB_matrix = np.hstack([A, B])
-    ABop = ProductSpaceOperator([Aop, Bop], dom, ran)
+    ABop = ProductSpaceOperator([[Aop, Bop]], dom, ran)
 
     matrix_repr = matrix_representation(ABop)
 
