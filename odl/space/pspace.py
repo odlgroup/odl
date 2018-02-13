@@ -1178,6 +1178,50 @@ class ProductSpaceElement(LinearSpaceElement):
         real_part = [part.real for part in self.parts]
         return self.space.real_space.element(real_part)
 
+    @real.setter
+    def real(self, newreal):
+        """Setter for the real part.
+
+        This method is invoked by ``x.real = other``.
+
+        Parameters
+        ----------
+        newreal : array-like or scalar
+            Values to be assigned to the real part of this element.
+
+        Examples
+        --------
+        >>> space = odl.ProductSpace(odl.cn(3), odl.cn(2))
+        >>> x = space.element([[1 + 1j, 2, 3 - 3j], [1 + 1j, 2]])
+        >>> zero = space.real_space.zero()
+        >>> x.real = zero
+        >>> x
+        space.element([[1j, 0j, -3j], [1j, 0]])
+
+        Other array-like types:
+
+        >>> x.real = 1.0
+        >>> x
+        space.element([[1 + 1j, 1, 1 - 3j], [1 + 1j, 1]])
+        >>> x.real = [[2, 3, 4], [5, 6]]
+        >>> x
+        space.element([[2 + 1j, 3, 4 - 3j], [5 + 1j, 6]])
+        """
+        if newreal in self.space.field:
+            for part in self.parts:
+                part.real.data[:] = newreal
+        elif newreal in self.space.real_space or newreal in self.space:
+            for part, newreal_subpart in zip(self.parts, newreal):
+                part.real.data[:] = newreal_subpart.real.data[:]
+        elif self.space.shape[0] == np.shape(newreal)[0]:
+            for part, newreal_subpart in zip(self.parts, newreal):
+                part.real.data[:] = np.real(newreal_subpart)
+        else:
+            raise ValueError('new real part does not the correct first '
+                             'dimension, expected {} but got {}'
+                             ''.format(self.space.shape[0],
+                                       np.shape(newreal)[0]))
+
     @property
     def imag(self):
         """Imaginary part of the element.
