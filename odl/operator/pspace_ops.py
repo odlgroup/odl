@@ -94,7 +94,7 @@ class ProductSpaceOperator(Operator):
         Parameters
         ----------
         operators : `array-like`
-            An array of `Operator`'s
+            An array of `Operator`'s, must be 2-dimensional.
         domain : `ProductSpace`, optional
             Domain of the operator. If not provided, it is tried to be
             inferred from the operators. This requires each **column**
@@ -112,9 +112,9 @@ class ProductSpaceOperator(Operator):
         >>> x = pspace.element([[1, 2, 3],
         ...                     [4, 5, 6]])
 
-        Sum of elements:
+        Create an operator that sums two inputs:
 
-        >>> prod_op = ProductSpaceOperator([I, I])
+        >>> prod_op = odl.ProductSpaceOperator([[I, I]])
         >>> prod_op(x)
         ProductSpace(rn(3), 1).element([
             [ 5.,  7.,  9.]
@@ -123,20 +123,30 @@ class ProductSpaceOperator(Operator):
         Diagonal operator -- 0 or ``None`` means ignore, or the implicit
         zero operator:
 
-        >>> prod_op = ProductSpaceOperator([[I, 0], [0, I]])
+        >>> prod_op = odl.ProductSpaceOperator([[I, 0],
+        ...                                     [0, I]])
         >>> prod_op(x)
         ProductSpace(rn(3), 2).element([
             [ 1.,  2.,  3.],
             [ 4.,  5.,  6.]
         ])
 
-        Complicated combinations:
+        If a column is empty, the operator domain must be specified. The
+        same holds for an empty row and the range of the operator:
 
-        >>> prod_op = ProductSpaceOperator([[I, I], [I, 0]])
+        >>> prod_op = odl.ProductSpaceOperator([[I, 0],
+        ...                                     [I, 0]], domain=r3 ** 2)
+        >>> prod_op(x)
+        ProductSpace(rn(3), 2).element([
+            [ 1.,  2.,  3.],
+            [ 1.,  2.,  3.]
+        ])
+        >>> prod_op = odl.ProductSpaceOperator([[I, I],
+        ...                                     [0, 0]], range=r3 ** 2)
         >>> prod_op(x)
         ProductSpace(rn(3), 2).element([
             [ 5.,  7.,  9.],
-            [ 1.,  2.,  3.]
+            [ 0.,  0.,  0.]
         ])
         """
         # Lazy import to improve `import odl` time
