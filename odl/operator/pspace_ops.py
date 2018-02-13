@@ -157,25 +157,27 @@ class ProductSpaceOperator(Operator):
             if range.is_weighted:
                 raise NotImplementedError('weighted spaces not supported')
 
-        # Convert ops to sparse representation
-        self.ops = scipy.sparse.coo_matrix(operators)
-
-        if not all(isinstance(op, Operator) for op in self.ops.data):
-            raise TypeError('`operators` {!r} must be a matrix of Operators'
-                            ''.format(operators))
+        if isinstance(operators, scipy.sparse.spmatrix):
+            if not all(isinstance(op, Operator) for op in operators.data):
+                raise ValueError('sparse matrix `operator` contains non-'
+                                 '`Operator` entries')
+            self.__ops = operators
+        else:
+            self.__ops = self._convert_to_spmatrix(operators)
 
         # Set domain and range (or verify if given)
         if domain is None:
-            domains = [None] * self.ops.shape[1]
+            domains = [None] * self.__ops.shape[1]
         else:
             domains = domain
 
         if range is None:
-            ranges = [None] * self.ops.shape[0]
+            ranges = [None] * self.__ops.shape[0]
         else:
             ranges = range
 
-        for row, col, op in zip(self.ops.row, self.ops.col, self.ops.data):
+        for row, col, op in zip(self.__ops.row, self.__ops.col,
+                                self.__ops.data):
             if domains[col] is None:
                 domains[col] = op.domain
             elif domains[col] != op.domain:
@@ -209,10 +211,71 @@ class ProductSpaceOperator(Operator):
             range = ProductSpace(*ranges)
 
         # Set linearity
-        linear = all(op.is_linear for op in self.ops.data)
+        linear = all(op.is_linear for op in self.__ops.data)
 
         super(ProductSpaceOperator, self).__init__(
             domain=domain, range=range, linear=linear)
+
+    @staticmethod
+    def _convert_to_spmatrix(operators):
+        """Convert an array-like object of operators to a sparse matrix."""
+        # Lazy import to improve `import odl` time
+        import scipy.sparse
+
+        # Convert ops to sparse representation. This is not trivial because
+        # operators can be indexable themselves and give the wrong impression
+        # of an extra dimension. So we have to infer the shape manually
+        # first and extract the indices of nonzero positions.
+        nrows = len(operators)
+        ncols = None
+        irow, icol, data = [], [], []
+        for i, row in enumerate(operators):
+            try:
+                iter(row)
+            except TypeError:
+                raise ValueError(
+                    '`operators` must be a matrix of `Operator` objects, `0` '
+                    'or `None`, got {!r} (row {} = {!r} is not iterable)'
+                    ''.format(operators, i, row))
+
+            if isinstance(row, Operator):
+                raise ValueError(
+                    '`operators` must be a matrix of `Operator` objects, `0` '
+                    'or `None`, but row {} is an `Operator` {!r}'
+                    ''.format(i, row))
+
+            if ncols is None:
+                ncols = len(row)
+            elif len(row) != ncols:
+                raise ValueError(
+                    'all rows in `operators` must have the same length, but '
+                    'length {} of row {} differs from previous common length '
+                    '{}'.format(len(row), i, ncols))
+
+            for j, col in enumerate(row):
+                if col is None or col is 0:
+                    pass
+                elif isinstance(col, Operator):
+                    irow.append(i)
+                    icol.append(j)
+                    data.append(col)
+                else:
+                    raise ValueError(
+                        '`operators` must be a matrix of `Operator` objects, '
+                        '`0` or `None`, got entry {!r} at ({}, {})'
+                        ''.format(col, i, j))
+
+        # Create object array explicitly, threby avoiding erroneous conversion
+        # in `coo_matrix.__init__`
+        data_arr = np.empty(len(data), dtype=object)
+        data_arr[:] = data
+        return scipy.sparse.coo_matrix((data_arr, (irow, icol)),
+                                       shape=(nrows, ncols))
+
+    @property
+    def ops(self):
+        """The sparse operator matrix representing this operator."""
+        return self.__ops
 
     def _call(self, x, out=None):
         """Call the operators on the parts of ``x``."""
@@ -1062,9 +1125,12 @@ class DiagonalOperator(ProductSpaceOperator):
                 isinstance(operators[1], Integral)):
             operators = (operators[0],) * operators[1]
 
-        indices = [range(len(operators)), range(len(operators))]
-        shape = (len(operators), len(operators))
-        op_matrix = scipy.sparse.coo_matrix((operators, indices), shape)
+        n_ops = len(operators)
+        irow = icol = np.arange(n_ops)
+        data = np.empty(n_ops, dtype=object)
+        data[:] = operators
+        shape = (n_ops, n_ops)
+        op_matrix = scipy.sparse.coo_matrix((data, (irow, icol)), shape)
         super(DiagonalOperator, self).__init__(op_matrix, **kwargs)
 
         self.__operators = tuple(operators)
