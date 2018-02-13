@@ -912,7 +912,7 @@ def test_array_wrap_method():
 
 
 def test_real_imag_and_conj():
-    """..."""
+    """Verify that .real .imag and .conj() work for product space elements."""
     space = odl.ProductSpace(odl.uniform_discr(0, 1, 3, dtype=complex),
                              odl.cn(2))
     x = noise_element(space)

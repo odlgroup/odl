@@ -1083,29 +1083,29 @@ class ProductSpaceElement(LinearSpaceElement):
 
     @property
     def real(self):
-        """Pointwise real part of the element."""
-        size = self.space.shape[0]
-        to_return = [None] * size
-        for (i, part) in zip(range(size), self.__parts):
-            to_return[i] = part.real
-        return self.space.element(to_return)
+        """Real part of the element."""
+        size = len(self)
+        real_part = [None] * size
+        for i, part in enumerate(self.parts):
+            real_part[i] = part.real
+        return self.space.element(real_part)
 
     @property
     def imag(self):
-        """Pointwise imaginary part of the element."""
-        size = self.space.shape[0]
-        to_return = [None] * size
-        for (i, part) in zip(range(size), self.__parts):
-            to_return[i] = part.imag
-        return self.space.element(to_return)
+        """Imaginary part of the element."""
+        size = len(self)
+        imag_part = [None] * size
+        for i, part in enumerate(self.parts):
+            imag_part[i] = part.imag
+        return self.space.element(imag_part)
 
     def conj(self):
-        """Pointwise complex conjugate of the element."""
-        size = self.space.shape[0]
-        to_return = [None] * size
-        for (i, part) in zip(range(size), self.__parts):
-            to_return[i] = part.conj()
-        return self.space.element(to_return)
+        """Complex conjugate of the element."""
+        size = len(self)
+        complex_conj = [None] * size
+        for i, part in enumerate(self.parts):
+            complex_conj[i] = part.conj()
+        return self.space.element(complex_conj)
 
     def __str__(self):
         """Return ``str(self)``."""
