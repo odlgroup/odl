@@ -58,17 +58,17 @@ def test_pspace_op_weighted_init():
 
     r3 = odl.rn(3)
     ran = odl.ProductSpace(r3, 2, weighting=[1, 2])
-    I = odl.IdentityOperator(r3)
+    A = odl.IdentityOperator(r3)
 
     with pytest.raises(NotImplementedError):
-        odl.ProductSpaceOperator([[I],
+        odl.ProductSpaceOperator([[A],
                                   [0]], range=ran)
 
 
 def test_pspace_op_sum_call():
     r3 = odl.rn(3)
-    I = odl.IdentityOperator(r3)
-    op = odl.ProductSpaceOperator([[I, I]])
+    A = odl.IdentityOperator(r3)
+    op = odl.ProductSpaceOperator([[A, A]])
 
     x = r3.element([1, 2, 3])
     y = r3.element([7, 8, 9])
@@ -80,9 +80,9 @@ def test_pspace_op_sum_call():
 
 def test_pspace_op_project_call():
     r3 = odl.rn(3)
-    I = odl.IdentityOperator(r3)
-    op = odl.ProductSpaceOperator([[I],
-                                   [I]])
+    A = odl.IdentityOperator(r3)
+    op = odl.ProductSpaceOperator([[A],
+                                   [A]])
 
     x = r3.element([1, 2, 3])
     z = op.domain.element([x])
@@ -95,9 +95,9 @@ def test_pspace_op_project_call():
 
 def test_pspace_op_diagonal_call():
     r3 = odl.rn(3)
-    I = odl.IdentityOperator(r3)
-    op = odl.ProductSpaceOperator([[I, 0],
-                                   [0, I]])
+    A = odl.IdentityOperator(r3)
+    op = odl.ProductSpaceOperator([[A, 0],
+                                   [0, A]])
 
     x = r3.element([1, 2, 3])
     y = r3.element([7, 8, 9])
@@ -109,9 +109,9 @@ def test_pspace_op_diagonal_call():
 
 def test_pspace_op_swap_call():
     r3 = odl.rn(3)
-    I = odl.IdentityOperator(r3)
-    op = odl.ProductSpaceOperator([[0, I],
-                                   [I, 0]])
+    A = odl.IdentityOperator(r3)
+    op = odl.ProductSpaceOperator([[0, A],
+                                   [A, 0]])
 
     x = r3.element([1, 2, 3])
     y = r3.element([7, 8, 9])
