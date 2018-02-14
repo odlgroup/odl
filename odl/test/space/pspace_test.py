@@ -18,6 +18,58 @@ from odl.util.testutils import (all_equal, all_almost_equal, almost_equal,
 
 exponent = simple_fixture('exponent', [2.0, 1.0, float('inf'), 0.5, 1.5])
 
+space_params = ['product_space', 'power_space']
+space_ids = [' space={} '.format(p) for p in space_params]
+
+elem_params = ['space', 'real_space', 'numpy_array', 'array', 'scalar',
+               '1d_array']
+elem_ids = [' form of element={} '.format(p) for p in elem_params]
+
+
+@pytest.fixture(scope="module", ids=space_ids, params=space_params)
+def space(request):
+    name = request.param.strip()
+
+    if name == 'product_space':
+        space = odl.ProductSpace(odl.uniform_discr(0, 1, 3, dtype=complex),
+                                 odl.cn(2))
+    elif name == 'power_space':
+        space = odl.ProductSpace(odl.uniform_discr(0, 1, 3, dtype=complex), 2)
+    else:
+        raise ValueError('undefined space')
+
+    return space
+
+
+@pytest.fixture(scope="module", ids=elem_ids, params=elem_params)
+def newreal(request, space):
+    element_form = request.param.strip()
+
+    if element_form == 'space':
+        tmp = noise_element(space)
+        newreal = space.element(tmp.real)
+    elif element_form == 'real_space':
+        newreal = noise_element(space).real
+    elif element_form == 'numpy_array':
+        tmp = noise_element(space)
+        newreal = [tmp[0].real.asarray(), tmp[1].real.asarray()]
+    elif element_form == 'array':
+        if space.is_power_space:
+            newreal = [[0, 1, 2], [3, 4, 5]]
+        else:
+            newreal = [[0, 1, 2], [3, 4]]
+    elif element_form == 'scalar':
+        newreal = np.random.randn()
+    elif element_form == '1d_array':
+        if not space.is_power_space:
+            pytest.skip('arrays mathcing only one dimension can only be used '
+                        'for power spaces')
+        newreal = [0, 1, 2]
+    else:
+        raise ValueError('undefined form of element')
+
+    return newreal
+
 
 def test_emptyproduct():
     with pytest.raises(ValueError):
@@ -933,135 +985,27 @@ def test_real_imag_and_conj():
     assert x_conj[1] == expected_result[1]
 
 
-def test_real_setter_product_space():
+def test_real_setter_product_space(space, newreal):
     """Verify that the setter for the real part of an element works."""
-    space = odl.ProductSpace(odl.uniform_discr(0, 1, 3, dtype=complex),
-                             odl.cn(2))
     x = noise_element(space)
-    x_imag = x.imag
-
-    # Test for element in ProductSpace where imaginary part is zero
-    tmp = noise_element(space)
-    newreal = space.element(tmp.real)
+    print(x)
     x.real = newreal
-    assert x.real == newreal.real
 
-    # Test for element in ProductSpace with none-zero imaginary part
-    newreal = noise_element(space)
-    x.real = newreal
-    assert x.real == newreal.real
+    try:
+        # Catch the scalar
+        iter(newreal)
+    except TypeError:
+        expected_result = newreal * space.one()
+    else:
+        if newreal in space:
+            expected_result = newreal.real
+        elif np.shape(newreal) == (3,):
+            expected_result = [newreal, newreal]
+        else:
+            expected_result = newreal
 
-    # Test for element in ProductSpace.real_space
-    tmp = noise_element(space)
-    newreal = tmp.real
-    x.real = newreal
     assert x in space
-    assert x.real == newreal
-
-    # Test for array of numpy.ndarray
-    tmp = noise_element(space)
-    newreal = [tmp[0].real.asarray(), tmp[1].real.asarray()]
-    x.real = newreal
-    expected_result = space.real_space.element(newreal)
-    assert x.real == expected_result
-
-    # Test array of numpy.ndarray with none-zero imaginary part
-    tmp = noise_element(space)
-    newreal = [tmp[0].asarray(), tmp[1].asarray()]
-    x.real = newreal
-    expected_result = space.real_space.element(newreal)
-    assert x.real == expected_result
-
-    # Test for array
-    newreal = [[0, 1, 2], [3, 4]]
-    x.real = newreal
-    expected_result = space.real_space.element(newreal)
-    assert x.real == expected_result
-
-#    # Test array with none-zero imaginary part
-#    newreal = [[0, 1 + 1j, 2], [3, 4]]
-#    x.real = newreal
-#    expected_result = space.element(newreal).real
-#    assert x.real == expected_result
-
-    # Test for scalar
-    newreal = np.random.randn()
-    x.real = newreal
-    expected_result = (newreal * space.one()).real
-    assert x.real == expected_result
-
-    # Test scalar with none-zero imaginary part
-    newreal = np.random.randn() + 1j * np.random.randn()
-    x.real = newreal
-    expected_result = (newreal * space.one()).real
-    assert x.real == expected_result
-
-    # Assert that imaginary part has not changed in any of the tests
-    assert x.imag == x_imag
-
-    # Test that wrong first dimension do not pass
-    newreal = np.random.randn(5, 1)  # space has 5 entries in total
-    with pytest.raises(ValueError):
-        x.real = newreal
-
-
-def test_real_setter_power_space():
-    """Verify that the setter for the real part of an element works."""
-    space = odl.ProductSpace(odl.uniform_discr(0, 1, 3, dtype=complex), 2)
-    x = noise_element(space)
-    x_imag = x.imag
-
-    # Test for element in ProductSpace where imaginary part is zero
-    tmp = noise_element(space)
-    newreal = space.element(tmp.real)
-    x.real = newreal
-    assert x.real == newreal.real
-
-    # Test for element in ProductSpace with none-zero imaginary part
-    newreal = noise_element(space)
-    x.real = newreal
-    assert x.real == newreal.real
-
-    # Test for element in ProductSpace.real_space
-    tmp = noise_element(space)
-    newreal = tmp.real
-    x.real = newreal
-    assert x in space
-    assert x.real == newreal
-
-    # Test for array of numpy.ndarray
-    tmp = noise_element(space)
-    newreal = [tmp[0].real.asarray(), tmp[1].real.asarray()]
-    x.real = newreal
-    expected_result = space.real_space.element(newreal)
-    assert x.real == expected_result
-
-    # Test array of numpy.ndarray with none-zero imaginary part
-    tmp = noise_element(space)
-    newreal = [tmp[0].asarray(), tmp[1].asarray()]
-    x.real = newreal
-    expected_result = space.real_space.element(newreal)
-    assert x.real == expected_result
-
-    # Test for array
-    newreal = [[0, 1, 2], [3, 4, 5]]
-    x.real = newreal
-    expected_result = space.real_space.element(newreal)
-    assert x.real == expected_result
-
-#    # Test array with none-zero imaginary part
-#    newreal = [[0, 1 + 1j, 2], [3, 4, 5]]
-#    x.real = newreal
-#    expected_result = space.element(newreal).real
-#    assert x.real == expected_result
-
-    # Assert that imaginary part has not changed in any of the tests
-    assert x.imag == x_imag
-
-    # Test that wrong first dimension do not pass
-    newreal = np.random.randn(6, 1)  # space has 6 entries in total
-    with pytest.raises(ValueError):
-        x.real = newreal
+    assert all_equal(x.real, expected_result)
 
 
 if __name__ == '__main__':

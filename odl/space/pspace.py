@@ -1234,36 +1234,27 @@ class ProductSpaceElement(LinearSpaceElement):
         try:
             iter(newreal)
         except TypeError:
+            # `newreal` is not iterable, assume it can be assigned to
+            # all indexed parts
             for part in self.parts:
                 part.real = newreal
             return
 
         if self.space.is_power_space:
             try:
+                # Set same value in all parts
                 for part in self.parts:
                     part.real = newreal
-            except (ValueError, TypeError):  # maybe need to catch more, e.g. `LinearSpaceTypeError`
+            except (ValueError, TypeError):
+                # Iterate over all parts and set them separately
+                for part, new_re in zip(self.parts, newreal):
+                    part.real = new_re
                 pass
         elif len(newreal) == len(self):
             for part, new_re in zip(self.parts, newreal):
                 part.real = new_re
         else:
             raise ValueError('invalid')  # better error
-
-#        if newreal in self.space.field:
-#            for part in self.parts:
-#                part.real.data[:] = newreal
-#        elif newreal in self.space.real_space or newreal in self.space:
-#            for part, newreal_subpart in zip(self.parts, newreal):
-#                part.real.data[:] = newreal_subpart.real.data[:]
-#        elif self.space.shape[0] == np.shape(newreal)[0]:
-#            for part, newreal_subpart in zip(self.parts, newreal):
-#                part.real.data[:] = np.real(newreal_subpart)
-#        else:
-#            raise ValueError('new real part does not the correct first '
-#                             'dimension, expected {} but got {}'
-#                             ''.format(self.space.shape[0],
-#                                       np.shape(newreal)[0]))
 
     @property
     def imag(self):
