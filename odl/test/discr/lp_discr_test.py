@@ -744,15 +744,14 @@ def test_cell_volume():
 
 
 def test_astype(tspace_impl):
-
-    rdiscr = odl.uniform_discr([0, 0], [1, 1], [2, 2], dtype='float64',
-                               impl=tspace_impl)
-    cdiscr = odl.uniform_discr([0, 0], [1, 1], [2, 2], dtype='complex128',
-                               impl=tspace_impl)
-    rdiscr_s = odl.uniform_discr([0, 0], [1, 1], [2, 2], dtype='float32',
-                                 impl=tspace_impl)
-    cdiscr_s = odl.uniform_discr([0, 0], [1, 1], [2, 2], dtype='complex64',
-                                 impl=tspace_impl)
+    rdiscr = odl.uniform_discr([0, 0], [1, 1], [2, 2],
+                               dtype='float64', impl=tspace_impl)
+    cdiscr = odl.uniform_discr([0, 0], [1, 1], [2, 2],
+                               dtype='complex128', impl=tspace_impl)
+    rdiscr_s = odl.uniform_discr([0, 0], [1, 1], [2, 2],
+                                 dtype='float32', impl=tspace_impl)
+    cdiscr_s = odl.uniform_discr([0, 0], [1, 1], [2, 2],
+                                 dtype='complex64', impl=tspace_impl)
 
     # Real
     assert rdiscr.astype('float32') == rdiscr_s

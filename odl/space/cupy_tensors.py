@@ -80,7 +80,7 @@ def _get_flat_inc(arr1, arr2=None):
     be applied, a ``ValueError`` is raised, triggering a fallback
     implementation.
 
-    For **1 array**, the conditions to be fulfilled are
+    For ``arr2 is None``, the conditions to be fulfilled are
 
     - the strides do not contain 0 and
     - the memory of the array has constant stride.
@@ -93,9 +93,9 @@ def _get_flat_inc(arr1, arr2=None):
     - strided slices along the **fastest-varying axis** (``arr[..., ::2]``
       for C-contiguous ``arr``).
 
-    For **2 arrays**, both arrays must
+    For ``arr2 is not None``, both arrays must
 
-    - fulfill the "1 array" conditions individually,
+    - fulfill the ``arr2 is None`` conditions individually,
     - have the same total size, and
     - the axis order of both must be the same in the sense that the same
       index array sorts the strides of both arrays in ascending order.
@@ -298,17 +298,16 @@ def _get_scal(arr):
         return _fallback_scal
 
     try:
-        _cublas_scal = _cublas_func('scal', arr.dtype)
+        _cublas_scal_impl = _cublas_func('scal', arr.dtype)
     except (ValueError, AttributeError):
         return _fallback_scal
 
-    def scal(a, x):
+    def _cublas_scal(a, x):
         """Implement ``x <- a * x`` with constant ``a``."""
-        return _cublas_scal(
+        return _cublas_scal_impl(
             x.data.device.cublas_handle, x.size, a, x.data.ptr, incx)
 
-    scal.__name__ = scal.__qualname__ = '_cublas_scal'
-    return scal
+    return _cublas_scal
 
 
 def _get_axpy(arr1, arr2):
@@ -480,14 +479,14 @@ class CupyTensorSpace(TensorSpace):
 
         Parameters
         ----------
-        shape : sequence of non-negative ints
-            Number entries per dimension.
+        shape : positive int or sequence of positive ints
+            Number of entries per axis for elements in this space.
+            A single integer results in a space with rank 1, i.e., 1 axis.
         dtype :
-            Data type for each tuple entry. Can be provided in any
-            way the `numpy.dtype` function understands, e.g.,
-            as built-in type, as one of NumPy's internal datatype
-            objects or as string.
-            See `available_dtypes` for the list of supported data types.
+            Data type of each element. Can be provided in any
+            way the `numpy.dtype` function understands, e.g.
+            as built-in type or as a string.
+            See `available_dtypes` for the list of supported scalar data types.
         device : int, optional
             ID of the GPU device where elements should be created.
             For ``None``, the default device is chosen, which usually
@@ -512,7 +511,7 @@ class CupyTensorSpace(TensorSpace):
             This option cannot be combined with ``dist``,
             ``norm`` or ``inner``.
 
-            Default: no weighting
+            Default: Each point has weight 1.0 (no weighting)
 
         exponent : positive float, optional
             Exponent of the norm. For values other than 2.0, no
@@ -875,7 +874,8 @@ class CupyTensorSpace(TensorSpace):
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        return hash((super(CupyTensorSpace, self).__hash__(), self.device,
+        return hash((super(CupyTensorSpace, self).__hash__(),
+                     self.device,
                      self.weighting))
 
     def _lincomb(self, a, x1, b, x2, out):
@@ -1122,12 +1122,20 @@ class CupyTensorSpace(TensorSpace):
         """Return the data types available for this space."""
         dtypes = (np.sctypes['float'] +
                   np.sctypes['complex'] +
-                  np.sctypes['int']
-                  + np.sctypes['uint']
-                  + [bool])
-        dtypes.remove(np.float128)
-        dtypes.remove(np.complex256)
-        return tuple(np.dtype(dtype) for dtype in dtypes)
+                  np.sctypes['int'] +
+                  np.sctypes['uint'] +
+                  [bool])
+
+        # Convert to dtypes and remove duplicates
+        dtypes = tuple(set(np.dtype(dtype) for dtype in dtypes))
+
+        # Remove float128 and complex256 if they exist
+        if hasattr(np, 'float128'):
+            dtypes.remove(np.float128)
+        if hasattr(np, 'complex256'):
+            dtypes.remove(np.complex256)
+
+        return dtypes
 
     @staticmethod
     def default_dtype(field=None):
@@ -1267,6 +1275,12 @@ class CupyTensor(Tensor):
     def data_ptr(self):
         """Memory address of the data container as 64-bit integer.
 
+        Returns
+        -------
+        data_ptr : int
+            The data pointer is technically of type ``uintptr_t`` and gives the
+            index in bytes of the first element of the data storage.
+
         Examples
         --------
         >>> r3 = odl.rn(3, impl='cupy')
@@ -1289,11 +1303,6 @@ class CupyTensor(Tensor):
         equals : bool
             ``True`` if all entries of ``other`` are equal to this
             tensor's entries, ``False`` otherwise.
-
-        Notes
-        -----
-        The element-by-element comparison is performed on the CPU,
-        i.e. it involves data transfer to host memory, which is slow.
 
         Examples
         --------
@@ -1611,7 +1620,7 @@ class CupyTensor(Tensor):
             - ``np.add.reduce`` -> ``cupy.sum``
             - ``np.add.accumulate`` -> ``cupy.cumsum``
             - ``np.multiply.reduce`` -> ``cupy.prod``
-            - ``np.multiply.reduce`` -> ``cupy.cumprod``.
+            - ``np.multiply.accumulate`` -> ``cupy.cumprod``.
 
             **All other such methods will run Numpy code and be slow**!
 
@@ -1853,14 +1862,10 @@ numpy.ufunc.reduceat.html
             # Manually implemented cases
             if (
                     (ufunc in (np.add, np.multiply) and
-                     method in ('reduce', 'accumulate')
-                     ) or
+                     method in ('reduce', 'accumulate')) or
                     (ufunc in (np.minimum, np.maximum) and
-                     method == 'reduce'
-                     ) or
-                    (ufunc == np.add and
-                     method == 'at'
-                     )
+                     method == 'reduce') or
+                    (ufunc == np.add and method == 'at')
                     ):
                 use_native = native_ufunc is not None  # should be True
             else:
@@ -1901,19 +1906,6 @@ numpy.ufunc.reduceat.html
                     inputs[i] = cupy.asnumpy(inputs[i])
                 elif isinstance(inputs[i], CupyTensor):
                     inputs[i] = cupy.asnumpy(inputs[i].data)
-
-        # For debugging
-        if use_native:
-            assert all(isinstance(i, cupy.ndarray) or
-                       np.isscalar(i) or
-                       i is None
-                       for i in inputs)
-            assert all(isinstance(o, cupy.ndarray) or o is None
-                       for o in (out1, out2))
-
-        elif not use_native and method != 'at':
-            assert not any(isinstance(i, cupy.ndarray) for i in inputs)
-            # `out` handled below, we don't want to mess with it here
 
         # --- For later --- #
 
@@ -2290,6 +2282,14 @@ def _weighting(weights, exponent):
 
 
 if CUPY_AVAILABLE:
+    dot = cupy.ReductionKernel(in_params='T x, T y',
+                               out_params='T res',
+                               map_expr='x * y',
+                               reduce_expr='a + b',
+                               post_map_expr='res = a',
+                               identity='0',
+                               name='dot')
+
     dotw = cupy.ReductionKernel(in_params='T x, T y, W w',
                                 out_params='T res',
                                 map_expr='x * y * w',
@@ -2396,7 +2396,7 @@ if CUPY_AVAILABLE:
 
     dist2 = cupy.ReductionKernel(in_params='T x, T y',
                                  out_params='R res',
-                                 map_expr='abs(x - y) * abs(x - y)',
+                                 map_expr='abs((x - y) * (x - y))',
                                  reduce_expr='a + b',
                                  post_map_expr='res = sqrt(a)',
                                  identity='0',
@@ -2404,7 +2404,7 @@ if CUPY_AVAILABLE:
 
     dist2w = cupy.ReductionKernel(in_params='T x, T y, W w',
                                   out_params='R res',
-                                  map_expr='abs(x - y) * abs(x - y) * w',
+                                  map_expr='abs((x - y) * (x - y)) * w',
                                   reduce_expr='a + b',
                                   post_map_expr='res = sqrt(a)',
                                   identity='0',

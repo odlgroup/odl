@@ -73,19 +73,19 @@ class NumpyTensorSpace(TensorSpace):
     .. _Wikipedia article on tensors: https://en.wikipedia.org/wiki/Tensor
     """
 
-    def __init__(self, shape, dtype=None, **kwargs):
+    def __init__(self, shape, dtype='float64', **kwargs):
         """Initialize a new instance.
 
         Parameters
         ----------
         shape : positive int or sequence of positive ints
-            Number of entries per axis for elements in this space. A
-            single integer results in a space with rank 1, i.e., 1 axis.
+            Number of entries per axis for elements in this space.
+            A single integer results in a space with rank 1, i.e., 1 axis.
         dtype :
             Data type of each element. Can be provided in any
             way the `numpy.dtype` function understands, e.g.
-            as built-in type or as a string. For ``None``,
-            the `default_dtype` of this space (``float64``) is used.
+            as built-in type or as a string.
+            See `available_dtypes` for the list of supported scalar data types.
         exponent : positive float, optional
             Exponent of the norm. For values other than 2.0, no
             inner product is defined.
@@ -902,6 +902,7 @@ class NumpyTensor(Tensor):
         array([[ 1.,  1.,  1.],
                [ 1.,  1.,  1.]])
         """
+        # Import cupy if it exists (else None)
         from odl.space.cupy_tensors import cupy, CUPY_AVAILABLE
         import ctypes
 
@@ -964,6 +965,12 @@ class NumpyTensor(Tensor):
     @property
     def data_ptr(self):
         """Memory address of the data container as 64-bit integer.
+
+        Returns
+        -------
+        data_ptr : int
+            The data pointer is technically of type ``uintptr_t`` and gives the
+            index in bytes of the first element of the data storage.
 
         Examples
         --------

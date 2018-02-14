@@ -207,7 +207,16 @@ def is_subdict(subdict, dictionary):
 
 
 def xfail_if(condition, reason=''):
-    """Return a ``pytest.xfail`` object if ``condition`` is ``True``."""
+    """Return a ``pytest.xfail`` object if ``condition`` is ``True``.
+
+    Examples
+    --------
+    Create test that is expected to fail if ``condition`` is false, e.g.
+
+    >>> condition = False
+    >>> with xfail_if(condition, reason='only works without condition'):
+    ...     assert not condition
+    """
     if condition:
         return pytest.xfail(reason)
     else:

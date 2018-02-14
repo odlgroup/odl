@@ -252,7 +252,8 @@ def test_metric():
     w2 = HxH.element([v21, v22])
 
     dist = HxH.dist(w1, w2)
-    expected_dist = sum([H.dist(v11, v21), H.dist(v12, v22)])
+    expected_dist = np.linalg.norm([H.dist(v11, v21), H.dist(v12, v22)],
+                                   ord=1.0)
     assert dist == pytest.approx(expected_dist)
 
     # 2-norm
@@ -261,9 +262,8 @@ def test_metric():
     w2 = HxH.element([v21, v22])
 
     dist = HxH.dist(w1, w2)
-    expected_dist = np.sqrt(
-        sum(d ** 2 for d in (H.dist(v11, v21), H.dist(v12, v22)))
-    )
+    expected_dist = np.linalg.norm([H.dist(v11, v21), H.dist(v12, v22)],
+                                   ord=2.0)
     assert dist == pytest.approx(expected_dist)
 
     # inf norm
@@ -272,7 +272,8 @@ def test_metric():
     w2 = HxH.element([v21, v22])
 
     dist = HxH.dist(w1, w2)
-    expected_dist = max(H.dist(v11, v21), H.dist(v12, v22))
+    expected_dist = np.linalg.norm([H.dist(v11, v21), H.dist(v12, v22)],
+                                   ord='inf')
     assert dist == pytest.approx(expected_dist)
 
 
