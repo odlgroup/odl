@@ -24,10 +24,7 @@ base_op = simple_fixture(
 
 
 def test_pspace_op_init(base_op):
-    """Test initialization with different base operators.
-
-    See also https://github.com/odlgroup/odl/issues/1290
-    """
+    """Test initialization with different base operators."""
     A = base_op
 
     op = odl.ProductSpaceOperator([[A]])
@@ -52,6 +49,49 @@ def test_pspace_op_init(base_op):
                                    [None, A]])
     assert op.domain == A.domain ** 2
     assert op.range == A.range ** 2
+
+
+def test_pspace_op_derivative(base_op):
+    """Test derivatives with different base operators."""
+    A = base_op
+
+    op = odl.ProductSpaceOperator([[A + 1]])
+    true_deriv = odl.ProductSpaceOperator([[A]])
+    deriv = op.derivative(op.domain.zero())
+    assert deriv.domain == op.domain
+    assert deriv.range == op.range
+    x = op.domain.one()
+    assert all_almost_equal(deriv(x), true_deriv(x))
+
+    op = odl.ProductSpaceOperator([[A + 1, 2 * A - 1]])
+    deriv = op.derivative(op.domain.zero())
+    true_deriv = odl.ProductSpaceOperator([[A, 2 * A]])
+    assert deriv.domain == op.domain
+    assert deriv.range == op.range
+    x = op.domain.one()
+    assert all_almost_equal(deriv(x), true_deriv(x))
+
+
+def test_pspace_op_adjoint(base_op):
+    """Test adjoints with different base operators."""
+    A = base_op
+
+    op = odl.ProductSpaceOperator([[A]])
+    true_adj = odl.ProductSpaceOperator([[A.adjoint]])
+    adj = op.adjoint
+    assert adj.domain == op.range
+    assert adj.range == op.domain
+    y = op.range.one()
+    assert all_almost_equal(adj(y), true_adj(y))
+
+    op = odl.ProductSpaceOperator([[2 * A, -A]])
+    true_adj = odl.ProductSpaceOperator([[2 * A.adjoint],
+                                         [-A.adjoint]])
+    adj = op.adjoint
+    assert adj.domain == op.range
+    assert adj.range == op.domain
+    y = op.range.one()
+    assert all_almost_equal(adj(y), true_adj(y))
 
 
 def test_pspace_op_weighted_init():
