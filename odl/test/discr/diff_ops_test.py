@@ -16,7 +16,7 @@ import odl
 from odl.discr.diff_ops import (
     finite_diff, PartialDerivative, Gradient, Divergence, Laplacian)
 from odl.util.testutils import (
-    all_equal, all_almost_equal, almost_equal, noise_element, simple_fixture)
+    all_equal, all_almost_equal, noise_element, simple_fixture)
 
 
 # --- pytest fixtures --- #
@@ -28,7 +28,7 @@ padding = simple_fixture('padding', [('constant', 0), ('constant', 1),
                                      'order0', 'order1', 'order2'])
 
 
-@pytest.fixture(scope="module", params=[1, 2, 3], ids=['1d', '2d', '3d'])
+@pytest.fixture(scope="module", params=[1, 2, 3], ids=[' 1d ', ' 2d ', ' 3d '])
 def space(request, tspace_impl):
     ndim = request.param
 
@@ -270,7 +270,7 @@ def test_part_deriv(space, method, padding):
         # Check not to use trivial data
         assert lhs != 0
         assert rhs != 0
-        assert almost_equal(lhs, rhs, places=4)
+        assert lhs == pytest.approx(rhs, rel=1e-4)
 
 
 # --- Gradient --- #
@@ -347,7 +347,7 @@ def test_gradient(space, method, padding):
     # Check not to use trivial data
     assert lhs != 0
     assert rhs != 0
-    assert almost_equal(lhs, rhs, places=places)
+    assert lhs == pytest.approx(rhs, rel=10 ** (-places))
 
     # Higher-dimensional arrays
     lin_size = 3
@@ -432,7 +432,7 @@ def test_divergence(space, method, padding):
     # Check not to use trivial data
     assert lhs != 0
     assert rhs != 0
-    assert almost_equal(lhs, rhs, places=4)
+    assert lhs == pytest.approx(rhs, rel=1e-4)
 
     # Higher dimensional arrays
     for ndim in range(1, 6):
@@ -503,7 +503,7 @@ def test_laplacian(space, padding):
     # Check not to use trivial data
     assert lhs != 0
     assert rhs != 0
-    assert almost_equal(lhs, rhs, places=4)
+    assert lhs == pytest.approx(rhs, rel=1e-4)
 
 
 if __name__ == '__main__':

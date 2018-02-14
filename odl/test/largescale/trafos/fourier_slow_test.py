@@ -17,7 +17,7 @@ import pytest
 import numpy as np
 
 import odl
-from odl.util.testutils import almost_equal, never_skip, simple_fixture
+from odl.util.testutils import never_skip, simple_fixture
 
 skip_if_no_pyfftw = pytest.mark.skipif("not odl.trafos.PYFFTW_AVAILABLE",
                                        reason='pyfftw not available')
@@ -78,8 +78,8 @@ def test_fourier_trafo_forward_complex(domain, impl):
 
     ball_dom_ft = ft(ball_dom)
     ball_ran_ift = ft.adjoint(ball_ran)
-    assert almost_equal(ball_dom.inner(ball_ran_ift),
-                        ball_ran.inner(ball_dom_ft), places=1)
+    assert (ball_dom.inner(ball_ran_ift) ==
+            pytest.approx(ball_ran.inner(ball_dom_ft), rel=0.1))
 
 
 if __name__ == '__main__':

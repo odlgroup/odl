@@ -10,14 +10,14 @@
 
 from __future__ import division
 import numpy as np
+import pytest
 
 import odl
 from odl.discr.grid import sparse_meshgrid
 from odl.discr.discr_mappings import (
     PointCollocation, NearestInterpolation, LinearInterpolation,
     PerAxisInterpolation)
-from odl.util.testutils import (
-    all_almost_equal, all_equal, almost_equal)
+from odl.util.testutils import all_almost_equal, all_equal
 
 
 def test_nearest_interpolation_1d_complex(tspace_impl):
@@ -175,7 +175,7 @@ def test_linear_interpolation_1d():
     # Evaluate at single point
     val = function(0.35)
     true_val = 0.75 * 2 + 0.25 * 3
-    assert almost_equal(val, true_val)
+    assert val == pytest.approx(true_val)
 
     # Input array, with and without output array
     pts = np.array([0.4, 0.0, 0.65, 0.95])
@@ -205,7 +205,7 @@ def test_linear_interpolation_2d():
                 (1 - l1) * l2 * rvals[0, 1] +
                 l1 * (1 - l2) * rvals[1, 0] +
                 l1 * l2 * rvals[1, 1])
-    assert almost_equal(val, true_val)
+    assert val == pytest.approx(true_val)
 
     # Input array, with and without output array
     pts = np.array([[0.3, 0.6],
@@ -277,7 +277,7 @@ def test_per_axis_interpolation():
     l1 = (0.3 - 0.125) / (0.375 - 0.125)
     # 0.5 equally far from both neighbors -> 'right' chooses 0.75
     true_val = (1 - l1) * rvals[0, 1] + l1 * rvals[1, 1]
-    assert almost_equal(val, true_val)
+    assert val == pytest.approx(true_val)
 
     # Input array, with and without output array
     pts = np.array([[0.3, 0.6],

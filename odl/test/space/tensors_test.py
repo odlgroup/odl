@@ -17,14 +17,22 @@ import sys
 
 import odl
 from odl.set.space import LinearSpaceTypeError
+from odl.space.entry_points import tensor_space_impl
 from odl.space.npy_tensors import (
-    NumpyTensor, NumpyTensorSpace,
+    NumpyTensorSpace,
     NumpyTensorSpaceConstWeighting, NumpyTensorSpaceArrayWeighting,
     NumpyTensorSpaceCustomInner, NumpyTensorSpaceCustomNorm,
     NumpyTensorSpaceCustomDist)
+from odl.space.cupy_tensors import (
+    CupyTensorSpace,
+    CupyTensorSpaceConstWeighting, CupyTensorSpaceArrayWeighting,
+    CupyTensorSpaceCustomInner, CupyTensorSpaceCustomNorm,
+    CupyTensorSpaceCustomDist,
+    CUPY_AVAILABLE, cupy)
+from odl.util import array_module, array_cls, as_numpy
 from odl.util.testutils import (
-    all_almost_equal, all_equal, simple_fixture,
-    noise_array, noise_element, noise_elements)
+    all_almost_equal, all_equal, simple_fixture, skip_if_no_cupy,
+    noise_array, noise_element, noise_elements, xfail_if)
 from odl.util.ufuncs import UFUNCS
 
 
@@ -35,28 +43,22 @@ USE_ARRAY_UFUNCS_INTERFACE = (parse_version(np.__version__) >=
                               parse_version('1.13'))
 
 
-# Functions to return arrays and classes corresponding to impls. Extend
+# Functions to return arrays, classes etc. corresponding to impls. Extend
 # when a new impl is available.
 
+def _data_ptr(array):
+    """Return the memory address of the given array (depending on impl)."""
+    if isinstance(array, np.ndarray):
+        return array.ctypes.data
+    elif isinstance(array, cupy.ndarray):
+        return array.data.ptr
+    else:
+        assert False
+
+
 def _pos_array(space):
-    """Create an array with positive real entries in ``space``."""
-    return np.abs(noise_array(space)) + 0.1
-
-
-def _array_cls(impl):
-    """Return the array class for given impl."""
-    if impl == 'numpy':
-        return np.ndarray
-    else:
-        assert False
-
-
-def _odl_tensor_cls(impl):
-    """Return the ODL tensor class for given impl."""
-    if impl == 'numpy':
-        return NumpyTensor
-    else:
-        assert False
+    """Create an array with positive real entries for ``space``."""
+    return array_module(space.impl).asarray(abs(noise_array(space)) + 0.1)
 
 
 def _weighting_cls(impl, kind):
@@ -74,6 +76,21 @@ def _weighting_cls(impl, kind):
             return NumpyTensorSpaceCustomDist
         else:
             assert False
+
+    elif impl == 'cupy':
+        if kind == 'array':
+            return CupyTensorSpaceArrayWeighting
+        elif kind == 'const':
+            return CupyTensorSpaceConstWeighting
+        elif kind == 'inner':
+            return CupyTensorSpaceCustomInner
+        elif kind == 'norm':
+            return CupyTensorSpaceCustomNorm
+        elif kind == 'dist':
+            return CupyTensorSpaceCustomDist
+        else:
+            assert False
+
     else:
         assert False
 
@@ -102,7 +119,12 @@ def weight(request):
 
 @pytest.fixture(scope='module')
 def tspace(floating_dtype, tspace_impl):
-    return odl.tensor_space(shape=(3, 4), dtype=floating_dtype)
+    if floating_dtype not in tensor_space_impl(tspace_impl).available_dtypes():
+        pytest.skip('dtype {} not supported by impl {!r}'
+                    ''.format(floating_dtype, tspace_impl))
+    else:
+        return odl.tensor_space(shape=(3, 4), dtype=floating_dtype,
+                                impl=tspace_impl)
 
 
 # --- Space classes --- #
@@ -118,6 +140,9 @@ def test_init_npy_tspace():
     NumpyTensorSpace((3, 4), dtype=complex, exponent=1.0)
     NumpyTensorSpace((3, 4), dtype=complex, exponent=float('inf'))
     NumpyTensorSpace((3, 4), dtype='S1')
+
+    with pytest.raises(ValueError):
+        NumpyTensorSpace((3, 4), dtype=object)
 
     # Alternative constructor
     odl.tensor_space((3, 4))
@@ -158,18 +183,77 @@ def test_init_npy_tspace():
     odl.rn((3, 4), weighting=weight_arr)
 
 
+def test_init_cupy_tspace():
+    """Test initialization patterns and options for ``CupyTensorSpace``."""
+    if not CUPY_AVAILABLE:
+        pytest.skip('cupy backend not available')
+
+    # Basic class constructor
+    CupyTensorSpace((3, 4))
+    CupyTensorSpace((3, 4), dtype=int)
+    CupyTensorSpace((3, 4), dtype=float)
+    CupyTensorSpace((3, 4), dtype=complex)
+    CupyTensorSpace((3, 4), dtype=complex, exponent=1.0)
+    CupyTensorSpace((3, 4), dtype=complex, exponent=float('inf'))
+
+    with pytest.raises(ValueError):
+        CupyTensorSpace((3, 4), dtype='S1')
+    with pytest.raises(ValueError):
+        CupyTensorSpace((3, 4), dtype=object)
+
+    # Alternative constructor
+    odl.tensor_space((3, 4), impl='cupy')
+    odl.tensor_space((3, 4), dtype=int, impl='cupy')
+    odl.tensor_space((3, 4), exponent=1.0, impl='cupy')
+
+    # Constructors for real spaces
+    odl.rn((3, 4), impl='cupy')
+    odl.rn((3, 4), dtype='float32', impl='cupy')
+    odl.rn(3, impl='cupy')
+    odl.rn(3, dtype='float32', impl='cupy')
+
+    # Works only for real data types
+    with pytest.raises(ValueError):
+        odl.rn((3, 4), complex, impl='cupy')
+    with pytest.raises(ValueError):
+        odl.rn(3, int, impl='cupy')
+    with pytest.raises(ValueError):
+        odl.rn(3, 'S1', impl='cupy')
+
+    # Constructors for complex spaces
+    odl.cn((3, 4), impl='cupy')
+    odl.cn((3, 4), dtype='complex64', impl='cupy')
+    odl.cn(3, impl='cupy')
+    odl.cn(3, dtype='complex64', impl='cupy')
+
+    # Works only for complex data types
+    with pytest.raises(ValueError):
+        odl.cn((3, 4), float, impl='cupy')
+    with pytest.raises(ValueError):
+        odl.cn(3, 'S1', impl='cupy')
+
+    # Init with weights or custom space functions
+    weight_const = 1.5
+    weight_arr = _pos_array(odl.rn((3, 4), float))
+
+    odl.rn((3, 4), weighting=weight_const, impl='cupy')
+    odl.rn((3, 4), weighting=weight_arr, impl='cupy')
+
+
 def test_init_tspace_weighting(weight, exponent, tspace_impl):
     """Test if weightings during init give the correct weighting classes."""
+    if tspace_impl == 'cupy' and isinstance(weight, np.ndarray):
+        # Need cast before using in space creation since
+        # ArrayWeighting.__eq__ uses `arr1 is arr2` to check arrays
+        weight = cupy.asarray(weight)
+
     space = odl.tensor_space((3, 4), weighting=weight, exponent=exponent,
                              impl=tspace_impl)
 
-    if tspace_impl == 'numpy':
-        if isinstance(weight, np.ndarray):
-            weighting_cls = _weighting_cls(tspace_impl, 'array')
-        else:
-            weighting_cls = _weighting_cls(tspace_impl, 'const')
+    if isinstance(weight, array_cls(tspace_impl)):
+        weighting_cls = _weighting_cls(tspace_impl, 'array')
     else:
-        assert False
+        weighting_cls = _weighting_cls(tspace_impl, 'const')
 
     weighting = weighting_cls(weight, exponent)
 
@@ -185,13 +269,12 @@ def test_init_tspace_weighting(weight, exponent, tspace_impl):
         badly_sized = np.ones((2, 4))
         odl.tensor_space((3, 4), weighting=badly_sized, impl=tspace_impl)
 
-    if tspace_impl == 'numpy':
-        with pytest.raises(ValueError):
-            bad_dtype = np.ones((3, 4), dtype=complex)
-            odl.tensor_space((3, 4), weighting=bad_dtype)
+    with pytest.raises(ValueError):
+        bad_dtype = np.ones((3, 4), dtype=complex)
+        odl.tensor_space((3, 4), weighting=bad_dtype)
 
-        with pytest.raises(TypeError):
-            odl.tensor_space((3, 4), weighting=1j)  # float() conversion
+    with pytest.raises(TypeError):
+        odl.tensor_space((3, 4), weighting=1j)  # float() conversion
 
 
 def test_properties(tspace_impl):
@@ -206,6 +289,9 @@ def test_properties(tspace_impl):
     assert x.shape == space.shape == (3, 4)
     assert x.itemsize == 4
     assert x.nbytes == 4 * 3 * 4
+
+    if tspace_impl == 'cupy':
+        assert x.device == space.device == cupy.cuda.get_device_id()
 
 
 def test_element(tspace, elem_order):
@@ -226,51 +312,60 @@ def test_element(tspace, elem_order):
     else:
         assert elem.data.flags[elem_order + '_CONTIGUOUS']
 
-    # From Numpy array (C order)
-    arr_c = np.random.rand(*tspace.shape).astype(tspace.dtype)
+    # From array (C order)
+    arr_c = array_module(tspace.impl).asarray(
+        np.ascontiguousarray(noise_array(tspace)))
     elem = tspace.element(arr_c, order=elem_order)
     assert all_equal(elem, arr_c)
     assert elem.shape == elem.data.shape
     assert elem.dtype == tspace.dtype == elem.data.dtype
     if elem_order is None or elem_order == 'C':
         # None or same order should not lead to copy
-        assert np.may_share_memory(elem.data, arr_c)
+        assert _data_ptr(elem.data) == _data_ptr(arr_c)
     if elem_order is not None:
         # Contiguousness in explicitly provided order should be guaranteed
         assert elem.data.flags[elem_order + '_CONTIGUOUS']
 
-    # From Numpy array (F order)
-    arr_f = np.asfortranarray(arr_c)
+    # From array (F order)
+    arr_f = array_module(tspace.impl).asarray(
+        np.asfortranarray(noise_array(tspace)))
     elem = tspace.element(arr_f, order=elem_order)
     assert all_equal(elem, arr_f)
     assert elem.shape == elem.data.shape
     assert elem.dtype == tspace.dtype == elem.data.dtype
     if elem_order is None or elem_order == 'F':
         # None or same order should not lead to copy
-        assert np.may_share_memory(elem.data, arr_f)
+        assert _data_ptr(elem.data) == _data_ptr(arr_f)
     if elem_order is not None:
         # Contiguousness in explicitly provided order should be guaranteed
         assert elem.data.flags[elem_order + '_CONTIGUOUS']
 
+    # From Numpy array
+    arr = np.random.rand(*tspace.shape).astype(tspace.dtype)
+    elem = tspace.element(arr, order=elem_order)
+    assert all_equal(elem, arr)
+    assert elem.shape == elem.data.shape
+    assert elem.dtype == tspace.dtype == elem.data.dtype
+
     # From pointer
-    arr_c_ptr = arr_c.ctypes.data
-    elem = tspace.element(data_ptr=arr_c_ptr, order='C')
-    assert all_equal(elem, arr_c)
-    assert np.may_share_memory(elem.data, arr_c)
-    arr_f_ptr = arr_f.ctypes.data
-    elem = tspace.element(data_ptr=arr_f_ptr, order='F')
-    assert all_equal(elem, arr_f)
-    assert np.may_share_memory(elem.data, arr_f)
+    if tspace.impl == 'numpy':
+        arr_c_ptr = arr_c.ctypes.data
+        elem = tspace.element(data_ptr=arr_c_ptr, order='C')
+        assert all_equal(elem, arr_c)
+        assert np.may_share_memory(elem.data, arr_c)
+        arr_f_ptr = arr_f.ctypes.data
+        elem = tspace.element(data_ptr=arr_f_ptr, order='F')
+        assert all_equal(elem, arr_f)
+        assert np.may_share_memory(elem.data, arr_f)
 
-    # Check errors
+        with pytest.raises(ValueError):
+            tspace.element(data_ptr=arr_c_ptr)  # need order argument
+
+        with pytest.raises(TypeError):
+            tspace.element(arr_c, arr_c_ptr)  # forbidden to give both
+
     with pytest.raises(ValueError):
-        tspace.element(order='A')  # only 'C' or 'F' valid
-
-    with pytest.raises(ValueError):
-        tspace.element(data_ptr=arr_c_ptr)  # need order argument
-
-    with pytest.raises(TypeError):
-        tspace.element(arr_c, arr_c_ptr)  # forbidden to give both
+        tspace.element(order='A')  # only 'C', 'F' or None valid
 
 
 def test_equals_space(tspace_impl):
@@ -462,7 +557,7 @@ def test_multiply(tspace):
 
 def test_multiply_exceptions(tspace):
     """Test if multiply raises correctly for bad input."""
-    other_space = odl.rn((4, 3))
+    other_space = odl.rn((4, 3), impl=tspace.impl)
 
     other_x = other_space.zero()
     x, y = tspace.zero(), tspace.zero()
@@ -480,8 +575,9 @@ def test_multiply_exceptions(tspace):
 def test_power(tspace):
     """Test ``**`` against direct array exponentiation."""
     [x_arr, y_arr], [x, y] = noise_elements(tspace, n=2)
-    y_pos = tspace.element(np.abs(y) + 0.1)
-    y_pos_arr = np.abs(y_arr) + 0.1
+    y_pos = tspace.element(y.ufuncs.absolute() + 0.1)
+    y_pos_arr = array_module(tspace.impl).abs(y_arr) + 0.1
+    y_pos_arr = y_pos_arr.astype(tspace.dtype)
 
     # Testing standard positive integer power out-of-place and in-place
     assert all_almost_equal(x ** 2, x_arr ** 2)
@@ -602,16 +698,16 @@ def test_inner(tspace):
     """Test the inner method against numpy.vdot."""
     xd = noise_element(tspace)
     yd = noise_element(tspace)
-
-    # TODO: add weighting
     correct_inner = np.vdot(yd, xd)
-    assert tspace.inner(xd, yd) == pytest.approx(correct_inner)
-    assert xd.inner(yd) == pytest.approx(correct_inner)
+
+    # Allow some error for single and half precision
+    assert tspace.inner(xd, yd) == pytest.approx(correct_inner, rel=1e-2)
+    assert xd.inner(yd) == pytest.approx(correct_inner, rel=1e-2)
 
 
 def test_inner_exceptions(tspace):
     """Test if inner raises correctly for bad input."""
-    other_space = odl.rn((4, 3))
+    other_space = odl.rn((4, 3), impl=tspace.impl)
     other_x = other_space.zero()
     x = tspace.zero()
 
@@ -625,27 +721,32 @@ def test_inner_exceptions(tspace):
 def test_norm(tspace):
     """Test the norm method against numpy.linalg.norm."""
     xarr, x = noise_elements(tspace)
+    correct_norm = np.linalg.norm(as_numpy(xarr.ravel()))
 
-    correct_norm = np.linalg.norm(xarr.ravel())
-    assert tspace.norm(x) == pytest.approx(correct_norm)
-    assert x.norm() == pytest.approx(correct_norm)
+    # Allow some error for single and half precision
+    assert tspace.norm(x) == pytest.approx(correct_norm, rel=1e-2)
+    assert x.norm() == pytest.approx(correct_norm, rel=1e-2)
 
 
 def test_norm_exceptions(tspace):
     """Test if norm raises correctly for bad input."""
-    other_space = odl.rn((4, 3))
+    other_space = odl.rn((4, 3), impl=tspace.impl)
     other_x = other_space.zero()
 
     with pytest.raises(LinearSpaceTypeError):
         tspace.norm(other_x)
 
 
-def test_pnorm(exponent):
+def test_pnorm(exponent, tspace_impl):
     """Test the norm method with p!=2 against numpy.linalg.norm."""
-    for tspace in (odl.rn((3, 4), exponent=exponent),
-                   odl.cn((3, 4), exponent=exponent)):
+    spaces = [odl.rn((3, 4), exponent=exponent, impl=tspace_impl)]
+    cls = odl.space.entry_points.tensor_space_impl(tspace_impl)
+    if complex in cls.available_dtypes():
+        spaces.append(odl.cn((3, 4), exponent=exponent, impl=tspace_impl))
+
+    for tspace in spaces:
         xarr, x = noise_elements(tspace)
-        correct_norm = np.linalg.norm(xarr.ravel(), ord=exponent)
+        correct_norm = np.linalg.norm(as_numpy(xarr.ravel()), ord=exponent)
 
         assert tspace.norm(x) == pytest.approx(correct_norm)
         assert x.norm() == pytest.approx(correct_norm)
@@ -654,15 +755,16 @@ def test_pnorm(exponent):
 def test_dist(tspace):
     """Test the dist method against numpy.linalg.norm of the difference."""
     [xarr, yarr], [x, y] = noise_elements(tspace, n=2)
+    correct_dist = np.linalg.norm(as_numpy((xarr - yarr).ravel()))
 
-    correct_dist = np.linalg.norm((xarr - yarr).ravel())
-    assert tspace.dist(x, y) == pytest.approx(correct_dist)
+    # Allow some error for single and half precision
+    assert tspace.dist(x, y) == pytest.approx(correct_dist, rel=1e-2)
     assert x.dist(y) == pytest.approx(correct_dist)
 
 
 def test_dist_exceptions(tspace):
     """Test if dist raises correctly for bad input."""
-    other_space = odl.rn((4, 3))
+    other_space = odl.rn((4, 3), impl=tspace.impl)
     other_x = other_space.zero()
     x = tspace.zero()
 
@@ -679,10 +781,12 @@ def test_pdist(tspace_impl, exponent):
     cls = odl.space.entry_points.tensor_space_impl(tspace_impl)
     if complex in cls.available_dtypes():
         spaces.append(odl.cn((3, 4), exponent=exponent, impl=tspace_impl))
+
     for space in spaces:
         [xarr, yarr], [x, y] = noise_elements(space, n=2)
 
-        correct_dist = np.linalg.norm((xarr - yarr).ravel(), ord=exponent)
+        correct_dist = np.linalg.norm(as_numpy((xarr - yarr).ravel()),
+                                      ord=exponent)
         assert space.dist(x, y) == pytest.approx(correct_dist)
         assert x.dist(y) == pytest.approx(correct_dist)
 
@@ -690,14 +794,14 @@ def test_pdist(tspace_impl, exponent):
 def test_element_getitem(tspace_impl, getitem_indices):
     """Check if getitem produces correct values, shape and other stuff."""
     space = odl.tensor_space((2, 3, 4), dtype='float32', exponent=1,
-                             weighting=2)
+                             weighting=2, impl=tspace_impl)
     x_arr, x = noise_elements(space)
 
     x_arr_sliced = x_arr[getitem_indices]
     sliced_shape = x_arr_sliced.shape
     x_sliced = x[getitem_indices]
 
-    if np.isscalar(x_arr_sliced):
+    if np.isscalar(x_sliced):
         assert x_arr_sliced == x_sliced
     else:
         assert x_sliced.shape == sliced_shape
@@ -708,19 +812,18 @@ def test_element_getitem(tspace_impl, getitem_indices):
         assert sliced_spc.shape == sliced_shape
         assert sliced_spc.dtype == space.dtype
         assert sliced_spc.exponent == space.exponent
-        assert sliced_spc.weighting == space.weighting
 
         # Check that we have a view that manipulates the original array
         # (or not, depending on indexing style)
         x_arr_sliced[:] = 0
         x_sliced[:] = 0
-        assert all_equal(x_arr, x)
+        assert all_equal(x, x_arr)
 
 
 def test_element_setitem(tspace_impl, setitem_indices):
     """Check if setitem produces the same result as NumPy."""
     space = odl.tensor_space((2, 3, 4), dtype='float32', exponent=1,
-                             weighting=2)
+                             weighting=2, impl=tspace_impl)
     x_arr, x = noise_elements(space)
 
     x_arr_sliced = x_arr[setitem_indices]
@@ -732,13 +835,14 @@ def test_element_setitem(tspace_impl, setitem_indices):
     assert all_equal(x, x_arr)
 
     # Setting values with arrays
-    rhs_arr = np.ones(sliced_shape)
+    rhs_arr = array_module(tspace_impl).ones(sliced_shape)
     x_arr[setitem_indices] = rhs_arr
     x[setitem_indices] = rhs_arr
     assert all_equal(x, x_arr)
 
-    # Using a list of lists
+    # Setting values with a list of lists
     rhs_list = (-np.ones(sliced_shape)).tolist()
+    x_arr = as_numpy(x_arr)
     x_arr[setitem_indices] = rhs_list
     x[setitem_indices] = rhs_list
     assert all_equal(x, x_arr)
@@ -747,8 +851,8 @@ def test_element_setitem(tspace_impl, setitem_indices):
 def test_element_getitem_bool_array(tspace_impl):
     """Check if getitem with boolean array yields the same result as NumPy."""
     space = odl.tensor_space((2, 3, 4), dtype='float32', exponent=1,
-                             weighting=2)
-    bool_space = odl.tensor_space((2, 3, 4), dtype=bool)
+                             weighting=2, impl=tspace_impl)
+    bool_space = odl.tensor_space((2, 3, 4), dtype=bool, impl=tspace_impl)
     x_arr, x = noise_elements(space)
     cond_arr, cond = noise_elements(bool_space)
 
@@ -761,7 +865,6 @@ def test_element_getitem_bool_array(tspace_impl):
     assert sliced_spc.shape == x_arr_sliced.shape
     assert sliced_spc.dtype == space.dtype
     assert sliced_spc.exponent == space.exponent
-    assert sliced_spc.weighting == space.weighting
 
 
 def test_element_setitem_bool_array(tspace_impl):
@@ -791,6 +894,74 @@ def test_element_setitem_bool_array(tspace_impl):
     x_arr[cond_arr] = rhs_list
     x[cond] = rhs_list
     assert all_equal(x, x_arr)
+
+
+@skip_if_no_cupy
+def test_asarray_numpy_to_cupy(floating_dtype):
+    """Test x.asarray with numpy x and cupy impl and out."""
+    space = odl.tensor_space((2, 3), dtype=floating_dtype)
+
+    with xfail_if(floating_dtype in ('float128', 'complex256'),
+                  reason='quad precision types not available in cupy'):
+        # Make new array, contiguous
+        x = space.one()
+        x_cpy = x.asarray(impl='cupy')
+        assert isinstance(x_cpy, cupy.ndarray)
+        assert all_equal(x_cpy, x)
+
+        # Write to existing, contiguous
+        out_cpy = cupy.empty((2, 3), dtype=floating_dtype)
+        x_cpy = x.asarray(out=out_cpy)
+        assert x_cpy is out_cpy
+        assert all_equal(out_cpy, x)
+
+        # Make new array, discontiguous
+        arr = np.arange(12).astype(floating_dtype).reshape((2, 6))[:, ::2]
+        x = space.element(arr)
+        assert not (x.data.flags.c_contiguous or x.data.flags.f_contiguous)
+        x_cpy = x.asarray(impl='cupy')
+        assert isinstance(x_cpy, cupy.ndarray)
+        assert all_equal(x_cpy, x)
+
+        # Write to existing, contiguous
+        out_cpy = cupy.empty((2, 3), dtype=floating_dtype)
+        x_cpy = x.asarray(out=out_cpy)
+        assert x_cpy is out_cpy
+        assert all_equal(out_cpy, x)
+
+
+@skip_if_no_cupy
+def test_asarray_cupy_to_numpy(floating_dtype):
+    """Test x.asarray with cupy x and numpy impl and out."""
+    with xfail_if(floating_dtype in ('float128', 'complex256'),
+                  reason='quad precision types not available in cupy'):
+        space = odl.tensor_space((2, 3), dtype=floating_dtype, impl='cupy')
+
+        # Make new array, contiguous
+        x = space.one()
+        x_npy = x.asarray(impl='numpy')
+        assert isinstance(x_npy, np.ndarray)
+        assert all_equal(x_npy, x)
+
+        # Write to existing, contiguous
+        out_npy = np.empty((2, 3), dtype=floating_dtype)
+        x_npy = x.asarray(out=out_npy)
+        assert x_npy is out_npy
+        assert all_equal(out_npy, x)
+
+        # Make new array, discontiguous
+        arr = cupy.arange(12).astype(floating_dtype).reshape((2, 6))[:, ::2]
+        x = space.element(arr)
+        assert not (x.data.flags.c_contiguous or x.data.flags.f_contiguous)
+        x_npy = x.asarray(impl='numpy')
+        assert isinstance(x_npy, np.ndarray)
+        assert all_equal(x_npy, x)
+
+        # Write to existing, contiguous
+        out_npy = np.empty((2, 3), dtype=floating_dtype)
+        x_npy = x.asarray(out=out_npy)
+        assert x_npy is out_npy
+        assert all_equal(out_npy, x)
 
 
 def test_transpose(tspace_impl):
@@ -868,8 +1039,8 @@ def test_python_copy(tspace_impl):
 
 def test_conversion_to_scalar(tspace_impl):
     """Test conversion of size-1 vectors/tensors to scalars."""
-    space = odl.rn(1, impl=tspace_impl)
     # Size 1 real space
+    space = odl.rn(1, impl=tspace_impl)
     value = 1.5
     element = space.element(value)
 
@@ -924,8 +1095,8 @@ def test_bool_conversion(tspace_impl):
     assert all(x)
 
 
-def test_numpy_array_interface(tspace_impl):
-    """Verify that the __array__ interface for NumPy works."""
+def test___array__(tspace_impl):
+    """Verify that the __array__ method for NumPy works."""
     space = odl.tensor_space((3, 4), dtype='float32', exponent=1, weighting=2,
                              impl=tspace_impl)
     x = space.one()
@@ -942,12 +1113,12 @@ def test_numpy_array_interface(tspace_impl):
     assert np.array_equal(x_as_any_arr, np.ones(x.shape))
 
 
-def test_array_wrap_method(tspace_impl):
+def test___array_wrap__(tspace_impl):
     """Verify that the __array_wrap__ method for NumPy works."""
     space = odl.tensor_space((3, 4), dtype='float32', exponent=1, weighting=2,
                              impl=tspace_impl)
     x_arr, x = noise_elements(space)
-    y_arr = np.sin(x_arr)
+    y_arr = array_module(tspace_impl).sin(x_arr)
     y = np.sin(x)  # Should yield again an ODL tensor
 
     assert all_equal(y, y_arr)
@@ -967,7 +1138,7 @@ def test_conj(tspace):
     assert all_equal(y, xarr.conj())
 
 
-# --- Weightings (Numpy) --- #
+# --- Weightings --- #
 
 
 def test_array_weighting_init(tspace_impl, exponent):
@@ -980,8 +1151,8 @@ def test_array_weighting_init(tspace_impl, exponent):
     weighting_arr = weighting_cls(weight_arr, exponent=exponent)
     weighting_elem = weighting_cls(weight_elem, exponent=exponent)
 
-    assert isinstance(weighting_arr.array, _array_cls(tspace_impl))
-    assert isinstance(weighting_elem.array, _array_cls(tspace_impl))
+    assert isinstance(weighting_arr.array, array_cls(tspace_impl))
+    assert isinstance(weighting_elem.array, array_cls(tspace_impl))
 
 
 def test_array_weighting_array_is_valid(tspace_impl):
@@ -996,7 +1167,7 @@ def test_array_weighting_array_is_valid(tspace_impl):
 
     # Invalid
     weight_arr[0] = 0
-    weighting_arr = NumpyTensorSpaceArrayWeighting(weight_arr)
+    weighting_arr = weighting_cls(weight_arr)
     assert not weighting_arr.is_valid()
 
 
@@ -1065,54 +1236,53 @@ def test_array_weighting_inner(tspace):
     [xarr, yarr], [x, y] = noise_elements(tspace, 2)
 
     weight_arr = _pos_array(tspace)
-    weighting = NumpyTensorSpaceArrayWeighting(weight_arr)
+    weighting_cls = _weighting_cls(tspace.impl, 'array')
+    weighting = weighting_cls(weight_arr)
+    true_inner = np.vdot(as_numpy(yarr), as_numpy(xarr * weight_arr))
 
-    true_inner = np.vdot(yarr, xarr * weight_arr)
-    assert weighting.inner(x, y) == pytest.approx(true_inner)
+    # Allow some error for single and half precision
+    assert weighting.inner(x, y) == pytest.approx(true_inner, rel=1e-2)
 
     # Exponent != 2 -> no inner product, should raise
     with pytest.raises(NotImplementedError):
-        NumpyTensorSpaceArrayWeighting(weight_arr, exponent=1.0).inner(x, y)
+        weighting_cls(weight_arr, exponent=1.0).inner(x, y)
 
 
 def test_array_weighting_norm(tspace, exponent):
     """Test norm in a weighted space."""
-    rtol = np.sqrt(np.finfo(tspace.dtype).resolution)
     xarr, x = noise_elements(tspace)
 
     weight_arr = _pos_array(tspace)
-    weighting = NumpyTensorSpaceArrayWeighting(weight_arr, exponent=exponent)
-
+    weighting_cls = _weighting_cls(tspace.impl, 'array')
+    weighting = weighting_cls(weight_arr, exponent=exponent)
     if exponent == float('inf'):
-        true_norm = np.linalg.norm(
-            (weight_arr * xarr).ravel(),
-            ord=float('inf'))
+        true_norm = np.linalg.norm(as_numpy(xarr.ravel()), ord=float('inf'))
     else:
         true_norm = np.linalg.norm(
-            (weight_arr ** (1 / exponent) * xarr).ravel(),
+            as_numpy((weight_arr ** (1 / exponent) * xarr).ravel()),
             ord=exponent)
 
-    assert weighting.norm(x) == pytest.approx(true_norm, rel=rtol)
+    # Allow some error for single and half precision
+    assert weighting.norm(x) == pytest.approx(true_norm, rel=1e-2)
 
 
 def test_array_weighting_dist(tspace, exponent):
     """Test dist product in a weighted space."""
-    rtol = np.sqrt(np.finfo(tspace.dtype).resolution)
     [xarr, yarr], [x, y] = noise_elements(tspace, n=2)
 
     weight_arr = _pos_array(tspace)
-    weighting = NumpyTensorSpaceArrayWeighting(weight_arr, exponent=exponent)
-
+    weighting_cls = _weighting_cls(tspace.impl, 'array')
+    weighting = weighting_cls(weight_arr, exponent=exponent)
     if exponent == float('inf'):
-        true_dist = np.linalg.norm(
-            (weight_arr * (xarr - yarr)).ravel(),
-            ord=float('inf'))
+        true_dist = np.linalg.norm(as_numpy((xarr - yarr).ravel()),
+                                   ord=float('inf'))
     else:
         true_dist = np.linalg.norm(
-            (weight_arr ** (1 / exponent) * (xarr - yarr)).ravel(),
+            as_numpy((weight_arr ** (1 / exponent) * (xarr - yarr)).ravel()),
             ord=exponent)
 
-    assert weighting.dist(x, y) == pytest.approx(true_dist, rel=rtol)
+    # Allow some error for single and half precision
+    assert weighting.dist(x, y) == pytest.approx(true_dist, rel=1e-2)
 
 
 def test_const_weighting_init(tspace_impl, exponent):
@@ -1174,15 +1344,17 @@ def test_const_weighting_inner(tspace):
     [xarr, yarr], [x, y] = noise_elements(tspace, 2)
 
     constant = 1.5
-    true_result_const = constant * np.vdot(yarr, xarr)
+    weighting_cls = _weighting_cls(tspace.impl, 'const')
+    weighting = weighting_cls(constant)
+    true_inner = constant * np.vdot(as_numpy(yarr), as_numpy(xarr))
 
-    w_const = NumpyTensorSpaceConstWeighting(constant)
-    assert w_const.inner(x, y) == pytest.approx(true_result_const)
+    # Allow some error for single and half precision
+    assert weighting.inner(x, y) == pytest.approx(true_inner, rel=1e-2)
 
     # Exponent != 2 -> no inner
-    w_const = NumpyTensorSpaceConstWeighting(constant, exponent=1)
+    weighing = weighting_cls(constant, exponent=1)
     with pytest.raises(NotImplementedError):
-        w_const.inner(x, y)
+        weighing.inner(x, y)
 
 
 def test_const_weighting_norm(tspace, exponent):
@@ -1190,14 +1362,16 @@ def test_const_weighting_norm(tspace, exponent):
     xarr, x = noise_elements(tspace)
 
     constant = 1.5
+    weighting_cls = _weighting_cls(tspace.impl, 'const')
+    weighting = weighting_cls(constant, exponent=exponent)
     if exponent == float('inf'):
-        factor = constant
+        factor = 1.0
     else:
         factor = constant ** (1 / exponent)
-    true_norm = factor * np.linalg.norm(xarr.ravel(), ord=exponent)
+    true_norm = factor * np.linalg.norm(as_numpy(xarr.ravel()), ord=exponent)
 
-    w_const = NumpyTensorSpaceConstWeighting(constant, exponent=exponent)
-    assert w_const.norm(x) == pytest.approx(true_norm)
+    # Allow some error for single and half precision
+    assert weighting.norm(x) == pytest.approx(true_norm, rel=1e-2)
 
 
 def test_const_weighting_dist(tspace, exponent):
@@ -1205,74 +1379,79 @@ def test_const_weighting_dist(tspace, exponent):
     [xarr, yarr], [x, y] = noise_elements(tspace, 2)
 
     constant = 1.5
+    weighting_cls = _weighting_cls(tspace.impl, 'const')
+    weighting = weighting_cls(constant, exponent=exponent)
     if exponent == float('inf'):
-        factor = constant
+        factor = 1.0
     else:
         factor = constant ** (1 / exponent)
-    true_dist = factor * np.linalg.norm((xarr - yarr).ravel(), ord=exponent)
+    true_dist = factor * np.linalg.norm(as_numpy((xarr - yarr).ravel()),
+                                        ord=exponent)
 
-    w_const = NumpyTensorSpaceConstWeighting(constant, exponent=exponent)
-    assert w_const.dist(x, y) == pytest.approx(true_dist)
+    # Allow some error for single and half precision
+    assert weighting.dist(x, y) == pytest.approx(true_dist, rel=1e-2)
 
 
 def test_custom_inner(tspace):
     """Test weighting with a custom inner product."""
-    rtol = np.sqrt(np.finfo(tspace.dtype).resolution)
-
     [xarr, yarr], [x, y] = noise_elements(tspace, 2)
 
     def inner(x, y):
-        return np.vdot(y, x)
+        return np.vdot(as_numpy(y.data), as_numpy(x.data))
 
-    w = NumpyTensorSpaceCustomInner(inner)
-    w_same = NumpyTensorSpaceCustomInner(inner)
-    w_other = NumpyTensorSpaceCustomInner(np.dot)
+    weighting_cls = _weighting_cls(tspace.impl, 'inner')
+    w = weighting_cls(inner)
+    w_same = weighting_cls(inner)
+    w_other = weighting_cls(array_module(tspace.impl).dot)
 
     assert w == w
     assert w == w_same
     assert w != w_other
 
-    true_inner = inner(xarr, yarr)
-    assert w.inner(x, y) == pytest.approx(true_inner)
+    true_inner = np.vdot(as_numpy(yarr), as_numpy(xarr))
+    true_norm = np.linalg.norm(as_numpy(xarr.ravel()))
+    true_dist = np.linalg.norm(as_numpy((xarr - yarr).ravel()))
 
-    true_norm = np.linalg.norm(xarr.ravel())
-    assert w.norm(x) == pytest.approx(true_norm)
-
-    true_dist = np.linalg.norm((xarr - yarr).ravel())
-    assert w.dist(x, y) == pytest.approx(true_dist, rel=rtol)
+    # Allow some error for single and half precision
+    assert w.inner(x, y) == pytest.approx(true_inner, rel=1e-2)
+    assert w.norm(x) == pytest.approx(true_norm, rel=1e-2)
+    assert w.dist(x, y) == pytest.approx(true_dist, rel=1e-2)
 
     with pytest.raises(TypeError):
-        NumpyTensorSpaceCustomInner(1)
+        weighting_cls(1)
 
 
 def test_custom_norm(tspace):
     """Test weighting with a custom norm."""
     [xarr, yarr], [x, y] = noise_elements(tspace, 2)
 
-    norm = np.linalg.norm
+    def norm(x):
+        return np.linalg.norm(as_numpy(x.data).ravel())
 
     def other_norm(x):
-        return np.linalg.norm(x, ord=1)
+        return np.linalg.norm(as_numpy(x.data).ravel(), ord=1)
 
-    w = NumpyTensorSpaceCustomNorm(norm)
-    w_same = NumpyTensorSpaceCustomNorm(norm)
-    w_other = NumpyTensorSpaceCustomNorm(other_norm)
+    weighting_cls = _weighting_cls(tspace.impl, 'norm')
+    w = weighting_cls(norm)
+    w_same = weighting_cls(norm)
+    w_other = weighting_cls(other_norm)
 
     assert w == w
     assert w == w_same
     assert w != w_other
 
+    true_norm = np.linalg.norm(as_numpy(xarr.ravel()))
+    true_dist = np.linalg.norm(as_numpy((xarr - yarr).ravel()))
+
+    # Allow some error for single and half precision
+    assert w.norm(x) == pytest.approx(true_norm, rel=1e-2)
+    assert w.dist(x, y) == pytest.approx(true_dist, rel=1e-2)
+
     with pytest.raises(NotImplementedError):
         w.inner(x, y)
 
-    true_norm = np.linalg.norm(xarr.ravel())
-    assert w.norm(x) == pytest.approx(true_norm)
-
-    true_dist = np.linalg.norm((xarr - yarr).ravel())
-    assert w.dist(x, y) == pytest.approx(true_dist)
-
     with pytest.raises(TypeError):
-        NumpyTensorSpaceCustomNorm(1)
+        weighting_cls(1)
 
 
 def test_custom_dist(tspace):
@@ -1280,18 +1459,24 @@ def test_custom_dist(tspace):
     [xarr, yarr], [x, y] = noise_elements(tspace, 2)
 
     def dist(x, y):
-        return np.linalg.norm(x - y)
+        return np.linalg.norm(as_numpy((x - y).data).ravel())
 
     def other_dist(x, y):
-        return np.linalg.norm(x - y, ord=1)
+        return np.linalg.norm(as_numpy((x - y).data).ravel(), ord=1)
 
-    w = NumpyTensorSpaceCustomDist(dist)
-    w_same = NumpyTensorSpaceCustomDist(dist)
-    w_other = NumpyTensorSpaceCustomDist(other_dist)
+    weighting_cls = _weighting_cls(tspace.impl, 'dist')
+    w = weighting_cls(dist)
+    w_same = weighting_cls(dist)
+    w_other = weighting_cls(other_dist)
 
     assert w == w
     assert w == w_same
     assert w != w_other
+
+    true_dist = np.linalg.norm(as_numpy((xarr - yarr).ravel()))
+
+    # Allow some error for single and half precision
+    assert w.dist(x, y) == pytest.approx(true_dist, rel=1e-2)
 
     with pytest.raises(NotImplementedError):
         w.inner(x, y)
@@ -1299,11 +1484,8 @@ def test_custom_dist(tspace):
     with pytest.raises(NotImplementedError):
         w.norm(x)
 
-    true_dist = np.linalg.norm((xarr - yarr).ravel())
-    assert w.dist(x, y) == pytest.approx(true_dist)
-
     with pytest.raises(TypeError):
-        NumpyTensorSpaceCustomDist(1)
+        weighting_cls(1)
 
 
 # --- Ufuncs & Reductions --- #
@@ -1314,165 +1496,238 @@ def test_ufuncs(tspace, ufunc):
     name = ufunc
 
     # Get the ufunc from numpy as reference, plus some additional info
-    npy_ufunc = getattr(np, name)
-    nin = npy_ufunc.nin
-    nout = npy_ufunc.nout
+    ufunc_npy = getattr(np, name)
+    nin = ufunc_npy.nin
+    nout = ufunc_npy.nout
 
-    if (np.issubsctype(tspace.dtype, np.floating) or
-            np.issubsctype(tspace.dtype, np.complexfloating) and
-            name in ['bitwise_and',
-                     'bitwise_or',
-                     'bitwise_xor',
-                     'invert',
-                     'left_shift',
-                     'right_shift']):
-        # Skip integer only methods for floating point data types
-        return
+    # Disable Numpy warnings for the time being
+    npy_err_orig = np.geterr()
+    np.seterr(all='ignore')
 
-    if (np.issubsctype(tspace.dtype, np.complexfloating) and
-            name in ['remainder',
-                     'trunc',
-                     'signbit',
-                     'invert',
-                     'left_shift',
-                     'right_shift',
-                     'rad2deg',
-                     'deg2rad',
-                     'copysign',
-                     'mod',
-                     'modf',
-                     'fmod',
-                     'logaddexp2',
-                     'logaddexp',
-                     'hypot',
-                     'arctan2',
-                     'floor',
-                     'ceil']):
-        # Skip real-only methods for complex data types
-        return
+    def _check_result_type(result, expected_type):
+        if nout == 1:
+            assert isinstance(result, tspace.element_type)
+        elif nout > 1:
+            for i in range(nout):
+                assert isinstance(result[i], tspace.element_type)
+        else:
+            assert False
+
+    def _check_result_is_out(result, out_seq):
+        if nout == 1:
+            assert result is out_seq[0]
+        elif nout > 1:
+            for i in range(nout):
+                assert result[i] is out_seq[i]
+        else:
+            assert False
+
+    # See https://github.com/cupy/cupy/issues/794
+    cupy_ufuncs_broken_complex = [
+        'expm1', 'floor_divide', 'fmin', 'fmax',
+        'greater', 'greater_equal', 'less', 'less_equal', 'log1p', 'log2',
+        'logical_and', 'logical_or', 'logical_not', 'logical_xor', 'minimum',
+        'maximum', 'rint', 'sign', 'square']
+    if (tspace.impl == 'cupy' and
+            tspace.dtype.kind == 'c' and
+            ufunc in cupy_ufuncs_broken_complex):
+        pytest.xfail('ufunc {} broken for complex input in cupy'.format(ufunc))
 
     # Create some data
     arrays, elements = noise_elements(tspace, nin + nout)
-    in_arrays = arrays[:nin]
-    out_arrays = arrays[nin:]
+    # Arrays of the space's own data storage type
+    in_arrays_own = arrays[:nin]
+    in_arrays_npy = [as_numpy(arr) for arr in arrays[:nin]]
     data_elem = elements[0]
 
-    out_elems = elements[nin:]
-    out_arr_kwargs = {'out': out_arrays[:nout]}
-
-    if nout == 1:
-        out_elem_kwargs = {'out': out_elems[0]}
-    elif nout > 1:
-        out_elem_kwargs = {'out': out_elems[:nout]}
-
     # Get function to call, using both interfaces:
-    # - vec.ufunc(other_args)
-    # - np.ufunc(vec, other_args)
-    elem_fun_old = getattr(data_elem.ufuncs, name)
-    in_elems_old = elements[1:nin]
-    elem_fun_new = npy_ufunc
-    in_elems_new = elements[:nin]
+    # - vec.ufunc(*other_args)
+    # - np.ufunc(vec, *other_args)
+    ufunc_method = getattr(data_elem.ufuncs, name)
+    in_elems_method = elements[1:nin]
+    in_elems_npy = elements[:nin]
 
-    # Out-of-place
-    npy_result = npy_ufunc(*in_arrays)
-    odl_result_old = elem_fun_old(*in_elems_old)
-    assert all_almost_equal(npy_result, odl_result_old)
-    odl_result_new = elem_fun_new(*in_elems_new)
-    assert all_almost_equal(npy_result, odl_result_new)
+    # If Numpy fails, mark the test as xfail (same below)
+    try:
+        result_npy = ufunc_npy(*in_arrays_npy)
+    except TypeError:
+        pytest.xfail('numpy ufunc not valid for inputs')
 
-    # Test type of output
+    # Out-of-place -- in = elements -- ufunc = method or numpy
+    result = ufunc_method(*in_elems_method)
+    assert all_almost_equal(result_npy, result)
+    _check_result_type(result, tspace.element_type)
+
+    # Get element(s) in the right space for in-place later
     if nout == 1:
-        assert isinstance(odl_result_old, tspace.element_type)
-        assert isinstance(odl_result_new, tspace.element_type)
-    elif nout > 1:
-        for i in range(nout):
-            assert isinstance(odl_result_old[i], tspace.element_type)
-            assert isinstance(odl_result_new[i], tspace.element_type)
+        out_elems = [result.space.element()]
+    elif nout == 2:
+        out_elems = [res.space.element() for res in result]
+    else:
+        assert False
 
-    # In-place with ODL objects as `out`
-    npy_result = npy_ufunc(*in_arrays, **out_arr_kwargs)
-    odl_result_old = elem_fun_old(*in_elems_old, **out_elem_kwargs)
-    assert all_almost_equal(npy_result, odl_result_old)
-    if USE_ARRAY_UFUNCS_INTERFACE:
-        # In-place will not work with Numpy < 1.13
-        odl_result_new = elem_fun_new(*in_elems_new, **out_elem_kwargs)
-        assert all_almost_equal(npy_result, odl_result_new)
+    result = ufunc_npy(*in_elems_npy)
+    assert all_almost_equal(result_npy, result)
+    _check_result_type(result, tspace.element_type)
 
-    # Check that returned stuff refers to given out
+    # Out-of-place -- in = numpy or own arrays -- ufunc = method
+    result = ufunc_method(*in_arrays_npy[1:])
+    assert all_almost_equal(result_npy, result)
+    _check_result_type(result, tspace.element_type)
+
+    result = ufunc_method(*in_arrays_own[1:])
+    assert all_almost_equal(result_npy, result)
+    _check_result_type(result, tspace.element_type)
+
+    # In-place -- in = elements -- out = elements -- ufunc = method or numpy
     if nout == 1:
-        assert odl_result_old is out_elems[0]
-        if USE_ARRAY_UFUNCS_INTERFACE:
-            assert odl_result_new is out_elems[0]
-    elif nout > 1:
-        for i in range(nout):
-            assert odl_result_old[i] is out_elems[i]
-            if USE_ARRAY_UFUNCS_INTERFACE:
-                assert odl_result_new[i] is out_elems[i]
+        kwargs_out = {'out': out_elems[0]}
+    elif nout == 2:
+        kwargs_out = {'out1': out_elems[0], 'out2': out_elems[1]}
 
-    # In-place with Numpy array as `out` for new interface
+    result = ufunc_method(*in_elems_method, **kwargs_out)
+    assert all_almost_equal(result_npy, result)
+    _check_result_is_out(result, out_elems[:nout])
     if USE_ARRAY_UFUNCS_INTERFACE:
-        out_arrays_new = [np.empty_like(arr) for arr in out_arrays]
-        if nout == 1:
-            out_elem_kwargs_new = {'out': out_arrays_new[0]}
-        elif nout > 1:
-            out_elem_kwargs_new = {'out': out_arrays_new[:nout]}
-
-        odl_result_elem_new = elem_fun_new(*in_elems_new,
-                                           **out_elem_kwargs_new)
-        assert all_almost_equal(npy_result, odl_result_elem_new)
+        # Custom objects not allowed as `out` for numpy < 1.13
 
         if nout == 1:
-            assert odl_result_elem_new is out_arrays_new[0]
+            kwargs_out = {'out': out_elems[0]}
+        elif nout == 2:
+            kwargs_out = {'out': (out_elems[0], out_elems[1])}
+
+        result = ufunc_npy(*in_elems_npy, **kwargs_out)
+        assert all_almost_equal(result_npy, result)
+        _check_result_is_out(result, out_elems[:nout])
+
+    # In-place -- in = elements -- out = numpy or own arrays -- ufunc = numpy
+    # This case is only supported with the new interface
+    if USE_ARRAY_UFUNCS_INTERFACE:
+        # Fresh arrays for output
+        out_arrays_npy = [np.empty_like(as_numpy(arr))
+                          for arr in arrays[nin:]]
+        out_arrays_own = [array_module(tspace.impl).empty_like(arr)
+                          for arr in arrays[nin:]]
+        if nout == 1:
+            kwargs_npy = {'out': out_arrays_npy[0]}
+            kwargs_own = {'out': out_arrays_own[0]}
         elif nout > 1:
-            for i in range(nout):
-                assert odl_result_elem_new[i] is out_arrays_new[i]
+            kwargs_npy = {'out': out_arrays_npy[:nout]}
+            kwargs_own = {'out': out_arrays_own[:nout]}
+
+        try:
+            result_out_npy = ufunc_npy(*in_elems_npy, **kwargs_npy)
+        except TypeError:
+            pytest.xfail('numpy ufunc not valid for inputs')
+
+        result_out_own = ufunc_npy(*in_elems_npy, **kwargs_own)
+        assert all_almost_equal(result_out_npy, result_npy)
+        assert all_almost_equal(result_out_own, result_npy)
+        _check_result_is_out(result_out_npy, out_arrays_npy)
+        _check_result_is_out(result_out_own, out_arrays_own)
 
     if USE_ARRAY_UFUNCS_INTERFACE:
         # Check `ufunc.at`
         indices = [[0, 0, 1],
                    [0, 1, 2]]
 
-        mod_array = in_arrays[0].copy()
-        mod_elem = in_elems_new[0].copy()
+        mod_array = in_arrays_npy[0].copy()
+        mod_elem = in_elems_npy[0].copy()
         if nin == 1:
-            npy_result = npy_ufunc.at(mod_array, indices)
-            odl_result = npy_ufunc.at(mod_elem, indices)
-        elif nin == 2:
-            other_array = in_arrays[1][indices]
-            other_elem = in_elems_new[1][indices]
-            npy_result = npy_ufunc.at(mod_array, indices, other_array)
-            odl_result = npy_ufunc.at(mod_elem, indices, other_elem)
+            try:
+                result_npy = ufunc_npy.at(mod_array, indices)
+            except TypeError:
+                pytest.xfail('numpy ufunc.at not valid for inputs')
 
-        assert all_almost_equal(odl_result, npy_result)
+            result = ufunc_npy.at(mod_elem, indices)
+
+        elif nin == 2:
+            other_array = in_arrays_npy[1][indices]
+            other_elem = in_elems_npy[1][indices]
+            try:
+                result_npy = ufunc_npy.at(mod_array, indices, other_array)
+            except TypeError:
+                pytest.xfail('numpy ufunc.at not valid for inputs')
+
+            result = ufunc_npy.at(mod_elem, indices, other_elem)
+
+        assert all_almost_equal(result, result_npy)
 
     # Check `ufunc.reduce`
     if nin == 2 and nout == 1 and USE_ARRAY_UFUNCS_INTERFACE:
-        in_array = in_arrays[0]
-        in_elem = in_elems_new[0]
+        in_array = in_arrays_npy[0]
+        in_elem = in_elems_npy[0]
 
         # We only test along one axis since some binary ufuncs are not
         # re-orderable, in which case Numpy raises a ValueError
-        npy_result = npy_ufunc.reduce(in_array)
-        odl_result = npy_ufunc.reduce(in_elem)
-        assert all_almost_equal(odl_result, npy_result)
-        odl_result_keepdims = npy_ufunc.reduce(in_elem, keepdims=True)
-        assert odl_result_keepdims.shape == (1,) + in_elem.shape[1:]
-        # In-place using `out` (with ODL vector and array)
-        out_elem = odl_result_keepdims.space.element()
-        out_array = np.empty(odl_result_keepdims.shape,
-                             dtype=odl_result_keepdims.dtype)
-        npy_ufunc.reduce(in_elem, out=out_elem, keepdims=True)
-        npy_ufunc.reduce(in_elem, out=out_array, keepdims=True)
-        assert all_almost_equal(out_elem, odl_result_keepdims)
-        assert all_almost_equal(out_array, odl_result_keepdims)
+
+        try:
+            result_npy = ufunc_npy.reduce(in_array)
+        except TypeError:
+            pytest.xfail('numpy ufunc.reduce not valid for inputs')
+
+        # Out-of-place -- in = element
+        result = ufunc_npy.reduce(in_elem)
+        assert all_almost_equal(result, result_npy)
+        result_keepdims = ufunc_npy.reduce(in_elem, keepdims=True)
+        assert result_keepdims.shape == (1,) + in_elem.shape[1:]
+
+        # In-place -- in = element -- out = element or numpy array or own array
+        out_elem = result_keepdims.space.element()
+        ufunc_npy.reduce(in_elem, out=out_elem, keepdims=True)
+        assert all_almost_equal(out_elem, result_keepdims)
+        out_array_npy = np.empty(result_keepdims.shape,
+                                 dtype=result_keepdims.dtype)
+        ufunc_npy.reduce(in_elem, out=out_array_npy, keepdims=True)
+        assert all_almost_equal(out_array_npy, result_keepdims)
+        out_array_own = array_module(tspace.impl).empty(
+            result_keepdims.shape, dtype=result_keepdims.dtype)
+        ufunc_npy.reduce(in_elem, out=out_array_own, keepdims=True)
+        assert all_almost_equal(out_array_own, result_keepdims)
+
         # Using a specific dtype
-        npy_result = npy_ufunc.reduce(in_array, dtype=complex)
-        odl_result = npy_ufunc.reduce(in_elem, dtype=complex)
-        assert odl_result.dtype == npy_result.dtype
-        assert all_almost_equal(odl_result, npy_result)
+        try:
+            result_npy = ufunc_npy.reduce(in_array, dtype=complex)
+        except TypeError:
+            pytest.xfail('numpy ufunc.reduce not valid for complex dtype')
+
+        with xfail_if(tspace.impl == 'cupy'):
+            result = ufunc_npy.reduce(in_elem, dtype=complex)
+            assert result.dtype == result_npy.dtype
+            assert all_almost_equal(result, result_npy)
 
     # Other ufunc method use the same interface, to we don't perform
     # extra tests for them.
+
+    # Reset Numpy err handling
+    np.seterr(**npy_err_orig)
+
+
+@skip_if_no_cupy
+def test_ufunc_cupy_force_native():
+    """Test the ``force_native`` flag for cupy based ufuncs."""
+    if not USE_ARRAY_UFUNCS_INTERFACE:
+        pytest.skip('`force_native` option only used in __array_ufuncs__')
+
+    space = odl.rn((3, 4), impl='cupy')
+
+    # Make sure we call native code for supported ufuncs
+    for ufunc in [np.sin, np.absolute, np.add, np.remainder, np.fmod]:
+        nin, nout = ufunc.nin, ufunc.nout
+        _, in_elems = noise_elements(space, n=2)
+        out_arrays, out_elems = noise_elements(space, n=2)
+        ufunc(*in_elems[:nin], out=out_elems[:nout], force_native=True)
+        ufunc(*in_elems[:nin], out=out_arrays[:nout], force_native=True)
+
+    # These have explicit native implementations
+    for ufunc in [np.add, np.multiply]:
+        for method in ['reduce', 'accumulate']:
+            in_elem = noise_element(space)
+            getattr(ufunc, method)(in_elem, force_native=True)
+
+    for ufunc in [np.minimum, np.maximum]:
+        in_elem = noise_element(space)
+        ufunc.reduce(in_elem, force_native=True)
 
 
 def test_ufunc_corner_cases(tspace_impl):
@@ -1497,11 +1752,13 @@ def test_ufunc_corner_cases(tspace_impl):
     # Check that the result space is the same
     assert res.space == space
 
-    # Check usage of `order` argument
-    for order in ('C', 'F'):
-        res = x.__array_ufunc__(np.sin, '__call__', x, order=order)
-        assert all_almost_equal(res, np.sin(x.asarray()))
-        assert res.data.flags[order + '_CONTIGUOUS']
+    # Check usage of `order` argument (not available in cupy)
+    with xfail_if(tspace_impl == 'cupy',
+                  reason='cupy does not accept `order` in ufuncs'):
+        for order in ('C', 'F'):
+                res = x.__array_ufunc__(np.sin, '__call__', x, order=order)
+                assert all_almost_equal(res, np.sin(x.asarray()))
+                assert res.data.flags[order + '_CONTIGUOUS']
 
     # Check usage of `dtype` argument
     res = x.__array_ufunc__(np.sin, '__call__', x, dtype='float32')
@@ -1542,7 +1799,7 @@ def test_ufunc_corner_cases(tspace_impl):
     res = x.__array_ufunc__(np.add, 'accumulate', x)
     assert all_almost_equal(res, np.add.accumulate(x.asarray()))
     assert res.space == space
-    arr = np.empty_like(x)
+    arr = array_module(tspace_impl).empty_like(x)
     res = x.__array_ufunc__(np.add, 'accumulate', x, out=(arr,))
     assert all_almost_equal(arr, np.add.accumulate(x.asarray()))
     assert res is arr
@@ -1563,7 +1820,7 @@ def test_ufunc_corner_cases(tspace_impl):
     assert all_almost_equal(res, np.add.reduce(x.asarray()))
 
     # With `out` argument and `axis`
-    out_ax0 = np.empty(3)
+    out_ax0 = array_module(tspace_impl).empty(3)
     res = x.__array_ufunc__(np.add, 'reduce', x, axis=0, out=(out_ax0,))
     assert all_almost_equal(out_ax0, np.add.reduce(x.asarray(), axis=0))
     assert res is out_ax0
@@ -1603,51 +1860,60 @@ def test_reduction(tspace, reduction):
     # Should be equal theoretically, but summation order, other stuff, ...,
     # hence we use approx
 
+    if (tspace.impl == 'cupy' and
+            reduction in ('min', 'max') and
+            tspace.dtype.kind == 'c'):
+        pytest.xfail('Cupy does not accept complex input to `min` and `max`')
+
     # Full reduction, produces scalar
-    result_npy = npy_reduction(x_arr)
+    result_npy = npy_reduction(as_numpy(x_arr))
     result = x_reduction()
     assert result == pytest.approx(result_npy)
     result = x_reduction(axis=(0, 1))
     assert result == pytest.approx(result_npy)
 
     # Reduction along axes, produces element in reduced space
-    result_npy = npy_reduction(x_arr, axis=0)
+    result_npy = npy_reduction(as_numpy(x_arr), axis=0)
     result = x_reduction(axis=0)
-    assert isinstance(result, NumpyTensor)
+    assert isinstance(result, tspace.element_type)
     assert result.shape == result_npy.shape
     assert result.dtype == x.dtype
-    assert np.allclose(result, result_npy)
+    assert all_almost_equal(result, result_npy)
     # Check reduced space properties
-    assert isinstance(result.space, NumpyTensorSpace)
+    assert type(result.space) is type(tspace)
     assert result.space.exponent == x.space.exponent
     assert result.space.weighting == x.space.weighting  # holds true here
     # Evaluate in-place
     out = result.space.element()
     x_reduction(axis=0, out=out)
-    assert np.allclose(out, result_npy)
+    assert all_almost_equal(out, result_npy)
 
     # Use keepdims parameter
-    result_npy = npy_reduction(x_arr, axis=1, keepdims=True)
+    result_npy = npy_reduction(as_numpy(x_arr), axis=1, keepdims=True)
     result = x_reduction(axis=1, keepdims=True)
     assert result.shape == result_npy.shape
-    assert np.allclose(result, result_npy)
+    assert all_almost_equal(result, result_npy)
     # Evaluate in-place
     out = result.space.element()
     x_reduction(axis=1, keepdims=True, out=out)
-    assert np.allclose(out, result_npy)
+    assert all_almost_equal(out, result_npy)
 
     # Use dtype parameter
     # These reductions have a `dtype` parameter
     if name in ('cumprod', 'cumsum', 'mean', 'prod', 'std', 'sum',
                 'trace', 'var'):
-        result_npy = npy_reduction(x_arr, axis=1, dtype='complex64')
-        result = x_reduction(axis=1, dtype='complex64')
-        assert result.dtype == np.dtype('complex64')
-        assert np.allclose(result, result_npy)
-        # Evaluate in-place
-        out = result.space.element()
-        x_reduction(axis=1, dtype='complex64', out=out)
-        assert np.allclose(out, result_npy)
+        with xfail_if(tspace.impl == 'cupy' and tspace.dtype == 'float16',
+                      reason='complex reduction fails for float16 in cupy'):
+            # See https://github.com/cupy/cupy/issues/795
+            result_npy = npy_reduction(as_numpy(x_arr), axis=1,
+                                       dtype='complex64')
+            result = x_reduction(axis=1, dtype='complex64')
+            assert result.dtype == np.dtype('complex64')
+            assert all_almost_equal(result, result_npy)
+            # Evaluate in-place
+            out = result.space.element()
+            x_reduction(axis=1, dtype='complex64', out=out)
+            assert all_almost_equal(out, result_npy)
 
 
 def test_ufunc_reduction_docs_notempty(tspace_impl):

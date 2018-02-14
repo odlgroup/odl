@@ -670,29 +670,6 @@ class DiscreteLpElement(DiscretizedSpaceElement):
             self.tensor.conj(out=out.tensor)
             return out
 
-    def __setitem__(self, indices, values):
-        """Set values of this element.
-
-        Parameters
-        ----------
-        indices : int or `slice`
-            The position(s) that should be set
-        values : scalar or `array-like`
-            Value(s) to be assigned.
-            If ``indices`` is an integer, ``values`` must be a scalar
-            value.
-            If ``indices`` is a slice, ``values`` must be
-            broadcastable to the size of the slice (same size,
-            shape ``(1,)`` or scalar).
-            For ``indices == slice(None)``, i.e. in the call
-            ``vec[:] = values``, a multi-dimensional array of correct
-            shape is allowed as ``values``.
-        """
-        if values in self.space:
-            self.tensor[indices] = values.tensor
-        else:
-            super(DiscreteLpElement, self).__setitem__(indices, values)
-
     def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
         """Interface to Numpy's ufunc machinery.
 
