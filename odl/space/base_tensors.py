@@ -181,11 +181,11 @@ class TensorSpace(LinearSpace):
 
         Raises
         ------
-        NotImplementedError
+        ValueError
             If `dtype` is not a numeric data type.
         """
         if not is_numeric_dtype(self.dtype):
-            raise NotImplementedError(
+            raise ValueError(
                 '`real_space` not defined for non-numeric `dtype`')
         return self.astype(self.real_dtype)
 
@@ -195,11 +195,11 @@ class TensorSpace(LinearSpace):
 
         Raises
         ------
-        NotImplementedError
+        ValueError
             If `dtype` is not a numeric data type.
         """
         if not is_numeric_dtype(self.dtype):
-            raise NotImplementedError(
+            raise ValueError(
                 '`complex_space` not defined for non-numeric `dtype`')
         return self.astype(self.complex_dtype)
 
