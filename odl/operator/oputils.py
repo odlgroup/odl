@@ -629,9 +629,14 @@ class auto_adjoint_weighting(OptionalArgDecorator):
     @staticmethod
     def _instance_wrapper(unweighted_adjoint, optimize=True):
         """Wrapper for `Operator` instances."""
-        # Use notions of the original operator, not the adjoint
-        dom_weighting = unweighted_adjoint.range.weighting
-        ran_weighting = unweighted_adjoint.domain.weighting
+        # Use notions of the original operator, not the adjoint.
+        # We default to 1 for spaces that have no `weighting` property,
+        # e.g., `Field` instances.
+        dom_weighting = getattr(unweighted_adjoint.range, 'weighting', None)
+        ran_weighting = getattr(unweighted_adjoint.domain, 'weighting', None)
+
+        dom_size = getattr(unweighted_adjoint.range, 'size', 1)
+        ran_size = getattr(unweighted_adjoint.domain, 'size', 1)
 
         if isinstance(dom_weighting, ArrayWeighting):
             dom_w_type = 'array'
@@ -639,6 +644,9 @@ class auto_adjoint_weighting(OptionalArgDecorator):
         elif isinstance(dom_weighting, ConstWeighting):
             dom_w_type = 'const'
             dom_w = dom_weighting.const
+        elif dom_weighting is None:
+            dom_w_type = 'const'
+            dom_w = 1.0
         else:
             raise TypeError(
                 'weighting of `unweighted_adjoint.range` must be of '
@@ -651,6 +659,9 @@ class auto_adjoint_weighting(OptionalArgDecorator):
         elif isinstance(ran_weighting, ConstWeighting):
             ran_w_type = 'const'
             ran_w = ran_weighting.const
+        elif ran_weighting is None:
+            ran_w_type = 'const'
+            ran_w = 1.0
         else:
             raise TypeError(
                 'weighting of `unweighted_adjoint.domain` must be of '
@@ -677,7 +688,7 @@ class auto_adjoint_weighting(OptionalArgDecorator):
             skip_dom = True
             skip_ran = False
         elif dom_w_type == 'const' and ran_w_type == 'const':
-            if unweighted_adjoint.domain.size < unweighted_adjoint.range.size:
+            if ran_size < dom_size:
                 new_dom_w = 1.0
                 new_ran_w = ran_w / dom_w
                 skip_dom = True
