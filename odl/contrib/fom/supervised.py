@@ -153,7 +153,8 @@ def mean_absolute_error(data, ground_truth, mask=None,
     return fom
 
 
-def mean_value_difference(data, ground_truth, mask=None, normalized=False):
+def mean_value_difference(data, ground_truth, mask=None, normalized=False,
+                          force_lower_is_better=True):
     """Return difference in mean value between ``data`` and ``ground_truth``.
 
     Parameters
@@ -166,6 +167,11 @@ def mean_value_difference(data, ground_truth, mask=None, normalized=False):
         If given, ``data * mask`` is compared to ``ground_truth * mask``.
     normalized  : bool, optional
         Boolean flag to switch between unormalized and normalized FOM.
+    force_lower_is_better : bool, optional
+        If ``True``, it is ensured that lower values correspond to better
+        matches. For the mean value difference, this is already the case, and
+        the flag is only present for compatibility to other figures of merit.
+
 
     Returns
     -------
@@ -178,13 +184,13 @@ def mean_value_difference(data, ground_truth, mask=None, normalized=False):
 
     .. math::
          \mathrm{MVD}(f, g) =
-         \\Big| |\\overline{f}| - |\\overline{g}| \\Big|,
+         \\Big| \\overline{f} - \\overline{g} \\Big|,
 
     or, in normalized form
 
     .. math::
          \mathrm{MVD_N}(f, g) =
-         \\frac{\\Big| |\\overline{f}| - |\\overline{g}| \\Big|}
+         \\frac{\\Big| \\overline{f} - \\overline{g} \\Big|}
                {\\Big| |\\overline{f}| + |\\overline{g}| \\Big|}
 
     where :math:`\\overline{f}` is the mean value of :math:`f`,
@@ -205,16 +211,17 @@ def mean_value_difference(data, ground_truth, mask=None, normalized=False):
     data_mean = data.inner(data.space.one()) / vol
     ground_truth_mean = ground_truth.inner(ground_truth.space.one()) / vol
 
-    fom = np.abs(np.abs(data_mean) - np.abs(ground_truth_mean))
+    fom = np.abs(data_mean - ground_truth_mean)
 
     if normalized:
         fom /= (np.abs(data_mean) + np.abs(ground_truth_mean))
+
 
     return fom
 
 
 def standard_deviation_difference(data, ground_truth, mask=None,
-                                  normalized=False):
+                                normalized=False, force_lower_is_better=True):
     """Return absolute difference in std between ``data`` and ``ground_truth``.
 
     Parameters
@@ -227,6 +234,12 @@ def standard_deviation_difference(data, ground_truth, mask=None,
         If given, ``data * mask`` is compared to ``ground_truth * mask``.
     normalized  : bool, optional
         Boolean flag to switch between unormalized and normalized FOM.
+    force_lower_is_better : bool, optional
+        If ``True``, it is ensured that lower values correspond to better
+        matches. For the standard deviation difference, this is already the 
+        case, and the flag is only present for compatibility to other figures
+        of merit.
+
 
     Returns
     -------
@@ -270,17 +283,21 @@ def standard_deviation_difference(data, ground_truth, mask=None,
     data_mean = data.inner(data.space.one()) / vol
     ground_truth_mean = ground_truth.inner(ground_truth.space.one()) / vol
 
-    fom = np.abs((l2_norm(data - data_mean) -
-                  l2_norm(ground_truth - ground_truth_mean)))
+    deviation_data = l2_norm(data - data_mean)
+    deviation_ground_truth = l2_norm(ground_truth - ground_truth_mean)
+    fom = np.abs(deviation_data - deviation_ground_truth)
 
     if normalized:
-        fom /= (l2_norm(data - data_mean) +
-                l2_norm(ground_truth - ground_truth_mean))
+        sum_deviation = deviation_data + deviation_ground_truth
+        fom /= sum_deviation
+        if np.isnan(fom):
+            fom = 0
 
     return fom
 
 
-def range_difference(data, ground_truth, mask=None, normalized=False):
+def range_difference(data, ground_truth, mask=None, normalized=False,
+                                                 force_lower_is_better=True):
     """Return dynamic range difference between ``data`` and ``ground_truth``.
 
     Evaluates difference in range between input (``data``) and reference
@@ -298,6 +315,10 @@ def range_difference(data, ground_truth, mask=None, normalized=False):
         is performed.
     normalized  : bool, optional
         If ``True``, normalize the FOM to lie in [0, 1].
+    force_lower_is_better : bool, optional
+        If ``True``, it is ensured that lower values correspond to better
+        matches. For the range difference, this is already the case, and
+        the flag is only present for compatibility to other figures of merit.
 
     Returns
     -------
@@ -460,7 +481,7 @@ def false_structures_mask(foreground, smoothness_factor=None):
     unique = np.unique(foreground)
     if not np.array_equiv(unique, [0., 1.]):
         raise ValueError('`foreground` is not a binary mask or has '
-                          'no true values {!r}'.format(unique))
+                                          'no true values {!r}'.format(unique))
 
     result = distance_transform_edt(1.0 - foreground,
                                     sampling=space.cell_sides)
@@ -586,11 +607,11 @@ def psnr(data, ground_truth, use_zscore=False, force_lower_is_better=False):
     ground_truth : `FnBaseVector`
         Reference to compare ``data`` to.
     use_zscore : bool
-        If ``true``, normalize ``data`` and ``ground_truth`` to have zero mean and
-        unit variance before comparison.
+        If ``true``, normalize ``data`` and ``ground_truth`` to have zero mean 
+        and unit variance before comparison.
     force_lower_is_better : bool
-        If ``true``, then lower value indicates better fit. In this case the output
-        is negated
+        If ``true``, then lower value indicates better fit. In this case the 
+        output is negated
 
     Returns
     -------
