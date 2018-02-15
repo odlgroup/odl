@@ -14,11 +14,11 @@ import numpy as np
 
 from odl.operator.operator import Operator
 from odl.operator.default_ops import ZeroOperator
+from odl.operator.oputils import auto_adjoint_weighting
 from odl.space import ProductSpace
 
 
-__all__ = ('ProductSpaceOperator',
-           'ComponentProjection', 'ComponentProjectionAdjoint',
+__all__ = ('ProductSpaceOperator', 'ComponentProjection',
            'BroadcastOperator', 'ReductionOperator', 'DiagonalOperator')
 
 
@@ -386,6 +386,7 @@ class ProductSpaceOperator(Operator):
         return ProductSpaceOperator(deriv_matrix, self.domain, self.range)
 
     @property
+    @auto_adjoint_weighting
     def adjoint(self):
         """Adjoint of this operator.
 
@@ -577,13 +578,18 @@ class ComponentProjection(Operator):
             [ 4.,  5.,  6.]
         ])
         """
-        self.__index = index
+        if np.isscalar(index):
+            self.__index = int(index)
+        elif isinstance(index, slice):
+            self.__index = index
+        else:
+            self.__index = list(index)
         super(ComponentProjection, self).__init__(
             space, space[index], linear=True)
 
     @property
     def index(self):
-        """Index of the subspace."""
+        """Index, indices or slice defining the subspace."""
         return self.__index
 
     def _call(self, x, out=None):
@@ -595,17 +601,80 @@ class ComponentProjection(Operator):
         return out
 
     @property
+    @auto_adjoint_weighting
     def adjoint(self):
-        """The adjoint operator.
+        """Adjoint operator extending by zeros from subspace to full space."""
+        op = self
 
-        The adjoint is given by extending along `ComponentProjection.index`,
-        and setting zero along the others.
+        class ComponentProjectionAdjoint(Operator):
 
-        See Also
-        --------
-        ComponentProjectionAdjoint
-        """
-        return ComponentProjectionAdjoint(self.domain, self.index)
+            """Adjoint operator to `ComponentProjection`."""
+
+            def __init__(self):
+                """Initialize a new instance.
+
+                Examples
+                --------
+                >>> r1 = odl.rn(1)
+                >>> r2 = odl.rn(2)
+                >>> r3 = odl.rn(3)
+                >>> pspace = odl.ProductSpace(r1, r2, r3)
+                >>> x = pspace.element([[1],
+                ...                     [2, 3],
+                ...                     [4, 5, 6]])
+
+                Projection on the 0-th component:
+
+                >>> proj_adj = odl.ComponentProjection(pspace, 0).adjoint
+                >>> proj_adj(x[0])
+                ProductSpace(rn(1), rn(2), rn(3)).element([
+                    [ 1.],
+                    [ 0.,  0.],
+                    [ 0.,  0.,  0.]
+                ])
+
+                Projection on a subspace corresponding to indices 0 and 2:
+
+                >>> proj_adj = odl.ComponentProjection(pspace, [0, 2]).adjoint
+                >>> proj_adj(x[[0, 2]])
+                ProductSpace(rn(1), rn(2), rn(3)).element([
+                    [ 1.],
+                    [ 0.,  0.],
+                    [ 4.,  5.,  6.]
+                ])
+                """
+                super(ComponentProjectionAdjoint, self).__init__(
+                    op.range, op.domain, linear=True)
+
+            @property
+            def index(self):
+                """Index, indices or slice defining the subspace."""
+                return op.index
+
+            def _call(self, x, out=None):
+                """Extend ``x`` to the full space."""
+                if out is None:
+                    out = self.range.zero()
+                else:
+                    out.set_zero()
+
+                out[self.index] = x
+                return out
+
+            def __repr__(self):
+                """Return ``repr(self)``.
+
+                Examples
+                --------
+                >>> pspace = odl.ProductSpace(odl.rn(1), odl.rn(2))
+                >>> odl.ComponentProjection(pspace, 0).adjoint
+                ComponentProjectionAdjoint(ProductSpace(rn(1), rn(2)), 0)
+                """
+                posargs = [self.range, self.index]
+                inner_parts = signature_string_parts(posargs, [])
+                return repr_string(self.__class__.__name__, inner_parts)
+
+        return ComponentProjectionAdjoint()
 
     def __repr__(self):
         """Return ``repr(self)``.
@@ -618,103 +687,6 @@ class ComponentProjection(Operator):
         """
         return '{}({!r}, {})'.format(self.__class__.__name__,
                                      self.domain, self.index)
-
-
-class ComponentProjectionAdjoint(Operator):
-
-    """Adjoint operator to `ComponentProjection`.
-
-    As a special case of the adjoint of a `ProductSpaceOperator`,
-    this operator is given as a column vector of identity operators
-    and zero operators, with the identities placed in the positions
-    defined by `ComponentProjectionAdjoint.index`.
-
-    In weighted product spaces, the adjoint needs to take the
-    weightings into account. This is currently not supported.
-    """
-
-    def __init__(self, space, index):
-        """Initialize a new instance
-
-        Parameters
-        ----------
-        space : `ProductSpace`
-            Space to project to.
-        index : int, slice, or list
-            Indexes to project from.
-
-        Examples
-        --------
-        >>> r1 = odl.rn(1)
-        >>> r2 = odl.rn(2)
-        >>> r3 = odl.rn(3)
-        >>> pspace = odl.ProductSpace(r1, r2, r3)
-        >>> x = pspace.element([[1],
-        ...                     [2, 3],
-        ...                     [4, 5, 6]])
-
-        Projection on the 0-th component:
-
-        >>> proj_adj = odl.ComponentProjectionAdjoint(pspace, 0)
-        >>> proj_adj(x[0])
-        ProductSpace(rn(1), rn(2), rn(3)).element([
-            [ 1.],
-            [ 0.,  0.],
-            [ 0.,  0.,  0.]
-        ])
-
-        Projection on a sub-space corresponding to indices 0 and 2:
-
-        >>> proj_adj = odl.ComponentProjectionAdjoint(pspace, [0, 2])
-        >>> proj_adj(x[[0, 2]])
-        ProductSpace(rn(1), rn(2), rn(3)).element([
-            [ 1.],
-            [ 0.,  0.],
-            [ 4.,  5.,  6.]
-        ])
-        """
-        self.__index = index
-        super(ComponentProjectionAdjoint, self).__init__(
-            space[index], space, linear=True)
-
-    @property
-    def index(self):
-        """Index of the subspace."""
-        return self.__index
-
-    def _call(self, x, out=None):
-        """Extend ``x`` from the subspace."""
-        if out is None:
-            out = self.range.zero()
-        else:
-            out.set_zero()
-
-        out[self.index] = x
-        return out
-
-    @property
-    def adjoint(self):
-        """Adjoint of this operator.
-
-        Returns
-        -------
-        adjoint : `ComponentProjection`
-            The adjoint is given by the `ComponentProjection` related to this
-            operator's `index`.
-        """
-        return ComponentProjection(self.range, self.index)
-
-    def __repr__(self):
-        """Return ``repr(self)``.
-
-        Examples
-        --------
-        >>> pspace = odl.ProductSpace(odl.rn(1), odl.rn(2))
-        >>> odl.ComponentProjectionAdjoint(pspace, 0)
-        ComponentProjectionAdjoint(ProductSpace(rn(1), rn(2)), 0)
-        """
-        return '{}({!r}, {})'.format(self.__class__.__name__,
-                                     self.range, self.index)
 
 
 class BroadcastOperator(Operator):
@@ -849,6 +821,7 @@ class BroadcastOperator(Operator):
                                    self.operators])
 
     @property
+    @auto_adjoint_weighting
     def adjoint(self):
         """Adjoint of this operator.
 
@@ -1033,6 +1006,7 @@ class ReductionOperator(Operator):
                                    for op, xi in zip(self.operators, x)])
 
     @property
+    @auto_adjoint_weighting
     def adjoint(self):
         """Adjoint of this operator.
 
@@ -1203,6 +1177,7 @@ class DiagonalOperator(ProductSpaceOperator):
                                 domain=self.domain, range=self.range)
 
     @property
+    @auto_adjoint_weighting
     def adjoint(self):
         """Adjoint of this operator.
 

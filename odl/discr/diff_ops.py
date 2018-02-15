@@ -6,12 +6,13 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Operators defined for tensor fields."""
+"""Differential operators."""
 
 from __future__ import print_function, division, absolute_import
 import numpy as np
 
 from odl.discr.lp_discr import DiscreteLp
+from odl.operator.oputils import auto_adjoint_weighting
 from odl.operator.tensor_ops import PointwiseTensorFieldOperator
 from odl.space import ProductSpace
 from odl.util import writable_array, signature_string, indent
@@ -164,6 +165,7 @@ class PartialDerivative(PointwiseTensorFieldOperator):
             return self
 
     @property
+    @auto_adjoint_weighting
     def adjoint(self):
         """Return the adjoint operator."""
         if not self.is_linear:
@@ -380,6 +382,7 @@ class Gradient(PointwiseTensorFieldOperator):
             return self
 
     @property
+    @auto_adjoint_weighting
     def adjoint(self):
         """Adjoint of this operator.
 
@@ -594,6 +597,7 @@ class Divergence(PointwiseTensorFieldOperator):
             return self
 
     @property
+    @auto_adjoint_weighting
     def adjoint(self):
         """Adjoint of this operator.
 
@@ -644,6 +648,9 @@ class Laplacian(PointwiseTensorFieldOperator):
         ----------
         domain : `DiscreteLp`
             Space of elements which the operator is acting on.
+        range : `DiscreteLp`, optional
+            Space of elements to which the operator maps.
+            Default: ``domain``
         pad_mode : string, optional
             The padding mode to use outside the domain.
 
@@ -692,9 +699,6 @@ class Laplacian(PointwiseTensorFieldOperator):
         if range is None:
             range = domain
 
-        super(Laplacian, self).__init__(
-            domain, range, base_space=domain, linear=True)
-
         self.pad_mode, pad_mode_in = str(pad_mode).lower(), pad_mode
         if pad_mode not in _SUPPORTED_PAD_MODES:
             raise ValueError('`pad_mode` {} not understood'
@@ -704,6 +708,10 @@ class Laplacian(PointwiseTensorFieldOperator):
             # TODO: Add these pad modes
             raise ValueError('`pad_mode` {} not implemented for Laplacian.'
                              ''.format(pad_mode_in))
+
+        linear = not (self.pad_mode == 'constant' and pad_const != 0)
+        super(Laplacian, self).__init__(
+            domain, range, base_space=domain, linear=linear)
 
         self.pad_const = self.domain.field.element(pad_const)
 
@@ -760,11 +768,16 @@ class Laplacian(PointwiseTensorFieldOperator):
             return self
 
     @property
+    @auto_adjoint_weighting
     def adjoint(self):
         """Return the adjoint operator.
 
         The laplacian is self-adjoint, so this returns ``self``.
         """
+        if not self.is_linear:
+            raise ValueError('operator with nonzero pad_const ({}) is not'
+                             ' linear and has no adjoint'
+                             ''.format(self.pad_const))
         return Laplacian(self.range, self.domain,
                          pad_mode=self.pad_mode, pad_const=0)
 

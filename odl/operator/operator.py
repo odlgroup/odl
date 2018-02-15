@@ -14,6 +14,7 @@ import inspect
 from numbers import Number, Integral
 import sys
 
+from odl.operator.oputils import auto_adjoint_weighting
 from odl.set import LinearSpace, Set, Field
 from odl.set.space import LinearSpaceElement
 from odl.util import cache_arguments
@@ -576,9 +577,8 @@ class Operator(object):
         OpNotImplementedError
             Since the adjoint cannot be default implemented.
         """
-        raise OpNotImplementedError('adjoint not implemented '
-                                    'for operator {!r}'
-                                    ''.format(self))
+        raise OpNotImplementedError(
+            'adjoint not implemented for operator {!r}'.format(self))
 
     def derivative(self, point):
         """Return the operator derivative at ``point``.
@@ -592,9 +592,8 @@ class Operator(object):
         if self.is_linear:
             return self
         else:
-            raise OpNotImplementedError('derivative not implemented '
-                                        'for operator {!r}'
-                                        ''.format(self))
+            raise OpNotImplementedError(
+                'derivative not implemented for operator {!r}'.format(self))
 
     @property
     def inverse(self):
@@ -605,8 +604,8 @@ class Operator(object):
         OpNotImplementedError
             Since the inverse cannot be default implemented.
         """
-        raise OpNotImplementedError('inverse not implemented for operator {!r}'
-                                    ''.format(self))
+        raise OpNotImplementedError(
+            'inverse not implemented for operator {!r}'.format(self))
 
     def __call__(self, x, out=None, **kwargs):
         """Return ``self(x[, out, **kwargs])``.
@@ -735,9 +734,10 @@ class Operator(object):
         >>> opnorm = grad.norm(estimate=True)
         """
         if not estimate:
-            raise NotImplementedError('`Operator.norm()` not implemented, use '
-                                      '`Operator.norm(estimate=True)` to '
-                                      'obtain an estimate.')
+            raise OpNotImplementedError(
+                '`norm` not implemented for operator {!r}, use '
+                '`Operator.norm(estimate=True)` to obtain an estimate.'
+                ''.format(self))
         else:
             from odl.operator.oputils import power_method_opnorm
             return power_method_opnorm(self, **kwargs)
@@ -1055,7 +1055,7 @@ class Operator(object):
         """
         return self.__class__.__name__
 
-    # Give a `Operator` a higher priority than any NumPy array type. This
+    # Give an `Operator` a higher priority than any NumPy array type. This
     # forces the usage of `__op__` of `Operator` if the other operand
     # is a NumPy object (applies also to scalars!).
     # Set higher than LinearSpaceElement.__array_priority__ to handle
@@ -1173,6 +1173,7 @@ class OperatorSum(Operator):
                                self.__tmp_dom, self.__tmp_ran)
 
     @property
+    @auto_adjoint_weighting
     def adjoint(self):
         """Adjoint of this operator.
 
@@ -1405,6 +1406,7 @@ class OperatorComp(Operator):
                                 self.__tmp)
 
     @property
+    @auto_adjoint_weighting
     def adjoint(self):
         """Adjoint of this operator.
 
@@ -1451,11 +1453,9 @@ class OperatorPointwiseProduct(Operator):
 
         Parameters
         ----------
-        left : `Operator`
-            The first factor
-        right : `Operator`
-            The second factor. Must have the same domain and range as
-            ``left``.
+        left, right : `Operator`
+            Factors in the pointwise product. They must have the same domain
+            and range.
         """
         if left.range != right.range:
             raise OpTypeError('operator ranges {!r} and {!r} do not match'
@@ -1638,6 +1638,7 @@ class OperatorLeftScalarMult(Operator):
             return self.scalar * self.operator.derivative(x)
 
     @property
+    @auto_adjoint_weighting
     def adjoint(self):
         """Adjoint of this operator.
 
@@ -1810,15 +1811,16 @@ class OperatorRightScalarMult(Operator):
         Examples
         --------
         >>> space = odl.rn(3)
-        >>> operator = odl.IdentityOperator(space) - space.element([1, 1, 1])
-        >>> left_mul_op = OperatorRightScalarMult(operator, 3)
-        >>> derivative = left_mul_op.derivative([0, 0, 0])
+        >>> op = odl.IdentityOperator(space) - space.element([1, 1, 1])
+        >>> right_mul_op = odl.OperatorRightScalarMult(op, 3)
+        >>> derivative = right_mul_op.derivative([0, 0, 0])
         >>> derivative([1, 1, 1])
         rn(3).element([ 3.,  3.,  3.])
         """
         return self.scalar * self.operator.derivative(self.scalar * x)
 
     @property
+    @auto_adjoint_weighting
     def adjoint(self):
         """Adjoint of this operator.
 
@@ -1942,6 +1944,7 @@ class FunctionalLeftVectorMult(Operator):
                                             self.vector)
 
     @property
+    @auto_adjoint_weighting
     def adjoint(self):
         """Adjoint of this operator.
 
@@ -2048,6 +2051,7 @@ class OperatorLeftVectorMult(Operator):
             return self.vector * self.operator.derivative(x)
 
     @property
+    @auto_adjoint_weighting
     def adjoint(self):
         """Adjoint of this operator.
 
@@ -2168,6 +2172,7 @@ class OperatorRightVectorMult(Operator):
             return self.operator.derivative(x) * self.vector
 
     @property
+    @auto_adjoint_weighting
     def adjoint(self):
         """Adjoint of this operator.
 

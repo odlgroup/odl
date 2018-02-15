@@ -13,6 +13,7 @@ from copy import copy
 import numpy as np
 
 from odl.operator.operator import Operator
+from odl.operator.oputils import auto_adjoint_weighting
 from odl.set import LinearSpace, Field, RealNumbers
 from odl.set.space import LinearSpaceElement
 from odl.space import ProductSpace
@@ -84,12 +85,12 @@ class ScalingOperator(Operator):
         Examples
         --------
         >>> r3 = odl.rn(3)
-        >>> vec = r3.element([1, 2, 3])
+        >>> x = r3.element([1, 2, 3])
         >>> op = ScalingOperator(r3, 2.0)
         >>> inv = op.inverse
-        >>> inv(op(vec)) == vec
+        >>> inv(op(x)) == x
         True
-        >>> op(inv(vec)) == vec
+        >>> op(inv(x)) == x
         True
         """
         if self.scalar == 0.0:
@@ -98,6 +99,7 @@ class ScalingOperator(Operator):
         return ScalingOperator(self.domain, 1.0 / self.scalar)
 
     @property
+    @auto_adjoint_weighting
     def adjoint(self):
         """Adjoint, given as scaling with the conjugate of the scalar.
 
@@ -107,7 +109,7 @@ class ScalingOperator(Operator):
             ``self`` if `scalar` is real, else `scalar` is conjugated.
         """
         if complex(self.scalar).imag == 0.0:
-            return self
+            return ScalingOperator(self.range, self.scalar)
         else:
             return ScalingOperator(self.domain, self.scalar.conjugate())
 
@@ -161,6 +163,12 @@ class IdentityOperator(ScalingOperator):
             Space of elements which the operator is acting on.
         """
         super(IdentityOperator, self).__init__(space, 1)
+
+    @property
+    @auto_adjoint_weighting
+    def adjoint(self):
+        """Adjoint of the identity operator."""
+        return IdentityOperator(self.domain)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -305,6 +313,7 @@ class MultiplyOperator(Operator):
             raise ValueError('can only use `out` with `LinearSpace` range')
 
     @property
+    @auto_adjoint_weighting
     def adjoint(self):
         """Adjoint of this operator.
 
@@ -502,6 +511,7 @@ class InnerProductOperator(Operator):
         return x.inner(self.vector)
 
     @property
+    @auto_adjoint_weighting
     def adjoint(self):
         """Adjoint of this operator.
 
@@ -804,13 +814,6 @@ class ConstantOperator(Operator):
         else:
             out.assign(self.constant)
 
-    @property
-    def adjoint(self):
-        """Adjoint of the operator.
-
-        Only defined if the operator is the constant operator.
-        """
-
     def derivative(self, point):
         """Derivative of this operator, always zero.
 
@@ -984,6 +987,7 @@ class RealPart(Operator):
             return ComplexEmbedding(self.domain, scalar=1)
 
     @property
+    @auto_adjoint_weighting
     def adjoint(self):
         """Return the (left) adjoint.
 
@@ -1023,7 +1027,7 @@ class RealPart(Operator):
         True
         """
         if self.is_linear:
-            return self
+            return RealPart(self.space)
         else:
             return ComplexEmbedding(self.domain, scalar=1)
 
@@ -1097,6 +1101,7 @@ class ImagPart(Operator):
             return ComplexEmbedding(self.domain, scalar=1j)
 
     @property
+    @auto_adjoint_weighting
     def adjoint(self):
         """Return the (left) adjoint.
 
@@ -1231,6 +1236,7 @@ class ComplexEmbedding(Operator):
             return ComplexEmbedding(self.range, self.scalar.conjugate())
 
     @property
+    @auto_adjoint_weighting
     def adjoint(self):
         """Return the (right) adjoint.
 
