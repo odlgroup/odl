@@ -378,9 +378,11 @@ class ProductSpaceOperator(Operator):
 
         deriv_ops = [op.derivative(x[col]) for op, col in zip(self.ops.data,
                                                               self.ops.col)]
+        data = np.empty(len(deriv_ops), dtype=object)
+        data[:] = deriv_ops
         indices = [self.ops.row, self.ops.col]
         shape = self.ops.shape
-        deriv_matrix = scipy.sparse.coo_matrix((deriv_ops, indices), shape)
+        deriv_matrix = scipy.sparse.coo_matrix((data, indices), shape)
         return ProductSpaceOperator(deriv_matrix, self.domain, self.range)
 
     @property
@@ -425,9 +427,11 @@ class ProductSpaceOperator(Operator):
         import scipy.sparse
 
         adjoint_ops = [op.adjoint for op in self.ops.data]
+        data = np.empty(len(adjoint_ops), dtype=object)
+        data[:] = adjoint_ops
         indices = [self.ops.col, self.ops.row]  # Swap col/row -> transpose
         shape = (self.ops.shape[1], self.ops.shape[0])
-        adj_matrix = scipy.sparse.coo_matrix((adjoint_ops, indices), shape)
+        adj_matrix = scipy.sparse.coo_matrix((data, indices), shape)
         return ProductSpaceOperator(adj_matrix, self.range, self.domain)
 
     def __getitem__(self, index):
