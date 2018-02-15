@@ -154,7 +154,7 @@ def mean_absolute_error(data, ground_truth, mask=None,
 
 
 def mean_value_difference(data, ground_truth, mask=None, normalized=False,
-                          force_lower_is_better=False):
+                          force_lower_is_better=True):
     """Return difference in mean value between ``data`` and ``ground_truth``.
 
     Parameters
@@ -167,6 +167,11 @@ def mean_value_difference(data, ground_truth, mask=None, normalized=False,
         If given, ``data * mask`` is compared to ``ground_truth * mask``.
     normalized  : bool, optional
         Boolean flag to switch between unormalized and normalized FOM.
+    force_lower_is_better : bool, optional
+        If ``True``, it is ensured that lower values correspond to better
+        matches. For the mean value difference, this is already the case, and
+        the flag is only present for compatibility to other figures of merit.
+
 
     Returns
     -------
@@ -216,7 +221,7 @@ def mean_value_difference(data, ground_truth, mask=None, normalized=False,
 
 
 def standard_deviation_difference(data, ground_truth, mask=None,
-                                  normalized=False, force_lower_is_better=False):
+                                  normalized=False, force_lower_is_better=True):
     """Return absolute difference in std between ``data`` and ``ground_truth``.
 
     Parameters
@@ -229,6 +234,11 @@ def standard_deviation_difference(data, ground_truth, mask=None,
         If given, ``data * mask`` is compared to ``ground_truth * mask``.
     normalized  : bool, optional
         Boolean flag to switch between unormalized and normalized FOM.
+    force_lower_is_better : bool, optional
+        If ``True``, it is ensured that lower values correspond to better
+        matches. For the standard deviation difference, this is already the case, and
+        the flag is only present for compatibility to other figures of merit.
+
 
     Returns
     -------
@@ -287,7 +297,7 @@ def standard_deviation_difference(data, ground_truth, mask=None,
     return fom
 
 
-def range_difference(data, ground_truth, mask=None, normalized=False):
+def range_difference(data, ground_truth, mask=None, normalized=False, force_lower_is_better=True):
     """Return dynamic range difference between ``data`` and ``ground_truth``.
 
     Evaluates difference in range between input (``data``) and reference
@@ -305,6 +315,10 @@ def range_difference(data, ground_truth, mask=None, normalized=False):
         is performed.
     normalized  : bool, optional
         If ``True``, normalize the FOM to lie in [0, 1].
+    force_lower_is_better : bool, optional
+        If ``True``, it is ensured that lower values correspond to better
+        matches. For the range difference, this is already the case, and
+        the flag is only present for compatibility to other figures of merit.
 
     Returns
     -------
