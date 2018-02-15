@@ -203,9 +203,9 @@ def test_mean_value_difference_range_value(space):
 
 
     assert odl.contrib.fom.mean_value_difference(I0, I1) <= max(max0 - min1,
-                                                max1 - min0)
+                                                            max1 - min0)
     assert pytest.approx(odl.contrib.fom.mean_value_difference(I0, I0)) == 0
-    assert odl.contrib.fom.mean_value_difference(10*I0, I0,
+    assert odl.contrib.fom.mean_value_difference(10 * I0, I0,
                                                  normalized=True) <= 1.0
 
 
@@ -214,27 +214,26 @@ def test_standard_deviation_difference_range_value(space):
     const = np.random.normal(0, 10)
 
     assert pytest.approx(odl.contrib.fom.standard_deviation_difference(
-            I0, I0)) == 0
+                                                                I0, I0)) == 0
     assert odl.contrib.fom.standard_deviation_difference(10*I0, I0,
-            normalized=True) <= 1.0
+                                                       normalized=True) <= 1.0
     assert pytest.approx(odl.contrib.fom.standard_deviation_difference(
-            I0, I0 + const)) == 0
+                                                    I0, I0 + const)) == 0
     test_value = odl.contrib.fom.standard_deviation_difference(
-            space.one(), space.zero(), normalized=True)
+                                    space.one(), space.zero(), normalized=True)
     assert pytest.approx(test_value) == 0
+
 
 def test_range_difference(space):
     I0 = space.element(np.random.normal(0, 1, size=space.shape))
     I1 = space.element(np.random.normal(0, 1, size=space.shape))
     const = np.random.normal(0, 10)
 
-    assert pytest.approx(odl.contrib.fom.range_difference(
-            I0, I0)) == 0
-    assert pytest.approx(odl.contrib.fom.range_difference(
-            I0 + const, I0)) == 0
-    aconst=np.abs(const)
-    eval0=aconst * odl.contrib.fom.range_difference(I0, I1)
-    eval1=odl.contrib.fom.range_difference(aconst*I0, aconst*I1)
+    assert pytest.approx(odl.contrib.fom.range_difference(I0, I0)) == 0
+    assert pytest.approx(odl.contrib.fom.range_difference(I0 + const, I0)) == 0
+    aconst = np.abs(const)
+    eval0 = aconst * odl.contrib.fom.range_difference(I0, I1)
+    eval1 = odl.contrib.fom.range_difference(aconst * I0, aconst * I1)
     assert pytest.approx(eval0) == pytest.approx(eval1)
 
 

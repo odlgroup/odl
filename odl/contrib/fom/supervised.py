@@ -223,7 +223,7 @@ def mean_value_difference(data, ground_truth, mask=None, normalized=False,
 
 
 def standard_deviation_difference(data, ground_truth, mask=None,
-                                  normalized=False, force_lower_is_better=True):
+                                normalized=False, force_lower_is_better=True):
     """Return absolute difference in std between ``data`` and ``ground_truth``.
 
     Parameters
@@ -238,8 +238,9 @@ def standard_deviation_difference(data, ground_truth, mask=None,
         Boolean flag to switch between unormalized and normalized FOM.
     force_lower_is_better : bool, optional
         If ``True``, it is ensured that lower values correspond to better
-        matches. For the standard deviation difference, this is already the case, and
-        the flag is only present for compatibility to other figures of merit.
+        matches. For the standard deviation difference, this is already the 
+        case, and the flag is only present for compatibility to other figures
+        of merit.
 
 
     Returns
@@ -290,16 +291,15 @@ def standard_deviation_difference(data, ground_truth, mask=None,
 
     if normalized:
         sum_deviation = deviation_data + deviation_ground_truth
-        fom /=  sum_deviation
+        fom /= sum_deviation
         if np.isnan(fom):
             fom = 0
-
-
 
     return fom
 
 
-def range_difference(data, ground_truth, mask=None, normalized=False, force_lower_is_better=True):
+def range_difference(data, ground_truth, mask=None, normalized=False,
+                                                 force_lower_is_better=True):
     """Return dynamic range difference between ``data`` and ``ground_truth``.
 
     Evaluates difference in range between input (``data``) and reference
@@ -483,7 +483,7 @@ def false_structures_mask(foreground, smoothness_factor=None):
     unique = np.unique(foreground)
     if not np.array_equiv(unique, [0., 1.]):
         raise ValueError('`foreground` is not a binary mask or has '
-                          'no true values {!r}'.format(unique))
+                                          'no true values {!r}'.format(unique))
 
     result = distance_transform_edt(1.0 - foreground,
                                     sampling=space.cell_sides)
@@ -609,11 +609,11 @@ def psnr(data, ground_truth, use_zscore=False, force_lower_is_better=False):
     ground_truth : `Tensor`
         Reference to compare ``data`` to.
     use_zscore : bool
-        If ``true``, normalize ``data`` and ``ground_truth`` to have zero mean and
-        unit variance before comparison.
+        If ``true``, normalize ``data`` and ``ground_truth`` to have zero mean 
+        and unit variance before comparison.
     force_lower_is_better : bool
-        If ``true``, then lower value indicates better fit. In this case the output
-        is negated
+        If ``true``, then lower value indicates better fit. In this case the 
+        output is negated
 
     Returns
     -------
