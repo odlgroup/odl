@@ -386,75 +386,13 @@ class ProductSpace(LinearSpace):
 
     @property
     def real_space(self):
-        """Variant of this space with real dtype.
-
-        Raises
-        ------
-        ValueError
-            Raised if the underlying spaces have different `dtype`, if `dtype`
-            is not a numeric data type, if `dtype` is not a real or complex
-            type, and if `dtype` is complex but cannot be mapped to a real
-            type.
-        """
-        try:
-            current_dtype = self.dtype
-        except(AttributeError):
-            raise ValueError(
-                'dtypes of underlying spaces are not the same and therefore '
-                '`real_space` is not well-defined')
-
-        if not is_numeric_dtype(current_dtype):
-            raise ValueError(
-                '`real_space` not defined for non-numeric `dtype`')
-
-        if is_real_dtype(current_dtype):
-            return self
-        elif is_complex_floating_dtype(current_dtype):
-            new_dtype = TYPE_MAP_C2R.get(current_dtype, 'None')
-            if new_dtype is None:
-                raise ValueError('complex type `self.dtype` {} not possible '
-                                 'to map to a real type'.format(self.dtype))
-            return self.astype(new_dtype)
-        else:
-            raise ValueError(
-                '`real_space` is only defined for space with real or complex '
-                '`dtype`, got {}'.format(current_dtype))
+        """Variant of this space with real dtype."""
+        return ProductSpace(*[space.real_space for space in self.spaces])
 
     @property
     def complex_space(self):
-        """The space corresponding to this space's complex dtype.
-
-        Raises
-        ------
-        ValueError
-            Raised if the underlying spaces have different `dtype`, if `dtype`
-            is not a numeric data type, if `dtype` is not a real or complex
-            type, and if `dtype` is real but cannot be mapped to a complex
-            type.
-        """
-        try:
-            current_dtype = self.dtype
-        except(AttributeError):
-            raise ValueError(
-                'dtypes of underlying spaces are not the same and therefore '
-                '`complex_space` is not well-defined')
-
-        if not is_numeric_dtype(current_dtype):
-            raise ValueError(
-                '`complex_space` not defined for non-numeric `dtype`')
-
-        if is_real_dtype(current_dtype):
-            new_dtype = TYPE_MAP_R2C.get(self.dtype, 'None')
-            if new_dtype is None:
-                raise ValueError('real type `self.dtype` {} not possible to '
-                                 'map to a complex type'.format(self.dtype))
-            return self.astype(new_dtype)
-        elif is_complex_floating_dtype(current_dtype):
-            return self
-        else:
-            raise ValueError(
-                '`complex_space` is only defined for space with real or '
-                'complex `dtype`, got {}'.format(current_dtype))
+        """The space corresponding to this space's complex dtype."""
+        return ProductSpace(*[space.complex_space for space in self.spaces])
 
     def astype(self, dtype):
         """Return a copy of this space with new ``dtype``.
