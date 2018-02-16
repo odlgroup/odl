@@ -42,7 +42,7 @@ def space(request):
 
 
 @pytest.fixture(scope="module", ids=elem_ids, params=elem_params)
-def newreal(request, space):
+def newpart(request, space):
     element_form = request.param.strip()
 
     if element_form == 'space':
@@ -985,27 +985,51 @@ def test_real_imag_and_conj():
     assert x_conj[1] == expected_result[1]
 
 
-def test_real_setter_product_space(space, newreal):
+def test_real_setter_product_space(space, newpart):
     """Verify that the setter for the real part of an element works."""
     x = noise_element(space)
-    print(x)
-    x.real = newreal
+    x.real = newpart
 
     try:
         # Catch the scalar
-        iter(newreal)
+        iter(newpart)
     except TypeError:
-        expected_result = newreal * space.one()
+        expected_result = newpart * space.one()
     else:
-        if newreal in space:
-            expected_result = newreal.real
-        elif np.shape(newreal) == (3,):
-            expected_result = [newreal, newreal]
+        if newpart in space:
+            expected_result = newpart.real
+        elif np.shape(newpart) == (3,):
+            expected_result = [newpart, newpart]
         else:
-            expected_result = newreal
+            expected_result = newpart
 
     assert x in space
     assert all_equal(x.real, expected_result)
+
+
+def test_imag_setter_product_space(space, newpart):
+    """Verify that the setter for the imaginary part of an element works."""
+    x = noise_element(space)
+    x.imag = newpart
+
+    try:
+        # Catch the scalar
+        iter(newpart)
+    except TypeError:
+        expected_result = newpart * space.one()
+    else:
+        if newpart in space:
+            # The imaginary part is by definition real, and thus the new
+            # imaginary part is thus the real part of the element we try to set
+            # the value to
+            expected_result = newpart.real
+        elif np.shape(newpart) == (3,):
+            expected_result = [newpart, newpart]
+        else:
+            expected_result = newpart
+
+    assert x in space
+    assert all_equal(x.imag, expected_result)
 
 
 if __name__ == '__main__':

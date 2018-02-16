@@ -1192,7 +1192,9 @@ class ProductSpaceElement(LinearSpaceElement):
             for part, new_re in zip(self.parts, newreal):
                 part.real = new_re
         else:
-            raise ValueError('invalid')  # better error
+            raise ValueError(
+                'dimensions of the new real part does not match the space, '
+                'got element {} to set real part of {}'.format(newreal, self))
 
     @property
     def imag(self):
@@ -1210,6 +1212,63 @@ class ProductSpaceElement(LinearSpaceElement):
         """
         imag_part = [part.imag for part in self.parts]
         return self.space.real_space.element(imag_part)
+
+    @imag.setter
+    def imag(self, newimag):
+        """Setter for the imaginary part.
+
+        This method is invoked by ``x.imag = other``.
+
+        Parameters
+        ----------
+        newimag : array-like or scalar
+            Values to be assigned to the imaginary part of this element.
+
+        Examples
+        --------
+        >>> space = odl.ProductSpace(odl.cn(3), odl.cn(2))
+        >>> x = space.element([[1 + 1j, 2, 3 - 3j], [1 + 1j, 2]])
+        >>> zero = space.real_space.zero()
+        >>> x.imag = zero
+        >>> x
+        space.element([[1, 2, 3], [1, 2]])
+
+        Other array-like types:
+
+        >>> x.imag = 1.0
+        >>> x
+        space.element([[1 + 1j, 2 + 1j, 3 + 1j], [1 + 1j, 2 + 1j]])
+        >>> x.imag = [[2, 3, 4], [5, 6]]
+        >>> x
+        space.element([[1 + 2j, 2 + 3j, 3 + 4j], [1 + 5j, 2 + 6j]])
+        """
+        try:
+            iter(newimag)
+        except TypeError:
+            # `newimag` is not iterable, assume it can be assigned to
+            # all indexed parts
+            for part in self.parts:
+                part.imag = newimag
+            return
+
+        if self.space.is_power_space:
+            try:
+                # Set same value in all parts
+                for part in self.parts:
+                    part.imag = newimag
+            except (ValueError, TypeError):
+                # Iterate over all parts and set them separately
+                for part, new_im in zip(self.parts, newimag):
+                    part.imag = new_im
+                pass
+        elif len(newimag) == len(self):
+            for part, new_im in zip(self.parts, newimag):
+                part.imag = new_im
+        else:
+            raise ValueError(
+                'dimensions of the new imaginary part does not match the '
+                'space, got element {} to set real part of {}}'
+                ''.format(newimag, self))
 
     def conj(self):
         """Complex conjugate of the element."""
