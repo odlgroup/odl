@@ -54,10 +54,12 @@ def douglas_rachford_pd(x, f, g, L, niter, tau=None, sigma=None,
         Number of iterations.
     tau : float, optional
         Step size parameter for ``f``.
-        Default: Sufficient for convergence, see Notes.
+        Default: Sufficient for convergence, see
+        `douglas_rachford_pd_stepsize`.
     sigma : sequence of floats, optional
         Step size parameters for the ``g_i``'s.
-        Default: Sufficient for convergence, see Notes.
+        Default: Sufficient for convergence, see
+        `douglas_rachford_pd_stepsize`.
     callback : callable, optional
         Function called with the current iterate after each iteration.
 
@@ -101,15 +103,6 @@ def douglas_rachford_pd(x, f, g, L, niter, tau=None, sigma=None,
     .. math::
        \tau \sum_{i=1}^n \sigma_i \|L_i\|^2 < 4
 
-    An example of such a choice is
-
-    .. math::
-        \tau = \frac{1}{\sum_{i=1}^n \|L_i\|},
-        \quad
-        \sigma = \frac{2}{n \tau \|L_i\|^2}
-
-    which are the defaults for this implementation.
-
     The parameter :math:`\lambda` needs to satisfy :math:`0 < \lambda < 2`
     and if it is given as a function it needs to satisfy
 
@@ -142,15 +135,9 @@ def douglas_rachford_pd(x, f, g, L, niter, tau=None, sigma=None,
     if len(g) != m:
         raise ValueError('len(prox_cc_g) != len(L)')
 
-    if tau is None or sigma is None:
-        tau_default, sigma_default = douglas_rachford_pd_stepsize(L, tau)
+    tau, sigma = douglas_rachford_pd_stepsize(L, tau, sigma)
 
-    if tau is None:
-        tau = tau_default
-
-    if sigma is None:
-        sigma = sigma_default
-    elif len(sigma) != m:
+    if len(sigma) != m:
         raise ValueError('len(sigma) != len(L)')
 
     prox_cc_g = [gi.convex_conj.proximal for gi in g]
@@ -246,8 +233,8 @@ def douglas_rachford_pd(x, f, g, L, niter, tau=None, sigma=None,
     x.assign(p1)
 
 
-def douglas_rachford_pd_stepsize(L, tau=None):
-    r"""Compute defautl step sizes for the Douglas-Rachford solver.
+def _operator_norms(L):
+    """Get operator norms if needed.
 
     Parameters
     ----------
@@ -255,9 +242,31 @@ def douglas_rachford_pd_stepsize(L, tau=None):
         The operators or the norms of the operators that are used in the
         `douglas_rachford_pd` method. For `Operator` entries, the norm
         is computed with `power_method_opnorm`.
+    """
+    L_norms = []
+    for Li in L:
+        if np.isscalar(Li):
+            L_norms.append(float(Li))
+        elif isinstance(Li, Operator):
+            L_norms.append(Li.norm(estimate=True))
+        else:
+            raise TypeError('invalid entry {!r} in `L`'.format(Li))
+    return L_norms
+
+def douglas_rachford_pd_stepsize(L, tau=None, sigma=None):
+    r"""Default step sizes for `douglas_rachford_pd`.
+
+    Parameters
+    ----------
+    L : sequence of `Operator` or float
+        The operators or the norms of the operators that are used in the
+        `douglas_rachford_pd` method. For `Operator` entries, the norm
+        is computed with `Operator.norm(estimate=True)`.
     tau : positive float, optional
         Use this value for ``tau`` instead of computing it from the
         operator norms, see Notes.
+    sigma : tuple of float, optional
+        The ``sigma`` step size parameters for the dual update.
 
     Returns
     -------
@@ -274,31 +283,47 @@ def douglas_rachford_pd_stepsize(L, tau=None):
     .. math::
        \tau \sum_{i=1}^n \sigma_i \|L_i\|^2 < 4.
 
-    An example of such a choice is
+    This function has 4 options, :math:`\tau`/:math:`\sigma` given or not
+    given.
+
+    If :math:`\tau` nor :math:`\sigma` is given, they are chosen as:
 
     .. math::
         \tau = \frac{1}{\sum_{i=1}^n \|L_i\|},
         \quad
-        \sigma = \frac{2}{n \tau \|L_i\|^2}
+        \sigma_i = \frac{2}{n \tau \|L_i\|}
 
-    which are the defaults for this implementation.
+    If :math:`\sigma` is given but not :math:`\tau`, :math:`\tau` is set to:
+
+    .. math::
+        \tau = \frac{2}{\sum_{i=1}^n \sigma_i \|L_i\|^2}
+
+    If :math:`\tau` is given but not :math:`\sigma`, :math:`\sigma` is set to:
+
+    .. math::
+        \sigma_i = \frac{2}{n \tau \|L_i\|}
     """
-    L_norms = []
-    for Li in L:
-        if np.isscalar(Li):
-            L_norms.append(float(Li))
-        elif isinstance(Li, Operator):
-            L_norms.append(Li.norm(estimate=True))
-        else:
-            raise TypeError('invalid entry {!r} in `L`'.format(Li))
+    if tau is None and sigma is None:
+        L_norms = _operator_norms(L)
 
-    if tau is None:
-        norm_sum = sum(L_norms)
-        tau = 1 / norm_sum if norm_sum != 0 else 1.0
-    else:
+        tau = 1 / sum(L_norms)
+        sigma = [2.0 / (len(L_norms) * tau * Li_norm ** 2)
+                 for Li_norm in L_norms]
+
+        return tau, tuple(sigma)
+    elif tau is None:
+        L_norms = _operator_norms(L)
+
+        tau = 2 / sum(si * Li_norm ** 2
+                      for si, Li_norm in zip(sigma, L_norms))
+        return tau, tuple(sigma)
+    elif sigma is None:
+        L_norms = _operator_norms(L)
+
         tau = float(tau)
+        sigma = [2.0 / (len(L_norms) * tau * Li_norm ** 2)
+                 for Li_norm in L_norms]
 
-    sigma = [2.0 / (len(L_norms) * tau * Li_norm ** 2) if Li_norm != 0 else 1.0
-             for Li_norm in L_norms]
-
-    return tau, tuple(sigma)
+        return tau, tuple(sigma)
+    else:
+        return float(tau), tuple(sigma)
