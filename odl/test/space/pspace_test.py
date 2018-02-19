@@ -23,7 +23,7 @@ space_ids = [' space={} '.format(p) for p in space_params]
 
 elem_params = ['space', 'real_space', 'numpy_array', 'array', 'scalar',
                '1d_array']
-elem_ids = [' form of element={} '.format(p) for p in elem_params]
+elem_ids = [' element={} '.format(p) for p in elem_params]
 
 
 @pytest.fixture(scope="module", ids=space_ids, params=space_params)
@@ -62,7 +62,7 @@ def newpart(request, space):
         newreal = np.random.randn()
     elif element_form == '1d_array':
         if not space.is_power_space:
-            pytest.skip('arrays mathcing only one dimension can only be used '
+            pytest.skip('arrays matching only one dimension can only be used '
                         'for power spaces')
         newreal = [0, 1, 2]
     else:

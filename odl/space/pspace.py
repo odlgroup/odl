@@ -18,11 +18,8 @@ from odl.set.space import LinearSpaceElement
 from odl.space.weighting import (
     Weighting, ArrayWeighting, ConstWeighting,
     CustomInner, CustomNorm, CustomDist)
-from odl.util import (
-    is_real_dtype, signature_string, indent, is_numeric_dtype,
-    is_complex_floating_dtype)
+from odl.util import is_real_dtype, signature_string, indent
 from odl.util.ufuncs import ProductSpaceUfuncs
-from odl.util.utility import TYPE_MAP_R2C, TYPE_MAP_C2R
 
 
 __all__ = ('ProductSpace',)
@@ -391,7 +388,7 @@ class ProductSpace(LinearSpace):
 
     @property
     def complex_space(self):
-        """The space corresponding to this space's complex dtype."""
+        """Variant of this space with complex dtype."""
         return ProductSpace(*[space.complex_space for space in self.spaces])
 
     def astype(self, dtype):
@@ -415,7 +412,7 @@ class ProductSpace(LinearSpace):
             raise ValueError('`None` is not a valid data type')
 
         dtype = np.dtype(dtype)
-        current_dtype = getattr(self, 'dtype', None)
+        current_dtype = getattr(self, 'dtype', object)
 
         if dtype == current_dtype:
             return self
@@ -1051,7 +1048,7 @@ class ProductSpaceElement(LinearSpaceElement):
     def __array_wrap__(self, array):
         """Return a new product space element wrapping the ``array``.
 
-        Only available if `is_power_space` is True.
+        Only available if `is_power_space` is ``True``.
 
         Parameters
         ----------
@@ -1127,15 +1124,42 @@ class ProductSpaceElement(LinearSpaceElement):
     def real(self):
         """Real part of the element.
 
+        The real part can also be set using ``x.real = other``, where ``other``
+        is array-like or scalar.
+
         Examples
         --------
         >>> space = odl.ProductSpace(odl.cn(3), odl.cn(2))
-        >>> x = space.element([[1 + 1j, 2, 3 - 3j], [-1+2j, -2-3j]])
-        >>> x_real = x.real
-        >>> real_space = odl.ProductSpace(odl.rn(3), odl.rn(2))
-        >>> expected_result = real_space.element([[1, 2, 3], [-1, -2]])
-        >>> x_real == expected_result
-        True
+        >>> x = space.element([[1 + 1j, 2, 3 - 3j],
+        ...                    [-1 + 2j, -2 - 3j]])
+        >>> x.real
+        ProductSpace(rn(3), rn(2)).element([
+            [ 1.,  2.,  3.],
+            [-1., -2.]
+        ])
+
+        The real part can also be set using different array-like types:
+
+        >>> x.real = space.real_space.zero()
+        >>> x
+        ProductSpace(cn(3), cn(2)).element([
+            [ 0.+1.j,  0.+0.j,  0.-3.j],
+            [ 0.+2.j,  0.-3.j]
+        ])
+
+        >>> x.real = 1.0
+        >>> x
+        ProductSpace(cn(3), cn(2)).element([
+            [ 1.+1.j,  1.+0.j,  1.-3.j],
+            [ 1.+2.j,  1.-3.j]
+        ])
+
+        >>> x.real = [[2, 3, 4], [5, 6]]
+        >>> x
+        ProductSpace(cn(3), cn(2)).element([
+            [ 2.+1.j,  3.+0.j,  4.-3.j],
+            [ 5.+2.j,  6.-3.j]
+        ])
         """
         real_part = [part.real for part in self.parts]
         return self.space.real_space.element(real_part)
@@ -1150,24 +1174,6 @@ class ProductSpaceElement(LinearSpaceElement):
         ----------
         newreal : array-like or scalar
             Values to be assigned to the real part of this element.
-
-        Examples
-        --------
-        >>> space = odl.ProductSpace(odl.cn(3), odl.cn(2))
-        >>> x = space.element([[1 + 1j, 2, 3 - 3j], [1 + 1j, 2]])
-        >>> zero = space.real_space.zero()
-        >>> x.real = zero
-        >>> x
-        space.element([[1j, 0j, -3j], [1j, 0]])
-
-        Other array-like types:
-
-        >>> x.real = 1.0
-        >>> x
-        space.element([[1 + 1j, 1, 1 - 3j], [1 + 1j, 1]])
-        >>> x.real = [[2, 3, 4], [5, 6]]
-        >>> x
-        space.element([[2 + 1j, 3, 4 - 3j], [5 + 1j, 6]])
         """
         try:
             iter(newreal)
@@ -1200,15 +1206,43 @@ class ProductSpaceElement(LinearSpaceElement):
     def imag(self):
         """Imaginary part of the element.
 
+        The imaginary part can also be set using ``x.imag = other``, where
+        ``other`` is array-like or scalar.
+
+
         Examples
         --------
         >>> space = odl.ProductSpace(odl.cn(3), odl.cn(2))
-        >>> x = space.element([[1 + 1j, 2, 3 - 3j], [-1+2j, -2-3j]])
-        >>> x_imag = x.imag
-        >>> real_space = odl.ProductSpace(odl.rn(3), odl.rn(2))
-        >>> expected_result = real_space.element([[1, 0, -3], [2, -3]])
-        >>> x_imag == expected_result
-        True
+        >>> x = space.element([[1 + 1j, 2, 3 - 3j],
+        ...                    [-1 + 2j, -2 - 3j]])
+        >>> x.imag
+        ProductSpace(rn(3), rn(2)).element([
+            [ 1.,  0., -3.],
+            [ 2., -3.]
+        ])
+
+        The imaginary part can also be set using different array-like types:
+
+        >>> x.imag = space.real_space.zero()
+        >>> x
+        ProductSpace(cn(3), cn(2)).element([
+            [ 1.+0.j,  2.+0.j,  3.+0.j],
+            [-1.+0.j, -2.+0.j]
+        ])
+
+        >>> x.imag = 1.0
+        >>> x
+        ProductSpace(cn(3), cn(2)).element([
+            [ 1.+1.j,  2.+1.j,  3.+1.j],
+            [-1.+1.j, -2.+1.j]
+        ])
+
+        >>> x.imag = [[2, 3, 4], [5, 6]]
+        >>> x
+        ProductSpace(cn(3), cn(2)).element([
+            [ 1.+2.j,  2.+3.j,  3.+4.j],
+            [-1.+5.j, -2.+6.j]
+        ])
         """
         imag_part = [part.imag for part in self.parts]
         return self.space.real_space.element(imag_part)
@@ -1223,24 +1257,6 @@ class ProductSpaceElement(LinearSpaceElement):
         ----------
         newimag : array-like or scalar
             Values to be assigned to the imaginary part of this element.
-
-        Examples
-        --------
-        >>> space = odl.ProductSpace(odl.cn(3), odl.cn(2))
-        >>> x = space.element([[1 + 1j, 2, 3 - 3j], [1 + 1j, 2]])
-        >>> zero = space.real_space.zero()
-        >>> x.imag = zero
-        >>> x
-        space.element([[1, 2, 3], [1, 2]])
-
-        Other array-like types:
-
-        >>> x.imag = 1.0
-        >>> x
-        space.element([[1 + 1j, 2 + 1j, 3 + 1j], [1 + 1j, 2 + 1j]])
-        >>> x.imag = [[2, 3, 4], [5, 6]]
-        >>> x
-        space.element([[1 + 2j, 2 + 3j, 3 + 4j], [1 + 5j, 2 + 6j]])
         """
         try:
             iter(newimag)
