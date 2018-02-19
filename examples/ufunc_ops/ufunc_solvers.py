@@ -1,4 +1,4 @@
-"""Examples of using the ufunc functionals in ODL in optimization.
+"""Examples of using UFuncs in optimization.
 
 Here, we minimize the logarithm of the rosenbrock function:
 
