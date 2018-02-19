@@ -11,7 +11,7 @@
 from __future__ import print_function, division, absolute_import
 from builtins import int, object
 from numbers import Integral, Real, Complex
-from past.builtins import basestring
+from past.types.basestring import basestring
 import numpy as np
 
 from odl.util import is_int_dtype, is_real_dtype, is_numeric_dtype, unique
