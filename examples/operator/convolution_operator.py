@@ -30,7 +30,7 @@ class Convolution(odl.Operator):
     @property
     def adjoint(self):
         """Implement ``self.adjoint``.
-        
+
         For a convolution operator, the adjoint is given by the convolution
         with a kernel with flipped axes. In particular, if the kernel is
         symmetric the operator is self-adjoint.
