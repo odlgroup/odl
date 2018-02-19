@@ -606,22 +606,107 @@ class DiscreteLpElement(DiscretizedSpaceElement):
 
     @property
     def real(self):
-        """Real part of this element."""
+        """Real part of this element.
+
+        Returns
+        -------
+        real : `DiscreteLpElement`
+
+        Examples
+        --------
+        Get the real part:
+
+        >>> discr = uniform_discr(0, 1, 3, dtype=complex)
+        >>> x = discr.element([5+1j, 3, 2-2j])
+        >>> x.real
+        uniform_discr(0.0, 1.0, 3).element([ 5.,  3.,  2.])
+
+        Set the real part:
+
+        >>> x = discr.element([1 + 1j, 2, 3 - 3j])
+        >>> zero = discr.real_space.zero()
+        >>> x.real = zero
+        >>> x.real
+        uniform_discr(0.0, 1.0, 3).element([ 0.,  0.,  0.])
+
+        Other array-like types and broadcasting:
+
+        >>> x.real = 1.0
+        >>> x.real
+        uniform_discr(0.0, 1.0, 3).element([ 1.,  1.,  1.])
+        >>> x.real = [2, 3, 4]
+        >>> x.real
+        uniform_discr(0.0, 1.0, 3).element([ 2.,  3.,  4.])
+        """
         return self.space.real_space.element(self.tensor.real)
 
     @real.setter
     def real(self, newreal):
-        """Set the real part of this element to ``newreal``."""
+        """Set the real part of this element to ``newreal``.
+
+        This method is invoked by ``x.real = other``.
+
+        Parameters
+        ----------
+        newreal : array-like or scalar
+            Values to be assigned to the real part of this element.
+        """
         self.tensor.real = newreal
 
     @property
     def imag(self):
-        """Imaginary part of this element."""
+        """Imaginary part of this element.
+
+        Returns
+        -------
+        imag : `DiscreteLpElement`
+
+        Examples
+        --------
+        Get the imaginary part:
+
+        >>> discr = uniform_discr(0, 1, 3, dtype=complex)
+        >>> x = discr.element([5+1j, 3, 2-2j])
+        >>> x.imag
+        uniform_discr(0.0, 1.0, 3).element([ 1.,  0., -2.])
+
+        Set the imaginary part:
+
+        >>> x = discr.element([1 + 1j, 2, 3 - 3j])
+        >>> zero = discr.real_space.zero()
+        >>> x.imag = zero
+        >>> x.imag
+        uniform_discr(0.0, 1.0, 3).element([ 0.,  0.,  0.])
+
+        Other array-like types and broadcasting:
+
+        >>> x.imag = 1.0
+        >>> x.imag
+        uniform_discr(0.0, 1.0, 3).element([ 1.,  1.,  1.])
+        >>> x.imag = [2, 3, 4]
+        >>> x.imag
+        uniform_discr(0.0, 1.0, 3).element([ 2.,  3.,  4.])
+        """
         return self.space.real_space.element(self.tensor.imag)
 
     @imag.setter
     def imag(self, newimag):
-        """Set the imaginary part of this element to ``newimag``."""
+        """Set the imaginary part of this element to ``newimag``.
+
+        This method is invoked by ``x.imag = other``.
+
+        Parameters
+        ----------
+        newimag : array-like or scalar
+            Values to be assigned to the imaginary part of this element.
+
+        Raises
+        ------
+        ValueError
+            If the space is real, i.e., no imagninary part can be set.
+        """
+        if self.space.is_real:
+            raise ValueError('cannot set imaginary part in real spaces')
         self.tensor.imag = newimag
 
     def conj(self, out=None):
