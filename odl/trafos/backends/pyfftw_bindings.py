@@ -24,8 +24,8 @@ except ImportError:
     PYFFTW_AVAILABLE = False
 else:
     _maj, _min, _patch = [int(n) for n in pyfftw.__version__.split('.')[:3]]
-    if (_maj, _min, _patch) < (0, 10, 4):
-        warnings.warn('PyFFTW < 0.10.4 is known to cause problems with some '
+    if (_maj, _min, _patch) < (0, 10, 3):
+        warnings.warn('PyFFTW < 0.10.3 is known to cause problems with some '
                       'ODL functionality, see issue #1002.',
                       RuntimeWarning)
 
