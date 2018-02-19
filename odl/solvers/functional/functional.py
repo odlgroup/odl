@@ -74,7 +74,7 @@ class Functional(Operator):
 
     @grad_lipschitz.setter
     def grad_lipschitz(self, value):
-        "Setter for the Lipschitz constant for the gradient."""
+        """Setter for the Lipschitz constant for the gradient."""
         self.__grad_lipschitz = float(value)
 
     @property

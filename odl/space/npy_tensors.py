@@ -1205,10 +1205,30 @@ class NumpyTensor(Tensor):
 
         Examples
         --------
+        Get the real part:
+
         >>> space = odl.cn(3)
         >>> x = space.element([1 + 1j, 2, 3 - 3j])
         >>> x.real
         rn(3).element([ 1.,  2.,  3.])
+
+        Set the real part:
+
+        >>> space = odl.cn(3)
+        >>> x = space.element([1 + 1j, 2, 3 - 3j])
+        >>> zero = odl.rn(3).zero()
+        >>> x.real = zero
+        >>> x
+        cn(3).element([ 0.+1.j,  0.+0.j,  0.-3.j])
+
+        Other array-like types and broadcasting:
+
+        >>> x.real = 1.0
+        >>> x
+        cn(3).element([ 1.+1.j,  1.+0.j,  1.-3.j])
+        >>> x.real = [2, 3, 4]
+        >>> x
+        cn(3).element([ 2.+1.j,  3.+0.j,  4.-3.j])
         """
         if self.space.is_real:
             return self
@@ -1229,24 +1249,6 @@ class NumpyTensor(Tensor):
         ----------
         newreal : array-like or scalar
             Values to be assigned to the real part of this element.
-
-        Examples
-        --------
-        >>> space = odl.cn(3)
-        >>> x = space.element([1 + 1j, 2, 3 - 3j])
-        >>> zero = odl.rn(3).zero()
-        >>> x.real = zero
-        >>> x
-        cn(3).element([1j, 0j, -3j])
-
-        Other array-like types and broadcasting:
-
-        >>> x.real = 1.0
-        >>> x
-        cn(3).element([(1+1j), (1+0j), (1-3j)])
-        >>> x.real = [2, 3, 4]
-        >>> x
-        cn(3).element([(2+1j), (3+0j), (4-3j)])
         """
         self.real.data[:] = newreal
 
@@ -1262,10 +1264,30 @@ class NumpyTensor(Tensor):
 
         Examples
         --------
+        Get the imaginary part:
+
         >>> space = odl.cn(3)
         >>> x = space.element([1 + 1j, 2, 3 - 3j])
         >>> x.imag
         rn(3).element([ 1.,  0., -3.])
+
+        Set the imaginary part:
+
+        >>> space = odl.cn(3)
+        >>> x = space.element([1 + 1j, 2, 3 - 3j])
+        >>> zero = odl.rn(3).zero()
+        >>> x.imag = zero
+        >>> x
+        cn(3).element([ 1.+0.j,  2.+0.j,  3.+0.j])
+
+        Other array-like types and broadcasting:
+
+        >>> x.imag = 1.0
+        >>> x
+        cn(3).element([ 1.+1.j,  2.+1.j,  3.+1.j])
+        >>> x.imag = [2, 3, 4]
+        >>> x
+        cn(3).element([ 1.+2.j,  2.+3.j,  3.+4.j])
         """
         if self.space.is_real:
             return self.space.zero()
@@ -1291,24 +1313,6 @@ class NumpyTensor(Tensor):
         ------
         ValueError
             If the space is real, i.e., no imagninary part can be set.
-
-        Examples
-        --------
-        >>> space = odl.cn(3)
-        >>> x = space.element([1 + 1j, 2, 3 - 3j])
-        >>> zero = odl.rn(3).zero()
-        >>> x.imag = zero
-        >>> x
-        cn(3).element([(1+0j), (2+0j), (3+0j)])
-
-        Other array-like types and broadcasting:
-
-        >>> x.imag = 1.0
-        >>> x
-        cn(3).element([(1+1j), (2+1j), (3+1j)])
-        >>> x.imag = [2, 3, 4]
-        >>> x
-        cn(3).element([(1+2j), (2+3j), (3+4j)])
         """
         if self.space.is_real:
             raise ValueError('cannot set imaginary part in real spaces')
