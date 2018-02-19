@@ -17,7 +17,7 @@ import odl
 # Read test image: use only every second pixel, convert integer to float,
 # and rotate to get the image upright
 image = np.rot90(scipy.misc.ascent()[::1, ::1], 3).astype('float32')
-image = image + 1j*image.T
+image = image + 1j * image.T
 shape = image.shape
 
 # Rescale max to 1

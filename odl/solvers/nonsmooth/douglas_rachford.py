@@ -78,7 +78,7 @@ def douglas_rachford_pd(x, f, g, L, niter, tau=None, sigma=None,
     The mathematical problem to solve is
 
     .. math::
-       \min_x f(x) + \sum_{i=0}^n (g_i \Box l_tuplei)(L_i x),
+       \min_x f(x) + \sum_{i=0}^n (g_i \Box l_i)(L_i x),
 
     where :math:`f`, :math:`g_i`, :math:`l_i` are proper, convex and lower
     semicontinuous and :math:`L_i` are linear operators. The infimal
@@ -287,22 +287,25 @@ def douglas_rachford_pd_stepsize(L, tau=None, sigma=None):
     This function has 4 options, :math:`\tau`/:math:`\sigma` given or not
     given.
 
-    If :math:`\tau` nor :math:`\sigma` is given, they are chosen as:
+    - If neither :math:`\tau` nor :math:`\sigma` are given, they are chosen as:
 
-    .. math::
-        \tau = \frac{1}{\sum_{i=1}^n \|L_i\|},
-        \quad
-        \sigma_i = \frac{2}{n \tau \|L_i\|}
+        .. math::
+            \tau = \frac{1}{\sum_{i=1}^n \|L_i\|},
+            \quad
+            \sigma_i = \frac{2}{n \tau \|L_i\|}
 
-    If :math:`\sigma` is given but not :math:`\tau`, :math:`\tau` is set to:
+    - If only :math:`\sigma` is given, :math:`\tau` is set to:
 
-    .. math::
-        \tau = \frac{2}{\sum_{i=1}^n \sigma_i \|L_i\|^2}
+        .. math::
+            \tau = \frac{2}{\sum_{i=1}^n \sigma_i \|L_i\|^2}
 
-    If :math:`\tau` is given but not :math:`\sigma`, :math:`\sigma` is set to:
+    - If only :math:`\tau` is given, :math:`\sigma` is set
+      to:
 
-    .. math::
-        \sigma_i = \frac{2}{n \tau \|L_i\|}
+        .. math::
+            \sigma_i = \frac{2}{n \tau \|L_i\|}
+
+    - If both are given, they are returned as is without further validation.
     """
     if tau is None and sigma is None:
         L_norms = _operator_norms(L)

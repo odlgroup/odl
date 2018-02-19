@@ -309,8 +309,8 @@ def pdhg_stepsize(L, tau=None, sigma=None):
     Parameters
     ----------
     L : `Operator` or float
-        Operators or norm of the operators that are used in the `pdhg` method.
-        If it is an operator `Operator`, the norm is computed with
+        Operator or norm of the operator that are used in the `pdhg` method.
+        If it is an `Operator`, the norm is computed with
         `Operator.norm(estimate=True)`.
     tau : positive float, optional
         Use this value for ``tau`` instead of computing it from the
@@ -336,20 +336,23 @@ def pdhg_stepsize(L, tau=None, sigma=None):
     This function has 4 options, :math:`\tau`/:math:`\sigma` given or not
     given.
 
-    If :math:`\tau` nor :math:`\sigma` is given, they are chosen as:
+    - Neither :math:`\tau` nor :math:`\sigma` are given, they are chosen as:
 
-    .. math::
-        \tau = \sigma = \frac{\sqrt{0.9}}{\|L\|}
+        .. math::
+            \tau = \sigma = \frac{\sqrt{0.9}}{\|L\|}
 
-    If :math:`\sigma` is given but not :math:`\tau`, :math:`\tau` is set to:
+    - If only :math:`\sigma` is given, :math:`\tau` is set to:
 
-    .. math::
-        \tau = \frac{0.9}{\sigma \|L\|^2}
+        .. math::
+            \tau = \frac{0.9}{\sigma \|L\|^2}
 
-    If :math:`\tau` is given but not :math:`\sigma`, :math:`\sigma` is set to:
+    - If only :math:`\tau` is given, :math:`\sigma` is set
+      to:
 
-    .. math::
-        \sigma = \frac{0.9}{\tau \|L\|^2}
+        .. math::
+            \sigma = \frac{0.9}{\tau \|L\|^2}
+
+    - If both are given, they are returned as is without further validation.
     """
     if tau is None and sigma is None:
         L_norm = L.norm(estimate=True)
@@ -369,7 +372,6 @@ def pdhg_stepsize(L, tau=None, sigma=None):
         return float(tau), sigma
     else:
         return float(tau), float(sigma)
-
 
 
 if __name__ == '__main__':
