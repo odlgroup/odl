@@ -13,10 +13,62 @@ import operator
 
 import odl
 from odl.util.testutils import (all_equal, all_almost_equal, almost_equal,
-                                noise_elements, simple_fixture)
+                                noise_elements, noise_element, simple_fixture)
 
 
 exponent = simple_fixture('exponent', [2.0, 1.0, float('inf'), 0.5, 1.5])
+
+space_params = ['product_space', 'power_space']
+space_ids = [' space={} '.format(p) for p in space_params]
+
+elem_params = ['space', 'real_space', 'numpy_array', 'array', 'scalar',
+               '1d_array']
+elem_ids = [' element={} '.format(p) for p in elem_params]
+
+
+@pytest.fixture(scope="module", ids=space_ids, params=space_params)
+def space(request):
+    name = request.param.strip()
+
+    if name == 'product_space':
+        space = odl.ProductSpace(odl.uniform_discr(0, 1, 3, dtype=complex),
+                                 odl.cn(2))
+    elif name == 'power_space':
+        space = odl.ProductSpace(odl.uniform_discr(0, 1, 3, dtype=complex), 2)
+    else:
+        raise ValueError('undefined space')
+
+    return space
+
+
+@pytest.fixture(scope="module", ids=elem_ids, params=elem_params)
+def newpart(request, space):
+    element_form = request.param.strip()
+
+    if element_form == 'space':
+        tmp = noise_element(space)
+        newreal = space.element(tmp.real)
+    elif element_form == 'real_space':
+        newreal = noise_element(space).real
+    elif element_form == 'numpy_array':
+        tmp = noise_element(space)
+        newreal = [tmp[0].real.asarray(), tmp[1].real.asarray()]
+    elif element_form == 'array':
+        if space.is_power_space:
+            newreal = [[0, 1, 2], [3, 4, 5]]
+        else:
+            newreal = [[0, 1, 2], [3, 4]]
+    elif element_form == 'scalar':
+        newreal = np.random.randn()
+    elif element_form == '1d_array':
+        if not space.is_power_space:
+            pytest.skip('arrays matching only one dimension can only be used '
+                        'for power spaces')
+        newreal = [0, 1, 2]
+    else:
+        raise ValueError('undefined form of element')
+
+    return newreal
 
 
 def test_emptyproduct():
@@ -898,6 +950,86 @@ def test_reductions():
     assert x.ufuncs.prod() == 6.0
     assert x.ufuncs.min() == 1.0
     assert x.ufuncs.max() == 3.0
+
+
+def test_array_wrap_method():
+    """Verify that the __array_wrap__ method for NumPy works."""
+    space = odl.ProductSpace(odl.uniform_discr(0, 1, 10), 2)
+    x_arr, x = noise_elements(space)
+    y_arr = np.sin(x_arr)
+    y = np.sin(x)  # Should yield again an ODL product space element
+
+    assert y in space
+    assert all_equal(y, y_arr)
+
+
+def test_real_imag_and_conj():
+    """Verify that .real .imag and .conj() work for product space elements."""
+    space = odl.ProductSpace(odl.uniform_discr(0, 1, 3, dtype=complex),
+                             odl.cn(2))
+    x = noise_element(space)
+
+    # Test real
+    expected_result = space.real_space.element([x[0].real, x[1].real])
+    assert x.real == expected_result
+
+    # Test imag
+    expected_result = space.real_space.element([x[0].imag, x[1].imag])
+    assert x.imag == expected_result
+
+    # Test conj. Note that ProductSpace does not implement asarray if
+    # is_power_space is false. Hence the construction below
+    expected_result = space.element([x[0].conj(), x[1].conj()])
+    x_conj = x.conj()
+    assert x_conj[0] == expected_result[0]
+    assert x_conj[1] == expected_result[1]
+
+
+def test_real_setter_product_space(space, newpart):
+    """Verify that the setter for the real part of an element works."""
+    x = noise_element(space)
+    x.real = newpart
+
+    try:
+        # Catch the scalar
+        iter(newpart)
+    except TypeError:
+        expected_result = newpart * space.one()
+    else:
+        if newpart in space:
+            expected_result = newpart.real
+        elif np.shape(newpart) == (3,):
+            expected_result = [newpart, newpart]
+        else:
+            expected_result = newpart
+
+    assert x in space
+    assert all_equal(x.real, expected_result)
+
+
+def test_imag_setter_product_space(space, newpart):
+    """Verify that the setter for the imaginary part of an element works."""
+    x = noise_element(space)
+    x.imag = newpart
+
+    try:
+        # Catch the scalar
+        iter(newpart)
+    except TypeError:
+        expected_result = newpart * space.one()
+    else:
+        if newpart in space:
+            # The imaginary part is by definition real, and thus the new
+            # imaginary part is thus the real part of the element we try to set
+            # the value to
+            expected_result = newpart.real
+        elif np.shape(newpart) == (3,):
+            expected_result = [newpart, newpart]
+        else:
+            expected_result = newpart
+
+    assert x in space
+    assert all_equal(x.imag, expected_result)
 
 
 if __name__ == '__main__':

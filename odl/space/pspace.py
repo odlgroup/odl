@@ -381,6 +381,45 @@ class ProductSpace(LinearSpace):
         else:
             raise AttributeError("`dtype`'s of subspaces not equal")
 
+    @property
+    def real_space(self):
+        """Variant of this space with real dtype."""
+        return ProductSpace(*[space.real_space for space in self.spaces])
+
+    @property
+    def complex_space(self):
+        """Variant of this space with complex dtype."""
+        return ProductSpace(*[space.complex_space for space in self.spaces])
+
+    def astype(self, dtype):
+        """Return a copy of this space with new ``dtype``.
+
+        Parameters
+        ----------
+        dtype :
+            Scalar data type of the returned space. Can be provided
+            in any way the `numpy.dtype` constructor understands, e.g.
+            as built-in type or as a string. Data types with non-trivial
+            shapes are not allowed.
+
+        Returns
+        -------
+        newspace : `ProductSpace`
+            Version of this space with given data type.
+        """
+        if dtype is None:
+            # Need to filter this out since Numpy iterprets it as 'float'
+            raise ValueError('`None` is not a valid data type')
+
+        dtype = np.dtype(dtype)
+        current_dtype = getattr(self, 'dtype', object)
+
+        if dtype == current_dtype:
+            return self
+        else:
+            return ProductSpace(*[space.astype(dtype)
+                                  for space in self.spaces])
+
     def element(self, inp=None, cast=True):
         """Create an element in the product space.
 
@@ -1006,6 +1045,23 @@ class ProductSpaceElement(LinearSpaceElement):
         """
         return self.asarray()
 
+    def __array_wrap__(self, array):
+        """Return a new product space element wrapping the ``array``.
+
+        Only available if `is_power_space` is ``True``.
+
+        Parameters
+        ----------
+        array : `numpy.ndarray`
+            Array to be wrapped.
+
+        Returns
+        -------
+        wrapper : `ProductSpaceElement`
+            Product space element wrapping ``array``.
+        """
+        return self.space.element(array)
+
     @property
     def ufuncs(self):
         """`ProductSpaceUfuncs`, access to Numpy style ufuncs.
@@ -1063,6 +1119,177 @@ class ProductSpaceElement(LinearSpaceElement):
             For a list of available ufuncs.
         """
         return ProductSpaceUfuncs(self)
+
+    @property
+    def real(self):
+        """Real part of the element.
+
+        The real part can also be set using ``x.real = other``, where ``other``
+        is array-like or scalar.
+
+        Examples
+        --------
+        >>> space = odl.ProductSpace(odl.cn(3), odl.cn(2))
+        >>> x = space.element([[1 + 1j, 2, 3 - 3j],
+        ...                    [-1 + 2j, -2 - 3j]])
+        >>> x.real
+        ProductSpace(rn(3), rn(2)).element([
+            [ 1.,  2.,  3.],
+            [-1., -2.]
+        ])
+
+        The real part can also be set using different array-like types:
+
+        >>> x.real = space.real_space.zero()
+        >>> x
+        ProductSpace(cn(3), cn(2)).element([
+            [ 0.+1.j,  0.+0.j,  0.-3.j],
+            [ 0.+2.j,  0.-3.j]
+        ])
+
+        >>> x.real = 1.0
+        >>> x
+        ProductSpace(cn(3), cn(2)).element([
+            [ 1.+1.j,  1.+0.j,  1.-3.j],
+            [ 1.+2.j,  1.-3.j]
+        ])
+
+        >>> x.real = [[2, 3, 4], [5, 6]]
+        >>> x
+        ProductSpace(cn(3), cn(2)).element([
+            [ 2.+1.j,  3.+0.j,  4.-3.j],
+            [ 5.+2.j,  6.-3.j]
+        ])
+        """
+        real_part = [part.real for part in self.parts]
+        return self.space.real_space.element(real_part)
+
+    @real.setter
+    def real(self, newreal):
+        """Setter for the real part.
+
+        This method is invoked by ``x.real = other``.
+
+        Parameters
+        ----------
+        newreal : array-like or scalar
+            Values to be assigned to the real part of this element.
+        """
+        try:
+            iter(newreal)
+        except TypeError:
+            # `newreal` is not iterable, assume it can be assigned to
+            # all indexed parts
+            for part in self.parts:
+                part.real = newreal
+            return
+
+        if self.space.is_power_space:
+            try:
+                # Set same value in all parts
+                for part in self.parts:
+                    part.real = newreal
+            except (ValueError, TypeError):
+                # Iterate over all parts and set them separately
+                for part, new_re in zip(self.parts, newreal):
+                    part.real = new_re
+                pass
+        elif len(newreal) == len(self):
+            for part, new_re in zip(self.parts, newreal):
+                part.real = new_re
+        else:
+            raise ValueError(
+                'dimensions of the new real part does not match the space, '
+                'got element {} to set real part of {}'.format(newreal, self))
+
+    @property
+    def imag(self):
+        """Imaginary part of the element.
+
+        The imaginary part can also be set using ``x.imag = other``, where
+        ``other`` is array-like or scalar.
+
+
+        Examples
+        --------
+        >>> space = odl.ProductSpace(odl.cn(3), odl.cn(2))
+        >>> x = space.element([[1 + 1j, 2, 3 - 3j],
+        ...                    [-1 + 2j, -2 - 3j]])
+        >>> x.imag
+        ProductSpace(rn(3), rn(2)).element([
+            [ 1.,  0., -3.],
+            [ 2., -3.]
+        ])
+
+        The imaginary part can also be set using different array-like types:
+
+        >>> x.imag = space.real_space.zero()
+        >>> x
+        ProductSpace(cn(3), cn(2)).element([
+            [ 1.+0.j,  2.+0.j,  3.+0.j],
+            [-1.+0.j, -2.+0.j]
+        ])
+
+        >>> x.imag = 1.0
+        >>> x
+        ProductSpace(cn(3), cn(2)).element([
+            [ 1.+1.j,  2.+1.j,  3.+1.j],
+            [-1.+1.j, -2.+1.j]
+        ])
+
+        >>> x.imag = [[2, 3, 4], [5, 6]]
+        >>> x
+        ProductSpace(cn(3), cn(2)).element([
+            [ 1.+2.j,  2.+3.j,  3.+4.j],
+            [-1.+5.j, -2.+6.j]
+        ])
+        """
+        imag_part = [part.imag for part in self.parts]
+        return self.space.real_space.element(imag_part)
+
+    @imag.setter
+    def imag(self, newimag):
+        """Setter for the imaginary part.
+
+        This method is invoked by ``x.imag = other``.
+
+        Parameters
+        ----------
+        newimag : array-like or scalar
+            Values to be assigned to the imaginary part of this element.
+        """
+        try:
+            iter(newimag)
+        except TypeError:
+            # `newimag` is not iterable, assume it can be assigned to
+            # all indexed parts
+            for part in self.parts:
+                part.imag = newimag
+            return
+
+        if self.space.is_power_space:
+            try:
+                # Set same value in all parts
+                for part in self.parts:
+                    part.imag = newimag
+            except (ValueError, TypeError):
+                # Iterate over all parts and set them separately
+                for part, new_im in zip(self.parts, newimag):
+                    part.imag = new_im
+                pass
+        elif len(newimag) == len(self):
+            for part, new_im in zip(self.parts, newimag):
+                part.imag = new_im
+        else:
+            raise ValueError(
+                'dimensions of the new imaginary part does not match the '
+                'space, got element {} to set real part of {}}'
+                ''.format(newimag, self))
+
+    def conj(self):
+        """Complex conjugate of the element."""
+        complex_conj = [part.conj() for part in self.parts]
+        return self.space.element(complex_conj)
 
     def __str__(self):
         """Return ``str(self)``."""
