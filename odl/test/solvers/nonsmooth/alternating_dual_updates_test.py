@@ -90,13 +90,13 @@ def test_adupdates():
     x_simple = tv1.domain.zero()
 
     stepsize = 1.0
-    niter = 100
+    niter = 10
 
     adupdates(x, funcs, ops, stepsize, inner_stepsizes, niter)
     adupdates_simple(x_simple, funcs, ops, stepsize,
                      inner_stepsizes, niter)
     assert all_almost_equal(x, x_simple)
-    assert domain.dist(x, expected_solution) < 1e-3
+    assert domain.dist(x, expected_solution) < 3e-2
 
 
 if __name__ == '__main__':
