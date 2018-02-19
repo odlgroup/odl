@@ -117,7 +117,7 @@ x_start = op.domain.zero()
 # Run algorithm 1
 x_alg1 = x_start.copy()
 callback.reset()
-odl.solvers.pdhg(x_alg1, f, g, op, tau=tau, sigma=sigma, niter=niter,
+odl.solvers.pdhg(x_alg1, f, g, op, niter=niter, tau=tau, sigma=sigma,
                  callback=callback)
 obj_alg1 = callback.callbacks[1].obj_function_values
 obj_ergodic_alg1 = callback.callbacks[1].obj_function_values_ergodic
@@ -142,14 +142,14 @@ sigma = 1.0 / op_norm  # Step size for the dual variable
 # Run algorithms 2 and 3
 x_alg2 = x_start.copy()
 callback.reset()
-odl.solvers.pdhg(x_alg2, f, g, op, tau=tau, sigma=sigma, niter=niter,
+odl.solvers.pdhg(x_alg2, f, g, op, niter=niter, tau=tau, sigma=sigma,
                  gamma_primal=0, callback=callback)
 obj_alg2 = callback.callbacks[1].obj_function_values
 obj_ergodic_alg2 = callback.callbacks[1].obj_function_values_ergodic
 
 x_alg3 = x_start.copy()
 callback.reset()
-odl.solvers.pdhg(x_alg3, f, g, op, tau=tau, sigma=sigma, niter=niter,
+odl.solvers.pdhg(x_alg3, f, g, op, niter=niter, tau=tau, sigma=sigma,
                  gamma_primal=strong_convexity, callback=callback)
 obj_alg3 = callback.callbacks[1].obj_function_values
 obj_ergodic_alg3 = callback.callbacks[1].obj_function_values_ergodic

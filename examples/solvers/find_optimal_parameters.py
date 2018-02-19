@@ -210,8 +210,8 @@ elif reconstruction_method == 'tv':
 
         # Run the algorithm
         x = op.domain.zero()
-        odl.solvers.pdhg(x, f, g, op, tau=1.0 / op_norm, sigma=1.0 / op_norm,
-                         niter=200)
+        odl.solvers.pdhg(x, f, g, op, niter=200,
+                         tau=1.0 / op_norm, sigma=1.0 / op_norm)
 
         return x
 

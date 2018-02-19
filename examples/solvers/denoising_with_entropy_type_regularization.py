@@ -77,7 +77,7 @@ sigma = 0.1 / op_norm  # Step size for the dual variable
 x = op.domain.zero()
 
 # Run algorithm (and display intermediates)
-odl.solvers.pdhg(x, f, g, op, tau=tau, sigma=sigma, niter=100,
+odl.solvers.pdhg(x, f, g, op, niter=100, tau=tau, sigma=sigma,
                  callback=callback)
 
 # Display images

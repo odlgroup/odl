@@ -50,7 +50,7 @@ def test_pdhg_simple_space():
     f = g.convex_conj
 
     # Run the algorithm
-    pdhg(discr_vec, f, g, op, tau=TAU, sigma=SIGMA, theta=THETA, niter=1,
+    pdhg(discr_vec, f, g, op, niter=1, tau=TAU, sigma=SIGMA, theta=THETA,
          callback=None, x_relax=discr_vec_relax, y=discr_dual)
 
     # Explicit computation
@@ -64,14 +64,14 @@ def test_pdhg_simple_space():
     assert all_almost_equal(discr_vec_relax, vec_relax_expl, PLACES)
 
     # Resume iteration with previous x but without previous relaxation
-    pdhg(discr_vec, f, g, op, tau=TAU, sigma=SIGMA, theta=THETA, niter=1)
+    pdhg(discr_vec, f, g, op, niter=1, tau=TAU, sigma=SIGMA, theta=THETA)
 
     vec_expl *= (1 - SIGMA * TAU)
     assert all_almost_equal(discr_vec, vec_expl, PLACES)
 
     # Resume iteration with x1 as above and with relaxation parameter
     discr_vec[:] = vec_expl
-    pdhg(discr_vec, f, g, op, tau=TAU, sigma=SIGMA, theta=THETA, niter=1,
+    pdhg(discr_vec, f, g, op, niter=1, tau=TAU, sigma=SIGMA, theta=THETA,
          x_relax=discr_vec_relax, y=discr_dual)
 
     vec_expl = vec_expl - TAU * SIGMA * (DATA + vec_relax_expl)
@@ -86,20 +86,20 @@ def test_pdhg_simple_space():
     # Relaxation parameter 1 and no acceleration
     discr_vec = op.domain.element(DATA)
     discr_vec_relax_no_gamma = op.domain.element(DATA)
-    pdhg(discr_vec, f, g, op, tau=TAU, sigma=SIGMA, theta=1, gamma_primal=None,
-         niter=1, x_relax=discr_vec_relax_no_gamma)
+    pdhg(discr_vec, f, g, op, niter=1, tau=TAU, sigma=SIGMA, theta=1,
+         gamma_primal=None, x_relax=discr_vec_relax_no_gamma)
 
     # Acceleration parameter 0, overwrites relaxation parameter
     discr_vec = op.domain.element(DATA)
     discr_vec_relax_g0 = op.domain.element(DATA)
-    pdhg(discr_vec, f, g, op, tau=TAU, sigma=SIGMA, theta=0, gamma_primal=0,
-         niter=1, x_relax=discr_vec_relax_g0)
+    pdhg(discr_vec, f, g, op, niter=1, tau=TAU, sigma=SIGMA, theta=0,
+         gamma_primal=0, x_relax=discr_vec_relax_g0)
 
     assert discr_vec != discr_vec_relax_no_gamma
     assert all_almost_equal(discr_vec_relax_no_gamma, discr_vec_relax_g0)
 
     # Test callback execution
-    pdhg(discr_vec, f, g, op, tau=TAU, sigma=SIGMA, theta=THETA, niter=1,
+    pdhg(discr_vec, f, g, op, niter=1, tau=TAU, sigma=SIGMA, theta=THETA,
          callback=odl.solvers.CallbackPrintIteration())
 
 
@@ -126,7 +126,7 @@ def test_pdhg_product_space():
     f = odl.solvers.ZeroFunctional(prod_op.range).convex_conj
 
     # Run the algorithm
-    pdhg(discr_vec, f, g, prod_op, tau=TAU, sigma=SIGMA, theta=THETA, niter=1)
+    pdhg(discr_vec, f, g, prod_op, niter=1, tau=TAU, sigma=SIGMA, theta=THETA)
 
     vec_expl = discr_vec_0 - TAU * SIGMA * prod_op.adjoint(
         prod_op(discr_vec_0))

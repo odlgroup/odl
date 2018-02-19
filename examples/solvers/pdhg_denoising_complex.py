@@ -70,7 +70,7 @@ x = op.domain.zero()
 
 # Run algorithm (and display intermediates)
 odl.solvers.pdhg(
-    x, f, g, op, tau=tau, sigma=sigma, niter=niter, callback=callback)
+    x, f, g, op, niter=niter, tau=tau, sigma=sigma, callback=callback)
 
 # Display images
 orig.show(title='original image')

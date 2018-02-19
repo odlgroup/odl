@@ -78,7 +78,7 @@ def douglas_rachford_pd(x, f, g, L, niter, tau=None, sigma=None,
     The mathematical problem to solve is
 
     .. math::
-       \min_x f(x) + \sum_{i=0}^n (g_i \Box l_i)(L_i x),
+       \min_x f(x) + \sum_{i=0}^n (g_i \Box l_tuplei)(L_i x),
 
     where :math:`f`, :math:`g_i`, :math:`l_i` are proper, convex and lower
     semicontinuous and :math:`L_i` are linear operators. The infimal
@@ -252,6 +252,7 @@ def _operator_norms(L):
         else:
             raise TypeError('invalid entry {!r} in `L`'.format(Li))
     return L_norms
+
 
 def douglas_rachford_pd_stepsize(L, tau=None, sigma=None):
     r"""Default step sizes for `douglas_rachford_pd`.

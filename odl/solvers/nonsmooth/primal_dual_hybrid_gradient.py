@@ -18,13 +18,13 @@ import numpy as np
 from odl.operator import Operator
 
 
-__all__ = ('pdhg',)
+__all__ = ('pdhg', 'pdhg_stepsize')
 
 
 # TODO: add dual gap as convergence measure
 # TODO: diagonal preconditioning
 
-def pdhg(x, f, g, L, tau, sigma, niter, **kwargs):
+def pdhg(x, f, g, L, niter, tau, sigma, **kwargs):
     """Primal-dual hybrid gradient algorithm for convex optimization.
 
     First order primal-dual hybrid-gradient method for non-smooth convex
@@ -56,12 +56,14 @@ def pdhg(x, f, g, L, tau, sigma, niter, **kwargs):
         The linear operator that should be applied before ``f``. Its range must
         match the domain of ``f`` and its domain must match the domain of
         ``g``.
-    tau : positive float
-        Step size parameter for the update of the primal (``g``) variable.
-    sigma : positive float
-        Step size parameter for the update of the dual (``f``) variable.
     niter : non-negative int
         Number of iterations.
+    tau : float, optional
+        Step size parameter for ``f``.
+        Default: Sufficient for convergence, see `pdhg_stepsize`.
+    sigma : sequence of floats, optional
+        Step size parameters for ``g``.
+        Default: Sufficient for convergence, see `pdhg_stepsize`.
 
     Other Parameters
     ----------------
@@ -299,6 +301,75 @@ def pdhg(x, f, g, L, tau, sigma, niter, **kwargs):
 
         if callback is not None:
             callback(x)
+
+
+def pdhg_stepsize(L, tau=None, sigma=None):
+    r"""Default step sizes for `pdhg`.
+
+    Parameters
+    ----------
+    L : `Operator` or float
+        Operators or norm of the operators that are used in the `pdhg` method.
+        If it is an operator `Operator`, the norm is computed with
+        `Operator.norm(estimate=True)`.
+    tau : positive float, optional
+        Use this value for ``tau`` instead of computing it from the
+        operator norms, see Notes.
+    sigma : positive float, optional
+        The ``sigma`` step size parameters for the dual update.
+
+    Returns
+    -------
+    tau : float
+        The ``tau`` step size parameter for the primal update.
+    sigma : tuple of float
+        The ``sigma`` step size parameter for the dual update.
+
+    Notes
+    -----
+    To guarantee convergence, the parameters :math:`\tau`, :math:`\sigma`
+    and :math:`L` need to satisfy
+
+    .. math::
+       \tau \sigma \|L\|^2 < 1
+
+    This function has 4 options, :math:`\tau`/:math:`\sigma` given or not
+    given.
+
+    If :math:`\tau` nor :math:`\sigma` is given, they are chosen as:
+
+    .. math::
+        \tau = \sigma = \frac{\sqrt{0.9}}{\|L\|}
+
+    If :math:`\sigma` is given but not :math:`\tau`, :math:`\tau` is set to:
+
+    .. math::
+        \tau = \frac{0.9}{\sigma \|L\|^2}
+
+    If :math:`\tau` is given but not :math:`\sigma`, :math:`\sigma` is set to:
+
+    .. math::
+        \sigma = \frac{0.9}{\tau \|L\|^2}
+    """
+    if tau is None and sigma is None:
+        L_norm = L.norm(estimate=True)
+
+        tau = sigma = np.sqrt(0.9) / L_norm
+
+        return tau, sigma
+    elif tau is None:
+        L_norm = L.norm(estimate=True)
+
+        tau = 0.9 / (sigma * L_norm ** 2)
+        return tau, float(sigma)
+    elif sigma is None:
+        L_norm = L.norm(estimate=True)
+
+        sigma = 0.9 / (tau * L_norm ** 2)
+        return float(tau), sigma
+    else:
+        return float(tau), float(sigma)
+
 
 
 if __name__ == '__main__':

@@ -61,7 +61,7 @@ sigma = 1.0 / norm_op  # Step size for dual variable
 # Run algorithm
 x = space.zero()
 callback(x)  # store values for initialization
-odl.solvers.pdhg(x, f, g, op, tau, sigma, niter, gamma_dual=mu_f,
+odl.solvers.pdhg(x, f, g, op, niter, tau, sigma, gamma_dual=mu_f,
                  callback=callback)
 obj = callback.callbacks[1].obj_function_values
 
