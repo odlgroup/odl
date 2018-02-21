@@ -52,7 +52,7 @@ install:
 
     # Doc dependencies
     - if [[ "$BUILD_DOCS" == "true" ]]; then
-        pip install "sphinx<1.7" sphinx_rtd_theme travis-sphinx;
+        pip install sphinx sphinx_rtd_theme travis-sphinx;
       fi
 
     # Install our package
