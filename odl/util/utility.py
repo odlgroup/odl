@@ -12,6 +12,7 @@ from __future__ import print_function, division, absolute_import
 from builtins import object
 from collections import OrderedDict
 from functools import wraps
+from itertools import product
 import inspect
 import numpy as np
 import sys
@@ -22,8 +23,9 @@ __all__ = ('array_str', 'dtype_str', 'dtype_repr', 'npy_printoptions',
            'is_numeric_dtype', 'is_int_dtype', 'is_floating_dtype',
            'is_real_dtype', 'is_real_floating_dtype',
            'is_complex_floating_dtype', 'real_dtype', 'complex_dtype',
-           'is_string', 'conj_exponent', 'writable_array',
+           'is_string', 'nd_iterator', 'conj_exponent', 'writable_array',
            'run_from_ipython', 'NumpyRandomSeed', 'cache_arguments', 'unique')
+
 
 TYPE_MAP_R2C = {np.dtype(dtype): np.result_type(dtype, 1j)
                 for dtype in np.sctypes['float']}
@@ -438,6 +440,26 @@ def is_string(obj):
         return False
     else:
         return True
+
+
+def nd_iterator(shape):
+    """Iterator over n-d cube with shape.
+
+    Parameters
+    ----------
+    shape : sequence of int
+        The number of points per axis
+
+    Examples
+    --------
+    >>> for pt in nd_iterator([2, 2]):
+    ...     print(pt)
+    (0, 0)
+    (0, 1)
+    (1, 0)
+    (1, 1)
+    """
+    return product(*map(range, shape))
 
 
 def conj_exponent(exp):

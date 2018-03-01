@@ -387,7 +387,7 @@ class DiscretizedSpaceElement(Tensor):
         """
         if isinstance(indices, type(self)):
             indices = indices.tensor
-        return self.tensor.__getitem__(indices)
+        return self.tensor[indices]
 
     def __setitem__(self, indices, values):
         """Implement ``self[indices] = values``.
