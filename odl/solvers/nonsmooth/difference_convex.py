@@ -133,9 +133,11 @@ no=4&page=451&year=2003&ppage=462>`_. It solves the problem
 
     .. math ::
         y_n \\in \\partial h(x_n), \\qquad x_{n+1}
-            = \\mathrm{Prox}^{\\gamma}_g(x_n + \\gamma y_n)
+            = \\mathrm{Prox}^{\\gamma}_g(x_n + \\gamma y_n).
 
-    Here, :math:`\\gamma` is the stepsize parameter ``gamma``.
+    In contrast to `dca`, `prox_dca` uses proximal steps with respect to the
+    convex part ``g``. Both algorithms use subgradients of the concave part
+    ``h``.
 
     References
     ----------
