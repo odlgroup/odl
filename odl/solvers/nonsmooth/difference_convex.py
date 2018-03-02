@@ -193,7 +193,7 @@ def doubleprox_dc(x, y, g, h, phi, K, niter, gamma, mu, callback=None):
 
     Notes
     -----
-    This algorithm is proposed in`[BB2016]
+    This algorithm is proposed in `[BB2016]
     <https://arxiv.org/abs/1610.06538>`_ and solves the d.c. problem
 
     .. math ::
