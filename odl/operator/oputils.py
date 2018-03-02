@@ -27,6 +27,7 @@ def matrix_representation(op):
     ----------
     op : `Operator`
         The linear operator of which one wants a matrix representation.
+        If the domain or range is a `ProductSpace`, it must be a power-space.
 
     Returns
     -------
@@ -68,21 +69,23 @@ def matrix_representation(op):
 
     if not (isinstance(op.domain, TensorSpace) or
             (isinstance(op.domain, ProductSpace) and
+             op.domain.is_power_space and
              all(isinstance(spc, TensorSpace) for spc in op.domain))):
         raise TypeError('operator domain {!r} is neither `TensorSpace` '
-                        'nor `ProductSpace` with only `TensorSpace` '
+                        'nor `ProductSpace` with only equal `TensorSpace` '
                         'components'.format(op.domain))
 
     if not (isinstance(op.range, TensorSpace) or
             (isinstance(op.range, ProductSpace) and
+             op.range.is_power_space and
              all(isinstance(spc, TensorSpace) for spc in op.range))):
         raise TypeError('operator range {!r} is neither `TensorSpace` '
-                        'nor `ProductSpace` with only `TensorSpace` '
+                        'nor `ProductSpace` with only equal `TensorSpace` '
                         'components'.format(op.range))
 
     # Generate the matrix
     dtype = np.promote_types(op.domain.dtype, op.range.dtype)
-    matrix = np.zeros(op.domain.shape + op.range.shape, dtype=dtype)
+    matrix = np.zeros(op.range.shape + op.domain.shape, dtype=dtype)
     tmp_ran = op.range.element()  # Store for reuse in loop
     tmp_dom = op.domain.zero()  # Store for reuse in loop
 
@@ -90,7 +93,7 @@ def matrix_representation(op):
         tmp_dom[j] = 1.0
 
         op(tmp_dom, out=tmp_ran)
-        matrix[j + (Ellipsis,)] = tmp_ran.asarray()
+        matrix[(Ellipsis,) + j] = tmp_ran.asarray()
 
         tmp_dom[j] = 0.0
 

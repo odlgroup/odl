@@ -18,8 +18,7 @@ from odl.util.testutils import almost_equal
 
 
 def test_matrix_representation():
-    # Verify that the matrix representation function returns the correct matrix
-
+    """Verify that the matrix repr returns the correct matrix"""
     n = 3
     A = np.random.rand(n, n)
 
@@ -30,119 +29,85 @@ def test_matrix_representation():
 
 
 def test_matrix_representation_product_to_lin_space():
-    # Verify that the matrix representation function returns the correct matrix
+    """Verify that the matrix repr works for product spaces.
 
+    Here, since the domain shape ``(2, 3)`` and the range has shape ``(1, 3)``,
+    the shape of the matrix representation will be ``(2, 3, 1, 3)``.
+    """
     n = 3
-    rn = odl.rn(n)
-    A = np.random.rand(n, n)
-    Aop = odl.MatrixOperator(A)
-
-    m = 2
-    rm = odl.rn(m)
-    B = np.random.rand(n, m)
-    Bop = odl.MatrixOperator(B)
-
-    dom = ProductSpace(rn, rm)
-    ran = ProductSpace(rn, 1)
-
-    AB_matrix = np.hstack([A, B])
-    ABop = ProductSpaceOperator([[Aop, Bop]], dom, ran)
-
-    matrix_repr = matrix_representation(ABop)
-
-    assert almost_equal(np.sum(np.abs(AB_matrix - matrix_repr)), 1e-6)
-
-
-def test_matrix_representation_lin_space_to_product():
-    # Verify that the matrix representation function returns the correct matrix
-
-    n = 3
-    rn = odl.rn(n)
-    A = np.random.rand(n, n)
-    Aop = odl.MatrixOperator(A)
-
-    m = 2
-    rm = odl.rn(m)
-    B = np.random.rand(m, n)
-    Bop = odl.MatrixOperator(B)
-
-    dom = ProductSpace(rn, 1)
-    ran = ProductSpace(rn, rm)
-
-    AB_matrix = np.vstack([A, B])
-    ABop = ProductSpaceOperator([[Aop], [Bop]], dom, ran)
-
-    matrix_repr = matrix_representation(ABop)
-
-    assert almost_equal(np.sum(np.abs(AB_matrix - matrix_repr)), 1e-6)
-
-
-def test_matrix_representation_product_to_product():
-    # Verify that the matrix representation function returns the correct matrix
-
-    n = 3
-    rn = odl.rn(n)
-    A = np.random.rand(n, n)
-    Aop = odl.MatrixOperator(A)
-
-    m = 2
-    rm = odl.rn(m)
-    B = np.random.rand(m, m)
-    Bop = odl.MatrixOperator(B)
-
-    ran_and_dom = ProductSpace(rn, rm)
-
-    AB_matrix = np.vstack([np.hstack([A, np.zeros((n, m))]),
-                           np.hstack([np.zeros((m, n)), B])])
-    ABop = ProductSpaceOperator([[Aop, 0],
-                                 [0, Bop]],
-                                ran_and_dom, ran_and_dom)
-    matrix_repr = matrix_representation(ABop)
-
-    assert almost_equal(np.sum(np.abs(AB_matrix - matrix_repr)), 1e-6)
-
-
-def test_matrix_representation_product_to_product_two():
-    # Verify that the matrix representation function returns the correct matrix
-
-    n = 3
-    rn = odl.rn(n)
     A = np.random.rand(n, n)
     Aop = odl.MatrixOperator(A)
 
     B = np.random.rand(n, n)
     Bop = odl.MatrixOperator(B)
 
-    ran_and_dom = ProductSpace(rn, 2)
-
-    AB_matrix = np.vstack([np.hstack([A, np.zeros((n, n))]),
-                           np.hstack([np.zeros((n, n)), B])])
-    ABop = ProductSpaceOperator([[Aop, 0],
-                                 [0, Bop]],
-                                ran_and_dom, ran_and_dom)
+    ABop = ProductSpaceOperator([[Aop, Bop]])
     matrix_repr = matrix_representation(ABop)
 
-    assert almost_equal(np.sum(np.abs(AB_matrix - matrix_repr)), 1e-6)
+    assert matrix_repr.shape == (1, n, 2, n)
+    assert np.linalg.norm(A - matrix_repr[0, :, 0, :]) == pytest.approx(0)
+    assert np.linalg.norm(B - matrix_repr[0, :, 1, :]) == pytest.approx(0)
+
+
+def test_matrix_representation_lin_space_to_product():
+    """Verify that the matrix repr works for product spaces.
+
+    Here, since the domain shape ``(1, 3)`` and the range has shape ``(2, 3)``,
+    the shape of the matrix representation will be ``(2, 3, 1, 3)``.
+    """
+    n = 3
+    A = np.random.rand(n, n)
+    Aop = odl.MatrixOperator(A)
+
+    B = np.random.rand(n, n)
+    Bop = odl.MatrixOperator(B)
+
+    ABop = ProductSpaceOperator([[Aop],
+                                 [Bop]])
+
+    matrix_repr = matrix_representation(ABop)
+
+    assert matrix_repr.shape == (2, n, 1, n)
+    assert np.linalg.norm(A - matrix_repr[0, :, 0, :]) == pytest.approx(0)
+    assert np.linalg.norm(B - matrix_repr[1, :, 0, :]) == pytest.approx(0)
+
+
+def test_matrix_representation_product_to_product():
+    """Verify that the matrix repr works for product spaces.
+
+    Here, since the domain and range has shape ``(2, 3)``, the shape of the
+    matrix representation will be ``(2, 3, 2, 3)``.
+    """
+    n = 3
+    A = np.random.rand(n, n)
+    Aop = odl.MatrixOperator(A)
+
+    B = np.random.rand(n, n)
+    Bop = odl.MatrixOperator(B)
+
+    ABop = ProductSpaceOperator([[Aop, 0],
+                                 [0, Bop]])
+    matrix_repr = matrix_representation(ABop)
+
+    assert matrix_repr.shape == (2, n, 2, n)
+    assert np.linalg.norm(A - matrix_repr[0, :, 0, :]) == pytest.approx(0)
+    assert np.linalg.norm(B - matrix_repr[1, :, 1, :]) == pytest.approx(0)
 
 
 def test_matrix_representation_not_linear_op():
-    # Verify that the matrix representation function gives correct error
+    """Verify error when operator is non-linear"""
     class MyNonLinOp(odl.Operator):
         """Small nonlinear test operator."""
-        def __init__(self):
-            super(MyNonLinOp, self).__init__(
-                domain=odl.rn(3), range=odl.rn(4), linear=False)
-
         def _call(self, x):
             return x ** 2
 
-    nonlin_op = MyNonLinOp()
+    nonlin_op = MyNonLinOp(domain=odl.rn(3), range=odl.rn(3), linear=False)
     with pytest.raises(ValueError):
         matrix_representation(nonlin_op)
 
 
 def test_matrix_representation_wrong_domain():
-    # Verify that the matrix representation function gives correct error
+    """Verify that the matrix representation function gives correct error"""
     class MyOp(odl.Operator):
         """Small test operator."""
         def __init__(self):
@@ -160,7 +125,7 @@ def test_matrix_representation_wrong_domain():
 
 
 def test_matrix_representation_wrong_range():
-    # Verify that the matrix representation function gives correct error
+    """Verify that the matrix representation function gives correct error"""
     class MyOp(odl.Operator):
         """Small test operator."""
         def __init__(self):
@@ -178,8 +143,7 @@ def test_matrix_representation_wrong_range():
 
 
 def test_power_method_opnorm_symm():
-    # Test the power method on a matrix operator
-
+    """Test the power method on a symmetrix matrix operator"""
     # Test matrix with eigenvalues 1 and -2
     # Rather nasty case since the eigenvectors are almost parallel
     mat = np.array([[10, -18],
@@ -197,8 +161,7 @@ def test_power_method_opnorm_symm():
 
 
 def test_power_method_opnorm_nonsymm():
-    # Test the power method on a matrix operator
-
+    """Test the power method on a nonsymmetrix matrix operator"""
     # Singular values 5.5 and 6
     mat = np.array([[-1.52441557, 5.04276365],
                     [1.90246927, 2.54424763],
@@ -218,8 +181,7 @@ def test_power_method_opnorm_nonsymm():
 
 
 def test_power_method_opnorm_exceptions():
-    # Test the exceptions
-
+    """Test the exceptions"""
     space = odl.rn(2)
     op = odl.IdentityOperator(space)
 
