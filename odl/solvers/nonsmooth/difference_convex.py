@@ -112,7 +112,7 @@ def prox_dca(x, g, h, niter, gamma, callback=None):
         `Functional.proximal` factory.
     h : `Functional`
         The negative of the concave part. Needs to provide a
-        `Functional.proximal` factory.
+        `Functional.gradient` method.
     niter : int
         Number of iterations.
     gamma : positive float
