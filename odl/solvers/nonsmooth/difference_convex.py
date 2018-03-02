@@ -144,10 +144,6 @@ no=4&page=451&year=2003&ppage=462>`_. It solves the problem
     [SSC2003] Sun, W, Sampaio R J B, and Candido M A B. *Proximal point
     algorithm for minimization of DC function*. Journal of Computational
     Mathematics, 21.4 (2003), pp 451--462.
-
-    [TA1997] Tao, P D, and An, L T H. *Convex analysis approach to d.c.
-    programming: Theory, algorithms and applications*. Acta Mathematica
-    Vietnamica, 22.1 (1997), pp 289--355.
     """
     space = g.domain
     if h.domain != space:
