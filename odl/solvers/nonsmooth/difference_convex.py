@@ -151,7 +151,7 @@ no=4&page=451&year=2003&ppage=462>`_. It solves the problem
         raise ValueError('`g.domain` and `h.domain` need to be equal, but '
                          '{} != {}'.format(space, h.domain))
     for _ in range(niter):
-        g.proximal(gamma)(x + gamma * h.gradient(x), out=x)
+        g.proximal(gamma)(x.lincomb(1, x, gamma, h.gradient(x)), out=x)
 
         if callback is not None:
             callback(x)
@@ -234,9 +234,10 @@ def doubleprox_dc(x, y, g, h, phi, K, niter, gamma, mu, callback=None):
                          '{} != {}'.format(dual_space, K.range))
 
     for _ in range(niter):
-        g.proximal(gamma)(x + gamma * K.adjoint(y) -
-                          gamma * phi.gradient(x), out=x)
-        h.convex_conj.proximal(mu)(y + mu * K(x), out=y)
+        g.proximal(gamma)(x.lincomb(1, x,
+                                    gamma, K.adjoint(y) - phi.gradient(x)),
+                          out=x)
+        h.convex_conj.proximal(mu)(y.lincomb(1, y, mu, K(x)), out=y)
 
         if callback is not None:
             callback(x)
