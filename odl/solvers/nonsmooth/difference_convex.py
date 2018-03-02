@@ -34,10 +34,10 @@ def dca(x, g, h, niter, callback=None):
         Initial point, updated in-place.
     g : `Functional`
         Convex part. Needs to provide a `Functional.convex_conj` with a
-        `Functional.proximal` factory.
+        `Functional.gradient` method.
     h : `Functional`
         Negative of the concave part. Needs to provide a
-        `Functional.proximal` factory.
+        `Functional.gradient` method.
     niter : int
         Number of iterations.
     callback : callable, optional
@@ -66,9 +66,10 @@ def dca(x, g, h, niter, callback=None):
     and the iteration is given by
 
     .. math::
-        y_n \in \partial h(x_n), \qquad x_{n+1} \in \partial g^*(y_n)
+        y_n \in \partial h(x_n), \qquad x_{n+1} \in \partial g^*(y_n),
 
-    for :math:`n\geq 0`.
+    for :math:`n\geq 0`. Here, a subgradient is found by evaluating the
+    gradient method of the respective functionals.
 
     References
     ----------
