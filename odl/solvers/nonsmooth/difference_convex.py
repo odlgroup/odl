@@ -207,8 +207,8 @@ def doubleprox_dc(x, y, g, h, phi, K, niter, gamma, mu, callback=None):
     The iterations are given by
 
     .. math ::
-        x_{n+1} &= \mathrm{Prox}_{\gamma}^g (x_n + \gamma K^* y_n
-                   - \gamma \nabla \varphi(x_n)), \\
+        x_{n+1} &= \mathrm{Prox}_{\gamma}^g (x_n + \gamma (K^* y_n
+                   - \nabla \varphi(x_n))), \\
         y_{n+1} &= \mathrm{Prox}_{\mu}^{h^*} (y_n + \mu K x_{n+1}).
 
     To guarantee convergence, the parameter :math:`\gamma` must satisfy
