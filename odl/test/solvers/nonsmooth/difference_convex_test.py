@@ -13,6 +13,7 @@
 from __future__ import division
 import odl
 from odl.solvers import (dca, prox_dca, doubleprox_dc)
+from odl.solvers.nonsmooth.difference_convex import doubleprox_dc_simple
 import numpy as np
 import pytest
 
@@ -58,10 +59,12 @@ def test_dca():
     x_dca = x.copy()
     x_prox_dca = x.copy()
     x_doubleprox = x.copy()
+    x_simpl = x.copy()
 
     # Some additional parameters for some of the solvers
     phi = odl.solvers.ZeroFunctional(space)
     y = space.element(3)
+    y_simpl = y.copy()
     gamma = 1
     mu = 1
     K = odl.IdentityOperator(space)
@@ -69,12 +72,19 @@ def test_dca():
     dca(x_dca, g, h, niter)
     prox_dca(x_prox_dca, g, h, niter, gamma)
     doubleprox_dc(x_doubleprox, y, g, h, phi, K, niter, gamma, mu)
+    doubleprox_dc_simple(x_simpl, y_simpl, g, h, phi, K, niter, gamma, mu)
     expected = np.asarray([b - 1 / a, 0, b + 1 / a])
 
     dist_dca = np.min(np.abs(expected - float(x_dca)))
     dist_prox_cda = np.min(np.abs(expected - float(x_prox_dca)))
     dist_prox_doubleprox = np.min(np.abs(expected - float(x_doubleprox)))
 
+    # Optimized and simplified versions of doubleprox_dc should give
+    # the same result.
+    assert float(x_simpl) == pytest.approx(float(x_doubleprox))
+    assert float(y_simpl) == pytest.approx(float(y))
+
+    # All methods should give approximately one solution of the problem.
     assert dist_dca == pytest.approx(0, abs=1e-6)
     assert dist_prox_cda == pytest.approx(0, abs=1e-6)
     assert dist_prox_doubleprox == pytest.approx(0, abs=1e-6)

@@ -241,3 +241,14 @@ def doubleprox_dc(x, y, g, h, phi, K, niter, gamma, mu, callback=None):
 
         if callback is not None:
             callback(x)
+
+
+def doubleprox_dc_simple(x, y, g, h, phi, K, niter, gamma, mu):
+    """Non-optimized version of ``doubleprox_dc``.
+    This function is intended for debugging. It makes a lot of copies and
+    performs no error checking.
+    """
+    for _ in range(niter):
+        g.proximal(gamma)(x + gamma * K.adjoint(y) -
+                          gamma * phi.gradient(x), out=x)
+        h.convex_conj.proximal(mu)(y + mu * K(x), out=y)
