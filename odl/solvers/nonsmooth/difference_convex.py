@@ -116,7 +116,7 @@ def prox_dca(x, g, h, niter, gamma, callback=None):
     niter : int
         Number of iterations.
     gamma : positive float
-        Stepsize of the proximal steps.
+        Stepsize in the primal updates.
     callback : callable, optional
         Function called with the current iterate after each iteration.
 
