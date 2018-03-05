@@ -450,6 +450,11 @@ def nd_iterator(shape):
     shape : sequence of int
         The number of points per axis
 
+    Returns
+    -------
+    nd_iterator : generator
+        Generator returning tuples of integers of length ``len(shape)``.
+
     Examples
     --------
     >>> for pt in nd_iterator([2, 2]):

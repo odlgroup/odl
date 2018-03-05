@@ -50,13 +50,34 @@ def matrix_representation(op):
            [4, 5, 6],
            [7, 8, 9]])
 
-    Works with product spaces:
+    It also works with `ProductSpace`s and higher dimensional `TensorSpace`s.
+    In this case, the returned "matrix" will also be higher dimensional:
 
-    >>> prod_ft = odl.DiagonalOperator(op)
-    >>> matrix_representation(op)
-    array([[1, 2, 3],
-           [4, 5, 6],
-           [7, 8, 9]])
+    >>> space = odl.uniform_discr([0, 0], [2, 2], (2, 2))
+    >>> grad = odl.Gradient(space)
+    >>> tensor = odl.matrix_representation(grad)
+    >>> tensor.shape
+    (2L, 2L, 2L, 2L, 2L)
+
+    Since the "matrix" is now higher dimensional, we need to use e.g.
+    `numpy.tensordot` if we want to compute with the matrix representation:
+
+    >>> x = space.element(lambda x: x[0] ** 2 + 2 * x[1] ** 2)
+    >>> grad(x)
+    ProductSpace(uniform_discr([ 0.,  0.], [ 2.,  2.], (2, 2)), 2).element([
+    <BLANKLINE>
+            [[ 2.  ,  2.  ],
+             [-2.75, -6.75]],
+    <BLANKLINE>
+            [[ 4.  , -4.75],
+             [ 4.  , -6.75]]
+    ])
+    >>> np.tensordot(tensor, x, axes=grad.domain.ndim)
+    array([[[ 2.  ,  2.  ],
+            [-2.75, -6.75]],
+    <BLANKLINE>
+            [[ 4.  , -4.75],
+             [ 4.  , -6.75]]])
 
     Notes
     ----------
