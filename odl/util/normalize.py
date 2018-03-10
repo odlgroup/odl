@@ -106,29 +106,8 @@ def normalized_scalar_param_list(param, length, param_conv=None,
         raise ValueError('`length` must be nonnegative, got {}'
                          ''.format(length_in))
 
-    try:
-        # TODO: always use this when numpy >= 1.10 can be assumed
-        param = np.array(param, dtype=object, copy=True, ndmin=1)
-        nonconv_list = list(np.broadcast_to(param, (length,)))
-    except AttributeError:
-        # numpy.broadcast_to not available
-        if np.isscalar(param):
-            # Try this first, will work better with iterable input like '10'
-            nonconv_list = [param] * length
-        else:
-            try:
-                param_len = len(param)
-            except TypeError:
-                # Not a sequence -> single parameter
-                nonconv_list = [param] * length
-            else:
-                if param_len == 1:
-                    nonconv_list = list(param) * length
-                elif param_len == length:
-                    nonconv_list = list(param)
-                else:
-                    raise ValueError('sequence `param` has length {}, '
-                                     'expected {}'.format(param_len, length))
+    param = np.array(param, dtype=object, copy=True, ndmin=1)
+    nonconv_list = list(np.broadcast_to(param, (length,)))
 
     if len(nonconv_list) != length:
         raise ValueError('sequence `param` has length {}, expected {}'

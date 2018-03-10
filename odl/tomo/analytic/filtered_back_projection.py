@@ -11,7 +11,6 @@ import numpy as np
 
 from odl.discr import ResizingOperator
 from odl.trafos import FourierTransform, PYFFTW_AVAILABLE
-from odl.util.npy_compat import broadcast_to
 
 
 __all__ = ('fbp_op', 'fbp_filter_op', 'tam_danielson_window',
@@ -293,7 +292,7 @@ def parker_weighting(ray_trafo, q=0.25):
 
     scale = 0.5 * alen / np.pi
     return ray_trafo.range.element(
-        broadcast_to(S_sum * scale, ray_trafo.range.shape))
+        np.broadcast_to(S_sum * scale, ray_trafo.range.shape))
 
 
 def fbp_filter_op(ray_trafo, padding=True, filter_type='Ram-Lak',

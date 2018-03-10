@@ -15,6 +15,7 @@ import numpy as np
 from odl.discr import RectPartition
 from odl.tomo.util import perpendicular_vector, is_inside_bounds
 from odl.util import indent, signature_string, array_str
+from odl.util.npy_compat import moveaxis
 
 
 __all__ = ('Detector',
@@ -187,7 +188,7 @@ class Detector(object):
             deriv = self.surface_deriv(param)
             if deriv.ndim > 2:
                 # Vectorized, need to reshape (N, 2, 3) to (2, N, 3)
-                deriv = np.moveaxis(deriv, -2, 0)
+                deriv = moveaxis(deriv, -2, 0)
             normal = np.cross(*deriv, axis=-1)
             normal /= np.linalg.norm(normal, axis=-1, keepdims=True)
             return normal
@@ -243,7 +244,7 @@ class Detector(object):
             deriv = self.surface_deriv(param)
             if deriv.ndim > 2:
                 # Vectorized, need to reshape (N, 2, 3) to (2, N, 3)
-                deriv = np.moveaxis(deriv, -2, 0)
+                deriv = moveaxis(deriv, -2, 0)
             cross = np.cross(*deriv, axis=-1)
             measure = np.linalg.norm(cross, axis=-1)
             if scalar_out:
@@ -401,10 +402,9 @@ class Flat1dDetector(Detector):
             return self.axis
         else:
             # Produce array of shape `param.shape + (ndim,)` by broadcasting
-            axis_slc = (None,) * param.ndim + (slice(None),)
-            # TODO: use broadcast_to from Numpy when v1.10 is required
-            zeros = np.zeros(param.shape + (1,))
-            return self.axis[axis_slc] + zeros
+            bcast_slc = (None,) * param.ndim + (slice(None),)
+            return np.broadcast_to(
+                self.axis[bcast_slc], param.shape + self.axis.shape)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -611,13 +611,8 @@ class Flat2dDetector(Detector):
         if squeeze_out:
             return self.axes
         else:
-            # Produce array of shape `broadcast(*param).shape + (2, 3)`
-            # by explicit broadcasting.
-            # TODO: use broadcast_to from Numpy when v1.10 is required
-            axes_slc = ((None,) * len(np.broadcast(*param).shape) +
-                        (slice(None), slice(None)))
-            zeros = np.zeros(np.broadcast(*param).shape + (1, 1))
-            return self.axes[axes_slc] + zeros
+            return np.broadcast_to(
+                self.axes, np.broadcast(*param).shape + self.axes.shape)
 
     def __repr__(self):
         """Return ``repr(self)``."""

@@ -21,8 +21,7 @@ from odl.util import (
     is_real_dtype, is_complex_floating_dtype, dtype_repr, dtype_str,
     complex_dtype, real_dtype, signature_string,
     is_valid_input_array, is_valid_input_meshgrid,
-    out_shape_from_array, out_shape_from_meshgrid, vectorize, broadcast_to,
-    writable_array)
+    out_shape_from_array, out_shape_from_meshgrid, vectorize, writable_array)
 from odl.util.utility import preload_first_arg, getargspec
 
 
@@ -93,7 +92,7 @@ def _default_in_place(func, x, out, **kwargs):
         else:
             raise RuntimeError('bad input')
 
-        bcast_results = [broadcast_to(res, scalar_out_shape)
+        bcast_results = [np.broadcast_to(res, scalar_out_shape)
                          for res in flat_results]
         # New array that is flat in the `out_shape` axes, reshape it
         # to the final `out_shape + scalar_shape`, using the same
@@ -569,7 +568,7 @@ class FunctionSpace(LinearSpace):
                             reshaped = np.reshape(res, scalar_out_shape)
                         except ValueError:
                             bcast_results.append(
-                                broadcast_to(res, scalar_out_shape))
+                                np.broadcast_to(res, scalar_out_shape))
                         else:
                             bcast_results.append(reshaped)
 
@@ -1331,7 +1330,7 @@ class FunctionSpaceElement(LinearSpaceElement):
                     # Broadcast the returned element, but not in the
                     # scalar case. The resulting array may be read-only,
                     # in which case we copy.
-                    out = broadcast_to(out, out_shape)
+                    out = np.broadcast_to(out, out_shape)
                     if not out.flags.writeable:
                         out = out.copy()
 
@@ -1353,7 +1352,8 @@ class FunctionSpaceElement(LinearSpaceElement):
                             shp = getattr(res, 'shape', ())
                             if shp and shp[0] == 1:
                                 res = res.reshape(res.shape[1:])
-                        bcast_res.append(broadcast_to(res, scalar_out_shape))
+                        bcast_res.append(
+                            np.broadcast_to(res, scalar_out_shape))
 
                     out_arr = np.array(bcast_res,
                                        dtype=self.space.scalar_out_dtype)

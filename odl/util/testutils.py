@@ -327,7 +327,8 @@ def noise_array(space):
         return np.array([noise_array(si) for si in space])
     else:
         if space.dtype == bool:
-            arr = np.random.randint(0, 2, size=space.shape, dtype=bool)
+            # TODO(kohr-h): use `randint(..., dtype=bool)` from Numpy 1.11 on
+            arr = np.random.randint(0, 2, size=space.shape).astype(bool)
         elif np.issubdtype(space.dtype, np.unsignedinteger):
             arr = np.random.randint(0, 10, space.shape)
         elif np.issubdtype(space.dtype, np.signedinteger):

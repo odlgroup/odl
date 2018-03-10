@@ -6,6 +6,9 @@ matrix:
           env: NUMPY_VERSION=1.13
 
         - python: 3.6
+          env: NUMPY_VERSION=1.10.1
+
+        - python: 3.6
           env: NUMPY_VERSION=1.12
 
         - python: 3.6
@@ -46,9 +49,10 @@ install:
     # make it run faster and avoid downloading big stuff like mkl
     - conda create -n testenv python=$TRAVIS_PYTHON_VERSION nomkl pywavelets
     - source activate testenv
-    # We avoid annoying issues with building pyfftw wheels by using a conda-forge version
-    - pip install "numpy==$NUMPY_VERSION" scipy future scikit-image pytest pytest-cov  # faster than conda
-    - conda install -c conda-forge pyfftw  # compilation sometimes breaks on pip, using conda therefore
+    # Install packages with pip if possible, it's way faster
+    - pip install "numpy==$NUMPY_VERSION" scipy future scikit-image pytest pytest-cov;
+    # Building pyfftw wheels sometimes fails, using a conda-forge version instead
+    - conda install -c conda-forge pyfftw
 
     # Doc dependencies
     - if [[ "$BUILD_DOCS" == "true" ]]; then

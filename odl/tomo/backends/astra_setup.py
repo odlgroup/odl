@@ -39,6 +39,7 @@ from odl.tomo.geometry import (
     Geometry, DivergentBeamGeometry, ParallelBeamGeometry,
     Flat1dDetector, Flat2dDetector)
 from odl.tomo.util.utility import euler_matrix
+from odl.util.npy_compat import moveaxis
 
 # Make sure that ASTRA >= 1.7 is used
 if ASTRA_AVAILABLE:
@@ -275,7 +276,7 @@ def astra_conebeam_3d_geom_to_vec(geometry):
 
     # Vectors from detector pixel (0, 0) to (1, 0) and (0, 0) to (0, 1)
     # `det_axes` gives shape (N, 2, 3), swap to get (2, N, 3)
-    det_axes = np.moveaxis(geometry.det_axes(angles), -2, 0)
+    det_axes = moveaxis(geometry.det_axes(angles), -2, 0)
     px_sizes = geometry.det_partition.cell_sides
     # Swap detector axes to have better memory layout in  projection data.
     # ASTRA produces `(v, theta, u)` layout, and to map to ODL layout
@@ -403,7 +404,7 @@ def astra_parallel_3d_geom_to_vec(geometry):
 
     # Vectors from detector pixel (0, 0) to (1, 0) and (0, 0) to (0, 1)
     # `det_axes` gives shape (N, 2, 3), swap to get (2, N, 3)
-    det_axes = np.moveaxis(geometry.det_axes(angles), -2, 0)
+    det_axes = moveaxis(geometry.det_axes(angles), -2, 0)
     px_sizes = geometry.det_partition.cell_sides
     # Swap detector axes to have better memory layout in  projection data.
     # ASTRA produces `(v, theta, u)` layout, and to map to ODL layout
