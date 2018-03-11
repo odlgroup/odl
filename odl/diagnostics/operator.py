@@ -252,7 +252,7 @@ class OperatorTest(object):
 
                     # Need to be slightly more generous here due to possible
                     # numerical instabilities.
-                    # TODO: perform more tests to find a good threshold here.
+                    # TODO: perform more tests to find a good threshold here
                     if err < 10 * self.tol:
                         derivative_ok = True
                         break

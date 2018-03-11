@@ -32,7 +32,7 @@ __all__ = ('set',
            )
 
 # Set old Numpy printing behavior as to not invalidate all doctests.
-# TODO: switch to new behavior when Numpy 1.14 is minimum
+# TODO(kohr-h): switch to new behavior when Numpy 1.14 is minimum
 try:
     np.set_printoptions(legacy='1.13')
 except TypeError:

@@ -25,6 +25,7 @@ from odl.solvers.nonsmooth.proximal_operators import (
     proximal_const_func, proximal_box_constraint,
     proximal_convex_conj_kl, proximal_convex_conj_kl_cross_entropy,
     combine_proximals, proximal_convex_conj)
+from odl.ufunc_ops import exp
 from odl.util import (
     REPR_PRECISION, npy_printoptions, repr_string, signature_string_parts,
     conj_exponent, moveaxis)
@@ -91,10 +92,10 @@ class LpNorm(Functional):
 
     @property
     def exponent(self):
-        """The exponent ``p`` of the Lp-norm."""
+        """The exponent p of the p-norm."""
         return self.__exponent
 
-    # TODO: update when integration operator is in place: issue #440
+    # TODO(#440): update when integration operator is in place
     def _call(self, x):
         """Return ``self(x)``."""
         if self.exponent == 0:
@@ -376,7 +377,7 @@ class IndicatorLpUnitBall(Functional):
                            allow_mixed_seps=False)
 
 
-# TODO: make work for `TensorSpace`
+# TODO(kohr-h): make work for `TensorSpace`
 class GroupL1Norm(Functional):
 
     r"""The mixed L1-Lp norm (or cross norm) for vector-valued functions.
@@ -440,7 +441,7 @@ class GroupL1Norm(Functional):
 
     def _call(self, x):
         """Return ``self(x)``."""
-        # TODO: update when integration operator is in place: issue #440
+        # TODO(#440): use integration operator when available
         pointwise_norm = self.pointwise_norm(x)
         return pointwise_norm.inner(pointwise_norm.space.one())
 
@@ -820,7 +821,7 @@ class L2NormSquared(Functional):
         super(L2NormSquared, self).__init__(
             space=space, linear=False, grad_lipschitz=2)
 
-    # TODO: update when integration operator is in place: issue #440
+    # TODO(#440): use integration operator when available
     def _call(self, x):
         """Return ``self(x)``."""
         return x.inner(x)
@@ -1336,7 +1337,7 @@ class KullbackLeibler(Functional):
         """The prior in the Kullback-Leibler functional."""
         return self.__prior
 
-    # TODO: update when integration operator is in place: issue #440
+    # TODO(#440): use integration operator when available
     def _call(self, x):
         """Return ``self(x)``.
 
@@ -1475,7 +1476,7 @@ class KullbackLeiblerConvexConj(Functional):
         """The prior in convex conjugate Kullback-Leibler functional."""
         return self.__prior
 
-    # TODO: update when integration operator is in place: issue #440
+    # TODO(#440): use integration operator when available
     def _call(self, x):
         """Return ``self(x)``.
 
@@ -1634,7 +1635,7 @@ class KullbackLeiblerCrossEntropy(Functional):
         """The prior in the Kullback-Leibler functional."""
         return self.__prior
 
-    # TODO: update when integration operator is in place: issue #440
+    # TODO(#440): use integration operator when available
     def _call(self, x):
         """Return ``self(x)``.
 
@@ -1766,7 +1767,7 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
         """The prior in convex conjugate Kullback-Leibler Cross Entorpy."""
         return self.__prior
 
-    # TODO: update when integration operator is in place: issue #440
+    # TODO(#440): use integration operator when available
     def _call(self, x):
         """Return ``self(x)``."""
         if self.prior is None:
@@ -1775,29 +1776,13 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
             tmp = (self.prior * (np.exp(x) - 1)).inner(self.domain.one())
         return tmp
 
-    # TODO: replace this when UFuncOperators is in place: PL #576
     @property
     def gradient(self):
         """Gradient operator of the functional."""
-        functional = self
-
-        class KLCrossEntCCGradient(Operator):
-
-            """The gradient operator of this functional."""
-
-            def __init__(self):
-                """Initialize a new instance."""
-                super(KLCrossEntCCGradient, self).__init__(
-                    functional.domain, functional.domain, linear=False)
-
-            def _call(self, x):
-                """Return ``self(x)``."""
-                if functional.prior is None:
-                    return self.domain.element(np.exp(x))
-                else:
-                    return functional.prior * np.exp(x)
-
-        return KLCrossEntCCGradient()
+        if self.prior is None:
+            return exp(self.domain)
+        else:
+            return self.prior * exp(self.domain)
 
     @property
     def proximal(self):
@@ -2115,7 +2100,7 @@ class QuadraticForm(Functional):
             return ConstantOperator(self.vector, self.domain)
         else:
             if not self.operator.is_linear:
-                # TODO: Acutally works otherwise, but needs more work
+                # TODO: acutally valid, but needs more work
                 raise NotImplementedError('`operator` must be linear')
 
             # Figure out if operator is symmetric

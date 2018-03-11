@@ -385,7 +385,7 @@ class ComplexNumbers(Field):
         if inp is not None:
             # Workaround for missing __complex__ of numpy.ndarray
             # for Numpy version < 1.12
-            # TODO: remove when Numpy >= 1.12 is required
+            # TODO(kohr-h): remove when Numpy >= 1.12 is required
             if isinstance(inp, np.ndarray):
                 return complex(inp.reshape([1])[0])
             else:

@@ -204,7 +204,7 @@ def show_discrete_data(values, grid, title=None, method='',
              (values.ndim == 2 and method not in ('', 'imshow')))):
         update_in_place = False
 
-    if values.ndim == 1:  # TODO: maybe a plotter class would be better
+    if values.ndim == 1:
         if not method:
             if interp == 'nearest':
                 method = 'step'

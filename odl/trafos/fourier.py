@@ -163,7 +163,6 @@ class DiscreteFourierTransformBase(Operator):
         --------
         pyfftw_call : Call pyfftw backend directly
         """
-        # TODO: Implement zero padding
         if self.impl == 'numpy':
             out[:] = self._call_numpy(x.asarray())
         else:
@@ -891,7 +890,6 @@ class FourierTransformBase(Operator):
         --------
         pyfftw_call : Call pyfftw backend directly
         """
-        # TODO: Implement zero padding
         if self.impl == 'numpy':
             out[:] = self._call_numpy(x.asarray())
         else:

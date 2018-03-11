@@ -798,7 +798,7 @@ def mrc_header_from_params(shape, dtype, kind, **kwargs):
                         dtype='int32').reshape([1])
     origin = np.zeros(3, dtype='int32')
     map = np.fromstring('MAP ', dtype='S1')
-    # TODO: no idea how to properly choose the machine stamp
+    # TODO(kohr-h): no idea how to properly choose the machine stamp
     machst = np.fromiter(b'DD  ', dtype='S1')
     nlabl = np.array(nlabl, dtype='int32').reshape([1])
     label = np.zeros((10, 80), dtype='S1')  # ensure correct size
@@ -812,6 +812,7 @@ def mrc_header_from_params(shape, dtype, kind, **kwargs):
 
     header = OrderedDict()
     for field in header_fields:
+        # TODO(kohr-h): replace `eval` with fixed values, even if repetitive
         header[field['name']] = {'offset': field['offset'],
                                  'value': eval(field['name'])}
 

@@ -65,10 +65,6 @@ numpy.{}
 """.format(name)
     UFUNCS.append((name, n_in, n_out, doc))
 
-# TODO: add the following reductions (to the CUDA implementation):
-# ['var', 'trace', 'tensordot', 'std', 'ptp', 'mean', 'diff', 'cumsum',
-#  'cumprod', 'average']
-
 
 # --- Wrappers for `Tensor` --- #
 

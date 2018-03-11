@@ -212,7 +212,7 @@ class MatrixWeighting(Weighting):
         # Lazy import to improve `import odl` time
         import scipy.sparse
 
-        # TODO: fix dead link `scipy.sparse.spmatrix`
+        # TODO(kohr-h): fix dead link `scipy.sparse.spmatrix`
         precomp_mat_pow = kwargs.pop('precomp_mat_pow', False)
         self._cache_mat_pow = bool(kwargs.pop('cache_mat_pow', True))
         self._cache_mat_decomp = bool(kwargs.pop('cache_mat_decomp', False))
@@ -317,7 +317,7 @@ class MatrixWeighting(Weighting):
         import scipy.linalg
         import scipy.sparse
 
-        # TODO: fix dead link `scipy.linalg.decomp.eigh`
+        # TODO(kohr-h): fix dead link `scipy.linalg.decomp.eigh`
         if scipy.sparse.isspmatrix(self.matrix):
             raise NotImplementedError('sparse matrix not supported')
 

@@ -30,7 +30,7 @@ frequency_scaling = simple_fixture(
 weighting = simple_fixture('weighting', [None, 1.0])
 
 # Find the valid projectors
-# TODO: Add nonuniform once #671 is solved
+# TODO(doable, #671): add nonuniform
 projectors = [skip_if_no_astra('par2d astra_cpu uniform'),
               skip_if_no_astra('cone2d astra_cpu uniform'),
               skip_if_no_astra_cuda('par2d astra_cuda uniform'),

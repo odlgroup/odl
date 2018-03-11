@@ -240,7 +240,7 @@ def simple_fixture(name, params, fmt=None):
 
         ids = []
         for p in params:
-            # TODO: other types of decorators?
+            # TODO(kohr-h): other types of decorators?
             if (isinstance(p, _pytest.mark.MarkDecorator) and
                     p.name == 'skipif'):
                 # Unwrap the wrapped object in the decorator

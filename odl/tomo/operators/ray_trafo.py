@@ -220,9 +220,10 @@ class RayTransformBase(Operator):
                   np.isclose(reco_space.weighting.const,
                              reco_space.cell_volume)):
                 # Approximate cell volume
-                # TODO: find a way to treat angles and detector differently
-                # regarding weighting. While the detector should be uniformly
-                # discretized, the angles do not have to and often are not.
+                # TODO(kohr-h): find a way to treat angles and detector
+                # differently regarding weighting. While the detector should
+                # be uniformly discretized, the angles do not have to, and
+                # often are not.
                 # The needed partition property is available since
                 # commit a551190d, but weighting is not adapted yet.
                 # See also issue #286

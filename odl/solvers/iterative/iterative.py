@@ -20,9 +20,6 @@ __all__ = ('landweber', 'conjugate_gradient', 'conjugate_gradient_normal',
            'gauss_newton', 'kaczmarz')
 
 
-# TODO: update all docs
-
-
 def landweber(op, x, rhs, niter, omega=1, projection=None, callback=None):
     """Optimized implementation of Landweber's method.
 
@@ -93,7 +90,7 @@ def landweber(op, x, rhs, niter, omega=1, projection=None, callback=None):
     `Wikipedia article
     <https://en.wikipedia.org/wiki/Landweber_iteration>`_.
     """
-    # TODO: add a book reference
+    # TODO(kohr-h): add a book reference
 
     if x not in op.domain:
         raise TypeError('`x` {!r} is not in the domain of `op` {!r}'
@@ -153,8 +150,8 @@ def conjugate_gradient(op, x, rhs, niter, callback=None):
     --------
     conjugate_gradient_normal : Solver for nonsymmetric matrices
     """
-    # TODO: add a book reference
-    # TODO: update doc
+    # TODO(kohr-h): add a book reference
+    # TODO(kohr-h): write up the math
 
     if op.domain != op.range:
         raise ValueError('operator needs to be self-adjoint')
@@ -239,8 +236,8 @@ Conjugate_gradient_on_the_normal_equations>`_.
     conjugate_gradient : Optimized solver for symmetric matrices
     conjugate_gradient_nonlinear : Equivalent solver but for nonlinear case
     """
-    # TODO: add a book reference
-    # TODO: update doc
+    # TODO(kohr-h): add a book reference
+    # TODO(kohr-h): write up the math
 
     if x not in op.domain:
         raise TypeError('`x` {!r} is not in the domain of `op` {!r}'

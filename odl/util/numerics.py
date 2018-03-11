@@ -625,8 +625,8 @@ def _apply_padding(lhs_arr, rhs_arr, offset, pad_mode, direction):
     else:
         working_slc = list(full_slc)
 
-    # TODO: order axes according to padding size for optimization (largest
-    # last)? Axis strides could be important, too.
+    # TODO(kohr-h): order axes according to padding size for optimization
+    # (largest last)? Axis strides could be important, too.
     for axis, (n_lhs, n_rhs) in enumerate(zip(lhs_arr.shape, rhs_arr.shape)):
 
         if n_lhs <= n_rhs:
@@ -663,15 +663,14 @@ def _apply_padding(lhs_arr, rhs_arr, offset, pad_mode, direction):
         # Slice tuples used to index LHS and RHS for left and right padding,
         # respectively. Since `lhs_arr` is used on both sides of the
         # assignments, full slices are used in all axes except `axis`.
-        # TODO: change comment
+        # TODO(kohr-h): change comment
 
-        # TODO: use working_slc instead of full_slc
         lhs_slc_l, lhs_slc_r = list(working_slc), list(working_slc)
         rhs_slc_l, rhs_slc_r = list(working_slc), list(working_slc)
 
         # We're always using the outer (excess) parts involved in padding
         # on the LHS of the assignment, so we set them here.
-        # TODO: change comment
+        # TODO(kohr-h): change comment
         pad_slc_outer_l, pad_slc_outer_r = _padding_slices_outer(
             lhs_arr, rhs_arr, axis, offset)
 

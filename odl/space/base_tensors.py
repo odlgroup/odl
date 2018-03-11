@@ -442,7 +442,8 @@ class TensorSpace(LinearSpace):
                    self.element(np.random.uniform(size=self.shape) +
                                 np.random.uniform(size=self.shape) * 1j))
         else:
-            # TODO: return something that always works, like zeros or ones?
+            # TODO(kohr-h): return something that always works, like zeros
+            # or ones?
             raise NotImplementedError('no examples available for non-numeric'
                                       'data type')
 

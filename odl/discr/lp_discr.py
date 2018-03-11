@@ -398,7 +398,7 @@ class DiscreteLp(DiscretizedSpace):
     def _inner(self, x, y):
         """Return ``self.inner(x, y)``."""
         if self.is_uniform and not self.is_uniformly_weighted:
-            # TODO: implement without copying x
+            # TODO(kohr-h): implement without copying x
             bdry_fracs = self.partition.boundary_cell_fractions
             func_list = _scaling_func_list(bdry_fracs, exponent=1.0)
             x_arr = apply_on_boundary(x, func=func_list, only_once=False)
@@ -409,7 +409,7 @@ class DiscreteLp(DiscretizedSpace):
     def _norm(self, x):
         """Return ``self.norm(x)``."""
         if self.is_uniform and not self.is_uniformly_weighted:
-            # TODO: implement without copying x
+            # TODO(kohr-h): implement without copying x
             bdry_fracs = self.partition.boundary_cell_fractions
             func_list = _scaling_func_list(bdry_fracs, exponent=self.exponent)
             x_arr = apply_on_boundary(x, func=func_list, only_once=False)
@@ -430,7 +430,7 @@ class DiscreteLp(DiscretizedSpace):
         else:
             return super(DiscreteLp, self)._dist(x, y)
 
-    # TODO: add byaxis_out when discretized tensor-valued functions are
+    # TODO(kohr-h): add byaxis_out when discretized tensor-valued functions are
     # available
 
     @property
@@ -1916,7 +1916,7 @@ def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
                                  nodes_on_bdry=nodes_on_bdry)
 
     dtype = kwargs.pop('dtype', discr.dtype)
-    # TODO: weighting
+    # TODO(kohr-h): weighting
     return uniform_discr_frompartition(new_part, exponent=discr.exponent,
                                        interp=discr.interp, impl=discr.impl,
                                        dtype=dtype, **kwargs)

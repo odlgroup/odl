@@ -17,9 +17,6 @@ from odl.solvers.util import ConstantLineSearch
 __all__ = ('steepest_descent', 'adam')
 
 
-# TODO: update all docs
-
-
 def steepest_descent(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
                      projection=None, callback=None):
     """Steepest descent method to minimize an objective function.

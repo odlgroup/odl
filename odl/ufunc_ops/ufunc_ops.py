@@ -250,7 +250,7 @@ def ufunc_class_factory(name, nargin, nargout, docstring):
 
     def _call(self, x, out=None):
         """Return ``self(x)``."""
-        # TODO: use `__array_ufunc__` when implemented on `ProductSpace`,
+        # TODO(#1301): use `__array_ufunc__` on `ProductSpace` when available,
         # or try both
         if out is None:
             if nargin == 1:

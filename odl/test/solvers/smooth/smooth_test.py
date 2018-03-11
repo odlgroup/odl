@@ -24,7 +24,7 @@ def functional(request):
     """functional with optimum 0 at 0."""
     name = request.param
 
-    # TODO: quadratic (#606) functionals
+    # TODO(doable, #606): quadratic functionals
 
     if name == 'l2_squared':
         space = odl.rn(3)

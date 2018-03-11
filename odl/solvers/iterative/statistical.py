@@ -168,7 +168,7 @@ def osmlem(op, x, data, niter, noise='poisson', callback=None, **kwargs):
 
     if noise == 'poisson':
         # Parameter used to enforce positivity.
-        # TODO: let users give this.
+        # TODO: let users give this
         eps = 1e-8
 
         if np.any(np.less(x, 0)):

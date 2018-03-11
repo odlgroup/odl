@@ -396,7 +396,7 @@ class NearestInterpolation(FunctionSpaceMapping):
 
     def _call(self, x, out=None):
         """Return ``self(x[, out])``."""
-        # TODO: pass reasonable options on to the interpolator
+        # TODO(kohr-h): pass reasonable options on to the interpolator
         def nearest(arg, out=None):
             """Interpolating function with vectorization."""
             if is_valid_input_meshgrid(arg, self.grid.ndim):
@@ -465,7 +465,7 @@ class LinearInterpolation(FunctionSpaceMapping):
 
     def _call(self, x, out=None):
         """Return ``self(x[, out])``."""
-        # TODO: pass reasonable options on to the interpolator
+        # TODO(kohr-h): pass reasonable options on to the interpolator
         def linear(arg, out=None):
             """Interpolating function with vectorization."""
             if is_valid_input_meshgrid(arg, self.grid.ndim):
@@ -984,7 +984,7 @@ class _PerAxisInterpolator(_Interpolator):
         for lo_hi, edge in zip(product(*([['l', 'h']] * len(indices))),
                                product(*edge_indices)):
             weight = 1.0
-            # TODO: determine best summation order from array strides
+            # TODO(kohr-h): determine best summation order from array strides
             for lh, w_lo, w_hi in zip(lo_hi, low_weights, high_weights):
 
                 # We don't multiply in-place to exploit the cheap operations

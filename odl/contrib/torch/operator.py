@@ -19,7 +19,8 @@ import torch
 
 __all__ = ('OperatorAsAutogradFunction', 'OperatorAsModule')
 
-# TODO: ProductSpaceOperator as implementation of channels_in and channels_out?
+# TODO(kohr-h): ProductSpaceOperator as implementation of channels_in and
+# channels_out?
 
 
 class OperatorAsAutogradFunction(torch.autograd.Function):
@@ -96,16 +97,16 @@ class OperatorAsAutogradFunction(torch.autograd.Function):
          14
         [torch.FloatTensor of size 1]
         """
-        # TODO: batched evaluation
+        # TODO(kohr-h): batched evaluation
         if not self.operator.is_linear:
             # Only needed for nonlinear operators
             self.save_for_backward(input)
 
-        # TODO: use GPU memory directly if possible
+        # TODO(PR #1229): use GPU memory directly if possible
         input_arr = input.cpu().numpy()
         if any(s == 0 for s in input_arr.strides):
-            # TODO: remove when Numpy issue #9165 is fixed
-            # https://github.com/numpy/numpy/pull/9177
+            # TODO(numpy #9165): remove when Numpy copies automatically.
+            # PR: https://github.com/numpy/numpy/pull/9177
             input_arr = input_arr.copy()
 
         op_result = self.operator(input_arr)
@@ -204,12 +205,12 @@ class OperatorAsAutogradFunction(torch.autograd.Function):
         computing ``[f'(x)^*(y)]`` using the input ``x`` stored during
         the previous `forward` pass.
         """
-        # TODO: implement directly for GPU data
+        # TODO(PR #1229): implement directly for GPU data
         if not self.operator.is_linear:
             input_arr = self.saved_variables[0].data.cpu().numpy()
             if any(s == 0 for s in input_arr.strides):
-                # TODO: remove when Numpy issue #9165 is fixed
-                # https://github.com/numpy/numpy/pull/9177
+                # TODO(numpy #9165): remove when Numpy copies automatically.
+                # PR: https://github.com/numpy/numpy/pull/9177
                 input_arr = input_arr.copy()
 
         grad = None
@@ -230,8 +231,8 @@ class OperatorAsAutogradFunction(torch.autograd.Function):
         if self.needs_input_grad[0]:
             grad_output_arr = grad_output.cpu().numpy()
             if any(s == 0 for s in grad_output_arr.strides):
-                # TODO: remove when Numpy issue #9165 is fixed
-                # https://github.com/numpy/numpy/pull/9177
+                # TODO(numpy #9165): remove when Numpy copies automatically.
+                # PR: https://github.com/numpy/numpy/pull/9177
                 grad_output_arr = grad_output_arr.copy()
 
             if self.operator.is_linear:

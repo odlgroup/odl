@@ -603,7 +603,7 @@ def test_inner(tspace):
     xd = noise_element(tspace)
     yd = noise_element(tspace)
 
-    # TODO: add weighting
+    # TODO(kohr-h): add weighting
     correct_inner = np.vdot(yd, xd)
     assert tspace.inner(xd, yd) == pytest.approx(correct_inner)
     assert xd.inner(yd) == pytest.approx(correct_inner)

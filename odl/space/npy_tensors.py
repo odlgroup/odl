@@ -1797,7 +1797,7 @@ def _blas_is_applicable(*args):
         return False
     elif any(x.size > np.iinfo('int32').max for x in args):
         # Temporary fix for 32 bit int overflow in BLAS
-        # TODO: use chunking instead
+        # TODO(#1200): use chunking instead
         return False
     else:
         return True
@@ -2167,7 +2167,7 @@ class NumpyTensorSpaceArrayWeighting(ArrayWeighting):
             The norm of the provided tensor.
         """
         if self.exponent == 2.0:
-            norm_squared = self.inner(x, x).real  # TODO: optimize?!
+            norm_squared = self.inner(x, x).real
             if norm_squared < 0:
                 norm_squared = 0.0  # Compensate for numerical error
             return float(np.sqrt(norm_squared))

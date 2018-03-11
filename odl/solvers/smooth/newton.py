@@ -173,7 +173,7 @@ def newtons_method(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
         Goal functional. Needs to have ``f.gradient`` and
         ``f.gradient.derivative``.
     x : ``op.domain`` element
-        Starting point of the iteration
+        Starting point of the iteration.
     line_search : float or `LineSearch`, optional
         Strategy to choose the step length. If a float is given, uses it as a
         fixed step length.
@@ -195,7 +195,6 @@ def newtons_method(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
     [GNS2009] Griva, I, Nash, S G, and Sofer, A. *Linear and nonlinear
     optimization*. Siam, 2009.
     """
-    # TODO: update doc
     grad = f.gradient
     if x not in grad.domain:
         raise TypeError('`x` {!r} is not in the domain of `f` {!r}'

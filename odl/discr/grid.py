@@ -507,7 +507,7 @@ class RectGrid(Set):
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        # TODO: update with #841
+        # TODO(doable, #841): update (what exactly)
         coord_vec_str = tuple(cv.tobytes() for cv in self.coord_vectors)
         return hash((type(self), coord_vec_str))
 

@@ -26,8 +26,8 @@ from odl.util import writable_array
 __all__ = ('astra_cpu_forward_projector', 'astra_cpu_back_projector')
 
 
-# TODO: use context manager when creating data structures
-# TODO: is magnification scaling at the right place?
+# TODO(kohr-h): use context manager when creating data structures
+# TODO(kohr-h): is magnification scaling at the right place?
 
 def astra_cpu_forward_projector(vol_data, geometry, proj_space, out=None):
     """Run an ASTRA forward projection on the given data using the CPU.
@@ -175,7 +175,7 @@ def astra_cpu_back_projector(proj_data, geometry, reco_space, out=None):
                          allow_copy=True)
 
     # Create projector
-    # TODO: implement with different schemes for angles and detector
+    # TODO(kohr-h): implement with different schemes for angles and detector
     if not all(s == proj_data.space.interp_byaxis[0]
                for s in proj_data.space.interp_byaxis):
         raise ValueError('data interpolation must be the same in each '

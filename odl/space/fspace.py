@@ -1008,7 +1008,7 @@ class FunctionSpace(LinearSpace):
         Gaussian
         Linear gradients
         """
-        # TODO: adapt for tensor-valued functions
+        # TODO(kohr-h): adapt for tensor-valued functions
 
         # Get the points and calculate some statistics on them
         mins = self.domain.min()

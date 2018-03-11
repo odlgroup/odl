@@ -455,7 +455,7 @@ def astra_projection_geometry(geometry):
     if (isinstance(geometry, ParallelBeamGeometry) and
             isinstance(geometry.detector, (Flat1dDetector, Flat2dDetector)) and
             geometry.ndim == 2):
-        # TODO: change to parallel_vec when available
+        # TODO(kohr-h): change to parallel_vec when available
         det_width = geometry.det_partition.cell_sides[0]
         det_count = geometry.detector.size
         # Instead of rotating the data by 90 degrees counter-clockwise,

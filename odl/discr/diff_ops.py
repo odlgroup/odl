@@ -135,7 +135,6 @@ class PartialDerivative(PointwiseTensorFieldOperator):
         if out is None:
             out = self.range.element()
 
-        # TODO: this pipes CUDA arrays through NumPy. Write native operator.
         with writable_array(out) as out_arr:
             finite_diff(x.asarray(), axis=self.axis, dx=self.dx,
                         method=self.method, pad_mode=self.pad_mode,

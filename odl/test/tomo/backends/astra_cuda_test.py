@@ -17,8 +17,6 @@ from odl.tomo.backends.astra_cuda import (
     AstraCudaProjectorImpl, AstraCudaBackProjectorImpl)
 from odl.tomo.util.testutils import skip_if_no_astra_cuda
 
-# TODO: test with CUDA implemented uniform_discr
-
 
 # --- pytest fixtures --- #
 

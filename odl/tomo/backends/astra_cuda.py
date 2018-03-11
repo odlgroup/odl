@@ -355,8 +355,8 @@ def astra_cuda_bp_scaling_factor(proj_space, reco_space, geometry):
     # angle interval weight by approximate cell volume
     angle_extent = geometry.motion_partition.extent
     num_angles = geometry.motion_partition.shape
-    # TODO: this gives the wrong factor for Parallel3dEulerGeometry with
-    # 2 angles
+    # TODO(kohr-h): this gives the wrong factor for Parallel3dEulerGeometry
+    # with 2 angles
     scaling_factor = (angle_extent / num_angles).prod()
 
     # Correct in case of non-weighted spaces
@@ -426,7 +426,7 @@ def astra_cuda_bp_scaling_factor(proj_space, reco_space, geometry):
             scaling_factor *= (src_radius ** 2 * det_px_area ** 2 /
                                reco_space.cell_volume ** 2)
 
-        # TODO: add case with new ASTRA release
+        # TODO(kohr-h): add case with new ASTRA release
 
     return scaling_factor
 

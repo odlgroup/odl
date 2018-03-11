@@ -168,7 +168,7 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
         >>> pw_norm(x)
         uniform_discr([-1., -1.], [ 1.,  1.], (1, 2)).element([[ 1.,  7.]])
         """
-        # TODO: allow `Tensorspace` and `DiscreteLp` with shaped dtype
+        # TODO(kohr-h): allow `Tensorspace` and `DiscreteLp` with shaped dtype
         if not isinstance(vfspace, ProductSpace):
             raise TypeError('`vfspace` {!r} is not a ProductSpace '
                             'instance'.format(vfspace))
@@ -192,7 +192,8 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
 
         # Weighting checks
         if weighting is None:
-            # TODO: find a more robust way of getting the weights as an array
+            # TODO(kohr-h): find a more robust way of getting the weights as
+            # an array
             if hasattr(self.domain.weighting, 'array'):
                 self.__weights = self.domain.weighting.array
             elif hasattr(self.domain.weighting, 'const'):
@@ -927,7 +928,6 @@ class MatrixOperator(Operator):
                     self.matrix.dot(x, out=out_arr)
             else:
                 # Could use einsum to have out, but it's damn slow
-                # TODO: investigate speed issue
                 dot = np.tensordot(self.matrix, x, axes=(1, self.axis))
                 # New axis ends up as first, need to move it to its place
                 out[:] = moveaxis(dot, 0, self.axis)

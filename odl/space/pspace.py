@@ -1631,7 +1631,7 @@ class ProductSpaceArrayWeighting(ArrayWeighting):
             The norm of the provided element.
         """
         if self.exponent == 2.0:
-            norm_squared = self.inner(x, x).real  # TODO: optimize?!
+            norm_squared = self.inner(x, x).real
             return np.sqrt(norm_squared)
         else:
             norms = np.fromiter(
@@ -1736,7 +1736,7 @@ class ProductSpaceConstWeighting(ConstWeighting):
             The norm of the element.
         """
         if self.exponent == 2.0:
-            norm_squared = self.inner(x, x).real  # TODO: optimize?!
+            norm_squared = self.inner(x, x).real
             return np.sqrt(norm_squared)
         else:
             norms = np.fromiter(
