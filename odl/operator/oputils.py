@@ -14,6 +14,7 @@ import numpy as np
 
 from odl.space.base_tensors import TensorSpace
 from odl.space import ProductSpace
+from odl.util import nd_iterator
 
 __all__ = ('matrix_representation', 'power_method_opnorm', 'as_scipy_operator',
            'as_scipy_functional', 'as_proximal_lang_operator')
@@ -26,11 +27,15 @@ def matrix_representation(op):
     ----------
     op : `Operator`
         The linear operator of which one wants a matrix representation.
+        If the domain or range is a `ProductSpace`, it must be a power-space.
 
     Returns
     -------
     matrix : `numpy.ndarray`
         The matrix representation of the operator.
+
+        The shape will be ``op.domain.shape + op.range.shape`` and the dtype
+        is the promoted (greatest) dtype of the domain and range.
 
     Examples
     --------
@@ -45,13 +50,34 @@ def matrix_representation(op):
            [4, 5, 6],
            [7, 8, 9]])
 
-    Works with product spaces:
+    It also works with `ProductSpace`s and higher dimensional `TensorSpace`s.
+    In this case, the returned "matrix" will also be higher dimensional:
 
-    >>> prod_ft = odl.DiagonalOperator(op)
-    >>> matrix_representation(op)
-    array([[1, 2, 3],
-           [4, 5, 6],
-           [7, 8, 9]])
+    >>> space = odl.uniform_discr([0, 0], [2, 2], (2, 2))
+    >>> grad = odl.Gradient(space)
+    >>> tensor = odl.matrix_representation(grad)
+    >>> tensor.shape == (2, 2, 2, 2, 2)
+    True
+
+    Since the "matrix" is now higher dimensional, we need to use e.g.
+    `numpy.tensordot` if we want to compute with the matrix representation:
+
+    >>> x = space.element(lambda x: x[0] ** 2 + 2 * x[1] ** 2)
+    >>> grad(x)
+    ProductSpace(uniform_discr([ 0.,  0.], [ 2.,  2.], (2, 2)), 2).element([
+    <BLANKLINE>
+            [[ 2.  ,  2.  ],
+             [-2.75, -6.75]],
+    <BLANKLINE>
+            [[ 4.  , -4.75],
+             [ 4.  , -6.75]]
+    ])
+    >>> np.tensordot(tensor, x, axes=grad.domain.ndim)
+    array([[[ 2.  ,  2.  ],
+            [-2.75, -6.75]],
+    <BLANKLINE>
+           [[ 4.  , -4.75],
+            [ 4.  , -6.75]]])
 
     Notes
     ----------
@@ -64,66 +90,33 @@ def matrix_representation(op):
 
     if not (isinstance(op.domain, TensorSpace) or
             (isinstance(op.domain, ProductSpace) and
+             op.domain.is_power_space and
              all(isinstance(spc, TensorSpace) for spc in op.domain))):
         raise TypeError('operator domain {!r} is neither `TensorSpace` '
-                        'nor `ProductSpace` with only `TensorSpace` '
+                        'nor `ProductSpace` with only equal `TensorSpace` '
                         'components'.format(op.domain))
 
     if not (isinstance(op.range, TensorSpace) or
             (isinstance(op.range, ProductSpace) and
+             op.range.is_power_space and
              all(isinstance(spc, TensorSpace) for spc in op.range))):
         raise TypeError('operator range {!r} is neither `TensorSpace` '
-                        'nor `ProductSpace` with only `TensorSpace` '
+                        'nor `ProductSpace` with only equal `TensorSpace` '
                         'components'.format(op.range))
-
-    # Get the size of the range, and handle ProductSpace
-    # Store for reuse in loop
-    op_ran_is_prod_space = isinstance(op.range, ProductSpace)
-    if op_ran_is_prod_space:
-        num_ran = len(op.range)
-        n = [ran.size for ran in op.range]
-    else:
-        num_ran = 1
-        n = [op.range.size]
-
-    # Get the size of the domain, and handle ProductSpace
-    # Store for reuse in loop
-    op_dom_is_prod_space = isinstance(op.domain, ProductSpace)
-    if op_dom_is_prod_space:
-        num_dom = len(op.domain)
-        m = [dom.size for dom in op.domain]
-    else:
-        num_dom = 1
-        m = [op.domain.size]
 
     # Generate the matrix
     dtype = np.promote_types(op.domain.dtype, op.range.dtype)
-    matrix = np.zeros([np.sum(n), np.sum(m)], dtype=dtype)
+    matrix = np.zeros(op.range.shape + op.domain.shape, dtype=dtype)
     tmp_ran = op.range.element()  # Store for reuse in loop
     tmp_dom = op.domain.zero()  # Store for reuse in loop
-    index = 0
-    last_i = last_j = 0
 
-    for i in range(num_dom):
-        for j in range(m[i]):
-            if op_dom_is_prod_space:
-                tmp_dom[last_i][last_j] = 0.0
-                tmp_dom[i][j] = 1.0
-            else:
-                tmp_dom[last_j] = 0.0
-                tmp_dom[j] = 1.0
-            op(tmp_dom, out=tmp_ran)
-            if op_ran_is_prod_space:
-                tmp_idx = 0
-                for k in range(num_ran):
-                    matrix[tmp_idx: tmp_idx + op.range[k].size, index] = (
-                        (tmp_ran[k]).asarray().ravel())
-                    tmp_idx += op.range[k].size
-            else:
-                matrix[:, index] = tmp_ran.asarray().ravel()
-            index += 1
-            last_j = j
-            last_i = i
+    for j in nd_iterator(op.domain.shape):
+        tmp_dom[j] = 1.0
+
+        op(tmp_dom, out=tmp_ran)
+        matrix[(Ellipsis,) + j] = tmp_ran.asarray()
+
+        tmp_dom[j] = 0.0
 
     return matrix
 
