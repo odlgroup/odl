@@ -1499,7 +1499,7 @@ def helical_geometry(space, src_radius, det_radius, num_turns,
     In the "axial direction", e.g. along the [0, 0, 1] axis, the geometry is
     sampled according to two criteria. First, the bounds of the detector
     are chosen to satisfy the tuy condition.
-    See TSS1998_ for a full description.
+    See `[TSS1998]`_ for a full description.
 
     Second, the sampling rate is selected according to the nyquist criterion
     to give a full sampling. This is done by sampling such that the pixel
@@ -1511,7 +1511,8 @@ def helical_geometry(space, src_radius, det_radius, num_turns,
     [TSS1998] Tam, K C, Samarasekera, S and Sauer, F.
     *Exact cone beam CT with a spiral scan*.
     Physics in Medicine & Biology 4 (1998), p 1015.
-    https://dx.doi.org/10.1088/0031-9155/43/4/028
+
+    .. _[TSS1998]: https://dx.doi.org/10.1088/0031-9155/43/4/028
     """
     # Find maximum distance from rotation axis
     corners = space.domain.corners()[:, :2]
