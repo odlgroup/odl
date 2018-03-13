@@ -56,8 +56,8 @@ def matrix_representation(op):
     >>> space = odl.uniform_discr([0, 0], [2, 2], (2, 2))
     >>> grad = odl.Gradient(space)
     >>> tensor = odl.matrix_representation(grad)
-    >>> tensor.shape
-    (2L, 2L, 2L, 2L, 2L)
+    >>> tensor.shape == (2, 2, 2, 2, 2)
+    True
 
     Since the "matrix" is now higher dimensional, we need to use e.g.
     `numpy.tensordot` if we want to compute with the matrix representation:
@@ -76,8 +76,8 @@ def matrix_representation(op):
     array([[[ 2.  ,  2.  ],
             [-2.75, -6.75]],
     <BLANKLINE>
-            [[ 4.  , -4.75],
-             [ 4.  , -6.75]]])
+           [[ 4.  , -4.75],
+            [ 4.  , -6.75]]])
 
     Notes
     ----------
