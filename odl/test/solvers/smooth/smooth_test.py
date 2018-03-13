@@ -84,7 +84,7 @@ def test_bfgs_solver(functional_and_linesearch):
     functional, line_search = functional_and_linesearch
 
     x = functional.domain.one()
-    odl.solvers.bfgs_method(functional, x, tol=1e-6,
+    odl.solvers.bfgs_method(functional, x, tol=1e-3,
                             line_search=line_search)
 
     assert functional(x) < 1e-3
@@ -95,7 +95,7 @@ def test_lbfgs_solver(functional_and_linesearch):
     functional, line_search = functional_and_linesearch
 
     x = functional.domain.one()
-    odl.solvers.bfgs_method(functional, x, tol=1e-6,
+    odl.solvers.bfgs_method(functional, x, tol=1e-3,
                             line_search=line_search, num_store=5)
 
     assert functional(x) < 1e-3
@@ -106,7 +106,7 @@ def test_broydens_method(broyden_impl, functional_and_linesearch):
     functional, line_search = functional_and_linesearch
 
     x = functional.domain.one()
-    odl.solvers.broydens_method(functional, x, tol=1e-6,
+    odl.solvers.broydens_method(functional, x, tol=1e-3,
                                 line_search=line_search, impl=broyden_impl)
 
     assert functional(x) < 1e-3
@@ -117,7 +117,7 @@ def test_steepest_descent(functional):
     line_search = odl.solvers.BacktrackingLineSearch(functional)
 
     x = functional.domain.one()
-    odl.solvers.steepest_descent(functional, x, tol=1e-6,
+    odl.solvers.steepest_descent(functional, x, tol=1e-3,
                                  line_search=line_search)
 
     assert functional(x) < 1e-3
@@ -137,7 +137,7 @@ def test_conjguate_gradient_nonlinear(functional, nonlinear_cg_beta):
     line_search = odl.solvers.BacktrackingLineSearch(functional)
 
     x = functional.domain.one()
-    odl.solvers.conjugate_gradient_nonlinear(functional, x, tol=1e-6,
+    odl.solvers.conjugate_gradient_nonlinear(functional, x, tol=1e-3,
                                              line_search=line_search,
                                              beta_method=nonlinear_cg_beta)
 

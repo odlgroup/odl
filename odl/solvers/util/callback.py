@@ -664,7 +664,7 @@ class CallbackShow(Callback):
                                   **self.kwargs)
 
             else:
-                saveto = self.saveto_formatter.format(self.iter)
+                saveto = self.saveto_formatter(self.iter)
                 self.fig = x.show(title, fig=self.fig,
                                   update_in_place=update_in_place,
                                   saveto=saveto, **self.kwargs)

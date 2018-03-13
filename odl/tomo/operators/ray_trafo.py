@@ -125,8 +125,23 @@ class RayTransformBase(Operator):
                 impl = 'astra_cuda'
             elif ASTRA_AVAILABLE:
                 impl = 'astra_cpu'
+                if reco_space.size >= 512 ** 2:
+                    warnings.warn(
+                        "The best available backend ('astra_cpu') may be too "
+                        "slow for volumes of this size. Consider using "
+                        "'astra_cuda' if your machine has an Nvidia GPU. "
+                        "This warning can be disabled by explicitly setting "
+                        "`impl='astra_cpu'`.",
+                        RuntimeWarning)
             elif SKIMAGE_AVAILABLE:
                 impl = 'skimage'
+                if reco_space.size >= 256 ** 2:
+                    warnings.warn(
+                        "The best available backend ('skimage') may be too "
+                        "slow for volumes of this size. Consider using ASTRA. "
+                        "This warning can be disabled by explicitly setting "
+                        "`impl='skimage'`.",
+                        RuntimeWarning)
             else:
                 raise RuntimeError('bad impl')
         else:
@@ -341,7 +356,7 @@ class RayTransform(RayTransformBase):
               reconstruction space.
 
             For the default ``None``, the fastest available back-end is
-            used.
+            used, tried in the above order.
         interp : {'nearest', 'linear'}, optional
             Interpolation type for the discretization of the operator
             range. This has no effect if ``range`` is given explicitly.
@@ -447,7 +462,7 @@ class RayBackProjection(RayTransformBase):
               reconstruction space.
 
             For the default ``None``, the fastest available back-end is
-            used.
+-           used, tried in the above order.
         interp : {'nearest', 'linear'}, optional
             Interpolation type for the discretization of the operator
             domain. This has no effect if ``domain`` is given explicitly.
