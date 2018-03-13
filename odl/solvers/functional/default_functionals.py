@@ -26,7 +26,6 @@ from odl.solvers.nonsmooth.proximal_operators import (
     proximal_convex_conj_l1_l2, proximal_convex_conj_l2, proximal_huber,
     proximal_l1, proximal_l1_l2, proximal_l2, proximal_l2_squared)
 from odl.space import ProductSpace
-from odl.ufunc_ops import exp
 from odl.util import (
     REPR_PRECISION, conj_exponent, moveaxis, npy_printoptions, repr_string,
     signature_string_parts)
@@ -1779,6 +1778,8 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
     @property
     def gradient(self):
         """Gradient operator of the functional."""
+        # Avoid circular import
+        from odl.ufunc_ops import exp
         if self.prior is None:
             return exp(self.domain)
         else:
