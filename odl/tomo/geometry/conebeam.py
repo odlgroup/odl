@@ -21,7 +21,7 @@ from odl.util import signature_string, indent, array_str
 
 
 __all__ = ('FanFlatGeometry', 'ConeFlatGeometry',
-           'cone_beam_geometry')
+           'cone_beam_geometry', 'helical_geometry')
 
 
 class FanFlatGeometry(DivergentBeamGeometry):
@@ -1431,6 +1431,159 @@ def cone_beam_geometry(space, src_radius, det_radius, num_angles=None,
                                 src_radius, det_radius)
     else:
         raise ValueError('``space.ndim`` must be 2 or 3.')
+
+
+def helical_geometry(space, src_radius, det_radius, num_turns,
+                     num_angles=None, det_shape=None):
+    """Create a default helical geometry from ``space``.
+
+    This function is intended for simple test cases where users do not
+    need the full flexibility of the geometries, but simply wants a
+    geometry that works.
+
+    The geometry returned by this function has equidistant angles
+    that lie (strictly) between 0 and ``2 * pi * num_turns``.
+    The detector is centered around 0, and its size is chosen such that
+    the whole ``space`` is covered with lines.
+
+    The number of angles and detector elements is chosen such that
+    the resulting sinogram is fully sampled according to the
+    Nyquist criterion, which in general results in a very large number of
+    samples. In particular, a ``space`` that is not centered at the origin
+    can result in very large detectors since the latter is always
+    origin-centered.
+
+    Parameters
+    ----------
+    space : `DiscreteLp`
+        Reconstruction space, the space of the volumetric data to be
+        projected. Must be 3-dimensional.
+    src_radius : nonnegative float
+        Radius of the source circle. Must be larger than the radius of
+        the smallest vertical cylinder containing ``space.domain``,
+        i.e., the source must be outside the volume for all rotations.
+    det_radius : nonnegative float
+        Radius of the detector circle.
+    num_turns : positive float
+        Total number of helical turns.
+    num_angles : int, optional
+        Number of angles.
+        Default: Enough to fully sample the data, see Notes.
+    det_shape : int or sequence of ints, optional
+        Number of detector pixels.
+        Default: Enough to fully sample the data, see Notes.
+
+    Returns
+    -------
+    geometry : `ConeFlatGeometry`
+        Projection geometry with equidistant angles and zero-centered
+        detector as determined by sampling criteria.
+
+    Examples
+    --------
+    Create a helical beam geometry from space:
+
+    >>> space = odl.uniform_discr([-1, -1, -1], [1, 1, 1], (20, 20, 20))
+    >>> geometry = helical_geometry(space, src_radius=5, det_radius=5,
+    ...                             num_turns=3)
+    >>> geometry.angles.size
+    234
+    >>> geometry.detector.shape
+    (57, 10)
+
+    Notes
+    -----
+    In the "fan beam direction", the sampling exactly follows the
+    two-dimensional case see `cone_beam_geometry` for a description.
+
+    In the "axial direction", e.g. along the [0, 0, 1] axis, the geometry is
+    sampled according to two criteria. First, the bounds of the detector
+    are chosen to satisfy the tuy condition.
+    See `[TSS1998]`_ for a full description.
+
+    Second, the sampling rate is selected according to the nyquist criterion
+    to give a full sampling. This is done by sampling such that the pixel
+    size is half of the size of the projection of the smallest voxel onto the
+    detector.
+
+    References
+    ----------
+    [TSS1998] Tam, K C, Samarasekera, S and Sauer, F.
+    *Exact cone beam CT with a spiral scan*.
+    Physics in Medicine & Biology 4 (1998), p 1015.
+
+    .. _[TSS1998]: https://dx.doi.org/10.1088/0031-9155/43/4/028
+    """
+    # Find maximum distance from rotation axis
+    corners = space.domain.corners()[:, :2]
+    rho = np.max(np.linalg.norm(corners, axis=1))
+
+    offset_along_axis = space.partition.min_pt[2]
+    pitch = space.partition.extent[2] / num_turns
+
+    # Find default values according to Nyquist criterion.
+
+    # We assume that the function is bandlimited by a wave along the x or y
+    # axis. The highest frequency we can measure is then a standing wave with
+    # period of twice the inter-node distance.
+    min_side = min(space.partition.cell_sides[:2])
+    omega = np.pi / min_side
+
+    # Compute minimum width of the detector to cover the object. The relation
+    # used here is (w/2)/(rs+rd) = rho/rs since both are equal to tan(alpha),
+    # where alpha is the half fan angle.
+    rs = float(src_radius)
+    if (rs <= rho):
+        raise ValueError('source too close to the object, resulting in '
+                         'infinite detector for full coverage')
+    rd = float(det_radius)
+    r = rs + rd
+    w = 2 * rho * (rs + rd) / rs
+
+    # Compute minimum number of pixels given the constraint on the
+    # sampling interval and the computed width
+    rb = np.hypot(r, w / 2)  # length of the boundary ray to the flat detector
+    num_px_horiz = 2 * int(np.ceil(w * omega * r / (2 * np.pi * rb))) + 1
+
+    # Compute the vertical size needed in order to get a full sampling
+    # according to the Tuy condition
+    theta = 2 * np.arctan((w / 2) / r)
+
+    # Compute lower and upper bound needed to fully sample the object.
+    # In particular, since in a helical geometry several turns are used,
+    # this is selected so that the field of view of two opposing projections,
+    # separated by theta = 180 deg, overlap, but as little as possible.
+    # See `tam_danielson_window` for more information.
+    source_to_line_distance = rs * (1 + np.cos(theta))
+    scale = r / source_to_line_distance
+
+    source_to_line_lower = (pitch *
+                            (num_turns * np.pi / 2 - theta) / (2 * np.pi))
+    h = 2 * source_to_line_lower * scale
+
+    # Compute number of pixels
+    min_mag = r / rs
+    dh = 0.5 * space.partition.cell_sides[2] * min_mag
+    num_px_vert = int(np.ceil(h / dh))
+
+    det_min_pt = [-w / 2, -h / 2]
+    det_max_pt = [w / 2, h / 2]
+    if det_shape is None:
+        det_shape = [num_px_horiz, num_px_vert]
+
+    max_angle = 2 * np.pi * num_turns
+
+    if num_angles is None:
+        num_angles = int(np.ceil(max_angle * omega * rho / np.pi *
+                                 r / (r + rho)))
+
+    angle_partition = uniform_partition(0, max_angle, num_angles)
+    det_partition = uniform_partition(det_min_pt, det_max_pt, det_shape)
+
+    return ConeFlatGeometry(angle_partition, det_partition,
+                            src_radius, det_radius,
+                            offset_along_axis=offset_along_axis,
+                            pitch=pitch)
 
 
 if __name__ == '__main__':
