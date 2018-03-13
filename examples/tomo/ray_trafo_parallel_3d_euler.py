@@ -5,8 +5,8 @@ and is not aligned to a rotation axis.
 """
 
 import numpy as np
-import odl
 
+import odl
 
 # Reconstruction space: discretized functions on the cube
 # [-20, 20]^3 with 300 samples per dimension.

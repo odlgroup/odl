@@ -4,8 +4,9 @@ Including some benchmarks with an optimized version.
 """
 
 import numpy as np
+
 import odl
-from odl.space.base_tensors import TensorSpace, Tensor
+from odl.space.base_tensors import Tensor, TensorSpace
 from odl.util.testutils import Timer
 
 

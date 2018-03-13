@@ -10,11 +10,11 @@ hardware used.
 """
 
 import astra
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 import scipy
-import odl
 
+import odl
 
 # Common geometry parameters
 

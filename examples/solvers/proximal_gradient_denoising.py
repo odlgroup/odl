@@ -11,7 +11,6 @@ The proximal gradient solvers are also known as ISTA and FISTA.
 
 import odl
 
-
 # --- Set up problem definition --- #
 
 

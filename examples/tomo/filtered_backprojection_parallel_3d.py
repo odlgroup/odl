@@ -4,8 +4,8 @@ We use a rotated geometry to demonstrate that the FBP still works as expected.
 """
 
 import numpy as np
-import odl
 
+import odl
 
 # --- Set up geometry of the problem --- #
 

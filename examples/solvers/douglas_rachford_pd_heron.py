@@ -15,6 +15,7 @@ the problem can be written as:
 
 import matplotlib.pyplot as plt
 import numpy as np
+
 import odl
 
 # Create the solution space

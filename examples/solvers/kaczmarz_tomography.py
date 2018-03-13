@@ -14,7 +14,6 @@ points). This allows a faster solution.
 
 import odl
 
-
 # --- Set up the forward operator (ray transform) --- #
 
 

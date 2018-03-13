@@ -11,8 +11,9 @@ Note that running this example requires an installation of
 """
 
 from os import path
-import stir
+
 import odl
+import stir
 
 # Load STIR input files with data
 base = path.join(path.dirname(path.abspath(__file__)), 'data', 'stir')

@@ -17,8 +17,8 @@ The adjoint is based on an approximation given by the transformation
 """
 
 import numpy as np
-import odl
 
+import odl
 
 # --- Create template and displacement field --- #
 

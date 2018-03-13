@@ -1,8 +1,9 @@
 ﻿"""Example of a deconvolution problem with different solvers (CPU)."""
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 import scipy.signal
+
 import odl
 
 

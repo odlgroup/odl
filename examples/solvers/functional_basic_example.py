@@ -6,6 +6,7 @@ information on functionals, see `the ODL functional guide
 """
 
 import numpy as np
+
 import odl
 
 

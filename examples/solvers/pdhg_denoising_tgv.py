@@ -29,6 +29,7 @@ on Imaging Sciences, 8(4):2851-2886, 2015.
 """
 
 import numpy as np
+
 import odl
 
 # --- Set up the forward operator (identity) --- #

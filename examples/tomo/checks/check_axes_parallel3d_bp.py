@@ -13,6 +13,7 @@ This example is best run in Spyder section-by-section (CTRL-Enter).
 # %% Set up the things that never change
 
 import numpy as np
+
 import odl
 
 # Set back-end here (for `None` the fastest available is chosen)

@@ -5,6 +5,7 @@ will trigger an error.
 """
 
 import numpy as np
+
 import odl
 
 # Reconstruction space: discretized functions on the cube

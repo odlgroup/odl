@@ -3,8 +3,9 @@
 This example uses the update_in_place option, which can improve performance.
 """
 
-import odl
 import matplotlib.pyplot as plt
+
+import odl
 
 n = 100
 m = 200

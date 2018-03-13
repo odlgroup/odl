@@ -13,8 +13,8 @@ functionality could be implemented by hand in ODL.
 """
 
 import numpy as np
-import odl
 
+import odl
 
 # --- Set up geometry of the problem --- #
 

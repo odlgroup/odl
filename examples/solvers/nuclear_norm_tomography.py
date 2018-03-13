@@ -24,8 +24,8 @@ Note that this is an advanced example.
 
 
 import numpy as np
-import odl
 
+import odl
 
 # --- Set up the forward operator (ray transform) --- #
 

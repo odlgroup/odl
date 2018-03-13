@@ -10,9 +10,9 @@ Where ``W`` is a wavelet operator, ``T`` is a parallel beam ray transform and
 The proximal gradient solvers are also known as ISTA and FISTA.
 """
 
-import odl
 import numpy as np
 
+import odl
 
 # --- Set up problem definition --- #
 

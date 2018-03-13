@@ -25,10 +25,11 @@ For further details and a description of the solution method used, see
 https://odlgroup.github.io/odl/guide/pdhg_guide.html in the ODL documentation.
 """
 
+import matplotlib.pyplot as plt
 import numpy as np
 import scipy
+
 import odl
-import matplotlib.pyplot as plt
 
 # Define ground truth, space and noisy data
 image = np.rot90(scipy.misc.ascent()[::2, ::2].astype('float'), 3)

@@ -1,6 +1,7 @@
 """Example using the ray transform with circular cone beam geometry."""
 
 import numpy as np
+
 import odl
 
 # Reconstruction space: discretized functions on the cube

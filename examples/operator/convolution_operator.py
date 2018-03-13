@@ -1,8 +1,9 @@
 """Create a convolution operator by wrapping a library."""
 
-import odl
 import scipy
 import scipy.signal
+
+import odl
 
 
 class Convolution(odl.Operator):

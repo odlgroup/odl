@@ -9,6 +9,7 @@ where ``grad`` is the spatial gradient and ``g`` the given noisy data.
 
 import numpy as np
 import scipy.misc
+
 import odl
 
 # Load image

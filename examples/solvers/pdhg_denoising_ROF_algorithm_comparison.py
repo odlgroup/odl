@@ -15,10 +15,11 @@ For further details and a description of the solution method used, see
 https://odlgroup.github.io/odl/guide/pdhg_guide.html in the ODL documentation.
 """
 
+import matplotlib.pyplot as plt
 import numpy as np
 import scipy
+
 import odl
-import matplotlib.pyplot as plt
 
 # --- define setting --- #
 

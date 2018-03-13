@@ -14,8 +14,8 @@ about ~20s.
 """
 
 import numpy as np
-import odl
 
+import odl
 
 # --- Set up geometry of the problem --- #
 

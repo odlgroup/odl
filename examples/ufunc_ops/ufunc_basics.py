@@ -2,7 +2,6 @@
 
 import odl
 
-
 # Trigonometric functions can be computed, along with their gradients.
 
 
