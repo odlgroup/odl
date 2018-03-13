@@ -8,14 +8,14 @@
 
 """Standardized tests for `LinearSpace`'s."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 from builtins import object
 from copy import copy, deepcopy
 
-from odl.set import Field
 from odl.diagnostics.examples import samples
+from odl.set import Field
 from odl.util.testutils import FailCounter
-
 
 __all__ = ('SpaceTest',)
 

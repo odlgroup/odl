@@ -9,6 +9,7 @@
 """Test for the forward-backward solver."""
 
 from __future__ import division
+
 import pytest
 
 import odl

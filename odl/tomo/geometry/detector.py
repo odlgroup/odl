@@ -8,15 +8,16 @@
 
 """Detectors for tomographic imaging."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 from builtins import object
+
 import numpy as np
 
 from odl.discr import RectPartition
-from odl.tomo.util import perpendicular_vector, is_inside_bounds
-from odl.util import indent, signature_string, array_str
+from odl.tomo.util import is_inside_bounds, perpendicular_vector
+from odl.util import array_str, indent, signature_string
 from odl.util.npy_compat import moveaxis
-
 
 __all__ = ('Detector',
            'Flat1dDetector', 'Flat2dDetector',

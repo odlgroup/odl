@@ -8,14 +8,15 @@
 
 """Ufunc operators for ODL vectors."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 import numpy as np
 
-from odl.set import LinearSpace, RealNumbers, Field
+from odl.operator import MultiplyOperator, Operator
+from odl.set import Field, LinearSpace, RealNumbers
+from odl.solvers import (
+    ConstantFunctional, Functional, FunctionalQuotient, ScalingFunctional)
 from odl.space import ProductSpace, tensor_space
-from odl.operator import Operator, MultiplyOperator
-from odl.solvers import (Functional, ScalingFunctional, FunctionalQuotient,
-                         ConstantFunctional)
 from odl.util.ufuncs import UFUNCS
 
 __all__ = ()

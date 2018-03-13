@@ -7,16 +7,15 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import division
+
 import numpy as np
 import pytest
 
 import odl
-from odl.operator.oputils import (
-    matrix_representation, power_method_opnorm)
+from odl.operator.oputils import matrix_representation, power_method_opnorm
 from odl.operator.pspace_ops import ProductSpaceOperator
 from odl.space.pspace import ProductSpace
 from odl.util.testutils import almost_equal, simple_fixture
-
 
 optimize_weighting = simple_fixture('optimize', [True, False])
 call_variant = simple_fixture('call_variant', ['oop', 'ip', 'dual'])

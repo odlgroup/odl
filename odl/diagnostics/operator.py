@@ -8,14 +8,15 @@
 
 """Standardized tests for `Operator`'s."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 from builtins import object
+
 import numpy as np
 
 from odl.diagnostics.examples import samples
 from odl.operator import power_method_opnorm
 from odl.util.testutils import FailCounter
-
 
 __all__ = ('OperatorTest',)
 

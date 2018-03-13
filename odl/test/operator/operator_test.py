@@ -7,22 +7,23 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import division
-import pytest
-import numpy as np
+
 import sys
 
+import numpy as np
+import pytest
+
 import odl
-from odl import (Operator, OperatorSum, OperatorComp,
-                 OperatorLeftScalarMult, OperatorRightScalarMult,
-                 FunctionalLeftVectorMult, OperatorRightVectorMult,
-                 MatrixOperator, OperatorLeftVectorMult,
-                 OpTypeError, OpDomainError, OpRangeError)
-from odl.operator.operator import _function_signature, _dispatch_call_args
+from odl import (
+    FunctionalLeftVectorMult, MatrixOperator, OpDomainError, Operator,
+    OperatorComp, OperatorLeftScalarMult, OperatorLeftVectorMult,
+    OperatorRightScalarMult, OperatorRightVectorMult, OperatorSum,
+    OpRangeError, OpTypeError)
+from odl.operator.operator import _dispatch_call_args, _function_signature
 from odl.util.testutils import (
-    almost_equal, all_almost_equal, noise_element, noise_elements,
+    all_almost_equal, almost_equal, noise_element, noise_elements,
     simple_fixture)
 from odl.util.utility import getargspec
-
 
 # --- Fixtures --- #
 

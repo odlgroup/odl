@@ -9,10 +9,11 @@
 """Test for the smooth solvers."""
 
 from __future__ import division
+
 import pytest
+
 import odl
 from odl.operator import OpNotImplementedError
-
 
 nonlinear_cg_beta = odl.util.testutils.simple_fixture('nonlinear_cg_beta',
                                                       ['FR', 'PR', 'HS', 'DY'])

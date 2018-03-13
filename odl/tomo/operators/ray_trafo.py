@@ -8,23 +8,23 @@
 
 """Ray transforms."""
 
-from __future__ import print_function, division, absolute_import
-import numpy as np
+from __future__ import absolute_import, division, print_function
+
 import warnings
+
+import numpy as np
 
 from odl.discr import DiscreteLp
 from odl.operator import Operator
 from odl.space import FunctionSpace
-from odl.tomo.geometry import (
-    Geometry, Parallel2dGeometry, Parallel3dAxisGeometry)
 from odl.space.weighting import ConstWeighting
 from odl.tomo.backends import (
-    ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE, SKIMAGE_AVAILABLE,
-    astra_supports, ASTRA_VERSION,
-    astra_cpu_forward_projector, astra_cpu_back_projector,
-    AstraCudaProjectorImpl, AstraCudaBackProjectorImpl,
-    skimage_radon_forward, skimage_radon_back_projector)
-
+    ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE, ASTRA_VERSION, SKIMAGE_AVAILABLE,
+    AstraCudaBackProjectorImpl, AstraCudaProjectorImpl,
+    astra_cpu_back_projector, astra_cpu_forward_projector, astra_supports,
+    skimage_radon_back_projector, skimage_radon_forward)
+from odl.tomo.geometry import (
+    Geometry, Parallel2dGeometry, Parallel3dAxisGeometry)
 
 ASTRA_CPU_AVAILABLE = ASTRA_AVAILABLE
 _SUPPORTED_IMPL = ('astra_cpu', 'astra_cuda', 'skimage')

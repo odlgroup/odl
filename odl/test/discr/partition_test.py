@@ -7,12 +7,12 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import division
-import pytest
+
 import numpy as np
+import pytest
 
 import odl
-from odl.util.testutils import all_equal, all_almost_equal
-
+from odl.util.testutils import all_almost_equal, all_equal
 
 # ---- RectPartition ---- #
 

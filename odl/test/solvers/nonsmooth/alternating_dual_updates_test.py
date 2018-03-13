@@ -9,12 +9,11 @@
 """Test for the alternating dual updates solver."""
 
 from __future__ import division
+
 import odl
 from odl.solvers.nonsmooth import adupdates
 from odl.solvers.nonsmooth.alternating_dual_updates import adupdates_simple
-
 from odl.util.testutils import all_almost_equal
-
 
 # Places for the accepted error when comparing results
 HIGH_ACCURACY = 8

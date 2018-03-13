@@ -8,18 +8,18 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 import numpy as np
 
+from odl.operator.default_ops import ConstantOperator, IdentityOperator
 from odl.operator.operator import (
-    Operator, OperatorComp, OperatorLeftScalarMult, OperatorRightScalarMult,
-    OperatorRightVectorMult, OperatorSum, OperatorPointwiseProduct)
-from odl.operator.default_ops import (IdentityOperator, ConstantOperator)
-from odl.solvers.nonsmooth import (proximal_arg_scaling, proximal_translation,
-                                   proximal_quadratic_perturbation,
-                                   proximal_const_func, proximal_convex_conj)
-from odl.util import signature_string, indent
-
+    Operator, OperatorComp, OperatorLeftScalarMult, OperatorPointwiseProduct,
+    OperatorRightScalarMult, OperatorRightVectorMult, OperatorSum)
+from odl.solvers.nonsmooth import (
+    proximal_arg_scaling, proximal_const_func, proximal_convex_conj,
+    proximal_quadratic_perturbation, proximal_translation)
+from odl.util import indent, signature_string
 
 __all__ = ('Functional', 'FunctionalLeftScalarMult',
            'FunctionalRightScalarMult', 'FunctionalComp',

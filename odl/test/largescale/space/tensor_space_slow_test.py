@@ -9,6 +9,7 @@
 """Test to make sure the `TensorSpace` spaces work with larger sizes."""
 
 from __future__ import division
+
 import numpy as np
 import pytest
 

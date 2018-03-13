@@ -9,10 +9,12 @@
 """Test iterative solvers."""
 
 from __future__ import division
+
+import numpy as np
+import pytest
+
 import odl
 from odl.util.testutils import all_almost_equal
-import pytest
-import numpy as np
 
 
 # Find the valid projectors

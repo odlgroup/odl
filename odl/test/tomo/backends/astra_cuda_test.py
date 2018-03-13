@@ -9,14 +9,14 @@
 """Test ASTRA back-end using CUDA."""
 
 from __future__ import division
+
 import numpy as np
 import pytest
 
 import odl
 from odl.tomo.backends.astra_cuda import (
-    AstraCudaProjectorImpl, AstraCudaBackProjectorImpl)
+    AstraCudaBackProjectorImpl, AstraCudaProjectorImpl)
 from odl.tomo.util.testutils import skip_if_no_astra_cuda
-
 
 # --- pytest fixtures --- #
 

@@ -8,13 +8,15 @@
 
 """Callback objects for per-iterate actions in iterative methods."""
 
-from __future__ import print_function, division, absolute_import
-from builtins import object
+from __future__ import absolute_import, division, print_function
+
 import copy
-import numpy as np
 import os
 import time
 import warnings
+from builtins import object
+
+import numpy as np
 
 from odl.util import signature_string
 

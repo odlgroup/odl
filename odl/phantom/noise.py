@@ -8,11 +8,11 @@
 
 """Functions to create noise samples of different distributions."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 import numpy as np
 
 from odl.util import NumpyRandomSeed
-
 
 __all__ = ('white_noise', 'poisson_noise', 'salt_pepper_noise',
            'uniform_noise')

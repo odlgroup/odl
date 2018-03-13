@@ -21,15 +21,15 @@ References
 Foundations and Trends in Optimization, 1 (2014), pp 127-239.
 """
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 import numpy as np
 
-from odl.operator import (Operator, IdentityOperator, ScalingOperator,
-                          ConstantOperator, DiagonalOperator, PointwiseNorm,
-                          MultiplyOperator)
-from odl.space import ProductSpace
+from odl.operator import (
+    ConstantOperator, DiagonalOperator, IdentityOperator, MultiplyOperator,
+    Operator, PointwiseNorm, ScalingOperator)
 from odl.set.space import LinearSpaceElement
-
+from odl.space import ProductSpace
 
 __all__ = ('combine_proximals', 'proximal_convex_conj', 'proximal_translation',
            'proximal_arg_scaling', 'proximal_quadratic_perturbation',

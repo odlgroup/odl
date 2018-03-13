@@ -7,13 +7,13 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import division
-import pytest
+
 import numpy as np
+import pytest
 
 import odl
-from odl.discr.grid import RectGrid, uniform_grid, sparse_meshgrid
+from odl.discr.grid import RectGrid, sparse_meshgrid, uniform_grid
 from odl.util.testutils import all_equal
-
 
 # ---- RectGrid ---- #
 

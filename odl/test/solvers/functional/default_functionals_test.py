@@ -9,16 +9,15 @@
 """Test for the default functionals."""
 
 from __future__ import division
+
 import numpy as np
-import scipy
 import pytest
+import scipy
 
 import odl
-from odl.util.testutils import (all_almost_equal, noise_element,
-                                simple_fixture)
 from odl.solvers.functional.default_functionals import (
     KullbackLeiblerConvexConj, KullbackLeiblerCrossEntropyConvexConj)
-
+from odl.util.testutils import all_almost_equal, noise_element, simple_fixture
 
 # --- pytest fixtures --- #
 

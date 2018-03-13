@@ -8,12 +8,12 @@
 
 """Phantoms typically used in transmission tomography."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 import numpy as np
 
 from odl.discr import DiscreteLp
 from odl.phantom.geometric import ellipsoid_phantom
-
 
 __all__ = ('shepp_logan_ellipsoids', 'shepp_logan', 'forbild')
 

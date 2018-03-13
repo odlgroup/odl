@@ -9,15 +9,15 @@
 """Test analytical reconstruction methods."""
 
 from __future__ import division
-import pytest
+
 import numpy as np
+import pytest
 
 import odl
 import odl.tomo as tomo
-from odl.util.testutils import skip_if_no_largescale, simple_fixture
-from odl.tomo.util.testutils import (skip_if_no_astra, skip_if_no_astra_cuda,
-                                     skip_if_no_skimage)
-
+from odl.tomo.util.testutils import (
+    skip_if_no_astra, skip_if_no_astra_cuda, skip_if_no_skimage)
+from odl.util.testutils import simple_fixture, skip_if_no_largescale
 
 # --- pytest fixtures --- #
 

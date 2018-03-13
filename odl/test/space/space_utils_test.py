@@ -7,6 +7,7 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import division
+
 import numpy as np
 from past.builtins import basestring
 

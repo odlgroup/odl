@@ -8,13 +8,13 @@
 
 """Example functionals used in optimization."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 import numpy as np
 
+from odl.operator import MatrixOperator, Operator
 from odl.solvers.functional.functional import Functional
-from odl.operator import Operator, MatrixOperator
 from odl.space.base_tensors import TensorSpace
-
 
 __all__ = ('RosenbrockFunctional',)
 

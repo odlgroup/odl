@@ -8,19 +8,22 @@
 
 """Backend for ASTRA using CPU."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 import numpy as np
+
+from odl.discr import DiscreteLp, DiscreteLpElement
+from odl.tomo.backends.astra_setup import (
+    astra_algorithm, astra_data, astra_projection_geometry, astra_projector,
+    astra_volume_geometry)
+from odl.tomo.geometry import Geometry
+from odl.util import writable_array
+
 try:
     import astra
 except ImportError:
     pass
 
-from odl.discr import DiscreteLp, DiscreteLpElement
-from odl.tomo.backends.astra_setup import (
-    astra_projection_geometry, astra_volume_geometry, astra_data,
-    astra_projector, astra_algorithm)
-from odl.tomo.geometry import Geometry
-from odl.util import writable_array
 
 
 __all__ = ('astra_cpu_forward_projector', 'astra_cpu_back_projector')

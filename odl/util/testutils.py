@@ -8,17 +8,18 @@
 
 """Utilities for internal use."""
 
-from __future__ import print_function, division, absolute_import
-from builtins import object
-from future.moves.itertools import zip_longest
-import numpy as np
-import sys
+from __future__ import absolute_import, division, print_function
+
 import os
+import sys
 import warnings
+from builtins import object
 from time import time
 
-from odl.util.utility import run_from_ipython, is_string
+import numpy as np
+from future.moves.itertools import zip_longest
 
+from odl.util.utility import is_string, run_from_ipython
 
 __all__ = ('all_equal', 'all_almost_equal', 'is_subdict',
            'never_skip', 'skip_if_no_stir', 'skip_if_no_pywavelets',

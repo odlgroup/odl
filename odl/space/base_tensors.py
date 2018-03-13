@@ -8,21 +8,21 @@
 
 """Base classes for implementations of tensor spaces."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 from builtins import object
 from numbers import Integral
+
 import numpy as np
 
-from odl.set.sets import RealNumbers, ComplexNumbers
+from odl.set.sets import ComplexNumbers, RealNumbers
 from odl.set.space import LinearSpace, LinearSpaceElement
 from odl.util import (
-    is_numeric_dtype, is_real_dtype, is_floating_dtype,
-    is_real_floating_dtype, is_complex_floating_dtype, safe_int_conv,
-    array_str, dtype_str, signature_string_parts, repr_string,
-    element_repr_string, writable_array)
+    array_str, dtype_str, element_repr_string, is_complex_floating_dtype,
+    is_floating_dtype, is_numeric_dtype, is_real_dtype, is_real_floating_dtype,
+    repr_string, safe_int_conv, signature_string_parts, writable_array)
 from odl.util.ufuncs import TensorSpaceUfuncs
-from odl.util.utility import TYPE_MAP_R2C, TYPE_MAP_C2R
-
+from odl.util.utility import TYPE_MAP_C2R, TYPE_MAP_R2C
 
 __all__ = ('TensorSpace',)
 

@@ -8,9 +8,9 @@
 
 """Utilities for creating phantoms."""
 
-from __future__ import print_function, division, absolute_import
-import numpy as np
+from __future__ import absolute_import, division, print_function
 
+import numpy as np
 
 __all__ = ('cylinders_from_ellipses',)
 

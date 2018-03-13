@@ -8,13 +8,14 @@
 
 """Simple iterative type optimization schemes."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 from builtins import next
+
 import numpy as np
 
 from odl.operator import IdentityOperator, OperatorComp, OperatorSum
 from odl.util import normalized_scalar_param_list
-
 
 __all__ = ('landweber', 'conjugate_gradient', 'conjugate_gradient_normal',
            'gauss_newton', 'kaczmarz')

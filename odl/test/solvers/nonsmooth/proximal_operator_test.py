@@ -9,19 +9,17 @@
 """Tests for the factory functions to create proximal operators."""
 
 from __future__ import division
+
 import numpy as np
 import scipy.special
 
 import odl
 from odl.solvers.nonsmooth.proximal_operators import (
-    combine_proximals, proximal_const_func,
-    proximal_box_constraint, proximal_nonnegativity,
+    combine_proximals, proximal_box_constraint, proximal_const_func,
+    proximal_convex_conj_kl, proximal_convex_conj_kl_cross_entropy,
     proximal_convex_conj_l1, proximal_convex_conj_l1_l2,
-    proximal_l2,
-    proximal_convex_conj_l2_squared,
-    proximal_convex_conj_kl, proximal_convex_conj_kl_cross_entropy)
+    proximal_convex_conj_l2_squared, proximal_l2, proximal_nonnegativity)
 from odl.util.testutils import all_almost_equal
-
 
 # Places for the accepted error when comparing results
 HIGH_ACC = 8

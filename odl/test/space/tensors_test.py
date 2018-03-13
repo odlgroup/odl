@@ -9,24 +9,24 @@
 """Unit tests for Numpy-based tensors."""
 
 from __future__ import division
-import numpy as np
+
 import operator
-from pkg_resources import parse_version
-import pytest
 import sys
+
+import numpy as np
+import pytest
+from pkg_resources import parse_version
 
 import odl
 from odl.set.space import LinearSpaceTypeError
 from odl.space.npy_tensors import (
-    NumpyTensor, NumpyTensorSpace,
-    NumpyTensorSpaceConstWeighting, NumpyTensorSpaceArrayWeighting,
-    NumpyTensorSpaceCustomInner, NumpyTensorSpaceCustomNorm,
-    NumpyTensorSpaceCustomDist)
+    NumpyTensor, NumpyTensorSpace, NumpyTensorSpaceArrayWeighting,
+    NumpyTensorSpaceConstWeighting, NumpyTensorSpaceCustomDist,
+    NumpyTensorSpaceCustomInner, NumpyTensorSpaceCustomNorm)
 from odl.util.testutils import (
-    all_almost_equal, all_equal, simple_fixture,
-    noise_array, noise_element, noise_elements)
+    all_almost_equal, all_equal, noise_array, noise_element, noise_elements,
+    simple_fixture)
 from odl.util.ufuncs import UFUNCS
-
 
 # --- Test helpers --- #
 

@@ -7,6 +7,7 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import division
+
 import numpy as np
 import pytest
 
@@ -14,7 +15,6 @@ import odl
 from odl import FunctionSpace
 from odl.discr.grid import sparse_meshgrid
 from odl.util.testutils import all_almost_equal, all_equal, simple_fixture
-
 
 # --- Helper functions --- #
 

@@ -9,9 +9,9 @@
 """Convenience functions for operators."""
 
 from __future__ import absolute_import, division, print_function
-from future.utils import native
 
 import numpy as np
+from future.utils import native
 
 from odl.space.base_tensors import TensorSpace
 from odl.space.pspace import ProductSpace

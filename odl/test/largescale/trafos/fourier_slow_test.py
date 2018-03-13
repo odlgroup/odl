@@ -13,8 +13,9 @@ speed regressions.
 """
 
 from __future__ import division
-import pytest
+
 import numpy as np
+import pytest
 
 import odl
 from odl.util.testutils import almost_equal, never_skip, simple_fixture

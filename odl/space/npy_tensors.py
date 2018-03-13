@@ -8,23 +8,24 @@
 
 """NumPy implementation of tensor spaces."""
 
-from __future__ import print_function, division, absolute_import
-from future.utils import native
-from builtins import object
+from __future__ import absolute_import, division, print_function
+
 import ctypes
+from builtins import object
 from functools import partial
+
 import numpy as np
+from future.utils import native
 
-from odl.set.sets import RealNumbers, ComplexNumbers
+from odl.set.sets import ComplexNumbers, RealNumbers
 from odl.set.space import LinearSpaceTypeError
-from odl.space.base_tensors import TensorSpace, Tensor
+from odl.space.base_tensors import Tensor, TensorSpace
 from odl.space.weighting import (
-    Weighting, ArrayWeighting, ConstWeighting,
-    CustomInner, CustomNorm, CustomDist)
+    ArrayWeighting, ConstWeighting, CustomDist, CustomInner, CustomNorm,
+    Weighting)
 from odl.util import (
-    dtype_str, signature_string_parts, repr_string, attribute_repr_string,
-    is_real_dtype, is_numeric_dtype, writable_array, is_floating_dtype)
-
+    attribute_repr_string, dtype_str, is_floating_dtype, is_numeric_dtype,
+    is_real_dtype, repr_string, signature_string_parts, writable_array)
 
 __all__ = ('NumpyTensorSpace',)
 

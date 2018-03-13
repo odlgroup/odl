@@ -20,7 +20,7 @@ See Also
 NumpyTensorSpace : Numpy-based implementation of `TensorSpace`
 """
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
 
 from odl.space.npy_tensors import NumpyTensorSpace
 

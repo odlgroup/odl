@@ -9,6 +9,7 @@
 """Test for the smooth solvers."""
 
 from __future__ import division
+
 import odl
 
 

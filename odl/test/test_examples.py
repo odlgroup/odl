@@ -19,9 +19,12 @@ This package assumes that all dependencies are installed.
 """
 
 from __future__ import division
+
 import os
-import pytest
 import sys
+
+import pytest
+
 import odl
 
 try:
