@@ -12,28 +12,7 @@ from __future__ import print_function, division, absolute_import
 import numpy as np
 
 
-__all__ = ('broadcast_to', 'moveaxis')
-
-
-# TODO: Remove when Numpy 1.10 is an ODL dependency
-def broadcast_to(array, shape):
-    """Broadcast an array to a new shape.
-
-    This function is a backport of `numpy.broadcast_to` introduced in
-    NumPy 1.10.
-
-    See Also
-    --------
-    numpy.broadcast_to
-    """
-    array = np.asarray(array)
-    try:
-        return np.broadcast_to(array, shape)
-    except AttributeError:
-        # The above requires numpy 1.10, fallback impl else
-        shape = [m if n == 1 and m != 1 else 1
-                 for n, m in zip(array.shape, shape)]
-        return array + np.zeros(shape, dtype=array.dtype)
+__all__ = ('moveaxis', 'flip')
 
 
 # TODO: Remove when Numpy 1.11 is an ODL dependency

@@ -1,3 +1,38 @@
+## Custom stuff
+
+# vim viles
+*.swp
+*.swo
+*~
+
+# Spyder project files
+.spyproject/
+.spyderproject
+.spyderworkspace
+.spyproject/
+
+# PyCharm project files
+.idea
+
+# VS Code files
+.vscode/
+
+# IPython / Jupyter notebook files
+*.ipynb
+.ipynb_checkpoints
+
+# caches
+.pytest_cache/
+
+# Sphinx documentation
+doc/_build/
+doc/source/generated
+doc/source/odl_interface
+doc/source/odl*.rst
+
+
+## Python
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -51,19 +86,14 @@ coverage.xml
 # Django stuff:
 *.log
 
-# Sphinx documentation
-doc/_build/
-doc/source/generated
-doc/source/odl_interface
-doc/source/odl*.rst
-
 # PyBuilder
 target/
 
 # Backups from futurize/pasteurize
 *.py.bak
 
-# Visual studio
+
+## Visual studio
 *.sdf
 *.sln
 *.suo
@@ -71,26 +101,3 @@ target/
 *.pyproj.user
 *.pyperf
 *.psess
-
-# vim viles
-*.swp
-*.swo
-*~
-
-# Spyder project files
-.spyproject/
-.spyderproject
-.spyderworkspace
-.spyproject/
-
-# PyCharm project files
-.idea
-
-# VS Code files
-.vscode/
-
-# IPython / Jupyter notebook files
-*.ipynb
-.ipynb_checkpoints
-
-# Documentation build files

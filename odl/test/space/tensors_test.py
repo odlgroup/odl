@@ -1358,11 +1358,11 @@ def test_ufuncs(tspace, ufunc):
     data_elem = elements[0]
 
     out_elems = elements[nin:]
-    out_arr_kwargs = {'out': out_arrays[:nout]}
-
     if nout == 1:
+        out_arr_kwargs = {'out': out_arrays[0]}
         out_elem_kwargs = {'out': out_elems[0]}
     elif nout > 1:
+        out_arr_kwargs = {'out': out_arrays[:nout]}
         out_elem_kwargs = {'out': out_elems[:nout]}
 
     # Get function to call, using both interfaces:
