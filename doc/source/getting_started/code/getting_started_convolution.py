@@ -1,8 +1,9 @@
 """Source code for the getting started example."""
 
-import odl
 import scipy
 import scipy.signal
+
+import odl
 
 
 class Convolution(odl.Operator):
