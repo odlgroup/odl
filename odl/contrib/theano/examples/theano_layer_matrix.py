@@ -9,11 +9,13 @@ squared L2-norm function properly using either Theano or ODL.
 """
 
 from __future__ import print_function
-import theano
-import theano.tensor as T
+
 import numpy as np
+
 import odl
 import odl.contrib.theano
+import theano
+import theano.tensor as T
 
 # --- Wrap ODL operator as Theano operator --- #
 

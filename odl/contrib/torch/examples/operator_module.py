@@ -11,11 +11,11 @@ internal use.
 """
 
 import numpy as np
+
 import odl
 import torch
-from torch import autograd, nn
 from odl.contrib import torch as odl_torch
-
+from torch import autograd, nn
 
 # --- Forward --- #
 

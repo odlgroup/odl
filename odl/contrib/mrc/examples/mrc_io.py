@@ -12,14 +12,14 @@ volume is written back to disk, using a different header.
 
 from __future__ import print_function
 
-import matplotlib.pyplot as plt
-import numpy as np
 import os
 import tempfile
 
+import matplotlib.pyplot as plt
+import numpy as np
+
 from odl.contrib.mrc import (
     FileReaderMRC, FileWriterMRC, mrc_header_from_params)
-
 
 # --- Reading --- #
 

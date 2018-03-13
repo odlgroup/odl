@@ -9,6 +9,7 @@
 """Figures of merit (FOMs) for comparison against a known ground truth."""
 
 from __future__ import division
+
 import numpy as np
 
 import odl

@@ -9,6 +9,7 @@
 """Figures of Merit (FOMs) for measuring image quality without a reference."""
 
 from __future__ import division
+
 import numpy as np
 
 __all__ = ('estimate_noise_std',)

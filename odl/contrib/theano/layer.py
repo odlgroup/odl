@@ -8,14 +8,13 @@
 
 """Utilities for converting ODL operators to Theano operators."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
+import numpy as np
 from future.utils import native
 
 import theano
-import numpy as np
-
 from odl.solvers import Functional
-
 
 __all__ = ('TheanoOperator',)
 

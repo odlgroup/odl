@@ -14,7 +14,9 @@ see `the pytorch installation guide
 """
 
 from __future__ import division
+
 import numpy as np
+
 import torch
 
 __all__ = ('OperatorAsAutogradFunction', 'OperatorAsModule')

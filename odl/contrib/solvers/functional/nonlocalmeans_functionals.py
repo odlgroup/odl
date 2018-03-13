@@ -8,7 +8,8 @@
 
 """Non Local Means functionals."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 import numpy as np
 
 from odl.operator import Operator

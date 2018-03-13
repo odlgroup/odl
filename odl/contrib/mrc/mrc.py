@@ -8,18 +8,19 @@
 
 """Specification and reader for the MRC2014 file format."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
+import struct
+import warnings
 from builtins import int, object
 from collections import OrderedDict
 from itertools import permutations
+
 import numpy as np
-import struct
-import warnings
 
 from odl.contrib.mrc.uncompr_bin import (
     FileReaderRawBinaryWithHeader, FileWriterRawBinaryWithHeader,
     header_fields_from_table)
-
 
 __all__ = ('FileReaderMRC', 'FileWriterMRC', 'mrc_header_from_params')
 

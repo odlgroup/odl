@@ -9,13 +9,14 @@
 """Tests for Theano."""
 
 from __future__ import division
-import pytest
+
 import numpy as np
-import theano
-import theano.tensor as T
+import pytest
 
 import odl
 import odl.contrib.theano
+import theano
+import theano.tensor as T
 from odl.util import all_almost_equal
 
 

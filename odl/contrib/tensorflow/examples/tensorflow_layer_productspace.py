@@ -5,9 +5,10 @@ to handle product-spaces.
 """
 
 from __future__ import print_function
-import tensorflow as tf
+
 import odl
 import odl.contrib.tensorflow
+import tensorflow as tf
 
 sess = tf.InteractiveSession()
 

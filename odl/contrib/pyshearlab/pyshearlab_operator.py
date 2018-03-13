@@ -9,11 +9,12 @@
 """ODL integration with pyshearlab."""
 
 
-import odl
-import numpy as np
-import pyshearlab
 from threading import Lock
 
+import numpy as np
+
+import odl
+import pyshearlab
 
 __all__ = ('PyShearlabOperator',)
 

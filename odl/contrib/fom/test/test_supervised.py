@@ -9,10 +9,12 @@
 """Tests for supervised FoMs."""
 
 from __future__ import division
+
 import numpy as np
 import pytest
-import scipy.signal
 import scipy.misc
+import scipy.signal
+
 import odl
 import odl.contrib.fom
 from odl.contrib.fom.util import filter_image_sep2d

@@ -8,12 +8,12 @@
 
 """Unit tests for the ODL-pyshearlab integration."""
 
-import pytest
 import numpy as np
+import pytest
+
 import odl
 import odl.contrib.pyshearlab
 from odl.util.testutils import all_almost_equal, simple_fixture
-
 
 dtype = simple_fixture('dtype', ['float32', 'float64'])
 shape = simple_fixture('shape', [(64, 64), (128, 128)])

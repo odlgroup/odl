@@ -8,13 +8,14 @@
 
 """Utilities and class for reading uncompressed binary files with header."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
+import csv
+import struct
 from builtins import int, object
 from collections import OrderedDict
-import csv
-import numpy as np
-import struct
 
+import numpy as np
 
 __all__ = ('FileReaderRawBinaryWithHeader',
            'FileWriterRawBinaryWithHeader',

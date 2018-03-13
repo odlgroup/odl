@@ -12,9 +12,9 @@ By using a combination of regularizers, a better result is achieved.
 """
 
 import numpy as np
+
 import odl
 import odl.contrib.solvers
-
 
 # Select what type of denoising to use. Options: 'TV', 'NLM' and 'TV_NLM'
 model = 'TV'

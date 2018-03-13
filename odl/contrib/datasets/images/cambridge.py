@@ -9,6 +9,7 @@
 """Images provided by the University of Cambridge."""
 
 import numpy as np
+
 import skimage.transform
 from odl.contrib.datasets.util import get_data
 

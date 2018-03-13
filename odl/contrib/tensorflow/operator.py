@@ -8,12 +8,12 @@
 
 """Utilities for converting ODL spaces to tensorflow layers."""
 
-from __future__ import print_function, division, absolute_import
-import tensorflow as tf
+from __future__ import absolute_import, division, print_function
+
 import numpy as np
 
 import odl
-
+import tensorflow as tf
 
 __all__ = ('TensorflowOperator',)
 

@@ -13,14 +13,15 @@ the raw binary data I/O here.
 """
 
 from __future__ import division
-import numpy as np
+
 import tempfile
+
+import numpy as np
 
 import odl
 from odl.contrib.mrc import (
-    FileWriterRawBinaryWithHeader, FileReaderRawBinaryWithHeader)
+    FileReaderRawBinaryWithHeader, FileWriterRawBinaryWithHeader)
 from odl.util.testutils import simple_fixture
-
 
 # --- pytest fixtures --- #
 
