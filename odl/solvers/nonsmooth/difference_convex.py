@@ -94,7 +94,7 @@ def dca(x, g, h, niter, callback=None):
 
 
 def prox_dca(x, g, h, niter, gamma, callback=None):
-    """Proximal DCA of Sun, Sampaio and Candido.
+    r"""Proximal DCA of Sun, Sampaio and Candido.
 
     This algorithm solves a problem of the form ::
 
@@ -123,18 +123,19 @@ def prox_dca(x, g, h, niter, gamma, callback=None):
     Notes
     -----
     The algorithm was proposed as Algorithm 2.3 in
-    `[SSC2003] <http://www.global-sci.org/jcm/readabs.php?vol=21&\
-no=4&page=451&year=2003&ppage=462>`_. It solves the problem
+    `[SSC2003]
+    <http://www.global-sci.org/jcm/readabs.php?vol=21&no=4&page=451&year=2003&ppage=462>`_.
+    It solves the problem
 
     .. math ::
-        \\min g(x) - h(x)
+        \min g(x) - h(x)
 
     by involving subgradients of :math:`h` and proximal points of :math:`g^*`.
     The iteration is given by
 
     .. math ::
-        y_n \\in \\partial h(x_n), \\qquad x_{n+1}
-            = \\mathrm{Prox}^{\\gamma}_g(x_n + \\gamma y_n).
+        y_n \in \partial h(x_n), \qquad x_{n+1}
+            = \mathrm{Prox}^{\gamma}_g(x_n + \gamma y_n).
 
     In contrast to `dca`, `prox_dca` uses proximal steps with respect to the
     convex part ``g``. Both algorithms use subgradients of the concave part
