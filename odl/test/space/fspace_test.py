@@ -1131,8 +1131,9 @@ def test_fspace_elem_power(power, out_shape):
         assert all_almost_equal(out_arr, true_result)
 
 
-def test_fspace_elem_arithmetic(arithmetic_op, out_shape):
+def test_fspace_elem_arithmetic(odl_arithmetic_op, out_shape):
     """Test arithmetic of fspace elements."""
+    op = odl_arithmetic_op
 
     intv = odl.IntervalProd([1, 0], [2, 1])
     fspace = FunctionSpace(intv, out_dtype=(float, out_shape))
@@ -1154,12 +1155,12 @@ def test_fspace_elem_arithmetic(arithmetic_op, out_shape):
     result1 = f_elem1(points)
     result1_cpy = result1.copy()
     result2 = f_elem2(points)
-    true_result_func = arithmetic_op(result1, result2)
-    true_result_scal = arithmetic_op(result1_cpy, -2.0)
+    true_result_func = op(result1, result2)
+    true_result_scal = op(result1_cpy, -2.0)
 
     f_elem1_cpy = f_elem1.copy()
-    func_arith_func = arithmetic_op(f_elem1, f_elem2)
-    func_arith_scal = arithmetic_op(f_elem1_cpy, -2.0)
+    func_arith_func = op(f_elem1, f_elem2)
+    func_arith_scal = op(f_elem1_cpy, -2.0)
     assert all_almost_equal(func_arith_func(points), true_result_func)
     assert all_almost_equal(func_arith_scal(points), true_result_scal)
     out_arr_func = np.empty(out_shape + (4,))

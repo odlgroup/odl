@@ -24,16 +24,17 @@ spc_ids = [' type={} ' ''.format(p) for p in spc_params]
 
 
 @pytest.fixture(scope="module", ids=spc_ids, params=spc_params)
-def tspace(tspace_impl, request):
+def tspace(odl_tspace_impl, request):
     spc = request.param
+    impl = odl_tspace_impl
 
     if spc == 'rn':
-        return odl.rn(10 ** 5, impl=tspace_impl)
+        return odl.rn(10 ** 5, impl=impl)
     elif spc == '1d':
-        return odl.uniform_discr(0, 1, 10 ** 5, impl=tspace_impl)
+        return odl.uniform_discr(0, 1, 10 ** 5, impl=impl)
     elif spc == '3d':
         return odl.uniform_discr([0, 0, 0], [1, 1, 1],
-                                 [100, 100, 100], impl=tspace_impl)
+                                 [100, 100, 100], impl=impl)
 
 
 def test_element(tspace):
