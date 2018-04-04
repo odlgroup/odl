@@ -212,6 +212,24 @@ def test_properties(odl_tspace_impl):
     assert x.nbytes == 4 * 3 * 4
 
 
+def test_size(odl_tspace_impl):
+    """Test that size handles corner cases appropriately."""
+    impl = odl_tspace_impl
+    space = odl.tensor_space((3, 4), impl=impl)
+    assert space.size == 12
+    assert type(space.size) == int
+
+    # Size 0
+    space = odl.tensor_space((), impl=impl)
+    assert space.size == 0
+    assert type(space.size) == int
+
+    # Overflow test
+    large_space = odl.tensor_space((10000,) * 3, impl=impl)
+    assert large_space.size == 10000 ** 3
+    assert type(space.size) == int
+
+
 def test_element(tspace, odl_elem_order):
     """Test creation of space elements."""
     order = odl_elem_order
