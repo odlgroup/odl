@@ -273,27 +273,30 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
             return
 
         # Initialize out, avoiding one copy
-        self._abs_pow_ufunc(vf[0], out=out)
+        self._abs_pow_ufunc(vf[0], out=out, p=self.exponent)
         if self.is_weighted:
             out *= self.weights[0]
 
         tmp = self.range.element()
         for fi, wi in zip(vf[1:], self.weights[1:]):
-            self._abs_pow_ufunc(fi, out=tmp)
+            self._abs_pow_ufunc(fi, out=tmp, p=self.exponent)
             if self.is_weighted:
                 tmp *= wi
             out += tmp
 
-        out.ufuncs.power(1 / self.exponent, out=out)
+        self._abs_pow_ufunc(out, out=out, p=(1 / self.exponent))
 
-    def _abs_pow_ufunc(self, fi, out):
+    def _abs_pow_ufunc(self, fi, out, p):
         """Compute |F_i(x)|^p point-wise and write to ``out``."""
-        # Optimization for a very common case
-        if self.exponent == 2.0 and self.base_space.field == RealNumbers():
+        # Optimization for very common cases
+        if p == 0.5:
+            fi.ufuncs.absolute(out=out)
+            out.ufuncs.sqrt(out=out)
+        elif p == 2.0 and self.base_space.field == RealNumbers():
             fi.multiply(fi, out=out)
         else:
             fi.ufuncs.absolute(out=out)
-            out.ufuncs.power(self.exponent, out=out)
+            out.ufuncs.power(p, out=out)
 
     def derivative(self, vf):
         """Derivative of the point-wise norm operator at ``vf``.
