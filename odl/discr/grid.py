@@ -244,7 +244,8 @@ class RectGrid(Set):
     def size(self):
         """Total number of grid points."""
         # Since np.prod(()) == 1.0 we need to handle that by ourselves
-        return 0 if self.shape == () else np.prod(self.shape)
+        return (0 if self.shape == () else
+                int(np.prod(self.shape, dtype='int64')))
 
     def __len__(self):
         """Return ``len(self)``.

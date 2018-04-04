@@ -333,7 +333,8 @@ class ProductSpace(LinearSpace):
         >>> pspace2.size
         6
         """
-        return 0 if self.shape == () else int(np.prod(self.shape))
+        return (0 if self.shape == () else
+                int(np.prod(self.shape, dtype='int64')))
 
     @property
     def spaces(self):

@@ -269,7 +269,8 @@ class TensorSpace(LinearSpace):
     @property
     def size(self):
         """Total number of entries in an element of this space."""
-        return 0 if self.shape == () else int(np.prod(self.shape))
+        return (0 if self.shape == () else
+                int(np.prod(self.shape, dtype='int64')))
 
     @property
     def ndim(self):
