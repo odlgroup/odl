@@ -21,8 +21,8 @@ import pylab
 from math import ceil
 from numpy.fft import fft2, ifft2, fftshift, ifftshift
 
-
 __all__ = ('ShearlabOperator',)
+
 
 class ShearlabOperator(odl.Operator):
 
@@ -106,6 +106,7 @@ class ShearlabOperatorAdjoint(odl.Operator):
         """Return the inverse operator."""
         return ShearlabOperatorAdjointInverse(self.op)
 
+
 class ShearlabOperatorInverse(odl.Operator):
 
     """Inverse of the shearlet transform.
@@ -141,6 +142,7 @@ class ShearlabOperatorInverse(odl.Operator):
     def inverse(self):
         """Return the inverse operator."""
         return self.op
+
 
 class ShearlabOperatorAdjointInverse(odl.Operator):
 
@@ -178,7 +180,8 @@ class ShearlabOperatorAdjointInverse(odl.Operator):
         """Return the inverse operator."""
         return self.op.adjoint
 
-## Python library for shearlab.jl
+# Python library for shearlab.jl
+
 
 # Function to load Shearlab
 def load_Shearlab():
@@ -188,17 +191,19 @@ def load_Shearlab():
     j.eval('using PyPlot')
     j.eval('using Images')
     return j
-        
+
 # Load Shearlab
 j = load_Shearlab()
+
 
 # Function to load images with certain size
 def load_image(name, n, m=None, gpu=0, square=0):
     if m is None:
-    	m = n
+        m = n
     command = 'Shearlab.load_image('+'"'+name+'"'+','+str(n)+','
     command = command + str(m)+','+str(gpu)+','+str(square)+')'
     return j.eval(command)
+
 
 # Function to plot images
 def imageplot(f, str='', sbpt=[]):
@@ -212,6 +217,7 @@ def imageplot(f, str='', sbpt=[]):
     pylab.axis('off')
     if str != '':
         plt.title(str)
+
 
 # Class of shearlet system in 2D
 class Shearletsystem2D:
@@ -229,13 +235,14 @@ class Shearletsystem2D:
 
 
 # Function to generate de 2D system
-def getshearletsystem2D(rows,cols,nScales,
-                                shearLevels= None,
-                                full= 0,
-                                directionalFilter = 'Shearlab.filt_gen("directional_shearlet")',
-                                quadratureMirrorFilter= 'Shearlab.filt_gen("scaling_shearlet")'):
+def getshearletsystem2D(rows, cols, nScales, shearLevels=None,
+                        full=0,
+                        directionalFilter='Shearlab.
+                        filt_gen("directional_shearlet")',
+                        quadratureMirrorFilter='Shearlab.
+                        filt_gen("scaling_shearlet")'):
     if shearLevels is None:
-    	shearLevels = [float(ceil(i/2)) for i in range(1,nScales+1)]
+        shearLevels = [float(ceil(i/2)) for i in range(1, nScales+1)]
     j.eval('rows='+str(rows))
     j.eval('cols='+str(cols))
     j.eval('nScales='+str(nScales))
@@ -243,7 +250,9 @@ def getshearletsystem2D(rows,cols,nScales,
     j.eval('full='+str(full))
     j.eval('directionalFilter='+directionalFilter)
     j.eval('quadratureMirrorFilter='+quadratureMirrorFilter)
-    j.eval('shearletSystem = Shearlab.getshearletsystem2D(rows,cols,nScales,shearLevels,full,directionalFilter,quadratureMirrorFilter);')
+    j.eval('shearletSystem=Shearlab.getshearletsystem2D(rows,
+           cols, nScales, shearLevels, full, directionalFilter,
+           quadratureMirrorFilter) ')
     shearlets = j.eval('shearletSystem.shearlets')
     size = j.eval('shearletSystem.size')
     shearLevels = j.eval('shearletSystem.shearLevels')
@@ -252,41 +261,49 @@ def getshearletsystem2D(rows,cols,nScales,
     shearletIdxs = j.eval('shearletSystem.shearletIdxs')
     dualFrameWeights = j.eval('shearletSystem.dualFrameWeights')
     RMS = j.eval('shearletSystem.RMS')
-    isComplex = j.eval('shearletSystem.isComplex');
-    return  Shearletsystem2D(shearlets, size, shearLevels, full, nShearlets,
-                                  shearletIdxs, dualFrameWeights, RMS, isComplex)
+    isComplex = j.eval('shearletSystem.isComplex')
+    return Shearletsystem2D(shearlets, size, shearLevels, full, nShearlets,
+                            shearletIdxs, dualFrameWeights, RMS, isComplex)
+
 
 # Shearlet Decomposition function
-def sheardec2D(X,shearletSystem):
-    coeffs = np.zeros(shearletSystem.shearlets.shape,dtype=np.complex_)
+def sheardec2D(X, shearletSystem):
+    coeffs = np.zeros(shearletSystem.shearlets.shape, dtype=np.complex_)
     Xfreq = fftshift(fft2(ifftshift(X)))
     for i in range(shearletSystem.nShearlets):
-        coeffs[:,:,i] = fftshift(ifft2(ifftshift(Xfreq*np.conj(shearletSystem.shearlets[:,:,i]))))
+        coeffs[:, :, i] = fftshift(ifft2(ifftshift(Xfreq*np.conj(
+                                   shearletSystem.shearlets[:, :, i]))))
     return coeffs.real
 
+
 # Shearlet Recovery function
-def shearrec2D(coeffs,shearletSystem):
-    X = np.zeros((coeffs.shape[0],coeffs.shape[1]),dtype=np.complex_)
+def shearrec2D(coeffs, shearletSystem):
+    X = np.zeros((coeffs.shape[0], coeffs.shape[1]), dtype=np.complex_)
     for i in range(shearletSystem.nShearlets):
-        X = X+fftshift(fft2(ifftshift(coeffs[:,:,i])))*shearletSystem.shearlets[:,:,i]
-    return (fftshift(ifft2(ifftshift((1/shearletSystem.dualFrameWeights)*X)))).real
+        X = X+fftshift(fft2(ifftshift(coeffs[:, :, i])))*
+        shearletSystem.shearlets[:, :, i]
+    return (fftshift(ifft2(ifftshift((
+            1/shearletSystem.dualFrameWeights)*X)))).real
+
 
 # Shearlet Decomposition adjoint function
 def sheardecadjoint2D(coeffs, shearletSystem):
     X = np.zeros((coeffs.shape[0], coeffs.shape[1]), dtype=complex)
     for i in range(shearletSystem.nShearlets):
-        X = X+fftshift(fft2(ifftshift(coeffs[:,:,i])))*np.conj(shearletSystem.shearlets[:,:,i])
+        X = X+fftshift(fft2(ifftshift(coeffs[:, :, i])))*
+        np.conj(shearletSystem.shearlets[:, :, i])
     return fftshift(ifft2(ifftshift(X))).real
+
 
 # Shearlet Recovery adjoint function
 def shearrecadjoint2D(X, shearletSystem):
-    coeffs = np.zeros(shearletSystem.shearlets.shape,dtype=np.complex_)
+    coeffs = np.zeros(shearletSystem.shearlets.shape, dtype=np.complex_)
     Xfreq = fftshift(fft2(ifftshift(X)))
     for i in range(shearletSystem.nShearlets):
-        coeffs[:,:,i] = fftshift(ifft2(ifftshift(Xfreq*shearletSystem.shearlets[:,:,i])))
+        coeffs[:, :, i] = fftshift(ifft2(ifftshift(
+                                 Xfreq*shearletSystem.shearlets[:, :, i])))
     return coeffs.real
 
-    
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
