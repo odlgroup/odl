@@ -10,7 +10,7 @@ coefficients to contain the square.
 """
 
 import odl
-from odl.contrib.shearlab import ShearlabOperator
+from odl.contrib import shearlab
 
 space = odl.uniform_discr([-1, -1], [1, 1], [128, 128])
 img = odl.phantom.ellipsoid_phantom(space, [[1, 0.02, 0.3, 0.5, 0, 0]])
@@ -21,7 +21,7 @@ noise = odl.phantom.white_noise(space) * 0.001
 noisy_data = img + noise
 
 # Create shearlet and wavelet transforms
-shear_op = ShearlabOperator(space, num_scales=2)
+shear_op = shearlab.ShearlabOperator(space, num_scales=2)
 wave_op = odl.trafos.WaveletTransform(space, 'haar', nlevels=2)
 wave_op = wave_op / wave_op.norm(estimate=True)
 

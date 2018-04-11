@@ -1,4 +1,4 @@
-"""Demonstration of basic ODL->pyshearlets integration functionality."""
+"""Demonstration of basic ODL->shearlets integration functionality."""
 
 import odl
 import odl.contrib.shearlab

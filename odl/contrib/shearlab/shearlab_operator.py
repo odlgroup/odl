@@ -27,9 +27,10 @@ __all__ = ('ShearlabOperator',)
 class ShearlabOperator(odl.Operator):
 
     """Shearlet transform using Shearlab.jl as backend.
-    This is the non-compact shearlet transform implemented using the fourier
+    This is the non-compact shearlet transform implemented using the Fourier
     transform.
     """
+
 
     def __init__(self, space, num_scales):
         """Initialize a new instance.
@@ -54,134 +55,133 @@ class ShearlabOperator(odl.Operator):
         super(ShearlabOperator, self).__init__(space, range, True)
 
     def _call(self, x):
-        """Return ``self(x)``."""
+        """``self(x)``."""
         with self.mutex:
             result = sheardec2D(x, self.shearlet_system)
             return np.moveaxis(result, -1, 0)
 
     @property
     def adjoint(self):
-        """Return the adjoint operator."""
-        return ShearlabOperatorAdjoint(self)
+        """The adjoint operator."""
+        op = self
+        
+        class ShearlabOperatorAdjoint(odl.Operator):
+
+            """Adjoint of the shearlet transform.
+            Should not be used independently.
+            See Also
+            --------
+            odl.contrib.shearlab.ShearlabOperator
+            """
+
+            def __init__(self):
+                """Initialize a new instance.
+                Parameters
+                ----------
+                op : `ShearlabOperator`
+                    The operator which this should be the adjoint of.
+                """
+                super(ShearlabOperatorAdjoint, self).__init__(
+                    op.range, op.domain, True)
+
+            def _call(self, x):
+                """``self(x)``."""
+                with op.mutex:
+                    x = np.moveaxis(x, 0, -1)
+                    return sheardecadjoint2D(x, op.shearlet_system)
+
+            @property
+            def adjoint(self):
+                """The adjoint operator."""
+                return op
+
+            @property
+            def inverse(self):
+                """The inverse operator."""
+                op = self
+                
+                class ShearlabOperatorAdjointInverse(odl.Operator):
+
+                    """Adjoint of the inverse/Inverse of the adjoint of shearlet transform.
+                    Should not be used independently.
+                    See Also
+                    --------
+                    odl.contrib.shearlab.ShearlabOperator
+                    """
+
+                    def __init__(self):
+                        """Initialize a new instance.
+                        Parameters
+                        ----------
+                        op : `ShearlabOperator`
+                            The operator which this should be the inverse of the adjoint of.
+                        """
+                        super(ShearlabOperatorAdjointInverse, self).__init__(
+                            op.domain, op.range, True)
+
+                    def _call(self, x):
+                        """``self(x)``."""
+                        with op.mutex:
+                            result = shearrecadjoint2D(x, op.shearlet_system)
+                            return np.moveaxis(result, -1, 0)
+
+                    @property
+                    def adjoint(self):
+                        """The adjoint operator."""
+                        return self.op.inverse
+
+                    @property
+                    def inverse(self):
+                        """The inverse operator."""
+                        return self.op.adjoint
+
+        return ShearlabOperatorAdjoint()
 
     @property
     def inverse(self):
-        """Return the inverse operator."""
-        return ShearlabOperatorInverse(self)
+        """The inverse operator."""
+        op = self
+        
+        class ShearlabOperatorInverse(odl.Operator):
+
+            """Inverse of the shearlet transform.
+            Should not be used independently.
+            See Also
+            --------
+            odl.contrib.shearlab.ShearlabOperator
+            """
 
 
-class ShearlabOperatorAdjoint(odl.Operator):
+            def __init__(self):
+                """Initialize a new instance.
+                Parameters
+                ----------
+                op : `ShearlabOperator`
+                    The operator which this should be the inverse of.
+                """
+                super(ShearlabOperatorInverse, self).__init__(
+                    op.range, op.domain, True)
 
-    """Adjoint of the shearlet transform.
-    Should not be used independently.
-    See Also
-    --------
-    odl.contrib.shearlab.ShearlabOperator
-    """
+            def _call(self, x):
+                """``self(x)``."""
+                with op.mutex:
+                    x = np.moveaxis(x, 0, -1)
+                    return shearrec2D(x, op.shearlet_system)
 
-    def __init__(self, op):
-        """Initialize a new instance.
-        Parameters
-        ----------
-        op : `ShearlabOperator`
-            The operator which this should be the adjoint of.
-        """
-        self.op = op
-        super(ShearlabOperatorAdjoint, self).__init__(
-            op.range, op.domain, True)
+            @property
+            def adjoint(self):
+                """The adjoint operator."""
+                return ShearlabOperatorAdjointInverse()
 
-    def _call(self, x):
-        """Return ``self(x)``."""
-        with self.op.mutex:
-            x = np.moveaxis(x, 0, -1)
-            return sheardecadjoint2D(x, self.op.shearlet_system)
+            @property
+            def inverse(self):
+                """The inverse operator."""
+                return op
+        
+        return ShearlabOperatorInverse()
 
-    @property
-    def adjoint(self):
-        """Return the adjoint operator."""
-        return self.op
-
-    @property
-    def inverse(self):
-        """Return the inverse operator."""
-        return ShearlabOperatorAdjointInverse(self.op)
-
-
-class ShearlabOperatorInverse(odl.Operator):
-
-    """Inverse of the shearlet transform.
-    Should not be used independently.
-    See Also
-    --------
-    odl.contrib.shearlab.ShearlabOperator
-    """
-
-    def __init__(self, op):
-        """Initialize a new instance.
-        Parameters
-        ----------
-        op : `ShearlabOperator`
-            The operator which this should be the inverse of.
-        """
-        self.op = op
-        super(ShearlabOperatorInverse, self).__init__(
-            op.range, op.domain, True)
-
-    def _call(self, x):
-        """Return ``self(x)``."""
-        with self.op.mutex:
-            x = np.moveaxis(x, 0, -1)
-            return shearrec2D(x, self.op.shearlet_system)
-
-    @property
-    def adjoint(self):
-        """Return the adjoint operator."""
-        return ShearlabOperatorAdjointInverse(self.op)
-
-    @property
-    def inverse(self):
-        """Return the inverse operator."""
-        return self.op
-
-
-class ShearlabOperatorAdjointInverse(odl.Operator):
-
-    """Adjoint of the inverse/Inverse of the adjoint of shearlet transform.
-    Should not be used independently.
-    See Also
-    --------
-    odl.contrib.shearlab.ShearlabOperator
-    """
-
-    def __init__(self, op):
-        """Initialize a new instance.
-        Parameters
-        ----------
-        op : `ShearlabOperator`
-            The operator which this should be the inverse of the adjoint of.
-        """
-        self.op = op
-        super(ShearlabOperatorAdjointInverse, self).__init__(
-            op.domain, op.range, True)
-
-    def _call(self, x):
-        """Return ``self(x)``."""
-        with self.op.mutex:
-            result = shearrecadjoint2D(x, self.op.shearlet_system)
-            return np.moveaxis(result, -1, 0)
-
-    @property
-    def adjoint(self):
-        """Return the adjoint operator."""
-        return self.op.inverse
-
-    @property
-    def inverse(self):
-        """Return the inverse operator."""
-        return self.op.adjoint
 
 # Python library for shearlab.jl
-
 
 # Function to load Shearlab
 def load_Shearlab():
@@ -201,8 +201,8 @@ j = load_Shearlab()
 def load_image(name, n, m=None, gpu=0, square=0):
     if m is None:
         m = n
-    command = 'Shearlab.load_image(' + '"' + name + '"' + ',' + str(n) + ','
-    command = command + str(m) + ',' + str(gpu) + ',' + str(square) + ')'
+    command = ('Shearlab.load_image("{}", {}, {}, {}, {})'
+           ''.format(name, n, m, gpu, square))
     return j.eval(command)
 
 
@@ -238,10 +238,8 @@ class Shearletsystem2D:
 # Function to generate de 2D system
 def getshearletsystem2D(rows, cols, nScales, shearLevels=None,
                         full=0,
-                        directionalFilter='Shearlab.
-                        filt_gen("directional_shearlet")',
-                        quadratureMirrorFilter='Shearlab.
-                        filt_gen("scaling_shearlet")'):
+                        directionalFilter='Shearlab.filt_gen("directional_shearlet")',
+                        quadratureMirrorFilter='Shearlab.filt_gen("scaling_shearlet")'):
     if shearLevels is None:
         shearLevels = [float(ceil(i / 2)) for i in range(1, nScales + 1)]
     j.eval('rows=' + str(rows))
@@ -251,9 +249,7 @@ def getshearletsystem2D(rows, cols, nScales, shearLevels=None,
     j.eval('full=' + str(full))
     j.eval('directionalFilter=' + directionalFilter)
     j.eval('quadratureMirrorFilter=' + quadratureMirrorFilter)
-    j.eval('shearletSystem=Shearlab.getshearletsystem2D(rows,
-           cols, nScales, shearLevels, full, directionalFilter,
-           quadratureMirrorFilter) ')
+    j.eval('shearletSystem=Shearlab.getshearletsystem2D(rows, cols, nScales, shearLevels, full, directionalFilter, quadratureMirrorFilter) ')
     shearlets = j.eval('shearletSystem.shearlets')
     size = j.eval('shearletSystem.size')
     shearLevels = j.eval('shearletSystem.shearLevels')
@@ -281,8 +277,7 @@ def sheardec2D(X, shearletSystem):
 def shearrec2D(coeffs, shearletSystem):
     X = np.zeros((coeffs.shape[0], coeffs.shape[1]), dtype=np.complex_)
     for i in range(shearletSystem.nShearlets):
-        X = X + fftshift(fft2(ifftshift(coeffs[:, :, i]))) *
-        shearletSystem.shearlets[:, :, i]
+        X = X + fftshift(fft2(ifftshift(coeffs[:, :, i]))) * shearletSystem.shearlets[:, :, i]
     return (fftshift(ifft2(ifftshift((
             1 / shearletSystem.dualFrameWeights) * X)))).real
 
@@ -291,8 +286,7 @@ def shearrec2D(coeffs, shearletSystem):
 def sheardecadjoint2D(coeffs, shearletSystem):
     X = np.zeros((coeffs.shape[0], coeffs.shape[1]), dtype=complex)
     for i in range(shearletSystem.nShearlets):
-        X = X + fftshift(fft2(ifftshift(coeffs[:, :, i]))) *
-        np.conj(shearletSystem.shearlets[:, :, i])
+        X = X + fftshift(fft2(ifftshift(coeffs[:, :, i]))) * np.conj(shearletSystem.shearlets[:, :, i])
     return fftshift(ifft2(ifftshift(X))).real
 
 
