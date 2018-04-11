@@ -1,4 +1,6 @@
-﻿# Copyright 2014-2017 The ODL contributors
+﻿# coding=utf-8
+
+# Copyright 2014-2017 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -22,7 +24,7 @@ __all__ = ('ScalingOperator', 'ZeroOperator', 'IdentityOperator',
            'LinCombOperator', 'MultiplyOperator', 'PowerOperator',
            'InnerProductOperator', 'NormOperator', 'DistOperator',
            'ConstantOperator', 'RealPart', 'ImagPart', 'ComplexEmbedding',
-           'ComplexModulus')
+           'ComplexModulus', 'ComplexModulusSquared')
 
 
 class ScalingOperator(Operator):
@@ -957,6 +959,20 @@ class RealPart(Operator):
         """Return ``self(x)``."""
         return x.real
 
+    def derivative(self, x):
+        r"""Return the derivative operator in the "C = R^2" sense.
+
+        The returned operator (``self``) is the derivative of the
+        operator variant where the complex domain is reinterpreted as
+        a product of two real spaces.
+
+        Parameters
+        ----------
+        x : `domain` element
+            Point in which to take the derivative, has no effect.
+        """
+        return self
+
     @property
     def inverse(self):
         """Return the (pseudo-)inverse.
@@ -1069,6 +1085,20 @@ class ImagPart(Operator):
     def _call(self, x):
         """Return ``self(x)``."""
         return x.imag
+
+    def derivative(self, x):
+        r"""Return the derivative operator in the "C = R^2" sense.
+
+        The returned operator (``self``) is the derivative of the
+        operator variant where the complex domain is reinterpreted as
+        a product of two real spaces.
+
+        Parameters
+        ----------
+        x : `domain` element
+            Point in which to take the derivative, has no effect.
+        """
+        return self
 
     @property
     def inverse(self):
@@ -1289,20 +1319,20 @@ class ComplexEmbedding(Operator):
 
 class ComplexModulus(Operator):
 
-    """Operator that computes the modolus (absolute value) of a vector."""
+    """Operator that computes the modulus (absolute value) of a vector."""
 
     def __init__(self, space):
         """Initialize a new instance.
 
         Parameters
         ----------
-        space : `FnBase`
-            Space whose real part should be taken, needs to implement
+        space : `TensorSpace`
+            Space in which the modulus should be taken, needs to implement
             ``space.real_space``.
 
         Examples
         --------
-        Take the real part of a complex vector:
+        Take the modulus of a complex vector:
 
         >>> c2 = odl.cn(2)
         >>> op = odl.ComplexModulus(c2)
@@ -1316,8 +1346,8 @@ class ComplexModulus(Operator):
         >>> op([1, -2])
         rn(2).element([ 1.,  2.])
 
-        The operator also works on other `FnBase` spaces such as
-        `DiscreteLp` spaces:
+        The operator also works on other `TensorSpace`'s such as
+        `DiscreteLp`:
 
         >>> r2 = odl.uniform_discr(0, 1, 2, dtype=complex)
         >>> op = odl.ComplexModulus(r2)
@@ -1325,38 +1355,375 @@ class ComplexModulus(Operator):
         uniform_discr(0.0, 1.0, 2).element([ 5.,  2.])
         """
         real_space = space.real_space
-        linear = (space == real_space)
-        super(ComplexModulus, self).__init__(space, real_space, linear=linear)
+        super(ComplexModulus, self).__init__(space, real_space, linear=False)
 
     def _call(self, x):
         """Return ``self(x)``."""
         return (x.real ** 2 + x.imag ** 2).ufuncs.sqrt()
 
-    @property
-    def inverse(self):
-        """Return the (pseudo-)inverse.
+    def derivative(self, x):
+        r"""Return the derivative operator in the "C = R^2" sense.
+
+        The returned operator (``self``) is the derivative of the
+        operator variant where the complex domain is reinterpreted as
+        a product of two real spaces.
+
+        Parameters
+        ----------
+        x : `domain` element
+            Point in which to take the derivative.
 
         Examples
         --------
-        The (pseudo-)inverse in the real case is the identity:
+        >>> c2 = odl.cn(2)
+        >>> op = odl.ComplexModulus(c2)
+        >>> op([3 + 4j, 2])
+        rn(2).element([ 5.,  2.])
+        >>> deriv = op.derivative([3 + 4j, 2])
+        >>> deriv.domain
+        cn(2)
+        >>> deriv.range
+        rn(2)
+        >>> deriv([2 + 1j, 4j])  # [(3*2 + 4*1) / 5, (2*0 + 0*4) / 2]
+        rn(2).element([ 2.,  0.])
 
-        >>> r2 = odl.rn(2)
-        >>> op = ComplexModulus(r2)
-        >>> op.inverse(op([1, -2]))
-        rn(2).element([ 1.,  2.])
+        Notes
+        -----
+        The derivative of the complex modulus
 
-        If the domain is complex, a pseudo-inverse is taken, assigning equal
-        positive weights to the real and complex parts:
+        .. math::
+            &M: X(\mathbb{C}) \to X(\mathbb{R}), \\
+            &M(x) = \sqrt{\Re(x)^2 + \Im(x)^2},
+
+        with :math:`X(\mathbb{F}) = \mathbb{F}^n` or
+        :math:`L^2(\Omega, \mathbb{F})`, is given as
+
+        .. math::
+            &M'(x): X(\mathbb{C}) \to X(\mathbb{R}), \\
+            &M'(x)(y) = \frac{\Re(x)\,\Re(y) + \Im(x)\,\Im(y)}{M(x)}.
+
+        It is linear when identifying :math:`\mathbb{C}` with
+        :math:`\mathbb{R}^2`, but not complex-linear.
+        """
+        op = self
+        x = self.domain.element(x)
+
+        class ComplexModulusDerivative(Operator):
+
+            """Derivative of the complex modulus operator."""
+
+            def __init__(self):
+                """Initialize a new instance."""
+                super(ComplexModulusDerivative, self).__init__(
+                    op.domain, op.range, linear=op.domain.is_real)
+
+            def _call(self, y, out):
+                """Return ``self(y)``."""
+                out[:] = x.real * y.real
+                out += x.imag * y.imag
+                out /= op(x)
+                return out
+
+            @property
+            def adjoint(self):
+                r"""Adjoint in the "C = R^2" sense.
+
+                Examples
+                --------
+                Adjoint of the derivative:
+
+                >>> c2 = odl.cn(2)
+                >>> op = odl.ComplexModulus(c2)
+                >>> op([3 + 4j, 2])
+                rn(2).element([ 5.,  2.])
+                >>> deriv = op.derivative([3 + 4j, 2])
+                >>> adj = deriv.adjoint
+                >>> adj.domain
+                rn(2)
+                >>> adj.range
+                cn(2)
+                >>> adj([5, 5])  # [5*(3 + 4j)/5, 5*2/2]
+                cn(2).element([ 3.+4.j,  5.+0.j])
+
+                Adjointness only holds in the weaker sense that inner products
+                are the same when testing with vectors from the real space, but
+                not when testing complex vectors:
+
+                >>> y1 = deriv.range.element([5, 5])
+                >>> y2 = deriv.range.element([1, 2])
+                >>> adj(y1).inner(adj(y2))  # <M^* y1, M^* y2>
+                (15+0j)
+                >>> deriv(adj(y1)).inner(y2)  # <M M^* y1, y2>
+                15.0
+                >>> x1 = deriv.domain.element([6 + 3j, 2j])
+                >>> x2 = deriv.domain.element([5, 10 + 4j])
+                >>> deriv(x1).inner(deriv(x2))  # <M x1, M x2>
+                18.0
+                >>> adj(deriv(x1)).inner(x2)  # <M^* M x1, x2>
+                (18+24j)
+
+                Notes
+                -----
+                The complex modulus derivative is given by
+
+                .. math::
+                    &M'(x): X(\mathbb{C}) \to X(\mathbb{R}), \\
+                    &M'(x)(y) = \frac{\Re(x)\,\Re(y) + \Im(x)\,\Im(y)}{M(x)}.
+
+                Thus, its adjoint can (formally) be identified as
+
+                .. math::
+                    &M'(x)^*: X(\mathbb{R}) \to X(\mathbb{C}), \\
+                    &M'(x)^*(u) = \frac{(\Re(x)\,u,\ \Im(x)\,u}{M(x)}.
+
+                The operator :math:`A = M'(x)` has the weak adjointness
+                property
+
+                .. math::
+                    \langle A^* y_1,\ A^* y_2 \rangle_{X(\mathbb{C})} =
+                    \langle AA^* y_1,\ y_2 \rangle_{X(\mathbb{R})},
+
+                but in general,
+
+                .. math::
+                    \langle A x,\ y \rangle_{X(\mathbb{R})} \neq
+                    \langle x,\ A^* y \rangle_{X(\mathbb{C})},
+
+                in particular
+
+                .. math::
+                    \langle A x_1,\ A x_2 \rangle_{X(\mathbb{R})} \neq
+                    \langle A^*A x_1,\ x_2 \rangle_{X(\mathbb{C})}.
+                """
+                deriv = self
+
+                class ComplexModulusDerivativeAdjoint(Operator):
+
+                    def __init__(self):
+                        """Initialize a new instance."""
+                        super(ComplexModulusDerivativeAdjoint, self).__init__(
+                            deriv.range, deriv.domain,
+                            linear=deriv.domain.is_real)
+
+                    def _call(self, u, out):
+                        """Implement ``self(u, out)``."""
+                        out.assign(x)
+                        tmp = u / op(x)
+                        out.real *= tmp
+                        out.imag *= tmp
+                        return out
+
+                    @property
+                    def adjoint(self):
+                        """Adjoint in the "C = R^2" sense."""
+                        return deriv
+
+                return ComplexModulusDerivativeAdjoint()
+
+        return ComplexModulusDerivative()
+
+
+class ComplexModulusSquared(Operator):
+
+    """Operator that computes the squared complex modulus (absolute value)."""
+
+    def __init__(self, space):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        space : `TensorSpace`
+            Space in which the modulus should be taken, needs to implement
+            ``space.real_space``.
+
+        Examples
+        --------
+        Take the squared modulus of a complex vector:
 
         >>> c2 = odl.cn(2)
-        >>> op = ComplexModulus(c2)
-        >>> op.inverse(op([np.sqrt(2), 2 + 2j]))
-        cn(2).element([ 1.+1.j,  2.+2.j])
+        >>> op = odl.ComplexModulusSquared(c2)
+        >>> op([3 + 4j, 2])
+        rn(2).element([ 25.,   4.])
+
+        On a real space, this is the same as squaring:
+
+        >>> r2 = odl.rn(2)
+        >>> op = odl.ComplexModulusSquared(r2)
+        >>> op([1, -2])
+        rn(2).element([ 1.,  4.])
+
+        The operator also works on other `TensorSpace`'s such as
+        `DiscreteLp`:
+
+        >>> r2 = odl.uniform_discr(0, 1, 2, dtype=complex)
+        >>> op = odl.ComplexModulusSquared(r2)
+        >>> op([3 + 4j, 2])
+        uniform_discr(0.0, 1.0, 2).element([ 25.,   4.])
         """
-        if self.is_linear:
-            return IdentityOperator(self.domain)
-        else:
-            return ComplexEmbedding(self.range, scalar=(1 + 1j) / np.sqrt(2))
+        real_space = space.real_space
+        super(ComplexModulusSquared, self).__init__(
+            space, real_space, linear=False)
+
+    def _call(self, x):
+        """Return ``self(x)``."""
+        return x.real ** 2 + x.imag ** 2
+
+    def derivative(self, x):
+        r"""Return the derivative operator in the "C = R^2" sense.
+
+        The returned operator (``self``) is the derivative of the
+        operator variant where the complex domain is reinterpreted as
+        a product of two real spaces.
+
+        Parameters
+        ----------
+        x : `domain` element
+            Point in which to take the derivative.
+
+        Examples
+        --------
+        >>> c2 = odl.cn(2)
+        >>> op = odl.ComplexModulusSquared(c2)
+        >>> op([3 + 4j, 2])
+        rn(2).element([ 25.,   4.])
+        >>> deriv = op.derivative([3 + 4j, 2])
+        >>> deriv.domain
+        cn(2)
+        >>> deriv.range
+        rn(2)
+        >>> deriv([2 + 1j, 4j])  # [(3*2 + 4*1) / 5, (2*0 + 0*4) / 2]
+        rn(2).element([ 10.,   0.])
+
+        Notes
+        -----
+        The derivative of the squared complex modulus
+
+        .. math::
+            &S: X(\mathbb{C}) \to X(\mathbb{R}), \\
+            &S(x) = \Re(x)^2 + \Im(x)^2,
+
+        with :math:`X(\mathbb{F}) = \mathbb{F}^n` or
+        :math:`L^2(\Omega, \mathbb{F})`, is given as
+
+        .. math::
+            &S'(x): X(\mathbb{C}) \to X(\mathbb{R}), \\
+            &S'(x)(y) = \Re(x)\,\Re(y) + \Im(x)\,\Im(y).
+
+        It is linear when identifying :math:`\mathbb{C}` with
+        :math:`\mathbb{R}^2`, but not complex-linear.
+        """
+        op = self
+        x = self.domain.element(x)
+
+        class ComplexModulusSquaredDerivative(Operator):
+
+            """Derivative of the squared complex modulus operator."""
+
+            def __init__(self):
+                """Initialize a new instance."""
+                super(ComplexModulusSquaredDerivative, self).__init__(
+                    op.domain, op.range, linear=op.domain.is_real)
+
+            def _call(self, y, out):
+                """Return ``self(y)``."""
+                x.real.multiply(y.real, out=out)
+                out += x.imag * y.imag
+                return out
+
+            @property
+            def adjoint(self):
+                r"""Adjoint in the "C = R^2" sense.
+
+                Adjoint of the derivative:
+
+                Examples
+                --------
+                >>> c2 = odl.cn(2)
+                >>> op = odl.ComplexModulusSquared(c2)
+                >>> deriv = op.derivative([3 + 4j, 2])
+                >>> adj = deriv.adjoint
+                >>> adj.domain
+                rn(2)
+                >>> adj.range
+                cn(2)
+                >>> adj([2, 1])  # [2*(3 + 4j), 1*2]
+                cn(2).element([ 6.+8.j,  2.+0.j])
+
+                Adjointness only holds in the weaker sense that inner products
+                are the same when testing with vectors from the real space, but
+                not when testing complex vectors:
+
+                >>> y1 = deriv.range.element([1, 1])
+                >>> y2 = deriv.range.element([1, -1])
+                >>> adj(y1).inner(adj(y2))  # <M^* y1, M^* y2>
+                (21+0j)
+                >>> deriv(adj(y1)).inner(y2)  # <M M^* y1, y2>
+                21.0
+                >>> x1 = deriv.domain.element([1j, 1j])
+                >>> x2 = deriv.domain.element([1 + 1j, 1j])
+                >>> deriv(x1).inner(deriv(x2))  # <M x1, M x2>
+                28.0
+                >>> adj(deriv(x1)).inner(x2)  # <M^* M x1, x2>
+                (28+4j)
+
+                Notes
+                -----
+                The squared complex modulus derivative is given by
+
+                .. math::
+                    &S'(x): X(\mathbb{C}) \to X(\mathbb{R}), \\
+                    &S'(x)(y) = \Re(x)\,\Re(y) + \Im(x)\,\Im(y).
+
+                Thus, its adjoint can (formally) be identified as
+
+                .. math::
+                    &S'(x)^*: X(\mathbb{R}) \to X(\mathbb{C}), \\
+                    &S'(x)^*(u) = (\Re(x)\,u,\ \Im(x)\,u).
+
+                The operator :math:`A = S'(x)` has the weak adjointness
+                property
+
+                .. math::
+                    \langle A^* y_1,\ A^* y_2 \rangle_{X(\mathbb{C})} =
+                    \langle AA^* y_1,\ y_2 \rangle_{X(\mathbb{R})},
+
+                but in general,
+
+                .. math::
+                    \langle A x,\ y \rangle_{X(\mathbb{R})} \neq
+                    \langle x,\ A^* y \rangle_{X(\mathbb{C})},
+
+                in particular
+
+                .. math::
+                    \langle A x_1,\ A x_2 \rangle_{X(\mathbb{R})} \neq
+                    \langle A^*A x_1,\ x_2 \rangle_{X(\mathbb{C})}.
+                """
+                deriv = self
+
+                class ComplexModulusSquaredDerivAdj(Operator):
+
+                    def __init__(self):
+                        """Initialize a new instance."""
+                        super(ComplexModulusSquaredDerivAdj, self).__init__(
+                            deriv.range, deriv.domain,
+                            linear=deriv.domain.is_real)
+
+                    def _call(self, u, out):
+                        """Implement ``self(u, out)``."""
+                        out.assign(x)
+                        out.real *= u
+                        out.imag *= u
+                        return out
+
+                    @property
+                    def adjoint(self):
+                        """Adjoint in the "C = R^2" sense."""
+                        return deriv
+
+                return ComplexModulusSquaredDerivAdj()
+
+        return ComplexModulusSquaredDerivative()
 
 
 if __name__ == '__main__':
