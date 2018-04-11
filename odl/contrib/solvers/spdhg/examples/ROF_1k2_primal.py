@@ -30,10 +30,9 @@ import brewer2mpl
 
 # create folder structure and set parameters
 folder_out = '.'  # to be changed
-folder_out = '/home/ehrhardt/Desktop'  # to be changed
 filename = 'ROF_1k2_primal'
-nepoch = 2
-niter_target = 2
+nepoch = 300
+niter_target = 2000
 subfolder = '{}epochs'.format(nepoch)
 
 folder_main = '{}/{}'.format(folder_out, filename)
