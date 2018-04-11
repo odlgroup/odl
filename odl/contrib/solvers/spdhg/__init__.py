@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,17 +8,15 @@
 
 """Contributed code for the stochastic PDHG.
 
-    [CERS2017] Chambolle, A., Ehrhardt, M. J., Richtárik, P., and
-    Schoenlieb, C.-B. *Stochastic Primal-Dual Hybrid Gradient Algorithm with
-    Arbitrary Sampling and Imaging Applications*.
-    ArXiv: http://arxiv.org/abs/1706.04957 (2017).
+[1] A. Chambolle, M. J. Ehrhardt, P. Richtárik and C.-B. Schönlieb (2017).
+Stochastic Primal-Dual Hybrid Gradient Algorithm with Arbitrary Sampling and
+Imaging Applications. http://arxiv.org/abs/1706.04957
 
-    [E+2017] Ehrhardt, M. J., Markiewicz, P. J., Richtárik, P., Schott, J.,
-    Chambolle, A. and Schoenlieb, C.-B. *Faster PET reconstruction with a
-    stochastic primal-dual hybrid gradient method*. Wavelets and Sparsity XVII,
-    58 (2017) http://doi.org/10.1117/12.2272946.
+[2] M. J. Ehrhardt, P. J. Markiewicz, P. Richtárik, J. Schott, A. Chambolle
+and C.-B. Schönlieb (2017). Faster PET Reconstruction with a Stochastic
+Primal-Dual Hybrid Gradient Method. Wavelets and Sparsity XVII, 58
+http://doi.org/10.1117/12.2272946.
 """
-
 
 from __future__ import absolute_import
 

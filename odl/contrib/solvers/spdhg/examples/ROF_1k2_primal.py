@@ -8,13 +8,14 @@
 
 """An example of using the SPDHG algorithm to solve a TV denoising problem
 with Gaussian noise. We exploit the strong convexity of the data term to get
-1/k^2 convergence on the primal part.
+1/k^2 convergence on the primal part. We compare different algorithms for this
+problem and visualize the results as in [1].
 
 Reference
 ---------
-Chambolle, A., Ehrhardt, M. J., Richtárik, P., & Schönlieb, C.-B. (2017).
+[1] A. Chambolle, M. J. Ehrhardt, P. Richtárik and C.-B. Schönlieb (2017).
 Stochastic Primal-Dual Hybrid Gradient Algorithm with Arbitrary Sampling and
-Imaging Applications. Retrieved from http://arxiv.org/abs/1706.04957
+Imaging Applications. http://arxiv.org/abs/1706.04957
 """
 
 from __future__ import division, print_function
@@ -29,9 +30,10 @@ import brewer2mpl
 
 # create folder structure and set parameters
 folder_out = '.'  # to be changed
+folder_out = '/home/ehrhardt/Desktop'  # to be changed
 filename = 'ROF_1k2_primal'
-nepoch = 300
-niter_target = 2000
+nepoch = 2
+niter_target = 2
 subfolder = '{}epochs'.format(nepoch)
 
 folder_main = '{}/{}'.format(folder_out, filename)
@@ -108,8 +110,6 @@ if not os.path.exists(file_target):
 else:
     (x_opt, y_opt, subx_opt, suby_opt, obj_opt, normA) = np.load(file_target)
 
-verbose = 1  # set verbosity level
-
 # set norms of the primal and dual variable
 dist_x = odl.solvers.L2NormSquared(X).translated(x_opt)
 dist_y = odl.solvers.L2NormSquared(Y).translated(y_opt)
@@ -123,8 +123,8 @@ bregman_f = odl.solvers.SeparableSum(
           for fi, yi, ri in zip(f, y_opt, suby_opt)])
 
 
-# define callback to store function values
 class CallbackStore(odl.solvers.util.callback.Callback):
+    """Callback to store function values"""
 
     def __init__(self, alg, iter_save, iter_plot):
         self.iter_save = iter_save
@@ -180,7 +180,7 @@ for alg in nsub.keys():
     iter_save[alg] = range(0, niter[alg] + 1, nsub[alg])
     iter_plot[alg] = list(np.array([10, 20, 30, 40, 100, 300]) * nsub[alg])
 
-# %% run algorithms
+# %% --- Run algorithms ---
 # TODO: ODL version to be included once the callback includes dual iterates
 #for alg in ['pdhg', 'pesquet_uni2', 'pa_pdhg', 'spdhg_uni2', 'pa_spdhg_uni2', 'odl', 'pa_odl']:
 for alg in ['pdhg', 'pesquet_uni2', 'pa_pdhg', 'spdhg_uni2', 'pa_spdhg_uni2']:
@@ -221,21 +221,19 @@ for alg in ['pdhg', 'pesquet_uni2', 'pa_pdhg', 'spdhg_uni2', 'pa_spdhg_uni2']:
         tau = gamma / (n * max(normAi))
 
     else:
-        raise NameError('Parameters not defined')
+        assert False, "Parameters not defined"
 
     # function that selects the indices every iteration
     def fun_select(k):
         return sub2ind[int(np.random.choice(n, 1, p=prob_subset))]
 
     # output function to be used within the iterations
-    callback = (odl.solvers.CallbackPrintIteration(fmt='iter:{:4d}',
-                                                   step=verbose * n,
+    callback = (odl.solvers.CallbackPrintIteration(fmt='iter:{:4d}', step=n,
                                                    end=', ') &
                 odl.solvers.CallbackPrintTiming(fmt='time/iter: {:5.2f} s',
-                                                step=verbose * n, end=', ') &
+                                                step=n, end=', ') &
                 odl.solvers.CallbackPrintTiming(fmt='time: {:5.2f} s',
-                                                cumulative=True,
-                                                step=verbose * n) &
+                                                cumulative=True, step=n) &
                 CallbackStore(alg, iter_save[alg], iter_plot[alg]))
 
     x, y = X.zero(), Y.zero()  # initialise variables
@@ -262,14 +260,14 @@ for alg in ['pdhg', 'pesquet_uni2', 'pa_pdhg', 'spdhg_uni2', 'pa_spdhg_uni2']:
                             y=y, callback=callback)
 
     else:
-        raise NameError('Algorithm not defined')
+        assert False, "Algorithm not defined"
 
     out = callback.callbacks[1].out
 
     np.save('{}/{}_output'.format(folder_npy, alg), (iter_save[alg],
             niter[alg], x, out, nsub[alg]))
 
-# %%
+# %% --- Analyse and visualise the output ---
 algs = ['pdhg', 'pesquet_uni2', 'pa_pdhg', 'spdhg_uni2', 'pa_spdhg_uni2']
 
 iter_save_v, niter_v, image_v, out_v, nsub_v = {}, {}, {}, {}, {}
@@ -353,7 +351,7 @@ for plotx in ['linx', 'logx']:
         fig.savefig('{}/{}_{}.png'.format(folder_today, plotx, meas),
                     bbox_inches='tight')
 
-# %%
+# %% --- Prepapare visual output as in [1] ---
 # set line width and style
 lwidth = 2
 lwidth_help = 2

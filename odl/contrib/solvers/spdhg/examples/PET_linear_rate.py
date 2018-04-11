@@ -9,15 +9,16 @@
 """An example of using the SPDHG algorithm to solve a PET reconstruction
 problem with a strongly convex total variation prior. We exploit the smoothness
 of the data term and the strong convexity of the prior to obtain a linearly
-convergent algorithm.
+convergent algorithm. We compare different algorithms for this problem and
+visualize the results as in [1].
 
 Note that this example uses the ASTRA toolbox https://www.astra-toolbox.com/.
 
 Reference
 ---------
-Chambolle, A., Ehrhardt, M. J., Richtárik, P., & Schönlieb, C.-B. (2017).
+[1] A. Chambolle, M. J. Ehrhardt, P. Richtárik and C.-B. Schönlieb (2017).
 Stochastic Primal-Dual Hybrid Gradient Algorithm with Arbitrary Sampling and
-Imaging Applications. Retrieved from http://arxiv.org/abs/1706.04957
+Imaging Applications. http://arxiv.org/abs/1706.04957
 """
 
 from __future__ import division, print_function
@@ -181,15 +182,13 @@ if not os.path.exists(file_target):
 else:
     (x_opt, y_opt, subx_opt, suby_opt, obj_opt) = np.load(file_target)
 
-verbose = 1  # set verbosity level
-
 # set distances
 dist_x = 1 / 2 * odl.solvers.L2NormSquared(X).translated(x_opt)
 dist_y = 1 / 2 * odl.solvers.L2NormSquared(Y).translated(y_opt)
 
 
-# define callback to store function values
 class CallbackStore(odl.solvers.Callback):
+    """Callback to store function values"""
 
     def __init__(self, alg, iter_save, iter_plot):
         self.iter_save = iter_save
@@ -227,8 +226,7 @@ for alg in nsub.keys():
     iter_save[alg] = range(0, niter[alg] + 1, nsub[alg])
     iter_plot[alg] = list(np.array([10, 20, 30, 40, 100, 300]) * nsub[alg])
 
-# %%
-# run algorithms
+# %% --- Run algorithms ---
 for alg in ['pdhg', 'spdhg_uni10', 'spdhg_uni50', 'pesquet_uni10',
             'pesquet_uni50']:
     print('======= ' + alg + ' =======')
@@ -284,7 +282,7 @@ for alg in ['pdhg', 'spdhg_uni10', 'spdhg_uni50', 'pesquet_uni10',
         tau = rho / normA[0]
 
     else:
-        raise NameError('Parameters not defined')
+        assert False, "Parameters not defined"
 
     # function that selects the indices every iteration
     def fun_select(k):
@@ -294,14 +292,12 @@ for alg in ['pdhg', 'spdhg_uni10', 'spdhg_uni50', 'pesquet_uni10',
     x, y = X.zero(), Y.zero()
 
     # output function to be used within the iterations
-    callback = (odl.solvers.CallbackPrintIteration(fmt='iter:{:4d}',
-                                                   step=verbose * n,
+    callback = (odl.solvers.CallbackPrintIteration(fmt='iter:{:4d}', step=n,
                                                    end=', ') &
                 odl.solvers.CallbackPrintTiming(fmt='time/iter: {:5.2f} s',
-                                                step=verbose * n, end=', ') &
+                                                step=n, end=', ') &
                 odl.solvers.CallbackPrintTiming(fmt='time: {:5.2f} s',
-                                                cumulative=True,
-                                                step=verbose * n) &
+                                                cumulative=True, step=n) &
                 CallbackStore(alg, iter_save[alg], iter_plot[alg]))
 
     x, y = X.zero(), Y.zero()  # initialise variables
@@ -316,12 +312,15 @@ for alg in ['pdhg', 'spdhg_uni10', 'spdhg_uni50', 'pesquet_uni10',
         spdhg.spdhg_pesquet(x, f, g, A, tau, sigma, niter[alg], fun_select,
                             y=y, callback=callback)
 
+    else:
+        assert False, "Algorithm not defined"
+
     out = callback.callbacks[1].out
 
     np.save('{}/{}_output'.format(folder_npy, alg), (iter_save[alg],
             niter[alg], x, out, nsub[alg], theta))
 
-# %%
+# %% --- Analyse and visualise the output ---
 algs = ['pdhg', 'spdhg_uni10', 'spdhg_uni50', 'pesquet_uni10', 'pesquet_uni50']
 
 iter_save_v, niter_v, image_v, out_v, nsub_v, theta_v = {}, {}, {}, {}, {}, {}
@@ -407,7 +406,7 @@ for plotx in ['linx', 'logx']:
         fig.savefig('{}/{}_{}_{}.png'.format(folder_today, filename, plotx,
                     meas), bbox_inches='tight')
 
-# %%
+# %% --- Prepapare visual output as in [1] ---
 # set line width and style
 lwidth = 2
 lwidth_help = 2

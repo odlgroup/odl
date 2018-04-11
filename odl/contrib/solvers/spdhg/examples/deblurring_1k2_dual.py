@@ -8,13 +8,15 @@
 
 """An example of using the SPDHG algorithm to solve a TV deblurring problem
 with Poisson noise. We exploit the smoothness of the data term to get 1/k^2
-convergence on the dual part.
+convergence on the dual part. We compare different algorithms for this problem
+and visualize the results as in [1].
+
 
 Reference
 ---------
-Chambolle, A., Ehrhardt, M. J., Richtárik, P., & Schönlieb, C.-B. (2017).
+[1] A. Chambolle, M. J. Ehrhardt, P. Richtárik and C.-B. Schönlieb (2017).
 Stochastic Primal-Dual Hybrid Gradient Algorithm with Arbitrary Sampling and
-Imaging Applications. Retrieved from http://arxiv.org/abs/1706.04957
+Imaging Applications. http://arxiv.org/abs/1706.04957
 """
 
 from __future__ import division, print_function
@@ -132,15 +134,13 @@ if not os.path.exists(file_target):
 else:
     (x_opt, y_opt, subx_opt, suby_opt, obj_opt, normA) = np.load(file_target)
 
-verbose = 1  # set verbosity level
-
 # set norms of the primal and dual variable
 dist_x = odl.solvers.L2NormSquared(X).translated(x_opt)
 dist_y = odl.solvers.L2NormSquared(Y).translated(y_opt)
 
 
-# define callback to store function values
 class CallbackStore(odl.solvers.Callback):
+    """Callback to store function values"""
 
     def __init__(self, alg, iter_save, iter_plot):
         self.iter_save = iter_save
@@ -180,8 +180,7 @@ for a in nsub.keys():
     iter_save[a] = range(0, niter[a] + 1, nsub[a])
     iter_plot[a] = list(np.array([10, 30, 50, 70, 100, 300]) * nsub[a])
 
-# %%
-# run algorithms
+# %% --- Run algorithms ---
 for alg in ['pdhg', 'da_pdhg', 'da_spdhg_uni3']:
     print('======= ' + alg + ' =======')
 
@@ -247,17 +246,17 @@ for alg in ['pdhg', 'da_pdhg', 'da_spdhg_uni3']:
                            for p, mu, normAi in zip(prob, mu_i, normA)])
 
     else:
-        raise NameError('Parameters not defined')
+        assert False, "Parameters not defined"
 
     # function that selects the indices every iteration
     def fun_select(k):
         return sub2ind[int(np.random.choice(n, 1, p=prob_subset))]
 
     # output function to be used within the iterations
-    callback = (odl.solvers.CallbackPrintIteration(
-            fmt='iter:{:4d}', step=verbose * n, end=', ') &
-                odl.solvers.CallbackPrintTiming(
-            fmt='time: {:5.2f} s', cumulative=True, step=verbose * n) &
+    callback = (odl.solvers.CallbackPrintIteration(fmt='iter:{:4d}', step=n,
+                                                   end=', ') &
+                odl.solvers.CallbackPrintTiming(fmt='time: {:5.2f} s',
+                                                cumulative=True, step=n) &
                 CallbackStore(alg, iter_save[alg], iter_plot[alg]))
 
     x, y = X.zero(), Y.zero()  # initialise variables
@@ -272,14 +271,14 @@ for alg in ['pdhg', 'da_pdhg', 'da_spdhg_uni3']:
                        mu, fun_select, y=y, callback=callback)
 
     else:
-        raise NameError('Algorithm not defined')
+        assert False, "Algorithm not defined"
 
     out = callback.callbacks[1].out
 
     np.save('{}/{}_output'.format(folder_npy, alg), (iter_save[alg],
             niter[alg], x, out, nsub[alg]))
 
-# %%
+# %% --- Analyse and visualise the output ---
 algs = ['pdhg', 'da_pdhg', 'da_spdhg_uni3']
 
 (iter_save_v, niter_v, image_v, out_v, nsub_v) = {}, {}, {}, {}, {}
@@ -363,7 +362,7 @@ for plotx in ['linx', 'logx']:
         fig.savefig('{}/{}_{}.png'.format(folder_today, plotx, meas),
                     bbox_inches='tight')
 
-# %%
+# %% --- Prepapare visual output as in [1] ---
 # set line width and style
 lwidth = 2
 lwidth_help = 2
