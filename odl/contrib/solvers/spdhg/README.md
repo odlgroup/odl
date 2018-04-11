@@ -4,7 +4,9 @@ This package contains an ODL compatible implementation of the Stochastic Primal-
 	min_x sum_{i=1}^n f_i(A_i x) + g(x)
 where f_i and g are closed, proper and convex functionals and A_i are linear operators.
 
-It has been successfully used for PET image reconstruction [SPIE](https://www.spiedigitallibrary.org/conference-proceedings-of-spie/10394/103941O/Faster-PET-reconstruction-with-a-stochastic-primal-dual-hybrid-gradient/10.1117/12.2272946.full). Watch [this](https://www.youtube.com/watch?v=iZc2eFqS2l4) if you want to have an introduction to it by [Peter Richtárik](http://www.maths.ed.ac.uk/~prichtar/).
+It has been successfully used for PET image reconstruction (from the Siemens Biograph mMR) [SPIE](https://www.spiedigitallibrary.org/conference-proceedings-of-spie/10394/103941O/Faster-PET-reconstruction-with-a-stochastic-primal-dual-hybrid-gradient/10.1117/12.2272946.full). Watch [this](https://www.youtube.com/watch?v=iZc2eFqS2l4) if you want to have an introduction to SPDHG by [Peter Richtárik](http://www.maths.ed.ac.uk/~prichtar/).
+
+Original contribution by: @mehrhardt
 
 ## Content
 
@@ -14,8 +16,7 @@ It has been successfully used for PET image reconstruction [SPIE](https://www.sp
 
 ## Example usage
 
-The [examples](examples) folder contains examples on how to use the above functionality.
-Specifically:
+The [examples](examples) folder contains examples on how to use the above functionality. The PET examples are based on [ASTRA](https://www.astra-toolbox.com/) to compute the line integrals in the forward operator.
 
 * [PET_1k.py](examples/PET_1k.py) shows an example for PET reconstruction (from simulated data) with total variation regularization where the algorithm is proven to converge with rate O(1/k) in the partial primal-dual gap.
 * [ROF_1k2_primal.py](examples/ROF_1k2_primal.py) shows primal acceleration for ROF denoising (Gaussian noise; squared L2-norm + total variation) where the algorithm is proven to converge with rate O(1/k^2) in squared norm to the primal solution.

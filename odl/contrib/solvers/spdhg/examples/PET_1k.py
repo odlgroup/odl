@@ -10,7 +10,7 @@
 problem with total variation prior. As we do not exploit any smoothness here
 we only expect a 1/k convergence of the ergodic sequence in a Bregman sense.
 
-Note that this example uses the astra toolbox.
+Note that this example uses the ASTRA toolbox https://www.astra-toolbox.com/.
 
 Reference
 ---------
@@ -30,22 +30,15 @@ from scipy.ndimage.filters import gaussian_filter
 import odl
 import brewer2mpl
 
-# create folder for data
+# create folder structure and set parameters
 folder_out = '.'  # to be changed
 filename = 'PET_1k'
-
-nepoch = 300  # set number of epochs
+nepoch = 300
 niter_target = 2000
-
-# subfolder will contain date and number of epochs
 subfolder = '{}epochs'.format(nepoch)
-
 nvoxelx = 250  # set problem size
-
-# change filename with problem size
 filename = '{}_{}x{}'.format(filename, nvoxelx, nvoxelx)
 
-# create output folders
 folder_main = '{}/{}'.format(folder_out, filename)
 os.makedirs(folder_main, exist_ok=True)
 
@@ -281,13 +274,13 @@ for alg in ['pdhg', 'pesquet10', 'pesquet50', 'spdhg10', 'spdhg50']:
         sigma = [gamma / normA[0]] * Y.size
         tau = gamma / normA[0]
 
-    elif alg[0:7] == 'pesquet':
+    elif alg.startswith('pesquet'):
         prob_subset = [1 / n] * n
         prob = [1 / n] * Y.size
         sigma = [gamma / normA[0]] * Y.size
         tau = gamma / normA[0]
 
-    elif alg[0:5] == 'spdhg':
+    elif alg.startswith('spdhg'):
         prob_subset = [1 / n] * n
         prob = [1 / n] * Y.size
         sigma = [gamma / normA[ind2sub[i][0]] for i in range(Y.size)]
@@ -315,11 +308,11 @@ for alg in ['pdhg', 'pesquet10', 'pesquet50', 'spdhg10', 'spdhg50']:
     callback([x, y])  # compute statistic for initialisation
     g.prox_options['p'] = None
 
-    if alg[:4] == 'pdhg' or alg[:5] == 'spdhg':
+    if alg.startswith('pdhg') or alg.startswith('spdhg'):
         spdhg.spdhg(x, f, g, A, tau, sigma, niter[alg], prob, fun_select, y=y,
                     callback=callback)
 
-    elif alg[:7] == 'pesquet':
+    elif alg.startswith('pesquet'):
         spdhg.spdhg_pesquet(x, f, g, A, tau, sigma, niter[alg], fun_select,
                             y=y, callback=callback)
 

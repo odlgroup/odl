@@ -11,7 +11,7 @@ problem with a strongly convex total variation prior. We exploit the smoothness
 of the data term and the strong convexity of the prior to obtain a linearly
 convergent algorithm.
 
-Note that this example uses the astra toolbox.
+Note that this example uses the ASTRA toolbox https://www.astra-toolbox.com/.
 
 Reference
 ---------
@@ -31,23 +31,16 @@ from scipy.ndimage.filters import gaussian_filter
 import odl
 import brewer2mpl
 
-# create folder for data
+# create folder structure and set parameters
 folder_out = '.'  # to be changed
 filename = 'PET_linear_rate'
-
-# set number of epochs
 nepoch = 100
 niter_target = 2000
-
 subfolder = '{}epochs'.format(nepoch)
+nvoxelx = 250  # set problem size
 
-# set problem size
-nvoxelx = 250
-
-# change filename with problem size
 filename = '{}_{}x{}'.format(filename, nvoxelx, nvoxelx)
 
-# create output folders
 folder_main = '{}/{}'.format(folder_out, filename)
 os.makedirs(folder_main, exist_ok=True)
 
@@ -62,7 +55,6 @@ X = odl.uniform_discr(min_pt=[-1, -1], max_pt=[1, 1],
                       shape=[nvoxelx, nvoxelx], dtype='float32')
 
 geometry = odl.tomo.parallel_beam_geometry(X, num_angles=200, det_shape=250)
-
 G = odl.BroadcastOperator(*[odl.tomo.RayTransform(X, gi, impl='astra_cpu')
                             for gi in geometry])
 
@@ -275,7 +267,7 @@ for alg in ['pdhg', 'spdhg_uni10', 'spdhg_uni50', 'pesquet_uni10',
         tau = 1 / ((kappa - 1) * mu_g)
         theta = 1 - 2 / (1 + kappa)
 
-    elif alg[:5] == 'spdhg':
+    elif alg.startswith('spdhg'):
         kappa = [np.sqrt(1 + normAi**2 / (mu_g * mui) / rho**2)
                  for normAi, mui in zip(normA, mu_i)]
         kappa_max = max(kappa)
@@ -285,7 +277,7 @@ for alg in ['pdhg', 'spdhg_uni10', 'spdhg_uni50', 'pesquet_uni10',
         tau = 1 / ((n * kappa_max + n - 2) * mu_g)
         theta = 1 - 2 / (n + n * kappa_max)
 
-    elif alg[:7] == 'pesquet':
+    elif alg.startswith('pesquet'):
         prob_subset = [1 / n] * n
         prob = [1 / n] * Y.size
         sigma = [rho / normA[0]] * Y.size
@@ -316,11 +308,11 @@ for alg in ['pdhg', 'spdhg_uni10', 'spdhg_uni50', 'pesquet_uni10',
     callback([x, y])
     g.prox_options['p'] = None
 
-    if alg[:4] == 'pdhg' or alg[:5] in ['spdhg']:
+    if alg.startswith('pdhg') or alg.startswith('spdhg'):
         spdhg.spdhg(x, f, g, A, tau, sigma, niter[alg], prob, fun_select, y=y,
                     theta=theta, callback=callback)
 
-    elif alg[:7] == 'pesquet':
+    elif alg.startswith('pesquet'):
         spdhg.spdhg_pesquet(x, f, g, A, tau, sigma, niter[alg], fun_select,
                             y=y, callback=callback)
 

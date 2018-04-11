@@ -27,14 +27,11 @@ import numpy as np
 import odl
 import brewer2mpl
 
-# create folder for data
+# create folder structure and set parameters
 folder_out = '.'  # to be changed
 filename = 'ROF_1k2_primal'
-
-nepoch = 300  # number of epochs
+nepoch = 300
 niter_target = 2000
-
-# create folder structure
 subfolder = '{}epochs'.format(nepoch)
 
 folder_main = '{}/{}'.format(folder_out, filename)
@@ -244,23 +241,23 @@ for alg in ['pdhg', 'pesquet_uni2', 'pa_pdhg', 'spdhg_uni2', 'pa_spdhg_uni2']:
     x, y = X.zero(), Y.zero()  # initialise variables
     callback([x, y])
 
-    if alg[:4] == 'pdhg' or alg[:5] == 'spdhg':
+    if alg.startswith('pdhg') or alg.startswith('spdhg'):
         spdhg.spdhg(x, f, g, A, tau, sigma, niter[alg], prob, y=y,
                     fun_select=fun_select, callback=callback)
 
-    elif alg[:7] == 'pa_pdhg' or alg[:8] == 'pa_spdhg':
+    elif alg.startswith('pa_pdhg') or alg.startswith('pa_spdhg'):
         spdhg.pa_spdhg(x, f, g, A, tau, sigma, niter[alg], prob, mu_g, y=y,
                        fun_select=fun_select, callback=callback)
 
-    elif alg[:3] == 'odl':
+    elif alg.startswith('odl'):
         odl.solvers.pdhg(x, f, g, A, tau, sigma, niter[alg], y=y,
                          callback=callback)
 
-    elif alg[:6] == 'pa_odl':
+    elif alg.startswith('pa_odl'):
         odl.solvers.pdhg(x, f, g, A, tau, sigma, niter[alg], y=y,
                          callback=callback, gamma_primal=mu_g)
 
-    elif alg == 'pesquet_uni2':
+    elif alg.startswith('pesquet'):
         spdhg.spdhg_pesquet(x, f, g, A, tau, sigma, niter[alg], fun_select,
                             y=y, callback=callback)
 

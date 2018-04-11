@@ -28,20 +28,15 @@ import matplotlib.pyplot as plt
 import matplotlib
 import numpy as np
 
-# create folder for data
+# create folder structure and set parameters
 folder_out = '.'  # to be changed
 filename = 'deblurring_1k2_dual'
-
-nepoch = 300  # set number of epochs
+nepoch = 300
 niter_target = 2000
-
 subfolder = '{}epochs'.format(nepoch)
-
-# load image
 simage = [408, 544]
-image_raw = images.rings(shape=simage, gray=True)
+image_raw = images.rings(shape=simage, gray=True)  # load image
 
-# add size to filename and create folder structure
 filename = '{}_{}x{}'.format(filename, simage[0], simage[1])
 
 folder_main = '{}/{}'.format(folder_out, filename)
@@ -268,11 +263,11 @@ for alg in ['pdhg', 'da_pdhg', 'da_spdhg_uni3']:
     x, y = X.zero(), Y.zero()  # initialise variables
     callback([x, y])
 
-    if alg[:4] == 'pdhg':
+    if alg.startswith('pdhg'):
         spdhg.spdhg(x, f, g, A, tau, sigma, niter[alg], prob, fun_select, y=y,
                     callback=callback)
 
-    elif alg[:7] == 'da_pdhg' or alg[:8] == 'da_spdhg':
+    elif alg.startswith('da_pdhg') or alg.startswith('da_spdhg'):
         spdhg.da_spdhg(x, f, g, A, tau, sigma_tilde, niter[alg], extra, prob,
                        mu, fun_select, y=y, callback=callback)
 

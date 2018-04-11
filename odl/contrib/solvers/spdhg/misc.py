@@ -16,9 +16,9 @@ import matplotlib
 import matplotlib.pyplot as plt
 from skimage.io import imsave
 
-__all__ = ('total_variation', 'TotalVariationNonNegative',
-           'bregman', 'save_image', 'save_signal',
-           'divide_1Darray_equally', 'Blur2D', 'KullbackLeiblerSmooth')
+__all__ = ('total_variation', 'TotalVariationNonNegative', 'bregman',
+           'save_image', 'save_signal', 'divide_1Darray_equally', 'Blur2D',
+           'KullbackLeiblerSmooth')
 
 
 def save_image(image, name, folder, fignum, cmap='gray', clim=None):
@@ -74,8 +74,7 @@ def partition_equally_1d(arr, nparts, order='interlaced'):
 
 
 def divide_1Darray_equally(ind, nsub):
-    """
-    Divide an array into equal chunks to be used for instance in OSEM.
+    """Divide an array into equal chunks to be used for instance in OSEM.
 
     Parameters
     ----------
@@ -107,7 +106,7 @@ def divide_1Darray_equally(ind, nsub):
 
 
 def total_variation(domain, grad=None):
-    """ Total variation functional.
+    """Total variation functional.
 
     Parameters
     ----------
@@ -141,7 +140,7 @@ def total_variation(domain, grad=None):
 
 
 class TotalVariationNonNegative(odl.solvers.Functional):
-    """ Total variation function with nonnegativity constraint and strongly
+    """Total variation function with nonnegativity constraint and strongly
     convex relaxation.
 
     In formulas, this functional may represent
@@ -205,17 +204,7 @@ class TotalVariationNonNegative(odl.solvers.Functional):
         super().__init__(space=domain, linear=False, grad_lipschitz=0)
 
     def __call__(self, x):
-        """ Characteristic function of the non-negative orthant
-
-        Parameters
-        ----------
-        x : np.array
-            vector / image
-
-        Returns
-        -------
-        extended float (with infinity)
-            Is the input in the non-negative orthant?
+        """Evaluate functional.
 
         Examples
         --------
@@ -247,18 +236,8 @@ class TotalVariationNonNegative(odl.solvers.Functional):
             return out
 
     def proximal(self, sigma):
-        """ Prox operator of TV. It allows the proximal step length to be a vector
-        of positive elements.
-
-        Parameters
-        ----------
-        x : np.array
-            vector / image
-
-        Returns
-        -------
-        extended float (with infinity)
-            Is the input in the non-negative orthant?
+        """Prox operator of TV. It allows the proximal step length to be a
+        vector of positive elements.
 
         Examples
         --------
@@ -329,7 +308,7 @@ class TotalVariationNonNegative(odl.solvers.Functional):
 
 
 def fgp_dual(p, data, alpha, niter, grad, proj_C, proj_P, tol=None, **kwargs):
-    """ Computes a solution to the ROF problem with the fast gradient
+    """Computes a solution to the ROF problem with the fast gradient
     projection algorithm.
 
     Parameters
@@ -419,8 +398,7 @@ def fgp_dual(p, data, alpha, niter, grad, proj_C, proj_P, tol=None, **kwargs):
 
 
 class Blur2D(odl.Operator):
-    """Blur operator
-    """
+    """Blur operator"""
 
     def __init__(self, domain, kernel, boundary_condition='wrap'):
         """Initialize a new instance.
@@ -462,7 +440,6 @@ class Blur2D(odl.Operator):
 
 
 class KullbackLeiblerSmooth(odl.solvers.Functional):
-
     """The smooth Kullback-Leibler divergence functional.
 
     Notes
@@ -584,7 +561,6 @@ class KullbackLeiblerSmooth(odl.solvers.Functional):
 
 
 class KullbackLeiblerSmoothConvexConj(odl.solvers.Functional):
-
     """The convex conjugate of the smooth Kullback-Leibler divergence functional.
 
     Notes
@@ -616,7 +592,7 @@ class KullbackLeiblerSmoothConvexConj(odl.solvers.Functional):
     """
 
     def __init__(self, space, data, background):
-        '''Initialize a new instance.
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -626,7 +602,7 @@ class KullbackLeiblerSmoothConvexConj(odl.solvers.Functional):
             Data vector which has to be non-negative.
         background : ``space`` `element-like`
             Background vector which has to be non-negative.
-        '''
+        """
 
         if background.ufuncs.less_equal(0).ufuncs.sum() > 0:
             raise NotImplementedError('Background must be positive')
@@ -700,8 +676,7 @@ class KullbackLeiblerSmoothConvexConj(odl.solvers.Functional):
 
     @property
     def gradient(self):
-        """Gradient operator of the functional.
-        """
+        """Gradient operator of the functional."""
         raise NotImplementedError('No yet implemented')
 
     @property
@@ -712,7 +687,6 @@ class KullbackLeiblerSmoothConvexConj(odl.solvers.Functional):
         r = self.background
 
         class ProxKullbackLeiblerSmoothConvexConj(odl.Operator):
-
             """Proximal operator of the convex conjugate of the smooth
             Kullback-Leibler functional.
             """
