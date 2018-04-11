@@ -31,7 +31,6 @@ class ShearlabOperator(odl.Operator):
     transform.
     """
 
-
     def __init__(self, space, num_scales):
         """Initialize a new instance.
         Parameters
@@ -64,7 +63,7 @@ class ShearlabOperator(odl.Operator):
     def adjoint(self):
         """The adjoint operator."""
         op = self
-        
+ 
         class ShearlabOperatorAdjoint(odl.Operator):
 
             """Adjoint of the shearlet transform.
@@ -99,7 +98,7 @@ class ShearlabOperator(odl.Operator):
             def inverse(self):
                 """The inverse operator."""
                 op = self
-                
+ 
                 class ShearlabOperatorAdjointInverse(odl.Operator):
 
                     """Adjoint of the inverse/Inverse of the adjoint of shearlet transform.
@@ -114,7 +113,8 @@ class ShearlabOperator(odl.Operator):
                         Parameters
                         ----------
                         op : `ShearlabOperator`
-                            The operator which this should be the inverse of the adjoint of.
+                            The operator which this should be the 
+                            inverse of the adjoint of.
                         """
                         super(ShearlabOperatorAdjointInverse, self).__init__(
                             op.domain, op.range, True)
@@ -141,7 +141,7 @@ class ShearlabOperator(odl.Operator):
     def inverse(self):
         """The inverse operator."""
         op = self
-        
+ 
         class ShearlabOperatorInverse(odl.Operator):
 
             """Inverse of the shearlet transform.
@@ -150,7 +150,6 @@ class ShearlabOperator(odl.Operator):
             --------
             odl.contrib.shearlab.ShearlabOperator
             """
-
 
             def __init__(self):
                 """Initialize a new instance.
@@ -177,7 +176,7 @@ class ShearlabOperator(odl.Operator):
             def inverse(self):
                 """The inverse operator."""
                 return op
-        
+
         return ShearlabOperatorInverse()
 
 
@@ -201,8 +200,7 @@ j = load_Shearlab()
 def load_image(name, n, m=None, gpu=0, square=0):
     if m is None:
         m = n
-    command = ('Shearlab.load_image("{}", {}, {}, {}, {})'
-           ''.format(name, n, m, gpu, square))
+    command = 'Shearlab.load_image("{}", {}, {}, {}, {})'.format(name, n, m, gpu, square)
     return j.eval(command)
 
 
