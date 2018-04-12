@@ -31,7 +31,7 @@ class ShearlabOperator(odl.Operator):
 
     def __init__(self, space, num_scales):
         """Initialize a new instance.
-        
+
         Parameters
         ----------
         space : `DiscreteLp`
@@ -40,7 +40,7 @@ class ShearlabOperator(odl.Operator):
         num_scales : nonnegative `int`
             The number of scales for the shearlet transform, higher numbers
             mean better edge resolution but more computational burden.
-        
+
         Examples
         --------
         Create a 2d-shearlet transform:
