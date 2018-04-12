@@ -304,7 +304,7 @@ def sheardecadjoint2D(coeffs, shearletsystem):
     for i in range(shearletsystem.nShearlets):
         X = X + fftshift(fft2(
             ifftshift(coeffs[:, :, i]))) * np.conj(
-                      shearletsystem.shearlets[:, :, i])
+            shearletsystem.shearlets[:, :, i])
     return (fftshift(ifft2(ifftshift(
             X / shearletsystem.dualFrameWeights)))).real
 
