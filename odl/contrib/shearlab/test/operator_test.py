@@ -34,7 +34,7 @@ def test_operator(dtype, shape):
 
     # <Ax, Ax> = <x, AtAx>
     ax = op.adjoint(y)
-    assert pytest.approx(y.inner(y), rel=rel) == phantom.inner(ax)
+    assert phantom.inner(ax) == pytest.approx(y.inner(y), rel=rel)
 
     # A^{-1} A x = x
     rec = op.inverse(y)
