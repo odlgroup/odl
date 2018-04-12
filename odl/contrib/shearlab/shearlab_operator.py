@@ -30,8 +30,8 @@ class ShearlabOperator(odl.Operator):
     """
 
     def __init__(self, space, num_scales):
-
         """Initialize a new instance.
+        
         Parameters
         ----------
         space : `DiscreteLp`
@@ -40,6 +40,7 @@ class ShearlabOperator(odl.Operator):
         num_scales : nonnegative `int`
             The number of scales for the shearlet transform, higher numbers
             mean better edge resolution but more computational burden.
+        
         Examples
         --------
         Create a 2d-shearlet transform:
@@ -66,7 +67,7 @@ class ShearlabOperator(odl.Operator):
         class ShearlabOperatorAdjoint(odl.Operator):
 
             """Adjoint of the shearlet transform.
-            Should not be used independently.
+
             See Also
             --------
             odl.contrib.shearlab.ShearlabOperator
@@ -100,10 +101,10 @@ class ShearlabOperator(odl.Operator):
 
                 class ShearlabOperatorAdjointInverse(odl.Operator):
 
-                    """\
+                    """
                     Adjoint of the inverse/Inverse of the adjoint
                     of shearlet transform.
-                    Should not be used independently.
+
                     See Also
                     --------
                     odl.contrib.shearlab.ShearlabOperator
@@ -146,7 +147,7 @@ class ShearlabOperator(odl.Operator):
         class ShearlabOperatorInverse(odl.Operator):
 
             """Inverse of the shearlet transform.
-            Should not be used independently.
+
             See Also
             --------
             odl.contrib.shearlab.ShearlabOperator
