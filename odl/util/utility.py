@@ -1265,7 +1265,12 @@ def attribute_repr_string(instance_str, attr_str):
         left, rest = instance_str.split('(', maxsplit=1)
         right, middle = rest[::-1].split(')', maxsplit=1)
         middle, right = middle[::-1], right[::-1]
-        new_instance_str = '(\n'.join([left, indent(middle)]) + '\n)' + right
+        if middle.startswith('\n') and middle.endswith('\n'):
+            # Already on multiple lines
+            new_instance_str = instance_str
+        else:
+            new_instance_str = ('(\n'.join([left, indent(middle)]) + '\n)' +
+                                right)
         parts = [new_instance_str, attr_str]
 
     return '.'.join(parts)
