@@ -19,6 +19,9 @@ from odl.space.base_tensors import TensorSpace
 __all__ = ('NumericalDerivative', 'NumericalGradient',)
 
 
+# TODO: continue here
+
+
 class NumericalDerivative(Operator):
 
     """The derivative of an operator by finite differences.
