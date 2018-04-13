@@ -135,13 +135,12 @@ def spdhg(x, f, g, A, tau, sigma, niter, prob, fun_select, **kwargs):
 
     References
     ----------
-    [CERS2017] Chambolle, A., Ehrhardt, M. J., Richtárik, P., and
-    Schoenlieb, C.-B. *Stochastic Primal-Dual Hybrid Gradient Algorithm with
-    Arbitrary Sampling and Imaging Applications*.
-    ArXiv: http://arxiv.org/abs/1706.04957 (2017).
+    [CERS2017] A. Chambolle, M. J. Ehrhardt, P. Richtarik and C.-B. Schoenlieb,
+    *Stochastic Primal-Dual Hybrid Gradient Algorithm with Arbitrary Sampling
+    and Imaging Applications*. ArXiv: http://arxiv.org/abs/1706.04957 (2017).
 
-    [E+2017] Ehrhardt, M. J., Markiewicz, P. J., Richtárik, P., Schott, J.,
-    Chambolle, A. and Schoenlieb, C.-B. *Faster PET reconstruction with a
+    [E+2017] M. J. Ehrhardt, P. J. Markiewicz, P. Richtarik, J. Schott,
+    A. Chambolle and C.-B. Schoenlieb, *Faster PET reconstruction with a
     stochastic primal-dual hybrid gradient method*. Wavelets and Sparsity XVII,
     58 (2017) http://doi.org/10.1117/12.2272946.
     """
@@ -198,10 +197,9 @@ def pa_spdhg(x, f, g, A, tau, sigma, niter, prob, mu_g, fun_select, **kwargs):
 
     References
     ----------
-    [CERS2017] Chambolle, A., Ehrhardt, M. J., Richtárik, P., and
-    Schoenlieb, C.-B. *Stochastic Primal-Dual Hybrid Gradient Algorithm with
-    Arbitrary Sampling and Imaging Applications*.
-    ArXiv: http://arxiv.org/abs/1706.04957 (2017).
+    [CERS2017] A. Chambolle, M. J. Ehrhardt, P. Richtarik and C.-B. Schoenlieb,
+    *Stochastic Primal-Dual Hybrid Gradient Algorithm with Arbitrary Sampling
+    and Imaging Applications*. ArXiv: http://arxiv.org/abs/1706.04957 (2017).
     """
 
     # Dual variable
@@ -266,13 +264,12 @@ def spdhg_generic(x, f, g, A, tau, sigma, niter, fun_select, **kwargs):
 
     References
     ----------
-    [CERS2017] Chambolle, A., Ehrhardt, M. J., Richtárik, P., and
-    Schoenlieb, C.-B. *Stochastic Primal-Dual Hybrid Gradient Algorithm with
-    Arbitrary Sampling and Imaging Applications*.
-    ArXiv: http://arxiv.org/abs/1706.04957 (2017).
+    [CERS2017] A. Chambolle, M. J. Ehrhardt, P. Richtarik and C.-B. Schoenlieb,
+    *Stochastic Primal-Dual Hybrid Gradient Algorithm with Arbitrary Sampling
+    and Imaging Applications*. ArXiv: http://arxiv.org/abs/1706.04957 (2017).
 
-    [E+2017] Ehrhardt, M. J., Markiewicz, P. J., Richtárik, P., Schott, J.,
-    Chambolle, A. and Schoenlieb, C.-B. *Faster PET reconstruction with a
+    [E+2017] M. J. Ehrhardt, P. J. Markiewicz, P. Richtarik, J. Schott,
+    A. Chambolle and C.-B. Schoenlieb, *Faster PET reconstruction with a
     stochastic primal-dual hybrid gradient method*. Wavelets and Sparsity XVII,
     58 (2017) http://doi.org/10.1117/12.2272946.
     """
@@ -421,10 +418,9 @@ def da_spdhg(x, f, g, A, tau, sigma_tilde, niter, extra, prob, mu, fun_select,
 
     References
     ----------
-    [CERS2017] Chambolle, A., Ehrhardt, M. J., Richtárik, P., and
-    Schoenlieb, C.-B. *Stochastic Primal-Dual Hybrid Gradient Algorithm with
-    Arbitrary Sampling and Imaging Applications*.
-    ArXiv: http://arxiv.org/abs/1706.04957 (2017).
+    [CERS2017] A. Chambolle, M. J. Ehrhardt, P. Richtarik and C.-B. Schoenlieb,
+    *Stochastic Primal-Dual Hybrid Gradient Algorithm with Arbitrary Sampling
+    and Imaging Applications*. ArXiv: http://arxiv.org/abs/1706.04957 (2017).
     """
 
     # Callback object
@@ -542,7 +538,7 @@ def spdhg_pesquet(x, f, g, A, tau, sigma, niter, fun_select, **kwargs):
 
     References
     ----------
-    [PR2015] Pesquet, J.-C., & Repetti, A. *A Class of Randomized Primal-Dual
+    [PR2015] J.-C. Pesquet and A. Repetti. *A Class of Randomized Primal-Dual
     Algorithms for Distributed Optimization*.
     ArXiv: http://arxiv.org/abs/1406.6404 (2015).
     """
