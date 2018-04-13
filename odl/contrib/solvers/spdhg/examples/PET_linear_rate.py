@@ -43,13 +43,16 @@ nvoxelx = 250  # set problem size
 filename = '{}_{}x{}'.format(filename, nvoxelx, nvoxelx)
 
 folder_main = '{}/{}'.format(folder_out, filename)
-os.makedirs(folder_main, exist_ok=True)
+if not os.path.exists(folder_main):
+    os.makedirs(folder_main)
 
 folder_today = '{}/{}'.format(folder_main, subfolder)
-os.makedirs(folder_today, exist_ok=True)
+if not os.path.exists(folder_today):
+    os.makedirs(folder_today)
 
 folder_npy = '{}/npy'.format(folder_today)
-os.makedirs(folder_npy, exist_ok=True)
+if not os.path.exists(folder_npy):
+    os.makedirs(folder_npy)
 
 # create geometry of operator
 X = odl.uniform_discr(min_pt=[-1, -1], max_pt=[1, 1],
@@ -232,7 +235,7 @@ for alg in ['pdhg', 'spdhg_uni10', 'spdhg_uni50', 'pesquet_uni10',
     print('======= ' + alg + ' =======')
 
     # clear variables in order not to use previous instances
-    prob, extra, sigma, tau, theta = [None] * 5
+    prob, sigma, tau, theta = [None] * 4
 
     # create lists for subset division
     n = nsub[alg]
@@ -305,12 +308,12 @@ for alg in ['pdhg', 'spdhg_uni10', 'spdhg_uni50', 'pesquet_uni10',
     g.prox_options['p'] = None
 
     if alg.startswith('pdhg') or alg.startswith('spdhg'):
-        spdhg.spdhg(x, f, g, A, tau, sigma, niter[alg], prob, fun_select, y=y,
-                    theta=theta, callback=callback)
+        spdhg.spdhg(x, f, g, A, tau, sigma, niter[alg], prob=prob, y=y,
+                    fun_select=fun_select, theta=theta, callback=callback)
 
     elif alg.startswith('pesquet'):
-        spdhg.spdhg_pesquet(x, f, g, A, tau, sigma, niter[alg], fun_select,
-                            y=y, callback=callback)
+        spdhg.spdhg_pesquet(x, f, g, A, tau, sigma, niter[alg], y=y,
+                            fun_select=fun_select, callback=callback)
 
     else:
         assert False, "Algorithm not defined"

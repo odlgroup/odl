@@ -36,13 +36,16 @@ niter_target = 2000
 subfolder = '{}epochs'.format(nepoch)
 
 folder_main = '{}/{}'.format(folder_out, filename)
-os.makedirs(folder_main, exist_ok=True)
+if not os.path.exists(folder_main):
+    os.makedirs(folder_main)
 
 folder_today = '{}/{}'.format(folder_main, subfolder)
-os.makedirs(folder_today, exist_ok=True)
+if not os.path.exists(folder_today):
+    os.makedirs(folder_today)
 
 folder_npy = '{}/npy'.format(folder_today)
-os.makedirs(folder_npy, exist_ok=True)
+if not os.path.exists(folder_npy):
+    os.makedirs(folder_npy)
 
 # create ground truth
 image_gray = images.building(gray=True)
@@ -187,7 +190,7 @@ for alg in ['pdhg', 'pesquet_uni2', 'pa_pdhg', 'spdhg_uni2', 'pa_spdhg_uni2']:
     print('======= ' + alg + ' =======')
 
     # clear variables in order not to use previous instances
-    prob, extra, sigma, tau, theta = [None] * 5
+    prob, sigma, tau, theta = [None] * 4
 
     # create lists for subset division
     n = nsub[alg]
@@ -240,12 +243,12 @@ for alg in ['pdhg', 'pesquet_uni2', 'pa_pdhg', 'spdhg_uni2', 'pa_spdhg_uni2']:
     callback([x, y])
 
     if alg.startswith('pdhg') or alg.startswith('spdhg'):
-        spdhg.spdhg(x, f, g, A, tau, sigma, niter[alg], prob, y=y,
+        spdhg.spdhg(x, f, g, A, tau, sigma, niter[alg], prob=prob, y=y,
                     fun_select=fun_select, callback=callback)
 
     elif alg.startswith('pa_pdhg') or alg.startswith('pa_spdhg'):
-        spdhg.pa_spdhg(x, f, g, A, tau, sigma, niter[alg], prob, mu_g, y=y,
-                       fun_select=fun_select, callback=callback)
+        spdhg.pa_spdhg(x, f, g, A, tau, sigma, niter[alg], mu_g, prob=prob,
+                       y=y, fun_select=fun_select, callback=callback)
 
     elif alg.startswith('odl'):
         odl.solvers.pdhg(x, f, g, A, tau, sigma, niter[alg], y=y,
@@ -256,8 +259,8 @@ for alg in ['pdhg', 'pesquet_uni2', 'pa_pdhg', 'spdhg_uni2', 'pa_spdhg_uni2']:
                          callback=callback, gamma_primal=mu_g)
 
     elif alg.startswith('pesquet'):
-        spdhg.spdhg_pesquet(x, f, g, A, tau, sigma, niter[alg], fun_select,
-                            y=y, callback=callback)
+        spdhg.spdhg_pesquet(x, f, g, A, tau, sigma, niter[alg],
+                            fun_select=fun_select, y=y, callback=callback)
 
     else:
         assert False, "Algorithm not defined"

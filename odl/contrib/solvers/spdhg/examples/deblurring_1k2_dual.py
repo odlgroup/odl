@@ -42,13 +42,16 @@ image_raw = images.rings(shape=simage, gray=True)  # load image
 filename = '{}_{}x{}'.format(filename, simage[0], simage[1])
 
 folder_main = '{}/{}'.format(folder_out, filename)
-os.makedirs(folder_main, exist_ok=True)
+if not os.path.exists(folder_main):
+    os.makedirs(folder_main)
 
 folder_today = '{}/{}'.format(folder_main, subfolder)
-os.makedirs(folder_today, exist_ok=True)
+if not os.path.exists(folder_today):
+    os.makedirs(folder_today)
 
 folder_npy = '{}/npy'.format(folder_today)
-os.makedirs(folder_npy, exist_ok=True)
+if not os.path.exists(folder_npy):
+    os.makedirs(folder_npy)
 
 # create ground truth
 X = odl.uniform_discr([0, 0], simage, simage)
@@ -185,7 +188,7 @@ for alg in ['pdhg', 'da_pdhg', 'da_spdhg_uni3']:
     print('======= ' + alg + ' =======')
 
     # clear variables in order not to use previous instances
-    prob_subset, prob, extra, sigma, sigma_tilde, tau, theta = [None] * 7
+    prob_subset, prob, sigma, sigma_tilde, tau, theta = [None] * 6
 
     np.random.seed(1807)  # set random seed so results are reproducable
 
@@ -231,7 +234,6 @@ for alg in ['pdhg', 'da_pdhg', 'da_spdhg_uni3']:
     elif alg == 'da_pdhg':
         prob_subset = [1] * n
         prob = [1] * len(Y)
-        extra = [1] * len(Y)
         tau = gamma / normA[0]
         mu = [mu_f] * len(Y)
         sigma_tilde = mu_f / normA[0]
@@ -239,7 +241,6 @@ for alg in ['pdhg', 'da_pdhg', 'da_spdhg_uni3']:
     elif alg in ['da_spdhg_uni3']:
         prob = [1 / n] * n
         prob_subset = prob
-        extra = [1 / p for p in prob]
         tau = gamma / (n * max(normA))
         mu = mu_i
         sigma_tilde = min([m * p**2 / (tau * normAi**2 + 2 * m * p * (1 - p))
@@ -263,12 +264,12 @@ for alg in ['pdhg', 'da_pdhg', 'da_spdhg_uni3']:
     callback([x, y])
 
     if alg.startswith('pdhg'):
-        spdhg.spdhg(x, f, g, A, tau, sigma, niter[alg], prob, fun_select, y=y,
-                    callback=callback)
+        spdhg.spdhg(x, f, g, A, tau, sigma, niter[alg], y=y, prob=prob,
+                    fun_select=fun_select, callback=callback)
 
     elif alg.startswith('da_pdhg') or alg.startswith('da_spdhg'):
-        spdhg.da_spdhg(x, f, g, A, tau, sigma_tilde, niter[alg], extra, prob,
-                       mu, fun_select, y=y, callback=callback)
+        spdhg.da_spdhg(x, f, g, A, tau, sigma_tilde, niter[alg], mu, prob=prob,
+                       fun_select=fun_select, y=y, callback=callback)
 
     else:
         assert False, "Algorithm not defined"

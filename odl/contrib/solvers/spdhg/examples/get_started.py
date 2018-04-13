@@ -62,7 +62,8 @@ cb = (odl.solvers.CallbackPrintIteration(fmt='iter:{:4d}', step=n, end=', ') &
 # initialise variable and run algorithm
 x = X.zero()
 niter = 2 * nepoch
-spdhg.spdhg(x, f, g, A, tau, sigma, niter, prob, fun_select, callback=cb)
+spdhg.spdhg(x, f, g, A, tau, sigma, niter, prob=prob, fun_select=fun_select,
+            callback=cb)
 
 # show data and output
 data.show()
