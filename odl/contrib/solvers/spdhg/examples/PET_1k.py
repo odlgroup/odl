@@ -98,7 +98,7 @@ if not os.path.exists(file_data):
     fig2.clf()
     i = 11
     plt.plot((sino[i]).asarray()[0], label='G(x)')
-    plt.plot((factors[i]*sino[i]).asarray()[0], label='factors * G(x)')
+    plt.plot((factors[i] * sino[i]).asarray()[0], label='factors * G(x)')
     plt.plot(data[i].asarray()[0], label='data')
     plt.plot(background[i].asarray()[0], label='background')
     plt.legend()
@@ -111,8 +111,8 @@ else:
 
 # data fit
 f = odl.solvers.SeparableSum(
-        *[odl.solvers.KullbackLeibler(Yi, yi).translated(-ri)
-          for Yi, yi, ri in zip(Y, data, background)])
+    *[odl.solvers.KullbackLeibler(Yi, yi).translated(-ri)
+      for Yi, yi, ri in zip(Y, data, background)])
 # TODO: should be ideally like
 # f = odl.solvers.KullbackLeibler(Y, data).translated(-background)
 
@@ -175,8 +175,8 @@ bregman_g = spdhg.bregman(g, x_opt, subx_opt)  # primal Bregman distance
 
 # dual Bregman distance
 bregman_f = odl.solvers.SeparableSum(
-        *[spdhg.bregman(fi.convex_conj, yi, ri)
-          for fi, yi, ri in zip(f, y_opt, suby_opt)])
+    *[spdhg.bregman(fi.convex_conj, yi, ri)
+      for fi, yi, ri in zip(f, y_opt, suby_opt)])
 # TODO: should be like: bregman_f = f.bregman(y_opt, subgrad=subx_opt)
 
 
@@ -328,7 +328,7 @@ algs = ['pdhg', 'pesquet10', 'pesquet50', 'spdhg10', 'spdhg50']
 iter_save_v, niter_v, image_v, out_v, nsub_v = {}, {}, {}, {}, {}
 for a in algs:
     (iter_save_v[a], niter_v[a], image_v[a], out_v[a], nsub_v[a]) = np.load(
-            '{}/{}_output.npy'.format(folder_npy, a))
+     '{}/{}_output.npy'.format(folder_npy, a))
 
 epochs_save = {a: np.array(iter_save_v[a]) / np.float(nsub_v[a]) for a in algs}
 

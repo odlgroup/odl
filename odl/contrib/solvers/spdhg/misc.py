@@ -53,8 +53,8 @@ def save_signal(signal, name, folder, fignum):
 
 
 def bregman(f, v, subgrad):
-    return (odl.solvers.FunctionalQuadraticPerturb(f, linear_term=-subgrad)
-            - f(v) + subgrad.inner(v))
+    return (odl.solvers.FunctionalQuadraticPerturb(f, linear_term=-subgrad) -
+            f(v) + subgrad.inner(v))
 
 
 def partition_1d(arr, slices):
@@ -377,10 +377,10 @@ def fgp_dual(p, data, alpha, niter, grad, proj_C, proj_P, tol=None, **kwargs):
 
         if not converged:
             # update step size
-            t = (1 + np.sqrt(1 + 4*t0**2))/2.
+            t = (1 + np.sqrt(1 + 4 * t0 ** 2)) / 2.
 
             # calculate next iterate
-            q[:] = pnew + (t0 - 1)/t * (pnew - p)
+            q[:] = pnew + (t0 - 1) / t * (pnew - p)
 
         p[:] = pnew
 
@@ -484,7 +484,7 @@ class KullbackLeiblerSmooth(odl.solvers.Functional):
             raise NotImplementedError('Background must be positive')
 
         super().__init__(space=space, linear=False,
-                         grad_lipschitz=np.max(data/background**2))
+                         grad_lipschitz=np.max(data / background ** 2))
 
         if data not in self.domain:
             raise ValueError('`data` not in `domain`'

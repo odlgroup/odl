@@ -42,8 +42,11 @@ g = 1 / (2 * alpha) * odl.solvers.L2NormSquared(X).translated(data)
 n = 2  # number of subsets
 prob = [1 / n] * n  # probablity that a subset gets selected
 S = [[0], [1]]  # all possible subsets to select from
+
+
 def fun_select(k):  # subset selection function
     return S[int(np.random.choice(n, 1, p=prob))]
+
 
 # set parameters for algorithm
 Ai_norm = [2, 2]

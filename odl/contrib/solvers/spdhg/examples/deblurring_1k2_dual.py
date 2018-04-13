@@ -84,9 +84,9 @@ gamma = 0.99  # auxiliary step size parameter < 1
 
 # set up functional f
 f = odl.solvers.SeparableSum(
-        odl.solvers.Huber(A[0].range, gamma=1),
-        odl.solvers.Huber(A[1].range, gamma=1),
-        1 / alpha * spdhg.KullbackLeiblerSmooth(A[2].range, data, background))
+    odl.solvers.Huber(A[0].range, gamma=1),
+    odl.solvers.Huber(A[1].range, gamma=1),
+    1 / alpha * spdhg.KullbackLeiblerSmooth(A[2].range, data, background))
 
 g = odl.solvers.IndicatorBox(X, clim[0], clim[1])  # set up functional g
 obj_fun = f * A + g  # define objective function
@@ -126,7 +126,7 @@ if not os.path.exists(file_target):
     spdhg.save_image(y_opt[0], 'y_saddle[0]', folder_main, 2)
     spdhg.save_image(y_opt[1], 'y_saddle[1]', folder_main, 3)
     spdhg.save_image(y_opt[2], 'y_saddle[2]', folder_main, 4)
-    spdhg.save_image(subx_opt, 'subx_saddle',    folder_main, 5)
+    spdhg.save_image(subx_opt, 'subx_saddle', folder_main, 5)
     spdhg.save_image(suby_opt[0], 'suby_saddle[0]', folder_main, 6)
     spdhg.save_image(suby_opt[1], 'suby_saddle[1]', folder_main, 7)
     spdhg.save_image(suby_opt[2], 'suby_saddle[2]', folder_main, 8)
@@ -242,8 +242,8 @@ for alg in ['pdhg', 'da_pdhg', 'da_spdhg_uni3']:
         extra = [1 / p for p in prob]
         tau = gamma / (n * max(normA))
         mu = mu_i
-        sigma_tilde = min([mu * p**2 / (tau * normAi**2 + 2 * mu * p * (1 - p))
-                           for p, mu, normAi in zip(prob, mu_i, normA)])
+        sigma_tilde = min([m * p**2 / (tau * normAi**2 + 2 * m * p * (1 - p))
+                           for p, m, normAi in zip(prob, mu_i, normA)])
 
     else:
         assert False, "Parameters not defined"
@@ -284,7 +284,7 @@ algs = ['pdhg', 'da_pdhg', 'da_spdhg_uni3']
 (iter_save_v, niter_v, image_v, out_v, nsub_v) = {}, {}, {}, {}, {}
 for a in algs:
     (iter_save_v[a], niter_v[a], image_v[a], out_v[a], nsub_v[a]) = np.load(
-             '{}/{}_output.npy'.format(folder_npy, a))
+        '{}/{}_output.npy'.format(folder_npy, a))
 
 epochs_save = {a: np.array(iter_save_v[a]) / np.float(nsub_v[a]) for a in algs}
 

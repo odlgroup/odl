@@ -118,8 +118,8 @@ bregman_g = spdhg.bregman(g, x_opt, subx_opt)
 
 # define Bregman distance for f and f_p
 bregman_f = odl.solvers.SeparableSum(
-        *[spdhg.bregman(fi.convex_conj, yi, ri)
-          for fi, yi, ri in zip(f, y_opt, suby_opt)])
+    *[spdhg.bregman(fi.convex_conj, yi, ri)
+      for fi, yi, ri in zip(f, y_opt, suby_opt)])
 
 
 class CallbackStore(odl.solvers.util.callback.Callback):
@@ -181,7 +181,8 @@ for alg in nsub.keys():
 
 # %% --- Run algorithms ---
 # TODO: ODL version to be included once the callback includes dual iterates
-#for alg in ['pdhg', 'pesquet_uni2', 'pa_pdhg', 'spdhg_uni2', 'pa_spdhg_uni2', 'odl', 'pa_odl']:
+# for alg in ['pdhg', 'pesquet_uni2', 'pa_pdhg', 'spdhg_uni2', 'pa_spdhg_uni2',
+# 'odl', 'pa_odl']:
 for alg in ['pdhg', 'pesquet_uni2', 'pa_pdhg', 'spdhg_uni2', 'pa_spdhg_uni2']:
     print('======= ' + alg + ' =======')
 
@@ -272,7 +273,7 @@ algs = ['pdhg', 'pesquet_uni2', 'pa_pdhg', 'spdhg_uni2', 'pa_spdhg_uni2']
 iter_save_v, niter_v, image_v, out_v, nsub_v = {}, {}, {}, {}, {}
 for a in algs:
     (iter_save_v[a], niter_v[a], image_v[a], out_v[a], nsub_v[a]) = np.load(
-            '{}/{}_output.npy'.format(folder_npy, a))
+        '{}/{}_output.npy'.format(folder_npy, a))
 
 epochs_save = {a: np.array(iter_save_v[a]) / np.float(nsub_v[a]) for a in algs}
 

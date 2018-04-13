@@ -469,7 +469,7 @@ def da_spdhg(x, f, g, A, tau, sigma_tilde, niter, extra, prob, mu, fun_select,
 
             # compute the step sizes sigma_i based on sigma_tilde
             sigma_i = sigma_tilde / (
-                    mu[i] * (prob[i] - 2 * (1 - prob[i]) * sigma_tilde))
+                mu[i] * (prob[i] - 2 * (1 - prob[i]) * sigma_tilde))
 
             # save old yi
             y_old[i].assign(y[i])

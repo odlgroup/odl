@@ -81,8 +81,8 @@ if not os.path.exists(file_data):
 
     sinogram_support = sinogram.ufuncs.greater(0)
     smoothed_support = Y.element(
-            [gaussian_filter(sino_support, sigma=[1, 2 / X.cell_sides[0]])
-             for sino_support in sinogram_support])
+        [gaussian_filter(sino_support, sigma=[1, 2 / X.cell_sides[0]])
+         for sino_support in sinogram_support])
     background = 10 * smoothed_support + 10
     background *= counts_background / background.ufuncs.sum()
     data = odl.phantom.poisson_noise(factors * sinogram + background,
@@ -100,7 +100,7 @@ if not os.path.exists(file_data):
     fig2.clf()
     i = 0
     plt.plot((sinogram[i]).asarray()[0], label='G(x)')
-    plt.plot((factors[i]*sinogram[i]).asarray()[0], label='factors * G(x)')
+    plt.plot((factors[i] * sinogram[i]).asarray()[0], label='factors * G(x)')
     plt.plot(data[i].asarray()[0], label='data')
     plt.plot(background[i].asarray()[0], label='background')
     plt.legend()
@@ -113,8 +113,8 @@ else:
 
 # data fit
 f = odl.solvers.SeparableSum(
-        *[spdhg.KullbackLeiblerSmooth(Yi, yi, ri)
-          for Yi, yi, ri in zip(Y, data, background)])
+    *[spdhg.KullbackLeiblerSmooth(Yi, yi, ri)
+      for Yi, yi, ri in zip(Y, data, background)])
 # TODO: should be like:
 # f = spdhg.KullbackLeiblerSmooth(Y, data).translated(-background)
 
