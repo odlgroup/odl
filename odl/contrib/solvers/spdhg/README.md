@@ -4,9 +4,9 @@ This package contains an ODL compatible implementation of the Stochastic Primal-
 	min_x sum_{i=1}^n f_i(A_i x) + g(x)
 where f_i and g are closed, proper and convex functionals and A_i are linear operators.
 
-It has been successfully used for PET image reconstruction (from the Siemens Biograph mMR) [SPIE](https://www.spiedigitallibrary.org/conference-proceedings-of-spie/10394/103941O/Faster-PET-reconstruction-with-a-stochastic-primal-dual-hybrid-gradient/10.1117/12.2272946.full). Watch [this](https://www.youtube.com/watch?v=iZc2eFqS2l4) if you want to have an introduction to SPDHG by [Peter Richtarik](http://www.maths.ed.ac.uk/~prichtar/).
+It has been successfully used for PET image reconstruction (from the Siemens Biograph mMR) [SPIE](https://www.spiedigitallibrary.org/conference-proceedings-of-spie/10394/103941O/Faster-PET-reconstruction-with-a-stochastic-primal-dual-hybrid-gradient/10.1117/12.2272946.full). Watch [this](https://www.youtube.com/watch?v=iZc2eFqS2l4) if you want to have an introduction to SPDHG by [Peter Richtárik](http://www.maths.ed.ac.uk/~prichtar/).
 
-Original contribution by: @mehrhardt
+Original contribution by: [@mehrhardt](https://github.com/mehrhardt)
 
 ## Content
 
