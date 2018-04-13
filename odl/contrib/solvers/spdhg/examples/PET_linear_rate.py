@@ -10,15 +10,15 @@
 problem with a strongly convex total variation prior. We exploit the smoothness
 of the data term and the strong convexity of the prior to obtain a linearly
 convergent algorithm. We compare different algorithms for this problem and
-visualize the results as in [1].
+visualize the results as in [CERS2017].
 
 Note that this example uses the ASTRA toolbox https://www.astra-toolbox.com/.
 
 Reference
 ---------
-[1] A. Chambolle, M. J. Ehrhardt, P. Richtárik and C.-B. Schönlieb (2017).
-Stochastic Primal-Dual Hybrid Gradient Algorithm with Arbitrary Sampling and
-Imaging Applications. http://arxiv.org/abs/1706.04957
+    [CERS2017] A. Chambolle, M. J. Ehrhardt, P. Richtarik and C.-B. Schoenlieb,
+    *Stochastic Primal-Dual Hybrid Gradient Algorithm with Arbitrary Sampling
+    and Imaging Applications*. ArXiv: http://arxiv.org/abs/1706.04957 (2017).
 """
 
 from __future__ import division, print_function

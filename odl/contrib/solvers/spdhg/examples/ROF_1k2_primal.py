@@ -9,13 +9,13 @@
 """An example of using the SPDHG algorithm to solve a TV denoising problem
 with Gaussian noise. We exploit the strong convexity of the data term to get
 1/k^2 convergence on the primal part. We compare different algorithms for this
-problem and visualize the results as in [1].
+problem and visualize the results as in [CERS2017].
 
 Reference
 ---------
-[1] A. Chambolle, M. J. Ehrhardt, P. Richtárik and C.-B. Schönlieb (2017).
-Stochastic Primal-Dual Hybrid Gradient Algorithm with Arbitrary Sampling and
-Imaging Applications. http://arxiv.org/abs/1706.04957
+    [CERS2017] A. Chambolle, M. J. Ehrhardt, P. Richtarik and C.-B. Schoenlieb,
+    *Stochastic Primal-Dual Hybrid Gradient Algorithm with Arbitrary Sampling
+    and Imaging Applications*. ArXiv: http://arxiv.org/abs/1706.04957 (2017).
 """
 
 from __future__ import division, print_function
