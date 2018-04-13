@@ -16,9 +16,9 @@ Note that this example uses the ASTRA toolbox https://www.astra-toolbox.com/.
 
 Reference
 ---------
-    [CERS2017] A. Chambolle, M. J. Ehrhardt, P. Richtarik and C.-B. Schoenlieb,
-    *Stochastic Primal-Dual Hybrid Gradient Algorithm with Arbitrary Sampling
-    and Imaging Applications*. ArXiv: http://arxiv.org/abs/1706.04957 (2017).
+[CERS2017] A. Chambolle, M. J. Ehrhardt, P. Richtarik and C.-B. Schoenlieb,
+*Stochastic Primal-Dual Hybrid Gradient Algorithm with Arbitrary Sampling
+and Imaging Applications*. ArXiv: http://arxiv.org/abs/1706.04957 (2017).
 """
 
 from __future__ import division, print_function

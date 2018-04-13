@@ -460,10 +460,9 @@ class KullbackLeiblerSmooth(odl.solvers.Functional):
 
     References
     ----------
-    [CERS2017] Chambolle, A., Ehrhardt, M. J., Richtárik, P. and
-    Schönlieb, C.-B. *Stochastic Primal-Dual Hybrid Gradient Algorithm with
-    Arbitrary Sampling and Imaging Applications*.
-    ArXiv: http://arxiv.org/abs/1706.04957, 2017
+    [CERS2017] A. Chambolle, M. J. Ehrhardt, P. Richtarik and C.-B. Schoenlieb,
+    *Stochastic Primal-Dual Hybrid Gradient Algorithm with Arbitrary Sampling
+    and Imaging Applications*. ArXiv: http://arxiv.org/abs/1706.04957 (2017).
     """
 
     def __init__(self, space, data, background):
@@ -585,10 +584,9 @@ class KullbackLeiblerSmoothConvexConj(odl.solvers.Functional):
 
     References
     ----------
-    [CERS2017] Chambolle, A., Ehrhardt, M. J., Richtárik, P. and
-    Schönlieb, C.-B. *Stochastic Primal-Dual Hybrid Gradient Algorithm with
-    Arbitrary Sampling and Imaging Applications*.
-    ArXiv: http://arxiv.org/abs/1706.04957, 2017
+    [CERS2017] A. Chambolle, M. J. Ehrhardt, P. Richtarik and C.-B. Schoenlieb,
+    *Stochastic Primal-Dual Hybrid Gradient Algorithm with Arbitrary Sampling
+    and Imaging Applications*. ArXiv: http://arxiv.org/abs/1706.04957 (2017).
     """
 
     def __init__(self, space, data, background):
