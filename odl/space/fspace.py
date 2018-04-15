@@ -1087,10 +1087,6 @@ class FunctionSpace(LinearSpace):
         inner_str = signature_string(posargs, optargs, mod=['!r', optmod])
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
-    def __str__(self):
-        """Return ``str(self)``."""
-        return repr(self)
-
 
 class FunctionSpaceElement(LinearSpaceElement):
 

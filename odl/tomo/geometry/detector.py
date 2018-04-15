@@ -259,6 +259,10 @@ class Detector(object):
                 'for `ndim={}` and `space_ndim={}`'
                 ''.format(self.ndim, self.space_ndim))
 
+    def __str__(self):
+        """Return ``str(self)``."""
+        return repr(self)
+
 
 class Flat1dDetector(Detector):
 
@@ -413,10 +417,6 @@ class Flat1dDetector(Detector):
         optargs = [('axis', array_str(self.axis), '')]
         inner_str = signature_string(posargs, optargs, sep=',\n')
         return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        return repr(self)
 
 
 class Flat2dDetector(Detector):
@@ -621,10 +621,6 @@ class Flat2dDetector(Detector):
         optargs = [('axes', tuple(array_str(ax) for ax in self.axes), None)]
         inner_str = signature_string(posargs, optargs, sep=',\n')
         return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        return repr(self)
 
 
 class CircleSectionDetector(Detector):
@@ -892,10 +888,6 @@ class CircleSectionDetector(Detector):
         optargs = [('center', array_str(self.center), None)]
         inner_str = signature_string(posargs, optargs, sep=',\n')
         return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        return repr(self)
 
 
 if __name__ == '__main__':

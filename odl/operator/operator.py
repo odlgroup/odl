@@ -1060,10 +1060,10 @@ class Operator(object):
     def __str__(self):
         """Return ``str(self)``.
 
-        The default string implementation. Should be overridden by
-        subclasses.
+        By default, ``str(self)`` is the same as ``repr(self)``. Subclasses
+        that need a different behavior should override this method.
         """
-        return self.__class__.__name__
+        return repr(self)
 
     # Give an `Operator` a higher priority than any NumPy array type. This
     # forces the usage of `__op__` of `Operator` if the other operand
@@ -1524,10 +1524,6 @@ class OperatorPointwiseProduct(Operator):
         inner_parts = signature_string_parts(posargs, [])
         return repr_string(self.__class__.__name__, inner_parts,
                            allow_mixed_seps=False)
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        return repr(self)
 
 
 class OperatorLeftScalarMult(Operator):

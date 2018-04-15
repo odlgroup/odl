@@ -15,6 +15,7 @@ import sys
 from builtins import object
 from collections import OrderedDict
 from functools import wraps
+from future.moves.itertools import zip_longest
 from itertools import product
 
 import numpy as np
@@ -22,7 +23,7 @@ import numpy as np
 __all__ = (
     'array_str', 'dtype_str', 'dtype_repr', 'npy_printoptions',
     'signature_string', 'signature_string_parts', 'repr_string',
-    'indent', 'dedent', 'attribute_repr_string', 'element_repr_string',
+    'indent', 'dedent', 'attribute_repr_string', 'method_repr_string',
     'is_numeric_dtype', 'is_int_dtype', 'is_floating_dtype', 'is_real_dtype',
     'is_real_floating_dtype', 'is_complex_floating_dtype',
     'real_dtype', 'complex_dtype', 'is_string', 'nd_iterator', 'conj_exponent',
@@ -1062,7 +1063,7 @@ def _separators(strings, linewidth):
 
 
 def repr_string(outer_string, inner_strings, allow_mixed_seps=True):
-    """Return a pretty string for ``repr``.
+    r"""Return a pretty string for ``repr``.
 
     The returned string is formatted such that it does not extend
     beyond the line boundary if avoidable. The line width is taken from
@@ -1080,14 +1081,18 @@ def repr_string(outer_string, inner_strings, allow_mixed_seps=True):
         This is usually the return value of `signature_string_parts`.
     allow_mixed_seps : bool, optional
         If ``False`` and the string does not fit on one line, use
-        ``',\\n'`` to separate all strings.
-        By default, a mixture of ``', '`` and ``,\\n`` is used to fit
+        ``',\n'`` to separate all strings.
+        By default, a mixture of ``', '`` and ``',\n'`` is used to fit
         as much on one line as possible.
+
+        In case some of the ``inner_strings`` span multiple lines, it is
+        usually advisable to set ``allow_mixed_seps`` to ``False`` since
+        the result tends to be more readable that way.
 
     Returns
     -------
     repr_string : str
-        Full string that can be returned by a class' ``repr`` method.
+        Full string that can be returned by a class' ``__repr__`` method.
 
     Examples
     --------
@@ -1227,12 +1232,12 @@ def repr_string(outer_string, inner_strings, allow_mixed_seps=True):
     return fmt.format(outer_string, inner_string)
 
 
-def attribute_repr_string(instance_str, attr_str):
+def attribute_repr_string(inst_str, attr_str):
     """Return a repr string for an attribute that respects line width.
 
     Parameters
     ----------
-    instance_str : str
+    inst_str : str
         Stringification of a class instance.
     attr_str : str
         Name of the attribute (not including the ``'.'``).
@@ -1249,6 +1254,14 @@ def attribute_repr_string(instance_str, attr_str):
     >>> attr_str = 'byaxis'
     >>> print(attribute_repr_string(inst_str, attr_str))
     rn((2, 3)).byaxis
+    >>> inst_str = 'MyClass()'
+    >>> attr_str = 'attr_name'
+    >>> print(attribute_repr_string(inst_str, attr_str))
+    Myclass().attr_name
+    >>> inst_str = 'Myclass'
+    >>> attr_str = 'class_attr'
+    >>> print(attribute_repr_string(inst_str, attr_str))
+    Myclass.class_attr
     >>> long_inst_str = (
     ...     "MyClass('long string that will definitely trigger a line break')"
     ... )
@@ -1259,73 +1272,151 @@ def attribute_repr_string(instance_str, attr_str):
     ).long_attribute_name
     """
     linewidth = np.get_printoptions()['linewidth']
-    if len(instance_str) + len(attr_str) + 1 <= linewidth:
-        parts = [instance_str, attr_str]
+    if (len(inst_str) + 1 + len(attr_str) <= linewidth or
+            '(' not in inst_str):
+        # Instance string + dot + attribute string fit in one line or
+        # no parentheses -> keep instance string as-is and append attr string
+        parts = [inst_str, attr_str]
     else:
-        left, rest = instance_str.split('(', maxsplit=1)
+        leftsplit = inst_str.split('(', maxsplit=1)
+        left, rest = leftsplit
         right, middle = rest[::-1].split(')', maxsplit=1)
         middle, right = middle[::-1], right[::-1]
+
         if middle.startswith('\n') and middle.endswith('\n'):
             # Already on multiple lines
-            new_instance_str = instance_str
+            new_inst_str = inst_str
         else:
-            new_instance_str = ('(\n'.join([left, indent(middle)]) + '\n)' +
-                                right)
-        parts = [new_instance_str, attr_str]
+            init_parts = [left]
+            if middle:
+                init_parts.append(indent(middle))
+            new_inst_str = '(\n'.join(init_parts) + '\n)' + right
+        parts = [new_inst_str, attr_str]
 
     return '.'.join(parts)
 
 
-def element_repr_string(space_str, data_str):
-    """Return a repr string for a space element that respects line width.
+def method_repr_string(inst_str, meth_str, arg_strs=None,
+                       allow_mixed_seps=True):
+    r"""Return a repr string for a method that respects line width.
+
+    This function is useful to generate a ``repr`` string for a derived
+    class that is created through a method, for instance ::
+
+        functional.translated(x)
+
+    as a better way of representing ::
+
+        FunctionalTranslation(functional, x)
 
     Parameters
     ----------
-    space_str : str
-        Stringification of the space in which the element lives.
-    data_str : str
-        Stringification of the data that the element contains.
+    inst_str : str
+        Stringification of a class instance.
+    meth_str : str
+        Name of the method (not including the ``'.'``).
+    arg_strs : sequence of str, optional
+        Stringification of the arguments to the method.
+    allow_mixed_seps : bool, optional
+        If ``False`` and the argument strings do not fit on one line, use
+        ``',\n'`` to separate all strings.
+        By default, a mixture of ``', '`` and ``',\n'`` is used to fit
+        as much on one line as possible.
+
+        In case some of the ``arg_strs`` span multiple lines, it is
+        usually advisable to set ``allow_mixed_seps`` to ``False`` since
+        the result tends to be more readable that way.
 
     Returns
     -------
-    elem_repr_str : str
-        Stringification of the element in a way that the line width
+    meth_repr_str : str
+        Concatenation of all strings in a way that the line width
         is respected.
 
     Examples
     --------
-    >>> space_str = 'rn(3)'
-    >>> data_str = array_str([1.0, 0.0, 1.0])
-    >>> print(element_repr_string(space_str, data_str))
-    rn(3).element([ 1.,  0.,  1.])
-    >>> space_str = (
-    ...     'uniform_discr([ 0.,  0.], [ 1.,  1.], (2, 2), dtype=complex)'
+    >>> inst_str = 'MyClass'
+    >>> meth_str = 'empty'
+    >>> arg_strs = []
+    >>> print(method_repr_string(inst_str, meth_str, arg_strs))
+    MyClass.empty()
+    >>> inst_str = 'MyClass'
+    >>> meth_str = 'fromfile'
+    >>> arg_strs = ["'tmpfile.txt'"]
+    >>> print(method_repr_string(inst_str, meth_str, arg_strs))
+    MyClass.fromfile('tmpfile.txt')
+    >>> inst_str = "MyClass('init string')"
+    >>> meth_str = 'method'
+    >>> arg_strs = ['2.0']
+    >>> print(method_repr_string(inst_str, meth_str, arg_strs))
+    MyClass('init string').method(2.0)
+    >>> long_inst_str = (
+    ...     "MyClass('long string that will definitely trigger a line break')"
     ... )
-    >>> long_data_str = array_str([[1.0, 2.0],
-    ...                            [3.0, 4.0]])
-    >>> print(element_repr_string(space_str, long_data_str))
-    uniform_discr([ 0.,  0.], [ 1.,  1.], (2, 2), dtype=complex).element(
-        [[ 1.,  2.],
-         [ 3.,  4.]]
+    >>> meth_str = 'method'
+    >>> long_arg1 = "'long argument string that should come on the next line'"
+    >>> arg2 = 'param1=1'
+    >>> arg3 = 'param2=2.0'
+    >>> arg_strs = [long_arg1, arg2, arg3]
+    >>> print(method_repr_string(long_inst_str, meth_str, arg_strs))
+    MyClass(
+        'long string that will definitely trigger a line break'
+    ).method(
+        'long argument string that should come on the next line',
+        param1=1, param2=2.0
+    )
+    >>> print(method_repr_string(long_inst_str, meth_str, arg_strs,
+    ...                          allow_mixed_seps=False))
+    MyClass(
+        'long string that will definitely trigger a line break'
+    ).method(
+        'long argument string that should come on the next line',
+        param1=1,
+        param2=2.0
     )
     """
     linewidth = np.get_printoptions()['linewidth']
 
-    spc_len = len(space_str) + len('.element(')
-    if spc_len <= linewidth:
-        # Can fit the 'space.element(' part on one line
-        spc_part = space_str + '.element('
+    # Part up to the method name
+    if (len(inst_str) + 1 + len(meth_str) + 1 <= linewidth or
+            '(' not in inst_str):
+        init_parts = [inst_str, meth_str]
+        # Length of the line to the end of the method name
+        meth_line_start_len = len(inst_str) + 1 + len(meth_str)
     else:
-        left, rest = space_str.split('(', maxsplit=1)
+        left, rest = inst_str.split('(', maxsplit=1)
         right, middle = rest[::-1].split(')', maxsplit=1)
         middle, right = middle[::-1], right[::-1]
-        spc_part = ('(\n'.join([left, indent(middle)]) + '\n)' + right +
-                    '.element(')
+        if middle.startswith('\n') and middle.endswith('\n'):
+            # Already on multiple lines
+            new_inst_str = inst_str
+        else:
+            new_inst_str = '(\n'.join([left, indent(middle)]) + '\n)' + right
 
-    if '\n' in data_str or len(spc_part) + len(data_str) + 1 > linewidth:
-        return spc_part + '\n' + indent(data_str) + '\n)'
+        # Length of the line to the end of the method name, consisting of
+        # ')' + '.' + <method name>
+        meth_line_start_len = 1 + 1 + len(meth_str)
+        init_parts = [new_inst_str, meth_str]
+
+    # Method call part
+    arg_str_oneline = ', '.join(arg_strs)
+    if meth_line_start_len + 1 + len(arg_str_oneline) + 1 <= linewidth:
+        meth_call_str = '(' + arg_str_oneline + ')'
+    elif not arg_str_oneline:
+        meth_call_str = '(\n)'
     else:
-        return spc_part + data_str + ')'
+        if allow_mixed_seps:
+            arg_seps = _separators(arg_strs, linewidth - 4)  # indented
+        else:
+            arg_seps = [',\n'] * (len(arg_strs) - 1)
+
+        full_arg_str = ''
+        for arg_str, sep in zip_longest(arg_strs, arg_seps, fillvalue=''):
+            full_arg_str += arg_str + sep
+
+        meth_call_str = '(\n' + indent(full_arg_str) + '\n)'
+
+    return '.'.join(init_parts) + meth_call_str
 
 
 def run_from_ipython():

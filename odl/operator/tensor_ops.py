@@ -978,10 +978,6 @@ class MatrixOperator(Operator):
         return repr_string(self.__class__.__name__, inner_parts,
                            allow_mixed_seps=False)
 
-    def __str__(self):
-        """Return ``str(self)``."""
-        return repr(self)
-
 
 def _normalize_sampling_points(sampling_points, ndim):
     """Normalize points to an ndim-long list of linear index arrays.
@@ -1200,15 +1196,7 @@ class SamplingOperator(Operator):
                                            variant)
 
     def __repr__(self):
-        """Return ``repr(self)``."""
-        posargs = [self.domain, self.sampling_points]
-        optargs = [('variant', self.variant, 'point_eval')]
-        inner_parts = signature_string_parts(posargs, optargs, mod=['!r', ''])
-        return repr_string(self.__class__.__name__, inner_parts,
-                           allow_mixed_seps=False)
-
-    def __str__(self):
-        """Return ``str(self)``.
+        """Return ``repr(self)``.
 
         Examples
         --------
@@ -1222,7 +1210,11 @@ class SamplingOperator(Operator):
             variant='integrate'
         )
         """
-        return repr(self)
+        posargs = [self.domain, self.sampling_points]
+        optargs = [('variant', self.variant, 'point_eval')]
+        inner_parts = signature_string_parts(posargs, optargs, mod=['!r', ''])
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
 
 class WeightedSumSamplingOperator(Operator):
@@ -1432,10 +1424,6 @@ class WeightedSumSamplingOperator(Operator):
         return repr_string(self.__class__.__name__, inner_parts,
                            allow_mixed_seps=False)
 
-    def __str__(self):
-        """Return ``str(self)``."""
-        return repr(self)
-
 
 class FlatteningOperator(Operator):
 
@@ -1571,12 +1559,19 @@ class FlatteningOperator(Operator):
                 return op
 
             def __repr__(self):
-                """Return ``repr(self)``."""
-                return attribute_repr_string(repr(op), 'inverse')
+                """Return ``repr(self)``.
 
-            def __str__(self):
-                """Return ``str(self)``."""
-                return repr(self)
+                Examples
+                --------
+                >>> space = odl.uniform_discr([-1, -1], [1, 1], shape=(2, 3))
+                >>> op = odl.FlatteningOperator(space)
+                >>> op.inverse
+                FlatteningOperator(
+                    uniform_discr([-1., -1.], [ 1.,  1.], (2, 3))
+                ).inverse
+
+                """
+                return attribute_repr_string(repr(op), 'inverse')
 
         return FlatteningOperatorInverse()
 
@@ -1595,10 +1590,6 @@ class FlatteningOperator(Operator):
         inner_parts = signature_string_parts(posargs, optargs, mod=['!r', ''])
         return repr_string(self.__class__.__name__, inner_parts,
                            allow_mixed_seps=False)
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        return repr(self)
 
 
 def is_compatible_space(space, base_space):

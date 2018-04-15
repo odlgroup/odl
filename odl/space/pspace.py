@@ -21,7 +21,7 @@ from odl.space.weighting import (
     ArrayWeighting, ConstWeighting, CustomDist, CustomInner, CustomNorm,
     Weighting)
 from odl.util import (
-    dedent, element_repr_string, indent, is_real_dtype, repr_string,
+    dedent, method_repr_string, indent, is_real_dtype, repr_string,
     signature_string_parts)
 from odl.util.ufuncs import ProductSpaceUfuncs
 
@@ -1293,10 +1293,6 @@ class ProductSpaceElement(LinearSpaceElement):
         complex_conj = [part.conj() for part in self.parts]
         return self.space.element(complex_conj)
 
-    def __str__(self):
-        """Return ``str(self)``."""
-        return repr(self)
-
     def __repr__(self):
         """Return ``repr(self)``.
 
@@ -1354,7 +1350,7 @@ class ProductSpaceElement(LinearSpaceElement):
 
         data_str += '\n]'
 
-        return element_repr_string(repr(self.space), data_str)
+        return method_repr_string(repr(self.space), 'element', [data_str])
 
     def show(self, title=None, indices=None, **kwargs):
         """Display the parts of this product space element graphically.

@@ -616,10 +616,6 @@ class DiscreteLp(DiscretizedSpace):
 
         return repr_string(ctor, inner_parts, allow_mixed_seps=True)
 
-    def __str__(self):
-        """Return ``str(self)``."""
-        return repr(self)
-
     @property
     def element_type(self):
         """`DiscreteLpElement`"""

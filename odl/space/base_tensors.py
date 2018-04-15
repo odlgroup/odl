@@ -18,7 +18,7 @@ import numpy as np
 from odl.set.sets import ComplexNumbers, RealNumbers
 from odl.set.space import LinearSpace, LinearSpaceElement
 from odl.util import (
-    array_str, dtype_str, element_repr_string, is_complex_floating_dtype,
+    array_str, dtype_str, method_repr_string, is_complex_floating_dtype,
     is_floating_dtype, is_numeric_dtype, is_real_dtype, is_real_floating_dtype,
     repr_string, safe_int_conv, signature_string_parts, writable_array)
 from odl.util.ufuncs import TensorSpaceUfuncs
@@ -417,10 +417,6 @@ class TensorSpace(LinearSpace):
         inner_parts = signature_string_parts(posargs, [])
         return repr_string(self.__class__.__name__, inner_parts)
 
-    def __str__(self):
-        """Return ``str(self)``."""
-        return repr(self)
-
     @property
     def examples(self):
         """Return example random vectors."""
@@ -643,10 +639,18 @@ class Tensor(LinearSpaceElement):
         raise NotImplementedError('abstract method')
 
     def __repr__(self):
-        """Return ``repr(self)``."""
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> rn = odl.rn(3)
+        >>> x = rn.element([1, 2, 3])
+        >>> x
+        rn(3).element([ 1.,  2.,  3.])
+        """
         maxsize_full_print = 2 * np.get_printoptions()['edgeitems']
         self_str = array_str(self, nprint=maxsize_full_print)
-        return element_repr_string(repr(self.space), self_str)
+        return method_repr_string(repr(self.space), 'element', [self_str])
 
     def __str__(self):
         """Return ``str(self)``."""

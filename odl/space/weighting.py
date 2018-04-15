@@ -150,6 +150,10 @@ class Weighting(object):
         """
         return self.norm(x1 - x2)
 
+    def __str__(self):
+        """Return ``str(self)``."""
+        return repr(self)
+
 
 class MatrixWeighting(Weighting):
 
@@ -451,10 +455,6 @@ class MatrixWeighting(Weighting):
                                      mod=['!s', ''])
         return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
 
-    def __str__(self):
-        """Return ``str(self)``."""
-        return repr(self)
-
 
 class ArrayWeighting(Weighting):
 
@@ -568,10 +568,6 @@ class ArrayWeighting(Weighting):
                                      mod=['!s', ':.4'])
         return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
 
-    def __str__(self):
-        """Return ``str(self)``."""
-        return repr(self)
-
 
 class ConstWeighting(Weighting):
 
@@ -655,10 +651,6 @@ class ConstWeighting(Weighting):
         return '{}({})'.format(self.__class__.__name__,
                                signature_string(posargs, optargs))
 
-    def __str__(self):
-        """Return ``str(self)``."""
-        return repr(self)
-
 
 class CustomInner(Weighting):
 
@@ -720,8 +712,7 @@ class CustomInner(Weighting):
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = [self.inner]
-        optargs = []
-        inner_str = signature_string(posargs, optargs, mod='!r')
+        inner_str = signature_string(posargs, [], mod='!r')
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 

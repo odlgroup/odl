@@ -19,7 +19,9 @@ from odl.operator.operator import (
 from odl.solvers.nonsmooth import (
     proximal_arg_scaling, proximal_const_func, proximal_convex_conj,
     proximal_quadratic_perturbation, proximal_translation)
-from odl.util import indent, signature_string
+from odl.util import (
+    array_str, signature_string_parts, repr_string, npy_printoptions,
+    attribute_repr_string, method_repr_string, REPR_PRECISION)
 
 __all__ = ('Functional', 'FunctionalLeftScalarMult',
            'FunctionalRightScalarMult', 'FunctionalComp',
@@ -31,20 +33,25 @@ __all__ = ('Functional', 'FunctionalLeftScalarMult',
 
 class Functional(Operator):
 
-    """Implementation of a functional class.
+    r"""Implementation of a functional class.
 
-    A functional is an operator ``f`` that maps from some domain ``X`` to the
-    field of scalars ``F`` associated with the domain:
+    A functional is an operator
 
-        ``f : X -> F``.
+    .. math:
+        f: X \to \mathbb{F}
+
+    that maps from some domain :math:`X` to *its* field :math:`\mathbb{F}`
+    of scalars.
 
     Notes
     -----
     The implementation of the functional class assumes that the domain
-    :math:`X` is a Hilbert space and that the field of scalars :math:`F` is a
-    is the real numbers. It is possible to create functions that do not fulfil
-    these assumptions, however some mathematical results might not be valid in
-    this case. For more information, see `the ODL functional guide
+    :math:`X` is a real Hilbert space and that the field of scalars
+    :math:`\mathbb{F}` are the real numbers. It is possible to create
+    functionals that do not fulfil these assumptions, however some
+    mathematical properties might not be valid in this case.
+
+    For more information, see `the ODL functional guide
     <http://odlgroup.github.io/odl/guide/in_depth/functional_guide.html>`_.
     """
 
@@ -69,7 +76,7 @@ class Functional(Operator):
 
     @property
     def grad_lipschitz(self):
-        """Lipschitz constant for the gradient of the functional"""
+        """Lipschitz constant for the gradient of the functional."""
         return self.__grad_lipschitz
 
     @grad_lipschitz.setter
@@ -79,18 +86,18 @@ class Functional(Operator):
 
     @property
     def gradient(self):
-        """Gradient operator of the functional.
+        r"""Gradient operator of the functional.
 
         Notes
         -----
-        The operator that corresponds to the mapping
+        The gradient operator is the
 
         .. math::
-            x \\to \\nabla f(x)
+            x \to \nabla f(x)
 
-        where :math:`\\nabla f(x)` is the element used to evaluate
+        where :math:`\nabla f(x)` is the element used to evaluate
         derivatives in a direction :math:`d` by
-        :math:`\\langle \\nabla f(x), d \\rangle`.
+        :math:`\langle \nabla f(x), d \rangle`.
         """
         raise NotImplementedError(
             'no gradient implemented for functional {!r}'
@@ -98,48 +105,50 @@ class Functional(Operator):
 
     @property
     def proximal(self):
-        """Proximal factory of the functional.
+        r"""Proximal factory of the functional.
 
         Notes
         -----
         The proximal operator of a function :math:`f` is an operator defined as
 
         .. math::
-            prox_{\\sigma f}(x) = \\sup_{y} \\left\{ f(y) -
-            \\frac{1}{2\\sigma} \| y-x \|_2^2 \\right\}.
+            \mathrm{prox}_{\sigma f}(x) = \sup_{y} \left\{ f(y) -
+            \frac{1}{2\sigma} \| y-x \|_2^2 \right\}.
 
-        Proximal operators are often used in different optimization algorithms,
-        especially when designed to handle nonsmooth functionals.
+        Proximal operators are often used in algorithms for nonsmooth
+        convex optimization.
 
         A `proximal factory` is a function that, when called with a step
-        length :math:`\\sigma`, returns the corresponding proximal operator.
-
-        The nonsmooth solvers that make use of proximal operators to solve a
-        given optimization problem take a `proximal factory` as input,
-        i.e., a function returning a proximal operator. See for example
+        size :math:`\sigma`, returns the corresponding proximal operator.
+        This factory function is typically consumed by an optimization
+        method that produces proximal operators with potentially varying
+        step sizes during the iteration. See for example
         `forward_backward_pd`.
 
-        In general, the step length :math:`\\sigma` is expected to be a
+        In general, the step length :math:`\sigma` is expected to be a
         positive float, but certain functionals might accept more types of
         objects as a stepsize:
 
-        * If a functional is a `SeparableSum`, then, instead of a positive
-        float, one may call the `proximal factory` with a list of positive
-        floats, and the stepsize are applied to each component individually.
+        - If a functional is a `SeparableSum`, then, instead of a positive
+          float, one may call the `proximal factory` with a list of positive
+          floats, and the stepsizes are applied per component.
 
-        * For certain special functionals like `L1Norm` and `L2NormSquared`,
-        which are not implemented as a `SeparableSum`, the proximal factory
-        will accept an argument which is `element-like` regarding the domain
-        of the functional. Its components must be strictly positive floats.
+        - For certain special functionals like `L1Norm` and `L2NormSquared`,
+          which are not implemented as a `SeparableSum`, the proximal factory
+          will accept an argument which can be turned into an element of
+          the functional domain (called `element-like`). Its components must
+          be strictly positive.
 
-        A stepsize like :math:`(\\sigma_1, \\ldots, \\sigma_n)`  coincides
-        with a matrix-valued distance according to Section XV.4 of _[HL1993]
+        A step size like :math:`(\sigma_1, \ldots, \sigma_n)`  coincides
+        with a matrix-valued distance according to Section XV.4 of
+        `[HL1993] <http://dx.doi.org/10.1007/978-3-662-06409-2>`_
         and the rule
 
         .. math::
-            M = \\mathrm{diag}(\\sigma_1^{-1}, \\ldots, \\sigma_n^{-1})
+            M = \mathrm{diag}(\sigma_1^{-1}, \ldots, \sigma_n^{-1})
 
-        or the Bregman-proximal according to _[E1993] and the rule
+        or the Bregman-proximal according to
+        `[E1993] <https://doi.org/10.1287/moor.18.1.202>`_  and the rule
 
         .. math::
             h(x) = \langle x, M x \rangle.
@@ -160,7 +169,7 @@ class Functional(Operator):
 
     @property
     def convex_conj(self):
-        """Convex conjugate functional of the functional.
+        r"""Convex conjugate functional of the functional.
 
         Notes
         -----
@@ -168,7 +177,7 @@ class Functional(Operator):
         defined on a Hilber space, is defined as the functional
 
         .. math::
-            f^*(x^*) = \\sup_{x} \{ \\langle x^*,x \\rangle - f(x)  \}.
+            f^*(x^*) = \sup_{x} \{ \langle x^*,x \rangle - f(x)  \}.
 
         The concept is also known as the Legendre transformation.
 
@@ -191,7 +200,7 @@ class Functional(Operator):
     def derivative(self, point):
         """Return the derivative operator in the given point.
 
-        This function returns the linear operator given by::
+        This function returns the linear operator given by ::
 
             self.derivative(point)(x) == self.gradient(point).inner(x)
 
@@ -216,17 +225,17 @@ class Functional(Operator):
         Parameters
         ----------
         translation : `domain` element
-            Element in the domain of the functional
+            Element in the domain of the functional.
 
         Returns
         -------
         out : `FunctionalTranslation`
-            The functional ``f(. - translation)``
+            The functional ``f(. - translation)``.
         """
         return FunctionalTranslation(self, shift)
 
     def bregman(self, point, subgrad=None):
-        """Return the Bregman distance functional.
+        r"""Return the Bregman distance functional.
 
         Parameters
         ----------
@@ -250,7 +259,7 @@ class Functional(Operator):
         functional :math:`D_f(\cdot, y)` in a point :math:`x` is given by
 
         .. math::
-            D_f(x, y) = f(x) - f(y) - \\langle \partial f(y), x - y \\rangle.
+            D_f(x, y) = f(x) - f(y) - \langle \partial f(y), x - y \rangle.
 
 
         For mathematical details, see `[Bur2016]`_.
@@ -533,6 +542,8 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
 
             return proximal_left_scalar_mult
 
+    # __repr__ implemented by OperatorLeftScalarMult
+
 
 class FunctionalRightScalarMult(Functional, OperatorRightScalarMult):
 
@@ -596,6 +607,8 @@ class FunctionalRightScalarMult(Functional, OperatorRightScalarMult):
         """
         return proximal_arg_scaling(self.functional.proximal, self.scalar)
 
+    # __repr__ implemented by OperatorRightScalarMult
+
 
 class FunctionalComp(Functional, OperatorComp):
 
@@ -633,6 +646,7 @@ class FunctionalComp(Functional, OperatorComp):
         """Gradient of the compositon according to the chain rule."""
         func = self.left
         op = self.right
+        comp = self
 
         class FunctionalCompositionGradient(Operator):
 
@@ -658,7 +672,24 @@ class FunctionalComp(Functional, OperatorComp):
                 else:
                     return (op.adjoint * func.gradient * op).derivative(x)
 
+            def __repr__(self):
+                """Return ``repr(self)``.
+
+                Examples
+                --------
+                >>> space = odl.rn(2)
+                >>> l2norm = odl.solvers.LpNorm(space, exponent=2)
+                >>> op = odl.ScalingOperator(space, 3.0)
+                >>> (l2norm * op).gradient
+                FunctionalComp(
+                    LpNorm(rn(2), exponent=2.0), ScalingOperator(rn(2), scalar=3.0)
+                ).gradient
+                """
+                return attribute_repr_string(repr(comp), 'gradient')
+
         return FunctionalCompositionGradient()
+
+    # __repr__ implemented by OperatorComp
 
 
 class FunctionalRightVectorMult(Functional, OperatorRightVectorMult):
@@ -705,6 +736,8 @@ class FunctionalRightVectorMult(Functional, OperatorRightVectorMult):
         """
         return self.functional.convex_conj * (1.0 / self.vector)
 
+    # __repr__ implemented by OperatorRightVectorMult
+
 
 class FunctionalSum(Functional, OperatorSum):
 
@@ -739,6 +772,8 @@ class FunctionalSum(Functional, OperatorSum):
     def gradient(self):
         """Gradient operator of functional sum."""
         return self.left.gradient + self.right.gradient
+
+    # __repr__ implemented by `OperatorSum`
 
 
 class FunctionalScalarSum(FunctionalSum):
@@ -887,14 +922,18 @@ class FunctionalTranslation(Functional):
             linear_term=self.translation)
 
     def __repr__(self):
-        """Return ``repr(self)``."""
-        return '{!r}.translated({!r})'.format(self.functional,
-                                              self.translation)
+        """Return ``repr(self)``.
 
-    def __str__(self):
-        """Return ``str(self)``."""
-        return '{}.translated({})'.format(self.functional,
-                                          self.translation)
+        Examples
+        --------
+        >>> space = odl.rn(2)
+        >>> l2norm = odl.solvers.LpNorm(space, exponent=2)
+        >>> x = space.one()
+        >>> l2norm.translated(x)
+        LpNorm(rn(2), exponent=2.0).translated([ 1.,  1.])
+        """
+        return method_repr_string(repr(self.functional), 'translated',
+                                  [array_str(self.translation)])
 
 
 class InfimalConvolution(Functional):
@@ -964,14 +1003,20 @@ class InfimalConvolution(Functional):
         return self.left.convex_conj + self.right.convex_conj
 
     def __repr__(self):
-        """Return ``repr(self)``."""
-        posargs = [self.left, self.right]
-        inner_str = signature_string(posargs, [], sep=',\n')
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
+        """Return ``repr(self)``.
 
-    def __str__(self):
-        """Return ``str(self)``."""
-        return repr(self)
+        Examples
+        --------
+        >>> space = odl.rn(3)
+        >>> l1 = odl.solvers.L1Norm(space)
+        >>> l2 = odl.solvers.L2Norm(space)
+        >>> inf_conv = odl.solvers.InfimalConvolution(l1, l2)
+        >>> inf_conv
+        InfimalConvolution(L1Norm(rn(3)), L2Norm(rn(3)))
+        """
+        posargs = [self.left, self.right]
+        inner_parts = signature_string_parts(posargs, [])
+        return repr_string(self.__class__.__name__, inner_parts)
 
 
 class FunctionalQuadraticPerturb(Functional):
@@ -1005,10 +1050,10 @@ class FunctionalQuadraticPerturb(Functional):
                 "Complex-valued quadratic coefficient is not supported.")
         self.__quadratic_coeff = quadratic_coeff.real
 
-        if linear_term is not None:
-            self.__linear_term = func.domain.element(linear_term)
+        if linear_term is None:
+            self.__linear_term = None
         else:
-            self.__linear_term = func.domain.zero()
+            self.__linear_term = func.domain.element(linear_term)
 
         if linear_term is None:
             grad_lipschitz = func.grad_lipschitz
@@ -1048,16 +1093,26 @@ class FunctionalQuadraticPerturb(Functional):
 
     def _call(self, x):
         """Apply the functional to the given point."""
-        return (self.functional(x) +
-                self.quadratic_coeff * x.inner(x) +
-                x.inner(self.linear_term) + self.constant)
+        val = (self.functional(x) +
+               self.quadratic_coeff * x.inner(x) +
+               self.constant)
+        if self.linear_term is not None:
+            val += x.inner(self.linear_term)
+
+        return val
 
     @property
     def gradient(self):
         """Gradient operator of the functional."""
-        return (self.functional.gradient +
-                (2 * self.quadratic_coeff) * IdentityOperator(self.domain) +
-                ConstantOperator(self.linear_term))
+        ops = [self.functional.gradient]
+        if self.quadratic_coeff != 0:
+            ops.append(
+                (2 * self.quadratic_coeff) * IdentityOperator(self.domain))
+        if self.linear_term is not None:
+            ops.append(ConstantOperator(self.linear_term))
+
+        #TODO: check repr example
+        return sum(ops)
 
     @property
     def proximal(self):
@@ -1067,8 +1122,7 @@ class FunctionalQuadraticPerturb(Functional):
                             ''.format(self.quadratic_coeff))
 
         return proximal_quadratic_perturbation(
-            self.functional.proximal,
-            a=self.quadratic_coeff, u=self.linear_term)
+            self.functional.proximal, self.quadratic_coeff, self.linear_term)
 
     @property
     def convex_conj(self):
@@ -1077,11 +1131,11 @@ class FunctionalQuadraticPerturb(Functional):
         Notes
         -----
         Given a functional :math:`f`, the convex conjugate of a linearly
-        perturbed version :math:`f(x) + <y, x>` is given by a translation of
-        the convex conjugate of :math:`f`:
+        perturbed version :math:`f(x) + \langle y, x\rangle` is given by a
+        translation of the convex conjugate of :math:`f`:
 
         .. math::
-            (f + \\langle y, \cdot \\rangle)^* (x^*) = f^*(x^* - y).
+            (f + \langle y, \cdot \rangle)^* (x^*) = f^*(x^* - y).
 
         For reference on the identity used, see `[KP2015]`_. Moreover, the
         convex conjugate of :math:`f + c` is by definition
@@ -1100,18 +1154,48 @@ class FunctionalQuadraticPerturb(Functional):
         .. _[KP2015]:  https://arxiv.org/abs/1406.5429
         """
         if self.quadratic_coeff == 0:
-            return (self.functional.convex_conj.translated(
-                self.linear_term) - self.constant)
+            cconj = self.functional.convex_conj
+            if self.linear_term is not None:
+                cconj = cconj.translated(self.linear_term)
+            if self.constant != 0:
+                cconj = cconj - self.constant
+            return cconj
         else:
+            # TODO(kohr-h): Implement this
             return super(FunctionalQuadraticPerturb, self).convex_conj
 
     def __repr__(self):
-        """Return ``repr(self)``."""
-        return '{}({!r}, {!r}, {!r}, {!r})'.format(self.__class__.__name__,
-                                                   self.functional,
-                                                   self.quadratic_coeff,
-                                                   self.linear_term,
-                                                   self.constant)
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> space = odl.rn(2)
+        >>> l1 = odl.solvers.L1Norm(space)
+        >>> func = odl.solvers.FunctionalQuadraticPerturb(
+        ...     l1, quadratic_coeff=2.0, constant=-1)
+        >>> func
+        FunctionalQuadraticPerturb(
+            L1Norm(rn(2)),
+            quadratic_coeff=2.0,
+            constant=-1.0
+        )
+        >>> func = odl.solvers.FunctionalQuadraticPerturb(
+        ...     l1, quadratic_coeff=2.0, linear_term=space.one())
+        >>> func
+        FunctionalQuadraticPerturb(
+            L1Norm(rn(2)),
+            quadratic_coeff=2.0,
+            linear_term=rn(2).element([ 1.,  1.])
+        )
+        """
+        posargs = [self.functional]
+        optargs = [('quadratic_coeff', self.quadratic_coeff, 0),
+                   ('linear_term', self.linear_term, None),
+                   ('constant', self.constant, 0)]
+        with npy_printoptions(precision=REPR_PRECISION):
+            inner_parts = signature_string_parts(posargs, optargs)
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -1158,14 +1242,14 @@ class FunctionalProduct(Functional, OperatorPointwiseProduct):
 
     @property
     def gradient(self):
-        """Gradient operator of the functional.
+        r"""Gradient operator of the functional.
 
         Notes
         -----
         The derivative is computed using Leibniz's rule:
 
         .. math::
-            [\\nabla (f g)](p) = g(p) [\\nabla f](p) + f(p) [\\nabla g](p)
+            [\nabla (f g)](p) = g(p) [\nabla f](p) + f(p) [\nabla g](p)
         """
         func = self
 
@@ -1236,15 +1320,15 @@ class FunctionalQuotient(Functional):
 
     @property
     def gradient(self):
-        """Gradient operator of the functional.
+        r"""Gradient operator of the functional.
 
         Notes
         -----
         The derivative is computed using the quotient rule:
 
         .. math::
-            [\\nabla (f / g)](p) = (g(p) [\\nabla f](p) -
-                                    f(p) [\\nabla g](p)) / g(p)^2
+            [\nabla (f / g)](p) = (g(p) [\nabla f](p) -
+                                    f(p) [\nabla g](p)) / g(p)^2
         """
         func = self
 
@@ -1275,7 +1359,7 @@ class FunctionalQuotient(Functional):
 
 class FunctionalDefaultConvexConjugate(Functional):
 
-    """The `Functional` representing ``F^*``, the convex conjugate of ``F``.
+    r"""The `Functional` representing ``F^*``, the convex conjugate of ``F``.
 
     This class does not provide a way to evaluate the functional, it is rather
     intended to be used for its `proximal`.
@@ -1285,8 +1369,8 @@ class FunctionalDefaultConvexConjugate(Functional):
     The proximal is found by using the Moreau identity
 
     .. math::
-        \\text{prox}_{\\sigma F^*}(y) = y -
-        \\sigma \\text{prox}_{F / \\sigma}(y / \\sigma)
+        \text{prox}_{\sigma F^*}(y) = y -
+        \sigma \text{prox}_{F / \sigma}(y / \sigma)
 
     which allows the proximal of the convex conjugate to be calculated without
     explicit knowledge about the convex conjugate itself.
@@ -1334,7 +1418,7 @@ class FunctionalDefaultConvexConjugate(Functional):
 
 
 class BregmanDistance(Functional):
-    """The Bregman distance functional.
+    r"""The Bregman distance functional.
 
     The Bregman distance, also refered to as the Bregman divergence, is similar
     to a metric but satisfies neither the triangle inequality nor symmetry.
@@ -1348,7 +1432,7 @@ class BregmanDistance(Functional):
     :math:`D_f(\cdot, y)` in a point :math:`x` is given by
 
     .. math::
-        D_f(x, y) = f(x) - f(y) - \\langle \partial f(y), x - y \\rangle.
+        D_f(x, y) = f(x) - f(y) - \langle \partial f(y), x - y \rangle.
 
 
     For mathematical details, see `[Bur2016]`_.

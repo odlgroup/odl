@@ -2379,12 +2379,11 @@ class QuadraticForm(Functional):
             constant=2.0
         )
         """
-        posargs = []
         optargs = [('operator', self.operator, None),
                    ('vector', self.vector, None),
                    ('constant', self.constant, 0)]
         with npy_printoptions(precision=REPR_PRECISION):
-            inner_parts = signature_string_parts(posargs, optargs)
+            inner_parts = signature_string_parts([], optargs)
         return repr_string(self.__class__.__name__, inner_parts,
                            allow_mixed_seps=False)
 

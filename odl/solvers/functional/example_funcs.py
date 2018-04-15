@@ -15,28 +15,31 @@ import numpy as np
 from odl.operator import MatrixOperator, Operator
 from odl.solvers.functional.functional import Functional
 from odl.space.base_tensors import TensorSpace
+from odl.util import (
+    signature_string_parts, repr_string, attribute_repr_string,
+    npy_printoptions, REPR_PRECISION)
 
 __all__ = ('RosenbrockFunctional',)
 
 
 class RosenbrockFunctional(Functional):
 
-    """The well-known Rosenbrock function on ``R^n``.
+    r"""The well-known Rosenbrock function on ``R^n``.
 
-    The `Rosenbrock function`_ is often used as a test problem in
-    smooth optimization.
+    Minimization of the `Rosenbrock function`_ is often used as a test
+    problem in smooth optimization.
 
     Notes
     -----
-    The functional is defined for :math:`x \\in \\mathbb{R}^n`,
-    :math:`n \\geq 2`, as
+    The functional is defined for :math:`x \in \mathbb{R}^n`,
+    :math:`n \geq 2`, as
 
     .. math::
         \sum_{i=1}^{n - 1} c (x_{i+1} - x_i^2)^2 + (1 - x_i)^2,
 
     where :math:`c` is a constant, usually set to 100, which determines how
     "ill-behaved" the function should be.
-    The global minimum lies at :math:`x = (1, \\dots, 1)`, independent
+    The global minimum lies at :math:`x = (1, \dots, 1)`, independently
     of :math:`c`.
 
     There are two definitions of the n-dimensional Rosenbrock function found in
@@ -66,7 +69,7 @@ class RosenbrockFunctional(Functional):
         Initialize and call the functional:
 
         >>> r2 = odl.rn(2)
-        >>> functional = RosenbrockFunctional(r2)
+        >>> functional = odl.solvers.RosenbrockFunctional(r2)
         >>> functional([1, 1])  # optimum is 0 at [1, 1]
         0.0
         >>> functional([0, 1])
@@ -75,14 +78,14 @@ class RosenbrockFunctional(Functional):
         The functional can also be used in higher dimensions:
 
         >>> r5 = odl.rn(5)
-        >>> functional = RosenbrockFunctional(r5)
+        >>> functional = odl.solvers.RosenbrockFunctional(r5)
         >>> functional([1, 1, 1, 1, 1])
         0.0
 
         We can change how much the function is ill-behaved via ``scale``:
 
         >>> r2 = odl.rn(2)
-        >>> functional = RosenbrockFunctional(r2, scale=2)
+        >>> functional = odl.solvers.RosenbrockFunctional(r2, scale=2)
         >>> functional([1, 1])  # optimum is still 0 at [1, 1]
         0.0
         >>> functional([0, 1])  # much lower variation
@@ -154,7 +157,36 @@ class RosenbrockFunctional(Functional):
                 matrix[0, 0] = 2 + 12 * c * x[0] ** 2 - 4 * c * x[1]
                 return MatrixOperator(matrix, self.domain, self.range)
 
+            def __repr__(self):
+                """Return ``repr(self)``.
+
+                Examples
+                --------
+                >>> r2 = odl.rn(2)
+                >>> functional = odl.solvers.RosenbrockFunctional(r2, scale=2)
+                >>> functional.gradient
+                RosenbrockFunctional(rn(2), scale=2.0).gradient
+                """
+                return attribute_repr_string(repr(functional), 'gradient')
+
         return RosenbrockGradient()
+
+    def __repr__(self):
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> r2 = odl.rn(2)
+        >>> functional = odl.solvers.RosenbrockFunctional(r2, scale=2)
+        >>> functional
+        RosenbrockFunctional(rn(2), scale=2.0)
+        """
+        posargs = [self.domain]
+        optargs = [('scale', self.scale, 100)]
+        with npy_printoptions(precision=REPR_PRECISION):
+            inner_parts = signature_string_parts(posargs, optargs)
+
+        return repr_string(self.__class__.__name__, inner_parts)
 
 
 if __name__ == '__main__':
