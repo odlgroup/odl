@@ -275,6 +275,7 @@ def getshearletsystem2D(rows, cols, nScales, shearLevels=None,
     dualFrameWeights = j.eval('shearletsystem.dualFrameWeights')
     RMS = j.eval('shearletsystem.RMS')
     isComplex = j.eval('shearletsystem.isComplex')
+    j.eval('shearletsystem = 0')
     return Shearletsystem2D(shearlets, size, shearLevels, full, nShearlets,
                             shearletIdxs, dualFrameWeights, RMS, isComplex)
 
