@@ -18,7 +18,7 @@ import numpy as np
 import pytest
 
 import odl
-from odl.util.testutils import almost_equal, never_skip, simple_fixture
+from odl.util.testutils import never_skip, simple_fixture
 
 skip_if_no_pyfftw = pytest.mark.skipif("not odl.trafos.PYFFTW_AVAILABLE",
                                        reason='pyfftw not available')

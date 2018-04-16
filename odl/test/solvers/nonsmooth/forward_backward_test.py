@@ -14,7 +14,7 @@ import pytest
 
 import odl
 from odl.solvers import forward_backward_pd
-from odl.util.testutils import all_almost_equal, almost_equal, noise_element
+from odl.util.testutils import all_almost_equal, noise_element
 
 # Places for the accepted error when comparing results
 HIGH_ACCURACY = 8

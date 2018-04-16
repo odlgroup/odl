@@ -15,8 +15,7 @@ import pytest
 
 import odl
 from odl.util.testutils import (
-    all_almost_equal, all_equal, almost_equal, noise_element, noise_elements,
-    simple_fixture)
+    all_almost_equal, all_equal, noise_element, noise_elements, simple_fixture)
 
 exponent = simple_fixture('exponent', [2.0, 1.0, float('inf'), 0.5, 1.5])
 

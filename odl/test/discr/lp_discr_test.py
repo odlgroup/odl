@@ -18,7 +18,7 @@ from odl.space.base_tensors import TensorSpace
 from odl.space.npy_tensors import NumpyTensor
 from odl.space.weighting import ConstWeighting
 from odl.util.testutils import (
-    all_almost_equal, all_equal, almost_equal, noise_elements, simple_fixture)
+    all_almost_equal, all_equal, noise_elements, simple_fixture)
 
 USE_ARRAY_UFUNCS_INTERFACE = (parse_version(np.__version__) >=
                               parse_version('1.13'))

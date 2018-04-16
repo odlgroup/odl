@@ -17,7 +17,7 @@ import odl
 from odl.discr.diff_ops import (
     Divergence, Gradient, Laplacian, PartialDerivative, finite_diff)
 from odl.util.testutils import (
-    all_almost_equal, all_equal, almost_equal, noise_element, simple_fixture)
+    all_almost_equal, all_equal, noise_element, simple_fixture)
 
 # --- pytest fixtures --- #
 

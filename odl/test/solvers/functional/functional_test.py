@@ -18,7 +18,7 @@ from odl.operator import OpTypeError
 from odl.solvers.functional.default_functionals import (
     KullbackLeiblerConvexConj)
 from odl.util.testutils import (
-    all_almost_equal, almost_equal, noise_element, simple_fixture)
+    all_almost_equal, noise_element, simple_fixture)
 
 # TODO: maybe add tests for if translations etc. belongs to the wrong space.
 # These tests don't work as intended now, since casting is possible between

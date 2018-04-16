@@ -555,12 +555,6 @@ class PointwiseInner(PointwiseTensorFieldOperator):
 
             """Adjoint of the point-wise inner product operator."""
 
-            def __init__(self):
-                """Initialize a new instance."""
-                super(PointwiseInnerAdjoint, self).__init__(
-                    domain=op.range, range=op.domain,
-                    base_space=op.base_space, linear=True)
-
             def _call(self, f, out):
                 """Implement ``self(vf, out)``."""
                 for vfi, oi, wi in zip(op.vecfield, out, op.weights):
@@ -578,7 +572,8 @@ class PointwiseInner(PointwiseTensorFieldOperator):
                 """
                 return op
 
-        return PointwiseInnerAdjoint()
+        return PointwiseInnerAdjoint(self.range, self.domain,
+                                     base_space=self.base_space, linear=True)
 
     def __repr__(self):
         """Return ``repr(self)``.
@@ -1540,11 +1535,6 @@ class FlatteningOperator(Operator):
                 FlatteningOperatorInverse(x) == reshape(x, orig_shape)
             """
 
-            def __init__(self):
-                """Initialize a new instance."""
-                super(FlatteningOperatorInverse, self).__init__(
-                    op.range, op.domain, linear=True)
-
             def _call(self, x):
                 """Reshape ``x`` back to n-dim. shape."""
                 return np.reshape(x.asarray(), self.range.shape,
@@ -1573,7 +1563,7 @@ class FlatteningOperator(Operator):
                 """
                 return attribute_repr_string(repr(op), 'inverse')
 
-        return FlatteningOperatorInverse()
+        return FlatteningOperatorInverse(self.range, self.domain, linear=True)
 
     def __repr__(self):
         """Return ``repr(self)``.

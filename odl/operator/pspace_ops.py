@@ -683,53 +683,43 @@ class ComponentProjection(Operator):
 
     @property
     def adjoint(self):
-        """Adjoint operator extending by zeros from subspace to full space."""
+        """Adjoint operator extending by zeros from subspace to full space.
+
+        Examples
+        --------
+        >>> r1 = odl.rn(1)
+        >>> r2 = odl.rn(2)
+        >>> r3 = odl.rn(3)
+        >>> pspace = odl.ProductSpace(r1, r2, r3)
+        >>> x = pspace.element([[1],
+        ...                     [2, 3],
+        ...                     [4, 5, 6]])
+
+        Projection on the 0-th component:
+
+        >>> proj_adj = odl.ComponentProjection(pspace, 0).adjoint
+        >>> proj_adj(x[0])
+        ProductSpace(rn(1), rn(2), rn(3)).element([
+            [ 1.],
+            [ 0.,  0.],
+            [ 0.,  0.,  0.]
+        ])
+
+        Projection on a subspace corresponding to indices 0 and 2:
+
+        >>> proj_adj = odl.ComponentProjection(pspace, [0, 2]).adjoint
+        >>> proj_adj(x[[0, 2]])
+        ProductSpace(rn(1), rn(2), rn(3)).element([
+            [ 1.],
+            [ 0.,  0.],
+            [ 4.,  5.,  6.]
+        ])
+        """
         op = self
 
         class ComponentProjectionAdjoint(Operator):
 
             """Adjoint operator to `ComponentProjection`."""
-
-            def __init__(self):
-                """Initialize a new instance.
-
-                Examples
-                --------
-                >>> r1 = odl.rn(1)
-                >>> r2 = odl.rn(2)
-                >>> r3 = odl.rn(3)
-                >>> pspace = odl.ProductSpace(r1, r2, r3)
-                >>> x = pspace.element([[1],
-                ...                     [2, 3],
-                ...                     [4, 5, 6]])
-
-                Projection on the 0-th component:
-
-                >>> proj_adj = odl.ComponentProjection(pspace, 0).adjoint
-                >>> proj_adj(x[0])
-                ProductSpace(rn(1), rn(2), rn(3)).element([
-                    [ 1.],
-                    [ 0.,  0.],
-                    [ 0.,  0.,  0.]
-                ])
-
-                Projection on a subspace corresponding to indices 0 and 2:
-
-                >>> proj_adj = odl.ComponentProjection(pspace, [0, 2]).adjoint
-                >>> proj_adj(x[[0, 2]])
-                ProductSpace(rn(1), rn(2), rn(3)).element([
-                    [ 1.],
-                    [ 0.,  0.],
-                    [ 4.,  5.,  6.]
-                ])
-                """
-                super(ComponentProjectionAdjoint, self).__init__(
-                    op.range, op.domain, linear=True)
-
-            @property
-            def index(self):
-                """Index, indices or slice defining the subspace."""
-                return op.index
 
             def _call(self, x, out=None):
                 """Extend ``x`` to the full space."""
@@ -738,8 +728,13 @@ class ComponentProjection(Operator):
                 else:
                     out.set_zero()
 
-                out[self.index] = x
+                out[op.index] = x
                 return out
+
+            @property
+            def adjoint(self):
+                """Adjoint of the adjoint, the original operator."""
+                return op
 
             def __repr__(self):
                 """Return ``repr(self)``.
@@ -752,7 +747,7 @@ class ComponentProjection(Operator):
                 """
                 return attribute_repr_string(repr(op), 'adjoint')
 
-        return ComponentProjectionAdjoint()
+        return ComponentProjectionAdjoint(self.range, self.domain, linear=True)
 
     def __repr__(self):
         """Return ``repr(self)``.

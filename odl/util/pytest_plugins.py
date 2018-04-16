@@ -15,10 +15,10 @@ import os
 
 import numpy as np
 
-import odl
 from odl.space.entry_points import tensor_space_impl_names
 from odl.trafos.backends import PYFFTW_AVAILABLE, PYWT_AVAILABLE
 from odl.util.testutils import simple_fixture
+from odl.util.ufuncs import UFUNCS
 
 try:
     from pytest import fixture
@@ -32,6 +32,7 @@ except ImportError:
 
 @fixture(autouse=True)
 def add_doctest_np_odl(doctest_namespace):
+    import odl
     doctest_namespace['np'] = np
     doctest_namespace['odl'] = odl
 
@@ -113,7 +114,7 @@ scalar_dtype = simple_fixture(name='dtype',
 
 elem_order = simple_fixture(name='order', params=[None, 'C', 'F'])
 
-ufunc = simple_fixture('ufunc', [p[0] for p in odl.util.ufuncs.UFUNCS])
+ufunc = simple_fixture('ufunc', [p[0] for p in UFUNCS])
 reduction = simple_fixture('reduction', ['sum', 'prod', 'min', 'max'])
 
 # More complicated ones with non-trivial documentation

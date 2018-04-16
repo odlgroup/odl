@@ -14,7 +14,7 @@ import pytest
 import odl
 from odl.discr.grid import sparse_meshgrid
 from odl.set.domain import IntervalProd
-from odl.util.testutils import all_equal, almost_equal
+from odl.util.testutils import all_equal
 
 
 def random_point(set_):

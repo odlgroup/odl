@@ -18,7 +18,7 @@ import odl
 from odl.tomo.backends import ASTRA_VERSION
 from odl.tomo.util.testutils import (
     skip_if_no_astra, skip_if_no_astra_cuda, skip_if_no_skimage)
-from odl.util.testutils import all_almost_equal, almost_equal, simple_fixture
+from odl.util.testutils import all_almost_equal, simple_fixture
 
 # --- pytest fixtures --- #
 

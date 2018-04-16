@@ -12,7 +12,8 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 
-from odl.operator.default_ops import ConstantOperator, IdentityOperator
+from odl.operator.default_ops import (
+    ConstantOperator, IdentityOperator, ScalingOperator)
 from odl.operator.operator import (
     Operator, OperatorComp, OperatorLeftScalarMult, OperatorPointwiseProduct,
     OperatorRightScalarMult, OperatorRightVectorMult, OperatorSum)
@@ -652,11 +653,6 @@ class FunctionalComp(Functional, OperatorComp):
 
             """Gradient of the compositon according to the chain rule."""
 
-            def __init__(self):
-                """Initialize a new instance."""
-                super(FunctionalCompositionGradient, self).__init__(
-                    op.domain, op.domain, linear=False)
-
             def _call(self, x):
                 """Apply the gradient operator to the given point."""
                 return op.derivative(x).adjoint(func.gradient(op(x)))
@@ -687,7 +683,8 @@ class FunctionalComp(Functional, OperatorComp):
                 """
                 return attribute_repr_string(repr(comp), 'gradient')
 
-        return FunctionalCompositionGradient()
+        return FunctionalCompositionGradient(self.domain, self.domain,
+                                             linear=False)
 
     # __repr__ implemented by OperatorComp
 
@@ -721,6 +718,7 @@ class FunctionalRightVectorMult(Functional, OperatorRightVectorMult):
 
     @property
     def functional(self):
+        """The functional in the product."""
         return self.operator
 
     @property
@@ -1104,15 +1102,18 @@ class FunctionalQuadraticPerturb(Functional):
     @property
     def gradient(self):
         """Gradient operator of the functional."""
-        ops = [self.functional.gradient]
+        ops = []
         if self.quadratic_coeff != 0:
-            ops.append(
-                (2 * self.quadratic_coeff) * IdentityOperator(self.domain))
+            ops.append(ScalingOperator(self.domain, 2 * self.quadratic_coeff))
         if self.linear_term is not None:
             ops.append(ConstantOperator(self.linear_term))
 
-        #TODO: check repr example
-        return sum(ops)
+        # Don't use `sum` since it adds an explicit zero element
+        grad = self.functional.gradient
+        for op in ops:
+            grad = grad + op
+
+        return grad
 
     @property
     def proximal(self):
@@ -1197,14 +1198,6 @@ class FunctionalQuadraticPerturb(Functional):
         return repr_string(self.__class__.__name__, inner_parts,
                            allow_mixed_seps=False)
 
-    def __str__(self):
-        """Return ``str(self)``."""
-        return '{}({}, {}, {}, {})'.format(self.__class__.__name__,
-                                           self.functional,
-                                           self.quadratic_coeff,
-                                           self.linear_term,
-                                           self.constant)
-
 
 class FunctionalProduct(Functional, OperatorPointwiseProduct):
 
@@ -1220,7 +1213,7 @@ class FunctionalProduct(Functional, OperatorPointwiseProduct):
 
         Examples
         --------
-        Construct the functional || . ||_2^2 * 3
+        Construct the functional || . ||_2^2 * 3:
 
         >>> space = odl.rn(2)
         >>> func1 = odl.solvers.L2NormSquared(space)
@@ -1261,8 +1254,26 @@ class FunctionalProduct(Functional, OperatorPointwiseProduct):
                 return (func.right(x) * func.left.gradient(x) +
                         func.left(x) * func.right.gradient(x))
 
+            def __repr__(self):
+                """Return ``repr(self)``.
+
+                Examples
+                --------
+                >>> space = odl.rn(2)
+                >>> func1 = odl.solvers.L2NormSquared(space)
+                >>> func2 = odl.solvers.ConstantFunctional(space, 3)
+                >>> prod = odl.solvers.FunctionalProduct(func1, func2)
+                FunctionalProduct(
+                    L2NormSquared(rn(2)),
+                    ConstantFunctional(rn(2), constant=3.0)
+                ).gradient
+                """
+                return attribute_repr_string(repr(func), 'gradient')
+
         return FunctionalProductGradient(self.domain, self.domain,
                                          linear=False)
+
+    # __repr__ implemented by OperatorPointwiseProduct
 
 
 class FunctionalQuotient(Functional):
@@ -1343,18 +1354,42 @@ class FunctionalQuotient(Functional):
                 return ((1 / divisorx) * func.dividend.gradient(x) +
                         (- dividendx / divisorx**2) * func.divisor.gradient(x))
 
+            def __repr__(self):
+                """Return ``repr(self)``.
+
+                Examples
+                --------
+                >>> space = odl.rn(2)
+                >>> func1 = odl.solvers.L2Norm(space)
+                >>> func2 = odl.solvers.ConstantFunctional(space, 5)
+                >>> prod = odl.solvers.FunctionalQuotient(func1, func2)
+                >>> prod.gradient
+                FunctionalQuotient(
+                    L2Norm(rn(2)), ConstantFunctional(rn(2), constant=5.0)
+                ).gradient
+                """
+                return attribute_repr_string(repr(func), 'gradient')
+
         return FunctionalQuotientGradient(self.domain, self.domain,
                                           linear=False)
 
     def __repr__(self):
-        """Return ``repr(self)``."""
-        return '{}({!r}, {!r})'.format(self.__class__.__name__,
-                                       self.dividend, self.divisor)
+        """Return ``repr(self)``.
 
-    def __str__(self):
-        """Return ``str(self)``."""
-        return '{}({}, {})'.format(self.__class__.__name__,
-                                   self.dividend, self.divisor)
+        Examples
+        --------
+        >>> space = odl.rn(2)
+        >>> func1 = odl.solvers.L2Norm(space)
+        >>> func2 = odl.solvers.ConstantFunctional(space, 5)
+        >>> prod = odl.solvers.FunctionalQuotient(func1, func2)
+        >>> prod
+        FunctionalQuotient(
+            L2Norm(rn(2)), ConstantFunctional(rn(2), constant=5.0)
+        )
+        """
+        posargs = [self.dividend, self.divisor]
+        inner_parts = signature_string_parts(posargs, [])
+        return repr_string(self.__class__.__name__, inner_parts)
 
 
 class FunctionalDefaultConvexConjugate(Functional):
@@ -1399,22 +1434,31 @@ class FunctionalDefaultConvexConjugate(Functional):
 
     @property
     def proximal(self):
-        """Proximal factory using the Moreu identity.
+        """Proximal factory using the Moreau identity.
 
         Returns
         -------
         proximal : proximal_convex_conj
             Proximal computed using the Moreu identity
+
+        See Also
+        --------
+        odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj
         """
         return proximal_convex_conj(self.convex_conj.proximal)
 
     def __repr__(self):
-        """Return ``repr(self)``."""
-        return '{!r}.convex_conj'.format(self.convex_conj)
+        """Return ``repr(self)``.
 
-    def __str__(self):
-        """Return ``str(self)``."""
-        return '{}.convex_conj'.format(self.convex_conj)
+        Examples
+        --------
+        >>> space = odl.rn(2)
+        >>> func = odl.solvers.L2Norm(space)
+        >>> cconj = FunctionalDefaultConvexConjugate(func)
+        >>> cconj
+        L2Norm(rn(2)).convex_conj
+        """
+        return attribute_repr_string(repr(self.convex_conj), 'convex_conj')
 
 
 class BregmanDistance(Functional):
@@ -1433,7 +1477,6 @@ class BregmanDistance(Functional):
 
     .. math::
         D_f(x, y) = f(x) - f(y) - \langle \partial f(y), x - y \rangle.
-
 
     For mathematical details, see `[Bur2016]`_.
 
@@ -1472,22 +1515,22 @@ class BregmanDistance(Functional):
         >>> space = odl.uniform_discr(0, 1, 10)
         >>> l2_squared = odl.solvers.L2NormSquared(space)
         >>> point = space.one()
-        >>> Bregman_dist = odl.solvers.BregmanDistance(l2_squared, point)
+        >>> bregman_dist = odl.solvers.BregmanDistance(l2_squared, point)
 
         This is gives squared L2 distance to the given point, ||x - 1||^2:
 
         >>> expected_functional = l2_squared.translated(point)
-        >>> Bregman_dist(space.zero()) == expected_functional(space.zero())
+        >>> bregman_dist(space.zero()) == expected_functional(space.zero())
         True
         """
         if not isinstance(functional, Functional):
-            raise TypeError('`functional` {} not an instance of ``Functional``'
+            raise TypeError('`functional` must be a `Functional`, got {!r}'
                             ''.format(functional))
         self.__functional = functional
 
         if point not in functional.domain:
-            raise ValueError('`point` {} is not in `functional.domain` {}'
-                             ''.format(point, functional.domain))
+            raise ValueError('`point` must be a `functional.domain` element, '
+                             'got {!r}'.format(point, functional.domain))
         self.__point = point
 
         if func_subgrad is None:
@@ -1497,7 +1540,7 @@ class BregmanDistance(Functional):
                 self.__func_subgrad = self.__functional.gradient
             except NotImplementedError:
                 raise NotImplementedError(
-                    '`subgradient` not given, and the `functional` {} does '
+                    '`subgradient` not given, and the `functional` {!r} does '
                     'not implement `functional.gradient`'.format(functional))
         else:
             # Check that given subgradient is an operator that maps from the
@@ -1505,7 +1548,7 @@ class BregmanDistance(Functional):
             if not isinstance(func_subgrad, Operator):
                 raise TypeError(
                     '`func_subgrad` must be an instance of ``Operator``, got '
-                    '{}'.format(func_subgrad))
+                    '{!r}'.format(func_subgrad))
             if func_subgrad.domain != self.__functional.domain:
                 raise ValueError('`func_subgrad.domain` {} is not the same as '
                                  '`functional.domain` {}'
@@ -1565,7 +1608,7 @@ class BregmanDistance(Functional):
 
     @property
     def convex_conj(self):
-        """The convex conjugate"""
+        """The convex conjugate."""
         self._initialize_if_needed()
         return self.__bregman_dist.convex_conj
 
@@ -1582,11 +1625,28 @@ class BregmanDistance(Functional):
         return self.func_subgrad - ConstantOperator(self.__func_subgrad_eval)
 
     def __repr__(self):
-        '''Return ``repr(self)``.'''
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> space = odl.uniform_discr(0, 1, 10)
+        >>> l2_squared = odl.solvers.L2NormSquared(space)
+        >>> point = space.one()
+        >>> bregman_dist = odl.solvers.BregmanDistance(l2_squared, point)
+        >>> bregman_dist
+        BregmanDistance(
+            L2NormSquared(uniform_discr(0.0, 1.0, 10)),
+            uniform_discr(0.0, 1.0, 10).element(
+                [ 1.,  1.,  1., ...,  1.,  1.,  1.]
+            ),
+            func_subgrad=ScalingOperator(uniform_discr(0.0, 1.0, 10), scalar=2.0)
+        )
+        """
         posargs = [self.functional, self.point]
         optargs = [('func_subgrad', self.func_subgrad, None)]
-        inner_str = signature_string(posargs, optargs, sep=',\n')
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
+        inner_parts = signature_string_parts(posargs, optargs)
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
 
 def simple_functional(space, fcall=None, grad=None, prox=None, grad_lip=np.nan,
@@ -1622,14 +1682,14 @@ def simple_functional(space, fcall=None, grad=None, prox=None, grad_lip=np.nan,
 
     Examples
     --------
-    Create squared sum functional on rn:
+    Create squared sum functional on ``rn(3)``:
 
     >>> def f(x):
     ...     return sum(xi**2 for xi in x)
     >>> def dfdx(x):
     ...     return 2 * x
     >>> space = odl.rn(3)
-    >>> func = simple_functional(space, f, grad=dfdx)
+    >>> func = odl.solvers.simple_functional(space, f, grad=dfdx)
     >>> func.domain
     rn(3)
     >>> func.range
@@ -1639,42 +1699,10 @@ def simple_functional(space, fcall=None, grad=None, prox=None, grad_lip=np.nan,
     >>> func.gradient([1, 2, 3])
     rn(3).element([ 2.,  4.,  6.])
     """
-    if grad is not None and not isinstance(grad, Operator):
-        grad_in = grad
-
-        class SimpleFunctionalGradient(Operator):
-
-            """Gradient of a `SimpleFunctional`."""
-
-            def _call(self, x):
-                """Return ``self(x)``."""
-                return grad_in(x)
-
-        grad = SimpleFunctionalGradient(space, space, linear=False)
-
-    if (convex_conj_grad is not None and
-            not isinstance(convex_conj_grad, Operator)):
-        convex_conj_grad_in = convex_conj_grad
-
-        class SimpleFunctionalConvexConjGradient(Operator):
-
-            """Gradient of the convex conj of a  `SimpleFunctional`."""
-
-            def _call(self, x):
-                """Return ``self(x)``."""
-                return convex_conj_grad_in(x)
-
-        convex_conj_grad = SimpleFunctionalConvexConjGradient(
-            space, space, linear=False)
 
     class SimpleFunctional(Functional):
 
         """A simplified functional for examples."""
-
-        def __init__(self):
-            """Initialize an instance."""
-            super(SimpleFunctional, self).__init__(
-                space, linear=linear, grad_lipschitz=grad_lip)
 
         def _call(self, x):
             """Return ``self(x)``."""
@@ -1696,11 +1724,28 @@ def simple_functional(space, fcall=None, grad=None, prox=None, grad_lip=np.nan,
             """Return the gradient of the operator."""
             if grad is None:
                 raise NotImplementedError('gradient not implemented')
-            else:
-                return grad
+
+            if not isinstance(grad, Operator):
+                # Wrap into an operator (assuming `grad` is callable)
+                func = self
+
+                class SimpleFunctionalGradient(Operator):
+
+                    """Gradient of a `SimpleFunctional`."""
+
+                    def _call(self, x):
+                        """Return ``self(x)``."""
+                        return grad(x)
+
+                    def __repr__(self):
+                        """Return ``repr(self)``."""
+                        return attribute_repr_string(repr(func), 'gradient')
+
+                return SimpleFunctionalGradient(space, space, linear=False)
 
         @property
         def convex_conj(self):
+            """Convex conjugate of the simple functional."""
             return simple_functional(space, fcall=convex_conj_fcall,
                                      grad=convex_conj_grad,
                                      prox=convex_conj_prox,
@@ -1711,7 +1756,35 @@ def simple_functional(space, fcall=None, grad=None, prox=None, grad_lip=np.nan,
                                      convex_conj_grad_lip=grad_lip,
                                      linear=linear)
 
-    return SimpleFunctional()
+        def __repr__(self):
+            """Return ``repr(self)``."""
+            posargs = [space]
+            optargs = [('fcall', fcall, None),
+                       ('grad', grad, None),
+                       ('prox', prox, None)]
+
+            # Avoid comparison of NaN
+            grad_lip_given = (not np.isnan(grad_lip))
+            if grad_lip_given:
+                optargs.append(('grad_lip', grad_lip, None))
+
+            optargs.extend([('convex_conj_fcall', convex_conj_fcall, None),
+                            ('convex_conj_grad', convex_conj_grad, None),
+                            ('convex_conj_prox', convex_conj_prox, None)])
+
+            cc_grad_lip_given = (not np.isnan(convex_conj_grad_lip))
+            if cc_grad_lip_given:
+                optargs.append(
+                    ('convex_conj_grad_lip', convex_conj_grad_lip, None))
+
+            optargs.append(('linear', linear, False))
+
+            with npy_printoptions(precision=REPR_PRECISION):
+                inner_parts = signature_string_parts(posargs, optargs)
+            return repr_string('simple_functional', inner_parts,
+                               allow_mixed_seps=False)
+
+    return SimpleFunctional(space, linear=linear, grad_lipschitz=grad_lip)
 
 
 if __name__ == '__main__':

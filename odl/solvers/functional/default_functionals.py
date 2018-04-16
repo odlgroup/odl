@@ -19,7 +19,7 @@ from odl.operator import (
 from odl.solvers.functional.functional import (
     Functional, FunctionalQuadraticPerturb)
 from odl.solvers.nonsmooth.proximal_operators import (
-    combine_proximals, proximal_box_constraint, proximal_const_func,
+    proximal_separable_sum, proximal_box_constraint, proximal_const_func,
     proximal_convex_conj, proximal_convex_conj_kl,
     proximal_convex_conj_kl_cross_entropy, proximal_convex_conj_l1,
     proximal_convex_conj_l1_l2, proximal_convex_conj_l2, proximal_huber,
@@ -194,11 +194,6 @@ class LpNorm(Functional):
 
                 """The gradient operator of this functional."""
 
-                def __init__(self):
-                    """Initialize a new instance."""
-                    super(L1Gradient, self).__init__(
-                        functional.domain, functional.domain, linear=False)
-
                 def _call(self, x):
                     """Return ``self(x)``."""
                     return x.ufuncs.sign()
@@ -223,17 +218,12 @@ class LpNorm(Functional):
                     """
                     return attribute_repr_string(repr(functional), 'gradient')
 
-            return L1Gradient()
+            return L1Gradient(self.domain, self.domain, linear=False)
 
         elif self.exponent == 2:
             class L2Gradient(Operator):
 
                 """The gradient operator of this functional."""
-
-                def __init__(self):
-                    """Initialize a new instance."""
-                    super(L2Gradient, self).__init__(
-                        functional.domain, functional.domain, linear=False)
 
                 def _call(self, x):
                     """Return ``self(x)``."""
@@ -255,7 +245,7 @@ class LpNorm(Functional):
                     """
                     return attribute_repr_string(repr(functional), 'gradient')
 
-            return L2Gradient()
+            return L2Gradient(self.domain, self.domain, linear=False)
 
         else:
             raise NotImplementedError(
@@ -509,18 +499,12 @@ class GroupL1Norm(Functional):
 
             """The gradient operator of the `GroupL1Norm` functional."""
 
-            def __init__(self):
-                """Initialize a new instance."""
-                super(GroupL1Gradient, self).__init__(
-                    functional.domain, functional.domain, linear=False)
-
             def _call(self, x, out):
                 """Return ``self(x)``."""
                 pwnorm_x = functional.pointwise_norm(x)
                 pwnorm_x.ufuncs.sign(out=pwnorm_x)
                 functional.pointwise_norm.derivative(x).adjoint(pwnorm_x,
                                                                 out=out)
-
                 return out
 
             def __repr__(self):
@@ -535,7 +519,7 @@ class GroupL1Norm(Functional):
                 """
                 return attribute_repr_string(repr(functional), 'gradient')
 
-        return GroupL1Gradient()
+        return GroupL1Gradient(self.domain, self.domain, linear=False)
 
     @property
     def proximal(self):
@@ -1412,11 +1396,6 @@ class KullbackLeibler(Functional):
 
             """The gradient operator of this functional."""
 
-            def __init__(self):
-                """Initialize a new instance."""
-                super(KLGradient, self).__init__(
-                    functional.domain, functional.domain, linear=False)
-
             def _call(self, x):
                 """Return ``self(x)``."""
                 if functional.prior is None:
@@ -1436,7 +1415,7 @@ class KullbackLeibler(Functional):
                 """
                 return attribute_repr_string(repr(functional), 'gradient')
 
-        return KLGradient()
+        return KLGradient(self.domain, self.domain, linear=False)
 
     @property
     def proximal(self):
@@ -1580,11 +1559,6 @@ class KullbackLeiblerConvexConj(Functional):
 
             """The gradient operator of this functional."""
 
-            def __init__(self):
-                """Initialize a new instance."""
-                super(KLCCGradient, self).__init__(
-                    functional.domain, functional.domain, linear=False)
-
             def _call(self, x):
                 """Return ``self(x)``."""
                 if functional.prior is None:
@@ -1604,7 +1578,7 @@ class KullbackLeiblerConvexConj(Functional):
                 """
                 return attribute_repr_string(repr(functional), 'gradient')
 
-        return KLCCGradient()
+        return KLCCGradient(self.domain, self.domain, linear=False)
 
     @property
     def proximal(self):
@@ -1763,11 +1737,6 @@ class KullbackLeiblerCrossEntropy(Functional):
 
             """The gradient operator."""
 
-            def __init__(self):
-                """Initialize a new instance."""
-                super(KLCrossEntropyGradient, self).__init__(
-                    functional.domain, functional.domain, linear=False)
-
             def _call(self, x):
                 """Return ``self(x)``."""
                 if functional.prior is None:
@@ -1787,7 +1756,7 @@ class KullbackLeiblerCrossEntropy(Functional):
                 """
                 return attribute_repr_string(repr(functional), 'gradient')
 
-        return KLCrossEntropyGradient()
+        return KLCrossEntropyGradient(self.domain, self.domain, linear=False)
 
     @property
     def proximal(self):
@@ -2082,12 +2051,12 @@ class SeparableSum(Functional):
 
         The proximal operator separates over separable sums.
 
-        Returns
-        -------
-        proximal : combine_proximals
+        See Also
+        --------
+        proximal_separable_sum
         """
         proximals = [func.proximal for func in self.functionals]
-        return combine_proximals(*proximals)
+        return proximal_separable_sum(*proximals)
 
     @property
     def convex_conj(self):
@@ -2261,12 +2230,6 @@ class QuadraticForm(Functional):
 
             """Gradient of a quadratic form."""
 
-            def __init__(self):
-                """Initialize a new instance."""
-                linear = (func.vector is None)
-                super(QuadraticFormGradient, self).__init__(
-                    func.domain, func.domain, linear)
-
             def _call(self, x):
                 """Return ``self(x)``."""
                 if func.operator is None:
@@ -2305,7 +2268,8 @@ class QuadraticForm(Functional):
                 """
                 return attribute_repr_string(repr(func), 'gradient')
 
-        return QuadraticFormGradient()
+        return QuadraticFormGradient(self.domain, self.domain,
+                                     linear=(self.vector is None))
 
     @property
     def convex_conj(self):
@@ -2968,11 +2932,6 @@ class Huber(Functional):
 
             """The gradient operator of this functional."""
 
-            def __init__(self):
-                """Initialize a new instance."""
-                super(HuberGradient, self).__init__(
-                    functional.domain, functional.domain, linear=False)
-
             def _call(self, x):
                 """Return ``self(x)``."""
                 if isinstance(self.domain, ProductSpace):
@@ -3003,7 +2962,7 @@ class Huber(Functional):
                 """
                 return attribute_repr_string(repr(functional), 'gradient')
 
-        return HuberGradient()
+        return HuberGradient(self.domain, self.domain, linear=False)
 
     def __repr__(self):
         """Return ``repr(self)``.

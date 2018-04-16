@@ -17,7 +17,7 @@ from odl.discr.discr_mappings import (
     LinearInterpolation, NearestInterpolation, PerAxisInterpolation,
     PointCollocation)
 from odl.discr.grid import sparse_meshgrid
-from odl.util.testutils import all_almost_equal, all_equal, almost_equal
+from odl.util.testutils import all_almost_equal, all_equal
 
 
 def test_nearest_interpolation_1d_complex(tspace_impl):

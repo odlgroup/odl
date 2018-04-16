@@ -413,11 +413,6 @@ class ResizingOperator(Operator):
             on resizing operators for mathematical details.
             """
 
-            def __init__(self):
-                """Initialize a new instance."""
-                super(ResizingOperatorAdjoint, self).__init__(
-                    op.range, op.domain, linear=True)
-
             def _call(self, x, out):
                 """Implement ``self(x, out)``."""
                 with writable_array(out) as out_arr:
@@ -447,7 +442,7 @@ class ResizingOperator(Operator):
                 """Return ``repr(self)``."""
                 return attribute_repr_string(repr(op), 'adjoint')
 
-        return ResizingOperatorAdjoint()
+        return ResizingOperatorAdjoint(self.range, self.domain, linear=True)
 
     @property
     def inverse(self):

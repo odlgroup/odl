@@ -21,8 +21,7 @@ from odl import (
     OpRangeError, OpTypeError)
 from odl.operator.operator import _dispatch_call_args, _function_signature
 from odl.util.testutils import (
-    all_almost_equal, almost_equal, noise_element, noise_elements,
-    simple_fixture)
+    all_almost_equal, noise_element, noise_elements, simple_fixture)
 from odl.util.utility import getargspec
 
 # --- Fixtures --- #

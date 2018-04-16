@@ -17,16 +17,16 @@ __all__ = ('douglas_rachford_pd',)
 
 def douglas_rachford_pd(x, f, g, L, tau, sigma, niter,
                         callback=None, **kwargs):
-    """Douglas-Rachford primal-dual splitting algorithm.
+    r"""Douglas-Rachford primal-dual splitting algorithm.
 
     Minimizes the sum of several convex functions composed with linear
-    operators::
+    operators, ::
 
         min_x f(x) + sum_i g_i(L_i x)
 
     where ``f``, ``g_i`` are convex functions, ``L_i`` are linear `Operator`'s.
 
-    Can also be used to solve the more general problem::
+    Can also be used to solve the more general problem ::
 
         min_x f(x) + sum_i (g_i @ l_i)(L_i x)
 
@@ -88,19 +88,19 @@ def douglas_rachford_pd(x, f, g, L, tau, sigma, niter,
     can be obtained by setting
 
     .. math::
-        l(x) = 0 \\text{ if } x = 0, \infty \\text{ else.}
+        l(x) = 0 \text{ if } x = 0, \infty \text{ else.}
 
-    To guarantee convergence, the parameters :math:`\\tau`, :math:`\\sigma_i`
+    To guarantee convergence, the parameters :math:`\tau`, :math:`\sigma_i`
     and :math:`L_i` need to satisfy
 
     .. math::
-       \\tau \\sum_{i=1}^n \\sigma_i ||L_i||^2 < 4
+       \tau \sum_{i=1}^n \sigma_i \|L_i\|^2 < 4
 
-    The parameter :math:`\\lambda` needs to satisfy :math:`0 < \\lambda < 2`
+    The parameter :math:`\lambda` needs to satisfy :math:`0 < \lambda < 2`
     and if it is given as a function it needs to satisfy
 
     .. math::
-        \\sum_{n=1}^\infty \\lambda_n (2 - \\lambda_n) = +\infty.
+        \sum_{n=1}^\infty \lambda_n (2 - \lambda_n) = +\infty.
 
     See Also
     --------

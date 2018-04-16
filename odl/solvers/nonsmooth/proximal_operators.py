@@ -13,7 +13,8 @@ are provided for convenience.
 
 For more details see :ref:`proximal_operators` and references therein. For
 more details on proximal operators including how to evaluate the proximal
-operator of a variety of functions see [PB2014].
+operator of a variety of functions see `[PB2014]
+<https://web.stanford.edu/~boyd/papers/prox_algs.html>`_.
 
 References
 ----------
@@ -31,10 +32,11 @@ from odl.operator import (
 from odl.set.space import LinearSpaceElement
 from odl.space import ProductSpace
 
-__all__ = ('combine_proximals', 'proximal_convex_conj', 'proximal_translation',
-           'proximal_arg_scaling', 'proximal_quadratic_perturbation',
-           'proximal_composition', 'proximal_const_func',
-           'proximal_box_constraint', 'proximal_nonnegativity',
+__all__ = ('proximal_separable_sum', 'proximal_convex_conj',
+           'proximal_translation', 'proximal_arg_scaling',
+           'proximal_quadratic_perturbation', 'proximal_composition',
+           'proximal_const_func', 'proximal_box_constraint',
+           'proximal_nonnegativity',
            'proximal_l1', 'proximal_convex_conj_l1',
            'proximal_l2', 'proximal_convex_conj_l2',
            'proximal_l2_squared', 'proximal_convex_conj_l2_squared',
@@ -43,70 +45,70 @@ __all__ = ('combine_proximals', 'proximal_convex_conj', 'proximal_translation',
            'proximal_huber')
 
 
-def combine_proximals(*factory_list):
-    """Combine proximal operators into a diagonal product space operator.
-
-    This assumes the functional to be separable across variables in order to
-    make use of the separable sum property of proximal operators.
+def proximal_separable_sum(*factory_funcs):
+    r"""Return the proximal factory for the separable sum of functionals.
 
     Parameters
     ----------
-    factory_list : sequence of callables
-        Proximal operator factories to be combined.
-
-    Returns
-    -------
-    diag_op : function
-        Returns a diagonal product space operator factory to be initialized
-        with the same step size parameter
-
-    Notes
-    -----
-    That two functionals :math:`F` and :math:`G` are separable across variables
-    means that :math:`F((x, y)) = F(x)` and :math:`G((x, y)) = G(y)`, and in
-    this case the proximal operator of the sum is given by
-
-    .. math::
-        \mathrm{prox}_{\\sigma (F(x) + G(y))}(x, y) =
-        (\mathrm{prox}_{\\sigma F}(x), \mathrm{prox}_{\\sigma G}(y)).
-    """
-
-    def diag_op_factory(sigma):
-        """Diagonal matrix of operators.
-
-        Parameters
-        ----------
-        sigma : positive float or sequence of positive floats
-            Step size parameter(s), if a sequence, the length must match
-            the length of the ``factory_list``.
-
-        Returns
-        -------
-        diag_op : `DiagonalOperator`
-        """
-        if np.isscalar(sigma):
-            sigma = [sigma] * len(factory_list)
-
-        return DiagonalOperator(
-            *[factory(sigmai)
-              for sigmai, factory in zip(sigma, factory_list)])
-
-    return diag_op_factory
-
-
-def proximal_convex_conj(prox_factory):
-    """Calculate the proximal of the dual using Moreau decomposition.
-
-    Parameters
-    ----------
-    prox_factory : callable
-        A factory function that, when called with a step size, returns the
-        proximal operator of ``F``
+    factory_func1, ..., factory_funcN : callable
+        Proximal operator factories, one for each of the functionals in
+        the separable sum.
 
     Returns
     -------
     prox_factory : function
-        Factory for the proximal operator to be initialized
+        Factory for the proximal operator of the separable sum of functionals.
+
+    Notes
+    -----
+    That two functionals :math:`F` and :math:`G` are separable across variables
+    means that :math:`F((x, y)) = F(x)` and :math:`G((x, y)) = G(y)`. In
+    this case, the proximal operator of the sum is given by
+
+    .. math::
+        \mathrm{prox}_{\sigma (F(x) + G(y))}(x, y) =
+        (\mathrm{prox}_{\sigma F}(x), \mathrm{prox}_{\sigma G}(y)).
+    """
+
+    def separable_sum_prox_factory(sigma):
+        """Proximal factory for a separable sum of functionals ``F_i``.
+
+        Parameters
+        ----------
+        sigma : positive float or sequence of positive floats
+            Step size parameter(s). If a sequence, the length must match
+            the length of the ``factory_list``. Furthermore, each of the
+            sequence entries can be sequences or arrays, depending on
+            what the used proximal factories support.
+
+        Returns
+        -------
+        diag_op : `DiagonalOperator`
+            The operator ``(prox[sigma_1](F_i), ..., prox[sigma_n](F_n))``.
+        """
+        if np.isscalar(sigma):
+            sigma = [sigma] * len(factory_funcs)
+
+        return DiagonalOperator(
+            *[factory(sigma_i)
+              for sigma_i, factory in zip(sigma, factory_funcs)])
+
+    return separable_sum_prox_factory
+
+
+def proximal_convex_conj(prox_factory):
+    r"""Return the proximal factory for the convex conjugate of a functional.
+
+    Parameters
+    ----------
+    prox_factory : callable
+        A factory function that, when called with a step size, returns a
+        proximal operator.
+
+    Returns
+    -------
+    prox_factory : function
+        Factory for the proximal operator of the convex conjugate.
 
     Notes
     -----
@@ -114,20 +116,21 @@ def proximal_convex_conj(prox_factory):
     convex conjugate :math:`F^*`, the proximals satisfy
 
     .. math::
-        \mathrm{prox}_{\\sigma F^*}(x) +\\sigma \,
-        \mathrm{prox}_{F / \\sigma}(x / \\sigma) = x
+        \mathrm{prox}_{\sigma F^*}(x) + \sigma \,
+        \mathrm{prox}_{F / \sigma}(x / \sigma) = x
 
-    where :math:`\\sigma` is a scalar step size. Using this, the proximal of
+    where :math:`\sigma` is a scalar step size. Using this, the proximal of
     the convex conjugate is given by
 
     .. math::
-        \mathrm{prox}_{\\sigma F^*}(x) =
-        x - \\sigma \, \mathrm{prox}_{F / \\sigma}(x / \\sigma)
+        \mathrm{prox}_{\sigma F^*}(x) =
+        x - \sigma \, \mathrm{prox}_{F / \sigma}(x / \sigma)
 
     Note that since :math:`(F^*)^* = F`, this can be used to get the proximal
     of the original function from the proximal of the convex conjugate.
 
-    For reference on the Moreau identity, see [CP2011c].
+    For reference see `[CP2011c]
+    <https://link.springer.com/chapter/10.1007%2F978-1-4419-9569-8_10>`_.
 
     References
     ----------
@@ -138,59 +141,67 @@ def proximal_convex_conj(prox_factory):
     2011.
     """
     def convex_conj_prox_factory(sigma):
-        """Create proximal for the dual with a given sigma.
+        """Proximal factory for the convex conjugate of a functional ``F``.
 
         Parameters
         ----------
         sigma : positive float or array-like
-            Step size parameter. Can be a pointwise positive space element or
-            a sequence of positive floats if `prox_factory` supports that.
+            Step size parameter. Can be a scalar, a pointwise positive space
+            element or a sequence of positive floats if the provided
+            ``prox_factory`` supports that.
 
         Returns
         -------
         proximal : `Operator`
-            The proximal operator of ``s * F^*`` where ``s`` is the step size
+            The proximal operator of ``sigma * F^*``.
         """
-
         # Get the underlying space. At the same time, check if the given
         # prox_factory accepts stepsize objects of the type given by sigma.
         space = prox_factory(sigma).domain
 
-        mult_inner = MultiplyOperator(1.0 / sigma, domain=space, range=space)
+        mult_inner = MultiplyOperator(1 / sigma, domain=space, range=space)
         mult_outer = MultiplyOperator(sigma, domain=space, range=space)
         result = (IdentityOperator(space) -
-                  mult_outer * prox_factory(1.0 / sigma) * mult_inner)
+                  mult_outer * prox_factory(1 / sigma) * mult_inner)
         return result
 
     return convex_conj_prox_factory
 
 
 def proximal_translation(prox_factory, y):
-    """Calculate the proximal of the translated function F(x - y).
+    r"""Return the proximal factory for a translated functional.
+
+    The returned `proximal factory` is associated with the translated
+    functional ::
+
+        x --> F(x - y)
+
+    given the proximal factory of the original functional ``F``.
 
     Parameters
     ----------
     prox_factory : callable
-        A factory function that, when called with a step size, returns the
-        proximal operator of ``F``.
-    y : Element in domain of ``F``.
+        A factory function that, when called with a step size, returns a
+        proximal operator.
+    y : Element in domain of the functional by which should be translated.
 
     Returns
     -------
     prox_factory : function
-        Factory for the proximal operator to be initialized
+        Factory for the proximal operator of the translated functional.
 
     Notes
     -----
     Given a functional :math:`F`, this is calculated according to the rule
 
     .. math::
-        \mathrm{prox}_{\\sigma F( \cdot - y)}(x) =
-        y + \mathrm{prox}_{\\sigma F}(x - y)
+        \mathrm{prox}_{\sigma F(\cdot - y)}(x) =
+        y + \mathrm{prox}_{\sigma F}(x - y)
 
-    where :math:`y` is the translation, and :math:`\\sigma` is the step size.
+    where :math:`y` is the translation, and :math:`\sigma` is the step size.
 
-    For reference on the identity used, see [CP2011c].
+    For reference see `[CP2011c]
+    <https://link.springer.com/chapter/10.1007%2F978-1-4419-9569-8_10>`_.
 
     References
     ----------
@@ -202,18 +213,20 @@ def proximal_translation(prox_factory, y):
     """
 
     def translation_prox_factory(sigma):
-        """Create proximal for the translation with a given sigma.
+        """Proximal factory for the translated functional.
 
         Parameters
         ----------
-        sigma : positive float
-            Step size parameter
+        sigma : positive float or array-like
+            Step size parameter. Can be a scalar, a pointwise positive space
+            element or a sequence of positive floats if the provided
+            ``prox_factory`` supports that.
 
         Returns
         -------
         proximal : `Operator`
             The proximal operator of ``s * F( . - y)`` where ``s`` is the
-            step size
+            step size.
         """
         return (ConstantOperator(y) + prox_factory(sigma) *
                 (IdentityOperator(y.space) - ConstantOperator(y)))
@@ -222,38 +235,52 @@ def proximal_translation(prox_factory, y):
 
 
 def proximal_arg_scaling(prox_factory, scaling):
-    """Calculate the proximal of function F(x * scaling).
+    r"""Return the proximal factory for a right-scaled functional.
+
+    The returned `proximal factory` is associated with the functional whose
+    argument is scaled by a factor, ::
+
+        x --> F(a * x)
+
+    given the proximal factory of the original functional ``F``.
 
     Parameters
     ----------
     prox_factory : callable
-        A factory function that, when called with a step size, returns the
-        proximal operator of ``F``
-    scaling : float or sequence of floats or space element
-        Scaling parameter. The permissible types depent on the stepsizes
-        accepted by prox_factory. It may not contain any nonzero imaginary
-        parts. If it is a scalar, it may be zero, in which case the
-        resulting proxmial operator is the identity. If not a scalar,
-        it may not contain any zero components.
+        A factory function that, when called with a step size, returns a
+        proximal operator.
+    scaling : float or array-like
+        Scaling parameter. Can be a scalar, a pointwise positive space
+        element or a sequence of positive floats if the provided
+        ``prox_factory`` support such types as step size parameters.
+
+        .. note::
+            - A scalar 0 is valid, but arrays may not contain zeros since
+              they lead to division by 0.
+            - Complex factors with nonzero imaginary parts are not supported
+              yet. For such scalars, an exception will be raised.
+            - For arrays, these conditions are not checked for efficiency
+              reasons.
 
     Returns
     -------
     prox_factory : function
-        Factory for the proximal operator to be initialized
+        Factory for the proximal operator of the right-scaled functional.
 
     Notes
     -----
-    Given a functional :math:`F`, and scaling factor :math:`\\alpha` this is
-    calculated according to the rule
+    Given a functional :math:`F` and a scaling factor :math:`\alpha`,
+    the proximal calculated here is
 
     .. math::
-        \mathrm{prox}_{\\sigma F(\\alpha \, \cdot)}(x) =
-        \\frac{1}{\\alpha}
-        \mathrm{prox}_{\\sigma \\alpha^2 F(\cdot) }(\\alpha x)
+        \mathrm{prox}_{\sigma F(\alpha \, \cdot)}(x) =
+        \frac{1}{\alpha}
+        \mathrm{prox}_{\sigma \alpha^2 F(\cdot) }(\alpha x),
 
-    where :math:`\\sigma` is the step size.
+    where :math:`\sigma` is the step size.
 
-    For reference on the identity used, see [CP2011c].
+    For reference see `[CP2011c]
+    <https://link.springer.com/chapter/10.1007%2F978-1-4419-9569-8_10>`_.
 
     References
     ----------
@@ -263,39 +290,39 @@ def proximal_arg_scaling(prox_factory, scaling):
     algorithms for inverse problems in science and engineering, Springer,
     2011.
     """
+    # TODO: Implement the correct proximal for arrays with zero entries.
+    # This proximal maps the components where the factor is zero to
+    # themselves.
 
-    # To begin, we could check for two things:
-    # * Currently, we do not support complex scaling. We could therefore catch
-    #   nonempty imaginary parts.
-    # * If some components of scaling are zero, then the following routine will
-    #   crash with a division-by-zero error. The correct solution would be to
-    #   just keep these components and do the following computations only for
-    #   the others.
-    # Since these checks are computationally expensive, we do not execute them
-    # unconditionally, but only if the scaling factor is a scalar:
+    # TODO(kohr-h): Implement the full complex version of this?
     if np.isscalar(scaling):
+        # We run these checks only for scalars, since they can potentially
+        # be computationally expensive for arrays.
         if scaling == 0:
+            # Special case
             return proximal_const_func(prox_factory(1.0).domain)
         elif scaling.imag != 0:
-            raise ValueError("Complex scaling not supported.")
+            raise NotImplementedError('complex scaling not supported.')
         else:
             scaling = float(scaling)
     else:
         scaling = np.asarray(scaling)
 
     def arg_scaling_prox_factory(sigma):
-        """Create proximal for the translation with a given sigma.
+        """Proximal factory for the right-scaled functional.
 
         Parameters
         ----------
-        sigma : positive float
-            Step size parameter
+        sigma : positive float or array-like
+            Step size parameter. Can be a scalar, a pointwise positive space
+            element or a sequence of positive floats if the provided
+            ``prox_factory`` supports that, and if the product
+            ``sigma * scaling`` makes sense.
 
         Returns
         -------
         proximal : `Operator`
-            The proximal operator of ``sigma * F( . * a)`` where ``sigma`` is
-            the step size
+            The proximal operator of ``sigma * F( . * a)``.
         """
         scaling_square = scaling * scaling
         prox = prox_factory(sigma * scaling_square)
@@ -308,45 +335,52 @@ def proximal_arg_scaling(prox_factory, scaling):
 
 
 def proximal_quadratic_perturbation(prox_factory, a, u=None):
-    """Calculate the proximal of function F(x) + a * \|x\|^2 + <u,x>.
+    r"""Return the proximal factory for a quadratically perturbed functional.
+
+    The returned `proximal factory` is associated with the functional ::
+
+        x --> F(x) + <x, a * x + u>
+
+    given the proximal factory of the original functional ``F``, where
+    ``a`` is a scalar and ``u`` a vector.
 
     Parameters
     ----------
     prox_factory : callable
-        A factory function that, when called with a step size, returns the
-        proximal operator of ``F``
+        A factory function that, when called with a step size, returns a
+        proximal operator.
     a : non-negative float
-        Scaling of the quadratic term
-    u : Element in domain of F, optional
-        Defines the linear functional. For ``None``, the zero element
-        is taken.
+        Coefficient of the quadratic term.
+    u : array-like, optional
+        Element of the functional domain that defines the linear term.
+        The default ``None`` means zero.
 
     Returns
     -------
     prox_factory : function
-        Factory for the proximal operator to be initialized
+        Factory for the proximal operator of the perturbed functional.
 
     Notes
     -----
     Given a functional :math:`F`, this is calculated according to the rule
 
     .. math::
-        \mathrm{prox}_{\\sigma \left(F( \cdot ) + a \| \cdot \|^2 +
-        <u, \cdot >\\right)}(x) =
-        c \; \mathrm{prox}_{\\sigma F( \cdot \, c)}((x - \\sigma u) c)
+        \mathrm{prox}_{\sigma \left(F( \cdot ) + a \| \cdot \|^2 +
+        <u, \cdot >\right)}(x) =
+        c \, \mathrm{prox}_{\sigma F( \cdot \, c)}
+        \big((x - \sigma u)\cdot c\big)
 
     where :math:`c` is the constant
 
     .. math::
-        c = \\frac{1}{\\sqrt{2 \\sigma a + 1}},
+        c = \frac{1}{\sqrt{2 \sigma a + 1}},
 
     :math:`a` is the scaling parameter belonging to the quadratic term,
     :math:`u` is the space element defining the linear functional, and
-    :math:`\\sigma` is the step size.
+    :math:`\sigma` is the step size.
 
-    For reference on the identity used, see [CP2011c]. Note that this identity
-    is not the exact one given in the reference, but was recalculated for
-    arbitrary step lengths.
+    For reference see `[CP2011c]
+    <https://link.springer.com/chapter/10.1007%2F978-1-4419-9569-8_10>`_.
 
     References
     ----------
@@ -356,7 +390,6 @@ def proximal_quadratic_perturbation(prox_factory, a, u=None):
     algorithms for inverse problems in science and engineering, Springer,
     2011.
     """
-
     a = float(a)
     if a < 0:
         raise ValueError('scaling parameter muts be non-negative, got {}'
@@ -367,18 +400,19 @@ def proximal_quadratic_perturbation(prox_factory, a, u=None):
                         'instance, got {!r}.'.format(u))
 
     def quadratic_perturbation_prox_factory(sigma):
-        """Create proximal for the quadratic perturbation with a given sigma.
+        """Proximal factory for the right-scaled functional.
 
         Parameters
         ----------
-        sigma : positive float
-            Step size parameter
+        sigma : positive float or array-like
+            Step size parameter. Can be a scalar, a pointwise positive space
+            element or a sequence of positive floats if the provided
+            ``prox_factory`` supports that.
 
         Returns
         -------
         proximal : `Operator`
-            The proximal operator of ``sigma * (F(x) + a * \|x\|^2 + <u,x>)``,
-            where ``sigma`` is the step size
+            The proximal operator of ``x --> sigma * (F(x) + <x, a * x + u>)``.
         """
         if np.isscalar(sigma):
             sigma = float(sigma)
@@ -387,15 +421,18 @@ def proximal_quadratic_perturbation(prox_factory, a, u=None):
 
         const = 1.0 / np.sqrt(sigma * 2.0 * a + 1)
         prox = proximal_arg_scaling(prox_factory, const)(sigma)
-        if u is not None:
-            return (MultiplyOperator(const, domain=u.space, range=u.space) *
-                    prox *
-                    (MultiplyOperator(const, domain=u.space, range=u.space) -
-                     sigma * const * u))
-        else:
+        if a != 0:
             space = prox.domain
-            return (MultiplyOperator(const, domain=space, range=space) *
-                    prox * MultiplyOperator(const, domain=space, range=space))
+            mult_op = MultiplyOperator(const, domain=space)
+
+        if u is None and a == 0:
+            return prox
+        elif u is None and a != 0:
+            return mult_op * prox * mult_op
+        elif u is not None and a == 0:
+            return prox - sigma * u
+        else:
+            return mult_op * prox * (mult_op - (sigma * const) * u)
 
     return quadratic_perturbation_prox_factory
 

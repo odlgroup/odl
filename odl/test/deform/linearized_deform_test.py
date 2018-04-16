@@ -16,7 +16,7 @@ import pytest
 import odl
 from odl.deform import LinDeformFixedDisp, LinDeformFixedTempl
 from odl.space.entry_points import tensor_space_impl
-from odl.util.testutils import almost_equal, simple_fixture
+from odl.util.testutils import simple_fixture
 
 # --- pytest fixtures --- #
 

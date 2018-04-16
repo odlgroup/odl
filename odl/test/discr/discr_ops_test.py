@@ -17,7 +17,7 @@ import odl
 from odl.discr.discr_ops import _SUPPORTED_RESIZE_PAD_MODES
 from odl.space.entry_points import tensor_space_impl
 from odl.util import is_numeric_dtype, is_real_floating_dtype
-from odl.util.testutils import almost_equal, dtype_places, noise_element
+from odl.util.testutils import dtype_places, noise_element
 
 # --- pytest fixtures --- #
 

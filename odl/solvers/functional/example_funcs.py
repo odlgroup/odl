@@ -122,11 +122,6 @@ class RosenbrockFunctional(Functional):
 
             """The gradient operator of the Rosenbrock functional."""
 
-            def __init__(self):
-                """Initialize a new instance."""
-                super(RosenbrockGradient, self).__init__(
-                    functional.domain, functional.domain, linear=False)
-
             def _call(self, x, out):
                 """Apply the gradient operator to the given point."""
                 for i in range(1, self.domain.size - 1):
@@ -169,7 +164,7 @@ class RosenbrockFunctional(Functional):
                 """
                 return attribute_repr_string(repr(functional), 'gradient')
 
-        return RosenbrockGradient()
+        return RosenbrockGradient(self.domain, self.domain, linear=False)
 
     def __repr__(self):
         """Return ``repr(self)``.

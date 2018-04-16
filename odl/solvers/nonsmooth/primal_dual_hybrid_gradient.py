@@ -25,11 +25,11 @@ __all__ = ('pdhg',)
 # TODO: diagonal preconditioning
 
 def pdhg(x, f, g, L, tau, sigma, niter, **kwargs):
-    """Primal-dual hybrid gradient algorithm for convex optimization.
+    r"""Primal-dual hybrid gradient algorithm for convex optimization.
 
     First order primal-dual hybrid-gradient method for non-smooth convex
     optimization problems with known saddle-point structure. The
-    primal formulation of the general problem is::
+    primal formulation of the general problem is ::
 
         min_{x in X} f(L x) + g(x)
 
@@ -99,20 +99,20 @@ def pdhg(x, f, g, L, tau, sigma, niter, **kwargs):
     The problem of interest is
 
     .. math::
-        \\min_{x \\in X} f(L x) + g(x),
+        \min_{x \in X} f(L x) + g(x),
 
     where the formal conditions are that :math:`L` is an operator
     between Hilbert spaces :math:`X` and :math:`Y`.
-    Further, :math:`g : X \\rightarrow [0, +\\infty]` and
-    :math:`f : Y \\rightarrow [0, +\\infty]` are proper, convex,
+    Further, :math:`g : X \rightarrow [0, +\infty]` and
+    :math:`f : Y \rightarrow [0, +\infty]` are proper, convex,
     lower-semicontinuous functionals.
 
     Convergence is only guaranteed if :math:`L` is linear, :math:`X, Y`
-    are finite dimensional and the step lengths :math:`\\sigma` and
-    :math:`\\tau` satisfy
+    are finite dimensional and the step lengths :math:`\sigma` and
+    :math:`\tau` satisfy
 
     .. math::
-       \\tau \\sigma \|L\|^2 < 1
+       \tau \sigma \|L\|^2 < 1
 
     where :math:`\|L\|` is the operator norm of :math:`L`.
 
@@ -120,13 +120,13 @@ def pdhg(x, f, g, L, tau, sigma, niter, **kwargs):
     for example the classical TV regularized problem
 
     .. math::
-        \\min_x \|Ax - b\|_2^2 + \|\\nabla x\|_1.
+        \min_x \|Ax - b\|_2^2 + \|\nabla x\|_1.
 
-    Here it is tempting to let :math:`L=A`, :math:`f(y)=||y||_2^2` and
-    :math:`g(x)=\|\\nabla x\|_1`. This is however not feasible since the
-    proximal of :math:`||\\nabla x||_1` has no closed form expression.
+    Here it is tempting to let :math:`L=A`, :math:`f(y)=\|y\|_2^2` and
+    :math:`g(x)=\|\nabla x\|_1`. This is however not feasible since the
+    proximal of :math:`\|\nabla x\|_1` has no closed form expression.
 
-    Instead, the problem can be formulated :math:`L(x) = (A(x), \\nabla x)`,
+    Instead, the problem can be formulated :math:`L(x) = (A(x), \nabla x)`,
     :math:`f((x_1, x_2)) = \|x_1\|_2^2 + \|x_2\|_1`, :math:`g(x)=0`. See the
     examples folder for more information on how to do this.
 
