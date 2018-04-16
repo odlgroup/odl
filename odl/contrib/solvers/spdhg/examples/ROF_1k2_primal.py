@@ -9,13 +9,13 @@
 """An example of using the SPDHG algorithm to solve a TV denoising problem
 with Gaussian noise. We exploit the strong convexity of the data term to get
 1/k^2 convergence on the primal part. We compare different algorithms for this
-problem and visualize the results as in [1].
+problem and visualize the results as in [CERS2017].
 
 Reference
 ---------
-[1] A. Chambolle, M. J. Ehrhardt, P. Richtárik and C.-B. Schönlieb (2017).
-Stochastic Primal-Dual Hybrid Gradient Algorithm with Arbitrary Sampling and
-Imaging Applications. http://arxiv.org/abs/1706.04957
+[CERS2017] A. Chambolle, M. J. Ehrhardt, P. Richtarik and C.-B. Schoenlieb,
+*Stochastic Primal-Dual Hybrid Gradient Algorithm with Arbitrary Sampling
+and Imaging Applications*. ArXiv: http://arxiv.org/abs/1706.04957 (2017).
 """
 
 from __future__ import division, print_function
@@ -36,13 +36,16 @@ niter_target = 2000
 subfolder = '{}epochs'.format(nepoch)
 
 folder_main = '{}/{}'.format(folder_out, filename)
-os.makedirs(folder_main, exist_ok=True)
+if not os.path.exists(folder_main):
+    os.makedirs(folder_main)
 
 folder_today = '{}/{}'.format(folder_main, subfolder)
-os.makedirs(folder_today, exist_ok=True)
+if not os.path.exists(folder_today):
+    os.makedirs(folder_today)
 
 folder_npy = '{}/npy'.format(folder_today)
-os.makedirs(folder_npy, exist_ok=True)
+if not os.path.exists(folder_npy):
+    os.makedirs(folder_npy)
 
 # create ground truth
 image_gray = images.building(gray=True)
@@ -118,8 +121,8 @@ bregman_g = spdhg.bregman(g, x_opt, subx_opt)
 
 # define Bregman distance for f and f_p
 bregman_f = odl.solvers.SeparableSum(
-        *[spdhg.bregman(fi.convex_conj, yi, ri)
-          for fi, yi, ri in zip(f, y_opt, suby_opt)])
+    *[spdhg.bregman(fi.convex_conj, yi, ri)
+      for fi, yi, ri in zip(f, y_opt, suby_opt)])
 
 
 class CallbackStore(odl.solvers.util.callback.Callback):
@@ -181,12 +184,13 @@ for alg in nsub.keys():
 
 # %% --- Run algorithms ---
 # TODO: ODL version to be included once the callback includes dual iterates
-#for alg in ['pdhg', 'pesquet_uni2', 'pa_pdhg', 'spdhg_uni2', 'pa_spdhg_uni2', 'odl', 'pa_odl']:
+# for alg in ['pdhg', 'pesquet_uni2', 'pa_pdhg', 'spdhg_uni2', 'pa_spdhg_uni2',
+# 'odl', 'pa_odl']:
 for alg in ['pdhg', 'pesquet_uni2', 'pa_pdhg', 'spdhg_uni2', 'pa_spdhg_uni2']:
     print('======= ' + alg + ' =======')
 
     # clear variables in order not to use previous instances
-    prob, extra, sigma, tau, theta = [None] * 5
+    prob, sigma, tau, theta = [None] * 4
 
     # create lists for subset division
     n = nsub[alg]
@@ -239,12 +243,12 @@ for alg in ['pdhg', 'pesquet_uni2', 'pa_pdhg', 'spdhg_uni2', 'pa_spdhg_uni2']:
     callback([x, y])
 
     if alg.startswith('pdhg') or alg.startswith('spdhg'):
-        spdhg.spdhg(x, f, g, A, tau, sigma, niter[alg], prob, y=y,
+        spdhg.spdhg(x, f, g, A, tau, sigma, niter[alg], prob=prob, y=y,
                     fun_select=fun_select, callback=callback)
 
     elif alg.startswith('pa_pdhg') or alg.startswith('pa_spdhg'):
-        spdhg.pa_spdhg(x, f, g, A, tau, sigma, niter[alg], prob, mu_g, y=y,
-                       fun_select=fun_select, callback=callback)
+        spdhg.pa_spdhg(x, f, g, A, tau, sigma, niter[alg], mu_g, prob=prob,
+                       y=y, fun_select=fun_select, callback=callback)
 
     elif alg.startswith('odl'):
         odl.solvers.pdhg(x, f, g, A, tau, sigma, niter[alg], y=y,
@@ -255,8 +259,8 @@ for alg in ['pdhg', 'pesquet_uni2', 'pa_pdhg', 'spdhg_uni2', 'pa_spdhg_uni2']:
                          callback=callback, gamma_primal=mu_g)
 
     elif alg.startswith('pesquet'):
-        spdhg.spdhg_pesquet(x, f, g, A, tau, sigma, niter[alg], fun_select,
-                            y=y, callback=callback)
+        spdhg.spdhg_pesquet(x, f, g, A, tau, sigma, niter[alg],
+                            fun_select=fun_select, y=y, callback=callback)
 
     else:
         assert False, "Algorithm not defined"
@@ -272,7 +276,7 @@ algs = ['pdhg', 'pesquet_uni2', 'pa_pdhg', 'spdhg_uni2', 'pa_spdhg_uni2']
 iter_save_v, niter_v, image_v, out_v, nsub_v = {}, {}, {}, {}, {}
 for a in algs:
     (iter_save_v[a], niter_v[a], image_v[a], out_v[a], nsub_v[a]) = np.load(
-            '{}/{}_output.npy'.format(folder_npy, a))
+        '{}/{}_output.npy'.format(folder_npy, a))
 
 epochs_save = {a: np.array(iter_save_v[a]) / np.float(nsub_v[a]) for a in algs}
 

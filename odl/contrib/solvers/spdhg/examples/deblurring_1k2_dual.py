@@ -9,14 +9,14 @@
 """An example of using the SPDHG algorithm to solve a TV deblurring problem
 with Poisson noise. We exploit the smoothness of the data term to get 1/k^2
 convergence on the dual part. We compare different algorithms for this problem
-and visualize the results as in [1].
+and visualize the results as in [CERS2017].
 
 
 Reference
 ---------
-[1] A. Chambolle, M. J. Ehrhardt, P. Richtárik and C.-B. Schönlieb (2017).
-Stochastic Primal-Dual Hybrid Gradient Algorithm with Arbitrary Sampling and
-Imaging Applications. http://arxiv.org/abs/1706.04957
+[CERS2017] A. Chambolle, M. J. Ehrhardt, P. Richtarik and C.-B. Schoenlieb,
+*Stochastic Primal-Dual Hybrid Gradient Algorithm with Arbitrary Sampling
+and Imaging Applications*. ArXiv: http://arxiv.org/abs/1706.04957 (2017).
 """
 
 from __future__ import division, print_function
@@ -42,13 +42,16 @@ image_raw = images.rings(shape=simage, gray=True)  # load image
 filename = '{}_{}x{}'.format(filename, simage[0], simage[1])
 
 folder_main = '{}/{}'.format(folder_out, filename)
-os.makedirs(folder_main, exist_ok=True)
+if not os.path.exists(folder_main):
+    os.makedirs(folder_main)
 
 folder_today = '{}/{}'.format(folder_main, subfolder)
-os.makedirs(folder_today, exist_ok=True)
+if not os.path.exists(folder_today):
+    os.makedirs(folder_today)
 
 folder_npy = '{}/npy'.format(folder_today)
-os.makedirs(folder_npy, exist_ok=True)
+if not os.path.exists(folder_npy):
+    os.makedirs(folder_npy)
 
 # create ground truth
 X = odl.uniform_discr([0, 0], simage, simage)
@@ -84,9 +87,9 @@ gamma = 0.99  # auxiliary step size parameter < 1
 
 # set up functional f
 f = odl.solvers.SeparableSum(
-        odl.solvers.Huber(A[0].range, gamma=1),
-        odl.solvers.Huber(A[1].range, gamma=1),
-        1 / alpha * spdhg.KullbackLeiblerSmooth(A[2].range, data, background))
+    odl.solvers.Huber(A[0].range, gamma=1),
+    odl.solvers.Huber(A[1].range, gamma=1),
+    1 / alpha * spdhg.KullbackLeiblerSmooth(A[2].range, data, background))
 
 g = odl.solvers.IndicatorBox(X, clim[0], clim[1])  # set up functional g
 obj_fun = f * A + g  # define objective function
@@ -126,7 +129,7 @@ if not os.path.exists(file_target):
     spdhg.save_image(y_opt[0], 'y_saddle[0]', folder_main, 2)
     spdhg.save_image(y_opt[1], 'y_saddle[1]', folder_main, 3)
     spdhg.save_image(y_opt[2], 'y_saddle[2]', folder_main, 4)
-    spdhg.save_image(subx_opt, 'subx_saddle',    folder_main, 5)
+    spdhg.save_image(subx_opt, 'subx_saddle', folder_main, 5)
     spdhg.save_image(suby_opt[0], 'suby_saddle[0]', folder_main, 6)
     spdhg.save_image(suby_opt[1], 'suby_saddle[1]', folder_main, 7)
     spdhg.save_image(suby_opt[2], 'suby_saddle[2]', folder_main, 8)
@@ -185,7 +188,7 @@ for alg in ['pdhg', 'da_pdhg', 'da_spdhg_uni3']:
     print('======= ' + alg + ' =======')
 
     # clear variables in order not to use previous instances
-    prob_subset, prob, extra, sigma, sigma_tilde, tau, theta = [None] * 7
+    prob_subset, prob, sigma, sigma_tilde, tau, theta = [None] * 6
 
     np.random.seed(1807)  # set random seed so results are reproducable
 
@@ -231,7 +234,6 @@ for alg in ['pdhg', 'da_pdhg', 'da_spdhg_uni3']:
     elif alg == 'da_pdhg':
         prob_subset = [1] * n
         prob = [1] * len(Y)
-        extra = [1] * len(Y)
         tau = gamma / normA[0]
         mu = [mu_f] * len(Y)
         sigma_tilde = mu_f / normA[0]
@@ -239,11 +241,10 @@ for alg in ['pdhg', 'da_pdhg', 'da_spdhg_uni3']:
     elif alg in ['da_spdhg_uni3']:
         prob = [1 / n] * n
         prob_subset = prob
-        extra = [1 / p for p in prob]
         tau = gamma / (n * max(normA))
         mu = mu_i
-        sigma_tilde = min([mu * p**2 / (tau * normAi**2 + 2 * mu * p * (1 - p))
-                           for p, mu, normAi in zip(prob, mu_i, normA)])
+        sigma_tilde = min([m * p**2 / (tau * normAi**2 + 2 * m * p * (1 - p))
+                           for p, m, normAi in zip(prob, mu_i, normA)])
 
     else:
         assert False, "Parameters not defined"
@@ -263,12 +264,12 @@ for alg in ['pdhg', 'da_pdhg', 'da_spdhg_uni3']:
     callback([x, y])
 
     if alg.startswith('pdhg'):
-        spdhg.spdhg(x, f, g, A, tau, sigma, niter[alg], prob, fun_select, y=y,
-                    callback=callback)
+        spdhg.spdhg(x, f, g, A, tau, sigma, niter[alg], y=y, prob=prob,
+                    fun_select=fun_select, callback=callback)
 
     elif alg.startswith('da_pdhg') or alg.startswith('da_spdhg'):
-        spdhg.da_spdhg(x, f, g, A, tau, sigma_tilde, niter[alg], extra, prob,
-                       mu, fun_select, y=y, callback=callback)
+        spdhg.da_spdhg(x, f, g, A, tau, sigma_tilde, niter[alg], mu, prob=prob,
+                       fun_select=fun_select, y=y, callback=callback)
 
     else:
         assert False, "Algorithm not defined"
@@ -284,7 +285,7 @@ algs = ['pdhg', 'da_pdhg', 'da_spdhg_uni3']
 (iter_save_v, niter_v, image_v, out_v, nsub_v) = {}, {}, {}, {}, {}
 for a in algs:
     (iter_save_v[a], niter_v[a], image_v[a], out_v[a], nsub_v[a]) = np.load(
-             '{}/{}_output.npy'.format(folder_npy, a))
+        '{}/{}_output.npy'.format(folder_npy, a))
 
 epochs_save = {a: np.array(iter_save_v[a]) / np.float(nsub_v[a]) for a in algs}
 

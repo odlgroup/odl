@@ -10,15 +10,15 @@
 problem with total variation prior. As we do not exploit any smoothness here we
 only expect a 1/k convergence of the ergodic sequence in a Bregman sense. We
 compare different algorithms for this problem and visualize the results as in
-[1].
+[CERS2017].
 
 Note that this example uses the ASTRA toolbox https://www.astra-toolbox.com/.
 
 Reference
 ---------
-[1] A. Chambolle, M. J. Ehrhardt, P. Richtárik and C.-B. Schönlieb (2017).
-Stochastic Primal-Dual Hybrid Gradient Algorithm with Arbitrary Sampling and
-Imaging Applications. http://arxiv.org/abs/1706.04957
+[CERS2017] A. Chambolle, M. J. Ehrhardt, P. Richtarik and C.-B. Schoenlieb,
+*Stochastic Primal-Dual Hybrid Gradient Algorithm with Arbitrary Sampling
+and Imaging Applications*. ArXiv: http://arxiv.org/abs/1706.04957 (2017).
 """
 
 from __future__ import division, print_function
@@ -42,13 +42,16 @@ nvoxelx = 250  # set problem size
 filename = '{}_{}x{}'.format(filename, nvoxelx, nvoxelx)
 
 folder_main = '{}/{}'.format(folder_out, filename)
-os.makedirs(folder_main, exist_ok=True)
+if not os.path.exists(folder_main):
+    os.makedirs(folder_main)
 
 folder_today = '{}/{}'.format(folder_main, subfolder)
-os.makedirs(folder_today, exist_ok=True)
+if not os.path.exists(folder_today):
+    os.makedirs(folder_today)
 
 folder_npy = '{}/npy'.format(folder_today)
-os.makedirs(folder_npy, exist_ok=True)
+if not os.path.exists(folder_npy):
+    os.makedirs(folder_npy)
 
 # create geometry of operator
 X = odl.uniform_discr(min_pt=[-1, -1], max_pt=[1, 1], shape=[nvoxelx, nvoxelx])
@@ -98,7 +101,7 @@ if not os.path.exists(file_data):
     fig2.clf()
     i = 11
     plt.plot((sino[i]).asarray()[0], label='G(x)')
-    plt.plot((factors[i]*sino[i]).asarray()[0], label='factors * G(x)')
+    plt.plot((factors[i] * sino[i]).asarray()[0], label='factors * G(x)')
     plt.plot(data[i].asarray()[0], label='data')
     plt.plot(background[i].asarray()[0], label='background')
     plt.legend()
@@ -111,8 +114,8 @@ else:
 
 # data fit
 f = odl.solvers.SeparableSum(
-        *[odl.solvers.KullbackLeibler(Yi, yi).translated(-ri)
-          for Yi, yi, ri in zip(Y, data, background)])
+    *[odl.solvers.KullbackLeibler(Yi, yi).translated(-ri)
+      for Yi, yi, ri in zip(Y, data, background)])
 # TODO: should be ideally like
 # f = odl.solvers.KullbackLeibler(Y, data).translated(-background)
 
@@ -175,8 +178,8 @@ bregman_g = spdhg.bregman(g, x_opt, subx_opt)  # primal Bregman distance
 
 # dual Bregman distance
 bregman_f = odl.solvers.SeparableSum(
-        *[spdhg.bregman(fi.convex_conj, yi, ri)
-          for fi, yi, ri in zip(f, y_opt, suby_opt)])
+    *[spdhg.bregman(fi.convex_conj, yi, ri)
+      for fi, yi, ri in zip(f, y_opt, suby_opt)])
 # TODO: should be like: bregman_f = f.bregman(y_opt, subgrad=subx_opt)
 
 
@@ -243,7 +246,7 @@ for alg in ['pdhg', 'pesquet10', 'pesquet50', 'spdhg10', 'spdhg50']:
     print('======= ' + alg + ' =======')
 
     # clear variables in order not to use previous instances
-    prob, extra, sigma, tau = [None] * 4
+    prob, sigma, tau = [None] * 3
 
     # create lists for subset division
     n = nsub[alg]
@@ -307,12 +310,12 @@ for alg in ['pdhg', 'pesquet10', 'pesquet50', 'spdhg10', 'spdhg50']:
     g.prox_options['p'] = None
 
     if alg.startswith('pdhg') or alg.startswith('spdhg'):
-        spdhg.spdhg(x, f, g, A, tau, sigma, niter[alg], prob, fun_select, y=y,
-                    callback=callback)
+        spdhg.spdhg(x, f, g, A, tau, sigma, niter[alg], prob=prob, y=y,
+                    fun_select=fun_select, callback=callback)
 
     elif alg.startswith('pesquet'):
-        spdhg.spdhg_pesquet(x, f, g, A, tau, sigma, niter[alg], fun_select,
-                            y=y, callback=callback)
+        spdhg.spdhg_pesquet(x, f, g, A, tau, sigma, niter[alg], y=y,
+                            fun_select=fun_select, callback=callback)
 
     else:
         assert False, "Algorithm not defined"
@@ -328,7 +331,7 @@ algs = ['pdhg', 'pesquet10', 'pesquet50', 'spdhg10', 'spdhg50']
 iter_save_v, niter_v, image_v, out_v, nsub_v = {}, {}, {}, {}, {}
 for a in algs:
     (iter_save_v[a], niter_v[a], image_v[a], out_v[a], nsub_v[a]) = np.load(
-            '{}/{}_output.npy'.format(folder_npy, a))
+     '{}/{}_output.npy'.format(folder_npy, a))
 
 epochs_save = {a: np.array(iter_save_v[a]) / np.float(nsub_v[a]) for a in algs}
 

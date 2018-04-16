@@ -10,15 +10,15 @@
 problem with a strongly convex total variation prior. We exploit the smoothness
 of the data term and the strong convexity of the prior to obtain a linearly
 convergent algorithm. We compare different algorithms for this problem and
-visualize the results as in [1].
+visualize the results as in [CERS2017].
 
 Note that this example uses the ASTRA toolbox https://www.astra-toolbox.com/.
 
 Reference
 ---------
-[1] A. Chambolle, M. J. Ehrhardt, P. Richtárik and C.-B. Schönlieb (2017).
-Stochastic Primal-Dual Hybrid Gradient Algorithm with Arbitrary Sampling and
-Imaging Applications. http://arxiv.org/abs/1706.04957
+[CERS2017] A. Chambolle, M. J. Ehrhardt, P. Richtarik and C.-B. Schoenlieb,
+*Stochastic Primal-Dual Hybrid Gradient Algorithm with Arbitrary Sampling
+and Imaging Applications*. ArXiv: http://arxiv.org/abs/1706.04957 (2017).
 """
 
 from __future__ import division, print_function
@@ -43,13 +43,16 @@ nvoxelx = 250  # set problem size
 filename = '{}_{}x{}'.format(filename, nvoxelx, nvoxelx)
 
 folder_main = '{}/{}'.format(folder_out, filename)
-os.makedirs(folder_main, exist_ok=True)
+if not os.path.exists(folder_main):
+    os.makedirs(folder_main)
 
 folder_today = '{}/{}'.format(folder_main, subfolder)
-os.makedirs(folder_today, exist_ok=True)
+if not os.path.exists(folder_today):
+    os.makedirs(folder_today)
 
 folder_npy = '{}/npy'.format(folder_today)
-os.makedirs(folder_npy, exist_ok=True)
+if not os.path.exists(folder_npy):
+    os.makedirs(folder_npy)
 
 # create geometry of operator
 X = odl.uniform_discr(min_pt=[-1, -1], max_pt=[1, 1],
@@ -81,8 +84,8 @@ if not os.path.exists(file_data):
 
     sinogram_support = sinogram.ufuncs.greater(0)
     smoothed_support = Y.element(
-            [gaussian_filter(sino_support, sigma=[1, 2 / X.cell_sides[0]])
-             for sino_support in sinogram_support])
+        [gaussian_filter(sino_support, sigma=[1, 2 / X.cell_sides[0]])
+         for sino_support in sinogram_support])
     background = 10 * smoothed_support + 10
     background *= counts_background / background.ufuncs.sum()
     data = odl.phantom.poisson_noise(factors * sinogram + background,
@@ -100,7 +103,7 @@ if not os.path.exists(file_data):
     fig2.clf()
     i = 0
     plt.plot((sinogram[i]).asarray()[0], label='G(x)')
-    plt.plot((factors[i]*sinogram[i]).asarray()[0], label='factors * G(x)')
+    plt.plot((factors[i] * sinogram[i]).asarray()[0], label='factors * G(x)')
     plt.plot(data[i].asarray()[0], label='data')
     plt.plot(background[i].asarray()[0], label='background')
     plt.legend()
@@ -113,8 +116,8 @@ else:
 
 # data fit
 f = odl.solvers.SeparableSum(
-        *[spdhg.KullbackLeiblerSmooth(Yi, yi, ri)
-          for Yi, yi, ri in zip(Y, data, background)])
+    *[spdhg.KullbackLeiblerSmooth(Yi, yi, ri)
+      for Yi, yi, ri in zip(Y, data, background)])
 # TODO: should be like:
 # f = spdhg.KullbackLeiblerSmooth(Y, data).translated(-background)
 
@@ -232,7 +235,7 @@ for alg in ['pdhg', 'spdhg_uni10', 'spdhg_uni50', 'pesquet_uni10',
     print('======= ' + alg + ' =======')
 
     # clear variables in order not to use previous instances
-    prob, extra, sigma, tau, theta = [None] * 5
+    prob, sigma, tau, theta = [None] * 4
 
     # create lists for subset division
     n = nsub[alg]
@@ -305,12 +308,12 @@ for alg in ['pdhg', 'spdhg_uni10', 'spdhg_uni50', 'pesquet_uni10',
     g.prox_options['p'] = None
 
     if alg.startswith('pdhg') or alg.startswith('spdhg'):
-        spdhg.spdhg(x, f, g, A, tau, sigma, niter[alg], prob, fun_select, y=y,
-                    theta=theta, callback=callback)
+        spdhg.spdhg(x, f, g, A, tau, sigma, niter[alg], prob=prob, y=y,
+                    fun_select=fun_select, theta=theta, callback=callback)
 
     elif alg.startswith('pesquet'):
-        spdhg.spdhg_pesquet(x, f, g, A, tau, sigma, niter[alg], fun_select,
-                            y=y, callback=callback)
+        spdhg.spdhg_pesquet(x, f, g, A, tau, sigma, niter[alg], y=y,
+                            fun_select=fun_select, callback=callback)
 
     else:
         assert False, "Algorithm not defined"

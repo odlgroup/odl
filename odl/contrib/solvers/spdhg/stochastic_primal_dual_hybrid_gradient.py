@@ -6,9 +6,9 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Primal-Dual Hybrid Gradient (PDHG) algorithms"""
+"""Stochastic Primal-Dual Hybrid Gradient (SPDHG) algorithms"""
 
-from __future__ import print_function
+from __future__ import print_function, division
 import numpy as np
 import odl
 
@@ -34,7 +34,7 @@ def pdhg(x, f, g, A, tau, sigma, niter, **kwargs):
         Functional X -> IR_infty that has a proximal operator, i.e.
         g.proximal(tau) : X -> X.
     A : function
-        Operator A : X -> Y that posseses an adjoint: A.adjoint
+        Operator A : X -> Y that possesses an adjoint: A.adjoint
     tau : scalar / vector / matrix
         Step size for primal variable. Note that the proximal operator of g
         has to be well-defined for this input.
@@ -53,7 +53,7 @@ def pdhg(x, f, g, A, tau, sigma, niter, **kwargs):
         Adjoint of dual variable, z = A^* y.
     theta : scalar
         Extrapolation factor.
-    callback : callable, optional
+    callback : callable
         Function called with the current iterate after each iteration.
 
     References
@@ -84,7 +84,7 @@ def pdhg(x, f, g, A, tau, sigma, niter, **kwargs):
         y.assign(y_new[0])
 
 
-def spdhg(x, f, g, A, tau, sigma, niter, prob, fun_select, **kwargs):
+def spdhg(x, f, g, A, tau, sigma, niter, **kwargs):
     """Computes a saddle point with a stochastic PDHG.
 
     This means, a solution (x*, y*), y* = (y*_1, ..., y*_n) such that
@@ -107,7 +107,7 @@ def spdhg(x, f, g, A, tau, sigma, niter, prob, fun_select, **kwargs):
         Functional X -> IR_infty that has a proximal operator, i.e.
         g.proximal(tau) : X -> X.
     A : functions
-        Operators A[i] : X -> Y[i] that posses adjoints: A[i].adjoint
+        Operators A[i] : X -> Y[i] that possess adjoints: A[i].adjoint
     tau : scalar / vector / matrix
         Step size for primal variable. Note that the proximal operator of g
         has to be well-defined for this input.
@@ -117,45 +117,58 @@ def spdhg(x, f, g, A, tau, sigma, niter, prob, fun_select, **kwargs):
         for this input.
     niter : int
         Number of iterations
-    prob: list
-        List of probabilities that an index i is selected each iteration.
-    fun_select : function
-        Function that selects blocks at every iteration IN -> {1,...,n}.
 
     Other Parameters
     ----------------
-    y : dual variable, optional
+    y : dual variable
         Dual variable is part of a product space. By default equals 0.
-    z : variable, optional
+    z : variable
         Adjoint of dual variable, z = A^* y. By default equals 0 if y = 0.
     theta : scalar
         Global extrapolation factor.
-    callback : callable, optional
+    prob: list
+        List of probabilities that an index i is selected each iteration. By
+        default this is uniform serial sampling, p_i = 1/n.
+    fun_select : function
+        Function that selects blocks at every iteration IN -> {1,...,n}. By
+        default this is serial sampling, fun_select(k) selects an index
+        i \in {1,...,n} with probability p_i.
+    callback : callable
         Function called with the current iterate after each iteration.
 
     References
     ----------
-    [CERS2017] Chambolle, A., Ehrhardt, M. J., Richtárik, P., and
-    Schoenlieb, C.-B. *Stochastic Primal-Dual Hybrid Gradient Algorithm with
-    Arbitrary Sampling and Imaging Applications*.
-    ArXiv: http://arxiv.org/abs/1706.04957 (2017).
+    [CERS2017] A. Chambolle, M. J. Ehrhardt, P. Richtarik and C.-B. Schoenlieb,
+    *Stochastic Primal-Dual Hybrid Gradient Algorithm with Arbitrary Sampling
+    and Imaging Applications*. ArXiv: http://arxiv.org/abs/1706.04957 (2017).
 
-    [E+2017] Ehrhardt, M. J., Markiewicz, P. J., Richtárik, P., Schott, J.,
-    Chambolle, A. and Schoenlieb, C.-B. *Faster PET reconstruction with a
+    [E+2017] M. J. Ehrhardt, P. J. Markiewicz, P. Richtarik, J. Schott,
+    A. Chambolle and C.-B. Schoenlieb, *Faster PET reconstruction with a
     stochastic primal-dual hybrid gradient method*. Wavelets and Sparsity XVII,
     58 (2017) http://doi.org/10.1117/12.2272946.
     """
+
+    # Probabilities
+    prob = kwargs.pop('prob', None)
+    if prob is None:
+        prob = [1 / len(A)] * len(A)
+
+    # Selection function
+    fun_select = kwargs.pop('fun_select', None)
+    if fun_select is None:
+        def fun_select(x):
+            return [int(np.random.choice(len(A), 1, p=prob))]
 
     # Dual variable
     y = kwargs.pop('y', None)
 
     extra = [1 / p for p in prob]
 
-    spdhg_generic(x, f, g, A, tau, sigma, niter, fun_select, y=y, extra=extra,
-                  **kwargs)
+    spdhg_generic(x, f, g, A, tau, sigma, niter, fun_select=fun_select, y=y,
+                  extra=extra, **kwargs)
 
 
-def pa_spdhg(x, f, g, A, tau, sigma, niter, prob, mu_g, fun_select, **kwargs):
+def pa_spdhg(x, f, g, A, tau, sigma, niter, mu_g, **kwargs):
     """Computes a saddle point with a stochastic PDHG and primal acceleration.
 
     Next to other standard arguments, this algorithm requires the strong
@@ -173,47 +186,60 @@ def pa_spdhg(x, f, g, A, tau, sigma, niter, prob, mu_g, fun_select, **kwargs):
         Functional X -> IR_infty that has a proximal operator, i.e.
         g.proximal(tau) : X -> X.
     A : functions
-        Operators A[i] : X -> Y[i] that posses adjoints: A[i].adjoint
+        Operators A[i] : X -> Y[i] that possess adjoints: A[i].adjoint
     tau : scalar
         Step size for primal variable.
     sigma : scalar
         Step size for dual variable.
     niter : int
         Number of iterations
-    prob: list
-        List of probabilities that an index i is selected each iteration.
     mu_g : scalar
         Strong convexity constant of g.
-    fun_select : function
-        Function that selects blocks at every iteration IN -> {1,...,n}.
 
     Other Parameters
     ----------------
-    y : dual variable, optional
+    y : dual variable
         Dual variable is part of a product space. By default equals 0.
-    z : variable, optional
+    z : variable
         Adjoint of dual variable, z = A^* y. By default equals 0 if y = 0.
+    prob: list
+        List of probabilities that an index i is selected each iteration. By
+        default this is uniform serial sampling, p_i = 1/n.
+    fun_select : function
+        Function that selects blocks at every iteration IN -> {1,...,n}. By
+        default this is serial sampling, fun_select(k) selects an index
+        i \in {1,...,n} with probability p_i.
     callback : callable, optional
         Function called with the current iterate after each iteration.
 
     References
     ----------
-    [CERS2017] Chambolle, A., Ehrhardt, M. J., Richtárik, P., and
-    Schoenlieb, C.-B. *Stochastic Primal-Dual Hybrid Gradient Algorithm with
-    Arbitrary Sampling and Imaging Applications*.
-    ArXiv: http://arxiv.org/abs/1706.04957 (2017).
+    [CERS2017] A. Chambolle, M. J. Ehrhardt, P. Richtarik and C.-B. Schoenlieb,
+    *Stochastic Primal-Dual Hybrid Gradient Algorithm with Arbitrary Sampling
+    and Imaging Applications*. ArXiv: http://arxiv.org/abs/1706.04957 (2017).
     """
+
+    # Probabilities
+    prob = kwargs.pop('prob', None)
+    if prob is None:
+        prob = [1 / len(A)] * len(A)
+
+    # Selection function
+    fun_select = kwargs.pop('fun_select', None)
+    if fun_select is None:
+        def fun_select(x):
+            return [int(np.random.choice(len(A), 1, p=prob))]
 
     # Dual variable
     y = kwargs.pop('y', None)
 
     extra = [1 / p for p in prob]
 
-    spdhg_generic(x, f, g, A, tau, sigma, niter, fun_select, extra=extra,
-                  mu_g=mu_g, y=y, **kwargs)
+    spdhg_generic(x, f, g, A, tau, sigma, niter, fun_select=fun_select,
+                  extra=extra, mu_g=mu_g, y=y, **kwargs)
 
 
-def spdhg_generic(x, f, g, A, tau, sigma, niter, fun_select, **kwargs):
+def spdhg_generic(x, f, g, A, tau, sigma, niter, **kwargs):
     """Computes a saddle point with a stochastic PDHG.
 
     This means, a solution (x*, y*), y* = (y*_1, ..., y*_n) such that
@@ -236,7 +262,7 @@ def spdhg_generic(x, f, g, A, tau, sigma, niter, fun_select, **kwargs):
         Functional X -> IR_infty that has a proximal operator, i.e.
         g.proximal(tau) : X -> X.
     A : functions
-        Operators A[i] : X -> Y[i] that posses adjoints: A[i].adjoint
+        Operators A[i] : X -> Y[i] that possess adjoints: A[i].adjoint
     tau : scalar / vector / matrix
         Step size for primal variable. Note that the proximal operator of g
         has to be well-defined for this input.
@@ -246,8 +272,6 @@ def spdhg_generic(x, f, g, A, tau, sigma, niter, fun_select, **kwargs):
         for this input.
     niter : int
         Number of iterations
-    fun_select : function
-        Function that selects blocks at every iteration IN -> {1,...,n}.
 
     Other Parameters
     ----------------
@@ -259,20 +283,24 @@ def spdhg_generic(x, f, g, A, tau, sigma, niter, fun_select, **kwargs):
         Strong convexity constant of g.
     theta : scalar
         Global extrapolation factor.
-    extra : list
-        List of local extrapolation paramters for every index i.
+    extra: list
+        List of local extrapolation paramters for every index i. By default
+        extra_i = 1.
+    fun_select : function
+        Function that selects blocks at every iteration IN -> {1,...,n}. By
+        default this is serial uniform sampling, fun_select(k) selects an index
+        i \in {1,...,n} with probability 1/n.
     callback : callable, optional
         Function called with the current iterate after each iteration.
 
     References
     ----------
-    [CERS2017] Chambolle, A., Ehrhardt, M. J., Richtárik, P., and
-    Schoenlieb, C.-B. *Stochastic Primal-Dual Hybrid Gradient Algorithm with
-    Arbitrary Sampling and Imaging Applications*.
-    ArXiv: http://arxiv.org/abs/1706.04957 (2017).
+    [CERS2017] A. Chambolle, M. J. Ehrhardt, P. Richtarik and C.-B. Schoenlieb,
+    *Stochastic Primal-Dual Hybrid Gradient Algorithm with Arbitrary Sampling
+    and Imaging Applications*. ArXiv: http://arxiv.org/abs/1706.04957 (2017).
 
-    [E+2017] Ehrhardt, M. J., Markiewicz, P. J., Richtárik, P., Schott, J.,
-    Chambolle, A. and Schoenlieb, C.-B. *Faster PET reconstruction with a
+    [E+2017] M. J. Ehrhardt, P. J. Markiewicz, P. Richtarik, J. Schott,
+    A. Chambolle and C.-B. Schoenlieb, *Faster PET reconstruction with a
     stochastic primal-dual hybrid gradient method*. Wavelets and Sparsity XVII,
     58 (2017) http://doi.org/10.1117/12.2272946.
     """
@@ -306,10 +334,16 @@ def spdhg_generic(x, f, g, A, tau, sigma, niter, fun_select, **kwargs):
     # Global extrapolation factor theta
     theta = kwargs.pop('theta', 1)
 
-    # Extrapolation factor theta
+    # Second extrapolation factor
     extra = kwargs.pop('extra', None)
     if extra is None:
         extra = [1] * len(sigma)
+
+    # Selection function
+    fun_select = kwargs.pop('fun_select', None)
+    if fun_select is None:
+        def fun_select(x):
+            return [int(np.random.choice(len(A), 1, p=1 / len(A)))]
 
     # Initialize variables
     z_relax = z.copy()
@@ -375,8 +409,7 @@ def spdhg_generic(x, f, g, A, tau, sigma, niter, fun_select, **kwargs):
             callback([x, y])
 
 
-def da_spdhg(x, f, g, A, tau, sigma_tilde, niter, extra, prob, mu, fun_select,
-             **kwargs):
+def da_spdhg(x, f, g, A, tau, sigma_tilde, niter, mu, **kwargs):
     """Computes a saddle point with a PDHG and dual acceleration.
 
     It therefore requires the functionals f*_i to be mu[i] strongly convex.
@@ -393,22 +426,16 @@ def da_spdhg(x, f, g, A, tau, sigma_tilde, niter, extra, prob, mu, fun_select,
         Functional X -> IR_infty that has a proximal operator, i.e.
         g.proximal(tau) : X -> X.
     A : functions
-        Operators A[i] : X -> Y[i] that posses adjoints: A[i].adjoint
+        Operators A[i] : X -> Y[i] that possess adjoints: A[i].adjoint
     tau : scalar
         Initial step size for primal variable.
     sigma_tilde : scalar
         Related to initial step size for dual variable.
     niter : int
         Number of iterations
-    extra: list
-        List of local extrapolation paramters for every index i.
-    prob: list
-        List of probabilities that an index i is selected each iteration.
     mu: list
         List of strong convexity constants of f*, i.e. mu[i] is the strong
         convexity constant of f*[i].
-    fun_select : function
-        Function that selects blocks at every iteration IN -> {1,...,n}.
 
     Other Parameters
     ----------------
@@ -416,15 +443,24 @@ def da_spdhg(x, f, g, A, tau, sigma_tilde, niter, extra, prob, mu, fun_select,
         Dual variable is part of a product space
     z: variable
         Adjoint of dual variable, z = A^* y.
+    prob: list
+        List of probabilities that an index i is selected each iteration. By
+        default this is uniform serial sampling, p_i = 1/n.
+    fun_select : function
+        Function that selects blocks at every iteration IN -> {1,...,n}. By
+        default this is serial sampling, fun_select(k) selects an index
+        i \in {1,...,n} with probability p_i.
+    extra: list
+        List of local extrapolation paramters for every index i. By default
+        extra_i = 1 / p_i.
     callback : callable, optional
         Function called with the current iterate after each iteration.
 
     References
     ----------
-    [CERS2017] Chambolle, A., Ehrhardt, M. J., Richtárik, P., and
-    Schoenlieb, C.-B. *Stochastic Primal-Dual Hybrid Gradient Algorithm with
-    Arbitrary Sampling and Imaging Applications*.
-    ArXiv: http://arxiv.org/abs/1706.04957 (2017).
+    [CERS2017] A. Chambolle, M. J. Ehrhardt, P. Richtarik and C.-B. Schoenlieb,
+    *Stochastic Primal-Dual Hybrid Gradient Algorithm with Arbitrary Sampling
+    and Imaging Applications*. ArXiv: http://arxiv.org/abs/1706.04957 (2017).
     """
 
     # Callback object
@@ -432,6 +468,17 @@ def da_spdhg(x, f, g, A, tau, sigma_tilde, niter, extra, prob, mu, fun_select,
     if callback is not None and not callable(callback):
         raise TypeError('`callback` {} is not callable'
                         ''.format(callback))
+
+    # Probabilities
+    prob = kwargs.pop('prob', None)
+    if prob is None:
+        prob = [1 / len(A)] * len(A)
+
+    # Selection function
+    fun_select = kwargs.pop('fun_select', None)
+    if fun_select is None:
+        def fun_select(x):
+            return [int(np.random.choice(len(A), 1, p=prob))]
 
     # Dual variable
     y = kwargs.pop('y', None)
@@ -442,6 +489,11 @@ def da_spdhg(x, f, g, A, tau, sigma_tilde, niter, extra, prob, mu, fun_select,
     z = kwargs.pop('z', None)
     if z is None and y.norm() == 0:
         z = A.domain.zero()
+
+    # Extrapolation
+    extra = kwargs.pop('extra', None)
+    if extra is None:
+        extra = [1 / p for p in prob]
 
     # Initialize variables
     z_relax = z.copy()
@@ -473,7 +525,7 @@ def da_spdhg(x, f, g, A, tau, sigma_tilde, niter, extra, prob, mu, fun_select,
 
             # compute the step sizes sigma_i based on sigma_tilde
             sigma_i = sigma_tilde / (
-                    mu[i] * (prob[i] - 2 * (1 - prob[i]) * sigma_tilde))
+                mu[i] * (prob[i] - 2 * (1 - prob[i]) * sigma_tilde))
 
             # save old yi
             y_old[i].assign(y[i])
@@ -503,7 +555,7 @@ def da_spdhg(x, f, g, A, tau, sigma_tilde, niter, extra, prob, mu, fun_select,
             callback([x, y])
 
 
-def spdhg_pesquet(x, f, g, A, tau, sigma, niter, fun_select, **kwargs):
+def spdhg_pesquet(x, f, g, A, tau, sigma, niter, **kwargs):
     """Computes a saddle point with a stochstic variant of PDHG [PR2015].
 
     Parameters
@@ -518,7 +570,7 @@ def spdhg_pesquet(x, f, g, A, tau, sigma, niter, fun_select, **kwargs):
         Functional X -> IR_infty that has a proximal operator, i.e.
         g.proximal(tau) : X -> X.
     A : functions
-        Operators A[i] : X -> Y[i] that posses adjoints: A[i].adjoint
+        Operators A[i] : X -> Y[i] that possess adjoints: A[i].adjoint
     tau : scalar / vector / matrix
         Step size for primal variable. Note that the proximal operator of g
         has to be well-defined for this input.
@@ -528,8 +580,6 @@ def spdhg_pesquet(x, f, g, A, tau, sigma, niter, fun_select, **kwargs):
         have to be well-defined for this input.
     niter : int
         Number of iterations
-    fun_select : function
-        Function that selects blocks at every iteration IN -> {1,...,n}.
 
     Other Parameters
     ----------------
@@ -537,12 +587,16 @@ def spdhg_pesquet(x, f, g, A, tau, sigma, niter, fun_select, **kwargs):
         Dual variable is part of a product space
     z: variable
         Adjoint of dual variable, z = A^* y.
+    fun_select : function
+        Function that selects blocks at every iteration IN -> {1,...,n}. By
+        default this is uniform serial sampling, fun_select(k) selects
+        uniformly an i \in {1,...,n}.
     callback : callable, optional
         Function called with the current iterate after each iteration.
 
     References
     ----------
-    [PR2015] Pesquet, J.-C., & Repetti, A. *A Class of Randomized Primal-Dual
+    [PR2015] J.-C. Pesquet and A. Repetti. *A Class of Randomized Primal-Dual
     Algorithms for Distributed Optimization*.
     ArXiv: http://arxiv.org/abs/1406.6404 (2015).
     """
@@ -552,6 +606,12 @@ def spdhg_pesquet(x, f, g, A, tau, sigma, niter, fun_select, **kwargs):
     if callback is not None and not callable(callback):
         raise TypeError('`callback` {} is not callable'
                         ''.format(callback))
+
+    # Selection function
+    fun_select = kwargs.pop('fun_select', None)
+    if fun_select is None:
+        def fun_select(x):
+            return [int(np.random.choice(len(A), 1, p=1/len(A)))]
 
     # Dual variable
     y = kwargs.pop('y', None)

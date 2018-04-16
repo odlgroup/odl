@@ -9,6 +9,7 @@
 """Functions for folders and files."""
 
 from __future__ import print_function
+from builtins import super
 import numpy as np
 import odl
 import scipy.signal
@@ -53,8 +54,8 @@ def save_signal(signal, name, folder, fignum):
 
 
 def bregman(f, v, subgrad):
-    return (odl.solvers.FunctionalQuadraticPerturb(f, linear_term=-subgrad)
-            - f(v) + subgrad.inner(v))
+    return (odl.solvers.FunctionalQuadraticPerturb(f, linear_term=-subgrad) -
+            f(v) + subgrad.inner(v))
 
 
 def partition_1d(arr, slices):
@@ -377,10 +378,10 @@ def fgp_dual(p, data, alpha, niter, grad, proj_C, proj_P, tol=None, **kwargs):
 
         if not converged:
             # update step size
-            t = (1 + np.sqrt(1 + 4*t0**2))/2.
+            t = (1 + np.sqrt(1 + 4 * t0 ** 2)) / 2.
 
             # calculate next iterate
-            q[:] = pnew + (t0 - 1)/t * (pnew - p)
+            q[:] = pnew + (t0 - 1) / t * (pnew - p)
 
         p[:] = pnew
 
@@ -460,10 +461,9 @@ class KullbackLeiblerSmooth(odl.solvers.Functional):
 
     References
     ----------
-    [CERS2017] Chambolle, A., Ehrhardt, M. J., Richtárik, P. and
-    Schönlieb, C.-B. *Stochastic Primal-Dual Hybrid Gradient Algorithm with
-    Arbitrary Sampling and Imaging Applications*.
-    ArXiv: http://arxiv.org/abs/1706.04957, 2017
+    [CERS2017] A. Chambolle, M. J. Ehrhardt, P. Richtarik and C.-B. Schoenlieb,
+    *Stochastic Primal-Dual Hybrid Gradient Algorithm with Arbitrary Sampling
+    and Imaging Applications*. ArXiv: http://arxiv.org/abs/1706.04957 (2017).
     """
 
     def __init__(self, space, data, background):
@@ -485,7 +485,7 @@ class KullbackLeiblerSmooth(odl.solvers.Functional):
             raise NotImplementedError('Background must be positive')
 
         super().__init__(space=space, linear=False,
-                         grad_lipschitz=np.max(data/background**2))
+                         grad_lipschitz=np.max(data / background ** 2))
 
         if data not in self.domain:
             raise ValueError('`data` not in `domain`'
@@ -585,10 +585,9 @@ class KullbackLeiblerSmoothConvexConj(odl.solvers.Functional):
 
     References
     ----------
-    [CERS2017] Chambolle, A., Ehrhardt, M. J., Richtárik, P. and
-    Schönlieb, C.-B. *Stochastic Primal-Dual Hybrid Gradient Algorithm with
-    Arbitrary Sampling and Imaging Applications*.
-    ArXiv: http://arxiv.org/abs/1706.04957, 2017
+    [CERS2017] A. Chambolle, M. J. Ehrhardt, P. Richtarik and C.-B. Schoenlieb,
+    *Stochastic Primal-Dual Hybrid Gradient Algorithm with Arbitrary Sampling
+    and Imaging Applications*. ArXiv: http://arxiv.org/abs/1706.04957 (2017).
     """
 
     def __init__(self, space, data, background):
