@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -123,6 +123,7 @@ def print_mrc2014_spec():
     """
     print(MRC_2014_SPEC_TABLE)
 
+
 print_mrc2014_spec.__doc__ += MRC_2014_SPEC_TABLE
 
 
@@ -193,6 +194,7 @@ def print_fei_ext_header_spec():
     The specification table is as follows:
     """
     print(MRC_FEI_EXT_HEADER_SECTION)
+
 
 print_fei_ext_header_spec.__doc__ += MRC_FEI_EXT_HEADER_SECTION
 

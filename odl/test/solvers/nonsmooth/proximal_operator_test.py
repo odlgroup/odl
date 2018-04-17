@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -19,7 +19,7 @@ from odl.solvers.nonsmooth.proximal_operators import (
     proximal_separable_sum, proximal_box_constraint, proximal_const_func,
     proximal_convex_conj_kl, proximal_convex_conj_kl_cross_entropy,
     proximal_convex_conj_l1, proximal_convex_conj_l1_l2,
-    proximal_convex_conj_l2_squared, proximal_l2, proximal_nonnegativity)
+    proximal_convex_conj_l2_squared, proximal_l2)
 from odl.util.testutils import all_almost_equal, noise_element
 
 # Places for the accepted error when comparing results
@@ -76,28 +76,6 @@ def test_proximal_box_constraint():
 
             # Verify equal result
             assert all_almost_equal(result_np, result)
-
-
-def test_proximal_nonnegativity():
-    """Proximal factory for indicator function for non-negativity."""
-
-    # Image space
-    space = odl.uniform_discr(0, 1, 10)
-
-    # Element in the image space where the proximal operator is evaluated
-    x = space.element(np.arange(-5, 5))
-
-    # Factory function returning the proximal operator
-    prox_factory = proximal_nonnegativity(space)
-
-    # Initialize proximal operator of G (with an unused parameter)
-    prox = prox_factory(1.0)
-
-    # Optimal point returned by the proximal operator
-    result = prox(x)
-
-    # prox_tau[G](x) = non-negativity thresholding
-    assert all(result.asarray() >= 0)
 
 
 def test_proximal_separable_sum():

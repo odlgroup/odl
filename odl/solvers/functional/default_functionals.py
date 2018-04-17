@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -19,7 +19,7 @@ from odl.operator import (
 from odl.solvers.functional.functional import (
     Functional, FunctionalQuadraticPerturb)
 from odl.solvers.nonsmooth.proximal_operators import (
-    proximal_separable_sum, proximal_box_constraint, proximal_const_func,
+    proximal_separable_sum, proximal_indicator_box, proximal_const_func,
     proximal_convex_conj, proximal_convex_conj_kl,
     proximal_convex_conj_kl_cross_entropy, proximal_convex_conj_l1,
     proximal_convex_conj_l1_l2, proximal_convex_conj_l2, proximal_huber,
@@ -1096,7 +1096,7 @@ class IndicatorBox(Functional):
         onto that box, i.e., setting the input equal to the lower bound where
         it is smaller, and equal to the upper bound where it is larger.
         """
-        return proximal_box_constraint(self.domain, self.lower, self.upper)
+        return proximal_indicator_box(self.domain, self.lower, self.upper)
 
     def __repr__(self):
         """Return ``repr(self)``.

@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -89,8 +89,8 @@ class TheanoOperator(theano.Op):
         else:
             out_type = theano.tensor.TensorVariable(
                 theano.tensor.TensorType(
-                        self.operator.range.dtype,
-                        [False] * len(self.operator.range.shape)))
+                    self.operator.range.dtype,
+                    [False] * len(self.operator.range.shape)))
 
         return theano.Apply(self, [x], [out_type.type()])
 
