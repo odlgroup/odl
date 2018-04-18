@@ -40,7 +40,7 @@ __all__ = ('proximal_separable_sum', 'proximal_convex_conj',
            'proximal_quadratic_perturbation', 'proximal_composition',
            'proximal_const_func', 'proximal_indicator_box',
            'proximal_l1', 'proximal_convex_conj_l1',
-           'proximal_l2', 'proximal_convex_conj_l2',
+           'proximal_l2', 'proximal_indicator_l2_unit_ball',
            'proximal_l2_squared', 'proximal_convex_conj_l2_squared',
            'proximal_l1_l2', 'proximal_convex_conj_l1_l2',
            'proximal_convex_conj_kl', 'proximal_convex_conj_kl_cross_entropy',
@@ -158,13 +158,13 @@ def proximal_convex_conj(prox_factory):
             The proximal operator of ``sigma * F^*``.
         """
         # Get the underlying space. At the same time, check if the given
-        # prox_factory accepts stepsize objects of the type given by sigma.
+        # prox_factory accepts `sigma` of the given type.
         space = prox_factory(sigma).domain
 
-        mult_inner = MultiplyOperator(1 / sigma, domain=space, range=space)
-        mult_outer = MultiplyOperator(sigma, domain=space, range=space)
+        mult_right = MultiplyOperator(1 / sigma, domain=space, range=space)
+        mult_left = MultiplyOperator(sigma, domain=space, range=space)
         result = (IdentityOperator(space) -
-                  mult_outer * prox_factory(1 / sigma) * mult_inner)
+                  mult_left * prox_factory(1 / sigma) * mult_right)
         return result
 
     return convex_conj_prox_factory
@@ -590,31 +590,27 @@ def proximal_indicator_box(space, lower=None, upper=None):
 
     Notes
     -----
-    If :math:`P` is an interval :math:`[a,b]`, the indicator function is
+    The box indicator with lower bound :math:`a` and upper bound :math:`b`
+    (can be scalars, vectors or functions) is
     defined as
 
     .. math::
-        I_{P}(x) = \begin{cases}
-        0 & \text{if } x \in P, \\
-        \infty & \text{if } x \not \in P
+        \iota_{[a,b]}(x) =
+        \begin{cases}
+            0      & \text{if } a \leq x \leq b \text{ everywhere}, \\
+            \infty & \text{otherwise}.
         \end{cases}
 
-    For a step size :math:`\sigma`, the proximal operator of
-    :math:`\sigma I_{P}` is given by the projection onto the interval
+    Its proximal operator is (independently of :math:`\sigma`) given by
+    the projection onto the box:
 
     .. math::
-         \mathrm{prox}_{\sigma I_{P}}(x) = \begin{cases}
-         a & \text{if } x < a, \\
-         x & \text{if } x \in [a,b], \\
-         b & \text{if } x > b.
+         \mathrm{prox}_{\sigma \iota_{[a,b]}}(x) =
+         \begin{cases}
+         a & \text{where } x < a, \\
+         x & \text{where } a \leq x \leq b, \\
+         b & \text{where } x > b.
          \end{cases}
-
-    The proximal operator is independent of :math:`\sigma` and invariant under
-    a positive rescaling of :math:`I_{P}(x)`, since that leaves the indicator
-    function unchanged.
-
-    For spaces of the form :math:`R^n`, the definition extends naturally
-    in each component.
     """
     if lower is not None:
         if np.isscalar(lower):
@@ -631,7 +627,7 @@ def proximal_indicator_box(space, lower=None, upper=None):
         raise ValueError('`lower` may not be larger than `upper`, but '
                          '{} > {}'.format(lower, upper))
 
-    class ProximalOperatorIndicatorBox(Operator):
+    class ProximalIndicatorBox(Operator):
 
         """Proximal operator for a box indicator function."""
 
@@ -644,7 +640,7 @@ def proximal_indicator_box(space, lower=None, upper=None):
                 Step size parameter (unused but kept to maintain a uniform
                 interface).
             """
-            super(ProximalOperatorIndicatorBox, self).__init__(
+            super(ProximalIndicatorBox, self).__init__(
                 domain=space, range=space, linear=False)
             self.sigma = sigma
 
@@ -682,75 +678,104 @@ def proximal_indicator_box(space, lower=None, upper=None):
             callee_repr = repr_string('IndicatorBox', inner_parts)
             return method_repr_string(callee_repr, 'proximal', ['1.0'])
 
-    return ProximalOperatorIndicatorBox
+    return ProximalIndicatorBox
 
 
-#TODO: continue here
-def proximal_convex_conj_l2(space, lam=1, g=None):
-    """Proximal operator factory of the convex conj of the l2-norm/distance.
+def proximal_indicator_l2_unit_ball(space):
+    r"""Return the proximal factory for the L2 unit ball indicator functional.
 
-    Function for the proximal operator of the convex conjugate of the
-    functional F where F is the l2-norm (or distance to g, if given)::
-
-        F(x) =  lam ||x - g||_2
-
-    with x and g elements in ``space``, scaling factor lam, and given data g.
+    The L2 unit ball indicator function assigns the value ``+inf`` to all
+    points outside the unit ball, and ``0`` points inside. Its proximal
+    operator is the projection onto that ball.
 
     Parameters
     ----------
     space : `LinearSpace`
-        Domain of F(x). Needs to be a Hilbert space.
-        That is, have an inner product (`LinearSpace.inner`).
-    lam : positive float, optional
-        Scaling factor or regularization parameter.
-    g : ``space`` element, optional
-        An element in ``space``. Default: ``space.zero``.
+        Domain of the functional.
 
     Returns
     -------
     prox_factory : function
-        Factory for the proximal operator to be initialized
+        Factory for the proximal operator of the ball indicator functional.
+        It always returns the unit ball projection operator, independently
+        of its input parameter.
 
     Notes
     -----
-    Most problems are forumlated for the squared norm/distance, in that case
-    use the `proximal_convex_conj_l2_squared` instead.
-
-    The :math:`L_2`-norm/distance :math:`F` is given by is given by
+    The :math:`L^2` unit ball indicator is defined as
 
     .. math::
-        F(x) = \\lambda \|x - g\|_2
+        \iota_{B_2}(x) =
+        \begin{cases}
+            0      & \text{if } \|x\|_2 \leq 1, \\
+            \infty & \text{otherwise}.
+        \end{cases}
 
-    The convex conjugate :math:`F^*` of :math:`F` is given by
-
-    .. math::
-        F^*(y) = \\begin{cases}
-        0 & \\text{if } \|y-g\|_2 \leq \\lambda, \\\\
-        \\infty & \\text{else.}
-        \\end{cases}
-
-    For a step size :math:`\\sigma`, the proximal operator of
-    :math:`\\sigma F^*` is given by the projection onto the set of :math:`y`
-    satisfying :math:`\|y-g\|_2 \leq \\lambda`, i.e., by
+    Its proximal operator is (independently of :math:`\sigma`) given by
+    the projection onto the ball:
 
     .. math::
-        \mathrm{prox}_{\\sigma F^*}(y) = \\begin{cases}
-        \\lambda \\frac{y - g}{\|y - g\|}
-        & \\text{if } \|y-g\|_2 > \\lambda, \\\\
-        y & \\text{if } \|y-g\|_2 \leq \\lambda
-        \\end{cases}
-
-    Note that the expression is independent of :math:`\sigma`.
+         \mathrm{prox}_{\sigma \iota_{B_2}}(x) =
+         \begin{cases}
+         \frac{x}{\|x\|_2} & \text{if } \|x\|_2 > 1, \\
+         \ x & \text{otherwise.}
+         \end{cases}
 
     See Also
     --------
-    proximal_l2 : proximal without convex conjugate
-    proximal_convex_conj_l2_squared : proximal for squared norm/distance
+    proximal_l2
+    proximal_convex_conj_l2_squared
     """
-    prox_l2 = proximal_l2(space, lam=lam, g=g)
-    return proximal_convex_conj(prox_l2)
+
+    class ProximalIndicatorL2UnitBall(Operator):
+
+        """Proximal operator for the L2 unit ball indicator."""
+
+        def __init__(self, sigma):
+            """Initialize a new instance.
+
+            Parameters
+            ----------
+            sigma : positive float or array-like
+                Step size parameter (unused but kept to maintain a uniform
+                interface).
+            """
+            super(ProximalIndicatorL2UnitBall, self).__init__(
+                domain=space, range=space, linear=False)
+            self.sigma = float(sigma)
+
+        def _call(self, x, out):
+            """Implement ``self(x, out)``."""
+            dtype = getattr(self.domain, 'dtype', float)
+            eps = np.finfo(dtype).resolution * 10
+
+            x_norm = x.norm() * (1 + eps)
+            if x_norm > 1:
+                out.lincomb(1 / x_norm, x)
+            else:
+                out.assign(x)
+
+        def __repr__(self):
+            """Return ``repr(self)``.
+
+            Examples
+            --------
+            >>> space = odl.rn(2)
+            >>> l2norm = odl.solvers.L2Norm(space)
+            >>> l2norm.convex_conj.proximal(2)
+            IndicatorLpUnitBall(rn(2), exponent=2.0).proximal(1.0)
+            """
+            posargs = [space]
+            optargs = [('exponent', 2.0, None)]
+            with npy_printoptions(precision=REPR_PRECISION):
+                inner_parts = signature_string_parts(posargs, optargs)
+            callee_repr = repr_string('IndicatorLpUnitBall', inner_parts)
+            return method_repr_string(callee_repr, 'proximal', ['1.0'])
+
+    return ProximalIndicatorL2UnitBall
 
 
+#TODO: continue here
 def proximal_l2(space, lam=1, g=None):
     """Proximal operator factory of the l2-norm/distance.
 
@@ -791,7 +816,7 @@ def proximal_l2(space, lam=1, g=None):
         \mathrm{prox}_{\\sigma F}(y) = \\begin{cases}
         \\frac{1 - c}{\|y-g\|} \\cdot y  + c \cdot g
         & \\text{if } c < g, \\\\
-        g & \\text{else},
+        g & \\text{otherwise},
         \\end{cases}
 
     where :math:`c = \\sigma \\frac{\\lambda}{\|y - g\|_2}`.
@@ -799,7 +824,7 @@ def proximal_l2(space, lam=1, g=None):
     See Also
     --------
     proximal_l2_squared : proximal for squared norm/distance
-    proximal_convex_conj_l2 : proximal for convex conjugate
+    proximal_indicator_l2_unit_ball : proximal of the convex conjugate
     """
     lam = float(lam)
 
@@ -901,7 +926,8 @@ def proximal_convex_conj_l2_squared(space, lam=1, g=None):
 
     See Also
     --------
-    proximal_convex_conj_l2 : proximal without square
+    proximal_convex_conj_l2 :
+        proximal of the convex conjugate of the non-squared 2-norm
     proximal_l2_squared : proximal without convex conjugate
     """
     lam = float(lam)

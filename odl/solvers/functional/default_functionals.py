@@ -22,7 +22,7 @@ from odl.solvers.nonsmooth.proximal_operators import (
     proximal_separable_sum, proximal_indicator_box, proximal_const_func,
     proximal_convex_conj, proximal_convex_conj_kl,
     proximal_convex_conj_kl_cross_entropy, proximal_convex_conj_l1,
-    proximal_convex_conj_l1_l2, proximal_convex_conj_l2, proximal_huber,
+    proximal_convex_conj_l1_l2, proximal_indicator_l2_unit_ball, proximal_huber,
     proximal_l1, proximal_l1_l2, proximal_l2, proximal_l2_squared)
 from odl.space import ProductSpace
 from odl.util import (
@@ -276,11 +276,13 @@ class IndicatorLpUnitBall(Functional):
     This functional is defined as
 
     .. math::
-        f(x) =
+        \iota_{B_p}(x) =
         \begin{cases}
             0      & \text{if } \|x\|_p \leq 1, \\
-            \infty & \text{else.}
+            \infty & \text{else,}
         \end{cases}
+
+    where :math:`B_p` is the unit ball in the p-norm.
 
     See Also
     --------
@@ -352,15 +354,15 @@ class IndicatorLpUnitBall(Functional):
 
         See Also
         --------
-        odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_l1 :
+        proximal_convex_conj_l1 :
             `proximal factory` for convex conjuagte of L1-norm.
-        odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_l2 :
+        proximal_indicator_l2_unit_ball :
             `proximal factory` for convex conjuagte of L2-norm.
         """
         if self.exponent == np.inf:
-            return proximal_convex_conj_l1(space=self.domain)
+            return proximal_convex_conj_l1(self.domain)
         elif self.exponent == 2:
-            return proximal_convex_conj_l2(space=self.domain)
+            return proximal_indicator_l2_unit_ball(self.domain)
         else:
             raise NotImplementedError('`gradient` only implemented for p=2 or '
                                       'p=inf')
@@ -586,11 +588,13 @@ class IndicatorGroupL1UnitBall(Functional):
     This functional is defined as
 
     .. math::
-        \iota_B(\mathrm{x}) =
+        \iota_{B_{\times,p}}(\mathrm{x}) =
         \begin{cases}
             0      & \text{if } \|x\|_{\times, p} \leq 1, \\
-            \infty & \text{else.}
+            \infty & \text{else,}
         \end{cases}
+
+    where :math:`B_{\times,p}` is the unit ball in the :math:`p`-cross norm.
 
     See Also
     --------
@@ -1043,11 +1047,12 @@ class IndicatorBox(Functional):
 
     r"""Indicator functional on some box shaped domain.
 
-    The indicator with lower bound :math:`a` and upper bound :math:`b` is
+    The indicator with lower bound :math:`a` and upper bound :math:`b`
+    (can be scalars, vectors or functions) is
     defined as
 
     .. math::
-        \iota_{a,b}(x) =
+        \iota_{[a,b]}(x) =
         \begin{cases}
             0      & \text{if } a \leq x \leq b \text{ everywhere}, \\
             \infty & \text{else}.
@@ -1095,6 +1100,10 @@ class IndicatorBox(Functional):
         The proximal operator of the box indicator functional is a projection
         onto that box, i.e., setting the input equal to the lower bound where
         it is smaller, and equal to the upper bound where it is larger.
+
+        See Also
+        --------
+        proximal_indicator_box
         """
         return proximal_indicator_box(self.domain, self.lower, self.upper)
 
