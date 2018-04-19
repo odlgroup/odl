@@ -254,6 +254,14 @@ def array_str(a, nprint=6):
     [ 2.]
     """
     a = np.asarray(a)
+
+    # TODO(numpy #10934): remove this workaround when upstream issue is
+    # fixed (not before NumPy 1.14.3)
+    if a.shape == ():
+        # Use NumPy anyway to make use of the print options
+        a_repr = np.array_repr(a)  # 'array(1.234)'
+        return a_repr[6:-1]
+
     max_shape = tuple(n if n < nprint else nprint for n in a.shape)
     with npy_printoptions(threshold=int(np.prod(max_shape)),
                           edgeitems=nprint // 2,

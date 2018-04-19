@@ -33,7 +33,7 @@ from odl.set.space import LinearSpaceElement
 from odl.space import ProductSpace
 from odl.util import (
     signature_string_parts, repr_string, npy_printoptions, REPR_PRECISION,
-    method_repr_string)
+    method_repr_string, array_str)
 
 __all__ = ('proximal_separable_sum', 'proximal_convex_conj',
            'proximal_translation', 'proximal_arg_scaling',
@@ -41,7 +41,6 @@ __all__ = ('proximal_separable_sum', 'proximal_convex_conj',
            'proximal_const_func', 'proximal_indicator_box',
            'proximal_l1', 'proximal_convex_conj_l1',
            'proximal_l2', 'proximal_indicator_l2_unit_ball',
-           'proximal_l2_squared', 'proximal_convex_conj_l2_squared',
            'proximal_l1_l2', 'proximal_convex_conj_l1_l2',
            'proximal_convex_conj_kl', 'proximal_convex_conj_kl_cross_entropy',
            'proximal_huber')
@@ -364,13 +363,14 @@ def proximal_quadratic_perturbation(prox_factory, a, u=None):
 
     Notes
     -----
-    Given a functional :math:`F`, this is calculated according to the rule
+    Given a functional :math:`F`, this proximal is calculated according to
+    the rule
 
     .. math::
         \mathrm{prox}_{\sigma \left(F( \cdot ) + a \| \cdot \|^2 +
         <u, \cdot >\right)}(x) =
         c \, \mathrm{prox}_{\sigma F( \cdot \, c)}
-        \big((x - \sigma u)\cdot c\big)
+        \big((x - \sigma u)\cdot c\big),
 
     where :math:`c` is the constant
 
@@ -681,12 +681,8 @@ def proximal_indicator_box(space, lower=None, upper=None):
     return ProximalIndicatorBox
 
 
-def proximal_indicator_l2_unit_ball(space):
-    r"""Return the proximal factory for the L2 unit ball indicator functional.
-
-    The L2 unit ball indicator function assigns the value ``+inf`` to all
-    points outside the unit ball, and ``0`` points inside. Its proximal
-    operator is the projection onto that ball.
+def proximal_l1(space):
+    r"""Return the proximal factory for the L1 norm functional.
 
     Parameters
     ----------
@@ -696,40 +692,37 @@ def proximal_indicator_l2_unit_ball(space):
     Returns
     -------
     prox_factory : function
-        Factory for the proximal operator of the ball indicator functional.
-        It always returns the unit ball projection operator, independently
-        of its input parameter.
+        Factory for the proximal operator of the L1 norm functional.
 
     Notes
     -----
-    The :math:`L^2` unit ball indicator is defined as
+    For a step size :math:`\sigma`, the proximal operator of
+    :math:`\sigma \|\cdot\|_1` is given by
 
     .. math::
-        \iota_{B_2}(x) =
-        \begin{cases}
-            0      & \text{if } \|x\|_2 \leq 1, \\
-            \infty & \text{otherwise}.
-        \end{cases}
+        \mathrm{prox}_{\sigma \|\cdot\|_1}(x) =
+        \max\big\{|x| - \sigma,\, 0\big\}\ \mathrm{sign}(x),
 
-    Its proximal operator is (independently of :math:`\sigma`) given by
-    the projection onto the ball:
+    where all operations are to be read pointwise.
+
+    For vector-valued :math:`\mathbf{x}`, the (non-isotropic) proximal
+    operator is the component-wise scalar proximal:
 
     .. math::
-         \mathrm{prox}_{\sigma \iota_{B_2}}(x) =
-         \begin{cases}
-         \frac{x}{\|x\|_2} & \text{if } \|x\|_2 > 1, \\
-         \ x & \text{otherwise.}
-         \end{cases}
+        \mathrm{prox}_{\sigma \|\cdot\|_1}(\mathbf{x}) = \left(
+            \mathrm{prox}_{\sigma F}(x_1), \dots,
+            \mathrm{prox}_{\sigma F}(x_d)
+            \right).
 
     See Also
     --------
-    proximal_l2
-    proximal_convex_conj_l2_squared
+    proximal_convex_conj_l1
+    proximal_l1_l2 : isotropic variant of the group L1 norm proximal
     """
 
-    class ProximalIndicatorL2UnitBall(Operator):
+    class ProximalL1(Operator):
 
-        """Proximal operator for the L2 unit ball indicator."""
+        """Proximal operator of the L1 norm/distance."""
 
         def __init__(self, sigma):
             """Initialize a new instance.
@@ -737,23 +730,28 @@ def proximal_indicator_l2_unit_ball(space):
             Parameters
             ----------
             sigma : positive float or array-like
-                Step size parameter (unused but kept to maintain a uniform
-                interface).
+                Step size parameter. A scalar defines a global step size,
+                and arrays follow the broadcasting rules.
             """
-            super(ProximalIndicatorL2UnitBall, self).__init__(
+            super(ProximalL1, self).__init__(
                 domain=space, range=space, linear=False)
-            self.sigma = float(sigma)
+
+            if isinstance(space, ProductSpace) and not space.is_power_space:
+                dtype = float
+            else:
+                dtype = space.dtype
+
+            self.sigma = np.asarray(sigma, dtype=dtype)
 
         def _call(self, x, out):
-            """Implement ``self(x, out)``."""
-            dtype = getattr(self.domain, 'dtype', float)
-            eps = np.finfo(dtype).resolution * 10
+            """Return ``self(x, out=out)``."""
+            # Assign here in case `x` and `out` are aliased
+            sign_x = x.ufuncs.sign()
 
-            x_norm = x.norm() * (1 + eps)
-            if x_norm > 1:
-                out.lincomb(1 / x_norm, x)
-            else:
-                out.assign(x)
+            x.ufuncs.absolute(out=out)
+            out -= self.sigma
+            out.ufuncs.maximum(0, out=out)
+            out *= sign_x
 
         def __repr__(self):
             """Return ``repr(self)``.
@@ -761,308 +759,18 @@ def proximal_indicator_l2_unit_ball(space):
             Examples
             --------
             >>> space = odl.rn(2)
-            >>> l2norm = odl.solvers.L2Norm(space)
-            >>> l2norm.convex_conj.proximal(2)
-            IndicatorLpUnitBall(rn(2), exponent=2.0).proximal(1.0)
+            >>> l1norm = odl.solvers.L1Norm(space)
+            >>> l1norm.proximal(2)
+            L1Norm(rn(2)).proximal(2.0)
             """
             posargs = [space]
-            optargs = [('exponent', 2.0, None)]
+            inner_parts = signature_string_parts(posargs, [])
+            callee_repr = repr_string('L1Norm', inner_parts)
             with npy_printoptions(precision=REPR_PRECISION):
-                inner_parts = signature_string_parts(posargs, optargs)
-            callee_repr = repr_string('IndicatorLpUnitBall', inner_parts)
-            return method_repr_string(callee_repr, 'proximal', ['1.0'])
+                prox_arg_str = array_str(self.sigma)
+            return method_repr_string(callee_repr, 'proximal', [prox_arg_str])
 
-    return ProximalIndicatorL2UnitBall
-
-
-#TODO: continue here
-def proximal_l2(space, lam=1, g=None):
-    """Proximal operator factory of the l2-norm/distance.
-
-    Function for the proximal operator of the functional ``F`` where ``F``
-    is the l2-norm (or distance to g, if given)::
-
-        ``F(x) =  lam ||x - g||_2``
-
-    Parameters
-    ----------
-    space : `LinearSpace`
-        Domain of F(x). Needs to be a Hilbert space.
-        That is, have an inner product (`LinearSpace.inner`).
-    lam : positive float, optional
-        Scaling factor or regularization parameter.
-    g : ``space`` element, optional
-        An element in ``space``. Default: ``space.zero``.
-
-    Returns
-    -------
-    prox_factory : callable
-        Factory for the proximal operator to be initialized.
-
-    Notes
-    -----
-    Most problems are forumlated for the squared norm/distance, in that case
-    use `proximal_l2_squared` instead.
-
-    The :math:`L_2`-norm/distance :math:`F` is given by
-
-    .. math::
-        F(x) = \\lambda \|x - g\|_2
-
-    For a step size :math:`\\sigma`, the proximal operator of :math:`\\sigma F`
-    is given by
-
-    .. math::
-        \mathrm{prox}_{\\sigma F}(y) = \\begin{cases}
-        \\frac{1 - c}{\|y-g\|} \\cdot y  + c \cdot g
-        & \\text{if } c < g, \\\\
-        g & \\text{otherwise},
-        \\end{cases}
-
-    where :math:`c = \\sigma \\frac{\\lambda}{\|y - g\|_2}`.
-
-    See Also
-    --------
-    proximal_l2_squared : proximal for squared norm/distance
-    proximal_indicator_l2_unit_ball : proximal of the convex conjugate
-    """
-    lam = float(lam)
-
-    if g is not None and g not in space:
-        raise TypeError('{!r} is not an element of {!r}'.format(g, space))
-
-    class ProximalL2(Operator):
-
-        """Proximal operator of the l2-norm/distance."""
-
-        def __init__(self, sigma):
-            """Initialize a new instance.
-
-            Parameters
-            ----------
-            sigma : positive float
-                Step size parameter
-            """
-            super(ProximalL2, self).__init__(
-                domain=space, range=space, linear=False)
-            self.sigma = float(sigma)
-
-        def _call(self, x, out):
-            """Apply the operator to ``x`` and stores the result in ``out``."""
-            dtype = getattr(self.domain, 'dtype', float)
-            eps = np.finfo(dtype).resolution * 10
-
-            if g is None:
-                x_norm = x.norm() * (1 + eps)
-                if x_norm > 0:
-                    step = self.sigma * lam / x_norm
-                else:
-                    step = np.infty
-
-                if step < 1.0:
-                    out.lincomb(1.0 - step, x)
-                else:
-                    out.set_zero()
-
-            else:
-                x_norm = (x - g).norm() * (1 + eps)
-                if x_norm > 0:
-                    step = self.sigma * lam / x_norm
-                else:
-                    step = np.infty
-
-                if step < 1.0:
-                    out.lincomb(1.0 - step, x, step, g)
-                else:
-                    out.assign(g)
-
-    return ProximalL2
-
-
-def proximal_convex_conj_l2_squared(space, lam=1, g=None):
-    """Proximal operator factory of the convex conj of the squared l2-norm/dist
-
-    Function for the proximal operator of the convex conjugate of the
-    functional F where F is the l2-norm (or distance to g, if given)::
-
-        F(x) =  lam ||x - g||_2^2
-
-    with x and g elements in ``space``, scaling factor lam, and given data g.
-
-    Parameters
-    ----------
-    space : `LinearSpace`
-        Domain of F(x). Needs to be a Hilbert space.
-        That is, have an inner product (`LinearSpace.inner`).
-    lam : positive float, optional
-        Scaling factor or regularization parameter.
-    g : ``space`` element, optional
-        An element in ``space``. Default: ``space.zero``.
-
-    Returns
-    -------
-    prox_factory : function
-        Factory for the proximal operator to be initialized
-
-    Notes
-    -----
-    The squared :math:`L_2`-norm/distance :math:`F` is given by
-
-    .. math::
-        F(x) =  \\lambda \|x - g\|_2^2.
-
-    The convex conjugate :math:`F^*` of :math:`F` is given by
-
-    .. math::
-        F^*(y) = \\frac{1}{4\\lambda} \left( \|
-        y\|_2^2 + \langle y, g \\rangle \\right)
-
-    For a step size :math:`\\sigma`, the proximal operator of
-    :math:`\\sigma F^*` is given by
-
-    .. math::
-        \mathrm{prox}_{\\sigma F^*}(y) = \\frac{y - \\sigma g}{1 +
-        \\sigma/(2 \\lambda)}
-
-    See Also
-    --------
-    proximal_convex_conj_l2 :
-        proximal of the convex conjugate of the non-squared 2-norm
-    proximal_l2_squared : proximal without convex conjugate
-    """
-    lam = float(lam)
-
-    if g is not None and g not in space:
-        raise TypeError('{!r} is not an element of {!r}'.format(g, space))
-
-    class ProximalConvexConjL2Squared(Operator):
-
-        """Proximal operator of the convex conj of the squared l2-norm/dist."""
-
-        def __init__(self, sigma):
-            """Initialize a new instance.
-
-            Parameters
-            ----------
-            sigma : positive float or pointwise positive space.element
-                Step size parameter. If scalar, it contains a global stepsize,
-                otherwise the space.element defines a stepsize for each point.
-            """
-            super(ProximalConvexConjL2Squared, self).__init__(
-                domain=space, range=space, linear=g is None)
-            if np.isscalar(sigma):
-                self.sigma = float(sigma)
-            else:
-                self.sigma = space.element(sigma)
-
-        def _call(self, x, out):
-            """Apply the operator to ``x`` and store the result in ``out``"""
-            # (x - sig*g) / (1 + sig/(2 lam))
-            sig = self.sigma
-            if np.isscalar(sig):
-                if g is None:
-                    out.lincomb(1.0 / (1 + 0.5 * sig / lam), x)
-                else:
-                    out.lincomb(1.0 / (1 + 0.5 * sig / lam), x,
-                                -sig / (1 + 0.5 * sig / lam), g)
-            elif sig in space:
-                if g is None:
-                    x.divide(1 + 0.5 / lam * sig, out=out)
-                else:
-                    sig.multiply(g, out=out)
-                    out.lincomb(1.0, x, -1.0, out=out)
-                    out.divide(1 + 0.5 / lam * sig, out=out)
-            else:
-                raise RuntimeError('Error in ProximalConvexConjL2Squared: sig '
-                                   'is neither a scalar nor a space element.')
-
-    return ProximalConvexConjL2Squared
-
-
-def proximal_l2_squared(space, lam=1, g=None):
-    """Proximal operator factory of the squared l2-norm/distance.
-
-    Function for the proximal operator of the convex conjugate of the
-    functional F where F is the l2-norm (or distance to g, if given)::
-
-        F(x) =  lam ||x - g||_2^2
-
-    with x and g elements in ``space``, scaling factor lam, and given data g.
-
-    Parameters
-    ----------
-    space : `LinearSpace`
-        Domain of F(x). Needs to be a Hilbert space.
-        That is, have an inner product (`LinearSpace.inner`).
-    lam : positive float, optional
-        Scaling factor or regularization parameter.
-    g : ``space`` element, optional
-        An element in ``space``. Default: ``space.zero``.
-
-    Returns
-    -------
-    prox_factory : function
-        Factory for the proximal operator to be initialized
-
-    Notes
-    -----
-    The squared :math:`L_2`-norm/distance :math:`F` is given by
-
-    .. math::
-        F(x) =  \\lambda \|x - g\|_2^2.
-
-    For a step size :math:`\\sigma`, the proximal operator of :math:`\\sigma F`
-    is given by
-
-    .. math::
-        \mathrm{prox}_{\\sigma F}(x) = \\frac{x + 2 \\sigma \\lambda g}
-        {1 + 2 \\sigma \\lambda}.
-
-    See Also
-    --------
-    proximal_l2 : proximal without square
-    proximal_convex_conj_l2_squared : proximal for convex conjugate
-    """
-
-    class ProximalL2Squared(Operator):
-
-        """Proximal operator of the squared l2-norm/dist."""
-
-        def __init__(self, sigma):
-            """Initialize a new instance.
-
-            Parameters
-            ----------
-            sigma : positive float or pointwise positive space.element
-                Step size parameter. If scalar, it contains a global stepsize,
-                otherwise the space.element defines a stepsize for each point.
-            """
-            super(ProximalL2Squared, self).__init__(
-                domain=space, range=space, linear=g is None)
-            if np.isscalar(sigma):
-                self.sigma = float(sigma)
-            else:
-                self.sigma = space.element(sigma)
-
-        def _call(self, x, out):
-            """Apply the operator to ``x`` and store the result in ``out``"""
-            # (x + 2*sig*lam*g) / (1 + 2*sig*lam))
-            sig = self.sigma
-            if np.isscalar(sig):
-                if g is None:
-                    out.lincomb(1.0 / (1 + 2 * sig * lam), x)
-                else:
-                    out.lincomb(1.0 / (1 + 2 * sig * lam), x,
-                                2 * sig * lam / (1 + 2 * sig * lam), g)
-            else:   # sig in space
-                if g is None:
-                    x.divide(1.0 + 2.0 * sig * lam, out=out)
-                else:
-                    sig.multiply(2.0 * lam * g, out=out)
-                    out.lincomb(1.0, x, 1.0, out=out)
-                    out.divide(1.0 + 2 * sig * lam, out=out)
-
-    return ProximalL2Squared
+    return ProximalL1
 
 
 def proximal_convex_conj_l1(space, lam=1, g=None):
@@ -1193,6 +901,158 @@ def proximal_convex_conj_l1(space, lam=1, g=None):
     return ProximalConvexConjL1
 
 
+def proximal_l2(space):
+    r"""Return the proximal factory for the L2 norm functional.
+
+    Parameters
+    ----------
+    space : `LinearSpace`
+        Domain of the functional.
+
+    Returns
+    -------
+    prox_factory : function
+        Factory for the proximal operator of the L2 norm functional.
+
+    Notes
+    -----
+    For a step size :math:`\sigma`, the proximal operator of
+    :math:`\sigma \|\cdot\|_2` is given by
+
+    .. math::
+        \mathrm{prox}_{\sigma \|\cdot\|_2}(y) =
+        \max\left\{1 - \frac{\sigma}{\|y\|_2},\ 0\right\}\ y.
+
+    See Also
+    --------
+    proximal_l2_squared : proximal for squared norm/distance
+    proximal_indicator_l2_unit_ball : proximal of the convex conjugate
+    """
+
+    class ProximalL2(Operator):
+
+        """Proximal operator of the L2 norm."""
+
+        def __init__(self, sigma):
+            """Initialize a new instance.
+
+            Parameters
+            ----------
+            sigma : positive float
+                Step size parameter.
+            """
+            super(ProximalL2, self).__init__(
+                domain=space, range=space, linear=False)
+            self.sigma = float(sigma)
+
+        def _call(self, x, out):
+            """Implement ``self(x, out)``."""
+            dtype = getattr(self.domain, 'dtype', float)
+            eps = np.finfo(dtype).resolution * 10
+
+            x_norm = x.norm() * (1 + eps)
+            if x_norm == 0:
+                out.set_zero()
+            else:
+                out.lincomb(1 - self.sigma / x_norm, x)
+
+    return ProximalL2
+
+
+def proximal_indicator_l2_unit_ball(space):
+    r"""Return the proximal factory for the L2 unit ball indicator functional.
+
+    The L2 unit ball indicator function assigns the value ``+inf`` to all
+    points outside the unit ball, and ``0`` points inside. Its proximal
+    operator is the projection onto that ball.
+
+    Parameters
+    ----------
+    space : `LinearSpace`
+        Domain of the functional.
+
+    Returns
+    -------
+    prox_factory : function
+        Factory for the proximal operator of the ball indicator functional.
+        It always returns the unit ball projection operator, independently
+        of its input parameter.
+
+    Notes
+    -----
+    The :math:`L^2` unit ball indicator is defined as
+
+    .. math::
+        \iota_{B_2}(x) =
+        \begin{cases}
+            0      & \text{if } \|x\|_2 \leq 1, \\
+            \infty & \text{otherwise}.
+        \end{cases}
+
+    Its proximal operator is (independently of :math:`\sigma`) given by
+    the projection onto the ball:
+
+    .. math::
+         \mathrm{prox}_{\sigma \iota_{B_2}}(x) =
+         \begin{cases}
+         \frac{x}{\|x\|_2} & \text{if } \|x\|_2 > 1, \\
+         \ x & \text{otherwise.}
+         \end{cases}
+
+    See Also
+    --------
+    proximal_l2
+    proximal_convex_conj_l2_squared
+    """
+
+    class ProximalIndicatorL2UnitBall(Operator):
+
+        """Proximal operator for the L2 unit ball indicator."""
+
+        def __init__(self, sigma):
+            """Initialize a new instance.
+
+            Parameters
+            ----------
+            sigma : positive float or array-like
+                Step size parameter (unused but kept to maintain a uniform
+                interface).
+            """
+            super(ProximalIndicatorL2UnitBall, self).__init__(
+                domain=space, range=space, linear=False)
+            self.sigma = float(sigma)
+
+        def _call(self, x, out):
+            """Implement ``self(x, out)``."""
+            dtype = getattr(self.domain, 'dtype', float)
+            eps = np.finfo(dtype).resolution * 10
+
+            x_norm = x.norm() * (1 + eps)
+            if x_norm > 1:
+                out.lincomb(1 / x_norm, x)
+            else:
+                out.assign(x)
+
+        def __repr__(self):
+            """Return ``repr(self)``.
+
+            Examples
+            --------
+            >>> space = odl.rn(2)
+            >>> l2norm = odl.solvers.L2Norm(space)
+            >>> l2norm.convex_conj.proximal(2)
+            IndicatorLpUnitBall(rn(2), exponent=2.0).proximal(1.0)
+            """
+            posargs = [space]
+            optargs = [('exponent', 2.0, None)]
+            with npy_printoptions(precision=REPR_PRECISION):
+                inner_parts = signature_string_parts(posargs, optargs)
+            callee_repr = repr_string('IndicatorLpUnitBall', inner_parts)
+            return method_repr_string(callee_repr, 'proximal', ['1.0'])
+
+    return ProximalIndicatorL2UnitBall
+
+
 def proximal_convex_conj_l1_l2(space, lam=1, g=None):
     """Proximal operator factory of the L1-L2 norm/distance convex conjugate.
 
@@ -1295,117 +1155,6 @@ def proximal_convex_conj_l1_l2(space, lam=1, g=None):
                 diff_i.divide(denom, out=out_i)
 
     return ProximalConvexConjL1L2
-
-
-def proximal_l1(space, lam=1, g=None):
-    """Proximal operator factory of the L1 norm/distance.
-
-    Implements the proximal operator of the functional ::
-
-        F(x) = lam ||x - g||_1
-
-    with ``x`` and ``g`` elements in ``space``, and scaling factor ``lam``.
-
-    Parameters
-    ----------
-    space : `LinearSpace` or `ProductSpace`
-        Domain of the functional.
-    lam : positive float, optional
-        Scaling factor or regularization parameter.
-    g : ``space`` element, optional
-        Element to which the L1 distance is taken.
-        Default: ``space.zero``.
-
-    Returns
-    -------
-    prox_factory : function
-        Factory for the proximal operator to be initialized
-
-    Notes
-    -----
-    For the functional
-
-    .. math::
-        F(x) = \\lambda \|x - g\|_1,
-
-    and a step size :math:`\\sigma`, the proximal operator of
-    :math:`\\sigma F` is given as the "soft-shrinkage" operator
-
-    .. math::
-        \mathrm{prox}_{\\sigma F}(x) =
-        \\begin{cases}
-            g, & \\text{where } |x - g| \\leq \sigma\\lambda, \\\\
-            x - \sigma\\lambda \mathrm{sign}(x - g), & \\text{elsewhere.}
-        \\end{cases}
-
-    Here, all operations are to be read pointwise.
-
-    For vector-valued :math:`x` and :math:`g`, the (non-isotropic) proximal
-    operator is the component-wise scalar proximal:
-
-    .. math::
-        \mathrm{prox}_{\\sigma F}(x) = \\left(
-            \mathrm{prox}_{\\sigma F}(x_1), \dots,
-            \mathrm{prox}_{\\sigma F}(x_d)
-            \\right),
-
-    where :math:`d` is the number of components of :math:`x`.
-
-    See Also
-    --------
-    proximal_convex_conj_l1 : proximal for convex conjugate
-    proximal_l1_l2 : isotropic variant of the group L1 norm proximal
-    """
-    lam = float(lam)
-
-    if g is not None and g not in space:
-        raise TypeError('{!r} is not an element of {!r}'.format(g, space))
-
-    class ProximalL1(Operator):
-
-        """Proximal operator of the L1 norm/distance."""
-
-        def __init__(self, sigma):
-            """Initialize a new instance.
-
-            Parameters
-            ----------
-            sigma : positive float or pointwise positive space.element
-                Step size parameter. If scalar, it contains a global stepsize,
-                otherwise the space.element defines a stepsize for each point.
-            """
-            super(ProximalL1, self).__init__(
-                domain=space, range=space, linear=False)
-            if np.isscalar(sigma):
-                self.sigma = float(sigma)
-            else:
-                self.sigma = space.element(sigma)
-
-        def _call(self, x, out):
-            """Return ``self(x, out=out)``."""
-            # diff = x - g
-            if g is not None:
-                diff = x - g
-            else:
-                if x is out:
-                    # Handle aliased `x` and `out` (original `x` needed later)
-                    diff = x.copy()
-                else:
-                    diff = x
-
-            # We write the operator as
-            # x - (x - g) / max(|x - g| / sig*lam, 1)
-            denom = diff.ufuncs.absolute()
-            denom /= self.sigma * lam
-            denom.ufuncs.maximum(1, out=denom)
-
-            # out = (x - g) / denom
-            diff.ufuncs.divide(denom, out=out)
-
-            # out = x - ...
-            out.lincomb(1, x, -1, out)
-
-    return ProximalL1
 
 
 def proximal_l1_l2(space, lam=1, g=None):

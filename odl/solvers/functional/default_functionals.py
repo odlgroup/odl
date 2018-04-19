@@ -23,7 +23,7 @@ from odl.solvers.nonsmooth.proximal_operators import (
     proximal_convex_conj, proximal_convex_conj_kl,
     proximal_convex_conj_kl_cross_entropy, proximal_convex_conj_l1,
     proximal_convex_conj_l1_l2, proximal_indicator_l2_unit_ball, proximal_huber,
-    proximal_l1, proximal_l1_l2, proximal_l2, proximal_l2_squared)
+    proximal_l1, proximal_l1_l2, proximal_l2)
 from odl.space import ProductSpace
 from odl.util import (
     REPR_PRECISION, conj_exponent, moveaxis, npy_printoptions, repr_string,
@@ -141,9 +141,9 @@ class LpNorm(Functional):
             proximal factory for the L2-norm.
         """
         if self.exponent == 1:
-            return proximal_l1(space=self.domain)
+            return proximal_l1(self.domain)
         elif self.exponent == 2:
-            return proximal_l2(space=self.domain)
+            return proximal_l2(self.domain)
         else:
             raise NotImplementedError('`proximal` only implemented for p=1 or '
                                       'p=2')
@@ -537,9 +537,9 @@ class GroupL1Norm(Functional):
         proximal_l1_l2 : `proximal factory` for the L1-L2 norm.
         """
         if self.pointwise_norm.exponent == 1:
-            return proximal_l1(space=self.domain)
+            return proximal_l1(self.domain)
         elif self.pointwise_norm.exponent == 2:
-            return proximal_l1_l2(space=self.domain)
+            return proximal_l1_l2(self.domain)
         else:
             raise NotImplementedError('`proximal` only implemented for p = 1 '
                                       'or 2')
@@ -849,14 +849,19 @@ class L2NormSquared(Functional):
 
     @property
     def proximal(self):
-        """Return the `proximal factory` of the functional.
+        r"""Return the `proximal factory` of the functional.
 
-        See Also
-        --------
-        odl.solvers.nonsmooth.proximal_operators.proximal_l2_squared :
-            `proximal factory` for the squared L2 norm.
+        The proximal of the squared L2 norm is the scaling
+
+        .. math::
+            \mathrm{prox}_{\sigma \|\cdot\|_2^2}(x) =
+            \frac{x}{1 + 2 \sigma}.
         """
-        return proximal_l2_squared(space=self.domain)
+        def l2_squared_prox_factory(sigma):
+            """Return the L2 squared proximal operator for ``sigma``."""
+            return ScalingOperator(1 / (1 + 2 * sigma), self.domain)
+
+        return l2_squared_prox_factory
 
     @property
     def convex_conj(self):
@@ -867,7 +872,7 @@ class L2NormSquared(Functional):
         The conjugate functional of :math:`\| \cdot \|_2^2` is
         :math:`\frac{1}{4}\| \cdot \|_2^2`
         """
-        return (1.0 / 4) * L2NormSquared(self.domain)
+        return (1 / 4) * L2NormSquared(self.domain)
 
     def __repr__(self):
         """Return ``repr(self)``.
