@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -9,10 +9,11 @@
 """Test reconstruction with STIR."""
 
 from __future__ import division
+
 import os.path as pth
+
 import odl
 from odl.tomo.backends.stir_bindings import stir_projector_from_file
-
 
 pytestmark = odl.util.skip_if_no_largescale
 

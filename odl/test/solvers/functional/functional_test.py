@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -9,16 +9,16 @@
 """Test for the Functional class."""
 
 from __future__ import division
+
 import numpy as np
 import pytest
 
 import odl
 from odl.operator import OpTypeError
-from odl.util.testutils import (all_almost_equal, almost_equal, noise_element,
-                                simple_fixture)
 from odl.solvers.functional.default_functionals import (
     KullbackLeiblerConvexConj)
-
+from odl.util.testutils import (
+    all_almost_equal, noise_element, simple_fixture)
 
 # TODO: maybe add tests for if translations etc. belongs to the wrong space.
 # These tests don't work as intended now, since casting is possible between

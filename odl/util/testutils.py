@@ -1,4 +1,4 @@
-﻿# Copyright 2014-2017 The ODL contributors
+﻿# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,35 +8,36 @@
 
 """Utilities for internal use."""
 
-from __future__ import print_function, division, absolute_import
-from builtins import object
-from future.moves.itertools import zip_longest
-import numpy as np
-import sys
+from __future__ import absolute_import, division, print_function
+
 import os
+import sys
 import warnings
+from builtins import object
 from time import time
 
-from odl.util.utility import run_from_ipython, is_string
+import numpy as np
+from future.moves.itertools import zip_longest
 
+from odl.util.utility import is_string, run_from_ipython
 
-__all__ = ('almost_equal', 'all_equal', 'all_almost_equal', 'never_skip',
-           'skip_if_no_stir', 'skip_if_no_pywavelets',
+__all__ = ('all_equal', 'all_almost_equal', 'is_subdict',
+           'never_skip', 'skip_if_no_stir', 'skip_if_no_pywavelets',
            'skip_if_no_pyfftw', 'skip_if_no_largescale',
-           'noise_array', 'noise_element', 'noise_elements',
-           'Timer', 'timeit', 'ProgressBar', 'ProgressRange',
-           'test', 'run_doctests', 'test_file')
+           'skip_if_no_benchmark', 'simple_fixture', 'noise_array',
+           'noise_element', 'noise_elements', 'FailCounter', 'Timer',
+           'timeit', 'ProgressBar', 'ProgressRange', 'test', 'run_doctests',
+           'test_file')
 
 
 def _places(a, b, default=None):
     """Return number of expected correct digits between ``a`` and ``b``.
 
     Returned numbers if one of ``a.dtype`` and ``b.dtype`` is as below:
-        1 -- for ``np.float16``
 
-        3 -- for ``np.float32`` or ``np.complex64``
-
-        5 -- for all other cases
+    - 1 -- for ``np.float16``
+    - 3 -- for ``np.float32`` or ``np.complex64``
+    - 5 -- for all other cases
     """
     dtype1 = getattr(a, 'dtype', object)
     dtype2 = getattr(b, 'dtype', object)
@@ -47,11 +48,10 @@ def dtype_places(dtype, default=None):
     """Return number of correct digits expected for given dtype.
 
     Returned numbers:
-        1 -- for ``np.float16``
 
-        3 -- for ``np.float32`` or ``np.complex64``
-
-        5 -- for all other cases
+    - 1 -- for ``np.float16``
+    - 3 -- for ``np.float32`` or ``np.complex64``
+    - 5 -- for all other cases
     """
     small_dtypes = [np.float32, np.complex64]
     tiny_dtypes = [np.float16]
@@ -62,34 +62,6 @@ def dtype_places(dtype, default=None):
         return 3
     else:
         return default if default is not None else 5
-
-
-def almost_equal(a, b, places=None):
-    """Return ``True`` if the scalars ``a`` and ``b`` are almost equal."""
-    if a is None and b is None:
-        return True
-
-    if places is None:
-        places = _places(a, b)
-
-    eps = 10 ** -places
-
-    try:
-        complex(a)
-        complex(b)
-    except TypeError:
-        return False
-
-    if np.isnan(a) and np.isnan(b):
-        return True
-
-    if np.isinf(a) and np.isinf(b):
-        return a == b
-
-    if abs(complex(b)) < eps:
-        return abs(complex(a) - complex(b)) < eps
-    else:
-        return abs(a / b - 1) < eps
 
 
 def all_equal(iter1, iter2):
@@ -104,6 +76,10 @@ def all_equal(iter1, iter2):
     # Special case for None
     if iter1 is None and iter2 is None:
         return True
+
+    # Do it faster for arrays
+    if hasattr(iter1, '__array__') and hasattr(iter2, '__array__'):
+        return np.array_equal(iter1, iter2)
 
     # If one nested iterator is exhausted, go to direct comparison
     try:
@@ -132,18 +108,12 @@ def all_equal(iter1, iter2):
     return True
 
 
-def all_almost_equal_array(v1, v2, places):
-    return np.allclose(v1, v2,
-                       rtol=10 ** (-places), atol=10 ** (-places),
-                       equal_nan=True)
-
-
 def all_almost_equal(iter1, iter2, places=None):
     """Return ``True`` if all elements in ``a`` and ``b`` are almost equal."""
     try:
         if iter1 is iter2 or iter1 == iter2:
             return True
-    except ValueError:
+    except (ValueError, TypeError):
         pass
 
     if iter1 is None and iter2 is None:
@@ -154,13 +124,23 @@ def all_almost_equal(iter1, iter2, places=None):
         # otherwise for recursive calls.
         if places is None:
             places = _places(iter1, iter2, None)
-        return all_almost_equal_array(iter1, iter2, places)
+        return np.allclose(iter1, iter2,
+                           rtol=10 ** (-places), atol=10 ** (-places),
+                           equal_nan=True)
 
     try:
         it1 = iter(iter1)
         it2 = iter(iter2)
     except TypeError:
-        return almost_equal(iter1, iter2, places)
+        if places is None:
+            places = _places(iter1, iter2, None)
+        isclose = np.isclose(iter1, iter2,
+                             atol=10 ** (-places),
+                             equal_nan=True)
+        try:
+            return bool(isclose)
+        except ValueError:
+            return False
 
     diff_length_sentinel = object()
     for [ip1, ip2] in zip_longest(it1, it2,
@@ -261,7 +241,7 @@ def simple_fixture(name, params, fmt=None):
 
         ids = []
         for p in params:
-            # TODO: other types of decorators?
+            # TODO(kohr-h): other types of decorators?
             if (isinstance(p, _pytest.mark.MarkDecorator) and
                     p.name == 'skipif'):
                 # Unwrap the wrapped object in the decorator
@@ -304,7 +284,7 @@ def noise_array(space):
 
     Returns
     -------
-    noise_array : `numpy.ndarray` element
+    noise_array : `numpy.ndarray`
         Array with white noise such that ``space.element``'s can be created
         from it.
 
@@ -322,9 +302,21 @@ def noise_array(space):
     odl.set.space.LinearSpace.examples : Examples of elements
         typical to the space.
     """
-    from odl.space import ProductSpace
+    from odl.space.pspace import ProductSpace
+
     if isinstance(space, ProductSpace):
-        return np.array([noise_array(si) for si in space])
+        arr_list = [noise_array(spc_i) for spc_i in space]
+        if space.is_power_space:
+            arr = np.empty((len(arr_list),) + arr_list[0].shape,
+                           dtype=space[0].dtype)
+        else:
+            arr = np.empty((len(arr_list),) + arr_list[0].shape,
+                           dtype=object)
+        for i in range(len(arr)):
+            arr[i] = arr_list[i]
+
+        return arr
+
     else:
         if space.dtype == bool:
             # TODO(kohr-h): use `randint(..., dtype=bool)` from Numpy 1.11 on
@@ -434,13 +426,21 @@ def noise_elements(space, n=1):
     noise_array
     noise_element
     """
-    arrs = tuple(noise_array(space) for _ in range(n))
+    from odl.space.pspace import ProductSpace
 
-    # Make space elements from arrays
-    elems = tuple(space.element(arr.copy()) for arr in arrs)
+    if isinstance(space, ProductSpace) and not space.is_power_space:
+        raise ValueError('`space` cannot be a non-power product space')
+
+    if isinstance(space, ProductSpace):
+        impl = space[0].impl
+    else:
+        impl = space.impl
+
+    arrs = tuple(noise_array(space, impl=impl) for _ in range(n))
+    elems = tuple(space.element(arr) for arr in arrs)
 
     if n == 1:
-        return tuple(arrs + elems)
+        return arrs + elems
     else:
         return arrs, elems
 
@@ -556,23 +556,23 @@ class ProgressBar(object):
     Usage:
 
     >>> progress = ProgressBar('Reading data', 10)
-    \rReading data: [                              ] Starting
+    Reading data: [                              ] Starting
     >>> progress.update(4) #halfway, zero indexing
-    \rReading data: [###############               ] 50.0%
+    Reading data: [###############               ] 50.0%
 
     Multi-indices, from slowest to fastest:
 
     >>> progress = ProgressBar('Reading data', 10, 10)
-    \rReading data: [                              ] Starting
+    Reading data: [                              ] Starting
     >>> progress.update(9, 8)
-    \rReading data: [############################# ] 99.0%
+    Reading data: [############################# ] 99.0%
 
     Supports simply calling update, which moves the counter forward:
 
     >>> progress = ProgressBar('Reading data', 10, 10)
-    \rReading data: [                              ] Starting
+    Reading data: [                              ] Starting
     >>> progress.update()
-    \rReading data: [                              ]  1.0%
+    Reading data: [                              ]  1.0%
     """
 
     def __init__(self, text='progress', *njobs):
@@ -686,12 +686,14 @@ def run_doctests(skip_if=False, **kwargs):
         Extra keyword arguments passed on to the ``doctest.testmod``
         function.
     """
-    from doctest import testmod, NORMALIZE_WHITESPACE, SKIP
+    from doctest import (
+        testmod, NORMALIZE_WHITESPACE, SKIP, IGNORE_EXCEPTION_DETAIL)
     from pkg_resources import parse_version
     import odl
     import numpy as np
 
-    optionflags = kwargs.pop('optionflags', NORMALIZE_WHITESPACE)
+    optionflags = kwargs.pop('optionflags',
+                             NORMALIZE_WHITESPACE | IGNORE_EXCEPTION_DETAIL)
     if skip_if:
         optionflags |= SKIP
 

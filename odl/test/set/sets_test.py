@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -7,11 +7,12 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import division
+
 import pytest
 
 import odl
-from odl.set.sets import (EmptySet, UniversalSet, Strings, ComplexNumbers,
-                          RealNumbers, Integers)
+from odl.set.sets import (
+    ComplexNumbers, EmptySet, Integers, RealNumbers, Strings, UniversalSet)
 
 
 def test_empty_set():

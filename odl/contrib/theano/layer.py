@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,14 +8,13 @@
 
 """Utilities for converting ODL operators to Theano operators."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
+import numpy as np
 from future.utils import native
 
 import theano
-import numpy as np
-
 from odl.solvers import Functional
-
 
 __all__ = ('TheanoOperator',)
 
@@ -37,8 +36,8 @@ class TheanoOperator(theano.Op):
         Parameters
         ----------
         operator : `Operator`
-            The operator that should be wrapped, must map `FnBase` spaces to
-            `FnBase` spaces.
+            The operator that should be wrapped, must map `TensorSpace`'s to
+            `TensorSpace`'s.
 
         Examples
         --------
@@ -90,8 +89,8 @@ class TheanoOperator(theano.Op):
         else:
             out_type = theano.tensor.TensorVariable(
                 theano.tensor.TensorType(
-                        self.operator.range.dtype,
-                        [False] * len(self.operator.range.shape)))
+                    self.operator.range.dtype,
+                    [False] * len(self.operator.range.shape)))
 
         return theano.Apply(self, [x], [out_type.type()])
 

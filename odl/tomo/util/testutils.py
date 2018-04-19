@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -6,7 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
 
 __all__ = ('skip_if_no_astra', 'skip_if_no_astra_cuda', 'skip_if_no_skimage')
 

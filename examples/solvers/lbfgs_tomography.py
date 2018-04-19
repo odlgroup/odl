@@ -9,8 +9,8 @@ Where ``A`` is a parallel beam forward projector, ``x`` the result and
 """
 
 import numpy as np
-import odl
 
+import odl
 
 # --- Set up the forward operator (ray transform) --- #
 

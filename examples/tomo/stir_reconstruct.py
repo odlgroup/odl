@@ -11,6 +11,7 @@ Note that running this example requires an installation of
 """
 
 from os import path
+
 import odl
 
 # Set path to input files

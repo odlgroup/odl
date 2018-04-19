@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -9,13 +9,15 @@
 """Test ASTRA backend using CPU."""
 
 from __future__ import division
+
+import sys
+
 import numpy as np
 import pytest
-import sys
 
 import odl
 from odl.tomo.backends.astra_cpu import (
-    astra_cpu_forward_projector, astra_cpu_back_projector)
+    astra_cpu_back_projector, astra_cpu_forward_projector)
 from odl.tomo.util.testutils import skip_if_no_astra
 
 # TODO: clean up and improve tests

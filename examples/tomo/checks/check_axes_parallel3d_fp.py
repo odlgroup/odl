@@ -13,6 +13,7 @@ right arrangement (not flipped, rotated, etc.).
 
 import matplotlib.pyplot as plt
 import numpy as np
+
 import odl
 
 # Set back-end here (for `None` the fastest available is chosen)

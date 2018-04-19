@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -7,10 +7,11 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import print_function
-import inspect
-import importlib
-import odl
 
+import importlib
+import inspect
+
+import odl
 
 __all__ = ('make_interface',)
 

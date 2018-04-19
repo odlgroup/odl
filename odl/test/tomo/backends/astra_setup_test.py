@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -9,16 +9,19 @@
 """Test astra setup functions."""
 
 from __future__ import division
+
 import numpy as np
 import pytest
+
+import odl
+from odl.tomo.backends.astra_setup import astra_supports
+from odl.util.testutils import is_subdict
+
 try:
     import astra
 except ImportError:
     pass
 
-import odl
-from odl.tomo.backends.astra_setup import astra_supports
-from odl.util.testutils import is_subdict
 
 
 pytestmark = pytest.mark.skipif("not odl.tomo.ASTRA_AVAILABLE")

@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -9,14 +9,17 @@
 """Radon transform (ray transform) in 2d using skimage.transform."""
 
 from __future__ import division
+
 import numpy as np
+
+from odl.discr import uniform_discr_frompartition, uniform_partition
+
 try:
     import skimage
     SKIMAGE_AVAILABLE = True
 except ImportError:
     SKIMAGE_AVAILABLE = False
 
-from odl.discr import uniform_discr_frompartition, uniform_partition
 
 __all__ = ('skimage_radon_forward', 'skimage_radon_back_projector',
            'SKIMAGE_AVAILABLE')

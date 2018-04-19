@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,13 +8,15 @@
 
 """Utilities for computing the gradient and Hessian of functionals."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 import numpy as np
 
-from odl.solvers.functional.functional import Functional
 from odl.operator import Operator
+from odl.solvers.functional.functional import Functional
 from odl.space.base_tensors import TensorSpace
-
+from odl.util import (
+    is_floating_dtype, dtype_repr, signature_string_parts, repr_string)
 
 __all__ = ('NumericalDerivative', 'NumericalGradient',)
 
@@ -25,11 +27,11 @@ class NumericalDerivative(Operator):
 
     See Also
     --------
-    NumericalGradient : Compute gradient of a functional
+    NumericalGradient : Compute the gradient of a functional
     """
 
     def __init__(self, operator, point, method='forward', step=None):
-        """Initialize a new instance.
+        r"""Initialize a new instance.
 
         Parameters
         ----------
@@ -51,7 +53,7 @@ class NumericalDerivative(Operator):
 
         >>> space = odl.rn(3)
         >>> func = odl.solvers.L2NormSquared(space)
-        >>> hess = NumericalDerivative(func.gradient, [1, 1, 1])
+        >>> hess = odl.solvers.NumericalDerivative(func.gradient, [1, 1, 1])
         >>> hess([0, 0, 1])
         rn(3).element([ 0.,  0.,  2.])
 
@@ -70,26 +72,26 @@ class NumericalDerivative(Operator):
         ``method='backward'``:
 
         .. math::
-            \\partial A(x)(dx) =
-            (A(x) - A(x - dx \\cdot h / \| dx \|))
-            \\cdot \\frac{\| dx \|}{h}
+            \partial A(x)(dx) =
+            (A(x) - A(x - dx \cdot h / \| dx \|))
+            \cdot \frac{\| dx \|}{h}
 
         ``method='forward'``:
 
         .. math::
-            \\partial A(x)(dx) =
-            (A(x + dx \\cdot h / \| dx \|) - A(x))
-            \\cdot \\frac{\| dx \|}{h}
+            \partial A(x)(dx) =
+            (A(x + dx \cdot h / \| dx \|) - A(x))
+            \cdot \frac{\| dx \|}{h}
 
         ``method='central'``:
 
         .. math::
-            \\partial A(x)(dx) =
-            (A(x + dx \\cdot h / (2 \| dx \|)) -
-             A(x - dx \\cdot h / (2 \| dx \|))
-            \\cdot \\frac{\| dx \|}{h}
+            \partial A(x)(dx) =
+            (A(x + dx \cdot h / (2 \| dx \|)) -
+             A(x - dx \cdot h / (2 \| dx \|))
+            \cdot \frac{\| dx \|}{h}
 
-        The number of operator evaluations is ``2``, regardless of parameters.
+        The number of operator evaluations is 2 in all cases.
         """
         if not isinstance(operator, Operator):
             raise TypeError('`operator` has to be an `Operator` instance')
@@ -100,15 +102,16 @@ class NumericalDerivative(Operator):
         if not isinstance(operator.range, TensorSpace):
             raise TypeError('`operator.range` must be a `TensorSpace` '
                             'instance')
+        if not is_floating_dtype(operator.domain.dtype):
+            raise ValueError('`operator.domain.dtype` must be a floating '
+                             'point type, got {}'
+                             ''.format(dtype_repr(operator.domain.dtype)))
 
         self.operator = operator
         self.point = operator.domain.element(point)
 
         if step is None:
-            # Use half of the number of digits as machine epsilon, this
-            # "usually" gives a good balance between precision and numerical
-            # stability.
-            self.step = np.sqrt(np.finfo(operator.domain.dtype).eps)
+            self.step = self._default_step(operator)
         else:
             self.step = float(step)
 
@@ -118,6 +121,16 @@ class NumericalDerivative(Operator):
 
         super(NumericalDerivative, self).__init__(
             operator.domain, operator.range, linear=True)
+
+    @staticmethod
+    def _default_step(op):
+        """Return the default step size for an operator.
+
+        We use half of the number of digits of the machine epsilon for the
+        operator domain dtype since this "usually" gives a good balance
+        between precision and numerical stability.
+        """
+        return np.sqrt(np.finfo(op.domain.dtype).eps)
 
     def _call(self, dx):
         """Return ``self(x)``."""
@@ -141,6 +154,30 @@ class NumericalDerivative(Operator):
 
         return dAdx * (dx_norm / self.step)
 
+    def __repr__(self):
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> space = odl.uniform_discr(0, 1, 4)
+        >>> op = odl.ufunc_ops.square(space)
+        >>> num_deriv = odl.solvers.NumericalDerivative(op, space.one())
+        >>> num_deriv
+        NumericalDerivative(
+            square(uniform_discr(0.0, 1.0, 4)),
+            point=uniform_discr(0.0, 1.0, 4).element([ 1.,  1.,  1.,  1.])
+        )
+        """
+        posargs = [self.operator]
+        optargs = [('point', self.point, None),
+                   ('method', self.method, 'forward')]
+        if not np.isclose(self.step, self._default_step(self.operator)):
+            optargs.append(('step', self.step, None))
+
+        inner_parts = signature_string_parts(posargs, optargs)
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
+
 
 class NumericalGradient(Operator):
 
@@ -152,7 +189,7 @@ class NumericalGradient(Operator):
     """
 
     def __init__(self, functional, method='forward', step=None):
-        """Initialize a new instance.
+        r"""Initialize a new instance.
 
         Parameters
         ----------
@@ -169,7 +206,7 @@ class NumericalGradient(Operator):
         --------
         >>> space = odl.rn(3)
         >>> func = odl.solvers.L2NormSquared(space)
-        >>> grad = NumericalGradient(func)
+        >>> grad = odl.solvers.NumericalGradient(func)
         >>> grad([1, 1, 1])
         rn(3).element([ 2.,  2.,  2.])
 
@@ -180,13 +217,14 @@ class NumericalGradient(Operator):
 
         If the step is too large the result is not correct:
 
-        >>> grad = NumericalGradient(func, step=0.5)
+        >>> grad = odl.solvers.NumericalGradient(func, step=0.5)
         >>> grad([1, 1, 1])
         rn(3).element([ 2.5,  2.5,  2.5])
 
         But it can be improved by using the more accurate ``method='central'``:
 
-        >>> grad = NumericalGradient(func, method='central', step=0.5)
+        >>> grad = odl.solvers.NumericalGradient(func, method='central',
+        ...                                      step=0.5)
         >>> grad([1, 1, 1])
         rn(3).element([ 2.,  2.,  2.])
 
@@ -198,17 +236,17 @@ class NumericalGradient(Operator):
         ``method='backward'``:
 
         .. math::
-            (\\nabla f(x))_i = \\frac{f(x) - f(x - h e_i)}{h}
+            (\nabla f(x))_i = \frac{f(x) - f(x - h e_i)}{h}
 
         ``method='forward'``:
 
         .. math::
-            (\\nabla f(x))_i = \\frac{f(x + h e_i) - f(x)}{h}
+            (\nabla f(x))_i = \frac{f(x + h e_i) - f(x)}{h}
 
         ``method='central'``:
 
         .. math::
-            (\\nabla f(x))_i = \\frac{f(x + (h/2) e_i) - f(x - (h/2) e_i)}{h}
+            (\nabla f(x))_i = \frac{f(x + (h/2) e_i) - f(x - (h/2) e_i)}{h}
 
         The number of function evaluations is ``functional.domain.size + 1`` if
         ``'backward'`` or ``'forward'`` is used and
@@ -221,13 +259,14 @@ class NumericalGradient(Operator):
         if not isinstance(functional.domain, TensorSpace):
             raise TypeError('`functional.domain` must be a `TensorSpace` '
                             'instance')
+        if not is_floating_dtype(functional.domain.dtype):
+            raise ValueError('`functional.domain.dtype` must be a floating '
+                             'point type, got {}'
+                             ''.format(dtype_repr(functional.domain.dtype)))
 
         self.functional = functional
         if step is None:
-            # Use half of the number of digits as machine epsilon, this
-            # "usually" gives a good balance between precision and numerical
-            # stability.
-            self.step = np.sqrt(np.finfo(functional.domain.dtype).eps)
+            self.step = self._default_step(functional)
         else:
             self.step = float(step)
 
@@ -237,6 +276,16 @@ class NumericalGradient(Operator):
 
         super(NumericalGradient, self).__init__(
             functional.domain, functional.domain, linear=functional.is_linear)
+
+    @staticmethod
+    def _default_step(func):
+        """Return the default step size for a functional.
+
+        We use half of the number of digits of the machine epsilon for the
+        functional domain dtype since this "usually" gives a good balance
+        between precision and numerical stability.
+        """
+        return np.sqrt(np.finfo(func.domain.dtype).eps)
 
     def _call(self, x):
         """Return ``self(x)``."""
@@ -291,7 +340,7 @@ class NumericalGradient(Operator):
 
         >>> space = odl.rn(3)
         >>> func = odl.solvers.L2NormSquared(space)
-        >>> grad = NumericalGradient(func)
+        >>> grad = odl.solvers.NumericalGradient(func)
         >>> hess = grad.derivative([1, 1, 1])
         >>> hess([1, 0, 0])
         rn(3).element([ 2.,  0.,  0.])
@@ -304,6 +353,26 @@ class NumericalGradient(Operator):
         """
         return NumericalDerivative(self, point,
                                    method=self.method, step=np.sqrt(self.step))
+
+    def __repr__(self):
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> space = odl.rn(3)
+        >>> func = odl.solvers.L2NormSquared(space)
+        >>> num_grad = odl.solvers.NumericalGradient(func)
+        >>> num_grad
+        NumericalGradient(L2NormSquared(rn(3)))
+        """
+        posargs = [self.functional]
+        optargs = [('method', self.method, 'forward')]
+        if not np.isclose(self.step, self._default_step(self.functional)):
+            optargs.append(('step', self.step, None))
+
+        inner_parts = signature_string_parts(posargs, optargs)
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
 
 if __name__ == '__main__':

@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -19,9 +19,12 @@ This package assumes that all dependencies are installed.
 """
 
 from __future__ import division
+
 import os
-import pytest
 import sys
+
+import pytest
+
 import odl
 
 try:

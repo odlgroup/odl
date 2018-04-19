@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -7,15 +7,15 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import division
+
 import numpy as np
 import pytest
 
 import odl
 from odl.util import (
-    apply_on_boundary, fast_1d_tensor_mult, resize_array, is_real_dtype)
+    apply_on_boundary, fast_1d_tensor_mult, is_real_dtype, resize_array)
 from odl.util.numerics import _SUPPORTED_RESIZE_PAD_MODES
-from odl.util.testutils import all_equal, almost_equal, simple_fixture
-
+from odl.util.testutils import all_equal, simple_fixture
 
 # --- pytest fixtures --- #
 

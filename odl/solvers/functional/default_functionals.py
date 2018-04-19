@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,25 +8,26 @@
 
 """Default functionals defined on any space similar to R^n or L^2."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 from numbers import Integral
+
 import numpy as np
 
-from odl.solvers.functional.functional import (Functional,
-                                               FunctionalQuadraticPerturb)
-from odl.space import ProductSpace
-from odl.operator import (Operator, ConstantOperator, ZeroOperator,
-                          ScalingOperator, DiagonalOperator, PointwiseNorm)
+from odl.operator import (
+    DiagonalOperator, Operator, PointwiseNorm, ScalingOperator, ZeroOperator)
+from odl.solvers.functional.functional import (
+    Functional, FunctionalQuadraticPerturb)
 from odl.solvers.nonsmooth.proximal_operators import (
-    proximal_l1, proximal_convex_conj_l1,
-    proximal_l1_l2, proximal_convex_conj_l1_l2,
-    proximal_l2, proximal_convex_conj_l2, proximal_l2_squared,
-    proximal_huber,
-    proximal_const_func, proximal_box_constraint,
-    proximal_convex_conj_kl, proximal_convex_conj_kl_cross_entropy,
-    combine_proximals, proximal_convex_conj)
-from odl.util import conj_exponent, moveaxis
-
+    proximal_separable_sum, proximal_indicator_box, proximal_const_func,
+    proximal_convex_conj, proximal_convex_conj_kl,
+    proximal_convex_conj_kl_cross_entropy, proximal_convex_conj_l1,
+    proximal_convex_conj_l1_l2, proximal_indicator_l2_unit_ball, proximal_huber,
+    proximal_l1, proximal_l1_l2, proximal_l2)
+from odl.space import ProductSpace
+from odl.util import (
+    REPR_PRECISION, conj_exponent, moveaxis, npy_printoptions, repr_string,
+    signature_string_parts, attribute_repr_string)
 
 __all__ = ('ZeroFunctional', 'ConstantFunctional', 'ScalingFunctional',
            'IdentityFunctional',
@@ -42,21 +43,18 @@ __all__ = ('ZeroFunctional', 'ConstantFunctional', 'ScalingFunctional',
 
 class LpNorm(Functional):
 
-    """The functional corresponding to the Lp-norm.
+    r"""The p-norm as a functional.
 
-    Notes
-    -----
-    If the functional is defined on an :math:`\mathbb{R}^n`-like space, the
-    :math:`\| \cdot \|_p`-norm is defined as
+    This functional is defined as
 
     .. math::
-        \| x \|_p = \\left(\\sum_{i=1}^n |x_i|^p \\right)^{1/p}.
+        \| x \|_p &= \left(\sum_{i=1}^n |x_i|^p \right)^{1/p}
+        \quad (\mathbb{R^n-}\text{like space}) \\
+        \| x \|_p &= \left(\int |x(t)|^p \mathrm{d}t \right)^{1/p}
+        \quad (L^p-\text{like space}).
 
-    If the functional is defined on an :math:`L_2`-like space, the
-    :math:`\| \cdot \|_p`-norm is defined as
-
-    .. math::
-        \| x \|_p = \\left(\\int_\Omega |x(t)|^p dt. \\right)^{1/p}
+    If :math:`n` is a multi-index, i.e., :math:`\mathbb{R}^n` is a tensor
+    space, the above definition is applied to the flattened array.
     """
 
     def __init__(self, space, exponent):
@@ -67,15 +65,31 @@ class LpNorm(Functional):
         space : `DiscreteLp` or `TensorSpace`
             Domain of the functional.
         exponent : float
-            Exponent for the norm (``p``).
+            Exponent ``p`` of the norm.
+
+        Examples
+        --------
+        >>> space = odl.rn(2)
+        >>> l2norm = odl.solvers.LpNorm(space, exponent=2)
+        >>> l2norm([3, 4])
+        5.0
+        >>> l1norm = odl.solvers.LpNorm(space, exponent=1)
+        >>> l1norm([3, 4])
+        7.0
         """
         super(LpNorm, self).__init__(
             space=space, linear=False, grad_lipschitz=np.nan)
-        self.exponent = float(exponent)
 
-    # TODO: update when integration operator is in place: issue #440
+        self.__exponent = float(exponent)
+
+    @property
+    def exponent(self):
+        """The exponent p of the p-norm."""
+        return self.__exponent
+
+    # TODO(#440): update when integration operator is in place
     def _call(self, x):
-        """Return the Lp-norm of ``x``."""
+        """Return ``self(x)``."""
         if self.exponent == 0:
             return self.domain.one().inner(np.not_equal(x, 0))
         elif self.exponent == 1:
@@ -95,13 +109,29 @@ class LpNorm(Functional):
 
     @property
     def convex_conj(self):
-        """The convex conjugate functional of the Lp-norm."""
+        r"""Convex conjugate of the p-norm.
+
+        The convex conjugate of a norm is the indicator function of
+        the unit ball in the dual norm,
+
+        .. math::
+            B_{\|\cdot\|_*} = \{ t\,|\, \|t\|_* \leq 1 \},
+
+        which takes value 0 inside the set and :math:`\infty` outside.
+        The dual norm :math:`\|\cdot\|_*` is the :math:`q`-norm with the
+        conjugate exponent :math:`q = p / (p - 1)` (with :math:`q = \infty`
+        for :math:`p = 1` and vice versa).
+
+        See Also
+        --------
+        IndicatorLpUnitBall
+        """
         return IndicatorLpUnitBall(self.domain,
                                    exponent=conj_exponent(self.exponent))
 
     @property
     def proximal(self):
-        """Return the proximal factory of the functional.
+        """The `proximal factory` of the p-norm.
 
         See Also
         --------
@@ -111,19 +141,51 @@ class LpNorm(Functional):
             proximal factory for the L2-norm.
         """
         if self.exponent == 1:
-            return proximal_l1(space=self.domain)
+            return proximal_l1(self.domain)
         elif self.exponent == 2:
-            return proximal_l2(space=self.domain)
+            return proximal_l2(self.domain)
         else:
             raise NotImplementedError('`proximal` only implemented for p=1 or '
                                       'p=2')
 
     @property
     def gradient(self):
-        """Gradient operator of the functional.
+        r"""Gradient operator of the p-norm.
 
-        The functional is not differentiable in ``x=0``. However, when
-        evaluating the gradient operator in this point it will return 0.
+        The functional is not differentiable in ``x=0``. This implementation
+        evaluates to 0 in that case.
+
+        The gradient of :math:`\|\cdot\|_p` is given as:
+
+        - :math:`p = 1`:
+
+          .. math::
+              \nabla \|\cdot\|_1(x) &= \big[\text{sign}(x_i)\big]_i
+              \quad (\mathbb{R^n-}\text{like space}) \\
+              \nabla \|\cdot\|_1(x) &= t \mapsto \text{sign}\big(x(t)\big)
+              \quad (L^p-\text{like space})
+
+        - :math:`p = 2`:
+
+          .. math::
+              \nabla \|\cdot\|_2(x) &= \left[\frac{x_i}{\|x\|_2}\right]_i
+              \quad (\mathbb{R^n-}\text{like space}) \\
+              \nabla \|\cdot\|_2(x) &= t \mapsto \frac{x(t)}{\|x\|_2}
+              \quad (L^p-\text{like space})
+
+        - otherwise:
+
+          .. math::
+              \nabla \|\cdot\|_p(x) &= \left[
+                  \frac{|x_i|^{p-2}\, x_i}{\|x\|_p^{p - 1}}\right]_i
+              \quad (\mathbb{R^n-}\text{like space}) \\
+              \nabla \|\cdot\|_p(x) &= t \mapsto
+                  \frac{|x(t)|^{p-2}\, x(t)}{\|x\|_p^{p-1}}
+              \quad (L^p-\text{like space})
+
+        .. note::
+            The gradient is currently only implemented for ``p == 1`` and
+            ``p == 2``.
         """
         functional = self
 
@@ -132,325 +194,99 @@ class LpNorm(Functional):
 
                 """The gradient operator of this functional."""
 
-                def __init__(self):
-                    """Initialize a new instance."""
-                    super(L1Gradient, self).__init__(
-                        functional.domain, functional.domain, linear=False)
-
                 def _call(self, x):
-                    """Apply the gradient operator to the given point."""
+                    """Return ``self(x)``."""
                     return x.ufuncs.sign()
 
                 def derivative(self, x):
-                    """Derivative is a.e. zero."""
+                    """Return the derivative operator.
+
+                    The derivative is zero almost everywhere, hence this
+                    implementation yields the zero operator.
+                    """
                     return ZeroOperator(self.domain)
 
-            return L1Gradient()
+                def __repr__(self):
+                    """Return ``repr(self)``.
+
+                    Examples
+                    --------
+                    >>> space = odl.rn(2)
+                    >>> l1norm = odl.solvers.LpNorm(space, exponent=1)
+                    >>> l1norm.gradient
+                    LpNorm(rn(2), exponent=1.0).gradient
+                    """
+                    return attribute_repr_string(repr(functional), 'gradient')
+
+            return L1Gradient(self.domain, self.domain, linear=False)
 
         elif self.exponent == 2:
             class L2Gradient(Operator):
 
                 """The gradient operator of this functional."""
 
-                def __init__(self):
-                    """Initialize a new instance."""
-                    super(L2Gradient, self).__init__(
-                        functional.domain, functional.domain, linear=False)
-
                 def _call(self, x):
-                    """Apply the gradient operator to the given point.
-
-                    The gradient is not defined in 0.
-                    """
+                    """Return ``self(x)``."""
                     norm_of_x = x.norm()
                     if norm_of_x == 0:
                         return self.domain.zero()
                     else:
                         return x / norm_of_x
 
-            return L2Gradient()
+                def __repr__(self):
+                    """Return ``repr(self)``.
+
+                    Examples
+                    --------
+                    >>> space = odl.rn(2)
+                    >>> l2norm = odl.solvers.LpNorm(space, exponent=2)
+                    >>> l2norm.gradient
+                    LpNorm(rn(2), exponent=2.0).gradient
+                    """
+                    return attribute_repr_string(repr(functional), 'gradient')
+
+            return L2Gradient(self.domain, self.domain, linear=False)
 
         else:
-            raise NotImplementedError('`gradient` only implemented for p=1 or '
-                                      'p=2')
+            raise NotImplementedError(
+                '`gradient` only implemented for `p == 1` and `p == 2`')
 
     def __repr__(self):
-        """Return ``repr(self)``."""
-        return '{}({!r}, {!r})'.format(self.__class__.__name__,
-                                       self.domain,
-                                       self.exponent)
-
-
-class GroupL1Norm(Functional):
-
-    """The functional corresponding to the mixed L1--Lp norm on `ProductSpace`.
-
-    The L1-norm, ``|| ||x||_p ||_1``,  is defined as the integral/sum of
-    ``||x||_p``, where  ``||x||_p`` is the pointwise p-norm.
-
-    This is also known as the cross norm.
-
-    Notes
-    -----
-    If the functional is defined on an :math:`\mathbb{R}^{n \\times m}`-like
-    space, the group :math:`L_1`-norm, denoted
-    :math:`\| \\cdot \|_{\\times, p}` is defined as
-
-    .. math::
-        \|F\|_{\\times, p} =
-        \\sum_{i = 1}^n \\left(\\sum_{j=1}^m |F_{i,j}|^p\\right)^{1/p}
-
-    If the functional is defined on an :math:`(\\mathcal{L}^p)^m`-like space,
-    the group :math:`L_1`-norm is defined as
-
-    .. math::
-        \| F \|_{\\times, p} =
-        \\int_{\Omega} \\left(\\sum_{j = 1}^m |F_j(x)|^p\\right)^{1/p}
-        \mathrm{d}x.
-    """
-
-    def __init__(self, vfspace, exponent=None):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        vfspace : `ProductSpace`
-            Space of vector fields on which the operator acts.
-            It has to be a product space of identical spaces, i.e. a
-            power space.
-        exponent : non-zero float, optional
-            Exponent of the norm in each point. Values between
-            0 and 1 are currently not supported due to numerical
-            instability. Infinity gives the supremum norm.
-            Default: ``vfspace.exponent``, usually 2.
+        """Return ``repr(self)``.
 
         Examples
         --------
         >>> space = odl.rn(2)
-        >>> pspace = odl.ProductSpace(space, 2)
-        >>> op = GroupL1Norm(pspace)
-        >>> op([[3, 3], [4, 4]])
-        10.0
-
-        Set exponent of inner (p) norm:
-
-        >>> op2 = GroupL1Norm(pspace, exponent=1)
-        >>> op2([[3, 3], [4, 4]])
-        14.0
+        >>> l1norm = odl.solvers.LpNorm(space, exponent=1)
+        >>> l1norm
+        LpNorm(rn(2), exponent=1.0)
         """
-        if not isinstance(vfspace, ProductSpace):
-            raise TypeError('`space` must be a `ProductSpace`')
-        if not vfspace.is_power_space:
-            raise TypeError('`space.is_power_space` must be `True`')
-
-        super(GroupL1Norm, self).__init__(
-            space=vfspace, linear=False, grad_lipschitz=np.nan)
-        self.pointwise_norm = PointwiseNorm(vfspace, exponent)
-
-    def _call(self, x):
-        """Return the group L1-norm of ``x``."""
-        # TODO: update when integration operator is in place: issue #440
-        pointwise_norm = self.pointwise_norm(x)
-        return pointwise_norm.inner(pointwise_norm.space.one())
-
-    @property
-    def gradient(self):
-        """Gradient operator of the functional.
-
-        The functional is not differentiable in ``x=0``. However, when
-        evaluating the gradient operator in this point it will return 0.
-
-         Notes
-        -----
-        The gradient is given by
-
-        .. math::
-            \\left[ \\nabla \| \|f\|_1 \|_1 \\right]_i =
-            \\frac{f_i}{|f_i|}
-
-        .. math::
-            \\left[ \\nabla \| \|f\|_2 \|_1 \\right]_i =
-            \\frac{f_i}{\|f\|_2}
-
-        else:
-
-        .. math::
-            \\left[ \\nabla || ||f||_p ||_1 \\right]_i =
-            \\frac{| f_i |^{p-2} f_i}{||f||_p^{p-1}}
-        """
-        functional = self
-
-        class GroupL1Gradient(Operator):
-
-            """The gradient operator of the `GroupL1Norm` functional."""
-
-            def __init__(self):
-                """Initialize a new instance."""
-                super(GroupL1Gradient, self).__init__(
-                    functional.domain, functional.domain, linear=False)
-
-            def _call(self, x, out):
-                """Return ``self(x)``."""
-                pwnorm_x = functional.pointwise_norm(x)
-                pwnorm_x.ufuncs.sign(out=pwnorm_x)
-                functional.pointwise_norm.derivative(x).adjoint(pwnorm_x,
-                                                                out=out)
-
-                return out
-
-        return GroupL1Gradient()
-
-    @property
-    def proximal(self):
-        """Return the ``proximal factory`` of the functional.
-
-        See Also
-        --------
-        proximal_l1 : `proximal factory` for the L1-norm.
-        """
-        if self.pointwise_norm.exponent == 1:
-            return proximal_l1(space=self.domain)
-        elif self.pointwise_norm.exponent == 2:
-            return proximal_l1_l2(space=self.domain)
-        else:
-            raise NotImplementedError('`proximal` only implemented for p = 1 '
-                                      'or 2')
-
-    @property
-    def convex_conj(self):
-        """The convex conjugate functional of the group L1-norm."""
-        conj_exp = conj_exponent(self.pointwise_norm.exponent)
-        return IndicatorGroupL1UnitBall(self.domain, exponent=conj_exp)
-
-    def __repr__(self):
-        """Return ``repr(self)``."""
-        return '{}({!r}, exponent={})'.format(self.__class__.__name__,
-                                              self.domain,
-                                              self.pointwise_norm.exponent)
-
-
-class IndicatorGroupL1UnitBall(Functional):
-
-    """The convex conjugate to the mixed L1--Lp norm on `ProductSpace`.
-
-    See Also
-    --------
-    GroupL1Norm
-    """
-
-    def __init__(self, vfspace, exponent=None):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        vfspace : `ProductSpace`
-            Space of vector fields on which the operator acts.
-            It has to be a product space of identical spaces, i.e. a
-            power space.
-        exponent : non-zero float, optional
-            Exponent of the norm in each point. Values between
-            0 and 1 are currently not supported due to numerical
-            instability. Infinity gives the supremum norm.
-            Default: ``vfspace.exponent``, usually 2.
-
-        Examples
-        --------
-        >>> space = odl.rn(2)
-        >>> pspace = odl.ProductSpace(space, 2)
-        >>> op = IndicatorGroupL1UnitBall(pspace)
-        >>> op([[0.1, 0.5], [0.2, 0.3]])
-        0
-        >>> op([[3, 3], [4, 4]])
-        inf
-
-        Set exponent of inner (p) norm:
-
-        >>> op2 = IndicatorGroupL1UnitBall(pspace, exponent=1)
-        """
-        if not isinstance(vfspace, ProductSpace):
-            raise TypeError('`space` must be a `ProductSpace`')
-        if not vfspace.is_power_space:
-            raise TypeError('`space.is_power_space` must be `True`')
-
-        super(IndicatorGroupL1UnitBall, self).__init__(
-            space=vfspace, linear=False, grad_lipschitz=np.nan)
-        self.pointwise_norm = PointwiseNorm(vfspace, exponent)
-
-    def _call(self, x):
-        """Return ``self(x)``."""
-        x_norm = self.pointwise_norm(x).ufuncs.max()
-
-        if x_norm > 1:
-            return np.inf
-        else:
-            return 0
-
-    @property
-    def proximal(self):
-        """Return the `proximal factory` of the functional.
-
-        See Also
-        --------
-        proximal_convex_conj_l1 : `proximal factory` for the L1-norms convex
-                            conjugate.
-        """
-        if self.pointwise_norm.exponent == np.inf:
-            return proximal_convex_conj_l1(space=self.domain)
-        elif self.pointwise_norm.exponent == 2:
-            return proximal_convex_conj_l1_l2(space=self.domain)
-        else:
-            raise NotImplementedError('`proximal` only implemented for p = 1 '
-                                      'or 2')
-
-    @property
-    def convex_conj(self):
-        """Convex conjugate functional of IndicatorLpUnitBall.
-
-        Returns
-        -------
-        convex_conj : GroupL1Norm
-            The convex conjugate is the the group L1-norm.
-        """
-        conj_exp = conj_exponent(self.pointwise_norm.exponent)
-        return GroupL1Norm(self.domain, exponent=conj_exp)
-
-    def __repr__(self):
-        """Return ``repr(self)``."""
-        return '{}({!r}, exponent={})'.format(self.__class__.__name__,
-                                              self.domain,
-                                              self.pointwise_norm.exponent)
+        posargs = [self.domain]
+        optargs = [('exponent', self.exponent, None)]
+        with npy_printoptions(precision=REPR_PRECISION):
+            inner_parts = signature_string_parts(posargs, optargs)
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
 
 class IndicatorLpUnitBall(Functional):
 
-    """The indicator function on the unit ball in given the ``Lp`` norm.
+    r"""Indicator functional on the unit ball in the p-norm.
 
-    It does not implement `gradient` since it is not differentiable everywhere.
-
-    Notes
-    -----
     This functional is defined as
 
-        .. math::
-            f(x) = \\left\{ \\begin{array}{ll}
-            0 & \\text{if } ||x||_{L_p} \\leq 1, \\\\
-            \\infty & \\text{else,}
-            \\end{array} \\right.
+    .. math::
+        \iota_{B_p}(x) =
+        \begin{cases}
+            0      & \text{if } \|x\|_p \leq 1, \\
+            \infty & \text{else,}
+        \end{cases}
 
-    where :math:`||x||_{L_p}` is the :math:`L_p`-norm, which for finite values
-    of :math:`p` is defined as
+    where :math:`B_p` is the unit ball in the p-norm.
 
-        .. math::
-            \| x \|_{L_p} = \\left( \\int_{\Omega} |x|^p dx \\right)^{1/p},
-
-    and for :math:`p = \\infty` it is defined as
-
-        .. math::
-            ||x||_{\\infty} = \max_x (|x|).
-
-    The functional also allows noninteger and nonpositive values of the
-    exponent :math:`p`, however in this case :math:`\| x \|_{L_p}` is not a
-    norm.
+    See Also
+    --------
+    LpNorm
     """
 
     def __init__(self, space, exponent):
@@ -473,7 +309,7 @@ class IndicatorLpUnitBall(Functional):
         return self.__exponent
 
     def _call(self, x):
-        """Apply the functional to the given point."""
+        """Return ``self(x)``."""
         x_norm = self.__norm(x)
 
         if x_norm > 1:
@@ -483,22 +319,17 @@ class IndicatorLpUnitBall(Functional):
 
     @property
     def convex_conj(self):
-        """The conjugate functional of IndicatorLpUnitBall.
+        r"""Convex conjugate of the indicator of the p-norm unit ball.
 
-        The convex conjugate functional of an ``Lp`` norm, ``p < infty`` is the
-        indicator function on the unit ball defined by the corresponding dual
-        norm ``q``, given by ``1/p + 1/q = 1`` and where ``q = infty`` if
-        ``p = 1`` [Roc1970]. By the Fenchel-Moreau theorem, the convex
-        conjugate functional of indicator function on the unit ball in ``Lq``
-        is the corresponding Lp-norm [BC2011].
+        The convex conjugate of the indicator function of a norm ball,
+        that is a function taking the value 0 inside and :math:`\infty`
+        outside, is the dual norm :math:`\|\cdot\|_*`, in this case the
+        Lp-norm with conjugate exponent :math:`q = p / (p - 1)`
+        (:math:`1` and :math:`\infty` are conjugate to each other).
 
-        References
-        ----------
-        [Roc1970] Rockafellar, R. T. *Convex analysis*. Princeton
-        University Press, 1970.
-
-        [BC2011] Bauschke, H H, and Combettes, P L. *Convex analysis and
-        monotone operator theory in Hilbert spaces*. Springer, 2011.
+        See Also
+        --------
+        LpNorm
         """
         if self.exponent == np.inf:
             return L1Norm(self.domain)
@@ -509,56 +340,391 @@ class IndicatorLpUnitBall(Functional):
 
     @property
     def proximal(self):
-        """Return the `proximal factory` of the functional.
+        r"""The `proximal factory` of the functional.
+
+        The proximal operator of an indicator function of a set :math:`B`
+        is the orthogonal projection
+
+        .. math::
+            P_B(x) = \mathrm{arg\,min}_{y \in B} \|x - y\|_2.
+
+        .. note::
+            The proximal operator is currently only implemented for ``p == 1``
+            and ``p == 2``.
 
         See Also
         --------
-        odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_l1 :
+        proximal_convex_conj_l1 :
             `proximal factory` for convex conjuagte of L1-norm.
-        odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_l2 :
+        proximal_indicator_l2_unit_ball :
             `proximal factory` for convex conjuagte of L2-norm.
         """
         if self.exponent == np.inf:
-            return proximal_convex_conj_l1(space=self.domain)
+            return proximal_convex_conj_l1(self.domain)
         elif self.exponent == 2:
-            return proximal_convex_conj_l2(space=self.domain)
+            return proximal_indicator_l2_unit_ball(self.domain)
         else:
             raise NotImplementedError('`gradient` only implemented for p=2 or '
                                       'p=inf')
 
     def __repr__(self):
-        """Return ``repr(self)``."""
-        return '{}({!r},{!r})'.format(self.__class__.__name__,
-                                      self.domain, self.exponent)
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> space = odl.rn(2)
+        >>> op = odl.solvers.IndicatorLpUnitBall(space, exponent=1)
+        >>> op
+        IndicatorLpUnitBall(rn(2), exponent=1.0)
+        """
+        posargs = [self.domain]
+        optargs = [('exponent', self.exponent, None)]
+        with npy_printoptions(precision=REPR_PRECISION):
+            inner_parts = signature_string_parts(posargs, optargs)
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
+
+
+# TODO(kohr-h): make work for `TensorSpace`
+class GroupL1Norm(Functional):
+
+    r"""The mixed L1-Lp norm (or cross norm) for vector-valued functions.
+
+    On an :math:`\mathbb{R}^{m \times n}`-like space, the group
+    :math:`L^1` norm, denoted :math:`\| \cdot \|_{\times, p}` is defined as
+
+    .. math::
+        \|\mathbf{x}\|_{\times, p} =
+        \sum_{j=1}^n \left(\sum_{i=1}^m |x_{i,j}|^p\right)^{1/p}
+
+    On an :math:`(L^p)^m`-like space, norm is given as
+
+    .. math::
+        \|\mathbf{x}\|_{\times, p} =
+        \int \left(\sum_{i=1}^m |x_i(x)|^p\right)^{1/p}
+        \mathrm{d}x.
+    """
+
+    def __init__(self, vfspace, exponent=None):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        vfspace : `ProductSpace`
+            Space of vector fields on which the operator acts.
+            It has to be a product space of identical spaces, i.e. a
+            power space.
+        exponent : non-zero float, optional
+            Exponent of the norm in each point. Values between
+            0 and 1 are currently not supported due to numerical
+            instability. Infinity gives the supremum norm.
+            Default: ``vfspace.exponent``, usually 2.
+
+        Examples
+        --------
+        >>> pspace = odl.rn(2) ** 2
+        >>> op = odl.solvers.GroupL1Norm(pspace)
+        >>> op([[3, 3], [4, 4]])
+        10.0
+
+        Set exponent of inner (p) norm:
+
+        >>> op2 = odl.solvers.GroupL1Norm(pspace, exponent=1)
+        >>> op2([[3, 3], [4, 4]])
+        14.0
+        """
+        if not isinstance(vfspace, ProductSpace):
+            raise TypeError('`space` must be a `ProductSpace`')
+        if not vfspace.is_power_space:
+            raise TypeError('`space.is_power_space` must be `True`')
+
+        super(GroupL1Norm, self).__init__(
+            space=vfspace, linear=False, grad_lipschitz=np.nan)
+        self.__pointwise_norm = PointwiseNorm(vfspace, exponent=exponent)
+
+    @property
+    def pointwise_norm(self):
+        """Operator for computing the norm in each point."""
+        return self.__pointwise_norm
+
+    def _call(self, x):
+        """Return ``self(x)``."""
+        # TODO(#440): use integration operator when available
+        pointwise_norm = self.pointwise_norm(x)
+        return pointwise_norm.inner(pointwise_norm.space.one())
+
+    @property
+    def gradient(self):
+        r"""Gradient operator of the functional.
+
+        The functional is not differentiable in ``x=0``. This implementation
+        sets evaluates to 0 in that case.
+
+        The gradient of :math:`\|\cdot\|_{\times, p}` is given as:
+
+        - :math:`p = 1` (equivalent to the :math:`L^1` norm):
+
+          .. math::
+              \nabla \|\cdot\|_{\times, 1}(\mathbf{x}) &= \big[
+                  \text{sign}(x_{i,j})\big]_{i,j}
+              \quad (\mathbb{R^{m \times n}-}\text{like space}) \\
+              \nabla \|\cdot\|_{\times, 1}(\mathbf{x}) &= t \mapsto
+                  \big[\text{sign}\big(x_i(t)\big)\big]_i
+              \quad ((L^p)^m-\text{like space})
+
+        - :math:`p = 2`:
+
+          .. math::
+              \nabla \|\cdot\|_{\times, 2}(\mathbf{x}) &= \left[
+                  \frac{x_{i,j}}{\|\mathbf{x}_j\|_2}\right]_{i,j}
+              \quad (\mathbb{R^{m \times n}-}\text{like space}) \\
+              \nabla \|\cdot\|_{\times, 2}(\mathbf{x}) &= t \mapsto
+                  \left[\frac{x_i(t)}{\|\mathbf{x}(t)\|_2}\right]_i
+              \quad ((L^p)^m-\text{like space})
+
+        - otherwise:
+
+          .. math::
+              \nabla \|\cdot\|_{\times, p}(\mathbf{x}) &= \left[
+                  \frac{|x_{i,j}|^{p-2}\, x_{i,j}}{\|\mathbf{x}_j\|_p^{p-1}}
+              \right]_{i,j}
+              \quad (\mathbb{R^{m \times n}-}\text{like space}) \\
+              \nabla \|\cdot\|_{\times, p}(\mathbf{x}) &= t \mapsto
+                  \left[\frac{|x_i(t)|^{p-2}\, x_i(t)}{
+                              \|\mathbf{x}(t)\|_p^{p-1}}
+              \right]_i
+              \quad ((L^p)^m-\text{like space})
+        """
+        functional = self
+
+        class GroupL1Gradient(Operator):
+
+            """The gradient operator of the `GroupL1Norm` functional."""
+
+            def _call(self, x, out):
+                """Return ``self(x)``."""
+                pwnorm_x = functional.pointwise_norm(x)
+                pwnorm_x.ufuncs.sign(out=pwnorm_x)
+                functional.pointwise_norm.derivative(x).adjoint(pwnorm_x,
+                                                                out=out)
+                return out
+
+            def __repr__(self):
+                """Return ``repr(self)``.
+
+                Examples
+                --------
+                >>> pspace = odl.rn(2) ** 2
+                >>> op = odl.solvers.GroupL1Norm(pspace)
+                >>> op.gradient
+                GroupL1Norm(ProductSpace(rn(2), 2), exponent=2.0).gradient
+                """
+                return attribute_repr_string(repr(functional), 'gradient')
+
+        return GroupL1Gradient(self.domain, self.domain, linear=False)
+
+    @property
+    def proximal(self):
+        """The ``proximal factory`` of the functional.
+
+        .. note::
+            The proximal operator is currently only implemented for ``p == 1``
+            and ``p == 2``.
+
+        See Also
+        --------
+        proximal_l1 : `proximal factory` for the L1 norm.
+        proximal_l1_l2 : `proximal factory` for the L1-L2 norm.
+        """
+        if self.pointwise_norm.exponent == 1:
+            return proximal_l1(self.domain)
+        elif self.pointwise_norm.exponent == 2:
+            return proximal_l1_l2(self.domain)
+        else:
+            raise NotImplementedError('`proximal` only implemented for p = 1 '
+                                      'or 2')
+
+    @property
+    def convex_conj(self):
+        """Convex conjugate functional of the group L1 norm.
+
+        The convex conjugate of a norm is the indicator function of
+        the unit ball with respect to the dual norm,
+
+        .. math::
+            B_{\|\cdot\|_*} = \{ t\,|\, \|t\|_* \leq 1 \},
+
+        which takes value 0 inside the set and :math:`\infty` outside.
+
+        See Also
+        --------
+        IndicatorGroupL1UnitBall
+        """
+        conj_exp = conj_exponent(self.pointwise_norm.exponent)
+        return IndicatorGroupL1UnitBall(self.domain, exponent=conj_exp)
+
+    def __repr__(self):
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> pspace = odl.rn(2) ** 2
+        >>> l1_2_norm = odl.solvers.GroupL1Norm(pspace, exponent=2)
+        >>> l1_2_norm
+        GroupL1Norm(ProductSpace(rn(2), 2), exponent=2.0)
+        """
+        posargs = [self.domain]
+        optargs = [('exponent', self.pointwise_norm.exponent, None)]
+        with npy_printoptions(precision=REPR_PRECISION):
+            inner_parts = signature_string_parts(posargs, optargs)
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
+
+
+class IndicatorGroupL1UnitBall(Functional):
+
+    r"""Indicator functional of the unit ball in the group L1 norm.
+
+    This functional is defined as
+
+    .. math::
+        \iota_{B_{\times,p}}(\mathrm{x}) =
+        \begin{cases}
+            0      & \text{if } \|x\|_{\times, p} \leq 1, \\
+            \infty & \text{else,}
+        \end{cases}
+
+    where :math:`B_{\times,p}` is the unit ball in the :math:`p`-cross norm.
+
+    See Also
+    --------
+    GroupL1Norm
+    """
+
+    def __init__(self, vfspace, exponent=None):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        vfspace : `ProductSpace`
+            Space of vector fields on which the operator acts.
+            It has to be a product space of identical spaces, i.e., a
+            power space.
+        exponent : non-zero float, optional
+            Exponent of the norm in each point. Values between
+            0 and 1 are currently not supported due to numerical
+            instability. Infinity gives the supremum norm.
+            Default: ``vfspace.exponent``, usually 2.
+
+        Examples
+        --------
+        >>> pspace = odl.rn(2) ** 2
+        >>> op = odl.solvers.IndicatorGroupL1UnitBall(pspace)
+        >>> op([[0.1, 0.5], [0.2, 0.3]])
+        0
+        >>> op([[3, 3], [4, 4]])
+        inf
+
+        Set exponent of inner (p) norm:
+
+        >>> op2 = odl.solvers.IndicatorGroupL1UnitBall(pspace, exponent=1)
+        """
+        if not isinstance(vfspace, ProductSpace):
+            raise TypeError('`space` must be a `ProductSpace`')
+        if not vfspace.is_power_space:
+            raise TypeError('`space.is_power_space` must be `True`')
+
+        super(IndicatorGroupL1UnitBall, self).__init__(
+            space=vfspace, linear=False, grad_lipschitz=np.nan)
+        self.pointwise_norm = PointwiseNorm(vfspace, exponent=exponent)
+
+    def _call(self, x):
+        """Return ``self(x)``."""
+        x_norm = self.pointwise_norm(x).ufuncs.max()
+
+        if x_norm > 1:
+            return np.inf
+        else:
+            return 0
+
+    @property
+    def proximal(self):
+        """Return the `proximal factory` of the functional.
+
+        .. note::
+            The proximal operator is currently only implemented for ``p == 1``
+            and ``p == 2``.
+
+        See Also
+        --------
+        proximal_convex_conj_l1 :
+            `proximal factory` for the L1 norm's convex conjugate.
+        proximal_convex_conj_l1_l2 :
+            `proximal factory` for the L1-L2 norm's convex conjugate.
+        """
+        if self.pointwise_norm.exponent == np.inf:
+            return proximal_convex_conj_l1(space=self.domain)
+        elif self.pointwise_norm.exponent == 2:
+            return proximal_convex_conj_l1_l2(space=self.domain)
+        else:
+            raise NotImplementedError('`proximal` only implemented for p = 1 '
+                                      'or 2')
+
+    @property
+    def convex_conj(self):
+        r"""Convex conjugate of the indicator of the group L1 norm unit ball.
+
+        The convex conjugate of the indicator function of a norm ball,
+        that is a function taking the value 0 inside and :math:`\infty`
+        outside, is the dual norm :math:`\|\cdot\|_*`, in this case the
+        group L1 norm with conjugate exponent :math:`q = p / (p - 1)`
+        (:math:`1` and :math:`\infty` are conjugate to each other).
+
+        See Also
+        --------
+        GroupL1Norm
+        """
+        conj_exp = conj_exponent(self.pointwise_norm.exponent)
+        return GroupL1Norm(self.domain, exponent=conj_exp)
+
+    def __repr__(self):
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> pspace = odl.rn(2) ** 2
+        >>> op = odl.solvers.IndicatorGroupL1UnitBall(pspace)
+        >>> op
+        IndicatorGroupL1UnitBall(ProductSpace(rn(2), 2))
+        """
+        posargs = [self.domain]
+        optargs = [('exponent', self.pointwise_norm.exponent,
+                    self.domain.exponent)]
+        with npy_printoptions(precision=REPR_PRECISION):
+            inner_parts = signature_string_parts(posargs, optargs)
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
 
 class L1Norm(LpNorm):
 
-    """The functional corresponding to L1-norm.
+    r"""The 1-norm as a functional.
 
-    The L1-norm, ``||x||_1``,  is defined as the integral/sum of ``|x|``.
-
-    Notes
-    -----
-    If the functional is defined on an :math:`\mathbb{R}^n`-like space, the
-    :math:`\| \cdot \|_1`-norm is defined as
+    This functional is defined as
 
     .. math::
-        \| x \|_1 = \\sum_{i=1}^n |x_i|.
+        \| x \|_1 &= \sum_{i=1}^n |x_i|
+        \quad (\mathbb{R^n-}\text{like space}) \\
+        \| x \|_1 &= \int |x(t)| \mathrm{d}t
+        \quad (L^p-\text{like space}).
 
-    If the functional is defined on an :math:`L_2`-like space, the
-    :math:`\| \cdot \|_1`-norm is defined as
+    If :math:`n` is a multi-index, i.e., :math:`\mathbb{R}^n` is a tensor
+    space, the above definition is applied to the flattened array.
 
-    .. math::
-        \| x \|_1 = \\int_\Omega |x(t)| dt.
-
-    The `proximal` factory allows using vector-valued stepsizes:
-
-    >>> space = odl.rn(3)
-    >>> f = odl.solvers.L1Norm(space)
-    >>> x = space.one()
-    >>> f.proximal([0.5, 1.0, 1.5])(x)
-    rn(3).element([ 0.5,  0. ,  0. ])
+    See Also
+    --------
+    LpNorm
+    GroupL1Norm
     """
 
     def __init__(self, space):
@@ -572,31 +738,41 @@ class L1Norm(LpNorm):
         super(L1Norm, self).__init__(space=space, exponent=1)
 
     def __repr__(self):
-        """Return ``repr(self)``."""
-        return '{}({!r})'.format(self.__class__.__name__,
-                                 self.domain)
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> space = odl.rn(2)
+        >>> op = odl.solvers.L1Norm(space)
+        >>> op
+        L1Norm(rn(2))
+        """
+        posargs = [self.domain]
+        with npy_printoptions(precision=REPR_PRECISION):
+            inner_parts = signature_string_parts(posargs, [])
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
 
 class L2Norm(LpNorm):
 
-    """The functional corresponding to the L2-norm.
+    r"""The 2-norm or Euclidean norm as a functional.
 
-    The L2-norm, ``||x||_2``,  is defined as the square-root out of the
-    integral/sum of ``x^2``.
-
-    Notes
-    -----
-    If the functional is defined on an :math:`\mathbb{R}^n`-like space, the
-    :math:`\| \cdot \|_2`-norm is defined as
+    This functional is defined as
 
     .. math::
-        \| x \|_2 = \\sqrt{ \\sum_{i=1}^n |x_i|^2 }.
+        \| x \|_2 &= \left(\sum_{i=1}^n |x_i|^2 \right)^{1/2}
+        \quad (\mathbb{R^n-}\text{like space}) \\
+        \| x \|_2 &= \left(\int |x(t)|^2 \mathrm{d}t \right)^{1/2}
+        \quad (L^p-\text{like space}).
 
-    If the functional is defined on an :math:`L_2`-like space, the
-    :math:`\| \cdot \|_2`-norm is defined as
+    If :math:`n` is a multi-index, i.e., :math:`\mathbb{R}^n` is a tensor
+    space, the above definition is applied to the flattened array.
 
-    .. math::
-        \| x \|_2 = \\sqrt{ \\int_\Omega |x(t)|^2 dt. }
+    See Also
+    --------
+    L2NormSquared
+    LpNorm
     """
 
     def __init__(self, space):
@@ -610,39 +786,44 @@ class L2Norm(LpNorm):
         super(L2Norm, self).__init__(space=space, exponent=2)
 
     def __repr__(self):
-        """Return ``repr(self)``."""
-        return '{}({!r})'.format(self.__class__.__name__,
-                                 self.domain)
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> space = odl.rn(2)
+        >>> op = odl.solvers.L2Norm(space)
+        >>> op
+        L2Norm(rn(2))
+        """
+        posargs = [self.domain]
+        with npy_printoptions(precision=REPR_PRECISION):
+            inner_parts = signature_string_parts(posargs, [])
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
 
 class L2NormSquared(Functional):
 
-    """The functional corresponding to the squared L2-norm.
+    r"""The squared 2-norm as a functional.
 
-    The squared L2-norm, ``||x||_2^2``,  is defined as the integral/sum of
-    ``x^2``.
-
-    Notes
-    -----
-    If the functional is defined on an :math:`\mathbb{R}^n`-like space, the
-    :math:`\| \cdot \|_2^2`-functional is defined as
+    This functional is defined as
 
     .. math::
-        \| x \|_2^2 = \\sum_{i=1}^n |x_i|^2.
+        \| x \|_2^2 &= \sum_{i=1}^n |x_i|^2
+        \quad (\mathbb{R^n-}\text{like space}) \\
+        \| x \|_2^2 &= \int |x(t)|^2 \mathrm{d}t
+        \quad (L^p-\text{like space}).
 
-    If the functional is defined on an :math:`L_2`-like space, the
-    :math:`\| \cdot \|_2^2`-functional is defined as
+    If :math:`n` is a multi-index, i.e., :math:`\mathbb{R}^n` is a tensor
+    space, the above definition is applied to the flattened array.
 
-    .. math::
-        \| x \|_2^2 = \\int_\Omega |x(t)|^2 dt.
+    In contrast to the non-squared 2-norm, this functional is differentiable
+    and has a well-defined gradient everywhere.
 
-    The `proximal` factory allows using vector-valued stepsizes:
-
-    >>> space = odl.rn(3)
-    >>> f = odl.solvers.L2NormSquared(space)
-    >>> x = space.one()
-    >>> f.proximal([0.5, 1.5, 2.0])(x)
-    rn(3).element([ 0.5 ,  0.25,  0.2 ])
+    See Also
+    --------
+    L2Norm
+    L1Norm
     """
 
     def __init__(self, space):
@@ -656,9 +837,9 @@ class L2NormSquared(Functional):
         super(L2NormSquared, self).__init__(
             space=space, linear=False, grad_lipschitz=2)
 
-    # TODO: update when integration operator is in place: issue #440
+    # TODO(#440): use integration operator when available
     def _call(self, x):
-        """Return the squared L2-norm of ``x``."""
+        """Return ``self(x)``."""
         return x.inner(x)
 
     @property
@@ -668,37 +849,51 @@ class L2NormSquared(Functional):
 
     @property
     def proximal(self):
-        """Return the `proximal factory` of the functional.
+        r"""Return the `proximal factory` of the functional.
 
-        See Also
-        --------
-        odl.solvers.nonsmooth.proximal_operators.proximal_l2_squared :
-            `proximal factory` for the squared L2-norm.
+        The proximal of the squared L2 norm is the scaling
+
+        .. math::
+            \mathrm{prox}_{\sigma \|\cdot\|_2^2}(x) =
+            \frac{x}{1 + 2 \sigma}.
         """
-        return proximal_l2_squared(space=self.domain)
+        def l2_squared_prox_factory(sigma):
+            """Return the L2 squared proximal operator for ``sigma``."""
+            return ScalingOperator(1 / (1 + 2 * sigma), self.domain)
+
+        return l2_squared_prox_factory
 
     @property
     def convex_conj(self):
-        """The convex conjugate functional of the squared L2-norm.
+        r"""The convex conjugate functional of the squared L2 norm.
 
         Notes
         -----
-        The conjugate functional of :math:`\| \\cdot \|_2^2` is
-        :math:`\\frac{1}{4}\| \\cdot \|_2^2`
+        The conjugate functional of :math:`\| \cdot \|_2^2` is
+        :math:`\frac{1}{4}\| \cdot \|_2^2`
         """
-        return (1.0 / 4) * L2NormSquared(self.domain)
+        return (1 / 4) * L2NormSquared(self.domain)
 
     def __repr__(self):
-        """Return ``repr(self)``."""
-        return '{}({!r})'.format(self.__class__.__name__, self.domain)
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> space = odl.rn(2)
+        >>> op = odl.solvers.L2NormSquared(space)
+        >>> op
+        L2NormSquared(rn(2))
+        """
+        posargs = [self.domain]
+        with npy_printoptions(precision=REPR_PRECISION):
+            inner_parts = signature_string_parts(posargs, [])
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
 
 class ConstantFunctional(Functional):
 
-    """The constant functional.
-
-    This functional maps all elements in the domain to a given, constant value.
-    """
+    """Functional mapping all inputs to the same constant."""
 
     def __init__(self, space, constant):
         """Initialize a new instance.
@@ -708,7 +903,7 @@ class ConstantFunctional(Functional):
         space : `LinearSpace`
             Domain of the functional.
         constant : element in ``domain.field``
-            The constant value of the functional
+            The constant value of the functional.
         """
         super(ConstantFunctional, self).__init__(
             space=space, linear=(constant == 0), grad_lipschitz=0)
@@ -720,7 +915,7 @@ class ConstantFunctional(Functional):
         return self.__constant
 
     def _call(self, x):
-        """Return a constant value."""
+        """Return ``self(x)``."""
         return self.constant
 
     @property
@@ -735,29 +930,42 @@ class ConstantFunctional(Functional):
 
     @property
     def convex_conj(self):
-        """Convex conjugate functional of the constant functional.
+        r"""Convex conjugate of the constant functional.
 
-        Notes
-        -----
-        This functional is defined as
+        The convex conjugate of a constant functional :math:`f(x) = c`
+        is an indicator function of the singleton set :math:`\{0\}` that
+        takes the value :math:`-c` instead of 0:
 
          .. math::
-            f^*(x) = \\left\{ \\begin{array}{ll}
-            -constant & \\text{if } x = 0, \\\\
-            \\infty & \\text{else}
-            \\end{array} \\right.
+            f^*(x) =
+            \begin{cases}
+                -c     & \text{if } x = 0, \\
+                \infty & \text{else}.
+            \end{cases}
         """
         return IndicatorZero(self.domain, -self.constant)
 
     def __repr__(self):
-        """Return ``repr(self)``."""
-        return '{}({!r}, {!r})'.format(self.__class__.__name__,
-                                       self.domain, self.constant)
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> space = odl.rn(2)
+        >>> op = odl.solvers.ConstantFunctional(space, 1.5)
+        >>> op
+        ConstantFunctional(rn(2), constant=1.5)
+        """
+        posargs = [self.domain]
+        optargs = [('constant', self.constant, None)]
+        with npy_printoptions(precision=REPR_PRECISION):
+            inner_parts = signature_string_parts(posargs, optargs)
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
 
 class ZeroFunctional(ConstantFunctional):
 
-    """Functional that maps all elements in the domain to zero."""
+    """Functional that maps everything to zero."""
 
     def __init__(self, space):
         """Initialize a new instance.
@@ -770,8 +978,20 @@ class ZeroFunctional(ConstantFunctional):
         super(ZeroFunctional, self).__init__(space=space, constant=0)
 
     def __repr__(self):
-        """Return ``repr(self)``."""
-        return '{}({!r})'.format(self.__class__.__name__, self.domain)
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> space = odl.rn(2)
+        >>> op = odl.solvers.ZeroFunctional(space)
+        >>> op
+        ZeroFunctional(rn(2))
+        """
+        posargs = [self.domain]
+        with npy_printoptions(precision=REPR_PRECISION):
+            inner_parts = signature_string_parts(posargs, [])
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
 
 class ScalingFunctional(Functional, ScalingOperator):
@@ -779,28 +999,28 @@ class ScalingFunctional(Functional, ScalingOperator):
     """Functional that scales the input argument by a value.
 
     Since the range of a functional is always a field, the domain of this
-    functional is also a field, i.e. real or complex numbers.
+    functional must also be a field, i.e. real or complex numbers.
     """
 
-    def __init__(self, field, scale):
+    def __init__(self, field, scalar):
         """Initialize a new instance.
 
         Parameters
         ----------
         field : `Field`
             Domain of the functional.
-        scale : element in ``domain``
+        scalar : element in ``domain``
             The constant value to scale by.
 
         Examples
         --------
         >>> field = odl.RealNumbers()
-        >>> func = ScalingFunctional(field, 3)
+        >>> func = odl.solvers.ScalingFunctional(field, 3)
         >>> func(5)
         15.0
         """
         Functional.__init__(self, space=field, linear=True, grad_lipschitz=0)
-        ScalingOperator.__init__(self, field, scale)
+        ScalingOperator.__init__(self, field, scalar)
 
     @property
     def gradient(self):
@@ -830,18 +1050,18 @@ class IdentityFunctional(ScalingFunctional):
 
 class IndicatorBox(Functional):
 
-    """Indicator on some box shaped domain.
+    r"""Indicator functional on some box shaped domain.
 
-    Notes
-    -----
-    The indicator :math:`F` with lower bound :math:`a` and upper bound
-    :math:`b` is defined as:
+    The indicator with lower bound :math:`a` and upper bound :math:`b`
+    (can be scalars, vectors or functions) is
+    defined as
 
     .. math::
-        F(x) = \\begin{cases}
-            0 & \\text{if } a \\leq x \\leq b \\text{ everywhere}, \\\\
-            \\infty & \\text{else}
-            \\end{cases}
+        \iota_{[a,b]}(x) =
+        \begin{cases}
+            0      & \text{if } a \leq x \leq b \text{ everywhere}, \\
+            \infty & \text{else}.
+        \end{cases}
     """
 
     def __init__(self, space, lower=None, upper=None):
@@ -861,7 +1081,7 @@ class IndicatorBox(Functional):
         Examples
         --------
         >>> space = odl.rn(3)
-        >>> func = IndicatorBox(space, 0, 2)
+        >>> func = odl.solvers.IndicatorBox(space, 0, 2)
         >>> func([0, 1, 2])  # all points inside
         0
         >>> func([0, 1, 3])  # one point outside
@@ -872,7 +1092,7 @@ class IndicatorBox(Functional):
         self.upper = upper
 
     def _call(self, x):
-        """Apply the functional to the given point."""
+        """Return ``self(x)``."""
         # Since the proximal projects onto our feasible set we can simply
         # check if it changes anything
         proj = self.proximal(1)(x)
@@ -880,29 +1100,49 @@ class IndicatorBox(Functional):
 
     @property
     def proximal(self):
-        """Return the `proximal factory` of the functional."""
-        return proximal_box_constraint(self.domain, self.lower, self.upper)
+        """Return the `proximal factory` of the functional.
+
+        The proximal operator of the box indicator functional is a projection
+        onto that box, i.e., setting the input equal to the lower bound where
+        it is smaller, and equal to the upper bound where it is larger.
+
+        See Also
+        --------
+        proximal_indicator_box
+        """
+        return proximal_indicator_box(self.domain, self.lower, self.upper)
 
     def __repr__(self):
-        """Return ``repr(self)``."""
-        return '{}({!r}, {!r}, {!r})'.format(self.__class__.__name__,
-                                             self.domain,
-                                             self.lower, self.upper)
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> space = odl.rn(3)
+        >>> func = odl.solvers.IndicatorBox(space, 0, 2)
+        >>> func
+        IndicatorBox(rn(3), lower=0, upper=2)
+        """
+        posargs = [self.domain]
+        optargs = [('lower', self.lower, None),
+                   ('upper', self.upper, None)]
+        with npy_printoptions(precision=REPR_PRECISION):
+            inner_parts = signature_string_parts(posargs, optargs)
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
 
 class IndicatorNonnegativity(IndicatorBox):
 
-    """Indicator on the set of non-negative numbers.
+    r"""Indicator on the set of non-negative numbers.
 
-    Notes
-    -----
-    The nonnegativity indicator :math:`F`  is defined as:
+    The nonnegativity indicator is defined as
 
     .. math::
-        F(x) = \\begin{cases}
-            0 & \\text{if } 0 \\leq x \\text{ everywhere}, \\\\
-            \\infty & \\text{else}
-            \\end{cases}
+        \iota_0(x) =
+        \begin{cases}
+            0      & \text{if } x \geq 0 \text{ everywhere}, \\
+            \infty & \text{else}.
+        \end{cases}
     """
 
     def __init__(self, space):
@@ -916,7 +1156,7 @@ class IndicatorNonnegativity(IndicatorBox):
         Examples
         --------
         >>> space = odl.rn(3)
-        >>> func = IndicatorNonnegativity(space)
+        >>> func = odl.solvers.IndicatorNonnegativity(space)
         >>> func([0, 1, 2])  # all points positive
         0
         >>> func([0, 1, -3])  # one point negative
@@ -926,15 +1166,36 @@ class IndicatorNonnegativity(IndicatorBox):
             space, lower=0, upper=None)
 
     def __repr__(self):
-        """Return ``repr(self)``."""
-        return '{}({!r})'.format(self.__class__.__name__, self.domain)
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> space = odl.rn(3)
+        >>> func = odl.solvers.IndicatorNonnegativity(space)
+        >>> func
+        IndicatorNonnegativity(rn(3))
+        """
+        posargs = [self.domain]
+        with npy_printoptions(precision=REPR_PRECISION):
+            inner_parts = signature_string_parts(posargs, [])
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
 
 class IndicatorZero(Functional):
 
-    """The indicator function of the singleton set {0}.
+    r"""Indicator functional of the singleton set {0}.
 
-    The function has a constant value if the input is zero, otherwise infinity.
+    This functional is defined as
+
+    .. math::
+        \iota_{\{0\}, c}(x) =
+        \begin{cases}
+            c      & \text{if } x = 0 \text{ everywhere}, \\
+            \infty & \text{else},
+        \end{cases}
+
+    where :math:`c` is a user-chosen constant value.
     """
 
     def __init__(self, space, constant=0):
@@ -945,18 +1206,18 @@ class IndicatorZero(Functional):
         space : `LinearSpace`
             Domain of the functional.
         constant : element in ``domain.field``, optional
-            The constant value of the functional
+            The constant value that the functional takes in zero.
 
         Examples
         --------
         >>> space = odl.rn(3)
-        >>> func = IndicatorZero(space)
+        >>> func = odl.solvers.IndicatorZero(space)
         >>> func([0, 0, 0])
         0
         >>> func([0, 0, 1])
         inf
 
-        >>> func = IndicatorZero(space, constant=2)
+        >>> func = odl.solvers.IndicatorZero(space, constant=2)
         >>> func([0, 0, 0])
         2
         """
@@ -969,34 +1230,27 @@ class IndicatorZero(Functional):
         return self.__constant
 
     def _call(self, x):
-        """Apply the functional to the given point."""
+        """Return ``self(x)``."""
         if x.norm() == 0:
-            # In this case x is the zero-element.
             return self.constant
         else:
             return np.inf
 
     @property
     def convex_conj(self):
-        """The convex conjugate functional.
+        """Convex conjugate of this functional.
 
-        Notes
-        -----
-        By the Fenchel-Moreau theorem the convex conjugate is the constant
-        functional [BC2011] with the constant value of -`constant`.
-
-        References
-        ----------
-        [BC2011] Bauschke, H H, and Combettes, P L. *Convex analysis and
-        monotone operator theory in Hilbert spaces*. Springer, 2011.
+        The convex conjugate of the singleton set :math:`\{0\}` with
+        constant :math:`c` is the functional mapping everything to the
+        constant :math:`-c`.
         """
         return ConstantFunctional(self.domain, -self.constant)
 
     @property
     def proximal(self):
-        """Return the proximal factory of the functional.
+        """A proximal factory for this functional.
 
-        This is the zero operator.
+        It returns the zero operator.
         """
         def zero_proximal(sigma=1.0):
             """Proximal factory for zero operator.
@@ -1004,49 +1258,71 @@ class IndicatorZero(Functional):
             Parameters
             ----------
             sigma : positive float, optional
-                Step size parameter.
+                Step size parameter (not used).
             """
             return ZeroOperator(self.domain)
 
         return zero_proximal
 
     def __repr__(self):
-        """Return ``repr(self)``."""
-        return '{}({!r}, {!r})'.format(self.__class__.__name__,
-                                       self.domain, self.constant)
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> space = odl.rn(3)
+        >>> func = odl.solvers.IndicatorZero(space)
+        >>> func
+        IndicatorZero(rn(3))
+        """
+        posargs = [self.domain]
+        optargs = [('constant', self.constant, 0)]
+        with npy_printoptions(precision=REPR_PRECISION):
+            inner_parts = signature_string_parts(posargs, optargs)
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
 
 class KullbackLeibler(Functional):
 
-    """The Kullback-Leibler divergence functional.
+    r"""The Kullback-Leibler divergence functional.
 
     Notes
     -----
-    The functional :math:`F` with prior :math:`g>=0` is given by:
+    The Kullback-Leibler divergence with prior :math:`g \geq 0` is defined as
 
     .. math::
-        F(x)
-        =
-        \\begin{cases}
-            \\sum_{i} \left( x_i - g_i + g_i \log \left( \\frac{g_i}{x_i}
-            \\right) \\right) & \\text{if } x_i > 0 \\forall i
-            \\\\
-            +\\infty & \\text{else.}
-        \\end{cases}
+        \text{KL}(x)
+        &=
+        \begin{cases}
+            \sum_{i} \left( x_i - g_i + g_i \ln \left( \frac{g_i}{x_i}
+            \right) \right) & \text{if } x_i > 0 \text{ for all } i,
+            \\
+            +\infty & \text{otherwise.}
+        \end{cases}
+        \quad (\mathbb{R}^n\text{-like space}) \\[2ex]
+        \text{KL}(x)
+        &=
+        \begin{cases}
+            \int \left(
+                x(t) - g(t) + g(t) \ln\left(\frac{g(t)}{x(t)}\right)
+            \right)\, \mathrm{d}t  & \text{if } x(t) > 0 \text{ for all } t,
+            \\
+            +\infty & \text{otherwise.}
+        \end{cases}
+        \quad (L^p-\text{like space})
 
-    Note that we use the common definition 0 log(0) := 0.
-    KL based objectives are common in MLEM optimization problems and are often
+    Note that we use the common convention :math:`0 \ln 0 := 0`.
+    KL-based objectives are common in MLEM optimization problems and are often
     used as data-matching term when data noise governed by a multivariate
     Poisson probability distribution is significant.
 
-    The functional is related to the Kullback-Leibler cross entropy functional
-    `KullbackLeiblerCrossEntropy`. The KL cross entropy is the one
-    diescribed in `this Wikipedia article
-    <https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence>`_, and
-    the functional :math:`F` is obtained by switching place of the prior and
-    the varialbe in the KL cross entropy functional.
+    This functional is related to the `KullbackLeiblerCrossEntropy`
+    described in `this Wikipedia article
+    <https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence>`_,
+    in that they have flipped roles of variable :math:`x` and prior :math:`g`.
 
-    For a theoretical exposition, see `Csiszar1991`_.
+    For a theoretical exposition, see `[Csiszar1991]
+    <http://www.jstor.org/stable/2241918>`_.
 
     See Also
     --------
@@ -1055,7 +1331,10 @@ class KullbackLeibler(Functional):
 
     References
     ----------
-    .. _Csiszar1991:  http://www.jstor.org/stable/2241918
+    [Csiszar1991] I. Csiszar.
+    *Why Least Squares and Maximum Entropy? An Axiomatic Approach to
+    Inference for Linear Inverse Problems.*
+    The Annals of Statistics, 19/4 (1991), pp 2032–-2066.
     """
 
     def __init__(self, space, prior=None):
@@ -1067,28 +1346,14 @@ class KullbackLeibler(Functional):
             Domain of the functional.
         prior : ``space`` `element-like`, optional
             Depending on the context, the prior, target or data
-            distribution. It is assumed to be nonnegative.
-            Default: if None it is take as the one-element.
+            distribution, assumed to be nonnegative.
+            The default ``None`` is equivalent to a prior of all ones.
 
         Examples
         --------
-
-        Test that KullbackLeibler(x,x) = 0
-
         >>> space = odl.rn(3)
         >>> prior = 3 * space.one()
-        >>> func = odl.solvers.KullbackLeibler(space, prior=prior)
-        >>> func(prior)
-        0.0
-
-
-        Test that zeros in the prior are handled correctly
-
-        >>> prior = space.zero()
-        >>> func = odl.solvers.KullbackLeibler(space, prior=prior)
-        >>> x = space.one()
-        >>> func(x)
-        3.0
+        >>> kl = odl.solvers.KullbackLeibler(space, prior=prior)
         """
         super(KullbackLeibler, self).__init__(
             space=space, linear=False, grad_lipschitz=np.nan)
@@ -1104,37 +1369,40 @@ class KullbackLeibler(Functional):
         """The prior in the Kullback-Leibler functional."""
         return self.__prior
 
-    # TODO: update when integration operator is in place: issue #440
+    # TODO(#440): use integration operator when available
     def _call(self, x):
-        """Return the KL-diveregnce in the point ``x``.
+        """Return ``self(x)``.
 
-        If any components of ``x`` is non-positive, the value is positive
+        If any component of ``x`` is non-positive, the value is positive
         infinity.
         """
         # Lazy import to improve `import odl` time
         import scipy.special
 
         if self.prior is None:
-            tmp = ((x - 1 - np.log(x)).inner(self.domain.one()))
+            integrand = x - 1 - np.log(x)
         else:
-            tmp = ((x - self.prior +
-                    scipy.special.xlogy(self.prior, self.prior / x))
-                   .inner(self.domain.one()))
-        if np.isnan(tmp):
+            integrand = (x - self.prior +
+                         scipy.special.xlogy(self.prior, self.prior / x))
+
+        integral = integrand.inner(self.domain.one())
+        if np.isnan(integral):
             # In this case, some element was less than or equal to zero
             return np.inf
         else:
-            return tmp
+            return integral
 
     @property
     def gradient(self):
-        """The gradient of `KullbackLeibler` with ``prior`` :math:`g` is given as
+        r"""The gradient operator of the Kullback-Leibler divergence.
+
+        For a prior :math:`g` is given by
 
         .. math::
-            \\nabla F(x) = 1 - \frac{g}{x}.
+            \nabla \text{KL}(x) = 1 - \frac{g}{x}.
 
-        The gradient is not defined in points where one or more components
-        are non-positive.
+        The gradient is not defined if any component of :math:`x` is
+        non-positive.
         """
         functional = self
 
@@ -1142,26 +1410,30 @@ class KullbackLeibler(Functional):
 
             """The gradient operator of this functional."""
 
-            def __init__(self):
-                """Initialize a new instance."""
-                super(KLGradient, self).__init__(
-                    functional.domain, functional.domain, linear=False)
-
             def _call(self, x):
-                """Apply the gradient operator to the given point.
-                The gradient is not defined in points where one or more
-                components are non-positive.
-                """
+                """Return ``self(x)``."""
                 if functional.prior is None:
                     return (-1.0) / x + 1
                 else:
                     return (-functional.prior) / x + 1
 
-        return KLGradient()
+            def __repr__(self):
+                """Return ``repr(self)``.
+
+                Examples
+                --------
+                >>> space = odl.rn(3)
+                >>> kl = odl.solvers.KullbackLeibler(space)
+                >>> kl.gradient
+                KullbackLeibler(rn(3)).gradient
+                """
+                return attribute_repr_string(repr(functional), 'gradient')
+
+        return KLGradient(self.domain, self.domain, linear=False)
 
     @property
     def proximal(self):
-        """Return the `proximal factory` of the functional.
+        """A `proximal factory` for this functional.
 
         See Also
         --------
@@ -1170,41 +1442,69 @@ class KullbackLeibler(Functional):
         odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj :
             Proximal of the convex conjugate of a functional.
         """
-        return proximal_convex_conj(proximal_convex_conj_kl(space=self.domain,
-                                                            g=self.prior))
+        return proximal_convex_conj(
+            proximal_convex_conj_kl(space=self.domain, g=self.prior))
 
     @property
     def convex_conj(self):
-        """The convex conjugate functional of the KL-functional."""
+        """The convex conjugate of the KL functional.
+
+        See Also
+        --------
+        KullbackLeiblerConvexConj
+        """
         return KullbackLeiblerConvexConj(self.domain, self.prior)
 
     def __repr__(self):
-        """Return ``repr(self)``."""
-        return '{}({!r}, {!r})'.format(self.__class__.__name__,
-                                       self.domain, self.prior)
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> space = odl.rn(3)
+        >>> prior = 3 * space.one()
+        >>> odl.solvers.KullbackLeibler(space, prior=prior)
+        KullbackLeibler(rn(3), prior=rn(3).element([ 3.,  3.,  3.]))
+        """
+        posargs = [self.domain]
+        optargs = [('prior', self.prior, None)]
+        with npy_printoptions(precision=REPR_PRECISION):
+            inner_parts = signature_string_parts(posargs, optargs)
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
 
 class KullbackLeiblerConvexConj(Functional):
 
-    """The convex conjugate of Kullback-Leibler divergence functional.
+    r"""The convex conjugate of the Kullback-Leibler divergence functional.
 
     Notes
     -----
-    The functional :math:`F^*` with prior :math:`g>=0` is given by:
+    The convex conjugate :math:`\text{KL}^*` of the KL divergence with
+    prior :math:`g \geq 0` is given by
 
     .. math::
-        F^*(x)
-        =
-        \\begin{cases}
-            \\sum_{i} \left( -g_i \ln(1 - x_i) \\right)
-            & \\text{if } x_i < 1 \\forall i
-            \\\\
-            +\\infty & \\text{else}
-        \\end{cases}
+        \text{KL}^*(x)
+        &=
+        \begin{cases}
+            \sum_{i} \left( -g_i \ln(1 - x_i) \right) & \text{if }
+            x_i < 1 \text{ for all } i,
+            \\
+            +\infty & \text{otherwise.}
+        \end{cases}
+        \quad (\mathbb{R}^n\text{-like space}) \\[2ex]
+        \text{KL}^*(x)
+        &=
+        \begin{cases}
+            \int \big(-g(t)\ln\left(1 - x(t)\big)
+            \right)\, \mathrm{d}t  & \text{if } x(t) < 1 \text{ for all } t,
+            \\
+            +\infty & \text{otherwise.}
+        \end{cases}
+        \quad (L^p-\text{like space})
 
     See Also
     --------
-    KullbackLeibler : convex conjugate functional
+    KullbackLeibler : convex conjugate
     """
 
     def __init__(self, space, prior=None):
@@ -1216,8 +1516,8 @@ class KullbackLeiblerConvexConj(Functional):
             Domain of the functional.
         prior : ``space`` `element-like`, optional
             Depending on the context, the prior, target or data
-            distribution. It is assumed to be nonnegative.
-            Default: if None it is take as the one-element.
+            distribution, assumed to be nonnegative.
+            The default ``None`` is equivalent to a prior of all ones.
         """
         super(KullbackLeiblerConvexConj, self).__init__(
             space=space, linear=False, grad_lipschitz=np.nan)
@@ -1230,37 +1530,42 @@ class KullbackLeiblerConvexConj(Functional):
 
     @property
     def prior(self):
-        """The prior in convex conjugate Kullback-Leibler functional."""
+        """The prior in the convex conjugate of the KL functional."""
         return self.__prior
 
-    # TODO: update when integration operator is in place: issue #440
+    # TODO(#440): use integration operator when available
     def _call(self, x):
-        """Return the value in the point ``x``.
+        """Return ``self(x)``.
 
-        If any components of ``x`` is larger than or equal to 1, the value is
+        If any component of ``x`` is larger than or equal to 1, the value is
         positive infinity.
         """
         # Lazy import to improve `import odl` time
         import scipy.special
 
         if self.prior is None:
-            tmp = self.domain.element(
-                -1.0 * (np.log(1 - x))).inner(self.domain.one())
+            integral = (-1.0 * (np.log1p(-x))).inner(self.domain.one())
         else:
-            tmp = self.domain.element(-scipy.special.xlogy(
-                self.prior, 1 - x)).inner(self.domain.one())
-        if np.isnan(tmp):
+            integrand = -scipy.special.xlog1py(self.prior, -x)
+            integral = integrand.inner(self.domain.one())
+        if np.isnan(integral):
             # In this case, some element was larger than or equal to one
             return np.inf
         else:
-            return tmp
+            return integral
 
     @property
     def gradient(self):
-        """Gradient operator of the functional.
+        """Gradient operator of this functional.
 
-        The gradient is not defined in points where one or more components
-        are larger than or equal to one.
+        The gradient of the convex conjugate of the KL divergence is given
+        by
+
+        .. math::
+            \nabla \text{KL}^*(x) = \frac{g}{1 - x}.
+
+        The gradient is not defined in points where any component of :math:`x`
+        is (larger than or) equal to one.
         """
         functional = self
 
@@ -1268,27 +1573,30 @@ class KullbackLeiblerConvexConj(Functional):
 
             """The gradient operator of this functional."""
 
-            def __init__(self):
-                """Initialize a new instance."""
-                super(KLCCGradient, self).__init__(
-                    functional.domain, functional.domain, linear=False)
-
             def _call(self, x):
-                """Apply the gradient operator to the given point.
-
-                The gradient is not defined in points where one or more
-                components are larger than or equal to one.
-                """
+                """Return ``self(x)``."""
                 if functional.prior is None:
                     return 1.0 / (1 - x)
                 else:
                     return functional.prior / (1 - x)
 
-        return KLCCGradient()
+            def __repr__(self):
+                """Return ``repr(self)``.
+
+                Examples
+                --------
+                >>> space = odl.rn(3)
+                >>> kl_cc = odl.solvers.KullbackLeibler(space).convex_conj
+                >>> kl_cc.gradient
+                KullbackLeiblerConvexConj(rn(3)).gradient
+                """
+                return attribute_repr_string(repr(functional), 'gradient')
+
+        return KLCCGradient(self.domain, self.domain, linear=False)
 
     @property
     def proximal(self):
-        """Return the `proximal factory` of the functional.
+        """A `proximal factory` for this functional.
 
         See Also
         --------
@@ -1301,56 +1609,79 @@ class KullbackLeiblerConvexConj(Functional):
 
     @property
     def convex_conj(self):
-        """The convex conjugate functional of the conjugate KL-functional."""
+        """The convex conjugate functional of the KL convex conjugate.
+
+        This is the original KL divergence.
+        """
         return KullbackLeibler(self.domain, self.prior)
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r}, {!r})'.format(self.__class__.__name__,
-                                       self.domain, self.prior)
+        posargs = [self.domain]
+        optargs = [('prior', self.prior, None)]
+        with npy_printoptions(precision=REPR_PRECISION):
+            inner_parts = signature_string_parts(posargs, optargs)
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
 
 class KullbackLeiblerCrossEntropy(Functional):
 
-    """The Kullback-Leibler Cross Entropy divergence functional.
+    r"""The Kullback-Leibler Cross Entropy divergence functional.
 
     Notes
     -----
-    The functional :math:`F` with prior :math:`g>0` is given by:
+    The Kullback-Leibler cross entropy with prior :math:`g > 0` is
+    defined as
 
     .. math::
-        F(x)
-        =
-        \\begin{cases}
-            \\sum_{i} \left( g_i - x_i + x_i \log \left( \\frac{x_i}{g_i}
-            \\right) \\right)
-            & \\text{if } g_i > 0 \\forall i
-            \\\\
-            +\\infty & \\text{else}
-        \\end{cases}
+        \widetilde{\text{KL}}(x)
+        &=
+        \begin{cases}
+            \sum_{i} \left( g_i - x_i + x_i \ln \left( \frac{x_i}{g_i}
+            \right) \right) & \text{if } x_i \geq 0 \text{ for all } i,
+            \\
+            +\infty & \text{otherwise.}
+        \end{cases}
+        \quad (\mathbb{R}^n\text{-like space}) \\[2ex]
+        \widetilde{\text{KL}}(x)
+        &=
+        \begin{cases}
+            \int \left(
+                g(t) - x(t) + x(t) \ln\left(\frac{x(t)}{g(t)}\right)
+            \right)\, \mathrm{d}t  & \text{if } x(t) \geq 0 \text{ for all } t,
+            \\
+            +\infty & \text{otherwise.}
+        \end{cases}
+        \quad (L^p-\text{like space})
 
-    For further information about the functional, see the
-    `Wikipedia article on the Kullback Leibler divergence
+    Note that we use the common convention :math:`0 \ln 0 := 0`.
+    This variant of the `KullbackLeibler` functional that flips the roles of
+    :math:`x` and :math:`g` is more often used in statistics (for the
+    comparison of probablility distributions) than in inverse problems.
+
+    For more details see `this Wikipedia article
     <https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence>`_,
-    or read for example `this article
-    <http://ieeexplore.ieee.org/document/1056144/?arnumber=1056144>`_.
-
-    The KL cross entropy functional :math:`F`, described above, is related to
-    another functional which is also know as KL divergence. This functional
-    is often used as data discrepancy term in inverse problems, when data is
-    corrupted with Poisson noise. It is obtained by changing place
-    of the prior and the variable. See the See Also section.
-
-    For a theoretical exposition, see `Csiszar1991`_.
+    or `[Csiszar1991] <http://www.jstor.org/stable/2241918>`_. or `[SJ1980]
+    <http://ieeexplore.ieee.org/document/1056144/?arnumber=1056144>`_
+    for a theoretical explanation.
 
     See Also
     --------
     KullbackLeibler : related functional
-    KullbackLeiblerCrossEntropyConvexConj : the convex conjugate functional
+    KullbackLeiblerCrossEntropyConvexConj : the convex conjugate
 
     References
     ----------
-    .. _Csiszar1991:  http://www.jstor.org/stable/2241918
+    [Csiszar1991] I. Csiszar.
+    *Why Least Squares and Maximum Entropy? An Axiomatic Approach to
+    Inference for Linear Inverse Problems.*
+    The Annals of Statistics, 19/4 (1991), pp 2032–-2066.
+
+    [SJ1980] Shore, J and Johnson, R.
+    *Axiomatic derivation of the principle of maximum entropy and the
+    principle of minimum cross-entropy.*
+    IEEE Transactions on Information Theory, 26/1 (1980), pp 26--37.
     """
 
     def __init__(self, space, prior=None):
@@ -1379,70 +1710,71 @@ class KullbackLeiblerCrossEntropy(Functional):
         """The prior in the Kullback-Leibler functional."""
         return self.__prior
 
-    # TODO: update when integration operator is in place: issue #440
+    # TODO(#440): use integration operator when available
     def _call(self, x):
-        """Return the KL-diveregnce in the point ``x``.
+        """Return ``self(x)``.
 
-        If any components of ``x`` is non-positive, the value is positive
+        If any component of ``x`` is non-positive, the value is positive
         infinity.
         """
         # Lazy import to improve `import odl` time
         import scipy.special
 
         if self.prior is None:
-            tmp = (1 - x + scipy.special.xlogy(x, x)).inner(self.domain.one())
+            integrand = 1 - x + scipy.special.xlogy(x, x)
         else:
-            tmp = ((self.prior - x + scipy.special.xlogy(x, x / self.prior))
-                   .inner(self.domain.one()))
-        if np.isnan(tmp):
+            integrand = (self.prior - x +
+                         scipy.special.xlogy(x, x / self.prior))
+
+        integral = integrand.inner(self.domain.one())
+        if np.isnan(integral):
             # In this case, some element was less than or equal to zero
             return np.inf
         else:
-            return tmp
+            return integral
 
     @property
     def gradient(self):
-        """Gradient operator of the functional.
+        r"""Gradient operator of this functional.
+
+        The gradient of the KL cross entropy is given by
+
+        .. math::
+            \nabla \widetilde{\text{KL}}(x) = \ln\left(\frac{x}{g}\right).
 
         The gradient is not defined in points where one or more components
-        are less than or equal to 0.
+        of :math:`x` are less than or equal to 0.
         """
         functional = self
 
         class KLCrossEntropyGradient(Operator):
 
-            """The gradient operator of this functional."""
-
-            def __init__(self):
-                """Initialize a new instance."""
-                super(KLCrossEntropyGradient, self).__init__(
-                    functional.domain, functional.domain, linear=False)
+            """The gradient operator."""
 
             def _call(self, x):
-                """Apply the gradient operator to the given point.
-
-                The gradient is not defined in for points with components less
-                than or equal to zero.
-                """
+                """Return ``self(x)``."""
                 if functional.prior is None:
-                    tmp = np.log(x)
+                    return np.log(x)
                 else:
-                    tmp = np.log(x / functional.prior)
+                    return np.log(x / functional.prior)
 
-                if np.all(np.isfinite(tmp)):
-                    return tmp
-                else:
-                    # The derivative is not defined.
-                    raise ValueError('The gradient of the Kullback-Leibler '
-                                     'Cross Entropy functional is not defined '
-                                     'for `x` with one or more components '
-                                     'less than or equal to zero.'.format(x))
+            def __repr__(self):
+                """Return ``repr(self)``.
 
-        return KLCrossEntropyGradient()
+                Examples
+                --------
+                >>> space = odl.rn(3)
+                >>> kl_xent = odl.solvers.KullbackLeiblerCrossEntropy(space)
+                >>> kl_xent.gradient
+                KullbackLeiblerCrossEntropy(rn(3)).gradient
+                """
+                return attribute_repr_string(repr(functional), 'gradient')
+
+        return KLCrossEntropyGradient(self.domain, self.domain, linear=False)
 
     @property
     def proximal(self):
-        """Return the `proximal factory` of the functional.
+        """Return a `proximal factory` for this functional.
 
         See Also
         --------
@@ -1457,28 +1789,44 @@ proximal_convex_conj_kl_cross_entropy :
 
     @property
     def convex_conj(self):
-        """The convex conjugate functional of the KL-functional."""
+        """The convex conjugate of the KL cross entropy.
+
+        See Also
+        --------
+        KullbackLeiblerCrossEntropyConvexConj
+        """
         return KullbackLeiblerCrossEntropyConvexConj(self.domain, self.prior)
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r}, {!r})'.format(self.__class__.__name__,
-                                       self.domain, self.prior)
+        posargs = [self.domain]
+        optargs = [('prior', self.prior, None)]
+        with npy_printoptions(precision=REPR_PRECISION):
+            inner_parts = signature_string_parts(posargs, optargs)
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
 
 class KullbackLeiblerCrossEntropyConvexConj(Functional):
-    """The convex conjugate of Kullback-Leibler Cross Entorpy functional.
+
+    r"""The convex conjugate of the Kullback-Leibler cross entropy.
 
     Notes
     -----
-    The functional :math:`F^*` with prior :math:`g>0` is given by
+    The convex conjugate :math:`\widetilde{\text{KL}}^*` of the KL cross
+    entropy with prior :math:`g \geq 0` is given by
 
     .. math::
-        F^*(x) = \\sum_i g_i \\left(e^{x_i} - 1\\right)
+        \widetilde{\text{KL}}^*(x)
+        &= \sum_{i} g_i\, (\mathrm{e}^{x_i} - 1)
+        \quad (\mathbb{R}^n\text{-like space}) \\[2ex]
+        \widetilde{\text{KL}}^*(x)
+        &= \int g(t))\, (\mathrm{e}^{x(t)} - 1)\, \mathrm{d}t
+        \quad (L^p-\text{like space})
 
     See Also
     --------
-    KullbackLeiblerCrossEntropy : convex conjugate functional
+    KullbackLeiblerCrossEntropy : convex conjugate
     """
 
     def __init__(self, space, prior=None):
@@ -1507,38 +1855,32 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
         """The prior in convex conjugate Kullback-Leibler Cross Entorpy."""
         return self.__prior
 
-    # TODO: update when integration operator is in place: issue #440
+    # TODO(#440): use integration operator when available
     def _call(self, x):
-        """Return the value in the point ``x``."""
+        """Return ``self(x)``."""
         if self.prior is None:
-            tmp = self.domain.element((np.exp(x) - 1)).inner(self.domain.one())
+            return (np.exp(x) - 1).inner(self.domain.one())
         else:
-            tmp = (self.prior * (np.exp(x) - 1)).inner(self.domain.one())
-        return tmp
+            return (self.prior * (np.exp(x) - 1)).inner(self.domain.one())
 
-    # TODO: replace this when UFuncOperators is in place: PL #576
     @property
     def gradient(self):
-        """Gradient operator of the functional."""
-        functional = self
+        """Gradient operator of this functional.
 
-        class KLCrossEntCCGradient(Operator):
+        The gradient of the convex conjugate of the KL cross entropy is
 
-            """The gradient operator of this functional."""
+        .. math::
+            \nabla \widetilde{\text{KL}}^*(x) = g\, \mathrm{e}^x,
 
-            def __init__(self):
-                """Initialize a new instance."""
-                super(KLCrossEntCCGradient, self).__init__(
-                    functional.domain, functional.domain, linear=False)
+        where multiplication and exponential are taken pointwise.
+        """
+        # Avoid circular import
+        from odl.ufunc_ops import exp
 
-            def _call(self, x):
-                """Apply the gradient operator to the given point."""
-                if functional.prior is None:
-                    return self.domain.element(np.exp(x))
-                else:
-                    return functional.prior * np.exp(x)
-
-        return KLCrossEntCCGradient()
+        if self.prior is None:
+            return exp(self.domain)
+        else:
+            return self.prior * exp(self.domain)
 
     @property
     def proximal(self):
@@ -1555,20 +1897,24 @@ proximal_convex_conj_kl_cross_entropy :
 
     @property
     def convex_conj(self):
-        """The convex conjugate functional of the conjugate KL-functional."""
+        """Biconjugate of the KL cross entropy, the original functional."""
         return KullbackLeiblerCrossEntropy(self.domain, self.prior)
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r}, {!r})'.format(self.__class__.__name__,
-                                       self.domain, self.prior)
+        posargs = [self.domain]
+        optargs = [('prior', self.prior, None)]
+        with npy_printoptions(precision=REPR_PRECISION):
+            inner_parts = signature_string_parts(posargs, optargs)
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
 
 class SeparableSum(Functional):
 
-    """The functional corresponding to separable sum of functionals.
+    r"""The functional corresponding to separable sum of functionals.
 
-    The separable sum of functionals ``f_1, f_2, ..., f_n`` is given by::
+    The separable sum of functionals ``f_1, f_2, ..., f_n`` is given by ::
 
         h(x_1, x_2, ..., x_n) = sum_i^n f_i(x_i)
 
@@ -1577,41 +1923,43 @@ class SeparableSum(Functional):
 
     Notes
     -----
-    The separable sum of functionals :math:`f_1, f_2, ..., f_n` is given by
+    The separable sum of functionals :math:`f_1, f_2, ..., f_n` is defined
+    as
 
     .. math::
         h(x_1, x_2, ..., x_n) = \sum_{i=1}^n f_i(x_i)
 
-    It has several useful features that also distribute. For example, the
-    gradient is a `DiagonalOperator`:
+    The separation carries over to important derived properties:
 
-    .. math::
-        [\\nabla h](x_1, x_2, ..., x_n) =
-        [\\nabla f_1(x_i), \\nabla f_2(x_i), ..., \\nabla f_n(x_i)]
+    - The gradient is a `DiagonalOperator`:
 
-    The convex conjugate is also a separable sum:
+      .. math::
+          [\nabla h](x_1, x_2, ..., x_n) =
+          [\nabla f_1(x_i), \nabla f_2(x_i), ..., \nabla f_n(x_i)]
 
-    .. math::
-        [h^*](y_1, y_2, ..., y_n) = \sum_{i=1}^n f_i^*(y_i)
+    - The convex conjugate is also a separable sum:
 
-    And the proximal distributes:
+      .. math::
+          [h^*](y_1, y_2, ..., y_n) = \sum_{i=1}^n f_i^*(y_i)
 
-    .. math::
-        \mathrm{prox}_{\\sigma h}(x_1, x_2, ..., x_n) =
-        [\mathrm{prox}_{\\sigma f_1}(x_1),
-         \mathrm{prox}_{\\sigma f_2}(x_2),
-         ...,
-         \mathrm{prox}_{\\sigma f_n}(x_n)].
+    - The proximal operator is separated as well:
 
-    If :math:`\\sigma = (\\sigma_1, \\sigma_2, \\ldots, \\sigma_n)` is a list
-    of positive `float`s, then it distributes, too:
+      .. math::
+          \mathrm{prox}_{\sigma h}(x_1, x_2, ..., x_n) =
+          [\mathrm{prox}_{\sigma f_1}(x_1),
+          \mathrm{prox}_{\sigma f_2}(x_2),
+           \dots,
+           \mathrm{prox}_{\sigma f_n}(x_n)].
 
-    .. math::
-        \mathrm{prox}_{\\sigma h}(x_1, x_2, ..., x_n) =
-        [\mathrm{prox}_{\\sigma_1 f_1}(x_1),
-         \mathrm{prox}_{\\sigma_2 f_2}(x_2),
-         ...,
-         \mathrm{prox}_{\\sigma_n f_n}(x_n)].
+      If :math:`\sigma = (\sigma_1, \sigma_2, \ldots, \sigma_n)` is a vector,
+      the individual parameters are distributed, too:
+
+      .. math::
+          \mathrm{prox}_{\sigma h}(x_1, x_2, ..., x_n) =
+          [\mathrm{prox}_{\sigma_1 f_1}(x_1),
+           \mathrm{prox}_{\sigma_2 f_2}(x_2),
+           ...,
+           \mathrm{prox}_{\sigma_n f_n}(x_n)].
     """
 
     def __init__(self, *functionals):
@@ -1637,12 +1985,14 @@ class SeparableSum(Functional):
 
         >>> x = f_sum.domain.one()
         >>> f_sum.proximal([0.5, 2.0])(x)
-        ProductSpace(rn(3), 2).element([
-            [ 0.5,  0.5,  0.5],
-            [ 0.,  0.,  0.]
-        ])
+        ProductSpace(rn(3), 2).element(
+            [
+                [ 0.5,  0.5,  0.5],
+                [ 0.,  0.,  0.]
+            ]
+        )
 
-        Create functional ``f([x1, ... ,xn]) = \sum_i ||xi||_1``:
+        Create functional ``f([x1, ... ,xn]) = sum_i ||xi||_1``:
 
         >>> f_sum = odl.solvers.SeparableSum(l1, 5)
         """
@@ -1659,7 +2009,7 @@ class SeparableSum(Functional):
         self.__functionals = tuple(functionals)
 
     def _call(self, x):
-        """Return the separable sum evaluated in ``x``."""
+        """Return ``self(x)``."""
         return sum(fi(xi) for xi, fi in zip(x, self.functionals))
 
     @property
@@ -1685,14 +2035,14 @@ class SeparableSum(Functional):
         >>> space = odl.rn(3)
         >>> l1 = odl.solvers.L1Norm(space)
         >>> l2 = odl.solvers.L2Norm(space)
-        >>> f_sum = odl.solvers.SeparableSum(l1, l2, 2*l2)
+        >>> f_sum = odl.solvers.SeparableSum(l1, l2, 2 * l2)
 
-        Extract single sub-functional via integer index:
+        Extract a sub-functional via integer index:
 
         >>> f_sum[0]
         L1Norm(rn(3))
 
-        Extract subset of functionals:
+        Extract a subset of functionals:
 
         >>> f_sum[:2]
         SeparableSum(L1Norm(rn(3)), L2Norm(rn(3)))
@@ -1715,12 +2065,12 @@ class SeparableSum(Functional):
 
         The proximal operator separates over separable sums.
 
-        Returns
-        -------
-        proximal : combine_proximals
+        See Also
+        --------
+        proximal_separable_sum
         """
         proximals = [func.proximal for func in self.functionals]
-        return combine_proximals(*proximals)
+        return proximal_separable_sum(*proximals)
 
     @property
     def convex_conj(self):
@@ -1733,24 +2083,52 @@ class SeparableSum(Functional):
         return SeparableSum(*convex_conjs)
 
     def __repr__(self):
-        """Return ``repr(self)``."""
-        func_repr = ', '.join(repr(func) for func in self.functionals)
-        return '{}({})'.format(self.__class__.__name__, func_repr)
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> space = odl.rn(3)
+        >>> l1 = odl.solvers.L1Norm(space)
+        >>> l2 = odl.solvers.L2Norm(space)
+        >>> odl.solvers.SeparableSum(l1, 3)
+        SeparableSum(L1Norm(rn(3)), 3)
+        >>> odl.solvers.SeparableSum(l1, l2, 2 * l2)
+        SeparableSum(
+            L1Norm(rn(3)),
+            L2Norm(rn(3)),
+            FunctionalLeftScalarMult(L2Norm(rn(3)), 2)
+        )
+        """
+        if all(func is self.functionals[0] for func in self.functionals[1:]):
+            posargs = [self.functionals[0], len(self.functionals)]
+        else:
+            posargs = self.functionals
+
+        with npy_printoptions(precision=REPR_PRECISION):
+            inner_parts = signature_string_parts(posargs, [])
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
 
 class QuadraticForm(Functional):
 
-    """Functional for a general quadratic form ``x^T A x + b^T x + c``."""
+    r"""Functional for a general quadratic form.
+
+    This functional represents the quadradic form :math:`Q: X \to \mathbb{R}`
+    defined as
+
+    .. math::
+        Q(x) = \langle x, A(x)\rangle + \langle x, b\rangle + c,
+
+    with an operator :math:`A: X \to X`, a vector :math:`b \in X` and a
+    constant :math:`c \in \mathbb{R}`.
+    """
 
     def __init__(self, operator=None, vector=None, constant=0):
-        """Initialize a new instance.
+        r"""Initialize a new instance.
 
         All parameters are optional, but at least one of ``op`` and ``vector``
-        have to be provided in order to infer the space.
-
-        The computed value is::
-
-            x.inner(operator(x)) + vector.inner(x) + constant
+        have to be provided so the space can be inferred.
 
         Parameters
         ----------
@@ -1762,14 +2140,24 @@ class QuadraticForm(Functional):
             ``None`` means that this part is ignored.
         constant : `Operator`, optional
             Constant offset of the functional.
+
+        Examples
+        --------
+        >>> space = odl.rn(3)
+        >>> op = odl.ScalingOperator(space, 2)
+        >>> vec = space.one()
+        >>> const = 2.0
+        >>> quad_form = odl.solvers.QuadraticForm(op, vec, const)
+        >>> quad_form(space.one())
+        11.0
         """
-        if operator is None and vector is None:
-            raise ValueError('need to provide at least one of `operator` and '
-                             '`vector`')
         if operator is not None:
             domain = operator.domain
         elif vector is not None:
             domain = vector.space
+        else:
+            raise ValueError('need to provide at least one of `operator` and '
+                             '`vector`')
 
         if (operator is not None and vector is not None and
                 vector not in operator.domain):
@@ -1805,7 +2193,7 @@ class QuadraticForm(Functional):
     def _call(self, x):
         """Return ``self(x)``."""
         if self.operator is None:
-            return self.vector.inner(x) + self.constant
+            return x.inner(self.vector) + self.constant
         elif self.vector is None:
             return x.inner(self.operator(x)) + self.constant
         else:
@@ -1815,108 +2203,192 @@ class QuadraticForm(Functional):
 
     @property
     def gradient(self):
-        """Gradient operator of the functional."""
-        if self.operator is None:
-            return ConstantOperator(self.vector, self.domain)
-        else:
-            if not self.operator.is_linear:
-                # TODO: Acutally works otherwise, but needs more work
-                raise NotImplementedError('`operator` must be linear')
+        """Gradient operator of the quadratic form.
 
-            # Figure out if operator is symmetric
-            opadjoint = self.operator.adjoint
-            if opadjoint == self.operator:
-                gradient = 2 * self.operator
-            else:
-                gradient = self.operator + opadjoint
+        The gradient of a quadratic form
 
-            # Return gradient
-            if self.vector is None:
-                return gradient
-            else:
-                return gradient + self.vector
+        .. math::
+            Q(x) = \langle x, A(x)\rangle + \langle x, b\rangle + c
 
-    @property
-    def convex_conj(self):
-        """The convex conjugate functional of the quadratic form.
-
-        Notes
-        -----
-        The convex conjugate of the quadratic form :math:`<x, Ax> + <b, x> + c`
         is given by
 
         .. math::
-            (<x, Ax> + <b, x> + c)^* (x) =
-            <(x - b), A^-1 (x - b)> - c =
-            <x , A^-1 x> - <x, A^-* b> - <x, A^-1 b> + <b, A^-1 b> - c.
+            \nabla Q(x) = A'(x)^* x + A(x) + b,
+
+        which simplifies to
+
+        .. math::
+            \nabla Q(x) = (A^* + A) x + b
+
+        for linear operators.
+
+        Examples
+        --------
+        >>> space = odl.rn(3)
+        >>> op = odl.ScalingOperator(space, 2)
+        >>> vec = space.one()
+        >>> const = 2.0
+        >>> quad_form = odl.solvers.QuadraticForm(op, vec, const)
+        >>> grad = quad_form.gradient
+        >>> grad(-space.one())  # (2*I + 2*I)([-1, -1, -1]) + 1
+        rn(3).element([-3., -3., -3.])
+        >>> grad.derivative(space.one())
+        OperatorSum(
+            ScalingOperator(rn(3), scalar=2.0),
+            ScalingOperator(rn(3), scalar=2.0)
+        )
+        """
+        func = self
+
+        class QuadraticFormGradient(Operator):
+
+            """Gradient of a quadratic form."""
+
+            def _call(self, x):
+                """Return ``self(x)``."""
+                if func.operator is None:
+                    return func.vector
+
+                tmp = func.operator(x)
+                tmp += func.operator.derivative(x).adjoint(x)
+
+                if func.vector is not None:
+                    tmp += func.vector
+
+                return tmp
+
+            def derivative(self, x):
+                """Second derivative of the quadratic form.
+
+                Only defined if the operator is linear.
+                """
+                if func.operator.is_linear:
+                    return func.operator + func.operator.adjoint
+                else:
+                    raise NotImplementedError(
+                        'derivative of the quadratic form gradient only '
+                        'implemented for linear operators')
+
+            def __repr__(self):
+                """Return ``repr(self)``.
+
+                Examples
+                --------
+                >>> space = odl.rn(3)
+                >>> op = odl.ScalingOperator(space, 2)
+                >>> vec = space.one()
+                >>> const = 2.0
+                >>> quad_form = odl.solvers.QuadraticForm(op, vec, const)
+                """
+                return attribute_repr_string(repr(func), 'gradient')
+
+        return QuadraticFormGradient(self.domain, self.domain,
+                                     linear=(self.vector is None))
+
+    @property
+    def convex_conj(self):
+        r"""The convex conjugate functional of a quadratic form.
+
+        Notes
+        -----
+        The convex conjugate of the quadratic form
+        :math:`Q(x) = \langle x, Ax \rangle + \langle x, b \rangle + c`
+        with linar operator :math:`A` is given by
+
+        .. math::
+            Q^* (x) =
+            \langle (x - b), A^-1 (x - b) \rangle - c =
+            \langle x , A^-1 x \rangle - \langle x, A^-* b \rangle -
+            \langle x, A^-1 b \rangle + \langle b, A^-1 b \rangle - c.
 
         If the quadratic part of the functional is zero it is instead given
         by a translated indicator function on zero, i.e., if
 
         .. math::
-            f(x) = <b, x> + c,
+            Q(x) = \langle x, b \rangle + c,
 
         then
 
         .. math::
-            f^*(x^*) =
-            \\begin{cases}
-                -c & \\text{if } x^* = b \\\\
-                \\infty & \\text{else.}
-            \\end{cases}
+            Q^*(x^*) =
+            \begin{cases}
+                -c & \text{if } x^* = b \\
+                \infty & \text{else.}
+            \end{cases}
 
         See Also
         --------
         IndicatorZero
         """
         if self.operator is None:
-            tmp = IndicatorZero(space=self.domain, constant=-self.constant)
+            func = IndicatorZero(space=self.domain, constant=-self.constant)
             if self.vector is None:
-                return tmp
+                return func
             else:
-                return tmp.translated(self.vector)
+                return func.translated(self.vector)
 
         if self.vector is None:
             # Handle trivial case separately
             return QuadraticForm(operator=self.operator.inverse,
                                  constant=-self.constant)
         else:
-            # Compute the needed variables
             opinv = self.operator.inverse
             vector = -opinv.adjoint(self.vector) - opinv(self.vector)
             constant = self.vector.inner(opinv(self.vector)) - self.constant
 
-            # Create new quadratic form
-            return QuadraticForm(operator=opinv,
-                                 vector=vector,
+            return QuadraticForm(operator=opinv, vector=vector,
                                  constant=constant)
+
+    def __repr__(self):
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> space = odl.rn(3)
+        >>> op = odl.ScalingOperator(space, 2)
+        >>> vec = space.one()
+        >>> const = 2.0
+        >>> odl.solvers.QuadraticForm(vector=vec)
+        QuadraticForm(vector=rn(3).element([ 1.,  1.,  1.]))
+        >>> odl.solvers.QuadraticForm(op, vec, const)
+        QuadraticForm(
+            operator=ScalingOperator(rn(3), scalar=2.0),
+            vector=rn(3).element([ 1.,  1.,  1.]),
+            constant=2.0
+        )
+        """
+        optargs = [('operator', self.operator, None),
+                   ('vector', self.vector, None),
+                   ('constant', self.constant, 0)]
+        with npy_printoptions(precision=REPR_PRECISION):
+            inner_parts = signature_string_parts([], optargs)
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
 
 class NuclearNorm(Functional):
 
-    """Nuclear norm for matrix valued functions.
+    r"""Nuclear norm for matrix-valued functions.
 
-    Notes
-    -----
     For a matrix-valued function
-    :math:`f : \\Omega \\rightarrow \\mathbb{R}^{n \\times m}`,
+    :math:`f : \Omega \rightarrow \mathbb{R}^{n \times m}`,
     the nuclear norm with parameters :math:`p` and :math:`q` is defined by
 
     .. math::
-        \\left( \int_\Omega \|\sigma(f(x))\|_p^q d x \\right)^{1/q},
+        \left( \int_\Omega \big\|\sigma(f(x))\big\|_p^q d x \right)^{1/q},
 
     where :math:`\sigma(f(x))` is the vector of singular values of the matrix
     :math:`f(x)` and :math:`\| \cdot \|_p` is the usual :math:`p`-norm on
     :math:`\mathbb{R}^{\min(n, m)}`.
 
     For a detailed description of its properties, e.g, its proximal, convex
-    conjugate and more, see [Du+2016].
+    conjugate and more, see `[Du+2016] <https://arxiv.org/abs/1508.01308>`_.
 
     References
     ----------
     [Du+2016] J. Duran, M. Moeller, C. Sbert, and D. Cremers.
     *Collaborative Total Variation: A General Framework for Vectorial TV
-    Models* SIAM Journal of Imaging Sciences 9(1): 116--151, 2016.
+    Models.* SIAM Journal of Imaging Sciences 9/1 (2016), pp 116--151.
     """
 
     def __init__(self, space, outer_exp=1, singular_vector_exp=2):
@@ -1933,13 +2405,13 @@ class NuclearNorm(Functional):
 
         Examples
         --------
-        Simple example, nuclear norm of matrix valued function with all ones
-        in 3 points. The singular values are [2, 0], which has squared 2-norm
-        2. Since there are 3 points, the expected total value is 6.
+        Nuclear norm of a matrix-valued function with all ones in 3 points.
+        The singular values are [2, 0], resulting in a 2-norm of 2.
+        Since there are 3 points, the expected total value is 6.
 
         >>> r3 = odl.rn(3)
-        >>> space = odl.ProductSpace(odl.ProductSpace(r3, 2), 2)
-        >>> norm = NuclearNorm(space)
+        >>> space = r3 ** (2, 2)
+        >>> norm = odl.solvers.NuclearNorm(space)
         >>> norm(space.one())
         6.0
         """
@@ -1958,35 +2430,10 @@ class NuclearNorm(Functional):
                                        exponent=singular_vector_exp)
         self.pshape = (len(self.domain), len(self.domain[0]))
 
-    def _asarray(self, vec):
-        """Convert ``x`` to an array.
-
-        Here the indices are changed such that the "outer" indices come last
-        in order to have the access order as `numpy.linalg.svd` needs it.
-
-        This is the inverse of `_asvector`.
-        """
-        shape = self.domain[0, 0].shape + self.pshape
-        arr = np.empty(shape, dtype=self.domain.dtype)
-        for i, xi in enumerate(vec):
-            for j, xij in enumerate(xi):
-                arr[..., i, j] = xij.asarray()
-
-        return arr
-
-    def _asvector(self, arr):
-        """Convert ``arr`` to a `domain` element.
-
-        This is the inverse of `_asarray`.
-        """
-        result = moveaxis(arr, [-2, -1], [0, 1])
-        return self.domain.element(result)
-
     def _call(self, x):
         """Return ``self(x)``."""
-
-        # Convert to array with most
-        arr = self._asarray(x)
+        # Convert to array with "outer" indices last
+        arr = moveaxis(x.asarray(), [0, 1], [-2, -1])
         svd_diag = np.linalg.svd(arr, compute_uv=False)
 
         # Rotate the axes so the svd-direction is first
@@ -2005,6 +2452,7 @@ class NuclearNorm(Functional):
             if ``outer_exp`` is not 1 or ``singular_vector_exp`` is not 1, 2 or
             infinity
         """
+        # TODO(kohr-h): document the math of the proximal
         if self.outernorm.exponent != 1:
             raise NotImplementedError('`proximal` only implemented for '
                                       '`outer_exp==1`')
@@ -2025,6 +2473,7 @@ class NuclearNorm(Functional):
         eps = np.finfo(dtype).resolution * 10
 
         class NuclearNormProximal(Operator):
+
             """Proximal operator of `NuclearNorm`."""
 
             def __init__(self, sigma):
@@ -2034,7 +2483,7 @@ class NuclearNorm(Functional):
 
             def _call(self, x):
                 """Return ``self(x)``."""
-                arr = func._asarray(x)
+                arr = moveaxis(x.asarray(), [0, 1], [-2, -1])
 
                 # Compute SVD
                 U, s, Vt = np.linalg.svd(arr, full_matrices=False)
@@ -2071,11 +2520,7 @@ class NuclearNorm(Functional):
 
                 # Cast to vector and return. Note array and vector have
                 # different shapes.
-                return func._asvector(result)
-
-            def __repr__(self):
-                """Return ``repr(self)``."""
-                return '{!r}.proximal({})'.format(func, self.sigma)
+                return moveaxis(result, [-2, -1], [0, 1])
 
         return NuclearNormProximal
 
@@ -2086,6 +2531,10 @@ class NuclearNorm(Functional):
         The convex conjugate is the indicator function on the unit ball of
         the dual norm where the dual norm is obtained by taking the conjugate
         exponent of both the outer and singular vector exponents.
+
+        See Also
+        --------
+        IndicatorNuclearNormUnitBall
         """
         return IndicatorNuclearNormUnitBall(
             self.domain,
@@ -2093,40 +2542,52 @@ class NuclearNorm(Functional):
             conj_exponent(self.pwisenorm.exponent))
 
     def __repr__(self):
-        """Return ``repr(self)``."""
-        return '{}({!r}, {}, {})'.format(self.__class__.__name__,
-                                         self.domain,
-                                         self.outernorm.exponent,
-                                         self.pwisenorm.exponent)
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> r3 = odl.rn(3)
+        >>> space = r3 ** (2, 2)
+        >>> odl.solvers.NuclearNorm(space, singular_vector_exp=1.0)
+        NuclearNorm(
+            ProductSpace(ProductSpace(rn(3), 2), 2),
+            singular_vector_exp=1.0
+        )
+        """
+        posargs = [self.domain]
+        optargs = [('outer_exp', self.outernorm.exponent, 1.0),
+                   ('singular_vector_exp', self.pwisenorm.exponent, 2.0)]
+        with npy_printoptions(precision=REPR_PRECISION):
+            inner_parts = signature_string_parts(posargs, optargs)
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
 
 class IndicatorNuclearNormUnitBall(Functional):
-    """Indicator on unit ball of nuclear norm for matrix valued functions.
+    r"""Indicator on unit ball of nuclear norm for matrix valued functions.
 
-    Notes
-    -----
     For a matrix-valued function
-    :math:`f : \\Omega \\rightarrow \\mathbb{R}^{n \\times m}`,
+    :math:`f : \Omega \rightarrow \mathbb{R}^{n \times m}`,
     the nuclear norm with parameters :math:`p` and :math:`q` is defined by
 
     .. math::
-        \\left( \int_\Omega \|\sigma(f(x))\|_p^q d x \\right)^{1/q},
+        \left( \int_\Omega \|\sigma(f(x))\|_p^q d x \right)^{1/q},
 
     where :math:`\sigma(f(x))` is the vector of singular values of the matrix
     :math:`f(x)` and :math:`\| \cdot \|_p` is the usual :math:`p`-norm on
     :math:`\mathbb{R}^{\min(n, m)}`.
 
-    This function is defined as the indicator on the unit ball of the nuclear
+    This functional is defined as the indicator on the unit ball of the nuclear
     norm, that is, 0 if the nuclear norm is less than 1, and infinity else.
 
     For a detailed description of its properties, e.g, its proximal, convex
-    conjugate and more, see [Du+2016].
+    conjugate and more, see `[Du+2016] <https://arxiv.org/abs/1508.01308>`_.
 
     References
     ----------
     [Du+2016] J. Duran, M. Moeller, C. Sbert, and D. Cremers.
     *Collaborative Total Variation: A General Framework for Vectorial TV
-    Models* SIAM Journal of Imaging Sciences 9(1): 116--151, 2016.
+    Models.* SIAM Journal of Imaging Sciences 9/1 (2016), pp 116--151.
     """
 
     def __init__(self, space, outer_exp=1, singular_vector_exp=2):
@@ -2143,15 +2604,15 @@ class IndicatorNuclearNormUnitBall(Functional):
 
         Examples
         --------
-        Simple example, nuclear norm of matrix valued function with all ones
-        in 3 points. The singular values are [2, 0], which has squared 2-norm
-        2. Since there are 3 points, the expected total value is 6.
+        Indicator evaluated at a matrix-valued function with all ones
+        in 3 points. The singular values are [2, 0], which result in a 2-norm
+        of 2. Since there are 3 points, the expected total value is 6.
         Since the nuclear norm is larger than 1, the indicator is infinity.
 
         >>> r3 = odl.rn(3)
-        >>> space = odl.ProductSpace(odl.ProductSpace(r3, 2), 2)
-        >>> norm = IndicatorNuclearNormUnitBall(space)
-        >>> norm(space.one())
+        >>> space = r3 ** (2, 2)
+        >>> func = odl.solvers.IndicatorNuclearNormUnitBall(space)
+        >>> func(space.one())
         inf
         """
         super(IndicatorNuclearNormUnitBall, self).__init__(
@@ -2170,7 +2631,7 @@ class IndicatorNuclearNormUnitBall(Functional):
     @property
     def proximal(self):
         """The proximal operator."""
-        # Implement proximal via duality
+        # TODO(kohr-h): document math
         return proximal_convex_conj(self.convex_conj.proximal)
 
     @property
@@ -2180,6 +2641,10 @@ class IndicatorNuclearNormUnitBall(Functional):
         The convex conjugate is the dual nuclear norm where the dual norm is
         obtained by taking the conjugate exponent of both the outer and
         singular vector exponents.
+
+        See Also
+        --------
+        NuclearNorm
         """
         return NuclearNorm(self.domain,
                            conj_exponent(self.__norm.outernorm.exponent),
@@ -2187,15 +2652,18 @@ class IndicatorNuclearNormUnitBall(Functional):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r}, {}, {})'.format(self.__class__.__name__,
-                                         self.domain,
-                                         self.__norm.outernorm.exponent,
-                                         self.__norm.pwisenorm.exponent)
+        posargs = [self.domain]
+        optargs = [('outer_exp', self.outernorm.exponent, 1.0),
+                   ('singular_vector_exp', self.pwisenorm.exponent, 2.0)]
+        with npy_printoptions(precision=REPR_PRECISION):
+            inner_parts = signature_string_parts(posargs, optargs)
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
 
 class MoreauEnvelope(Functional):
 
-    """Moreau envelope of a convex functional.
+    r"""Moreau envelope of a convex functional.
 
     The Moreau envelope is a way to smooth an arbitrary convex functional
     such that its gradient can be computed given the proximal of the original
@@ -2204,37 +2672,36 @@ class MoreauEnvelope(Functional):
     It is also called the Moreau-Yosida regularization.
 
     Note that the only computable property of the Moreau envelope is the
-    gradient, the functional itself cannot be evaluated efficiently.
+    gradient, the functional itself cannot be evaluated without solving
+    a minimization problem.
 
     See `Proximal Algorithms`_ for more information.
 
-    Notes
-    -----
     The Moreau envelope of a convex functional
-    :math:`f : \mathcal{X} \\rightarrow \mathbb{R}` multiplied by a scalar
-    :math:`\\sigma` is defined by
+    :math:`f : \mathcal{X} \rightarrow \mathbb{R}` with parameter
+    :math:`\sigma > 0` is defined by
 
     .. math::
-        \mathrm{env}_{\\sigma f}(x) =
-        \\inf_{y \\in \\mathcal{X}}
-        \\left\{ \\frac{1}{2 \\sigma} \| x - y \|_2^2 + f(y) \\right\}
+        \mathrm{env}_{\sigma, f}(x) =
+        \inf_{y \in \mathcal{X}}
+        \left\{ \frac{1}{2 \sigma} \| x - y \|_2^2 + f(y) \right\}
 
     The gradient of the envelope is given by
 
     .. math::
-        [\\nabla \mathrm{env}_{\\sigma f}](x) =
-        \\frac{1}{\\sigma} (x - \mathrm{prox}_{\\sigma f}(x))
+        [\nabla \mathrm{env}_{\sigma, f}](x) =
+        \frac{1}{\sigma} (x - \mathrm{prox}_{\sigma f}(x))
 
-    Example: if :math:`f = \| \cdot \|_1`, then
+    Example: If :math:`f = \| \cdot \|_1`, then
 
     .. math::
-        [\mathrm{env}_{\\sigma  \| \cdot \|_1}(x)]_i =
-        \\begin{cases}
-            \\frac{1}{2 \\sigma} x_i^2 & \\text{if } |x_i| \leq \\sigma \\\\
-            |x_i| - \\frac{\\sigma}{2} & \\text{if } |x_i| > \\sigma,
-        \\end{cases}
+        [\mathrm{env}_{\sigma,  \| \cdot \|_1}(x)]_i =
+        \begin{cases}
+            \frac{1}{2 \sigma} x_i^2 & \text{if } |x_i| \leq \sigma \\
+            |x_i| - \frac{\sigma}{2} & \text{if } |x_i| > \sigma,
+        \end{cases}
 
-    which is the usual Huber functional.
+    which is the `Huber` functional.
 
     References
     ----------
@@ -2260,12 +2727,12 @@ https://web.stanford.edu/~boyd/papers/pdf/prox_algs.pdf
 
         >>> space = odl.rn(3)
         >>> l1_norm = odl.solvers.L1Norm(space)
-        >>> smoothed_l1 = MoreauEnvelope(l1_norm)
+        >>> smoothed_l1 = odl.solvers.MoreauEnvelope(l1_norm)
         """
         super(MoreauEnvelope, self).__init__(
             space=functional.domain, linear=False)
         self.__functional = functional
-        self.__sigma = sigma
+        self.__sigma = float(sigma)
 
     @property
     def functional(self):
@@ -2283,28 +2750,42 @@ https://web.stanford.edu/~boyd/papers/pdf/prox_algs.pdf
         return (ScalingOperator(self.domain, 1 / self.sigma) -
                 (1 / self.sigma) * self.functional.proximal(self.sigma))
 
+    def __repr__(self):
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> space = odl.rn(3)
+        >>> l1_norm = odl.solvers.L1Norm(space)
+        >>> odl.solvers.MoreauEnvelope(l1_norm)
+        MoreauEnvelope(L1Norm(rn(3)))
+        """
+        posargs = [self.functional]
+        optargs = [('sigma', self.sigma, 1.0)]
+        with npy_printoptions(precision=REPR_PRECISION):
+            inner_parts = signature_string_parts(posargs, optargs)
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
+
 
 class Huber(Functional):
-    """The Huber functional.
+    r"""The Huber functional.
 
-    Notes
-    -----
-    The Huber norm is the integral over a smoothed norm. In detail, it is given
-    by
+    The Huber norm is the integral over a smoothed norm,
 
     .. math::
-        F(x) = \\int_\Omega f_{\\gamma}(||x(y)||_2) dy
+        F(x) = \int_\Omega f_{\gamma}(\|x(y)\|_2) dy
 
-    where :mth:`||\cdot||_2` denotes the Euclidean norm for vector-valued
+    where :math:`\|\cdot\|_2` denotes the Euclidean norm for vector-valued
     functions which reduces to the absolute value for scalar-valued functions.
-    The function :math:`f` with smoothing :math:`\\gamma` is given by
+    The function :math:`f_\gamma` with smoothing :math:`\gamma` is given by
 
     .. math::
-        f_{\\gamma}(t) =
-        \\begin{cases}
-            \\frac{1}{2 \\gamma} t^2 & \\text{if } |t| \leq \\gamma \\\\
-            |t| - \\frac{\\gamma}{2} & \\text{else}
-        \\end{cases}.
+        f_{\gamma}(t) =
+        \begin{cases}
+            \frac{1}{2 \gamma} t^2 & \text{if } |t| \leq \gamma \\
+            |t| - \frac{\gamma}{2} & \text{else}
+        \end{cases}.
     """
 
     def __init__(self, space, gamma):
@@ -2312,7 +2793,7 @@ class Huber(Functional):
 
         Parameters
         ----------
-        space : `FnBase`
+        space : `TensorSpace`
             Domain of the functional.
         gamma : float
             Smoothing parameter of the Huber functional. If ``gamma = 0``,
@@ -2328,7 +2809,7 @@ class Huber(Functional):
         >>> gamma = 0.1
         >>> huber_norm = odl.solvers.Huber(space, gamma=0.1)
 
-        Check that if all elements are > ``gamma`` we get the L1-norm up to a
+        Check that if all elements are > ``gamma`` we get the L1 norm up to a
         constant:
 
         >>> x = 2 * gamma * space.one()
@@ -2338,7 +2819,7 @@ class Huber(Functional):
         >>> abs(huber_norm(x) - f(x)) < tol
         True
 
-        Check that if all elements are < ``gamma`` we get the squared L2-norm
+        Check that if all elements are < ``gamma`` we get the squared L2 norm
         times the weight ``1/(2*gamma)``:
 
         >>> x = gamma / 2 * space.one()
@@ -2346,7 +2827,7 @@ class Huber(Functional):
         >>> abs(huber_norm(x) - f(x)) < tol
         True
 
-        Compare Huber- and L1-norm for vanishing smoothing ``gamma=0``:
+        Compare Huber- and L1 norm for vanishing smoothing ``gamma=0``:
 
         >>> x = odl.phantom.white_noise(space)
         >>> huber_norm = odl.solvers.Huber(space, gamma=0)
@@ -2382,7 +2863,7 @@ class Huber(Functional):
     def _call(self, x):
         """Return ``self(x)``."""
         if isinstance(self.domain, ProductSpace):
-            norm = PointwiseNorm(self.domain, 2)(x)
+            norm = PointwiseNorm(self.domain, exponent=2)(x)
         else:
             norm = x.ufuncs.absolute()
 
@@ -2400,8 +2881,9 @@ class Huber(Functional):
     @property
     def convex_conj(self):
         """The convex conjugate"""
+        # TODO(kohr-h): document math
         if isinstance(self.domain, ProductSpace):
-            norm = GroupL1Norm(self.domain, 2)
+            norm = GroupL1Norm(self.domain, exponent=2)
         else:
             norm = L1Norm(self.domain)
 
@@ -2421,16 +2903,16 @@ class Huber(Functional):
 
     @property
     def gradient(self):
-        """Gradient operator of the functional.
+        r"""Gradient operator of the functional.
 
         The gradient of the Huber functional is given by
 
             .. math::
-                \\nabla f_{\\gamma}(x) =
-                \\begin{cases}
-                \\frac{1}{\\gamma} x & \\text{if } \|x\|_2 \leq \\gamma \\\\
-                \\frac{1}{\|x\|_2} x & \\text{else}
-                \\end{cases}.
+                \nabla f_{\gamma}(x) =
+                \begin{cases}
+                \frac{1}{\gamma} x & \text{if } \|x\|_2 \leq \gamma \\
+                \frac{1}{\|x\|_2} x & \text{else}
+                \end{cases}.
 
         Examples
         --------
@@ -2464,15 +2946,10 @@ class Huber(Functional):
 
             """The gradient operator of this functional."""
 
-            def __init__(self):
-                """Initialize a new instance."""
-                super(HuberGradient, self).__init__(
-                    functional.domain, functional.domain, linear=False)
-
             def _call(self, x):
-                """Apply the gradient operator to the given point."""
+                """Return ``self(x)``."""
                 if isinstance(self.domain, ProductSpace):
-                    norm = PointwiseNorm(self.domain, 2)(x)
+                    norm = PointwiseNorm(self.domain, exponent=2)(x)
                 else:
                     norm = x.ufuncs.absolute()
 
@@ -2487,12 +2964,35 @@ class Huber(Functional):
 
                 return grad
 
-        return HuberGradient()
+            def __repr__(self):
+                """Return ``repr(self)``.
+
+                Examples
+                --------
+                >>> space = odl.uniform_discr(0, 1, 14)
+                >>> huber = odl.solvers.Huber(space, gamma=0.1)
+                >>> huber.gradient
+                Huber(uniform_discr(0.0, 1.0, 14), gamma=0.1).gradient
+                """
+                return attribute_repr_string(repr(functional), 'gradient')
+
+        return HuberGradient(self.domain, self.domain, linear=False)
 
     def __repr__(self):
-        '''Return ``repr(self)``.'''
-        return '{}({!r}, {!r})'.format(self.__class__.__name__, self.domain,
-                                       self.gamma)
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> space = odl.uniform_discr(0, 1, 14)
+        >>> odl.solvers.Huber(space, gamma=0.1)
+        Huber(uniform_discr(0.0, 1.0, 14), gamma=0.1)
+        """
+        posargs = [self.domain]
+        optargs = [('gamma', self.gamma, None)]
+        with npy_printoptions(precision=REPR_PRECISION):
+            inner_parts = signature_string_parts(posargs, optargs)
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
 
 if __name__ == '__main__':

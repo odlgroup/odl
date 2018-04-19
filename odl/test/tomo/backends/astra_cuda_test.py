@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -9,16 +9,14 @@
 """Test ASTRA back-end using CUDA."""
 
 from __future__ import division
+
 import numpy as np
 import pytest
 
 import odl
 from odl.tomo.backends.astra_cuda import (
-    AstraCudaProjectorImpl, AstraCudaBackProjectorImpl)
+    AstraCudaBackProjectorImpl, AstraCudaProjectorImpl)
 from odl.tomo.util.testutils import skip_if_no_astra_cuda
-
-# TODO: test with CUDA implemented uniform_discr
-
 
 # --- pytest fixtures --- #
 

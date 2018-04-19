@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -7,6 +7,7 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import division
+
 import numpy as np
 import pytest
 
@@ -15,9 +16,8 @@ from odl.discr.grid import sparse_meshgrid
 from odl.util import is_int_dtype
 from odl.util.testutils import all_equal
 from odl.util.vectorization import (
-    is_valid_input_array, is_valid_input_meshgrid,
-    out_shape_from_meshgrid, out_shape_from_array,
-    vectorize)
+    is_valid_input_array, is_valid_input_meshgrid, out_shape_from_array,
+    out_shape_from_meshgrid, vectorize)
 
 
 def test_is_valid_input_array():

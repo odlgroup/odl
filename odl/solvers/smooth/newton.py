@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,12 +8,12 @@
 
 """(Quasi-)Newton schemes to find zeros of functionals."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 import numpy as np
 
-from odl.solvers.util import ConstantLineSearch
 from odl.solvers.iterative.iterative import conjugate_gradient
-
+from odl.solvers.util import ConstantLineSearch
 
 __all__ = ('newtons_method', 'bfgs_method', 'broydens_method')
 
@@ -173,7 +173,7 @@ def newtons_method(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
         Goal functional. Needs to have ``f.gradient`` and
         ``f.gradient.derivative``.
     x : ``op.domain`` element
-        Starting point of the iteration
+        Starting point of the iteration.
     line_search : float or `LineSearch`, optional
         Strategy to choose the step length. If a float is given, uses it as a
         fixed step length.
@@ -195,7 +195,6 @@ def newtons_method(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
     [GNS2009] Griva, I, Nash, S G, and Sofer, A. *Linear and nonlinear
     optimization*. Siam, 2009.
     """
-    # TODO: update doc
     grad = f.gradient
     if x not in grad.domain:
         raise TypeError('`x` {!r} is not in the domain of `f` {!r}'

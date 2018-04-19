@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -9,13 +9,12 @@
 """Unit tests for the ODL-pytorch integration."""
 
 import numpy as np
-import torch
-from torch import autograd, nn
 
 import odl
+import torch
 from odl.contrib import torch as odl_torch
 from odl.util.testutils import all_almost_equal, simple_fixture
-
+from torch import autograd, nn
 
 dtype = simple_fixture('dtype', ['float32', 'float64'])
 use_cuda_params = [False]

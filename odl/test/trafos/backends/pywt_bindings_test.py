@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -7,23 +7,24 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import division
-import pytest
-try:
-    import pywt
-except ImportError:
-    pass
+
 import numpy as np
+import pytest
 from scipy.signal import convolve
 
 import odl
 from odl.trafos.backends.pywt_bindings import (
-    PYWT_AVAILABLE,
-    pywt_coeff_shapes,
-    pywt_flat_array_from_coeffs, pywt_coeffs_from_flat_array,
-    pywt_single_level_decomp,
-    pywt_multi_level_decomp, pywt_multi_level_recon)
-from odl.util.testutils import (all_almost_equal, all_equal, noise_array,
-                                simple_fixture)
+    PYWT_AVAILABLE, pywt_coeff_shapes, pywt_coeffs_from_flat_array,
+    pywt_flat_array_from_coeffs, pywt_multi_level_decomp,
+    pywt_multi_level_recon, pywt_single_level_decomp)
+from odl.util.testutils import (
+    all_almost_equal, all_equal, noise_array, simple_fixture)
+
+try:
+    import pywt
+except ImportError:
+    pass
+
 
 pytestmark = pytest.mark.skipif(not PYWT_AVAILABLE,
                                 reason='`pywt` backend not available')

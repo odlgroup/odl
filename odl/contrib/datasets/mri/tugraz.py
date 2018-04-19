@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -11,8 +11,9 @@
 import numpy as np
 from pkg_resources import parse_version
 
-from odl.contrib.datasets.util import get_data
 import odl
+from odl.contrib.datasets.util import get_data
+
 if parse_version(np.__version__) < parse_version('1.12'):
     flip = odl.util.npy_compat.flip
 else:

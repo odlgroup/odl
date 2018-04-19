@@ -1,4 +1,4 @@
-﻿# Copyright 2014-2017 The ODL contributors
+﻿# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,11 +8,10 @@
 
 """Phantoms used in emission tomography."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
 
 from odl.phantom.geometric import ellipsoid_phantom
 from odl.phantom.phantom_utils import cylinders_from_ellipses
-
 
 __all__ = ('derenzo_sources',)
 

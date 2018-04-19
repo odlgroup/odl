@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -9,13 +9,14 @@
 """Tests for Theano."""
 
 from __future__ import division
-import pytest
+
 import numpy as np
-import theano
-import theano.tensor as T
+import pytest
 
 import odl
 import odl.contrib.theano
+import theano
+import theano.tensor as T
 from odl.util import all_almost_equal
 
 

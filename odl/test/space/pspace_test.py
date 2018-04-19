@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -7,14 +7,15 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import division
-import numpy as np
-import pytest
+
 import operator
 
-import odl
-from odl.util.testutils import (all_equal, all_almost_equal, almost_equal,
-                                noise_elements, noise_element, simple_fixture)
+import numpy as np
+import pytest
 
+import odl
+from odl.util.testutils import (
+    all_almost_equal, all_equal, noise_element, noise_elements, simple_fixture)
 
 exponent = simple_fixture('exponent', [2.0, 1.0, float('inf'), 0.5, 1.5])
 

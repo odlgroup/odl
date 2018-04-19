@@ -1,8 +1,9 @@
 """Example on using show and updating the figure in real time in 1d."""
 
-import odl
 import matplotlib.pyplot as plt
 import numpy as np
+
+import odl
 
 n = 100
 m = 20

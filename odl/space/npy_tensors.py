@@ -1,4 +1,4 @@
-﻿# Copyright 2014-2017 The ODL contributors
+﻿# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,23 +8,24 @@
 
 """NumPy implementation of tensor spaces."""
 
-from __future__ import print_function, division, absolute_import
-from future.utils import native
-from builtins import object
+from __future__ import absolute_import, division, print_function
+
 import ctypes
+from builtins import object
 from functools import partial
+
 import numpy as np
+from future.utils import native
 
-from odl.set.sets import RealNumbers, ComplexNumbers
+from odl.set.sets import ComplexNumbers, RealNumbers
 from odl.set.space import LinearSpaceTypeError
-from odl.space.base_tensors import TensorSpace, Tensor
+from odl.space.base_tensors import Tensor, TensorSpace
 from odl.space.weighting import (
-    Weighting, ArrayWeighting, ConstWeighting,
-    CustomInner, CustomNorm, CustomDist)
+    ArrayWeighting, ConstWeighting, CustomDist, CustomInner, CustomNorm,
+    Weighting)
 from odl.util import (
-    dtype_str, signature_string, is_real_dtype, is_numeric_dtype,
-    writable_array, is_floating_dtype)
-
+    attribute_repr_string, dtype_str, is_floating_dtype, is_numeric_dtype,
+    is_real_dtype, repr_string, signature_string_parts, writable_array)
 
 __all__ = ('NumpyTensorSpace',)
 
@@ -807,7 +808,7 @@ class NumpyTensorSpace(TensorSpace):
 
             def __repr__(self):
                 """Return ``repr(self)``."""
-                return repr(space) + '.byaxis'
+                return attribute_repr_string(repr(space), 'byaxis')
 
         return NpyTensorSpacebyaxis()
 
@@ -837,12 +838,14 @@ class NumpyTensorSpace(TensorSpace):
             optargs = []
             optmod = ''
 
-        inner_str = signature_string(posargs, optargs, mod=['', optmod])
+        inner_parts = signature_string_parts(posargs, optargs,
+                                             mod=['', optmod])
+        inner_parts = [list(p) for p in inner_parts]
         weight_str = self.weighting.repr_part
         if weight_str:
-            inner_str += ', ' + weight_str
+            inner_parts[1].append(weight_str)
 
-        return '{}({})'.format(ctor_name, inner_str)
+        return repr_string(ctor_name, inner_parts)
 
     @property
     def element_type(self):
@@ -1795,7 +1798,7 @@ def _blas_is_applicable(*args):
         return False
     elif any(x.size > np.iinfo('int32').max for x in args):
         # Temporary fix for 32 bit int overflow in BLAS
-        # TODO: use chunking instead
+        # TODO(#1200): use chunking instead
         return False
     else:
         return True
@@ -2165,7 +2168,7 @@ class NumpyTensorSpaceArrayWeighting(ArrayWeighting):
             The norm of the provided tensor.
         """
         if self.exponent == 2.0:
-            norm_squared = self.inner(x, x).real  # TODO: optimize?!
+            norm_squared = self.inner(x, x).real
             if norm_squared < 0:
                 norm_squared = 0.0  # Compensate for numerical error
             return float(np.sqrt(norm_squared))

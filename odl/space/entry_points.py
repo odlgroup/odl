@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -20,7 +20,7 @@ See Also
 NumpyTensorSpace : Numpy-based implementation of `TensorSpace`
 """
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
 
 from odl.space.npy_tensors import NumpyTensorSpace
 

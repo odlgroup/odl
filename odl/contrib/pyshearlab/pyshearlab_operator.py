@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -9,11 +9,12 @@
 """ODL integration with pyshearlab."""
 
 
-import odl
-import numpy as np
-import pyshearlab
 from threading import Lock
 
+import numpy as np
+
+import odl
+import pyshearlab
 
 __all__ = ('PyShearlabOperator',)
 

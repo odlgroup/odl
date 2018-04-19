@@ -1,17 +1,17 @@
 ''' Checkout gitwash repo into directory and do search replace on name '''
 
-from __future__ import (absolute_import, division, print_function)
+from __future__ import absolute_import, division, print_function
 
+import fnmatch
+import glob
 import os
-from os.path import join as pjoin
+import re
 import shutil
 import sys
-import re
-import glob
-import fnmatch
 import tempfile
-from subprocess import call
 from optparse import OptionParser
+from os.path import join as pjoin
+from subprocess import call
 
 verbose = False
 

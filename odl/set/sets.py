@@ -1,4 +1,4 @@
-﻿# Copyright 2014-2017 The ODL contributors
+﻿# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,14 +8,17 @@
 
 """Basic abstract and concrete sets."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 from builtins import int, object
-from numbers import Integral, Real, Complex
-from past.types.basestring import basestring
+from numbers import Complex, Integral, Real
+
 import numpy as np
+from past.types.basestring import basestring
 
-from odl.util import is_int_dtype, is_real_dtype, is_numeric_dtype, unique
-
+from odl.util import (
+    is_int_dtype, is_numeric_dtype, is_real_dtype, repr_string,
+    signature_string_parts, unique)
 
 __all__ = ('Set', 'EmptySet', 'UniversalSet', 'Field', 'Integers',
            'RealNumbers', 'ComplexNumbers', 'Strings', 'CartesianProduct',
@@ -283,8 +286,17 @@ class Strings(Set):
         return [('hello', hello_str), ('world', world_str)]
 
     def __repr__(self):
-        """Return ``repr(self)``."""
-        return 'Strings({})'.format(self.length)
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> s8 = odl.Strings(8)
+        >>> s8
+        Strings(8)
+        """
+        posargs = [self.length]
+        inner_parts = signature_string_parts(posargs, [])
+        return repr_string(self.__class__.__name__, inner_parts)
 
 
 class Field(Set):
@@ -348,6 +360,16 @@ class ComplexNumbers(Field):
             dtype = np.result_type(*other)
         return is_numeric_dtype(dtype)
 
+    @property
+    def real_space(self):
+        """``RealNumbers``, for compatibility with tensor spaces."""
+        return RealNumbers()
+
+    @property
+    def complex_space(self):
+        """``ComplexNumbers``, for compatibility with tensor spaces."""
+        return ComplexNumbers()
+
     def __eq__(self, other):
         """Return ``self == other``."""
         if other is self:
@@ -364,7 +386,7 @@ class ComplexNumbers(Field):
         if inp is not None:
             # Workaround for missing __complex__ of numpy.ndarray
             # for Numpy version < 1.12
-            # TODO: remove when Numpy >= 1.12 is required
+            # TODO(kohr-h): remove when Numpy >= 1.12 is required
             if isinstance(inp, np.ndarray):
                 return complex(inp.reshape([1])[0])
             else:
@@ -414,6 +436,16 @@ class RealNumbers(Field):
         if dtype is None:
             dtype = np.result_type(*array)
         return is_real_dtype(dtype)
+
+    @property
+    def real_space(self):
+        """``RealNumbers``, for compatibility with tensor spaces."""
+        return RealNumbers()
+
+    @property
+    def complex_space(self):
+        """``ComplexNumbers``, for compatibility with tensor spaces."""
+        return ComplexNumbers()
 
     def __eq__(self, other):
         """Return ``self == other``."""
@@ -613,9 +645,20 @@ class CartesianProduct(Set):
         return ' x '.join(str(set_) for set_ in self.sets)
 
     def __repr__(self):
-        """Return ``repr(self)``."""
-        sets_str = ', '.join(repr(set_) for set_ in self.sets)
-        return '{}({})'.format(self.__class__.__name__, sets_str)
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> rs, cs = odl.RealNumbers(), odl.ComplexNumbers()
+        >>> prod = odl.CartesianProduct(rs, cs, cs, rs)
+        >>> prod
+        CartesianProduct(
+            RealNumbers(), ComplexNumbers(), ComplexNumbers(), RealNumbers()
+        )
+        """
+        posargs = self.sets
+        inner_parts = signature_string_parts(posargs, [])
+        return repr_string(self.__class__.__name__, inner_parts)
 
 
 class SetUnion(Set):
@@ -733,12 +776,14 @@ class SetUnion(Set):
 
         Examples
         --------
-        >>> reals, complexnrs = odl.RealNumbers(), odl.ComplexNumbers()
-        >>> odl.SetUnion(reals, complexnrs)
+        >>> rs, cs = odl.RealNumbers(), odl.ComplexNumbers()
+        >>> union = odl.SetUnion(rs, cs)
+        >>> union
         SetUnion(RealNumbers(), ComplexNumbers())
         """
-        sets_str = ', '.join(repr(set_) for set_ in self.sets)
-        return '{}({})'.format(self.__class__.__name__, sets_str)
+        posargs = self.sets
+        inner_parts = signature_string_parts(posargs, [])
+        return repr_string(self.__class__.__name__, inner_parts)
 
 
 class SetIntersection(Set):
@@ -763,7 +808,7 @@ class SetIntersection(Set):
         Examples
         --------
         >>> reals, complexnrs = odl.RealNumbers(), odl.ComplexNumbers()
-        >>> union = odl.SetIntersection(reals, complexnrs)
+        >>> intersec = odl.SetIntersection(reals, complexnrs)
         """
         for set_ in sets:
             if not isinstance(set_, Set):
@@ -844,8 +889,9 @@ class SetIntersection(Set):
         >>> odl.SetIntersection(reals, complexnrs)
         SetIntersection(RealNumbers(), ComplexNumbers())
         """
-        sets_str = ', '.join(repr(set_) for set_ in self.sets)
-        return '{}({})'.format(self.__class__.__name__, sets_str)
+        posargs = self.sets
+        inner_parts = signature_string_parts(posargs, [])
+        return repr_string(self.__class__.__name__, inner_parts)
 
 
 class FiniteSet(Set):
@@ -862,7 +908,7 @@ class FiniteSet(Set):
 
         Examples
         --------
-        >>> set = odl.FiniteSet(1, 'string')
+        >>> finite_set = odl.FiniteSet(1, 'string')
         """
         self.__elements = tuple(unique(elements))
 
@@ -882,12 +928,12 @@ class FiniteSet(Set):
 
         Examples
         --------
-        >>> set = odl.FiniteSet(1, 'string')
-        >>> 1 in set
+        >>> finite_set = odl.FiniteSet(1, 'string')
+        >>> 1 in finite_set
         True
-        >>> 2 in set
+        >>> 2 in finite_set
         False
-        >>> 'string' in set
+        >>> 'string' in finite_set
         True
         """
         return other in self.elements
@@ -929,10 +975,10 @@ class FiniteSet(Set):
 
         Examples
         --------
-        >>> set = odl.FiniteSet(1, 2, 3, 'string')
-        >>> set[:3]
+        >>> finite_set = odl.FiniteSet(1, 2, 3, 'string')
+        >>> finite_set[:3]
         FiniteSet(1, 2, 3)
-        >>> set[3]
+        >>> finite_set[3]
         'string'
         """
         if isinstance(indcs, slice):
@@ -945,11 +991,13 @@ class FiniteSet(Set):
 
         Examples
         --------
-        >>> odl.FiniteSet(1, 'string')
+        >>> finite_set = odl.FiniteSet(1, 'string')
+        >>> finite_set
         FiniteSet(1, 'string')
         """
-        elements_str = ', '.join(repr(el) for el in self.elements)
-        return '{}({})'.format(self.__class__.__name__, elements_str)
+        posargs = self.elements
+        inner_parts = signature_string_parts(posargs, [])
+        return repr_string(self.__class__.__name__, inner_parts)
 
 
 if __name__ == '__main__':

@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -9,16 +9,16 @@
 """Tests for the Ray transform."""
 
 from __future__ import division
+
 import numpy as np
-from pkg_resources import parse_version
 import pytest
+from pkg_resources import parse_version
 
 import odl
 from odl.tomo.backends import ASTRA_VERSION
-from odl.tomo.util.testutils import (skip_if_no_astra, skip_if_no_astra_cuda,
-                                     skip_if_no_skimage)
-from odl.util.testutils import almost_equal, all_almost_equal, simple_fixture
-
+from odl.tomo.util.testutils import (
+    skip_if_no_astra, skip_if_no_astra_cuda, skip_if_no_skimage)
+from odl.util.testutils import all_almost_equal, simple_fixture
 
 # --- pytest fixtures --- #
 

@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,18 +8,19 @@
 
 """Specification and reader for the MRC2014 file format."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
+import struct
+import warnings
 from builtins import int, object
 from collections import OrderedDict
 from itertools import permutations
+
 import numpy as np
-import struct
-import warnings
 
 from odl.contrib.mrc.uncompr_bin import (
     FileReaderRawBinaryWithHeader, FileWriterRawBinaryWithHeader,
     header_fields_from_table)
-
 
 __all__ = ('FileReaderMRC', 'FileWriterMRC', 'mrc_header_from_params')
 
@@ -122,6 +123,7 @@ def print_mrc2014_spec():
     """
     print(MRC_2014_SPEC_TABLE)
 
+
 print_mrc2014_spec.__doc__ += MRC_2014_SPEC_TABLE
 
 
@@ -192,6 +194,7 @@ def print_fei_ext_header_spec():
     The specification table is as follows:
     """
     print(MRC_FEI_EXT_HEADER_SECTION)
+
 
 print_fei_ext_header_spec.__doc__ += MRC_FEI_EXT_HEADER_SECTION
 
@@ -798,7 +801,7 @@ def mrc_header_from_params(shape, dtype, kind, **kwargs):
                         dtype='int32').reshape([1])
     origin = np.zeros(3, dtype='int32')
     map = np.fromstring('MAP ', dtype='S1')
-    # TODO: no idea how to properly choose the machine stamp
+    # TODO(kohr-h): no idea how to properly choose the machine stamp
     machst = np.fromiter(b'DD  ', dtype='S1')
     nlabl = np.array(nlabl, dtype='int32').reshape([1])
     label = np.zeros((10, 80), dtype='S1')  # ensure correct size
@@ -812,6 +815,7 @@ def mrc_header_from_params(shape, dtype, kind, **kwargs):
 
     header = OrderedDict()
     for field in header_fields:
+        # TODO(kohr-h): replace `eval` with fixed values, even if repetitive
         header[field['name']] = {'offset': field['offset'],
                                  'value': eval(field['name'])}
 

@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -9,6 +9,7 @@
 """Figures of Merit (FOMs) for measuring image quality without a reference."""
 
 from __future__ import division
+
 import numpy as np
 
 __all__ = ('estimate_noise_std',)

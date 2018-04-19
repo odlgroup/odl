@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -7,14 +7,18 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import division
+
 import numpy as np
 import pytest
 
 import odl
 from odl.operator.oputils import matrix_representation, power_method_opnorm
-from odl.space.pspace import ProductSpace
 from odl.operator.pspace_ops import ProductSpaceOperator
-from odl.util.testutils import almost_equal
+from odl.util.testutils import simple_fixture
+
+optimize_weighting = simple_fixture('optimize', [True, False])
+call_variant = simple_fixture('call_variant', ['oop', 'ip', 'dual'])
+weighting = simple_fixture('weighting', [1.0, 2.0, [1.0, 2.0]])
 
 
 def test_matrix_representation():
@@ -108,6 +112,7 @@ def test_matrix_representation_not_linear_op():
 
 def test_matrix_representation_wrong_domain():
     """Verify that the matrix representation function gives correct error"""
+
     class MyOp(odl.Operator):
         """Small test operator."""
         def __init__(self):
@@ -126,6 +131,7 @@ def test_matrix_representation_wrong_domain():
 
 def test_matrix_representation_wrong_range():
     """Verify that the matrix representation function gives correct error"""
+
     class MyOp(odl.Operator):
         """Small test operator."""
         def __init__(self):

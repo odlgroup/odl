@@ -1,4 +1,4 @@
-﻿# Copyright 2014-2017 The ODL contributors
+﻿# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,11 +8,11 @@
 
 """Functions to create noise samples of different distributions."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 import numpy as np
 
 from odl.util import NumpyRandomSeed
-
 
 __all__ = ('white_noise', 'poisson_noise', 'salt_pepper_noise',
            'uniform_noise')
@@ -72,7 +72,7 @@ def uniform_noise(space, low=0, high=1, seed=None):
 
     Parameters
     ----------
-    space : `FnBase` or `ProductSpace`
+    space : `TensorSpace` or `ProductSpace`
         The space in which the noise is created.
     low : ``space.field`` element or ``space`` `element-like`, optional
         The lower bound of the uniform noise. If a scalar, it is interpreted as

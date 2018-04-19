@@ -1,4 +1,4 @@
-﻿# Copyright 2014-2017 The ODL contributors
+﻿# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -7,6 +7,7 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import division
+
 import numpy as np
 import pytest
 from pkg_resources import parse_version
@@ -17,8 +18,7 @@ from odl.space.base_tensors import TensorSpace
 from odl.space.npy_tensors import NumpyTensor
 from odl.space.weighting import ConstWeighting
 from odl.util.testutils import (
-    almost_equal, all_equal, all_almost_equal, noise_elements, simple_fixture)
-
+    all_almost_equal, all_equal, noise_elements, simple_fixture)
 
 USE_ARRAY_UFUNCS_INTERFACE = (parse_version(np.__version__) >=
                               parse_version('1.13'))

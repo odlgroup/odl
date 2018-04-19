@@ -1,6 +1,7 @@
 """Simple example of noise power spectrum (NPS)."""
 
 import numpy as np
+
 import odl
 from odl.contrib import fom
 

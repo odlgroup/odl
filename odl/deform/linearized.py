@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,14 +8,14 @@
 
 """Operators and functions for linearized deformation."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 import numpy as np
 
-from odl.discr import DiscreteLp, Gradient, Divergence
+from odl.discr import DiscreteLp, Divergence, Gradient
 from odl.operator import Operator, PointwiseInner
 from odl.space import ProductSpace
-from odl.util import signature_string, indent
-
+from odl.util import repr_string, signature_string_parts
 
 __all__ = ('LinDeformFixedTempl', 'LinDeformFixedDisp', 'linear_deform')
 
@@ -146,10 +146,10 @@ class LinDeformFixedTempl(Operator):
 
         >>> space = odl.uniform_discr(0, 1, 5, interp='nearest')
         >>> template = space.element([0, 0, 1, 0, 0])
-        >>> op = LinDeformFixedTempl(template)
+        >>> op = odl.deform.LinDeformFixedTempl(template)
         >>> disp_field = [[0, 0, 0, -0.2, 0]]
-        >>> print(op(disp_field))
-        [ 0.,  0.,  1.,  1.,  0.]
+        >>> op(disp_field)
+        uniform_discr(0.0, 1.0, 5).element([ 0.,  0.,  1.,  1.,  0.])
 
         The result depends on the chosen interpolation. With 'linear'
         interpolation and an offset equal to half the distance between two
@@ -157,10 +157,12 @@ class LinDeformFixedTempl(Operator):
 
         >>> space = odl.uniform_discr(0, 1, 5, interp='linear')
         >>> template = space.element([0, 0, 1, 0, 0])
-        >>> op = LinDeformFixedTempl(template)
+        >>> op = odl.deform.LinDeformFixedTempl(template)
         >>> disp_field = [[0, 0, 0, -0.1, 0]]
-        >>> print(op(disp_field))
-        [ 0. ,  0. ,  1. ,  0.5,  0. ]
+        >>> op(disp_field)
+        uniform_discr(0.0, 1.0, 5, interp='linear').element(
+            [ 0. ,  0. ,  1. ,  0.5,  0. ]
+        )
         """
         space = getattr(template, 'space', None)
         if not isinstance(space, DiscreteLp):
@@ -221,7 +223,7 @@ class LinDeformFixedTempl(Operator):
 
         displacement = self.domain.element(displacement)
 
-        # TODO: allow users to select what method to use here.
+        # TODO: allow users to select what method to use here
         grad = Gradient(domain=self.range, method='central',
                         pad_mode='symmetric')
         grad_templ = grad(self.template)
@@ -231,11 +233,24 @@ class LinDeformFixedTempl(Operator):
         return PointwiseInner(self.domain, def_grad)
 
     def __repr__(self):
-        """Return ``repr(self)``."""
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> space = odl.uniform_discr(0, 1, 5)
+        >>> template = space.element([0, 0, 1, 0, 0])
+        >>> op = odl.deform.LinDeformFixedTempl(template)
+        >>> op
+        LinDeformFixedTempl(
+            uniform_discr(0.0, 1.0, 5).element([ 0.,  0.,  1.,  0.,  0.])
+        )
+        """
         posargs = [self.template]
-        optargs = [('domain', self.domain, self.template.space)]
-        inner_str = signature_string(posargs, optargs, mod='!r', sep=',\n')
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
+        optargs = [('domain', self.domain,
+                    self.template.space.real_space.tangent_bundle)]
+        inner_parts = signature_string_parts(posargs, optargs)
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
 
 class LinDeformFixedDisp(Operator):
@@ -297,10 +312,10 @@ class LinDeformFixedDisp(Operator):
 
         >>> space = odl.uniform_discr(0, 1, 5)
         >>> disp_field = space.tangent_bundle.element([[0, 0, 0, -0.2, 0]])
-        >>> op = LinDeformFixedDisp(disp_field)
+        >>> op = odl.deform.LinDeformFixedDisp(disp_field)
         >>> template = [0, 0, 1, 0, 0]
-        >>> print(op([0, 0, 1, 0, 0]))
-        [ 0.,  0.,  1.,  1.,  0.]
+        >>> op(template)
+        uniform_discr(0.0, 1.0, 5).element([ 0.,  0.,  1.,  1.,  0.])
 
         The result depends on the chosen interpolation. With 'linear'
         interpolation and an offset equal to half the distance between two
@@ -308,10 +323,12 @@ class LinDeformFixedDisp(Operator):
 
         >>> space = odl.uniform_discr(0, 1, 5, interp='linear')
         >>> disp_field = space.tangent_bundle.element([[0, 0, 0, -0.1, 0]])
-        >>> op = LinDeformFixedDisp(disp_field)
+        >>> op = odl.deform.LinDeformFixedDisp(disp_field)
         >>> template = [0, 0, 1, 0, 0]
-        >>> print(op(template))
-        [ 0. ,  0. ,  1. ,  0.5,  0. ]
+        >>> op(template)
+        uniform_discr(0.0, 1.0, 5, interp='linear').element(
+            [ 0. ,  0. ,  1. ,  0.5,  0. ]
+        )
         """
         space = getattr(displacement, 'space', None)
         if not isinstance(space, ProductSpace):
@@ -365,7 +382,7 @@ class LinDeformFixedDisp(Operator):
         Note that this implementation uses an approximation that is only
         valid for small displacements.
         """
-        # TODO allow users to select what method to use here.
+        # TODO allow users to select what method to use here
         div_op = Divergence(domain=self.displacement.space, method='forward',
                             pad_mode='symmetric')
         jacobian_det = self.domain.element(
@@ -374,11 +391,27 @@ class LinDeformFixedDisp(Operator):
         return jacobian_det * self.inverse
 
     def __repr__(self):
-        """Return ``repr(self)``."""
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> space = odl.uniform_discr(0, 1, 5)
+        >>> disp_field = space.tangent_bundle.element([[0, 0, 0, -0.2, 0]])
+        >>> op = odl.deform.LinDeformFixedDisp(disp_field)
+        >>> op
+        LinDeformFixedDisp(
+            ProductSpace(uniform_discr(0.0, 1.0, 5), 1).element(
+                [
+                  [ 0. ,  0. ,  0. , -0.2,  0. ]
+                ]
+            )
+        )
+        """
         posargs = [self.displacement]
         optargs = [('templ_space', self.domain, self.displacement.space[0])]
-        inner_str = signature_string(posargs, optargs, mod='!r', sep=',\n')
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
+        inner_parts = signature_string_parts(posargs, optargs)
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
 
 if __name__ == '__main__':

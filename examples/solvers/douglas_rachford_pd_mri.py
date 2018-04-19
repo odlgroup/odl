@@ -9,6 +9,7 @@ gradient and ``g`` the given noisy data.
 """
 
 import numpy as np
+
 import odl
 
 # Parameters

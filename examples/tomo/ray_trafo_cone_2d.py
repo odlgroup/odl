@@ -1,6 +1,7 @@
 """Example using the ray transform with fan beam geometry."""
 
 import numpy as np
+
 import odl
 
 # Reconstruction space: discretized functions on the rectangle

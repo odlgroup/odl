@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -9,19 +9,18 @@
 """Tests for the factory functions to create proximal operators."""
 
 from __future__ import division
+
 import numpy as np
+import pytest
 import scipy.special
 
 import odl
 from odl.solvers.nonsmooth.proximal_operators import (
-    combine_proximals, proximal_const_func,
-    proximal_box_constraint, proximal_nonnegativity,
+    proximal_separable_sum, proximal_box_constraint, proximal_const_func,
+    proximal_convex_conj_kl, proximal_convex_conj_kl_cross_entropy,
     proximal_convex_conj_l1, proximal_convex_conj_l1_l2,
-    proximal_l2,
-    proximal_convex_conj_l2_squared,
-    proximal_convex_conj_kl, proximal_convex_conj_kl_cross_entropy)
-from odl.util.testutils import all_almost_equal
-
+    proximal_convex_conj_l2_squared, proximal_l2)
+from odl.util.testutils import all_almost_equal, noise_element
 
 # Places for the accepted error when comparing results
 HIGH_ACC = 8
@@ -79,69 +78,24 @@ def test_proximal_box_constraint():
             assert all_almost_equal(result_np, result)
 
 
-def test_proximal_nonnegativity():
-    """Proximal factory for indicator function for non-negativity."""
-
-    # Image space
+def test_proximal_separable_sum():
+    """Validate ``proximal_separable_sum``."""
     space = odl.uniform_discr(0, 1, 10)
-
-    # Element in the image space where the proximal operator is evaluated
-    x = space.element(np.arange(-5, 5))
-
-    # Factory function returning the proximal operator
-    prox_factory = proximal_nonnegativity(space)
-
-    # Initialize proximal operator of G (with an unused parameter)
-    prox = prox_factory(1.0)
-
-    # Optimal point returned by the proximal operator
-    result = prox(x)
-
-    # prox_tau[G](x) = non-negativity thresholding
-    assert all(result.asarray() >= 0)
-
-
-def test_combine_proximal():
-    """Function to combine proximal factory functions.
-
-    The combine function makes use of the separable sum property of proximal
-    operators.
-    """
-
-    # Image space
-    space = odl.uniform_discr(0, 1, 10)
-
-    # Factory function returning the proximal operator
     prox_factory = proximal_const_func(space)
+    prox = prox_factory(1)
 
-    # Combine factory function of proximal operators
-    combined_prox_factory = combine_proximals(prox_factory, prox_factory)
+    sum_prox_factory = proximal_separable_sum(prox_factory, prox_factory)
+    sum_prox = sum_prox_factory(1)
 
-    # Initialize combine proximal operator
-    prox = combined_prox_factory(1)
+    assert isinstance(sum_prox, odl.Operator)
 
-    assert isinstance(prox, odl.Operator)
+    x = noise_element(sum_prox.domain)
+    out = sum_prox.range.element()
+    true_result = x
 
-    # Explicit construction of the combine proximal operator
-    prox_verify = odl.ProductSpaceOperator(
-        [[odl.IdentityOperator(space), None],
-         [None, odl.IdentityOperator(space)]])
-
-    # Create an element in the domain of the operator
-    x = prox_verify.domain.element([np.arange(-5, 5), np.arange(-5, 5)])
-
-    # Allocate output element
-    out = prox_verify.range.element()
-
-    # Apply explicitly constructed and factory-function-combined proximal
-    # operators
-    assert prox(x) == prox_verify(x)
-
-    # Test output argument
-    assert prox(x, out) == prox_verify(x)
-
-    # Identity mapping
-    assert out == x
+    assert all_almost_equal(prox(x), true_result)
+    prox(x, out=out)
+    assert all_almost_equal(out, true_result)
 
 
 def test_proximal_l2_wo_data():

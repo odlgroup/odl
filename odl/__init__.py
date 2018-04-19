@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -32,12 +32,15 @@ __all__ = ('set',
            )
 
 # Set old Numpy printing behavior as to not invalidate all doctests.
-# TODO: switch to new behavior when Numpy 1.14 is minimum
+# TODO(kohr-h): switch to new behavior when Numpy 1.14 is minimum
 try:
     np.set_printoptions(legacy='1.13')
 except TypeError:
     pass
 
+# Set printing linewidth to 71 to allow method docstrings to not extend
+# beyond 79 characters (2 times indent of 4)
+np.set_printoptions(linewidth=71)
 
 # Propagate names defined in` __all__` of all "core" subpackages into
 # the top-level namespace

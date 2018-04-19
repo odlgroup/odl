@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,15 +8,16 @@
 
 """Detectors for tomographic imaging."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 from builtins import object
+
 import numpy as np
 
 from odl.discr import RectPartition
-from odl.tomo.util import perpendicular_vector, is_inside_bounds
-from odl.util import indent, signature_string, array_str
+from odl.tomo.util import is_inside_bounds, perpendicular_vector
+from odl.util import array_str, indent, signature_string
 from odl.util.npy_compat import moveaxis
-
 
 __all__ = ('Detector',
            'Flat1dDetector', 'Flat2dDetector',
@@ -258,6 +259,10 @@ class Detector(object):
                 'for `ndim={}` and `space_ndim={}`'
                 ''.format(self.ndim, self.space_ndim))
 
+    def __str__(self):
+        """Return ``str(self)``."""
+        return repr(self)
+
 
 class Flat1dDetector(Detector):
 
@@ -412,10 +417,6 @@ class Flat1dDetector(Detector):
         optargs = [('axis', array_str(self.axis), '')]
         inner_str = signature_string(posargs, optargs, sep=',\n')
         return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        return repr(self)
 
 
 class Flat2dDetector(Detector):
@@ -620,10 +621,6 @@ class Flat2dDetector(Detector):
         optargs = [('axes', tuple(array_str(ax) for ax in self.axes), None)]
         inner_str = signature_string(posargs, optargs, sep=',\n')
         return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        return repr(self)
 
 
 class CircleSectionDetector(Detector):
@@ -891,10 +888,6 @@ class CircleSectionDetector(Detector):
         optargs = [('center', array_str(self.center), None)]
         inner_str = signature_string(posargs, optargs, sep=',\n')
         return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        return repr(self)
 
 
 if __name__ == '__main__':

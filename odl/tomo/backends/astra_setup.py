@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -23,9 +23,19 @@ ODL geometry representation to ASTRA's data structures, including:
 `ASTRA on GitHub <https://github.com/astra-toolbox/>`_.
 """
 
-from __future__ import print_function, division, absolute_import
-import numpy as np
+from __future__ import absolute_import, division, print_function
+
 import warnings
+
+import numpy as np
+
+from odl.discr import DiscreteLp, DiscreteLpElement
+from odl.tomo.geometry import (
+    DivergentBeamGeometry, Flat1dDetector, Flat2dDetector, Geometry,
+    ParallelBeamGeometry)
+from odl.tomo.util.utility import euler_matrix
+from odl.util.npy_compat import moveaxis
+
 try:
     import astra
 except ImportError:
@@ -34,12 +44,6 @@ except ImportError:
 else:
     ASTRA_AVAILABLE = True
 
-from odl.discr import DiscreteLp, DiscreteLpElement
-from odl.tomo.geometry import (
-    Geometry, DivergentBeamGeometry, ParallelBeamGeometry,
-    Flat1dDetector, Flat2dDetector)
-from odl.tomo.util.utility import euler_matrix
-from odl.util.npy_compat import moveaxis
 
 # Make sure that ASTRA >= 1.7 is used
 if ASTRA_AVAILABLE:
@@ -455,7 +459,7 @@ def astra_projection_geometry(geometry):
     if (isinstance(geometry, ParallelBeamGeometry) and
             isinstance(geometry.detector, (Flat1dDetector, Flat2dDetector)) and
             geometry.ndim == 2):
-        # TODO: change to parallel_vec when available
+        # TODO(kohr-h): change to parallel_vec when available
         det_width = geometry.det_partition.cell_sides[0]
         det_count = geometry.detector.size
         # Instead of rotating the data by 90 degrees counter-clockwise,

@@ -9,6 +9,7 @@ where b is a gaussian peak at the origin.
 
 import numpy as np
 import scipy.sparse.linalg as sl
+
 import odl
 
 # Create discrete space, a square from [-1, 1] x [-1, 1] with (11 x 11) points

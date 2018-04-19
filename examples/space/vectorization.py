@@ -1,8 +1,10 @@
 """Example showing how to use vectorization of `FunctionSpaceElement`'s."""
 
-import numpy as np
-import odl
 import timeit
+
+import numpy as np
+
+import odl
 
 
 def performance_example():

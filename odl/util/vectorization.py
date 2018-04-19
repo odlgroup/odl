@@ -1,4 +1,4 @@
-﻿# Copyright 2014-2017 The ODL contributors
+﻿# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,11 +8,12 @@
 
 """Utilities for internal functionality connected to vectorization."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 from builtins import object
 from functools import wraps
-import numpy as np
 
+import numpy as np
 
 __all__ = ('is_valid_input_array', 'is_valid_input_meshgrid',
            'out_shape_from_meshgrid', 'out_shape_from_array',

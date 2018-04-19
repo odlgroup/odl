@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -7,12 +7,14 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import print_function
-from distutils.version import StrictVersion
-import sphinx
+
 import glob
 import os
-import sphinx_rtd_theme
 import sys
+from distutils.version import StrictVersion
+
+import sphinx
+import sphinx_rtd_theme
 
 # --- General configuration --- #
 

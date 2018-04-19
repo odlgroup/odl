@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -9,13 +9,14 @@
 """Utilities for datasets."""
 
 from __future__ import print_function
-import os
-from os.path import join, expanduser, exists
-from future.moves.urllib.request import urlopen
-from shutil import copyfileobj, rmtree
-from scipy import io
-import contextlib
 
+import contextlib
+import os
+from os.path import exists, expanduser, join
+from shutil import copyfileobj, rmtree
+
+from future.moves.urllib.request import urlopen
+from scipy import io
 
 __all__ = ('get_data_dir', 'cleanup_data_dir', 'get_data')
 

@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -9,6 +9,7 @@
 """Images provided by the University of Cambridge."""
 
 import numpy as np
+
 import skimage.transform
 from odl.contrib.datasets.util import get_data
 

@@ -1,4 +1,4 @@
-﻿# Copyright 2014-2017 The ODL contributors
+﻿# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,16 +8,15 @@
 
 """Base classes for discretization."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
 
 from odl.operator import Operator
+from odl.set import ComplexNumbers, RealNumbers
 from odl.set.sets import Set
-from odl.space.base_tensors import TensorSpace, Tensor
+from odl.space.base_tensors import Tensor, TensorSpace
 from odl.space.entry_points import tensor_space_impl
-from odl.set import RealNumbers, ComplexNumbers
 from odl.util import (
-    is_real_floating_dtype, is_complex_floating_dtype, is_numeric_dtype)
-
+    is_complex_floating_dtype, is_numeric_dtype, is_real_floating_dtype)
 
 __all__ = ('DiscretizedSpace',)
 

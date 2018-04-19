@@ -1,4 +1,4 @@
-﻿# Copyright 2014-2017 The ODL contributors
+﻿# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,12 +8,13 @@
 
 """Abstract linear vector spaces."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 from builtins import object
+
 import numpy as np
 
 from odl.set.sets import Field, Set, UniversalSet
-
 
 __all__ = ('LinearSpace', 'UniversalSpace')
 
@@ -429,6 +430,11 @@ class LinearSpaceElement(object):
     Do not use this class directly -- to create an element of a vector
     space, call the space's `LinearSpace.element` method instead.
     """
+
+    # Give an `Element` a higher priority than any NumPy array type. This
+    # forces the usage of `__op__` of `Element` if the other operand
+    # is a NumPy object (applies also to scalars!).
+    __array_priority__ = 1000000.0
 
     def __init__(self, space):
         """Initialize a new instance.
@@ -874,10 +880,6 @@ class LinearSpaceElement(object):
     # Disable hash since vectors are mutable
     __hash__ = None
 
-    def __str__(self):
-        """Return ``str(self)``."""
-        return repr(self)
-
     def __copy__(self):
         """Return a copy of this element.
 
@@ -971,10 +973,9 @@ class LinearSpaceElement(object):
         from odl.operator import InnerProductOperator
         return InnerProductOperator(self.copy())
 
-    # Give an `Element` a higher priority than any NumPy array type. This
-    # forces the usage of `__op__` of `Element` if the other operand
-    # is a NumPy object (applies also to scalars!).
-    __array_priority__ = 1000000.0
+    def __str__(self):
+        """Return ``str(self)``."""
+        return repr(self)
 
 
 class UniversalSpace(LinearSpace):

@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -9,24 +9,24 @@
 """Unit tests for Numpy-based tensors."""
 
 from __future__ import division
-import numpy as np
+
 import operator
-from pkg_resources import parse_version
-import pytest
 import sys
+
+import numpy as np
+import pytest
+from pkg_resources import parse_version
 
 import odl
 from odl.set.space import LinearSpaceTypeError
 from odl.space.npy_tensors import (
-    NumpyTensor, NumpyTensorSpace,
-    NumpyTensorSpaceConstWeighting, NumpyTensorSpaceArrayWeighting,
-    NumpyTensorSpaceCustomInner, NumpyTensorSpaceCustomNorm,
-    NumpyTensorSpaceCustomDist)
+    NumpyTensor, NumpyTensorSpace, NumpyTensorSpaceArrayWeighting,
+    NumpyTensorSpaceConstWeighting, NumpyTensorSpaceCustomDist,
+    NumpyTensorSpaceCustomInner, NumpyTensorSpaceCustomNorm)
 from odl.util.testutils import (
-    all_almost_equal, all_equal, simple_fixture,
-    noise_array, noise_element, noise_elements)
+    all_almost_equal, all_equal, noise_array, noise_element, noise_elements,
+    simple_fixture)
 from odl.util.ufuncs import UFUNCS
-
 
 # --- Test helpers --- #
 
@@ -603,7 +603,7 @@ def test_inner(tspace):
     xd = noise_element(tspace)
     yd = noise_element(tspace)
 
-    # TODO: add weighting
+    # TODO(kohr-h): add weighting
     correct_inner = np.vdot(yd, xd)
     assert tspace.inner(xd, yd) == pytest.approx(correct_inner)
     assert xd.inner(yd) == pytest.approx(correct_inner)

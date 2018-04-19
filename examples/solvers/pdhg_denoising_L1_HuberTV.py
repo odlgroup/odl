@@ -13,9 +13,10 @@ For further details and a description of the solution method used, see
 https://odlgroup.github.io/odl/guide/pdhg_guide.html in the ODL documentation.
 """
 
-import numpy as np
-import odl
 import matplotlib.pyplot as plt
+import numpy as np
+
+import odl
 
 # Define ground truth, space and noisy data
 shape = [100, 100]

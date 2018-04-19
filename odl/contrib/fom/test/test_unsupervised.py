@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -10,6 +10,7 @@
 
 import numpy as np
 import pytest
+
 import odl
 import odl.contrib.fom
 

@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -9,15 +9,15 @@
 """Test analytical reconstruction methods."""
 
 from __future__ import division
-import pytest
+
 import numpy as np
+import pytest
 
 import odl
 import odl.tomo as tomo
-from odl.util.testutils import skip_if_no_largescale, simple_fixture
-from odl.tomo.util.testutils import (skip_if_no_astra, skip_if_no_astra_cuda,
-                                     skip_if_no_skimage)
-
+from odl.tomo.util.testutils import (
+    skip_if_no_astra, skip_if_no_astra_cuda, skip_if_no_skimage)
+from odl.util.testutils import simple_fixture, skip_if_no_largescale
 
 # --- pytest fixtures --- #
 
@@ -30,7 +30,7 @@ frequency_scaling = simple_fixture(
 weighting = simple_fixture('weighting', [None, 1.0])
 
 # Find the valid projectors
-# TODO: Add nonuniform once #671 is solved
+# TODO(doable, #671): add nonuniform
 projectors = [skip_if_no_astra('par2d astra_cpu uniform'),
               skip_if_no_astra('cone2d astra_cpu uniform'),
               skip_if_no_astra_cuda('par2d astra_cuda uniform'),

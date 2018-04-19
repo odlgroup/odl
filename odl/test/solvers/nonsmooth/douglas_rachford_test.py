@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -9,12 +9,12 @@
 """Test for the Douglas-Rachford solver."""
 
 from __future__ import division
+
 import pytest
+
 import odl
 from odl.solvers import douglas_rachford_pd
-
 from odl.util.testutils import all_almost_equal, noise_element
-
 
 # Places for the accepted error when comparing results
 HIGH_ACCURACY = 8

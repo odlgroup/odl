@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,14 +8,15 @@
 
 """Ufunc operators for ODL vectors."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 import numpy as np
 
-from odl.set import LinearSpace, RealNumbers, Field
+from odl.operator import MultiplyOperator, Operator
+from odl.set import Field, LinearSpace, RealNumbers
+from odl.solvers import (
+    ConstantFunctional, Functional, FunctionalQuotient, ScalingFunctional)
 from odl.space import ProductSpace, tensor_space
-from odl.operator import Operator, MultiplyOperator
-from odl.solvers import (Functional, ScalingFunctional, FunctionalQuotient,
-                         ConstantFunctional)
 from odl.util.ufuncs import UFUNCS
 
 __all__ = ()
@@ -250,7 +251,7 @@ def ufunc_class_factory(name, nargin, nargout, docstring):
 
     def _call(self, x, out=None):
         """Return ``self(x)``."""
-        # TODO: use `__array_ufunc__` when implemented on `ProductSpace`,
+        # TODO(#1301): use `__array_ufunc__` on `ProductSpace` when available,
         # or try both
         if out is None:
             if nargin == 1:

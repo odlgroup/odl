@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -13,10 +13,16 @@ wrapper around the well-known `FFTW <http://fftw.org/>`_ library for fast
 Fourier transforms.
 """
 
-from __future__ import print_function, division, absolute_import
-from multiprocessing import cpu_count
-import numpy as np
+from __future__ import absolute_import, division, print_function
+
 import warnings
+from multiprocessing import cpu_count
+
+import numpy as np
+
+from odl.util import (
+    complex_dtype, dtype_repr, is_real_dtype, normalized_axes_tuple)
+
 try:
     import pyfftw
     PYFFTW_AVAILABLE = True
@@ -29,8 +35,6 @@ else:
                       'ODL functionality, see issue #1002.',
                       RuntimeWarning)
 
-from odl.util import (
-    is_real_dtype, dtype_repr, complex_dtype, normalized_axes_tuple)
 
 __all__ = ('pyfftw_call', 'PYFFTW_AVAILABLE')
 

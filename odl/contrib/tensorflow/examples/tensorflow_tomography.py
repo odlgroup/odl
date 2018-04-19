@@ -7,10 +7,11 @@ In this example, we solve the TV regularized tomography problem::
 using a gradient descent method (ADAM).
 """
 
-import tensorflow as tf
 import numpy as np
+
 import odl
 import odl.contrib.tensorflow
+import tensorflow as tf
 
 sess = tf.InteractiveSession()
 

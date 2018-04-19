@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -6,12 +6,12 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 import numpy as np
 
 from odl.discr import ResizingOperator
-from odl.trafos import FourierTransform, PYFFTW_AVAILABLE
-
+from odl.trafos import PYFFTW_AVAILABLE, FourierTransform
 
 __all__ = ('fbp_op', 'fbp_filter_op', 'tam_danielson_window',
            'parker_weighting')

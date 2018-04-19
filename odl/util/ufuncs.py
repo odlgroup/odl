@@ -1,4 +1,4 @@
-﻿# Copyright 2014-2017 The ODL contributors
+﻿# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -23,11 +23,12 @@ dispatch machinery `introduced in Numpy 1.13
 arrays.classes.rst#special-attributes-and-methods>`_.
 """
 
-from __future__ import print_function, division, absolute_import
-from builtins import object
-import numpy as np
-import re
+from __future__ import absolute_import, division, print_function
 
+import re
+from builtins import object
+
+import numpy as np
 
 __all__ = ('TensorSpaceUfuncs', 'ProductSpaceUfuncs')
 
@@ -63,10 +64,6 @@ See Also
 numpy.{}
 """.format(name)
     UFUNCS.append((name, n_in, n_out, doc))
-
-# TODO: add the following reductions (to the CUDA implementation):
-# ['var', 'trace', 'tensordot', 'std', 'ptp', 'mean', 'diff', 'cumsum',
-#  'cumprod', 'average']
 
 
 # --- Wrappers for `Tensor` --- #

@@ -1,4 +1,4 @@
-﻿# Copyright 2014-2017 The ODL contributors
+﻿# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,13 +8,14 @@
 
 """Weightings for finite-dimensional spaces."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 from builtins import object
+
 import numpy as np
 
 from odl.space.base_tensors import TensorSpace
-from odl.util import array_str, signature_string, indent
-
+from odl.util import array_str, indent, signature_string
 
 __all__ = ('MatrixWeighting', 'ArrayWeighting', 'ConstWeighting',
            'CustomInner', 'CustomNorm', 'CustomDist')
@@ -149,6 +150,10 @@ class Weighting(object):
         """
         return self.norm(x1 - x2)
 
+    def __str__(self):
+        """Return ``str(self)``."""
+        return repr(self)
+
 
 class MatrixWeighting(Weighting):
 
@@ -212,7 +217,7 @@ class MatrixWeighting(Weighting):
         # Lazy import to improve `import odl` time
         import scipy.sparse
 
-        # TODO: fix dead link `scipy.sparse.spmatrix`
+        # TODO(kohr-h): fix dead link `scipy.sparse.spmatrix`
         precomp_mat_pow = kwargs.pop('precomp_mat_pow', False)
         self._cache_mat_pow = bool(kwargs.pop('cache_mat_pow', True))
         self._cache_mat_decomp = bool(kwargs.pop('cache_mat_decomp', False))
@@ -317,7 +322,7 @@ class MatrixWeighting(Weighting):
         import scipy.linalg
         import scipy.sparse
 
-        # TODO: fix dead link `scipy.linalg.decomp.eigh`
+        # TODO(kohr-h): fix dead link `scipy.linalg.decomp.eigh`
         if scipy.sparse.isspmatrix(self.matrix):
             raise NotImplementedError('sparse matrix not supported')
 
@@ -450,10 +455,6 @@ class MatrixWeighting(Weighting):
                                      mod=['!s', ''])
         return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
 
-    def __str__(self):
-        """Return ``str(self)``."""
-        return repr(self)
-
 
 class ArrayWeighting(Weighting):
 
@@ -567,10 +568,6 @@ class ArrayWeighting(Weighting):
                                      mod=['!s', ':.4'])
         return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
 
-    def __str__(self):
-        """Return ``str(self)``."""
-        return repr(self)
-
 
 class ConstWeighting(Weighting):
 
@@ -654,10 +651,6 @@ class ConstWeighting(Weighting):
         return '{}({})'.format(self.__class__.__name__,
                                signature_string(posargs, optargs))
 
-    def __str__(self):
-        """Return ``str(self)``."""
-        return repr(self)
-
 
 class CustomInner(Weighting):
 
@@ -719,8 +712,7 @@ class CustomInner(Weighting):
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = [self.inner]
-        optargs = []
-        inner_str = signature_string(posargs, optargs, mod='!r')
+        inner_str = signature_string(posargs, [], mod='!r')
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 

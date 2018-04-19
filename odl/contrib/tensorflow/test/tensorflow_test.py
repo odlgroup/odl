@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -9,13 +9,15 @@
 """Tests for tensorflow."""
 
 from __future__ import division
+
 from itertools import permutations
-import pytest
+
 import numpy as np
-import tensorflow as tf
+import pytest
 
 import odl
 import odl.contrib.tensorflow
+import tensorflow as tf
 from odl.util import all_almost_equal
 
 

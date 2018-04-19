@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,12 +8,13 @@
 
 """Single-photon emission computed tomography (SPECT) geometry."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 import numpy as np
 
 from odl.tomo.geometry.parallel import Parallel3dAxisGeometry
 from odl.tomo.util.utility import transform_system
-from odl.util import signature_string, indent, array_str
+from odl.util import array_str, indent, signature_string
 
 __all__ = ('ParallelHoleCollimatorGeometry', )
 

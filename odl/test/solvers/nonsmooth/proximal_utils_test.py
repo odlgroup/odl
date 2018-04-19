@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -9,14 +9,14 @@
 """Tests for the utility functions for proximal operators."""
 
 from __future__ import division
+
 import numpy as np
 import pytest
 
 import odl
 from odl.solvers.nonsmooth.proximal_operators import (
-    proximal_arg_scaling, proximal_composition,
-    proximal_quadratic_perturbation, proximal_translation,
-    proximal_l2_squared)
+    proximal_arg_scaling, proximal_composition, proximal_l2_squared,
+    proximal_quadratic_perturbation, proximal_translation)
 from odl.util.testutils import all_almost_equal, noise_element, simple_fixture
 
 # Places for the accepted error when comparing results

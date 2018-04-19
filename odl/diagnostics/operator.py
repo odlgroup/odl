@@ -1,4 +1,4 @@
-﻿# Copyright 2014-2017 The ODL contributors
+﻿# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,14 +8,15 @@
 
 """Standardized tests for `Operator`'s."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 from builtins import object
+
 import numpy as np
 
 from odl.diagnostics.examples import samples
 from odl.operator import power_method_opnorm
 from odl.util.testutils import FailCounter
-
 
 __all__ = ('OperatorTest',)
 
@@ -252,7 +253,7 @@ class OperatorTest(object):
 
                     # Need to be slightly more generous here due to possible
                     # numerical instabilities.
-                    # TODO: perform more tests to find a good threshold here.
+                    # TODO: perform more tests to find a good threshold here
                     if err < 10 * self.tol:
                         derivative_ok = True
                         break

@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -9,11 +9,12 @@
 """Tomographic datasets from the Finish Inverse Problems Society (FIPS)."""
 
 from __future__ import division
+
 import numpy as np
+
 from odl.contrib.datasets.util import get_data
 from odl.discr import uniform_partition
 from odl.tomo import FanFlatGeometry
-
 
 __all__ = ('walnut_data', 'walnut_geometry',
            'lotus_root_data', 'lotus_root_geometry')

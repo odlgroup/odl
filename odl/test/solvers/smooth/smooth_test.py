@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -9,10 +9,11 @@
 """Test for the smooth solvers."""
 
 from __future__ import division
+
 import pytest
+
 import odl
 from odl.operator import OpNotImplementedError
-
 
 nonlinear_cg_beta = odl.util.testutils.simple_fixture('nonlinear_cg_beta',
                                                       ['FR', 'PR', 'HS', 'DY'])
@@ -24,7 +25,7 @@ def functional(request):
     """functional with optimum 0 at 0."""
     name = request.param
 
-    # TODO: quadratic (#606) functionals
+    # TODO(doable, #606): quadratic functionals
 
     if name == 'l2_squared':
         space = odl.rn(3)

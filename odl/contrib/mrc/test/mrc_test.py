@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -9,16 +9,17 @@
 """Tests for the MRC I/O routines."""
 
 from __future__ import division
-from itertools import permutations
-import pytest
-import numpy as np
+
 import tempfile
+from itertools import permutations
+
+import numpy as np
+import pytest
 
 import odl
 from odl.contrib.mrc import (
-    mrc_header_from_params, FileWriterMRC, FileReaderMRC)
+    FileReaderMRC, FileWriterMRC, mrc_header_from_params)
 from odl.util.testutils import all_equal, simple_fixture
-
 
 # --- pytest fixtures --- #
 

@@ -20,8 +20,9 @@
 This example shows how this can be done using a variety of solution methods.
 """
 
-import odl
 from matplotlib import pyplot as plt
+
+import odl
 
 # Create the solution space
 space = odl.rn(2)

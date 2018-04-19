@@ -12,6 +12,7 @@ https://odlgroup.github.io/odl/guide/pdhg_guide.html in the ODL documentation.
 """
 
 import numpy as np
+
 import odl
 
 # --- Set up the forward operator (ray transform) --- #

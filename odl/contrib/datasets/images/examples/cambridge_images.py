@@ -1,8 +1,9 @@
 """Example of the Cambridge images."""
 
-import odl.contrib.datasets.images as images
 import numpy as np
+
 import odl
+import odl.contrib.datasets.images as images
 
 
 def convert_to_odl(image):

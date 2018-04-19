@@ -9,11 +9,12 @@ adjoint of the derivative.
 """
 
 from __future__ import print_function
-import tensorflow as tf
+
 import numpy as np
 
 import odl
 import odl.contrib.tensorflow
+import tensorflow as tf
 
 sess = tf.InteractiveSession()
 

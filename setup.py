@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -13,13 +13,13 @@ Installation command::
     pip install [--user] [-e] .
 """
 
-from __future__ import print_function, absolute_import
+from __future__ import absolute_import, print_function
 
-from setuptools import setup, find_packages
-from setuptools.command.test import test as TestCommand
 import os
 import sys
 
+from setuptools import find_packages, setup
+from setuptools.command.test import test as TestCommand
 
 root_path = os.path.dirname(__file__)
 

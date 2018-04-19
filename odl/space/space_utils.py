@@ -1,4 +1,4 @@
-﻿# Copyright 2014-2017 The ODL contributors
+﻿# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,12 +8,12 @@
 
 """Utility functions for space implementations."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 import numpy as np
 
-from odl.set import RealNumbers, ComplexNumbers
+from odl.set import ComplexNumbers, RealNumbers
 from odl.space.entry_points import tensor_space_impl
-
 
 __all__ = ('vector', 'tensor_space', 'cn', 'rn')
 

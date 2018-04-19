@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,10 +8,9 @@
 
 """Optimization methods based on a forward-backward splitting scheme."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
 
 from odl.operator import Operator
-
 
 __all__ = ('forward_backward_pd',)
 
@@ -21,14 +20,14 @@ def forward_backward_pd(x, f, g, L, h, tau, sigma, niter,
     """The forward-backward primal-dual splitting algorithm.
 
     The algorithm minimizes the sum of several convex functionals composed with
-    linear operators,::
+    linear operators, ::
 
         min_x f(x) + sum_i g_i(L_i x) + h(x)
 
     where ``f``, ``g_i`` are convex functionals, ``L_i`` are linear
     operator's, and ``h`` is a convex and differentiable functional.
 
-    The method can also be used to solve the more general problem::
+    The method can also be used to solve the more general problem ::
 
         min_x f(x) + sum_i (g_i @ l_i)(L_i x) + h(x)
 

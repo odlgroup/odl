@@ -1,7 +1,8 @@
 """Example on using `ProductSpaceElement.show`."""
 
-import odl
 import numpy as np
+
+import odl
 
 n = 100
 m = 7

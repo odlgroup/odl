@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -7,16 +7,17 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import division
+
 from itertools import product
+
 import numpy as np
 import pytest
 
 import odl
 from odl.trafos.util.ft_utils import (
-    reciprocal_grid, realspace_grid, dft_preprocess_data)
+    dft_preprocess_data, realspace_grid, reciprocal_grid)
 from odl.util import all_almost_equal, all_equal
 from odl.util.testutils import simple_fixture
-
 
 # --- pytest fixtures --- #
 

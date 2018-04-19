@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,15 +8,15 @@
 
 """Parallel beam geometries in 2 or 3 dimensions."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 import numpy as np
 
 from odl.discr import uniform_partition
 from odl.tomo.geometry.detector import Flat1dDetector, Flat2dDetector
-from odl.tomo.geometry.geometry import Geometry, AxisOrientedGeometry
-from odl.tomo.util import euler_matrix, transform_system, is_inside_bounds
-from odl.util import signature_string, indent, array_str
-
+from odl.tomo.geometry.geometry import AxisOrientedGeometry, Geometry
+from odl.tomo.util import euler_matrix, is_inside_bounds, transform_system
+from odl.util import array_str, indent, signature_string
 
 __all__ = ('ParallelBeamGeometry',
            'Parallel2dGeometry',

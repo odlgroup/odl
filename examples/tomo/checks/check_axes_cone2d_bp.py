@@ -11,6 +11,7 @@ This example is best run in Spyder section-by-section (CTRL-Enter).
 """
 
 import numpy as np
+
 import odl
 
 # Set back-end here (for `None` the fastest available is chosen)

@@ -1,6 +1,7 @@
 """Example of how to implement and use functionals."""
 
 from __future__ import division, print_function
+
 import odl
 
 

@@ -9,6 +9,7 @@ gradient and ``g`` is given noisy data.
 """
 
 import numpy as np
+
 import odl
 import proximal
 

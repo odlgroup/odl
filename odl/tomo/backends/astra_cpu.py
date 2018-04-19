@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,26 +8,29 @@
 
 """Backend for ASTRA using CPU."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 import numpy as np
+
+from odl.discr import DiscreteLp, DiscreteLpElement
+from odl.tomo.backends.astra_setup import (
+    astra_algorithm, astra_data, astra_projection_geometry, astra_projector,
+    astra_volume_geometry)
+from odl.tomo.geometry import Geometry
+from odl.util import writable_array
+
 try:
     import astra
 except ImportError:
     pass
 
-from odl.discr import DiscreteLp, DiscreteLpElement
-from odl.tomo.backends.astra_setup import (
-    astra_projection_geometry, astra_volume_geometry, astra_data,
-    astra_projector, astra_algorithm)
-from odl.tomo.geometry import Geometry
-from odl.util import writable_array
 
 
 __all__ = ('astra_cpu_forward_projector', 'astra_cpu_back_projector')
 
 
-# TODO: use context manager when creating data structures
-# TODO: is magnification scaling at the right place?
+# TODO(kohr-h): use context manager when creating data structures
+# TODO(kohr-h): is magnification scaling at the right place?
 
 def astra_cpu_forward_projector(vol_data, geometry, proj_space, out=None):
     """Run an ASTRA forward projection on the given data using the CPU.
@@ -175,7 +178,7 @@ def astra_cpu_back_projector(proj_data, geometry, reco_space, out=None):
                          allow_copy=True)
 
     # Create projector
-    # TODO: implement with different schemes for angles and detector
+    # TODO(kohr-h): implement with different schemes for angles and detector
     if not all(s == proj_data.space.interp_byaxis[0]
                for s in proj_data.space.interp_byaxis):
         raise ValueError('data interpolation must be the same in each '

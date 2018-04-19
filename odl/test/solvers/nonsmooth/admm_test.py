@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -9,9 +9,9 @@
 """Unit tests for ADMM."""
 
 from __future__ import division
-import odl
-from odl.solvers import admm_linearized, Callback
 
+import odl
+from odl.solvers import Callback, admm_linearized
 from odl.util.testutils import all_almost_equal, noise_element
 
 

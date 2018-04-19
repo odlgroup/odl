@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,21 +8,21 @@
 
 """Discretized Fourier transform on L^p spaces."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 import numpy as np
 
 from odl.discr import DiscreteLp, discr_sequence_space
 from odl.operator import Operator
-from odl.set import RealNumbers, ComplexNumbers
+from odl.set import ComplexNumbers, RealNumbers
 from odl.trafos.backends.pyfftw_bindings import (
-    pyfftw_call, PYFFTW_AVAILABLE, _pyfftw_to_local)
+    PYFFTW_AVAILABLE, _pyfftw_to_local, pyfftw_call)
 from odl.trafos.util import (
-    reciprocal_grid, reciprocal_space,
-    dft_preprocess_data, dft_postprocess_data)
-from odl.util import (is_real_dtype, is_complex_floating_dtype,
-                      dtype_repr, conj_exponent, complex_dtype,
-                      normalized_scalar_param_list, normalized_axes_tuple)
-
+    dft_postprocess_data, dft_preprocess_data, reciprocal_grid,
+    reciprocal_space)
+from odl.util import (
+    complex_dtype, conj_exponent, dtype_repr, is_complex_floating_dtype,
+    is_real_dtype, normalized_axes_tuple, normalized_scalar_param_list)
 
 __all__ = ('DiscreteFourierTransform', 'DiscreteFourierTransformInverse',
            'FourierTransform', 'FourierTransformInverse')
@@ -163,7 +163,6 @@ class DiscreteFourierTransformBase(Operator):
         --------
         pyfftw_call : Call pyfftw backend directly
         """
-        # TODO: Implement zero padding
         if self.impl == 'numpy':
             out[:] = self._call_numpy(x.asarray())
         else:
@@ -891,7 +890,6 @@ class FourierTransformBase(Operator):
         --------
         pyfftw_call : Call pyfftw backend directly
         """
-        # TODO: Implement zero padding
         if self.impl == 'numpy':
             out[:] = self._call_numpy(x.asarray())
         else:

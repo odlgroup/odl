@@ -9,9 +9,9 @@ gradient and ``g`` is given noisy data.
 """
 
 import numpy as np
+
 import odl
 import proximal
-
 
 # --- Set up the forward operator (ray transform) --- #
 

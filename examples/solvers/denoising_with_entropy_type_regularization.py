@@ -14,8 +14,8 @@ references therein.
 
 import numpy as np
 import scipy
-import odl
 
+import odl
 
 # Read test image:
 # convert integer values to float, and rotate to get the image upright

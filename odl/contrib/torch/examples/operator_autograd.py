@@ -11,9 +11,11 @@ layer (=``Module``) in a neural network.
 """
 
 from __future__ import print_function
+
 import numpy as np
-import torch
+
 import odl
+import torch
 from odl.contrib import torch as odl_torch
 
 # --- Forward --- #

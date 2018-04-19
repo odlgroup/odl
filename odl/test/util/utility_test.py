@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -7,13 +7,13 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import division
-import odl
+
 import numpy as np
 
+import odl
 from odl.util.utility import (
-    is_numeric_dtype, is_real_dtype, is_real_floating_dtype,
-    is_complex_floating_dtype)
-
+    is_complex_floating_dtype, is_numeric_dtype, is_real_dtype,
+    is_real_floating_dtype)
 
 real_float_dtypes = np.sctypes['float']
 complex_float_dtypes = np.sctypes['complex']

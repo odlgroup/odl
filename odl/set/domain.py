@@ -1,4 +1,4 @@
-﻿# Copyright 2014-2017 The ODL contributors
+﻿# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,13 +8,14 @@
 
 """Domains for continuous functions. """
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 import numpy as np
 
 from odl.set.sets import Set
 from odl.util import (
-    array_str, is_valid_input_array, is_valid_input_meshgrid, safe_int_conv)
-
+    REPR_PRECISION, array_str, is_valid_input_array, is_valid_input_meshgrid,
+    npy_printoptions, repr_string, safe_int_conv, signature_string_parts)
 
 __all__ = ('IntervalProd',)
 
@@ -42,8 +43,8 @@ class IntervalProd(Set):
         Examples
         --------
         >>> min_pt, max_pt = [-1, 2.5, 70], [-0.5, 10, 75]
-        >>> rbox = odl.IntervalProd(min_pt, max_pt)
-        >>> rbox
+        >>> intv = odl.IntervalProd(min_pt, max_pt)
+        >>> intv
         IntervalProd([ -1. ,   2.5,  70. ], [ -0.5,  10. ,  75. ])
         """
         super(IntervalProd, self).__init__()
@@ -199,11 +200,11 @@ class IntervalProd(Set):
 
         Examples
         --------
-        >>> rbox1 = IntervalProd(0, 0.5)
-        >>> rbox2 = IntervalProd(0, np.sqrt(0.5)**2)
-        >>> rbox1.approx_equals(rbox2, atol=0)  # Numerical error
+        >>> intv1 = IntervalProd(0, 0.5)
+        >>> intv2 = IntervalProd(0, np.sqrt(0.5)**2)
+        >>> intv1.approx_equals(intv2, atol=0)  # Numerical error
         False
-        >>> rbox1.approx_equals(rbox2, atol=1e-15)
+        >>> intv1.approx_equals(intv2, atol=1e-15)
         True
         """
         if other is self:
@@ -244,11 +245,11 @@ class IntervalProd(Set):
         Examples
         --------
         >>> min_pt, max_pt = [-1, 0, 2], [-0.5, 0, 3]
-        >>> rbox = IntervalProd(min_pt, max_pt)
+        >>> intv = IntervalProd(min_pt, max_pt)
         >>> # Numerical error
-        >>> rbox.approx_contains([-1 + np.sqrt(0.5)**2, 0., 2.9], atol=0)
+        >>> intv.approx_contains([-1 + np.sqrt(0.5)**2, 0., 2.9], atol=0)
         False
-        >>> rbox.approx_contains([-1 + np.sqrt(0.5)**2, 0., 2.9], atol=1e-9)
+        >>> intv.approx_contains([-1 + np.sqrt(0.5)**2, 0., 2.9], atol=1e-9)
         True
         """
         try:
@@ -306,12 +307,12 @@ class IntervalProd(Set):
         Examples
         --------
         >>> min_pt1, max_pt1 = [-1, 0, 2], [-0.5, 0, 3]
-        >>> rbox1 = IntervalProd(min_pt1, max_pt1)
+        >>> intv1 = IntervalProd(min_pt1, max_pt1)
         >>> min_pt2, max_pt2 = [-0.6, 0, 2.1], [-0.5, 0, 2.5]
-        >>> rbox2 = IntervalProd(min_pt2, max_pt2)
-        >>> rbox1.contains_set(rbox2)
+        >>> intv2 = IntervalProd(min_pt2, max_pt2)
+        >>> intv1.contains_set(intv2)
         True
-        >>> rbox2.contains_set(rbox1)
+        >>> intv2.contains_set(intv1)
         False
         """
         if self is other:
@@ -345,13 +346,13 @@ class IntervalProd(Set):
         Examples
         --------
         >>> min_pt, max_pt = [-1, 0, 2], [-0.5, 0, 3]
-        >>> rbox = IntervalProd(min_pt, max_pt)
+        >>> intv = IntervalProd(min_pt, max_pt)
 
         Arrays are expected in ``(ndim, npoints)`` shape:
 
         >>> arr = np.array([[-1, 0, 2],   # defining one point at a time
         ...                 [-0.5, 0, 2]])
-        >>> rbox.contains_all(arr.T)
+        >>> intv.contains_all(arr.T)
         True
 
         Implicit meshgrids defined by coordinate vectors:
@@ -361,20 +362,20 @@ class IntervalProd(Set):
         >>> vec2 = (0, 0, 0)
         >>> vec3 = (2.5, 2.75, 3)
         >>> mg = sparse_meshgrid(vec1, vec2, vec3)
-        >>> rbox.contains_all(mg)
+        >>> intv.contains_all(mg)
         True
 
         Works also with an arbitrary iterable:
 
-        >>> rbox.contains_all([[-1, -0.5], # define points by axis
+        >>> intv.contains_all([[-1, -0.5], # define points by axis
         ...                    [0, 0],
         ...                    [2, 2]])
         True
 
         Grids are also accepted as input:
 
-        >>> agrid = odl.uniform_grid(rbox.min_pt, rbox.max_pt, [3, 1, 3])
-        >>> rbox.contains_all(agrid)
+        >>> agrid = odl.uniform_grid(intv.min_pt, intv.max_pt, [3, 1, 3])
+        >>> intv.contains_all(agrid)
         True
         """
         atol = float(atol)
@@ -417,16 +418,16 @@ class IntervalProd(Set):
         Examples
         --------
         >>> min_pt, max_pt = [-1, 2.5, 0], [-0.5, 10, 0]
-        >>> rbox = IntervalProd(min_pt, max_pt)
-        >>> rbox.measure()
+        >>> intv = IntervalProd(min_pt, max_pt)
+        >>> intv.measure()
         3.75
-        >>> rbox.measure(ndim=3)
+        >>> intv.measure(ndim=3)
         0.0
-        >>> rbox.measure(ndim=3) == rbox.volume
+        >>> intv.measure(ndim=3) == intv.volume
         True
-        >>> rbox.measure(ndim=1)
+        >>> intv.measure(ndim=1)
         inf
-        >>> rbox.measure() == rbox.squeeze().volume
+        >>> intv.measure() == intv.squeeze().volume
         True
         """
         if self.true_ndim == 0:
@@ -466,10 +467,10 @@ class IntervalProd(Set):
         Examples
         --------
         >>> min_pt, max_pt = [-1, 0, 2], [-0.5, 0, 3]
-        >>> rbox = IntervalProd(min_pt, max_pt)
-        >>> rbox.dist([-5, 3, 2])
+        >>> intv = IntervalProd(min_pt, max_pt)
+        >>> intv.dist([-5, 3, 2])
         5.0
-        >>> rbox.dist([-5, 3, 2], exponent=float('inf'))
+        >>> intv.dist([-5, 3, 2], exponent=float('inf'))
         4.0
         """
         point = np.atleast_1d(point)
@@ -514,10 +515,10 @@ class IntervalProd(Set):
         Examples
         --------
         >>> min_pt, max_pt = [-1, 0, 2], [-0.5, 1, 3]
-        >>> rbox = IntervalProd(min_pt, max_pt)
-        >>> rbox.collapse(1, 0)
+        >>> intv = IntervalProd(min_pt, max_pt)
+        >>> intv.collapse(1, 0)
         IntervalProd([-1.,  0.,  2.], [-0.5,  0. ,  3. ])
-        >>> rbox.collapse([1, 2], [0, 2.5])
+        >>> intv.collapse([1, 2], [0, 2.5])
         IntervalProd([-1. ,  0. ,  2.5], [-0.5,  0. ,  2.5])
         """
         indices = np.atleast_1d(indices).astype('int64', casting='safe')
@@ -563,12 +564,12 @@ class IntervalProd(Set):
         Examples
         --------
         >>> min_pt, max_pt = [-1, 0, 2], [-0.5, 1, 3]
-        >>> rbox = IntervalProd(min_pt, max_pt)
-        >>> rbox.collapse(1, 0).squeeze()
+        >>> intv = IntervalProd(min_pt, max_pt)
+        >>> intv.collapse(1, 0).squeeze()
         IntervalProd([-1.,  2.], [-0.5,  3. ])
-        >>> rbox.collapse([1, 2], [0, 2.5]).squeeze()
+        >>> intv.collapse([1, 2], [0, 2.5]).squeeze()
         IntervalProd(-1.0, -0.5)
-        >>> rbox.collapse([0, 1, 2], [-1, 0, 2.5]).squeeze()
+        >>> intv.collapse([0, 1, 2], [-1, 0, 2.5]).squeeze()
         IntervalProd([], [])
         """
         b_new = self.min_pt[self.nondegen_byaxis]
@@ -742,23 +743,23 @@ class IntervalProd(Set):
 
         Examples
         --------
-        >>> rbox = IntervalProd([-1, 2, 0], [-0.5, 3, 0.5])
+        >>> intv = IntervalProd([-1, 2, 0], [-0.5, 3, 0.5])
 
         Indexing by integer selects single axes:
 
-        >>> rbox[0]
+        >>> intv[0]
         IntervalProd(-1.0, -0.5)
 
         With slices, multiple axes can be selected:
 
-        >>> rbox[:]
+        >>> intv[:]
         IntervalProd([-1.,  2.,  0.], [-0.5,  3. ,  0.5])
-        >>> rbox[::2]
+        >>> intv[::2]
         IntervalProd([-1.,  0.], [-0.5,  0.5])
 
         A list of integers can be used for free combinations of axes:
 
-        >>> rbox[[0, 1, 0]]
+        >>> intv[[0, 1, 0]]
         IntervalProd([-1.,  2., -1.], [-0.5,  3. , -0.5])
         """
         return IntervalProd(self.min_pt[indices], self.max_pt[indices])
@@ -836,14 +837,30 @@ class IntervalProd(Set):
     __rtruediv__ = __rdiv__
 
     def __repr__(self):
-        """Return ``repr(self)``."""
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> intv = odl.IntervalProd(0, 1)
+        >>> intv
+        IntervalProd(0.0, 1.0)
+        >>> intv = odl.IntervalProd([0] * 10, [1] * 10)
+        >>> intv
+        IntervalProd(
+            [ 0.,  0.,  0., ...,  0.,  0.,  0.],
+            [ 1.,  1.,  1., ...,  1.,  1.,  1.]
+        )
+        """
         if self.ndim == 1:
-            return '{}({:.4}, {:.4})'.format(self.__class__.__name__,
-                                             self.min_pt[0], self.max_pt[0])
+            posargs = [self.min_pt[0], self.max_pt[0]]
+            posmod = ''
         else:
-            return '{}({}, {})'.format(self.__class__.__name__,
-                                       array_str(self.min_pt),
-                                       array_str(self.max_pt))
+            posargs = [self.min_pt, self.max_pt]
+            posmod = array_str
+
+        with npy_printoptions(precision=REPR_PRECISION):
+            inner_parts = signature_string_parts(posargs, [], mod=[posmod, ''])
+        return repr_string(self.__class__.__name__, inner_parts)
 
     def __str__(self):
         """Return ``str(self)``."""

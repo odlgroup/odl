@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -9,15 +9,14 @@
 """Tests for the factory functions to create proximal operators."""
 
 from __future__ import division, print_function
+
 import numpy as np
 import pytest
 import scipy.special
 
 import odl
-from odl.util.testutils import (noise_element, all_almost_equal,
-                                simple_fixture)
 from odl.solvers.functional.functional import FunctionalDefaultConvexConjugate
-
+from odl.util.testutils import all_almost_equal, noise_element, simple_fixture
 
 # --- pytest fixtures --- #
 

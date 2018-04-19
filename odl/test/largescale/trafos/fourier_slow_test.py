@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -13,11 +13,12 @@ speed regressions.
 """
 
 from __future__ import division
-import pytest
+
 import numpy as np
+import pytest
 
 import odl
-from odl.util.testutils import almost_equal, never_skip, simple_fixture
+from odl.util.testutils import never_skip, simple_fixture
 
 skip_if_no_pyfftw = pytest.mark.skipif("not odl.trafos.PYFFTW_AVAILABLE",
                                        reason='pyfftw not available')

@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -7,13 +7,14 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import division
-import pytest
+
 import numpy as np
+import pytest
 
 import odl
 from odl.discr.grid import sparse_meshgrid
 from odl.set.domain import IntervalProd
-from odl.util.testutils import almost_equal, all_equal
+from odl.util.testutils import all_equal
 
 
 def random_point(set_):

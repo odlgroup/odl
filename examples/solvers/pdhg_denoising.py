@@ -12,6 +12,7 @@ https://odlgroup.github.io/odl/guide/pdhg_guide.html in the ODL documentation.
 
 import numpy as np
 import scipy.misc
+
 import odl
 
 # Read test image: use only every second pixel, convert integer to float,

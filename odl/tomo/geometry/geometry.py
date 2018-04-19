@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,14 +8,15 @@
 
 """Geometry base and mixin classes."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 from builtins import object
+
 import numpy as np
 
 from odl.discr import RectPartition
 from odl.tomo.geometry.detector import Detector
 from odl.tomo.util import axis_rotation_matrix, is_inside_bounds
-
 
 __all__ = ('Geometry', 'DivergentBeamGeometry', 'AxisOrientedGeometry')
 

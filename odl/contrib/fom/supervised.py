@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -9,6 +9,7 @@
 """Figures of merit (FOMs) for comparison against a known ground truth."""
 
 from __future__ import division
+
 import numpy as np
 
 import odl
@@ -27,9 +28,9 @@ def mean_squared_error(data, ground_truth, mask=None, normalized=False):
 
     Parameters
     ----------
-    data : `FnBaseVector`
+    data : `Tensor`
         Input data to compare to the ground truth.
-    ground_truth : `FnBaseVector`
+    ground_truth : `Tensor`
         Reference to compare ``data`` to.
     mask : `array-like`, optional
         If given, ``data * mask`` is compared to ``ground_truth * mask``.
@@ -85,9 +86,9 @@ def mean_absolute_error(data, ground_truth, mask=None, normalized=False):
 
     Parameters
     ----------
-    data : `FnBaseVector`
+    data : `Tensor`
         Input data to compare to the ground truth.
-    ground_truth : `FnBaseVector`
+    ground_truth : `Tensor`
         Reference to compare ``data`` to.
     mask : `array-like`, optional
         If given, ``data * mask`` is compared to ``ground_truth * mask``.
@@ -137,9 +138,9 @@ def mean_value_difference(data, ground_truth, mask=None, normalized=False):
 
     Parameters
     ----------
-    data : `FnBaseVector`
+    data : `Tensor`
         Input data to compare to the ground truth.
-    ground_truth : `FnBaseVector`
+    ground_truth : `Tensor`
         Reference to compare ``data`` to.
     mask : `array-like`, optional
         If given, ``data * mask`` is compared to ``ground_truth * mask``.
@@ -198,9 +199,9 @@ def standard_deviation_difference(data, ground_truth, mask=None,
 
     Parameters
     ----------
-    data : `FnBaseVector`
+    data : `Tensor`
         Input data to compare to the ground truth.
-    ground_truth : `FnBaseVector`
+    ground_truth : `Tensor`
         Reference to compare ``data`` to.
     mask : `array-like`, optional
         If given, ``data * mask`` is compared to ``ground_truth * mask``.
@@ -268,9 +269,9 @@ def range_difference(data, ground_truth, mask=None, normalized=False):
 
     Parameters
     ----------
-    data : `FnBaseVector`
+    data : `Tensor`
         Input data to compare to the ground truth.
-    ground_truth : `FnBaseVector`
+    ground_truth : `Tensor`
         Reference to compare ``data`` to.
     mask : `array-like`, optional
         Binary mask or index array to define ROI in which FOM evaluation
@@ -336,9 +337,9 @@ def blurring(data, ground_truth, mask=None, normalized=False,
 
     Parameters
     ----------
-    data : `FnBaseVector`
+    data : `Tensor`
         Input data to compare to the ground truth.
-    ground_truth : `FnBaseVector`
+    ground_truth : `Tensor`
         Reference to compare ``data`` to.
     mask : `array-like`, optional
         Binary mask to define ROI in which FOM evaluation is performed.
@@ -406,9 +407,9 @@ def false_structures(data, ground_truth, mask=None, normalized=False,
 
     Parameters
     ----------
-    data : `FnBaseVector`
+    data : `Tensor`
         Input data to compare to the ground truth.
-    ground_truth : `FnBaseVector`
+    ground_truth : `Tensor`
         Reference to compare ``data`` to.
     mask : `array-like`, optional
         Binary mask to define ROI in which FOM evaluation is performed.
@@ -471,9 +472,9 @@ def ssim(data, ground_truth,
 
     Parameters
     ----------
-    data : `FnBaseVector`
+    data : `Tensor`
         Input data to compare to the ground truth.
-    ground_truth : `FnBaseVector`
+    ground_truth : `Tensor`
         Reference to compare ``data`` to.
     size : odd int
         Size in elements per axis of the Gaussian window that is used
@@ -536,9 +537,9 @@ def psnr(data, ground_truth, normalized=False):
 
     Parameters
     ----------
-    data : `FnBaseVector`
+    data : `Tensor`
         Input data to compare to the ground truth.
-    ground_truth : `FnBaseVector`
+    ground_truth : `Tensor`
         Reference to compare ``data`` to.
     normalized : bool
         If true, normalize ``data`` and ``ground_truth`` to have the

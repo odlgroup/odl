@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -9,11 +9,12 @@
 """Test ODL geometry objects for SPECT."""
 
 from __future__ import division
+
 import numpy as np
 
 import odl
-from odl.util.testutils import all_equal
 from odl.tomo.geometry.spect import ParallelHoleCollimatorGeometry
+from odl.util.testutils import all_equal
 
 
 def test_spect():

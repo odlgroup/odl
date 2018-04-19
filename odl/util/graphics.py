@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,13 +8,14 @@
 
 """Functions for graphical output."""
 
-from __future__ import print_function, division, absolute_import
-import numpy as np
+from __future__ import absolute_import, division, print_function
+
 import warnings
+
+import numpy as np
 
 from odl.util.testutils import run_doctests
 from odl.util.utility import is_real_dtype
-
 
 __all__ = ('show_discrete_data',)
 
@@ -203,7 +204,7 @@ def show_discrete_data(values, grid, title=None, method='',
              (values.ndim == 2 and method not in ('', 'imshow')))):
         update_in_place = False
 
-    if values.ndim == 1:  # TODO: maybe a plotter class would be better
+    if values.ndim == 1:
         if not method:
             if interp == 'nearest':
                 method = 'step'

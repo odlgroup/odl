@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -9,15 +9,15 @@
 """Unit tests for `diff_ops`."""
 
 from __future__ import division
-import pytest
+
 import numpy as np
+import pytest
 
 import odl
 from odl.discr.diff_ops import (
-    finite_diff, PartialDerivative, Gradient, Divergence, Laplacian)
+    Divergence, Gradient, Laplacian, PartialDerivative, finite_diff)
 from odl.util.testutils import (
-    all_equal, all_almost_equal, almost_equal, noise_element, simple_fixture)
-
+    all_almost_equal, all_equal, noise_element, simple_fixture)
 
 # --- pytest fixtures --- #
 

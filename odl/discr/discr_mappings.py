@@ -1,4 +1,4 @@
-﻿# Copyright 2014-2017 The ODL contributors
+﻿# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -12,20 +12,21 @@ Includes grid evaluation (collocation) and various interpolation
 operators.
 """
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 from builtins import object
 from itertools import product
+
 import numpy as np
 
-from odl.operator import Operator
 from odl.discr.partition import RectPartition
-from odl.space.base_tensors import TensorSpace
+from odl.operator import Operator
 from odl.space import FunctionSpace
+from odl.space.base_tensors import TensorSpace
 from odl.util import (
-    is_valid_input_meshgrid, out_shape_from_array, out_shape_from_meshgrid,
-    is_string, is_numeric_dtype, signature_string, indent, dtype_repr,
-    writable_array)
-
+    dtype_repr, is_numeric_dtype, is_string, is_valid_input_meshgrid,
+    out_shape_from_array, out_shape_from_meshgrid, repr_string,
+    signature_string_parts, writable_array)
 
 __all__ = ('FunctionSpaceMapping',
            'PointCollocation', 'NearestInterpolation', 'LinearInterpolation',
@@ -178,14 +179,13 @@ class PointCollocation(FunctionSpaceMapping):
 
         Partition the rectangle by a rectilinear grid:
 
-        >>> rect = odl.IntervalProd([1, 3], [2, 5])
         >>> grid = odl.RectGrid([1, 2], [3, 4, 5])
         >>> partition = odl.RectPartition(rect, grid)
         >>> tspace = odl.rn(grid.shape)
 
         Finally create the operator and test it on a function:
 
-        >>> coll_op = PointCollocation(fspace, partition, tspace)
+        >>> coll_op = odl.PointCollocation(fspace, partition, tspace)
         >>>
         >>> # Properly vectorized function
         >>> func_elem = fspace.element(lambda x: x[0] - x[1])
@@ -264,12 +264,26 @@ vectorization_guide.html
         return out
 
     def __repr__(self):
-        """Return ``repr(self)``."""
-        posargs = [self.range, self.grid, self.domain]
-        inner_str = signature_string(posargs, [],
-                                     sep=[',\n', ', ', ',\n'],
-                                     mod=['!r', ''])
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> rect = odl.IntervalProd([1, 3], [2, 5])
+        >>> fspace = odl.FunctionSpace(rect)
+        >>> part = odl.uniform_partition_fromintv(rect, shape=(4, 2))
+        >>> tspace = odl.rn(part.shape)
+        >>> coll_op = odl.PointCollocation(fspace, part, tspace)
+        >>> coll_op
+        PointCollocation(
+            FunctionSpace(IntervalProd([ 1.,  3.], [ 2.,  5.])),
+            uniform_partition([ 1.,  3.], [ 2.,  5.], (4, 2)),
+            rn((4, 2))
+        )
+        """
+        posargs = [self.domain, self.partition, self.range]
+        inner_parts = signature_string_parts(posargs, [])
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
 
 class NearestInterpolation(FunctionSpaceMapping):
@@ -335,7 +349,7 @@ class NearestInterpolation(FunctionSpaceMapping):
         Now we initialize the operator and test it with some points:
 
         >>> tspace = odl.tensor_space(part.shape, dtype='U1')
-        >>> interp_op = NearestInterpolation(fspace, part, tspace)
+        >>> interp_op = odl.NearestInterpolation(fspace, part, tspace)
         >>> values = np.array([['m', 'y'],
         ...                    ['s', 't'],
         ...                    ['r', 'i'],
@@ -382,7 +396,7 @@ class NearestInterpolation(FunctionSpaceMapping):
 
     def _call(self, x, out=None):
         """Return ``self(x[, out])``."""
-        # TODO: pass reasonable options on to the interpolator
+        # TODO(kohr-h): pass reasonable options on to the interpolator
         def nearest(arg, out=None):
             """Interpolating function with vectorization."""
             if is_valid_input_meshgrid(arg, self.grid.ndim):
@@ -399,13 +413,27 @@ class NearestInterpolation(FunctionSpaceMapping):
         return self.range.element(nearest, vectorized=True)
 
     def __repr__(self):
-        """Return ``repr(self)``."""
-        posargs = [self.range, self.grid, self.domain]
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> rect = odl.IntervalProd([0, 0], [1, 1])
+        >>> fspace = odl.FunctionSpace(rect)
+        >>> part = odl.uniform_partition_fromintv(rect, shape=(4, 2))
+        >>> tspace = odl.rn(part.shape)
+        >>> interp_op = odl.NearestInterpolation(fspace, part, tspace)
+        >>> interp_op
+        NearestInterpolation(
+            FunctionSpace(IntervalProd([ 0.,  0.], [ 1.,  1.])),
+            uniform_partition([ 0.,  0.], [ 1.,  1.], (4, 2)),
+            rn((4, 2))
+        )
+        """
+        posargs = [self.range, self.partition, self.domain]
         optargs = [('variant', self.variant, 'left')]
-        inner_str = signature_string(posargs, optargs,
-                                     sep=[',\n', ', ', ',\n'],
-                                     mod=['!r', ''])
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
+        inner_parts = signature_string_parts(posargs, optargs, mod=['!r', ''])
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
 
 class LinearInterpolation(FunctionSpaceMapping):
@@ -437,7 +465,7 @@ class LinearInterpolation(FunctionSpaceMapping):
 
     def _call(self, x, out=None):
         """Return ``self(x[, out])``."""
-        # TODO: pass reasonable options on to the interpolator
+        # TODO(kohr-h): pass reasonable options on to the interpolator
         def linear(arg, out=None):
             """Interpolating function with vectorization."""
             if is_valid_input_meshgrid(arg, self.grid.ndim):
@@ -453,12 +481,26 @@ class LinearInterpolation(FunctionSpaceMapping):
         return self.range.element(linear, vectorized=True)
 
     def __repr__(self):
-        """Return ``repr(self)``."""
-        posargs = [self.range, self.grid, self.domain]
-        inner_str = signature_string(posargs, [],
-                                     sep=[',\n', ', ', ',\n'],
-                                     mod=['!r', ''])
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> rect = odl.IntervalProd([0, 0], [1, 1])
+        >>> fspace = odl.FunctionSpace(rect)
+        >>> part = odl.uniform_partition_fromintv(rect, shape=(4, 2))
+        >>> tspace = odl.rn(part.shape)
+        >>> interp_op = odl.LinearInterpolation(fspace, part, tspace)
+        >>> interp_op
+        LinearInterpolation(
+            FunctionSpace(IntervalProd([ 0.,  0.], [ 1.,  1.])),
+            uniform_partition([ 0.,  0.], [ 1.,  1.], (4, 2)),
+            rn((4, 2))
+        )
+        """
+        posargs = [self.range, self.partition, self.domain]
+        inner_parts = signature_string_parts(posargs, [])
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
 
 class PerAxisInterpolation(FunctionSpaceMapping):
@@ -543,8 +585,8 @@ class PerAxisInterpolation(FunctionSpaceMapping):
                                  'with `interp={!r}'
                                  ''.format(i, schemes_in[i]))
 
-        self.__schemes = schemes
-        self.__nn_variants = nn_variants
+        self.__schemes = tuple(schemes)
+        self.__nn_variants = tuple(nn_variants)
 
     @property
     def schemes(self):
@@ -590,19 +632,34 @@ class PerAxisInterpolation(FunctionSpaceMapping):
         return self.range.element(per_axis_interp, vectorized=True)
 
     def __repr__(self):
-        """Return ``repr(self)``."""
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> rect = odl.IntervalProd([0, 0], [1, 1])
+        >>> fspace = odl.FunctionSpace(rect)
+        >>> part = odl.uniform_partition_fromintv(rect, shape=(4, 2))
+        >>> tspace = odl.rn(part.shape)
+        >>> interp_op = odl.PerAxisInterpolation(fspace, part, tspace,
+        ...                                      schemes=['linear', 'nearest'])
+        >>> interp_op
+        PerAxisInterpolation(
+            FunctionSpace(IntervalProd([ 0.,  0.], [ 1.,  1.])),
+            uniform_grid([ 0.125,  0.25 ], [ 0.875,  0.75 ], (4, 2)),
+            rn((4, 2)),
+            schemes=('linear', 'nearest')
+        )
+        """
         if all(scm == self.schemes[0] for scm in self.schemes):
             schemes = self.schemes[0]
         else:
             schemes = self.schemes
 
-        posargs = [self.range, self.grid, self.domain, schemes]
+        posargs = [self.range, self.grid, self.domain]
+        optargs = [('schemes', schemes, None)]
 
         nn_relevant = [x for x in self.nn_variants if x is not None]
-        if not nn_relevant:
-            # No NN axes, ignore nn_variants
-            optargs = []
-        else:
+        if nn_relevant:
             # Use single string if all are equal, one per axis otherwise
             first_relevant = nn_relevant[0]
 
@@ -611,12 +668,11 @@ class PerAxisInterpolation(FunctionSpaceMapping):
             else:
                 variants = self.nn_variants
 
-            optargs = [('nn_variants', variants, 'left')]
+            optargs.append(('nn_variants', variants, 'left'))
 
-        inner_str = signature_string(posargs, optargs,
-                                     sep=[',\n', ', ', ',\n'],
-                                     mod=['!r', ''])
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
+        inner_parts = signature_string_parts(posargs, optargs, mod=['!r', ''])
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
 
 class _Interpolator(object):
@@ -928,7 +984,7 @@ class _PerAxisInterpolator(_Interpolator):
         for lo_hi, edge in zip(product(*([['l', 'h']] * len(indices))),
                                product(*edge_indices)):
             weight = 1.0
-            # TODO: determine best summation order from array strides
+            # TODO(kohr-h): determine best summation order from array strides
             for lh, w_lo, w_hi in zip(lo_hi, low_weights, high_weights):
 
                 # We don't multiply in-place to exploit the cheap operations

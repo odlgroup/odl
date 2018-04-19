@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,24 +8,27 @@
 
 """Backend for ASTRA using CUDA."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 from builtins import object
+from multiprocessing import Lock
+
 import numpy as np
+
+from odl.discr import DiscreteLp
+from odl.tomo.backends.astra_setup import (
+    ASTRA_VERSION, astra_algorithm, astra_data, astra_projection_geometry,
+    astra_projector, astra_volume_geometry)
+from odl.tomo.geometry import (
+    ConeFlatGeometry, FanFlatGeometry, Geometry, Parallel2dGeometry,
+    Parallel3dAxisGeometry)
+
 try:
     import astra
     ASTRA_CUDA_AVAILABLE = astra.astra.use_cuda()
 except ImportError:
     ASTRA_CUDA_AVAILABLE = False
 
-from odl.discr import DiscreteLp
-from odl.tomo.backends.astra_setup import (
-    ASTRA_VERSION,
-    astra_projection_geometry, astra_volume_geometry, astra_projector,
-    astra_data, astra_algorithm)
-from odl.tomo.geometry import (
-    Geometry, Parallel2dGeometry, FanFlatGeometry, Parallel3dAxisGeometry,
-    ConeFlatGeometry)
-from multiprocessing import Lock
 
 
 __all__ = ('ASTRA_CUDA_AVAILABLE',
@@ -355,8 +358,8 @@ def astra_cuda_bp_scaling_factor(proj_space, reco_space, geometry):
     # angle interval weight by approximate cell volume
     angle_extent = geometry.motion_partition.extent
     num_angles = geometry.motion_partition.shape
-    # TODO: this gives the wrong factor for Parallel3dEulerGeometry with
-    # 2 angles
+    # TODO(kohr-h): this gives the wrong factor for Parallel3dEulerGeometry
+    # with 2 angles
     scaling_factor = (angle_extent / num_angles).prod()
 
     # Correct in case of non-weighted spaces
@@ -426,7 +429,7 @@ def astra_cuda_bp_scaling_factor(proj_space, reco_space, geometry):
             scaling_factor *= (src_radius ** 2 * det_px_area ** 2 /
                                reco_space.cell_volume ** 2)
 
-        # TODO: add case with new ASTRA release
+        # TODO(kohr-h): add case with new ASTRA release
 
     return scaling_factor
 

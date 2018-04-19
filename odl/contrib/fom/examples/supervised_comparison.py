@@ -7,10 +7,11 @@ as a function of increasing noise level.
 
 """
 
+import matplotlib.pyplot as plt
+import numpy as np
+
 import odl
 from odl.contrib import fom
-import numpy as np
-import matplotlib.pyplot as plt
 
 # Discrete space: discretized functions on the rectangle
 # [-20, 20]^2 with 100 samples per dimension.

@@ -16,6 +16,7 @@ where ( )_+ denotes the positive part of the element, i.e.,
 """
 
 import numpy as np
+
 import odl
 
 # Create a space with dimensiona n=10.

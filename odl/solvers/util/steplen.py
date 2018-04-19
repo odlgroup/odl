@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,10 +8,11 @@
 
 """Step length computation for optimization schemes."""
 
-from __future__ import print_function, division, absolute_import
-from builtins import object
-import numpy as np
+from __future__ import absolute_import, division, print_function
 
+from builtins import object
+
+import numpy as np
 
 __all__ = ('LineSearch', 'BacktrackingLineSearch', 'ConstantLineSearch',
            'LineSearchFromIterNum')

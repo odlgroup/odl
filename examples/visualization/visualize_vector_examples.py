@@ -1,7 +1,8 @@
 """Visualization of the test functions in the diagnostics module."""
 
-import odl
 import matplotlib.pyplot as plt
+
+import odl
 
 space_1d = odl.uniform_discr(0, 1, 100)
 

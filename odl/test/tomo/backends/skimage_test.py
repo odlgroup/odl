@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -9,11 +9,12 @@
 """Test skimage back-end."""
 
 from __future__ import division
+
 import numpy as np
 
 import odl
 from odl.tomo.backends.skimage_radon import (
-    skimage_radon_forward, skimage_radon_back_projector)
+    skimage_radon_back_projector, skimage_radon_forward)
 from odl.tomo.util.testutils import skip_if_no_skimage
 
 

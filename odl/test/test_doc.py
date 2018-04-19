@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -16,10 +16,18 @@ This test file assumes that all dependencies are installed.
 """
 
 from __future__ import division
+
 import doctest
-from doctest import IGNORE_EXCEPTION_DETAIL, ELLIPSIS, NORMALIZE_WHITESPACE
 import os
+from doctest import ELLIPSIS, IGNORE_EXCEPTION_DETAIL, NORMALIZE_WHITESPACE
+
+# Modules to be added to testing globals
+import numpy
 import pytest
+import scipy
+
+import odl
+
 try:
     import matplotlib
     matplotlib.use('Agg')  # To avoid the backend freezing
@@ -27,10 +35,6 @@ try:
 except ImportError:
     pass
 
-# Modules to be added to testing globals
-import numpy
-import scipy
-import odl
 try:
     import proximal
 except ImportError:
