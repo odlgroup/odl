@@ -37,8 +37,8 @@ class TheanoOperator(theano.Op):
         Parameters
         ----------
         operator : `Operator`
-            The operator that should be wrapped, must map `FnBase` spaces to
-            `FnBase` spaces.
+            The operator that should be wrapped, must map from a
+            `TensorSpace` to a `TensorSpace`.
 
         Examples
         --------
@@ -90,8 +90,8 @@ class TheanoOperator(theano.Op):
         else:
             out_type = theano.tensor.TensorVariable(
                 theano.tensor.TensorType(
-                        self.operator.range.dtype,
-                        [False] * len(self.operator.range.shape)))
+                    self.operator.range.dtype,
+                    [False] * len(self.operator.range.shape)))
 
         return theano.Apply(self, [x], [out_type.type()])
 

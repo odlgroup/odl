@@ -471,7 +471,7 @@ class KullbackLeiblerSmooth(odl.solvers.Functional):
 
         Parameters
         ----------
-        space : `DiscreteLp` or `FnBase`
+        space : `DiscreteLp` or `TensorSpace`
             Domain of the functional.
         data : ``space`` `element-like`
             Data vector which has to be non-negative.
@@ -595,7 +595,7 @@ class KullbackLeiblerSmoothConvexConj(odl.solvers.Functional):
 
         Parameters
         ----------
-        space : `DiscreteLp` or `FnBase`
+        space : `DiscreteLp` or `TensorSpace`
             Domain of the functional.
         data : ``space`` `element-like`
             Data vector which has to be non-negative.
