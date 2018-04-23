@@ -1349,8 +1349,8 @@ class ComplexModulus(Operator):
         The operator also works on other `TensorSpace`'s such as
         `DiscreteLp`:
 
-        >>> r2 = odl.uniform_discr(0, 1, 2, dtype=complex)
-        >>> op = odl.ComplexModulus(r2)
+        >>> space = odl.uniform_discr(0, 1, 2, dtype=complex)
+        >>> op = odl.ComplexModulus(space)
         >>> op([3 + 4j, 2])
         uniform_discr(0.0, 1.0, 2).element([ 5.,  2.])
         """
@@ -1366,7 +1366,10 @@ class ComplexModulus(Operator):
 
         The returned operator (``self``) is the derivative of the
         operator variant where the complex domain is reinterpreted as
-        a product of two real spaces.
+        a product of two real spaces::
+
+            M'(x) = y --> ((Re(x) * Re(y) + Im(x) * Im(y)) /
+                           sqrt(Re(x)**2 + Re(y) ** 2))
 
         Parameters
         ----------
@@ -1411,11 +1414,6 @@ class ComplexModulus(Operator):
         class ComplexModulusDerivative(Operator):
 
             """Derivative of the complex modulus operator."""
-
-            def __init__(self):
-                """Initialize a new instance."""
-                super(ComplexModulusDerivative, self).__init__(
-                    op.domain, op.range, linear=op.domain.is_real)
 
             def _call(self, y, out):
                 """Return ``self(y)``."""
@@ -1499,12 +1497,6 @@ class ComplexModulus(Operator):
 
                 class ComplexModulusDerivativeAdjoint(Operator):
 
-                    def __init__(self):
-                        """Initialize a new instance."""
-                        super(ComplexModulusDerivativeAdjoint, self).__init__(
-                            deriv.range, deriv.domain,
-                            linear=deriv.domain.is_real)
-
                     def _call(self, u, out):
                         """Implement ``self(u, out)``."""
                         out.assign(x)
@@ -1518,9 +1510,11 @@ class ComplexModulus(Operator):
                         """Adjoint in the "C = R^2" sense."""
                         return deriv
 
-                return ComplexModulusDerivativeAdjoint()
+                return ComplexModulusDerivativeAdjoint(
+                    deriv.range, deriv.domain, linear=deriv.domain.is_real)
 
-        return ComplexModulusDerivative()
+        return ComplexModulusDerivative(op.domain, op.range,
+                                        linear=op.domain.is_real)
 
 
 class ComplexModulusSquared(Operator):
@@ -1555,8 +1549,8 @@ class ComplexModulusSquared(Operator):
         The operator also works on other `TensorSpace`'s such as
         `DiscreteLp`:
 
-        >>> r2 = odl.uniform_discr(0, 1, 2, dtype=complex)
-        >>> op = odl.ComplexModulusSquared(r2)
+        >>> space = odl.uniform_discr(0, 1, 2, dtype=complex)
+        >>> op = odl.ComplexModulusSquared(space)
         >>> op([3 + 4j, 2])
         uniform_discr(0.0, 1.0, 2).element([ 25.,   4.])
         """
@@ -1618,11 +1612,6 @@ class ComplexModulusSquared(Operator):
         class ComplexModulusSquaredDerivative(Operator):
 
             """Derivative of the squared complex modulus operator."""
-
-            def __init__(self):
-                """Initialize a new instance."""
-                super(ComplexModulusSquaredDerivative, self).__init__(
-                    op.domain, op.range, linear=op.domain.is_real)
 
             def _call(self, y, out):
                 """Return ``self(y)``."""
@@ -1703,12 +1692,6 @@ class ComplexModulusSquared(Operator):
 
                 class ComplexModulusSquaredDerivAdj(Operator):
 
-                    def __init__(self):
-                        """Initialize a new instance."""
-                        super(ComplexModulusSquaredDerivAdj, self).__init__(
-                            deriv.range, deriv.domain,
-                            linear=deriv.domain.is_real)
-
                     def _call(self, u, out):
                         """Implement ``self(u, out)``."""
                         out.assign(x)
@@ -1721,9 +1704,11 @@ class ComplexModulusSquared(Operator):
                         """Adjoint in the "C = R^2" sense."""
                         return deriv
 
-                return ComplexModulusSquaredDerivAdj()
+                return ComplexModulusSquaredDerivAdj(
+                    deriv.range, deriv.domain, linear=deriv.domain.is_real)
 
-        return ComplexModulusSquaredDerivative()
+        return ComplexModulusSquaredDerivative(op.domain, op.range,
+                                               linear=op.domain.is_real)
 
 
 if __name__ == '__main__':
