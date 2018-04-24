@@ -219,22 +219,22 @@ A peculiar issue with this setup is that linearity in domain and range have to b
 In particular, testing linearity with complex scalars is invalid in real spaces, such that these kinds of operators can never be formally complex-linear, only linear in the sense of identifying a complex number with a 2-vector of real numbers.
 
 Another issue is adjointness: When defining the adjoint with respect to the :math:`\mathbb{C} = \mathbb{R}^2` identification, "lossy" operators do not satisfy the adjoint condition fully.
-For instance, the real part operator :math:`\Re: L^2(\mathbb{C}) \to L^2(\mathbb{R})` can be rewritten as a projection operator
+For instance, the real part operator :math:`\Re: L^2(\Omega, \mathbb{C}) \to L^2(\Omega, \mathbb{R})` can be rewritten as a projection operator
 
 .. math::
-    \Re: L^2(\mathbb{C}) \to L^2(\mathbb{R}), \quad
+    \Re: L^2(\Omega, \mathbb{R})^2 \to L^2(\Omega, \mathbb{R}), \quad
     \Re(f) = f_1,
 
 and as such it is linear and has the adjoint :math:`\Re^*(g) = (g, 0)`.
 However, when transferring this back to the complex interpretation, we get
 
 .. math::
-    \langle \Re(f),\, g\rangle_{L^2(\mathbb{R})} = \int \Re(f)(x)\, g(x)\, \mathrm{d}x
+    \langle \Re(f),\, g\rangle_{L^2(\Omega, \mathbb{R})} = \int \Re(f)(x)\, g(x)\, \mathrm{d}x
 
 but
 
 .. math::
-    \langle f,\, \Re^*(g)\rangle_{L^2(\mathbb{C})} = \int \big[ \Re(f)(x)\, g(x) + \mathrm{i}\,\Im(f)(x)\, g(x) \big] \, \mathrm{d}x.
+    \langle f,\, \Re^*(g)\rangle_{L^2(\Omega, \mathbb{C})} = \int \big[ \Re(f)(x)\, g(x) + \mathrm{i}\,\Im(f)(x)\, g(x) \big] \, \mathrm{d}x.
 
 Therefore, ODL takes the following pragmatic approach for complex <-> real operators:
 
