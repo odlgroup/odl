@@ -971,6 +971,9 @@ def signature_string_parts(posargs, optargs, mod='!r'):
             else:
                 fmt = "'{}'"
             posargs_conv.append(fmt.format(arg))
+        elif np.isscalar(arg) and str(arg) in ('inf', 'nan'):
+            # Make sure the string quotes are added
+            posargs_conv.append("'{}'".format(arg))
         elif (np.isscalar(arg) and
               np.array(arg).real.astype('int64') != arg and
               modifier in ('', '!s', '!r')):
@@ -999,6 +1002,9 @@ def signature_string_parts(posargs, optargs, mod='!r'):
                 fmt = "'{}'"
             value_str = fmt.format(value)
             optargs_conv.append('{}={}'.format(name, value_str))
+        elif np.isscalar(value) and str(value) in ('inf', 'nan'):
+            # Make sure the string quotes are added
+            optargs_conv.append("{}='{}'".format(name, value))
         elif (np.isscalar(value) and
               np.array(value).real.astype('int64') != value and
               modifier in ('', '!s', '!r')):
