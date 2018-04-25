@@ -8,7 +8,7 @@ This package contains ODL functionality related to [TensorFlow](https://www.tens
   This allows using tensorflow neural networks as operators in ODL.
 * `as_tensorflow_layer` in [layer.py](layer.py) wraps an ODL operator into a tensorflow layer.
   This allows using arbitrary ODL operators inside tensorflow neural networks.
-* `TensorflowSpace` in [space.py](space.py) is a `FnBase`-type space which uses tensorflow as a backend.
+* `TensorflowSpace` in [space.py](space.py) is a `TensorSpace` which uses tensorflow as a backend.
 
 ## Example usage
 

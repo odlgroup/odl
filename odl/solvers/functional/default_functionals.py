@@ -2312,7 +2312,7 @@ class Huber(Functional):
 
         Parameters
         ----------
-        space : `FnBase`
+        space : `TensorSpace`
             Domain of the functional.
         gamma : float
             Smoothing parameter of the Huber functional. If ``gamma = 0``,

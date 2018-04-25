@@ -72,7 +72,7 @@ def uniform_noise(space, low=0, high=1, seed=None):
 
     Parameters
     ----------
-    space : `FnBase` or `ProductSpace`
+    space : `TensorSpace` or `ProductSpace`
         The space in which the noise is created.
     low : ``space.field`` element or ``space`` `element-like`, optional
         The lower bound of the uniform noise. If a scalar, it is interpreted as
