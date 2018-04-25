@@ -21,7 +21,7 @@ from odl.solvers.functional.functional import (
 from odl.solvers.nonsmooth.proximal_operators import (
     proximal_separable_sum, proximal_indicator_box, proximal_const_func,
     proximal_convex_conj, proximal_convex_conj_kl,
-    proximal_convex_conj_kl_cross_entropy, proximal_convex_conj_l1,
+    proximal_convex_conj_kl_cross_entropy, proximal_indicator_linf_unit_ball,
     proximal_convex_conj_l1_l2, proximal_indicator_l2_unit_ball, proximal_huber,
     proximal_l1, proximal_l1_l2, proximal_l2)
 from odl.space import ProductSpace
@@ -360,7 +360,7 @@ class IndicatorLpUnitBall(Functional):
             `proximal factory` for convex conjuagte of L2-norm.
         """
         if self.exponent == np.inf:
-            return proximal_convex_conj_l1(self.domain)
+            return proximal_indicator_linf_unit_ball(self.domain)
         elif self.exponent == 2:
             return proximal_indicator_l2_unit_ball(self.domain)
         else:
@@ -663,7 +663,7 @@ class IndicatorGroupL1UnitBall(Functional):
             `proximal factory` for the L1-L2 norm's convex conjugate.
         """
         if self.pointwise_norm.exponent == np.inf:
-            return proximal_convex_conj_l1(space=self.domain)
+            return proximal_indicator_linf_unit_ball(self.domain)
         elif self.pointwise_norm.exponent == 2:
             return proximal_convex_conj_l1_l2(space=self.domain)
         else:
