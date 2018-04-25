@@ -29,11 +29,11 @@ padding = simple_fixture('padding', [('constant', 0), ('constant', 1),
 
 
 @pytest.fixture(scope="module", params=[1, 2, 3], ids=['1d', '2d', '3d'])
-def space(request, tspace_impl):
+def space(request, odl_tspace_impl):
+    impl = odl_tspace_impl
     ndim = request.param
 
-    return odl.uniform_discr([0] * ndim, [1] * ndim, [5] * ndim,
-                             impl=tspace_impl)
+    return odl.uniform_discr([0] * ndim, [1] * ndim, [5] * ndim, impl=impl)
 
 
 # Test data

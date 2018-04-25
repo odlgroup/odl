@@ -326,19 +326,20 @@ def test_dft_init_plan(impl):
 # ---- FourierTransform ---- #
 
 
-def test_fourier_trafo_range(exponent, floating_dtype):
+def test_fourier_trafo_range(exponent, odl_floating_dtype):
     # Check if the range is initialized correctly. Encompasses the init test
+    dtype = odl_floating_dtype
 
     # Testing R2C for real dtype, else C2C
 
     # 1D
     shape = 10
     space_discr = odl.uniform_discr(0, 1, shape, exponent=exponent,
-                                    impl='numpy', dtype=floating_dtype)
+                                    impl='numpy', dtype=dtype)
 
     dft = FourierTransform(space_discr, halfcomplex=True, shift=True)
     assert dft.range.field == odl.ComplexNumbers()
-    halfcomplex = True if is_real_dtype(floating_dtype) else False
+    halfcomplex = True if is_real_dtype(dtype) else False
     assert dft.range.grid == reciprocal_grid(dft.domain.grid,
                                              halfcomplex=halfcomplex,
                                              shift=True)
@@ -347,11 +348,11 @@ def test_fourier_trafo_range(exponent, floating_dtype):
     # 3D
     shape = (3, 4, 5)
     space_discr = odl.uniform_discr([0] * 3, [1] * 3, shape, exponent=exponent,
-                                    impl='numpy', dtype=floating_dtype)
+                                    impl='numpy', dtype=dtype)
 
     dft = FourierTransform(space_discr, halfcomplex=True, shift=True)
     assert dft.range.field == odl.ComplexNumbers()
-    halfcomplex = True if is_real_dtype(floating_dtype) else False
+    halfcomplex = True if is_real_dtype(dtype) else False
     assert dft.range.grid == reciprocal_grid(dft.domain.grid,
                                              halfcomplex=halfcomplex,
                                              shift=True)
@@ -370,16 +371,17 @@ def test_fourier_trafo_range(exponent, floating_dtype):
         FourierTransform(dft.domain.partition)
 
 
-def test_fourier_trafo_init_plan(impl, floating_dtype):
+def test_fourier_trafo_init_plan(impl, odl_floating_dtype):
+    dtype = odl_floating_dtype
 
     # Not supported, skip
-    if floating_dtype == np.dtype('float16') and impl == 'pyfftw':
+    if dtype == np.dtype('float16') and impl == 'pyfftw':
         return
 
     shape = 10
-    halfcomplex, _ = _params_from_dtype(floating_dtype)
+    halfcomplex, _ = _params_from_dtype(dtype)
 
-    space_discr = odl.uniform_discr(0, 1, shape, dtype=floating_dtype)
+    space_discr = odl.uniform_discr(0, 1, shape, dtype=dtype)
 
     ft = FourierTransform(space_discr, impl=impl, halfcomplex=halfcomplex)
     if impl != 'pyfftw':
@@ -447,16 +449,17 @@ def test_fourier_trafo_create_temp():
     assert ft._tmp_f is None
 
 
-def test_fourier_trafo_call(impl, floating_dtype):
+def test_fourier_trafo_call(impl, odl_floating_dtype):
     # Test if all variants can be called without error
+    dtype = odl_floating_dtype
 
     # Not supported, skip
-    if floating_dtype == np.dtype('float16') and impl == 'pyfftw':
+    if dtype == np.dtype('float16') and impl == 'pyfftw':
         return
 
     shape = 10
-    halfcomplex, _ = _params_from_dtype(floating_dtype)
-    space_discr = odl.uniform_discr(0, 1, shape, dtype=floating_dtype)
+    halfcomplex, _ = _params_from_dtype(dtype)
+    space_discr = odl.uniform_discr(0, 1, shape, dtype=dtype)
 
     ft = FourierTransform(space_discr, impl=impl, halfcomplex=halfcomplex)
     ift = ft.inverse

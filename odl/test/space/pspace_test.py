@@ -845,8 +845,9 @@ def test_unary_ops():
         assert all_almost_equal([x, y], [x_arr, y_arr])
 
 
-def test_operators(arithmetic_op):
+def test_operators(odl_arithmetic_op):
     # Test of the operators `+`, `-`, etc work as expected by numpy
+    op = odl_arithmetic_op
 
     space = odl.rn(3)
     pspace = odl.ProductSpace(space, 2)
@@ -857,22 +858,21 @@ def test_operators(arithmetic_op):
 
         # Left op
         x_arr, x = noise_elements(pspace)
-        if scalar == 0 and arithmetic_op in [operator.truediv,
-                                             operator.itruediv]:
+        if scalar == 0 and op in [operator.truediv, operator.itruediv]:
             # Check for correct zero division behaviour
             with pytest.raises(ZeroDivisionError):
-                y = arithmetic_op(x, scalar)
+                y = op(x, scalar)
         else:
-            y_arr = arithmetic_op(x_arr, scalar)
-            y = arithmetic_op(x, scalar)
+            y_arr = op(x_arr, scalar)
+            y = op(x, scalar)
 
             assert all_almost_equal([x, y], [x_arr, y_arr])
 
         # Right op
         x_arr, x = noise_elements(pspace)
 
-        y_arr = arithmetic_op(scalar, x_arr)
-        y = arithmetic_op(scalar, x)
+        y_arr = op(scalar, x_arr)
+        y = op(scalar, x)
 
         assert all_almost_equal([x, y], [x_arr, y_arr])
 
@@ -881,28 +881,25 @@ def test_operators(arithmetic_op):
     y_arr, y = noise_elements(pspace, 1)
 
     # non-aliased left
-    if arithmetic_op in [operator.iadd,
-                         operator.isub,
-                         operator.itruediv,
-                         operator.imul]:
+    if op in [operator.iadd, operator.isub, operator.itruediv, operator.imul]:
         # Check for correct error since in-place op is not possible here
         with pytest.raises(TypeError):
-            z = arithmetic_op(x, y)
+            z = op(x, y)
     else:
-        z_arr = arithmetic_op(x_arr, y_arr)
-        z = arithmetic_op(x, y)
+        z_arr = op(x_arr, y_arr)
+        z = op(x, y)
 
         assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
 
     # non-aliased right
-    z_arr = arithmetic_op(y_arr, x_arr)
-    z = arithmetic_op(y, x)
+    z_arr = op(y_arr, x_arr)
+    z = op(y, x)
 
     assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
 
     # aliased operation
-    z_arr = arithmetic_op(y_arr, y_arr)
-    z = arithmetic_op(y, y)
+    z_arr = op(y_arr, y_arr)
+    z = op(y, y)
 
     assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
 

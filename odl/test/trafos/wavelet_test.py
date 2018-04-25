@@ -71,13 +71,13 @@ def shape_setup(ndim, nlevels, wavelet, pad_mode):
     return wavelet, pad_mode, nlevels, image_shape, coeff_shapes
 
 
-def test_wavelet_transform(wave_impl, shape_setup, floating_dtype):
+def test_wavelet_transform(wave_impl, shape_setup, odl_floating_dtype):
     # Verify that the operator works as expected
+    dtype = odl_floating_dtype
     wavelet, pad_mode, nlevels, shape, _ = shape_setup
     ndim = len(shape)
 
-    space = odl.uniform_discr([-1] * ndim, [1] * ndim, shape,
-                              dtype=floating_dtype)
+    space = odl.uniform_discr([-1] * ndim, [1] * ndim, shape, dtype=dtype)
     image = noise_element(space)
 
     # TODO: check more error scenarios
@@ -89,12 +89,12 @@ def test_wavelet_transform(wave_impl, shape_setup, floating_dtype):
     wave_trafo = odl.trafos.WaveletTransform(
         space, wavelet, nlevels, pad_mode, impl=wave_impl)
 
-    assert wave_trafo.domain.dtype == floating_dtype
-    assert wave_trafo.range.dtype == floating_dtype
+    assert wave_trafo.domain.dtype == dtype
+    assert wave_trafo.range.dtype == dtype
 
     wave_trafo_inv = wave_trafo.inverse
-    assert wave_trafo_inv.domain.dtype == floating_dtype
-    assert wave_trafo_inv.range.dtype == floating_dtype
+    assert wave_trafo_inv.domain.dtype == dtype
+    assert wave_trafo_inv.range.dtype == dtype
     assert wave_trafo_inv.nlevels == wave_trafo.nlevels
     assert wave_trafo_inv.wavelet == wave_trafo.wavelet
     assert wave_trafo_inv.pad_mode == wave_trafo.pad_mode
