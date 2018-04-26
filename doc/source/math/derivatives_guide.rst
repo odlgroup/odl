@@ -238,6 +238,6 @@ but
 
 Therefore, ODL takes the following pragmatic approach for complex <-> real operators:
 
-- Derivatives are taken in the real sense, but linearity is always set to `False` since this refers to linearity in the sense of the involved vector spaces.
-- Even for formally non-linear derivative operators, an adjoint can be defined, which will also not be linear.
+- Derivatives are taken in the real sense. Linearity is set to `True` for an operator :math:`A: X \to Y` if :math:`A'(x) = A` for all :math:`x\in X`. This property can be used to optimize calculations with derivatives, since the derivative operator does not depend on the point. Linearity in the sense of complex vector spaces is currently not reflected by any flag in ODL.
+- Even for formally non-linear derivative operators, an adjoint can be defined, which will not be complex-linear, either.
   It satisfies the adjointness test only when comparing real-valued inner products.
