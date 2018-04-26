@@ -208,6 +208,7 @@ class Functional(Operator):
         -------
         derivative : `Operator`
         """
+        
         return self.gradient(point).T
 
     def translated(self, shift):
@@ -434,7 +435,7 @@ class Functional(Operator):
 
             If ``other`` is a `Functional`, ``sum`` is a `FunctionalSum`.
         """
-        print(other,self.domain)
+#        print(other,self.domain)
         if other in self.domain.field:
             return FunctionalScalarSum(self, other)
         elif isinstance(other, Functional):
@@ -734,7 +735,7 @@ class FunctionalSum(Functional, OperatorSum):
             raise TypeError('`right` {!r} is not a `Functional` instance'
                             ''.format(right))
         if left.range!=right.range:
-            print(left.range,right.range)
+#            print(left.range,right.range)
             raise ValueError('The ranges of the left and right operators are not equal')
         Functional.__init__(
             self, domain=left.domain,
@@ -1597,7 +1598,7 @@ def simple_functional(space, fcall=None, grad=None, prox=None, grad_lip=np.nan,
         def __init__(self):
             """Initialize an instance."""
             super(SimpleFunctional, self).__init__(
-                domain, linear=linear, grad_lipschitz=grad_lip)
+                space, linear=linear, grad_lipschitz=grad_lip)
 
         def _call(self, x):
             """Return ``self(x)``."""
