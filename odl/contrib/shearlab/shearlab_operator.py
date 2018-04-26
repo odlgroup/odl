@@ -134,12 +134,12 @@ class ShearlabOperator(odl.Operator):
                     @property
                     def adjoint(self):
                         """The adjoint operator."""
-                        return self.op.inverse
+                        return op.adjoint.inverse
 
                     @property
                     def inverse(self):
                         """The inverse operator."""
-                        return self.op.adjoint
+                        return op
 
                 return ShearlabOperatorAdjointInverse()
 
@@ -215,12 +215,13 @@ class ShearlabOperator(odl.Operator):
                     @property
                     def adjoint(self):
                         """The adjoint operator."""
-                        return self.op.inverse
+                        return op
 
                     @property
                     def inverse(self):
                         """The inverse operator."""
-                        return self.op.adjoint
+                        return op.inverse.adjoint
+
                 return ShearlabOperatorInverseAdjoint()
 
             @property
