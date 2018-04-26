@@ -18,13 +18,12 @@ import numpy as np
 import sys
 
 
-__all__ = ('array_str', 'dtype_str', 'dtype_repr', 'npy_printoptions',
-           'signature_string', 'indent',
-           'is_numeric_dtype', 'is_int_dtype', 'is_floating_dtype',
-           'is_real_dtype', 'is_real_floating_dtype',
-           'is_complex_floating_dtype', 'real_dtype', 'complex_dtype',
-           'is_string', 'nd_iterator', 'conj_exponent', 'writable_array',
-           'run_from_ipython', 'NumpyRandomSeed', 'cache_arguments', 'unique')
+__all__ = ('NumpyRandomSeed', 'array_str', 'cache_arguments', 'complex_dtype',
+           'conj_exponent', 'dtype_repr', 'dtype_str', 'indent',
+           'is_complex_floating_dtype', 'is_floating_dtype', 'is_int_dtype',
+           'is_numeric_dtype', 'is_real_dtype', 'is_real_floating_dtype',
+           'is_string', 'nd_iterator', 'npy_printoptions', 'real_dtype',
+           'run_from_ipython', 'signature_string', 'unique', 'writable_array')
 
 
 TYPE_MAP_R2C = {np.dtype(dtype): np.result_type(dtype, 1j)
