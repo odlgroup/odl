@@ -1,11 +1,11 @@
 # Shearlab.jl
-**Original contribution by:** @arsenal9971  
+**Original contribution by:** [@arsenal9971](https://github.com/arsenal9971)
 
 This package adds functionality for integrating ODL with the [Julia API of Shearlab](https://github.com/arsenal9971/Shearlab.jl). This package requires different libraries installed, explained in the following.
 
 ## Dependencies and its installation.
 
-- **Julia language**: One can either installed [precompiled packages](https://julialang.org/downloads/) or build from [source](https://github.com/JuliaLang/julia). This package requires the Julia version 0.6 or higher.
+- **Julia language**: One can either [precompiled packages](https://julialang.org/downloads/) or build from [source](https://github.com/JuliaLang/julia). This package requires the Julia version 0.6 or higher.
 
 - **Shearlab.jl**: To install the library in Julia 0.6.x one needs to run the command `julia -e 'Pkg.add("Shearlab")`.
 
