@@ -447,7 +447,7 @@ def noise_elements(space, n=1):
 
 class FailCounter(object):
 
-    """Used to count the number of failures of something
+    """Context manager used to count the number of failures of something.
 
     Usage::
 
@@ -461,12 +461,16 @@ class FailCounter(object):
     ``*** FAILED 1 TEST CASE(S) ***``
     """
 
-    def __init__(self, test_name, err_msg=None, logger=print):
+    def __init__(self, test_name, err_msg=None, logger=None):
         self.num_failed = 0
         self.test_name = test_name
         self.err_msg = err_msg
         self.fail_strings = []
-        self.log = logger
+
+        def default_logger(msg, level='INFO'):
+            print(msg, file=sys.stderr)
+
+        self.log = default_logger if logger is None else logger
 
     def __enter__(self):
         return self
@@ -480,18 +484,17 @@ class FailCounter(object):
             self.fail_strings += [str(string)]
 
     def __exit__(self, type, value, traceback):
+        self.log(self.test_name, level='INFO')
         if self.num_failed == 0:
-            self.log('{:<70}: Completed all test cases.'
-                     ''.format(self.test_name))
+            self.log('All test cases passed.', level='INFO')
         else:
-            print(self.test_name)
-
             for fail_string in self.fail_strings:
-                print(fail_string)
+                self.log(fail_string, level='ERROR')
 
             if self.err_msg is not None:
-                print(self.err_msg)
-            print('*** FAILED {} TEST CASE(S) ***'.format(self.num_failed))
+                self.log(self.err_msg, level='ERROR')
+            self.log('*** FAILED {} TEST CASE(S) ***'.format(self.num_failed),
+                     level='ERROR')
 
 
 class Timer(object):
