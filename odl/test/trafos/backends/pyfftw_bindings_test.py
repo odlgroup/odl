@@ -66,15 +66,16 @@ def _halfcomplex_shape(shape, axes=None):
 # ---- pyfftw_call ---- #
 
 
-def test_pyfftw_call_forward(floating_dtype):
+def test_pyfftw_call_forward(odl_floating_dtype):
     # Test against Numpy's FFT
-    if floating_dtype == np.dtype('float16'):  # not supported, skipping
+    dtype = odl_floating_dtype
+    if dtype == np.dtype('float16'):  # not supported, skipping
         return
 
-    halfcomplex, out_dtype = _params_from_dtype(floating_dtype)
+    halfcomplex, out_dtype = _params_from_dtype(dtype)
 
     for shape in [(10,), (3, 4, 5)]:
-        arr = _random_array(shape, floating_dtype)
+        arr = _random_array(shape, dtype)
 
         if halfcomplex:
             true_dft = np.fft.rfftn(arr)
@@ -107,12 +108,13 @@ def test_pyfftw_call_threads():
     assert all_almost_equal(dft_arr, true_dft)
 
 
-def test_pyfftw_call_backward(floating_dtype):
+def test_pyfftw_call_backward(odl_floating_dtype):
     # Test against Numpy's IFFT, no normalization
-    if floating_dtype == np.dtype('float16'):  # not supported, skipping
+    dtype = odl_floating_dtype
+    if dtype == np.dtype('float16'):  # not supported, skipping
         return
 
-    halfcomplex, in_dtype = _params_from_dtype(floating_dtype)
+    halfcomplex, in_dtype = _params_from_dtype(dtype)
 
     for shape in [(10,), (3, 4, 5)]:
         # Scaling happens wrt output (large) shape
@@ -125,7 +127,7 @@ def test_pyfftw_call_backward(floating_dtype):
             arr = _random_array(shape, in_dtype)
             true_idft = np.fft.ifftn(arr) * idft_scaling
 
-        idft_arr = np.empty(shape, dtype=floating_dtype)
+        idft_arr = np.empty(shape, dtype=dtype)
         pyfftw_call(arr, idft_arr, direction='backward',
                     halfcomplex=halfcomplex)
 
@@ -285,16 +287,17 @@ def test_pyfftw_call_plan_preserve_input(planning):
         assert all_almost_equal(idft_arr, true_idft)
 
 
-def test_pyfftw_call_forward_with_axes(floating_dtype):
-    if floating_dtype == np.dtype('float16'):  # not supported, skipping
+def test_pyfftw_call_forward_with_axes(odl_floating_dtype):
+    dtype = odl_floating_dtype
+    if dtype == np.dtype('float16'):  # not supported, skipping
         return
 
-    halfcomplex, out_dtype = _params_from_dtype(floating_dtype)
+    halfcomplex, out_dtype = _params_from_dtype(dtype)
     shape = (3, 4, 5)
 
     test_axes = [(0, 1), [1], (-1,), (1, 0), (-1, -2, -3)]
     for axes in test_axes:
-        arr = _random_array(shape, floating_dtype)
+        arr = _random_array(shape, dtype)
         if halfcomplex:
             true_dft = np.fft.rfftn(arr, axes=axes)
             dft_arr = np.empty(_halfcomplex_shape(shape, axes),
@@ -309,11 +312,12 @@ def test_pyfftw_call_forward_with_axes(floating_dtype):
         assert all_almost_equal(dft_arr, true_dft)
 
 
-def test_pyfftw_call_backward_with_axes(floating_dtype):
-    if floating_dtype == np.dtype('float16'):  # not supported, skipping
+def test_pyfftw_call_backward_with_axes(odl_floating_dtype):
+    dtype = odl_floating_dtype
+    if dtype == np.dtype('float16'):  # not supported, skipping
         return
 
-    halfcomplex, in_dtype = _params_from_dtype(floating_dtype)
+    halfcomplex, in_dtype = _params_from_dtype(dtype)
     shape = (3, 4, 5)
 
     test_axes = [(0, 1), [1], (-1,), (1, 0), (-1, -2, -3)]
@@ -331,7 +335,7 @@ def test_pyfftw_call_backward_with_axes(floating_dtype):
             true_idft = (np.fft.ifftn(arr, s=active_shape, axes=axes) *
                          idft_scaling)
 
-        idft_arr = np.empty(shape, dtype=floating_dtype)
+        idft_arr = np.empty(shape, dtype=dtype)
         pyfftw_call(arr, idft_arr, direction='backward', axes=axes,
                     halfcomplex=halfcomplex)
 

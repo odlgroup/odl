@@ -34,16 +34,17 @@ space_ids = [' space={} '.format(p) for p in space_params]
 
 
 @pytest.fixture(scope="module", ids=space_ids, params=space_params)
-def space(request, tspace_impl):
+def space(request, odl_tspace_impl):
     name = request.param.strip()
+    impl = odl_tspace_impl
 
     if name == 'r10':
-        return odl.rn(10, impl=tspace_impl)
+        return odl.rn(10, impl=impl)
     elif name == 'uniform_discr':
-        return odl.uniform_discr(0, 1, 7, impl=tspace_impl)
+        return odl.uniform_discr(0, 1, 7, impl=impl)
     elif name == 'power_space_unif_discr':
         # Discretization parameters
-        space = odl.uniform_discr(0, 1, 7, impl=tspace_impl)
+        space = odl.uniform_discr(0, 1, 7, impl=impl)
         return odl.ProductSpace(space, 2)
 
 # --- functional tests --- #

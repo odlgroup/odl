@@ -115,16 +115,16 @@ def tensor_space(shape, dtype=None, impl='numpy', **kwargs):
 
     Examples
     --------
-    Space of 3-tuples with ``int64`` entries (although not strictly a
+    Space of 3-tuples with ``uint64`` entries (although not strictly a
     vector space):
 
-    >>> odl.tensor_space(3, dtype='int64')
-    tensor_space(3, dtype=int)
+    >>> odl.tensor_space(3, dtype='uint64')
+    tensor_space(3, dtype='uint64')
 
     2x3 tensors with same data type:
 
-    >>> odl.tensor_space((2, 3), dtype='int64')
-    tensor_space((2, 3), dtype=int)
+    >>> odl.tensor_space((2, 3), dtype='uint64')
+    tensor_space((2, 3), dtype='uint64')
 
     The default data type depends on the implementation. For
     ``impl='numpy'``, it is ``'float64'``:

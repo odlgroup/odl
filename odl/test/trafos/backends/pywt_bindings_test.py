@@ -136,7 +136,7 @@ def test_pywt_coeff_shapes(shape_setup):
     assert all_equal(shapes, coeff_shapes)
 
 
-def test_pywt_coeff_list_conversion(small_shapes, floating_dtype):
+def test_pywt_coeff_list_conversion(small_shapes):
     """Test if converstion flat array <-> coefficient list works."""
     ndim, shapes = small_shapes
 
@@ -151,11 +151,12 @@ def test_pywt_coeff_list_conversion(small_shapes, floating_dtype):
     assert all_equal(coeff_list, true_coeff_list)
 
 
-def test_multilevel_recon_inverts_decomp(shape_setup, floating_dtype):
+def test_multilevel_recon_inverts_decomp(shape_setup, odl_floating_dtype):
     """Test that reco is the inverse of decomp."""
+    dtype = odl_floating_dtype
     wavelet, pywt_mode, nlevels, image_shape, coeff_shapes = shape_setup
 
-    image = np.random.uniform(size=image_shape).astype(floating_dtype)
+    image = np.random.uniform(size=image_shape).astype(dtype)
     wave_decomp = pywt_multi_level_decomp(image, wavelet, nlevels, pywt_mode)
     wave_recon = pywt_multi_level_recon(wave_decomp, wavelet, pywt_mode,
                                         image_shape)
@@ -188,10 +189,11 @@ def test_multilevel_decomp_inverts_recon(shape_setup):
     assert all_almost_equal(coeffs, wave_decomp)
 
 
-def test_explicit_example(floating_dtype):
+def test_explicit_example(odl_floating_dtype):
     """Comparison with hand-calculated wavelet transform."""
+    dtype = odl_floating_dtype
 
-    space = odl.uniform_discr([0, 0], [1, 1], (16, 15), dtype=floating_dtype)
+    space = odl.uniform_discr([0, 0], [1, 1], (16, 15), dtype=dtype)
     x = noise_array(space).reshape(space.shape)
 
     # We use a Daubechies-2 wavelet

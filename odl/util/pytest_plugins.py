@@ -29,7 +29,7 @@ except ImportError:
 
 
 @fixture(autouse=True)
-def add_doctest_np_odl(doctest_namespace):
+def _add_doctest_np_odl(doctest_namespace):
     doctest_namespace['np'] = np
     doctest_namespace['odl'] = odl
 
@@ -91,28 +91,32 @@ def pytest_ignore_collect(path, config):
     return any(normalized.startswith(ignored) for ignored in collect_ignore)
 
 
-# --- Reusable fixtures ---
+# --- Reusable fixtures --- #
+
+# NOTE: All global fixtures need to be prefixed with `odl_` to make them
+# non-conflicting with other packages' fixture names, since these fixtures
+# are exposed globally across packages by setuptools.
 
 # Simple ones, use helper
-tspace_impl = simple_fixture(name='tspace_impl',
-                             params=tensor_space_impl_names())
+odl_tspace_impl = simple_fixture(name='tspace_impl',
+                                 params=tensor_space_impl_names())
 
 floating_dtypes = np.sctypes['float'] + np.sctypes['complex']
 floating_dtype_params = [np.dtype(dt) for dt in floating_dtypes]
-floating_dtype = simple_fixture(name='dtype',
-                                params=floating_dtype_params,
-                                fmt=' {name} = np.{value.name} ')
+odl_floating_dtype = simple_fixture(name='dtype',
+                                    params=floating_dtype_params,
+                                    fmt=' {name} = np.{value.name} ')
 
 scalar_dtypes = floating_dtype_params + np.sctypes['int'] + np.sctypes['uint']
 scalar_dtype_params = [np.dtype(dt) for dt in floating_dtypes]
-scalar_dtype = simple_fixture(name='dtype',
-                              params=scalar_dtype_params,
-                              fmt=' {name} = np.{value.name} ')
+odl_scalar_dtype = simple_fixture(name='dtype',
+                                  params=scalar_dtype_params,
+                                  fmt=' {name} = np.{value.name} ')
 
-elem_order = simple_fixture(name='order', params=[None, 'C', 'F'])
+odl_elem_order = simple_fixture(name='order', params=[None, 'C', 'F'])
 
-ufunc = simple_fixture('ufunc', [p[0] for p in odl.util.ufuncs.UFUNCS])
-reduction = simple_fixture('reduction', ['sum', 'prod', 'min', 'max'])
+odl_ufunc = simple_fixture('ufunc', [p[0] for p in odl.util.ufuncs.UFUNCS])
+odl_reduction = simple_fixture('reduction', ['sum', 'prod', 'min', 'max'])
 
 # More complicated ones with non-trivial documentation
 arithmetic_op_par = [operator.add,
@@ -128,6 +132,6 @@ arithmetic_op_ids = [" op = '{}' ".format(op)
 
 
 @fixture(ids=arithmetic_op_ids, params=arithmetic_op_par)
-def arithmetic_op(request):
+def odl_arithmetic_op(request):
     """An arithmetic operator, e.g. +, -, // etc."""
     return request.param

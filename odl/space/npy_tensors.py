@@ -933,19 +933,19 @@ class NumpyTensor(Tensor):
         Examples
         --------
         >>> import ctypes
-        >>> space = odl.tensor_space(3, dtype='int32')
+        >>> space = odl.tensor_space(3, dtype='uint16')
         >>> x = space.element([1, 2, 3])
-        >>> arr_type = ctypes.c_int32 * 3  # C type "array of 6 int32"
+        >>> arr_type = ctypes.c_uint16 * 3  # C type "array of 3 uint16"
         >>> buffer = arr_type.from_address(x.data_ptr)
-        >>> arr = np.frombuffer(buffer, dtype='int32')
+        >>> arr = np.frombuffer(buffer, dtype='uint16')
         >>> arr
-        array([1, 2, 3], dtype=int32)
+        array([1, 2, 3], dtype=uint16)
 
         In-place modification via pointer:
 
-        >>> arr[0] = -1
+        >>> arr[0] = 42
         >>> x
-        tensor_space(3, dtype='int32').element([-1, 2, 3])
+        tensor_space(3, dtype='uint16').element([42,  2,  3])
         """
         return self.data.ctypes.data
 
