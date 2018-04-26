@@ -412,23 +412,39 @@ class TensorSpace(LinearSpace):
         rand_state = np.random.get_state()
         np.random.seed(1337)
 
+        example_yielded = False
+
+        try:
+            yield ('zero', self.zero())
+            example_yielded = True
+        except NotImplementedError:
+            pass
+        try:
+            yield ('one', self.one())
+            example_yielded = True
+        except NotImplementedError:
+            pass
+
         if is_numeric_dtype(self.dtype):
-            yield ('Linearly spaced samples', self.element(
+            yield ('linspace(0, 1)', self.element(
                 np.linspace(0, 1, self.size).reshape(self.shape)))
-            yield ('Normally distributed noise',
+            yield ('rand_norm(0, 1)',
                    self.element(np.random.standard_normal(self.shape)))
+            example_yielded = True
 
         if self.is_real:
-            yield ('Uniformly distributed noise',
+            yield ('rand_uni(0, 1)',
                    self.element(np.random.uniform(size=self.shape)))
+            example_yielded = True
         elif self.is_complex:
-            yield ('Uniformly distributed noise',
+            yield ('rand_uni(0+0j, 1+1j)',
                    self.element(np.random.uniform(size=self.shape) +
                                 np.random.uniform(size=self.shape) * 1j))
-        else:
-            # TODO: return something that always works, like zeros or ones?
-            raise NotImplementedError('no examples available for non-numeric'
-                                      'data type')
+            example_yielded = True
+
+        if not example_yielded:
+            raise NotImplementedError('no examples available for space {!r}'
+                                      ''.format(self))
 
         np.random.set_state(rand_state)
 
