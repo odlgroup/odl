@@ -48,7 +48,8 @@ class Functional(Operator):
     <http://odlgroup.github.io/odl/guide/in_depth/functional_guide.html>`_.
     """
 
-    def __init__(self, domain, linear=False, grad_lipschitz=np.nan,range=None):
+    def __init__(self, domain, linear=False, grad_lipschitz=np.nan,
+                 range=None):
         """Initialize a new instance.
 
         Parameters
@@ -64,9 +65,12 @@ class Functional(Operator):
         # Cannot use `super(Functional, self)` here since that breaks
         # subclasses with multiple inheritance (at least those where both
         # parents implement `__init__`, e.g., in `ScalingFunctional`)
-#        print(range)
+        default_range = getattr(domain, 'field', None)
         if range is None:
-            range = domain.field
+            if default_range is None:
+                raise TypeError('Could not infere range for `functional` {!r}'
+                                .format(self))
+            else: range = default_range
 
         Operator.__init__(self, domain=domain, range=range, linear=linear)
         self.__grad_lipschitz = float(grad_lipschitz)
@@ -208,7 +212,6 @@ class Functional(Operator):
         -------
         derivative : `Operator`
         """
-        
         return self.gradient(point).T
 
     def translated(self, shift):
@@ -435,7 +438,6 @@ class Functional(Operator):
 
             If ``other`` is a `Functional`, ``sum`` is a `FunctionalSum`.
         """
-#        print(other,self.domain)
         if other in self.domain.field:
             return FunctionalScalarSum(self, other)
         elif isinstance(other, Functional):
@@ -741,7 +743,7 @@ class FunctionalSum(Functional, OperatorSum):
         if not isinstance(right, Functional):
             raise TypeError('`right` {!r} is not a `Functional` instance'
                             ''.format(right))
-        if left.range!=right.range:
+        if left.range != right.range:
             raise TypeError('The ranges of `functionals` {!r} and {!r} '
                             'are not equal'.format(left, right))
         Functional.__init__(
@@ -1037,7 +1039,7 @@ class FunctionalQuadraticPerturb(Functional):
             raise ValueError(
                 "Complex-valued `constant` coefficient is not supported.")
         self.__constant = constant.real
-        
+
         super(FunctionalQuadraticPerturb, self).__init__(
             domain=func.domain,
             linear=func.is_linear and (quadratic_coeff == 0),
@@ -1168,7 +1170,7 @@ class FunctionalProduct(Functional, OperatorPointwiseProduct):
         if not isinstance(right, Functional):
             raise TypeError('`right` {} is not a `Functional` instance'
                             ''.format(right))
-        #HELP: Check ranges?
+
         OperatorPointwiseProduct.__init__(self, left, right)
         Functional.__init__(self, left.domain, linear=False,
                             grad_lipschitz=np.nan, range=left.range)
@@ -1232,10 +1234,9 @@ class FunctionalQuotient(Functional):
             raise ValueError('domains of the operators do not match')
         if dividend.range is not divisor.range:
             raise ValueError('range of the operators do not match')
-        
+
         self.__dividend = dividend
         self.__divisor = divisor
-        
 
         super(FunctionalQuotient, self).__init__(
             dividend.domain, linear=False, grad_lipschitz=np.nan,
@@ -1324,7 +1325,7 @@ class FunctionalDefaultConvexConjugate(Functional):
         if not isinstance(func, Functional):
             raise TypeError('`func` {} is not a `Functional` instance'
                             ''.format(func))
-        #HELP: The range should be equal?!
+        
         super(FunctionalDefaultConvexConjugate, self).__init__(
             domain=func.domain, linear=func.is_linear, range=func.range)
         self.__convex_conj = func
@@ -1456,8 +1457,8 @@ class BregmanDistance(Functional):
             self.__func_subgrad = func_subgrad
 
         self.__is_initialized = False
-        
-        #HELP: Is the range right?
+
+        # HELP: Is the range right?
         super(BregmanDistance, self).__init__(domain=functional.domain,
                                               linear=False,
                                               range=functional.range)

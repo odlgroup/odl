@@ -15,6 +15,7 @@ import numpy as np
 from odl.solvers.functional.functional import (Functional,
                                                FunctionalQuadraticPerturb)
 from odl.space import ProductSpace
+from odl.set import RealNumbers#, ComplexNumbers
 from odl.operator import (Operator, ConstantOperator, ZeroOperator,
                           ScalingOperator, DiagonalOperator, PointwiseNorm)
 from odl.solvers.nonsmooth.proximal_operators import (
@@ -69,6 +70,9 @@ class LpNorm(Functional):
         exponent : float
             Exponent for the norm (``p``).
         """
+        if range is None and getattr(domain, 'is_complex', False):
+            range = RealNumbers()
+        
         super(LpNorm, self).__init__(
             domain=domain, linear=False, grad_lipschitz=np.nan, range=range)
         self.exponent = float(exponent)
@@ -465,15 +469,20 @@ class IndicatorLpUnitBall(Functional):
         """
         super(IndicatorLpUnitBall, self).__init__(domain=domain, linear=False,
                                                   range=range)
-        # HELP: The LpNorm should always have a range in the real numbers so
-        #       that it is comparable to 1, right?
-        self.__norm = LpNorm(domain, exponent)
+
+        self.__norm = LpNorm(domain, exponent, range=RealNumbers())
         self.__exponent = float(exponent)
+        self.__range = range
 
     @property
     def exponent(self):
         """Exponent corresponding to the norm."""
         return self.__exponent
+
+    @property
+    def range_(self):
+        """Exponent corresponding to the norm."""
+        return self.__range
 
     def _call(self, x):
         """Apply the functional to the given point."""
@@ -505,11 +514,12 @@ class IndicatorLpUnitBall(Functional):
         """
         # HELP: I guess it needs `range`, too
         if self.exponent == np.inf:
-            return L1Norm(self.domain)
+            return L1Norm(self.domain, range=self.range_)
         elif self.exponent == 2:
-            return L2Norm(self.domain)
+            return L2Norm(self.domain, range=self.range_)
         else:
-            return LpNorm(self.domain, exponent=conj_exponent(self.exponent))
+            return LpNorm(self.domain, exponent=conj_exponent(self.exponent),
+                          range=self._range)
 
     @property
     def proximal(self):
@@ -602,7 +612,7 @@ class L2Norm(LpNorm):
     .. math::
         \| x \|_2 = \\sqrt{ \\int_\Omega |x(t)|^2 dt. }
     """
-    
+
     def __init__(self, domain, range=None):
         """Initialize a new instance.
 
@@ -731,7 +741,7 @@ class ConstantFunctional(Functional):
     @property
     def gradient(self):
         """Gradient operator of the functional."""
-        return ZeroOperator(self.domain, self.range)
+        return ZeroOperator(self.domain)
 
     @property
     def proximal(self):
@@ -773,7 +783,7 @@ class ZeroFunctional(ConstantFunctional):
             Domain of the functional.
         """
         super(ZeroFunctional, self).__init__(domain=domain, constant=0,
-             range=range)
+              range=range)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -1664,7 +1674,7 @@ class SeparableSum(Functional):
         linear = all(func.is_linear for func in functionals)
 
         super(SeparableSum, self).__init__(domain=domain, linear=linear,
-             range=functionals[0].range)
+                                           range=functionals[0].range)
         self.__functionals = tuple(functionals)
 
     def _call(self, x):
@@ -1776,6 +1786,9 @@ class QuadraticForm(Functional):
             raise ValueError('need to provide at least one of `operator` and '
                              '`vector`')
         if operator is not None:
+            if operator.range != operator.domain:
+                raise ValueError('domain and range of `operator` must be '
+                                 'identical')
             domain = operator.domain
             range = operator.domain.field
         elif vector is not None:
@@ -1786,8 +1799,7 @@ class QuadraticForm(Functional):
                 vector not in operator.domain):
             raise ValueError('domain of `operator` and space of `vector` need '
                              'to match')
-        # HELP: operator.range == operator.domain to be able to evaluate .inner
-        #       => functional.range = operator.domain.field ?
+
         super(QuadraticForm, self).__init__(
             domain=domain, linear=(operator is None and constant == 0),
             range=range)
@@ -2143,7 +2155,7 @@ class IndicatorNuclearNormUnitBall(Functional):
     Models* SIAM Journal of Imaging Sciences 9(1): 116--151, 2016.
     """
 
-    def __init__(self, domain, outer_exp=1, singular_vector_exp=2):
+    def __init__(self, domain, outer_exp=1, singular_vector_exp=2, range=None):
         """Initialize a new instance.
 
         Parameters
@@ -2168,10 +2180,12 @@ class IndicatorNuclearNormUnitBall(Functional):
         >>> norm(space.one())
         inf
         """
-        # HELP: range should be RealNumbers since comparable?
+        if range is None:
+            range = getattr(domain, 'field', RealNumbers())
         super(IndicatorNuclearNormUnitBall, self).__init__(
-            domain=domain, linear=False, grad_lipschitz=np.nan)
-        self.__norm = NuclearNorm(domain, outer_exp, singular_vector_exp)
+            domain=domain, linear=False, grad_lipschitz=np.nan, range=range)
+        self.__norm = NuclearNorm(domain, outer_exp, singular_vector_exp,
+                                  range=RealNumbers())
 
     def _call(self, x):
         """Return ``self(x)``."""
@@ -2254,10 +2268,10 @@ class MoreauEnvelope(Functional):
     References
     ----------
     .. _Proximal Algorithms: \
-https://web.stanford.edu/~boyd/papers/pdf/prox_algs.pdf
+    https://web.stanford.edu/~boyd/papers/pdf/prox_algs.pdf
     """
 
-    def __init__(self, functional, sigma=1.0):
+    def __init__(self, functional, sigma=1.0, range=RealNumbers()):
         """Initialize an instance.
 
         Parameters
@@ -2277,12 +2291,12 @@ https://web.stanford.edu/~boyd/papers/pdf/prox_algs.pdf
         >>> l1_norm = odl.solvers.L1Norm(space)
         >>> smoothed_l1 = MoreauEnvelope(l1_norm)
         """
-        # HELP: Does this only makes sense, if 
-        #       functional.range == RealNumbers()? Otherwise raise Error?
+
         super(MoreauEnvelope, self).__init__(
-            domain=functional.domain, linear=False)
+            domain=functional.domain, linear=False, range=range)
         self.__functional = functional
         self.__sigma = sigma
+        self.__range = range
 
     @property
     def functional(self):
@@ -2293,6 +2307,10 @@ https://web.stanford.edu/~boyd/papers/pdf/prox_algs.pdf
     def sigma(self):
         """Regularization constant, larger means stronger regularization."""
         return self.__sigma
+
+    def _range(self):
+        """Range of functional."""
+        return self.__range
 
     @property
     def gradient(self):
@@ -2324,7 +2342,7 @@ class Huber(Functional):
         \\end{cases}.
     """
 
-    def __init__(self, domain, gamma, range=None):
+    def __init__(self, domain, gamma, range=RealNumbers()):
         """Initialize a new instance.
 
         Parameters
