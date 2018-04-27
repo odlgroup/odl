@@ -1038,7 +1038,7 @@ class FunctionalQuadraticPerturb(Functional):
             raise ValueError(
                 "Complex-valued `constant` coefficient is not supported.")
         self.__constant = constant.real
-        #HELP: Need to check for range? The + should take care of it, right?
+        
         super(FunctionalQuadraticPerturb, self).__init__(
             domain=func.domain,
             linear=func.is_linear and (quadratic_coeff == 0),

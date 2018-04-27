@@ -1751,7 +1751,7 @@ class QuadraticForm(Functional):
 
     """Functional for a general quadratic form ``x^T A x + b^T x + c``."""
 
-    def __init__(self, operator=None, vector=None, constant=0, range=None):
+    def __init__(self, operator=None, vector=None, constant=0):
         """Initialize a new instance.
 
         All parameters are optional, but at least one of ``op`` and ``vector``
@@ -1784,10 +1784,11 @@ class QuadraticForm(Functional):
                 vector not in operator.domain):
             raise ValueError('domain of `operator` and space of `vector` need '
                              'to match')
-
+        # HELP: operator.range == operator.domain to be able to evaluate .inner
+        #       => functional.range = operator.domain.field ?
         super(QuadraticForm, self).__init__(
             domain=domain, linear=(operator is None and constant == 0),
-            range=range)
+            range=operator.domain.field)
 
         self.__operator = operator
         self.__vector = vector
@@ -2140,7 +2141,7 @@ class IndicatorNuclearNormUnitBall(Functional):
     Models* SIAM Journal of Imaging Sciences 9(1): 116--151, 2016.
     """
 
-    def __init__(self, domain, outer_exp=1, singular_vector_exp=2, range=None):
+    def __init__(self, domain, outer_exp=1, singular_vector_exp=2):
         """Initialize a new instance.
 
         Parameters
@@ -2165,10 +2166,10 @@ class IndicatorNuclearNormUnitBall(Functional):
         >>> norm(space.one())
         inf
         """
+        # HELP: range should be RealNumbers since comparable?
         super(IndicatorNuclearNormUnitBall, self).__init__(
-            domain=domain, linear=False, grad_lipschitz=np.nan, range=range)
-        self.__norm = NuclearNorm(domain, outer_exp, singular_vector_exp,
-                                  range=range)
+            domain=domain, linear=False, grad_lipschitz=np.nan)
+        self.__norm = NuclearNorm(domain, outer_exp, singular_vector_exp)
 
     def _call(self, x):
         """Return ``self(x)``."""
@@ -2274,6 +2275,8 @@ https://web.stanford.edu/~boyd/papers/pdf/prox_algs.pdf
         >>> l1_norm = odl.solvers.L1Norm(space)
         >>> smoothed_l1 = MoreauEnvelope(l1_norm)
         """
+        # HELP: Does this only makes sense, if 
+        #       functional.range == RealNumbers()? Otherwise raise Error?
         super(MoreauEnvelope, self).__init__(
             domain=functional.domain, linear=False)
         self.__functional = functional
@@ -2307,7 +2310,7 @@ class Huber(Functional):
     .. math::
         F(x) = \\int_\Omega f_{\\gamma}(||x(y)||_2) dy
 
-    where :mth:`||\cdot||_2` denotes the Euclidean norm for vector-valued
+    where :math:`||\cdot||_2` denotes the Euclidean norm for vector-valued
     functions which reduces to the absolute value for scalar-valued functions.
     The function :math:`f` with smoothing :math:`\\gamma` is given by
 
@@ -2376,8 +2379,7 @@ class Huber(Functional):
         >>> abs(huber_norm(x) - l1_norm(x)) < tol
         True
         """
-        if range==None:
-            range = domain.field
+
         self.__gamma = float(gamma)
 
         if self.gamma > 0:
@@ -2386,7 +2388,8 @@ class Huber(Functional):
             grad_lipschitz = np.inf
 
         super(Huber, self).__init__(
-            domain=domain, linear=False, grad_lipschitz=grad_lipschitz, range=range)
+            domain=domain, linear=False, grad_lipschitz=grad_lipschitz,
+            range=range)
 
     @property
     def gamma(self):
