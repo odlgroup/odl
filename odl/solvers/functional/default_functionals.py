@@ -69,7 +69,6 @@ class LpNorm(Functional):
         exponent : float
             Exponent for the norm (``p``).
         """
-#        print('functional', type(self))
         if range==None:
             range=domain.field
         super(LpNorm, self).__init__(
