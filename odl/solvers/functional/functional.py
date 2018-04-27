@@ -67,8 +67,7 @@ class Functional(Operator):
 #        print(range)
         if range is None:
             range = domain.field
-        elif range != domain.field:
-            linear = False
+
         Operator.__init__(self, domain=domain, range=range, linear=linear)
         self.__grad_lipschitz = float(grad_lipschitz)
 

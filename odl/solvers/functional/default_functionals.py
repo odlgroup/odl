@@ -395,9 +395,9 @@ class IndicatorGroupL1UnitBall(Functional):
                             conjugate.
         """
         if self.pointwise_norm.exponent == np.inf:
-            return proximal_convex_conj_l1(domain=self.domain)
+            return proximal_convex_conj_l1(space=self.domain)
         elif self.pointwise_norm.exponent == 2:
-            return proximal_convex_conj_l1_l2(domain=self.domain)
+            return proximal_convex_conj_l1_l2(space=self.domain)
         else:
             raise NotImplementedError('`proximal` only implemented for p = 1 '
                                       'or 2')
@@ -523,9 +523,9 @@ class IndicatorLpUnitBall(Functional):
             `proximal factory` for convex conjuagte of L2-norm.
         """
         if self.exponent == np.inf:
-            return proximal_convex_conj_l1(domain=self.domain)
+            return proximal_convex_conj_l1(space=self.domain)
         elif self.exponent == 2:
-            return proximal_convex_conj_l2(domain=self.domain)
+            return proximal_convex_conj_l2(space=self.domain)
         else:
             raise NotImplementedError('`gradient` only implemented for p=2 or '
                                       'p=inf')
@@ -1178,7 +1178,7 @@ class KullbackLeibler(Functional):
         odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj :
             Proximal of the convex conjugate of a functional.
         """
-        return proximal_convex_conj(proximal_convex_conj_kl(domain=self.domain,
+        return proximal_convex_conj(proximal_convex_conj_kl(space=self.domain,
                                                             g=self.prior))
 
     @property
@@ -1305,7 +1305,7 @@ class KullbackLeiblerConvexConj(Functional):
         odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj :
             Proximal of the convex conjugate of a functional.
         """
-        return proximal_convex_conj_kl(domain=self.domain, g=self.prior)
+        return proximal_convex_conj_kl(space=self.domain, g=self.prior)
 
     @property
     def convex_conj(self):
@@ -1461,7 +1461,7 @@ class KullbackLeiblerCrossEntropy(Functional):
             Proximal of the convex conjugate of a functional.
         """
         return proximal_convex_conj(proximal_convex_conj_kl_cross_entropy(
-            domain=self.domain, g=self.prior))
+            space=self.domain, g=self.prior))
 
     @property
     def convex_conj(self):
@@ -1555,10 +1555,10 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
         See Also
         --------
         odl.solvers.nonsmooth.proximal_operators.\
-proximal_convex_conj_kl_cross_entropy :
+        proximal_convex_conj_kl_cross_entropy :
             `proximal factory` for convex conjugate of the KL cross entropy.
         """
-        return proximal_convex_conj_kl_cross_entropy(domain=self.domain,
+        return proximal_convex_conj_kl_cross_entropy(space=self.domain,
                                                      g=self.prior)
 
     @property
