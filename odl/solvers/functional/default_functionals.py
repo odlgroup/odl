@@ -1777,8 +1777,10 @@ class QuadraticForm(Functional):
                              '`vector`')
         if operator is not None:
             domain = operator.domain
+            range = operator.domain.field
         elif vector is not None:
             domain = vector.space
+            range = vector.space.field
 
         if (operator is not None and vector is not None and
                 vector not in operator.domain):
@@ -1788,7 +1790,7 @@ class QuadraticForm(Functional):
         #       => functional.range = operator.domain.field ?
         super(QuadraticForm, self).__init__(
             domain=domain, linear=(operator is None and constant == 0),
-            range=operator.domain.field)
+            range=range)
 
         self.__operator = operator
         self.__vector = vector
