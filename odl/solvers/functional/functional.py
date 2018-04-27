@@ -61,16 +61,21 @@ class Functional(Operator):
             If `True`, the functional is considered as linear.
         grad_lipschitz : float, optional
             The Lipschitz constant of the gradient. Default: ``nan``
+        range : `Field`, optional
+            Range of the functional. The default `None` will be treated as
+            `domain.field`.
         """
         # Cannot use `super(Functional, self)` here since that breaks
         # subclasses with multiple inheritance (at least those where both
         # parents implement `__init__`, e.g., in `ScalingFunctional`)
-        default_range = getattr(domain, 'field', None)
         if range is None:
+            default_range = getattr(domain, 'field', None)
             if default_range is None:
+                # HELP: I think this is not correct. How to do it properly?
                 raise TypeError('Could not infere range for `functional` {!r}'
-                                .format(self))
-            else: range = default_range
+                                ''.format(self))
+            else:
+                range = default_range
 
         Operator.__init__(self, domain=domain, range=range, linear=linear)
         self.__grad_lipschitz = float(grad_lipschitz)
@@ -696,8 +701,7 @@ class FunctionalRightVectorMult(Functional, OperatorRightVectorMult):
                             ''.format(func))
 
         OperatorRightVectorMult.__init__(self, operator=func, vector=vector)
-        # HELP: before it was Functional.__init__(self, domain=func.domain).
-        # But doesn't this loose the information on grad_lipschitz and linear?
+        # HELP: grad_lipschitz = func.grad_lipschitz * ||constant||_\infty ?
         Functional.__init__(self, domain=func.domain,
                             grad_lipschitz=func.grad_lipschitz,
                             linear=func.is_linear,
@@ -1325,7 +1329,7 @@ class FunctionalDefaultConvexConjugate(Functional):
         if not isinstance(func, Functional):
             raise TypeError('`func` {} is not a `Functional` instance'
                             ''.format(func))
-        
+
         super(FunctionalDefaultConvexConjugate, self).__init__(
             domain=func.domain, linear=func.is_linear, range=func.range)
         self.__convex_conj = func

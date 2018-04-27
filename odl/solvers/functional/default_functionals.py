@@ -15,7 +15,7 @@ import numpy as np
 from odl.solvers.functional.functional import (Functional,
                                                FunctionalQuadraticPerturb)
 from odl.space import ProductSpace
-from odl.set import RealNumbers#, ComplexNumbers
+from odl.set import RealNumbers
 from odl.operator import (Operator, ConstantOperator, ZeroOperator,
                           ScalingOperator, DiagonalOperator, PointwiseNorm)
 from odl.solvers.nonsmooth.proximal_operators import (
@@ -69,10 +69,13 @@ class LpNorm(Functional):
             Domain of the functional.
         exponent : float
             Exponent for the norm (``p``).
+        range : `Field`, optional
+            Range of the functional. The default `None` will be treated as
+            `RealNumbers`.
         """
         if range is None and getattr(domain, 'is_complex', False):
             range = RealNumbers()
-        
+
         super(LpNorm, self).__init__(
             domain=domain, linear=False, grad_lipschitz=np.nan, range=range)
         self.exponent = float(exponent)
@@ -227,6 +230,9 @@ class GroupL1Norm(Functional):
             0 and 1 are currently not supported due to numerical
             instability. Infinity gives the supremum norm.
             Default: ``vfspace.exponent``, usually 2.
+        range : `Field`, optional
+            Range of the functional. The default `None` will be treated as
+            `vfspace.field`.
 
         Examples
         --------
@@ -356,6 +362,9 @@ class IndicatorGroupL1UnitBall(Functional):
             0 and 1 are currently not supported due to numerical
             instability. Infinity gives the supremum norm.
             Default: ``vfspace.exponent``, usually 2.
+        range : `Field`, optional
+            Range of the functional. The default `None` will be treated as
+            `vfspace.field`.
 
         Examples
         --------
@@ -466,6 +475,9 @@ class IndicatorLpUnitBall(Functional):
             Domain of the functional.
         exponent : int or infinity
             Specifies wich norm to use.
+        range : `Field`, optional
+            Range of the functional. The default `None` will be treated as
+            `domain.field`.
         """
         super(IndicatorLpUnitBall, self).__init__(domain=domain, linear=False,
                                                   range=range)
@@ -512,7 +524,6 @@ class IndicatorLpUnitBall(Functional):
         [BC2011] Bauschke, H H, and Combettes, P L. *Convex analysis and
         monotone operator theory in Hilbert spaces*. Springer, 2011.
         """
-        # HELP: I guess it needs `range`, too
         if self.exponent == np.inf:
             return L1Norm(self.domain, range=self.range_)
         elif self.exponent == 2:
@@ -582,6 +593,9 @@ class L1Norm(LpNorm):
         ----------
         domain : `DiscreteLp` or `TensorSpace`
             Domain of the functional.
+        range : `Field`, optional
+            Range of the functional. The default `None` will be treated as
+            `RealNumbers`.
         """
         super(L1Norm, self).__init__(domain=domain, exponent=1, range=range)
 
@@ -620,6 +634,9 @@ class L2Norm(LpNorm):
         ----------
         domain : `DiscreteLp` or `TensorSpace`
             Domain of the functional.
+        range : `Field`, optional
+            Range of the functional. The default `None` will be treated as
+            `RealNumbers`.
         """
         super(L2Norm, self).__init__(domain=domain, exponent=2, range=range)
 
@@ -666,6 +683,9 @@ class L2NormSquared(Functional):
         ----------
         domain : `DiscreteLp` or `TensorSpace`
             Domain of the functional.
+        range : `Field`, optional
+            Range of the functional. The default `None` will be treated as
+            `RealNumbers`.
         """
         super(L2NormSquared, self).__init__(
             domain=domain, linear=False, grad_lipschitz=2, range=range)
@@ -723,6 +743,9 @@ class ConstantFunctional(Functional):
             Domain of the functional.
         constant : element in ``domain.field``
             The constant value of the functional
+        range : `Field`, optional
+            Range of the functional. The default `None` will be treated as
+            `domain.field`.
         """
         super(ConstantFunctional, self).__init__(
             domain=domain, linear=(constant == 0), grad_lipschitz=0,
@@ -781,9 +804,12 @@ class ZeroFunctional(ConstantFunctional):
         ----------
         domain : `LinearSpace`
             Domain of the functional.
+        range : `Field`, optional
+            Range of the functional. The default `None` will be treated as
+            `domain.field`.
         """
         super(ZeroFunctional, self).__init__(domain=domain, constant=0,
-              range=range)
+                                             range=range)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -874,6 +900,9 @@ class IndicatorBox(Functional):
         upper : ``domain.field`` element or ``domain`` `element-like`, optional
             The upper bound.
             Default: ``None``, interpreted as +infinity
+        range : `Field`, optional
+            Range of the functional. The default `None` will be treated as
+            `domain.field`.
 
         Examples
         --------
@@ -929,6 +958,9 @@ class IndicatorNonnegativity(IndicatorBox):
         ----------
         domain : `LinearSpace`
             Domain of the functional.
+        range : `Field`, optional
+            Range of the functional. The default `None` will be treated as
+            `domain.field`.
 
         Examples
         --------
@@ -963,6 +995,9 @@ class IndicatorZero(Functional):
             Domain of the functional.
         constant : element in ``domain.field``, optional
             The constant value of the functional
+        range : `Field`, optional
+            Range of the functional. The default `None` will be treated as
+            `domain.field`.
 
         Examples
         --------
@@ -1107,7 +1142,6 @@ class KullbackLeibler(Functional):
         >>> func(x)
         3.0
         """
-        # HELP: range is domain.field, correct?
         super(KullbackLeibler, self).__init__(
             domain=domain, linear=False, grad_lipschitz=np.nan)
 
@@ -1955,7 +1989,9 @@ class NuclearNorm(Functional):
             Exponent for the outer norm.
         singular_vector_exp : {1, 2, inf}, optional
             Exponent for the norm for the singular vectors.
-
+        range : `Field`, optional
+            Range of the functional. The default `None` will be treated as
+            `RealNumbers`.
         Examples
         --------
         Simple example, nuclear norm of matrix valued function with all ones
@@ -1974,7 +2010,8 @@ class NuclearNorm(Functional):
                             '`ProductSpace`s')
         if (not domain.is_power_space or not domain[0].is_power_space):
             raise TypeError('`domain` must be of the form `TensorSpace^(nxm)`')
-
+        if range is None:
+            range = RealNumbers()
         super(NuclearNorm, self).__init__(
             domain=domain, linear=False, grad_lipschitz=np.nan, range=range)
 
@@ -2166,7 +2203,9 @@ class IndicatorNuclearNormUnitBall(Functional):
             Exponent for the outer norm.
         singular_vector_exp : {1, 2, inf}, optional
             Exponent for the norm for the singular vectors.
-
+        range : `Field`, optional
+            Range of the functional. The default `None` will be treated as
+            `domain.field` or it that doesn't exist `RealNumbers`.
         Examples
         --------
         Simple example, nuclear norm of matrix valued function with all ones
@@ -2282,7 +2321,8 @@ class MoreauEnvelope(Functional):
         sigma : positive float, optional
             The scalar ``sigma`` in the definition of the Moreau envelope.
             Larger values mean stronger smoothing.
-
+        range : `Field`, optional
+            Range of the functional. The default is `RealNumbers`.
         Examples
         --------
         Create smoothed l1 norm:
@@ -2354,6 +2394,8 @@ class Huber(Functional):
             the functional is non-smooth and corresponds to the usual L1 norm.
             For ``gamma > 0``, it has a ``1/gamma``-Lipschitz gradient so that
             its convex conjugate is ``gamma``-strongly convex.
+        range : `Field`, optional
+            Range of the functional. The default is `RealNumbers`.
 
         Examples
         --------
