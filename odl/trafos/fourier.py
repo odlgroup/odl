@@ -135,12 +135,16 @@ class DiscreteFourierTransformBase(Operator):
                                  ''.format(dtype_repr(ran_dtype),
                                            dtype_repr(range.dtype)))
 
+        # Real <-> complex transforms are not considered (complex-)linear,
+        # see https://github.com/odlgroup/odl/pull/1324
+        linear = (domain.is_complex and range.is_complex)
+
         if inverse:
             super(DiscreteFourierTransformBase, self).__init__(
-                range, domain, linear=True)
+                range, domain, linear)
         else:
             super(DiscreteFourierTransformBase, self).__init__(
-                domain, range, linear=True)
+                domain, range, linear)
         self._fftw_plan = None
 
     def _call(self, x, out, **kwargs):
@@ -855,12 +859,16 @@ class FourierTransformBase(Operator):
                                      halfcomplex=self.halfcomplex,
                                      shift=self.shifts)
 
+        # Real <-> complex transforms are not considered (complex-)linear,
+        # see https://github.com/odlgroup/odl/pull/1324
+        linear = (domain.is_complex and range.is_complex)
+
         if inverse:
             super(FourierTransformBase, self).__init__(
-                range, domain, linear=True)
+                range, domain, linear)
         else:
             super(FourierTransformBase, self).__init__(
-                domain, range, linear=True)
+                domain, range, linear)
         self._fftw_plan = None
 
         if tmp_r is not None:

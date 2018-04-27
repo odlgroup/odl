@@ -1084,7 +1084,7 @@ class DiagonalOperator(ProductSpaceOperator):
 
     When evaluated it gives::
 
-         DiagonalOperator(op1, op2)(x) = [op1(x), op2(x)]
+         DiagonalOperator(op1, op2)(x) = [op1(x[0]), op2(x[1])]
 
     See Also
     --------
