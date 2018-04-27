@@ -952,7 +952,8 @@ class RealPart(Operator):
         uniform_discr(0.0, 1.0, 3).element([ 1.,  2.,  3.])
         """
         real_space = space.real_space
-        linear = (space == real_space)
+        self.space_is_real = (space == real_space)
+        linear = True
         super(RealPart, self).__init__(space, real_space, linear=linear)
 
     def _call(self, x):
@@ -994,7 +995,7 @@ class RealPart(Operator):
         >>> op.inverse(op([1 + 2j, 2, 3 - 1j]))
         cn(3).element([ 1.+0.j,  2.+0.j,  3.+0.j])
         """
-        if self.is_linear:
+        if self.space_is_real:
             return self
         else:
             return ComplexEmbedding(self.domain, scalar=1)
@@ -1038,7 +1039,7 @@ class RealPart(Operator):
         >>> AtAxy == AtxAty
         True
         """
-        if self.is_linear:
+        if self.space_is_real:
             return self
         else:
             return ComplexEmbedding(self.domain, scalar=1)
@@ -1079,7 +1080,8 @@ class ImagPart(Operator):
         rn(3).element([ 0.,  0.,  0.])
         """
         real_space = space.real_space
-        linear = (space == real_space)
+        self.space_is_real = (space == real_space)
+        linear = True
         super(ImagPart, self).__init__(space, real_space, linear=linear)
 
     def _call(self, x):
@@ -1121,7 +1123,7 @@ class ImagPart(Operator):
         >>> op.inverse(op([1 + 2j, 2, 3 - 1j]))
         cn(3).element([ 0.+2.j,  0.+0.j, -0.-1.j])
         """
-        if self.is_linear:
+        if self.space_is_real:
             return ZeroOperator(self.domain)
         else:
             return ComplexEmbedding(self.domain, scalar=1j)
@@ -1165,7 +1167,7 @@ class ImagPart(Operator):
         >>> AtAxy == AtxAty
         True
         """
-        if self.is_linear:
+        if self.space_is_real:
             return ZeroOperator(self.domain)
         else:
             return ComplexEmbedding(self.domain, scalar=1j)

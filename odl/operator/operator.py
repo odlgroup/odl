@@ -2165,7 +2165,7 @@ class OperatorRightVectorMult(Operator):
         if self.is_linear:
             return self
         else:
-            return self.operator.derivative(x) * self.vector
+            return self.operator.derivative(self.vector * x) * self.vector
 
     @property
     def adjoint(self):
