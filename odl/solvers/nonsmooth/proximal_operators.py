@@ -41,7 +41,7 @@ __all__ = ('proximal_separable_sum', 'proximal_convex_conj',
            'proximal_const_func', 'proximal_indicator_box',
            'proximal_l1', 'proximal_indicator_linf_unit_ball',
            'proximal_l2', 'proximal_indicator_l2_unit_ball',
-           'proximal_l1_l2', 'proximal_convex_conj_l1_l2',
+           'proximal_l1_l2', 'proximal_indicator_linf_l2_unit_ball',
            'proximal_convex_conj_kl', 'proximal_convex_conj_kl_cross_entropy',
            'proximal_huber')
 
@@ -1040,61 +1040,46 @@ def proximal_indicator_l2_unit_ball(space):
     return ProximalIndicatorL2UnitBall
 
 
-#TODO: continue here
+def proximal_l1_l2(space):
+    r"""Return the proximal factory for the L1-L2 norm functional.
 
-def proximal_l1_l2(space, lam=1, g=None):
-    """Proximal operator factory of the group-L1-L2 norm/distance.
-
-    Implements the proximal operator of the functional ::
-
-        F(x) = lam || |x - g|_2 ||_1
-
-    with ``x`` and ``g`` elements in ``space``, and scaling factor ``lam``.
-    Here, ``|.|_2`` is the pointwise Euclidean norm of a vector-valued
-    function.
+    The returned proximal is intended for the group L1 norm with inner
+    L2 norm. For vector-valued functions, that norm is the isotropic
+    variant of the vectorial L1 norm.
 
     Parameters
     ----------
-    space : `LinearSpace` or `ProductSpace`
-        Domain of the functional.
-    lam : positive float, optional
-        Scaling factor or regularization parameter.
-    g : ``space`` element, optional
-        Element to which the L1-L2 distance is taken.
-        Default: ``space.zero``.
+    space : `ProductSpace`
+        Domain of the functional, must be a power space, i.e.,
+        ``space.is_power_space is True``.
 
     Returns
     -------
     prox_factory : function
-        Factory for the proximal operator to be initialized
+        Factory for the proximal operator of the L1-L2 norm functional.
 
     Notes
     -----
-    For the functional
+    For a step size :math:`\sigma`, the proximal operator of the
+    :math:`L^{1,2}` norm is given by
 
     .. math::
-        F(x) = \\lambda \| |x - g|_2 \|_1,
+        \mathrm{prox}_{\sigma \|\cdot\|_{1,2}}(\mathbf{x}) =
+        \max\left\{1 - \frac{\sigma}{|\mathbf{x}|_2},\ 0\right\}\ \mathbf{x},
 
-    and a step size :math:`\\sigma`, the proximal operator of
-    :math:`\\sigma F` is given as the "soft-shrinkage" operator
+    where the Euclidean norm is taken per point along the components of
+    :math:`\mathbf{x}`,
 
     .. math::
-        \mathrm{prox}_{\\sigma F}(x) =
-        \\begin{cases}
-            g, & \\text{where } |x - g|_2 \\leq \sigma\\lambda, \\\\
-            x - \sigma\\lambda \\frac{x - g}{|x - g|_2}, & \\text{elsewhere.}
-        \\end{cases}
+        |\mathbf{x}|_2(t) = \bigg(\sum_{i=1}^d x_i(t)^2\bigg)^{1/2},
 
-    Here, all operations are to be read pointwise.
+    and the maximum and multiplication operations are also to be understood
+    pointwise.
 
     See Also
     --------
     proximal_l1 : Scalar or non-isotropic vectorial variant
     """
-    lam = float(lam)
-
-    if g is not None and g not in space:
-        raise TypeError('{!r} is not an element of {!r}'.format(g, space))
 
     class ProximalL1L2(Operator):
 
@@ -1114,100 +1099,104 @@ def proximal_l1_l2(space, lam=1, g=None):
 
         def _call(self, x, out):
             """Return ``self(x, out=out)``."""
-            # diff = x - g
-            if g is not None:
-                diff = x - g
+            if x is out:
+                # Handle aliased `x` and `out` (original `x` needed later)
+                tmp = x.copy()
             else:
-                if x is out:
-                    # Handle aliased `x` and `out` (original `x` needed later)
-                    diff = x.copy()
-                else:
-                    diff = x
+                tmp = x
 
             # We write the operator as
-            # x - (x - g) / max(|x - g|_2 / sig*lam, 1)
-            pwnorm = PointwiseNorm(self.domain, exponent=2)
-            denom = pwnorm(diff)
-            denom /= self.sigma * lam
+            # x - x / max(|x|_2 / sig, 1)
+            denom = PointwiseNorm(self.domain, exponent=2)(tmp)
+            denom /= self.sigma
             denom.ufuncs.maximum(1, out=denom)
 
-            # out = (x - g) / denom
-            for out_i, diff_i in zip(out, diff):
-                diff_i.divide(denom, out=out_i)
+            # out <- x / max(|x|_2 / sig, 1)
+            for out_i, tmp_i in zip(out, tmp):
+                tmp_i.divide(denom, out=out_i)
 
-            # out = x - ...
+            # out <- x - out
+            # Need original `x` here!
             out.lincomb(1, x, -1, out)
+
+        def __repr__(self):
+            """Return ``repr(self)``.
+
+            Examples
+            --------
+            >>> space = odl.rn(2) ** 3
+            >>> l12norm = odl.solvers.GroupL1Norm(space)
+            >>> l12norm.proximal(4)
+            GroupL1Norm(ProductSpace(rn(2), 3), exponent=2.0).proximal(4.0)
+            """
+            posargs = [space]
+            optargs = [('exponent', 2.0, None)]
+            inner_parts = signature_string_parts(posargs, optargs)
+            callee_repr = repr_string('GroupL1Norm', inner_parts)
+            with npy_printoptions(precision=REPR_PRECISION):
+                prox_arg_str = array_str(self.sigma)
+            return method_repr_string(callee_repr, 'proximal', [prox_arg_str])
 
     return ProximalL1L2
 
 
-def proximal_convex_conj_l1_l2(space, lam=1, g=None):
-    """Proximal operator factory of the L1-L2 norm/distance convex conjugate.
+def proximal_indicator_linf_l2_unit_ball(space):
+    r"""Return the proximal factory for the L^inf-L2 unit ball indicator.
 
-    Implements the proximal operator of the convex conjugate of the
-    functional ::
+    The L^inf-L2 unit ball indicator function assigns the value ``+inf``
+    if the L^inf-L2-norm of the input is greater than 1, and 0 otherwise.
+    The above condition is true if at any point, the 2-norm of the vector
+    at that point is larger than 1. See ``Notes`` for details.
 
-        F(x) = lam || |x - g|_2 ||_1
-
-    with ``x`` and ``g`` elements in ``space``, and scaling factor ``lam``.
-    Here, ``|.|_2`` is the pointwise Euclidean norm of a vector-valued
-    function.
+    The proximal of this indicator is the projection onto that unit ball.
 
     Parameters
     ----------
-    space : `LinearSpace` or `ProductSpace` of `LinearSpace` spaces
-        Domain of the functional F
-    lam : positive float, optional
-        Scaling factor or regularization parameter.
-    g : ``space`` element, optional
-        Element to which the L1 distance is taken.
-        Default: ``space.zero``.
+    space : `ProductSpace`
+        Domain of the functional, must be a power space, i.e.,
+        ``space.is_power_space is True``.
 
     Returns
     -------
     prox_factory : function
-        Factory for the proximal operator to be initialized.
+        Factory for the proximal operator of the ball indicator functional.
+        It always returns the unit ball projection operator, independently
+        of its input parameter.
 
     Notes
     -----
-    The convex conjugate :math:`F^*` of the functional
+    The :math:`L^{\infty, 2}` unit ball indicator is defined as
 
     .. math::
-        F(x) = \\lambda \| |x - g|_2 \|_1.
+        \iota_{B_{\infty, 2}}(\mathbf{x}) =
+        \begin{cases}
+            0      & \text{if } |\mathbf{x}|_2 \leq 1 \text{ everywhere}, \\
+            \infty & \text{otherwise},
+        \end{cases}
 
-    is given by
-
-    .. math::
-        F^*(y) = \iota_{B_\infty} \\big( \\lambda^{-1}\, |y|_2 \\big) +
-        \\left\\langle \\lambda^{-1}\, y,\: g \\right\\rangle,
-
-    where :math:`\iota_{B_\infty}` is the indicator function of the
-    unit ball with respect to :math:`\|\cdot\|_\infty`.
-
-    For a step size :math:`\\sigma`, the proximal operator of
-    :math:`\\sigma F^*` is given by
+    where the Euclidean norm is taken per point along the components of
+    :math:`\mathbf{x}`,
 
     .. math::
-        \mathrm{prox}_{\\sigma F^*}(y) = \\frac{\\lambda (y - \\sigma g)}{
-        \\max(\\lambda, |y - \\sigma g|_2)}
+        |\mathbf{x}|_2(t) = \bigg(\sum_{i=1}^d x_i(t)^2\bigg)^{1/2}.
 
-    Here, all operations are to be read pointwise.
+    Its proximal operator is (independently of :math:`\sigma`) given by
+    the projection onto the ball:
+
+    .. math::
+        \mathrm{prox}_{\sigma \iota_{B_{\infty, 2}}}(x) =
+        \min\{|\mathbf{x}|_2,\, 1\}\, \frac{\mathbf{x}}{|\mathbf{x}|_2},
+
+    where all operations are to be understood pointwise.
 
     See Also
     --------
     proximal_convex_conj_l1 : Scalar or non-isotropic vectorial variant
     """
-    # Fix for rounding errors
-    dtype = getattr(space, 'dtype', float)
-    eps = np.finfo(dtype).resolution * 10
-    lam = float(lam * (1 - eps))
 
-    if g is not None and g not in space:
-        raise TypeError('{!r} is not an element of {!r}'.format(g, space))
+    class ProximalIndicatorLinfL2UnitBall(Operator):
 
-    class ProximalConvexConjL1L2(Operator):
-
-        """Proximal operator of the convex conj of the l1-norm/distance."""
+        """Proximal operator for the L^inf-L2 unit ball indicator."""
 
         def __init__(self, sigma):
             """Initialize a new instance.
@@ -1215,36 +1204,46 @@ def proximal_convex_conj_l1_l2(space, lam=1, g=None):
             Parameters
             ----------
             sigma : positive float
-                Step size parameter
+                Step size parameter.
             """
-            super(ProximalConvexConjL1L2, self).__init__(
+            super(ProximalIndicatorLinfL2UnitBall, self).__init__(
                 domain=space, range=space, linear=False)
-            self.sigma = float(sigma)
 
         def _call(self, x, out):
             """Return ``self(x, out=out)``."""
-            # lam * (x - sig * g) / max(lam, |x - sig * g|)
+            # x / max(1, |x|_2)
 
-            # diff = x - sig * g
-            if g is not None:
-                diff = self.domain.element()
-                diff.lincomb(1, x, -self.sigma, g)
-            else:
-                diff = x
+            denom = PointwiseNorm(self.domain, exponent=2)(x)
+            denom.ufuncs.maximum(1, out=denom)
 
-            # denom = max( |x-sig*g|_2, lam ) / lam  (|.|_2 pointwise)
-            pwnorm = PointwiseNorm(self.domain, exponent=2)
-            denom = pwnorm(diff)
-            denom.ufuncs.maximum(lam, out=denom)
-            denom /= lam
+            # Pointwise division (no aliasing issue here)
+            for out_i, x_i in zip(out, x):
+                x_i.divide(denom, out=out_i)
 
-            # Pointwise division
-            for out_i, diff_i in zip(out, diff):
-                diff_i.divide(denom, out=out_i)
+        def __repr__(self):
+            """Return ``repr(self)``.
 
-    return ProximalConvexConjL1L2
+            Examples
+            --------
+            >>> space = odl.rn(2) ** 3
+            >>> l12norm = odl.solvers.GroupL1Norm(space)
+            >>> l12norm.convex_conj.proximal(4)
+            IndicatorGroupLinfUnitBall(
+                ProductSpace(rn(2), 3), exponent=2.0
+            ).proximal(1.0)
+            """
+            posargs = [space]
+            optargs = [('exponent', 2.0, None)]
+            with npy_printoptions(precision=REPR_PRECISION):
+                inner_parts = signature_string_parts(posargs, optargs)
+            callee_repr = repr_string('IndicatorGroupLinfUnitBall',
+                                      inner_parts)
+            return method_repr_string(callee_repr, 'proximal', ['1.0'])
+
+    return ProximalIndicatorLinfL2UnitBall
 
 
+#TODO: continue here
 # TODO(kohr-h): implement KL prox
 
 

@@ -22,8 +22,8 @@ from odl.solvers.nonsmooth.proximal_operators import (
     proximal_separable_sum, proximal_indicator_box, proximal_const_func,
     proximal_convex_conj, proximal_convex_conj_kl,
     proximal_convex_conj_kl_cross_entropy, proximal_indicator_linf_unit_ball,
-    proximal_convex_conj_l1_l2, proximal_indicator_l2_unit_ball, proximal_huber,
-    proximal_l1, proximal_l1_l2, proximal_l2)
+    proximal_indicator_linf_l2_unit_ball, proximal_indicator_l2_unit_ball,
+    proximal_huber, proximal_l1, proximal_l1_l2, proximal_l2)
 from odl.space import ProductSpace
 from odl.util import (
     REPR_PRECISION, conj_exponent, moveaxis, npy_printoptions, repr_string,
@@ -34,7 +34,7 @@ __all__ = ('ZeroFunctional', 'ConstantFunctional', 'ScalingFunctional',
            'LpNorm', 'L1Norm', 'GroupL1Norm', 'L2Norm', 'L2NormSquared',
            'Huber', 'NuclearNorm',
            'IndicatorZero', 'IndicatorBox', 'IndicatorNonnegativity',
-           'IndicatorLpUnitBall', 'IndicatorGroupL1UnitBall',
+           'IndicatorLpUnitBall', 'IndicatorGroupLinfUnitBall',
            'IndicatorNuclearNormUnitBall',
            'KullbackLeibler', 'KullbackLeiblerCrossEntropy',
            'QuadraticForm',
@@ -546,7 +546,7 @@ class GroupL1Norm(Functional):
 
     @property
     def convex_conj(self):
-        """Convex conjugate functional of the group L1 norm.
+        """Convex conjugate of the group L1 norm.
 
         The convex conjugate of a norm is the indicator function of
         the unit ball with respect to the dual norm,
@@ -558,10 +558,10 @@ class GroupL1Norm(Functional):
 
         See Also
         --------
-        IndicatorGroupL1UnitBall
+        IndicatorGroupLinfUnitBall
         """
         conj_exp = conj_exponent(self.pointwise_norm.exponent)
-        return IndicatorGroupL1UnitBall(self.domain, exponent=conj_exp)
+        return IndicatorGroupLinfUnitBall(self.domain, exponent=conj_exp)
 
     def __repr__(self):
         """Return ``repr(self)``.
@@ -581,20 +581,26 @@ class GroupL1Norm(Functional):
                            allow_mixed_seps=False)
 
 
-class IndicatorGroupL1UnitBall(Functional):
+class IndicatorGroupLinfUnitBall(Functional):
 
-    r"""Indicator functional of the unit ball in the group L1 norm.
+    r"""Indicator functional of the unit ball in the group L^inf norm.
 
     This functional is defined as
 
     .. math::
-        \iota_{B_{\times,p}}(\mathrm{x}) =
+        \iota_{B_{\infty, p}}(\mathbf{x}) =
         \begin{cases}
-            0      & \text{if } \|x\|_{\times, p} \leq 1, \\
+            0      & \text{if } \|\mathbf{x}\|_{\times, p} \leq 1, \\
             \infty & \text{else,}
         \end{cases}
 
-    where :math:`B_{\times,p}` is the unit ball in the :math:`p`-cross norm.
+    where :math:`B_{\infty, p}` is the unit ball in the norm
+
+    .. math::
+        \|\mathbf{x}\|_{\infty, p} = \sup_t |\mathbf{x}(t)|_p,
+
+    and the p-norm :math:`|\mathbf{x}(t)|_p` is taken along the components
+    of :math:`\mathbf{x}`.
 
     See Also
     --------
@@ -619,7 +625,7 @@ class IndicatorGroupL1UnitBall(Functional):
         Examples
         --------
         >>> pspace = odl.rn(2) ** 2
-        >>> op = odl.solvers.IndicatorGroupL1UnitBall(pspace)
+        >>> op = odl.solvers.IndicatorGroupLinfUnitBall(pspace)
         >>> op([[0.1, 0.5], [0.2, 0.3]])
         0
         >>> op([[3, 3], [4, 4]])
@@ -627,14 +633,14 @@ class IndicatorGroupL1UnitBall(Functional):
 
         Set exponent of inner (p) norm:
 
-        >>> op2 = odl.solvers.IndicatorGroupL1UnitBall(pspace, exponent=1)
+        >>> op2 = odl.solvers.IndicatorGroupLinfUnitBall(pspace, exponent=1)
         """
         if not isinstance(vfspace, ProductSpace):
             raise TypeError('`space` must be a `ProductSpace`')
         if not vfspace.is_power_space:
             raise TypeError('`space.is_power_space` must be `True`')
 
-        super(IndicatorGroupL1UnitBall, self).__init__(
+        super(IndicatorGroupLinfUnitBall, self).__init__(
             space=vfspace, linear=False, grad_lipschitz=np.nan)
         self.pointwise_norm = PointwiseNorm(vfspace, exponent=exponent)
 
@@ -652,8 +658,8 @@ class IndicatorGroupL1UnitBall(Functional):
         """Return the `proximal factory` of the functional.
 
         .. note::
-            The proximal operator is currently only implemented for ``p == 1``
-            and ``p == 2``.
+            The proximal operator is currently only implemented for
+            ``p == inf`` and ``p == 2``.
 
         See Also
         --------
@@ -662,17 +668,17 @@ class IndicatorGroupL1UnitBall(Functional):
         proximal_convex_conj_l1_l2 :
             `proximal factory` for the L1-L2 norm's convex conjugate.
         """
-        if self.pointwise_norm.exponent == np.inf:
+        if self.pointwise_norm.exponent == float('inf'):
             return proximal_indicator_linf_unit_ball(self.domain)
         elif self.pointwise_norm.exponent == 2:
-            return proximal_convex_conj_l1_l2(space=self.domain)
+            return proximal_indicator_linf_l2_unit_ball(self.domain)
         else:
-            raise NotImplementedError('`proximal` only implemented for p = 1 '
-                                      'or 2')
+            raise NotImplementedError('`proximal` only implemented for '
+                                      'p = inf or 2')
 
     @property
     def convex_conj(self):
-        r"""Convex conjugate of the indicator of the group L1 norm unit ball.
+        r"""Convex conjugate of the group L^inf unit ball indicator.
 
         The convex conjugate of the indicator function of a norm ball,
         that is a function taking the value 0 inside and :math:`\infty`
@@ -693,9 +699,9 @@ class IndicatorGroupL1UnitBall(Functional):
         Examples
         --------
         >>> pspace = odl.rn(2) ** 2
-        >>> op = odl.solvers.IndicatorGroupL1UnitBall(pspace)
+        >>> op = odl.solvers.IndicatorGroupLinfUnitBall(pspace)
         >>> op
-        IndicatorGroupL1UnitBall(ProductSpace(rn(2), 2))
+        IndicatorGroupLinfUnitBall(ProductSpace(rn(2), 2))
         """
         posargs = [self.domain]
         optargs = [('exponent', self.pointwise_norm.exponent,
