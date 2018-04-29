@@ -62,8 +62,7 @@ class Functional(Operator):
         grad_lipschitz : float, optional
             The Lipschitz constant of the gradient. Default: ``nan``
         range : `Field`, optional
-            Range of the functional. The default `None` will be treated as
-            `domain.field`.
+            Range of the functional. Default: `domain.field`.
         """
         # Cannot use `super(Functional, self)` here since that breaks
         # subclasses with multiple inheritance (at least those where both
@@ -71,9 +70,7 @@ class Functional(Operator):
         if range is None:
             default_range = getattr(domain, 'field', None)
             if default_range is None:
-                # HELP: I think this is not correct. How to do it properly?
-                raise TypeError('Could not infere range for `functional` {!r}'
-                                ''.format(self))
+                raise TypeError('Could not infere range for `functional`')
             else:
                 range = default_range
 
@@ -701,9 +698,10 @@ class FunctionalRightVectorMult(Functional, OperatorRightVectorMult):
                             ''.format(func))
 
         OperatorRightVectorMult.__init__(self, operator=func, vector=vector)
-        # HELP: grad_lipschitz = func.grad_lipschitz * ||constant||_\infty ?
+        # TODO: Implement grad_lipschitz? If func.is_linear:
+        #           grad_lipschitz = func.grad_lipschitz * ||constant||_\infty
+        #       else: grad_lipschitz = np.nan
         Functional.__init__(self, domain=func.domain,
-                            grad_lipschitz=func.grad_lipschitz,
                             linear=func.is_linear,
                             range=func.range)
 
@@ -747,14 +745,13 @@ class FunctionalSum(Functional, OperatorSum):
         if not isinstance(right, Functional):
             raise TypeError('`right` {!r} is not a `Functional` instance'
                             ''.format(right))
-        if left.range != right.range:
-            raise TypeError('The ranges of `functionals` {!r} and {!r} '
-                            'are not equal'.format(left, right))
+        range = left.range + right.range
+
         Functional.__init__(
             self, domain=left.domain,
             linear=(left.is_linear and right.is_linear),
             grad_lipschitz=left.grad_lipschitz + right.grad_lipschitz,
-            range=left.range)
+            range=range)
         OperatorSum.__init__(self, left, right)
 
     @property
@@ -951,6 +948,7 @@ class InfimalConvolution(Functional):
             raise TypeError('`func` {} is not a `Functional` instance'
                             ''.format(right))
 
+        # HELP: What should happen if left.range != right.range?
         super(InfimalConvolution, self).__init__(
             domain=left.domain, linear=False, grad_lipschitz=np.nan,
             range=left.range)
@@ -1071,8 +1069,7 @@ class FunctionalQuadraticPerturb(Functional):
 
     def _call(self, x):
         """Apply the functional to the given point."""
-        return (self.functional(x) +
-                self.quadratic_coeff * x.inner(x) +
+        return (self.functional(x) + self.quadratic_coeff * x.inner(x) +
                 x.inner(self.linear_term) + self.constant)
 
     @property
@@ -1174,10 +1171,11 @@ class FunctionalProduct(Functional, OperatorPointwiseProduct):
         if not isinstance(right, Functional):
             raise TypeError('`right` {} is not a `Functional` instance'
                             ''.format(right))
+        range = left.range + right.range
 
         OperatorPointwiseProduct.__init__(self, left, right)
         Functional.__init__(self, left.domain, linear=False,
-                            grad_lipschitz=np.nan, range=left.range)
+                            grad_lipschitz=np.nan, range=range)
 
     @property
     def gradient(self):
@@ -1234,17 +1232,14 @@ class FunctionalQuotient(Functional):
             raise TypeError('`divisor` {} is not a `Functional` instance'
                             ''.format(divisor))
 
-        if dividend.domain != divisor.domain:
-            raise ValueError('domains of the operators do not match')
-        if dividend.range is not divisor.range:
-            raise ValueError('range of the operators do not match')
+        range = dividend.range + divisor.range
 
         self.__dividend = dividend
         self.__divisor = divisor
 
         super(FunctionalQuotient, self).__init__(
             dividend.domain, linear=False, grad_lipschitz=np.nan,
-            range=dividend.range)
+            range=range)
 
     @property
     def dividend(self):
@@ -1462,7 +1457,6 @@ class BregmanDistance(Functional):
 
         self.__is_initialized = False
 
-        # HELP: Is the range right?
         super(BregmanDistance, self).__init__(domain=functional.domain,
                                               linear=False,
                                               range=functional.range)

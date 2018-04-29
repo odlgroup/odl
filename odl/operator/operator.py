@@ -1071,7 +1071,6 @@ class OperatorSum(Operator):
 
     The sum is only well-defined for `Operator` instances where
     `Operator.range` is a `LinearSpace`.
-
     """
 
     def __init__(self, left, right, tmp_ran=None, tmp_dom=None):
@@ -1106,8 +1105,14 @@ class OperatorSum(Operator):
         rn(3).element([ 2.,  4.,  6.])
         """
         if left.range != right.range:
-            raise OpTypeError('operator ranges {!r} and {!r} do not match'
-                              ''.format(left.range, right.range))
+            if isinstance(left.range, Field) and \
+                    isinstance(right.range, Field):
+                range = left.range + right.range
+            else:
+                raise OpTypeError('operator ranges {!r} and {!r} do not match'
+                                  ''.format(left.range, right.range))
+        else:
+            range = left.range
         if not isinstance(left.range, (LinearSpace, Field)):
             raise OpTypeError('`left.range` {!r} not a `LinearSpace` or '
                               '`Field` instance'.format(left.range))
@@ -1124,7 +1129,7 @@ class OperatorSum(Operator):
                                 ''.format(tmp_dom, left.domain))
 
         super(OperatorSum, self).__init__(
-            left.domain, left.range,
+            left.domain, range,
             linear=left.is_linear and right.is_linear)
         self.__left = left
         self.__right = right
