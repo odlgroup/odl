@@ -310,25 +310,6 @@ class Field(Set):
         """
         return self
 
-    def contains_set(self, other):
-        raise NotImplementedError('field {!r} does not have method '
-                                  '`contains_set`'.format(self))
-
-    def __add__(self, other):
-        if self.contains_set(other):
-            return self
-        elif other.contains_set(self):
-            return other
-        else:
-            raise ValueError('Fields {!r} and {!r} do not include '
-                             'each other'.format(self, other))
-
-    def __radd__(self, other):
-        if other == 0:
-            return self
-        else:
-            return self.__add__(other)
-
 
 class ComplexNumbers(Field):
 
@@ -447,7 +428,10 @@ class RealNumbers(Field):
 
     def element(self, inp=None):
         """Return a real number from ``inp`` or from scratch."""
-        return float(getattr(inp, 'real', 0.0))
+        if inp is None:
+            return 0.0
+        else:
+            return float(getattr(inp, 'real', inp))
 
     @property
     def examples(self):

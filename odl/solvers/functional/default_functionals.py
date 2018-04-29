@@ -182,9 +182,8 @@ class LpNorm(Functional):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r} -> {!r}, {!r})'.format(self.__class__.__name__,
-                                               self.domain, self.range,
-                                               self.exponent)
+        return '{}({!r}, {!r})'.format(self.__class__.__name__,
+                                       self.domain, self.exponent)
 
 
 class GroupL1Norm(Functional):
@@ -230,7 +229,7 @@ class GroupL1Norm(Functional):
             instability. Infinity gives the supremum norm.
             Default: ``vfspace.exponent``, usually 2.
         range : `Field`, optional
-            Range of the functional. Default: `vfspace.field`.
+            Range of the functional. Default: ``vfspace.field``.
 
         Examples
         --------
@@ -332,8 +331,8 @@ class GroupL1Norm(Functional):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r} -> {!r}, exponent={})'.format(self.__class__.__name__,
-                                              self.domain, self.range,
+        return '{}({!r}, exponent={})'.format(self.__class__.__name__,
+                                              self.domain,
                                               self.pointwise_norm.exponent)
 
 
@@ -426,8 +425,8 @@ class IndicatorGroupL1UnitBall(Functional):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r} -> {!r}, exponent={})'.format(self.__class__.__name__,
-                                              self.domain, self.range,
+        return '{}({!r}, exponent={})'.format(self.__class__.__name__,
+                                              self.domain,
                                               self.pointwise_norm.exponent)
 
 
@@ -473,7 +472,7 @@ class IndicatorLpUnitBall(Functional):
         exponent : int or infinity
             Specifies wich norm to use.
         range : `Field`, optional
-            Range of the functional. Default: `domain.field`.
+            Range of the functional. Default: ``domain.field``.
         """
         super(IndicatorLpUnitBall, self).__init__(domain=domain, linear=False,
                                                   range=range)
@@ -543,9 +542,8 @@ class IndicatorLpUnitBall(Functional):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r} -> {!r},{!r})'.format(self.__class__.__name__,
-                                              self.domain, self.range,
-                                              self.exponent)
+        return '{}({!r},{!r})'.format(self.__class__.__name__,
+                                      self.domain, self.exponent)
 
 
 class L1Norm(LpNorm):
@@ -591,8 +589,7 @@ class L1Norm(LpNorm):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r} -> {!r})'.format(self.__class__.__name__,
-                                         self.domain, self.range)
+        return '{}({!r})'.format(self.__class__.__name__, self.domain)
 
 
 class L2Norm(LpNorm):
@@ -631,8 +628,7 @@ class L2Norm(LpNorm):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r} -> {!r})'.format(self.__class__.__name__,
-                                         self.domain, self.range)
+        return '{}({!r})'.format(self.__class__.__name__, self.domain)
 
 
 class L2NormSquared(Functional):
@@ -712,8 +708,7 @@ class L2NormSquared(Functional):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r} -> {!r})'.format(self.__class__.__name__,
-                                         self.domain, self.range)
+        return '{}({!r})'.format(self.__class__.__name__, self.domain)
 
 
 class ConstantFunctional(Functional):
@@ -733,7 +728,7 @@ class ConstantFunctional(Functional):
         constant : element in ``domain.field``
             The constant value of the functional
         range : `Field`, optional
-            Range of the functional. Default: `domain.field`.
+            Range of the functional. Default: ``domain.field``.
         """
         super(ConstantFunctional, self).__init__(
             domain=domain, linear=(constant == 0), grad_lipschitz=0,
@@ -777,9 +772,8 @@ class ConstantFunctional(Functional):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r} -> {!r}, {!r})'.format(self.__class__.__name__,
-                                               self.domain, self.range,
-                                               self.constant)
+        return '{}({!r}, {!r})'.format(self.__class__.__name__,
+                                       self.domain, self.constant)
 
 
 class ZeroFunctional(ConstantFunctional):
@@ -794,15 +788,14 @@ class ZeroFunctional(ConstantFunctional):
         domain : `LinearSpace`
             Domain of the functional.
         range : `Field`, optional
-            Range of the functional. Default: `domain.field`.
+            Range of the functional. Default: ``domain.field``.
         """
         super(ZeroFunctional, self).__init__(domain=domain, constant=0,
                                              range=range)
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r} -> {!r})'.format(self.__class__.__name__,
-                                         self.domain, self.range)
+        return '{}({!r})'.format(self.__class__.__name__, self.domain)
 
 
 class ScalingFunctional(Functional, ScalingOperator):
@@ -890,7 +883,7 @@ class IndicatorBox(Functional):
             The upper bound.
             Default: `+infinity`
         range : `Field`, optional
-            Range of the functional. Default: `domain.field`.
+            Range of the functional. Default: ``domain.field``.
 
         Examples
         --------
@@ -919,9 +912,9 @@ class IndicatorBox(Functional):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r} -> {!r}, {!r}, {!r})'.format(self.__class__.__name__,
-                                                     self.domain, self.range,
-                                                     self.lower, self.upper)
+        return '{}({!r}, {!r}, {!r})'.format(self.__class__.__name__,
+                                             self.domain,
+                                             self.lower, self.upper)
 
 
 class IndicatorNonnegativity(IndicatorBox):
@@ -947,7 +940,7 @@ class IndicatorNonnegativity(IndicatorBox):
         domain : `LinearSpace`
             Domain of the functional.
         range : `Field`, optional
-            Range of the functional. Default: `domain.field`.
+            Range of the functional. Default: ``domain.field``.
 
         Examples
         --------
@@ -963,8 +956,7 @@ class IndicatorNonnegativity(IndicatorBox):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r} -> {!r})'.format(self.__class__.__name__,
-                                         self.domain, self.range)
+        return '{}({!r})'.format(self.__class__.__name__, self.domain)
 
 
 class IndicatorZero(Functional):
@@ -984,7 +976,7 @@ class IndicatorZero(Functional):
         constant : element in ``domain.field``, optional
             The constant value of the functional
         range : `Field`, optional
-            Range of the functional. Default: `domain.field`.
+            Range of the functional. Default: ``domain.field``.
 
         Examples
         --------
@@ -1051,9 +1043,8 @@ class IndicatorZero(Functional):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r} -> {!r}, {!r})'.format(self.__class__.__name__,
-                                               self.domain, self.range,
-                                               self.constant)
+        return '{}({!r}, {!r})'.format(self.__class__.__name__,
+                                       self.domain, self.constant)
 
 
 class KullbackLeibler(Functional):
@@ -1220,9 +1211,8 @@ class KullbackLeibler(Functional):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r} -> {!r}, {!r})'.format(self.__class__.__name__,
-                                               self.domain, self.range,
-                                               self.prior)
+        return '{}({!r}, {!r})'.format(self.__class__.__name__,
+                                       self.domain, self.prior)
 
 
 class KullbackLeiblerConvexConj(Functional):
@@ -1690,7 +1680,14 @@ class SeparableSum(Functional):
         # Make a power space if the second argument is an integer
         if (len(functionals) == 2 and isinstance(functionals[1], Integral)):
             functionals = [functionals[0]] * functionals[1]
-        range = sum(func.range for func in functionals)
+        for func1 in functionals:
+            if all(func1.range.contains_set(func2.range)
+                   for func2 in functionals):
+                range = func1.range
+                break
+        else:
+            raise ValueError('No functional range contained all other ranges '
+                             'in SeparableSum of {!r}'.format(functionals))
 
         domains = [func.domain for func in functionals]
         domain = ProductSpace(*domains)
@@ -1777,8 +1774,7 @@ class SeparableSum(Functional):
     def __repr__(self):
         """Return ``repr(self)``."""
         func_repr = ', '.join(repr(func) for func in self.functionals)
-        return '{}({} -> {!r})'.format(self.__class__.__name__,
-                                       func_repr, self.range)
+        return '{}({})'.format(self.__class__.__name__, func_repr)
 
 
 class QuadraticForm(Functional):
@@ -2146,10 +2142,9 @@ class NuclearNorm(Functional):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r} -> {!r}, {}, {})'.format(self.__class__.__name__,
-                                                 self.domain, self.range,
-                                                 self.outernorm.exponent,
-                                                 self.pwisenorm.exponent)
+        return '{}({!r}, {}, {})'.format(self.__class__.__name__, self.domain,
+                                         self.outernorm.exponent,
+                                         self.pwisenorm.exponent)
 
 
 class IndicatorNuclearNormUnitBall(Functional):
@@ -2193,7 +2188,7 @@ class IndicatorNuclearNormUnitBall(Functional):
         singular_vector_exp : {1, 2, inf}, optional
             Exponent for the norm for the singular vectors.
         range : `Field`, optional
-            Range of the functional. Default: `domain.field`.
+            Range of the functional. Default: ``domain.field``.
         Examples
         --------
         Simple example, nuclear norm of matrix valued function with all ones
@@ -2243,10 +2238,9 @@ class IndicatorNuclearNormUnitBall(Functional):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r} -> {!r}, {}, {})'.format(self.__class__.__name__,
-                                             self.domain, self.range,
-                                             self.__norm.outernorm.exponent,
-                                             self.__norm.pwisenorm.exponent)
+        return '{}({!r}, {}, {})'.format(self.__class__.__name__, self.domain,
+                                         self.__norm.outernorm.exponent,
+                                         self.__norm.pwisenorm.exponent)
 
 
 class MoreauEnvelope(Functional):

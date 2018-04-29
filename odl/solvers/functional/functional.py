@@ -48,8 +48,8 @@ class Functional(Operator):
     <http://odlgroup.github.io/odl/guide/in_depth/functional_guide.html>`_.
     """
 
-    def __init__(self, domain, linear=False, grad_lipschitz=np.nan,
-                 range=None):
+    def __init__(self, domain, range=None, linear=False,
+                 grad_lipschitz=np.nan):
         """Initialize a new instance.
 
         Parameters
@@ -57,12 +57,12 @@ class Functional(Operator):
         domain : `LinearSpace`
             The domain of this functional, i.e., the set of elements to
             which this functional can be applied.
+        range : `Field`, optional
+            Range of the functional. Default: ``domain.field``.
         linear : bool, optional
             If `True`, the functional is considered as linear.
         grad_lipschitz : float, optional
             The Lipschitz constant of the gradient. Default: ``nan``
-        range : `Field`, optional
-            Range of the functional. Default: `domain.field`.
         """
         # Cannot use `super(Functional, self)` here since that breaks
         # subclasses with multiple inheritance (at least those where both
@@ -698,11 +698,7 @@ class FunctionalRightVectorMult(Functional, OperatorRightVectorMult):
                             ''.format(func))
 
         OperatorRightVectorMult.__init__(self, operator=func, vector=vector)
-        # TODO: Implement grad_lipschitz? If func.is_linear:
-        #           grad_lipschitz = func.grad_lipschitz * ||constant||_\infty
-        #       else: grad_lipschitz = np.nan
-        Functional.__init__(self, domain=func.domain,
-                            linear=func.is_linear,
+        Functional.__init__(self, domain=func.domain, linear=func.is_linear,
                             range=func.range)
 
     @property
@@ -745,7 +741,14 @@ class FunctionalSum(Functional, OperatorSum):
         if not isinstance(right, Functional):
             raise TypeError('`right` {!r} is not a `Functional` instance'
                             ''.format(right))
-        range = left.range + right.range
+        if left.range.contains_set(right.range):
+            range = left.range
+        elif right.range.contains_set(left.range):
+            range = right.range
+        else:
+            raise ValueError('The ranges of the `Functionals` in the sum '
+                             '({!r} and {!r}) do not contain one another'
+                             ''.format(left.range, right.range))
 
         Functional.__init__(
             self, domain=left.domain,
@@ -948,7 +951,10 @@ class InfimalConvolution(Functional):
             raise TypeError('`func` {} is not a `Functional` instance'
                             ''.format(right))
 
-        # HELP: What should happen if left.range != right.range?
+        if left.range != right.range:
+            raise ValueError('Ranges of `left` and `right` not same '
+                             '({!r} and {!r})'.format(left.range, right.range))
+
         super(InfimalConvolution, self).__init__(
             domain=left.domain, linear=False, grad_lipschitz=np.nan,
             range=left.range)
@@ -1171,7 +1177,14 @@ class FunctionalProduct(Functional, OperatorPointwiseProduct):
         if not isinstance(right, Functional):
             raise TypeError('`right` {} is not a `Functional` instance'
                             ''.format(right))
-        range = left.range + right.range
+        if left.range.contains_set(right.range):
+            range = left.range
+        elif right.range.contains_set(left.range):
+            range = right.range
+        else:
+            raise ValueError('The ranges of the `Functionals` in the product '
+                             '({!r} and {!r}) do not contain one another'
+                             ''.format(left.range, right.range))
 
         OperatorPointwiseProduct.__init__(self, left, right)
         Functional.__init__(self, left.domain, linear=False,
@@ -1232,7 +1245,14 @@ class FunctionalQuotient(Functional):
             raise TypeError('`divisor` {} is not a `Functional` instance'
                             ''.format(divisor))
 
-        range = dividend.range + divisor.range
+        if dividend.range.contains_set(divisor.range):
+            range = dividend.range
+        elif divisor.range.contains_set(dividend.range):
+            range = divisor.range
+        else:
+            raise ValueError('The ranges of the `Functionals` in the quotient '
+                             '({!r} and {!r}) do not contain one another'
+                             ''.format(dividend.range, divisor.range))
 
         self.__dividend = dividend
         self.__divisor = divisor

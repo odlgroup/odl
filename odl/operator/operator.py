@@ -1105,8 +1105,8 @@ class OperatorSum(Operator):
         rn(3).element([ 2.,  4.,  6.])
         """
         if left.range != right.range:
-            if isinstance(left.range, Field) and \
-                    isinstance(right.range, Field):
+            if (isinstance(left.range, Field) and
+                    isinstance(right.range, Field)):
                 range = left.range + right.range
             else:
                 raise OpTypeError('operator ranges {!r} and {!r} do not match'
