@@ -22,6 +22,8 @@ References
 Foundations and Trends in Optimization, 1 (2014), pp 127-239.
 """
 
+#TODO: LinearSpace -> TensorSpace
+
 from __future__ import absolute_import, division, print_function
 
 import numpy as np
@@ -42,8 +44,8 @@ __all__ = ('proximal_separable_sum', 'proximal_convex_conj',
            'proximal_l1', 'proximal_indicator_linf_unit_ball',
            'proximal_l2', 'proximal_indicator_l2_unit_ball',
            'proximal_l1_l2', 'proximal_indicator_linf_l2_unit_ball',
-           'proximal_convex_conj_kl', 'proximal_convex_conj_kl_cross_entropy',
-           'proximal_huber')
+           'proximal_kl', 'proximal_convex_conj_kl',
+           'proximal_convex_conj_kl_cross_entropy', 'proximal_huber')
 
 
 def proximal_separable_sum(*factory_funcs):
@@ -1243,97 +1245,163 @@ def proximal_indicator_linf_l2_unit_ball(space):
     return ProximalIndicatorLinfL2UnitBall
 
 
-#TODO: continue here
-# TODO(kohr-h): implement KL prox
-
-
-def proximal_convex_conj_kl(space, lam=1, g=None):
-    """Proximal operator factory of the convex conjugate of the KL divergence.
-
-    Function returning the proximal operator of the convex conjugate of the
-    functional F where F is the entropy-type Kullback-Leibler (KL) divergence::
-
-        F(x) = sum_i (x_i - g_i + g_i ln(g_i) - g_i ln(pos(x_i))) + ind_P(x)
-
-    with ``x`` and ``g`` elements in the linear space ``X``, and ``g``
-    non-negative. Here, ``pos`` denotes the nonnegative part, and ``ind_P`` is
-    the indicator function for nonnegativity.
+def proximal_kl(space, g=None):
+    r"""Return the proximal factory for the KL divergence functional.
 
     Parameters
     ----------
-    space : `TensorSpace`
-        Space X which is the domain of the functional F
-    lam : positive float, optional
-        Scaling factor.
+    space : `LinearSpace`
+        Domain of the functional.
     g : ``space`` element, optional
-        Data term, positive. If None it is take as the one-element.
+        Data term (or prior), must be positive everywhere. For the default
+        ``None``, ``space.one()`` is taken.
 
     Returns
     -------
     prox_factory : function
-        Factory for the proximal operator to be initialized.
-
-    See Also
-    --------
-    proximal_convex_conj_kl_cross_entropy : proximal for releated functional
+        Factory for the proximal operator of the KL divergence.
 
     Notes
     -----
-    The functional is given by the expression
+    Since the KL functional is differentiable, its proximal is obtained by
+    solving
 
     .. math::
-        F(x) = \\sum_i (x_i - g_i + g_i \\ln(g_i) - g_i \\ln(pos(x_i))) +
-        I_{x \\geq 0}(x)
+        \nabla \mathrm{KL}(y) + \frac{y - x}{\sigma}
+        = 1 - \frac{g}{y} + \frac{y - x}{\sigma}
+        = 0
 
-    The indicator function :math:`I_{x \geq 0}(x)` is used to restrict the
-    domain of :math:`F` such that :math:`F` is defined over whole space
-    :math:`X`. The non-negativity thresholding :math:`pos` is used to define
-    :math:`F` in the real numbers.
-
-    Note that the functional is not well-defined without a prior g. Hence, if g
-    is omitted this will be interpreted as if g is equal to the one-element.
-
-    The convex conjugate :math:`F^*` of :math:`F` is
+    for :math:`y`. This results in
 
     .. math::
-        F^*(p) = \\sum_i (-g_i \\ln(\\text{pos}({1_X}_i - p_i))) +
-        I_{1_X - p \geq 0}(p)
+        \mathrm{prox}_{\sigma\mathrm{KL}}(x)
+        = \frac{x - \sigma + \sqrt{(x - \sigma)^2 + 4\sigma g}}{2}.
 
-    where :math:`p` is the variable dual to :math:`x`, and :math:`1_X` is an
-    element of the space :math:`X` with all components set to 1.
-
-    The proximal operator of the convex conjugate of F is
-
-    .. math::
-        \mathrm{prox}_{\\sigma (\\lambda F)^*}(x) =
-        \\frac{\\lambda 1_X + x - \\sqrt{(x -  \\lambda 1_X)^2 +
-        4 \\lambda \\sigma g}}{2}
-
-    where :math:`\\sigma` is the step size-like parameter, and :math:`\\lambda`
-    is the weighting in front of the function :math:`F`.
-
-    KL based objectives are common in MLEM optimization problems and are often
-    used when data noise governed by a multivariate Poisson probability
-    distribution is significant.
-
-    The intermediate image estimates can have negative values even though
-    the converged solution will be non-negative. Non-negative intermediate
-    image estimates can be enforced by adding an indicator function ind_P
-    the primal objective.
-
-    This functional :math:`F`, described above, is related to the
-    Kullback-Leibler cross entropy functional. The KL cross entropy is the one
-    described in `this Wikipedia article
-    <https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence>`_, and
-    the functional :math:`F` is obtained by switching place of the prior and
-    the varialbe in the KL cross entropy functional. See the See Also section.
+    See Also
+    --------
+    proximal_kl_convex_conj
     """
-    lam = float(lam)
+    if g is not None:
+        g = space.element(g)
 
-    if g is not None and g not in space:
-        raise TypeError('{} is not an element of {}'.format(g, space))
+    class ProximalKL(Operator):
 
-    class ProximalConvexConjKL(Operator):
+        """Proximal operator of the KL divergence."""
+
+        def __init__(self, sigma):
+            """Initialize a new instance.
+
+            Parameters
+            ----------
+            sigma : positive float
+            """
+            super(ProximalKL, self).__init__(
+                domain=space, range=space, linear=False)
+            self.sigma = float(sigma)
+
+        def _call(self, x, out):
+            """Return ``self(x, out=out)``."""
+            # (x - sig + sqrt((x - sig)^2 + 4*sig*g)) / 2
+
+            # out = (x - sig)^2
+            if x is out:
+                # Handle aliased `x` and `out` (need original `x` later on)
+                x = x.copy()
+            else:
+                out.assign(x)
+            out -= self.sigma
+            out.ufuncs.square(out=out)
+
+            # out = ... + 4*sigma*g
+            if g is None:
+                out += 4 * self.sigma
+            else:
+                out.lincomb(1, out, 4 * self.sigma, g)
+
+            # out = x + sqrt(...) - sig
+            out.ufuncs.sqrt(out=out)
+            out.lincomb(1, x, 1, out)
+            out -= self.sigma
+
+            # out = 1/2 * ...
+            out /= 2
+
+        def __repr__(self):
+            """Return ``repr(self)``.
+
+            Examples
+            --------
+            >>> space = odl.rn(2)
+            >>> g = 2 * space.one()
+            >>> kl = odl.solvers.KullbackLeibler(space, prior=g)
+            >>> kl.proximal(2)
+            KullbackLeibler(
+                rn(2), prior=rn(2).element([ 2.,  2.])
+            ).proximal(2.0)
+            """
+            posargs = [space]
+            optargs = [('prior', g, None)]
+            with npy_printoptions(precision=REPR_PRECISION):
+                inner_parts = signature_string_parts(posargs, optargs)
+            callee_repr = repr_string('KullbackLeibler',
+                                      inner_parts)
+            with npy_printoptions(precision=REPR_PRECISION):
+                prox_arg_str = array_str(self.sigma)
+            return method_repr_string(callee_repr, 'proximal', [prox_arg_str])
+
+    return ProximalKL
+
+
+def proximal_convex_conj_kl(space, g=None):
+    r"""Return the proximal factory for the KL divergence convex conjugate.
+
+    Parameters
+    ----------
+    space : `LinearSpace`
+        Domain of the functional.
+    g : ``space`` element, optional
+        Data term (or prior), must be positive everywhere. For the default
+        ``None``, ``space.one()`` is taken.
+
+    Returns
+    -------
+    prox_factory : function
+        Factory for the proximal operator of convex conjugate of the KL
+        divergence.
+
+    Notes
+    -----
+    The convex conjugate of the KL divergence is (for :math:`L^p`-like
+    spaces)
+
+    .. math::
+        \mathrm{KL}^*(x) = \int \big[-g(t) \ln\big(1 - x(t)\big)\big]\,
+        \mathrm{d}t,
+
+    with value :math:`+\infty` if :math:`x(t) \geq 1` anywhere. Its proximal
+    operator can be obtained by solving
+
+    .. math::
+        \nabla \mathrm{KL^*}(y) + \frac{y - x}{\sigma}
+        = \frac{g}{1 - y} + \frac{y - x}{\sigma}
+        = 0
+
+    for :math:`y`. This results in
+
+    .. math::
+        \mathrm{prox}_{\sigma\mathrm{KL^*}}(x)
+        = \frac{x + 1 - \sqrt{(x - 1)^2 + 4\sigma g}}{2}.
+
+    See Also
+    --------
+    proximal_kl
+    proximal_convex_conj_kl_cross_entropy :
+        Proximal for functional with switched roles of ``x`` and ``g``
+    """
+    if g is not None:
+        g = space.element(g)
+
+    class ProximalKLConvexConj(Operator):
 
         """Proximal operator of the convex conjugate of the KL divergence."""
 
@@ -1344,131 +1412,110 @@ def proximal_convex_conj_kl(space, lam=1, g=None):
             ----------
             sigma : positive float
             """
-            super(ProximalConvexConjKL, self).__init__(
+            super(ProximalKLConvexConj, self).__init__(
                 domain=space, range=space, linear=False)
             self.sigma = float(sigma)
 
         def _call(self, x, out):
             """Return ``self(x, out=out)``."""
-            # (x + lam - sqrt((x - lam)^2 + 4*lam*sig*g)) / 2
+            # (x + 1 - sqrt((x - 1)^2 + 4*sig*g)) / 2
 
-            # out = (x - lam)^2
+            # out = (x - 1)^2
             if x is out:
                 # Handle aliased `x` and `out` (need original `x` later on)
                 x = x.copy()
             else:
                 out.assign(x)
-            out -= lam
+            out -= 1
             out.ufuncs.square(out=out)
 
-            # out = ... + 4*lam*sigma*g
-            # If g is None, it is taken as the one element
+            # out = ... + 4*sigma*g
             if g is None:
-                out += 4.0 * lam * self.sigma
+                out += 4 * self.sigma
             else:
-                out.lincomb(1, out, 4.0 * lam * self.sigma, g)
+                out.lincomb(1, out, 4 * self.sigma, g)
 
-            # out = x - sqrt(...) + lam
+            # out = x - sqrt(...) + 1
             out.ufuncs.sqrt(out=out)
             out.lincomb(1, x, -1, out)
-            out += lam
+            out += 1
 
             # out = 1/2 * ...
             out /= 2
 
-    return ProximalConvexConjKL
+        def __repr__(self):
+            """Return ``repr(self)``.
+
+            Examples
+            --------
+            >>> space = odl.rn(2)
+            >>> g = 2 * space.one()
+            >>> kl = odl.solvers.KullbackLeibler(space, prior=g)
+            >>> kl.convex_conj.proximal(2)
+            KullbackLeiblerConvexConj(
+                rn(2), prior=rn(2).element([ 2.,  2.])
+            ).proximal(2.0)
+            """
+            posargs = [space]
+            optargs = [('prior', g, None)]
+            with npy_printoptions(precision=REPR_PRECISION):
+                inner_parts = signature_string_parts(posargs, optargs)
+            callee_repr = repr_string('KullbackLeiblerConvexConj',
+                                      inner_parts)
+            with npy_printoptions(precision=REPR_PRECISION):
+                prox_arg_str = array_str(self.sigma)
+            return method_repr_string(callee_repr, 'proximal', [prox_arg_str])
+
+    return ProximalKLConvexConj
 
 
-def proximal_convex_conj_kl_cross_entropy(space, lam=1, g=None):
-    """Proximal factory of the convex conjugate of cross entropy KL divergence.
-
-    Function returning the proximal factory of the convex conjugate of the
-    functional F, where F is the cross entropy Kullback-Leibler (KL)
-    divergence given by::
-
-        F(x) = sum_i (x_i ln(pos(x_i)) - x_i ln(g_i) + g_i - x_i) + ind_P(x)
-
-    with ``x`` and ``g`` in the linear space ``X``, and ``g`` non-negative.
-    Here, ``pos`` denotes the nonnegative part, and ``ind_P`` is the indicator
-    function for nonnegativity.
+def proximal_convex_conj_kl_cross_entropy(space, g=None):
+    r"""Return the proximal factory for the KL cross entropy convex conjugate.
 
     Parameters
     ----------
-    space : `TensorSpace`
-        Space X which is the domain of the functional F
-    lam : positive float, optional
-        Scaling factor.
+    space : `LinearSpace`
+        Domain of the functional.
     g : ``space`` element, optional
-        Data term, positive. If None it is take as the one-element.
+        Data term (or prior), must be positive everywhere. For the default
+        ``None``, ``space.one()`` is taken.
 
     Returns
     -------
     prox_factory : function
-        Factory for the proximal operator to be initialized.
-
-    See Also
-    --------
-    proximal_convex_conj_kl : proximal for related functional
+        Factory for the proximal operator of convex conjugate of the KL
+        divergence.
 
     Notes
     -----
-    The functional is given by the expression
+    The convex conjugate of the KL cross entropy is (for :math:`L^p`-like
+    spaces)
 
     .. math::
-        F(x) = \\sum_i (x_i \\ln(pos(x_i)) - x_i \\ln(g_i) + g_i - x_i) +
-        I_{x \\geq 0}(x)
+        \widetilde{\mathrm{KL}}^*(x) = \int g(t)\, \mathrm{e}^{x(t)- 1}\,
+        \mathrm{d}t.
 
-    The indicator function :math:`I_{x \geq 0}(x)` is used to restrict the
-    domain of :math:`F` such that :math:`F` is defined over whole space
-    :math:`X`. The non-negativity thresholding :math:`pos` is used to define
-    :math:`F` in the real numbers.
-
-    Note that the functional is not well-defined without a prior g. Hence, if g
-    is omitted this will be interpreted as if g is equal to the one-element.
-
-    The convex conjugate :math:`F^*` of :math:`F` is
+    Its proximal operator is given by
 
     .. math::
-        F^*(p) = \\sum_i g_i (exp(p_i) - 1)
+        \mathrm{prox}_{\sigma \widetilde{\mathrm{KL}}^*}(x) =
+        x - W(\sigma\, g\, \mathrm{e}^{x}),
 
-    where :math:`p` is the variable dual to :math:`x`.
+    where :math:`W` is the `Lambert W function
+    <https://en.wikipedia.org/wiki/Lambert_W_function>`_.
 
-    The proximal operator of the convex conjugate of :math:`F` is
-
-    .. math::
-        \mathrm{prox}_{\\sigma (\\lambda F)^*}(x) = x - \\lambda
-        W(\\frac{\\sigma}{\\lambda} g e^{x/\\lambda})
-
-    where :math:`\\sigma` is the step size-like parameter, :math:`\\lambda` is
-    the weighting in front of the function :math:`F`, and :math:`W` is the
-    Lambert W function (see, for example, the
-    `Wikipedia article <https://en.wikipedia.org/wiki/Lambert_W_function>`_).
-
-    For real-valued input x, the Lambert :math:`W` function is defined only for
-    :math:`x \\geq -1/e`, and it has two branches for values
-    :math:`-1/e \\leq x < 0`. However, for inteneded use-cases, where
-    :math:`\\lambda` and :math:`g` are positive, the argument of :math:`W`
-    will always be positive.
-
-    `Wikipedia article on Kullback Leibler divergence
-    <https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence>`_.
-    For further information about the functional, see for example `this article
-    <http://ieeexplore.ieee.org/document/1056144/?arnumber=1056144>`_.
-
-    The KL cross entropy functional :math:`F`, described above, is related to
-    another functional functional also know as KL divergence. This functional
-    is often used as data discrepancy term in inverse problems, when data is
-    corrupted with Poisson noise. This functional is obtained by changing place
-    of the prior and the variable. See the See Also section.
+    See Also
+    --------
+    proximal_kl
+    proximal_convex_conj_kl :
+        Proximal for functional with switched roles of ``x`` and ``g``
     """
-    lam = float(lam)
+    if g is not None:
+        g = space.element(g)
 
-    if g is not None and g not in space:
-        raise TypeError('{} is not an element of {}'.format(g, space))
+    class ProximalKLCrossEntropyConvexConj(Operator):
 
-    class ProximalConvexConjKLCrossEntropy(Operator):
-
-        """Proximal operator of conjugate of cross entropy KL divergence."""
+        """Proximal operator of the KL cross entropy convex conjugate."""
 
         def __init__(self, sigma):
             """Initialize a new instance.
@@ -1478,7 +1525,7 @@ def proximal_convex_conj_kl_cross_entropy(space, lam=1, g=None):
             sigma : positive float
             """
             self.sigma = float(sigma)
-            super(ProximalConvexConjKLCrossEntropy, self).__init__(
+            super(ProximalKLCrossEntropyConvexConj, self).__init__(
                 domain=space, range=space, linear=False)
 
         def _call(self, x, out):
@@ -1486,33 +1533,57 @@ def proximal_convex_conj_kl_cross_entropy(space, lam=1, g=None):
             # Lazy import to improve `import odl` time
             import scipy.special
 
-            if g is None:
-                # If g is None, it is taken as the one element
-                # Different branches of lambertw is not an issue, see Notes
-                lambw = scipy.special.lambertw(
-                    (self.sigma / lam) * np.exp(x / lam))
-            else:
-                # Different branches of lambertw is not an issue, see Notes
-                lambw = scipy.special.lambertw(
-                    (self.sigma / lam) * g * np.exp(x / lam))
+            tmp = np.exp(x)
+            tmp *= self.sigma
+            if g is not None:
+                tmp *= g
 
+            # Different branches of lambertw are not an issue since
+            # its input is positive.
+            # The returned array is complex, so we usually have to cast
+            # to real.
+            lambw = scipy.special.lambertw(tmp)
             if not np.issubsctype(self.domain.dtype, np.complexfloating):
                 lambw = lambw.real
 
             lambw = x.space.element(lambw)
+            out.lincomb(1, x, -1, lambw)
 
-            out.lincomb(1, x, -lam, lambw)
+        def __repr__(self):
+            """Return ``repr(self)``.
 
-    return ProximalConvexConjKLCrossEntropy
+            Examples
+            --------
+            >>> space = odl.rn(2)
+            >>> g = 2 * space.one()
+            >>> kl = odl.solvers.KullbackLeiblerCrossEntropy(space, prior=g)
+            >>> kl.convex_conj.proximal(2)
+            KullbackLeiblerCrossEntropyConvexConj(
+                rn(2), prior=rn(2).element([ 2.,  2.])
+            ).proximal(2.0)
+            """
+            posargs = [space]
+            optargs = [('prior', g, None)]
+            with npy_printoptions(precision=REPR_PRECISION):
+                inner_parts = signature_string_parts(posargs, optargs)
+            callee_repr = repr_string('KullbackLeiblerCrossEntropyConvexConj',
+                                      inner_parts)
+            with npy_printoptions(precision=REPR_PRECISION):
+                prox_arg_str = array_str(self.sigma)
+            return method_repr_string(callee_repr, 'proximal', [prox_arg_str])
 
+    return ProximalKLCrossEntropyConvexConj
+
+
+#TODO: continue here
 
 def proximal_huber(space, gamma):
-    """Proximal factory of the Huber norm.
+    """Return the proximal factory for the Huber norm.
 
     Parameters
     ----------
     space : `TensorSpace`
-        The domain of the functional
+        Domain of the functional.
     gamma : float
         The smoothing parameter of the Huber norm functional.
 
