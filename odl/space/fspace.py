@@ -19,7 +19,7 @@ from odl.set import RealNumbers, ComplexNumbers, Set, LinearSpace
 from odl.set.space import LinearSpaceElement
 from odl.util import (
     is_real_dtype, is_complex_floating_dtype, dtype_repr, dtype_str,
-    complex_dtype, real_dtype, signature_string,
+    complex_dtype, real_dtype, signature_string, is_real_floating_dtype,
     is_valid_input_array, is_valid_input_meshgrid,
     out_shape_from_array, out_shape_from_meshgrid, vectorize, writable_array)
 from odl.util.utility import preload_first_arg, getargspec
@@ -293,6 +293,16 @@ class FunctionSpace(LinearSpace):
                 ''.format(dtype_repr(self.scalar_out_dtype)))
         else:
             return self.__complex_out_dtype
+
+    @property
+    def is_real(self):
+        """True if this is a space of real valued functions."""
+        return is_real_floating_dtype(self.scalar_out_dtype)
+
+    @property
+    def is_complex(self):
+        """True if this is a space of complex valued functions."""
+        return is_complex_floating_dtype(self.scalar_out_dtype)
 
     @property
     def out_shape(self):
