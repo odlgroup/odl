@@ -56,7 +56,7 @@ install:
 
     # Doc dependencies
     - if [[ "$BUILD_DOCS" == "true" ]]; then
-        pip install "sphinx<1.7" sphinx_rtd_theme travis-sphinx;
+        pip install sphinx sphinx_rtd_theme travis-sphinx;
       fi
 
     # Install our package
@@ -77,7 +77,7 @@ script:
     # To avoid clogging the logs, we redirect stderr to /dev/null
     - if [[ "$BUILD_DOCS" == "true" ]]; then
         cd $TRAVIS_BUILD_DIR/doc/source && python generate_doc.py && cd -;
-        travis-sphinx build -n -s $TRAVIS_BUILD_DIR/doc/source 2>/dev/null;
+        travis-sphinx build -n -s $TRAVIS_BUILD_DIR/doc/source;
       fi
 
 after_success:
