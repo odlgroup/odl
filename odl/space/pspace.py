@@ -382,6 +382,16 @@ class ProductSpace(LinearSpace):
             raise AttributeError("`dtype`'s of subspaces not equal")
 
     @property
+    def is_real(self):
+        """True if this is a space of real valued vectors."""
+        return all(spc.is_real for spc in self.parts)
+
+    @property
+    def is_complex(self):
+        """True if this is a space of complex valued vectors."""
+        return all(spc.is_complex for spc in self.parts)
+
+    @property
     def real_space(self):
         """Variant of this space with real dtype."""
         return ProductSpace(*[space.real_space for space in self.spaces])
