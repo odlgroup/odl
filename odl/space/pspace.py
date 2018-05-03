@@ -384,12 +384,12 @@ class ProductSpace(LinearSpace):
     @property
     def is_real(self):
         """True if this is a space of real valued vectors."""
-        return all(spc.is_real for spc in self.parts)
+        return all(spc.is_real for spc in self.spaces)
 
     @property
     def is_complex(self):
         """True if this is a space of complex valued vectors."""
-        return all(spc.is_complex for spc in self.parts)
+        return all(spc.is_complex for spc in self.spaces)
 
     @property
     def real_space(self):
