@@ -51,8 +51,8 @@ def test_dca():
     b = 0.5
     # This means -1/a = -2 < b = 0.5 < 1/a = 2.
     space = odl.rn(1)
-    g = a / 2 * odl.solvers.L2NormSquared(space).translated(b)
-    h = odl.solvers.L1Norm(space)
+    f = a / 2 * odl.solvers.L2NormSquared(space).translated(b)
+    g = odl.solvers.L1Norm(space)
     niter = 50
 
     # Set up some space elements for the solvers to use
@@ -70,10 +70,10 @@ def test_dca():
     mu = 1
     K = odl.IdentityOperator(space)
 
-    dca(x_dca, g, h, niter)
-    prox_dca(x_prox_dca, g, h, niter, gamma)
-    doubleprox_dc(x_doubleprox, y, g, phi, h, K, niter, gamma, mu)
-    doubleprox_dc_simple(x_simpl, y_simpl, g, phi, h, K, niter, gamma, mu)
+    dca(x_dca, f, g, niter)
+    prox_dca(x_prox_dca, f, g, niter, gamma)
+    doubleprox_dc(x_doubleprox, y, f, phi, g, K, niter, gamma, mu)
+    doubleprox_dc_simple(x_simpl, y_simpl, f, phi, g, K, niter, gamma, mu)
     expected = np.asarray([b - 1 / a, 0, b + 1 / a])
 
     dist_dca = np.min(np.abs(expected - float(x_dca)))

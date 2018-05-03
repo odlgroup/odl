@@ -18,24 +18,24 @@ from __future__ import print_function, division, absolute_import
 __all__ = ('dca', 'prox_dca', 'doubleprox_dc')
 
 
-def dca(x, g, h, niter, callback=None):
+def dca(x, f, g, niter, callback=None):
     r"""Subgradient DCA of Tao and An.
 
     This algorithm solves a problem of the form ::
 
-        min_x g(x) - h(x),
+        min_x f(x) - g(x),
 
-    where ``g`` and ``h`` are proper, convex and lower semicontinuous
+    where ``f`` and ``g`` are proper, convex and lower semicontinuous
     functions.
 
     Parameters
     ----------
     x : `LinearSpaceElement`
         Initial point, updated in-place.
+    f : `Functional`
+        Convex functional. Needs to implement ``f.convex_conj.gradient``.
     g : `Functional`
-        Convex functional. Needs to implement ``g.convex_conj.gradient``.
-    h : `Functional`
-        Convex functional. Needs to implement ``h.gradient``.
+        Convex functional. Needs to implement ``g.gradient``.
     niter : int
         Number of iterations.
     callback : callable, optional
@@ -47,24 +47,24 @@ def dca(x, g, h, niter, callback=None):
     `[TA1997] <http://journals.math.ac.vn/acta/pdf/9701289.pdf>`_. The problem
 
     .. math::
-        \min g(x) - h(x)
+        \min f(x) - g(x)
 
-    has the first-order optimality condition :math:`0 \in \partial g(x) -
-    \partial h(x)`, i.e., aims at finding an :math:`x` so that there exists a
+    has the first-order optimality condition :math:`0 \in \partial f(x) -
+    \partial g(x)`, i.e., aims at finding an :math:`x` so that there exists a
     common element
 
     .. math::
-        y \in \partial g(x) \cap \partial h(x).
+        y \in \partial f(x) \cap \partial g(x).
 
     The element :math:`y` can be seen as a solution of the Toland dual problem
 
     .. math::
-        \min h^*(y) - g^*(y)
+        \min g^*(y) - f^*(y)
 
     and the iteration is given by
 
     .. math::
-        y_n \in \partial h(x_n), \qquad x_{n+1} \in \partial g^*(y_n),
+        y_n \in \partial g(x_n), \qquad x_{n+1} \in \partial f^*(y_n),
 
     for :math:`n\geq 0`. Here, a subgradient is found by evaluating the
     gradient method of the respective functionals.
@@ -77,42 +77,42 @@ def dca(x, g, h, niter, callback=None):
 
     See also
     --------
-    dca :
-        Solver with subgradinet steps for all the functionals.
+    prox_dca :
+        Solver with a proximal step for ``f`` and a subgradient step for ``g``.
     doubleprox_dc :
         Solver with proximal steps for all the nonsmooth convex functionals
         and a gradient step for a smooth functional.
     """
-    space = g.domain
-    if h.domain != space:
-        raise ValueError('`g.domain` and `h.domain` need to be equal, but '
-                         '{} != {}'.format(space, h.domain))
-    g_convex_conj = g.convex_conj
+    space = f.domain
+    if g.domain != space:
+        raise ValueError('`f.domain` and `g.domain` need to be equal, but '
+                         '{} != {}'.format(space, g.domain))
+    f_convex_conj = f.convex_conj
     for _ in range(niter):
-        g_convex_conj.gradient(h.gradient(x), out=x)
+        f_convex_conj.gradient(g.gradient(x), out=x)
 
         if callback is not None:
             callback(x)
 
 
-def prox_dca(x, g, h, niter, gamma, callback=None):
+def prox_dca(x, f, g, niter, gamma, callback=None):
     r"""Proximal DCA of Sun, Sampaio and Candido.
 
     This algorithm solves a problem of the form ::
 
-        min_x g(x) - h(x)
+        min_x f(x) - g(x)
 
-    where ``g`` and ``h`` are two proper, convex and lower semicontinuous
+    where ``f`` and ``g`` are two proper, convex and lower semicontinuous
     functions.
 
     Parameters
     ----------
     x : `LinearSpaceElement`
         Initial point, updated in-place.
+    f : `Functional`
+        Convex functional. Needs to implement ``f.proximal``.
     g : `Functional`
-        Convex functional. Needs to implement ``g.proximal``.
-    h : `Functional`
-        Convex functional. Needs to implement ``h.gradient``.
+        Convex functional. Needs to implement ``g.gradient``.
     niter : int
         Number of iterations.
     gamma : positive float
@@ -128,18 +128,18 @@ def prox_dca(x, g, h, niter, gamma, callback=None):
     It solves the problem
 
     .. math ::
-        \min g(x) - h(x)
+        \min f(x) - g(x)
 
-    by using subgradients of :math:`h` and proximal points of :math:`g^*`.
+    by using subgradients of :math:`g` and proximal points of :math:`f`.
     The iteration is given by
 
     .. math ::
-        y_n \in \partial h(x_n), \qquad x_{n+1}
-            = \mathrm{Prox}_{\gamma g}(x_n + \gamma y_n).
+        y_n \in \partial g(x_n), \qquad x_{n+1}
+            = \mathrm{Prox}_{\gamma f}(x_n + \gamma y_n).
 
     In contrast to `dca`, `prox_dca` uses proximal steps with respect to the
-    convex part ``g``. Both algorithms use subgradients of the concave part
-    ``h``.
+    convex part ``f``. Both algorithms use subgradients of the concave part
+    ``g``.
 
     References
     ----------
@@ -149,29 +149,29 @@ def prox_dca(x, g, h, niter, gamma, callback=None):
 
     See also
     --------
-    prox_dca :
-        Solver with a proximal step for ``g`` and a subgradient step for ``h``.
+    dca :
+        Solver with subgradinet steps for all the functionals.
     doubleprox_dc :
         Solver with proximal steps for all the nonsmooth convex functionals
         and a gradient step for a smooth functional.
     """
-    space = g.domain
-    if h.domain != space:
-        raise ValueError('`g.domain` and `h.domain` need to be equal, but '
-                         '{} != {}'.format(space, h.domain))
+    space = f.domain
+    if g.domain != space:
+        raise ValueError('`f.domain` and `g.domain` need to be equal, but '
+                         '{} != {}'.format(space, g.domain))
     for _ in range(niter):
-        g.proximal(gamma)(x.lincomb(1, x, gamma, h.gradient(x)), out=x)
+        f.proximal(gamma)(x.lincomb(1, x, gamma, g.gradient(x)), out=x)
 
         if callback is not None:
             callback(x)
 
 
-def doubleprox_dc(x, y, g, phi, h, K, niter, gamma, mu, callback=None):
+def doubleprox_dc(x, y, f, phi, g, K, niter, gamma, mu, callback=None):
     r"""Double-proxmial gradient d.c. algorithm of Banert and Bot.
 
     This algorithm solves a problem of the form ::
 
-        min_x g(x) + phi(x) - h(Kx).
+        min_x f(x) + phi(x) - g(Kx).
 
     Parameters
     ----------
@@ -179,12 +179,12 @@ def doubleprox_dc(x, y, g, phi, h, K, niter, gamma, mu, callback=None):
         Initial primal guess, updated in-place.
     y : `LinearSpaceElement`
         Initial dual guess, updated in-place.
-    g : `Functional`
+    f : `Functional`
         Convex functional. Needs to implement ``g.proximal``.
     phi : `Functional`
         Convex functional. Needs to implement ``phi.gradient``.
         Convergence can be guaranteed if the gradient is Lipschitz continuous.
-    h : `Functional`
+    g : `Functional`
         Convex functional. Needs to implement ``h.convex_conj.proximal``.
     K : `Operator`
         Linear operator. Needs to implement ``K.adjoint``
@@ -203,19 +203,19 @@ def doubleprox_dc(x, y, g, phi, h, K, niter, gamma, mu, callback=None):
     <https://arxiv.org/abs/1610.06538>`_ and solves the d.c. problem
 
     .. math ::
-        \min_x g(x) + \varphi(x) - h(Kx)
+        \min_x f(x) + \varphi(x) - g(Kx)
 
     together with its Toland dual
 
     .. math ::
-        \min_y h^*(y) - (g + \varphi)^*(K^* y).
+        \min_y g^*(y) - (f + \varphi)^*(K^* y).
 
     The iterations are given by
 
     .. math ::
-        x_{n+1} &= \mathrm{Prox}_{\gamma g} (x_n + \gamma (K^* y_n
+        x_{n+1} &= \mathrm{Prox}_{\gamma f} (x_n + \gamma (K^* y_n
                    - \nabla \varphi(x_n))), \\
-        y_{n+1} &= \mathrm{Prox}_{\mu h^*} (y_n + \mu K x_{n+1}).
+        y_{n+1} &= \mathrm{Prox}_{\mu g^*} (y_n + \mu K x_{n+1}).
 
     To guarantee convergence, the parameter :math:`\gamma` must satisfy
     :math:`0 < \gamma < 2/L` where :math:`L` is the Lipschitz constant of
@@ -228,42 +228,41 @@ def doubleprox_dc(x, y, g, phi, h, K, niter, gamma, mu, callback=None):
 
     See also
     --------
+    dca :
+        Solver with subgradient steps for all the functionals.
     prox_dca :
-        Solver with a proximal step for ``g`` and a subgradient step for ``h``.
-    doubleprox_dc :
-        Solver with proximal steps for all the nonsmooth convex functionals
-        and a gradient step for a smooth functional.
+        Solver with a proximal step for ``f`` and a subgradient step for ``g``.
     """
-    primal_space = g.domain
-    dual_space = h.domain
+    primal_space = f.domain
+    dual_space = g.domain
 
     if phi.domain != primal_space:
-        raise ValueError('`g.domain` and `phi.domain` need to be equal, but '
+        raise ValueError('`f.domain` and `phi.domain` need to be equal, but '
                          '{} != {}'.format(primal_space, phi.domain))
     if K.domain != primal_space:
-        raise ValueError('`g.domain` and `K.domain` need to be equal, but '
+        raise ValueError('`f.domain` and `K.domain` need to be equal, but '
                          '{} != {}'.format(primal_space, K.domain))
     if K.range != dual_space:
-        raise ValueError('`h.domain` and `K.range` need to be equal, but '
+        raise ValueError('`g.domain` and `K.range` need to be equal, but '
                          '{} != {}'.format(dual_space, K.range))
 
-    h_convex_conj = h.convex_conj
+    g_convex_conj = g.convex_conj
     for _ in range(niter):
-        g.proximal(gamma)(x.lincomb(1, x,
+        f.proximal(gamma)(x.lincomb(1, x,
                                     gamma, K.adjoint(y) - phi.gradient(x)),
                           out=x)
-        h_convex_conj.proximal(mu)(y.lincomb(1, y, mu, K(x)), out=y)
+        g_convex_conj.proximal(mu)(y.lincomb(1, y, mu, K(x)), out=y)
 
         if callback is not None:
             callback(x)
 
 
-def doubleprox_dc_simple(x, y, g, phi, h, K, niter, gamma, mu):
+def doubleprox_dc_simple(x, y, f, phi, g, K, niter, gamma, mu):
     """Non-optimized version of ``doubleprox_dc``.
     This function is intended for debugging. It makes a lot of copies and
     performs no error checking.
     """
     for _ in range(niter):
-        g.proximal(gamma)(x + gamma * K.adjoint(y) -
+        f.proximal(gamma)(x + gamma * K.adjoint(y) -
                           gamma * phi.gradient(x), out=x)
-        h.convex_conj.proximal(mu)(y + mu * K(x), out=y)
+        g.convex_conj.proximal(mu)(y + mu * K(x), out=y)
