@@ -71,8 +71,8 @@ def test_dca():
 
     dca(x_dca, g, h, niter)
     prox_dca(x_prox_dca, g, h, niter, gamma)
-    doubleprox_dc(x_doubleprox, y, g, h, phi, K, niter, gamma, mu)
-    doubleprox_dc_simple(x_simpl, y_simpl, g, h, phi, K, niter, gamma, mu)
+    doubleprox_dc(x_doubleprox, y, g, phi, h, K, niter, gamma, mu)
+    doubleprox_dc_simple(x_simpl, y_simpl, g, phi, h, K, niter, gamma, mu)
     expected = np.asarray([b - 1 / a, 0, b + 1 / a])
 
     dist_dca = np.min(np.abs(expected - float(x_dca)))

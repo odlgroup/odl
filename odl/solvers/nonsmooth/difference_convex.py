@@ -135,7 +135,7 @@ def prox_dca(x, g, h, niter, gamma, callback=None):
 
     .. math ::
         y_n \in \partial h(x_n), \qquad x_{n+1}
-            = \mathrm{Prox}^{\gamma}_g(x_n + \gamma y_n).
+            = \mathrm{Prox}_{\gamma g}(x_n + \gamma y_n).
 
     In contrast to `dca`, `prox_dca` uses proximal steps with respect to the
     convex part ``g``. Both algorithms use subgradients of the concave part
@@ -166,7 +166,7 @@ def prox_dca(x, g, h, niter, gamma, callback=None):
             callback(x)
 
 
-def doubleprox_dc(x, y, g, h, phi, K, niter, gamma, mu, callback=None):
+def doubleprox_dc(x, y, g, phi, h, K, niter, gamma, mu, callback=None):
     r"""Double-proxmial gradient d.c. algorithm of Banert and Bot.
 
     This algorithm solves a problem of the form::
@@ -181,11 +181,11 @@ def doubleprox_dc(x, y, g, h, phi, K, niter, gamma, mu, callback=None):
         Initial dual guess, updated in-place.
     g : `Functional`
         Convex functional. Needs to implement ``g.proximal``.
-    h : `Functional`
-        Convex functional. Needs to implement ``h.convex_conj.proximal``.
     phi : `Functional`
         Convex functional. Needs to implement ``phi.gradient``.
         Convergence can be guaranteed if the gradient is Lipschitz continuous.
+    h : `Functional`
+        Convex functional. Needs to implement ``h.convex_conj.proximal``.
     K : `Operator`
         Linear operator. Needs to implement ``K.adjoint``
     niter : int
@@ -213,9 +213,9 @@ def doubleprox_dc(x, y, g, h, phi, K, niter, gamma, mu, callback=None):
     The iterations are given by
 
     .. math ::
-        x_{n+1} &= \mathrm{Prox}_{\gamma}^g (x_n + \gamma (K^* y_n
+        x_{n+1} &= \mathrm{Prox}_{\gamma g} (x_n + \gamma (K^* y_n
                    - \nabla \varphi(x_n))), \\
-        y_{n+1} &= \mathrm{Prox}_{\mu}^{h^*} (y_n + \mu K x_{n+1}).
+        y_{n+1} &= \mathrm{Prox}_{\mu h^*} (y_n + \mu K x_{n+1}).
 
     To guarantee convergence, the parameter :math:`\gamma` must satisfy
     :math:`0 < \gamma < 2/L` where :math:`L` is the Lipschitz constant of
@@ -258,7 +258,7 @@ def doubleprox_dc(x, y, g, h, phi, K, niter, gamma, mu, callback=None):
             callback(x)
 
 
-def doubleprox_dc_simple(x, y, g, h, phi, K, niter, gamma, mu):
+def doubleprox_dc_simple(x, y, g, phi, h, K, niter, gamma, mu):
     """Non-optimized version of ``doubleprox_dc``.
     This function is intended for debugging. It makes a lot of copies and
     performs no error checking.
