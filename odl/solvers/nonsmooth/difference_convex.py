@@ -21,7 +21,7 @@ __all__ = ('dca', 'prox_dca', 'doubleprox_dc')
 def dca(x, g, h, niter, callback=None):
     r"""Subgradient DCA of Tao and An.
 
-    This algorithm solves a problem of the form::
+    This algorithm solves a problem of the form ::
 
         min_x g(x) - h(x),
 
@@ -169,7 +169,7 @@ def prox_dca(x, g, h, niter, gamma, callback=None):
 def doubleprox_dc(x, y, g, phi, h, K, niter, gamma, mu, callback=None):
     r"""Double-proxmial gradient d.c. algorithm of Banert and Bot.
 
-    This algorithm solves a problem of the form::
+    This algorithm solves a problem of the form ::
 
         min_x g(x) + phi(x) - h(Kx).
 
