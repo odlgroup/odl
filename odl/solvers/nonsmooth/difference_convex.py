@@ -33,10 +33,9 @@ def dca(x, g, h, niter, callback=None):
     x : `LinearSpaceElement`
         Initial point, updated in-place.
     g : `Functional`
-        Convex functional. Needs to provide a `Functional.convex_conj` with a
-        `Functional.gradient` method.
+        Convex functional. Needs to implement ``g.convex_conj.gradient``.
     h : `Functional`
-        Convex functional. Needs to provide a `Functional.gradient` method.
+        Convex functional. Needs to implement ``h.gradient``.
     niter : int
         Number of iterations.
     callback : callable, optional
@@ -110,10 +109,9 @@ def prox_dca(x, g, h, niter, gamma, callback=None):
     x : `LinearSpaceElement`
         Initial point, updated in-place.
     g : `Functional`
-        Convex functional. Needs to provide a `Functional.convex_conj` with a
-        `Functional.proximal` factory.
+        Convex functional. Needs to implement ``g.proximal``.
     h : `Functional`
-        Convex functional. Needs to provide a `Functional.gradient` method.
+        Convex functional. Needs to implement ``h.gradient``.
     niter : int
         Number of iterations.
     gamma : positive float
@@ -181,14 +179,14 @@ def doubleprox_dc(x, y, g, h, phi, K, niter, gamma, mu, callback=None):
     y : `LinearSpaceElement`
         Initial dual guess, updated in-place.
     g : `Functional`
-        Convex functional. Needs to provide a `Functional.proximal` factory.
+        Convex functional. Needs to implement ``g.proximal``.
     h : `Functional`
-        Convex functional. Needs to provide a `Functional.proximal` factory.
+        Convex functional. Needs to implement ``h.convex_conj.proximal``.
     phi : `Functional`
-        Convex functional. Needs to provide a `Functional.gradient`, and
-        convergence can be guaranteed if the gradient is Lipschitz continuous.
+        Convex functional. Needs to implement ``phi.gradient``.
+        Convergence can be guaranteed if the gradient is Lipschitz continuous.
     K : `Operator`
-        Linear operator.
+        Linear operator. Needs to implement ``K.adjoint``
     niter : int
         Number of iterations.
     gamma : positive float
