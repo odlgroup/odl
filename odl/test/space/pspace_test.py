@@ -79,6 +79,8 @@ def test_emptyproduct():
     spc = odl.ProductSpace(field=reals)
     assert spc.field == reals
     assert spc.size == 0
+    assert spc.is_real
+    assert spc.is_complex
 
     with pytest.raises(IndexError):
         spc[0]
@@ -97,6 +99,8 @@ def test_RxR():
     assert HxH.spaces[1] is H
     assert HxH.is_power_space
     assert not HxH.is_weighted
+    assert HxH.is_real
+    assert not HxH.is_complex
 
     v1 = H.element([1, 2])
     v2 = H.element([3, 4])
@@ -164,6 +168,8 @@ def test_mixed_space():
     assert not pspace.is_power_space
     assert pspace.spaces[0] is r2_1
     assert pspace.spaces[1] is r2_2
+    assert pspace.is_real
+    assert not pspace.is_complex
 
     # dtype not well defined for this space
     with pytest.raises(AttributeError):
