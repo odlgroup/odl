@@ -12,7 +12,7 @@
 
 from __future__ import division
 import odl
-from odl.solvers import (dca, prox_dca, doubleprox_dc)
+from odl.solvers import dca, prox_dca, doubleprox_dc
 from odl.solvers.nonsmooth.difference_convex import doubleprox_dc_simple
 import numpy as np
 import pytest
@@ -86,6 +86,8 @@ def test_dca():
     assert float(y_simpl) == pytest.approx(float(y))
 
     # All methods should give approximately one solution of the problem.
+    # For 50 iterations, the methods have been tested to achieve an absolute
+    # accuracy of at least 1/10^6.
     assert dist_dca == pytest.approx(0, abs=1e-6)
     assert dist_prox_cda == pytest.approx(0, abs=1e-6)
     assert dist_prox_doubleprox == pytest.approx(0, abs=1e-6)
