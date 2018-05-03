@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -28,12 +28,10 @@ from odl.contrib.datasets.ct.mayo_dicom_dict import new_dict_items
 
 # Update the dicom dictionary with the extra Mayo tags
 DicomDictionary.update(new_dict_items)
-new_names_dict = dict([(CleanName(tag), tag) for tag in
-                       new_dict_items])
-NameDict.update(new_names_dict)
+NameDict.update((CleanName(tag), tag) for tag in new_dict_items)
 
 
-__all__ = ('projections_from_folder', 'volume_from_folder')
+__all__ = ('load_projections', 'load_reconstruction')
 
 
 def _read_projections(folder, proj_start=1, proj_end=-1):
@@ -49,7 +47,7 @@ def _read_projections(folder, proj_start=1, proj_end=-1):
 
     file_names = file_names[proj_start:proj_end]
 
-    for file_name in tqdm.tqdm(file_names, 'loading projection data'):
+    for file_name in tqdm.tqdm(file_names, 'Loading projection data'):
         # read the file
         dataset = dicom.read_file(folder + '/' + file_name)
 
@@ -60,15 +58,12 @@ def _read_projections(folder, proj_start=1, proj_end=-1):
         rescale_intercept = dataset.RescaleIntercept
         rescale_slope = dataset.RescaleSlope
 
-        # print(rescale_intercept, rescale_slope)
-
         # Load the array as bytes
         data_array = np.array(np.frombuffer(dataset.PixelData, 'H'),
                               dtype='float32')
         data_array = data_array.reshape([rows, cols], order='F').T
 
         # Rescale array
-        # rescaled_array = rescale_intercept + data_array * rescale_slope
         data_array *= rescale_slope
         data_array += rescale_intercept
         data_array /= hu_factor
@@ -80,13 +75,13 @@ def _read_projections(folder, proj_start=1, proj_end=-1):
     return datasets, projections
 
 
-def projections_from_folder(folder, proj_start=1, proj_end=-1):
+def load_projections(folder, proj_start=1, proj_end=-1):
     """Load geometry and data stored in Mayo format from folder.
 
     Parameters
     ----------
     folder : str
-        Path to the folder where the Mayo dicom files are stored.
+        Path to the folder where the Mayo DICOM files are stored.
     proj_start : int
         Index of the first projection to use. Used for subsampling.
     proj_end : int
@@ -97,7 +92,8 @@ def projections_from_folder(folder, proj_start=1, proj_end=-1):
     geometry : ConeFlatGeometry
         Geometry corresponding to the Mayo projector.
     proj_data : `numpy.ndarray`
-        Projection data, normalized such that the reconstruction is g/cm^3.
+        Projection data, given as the line integral of the linear attenuation
+        coefficient (g/cm^3). Its unit is thus g/cm^2.
     """
     datasets, projections = _read_projections(folder, proj_start, proj_end)
 
@@ -181,7 +177,7 @@ def projections_from_folder(folder, proj_start=1, proj_end=-1):
     return geometry, proj_data.asarray()
 
 
-def volume_from_folder(folder, slice_start=0, slice_end=-1):
+def load_reconstruction(folder, slice_start=0, slice_end=-1):
     """Load a volume from folder, also returns the corresponding partition.
 
     Parameters
@@ -195,7 +191,7 @@ def volume_from_folder(folder, slice_start=0, slice_end=-1):
 
     Returns
     -------
-    partition : odl.:::
+    partition : `odl.RectPartition`
         Partition describing the geometric positioning of the voxels.
     data : `numpy.ndarray`
         Volumetric data. Scaled such that data = 1 for water (0 HU).
@@ -235,7 +231,7 @@ def volume_from_folder(folder, slice_start=0, slice_end=-1):
         # Get data array and convert to correct coordinates
         data_array = np.array(np.frombuffer(dataset.PixelData, 'H'),
                               dtype='float32')
-        data_array = data_array.reshape([rows, cols], order='F').T
+        data_array = data_array.reshape([cols, rows], order='C')
         data_array = np.rot90(data_array, -1)
 
         # Convert from CT numbers to densities
