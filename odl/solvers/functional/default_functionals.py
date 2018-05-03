@@ -2777,21 +2777,30 @@ https://web.stanford.edu/~boyd/papers/pdf/prox_algs.pdf
 class Huber(Functional):
     r"""The Huber functional.
 
-    The Huber norm is the integral over a smoothed norm,
+    The Huber norm is the integral over a smoothed pointwise norm,
 
     .. math::
-        F(x) = \int_\Omega f_{\gamma}(\|x(y)\|_2) dy
+        H_\gamma(x) = \int_\Omega h_{\gamma}(|x(t)|_2) \mathrm{d}t
 
-    where :math:`\|\cdot\|_2` denotes the Euclidean norm for vector-valued
-    functions which reduces to the absolute value for scalar-valued functions.
-    The function :math:`f_\gamma` with smoothing :math:`\gamma` is given by
+    where :math:`|\cdot|_2` denotes the Euclidean norm for vector-valued
+    functions, which reduces to the absolute value for scalar-valued
+    functions. The function :math:`h_\gamma` with smoothing
+    :math:`\gamma` is given by
 
     .. math::
-        f_{\gamma}(t) =
+        h_{\gamma}(s) =
         \begin{cases}
-            \frac{1}{2 \gamma} t^2 & \text{if } |t| \leq \gamma \\
-            |t| - \frac{\gamma}{2} & \text{else}
+            \frac{1}{2 \gamma} s^2 & \text{if } |s| \leq \gamma \\
+            |s| - \frac{\gamma}{2} & \text{else}
         \end{cases}.
+
+    The Huber norm is also the Moreau envelope of the 1-norm with smoothing
+    parameter :math:`\gamma`.
+
+    If :math:`\gamma > 0`, the functional is non-smooth and corresponds to
+    the usual L1 norm. For :math:`gamma > 0`, it has a
+    :math:`1/\gamma`-Lipschitz gradient, so that its convex conjugate is
+    :math:`\gamma`-strongly convex.
     """
 
     def __init__(self, space, gamma):
@@ -2802,10 +2811,7 @@ class Huber(Functional):
         space : `TensorSpace`
             Domain of the functional.
         gamma : float
-            Smoothing parameter of the Huber functional. If ``gamma = 0``,
-            the functional is non-smooth and corresponds to the usual L1 norm.
-            For ``gamma > 0``, it has a ``1/gamma``-Lipschitz gradient so that
-            its convex conjugate is ``gamma``-strongly convex.
+            Smoothing parameter of the Huber functional.
 
         Examples
         --------

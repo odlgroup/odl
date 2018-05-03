@@ -18,7 +18,8 @@ from builtins import object
 
 import numpy as np
 
-from odl.util import signature_string
+from odl.util import (
+    signature_string_parts, repr_string, npy_printoptions, REPR_PRECISION)
 
 __all__ = ('Callback', 'CallbackStore', 'CallbackApply', 'CallbackPrintTiming',
            'CallbackPrintIteration', 'CallbackPrint', 'CallbackPrintNorm',
@@ -106,7 +107,7 @@ class Callback(object):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}()'.format(self.__class__.__name__)
+        return self.__class__.__name__
 
 
 class _CallbackAnd(Callback):
@@ -137,8 +138,18 @@ class _CallbackAnd(Callback):
             callback.reset()
 
     def __repr__(self):
-        """Return ``repr(self)``."""
-        return ' & '.join('{!r}'.format(p) for p in self.callbacks)
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> cb1 = odl.solvers.CallbackPrintTiming()
+        >>> cb2 = odl.solvers.CallbackPrintIteration()
+        >>> cb3 = odl.solvers.CallbackPrintHardwareUsage()
+        >>> cb1 & cb2 & cb3
+
+        """
+        parts = signature_string_parts([self.callbacks], [])
+        return repr_string('_CallbackAnd', parts, allow_mixed_seps=False)
 
 
 class _CallbackCompose(Callback):
@@ -175,9 +186,11 @@ class _CallbackCompose(Callback):
         >>> callback = odl.solvers.CallbackPrint()
         >>> operator = odl.ScalingOperator(r3, 2.0)
         >>> callback * operator
-        CallbackPrint() * ScalingOperator(rn(3), 2.0)
+
         """
-        return '{!r} * {!r}'.format(self.callback, self.operator)
+        posargs = [self.callback, self.operator]
+        parts = signature_string_parts(posargs, [])
+        return repr_string('_CallbackCompose', parts, allow_mixed_seps=False)
 
 
 class CallbackStore(Callback):
@@ -261,12 +274,20 @@ class CallbackStore(Callback):
         return len(self.results)
 
     def __repr__(self):
-        """Return ``repr(self)``."""
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> callback = odl.solvers.CallbackStore(step=5)
+        >>> callback
+        CallbackStore(step=5)
+        """
         optargs = [('results', self.results, []),
                    ('function', self.function, None),
                    ('step', self.step, 1)]
-        inner_str = signature_string([], optargs)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        with npy_printoptions(precision=REPR_PRECISION):
+            parts = signature_string_parts([], optargs)
+        return repr_string(self.__class__.__name__, parts)
 
 
 class CallbackApply(Callback):
@@ -289,7 +310,7 @@ class CallbackApply(Callback):
 
         >>> def func(x):
         ...     print(np.max(x))
-        >>> callback = CallbackApply(func)
+        >>> callback = odl.solvers.CallbackApply(func)
         >>> x = odl.rn(3).element([1, 2, 3])
         >>> callback(x)
         3.0
@@ -320,16 +341,12 @@ class CallbackApply(Callback):
         """Set `iter` to 0."""
         self.iter = 0
 
-    def __str__(self):
-        """Return ``str(self)``."""
-        return repr(self)
-
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = [self.function]
         optargs = [('step', self.step, 1)]
-        inner_str = signature_string(posargs, optargs)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        parts = signature_string_parts(posargs, optargs)
+        return repr_string(self.__class__.__name__, parts)
 
 
 class CallbackPrintIteration(Callback):
@@ -353,7 +370,7 @@ class CallbackPrintIteration(Callback):
         Other Parameters
         ----------------
         kwargs :
-            Key word arguments passed to the print function.
+            Keyword arguments passed to the ``print`` function.
 
         Examples
         --------
@@ -397,13 +414,19 @@ class CallbackPrintIteration(Callback):
 
         Examples
         --------
-        >>> CallbackPrintIteration(fmt='Current iter is {}.', step=2)
-        CallbackPrintIteration(fmt='Current iter is {}.', step=2)
+        >>> callback = odl.solvers.CallbackPrintIteration(
+        ...     fmt='Current iteration: {}', step=2)
+        >>> callback
+        CallbackPrintIteration(fmt='Current iteration: {}', step=2)
         """
         optargs = [('fmt', self.fmt, 'iter = {}'),
                    ('step', self.step, 1)]
-        inner_str = signature_string([], optargs)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        for kwarg, value in self.kwargs.items():
+            optargs.append((kwarg, value, None))
+        with npy_printoptions(precision=REPR_PRECISION):
+            parts = signature_string_parts([], optargs)
+        return repr_string(self.__class__.__name__, parts,
+                           allow_mixed_seps=False)
 
 
 class CallbackPrintTiming(Callback):
@@ -430,7 +453,7 @@ class CallbackPrintTiming(Callback):
         Other Parameters
         ----------------
         kwargs :
-            Key word arguments passed to the print function.
+            Keyword arguments passed to the ``print`` function.
         """
         self.fmt = str(fmt)
         self.step = int(step)
@@ -458,12 +481,24 @@ class CallbackPrintTiming(Callback):
         self.iter = 0
 
     def __repr__(self):
-        """Return ``repr(self)``."""
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> callback = odl.solvers.CallbackPrintTiming(step=5,
+        ...                                            cumulative=True)
+        >>> callback
+        CallbackPrintTiming(step=5, cumulative=True)
+        """
         optargs = [('fmt', self.fmt, 'Time elapsed = {:<5.03f} s'),
                    ('step', self.step, 1),
                    ('cumulative', self.cumulative, False)]
-        inner_str = signature_string([], optargs)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        for kwarg, value in self.kwargs.items():
+            optargs.append((kwarg, value, None))
+        with npy_printoptions(precision=REPR_PRECISION):
+            parts = signature_string_parts([], optargs)
+        return repr_string(self.__class__.__name__, parts,
+                           allow_mixed_seps=False)
 
 
 class CallbackPrint(Callback):
@@ -491,7 +526,7 @@ class CallbackPrint(Callback):
         Other Parameters
         ----------------
         kwargs :
-            Key word arguments passed to the print function.
+            Keyword arguments passed to the ``print`` function.
 
         Examples
         --------
@@ -542,12 +577,23 @@ class CallbackPrint(Callback):
         self.iter = 0
 
     def __repr__(self):
-        """Return ``repr(self)``."""
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> callback = odl.solvers.CallbackPrint(step=5)
+        >>> callback
+        CallbackPrint(step=5)
+        """
         optargs = [('func', self.func, None),
                    ('fmt', self.fmt, '{!r}'),
                    ('step', self.step, 1)]
-        inner_str = signature_string([], optargs)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        for kwarg, value in self.kwargs.items():
+            optargs.append((kwarg, value, None))
+        with npy_printoptions(precision=REPR_PRECISION):
+            parts = signature_string_parts([], optargs)
+        return repr_string(self.__class__.__name__, parts,
+                           allow_mixed_seps=False)
 
 
 class CallbackPrintNorm(Callback):
@@ -680,7 +726,14 @@ class CallbackShow(Callback):
         self.space_of_last_x = None
 
     def __repr__(self):
-        """Return ``repr(self)``."""
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> callback = odl.solvers.CallbackShow(step=5, saveto='{:03}.png')
+        >>> callback
+        CallbackShow(step=5, saveto='{:03}.png')
+        """
         posargs = []
         if self.title != 'Iterate {}':
             posargs.append(self.title)
@@ -688,8 +741,10 @@ class CallbackShow(Callback):
                    ('saveto', self.saveto, None)]
         for kwarg, value in self.kwargs.items():
             optargs.append((kwarg, value, None))
-        inner_str = signature_string(posargs, optargs)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        with npy_printoptions(precision=REPR_PRECISION):
+            parts = signature_string_parts([], optargs)
+        return repr_string(self.__class__.__name__, parts,
+                           allow_mixed_seps=False)
 
 
 class CallbackSaveToDisk(Callback):
@@ -701,9 +756,11 @@ class CallbackSaveToDisk(Callback):
 
         Parameters
         ----------
-        saveto : string
+        saveto : string or callable
             Format string for the name of the file(s) where
-            iterates are saved. The file name is generated as
+            iterates are saved, or callable that takes the iteration number
+            as input and returns the file name. For a format string, the
+            file name is generated as ::
 
                 filename = saveto.format(cur_iter_num)
 
@@ -723,11 +780,11 @@ class CallbackSaveToDisk(Callback):
         --------
         Store each iterate:
 
-        >>> callback = CallbackSaveToDisk('my_path/my_iterate')
+        >>> callback = CallbackSaveToDisk('my_path/my_iterate_{}')
 
         Save every fifth overwriting the previous one:
 
-        >>> callback = CallbackSaveToDisk(saveto='my_path/my_iterate',
+        >>> callback = CallbackSaveToDisk(saveto='my_path/my_iterate_{}',
         ...                               step=5)
 
         Save each fifth iterate in ``numpy`` format, indexing the files with
@@ -774,14 +831,23 @@ class CallbackSaveToDisk(Callback):
         self.iter = 0
 
     def __repr__(self):
-        """Return ``repr(self)``."""
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> callback = odl.solvers.CallbackSaveToDisk('{:03}', step=5)
+        >>> callback
+        CallbackSaveToDisk('{:03}', step=5)
+        """
         posargs = [self.saveto]
         optargs = [('step', self.step, 1),
                    ('impl', self.impl, 'pickle')]
         for kwarg, value in self.kwargs.items():
             optargs.append((kwarg, value, None))
-        inner_str = signature_string(posargs, optargs)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        with npy_printoptions(precision=REPR_PRECISION):
+            parts = signature_string_parts(posargs, optargs)
+        return repr_string(self.__class__.__name__, parts,
+                           allow_mixed_seps=False)
 
 
 class CallbackSleep(Callback):
@@ -813,17 +879,25 @@ class CallbackSleep(Callback):
         time.sleep(self.seconds)
 
     def __repr__(self):
-        """Return ``repr(self)``."""
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> callback = odl.solvers.CallbackSleep(0.5)
+        >>> callback
+        CallbackSleep(seconds=0.5)
+        """
         optargs = [('seconds', self.seconds, 1.0)]
-        inner_str = signature_string([], optargs)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        with npy_printoptions(precision=REPR_PRECISION):
+            parts = signature_string_parts([], optargs)
+        return repr_string(self.__class__.__name__, parts)
 
 
 class CallbackShowConvergence(Callback):
 
     """Displays a convergence plot."""
 
-    def __init__(self, functional, title='convergence', logx=False, logy=False,
+    def __init__(self, functional, title='Convergence', logx=False, logy=False,
                  **kwargs):
         """Initialize a new instance.
 
@@ -850,20 +924,27 @@ class CallbackShowConvergence(Callback):
         self.logy = logy
         self.kwargs = kwargs
         self.iter = 0
+        self.fig = None
+        self.ax = None
 
+    def _init_fig(self):
+        """Initialize the matplotlib figure."""
         import matplotlib.pyplot as plt
-        self.fig = plt.figure(title)
+        self.fig = plt.figure(self.title)
         self.ax = self.fig.add_subplot(111)
-        self.ax.set_xlabel('iteration')
-        self.ax.set_ylabel('function value')
-        self.ax.set_title(title)
-        if logx:
-            self.ax.set_xscale("log", nonposx='clip')
-        if logy:
-            self.ax.set_yscale("log", nonposy='clip')
+        self.ax.set_xlabel('Iteration')
+        self.ax.set_ylabel('Functional value')
+        self.ax.set_title(self.title)
+        if self.logx:
+            self.ax.set_xscale('log', nonposx='clip')
+        if self.logy:
+            self.ax.set_yscale('log', nonposy='clip')
 
     def __call__(self, x):
         """Implement ``self(x)``."""
+        if self.fig is None or self.ax is None:
+            self._init_fig()
+
         if self.logx:
             it = self.iter + 1
         else:
@@ -876,13 +957,25 @@ class CallbackShowConvergence(Callback):
         self.iter = 0
 
     def __repr__(self):
-        """Return ``repr(self)``."""
-        return '{}(functional={}, title={}, logx={}, logy={})'.format(
-            self.__class__.__name__,
-            self.functional,
-            self.title,
-            self.logx,
-            self.logy)
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> callback = odl.solvers.CallbackShowConvergence(
+        ...     odl.solvers.L2Norm(odl.rn(3)), logy=True)
+        >>> callback
+        CallbackShowConvergence(L2Norm(rn(3)), logy=True)
+        """
+        posargs = [self.functional]
+        optargs = [('title', self.title, 'Convergence'),
+                   ('logx', self.logx, False),
+                   ('logy', self.logy, False)]
+        for kwarg, value in self.kwargs.items():
+            optargs.append((kwarg, value, None))
+        with npy_printoptions(precision=REPR_PRECISION):
+            parts = signature_string_parts(posargs, optargs)
+        return repr_string(self.__class__.__name__, parts,
+                           allow_mixed_seps=False)
 
 
 class CallbackPrintHardwareUsage(Callback):
@@ -900,28 +993,28 @@ class CallbackPrintHardwareUsage(Callback):
         ----------
         step : positive int, optional
             Number of iterations between output.
-        fmt_cpu : string, optional
-            Formating that should be applied. The CPU usage is printed as ::
+        fmt_cpu : str, optional
+            Format string for the CPU utilization, used as ::
 
                 print(fmt_cpu.format(cpu))
 
-            where ``cpu`` is a vector with the percentage of current CPU usaged
-            for each core. An empty format string disables printing of CPU
-            usage.
-        fmt_mem : string, optional
-            Formating that should be applied. The RAM usage is printed as ::
+            where ``cpu`` is a vector with the percentages of current CPU
+            utilization for each core. An empty format string disables
+            printing of CPU utilization.
+        fmt_mem : str, optional
+            Format string for RAM consumption, used as ::
 
                 print(fmt_mem.format(mem))
 
-            where ``mem`` is the current RAM memory usaged. An empty format
-            string disables printing of RAM memory usage.
-        fmt_swap : string, optional
-            Formating that should be applied. The SWAP usage is printed as ::
+            where ``mem`` is the currently used RAM in percent. An empty
+            format string disables printing of RAM usage.
+        fmt_swap : str, optional
+            Format string for Swap utilization, used as ::
 
                 print(fmt_swap.format(swap))
 
-            where ``swap`` is the current SWAP memory usaged. An empty format
-            string disables printing of SWAP memory usage.
+            where ``swap`` is the current percentage of used Swap space. An
+            empty format string disables printing of SWAP memory usage.
 
         Other Parameters
         ----------------
@@ -950,6 +1043,7 @@ class CallbackPrintHardwareUsage(Callback):
         self.fmt_mem = str(fmt_mem)
         self.fmt_swap = str(fmt_swap)
         self.iter = 0
+        self.kwargs = kwargs
 
     def __call__(self, _):
         """Print the memory and CPU usage"""
@@ -974,13 +1068,25 @@ class CallbackPrintHardwareUsage(Callback):
         self.iter = 0
 
     def __repr__(self):
-        """Return ``repr(self)``."""
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> callback = odl.solvers.CallbackPrintHardwareUsage(
+        ...     step=5, fmt_swap='')
+        >>> callback
+        CallbackPrintHardwareUsage(step=5, fmt_swap='')
+        """
         optargs = [('step', self.step, 1),
                    ('fmt_cpu', self.fmt_cpu, 'CPU usage (% each core): {}'),
                    ('fmt_mem', self.fmt_mem, 'RAM usage: {}'),
                    ('fmt_swap', self.fmt_swap, 'SWAP usage: {}')]
-        inner_str = signature_string([], optargs)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        for kwarg, value in self.kwargs.items():
+            optargs.append((kwarg, value, None))
+        with npy_printoptions(precision=REPR_PRECISION):
+            parts = signature_string_parts([], optargs)
+        return repr_string(self.__class__.__name__, parts,
+                           allow_mixed_seps=False)
 
 
 class CallbackProgressBar(Callback):
@@ -1008,10 +1114,13 @@ class CallbackProgressBar(Callback):
         self.niter = int(niter)
         self.step = int(step)
         self.kwargs = kwargs
-        self.reset()
+        self.iter = 0
+        self.pbar = None
 
     def __call__(self, _):
         """Update the progressbar."""
+        if self.iter == 0:
+            self.reset()
         if self.iter % self.step == 0:
             self.pbar.update(self.step)
 
@@ -1024,16 +1133,22 @@ class CallbackProgressBar(Callback):
         self.pbar = tqdm.tqdm(total=self.niter, **self.kwargs)
 
     def __repr__(self):
-        """Return ``repr(self)``."""
-        posargs = [self.niter]
-        optargs = [('step', self.step, 1)]
-        inner_str = signature_string(posargs, optargs)
-        if self.kwargs:
-            return '{}({}, **{})'.format(self.__class__.__name__,
-                                         inner_str, self.kwargs)
-        else:
-            return '{}({})'.format(self.__class__.__name__,
-                                   inner_str)
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> callback = odl.solvers.CallbackProgressBar(niter=100, step=5)
+        >>> callback
+        CallbackProgressBar(niter=100, step=5)
+        """
+        optargs = [('niter', self.niter, None),
+                   ('step', self.step, 1)]
+        for kwarg, value in self.kwargs.items():
+            optargs.append((kwarg, value, None))
+        with npy_printoptions(precision=REPR_PRECISION):
+            parts = signature_string_parts([], optargs)
+        return repr_string(self.__class__.__name__, parts,
+                           allow_mixed_seps=False)
 
 
 if __name__ == '__main__':

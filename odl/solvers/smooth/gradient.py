@@ -113,9 +113,9 @@ def adam(f, x, learning_rate=1e-3, beta1=0.9, beta2=0.999, eps=1e-8,
 
     where :math:`f` is a differentiable functional.
 
-    The algorithm is described in [KB2015] (`arxiv
-    <https://arxiv.org/abs/1412.6980>`_). All parameter names and default
-    valuesare taken from the article.
+    The algorithm is described in `[KB2015]
+    <https://arxiv.org/abs/1412.6980>`_. All parameter names and default
+    values are taken from the article.
 
     Parameters
     ----------

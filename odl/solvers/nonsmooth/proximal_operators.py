@@ -677,8 +677,8 @@ def proximal_indicator_box(space, lower=None, upper=None):
                        ('upper', upper, None)]
             with npy_printoptions(precision=REPR_PRECISION):
                 inner_parts = signature_string_parts(posargs, optargs)
-            callee_repr = repr_string('IndicatorBox', inner_parts)
-            return method_repr_string(callee_repr, 'proximal', ['1.0'])
+            caller_repr = repr_string('IndicatorBox', inner_parts)
+            return method_repr_string(caller_repr, 'proximal', ['1.0'])
 
     return ProximalIndicatorBox
 
@@ -767,10 +767,10 @@ def proximal_l1(space):
             """
             posargs = [space]
             inner_parts = signature_string_parts(posargs, [])
-            callee_repr = repr_string('L1Norm', inner_parts)
+            caller_repr = repr_string('L1Norm', inner_parts)
             with npy_printoptions(precision=REPR_PRECISION):
                 prox_arg_str = array_str(self.sigma)
-            return method_repr_string(callee_repr, 'proximal', [prox_arg_str])
+            return method_repr_string(caller_repr, 'proximal', [prox_arg_str])
 
     return ProximalL1
 
@@ -868,8 +868,8 @@ def proximal_indicator_linf_unit_ball(space):
             posargs = [space]
             optargs = [('exponent', float('inf'), None)]
             inner_parts = signature_string_parts(posargs, optargs)
-            callee_repr = repr_string('IndicatorLpUnitBall', inner_parts)
-            return method_repr_string(callee_repr, 'proximal', ['1.0'])
+            caller_repr = repr_string('IndicatorLpUnitBall', inner_parts)
+            return method_repr_string(caller_repr, 'proximal', ['1.0'])
 
     return ProximalIndicatorLinfUnitBall
 
@@ -941,10 +941,10 @@ def proximal_l2(space):
             """
             posargs = [space]
             inner_parts = signature_string_parts(posargs, [])
-            callee_repr = repr_string('L2Norm', inner_parts)
+            caller_repr = repr_string('L2Norm', inner_parts)
             with npy_printoptions(precision=REPR_PRECISION):
                 prox_arg_str = array_str(self.sigma)
-            return method_repr_string(callee_repr, 'proximal', [prox_arg_str])
+            return method_repr_string(caller_repr, 'proximal', [prox_arg_str])
 
     return ProximalL2
 
@@ -1036,8 +1036,8 @@ def proximal_indicator_l2_unit_ball(space):
             optargs = [('exponent', 2.0, None)]
             with npy_printoptions(precision=REPR_PRECISION):
                 inner_parts = signature_string_parts(posargs, optargs)
-            callee_repr = repr_string('IndicatorLpUnitBall', inner_parts)
-            return method_repr_string(callee_repr, 'proximal', ['1.0'])
+            caller_repr = repr_string('IndicatorLpUnitBall', inner_parts)
+            return method_repr_string(caller_repr, 'proximal', ['1.0'])
 
     return ProximalIndicatorL2UnitBall
 
@@ -1134,10 +1134,10 @@ def proximal_l1_l2(space):
             posargs = [space]
             optargs = [('exponent', 2.0, None)]
             inner_parts = signature_string_parts(posargs, optargs)
-            callee_repr = repr_string('GroupL1Norm', inner_parts)
+            caller_repr = repr_string('GroupL1Norm', inner_parts)
             with npy_printoptions(precision=REPR_PRECISION):
                 prox_arg_str = array_str(self.sigma)
-            return method_repr_string(callee_repr, 'proximal', [prox_arg_str])
+            return method_repr_string(caller_repr, 'proximal', [prox_arg_str])
 
     return ProximalL1L2
 
@@ -1238,9 +1238,9 @@ def proximal_indicator_linf_l2_unit_ball(space):
             optargs = [('exponent', 2.0, None)]
             with npy_printoptions(precision=REPR_PRECISION):
                 inner_parts = signature_string_parts(posargs, optargs)
-            callee_repr = repr_string('IndicatorGroupLinfUnitBall',
+            caller_repr = repr_string('IndicatorGroupLinfUnitBall',
                                       inner_parts)
-            return method_repr_string(callee_repr, 'proximal', ['1.0'])
+            return method_repr_string(caller_repr, 'proximal', ['1.0'])
 
     return ProximalIndicatorLinfL2UnitBall
 
@@ -1294,6 +1294,7 @@ def proximal_kl(space, g=None):
             Parameters
             ----------
             sigma : positive float
+                Step size parameter.
             """
             super(ProximalKL, self).__init__(
                 domain=space, range=space, linear=False)
@@ -1343,11 +1344,11 @@ def proximal_kl(space, g=None):
             optargs = [('prior', g, None)]
             with npy_printoptions(precision=REPR_PRECISION):
                 inner_parts = signature_string_parts(posargs, optargs)
-            callee_repr = repr_string('KullbackLeibler',
+            caller_repr = repr_string('KullbackLeibler',
                                       inner_parts)
             with npy_printoptions(precision=REPR_PRECISION):
                 prox_arg_str = array_str(self.sigma)
-            return method_repr_string(callee_repr, 'proximal', [prox_arg_str])
+            return method_repr_string(caller_repr, 'proximal', [prox_arg_str])
 
     return ProximalKL
 
@@ -1411,6 +1412,7 @@ def proximal_convex_conj_kl(space, g=None):
             Parameters
             ----------
             sigma : positive float
+                Step size parameter.
             """
             super(ProximalKLConvexConj, self).__init__(
                 domain=space, range=space, linear=False)
@@ -1460,11 +1462,11 @@ def proximal_convex_conj_kl(space, g=None):
             optargs = [('prior', g, None)]
             with npy_printoptions(precision=REPR_PRECISION):
                 inner_parts = signature_string_parts(posargs, optargs)
-            callee_repr = repr_string('KullbackLeiblerConvexConj',
+            caller_repr = repr_string('KullbackLeiblerConvexConj',
                                       inner_parts)
             with npy_printoptions(precision=REPR_PRECISION):
                 prox_arg_str = array_str(self.sigma)
-            return method_repr_string(callee_repr, 'proximal', [prox_arg_str])
+            return method_repr_string(caller_repr, 'proximal', [prox_arg_str])
 
     return ProximalKLConvexConj
 
@@ -1483,7 +1485,7 @@ def proximal_convex_conj_kl_cross_entropy(space, g=None):
     Returns
     -------
     prox_factory : function
-        Factory for the proximal operator of convex conjugate of the KL
+        Factory for the proximal operator of the convex conjugate of the KL
         divergence.
 
     Notes
@@ -1523,6 +1525,7 @@ def proximal_convex_conj_kl_cross_entropy(space, g=None):
             Parameters
             ----------
             sigma : positive float
+                Step size parameter.
             """
             self.sigma = float(sigma)
             super(ProximalKLCrossEntropyConvexConj, self).__init__(
@@ -1566,19 +1569,17 @@ def proximal_convex_conj_kl_cross_entropy(space, g=None):
             optargs = [('prior', g, None)]
             with npy_printoptions(precision=REPR_PRECISION):
                 inner_parts = signature_string_parts(posargs, optargs)
-            callee_repr = repr_string('KullbackLeiblerCrossEntropyConvexConj',
+            caller_repr = repr_string('KullbackLeiblerCrossEntropyConvexConj',
                                       inner_parts)
             with npy_printoptions(precision=REPR_PRECISION):
                 prox_arg_str = array_str(self.sigma)
-            return method_repr_string(callee_repr, 'proximal', [prox_arg_str])
+            return method_repr_string(caller_repr, 'proximal', [prox_arg_str])
 
     return ProximalKLCrossEntropyConvexConj
 
 
-#TODO: continue here
-
 def proximal_huber(space, gamma):
-    """Return the proximal factory for the Huber norm.
+    r"""Return the proximal factory for the Huber norm.
 
     Parameters
     ----------
@@ -1590,7 +1591,7 @@ def proximal_huber(space, gamma):
     Returns
     -------
     prox_factory : function
-        Factory for the proximal operator to be initialized.
+        Factory for the proximal operator of the Huber norm.
 
     See Also
     --------
@@ -1598,16 +1599,27 @@ def proximal_huber(space, gamma):
 
     Notes
     -----
-    The proximal operator is given by given by the proximal operator of
-    ``1/(2*gamma) * L2 norm`` in points that are ``<= gamma``, and by the
-    proximal operator of the l1 norm in points that are ``> gamma``.
+    The proximal operator of the Huber norm :math:`H_\gamma` is (for
+    :math:`L^p`-like spaces)
+
+    .. math::
+        \mathrm{prox}_{\sigma H_\gamma}(\mathbf{x}) =
+        \begin{cases}
+            \frac{\gamma}{\gamma + \sigma}\, \mathbf{x} &
+            \text{where } |\mathbf{x}|_2 \leq \gamma + \sigma, \\
+            \mathbf{x} - \sigma\, \mathrm{sign}(\mathbf{x}) &
+            \text{elsewhere,}
+        \end{cases}
+
+    with :math:`|\cdot|_2` being the pointwise Euclidean norm along the
+    vector components, and all operations being understood pointwise.
     """
 
     gamma = float(gamma)
 
     class ProximalHuber(Operator):
 
-        """Proximal operator of Huber norm."""
+        """Proximal operator of the Huber norm."""
 
         def __init__(self, sigma):
             """Initialize a new instance.
@@ -1615,6 +1627,7 @@ def proximal_huber(space, gamma):
             Parameters
             ----------
             sigma : positive float
+                Step size parameter.
             """
             self.sigma = float(sigma)
             super(ProximalHuber, self).__init__(domain=space, range=space,
@@ -1635,6 +1648,25 @@ def proximal_huber(space, gamma):
             out[idx] = x[idx] - self.sigma * sign_x[idx]
 
             return out
+
+        def __repr__(self):
+            """Return ``repr(self)``.
+
+            Examples
+            --------
+            >>> space = odl.rn(2)
+            >>> huber = odl.solvers.Huber(space, gamma=2)
+            >>> huber.proximal(4)
+            Huber(rn(2), gamma=2.0).proximal(4.0)
+            """
+            posargs = [space]
+            optargs = [('gamma', gamma, None)]
+            with npy_printoptions(precision=REPR_PRECISION):
+                inner_parts = signature_string_parts(posargs, optargs)
+            caller_repr = repr_string('Huber', inner_parts)
+            with npy_printoptions(precision=REPR_PRECISION):
+                prox_arg_str = array_str(self.sigma)
+            return method_repr_string(caller_repr, 'proximal', [prox_arg_str])
 
     return ProximalHuber
 
