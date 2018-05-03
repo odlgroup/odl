@@ -77,7 +77,7 @@ def test_dca():
     expected = np.asarray([b - 1 / a, 0, b + 1 / a])
 
     dist_dca = np.min(np.abs(expected - float(x_dca)))
-    dist_prox_cda = np.min(np.abs(expected - float(x_prox_dca)))
+    dist_prox_dca = np.min(np.abs(expected - float(x_prox_dca)))
     dist_prox_doubleprox = np.min(np.abs(expected - float(x_doubleprox)))
 
     # Optimized and simplified versions of doubleprox_dc should give
@@ -89,5 +89,5 @@ def test_dca():
     # For 50 iterations, the methods have been tested to achieve an absolute
     # accuracy of at least 1/10^6.
     assert dist_dca == pytest.approx(0, abs=1e-6)
-    assert dist_prox_cda == pytest.approx(0, abs=1e-6)
+    assert dist_prox_dca == pytest.approx(0, abs=1e-6)
     assert dist_prox_doubleprox == pytest.approx(0, abs=1e-6)
