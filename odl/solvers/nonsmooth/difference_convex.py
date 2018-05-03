@@ -87,8 +87,9 @@ def dca(x, g, h, niter, callback=None):
     if h.domain != space:
         raise ValueError('`g.domain` and `h.domain` need to be equal, but '
                          '{} != {}'.format(space, h.domain))
+    g_convex_conj = g.convex_conj
     for _ in range(niter):
-        g.convex_conj.gradient(h.gradient(x), out=x)
+        g_convex_conj.gradient(h.gradient(x), out=x)
 
         if callback is not None:
             callback(x)
@@ -246,11 +247,12 @@ def doubleprox_dc(x, y, g, h, phi, K, niter, gamma, mu, callback=None):
         raise ValueError('`h.domain` and `K.range` need to be equal, but '
                          '{} != {}'.format(dual_space, K.range))
 
+    h_convex_conj = h.convex_conj
     for _ in range(niter):
         g.proximal(gamma)(x.lincomb(1, x,
                                     gamma, K.adjoint(y) - phi.gradient(x)),
                           out=x)
-        h.convex_conj.proximal(mu)(y.lincomb(1, y, mu, K(x)), out=y)
+        h_convex_conj.proximal(mu)(y.lincomb(1, y, mu, K(x)), out=y)
 
         if callback is not None:
             callback(x)
