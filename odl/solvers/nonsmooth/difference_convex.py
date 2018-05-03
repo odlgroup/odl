@@ -8,9 +8,9 @@
 
 """Solvers for the optimization of the difference of convex functions.
 
-Collection of DCA and related methods which make use of structured optimization
-if the objective function can be written as a difference of two convex
-functions.
+Collection of DCA (d.c. algorithms) and related methods which make use of
+structured optimization if the objective function can be written as a
+difference of two convex functions.
 """
 
 from __future__ import print_function, division, absolute_import
@@ -33,11 +33,10 @@ def dca(x, g, h, niter, callback=None):
     x : `LinearSpaceElement`
         Initial point, updated in-place.
     g : `Functional`
-        Convex part. Needs to provide a `Functional.convex_conj` with a
+        Convex functional. Needs to provide a `Functional.convex_conj` with a
         `Functional.gradient` method.
     h : `Functional`
-        Negative of the concave part. Needs to provide a
-        `Functional.gradient` method.
+        Convex functional. Needs to provide a `Functional.gradient` method.
     niter : int
         Number of iterations.
     callback : callable, optional
@@ -79,9 +78,12 @@ def dca(x, g, h, niter, callback=None):
 
     See also
     --------
+    dca :
+        Solver with subgradinet steps for all the functionals.
+    doubleprox_dc :
+        Solver with proximal steps for all the nonsmooth convex functionals
+        and a gradient step for a smooth functional.
     """
-#    `prox_dca`, `doubleprox_dc`
-#    """
     space = g.domain
     if h.domain != space:
         raise ValueError('`g.domain` and `h.domain` need to be equal, but '
@@ -108,11 +110,10 @@ def prox_dca(x, g, h, niter, gamma, callback=None):
     x : `LinearSpaceElement`
         Initial point, updated in-place.
     g : `Functional`
-        Convex part. Needs to provide a `Functional.convex_conj` with a
+        Convex functional. Needs to provide a `Functional.convex_conj` with a
         `Functional.proximal` factory.
     h : `Functional`
-        The negative of the concave part. Needs to provide a
-        `Functional.gradient` method.
+        Convex functional. Needs to provide a `Functional.gradient` method.
     niter : int
         Number of iterations.
     gamma : positive float
@@ -130,7 +131,7 @@ def prox_dca(x, g, h, niter, gamma, callback=None):
     .. math ::
         \min g(x) - h(x)
 
-    by involving subgradients of :math:`h` and proximal points of :math:`g^*`.
+    by using subgradients of :math:`h` and proximal points of :math:`g^*`.
     The iteration is given by
 
     .. math ::
@@ -146,6 +147,14 @@ def prox_dca(x, g, h, niter, gamma, callback=None):
     [SSC2003] Sun, W, Sampaio R J B, and Candido M A B. *Proximal point
     algorithm for minimization of DC function*. Journal of Computational
     Mathematics, 21.4 (2003), pp 451--462.
+
+    See also
+    --------
+    prox_dca :
+        Solver with a proximal step for ``g`` and a subgradient step for ``h``.
+    doubleprox_dc :
+        Solver with proximal steps for all the nonsmooth convex functionals
+        and a gradient step for a smooth functional.
     """
     space = g.domain
     if h.domain != space:
@@ -172,17 +181,14 @@ def doubleprox_dc(x, y, g, h, phi, K, niter, gamma, mu, callback=None):
     y : `LinearSpaceElement`
         Initial dual guess, updated in-place.
     g : `Functional`
-        The nonsmooth part of the convex part of the problem. Needs to provide
-        a `Functional.proximal` factory.
+        Convex functional. Needs to provide a `Functional.proximal` factory.
     h : `Functional`
-        The functional involved in the concave part of the problem. Needs to
-        provide a `Functional.proximal` factory.
+        Convex functional. Needs to provide a `Functional.proximal` factory.
     phi : `Functional`
-        The smooth part of the convex part of the problem. Needs to provide a
-        `Functional.gradient`, and convergence can be guaranteed if the
-        gradient is Lipschitz continuous.
+        Convex functional. Needs to provide a `Functional.gradient`, and
+        convergence can be guaranteed if the gradient is Lipschitz continuous.
     K : `Operator`
-        The operator involved in the concave part of the problem.
+        Linear operator.
     niter : int
         Number of iterations.
     gamma : positive float
@@ -220,6 +226,14 @@ def doubleprox_dc(x, y, g, h, phi, K, niter, gamma, mu, callback=None):
     ----------
     [BB2016] Banert, S, and Bot, R I. *A general double-proximal gradient
     algorithm for d.c. programming*. arXiv:1610.06538 [math.OC] (2016).
+
+    See also
+    --------
+    prox_dca :
+        Solver with a proximal step for ``g`` and a subgradient step for ``h``.
+    doubleprox_dc :
+        Solver with proximal steps for all the nonsmooth convex functionals
+        and a gradient step for a smooth functional.
     """
     primal_space = g.domain
     dual_space = h.domain
