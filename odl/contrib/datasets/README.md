@@ -22,10 +22,9 @@ Reference datasets with accompanying ODL geometries etc.
     * `walnut_data`
     * `lotus_root_data`
 
-
-    CT data as provided by Mayo Clinic. The data is human and high resolution. To access the data, see https://www.aapm.org/GrandChallenge/LowDoseCT/#registration
-    * `projections_from_folder`
-    * `volume_from_folder`
+    CT data as provided by Mayo Clinic. The data is from a human and of high resolution (512x512). To access the data, see [the webpage](https://www.aapm.org/GrandChallenge/LowDoseCT/#registration). Note that downloading this dataset requires signing up and signing a terms of use form.
+    * `load_projections`
+    * `load_reconstruction`
 * `images`
 
   Two dimensional images.
