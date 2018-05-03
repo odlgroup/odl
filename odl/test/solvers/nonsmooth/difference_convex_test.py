@@ -49,6 +49,7 @@ def test_dca():
     # Set the problem parameters
     a = 0.5
     b = 0.5
+    # This means -1/a = -2 < b = 0.5 < 1/a = 2.
     space = odl.rn(1)
     g = a / 2 * odl.solvers.L2NormSquared(space).translated(b)
     h = odl.solvers.L1Norm(space)
