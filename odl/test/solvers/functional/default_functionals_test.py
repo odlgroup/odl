@@ -624,11 +624,12 @@ def test_bregman_functional_no_gradient(space):
 
     Test that the Bregman distance functional fails if the underlying
     functional does not have a gradient and no subgradient operator is
-    given. Also test giving the subgradient operator separately.
+    given. Also test giving the subgradient operator separately or a specific
+    subgradient separately.
     """
 
     ind_func = odl.solvers.IndicatorNonnegativity(space)
-    point = noise_element(space)
+    point = np.abs(noise_element(space))
 
     # Indicator function has no gradient, hence one cannot create a bregman
     # distance functional
@@ -640,11 +641,28 @@ def test_bregman_functional_no_gradient(space):
     subgrad_op = odl.IdentityOperator(space)
     bregman_dist = odl.solvers.BregmanDistance(ind_func, point, subgrad_op)
 
+    x = np.abs(noise_element(space))
+
+    expected_result = -(subgrad_op(point)).inner(x - point)
+    assert all_almost_equal(bregman_dist(x), expected_result)
+
     # In this case we should be able to call the gradient of the bregman
     # distance, which would give us a subgradient
-    x = np.abs(noise_element(space))
     expected_result = subgrad_op(x) - subgrad_op(point)
     assert all_almost_equal(bregman_dist.gradient(x), expected_result)
+
+    # We can also give a subgradient directly, which is an element in the
+    # domain of the functional.
+    subgrad = noise_element(space)
+    bregman_dist = odl.solvers.BregmanDistance(ind_func, point, subgrad)
+
+    expected_result = -subgrad.inner(x - point)
+    assert all_almost_equal(bregman_dist(x), expected_result)
+
+    # However, since the functional is not differentialbe and only a single
+    # subgradient is given, in this case we cannot call the gradient
+    with pytest.raises(ValueError):
+        bregman_dist.gradient
 
 
 def test_bregman_functional_l2_squared(space, sigma):
