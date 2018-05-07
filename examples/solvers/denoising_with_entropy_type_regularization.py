@@ -47,7 +47,7 @@ op = odl.BroadcastOperator(odl.IdentityOperator(space), gradient)
 # Proximal operator related to the primal variable
 
 # Non-negativity constraint
-g = odl.solvers.IndicatorNonnegativity(op.domain)
+f = odl.solvers.IndicatorNonnegativity(op.domain)
 
 # Functionals related to the dual variable
 
@@ -58,7 +58,7 @@ kl_divergence = odl.solvers.KullbackLeibler(space, prior=noisy)
 l1_norm = 0.1 * odl.solvers.L1Norm(gradient.range)
 
 # Make separable sum of functionals, order must correspond to the operator K
-f = odl.solvers.SeparableSum(kl_divergence, l1_norm)
+g = odl.solvers.SeparableSum(kl_divergence, l1_norm)
 
 # Optional: pass callback objects to solver
 callback = (odl.solvers.CallbackPrintIteration() &

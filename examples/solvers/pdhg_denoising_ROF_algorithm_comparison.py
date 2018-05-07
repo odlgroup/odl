@@ -100,10 +100,10 @@ niter = 500
 op = odl.BroadcastOperator(odl.IdentityOperator(space), gradient)
 
 # Make separable sum of functionals, order must correspond to the operator K
-f = odl.solvers.SeparableSum(l2_norm, l1_norm)
+g = odl.solvers.SeparableSum(l2_norm, l1_norm)
 
 # Non-negativity constraint
-g = char_fun
+f = char_fun
 
 # Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
 op_norm = 1.1 * odl.power_method_opnorm(op, xstart=noisy)
@@ -128,10 +128,10 @@ obj_ergodic_alg1 = callback.callbacks[1].obj_function_values_ergodic
 op = gradient
 
 # Assign functional f
-f = l1_norm
+g = l1_norm
 
 # Create new functional that combines data fit and characteritic function
-g = odl.solvers.FunctionalQuadraticPerturb(char_fun, factr, -2 * factr * noisy)
+f = odl.solvers.FunctionalQuadraticPerturb(char_fun, factr, -2 * factr * noisy)
 
 # The operator norm of the gradient with forward differences is well-known
 op_norm = np.sqrt(8) + 1e-4

@@ -25,13 +25,13 @@ __all__ = ('pdhg', 'pdhg_stepsize')
 # TODO: diagonal preconditioning
 
 def pdhg(x, f, g, L, niter, tau, sigma, **kwargs):
-    """Primal-dual hybrid gradient algorithm for convex optimization.
+    r"""Primal-dual hybrid gradient algorithm for convex optimization.
 
     First order primal-dual hybrid-gradient method for non-smooth convex
     optimization problems with known saddle-point structure. The
     primal formulation of the general problem is::
 
-        min_{x in X} f(L x) + g(x)
+        min_{x in X} f(x) + g(L x)
 
     where ``L`` is an operator and ``f`` and ``g`` are functionals.
 
@@ -48,21 +48,21 @@ def pdhg(x, f, g, L, niter, tau, sigma, **kwargs):
         Starting point of the iteration, updated in-place.
     f : `Functional`
         The function ``f`` in the problem definition. Needs to have
-        ``f.convex_conj.proximal``.
+        ``f.proximal``.
     g : `Functional`
         The function ``g`` in the problem definition. Needs to have
-        ``g.proximal``.
+        ``g.convex_conj.proximal``.
     L : linear `Operator`
-        The linear operator that should be applied before ``f``. Its range must
-        match the domain of ``f`` and its domain must match the domain of
-        ``g``.
+        The linear operator that should be applied before ``g``. Its range must
+        match the domain of ``g`` and its domain must match the domain of
+        ``f``.
     niter : non-negative int
         Number of iterations.
     tau : float, optional
-        Step size parameter for ``f``.
+        Step size parameter for ``g``.
         Default: Sufficient for convergence, see `pdhg_stepsize`.
     sigma : sequence of floats, optional
-        Step size parameters for ``g``.
+        Step size parameters for ``f``.
         Default: Sufficient for convergence, see `pdhg_stepsize`.
 
     Other Parameters
@@ -75,14 +75,14 @@ def pdhg(x, f, g, L, niter, tau, sigma, **kwargs):
     gamma_primal : non-negative float, optional
         Acceleration parameter. If not ``None``, it overrides ``theta`` and
         causes variable relaxation parameter and step sizes to be used,
-        with ``tau`` and ``sigma`` as initial values. Requires ``g`` to be
+        with ``tau`` and ``sigma`` as initial values. Requires ``f`` to be
         strongly convex and ``gamma_primal`` being upper bounded by the strong
-        convexity constant of ``g``. Acceleration can either be done on the
+        convexity constant of ``f``. Acceleration can either be done on the
         primal part or the dual part but not on both simultaneously.
         Default: ``None``
     gamma_dual : non-negative float, optional
         Acceleration parameter as ``gamma_primal`` but for dual variable.
-        Requires ``f^*`` to be strongly convex and ``gamma_dual`` being upper
+        Requires ``g^*`` to be strongly convex and ``gamma_dual`` being upper
         bounded by the strong convexity constant of ``f^*``. Acceleration can
         either be done on the primal part or the dual part but not on both
         simultaneously.
@@ -101,20 +101,20 @@ def pdhg(x, f, g, L, niter, tau, sigma, **kwargs):
     The problem of interest is
 
     .. math::
-        \\min_{x \\in X} f(L x) + g(x),
+        \min_{x \in X} f(x) + g(L x),
 
     where the formal conditions are that :math:`L` is an operator
     between Hilbert spaces :math:`X` and :math:`Y`.
-    Further, :math:`g : X \\rightarrow [0, +\\infty]` and
-    :math:`f : Y \\rightarrow [0, +\\infty]` are proper, convex,
+    Further, :math:`f : X \rightarrow [0, +\infty]` and
+    :math:`g : Y \rightarrow [0, +\infty]` are proper, convex,
     lower-semicontinuous functionals.
 
     Convergence is only guaranteed if :math:`L` is linear, :math:`X, Y`
-    are finite dimensional and the step lengths :math:`\\sigma` and
-    :math:`\\tau` satisfy
+    are finite dimensional and the step lengths :math:`\sigma` and
+    :math:`\tau` satisfy
 
     .. math::
-       \\tau \\sigma \|L\|^2 < 1
+       \tau \sigma \|L\|^2 < 1
 
     where :math:`\|L\|` is the operator norm of :math:`L`.
 
@@ -122,14 +122,15 @@ def pdhg(x, f, g, L, niter, tau, sigma, **kwargs):
     for example the classical TV regularized problem
 
     .. math::
-        \\min_x \|Ax - b\|_2^2 + \|\\nabla x\|_1.
+        \min_x \|Ax - b\|_2^2 + \|\nabla x\|_1.
 
-    Here it is tempting to let :math:`L=A`, :math:`f(y)=||y||_2^2` and
-    :math:`g(x)=\|\\nabla x\|_1`. This is however not feasible since the
-    proximal of :math:`||\\nabla x||_1` has no closed form expression.
+    Here it is tempting to let :math:`f(x)=\|\nabla x\|_1`, :math:`L=A` and
+    :math:`g(y)=||y||_2^2`. This is however not feasible since the
+    proximal of :math:`||\nabla x||_1` has no closed form expression.
 
-    Instead, the problem can be formulated :math:`L(x) = (A(x), \\nabla x)`,
-    :math:`f((x_1, x_2)) = \|x_1\|_2^2 + \|x_2\|_1`, :math:`g(x)=0`. See the
+    Instead, the problem can be formulated :math:`f(x)=0`,
+    :math:`L(x) = (A(x), \nabla x)` and
+    :math:`g((x_1, x_2)) = \|x_1\|_2^2 + \|x_2\|_1`. See the
     examples folder for more information on how to do this.
 
     For a more detailed documentation see `the PDHG guide
@@ -182,6 +183,11 @@ def pdhg(x, f, g, L, niter, tau, sigma, **kwargs):
     if x not in L.domain:
         raise TypeError('`x` {!r} is not in the domain of `op` {!r}'
                         ''.format(x, L.domain))
+
+    # Spaces
+    if f.domain != L.domain:
+        raise TypeError('`f.domain` {!r} must equal `op.domain` {!r}'
+                        ''.format(f.domain, L.domain))
 
     # Step size parameter
     tau, tau_in = float(tau), tau
@@ -246,8 +252,8 @@ def pdhg(x, f, g, L, niter, tau, sigma, **kwargs):
                         '{}'.format(y.space, L.range))
 
     # Get the proximals
-    proximal_dual = f.convex_conj.proximal
-    proximal_primal = g.proximal
+    proximal_primal = f.proximal
+    proximal_dual = g.convex_conj.proximal
     proximal_constant = (gamma_primal is None) and (gamma_dual is None)
     if proximal_constant:
         # Pre-compute proximals for efficiency

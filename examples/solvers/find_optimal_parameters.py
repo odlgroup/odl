@@ -198,12 +198,12 @@ elif reconstruction_method == 'tv':
         gradient = odl.Gradient(space)
         op = odl.BroadcastOperator(ray_trafo, gradient)
 
-        g = odl.solvers.ZeroFunctional(op.domain)
+        f = odl.solvers.ZeroFunctional(op.domain)
 
         l2_norm = odl.solvers.L2NormSquared(
             ray_trafo.range).translated(proj_data)
         l1_norm = lam * odl.solvers.GroupL1Norm(gradient.range)
-        f = odl.solvers.SeparableSum(l2_norm, l1_norm)
+        g = odl.solvers.SeparableSum(l2_norm, l1_norm)
 
         # Select solver parameters
         op_norm = 1.5 * odl.power_method_opnorm(op, maxiter=10)

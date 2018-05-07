@@ -42,9 +42,9 @@ d = odl.phantom.white_noise(space, orig, 0.1)
 op = odl.Gradient(space)  # operator
 norm_op = np.sqrt(8) + 1e-4  # norm with forward differences is well-known
 lam = 0.1  # Regularization parameter
-g = 1 / (2 * lam) * odl.solvers.L2NormSquared(space).translated(d)  # data fit
-f = odl.solvers.Huber(op.range, gamma=.01)  # regularization
-obj_fun = f * op + g  # combined functional
+f = 1 / (2 * lam) * odl.solvers.L2NormSquared(space).translated(d)  # data fit
+g = odl.solvers.Huber(op.range, gamma=.01)  # regularization
+obj_fun = f + g * op # combined functional
 mu_g = 1 / lam  # strong convexity of "g"
 mu_f = 1 / f.grad_lipschitz  # strong convexity of "f*"
 
