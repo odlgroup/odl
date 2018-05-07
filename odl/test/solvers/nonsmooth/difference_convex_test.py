@@ -88,6 +88,6 @@ def test_dca():
     # All methods should give approximately one solution of the problem.
     # For 50 iterations, the methods have been tested to achieve an absolute
     # accuracy of at least 1/10^6.
-    assert dist_dca == pytest.approx(0, abs=1e-6)
-    assert dist_prox_dca == pytest.approx(0, abs=1e-6)
-    assert dist_prox_doubleprox == pytest.approx(0, abs=1e-6)
+    assert float(dist_dca) == pytest.approx(0, abs=1e-6)
+    assert float(dist_prox_dca) == pytest.approx(0, abs=1e-6)
+    assert float(dist_prox_doubleprox) == pytest.approx(0, abs=1e-6)
