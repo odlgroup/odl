@@ -241,7 +241,7 @@ def _operator_norms(L):
     L : sequence of `Operator` or float
         The operators or the norms of the operators that are used in the
         `douglas_rachford_pd` method. For `Operator` entries, the norm
-        is computed with `power_method_opnorm`.
+        is computed with ``Operator.norm(estimate=True)``.
     """
     L_norms = []
     for Li in L:
@@ -262,7 +262,7 @@ def douglas_rachford_pd_stepsize(L, tau=None, sigma=None):
     L : sequence of `Operator` or float
         The operators or the norms of the operators that are used in the
         `douglas_rachford_pd` method. For `Operator` entries, the norm
-        is computed with `Operator.norm(estimate=True)`.
+        is computed with ``Operator.norm(estimate=True)``.
     tau : positive float, optional
         Use this value for ``tau`` instead of computing it from the
         operator norms, see Notes.
@@ -292,7 +292,7 @@ def douglas_rachford_pd_stepsize(L, tau=None, sigma=None):
         .. math::
             \tau = \frac{1}{\sum_{i=1}^n \|L_i\|},
             \quad
-            \sigma_i = \frac{2}{n \tau \|L_i\|}
+            \sigma_i = \frac{2}{n \tau \|L_i\|^2}
 
     - If only :math:`\sigma` is given, :math:`\tau` is set to:
 
@@ -303,7 +303,7 @@ def douglas_rachford_pd_stepsize(L, tau=None, sigma=None):
       to:
 
         .. math::
-            \sigma_i = \frac{2}{n \tau \|L_i\|}
+            \sigma_i = \frac{2}{n \tau \|L_i\|^2}
 
     - If both are given, they are returned as-is without further validation.
     """
