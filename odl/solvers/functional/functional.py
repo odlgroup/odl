@@ -226,7 +226,7 @@ class Functional(Operator):
         return FunctionalTranslation(self, shift)
 
     def bregman(self, point, subgrad):
-        """Return the Bregman distance functional.
+        r"""Return the Bregman distance functional.
 
         Parameters
         ----------
@@ -243,6 +243,14 @@ class Functional(Operator):
 
         Notes
         -----
+        Given a functional :math:`f`, a point :math:`y`, and a (sub)gradient
+        :math:`p \in \partial f(y)`, the Bregman distance functional
+        :math:`D_f^p(\cdot, y)` in a point :math:`x` is given by
+
+        .. math::
+            D_f^p(x, y) = f(x) - f(y) - \langle p, x - y \rangle.
+
+
         For mathematical details, see
         `[Bur2016] <https://arxiv.org/abs/1505.05191>`_. See also the Wikipedia
         article: https://en.wikipedia.org/wiki/Bregman_divergence
@@ -1342,7 +1350,6 @@ class BregmanDistance(Functional):
     For mathematical details, see
     `[Bur2016] <https://arxiv.org/abs/1505.05191>`_. See also the Wikipedia
     article: https://en.wikipedia.org/wiki/Bregman_divergence
-
 
     References
     ----------
