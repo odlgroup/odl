@@ -352,7 +352,7 @@ def pdhg_stepsize(L, tau=None, sigma=None):
         .. math::
             \sigma = \frac{0.9}{\tau \|L\|^2}
 
-    - If both are given, they are returned as is without further validation.
+    - If both are given, they are returned as-is without further validation.
     """
     if tau is None and sigma is None:
         L_norm = L.norm(estimate=True)

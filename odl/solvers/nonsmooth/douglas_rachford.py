@@ -305,7 +305,7 @@ def douglas_rachford_pd_stepsize(L, tau=None, sigma=None):
         .. math::
             \sigma_i = \frac{2}{n \tau \|L_i\|}
 
-    - If both are given, they are returned as is without further validation.
+    - If both are given, they are returned as-is without further validation.
     """
     if tau is None and sigma is None:
         L_norms = _operator_norms(L)

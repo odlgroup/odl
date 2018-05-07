@@ -1511,7 +1511,7 @@ def simple_functional(space, fcall=None, grad=None, prox=None, grad_lip=np.nan,
                       linear=False):
     """Simplified interface to create a functional with specific properties.
 
-    Users may specify as many properties as is needed by the application.
+    Users may specify as many properties as-is needed by the application.
 
     Parameters
     ----------
