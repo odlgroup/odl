@@ -26,7 +26,7 @@ import tqdm
 from dicom.datadict import DicomDictionary, NameDict, CleanName
 from odl.contrib.datasets.ct.mayo_dicom_dict import new_dict_items
 
-# Update the dicom dictionary with the extra Mayo tags
+# Update the DICOM dictionary with the extra Mayo tags
 DicomDictionary.update(new_dict_items)
 NameDict.update((CleanName(tag), tag) for tag in new_dict_items)
 
@@ -43,7 +43,7 @@ def _read_projections(folder, proj_start=1, proj_end=-1):
     file_names = sorted([f for f in os.listdir(folder) if f.endswith(".dcm")])
 
     if len(file_names) == 0:
-        raise ValueError('No dicom files found in {}'.format(folder))
+        raise ValueError('No DICOM files found in {}'.format(folder))
 
     file_names = file_names[proj_start:proj_end]
 
@@ -183,7 +183,7 @@ def load_reconstruction(folder, slice_start=0, slice_end=-1):
     Parameters
     ----------
     folder : str
-        Path to the folder where the dicom files are stored.
+        Path to the folder where the DICOM files are stored.
     slice_start : int
         Index of the first slice to use. Used for subsampling.
     slice_end : int
@@ -198,11 +198,11 @@ def load_reconstruction(folder, slice_start=0, slice_end=-1):
 
     Notes
     -----
-    Note that Dicom data is highly non trivial. Typically, each slice has been
+    Note that DICOM data is highly non trivial. Typically, each slice has been
     computed with a slice tickness (e.g. 3mm) but the slice spacing might be
     different from that.
 
-    Further, the coordinates in dicom is typically the *middle* of the pixel,
+    Further, the coordinates in DICOM is typically the *middle* of the pixel,
     not the corners as in ODL.
 
     This function should handle all of these peculiarities and give a volume
@@ -211,7 +211,7 @@ def load_reconstruction(folder, slice_start=0, slice_end=-1):
     file_names = sorted([f for f in os.listdir(folder) if f.endswith(".IMA")])
 
     if len(file_names) == 0:
-        raise ValueError('No dicom files found in {}'.format(folder))
+        raise ValueError('No DICOM files found in {}'.format(folder))
 
     volumes = []
     datasets = []
