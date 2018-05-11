@@ -1379,13 +1379,13 @@ class BregmanDistance(Functional):
         >>> l2_squared = odl.solvers.L2NormSquared(space)
         >>> point = space.one()
         >>> subgrad = l2_squared.gradient(point)
-        >>> Bregman_dist = odl.solvers.BregmanDistance(
+        >>> bregman_dist = odl.solvers.BregmanDistance(
         ...     l2_squared, point, subgrad)
 
         This is gives squared L2 distance to the given point, ||x - 1||^2:
 
         >>> expected_functional = l2_squared.translated(point)
-        >>> Bregman_dist(space.zero()) == expected_functional(space.zero())
+        >>> bregman_dist(space.zero()) == expected_functional(space.zero())
         True
         """
         if not isinstance(functional, Functional):
