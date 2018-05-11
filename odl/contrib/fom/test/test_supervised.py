@@ -3,8 +3,7 @@ import pytest
 import scipy.signal
 import scipy.misc
 import odl
-import odl.contrib.fom
-from odl.contrib.fom.util import filter_image_sep2d
+from odl.contrib import fom
 from odl.util.testutils import simple_fixture, noise_element
 
 fft_impl = simple_fixture('fft_impl',
@@ -18,12 +17,12 @@ space = simple_fixture('space',
                         odl.uniform_discr([0, 0], [1, 1], [5, 5])])
 
 scalar_fom = simple_fixture('FOM',
-                            [odl.contrib.fom.mean_squared_error,
-                             odl.contrib.fom.mean_absolute_error,
-                             odl.contrib.fom.mean_value_difference,
-                             odl.contrib.fom.standard_deviation_difference,
-                             odl.contrib.fom.range_difference,
-                             odl.contrib.fom.blurring])
+                            [fom.mean_squared_error,
+                             fom.mean_absolute_error,
+                             fom.mean_value_difference,
+                             fom.standard_deviation_difference,
+                             fom.range_difference,
+                             fom.blurring])
 
 
 def test_general(space, scalar_fom):
@@ -62,7 +61,7 @@ def test_filter_image_fft(fft_impl):
                       [[-1, 1], [-1, 1, 1], [-1, -1, 1, 1]]):
 
         conv_real = filter_image(image, fh, fv)
-        conv_fft = filter_image_sep2d(image, fh, fv, impl=fft_impl)
+        conv_fft = fom.util.filter_image_sep2d(image, fh, fv, impl=fft_impl)
         assert np.allclose(conv_real, conv_fft)
 
 
@@ -70,7 +69,7 @@ def test_mean_squared_error(space):
     true = odl.phantom.white_noise(space)
     data = odl.phantom.white_noise(space)
 
-    result = odl.contrib.fom.mean_squared_error(data, true)
+    result = fom.mean_squared_error(data, true)
     expected = np.mean((true - data) ** 2)
 
     assert result == pytest.approx(expected)
@@ -80,7 +79,7 @@ def test_mean_absolute_error(space):
     true = odl.phantom.white_noise(space)
     data = odl.phantom.white_noise(space)
 
-    result = odl.contrib.fom.mean_absolute_error(data, true)
+    result = fom.mean_absolute_error(data, true)
     expected = np.mean(np.abs(true - data))
 
     assert result == pytest.approx(expected)
@@ -94,13 +93,13 @@ def test_psnr(space):
     zero = space.zero()
 
     # Test psnr of image with itself is infinity
-    assert odl.contrib.fom.psnr(true, true) == np.inf
+    assert fom.psnr(true, true) == np.inf
 
     # Test psnr with both constants is infinity
-    assert odl.contrib.fom.psnr(zero, zero) == np.inf
+    assert fom.psnr(zero, zero) == np.inf
 
     # Test psnr with ground truth constant is negative infinity
-    assert odl.contrib.fom.psnr(data, zero) == -np.inf
+    assert fom.psnr(data, zero) == -np.inf
 
     # Compute the true value
     mse = np.mean((true - data) ** 2)
@@ -108,19 +107,16 @@ def test_psnr(space):
     expected = 10 * np.log10(maxi ** 2 / mse)
 
     # Test regular call
-    result = odl.contrib.fom.psnr(data, true)
+    result = fom.psnr(data, true)
     assert result == pytest.approx(expected)
 
     # Test with force_lower_is_better giving negative of expected
-    result = odl.contrib.fom.psnr(data, true,
-                                  force_lower_is_better=True)
+    result = fom.psnr(data, true, force_lower_is_better=True)
     assert result == pytest.approx(-expected)
 
     # Test with Z-score that result is independent of affine transformation
-    result = odl.contrib.fom.psnr(data * 3.7 + 1.234, true,
-                                  use_zscore=True)
-    expected = odl.contrib.fom.psnr(data, true,
-                                    use_zscore=True)
+    result = fom.psnr(data * 3.7 + 1.234, true, use_zscore=True)
+    expected = fom.psnr(data, true, use_zscore=True)
     assert result == pytest.approx(expected)
 
 
@@ -131,14 +127,12 @@ def test_ssim(space):
     # * 1 with force_lower_is_better == False,
     # * -1 with force_lower_is_better == True and normalized == False,
     # * 0 with force_lower_is_better == True and normalized == True.
-    result = odl.contrib.fom.ssim(ground_truth, ground_truth)
-    result_normalized = odl.contrib.fom.ssim(ground_truth, ground_truth,
-                                             normalized=True)
-    result_flib = odl.contrib.fom.ssim(ground_truth, ground_truth,
-                                       force_lower_is_better=True)
-    result_nf = odl.contrib.fom.ssim(ground_truth, ground_truth,
-                                     normalized=True,
-                                     force_lower_is_better=True)
+    result = fom.ssim(ground_truth, ground_truth)
+    result_normalized = fom.ssim(ground_truth, ground_truth, normalized=True)
+    result_flib = fom.ssim(ground_truth, ground_truth,
+                           force_lower_is_better=True)
+    result_nf = fom.ssim(ground_truth, ground_truth, normalized=True,
+                         force_lower_is_better=True)
     assert pytest.approx(result) == 1
     assert pytest.approx(result_normalized) == 1
     assert pytest.approx(result_flib) == -1
@@ -147,14 +141,11 @@ def test_ssim(space):
     # SSIM with ground truth zero should always give zero if not normalized
     # and 1/2 otherwise.
     data = odl.phantom.white_noise(space)
-    result = odl.contrib.fom.ssim(data, space.zero())
-    result_normalized = odl.contrib.fom.ssim(data, space.zero(),
-                                             normalized=True)
-    result_flib = odl.contrib.fom.ssim(data, space.zero(),
-                                       force_lower_is_better=True)
-    result_nf = odl.contrib.fom.ssim(data, space.zero(),
-                                     normalized=True,
-                                     force_lower_is_better=True)
+    result = fom.ssim(data, space.zero())
+    result_normalized = fom.ssim(data, space.zero(), normalized=True)
+    result_flib = fom.ssim(data, space.zero(), force_lower_is_better=True)
+    result_nf = fom.ssim(data, space.zero(), normalized=True,
+                         force_lower_is_better=True)
     assert pytest.approx(result) == 0
     assert pytest.approx(result_normalized) == 0.5
     assert pytest.approx(result_flib) == 0
@@ -163,12 +154,10 @@ def test_ssim(space):
     # SSIM should be symmetric if the dynamic range is set explicitly.
     for nor in [True, False]:
         for flib in [True, False]:
-            result1 = odl.contrib.fom.ssim(data, ground_truth, dynamic_range=1,
-                                           normalized=nor,
-                                           force_lower_is_better=flib)
-            result2 = odl.contrib.fom.ssim(ground_truth, data, dynamic_range=1,
-                                           normalized=nor,
-                                           force_lower_is_better=flib)
+            result1 = fom.ssim(data, ground_truth, dynamic_range=1,
+                               normalized=nor, force_lower_is_better=flib)
+            result2 = fom.ssim(ground_truth, data, dynamic_range=1,
+                               normalized=nor, force_lower_is_better=flib)
             assert pytest.approx(result1) == result2
 
 
@@ -176,9 +165,8 @@ def test_mean_value_difference_sign():
     space = odl.uniform_discr(0, 1, 10)
     I0 = space.one()
     I1 = -I0.copy()
-    assert np.abs(odl.contrib.fom.mean_value_difference(I0, I1)) > 0.1
-    assert np.abs(odl.contrib.fom.mean_value_difference(I0, I1,
-                  normalized=True)) > 0.1
+    assert np.abs(fom.mean_value_difference(I0, I1)) > 0.1
+    assert np.abs(fom.mean_value_difference(I0, I1, normalized=True)) > 0.1
 
 
 def test_mean_value_difference_range_value(space):
@@ -190,26 +178,21 @@ def test_mean_value_difference_range_value(space):
     min0 = np.min(I0.asarray())
     min1 = np.min(I1.asarray())
 
-
-    assert odl.contrib.fom.mean_value_difference(I0, I1) <= max(max0 - min1,
-                                                            max1 - min0)
-    assert pytest.approx(odl.contrib.fom.mean_value_difference(I0, I0)) == 0
-    assert odl.contrib.fom.mean_value_difference(10 * I0, I0,
-                                                 normalized=True) <= 1.0
+    assert fom.mean_value_difference(I0, I1) <= max(max0 - min1, max1 - min0)
+    assert pytest.approx(fom.mean_value_difference(I0, I0)) == 0
+    assert fom.mean_value_difference(10 * I0, I0, normalized=True) <= 1.0
 
 
 def test_standard_deviation_difference_range_value(space):
     I0 = space.element(np.random.normal(0, 1, size=space.shape))
     const = np.random.normal(0, 10)
 
-    assert pytest.approx(odl.contrib.fom.standard_deviation_difference(
-                                                                I0, I0)) == 0
-    assert odl.contrib.fom.standard_deviation_difference(10*I0, I0,
-                                                       normalized=True) <= 1.0
-    assert pytest.approx(odl.contrib.fom.standard_deviation_difference(
-                                                    I0, I0 + const)) == 0
-    test_value = odl.contrib.fom.standard_deviation_difference(
-                                    space.one(), space.zero(), normalized=True)
+    assert pytest.approx(fom.standard_deviation_difference(I0, I0)) == 0
+    assert fom.standard_deviation_difference(10*I0, I0, normalized=True) <= 1.0
+    assert (pytest.approx(fom.standard_deviation_difference(I0, I0 + const)) ==
+            0)
+    test_value = fom.standard_deviation_difference(space.one(), space.zero(),
+                                                   normalized=True)
     assert pytest.approx(test_value) == 0
 
 
@@ -218,14 +201,12 @@ def test_range_difference(space):
     I1 = space.element(np.random.normal(0, 1, size=space.shape))
     const = np.random.normal(0, 10)
 
-    assert pytest.approx(odl.contrib.fom.range_difference(I0, I0)) == 0
-    assert pytest.approx(odl.contrib.fom.range_difference(I0 + const, I0)) == 0
+    assert pytest.approx(fom.range_difference(I0, I0)) == 0
+    assert pytest.approx(fom.range_difference(I0 + const, I0)) == 0
     aconst = np.abs(const)
-    eval0 = aconst * odl.contrib.fom.range_difference(I0, I1)
-    eval1 = odl.contrib.fom.range_difference(aconst * I0, aconst * I1)
+    eval0 = aconst * fom.range_difference(I0, I1)
+    eval1 = fom.range_difference(aconst * I0, aconst * I1)
     assert pytest.approx(eval0) == pytest.approx(eval1)
-
-
 
 
 if __name__ == '__main__':
