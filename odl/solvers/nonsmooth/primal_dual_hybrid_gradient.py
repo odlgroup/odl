@@ -16,6 +16,7 @@ from __future__ import print_function, division, absolute_import
 import numpy as np
 
 from odl.operator import Operator
+from odl.solvers.util.callback import call_callback
 
 
 __all__ = ('pdhg',)
@@ -297,8 +298,7 @@ def pdhg(x, f, g, L, tau, sigma, niter, **kwargs):
         # Over-relaxation in the primal variable x
         x_relax.lincomb(1 + theta, x, -theta, x_old)
 
-        if callback is not None:
-            callback(x)
+        call_callback(x, dual_iterate=y)
 
 
 if __name__ == '__main__':
