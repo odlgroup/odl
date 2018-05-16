@@ -1358,7 +1358,7 @@ class BregmanDistance(Functional):
     and Optimal Control, 2016. p. 3-33.
     """
 
-    def __init__(self, functional, point, subgrad=None):
+    def __init__(self, functional, point, subgrad):
         """Initialize a new instance.
 
         Parameters
@@ -1404,10 +1404,16 @@ class BregmanDistance(Functional):
                 '{}'.format(subgrad))
         self.__subgrad = subgrad
 
-        self.__is_initialized = False
+        self.__constant = -functional(point) + subgrad.inner(point)
 
-        super(BregmanDistance, self).__init__(space=functional.domain,
-                                              linear=False)
+        self.__bregman_dist = FunctionalQuadraticPerturb(
+            functional, linear_term=-subgrad, constant=self.__constant)
+
+        grad_lipschitz = functional.grad_lipschitz + subgrad.norm()
+
+        super(BregmanDistance, self).__init__(
+            space=functional.domain, linear=False,
+            grad_lipschitz=grad_lipschitz)
 
     @property
     def functional(self):
@@ -1424,54 +1430,31 @@ class BregmanDistance(Functional):
         """The subgradient used to define the Bregman distance."""
         return self.__subgrad
 
-    @property
-    def initialized(self):
-        """Flag for if the Bregman distance functional is initialized."""
-        return self.__initialized
-
-    def _initialize_if_needed(self):
-        """Helper function to initialize the functional."""
-        if not self.__is_initialized:
-
-            self.__constant = (-self.functional(self.point) +
-                               self.__subgrad.inner(self.point))
-            self.__bregman_dist = FunctionalQuadraticPerturb(
-                self.functional, linear_term=-self.__subgrad,
-                constant=self.__constant)
-
-            self.grad_lipschitz = (self.functional.grad_lipschitz +
-                                   self.__subgrad.norm())
-
-            self.__initialized = True
-
     def _call(self, x):
         """Return ``self(x)``."""
-        self._initialize_if_needed()
         return self.__bregman_dist(x)
 
     @property
     def convex_conj(self):
         """The convex conjugate"""
-        self._initialize_if_needed()
         return self.__bregman_dist.convex_conj
 
     @property
     def proximal(self):
         """Return the ``proximal factory`` of the functional."""
-        self._initialize_if_needed()
         return self.__bregman_dist.proximal
 
     @property
     def gradient(self):
         """Gradient operator of the functional."""
         try:
-            op_to_return = self.__functional.gradient
+            op_to_return = self.functional.gradient
         except NotImplementedError:
             raise NotImplementedError(
                 '`self.functional.gradient` is not implemented for '
                 '`self.functional` {}'.format(self.functional))
 
-        op_to_return = op_to_return - ConstantOperator(self.__subgrad)
+        op_to_return = op_to_return - ConstantOperator(self.subgrad)
         return op_to_return
 
     def __repr__(self):
