@@ -5,6 +5,15 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
+#
+# The images are (c) by Matthias Joachim Ehrhardt, University of Cambridge.
+#
+# The images are licensed under a
+# Creative Commons Attribution 4.0 International License.
+#
+# You should have received a copy of the license along with this
+# work. If not, see <http://creativecommons.org/licenses/by/4.0/>.
+
 
 """Images provided by the University of Cambridge."""
 
