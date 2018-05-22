@@ -160,11 +160,6 @@ def power_method_opnorm(op, xstart=None, maxiter=100, rtol=1e-05, atol=1e-08,
     >>> power_method_opnorm(id)
     1.0
 
-    The operator norm scales as expected:
-
-    >>> power_method_opnorm(3 * id)
-    3.0
-
     Notes
     -----
     The operator norm :math:`||A||` is defined by as the smallest number
