@@ -108,11 +108,13 @@ def functional(request, space):
     elif name == 'bregman_l2squared':
         point = noise_element(space)
         l2_squared = odl.solvers.L2NormSquared(space)
-        func = odl.solvers.BregmanDistance(l2_squared, point)
+        subgrad = l2_squared.gradient(point)
+        func = odl.solvers.BregmanDistance(l2_squared, point, subgrad)
     elif name == 'bregman_l1':
         point = noise_element(space)
         l1 = odl.solvers.L1Norm(space)
-        func = odl.solvers.BregmanDistance(l1, point)
+        subgrad = l1.gradient(point)
+        func = odl.solvers.BregmanDistance(l1, point, subgrad)
     else:
         assert False
 
@@ -613,9 +615,9 @@ def test_functional_quadratic_perturb(space, linear_term, quadratic_coeff):
 def test_bregman(functional):
     """Test for the Bregman distance of a functional."""
     if isinstance(functional, odl.solvers.functional.IndicatorLpUnitBall):
-        # IndicatorFunction has no derivative
+        # IndicatorFunction has no gradient
         with pytest.raises(NotImplementedError):
-            functional.derivative(functional.domain.zero())
+            functional.gradient(functional.domain.zero())
         return
 
     y = noise_element(functional.domain)
@@ -637,7 +639,7 @@ def test_bregman(functional):
         vector=-grad, constant=-functional(y) + grad.inner(y))
     expected_func = functional + quadratic_func
 
-    assert almost_equal(functional.bregman(y)(x), expected_func(x))
+    assert almost_equal(functional.bregman(y, grad)(x), expected_func(x))
 
 
 if __name__ == '__main__':

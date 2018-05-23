@@ -225,18 +225,16 @@ class Functional(Operator):
         """
         return FunctionalTranslation(self, shift)
 
-    def bregman(self, point, subgrad=None):
-        """Return the Bregman distance functional.
+    def bregman(self, point, subgrad):
+        r"""Return the Bregman distance functional.
 
         Parameters
         ----------
         point : element of ``functional.domain``
             Point from which to define the Bregman distance.
-        subgrad : `Operator`, optional
-            A subgradient operator. Operator which that takes an element in
-            `functional.domain` and returns a subdifferential of the functional
-            in that point.
-            Default: ``functional.gradient``.
+        subgrad : element of ``functional.domain``
+            A subgradient of ``functional`` in ``point``. If it exists,  a
+            valid option is ``functional.gradient(point)``.
 
         Returns
         -------
@@ -245,25 +243,23 @@ class Functional(Operator):
 
         Notes
         -----
-        Given a functional :math:`f`, which has a (sub)gradient
-        :math:`\partial f`, and given a point :math:`y`, the Bregman distance
-        functional :math:`D_f(\cdot, y)` in a point :math:`x` is given by
+        Given a functional :math:`f`, a point :math:`y`, and a (sub)gradient
+        :math:`p \in \partial f(y)`, the Bregman distance functional
+        :math:`D_f^p(\cdot, y)` in a point :math:`x` is given by
 
         .. math::
-            D_f(x, y) = f(x) - f(y) - \\langle \partial f(y), x - y \\rangle.
+            D_f^p(x, y) = f(x) - f(y) - \langle p, x - y \rangle.
 
 
-        For mathematical details, see `[Bur2016]`_.
+        For mathematical details, see
+        `[Bur2016] <https://arxiv.org/abs/1505.05191>`_. See also the Wikipedia
+        article: https://en.wikipedia.org/wiki/Bregman_divergence
 
         References
         ----------
-        Wikipedia article: https://en.wikipedia.org/wiki/Bregman_divergence
-
         [Bur2016] Burger, M. *Bregman Distances in Inverse Problems and Partial
         Differential Equation*. In: Advances in Mathematical Modeling,
         Optimization and Optimal Control, 2016. p. 3-33.
-
-        .. _[Bur2016]:  https://arxiv.org/abs/1505.05191
         """
         return BregmanDistance(self, point, subgrad)
 
@@ -1334,7 +1330,7 @@ class FunctionalDefaultConvexConjugate(Functional):
 
 
 class BregmanDistance(Functional):
-    """The Bregman distance functional.
+    r"""The Bregman distance functional.
 
     The Bregman distance, also refered to as the Bregman divergence, is similar
     to a metric but satisfies neither the triangle inequality nor symmetry.
@@ -1343,43 +1339,37 @@ class BregmanDistance(Functional):
 
     Notes
     -----
-    Given a functional :math:`f`, which has a (sub)gradient :math:`\partial f`,
-    and given a point :math:`y`, the Bregman distance functional
-    :math:`D_f(\cdot, y)` in a point :math:`x` is given by
+    Given a functional :math:`f`, a point :math:`y`, and a (sub)gradient
+    :math:`p \in \partial f(y)`, the Bregman distance functional
+    :math:`D_f^p(\cdot, y)` in a point :math:`x` is given by
 
     .. math::
-        D_f(x, y) = f(x) - f(y) - \\langle \partial f(y), x - y \\rangle.
+        D_f^p(x, y) = f(x) - f(y) - \langle p, x - y \rangle.
 
 
-    For mathematical details, see `[Bur2016]`_.
+    For mathematical details, see
+    `[Bur2016] <https://arxiv.org/abs/1505.05191>`_. See also the Wikipedia
+    article: https://en.wikipedia.org/wiki/Bregman_divergence
 
     References
     ----------
-    Wikipedia article: https://en.wikipedia.org/wiki/Bregman_divergence
-
     [Bur2016] Burger, M. *Bregman Distances in Inverse Problems and Partial
     Differential Equation*. In: Advances in Mathematical Modeling, Optimization
     and Optimal Control, 2016. p. 3-33.
-
-    .. _[Bur2016]:  https://arxiv.org/abs/1505.05191
     """
 
-    def __init__(self, functional, point, func_subgrad=None):
+    def __init__(self, functional, point, subgrad):
         """Initialize a new instance.
 
         Parameters
         ----------
         functional : `Functional`
-            Functional on which to base the Bregman distance. If the
-            optional argument `func_subgrad` is not given, the functional
-            needs to implement `functional.gradient`.
+            Functional on which to base the Bregman distance.
         point : element of ``functional.domain``
             Point from which to define the Bregman distance.
-        func_subgrad : `Operator`, optional
-            A subgradient operator. Operator which that takes an element in
-            `functional.domain` and returns a subdifferential of the functional
-            in that point.
-            Default: ``functional.gradient``.
+        subgrad : element of ``functional.domain``
+            A subgradient of ``functional`` in ``point``. If it exists,  a
+            valid option is ``functional.gradient(point)``.
 
         Examples
         --------
@@ -1388,12 +1378,14 @@ class BregmanDistance(Functional):
         >>> space = odl.uniform_discr(0, 1, 10)
         >>> l2_squared = odl.solvers.L2NormSquared(space)
         >>> point = space.one()
-        >>> Bregman_dist = odl.solvers.BregmanDistance(l2_squared, point)
+        >>> subgrad = l2_squared.gradient(point)
+        >>> bregman_dist = odl.solvers.BregmanDistance(
+        ...     l2_squared, point, subgrad)
 
         This is gives squared L2 distance to the given point, ||x - 1||^2:
 
         >>> expected_functional = l2_squared.translated(point)
-        >>> Bregman_dist(space.zero()) == expected_functional(space.zero())
+        >>> bregman_dist(space.zero()) == expected_functional(space.zero())
         True
         """
         if not isinstance(functional, Functional):
@@ -1406,38 +1398,22 @@ class BregmanDistance(Functional):
                              ''.format(point, functional.domain))
         self.__point = point
 
-        if func_subgrad is None:
-            # If the subgradient is not given, assign the gradient of the
-            # functional
-            try:
-                self.__func_subgrad = self.__functional.gradient
-            except NotImplementedError:
-                raise NotImplementedError(
-                    '`subgradient` not given, and the `functional` {} does '
-                    'not implement `functional.gradient`'.format(functional))
-        else:
-            # Check that given subgradient is an operator that maps from the
-            # domain of the functional to itself
-            if not isinstance(func_subgrad, Operator):
-                raise TypeError(
-                    '`func_subgrad` must be an instance of ``Operator``, got '
-                    '{}'.format(func_subgrad))
-            if func_subgrad.domain != self.__functional.domain:
-                raise ValueError('`func_subgrad.domain` {} is not the same as '
-                                 '`functional.domain` {}'
-                                 ''.format(self.__functional.domain,
-                                           func_subgrad.domain))
-            if func_subgrad.range != self.__functional.domain:
-                raise ValueError('`func_subgrad.range` {} is not the same as '
-                                 '`functional.domain` {}'
-                                 ''.format(self.__functional.domain,
-                                           func_subgrad.range))
-            self.__func_subgrad = func_subgrad
+        if subgrad not in functional.domain:
+            raise TypeError(
+                '`subgrad` must be an element in `functional.domain`, got '
+                '{}'.format(subgrad))
+        self.__subgrad = subgrad
 
-        self.__is_initialized = False
+        self.__constant = -functional(point) + subgrad.inner(point)
 
-        super(BregmanDistance, self).__init__(space=functional.domain,
-                                              linear=False)
+        self.__bregman_dist = FunctionalQuadraticPerturb(
+            functional, linear_term=-subgrad, constant=self.__constant)
+
+        grad_lipschitz = functional.grad_lipschitz + subgrad.norm()
+
+        super(BregmanDistance, self).__init__(
+            space=functional.domain, linear=False,
+            grad_lipschitz=grad_lipschitz)
 
     @property
     def functional(self):
@@ -1450,57 +1426,41 @@ class BregmanDistance(Functional):
         return self.__point
 
     @property
-    def func_subgrad(self):
-        """The subgradient operator used to define the Bregman distance."""
-        return self.__func_subgrad
-
-    @property
-    def initialized(self):
-        """Flag for if the Bregman distance functional is initialized."""
-        return self.__initialized
-
-    def _initialize_if_needed(self):
-        """Helper function to initialize the functional."""
-        if not self.__is_initialized:
-            self.__func_subgrad_eval = self.func_subgrad(self.point)
-            self.__constant = (-self.functional(self.point) +
-                               self.__func_subgrad_eval.inner(self.point))
-            self.__bregman_dist = FunctionalQuadraticPerturb(
-                self.functional, linear_term=-self.__func_subgrad_eval,
-                constant=self.__constant)
-
-            self.grad_lipschitz = (self.functional.grad_lipschitz +
-                                   self.__func_subgrad_eval.norm())
-
-            self.__initialized = True
+    def subgrad(self):
+        """The subgradient used to define the Bregman distance."""
+        return self.__subgrad
 
     def _call(self, x):
         """Return ``self(x)``."""
-        self._initialize_if_needed()
         return self.__bregman_dist(x)
 
     @property
     def convex_conj(self):
         """The convex conjugate"""
-        self._initialize_if_needed()
         return self.__bregman_dist.convex_conj
 
     @property
     def proximal(self):
         """Return the ``proximal factory`` of the functional."""
-        self._initialize_if_needed()
         return self.__bregman_dist.proximal
 
     @property
     def gradient(self):
         """Gradient operator of the functional."""
-        self._initialize_if_needed()
-        return self.func_subgrad - ConstantOperator(self.__func_subgrad_eval)
+        try:
+            op_to_return = self.functional.gradient
+        except NotImplementedError:
+            raise NotImplementedError(
+                '`self.functional.gradient` is not implemented for '
+                '`self.functional` {}'.format(self.functional))
+
+        op_to_return = op_to_return - ConstantOperator(self.subgrad)
+        return op_to_return
 
     def __repr__(self):
         '''Return ``repr(self)``.'''
-        posargs = [self.functional, self.point]
-        optargs = [('func_subgrad', self.func_subgrad, None)]
+        posargs = [self.functional, self.point, self.subgrad]
+        optargs = []
         inner_str = signature_string(posargs, optargs, sep=',\n')
         return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
 
