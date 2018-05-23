@@ -279,7 +279,7 @@ def proximal_arg_scaling(prox_factory, scaling):
         elif scaling.imag != 0:
             raise ValueError("Complex scaling not supported.")
         else:
-            scaling = float(scaling)
+            scaling = float(scaling.real)
     else:
         scaling = np.asarray(scaling)
 

@@ -49,7 +49,7 @@ gradient = odl.Gradient(reco_space)
 op = odl.BroadcastOperator(ray_trafo, gradient)
 
 # Do not use the g functional, set it to zero.
-g = odl.solvers.ZeroFunctional(op.domain)
+f = odl.solvers.ZeroFunctional(op.domain)
 
 # Create functionals for the dual variable
 
@@ -60,7 +60,7 @@ l2_norm = odl.solvers.L2NormSquared(ray_trafo.range).translated(data)
 l1_norm = 0.015 * odl.solvers.L1Norm(gradient.range)
 
 # Combine functionals, order must correspond to the operator K
-f = odl.solvers.SeparableSum(l2_norm, l1_norm)
+g = odl.solvers.SeparableSum(l2_norm, l1_norm)
 
 # --- Select solver parameters and solve using PDHG --- #
 
@@ -79,7 +79,7 @@ callback = (odl.solvers.CallbackPrintIteration(step=10) &
 x = op.domain.zero()
 
 # Run the algorithm
-odl.solvers.pdhg(x, f, g, op, tau=tau, sigma=sigma, niter=niter,
+odl.solvers.pdhg(x, f, g, op, niter=niter, tau=tau, sigma=sigma,
                  callback=callback)
 
 # Display images

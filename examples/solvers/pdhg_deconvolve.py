@@ -51,7 +51,7 @@ gradient = odl.Gradient(space, method='forward')
 op = odl.BroadcastOperator(convolution, gradient)
 
 # Create the functional for unconstrained primal variable
-g = odl.solvers.ZeroFunctional(op.domain)
+f = odl.solvers.ZeroFunctional(op.domain)
 
 # l2-squared data matching
 l2_norm_squared = odl.solvers.L2NormSquared(space).translated(data)
@@ -60,7 +60,7 @@ l2_norm_squared = odl.solvers.L2NormSquared(space).translated(data)
 l1_norm = 0.01 * odl.solvers.L1Norm(gradient.range)
 
 # Make separable sum of functionals, order must be the same as in `op`
-f = odl.solvers.SeparableSum(l2_norm_squared, l1_norm)
+g = odl.solvers.SeparableSum(l2_norm_squared, l1_norm)
 
 # --- Select solver parameters and solve using PDHG --- #
 
@@ -79,7 +79,7 @@ callback = (odl.solvers.CallbackPrintIteration() &
 x = op.domain.zero()
 
 # Run the algorithm
-odl.solvers.pdhg(x, f, g, op, tau=tau, sigma=sigma, niter=niter,
+odl.solvers.pdhg(x, f, g, op, niter=niter, tau=tau, sigma=sigma,
                  callback=callback)
 
 # Display images

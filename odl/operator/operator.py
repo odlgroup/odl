@@ -739,8 +739,13 @@ class Operator(object):
                                       '`Operator.norm(estimate=True)` to '
                                       'obtain an estimate.')
         else:
-            from odl.operator.oputils import power_method_opnorm
-            return power_method_opnorm(self, **kwargs)
+            norm = getattr(self, '__norm', None)
+            if norm is not None:
+                return norm
+            else:
+                from odl.operator.oputils import power_method_opnorm
+                self.__norm = power_method_opnorm(self, **kwargs)
+                return self.__norm
 
     def __add__(self, other):
         """Return ``self + other``.

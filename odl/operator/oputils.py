@@ -15,6 +15,7 @@ import numpy as np
 from odl.space.base_tensors import TensorSpace
 from odl.space import ProductSpace
 from odl.util import nd_iterator
+from odl.util.testutils import noise_element
 
 __all__ = ('matrix_representation', 'power_method_opnorm', 'as_scipy_operator',
            'as_scipy_functional', 'as_proximal_lang_operator')
@@ -133,8 +134,8 @@ def power_method_opnorm(op, xstart=None, maxiter=100, rtol=1e-05, atol=1e-08,
         `Operator.adjoint` must be defined (which implies that the
         operator must be linear).
     xstart : ``op.domain`` `element-like`, optional
-        Starting point of the iteration. By default, the ``one``
-        element of the `Operator.domain` is used.
+        Starting point of the iteration. By default an `Operator.domain`
+        element containing noise is used.
     maxiter : positive int, optional
         Number of iterations to perform. If the domain and range of ``op``
         do not match, it needs to be an even number. If ``None`` is given,
@@ -202,11 +203,7 @@ def power_method_opnorm(op, xstart=None, maxiter=100, rtol=1e-05, atol=1e-08,
 
     # Make sure starting point is ok or select initial guess
     if xstart is None:
-        try:
-            x = op.domain.one()  # TODO: random? better choice?
-        except AttributeError:
-            raise ValueError('`xstart` must be defined in case the '
-                             'operator domain has no `one()`')
+        x = noise_element(op.domain)
     else:
         # copy to ensure xstart is not modified
         x = op.domain.element(xstart).copy()
@@ -250,7 +247,7 @@ def power_method_opnorm(op, xstart=None, maxiter=100, rtol=1e-05, atol=1e-08,
         # Calculate opnorm
         opnorm, opnorm_old = calc_opnorm(x_norm), opnorm
 
-        # Check if the breaking condition holds, stop. Else rescale and go on.
+        # If the breaking condition holds, stop. Else rescale and go on.
         if np.isclose(opnorm, opnorm_old, rtol, atol):
             break
         else:
