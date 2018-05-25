@@ -1,4 +1,4 @@
-"""Example of using optimization to pick reconstruction parameters.
+"""Example of using optimization to select reconstruction parameters.
 
 In this example, we solve the tomographic inversion problem with different
 regularizers (FBP, Huber-TV and TV) and pick the "best" regularization
@@ -9,7 +9,6 @@ merit, here the L2-distance to the true result.
 """
 
 import numpy as np
-import scipy
 import odl
 
 from odl.contrib.param_opt import optimal_parameters

@@ -175,19 +175,16 @@ def test_ssim(space):
 def test_mean_value_difference_sign():
     space = odl.uniform_discr(0, 1, 10)
     I0 = space.one()
-    I1 = -I0.copy()
-    assert np.abs(fom.mean_value_difference(I0, I1)) > 0.1
-    assert np.abs(fom.mean_value_difference(I0, I1, normalized=True)) > 0.1
+    assert np.abs(fom.mean_value_difference(I0, -I0)) == pytest.approx(2.0)
 
 
 def test_mean_value_difference_range_value(space):
-    I0 = space.element(np.random.normal(0, 1, size=space.shape))
-    I1 = space.element(np.random.normal(0, 1, size=space.shape))
-
-    max0 = np.max(I0.asarray())
-    max1 = np.max(I1.asarray())
-    min0 = np.min(I0.asarray())
-    min1 = np.min(I1.asarray())
+    I0 = odl.util.testutils.noise_element(space)
+    I1 = odl.util.testutils.noise_element(space)
+    max0 = np.max(I0)
+    max1 = np.max(I1)
+    min0 = np.min(I0)
+    min1 = np.min(I1)
 
     assert fom.mean_value_difference(I0, I1) <= max(max0 - min1, max1 - min0)
     assert pytest.approx(fom.mean_value_difference(I0, I0)) == 0
@@ -200,11 +197,11 @@ def test_standard_deviation_difference_range_value(space):
 
     assert pytest.approx(fom.standard_deviation_difference(I0, I0)) == 0
     assert fom.standard_deviation_difference(10*I0, I0, normalized=True) <= 1.0
-    assert (pytest.approx(fom.standard_deviation_difference(I0, I0 + const)) ==
-            0)
+    assert (pytest.approx(fom.standard_deviation_difference(
+            I0, I0 + const), abs=1e-6) == 0)
     test_value = fom.standard_deviation_difference(space.one(), space.zero(),
                                                    normalized=True)
-    assert pytest.approx(test_value) == 0
+    assert pytest.approx(test_value, abs=1e-6) == 0
 
 
 def test_range_difference(space):
@@ -213,7 +210,7 @@ def test_range_difference(space):
     const = np.random.normal(0, 10)
 
     assert pytest.approx(fom.range_difference(I0, I0)) == 0
-    assert pytest.approx(fom.range_difference(I0 + const, I0)) == 0
+    assert pytest.approx(fom.range_difference(I0 + const, I0), abs=1e-6) == 0
     aconst = np.abs(const)
     eval0 = aconst * fom.range_difference(I0, I1)
     eval1 = fom.range_difference(aconst * I0, aconst * I1)
