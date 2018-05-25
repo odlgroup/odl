@@ -23,6 +23,7 @@ fom = simple_fixture('fom',
                      [odl.contrib.fom.mean_squared_error,
                       odl.contrib.fom.mean_absolute_error])
 
+
 def test_optimal_parameters_one_parameter(space, fom):
     """Tests if optimal_parameters works for some simple examples."""
     mynoise = [odl.phantom.white_noise(space) for _ in range(2)]
