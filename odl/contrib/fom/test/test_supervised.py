@@ -196,7 +196,8 @@ def test_standard_deviation_difference_range_value(space):
     const = np.random.normal(0, 10)
 
     assert pytest.approx(fom.standard_deviation_difference(I0, I0)) == 0
-    assert fom.standard_deviation_difference(10*I0, I0, normalized=True) <= 1.0
+    assert (fom.standard_deviation_difference(10 * I0, I0, normalized=True) <=
+            1.0)
     assert (pytest.approx(fom.standard_deviation_difference(
             I0, I0 + const), abs=1e-6) == 0)
     test_value = fom.standard_deviation_difference(space.one(), space.zero(),
