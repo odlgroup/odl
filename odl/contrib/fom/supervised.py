@@ -19,7 +19,7 @@ __all__ = ('mean_squared_error', 'mean_absolute_error',
 
 def mean_squared_error(data, ground_truth, mask=None,
                        normalized=False, force_lower_is_better=False):
-    """Return mean squared L2 distance between ``data`` and ``ground_truth``.
+    r"""Return mean squared L2 distance between ``data`` and ``ground_truth``.
 
     See also `this Wikipedia article
     <https://en.wikipedia.org/wiki/Mean_squared_error>`_.
@@ -51,7 +51,7 @@ def mean_squared_error(data, ground_truth, mask=None,
     The FOM evaluates
 
     .. math::
-        \mathrm{MSE}(f, g) = \\frac{\| f - g \|_2^2}{\| 1 \|_2^2},
+        \mathrm{MSE}(f, g) = \frac{\| f - g \|_2^2}{\| 1 \|_2^2},
 
     where :math:`\| 1 \|^2_2` is the volume of the domain of definition
     of the functions. For :math:`\mathbb{R}^n` type spaces, this is equal
@@ -60,7 +60,7 @@ def mean_squared_error(data, ground_truth, mask=None,
     The normalized form is
 
     .. math::
-        \mathrm{MSE_N} = \\frac{\| f - g \|_2^2}{(\| f \|_2 + \| g \|_2)^2}.
+        \mathrm{MSE_N} = \frac{\| f - g \|_2^2}{(\| f \|_2 + \| g \|_2)^2}.
 
     The normalized variant takes values in :math:`[0, 1]`.
     """
@@ -88,7 +88,7 @@ def mean_squared_error(data, ground_truth, mask=None,
 
 def mean_absolute_error(data, ground_truth, mask=None,
                         normalized=False, force_lower_is_better=False):
-    """Return L1-distance between ``data`` and ``ground_truth``.
+    r"""Return L1-distance between ``data`` and ``ground_truth``.
 
     See also `this Wikipedia article
     <https://en.wikipedia.org/wiki/Mean_absolute_error>`_.
@@ -121,7 +121,7 @@ def mean_absolute_error(data, ground_truth, mask=None,
     The FOM evaluates
 
     .. math::
-        \mathrm{MAE}(f, g) = \\frac{\| f - g \|_1}{\| 1 \|_1},
+        \mathrm{MAE}(f, g) = \frac{\| f - g \|_1}{\| 1 \|_1},
 
     where :math:`\| 1 \|_1` is the volume of the domain of definition
     of the functions. For :math:`\mathbb{R}^n` type spaces, this is equal
@@ -130,7 +130,7 @@ def mean_absolute_error(data, ground_truth, mask=None,
     The normalized form is
 
     .. math::
-        \mathrm{MAE_N}(f, g) = \\frac{\| f - g \|_1}{\| f \|_1 + \| g \|_1}.
+        \mathrm{MAE_N}(f, g) = \frac{\| f - g \|_1}{\| f \|_1 + \| g \|_1}.
 
     The normalized variant takes values in :math:`[0, 1]`.
     """
@@ -155,7 +155,7 @@ def mean_absolute_error(data, ground_truth, mask=None,
 
 def mean_value_difference(data, ground_truth, mask=None, normalized=False,
                           force_lower_is_better=True):
-    """Return difference in mean value between ``data`` and ``ground_truth``.
+    r"""Return difference in mean value between ``data`` and ``ground_truth``.
 
     Parameters
     ----------
@@ -184,19 +184,19 @@ def mean_value_difference(data, ground_truth, mask=None, normalized=False,
 
     .. math::
          \mathrm{MVD}(f, g) =
-         \\Big| \\overline{f} - \\overline{g} \\Big|,
+         \Big| \overline{f} - \overline{g} \Big|,
 
     or, in normalized form
 
     .. math::
          \mathrm{MVD_N}(f, g) =
-         \\frac{\\Big| \\overline{f} - \\overline{g} \\Big|}
-               {\\Big| |\\overline{f}| + |\\overline{g}| \\Big|}
+         \frac{\Big| \overline{f} - \overline{g} \Big|}
+               {\Big| |\overline{f}| + |\overline{g}| \Big|}
 
-    where :math:`\\overline{f}` is the mean value of :math:`f`,
+    where :math:`\overline{f}` is the mean value of :math:`f`,
 
     .. math::
-        \\overline{f} = \\frac{\\langle f, 1\\rangle}{\|1|_1}.
+        \overline{f} = \frac{\langle f, 1\rangle}{\|1|_1}.
 
     The normalized variant takes values in :math:`[0, 1]`.
     """
@@ -216,13 +216,13 @@ def mean_value_difference(data, ground_truth, mask=None, normalized=False,
     if normalized:
         fom /= (np.abs(data_mean) + np.abs(ground_truth_mean))
 
-
     return fom
 
 
 def standard_deviation_difference(data, ground_truth, mask=None,
-                                normalized=False, force_lower_is_better=True):
-    """Return absolute difference in std between ``data`` and ``ground_truth``.
+                                  normalized=False,
+                                  force_lower_is_better=True):
+    r"""Return absolute difference in std between ``data`` and ``ground_truth``.
 
     Parameters
     ----------
@@ -236,7 +236,7 @@ def standard_deviation_difference(data, ground_truth, mask=None,
         Boolean flag to switch between unormalized and normalized FOM.
     force_lower_is_better : bool, optional
         If ``True``, it is ensured that lower values correspond to better
-        matches. For the standard deviation difference, this is already the 
+        matches. For the standard deviation difference, this is already the
         case, and the flag is only present for compatibility to other figures
         of merit.
 
@@ -252,21 +252,21 @@ def standard_deviation_difference(data, ground_truth, mask=None,
 
     .. math::
         \mathrm{SDD}(f, g) =
-         \Big| \| f - \\overline{f} \|_2 - \| g - \\overline{g} \|_2 \Big|,
+         \Big| \| f - \overline{f} \|_2 - \| g - \overline{g} \|_2 \Big|,
 
     or, in normalized form
 
     .. math::
         \mathrm{SDD_N}(f, g) =
-         \\frac{\Big| \| f - \\overline{f} \|_2 -
-                      \| g - \\overline{g} \|_2 \Big|}
-               {\Big| \| f - \\overline{f} \|_2 +
-                      \| g - \\overline{g} \|_2 \Big|},
+         \frac{\Big| \| f - \overline{f} \|_2 -
+                      \| g - \overline{g} \|_2 \Big|}
+               {\Big| \| f - \overline{f} \|_2 +
+                      \| g - \overline{g} \|_2 \Big|},
 
-    where :math:`\\overline{f}` is the mean value of :math:`f`,
+    where :math:`\overline{f}` is the mean value of :math:`f`,
 
     .. math::
-        \\overline{f} = \\frac{\\langle f, 1\\rangle}{\|1|_1}.
+        \overline{f} = \frac{\langle f, 1\rangle}{\|1|_1}.
 
     The normalized variant takes values in :math:`[0, 1]`.
     """
@@ -297,8 +297,8 @@ def standard_deviation_difference(data, ground_truth, mask=None,
 
 
 def range_difference(data, ground_truth, mask=None, normalized=False,
-                                                 force_lower_is_better=True):
-    """Return dynamic range difference between ``data`` and ``ground_truth``.
+                     force_lower_is_better=True):
+    r"""Return dynamic range difference between ``data`` and ``ground_truth``.
 
     Evaluates difference in range between input (``data``) and reference
     data (``ground_truth``). Allows for normalization (``normalized``) and a
@@ -331,21 +331,21 @@ def range_difference(data, ground_truth, mask=None, normalized=False,
 
     .. math::
         \mathrm{RD}(f, g) = \Big|
-            \\big(\\max(f) - \\min(f) \\big) -
-            \\big(\\max(g) - \\min(g) \\big)
+            \big(\max(f) - \min(f) \big) -
+            \big(\max(g) - \min(g) \big)
             \Big|
 
     or, in normalized form
 
     .. math::
-        \mathrm{RD_N}(f, g) = \\frac{
+        \mathrm{RD_N}(f, g) = \frac{
             \Big|
-            \\big(\\max(f) - \\min(f) \\big) -
-            \\big(\\max(g) - \\min(g) \\big)
+            \big(\max(f) - \min(f) \big) -
+            \big(\max(g) - \min(g) \big)
             \Big|}{
             \Big|
-            \\big(\\max(f) - \\min(f) \\big) +
-            \\big(\\max(g) - \\min(g) \\big)
+            \big(\max(f) - \min(f) \big) +
+            \big(\max(g) - \min(g) \big)
             \Big|}
 
     The normalized variant takes values in :math:`[0, 1]`.
@@ -370,7 +370,7 @@ def range_difference(data, ground_truth, mask=None, normalized=False,
 
 def blurring(data, ground_truth, mask=None, normalized=False,
              smoothness_factor=None):
-    """Return weighted L2 distance, emphasizing regions defined by ``mask``.
+    r"""Return weighted L2 distance, emphasizing regions defined by ``mask``.
 
     .. note::
         If the mask argument is omitted, this FOM is equivalent to the
@@ -404,23 +404,23 @@ def blurring(data, ground_truth, mask=None, normalized=False,
     The FOM evaluates
 
     .. math::
-        \mathrm{BLUR}(f, g) = \|\\alpha (f - g) \|_2^2,
+        \mathrm{BLUR}(f, g) = \|\alpha (f - g) \|_2^2,
 
     or, in normalized form
 
     .. math::
         \mathrm{BLUR_N}(f, g) =
-            \\frac{\|\\alpha(f - g)\|^2_2}
-                  {\|\\alpha f\|^2_2 + \|\\alpha g\|^2_2}.
+            \frac{\|\alpha(f - g)\|^2_2}
+                  {\|\alpha f\|^2_2 + \|\alpha g\|^2_2}.
 
-    The weighting function :math:`\\alpha` is given as
+    The weighting function :math:`\alpha` is given as
 
     .. math::
-        \\alpha(x) = e^{-\\frac{1}{k} \\beta_m(x)},
+        \alpha(x) = e^{-\frac{1}{k} \beta_m(x)},
 
-    where :math:`\\beta_m(x)` is the Euclidian distance transform of a
+    where :math:`\beta_m(x)` is the Euclidian distance transform of a
     given binary mask :math:`m`, and :math:`k` positive real number that
-    controls the smoothness of the weighting function :math:`\\alpha`.
+    controls the smoothness of the weighting function :math:`\alpha`.
     The weighting gives higher values to structures in the region of
     interest defined by the mask.
 
@@ -481,7 +481,7 @@ def false_structures_mask(foreground, smoothness_factor=None):
     unique = np.unique(foreground)
     if not np.array_equiv(unique, [0., 1.]):
         raise ValueError('`foreground` is not a binary mask or has '
-                                          'no true values {!r}'.format(unique))
+                         'no true values {!r}'.format(unique))
 
     result = distance_transform_edt(1.0 - foreground,
                                     sampling=space.cell_sides)
@@ -607,10 +607,10 @@ def psnr(data, ground_truth, use_zscore=False, force_lower_is_better=False):
     ground_truth : `FnBaseVector`
         Reference to compare ``data`` to.
     use_zscore : bool
-        If ``true``, normalize ``data`` and ``ground_truth`` to have zero mean 
+        If ``true``, normalize ``data`` and ``ground_truth`` to have zero mean
         and unit variance before comparison.
     force_lower_is_better : bool
-        If ``true``, then lower value indicates better fit. In this case the 
+        If ``true``, then lower value indicates better fit. In this case the
         output is negated
 
     Returns
@@ -662,7 +662,7 @@ def psnr(data, ground_truth, use_zscore=False, force_lower_is_better=False):
 
 
 def haarpsi(data, ground_truth, a=4.2, c=None):
-    """Haar-Wavelet based perceptual similarity index FOM.
+    r"""Haar-Wavelet based perceptual similarity index FOM.
 
     This function evaluates the structural similarity between two images
     based on edge features along the coordinate axes, analyzed with two
@@ -706,12 +706,12 @@ def haarpsi(data, ground_truth, a=4.2, c=None):
 
     .. math::
         \mathrm{HaarPSI}_{f_1, f_2} =
-        l_a^{-1} \\left(
-        \\frac{
+        l_a^{-1} \left(
+        \frac{
         \sum_x \sum_{k=1}^2 \mathrm{HS}_{f_1, f_2}^{(k)}(x) \cdot
         \mathrm{W}_{f_1, f_2}^{(k)}(x)}{
         \sum_x \sum_{k=1}^2 \mathrm{W}_{f_1, f_2}^{(k)}(x)}
-        \\right)^2
+        \right)^2
 
     see `[Rei+2016] <https://arxiv.org/abs/1607.06140>`_ equation (12).
 
