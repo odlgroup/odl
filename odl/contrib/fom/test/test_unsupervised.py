@@ -23,7 +23,7 @@ def test_estimate_noise_std_constant_1d():
 
 def test_estimate_noise_std_normal_1d():
     """Verify ``estimate_noise_std(N(0, 1)) == 1`` in 1d."""
-    img = np.random.randn(10)
+    img = np.random.randn(1000)
     result = odl.contrib.fom.estimate_noise_std(img)
     expected = np.std(img)
     assert pytest.approx(result, abs=0.2) == expected
@@ -31,7 +31,7 @@ def test_estimate_noise_std_normal_1d():
 
 def test_estimate_noise_std_normal_2d():
     """Verify ``estimate_noise_std(N(0, 1)) == 1`` in 2d."""
-    img = np.random.randn(10, 10)
+    img = np.random.randn(100, 100)
     result = odl.contrib.fom.estimate_noise_std(img)
     expected = np.std(img)
     assert pytest.approx(result, abs=0.2) == expected
@@ -39,7 +39,7 @@ def test_estimate_noise_std_normal_2d():
 
 def test_estimate_noise_std_normal_4d():
     """Verify ``estimate_noise_std(N(0, 1)) == 1`` in 4d."""
-    img = np.random.randn(5, 5, 5, 5)
+    img = np.random.randn(10, 10, 10, 10)
     result = odl.contrib.fom.estimate_noise_std(img)
     expected = np.std(img)
     assert pytest.approx(result, abs=0.2) == expected
@@ -55,13 +55,13 @@ def test_estimate_noise_std_normal_large_1d():
 
 def test_estimate_noise_std_normal_2d_pointwise():
     """Verify ``estimate_noise_std(N(0, 1)) == 1`` in 2d."""
-    img = np.random.randn(10, 10)
+    img = np.random.randn(100, 100)
     result = odl.contrib.fom.estimate_noise_std(img, average=False)
     result_mean = np.mean(result)
     expected = np.std(img)
     assert result.shape == img.shape
     assert result.dtype == result.dtype
-    assert pytest.approx(result_mean, abs=0.2) == expected
+    assert pytest.approx(result_mean, abs=0.25) == expected
 
 
 if __name__ == '__main__':

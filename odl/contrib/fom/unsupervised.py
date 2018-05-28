@@ -17,8 +17,7 @@ __all__ = ('estimate_noise_std',)
 def estimate_noise_std(img, average=True):
     """Estimate standard deviation of noise in ``img``.
 
-    The algorithm, given in [Immerkaer1996], estimates the noise in an image
-    by
+    The algorithm, given in [Immerkaer1996], estimates the noise in an image.
 
     Parameters
     ----------
