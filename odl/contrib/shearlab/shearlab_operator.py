@@ -139,7 +139,6 @@ class ShearlabOperator(odl.Operator):
 
                 return ShearlabOperatorAdjointInverse()
 
-
         return ShearlabOperatorAdjoint()
 
     @property
