@@ -137,6 +137,9 @@ class ShearlabOperator(odl.Operator):
                         """The inverse operator."""
                         return self.op.adjoint
 
+                return ShearlabOperatorAdjointInverse()
+
+
         return ShearlabOperatorAdjoint()
 
     @property
@@ -211,6 +214,7 @@ class ShearlabOperator(odl.Operator):
                     def inverse(self):
                         """The inverse operator."""
                         return self.op.adjoint
+                return ShearlabOperatorInverseAdjoint()
 
             @property
             def inverse(self):
