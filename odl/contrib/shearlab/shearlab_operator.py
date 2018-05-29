@@ -171,8 +171,46 @@ class ShearlabOperator(odl.Operator):
 
             @property
             def adjoint(self):
-                """The adjoint operator."""
-                return ShearlabOperatorAdjointInverse()
+                """The inverse operator."""
+                op = self
+
+                class ShearlabOperatorInverseAdjoint(odl.Operator):
+
+                    """
+                    Adjoint of the inverse/Inverse of the adjoint
+                    of shearlet transform.
+
+                    See Also
+                    --------
+                    odl.contrib.shearlab.ShearlabOperator
+                    """
+
+                    def __init__(self):
+                        """Initialize a new instance.
+                        Parameters
+                        ----------
+                        op : `ShearlabOperator`
+                              The operator which this should be the
+                              inverse of the adjoint of.
+                        """
+                        super(ShearlabOperatorInverseAdjoint, self).__init__(
+                            op.domain, op.range, True)
+
+                    def _call(self, x):
+                        """``self(x)``."""
+                        with op.mutex:
+                            result = shearrecadjoint2D(x, op.shearlet_system)
+                            return np.moveaxis(result, -1, 0)
+
+                    @property
+                    def adjoint(self):
+                        """The adjoint operator."""
+                        return self.op.inverse
+
+                    @property
+                    def inverse(self):
+                        """The inverse operator."""
+                        return self.op.adjoint
 
             @property
             def inverse(self):
