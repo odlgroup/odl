@@ -509,7 +509,7 @@ class ProductSpaceOperator(Operator):
     @property
     def size(self):
         """Total size of the matrix of operators."""
-        return np.prod(self.shape)
+        return np.prod(self.shape, dtype='int64')
 
     def __repr__(self):
         """Return ``repr(self)``."""

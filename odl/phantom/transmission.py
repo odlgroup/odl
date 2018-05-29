@@ -297,7 +297,7 @@ def forbild(space, resolution=False, ear=True, value_type='density',
 
         * ``'auto'`` means that space is rescaled to fit exactly. The space is
           also centered at [0, 0].
-        * ``'cm'`` means the dimensions of the space should be used as is.
+        * ``'cm'`` means the dimensions of the space should be used as-is.
         * ``'m'`` means all dimensions of the space are multiplied by 100.
         * ``'mm'`` means all dimensions of the space are divided by 10.
 

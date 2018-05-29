@@ -49,10 +49,10 @@ l2_norm = odl.solvers.L2NormSquared(space).translated(noisy)
 l1_norm = 0.15 * odl.solvers.L1Norm(gradient.range)
 
 # Make separable sum of functionals, order must correspond to the operator K
-f = odl.solvers.SeparableSum(l2_norm, l1_norm)
+g = odl.solvers.SeparableSum(l2_norm, l1_norm)
 
 # Non-negativity constraint
-g = odl.solvers.IndicatorNonnegativity(op.domain)
+f = odl.solvers.IndicatorNonnegativity(op.domain)
 
 # --- Select solver parameters and solve using PDHG --- #
 
@@ -71,7 +71,7 @@ callback = (odl.solvers.CallbackPrintIteration() &
 x = op.domain.zero()
 
 # Run algorithm (and display intermediates)
-odl.solvers.pdhg(x, f, g, op, tau=tau, sigma=sigma, niter=niter,
+odl.solvers.pdhg(x, f, g, op, niter=niter, tau=tau, sigma=sigma,
                  callback=callback)
 
 # Display images

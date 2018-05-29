@@ -734,5 +734,32 @@ def test_matrix_op_inverse():
     assert all_almost_equal(x, minv_m_x)
 
 
+def test_sampling_operator_adjoint():
+    """Validate basic properties of `SamplingOperator.adjoint`."""
+    # 1d space
+    space = odl.uniform_discr([-1], [1], shape=(3))
+    sampling_points = [[0, 1, 1, 0]]
+    x = space.element([1, 2, 3])
+    op = odl.SamplingOperator(space, sampling_points)
+    assert op.adjoint(op(x)).inner(x) == pytest.approx(op(x).inner(op(x)))
+
+    op = odl.SamplingOperator(space, sampling_points, variant='integrate')
+    assert op.adjoint(op(x)).inner(x) == pytest.approx(op(x).inner(op(x)))
+
+    # 2d space
+    space = odl.uniform_discr([-1, -1], [1, 1], shape=(2, 3))
+    x = space.element([[1, 2, 3],
+                       [4, 5, 6]])
+    sampling_points = [[0, 1, 1, 0],
+                       [0, 1, 2, 0]]
+    op = odl.SamplingOperator(space, sampling_points)
+    assert op.adjoint(op(x)).inner(x) == pytest.approx(op(x).inner(op(x)))
+
+    # The ``'integrate'`` variant adjoint puts ones at the indices in
+    # `sampling_points``, multiplied by their multiplicity:
+    op = odl.SamplingOperator(space, sampling_points, variant='integrate')
+    assert op.adjoint(op(x)).inner(x) == pytest.approx(op(x).inner(op(x)))
+
+
 if __name__ == '__main__':
     odl.util.test_file(__file__)

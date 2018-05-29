@@ -416,6 +416,12 @@ def test_fspace_attributes():
     assert fspace_c.real_out_dtype == float
     assert fspace_c.complex_out_dtype == complex
     assert fspace_s.out_dtype == np.dtype('U1')
+    assert fspace.is_real
+    assert not fspace.is_complex
+    assert fspace_r.is_real
+    assert not fspace_r.is_complex
+    assert fspace_c.is_complex
+    assert not fspace_c.is_real
     with pytest.raises(AttributeError):
         fspace_s.real_out_dtype
     with pytest.raises(AttributeError):

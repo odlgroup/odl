@@ -26,7 +26,7 @@ def apply_on_boundary(array, func, only_once=True, which_boundaries=None,
                       axis_order=None, out=None):
     """Apply a function of the boundary of an n-dimensional array.
 
-    All other values are preserved as is.
+    All other values are preserved as-is.
 
     Parameters
     ----------

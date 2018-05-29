@@ -10,15 +10,17 @@
 
 from __future__ import print_function, division, absolute_import
 
+import numpy as np
+
 from odl.operator import Operator
 
 
-__all__ = ('douglas_rachford_pd',)
+__all__ = ('douglas_rachford_pd', 'douglas_rachford_pd_stepsize')
 
 
-def douglas_rachford_pd(x, f, g, L, tau, sigma, niter,
+def douglas_rachford_pd(x, f, g, L, niter, tau=None, sigma=None,
                         callback=None, **kwargs):
-    """Douglas-Rachford primal-dual splitting algorithm.
+    r"""Douglas-Rachford primal-dual splitting algorithm.
 
     Minimizes the sum of several convex functions composed with linear
     operators::
@@ -48,12 +50,16 @@ def douglas_rachford_pd(x, f, g, L, tau, sigma, niter,
         ``g[i].convex_conj.proximal``.
     L : sequence of `Operator`'s
         Sequence of `Opeartor`'s with as many elements as ``g``.
-    tau : float
-        Step size parameter for ``f``.
-    sigma : sequence of floats
-        Step size parameters for the ``g_i``'s.
     niter : int
         Number of iterations.
+    tau : float, optional
+        Step size parameter for ``f``.
+        Default: Sufficient for convergence, see
+        `douglas_rachford_pd_stepsize`.
+    sigma : sequence of floats, optional
+        Step size parameters for the ``g_i``'s.
+        Default: Sufficient for convergence, see
+        `douglas_rachford_pd_stepsize`.
     callback : callable, optional
         Function called with the current iterate after each iteration.
 
@@ -89,19 +95,19 @@ def douglas_rachford_pd(x, f, g, L, tau, sigma, niter,
     can be obtained by setting
 
     .. math::
-        l(x) = 0 \\text{ if } x = 0, \infty \\text{ else.}
+        l(x) = 0 \text{ if } x = 0, \infty \text{ else.}
 
-    To guarantee convergence, the parameters :math:`\\tau`, :math:`\\sigma_i`
+    To guarantee convergence, the parameters :math:`\tau`, :math:`\sigma_i`
     and :math:`L_i` need to satisfy
 
     .. math::
-       \\tau \\sum_{i=1}^n \\sigma_i ||L_i||^2 < 4
+       \tau \sum_{i=1}^n \sigma_i \|L_i\|^2 < 4
 
-    The parameter :math:`\\lambda` needs to satisfy :math:`0 < \\lambda < 2`
+    The parameter :math:`\lambda` needs to satisfy :math:`0 < \lambda < 2`
     and if it is given as a function it needs to satisfy
 
     .. math::
-        \\sum_{n=1}^\infty \\lambda_n (2 - \\lambda_n) = +\infty.
+        \sum_{n=1}^\infty \lambda_n (2 - \lambda_n) = +\infty.
 
     See Also
     --------
@@ -118,20 +124,21 @@ def douglas_rachford_pd(x, f, g, L, tau, sigma, niter,
     composite and parallel-sum type monotone operators*. SIAM Journal
     on Optimization, 23.4 (2013), pp 2541--2565.
     """
-    # Problem size
-    m = len(L)
-
     # Validate input
+    m = len(L)
     if not all(isinstance(op, Operator) for op in L):
         raise ValueError('`L` not a sequence of operators')
     if not all(op.is_linear for op in L):
         raise ValueError('not all operators in `L` are linear')
     if not all(x in op.domain for op in L):
         raise ValueError('`x` not in the domain of all operators')
-    if len(sigma) != m:
-        raise ValueError('len(sigma) != len(L)')
     if len(g) != m:
         raise ValueError('len(prox_cc_g) != len(L)')
+
+    tau, sigma = douglas_rachford_pd_stepsize(L, tau, sigma)
+
+    if len(sigma) != m:
+        raise ValueError('len(sigma) != len(L)')
 
     prox_cc_g = [gi.convex_conj.proximal for gi in g]
 
@@ -150,7 +157,7 @@ def douglas_rachford_pd(x, f, g, L, tau, sigma, niter,
 
     # Check for unused parameters
     if kwargs:
-        raise TypeError('unexpected keyword argument: {}'.format(kwargs))
+        raise TypeError('got unexpected keyword arguments: {}'.format(kwargs))
 
     # Pre-allocate values
     v = [Li.range.zero() for Li in L]
@@ -224,3 +231,103 @@ def douglas_rachford_pd(x, f, g, L, tau, sigma, niter,
     # The final result is actually in p1 according to the algorithm, so we need
     # to assign here.
     x.assign(p1)
+
+
+def _operator_norms(L):
+    """Get operator norms if needed.
+
+    Parameters
+    ----------
+    L : sequence of `Operator` or float
+        The operators or the norms of the operators that are used in the
+        `douglas_rachford_pd` method. For `Operator` entries, the norm
+        is computed with ``Operator.norm(estimate=True)``.
+    """
+    L_norms = []
+    for Li in L:
+        if np.isscalar(Li):
+            L_norms.append(float(Li))
+        elif isinstance(Li, Operator):
+            L_norms.append(Li.norm(estimate=True))
+        else:
+            raise TypeError('invalid entry {!r} in `L`'.format(Li))
+    return L_norms
+
+
+def douglas_rachford_pd_stepsize(L, tau=None, sigma=None):
+    r"""Default step sizes for `douglas_rachford_pd`.
+
+    Parameters
+    ----------
+    L : sequence of `Operator` or float
+        The operators or the norms of the operators that are used in the
+        `douglas_rachford_pd` method. For `Operator` entries, the norm
+        is computed with ``Operator.norm(estimate=True)``.
+    tau : positive float, optional
+        Use this value for ``tau`` instead of computing it from the
+        operator norms, see Notes.
+    sigma : tuple of float, optional
+        The ``sigma`` step size parameters for the dual update.
+
+    Returns
+    -------
+    tau : float
+        The ``tau`` step size parameter for the primal update.
+    sigma : tuple of float
+        The ``sigma`` step size parameters for the dual update.
+
+    Notes
+    -----
+    To guarantee convergence, the parameters :math:`\tau`, :math:`\sigma_i`
+    and :math:`L_i` need to satisfy
+
+    .. math::
+       \tau \sum_{i=1}^n \sigma_i \|L_i\|^2 < 4.
+
+    This function has 4 options, :math:`\tau`/:math:`\sigma` given or not
+    given.
+
+    - If neither :math:`\tau` nor :math:`\sigma` are given, they are chosen as:
+
+        .. math::
+            \tau = \frac{1}{\sum_{i=1}^n \|L_i\|},
+            \quad
+            \sigma_i = \frac{2}{n \tau \|L_i\|^2}
+
+    - If only :math:`\sigma` is given, :math:`\tau` is set to:
+
+        .. math::
+            \tau = \frac{2}{\sum_{i=1}^n \sigma_i \|L_i\|^2}
+
+    - If only :math:`\tau` is given, :math:`\sigma` is set
+      to:
+
+        .. math::
+            \sigma_i = \frac{2}{n \tau \|L_i\|^2}
+
+    - If both are given, they are returned as-is without further validation.
+    """
+    if tau is None and sigma is None:
+        L_norms = _operator_norms(L)
+
+        tau = 1 / sum(L_norms)
+        sigma = [2.0 / (len(L_norms) * tau * Li_norm ** 2)
+                 for Li_norm in L_norms]
+
+        return tau, tuple(sigma)
+    elif tau is None:
+        L_norms = _operator_norms(L)
+
+        tau = 2 / sum(si * Li_norm ** 2
+                      for si, Li_norm in zip(sigma, L_norms))
+        return tau, tuple(sigma)
+    elif sigma is None:
+        L_norms = _operator_norms(L)
+
+        tau = float(tau)
+        sigma = [2.0 / (len(L_norms) * tau * Li_norm ** 2)
+                 for Li_norm in L_norms]
+
+        return tau, tuple(sigma)
+    else:
+        return float(tau), tuple(sigma)

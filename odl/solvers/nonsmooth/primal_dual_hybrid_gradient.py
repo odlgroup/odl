@@ -18,20 +18,20 @@ import numpy as np
 from odl.operator import Operator
 
 
-__all__ = ('pdhg',)
+__all__ = ('pdhg', 'pdhg_stepsize')
 
 
 # TODO: add dual gap as convergence measure
 # TODO: diagonal preconditioning
 
-def pdhg(x, f, g, L, tau, sigma, niter, **kwargs):
-    """Primal-dual hybrid gradient algorithm for convex optimization.
+def pdhg(x, f, g, L, niter, tau, sigma, **kwargs):
+    r"""Primal-dual hybrid gradient algorithm for convex optimization.
 
     First order primal-dual hybrid-gradient method for non-smooth convex
     optimization problems with known saddle-point structure. The
     primal formulation of the general problem is::
 
-        min_{x in X} f(L x) + g(x)
+        min_{x in X} f(x) + g(L x)
 
     where ``L`` is an operator and ``f`` and ``g`` are functionals.
 
@@ -48,20 +48,22 @@ def pdhg(x, f, g, L, tau, sigma, niter, **kwargs):
         Starting point of the iteration, updated in-place.
     f : `Functional`
         The function ``f`` in the problem definition. Needs to have
-        ``f.convex_conj.proximal``.
+        ``f.proximal``.
     g : `Functional`
         The function ``g`` in the problem definition. Needs to have
-        ``g.proximal``.
+        ``g.convex_conj.proximal``.
     L : linear `Operator`
-        The linear operator that should be applied before ``f``. Its range must
-        match the domain of ``f`` and its domain must match the domain of
-        ``g``.
-    tau : positive float
-        Step size parameter for the update of the primal (``g``) variable.
-    sigma : positive float
-        Step size parameter for the update of the dual (``f``) variable.
+        The linear operator that should be applied before ``g``. Its range must
+        match the domain of ``g`` and its domain must match the domain of
+        ``f``.
     niter : non-negative int
         Number of iterations.
+    tau : float, optional
+        Step size parameter for ``g``.
+        Default: Sufficient for convergence, see `pdhg_stepsize`.
+    sigma : sequence of floats, optional
+        Step size parameters for ``f``.
+        Default: Sufficient for convergence, see `pdhg_stepsize`.
 
     Other Parameters
     ----------------
@@ -73,14 +75,14 @@ def pdhg(x, f, g, L, tau, sigma, niter, **kwargs):
     gamma_primal : non-negative float, optional
         Acceleration parameter. If not ``None``, it overrides ``theta`` and
         causes variable relaxation parameter and step sizes to be used,
-        with ``tau`` and ``sigma`` as initial values. Requires ``g`` to be
+        with ``tau`` and ``sigma`` as initial values. Requires ``f`` to be
         strongly convex and ``gamma_primal`` being upper bounded by the strong
-        convexity constant of ``g``. Acceleration can either be done on the
+        convexity constant of ``f``. Acceleration can either be done on the
         primal part or the dual part but not on both simultaneously.
         Default: ``None``
     gamma_dual : non-negative float, optional
         Acceleration parameter as ``gamma_primal`` but for dual variable.
-        Requires ``f^*`` to be strongly convex and ``gamma_dual`` being upper
+        Requires ``g^*`` to be strongly convex and ``gamma_dual`` being upper
         bounded by the strong convexity constant of ``f^*``. Acceleration can
         either be done on the primal part or the dual part but not on both
         simultaneously.
@@ -99,20 +101,20 @@ def pdhg(x, f, g, L, tau, sigma, niter, **kwargs):
     The problem of interest is
 
     .. math::
-        \\min_{x \\in X} f(L x) + g(x),
+        \min_{x \in X} f(x) + g(L x),
 
     where the formal conditions are that :math:`L` is an operator
     between Hilbert spaces :math:`X` and :math:`Y`.
-    Further, :math:`g : X \\rightarrow [0, +\\infty]` and
-    :math:`f : Y \\rightarrow [0, +\\infty]` are proper, convex,
+    Further, :math:`f : X \rightarrow [0, +\infty]` and
+    :math:`g : Y \rightarrow [0, +\infty]` are proper, convex,
     lower-semicontinuous functionals.
 
     Convergence is only guaranteed if :math:`L` is linear, :math:`X, Y`
-    are finite dimensional and the step lengths :math:`\\sigma` and
-    :math:`\\tau` satisfy
+    are finite dimensional and the step lengths :math:`\sigma` and
+    :math:`\tau` satisfy
 
     .. math::
-       \\tau \\sigma \|L\|^2 < 1
+       \tau \sigma \|L\|^2 < 1
 
     where :math:`\|L\|` is the operator norm of :math:`L`.
 
@@ -120,14 +122,15 @@ def pdhg(x, f, g, L, tau, sigma, niter, **kwargs):
     for example the classical TV regularized problem
 
     .. math::
-        \\min_x \|Ax - b\|_2^2 + \|\\nabla x\|_1.
+        \min_x \|Ax - b\|_2^2 + \|\nabla x\|_1.
 
-    Here it is tempting to let :math:`L=A`, :math:`f(y)=||y||_2^2` and
-    :math:`g(x)=\|\\nabla x\|_1`. This is however not feasible since the
-    proximal of :math:`||\\nabla x||_1` has no closed form expression.
+    Here it is tempting to let :math:`f(x)=\|\nabla x\|_1`, :math:`L=A` and
+    :math:`g(y)=||y||_2^2`. This is however not feasible since the
+    proximal of :math:`||\nabla x||_1` has no closed form expression.
 
-    Instead, the problem can be formulated :math:`L(x) = (A(x), \\nabla x)`,
-    :math:`f((x_1, x_2)) = \|x_1\|_2^2 + \|x_2\|_1`, :math:`g(x)=0`. See the
+    Instead, the problem can be formulated :math:`f(x)=0`,
+    :math:`L(x) = (A(x), \nabla x)` and
+    :math:`g((x_1, x_2)) = \|x_1\|_2^2 + \|x_2\|_1`. See the
     examples folder for more information on how to do this.
 
     For a more detailed documentation see `the PDHG guide
@@ -180,6 +183,11 @@ def pdhg(x, f, g, L, tau, sigma, niter, **kwargs):
     if x not in L.domain:
         raise TypeError('`x` {!r} is not in the domain of `op` {!r}'
                         ''.format(x, L.domain))
+
+    # Spaces
+    if f.domain != L.domain:
+        raise TypeError('`f.domain` {!r} must equal `op.domain` {!r}'
+                        ''.format(f.domain, L.domain))
 
     # Step size parameter
     tau, tau_in = float(tau), tau
@@ -244,8 +252,8 @@ def pdhg(x, f, g, L, tau, sigma, niter, **kwargs):
                         '{}'.format(y.space, L.range))
 
     # Get the proximals
-    proximal_dual = f.convex_conj.proximal
-    proximal_primal = g.proximal
+    proximal_primal = f.proximal
+    proximal_dual = g.convex_conj.proximal
     proximal_constant = (gamma_primal is None) and (gamma_dual is None)
     if proximal_constant:
         # Pre-compute proximals for efficiency
@@ -299,6 +307,77 @@ def pdhg(x, f, g, L, tau, sigma, niter, **kwargs):
 
         if callback is not None:
             callback(x)
+
+
+def pdhg_stepsize(L, tau=None, sigma=None):
+    r"""Default step sizes for `pdhg`.
+
+    Parameters
+    ----------
+    L : `Operator` or float
+        Operator or norm of the operator that are used in the `pdhg` method.
+        If it is an `Operator`, the norm is computed with
+        `Operator.norm(estimate=True)`.
+    tau : positive float, optional
+        Use this value for ``tau`` instead of computing it from the
+        operator norms, see Notes.
+    sigma : positive float, optional
+        The ``sigma`` step size parameters for the dual update.
+
+    Returns
+    -------
+    tau : float
+        The ``tau`` step size parameter for the primal update.
+    sigma : tuple of float
+        The ``sigma`` step size parameter for the dual update.
+
+    Notes
+    -----
+    To guarantee convergence, the parameters :math:`\tau`, :math:`\sigma`
+    and :math:`L` need to satisfy
+
+    .. math::
+       \tau \sigma \|L\|^2 < 1
+
+    This function has 4 options, :math:`\tau`/:math:`\sigma` given or not
+    given.
+
+    - Neither :math:`\tau` nor :math:`\sigma` are given, they are chosen as:
+
+        .. math::
+            \tau = \sigma = \frac{\sqrt{0.9}}{\|L\|}
+
+    - If only :math:`\sigma` is given, :math:`\tau` is set to:
+
+        .. math::
+            \tau = \frac{0.9}{\sigma \|L\|^2}
+
+    - If only :math:`\tau` is given, :math:`\sigma` is set
+      to:
+
+        .. math::
+            \sigma = \frac{0.9}{\tau \|L\|^2}
+
+    - If both are given, they are returned as-is without further validation.
+    """
+    if tau is None and sigma is None:
+        L_norm = L.norm(estimate=True)
+
+        tau = sigma = np.sqrt(0.9) / L_norm
+
+        return tau, sigma
+    elif tau is None:
+        L_norm = L.norm(estimate=True)
+
+        tau = 0.9 / (sigma * L_norm ** 2)
+        return tau, float(sigma)
+    elif sigma is None:
+        L_norm = L.norm(estimate=True)
+
+        sigma = 0.9 / (tau * L_norm ** 2)
+        return float(tau), sigma
+    else:
+        return float(tau), float(sigma)
 
 
 if __name__ == '__main__':
