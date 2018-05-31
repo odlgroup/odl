@@ -182,7 +182,7 @@ class LinCombOperator(Operator):
         LinCombOperator(a, b)([x, y]) == a * x + b * y
     """
 
-    def __init__(self, space, a, b):
+    def __init__(self, space, a, b, rangeType=None):
         """Initialize a new instance.
 
         Parameters
@@ -204,8 +204,11 @@ class LinCombOperator(Operator):
         >>> z
         rn(3).element([ 2.,  4.,  6.])
         """
+        if rangeType is None:
+            rangeType = space.dtype
         domain = ProductSpace(space, space)
-        super(LinCombOperator, self).__init__(domain, space, linear=True)
+        super(LinCombOperator, self).__init__(domain, space.astype(rangeType),
+                                              linear=True)
         self.a = a
         self.b = b
 

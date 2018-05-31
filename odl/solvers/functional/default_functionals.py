@@ -76,7 +76,7 @@ class LpNorm(Functional):
             range = RealNumbers()
 
         super(LpNorm, self).__init__(
-            domain=domain, linear=False, grad_lipschitz=np.nan, range=range)
+            domain=domain, range=range, linear=False, grad_lipschitz=np.nan)
         self.exponent = float(exponent)
 
     # TODO: update when integration operator is in place: issue #440
@@ -141,7 +141,8 @@ class LpNorm(Functional):
                 def __init__(self):
                     """Initialize a new instance."""
                     super(L1Gradient, self).__init__(
-                        functional.domain, functional.domain, linear=False)
+                        functional.domain, range=functional.domain,
+                        linear=False)
 
                 def _call(self, x):
                     """Apply the gradient operator to the given point."""
@@ -161,7 +162,8 @@ class LpNorm(Functional):
                 def __init__(self):
                     """Initialize a new instance."""
                     super(L2Gradient, self).__init__(
-                        functional.domain, functional.domain, linear=False)
+                        functional.domain, range=functional.domain,
+                        linear=False)
 
                 def _call(self, x):
                     """Apply the gradient operator to the given point.
@@ -251,7 +253,7 @@ class GroupL1Norm(Functional):
             raise TypeError('`space.is_power_space` must be `True`')
 
         super(GroupL1Norm, self).__init__(
-            domain=vfspace, linear=False, grad_lipschitz=np.nan, range=range)
+            domain=vfspace, range=range, linear=False, grad_lipschitz=np.nan)
         self.pointwise_norm = PointwiseNorm(vfspace, exponent)
 
     def _call(self, x):
@@ -294,7 +296,7 @@ class GroupL1Norm(Functional):
             def __init__(self):
                 """Initialize a new instance."""
                 super(GroupL1Gradient, self).__init__(
-                    functional.domain, functional.domain, linear=False)
+                    functional.domain, range=functional.domain, linear=False)
 
             def _call(self, x, out):
                 """Return ``self(x)``."""
@@ -382,7 +384,7 @@ class IndicatorGroupL1UnitBall(Functional):
             raise TypeError('`space.is_power_space` must be `True`')
 
         super(IndicatorGroupL1UnitBall, self).__init__(
-            domain=vfspace, linear=False, grad_lipschitz=np.nan, range=range)
+            domain=vfspace, range=range, linear=False, grad_lipschitz=np.nan)
         self.pointwise_norm = PointwiseNorm(vfspace, exponent)
 
     def _call(self, x):
@@ -474,8 +476,8 @@ class IndicatorLpUnitBall(Functional):
         range : `Field`, optional
             Range of the functional. Default: ``domain.field``.
         """
-        super(IndicatorLpUnitBall, self).__init__(domain=domain, linear=False,
-                                                  range=range)
+        super(IndicatorLpUnitBall, self).__init__(domain=domain, range=range,
+                                                  linear=False)
 
         self.__norm = LpNorm(domain, exponent, range=RealNumbers())
         self.__exponent = float(exponent)
@@ -585,7 +587,7 @@ class L1Norm(LpNorm):
         range : `Field`, optional
             Range of the functional. Default: `RealNumbers`.
         """
-        super(L1Norm, self).__init__(domain=domain, exponent=1, range=range)
+        super(L1Norm, self).__init__(domain=domain, range=range, exponent=1)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -624,7 +626,7 @@ class L2Norm(LpNorm):
         range : `Field`, optional
             Range of the functional. Default: `RealNumbers`.
         """
-        super(L2Norm, self).__init__(domain=domain, exponent=2, range=range)
+        super(L2Norm, self).__init__(domain=domain, range=range, exponent=2)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -672,7 +674,7 @@ class L2NormSquared(Functional):
             Range of the functional. Default: `RealNumbers`.
         """
         super(L2NormSquared, self).__init__(
-            domain=domain, linear=False, grad_lipschitz=2, range=range)
+            domain=domain, range=range, linear=False, grad_lipschitz=2)
 
     # TODO: update when integration operator is in place: issue #440
     def _call(self, x):
@@ -731,8 +733,8 @@ class ConstantFunctional(Functional):
             Range of the functional. Default: ``domain.field``.
         """
         super(ConstantFunctional, self).__init__(
-            domain=domain, linear=(constant == 0), grad_lipschitz=0,
-            range=range)
+            domain=domain, range=range, linear=(constant == 0),
+            grad_lipschitz=0)
         self.__constant = self.range.element(constant)
 
     @property
@@ -790,8 +792,8 @@ class ZeroFunctional(ConstantFunctional):
         range : `Field`, optional
             Range of the functional. Default: ``domain.field``.
         """
-        super(ZeroFunctional, self).__init__(domain=domain, constant=0,
-                                             range=range)
+        super(ZeroFunctional, self).__init__(domain=domain, range=range,
+                                             constant=0)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -823,9 +825,9 @@ class ScalingFunctional(Functional, ScalingOperator):
         >>> func(5)
         15.0
         """
-        Functional.__init__(self, domain=field, linear=True, grad_lipschitz=0,
-                            range=field)
-        ScalingOperator.__init__(self, field, scale)
+        Functional.__init__(self, domain=field, range=field, linear=True,
+                            grad_lipschitz=0)
+        ScalingOperator.__init__(self, domain=field, scalar=scale)
 
     @property
     def gradient(self):
@@ -894,7 +896,7 @@ class IndicatorBox(Functional):
         >>> func([0, 1, 3])  # one point outside
         inf
         """
-        super(IndicatorBox, self).__init__(domain, linear=False, range=range)
+        super(IndicatorBox, self).__init__(domain, range=range, linear=False)
         self.lower = lower
         self.upper = upper
 
@@ -952,7 +954,7 @@ class IndicatorNonnegativity(IndicatorBox):
         inf
         """
         super(IndicatorNonnegativity, self).__init__(
-            domain, lower=0, upper=None, range=range)
+            domain, range=range, lower=0, upper=None)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -991,7 +993,7 @@ class IndicatorZero(Functional):
         >>> func([0, 0, 0])
         2
         """
-        super(IndicatorZero, self).__init__(domain, linear=False, range=range)
+        super(IndicatorZero, self).__init__(domain, range=range, linear=False)
         self.__constant = constant
 
     @property
@@ -1176,7 +1178,7 @@ class KullbackLeibler(Functional):
             def __init__(self):
                 """Initialize a new instance."""
                 super(KLGradient, self).__init__(
-                    functional.domain, functional.domain, linear=False)
+                    functional.domain, range=functional.domain, linear=False)
 
             def _call(self, x):
                 """Apply the gradient operator to the given point.
@@ -1302,7 +1304,7 @@ class KullbackLeiblerConvexConj(Functional):
             def __init__(self):
                 """Initialize a new instance."""
                 super(KLCCGradient, self).__init__(
-                    functional.domain, functional.domain, linear=False)
+                    functional.domain, range=functional.domain, linear=False)
 
             def _call(self, x):
                 """Apply the gradient operator to the given point.
@@ -1447,7 +1449,7 @@ class KullbackLeiblerCrossEntropy(Functional):
             def __init__(self):
                 """Initialize a new instance."""
                 super(KLCrossEntropyGradient, self).__init__(
-                    functional.domain, functional.domain, linear=False)
+                    functional.domain, range=functional.domain, linear=False)
 
             def _call(self, x):
                 """Apply the gradient operator to the given point.
@@ -1560,7 +1562,7 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
             def __init__(self):
                 """Initialize a new instance."""
                 super(KLCrossEntCCGradient, self).__init__(
-                    functional.domain, functional.domain, linear=False)
+                    functional.domain, range=functional.domain, linear=False)
 
             def _call(self, x):
                 """Apply the gradient operator to the given point."""
@@ -1680,21 +1682,17 @@ class SeparableSum(Functional):
         # Make a power space if the second argument is an integer
         if (len(functionals) == 2 and isinstance(functionals[1], Integral)):
             functionals = [functionals[0]] * functionals[1]
-        for func1 in functionals:
-            if all(func1.range.contains_set(func2.range)
-                   for func2 in functionals):
-                range = func1.range
-                break
-        else:
-            raise ValueError('No functional range contained all other ranges '
-                             'in SeparableSum of {!r}'.format(functionals))
+
+        range = RealNumbers()
+        for func in functionals:
+            range = (func.range if func.range.contains_set(range) else range)
 
         domains = [func.domain for func in functionals]
         domain = ProductSpace(*domains)
         linear = all(func.is_linear for func in functionals)
 
-        super(SeparableSum, self).__init__(domain=domain, linear=linear,
-                                           range=range)
+        super(SeparableSum, self).__init__(domain=domain, range=range,
+                                           linear=linear)
         self.__functionals = tuple(functionals)
 
     def _call(self, x):
@@ -1821,8 +1819,8 @@ class QuadraticForm(Functional):
                              'to match')
 
         super(QuadraticForm, self).__init__(
-            domain=domain, linear=(operator is None and constant == 0),
-            range=range)
+            domain=domain, range=range,
+            linear=(operator is None and constant == 0))
 
         self.__operator = operator
         self.__vector = vector
@@ -1998,7 +1996,7 @@ class NuclearNorm(Functional):
         if range is None:
             range = RealNumbers()
         super(NuclearNorm, self).__init__(
-            domain=domain, linear=False, grad_lipschitz=np.nan, range=range)
+            domain=domain, range=range, linear=False, grad_lipschitz=np.nan)
 
         self.outernorm = LpNorm(self.domain[0, 0], exponent=outer_exp,
                                 range=range)
@@ -2078,7 +2076,7 @@ class NuclearNorm(Functional):
             def __init__(self, sigma):
                 self.sigma = float(sigma)
                 super(NuclearNormProximal, self).__init__(
-                    func.domain, func.domain, linear=False)
+                    func.domain, range=func.domain, linear=False)
 
             def _call(self, x):
                 """Return ``self(x)``."""
@@ -2205,9 +2203,8 @@ class IndicatorNuclearNormUnitBall(Functional):
         if range is None:
             range = getattr(domain, 'field', RealNumbers())
         super(IndicatorNuclearNormUnitBall, self).__init__(
-            domain=domain, linear=False, grad_lipschitz=np.nan, range=range)
-        self.__norm = NuclearNorm(domain, outer_exp, singular_vector_exp,
-                                  range=RealNumbers())
+            domain=domain, range=range, linear=False, grad_lipschitz=np.nan)
+        self.__norm = NuclearNorm(domain, outer_exp, singular_vector_exp)
 
     def _call(self, x):
         """Return ``self(x)``."""
@@ -2318,7 +2315,7 @@ https://web.stanford.edu/~boyd/papers/pdf/prox_algs.pdf
             range = RealNumbers()
 
         super(MoreauEnvelope, self).__init__(
-            domain=functional.domain, linear=False, range=range)
+            domain=functional.domain, range=range, linear=False)
         self.__functional = functional
         self.__sigma = sigma
         self.__range = range
@@ -2436,9 +2433,8 @@ class Huber(Functional):
         if range is None:
             range = RealNumbers()
 
-        super(Huber, self).__init__(
-            domain=domain, linear=False, grad_lipschitz=grad_lipschitz,
-            range=range)
+        super(Huber, self).__init__(domain=domain, range=range, linear=False,
+                                    grad_lipschitz=grad_lipschitz)
 
     @property
     def gamma(self):
@@ -2532,7 +2528,7 @@ class Huber(Functional):
             def __init__(self):
                 """Initialize a new instance."""
                 super(HuberGradient, self).__init__(
-                    functional.domain, functional.domain, linear=False)
+                    functional.domain, range=functional.domain, linear=False)
 
             def _call(self, x):
                 """Apply the gradient operator to the given point."""
