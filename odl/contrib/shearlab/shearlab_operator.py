@@ -74,12 +74,7 @@ class ShearlabOperator(odl.Operator):
             """
 
             def __init__(self):
-                """Initialize a new instance.
-                Parameters
-                ----------
-                op : `ShearlabOperator`
-                    The operator which this should be the adjoint of.
-                """
+                """Initialize a new instance."""
                 self.mutex = op.mutex
                 self.shearlet_system = op.shearlet_system
                 super(ShearlabOperatorAdjoint, self).__init__(
@@ -113,13 +108,7 @@ class ShearlabOperator(odl.Operator):
                     """
 
                     def __init__(self):
-                        """Initialize a new instance.
-                        Parameters
-                        ----------
-                        op : `ShearlabOperator`
-                              The operator which this should be the
-                              inverse of the adjoint of.
-                        """
+                        """Initialize a new instance."""
                         self.mutex = op.mutex
                         self.shearlet_system = op.shearlet_system
                         super(ShearlabOperatorAdjointInverse, self).__init__(
@@ -160,12 +149,7 @@ class ShearlabOperator(odl.Operator):
             """
 
             def __init__(self):
-                """Initialize a new instance.
-                Parameters
-                ----------
-                op : `ShearlabOperator`
-                    The operator which this should be the inverse of.
-                """
+                """Initialize a new instance."""
                 self.mutex = op.mutex
                 self.shearlet_system = op.shearlet_system
                 super(ShearlabOperatorInverse, self).__init__(
@@ -194,13 +178,7 @@ class ShearlabOperator(odl.Operator):
                     """
 
                     def __init__(self):
-                        """Initialize a new instance.
-                        Parameters
-                        ----------
-                        op : `ShearlabOperator`
-                              The operator which this should be the
-                              inverse of the adjoint of.
-                        """
+                        """Initialize a new instance."""
                         self.mutex = op.mutex
                         self.shearlet_system = op.shearlet_system
                         super(ShearlabOperatorInverseAdjoint, self).__init__(
