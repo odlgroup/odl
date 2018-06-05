@@ -107,10 +107,12 @@ def forward_backward_pd(x, f, g, L, h, tau, sigma, niter,
     .. math::
        2 \min \{ \\frac{1}{\\tau}, \\frac{1}{\sigma_1}, \\ldots,
        \\frac{1}{\sigma_m} \} \cdot \min\{ \\eta, \\nu_1, \\ldots, \\nu_m  \}
-       \cdot \\sqrt{1 - \\tau \\sum_{i=1}^n \\sigma_i ||L_i||^2} > 1,
+       \cdot \\left(1 - \\sqrt{\\tau \\sum_{i=1}^n \\sigma_i ||L_i||^2}\\right)
+       > 1,
 
     where, if the simpler problem is considered, all :math:`\\nu_i` can be
-    considered to be :math:`\\infty`.
+    considered to be :math:`\\infty` and :math:`\\eta` is one over the
+    Lipschitz-constant of :math:`\\nabla h`.
 
     For reference on the forward-backward primal-dual algorithm, see [BC2015].
 
