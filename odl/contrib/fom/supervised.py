@@ -154,7 +154,7 @@ def mean_absolute_error(data, ground_truth, mask=None,
 
 
 def mean_value_difference(data, ground_truth, mask=None, normalized=False,
-                          force_lower_is_better=True):
+                          force_lower_is_better=False):
     r"""Return difference in mean value between ``data`` and ``ground_truth``.
 
     Parameters
@@ -191,7 +191,7 @@ def mean_value_difference(data, ground_truth, mask=None, normalized=False,
     .. math::
          \mathrm{MVD_N}(f, g) =
          \frac{\Big| \overline{f} - \overline{g} \Big|}
-               {\Big| |\overline{f}| + |\overline{g}| \Big|}
+               {|\overline{f}| + |\overline{g}|}
 
     where :math:`\overline{f}` is the mean value of :math:`f`,
 
@@ -221,7 +221,7 @@ def mean_value_difference(data, ground_truth, mask=None, normalized=False,
 
 def standard_deviation_difference(data, ground_truth, mask=None,
                                   normalized=False,
-                                  force_lower_is_better=True):
+                                  force_lower_is_better=False):
     r"""Return absolute difference in std between ``data`` and ``ground_truth``.
 
     Parameters
@@ -260,8 +260,7 @@ def standard_deviation_difference(data, ground_truth, mask=None,
         \mathrm{SDD_N}(f, g) =
          \frac{\Big| \| f - \overline{f} \|_2 -
                       \| g - \overline{g} \|_2 \Big|}
-               {\Big| \| f - \overline{f} \|_2 +
-                      \| g - \overline{g} \|_2 \Big|},
+               {\| f - \overline{f} \|_2 + \| g - \overline{g} \|_2},
 
     where :math:`\overline{f}` is the mean value of :math:`f`,
 
@@ -297,7 +296,7 @@ def standard_deviation_difference(data, ground_truth, mask=None,
 
 
 def range_difference(data, ground_truth, mask=None, normalized=False,
-                     force_lower_is_better=True):
+                     force_lower_is_better=False):
     r"""Return dynamic range difference between ``data`` and ``ground_truth``.
 
     Evaluates difference in range between input (``data``) and reference
@@ -343,10 +342,8 @@ def range_difference(data, ground_truth, mask=None, normalized=False,
             \big(\max(f) - \min(f) \big) -
             \big(\max(g) - \min(g) \big)
             \Big|}{
-            \Big|
             \big(\max(f) - \min(f) \big) +
-            \big(\max(g) - \min(g) \big)
-            \Big|}
+            \big(\max(g) - \min(g) \big)}
 
     The normalized variant takes values in :math:`[0, 1]`.
     """
@@ -465,7 +462,7 @@ def false_structures_mask(foreground, smoothness_factor=None):
     Raises
     ------
     ValueError
-        If foreground is all zero or contains values not in {0, 1}.
+        If foreground is all zero or all one, or contains values not in {0, 1}.
 
     Notes
     -----
@@ -481,7 +478,8 @@ def false_structures_mask(foreground, smoothness_factor=None):
     unique = np.unique(foreground)
     if not np.array_equiv(unique, [0., 1.]):
         raise ValueError('`foreground` is not a binary mask or has '
-                         'no true values {!r}'.format(unique))
+                         'either only true or only false values {!r}'
+                         ''.format(unique))
 
     result = distance_transform_edt(1.0 - foreground,
                                     sampling=space.cell_sides)
