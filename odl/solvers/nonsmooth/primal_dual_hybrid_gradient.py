@@ -137,12 +137,15 @@ def pdhg(x, f, g, L, niter, tau=None, sigma=None, **kwargs):
     <https://odlgroup.github.io/odl/guide/pdhg_guide.html>`_ in the online
     documentation.
 
-    References on the algorithm can be found in [CP2011a] and [CP2011b].
+    References on the algorithm can be found in `[CP2011a]
+    <https://doi.org/10.1007/s10851-010-0251-1>`_ and `[CP2011b]
+    <https://doi.org/10.1109/ICCV.2011.6126441>`_.
 
     This implementation of the CP algorithm is along the lines of
-    [Sid+2012].
+    `[Sid+2012] <https://doi.org/10.1088/0031-9155/57/10/3065>`_.
 
-    The non-linear case is analyzed in [Val2014].
+    The non-linear case is analyzed in `[Val2014]
+    <https://doi.org/10.1088/0266-5611/30/5/055012>`_.
 
     See Also
     --------
