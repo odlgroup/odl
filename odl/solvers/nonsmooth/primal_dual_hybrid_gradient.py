@@ -24,7 +24,7 @@ __all__ = ('pdhg', 'pdhg_stepsize')
 # TODO: add dual gap as convergence measure
 # TODO: diagonal preconditioning
 
-def pdhg(x, f, g, L, niter, tau, sigma, **kwargs):
+def pdhg(x, f, g, L, niter, tau=None, sigma=None, **kwargs):
     r"""Primal-dual hybrid gradient algorithm for convex optimization.
 
     First order primal-dual hybrid-gradient method for non-smooth convex
@@ -189,15 +189,8 @@ def pdhg(x, f, g, L, niter, tau, sigma, **kwargs):
         raise TypeError('`f.domain` {!r} must equal `op.domain` {!r}'
                         ''.format(f.domain, L.domain))
 
-    # Step size parameter
-    tau, tau_in = float(tau), tau
-    if tau <= 0:
-        raise ValueError('`tau` must be positive, got {}'.format(tau_in))
-
-    # Step size parameter
-    sigma, sigma_in = float(sigma), sigma
-    if sigma <= 0:
-        raise ValueError('`sigma` must be positive, got {}'.format(sigma_in))
+    # Step size parameters
+    tau, sigma = pdhg_stepsize(L, tau, sigma)
 
     # Number of iterations
     if not isinstance(niter, int) or niter < 0:
@@ -360,24 +353,19 @@ def pdhg_stepsize(L, tau=None, sigma=None):
 
     - If both are given, they are returned as-is without further validation.
     """
+    if tau is not None and sigma is not None:
+        return float(tau), float(sigma)
+
+    L_norm = L.norm(estimate=True) if isinstance(L, Operator) else float(L)
     if tau is None and sigma is None:
-        L_norm = L.norm(estimate=True)
-
         tau = sigma = np.sqrt(0.9) / L_norm
-
         return tau, sigma
     elif tau is None:
-        L_norm = L.norm(estimate=True)
-
         tau = 0.9 / (sigma * L_norm ** 2)
         return tau, float(sigma)
-    elif sigma is None:
-        L_norm = L.norm(estimate=True)
-
+    else:  # sigma is None
         sigma = 0.9 / (tau * L_norm ** 2)
         return float(tau), sigma
-    else:
-        return float(tau), float(sigma)
 
 
 if __name__ == '__main__':
