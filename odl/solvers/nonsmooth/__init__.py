@@ -32,3 +32,6 @@ __all__ += proximal_gradient_solvers.__all__
 
 from .alternating_dual_updates import *
 __all__ += alternating_dual_updates.__all__
+
+from .difference_convex import *
+__all__ += difference_convex.__all__
