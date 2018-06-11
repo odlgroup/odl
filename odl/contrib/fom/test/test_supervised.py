@@ -52,8 +52,12 @@ def test_general(space, scalar_fom):
                 scalar_fom(data, ground_truth))
 
         # Check that FOM is monotonic wrt noise level
-        assert (scalar_fom(ground_truth + noise, ground_truth) <=
-                scalar_fom(ground_truth + 2 * noise, ground_truth))
+        # This does not work for the FOMS `standard_deviation_difference`
+        # and `range_difference`.
+        if (scalar_fom != fom.standard_deviation_difference and
+                scalar_fom != fom.range_difference):
+            assert (scalar_fom(ground_truth + noise, ground_truth) <=
+                    scalar_fom(ground_truth + 2 * noise, ground_truth))
 
 
 def filter_image(image, fh, fv):
