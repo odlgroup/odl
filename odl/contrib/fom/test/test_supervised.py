@@ -107,13 +107,9 @@ def test_psnr(space):
     data = odl.phantom.white_noise(space)
     zero = space.zero()
 
-    # Test psnr of image with itself is infinity
+    # Check the corner cases
     assert fom.psnr(true, true) == np.inf
-
-    # Test psnr with both constants is infinity
     assert fom.psnr(zero, zero) == np.inf
-
-    # Test psnr with ground truth constant is negative infinity
     assert fom.psnr(data, zero) == -np.inf
 
     # Compute the true value
