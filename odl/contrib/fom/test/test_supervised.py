@@ -139,35 +139,35 @@ def test_ssim(space):
     # * -1 with force_lower_is_better == True and normalized == False,
     # * 0 with force_lower_is_better == True and normalized == True.
     result = fom.ssim(ground_truth, ground_truth)
-    assert pytest.approx(result) == 1
+    assert result == pytest.approx(1)
 
     result_normalized = fom.ssim(ground_truth, ground_truth, normalized=True)
-    assert pytest.approx(result_normalized) == 1
+    assert result_normalized == pytest.approx(1)
 
     result_flib = fom.ssim(ground_truth, ground_truth,
                            force_lower_is_better=True)
-    assert pytest.approx(result_flib) == -1
+    assert result_flib == pytest.approx(-1)
 
     result_nf = fom.ssim(ground_truth, ground_truth, normalized=True,
                          force_lower_is_better=True)
-    assert pytest.approx(result_nf) == 0
+    assert result_nf == pytest.approx(0)
 
     # SSIM with ground truth zero should always give zero if not normalized
     # and 1/2 otherwise.
     data = odl.phantom.white_noise(space)
 
     result = fom.ssim(data, space.zero())
-    assert pytest.approx(result) == 0
+    assert result == pytest.approx(0)
 
     result_normalized = fom.ssim(data, space.zero(), normalized=True)
-    assert pytest.approx(result_normalized) == 0.5
+    assert result_normalized == pytest.approx(0.5)
 
     result_flib = fom.ssim(data, space.zero(), force_lower_is_better=True)
-    assert pytest.approx(result_flib) == 0
+    assert result_flib == pytest.approx(0)
 
     result_nf = fom.ssim(data, space.zero(), normalized=True,
                          force_lower_is_better=True)
-    assert pytest.approx(result_nf) == 0.5
+    assert result_nf == pytest.approx(0.5)
 
     # SSIM should be symmetric if the dynamic range is set explicitly.
     for nor in [True, False]:
@@ -176,7 +176,7 @@ def test_ssim(space):
                                normalized=nor, force_lower_is_better=flib)
             result2 = fom.ssim(ground_truth, data, dynamic_range=1,
                                normalized=nor, force_lower_is_better=flib)
-            assert pytest.approx(result1) == result2
+            assert result1 == pytest.approx(result2)
 
 
 def test_mean_value_difference_sign():
@@ -194,7 +194,7 @@ def test_mean_value_difference_range_value(space):
     min1 = np.min(I1)
 
     assert fom.mean_value_difference(I0, I1) <= max(max0 - min1, max1 - min0)
-    assert pytest.approx(fom.mean_value_difference(I0, I0)) == 0
+    assert fom.mean_value_difference(I0, I0) == pytest.approx(0)
     assert fom.mean_value_difference(10 * I0, I0, normalized=True) <= 1.0
 
 
@@ -202,14 +202,14 @@ def test_standard_deviation_difference_range_value(space):
     I0 = space.element(np.random.normal(0, 1, size=space.shape))
     const = np.random.normal(0, 10)
 
-    assert pytest.approx(fom.standard_deviation_difference(I0, I0)) == 0
+    assert fom.standard_deviation_difference(I0, I0) == pytest.approx(0)
     assert (fom.standard_deviation_difference(10 * I0, I0, normalized=True) <=
             1.0)
-    assert (pytest.approx(fom.standard_deviation_difference(
-            I0, I0 + const), abs=1e-6) == 0)
+    assert (fom.standard_deviation_difference(I0, I0 + const) ==
+            pytest.approx(0, abs=1e-6))
     test_value = fom.standard_deviation_difference(space.one(), space.zero(),
                                                    normalized=True)
-    assert pytest.approx(test_value, abs=1e-6) == 0
+    assert test_value == pytest.approx(0, abs=1e-6)
 
 
 def test_range_difference(space):
@@ -217,12 +217,12 @@ def test_range_difference(space):
     I1 = space.element(np.random.normal(0, 1, size=space.shape))
     const = np.random.normal(0, 10)
 
-    assert pytest.approx(fom.range_difference(I0, I0)) == 0
-    assert pytest.approx(fom.range_difference(I0 + const, I0), abs=1e-6) == 0
+    assert fom.range_difference(I0, I0) == pytest.approx(0)
+    assert fom.range_difference(I0 + const, I0) == pytest.approx(0, abs=1e-6)
     aconst = np.abs(const)
     eval0 = aconst * fom.range_difference(I0, I1)
     eval1 = fom.range_difference(aconst * I0, aconst * I1)
-    assert pytest.approx(eval0) == pytest.approx(eval1)
+    assert eval0 == pytest.approx(eval1)
 
 
 if __name__ == '__main__':
