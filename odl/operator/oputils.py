@@ -159,7 +159,7 @@ def power_method_opnorm(op, xstart=None, maxiter=100, rtol=1e-05, atol=1e-08,
     >>> space = odl.uniform_discr(0, 1, 5)
     >>> id = odl.IdentityOperator(space)
     >>> estimation = power_method_opnorm(id)
-    >>> round(estimation, 3)
+    >>> round(estimation, ndigits=3)
     1.0
 
     Notes
