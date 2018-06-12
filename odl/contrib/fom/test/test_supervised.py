@@ -54,8 +54,8 @@ def test_general(space, scalar_fom):
         # Check that FOM is monotonic wrt noise level
         # This does not work for the FOMS `standard_deviation_difference`
         # and `range_difference`.
-        if (scalar_fom != fom.standard_deviation_difference and
-                scalar_fom != fom.range_difference):
+        if scalar_fom not in [fom.standard_deviation_difference,
+                              fom.range_difference]:
             assert (scalar_fom(ground_truth + noise, ground_truth) <=
                     scalar_fom(ground_truth + 2 * noise, ground_truth))
 
