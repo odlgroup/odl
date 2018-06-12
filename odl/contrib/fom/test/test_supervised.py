@@ -27,7 +27,7 @@ space = simple_fixture('space',
                         odl.uniform_discr(0, 1, 10),
                         odl.uniform_discr([0, 0], [1, 1], [5, 5])])
 
-scalar_fom = simple_fixture('FOM',
+scalar_fom = simple_fixture('scalar_fom',
                             [fom.mean_squared_error,
                              fom.mean_absolute_error,
                              fom.mean_value_difference,
