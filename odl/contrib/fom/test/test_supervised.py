@@ -199,7 +199,7 @@ def test_mean_value_difference_range_value(space):
 
 
 def test_standard_deviation_difference_range_value(space):
-    I0 = space.element(np.random.normal(0, 1, size=space.shape))
+    I0 = odl.util.testutils.noise_element(space)
     const = np.random.normal(0, 10)
 
     assert fom.standard_deviation_difference(I0, I0) == pytest.approx(0)
