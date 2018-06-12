@@ -238,7 +238,7 @@ class ShearlabOperator(odl.Operator):
 def load_julia_with_Shearlab():
     """Function to load Shearlab."""
     # Importing base
-    j = julia.Julia(jl_runtime_path='/home/UROP_student/work/julia-0.6/bin/julia')#, debug='False')
+    j = julia.Julia()
     j.eval('using Shearlab')
     j.eval('using PyPlot')
     j.eval('using Images')
