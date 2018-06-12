@@ -139,27 +139,34 @@ def test_ssim(space):
     # * -1 with force_lower_is_better == True and normalized == False,
     # * 0 with force_lower_is_better == True and normalized == True.
     result = fom.ssim(ground_truth, ground_truth)
+    assert pytest.approx(result) == 1
+
     result_normalized = fom.ssim(ground_truth, ground_truth, normalized=True)
+    assert pytest.approx(result_normalized) == 1
+
     result_flib = fom.ssim(ground_truth, ground_truth,
                            force_lower_is_better=True)
+    assert pytest.approx(result_flib) == -1
+
     result_nf = fom.ssim(ground_truth, ground_truth, normalized=True,
                          force_lower_is_better=True)
-    assert pytest.approx(result) == 1
-    assert pytest.approx(result_normalized) == 1
-    assert pytest.approx(result_flib) == -1
     assert pytest.approx(result_nf) == 0
 
     # SSIM with ground truth zero should always give zero if not normalized
     # and 1/2 otherwise.
     data = odl.phantom.white_noise(space)
+
     result = fom.ssim(data, space.zero())
+    assert pytest.approx(result) == 0
+
     result_normalized = fom.ssim(data, space.zero(), normalized=True)
+    assert pytest.approx(result_normalized) == 0.5
+
     result_flib = fom.ssim(data, space.zero(), force_lower_is_better=True)
+    assert pytest.approx(result_flib) == 0
+
     result_nf = fom.ssim(data, space.zero(), normalized=True,
                          force_lower_is_better=True)
-    assert pytest.approx(result) == 0
-    assert pytest.approx(result_normalized) == 0.5
-    assert pytest.approx(result_flib) == 0
     assert pytest.approx(result_nf) == 0.5
 
     # SSIM should be symmetric if the dynamic range is set explicitly.
