@@ -333,7 +333,8 @@ class ProductSpace(LinearSpace):
         >>> pspace2.size
         6
         """
-        return 0 if self.shape == () else int(np.prod(self.shape))
+        return (0 if self.shape == () else
+                int(np.prod(self.shape, dtype='int64')))
 
     @property
     def spaces(self):
@@ -380,6 +381,16 @@ class ProductSpace(LinearSpace):
             return dtypes[0]
         else:
             raise AttributeError("`dtype`'s of subspaces not equal")
+
+    @property
+    def is_real(self):
+        """True if this is a space of real valued vectors."""
+        return all(spc.is_real for spc in self.spaces)
+
+    @property
+    def is_complex(self):
+        """True if this is a space of complex valued vectors."""
+        return all(spc.is_complex for spc in self.spaces)
 
     @property
     def real_space(self):

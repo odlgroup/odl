@@ -160,6 +160,11 @@ def show_discrete_data(values, grid, title=None, method='',
     axis_fontsize : int, optional
         Fontsize for the axes. Default: 16
 
+    colorbar : bool, optional
+        Argument relevant for 2d plots using ``method='imshow'``. If ``True``,
+        include a colorbar in the plot.
+        Default: True
+
     kwargs : {'figsize', 'saveto', ...}, optional
         Extra keyword arguments passed on to display method
         See the Matplotlib functions for documentation of extra
@@ -195,6 +200,7 @@ def show_discrete_data(values, grid, title=None, method='',
     saveto = kwargs.pop('saveto', None)
     interp = kwargs.pop('interp', 'nearest')
     axis_fontsize = kwargs.pop('axis_fontsize', 16)
+    colorbar = kwargs.pop('colorbar', True)
 
     # Check if we should and can update the plot in-place
     update_in_place = kwargs.pop('update_in_place', False)
@@ -409,7 +415,7 @@ def show_discrete_data(values, grid, title=None, method='',
             plt.xticks(xpts, xlabels)
             plt.yticks(ypts, ylabels)
 
-        if method == 'imshow':
+        if method == 'imshow' and colorbar:
             # Add colorbar
             # Use clim from kwargs if given
             if 'clim' not in kwargs:

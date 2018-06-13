@@ -42,9 +42,9 @@ d = odl.phantom.white_noise(space, orig, 0.1)
 op = odl.Gradient(space)  # operator
 norm_op = np.sqrt(8) + 1e-4  # norm with forward differences is well-known
 lam = 0.1  # Regularization parameter
-g = 1 / (2 * lam) * odl.solvers.L2NormSquared(space).translated(d)  # data fit
-f = odl.solvers.Huber(op.range, gamma=.01)  # regularization
-obj_fun = f * op + g  # combined functional
+f = 1 / (2 * lam) * odl.solvers.L2NormSquared(space).translated(d)  # data fit
+g = odl.solvers.Huber(op.range, gamma=.01)  # regularization
+obj_fun = f + g * op # combined functional
 mu_g = 1 / lam  # strong convexity of "g"
 mu_f = 1 / f.grad_lipschitz  # strong convexity of "f*"
 
@@ -89,7 +89,7 @@ theta2 = 1 - 2 / (2 + kappa2)  # Extrapolation constant
 # Run linearly convergent algorithm 1
 x1 = space.zero()
 callback(x1)  # store values for initialization
-odl.solvers.pdhg(x1, f, g, op, tau1, sigma1, niter, theta=theta1,
+odl.solvers.pdhg(x1, f, g, op, niter, tau1, sigma1, theta=theta1,
                  callback=callback)
 obj1 = callback.callbacks[1].obj_function_values
 
@@ -97,7 +97,7 @@ obj1 = callback.callbacks[1].obj_function_values
 callback.reset()
 x2 = space.zero()
 callback(x2)  # store values for initialization
-odl.solvers.pdhg(x2, f, g, op, tau2, sigma2, niter, theta=theta2,
+odl.solvers.pdhg(x2, f, g, op, niter, tau2, sigma2, theta=theta2,
                  callback=callback)
 obj2 = callback.callbacks[1].obj_function_values
 

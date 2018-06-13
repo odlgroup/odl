@@ -25,13 +25,13 @@ d = odl.phantom.salt_pepper_noise(orig, fraction=0.2)
 
 # Define objective functional
 op = odl.Gradient(space)  # operator
-norm_op = np.sqrt(8) + 1e-4  # norm with forward differences is well-known
+norm_op = np.sqrt(8) + 1e-2  # norm with forward differences is well-known
 lam = 2  # Regularization parameter
 const = 0.5
-g = const / lam * odl.solvers.L1Norm(space).translated(d)  # data fit
-f = const * odl.solvers.Huber(op.range, gamma=.01)  # regularization
-obj_fun = f * op + g  # combined functional
-mu_f = 1 / f.grad_lipschitz  # Strong convexity of "f*"
+f = const / lam * odl.solvers.L1Norm(space).translated(d)  # data fit
+g = const * odl.solvers.Huber(op.range, gamma=.01)  # regularization
+obj_fun = f + g * op  # combined functional
+mu_g = 1 / g.grad_lipschitz  # Strong convexity of "f*"
 
 # Define algorithm parameters
 
@@ -61,7 +61,7 @@ sigma = 1.0 / norm_op  # Step size for dual variable
 # Run algorithm
 x = space.zero()
 callback(x)  # store values for initialization
-odl.solvers.pdhg(x, f, g, op, tau, sigma, niter, gamma_dual=mu_f,
+odl.solvers.pdhg(x, f, g, op, niter, tau, sigma, gamma_dual=mu_g,
                  callback=callback)
 obj = callback.callbacks[1].obj_function_values
 

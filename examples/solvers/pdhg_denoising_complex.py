@@ -17,7 +17,7 @@ import odl
 # Read test image: use only every second pixel, convert integer to float,
 # and rotate to get the image upright
 image = np.rot90(scipy.misc.ascent()[::1, ::1], 3).astype('float32')
-image = image + 1j*image.T
+image = image + 1j * image.T
 shape = image.shape
 
 # Rescale max to 1
@@ -47,9 +47,8 @@ l2_norm = odl.solvers.L2NormSquared(space).translated(noisy)
 l1_norm = 0.15 * odl.solvers.L1Norm(gradient.range)
 
 # Make separable sum of functionals, order must correspond to the operator K
-f = odl.solvers.SeparableSum(l2_norm, l1_norm)
-
-g = odl.solvers.ZeroFunctional(op.domain)
+f = odl.solvers.ZeroFunctional(op.domain)
+g = odl.solvers.SeparableSum(l2_norm, l1_norm)
 
 # --- Select solver parameters and solve using Chambolle-Pock --- #
 
@@ -70,7 +69,7 @@ x = op.domain.zero()
 
 # Run algorithm (and display intermediates)
 odl.solvers.pdhg(
-    x, f, g, op, tau=tau, sigma=sigma, niter=niter, callback=callback)
+    x, f, g, op, niter=niter, tau=tau, sigma=sigma, callback=callback)
 
 # Display images
 orig.show(title='original image')

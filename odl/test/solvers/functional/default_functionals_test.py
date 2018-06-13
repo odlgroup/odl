@@ -620,31 +620,22 @@ def test_weighted_proximal_L1_norm_close(space):
 
 
 def test_bregman_functional_no_gradient(space):
-    """Test Bregman distance for functional without gradient.
-
-    Test that the Bregman distance functional fails if the underlying
-    functional does not have a gradient and no subgradient operator is
-    given. Also test giving the subgradient operator separately.
-    """
+    """Test Bregman distance for functional without gradient."""
 
     ind_func = odl.solvers.IndicatorNonnegativity(space)
-    point = noise_element(space)
+    point = np.abs(noise_element(space))
+    subgrad = noise_element(space)  # Any element in the domain is ok
+    bregman_dist = odl.solvers.BregmanDistance(ind_func, point, subgrad)
 
-    # Indicator function has no gradient, hence one cannot create a bregman
-    # distance functional
-    with pytest.raises(NotImplementedError):
-        odl.solvers.BregmanDistance(ind_func, point)
-
-    # If a subgradient operator is given separately, it is possible to create
-    # an instance of the functional
-    subgrad_op = odl.IdentityOperator(space)
-    bregman_dist = odl.solvers.BregmanDistance(ind_func, point, subgrad_op)
-
-    # In this case we should be able to call the gradient of the bregman
-    # distance, which would give us a subgradient
     x = np.abs(noise_element(space))
-    expected_result = subgrad_op(x) - subgrad_op(point)
-    assert all_almost_equal(bregman_dist.gradient(x), expected_result)
+
+    expected_result = -subgrad.inner(x - point)
+    assert all_almost_equal(bregman_dist(x), expected_result)
+
+    # However, since the functional is not differentialbe we cannot call the
+    # gradient of the Bregman distance functional
+    with pytest.raises(NotImplementedError):
+        bregman_dist.gradient
 
 
 def test_bregman_functional_l2_squared(space, sigma):
@@ -653,7 +644,8 @@ def test_bregman_functional_l2_squared(space, sigma):
 
     l2_sq = odl.solvers.L2NormSquared(space)
     point = noise_element(space)
-    bregman_dist = odl.solvers.BregmanDistance(l2_sq, point)
+    subgrad = l2_sq.gradient(point)
+    bregman_dist = odl.solvers.BregmanDistance(l2_sq, point, subgrad)
 
     expected_func = odl.solvers.L2NormSquared(space).translated(point)
 
@@ -662,24 +654,14 @@ def test_bregman_functional_l2_squared(space, sigma):
     # Function evaluation
     assert all_almost_equal(bregman_dist(x), expected_func(x))
 
-    # Create new functionals to test initialization before each test
-    bregman_dist = odl.solvers.BregmanDistance(l2_sq, point)
-    expected_func = odl.solvers.L2NormSquared(space).translated(point)
-
     # Gradient evaluation
     assert all_almost_equal(bregman_dist.gradient(x),
                             expected_func.gradient(x))
-
-    bregman_dist = odl.solvers.BregmanDistance(l2_sq, point)
-    expected_func = odl.solvers.L2NormSquared(space).translated(point)
 
     # Convex conjugate
     cc_bregman_dist = bregman_dist.convex_conj
     cc_expected_func = expected_func.convex_conj
     assert all_almost_equal(cc_bregman_dist(x), cc_expected_func(x))
-
-    bregman_dist = odl.solvers.BregmanDistance(l2_sq, point)
-    expected_func = odl.solvers.L2NormSquared(space).translated(point)
 
     # Proximal operator
     prox_bregman_dist = bregman_dist.proximal(sigma)

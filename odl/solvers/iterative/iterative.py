@@ -23,7 +23,7 @@ __all__ = ('landweber', 'conjugate_gradient', 'conjugate_gradient_normal',
 # TODO: update all docs
 
 
-def landweber(op, x, rhs, niter, omega=1, projection=None, callback=None):
+def landweber(op, x, rhs, niter, omega=None, projection=None, callback=None):
     """Optimized implementation of Landweber's method.
 
     Solves the inverse problem::
@@ -45,6 +45,7 @@ def landweber(op, x, rhs, niter, omega=1, projection=None, callback=None):
         Number of iterations.
     omega : positive float, optional
         Relaxation parameter in the iteration.
+        Default: ``1 / op.norm(estimate=True) ** 2``
     projection : callable, optional
         Function that can be used to modify the iterates in each iteration,
         for example enforcing positivity. The function should take one
@@ -98,6 +99,9 @@ def landweber(op, x, rhs, niter, omega=1, projection=None, callback=None):
     if x not in op.domain:
         raise TypeError('`x` {!r} is not in the domain of `op` {!r}'
                         ''.format(x, op.domain))
+
+    if omega is None:
+        omega = 1 / op.norm(estimate=True) ** 2
 
     # Reusable temporaries
     tmp_ran = op.range.element()

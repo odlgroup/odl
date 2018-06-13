@@ -205,7 +205,7 @@ class CallbackStore(Callback):
 
         Examples
         --------
-        Store results as is
+        Store results as-is
 
         >>> callback = CallbackStore()
 

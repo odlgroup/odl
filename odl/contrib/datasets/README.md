@@ -21,6 +21,10 @@ Reference datasets with accompanying ODL geometries etc.
     CT data as provided by FIPS. The data is non-human and high resolution.
     * `walnut_data`
     * `lotus_root_data`
+
+    CT data as provided by Mayo Clinic. The data is from a human and of high resolution (512x512). To access the data, see [the webpage](https://www.aapm.org/GrandChallenge/LowDoseCT/#registration). Note that downloading this dataset requires signing up and signing a terms of use form.
+    * `load_projections`
+    * `load_reconstruction`
 * `images`
 
   Two dimensional images.

@@ -158,6 +158,8 @@ def test_uniform_discr_init_real(odl_tspace_impl):
     assert discr.is_real
     assert discr.tspace.exponent == 2.0
     assert discr.dtype == discr.tspace.default_dtype(odl.RealNumbers())
+    assert discr.is_real
+    assert not discr.is_complex
     assert all_equal(discr.min_pt, [0])
     assert all_equal(discr.max_pt, [1])
     assert discr.shape == (10,)

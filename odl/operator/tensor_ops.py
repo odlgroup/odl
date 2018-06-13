@@ -998,8 +998,14 @@ def _normalize_sampling_points(sampling_points, ndim):
     elif ndim == 1:
         if isinstance(sampling_points, Integral):
             sampling_points = (sampling_points,)
-        sampling_points = [np.array(sampling_points, dtype=int, copy=False,
-                                    ndmin=1)]
+        sampling_points = np.array(sampling_points, dtype=int, copy=False,
+                                   ndmin=1)
+
+        # Handle possible list of length one
+        if sampling_points.ndim == 2 and sampling_points.shape[0] == 1:
+            sampling_points = sampling_points[0]
+
+        sampling_points = [sampling_points]
         if sampling_points[0].ndim > 1:
             raise ValueError('expected 1D index (array), got {}'
                              ''.format(sampling_points_in))
