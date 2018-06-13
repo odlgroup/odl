@@ -31,7 +31,10 @@ def test_optimal_parameters_one_parameter(space, fom):
     data = mynoise.copy()
 
     def reconstruction(data, lam):
-        """Perturbs the data by adding lam to it."""
+        """Simple reconstruction operator.
+
+        The optimal reconstruction parameter in any fom is lam=0.
+        """
         return data + lam
 
     result = odl.contrib.param_opt.optimal_parameters(reconstruction, fom,

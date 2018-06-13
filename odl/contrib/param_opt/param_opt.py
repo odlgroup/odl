@@ -6,8 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Method(s) to find optimal reconstruction/regularization parameters with
-respect to given figures of merit."""
+"""Method(s) to find optimal reconstruction parameter(s) w.r.t. given FOM."""
 
 import numpy as np
 import scipy
@@ -17,24 +16,24 @@ __all__ = ('optimal_parameters', )
 
 def optimal_parameters(reconstruction, fom, phantoms, data,
                        initial_param=0):
-    """Find the optimal parameters for a reconstruction method.
+    r"""Find the optimal parameters for a reconstruction method.
 
     Notes
     -----
-    For a forward operator :math:`A : X \\to Y`, a reconstruction operator
-    parametrized by :math:`\\theta` is some operator
-    :math:`R_\\theta : Y \\to X`
+    For a forward operator :math:`A : X \to Y`, a reconstruction operator
+    parametrized by :math:`\theta` is some operator
+    :math:`R_\theta : Y \to X`
     such that
 
     .. math::
-        R_\\theta(A(x)) \\approx x.
+        R_\theta(A(x)) \approx x.
 
-    The optimal choice of :math:`\\theta` is given by
+    The optimal choice of :math:`\theta` is given by
 
     .. math::
-        \\theta = \\arg\\min_\\theta fom(R(A(x) + noise), x)
+        \theta = \arg\min_\theta fom(R(A(x) + noise), x)
 
-    where :math:`fom : X \\times X \\to \mathbb{R}` is a figure of merit.
+    where :math:`fom : X \times X \to \mathbb{R}` is a figure of merit.
 
     Parameters
     ----------
