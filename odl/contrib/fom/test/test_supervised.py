@@ -119,16 +119,16 @@ def test_psnr(space):
 
     # Test regular call
     result = fom.psnr(data, true)
-    assert result == pytest.approx(expected)
+    assert result == pytest.approx(expected, abs=1e-6)
 
     # Test with force_lower_is_better giving negative of expected
     result = fom.psnr(data, true, force_lower_is_better=True)
-    assert result == pytest.approx(-expected)
+    assert result == pytest.approx(-expected, abs=1e-6)
 
     # Test with Z-score that result is independent of affine transformation
     result = fom.psnr(data * 3.7 + 1.234, true, use_zscore=True)
     expected = fom.psnr(data, true, use_zscore=True)
-    assert result == pytest.approx(expected)
+    assert result == pytest.approx(expected, abs=1e-5)
 
 
 def test_ssim(space):
@@ -206,7 +206,7 @@ def test_standard_deviation_difference_range_value(space):
     assert (fom.standard_deviation_difference(10 * I0, I0, normalized=True) <=
             1.0)
     assert (fom.standard_deviation_difference(I0, I0 + value_shift) ==
-            pytest.approx(0, abs=1e-6))
+            pytest.approx(0, abs=1e-5))
     test_value = fom.standard_deviation_difference(space.one(), space.zero(),
                                                    normalized=True)
     assert test_value == pytest.approx(0, abs=1e-6)
@@ -218,11 +218,11 @@ def test_range_difference(space):
     const = np.random.normal(0, 10)
 
     assert fom.range_difference(I0, I0) == pytest.approx(0)
-    assert fom.range_difference(I0 + const, I0) == pytest.approx(0, abs=1e-6)
+    assert fom.range_difference(I0 + const, I0) == pytest.approx(0, abs=1e-5)
     aconst = np.abs(const)
     eval0 = aconst * fom.range_difference(I0, I1)
     eval1 = fom.range_difference(aconst * I0, aconst * I1)
-    assert eval0 == pytest.approx(eval1)
+    assert eval0 == pytest.approx(eval1, abs=1e-5)
 
 
 if __name__ == '__main__':
