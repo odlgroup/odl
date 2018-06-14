@@ -80,6 +80,8 @@ class ShearlabOperator(odl.Operator):
                 op : `ShearlabOperator`
                     The operator which this should be the adjoint of.
                 """
+                self.mutex = op.mutex
+                self.shearlet_system = op.shearlet_system
                 super(ShearlabOperatorAdjoint, self).__init__(
                     op.range, op.domain, True)
 
@@ -118,8 +120,10 @@ class ShearlabOperator(odl.Operator):
                               The operator which this should be the
                               inverse of the adjoint of.
                         """
+                        self.mutex = op.mutex
+                        self.shearlet_system = op.shearlet_system
                         super(ShearlabOperatorAdjointInverse, self).__init__(
-                            op.domain, op.range, True)
+                            op.range, op.domain, True)
 
                     def _call(self, x):
                         """``self(x)``."""
@@ -130,12 +134,14 @@ class ShearlabOperator(odl.Operator):
                     @property
                     def adjoint(self):
                         """The adjoint operator."""
-                        return self.op.inverse
+                        return op.adjoint.inverse
 
                     @property
                     def inverse(self):
                         """The inverse operator."""
-                        return self.op.adjoint
+                        return op
+
+                return ShearlabOperatorAdjointInverse()
 
         return ShearlabOperatorAdjoint()
 
@@ -160,6 +166,8 @@ class ShearlabOperator(odl.Operator):
                 op : `ShearlabOperator`
                     The operator which this should be the inverse of.
                 """
+                self.mutex = op.mutex
+                self.shearlet_system = op.shearlet_system
                 super(ShearlabOperatorInverse, self).__init__(
                     op.range, op.domain, True)
 
@@ -171,8 +179,51 @@ class ShearlabOperator(odl.Operator):
 
             @property
             def adjoint(self):
-                """The adjoint operator."""
-                return ShearlabOperatorAdjointInverse()
+                """The inverse operator."""
+                op = self
+
+                class ShearlabOperatorInverseAdjoint(odl.Operator):
+
+                    """
+                    Adjoint of the inverse/Inverse of the adjoint
+                    of shearlet transform.
+
+                    See Also
+                    --------
+                    odl.contrib.shearlab.ShearlabOperator
+                    """
+
+                    def __init__(self):
+                        """Initialize a new instance.
+                        Parameters
+                        ----------
+                        op : `ShearlabOperator`
+                              The operator which this should be the
+                              inverse of the adjoint of.
+                        """
+
+                        self.mutex = op.mutex
+                        self.shearlet_system = op.shearlet_system
+                        super(ShearlabOperatorInverseAdjoint, self).__init__(
+                            op.range, op.domain, True)
+
+                    def _call(self, x):
+                        """``self(x)``."""
+                        with op.mutex:
+                            result = shearrecadjoint2D(x, op.shearlet_system)
+                            return np.moveaxis(result, -1, 0)
+
+                    @property
+                    def adjoint(self):
+                        """The adjoint operator."""
+                        return op
+
+                    @property
+                    def inverse(self):
+                        """The inverse operator."""
+                        return op.inverse.adjoint
+
+                return ShearlabOperatorInverseAdjoint()
 
             @property
             def inverse(self):
