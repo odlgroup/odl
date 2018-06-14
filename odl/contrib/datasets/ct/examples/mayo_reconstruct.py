@@ -19,7 +19,7 @@ partition, volume = mayo.load_reconstruction(volume_folder)
 # Load a subset of the projection data
 data_folder = mayo_dir + '/Training Cases/L067/full_DICOM-CT-PD'
 geometry, proj_data = mayo.load_projections(data_folder,
-                                            proj_start=20000, proj_end=28000)
+                                            indices=slice(20000, 28000))
 
 # Reconstruction space and ray transform
 space = odl.uniform_discr_frompartition(partition, dtype='float32')
