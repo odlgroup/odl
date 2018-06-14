@@ -34,7 +34,7 @@ NameDict.update((CleanName(tag), tag) for tag in new_dict_items)
 __all__ = ('load_projections', 'load_reconstruction')
 
 
-def _read_projections(folder, proj_start=1, proj_end=-1):
+def _read_projections(folder, indices):
     """Read mayo projections from a folder."""
     projections = []
     datasets = []
@@ -45,7 +45,7 @@ def _read_projections(folder, proj_start=1, proj_end=-1):
     if len(file_names) == 0:
         raise ValueError('No DICOM files found in {}'.format(folder))
 
-    file_names = file_names[proj_start:proj_end]
+    file_names = file_names[indices]
 
     for file_name in tqdm.tqdm(file_names, 'Loading projection data'):
         # read the file
@@ -75,17 +75,16 @@ def _read_projections(folder, proj_start=1, proj_end=-1):
     return datasets, projections
 
 
-def load_projections(folder, proj_start=1, proj_end=-1):
+def load_projections(folder, indices=None):
     """Load geometry and data stored in Mayo format from folder.
 
     Parameters
     ----------
     folder : str
         Path to the folder where the Mayo DICOM files are stored.
-    proj_start : int
-        Index of the first projection to use. Used for subsampling.
-    proj_end : int
-        Index of the final projection to use.
+    indices : optional
+        Indices of the projections to load.
+        Accepts advanced indexing such as slice or list of indices.
 
     Returns
     -------
@@ -95,7 +94,7 @@ def load_projections(folder, proj_start=1, proj_end=-1):
         Projection data, given as the line integral of the linear attenuation
         coefficient (g/cm^3). Its unit is thus g/cm^2.
     """
-    datasets, projections = _read_projections(folder, proj_start, proj_end)
+    datasets, projections = _read_projections(folder, indices)
 
     data_array = np.empty((len(projections),) + projections[0].shape,
                           dtype='float32')
