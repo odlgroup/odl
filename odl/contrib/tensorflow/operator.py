@@ -19,14 +19,48 @@ __all__ = ('TensorflowOperator',)
 
 
 class TensorflowOperator(odl.Operator):
-    def __init__(self, input_tensor, output_tensor, linear=False, sess=None):
+    def __init__(self, input_tensor, output_tensor,
+                 domain=None, range=None,
+                 linear=False, sess=None):
+        """Wrap Tensorflow layers in ODL operator.
+
+        Parameters
+        ----------
+        input_tensor : `tf.Tensor`
+            Input to the tensorflow graph (values will be fed to this).
+        output_tensor : `tf.Tensor`
+            Output node from the graph.
+        domain : `TensorSpace`, optional
+            Domain of the wrapping operator.
+            Default: `tensor_space` with same shape and dtype as
+            ``input_tensor``.
+        range : `TensorSpace`, optional
+            Range of the wrapping operator.
+            Default: `tensor_space` with same shape and dtype as
+            ``output_tensor``.
+        linear : bool, optional
+            If the created operator should be linear
+        sess : `tf.Session`, optional
+            Session to evaluate the graph in.
+            Default: `tf.get_default_session`
+
+        Notes
+        -----
+        Both `Operator.derivative` and `Operator.adjoint` are implemented
+        using automatic differentiation in tensorflow.
+        """
         self.input_tensor = input_tensor
         self.output_tensor = output_tensor
 
-        domain = odl.tensor_space(input_tensor.shape.as_list(),
-                                  dtype=input_tensor.dtype.as_numpy_dtype)
-        range = odl.tensor_space(output_tensor.shape.as_list(),
-                                 dtype=output_tensor.dtype.as_numpy_dtype)
+        if domain is None:
+            domain = odl.tensor_space(input_tensor.shape.as_list(),
+                                      dtype=input_tensor.dtype.as_numpy_dtype)
+        if range is None:
+            range = odl.tensor_space(output_tensor.shape.as_list(),
+                                     dtype=output_tensor.dtype.as_numpy_dtype)
+
+        # TODO: replace with #1177
+        self.adjoint_weight = domain.weighting.const / range.weighting.const
 
         self.dx = tf.placeholder(input_tensor.dtype,
                                  shape=input_tensor.shape)
@@ -54,6 +88,7 @@ class TensorflowOperator(odl.Operator):
         super(TensorflowOperator, self).__init__(domain, range, linear=linear)
 
     def _call(self, x):
+        """Return ``self(x)``."""
         result = self.sess.run(self.output_tensor,
                                feed_dict={self.input_tensor: np.asarray(x)})
 
@@ -79,6 +114,8 @@ class TensorflowOperator(odl.Operator):
                             feed_dict={op.input_tensor: np.asarray(x),
                                        op.dy: np.asarray(y)})
 
+                        # Compensate for weighted spaces in ODL
+                        result *= op.adjoint_weight
                         return result
 
                 return TensorflowOperatorDerivativeAdjoint(self.range,
