@@ -9,7 +9,7 @@
 """Method(s) to find optimal reconstruction parameter(s) w.r.t. given FOM."""
 
 import numpy as np
-import scipy
+import scipy.optimize
 
 __all__ = ('optimal_parameters', )
 
