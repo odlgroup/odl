@@ -171,12 +171,13 @@ def test_power_method_opnorm_nonsymm():
     true_opnorm = 6
 
     # Start vector (1, 1) is close to the wrong eigenvector
-    opnorm_est = power_method_opnorm(op, maxiter=50)
+    xstart = odl.rn(2).element([1, 1])
+    opnorm_est = power_method_opnorm(op, xstart=xstart, maxiter=50)
     assert almost_equal(opnorm_est, true_opnorm, places=2)
 
     # Start close to the correct eigenvector, converges very fast
     xstart = odl.rn(2).element([-0.8, 0.5])
-    opnorm_est = power_method_opnorm(op, maxiter=6, xstart=xstart)
+    opnorm_est = power_method_opnorm(op, xstart=xstart, maxiter=6)
     assert almost_equal(opnorm_est, true_opnorm, places=2)
 
 
