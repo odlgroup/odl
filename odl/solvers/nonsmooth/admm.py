@@ -145,6 +145,9 @@ def admm_linearized(x, f, g, L, tau, sigma, niter, **kwargs):
         if callback is not None:
             callback(x)
 
+    if callback is not None:
+        callback.final()
+
 
 def admm_linearized_simple(x, f, g, L, tau, sigma, niter, **kwargs):
     """Non-optimized version of ``admm_linearized``.
@@ -161,3 +164,5 @@ def admm_linearized_simple(x, f, g, L, tau, sigma, niter, **kwargs):
         u = L(x) + u - z
         if callback is not None:
             callback(x)
+    if callback is not None:
+        callback.final()

@@ -190,6 +190,8 @@ def adupdates(x, g, L, stepsize, inner_stepsizes, niter, random=False,
                 callback(x)
         if callback is not None and callback_loop == 'outer':
             callback(x)
+    if callback is not None:
+        callback.final()
 
 
 def adupdates_simple(x, g, L, stepsize, inner_stepsizes, niter,
