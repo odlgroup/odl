@@ -188,3 +188,6 @@ def forward_backward_pd(x, f, g, L, h, tau, sigma, niter,
 
         if callback is not None:
             callback(x)
+
+    if callback is not None:
+        callback.final()

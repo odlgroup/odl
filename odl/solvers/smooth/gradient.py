@@ -103,6 +103,8 @@ def steepest_descent(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
 
         if callback is not None:
             callback(x)
+    if callback is not None:
+        callback.final()
 
 
 def adam(f, x, learning_rate=1e-3, beta1=0.9, beta2=0.999, eps=1e-8,
@@ -178,6 +180,8 @@ def adam(f, x, learning_rate=1e-3, beta1=0.9, beta2=0.999, eps=1e-8,
 
         if callback is not None:
             callback(x)
+    if callback is not None:
+        callback.final()
 
 
 if __name__ == '__main__':

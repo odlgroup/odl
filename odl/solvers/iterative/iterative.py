@@ -277,6 +277,9 @@ Conjugate_gradient_on_the_normal_equations>`_.
         if callback is not None:
             callback(x)
 
+    if callback is not None:
+        callback.final()
+
 
 def exp_zero_seq(base):
     """Default exponential zero sequence.
@@ -386,6 +389,9 @@ def gauss_newton(op, x, rhs, niter, zero_seq=exp_zero_seq(2.0),
 
         if callback is not None:
             callback(x)
+
+    if callback is not None:
+        callback.final()
 
 
 def kaczmarz(ops, x, rhs, niter, omega=1, projection=None, random=False,
@@ -519,6 +525,9 @@ def kaczmarz(ops, x, rhs, niter, omega=1, projection=None, random=False,
                 callback(x)
         if callback is not None and callback_loop == 'outer':
             callback(x)
+
+    if callback is not None:
+        callback.final()
 
 
 if __name__ == '__main__':

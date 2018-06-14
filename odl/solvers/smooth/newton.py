@@ -242,6 +242,9 @@ def newtons_method(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
         if callback is not None:
             callback(x)
 
+    if callback is not None:
+        callback.final()
+
 
 def bfgs_method(f, x, line_search=1.0, maxiter=1000, tol=1e-15, num_store=None,
                 hessinv_estimate=None, callback=None):
@@ -355,6 +358,8 @@ Goldfarb%E2%80%93Shanno_algorithm>`_
 
         if callback is not None:
             callback(x)
+    if callback is not None:
+        callback.final()
 
 
 def broydens_method(f, x, line_search=1.0, impl='first', maxiter=1000,
@@ -484,6 +489,8 @@ def broydens_method(f, x, line_search=1.0, impl='first', maxiter=1000,
 
         if callback is not None:
             callback(x)
+    if callback is not None:
+        callback.final()
 
 
 if __name__ == '__main__':

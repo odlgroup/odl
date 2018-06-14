@@ -1395,7 +1395,7 @@ class ProductSpaceElement(LinearSpaceElement):
             ``(indices, Ellipsis)``. In particular, for ``None``, all
             parts are shown with default slicing.
 
-        in_figs : sequence of `matplotlib.figure.Figure`, optional
+        fig : sequence of `matplotlib.figure.Figure`, optional
             Update these figures instead of creating new ones. Typically
             the return value of an earlier call to ``show`` is used
             for this parameter.

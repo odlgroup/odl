@@ -228,6 +228,8 @@ def douglas_rachford_pd(x, f, g, L, niter, tau=None, sigma=None,
         if callback is not None:
             callback(p1)
 
+    if callback is not None:
+        callback.final()
     # The final result is actually in p1 according to the algorithm, so we need
     # to assign here.
     x.assign(p1)

@@ -130,3 +130,5 @@ def conjugate_gradient_nonlinear(f, x, line_search=1.0, maxiter=1000, nreset=0,
 
             if callback is not None:
                 callback(x)
+    if callback is not None:
+        callback.final()

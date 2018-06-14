@@ -2295,7 +2295,7 @@ class Huber(Functional):
     .. math::
         F(x) = \\int_\Omega f_{\\gamma}(||x(y)||_2) dy
 
-    where :mth:`||\cdot||_2` denotes the Euclidean norm for vector-valued
+    where :math:`||\cdot||_2` denotes the Euclidean norm for vector-valued
     functions which reduces to the absolute value for scalar-valued functions.
     The function :math:`f` with smoothing :math:`\\gamma` is given by
 

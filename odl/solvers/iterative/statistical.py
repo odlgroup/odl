@@ -202,6 +202,8 @@ def osmlem(op, x, data, niter, noise='poisson', callback=None, **kwargs):
 
                 if callback is not None:
                     callback(x)
+        if callback is not None:
+            callback.final()
     else:
         raise RuntimeError('unknown noise model')
 
