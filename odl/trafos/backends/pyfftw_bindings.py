@@ -23,7 +23,10 @@ try:
 except ImportError:
     PYFFTW_AVAILABLE = False
 else:
-    _maj, _min, _patch = [int(n) for n in pyfftw.__version__.split('.')[:3]]
+    # Cheap way of getting the version, works with Git revision versions like
+    # '0.10.4+201.gdb78c2b'
+    _maj, _min, _patch = [int(n.split('+')[0])
+                          for n in pyfftw.__version__.split('.')[:3]]
     if (_maj, _min, _patch) < (0, 10, 3):
         warnings.warn('PyFFTW < 0.10.3 is known to cause problems with some '
                       'ODL functionality, see issue #1002.',
