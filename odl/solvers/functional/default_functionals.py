@@ -42,7 +42,7 @@ __all__ = ('ZeroFunctional', 'ConstantFunctional', 'ScalingFunctional',
 
 class LpNorm(Functional):
 
-    """The functional corresponding to the Lp-norm.
+    r"""The functional corresponding to the Lp-norm.
 
     Notes
     -----
@@ -50,13 +50,13 @@ class LpNorm(Functional):
     :math:`\| \cdot \|_p`-norm is defined as
 
     .. math::
-        \| x \|_p = \\left(\\sum_{i=1}^n |x_i|^p \\right)^{1/p}.
+        \| x \|_p = \left(\sum_{i=1}^n |x_i|^p \right)^{1/p}.
 
     If the functional is defined on an :math:`L_2`-like space, the
     :math:`\| \cdot \|_p`-norm is defined as
 
     .. math::
-        \| x \|_p = \\left(\\int_\Omega |x(t)|^p dt. \\right)^{1/p}
+        \| x \|_p = \left(\int_\Omega |x(t)|^p dt. \right)^{1/p}
     """
 
     def __init__(self, space, exponent):
@@ -183,29 +183,29 @@ class LpNorm(Functional):
 
 class GroupL1Norm(Functional):
 
-    """The functional corresponding to the mixed L1--Lp norm on `ProductSpace`.
+    r"""The functional corresponding to the mixed L1-Lp norm on `ProductSpace`.
 
-    The L1-norm, ``|| ||x||_p ||_1``,  is defined as the integral/sum of
-    ``||x||_p``, where  ``||x||_p`` is the pointwise p-norm.
+    The L1-norm, :math:`\| \|x\|_p \|_1`,  is defined as the integral/sum of
+    :math:`\|x\|_p`, where  :math:`\|x\|_p`` is the pointwise p-norm.
 
     This is also known as the cross norm.
 
     Notes
     -----
-    If the functional is defined on an :math:`\mathbb{R}^{n \\times m}`-like
+    If the functional is defined on an :math:`\mathbb{R}^{n \times m}`-like
     space, the group :math:`L_1`-norm, denoted
-    :math:`\| \\cdot \|_{\\times, p}` is defined as
+    :math:`\| \cdot \|_{\times, p}` is defined as
 
     .. math::
-        \|F\|_{\\times, p} =
-        \\sum_{i = 1}^n \\left(\\sum_{j=1}^m |F_{i,j}|^p\\right)^{1/p}
+        \|F\|_{\times, p} =
+        \sum_{i = 1}^n \left(\sum_{j=1}^m |F_{i,j}|^p\right)^{1/p}
 
-    If the functional is defined on an :math:`(\\mathcal{L}^p)^m`-like space,
+    If the functional is defined on an :math:`(\mathcal{L}^p)^m`-like space,
     the group :math:`L_1`-norm is defined as
 
     .. math::
-        \| F \|_{\\times, p} =
-        \\int_{\Omega} \\left(\\sum_{j = 1}^m |F_j(x)|^p\\right)^{1/p}
+        \| F \|_{\times, p} =
+        \int_{\Omega} \left(\sum_{j = 1}^m |F_j(x)|^p\right)^{1/p}
         \mathrm{d}x.
     """
 
@@ -255,28 +255,28 @@ class GroupL1Norm(Functional):
 
     @property
     def gradient(self):
-        """Gradient operator of the functional.
+        r"""Gradient operator of the functional.
 
         The functional is not differentiable in ``x=0``. However, when
         evaluating the gradient operator in this point it will return 0.
 
-         Notes
+        Notes
         -----
         The gradient is given by
 
         .. math::
-            \\left[ \\nabla \| \|f\|_1 \|_1 \\right]_i =
-            \\frac{f_i}{|f_i|}
+            \left[ \nabla \| \|f\|_1 \|_1 \right]_i =
+            \frac{f_i}{|f_i|}
 
         .. math::
-            \\left[ \\nabla \| \|f\|_2 \|_1 \\right]_i =
-            \\frac{f_i}{\|f\|_2}
+            \left[ \nabla \| \|f\|_2 \|_1 \right]_i =
+            \frac{f_i}{\|f\|_2}
 
         else:
 
         .. math::
-            \\left[ \\nabla || ||f||_p ||_1 \\right]_i =
-            \\frac{| f_i |^{p-2} f_i}{||f||_p^{p-1}}
+            \left[ \nabla \| \|f\|_p \|_1 \right]_i =
+            \frac{| f_i |^{p-2} f_i}{\|f\|_p^{p-1}}
         """
         functional = self
 
@@ -331,7 +331,7 @@ class GroupL1Norm(Functional):
 
 class IndicatorGroupL1UnitBall(Functional):
 
-    """The convex conjugate to the mixed L1--Lp norm on `ProductSpace`.
+    """The convex conjugate to the mixed L1-Lp norm on `ProductSpace`.
 
     See Also
     --------
@@ -423,7 +423,7 @@ class IndicatorGroupL1UnitBall(Functional):
 
 class IndicatorLpUnitBall(Functional):
 
-    """The indicator function on the unit ball in given the ``Lp`` norm.
+    r"""The indicator function on the unit ball in the :math:`L_p` norm.
 
     It does not implement `gradient` since it is not differentiable everywhere.
 
@@ -432,21 +432,21 @@ class IndicatorLpUnitBall(Functional):
     This functional is defined as
 
         .. math::
-            f(x) = \\left\{ \\begin{array}{ll}
-            0 & \\text{if } ||x||_{L_p} \\leq 1, \\\\
-            \\infty & \\text{else,}
-            \\end{array} \\right.
+            f(x) = \left\{ \begin{array}{ll}
+            0 & \text{if } \|x\|_{L_p} \leq 1, \\
+            \infty & \text{else,}
+            \end{array} \right.
 
-    where :math:`||x||_{L_p}` is the :math:`L_p`-norm, which for finite values
+    where :math:`\|x\|_{L_p}` is the :math:`L_p`-norm, which for finite values
     of :math:`p` is defined as
 
         .. math::
-            \| x \|_{L_p} = \\left( \\int_{\Omega} |x|^p dx \\right)^{1/p},
+            \| x \|_{L_p} = \left( \int_{\Omega} |x|^p dx \right)^{1/p},
 
-    and for :math:`p = \\infty` it is defined as
+    and for :math:`p = \infty` it is defined as
 
         .. math::
-            ||x||_{\\infty} = \max_x (|x|).
+            \|x\|_{\infty} = \max_x (|x|).
 
     The functional also allows noninteger and nonpositive values of the
     exponent :math:`p`, however in this case :math:`\| x \|_{L_p}` is not a
@@ -534,9 +534,10 @@ class IndicatorLpUnitBall(Functional):
 
 class L1Norm(LpNorm):
 
-    """The functional corresponding to L1-norm.
+    r"""The functional corresponding to L1-norm.
 
-    The L1-norm, ``||x||_1``,  is defined as the integral/sum of ``|x|``.
+    The L1-norm, :math:`\|x\|_1`,  is defined as the integral/sum of
+    :math:`|x|`.
 
     Notes
     -----
@@ -544,13 +545,13 @@ class L1Norm(LpNorm):
     :math:`\| \cdot \|_1`-norm is defined as
 
     .. math::
-        \| x \|_1 = \\sum_{i=1}^n |x_i|.
+        \| x \|_1 = \sum_{i=1}^n |x_i|.
 
     If the functional is defined on an :math:`L_2`-like space, the
     :math:`\| \cdot \|_1`-norm is defined as
 
     .. math::
-        \| x \|_1 = \\int_\Omega |x(t)| dt.
+        \| x \|_1 = \int_\Omega |x(t)| dt.
 
     The `proximal` factory allows using vector-valued stepsizes:
 
@@ -579,10 +580,10 @@ class L1Norm(LpNorm):
 
 class L2Norm(LpNorm):
 
-    """The functional corresponding to the L2-norm.
+    r"""The functional corresponding to the L2-norm.
 
-    The L2-norm, ``||x||_2``,  is defined as the square-root out of the
-    integral/sum of ``x^2``.
+    The L2-norm, :math;`\|x\|_2`,  is defined as the square-root out of the
+    integral/sum of :math:`x^2`.
 
     Notes
     -----
@@ -590,13 +591,13 @@ class L2Norm(LpNorm):
     :math:`\| \cdot \|_2`-norm is defined as
 
     .. math::
-        \| x \|_2 = \\sqrt{ \\sum_{i=1}^n |x_i|^2 }.
+        \| x \|_2 = \sqrt{ \sum_{i=1}^n |x_i|^2 }.
 
     If the functional is defined on an :math:`L_2`-like space, the
     :math:`\| \cdot \|_2`-norm is defined as
 
     .. math::
-        \| x \|_2 = \\sqrt{ \\int_\Omega |x(t)|^2 dt. }
+        \| x \|_2 = \sqrt{ \int_\Omega |x(t)|^2 dt. }
     """
 
     def __init__(self, space):
@@ -617,10 +618,10 @@ class L2Norm(LpNorm):
 
 class L2NormSquared(Functional):
 
-    """The functional corresponding to the squared L2-norm.
+    r"""The functional corresponding to the squared L2-norm.
 
-    The squared L2-norm, ``||x||_2^2``,  is defined as the integral/sum of
-    ``x^2``.
+    The squared L2-norm, :math:`\|x\|_2^2`,  is defined as the integral/sum of
+    :math:`x^2`.
 
     Notes
     -----
@@ -628,13 +629,13 @@ class L2NormSquared(Functional):
     :math:`\| \cdot \|_2^2`-functional is defined as
 
     .. math::
-        \| x \|_2^2 = \\sum_{i=1}^n |x_i|^2.
+        \| x \|_2^2 = \sum_{i=1}^n |x_i|^2.
 
     If the functional is defined on an :math:`L_2`-like space, the
     :math:`\| \cdot \|_2^2`-functional is defined as
 
     .. math::
-        \| x \|_2^2 = \\int_\Omega |x(t)|^2 dt.
+        \| x \|_2^2 = \int_\Omega |x(t)|^2 dt.
 
     The `proximal` factory allows using vector-valued stepsizes:
 
@@ -679,12 +680,12 @@ class L2NormSquared(Functional):
 
     @property
     def convex_conj(self):
-        """The convex conjugate functional of the squared L2-norm.
+        r"""The convex conjugate functional of the squared L2-norm.
 
         Notes
         -----
-        The conjugate functional of :math:`\| \\cdot \|_2^2` is
-        :math:`\\frac{1}{4}\| \\cdot \|_2^2`
+        The conjugate functional of :math:`\| \cdot \|_2^2` is
+        :math:`\frac{1}{4}\| \cdot \|_2^2`
         """
         return (1.0 / 4) * L2NormSquared(self.domain)
 
@@ -735,17 +736,17 @@ class ConstantFunctional(Functional):
 
     @property
     def convex_conj(self):
-        """Convex conjugate functional of the constant functional.
+        r"""Convex conjugate functional of the constant functional.
 
         Notes
         -----
         This functional is defined as
 
          .. math::
-            f^*(x) = \\left\{ \\begin{array}{ll}
-            -constant & \\text{if } x = 0, \\\\
-            \\infty & \\text{else}
-            \\end{array} \\right.
+            f^*(x) = \left\{ \begin{array}{ll}
+            -constant & \text{if } x = 0, \\
+            \infty & \text{else.}
+            \end{array} \right.
         """
         return IndicatorZero(self.domain, -self.constant)
 
@@ -830,7 +831,7 @@ class IdentityFunctional(ScalingFunctional):
 
 class IndicatorBox(Functional):
 
-    """Indicator on some box shaped domain.
+    r"""Indicator on some box shaped domain.
 
     Notes
     -----
@@ -838,10 +839,10 @@ class IndicatorBox(Functional):
     :math:`b` is defined as:
 
     .. math::
-        F(x) = \\begin{cases}
-            0 & \\text{if } a \\leq x \\leq b \\text{ everywhere}, \\\\
-            \\infty & \\text{else}
-            \\end{cases}
+        F(x) = \begin{cases}
+            0 & \text{if } a \leq x \leq b \text{ everywhere}, \\
+            \infty & \text{else}
+            \end{cases}
     """
 
     def __init__(self, space, lower=None, upper=None):
@@ -892,17 +893,17 @@ class IndicatorBox(Functional):
 
 class IndicatorNonnegativity(IndicatorBox):
 
-    """Indicator on the set of non-negative numbers.
+    r"""Indicator on the set of non-negative numbers.
 
     Notes
     -----
     The nonnegativity indicator :math:`F`  is defined as:
 
     .. math::
-        F(x) = \\begin{cases}
-            0 & \\text{if } 0 \\leq x \\text{ everywhere}, \\\\
-            \\infty & \\text{else}
-            \\end{cases}
+        F(x) = \begin{cases}
+            0 & \text{if } 0 \leq x \text{ everywhere}, \\
+            \infty & \text{else.}
+            \end{cases}
     """
 
     def __init__(self, space):
@@ -1128,7 +1129,9 @@ class KullbackLeibler(Functional):
 
     @property
     def gradient(self):
-        r"""The gradient of `KullbackLeibler` with ``prior`` :math:`g` is given as
+        r"""The gradient of `KullbackLeibler` with ``prior`` :math:`g`.
+
+        The gradient is given by
 
         .. math::
             \nabla F(x) = 1 - \frac{g}{x}.
@@ -1467,6 +1470,7 @@ proximal_convex_conj_kl_cross_entropy :
 
 
 class KullbackLeiblerCrossEntropyConvexConj(Functional):
+
     r"""The convex conjugate of Kullback-Leibler Cross Entorpy functional.
 
     Notes
@@ -1566,11 +1570,12 @@ proximal_convex_conj_kl_cross_entropy :
 
 class SeparableSum(Functional):
 
-    """The functional corresponding to separable sum of functionals.
+    r"""The functional corresponding to separable sum of functionals.
 
-    The separable sum of functionals ``f_1, f_2, ..., f_n`` is given by::
+    The separable sum of functionals :math:`f_1, f_2, ..., f_n` is given by
 
-        h(x_1, x_2, ..., x_n) = sum_i^n f_i(x_i)
+    .. math::
+        h(x_1, x_2, ..., x_n) = \sum_i^n f_i(x_i)
 
     The separable sum is thus defined for any collection of functionals with
     the same range.
@@ -1586,8 +1591,8 @@ class SeparableSum(Functional):
     gradient is a `DiagonalOperator`:
 
     .. math::
-        [\\nabla h](x_1, x_2, ..., x_n) =
-        [\\nabla f_1(x_i), \\nabla f_2(x_i), ..., \\nabla f_n(x_i)]
+        [\nabla h](x_1, x_2, ..., x_n) =
+        [\nabla f_1(x_i), \nabla f_2(x_i), ..., \nabla f_n(x_i)]
 
     The convex conjugate is also a separable sum:
 
@@ -1597,21 +1602,21 @@ class SeparableSum(Functional):
     And the proximal distributes:
 
     .. math::
-        \mathrm{prox}_{\\sigma h}(x_1, x_2, ..., x_n) =
-        [\mathrm{prox}_{\\sigma f_1}(x_1),
-         \mathrm{prox}_{\\sigma f_2}(x_2),
+        \mathrm{prox}_{\sigma h}(x_1, x_2, ..., x_n) =
+        [\mathrm{prox}_{\sigma f_1}(x_1),
+         \mathrm{prox}_{\sigma f_2}(x_2),
          ...,
-         \mathrm{prox}_{\\sigma f_n}(x_n)].
+         \mathrm{prox}_{\sigma f_n}(x_n)].
 
-    If :math:`\\sigma = (\\sigma_1, \\sigma_2, \\ldots, \\sigma_n)` is a list
+    If :math:`\sigma = (\sigma_1, \sigma_2, \ldots, \sigma_n)` is a list
     of positive `float`s, then it distributes, too:
 
     .. math::
-        \mathrm{prox}_{\\sigma h}(x_1, x_2, ..., x_n) =
-        [\mathrm{prox}_{\\sigma_1 f_1}(x_1),
-         \mathrm{prox}_{\\sigma_2 f_2}(x_2),
+        \mathrm{prox}_{\sigma h}(x_1, x_2, ..., x_n) =
+        [\mathrm{prox}_{\sigma_1 f_1}(x_1),
+         \mathrm{prox}_{\sigma_2 f_2}(x_2),
          ...,
-         \mathrm{prox}_{\\sigma_n f_n}(x_n)].
+         \mathrm{prox}_{\sigma_n f_n}(x_n)].
     """
 
     def __init__(self, *functionals):
@@ -1740,7 +1745,7 @@ class SeparableSum(Functional):
 
 class QuadraticForm(Functional):
 
-    """Functional for a general quadratic form ``x^T A x + b^T x + c``."""
+    r"""Functional for a general quadratic form :math:`x^T A x + b^T x + c`."""
 
     def __init__(self, operator=None, vector=None, constant=0):
         """Initialize a new instance.
@@ -1838,7 +1843,7 @@ class QuadraticForm(Functional):
 
     @property
     def convex_conj(self):
-        """The convex conjugate functional of the quadratic form.
+        r"""The convex conjugate functional of the quadratic form.
 
         Notes
         -----
@@ -1860,10 +1865,10 @@ class QuadraticForm(Functional):
 
         .. math::
             f^*(x^*) =
-            \\begin{cases}
-                -c & \\text{if } x^* = b \\\\
-                \\infty & \\text{else.}
-            \\end{cases}
+            \begin{cases}
+                -c & \text{if } x^* = b \\
+                \infty & \text{else.}
+            \end{cases}
 
         See Also
         --------
@@ -1894,16 +1899,16 @@ class QuadraticForm(Functional):
 
 class NuclearNorm(Functional):
 
-    """Nuclear norm for matrix valued functions.
+    r"""Nuclear norm for matrix valued functions.
 
     Notes
     -----
     For a matrix-valued function
-    :math:`f : \\Omega \\rightarrow \\mathbb{R}^{n \\times m}`,
+    :math:`f : \Omega \rightarrow \mathbb{R}^{n \times m}`,
     the nuclear norm with parameters :math:`p` and :math:`q` is defined by
 
     .. math::
-        \\left( \int_\Omega \|\sigma(f(x))\|_p^q d x \\right)^{1/q},
+        \left( \int_\Omega \|\sigma(f(x))\|_p^q d x \right)^{1/q},
 
     where :math:`\sigma(f(x))` is the vector of singular values of the matrix
     :math:`f(x)` and :math:`\| \cdot \|_p` is the usual :math:`p`-norm on
@@ -2101,16 +2106,17 @@ class NuclearNorm(Functional):
 
 
 class IndicatorNuclearNormUnitBall(Functional):
-    """Indicator on unit ball of nuclear norm for matrix valued functions.
+
+    r"""Indicator on unit ball of nuclear norm for matrix valued functions.
 
     Notes
     -----
     For a matrix-valued function
-    :math:`f : \\Omega \\rightarrow \\mathbb{R}^{n \\times m}`,
+    :math:`f : \Omega \rightarrow \mathbb{R}^{n \times m}`,
     the nuclear norm with parameters :math:`p` and :math:`q` is defined by
 
     .. math::
-        \\left( \int_\Omega \|\sigma(f(x))\|_p^q d x \\right)^{1/q},
+        \left( \int_\Omega \|\sigma(f(x))\|_p^q d x \right)^{1/q},
 
     where :math:`\sigma(f(x))` is the vector of singular values of the matrix
     :math:`f(x)` and :math:`\| \cdot \|_p` is the usual :math:`p`-norm on
@@ -2195,7 +2201,7 @@ class IndicatorNuclearNormUnitBall(Functional):
 
 class MoreauEnvelope(Functional):
 
-    """Moreau envelope of a convex functional.
+    r"""Moreau envelope of a convex functional.
 
     The Moreau envelope is a way to smooth an arbitrary convex functional
     such that its gradient can be computed given the proximal of the original
@@ -2211,28 +2217,28 @@ class MoreauEnvelope(Functional):
     Notes
     -----
     The Moreau envelope of a convex functional
-    :math:`f : \mathcal{X} \\rightarrow \mathbb{R}` multiplied by a scalar
-    :math:`\\sigma` is defined by
+    :math:`f : \mathcal{X} \rightarrow \mathbb{R}` multiplied by a scalar
+    :math:`\sigma` is defined by
 
     .. math::
-        \mathrm{env}_{\\sigma f}(x) =
-        \\inf_{y \\in \\mathcal{X}}
-        \\left\{ \\frac{1}{2 \\sigma} \| x - y \|_2^2 + f(y) \\right\}
+        \mathrm{env}_{\sigma f}(x) =
+        \inf_{y \in \mathcal{X}}
+        \left\{ \frac{1}{2 \sigma} \| x - y \|_2^2 + f(y) \right\}
 
     The gradient of the envelope is given by
 
     .. math::
-        [\\nabla \mathrm{env}_{\\sigma f}](x) =
-        \\frac{1}{\\sigma} (x - \mathrm{prox}_{\\sigma f}(x))
+        [\nabla \mathrm{env}_{\sigma f}](x) =
+        \frac{1}{\sigma} (x - \mathrm{prox}_{\sigma f}(x))
 
     Example: if :math:`f = \| \cdot \|_1`, then
 
     .. math::
-        [\mathrm{env}_{\\sigma  \| \cdot \|_1}(x)]_i =
-        \\begin{cases}
-            \\frac{1}{2 \\sigma} x_i^2 & \\text{if } |x_i| \leq \\sigma \\\\
-            |x_i| - \\frac{\\sigma}{2} & \\text{if } |x_i| > \\sigma,
-        \\end{cases}
+        [\mathrm{env}_{\sigma  \| \cdot \|_1}(x)]_i =
+        \begin{cases}
+            \frac{1}{2 \sigma} x_i^2 & \text{if } |x_i| \leq \sigma \\
+            |x_i| - \frac{\sigma}{2} & \text{if } |x_i| > \sigma,
+        \end{cases}
 
     which is the usual Huber functional.
 
@@ -2285,7 +2291,8 @@ https://web.stanford.edu/~boyd/papers/pdf/prox_algs.pdf
 
 
 class Huber(Functional):
-    """The Huber functional.
+
+    r"""The Huber functional.
 
     Notes
     -----
@@ -2293,18 +2300,18 @@ class Huber(Functional):
     by
 
     .. math::
-        F(x) = \\int_\Omega f_{\\gamma}(||x(y)||_2) dy
+        F(x) = \int_\Omega f_{\gamma}(\|x(y)\|_2) dy
 
-    where :mth:`||\cdot||_2` denotes the Euclidean norm for vector-valued
+    where :mth:`\|\cdot\|_2` denotes the Euclidean norm for vector-valued
     functions which reduces to the absolute value for scalar-valued functions.
-    The function :math:`f` with smoothing :math:`\\gamma` is given by
+    The function :math:`f` with smoothing :math:`\gamma` is given by
 
     .. math::
-        f_{\\gamma}(t) =
-        \\begin{cases}
-            \\frac{1}{2 \\gamma} t^2 & \\text{if } |t| \leq \\gamma \\\\
-            |t| - \\frac{\\gamma}{2} & \\text{else}
-        \\end{cases}.
+        f_{\gamma}(t) =
+        \begin{cases}
+            \frac{1}{2 \gamma} t^2 & \text{if } |t| \leq \gamma \\
+            |t| - \frac{\gamma}{2} & \text{else}
+        \end{cases}.
     """
 
     def __init__(self, space, gamma):
@@ -2421,16 +2428,16 @@ class Huber(Functional):
 
     @property
     def gradient(self):
-        """Gradient operator of the functional.
+        r"""Gradient operator of the functional.
 
         The gradient of the Huber functional is given by
 
             .. math::
-                \\nabla f_{\\gamma}(x) =
-                \\begin{cases}
-                \\frac{1}{\\gamma} x & \\text{if } \|x\|_2 \leq \\gamma \\\\
-                \\frac{1}{\|x\|_2} x & \\text{else}
-                \\end{cases}.
+                \nabla f_{\gamma}(x) =
+                \begin{cases}
+                \frac{1}{\gamma} x & \text{if } \|x\|_2 \leq \gamma \\
+                \frac{1}{\|x\|_2} x & \text{else}
+                \end{cases}.
 
         Examples
         --------
