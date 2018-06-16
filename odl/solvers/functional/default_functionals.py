@@ -1018,7 +1018,7 @@ class IndicatorZero(Functional):
 
 class KullbackLeibler(Functional):
 
-    """The Kullback-Leibler divergence functional.
+    r"""The Kullback-Leibler divergence functional.
 
     Notes
     -----
@@ -1027,12 +1027,12 @@ class KullbackLeibler(Functional):
     .. math::
         F(x)
         =
-        \\begin{cases}
-            \\sum_{i} \left( x_i - g_i + g_i \log \left( \\frac{g_i}{x_i}
-            \\right) \\right) & \\text{if } x_i > 0 \\forall i
-            \\\\
-            +\\infty & \\text{else.}
-        \\end{cases}
+        \begin{cases}
+            \int \left( x(t) - g(t) + g(t) \log \left( \frac{g(t)}{x(t)}
+            \right) \right) dt & \text{if } x(t) > 0  \; \forall t
+            \\
+            +\infty & \text{else.}
+        \end{cases}
 
     Note that we use the common definition 0 log(0) := 0.
     KL based objectives are common in MLEM optimization problems and are often
@@ -1128,10 +1128,10 @@ class KullbackLeibler(Functional):
 
     @property
     def gradient(self):
-        """The gradient of `KullbackLeibler` with ``prior`` :math:`g` is given as
+        r"""The gradient of `KullbackLeibler` with ``prior`` :math:`g` is given as
 
         .. math::
-            \\nabla F(x) = 1 - \frac{g}{x}.
+            \nabla F(x) = 1 - \frac{g}{x}.
 
         The gradient is not defined in points where one or more components
         are non-positive.
@@ -1186,7 +1186,7 @@ class KullbackLeibler(Functional):
 
 class KullbackLeiblerConvexConj(Functional):
 
-    """The convex conjugate of Kullback-Leibler divergence functional.
+    r"""The convex conjugate of Kullback-Leibler divergence functional.
 
     Notes
     -----
@@ -1195,12 +1195,12 @@ class KullbackLeiblerConvexConj(Functional):
     .. math::
         F^*(x)
         =
-        \\begin{cases}
-            \\sum_{i} \left( -g_i \ln(1 - x_i) \\right)
-            & \\text{if } x_i < 1 \\forall i
-            \\\\
-            +\\infty & \\text{else}
-        \\end{cases}
+        \begin{cases}
+            \int \left( -g(t) \ln(1 - x(t)) \right)
+            & \text{if } x(t) < 1 \; \forall t
+            \\
+            +\infty & \text{else.}
+        \end{cases}
 
     See Also
     --------
@@ -1312,7 +1312,7 @@ class KullbackLeiblerConvexConj(Functional):
 
 class KullbackLeiblerCrossEntropy(Functional):
 
-    """The Kullback-Leibler Cross Entropy divergence functional.
+    r"""The Kullback-Leibler Cross Entropy divergence functional.
 
     Notes
     -----
@@ -1321,13 +1321,13 @@ class KullbackLeiblerCrossEntropy(Functional):
     .. math::
         F(x)
         =
-        \\begin{cases}
-            \\sum_{i} \left( g_i - x_i + x_i \log \left( \\frac{x_i}{g_i}
-            \\right) \\right)
-            & \\text{if } g_i > 0 \\forall i
-            \\\\
-            +\\infty & \\text{else}
-        \\end{cases}
+        \begin{cases}
+            \int \left( g(t) - x(t) + x(t) \log \left( \frac{x(t)}{g(t)}
+            \right) \right) dt
+            & \text{if } g(t) > 0 \; \forall t
+            \\
+            +\infty & \text{else.}
+        \end{cases}
 
     For further information about the functional, see the
     `Wikipedia article on the Kullback Leibler divergence
@@ -1467,14 +1467,14 @@ proximal_convex_conj_kl_cross_entropy :
 
 
 class KullbackLeiblerCrossEntropyConvexConj(Functional):
-    """The convex conjugate of Kullback-Leibler Cross Entorpy functional.
+    r"""The convex conjugate of Kullback-Leibler Cross Entorpy functional.
 
     Notes
     -----
     The functional :math:`F^*` with prior :math:`g>0` is given by
 
     .. math::
-        F^*(x) = \\sum_i g_i \\left(e^{x_i} - 1\\right)
+        F^*(x) = \int g(t) \left(e^{x(t)} - 1\right) dt
 
     See Also
     --------
