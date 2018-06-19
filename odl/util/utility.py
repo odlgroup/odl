@@ -1285,9 +1285,9 @@ def attribute_repr_string(inst_str, attr_str):
         # no parentheses -> keep instance string as-is and append attr string
         parts = [inst_str, attr_str]
     else:
-        leftsplit = inst_str.split('(', maxsplit=1)
-        left, rest = leftsplit
-        right, middle = rest[::-1].split(')', maxsplit=1)
+        # TODO(kohr-h): use `maxsplit=1` kwarg, not supported in Py 2
+        left, rest = inst_str.split('(', 1)
+        right, middle = rest[::-1].split(')', 1)
         middle, right = middle[::-1], right[::-1]
 
         if middle.startswith('\n') and middle.endswith('\n'):
@@ -1391,8 +1391,9 @@ def method_repr_string(inst_str, meth_str, arg_strs=None,
         # Length of the line to the end of the method name
         meth_line_start_len = len(inst_str) + 1 + len(meth_str)
     else:
-        left, rest = inst_str.split('(', maxsplit=1)
-        right, middle = rest[::-1].split(')', maxsplit=1)
+        # TODO(kohr-h): use `maxsplit=1` kwarg, not supported in Py 2
+        left, rest = inst_str.split('(', 1)
+        right, middle = rest[::-1].split(')', 1)
         middle, right = middle[::-1], right[::-1]
         if middle.startswith('\n') and middle.endswith('\n'):
             # Already on multiple lines
