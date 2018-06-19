@@ -1,4 +1,4 @@
-﻿# Copyright 2014-2017 The ODL contributors
+﻿# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,20 +8,21 @@
 
 """Base classes for implementations of tensor spaces."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 from builtins import object
 from numbers import Integral
+
 import numpy as np
 
-from odl.set.sets import RealNumbers, ComplexNumbers
+from odl.set.sets import ComplexNumbers, RealNumbers
 from odl.set.space import LinearSpace, LinearSpaceElement
 from odl.util import (
-    is_numeric_dtype, is_real_dtype, is_floating_dtype,
-    is_real_floating_dtype, is_complex_floating_dtype, safe_int_conv,
-    array_str, dtype_str, signature_string, indent, writable_array)
+    array_str, dtype_str, method_repr_string, is_complex_floating_dtype,
+    is_floating_dtype, is_numeric_dtype, is_real_dtype, is_real_floating_dtype,
+    repr_string, safe_int_conv, signature_string_parts, writable_array)
 from odl.util.ufuncs import TensorSpaceUfuncs
-from odl.util.utility import TYPE_MAP_R2C, TYPE_MAP_C2R
-
+from odl.util.utility import TYPE_MAP_C2R, TYPE_MAP_R2C
 
 __all__ = ('TensorSpace',)
 
@@ -258,6 +259,21 @@ class TensorSpace(LinearSpace):
         else:
             return self._astype(dtype)
 
+    def asweighted(self, weighting):
+        """Return a copy of this space with new ``weighting``."""
+        if weighting == self.weighting:  # let `AttributeError` bubble up
+            return self
+        else:
+            return self._asweighted(weighting)
+
+    def _asweighted(self, weighting):
+        """Internal helper for `asweighted`.
+
+        Subclasses with differing init parameters should overload this
+        method.
+        """
+        return type(self)(self.shape, dtype=self.dtype, weighting=weighting)
+
     @property
     def default_order(self):
         """Default storage order for new elements in this space.
@@ -399,12 +415,8 @@ class TensorSpace(LinearSpace):
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = [self.shape, dtype_str(self.dtype)]
-        return "{}({})".format(self.__class__.__name__,
-                               signature_string(posargs, []))
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        return repr(self)
+        inner_parts = signature_string_parts(posargs, [])
+        return repr_string(self.__class__.__name__, inner_parts)
 
     @property
     def examples(self):
@@ -427,7 +439,8 @@ class TensorSpace(LinearSpace):
                    self.element(np.random.uniform(size=self.shape) +
                                 np.random.uniform(size=self.shape) * 1j))
         else:
-            # TODO: return something that always works, like zeros or ones?
+            # TODO(kohr-h): return something that always works, like zeros
+            # or ones?
             raise NotImplementedError('no examples available for non-numeric'
                                       'data type')
 
@@ -627,13 +640,18 @@ class Tensor(LinearSpaceElement):
         raise NotImplementedError('abstract method')
 
     def __repr__(self):
-        """Return ``repr(self)``."""
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> rn = odl.rn(3)
+        >>> x = rn.element([1, 2, 3])
+        >>> x
+        rn(3).element([ 1.,  2.,  3.])
+        """
         maxsize_full_print = 2 * np.get_printoptions()['edgeitems']
         self_str = array_str(self, nprint=maxsize_full_print)
-        if self.ndim == 1 and self.size <= maxsize_full_print:
-            return '{!r}.element({})'.format(self.space, self_str)
-        else:
-            return '{!r}.element(\n{}\n)'.format(self.space, indent(self_str))
+        return method_repr_string(repr(self.space), 'element', [self_str])
 
     def __str__(self):
         """Return ``str(self)``."""

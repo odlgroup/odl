@@ -1,4 +1,4 @@
-﻿# Copyright 2014-2017 The ODL contributors
+﻿# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,16 +8,20 @@
 
 """Abstract mathematical operators."""
 
-from __future__ import print_function, division, absolute_import
-from builtins import object
+from __future__ import absolute_import, division, print_function
+
 import inspect
-from numbers import Number, Integral
 import sys
+from builtins import object
+from numbers import Integral, Number
 
-from odl.set import LinearSpace, Set, Field
+import numpy as np
+
+from odl.set import Field, LinearSpace, Set
 from odl.set.space import LinearSpaceElement
-from odl.util import cache_arguments
-
+from odl.util import (
+    REPR_PRECISION, cache_arguments, npy_printoptions, repr_string,
+    signature_string_parts)
 
 __all__ = ('Operator', 'OperatorComp', 'OperatorSum', 'OperatorVectorSum',
            'OperatorLeftScalarMult', 'OperatorRightScalarMult',
@@ -576,9 +580,8 @@ class Operator(object):
         OpNotImplementedError
             Since the adjoint cannot be default implemented.
         """
-        raise OpNotImplementedError('adjoint not implemented '
-                                    'for operator {!r}'
-                                    ''.format(self))
+        raise OpNotImplementedError(
+            'adjoint not implemented for operator {!r}'.format(self))
 
     def derivative(self, point):
         """Return the operator derivative at ``point``.
@@ -592,9 +595,8 @@ class Operator(object):
         if self.is_linear:
             return self
         else:
-            raise OpNotImplementedError('derivative not implemented '
-                                        'for operator {!r}'
-                                        ''.format(self))
+            raise OpNotImplementedError(
+                'derivative not implemented for operator {!r}'.format(self))
 
     @property
     def inverse(self):
@@ -605,8 +607,8 @@ class Operator(object):
         OpNotImplementedError
             Since the inverse cannot be default implemented.
         """
-        raise OpNotImplementedError('inverse not implemented for operator {!r}'
-                                    ''.format(self))
+        raise OpNotImplementedError(
+            'inverse not implemented for operator {!r}'.format(self))
 
     def __call__(self, x, out=None, **kwargs):
         """Return ``self(x[, out, **kwargs])``.
@@ -723,8 +725,8 @@ class Operator(object):
         Some operators know their own operator norm and do not need an estimate
 
         >>> spc = odl.rn(3)
-        >>> id = odl.IdentityOperator(spc)
-        >>> id.norm(True)
+        >>> op = odl.IdentityOperator(spc)
+        >>> op.norm(estimate=True)
         1.0
 
         For others, there is no closed form expression and an estimate is
@@ -735,9 +737,10 @@ class Operator(object):
         >>> opnorm = grad.norm(estimate=True)
         """
         if not estimate:
-            raise NotImplementedError('`Operator.norm()` not implemented, use '
-                                      '`Operator.norm(estimate=True)` to '
-                                      'obtain an estimate.')
+            raise OpNotImplementedError(
+                '`norm` not implemented for operator {!r}, use '
+                '`Operator.norm(estimate=True)` to obtain an estimate.'
+                ''.format(self))
         else:
             norm = getattr(self, '__norm', None)
             if norm is not None:
@@ -846,8 +849,8 @@ class Operator(object):
         >>> x = rn.element([1, 2, 3])
         >>> op(x)
         rn(3).element([ 1.,  2.,  3.])
-        >>> Scaled = op * 3
-        >>> Scaled(x)
+        >>> scaled = op * 3
+        >>> scaled(x)
         rn(3).element([ 3.,  6.,  9.])
         """
         if isinstance(other, Operator):
@@ -928,8 +931,8 @@ class Operator(object):
         >>> x = rn.element([1, 2, 3])
         >>> op(x)
         rn(3).element([ 1.,  2.,  3.])
-        >>> Scaled = 3 * op
-        >>> Scaled(x)
+        >>> scaled = 3 * op
+        >>> scaled(x)
         rn(3).element([ 3.,  6.,  9.])
         """
         if isinstance(other, Operator):
@@ -1021,8 +1024,8 @@ class Operator(object):
         >>> x = rn.element([3, 6, 9])
         >>> op(x)
         rn(3).element([ 3.,  6.,  9.])
-        >>> Scaled = op / 3.0
-        >>> Scaled(x)
+        >>> scaled = op / 3.0
+        >>> scaled(x)
         rn(3).element([ 1.,  2.,  3.])
         """
         if isinstance(other, Number):
@@ -1049,18 +1052,25 @@ class Operator(object):
         The default `repr` implementation. Should be overridden by
         subclasses.
         """
-        return '{}: {!r} -> {!r}'.format(self.__class__.__name__, self.domain,
-                                         self.range)
+        linewidth = np.get_printoptions()['linewidth']
+        oneline_str = '{}: {!r} -> {!r}'.format(self.__class__.__name__,
+                                                self.domain, self.range)
+        if len(oneline_str) <= linewidth:
+            return oneline_str
+        else:
+            return '{}:\n    {!r} ->\n    {!r}'.format(self.__class__.__name__,
+                                                       self.domain,
+                                                       self.range)
 
     def __str__(self):
         """Return ``str(self)``.
 
-        The default string implementation. Should be overridden by
-        subclasses.
+        By default, ``str(self)`` is the same as ``repr(self)``. Subclasses
+        that need a different behavior should override this method.
         """
-        return self.__class__.__name__
+        return repr(self)
 
-    # Give a `Operator` a higher priority than any NumPy array type. This
+    # Give an `Operator` a higher priority than any NumPy array type. This
     # forces the usage of `__op__` of `Operator` if the other operand
     # is a NumPy object (applies also to scalars!).
     # Set higher than LinearSpaceElement.__array_priority__ to handle
@@ -1103,11 +1113,11 @@ class OperatorSum(Operator):
         >>> op = odl.IdentityOperator(r3)
         >>> x = r3.element([1, 2, 3])
         >>> out = r3.element()
-        >>> OperatorSum(op, op)(x, out)  # In-place, returns out
+        >>> odl.OperatorSum(op, op)(x, out)  # In-place, returns out
         rn(3).element([ 2.,  4.,  6.])
         >>> out
         rn(3).element([ 2.,  4.,  6.])
-        >>> OperatorSum(op, op)(x)
+        >>> odl.OperatorSum(op, op)(x)
         rn(3).element([ 2.,  4.,  6.])
         """
         if left.range != right.range:
@@ -1204,8 +1214,10 @@ class OperatorSum(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r}, {!r})'.format(self.__class__.__name__,
-                                       self.left, self.right)
+        posargs = [self.left, self.right]
+        inner_parts = signature_string_parts(posargs, [])
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -1234,8 +1246,8 @@ class OperatorVectorSum(Operator):
         --------
         >>> r3 = odl.rn(3)
         >>> y = r3.element([1, 2, 3])
-        >>> ident_op = odl.IdentityOperator(r3)
-        >>> sum_op = odl.OperatorVectorSum(ident_op, y)
+        >>> I = odl.IdentityOperator(r3)
+        >>> sum_op = odl.OperatorVectorSum(I, y)
         >>> x = r3.element([4, 5, 6])
         >>> sum_op(x)
         rn(3).element([ 5.,  7.,  9.])
@@ -1298,12 +1310,15 @@ class OperatorVectorSum(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r}, {!r})'.format(self.__class__.__name__,
-                                       self.operator, self.vector)
+        posargs = [self.operator, self.vector]
+        with npy_printoptions(precision=REPR_PRECISION):
+            inner_parts = signature_string_parts(posargs, [])
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
     def __str__(self):
         """Return ``str(self)``."""
-        return '({} + {})'.format(self.left, self.right)
+        return '({} + {})'.format(self.operator, self.vector)
 
 
 class OperatorComp(Operator):
@@ -1321,7 +1336,7 @@ class OperatorComp(Operator):
         Parameters
         ----------
         left : `Operator`
-            The left ("outer") operator
+            The left ("outer") operator.
         right : `Operator`
             The right ("inner") operator. Its range must coincide with the
             domain of ``left``.
@@ -1436,8 +1451,10 @@ class OperatorComp(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r}, {!r})'.format(self.__class__.__name__,
-                                       self.left, self.right)
+        posargs = [self.left, self.right]
+        inner_parts = signature_string_parts(posargs, [])
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -1456,11 +1473,9 @@ class OperatorPointwiseProduct(Operator):
 
         Parameters
         ----------
-        left : `Operator`
-            The first factor
-        right : `Operator`
-            The second factor. Must have the same domain and range as
-            ``left``.
+        left, right : `Operator`
+            Factors in the pointwise product. They must have the same domain
+            and range.
         """
         if left.range != right.range:
             raise OpTypeError('operator ranges {!r} and {!r} do not match'
@@ -1510,12 +1525,10 @@ class OperatorPointwiseProduct(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r}, {!r})'.format(self.__class__.__name__,
-                                       self.left, self.right)
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        return repr(self)
+        posargs = [self.left, self.right]
+        inner_parts = signature_string_parts(posargs, [])
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
 
 class OperatorLeftScalarMult(Operator):
@@ -1543,8 +1556,8 @@ class OperatorLeftScalarMult(Operator):
         Examples
         --------
         >>> space = odl.rn(3)
-        >>> operator = odl.IdentityOperator(space)
-        >>> left_mul_op = OperatorLeftScalarMult(operator, 3)
+        >>> I = odl.IdentityOperator(space)
+        >>> left_mul_op = odl.OperatorLeftScalarMult(I, 3)
         >>> left_mul_op([1, 2, 3])
         rn(3).element([ 3.,  6.,  9.])
         """
@@ -1601,8 +1614,8 @@ class OperatorLeftScalarMult(Operator):
         Examples
         --------
         >>> space = odl.rn(3)
-        >>> operator = odl.IdentityOperator(space)
-        >>> left_mul_op = OperatorLeftScalarMult(operator, 3)
+        >>> I = odl.IdentityOperator(space)
+        >>> left_mul_op = odl.OperatorLeftScalarMult(I, 3)
         >>> left_mul_op.inverse([3, 3, 3])
         rn(3).element([ 1.,  1.,  1.])
         """
@@ -1631,8 +1644,8 @@ class OperatorLeftScalarMult(Operator):
         Examples
         --------
         >>> space = odl.rn(3)
-        >>> operator = odl.IdentityOperator(space) - space.element([1, 1, 1])
-        >>> left_mul_op = OperatorLeftScalarMult(operator, 3)
+        >>> op = odl.IdentityOperator(space) - space.element([1, 1, 1])
+        >>> left_mul_op = odl.OperatorLeftScalarMult(op, 3)
         >>> derivative = left_mul_op.derivative([0, 0, 0])
         >>> derivative([1, 1, 1])
         rn(3).element([ 3.,  3.,  3.])
@@ -1660,8 +1673,8 @@ class OperatorLeftScalarMult(Operator):
         Examples
         --------
         >>> space = odl.rn(3)
-        >>> operator = odl.IdentityOperator(space)
-        >>> left_mul_op = OperatorLeftScalarMult(operator, 3)
+        >>> I = odl.IdentityOperator(space)
+        >>> left_mul_op = odl.OperatorLeftScalarMult(I, 3)
         >>> left_mul_op.adjoint([1, 2, 3])
         rn(3).element([ 3.,  6.,  9.])
         """
@@ -1673,8 +1686,11 @@ class OperatorLeftScalarMult(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r}, {!r})'.format(self.__class__.__name__,
-                                       self.operator, self.scalar)
+        posargs = [self.operator, self.scalar]
+        with npy_printoptions(precision=REPR_PRECISION):
+            inner_parts = signature_string_parts(posargs, [])
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -1709,9 +1725,9 @@ class OperatorRightScalarMult(Operator):
         Examples
         --------
         >>> space = odl.rn(3)
-        >>> operator = odl.IdentityOperator(space)
-        >>> left_mul_op = OperatorRightScalarMult(operator, 3)
-        >>> left_mul_op([1, 2, 3])
+        >>> I = odl.IdentityOperator(space)
+        >>> right_mul_op = odl.OperatorRightScalarMult(I, 3)
+        >>> right_mul_op([1, 2, 3])
         rn(3).element([ 3.,  6.,  9.])
         """
         if not isinstance(operator.domain, (LinearSpace, Field)):
@@ -1788,9 +1804,9 @@ class OperatorRightScalarMult(Operator):
         Examples
         --------
         >>> space = odl.rn(3)
-        >>> operator = odl.IdentityOperator(space)
-        >>> left_mul_op = OperatorRightScalarMult(operator, 3)
-        >>> left_mul_op.inverse([3, 3, 3])
+        >>> I = odl.IdentityOperator(space)
+        >>> right_mul_op = odl.OperatorRightScalarMult(I, 3)
+        >>> right_mul_op.inverse([3, 3, 3])
         rn(3).element([ 1.,  1.,  1.])
         """
         if self.scalar == 0.0:
@@ -1815,9 +1831,9 @@ class OperatorRightScalarMult(Operator):
         Examples
         --------
         >>> space = odl.rn(3)
-        >>> operator = odl.IdentityOperator(space) - space.element([1, 1, 1])
-        >>> left_mul_op = OperatorRightScalarMult(operator, 3)
-        >>> derivative = left_mul_op.derivative([0, 0, 0])
+        >>> op = odl.IdentityOperator(space) - space.element([1, 1, 1])
+        >>> right_mul_op = odl.OperatorRightScalarMult(op, 3)
+        >>> derivative = right_mul_op.derivative([0, 0, 0])
         >>> derivative([1, 1, 1])
         rn(3).element([ 3.,  3.,  3.])
         """
@@ -1841,9 +1857,9 @@ class OperatorRightScalarMult(Operator):
         Examples
         --------
         >>> space = odl.rn(3)
-        >>> operator = odl.IdentityOperator(space)
-        >>> left_mul_op = OperatorRightScalarMult(operator, 3)
-        >>> left_mul_op.adjoint([1, 2, 3])
+        >>> I = odl.IdentityOperator(space)
+        >>> right_mul_op = odl.OperatorRightScalarMult(I, 3)
+        >>> right_mul_op.adjoint([1, 2, 3])
         rn(3).element([ 3.,  6.,  9.])
         """
 
@@ -1854,8 +1870,11 @@ class OperatorRightScalarMult(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r}, {!r})'.format(self.__class__.__name__,
-                                       self.operator, self.scalar)
+        posargs = [self.operator, self.scalar]
+        with npy_printoptions(precision=REPR_PRECISION):
+            inner_parts = signature_string_parts(posargs, [])
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -1893,7 +1912,7 @@ class FunctionalLeftVectorMult(Operator):
         >>> space = odl.rn(3)
         >>> y = space.element([1, 2, 3])
         >>> functional = odl.InnerProductOperator(y)
-        >>> left_mul_op = FunctionalLeftVectorMult(functional, y)
+        >>> left_mul_op = odl.FunctionalLeftVectorMult(functional, y)
         >>> left_mul_op([1, 2, 3])
         rn(3).element([ 14.,  28.,  42.])
         """
@@ -1970,8 +1989,11 @@ class FunctionalLeftVectorMult(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r}, {!r})'.format(self.__class__.__name__,
-                                       self.functional, self.vector)
+        posargs = [self.functional, self.vector]
+        with npy_printoptions(precision=REPR_PRECISION):
+            inner_parts = signature_string_parts(posargs, [])
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -1991,9 +2013,9 @@ class OperatorLeftVectorMult(Operator):
         Parameters
         ----------
         operator : `Operator`
-            The range of ``op`` must be a `LinearSpace`.
+            The operator in the product. Its range must be a `LinearSpace`.
         vector : `LinearSpaceElement` in ``op.range``
-            The vector to multiply by
+            The vector to multiply with.
         """
         if vector not in operator.range:
             raise OpRangeError('`vector` {!r} not in operator.range {!r}'
@@ -2083,8 +2105,11 @@ class OperatorLeftVectorMult(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r}, {!r})'.format(self.__class__.__name__,
-                                       self.operator, self.vector)
+        posargs = [self.operator, self.vector]
+        with npy_printoptions(precision=REPR_PRECISION):
+            inner_parts = signature_string_parts(posargs, [])
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -2203,8 +2228,11 @@ class OperatorRightVectorMult(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r}, {!r})'.format(self.__class__.__name__,
-                                       self.operator, self.vector)
+        posargs = [self.operator, self.vector]
+        with npy_printoptions(precision=REPR_PRECISION):
+            inner_parts = signature_string_parts(posargs, [])
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
     def __str__(self):
         """Return ``str(self)``."""

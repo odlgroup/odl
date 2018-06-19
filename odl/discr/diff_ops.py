@@ -503,7 +503,7 @@ class Divergence(PointwiseTensorFieldOperator):
 
         >>> g = div.range.element(data ** 2)
         >>> adj_div_g = div.adjoint(g)
-        >>> g.inner(div_f) / f.inner(adj_div_g)
+        >>> div(f).inner(g) / f.inner(div.adjoint(g))
         1.0
         """
         if domain is None and range is None:
