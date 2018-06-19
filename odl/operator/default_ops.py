@@ -1396,10 +1396,10 @@ class ImagPart(Operator):
             # Zero case
             return ZeroOperator(self.range, self.domain)
         elif self.domain.is_complex and self.range.is_complex:
-            # Self case
-            return ImagPart(self.range, self.domain)
+            # "Self" case
+            return 1j * ImagPart(self.range, self.domain)
         else:
-            return ComplexEmbedding(self.range, self.domain, scalar=1)
+            return ComplexEmbedding(self.range, self.domain, scalar=1j)
 
     @property
     def adjoint(self):

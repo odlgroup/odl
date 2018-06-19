@@ -26,7 +26,7 @@ __all__ = ('ProductSpaceOperator', 'ComponentProjection',
 
 class ProductSpaceOperator(Operator):
 
-    """A "matrix of operators" on product spaces.
+    r"""A "matrix of operators" on product spaces.
 
     For example a matrix of operators can act on a vector by
 
@@ -39,49 +39,46 @@ class ProductSpaceOperator(Operator):
     as a linear combination of "sub-operators", e.g.
 
     .. math::
-        \\left(
-        \\begin{array}{ccc}
-        A & B & 0 \\\\
-        0 & C & 0 \\\\
+        \left(
+        \begin{array}{ccc}
+        A & B & 0 \\
+        0 & C & 0 \\
         0 & 0 & D
-        \end{array}\\right)
-        \\left(
-        \\begin{array}{c}
-        x \\\\
-        y \\\\
+        \end{array}\right)
+        \left(
+        \begin{array}{c}
+        x \\
+        y \\
         z
-        \end{array}\\right)
+        \end{array}\right)
         =
-        \\left(
-        \\begin{array}{c}
-        A(x) + B(y) \\\\
-        C(y) \\\\
+        \left(
+        \begin{array}{c}
+        A(x) + B(y) \\
+        C(y) \\
         D(z)
-        \end{array}\\right)
+        \end{array}\right)
 
     Mathematically, a `ProductSpaceOperator` is an operator
 
     .. math::
-        \mathcal{A}: \mathcal{X} \\to \mathcal{Y}
+        A: X \to Y
 
     between product spaces
-    :math:`\mathcal{X}=\mathcal{X}_1 \\times\dots\\times \mathcal{X}_m`
-    and
-    :math:`\mathcal{Y}=\mathcal{Y}_1 \\times\dots\\times \mathcal{Y}_n`
-    which can be written in the form
+    :math:`X = X_1 \times\dots\times X_m` and
+    :math:`Y = Y_1 \times\dots\times Y_n`, which can be written in the form
 
     .. math::
-        \mathcal{A} = (\mathcal{A}_{ij})_{i,j},  \quad
-                          i = 1, \dots, n, \\ j = 1, \dots, m
+        A = (A_{ij})_{i,j}, \quad i = 1, \dots, n, \ j = 1, \dots, m
 
     with *component operators*
-    :math:`\mathcal{A}_{ij}: \mathcal{X}_j \\to \mathcal{Y}_i`.
+    :math:`A_{ij}: X_j \to Y_i`.
 
     Its action on a vector :math:`x = (x_1, \dots, x_m)` is defined as
     the matrix multiplication
 
     .. math::
-        [\mathcal{A}(x)]_i = \sum_{j=1}^m \mathcal{A}_{ij}(x_j).
+        [A(x)]_i = \sum_{j=1}^m A_{ij}(x_j).
 
     See Also
     --------
@@ -118,11 +115,9 @@ class ProductSpaceOperator(Operator):
 
         >>> prod_op = odl.ProductSpaceOperator([[I, I]])
         >>> prod_op(x)
-        ProductSpace(rn(3), 1).element(
-            [
-              [ 5.,  7.,  9.]
-            ]
-        )
+        ProductSpace(rn(3), 1).element([
+          [ 5.,  7.,  9.]
+        ])
 
         Diagonal operator -- 0 or ``None`` means ignore, or the implicit
         zero operator:
@@ -130,12 +125,10 @@ class ProductSpaceOperator(Operator):
         >>> prod_op = odl.ProductSpaceOperator([[I, 0],
         ...                                     [0, I]])
         >>> prod_op(x)
-        ProductSpace(rn(3), 2).element(
-            [
-              [ 1.,  2.,  3.],
-              [ 4.,  5.,  6.]
-            ]
-        )
+        ProductSpace(rn(3), 2).element([
+          [ 1.,  2.,  3.],
+          [ 4.,  5.,  6.]
+        ])
 
         If a column is empty, the operator domain must be specified. The
         same holds for an empty row and the range of the operator:
@@ -143,21 +136,17 @@ class ProductSpaceOperator(Operator):
         >>> prod_op = odl.ProductSpaceOperator([[I, 0],
         ...                                     [I, 0]], domain=r3 ** 2)
         >>> prod_op(x)
-        ProductSpace(rn(3), 2).element(
-            [
-              [ 1.,  2.,  3.],
-              [ 1.,  2.,  3.]
-            ]
-        )
+        ProductSpace(rn(3), 2).element([
+          [ 1.,  2.,  3.],
+          [ 1.,  2.,  3.]
+        ])
         >>> prod_op = odl.ProductSpaceOperator([[I, I],
         ...                                     [0, 0]], range=r3 ** 2)
         >>> prod_op(x)
-        ProductSpace(rn(3), 2).element(
-            [
-              [ 5.,  7.,  9.],
-              [ 0.,  0.,  0.]
-            ]
-        )
+        ProductSpace(rn(3), 2).element([
+          [ 5.,  7.,  9.],
+          [ 0.,  0.,  0.]
+        ])
         """
         # Lazy import to improve `import odl` time
         import scipy.sparse
@@ -349,19 +338,15 @@ class ProductSpaceOperator(Operator):
         ...                                     [0, 0]],
         ...                                    domain=pspace, range=pspace)
         >>> prod_op(x)
-        ProductSpace(rn(3), 2).element(
-            [
-              [ 4.,  5.,  6.],
-              [ 0.,  0.,  0.]
-            ]
-        )
+        ProductSpace(rn(3), 2).element([
+          [ 4.,  5.,  6.],
+          [ 0.,  0.,  0.]
+        ])
         >>> prod_op.derivative(x)(x)
-        ProductSpace(rn(3), 2).element(
-            [
-              [ 4.,  5.,  6.],
-              [ 0.,  0.,  0.]
-            ]
-        )
+        ProductSpace(rn(3), 2).element([
+          [ 4.,  5.,  6.],
+          [ 0.,  0.,  0.]
+        ])
 
         Example with affine operator
 
@@ -373,22 +358,18 @@ class ProductSpaceOperator(Operator):
         Calling operator gives offset by [1, 1, 1]:
 
         >>> op(x)
-        ProductSpace(rn(3), 2).element(
-            [
-              [ 3.,  4.,  5.],
-              [ 0.,  0.,  0.]
-            ]
-        )
+        ProductSpace(rn(3), 2).element([
+          [ 3.,  4.,  5.],
+          [ 0.,  0.,  0.]
+        ])
 
         Derivative of affine operator does not have this offset
 
         >>> op.derivative(x)(x)
-        ProductSpace(rn(3), 2).element(
-            [
-              [ 4.,  5.,  6.],
-              [ 0.,  0.,  0.]
-            ]
-        )
+        ProductSpace(rn(3), 2).element([
+          [ 4.,  5.,  6.],
+          [ 0.,  0.,  0.]
+        ])
         """
         # Lazy import to improve `import odl` time
         import scipy.sparse
@@ -435,19 +416,15 @@ class ProductSpaceOperator(Operator):
         ...                                     [0, 0]],
         ...                                    domain=pspace, range=pspace)
         >>> prod_op(x)
-        ProductSpace(rn(3), 2).element(
-            [
-              [ 4.,  5.,  6.],
-              [ 0.,  0.,  0.]
-            ]
-        )
+        ProductSpace(rn(3), 2).element([
+          [ 4.,  5.,  6.],
+          [ 0.,  0.,  0.]
+        ])
         >>> prod_op.adjoint(x)
-        ProductSpace(rn(3), 2).element(
-            [
-              [ 0.,  0.,  0.],
-              [ 1.,  2.,  3.]
-            ]
-        )
+        ProductSpace(rn(3), 2).element([
+          [ 0.,  0.,  0.],
+          [ 1.,  2.,  3.]
+        ])
         """
         # Lazy import to improve `import odl` time
         import scipy.sparse
@@ -601,20 +578,20 @@ class ProductSpaceOperator(Operator):
 
 class ComponentProjection(Operator):
 
-    """Projection onto the subspace identified by an index.
+    r"""Projection onto the subspace identified by an index.
 
-    For a product space :math:`\mathcal{X} = \mathcal{X}_1 \\times \dots
-    \\times \mathcal{X}_n`, the component projection
+    For a product space :math:`X = X_1 \times \dots
+    \times X_n`, the component projection
 
     .. math::
-       \mathcal{P}_i: \mathcal{X} \\to \mathcal{X}_i
+       \mathcal{P}_i: X \to X_i
 
     is given by :math:`\mathcal{P}_i(x) = x_i` for an element
-    :math:`x = (x_1, \dots, x_n) \\in \mathcal{X}`.
+    :math:`x = (x_1, \dots, x_n) \in X`.
 
     More generally, for an index set :math:`I \subset \{1, \dots, n\}`,
     the projection operator :math:`\mathcal{P}_I` is defined by
-    :math:`\mathcal{P}_I(x) = (x_i)_{i \\in I}`.
+    :math:`\mathcal{P}_I(x) = (x_i)_{i \in I}`.
 
     Note that this is a special case of a product space operator where
     the "operator matrix" has only one row and contains only
@@ -652,12 +629,10 @@ class ComponentProjection(Operator):
 
         >>> proj = odl.ComponentProjection(pspace, [0, 2])
         >>> proj(x)
-        ProductSpace(rn(1), rn(3)).element(
-            [
-              [ 1.],
-              [ 4.,  5.,  6.]
-            ]
-        )
+        ProductSpace(rn(1), rn(3)).element([
+          [ 1.],
+          [ 4.,  5.,  6.]
+        ])
         """
         if np.isscalar(index):
             self.__index = int(index)
@@ -802,12 +777,10 @@ class BroadcastOperator(Operator):
 
         >>> x = [1, 2, 3]
         >>> op(x)
-        ProductSpace(rn(3), 2).element(
-            [
-              [ 1.,  2.,  3.],
-              [ 2.,  4.,  6.]
-            ]
-        )
+        ProductSpace(rn(3), 2).element([
+          [ 1.,  2.,  3.],
+          [ 2.,  4.,  6.]
+        ])
 
         Can also initialize by calling an operator repeatedly:
 
@@ -880,22 +853,18 @@ class BroadcastOperator(Operator):
 
         >>> x = [1, 2, 3]
         >>> op(x)
-        ProductSpace(rn(3), 2).element(
-            [
-              [ 0.,  1.,  2.],
-              [ 0.,  2.,  4.]
-            ]
-        )
+        ProductSpace(rn(3), 2).element([
+          [ 0.,  1.,  2.],
+          [ 0.,  2.,  4.]
+        ])
 
         The derivative of this affine operator does not have an offset:
 
         >>> op.derivative(x)(x)
-        ProductSpace(rn(3), 2).element(
-            [
-              [ 1.,  2.,  3.],
-              [ 2.,  4.,  6.]
-            ]
-        )
+        ProductSpace(rn(3), 2).element([
+          [ 1.,  2.,  3.],
+          [ 2.,  4.,  6.]
+        ])
         """
         return BroadcastOperator(*[op.derivative(x) for op in
                                    self.operators])
@@ -1102,12 +1071,10 @@ class ReductionOperator(Operator):
         >>> I = odl.IdentityOperator(odl.rn(3))
         >>> op = ReductionOperator(I, 2 * I)
         >>> op.adjoint([1, 2, 3])
-        ProductSpace(rn(3), 2).element(
-            [
-              [ 1.,  2.,  3.],
-              [ 2.,  4.,  6.]
-            ]
-        )
+        ProductSpace(rn(3), 2).element([
+          [ 1.,  2.,  3.],
+          [ 2.,  4.,  6.]
+        ])
         """
         return BroadcastOperator(*[op.adjoint for op in self.operators])
 
@@ -1184,12 +1151,10 @@ class DiagonalOperator(ProductSpaceOperator):
 
         >>> op([[1, 2, 3],
         ...     [4, 5, 6]])
-        ProductSpace(rn(3), 2).element(
-            [
-              [ 1.,  2.,  3.],
-              [  8.,  10.,  12.]
-            ]
-        )
+        ProductSpace(rn(3), 2).element([
+          [ 1.,  2.,  3.],
+          [  8.,  10.,  12.]
+        ])
 
         The diagonal operator can also be created using a multiple of a
         single operator:

@@ -1,4 +1,4 @@
-﻿# Copyright 2014-2017 The ODL contributors
+﻿# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -6,16 +6,18 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Operators defined for tensor fields."""
+"""Differential operators."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 import numpy as np
 
 from odl.discr.lp_discr import DiscreteLp
 from odl.operator.tensor_ops import PointwiseTensorFieldOperator
 from odl.space import ProductSpace
-from odl.util import writable_array, signature_string, indent
-
+from odl.util import (
+    REPR_PRECISION, npy_printoptions, repr_string, signature_string_parts,
+    writable_array)
 
 __all__ = ('PartialDerivative', 'Gradient', 'Divergence', 'Laplacian')
 
@@ -45,11 +47,7 @@ _ADJ_PADDING = {'constant': 'constant',
 
 class PartialDerivative(PointwiseTensorFieldOperator):
 
-    """Calculate the discrete partial derivative along a given axis.
-
-    Calls helper function `finite_diff` to calculate finite difference.
-    Preserves the shape of the underlying grid.
-    """
+    """Partial derivative operator along a given axis."""
 
     def __init__(self, domain, axis, range=None, method='forward',
                  pad_mode='constant', pad_const=0):
@@ -98,9 +96,9 @@ class PartialDerivative(PointwiseTensorFieldOperator):
         --------
         >>> f = np.array([[ 0.,  1.,  2.,  3.,  4.],
         ...               [ 0.,  2.,  4.,  6.,  8.]])
-        >>> discr = odl.uniform_discr([0, 0], [2, 1], f.shape)
-        >>> par_deriv = PartialDerivative(discr, axis=0, pad_mode='order1')
-        >>> par_deriv(f)
+        >>> space = odl.uniform_discr([0, 0], [2, 1], f.shape)
+        >>> pderiv = odl.PartialDerivative(space, axis=0, pad_mode='order1')
+        >>> pderiv(f)
         uniform_discr([ 0.,  0.], [ 2.,  1.], (2, 5)).element(
             [[ 0.,  1.,  2.,  3.,  4.],
              [ 0.,  1.,  2.,  3.,  4.]]
@@ -137,7 +135,6 @@ class PartialDerivative(PointwiseTensorFieldOperator):
         if out is None:
             out = self.range.element()
 
-        # TODO: this pipes CUDA arrays through NumPy. Write native operator.
         with writable_array(out) as out_arr:
             finite_diff(x.asarray(), axis=self.axis, dx=self.dx,
                         method=self.method, pad_mode=self.pad_mode,
@@ -177,39 +174,39 @@ class PartialDerivative(PointwiseTensorFieldOperator):
                                   self.pad_const)
 
     def __repr__(self):
-        """Return ``repr(self)``."""
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> space = odl.uniform_discr([0, 0], [2, 1], (2, 5))
+        >>> pderiv = odl.PartialDerivative(space, axis=0, pad_mode='order1')
+        >>> pderiv
+        PartialDerivative(
+            uniform_discr([ 0.,  0.], [ 2.,  1.], (2, 5)),
+            axis=0, pad_mode='order1'
+        )
+        """
         posargs = [self.domain]
         optargs = [('axis', self.axis, None),
                    ('range', self.range, self.domain),
                    ('method', self.method, 'forward'),
                    ('pad_mode', self.pad_mode, 'constant'),
                    ('pad_const', self.pad_const, 0)]
-        inner_str = signature_string(posargs, optargs,
-                                     sep=',\n', mod=['!r', ''])
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        dom_ran_str = '\n-->\n'.join([repr(self.domain), repr(self.range)])
-        return '{}:\n{}'.format(self.__class__.__name__, indent(dom_ran_str))
+        optmod = ['', '!r', '', '', '']
+        with npy_printoptions(precision=REPR_PRECISION):
+            inner_parts = signature_string_parts(posargs, optargs,
+                                                 mod=['!r', optmod])
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=True)
 
 
 class Gradient(PointwiseTensorFieldOperator):
 
-    """Spatial gradient operator for `DiscreteLp` spaces.
-
-    Calls helper function `finite_diff` to calculate each component of the
-    resulting product space element. For the adjoint of the `Gradient`
-    operator, zero padding is assumed to match the negative `Divergence`
-    operator
-    """
+    """Spatial gradient operator for `DiscreteLp` spaces."""
 
     def __init__(self, domain=None, range=None, method='forward',
                  pad_mode='constant', pad_const=0):
         """Initialize a new instance.
-
-        Zero padding is assumed for the adjoint of the `Gradient`
-        operator to match negative `Divergence` operator.
 
         Parameters
         ----------
@@ -253,25 +250,23 @@ class Gradient(PointwiseTensorFieldOperator):
 
         >>> dom = odl.uniform_discr([0, 0], [1, 1], (10, 20))
         >>> ran = odl.ProductSpace(dom, dom.ndim)  # 2-dimensional
-        >>> grad_op = Gradient(dom)
-        >>> grad_op.range == ran
+        >>> grad = odl.Gradient(dom)
+        >>> grad.range == ran
         True
-        >>> grad_op2 = Gradient(range=ran)
-        >>> grad_op2.domain == dom
+        >>> grad = odl.Gradient(range=ran)
+        >>> grad.domain == dom
         True
-        >>> grad_op3 = Gradient(domain=dom, range=ran)
-        >>> grad_op3.domain == dom
-        True
-        >>> grad_op3.range == ran
+        >>> grad = odl.Gradient(domain=dom, range=ran)
+        >>> grad.domain == dom and grad.range == ran
         True
 
         Calling the operator:
 
         >>> data = np.array([[ 0., 1., 2., 3., 4.],
         ...                  [ 0., 2., 4., 6., 8.]])
-        >>> discr = odl.uniform_discr([0, 0], [2, 5], data.shape)
-        >>> f = discr.element(data)
-        >>> grad = Gradient(discr)
+        >>> space = odl.uniform_discr([0, 0], [2, 5], data.shape)
+        >>> f = space.element(data)
+        >>> grad = odl.Gradient(space)
         >>> grad_f = grad(f)
         >>> grad_f[0]
         uniform_discr([ 0.,  0.], [ 2.,  5.], (2, 5)).element(
@@ -401,38 +396,38 @@ class Gradient(PointwiseTensorFieldOperator):
                             pad_const=self.pad_const)
 
     def __repr__(self):
-        """Return ``repr(self)``."""
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> space = odl.uniform_discr([0, 0], [2, 5], (2, 5))
+        >>> grad = odl.Gradient(space, pad_mode='order1')
+        >>> grad
+        Gradient(
+            uniform_discr([ 0.,  0.], [ 2.,  5.], (2, 5)),
+            pad_mode='order1'
+        )
+        """
         posargs = [self.domain]
         optargs = [('range', self.range, self.domain ** self.domain.ndim),
                    ('method', self.method, 'forward'),
                    ('pad_mode', self.pad_mode, 'constant'),
                    ('pad_const', self.pad_const, 0)]
-        inner_str = signature_string(posargs, optargs,
-                                     sep=[',\n', ', ', ',\n'],
-                                     mod=['!r', ''])
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        dom_ran_str = '\n-->\n'.join([repr(self.domain), repr(self.range)])
-        return '{}:\n{}'.format(self.__class__.__name__, indent(dom_ran_str))
+        optmod = ['!r', '', '', '']
+        with npy_printoptions(precision=REPR_PRECISION):
+            inner_parts = signature_string_parts(posargs, optargs,
+                                                 mod=['!r', optmod])
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=True)
 
 
 class Divergence(PointwiseTensorFieldOperator):
 
-    """Divergence operator for `DiscreteLp` spaces.
-
-    Calls helper function `finite_diff` for each component of the input
-    product space vector. For the adjoint of the `Divergence` operator to
-    match the negative `Gradient` operator implicit zero is assumed.
-    """
+    """Divergence operator for `DiscreteLp` spaces."""
 
     def __init__(self, domain=None, range=None, method='forward',
                  pad_mode='constant', pad_const=0):
         """Initialize a new instance.
-
-        Zero padding is assumed for the adjoint of the `Divergence`
-        operator to match the negative `Gradient` operator.
 
         Parameters
         ----------
@@ -475,16 +470,16 @@ class Divergence(PointwiseTensorFieldOperator):
 
         >>> ran = odl.uniform_discr([0, 0], [3, 5], (3, 5))
         >>> dom = odl.ProductSpace(ran, ran.ndim)  # 2-dimensional
-        >>> div = Divergence(dom)
+        >>> div = odl.Divergence(dom)
         >>> div.range == ran
         True
-        >>> div2 = Divergence(range=ran)
-        >>> div2.domain == dom
+        >>> div = odl.Divergence(range=ran)
+        >>> div.domain == dom
         True
-        >>> div3 = Divergence(domain=dom, range=ran)
-        >>> div3.domain == dom
+        >>> div = odl.Divergence(domain=dom, range=ran)
+        >>> div.domain == dom
         True
-        >>> div3.range == ran
+        >>> div.range == ran
         True
 
         Call the operator:
@@ -493,11 +488,12 @@ class Divergence(PointwiseTensorFieldOperator):
         ...                  [1., 2., 3., 4., 5.],
         ...                  [2., 3., 4., 5., 6.]])
         >>> f = div.domain.element([data, data])
-        >>> div_f = div(f)
-        >>> print(div_f)
-        [[  2.,   2.,   2.,   2.,  -3.],
-         [  2.,   2.,   2.,   2.,  -4.],
-         [ -1.,  -2.,  -3.,  -4., -12.]]
+        >>> div(f)
+        uniform_discr([ 0.,  0.], [ 3.,  5.], (3, 5)).element(
+            [[  2.,   2.,   2.,   2.,  -3.],
+             [  2.,   2.,   2.,   2.,  -4.],
+             [ -1.,  -2.,  -3.,  -4., -12.]]
+        )
 
         Verify adjoint:
 
@@ -610,32 +606,34 @@ class Divergence(PointwiseTensorFieldOperator):
                           pad_mode=_ADJ_PADDING[self.pad_mode])
 
     def __repr__(self):
-        """Return ``repr(self)``."""
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> ran = odl.uniform_discr([0, 0], [3, 5], (3, 5))
+        >>> div = odl.Divergence(range=ran, pad_mode='order1')
+        >>> div
+        Divergence(
+            ProductSpace(uniform_discr([ 0.,  0.], [ 3.,  5.], (3, 5)), 2),
+            pad_mode='order1'
+        )
+        """
         posargs = [self.domain]
         optargs = [('range', self.range, self.domain[0]),
                    ('method', self.method, 'forward'),
                    ('pad_mode', self.pad_mode, 'constant'),
                    ('pad_const', self.pad_const, 0)]
-        inner_str = signature_string(posargs, optargs,
-                                     sep=[',\n', ', ', ',\n'],
-                                     mod=['!r', ''])
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        dom_ran_str = '\n-->\n'.join([repr(self.domain), repr(self.range)])
-        return '{}:\n{}'.format(self.__class__.__name__, indent(dom_ran_str))
+        optmod = ['!r', '', '', '']
+        with npy_printoptions(precision=REPR_PRECISION):
+            inner_parts = signature_string_parts(posargs, optargs,
+                                                 mod=['!r', optmod])
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=True)
 
 
 class Laplacian(PointwiseTensorFieldOperator):
 
-    """Spatial Laplacian operator for `DiscreteLp` spaces.
-
-    Calls helper function `finite_diff` to calculate each component of the
-    resulting product space vector.
-
-    Outside the domain zero padding is assumed.
-    """
+    """Spatial Laplacian operator for `DiscreteLp` spaces."""
 
     def __init__(self, domain, range=None, pad_mode='constant', pad_const=0):
         """Initialize a new instance.
@@ -644,6 +642,9 @@ class Laplacian(PointwiseTensorFieldOperator):
         ----------
         domain : `DiscreteLp`
             Space of elements which the operator is acting on.
+        range : `DiscreteLp`, optional
+            Space of elements to which the operator maps.
+            Default: ``domain``
         pad_mode : string, optional
             The padding mode to use outside the domain.
 
@@ -677,7 +678,7 @@ class Laplacian(PointwiseTensorFieldOperator):
         ...                  [ 0., 0., 0.]])
         >>> space = odl.uniform_discr([0, 0], [3, 3], [3, 3])
         >>> f = space.element(data)
-        >>> lap = Laplacian(space)
+        >>> lap = odl.Laplacian(space)
         >>> lap(f)
         uniform_discr([ 0.,  0.], [ 3.,  3.], (3, 3)).element(
             [[ 0.,  1.,  0.],
@@ -692,9 +693,6 @@ class Laplacian(PointwiseTensorFieldOperator):
         if range is None:
             range = domain
 
-        super(Laplacian, self).__init__(
-            domain, range, base_space=domain, linear=True)
-
         self.pad_mode, pad_mode_in = str(pad_mode).lower(), pad_mode
         if pad_mode not in _SUPPORTED_PAD_MODES:
             raise ValueError('`pad_mode` {} not understood'
@@ -704,6 +702,10 @@ class Laplacian(PointwiseTensorFieldOperator):
             # TODO: Add these pad modes
             raise ValueError('`pad_mode` {} not implemented for Laplacian.'
                              ''.format(pad_mode_in))
+
+        linear = not (self.pad_mode == 'constant' and pad_const != 0)
+        super(Laplacian, self).__init__(
+            domain, range, base_space=domain, linear=linear)
 
         self.pad_const = self.domain.field.element(pad_const)
 
@@ -765,24 +767,36 @@ class Laplacian(PointwiseTensorFieldOperator):
 
         The laplacian is self-adjoint, so this returns ``self``.
         """
+        if not self.is_linear:
+            raise ValueError('operator with nonzero pad_const ({}) is not'
+                             ' linear and has no adjoint'
+                             ''.format(self.pad_const))
         return Laplacian(self.range, self.domain,
                          pad_mode=self.pad_mode, pad_const=0)
 
     def __repr__(self):
-        """Return ``repr(self)``."""
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> space = odl.uniform_discr([0, 0], [3, 3], [3, 3])
+        >>> lap = odl.Laplacian(space, pad_mode='symmetric')
+        >>> lap
+        Laplacian(
+            uniform_discr([ 0.,  0.], [ 3.,  3.], (3, 3)),
+            pad_mode='symmetric'
+        )
+        """
         posargs = [self.domain]
-        optargs = [('range', self.range, self.domain ** self.domain.ndim),
+        optargs = [('range', self.range, self.domain),
                    ('pad_mode', self.pad_mode, 'constant'),
                    ('pad_const', self.pad_const, 0)]
-        inner_str = signature_string(posargs, optargs,
-                                     sep=[',\n', ', ', ',\n'],
-                                     mod=['!r', ''])
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        dom_ran_str = '\n-->\n'.join([repr(self.domain), repr(self.range)])
-        return '{}:\n{}'.format(self.__class__.__name__, indent(dom_ran_str))
+        optmod = ['!r', '', '']
+        with npy_printoptions(precision=REPR_PRECISION):
+            inner_parts = signature_string_parts(posargs, optargs,
+                                                 mod=['!r', optmod])
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=True)
 
 
 def finite_diff(f, axis, dx=1.0, method='forward', out=None, **kwargs):

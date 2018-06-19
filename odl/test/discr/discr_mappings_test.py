@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -9,14 +9,15 @@
 """Unit tests for `discr_mappings`."""
 
 from __future__ import division
+
 import numpy as np
 import pytest
 
 import odl
-from odl.discr.grid import sparse_meshgrid
 from odl.discr.discr_mappings import (
-    PointCollocation, NearestInterpolation, LinearInterpolation,
-    PerAxisInterpolation)
+    LinearInterpolation, NearestInterpolation, PerAxisInterpolation,
+    PointCollocation)
+from odl.discr.grid import sparse_meshgrid
 from odl.util.testutils import all_almost_equal, all_equal
 
 

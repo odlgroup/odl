@@ -1,4 +1,4 @@
-﻿# Copyright 2014-2017 The ODL contributors
+﻿# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,26 +8,29 @@
 
 """Lebesgue L^p type discretizations of function spaces."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 from numbers import Integral
+
 import numpy as np
 
+from odl.discr.discr_mappings import (
+    LinearInterpolation, NearestInterpolation, PerAxisInterpolation,
+    PointCollocation)
 from odl.discr.discretization import (
     DiscretizedSpace, DiscretizedSpaceElement, tspace_type)
-from odl.discr.discr_mappings import (
-    PointCollocation, NearestInterpolation, LinearInterpolation,
-    PerAxisInterpolation)
 from odl.discr.partition import (
-    RectPartition, uniform_partition_fromintv, uniform_partition)
-from odl.set import RealNumbers, ComplexNumbers, IntervalProd
+    RectPartition, uniform_partition, uniform_partition_fromintv)
+from odl.set import ComplexNumbers, IntervalProd, RealNumbers
 from odl.space import FunctionSpace, ProductSpace
 from odl.space.entry_points import tensor_space_impl
 from odl.space.weighting import ConstWeighting
 from odl.util import (
-    apply_on_boundary, is_real_dtype, is_complex_floating_dtype, is_string,
-    is_floating_dtype, is_numeric_dtype,
-    dtype_str, array_str, signature_string, indent, npy_printoptions,
-    normalized_scalar_param_list, safe_int_conv, normalized_nodes_on_bdry)
+    REPR_PRECISION, apply_on_boundary, array_str, attribute_repr_string,
+    dtype_str, is_complex_floating_dtype, is_floating_dtype, is_numeric_dtype,
+    is_real_dtype, is_string, normalized_nodes_on_bdry,
+    normalized_scalar_param_list, npy_printoptions, repr_string, safe_int_conv,
+    signature_string_parts)
 
 __all__ = ('DiscreteLp', 'DiscreteLpElement',
            'uniform_discr_frompartition', 'uniform_discr_fromspace',
@@ -378,6 +381,13 @@ class DiscreteLp(DiscretizedSpace):
             fspace, self.partition, tspace, interp=self.interp,
             axis_labels=self.axis_labels)
 
+    def _asweighted(self, weighting):
+        """Internal helper for ``asweighted``."""
+        tspace = self.tspace.asweighted(weighting)
+        return type(self)(
+            self.fspace, self.partition, tspace, interp=self.interp,
+            axis_labels=self.axis_labels)
+
     # Overrides for space functions depending on partition
     #
     # The inherited methods by default use a weighting by a constant
@@ -388,7 +398,7 @@ class DiscreteLp(DiscretizedSpace):
     def _inner(self, x, y):
         """Return ``self.inner(x, y)``."""
         if self.is_uniform and not self.is_uniformly_weighted:
-            # TODO: implement without copying x
+            # TODO(kohr-h): implement without copying x
             bdry_fracs = self.partition.boundary_cell_fractions
             func_list = _scaling_func_list(bdry_fracs, exponent=1.0)
             x_arr = apply_on_boundary(x, func=func_list, only_once=False)
@@ -399,7 +409,7 @@ class DiscreteLp(DiscretizedSpace):
     def _norm(self, x):
         """Return ``self.norm(x)``."""
         if self.is_uniform and not self.is_uniformly_weighted:
-            # TODO: implement without copying x
+            # TODO(kohr-h): implement without copying x
             bdry_fracs = self.partition.boundary_cell_fractions
             func_list = _scaling_func_list(bdry_fracs, exponent=self.exponent)
             x_arr = apply_on_boundary(x, func=func_list, only_once=False)
@@ -420,7 +430,7 @@ class DiscreteLp(DiscretizedSpace):
         else:
             return super(DiscreteLp, self)._dist(x, y)
 
-    # TODO: add byaxis_out when discretized tensor-valued functions are
+    # TODO(kohr-h): add byaxis_out when discretized tensor-valued functions are
     # available
 
     @property
@@ -502,12 +512,46 @@ class DiscreteLp(DiscretizedSpace):
 
             def __repr__(self):
                 """Return ``repr(self)``."""
-                return repr(space) + '.byaxis_in'
+                return attribute_repr_string(repr(space), 'byaxis_in')
 
         return DiscreteLpByaxisIn()
 
     def __repr__(self):
-        """Return ``repr(self)``."""
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        Uniform:
+
+        >>> space = odl.uniform_discr(0, 1, 4, dtype='float32')
+        >>> space
+        uniform_discr(0.0, 1.0, 4, dtype='float32')
+        >>> space = odl.uniform_discr([0, 0, 0], [1, 1, 1], (2, 4, 8),
+        ...                           dtype=complex)
+        >>> space
+        uniform_discr(
+            [ 0.,  0.,  0.], [ 1.,  1.,  1.], (2, 4, 8), dtype=complex
+        )
+
+        Non-uniform:
+
+        >>> rect = odl.IntervalProd([0, 0], [1, 1])
+        >>> fspace = odl.FunctionSpace(rect)
+        >>> grid = odl.RectGrid([0.1, 0.25, 0.9], [0.25, 0.75])
+        >>> part = odl.RectPartition(rect, grid)
+        >>> tspace = odl.rn(part.shape)
+        >>> space = odl.DiscreteLp(fspace, part, tspace, interp='linear')
+        >>> space
+        DiscreteLp(
+            FunctionSpace(IntervalProd([ 0.,  0.], [ 1.,  1.])),
+            nonuniform_partition(
+                [ 0.1 ,  0.25,  0.9 ], [ 0.25,  0.75],
+                min_pt=[ 0.,  0.], max_pt=[ 1.,  1.]
+            ),
+            rn((3, 2)),
+            interp='linear'
+        )
+        """
         # Clunky check if the factory repr can be used
         if (uniform_partition_fromintv(
                 self.fspace.domain, self.shape,
@@ -526,7 +570,7 @@ class DiscreteLp(DiscretizedSpace):
             ctor = 'uniform_discr'
             if self.ndim == 1:
                 posargs = [self.min_pt[0], self.max_pt[0], self.shape[0]]
-                posmod = [':.4', ':.4', '']
+                posmod = ''
             else:
                 posargs = [self.min_pt, self.max_pt, self.shape]
                 posmod = [array_str, array_str, '']
@@ -558,26 +602,19 @@ class DiscreteLp(DiscretizedSpace):
             if self.dtype in (float, complex, int, bool):
                 optmod[3] = '!s'
 
-            with npy_printoptions(precision=4):
-                inner_str = signature_string(posargs, optargs,
-                                             mod=[posmod, optmod])
-            return '{}({})'.format(ctor, inner_str)
+            with npy_printoptions(precision=REPR_PRECISION):
+                inner_parts = signature_string_parts(posargs, optargs,
+                                                     mod=[posmod, optmod])
 
         else:
             ctor = self.__class__.__name__
             posargs = [self.fspace, self.partition, self.tspace]
             optargs = [('interp', self.interp, 'nearest')]
 
-            with npy_printoptions(precision=4):
-                inner_str = signature_string(posargs, optargs,
-                                             sep=[',\n', ', ', ',\n'],
-                                             mod=['!r', '!s'])
+            with npy_printoptions(precision=REPR_PRECISION):
+                inner_parts = signature_string_parts(posargs, optargs)
 
-            return '{}({})'.format(ctor, indent(inner_str))
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        return repr(self)
+        return repr_string(ctor, inner_parts, allow_mixed_seps=True)
 
     @property
     def element_type(self):
@@ -726,7 +763,7 @@ class DiscreteLpElement(DiscretizedSpaceElement):
 
         Examples
         --------
-        >>> discr = uniform_discr(0, 1, 4, dtype=complex)
+        >>> discr = odl.uniform_discr(0, 1, 4, dtype=complex)
         >>> x = discr.element([5+1j, 3, 2-2j, 1j])
         >>> y = x.conj()
         >>> print(y)
@@ -1392,7 +1429,7 @@ def uniform_discr_frompartition(partition, dtype=None, impl='numpy', **kwargs):
     Examples
     --------
     >>> part = odl.uniform_partition(0, 1, 10)
-    >>> uniform_discr_frompartition(part)
+    >>> odl.uniform_discr_frompartition(part)
     uniform_discr(0.0, 1.0, 10)
 
     See Also
@@ -1458,7 +1495,7 @@ def uniform_discr_fromspace(fspace, shape, dtype=None, impl='numpy', **kwargs):
     --------
     >>> intv = odl.IntervalProd(0, 1)
     >>> space = odl.FunctionSpace(intv)
-    >>> uniform_discr_fromspace(space, 10)
+    >>> odl.uniform_discr_fromspace(space, 10)
     uniform_discr(0.0, 1.0, 10)
 
     See Also
@@ -1533,7 +1570,7 @@ def uniform_discr_fromintv(intv_prod, shape, dtype=None, impl='numpy',
     Examples
     --------
     >>> intv = IntervalProd(0, 1)
-    >>> uniform_discr_fromintv(intv, 10)
+    >>> odl.uniform_discr_fromintv(intv, 10)
     uniform_discr(0.0, 1.0, 10)
 
     See Also
@@ -1607,7 +1644,7 @@ def uniform_discr(min_pt, max_pt, shape, dtype=None, impl='numpy', **kwargs):
     --------
     Create real space:
 
-    >>> space = uniform_discr([0, 0], [1, 1], (10, 10))
+    >>> space = odl.uniform_discr([0, 0], [1, 1], (10, 10))
     >>> space
     uniform_discr([ 0.,  0.], [ 1.,  1.], (10, 10))
     >>> space.cell_sides
@@ -1619,7 +1656,7 @@ def uniform_discr(min_pt, max_pt, shape, dtype=None, impl='numpy', **kwargs):
 
     Create complex space by giving a dtype:
 
-    >>> space = uniform_discr([0, 0], [1, 1], (10, 10), dtype=complex)
+    >>> space = odl.uniform_discr([0, 0], [1, 1], (10, 10), dtype=complex)
     >>> space
     uniform_discr([ 0.,  0.], [ 1.,  1.], (10, 10), dtype=complex)
     >>> space.is_complex
@@ -1878,9 +1915,11 @@ def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
                                  cell_sides=new_csides,
                                  nodes_on_bdry=nodes_on_bdry)
 
+    dtype = kwargs.pop('dtype', discr.dtype)
+    # TODO(kohr-h): weighting
     return uniform_discr_frompartition(new_part, exponent=discr.exponent,
                                        interp=discr.interp, impl=discr.impl,
-                                       **kwargs)
+                                       dtype=dtype, **kwargs)
 
 
 def _scaling_func_list(bdry_fracs, exponent):

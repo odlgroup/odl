@@ -480,12 +480,10 @@ class ProductSpace(LinearSpace):
         >>> x3 = r3.element([1, 2, 3])
         >>> x = prod.element([x2, x3])
         >>> x
-        ProductSpace(rn(2), rn(3)).element(
-            [
-              [ 1.,  2.],
-              [ 1.,  2.,  3.]
-            ]
-        )
+        ProductSpace(rn(2), rn(3)).element([
+          [ 1.,  2.],
+          [ 1.,  2.,  3.]
+        ])
         """
         # If data is given as keyword arg, prefer it over arg list
         if inp is None:
@@ -1088,30 +1086,24 @@ class ProductSpaceElement(LinearSpaceElement):
         >>> r22 = odl.ProductSpace(odl.rn(2), 2)
         >>> x = r22.element([[1, -2], [-3, 4]])
         >>> x.ufuncs.absolute()
-        ProductSpace(rn(2), 2).element(
-            [
-              [ 1.,  2.],
-              [ 3.,  4.]
-            ]
-        )
+        ProductSpace(rn(2), 2).element([
+          [ 1.,  2.],
+          [ 3.,  4.]
+        ])
 
         These functions can also be used with non-vector arguments and
         support broadcasting, per component and even recursively:
 
         >>> x.ufuncs.add([1, 2])
-        ProductSpace(rn(2), 2).element(
-            [
-              [ 2.,  0.],
-              [-2.,  6.]
-            ]
-        )
+        ProductSpace(rn(2), 2).element([
+          [ 2.,  0.],
+          [-2.,  6.]
+        ])
         >>> x.ufuncs.subtract(1)
-        ProductSpace(rn(2), 2).element(
-            [
-              [ 0., -3.],
-              [-4.,  3.]
-            ]
-        )
+        ProductSpace(rn(2), 2).element([
+          [ 0., -3.],
+          [-4.,  3.]
+        ])
 
         There is also support for various reductions (sum, prod, min, max):
 
@@ -1123,12 +1115,10 @@ class ProductSpaceElement(LinearSpaceElement):
         >>> y = r22.element()
         >>> result = x.ufuncs.absolute(out=y)
         >>> result
-        ProductSpace(rn(2), 2).element(
-            [
-              [ 1.,  2.],
-              [ 3.,  4.]
-            ]
-        )
+        ProductSpace(rn(2), 2).element([
+          [ 1.,  2.],
+          [ 3.,  4.]
+        ])
         >>> result is y
         True
 
@@ -1325,12 +1315,10 @@ class ProductSpaceElement(LinearSpaceElement):
         The result is readable:
 
         >>> x
-        ProductSpace(rn(2), rn(3)).element(
-            [
-              [ 1.,  2.],
-              [ 3.,  4.,  5.]
-            ]
-        )
+        ProductSpace(rn(2), rn(3)).element([
+          [ 1.,  2.],
+          [ 3.,  4.,  5.]
+        ])
 
         Nested spaces work as well:
 
@@ -1340,18 +1328,16 @@ class ProductSpaceElement(LinearSpaceElement):
         ...                     [[1, 2],
         ...                      [3, 4, 5]]])
         >>> x
-        ProductSpace(ProductSpace(rn(2), rn(3)), 2).element(
-            [
-               [
-                 [ 1.,  2.],
-                 [ 3.,  4.,  5.]
-               ],
-               [
-                 [ 1.,  2.],
-                 [ 3.,  4.,  5.]
-               ]
-            ]
-        )
+        ProductSpace(ProductSpace(rn(2), rn(3)), 2).element([
+          [
+            [ 1.,  2.],
+            [ 3.,  4.,  5.]
+          ],
+          [
+            [ 1.,  2.],
+            [ 3.,  4.,  5.]
+          ]
+        ])
         """
         data_str = '[\n'
         edgeitems = np.get_printoptions()['edgeitems']
@@ -1370,7 +1356,8 @@ class ProductSpaceElement(LinearSpaceElement):
 
         data_str += '\n]'
 
-        return method_repr_string(repr(self.space), 'element', [data_str])
+        return method_repr_string(repr(self.space), 'element', [data_str],
+                                  force_manual_arg_fmt=True)
 
     def show(self, title=None, indices=None, **kwargs):
         """Display the parts of this product space element graphically.

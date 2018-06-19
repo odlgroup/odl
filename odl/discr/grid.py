@@ -1,4 +1,4 @@
-﻿# Copyright 2014-2017 The ODL contributors
+﻿# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -12,14 +12,15 @@ Sampling grids are collections of points in an n-dimensional coordinate
 space with a certain structure which is exploited to minimize storage.
 """
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 import numpy as np
 
-from odl.set import Set, IntervalProd
+from odl.set import IntervalProd, Set
 from odl.util import (
-    normalized_index_expression, normalized_scalar_param_list, safe_int_conv,
-    array_str, signature_string, indent, npy_printoptions)
-
+    REPR_PRECISION, array_str, normalized_index_expression,
+    normalized_scalar_param_list, npy_printoptions, repr_string, safe_int_conv,
+    signature_string_parts)
 
 __all__ = ('RectGrid', 'uniform_grid', 'uniform_grid_fromintv')
 
@@ -86,12 +87,9 @@ class RectGrid(Set):
 
         Examples
         --------
-        >>> g = RectGrid([1, 2, 5], [-2, 1.5, 2])
+        >>> g = odl.RectGrid([1, 2, 5], [-2, 1.5, 2])
         >>> g
-        RectGrid(
-            [ 1.,  2.,  5.],
-            [-2. ,  1.5,  2. ]
-        )
+        RectGrid([ 1.,  2.,  5.], [-2. ,  1.5,  2. ])
         >>> g.ndim  # number of axes
         2
         >>> g.shape  # points per axis
@@ -102,26 +100,16 @@ class RectGrid(Set):
         Grid points can be extracted with index notation (NOTE: This is
         slow, do not loop over the grid using indices!):
 
-        >>> g = RectGrid([-1, 0, 3], [2, 4, 5], [5], [2, 4, 7])
+        >>> g = odl.RectGrid([-1, 0, 3], [2, 4, 5], [5], [2, 4, 7])
         >>> g[0, 0, 0, 0]
         array([-1.,  2.,  5.,  2.])
 
         Slices and ellipsis are also supported:
 
         >>> g[:, 0, 0, 0]
-        RectGrid(
-            [-1.,  0.,  3.],
-            [ 2.],
-            [ 5.],
-            [ 2.]
-        )
+        RectGrid([-1.,  0.,  3.], [ 2.], [ 5.], [ 2.])
         >>> g[0, ..., 1:]
-        RectGrid(
-            [-1.],
-            [ 2.,  4.,  5.],
-            [ 5.],
-            [ 4.,  7.]
-        )
+        RectGrid([-1.], [ 2.,  4.,  5.], [ 5.], [ 4.,  7.])
 
         Notes
         -----
@@ -207,7 +195,7 @@ class RectGrid(Set):
 
         Examples
         --------
-        >>> g = RectGrid([0, 1], [-1, 0, 2])
+        >>> g = odl.RectGrid([0, 1], [-1, 0, 2])
         >>> x, y = g.coord_vectors
         >>> x
         array([ 0.,  1.])
@@ -254,7 +242,7 @@ class RectGrid(Set):
 
         Examples
         --------
-        >>> g = RectGrid([0, 1], [-1, 0, 2], [4, 5, 6])
+        >>> g = odl.RectGrid([0, 1], [-1, 0, 2], [4, 5, 6])
         >>> len(g)
         2
 
@@ -270,7 +258,7 @@ class RectGrid(Set):
 
         Examples
         --------
-        >>> g = RectGrid([1, 2, 5], [-2, 1.5, 2])
+        >>> g = odl.RectGrid([1, 2, 5], [-2, 1.5, 2])
         >>> g.min_pt
         array([ 1., -2.])
         """
@@ -282,7 +270,7 @@ class RectGrid(Set):
 
         Examples
         --------
-        >>> g = RectGrid([1, 2, 5], [-2, 1.5, 2])
+        >>> g = odl.RectGrid([1, 2, 5], [-2, 1.5, 2])
         >>> g.max_pt
         array([ 5.,  2.])
         """
@@ -326,7 +314,7 @@ class RectGrid(Set):
 
         Examples
         --------
-        >>> g = RectGrid([1, 2, 5], [-2, 1.5, 2])
+        >>> g = odl.RectGrid([1, 2, 5], [-2, 1.5, 2])
         >>> g.min()
         array([ 1., -2.])
 
@@ -357,7 +345,7 @@ class RectGrid(Set):
 
         Examples
         --------
-        >>> g = RectGrid([1, 2, 5], [-2, 1.5, 2])
+        >>> g = odl.RectGrid([1, 2, 5], [-2, 1.5, 2])
         >>> g.max()
         array([ 5.,  2.])
 
@@ -407,13 +395,13 @@ class RectGrid(Set):
 
         NaN returned for non-uniform dimension:
 
-        >>> g = RectGrid([0, 1, 2], [0, 1, 4])
+        >>> g = odl.RectGrid([0, 1, 2], [0, 1, 4])
         >>> g.stride
         array([ 1.,  nan])
 
         0.0 returned for degenerate dimension:
 
-        >>> g = RectGrid([0, 1, 2], [0])
+        >>> g = odl.RectGrid([0, 1, 2], [0])
         >>> g.stride
         array([ 1.,  0.])
         """
@@ -437,7 +425,7 @@ class RectGrid(Set):
 
         Examples
         --------
-        >>> g = RectGrid([1, 2, 5], [-2, 1.5, 2])
+        >>> g = odl.RectGrid([1, 2, 5], [-2, 1.5, 2])
         >>> g.extent
         array([ 4.,  4.])
         """
@@ -458,7 +446,7 @@ class RectGrid(Set):
 
         Examples
         --------
-        >>> g = RectGrid([-1, 0, 3], [2, 4], [5], [2, 4, 7])
+        >>> g = odl.RectGrid([-1, 0, 3], [2, 4], [5], [2, 4, 7])
         >>> g.convex_hull()
         IntervalProd([-1.,  2.,  5.,  2.], [ 3.,  4.,  5.,  7.])
         """
@@ -488,8 +476,8 @@ class RectGrid(Set):
 
         Examples
         --------
-        >>> g1 = RectGrid([0, 1], [-1, 0, 2])
-        >>> g2 = RectGrid([-0.1, 1.1], [-1, 0.1, 2])
+        >>> g1 = odl.RectGrid([0, 1], [-1, 0, 2])
+        >>> g2 = odl.RectGrid([-0.1, 1.1], [-1, 0.1, 2])
         >>> g1.approx_equals(g2, atol=0)
         False
         >>> g1.approx_equals(g2, atol=0.15)
@@ -520,7 +508,7 @@ class RectGrid(Set):
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        # TODO: update with #841
+        # TODO(doable, #841): update (what exactly)
         coord_vec_str = tuple(cv.tobytes() for cv in self.coord_vectors)
         return hash((type(self), coord_vec_str))
 
@@ -537,7 +525,7 @@ class RectGrid(Set):
 
         Examples
         --------
-        >>> g = RectGrid([0, 1], [-1, 0, 2])
+        >>> g = odl.RectGrid([0, 1], [-1, 0, 2])
         >>> g.approx_contains([0, 0], atol=0.0)
         True
         >>> [0, 0] in g  # equivalent
@@ -663,15 +651,10 @@ class RectGrid(Set):
 
         Examples
         --------
-        >>> g1 = RectGrid([0, 1], [-1, 0, 2])
-        >>> g2 = RectGrid([1], [-6, 15])
+        >>> g1 = odl.RectGrid([0, 1], [-1, 0, 2])
+        >>> g2 = odl.RectGrid([1], [-6, 15])
         >>> g1.insert(1, g2)
-        RectGrid(
-            [ 0.,  1.],
-            [ 1.],
-            [ -6.,  15.],
-            [-1.,  0.,  2.]
-        )
+        RectGrid([ 0.,  1.], [ 1.], [ -6.,  15.], [-1.,  0.,  2.])
         >>> g1.insert(1, g2, g2)
         RectGrid(
             [ 0.,  1.],
@@ -725,15 +708,10 @@ class RectGrid(Set):
 
         Examples
         --------
-        >>> g1 = RectGrid([0, 1], [-1, 0, 2])
-        >>> g2 = RectGrid([1], [-6, 15])
+        >>> g1 = odl.RectGrid([0, 1], [-1, 0, 2])
+        >>> g2 = odl.RectGrid([1], [-6, 15])
         >>> g1.append(g2)
-        RectGrid(
-            [ 0.,  1.],
-            [-1.,  0.,  2.],
-            [ 1.],
-            [ -6.,  15.]
-        )
+        RectGrid([ 0.,  1.], [-1.,  0.,  2.], [ 1.], [ -6.,  15.])
         >>> g1.append(g2, g2)
         RectGrid(
             [ 0.,  1.],
@@ -765,12 +743,9 @@ class RectGrid(Set):
 
         Examples
         --------
-        >>> g = RectGrid([0, 1], [-1], [-1, 0, 2])
+        >>> g = odl.RectGrid([0, 1], [-1], [-1, 0, 2])
         >>> g.squeeze()
-        RectGrid(
-            [ 0.,  1.],
-            [-1.,  0.,  2.]
-        )
+        RectGrid([ 0.,  1.], [-1.,  0.,  2.])
         """
         if axis is None:
             rng = range(self.ndim)
@@ -798,7 +773,7 @@ class RectGrid(Set):
 
         Examples
         --------
-        >>> g = RectGrid([0, 1], [-1, 0, 2])
+        >>> g = odl.RectGrid([0, 1], [-1, 0, 2])
         >>> g.points()
         array([[ 0., -1.],
                [ 0.,  0.],
@@ -841,7 +816,7 @@ class RectGrid(Set):
 
         Examples
         --------
-        >>> g = RectGrid([0, 1], [-1, 0, 2])
+        >>> g = odl.RectGrid([0, 1], [-1, 0, 2])
         >>> g.corner_grid()
         uniform_grid([ 0., -1.], [ 1.,  2.], (2, 2))
         """
@@ -871,7 +846,7 @@ class RectGrid(Set):
 
         Examples
         --------
-        >>> g = RectGrid([0, 1], [-1, 0, 2])
+        >>> g = odl.RectGrid([0, 1], [-1, 0, 2])
         >>> g.corners()
         array([[ 0., -1.],
                [ 0.,  2.],
@@ -902,7 +877,7 @@ class RectGrid(Set):
 
         Examples
         --------
-        >>> g = RectGrid([0, 1], [-1, 0, 2])
+        >>> g = odl.RectGrid([0, 1], [-1, 0, 2])
         >>> x, y = g.meshgrid
         >>> x
         array([[ 0.],
@@ -931,43 +906,23 @@ class RectGrid(Set):
         --------
         Indexing with integers along all axes produces an array (a point):
 
-        >>> g = RectGrid([-1, 0, 3], [2, 4, 5], [5], [2, 4, 7])
+        >>> g = odl.RectGrid([-1, 0, 3], [2, 4, 5], [5], [2, 4, 7])
         >>> g[0, 0, 0, 0]
         array([-1.,  2.,  5.,  2.])
 
         Otherwise, a new RectGrid is returned:
 
         >>> g[:, 0, 0, 0]
-        RectGrid(
-            [-1.,  0.,  3.],
-            [ 2.],
-            [ 5.],
-            [ 2.]
-        )
+        RectGrid([-1.,  0.,  3.], [ 2.], [ 5.], [ 2.])
         >>> g[0, ..., 1:]
-        RectGrid(
-            [-1.],
-            [ 2.,  4.,  5.],
-            [ 5.],
-            [ 4.,  7.]
-        )
+        RectGrid([-1.], [ 2.,  4.,  5.], [ 5.], [ 4.,  7.])
         >>> g[::2, ..., ::2]
-        RectGrid(
-            [-1.,  3.],
-            [ 2.,  4.,  5.],
-            [ 5.],
-            [ 2.,  7.]
-        )
+        RectGrid([-1.,  3.], [ 2.,  4.,  5.], [ 5.], [ 2.,  7.])
 
         Too few indices are filled up with an ellipsis from the right:
 
         >>> g[0]
-        RectGrid(
-            [-1.],
-            [ 2.,  4.,  5.],
-            [ 5.],
-            [ 2.,  4.,  7.]
-        )
+        RectGrid([-1.], [ 2.,  4.,  5.], [ 5.], [ 2.,  4.,  7.])
         >>> g[0] == g[0, :, :, :] == g[0, ...]
         True
         """
@@ -1005,7 +960,7 @@ class RectGrid(Set):
 
         Examples
         --------
-        >>> g = RectGrid([0, 1], [-2, 0, 2])
+        >>> g = odl.RectGrid([0, 1], [-2, 0, 2])
 
         Convert to an array:
 
@@ -1025,23 +980,31 @@ class RectGrid(Set):
         return self.points().astype(dtype)
 
     def __repr__(self):
-        """Return ``repr(self)``."""
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> g = odl.RectGrid([-1, 0, 3], [2, 4, 5], [5], [2, 4, 7])
+        >>> g
+        RectGrid([-1.,  0.,  3.], [ 2.,  4.,  5.], [ 5.], [ 2.,  4.,  7.])
+        """
         if self.is_uniform:
             ctor = 'uniform_grid'
             posargs = [self.min_pt, self.max_pt, self.shape]
             posmod = [array_str, array_str, '']
-            with npy_printoptions(precision=4):
-                inner_str = signature_string(posargs, [], mod=[posmod, ''])
-            return '{}({})'.format(ctor, inner_str)
         else:
             ctor = self.__class__.__name__
             posargs = self.coord_vectors
             posmod = array_str
-            inner_str = signature_string(posargs, [], sep=[',\n', ', ', ', '],
-                                         mod=[posmod, ''])
-            return '{}(\n{}\n)'.format(ctor, indent(inner_str))
 
-    __str__ = __repr__
+        with npy_printoptions(precision=REPR_PRECISION):
+            inner_parts = signature_string_parts(posargs, [],
+                                                 mod=[posmod, ''])
+        return repr_string(ctor, inner_parts)
+
+    def __str__(self):
+        """Return ``str(self)``."""
+        return repr(self)
 
 
 def uniform_grid_fromintv(intv_prod, shape, nodes_on_bdry=True):

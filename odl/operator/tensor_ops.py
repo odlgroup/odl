@@ -546,14 +546,22 @@ class PointwiseInner(PointwiseTensorFieldOperator):
         >>> pw_inner = odl.PointwiseInner(vfspace, fixed_vf)
         >>> y = spc.element([[1, 2]])
         >>> pw_inner.adjoint(y)
-        ProductSpace(uniform_discr([-1., -1.], [ 1.,  1.], (1, 2)), 2).element(
-            [
-              [[ 0.,  2.]],
-              [[ 1., -2.]]
-            ]
-        )
+        ProductSpace(uniform_discr([-1., -1.], [ 1.,  1.], (1, 2)), 2).element([
+          [[ 0.,  2.]],
+          [[ 1., -2.]]
+        ])
         """
         op = self
+
+        # Get weighting as array
+        if hasattr(op.domain.weighting, 'array'):
+            adj_ran_weights = op.domain.weighting.array
+        elif hasattr(op.domain.weighting, 'const'):
+            adj_ran_weights = [op.domain.weighting.const] * len(op.domain)
+        else:
+            raise ValueError('domain weighting scheme {!r} does not define a '
+                             'weighting array or constant'
+                             ''.format(op.domain.weighting))
 
         class PointwiseInnerAdjoint(PointwiseTensorFieldOperator):
 
@@ -561,10 +569,11 @@ class PointwiseInner(PointwiseTensorFieldOperator):
 
             def _call(self, f, out):
                 """Implement ``self(vf, out)``."""
-                for vfi, oi, wi in zip(op.vecfield, out, op.weights):
+                for vfi, oi, ran_wi, dom_wi in zip(
+                    op.vecfield, out, adj_ran_weights, op.weights):
                     vfi.multiply(f, out=oi)
-                    if not np.isclose(wi, 1.0):
-                        oi *= wi
+                    if not np.isclose(ran_wi, dom_wi):
+                        oi *= dom_wi / ran_wi
 
             @property
             def adjoint(self):
@@ -592,12 +601,10 @@ class PointwiseInner(PointwiseTensorFieldOperator):
         >>> pw_inner
         PointwiseInner(
             ProductSpace(rn((1, 2)), 2),
-            ProductSpace(rn((1, 2)), 2).element(
-                [
-                  [[ 0.,  1.]],
-                  [[ 1., -1.]]
-                ]
-            )
+            ProductSpace(rn((1, 2)), 2).element([
+              [[ 0.,  1.]],
+              [[ 1., -1.]]
+            ])
         )
         """
         posargs = [self.domain, self.vecfield]
@@ -1508,7 +1515,7 @@ class FlatteningOperator(Operator):
         >>> abs(op.adjoint(op(x)).inner(x) - op(x).inner(op(x))) < 1e-10
         True
         """
-        return self.inverse
+        return (1 / self.domain.cell_volume) * self.inverse
 
     @property
     def inverse(self):

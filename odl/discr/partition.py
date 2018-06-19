@@ -1,4 +1,4 @@
-﻿# Copyright 2014-2017 The ODL contributors
+﻿# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -14,17 +14,19 @@ considered here are based on hypercubes, i.e. the tensor products
 of partitions of intervals.
 """
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 from builtins import object
+
 import numpy as np
 
 from odl.discr.grid import RectGrid, uniform_grid_fromintv
 from odl.set import IntervalProd
 from odl.util import (
+    REPR_PRECISION, array_str, attribute_repr_string,
     normalized_index_expression, normalized_nodes_on_bdry,
-    normalized_scalar_param_list, safe_int_conv,
-    signature_string, indent, array_str, npy_printoptions)
-
+    normalized_scalar_param_list, npy_printoptions, repr_string, safe_int_conv,
+    signature_string_parts)
 
 __all__ = ('RectPartition', 'uniform_partition_fromintv',
            'uniform_partition_fromgrid', 'uniform_partition',
@@ -499,11 +501,8 @@ class RectPartition(object):
         Take every second grid point. Note that is is in general non-uniform:
 
         >>> partition = odl.uniform_partition(0, 10, 10)
-        >>> partition[::2]
-        nonuniform_partition(
-            [ 0.5,  2.5,  4.5,  6.5,  8.5],
-            min_pt=0.0, max_pt=10.0
-        )
+        >>> partition[2::2]
+        nonuniform_partition([ 2.5,  4.5,  6.5,  8.5], min_pt=2.0, max_pt=10.0)
 
         A more advanced example is:
 
@@ -848,12 +847,27 @@ class RectPartition(object):
                 >>> p.byaxis
                 uniform_partition(0, 1, 5).byaxis
                 """
-                return '{!r}.byaxis'.format(partition)
+                return attribute_repr_string(repr(partition), 'byaxis')
 
         return RectPartitionByAxis()
 
     def __repr__(self):
-        """Return ``repr(self)``."""
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> p = odl.uniform_partition([0, 1, 2], [1, 3, 5], (3, 5, 6))
+        >>> p
+        uniform_partition([ 0.,  1.,  2.], [ 1.,  3.,  5.], (3, 5, 6))
+
+        >>> p = odl.nonuniform_partition([0, 1, 2], [1, 1.5, 2],
+        ...                              min_pt=[0, 0], max_pt=[2.5, 3])
+        >>> p
+        nonuniform_partition(
+            [ 0.,  1.,  2.], [ 1. ,  1.5,  2. ],
+            min_pt=[ 0.,  0.], max_pt=[ 2.5,  3. ]
+        )
+        """
         if self.ndim == 0:
             return 'uniform_partition([], [], ())'
 
@@ -877,16 +891,16 @@ class RectPartition(object):
             ctor = 'uniform_partition'
             if self.ndim == 1:
                 posargs = [self.min_pt[0], self.max_pt[0], self.shape[0]]
-                posmod = [':.4', ':.4', '']
+                posmod = ''
             else:
                 posargs = [self.min_pt, self.max_pt, self.shape]
                 posmod = [array_str, array_str, '']
 
             optargs = [('nodes_on_bdry', self.nodes_on_bdry, False)]
 
-            with npy_printoptions(precision=4):
-                sig_str = signature_string(posargs, optargs, mod=[posmod, ''])
-            return '{}({})'.format(ctor, sig_str)
+            with npy_printoptions(precision=REPR_PRECISION):
+                inner_parts = signature_string_parts(posargs, optargs,
+                                                     mod=[posmod, ''])
         else:
             ctor = 'nonuniform_partition'
             posargs = self.coord_vectors
@@ -914,9 +928,9 @@ class RectPartition(object):
                 if not np.allclose(self.min_pt, def_min_pt):
                     if self.ndim == 1:
                         optargs.append(('min_pt', self.min_pt[0], None))
-                        optmod.append(':.4')
+                        optmod.append('')
                     else:
-                        with npy_printoptions(precision=4):
+                        with npy_printoptions(precision=REPR_PRECISION):
                             optargs.append(
                                 ('min_pt', array_str(self.min_pt), ''))
                         optmod.append('!s')
@@ -924,16 +938,18 @@ class RectPartition(object):
                 if not np.allclose(self.max_pt, def_max_pt):
                     if self.ndim == 1:
                         optargs.append(('max_pt', self.max_pt[0], None))
-                        optmod.append(':.4')
+                        optmod.append('')
                     else:
-                        with npy_printoptions(precision=4):
+                        with npy_printoptions(precision=REPR_PRECISION):
                             optargs.append(
                                 ('max_pt', array_str(self.max_pt), ''))
                         optmod.append('!s')
 
-            sig_str = signature_string(posargs, optargs, mod=[posmod, optmod],
-                                       sep=[',\n', ', ', ',\n'])
-            return '{}(\n{}\n)'.format(ctor, indent(sig_str))
+            with npy_printoptions(precision=REPR_PRECISION):
+                inner_parts = signature_string_parts(posargs, optargs,
+                                                     mod=[posmod, optmod])
+
+        return repr_string(ctor, inner_parts, allow_mixed_seps=True)
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -1339,18 +1355,13 @@ def nonuniform_partition(*coord_vecs, **kwargs):
     that the points are in the middle of the sub-intervals:
 
     >>> odl.nonuniform_partition([0, 1, 3])
-    nonuniform_partition(
-        [ 0.,  1.,  3.]
-    )
+    nonuniform_partition([ 0.,  1.,  3.])
 
     Higher dimensional partitions are created by specifying the gridpoints
     along each dimension:
 
     >>> odl.nonuniform_partition([0, 1, 3], [1, 2])
-    nonuniform_partition(
-        [ 0.,  1.,  3.],
-        [ 1.,  2.]
-    )
+    nonuniform_partition([ 0.,  1.,  3.], [ 1.,  2.])
 
     Partitions with a single element are by default degenerate
 
@@ -1361,19 +1372,13 @@ def nonuniform_partition(*coord_vecs, **kwargs):
     can be used:
 
     >>> odl.nonuniform_partition([0, 1, 3], nodes_on_bdry=True)
-    nonuniform_partition(
-        [ 0.,  1.,  3.],
-        nodes_on_bdry=True
-    )
+    nonuniform_partition([ 0.,  1.,  3.], nodes_on_bdry=True)
 
     Users can also manually specify the containing intervals dimensions by
     using the ``min_pt`` and ``max_pt`` arguments:
 
     >>> odl.nonuniform_partition([0, 1, 3], min_pt=-2, max_pt=3)
-    nonuniform_partition(
-        [ 0.,  1.,  3.],
-        min_pt=-2.0, max_pt=3.0
-    )
+    nonuniform_partition([ 0.,  1.,  3.], min_pt=-2.0, max_pt=3.0)
     """
     # Get parameters from kwargs
     min_pt = kwargs.pop('min_pt', None)
