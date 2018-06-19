@@ -52,8 +52,12 @@ def _fbp_filter(norm_freq, filter_type, frequency_scaling):
     ----------
     norm_freq : `array-like`
         Frequencies normalized to lie in the interval [0, 1].
-    filter_type : {'Ram-Lak', 'Shepp-Logan', 'Cosine', 'Hamming', 'Hann'}
+    filter_type : {'Ram-Lak', 'Shepp-Logan', 'Cosine', 'Hamming', 'Hann',
+                   `callable`}
         The type of filter to be used.
+        If a string, uses one of the standard filters with that name.
+        If a callable, it must take values in [0, 1] and return the filter
+        for this frequency.
     frequency_scaling : float
         Scaling of the frequencies for the filter. All frequencies are scaled
         by this number, any relative frequency above ``frequency_scaling`` is
@@ -72,17 +76,20 @@ def _fbp_filter(norm_freq, filter_type, frequency_scaling):
     ...                    filter_type='Hann',
     ...                    frequency_scaling=0.8)
     """
-
-    if filter_type == 'Ram-Lak':
-        filt = 1
+    if callable(filter_type):
+        filt = filter_type(norm_freq)
+    elif filter_type == 'Ram-Lak':
+        filt = np.copy(norm_freq)
     elif filter_type == 'Shepp-Logan':
-        filt = np.sinc(norm_freq / (2 * frequency_scaling))
+        filt = norm_freq * np.sinc(norm_freq / (2 * frequency_scaling))
     elif filter_type == 'Cosine':
-        filt = np.cos(norm_freq * np.pi / (2 * frequency_scaling))
+        filt = norm_freq * np.cos(norm_freq * np.pi / (2 * frequency_scaling))
     elif filter_type == 'Hamming':
-        filt = 0.54 + 0.46 * np.cos(norm_freq * np.pi / (frequency_scaling))
+        filt = norm_freq * (
+            0.54 + 0.46 * np.cos(norm_freq * np.pi / (frequency_scaling)))
     elif filter_type == 'Hann':
-        filt = np.cos(norm_freq * np.pi / (2 * frequency_scaling)) ** 2
+        filt = norm_freq * (
+            np.cos(norm_freq * np.pi / (2 * frequency_scaling)) ** 2)
     else:
         raise ValueError('unknown `filter_type` ({})'
                          ''.format(filter_type))
@@ -324,10 +331,12 @@ def fbp_filter_op(ray_trafo, padding=True, filter_type='Ram-Lak',
         If the data space should be zero padded. Without padding, the data may
         be corrupted due to the circular convolution used. Using padding makes
         the algorithm slower.
-    filter_type : string, optional
-        The type of filter to be used. The options are, approximate order from
-        most noise senstive to least noise sensitive: 'Ram-Lak', 'Shepp-Logan',
-        'Cosine', 'Hamming' and 'Hann'.
+    filter_type : optional
+        The type of filter to be used. The predefined options are, in
+        approximate order from most noise senstive to least noise sensitive:
+        'Ram-Lak', 'Shepp-Logan', 'Cosine', 'Hamming' and 'Hann'.
+        A callable can also be provided. It must take values in [0, 1] and
+        return the filter for this normalized frequency.
     frequency_scaling : float, optional
         Relative cutoff frequency for the filter.
         The normalized frequencies are rescaled so that they fit into the range
@@ -353,7 +362,7 @@ def fbp_filter_op(ray_trafo, padding=True, filter_type='Ram-Lak',
             norm_freq = abs_freq / np.max(abs_freq)
             filt = _fbp_filter(norm_freq, filter_type, frequency_scaling)
             scaling = 1 / (2 * alen)
-            return filt * abs_freq * scaling
+            return filt * np.max(abs_freq) * scaling
 
         # Define (padded) fourier transform
         if padding:
@@ -408,8 +417,8 @@ def fbp_filter_op(ray_trafo, padding=True, filter_type='Ram-Lak',
                 abs_freq = np.abs(rot_dir[0] * x[1] + rot_dir[1] * x[2])
             norm_freq = abs_freq / np.max(abs_freq)
             filt = _fbp_filter(norm_freq, filter_type, frequency_scaling)
-            scaling = scale / (2 * alen)
-            return filt * abs_freq * scaling
+            scaling = scale * np.max(abs_freq) / (2 * alen)
+            return filt * scaling
 
         # Define (padded) fourier transform
         if padding:
@@ -486,10 +495,12 @@ def fbp_op(ray_trafo, padding=True, filter_type='Ram-Lak',
         If the data space should be zero padded. Without padding, the data may
         be corrupted due to the circular convolution used. Using padding makes
         the algorithm slower.
-    filter_type : string, optional
-        The type of filter to be used. The options are, approximate order from
-        most noise senstive to least noise sensitive: 'Ram-Lak', 'Shepp-Logan',
-        'Cosine', 'Hamming' and 'Hann'.
+    filter_type : optional
+        The type of filter to be used. The predefined options are, in
+        approximate order from most noise senstive to least noise sensitive:
+        'Ram-Lak', 'Shepp-Logan', 'Cosine', 'Hamming' and 'Hann'.
+        A callable can also be provided. It must take values in [0, 1] and
+        return the filter for this normalized frequency.
     frequency_scaling : float, optional
         Relative cutoff frequency for the filter.
         The normalized frequencies are rescaled so that they fit into the range
@@ -519,8 +530,9 @@ if __name__ == '__main__':
     cutoff = 0.7
 
     plt.figure('fbp filter')
-    for filter_name in ['Ram-Lak', 'Shepp-Logan', 'Cosine', 'Hamming', 'Hann']:
-        plt.plot(x, x * _fbp_filter(x, filter_name, cutoff), label=filter_name)
+    for filter_name in ['Ram-Lak', 'Shepp-Logan', 'Cosine', 'Hamming', 'Hann',
+                        np.sqrt]:
+        plt.plot(x, _fbp_filter(x, filter_name, cutoff), label=filter_name)
 
     plt.title('Filters with frequency scaling = {}'.format(cutoff))
     plt.legend(loc=2)
@@ -544,10 +556,8 @@ if __name__ == '__main__':
     # Show the Parker weighting
 
     # Create Ray Transform in fan beam geometry
-    angle_partition = odl.uniform_partition(0, np.pi + 0.8, 360)
-    detector_partition = odl.uniform_partition(-40, 40, 558)
-    geometry = odl.tomo.FanFlatGeometry(
-        angle_partition, detector_partition, src_radius=80, det_radius=40)
+    geometry = odl.tomo.cone_beam_geometry(reco_space,
+                                           src_radius=40, det_radius=80)
     ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl='astra_cuda')
 
     # Crete and show parker weighting
