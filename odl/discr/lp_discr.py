@@ -1269,6 +1269,10 @@ class DiscreteLpElement(DiscretizedSpaceElement):
         """
         from odl.util.graphics import show_discrete_data
 
+        if 'interp' not in kwargs and not isinstance(self.space.interp, tuple):
+            # Otherwise different interp per axis
+            kwargs['interp'] = self.space.interp
+
         if self.ndim == 0:
             raise ValueError('nothing to show for 0-dimensional vector')
 
