@@ -3,22 +3,22 @@ language: python
 matrix:
     include:
         - python: 2.7
-          env: NUMPY_VERSION=1.14
+          env: NUMPY_VERSION='1.14.*'
 
         - python: 3.6
           env: NUMPY_VERSION=1.10.1
 
         - python: 3.6
-          env: NUMPY_VERSION=1.12
+          env: NUMPY_VERSION='1.12.*'
 
         - python: 3.6
-          env: NUMPY_VERSION=1.13
+          env: NUMPY_VERSION='1.13.*'
 
         - python: 3.6
-          env: NUMPY_VERSION=1.14 COVERALLS=true
+          env: NUMPY_VERSION='1.14.*' COVERALLS=true
 
         - python: 3.6
-          env: NUMPY_VERSION=1.14 SKIP_TESTS=true BUILD_DOCS=true
+          env: NUMPY_VERSION='1.14.*' SKIP_TESTS=true BUILD_DOCS=true
 
 sudo: false
 
