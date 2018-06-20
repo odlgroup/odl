@@ -107,10 +107,7 @@ def load_projections(folder, indices=None):
     angles = [d.DetectorFocalCenterAngularPosition for d in datasets]
     angles = -np.unwrap(angles) - np.pi  # different defintion of angles
 
-    # Make a parallel beam geometry with flat detector
-    angle_partition = odl.nonuniform_partition(angles)
-
-    # Set minimum and maximum point
+    # Set minimum and maximum corners
     shape = np.array([datasets[0].NumberofDetectorColumns,
                       datasets[0].NumberofDetectorRows])
     pixel_size = np.array([datasets[0].DetectorElementTransverseSpacing,
@@ -126,30 +123,39 @@ def load_projections(folder, indices=None):
     src_radius = datasets[0].DetectorFocalCenterRadialDistance
     det_radius = (datasets[0].ConstantRadialDistance -
                   datasets[0].DetectorFocalCenterRadialDistance)
-
-    # Convert pitch and offset to odl defintions
     pitch = (pixel_size[1] * shape[1] * datasets[0].SpiralPitchFactor *
              src_radius / (src_radius + det_radius))
-    offset_along_axis = (datasets[0].DetectorFocalCenterAxialPosition -
-                         angles[0] / (2 * np.pi) * pitch)
 
     # Get flying focal spot data
     offset_axial = np.array([d.SourceAxialPositionShift for d in datasets])
     offset_angular = np.array([d.SourceAngularPositionShift for d in datasets])
     offset_radial = np.array([d.SourceRadialDistanceShift for d in datasets])
 
-    angles_offset = angles - offset_angular
-    src_rad_offset = src_radius + offset_radial
-    offset_x = (np.cos(angles_offset) * (-src_rad_offset) -
-                np.cos(angles) * (-src_radius))
-    offset_y = (np.sin(angles_offset) * (-src_rad_offset) -
-                np.sin(angles) * (-src_radius))
-    offset_z = offset_axial
+    if 1:
+        # Apply only mean of offsets
+        src_radius = src_radius + np.mean(offset_radial)
+        angles = angles - np.mean(offset_angular)
+        offset_along_axis = np.mean(offset_axial) * (
+            src_radius / (src_radius + det_radius))
+    else:
+        # TODO: Implement proper handling of flying focal spot
+        angles_offset = angles - offset_angular
+        src_rad_offset = src_radius + offset_radial
+        offset_x = (np.cos(angles_offset) * (-src_rad_offset) -
+                    np.cos(angles) * (-src_radius))
+        offset_y = (np.sin(angles_offset) * (-src_rad_offset) -
+                    np.sin(angles) * (-src_radius))
+        offset_z = offset_axial
 
-    # TODO: WE CURRENTLY IGNORE THE OFFSETS DUE TO FLYING FOCAL SPOT
-    source_offsets = np.array([offset_x, offset_y, offset_z]).T
+        source_offsets = np.array([offset_x, offset_y, offset_z]).T
+
+    # Convert offset to odl defintions
+    offset_along_axis = (offset_along_axis +
+                         datasets[0].DetectorFocalCenterAxialPosition -
+                         angles[0] / (2 * np.pi) * pitch)
 
     # Assemble geometry
+    angle_partition = odl.nonuniform_partition(angles)
     geometry = odl.tomo.ConeFlatGeometry(angle_partition,
                                          detector_partition,
                                          src_radius=src_radius,
@@ -245,8 +251,11 @@ def load_reconstruction(folder, slice_start=0, slice_end=-1):
     shape = np.array([rows, cols, len(volumes)])
     min_pt = (np.array(dataset.ImagePositionPatient) -
               np.array(dataset.DataCollectionCenterPatient))
-    min_pt[:2] += 0.5 * np.array(dataset.PixelSpacing)
-    max_pt = min_pt + voxel_size * np.array([rows - 1, cols - 1, 0])
+
+    max_pt = min_pt + voxel_size * np.array([rows, cols, 0])
+
+    # axis 1 has reversed convention
+    min_pt[1], max_pt[1] = -max_pt[1], -min_pt[1]
 
     min_pt[2] = -np.array(datasets[0].DataCollectionCenterPatient)[2]
     min_pt[2] -= 0.5 * pixel_thickness
