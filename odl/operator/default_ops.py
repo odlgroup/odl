@@ -60,7 +60,7 @@ class ScalingOperator(Operator):
         rn(3).element([ 2.,  4.,  6.])
         """
         if not isinstance(domain, (LinearSpace, Field)):
-            raise TypeError('`space` {!r} not a `LinearSpace` or `Field` '
+            raise TypeError('`domain` {!r} not a `LinearSpace` or `Field` '
                             'instance'.format(domain))
 
         super(ScalingOperator, self).__init__(domain, domain, linear=True)
