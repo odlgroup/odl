@@ -37,6 +37,8 @@ __all__ = ('combine_proximals', 'proximal_convex_conj', 'proximal_translation',
            'proximal_box_constraint', 'proximal_nonnegativity',
            'proximal_l1', 'proximal_convex_conj_l1',
            'proximal_l2', 'proximal_convex_conj_l2',
+           'proximal_linfty',
+           'proj_simplex', 'proj_l1',
            'proximal_l2_squared', 'proximal_convex_conj_l2_squared',
            'proximal_l1_l2', 'proximal_convex_conj_l1_l2',
            'proximal_convex_conj_kl', 'proximal_convex_conj_kl_cross_entropy',
@@ -1439,6 +1441,171 @@ def proximal_l1_l2(space, lam=1, g=None):
             out.lincomb(1, x, -1, out)
 
     return ProximalL1L2
+
+
+def proximal_linfty(space):
+    """Proximal operator factory of the ``l_\infty``-norm.
+
+    Function for the proximal operator of the functional ``F`` where ``F``
+    is the ``l_\infty``-norm::
+
+        ``F(x) =  \sup_i |x_i|``
+
+    Parameters
+    ----------
+    space : `LinearSpace`
+        Domain of ``F``.
+
+    Returns
+    -------
+    prox_factory : callable
+        Factory for the proximal operator to be initialized.
+
+    Notes
+    -----
+    The proximal is computed by the Moreau identity and a projection onto an
+    l1-ball [PB2014].
+
+    See Also
+    --------
+    proj_l1 : projection onto l1-ball
+    """
+
+    class ProximalLInfty(Operator):
+
+        """Proximal operator of the linf-norm."""
+
+        def __init__(self, sigma):
+            """Initialize a new instance.
+
+            Parameters
+            ----------
+            sigma : positive float
+                Step size parameter
+            """
+            super(ProximalLInfty, self).__init__(
+                domain=space, range=space, linear=False)
+            self.sigma = float(sigma)
+
+        def _call(self, x, out):
+            """Return ``self(x)``."""
+
+            radius = 1
+
+            if x is out:
+                x = x.copy()
+
+            proj_l1(x, radius, out)
+            out.lincomb(-1, out, 1, x)
+
+    return ProximalLInfty
+
+
+def proj_l1(x, radius=1, out=None):
+    """Projection onto l1-ball.
+
+    Projection onto::
+
+        ``{ x \in X | ||x||_1 \leq r}``
+
+    with ``r`` being the radius.
+
+    Parameters
+    ----------
+    space : `LinearSpace`
+        Space / domain ``X``.
+    radius : positive float, optional
+        Radius ``r`` of the ball.
+
+    Returns
+    -------
+    prox_factory : callable
+        Factory for the proximal operator to be initialized.
+
+    Notes
+    -----
+    The projection onto an l1-ball can be computed by projection onto a
+    simplex, see [D+2008] for details.
+
+    References
+    ----------
+    [D+2008] Duchi, J., Shalev-Shwartz, S., Singer, Y., and Chandra, T.
+    *Efficient Projections onto the L1-ball for Learning in High dimensions*.
+    ICML 2008, pp. 272-279. http://doi.org/10.1145/1390156.1390191
+
+    See Also
+    --------
+    proximal_linfty : proximal for l-infinity norm
+    proj_simplex : projection onto simplex
+    """
+
+    if out is None:
+        out = x.space.element()
+
+    u = x.ufuncs.absolute()
+    v = x.ufuncs.sign()
+    proj_simplex(u, radius, out)
+    out *= v
+
+    return out
+
+
+def proj_simplex(x, diameter=1, out=None):
+    """Projection onto simplex.
+
+    Projection onto::
+
+        ``{ x \in X | x_i \geq 0, \sum_i x_i = r}``
+
+    with `r` being the diameter. It is computed by the formula proposed in
+    [D+2008]
+
+    Parameters
+    ----------
+    space : `LinearSpace`
+        Space / domain ``X``.
+    diameter : positive float, optional
+        Diameter ``r`` of simplex.
+
+    Returns
+    -------
+    prox_factory : callable
+        Factory for the proximal operator to be initialized.
+
+    Notes
+    -----
+    The projection onto a simplex is not of closed-form but can be solved by a
+    non-iterative algorithm, see [D+2008] for details.
+
+    References
+    ----------
+    [D+2008] Duchi, J., Shalev-Shwartz, S., Singer, Y., and Chandra, T.
+    *Efficient Projections onto the L1-ball for Learning in High dimensions*.
+    ICML 2008, pp. 272-279. http://doi.org/10.1145/1390156.1390191
+
+    See Also
+    --------
+    proj_l1 : projection onto l1-norm ball
+    """
+
+    if out is None:
+        out = x.space.element()
+
+    # sort values in descending order
+    x_sor = x.asarray().flatten()
+    x_sor.sort()
+    x_sor = x_sor[::-1]
+
+    # find critical index
+    j = np.arange(1, x.size + 1)
+    x_avrg = (1 / j) * (np.cumsum(x_sor) - diameter)
+    crit = x_sor - x_avrg
+    i = np.argwhere(crit >= 0).flatten().max()
+
+    # output is a shifted and thresholded version of the input
+    out[:] = np.maximum(x - x_avrg[i], 0)
+
+    return out
 
 
 def proximal_convex_conj_kl(space, lam=1, g=None):
