@@ -17,7 +17,7 @@ from odl.space.base_tensors import TensorSpace
 from odl.space.npy_tensors import NumpyTensor
 from odl.space.weighting import ConstWeighting
 from odl.util.testutils import (
-    almost_equal, all_equal, all_almost_equal, noise_elements, simple_fixture)
+    all_equal, all_almost_equal, noise_elements, simple_fixture)
 
 
 USE_ARRAY_UFUNCS_INTERFACE = (parse_version(np.__version__) >=
@@ -1154,7 +1154,7 @@ def test_real_imag(odl_tspace_impl, odl_elem_order):
         x.imag = [4, 5, 6, 7]
 
 
-def testodl_reduction(odl_tspace_impl, odl_reduction):
+def test_reduction(odl_tspace_impl, odl_reduction):
     impl = odl_tspace_impl
     name = odl_reduction
     space = odl.uniform_discr([0, 0], [1, 1], [2, 2], impl=impl)
@@ -1163,7 +1163,7 @@ def testodl_reduction(odl_tspace_impl, odl_reduction):
 
     # Create some data
     x_arr, x = noise_elements(space, 1)
-    assert almost_equal(reduction(x_arr), getattr(x.ufuncs, name)())
+    assert reduction(x_arr) == pytest.approx(getattr(x.ufuncs, name)())
 
 
 def test_power(odl_tspace_impl, power):
@@ -1249,7 +1249,7 @@ def test_norm_interval(exponent):
         assert discr_testfunc.norm() <= 1  # Max at boundary not hit
     else:
         true_norm = (1 + 2 * p) ** (-1 / p)
-        assert almost_equal(discr_testfunc.norm(), true_norm, places=2)
+        assert discr_testfunc.norm() == pytest.approx(true_norm, rel=1e-2)
 
 
 def test_norm_rectangle(exponent):
@@ -1267,16 +1267,13 @@ def test_norm_rectangle(exponent):
         assert discr_testfunc.norm() <= 1  # Max at boundary not hit
     else:
         true_norm = ((1 + 2 * p) * (1 + 3 * p) / 2) ** (-1 / p)
-        assert almost_equal(discr_testfunc.norm(), true_norm, places=2)
+        assert discr_testfunc.norm() == pytest.approx(true_norm, rel=1e-2)
 
 
 def test_norm_rectangle_boundary(odl_tspace_impl, exponent):
     # Check the constant function 1 in different situations regarding the
     # placement of the outermost grid points.
     impl = odl_tspace_impl
-
-    if exponent == float('inf'):
-        pytest.xfail('inf-norm not implemented in CUDA')
 
     dtype = 'float32'
     rect = odl.IntervalProd([-1, -2], [1, 2])
@@ -1288,8 +1285,8 @@ def test_norm_rectangle_boundary(odl_tspace_impl, exponent):
     if exponent == float('inf'):
         assert discr.one().norm() == 1
     else:
-        assert almost_equal(discr.one().norm(),
-                            (rect.volume) ** (1 / exponent))
+        assert (discr.one().norm() ==
+                pytest.approx(rect.volume ** (1 / exponent)))
 
     # Nodes on the boundary (everywhere)
     discr = odl.uniform_discr_fromspace(
@@ -1298,8 +1295,8 @@ def test_norm_rectangle_boundary(odl_tspace_impl, exponent):
     if exponent == float('inf'):
         assert discr.one().norm() == 1
     else:
-        assert almost_equal(discr.one().norm(),
-                            (rect.volume) ** (1 / exponent))
+        assert (discr.one().norm() ==
+                pytest.approx(rect.volume ** (1 / exponent)))
 
     # Nodes on the boundary (selective)
     discr = odl.uniform_discr_fromspace(
@@ -1309,8 +1306,8 @@ def test_norm_rectangle_boundary(odl_tspace_impl, exponent):
     if exponent == float('inf'):
         assert discr.one().norm() == 1
     else:
-        assert almost_equal(discr.one().norm(),
-                            (rect.volume) ** (1 / exponent))
+        assert (discr.one().norm() ==
+                pytest.approx(rect.volume ** (1 / exponent)))
 
     discr = odl.uniform_discr_fromspace(
         fspace, (4, 8), exponent=exponent,
@@ -1319,8 +1316,8 @@ def test_norm_rectangle_boundary(odl_tspace_impl, exponent):
     if exponent == float('inf'):
         assert discr.one().norm() == 1
     else:
-        assert almost_equal(discr.one().norm(),
-                            (rect.volume) ** (1 / exponent))
+        assert (discr.one().norm() ==
+                pytest.approx(rect.volume ** (1 / exponent)))
 
     # Completely arbitrary boundary
     grid = odl.uniform_grid([0, 0], [1, 1], (4, 4))
@@ -1333,8 +1330,8 @@ def test_norm_rectangle_boundary(odl_tspace_impl, exponent):
     if exponent == float('inf'):
         assert discr.one().norm() == 1
     else:
-        assert almost_equal(discr.one().norm(),
-                            (rect.volume) ** (1 / exponent))
+        assert (discr.one().norm() ==
+                pytest.approx(rect.volume ** (1 / exponent)))
 
 
 def test_uniform_discr_fromdiscr_one_attr():

@@ -14,7 +14,7 @@ import odl
 from odl.util import (
     apply_on_boundary, fast_1d_tensor_mult, resize_array, is_real_dtype)
 from odl.util.numerics import _SUPPORTED_RESIZE_PAD_MODES
-from odl.util.testutils import all_equal, almost_equal, simple_fixture
+from odl.util.testutils import all_equal, dtype_tol, simple_fixture
 
 
 # --- pytest fixtures --- #
@@ -355,8 +355,9 @@ def test_resize_array_adj(resize_setup, odl_floating_dtype):
     resized_adj = resize_array(other_arr, array.shape, offset, pad_mode,
                                pad_const, direction='adjoint')
 
-    assert almost_equal(np.vdot(resized.ravel(), other_arr.ravel()),
-                        np.vdot(array.ravel(), resized_adj.ravel()))
+    assert (np.vdot(resized.ravel(), other_arr.ravel()) ==
+            pytest.approx(np.vdot(array.ravel(), resized_adj.ravel()),
+                          rel=dtype_tol(dtype)))
 
 
 def test_resize_array_corner_cases(odl_scalar_dtype, padding):

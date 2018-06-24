@@ -16,7 +16,7 @@ import odl
 from odl.discr.diff_ops import (
     finite_diff, PartialDerivative, Gradient, Divergence, Laplacian)
 from odl.util.testutils import (
-    all_equal, all_almost_equal, almost_equal, noise_element, simple_fixture)
+    all_equal, all_almost_equal, dtype_tol, noise_element, simple_fixture)
 
 
 # --- pytest fixtures --- #
@@ -270,7 +270,7 @@ def test_part_deriv(space, method, padding):
         # Check not to use trivial data
         assert lhs != 0
         assert rhs != 0
-        assert almost_equal(lhs, rhs, places=4)
+        assert lhs == pytest.approx(rhs, rel=dtype_tol(space.dtype))
 
 
 # --- Gradient --- #
@@ -306,9 +306,6 @@ def test_gradient_init():
 
 def test_gradient(space, method, padding):
     """Discretized spatial gradient operator."""
-
-    places = 2 if space.dtype == np.float32 else 4
-
     with pytest.raises(TypeError):
         Gradient(odl.rn(1), method=method)
 
@@ -347,7 +344,7 @@ def test_gradient(space, method, padding):
     # Check not to use trivial data
     assert lhs != 0
     assert rhs != 0
-    assert almost_equal(lhs, rhs, places=places)
+    assert lhs == pytest.approx(rhs, rel=dtype_tol(space.dtype))
 
     # Higher-dimensional arrays
     lin_size = 3
@@ -392,7 +389,6 @@ def test_divergence_init():
 
 def test_divergence(space, method, padding):
     """Discretized spatial divergence operator."""
-
     # Invalid space
     with pytest.raises(TypeError):
         Divergence(range=odl.rn(1), method=method)
@@ -432,7 +428,7 @@ def test_divergence(space, method, padding):
     # Check not to use trivial data
     assert lhs != 0
     assert rhs != 0
-    assert almost_equal(lhs, rhs, places=4)
+    assert lhs == pytest.approx(rhs, rel=dtype_tol(space.dtype))
 
 
 # --- Laplacian --- #
@@ -497,7 +493,7 @@ def test_laplacian(space, padding):
     # Check not to use trivial data
     assert lhs != 0
     assert rhs != 0
-    assert almost_equal(lhs, rhs, places=4)
+    assert lhs == pytest.approx(rhs, rel=dtype_tol(space.dtype))
 
 
 if __name__ == '__main__':

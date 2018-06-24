@@ -19,8 +19,7 @@ from odl import (Operator, OperatorSum, OperatorComp,
                  OpTypeError, OpDomainError, OpRangeError)
 from odl.operator.operator import _function_signature, _dispatch_call_args
 from odl.util.testutils import (
-    almost_equal, all_almost_equal, noise_element, noise_elements,
-    simple_fixture)
+    all_almost_equal, noise_element, noise_elements, simple_fixture)
 from odl.util.utility import getargspec
 
 
@@ -733,7 +732,7 @@ def test_nonlinear_functional():
 
     op = SumSquaredFunctional(r3)
 
-    assert almost_equal(op(x), np.sum(x ** 2))
+    assert op(x) == pytest.approx(np.sum(x ** 2))
 
 
 def test_nonlinear_functional_out():
@@ -758,31 +757,31 @@ def test_nonlinear_functional_operators():
     C = mat + mat2
 
     assert not C.is_linear
-    assert almost_equal(C(x), mat(x) + mat2(x))
+    assert C(x) == pytest.approx(mat(x) + mat2(x))
 
     # Minus
     C = mat - mat2
 
     assert not C.is_linear
-    assert almost_equal(C(x), mat(x) - mat2(x))
+    assert C(x) == pytest.approx(mat(x) - mat2(x))
 
     # left mul
     C = 2.0 * mat
 
     assert not C.is_linear
-    assert almost_equal(C(x), 2.0 * mat(x))
+    assert C(x) == pytest.approx(2.0 * mat(x))
 
     # right mul
     C = mat * 2.0
 
     assert not C.is_linear
-    assert almost_equal(C(x), mat(x * 2.0))
+    assert C(x) == pytest.approx(mat(x * 2.0))
 
     # right divide
     C = mat / 2.0
 
     assert not C.is_linear
-    assert almost_equal(C(x), mat(x / 2.0))
+    assert C(x) == pytest.approx(mat(x / 2.0))
 
 
 # test functions to dispatch

@@ -105,38 +105,25 @@ def optimization_problem(request):
 
 def test_solver(optimization_problem, iterative_solver):
     """Test iterative solver for solving some simple problems."""
-
-    # Solve within 1%
-    places = 2
-
     op, x, rhs = optimization_problem
 
-    # Solve problem
     iterative_solver(op, x, rhs)
-
-    # Assert residual is small
-    assert all_almost_equal(op(x), rhs, places)
+    assert all_almost_equal(op(x), rhs, ndigits=2)
 
 
 def test_steepst_descent():
     """Test steepest descent on the rosenbrock function in 3d."""
-
     space = odl.rn(3)
     scale = 1  # only mildly ill-behaved
     rosenbrock = odl.solvers.RosenbrockFunctional(space, scale)
 
-    # Create line search object
     line_search = odl.solvers.BacktrackingLineSearch(
         rosenbrock, 0.1, 0.01)
-
-    # Initial guess
     x = rosenbrock.domain.zero()
-
-    # Solving the problem
     odl.solvers.steepest_descent(rosenbrock, x, maxiter=40,
                                  line_search=line_search)
 
-    assert all_almost_equal(x, [1, 1, 1], places=2)
+    assert all_almost_equal(x, [1, 1, 1], ndigits=2)
 
 
 if __name__ == '__main__':

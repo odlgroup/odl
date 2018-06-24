@@ -14,8 +14,7 @@ import scipy
 import pytest
 
 import odl
-from odl.util.testutils import (all_almost_equal, noise_element,
-                                simple_fixture)
+from odl.util.testutils import all_almost_equal, noise_element, simple_fixture
 from odl.solvers.functional.default_functionals import (
     KullbackLeiblerConvexConj, KullbackLeiblerCrossEntropyConvexConj)
 

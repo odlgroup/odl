@@ -20,38 +20,44 @@ from time import time
 from odl.util.utility import run_from_ipython, is_string
 
 
-__all__ = ('almost_equal', 'all_equal', 'all_almost_equal', 'never_skip',
-           'skip_if_no_stir', 'skip_if_no_pywavelets',
-           'skip_if_no_pyfftw', 'skip_if_no_largescale',
-           'noise_array', 'noise_element', 'noise_elements',
-           'Timer', 'timeit', 'ProgressBar', 'ProgressRange',
-           'test', 'run_doctests', 'test_file')
+__all__ = (
+    'all_equal', 'all_almost_equal', 'dtype_ndigits', 'dtype_tol',
+    'never_skip', 'skip_if_no_stir', 'skip_if_no_pywavelets',
+    'skip_if_no_pyfftw', 'skip_if_no_largescale', 'noise_array',
+    'noise_element', 'noise_elements', 'Timer', 'timeit', 'ProgressBar',
+    'ProgressRange', 'test', 'run_doctests', 'test_file'
+)
 
 
-def _places(a, b, default=None):
-    """Return number of expected correct digits between ``a`` and ``b``.
+def _ndigits(a, b, default=None):
+    """Return number of expected correct digits comparing ``a`` and ``b``.
 
-    Returned numbers if one of ``a.dtype`` and ``b.dtype`` is as below:
-        1 -- for ``np.float16``
+    The returned number is the minimum `dtype_ndigits` of the two objects.
 
-        3 -- for ``np.float32`` or ``np.complex64``
-
-        5 -- for all other cases
+    See Also
+    --------
+    dtype_ndigits
     """
     dtype1 = getattr(a, 'dtype', object)
     dtype2 = getattr(b, 'dtype', object)
-    return min(dtype_places(dtype1, default), dtype_places(dtype2, default))
+    return min(dtype_ndigits(dtype1, default), dtype_ndigits(dtype2, default))
 
 
-def dtype_places(dtype, default=None):
-    """Return number of correct digits expected for given dtype.
+def dtype_ndigits(dtype, default=None):
+    """Return the number of correct digits expected for a given dtype.
+
+    This is intended as a somewhat generous default (relative) precision for
+    results of more or less stable computations.
 
     Returned numbers:
-        1 -- for ``np.float16``
 
-        3 -- for ``np.float32`` or ``np.complex64``
+    - ``np.float16``: ``1``
+    - ``np.float32`` or ``np.complex64``: ``3``
+    - Others: ``default`` if given, otherwise ``5``
 
-        5 -- for all other cases
+    See Also
+    --------
+    dtype_tol : Same precision expressed as tolerance
     """
     small_dtypes = [np.float32, np.complex64]
     tiny_dtypes = [np.float16]
@@ -64,32 +70,23 @@ def dtype_places(dtype, default=None):
         return default if default is not None else 5
 
 
-def almost_equal(a, b, places=None):
-    """Return ``True`` if the scalars ``a`` and ``b`` are almost equal."""
-    if a is None and b is None:
-        return True
+def dtype_tol(dtype, default=None):
+    """Return a tolerance for a given dtype.
 
-    if places is None:
-        places = _places(a, b)
+    This is intended as a somewhat generous default (relative) tolerance for
+    results of more or less stable computations.
 
-    eps = 10 ** -places
+    Returned numbers:
 
-    try:
-        complex(a)
-        complex(b)
-    except TypeError:
-        return False
+    - ``np.float16``: ``1e-1``
+    - ``np.float32`` or ``np.complex64``: ``1e-3``
+    - Others: ``default`` if given, otherwise ``1e-5``
 
-    if np.isnan(a) and np.isnan(b):
-        return True
-
-    if np.isinf(a) and np.isinf(b):
-        return a == b
-
-    if abs(complex(b)) < eps:
-        return abs(complex(a) - complex(b)) < eps
-    else:
-        return abs(a / b - 1) < eps
+    See Also
+    --------
+    dtype_ndigits : Same tolerance expressed in number of digits.
+    """
+    return 10 ** -dtype_ndigits(dtype, default)
 
 
 def all_equal(iter1, iter2):
@@ -132,13 +129,13 @@ def all_equal(iter1, iter2):
     return True
 
 
-def all_almost_equal_array(v1, v2, places):
+def all_almost_equal_array(v1, v2, ndigits):
     return np.allclose(v1, v2,
-                       rtol=10 ** (-places), atol=10 ** (-places),
+                       rtol=10 ** -ndigits, atol=10 ** -ndigits,
                        equal_nan=True)
 
 
-def all_almost_equal(iter1, iter2, places=None):
+def all_almost_equal(iter1, iter2, ndigits=None):
     """Return ``True`` if all elements in ``a`` and ``b`` are almost equal."""
     try:
         if iter1 is iter2 or iter1 == iter2:
@@ -150,17 +147,21 @@ def all_almost_equal(iter1, iter2, places=None):
         return True
 
     if hasattr(iter1, '__array__') and hasattr(iter2, '__array__'):
-        # Only get default places if comparing arrays, need to keep `None`
+        # Only get default ndigits if comparing arrays, need to keep `None`
         # otherwise for recursive calls.
-        if places is None:
-            places = _places(iter1, iter2, None)
-        return all_almost_equal_array(iter1, iter2, places)
+        if ndigits is None:
+            ndigits = _ndigits(iter1, iter2, None)
+        return all_almost_equal_array(iter1, iter2, ndigits)
 
     try:
         it1 = iter(iter1)
         it2 = iter(iter2)
     except TypeError:
-        return almost_equal(iter1, iter2, places)
+        if ndigits is None:
+            ndigits = _ndigits(iter1, iter2, None)
+        return np.isclose(iter1, iter2,
+                          atol=10 ** -ndigits, rtol=10 ** -ndigits,
+                          equal_nan=True)
 
     diff_length_sentinel = object()
     for [ip1, ip2] in zip_longest(it1, it2,
@@ -170,7 +171,7 @@ def all_almost_equal(iter1, iter2, places=None):
         if ip1 is diff_length_sentinel or ip2 is diff_length_sentinel:
             return False
 
-        if not all_almost_equal(ip1, ip2, places):
+        if not all_almost_equal(ip1, ip2, ndigits):
             return False
 
     return True
