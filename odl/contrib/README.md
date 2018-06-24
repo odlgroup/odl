@@ -75,7 +75,7 @@ In summary, the structure after adding your code would look like this:
  |                     |      |-- example2.py
  |                     |      ...
  |                     |
- |                     |--- tests
+ |                     |--- test
  |                     ...    |
  |                            |-- test_mymodule1.py
  |                            |-- test_mymodule2.py
@@ -92,5 +92,7 @@ We recommend that you add [doctests](https://odlgroup.github.io/odl/dev/testing.
 
 **Note:** If you add unit tests, they will by default *not* be run together with the rest of the ODL test suite. This relaxes requirements regarding success and runtime somewhat, but keep in mind that users (and you) will only want to run the tests if they pass and do not take too much time.
 
-To test all of your code with [pytest](https://pytest.org/), run `pytest odl/contrib/mylib/` for the unit tests only and `pytest odl/contrib/mylib --doctest-modules` to also run the doctests.
+To test all of your code with [pytest](https://pytest.org/), run `pytest odl/contrib/mylib/test/*` for the unit tests only and `pytest odl/contrib/mylib/* --doctest-modules` to run the doctests only.
 Also check your code for [PEP8](https://www.python.org/dev/peps/pep-0008/) compliance via `pytest --pep8`. For more information, see the [ODL testing documentation](https://odlgroup.github.io/odl/dev/testing.html).
+
+Note that due to the package layout, most tests in the entire `odl.contrib` sub-package can be run by `pytest odl/contrib/*/test/*`.
