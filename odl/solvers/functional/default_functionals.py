@@ -121,8 +121,8 @@ class LpNorm(Functional):
         elif self.exponent == np.inf:
             return proximal_linfty(space=self.domain)
         else:
-            raise NotImplementedError('`proximal` only implemented for p=1 or '
-                                      'p=2')
+            raise NotImplementedError('`proximal` only implemented for p=1, '
+                                      'p=2, and p=inf')
 
     @property
     def gradient(self):
@@ -177,8 +177,8 @@ class LpNorm(Functional):
             return L2Gradient()
 
         else:
-            raise NotImplementedError('`gradient` only implemented for p=1 or '
-                                      'p=2')
+            raise NotImplementedError('`gradient` only implemented for p=1 '
+                                      'and p=2')
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -2230,8 +2230,10 @@ class IndicatorSimplex(Functional):
             Domain of the functional.
         diameter : positive float, optional
             Diameter of the simplex.
-        sum_rtol : float
-            Relative tolerance for sum comparison.
+        sum_rtol : float, optional
+            Relative tolerance for sum comparison. If set to None, the default
+            is ``space.size`` times ``1e-10`` when ``space.dtype`` is
+            ``float64`` and ``1e-6`` otherwise.
 
         Examples
         --------
@@ -2255,9 +2257,9 @@ class IndicatorSimplex(Functional):
 
         if sum_rtol is None:
             if space.dtype == 'float64':
-                sum_rtol = 1e-10
+                sum_rtol = 1e-10 * self.domain.size
             else:
-                sum_rtol = 1e-6
+                sum_rtol = 1e-6 * self.domain.size
         self.sum_rtol = sum_rtol
 
     def _call(self, x):
@@ -2321,7 +2323,7 @@ class IndicatorSimplex(Functional):
 
 class IndicatorSumConstraint(Functional):
 
-    """The indicator functional of a unit sum constraint.
+    r"""Indicator functional of a unit sum constraint.
 
     Notes
     -----
@@ -2330,10 +2332,10 @@ class IndicatorSumConstraint(Functional):
     .. math::
         F(x)
         =
-        \\begin{cases}
-            0 & \\text{if } \sum_i x_i = 1 \\\\
-            +\\infty & \\text{else.}
-        \\end{cases}
+        \begin{cases}
+            0 & \text{if } \sum_i x_i = 1 \\
+            +\infty & \text{else.}
+        \end{cases}
     """
 
     def __init__(self, space, sum_value=1, sum_rtol=None):
@@ -2345,8 +2347,10 @@ class IndicatorSumConstraint(Functional):
             Domain of the functional.
         sum_value : float
             Desired value of the sum constraint.
-        sum_rtol : float
-            Relative tolerance for sum comparison.
+        sum_rtol : float, optional
+            Relative tolerance for sum comparison. If set to None, the default
+            is ``space.size`` times ``1e-10`` when ``space.dtype`` is
+            ``float64`` and ``1e-6`` otherwise.
 
         Examples
         --------
@@ -2369,9 +2373,9 @@ class IndicatorSumConstraint(Functional):
 
         if sum_rtol is None:
             if space.dtype == 'float64':
-                sum_rtol = 1e-10
+                sum_rtol = 1e-10 * self.domain.size
             else:
-                sum_rtol = 1e-6
+                sum_rtol = 1e-6 * self.domain.size
         self.sum_rtol = float(sum_rtol)
         self.sum_value = float(sum_value)
 

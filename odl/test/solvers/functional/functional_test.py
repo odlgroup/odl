@@ -59,6 +59,11 @@ func_params = ['l1 ', 'l2', 'l2^2', 'constant', 'zero', 'ind_unit_ball_1',
 
 func_ids = [" functional='{}' ".format(p) for p in func_params]
 
+FUNCTIONALS_WITHOUT_DERIVATIVE = (
+    odl.solvers.functional.IndicatorLpUnitBall,
+    odl.solvers.functional.IndicatorSimplex,
+    odl.solvers.functional.IndicatorSumConstraint)
+
 
 @pytest.fixture(scope="module", ids=func_ids, params=func_params)
 def functional(request, space):
@@ -137,9 +142,7 @@ def test_derivative(functional):
     the inner product of the gradient and the direction, if the gradient is
     defined.
     """
-    if isinstance(functional, (odl.solvers.functional.IndicatorLpUnitBall,
-                               odl.solvers.functional.IndicatorSimplex,
-                               odl.solvers.functional.IndicatorSumConstraint)):
+    if isinstance(functional, FUNCTIONALS_WITHOUT_DERIVATIVE):
         # IndicatorFunction has no derivative
         with pytest.raises(NotImplementedError):
             functional.derivative(functional.domain.zero())
@@ -638,9 +641,7 @@ def test_bregman(functional):
     """Test for the Bregman distance of a functional."""
     rtol = dtype_tol(functional.domain.dtype)
 
-    if isinstance(functional, (odl.solvers.functional.IndicatorLpUnitBall,
-                               odl.solvers.functional.IndicatorSimplex,
-                               odl.solvers.functional.IndicatorSumConstraint)):
+    if isinstance(functional, FUNCTIONALS_WITHOUT_DERIVATIVE):
         # IndicatorFunction has no gradient
         with pytest.raises(NotImplementedError):
             functional.gradient(functional.domain.zero())
