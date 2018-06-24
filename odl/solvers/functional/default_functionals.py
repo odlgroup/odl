@@ -1763,7 +1763,7 @@ class QuadraticForm(Functional):
         operator : `Operator`, optional
             Operator for the quadratic part of the functional.
             ``None`` means that this part is ignored.
-        vector : `Operator`, optional
+        vector : `LinearSpaceElement`, optional
             Vector for the linear part of the functional.
             ``None`` means that this part is ignored.
         constant : `Operator`, optional
