@@ -130,20 +130,23 @@ def dedent(string, indent_str='   ', max_levels=None):
     <->Level 2.
     <-><->Level 3.
     """
+    if len(indent_str) == 0:
+        return string
+
     lines = string.splitlines()
 
     # Determine common (minumum) number of indentation levels, capped at
     # `max_levels` if given
     def num_indents(line):
-        nindents = 0
-        while True:
+        max_num = int(np.ceil(len(line) / len(indent_str)))
+
+        for i in range(max_num):
             if line.startswith(indent_str):
-                nindents += 1
                 line = line[len(indent_str):]
             else:
                 break
 
-        return nindents
+        return i
 
     num_levels = num_indents(min(lines, key=num_indents))
     if max_levels is not None:
@@ -1030,7 +1033,6 @@ def _separators(strings, linewidth):
         cur_line_len = indent_len
 
     for i, s in enumerate(strings[1:-1]):
-
         cur_line_len += len(s) + 1
 
         if '\n' in s:
@@ -1075,7 +1077,7 @@ def repr_string(outer_string, inner_strings, allow_mixed_seps=True):
     The returned string is formatted such that it does not extend
     beyond the line boundary if avoidable. The line width is taken from
     NumPy's printing options that can be retrieved with
-    ``np.get_printoptions()``. They can be temporarily overridden
+    `numpy.get_printoptions`. They can be temporarily overridden
     using the `npy_printoptions` context manager. See Examples for details.
 
     Parameters
