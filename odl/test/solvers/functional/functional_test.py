@@ -55,7 +55,7 @@ func_params = ['l1 ', 'l2', 'l2^2', 'constant', 'zero', 'ind_unit_ball_1',
                'ind_unit_ball_2', 'ind_unit_ball_pi', 'ind_unit_ball_inf',
                'product', 'quotient', 'kl', 'kl_cc', 'kl_cross_ent',
                'kl_cc_cross_ent', 'huber', 'groupl1', 'bregman_l2squared',
-               'bregman_l1']
+               'bregman_l1', 'indicator_simplex', 'indicator_sum_constraint']
 
 func_ids = [" functional='{}' ".format(p) for p in func_params]
 
@@ -115,6 +115,12 @@ def functional(request, space):
         l1 = odl.solvers.L1Norm(space)
         subgrad = l1.gradient(point)
         func = odl.solvers.BregmanDistance(l1, point, subgrad)
+    elif name == 'indicator_simplex':
+        diameter = 1.23
+        func = odl.solvers.IndicatorSimplex(space, diameter)
+    elif name == 'indicator_sum_constraint':
+        sum_value = 1.23
+        func = odl.solvers.IndicatorSumConstraint(space, sum_value)
     else:
         assert False
 
@@ -131,7 +137,9 @@ def test_derivative(functional):
     the inner product of the gradient and the direction, if the gradient is
     defined.
     """
-    if isinstance(functional, odl.solvers.functional.IndicatorLpUnitBall):
+    if isinstance(functional, (odl.solvers.functional.IndicatorLpUnitBall,
+                               odl.solvers.functional.IndicatorSimplex,
+                               odl.solvers.functional.IndicatorSumConstraint)):
         # IndicatorFunction has no derivative
         with pytest.raises(NotImplementedError):
             functional.derivative(functional.domain.zero())
@@ -630,7 +638,9 @@ def test_bregman(functional):
     """Test for the Bregman distance of a functional."""
     rtol = dtype_tol(functional.domain.dtype)
 
-    if isinstance(functional, odl.solvers.functional.IndicatorLpUnitBall):
+    if isinstance(functional, (odl.solvers.functional.IndicatorLpUnitBall,
+                               odl.solvers.functional.IndicatorSimplex,
+                               odl.solvers.functional.IndicatorSumConstraint)):
         # IndicatorFunction has no gradient
         with pytest.raises(NotImplementedError):
             functional.gradient(functional.domain.zero())
