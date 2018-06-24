@@ -118,6 +118,7 @@ def dedent(string, indent_str='   ', max_levels=None):
     Level 1.
     <->Level 2.
     <-><->Level 3.
+
     >>> text = '''<-><->Level 2.
     ... <-><-><->Level 3.'''
     >>> print(text)
