@@ -9,7 +9,7 @@ Reference datasets with accompanying ODL geometries etc.
   Magnetic Resonance Imaging (MRI).
   * `tugraz`
 
-  MRI data as provided by TU Graz. The data is so called multi-channel or multicoil data, which implies that the reconstruction is non-linear.
+    MRI data as provided by TU Graz (License [CC BY 4.0](./licenses/CC_BY_40)). The data is so called multi-channel or multicoil data, which implies that the reconstruction is non-linear.
     * `mri_head_data_4_channel`
     * `mri_head_data_32_channel`
     * `mri_knee_data_8_channel`
@@ -18,7 +18,7 @@ Reference datasets with accompanying ODL geometries etc.
   Computed Tomography (CT)
   * `fips`
 
-    CT data as provided by FIPS. The data is non-human and high resolution.
+    CT data as provided by FIPS (License [CC BY 4.0](./licenses/CC_BY_40)). The data is non-human and high resolution.
     * `walnut_data`
     * `lotus_root_data`
 
@@ -30,7 +30,7 @@ Reference datasets with accompanying ODL geometries etc.
   Two dimensional images.
   * `cambridge`
 
-    Various images as provided by the University of Cambridge, see http://store.maths.cam.ac.uk/DAMTP/me404/data_sets/
+    Various images as provided by the University of Cambridge, see http://store.maths.cam.ac.uk/DAMTP/me404/data_sets/ (License [CC BY 4.0](./licenses/CC_BY_40))
     * `brain_phantom`
     * `resolution_phantom`
     * `building`
