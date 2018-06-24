@@ -18,9 +18,11 @@ from odl.space import ProductSpace
 from odl.operator import (Operator, ConstantOperator, ZeroOperator,
                           ScalingOperator, DiagonalOperator, PointwiseNorm)
 from odl.solvers.nonsmooth.proximal_operators import (
+    proj_simplex,
     proximal_l1, proximal_convex_conj_l1,
     proximal_l1_l2, proximal_convex_conj_l1_l2,
     proximal_l2, proximal_convex_conj_l2, proximal_l2_squared,
+    proximal_linfty,
     proximal_huber,
     proximal_const_func, proximal_box_constraint,
     proximal_convex_conj_kl, proximal_convex_conj_kl_cross_entropy,
@@ -35,6 +37,8 @@ __all__ = ('ZeroFunctional', 'ConstantFunctional', 'ScalingFunctional',
            'IndicatorZero', 'IndicatorBox', 'IndicatorNonnegativity',
            'IndicatorLpUnitBall', 'IndicatorGroupL1UnitBall',
            'IndicatorNuclearNormUnitBall',
+           'IndicatorSimplex',
+           'IndicatorSumConstraint',
            'KullbackLeibler', 'KullbackLeiblerCrossEntropy',
            'QuadraticForm',
            'SeparableSum', 'MoreauEnvelope')
@@ -114,6 +118,8 @@ class LpNorm(Functional):
             return proximal_l1(space=self.domain)
         elif self.exponent == 2:
             return proximal_l2(space=self.domain)
+        elif self.exponent == np.inf:
+            return proximal_linfty(space=self.domain)
         else:
             raise NotImplementedError('`proximal` only implemented for p=1 or '
                                       'p=2')
@@ -2191,6 +2197,228 @@ class IndicatorNuclearNormUnitBall(Functional):
                                          self.domain,
                                          self.__norm.outernorm.exponent,
                                          self.__norm.pwisenorm.exponent)
+
+
+class IndicatorSimplex(Functional):
+    r"""Indicator functional of simplex.
+
+    Notes
+    -----
+    The functional :math:`F` is given by:
+
+    .. math::
+        F(x)
+        =
+        \begin{cases}
+            0 & \text{if } x_i \geq 0 \forall i \text{ and } \sum_i x_i = r \\
+            +\infty & \text{else.}
+        \end{cases}
+
+    where `r` is the diameter.
+    """
+
+    def __init__(self, space, diameter=1, sum_rtol=None):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        space : `DiscreteLp` or `FnBase`
+            Domain of the functional.
+        diameter : positive float, optional
+            Diameter `r` of simplex.
+        sum_rtol : float
+            Relative tolerance for sum comparison.
+
+        Examples
+        --------
+        Example where a point lies outside the unit simplex ...
+
+        >>> space = odl.rn(3)
+        >>> ind_simplex = IndicatorSimplex(space)
+        >>> x = space.one()
+        >>> ind_simplex(x)
+        inf
+
+        ... and one where it lies inside the unit simplex.
+
+        >>> x /= x.ufuncs.sum()
+        >>> ind_simplex(x)
+        0
+        """
+        super(IndicatorSimplex, self).__init__(
+            space=space, linear=False, grad_lipschitz=np.nan)
+        self.diameter = float(diameter)
+
+        if sum_rtol is None:
+            if space.dtype == 'float64':
+                sum_rtol = 1e-10
+            else:
+                sum_rtol = 1e-6
+        self.sum_rtol = sum_rtol
+
+    def _call(self, x):
+        """Return ``self(x)``."""
+
+        sum_constr = abs(x.ufuncs.sum() / self.diameter - 1) <= self.sum_rtol
+
+        nonneq_constr = x.ufuncs.greater_equal(0).asarray().all()
+
+        if sum_constr and nonneq_constr:
+            return 0
+        else:
+            return np.inf
+
+    @property
+    def gradient(self):
+        """Gradient operator of the functional.
+
+        The indicator functional is not differentiable over the entire domain.
+        """
+
+        raise NotImplementedError('Not implemented')
+
+    @property
+    def proximal(self):
+        """Return the `proximal factory` of the functional."""
+
+        domain = self.domain
+
+        class ProximalSimplex(Operator):
+            """Proximal operator implemented by the algorithm of [D+2008].
+
+            [D+2008] Duchi, J., Shalev-Shwartz, S., Singer, Y., and Chandra, T.
+            *Efficient Projections onto the L1-ball for Learning in High
+            dimensions*. ICML 2008, pp. 272-279.
+            http://doi.org/10.1145/1390156.1390191
+            """
+
+            def __init__(self, sigma):
+                self.sigma = sigma
+                super(ProximalSimplex, self).__init__(
+                    domain=domain, range=domain, linear=False)
+
+            def _call(self, x, out):
+
+                # projection onto simplex
+                proj_simplex(x, self.radius, out)
+
+        return ProximalSimplex
+
+    @property
+    def convex_conj(self):
+        """The convex conjugate."""
+
+        raise NotImplementedError('Not yet implemented')
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{}({!r})'.format(self.__class__.__name__, self.domain)
+
+
+class IndicatorSumConstraint(Functional):
+
+    """The indicator functional of a unit sum constraint.
+
+    Notes
+    -----
+    The functional :math:`F` is given by:
+
+    .. math::
+        F(x)
+        =
+        \\begin{cases}
+            0 & \\text{if } \sum_i x_i = 1 \\\\
+            +\\infty & \\text{else.}
+        \\end{cases}
+    """
+
+    def __init__(self, space, sum_value=1, sum_rtol=None):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        space : `DiscreteLp` or `FnBase`
+            Domain of the functional.
+        sum_value : float
+            Desired value of the sum constraint.
+        sum_rtol : float
+            Relative tolerance for sum comparison.
+
+        Examples
+        --------
+        Example where a point does not have unit sum ...
+
+        >>> space = odl.rn(3)
+        >>> ind_sum = IndicatorSumConstraint(space)
+        >>> x = space.one()
+        >>> ind_sum(x)
+        inf
+
+        ... and one where it does.
+
+        >>> x /= x.ufuncs.sum()
+        >>> ind_sum(x)
+        0
+        """
+        super(IndicatorSumConstraint, self).__init__(
+            space=space, linear=False, grad_lipschitz=np.nan)
+
+        if sum_rtol is None:
+            if space.dtype == 'float64':
+                sum_rtol = 1e-10
+            else:
+                sum_rtol = 1e-6
+        self.sum_rtol = float(sum_rtol)
+        self.sum_value = float(sum_value)
+
+    def _call(self, x):
+        """Return ``self(x)``."""
+
+        if abs(x.ufuncs.sum() / self.sum_value - 1) <= self.sum_rtol:
+            return 0
+        else:
+            return np.inf
+
+    @property
+    def gradient(self):
+        """Gradient operator of the functional.
+
+        The indicator functional is not differentiable over the entire domain.
+        """
+
+        raise NotImplementedError('Not implemented')
+
+    @property
+    def proximal(self):
+        """Return the `proximal factory` of the functional."""
+
+        domain = self.domain
+
+        class ProximalSum(Operator):
+            """Proximal operator."""
+
+            def __init__(self, sigma):
+                self.sigma = sigma
+                super(ProximalSum, self).__init__(
+                    domain=domain, range=domain, linear=False)
+
+            def _call(self, x, out):
+
+                offset = 1 / x.size * (self.sum_value - x.ufuncs.sum())
+                out.assign(x)
+                out += offset
+
+        return ProximalSum
+
+    @property
+    def convex_conj(self):
+        """The convex conjugate."""
+
+        raise NotImplementedError('Not yet implemented')
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{}({!r})'.format(self.__class__.__name__, self.domain)
 
 
 class MoreauEnvelope(Functional):
