@@ -69,7 +69,7 @@ def test_admm_lin_l1():
     x = space.zero()
     admm_linearized(x, f, g, L, tau=1.0, sigma=2.0, niter=10)
 
-    assert all_almost_equal(x, data_1, places=2)
+    assert all_almost_equal(x, data_1, ndigits=2)
 
 
 if __name__ == '__main__':

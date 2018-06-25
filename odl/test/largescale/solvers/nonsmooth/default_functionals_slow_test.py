@@ -258,7 +258,7 @@ def test_proximal_convex_conj_kl_cross_entropy_solving_opt_problem():
     # Explicit solution: x = W(g * exp(a)), where W is the Lambert W function.
     x_verify = lam_kl * scipy.special.lambertw(
         (g / lam_kl) * np.exp(a / lam_kl))
-    assert all_almost_equal(x, x_verify, places=6)
+    assert all_almost_equal(x, x_verify, ndigits=6)
 
 
 if __name__ == '__main__':

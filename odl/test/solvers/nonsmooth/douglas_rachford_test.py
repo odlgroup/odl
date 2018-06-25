@@ -16,7 +16,7 @@ from odl.solvers import douglas_rachford_pd
 from odl.util.testutils import all_almost_equal, noise_element
 
 
-# Places for the accepted error when comparing results
+# Number of digits for the accepted error when comparing results
 HIGH_ACCURACY = 8
 LOW_ACCURACY = 4
 
@@ -92,7 +92,7 @@ def test_primal_dual_l1():
     x = space.zero()
     douglas_rachford_pd(x, f, g, L, tau=3.0, sigma=[1.0], niter=10)
 
-    assert all_almost_equal(x, data_1, places=2)
+    assert all_almost_equal(x, data_1, ndigits=2)
 
 
 def test_primal_dual_no_operator():
@@ -122,7 +122,7 @@ def test_primal_dual_no_operator():
     x = space.zero()
     douglas_rachford_pd(x, f, g, L, tau=3.0, sigma=[], niter=10)
 
-    assert all_almost_equal(x, data_1, places=2)
+    assert all_almost_equal(x, data_1, ndigits=2)
 
 
 def test_primal_dual_with_li():

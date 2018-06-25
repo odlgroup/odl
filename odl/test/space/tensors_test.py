@@ -550,9 +550,9 @@ def test_scalar_operator(tspace, odl_arithmetic_op):
     """
     op = odl_arithmetic_op
     if op in (operator.truediv, operator.itruediv):
-        places = int(-np.log10(np.finfo(tspace.dtype).resolution) // 2)
+        ndigits = int(-np.log10(np.finfo(tspace.dtype).resolution) // 2)
     else:
-        places = int(-np.log10(np.finfo(tspace.dtype).resolution))
+        ndigits = int(-np.log10(np.finfo(tspace.dtype).resolution))
 
     for scalar in [-31.2, -1, 0, 1, 2.13]:
         x_arr, x = noise_elements(tspace)
@@ -566,7 +566,7 @@ def test_scalar_operator(tspace, odl_arithmetic_op):
             y_arr = op(x_arr, scalar)
             y = op(x, scalar)
 
-            assert all_almost_equal([x, y], [x_arr, y_arr], places=places)
+            assert all_almost_equal([x, y], [x_arr, y_arr], ndigits)
 
         # right op
         x_arr, x = noise_elements(tspace)
@@ -574,7 +574,7 @@ def test_scalar_operator(tspace, odl_arithmetic_op):
         y_arr = op(scalar, x_arr)
         y = op(scalar, x)
 
-        assert all_almost_equal([x, y], [x_arr, y_arr], places=places)
+        assert all_almost_equal([x, y], [x_arr, y_arr], ndigits)
 
 
 def test_binary_operator(tspace, odl_arithmetic_op):
@@ -585,9 +585,9 @@ def test_binary_operator(tspace, odl_arithmetic_op):
     """
     op = odl_arithmetic_op
     if op in (operator.truediv, operator.itruediv):
-        places = int(-np.log10(np.finfo(tspace.dtype).resolution) // 2)
+        ndigits = int(-np.log10(np.finfo(tspace.dtype).resolution) // 2)
     else:
-        places = int(-np.log10(np.finfo(tspace.dtype).resolution))
+        ndigits = int(-np.log10(np.finfo(tspace.dtype).resolution))
 
     [x_arr, y_arr], [x, y] = noise_elements(tspace, 2)
 
@@ -595,19 +595,19 @@ def test_binary_operator(tspace, odl_arithmetic_op):
     z_arr = op(x_arr, y_arr)
     z = op(x, y)
 
-    assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr], places=places)
+    assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr], ndigits)
 
     # non-aliased right
     z_arr = op(y_arr, x_arr)
     z = op(y, x)
 
-    assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr], places=places)
+    assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr], ndigits)
 
     # aliased operation
     z_arr = op(x_arr, x_arr)
     z = op(x, x)
 
-    assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr], places=places)
+    assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr], ndigits)
 
 
 def test_assign(tspace):

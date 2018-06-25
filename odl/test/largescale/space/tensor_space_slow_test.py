@@ -13,7 +13,7 @@ import numpy as np
 import pytest
 
 import odl
-from odl.util.testutils import all_almost_equal, almost_equal, noise_elements
+from odl.util.testutils import all_almost_equal, dtype_tol, noise_elements
 
 pytestmark = odl.util.skip_if_no_largescale
 
@@ -98,8 +98,10 @@ def test_inner(tspace):
 
     correct_inner = np.vdot(yarr, xarr) * weighting_const
 
-    assert almost_equal(tspace.inner(x, y), correct_inner, places=2)
-    assert almost_equal(x.inner(y), correct_inner, places=2)
+    assert (tspace.inner(x, y) ==
+            pytest.approx(correct_inner, rel=dtype_tol(tspace.dtype)))
+    assert (x.inner(y) ==
+            pytest.approx(correct_inner, rel=dtype_tol(tspace.dtype)))
 
 
 def test_norm(tspace):
@@ -109,8 +111,10 @@ def test_norm(tspace):
 
     correct_norm = np.linalg.norm(xarr) * np.sqrt(weighting_const)
 
-    assert almost_equal(tspace.norm(x), correct_norm, places=2)
-    assert almost_equal(x.norm(), correct_norm, places=2)
+    assert (tspace.norm(x) ==
+            pytest.approx(correct_norm, rel=dtype_tol(tspace.dtype)))
+    assert (x.norm() ==
+            pytest.approx(correct_norm, rel=dtype_tol(tspace.dtype)))
 
 
 def test_dist(tspace):
@@ -120,8 +124,10 @@ def test_dist(tspace):
 
     correct_dist = np.linalg.norm(xarr - yarr) * np.sqrt(weighting_const)
 
-    assert almost_equal(tspace.dist(x, y), correct_dist, places=2)
-    assert almost_equal(x.dist(y), correct_dist, places=2)
+    assert (tspace.dist(x, y) ==
+            pytest.approx(correct_dist, rel=dtype_tol(tspace.dtype)))
+    assert (x.dist(y) ==
+            pytest.approx(correct_dist, rel=dtype_tol(tspace.dtype)))
 
 
 def _test_lincomb(space, a, b, discontig):
@@ -204,8 +210,8 @@ def _test_member_lincomb(spc, a):
     # Device side calculation
     y_device.lincomb(a, x_device)
 
-    # CUDA only uses floats, so require 5 places
-    assert all_almost_equal(y_device, y_host, places=2)
+    # CUDA only uses floats, so require 2 digits
+    assert all_almost_equal(y_device, y_host, ndigits=2)
 
 
 def test_member_lincomb(tspace):

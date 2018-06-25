@@ -14,8 +14,8 @@ import pytest
 
 import odl
 from odl.operator import OpTypeError
-from odl.util.testutils import (all_almost_equal, almost_equal, noise_element,
-                                simple_fixture)
+from odl.util.testutils import (
+    all_almost_equal, dtype_ndigits, dtype_tol, noise_element, simple_fixture)
 from odl.solvers.functional.default_functionals import (
     KullbackLeiblerConvexConj)
 
@@ -157,7 +157,7 @@ def test_derivative(functional):
     # Numerical test of gradient, only low accuracy can be guaranteed.
     assert all_almost_equal((functional(x + step * y) - functional(x)) / step,
                             y.inner(functional.gradient(x)),
-                            places=1)
+                            ndigits=1)
 
     # Check that derivative and gradient is consistent
     assert all_almost_equal(functional.derivative(x)(y),
@@ -195,7 +195,8 @@ def test_arithmetic():
 def test_left_scalar_mult(space, scalar):
     """Test for right and left multiplication of a functional with a scalar."""
     # Less strict checking for single precision
-    places = 3 if space.dtype == np.float32 else 5
+    ndigits = dtype_ndigits(space.dtype)
+    rtol = dtype_tol(space.dtype)
 
     x = noise_element(space)
     func = odl.solvers.functional.L2Norm(space)
@@ -206,17 +207,17 @@ def test_left_scalar_mult(space, scalar):
         return
 
     # Test functional evaluation
-    assert almost_equal(lmul_func(x), scalar * func(x), places=places)
+    assert lmul_func(x) == pytest.approx(scalar * func(x), rel=rtol)
 
     # Test gradient of left scalar multiplication
     assert all_almost_equal(lmul_func.gradient(x), scalar * func.gradient(x),
-                            places=places)
+                            ndigits)
 
     # Test derivative of left scalar multiplication
     p = noise_element(space)
     assert all_almost_equal(lmul_func.derivative(x)(p),
                             scalar * (func.derivative(x))(p),
-                            places=places)
+                            ndigits)
 
     # Test convex conjugate. This requires positive scaling to work
     pos_scalar = abs(scalar)
@@ -227,7 +228,7 @@ def test_left_scalar_mult(space, scalar):
 
     assert all_almost_equal((pos_scalar * func).convex_conj(x),
                             pos_scalar * func.convex_conj(x / pos_scalar),
-                            places=places)
+                            ndigits)
 
     # Test proximal operator. This requires scaling to be positive.
     sigma = 1.2
@@ -241,7 +242,8 @@ def test_left_scalar_mult(space, scalar):
 def test_right_scalar_mult(space, scalar):
     """Test for right and left multiplication of a functional with a scalar."""
     # Less strict checking for single precision
-    places = 3 if space.dtype == np.float32 else 5
+    ndigits = dtype_ndigits(space.dtype)
+    rtol = dtype_tol(space.dtype)
 
     x = noise_element(space)
     func = odl.solvers.functional.L2NormSquared(space)
@@ -251,35 +253,35 @@ def test_right_scalar_mult(space, scalar):
         # expecting the constant functional x -> func(0)
         assert isinstance(rmul_func, odl.solvers.ConstantFunctional)
         assert all_almost_equal(rmul_func(x), func(space.zero()),
-                                places=places)
+                                ndigits)
         # Nothing more to do, rest is part of ConstantFunctional test
         return
 
     # Test functional evaluation
-    assert almost_equal(rmul_func(x), func(scalar * x), places=places)
+    assert rmul_func(x) == pytest.approx(func(scalar * x), rel=rtol)
 
     # Test gradient of right scalar multiplication
     assert all_almost_equal(rmul_func.gradient(x),
                             scalar * func.gradient(scalar * x),
-                            places=places)
+                            ndigits)
 
     # Test derivative of right scalar multiplication
     p = noise_element(space)
     assert all_almost_equal(rmul_func.derivative(x)(p),
                             scalar * func.derivative(scalar * x)(p),
-                            places=places)
+                            ndigits)
 
     # Test convex conjugate conjugate
     assert all_almost_equal(rmul_func.convex_conj(x),
                             func.convex_conj(x / scalar),
-                            places=places)
+                            ndigits)
 
     # Test proximal operator
     sigma = 1.2
     assert all_almost_equal(
         rmul_func.proximal(sigma)(x),
         (1.0 / scalar) * func.proximal(sigma * scalar ** 2)(x * scalar),
-        places=places)
+        ndigits)
 
     # Verify that for linear functionals, left multiplication is used.
     func = odl.solvers.ZeroFunctional(space)
@@ -289,7 +291,8 @@ def test_right_scalar_mult(space, scalar):
 def test_functional_composition(space):
     """Test composition from the right with an operator."""
     # Less strict checking for single precision
-    places = 3 if space.dtype == np.float32 else 5
+    ndigits = dtype_ndigits(space.dtype)
+    rtol = dtype_tol(space.dtype)
 
     func = odl.solvers.L2NormSquared(space)
 
@@ -308,23 +311,24 @@ def test_functional_composition(space):
     assert isinstance(func_op_comp, odl.solvers.Functional)
 
     x = noise_element(space)
-    assert almost_equal(func_op_comp(x), func(op(x)), places=places)
+    assert func_op_comp(x) == pytest.approx(func(op(x)), rel=rtol)
 
     # Test gradient and derivative with composition from the right
     assert all_almost_equal(func_op_comp.gradient(x),
                             (op.adjoint * func.gradient * op)(x),
-                            places=places)
+                            ndigits)
 
     p = noise_element(space)
     assert all_almost_equal(func_op_comp.derivative(x)(p),
                             (op.adjoint * func.gradient * op)(x).inner(p),
-                            places=places)
+                            ndigits)
 
 
 def test_functional_sum(space):
     """Test for the sum of two functionals."""
     # Less strict checking for single precision
-    places = 3 if space.dtype == np.float32 else 5
+    ndigits = dtype_ndigits(space.dtype)
+    rtol = dtype_tol(space.dtype)
 
     func1 = odl.solvers.L2NormSquared(space)
     func2 = odl.solvers.L2Norm(space)
@@ -344,17 +348,19 @@ def test_functional_sum(space):
     p = noise_element(space)
 
     # Test functional evaluation
-    assert almost_equal(func_sum(x), func1(x) + func2(x), places=places)
+    assert func_sum(x) == pytest.approx(func1(x) + func2(x), rel=rtol)
 
     # Test gradient and derivative
     assert all_almost_equal(func_sum.gradient(x),
                             func1.gradient(x) + func2.gradient(x),
-                            places=places)
+                            ndigits)
 
-    assert almost_equal(
-        func_sum.derivative(x)(p),
-        func1.gradient(x).inner(p) + func2.gradient(x).inner(p),
-        places=places)
+    assert (
+        func_sum.derivative(x)(p) ==
+        pytest.approx(
+            func1.gradient(x).inner(p) + func2.gradient(x).inner(p),
+            rel=rtol)
+    )
 
     # Verify that proximal raises
     with pytest.raises(NotImplementedError):
@@ -368,7 +374,8 @@ def test_functional_sum(space):
 def test_functional_plus_scalar(space):
     """Test for sum of functioanl and scalar."""
     # Less strict checking for single precision
-    places = 3 if space.dtype == np.float32 else 5
+    ndigits = dtype_ndigits(space.dtype)
+    rtol = dtype_tol(space.dtype)
 
     func = odl.solvers.L2NormSquared(space)
     scalar = -1.3
@@ -383,36 +390,39 @@ def test_functional_plus_scalar(space):
     p = noise_element(space)
 
     # Test for evaluation
-    assert almost_equal(func_scalar_sum(x), func(x) + scalar, places=places)
+    assert func_scalar_sum(x) == pytest.approx(func(x) + scalar, rel=rtol)
 
     # Test for derivative and gradient
     assert all_almost_equal(func_scalar_sum.gradient(x), func.gradient(x),
-                            places=places)
+                            ndigits)
 
-    assert almost_equal(func_scalar_sum.derivative(x)(p),
-                        func.gradient(x).inner(p),
-                        places=places)
+    assert (
+        func_scalar_sum.derivative(x)(p) ==
+        pytest.approx(func.gradient(x).inner(p), rel=rtol)
+    )
 
     # Test proximal operator
     sigma = 1.2
     assert all_almost_equal(func_scalar_sum.proximal(sigma)(x),
                             func.proximal(sigma)(x),
-                            places=places)
+                            ndigits)
 
-    # Test convex conjugate functional
-    assert almost_equal(func_scalar_sum.convex_conj(x),
-                        func.convex_conj(x) - scalar,
-                        places=places)
+    # Test convex conjugate
+    assert (
+        func_scalar_sum.convex_conj(x) ==
+        pytest.approx(func.convex_conj(x) - scalar, rel=rtol)
+    )
 
     assert all_almost_equal(func_scalar_sum.convex_conj.gradient(x),
                             func.convex_conj.gradient(x),
-                            places=places)
+                            ndigits)
 
 
 def test_translation_of_functional(space):
     """Test for the translation of a functional: (f(. - y))^*."""
     # Less strict checking for single precision
-    places = 3 if space.dtype == np.float32 else 5
+    ndigits = dtype_ndigits(space.dtype)
+    rtol = dtype_tol(space.dtype)
 
     # The translation; an element in the domain
     translation = noise_element(space)
@@ -424,13 +434,13 @@ def test_translation_of_functional(space):
     # Test for evaluation of the functional
     expected_result = test_functional(x - translation)
     assert all_almost_equal(translated_functional(x), expected_result,
-                            places=places)
+                            ndigits)
 
     # Test for the gradient
     expected_result = test_functional.gradient(x - translation)
     translated_gradient = translated_functional.gradient
     assert all_almost_equal(translated_gradient(x), expected_result,
-                            places=places)
+                            ndigits)
 
     # Test for proximal
     sigma = 1.2
@@ -438,14 +448,14 @@ def test_translation_of_functional(space):
     expected_result = odl.solvers.proximal_translation(
         test_functional.proximal, translation)(sigma)(x)
     assert all_almost_equal(translated_functional.proximal(sigma)(x),
-                            expected_result, places=places)
+                            expected_result, ndigits)
 
     # Test for conjugate functional
     # The helper function below is tested explicitly further down in this file
     expected_result = odl.solvers.FunctionalQuadraticPerturb(
         test_functional.convex_conj, linear_term=translation)(x)
     assert all_almost_equal(translated_functional.convex_conj(x),
-                            expected_result, places=places)
+                            expected_result, ndigits)
 
     # Test for derivative in direction p
     p = noise_element(space)
@@ -453,7 +463,7 @@ def test_translation_of_functional(space):
     # Explicit computation in point x, in direction p: <x/2 + translation, p>
     expected_result = p.inner(test_functional.gradient(x - translation))
     assert all_almost_equal(translated_functional.derivative(x)(p),
-                            expected_result, places=places)
+                            expected_result, ndigits)
 
     # Test for optimized implementation, when translating a translated
     # functional
@@ -462,9 +472,11 @@ def test_translation_of_functional(space):
         second_translation)
 
     # Evaluation
-    assert almost_equal(double_translated_functional(x),
-                        test_functional(x - translation - second_translation),
-                        places=places)
+    assert (
+        double_translated_functional(x) ==
+        pytest.approx(test_functional(x - translation - second_translation),
+                      rel=rtol)
+    )
 
 
 def test_translation_proximal_stepsizes():
@@ -495,7 +507,8 @@ def test_translation_proximal_stepsizes():
 def test_multiplication_with_vector(space):
     """Test for multiplying a functional with a vector, both left and right."""
     # Less strict checking for single precision
-    places = 3 if space.dtype == np.float32 else 5
+    ndigits = dtype_ndigits(space.dtype)
+    rtol = dtype_tol(space.dtype)
 
     x = noise_element(space)
     y = noise_element(space)
@@ -510,19 +523,19 @@ def test_multiplication_with_vector(space):
     assert isinstance(func_times_y, odl.solvers.FunctionalRightVectorMult)
 
     expected_result = func(y * x)
-    assert almost_equal(func_times_y(x), expected_result, places=places)
+    assert func_times_y(x) == pytest.approx(expected_result, rel=rtol)
 
     # Test for the gradient.
     # Explicit calculations: 2*y*y*x
     expected_result = 2.0 * y * y * x
     assert all_almost_equal(func_times_y.gradient(x), expected_result,
-                            places=places)
+                            ndigits)
 
     # Test for convex_conj
     cc_func_times_y = func_times_y.convex_conj
     # Explicit calculations: 1/4 * ||x/y||_2^2
     expected_result = 1.0 / 4.0 * (x / y).norm()**2
-    assert almost_equal(cc_func_times_y(x), expected_result, places=places)
+    assert cc_func_times_y(x) == pytest.approx(expected_result, rel=rtol)
 
     # Make sure that right muliplication is not allowed with vector from
     # another space
@@ -534,7 +547,7 @@ def test_multiplication_with_vector(space):
     assert isinstance(y_times_func, odl.FunctionalLeftVectorMult)
 
     expected_result = y * func(x)
-    assert all_almost_equal(y_times_func(x), expected_result, places=places)
+    assert all_almost_equal(y_times_func(x), expected_result, ndigits)
 
     # Now, multiplication with vector from another space is ok (since it is the
     # same as scaling that vector with the scalar returned by the functional).
@@ -543,7 +556,7 @@ def test_multiplication_with_vector(space):
 
     expected_result = y_other_space * func(x)
     assert all_almost_equal(y_other_times_func(x), expected_result,
-                            places=places)
+                            ndigits)
 
 
 # Fixtures for test_functional_quadratic_perturb
@@ -554,7 +567,8 @@ quadratic_coeff = simple_fixture('quadratic_coeff', [0.0, 2.13])
 def test_functional_quadratic_perturb(space, linear_term, quadratic_coeff):
     """Test for the functional f(.) + a | . |^2 + <y, .>."""
     # Less strict checking for single precision
-    places = 3 if space.dtype == np.float32 else 5
+    ndigits = dtype_ndigits(space.dtype)
+    rtol = dtype_tol(space.dtype)
 
     orig_func = odl.solvers.L2NormSquared(space)
 
@@ -574,18 +588,20 @@ def test_functional_quadratic_perturb(space, linear_term, quadratic_coeff):
     x = noise_element(space)
 
     # Test for evaluation of the functional
-    assert all_almost_equal(functional(x),
-                            (orig_func(x) +
-                             quadratic_coeff * x.inner(x) +
-                             x.inner(linear_term)),
-                            places=places)
+    assert (
+        functional(x) ==
+        pytest.approx(orig_func(x) +
+                      quadratic_coeff * x.inner(x) +
+                      x.inner(linear_term),
+                      rel=rtol)
+    )
 
     # Test for the gradient
-    assert all_almost_equal(functional.gradient(x),
-                            (orig_func.gradient(x) +
-                             2.0 * quadratic_coeff * x +
-                             linear_term),
-                            places=places)
+    assert all_almost_equal(
+        functional.gradient(x),
+        orig_func.gradient(x) + 2.0 * quadratic_coeff * x + linear_term,
+        ndigits
+    )
 
     # Test for the proximal operator if it exists
     sigma = 1.2
@@ -595,25 +611,25 @@ def test_functional_quadratic_perturb(space, linear_term, quadratic_coeff):
     expected_result = prox((x - sigma * linear_term) * c ** 2)
     assert all_almost_equal(functional.proximal(sigma)(x),
                             expected_result,
-                            places=places)
+                            ndigits)
 
     # Test convex conjugate functional
     if quadratic_coeff == 0:
         expected = orig_func.convex_conj.translated(linear_term)(x)
-        assert almost_equal(functional.convex_conj(x),
-                            expected,
-                            places=places)
+        assert functional.convex_conj(x) == pytest.approx(expected, rel=rtol)
 
     # Test proximal of the convex conjugate
     cconj_prox = odl.solvers.proximal_convex_conj(functional.proximal)
     assert all_almost_equal(
         functional.convex_conj.proximal(sigma)(x),
         cconj_prox(sigma)(x),
-        places=places)
+        ndigits)
 
 
 def test_bregman(functional):
     """Test for the Bregman distance of a functional."""
+    rtol = dtype_tol(functional.domain.dtype)
+
     if isinstance(functional, odl.solvers.functional.IndicatorLpUnitBall):
         # IndicatorFunction has no gradient
         with pytest.raises(NotImplementedError):
@@ -639,7 +655,10 @@ def test_bregman(functional):
         vector=-grad, constant=-functional(y) + grad.inner(y))
     expected_func = functional + quadratic_func
 
-    assert almost_equal(functional.bregman(y, grad)(x), expected_func(x))
+    assert (
+        functional.bregman(y, grad)(x) ==
+        pytest.approx(expected_func(x), rel=rtol)
+    )
 
 
 if __name__ == '__main__':

@@ -19,8 +19,8 @@ from odl.solvers.nonsmooth.proximal_operators import (
     proximal_l2_squared)
 from odl.util.testutils import all_almost_equal, noise_element, simple_fixture
 
-# Places for the accepted error when comparing results
-PLACES = 8
+# Number of digits for the accepted error when comparing results
+NDIGITS = 8
 
 
 # --- pytest fixtures --- #
@@ -52,7 +52,7 @@ def test_proximal_arg_scaling(scalar, sigma):
     # works for scaling_param == 0, too
     expected_result = x / (2 * sigma * lam * scaling_param ** 2 + 1)
 
-    assert all_almost_equal(prox(x), expected_result, places=PLACES)
+    assert all_almost_equal(prox(x), expected_result, ndigits=NDIGITS)
 
 
 def test_proximal_translation(sigma):
@@ -69,7 +69,7 @@ def test_proximal_translation(sigma):
     expected_result = ((x + 2 * sigma * lam * translation) /
                        (1 + 2 * sigma * lam))
 
-    assert all_almost_equal(prox(x), expected_result, places=PLACES)
+    assert all_almost_equal(prox(x), expected_result, ndigits=NDIGITS)
 
 
 def test_proximal_quadratic_perturbation(nonneg_scalar, sigma):
@@ -91,13 +91,13 @@ def test_proximal_quadratic_perturbation(nonneg_scalar, sigma):
     prox = proximal_quadratic_perturbation(prox_factory, a)(sigma)
     x = noise_element(space)
     expected_result = x / (2 * sigma * (lam + a) + 1)
-    assert all_almost_equal(prox(x), expected_result, places=PLACES)
+    assert all_almost_equal(prox(x), expected_result, ndigits=NDIGITS)
 
     # Test with linear term
     u = noise_element(space)
     prox = proximal_quadratic_perturbation(prox_factory, a, u)(sigma)
     expected_result = (x - sigma * u) / (2 * sigma * (lam + a) + 1)
-    assert all_almost_equal(prox(x), expected_result, places=PLACES)
+    assert all_almost_equal(prox(x), expected_result, ndigits=NDIGITS)
 
 
 def test_proximal_composition(pos_scalar, sigma):
@@ -125,7 +125,7 @@ def test_proximal_composition(pos_scalar, sigma):
     prox_x = prox(x)
     equiv_prox = proximal_arg_scaling(prox_factory, scal)(sigma)
     expected_result = equiv_prox(x)
-    assert all_almost_equal(prox_x, expected_result, places=PLACES)
+    assert all_almost_equal(prox_x, expected_result, ndigits=NDIGITS)
 
 
 if __name__ == '__main__':

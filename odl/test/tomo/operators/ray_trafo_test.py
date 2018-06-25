@@ -17,7 +17,7 @@ import odl
 from odl.tomo.backends import ASTRA_VERSION
 from odl.tomo.util.testutils import (skip_if_no_astra, skip_if_no_astra_cuda,
                                      skip_if_no_skimage)
-from odl.util.testutils import almost_equal, all_almost_equal, simple_fixture
+from odl.util.testutils import all_almost_equal, simple_fixture
 
 
 # --- pytest fixtures --- #
@@ -197,10 +197,9 @@ def in_place(request):
 
 def test_projector(projector, in_place):
     """Test Ray transform forward projection."""
-
     # TODO: this needs to be improved
     # Accept 10% errors
-    places = 1
+    rtol = 1e-1
 
     # Create Shepp-Logan phantom
     vol = projector.domain.one()
@@ -214,7 +213,7 @@ def test_projector(projector, in_place):
 
     # We expect maximum value to be along diagonal
     expected_max = projector.domain.partition.extent[0] * np.sqrt(2)
-    assert almost_equal(proj.ufuncs.max(), expected_max, places=places)
+    assert proj.ufuncs.max() == pytest.approx(expected_max, rel=rtol)
 
 
 def test_adjoint(projector):

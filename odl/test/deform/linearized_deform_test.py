@@ -15,7 +15,7 @@ import pytest
 import odl
 from odl.deform import LinDeformFixedTempl, LinDeformFixedDisp
 from odl.space.entry_points import tensor_space_impl
-from odl.util.testutils import almost_equal, simple_fixture
+from odl.util.testutils import simple_fixture
 
 
 # --- pytest fixtures --- #
@@ -311,7 +311,7 @@ def test_fixed_disp_adj(space):
     deformed_templ = deform_op(template)
     inner1 = deformed_templ.inner(template)
     inner2 = template.inner(deformed_templ_adj)
-    assert almost_equal(inner1, inner2, places=1)
+    assert inner1 == pytest.approx(inner2, abs=.1)
 
 
 if __name__ == '__main__':

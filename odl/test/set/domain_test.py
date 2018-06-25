@@ -13,7 +13,7 @@ import numpy as np
 import odl
 from odl.discr.grid import sparse_meshgrid
 from odl.set.domain import IntervalProd
-from odl.util.testutils import almost_equal, all_equal
+from odl.util.testutils import all_equal
 
 
 def random_point(set_):
@@ -45,13 +45,13 @@ def test_init():
 
 def test_min_pt():
     set_ = IntervalProd(1, 2)
-    assert almost_equal(set_.min_pt, 1)
+    assert set_.min_pt == 1
 
     set_ = IntervalProd(-np.inf, 0)
-    assert almost_equal(set_.min_pt, -np.inf)
+    assert set_.min_pt == -np.inf
 
     set_ = IntervalProd([1], [2])
-    assert almost_equal(set_.min_pt, 1)
+    assert set_.min_pt == 1
 
     set_ = IntervalProd([1, 2, 3], [5, 6, 7])
     assert all_equal(set_.min_pt, [1, 2, 3])
@@ -59,13 +59,13 @@ def test_min_pt():
 
 def test_max_pt():
     set_ = IntervalProd(1, 2)
-    assert almost_equal(set_.max_pt, 2)
+    assert set_.max_pt == 2
 
     set_ = IntervalProd(0, np.inf)
-    assert almost_equal(set_.max_pt, np.inf)
+    assert set_.max_pt == np.inf
 
     set_ = IntervalProd([1], [2])
-    assert almost_equal(set_.max_pt, 2)
+    assert set_.max_pt == 2
 
     set_ = IntervalProd([1, 2, 3], [5, 6, 7])
     assert all_equal(set_.max_pt, [5, 6, 7])
@@ -139,7 +139,7 @@ def test_volume():
     assert set_.volume == np.inf
 
     set_ = IntervalProd([1, 2, 3], [5, 6, 7])
-    assert almost_equal(set_.volume, (5 - 1) * (6 - 2) * (7 - 3))
+    assert set_.volume == pytest.approx((5 - 1) * (6 - 2) * (7 - 3))
 
 
 def test_mid_pt():

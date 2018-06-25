@@ -12,9 +12,8 @@ import pytest
 
 import odl
 from odl.operator.oputils import matrix_representation, power_method_opnorm
-from odl.space.pspace import ProductSpace
 from odl.operator.pspace_ops import ProductSpaceOperator
-from odl.util.testutils import almost_equal
+from odl.util.testutils import all_almost_equal
 
 
 def test_matrix_representation():
@@ -25,7 +24,7 @@ def test_matrix_representation():
     Aop = odl.MatrixOperator(A)
     matrix_repr = matrix_representation(Aop)
 
-    assert almost_equal(np.sum(np.abs(A - matrix_repr)), 1e-6)
+    assert all_almost_equal(A, matrix_repr)
 
 
 def test_matrix_representation_product_to_lin_space():
@@ -152,12 +151,12 @@ def test_power_method_opnorm_symm():
     op = odl.MatrixOperator(mat)
     true_opnorm = 2
     opnorm_est = power_method_opnorm(op)
-    assert almost_equal(opnorm_est, true_opnorm, places=2)
+    assert opnorm_est == pytest.approx(true_opnorm, rel=1e-2)
 
     # Start at a different point
     xstart = odl.rn(2).element([0.8, 0.5])
     opnorm_est = power_method_opnorm(op, xstart=xstart)
-    assert almost_equal(opnorm_est, true_opnorm, places=2)
+    assert opnorm_est == pytest.approx(true_opnorm, rel=1e-2)
 
 
 def test_power_method_opnorm_nonsymm():
@@ -173,12 +172,12 @@ def test_power_method_opnorm_nonsymm():
     # Start vector (1, 1) is close to the wrong eigenvector
     xstart = odl.rn(2).element([1, 1])
     opnorm_est = power_method_opnorm(op, xstart=xstart, maxiter=50)
-    assert almost_equal(opnorm_est, true_opnorm, places=2)
+    assert opnorm_est == pytest.approx(true_opnorm, rel=1e-2)
 
     # Start close to the correct eigenvector, converges very fast
     xstart = odl.rn(2).element([-0.8, 0.5])
     opnorm_est = power_method_opnorm(op, xstart=xstart, maxiter=6)
-    assert almost_equal(opnorm_est, true_opnorm, places=2)
+    assert opnorm_est == pytest.approx(true_opnorm, rel=1e-2)
 
 
 def test_power_method_opnorm_exceptions():
