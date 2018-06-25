@@ -108,7 +108,7 @@ class OperatorAsAutogradFunction(torch.autograd.Function):
             self.save_for_backward(input)
 
         # TODO: use GPU memory directly if possible
-        input_arr = input.detach().numpy()
+        input_arr = input.cpu().detach().numpy()
         if any(s == 0 for s in input_arr.strides):
             # TODO: remove when Numpy issue #9165 is fixed
             # https://github.com/numpy/numpy/pull/9177
