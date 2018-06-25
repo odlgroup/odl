@@ -533,10 +533,7 @@ class FanFlatGeometry(DivergentBeamGeometry):
 
         >>> geom[::2, :]
         FanFlatGeometry(
-            nonuniform_partition(
-                [ 0.5,  2.5],
-                min_pt=0.0, max_pt=4.0
-            ),
+            nonuniform_partition([ 0.5,  2.5], min_pt=0.0, max_pt=4.0),
             uniform_partition(-1.0, 1.0, 20),
             src_radius=50.0,
             det_radius=100.0
@@ -1183,10 +1180,7 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
 
         >>> geom[::2]
         ConeFlatGeometry(
-            nonuniform_partition(
-                [ 0.5,  2.5],
-                min_pt=0.0, max_pt=4.0
-            ),
+            nonuniform_partition([ 0.5,  2.5], min_pt=0.0, max_pt=4.0),
             uniform_partition([-1., -1.], [ 1.,  1.], (20, 20)),
             src_radius=50.0,
             det_radius=100.0,
