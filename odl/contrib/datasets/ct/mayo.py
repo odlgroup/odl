@@ -113,6 +113,7 @@ def load_projections(folder, indices=None):
     pixel_size = np.array([datasets[0].DetectorElementTransverseSpacing,
                            datasets[0].DetectorElementAxialSpacing])
 
+    # Correct from center of pixel to corner of pixel
     minp = -(np.array(datasets[0].DetectorCentralElement) - 0.5) * pixel_size
     maxp = minp + shape * pixel_size
 
@@ -123,8 +124,13 @@ def load_projections(folder, indices=None):
     src_radius = datasets[0].DetectorFocalCenterRadialDistance
     det_radius = (datasets[0].ConstantRadialDistance -
                   datasets[0].DetectorFocalCenterRadialDistance)
-    pitch = (pixel_size[1] * shape[1] * datasets[0].SpiralPitchFactor *
-             src_radius / (src_radius + det_radius))
+
+    # For unknown reasons, mayo does not include the tag
+    # "TableFeedPerRotation", which is what we want.
+    # Instead we manually compute the pitch
+    pitch = ((datasets[-1].DetectorFocalCenterAxialPosition -
+              datasets[0].DetectorFocalCenterAxialPosition) /
+             ((np.max(angles) - np.min(angles)) / (2 * np.pi)))
 
     # Get flying focal spot data
     offset_axial = np.array([d.SourceAxialPositionShift for d in datasets])
@@ -248,10 +254,20 @@ def load_reconstruction(folder, slice_start=0, slice_end=-1):
     # axis 1 has reversed convention
     min_pt[1], max_pt[1] = -max_pt[1], -min_pt[1]
 
+    if len(datasets) > 1:
+        slice_distance = np.abs(
+            np.array(datasets[1].DataCollectionCenterPatient)[2] -
+            np.array(datasets[0].DataCollectionCenterPatient)[2])
+    else:
+        # If we only have one slice, we must approximate the distance.
+        slice_distance = pixel_thickness
+
+    # Set min and max points. We need half voxel offsets since dicom uses
+    # midpoint and ODL uses the corners.
     min_pt[2] = -np.array(datasets[0].DataCollectionCenterPatient)[2]
-    min_pt[2] -= 0.5 * pixel_thickness
+    min_pt[2] -= 0.5 * slice_distance
     max_pt[2] = -np.array(datasets[-1].DataCollectionCenterPatient)[2]
-    max_pt[2] += 0.5 * pixel_thickness
+    max_pt[2] += 0.5 * slice_distance
 
     partition = odl.uniform_partition(min_pt, max_pt, shape)
 
