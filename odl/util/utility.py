@@ -1416,7 +1416,8 @@ def method_repr_string(inst_str, meth_str, arg_strs=None,
 
     # Method call part
     arg_str_oneline = ', '.join(arg_strs)
-    if ('\n' not in arg_str_oneline and
+    if (
+        '\n' not in arg_str_oneline and
         meth_line_start_len + 1 + len(arg_str_oneline) + 1 <= linewidth
     ):
         meth_call_str = '(' + arg_str_oneline + ')'

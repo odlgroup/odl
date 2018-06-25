@@ -1872,6 +1872,7 @@ class ComplexModulus(Operator):
         inner_parts = signature_string_parts(posargs, optargs)
         return repr_string(self.__class__.__name__, inner_parts)
 
+
 class ComplexModulusSquared(Operator):
 
     """Operator that computes the squared complex modulus (absolute value)."""
@@ -2089,6 +2090,7 @@ class ComplexModulusSquared(Operator):
         optargs = [('range', self.range, self.domain.real_space)]
         inner_parts = signature_string_parts(posargs, optargs)
         return repr_string(self.__class__.__name__, inner_parts)
+
 
 if __name__ == '__main__':
     from odl.util.testutils import run_doctests

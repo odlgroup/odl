@@ -570,7 +570,8 @@ class PointwiseInner(PointwiseTensorFieldOperator):
             def _call(self, f, out):
                 """Implement ``self(vf, out)``."""
                 for vfi, oi, ran_wi, dom_wi in zip(
-                    op.vecfield, out, adj_ran_weights, op.weights):
+                    op.vecfield, out, adj_ran_weights, op.weights
+                ):
                     vfi.multiply(f, out=oi)
                     if not np.isclose(ran_wi, dom_wi):
                         oi *= dom_wi / ran_wi
