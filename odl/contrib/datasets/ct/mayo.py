@@ -131,23 +131,14 @@ def load_projections(folder, indices=None):
     offset_angular = np.array([d.SourceAngularPositionShift for d in datasets])
     offset_radial = np.array([d.SourceRadialDistanceShift for d in datasets])
 
-    if 1:
-        # Apply only mean of offsets
-        src_radius = src_radius + np.mean(offset_radial)
-        angles = angles - np.mean(offset_angular)
-        offset_along_axis = np.mean(offset_axial) * (
-            src_radius / (src_radius + det_radius))
-    else:
-        # TODO: Implement proper handling of flying focal spot
-        angles_offset = angles - offset_angular
-        src_rad_offset = src_radius + offset_radial
-        offset_x = (np.cos(angles_offset) * (-src_rad_offset) -
-                    np.cos(angles) * (-src_radius))
-        offset_y = (np.sin(angles_offset) * (-src_rad_offset) -
-                    np.sin(angles) * (-src_radius))
-        offset_z = offset_axial
+    # Correct the angular sampling according to corrections
+    angles = angles - offset_angular
 
-        source_offsets = np.array([offset_x, offset_y, offset_z]).T
+    # TODO: Implement proper handling of flying focal spot
+    # Apply only mean of offsets
+    src_radius = src_radius + np.mean(offset_radial)
+    offset_along_axis = np.mean(offset_axial) * (
+        src_radius / (src_radius + det_radius))
 
     # Convert offset to odl defintions
     offset_along_axis = (offset_along_axis +
