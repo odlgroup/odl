@@ -19,12 +19,10 @@ nonlinear_cg_beta = odl.util.testutils.simple_fixture('nonlinear_cg_beta',
 
 
 @pytest.fixture(scope="module", params=['l2_squared', 'l2_squared_scaled',
-                                        'rosenbrock'])
+                                        'rosenbrock', 'quadratic_form'])
 def functional(request):
     """functional with optimum 0 at 0."""
     name = request.param
-
-    # TODO: quadratic (#606) functionals
 
     if name == 'l2_squared':
         space = odl.rn(3)
@@ -34,6 +32,19 @@ def functional(request):
         scaling = odl.MultiplyOperator(space.element([1, 2, 3]),
                                        domain=space)
         return odl.solvers.L2NormSquared(space) * scaling
+    elif name == 'quadratic_form':
+        space = odl.rn(3)
+        # Symmetric and diagonally dominant matrix
+        matrix = odl.MatrixOperator([[7.0, 1, 2],
+                                     [1, 5, -3],
+                                     [2, -3, 8]])
+        vector = space.element([1, 2, 3])
+
+        # Calibrate so that functional is zero in optimal point
+        constant = 1 / 4 * vector.inner(matrix.inverse(vector))
+
+        return odl.solvers.QuadraticForm(
+            operator=matrix, vector=vector, constant=constant)
     elif name == 'rosenbrock':
         # Moderately ill-behaved rosenbrock functional.
         rosenbrock = odl.solvers.RosenbrockFunctional(odl.rn(2), scale=2)

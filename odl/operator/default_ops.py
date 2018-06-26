@@ -15,7 +15,7 @@ from copy import copy
 import numpy as np
 
 from odl.operator.operator import Operator
-from odl.set import LinearSpace, Field, RealNumbers
+from odl.set import LinearSpace, Field, RealNumbers, ComplexNumbers
 from odl.set.space import LinearSpaceElement
 from odl.space import ProductSpace
 
@@ -102,6 +102,29 @@ class ScalingOperator(Operator):
     @property
     def adjoint(self):
         """Adjoint, given as scaling with the conjugate of the scalar.
+
+        Examples
+        --------
+        In the real case, the adjoint is the same as the operator:
+
+        >>> r3 = odl.rn(3)
+        >>> x = r3.element([1, 2, 3])
+        >>> op = ScalingOperator(r3, 2)
+        >>> op(x)
+        rn(3).element([ 2.,  4.,  6.])
+        >>> op.adjoint(x)  # The same
+        rn(3).element([ 2.,  4.,  6.])
+
+        In the complex case, the scalar is conjugated:
+
+        >>> c3 = odl.cn(3)
+        >>> x_complex = c3.element([1, 1j, 1-1j])
+        >>> op = ScalingOperator(c3, 1+1j)
+        >>> expected_op = ScalingOperator(c3, 1-1j)
+        >>> op.adjoint(x_complex)
+        cn(3).element([ 1.-1.j,  1.+1.j,  0.-2.j])
+        >>> expected_op(x_complex)  # The same
+        cn(3).element([ 1.-1.j,  1.+1.j,  0.-2.j])
 
         Returns
         -------
@@ -340,11 +363,27 @@ class MultiplyOperator(Operator):
         >>> op2 = MultiplyOperator(3.0, domain=r3, range=r3)
         >>> op2.adjoint(x)
         rn(3).element([ 3.,  6.,  9.])
+
+        Multiplication operator with complex space:
+
+        >>> c3 = odl.cn(3)
+        >>> x_complex = c3.element([1, 1j, 1-1j])
+        >>> op3 = MultiplyOperator(x_complex)
+        >>> op3.adjoint.multiplicand
+        cn(3).element([ 1.-0.j,  0.-1.j,  1.+1.j])
         """
         if self.__domain_is_field:
-            return InnerProductOperator(self.multiplicand)
+            if isinstance(self.domain, RealNumbers):
+                return InnerProductOperator(self.multiplicand)
+            elif isinstance(self.domain, ComplexNumbers):
+                return InnerProductOperator(self.multiplicand.conjugate())
+            else:
+                raise NotImplemented('adjoint not implemented for domain{!r}'
+                                     ''.format(self.domain))
+        elif self.domain.is_complex:
+            return MultiplyOperator(np.conj(self.multiplicand),
+                                    domain=self.range, range=self.domain)
         else:
-            # TODO: complex case
             return MultiplyOperator(self.multiplicand,
                                     domain=self.range, range=self.domain)
 
