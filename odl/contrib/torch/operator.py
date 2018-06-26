@@ -21,8 +21,8 @@ import torch
 from pkg_resources import parse_version
 
 if parse_version(torch.__version__) < parse_version('0.4'):
-    warnings.warn("This interface is designed to work"
-                  "with Pytorch >= 0.4", RuntimeWarning)
+    warnings.warn("This interface is designed to work with Pytorch >= 0.4",
+                  RuntimeWarning)
 
 __all__ = ('OperatorAsAutogradFunction', 'OperatorAsModule')
 
