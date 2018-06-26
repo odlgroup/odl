@@ -125,7 +125,7 @@ def test_module_forward(shape, use_cuda):
         assert y_var.is_cuda
 
 
-def test_module_forward_diff_shapes():
+def test_module_forward_diff_shapes(use_cuda):
     """Test operator module with different shapes of input and output."""
     matrix = np.random.rand(2, 3)
     odl_op = odl.MatrixOperator(matrix)

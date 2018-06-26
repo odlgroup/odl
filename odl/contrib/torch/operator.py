@@ -14,8 +14,15 @@ see `the pytorch installation guide
 """
 
 from __future__ import division
+import warnings
+
 import numpy as np
 import torch
+from pkg_resources import parse_version
+
+if parse_version(torch.__version__) < parse_version('0.4'):
+    warnings.warn("This interface is designed to work with Pytorch >= 0.4",
+                  RuntimeWarning)
 
 __all__ = ('OperatorAsAutogradFunction', 'OperatorAsModule')
 
@@ -102,7 +109,7 @@ class OperatorAsAutogradFunction(torch.autograd.Function):
             self.save_for_backward(input)
 
         # TODO: use GPU memory directly if possible
-        input_arr = input.cpu().numpy()
+        input_arr = input.cpu().detach().numpy()
         if any(s == 0 for s in input_arr.strides):
             # TODO: remove when Numpy issue #9165 is fixed
             # https://github.com/numpy/numpy/pull/9177
@@ -382,7 +389,7 @@ class OperatorAsModule(torch.nn.Module):
 
         # Flatten extra axes, then do one entry at a time
         newshape = (int(np.prod(extra_shape)),) + op_in_shape
-        x_flat_xtra = x.resize(*newshape)
+        x_flat_xtra = x.reshape(*newshape)
         results = []
         for i in range(x_flat_xtra.data.shape[0]):
             results.append(self.op_func(x_flat_xtra[i]))
