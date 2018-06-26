@@ -14,9 +14,10 @@ see `the pytorch installation guide
 """
 
 from __future__ import division
+import warnings
+
 import numpy as np
 import torch
-import warnings
 from pkg_resources import parse_version
 
 if parse_version(torch.__version__) < parse_version('0.4'):
