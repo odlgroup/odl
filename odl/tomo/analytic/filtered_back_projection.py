@@ -53,11 +53,11 @@ def _fbp_filter(norm_freq, filter_type, frequency_scaling):
     norm_freq : `array-like`
         Frequencies normalized to lie in the interval [0, 1].
     filter_type : {'Ram-Lak', 'Shepp-Logan', 'Cosine', 'Hamming', 'Hann',
-                   `callable`}
+                   callable}
         The type of filter to be used.
-        If a string, uses one of the standard filters with that name.
-        If a callable, it must take values in [0, 1] and return the filter
-        for this frequency.
+        If a string is given, use one of the standard filters with that name.
+        A callable should take an array of values in [0, 1] and return the
+        filter for these frequencies.
     frequency_scaling : float
         Scaling of the frequencies for the filter. All frequencies are scaled
         by this number, any relative frequency above ``frequency_scaling`` is
@@ -332,11 +332,13 @@ def fbp_filter_op(ray_trafo, padding=True, filter_type='Ram-Lak',
         be corrupted due to the circular convolution used. Using padding makes
         the algorithm slower.
     filter_type : optional
-        The type of filter to be used. The predefined options are, in
-        approximate order from most noise senstive to least noise sensitive:
-        'Ram-Lak', 'Shepp-Logan', 'Cosine', 'Hamming' and 'Hann'.
-        A callable can also be provided. It must take values in [0, 1] and
-        return the filter for this normalized frequency.
+        The type of filter to be used.
+        The predefined options are, in approximate order from most noise
+        senstive to least noise sensitive:
+        ``'Ram-Lak'``, ``'Shepp-Logan'``, ``'Cosine'``, ``'Hamming'`` and
+        ``'Hann'``.
+        A callable can also be provided. It must take an array of values in
+        [0, 1] and return the filter for these frequencies.
     frequency_scaling : float, optional
         Relative cutoff frequency for the filter.
         The normalized frequencies are rescaled so that they fit into the range
@@ -496,11 +498,13 @@ def fbp_op(ray_trafo, padding=True, filter_type='Ram-Lak',
         be corrupted due to the circular convolution used. Using padding makes
         the algorithm slower.
     filter_type : optional
-        The type of filter to be used. The predefined options are, in
-        approximate order from most noise senstive to least noise sensitive:
-        'Ram-Lak', 'Shepp-Logan', 'Cosine', 'Hamming' and 'Hann'.
-        A callable can also be provided. It must take values in [0, 1] and
-        return the filter for this normalized frequency.
+        The type of filter to be used.
+        The predefined options are, in approximate order from most noise
+        senstive to least noise sensitive:
+        ``'Ram-Lak'``, ``'Shepp-Logan'``, ``'Cosine'``, ``'Hamming'`` and
+        ``'Hann'``.
+        A callable can also be provided. It must take an array of values in
+        [0, 1] and return the filter for these frequencies.
     frequency_scaling : float, optional
         Relative cutoff frequency for the filter.
         The normalized frequencies are rescaled so that they fit into the range
@@ -514,7 +518,8 @@ def fbp_op(ray_trafo, padding=True, filter_type='Ram-Lak',
 
     See Also
     --------
-    tam_danielson_window : Windowing for helical data
+    tam_danielson_window : Windowing for helical data.
+    parker_weighting : Windowing for overcomplete fan-beam data.
     """
     return ray_trafo.adjoint * fbp_filter_op(ray_trafo, padding, filter_type,
                                              frequency_scaling)
