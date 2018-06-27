@@ -236,11 +236,14 @@ def load_reconstruction(folder, slice_start=0, slice_end=-1):
         data_array = data_array.reshape([cols, rows], order='C')
         data_array = np.rot90(data_array, -1)
 
-        # Convert from CT numbers to densities
-        data_array /= 1024.0
+        # Convert from storage type to densities
+        # TODO: Optimize these computations
+        hu_values = (dataset.RescaleSlope * data_array +
+                     dataset.RescaleIntercept)
+        densities = (hu_values + 1000) / 1000
 
         # Store results
-        volumes.append(data_array)
+        volumes.append(densities)
         datasets.append(dataset)
 
     # Compute geometry parameters
