@@ -42,7 +42,7 @@ __all__ = ('ZeroFunctional', 'ConstantFunctional', 'ScalingFunctional',
 
 class LpNorm(Functional):
 
-    r"""The functional corresponding to the Lp-norm.
+    r"""Functional corresponding to the Lp-norm.
 
     Notes
     -----
@@ -183,7 +183,7 @@ class LpNorm(Functional):
 
 class GroupL1Norm(Functional):
 
-    r"""The functional corresponding to the mixed L1-Lp norm on `ProductSpace`.
+    r"""Functional corresponding to the mixed L1-Lp norm on `ProductSpace`.
 
     The L1-norm, :math:`\| \|x\|_p \|_1`,  is defined as the integral/sum of
     :math:`\|x\|_p`, where  :math:`\|x\|_p`` is the pointwise p-norm.
@@ -331,7 +331,7 @@ class GroupL1Norm(Functional):
 
 class IndicatorGroupL1UnitBall(Functional):
 
-    """The convex conjugate to the mixed L1-Lp norm on `ProductSpace`.
+    """Convex conjugate to the mixed L1-Lp norm on `ProductSpace`.
 
     See Also
     --------
@@ -423,7 +423,7 @@ class IndicatorGroupL1UnitBall(Functional):
 
 class IndicatorLpUnitBall(Functional):
 
-    r"""The indicator function on the unit ball in the :math:`L_p` norm.
+    r"""Indicator function on the unit ball in the Lp norm.
 
     It does not implement `gradient` since it is not differentiable everywhere.
 
@@ -534,7 +534,7 @@ class IndicatorLpUnitBall(Functional):
 
 class L1Norm(LpNorm):
 
-    r"""The functional corresponding to L1-norm.
+    r"""Functional corresponding to L1-norm.
 
     The L1-norm, :math:`\|x\|_1`,  is defined as the integral/sum of
     :math:`|x|`.
@@ -580,9 +580,9 @@ class L1Norm(LpNorm):
 
 class L2Norm(LpNorm):
 
-    r"""The functional corresponding to the L2-norm.
+    r"""Functional corresponding to the L2-norm.
 
-    The L2-norm, :math;`\|x\|_2`,  is defined as the square-root out of the
+    The L2-norm, :math:`\|x\|_2`,  is defined as the square-root out of the
     integral/sum of :math:`x^2`.
 
     Notes
@@ -618,7 +618,7 @@ class L2Norm(LpNorm):
 
 class L2NormSquared(Functional):
 
-    r"""The functional corresponding to the squared L2-norm.
+    r"""Functional corresponding to the squared L2-norm.
 
     The squared L2-norm, :math:`\|x\|_2^2`,  is defined as the integral/sum of
     :math:`x^2`.
@@ -696,7 +696,7 @@ class L2NormSquared(Functional):
 
 class ConstantFunctional(Functional):
 
-    """The constant functional.
+    """Constant functional.
 
     This functional maps all elements in the domain to a given, constant value.
     """
@@ -933,7 +933,7 @@ class IndicatorNonnegativity(IndicatorBox):
 
 class IndicatorZero(Functional):
 
-    """The indicator function of the singleton set {0}.
+    """Indicator function of the singleton set {0}.
 
     The function has a constant value if the input is zero, otherwise infinity.
     """
@@ -1019,7 +1019,7 @@ class IndicatorZero(Functional):
 
 class KullbackLeibler(Functional):
 
-    r"""The Kullback-Leibler divergence functional.
+    r"""Kullback-Leibler divergence functional.
 
     Notes
     -----
@@ -1189,7 +1189,7 @@ class KullbackLeibler(Functional):
 
 class KullbackLeiblerConvexConj(Functional):
 
-    r"""The convex conjugate of Kullback-Leibler divergence functional.
+    r"""Convex conjugate of Kullback-Leibler divergence functional.
 
     Notes
     -----
@@ -1315,7 +1315,7 @@ class KullbackLeiblerConvexConj(Functional):
 
 class KullbackLeiblerCrossEntropy(Functional):
 
-    r"""The Kullback-Leibler Cross Entropy divergence functional.
+    r"""Kullback-Leibler Cross Entropy divergence functional.
 
     Notes
     -----
@@ -1471,7 +1471,7 @@ proximal_convex_conj_kl_cross_entropy :
 
 class KullbackLeiblerCrossEntropyConvexConj(Functional):
 
-    r"""The convex conjugate of Kullback-Leibler Cross Entorpy functional.
+    r"""Convex conjugate of Kullback-Leibler Cross Entropy functional.
 
     Notes
     -----
@@ -1570,7 +1570,7 @@ proximal_convex_conj_kl_cross_entropy :
 
 class SeparableSum(Functional):
 
-    r"""The functional corresponding to separable sum of functionals.
+    r"""Functional corresponding to separable sum of functionals.
 
     The separable sum of functionals :math:`f_1, f_2, ..., f_n` is given by
 
@@ -2292,7 +2292,7 @@ https://web.stanford.edu/~boyd/papers/pdf/prox_algs.pdf
 
 class Huber(Functional):
 
-    r"""The Huber functional.
+    r"""Huber functional.
 
     Notes
     -----
