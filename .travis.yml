@@ -68,6 +68,10 @@ install:
 before_script:
     - pip install -r test_requirements.txt
 
+    # Make sure stdout is in blocking mode. Otherwise builds will fail due to large writes to stdout
+    # See: https://github.com/travis-ci/travis-ci/issues/4704. If this gets fixed, this line can be removed.
+    - python3 -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'
+
 script:
     # Run tests and produce a coverage report.
     # Also invoke the alternative way of running the unit tests.
