@@ -35,9 +35,9 @@ order = simple_fixture(name='order', params=['F', 'C'])
 # --- Tests --- #
 
 
-def test_uncompr_bin_io_without_header(shape, floating_dtype, order):
+def test_uncompr_bin_io_without_header(shape, odl_floating_dtype, order):
     """Test I/O bypassing the header processing."""
-    dtype = np.dtype(floating_dtype)
+    dtype = np.dtype(odl_floating_dtype)
     with tempfile.NamedTemporaryFile() as named_file:
         file = named_file.file
 

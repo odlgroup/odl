@@ -28,7 +28,7 @@ padding = simple_fixture('padding', [('constant', 0), ('constant', 1),
                                      'order0', 'order1', 'order2'])
 
 
-@pytest.fixture(scope="module", params=[1, 2, 3], ids=['1d', '2d', '3d'])
+@pytest.fixture(scope="module", params=[1, 2, 3], ids=[' 1d ', ' 2d ', ' 3d '])
 def space(request, odl_tspace_impl):
     impl = odl_tspace_impl
     ndim = request.param
@@ -429,6 +429,12 @@ def test_divergence(space, method, padding):
     assert lhs != 0
     assert rhs != 0
     assert lhs == pytest.approx(rhs, rel=dtype_tol(space.dtype))
+
+    # Higher dimensional arrays
+    for ndim in range(1, 6):
+        # DiscreteLpElement
+        lin_size = 3
+        space = odl.uniform_discr([0.] * ndim, [1.] * ndim, [lin_size] * ndim)
 
 
 # --- Laplacian --- #

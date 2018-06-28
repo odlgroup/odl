@@ -209,10 +209,10 @@ def derivative_factory(name):
     return derivative
 
 
-def ufunc_class_factory(name, nargin, nargout, docstring):
+def ufunc_class_factory(name, nin, nout, docstring):
     """Create a Ufunc `Operator` from a given specification."""
 
-    assert 0 <= nargin <= 2
+    assert 0 <= nin <= 2
 
     def __init__(self, space):
         """Initialize an instance.
@@ -225,21 +225,23 @@ def ufunc_class_factory(name, nargin, nargout, docstring):
         if not isinstance(space, LinearSpace):
             raise TypeError('`space` {!r} not a `LinearSpace`'.format(space))
 
-        if nargin == 1:
+        if nin == 1:
             domain = space0 = space
-            dtypes = [space.dtype]
-        elif nargin == len(space) == 2 and isinstance(space, ProductSpace):
+            dtypes_in = [space.dtype]
+        elif nin == 2:
+            if not (isinstance(space, ProductSpace) and len(space) == 2):
+                raise TypeError('`space` must be a `ProductSpace` of length '
+                                '{} for ufunc {!r}, got {!r}'
+                                ''.format(nin, name, space))
             domain = space
             space0 = space[0]
-            dtypes = [space[0].dtype, space[1].dtype]
+            dtypes_in = [space[0].dtype, space[1].dtype]
         else:
-            domain = ProductSpace(space, nargin)
-            space0 = space
-            dtypes = [space.dtype, space.dtype]
+            raise RuntimeError('bad `nin` {}'.format(nin))
 
-        dts_out = dtypes_out(name, dtypes)
+        dts_out = dtypes_out(name, dtypes_in)
 
-        if nargout == 1:
+        if nout == 1:
             range = space0.astype(dts_out[0])
         else:
             range = ProductSpace(space0.astype(dts_out[0]),
@@ -250,15 +252,15 @@ def ufunc_class_factory(name, nargin, nargout, docstring):
 
     def _call(self, x, out=None):
         """Return ``self(x)``."""
-        # TODO: use `__array_ufunc__` when implemented on `ProductSpace`,
+        # TODO: use `__array_ufunc__` when implemented on product spaces,
         # or try both
         if out is None:
-            if nargin == 1:
+            if nin == 1:
                 return getattr(x.ufuncs, name)()
             else:
                 return getattr(x[0].ufuncs, name)(*x[1:])
         else:
-            if nargin == 1:
+            if nin == 1:
                 return getattr(x.ufuncs, name)(out=out)
             else:
                 return getattr(x[0].ufuncs, name)(*x[1:], out=out)
@@ -274,21 +276,22 @@ def ufunc_class_factory(name, nargin, nargout, docstring):
         dtype = float
 
     space = tensor_space(3, dtype=dtype)
-    if nargin == 1:
+    if nin == 1:
         vec = space.element([-1, 1, 2])
         arg = '{}'.format(vec)
         with np.errstate(all='ignore'):
             result = getattr(vec.ufuncs, name)()
     else:
         vec = space.element([-1, 1, 2])
-        vec2 = space.element([3, 4, 5])
+        vec2 = [3, 4, 5]
         arg = '[{}, {}]'.format(vec, vec2)
         with np.errstate(all='ignore'):
             result = getattr(vec.ufuncs, name)(vec2)
 
-    if nargout == 2:
-        result_space = ProductSpace(vec.space, 2)
-        result = repr(result_space.element(result))
+    if nout == 2:
+        result_space = ProductSpace(result[0].space, result[1].space)
+        with np.errstate(all='ignore'):
+            result = repr(result_space.element(result))
 
     examples_docstring = RAW_EXAMPLES_DOCSTRING.format(space=space, name=name,
                                                        arg=arg, result=result)
@@ -305,10 +308,10 @@ def ufunc_class_factory(name, nargin, nargout, docstring):
     return type(full_name, (Operator,), attributes)
 
 
-def ufunc_functional_factory(name, nargin, nargout, docstring):
+def ufunc_functional_factory(name, nin, nout, docstring):
     """Create a ufunc `Functional` from a given specification."""
 
-    assert 0 <= nargin <= 2
+    assert 0 <= nin <= 2
 
     def __init__(self, field):
         """Initialize an instance.
@@ -330,7 +333,7 @@ def ufunc_functional_factory(name, nargin, nargout, docstring):
 
     def _call(self, x):
         """Return ``self(x)``."""
-        if nargin == 1:
+        if nin == 1:
             return getattr(np, name)(x)
         else:
             return getattr(np, name)(*x)
@@ -341,10 +344,11 @@ def ufunc_functional_factory(name, nargin, nargout, docstring):
 
     # Create example (also functions as doctest)
 
-    if nargin != 1:
+    # TODO: remove this restriction
+    if nin != 1:
         raise NotImplementedError('Currently not suppored')
 
-    if nargout != 1:
+    if nout != 1:
         raise NotImplementedError('Currently not suppored')
 
     space = RealNumbers()
@@ -371,7 +375,7 @@ def ufunc_functional_factory(name, nargin, nargout, docstring):
 RAW_UFUNC_FACTORY_DOCSTRING = """{docstring}
 Notes
 -----
-This creates a `Operator`/`Functional` that applies a ufunc pointwise.
+This creates an `Operator`or `Functional` that applies a ufunc pointwise.
 
 Examples
 --------
@@ -380,21 +384,28 @@ Examples
 """
 
 RAW_UFUNC_FACTORY_FUNCTIONAL_DOCSTRING = """
-Create functional with domain/range as real numbers:
+Create functional with real numbers as domain/range:
 
 >>> func = odl.ufunc_ops.{name}()
 """
 
 RAW_UFUNC_FACTORY_OPERATOR_DOCSTRING = """
-Create operator that acts pointwise on a `TensorSpace`
+Create operator that acts pointwise on a `TensorSpace`:
 
 >>> space = odl.rn(3)
 >>> op = odl.ufunc_ops.{name}(space)
 """
 
+# Avoid tons of warnings on the console when testing
+npy_err_old = np.geterr()
+np.seterr(all='ignore')
 
 # Create an operator for each ufunc
-for name, nargin, nargout, docstring in UFUNCS:
+for name, nin, nout, docstring in UFUNCS:
+    if nin == 2:
+        # Currently not supported
+        continue
+
     def indirection(name, docstring):
         # Indirection is needed since name should be saved but is changed
         # in the loop.
@@ -410,17 +421,17 @@ for name, nargin, nargout, docstring in UFUNCS:
                 raise ValueError('ufunc not available for {}'.format(domain))
         return ufunc_factory
 
-    globals()[name + '_op'] = ufunc_class_factory(name, nargin,
-                                                  nargout, docstring)
-    if not _is_integer_only_ufunc(name):
+    globals()[name + '_op'] = ufunc_class_factory(name, nin,
+                                                  nout, docstring)
+    if _is_integer_only_ufunc(name):
+        operator_example = ""
+    else:
         operator_example = RAW_UFUNC_FACTORY_OPERATOR_DOCSTRING.format(
             name=name)
-    else:
-        operator_example = ""
 
-    if not _is_integer_only_ufunc(name) and nargin == 1 and nargout == 1:
+    if not _is_integer_only_ufunc(name) and nin == 1 and nout == 1:
         globals()[name + '_func'] = ufunc_functional_factory(
-            name, nargin, nargout, docstring)
+            name, nin, nout, docstring)
         functional_example = RAW_UFUNC_FACTORY_FUNCTIONAL_DOCSTRING.format(
             name=name)
     else:
@@ -436,6 +447,7 @@ for name, nargin, nargout, docstring in UFUNCS:
     globals()[name] = ufunc_factory
     __all__ += (name,)
 
+np.seterr(**npy_err_old)
 
 if __name__ == '__main__':
     from odl.util.testutils import run_doctests

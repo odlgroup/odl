@@ -23,7 +23,7 @@ from odl.space.weighting import (
     CustomInner, CustomNorm, CustomDist)
 from odl.util import (
     dtype_str, signature_string, is_real_dtype, is_numeric_dtype,
-    writable_array, is_floating_dtype)
+    writable_array, is_floating_dtype, none_context)
 
 
 __all__ = ('NumpyTensorSpace',)
@@ -73,19 +73,19 @@ class NumpyTensorSpace(TensorSpace):
     .. _Wikipedia article on tensors: https://en.wikipedia.org/wiki/Tensor
     """
 
-    def __init__(self, shape, dtype=None, **kwargs):
+    def __init__(self, shape, dtype='float64', **kwargs):
         """Initialize a new instance.
 
         Parameters
         ----------
         shape : positive int or sequence of positive ints
-            Number of entries per axis for elements in this space. A
-            single integer results in a space with rank 1, i.e., 1 axis.
+            Number of entries per axis for elements in this space.
+            A single integer results in a space with rank 1, i.e., 1 axis.
         dtype :
             Data type of each element. Can be provided in any
             way the `numpy.dtype` function understands, e.g.
-            as built-in type or as a string. For ``None``,
-            the `default_dtype` of this space (``float64``) is used.
+            as built-in type or as a string.
+            See `available_dtypes` for the list of supported scalar data types.
         exponent : positive float, optional
             Exponent of the norm. For values other than 2.0, no
             inner product is defined.
@@ -220,8 +220,7 @@ class NumpyTensorSpace(TensorSpace):
         """
         super(NumpyTensorSpace, self).__init__(shape, dtype)
         if self.dtype.char not in self.available_dtypes():
-            raise ValueError('`dtype` {!r} not supported'
-                             ''.format(dtype_str(dtype)))
+            raise ValueError('`dtype` {!r} not supported'.format(dtype))
 
         dist = kwargs.pop('dist', None)
         norm = kwargs.pop('norm', None)
@@ -503,9 +502,10 @@ class NumpyTensorSpace(TensorSpace):
         dtype : `numpy.dtype`
             Numpy data type specifier. The returned defaults are:
 
-                ``RealNumbers()`` : ``np.dtype('float64')``
+            - ``RealNumbers()`` : ``np.dtype('float64')``
+            - ``ComplexNumbers()`` : ``np.dtype('complex128')``
 
-                ``ComplexNumbers()`` : ``np.dtype('complex128')``
+            These choices correspond to the defaults of the NumPy library.
         """
         if field is None or field == RealNumbers():
             return np.dtype('float64')
@@ -864,24 +864,24 @@ class NumpyTensor(Tensor):
         """The `numpy.ndarray` representing the data of ``self``."""
         return self.__data
 
-    def asarray(self, out=None):
-        """Extract the data of this array as a ``numpy.ndarray``.
+    def asarray(self, out=None, impl='numpy'):
+        """Extract the data of this array as an ndarray.
 
-        This method is invoked when calling `numpy.asarray` on this
-        tensor.
+        This method is invoked when calling `numpy.asarray` on this tensor.
 
         Parameters
         ----------
-        out : `numpy.ndarray`, optional
-            Array in which the result should be written in-place.
-            Has to be contiguous and of the correct dtype.
+        out : ndarray, optional
+            Array into which the result should be written. Must be contiguous
+            and of the correct dtype.
+        impl : str, optional
+            Array backend for the output, used when ``out`` is not given.
 
         Returns
         -------
-        asarray : `numpy.ndarray`
-            Numpy array with the same data type as ``self``. If
-            ``out`` was given, the returned object is a reference
-            to it.
+        asarray : ndarray
+            Array with the same data type as ``self``. If ``out`` was given,
+            the returned object is a reference to it.
 
         Examples
         --------
@@ -902,10 +902,46 @@ class NumpyTensor(Tensor):
         array([[ 1.,  1.,  1.],
                [ 1.,  1.,  1.]])
         """
+        # Import cupy if it exists (else None)
+        from odl.space.cupy_tensors import cupy, CUPY_AVAILABLE
+        import ctypes
+
+        impl, impl_in = str(impl).lower(), impl
         if out is None:
-            return self.data
+            if impl == 'numpy':
+                return self.data
+            elif impl == 'cupy':
+                if CUPY_AVAILABLE:
+                    return cupy.array(self.data)
+                else:
+                    raise ValueError("`impl` 'cupy' not available")
+            else:
+                raise ValueError('`impl` {!r} not understood'.format(impl_in))
+
         else:
-            out[:] = self.data
+            if not (out.flags.c_contiguous or out.flags.f_contiguous):
+                raise ValueError('`out` must be contiguous')
+            if out.shape != self.shape:
+                raise ValueError('`out` must have shape {}, got shape {}'
+                                 ''.format(self.shape, out.shape))
+            if out.dtype != self.dtype:
+                raise ValueError('`out` must have dtype {}, got dtype {}'
+                                 ''.format(self.dtype, out.dtype))
+
+            if CUPY_AVAILABLE and isinstance(out, cupy.ndarray):
+                # Use efficient copy by ensuring contiguous memory
+                if self.data.flags.contiguous:
+                    self_contig_arr = self.data
+                else:
+                    self_contig_arr = np.ascontiguousarray(self.data)
+
+                out.data.copy_from_host(
+                    self_contig_arr.ctypes.data_as(ctypes.c_void_p),
+                    self.size * self.itemsize)
+
+            else:
+                out[:] = self.data
+
             return out
 
     def astype(self, dtype):
@@ -928,7 +964,13 @@ class NumpyTensor(Tensor):
 
     @property
     def data_ptr(self):
-        """A raw pointer to the data container of ``self``.
+        """Memory address of the data container as 64-bit integer.
+
+        Returns
+        -------
+        data_ptr : int
+            The data pointer is technically of type ``uintptr_t`` and gives the
+            index in bytes of the first element of the data storage.
 
         Examples
         --------
@@ -1109,6 +1151,14 @@ class NumpyTensor(Tensor):
                 weighting = self.space.weighting
             else:
                 weighting = None
+
+            if isinstance(weighting, NumpyTensorSpaceArrayWeighting):
+                weighting = weighting.array[indices]
+            elif isinstance(weighting, NumpyTensorSpaceConstWeighting):
+                # Axes were removed, cannot infer new constant
+                if arr.ndim != self.ndim:
+                    weighting = None
+
             space = type(self.space)(
                 arr.shape, dtype=self.dtype, exponent=self.space.exponent,
                 weighting=weighting)
@@ -1124,11 +1174,6 @@ class NumpyTensor(Tensor):
             of the data array which should be written to.
         values : scalar, array-like or `NumpyTensor`
             The value(s) that are to be assigned.
-
-            If ``index`` is an integer, ``value`` must be a scalar.
-
-            If ``index`` is a slice or a sequence of slices, ``value``
-            must be broadcastable to the shape of the slice.
 
         Examples
         --------
@@ -1656,26 +1701,11 @@ numpy.ufunc.reduceat.html
 
         # --- Evaluate ufunc --- #
 
-        # Trivial context used to create a single code path for the ufunc
-        # evaluation. For `None` output parameter(s), this is used instead of
-        # `writable_array`.
-        class CtxNone(object):
-            """Trivial context manager class.
-
-            When used as ::
-
-                with CtxNone() as obj:
-                    # do stuff with `obj`
-
-            the returned ``obj`` is ``None``.
-            """
-            __enter__ = __exit__ = lambda *_: None
-
         if method == '__call__':
             if ufunc.nout == 1:
                 # Make context for output (trivial one returns `None`)
                 if out is None:
-                    out_ctx = CtxNone()
+                    out_ctx = none_context()
                 else:
                     out_ctx = writable_array(out, **array_kwargs)
 
@@ -1703,11 +1733,11 @@ numpy.ufunc.reduceat.html
                 if out1 is not None:
                     out1_ctx = writable_array(out1, **array_kwargs)
                 else:
-                    out1_ctx = CtxNone()
+                    out1_ctx = none_context()
                 if out2 is not None:
                     out2_ctx = writable_array(out2, **array_kwargs)
                 else:
-                    out2_ctx = CtxNone()
+                    out2_ctx = none_context()
 
                 # Evaluate ufunc
                 with out1_ctx as out1_arr, out2_ctx as out2_arr:
@@ -1733,7 +1763,7 @@ numpy.ufunc.reduceat.html
         else:  # method != '__call__'
             # Make context for output (trivial one returns `None`)
             if out is None:
-                out_ctx = CtxNone()
+                out_ctx = none_context()
             else:
                 out_ctx = writable_array(out, **array_kwargs)
 
@@ -2018,7 +2048,6 @@ def _pnorm_diagweight(x, p, w):
     # BLAS dot or nrm2
     xp = np.abs(x.data.ravel(order))
     if p == float('inf'):
-        xp *= w.ravel(order)
         return np.max(xp)
     else:
         xp = np.power(xp, p, out=xp)
@@ -2273,7 +2302,7 @@ class NumpyTensorSpaceConstWeighting(ConstWeighting):
         if self.exponent == 2.0:
             return float(np.sqrt(self.const) * _norm_default(x))
         elif self.exponent == float('inf'):
-            return float(self.const * _pnorm_default(x, self.exponent))
+            return float(_pnorm_default(x, self.exponent))
         else:
             return float((self.const ** (1 / self.exponent) *
                           _pnorm_default(x, self.exponent)))
@@ -2294,7 +2323,7 @@ class NumpyTensorSpaceConstWeighting(ConstWeighting):
         if self.exponent == 2.0:
             return float(np.sqrt(self.const) * _norm_default(x1 - x2))
         elif self.exponent == float('inf'):
-            return float(self.const * _pnorm_default(x1 - x2, self.exponent))
+            return float(_pnorm_default(x1 - x2, self.exponent))
         else:
             return float((self.const ** (1 / self.exponent) *
                           _pnorm_default(x1 - x2, self.exponent)))

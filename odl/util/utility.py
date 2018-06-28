@@ -21,16 +21,35 @@ from itertools import product
 import numpy as np
 
 __all__ = (
-    'array_str', 'dtype_str', 'dtype_repr', 'npy_printoptions',
-    'signature_string', 'signature_string_parts', 'repr_string',
-    'indent', 'dedent', 'attribute_repr_string', 'method_repr_string',
-    'is_numeric_dtype', 'is_int_dtype', 'is_floating_dtype', 'is_real_dtype',
-    'is_real_floating_dtype', 'is_complex_floating_dtype',
-    'real_dtype', 'complex_dtype', 'is_string', 'nd_iterator', 'conj_exponent',
-    'writable_array', 'run_from_ipython', 'NumpyRandomSeed',
-    'cache_arguments', 'unique',
-    'REPR_PRECISION')
-
+    'array_cls',
+    'array_module',
+    'array_str',
+    'as_numpy',
+    'asarray',
+    'cache_arguments',
+    'complex_dtype',
+    'conj_exponent',
+    'dtype_repr',
+    'dtype_str',
+    'indent',
+    'is_complex_floating_dtype',
+    'is_floating_dtype',
+    'is_int_dtype',
+    'is_numeric_dtype',
+    'is_real_dtype',
+    'is_real_floating_dtype',
+    'is_string',
+    'nd_iterator',
+    'none_context',
+    'npy_printoptions',
+    'NumpyRandomSeed',
+    'real_dtype',
+    'REPR_PRECISION',
+    'run_from_ipython',
+    'signature_string',
+    'unique',
+    'writable_array'
+    )
 
 REPR_PRECISION = 4  # For printing scalars and array entries
 TYPE_MAP_R2C = {np.dtype(dtype): np.result_type(dtype, 1j)
@@ -438,7 +457,7 @@ def real_dtype(dtype, default=None):
     """
     dtype, dtype_in = np.dtype(dtype), dtype
 
-    if is_real_floating_dtype(dtype):
+    if is_real_dtype(dtype):
         return dtype
 
     try:
@@ -648,18 +667,94 @@ def preload_first_arg(instance, mode):
     return decorator
 
 
+def asarray(obj, dtype=None, impl='numpy'):
+    """Convert ``obj`` to an ``impl`` type array as fast as possible.
+
+    Parameters
+    ----------
+    obj : array_like
+        Object to be converted to an array.
+    dtype : data-type, optional
+        Desired data type of the array.
+    impl : str, optional
+        Array backend used to create the array.
+
+    Returns
+    -------
+    array : ndarray
+        Array with data type ``dtype`` created from ``obj`` using ``impl``
+        as backend.
+
+    Examples
+    --------
+    >>> a = asarray([1, 2])
+    >>> a
+    array([1, 2])
+    >>> isinstance(a, np.ndarray)
+    True
+    >>> a = asarray(odl.rn(3).one())
+    >>> a
+    array([ 1.,  1.,  1.])
+    >>> isinstance(a, np.ndarray)
+    True
+
+    Notes
+    -----
+    For ODL tensors, there are specific implementation of the conversion
+    to different types of arrays that are not necessarily invoked by
+    the ``asarray`` methods of array libraries.
+    While ``numpy.asarray`` uses the ``__array__`` method to "ask" the
+    object for an array, there is no such dedicated interface for other
+    implementations. As a result, an intermediate Numpy array is typically
+    created, which, for instance, for ``impl='cupy'`` leads to transfers
+    GPU->CPU->GPU.
+    This function bypasses this detour and uses the optimized
+    ``Tensor.asarray()`` method.
+    """
+    from odl.space.cupy_tensors import cupy, CUPY_AVAILABLE
+    impl, impl_in = str(impl).lower(), impl
+
+    if impl == 'numpy':
+        if CUPY_AVAILABLE and isinstance(obj, cupy.ndarray):
+            # __array__ of cupy.ndarray does not return a Numpy array, see
+            # https://github.com/cupy/cupy/issues/589
+            obj = cupy.asnumpy(obj)
+        return np.asarray(obj, dtype=dtype)
+
+    elif impl == 'cupy':
+        if CUPY_AVAILABLE:
+            try:
+                arr = obj.asarray(impl='cupy')
+            except AttributeError:
+                arr = cupy.asarray(obj, dtype=dtype)
+            else:
+                arr = arr.astype(dtype, copy=False)
+
+            return arr
+
+        else:
+            raise ValueError("`impl` 'cupy' not available")
+
+    else:
+        raise ValueError('`impl` {!r} not understood'.format(impl_in))
+
+
 class writable_array(object):
+
     """Context manager that casts obj to a `numpy.array` and saves changes."""
 
-    def __init__(self, obj, **kwargs):
-        """initialize a new instance.
+    def __init__(self, obj, impl='numpy', **kwargs):
+        """Initialize a new instance.
 
         Parameters
         ----------
         obj : `array-like`
             Object that should be made available as writable array.
             It must be valid as input to `numpy.asarray` and needs to
-            support the syntax ``obj[:] = arr``.
+            support assignment ``obj[:] = arr``.
+        impl : str, optional
+            Array backend for the exposed ndarray.
+
         kwargs :
             Keyword arguments that should be passed to `numpy.asarray`.
 
@@ -702,31 +797,97 @@ class writable_array(object):
         """
         self.obj = obj
         self.kwargs = kwargs
+        self.impl = impl
         self.arr = None
 
     def __enter__(self):
-        """called by ``with writable_array(obj):``.
+        """Called by ``with writable_array(obj):``.
 
         Returns
         -------
-        arr : `numpy.ndarray`
-            Array representing ``self.obj``, created by calling
-            ``numpy.asarray``. Any changes to ``arr`` will be passed through
-            to ``self.obj`` after the context manager exits.
+        arr : ndarray
+            Array representing ``self.obj``, created by calling ``asarray``
+            corresponding to the chosen ``impl``, e.g., ``numpy.asarray``.
+            Any changes to ``arr`` will be passed through to ``self.obj``
+            when the context manager exits.
         """
-        self.arr = np.asarray(self.obj, **self.kwargs)
+        self.arr = array_module(self.impl).asarray(self.obj, **self.kwargs)
         return self.arr
 
-    def __exit__(self, type, value, traceback):
-        """called when ``with writable_array(obj):`` ends.
+    def __exit__(self, *args, **kwargs):
+        """Called when ``with writable_array(obj):`` ends.
 
         Saves any changes to ``self.arr`` to ``self.obj``, also "frees"
         self.arr in case the manager is used multiple times.
 
         Extra arguments are ignored, any exceptions are passed through.
         """
-        self.obj[:] = self.arr
-        self.arr = None
+        # Some extra care for Numpy and Cupy arrays
+        from odl.space.npy_tensors import NumpyTensor
+        from odl.space.cupy_tensors import cupy
+
+        obj_is_npy = isinstance(self.obj, (NumpyTensor, np.ndarray))
+        arr_is_cupy = isinstance(self.arr,
+                                 getattr(cupy, 'ndarray', type(None)))
+        if obj_is_npy and arr_is_cupy:
+            arr = cupy.asnumpy(self.arr)
+        else:
+            arr = self.arr
+
+        self.obj[:] = arr
+        self.arr = None  # gc
+
+
+class none_context(object):
+    """Trivial context manager class.
+
+    When used as ::
+
+        with none_context(*args, **kwargs) as obj:
+            # do stuff with `obj`
+
+    the returned ``obj`` is ``None``.
+    """
+    def __init__(self, *args, **kwargs):
+        # Ignore all arguments
+        pass
+
+    def __enter__(self):
+        return None
+
+    def __exit__(self, type, value, traceback):
+        return None
+
+
+def array_module(impl):
+    """Return the array module for ``impl``."""
+    from odl.space.cupy_tensors import cupy
+    if impl == 'numpy':
+        return np
+    elif impl == 'cupy':
+        return cupy
+    else:
+        raise ValueError('`impl` {!r} not understood'.format(impl))
+
+
+def array_cls(impl):
+    """Return the array class for given ``impl``."""
+    return array_module(impl).ndarray
+
+
+def as_numpy(array):
+    """Return a ``numpy.ndarray`` from the given array.
+
+    This is intended for casting from other array implementations to
+    Numpy, not for ODL tensors.
+    """
+    from odl.space.cupy_tensors import cupy
+    if isinstance(array, np.ndarray):
+        return array
+    elif isinstance(array, cupy.ndarray):
+        return cupy.asnumpy(array)
+    else:
+        raise TypeError('type {} not understood'.format(type(array)))
 
 
 def signature_string(posargs, optargs, sep=', ', mod='!r'):

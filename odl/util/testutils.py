@@ -17,8 +17,7 @@ import os
 import warnings
 from time import time
 
-from odl.util.utility import run_from_ipython, is_string
-
+from odl.util.utility import run_from_ipython, is_string, none_context, asarray
 
 __all__ = (
     'all_equal', 'all_almost_equal', 'dtype_ndigits', 'dtype_tol',
@@ -27,7 +26,6 @@ __all__ = (
     'noise_element', 'noise_elements', 'Timer', 'timeit', 'ProgressBar',
     'ProgressRange', 'test', 'run_doctests', 'test_file'
 )
-
 
 def _ndigits(a, b, default=None):
     """Return number of expected correct digits comparing ``a`` and ``b``.
@@ -91,6 +89,19 @@ def dtype_tol(dtype, default=None):
 
 def all_equal(iter1, iter2):
     """Return ``True`` if all elements in ``a`` and ``b`` are equal."""
+    # Transfer cupy arrays to CPU for faster comparison
+    from odl.space.cupy_tensors import CUPY_AVAILABLE, CupyTensor, cupy
+    if CUPY_AVAILABLE:
+        if isinstance(iter1, CupyTensor):
+            iter1 = iter1.asarray()
+        elif isinstance(iter1, cupy.ndarray):
+            iter1 = cupy.asnumpy(iter1)
+
+        if isinstance(iter2, CupyTensor):
+            iter2 = iter2.asarray()
+        elif isinstance(iter2, cupy.ndarray):
+            iter2 = cupy.asnumpy(iter2)
+
     # Direct comparison for scalars, tuples or lists
     try:
         if iter1 == iter2:
@@ -137,10 +148,23 @@ def all_almost_equal_array(v1, v2, ndigits):
 
 def all_almost_equal(iter1, iter2, ndigits=None):
     """Return ``True`` if all elements in ``a`` and ``b`` are almost equal."""
+    # Transfer cupy arrays to CPU for faster comparison
+    from odl.space.cupy_tensors import CUPY_AVAILABLE, CupyTensor, cupy
+    if CUPY_AVAILABLE:
+        if isinstance(iter1, CupyTensor):
+            iter1 = iter1.asarray()
+        elif isinstance(iter1, cupy.ndarray):
+            iter1 = cupy.asnumpy(iter1)
+
+        if isinstance(iter2, CupyTensor):
+            iter2 = iter2.asarray()
+        elif isinstance(iter2, cupy.ndarray):
+            iter2 = cupy.asnumpy(iter2)
+
     try:
         if iter1 is iter2 or iter1 == iter2:
             return True
-    except ValueError:
+    except (ValueError, TypeError):
         pass
 
     if iter1 is None and iter2 is None:
@@ -182,6 +206,23 @@ def is_subdict(subdict, dictionary):
     return all(item in dictionary.items() for item in subdict.items())
 
 
+def xfail_if(condition, reason=''):
+    """Return a ``pytest.xfail`` object if ``condition`` is ``True``.
+
+    Examples
+    --------
+    Create test that is expected to fail if ``condition`` is false, e.g.
+
+    >>> condition = False
+    >>> with xfail_if(condition, reason='only works without condition'):
+    ...     assert not condition
+    """
+    if condition:
+        return pytest.xfail(reason)
+    else:
+        return none_context()
+
+
 try:
     # Try catch in case user does not have pytest
     import pytest
@@ -191,6 +232,7 @@ except ImportError:
         return function
 
     never_skip = _pass
+    skip_if_no_cupy = _pass
     skip_if_no_stir = _pass
     skip_if_no_pywavelets = _pass
     skip_if_no_pyfftw = _pass
@@ -206,6 +248,11 @@ else:
     skip_if_no_stir = pytest.mark.skipif(
         "not odl.tomo.backends.stir_bindings.STIR_AVAILABLE",
         reason='STIR not available'
+    )
+
+    skip_if_no_cupy = pytest.mark.skipif(
+        "not odl.space.cupy_tensors.CUPY_AVAILABLE",
+        reason='CuPy not available'
     )
 
     skip_if_no_pywavelets = pytest.mark.skipif(
@@ -305,7 +352,7 @@ def noise_array(space):
 
     Returns
     -------
-    noise_array : `numpy.ndarray` element
+    noise_array : `numpy.ndarray`
         Array with white noise such that ``space.element``'s can be created
         from it.
 
@@ -323,9 +370,21 @@ def noise_array(space):
     odl.set.space.LinearSpace.examples : Examples of elements
         typical to the space.
     """
-    from odl.space import ProductSpace
+    from odl.space.pspace import ProductSpace
+
     if isinstance(space, ProductSpace):
-        return np.array([noise_array(si) for si in space])
+        arr_list = [noise_array(spc_i) for spc_i in space]
+        if space.is_power_space:
+            arr = np.empty((len(arr_list),) + arr_list[0].shape,
+                           dtype=space[0].dtype)
+        else:
+            arr = np.empty((len(arr_list),) + arr_list[0].shape,
+                           dtype=object)
+        for i in range(len(arr)):
+            arr[i] = arr_list[i]
+
+        return arr
+
     else:
         if space.dtype == bool:
             # TODO(kohr-h): use `randint(..., dtype=bool)` from Numpy 1.11 on
@@ -435,13 +494,21 @@ def noise_elements(space, n=1):
     noise_array
     noise_element
     """
-    arrs = tuple(noise_array(space) for _ in range(n))
+    from odl.space.pspace import ProductSpace
 
-    # Make space elements from arrays
-    elems = tuple(space.element(arr.copy()) for arr in arrs)
+    if isinstance(space, ProductSpace) and not space.is_power_space:
+        raise ValueError('`space` cannot be a non-power product space')
+
+    if isinstance(space, ProductSpace):
+        impl = space[0].impl
+    else:
+        impl = space.impl
+
+    arrs = tuple(asarray(noise_array(space), impl=impl) for _ in range(n))
+    elems = tuple(space.element(arr) for arr in arrs)
 
     if n == 1:
-        return tuple(arrs + elems)
+        return arrs + elems
     else:
         return arrs, elems
 
@@ -557,23 +624,23 @@ class ProgressBar(object):
     Usage:
 
     >>> progress = ProgressBar('Reading data', 10)
-    \rReading data: [                              ] Starting
+    Reading data: [                              ] Starting
     >>> progress.update(4) #halfway, zero indexing
-    \rReading data: [###############               ] 50.0%
+    Reading data: [###############               ] 50.0%
 
     Multi-indices, from slowest to fastest:
 
     >>> progress = ProgressBar('Reading data', 10, 10)
-    \rReading data: [                              ] Starting
+    Reading data: [                              ] Starting
     >>> progress.update(9, 8)
-    \rReading data: [############################# ] 99.0%
+    Reading data: [############################# ] 99.0%
 
     Supports simply calling update, which moves the counter forward:
 
     >>> progress = ProgressBar('Reading data', 10, 10)
-    \rReading data: [                              ] Starting
+    Reading data: [                              ] Starting
     >>> progress.update()
-    \rReading data: [                              ]  1.0%
+    Reading data: [                              ]  1.0%
     """
 
     def __init__(self, text='progress', *njobs):
@@ -687,12 +754,14 @@ def run_doctests(skip_if=False, **kwargs):
         Extra keyword arguments passed on to the ``doctest.testmod``
         function.
     """
-    from doctest import testmod, NORMALIZE_WHITESPACE, SKIP
+    from doctest import (
+        testmod, NORMALIZE_WHITESPACE, SKIP, IGNORE_EXCEPTION_DETAIL)
     from pkg_resources import parse_version
     import odl
     import numpy as np
 
-    optionflags = kwargs.pop('optionflags', NORMALIZE_WHITESPACE)
+    optionflags = kwargs.pop('optionflags',
+                             NORMALIZE_WHITESPACE | IGNORE_EXCEPTION_DETAIL)
     if skip_if:
         optionflags |= SKIP
 

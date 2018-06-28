@@ -9,8 +9,8 @@
 """Unit tests for `discr_ops`."""
 
 from __future__ import division
-import pytest
 import numpy as np
+import pytest
 
 import odl
 from odl.discr.discr_ops import _SUPPORTED_RESIZE_PAD_MODES

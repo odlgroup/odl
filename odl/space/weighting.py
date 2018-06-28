@@ -500,7 +500,7 @@ class ArrayWeighting(Weighting):
 
     def is_valid(self):
         """Return True if the array is a valid weight, i.e. positive."""
-        return np.all(np.greater(self.array, 0))
+        return (self.array > 0).all()
 
     def __eq__(self, other):
         """Return ``self == other``.
@@ -547,9 +547,9 @@ class ArrayWeighting(Weighting):
         elif isinstance(other, MatrixWeighting):
             return other.equiv(self)
         elif isinstance(other, ConstWeighting):
-            return np.array_equiv(self.array, other.const)
+            return (self.array == other.const).all()
         else:
-            return np.array_equal(self.array, other.array)
+            return (self.array == other.array).all()
 
     @property
     def repr_part(self):

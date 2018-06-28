@@ -355,12 +355,9 @@ def test_functional_sum(space):
                             func1.gradient(x) + func2.gradient(x),
                             ndigits)
 
-    assert (
-        func_sum.derivative(x)(p) ==
-        pytest.approx(
-            func1.gradient(x).inner(p) + func2.gradient(x).inner(p),
-            rel=rtol)
-    )
+    assert (func_sum.derivative(x)(p) ==
+            pytest.approx(func1.gradient(x).inner(p) +
+                          func2.gradient(x).inner(p), rel=rtol))
 
     # Verify that proximal raises
     with pytest.raises(NotImplementedError):
@@ -396,10 +393,8 @@ def test_functional_plus_scalar(space):
     assert all_almost_equal(func_scalar_sum.gradient(x), func.gradient(x),
                             ndigits)
 
-    assert (
-        func_scalar_sum.derivative(x)(p) ==
-        pytest.approx(func.gradient(x).inner(p), rel=rtol)
-    )
+    assert (func_scalar_sum.derivative(x)(p) ==
+            pytest.approx(func.gradient(x).inner(p), rel=rtol))
 
     # Test proximal operator
     sigma = 1.2
@@ -407,11 +402,9 @@ def test_functional_plus_scalar(space):
                             func.proximal(sigma)(x),
                             ndigits)
 
-    # Test convex conjugate
-    assert (
-        func_scalar_sum.convex_conj(x) ==
-        pytest.approx(func.convex_conj(x) - scalar, rel=rtol)
-    )
+    # Test convex conjugate functional
+    assert (func_scalar_sum.convex_conj(x) ==
+            pytest.approx(func.convex_conj(x) - scalar, rel=rtol))
 
     assert all_almost_equal(func_scalar_sum.convex_conj.gradient(x),
                             func.convex_conj.gradient(x),
@@ -472,11 +465,10 @@ def test_translation_of_functional(space):
         second_translation)
 
     # Evaluation
-    assert (
-        double_translated_functional(x) ==
-        pytest.approx(test_functional(x - translation - second_translation),
-                      rel=rtol)
-    )
+    assert (double_translated_functional(x) ==
+            pytest.approx(
+                test_functional(x - translation - second_translation),
+                rel=rtol))
 
 
 def test_translation_proximal_stepsizes():
