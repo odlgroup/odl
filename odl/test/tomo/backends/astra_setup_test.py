@@ -292,9 +292,6 @@ def test_parallel_2d_projector():
 def test_parallel_3d_projector():
     """Create ASTRA 3D projectors."""
 
-    odl.tomo.astra_projector('nearest', VOL_GEOM_3D, PROJ_GEOM_3D, ndim=3,
-                             impl='cuda')
-
     # Run as a real test once ASTRA supports this construction
     with pytest.raises(ValueError):
         odl.tomo.astra_projector('nearest', VOL_GEOM_3D, PROJ_GEOM_3D,
@@ -305,6 +302,15 @@ def test_parallel_3d_projector():
                                  ndim=3, impl='cpu')
 
 
+@pytest.mark.skipif(not odl.tomo.ASTRA_CUDA_AVAILABLE,
+                    reason="ASTRA cuda not available")
+def test_parallel_3d_projector_gpu():
+    """Create ASTRA 3D projectors on GPU."""
+
+    odl.tomo.astra_projector('nearest', VOL_GEOM_3D, PROJ_GEOM_3D, ndim=3,
+                             impl='cuda')
+
+
 def test_astra_algorithm():
     """Create ASTRA algorithm object."""
 
@@ -312,7 +318,6 @@ def test_astra_algorithm():
     ndim = 2
     impl = 'cpu'
     vol_id = odl.tomo.astra_data(VOL_GEOM_2D, 'volume', ndim=ndim)
-    rec_id = odl.tomo.astra_data(VOL_GEOM_2D, 'volume', ndim=ndim)
     sino_id = odl.tomo.astra_data(PROJ_GEOM_2D, 'projection', ndim=ndim)
     proj_id = odl.tomo.astra_projector('nearest', VOL_GEOM_2D, PROJ_GEOM_2D,
                                        ndim=ndim, impl=impl)
@@ -339,6 +344,18 @@ def test_astra_algorithm():
         alg_id = odl.tomo.astra_algorithm(direction, ndim, vol_id, sino_id,
                                           proj_id, impl)
         astra.algorithm.delete(alg_id)
+
+
+@pytest.mark.skipif(not odl.tomo.ASTRA_CUDA_AVAILABLE,
+                    reason="ASTRA cuda not available")
+def test_astra_algorithm_gpu():
+    """Create ASTRA algorithm object on GPU."""
+
+    direction = 'forward'
+    ndim = 2
+    vol_id = odl.tomo.astra_data(VOL_GEOM_2D, 'volume', ndim=ndim)
+    rec_id = odl.tomo.astra_data(VOL_GEOM_2D, 'volume', ndim=ndim)
+    sino_id = odl.tomo.astra_data(PROJ_GEOM_2D, 'projection', ndim=ndim)
 
     # 2D CUDA
     proj_id = odl.tomo.astra_projector('nearest', VOL_GEOM_2D, PROJ_GEOM_2D,
