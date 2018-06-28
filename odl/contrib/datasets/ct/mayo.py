@@ -137,17 +137,23 @@ def load_projections(folder, indices=None):
     offset_angular = np.array([d.SourceAngularPositionShift for d in datasets])
     offset_radial = np.array([d.SourceRadialDistanceShift for d in datasets])
 
-    # Correct the angular sampling according to corrections
+    # Update angles with flying focal spot (in plane direction).
+    # This increases the resolution of the reconstructions.
     angles = angles - offset_angular
 
-    # TODO: Implement proper handling of flying focal spot
-    # Apply only mean of offsets
+    # TODO(adler-j): Implement proper handling of flying focal spot
+    # We currently apply only the mean of the offsets
     src_radius = src_radius + np.mean(offset_radial)
-    offset_along_axis = np.mean(offset_axial) * (
+
+    # Partially compensate for a movement of the source by moving the object
+    # instead. We need to rescale by the magnification to get the correct
+    # change in the detector. This approximation is only exactly valid on the
+    # axis of rotation.
+    mean_offset_along_axis_for_ffz = np.mean(offset_axial) * (
         src_radius / (src_radius + det_radius))
 
     # Convert offset to odl defintions
-    offset_along_axis = (offset_along_axis +
+    offset_along_axis = (mean_offset_along_axis_for_ffz +
                          datasets[0].DetectorFocalCenterAxialPosition -
                          angles[0] / (2 * np.pi) * pitch)
 
@@ -259,14 +265,16 @@ def load_reconstruction(folder, slice_start=0, slice_end=-1):
 
     if len(datasets) > 1:
         slice_distance = np.abs(
-            np.array(datasets[1].DataCollectionCenterPatient)[2] -
-            np.array(datasets[0].DataCollectionCenterPatient)[2])
+            float(datasets[1].DataCollectionCenterPatient[2]) -
+            float(datasets[0].DataCollectionCenterPatient[2]))
     else:
         # If we only have one slice, we must approximate the distance.
         slice_distance = pixel_thickness
 
-    # Set min and max points. We need half voxel offsets since dicom uses
-    # midpoint and ODL uses the corners.
+    # The middle of the minimum/maximum slice can be computed from the
+    # DICOM attribute "DataCollectionCenterPatient". Since ODL uses corner
+    # points (e.g. edge of volume) we need to add half a voxel thickness to
+    # both sides.
     min_pt[2] = -np.array(datasets[0].DataCollectionCenterPatient)[2]
     min_pt[2] -= 0.5 * slice_distance
     max_pt[2] = -np.array(datasets[-1].DataCollectionCenterPatient)[2]
