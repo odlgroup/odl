@@ -118,13 +118,14 @@ def weight(request):
 
 
 @pytest.fixture(scope='module')
-def tspace(floating_dtype, odl_tspace_impl):
+def tspace(odl_floating_dtype, odl_tspace_impl):
     available_dtypes = tensor_space_impl(odl_tspace_impl).available_dtypes()
-    if floating_dtype not in available_dtypes:
+    if odl_floating_dtype not in available_dtypes:
         pytest.skip('dtype {} not supported by impl {!r}'
-                    ''.format(floating_dtype, odl_tspace_impl))
+                    ''.format(odl_floating_dtype, odl_tspace_impl))
     else:
-        return odl.tensor_space(shape=(3, 4), dtype=floating_dtype,
+        return odl.tensor_space(shape=(3, 4),
+                                dtype=odl_floating_dtype,
                                 impl=odl_tspace_impl)
 
 
@@ -867,7 +868,7 @@ def test_element_setitem(odl_tspace_impl, setitem_indices):
     assert all_equal(x, x_arr)
 
     # Setting values with arrays
-    rhs_arr = array_module(tspace_impl).ones(sliced_shape)
+    rhs_arr = array_module(impl).ones(sliced_shape)
     x_arr[setitem_indices] = rhs_arr
     x[setitem_indices] = rhs_arr
     assert all_equal(x, x_arr)
@@ -932,11 +933,12 @@ def test_element_setitem_bool_array(odl_tspace_impl):
 
 
 @skip_if_no_cupy
-def test_asarray_numpy_to_cupy(floating_dtype):
+def test_asarray_numpy_to_cupy(odl_floating_dtype):
     """Test x.asarray with numpy x and cupy impl and out."""
-    space = odl.tensor_space((2, 3), dtype=floating_dtype)
+    dtype = odl_floating_dtype
+    space = odl.tensor_space((2, 3), dtype=dtype)
 
-    with xfail_if(floating_dtype in ('float128', 'complex256'),
+    with xfail_if(dtype in ('float128', 'complex256'),
                   reason='quad precision types not available in cupy'):
         # Make new array, contiguous
         x = space.one()
@@ -945,13 +947,13 @@ def test_asarray_numpy_to_cupy(floating_dtype):
         assert all_equal(x_cpy, x)
 
         # Write to existing, contiguous
-        out_cpy = cupy.empty((2, 3), dtype=floating_dtype)
+        out_cpy = cupy.empty((2, 3), dtype=dtype)
         x_cpy = x.asarray(out=out_cpy)
         assert x_cpy is out_cpy
         assert all_equal(out_cpy, x)
 
         # Make new array, discontiguous
-        arr = np.arange(12).astype(floating_dtype).reshape((2, 6))[:, ::2]
+        arr = np.arange(12).astype(dtype).reshape((2, 6))[:, ::2]
         x = space.element(arr)
         assert not (x.data.flags.c_contiguous or x.data.flags.f_contiguous)
         x_cpy = x.asarray(impl='cupy')
@@ -959,18 +961,19 @@ def test_asarray_numpy_to_cupy(floating_dtype):
         assert all_equal(x_cpy, x)
 
         # Write to existing, contiguous
-        out_cpy = cupy.empty((2, 3), dtype=floating_dtype)
+        out_cpy = cupy.empty((2, 3), dtype=dtype)
         x_cpy = x.asarray(out=out_cpy)
         assert x_cpy is out_cpy
         assert all_equal(out_cpy, x)
 
 
 @skip_if_no_cupy
-def test_asarray_cupy_to_numpy(floating_dtype):
+def test_asarray_cupy_to_numpy(odl_floating_dtype):
     """Test x.asarray with cupy x and numpy impl and out."""
-    with xfail_if(floating_dtype in ('float128', 'complex256'),
+    dtype = odl_floating_dtype
+    with xfail_if(dtype in ('float128', 'complex256'),
                   reason='quad precision types not available in cupy'):
-        space = odl.tensor_space((2, 3), dtype=floating_dtype, impl='cupy')
+        space = odl.tensor_space((2, 3), dtype=dtype, impl='cupy')
 
         # Make new array, contiguous
         x = space.one()
@@ -979,13 +982,13 @@ def test_asarray_cupy_to_numpy(floating_dtype):
         assert all_equal(x_npy, x)
 
         # Write to existing, contiguous
-        out_npy = np.empty((2, 3), dtype=floating_dtype)
+        out_npy = np.empty((2, 3), dtype=dtype)
         x_npy = x.asarray(out=out_npy)
         assert x_npy is out_npy
         assert all_equal(out_npy, x)
 
         # Make new array, discontiguous
-        arr = cupy.arange(12).astype(floating_dtype).reshape((2, 6))[:, ::2]
+        arr = cupy.arange(12).astype(dtype).reshape((2, 6))[:, ::2]
         x = space.element(arr)
         assert not (x.data.flags.c_contiguous or x.data.flags.f_contiguous)
         x_npy = x.asarray(impl='numpy')
@@ -993,7 +996,7 @@ def test_asarray_cupy_to_numpy(floating_dtype):
         assert all_equal(x_npy, x)
 
         # Write to existing, contiguous
-        out_npy = np.empty((2, 3), dtype=floating_dtype)
+        out_npy = np.empty((2, 3), dtype=dtype)
         x_npy = x.asarray(out=out_npy)
         assert x_npy is out_npy
         assert all_equal(out_npy, x)
@@ -1587,14 +1590,19 @@ def testodl_ufuncs(tspace, odl_ufunc):
     arrays, elements = noise_elements(tspace, nin + nout)
     # Arrays of the space's own data storage type
     in_arrays_own = arrays[:nin]
-    in_arrays_npy = [as_numpy(arr) for arr in arrays[:nin]]
+    in_arrays_npy = [as_numpy(arr) for arr in in_arrays_own]
+    out_arrays_own = arrays[:nin]
+    out_arrays_npy = [as_numpy(arr) for arr in out_arrays_own]
     data_elem = elements[0]
+
     out_elems = elements[nin:]
     if nout == 1:
-        out_arr_kwargs = {'out': out_arrays[0]}
+        out_arr_own_kwargs = {'out': out_arrays_own[0]}
+        out_arr_npy_kwargs = {'out': out_arrays_npy[0]}
         out_elem_kwargs = {'out': out_elems[0]}
     elif nout > 1:
-        out_arr_kwargs = {'out': out_arrays[:nout]}
+        out_arr_own_kwargs = {'out': out_arrays_own[:nout]}
+        out_arr_npy_kwargs = {'out': out_arrays_npy[:nout]}
         out_elem_kwargs = {'out': out_elems[:nout]}
 
     # Get function to call, using both interfaces:
@@ -1643,14 +1651,7 @@ def testodl_ufuncs(tspace, odl_ufunc):
 
     if USE_ARRAY_UFUNCS_INTERFACE:
         # Custom objects not allowed as `out` for numpy < 1.13
-        result = ufunc_npy(*in_elems_npy, **out_elem_kwargs)
-
-        if nout == 1:
-            kwargs_out = {'out': out_elems[0]}
-        elif nout == 2:
-            kwargs_out = {'out': (out_elems[0], out_elems[1])}
-
-        result = ufunc_npy(*in_elems_npy, **kwargs_out)
+        result = ufunc_npy(*in_elems_npy, **out_arr_npy_kwargs)
 
         assert all_almost_equal(result_npy, result)
         _check_result_is_out(result, out_elems[:nout])

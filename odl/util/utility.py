@@ -21,18 +21,6 @@ from itertools import product
 import numpy as np
 
 __all__ = (
-    'array_str', 'dtype_str', 'dtype_repr', 'npy_printoptions',
-    'signature_string', 'signature_string_parts', 'repr_string',
-    'indent', 'dedent', 'attribute_repr_string', 'method_repr_string',
-    'is_numeric_dtype', 'is_int_dtype', 'is_floating_dtype', 'is_real_dtype',
-    'is_real_floating_dtype', 'is_complex_floating_dtype',
-    'real_dtype', 'complex_dtype', 'is_string', 'nd_iterator', 'conj_exponent',
-    'writable_array', 'run_from_ipython', 'NumpyRandomSeed',
-    'cache_arguments', 'unique',
-    'REPR_PRECISION')
-
-__all__ = (
-    'NumpyRandomSeed',
     'array_cls',
     'array_module',
     'array_str',
@@ -51,9 +39,12 @@ __all__ = (
     'is_real_dtype',
     'is_real_floating_dtype',
     'is_string',
+    'nd_iterator',
     'none_context',
     'npy_printoptions',
+    'NumpyRandomSeed',
     'real_dtype',
+    'REPR_PRECISION',
     'run_from_ipython',
     'signature_string',
     'unique',
