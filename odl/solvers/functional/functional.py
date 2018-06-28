@@ -48,14 +48,17 @@ class Functional(Operator):
     <http://odlgroup.github.io/odl/guide/in_depth/functional_guide.html>`_.
     """
 
-    def __init__(self, space, linear=False, grad_lipschitz=np.nan):
+    def __init__(self, domain, range=None, linear=False,
+                 grad_lipschitz=np.nan):
         """Initialize a new instance.
 
         Parameters
         ----------
-        space : `LinearSpace`
+        domain : `LinearSpace`
             The domain of this functional, i.e., the set of elements to
             which this functional can be applied.
+        range : `Field`, optional
+            Range of the functional. Default: ``domain.field``.
         linear : bool, optional
             If `True`, the functional is considered as linear.
         grad_lipschitz : float, optional
@@ -64,7 +67,14 @@ class Functional(Operator):
         # Cannot use `super(Functional, self)` here since that breaks
         # subclasses with multiple inheritance (at least those where both
         # parents implement `__init__`, e.g., in `ScalingFunctional`)
-        Operator.__init__(self, domain=space, range=space.field, linear=linear)
+        if range is None:
+            default_range = getattr(domain, 'field', None)
+            if default_range is None:
+                raise TypeError('Could not infere range for `functional`')
+            else:
+                range = default_range
+
+        Operator.__init__(self, domain=domain, range=range, linear=linear)
         self.__grad_lipschitz = float(grad_lipschitz)
 
     @property
@@ -468,7 +478,7 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
                             ''.format(func))
 
         Functional.__init__(
-            self, space=func.domain, linear=func.is_linear,
+            self, domain=func.domain, range=func.range, linear=func.is_linear,
             grad_lipschitz=np.abs(scalar) * func.grad_lipschitz)
         OperatorLeftScalarMult.__init__(self, operator=func, scalar=scalar)
 
@@ -560,7 +570,7 @@ class FunctionalRightScalarMult(Functional, OperatorRightScalarMult):
         scalar = func.domain.field.element(scalar)
 
         Functional.__init__(
-            self, space=func.domain, linear=func.is_linear,
+            self, domain=func.domain, range=func.range, linear=func.is_linear,
             grad_lipschitz=np.abs(scalar) * func.grad_lipschitz)
         OperatorRightScalarMult.__init__(self, operator=func, scalar=scalar)
 
@@ -620,7 +630,7 @@ class FunctionalComp(Functional, OperatorComp):
                             ''.format(func))
 
         OperatorComp.__init__(self, left=func, right=op)
-        Functional.__init__(self, space=op.domain,
+        Functional.__init__(self, domain=op.domain, range=func.range,
                             linear=(func.is_linear and op.is_linear),
                             grad_lipschitz=np.nan)
 
@@ -637,7 +647,7 @@ class FunctionalComp(Functional, OperatorComp):
             def __init__(self):
                 """Initialize a new instance."""
                 super(FunctionalCompositionGradient, self).__init__(
-                    op.domain, op.domain, linear=False)
+                    domain=op.domain, range=op.domain, linear=False)
 
             def _call(self, x):
                 """Apply the gradient operator to the given point."""
@@ -682,7 +692,8 @@ class FunctionalRightVectorMult(Functional, OperatorRightVectorMult):
                             ''.format(func))
 
         OperatorRightVectorMult.__init__(self, operator=func, vector=vector)
-        Functional.__init__(self, space=func.domain)
+        Functional.__init__(self, domain=func.domain, range=func.range,
+                            linear=func.is_linear)
 
     @property
     def functional(self):
@@ -724,9 +735,17 @@ class FunctionalSum(Functional, OperatorSum):
         if not isinstance(right, Functional):
             raise TypeError('`right` {!r} is not a `Functional` instance'
                             ''.format(right))
+        if left.range.contains_set(right.range):
+            range = left.range
+        elif right.range.contains_set(left.range):
+            range = right.range
+        else:
+            raise ValueError('The ranges of the `Functionals` in the sum '
+                             '({!r} and {!r}) do not contain one another'
+                             ''.format(left.range, right.range))
 
         Functional.__init__(
-            self, space=left.domain,
+            self, domain=left.domain, range=range,
             linear=(left.is_linear and right.is_linear),
             grad_lipschitz=left.grad_lipschitz + right.grad_lipschitz)
         OperatorSum.__init__(self, left, right)
@@ -767,7 +786,7 @@ class FunctionalScalarSum(FunctionalSum):
 
         super(FunctionalScalarSum, self).__init__(
             left=func,
-            right=ConstantFunctional(space=func.domain, constant=scalar))
+            right=ConstantFunctional(domain=func.domain, constant=scalar))
 
     @property
     def scalar(self):
@@ -813,7 +832,7 @@ class FunctionalTranslation(Functional):
         translation = func.domain.element(translation)
 
         super(FunctionalTranslation, self).__init__(
-            space=func.domain, linear=False,
+            domain=func.domain, range=func.range, linear=False,
             grad_lipschitz=func.grad_lipschitz)
 
         # TODO: Add case if we have translation -> scaling -> translation?
@@ -925,8 +944,13 @@ class InfimalConvolution(Functional):
             raise TypeError('`func` {} is not a `Functional` instance'
                             ''.format(right))
 
+        if left.range != right.range:
+            raise ValueError('Ranges of `left` and `right` not same '
+                             '({!r} and {!r})'.format(left.range, right.range))
+
         super(InfimalConvolution, self).__init__(
-            space=left.domain, linear=False, grad_lipschitz=np.nan)
+            domain=left.domain, range=left.range, linear=False,
+            grad_lipschitz=np.nan)
         self.__left = left
         self.__right = right
 
@@ -1018,7 +1042,7 @@ class FunctionalQuadraticPerturb(Functional):
         self.__constant = constant.real
 
         super(FunctionalQuadraticPerturb, self).__init__(
-            space=func.domain,
+            domain=func.domain, range=func.range,
             linear=func.is_linear and (quadratic_coeff == 0),
             grad_lipschitz=grad_lipschitz)
 
@@ -1044,8 +1068,7 @@ class FunctionalQuadraticPerturb(Functional):
 
     def _call(self, x):
         """Apply the functional to the given point."""
-        return (self.functional(x) +
-                self.quadratic_coeff * x.inner(x) +
+        return (self.functional(x) + self.quadratic_coeff * x.inner(x) +
                 x.inner(self.linear_term) + self.constant)
 
     @property
@@ -1147,9 +1170,17 @@ class FunctionalProduct(Functional, OperatorPointwiseProduct):
         if not isinstance(right, Functional):
             raise TypeError('`right` {} is not a `Functional` instance'
                             ''.format(right))
+        if left.range.contains_set(right.range):
+            range = left.range
+        elif right.range.contains_set(left.range):
+            range = right.range
+        else:
+            raise ValueError('The ranges of the `Functionals` in the product '
+                             '({!r} and {!r}) do not contain one another'
+                             ''.format(left.range, right.range))
 
         OperatorPointwiseProduct.__init__(self, left, right)
-        Functional.__init__(self, left.domain, linear=False,
+        Functional.__init__(self, left.domain, range=range, linear=False,
                             grad_lipschitz=np.nan)
 
     @property
@@ -1207,14 +1238,20 @@ class FunctionalQuotient(Functional):
             raise TypeError('`divisor` {} is not a `Functional` instance'
                             ''.format(divisor))
 
-        if dividend.domain != divisor.domain:
-            raise ValueError('domains of the operators do not match')
+        if dividend.range.contains_set(divisor.range):
+            range = dividend.range
+        elif divisor.range.contains_set(dividend.range):
+            range = divisor.range
+        else:
+            raise ValueError('The ranges of the `Functionals` in the quotient '
+                             '({!r} and {!r}) do not contain one another'
+                             ''.format(dividend.range, divisor.range))
 
         self.__dividend = dividend
         self.__divisor = divisor
 
         super(FunctionalQuotient, self).__init__(
-            dividend.domain, linear=False, grad_lipschitz=np.nan)
+            dividend.domain, range=range, linear=False, grad_lipschitz=np.nan)
 
     @property
     def dividend(self):
@@ -1301,7 +1338,7 @@ class FunctionalDefaultConvexConjugate(Functional):
                             ''.format(func))
 
         super(FunctionalDefaultConvexConjugate, self).__init__(
-            space=func.domain, linear=func.is_linear)
+            domain=func.domain, range=func.range, linear=func.is_linear)
         self.__convex_conj = func
 
     @property
@@ -1412,7 +1449,7 @@ class BregmanDistance(Functional):
         grad_lipschitz = functional.grad_lipschitz + subgrad.norm()
 
         super(BregmanDistance, self).__init__(
-            space=functional.domain, linear=False,
+            domain=functional.domain, range=functional.range, linear=False,
             grad_lipschitz=grad_lipschitz)
 
     @property
@@ -1468,7 +1505,7 @@ class BregmanDistance(Functional):
 def simple_functional(space, fcall=None, grad=None, prox=None, grad_lip=np.nan,
                       convex_conj_fcall=None, convex_conj_grad=None,
                       convex_conj_prox=None, convex_conj_grad_lip=np.nan,
-                      linear=False):
+                      linear=False, range=None):
     """Simplified interface to create a functional with specific properties.
 
     Users may specify as many properties as-is needed by the application.
@@ -1550,7 +1587,7 @@ def simple_functional(space, fcall=None, grad=None, prox=None, grad_lip=np.nan,
         def __init__(self):
             """Initialize an instance."""
             super(SimpleFunctional, self).__init__(
-                space, linear=linear, grad_lipschitz=grad_lip)
+                space, range=range, linear=linear, grad_lipschitz=grad_lip)
 
         def _call(self, x):
             """Return ``self(x)``."""
@@ -1585,7 +1622,8 @@ def simple_functional(space, fcall=None, grad=None, prox=None, grad_lip=np.nan,
                                      convex_conj_grad=grad,
                                      convex_conj_prox=prox,
                                      convex_conj_grad_lip=grad_lip,
-                                     linear=linear)
+                                     linear=linear,
+                                     range=range)
 
     return SimpleFunctional()
 

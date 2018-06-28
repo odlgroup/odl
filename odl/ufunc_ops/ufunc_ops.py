@@ -326,7 +326,7 @@ def ufunc_functional_factory(name, nargin, nargout, docstring):
                              "".format(name))
 
         linear = name in LINEAR_UFUNCS
-        Functional.__init__(self, space=field, linear=linear)
+        Functional.__init__(self, domain=field, linear=linear)
 
     def _call(self, x):
         """Return ``self(x)``."""

@@ -428,10 +428,10 @@ class RealNumbers(Field):
 
     def element(self, inp=None):
         """Return a real number from ``inp`` or from scratch."""
-        if inp is not None:
-            return float(inp)
-        else:
+        if inp is None:
             return 0.0
+        else:
+            return float(getattr(inp, 'real', inp))
 
     @property
     def examples(self):

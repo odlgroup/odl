@@ -304,6 +304,9 @@ def pdhg(x, f, g, L, niter, tau=None, sigma=None, **kwargs):
         if callback is not None:
             callback(x)
 
+    if callback is not None:
+        callback.final()
+
 
 def pdhg_stepsize(L, tau=None, sigma=None):
     r"""Default step sizes for `pdhg`.
