@@ -1,4 +1,4 @@
-﻿# Copyright 2014-2017 The ODL contributors
+﻿# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -11,6 +11,7 @@
 from __future__ import print_function, division, absolute_import
 from numbers import Integral
 import numpy as np
+from packaging.version import parse as parse_version
 
 from odl.operator.operator import Operator
 from odl.set import RealNumbers, ComplexNumbers
@@ -911,7 +912,6 @@ class MatrixOperator(Operator):
         """Return ``self(x[, out])``."""
         # Lazy import to improve `import odl` time
         import scipy.sparse
-        from pkg_resources import parse_version
 
         if out is None:
             if scipy.sparse.isspmatrix(self.matrix):

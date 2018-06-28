@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -16,18 +16,16 @@ Fourier transforms.
 from __future__ import print_function, division, absolute_import
 from multiprocessing import cpu_count
 import numpy as np
+from packaging.version import parse as parse_version
 import warnings
+
 try:
     import pyfftw
     PYFFTW_AVAILABLE = True
 except ImportError:
     PYFFTW_AVAILABLE = False
 else:
-    # Cheap way of getting the version, works with Git revision versions like
-    # '0.10.4+201.gdb78c2b'
-    _maj, _min, _patch = [int(n.split('+')[0])
-                          for n in pyfftw.__version__.split('.')[:3]]
-    if (_maj, _min, _patch) < (0, 10, 3):
+    if parse_version(pyfftw.__version__) < parse_version('0.10.3'):
         warnings.warn('PyFFTW < 0.10.3 is known to cause problems with some '
                       'ODL functionality, see issue #1002.',
                       RuntimeWarning)

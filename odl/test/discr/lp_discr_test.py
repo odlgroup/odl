@@ -1,4 +1,4 @@
-﻿# Copyright 2014-2017 The ODL contributors
+﻿# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,8 +8,8 @@
 
 from __future__ import division
 import numpy as np
+from packaging.version import parse as parse_version
 import pytest
-from pkg_resources import parse_version
 
 import odl
 from odl.discr.lp_discr import DiscreteLp, DiscreteLpElement
@@ -20,8 +20,8 @@ from odl.util.testutils import (
     all_equal, all_almost_equal, noise_elements, simple_fixture)
 
 
-USE_ARRAY_UFUNCS_INTERFACE = (parse_version(np.__version__) >=
-                              parse_version('1.13'))
+USE_ARRAY_UFUNCS_INTERFACE = (
+    parse_version(np.__version__) >= parse_version('1.13'))
 
 # --- Pytest fixtures --- #
 

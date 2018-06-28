@@ -1,4 +1,4 @@
-﻿# Copyright 2014-2017 The ODL contributors
+﻿# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -688,7 +688,7 @@ def run_doctests(skip_if=False, **kwargs):
         function.
     """
     from doctest import testmod, NORMALIZE_WHITESPACE, SKIP
-    from pkg_resources import parse_version
+    from packaging.version import parse as parse_version
     import odl
     import numpy as np
 

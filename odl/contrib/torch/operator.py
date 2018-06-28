@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -14,11 +14,11 @@ see `the pytorch installation guide
 """
 
 from __future__ import division
+from packaging.version import parse as parse_version
 import warnings
 
 import numpy as np
 import torch
-from pkg_resources import parse_version
 
 if parse_version(torch.__version__) < parse_version('0.4'):
     warnings.warn("This interface is designed to work with Pytorch >= 0.4",
