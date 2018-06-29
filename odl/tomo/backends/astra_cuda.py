@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -10,7 +10,10 @@
 
 from __future__ import print_function, division, absolute_import
 from builtins import object
+from multiprocessing import Lock
 import numpy as np
+from packaging.version import parse as parse_version
+
 try:
     import astra
     ASTRA_CUDA_AVAILABLE = astra.astra.use_cuda()
@@ -25,7 +28,6 @@ from odl.tomo.backends.astra_setup import (
 from odl.tomo.geometry import (
     Geometry, Parallel2dGeometry, FanFlatGeometry, Parallel3dAxisGeometry,
     ConeFlatGeometry)
-from multiprocessing import Lock
 
 
 __all__ = ('ASTRA_CUDA_AVAILABLE',
@@ -348,9 +350,6 @@ def astra_cuda_bp_scaling_factor(proj_space, reco_space, geometry):
     Behavior of ASTRA changes slightly between versions, so we keep
     track of it and adapt the scaling accordingly.
     """
-    # Lazy import due to long import time
-    from pkg_resources import parse_version
-
     # Angular integration weighting factor
     # angle interval weight by approximate cell volume
     angle_extent = geometry.motion_partition.extent

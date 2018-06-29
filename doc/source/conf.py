@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -7,12 +7,12 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import print_function
-from distutils.version import StrictVersion
 import sphinx
 import glob
 import os
 import sphinx_rtd_theme
 import sys
+from packaging.version import parse as parse_version
 
 # --- General configuration --- #
 
@@ -43,7 +43,7 @@ extensions = [
     'numpydoc'
 ]
 # Use newer 'imgmath' extension if possible
-if StrictVersion(sphinx.__version__) >= '1.4':
+if parse_version(sphinx.__version__) >= parse_version('1.4'):
     extensions.append('sphinx.ext.imgmath')
 else:
     extensions.append('sphinx.ext.pngmath')
