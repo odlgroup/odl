@@ -31,7 +31,7 @@ try:
 except ImportError:
     pass
 
-ignore_prefix = ['stir', 'proximal_lang']
+ignore_prefix = ['proximal_lang']
 
 # Make a fixture for all examples
 here = os.path.dirname(os.path.abspath(__file__))

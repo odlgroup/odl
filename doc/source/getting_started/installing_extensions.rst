@@ -30,11 +30,6 @@ Astra is most easily installed using conda:
 For further instructions, check `the ASTRA GitHub page <https://github.com/astra-toolbox/astra-toolbox>`_.
 
 
-STIR for emission tomography
-============================
-For applications in emission tomography, i.e. PET or SPECT, install `STIR`_ with Python bindings.
-Support for STIR is currently very limited.
-
 
 CUDA backend for linear arrays
 ==============================
@@ -121,4 +116,3 @@ If the above command instead raises a ``MemoryError`` or similar, your graphics 
 .. _odlcuda: https://github.com/odlgroup/odlcuda
 .. _CUDA toolkit: https://developer.nvidia.com/cuda-toolkit
 .. _ASTRA: https://github.com/astra-toolbox/astra-toolbox
-.. _STIR: https://github.com/UCL/STIR

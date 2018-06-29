@@ -166,7 +166,7 @@ If we now exchange ``matrix_op`` and ``data`` with a tomographic projector and l
 Further features
 ================
 * A unified structure `Geometry` for representing tomographic acquisition geometries
-* Interfaces to fast external libraries, e.g. `ASTRA`_ for X-ray tomography, `STIR`_ for emission tomography (preliminary), `pyFFTW`_ for fast Fourier transforms, ...
+* Interfaces to fast external libraries, e.g. `ASTRA`_ for X-ray tomography, `pyFFTW`_ for fast Fourier transforms, ...
 * A growing number of "must-have" operators like `Gradient`, `FourierTransform`, `WaveletTransform`
 * Several solvers for variational inverse problems, ranging from simple `gradient methods <steepest_descent>` to state-of-the-art non-smooth primal-dual splitting methods like `Douglas-Rachford <douglas_rachford_pd>`
 * Standardized tests for the correctness of implementations of operators and spaces, e.g. does the adjoint operator fulfill its defining relation?
@@ -193,6 +193,5 @@ Further reading
 .. _real numbers: https://en.wikipedia.org/wiki/Real_number
 .. _rectangular boxes: https://en.wikipedia.org/wiki/Hypercube
 .. _set: https://en.wikipedia.org/wiki/Set_%28mathematics%29
-.. _STIR: http://stir.sourceforge.net/
 .. _vector space: https://en.wikipedia.org/wiki/Vector_space
 .. _vectorized: https://en.wikipedia.org/wiki/Array_programming

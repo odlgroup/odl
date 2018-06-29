@@ -22,7 +22,7 @@ from odl.util.utility import run_from_ipython, is_string
 
 __all__ = (
     'all_equal', 'all_almost_equal', 'dtype_ndigits', 'dtype_tol',
-    'never_skip', 'skip_if_no_stir', 'skip_if_no_pywavelets',
+    'never_skip', 'skip_if_no_pywavelets',
     'skip_if_no_pyfftw', 'skip_if_no_largescale', 'noise_array',
     'noise_element', 'noise_elements', 'Timer', 'timeit', 'ProgressBar',
     'ProgressRange', 'test', 'run_doctests', 'test_file'
@@ -191,7 +191,6 @@ except ImportError:
         return function
 
     never_skip = _pass
-    skip_if_no_stir = _pass
     skip_if_no_pywavelets = _pass
     skip_if_no_pyfftw = _pass
     skip_if_no_largescale = _pass
@@ -201,11 +200,6 @@ else:
     never_skip = pytest.mark.skipif(
         "False",
         reason='Fill in, never skips'
-    )
-
-    skip_if_no_stir = pytest.mark.skipif(
-        "not odl.tomo.backends.stir_bindings.STIR_AVAILABLE",
-        reason='STIR not available'
     )
 
     skip_if_no_pywavelets = pytest.mark.skipif(
