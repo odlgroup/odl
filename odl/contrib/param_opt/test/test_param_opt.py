@@ -57,7 +57,6 @@ def test_optimal_parameters_two_parameters(space, fom):
 
     result1 = odl.contrib.param_opt.optimal_parameters(reconstruction1, fom,
                                                        phantoms, data, [1, 2])
-    print(result1)
     assert 1 - result1[1] == pytest.approx(result1[0], abs=1e-4)
 
     def reconstruction2(data, params):
