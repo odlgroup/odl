@@ -52,12 +52,3 @@ Example | Purpose | Complexity
 [`filtered_backprojection_cone_3d_short_scan.py`](filtered_backprojection_cone_3d_short_scan.py) | (Inexact) FBP reconstruction in 3D circular cone beam geometry **with short scan (less than 360 degrees)** | middle
 [`filtered_backprojection_helical_3d.py`](filtered_backprojection_helical_3d.py) | (Inexact) FBP reconstruction in 3D helical cone beam geometry | middle
 
-
-# Other
-
-[comment]: <> (This stuff will be removed from core ODL, just putting it to "Other" for now)
-
-Example | Purpose | Complexity
-------- | ------- | ----------
-[`stir_project.py`](stir_project.py) | Projection and back-projection in 3D PET geometry using the `stir` back-end | middle
-[`stir_reconstruct.py`](stir_reconstruct.py) | Iterative reconstruction in 3D PET geometry using the `stir` back-end | middle
