@@ -1143,14 +1143,6 @@ def test_ufunc_corner_cases(odl_tspace_impl):
     true_factors = x.space.weighting.factors + y.space.weighting.factors
     assert res.space.weighting.factors == pytest.approx(true_factors)
 
-    # Other space 1D and const weighhting -> concatenate
-    x = space.one()
-    y = odl.uniform_discr(0, 1, 2, weighting=0.5).one()
-    res = x.__array_ufunc__(np.add, 'outer', x, y)
-    assert isinstance(res.space.weighting, PerAxisWeighting)
-    true_factors = x.space.weighting.factors + (y.space.weighting.const,)
-    assert res.space.weighting.factors == pytest.approx(true_factors)
-
 
 def test_real_imag(odl_tspace_impl, odl_elem_order):
     """Check if real and imaginary parts can be read and written to."""
