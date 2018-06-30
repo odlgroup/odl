@@ -151,7 +151,7 @@ class DiscreteLp(DiscretizedSpace):
     @property
     def interp(self):
         """Interpolation type of this discretization."""
-        if self.ndim == 0:
+        if self.ndim_in == 0:
             return 'nearest'
         elif all(interp == self.interp_byaxis[0]
                  for interp in self.interp_byaxis):
@@ -503,9 +503,6 @@ class DiscreteLp(DiscretizedSpace):
         else:
             return super(DiscreteLp, self)._dist(x, y)
 
-    # TODO: add byaxis_out when discretized tensor-valued functions are
-    # available
-
     def __getitem__(self, indices):
         """Return ``self[indices]``.
 
@@ -588,9 +585,8 @@ class DiscreteLp(DiscretizedSpace):
         # The overall logic of the slicing is as follows:
         # - indices are normalized to be a tuple of length `ndim`
         # - the `tspace` is indexed with the whole index tuple
-        # - the `partition` is indexed with the "in" part of the tuple
-        #   only, i.e., the last part excluding `n_out = len(shape_out)`
-        #   axes
+        # - the `partition` is indexed with the "in" part of the tuple only,
+        #   i.e., the last part excluding `n_out = len(shape_out)` axes
         # - the `shape_out` for the function space is determined using the
         #   first `n_out` index tuple entries
         # - the new function space is constructed from `new_partition.set`,
@@ -648,6 +644,15 @@ class DiscreteLp(DiscretizedSpace):
     def byaxis(self):
         """Object to index along (input and output) axes.
 
+        .. note::
+            - Output dimensions come first (function components), then
+              input dimensions (function domain).
+            - If the index expression does not contain an index from the
+              "in" or "out" parts, the result will have no axes in that part.
+              For output dimensions, this means that the resulting space will
+              be scalar-valued, for input dimensions, the domain will be
+              empty, which is usually not desired.
+
         Examples
         --------
         Indexing with integers or slices:
@@ -655,16 +660,19 @@ class DiscreteLp(DiscretizedSpace):
         >>> space = odl.uniform_discr([0, 0, 0], [1, 2, 3], (5, 10, 15),
         ...                           dtype=(float, (2, 3)))
         >>> space.byaxis[0]
+        uniform_discr([], [], (), dtype=('float64', (2,)))
+        >>> space.byaxis[[0, 2, 3]]
+        uniform_discr([ 0.,  0.], [ 1.,  2.], (5, 10), dtype=('float64', (2,)))
+        >>> space.byaxis[1:3]
+        uniform_discr(0.0, 1.0, 5, dtype=('float64', (3,)))
+        >>> space.byaxis[2]
         uniform_discr(0.0, 1.0, 5)
-        >>> space.byaxis_in[1]
-        uniform_discr(0.0, 2.0, 10)
-        >>> space.byaxis_in[1:]
-        uniform_discr([ 0.,  0.], [ 2.,  3.], (10, 15))
 
-        Lists can be used to stack spaces arbitrarily:
+        Lists can be used to stack spaces arbitrarily (as long as "in" and
+        "out" axes are not mixed):
 
-        >>> space.byaxis_in[[2, 1, 2]]
-        uniform_discr([ 0.,  0.,  0.], [ 3.,  2.,  3.], (15, 10, 15))
+        >>> space.byaxis[[1, 2, 2]]
+        uniform_discr([ 0.,  0.], [ 1.,  1.], (5, 5), dtype=('float64', (3,)))
         """
         space = self
 
@@ -686,7 +694,15 @@ class DiscreteLp(DiscretizedSpace):
                     The resulting space after indexing along axes, with
                     roughly the same properties except possibly weighting.
                 """
-                indices = normalized_axis_indices(indices, space.ndim)
+                from odl.space.fspace import _out_in_indices_overlap
+
+                indices, indices_in = (
+                    normalized_axis_indices(indices, space.ndim), indices)
+                if _out_in_indices_overlap(indices, space.ndim_out):
+                    raise ValueError(
+                        '`indices` {} has overlapping output and input '
+                        'axes'.format(indices_in))
+
                 idcs_in = [i - space.ndim_out for i in indices
                            if i >= space.ndim_out]
 

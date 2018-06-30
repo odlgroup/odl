@@ -893,9 +893,14 @@ class FunctionSpace(LinearSpace):
     def byaxis(self):
         """Object to index along output and input dimensions.
 
-        Note that the output dimensions come first, such that a ``F[0]``
-        for a vector-valued function gives the first vector component
-        function.
+        .. note::
+            - Output dimensions come first (function components), then
+              input dimensions (function domain).
+            - If the index expression does not contain an index from the
+              "in" or "out" parts, the result will have no axes in that part.
+              For output dimensions, this means that the resulting space will
+              be scalar-valued, for input dimensions, the domain will be
+              empty, which is usually not desired.
 
         See Also
         --------
@@ -908,6 +913,10 @@ class FunctionSpace(LinearSpace):
 
         >>> domain = odl.IntervalProd(0, 1)
         >>> fspace = odl.FunctionSpace(domain, dtype_out=(float, (2, 3, 4)))
+        >>> fspace.byaxis[0]
+        FunctionSpace(IntervalProd([], []), dtype_out=('float64', (2,)))
+        >>> fspace.byaxis[0, -1]
+        FunctionSpace(IntervalProd(0.0, 1.0), dtype_out=('float64', (2,)))
         >>> fspace.byaxis[1:]
         FunctionSpace(IntervalProd(0.0, 1.0), dtype_out=('float64', (3, 4)))
         """
@@ -933,21 +942,17 @@ class FunctionSpace(LinearSpace):
                 """
                 ndim_out = len(space.shape_out)
                 ndim = ndim_out + space.domain.ndim
+                indices, indices_in = (normalized_axis_indices(indices, ndim),
+                                       indices)
+                if _out_in_indices_overlap(indices, ndim_out):
+                    raise ValueError(
+                        '`indices` {} has overlapping output and input '
+                        'axes'.format(indices_in))
 
-                if is_int(indices):
-                    indices = [indices]
-                elif isinstance(indices, slice):
-                    indices = list(range(ndim))[indices]
-
-                if any(not is_int(i) for i in indices):
-                    raise TypeError('sequence may only contain integers, '
-                                    'got {}'.format(indices))
-
-                indices = [i + ndim if i < 0 else i for i in indices]
                 idcs_out = [i for i in indices if i < ndim_out]
                 idcs_in = [i - ndim_out for i in indices if i >= ndim_out]
 
-                domain = space.domain[idcs_in]
+                domain = space.domain[idcs_in]  # this slices by axis
                 shape_out = tuple(space.shape_out[i] for i in idcs_out)
                 dtype_out = (space.scalar_dtype_out, shape_out)
                 return FunctionSpace(domain, dtype_out)
@@ -1599,6 +1604,28 @@ class FunctionSpaceElement(LinearSpaceElement):
             func = self._call_out_of_place
 
         return '{!r}.element({!r})'.format(self.space, func)
+
+
+def _out_in_indices_overlap(indices, ndim_out):
+    """Return whether index parts overlap for per-axis indexing of a space.
+
+    This function is intended for checking of an error condition in
+    per-axis indexing of tensor-valued spaces. The error condition is that
+    indices are given as a list, and input and output axes are mixed.
+    """
+    if not indices:
+        return False
+
+    out_idcs = [i for i in indices if i < ndim_out]
+    in_idcs = [i for i in indices if i >= ndim_out]
+    if not out_idcs or not in_idcs:
+        return False
+
+    outmax = max(out_idcs)
+    outmax_idx = len(indices) - 1 - indices[::-1].index(outmax)
+    inmin = min(in_idcs)
+    inmin_idx = indices.index(inmin)
+    return inmin_idx < outmax_idx
 
 
 if __name__ == '__main__':
