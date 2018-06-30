@@ -1924,9 +1924,11 @@ def uniform_discr_frompartition(partition, dtype=None, impl='numpy', **kwargs):
 
     weighting = kwargs.pop('weighting', None)
     exponent = kwargs.pop('exponent', 2.0)
-    if (weighting is None and
-            is_numeric_dtype(dtype) and
-            exponent != float('inf')):
+    if (
+        weighting is None and
+        is_numeric_dtype(dtype) and
+        exponent not in (float('inf'), -float('inf'))
+    ):
         weighting = np.concatenate([np.ones(len(fspace.shape_out)),
                                     partition.cell_sides])
 

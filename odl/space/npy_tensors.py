@@ -76,7 +76,7 @@ class NumpyTensorSpace(TensorSpace):
     """
 
     def __init__(self, shape, dtype=None, **kwargs):
-        """Initialize a new instance.
+        r"""Initialize a new instance.
 
         Parameters
         ----------
@@ -164,39 +164,39 @@ class NumpyTensorSpace(TensorSpace):
         -----
         - A distance function or metric on a space :math:`X`
           is a mapping
-          :math:`d:X \\times X \\to \mathbb{R}`
+          :math:`d:X \times X \to \mathbb{R}`
           satisfying the following conditions for all space elements
           :math:`x, y, z`:
 
           * :math:`d(x, y) \geq 0`,
           * :math:`d(x, y) = 0 \Leftrightarrow x = y`,
           * :math:`d(x, y) = d(y, x)`,
-          * :math:`d(x, y) \\leq d(x, z) + d(z, y)`.
+          * :math:`d(x, y) \leq d(x, z) + d(z, y)`.
 
         - A norm on a space :math:`X` is a mapping
-          :math:`\| \cdot \|:X \\to \mathbb{R}`
+          :math:`\| \cdot \|:X \to \mathbb{R}`
           satisfying the following conditions for all
           space elements :math:`x, y`: and scalars :math:`s`:
 
           * :math:`\| x\| \geq 0`,
           * :math:`\| x\| = 0 \Leftrightarrow x = 0`,
           * :math:`\| sx\| = |s| \cdot \| x \|`,
-          * :math:`\| x+y\| \\leq \| x\| +
+          * :math:`\| x+y\| \leq \| x\| +
             \| y\|`.
 
         - An inner product on a space :math:`X` over a field
           :math:`\mathbb{F} = \mathbb{R}` or :math:`\mathbb{C}` is a
           mapping
-          :math:`\\langle\cdot, \cdot\\rangle: X \\times
-          X \\to \mathbb{F}`
+          :math:`\langle\cdot, \cdot\rangle: X \times
+          X \to \mathbb{F}`
           satisfying the following conditions for all
           space elements :math:`x, y, z`: and scalars :math:`s`:
 
-          * :math:`\\langle x, y\\rangle =
-            \overline{\\langle y, x\\rangle}`,
-          * :math:`\\langle sx + y, z\\rangle = s \\langle x, z\\rangle +
-            \\langle y, z\\rangle`,
-          * :math:`\\langle x, x\\rangle = 0 \Leftrightarrow x = 0`.
+          * :math:`\langle x, y\rangle =
+            \overline{\langle y, x\rangle}`,
+          * :math:`\langle sx + y, z\rangle = s \langle x, z\rangle +
+            \langle y, z\rangle`,
+          * :math:`\langle x, x\rangle = 0 \Leftrightarrow x = 0`.
 
         Examples
         --------
@@ -2114,8 +2114,9 @@ def _pnorm_diagweight_impl(x, p, w):
     # BLAS dot or nrm2
     xp = np.abs(x.ravel(order))
     if p == float('inf'):
-        xp *= w.ravel(order)
         return np.max(xp)
+    elif p == -float('inf'):
+        return np.min(xp)
     else:
         xp = np.power(xp, p, out=xp)
         xp *= w.ravel(order)
@@ -2240,7 +2241,7 @@ class NumpyTensorSpaceArrayWeighting(ArrayWeighting):
     """
 
     def __init__(self, array, exponent=2.0):
-        """Initialize a new instance.
+        r"""Initialize a new instance.
 
         Parameters
         ----------
@@ -2258,9 +2259,9 @@ class NumpyTensorSpaceArrayWeighting(ArrayWeighting):
           :math:`W` is defined as
 
           .. math::
-              \\langle A, B\\rangle_W :=
-              \\langle W \odot A, B\\rangle =
-              \\langle w \odot a, b\\rangle =
+              \langle A, B\rangle_W :=
+              \langle W \odot A, B\rangle =
+              \langle w \odot a, b\rangle =
               b^{\mathrm{H}} (w \odot a),
 
           where :math:`a, b, w` are the "flattened" counterparts of
@@ -2268,29 +2269,27 @@ class NumpyTensorSpaceArrayWeighting(ArrayWeighting):
           stands for transposed complex conjugate and :math:`w \odot a`
           for element-wise multiplication.
 
-        - For other exponents, only norm and dist are defined. In the
-          case of exponent :math:`\\infty`, the weighted norm is
-
-          .. math::
-              \| A\|_{W, \\infty} :=
-              \| W \odot A\|_{\\infty} =
-              \| w \odot a\|_{\\infty},
-
-          otherwise it is (using point-wise exponentiation)
+        - For other exponents, only norm and dist are defined. In the case
+          of finite exponent, it is (using point-wise exponentiation)
 
           .. math::
               \| A\|_{W, p} :=
-              \| W^{1/p} \odot A\|_{p} =
-              \| w^{1/p} \odot a\|_{\\infty}.
+              \| W^{1/p} \odot A\|_p =
+              \| w^{1/p} \odot a\|_p,
 
-        - Note that this definition does **not** fulfill the limit
-          property in :math:`p`, i.e.
+          and for :math:`\pm \infty` we have
 
           .. math::
-              \| A\|_{W, p} \\not\\to
-              \| A\|_{W, \\infty} \quad (p \\to \\infty)
+              \| A\|_{W, \pm \infty} :=
+              \| W \odot A\|_{\pm \infty} =
+              \| w \odot a\|_{\pm \infty}.
 
-          unless all weights are equal to 1.
+          Note that this definition is chosen such that the limit
+          property in :math:`p` holds, i.e.
+
+          .. math::
+              \| A\|_{W, p} \to
+              \| A\|_{W, \infty} \quad (p \to \infty).
 
         - The array :math:`W` may only have positive entries, otherwise
           it does not define an inner product or norm, respectively. This
@@ -2367,7 +2366,7 @@ class NumpyTensorSpacePerAxisWeighting(PerAxisWeighting):
     """
 
     def __init__(self, factors, exponent=2.0):
-        """Initialize a new instance.
+        r"""Initialize a new instance.
 
         Parameters
         ----------
@@ -2394,31 +2393,30 @@ class NumpyTensorSpacePerAxisWeighting(PerAxisWeighting):
         - For exponent 2.0, a new weighted inner product is given as
 
           .. math::
-              \\langle a, b\\rangle_v :=
-              \\langle v \odot a, b\\rangle =
+              \langle a, b\rangle_v :=
+              \langle v \odot a, b\rangle =
               b^{\mathrm{H}} (v \odot a),
 
           where :math:`b^{\mathrm{H}}` stands for transposed complex
           conjugate and ":math:`\odot`" for pointwise product.
 
-        - For other exponents, only norm and dist are defined. In the
-          case of exponent :math:`\\infty`, the weighted norm is defined
-          as
+        - For other exponents, only norm and dist are defined. In the case
+          of finite exponent, it is (using point-wise exponentiation)
 
           .. math::
-              \| a \|_{v, \\infty} := \| a \|_{\\infty},
+              \| a \|_{v, p} := \| v^{1/p} \odot a \|_{p},
 
-          otherwise it is
+          and for :math:`\pm \infty` we have
 
           .. math::
-              \| a \|_{v, p} := \| v^{1/p} \odot a \|_{p}.
+              \| a \|_{v, \pm \infty} := \| a \|_{\pm \infty},
 
           Note that this definition is chosen such that the limit
           property in :math:`p` holds, i.e.
 
           .. math::
-              \| a\|_{v, p} \\to
-              \| a \|_{v, \\infty} \quad (p \\to \\infty).
+              \| a\|_{v, p} \to
+              \| a \|_{v, \infty} \quad (p \to \infty).
         """
         # TODO: allow 3-tuples for `bdry, inner, bdry` type factors
         conv_factors = []
@@ -2633,7 +2631,7 @@ class NumpyTensorSpaceConstWeighting(ConstWeighting):
     """
 
     def __init__(self, const, exponent=2.0):
-        """Initialize a new instance.
+        r"""Initialize a new instance.
 
         Parameters
         ----------
@@ -2649,35 +2647,32 @@ class NumpyTensorSpaceConstWeighting(ConstWeighting):
           :math:`c` is defined as
 
           .. math::
-              \\langle a, b\\rangle_c :=
-              c \, \\langle a, b\\rangle_c =
+              \langle a, b\rangle_c :=
+              c \, \langle a, b\rangle_c =
               c \, b^{\mathrm{H}} a,
 
           where :math:`b^{\mathrm{H}}` standing for transposed complex
           conjugate.
 
-        - For other exponents, only norm and dist are defined. In the
-          case of exponent :math:`\\infty`, the weighted norm is defined
-          as
-
-          .. math::
-              \| a \|_{c, \\infty} :=
-              c\, \| a \|_{\\infty},
-
-          otherwise it is
+        - For other exponents, only norm and dist are defined. In the case
+          of finite exponent, it is
 
           .. math::
               \| a \|_{c, p} :=
-              c^{1/p}\, \| a \|_{p}.
+              c^{1/p}\, \| a \|_{p},
 
-        - Note that this definition does **not** fulfill the limit
-          property in :math:`p`, i.e.
+          and for :math:`\pm \infty` we have
 
           .. math::
-              \| a\|_{c, p} \\not\\to
-              \| a \|_{c, \\infty} \quad (p \\to \\infty)
+              \| a \|_{c, \pm \infty} :=
+              \| a \|_{\pm \infty}.
 
-          unless :math:`c = 1`.
+          Note that this definition is chosen such that the limit
+          property in :math:`p` holds, i.e.
+
+          .. math::
+              \| a\|_{c, p} \to
+              \| a \|_{c, \infty} \quad (p \to \infty)
 
         - The constant must be positive, otherwise it does not define an
           inner product or norm, respectively.
