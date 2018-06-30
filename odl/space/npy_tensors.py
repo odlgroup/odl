@@ -801,11 +801,9 @@ class NumpyTensorSpace(TensorSpace):
         """Return ``self[indices]``.
 
         For all supported cases, indexing is implemented such that for an
-        element ``x in space``, the statement ::
+        element ``x in space``, ::
 
             x[indices] in space[indices]
-
-        is ``True``.
 
         Space indexing works with
 

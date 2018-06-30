@@ -212,6 +212,12 @@ class DiscreteLp(DiscretizedSpace):
         this includes the output components as ::
 
             shape = fspace.shape_out + partition.shape
+
+        Examples
+        --------
+        >>> space = odl.uniform_discr(0, 1, 4, dtype=(float, (2, 3)))
+        >>> space.shape
+        (2, 3, 4)
         """
         return self.tspace.shape
 
@@ -222,6 +228,12 @@ class DiscreteLp(DiscretizedSpace):
         For spaces of discretized scalar-valued functions, this is the
         same as `shape`. For vector- or tensor-valued functions, this
         is the shape of *one component*.
+
+        Examples
+        --------
+        >>> space = odl.uniform_discr(0, 1, 4, dtype=(float, (2, 3)))
+        >>> space.shape_in
+        (4),
         """
         return self.partition.shape
 
@@ -237,6 +249,12 @@ class DiscreteLp(DiscretizedSpace):
         For spaces of discretized vector- or tensor-valued functions,
         this is the shape of a function value; for scalar-valued functions,
         it is an empty tuple.
+
+        Examples
+        --------
+        >>> space = odl.uniform_discr(0, 1, 4, dtype=(float, (2, 3)))
+        >>> space.shape_out
+        (2, 3)
         """
         return self.fspace.shape_out
 
@@ -539,7 +557,7 @@ class DiscreteLp(DiscretizedSpace):
 
         >>> space[0, 0]
         uniform_discr([  0.,  0.], [  3.,  4.], (6, 8))
-        >>> space[0, 1, 1]
+        >>> space[0, 1, -1]
         uniform_discr(0.0, 4.0, 8)
 
         Ellipsis (``...``) and ``slice(None)`` (``:``) can be used to keep
@@ -620,7 +638,7 @@ class DiscreteLp(DiscretizedSpace):
         res_part = res_part.byaxis[remaining_axes_in]
 
         # Determine new fspace
-        sliced_shape_out, collapsed_axes_out, _, _ = simulate_slicing(
+        sliced_shape_out, collapsed_axes_out, new_axes, _ = simulate_slicing(
             self.shape_out, indices_out)
         res_fspace = FunctionSpace(
             res_part.set,
@@ -635,6 +653,8 @@ class DiscreteLp(DiscretizedSpace):
                       if i in remaining_axes_in]
         res_labels = [self.axis_labels[i] for i in range(self.ndim)
                       if i in remaining_axes]
+        for i, ax in enumerate(new_axes):
+            res_labels.insert(ax, '$new_{}$'.format(i))
 
         # Create new space
         return DiscreteLp(res_fspace, res_part, res_tspace, interp=res_interp,
@@ -652,6 +672,9 @@ class DiscreteLp(DiscretizedSpace):
               For output dimensions, this means that the resulting space will
               be scalar-valued, for input dimensions, the domain will be
               empty, which is usually not desired.
+            - If a list of integers is given, the respective axes are
+              "stacked" as desired. However, it is not possible to mix
+              output with input axes.
 
         Examples
         --------
@@ -859,7 +882,7 @@ class DiscreteLp(DiscretizedSpace):
                        ('nodes_on_bdry', nodes_on_bdry, False)]
 
             # Add weighting stuff if not equal to default
-            default_facs_out = [1.0] * self.ndim_out
+            default_factors_out = [1.0] * self.ndim_out
             if self.exponent != 2.0:
                 weighting_part = self.weighting.repr_part
 
@@ -867,24 +890,26 @@ class DiscreteLp(DiscretizedSpace):
                   self.ndim_in == 0 or
                   not is_floating_dtype(self.dtype)):
                 # In these cases, weighting factors 1 is the default
-                default_facs_in = [1.0] * self.ndim_in
-                default_facs = default_facs_out + default_facs_in
-                if (not isinstance(self.weighting, PerAxisWeighting) or
-                        all(fac.ndim == 0 and np.isclose(fac, default_facs[i])
-                            for i, fac in enumerate(self.weighting.factors))):
+                default_factors_in = [1.0] * self.ndim_in
+                default_factors = default_factors_out + default_factors_in
+                if (
+                    not isinstance(self.weighting, PerAxisWeighting) or
+                    all(fac.ndim == 0 and np.isclose(fac, default_factors[i])
+                        for i, fac in enumerate(self.weighting.factors))
+                ):
                     weighting_part = self.weighting.repr_part
 
             else:
                 # Here, per-axis weighting with the cell sides as factors is
                 # the default
-                default_facs_in = list(self.cell_sides)
-                default_facs = default_facs_out + default_facs_in
+                default_factors_in = list(self.cell_sides)
+                default_factors = default_factors_out + default_factors_in
 
                 if isinstance(self.weighting, ConstWeighting):
                     weighting_part = ('weighting={:.4}'
                                       ''.format(self.weighting.const))
                 elif (isinstance(self.weighting, PerAxisWeighting) and
-                      all(fac.ndim == 0 and np.isclose(fac, default_facs[i])
+                      all(fac.ndim == 0 and np.isclose(fac, default_factors[i])
                           for i, fac in enumerate(self.weighting.factors))):
                     weighting_part = ''
                 else:
@@ -933,7 +958,34 @@ class DiscreteLpElement(DiscretizedSpaceElement):
 
     """Representation of a `DiscreteLp` element."""
 
-    # TODO: ndim_in, ndim_out, shape_in, shape_out
+    @property
+    def shape_in(self):
+        """Shape of the "input" part, i.e. of the function domain.
+
+        For scalar-valued functions, this is the same as `shape`. For
+        vector- or tensor-valued functions, this is the shape of
+        *one component*.
+        """
+        return self.space.shape_in
+
+    @property
+    def ndim_in(self):
+        """Number of "input" dimensions, equals ``len(self.shape_in)``."""
+        return self.space.ndim_in
+
+    @property
+    def shape_out(self):
+        """Shape of the "output" part, i.e. of the function range.
+
+        For vector- or tensor-valued functions, this is the shape of a
+        function value; for scalar-valued functions, it is an empty tuple.
+        """
+        return self.space.shape_out
+
+    @property
+    def ndim_out(self):
+        """Number of "output" dimensions, equals ``len(self.shape_out)``."""
+        return self.space.ndim_out
 
     @property
     def cell_sides(self):
@@ -1126,22 +1178,89 @@ class DiscreteLpElement(DiscretizedSpaceElement):
 
         Examples
         --------
-        # TODO: write example
+        Indexing of scalar-valued functions works very just as with
+        arrays:
+
+        >>> space = odl.uniform_discr([0, 0, 0], [1, 2, 3], (2, 3, 4))
+        >>> x = space.element(
+        ...     [[[1, 2, 3, 4],
+        ...       [2, 3, 4, 5],
+        ...       [3, 4, 5, 6]],
+        ...      [[4, 5, 6, 7],
+        ...       [5, 6, 7, 8],
+        ...       [6, 7, 8, 9]]]
+        ... )
+        >>> x[0]
+        uniform_discr([ 0.,  0.], [ 2.,  3.], (3, 4)).element(
+            [[ 1.,  2.,  3.,  4.],
+             [ 2.,  3.,  4.,  5.],
+             [ 3.,  4.,  5.,  6.]]
+        )
+        >>> x[:, 1, 1:-1]
+        uniform_discr([ 0.  ,  0.75], [ 1.  ,  2.25], (2, 2)).element(
+            [[ 3.,  4.],
+             [ 6.,  7.]]
+        )
+
+        We can make a "fake" vector-valued function by adding a new axis
+        to the left (new axes are not allowed in the "domain" part):
+
+        >>> x[None, :, 0, 0]
+        uniform_discr(0.0, 1.0, 2, dtype=('float64', (1,))).element(
+            [[ 1.,  4.]]
+        )
+
+        Vector- and tensor-valued functions work similarly -- the only
+        notable difference here is that the first two axes are part of the
+        function output, i.e., we have a ``(2, 3)``-tensor-valued function:
+
+        >>> space = odl.uniform_discr(0, 1, 4, dtype=(float, (2, 3)))
+        >>> x = space.element(
+        ...     [[[1, 2, 3, 4],
+        ...       [2, 3, 4, 5],
+        ...       [3, 4, 5, 6]],
+        ...      [[4, 5, 6, 7],
+        ...       [5, 6, 7, 8],
+        ...       [6, 7, 8, 9]]]
+        ... )
+        >>> x[0]
+        uniform_discr(0.0, 1.0, 4, dtype=('float64', (3,))).element(
+            [[ 1.,  2.,  3.,  4.],
+             [ 2.,  3.,  4.,  5.],
+             [ 3.,  4.,  5.,  6.]]
+        )
+        >>> x[:, 1, 1:-1]
+        uniform_discr(0.25, 0.75, 2, dtype=('float64', (2,))).element(
+            [[ 3.,  4.],
+             [ 6.,  7.]]
+        )
+
+        Now we have more options to add new axes:
+
+        >>> x[None, :, 0, 0]  # collapses domain completely
+        uniform_discr([], [], (), dtype=('float64', (1, 2))).element(
+            [[ 1.,  4.]]
+        )
+        >>> x[None, 0, None, :, :]
+        uniform_discr(0.0, 1.0, 4, dtype=('float64', (1, 1, 3))).element(
+            [[[[ 1.,  2.,  3.,  4.],
+               [ 2.,  3.,  4.,  5.],
+               [ 3.,  4.,  5.,  6.]]]]
+        )
         """
         if isinstance(indices, type(self)):
             indices = indices.tensor
         if isinstance(indices, type(self.tensor)):
             indices = indices.data
-        if isinstance(indices, type(self.tensor.data)):
+        if isinstance(indices, type(self.tensor.data)) and not is_int(indices):
             return self.tensor[indices]
-
-        try:
-            iter(indices)
-        except TypeError:
-            pass
 
         # Normalize the index expression based on the full shape, and
         # split into "in" and "out" parts
+        # TODO(kohr-h): This step butchers "list of index lists" type
+        # of indices that we should make work. Think of a way around this
+        # issue. The `simulate_slicing` function likely has some of the
+        # required functionality.
         indices = normalized_index_expression(indices, self.shape)
 
         # New axes can be added to the output part, so we can only use
@@ -1162,9 +1281,10 @@ class DiscreteLpElement(DiscretizedSpaceElement):
         try:
             res_space = self.space[indices]
         except (ValueError, TypeError):
-            # TODO: adapt error type
-            # Cannot index space like this, e.g., with an index array or
-            # a boolean array. Just return the tensor.
+            # Cannot index the space like this, e.g., with an index array or
+            # a boolean array; just return the tensor
+            # TODO(kohr-h): Relying on ValueError and TypeError is a bit
+            # dangerous, there must be a better way
             return res_tens
         else:
             return res_space.element(res_tens)

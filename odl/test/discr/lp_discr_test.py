@@ -1135,7 +1135,7 @@ def test_ufunc_corner_cases(odl_tspace_impl):
     true_factors = x.space.weighting.factors + (1, 1)
     assert res.space.weighting.factors == pytest.approx(true_factors)
 
-    # Other space 2D and per-axis weighhting -> concatenate
+    # Other space 2D and per-axis weighting -> concatenate
     x = space.one()
     y = odl.uniform_discr([0, 0], [1, 1], (2, 3), weighting=(0.5, 1.5)).one()
     res = x.__array_ufunc__(np.add, 'outer', x, y)

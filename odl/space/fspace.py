@@ -901,6 +901,9 @@ class FunctionSpace(LinearSpace):
               For output dimensions, this means that the resulting space will
               be scalar-valued, for input dimensions, the domain will be
               empty, which is usually not desired.
+            - If a list of integers is given, the respective axes are
+              "stacked" as desired. However, it is not possible to mix
+              output with input axes.
 
         See Also
         --------
