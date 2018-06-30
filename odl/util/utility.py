@@ -581,13 +581,14 @@ def is_int(obj):
     This is faster than ``isinstance(obj, Integral)``, although perhaps not
     quite as general.
     """
-    # Shortcut for common case
+    # Shortcut for common cases
     if isinstance(obj, int):
         return True
+    elif getattr(obj, 'shape', ()) not in ((), (1,)):
+        return False
 
     try:
-        obj_int = int(obj)
-        return obj_int == obj
+        return np.issubsctype(np.asarray(obj), np.integer)
     except (TypeError, ValueError):
         return False
 

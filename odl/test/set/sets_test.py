@@ -168,10 +168,10 @@ def test_integers():
     assert -1 in Z
     assert 1 in Z
     assert 0 in Z
+    assert -44 in Z
 
-    assert -1.0 not in Z
-    assert 1.0 not in Z
-    assert 0.0 not in Z
+    assert 2.0 not in Z
+    assert -1.1 not in Z
     assert 2j not in Z
     assert 2 + 2j not in Z
     assert 'a' not in Z
