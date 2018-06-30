@@ -1310,6 +1310,25 @@ class ProductSpaceElement(LinearSpaceElement):
         complex_conj = [part.conj() for part in self.parts]
         return self.space.element(complex_conj)
 
+    def astype(self, dtype):
+        """Cast this product space element to a new ``dtype``.
+
+        Parameters
+        ----------
+        dtype :
+            Scalar data type of the returned space. Can be provided
+            in any way the `numpy.dtype` constructor understands, e.g.
+            as built-in type or as a string. Data types with non-trivial
+            shapes are not allowed.
+
+        Returns
+        -------
+        newelem : `ProductSpaceElement`
+            Version of this element with given data type.
+        """
+        return self.space.astype(dtype).element(
+            [p.astype(dtype) for p in self.parts])
+
     def __str__(self):
         """Return ``str(self)``."""
         return repr(self)
