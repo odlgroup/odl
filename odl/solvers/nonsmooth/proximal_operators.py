@@ -29,6 +29,7 @@ from odl.operator import (
     PointwiseNorm, MultiplyOperator)
 from odl.space import ProductSpace
 from odl.set.space import LinearSpaceElement
+from odl.util import npy_erroroptions
 
 
 __all__ = ('combine_proximals', 'proximal_convex_conj', 'proximal_translation',
@@ -1847,20 +1848,18 @@ def proximal_convex_conj_kl_cross_entropy(space, lam=1, g=None):
             # Lazy import to improve `import odl` time
             import scipy.special
 
-            if g is None:
-                # If g is None, it is taken as the one element
-                # Different branches of lambertw is not an issue, see Notes
-                lambw = scipy.special.lambertw(
-                    (self.sigma / lam) * np.exp(x / lam))
-            else:
-                # Different branches of lambertw is not an issue, see Notes
-                lambw = scipy.special.lambertw(
-                    (self.sigma / lam) * g * np.exp(x / lam))
+            with npy_erroroptions(complex='ignore'):
+                if g is None:
+                    # If g is None, it is taken as the one element
+                    # Different branches of lambertw is not an issue, see Notes
+                    lambw = scipy.special.lambertw(
+                        (self.sigma / lam) * np.exp(x / lam))
+                else:
+                    # Different branches of lambertw is not an issue, see Notes
+                    lambw = scipy.special.lambertw(
+                        (self.sigma / lam) * g * np.exp(x / lam))
 
-            if not np.issubsctype(self.domain.dtype, np.complexfloating):
-                lambw = lambw.real
-
-            lambw = x.space.element(lambw)
+                lambw = x.space.element(lambw)
 
             out.lincomb(1, x, -lam, lambw)
 

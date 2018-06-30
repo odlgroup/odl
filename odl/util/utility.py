@@ -17,18 +17,19 @@ from collections import OrderedDict
 from functools import wraps
 from future.moves.itertools import zip_longest
 from itertools import product
+import warnings
 
 import numpy as np
 
 __all__ = (
     'array_str', 'dtype_str', 'dtype_repr', 'npy_printoptions',
-    'signature_string', 'signature_string_parts', 'repr_string',
-    'indent', 'dedent', 'attribute_repr_string', 'method_repr_string',
-    'is_numeric_dtype', 'is_int_dtype', 'is_floating_dtype', 'is_real_dtype',
-    'is_real_floating_dtype', 'is_complex_floating_dtype',
-    'real_dtype', 'complex_dtype', 'is_int', 'is_string',
-    'nd_iterator', 'conj_exponent', 'writable_array', 'run_from_ipython',
-    'NumpyRandomSeed', 'cache_arguments', 'unique',
+    'npy_erroroptions', 'signature_string', 'signature_string_parts',
+    'repr_string', 'indent', 'dedent', 'attribute_repr_string',
+    'method_repr_string', 'is_numeric_dtype', 'is_int_dtype',
+    'is_floating_dtype', 'is_real_dtype', 'is_real_floating_dtype',
+    'is_complex_floating_dtype', 'real_dtype', 'complex_dtype', 'is_int',
+    'is_string', 'nd_iterator', 'conj_exponent', 'writable_array',
+    'run_from_ipython', 'NumpyRandomSeed', 'cache_arguments', 'unique',
     'REPR_PRECISION')
 
 
@@ -190,6 +191,55 @@ class npy_printoptions(object):
 
     def __exit__(self, type, value, traceback):
         np.set_printoptions(**self.orig_opts)
+
+
+class npy_erroroptions(object):
+
+    """Context manager to handle error or warning conditions.
+
+    This class extends the `numpy.errstate` context manager by the
+    ``'complex'`` parameter to handle ``ComplexWarning``.
+
+    See Also
+    --------
+    numpy.errstate
+    """
+
+    def __init__(self, **kwargs):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        complex : {'warn', 'ignore', 'raise', 'print'}
+            Action to take in situations that by default emit a
+            `numpy.core.numeric.ComplexWarning`.
+        kwargs :
+            Other keyword arguments ``all, divide, over, under, invalid``.
+            See `numpy.seterr` for details.
+        """
+        if 'all' in kwargs:
+            self.complex_action = kwargs['all']
+        else:
+            self.complex_action = kwargs.pop('complex', 'warn')
+        self.complex_filter = None
+        self.npy_kwargs = kwargs
+        self.npy_errstate = None
+
+    def __enter__(self):
+        # From `numpy` to `warnings` style
+        actions = {'ignore': 'ignore', 'raise': 'error', 'print': 'always'}
+        if self.complex_action != 'warn':
+            warnings.filterwarnings(
+                actions[self.complex_action], message=r'.*',
+                category=np.ComplexWarning, module=r'.*'
+            )
+            self.complex_filter = np.warnings.filters[0]
+        self.npy_old_errstate = np.seterr(**self.npy_kwargs)
+
+    def __exit__(self, type, value, traceback):
+        if self.complex_filter is not None:
+            np.warnings.filters.remove(self.complex_filter)
+        np.seterr(**self.npy_old_errstate)
 
 
 def array_str(a, nprint=6):
