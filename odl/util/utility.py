@@ -22,7 +22,7 @@ import warnings
 import numpy as np
 
 __all__ = (
-    'array_str', 'dtype_str', 'dtype_repr', 'npy_printoptions',
+    'array_str', 'array_hash', 'dtype_str', 'dtype_repr', 'npy_printoptions',
     'npy_erroroptions', 'signature_string', 'signature_string_parts',
     'repr_string', 'indent', 'dedent', 'attribute_repr_string',
     'method_repr_string', 'is_numeric_dtype', 'is_int_dtype',
@@ -315,6 +315,11 @@ def array_str(a, nprint=6):
                           suppress=True):
         a_str = np.array2string(a, separator=', ')
     return a_str
+
+
+def array_hash(arr):
+    """Return a hash of an array, using a conversion to bytes."""
+    return hash(arr.tobytes())
 
 
 def dtype_repr(dtype):

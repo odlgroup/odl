@@ -14,7 +14,8 @@ import numpy as np
 
 from odl.space.base_tensors import TensorSpace
 from odl.util import (
-    array_str, signature_string, indent, fast_1d_tensor_mult, writable_array)
+    array_str, array_hash, signature_string, indent, fast_1d_tensor_mult,
+    writable_array)
 
 
 __all__ = ('MatrixWeighting', 'ArrayWeighting', 'ConstWeighting',
@@ -342,9 +343,9 @@ class MatrixWeighting(Weighting):
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        # TODO: Better hash for matrix?
-        return hash((super(MatrixWeighting, self).__hash__(),
-                     self.matrix.tobytes()))
+        return hash(
+            (super(MatrixWeighting, self).__hash__(), array_hash(self.matrix))
+        )
 
     @property
     def repr_part(self):
@@ -448,8 +449,9 @@ class ArrayWeighting(Weighting):
     def __hash__(self):
         """Return ``hash(self)``."""
         # TODO: Better hash for array?
-        return hash((super(ArrayWeighting, self).__hash__(),
-                     self.array.tobytes()))
+        return hash(
+            (super(ArrayWeighting, self).__hash__(), array_hash(self.array))
+        )
 
     @property
     def repr_part(self):

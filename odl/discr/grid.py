@@ -18,7 +18,7 @@ import numpy as np
 from odl.set import Set, IntervalProd
 from odl.util import (
     normalized_index_expression, normalized_scalar_param_list, safe_int_conv,
-    array_str, signature_string, indent, npy_printoptions)
+    array_str, signature_string, indent, npy_printoptions, array_hash)
 
 
 __all__ = ('RectGrid', 'uniform_grid', 'uniform_grid_fromintv')
@@ -521,8 +521,9 @@ class RectGrid(Set):
     def __hash__(self):
         """Return ``hash(self)``."""
         # TODO: update with #841
-        coord_vec_str = tuple(cv.tobytes() for cv in self.coord_vectors)
-        return hash((type(self), coord_vec_str))
+        return hash(
+            (type(self), tuple(array_hash(cv) for cv in self.coord_vectors))
+        )
 
     def approx_contains(self, other, atol):
         """Test if ``other`` belongs to this grid up to a tolerance.

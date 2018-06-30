@@ -24,7 +24,7 @@ from odl.space.weighting import (
     CustomInner, CustomNorm, CustomDist)
 from odl.util import (
     dtype_str, signature_string, is_real_dtype, is_numeric_dtype, array_str,
-    indent, fast_1d_tensor_mult, writable_array, is_floating_dtype,
+    array_hash, indent, fast_1d_tensor_mult, writable_array, is_floating_dtype,
     simulate_slicing, normalized_index_expression)
 
 
@@ -2310,7 +2310,9 @@ class NumpyTensorSpaceArrayWeighting(ArrayWeighting):
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        return hash((type(self), self.array.tobytes(), self.exponent))
+        return hash(
+            (type(self), array_hash(self.array), self.exponent)
+        )
 
     def inner(self, x1, x2):
         """Return the weighted inner product of ``x1`` and ``x2``.
@@ -2570,7 +2572,8 @@ class NumpyTensorSpacePerAxisWeighting(PerAxisWeighting):
         """Return ``hash(self)``."""
         return hash(
             (super(NumpyTensorSpacePerAxisWeighting, self).__hash__(),) +
-            tuple(fac.tobytes() for fac in self.factors))
+            tuple(array_hash(fac) for fac in self.factors)
+        )
 
     @property
     def repr_part(self):
