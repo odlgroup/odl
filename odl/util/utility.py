@@ -589,7 +589,7 @@ def is_int(obj):
     # Shortcuts for common cases
     if isinstance(obj, int):
         return True
-    elif isinstance(obj, (float, list, tuple)):
+    elif isinstance(obj, (float, list, tuple, str, dict)):
         return False
     elif getattr(obj, 'shape', ()) != ():
         # Shape (1,) not allowed. It is possible to cat `np.array([1])` to
@@ -602,7 +602,7 @@ def is_int(obj):
     # Semi-slow track: reject objects not castable to int
     try:
         int(obj)
-    except TypeError:
+    except Exception:
         return False
 
     try:
