@@ -583,17 +583,32 @@ def complex_dtype(dtype, default=None):
 def is_int(obj):
     """Return ``True`` if ``obj`` behaves like an integer, ``False`` else.
 
-    This is faster than ``isinstance(obj, Integral)``, although perhaps not
-    quite as general.
+    This is faster than ``isinstance(obj, Integral)`` (for Python <3.7),
+    although perhaps not quite as general.
     """
-    # Shortcut for common cases
+    # Shortcuts for common cases
     if isinstance(obj, int):
         return True
-    elif getattr(obj, 'shape', ()) not in ((), (1,)):
+    elif isinstance(obj, (float, list, tuple)):
+        return False
+    elif getattr(obj, 'shape', ()) != ():
+        # Shape (1,) not allowed. It is possible to cat `np.array([1])` to
+        # integer, but it behaves differently from `np.array(1)` when
+        # indexing:
+        # np.ones((2, 3))[np.array(1)] -> array([ 1.,  1.,  1.])
+        # np.ones((2, 3))[np.array([1])] -> array([[ 1.,  1.,  1.]])
+        return False
+
+    # Semi-slow track: reject objects not castable to int
+    try:
+        int(obj)
+    except TypeError:
         return False
 
     try:
-        return np.issubsctype(np.asarray(obj), np.integer)
+        # Slow track, mainly for array types that support scalars
+        arr = np.asarray(obj)
+        return np.issubsctype(arr, np.integer) and arr.shape == ()
     except (TypeError, ValueError):
         return False
 
