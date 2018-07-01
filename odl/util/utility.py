@@ -583,8 +583,11 @@ def complex_dtype(dtype, default=None):
 def is_int(obj):
     """Return ``True`` if ``obj`` behaves like an integer, ``False`` else.
 
-    This is faster than ``isinstance(obj, Integral)`` (for Python <3.7),
-    although perhaps not quite as general.
+    In particular, this function returns ``True`` for scalar arrays,
+    e.g., ``numpy.array(-2)``.
+
+    For Python versions <3.7, this function is also faster than
+    ``isinstance(obj, numbers.Integral)``.
     """
     # Shortcuts for common cases
     if isinstance(obj, int):
