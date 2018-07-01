@@ -924,7 +924,7 @@ def simulate_slicing(shape, indices):
 
     >>> # arr[0, :3, 1:4, ::2]
     >>> simulate_slicing(shape, (0, np.s_[:3], np.s_[1:4], np.s_[::2]))
-    ((3, 3, 3), (0,), None)
+    ((3, 3, 3), (0,), (), None)
 
     New axes are created with ``None`` objects. Their positions in the
     result of indexing with the rest of the indices ends up in the
