@@ -233,7 +233,7 @@ class DiscreteLp(DiscretizedSpace):
         --------
         >>> space = odl.uniform_discr(0, 1, 4, dtype=(float, (2, 3)))
         >>> space.shape_in
-        (4),
+        (4,)
         """
         return self.partition.shape
 
