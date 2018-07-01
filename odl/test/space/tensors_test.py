@@ -1095,13 +1095,12 @@ def test_array_weighting_norm(tspace, exponent):
     weighting = NumpyTensorSpaceArrayWeighting(weight_arr, exponent=exponent)
 
     if exponent == float('inf'):
-        true_norm = np.linalg.norm(
-            (weight_arr * xarr).ravel(),
-            ord=float('inf'))
+        true_norm = np.linalg.norm(xarr.ravel(), ord=float('inf'))
     else:
         true_norm = np.linalg.norm(
             (weight_arr ** (1 / exponent) * xarr).ravel(),
-            ord=exponent)
+            ord=exponent
+        )
 
     assert weighting.norm(x) == pytest.approx(true_norm, rel=rtol)
 
@@ -1115,9 +1114,7 @@ def test_array_weighting_dist(tspace, exponent):
     weighting = NumpyTensorSpaceArrayWeighting(weight_arr, exponent=exponent)
 
     if exponent == float('inf'):
-        true_dist = np.linalg.norm(
-            (weight_arr * (xarr - yarr)).ravel(),
-            ord=float('inf'))
+        true_dist = np.linalg.norm((xarr - yarr).ravel(), ord=float('inf'))
     else:
         true_dist = np.linalg.norm(
             (weight_arr ** (1 / exponent) * (xarr - yarr)).ravel(),
