@@ -227,13 +227,24 @@ class TensorSpace(LinearSpace):
         dtype :
             Scalar data type of the returned space. Can be provided
             in any way the `numpy.dtype` constructor understands, e.g.
-            as built-in type or as a string. Data types with non-trivial
-            shapes are not allowed.
+            as built-in type or as a string.
+            For data types with non-trivial shape, that shape is added to
+            the left of the existing axes.
 
         Returns
         -------
         newspace : `TensorSpace`
             Version of this space with given data type.
+
+        Examples
+        --------
+        >>> space = odl.rn(3)
+        >>> space.astype('float32')
+        rn(3, dtype='float32')
+        >>> space.astype(int)
+        tensor_space(3, dtype=int)
+        >>> space.astype((float, (2,)))
+        rn((2, 3))
         """
         if dtype is None:
             # Need to filter this out since Numpy iterprets it as 'float'

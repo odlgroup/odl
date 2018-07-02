@@ -470,6 +470,27 @@ class NumpyTensorSpace(TensorSpace):
         else:
             raise TypeError('cannot provide both `inp` and `data_ptr`')
 
+    def _astype(self, dtype):
+        """Internal helper for `astype`.
+
+        Subclasses with differing init parameters should overload this
+        method.
+        """
+        kwargs = {}
+        dtype = np.dtype(dtype)
+
+        if is_floating_dtype(dtype) and dtype.shape != ():
+            # Use weighting only for floating-point types, otherwise, e.g.,
+            # `space.astype(bool)` would fail
+            weighting_slc = (
+                (None,) * len(dtype.shape) + (slice(None),) * self.ndim
+            )
+            weighting = slice_weighting(
+                self.weighting, self.shape, weighting_slc)
+            kwargs['weighting'] = weighting
+
+        return type(self)(dtype.shape + self.shape, dtype=dtype.base, **kwargs)
+
     def zero(self):
         """Return a tensor of all zeros.
 
@@ -1031,6 +1052,9 @@ class NumpyTensor(Tensor):
         newelem : `NumpyTensor`
             Version of this element with given data type.
         """
+        dtype = np.dtype(dtype)
+        if dtype.shape != ():
+            raise ValueError('`dtype` with shape not supported')
         return self.space.astype(dtype).element(self.data.astype(dtype))
 
     @property
