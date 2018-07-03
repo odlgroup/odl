@@ -85,7 +85,7 @@ op = odl.BroadcastOperator(
     odl.ReductionOperator(G, odl.ScalingOperator(V, -1)),
     E * odl.ComponentProjection(domain, 1))
 
-# Do not use the g functional, set it to zero.
+# Do not use the f functional, set it to zero.
 f = odl.solvers.ZeroFunctional(domain)
 
 # l2-squared data matching
