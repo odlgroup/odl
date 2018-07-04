@@ -288,7 +288,7 @@ class TensorSpace(LinearSpace):
 
     @property
     def nbytes(self):
-        """Total number of bytes used by an element of this space in memory."""
+        """Total number of bytes in memory used by an element of this space."""
         return self.size * self.itemsize
 
     def __contains__(self, other):

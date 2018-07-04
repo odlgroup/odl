@@ -282,6 +282,11 @@ class ProductSpace(LinearSpace):
         return len(self.spaces)
 
     @property
+    def nbytes(self):
+        """Total number of bytes in memory used by an element of this space."""
+        return sum(spc.nbytes for spc in self.spaces)
+
+    @property
     def shape(self):
         """Total spaces per axis, computed recursively.
 
@@ -872,13 +877,17 @@ class ProductSpaceElement(LinearSpaceElement):
         """Return ``len(self)``."""
         return len(self.space)
 
+    @property
+    def nbytes(self):
+        """Total number of bytes in memory used by this element."""
+        return self.space.nbytes
+
     def __eq__(self, other):
         """Return ``self == other``.
 
-        Overrides the default `LinearSpace` method since it is
-        implemented with the distance function, which is prone to
-        numerical errors. This function checks equality per
-        component.
+        Overrides the default `LinearSpace` method since it is implemented with
+        the distance function, which is prone to numerical errors. This
+        function checks equality per component.
         """
         if other is self:
             return True
