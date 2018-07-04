@@ -48,7 +48,7 @@ gradient = odl.Gradient(reco_space)
 # Column vector of two operators
 op = odl.BroadcastOperator(ray_trafo, gradient)
 
-# Do not use the g functional, set it to zero.
+# Do not use the f functional, set it to zero.
 f = odl.solvers.ZeroFunctional(op.domain)
 
 # Create functionals for the dual variable
