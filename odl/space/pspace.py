@@ -283,7 +283,7 @@ class ProductSpace(LinearSpace):
 
     @property
     def nbytes(self):
-        """Total number of bytes used by an element of this space in memory."""
+        """Total number of bytes in memory used by an element of this space."""
         return sum(spc.nbytes for spc in self.spaces)
 
     @property
