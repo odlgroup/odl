@@ -55,7 +55,7 @@ install:
     # Install packages with pip if possible, it's way faster
     - pip install "numpy==$NUMPY_VERSION" scipy future packaging scikit-image pywavelets pytest pytest-cov;
     # Building pyfftw wheels sometimes fails, using a conda-forge version instead
-    - conda install -c conda-forge pyfftw
+    - conda install -c conda-forge --no-update-deps pyfftw
 
     # Doc dependencies
     - if [[ "$BUILD_DOCS" == "true" ]]; then
