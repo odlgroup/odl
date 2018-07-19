@@ -50,10 +50,10 @@ install:
 
     # Install dependencies and enter test environment. Use conda for the minimal stuff to
     # make it run faster and avoid downloading big stuff like mkl
-    - conda create -n testenv python=$TRAVIS_PYTHON_VERSION nomkl pywavelets
+    - conda create -n testenv python=$TRAVIS_PYTHON_VERSION nomkl
     - source activate testenv
     # Install packages with pip if possible, it's way faster
-    - pip install "numpy==$NUMPY_VERSION" scipy future packaging scikit-image pytest pytest-cov;
+    - pip install "numpy==$NUMPY_VERSION" scipy future packaging scikit-image pywavelets pytest pytest-cov;
     # Building pyfftw wheels sometimes fails, using a conda-forge version instead
     - conda install -c conda-forge pyfftw
 
