@@ -32,6 +32,8 @@ PAD_MODES_ODL2PYWT = {'constant': 'zero',
                       'order1': 'smooth',
                       'pywt_periodic': 'periodization',
                       'reflect': 'reflect',
+                      'antireflect': 'antireflect',
+                      'antisymmetric': 'antisymmetric',
                       }
 PYWT_SUPPORTED_MODES = PAD_MODES_ODL2PYWT.values()
 
