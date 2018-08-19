@@ -21,6 +21,7 @@ wavelet = simple_fixture('wavelet', ['db1', 'sym2'])
 pad_mode = simple_fixture('pad_mode', ['constant', 'pywt_periodic'])
 ndim = simple_fixture('ndim', [1, 2, 3])
 nlevels = simple_fixture('nlevels', [2, None])
+axes = simple_fixture('axes', [-1, None])
 wave_impl = simple_fixture('wave_impl', [skip_if_no_pywavelets('pywt')])
 
 
@@ -71,7 +72,7 @@ def shape_setup(ndim, nlevels, wavelet, pad_mode):
     return wavelet, pad_mode, nlevels, image_shape, coeff_shapes
 
 
-def test_wavelet_transform(wave_impl, shape_setup, odl_floating_dtype):
+def test_wavelet_transform(wave_impl, shape_setup, odl_floating_dtype, axes):
     # Verify that the operator works as expected
     dtype = odl_floating_dtype
     wavelet, pad_mode, nlevels, shape, _ = shape_setup
@@ -84,10 +85,11 @@ def test_wavelet_transform(wave_impl, shape_setup, odl_floating_dtype):
     if wave_impl == 'pywt' and pad_mode == 'constant':
         with pytest.raises(ValueError):
             wave_trafo = odl.trafos.WaveletTransform(
-                space, wavelet, nlevels, pad_mode, pad_const=1, impl=wave_impl)
+                space, wavelet, nlevels, pad_mode, pad_const=1, impl=wave_impl,
+                axes=axes)
 
     wave_trafo = odl.trafos.WaveletTransform(
-        space, wavelet, nlevels, pad_mode, impl=wave_impl)
+        space, wavelet, nlevels, pad_mode, impl=wave_impl, axes=axes)
 
     assert wave_trafo.domain.dtype == dtype
     assert wave_trafo.range.dtype == dtype

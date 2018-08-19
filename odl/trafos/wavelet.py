@@ -10,6 +10,7 @@
 
 from __future__ import print_function, division, absolute_import
 
+import numpy as np
 from odl.discr import DiscreteLp
 from odl.operator import Operator
 from odl.trafos.backends.pywt_bindings import (
@@ -114,6 +115,8 @@ class WaveletTransformBase(Operator):
 
         if axes is None:
             axes = tuple(range(space.ndim))
+        elif np.isscalar(axes):
+            axes = (axes, )
         elif len(axes) > space.ndim:
                 raise ValueError("Too many axes.")
         self.axes = tuple(axes)
@@ -217,7 +220,7 @@ class WaveletTransformBase(Operator):
             for i in range(1, 1 + len(shapes[1:])):
                 coeff_list.append({k: np.full(shapes[i][k], i)
                                    for k in shapes[i].keys()})
-            coeffs = pywt.ravel_coeffs(coeff_list)[0]
+            coeffs = pywt.ravel_coeffs(coeff_list, axes=self.axes)[0]
             return wavelet_space.element(coeffs)
         else:
             raise RuntimeError("bad `impl` '{}'".format(self.impl))
@@ -323,7 +326,7 @@ class WaveletTransform(WaveletTransformBase):
                 x, wavelet=self.pywt_wavelet, level=self.nlevels,
                 mode=self.pywt_pad_mode, axes=self.axes)
             (coeffs, self._coeff_slices,
-             self._coeff_shapes) = pywt.ravel_coeffs(coeffs)
+             self._coeff_shapes) = pywt.ravel_coeffs(coeffs, axes=self.axes)
             return coeffs.ravel()
         else:
             raise RuntimeError("bad `impl` '{}'".format(self.impl))
