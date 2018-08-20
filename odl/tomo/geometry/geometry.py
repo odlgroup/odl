@@ -18,7 +18,8 @@ from odl.discr import RectPartition, uniform_partition
 from odl.tomo.geometry.detector import Detector, Flat1dDetector, Flat2dDetector
 from odl.tomo.util import axis_rotation_matrix, is_inside_bounds
 from odl.util import (
-    indent_rows, normalized_scalar_param_list, safe_int_conv, signature_string)
+    REPR_PRECISION, normalized_scalar_param_list, npy_printoptions,
+    repr_string, safe_int_conv, signature_string_parts)
 
 __all__ = (
     'Geometry',
@@ -1053,9 +1054,10 @@ class VecGeometry(Geometry):
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = [self.det_partition.shape, self.vectors]
-        inner_str = signature_string(posargs, [], sep=',\n')
-        return '{}(\n{}\n)'.format(self.__class__.__name__,
-                                   indent_rows(inner_str))
+        with npy_printoptions(precision=REPR_PRECISION):
+            inner_parts = signature_string_parts(posargs, [])
+        return repr_string(self.__class__.__name__, inner_parts,
+                           allow_mixed_seps=False)
 
 
 if __name__ == '__main__':
