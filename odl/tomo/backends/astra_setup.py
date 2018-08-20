@@ -523,6 +523,65 @@ def astra_parallel_3d_geom_to_vec(geometry):
     return vecs_odl_axes_to_astra_axes(vectors)
 
 
+def astra_parallel_2d_geom_to_vec(geometry):
+    """Create vectors for ASTRA projection geometries from ODL geometry.
+
+    The 2D vectors are used to create an ASTRA projection geometry for
+    fan beam geometries, see ``'parallel2d_vec'`` in the
+    `ASTRA projection geometry documentation`_.
+
+    Each row of the returned vectors corresponds to a single projection
+    and consists of ::
+
+        (rayX, rayY, dX, dY, uX, uY)
+
+    with
+
+        - ``ray``: the ray direction
+        - ``d``  : the center of the detector
+        - ``u``  : the vector from detector pixel 0 to 1
+
+    Parameters
+    ----------
+    geometry : `Geometry`
+        ODL projection geometry from which to create the ASTRA geometry.
+
+    Returns
+    -------
+    vectors : `numpy.ndarray`
+        Array of shape ``(num_angles, 6)`` containing the vectors.
+
+    References
+    ----------
+    .. _ASTRA projection geometry documentation:
+       http://www.astra-toolbox.com/docs/geom2d.html#projection-geometries
+    """
+    # Instead of rotating the data by 90 degrees counter-clockwise,
+    # we subtract pi/2 from the geometry angles, thereby rotating the
+    # geometry by 90 degrees clockwise
+    rot_minus_90 = euler_matrix(-np.pi / 2)
+    angles = geometry.angles
+    mid_pt = geometry.det_params.mid_pt
+    vectors = np.zeros((angles.size, 6))
+
+    # Ray direction = -(detector-to-source normal vector)
+    ray = -geometry.det_to_src(angles, mid_pt)
+    vectors[:, 0:2] = rot_minus_90.dot(ray.T).T  # dot along 2nd axis
+
+    # Center of detector
+    # Need to cast `mid_pt` to float since otherwise the empty axis is
+    # not removed
+    centers = geometry.det_point_position(angles, float(mid_pt))
+    vectors[:, 2:4] = rot_minus_90.dot(centers.T).T
+
+    # Vector from detector pixel 0 to 1
+    det_axis = rot_minus_90.dot(geometry.det_axis(angles).T).T
+    px_size = geometry.det_partition.cell_sides[0]
+    vectors[:, 4:6] = det_axis * px_size
+
+    return vecs_odl_axes_to_astra_axes(vectors)
+
+
 def astra_projection_geometry(geometry):
     """Create an ASTRA projection geometry from an ODL geometry object.
 
