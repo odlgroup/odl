@@ -1,5 +1,5 @@
-pytest >= 3.0.3
+pytest >=3.0.3,<3.7
 pytest-pep8
 pytest-cov
-coverage >= 4.0
+coverage >=4.0
 coveralls
