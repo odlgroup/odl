@@ -632,7 +632,7 @@ def astra_projection_geometry(geometry):
     elif isinstance(geometry, ParallelVecGeometry) and geometry.ndim == 2:
         det_count = geometry.detector.size
         vec = geometry.vectors
-        if not astra_supports('parallel2d_vec_geometry'):
+        if not astra_supports('par2d_vec_geometry'):
             raise NotImplementedError(
                 "'parallel_vec' geometry not supported by ASTRA "
                 'v{}'.format(ASTRA_VERSION))
