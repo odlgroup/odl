@@ -649,7 +649,7 @@ def test(arguments=None):
         raise ImportError('ODL tests cannot be run without `pytest` installed.'
                           '\nRun `$ pip install [--user] odl[testing]` in '
                           'order to install `pytest`.')
-    if not version.parse(pytest.__version__) < version.parse("3.7*"):
+    if version.parse(pytest.__version__) >= version.parse("3.7"):
         raise RuntimeError('ODL tests cannot be run with `pytest` '
                            'version `3.7` or higher.\nRun `$ pip install '
                            '"pytest<3.7"` in order to install '
