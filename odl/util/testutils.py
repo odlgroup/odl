@@ -648,6 +648,11 @@ def test(arguments=None):
         raise ImportError('ODL tests cannot be run without `pytest` installed.'
                           '\nRun `$ pip install [--user] odl[testing]` in '
                           'order to install `pytest`.')
+    if pytest.__version__ in ['3.7.0', '3.7.1']:
+        raise ImportError('ODL tests cannot be run with `pytest` '
+                          'versions `3.7.0` and `3.7.1`.\nRun `$ pip install '
+                          '[--user] odl[testing]` in order to install '
+                          '`pytest`.')
 
     from .pytest_plugins import collect_ignore
 
