@@ -16,6 +16,7 @@ import sys
 import os
 import warnings
 from time import time
+from packaging import version
 
 from odl.util.utility import run_from_ipython, is_string
 
@@ -648,11 +649,11 @@ def test(arguments=None):
         raise ImportError('ODL tests cannot be run without `pytest` installed.'
                           '\nRun `$ pip install [--user] odl[testing]` in '
                           'order to install `pytest`.')
-    if pytest.__version__ in ['3.7.0', '3.7.1']:
-        raise ImportError('ODL tests cannot be run with `pytest` '
-                          'versions `3.7.0` and `3.7.1`.\nRun `$ pip install '
-                          '[--user] odl[testing]` in order to install '
-                          '`pytest`.')
+    if not version.parse(pytest.__version__) < version.parse("3.7*"):
+        raise RuntimeError('ODL tests cannot be run with `pytest` '
+                           'version `3.7` or higher.\nRun `$ pip install '
+                           '"pytest<3.7"` in order to install '
+                           'a suitable version of `pytest`.')
 
     from .pytest_plugins import collect_ignore
 
