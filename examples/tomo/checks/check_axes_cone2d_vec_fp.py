@@ -1,4 +1,4 @@
-"""Parallel2D_vec example for checking that orientations are handled correctly.
+"""Cone2D_vec example for checking that orientations are handled correctly.
 
 Due to differing axis conventions between ODL and the ray transform
 back-ends, a check is needed to confirm that the translation steps are
@@ -33,20 +33,23 @@ assert np.allclose(reco_space.cell_sides, 1)
 
 # Generate ASTRA vectors, but in the ODL geometry convention.
 # We use 0, 90, 180 and 270 degrees as angles, with the detector starting
-# with reference point (0, 1) and axis (1, 0), rotating counter-clockwise.
-# The vector to the detector reference point coincides with the ray direction.
+# with reference point (0, 1000) and axis (1, 0), rotating counter-clockwise.
+# The source points are chosen opposite to the detector at radius 500.
 # The detector `u` vector from pixel 0 to pixel 1 is equal to the detector
 # axis, since we choose the pixel size to be equal to 1.
-det_refpoints = np.array([(0, 1), (-1, 0), (0, -1), (1, 0)])
-ray_dirs = det_refpoints
+src_radius = 500
+det_radius = 1000
+det_refpoints = np.array([(0, 1), (-1, 0), (0, -1), (1, 0)]) * det_radius
+src_points = -det_refpoints / det_radius * src_radius
 det_axes = np.array([(1, 0), (0, 1), (-1, 0), (0, -1)])
 vectors = np.empty((4, 6))
-vectors[:, 0:2] = ray_dirs
+vectors[:, 0:2] = src_points
 vectors[:, 2:4] = det_refpoints
 vectors[:, 4:6] = det_axes
 
 # Choose enough pixels to cover the object projections
-det_size = np.floor(1.1 * np.sqrt(np.sum(np.square(img_shape))))
+fan_angle = np.arctan(img_max_pt[1] / src_radius)
+det_size = np.floor(2 * (src_radius + det_radius) * np.sin(fan_angle))
 det_shape = int(det_size)
 
 # Sum manually using Numpy
@@ -57,10 +60,10 @@ sum_along_y = np.sum(phantom, axis=1)
 # %% Test forward projection along y axis
 
 
-geometry = odl.tomo.ParallelVecGeometry(det_shape, vectors)
+geometry = odl.tomo.ConeVecGeometry(det_shape, vectors)
 # Check initial configuration
 assert np.allclose(geometry.det_axes(0), [[1, 0]])
-assert np.allclose(geometry.det_refpoint(0), [[0, 1]])
+assert np.allclose(geometry.det_refpoint(0), [[0, det_radius]])
 
 # Create projections
 ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl=impl)

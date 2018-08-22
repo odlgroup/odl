@@ -17,7 +17,6 @@ import odl
 from odl.tomo.backends.astra_setup import (
     astra_algorithm, astra_data, astra_projection_geometry, astra_projector,
     astra_supports, astra_volume_geometry)
-from odl.util.testutils import is_subdict
 
 try:
     import astra
@@ -151,23 +150,6 @@ def test_vol_geom_3d():
             astra_volume_geometry(discr_dom)
 
 
-def test_proj_geom_parallel_2d():
-    """Create ASTRA 2D projection geometry."""
-
-    apart = odl.uniform_partition(0, 2, 5)
-    dpart = odl.uniform_partition(-1, 1, 10)
-    geom = odl.tomo.Parallel2dGeometry(apart, dpart)
-
-    proj_geom = astra_projection_geometry(geom)
-
-    correct_subdict = {
-        'type': 'parallel',
-        'DetectorCount': 10, 'DetectorWidth': 0.2}
-
-    assert is_subdict(correct_subdict, proj_geom)
-    assert 'ProjectionAngles' in proj_geom
-
-
 def test_astra_projection_geometry():
     """Create ASTRA projection geometry from geometry objects."""
 
@@ -191,7 +173,10 @@ def test_astra_projection_geometry():
     # Parallel 2D geometry
     geom_p2d = odl.tomo.Parallel2dGeometry(apart, dpart)
     astra_geom = astra_projection_geometry(geom_p2d)
-    assert astra_geom['type'] == 'parallel'
+    if odl.tomo.astra_supports('par2d_vec_geometry'):
+        assert astra_geom['type'] == 'parallel_vec'
+    else:
+        assert astra_geom['type'] == 'parallel'
 
     # Fan flat
     src_rad = 10
@@ -386,22 +371,22 @@ def test_geom_to_vec():
     src_rad = 10
     det_rad = 5
     geom_ff = odl.tomo.FanBeamGeometry(apart, dpart, src_rad, det_rad)
-    vec = odl.tomo.astra_conebeam_2d_geom_to_vec(geom_ff)
+    vecs = odl.tomo.cone_2d_geom_to_astra_vecs(geom_ff)
 
-    assert vec.shape == (apart.size, 6)
+    assert vecs.shape == (apart.size, 6)
 
     # Circular cone flat
     dpart = odl.uniform_partition([-40, -3], [40, 3], (10, 5))
     geom_ccf = odl.tomo.ConeBeamGeometry(apart, dpart, src_rad, det_rad)
-    vec = odl.tomo.astra_conebeam_3d_geom_to_vec(geom_ccf)
-    assert vec.shape == (apart.size, 12)
+    vecs = odl.tomo.cone_3d_geom_to_astra_vecs(geom_ccf)
+    assert vecs.shape == (apart.size, 12)
 
     # Helical cone flat
     pitch = 1
     geom_hcf = odl.tomo.ConeBeamGeometry(apart, dpart, src_rad, det_rad,
                                          pitch=pitch)
-    vec = odl.tomo.astra_conebeam_3d_geom_to_vec(geom_hcf)
-    assert vec.shape == (apart.size, 12)
+    vecs = odl.tomo.cone_3d_geom_to_astra_vecs(geom_hcf)
+    assert vecs.shape == (apart.size, 12)
 
 
 if __name__ == '__main__':

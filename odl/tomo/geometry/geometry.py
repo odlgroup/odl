@@ -680,29 +680,28 @@ class VecGeometry(Geometry):
             Number of detector pixels per axis, can be given as single
             integer for 2D geometries (with 1D detector).
         vectors : array-like, shape ``(N, 6)`` or ``(N, 12)``
-            Vectors defining the geometric configuration in each
-            projection. The number ``N`` of rows determines the number
-            of projections, and the number of columns the spatial
-            dimension (6 for 2D, 12 for 3D).
+            Vectors defining the geometric configuration (in ASTRA's
+            coordinate system) in each projection. The number ``N`` of rows
+            determines the number of projections, and the number of columns
+            the spatial dimension (6 for 2D, 12 for 3D).
         """
         self.__vectors = np.asarray(vectors, dtype=float)
-        if self.vectors.ndim != 2:
+        if self.__vectors.ndim != 2:
             raise ValueError('`vectors` must be 2-dimensional, got array '
-                             'with ndim = {}'.format(self.vectors.ndim))
+                             'with ndim = {}'.format(self.__vectors.ndim))
 
-        num_projs = self.vectors.shape[0]
-
+        num_projs = self.__vectors.shape[0]
         if num_projs == 0:
             raise ValueError('`vectors` is empty')
 
-        if self.vectors.shape[1] == 6:
+        if self.__vectors.shape[1] == 6:
             ndim = 2
-        elif self.vectors.shape[1] == 12:
+        elif self.__vectors.shape[1] == 12:
             ndim = 3
         else:
             raise ValueError('`vectors` must have 6 or 12 columns, got '
                              'array with {} columns'
-                             ''.format(self.vectors.shape[1]))
+                             ''.format(self.__vectors.shape[1]))
 
         # Make angle partition with spacing 1
         mpart = uniform_partition(0, num_projs - 1, num_projs,
@@ -713,7 +712,7 @@ class VecGeometry(Geometry):
         # sizes during acquisition, but has no effect on the computations.
         # For those, only the `vectors` are used.
         if ndim == 2:
-            det_u = self.vectors[0, 4:6]
+            det_u = self.__vectors[0, 4:6]
             det_shape = normalized_scalar_param_list(det_shape, length=1,
                                                      param_conv=safe_int_conv)
             det_cell_size = np.linalg.norm(det_u)
@@ -723,8 +722,8 @@ class VecGeometry(Geometry):
                 shape=det_shape)
             detector = Flat1dDetector(det_part, axis=det_u)
         elif ndim == 3:
-            det_u = self.vectors[0, 6:9]
-            det_v = self.vectors[0, 9:12]
+            det_u = self.__vectors[0, 6:9]
+            det_v = self.__vectors[0, 9:12]
             det_shape = normalized_scalar_param_list(det_shape, length=2,
                                                      param_conv=safe_int_conv)
             det_cell_sides = np.array(
@@ -842,7 +841,8 @@ class VecGeometry(Geometry):
                                     self._slice_det_center]
             vecs[not_at_right_bdry, :] = (
                 pt_left +
-                frac_part[not_at_right_bdry, None] * (pt_right - pt_left))
+                frac_part[not_at_right_bdry, None] * (pt_right - pt_left)
+            )
         return vecs.squeeze()
 
     def det_point_position(self, index, dparam):
