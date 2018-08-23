@@ -305,7 +305,7 @@ def astra_projection_geometry(geometry):
             geometry.ndim == 2):
         det_count = geometry.detector.size
         if astra_supports('par2d_vec_geometry'):
-            vecs = parallel_2d_geom_to_astra_vecs(geometry)
+            vecs = parallel_2d_geom_to_astra_vecs(geometry, coords='ASTRA')
             proj_geom = astra.create_proj_geom('parallel_vec', det_count, vecs)
         else:
             det_width = geometry.det_partition.cell_sides[0]
@@ -331,7 +331,7 @@ def astra_projection_geometry(geometry):
           isinstance(geometry.detector, (Flat1dDetector, Flat2dDetector)) and
           geometry.ndim == 2):
         det_count = geometry.detector.size
-        vecs = cone_2d_geom_to_astra_vecs(geometry)
+        vecs = cone_2d_geom_to_astra_vecs(geometry, coords='ASTRA')
         proj_geom = astra.create_proj_geom('fanflat_vec', det_count, vecs)
 
     # Cone 2D vec
@@ -347,7 +347,7 @@ def astra_projection_geometry(geometry):
         # Swap detector axes (see `parallel_3d_geom_to_astra_vecs`)
         det_row_count = geometry.det_partition.shape[0]
         det_col_count = geometry.det_partition.shape[1]
-        vecs = parallel_3d_geom_to_astra_vecs(geometry)
+        vecs = parallel_3d_geom_to_astra_vecs(geometry, coords='ASTRA')
         proj_geom = astra.create_proj_geom(
             'parallel3d_vec', det_row_count, det_col_count, vecs)
 
@@ -366,7 +366,7 @@ def astra_projection_geometry(geometry):
         # Swap detector axes (see `conebeam_3d_geom_to_astra_vecs`)
         det_row_count = geometry.det_partition.shape[0]
         det_col_count = geometry.det_partition.shape[1]
-        vecs = cone_3d_geom_to_astra_vecs(geometry)
+        vecs = cone_3d_geom_to_astra_vecs(geometry, coords='ASTRA')
         proj_geom = astra.create_proj_geom(
             'cone_vec', det_row_count, det_col_count, vecs)
 
@@ -509,7 +509,7 @@ def vecs_astra_to_odl_coords(vecs):
                          'array with shape {}'.format(vecs.shape))
 
 
-def parallel_2d_geom_to_astra_vecs(geometry):
+def parallel_2d_geom_to_astra_vecs(geometry, coords='ODL'):
     """Create vectors for ASTRA projection geometries from an ODL geometry.
 
     The 2D vectors are used to create an ASTRA projection geometry for
@@ -534,18 +534,29 @@ def parallel_2d_geom_to_astra_vecs(geometry):
     Parameters
     ----------
     geometry : `Geometry`
-        ODL projection geometry from which to create the ASTRA geometry.
+        ODL projection geometry from which to create the ASTRA vectors.
+    coords : {'ODL', 'ASTRA'}, optional
+        Coordinate system in which the resulting vectors should be
+        represented.
 
     Returns
     -------
     vectors : `numpy.ndarray`
         Array of shape ``(num_angles, 6)`` containing the vectors.
 
+    See Also
+    --------
+    vecs_odl_to_astra_coords : Conversion to ASTRA coordinates
+
     References
     ----------
     .. _ASTRA projection geometry documentation:
        http://www.astra-toolbox.com/docs/geom2d.html#projection-geometries
     """
+    coords, coords_in = str(coords).upper(), coords
+    if coords not in ('ODL', 'ASTRA'):
+        raise ValueError('`coords` {!r} not understood'.format(coords_in))
+
     angles = geometry.angles
     mid_pt = geometry.det_params.mid_pt
     vectors = np.zeros((angles.size, 6))
@@ -562,10 +573,13 @@ def parallel_2d_geom_to_astra_vecs(geometry):
     px_size = geometry.det_partition.cell_sides[0]
     vectors[:, 4:6] = det_axis * px_size
 
-    return vecs_odl_to_astra_coords(vectors)
+    if coords == 'ASTRA':
+        vectors = vecs_odl_to_astra_coords(vectors)
+
+    return vectors
 
 
-def parallel_3d_geom_to_astra_vecs(geometry):
+def parallel_3d_geom_to_astra_vecs(geometry, coords='ODL'):
     """Create vectors for ASTRA projection geometries from an ODL geometry.
 
     The 3D vectors are used to create an ASTRA projection geometry for
@@ -591,7 +605,10 @@ def parallel_3d_geom_to_astra_vecs(geometry):
     Parameters
     ----------
     geometry : `Geometry`
-        ODL projection geometry from which to create the ASTRA geometry.
+        ODL projection geometry from which to create the ASTRA vectors.
+    coords : {'ODL', 'ASTRA'}, optional
+        Coordinate system in which the resulting vectors should be
+        represented.
 
     Returns
     -------
@@ -603,6 +620,12 @@ def parallel_3d_geom_to_astra_vecs(geometry):
     .. _ASTRA projection geometry documentation:
        http://www.astra-toolbox.com/docs/geom3d.html#projection-geometries
     """
+    coords, coords_in = str(coords).upper(), coords
+    if coords not in ('ODL', 'ASTRA'):
+        raise ValueError('`coords` {!r} not understood'.format(coords_in))
+
+    # TODO: use `coords`
+
     angles = geometry.angles
     mid_pt = geometry.det_params.mid_pt
 
@@ -625,13 +648,15 @@ def parallel_3d_geom_to_astra_vecs(geometry):
     # Instead we swap `u` and `v`, resulting in the effective ASTRA result
     # `(u, theta, v)`. Here we only need to swap axes 0 and 1, which
     # keeps at least contiguous blocks in `v`.
+    #
+    # TODO: this swapping should not happen in this function!
     vectors[:, 9:12] = det_axes[0] * px_sizes[0]
     vectors[:, 6:9] = det_axes[1] * px_sizes[1]
 
     return vecs_odl_to_astra_coords(vectors)
 
 
-def cone_2d_geom_to_astra_vecs(geometry):
+def cone_2d_geom_to_astra_vecs(geometry, coords='ODL'):
     """Create vectors for ASTRA projection geometries from an ODL geometry.
 
     The 2D vectors are used to create an ASTRA projection geometry for
@@ -657,6 +682,9 @@ def cone_2d_geom_to_astra_vecs(geometry):
     ----------
     geometry : `Geometry`
         ODL projection geometry from which to create the ASTRA vectors.
+    coords : {'ODL', 'ASTRA'}, optional
+        Coordinate system in which the resulting vectors should be
+        represented.
 
     Returns
     -------
@@ -668,6 +696,10 @@ def cone_2d_geom_to_astra_vecs(geometry):
     .. _ASTRA projection geometry documentation:
        http://www.astra-toolbox.com/docs/geom2d.html#projection-geometries
     """
+    coords, coords_in = str(coords).upper(), coords
+    if coords not in ('ODL', 'ASTRA'):
+        raise ValueError('`coords` {!r} not understood'.format(coords_in))
+
     angles = geometry.angles
     mid_pt = geometry.det_params.mid_pt
     vectors = np.zeros((angles.size, 6))
@@ -684,10 +716,13 @@ def cone_2d_geom_to_astra_vecs(geometry):
     px_size = geometry.det_partition.cell_sides[0]
     vectors[:, 4:6] = det_axis * px_size
 
-    return vecs_odl_to_astra_coords(vectors)
+    if coords == 'ASTRA':
+        vectors = vecs_odl_to_astra_coords(vectors)
+
+    return vectors
 
 
-def cone_3d_geom_to_astra_vecs(geometry):
+def cone_3d_geom_to_astra_vecs(geometry, coords='ODL'):
     """Create vectors for ASTRA projection geometries from an ODL geometry.
 
     The 3D vectors are used to create an ASTRA projection geometry for
@@ -714,6 +749,9 @@ def cone_3d_geom_to_astra_vecs(geometry):
     ----------
     geometry : `Geometry`
         ODL projection geometry from which to create the ASTRA vectors.
+    coords : {'ODL', 'ASTRA'}, optional
+        Coordinate system in which the resulting vectors should be
+        represented.
 
     Returns
     -------
@@ -725,6 +763,12 @@ def cone_3d_geom_to_astra_vecs(geometry):
     .. _ASTRA projection geometry documentation:
        http://www.astra-toolbox.com/docs/geom3d.html#projection-geometries
     """
+    coords, coords_in = str(coords).upper(), coords
+    if coords not in ('ODL', 'ASTRA'):
+        raise ValueError('`coords` {!r} not understood'.format(coords_in))
+
+    # TODO: use `coords`
+
     angles = geometry.angles
     mid_pt = geometry.det_params.mid_pt
     vectors = np.zeros((angles.size, 12))
@@ -746,6 +790,8 @@ def cone_3d_geom_to_astra_vecs(geometry):
     # Instead we swap `u` and `v`, resulting in the effective ASTRA result
     # `(u, theta, v)`. Here we only need to swap axes 0 and 1, which
     # keeps at least contiguous blocks in `v`.
+    #
+    # TODO: this swapping should not happen in this function!
     vectors[:, 9:12] = det_axes[0] * px_sizes[0]
     vectors[:, 6:9] = det_axes[1] * px_sizes[1]
 
