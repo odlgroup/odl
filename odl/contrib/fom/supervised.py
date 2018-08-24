@@ -12,6 +12,7 @@ from __future__ import division
 import numpy as np
 
 import odl
+from odl.contrib.fom.util import radial_sum
 
 __all__ = ('mean_squared_error', 'mean_absolute_error',
            'mean_value_difference', 'standard_deviation_difference',
@@ -783,21 +784,11 @@ def noise_power_spectrum(data, ground_truth, radial=False):
         If ``radial`` is ``True``, this is an element in a one-dimensional
         space of the same type as ``data.space``.
     """
-    fftop = odl.trafos.FourierTransform(data.space, halfcomplex=False)
-    f1 = fftop(data - ground_truth)
-    nps = np.abs(f1).real ** 2
+    ft = odl.trafos.FourierTransform(data.space, halfcomplex=False)
+    nps = np.abs(ft(data - ground_truth)).real ** 2
 
     if radial:
-        r = np.sqrt(sum(xi ** 2 for xi in nps.space.meshgrid))
-        n_bins = max(*nps.shape)
-        radial_nps, rad = np.histogram(r, weights=nps, bins=n_bins)
-
-        out_spc = odl.uniform_discr(0, np.max(r), n_bins,
-                                    impl=f1.space.impl,
-                                    dtype=f1.space.real_dtype,
-                                    axis_labels=['$\\^{r}$'])
-
-        return out_spc.element(radial_nps)
+        return radial_sum(nps)
     else:
         return nps
 
