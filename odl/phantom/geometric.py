@@ -318,7 +318,7 @@ def _getshapes_2d(center, max_radius, shape):
     idx = [slice(minx, maxx) for minx, maxx in zip(min_idx, max_idx)]
     shapes = [(idx[0], slice(None)),
               (slice(None), idx[1])]
-    return idx, shapes
+    return tuple(idx), tuple(shapes)
 
 
 def _ellipse_phantom_2d(space, ellipses):
@@ -443,7 +443,7 @@ def _getshapes_3d(center, max_radius, shape):
     shapes = [(idx[0], slice(None), slice(None)),
               (slice(None), idx[1], slice(None)),
               (slice(None), slice(None), idx[2])]
-    return idx, shapes
+    return tuple(idx), tuple(shapes)
 
 
 def _ellipsoid_phantom_3d(space, ellipsoids):

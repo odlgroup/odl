@@ -779,6 +779,7 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
                 idx_res.append(np.where(yi <= .5, i, i + 1))
             else:
                 idx_res.append(np.where(yi < .5, i, i + 1))
+        idx_res = tuple(idx_res)
         if out is not None:
             out[:] = self.values[idx_res]
             return out

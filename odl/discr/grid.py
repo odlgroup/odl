@@ -54,7 +54,7 @@ def sparse_meshgrid(*x):
         xi = np.asarray(xi)
         slc = [None] * n
         slc[ax] = slice(None)
-        mesh.append(np.ascontiguousarray(xi[slc]))
+        mesh.append(np.ascontiguousarray(xi[tuple(slc)]))
 
     return tuple(mesh)
 

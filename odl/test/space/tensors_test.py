@@ -88,7 +88,7 @@ setitem_indices_params = [
 setitem_indices = simple_fixture('indices', setitem_indices_params)
 
 getitem_indices_params = (setitem_indices_params +
-                          [[[0, 1, 1, 0], [0, 1, 1, 2]], (Ellipsis, None)])
+                          [([0, 1, 1, 0], [0, 1, 1, 2]), (Ellipsis, None)])
 getitem_indices = simple_fixture('indices', getitem_indices_params)
 
 weight_params = [1.0, 0.5, _pos_array(odl.tensor_space((3, 4)))]
@@ -363,7 +363,9 @@ def _test_lincomb(space, a, b, discontig):
     """Validate lincomb against direct result using arrays."""
     # Set slice for discontiguous arrays and get result space of slicing
     if discontig:
-        slc = [slice(None)] * (space.ndim - 1) + [slice(None, None, 2)]
+        slc = tuple(
+            [slice(None)] * (space.ndim - 1) + [slice(None, None, 2)]
+        )
         res_space = space.element()[slc].space
     else:
         res_space = space
@@ -1356,7 +1358,7 @@ def test_custom_dist(tspace):
 # --- Ufuncs & Reductions --- #
 
 
-def testodl_ufuncs(tspace, odl_ufunc):
+def test_ufuncs(tspace, odl_ufunc):
     """Test ufuncs in ``x.ufuncs`` against direct Numpy ufuncs."""
     name = odl_ufunc
 
@@ -1476,8 +1478,8 @@ def testodl_ufuncs(tspace, odl_ufunc):
 
     if USE_ARRAY_UFUNCS_INTERFACE:
         # Check `ufunc.at`
-        indices = [[0, 0, 1],
-                   [0, 1, 2]]
+        indices = ([0, 0, 1],
+                   [0, 1, 2])
 
         mod_array = in_arrays[0].copy()
         mod_elem = in_elems_new[0].copy()

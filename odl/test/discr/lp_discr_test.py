@@ -775,7 +775,7 @@ def test_astype():
     assert not as_complex.is_weighted
 
 
-def testodl_ufuncs(odl_tspace_impl, odl_ufunc):
+def test_ufuncs(odl_tspace_impl, odl_ufunc):
     """Test ufuncs in ``x.ufuncs`` against direct Numpy ufuncs."""
     impl = odl_tspace_impl
     space = odl.uniform_discr([0, 0], [1, 1], (2, 3), impl=impl)
@@ -896,8 +896,8 @@ def testodl_ufuncs(odl_tspace_impl, odl_ufunc):
 
     if USE_ARRAY_UFUNCS_INTERFACE:
         # Check `ufunc.at`
-        indices = [[0, 0, 1],
-                   [0, 1, 2]]
+        indices = ([0, 0, 1],
+                   [0, 1, 2])
 
         mod_array = in_arrays[0].copy()
         mod_elem = in_elems_new[0].copy()
