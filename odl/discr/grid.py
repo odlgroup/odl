@@ -18,8 +18,8 @@ import numpy as np
 
 from odl.set import IntervalProd, Set
 from odl.util import (
-    REPR_PRECISION, array_str, normalized_index_expression,
-    normalized_scalar_param_list, npy_printoptions, repr_string, safe_int_conv,
+    array_str, normalized_index_expression, normalized_scalar_param_list,
+    npy_printoptions, repr_precision, repr_string, safe_int_conv,
     signature_string_parts)
 
 __all__ = ('RectGrid', 'uniform_grid', 'uniform_grid_fromintv')
@@ -997,7 +997,7 @@ class RectGrid(Set):
             posargs = self.coord_vectors
             posmod = array_str
 
-        with npy_printoptions(precision=REPR_PRECISION):
+        with npy_printoptions(precision=repr_precision()):
             inner_parts = signature_string_parts(posargs, [],
                                                  mod=[posmod, ''])
         return repr_string(ctor, inner_parts)

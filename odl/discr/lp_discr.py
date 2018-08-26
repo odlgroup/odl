@@ -26,11 +26,11 @@ from odl.space import FunctionSpace, ProductSpace
 from odl.space.entry_points import tensor_space_impl
 from odl.space.weighting import ConstWeighting
 from odl.util import (
-    REPR_PRECISION, apply_on_boundary, array_str, attribute_repr_string,
-    dtype_str, is_complex_floating_dtype, is_floating_dtype, is_numeric_dtype,
+    apply_on_boundary, array_str, attribute_repr_string, dtype_str,
+    is_complex_floating_dtype, is_floating_dtype, is_numeric_dtype,
     is_real_dtype, is_string, normalized_nodes_on_bdry,
-    normalized_scalar_param_list, npy_printoptions, repr_string, safe_int_conv,
-    signature_string_parts)
+    normalized_scalar_param_list, npy_printoptions, repr_precision,
+    repr_string, safe_int_conv, signature_string_parts)
 
 __all__ = ('DiscreteLp', 'DiscreteLpElement',
            'uniform_discr_frompartition', 'uniform_discr_fromspace',
@@ -602,7 +602,7 @@ class DiscreteLp(DiscretizedSpace):
             if self.dtype in (float, complex, int, bool):
                 optmod[3] = '!s'
 
-            with npy_printoptions(precision=REPR_PRECISION):
+            with npy_printoptions(precision=repr_precision()):
                 inner_parts = signature_string_parts(posargs, optargs,
                                                      mod=[posmod, optmod])
 
@@ -611,7 +611,7 @@ class DiscreteLp(DiscretizedSpace):
             posargs = [self.fspace, self.partition, self.tspace]
             optargs = [('interp', self.interp, 'nearest')]
 
-            with npy_printoptions(precision=REPR_PRECISION):
+            with npy_printoptions(precision=repr_precision()):
                 inner_parts = signature_string_parts(posargs, optargs)
 
         return repr_string(ctor, inner_parts, allow_mixed_seps=True)

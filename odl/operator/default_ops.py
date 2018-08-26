@@ -20,8 +20,8 @@ from odl.operator.operator import Operator
 from odl.set import ComplexNumbers, Field, LinearSpace, RealNumbers
 from odl.space import ProductSpace
 from odl.util import (
-    REPR_PRECISION, attribute_repr_string, method_repr_string,
-    npy_printoptions, repr_string, signature_string_parts)
+    attribute_repr_string, method_repr_string, npy_printoptions,
+    repr_precision, repr_string, signature_string_parts)
 
 __all__ = ('ScalingOperator', 'ZeroOperator', 'IdentityOperator',
            'LinCombOperator', 'MultiplyOperator', 'PowerOperator',
@@ -224,7 +224,7 @@ class ScalingOperator(Operator):
         posargs = [self.domain]
         optargs = [('scalar', self.scalar, None),
                    ('range', self.range, self.domain)]
-        with npy_printoptions(precision=REPR_PRECISION):
+        with npy_printoptions(precision=repr_precision()):
             inner_parts = signature_string_parts(posargs, optargs)
         return repr_string(self.__class__.__name__, inner_parts)
 
@@ -481,7 +481,7 @@ class MultiplyOperator(Operator):
         optargs = [('domain', self.domain,
                     getattr(self.multiplicand, 'space', None)),
                    ('range', self.range, self.domain)]
-        with npy_printoptions(precision=REPR_PRECISION):
+        with npy_printoptions(precision=repr_precision()):
             inner_parts = signature_string_parts(posargs, optargs)
         return repr_string(self.__class__.__name__, inner_parts)
 
@@ -601,7 +601,7 @@ class PowerOperator(Operator):
         posargs = [self.domain]
         optargs = [('exponent', self.exponent, None),
                    ('range', self.range, self.domain)]
-        with npy_printoptions(precision=REPR_PRECISION):
+        with npy_printoptions(precision=repr_precision()):
             inner_parts = signature_string_parts(posargs, optargs)
         return repr_string(self.__class__.__name__, inner_parts)
 
@@ -742,7 +742,7 @@ class InnerProductOperator(Operator):
         optargs = [('domain', self.domain,
                     getattr(self.vector, 'space', None)),
                    ('range', self.range, self.domain.field)]
-        with npy_printoptions(precision=REPR_PRECISION):
+        with npy_printoptions(precision=repr_precision()):
             inner_parts = signature_string_parts(posargs, optargs)
         return repr_string(self.__class__.__name__, inner_parts)
 
@@ -975,7 +975,7 @@ class DistOperator(Operator):
         optargs = [('domain', self.domain,
                     getattr(self.vector, 'space', None)),
                    ('range', self.range, RealNumbers())]
-        with npy_printoptions(precision=REPR_PRECISION):
+        with npy_printoptions(precision=repr_precision()):
             inner_parts = signature_string_parts(posargs, optargs)
         return repr_string(self.__class__.__name__, inner_parts)
 
@@ -1067,7 +1067,7 @@ class ConstantOperator(Operator):
         optargs = [('domain', self.domain, self.range),
                    ('range', self.range,
                     getattr(self.constant, 'space', None))]
-        with npy_printoptions(precision=REPR_PRECISION):
+        with npy_printoptions(precision=repr_precision()):
             inner_parts = signature_string_parts(posargs, optargs)
         return repr_string(self.__class__.__name__, inner_parts)
 
@@ -1636,7 +1636,7 @@ class ComplexEmbedding(Operator):
         posargs = [self.domain]
         optargs = [('range', self.range, self.domain.complex_space),
                    ('scalar', self.scalar, 1.0)]
-        with npy_printoptions(precision=REPR_PRECISION):
+        with npy_printoptions(precision=repr_precision()):
             inner_parts = signature_string_parts(posargs, optargs)
         return repr_string(self.__class__.__name__, inner_parts)
 

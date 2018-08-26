@@ -17,8 +17,8 @@ from odl.operator import Operator
 from odl.set import IntervalProd
 from odl.space import FunctionSpace, tensor_space
 from odl.util import (
-    REPR_PRECISION, attribute_repr_string, normalized_scalar_param_list,
-    npy_printoptions, repr_string, resize_array, safe_int_conv,
+    attribute_repr_string, normalized_scalar_param_list, npy_printoptions,
+    repr_precision, repr_string, resize_array, safe_int_conv,
     signature_string_parts, writable_array)
 from odl.util.numerics import _SUPPORTED_RESIZE_PAD_MODES
 
@@ -470,7 +470,7 @@ class ResizingOperator(Operator):
         posargs = [self.domain, self.range]
         optargs = [('pad_mode', self.pad_mode, 'constant'),
                    ('pad_const', self.pad_const, 0)]
-        with npy_printoptions(precision=REPR_PRECISION):
+        with npy_printoptions(precision=repr_precision()):
             inner_parts = signature_string_parts(posargs, optargs,
                                                  mod=['!r', ''])
         return repr_string(self.__class__.__name__, inner_parts,

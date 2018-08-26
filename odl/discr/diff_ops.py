@@ -16,7 +16,7 @@ from odl.discr.lp_discr import DiscreteLp
 from odl.operator.tensor_ops import PointwiseTensorFieldOperator
 from odl.space import ProductSpace
 from odl.util import (
-    REPR_PRECISION, npy_printoptions, repr_string, signature_string_parts,
+    npy_printoptions, repr_precision, repr_string, signature_string_parts,
     writable_array)
 
 __all__ = ('PartialDerivative', 'Gradient', 'Divergence', 'Laplacian')
@@ -193,7 +193,7 @@ class PartialDerivative(PointwiseTensorFieldOperator):
                    ('pad_mode', self.pad_mode, 'constant'),
                    ('pad_const', self.pad_const, 0)]
         optmod = ['', '!r', '', '', '']
-        with npy_printoptions(precision=REPR_PRECISION):
+        with npy_printoptions(precision=repr_precision()):
             inner_parts = signature_string_parts(posargs, optargs,
                                                  mod=['!r', optmod])
         return repr_string(self.__class__.__name__, inner_parts,
@@ -414,7 +414,7 @@ class Gradient(PointwiseTensorFieldOperator):
                    ('pad_mode', self.pad_mode, 'constant'),
                    ('pad_const', self.pad_const, 0)]
         optmod = ['!r', '', '', '']
-        with npy_printoptions(precision=REPR_PRECISION):
+        with npy_printoptions(precision=repr_precision()):
             inner_parts = signature_string_parts(posargs, optargs,
                                                  mod=['!r', optmod])
         return repr_string(self.__class__.__name__, inner_parts,
@@ -624,7 +624,7 @@ class Divergence(PointwiseTensorFieldOperator):
                    ('pad_mode', self.pad_mode, 'constant'),
                    ('pad_const', self.pad_const, 0)]
         optmod = ['!r', '', '', '']
-        with npy_printoptions(precision=REPR_PRECISION):
+        with npy_printoptions(precision=repr_precision()):
             inner_parts = signature_string_parts(posargs, optargs,
                                                  mod=['!r', optmod])
         return repr_string(self.__class__.__name__, inner_parts,
@@ -792,7 +792,7 @@ class Laplacian(PointwiseTensorFieldOperator):
                    ('pad_mode', self.pad_mode, 'constant'),
                    ('pad_const', self.pad_const, 0)]
         optmod = ['!r', '', '']
-        with npy_printoptions(precision=REPR_PRECISION):
+        with npy_printoptions(precision=repr_precision()):
             inner_parts = signature_string_parts(posargs, optargs,
                                                  mod=['!r', optmod])
         return repr_string(self.__class__.__name__, inner_parts,

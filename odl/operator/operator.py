@@ -20,7 +20,7 @@ import numpy as np
 from odl.set import Field, LinearSpace, Set
 from odl.set.space import LinearSpaceElement
 from odl.util import (
-    REPR_PRECISION, cache_arguments, npy_printoptions, repr_string,
+    cache_arguments, npy_printoptions, repr_precision, repr_string,
     signature_string_parts)
 
 __all__ = ('Operator', 'OperatorComp', 'OperatorSum', 'OperatorVectorSum',
@@ -1311,7 +1311,7 @@ class OperatorVectorSum(Operator):
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = [self.operator, self.vector]
-        with npy_printoptions(precision=REPR_PRECISION):
+        with npy_printoptions(precision=repr_precision()):
             inner_parts = signature_string_parts(posargs, [])
         return repr_string(self.__class__.__name__, inner_parts,
                            allow_mixed_seps=False)
@@ -1687,7 +1687,7 @@ class OperatorLeftScalarMult(Operator):
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = [self.operator, self.scalar]
-        with npy_printoptions(precision=REPR_PRECISION):
+        with npy_printoptions(precision=repr_precision()):
             inner_parts = signature_string_parts(posargs, [])
         return repr_string(self.__class__.__name__, inner_parts,
                            allow_mixed_seps=False)
@@ -1871,7 +1871,7 @@ class OperatorRightScalarMult(Operator):
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = [self.operator, self.scalar]
-        with npy_printoptions(precision=REPR_PRECISION):
+        with npy_printoptions(precision=repr_precision()):
             inner_parts = signature_string_parts(posargs, [])
         return repr_string(self.__class__.__name__, inner_parts,
                            allow_mixed_seps=False)
@@ -1990,7 +1990,7 @@ class FunctionalLeftVectorMult(Operator):
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = [self.functional, self.vector]
-        with npy_printoptions(precision=REPR_PRECISION):
+        with npy_printoptions(precision=repr_precision()):
             inner_parts = signature_string_parts(posargs, [])
         return repr_string(self.__class__.__name__, inner_parts,
                            allow_mixed_seps=False)
@@ -2106,7 +2106,7 @@ class OperatorLeftVectorMult(Operator):
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = [self.operator, self.vector]
-        with npy_printoptions(precision=REPR_PRECISION):
+        with npy_printoptions(precision=repr_precision()):
             inner_parts = signature_string_parts(posargs, [])
         return repr_string(self.__class__.__name__, inner_parts,
                            allow_mixed_seps=False)
@@ -2229,7 +2229,7 @@ class OperatorRightVectorMult(Operator):
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = [self.operator, self.vector]
-        with npy_printoptions(precision=REPR_PRECISION):
+        with npy_printoptions(precision=repr_precision()):
             inner_parts = signature_string_parts(posargs, [])
         return repr_string(self.__class__.__name__, inner_parts,
                            allow_mixed_seps=False)

@@ -21,8 +21,8 @@ from odl.space import ProductSpace, tensor_space
 from odl.space.base_tensors import TensorSpace
 from odl.space.weighting import ArrayWeighting
 from odl.util import (
-    REPR_PRECISION, array_str, attribute_repr_string, dtype_repr, moveaxis,
-    npy_printoptions, repr_string, signature_string_parts, writable_array)
+    array_str, attribute_repr_string, dtype_repr, moveaxis, npy_printoptions,
+    repr_precision, repr_string, signature_string_parts, writable_array)
 
 __all__ = ('PointwiseNorm', 'PointwiseInner', 'PointwiseSum', 'MatrixOperator',
            'SamplingOperator', 'WeightedSumSamplingOperator',
@@ -386,7 +386,7 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
         if self.is_weighted:
             optargs.append(('weighting', array_str(self.weights), ''))
             optmod.append('!s')
-        with npy_printoptions(precision=REPR_PRECISION):
+        with npy_printoptions(precision=repr_precision()):
             inner_parts = signature_string_parts(posargs, optargs,
                                                  mod=['!r', optmod])
         return repr_string(self.__class__.__name__, inner_parts,
