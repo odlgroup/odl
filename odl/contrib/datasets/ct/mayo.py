@@ -132,16 +132,20 @@ def load_projections(folder, indices=None):
     offset_angular = np.array([d.SourceAngularPositionShift for d in datasets])
     offset_radial = np.array([d.SourceRadialDistanceShift for d in datasets])
 
+    # TODO(adler-j): Implement proper handling of flying focal spot.
+    # Currently we do not fully account for it, merely making some "first
+    # order corrections".
+
     # Update angles with flying focal spot (in plane direction).
     # This increases the resolution of the reconstructions.
     angles = angles - offset_angular
 
-    # We correct for the mean offset due to ffz in the detector.
+    # We correct for the mean offset due to the rotated angles, we need to
+    # shift the detector.
     offset_detector_by_angles = det_radius * np.mean(offset_angular)
     minp[0] -= offset_detector_by_angles
     maxp[0] -= offset_detector_by_angles
 
-    # TODO(adler-j): Implement proper handling of flying focal spot
     # We currently apply only the mean of the offsets
     src_radius = src_radius + np.mean(offset_radial)
 
@@ -209,8 +213,8 @@ def load_reconstruction(folder, slice_start=0, slice_end=-1):
 
     Notes
     -----
-    Note that DICOM data is highly non trivial. Typically, each slice has been
-    computed with a slice tickness (e.g. 3mm) but the slice spacing might be
+    DICOM data is highly non trivial. Typically, each slice has been computed
+    with a slice tickness (e.g. 3mm) but the slice spacing might be
     different from that.
 
     Further, the coordinates in DICOM is typically the *middle* of the pixel,
