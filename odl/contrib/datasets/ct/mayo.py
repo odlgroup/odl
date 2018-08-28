@@ -48,7 +48,8 @@ def _read_projections(folder, indices):
 
     data_array = None
 
-    for i, file_name in enumerate(tqdm.tqdm(file_names, 'Loading projection data')):
+    for i, file_name in enumerate(tqdm.tqdm(file_names,
+                                            'Loading projection data')):
         # read the file
         dataset = dicom.read_file(folder + '/' + file_name)
 
@@ -72,7 +73,8 @@ def _read_projections(folder, indices):
         # Store results
         if data_array is None:
             # We need to load the first dataset before we know the shape
-            data_array = np.empty((len(file_names), cols, rows), dtype='float32')
+            data_array = np.empty((len(file_names), cols, rows),
+                                  dtype='float32')
 
         data_array[i] = proj_array[:, ::-1]
         datasets.append(dataset)
@@ -134,7 +136,7 @@ def load_projections(folder, indices=None):
 
     # TODO(adler-j): Implement proper handling of flying focal spot.
     # Currently we do not fully account for it, merely making some "first
-    # order corrections".
+    # order corrections" to the detector position and radial offset.
 
     # Update angles with flying focal spot (in plane direction).
     # This increases the resolution of the reconstructions.
