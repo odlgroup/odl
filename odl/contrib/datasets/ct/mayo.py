@@ -36,7 +36,6 @@ __all__ = ('load_projections', 'load_reconstruction')
 
 def _read_projections(folder, indices):
     """Read mayo projections from a folder."""
-    projections = []
     datasets = []
 
     # Get the relevant file names
@@ -47,7 +46,10 @@ def _read_projections(folder, indices):
 
     file_names = file_names[indices]
 
-    for file_name in tqdm.tqdm(file_names, 'Loading projection data'):
+    data_array = None
+
+    for i, file_name in enumerate(tqdm.tqdm(file_names,
+                                            'Loading projection data')):
         # read the file
         dataset = dicom.read_file(folder + '/' + file_name)
 
@@ -59,20 +61,25 @@ def _read_projections(folder, indices):
         rescale_slope = dataset.RescaleSlope
 
         # Load the array as bytes
-        data_array = np.array(np.frombuffer(dataset.PixelData, 'H'),
+        proj_array = np.array(np.frombuffer(dataset.PixelData, 'H'),
                               dtype='float32')
-        data_array = data_array.reshape([rows, cols], order='F').T
+        proj_array = proj_array.reshape([rows, cols], order='F').T
 
         # Rescale array
-        data_array *= rescale_slope
-        data_array += rescale_intercept
-        data_array /= hu_factor
+        proj_array *= rescale_slope
+        proj_array += rescale_intercept
+        proj_array /= hu_factor
 
         # Store results
-        projections.append(data_array)
+        if data_array is None:
+            # We need to load the first dataset before we know the shape
+            data_array = np.empty((len(file_names), cols, rows),
+                                  dtype='float32')
+
+        data_array[i] = proj_array[:, ::-1]
         datasets.append(dataset)
 
-    return datasets, projections
+    return datasets, data_array
 
 
 def load_projections(folder, indices=None):
@@ -94,14 +101,7 @@ def load_projections(folder, indices=None):
         Projection data, given as the line integral of the linear attenuation
         coefficient (g/cm^3). Its unit is thus g/cm^2.
     """
-    datasets, projections = _read_projections(folder, indices)
-
-    data_array = np.empty((len(projections),) + projections[0].shape,
-                          dtype='float32')
-
-    # Move data to a big array, change order
-    for i, proj in enumerate(projections):
-        data_array[i] = proj[:, ::-1]
+    datasets, data_array = _read_projections(folder, indices)
 
     # Get the angles
     angles = [d.DetectorFocalCenterAngularPosition for d in datasets]
@@ -116,9 +116,6 @@ def load_projections(folder, indices=None):
     # Correct from center of pixel to corner of pixel
     minp = -(np.array(datasets[0].DetectorCentralElement) - 0.5) * pixel_size
     maxp = minp + shape * pixel_size
-
-    # Create partition for detector
-    detector_partition = odl.uniform_partition(minp, maxp, shape)
 
     # Select geometry parameters
     src_radius = datasets[0].DetectorFocalCenterRadialDistance
@@ -137,11 +134,20 @@ def load_projections(folder, indices=None):
     offset_angular = np.array([d.SourceAngularPositionShift for d in datasets])
     offset_radial = np.array([d.SourceRadialDistanceShift for d in datasets])
 
+    # TODO(adler-j): Implement proper handling of flying focal spot.
+    # Currently we do not fully account for it, merely making some "first
+    # order corrections" to the detector position and radial offset.
+
     # Update angles with flying focal spot (in plane direction).
     # This increases the resolution of the reconstructions.
     angles = angles - offset_angular
 
-    # TODO(adler-j): Implement proper handling of flying focal spot
+    # We correct for the mean offset due to the rotated angles, we need to
+    # shift the detector.
+    offset_detector_by_angles = det_radius * np.mean(offset_angular)
+    minp[0] -= offset_detector_by_angles
+    maxp[0] -= offset_detector_by_angles
+
     # We currently apply only the mean of the offsets
     src_radius = src_radius + np.mean(offset_radial)
 
@@ -151,6 +157,9 @@ def load_projections(folder, indices=None):
     # axis of rotation.
     mean_offset_along_axis_for_ffz = np.mean(offset_axial) * (
         src_radius / (src_radius + det_radius))
+
+    # Create partition for detector
+    detector_partition = odl.uniform_partition(minp, maxp, shape)
 
     # Convert offset to odl defintions
     offset_along_axis = (mean_offset_along_axis_for_ffz +
@@ -206,8 +215,8 @@ def load_reconstruction(folder, slice_start=0, slice_end=-1):
 
     Notes
     -----
-    Note that DICOM data is highly non trivial. Typically, each slice has been
-    computed with a slice tickness (e.g. 3mm) but the slice spacing might be
+    DICOM data is highly non trivial. Typically, each slice has been computed
+    with a slice tickness (e.g. 3mm) but the slice spacing might be
     different from that.
 
     Further, the coordinates in DICOM is typically the *middle* of the pixel,
@@ -252,13 +261,15 @@ def load_reconstruction(folder, slice_start=0, slice_end=-1):
         volumes.append(densities)
         datasets.append(dataset)
 
-    # Compute geometry parameters
     voxel_size = np.array(list(pixel_size) + [pixel_thickness])
     shape = np.array([rows, cols, len(volumes)])
-    min_pt = (np.array(dataset.ImagePositionPatient) -
-              np.array(dataset.DataCollectionCenterPatient))
 
-    max_pt = min_pt + voxel_size * np.array([rows, cols, 0])
+    # Compute geometry parameters
+    mid_pt = (np.array(dataset.ReconstructionTargetCenterPatient) -
+              np.array(dataset.DataCollectionCenterPatient))
+    reconstruction_size = (voxel_size * shape)
+    min_pt = mid_pt - reconstruction_size / 2
+    max_pt = mid_pt + reconstruction_size / 2
 
     # axis 1 has reversed convention
     min_pt[1], max_pt[1] = -max_pt[1], -min_pt[1]
