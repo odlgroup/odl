@@ -138,6 +138,8 @@ def apply_on_boundary(array, func, only_once=True, which_boundaries=None,
         slc_l[ax] = 0
         slc_r[ax] = -1
 
+        slc_l, slc_r = tuple(slc_l), tuple(slc_r)
+
         try:
             # Tuple of functions in this axis
             func_l, func_r = function
@@ -257,7 +259,7 @@ def fast_1d_tensor_mult(ndarr, onedim_arrs, axes=None, out=None):
             # Meshgrid-style slice
             slc = [None] * out.ndim
             slc[ax] = slice(None)
-            factor = factor * arr[slc]
+            factor = factor * arr[tuple(slc)]
 
         out *= factor
 
@@ -277,14 +279,14 @@ def fast_1d_tensor_mult(ndarr, onedim_arrs, axes=None, out=None):
 
             slc = [None] * out.ndim
             slc[ax] = slice(None)
-            factor = factor * arr[slc]
+            factor = factor * arr[tuple(slc)]
 
         out *= factor
 
         # Finally multiply by the remaining 1d array
         slc = [None] * out.ndim
         slc[last_ax] = slice(None)
-        out *= last_arr[slc]
+        out *= last_arr[tuple(slc)]
 
     return out
 
@@ -661,17 +663,12 @@ def _apply_padding(lhs_arr, rhs_arr, offset, pad_mode, direction):
                                  ''.format(axis, lr, pad_len, n_rhs))
 
         # Slice tuples used to index LHS and RHS for left and right padding,
-        # respectively. Since `lhs_arr` is used on both sides of the
-        # assignments, full slices are used in all axes except `axis`.
-        # TODO: change comment
-
-        # TODO: use working_slc instead of full_slc
-        lhs_slc_l, lhs_slc_r = list(working_slc), list(working_slc)
-        rhs_slc_l, rhs_slc_r = list(working_slc), list(working_slc)
+        # respectively; we make 4 copies of `working_slc` as lists
+        lhs_slc_l, lhs_slc_r, rhs_slc_l, rhs_slc_r = map(
+            list, [working_slc] * 4)
 
         # We're always using the outer (excess) parts involved in padding
         # on the LHS of the assignment, so we set them here.
-        # TODO: change comment
         pad_slc_outer_l, pad_slc_outer_r = _padding_slices_outer(
             lhs_arr, rhs_arr, axis, offset)
 
@@ -692,15 +689,19 @@ def _apply_padding(lhs_arr, rhs_arr, offset, pad_mode, direction):
             if direction == 'forward':
                 rhs_slc_l[axis] = pad_slc_inner_l
                 rhs_slc_r[axis] = pad_slc_inner_r
+                lhs_slc_l, rhs_slc_l, lhs_slc_r, rhs_slc_r = map(
+                    tuple, [lhs_slc_l, rhs_slc_l, lhs_slc_r, rhs_slc_r])
 
-                lhs_arr[tuple(lhs_slc_l)] = lhs_arr[tuple(rhs_slc_l)]
-                lhs_arr[tuple(lhs_slc_r)] = lhs_arr[tuple(rhs_slc_r)]
+                lhs_arr[lhs_slc_l] = lhs_arr[rhs_slc_l]
+                lhs_arr[lhs_slc_r] = lhs_arr[rhs_slc_r]
             else:
                 lhs_slc_l[axis] = pad_slc_inner_l
                 lhs_slc_r[axis] = pad_slc_inner_r
+                lhs_slc_l, rhs_slc_l, lhs_slc_r, rhs_slc_r = map(
+                    tuple, [lhs_slc_l, rhs_slc_l, lhs_slc_r, rhs_slc_r])
 
-                lhs_arr[tuple(lhs_slc_l)] += lhs_arr[tuple(rhs_slc_l)]
-                lhs_arr[tuple(lhs_slc_r)] += lhs_arr[tuple(rhs_slc_r)]
+                lhs_arr[lhs_slc_l] += lhs_arr[rhs_slc_l]
+                lhs_arr[lhs_slc_r] += lhs_arr[rhs_slc_r]
 
         elif pad_mode == 'order0':
             # The `_padding_slices_inner` helper returns the slices for the
@@ -711,18 +712,22 @@ def _apply_padding(lhs_arr, rhs_arr, offset, pad_mode, direction):
             if direction == 'forward':
                 rhs_slc_l[axis] = left_slc
                 rhs_slc_r[axis] = right_slc
+                lhs_slc_l, rhs_slc_l, lhs_slc_r, rhs_slc_r = map(
+                    tuple, [lhs_slc_l, rhs_slc_l, lhs_slc_r, rhs_slc_r])
 
-                lhs_arr[tuple(lhs_slc_l)] = lhs_arr[tuple(rhs_slc_l)]
-                lhs_arr[tuple(lhs_slc_r)] = lhs_arr[tuple(rhs_slc_r)]
+                lhs_arr[lhs_slc_l] = lhs_arr[rhs_slc_l]
+                lhs_arr[lhs_slc_r] = lhs_arr[rhs_slc_r]
             else:
                 lhs_slc_l[axis] = left_slc
                 lhs_slc_r[axis] = right_slc
+                lhs_slc_l, rhs_slc_l, lhs_slc_r, rhs_slc_r = map(
+                    tuple, [lhs_slc_l, rhs_slc_l, lhs_slc_r, rhs_slc_r])
 
-                lhs_arr[tuple(lhs_slc_l)] += np.sum(
-                    lhs_arr[tuple(rhs_slc_l)],
+                lhs_arr[lhs_slc_l] += np.sum(
+                    lhs_arr[rhs_slc_l],
                     axis=axis, keepdims=True, dtype=lhs_arr.dtype)
-                lhs_arr[tuple(lhs_slc_r)] += np.sum(
-                    lhs_arr[tuple(rhs_slc_r)],
+                lhs_arr[lhs_slc_r] += np.sum(
+                    lhs_arr[rhs_slc_r],
                     axis=axis, keepdims=True, dtype=lhs_arr.dtype)
 
         elif pad_mode == 'order1':
@@ -732,6 +737,7 @@ def _apply_padding(lhs_arr, rhs_arr, offset, pad_mode, direction):
             # Slice for broadcasting of a 1D array along `axis`
             bcast_slc = [None] * lhs_arr.ndim
             bcast_slc[axis] = slice(None)
+            bcast_slc = tuple(bcast_slc)
 
             # Slices for the boundary in `axis`
             left_slc, right_slc = _padding_slices_inner(
@@ -740,15 +746,19 @@ def _apply_padding(lhs_arr, rhs_arr, offset, pad_mode, direction):
             # Create slice tuples for indexing of the boundary values
             bdry_slc_l = list(working_slc)
             bdry_slc_l[axis] = left_slc
+            bdry_slc_l = tuple(bdry_slc_l)
             bdry_slc_r = list(working_slc)
             bdry_slc_r[axis] = right_slc
+            bdry_slc_r = tuple(bdry_slc_r)
 
             # For the slope at the boundary, we need two neighboring points.
             # We create the corresponding slices from the boundary slices.
             slope_slc_l = list(working_slc)
             slope_slc_l[axis] = slice(left_slc.start, left_slc.stop + 1)
+            slope_slc_l = tuple(slope_slc_l)
             slope_slc_r = list(working_slc)
             slope_slc_r[axis] = slice(right_slc.start - 1, right_slc.stop)
+            slope_slc_r = tuple(slope_slc_r)
 
             # The `np.arange`s, broadcast along `axis`, are used to create the
             # constant-slope continuation (forward) or to calculate the
@@ -758,6 +768,9 @@ def _apply_padding(lhs_arr, rhs_arr, offset, pad_mode, direction):
             arange_r = np.arange(1, n_pad_r + 1,
                                  dtype=lhs_arr.dtype)[bcast_slc]
 
+            lhs_slc_l, rhs_slc_l, lhs_slc_r, rhs_slc_r = map(
+                tuple, [lhs_slc_l, rhs_slc_l, lhs_slc_r, rhs_slc_r])
+
             if direction == 'forward':
                 # Take first order difference to get the derivative
                 # along `axis`.
@@ -765,24 +778,22 @@ def _apply_padding(lhs_arr, rhs_arr, offset, pad_mode, direction):
                 slope_r = np.diff(lhs_arr[slope_slc_r], n=1, axis=axis)
 
                 # Finally assign the constant slope values
-                lhs_arr[tuple(lhs_slc_l)] = (
-                    lhs_arr[tuple(bdry_slc_l)] + arange_l * slope_l)
-                lhs_arr[tuple(lhs_slc_r)] = (
-                    lhs_arr[tuple(bdry_slc_r)] + arange_r * slope_r)
+                lhs_arr[lhs_slc_l] = lhs_arr[bdry_slc_l] + arange_l * slope_l
+                lhs_arr[lhs_slc_r] = lhs_arr[bdry_slc_r] + arange_r * slope_r
             else:
                 # Same as in 'order0'
-                lhs_arr[tuple(bdry_slc_l)] += np.sum(
-                    lhs_arr[tuple(rhs_slc_l)],
-                    axis=axis, keepdims=True, dtype=lhs_arr.dtype)
-                lhs_arr[tuple(bdry_slc_r)] += np.sum(
-                    lhs_arr[tuple(rhs_slc_r)],
-                    axis=axis, keepdims=True, dtype=lhs_arr.dtype)
+                lhs_arr[bdry_slc_l] += np.sum(lhs_arr[rhs_slc_l],
+                                              axis=axis, keepdims=True,
+                                              dtype=lhs_arr.dtype)
+                lhs_arr[bdry_slc_r] += np.sum(lhs_arr[rhs_slc_r],
+                                              axis=axis, keepdims=True,
+                                              dtype=lhs_arr.dtype)
 
                 # Calculate the order 1 moments
-                moment1_l = np.sum(arange_l * lhs_arr[tuple(rhs_slc_l)],
+                moment1_l = np.sum(arange_l * lhs_arr[rhs_slc_l],
                                    axis=axis, keepdims=True,
                                    dtype=lhs_arr.dtype)
-                moment1_r = np.sum(arange_r * lhs_arr[tuple(rhs_slc_r)],
+                moment1_r = np.sum(arange_r * lhs_arr[rhs_slc_r],
                                    axis=axis, keepdims=True,
                                    dtype=lhs_arr.dtype)
 

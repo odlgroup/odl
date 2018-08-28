@@ -730,7 +730,7 @@ class ProductSpace(LinearSpace):
 
         else:
             raise TypeError('`indices` must be integer, slice, tuple or '
-                            'or list, got {!r}'.format(indices))
+                            'list, got {!r}'.format(indices))
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -1479,7 +1479,9 @@ class ProductSpaceElement(LinearSpaceElement):
         return tuple(figs)
 
 
-# --- Add arithmetic operators that broadcast ---
+# --- Add arithmetic operators that broadcast --- #
+
+
 def _broadcast_arithmetic(op):
     """Return ``op(self, other)`` with broadcasting.
 

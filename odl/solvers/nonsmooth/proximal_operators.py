@@ -1917,12 +1917,12 @@ def proximal_huber(space, gamma):
             else:
                 norm = x.ufuncs.absolute()
 
-            idx = norm.ufuncs.less_equal(gamma + self.sigma)
-            out[idx] = gamma / (gamma + self.sigma) * x[idx]
+            mask = norm.ufuncs.less_equal(gamma + self.sigma)
+            out[mask] = gamma / (gamma + self.sigma) * x[mask]
 
-            idx.ufuncs.logical_not(out=idx)
+            mask.ufuncs.logical_not(out=mask)
             sign_x = x.ufuncs.sign()
-            out[idx] = x[idx] - self.sigma * sign_x[idx]
+            out[mask] = x[mask] - self.sigma * sign_x[mask]
 
             return out
 

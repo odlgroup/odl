@@ -65,13 +65,13 @@ def partition_1d(arr, slices):
 def partition_equally_1d(arr, nparts, order='interlaced'):
     if order == 'block':
         stride = int(np.ceil(arr.size / nparts))
-        slc_list = [slice(i * stride, (i + 1) * stride) for i in range(nparts)]
+        slices = [slice(i * stride, (i + 1) * stride) for i in range(nparts)]
     elif order == 'interlaced':
-        slc_list = [slice(i, len(arr), nparts) for i in range(nparts)]
+        slices = [slice(i, len(arr), nparts) for i in range(nparts)]
     else:
         raise ValueError
 
-    return partition_1d(arr, slc_list)
+    return partition_1d(arr, tuple(slices))
 
 
 def divide_1Darray_equally(ind, nsub):

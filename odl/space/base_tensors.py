@@ -968,8 +968,9 @@ numpy.ufunc.reduceat.html
 
         # Default to showing x-y slice "in the middle"
         if indices is None and self.ndim >= 3:
-            indices = (slice(None),) * 2
-            indices += tuple(n // 2 for n in self.space.shape[2:])
+            indices = tuple(
+                [slice(None)] * 2 + [n // 2 for n in self.space.shape[2:]]
+            )
 
         if isinstance(indices, (Integral, slice)):
             indices = (indices,)

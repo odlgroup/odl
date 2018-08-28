@@ -1074,8 +1074,7 @@ class NumpyTensor(Tensor):
              [ 5.,  6.]]
         )
 
-        Slices can be assigned to, except if lists are used for
-        indexing:
+        Slices can be assigned to, except if lists are used for indexing:
 
         >>> y = x[:, ::2]  # view into x
         >>> y[:] = -9
@@ -1084,7 +1083,7 @@ class NumpyTensor(Tensor):
             [[-9.,  2., -9.],
              [-9.,  5., -9.]]
         )
-        >>> y = x[[[0, 1], [1, 2]]]  # not a view, won't modify x
+        >>> y = x[[0, 1], [1, 2]]  # not a view, won't modify x
         >>> y
         rn(2).element([ 2., -9.])
         >>> y[:] = 0

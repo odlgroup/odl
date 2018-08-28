@@ -8,7 +8,6 @@
 
 from __future__ import division
 import numpy as np
-from past.builtins import basestring
 
 import odl
 from odl import vector
@@ -51,24 +50,22 @@ def test_vector_numpy():
     x = vector([1, 2, 3], dtype='complex64')
     assert isinstance(x, NumpyTensor)
 
-    # Fn
+    # Generic TensorSpace
     inp = [1, 2, 3]
-
     x = vector(inp)
     assert isinstance(x, NumpyTensor)
     assert x.dtype == np.dtype('int')
     assert all_equal(x, inp)
 
-    # Tensors
     inp = ['a', 'b', 'c']
     x = vector(inp)
     assert isinstance(x, NumpyTensor)
-    assert np.issubdtype(x.dtype, basestring)
+    assert np.issubdtype(x.dtype, np.str_)
     assert all_equal(x, inp)
 
     x = vector([1, 2, 'inf'])  # Becomes string type
     assert isinstance(x, NumpyTensor)
-    assert np.issubdtype(x.dtype, basestring)
+    assert np.issubdtype(x.dtype, np.str_)
     assert all_equal(x, ['1', '2', 'inf'])
 
     # Scalar or empty input
