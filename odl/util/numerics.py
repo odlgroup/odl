@@ -663,9 +663,9 @@ def _apply_padding(lhs_arr, rhs_arr, offset, pad_mode, direction):
                                  ''.format(axis, lr, pad_len, n_rhs))
 
         # Slice tuples used to index LHS and RHS for left and right padding,
-        # respectively.
-        lhs_slc_l, lhs_slc_r = list(working_slc), list(working_slc)
-        rhs_slc_l, rhs_slc_r = list(working_slc), list(working_slc)
+        # respectively; we make 4 copies of `working_slc` as lists
+        lhs_slc_l, lhs_slc_r, rhs_slc_l, rhs_slc_r = map(
+            list, [working_slc] * 4)
 
         # We're always using the outer (excess) parts involved in padding
         # on the LHS of the assignment, so we set them here.
@@ -746,17 +746,19 @@ def _apply_padding(lhs_arr, rhs_arr, offset, pad_mode, direction):
             # Create slice tuples for indexing of the boundary values
             bdry_slc_l = list(working_slc)
             bdry_slc_l[axis] = left_slc
+            bdry_slc_l = tuple(bdry_slc_l)
             bdry_slc_r = list(working_slc)
             bdry_slc_r[axis] = right_slc
-            bdry_slc_l, bdry_slc_r = map(tuple, [bdry_slc_l, bdry_slc_r])
+            bdry_slc_r = tuple(bdry_slc_r)
 
             # For the slope at the boundary, we need two neighboring points.
             # We create the corresponding slices from the boundary slices.
             slope_slc_l = list(working_slc)
             slope_slc_l[axis] = slice(left_slc.start, left_slc.stop + 1)
+            slope_slc_l = tuple(slope_slc_l)
             slope_slc_r = list(working_slc)
             slope_slc_r[axis] = slice(right_slc.start - 1, right_slc.stop)
-            slope_slc_l, slope_slc_r = map(tuple, [slope_slc_l, slope_slc_r])
+            slope_slc_r = tuple(slope_slc_r)
 
             # The `np.arange`s, broadcast along `axis`, are used to create the
             # constant-slope continuation (forward) or to calculate the
