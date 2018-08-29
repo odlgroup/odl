@@ -498,7 +498,6 @@ class Divergence(PointwiseTensorFieldOperator):
         Verify adjoint:
 
         >>> g = div.range.element(data ** 2)
-        >>> adj_div_g = div.adjoint(g)
         >>> div(f).inner(g) / f.inner(div.adjoint(g))
         1.0
         """

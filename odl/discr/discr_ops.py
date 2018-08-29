@@ -111,7 +111,7 @@ class Resampling(Operator):
         >>> resampling = odl.Resampling(coarse_discr, fine_discr)
         >>> resampling_inv = resampling.inverse
 
-        The inverse is proper left inverse if the resampling goes from a
+        The inverse is a proper left inverse if the resampling maps from a
         coarser to a finer sampling:
 
         >>> resampling_inv(resampling([0.0, 1.0, 0.0]))
@@ -171,7 +171,7 @@ class ResizingOperator(Operator):
     ("padded") according to a provided parameter ``pad_mode``.
 
     All resizing operator variants are linear, except constant padding
-    with constant != 0.
+    with constant != 0, which is affine.
 
     See `the online documentation
     <https://odlgroup.github.io/odl/math/resizing_ops.html>`_

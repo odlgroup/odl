@@ -497,13 +497,14 @@ class RectPartition(object):
 
         Examples
         --------
-        Take every second grid point. Note that is is in general non-uniform:
+        Take every second, starting at index 2 (note that this generally
+        results in a non-uniform partition):
 
         >>> partition = odl.uniform_partition(0, 10, 10)
         >>> partition[2::2]
         nonuniform_partition([ 2.5,  4.5,  6.5,  8.5], min_pt=2.0, max_pt=10.0)
 
-        A more advanced example is:
+        A more advanced example:
 
         >>> intvp = odl.IntervalProd([-1, 1, 4, 2], [3, 6, 5, 7])
         >>> grid = odl.RectGrid([-1, 0, 3], [2, 4], [5], [2, 4, 7])

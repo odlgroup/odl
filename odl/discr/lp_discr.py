@@ -521,7 +521,8 @@ class DiscreteLp(DiscretizedSpace):
 
         Examples
         --------
-        Uniform:
+        Uniformly discretized space, resulting in ``repr`` using the
+        `uniform_discr` factory function:
 
         >>> space = odl.uniform_discr(0, 1, 4, dtype='float32')
         >>> space
@@ -533,7 +534,8 @@ class DiscreteLp(DiscretizedSpace):
             [ 0.,  0.,  0.], [ 1.,  1.,  1.], (2, 4, 8), dtype=complex
         )
 
-        Non-uniform:
+        For non-uniform discretizations, the output is more verbose and
+        uses the class constructor:
 
         >>> rect = odl.IntervalProd([0, 0], [1, 1])
         >>> fspace = odl.FunctionSpace(rect)

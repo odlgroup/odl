@@ -519,8 +519,8 @@ class ProductSpaceOperator(Operator):
 
         Examples
         --------
-        All rows and columns with an operator, i.e., domain and range
-        are unambiguous:
+        All rows and columns contain at least one `Operator` instance,
+        so both domain and range can be inferred:
 
         >>> r3 = odl.rn(3)
         >>> pspace = odl.ProductSpace(r3, r3)
@@ -533,10 +533,12 @@ class ProductSpaceOperator(Operator):
              [0, IdentityOperator(rn(3))]]
         )
 
-        Domain not completely determined (column with all zeros):
+        Second column all zeros, this the domain is not determined and
+        has to be specified:
 
         >>> prod_op = odl.ProductSpaceOperator([[I, 0],
-        ...                                     [I, 0]], domain=pspace)
+        ...                                     [I, 0]],
+        ...                                    domain=pspace)
         >>> prod_op
         ProductSpaceOperator(
             [[IdentityOperator(rn(3)), 0],
@@ -544,10 +546,12 @@ class ProductSpaceOperator(Operator):
             domain=ProductSpace(rn(3), 2)
         )
 
-        Range not completely determined (row with all zeros):
+        Second row all zeros, thus the range is undetermined and has to
+        be given:
 
         >>> prod_op = odl.ProductSpaceOperator([[I, I],
-        ...                                     [0, 0]], range=pspace)
+        ...                                     [0, 0]],
+        ...                                    range=pspace)
         >>> prod_op
         ProductSpaceOperator(
             [[IdentityOperator(rn(3)), IdentityOperator(rn(3))],

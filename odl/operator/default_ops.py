@@ -333,9 +333,9 @@ class MultiplyOperator(Operator):
         rn(3).element([ 1.,  4.,  9.])
 
         For a scalar or `element-like` multiplicand, ``domain`` (and
-        ``range``) should be given:
+        optionally ``range``) should be given:
 
-        >>> op = odl.MultiplyOperator(x, domain=r3.field, range=r3)
+        >>> op = odl.MultiplyOperator(x, domain=r3.field)
         >>> op(3)
         rn(3).element([ 3.,  6.,  9.])
         >>> out = r3.element()
@@ -1668,10 +1668,7 @@ class ComplexModulus(Operator):
     def _call(self, x):
         """Return ``self(x)``."""
         squared_mod = x.real ** 2 + x.imag ** 2
-        if hasattr(squared_mod, 'ufuncs'):
-            return squared_mod.ufuncs.sqrt()
-        else:
-            return np.sqrt(squared_mod)
+        return squared_mod.ufuncs.sqrt()
 
     def derivative(self, x):
         r"""Return the derivative operator in the "C = R^2" sense.

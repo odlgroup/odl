@@ -417,16 +417,14 @@ class NearestInterpolation(FunctionSpaceMapping):
 
         Examples
         --------
-        >>> rect = odl.IntervalProd([0, 0], [1, 1])
-        >>> fspace = odl.FunctionSpace(rect)
-        >>> part = odl.uniform_partition_fromintv(rect, shape=(4, 2))
-        >>> tspace = odl.rn(part.shape)
-        >>> interp_op = odl.NearestInterpolation(fspace, part, tspace)
+        >>> space = odl.uniform_discr([0, 0], [1, 1], shape=(4, 2))
+        >>> interp_op = odl.NearestInterpolation(
+        ...     space.fspace, space.partition, space.tspace)
         >>> interp_op
         NearestInterpolation(
             FunctionSpace(IntervalProd([ 0.,  0.], [ 1.,  1.])),
             uniform_partition([ 0.,  0.], [ 1.,  1.], (4, 2)),
-            rn((4, 2))
+            rn((4, 2), weighting=0.125)
         )
         """
         posargs = [self.range, self.partition, self.domain]
@@ -485,16 +483,14 @@ class LinearInterpolation(FunctionSpaceMapping):
 
         Examples
         --------
-        >>> rect = odl.IntervalProd([0, 0], [1, 1])
-        >>> fspace = odl.FunctionSpace(rect)
-        >>> part = odl.uniform_partition_fromintv(rect, shape=(4, 2))
-        >>> tspace = odl.rn(part.shape)
-        >>> interp_op = odl.LinearInterpolation(fspace, part, tspace)
+        >>> space = odl.uniform_discr([0, 0], [1, 1], shape=(4, 2))
+        >>> interp_op = odl.LinearInterpolation(
+        ...     space.fspace, space.partition, space.tspace)
         >>> interp_op
         LinearInterpolation(
             FunctionSpace(IntervalProd([ 0.,  0.], [ 1.,  1.])),
             uniform_partition([ 0.,  0.], [ 1.,  1.], (4, 2)),
-            rn((4, 2))
+            rn((4, 2), weighting=0.125)
         )
         """
         posargs = [self.range, self.partition, self.domain]
@@ -636,17 +632,15 @@ class PerAxisInterpolation(FunctionSpaceMapping):
 
         Examples
         --------
-        >>> rect = odl.IntervalProd([0, 0], [1, 1])
-        >>> fspace = odl.FunctionSpace(rect)
-        >>> part = odl.uniform_partition_fromintv(rect, shape=(4, 2))
-        >>> tspace = odl.rn(part.shape)
-        >>> interp_op = odl.PerAxisInterpolation(fspace, part, tspace,
-        ...                                      schemes=['linear', 'nearest'])
+        >>> space = odl.uniform_discr([0, 0], [1, 1], shape=(4, 2))
+        >>> interp_op = odl.PerAxisInterpolation(
+        ...     space.fspace, space.partition, space.tspace,
+        ...     schemes=['linear', 'nearest'])
         >>> interp_op
         PerAxisInterpolation(
             FunctionSpace(IntervalProd([ 0.,  0.], [ 1.,  1.])),
             uniform_grid([ 0.125,  0.25 ], [ 0.875,  0.75 ], (4, 2)),
-            rn((4, 2)),
+            rn((4, 2), weighting=0.125),
             schemes=('linear', 'nearest')
         )
         """
@@ -965,7 +959,8 @@ class _PerAxisInterpolator(_Interpolator):
         """Evaluate linear interpolation.
 
         Modified for in-place evaluation and treatment of out-of-bounds
-        points by implicitly assuming 0 at the next node."""
+        points by implicitly assuming 0 at the next node.
+        """
         # slice for broadcasting over trailing dimensions in self.values
         vslice = (slice(None),) + (None,) * (self.values.ndim - len(indices))
 
