@@ -33,8 +33,7 @@ def mean_squared_error(data, ground_truth, mask=None,
     ground_truth : `Tensor`
         Reference to compare ``data`` to.
     mask : `array-like`, optional
-        If given, ``data * mask`` is compared to ``ground_truth * mask``,
-        where multiplication is pointwise.
+        If given, ``data * mask`` is compared to ``ground_truth * mask``.
     normalized  : bool, optional
         If ``True``, the output values are mapped to the interval
         :math:`[0, 1]` (see `Notes` for details), otherwise return the
@@ -43,6 +42,7 @@ def mean_squared_error(data, ground_truth, mask=None,
         If ``True``, it is ensured that lower values correspond to better
         matches. For the mean squared error, this is already the case, and
         the flag is only present for compatibility to other figures of merit.
+
     Returns
     -------
     mse : float
@@ -102,8 +102,7 @@ def mean_absolute_error(data, ground_truth, mask=None,
     ground_truth : `Tensor`
         Reference to compare ``data`` to.
     mask : `array-like`, optional
-        If given, ``data * mask`` is compared to ``ground_truth * mask``,
-        where multiplication is pointwise.
+        If given, ``data * mask`` is compared to ``ground_truth * mask``.
     normalized  : bool, optional
         If ``True``, the output values are mapped to the interval
         :math:`[0, 1]` (see `Notes` for details), otherwise return the
@@ -174,7 +173,6 @@ def mean_value_difference(data, ground_truth, mask=None, normalized=False,
         matches. For the mean value difference, this is already the case, and
         the flag is only present for compatibility to other figures of merit.
 
-
     Returns
     -------
     mvd : float
@@ -241,7 +239,6 @@ def standard_deviation_difference(data, ground_truth, mask=None,
         matches. For the standard deviation difference, this is already the
         case, and the flag is only present for compatibility to other figures
         of merit.
-
 
     Returns
     -------
@@ -488,10 +485,9 @@ def false_structures_mask(foreground, smoothness_factor=None):
     return space.element(result)
 
 
-# TODO Add details on the computation in the docstring.
 def ssim(data, ground_truth, size=11, sigma=1.5, K1=0.01, K2=0.03,
          dynamic_range=None, normalized=False, force_lower_is_better=False):
-    """Structural SIMilarity between ``data`` and ``ground_truth``.
+    r"""Structural SIMilarity between ``data`` and ``ground_truth``.
 
     The SSIM takes value -1 for maximum dissimilarity and +1 for maximum
     similarity.
@@ -537,9 +533,29 @@ def ssim(data, ground_truth, size=11, sigma=1.5, K1=0.01, K2=0.03,
 
     Notes
     -----
-    The unnormalized values are in the interval :math:`[-1, 1]`, where 1
-    corresponds to a perfect match. The normalized values are obtained by
-    adding 1 and dividing by 2.
+    The SSIM is computed on small windows and then averaged over the whole
+    image. The SSIM between two windows :math:`x` and :math:`y` of size
+    :math:`N \times N`
+
+    .. math::
+        SSIM(x,y) = \frac{(2\mu_x\mu_y + c_1)(2\sigma_{xy} + c_2)}
+                    {(\mu_x^2 + \mu_y^2 + c_1)(\sigma_x^2 + \sigma_y^2 + c_2)}
+
+    where:
+
+    * :math:`\mu_x`, :math:`\mu_y` is the mean of :math:`x` and :math:`y`,
+      respectively.
+    * :math:`\sigma_x`, :math:`\sigma_y` is the standard deviation of
+      :math:`x` and :math:`y`, respectively.
+    * :math:`\sigma_{xy}` the covariance of :math:`x` and :math:`y`
+    * :math:`c_1 = (k_1L)^2`, :math:`c_2 = (k_2L)^2` where :math:`L` is the
+      dynamic range of the image.
+
+    The unnormalized values are contained in the interval :math:`[-1, 1]`,
+    where 1 corresponds to a perfect match. The normalized values are given by
+
+    .. math::
+        SSIM_{normalized}(x, y) = \frac{SSIM(x, y) + 1}{2}
 
     References
     ----------

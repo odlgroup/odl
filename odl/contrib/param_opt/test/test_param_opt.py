@@ -52,8 +52,8 @@ def test_optimal_parameters_two_parameters(space, fom):
     data = noise.copy()
 
     def reconstruction1(data, params):
-        """Perturbs the data by adding the sum of squares of params to it."""
-        return (1 - params[1]) * data / np.abs(params[0])
+        """Perturbs the data scaling it with a nonlinear function of params."""
+        return data * (1 - params[1]) / np.abs(params[0])
 
     result1 = odl.contrib.param_opt.optimal_parameters(reconstruction1, fom,
                                                        phantoms, data, [1, 2])
