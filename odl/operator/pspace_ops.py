@@ -17,10 +17,9 @@ import numpy as np
 from odl.operator.default_ops import ZeroOperator
 from odl.operator.operator import Operator
 from odl.space import ProductSpace
-from odl.util import (
-    array_str, attribute_repr_string, repr_string, signature_string_parts)
+from odl.util import array_str, repr_string, signature_string_parts
 
-__all__ = ('ProductSpaceOperator', 'ComponentProjection',
+__all__ = ('ProductSpaceOperator', 'ComponentProjection', 'ComponentEmbedding',
            'BroadcastOperator', 'ReductionOperator', 'DiagonalOperator')
 
 
@@ -694,39 +693,7 @@ class ComponentProjection(Operator):
             [ 4.,  5.,  6.]
         ])
         """
-        op = self
-
-        class ComponentProjectionAdjoint(Operator):
-
-            """Adjoint operator to `ComponentProjection`."""
-
-            def _call(self, x, out=None):
-                """Extend ``x`` to the full space."""
-                if out is None:
-                    out = self.range.zero()
-                else:
-                    out.set_zero()
-
-                out[op.index] = x
-                return out
-
-            @property
-            def adjoint(self):
-                """Adjoint of the adjoint, the original operator."""
-                return op
-
-            def __repr__(self):
-                """Return ``repr(self)``.
-
-                Examples
-                --------
-                >>> pspace = odl.ProductSpace(odl.rn(1), odl.rn(2))
-                >>> odl.ComponentProjection(pspace, 0).adjoint
-                ComponentProjection(ProductSpace(rn(1), rn(2)), 0).adjoint
-                """
-                return attribute_repr_string(repr(op), 'adjoint')
-
-        return ComponentProjectionAdjoint(self.range, self.domain, linear=True)
+        return ComponentEmbedding(self.domain, self.index)
 
     def __repr__(self):
         """Return ``repr(self)``.
@@ -738,6 +705,103 @@ class ComponentProjection(Operator):
         ComponentProjection(ProductSpace(rn(1), rn(2)), 0)
         """
         posargs = [self.domain, self.index]
+        inner_parts = signature_string_parts(posargs, [])
+        return repr_string(self.__class__.__name__, inner_parts)
+
+
+class ComponentEmbedding(Operator):
+
+    r"""Embedding of a space into a product space at a given index.
+
+    For a product space :math:`X = X_1 \times \dots \times X_n`, the
+    component embedding is defined as
+
+    .. math::
+       E_i: X_i \to X,\quad E_i(x_i) = (0, \dots, 0, x_i, 0, \dots, 0).
+
+    More generally, for an index set :math:`I \subset \{1, \dots, n\}`,
+    the embedding operator :math:`E_I` inserts the components
+    of a given vector into the larger vector at the indices :math:`i \in I`,
+    and sets the other components to zero.
+
+    This is the (unweighted) adjoint operator to `ComponentProjection`.
+    """
+
+    def __init__(self, space, index):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        space : `ProductSpace`
+            Space to embed into.
+        index : int, slice, or list
+            Indices defining the subspace. If ``index`` is not an integer,
+            the `Operator.domain` of this operator is also a `ProductSpace`.
+
+        Examples
+        --------
+        Embedding with a single integer component:
+
+        >>> pspace = odl.ProductSpace(odl.rn(1), odl.rn(2), odl.rn(3))
+        >>> emb = odl.ComponentEmbedding(pspace, 0)
+        >>> x0 = emb.domain.element([1])
+        >>> emb(x0)
+        ProductSpace(rn(1), rn(2), rn(3)).element([
+          [ 1.],
+          [ 0.,  0.],
+          [ 0.,  0.,  0.]
+        ])
+
+        Embedding with multiple indices:
+
+        >>> emb = odl.ComponentEmbedding(pspace, [0, 2])
+        >>> x02 = emb.domain.element([[1], [2, 3, 4]])
+        >>> emb(x02)
+        ProductSpace(rn(1), rn(2), rn(3)).element([
+          [ 1.],
+          [ 0.,  0.],
+          [ 2.,  3.,  4.]
+        ])
+        """
+        if np.isscalar(index):
+            self.__index = int(index)
+        elif isinstance(index, slice):
+            self.__index = index
+        else:
+            self.__index = list(index)
+        super(ComponentEmbedding, self).__init__(
+            space[index], space, linear=True)
+
+    @property
+    def index(self):
+        """Index, indices or slice defining the subspace."""
+        return self.__index
+
+    def _call(self, x, out=None):
+        """Extend ``x`` to the full space."""
+        if out is None:
+            out = self.range.zero()
+        else:
+            out.set_zero()
+
+        out[self.index] = x
+        return out
+
+    @property
+    def adjoint(self):
+        """Adjoint operator, the projection onto the index set."""
+        return ComponentProjection(self.range, self.index)
+
+    def __repr__(self):
+        """Return ``repr(self)``.
+
+        Examples
+        --------
+        >>> pspace = odl.rn(1) * odl.rn(2)
+        >>> odl.ComponentEmbedding(pspace, 0)
+        ComponentEmbedding(ProductSpace(rn(1), rn(2)), 0)
+        """
+        posargs = [self.range, self.index]
         inner_parts = signature_string_parts(posargs, [])
         return repr_string(self.__class__.__name__, inner_parts)
 
