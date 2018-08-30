@@ -346,7 +346,7 @@ class MultiplyOperator(Operator):
             domain = multiplicand.space
 
         if range is None:
-            range = domain
+            range = multiplicand.space
 
         super(MultiplyOperator, self).__init__(domain, range, linear=True)
 
