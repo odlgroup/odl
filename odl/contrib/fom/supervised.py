@@ -762,7 +762,7 @@ def haarpsi(data, ground_truth, a=4.2, c=None):
 
 
 def noise_power_spectrum(data, ground_truth, radial=False,
-                         radial_binning_factor=2):
+                         radial_binning_factor=2.0):
     """Return the Noise Power Spectrum (NPS).
 
     The NPS is given by the squared magnitude of the Fourier transform of the
@@ -776,7 +776,7 @@ def noise_power_spectrum(data, ground_truth, radial=False,
         Reference to compare ``data`` to.
     radial : bool
         If ``True``, compute the radial NPS.
-    radial_binning_factor : float, optional
+    radial_binning_factor : positive float, optional
         Reduce the number of radial bins by this factor. Increasing this
         number can help reducing fluctuations due to the variance of points
         that fall in a particular annulus.

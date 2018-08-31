@@ -396,14 +396,14 @@ def haarpsi_weight_map(img1, img2, axis):
     return np.maximum(img1_lvl3, img2_lvl3)
 
 
-def spherical_sum(image, binning_factor=1):
+def spherical_sum(image, binning_factor=1.0):
     """Sum image values over concentric annuli.
 
     Parameters
     ----------
     image : `DiscreteLp` element
         Input data whose radial sum should be computed.
-    binning_factor : positive int or float, optional
+    binning_factor : positive float, optional
         Reduce the number of output bins by this factor. Increasing this
         number can help reducing fluctuations due to the variance of points
         that fall in a particular annulus.
