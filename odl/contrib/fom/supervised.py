@@ -761,7 +761,8 @@ def haarpsi(data, ground_truth, a=4.2, c=None):
     return (scipy.special.logit(numer / denom) / a) ** 2
 
 
-def noise_power_spectrum(data, ground_truth, radial=False):
+def noise_power_spectrum(data, ground_truth, radial=False,
+                         radial_binning_factor=2):
     """Return the Noise Power Spectrum (NPS).
 
     The NPS is given by the squared magnitude of the Fourier transform of the
@@ -775,20 +776,34 @@ def noise_power_spectrum(data, ground_truth, radial=False):
         Reference to compare ``data`` to.
     radial : bool
         If ``True``, compute the radial NPS.
+    radial_binning_factor : float, optional
+        Reduce the number of radial bins by this factor. Increasing this
+        number can help reducing fluctuations due to the variance of points
+        that fall in a particular annulus.
+        A binning factor of ``1`` corresponds to a bin size equal to
+        image pixel size for images with square pixels, otherwise ::
+
+            max(norm2(c)) / norm2(shape)
+
+        where the maximum is taken over all corners of the image domain.
 
     Returns
     -------
     noise_power_spectrum : `DiscreteLp`-element
         The space is the Fourier space corresponding to ``data.space``, and
         hence the axes indicate frequency.
-        If ``radial`` is ``True``, this is an element in a one-dimensional
-        space of the same type as ``data.space``.
+        If ``radial`` is ``True``, an average over concentric annuli is
+        taken. The result is an element of a one-dimensional space with
+        domain ``[0, rmax]``, where ``rmax`` is the radius of the smallest
+        ball containing ``data.space.domain``. Its shape is ``(N,)`` with ::
+
+            N = int(sqrt(sum(n ** 2 for n in image.shape)) / binning_factor)
     """
     ft = odl.trafos.FourierTransform(data.space, halfcomplex=False)
     nps = np.abs(ft(data - ground_truth)).real ** 2
 
     if radial:
-        return radial_sum(nps)
+        return radial_sum(nps, binning_factor=radial_binning_factor)
     else:
         return nps
 

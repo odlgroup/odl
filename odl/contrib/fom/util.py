@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -407,6 +407,12 @@ def radial_sum(image, binning_factor=1):
         Reduce the number of output bins by this factor. Increasing this
         number can help reducing fluctuations due to the variance of points
         that fall in a particular annulus.
+        A binning factor of ``1`` corresponds to a bin size equal to
+        image pixel size for images with square pixels, otherwise ::
+
+            max(norm2(c)) / norm2(shape)
+
+        where the maximum is taken over all corners of the image domain.
 
     Returns
     -------
