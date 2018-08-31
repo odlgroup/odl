@@ -77,16 +77,12 @@ def optimal_parameters(reconstruction, fom, phantoms, data,
     # We use a faster optimizer for the one parameter case
     if initial_param.size == 1:
         bracket = [initial_param - tol, initial_param + tol]
-        result = scipy.optimize.minimize_scalar(func,
-                                                bracket=bracket,
-                                                tol=tol,
-                                                bounds=None,
-                                                options={'disp': False})
+        result = scipy.optimize.minimize_scalar(
+            func, bracket=bracket, tol=tol, bounds=None,
+            options={'disp': False})
         return result.x
     else:
         # Use a gradient free method to find the best parameters
-        parameters = scipy.optimize.fmin_powell(func, initial_param,
-                                                xtol=tol,
-                                                ftol=tol,
-                                                disp=False)
+        parameters = scipy.optimize.fmin_powell(
+            func, initial_param, xtol=tol, ftol=tol, disp=False)
         return parameters

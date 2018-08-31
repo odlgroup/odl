@@ -623,11 +623,11 @@ def psnr(data, ground_truth, use_zscore=False, force_lower_is_better=False):
     ground_truth : `Tensor`
         Reference to compare ``data`` to.
     use_zscore : bool
-        If ``true``, normalize ``data`` and ``ground_truth`` to have zero mean
+        If ``True``, normalize ``data`` and ``ground_truth`` to have zero mean
         and unit variance before comparison.
     force_lower_is_better : bool
-        If ``true``, then lower value indicates better fit. In this case the
-        output is negated
+        If ``True``, then lower value indicates better fit. In this case the
+        output is negated.
 
     Returns
     -------
@@ -773,7 +773,7 @@ def noise_power_spectrum(data, ground_truth, radial=False):
     ground_truth : `DiscreteLp` element
         Reference to compare ``data`` to.
     radial : bool
-        If ``true``, compute the radial NPS.
+        If ``True``, compute the radial NPS.
 
     Returns
     -------
