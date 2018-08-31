@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -10,6 +10,7 @@
 
 import numpy as np
 
+from odl.discr import uniform_discr
 from odl.trafos.backends import PYFFTW_AVAILABLE
 
 __all__ = ()
@@ -393,3 +394,42 @@ def haarpsi_weight_map(img1, img2, axis):
     np.abs(img2_lvl3, out=img2_lvl3)
 
     return np.maximum(img1_lvl3, img2_lvl3)
+
+
+def spherical_sum(image, binning_factor=1.0):
+    """Sum image values over concentric annuli.
+
+    Parameters
+    ----------
+    image : `DiscreteLp` element
+        Input data whose radial sum should be computed.
+    binning_factor : positive float, optional
+        Reduce the number of output bins by this factor. Increasing this
+        number can help reducing fluctuations due to the variance of points
+        that fall in a particular annulus.
+        A binning factor of ``1`` corresponds to a bin size equal to
+        image pixel size for images with square pixels, otherwise ::
+
+            max(norm2(c)) / norm2(shape)
+
+        where the maximum is taken over all corners of the image domain.
+
+    Returns
+    -------
+    spherical_sum : 1D `DiscreteLp` element
+        The spherical sum of ``image``. Its space is one-dimensional with
+        domain ``[0, rmax]``, where ``rmax`` is the radius of the smallest
+        ball containing ``image.space.domain``. Its shape is ``(N,)`` with ::
+
+            N = int(sqrt(sum(n ** 2 for n in image.shape)) / binning_factor)
+    """
+    r = np.sqrt(sum(xi ** 2 for xi in image.space.meshgrid))
+    rmax = max(np.linalg.norm(c) for c in image.space.domain.corners())
+    n_bins = int(np.sqrt(sum(n ** 2 for n in image.shape)) / binning_factor)
+    rad_sum, _ = np.histogram(r, weights=image, bins=n_bins, range=(0, rmax))
+
+    out_spc = uniform_discr(min_pt=0, max_pt=rmax, shape=n_bins,
+                            impl=image.space.impl, dtype=image.space.dtype,
+                            interp="linear", axis_labels=["$r$"])
+
+    return out_spc.element(rad_sum)

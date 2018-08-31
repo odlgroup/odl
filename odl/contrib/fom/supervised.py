@@ -12,6 +12,7 @@ from __future__ import division
 import numpy as np
 
 import odl
+from odl.contrib.fom.util import spherical_sum
 
 __all__ = ('mean_squared_error', 'mean_absolute_error',
            'mean_value_difference', 'standard_deviation_difference',
@@ -760,7 +761,8 @@ def haarpsi(data, ground_truth, a=4.2, c=None):
     return (scipy.special.logit(numer / denom) / a) ** 2
 
 
-def noise_power_spectrum(data, ground_truth, radial=False):
+def noise_power_spectrum(data, ground_truth, radial=False,
+                         radial_binning_factor=2.0):
     """Return the Noise Power Spectrum (NPS).
 
     The NPS is given by the squared magnitude of the Fourier transform of the
@@ -774,30 +776,34 @@ def noise_power_spectrum(data, ground_truth, radial=False):
         Reference to compare ``data`` to.
     radial : bool
         If ``True``, compute the radial NPS.
+    radial_binning_factor : positive float, optional
+        Reduce the number of radial bins by this factor. Increasing this
+        number can help reducing fluctuations due to the variance of points
+        that fall in a particular annulus.
+        A binning factor of ``1`` corresponds to a bin size equal to
+        image pixel size for images with square pixels, otherwise ::
+
+            max(norm2(c)) / norm2(shape)
+
+        where the maximum is taken over all corners of the image domain.
 
     Returns
     -------
     noise_power_spectrum : `DiscreteLp`-element
         The space is the Fourier space corresponding to ``data.space``, and
         hence the axes indicate frequency.
-        If ``radial`` is ``True``, this is an element in a one-dimensional
-        space of the same type as ``data.space``.
+        If ``radial`` is ``True``, an average over concentric annuli is
+        taken. The result is an element of a one-dimensional space with
+        domain ``[0, rmax]``, where ``rmax`` is the radius of the smallest
+        ball containing ``data.space.domain``. Its shape is ``(N,)`` with ::
+
+            N = int(sqrt(sum(n ** 2 for n in image.shape)) / binning_factor)
     """
-    fftop = odl.trafos.FourierTransform(data.space, halfcomplex=False)
-    f1 = fftop(data - ground_truth)
-    nps = np.abs(f1).real ** 2
+    ft = odl.trafos.FourierTransform(data.space, halfcomplex=False)
+    nps = np.abs(ft(data - ground_truth)).real ** 2
 
     if radial:
-        r = np.sqrt(sum(xi ** 2 for xi in nps.space.meshgrid))
-        n_bins = max(*nps.shape)
-        radial_nps, rad = np.histogram(r, weights=nps, bins=n_bins)
-
-        out_spc = odl.uniform_discr(0, np.max(r), n_bins,
-                                    impl=f1.space.impl,
-                                    dtype=f1.space.real_dtype,
-                                    axis_labels=['$\\^{r}$'])
-
-        return out_spc.element(radial_nps)
+        return spherical_sum(nps, binning_factor=radial_binning_factor)
     else:
         return nps
 
