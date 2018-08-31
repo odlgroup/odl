@@ -8,12 +8,7 @@
 
 from __future__ import absolute_import
 
-__all__ = ('supervised', 'unsupervised', 'util')
+__all__ = ('param_opt', )
 
-from .supervised import *
-__all__ += supervised.__all__
-
-from .unsupervised import *
-__all__ += unsupervised.__all__
-
-from . import util
+from .param_opt import *
+__all__ += param_opt.__all__
