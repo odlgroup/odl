@@ -396,7 +396,7 @@ def haarpsi_weight_map(img1, img2, axis):
     return np.maximum(img1_lvl3, img2_lvl3)
 
 
-def radial_sum(image, binning_factor=1):
+def spherical_sum(image, binning_factor=1):
     """Sum image values over concentric annuli.
 
     Parameters
@@ -416,8 +416,8 @@ def radial_sum(image, binning_factor=1):
 
     Returns
     -------
-    radial_sum : 1D `DiscreteLp` element
-        The radial sum of ``image``. Its space is one-dimensional with
+    spherical_sum : 1D `DiscreteLp` element
+        The spherical sum of ``image``. Its space is one-dimensional with
         domain ``[0, rmax]``, where ``rmax`` is the radius of the smallest
         ball containing ``image.space.domain``. Its shape is ``(N,)`` with ::
 

@@ -12,7 +12,7 @@ from __future__ import division
 import numpy as np
 
 import odl
-from odl.contrib.fom.util import radial_sum
+from odl.contrib.fom.util import spherical_sum
 
 __all__ = ('mean_squared_error', 'mean_absolute_error',
            'mean_value_difference', 'standard_deviation_difference',
@@ -803,7 +803,7 @@ def noise_power_spectrum(data, ground_truth, radial=False,
     nps = np.abs(ft(data - ground_truth)).real ** 2
 
     if radial:
-        return radial_sum(nps, binning_factor=radial_binning_factor)
+        return spherical_sum(nps, binning_factor=radial_binning_factor)
     else:
         return nps
 
