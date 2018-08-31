@@ -20,7 +20,7 @@ __all__ = ('mean_squared_error', 'mean_absolute_error',
 
 
 def mean_squared_error(data, ground_truth, mask=None,
-                       normalized=False, force_lower_is_better=False):
+                       normalized=False, force_lower_is_better=True):
     r"""Return mean squared L2 distance between ``data`` and ``ground_truth``.
 
     See also `this Wikipedia article
@@ -89,7 +89,7 @@ def mean_squared_error(data, ground_truth, mask=None,
 
 
 def mean_absolute_error(data, ground_truth, mask=None,
-                        normalized=False, force_lower_is_better=False):
+                        normalized=False, force_lower_is_better=True):
     r"""Return L1-distance between ``data`` and ``ground_truth``.
 
     See also `this Wikipedia article
@@ -155,7 +155,7 @@ def mean_absolute_error(data, ground_truth, mask=None,
 
 
 def mean_value_difference(data, ground_truth, mask=None, normalized=False,
-                          force_lower_is_better=False):
+                          force_lower_is_better=True):
     r"""Return difference in mean value between ``data`` and ``ground_truth``.
 
     Parameters
@@ -221,7 +221,7 @@ def mean_value_difference(data, ground_truth, mask=None, normalized=False,
 
 def standard_deviation_difference(data, ground_truth, mask=None,
                                   normalized=False,
-                                  force_lower_is_better=False):
+                                  force_lower_is_better=True):
     r"""Return absolute difference in std between ``data`` and ``ground_truth``.
 
     Parameters
@@ -295,7 +295,7 @@ def standard_deviation_difference(data, ground_truth, mask=None,
 
 
 def range_difference(data, ground_truth, mask=None, normalized=False,
-                     force_lower_is_better=False):
+                     force_lower_is_better=True):
     r"""Return dynamic range difference between ``data`` and ``ground_truth``.
 
     Evaluates difference in range between input (``data``) and reference
