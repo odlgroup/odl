@@ -37,7 +37,7 @@ and create a wrapping `Operator` for it in ODL.
 .. code-block:: python
 
    import odl
-   import scipy
+   import scipy.signal
 
    class Convolution(odl.Operator):
        """Operator calculating the convolution of a kernel with a function.
@@ -253,7 +253,7 @@ e.g. `forward_backward_pd`, `pdhg`, etc in the ODL `examples/solvers <https://gi
     x = space.zero()
     odl.solvers.douglas_rachford_pd(x, f, g_funcs, lin_ops,
                                     tau=tau, sigma=sigma, niter=100)
-    x.show('TV Douglas-Rachford', show=True)
+    x.show('TV Douglas-Rachford', force_show=True)
 
 .. image:: figures/getting_started_TV_douglas_rachford.png
 

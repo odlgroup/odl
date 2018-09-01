@@ -74,7 +74,7 @@ It is also possible to use an ODL object as ``out`` parameter::
    >>> result is out
    True
    >>> out = r3.element()
-   >>> result = x.ufuncs.negative(x, out=out)  # variant 2
+   >>> result = x.ufuncs.negative(out=out)  # variant 2
    >>> out
    rn(3).element([-1., -2., -3.])
    >>> result is out
@@ -168,6 +168,6 @@ Here is a simple example of solving Poisson's equation :math:`- \Delta u = f` on
    >>> space = odl.uniform_discr(0, 1, 5)
    >>> op = -odl.Laplacian(space)
    >>> f = space.element(lambda x: (x > 0.4) & (x < 0.6))  # indicator function on [0.4, 0.6]
-   >>> u, status = scipy.sparse.linalg.cg(odl.as_scipy_operator(op), rhs)
+   >>> u, status = scipy.sparse.linalg.cg(odl.as_scipy_operator(op), f)
    >>> u
    array([ 0.02,  0.04,  0.06,  0.04,  0.02])
