@@ -392,7 +392,7 @@ def forbild(space, resolution=False, ear=True, value_type='density',
         # Bone
         materials[image > 1.75] = 7
 
-        return space.element(materials)
+        return space.element(materials.reshape(space.shape))
     elif value_type == 'density':
         return space.element(image.reshape(space.shape))
     else:
