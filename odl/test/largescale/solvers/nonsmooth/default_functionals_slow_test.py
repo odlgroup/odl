@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -176,8 +176,22 @@ def test_proximal_defintion(functional, stepsize):
 
 
 def convex_conj_objective(functional, x, y):
-    """CObjective function of the convex conjugate problem."""
+    """Objective function of the convex conjugate problem."""
     return x.inner(y) - functional(x)
+
+
+def func_convex_conj_has_call(functional):
+    """Helper to determine whether a convex conjugate can be called."""
+    f_cconj = functional.convex_conj
+    if isinstance(f_cconj, FunctionalDefaultConvexConjugate):
+        return False
+    if (
+        isinstance(f_cconj, odl.solvers.FunctionalTranslation) and
+        isinstance(f_cconj.functional, FunctionalDefaultConvexConjugate)
+    ):
+        return False
+
+    return True
 
 
 def test_convex_conj_defintion(functional):
@@ -190,20 +204,14 @@ def test_convex_conj_defintion(functional):
         <x, y> - f(x) <= f^*(y)
     """
     if isinstance(functional, FunctionalDefaultConvexConjugate):
-        pytest.skip('functional has no call')
+        pytest.skip('`functional` has no `_call` implementation')
+        return
+
+    if not func_convex_conj_has_call(functional):
+        pytest.skip('`functional.convex_conj` has no `_call` implementation')
         return
 
     f_convex_conj = functional.convex_conj
-    if isinstance(f_convex_conj, FunctionalDefaultConvexConjugate):
-        pytest.skip('functional has no convex conjugate')
-        return
-
-    if (isinstance(f_convex_conj, odl.solvers.FunctionalTranslation) and
-            isinstance(f_convex_conj.functional,
-                       FunctionalDefaultConvexConjugate)):
-        pytest.skip('functional has no convex conjugate with call')
-        return
-
     for _ in range(100):
         y = noise_element(functional.domain)
         f_convex_conj_y = f_convex_conj(y)

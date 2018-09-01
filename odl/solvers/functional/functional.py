@@ -1,6 +1,6 @@
 # coding=utf-8
 
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -1096,8 +1096,10 @@ class FunctionalQuadraticPerturb(Functional):
         .. _[KP2015]:  https://arxiv.org/abs/1406.5429
         """
         if self.quadratic_coeff == 0:
-            return (self.functional.convex_conj.translated(
-                self.linear_term) - self.constant)
+            cconj = self.functional.convex_conj.translated(self.linear_term)
+            if self.constant != 0:
+                cconj = cconj - self.constant
+            return cconj
         else:
             return super(FunctionalQuadraticPerturb, self).convex_conj
 
