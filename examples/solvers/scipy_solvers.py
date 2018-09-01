@@ -8,7 +8,7 @@ where b is a gaussian peak at the origin.
 """
 
 import numpy as np
-import scipy.sparse.linalg as sl
+import scipy.sparse.linalg as scipy_solvers
 import odl
 
 # Create discrete space, a square from [-1, 1] x [-1, 1] with (11 x 11) points
@@ -27,14 +27,14 @@ scipy_laplacian = odl.operator.oputils.as_scipy_operator(laplacian)
 rhs_arr = rhs.asarray().ravel()
 
 # Solve using scipy
-result, info = sl.cg(scipy_laplacian, rhs_arr)
+result, info = scipy_solvers.cg(scipy_laplacian, rhs_arr)
 
 # Other options include
-# result, info = sl.cgs(scipy_laplacian, rhs_arr)
-# result, info = sl.gmres(scipy_op, rhs_arr)
-# result, info = sl.lgmres(scipy_op, rhs_arr)
-# result, info = sl.bicg(scipy_op, rhs_arr)
-# result, info = sl.bicgstab(scipy_op, rhs_arr)
+# result, info = scipy_solvers.cgs(scipy_laplacian, rhs_arr)
+# result, info = scipy_solvers.gmres(scipy_op, rhs_arr)
+# result, info = scipy_solvers.lgmres(scipy_op, rhs_arr)
+# result, info = scipy_solvers.bicg(scipy_op, rhs_arr)
+# result, info = scipy_solvers.bicgstab(scipy_op, rhs_arr)
 
 # Convert back to odl and display result
 result_odl = space.element(result.reshape(space.shape))  # result is flat

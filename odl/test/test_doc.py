@@ -29,15 +29,13 @@ except ImportError:
 
 # Modules to be added to testing globals
 import numpy
-import scipy
 import odl
 try:
     import proximal
 except ImportError:
     proximal = None
 
-doctest_extraglobs = {'odl': odl, 'np': numpy, 'scipy': scipy,
-                      'proximal': proximal}
+doctest_extraglobs = {'odl': odl, 'np': numpy, 'proximal': proximal}
 
 root_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)),
                         os.pardir, os.pardir, 'doc', 'source')

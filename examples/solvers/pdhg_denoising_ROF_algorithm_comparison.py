@@ -16,7 +16,7 @@ https://odlgroup.github.io/odl/guide/pdhg_guide.html in the ODL documentation.
 """
 
 import numpy as np
-import scipy
+import scipy.misc
 import odl
 import matplotlib.pyplot as plt
 

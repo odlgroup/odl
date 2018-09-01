@@ -282,8 +282,8 @@ def as_scipy_operator(op):
 
     >>> op = odl.IdentityOperator(odl.rn(3))
     >>> scipy_op = as_scipy_operator(op)
-    >>> import scipy.sparse.linalg as sl
-    >>> result, status = sl.cg(scipy_op, [0, 1, 0])
+    >>> import scipy.sparse.linalg as scipy_solvers
+    >>> result, status = scipy_solvers.cg(scipy_op, [0, 1, 0])
     >>> result
     array([ 0.,  1.,  0.])
 
