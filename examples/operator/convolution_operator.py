@@ -36,6 +36,7 @@ class Convolution(odl.Operator):
         """
         return Convolution(self.kernel[::-1, ::-1])
 
+
 # Define the space on which the problem should be solved
 # Here the square [-1, 1] x [-1, 1] discretized on a 100x100 grid
 space = odl.uniform_discr([-1, -1], [1, 1], [100, 100])
