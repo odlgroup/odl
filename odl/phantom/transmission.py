@@ -96,7 +96,7 @@ def shepp_logan_ellipsoids(ndim, modified=False):
 
     References
     ----------
-    .. _Shepp-Logan phantom: en.wikipedia.org/wiki/Shepp–Logan_phantom
+    .. _Shepp-Logan phantom: https://en.wikipedia.org/wiki/Shepp-Logan_phantom
     """
     if ndim == 2:
         ellipsoids = _shepp_logan_ellipse_2d()
@@ -148,7 +148,7 @@ def shepp_logan(space, modified=False, min_pt=None, max_pt=None):
 
     References
     ----------
-    .. _Shepp-Logan phantom: en.wikipedia.org/wiki/Shepp–Logan_phantom
+    .. _Shepp-Logan phantom: https://en.wikipedia.org/wiki/Shepp-Logan_phantom
     """
     ellipsoids = shepp_logan_ellipsoids(space.ndim, modified)
     return ellipsoid_phantom(space, ellipsoids, min_pt, max_pt)
