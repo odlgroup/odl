@@ -682,10 +682,7 @@ class Parallel2dGeometry(ParallelBeamGeometry):
 
         >>> geom[::2]
         Parallel2dGeometry(
-            nonuniform_partition(
-                [ 0.5,  2.5],
-                min_pt=0.0, max_pt=4.0
-            ),
+            nonuniform_partition([ 0.5,  2.5], min_pt=0.0, max_pt=4.0),
             uniform_partition(-1.0, 1.0, 20)
         )
         """
@@ -1446,10 +1443,7 @@ class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
 
         >>> geom[::2]
         Parallel3dAxisGeometry(
-            nonuniform_partition(
-                [ 0.5,  2.5],
-                min_pt=0.0, max_pt=4.0
-            ),
+            nonuniform_partition([ 0.5,  2.5], min_pt=0.0, max_pt=4.0),
             uniform_partition([-1., -1.], [ 1.,  1.], (20, 20))
         )
         """

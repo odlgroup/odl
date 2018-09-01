@@ -1,4 +1,4 @@
-﻿# Copyright 2014-2017 The ODL contributors
+﻿# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,22 +8,23 @@
 
 """Spaces of scalar-, vector- and tensor-valued functions on a given domain."""
 
-from __future__ import print_function, division, absolute_import
-from builtins import object
+from __future__ import absolute_import, division, print_function
+
 import inspect
-import numpy as np
 import sys
 import warnings
+from builtins import object
 
-from odl.set import RealNumbers, ComplexNumbers, Set, LinearSpace
+import numpy as np
+
+from odl.set import ComplexNumbers, LinearSpace, RealNumbers, Set
 from odl.set.space import LinearSpaceElement
 from odl.util import (
-    is_real_dtype, is_complex_floating_dtype, dtype_repr, dtype_str,
-    complex_dtype, real_dtype, signature_string, is_real_floating_dtype,
-    is_valid_input_array, is_valid_input_meshgrid,
-    out_shape_from_array, out_shape_from_meshgrid, vectorize, writable_array)
-from odl.util.utility import preload_first_arg, getargspec
-
+    complex_dtype, dtype_repr, dtype_str, is_complex_floating_dtype,
+    is_real_dtype, is_real_floating_dtype, is_valid_input_array,
+    is_valid_input_meshgrid, out_shape_from_array, out_shape_from_meshgrid,
+    real_dtype, signature_string, vectorize, writable_array)
+from odl.util.utility import getargspec, preload_first_arg
 
 __all__ = ('FunctionSpace',)
 
@@ -1018,7 +1019,7 @@ class FunctionSpace(LinearSpace):
         Gaussian
         Linear gradients
         """
-        # TODO: adapt for tensor-valued functions
+        # TODO(kohr-h): adapt for tensor-valued functions
 
         # Get the points and calculate some statistics on them
         mins = self.domain.min()
@@ -1095,10 +1096,6 @@ class FunctionSpace(LinearSpace):
             optmod = ''
         inner_str = signature_string(posargs, optargs, mod=['!r', optmod])
         return '{}({})'.format(self.__class__.__name__, inner_str)
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        return repr(self)
 
 
 class FunctionSpaceElement(LinearSpaceElement):

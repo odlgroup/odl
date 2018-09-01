@@ -173,7 +173,7 @@ class _CallbackCompose(Callback):
         >>> callback = odl.solvers.CallbackPrint()
         >>> operator = odl.ScalingOperator(r3, 2.0)
         >>> callback * operator
-        CallbackPrint() * ScalingOperator(rn(3), 2.0)
+        CallbackPrint() * ScalingOperator(rn(3), scalar=2.0)
         """
         return '{!r} * {!r}'.format(self.callback, self.operator)
 

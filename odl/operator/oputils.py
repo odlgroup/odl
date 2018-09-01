@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,12 +8,13 @@
 
 """Convenience functions for operators."""
 
-from __future__ import print_function, division, absolute_import
-from future.utils import native
+from __future__ import absolute_import, division, print_function
+
 import numpy as np
+from future.utils import native
 
 from odl.space.base_tensors import TensorSpace
-from odl.space import ProductSpace
+from odl.space.pspace import ProductSpace
 from odl.util import nd_iterator
 from odl.util.testutils import noise_element
 

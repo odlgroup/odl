@@ -9,13 +9,13 @@
 """Utilities mainly for internal use."""
 
 from __future__ import absolute_import, division, print_function
+from future.moves.itertools import zip_longest
 
 import inspect
 import sys
 from builtins import object
 from collections import OrderedDict
 from functools import wraps
-from future.moves.itertools import zip_longest
 from itertools import product
 
 import numpy as np
@@ -29,10 +29,11 @@ __all__ = (
     'real_dtype', 'complex_dtype', 'is_string', 'nd_iterator', 'conj_exponent',
     'writable_array', 'run_from_ipython', 'NumpyRandomSeed',
     'cache_arguments', 'unique',
-    'REPR_PRECISION')
+    'repr_precision')
 
 
 REPR_PRECISION = 4  # For printing scalars and array entries
+NPY_DEFAULT_PRECISION = np.get_printoptions()['precision']
 TYPE_MAP_R2C = {np.dtype(dtype): np.result_type(dtype, 1j)
                 for dtype in np.sctypes['float']}
 
@@ -1307,7 +1308,8 @@ def attribute_repr_string(inst_str, attr_str):
 
 
 def method_repr_string(inst_str, meth_str, arg_strs=None,
-                       allow_mixed_seps=True):
+                       allow_mixed_seps=True,
+                       force_manual_arg_fmt=False):
     r"""Return a repr string for a method that respects line width.
 
     This function is useful to generate a ``repr`` string for a derived
@@ -1336,6 +1338,10 @@ def method_repr_string(inst_str, meth_str, arg_strs=None,
         In case some of the ``arg_strs`` span multiple lines, it is
         usually advisable to set ``allow_mixed_seps`` to ``False`` since
         the result tends to be more readable that way.
+    force_manual_arg_fmt : bool, optional
+        If ``True``, force the function to not use newlines around the
+        argument part and not to indent. This can be useful when the arguments
+        already contain appropriate newlines and are already indented.
 
     Returns
     -------
@@ -1411,7 +1417,10 @@ def method_repr_string(inst_str, meth_str, arg_strs=None,
 
     # Method call part
     arg_str_oneline = ', '.join(arg_strs)
-    if meth_line_start_len + 1 + len(arg_str_oneline) + 1 <= linewidth:
+    if (
+        '\n' not in arg_str_oneline and
+        meth_line_start_len + 1 + len(arg_str_oneline) + 1 <= linewidth
+    ):
         meth_call_str = '(' + arg_str_oneline + ')'
     elif not arg_str_oneline:
         meth_call_str = '(\n)'
@@ -1425,9 +1434,31 @@ def method_repr_string(inst_str, meth_str, arg_strs=None,
         for arg_str, sep in zip_longest(arg_strs, arg_seps, fillvalue=''):
             full_arg_str += arg_str + sep
 
-        meth_call_str = '(\n' + indent(full_arg_str) + '\n)'
+        if force_manual_arg_fmt:
+            meth_call_str = '(' + full_arg_str + ')'
+        else:
+            meth_call_str = '(\n' + indent(full_arg_str) + '\n)'
 
     return '.'.join(init_parts) + meth_call_str
+
+
+def repr_precision():
+    """Return the print precision for floating point numbers.
+
+    By default, the value of the global variable ``REPR_PRECISION``
+    is returned, unless the user changed the value of the ``'precision'``
+    entry in `numpy.get_printoptions`, e.g., via ::
+
+        with npy_printoptions(precision=10):
+            ...
+
+    """
+    cur_npy_prec = np.get_printoptions()['precision']
+    if cur_npy_prec == NPY_DEFAULT_PRECISION:
+        # No change by the user
+        return REPR_PRECISION
+    else:
+        return cur_npy_prec
 
 
 def run_from_ipython():
