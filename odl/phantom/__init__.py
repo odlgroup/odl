@@ -1,4 +1,4 @@
-﻿# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -10,7 +10,7 @@
 
 from __future__ import absolute_import
 
-__all__ = ('phantom_utils',)
+__all__ = ()
 
 from . import phantom_utils
 
