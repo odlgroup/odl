@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -134,7 +134,7 @@ def _test_lincomb(space, a, b, discontig):
     """Validate lincomb against direct result using arrays."""
     # Set slice for discontiguous arrays and get result space of slicing
     if discontig:
-        slc = [slice(None)] * (space.ndim - 1) + [slice(None, None, 2)]
+        slc = tuple([slice(None)] * (space.ndim - 1) + [slice(None, None, 2)])
         res_space = space.element()[slc].space
     else:
         res_space = space
