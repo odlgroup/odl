@@ -1,4 +1,4 @@
-﻿# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -59,7 +59,7 @@ class NumpyTensorSpace(TensorSpace):
     This class is implemented using `numpy.ndarray`'s as back-end.
 
     See the `Wikipedia article on tensors`_ for further details.
-    See also [Hac2012]_ "Part I Algebraic Tensors" for a rigorous
+    See also [Hac2012] "Part I Algebraic Tensors" for a rigorous
     treatment of tensors with a definition close to this one.
 
     Note also that this notion of tensors is the same as in popular
@@ -153,11 +153,10 @@ class NumpyTensorSpace(TensorSpace):
 
         See Also
         --------
-        rn : constructor for real tensor spaces
-        cn : constructor for complex tensor spaces
-        tensor_space :
-            constructor for tensor spaces of arbitrary scalar
-            data type
+        odl.space.space_utils.rn : constructor for real tensor spaces
+        odl.space.space_utils.cn : constructor for complex tensor spaces
+        odl.space.space_utils.tensor_space :
+            constructor for tensor spaces of arbitrary scalar data type
 
         Notes
         -----
@@ -472,7 +471,7 @@ class NumpyTensorSpace(TensorSpace):
 
         Notes
         -----
-        This is all dtypes available in Numpy. See `numpy.sctypes`
+        This is all dtypes available in Numpy. See ``numpy.sctypes``
         for more information.
 
         The available dtypes may depend on the specific system used.

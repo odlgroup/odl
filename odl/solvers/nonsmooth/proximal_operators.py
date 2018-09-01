@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -24,9 +24,9 @@ Foundations and Trends in Optimization, 1 (2014), pp 127-239.
 from __future__ import print_function, division, absolute_import
 import numpy as np
 
-from odl.operator import (Operator, IdentityOperator, ScalingOperator,
-                          ConstantOperator, DiagonalOperator, PointwiseNorm,
-                          MultiplyOperator)
+from odl.operator import (
+    Operator, IdentityOperator, ConstantOperator, DiagonalOperator,
+    PointwiseNorm, MultiplyOperator)
 from odl.space import ProductSpace
 from odl.set.space import LinearSpaceElement
 
@@ -1557,15 +1557,15 @@ def proj_simplex(x, diameter=1, out=None):
 
         ``{ x \in X | x_i \geq 0, \sum_i x_i = r}``
 
-    with `r` being the diameter. It is computed by the formula proposed in
-    [D+2008]
+    with :math:`r` being the diameter. It is computed by the formula proposed
+    in [D+2008].
 
     Parameters
     ----------
     space : `LinearSpace`
         Space / domain ``X``.
     diameter : positive float, optional
-        Diameter ``r`` of simplex.
+        Diameter of the simplex.
 
     Returns
     -------
@@ -1884,7 +1884,7 @@ def proximal_huber(space, gamma):
 
     See Also
     --------
-    odl.solvers.Huber : the Huber norm functional
+    odl.solvers.default_functionals.Huber : the Huber norm functional
 
     Notes
     -----

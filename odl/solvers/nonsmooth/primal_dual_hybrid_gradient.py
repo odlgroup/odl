@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -29,7 +29,7 @@ def pdhg(x, f, g, L, niter, tau=None, sigma=None, **kwargs):
 
     First order primal-dual hybrid-gradient method for non-smooth convex
     optimization problems with known saddle-point structure. The
-    primal formulation of the general problem is::
+    primal formulation of the general problem is ::
 
         min_{x in X} f(x) + g(L x)
 
@@ -86,7 +86,7 @@ def pdhg(x, f, g, L, niter, tau=None, sigma=None, **kwargs):
         bounded by the strong convexity constant of ``f^*``. Acceleration can
         either be done on the primal part or the dual part but not on both
         simultaneously.
-        Default: ``None`
+        Default: ``None``
     x_relax : ``op.domain`` element, optional
         Required to resume iteration. For ``None``, a copy of the primal
         variable ``x`` is used.
@@ -313,7 +313,7 @@ def pdhg_stepsize(L, tau=None, sigma=None):
     L : `Operator` or float
         Operator or norm of the operator that are used in the `pdhg` method.
         If it is an `Operator`, the norm is computed with
-        `Operator.norm(estimate=True)`.
+        ``Operator.norm(estimate=True)``.
     tau : positive float, optional
         Use this value for ``tau`` instead of computing it from the
         operator norms, see Notes.
@@ -338,21 +338,21 @@ def pdhg_stepsize(L, tau=None, sigma=None):
     This function has 4 options, :math:`\tau`/:math:`\sigma` given or not
     given.
 
-    - Neither :math:`\tau` nor :math:`\sigma` are given, they are chosen as:
+    - Neither :math:`\tau` nor :math:`\sigma` are given, they are chosen as
 
-        .. math::
-            \tau = \sigma = \frac{\sqrt{0.9}}{\|L\|}
+      .. math::
+          \tau = \sigma = \frac{\sqrt{0.9}}{\|L\|}
 
-    - If only :math:`\sigma` is given, :math:`\tau` is set to:
+    - If only :math:`\sigma` is given, :math:`\tau` is set to
 
-        .. math::
-            \tau = \frac{0.9}{\sigma \|L\|^2}
+      .. math::
+          \tau = \frac{0.9}{\sigma \|L\|^2}
 
     - If only :math:`\tau` is given, :math:`\sigma` is set
-      to:
+      to
 
-        .. math::
-            \sigma = \frac{0.9}{\tau \|L\|^2}
+      .. math::
+          \sigma = \frac{0.9}{\tau \|L\|^2}
 
     - If both are given, they are returned as-is without further validation.
     """

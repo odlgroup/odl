@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -49,7 +49,7 @@ def douglas_rachford_pd(x, f, g, L, niter, tau=None, sigma=None,
         Sequence of of the functions ``g_i``. Needs to have
         ``g[i].convex_conj.proximal``.
     L : sequence of `Operator`'s
-        Sequence of `Opeartor`'s with as many elements as ``g``.
+        Sequence of `Operator`'s with as many elements as ``g``.
     niter : int
         Number of iterations.
     tau : float, optional

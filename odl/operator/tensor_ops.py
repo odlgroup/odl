@@ -1,4 +1,4 @@
-﻿# Copyright 2014-2018 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -51,7 +51,7 @@ class PointwiseTensorFieldOperator(Operator):
 
     See Also
     --------
-    ProductSpace
+    odl.space.pspace.ProductSpace
     """
 
     def __init__(self, domain, range, base_space, linear=False):

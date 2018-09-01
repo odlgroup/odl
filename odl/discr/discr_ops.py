@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -30,7 +30,7 @@ class Resampling(Operator):
     The operator uses the underlying `DiscretizedSpace.sampling` and
     `DiscretizedSpace.interpolation` operators to achieve this.
 
-    The spaces need to have the same `DiscretizedSet.fspace` in order
+    The spaces need to have the same `DiscretizedSpace.fspace` in order
     for this to work. The tensor space implementations may be different,
     although performance may suffer drastically due to translation
     steps.

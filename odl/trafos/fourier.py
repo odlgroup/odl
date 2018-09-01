@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -155,13 +155,14 @@ class DiscreteFourierTransformBase(Operator):
 
         Notes
         -----
-        See the `pyfftw_call` function for ``**kwargs`` options.
+        See the ``pyfftw_call`` function for ``**kwargs`` options.
         The parameters ``axes`` and ``halfcomplex`` cannot be
         overridden.
 
         See Also
         --------
-        pyfftw_call : Call pyfftw backend directly
+        odl.trafos.backends.pyfftw_bindings.pyfftw_call :
+            Call pyfftw backend directly
         """
         # TODO: Implement zero padding
         if self.impl == 'numpy':
@@ -366,7 +367,7 @@ class DiscreteFourierTransform(DiscreteFourierTransformBase):
     --------
     numpy.fft.fftn : n-dimensional FFT routine
     numpy.fft.rfftn : n-dimensional half-complex FFT
-    pyfftw_call : apply an FFTW transform
+    odl.trafos.backends.pyfftw_bindings.pyfftw_call : apply an FFTW transform
 
     References
     ----------
@@ -518,7 +519,7 @@ class DiscreteFourierTransformInverse(DiscreteFourierTransformBase):
     FourierTransformInverse
     numpy.fft.ifftn : n-dimensional inverse FFT routine
     numpy.fft.irfftn : n-dimensional half-complex inverse FFT
-    pyfftw_call : apply an FFTW transform
+    odl.trafos.backends.pyfftw_bindings.pyfftw_call : apply an FFTW transform
 
     References
     ----------
@@ -700,9 +701,9 @@ class FourierTransformBase(Operator):
     --------
     DiscreteFourierTransform
     FourierTransformInverse
-    dft_preprocess_data
-    pyfftw_call
-    dft_postprocess_data
+    odl.trafos.util.ft_utils.dft_preprocess_data
+    odl.trafos.backends.pyfftw_bindings.pyfftw_call
+    odl.trafos.util.ft_utils.dft_postprocess_data
     """
 
     def __init__(self, inverse, domain, range=None, impl=None, **kwargs):
@@ -883,13 +884,14 @@ class FourierTransformBase(Operator):
 
         Notes
         -----
-        See the `pyfftw_call` function for ``**kwargs`` options.
+        See the ``pyfftw_call`` function for ``**kwargs`` options.
         The parameters ``axes`` and ``halfcomplex`` cannot be
         overridden.
 
         See Also
         --------
-        pyfftw_call : Call pyfftw backend directly
+        odl.trafos.backends.pyfftw_bindings.pyfftw_call :
+            Call pyfftw backend directly
         """
         # TODO: Implement zero padding
         if self.impl == 'numpy':
@@ -1159,9 +1161,9 @@ class FourierTransform(FourierTransformBase):
     --------
     DiscreteFourierTransform
     FourierTransformInverse
-    dft_preprocess_data
-    pyfftw_call
-    dft_postprocess_data
+    odl.trafos.util.ft_utils.dft_preprocess_data
+    odl.trafos.backends.pyfftw_bindings.pyfftw_call
+    odl.trafos.util.ft_utils.dft_postprocess_data
     """
 
     def __init__(self, domain, range=None, impl=None, **kwargs):

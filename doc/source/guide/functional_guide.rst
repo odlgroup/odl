@@ -191,7 +191,7 @@ All available functional arithmetic, including which properties and methods that
 Code example
 ============
 This section contains an example of an implementation of a functional, namely the functional :math:`\|x\|_2^2 + \langle x, y \rangle`.
-Another example can be found `functional_basic_example.py`, and more implementations of other functionals can be found in `default_functionals.py`.
+Another example can be found in `functional_basic_example.py <https://github.com/odlgroup/odl/blob/master/examples/solvers/functional_basic_example.py>`_, and more implementations of other functionals can be found in `default_functionals.py <https://github.com/odlgroup/odl/blob/master/odl/solvers/functional/default_functionals.py>`_.
 
 .. literalinclude:: code/functional_indepth_example.py
    :language: python

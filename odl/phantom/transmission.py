@@ -1,4 +1,4 @@
-﻿# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -77,7 +77,7 @@ def _modified_shepp_logan_ellipsoids(ellipsoids):
 
 
 def shepp_logan_ellipsoids(ndim, modified=False):
-    """Ellipsoids for the standard `Shepp-Logan phantom`_ in 2 or 3 dimensions.
+    """Ellipsoids for the standard Shepp-Logan phantom in 2 or 3 dimensions.
 
     Parameters
     ----------
@@ -90,7 +90,7 @@ def shepp_logan_ellipsoids(ndim, modified=False):
 
     See Also
     --------
-    odl.phantom.geometric.ellipsoids_phantom :
+    odl.phantom.geometric.ellipsoid_phantom :
         Function for creating arbitrary ellipsoids phantoms
     shepp_logan : Create a phantom with these ellipsoids
 
@@ -112,7 +112,7 @@ def shepp_logan_ellipsoids(ndim, modified=False):
 
 
 def shepp_logan(space, modified=False, min_pt=None, max_pt=None):
-    """Standard `Shepp-Logan phantom`_ in 2 or 3 dimensions.
+    """Standard Shepp-Logan phantom in 2 or 3 dimensions.
 
     Parameters
     ----------
@@ -257,7 +257,7 @@ def _analytical_forbild_phantom(resolution, ear):
 
 def forbild(space, resolution=False, ear=True, value_type='density',
             scale='auto'):
-    """Standard `FORBILD phantom` in 2 dimensions.
+    """Standard FORBILD phantom in 2 dimensions.
 
     The FORBILD phantom is intended for testing CT algorithms and is intended
     to be similar to a human head.

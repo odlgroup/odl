@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -107,7 +107,7 @@ def tam_danielson_window(ray_trafo, smoothing_width=0.05, n_half_rot=1):
     analytic reconstruction methods such as FBP to give a more accurate
     reconstruction.
 
-    See TAM1998_ for more information.
+    See [TSS1998] for more information.
 
     Parameters
     ----------
@@ -129,7 +129,8 @@ def tam_danielson_window(ray_trafo, smoothing_width=0.05, n_half_rot=1):
     --------
     fbp_op : Filtered back-projection operator from `RayTransform`
     tam_danielson_window : Weighting for short scan data
-    ConeFlatGeometry : Primary use case for this window function.
+    odl.tomo.geometry.conebeam.ConeFlatGeometry :
+        Primary use case for this window function.
 
     References
     ----------
@@ -228,8 +229,8 @@ def parker_weighting(ray_trafo, q=0.25):
     --------
     fbp_op : Filtered back-projection operator from `RayTransform`
     tam_danielson_window : Indicator function for helical data
-    FanFlatGeometry : Use case in 2d
-    ConeFlatGeometry : Use case in 3d (for pitch 0)
+    odl.tomo.geometry.conebeam.FanFlatGeometry : Use case in 2d
+    odl.tomo.geometry.conebeam.ConeFlatGeometry : Use case in 3d (for pitch 0)
 
     References
     ----------
@@ -312,7 +313,7 @@ def fbp_filter_op(ray_trafo, padding=True, filter_type='Ram-Lak',
         The ray transform (forward operator) whose approximate inverse should
         be computed. Its geometry has to be any of the following
 
-        `Parallel2DGeometry` : Exact reconstruction
+        `Parallel2dGeometry` : Exact reconstruction
 
         `Parallel3dAxisGeometry` : Exact reconstruction
 
@@ -478,7 +479,7 @@ def fbp_op(ray_trafo, padding=True, filter_type='Ram-Lak',
         The ray transform (forward operator) whose approximate inverse should
         be computed. Its geometry has to be any of the following
 
-        `Parallel2DGeometry` : Exact reconstruction
+        `Parallel2dGeometry` : Exact reconstruction
 
         `Parallel3dAxisGeometry` : Exact reconstruction
 

@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -241,7 +241,8 @@ Conjugate_gradient_on_the_normal_equations>`_.
     See Also
     --------
     conjugate_gradient : Optimized solver for symmetric matrices
-    conjugate_gradient_nonlinear : Equivalent solver but for nonlinear case
+    odl.solvers.smooth.nonlinear_cg.conjugate_gradient_nonlinear :
+        Equivalent solver for the nonlinear case
     """
     # TODO: add a book reference
     # TODO: update doc

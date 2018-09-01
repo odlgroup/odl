@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -185,7 +185,7 @@ class CallbackStore(Callback):
     Can optionally apply a function, for example the norm or calculating the
     residual.
 
-    By default, calls the `copy()` method on the iterates before storing.
+    By default, calls the ``copy()`` method on the iterates before storing.
     """
 
     def __init__(self, results=None, function=None, step=1):
@@ -205,16 +205,16 @@ class CallbackStore(Callback):
 
         Examples
         --------
-        Store results as-is
+        Store results as-is:
 
         >>> callback = CallbackStore()
 
-        Provide list to store iterates in.
+        Provide list to store iterates in:
 
         >>> results = []
         >>> callback = CallbackStore(results=results)
 
-        Store the norm of the results
+        Store the norm of the results:
 
         >>> norm_function = lambda x: x.norm()
         >>> callback = CallbackStore() * norm_function
@@ -239,7 +239,7 @@ class CallbackStore(Callback):
                 self.results.append(copy.copy(result))
 
     def reset(self):
-        """Clear the `results` list."""
+        """Clear the results list."""
         self.results = []
         self.iter = 0
 
