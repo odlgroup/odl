@@ -185,8 +185,8 @@ def func_convex_conj_has_call(functional):
     f_cconj = functional.convex_conj
     if isinstance(f_cconj, FunctionalDefaultConvexConjugate):
         return False
-    if (
-        isinstance(f_cconj, odl.solvers.FunctionalTranslation) and
+
+    elif (isinstance(f_cconj, odl.solvers.FunctionalTranslation) and
         isinstance(f_cconj.functional, FunctionalDefaultConvexConjugate)
     ):
         return False
