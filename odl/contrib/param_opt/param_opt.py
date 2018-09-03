@@ -15,7 +15,7 @@ __all__ = ('optimal_parameters', )
 
 
 def optimal_parameters(reconstruction, fom, phantoms, data,
-                       initial_param=0):
+                       initial=None, multivariate=True):
     r"""Find the optimal parameters for a reconstruction method.
 
     Notes
@@ -55,8 +55,12 @@ def optimal_parameters(reconstruction, fom, phantoms, data,
         True images.
     data : sequence
         The data to reconstruct from.
-    initial_param : array-like, optional
-        Initial guess for the parameters, default is zero.
+    initial : array-like or pair
+        Initial guess for the parameters. It is
+        - a required array in the multivariate case
+        - an optional pair in the univariate case.
+    multivariate : bool, optional
+        Whether to use a multivariate solver (defaults to True)
 
     Returns
     -------
@@ -72,17 +76,15 @@ def optimal_parameters(reconstruction, fom, phantoms, data,
     # Pick resolution to fit the one used by the space
     tol = np.finfo(phantoms[0].space.dtype).resolution * 10
 
-    initial_param = np.asarray(initial_param)
-
-    # We use a faster optimizer for the one parameter case
-    if initial_param.size == 1:
-        bracket = [initial_param - tol, initial_param + tol]
+    if not multivariate:
+        # We use a faster optimizer for the one parameter case
         result = scipy.optimize.minimize_scalar(
-            func, bracket=bracket, tol=tol, bounds=None,
+            func, bracket=initial, tol=tol, bounds=None,
             options={'disp': False})
         return result.x
     else:
         # Use a gradient free method to find the best parameters
+        initial = np.asarray(initial)
         parameters = scipy.optimize.fmin_powell(
-            func, initial_param, xtol=tol, ftol=tol, disp=False)
+            func, initial, xtol=tol, ftol=tol, disp=False)
         return parameters
