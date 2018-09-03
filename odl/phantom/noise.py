@@ -1,4 +1,4 @@
-﻿# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -174,7 +174,7 @@ def salt_pepper_noise(vector, fraction=0.05, salt_vs_pepper=0.5,
 
     Parameters
     ----------
-    vector : `TensorSpaceElement` or `ProductSpaceElement`
+    vector : element of `TensorSpace` or `ProductSpace`
         The vector that noise should be added to.
     fraction : float, optional
         The propotion of the elements in ``vector`` that should be converted

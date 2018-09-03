@@ -1,4 +1,4 @@
-﻿# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -234,7 +234,7 @@ class RectPartition(object):
 
     @property
     def has_isotropic_cells(self):
-        """``True`` if `grid` is uniform and `cell sides` are all equal.
+        """``True`` if `grid` is uniform and `cell_sides` are all equal.
 
         Always ``True`` for 1D partitions.
 
@@ -289,7 +289,7 @@ class RectPartition(object):
 
         See Also
         --------
-        RectGrid.points
+        odl.discr.grid.RectGrid.points
         """
         return self.grid.points(order)
 
@@ -692,8 +692,8 @@ class RectPartition(object):
 
         See Also
         --------
-        RectGrid.squeeze
-        IntervalProd.squeeze
+        odl.discr.grid.RectGrid.squeeze
+        odl.set.domain.IntervalProd.squeeze
         """
         if axis is None:
             rng = range(self.ndim)

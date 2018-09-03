@@ -1,4 +1,4 @@
-﻿# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -54,19 +54,23 @@ class DiscreteLp(DiscretizedSpace):
             Space of elements used for data storage. It must have the
             same `TensorSpace.field` as ``fspace`` and the same
             `TensorSpace.shape` as ``partition``.
-        interp : string or sequence of strings, optional
+        interp : str or sequence of str, optional
             Interpolation type to be used for discretization.
             A sequence is interpreted as interpolation scheme per axis.
             Possible values:
-                - ``'nearest'`` : use nearest-neighbor interpolation.
-                - ``'linear'`` : use linear interpolation.
+
+            - ``'nearest'`` : use nearest-neighbor interpolation.
+            - ``'linear'`` : use linear interpolation.
+
         axis_labels : sequence of str, optional
             Names of the axes to use for plotting etc.
             Default:
-                - 1D: ``['$x$']``
-                - 2D: ``['$x$', '$y$']``
-                - 3D: ``['$x$', '$y$', '$z$']``
-                - nD: ``['$x_1$', '$x_2$', ..., '$x_n$']``
+
+            - 1D: ``['$x$']``
+            - 2D: ``['$x$', '$y$']``
+            - 3D: ``['$x$', '$y$', '$z$']``
+            - nD: ``['$x_1$', '$x_2$', ..., '$x_n$']``
+
             Note: The ``$`` signs ensure rendering as LaTeX.
         """
         if not isinstance(fspace, FunctionSpace):
@@ -1576,8 +1580,10 @@ def uniform_discr(min_pt, max_pt, shape, dtype=None, impl='numpy', **kwargs):
         Interpolation type to be used for discretization.
         A sequence is interpreted as interpolation scheme per axis.
         Possible values:
-            - ``'nearest'`` : use nearest-neighbor interpolation.
-            - ``'linear'`` : use linear interpolation.
+
+        - ``'nearest'`` : use nearest-neighbor interpolation.
+        - ``'linear'`` : use linear interpolation.
+
     nodes_on_bdry : bool or sequence, optional
         If a sequence is provided, it determines per axis whether to
         place the last grid point on the boundary (``True``) or shift it
@@ -1592,11 +1598,12 @@ def uniform_discr(min_pt, max_pt, shape, dtype=None, impl='numpy', **kwargs):
     weighting : optional
         Use weighted inner product, norm, and dist. The following
         types are supported as ``weighting``:
-            - ``None``: Use the cell volume as weighting constant (default).
-            - ``float``: Weighting by a constant.
-            - array-like: Point-wise weighting by an array.
-            - `Weighting`: Use weighting class as-is. Compatibility
-              with this space's elements is not checked during init.
+
+        - ``None``: Use the cell volume as weighting constant (default).
+        - ``float``: Weighting by a constant.
+        - array-like: Point-wise weighting by an array.
+        - `Weighting`: Use weighting class as-is. Compatibility
+          with this space's elements is not checked during init.
 
     Returns
     -------

@@ -1,6 +1,6 @@
 # coding=utf-8
 
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -69,7 +69,7 @@ class Functional(Operator):
 
     @property
     def grad_lipschitz(self):
-        """Lipschitz constant for the gradient of the functional"""
+        """Lipschitz constant for the gradient of the functional."""
         return self.__grad_lipschitz
 
     @grad_lipschitz.setter
@@ -79,18 +79,18 @@ class Functional(Operator):
 
     @property
     def gradient(self):
-        """Gradient operator of the functional.
+        r"""Gradient operator of the functional.
 
         Notes
         -----
         The operator that corresponds to the mapping
 
         .. math::
-            x \\to \\nabla f(x)
+            x \to \nabla f(x)
 
-        where :math:`\\nabla f(x)` is the element used to evaluate
+        where :math:`\nabla f(x)` is the element used to evaluate
         derivatives in a direction :math:`d` by
-        :math:`\\langle \\nabla f(x), d \\rangle`.
+        :math:`\langle \nabla f(x), d \rangle`.
         """
         raise NotImplementedError(
             'no gradient implemented for functional {!r}'
@@ -98,48 +98,48 @@ class Functional(Operator):
 
     @property
     def proximal(self):
-        """Proximal factory of the functional.
+        r"""Proximal factory of the functional.
 
         Notes
         -----
         The proximal operator of a function :math:`f` is an operator defined as
 
         .. math::
-            prox_{\\sigma f}(x) = \\sup_{y} \\left\{ f(y) -
-            \\frac{1}{2\\sigma} \| y-x \|_2^2 \\right\}.
+            prox_{\sigma f}(x) = \sup_{y} \left\{ f(y) -
+            \frac{1}{2\sigma} \| y-x \|_2^2 \right\}.
 
         Proximal operators are often used in different optimization algorithms,
         especially when designed to handle nonsmooth functionals.
 
         A `proximal factory` is a function that, when called with a step
-        length :math:`\\sigma`, returns the corresponding proximal operator.
+        length :math:`\sigma`, returns the corresponding proximal operator.
 
         The nonsmooth solvers that make use of proximal operators to solve a
         given optimization problem take a `proximal factory` as input,
         i.e., a function returning a proximal operator. See for example
         `forward_backward_pd`.
 
-        In general, the step length :math:`\\sigma` is expected to be a
+        In general, the step length :math:`\sigma` is expected to be a
         positive float, but certain functionals might accept more types of
         objects as a stepsize:
 
-        * If a functional is a `SeparableSum`, then, instead of a positive
-        float, one may call the `proximal factory` with a list of positive
-        floats, and the stepsize are applied to each component individually.
+        - If a functional is a `SeparableSum`, then, instead of a positive
+          float, one may call the `proximal factory` with a list of positive
+          floats, and the stepsize are applied to each component individually.
 
-        * For certain special functionals like `L1Norm` and `L2NormSquared`,
-        which are not implemented as a `SeparableSum`, the proximal factory
-        will accept an argument which is `element-like` regarding the domain
-        of the functional. Its components must be strictly positive floats.
+        - For certain special functionals like `L1Norm` and `L2NormSquared`,
+          which are not implemented as a `SeparableSum`, the proximal factory
+          will accept an argument which is `element-like` regarding the domain
+          of the functional. Its components must be strictly positive floats.
 
-        A stepsize like :math:`(\\sigma_1, \\ldots, \\sigma_n)`  coincides
-        with a matrix-valued distance according to Section XV.4 of _[HL1993]
+        A stepsize like :math:`(\sigma_1, \ldots, \sigma_n)`  coincides
+        with a matrix-valued distance according to Section XV.4 of [HL1993]
         and the rule
 
         .. math::
-            M = \\mathrm{diag}(\\sigma_1^{-1}, \\ldots, \\sigma_n^{-1})
+            M = \mathrm{diag}(\sigma_1^{-1}, \ldots, \sigma_n^{-1})
 
-        or the Bregman-proximal according to _[E1993] and the rule
+        or the Bregman-proximal according to [E1993] and the rule
 
         .. math::
             h(x) = \langle x, M x \rangle.
@@ -160,7 +160,7 @@ class Functional(Operator):
 
     @property
     def convex_conj(self):
-        """Convex conjugate functional of the functional.
+        r"""Convex conjugate functional of the functional.
 
         Notes
         -----
@@ -168,7 +168,7 @@ class Functional(Operator):
         defined on a Hilber space, is defined as the functional
 
         .. math::
-            f^*(x^*) = \\sup_{x} \{ \\langle x^*,x \\rangle - f(x)  \}.
+            f^*(x^*) = \sup_{x} \{ \langle x^*,x \rangle - f(x)  \}.
 
         The concept is also known as the Legendre transformation.
 
@@ -450,7 +450,7 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
 
         ``(scalar * f)(x) == scalar * f(x)``.
 
-    `Functional.__rmul__` takes care of the case scalar = 0.
+    ``Functional.__rmul__`` takes care of the case scalar = 0.
     """
 
     def __init__(self, func, scalar):
@@ -486,7 +486,7 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
     def convex_conj(self):
         """Convex conjugate functional of the scaled functional.
 
-        `Functional.__rmul__` takes care of the case scalar = 0.
+        ``Functional.__rmul__`` takes care of the case scalar = 0.
         """
         if self.scalar <= 0:
             raise ValueError('scaling with nonpositive values have no convex '
@@ -499,11 +499,11 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
     def proximal(self):
         """Proximal factory of the scaled functional.
 
-        `Functional.__rmul__` takes care of the case scalar = 0
+        ``Functional.__rmul__`` takes care of the case scalar = 0
 
         See Also
         --------
-        proximal_const_func
+        odl.solvers.nonsmooth.proximal_operators.proximal_const_func
         """
 
         if self.scalar < 0:
@@ -588,7 +588,7 @@ class FunctionalRightScalarMult(Functional, OperatorRightScalarMult):
 
         See Also
         --------
-        proximal_arg_scaling
+        odl.solvers.nonsmooth.proximal_operators.proximal_arg_scaling
         """
         return proximal_arg_scaling(self.functional.proximal, self.scalar)
 
@@ -1068,7 +1068,7 @@ class FunctionalQuadraticPerturb(Functional):
 
     @property
     def convex_conj(self):
-        """Convex conjugate functional of the functional.
+        r"""Convex conjugate functional of the functional.
 
         Notes
         -----
@@ -1077,7 +1077,7 @@ class FunctionalQuadraticPerturb(Functional):
         the convex conjugate of :math:`f`:
 
         .. math::
-            (f + \\langle y, \cdot \\rangle)^* (x^*) = f^*(x^* - y).
+            (f + \langle y, \cdot \rangle)^* (x^*) = f^*(x^* - y).
 
         For reference on the identity used, see `[KP2015]`_. Moreover, the
         convex conjugate of :math:`f + c` is by definition
@@ -1096,8 +1096,10 @@ class FunctionalQuadraticPerturb(Functional):
         .. _[KP2015]:  https://arxiv.org/abs/1406.5429
         """
         if self.quadratic_coeff == 0:
-            return (self.functional.convex_conj.translated(
-                self.linear_term) - self.constant)
+            cconj = self.functional.convex_conj.translated(self.linear_term)
+            if self.constant != 0:
+                cconj = cconj - self.constant
+            return cconj
         else:
             return super(FunctionalQuadraticPerturb, self).convex_conj
 
@@ -1154,14 +1156,14 @@ class FunctionalProduct(Functional, OperatorPointwiseProduct):
 
     @property
     def gradient(self):
-        """Gradient operator of the functional.
+        r"""Gradient operator of the functional.
 
         Notes
         -----
         The derivative is computed using Leibniz's rule:
 
         .. math::
-            [\\nabla (f g)](p) = g(p) [\\nabla f](p) + f(p) [\\nabla g](p)
+            [\nabla (f g)](p) = g(p) [\nabla f](p) + f(p) [\nabla g](p)
         """
         func = self
 
@@ -1232,15 +1234,15 @@ class FunctionalQuotient(Functional):
 
     @property
     def gradient(self):
-        """Gradient operator of the functional.
+        r"""Gradient operator of the functional.
 
         Notes
         -----
         The derivative is computed using the quotient rule:
 
         .. math::
-            [\\nabla (f / g)](p) = (g(p) [\\nabla f](p) -
-                                    f(p) [\\nabla g](p)) / g(p)^2
+            [\nabla (f / g)](p) = (g(p) [\nabla f](p) -
+                                    f(p) [\nabla g](p)) / g(p)^2
         """
         func = self
 
@@ -1271,7 +1273,7 @@ class FunctionalQuotient(Functional):
 
 class FunctionalDefaultConvexConjugate(Functional):
 
-    """The `Functional` representing ``F^*``, the convex conjugate of ``F``.
+    r"""The `Functional` representing ``F^*``, the convex conjugate of ``F``.
 
     This class does not provide a way to evaluate the functional, it is rather
     intended to be used for its `proximal`.
@@ -1281,8 +1283,8 @@ class FunctionalDefaultConvexConjugate(Functional):
     The proximal is found by using the Moreau identity
 
     .. math::
-        \\text{prox}_{\\sigma F^*}(y) = y -
-        \\sigma \\text{prox}_{F / \\sigma}(y / \\sigma)
+        \text{prox}_{\sigma F^*}(y) = y -
+        \sigma \text{prox}_{F / \sigma}(y / \sigma)
 
     which allows the proximal of the convex conjugate to be calculated without
     explicit knowledge about the convex conjugate itself.

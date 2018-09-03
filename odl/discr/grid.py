@@ -1,4 +1,4 @@
-﻿# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -566,7 +566,7 @@ class RectGrid(Set):
 
         Parameters
         ----------
-        other :  `TensorGrid`
+        other :  `RectGrid`
             The other grid which is supposed to contain this grid
         atol : float, optional
             Allow deviations up to this number in absolute value

@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -220,8 +220,6 @@ class FanFlatGeometry(DivergentBeamGeometry):
         translate the default configuration. It is most useful when
         the transformation to be applied is already given as a matrix.
 
-        Parameters
-        ----------
         Parameters
         ----------
         apart : 1-dim. `RectPartition`

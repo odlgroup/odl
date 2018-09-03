@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -312,7 +312,8 @@ class GroupL1Norm(Functional):
 
         See Also
         --------
-        proximal_l1 : `proximal factory` for the L1-norm.
+        odl.solvers.nonsmooth.proximal_operators.proximal_l1 :
+            `proximal factory` for the L1-norm.
         """
         if self.pointwise_norm.exponent == 1:
             return proximal_l1(space=self.domain)
@@ -397,8 +398,8 @@ class IndicatorGroupL1UnitBall(Functional):
 
         See Also
         --------
-        proximal_convex_conj_l1 : `proximal factory` for the L1-norms convex
-                            conjugate.
+        odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_l1 :
+            `proximal factory` for the L1-norms convex conjugate.
         """
         if self.pointwise_norm.exponent == np.inf:
             return proximal_convex_conj_l1(space=self.domain)
@@ -820,7 +821,7 @@ class IdentityFunctional(ScalingFunctional):
 
     See Also
     --------
-    odl.operator.IdentityOperator
+    odl.operator.default_ops.IdentityOperator
     """
 
     def __init__(self, field):
@@ -1134,10 +1135,13 @@ class KullbackLeibler(Functional):
 
     @property
     def gradient(self):
-        """The gradient of `KullbackLeibler` with ``prior`` :math:`g` is given as
+        r"""Gradient of the KL functional.
+
+        The gradient of `KullbackLeibler` with ``prior`` :math:`g` is given
+        as
 
         .. math::
-            \\nabla F(x) = 1 - \frac{g}{x}.
+            \nabla F(x) = 1 - \frac{g}{x}.
 
         The gradient is not defined in points where one or more components
         are non-positive.
@@ -1155,6 +1159,7 @@ class KullbackLeibler(Functional):
 
             def _call(self, x):
                 """Apply the gradient operator to the given point.
+
                 The gradient is not defined in points where one or more
                 components are non-positive.
                 """
@@ -1452,8 +1457,7 @@ class KullbackLeiblerCrossEntropy(Functional):
 
         See Also
         --------
-        odl.solvers.nonsmooth.proximal_operators.\
-proximal_convex_conj_kl_cross_entropy :
+        odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_kl_cross_entropy :
             `proximal factory` for convex conjugate of the KL cross entropy.
         odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj :
             Proximal of the convex conjugate of a functional.
@@ -1552,8 +1556,7 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
 
         See Also
         --------
-        odl.solvers.nonsmooth.proximal_operators.\
-proximal_convex_conj_kl_cross_entropy :
+        odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_kl_cross_entropy :
             `proximal factory` for convex conjugate of the KL cross entropy.
         """
         return proximal_convex_conj_kl_cross_entropy(space=self.domain,
@@ -1574,7 +1577,7 @@ class SeparableSum(Functional):
 
     """The functional corresponding to separable sum of functionals.
 
-    The separable sum of functionals ``f_1, f_2, ..., f_n`` is given by::
+    The separable sum of functionals ``f_1, f_2, ..., f_n`` is given by ::
 
         h(x_1, x_2, ..., x_n) = sum_i^n f_i(x_i)
 
@@ -1610,7 +1613,7 @@ class SeparableSum(Functional):
          \mathrm{prox}_{\\sigma f_n}(x_n)].
 
     If :math:`\\sigma = (\\sigma_1, \\sigma_2, \\ldots, \\sigma_n)` is a list
-    of positive `float`s, then it distributes, too:
+    of positive ``float``'s, then it distributes, too:
 
     .. math::
         \mathrm{prox}_{\\sigma h}(x_1, x_2, ..., x_n) =
@@ -1618,6 +1621,7 @@ class SeparableSum(Functional):
          \mathrm{prox}_{\\sigma_2 f_2}(x_2),
          ...,
          \mathrm{prox}_{\\sigma_n f_n}(x_n)].
+
     """
 
     def __init__(self, *functionals):
@@ -2214,7 +2218,7 @@ class IndicatorSimplex(Functional):
             +\infty & \text{else.}
         \end{cases}
 
-    where `r` is the diameter.
+    where :math:`r` is the diameter.
     """
 
     def __init__(self, space, diameter=1, sum_rtol=None):
@@ -2222,10 +2226,10 @@ class IndicatorSimplex(Functional):
 
         Parameters
         ----------
-        space : `DiscreteLp` or `FnBase`
+        space : `DiscreteLp` or `TensorSpace`
             Domain of the functional.
         diameter : positive float, optional
-            Diameter `r` of simplex.
+            Diameter of the simplex.
         sum_rtol : float
             Relative tolerance for sum comparison.
 
@@ -2337,7 +2341,7 @@ class IndicatorSumConstraint(Functional):
 
         Parameters
         ----------
-        space : `DiscreteLp` or `FnBase`
+        space : `DiscreteLp` or `TensorSpace`
             Domain of the functional.
         sum_value : float
             Desired value of the sum constraint.
@@ -2523,7 +2527,7 @@ class Huber(Functional):
     .. math::
         F(x) = \\int_\Omega f_{\\gamma}(||x(y)||_2) dy
 
-    where :mth:`||\cdot||_2` denotes the Euclidean norm for vector-valued
+    where :math:`||\cdot||_2` denotes the Euclidean norm for vector-valued
     functions which reduces to the absolute value for scalar-valued functions.
     The function :math:`f` with smoothing :math:`\\gamma` is given by
 
@@ -2642,8 +2646,8 @@ class Huber(Functional):
 
         See Also
         --------
-        odl.solvers.proximal_huber : `proximal factory` for the Huber
-            norm.
+        odl.solvers.nonsmooth.proximal_operators.proximal_huber :
+            `proximal factory` for the Huber norm.
         """
         return proximal_huber(space=self.domain, gamma=self.gamma)
 

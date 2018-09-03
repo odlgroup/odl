@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -34,7 +34,6 @@ def matrix_representation(op):
     -------
     matrix : `numpy.ndarray`
         The matrix representation of the operator.
-
         The shape will be ``op.domain.shape + op.range.shape`` and the dtype
         is the promoted (greatest) dtype of the domain and range.
 
@@ -51,7 +50,7 @@ def matrix_representation(op):
            [4, 5, 6],
            [7, 8, 9]])
 
-    It also works with `ProductSpace`s and higher dimensional `TensorSpace`s.
+    It also works with `ProductSpace`'s and higher dimensional `TensorSpace`'s.
     In this case, the returned "matrix" will also be higher dimensional:
 
     >>> space = odl.uniform_discr([0, 0], [2, 2], (2, 2))
@@ -282,8 +281,8 @@ def as_scipy_operator(op):
 
     >>> op = odl.IdentityOperator(odl.rn(3))
     >>> scipy_op = as_scipy_operator(op)
-    >>> import scipy.sparse.linalg as sl
-    >>> result, status = sl.cg(scipy_op, [0, 1, 0])
+    >>> import scipy.sparse.linalg as scipy_solvers
+    >>> result, status = scipy_solvers.cg(scipy_op, [0, 1, 0])
     >>> result
     array([ 0.,  1.,  0.])
 
@@ -363,9 +362,9 @@ def as_scipy_functional(func, return_gradient=False):
 
     Notes
     -----
-    If the data representation of ``op``'s domain is of type `NumpyFn` this
-    incurs no significant overhead. If the space type is ``CudaFn`` or some
-    other nonlocal type, the overhead is significant.
+    If the data representation of ``op``'s domain is of type
+    `NumpyTensorSpace`, this incurs no significant overhead. If the space type
+    is ``CudaFn`` or some other nonlocal type, the overhead is significant.
     """
     def func_call(arr):
         return func(np.asarray(arr).reshape(func.domain.shape))

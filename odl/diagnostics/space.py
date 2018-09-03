@@ -6,7 +6,7 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Standardized tests for `LinearSpace`'s."""
+"""Standardized tests for ``LinearSpace``."""
 
 from __future__ import print_function, division, absolute_import
 from builtins import object
@@ -321,7 +321,7 @@ class SpaceTest(object):
 
             ``x + y = y + x``
 
-        and identity of the `LinearSpace.zero` element
+        and identity of the ``LinearSpace.zero`` element
 
             ``x + 0 = x``
 
@@ -412,7 +412,7 @@ class SpaceTest(object):
                                  ''.format(n_x, inner))
 
     def inner(self):
-        """Verify `LinearSpace.inner`.
+        """Verify ``LinearSpace.inner``.
 
         The inner product is checked for the following properties:
 
@@ -520,7 +520,7 @@ class SpaceTest(object):
                                  ''.format(n_x, error))
 
     def norm(self):
-        """Verify `LinearSpace.norm`.
+        """Verify ``LinearSpace.norm``.
 
         The norm is checked for the following properties:
 
@@ -639,7 +639,7 @@ class SpaceTest(object):
                                  ''.format(n_x, n_y, error))
 
     def dist(self):
-        """Verify `LinearSpace.dist`.
+        """Verify ``LinearSpace.dist``.
 
         The distance metric is checked for the following properties:
 
@@ -763,7 +763,7 @@ class SpaceTest(object):
                                  ''.format(n_x, n_y, n_z))
 
     def multiply(self):
-        """Verify `LinearSpace.multiply`.
+        """Verify ``LinearSpace.multiply``.
 
         The vector multiplication is checked for the following properties:
 

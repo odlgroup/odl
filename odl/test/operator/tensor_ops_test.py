@@ -11,7 +11,7 @@
 from __future__ import division
 import pytest
 import numpy as np
-import scipy
+import scipy.sparse
 
 import odl
 from odl.operator.tensor_ops import (

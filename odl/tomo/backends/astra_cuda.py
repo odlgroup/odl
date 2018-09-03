@@ -53,7 +53,7 @@ class AstraCudaProjectorImpl(object):
         reco_space : `DiscreteLp`
             Reconstruction space, the space of the images to be forward
             projected.
-        proj_space : ``DiscreteLp``
+        proj_space : `DiscreteLp`
             Projection space, the space of the result.
         """
         assert isinstance(geometry, Geometry)
@@ -75,9 +75,9 @@ class AstraCudaProjectorImpl(object):
 
         Parameters
         ----------
-        vol_data : `reco_space` element
+        vol_data : ``reco_space`` element
             Volume data to which the projector is applied.
-        out : `proj_space` element, optional
+        out : ``proj_space`` element, optional
             Element of the projection space to which the result is written. If
             ``None``, an element in `proj_space` is created.
 
@@ -207,7 +207,7 @@ class AstraCudaBackProjectorImpl(object):
             Geometry defining the tomographic setup.
         reco_space : `DiscreteLp`
             Reconstruction space, the space to which the backprojection maps.
-        proj_space : ``DiscreteLp``
+        proj_space : `DiscreteLp`
             Projection space, the space from which the backprojection maps.
         """
         assert isinstance(geometry, Geometry)
@@ -228,9 +228,9 @@ class AstraCudaBackProjectorImpl(object):
 
         Parameters
         ----------
-        proj_data : `proj_space` element
+        proj_data : ``proj_space`` element
             Projection data to which the back-projector is applied.
-        out : `reco_space` element, optional
+        out : ``reco_space`` element, optional
             Element of the reconstruction space to which the result is written.
             If ``None``, an element in ``reco_space`` is created.
 

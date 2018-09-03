@@ -10,9 +10,9 @@ It is a method for solving convex non-smooth problems of the form
 
 .. math::
 
-   \min_{x \in X} f(L x) + g(x),
+   \min_{x \in X} f(x) + g(Lx),
 
-where :math:`L` is a linear `Operator` :math:`L : X -> Y`, :math:`X` and :math:`Y` are (discretized) function spaces and :math:`g : X \mapsto [0, +\infty]` and :math:`f : Y \mapsto [0, +\infty]` are proper, convex, lower semi-continuous functionals.
+where :math:`L` is a linear `Operator` :math:`L : X -> Y`, :math:`X` and :math:`Y` are (discretized) function spaces and :math:`f : X \to [0, +\infty]` and :math:`g : Y \to [0, +\infty]` are proper, convex, lower semi-continuous functionals.
 For more information on the mathematics, please see :ref:`the mathematical background article on this method <pdhg_math>`.
 
 
@@ -51,7 +51,7 @@ and positivity constraint enforced by the indicator function
 
 Here, :math:`\|\cdot\|_q` is the :math:`L^q` norm (:math:`q = 1,2`), :math:`\nabla` the spatial gradient, and :math:`\lambda` a regularization parameter.
 
-The standard way of fitting this problem into the PDHG framework is to summarize both data fit and regularization terms into the composition part :math:`f \circ L` of the solver, and to set :math:`g` to the positivity constraint :math:`\iota_{[0, \infty]}`.
+The standard way of fitting this problem into the PDHG framework is to summarize both data fit and regularization terms into the composition part :math:`g \circ L` of the solver, and to set :math:`f` to the positivity constraint :math:`\iota_{[0, \infty]}`.
 By setting :math:`L = (I, \nabla): X \to X \times X^d`, where :math:`I` is the identity mapping on :math:`X`, we can write
 
 .. math::
@@ -68,12 +68,12 @@ By setting :math:`L = (I, \nabla): X \to X \times X^d`, where :math:`I` is the i
       \lambda \|\nabla x\|_1
     \end{pmatrix}
     \right \|_1
-    = \big[ f \circ L \big](x)
+    = \big[ g \circ L \big](x)
 
-with the functional :math:`f: X \times X^d \to \mathbb{R}` defined by
+with the functional :math:`g: X \times X^d \to \mathbb{R}` defined by
 
 .. math::
-    f(x, u) = \left \|
+    g(x, u) = \left \|
     \begin{pmatrix}
       \|x - y\|_2^2 / 2 \\
       \lambda \|u\|_1
@@ -81,7 +81,7 @@ with the functional :math:`f: X \times X^d \to \mathbb{R}` defined by
     \right \|_1
     = \frac{1}{2} \|x - y\|_2^2 + \lambda \|u\|_1.
 
-Note that the arguments :math:`x, u` of :math:`f` are independent, i.e. the sum of the two functionals is a `SeparableSum`.
+Note that the arguments :math:`x, u` of :math:`g` are independent, i.e. the sum of the two functionals is a `SeparableSum`.
 
 .. note::
     The operator :math:`L` maps :math:`X` to the `ProductSpace` :math:`X \times X^d`.
@@ -123,14 +123,14 @@ To create :math:`L`, we use the `BroadcastOperator` class as mentioned above:
     >>> L = odl.BroadcastOperator(ident, grad)
 
 We can now proceed to the problem specification.
-This step requires us to specify the functionals :math:`f` and :math:`g`, where the former is the `SeparableSum` of the squared :math:`L^2` distance to :math:`y` and the (vectorial) :math:`L^1` norm.
+This step requires us to specify the functionals :math:`f` and :math:`g`, where the latter is the `SeparableSum` of the squared :math:`L^2` distance to :math:`y` and the (vectorial) :math:`L^1` norm.
 These functionals are available in ODL as `L2NormSquared` and `L1Norm`, respectively:
 
 .. code-block:: python
 
     >>> l2_norm_squared = odl.solvers.L2NormSquared(space).translated(data)
     >>> l1_norm = 0.0003 * odl.solvers.L1Norm(grad.range)
-    >>> f = odl.solvers.SeparableSum(l2_norm_squared, l1_norm)
+    >>> g = odl.solvers.SeparableSum(l2_norm_squared, l1_norm)
 
 .. note::
     We don't need to take extra care of the :math:`L^1` norm being a vectorial norm since `L1Norm` also works on product spaces.
@@ -139,7 +139,7 @@ Finally, we define the functional for the nonnegativity constraint, available as
 
 .. code-block:: python
 
-    >>> g = odl.solvers.IndicatorNonnegativity(space)
+    >>> f = odl.solvers.IndicatorNonnegativity(space)
 
 Calling the solver
 ^^^^^^^^^^^^^^^^^^

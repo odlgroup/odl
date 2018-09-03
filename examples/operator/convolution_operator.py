@@ -1,7 +1,6 @@
 """Create a convolution operator by wrapping a library."""
 
 import odl
-import scipy
 import scipy.signal
 
 
@@ -36,6 +35,7 @@ class Convolution(odl.Operator):
         symmetric the operator is self-adjoint.
         """
         return Convolution(self.kernel[::-1, ::-1])
+
 
 # Define the space on which the problem should be solved
 # Here the square [-1, 1] x [-1, 1] discretized on a 100x100 grid

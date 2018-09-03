@@ -1,4 +1,4 @@
-﻿# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -46,7 +46,7 @@ class TensorSpace(LinearSpace):
     or comparison, and element-wise mathematical functions ("ufuncs").
 
     See the `Wikipedia article on tensors`_ for further details.
-    See also [Hac2012]_ "Part I Algebraic Tensors" for a rigorous
+    See also [Hac2012] "Part I Algebraic Tensors" for a rigorous
     treatment of tensors with a definition close to this one.
 
     Note also that this notion of tensors is the same as in popular

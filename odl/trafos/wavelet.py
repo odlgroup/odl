@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -93,7 +93,7 @@ class WaveletTransformBase(Operator):
 
             ``'pywt_per'``:  like ``'periodic'``-padding but gives the smallest
             possible number of decomposition coefficients.
-            Only available with ``impl='pywt'``, See `pywt.MODES.modes`.
+            Only available with ``impl='pywt'``, See ``pywt.Modes.modes``.
 
         pad_const : float, optional
             Constant value to use if ``pad_mode == 'constant'``. Ignored
@@ -266,7 +266,7 @@ class WaveletTransform(WaveletTransformBase):
 
             ``'pywt_per'``:  like ``'periodic'`` padding, but gives the
             smallest possible number of decomposition coefficients.
-            Only available with ``impl='pywt'``, See `pywt.Modes.modes`.
+            Only available with ``impl='pywt'``, See ``pywt.Modes.modes``.
 
         pad_const : float, optional
             Constant value to use if ``pad_mode == 'constant'``. Ignored
@@ -410,7 +410,7 @@ class WaveletTransformInverse(WaveletTransformBase):
 
             ``'pywt_per'``:  like ``'periodic'``-padding but gives the smallest
             possible number of decomposition coefficients.
-            Only available with ``impl='pywt'``, See `pywt.MODES.modes`.
+            Only available with ``impl='pywt'``, See ``pywt.MODES.modes``.
 
         pad_const : float, optional
             Constant value to use if ``pad_mode == 'constant'``. Ignored

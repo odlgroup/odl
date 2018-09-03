@@ -106,7 +106,7 @@ It is the default in the convenience function `uniform_discr`:
 
     >>> l2_discr = odl.uniform_discr(0, 1, 5)  # Omega = [0, 1], 5 subintervals
     >>> type(l2_discr)
-    <class 'odl.discr.lp_discr.DiscreteLp'>
+    odl.discr.lp_discr.DiscreteLp
     >>> l2_discr.exponent
     2.0
     >>> l2_discr.domain
@@ -119,9 +119,9 @@ If we, for example, want to discretize the function ``f(x) = exp(-x)``, we can s
 
     >>> exp_discr = l2_discr.element(lambda x: np.exp(-x))
     >>> type(exp_discr)
-    <class 'odl.discr.lp_discr.DiscreteLpElement'>
+    odl.discr.lp_discr.DiscreteLpElement
     >>> print(exp_discr)
-    [0.904837418036, 0.740818220682, 0.606530659713, 0.496585303791, 0.406569659741]
+    [ 0.90483742,  0.74081822,  0.60653066,  0.4965853 ,  0.40656966]
     >>> exp_discr.shape
     (5,)
 

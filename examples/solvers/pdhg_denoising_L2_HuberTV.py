@@ -26,7 +26,7 @@ https://odlgroup.github.io/odl/guide/pdhg_guide.html in the ODL documentation.
 """
 
 import numpy as np
-import scipy
+import scipy.misc
 import odl
 import matplotlib.pyplot as plt
 
@@ -44,7 +44,7 @@ norm_op = np.sqrt(8) + 1e-4  # norm with forward differences is well-known
 lam = 0.1  # Regularization parameter
 f = 1 / (2 * lam) * odl.solvers.L2NormSquared(space).translated(d)  # data fit
 g = odl.solvers.Huber(op.range, gamma=.01)  # regularization
-obj_fun = f + g * op # combined functional
+obj_fun = f + g * op  # combined functional
 mu_g = 1 / lam  # strong convexity of "g"
 mu_f = 1 / f.grad_lipschitz  # strong convexity of "f*"
 

@@ -1,7 +1,6 @@
 """Source code for the getting started example."""
 
 import odl
-import scipy
 import scipy.signal
 
 
@@ -59,7 +58,7 @@ g.show('convolved phantom')
 opnorm = odl.power_method_opnorm(A)
 
 f = space.zero()
-odl.solvers.landweber(A, f, g, niter=100, omega=1/opnorm**2)
+odl.solvers.landweber(A, f, g, niter=100, omega=1 / opnorm ** 2)
 f.show('landweber')
 
 # Conjugate gradient

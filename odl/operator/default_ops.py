@@ -1,6 +1,6 @@
-﻿# coding=utf-8
+# coding=utf-8
 
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -599,7 +599,7 @@ class NormOperator(Operator):
         NormOperator()(x) <==> x.norm()
 
     This is only applicable in normed spaces, i.e., spaces implementing
-    a `LinearSpace.norm` method.
+    a ``norm`` method.
 
     See Also
     --------
@@ -691,7 +691,7 @@ class DistOperator(Operator):
         DistOperator(y)(x) == y.dist(x)
 
     This is only applicable in metric spaces, i.e., spaces implementing
-    a `LinearSpace.dist` method.
+    a ``dist`` method.
 
     See Also
     --------

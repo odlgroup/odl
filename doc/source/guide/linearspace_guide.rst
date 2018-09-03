@@ -54,7 +54,7 @@ Linear combination
 This private method is the raw implementation (i.e. without error
 checking) of the linear combination ``out = a * x1 + b * x2``.
 `LinearSpace._lincomb` and its public counterpart
-`LinearSpace.lincomb` are used to covera range of convenience
+`LinearSpace.lincomb` are used to cover a range of convenience
 functions, see below.
 
 **Parameters:**

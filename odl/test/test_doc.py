@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -29,18 +29,16 @@ except ImportError:
 
 # Modules to be added to testing globals
 import numpy
-import scipy
 import odl
 try:
     import proximal
 except ImportError:
     proximal = None
 
-doctest_extraglobs = {'odl': odl, 'np': numpy, 'scipy': scipy,
-                      'proximal': proximal}
+doctest_extraglobs = {'odl': odl, 'np': numpy, 'proximal': proximal}
 
 root_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)),
-                        '../../doc/source')
+                        os.pardir, os.pardir, 'doc', 'source')
 root_dir = os.path.normpath(root_dir)
 test_dirs = ['guide', 'getting_started']
 test_suffixes = ['.rst', '.py']
@@ -65,6 +63,7 @@ def doc_src_file(request):
 @pytest.mark.skipif("not pytest.config.getoption('--doctest-doc')",
                     reason='Need --doctest-doc option to run')
 def test_file(doc_src_file):
+    # FIXXXME: This doesn't seem to actually test the file :-(
     doctest.testfile(doc_src_file, module_relative=False, report=True,
                      extraglobs=doctest_extraglobs, verbose=True,
                      optionflags=doctest_optionflags)

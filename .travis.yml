@@ -37,7 +37,7 @@ addons:
 install:
     # Install miniconda according to Python version of the build (saves downloading if versions match)
     - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
-        wget -q https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh;
+        wget -q https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
       else
         wget -q https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
       fi

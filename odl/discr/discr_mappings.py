@@ -1,4 +1,4 @@
-﻿# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -147,7 +147,7 @@ class PointCollocation(FunctionSpaceMapping):
     only difference being the additional information about the ordering
     of the axes in the flat storage array (C- vs. Fortran ordering).
 
-    This operator is the default `DiscretizedSet.sampling` used by all
+    This operator is the default `DiscretizedSpace.sampling` used by all
     core discretization classes.
     """
 

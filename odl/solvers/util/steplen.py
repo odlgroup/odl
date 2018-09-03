@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -72,7 +72,8 @@ class BacktrackingLineSearch(LineSearch):
         ----------
         function : callable
             The cost function of the optimization problem to be solved.
-            If function is not a `Functional`, the argument `dir_derivative`
+            If ``function`` is not a `Functional`, calling this class later
+            requires a value for the ``dir_derivative`` argument.
         tau : float, optional
             The amount the step length is decreased in each iteration,
             as long as it does not fulfill the decrease condition.

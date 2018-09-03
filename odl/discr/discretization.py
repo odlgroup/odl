@@ -1,4 +1,4 @@
-﻿# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -487,8 +487,7 @@ def tspace_type(space, impl, dtype=None):
     ----------
     space : `LinearSpace`
         Template space from which to infer an adequate tensor space. If
-        it has a `LinearSpace.field` attribute, ``dtype`` must be
-        consistent with it.
+        it has a ``field`` attribute, ``dtype`` must be consistent with it.
     impl : string
         Implementation backend for the tensor space.
     dtype : optional

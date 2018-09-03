@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -153,7 +153,7 @@ def defrise_ellipses(ndim, nellipses=8, alternating=False):
     --------
     odl.phantom.geometric.ellipsoid_phantom :
         Function for creating arbitrary ellipsoids phantoms
-    shepp_logan_ellipsoids
+    odl.phantom.transmission.shepp_logan_ellipsoids
     """
     ellipses = []
     if ndim == 2:
@@ -653,7 +653,7 @@ def ellipsoid_phantom(space, ellipsoids, min_pt=None, max_pt=None):
     --------
     odl.phantom.transmission.shepp_logan : Classical Shepp-Logan phantom,
         typically used for transmission imaging
-    odl.phantom.transmission.shepp_logan_ellipses : Ellipses for the
+    odl.phantom.transmission.shepp_logan_ellipsoids : Ellipses for the
         Shepp-Logan phantom
     odl.phantom.geometric.defrise_ellipses : Ellipses for the
         Defrise phantom

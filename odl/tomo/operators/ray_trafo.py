@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -437,6 +437,7 @@ class RayTransform(RayTransformBase):
 
 
 class RayBackProjection(RayTransformBase):
+
     """Adjoint of the discrete Ray transform between L^p spaces."""
 
     def __init__(self, range, geometry, **kwargs):
@@ -462,7 +463,8 @@ class RayBackProjection(RayTransformBase):
               reconstruction space.
 
             For the default ``None``, the fastest available back-end is
--           used, tried in the above order.
+            used, tried in the above order.
+
         interp : {'nearest', 'linear'}, optional
             Interpolation type for the discretization of the operator
             domain. This has no effect if ``domain`` is given explicitly.
