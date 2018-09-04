@@ -38,9 +38,8 @@ def test_optimal_parameters_one_parameter(space, fom):
         """
         return 1.23 * data / lam
 
-    result = odl.contrib.param_opt.optimal_parameters(reconstruction, fom,
-                                                      phantoms, data, [.9, 1.1],
-                                                      univariate=True)
+    result = odl.contrib.param_opt.optimal_parameters(
+        reconstruction, fom, phantoms, data, [.9, 1.1], univariate=True)
     assert result == pytest.approx(1.23, abs=1e-4)
 
 
