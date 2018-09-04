@@ -2231,9 +2231,10 @@ class IndicatorSimplex(Functional):
         diameter : positive float, optional
             Diameter of the simplex.
         sum_rtol : float, optional
-            Relative tolerance for sum comparison. If set to None, the default
-            is ``space.size`` times ``1e-10`` when ``space.dtype`` is
-            ``float64`` and ``1e-6`` otherwise.
+            Relative tolerance for sum comparison.
+            Default:
+                - ``space.dtype == 'float64'``: ``1e-10 * space.size``
+                - Otherwise: ``1e-6 * space.size``
 
         Examples
         --------
