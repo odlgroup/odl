@@ -15,7 +15,7 @@ __all__ = ('optimal_parameters', )
 
 
 def optimal_parameters(reconstruction, fom, phantoms, data,
-                       initial=None, multivariate=True):
+                       initial=None, univariate=False):
     r"""Find the optimal parameters for a reconstruction method.
 
     Notes
@@ -59,8 +59,8 @@ def optimal_parameters(reconstruction, fom, phantoms, data,
         Initial guess for the parameters. It is
         - a required array in the multivariate case
         - an optional pair in the univariate case.
-    multivariate : bool, optional
-        Whether to use a multivariate solver (defaults to True)
+    univariate : bool, optional
+        Whether to use a univariate solver
 
     Returns
     -------
@@ -76,7 +76,7 @@ def optimal_parameters(reconstruction, fom, phantoms, data,
     # Pick resolution to fit the one used by the space
     tol = np.finfo(phantoms[0].space.dtype).resolution * 10
 
-    if not multivariate:
+    if univariate:
         # We use a faster optimizer for the one parameter case
         result = scipy.optimize.minimize_scalar(
             func, bracket=initial, tol=tol, bounds=None,
