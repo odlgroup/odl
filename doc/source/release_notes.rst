@@ -9,6 +9,234 @@ Release Notes
 Upcoming release
 ================
 
+ODL 0.7.0 Release Notes (2018-09-09)
+====================================
+This release is a big one as it includes the cumulative work over a period of 1 1/2 years.
+It is planned to be the last release before version 1.0.0 where we expect to land a number of exciting new features.
+
+Highlights
+----------
+
+Native multi-indexing of ODL space elements
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The ``DiscreteLpElement`` and ``Tensor`` (renamed from ``FnBaseVector``) data structures now natively support almost all kinds of Numpy "fancy" indexing.
+Likewise, the spaces ``DiscreteLp`` and ``Tensorspace`` (renamed from ``FnBase``) have more advanced indexing capabilities as well.
+Up to few exceptions, ``elem[indices] in space[indices]`` is always fulfilled.
+Alongside, ``ProductSpace`` and its elements also gained more advanced indexing capabilities, in particular in the case of power spaces.
+
+Furthermore, integration with Numpy has been further improved with the implementation of the ``__array_ufunc__`` interface.
+This allows to transparently use ODL objects in calls to Numpy UFuncs, e.g., ``np.cos(odl_obj, out=odl_obj)`` or ``np.add.reduce(odl_in, axis=0, out=odl_out)`` — both these examples were not possible with the ``__array__`` and ``__array_wrap__`` interfaces.
+
+Unfortunately, this changeset makes the ``odlcuda`` plugin unusable since it only supports linear indexing.
+A much more powerful replacement based on CuPy will be added in version 1.0.0.
+
+Integration with deep learning frameworks
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ODL is now integrated with three major deep learning frameworks: `TensorFlow <https://www.tensorflow.org/>`_, `PyTorch <https://pytorch.org/>`_ and `Theano <http://www.deeplearning.net/software/theano/>`_.
+In particular, ODL ``Operator`` and ``Functional`` objects can be used as layers in neural networks, with support for automatic differentiation and backpropagation.
+This makes a lot of (inverse) problems that ODL can handle well, e.g., tomography, accessible to the computation engines of the deep learning field, and opens up a wide range of possibilities to combine the two.
+
+The implementation of this functionality and examples of its usage can be found in the packages `tensorflow <https://github.com/odlgroup/odl/tree/master/odl/contrib/tensorflow>`_, `torch <https://github.com/odlgroup/odl/tree/master/odl/contrib/torch>`_ and `theano <https://github.com/odlgroup/odl/tree/master/odl/contrib/theano>`_ in the ``odl.contrib`` sub-package (see below).
+
+New ``contrib`` sub-package
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The core ODL library is intended to stay focused on general-purpose classes and data structures, and good code quality is a major goal.
+This implies that contributions need to undergo scrutiny in a review process, and that some contributions might not be a good fit if they are too specific for certain applications.
+
+For this reason, we have created a new `contrib <https://github.com/odlgroup/odl/tree/master/odl/contrib>`_ sub-package that is intended for exactly this kind of code.
+As of writing this, ``contrib`` already contains a number of highly useful modules:
+
+- `datasets <https://github.com/odlgroup/odl/tree/master/odl/contrib/datasets>`_: Loaders and utility code for publicly available datasets (currently FIPS CT, Mayo clinic human CT, Tu Graz MRI and some image data)
+- `fom <https://github.com/odlgroup/odl/tree/master/odl/contrib/fom>`_: Implementations of Figures-of-Merit for image quality assessment
+- `mrc <https://github.com/odlgroup/odl/tree/master/odl/contrib/mrc>`_: Reader and writer for the MRC 2014 data format in electron microscopy
+- `param_opt <https://github.com/odlgroup/odl/tree/master/odl/contrib/param_opt>`_: Optimization strategies for method hyperparameters
+- `pyshearlab <https://github.com/odlgroup/odl/tree/master/odl/contrib/pyshearlab>`_: Integration of the `pyshearlab <https://github.com/stefanloock/pyshearlab>`_ Python library for shearlet decomposition and analysis
+- `shearlab <https://github.com/odlgroup/odl/tree/master/odl/contrib/shearlab>`_: Integration of the `Shearlab.jl <https://github.com/arsenal9971/Shearlab.jl>`_ Julia shearlet library
+- `solvers <https://github.com/odlgroup/odl/tree/master/odl/contrib/solvers>`_: More exotic functionals and optimization methods than in the core ODL library
+- `tomo <https://github.com/odlgroup/odl/tree/master/odl/contrib/tomo>`_: Vendor- or application-specific geometries (currently Elekta ICON and XIV)
+- `tensorflow <https://github.com/odlgroup/odl/tree/master/odl/contrib/tensorflow>`_: Integration of ODL with TensorFlow
+- `theano <https://github.com/odlgroup/odl/tree/master/odl/contrib/theano>`_: Integration of ODL with Theano
+- `torch <https://github.com/odlgroup/odl/tree/master/odl/contrib/torch>`_: Integration of ODL with
+
+Overhaul of tomographic geometries
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The classes for representing tomographic geometries in ``odl.tomo`` have undergone a major update, resulting in a consistent definition of coordinate systems across all cases, `proper documentation <https://odlgroup.github.io/odl/guide/geometry_guide.html>`_, vectorization and broadcasting semantics in all methods that compute vectors, and significant speed-up of backprojection due to better axis handling.
+Additionally, factory functions ``cone_beam_geometry`` and ``helical_geometry`` have been added as a simpler and more accessible way to create cone beam geometries.
+
+-----
+
+New features
+------------
+- Function ``pkg_supports`` for tracking package features (:pull:`976`).
+- Class ``CallbackShowConvergence`` for tracking values of functionals in a plot (:pull:`832`).
+- Context manager ``NumpyRandomSeed`` for setting and resetting the random seed, to get reproducible randomness (:pull:`1003`).
+- Parameter ``seed`` in noise phantoms for reproducible results (:pull:`1003`).
+- Function ``as_scipy_functional`` that allows using ``Functional`` instances and their gradients in SciPy's optimization methods (:pull:`1004`).
+- New ``text`` phantom to create images from arbitrary text (:pull:`1009`, :pull:`1072`).
+- Class ``CallbackPrintHardwareUsage`` for monitoring of OS resources during an optimization loop (:pull:`1024`).
+- New ``odl.contrib`` sub-package as a place for user-contributed code that lives outside the ODL core, but is still bundled with it (:pull:`1020`).
+- Class ``FiniteSet`` with some simple set logic (:pull:`865`).
+- Alternative constructor ``frommatrix`` for tomographic geometries which takes a matrix that rotates (and scales) the default coordinate system. This is an advanced interface that gives full control over the initialization (:pull:`968`).
+- Factory function ``cone_beam_geometry`` as a simple interface to cone beam geometries (:pull:`968`).
+- Class ``FunctionalQuadraticPerturb`` that supersedes ``FunctionalLinearPerturb``, with an additional quadratic terms and the usual rules for gradient and proximal (:pull:`1066`).
+- Method ``Operator.norm`` that allows to implement exact (constant) values for operator norms, as well as estimating them with a power iteration (:pull:`1067`).
+- Two phantoms ``smooth_cuboid`` and ``tgv_phantom`` (:pull:`1081`, :pull:`1082`, :pull:`1041`).
+- Operator ``ComplexModulus``, often used in MRI and phase contrast imaging (:pull:`1041`).
+- Optimization method ``adam`` that is popular in the machine learning community (:pull:`972`).
+- Class ``CallbackProgressBar`` for prettier progress display in solvers (:pull:`1097`).
+- Additional ``axis`` parameter in the ``squeeze`` methods on ``RectGrid`` and ``RectPartition`` for axis-specific squeezing (:pull:`1110`).
+- Tomographic ``Geometry`` classes now support indexing ``geom[indices]`` for extraction of sub-geometries. This is particularly useful for reconstruction methods that split up the forward operator, e.g., Kaczmarz (:pull:`1110`).
+- Additional ``gamma_dual`` parameter in the ``pdhg`` solver (renamed from ``chambolle_pock_solver``) for doing acceleration in the dual variable instead of the primal (:pull:`1092`).
+- Function ``linear_deform`` now exposed (:pull:`1140`).
+- Phantom ``uniform_noise`` (:pull:`1148`).
+- Optimization method ``admm_linearized`` implementing the linearized version of the ADMM (Alternating Direction Method of Multipliers) (:pull:`1198`).
+- Functional ``Huber``,  a smoothed version of the L1 Norm (:pull:`1191`).
+- Functional ``BregmanDistance`` and a method ``Functional.bregman`` as helpers to implement "Bregmanized" versions of regularization methods (:pull:`1267`, :pull:`1340`).
+- Optimization method ``adupdates``, an implementation of the Alternating Dual method of McGaffin and Fessler for nonsmooth optimization (:pull:`1243`).
+- Helper function ``helical_geometry`` to quickly create helical cone beam geometries (:pull:`1157`).
+- Helper functions ``douglas_rachford_pd_stepsize`` and ``pdhg_stepsize`` for automatically computing step-size-like parameters for solvers that ensure theoretical convergence (:pull:`1286`, :pull:`1360`).
+- Optimization methods ``dca``, ``prox_dca`` and ``doubleprox_dca`` for difference-of-convex type problems (:pull:`1307`).
+- Functionals ``IndicatorSimplex`` and ``IndicatorSumConstraint`` with proximals, for restraining solutions of optimization problems to simplices (:pull:`1347`).
+
+Updates/additions to ``contrib``
+--------------------------------
+- New ``datasets`` sub-package for code to programatically load publicly available datasets from the web; initially containing two FIPS datasets for X-ray CT, Mayo clinic real human CT data, three MRI datasets from TU Graz, as well as some images for image processing applications (:pull:`992`, :pull:`1041`, :pull:`1193`, :pull:`1211`, :pull:`1352`, :pull:`1321`, :pull:`1367`, :pull:`1383`, :pull:`1421`).
+- New ``tomo`` sub-package for application- or device-specific geometries and projection operators; initially populated with implementations for the Elekta ICON and XVI CT systems (:pull:`1035`, :pull:`1125`, :pull:`1138`).
+- New ``fom`` sub-package for figures-of-merit (FOMs) that measure image quality (:pull:`1018`, :pull:`972`, :pull:`1116`, :pull:`1128`, :pull:`1108`, :pull:`1126`, :pull:`1144`, :pull:`1163`, :pull:`1280`, :pull:`1419`).
+- New ``solvers`` sub-package for application-specific solvers and experimental optimization code; initally contains a nonlocal means functional (:pull:`1052`).
+- New ``tensorflow`` sub-package featuring seamless two-way integration of ODL and Tensorflow. This allows ODL operators and functionals to be used as layers in neural networks, which opens up a big range of (inverse problems) applications to the world of deep learning.
+  Conversely, Tensorflow computation graphs can be treated as ODL vector space elements and, e.g., be fed to ODL solvers, resulting in an abstract representation of the result as a new computation graph (:pull:`972`, :pull:`1271`, :pull:`1366`).
+- New ``theano`` sub-package featuring support for ODL operators and functionals as ``theano.Op``. Unfortunately, this has limited usefulness since the Theano project has been stopped (:pull:`1098`).
+- New ``pytorch`` sub-package integrating ODL with PyTorch, such that operators and functionals can be used in PyTorch neural nets, with similar implications as for the ``tensorflow`` integration, although only one-way (:pull:`1109`, :pull:`1160`, :pull:`1393`).
+- New ``pyshearlab`` sub-package implementing bindings for the pyshearlab library for shearlet decomposition and analysis in 2D (:pull:`1115`).
+- New ``solvers.spdhg`` sub-package containing a stochastic version of the PDHG optimizer (:pull:`1194`, :pull:`1326`).
+- New ``shearlab`` sub-package with a wrapper for the Julia package ``Shearlab.jl`` that implements shearlet decomposition and analysis (:pull:`1322`, :pull:`1372`).
+- New ``param_opt`` sub-package for parameter optimization strategies, e.g. regularization parameters in inverse problems (:pull:`1280`).
+- Bugfix: MRC headers with invalid axis order entries are now handled properly (:pull:`990`).
+
+Improvements
+------------
+- Anisotropic voxels are now supported in 3D tomographic projections with the ASTRA toolbox (:pull:`976`).
+- Zero-dimensional grids, partitions and ``DiscreteLp`` instances are now supported. They come up once in a while, e.g., during splitting or when building up something axis by axis (:pull:`995`).
+- ``DiscreteLp`` can now have a mixture of uniform and non-uniform axes, and (most) operators that take an ``axis`` argument work with this. A major use case is ranges of tomographic projections with non-uniform angles (:pull:`996`, :pull:`1000`).
+- An annoying ``ComplexWarning`` in ``ProductSpace.inner`` was silenced by correct code (:pull:`1005`).
+- ``Operator`` now disallows returning a different ``out`` than was passed in. This catches erroneous code that would allocate a new element regardless and return that, instead of using the provided ``out`` element (:pull:`1007`).
+- FFTs now use the fastest available backend by default, instead of defaulting to Numpy's FFT (:pull:`1006`).
+- Many classes now make more use of caching of their computed properties to save the computational cost. Some of those properties are on hot code paths and make a big difference for the final runtime of typical code. Furthermore, heavily used functions with only a small number of possible inputs make use of an LRU input cache (:pull:`1012`).
+- The performance of the ``douglas_rachford_pd`` solver was improved by the use of a temporary and in-place arithmetic (:pull:`1012`).
+- Linear combination in :math:`R^n` like spaces uses BLAS only for arrays of more than 50000 entries; below that threshold, a naive implementation tends to be faster (:pull:`1012`).
+- All ``Callback`` classes now support the ``step`` parameter (:pull:`1021`).
+- The ``pdhg`` solver (then ``chambolle_pock_solver``) precomputes proximals for a 25 % speed-up (:pull:`1027`).
+- The ``indices`` sequence in ``show`` methods now takes ``None`` entries as ``slice(None)``, thereby mirroring the behavior of the ``coords`` parameter (:pull:`1029`).
+- Several functions (``parker_weighting``, ``fpb_filter``, the ASTRA CUDA wrappers) got performance tweaks (:pull:`1035`).
+- A number of code paths have been made faster by removing redundant checks, getting rid of ``abc``, caching, etc. (:pull:`1043`).
+- The whole system of tomographic geometries was overhauled with better internal consistency, clearer definitions of coordinate systems, vectorization of methods, and, most importantly, proper documentation (:pull:`968`, :pull:`1159`).
+- The ``indicate_proj_axis`` phantom can now be used in 2D as well (:pull:`968`).
+- The ODL to ASTRA geometry translation tries as hard as possible to make the data layout beneficial for performance (less axis swapping). In 3D, this gives a whopping 15x speedup compared to the previous implementation (:pull:`968`).
+- The duration of ``import odl`` was decreased with a number of optimizations, most of them consisting in lazy loading of modules or lazy evaluation of expressions that are not strictly needed at import time (:pull:`1090`, :pull:`1112`, :pull:`1402`).
+- ``ProductSpaceElement`` now implements the ``__array__`` interface if its ``space`` is a power space (:pull:`972`).
+- A mutex was added to the ASTRA CUDA wrapper classes, to avoid race conditions between threads, e.g. when using ``tensorflow`` (:pull:`972`).
+- Calls to ``super`` have been carefully revised and unified, either as ``super(<class_name>, self).<attr>`` for collaborative multiple inheritance, or as hard-wired ``OtherClass.<attr>`` if a very specific attribute should be used. As an aside, remnants of the slow ``super`` from the ``future`` module have been removed (:pull:`1161`).
+- ``Detector`` subclasses can opt out of bounds checking with the new ``check_bounds`` parameter (:pull:`1059`).
+- ``CallbackPrintIteration`` now passes through keyword args to the ``print`` function, and the ``CallbackPrintTiming`` has gotten a ``cumulative`` parameter (:pull:`1176`).
+- Printing of ODL space elements, operators and others has been improved, and the implementation has been simplified with helper functions (:pull:`1203`).
+- The internal representation of vector spaces and similar structures has been significantly simplified. Before, there were a number of ``*Set`` and ``*Space`` classes alongside, where the former was a more general version of the latter with less structure and fewer capabilities. This separation has been removed in favor of *duck-typing*: if it quacks like a space (e.g. has an inner product), it is a space (:pull:`1205`).
+- A number of operators (differential operators like ``Gradient`` and pointwise vector field operators like ``PointwiseNorm``) have been equipped with the capability of customizing their ranges (:pull:`1216`).
+- Phantoms now take two additional parameters ``min_pt`` and ``max_pt`` that allow restricting their extent to a subvolume if both are given, or shift the phantom if only one of them is given (:pull:`1223`).
+- ``KullbackLeiblerCrossEntropy.proximal`` now works with complex spaces (:pull:`1088`).
+- The ``insert`` method of ``IntervalProd``, ``RectGrid`` and ``RectPartition`` now takes an arbitrary number of objects to insert (:pull:`1088`).
+- Numpy ``ufunc`` operators with 2 disparate output data types are now supported (:pull:`1088`).
+- ``ProductSpace.shape`` now recursively determines the axes and its sizes in case of power spaces. The ``size`` and ``ndim`` properties work accordingly, i.e., ``len(pspace)`` is no longer necessarily the same as ``pspace.ndim``, as for Numpy arrays (:pull:`1088`).
+- ``ProductSpace`` and its elements now support indexing with integers, slices, tuples and lists (:pull:`1088`).
+- The ``TensorSpace`` class (replacement for ``FnBase``) and its element class ``Tensor`` (and by analogy also ``DiscreteLp`` and its elements) now fully and natively support Numpy "fancy" indexing up to very few exceptions (:pull:`1088`).
+- ``Tensor`` and ``DiscreteLpElement`` support the Numpy 1.13 ``__array_ufunc__`` interface which allows classes to take control over how ufuncs are evaluated. With this interface, it is possible to transparently perform in-place operations like ``np.cos(odl_obj, out=odl_obj)``, which was not possible with ``__array__`` and ``__array_wrap__`` before. Furthermore, other methods of Numpy ufuncs are available, e.g. ``np.add.reduce(odl_in, axis=0, out=odl_out)`` (:pull:`1088`).
+- A non-discretized ``FunctionSpace`` can now be vector- or tensor-valued, using a Numpy ``dtype`` with shape, e.g., ``np.dtype((float, (2, 3)))`` (:pull:`1088`).
+- The ``element`` methods of ``TensorSpace`` and ``DiscreteLp`` have a new ``order`` parameter to determine the array memory layout (:pull:`1088`).
+- ``ProductSpaceElement.asarray`` has been added (:pull:`1152`).
+- ``SeparableSum`` now accepts vector-valued step sizes, and several functionals (e.g. ``L1Norm``) takes pointwise step sizes, with full support for proximal, convex conjuage etc. (:pull:`1166`).
+- ``KullbackLeibler.convex_conj`` now works on product spaces (:pull:`1287`).
+- Generation of the sparse matrix containing the operators in ``ProductSpaceOperator`` is now more robust and disallows malformed constructions like ``ProductSpaceOperator([A, B])`` with matrices that are not 2D (:pull:`1293`, :pull:`1295`).
+- ``ProductSpace`` and ``ProductSpaceElement`` now implement ``real_space``, ``complex_space``, ``real``, ``imag``, ``conj``, ``astype`` and ``__array_wrap__`` where applicable (:pull:`1288`).
+- ``matrix_representation`` now works with arbitrary tensor spaces as domain and range of an operator. The result will be a tensor with the sum of the number of axes in domain and range (:pull:`1308`).
+- Optimizations for common cases in ``PointwiseNorm`` have been added, making the code run 1.5-2 times faster in typical conditions (:pull:`1318`).
+- Several complex-to-real operators like ``ComplexModulus`` now have a ``derivative`` that implements the :math:`\mathbb{C} = \mathbb{R}^2` interpretation. Furthermore, linearity is interpreted in the same sense, allowing optimization of certain operations (:pull:`1324`, :pull:`1331`).
+- The colorbar in plots from ``show`` can new be turned off with the ``colorbar`` flag (:pull:`1343`).
+- ``FunctionSpace`` and ``ProductSpace`` now have properties ``is_real`` and ``is_complex`` (:pull:`1348`).
+- ``power_method_opnorm`` now starts from a noise element, making it easier to use with operators that have null spaces, like ``Gradient`` (:pull:`1286`).
+- The default of the ``omega`` relaxation parameter in the ``landweber`` solver has been changed from 1 to ``1 / op.norm(estimate=True) ** 2``, which theoretically guarantees convergence (:pull:`1286`).
+- For the solvers ``douglas_rachford_pd`` and ``pdhg``, the step-size-like parameters have been made optional, with the default values being computed automatically using some heuristics and the bound that guarantees convergence (:pull:`1286`).
+- The ``LpNorm`` proximal now also supports exponent infinity (:pull:`1347`).
+- Filters for FBP reconstruction can now be given as arrays to ``fbp_op`` (:pull:`1379`).
+- ``ProductSpace`` and its element type now implement ``nbytes`` (:pull:`1410`).
+
+Bugfixes
+--------
+- Resolve an issue with negative indices resulting in a truncated image in ``ellipsoid_phantom`` (:pull:`998`).
+- ``MultiplyOperator.adjoint`` now works for scalar domain and range (:pull:`987`).
+- ``ReductionOperator._call`` now properly unwraps the result before returning it (:pull:`1012`, :pull:`1010`).
+- Fix the issue of ``0 * log(0)`` producing ``NaN`` in ``KullbackLeibler`` (:pull:`1042`).
+- Sometimes, titles of figures resulting from ``show`` would be clipped. This is now fixed (:pull:`1045`).
+- ``Parallel3dEulerGeometry`` now actually works with ASTRA projectors (:pull:`968`).
+- Fix a rounding error preventing colorbar ticks to show up in ``show`` (:pull:`1063`).
+- ``DiscreteLp.astype`` now propagates its axis labels as expected (:pull:`1073`).
+- Resolve an issue with wrong inner products on non-uniformly discretized spaces (:pull:`1096`).
+- ``CallbackStore`` now works with objects that do have a ``copy`` method but do implement ``__copy__`` (:pull:`1094`).
+- ``RayTransform`` and FBP operators used the wrong projection space weighting if the reconstruction space was unweighted. This was fixed, but the patch has been superseded by :pull:`1088` (:pull:`1099`, :pull:`1102`).
+- Fix ``LinearSpace.zeros`` using the wrong order of arguments (:pull:`972`).
+- ``ProductSpaceElement`` now has a (space pass-through) ``shape`` property (:pull:`972`).
+- Resolve several issues with complex spaces in optimization problems (:pull:`1120`).
+- The tick labels in ``show`` are now "NaN-proof" (:pull:`1092`, :pull:`1158`, :pull:`1088`).
+- Fix a bug in ``nonuniform_partition`` that caused length-1 inputs to crash the function (:pull:`1141`).
+- Fix ``DiscreteLpElement.real`` (and ``.imag``) sometimes returning a copy instead of a view (:pull:`1155`).
+- Fix ``ConeFlatGeometry`` not propagating ``pitch`` in its ``__getitem__`` method (:pull:`1173`).
+- Fix a bug in ``parker_weighting`` caused by the change of geometry definitions (:pull:`1175`).
+- Resolve an issue with wrong results of the L1 convex conjugate proximal when input and output were aliased (:pull:`1182`).
+- Correct the implementation of ``Operator{Left,Right}VectorMult.adjoint`` for complex spaces (:pull:`1192`).
+- Add a workaround for the fact BLAS internally works with 32-bit integers as indices, which goes wrong for very large arrays (:pull:`1190`).
+- Fix Numpy errors not recognizing ``builtins.int`` from the ``future`` library as valid ``dtype`` by disallowing that object as ``dtype`` internally (:pull:`1205`).
+- Resolve a number of minor issues with geometry methods' broadcasting (:pull:`1210`).
+- Correct handling of degenerate (size 1) axes in Fourier transform range inference (:pull:`1208`).
+- Fix a bug in ``OperatorSum`` and ``OperatorPointwiseProduct`` that resulted in wrong outputs for aliased input and output objects (:pull:`1225`).
+- Fix the broken ``field`` determination for ``ProductSpace(space, 0)`` (:pull:`1088`).
+- Add back the string dtypes in ``NumpyTensorSpace.available_dtypes`` (:pull:`1236`, :pull:`1294`).
+- Disallow bool conversion of ``Tensor`` with ``size > 1`` (:pull:`1235`).
+- Fix a sign flip error in 2D geometries (:pull:`1245`).
+- Blacklisted several patch versions of NumPy 1.14 due to bugs in new-style array printing that result in failing doctests (:pull:`1265`).
+- Correct the implementations of ``PointwiseNorm.derivative`` and ``GroupL1Norm.gradient`` to account for division-by-zero errors (:pull:`1070`).
+- Fix issue in ``NumpyTensor.lincomb`` when one of the scalars is NaN (:pull:`1272`).
+- Fix indexing into ``RectPartition.byaxis`` producing a wrong result with integers (:pull:`1284`).
+- Resolve ``space.astype(float)`` failing for ``space.dtype == bool`` (:pull:`1285`).
+- Add a missing check for scalar ``sigma`` in ``FunctionalQuadraticPerturb.proximal`` (:pull:`1283`).
+- Fix an error in the adjoint of ``SamplingOperator`` triggered by a ``sampling_points`` argument of length 1 (:pull:`1351`).
+- Make ``DiscreteLpElement.show`` use the correct interpolation scheme (:pull:`1375`).
+- Fix checking of pyFFTW versions to also support Git revision versions (:pull:`1373`).
+- Correct the implementation of ``MultiplyOperator.adjoint`` for complex spaces (:pull:`1390`).
+- Replace the improper and potentially ambiguous indexing with tuple indexing as signalled by the Numpy deprecation warning (:pull:`1420`).
+
+API Changes
+-----------
+- Functions and attributes related to convex conjugates now use ``convex_conj`` as name part instead of ``cconj`` (:pull:`1048`).
+- ``ParallelGeometry`` was renamed to ``ParallelBeamGeometry`` (:pull:`968`).
+- ``HelicalConeFlatGeometry`` was renamed to ``ConeFlatGeometry``, and ``CircularConeFlatGeometry`` was removed as special case (:pull:`968`).
+- ``pitch_offset`` in 3D cone beam geometries was renamed to ``offset_along_axis`` (:pull:`968`).
+- ``ellipsoid_phantom`` now takes angles in radians instead of degrees (:pull:`972`).
+- The ``L1Norm.gradient`` operator now implements the (ad-hoc) ``derivative`` method, returning ``ZeroOperator`` (:pull:`972`).
+- The base class for solver callbacks was renamed from ``SolverCallback`` to ``Callback`` (:pull:`1097`).
+- The ``chambolle_pock_solver`` has been renamed to ``pdhg`` (Primal-Dual Hybrid Gradient), along with all references to "Chambolle-Pock" (:pull:`1092`).
+- The ``gamma`` parameter in ``pdhg`` (see one above) has been renamed to ``gamma_primal``, since one can now alternatively specify a ``gamma_dual`` acceleration parameter (:pull:`1092`).
+- As a result of merging internal ``*Set`` and ``*Space`` classes, a number of arguments to internal class constructors like ``FunctionSpaceMapping`` have been renamed accordingly (:pull:`1205`)
+- Remove the (dubious) ``dist_using_inner`` optimization of vector spaces (:pull:`1214`).
+- The class ``Ntuples`` has been merged into ``FnBase``, but both have been superseded by :pull:`1088` (:pull:`1205`, :pull:`1216`).
+- The ``writable_array`` context manager no longer takes an arbitrary number of positional arguments as pass-through, only keyword arguments (:pull:`1088`).
+- ``LinearSpaceElement`` and ``ProductSpaceElement`` are no longer available in the top-level ``odl`` namespace (:pull:`1088`).
+- The ``NoWeighting`` classes have been removed due to their odd behavior. For the time being, no weighting is equivalent to weighting with constant 1.0, but this will change a bit in the future (:pull:`1088`).
+- The classes ``FnBase`` and ``NumpyFn`` have been removed in favor of ``TensorSpace`` and ``NumpyTensorSpace``. Likewise, the ``fn`` factory function is now called ``tensor_space``, and any other name associated with ``fn`` has been renamed accordingly (:pull:`1088`).
+- The ``uspace`` and ``dspace`` properties of ``Discretization`` have been renamed to ``fspace`` ("function space") and ``tspace`` ("tensor space"), respectively (:pull:`1088`).
+- With mandatory multi-indexing support for ``TensorSpace`` implementations, the old ``CudaFn`` class is no longer supported. The next release 1.0.0 will have a much more powerful replacement using CuPy, see :pull:`1401` (:pull:`1088`).
+- The meanings of the parameters ``f`` and ``g`` has been switched in ``pdhg`` to make the interface match the rest of the solvers (:pull:`1286`).
+- Bindings to the STIR reconstruction software have been overhauled and moved out of the core into a separate repository (:pull:`1403`).
+
+
 ODL 0.6.0 Release Notes (2017-04-20)
 ====================================
 Besides many small improvements and additions, this release is the first one under the new Mozilla Public License 2.0 (MPL-2.0).
@@ -301,7 +529,7 @@ Improvements
   (:pull:`490`)
 - Clean-up of imports. (:pull:`492`)
 - All solvers now check that the given start value ``x`` is in ``op.domain``. (:pull:`502`)
-- Added test for in-place evaluation of the ray transform. (:pull:`500`)
+- Add test for in-place evaluation of the ray transform. (:pull:`500`)
 
 Bugfixes
 --------
@@ -323,10 +551,10 @@ New features
 
 Changes
 -------
-- Moved all CUDA specfic code out of the library into odlcuda. This means that ``cu_ntuples.py`` and related files have been removed.
+- Move all CUDA specfic code out of the library into odlcuda. This means that ``cu_ntuples.py`` and related files have been removed.
 - Rename ``ntuples.py`` to ``npy_ntuples.py``.
-- Added ``Numpy`` to the numy based spaces. They are now named ``NumpyFn`` and ``NumpyNtuples``.
-- Prepended ``npy_`` to all methods specific to ``ntuples`` such as weightings.
+- Add ``Numpy`` to the numy based spaces. They are now named ``NumpyFn`` and ``NumpyNtuples``.
+- Prepend ``npy_`` to all methods specific to ``ntuples`` such as weightings.
 
 ODL 0.2.4 Release Notes (2016-06-28)
 ====================================
