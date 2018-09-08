@@ -54,7 +54,7 @@ def test_dft_forward(domain, impl):
     out = dft.range.element()
 
     dft(one, out=out)
-    assert out[(0,) * out.ndim] == domain.size
+    assert out[(0,) * out.ndim] == pytest.approx(domain.size)
 
 
 def test_fourier_trafo_forward_complex(domain, impl):
