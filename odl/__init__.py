@@ -15,7 +15,7 @@ restricted to) inverse problems.
 from __future__ import absolute_import
 import numpy as np
 
-__version__ = '0.6.1.dev0'
+__version__ = '0.7.0'
 __all__ = ('set',
            'space',
            'operator',
