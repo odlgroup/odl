@@ -1432,7 +1432,7 @@ def cone_beam_geometry(space, src_radius, det_radius, num_angles=None,
 
 
 def helical_geometry(space, src_radius, det_radius, num_turns,
-                     num_angles=None, det_shape=None):
+                     n_pi=1, num_angles=None, det_shape=None):
     """Create a default helical geometry from ``space``.
 
     This function is intended for simple test cases where users do not
@@ -1552,7 +1552,6 @@ def helical_geometry(space, src_radius, det_radius, num_turns,
     # this is selected so that the field of view of two opposing projections,
     # separated by theta = 180 deg, overlap, but as little as possible.
     # See `tam_danielson_window` for more information.
-    n_pi = 1
     h_axis = (pitch / (2 * np.pi) *
               (1 + (-rho / src_radius) ** 2) *
               (n_pi * np.pi / 2.0 - np.arctan(-rho / src_radius)))
