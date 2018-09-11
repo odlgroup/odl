@@ -61,10 +61,10 @@ intersphinx_mapping = {
     'python': ('https://docs.python.org/3/', None),
     'numpy': ('https://docs.scipy.org/doc/numpy/', None),
     'scipy': ('https://docs.scipy.org/doc/scipy/reference/', None),
-    'matplotlib': ('http://matplotlib.org/', None),
+    'matplotlib': ('https://matplotlib.org/', None),
     'pywt': ('http://www.pybytes.com/pywavelets/', None),
     'pyfftw': ('https://hgomersall.github.io/pyFFTW/', None),
-    'pytest': ('http://doc.pytest.org/en/latest/', None)}
+    'pytest': ('https://docs.pytest.org/en/latest/', None)}
 
 
 # Stop autodoc from skipping __init__
