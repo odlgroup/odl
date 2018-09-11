@@ -29,7 +29,7 @@ ray_trafo = odl.tomo.RayTransform(space, geometry)
 fbp = odl.tomo.fbp_op(ray_trafo, padding=True)
 
 # Tam-Danielsson window to handle redundant data
-td_window = odl.tomo.tam_danielson_window(ray_trafo, n_half_rot=3)
+td_window = odl.tomo.tam_danielson_window(ray_trafo, n_pi=3)
 
 # Calculate FBP reconstruction
 fbp_result = fbp(td_window * proj_data)
