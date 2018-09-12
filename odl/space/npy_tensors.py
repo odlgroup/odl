@@ -1061,7 +1061,7 @@ class NumpyTensor(Tensor):
         """
         dtype = np.dtype(dtype)
         if dtype.shape != ():
-            raise ValueError('`dtype` with shape not supported')
+            raise ValueError('`dtype` with shape not allowed')
         return self.space.astype(dtype).element(self.data.astype(dtype))
 
     @property
@@ -2606,12 +2606,15 @@ class NumpyTensorSpacePerAxisWeighting(PerAxisWeighting):
     def repr_part(self):
         """String usable in a space's ``__repr__`` method."""
         max_elems = 2 * np.get_printoptions()['edgeitems']
+        precision = np.get_printoptions()['precision']
 
         def factors_repr(factors):
+            """Return repr string for the weighting factors part."""
             factor_strs = []
             for fac in factors:
                 if fac.ndim == 0:
-                    factor_strs.append('{:.4}'.format(float(fac)))
+                    fmt = '{{:.{}}}'.format(precision)
+                    factor_strs.append(fmt.format(float(fac)))
                 else:
                     factor_strs.append(array_str(fac, nprint=max_elems))
             if len(factor_strs) == 1:
@@ -2633,12 +2636,15 @@ class NumpyTensorSpacePerAxisWeighting(PerAxisWeighting):
     def __repr__(self):
         """Return ``repr(self)``."""
         max_elems = 2 * np.get_printoptions()['edgeitems']
+        precision = np.get_printoptions()['precision']
 
         def factors_repr(factors):
+            """Return repr string for the weighting factors part."""
             factor_strs = []
             for fac in factors:
                 if fac.ndim == 0:
-                    factor_strs.append('{:.4}'.format(float(fac)))
+                    fmt = '{{:.{}}}'.format(precision)
+                    factor_strs.append(fmt.format(float(fac)))
                 else:
                     factor_strs.append(array_str(fac, nprint=max_elems))
             return '({})'.format(', '.join(factor_strs))
