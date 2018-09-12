@@ -320,6 +320,9 @@ def dft_preprocess_data(arr, shift=True, axes=None, sign='-', out=None):
             out = np.array(arr, dtype=complex_dtype(arr.dtype), copy=True)
         else:
             out = arr.copy()
+    elif is_real_dtype(out.dtype):
+        # Avoid `ComplexWarning` this way instead of silencing it
+        out[:] = arr.real
     else:
         out[:] = arr
 
