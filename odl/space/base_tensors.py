@@ -579,6 +579,14 @@ class Tensor(LinearSpaceElement):
         raise NotImplementedError('abstract method')
 
     @property
+    def data(self):
+        """The data structure holding this element's entries.
+
+        This method should be overridden by subclasses.
+        """
+        raise NotImplementedError('abstract method')
+
+    @property
     def impl(self):
         """Name of the implementation back-end of this tensor."""
         return self.space.impl
