@@ -206,13 +206,13 @@ class TensorSpace(LinearSpace):
     def _astype(self, dtype):
         """Internal helper for `astype`.
 
-        Subclasses with differing init parameters should overload this
+        Subclasses with different constructor signature should override this
         method.
         """
         kwargs = {}
+        # Use weighting only for floating-point types, otherwise, e.g.,
+        # `space.astype(bool)` would fail
         if is_floating_dtype(dtype):
-            # Use weighting only for floating-point types, otherwise, e.g.,
-            # `space.astype(bool)` would fail
             weighting = getattr(self, 'weighting', None)
             if weighting is not None:
                 kwargs['weighting'] = weighting

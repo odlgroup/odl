@@ -473,15 +473,22 @@ class NumpyTensorSpace(TensorSpace):
     def _astype(self, dtype):
         """Internal helper for `astype`.
 
-        Subclasses with differing init parameters should overload this
+        Subclasses with different constructor signature should override this
         method.
         """
         kwargs = {}
         dtype = np.dtype(dtype)
 
-        if is_floating_dtype(dtype) and dtype.shape != ():
-            # Use weighting only for floating-point types, otherwise, e.g.,
-            # `space.astype(bool)` would fail
+        # Use weighting only for floating-point types, otherwise, e.g.,
+        # `space.astype(bool)` would fail
+        if is_floating_dtype(dtype) and dtype.shape == ():
+            # Standard case, basically pass-through
+            weighting = getattr(self, 'weighting', None)
+            if weighting is not None:
+                kwargs['weighting'] = weighting
+
+        elif is_floating_dtype(dtype) and dtype.shape != ():
+            # Got nontrivial `dtype.shape`, make new axes accordingly
             weighting_slc = (
                 (None,) * len(dtype.shape) + (slice(None),) * self.ndim
             )

@@ -459,7 +459,11 @@ class DiscreteLp(DiscretizedSpace):
                 self, self.tspace.element(inp, order=order))
 
     def _astype(self, dtype):
-        """Internal helper for ``astype``."""
+        """Internal helper for ``astype``.
+
+        Subclasses with different constructor signature should override this
+        method.
+        """
         dtype = np.dtype(dtype)
         fspace = self.fspace.astype(dtype)
 
@@ -481,10 +485,10 @@ class DiscreteLp(DiscretizedSpace):
 
     # Overrides for space functions depending on partition
     #
-    # The inherited methods by default use a weighting by a constant
+    # The inherited methods by default use weighting by a constant
     # (the grid cell size). In dimensions where the partitioned set contains
     # only a fraction of the outermost cells (e.g. if the outermost grid
-    # points lie at the boundary), the corresponding contribuitons to
+    # points lie at the boundary), the corresponding contributions to
     # discretized integrals need to be scaled by that fraction.
     def _inner(self, x, y):
         """Return ``self.inner(x, y)``."""
