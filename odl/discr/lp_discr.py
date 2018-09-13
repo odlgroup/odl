@@ -473,7 +473,8 @@ class DiscreteLp(DiscretizedSpace):
             tspace = self.tspace.astype(dtype)
             axis_labels_new = self.axis_labels
         else:
-            tspace = self.tspace.byaxis[self.ndim_out:].astype(dtype)
+            tspace = self.tspace.byaxis[self.ndim_out:].newaxis(0, dtype.shape)
+            tspace = tspace.astype(dtype.base)
             axis_labels_extra = tuple('$i_{}$'.format(ax)
                                       for ax in range(len(dtype.shape)))
             axis_labels_new = (axis_labels_extra +

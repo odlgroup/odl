@@ -561,7 +561,7 @@ class ConstWeighting(Weighting):
     @property
     def repr_part(self):
         """String usable in a space's ``__repr__`` method."""
-        optargs = [('weighting', self.const, 1.0),
+        optargs = [('weighting', self.const, None),
                    ('exponent', self.exponent, 2.0)]
         return signature_string([], optargs, mod=':.4')
 

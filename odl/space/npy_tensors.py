@@ -92,8 +92,8 @@ class NumpyTensorSpace(TensorSpace):
             Exponent of the norm. For values other than 2.0, no
             inner product is defined.
 
-            This option has no impact if either ``dist``, ``norm`` or
-            ``inner`` is given, or if ``dtype`` is non-numeric.
+            This option has no impact if either of ``weighting``, ``dist``,
+            ``norm`` or ``inner`` is given, or if ``dtype`` is non-numeric.
 
             Default: 2.0
 
@@ -103,7 +103,8 @@ class NumpyTensorSpace(TensorSpace):
             Use weighted inner product, norm, and dist. The following
             types are supported as ``weighting``:
 
-            - ``None``: No weighting, i.e. weighting with ``1.0`` (default).
+            - ``None``: No weighting, i.e. weighting with ``1.0`` for
+              each axis (default).
             - ``float``: Weighting by a constant.
             - sequence of length ``ndim``: Separate weighting per axis.
               Entries can be constants or 1D arrays.
@@ -312,8 +313,9 @@ class NumpyTensorSpace(TensorSpace):
         elif inner is not None:
             self.__weighting = NumpyTensorSpaceCustomInner(inner)
         else:
-            # No weighting, i.e., weighting with constant 1.0
-            self.__weighting = NumpyTensorSpaceConstWeighting(1.0, exponent)
+            # No weighting, i.e., weighting with constant 1.0 in each axis
+            self.__weighting = NumpyTensorSpacePerAxisWeighting(
+                [1.0] * self.ndim, exponent)
 
         # Make sure there are no leftover kwargs
         if kwargs:
@@ -336,10 +338,11 @@ class NumpyTensorSpace(TensorSpace):
 
     @property
     def is_weighted(self):
-        """Return ``True`` if the space is not weighted by constant 1.0."""
+        """Return ``True`` if the space is not weighted by 1.0 in each axis."""
         return not (
-            isinstance(self.weighting, NumpyTensorSpaceConstWeighting) and
-            self.weighting.const == 1.0)
+            isinstance(self.weighting, NumpyTensorSpacePerAxisWeighting) and
+            self.weighting.array_axes == () and
+            self.weighting.consts == (1.0,) * self.ndim)
 
     @property
     def exponent(self):
@@ -478,6 +481,8 @@ class NumpyTensorSpace(TensorSpace):
         """
         kwargs = {}
         dtype = np.dtype(dtype)
+        if dtype.shape != ():
+            raise ValueError('`dtype` with shape not allowed')
 
         # Use weighting only for floating-point types, otherwise, e.g.,
         # `space.astype(bool)` would fail
@@ -497,6 +502,107 @@ class NumpyTensorSpace(TensorSpace):
             kwargs['weighting'] = weighting
 
         return type(self)(dtype.shape + self.shape, dtype=dtype.base, **kwargs)
+
+    def newaxis(self, index, shape, weighting=None):
+        """Return a copy of this space with extra axes inserted.
+
+        .. note::
+            This function is most useful in the default case of per-axis
+            weighting factors. For weighting with a single constant, with
+            an array of the same shape as this space, or for custom
+            weighting classes, "inserting" new factors does not really make
+            sense. This function will therefore use the old constant in the
+            first case and fall back to no weighting in all other non-standard
+            cases. If that is not the desired outcome, a new space should
+            be constructed altogether.
+
+        Parameters
+        ----------
+        index : int
+            Position at which to insert new axes. Negative indices are
+            counted backwards from the end.
+        shape : nonnegative int or sequence of nonnegative ints
+            Sizes of the axes that are to be inserted.
+        weighting : `array-like` or sequence of `array-like`, optional
+            Weighting factors that should be used in the new axes.
+            The number of factors must correspond to the number of entries
+            in ``shape`` (1 if ``shape`` is an int).
+
+        Examples
+        --------
+        In the default unweighted case, the extended space is unweighted
+        as well, unless specified otherwise:
+
+        >>> space = odl.rn(3)
+        >>> space.newaxis(0, 2)
+        rn((2, 3))
+        >>> space.newaxis(1, 2)
+        rn((3, 2))
+        >>> space = odl.rn((2, 5))
+        >>> space.newaxis(1, (3, 4))
+        rn((2, 3, 4, 5))
+        >>> space.newaxis(1, (3, 4), weighting=[0.5, 2.0])
+        rn((2, 3, 4, 5), weighting=(1.0, 0.5, 2.0, 1.0))
+
+        The (default) per-axis weighting is extended with factors 1.0 by
+        default, or other factors as given:
+
+        >>> space = odl.rn((2, 4))
+        >>> space.newaxis(1, 3) == space.newaxis(1, 3, weighting=[1.0])
+        True
+        >>> space.newaxis(1, 3, weighting=[2, 1, 0.5])
+        rn((2, 3, 4), weighting=(1.0, [ 2. ,  1. ,  0.5], 1.0))
+        """
+        # Check inputs
+        index, index_in = int(index), index
+        if index != index_in:
+            raise TypeError('`index` must be an int, got {!r}'
+                            ''.format(index_in))
+        if index < 0:
+            index += self.ndim
+        if not 0 <= index <= self.ndim:
+            raise IndexError(
+                '`index` must satisfy `-{ndim} <= index <= {ndim}`, got {0}'
+                ''.format(index_in, ndim=self.ndim))
+
+        try:
+            shape = tuple(shape)
+        except TypeError:
+            shape = (shape,)
+
+        num_axes = len(shape)
+
+        # Determine new weighting
+        if isinstance(self.weighting, PerAxisWeighting):
+            if weighting is None:
+                weighting = [1.0] * num_axes
+            else:
+                if num_axes == 1:
+                    weighting = [
+                        np.asarray(weighting, dtype=self.dtype).squeeze()
+                    ]
+                else:
+                    weighting = [np.asarray(w, dtype=self.dtype)
+                                 for w in weighting]
+
+            if len(weighting) != num_axes:
+                raise ValueError(
+                    '`shape` has length {}, but got {} weighting factors'
+                    ''.format(num_axes, len(weighting)))
+
+            old_factors = list(self.weighting.factors)
+            new_factors = old_factors[:index] + weighting + old_factors[index:]
+            new_weighting = NumpyTensorSpacePerAxisWeighting(
+                new_factors, self.exponent)
+
+        elif isinstance(self.weighting, ConstWeighting):
+            new_weighting = self.weighting
+        else:
+            new_weighting = None
+
+        # Construct new space
+        new_shape = self.shape[:index] + shape + self.shape[index:]
+        return type(self)(new_shape, self.dtype, weighting=new_weighting)
 
     def zero(self):
         """Return a tensor of all zeros.
@@ -2588,7 +2694,7 @@ class NumpyTensorSpacePerAxisWeighting(PerAxisWeighting):
 
         same_const_idcs = (other.const_axes == self.const_axes)
         consts_equal = (self.consts == other.consts)
-        arrs_ident = (a is b for a, b in zip(self.arrays, other.arrays))
+        arrs_ident = all(a is b for a, b in zip(self.arrays, other.arrays))
 
         return (super(NumpyTensorSpacePerAxisWeighting, self).__eq__(other) and
                 same_const_idcs and

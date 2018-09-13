@@ -270,11 +270,28 @@ class TensorSpace(LinearSpace):
         else:
             return self._astype(dtype)
 
-    @property
-    def default_order(self):
-        """Default storage order for new elements in this space.
+    def newaxis(self, index, shape, weighting=None):
+        """Return a copy of this space with extra axes inserted.
 
-        This property should be overridden by subclasses.
+        .. note::
+            This function is most useful in the default case of per-axis
+            weighting factors. For weighting with a single constant
+            or with an array of the same shape as this space, "inserting"
+            new factors does not really make sense, and the ``weighting``
+            argument will not be used. In these cases, it is better to
+            construct a new space altogether.
+
+        Parameters
+        ----------
+        index : int
+            Position at which to insert new axes. Negative indices are
+            counted backwards from the end.
+        shape : nonnegative int or sequence of nonnegative ints
+            Sizes of the axes that are to be inserted.
+        weighting : float, `array-like` or `Weighting`, optional
+            Weighting factors that should be used in the new axes.
+            The number of factors must correspond to the number of entries
+            in ``shape`` (1 if ``shape`` is an int).
         """
         raise NotImplementedError('abstract method')
 
@@ -480,6 +497,14 @@ class TensorSpace(LinearSpace):
         """The entry-wise quotient of two tensors, assigned to ``out``.
 
         This method should be overridden by subclasses.
+        """
+        raise NotImplementedError('abstract method')
+
+    @property
+    def default_order(self):
+        """Default storage order for new elements in this space.
+
+        This property should be overridden by subclasses.
         """
         raise NotImplementedError('abstract method')
 
