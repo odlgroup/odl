@@ -1491,7 +1491,7 @@ def helical_geometry(space, src_radius, det_radius, num_turns,
     >>> geometry.angles.size
     234
     >>> geometry.detector.shape
-    (57, 10)
+    (57, 9)
 
     Notes
     -----
