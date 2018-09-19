@@ -15,7 +15,7 @@ from odl.discr import DiscreteLp
 from odl.operator import Operator
 from odl.trafos.backends.pywt_bindings import (
     PYWT_AVAILABLE,
-    pywt_pad_mode, pywt_wavelet)
+    pywt_pad_mode, pywt_wavelet, precompute_raveled_slices)
 
 __all__ = ('WaveletTransform', 'WaveletTransformInverse')
 
@@ -35,7 +35,7 @@ class WaveletTransformBase(Operator):
     """
 
     def __init__(self, space, wavelet, nlevels, variant, pad_mode='constant',
-                 pad_const=0, impl='pywt', axes=None, slices=None, shapes=None):
+                 pad_const=0, impl='pywt', axes=None):
         """Initialize a new instance.
 
         Parameters
@@ -138,9 +138,13 @@ class WaveletTransformBase(Operator):
         if self.impl == 'pywt':
             self.pywt_pad_mode = pywt_pad_mode(pad_mode, pad_const)
             self.pywt_wavelet = pywt_wavelet(self.wavelet)
-            coeff_size = pywt.wavedecn_size(pywt.wavedecn_shapes(
+            # determine coefficient shapes (without running wavedecn)
+            self._coeff_shapes = pywt.wavedecn_shapes(
                 space.shape, wavelet, mode=self.pywt_pad_mode,
-                level=self.nlevels, axes=self.axes))
+                level=self.nlevels, axes=self.axes)
+            # precompute slices into the (raveled) coeffs
+            self._coeff_slices = precompute_raveled_slices(self._coeff_shapes)
+            coeff_size = pywt.wavedecn_size(self._coeff_shapes)
             coeff_space = space.tspace_type(coeff_size, dtype=space.dtype)
         else:
             raise RuntimeError("bad `impl` '{}'".format(self.impl))
@@ -150,8 +154,6 @@ class WaveletTransformBase(Operator):
             raise ValueError("`variant` '{}' not understood"
                              "".format(variant_in))
         self.__variant = variant
-        self._coeff_slices = slices  # will be set during forward call
-        self._coeff_shapes = shapes  # will be set during forward call
 
         if variant == 'forward':
             super(WaveletTransformBase, self).__init__(
@@ -324,9 +326,7 @@ class WaveletTransform(WaveletTransformBase):
             coeffs = pywt.wavedecn(
                 x, wavelet=self.pywt_wavelet, level=self.nlevels,
                 mode=self.pywt_pad_mode, axes=self.axes)
-            (coeffs, self._coeff_slices,
-             self._coeff_shapes) = pywt.ravel_coeffs(coeffs, axes=self.axes)
-            return coeffs.ravel()
+            return pywt.ravel_coeffs(coeffs, axes=self.axes)[0]
         else:
             raise RuntimeError("bad `impl` '{}'".format(self.impl))
 
@@ -366,8 +366,7 @@ class WaveletTransform(WaveletTransformBase):
         return WaveletTransformInverse(
             range=self.domain, wavelet=self.pywt_wavelet, nlevels=self.nlevels,
             pad_mode=self.pad_mode, pad_const=self.pad_const, impl=self.impl,
-            axes=self.axes, slices=self._coeff_slices,
-            shapes=self._coeff_shapes)
+            axes=self.axes)
 
 
 class WaveletTransformInverse(WaveletTransformBase):
@@ -380,8 +379,7 @@ class WaveletTransformInverse(WaveletTransformBase):
     """
 
     def __init__(self, range, wavelet, nlevels=None, pad_mode='constant',
-                 pad_const=0, impl='pywt', axes=None, slices=None,
-                 shapes=None):
+                 pad_const=0, impl='pywt', axes=None):
         """Initialize a new instance.
 
          Parameters
@@ -466,15 +464,10 @@ class WaveletTransformInverse(WaveletTransformBase):
         """
         super(WaveletTransformInverse, self).__init__(
             space=range, wavelet=wavelet, variant='inverse', nlevels=nlevels,
-            pad_mode=pad_mode, pad_const=pad_const, impl=impl, axes=axes,
-            slices=slices, shapes=shapes)
+            pad_mode=pad_mode, pad_const=pad_const, impl=impl, axes=axes)
 
     def _call(self, coeffs):
         """Return the inverse wavelet transform of ``coeffs``."""
-        if self._coeff_slices is None:
-            raise ValueError(
-                "self._coeff_slices not initialized.  Run the forward "
-                "transform once first to initialize it.")
         if self.impl == 'pywt':
             coeffs = pywt.unravel_coeffs(coeffs,
                                          coeff_slices=self._coeff_slices,
