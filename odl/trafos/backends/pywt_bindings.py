@@ -28,6 +28,8 @@ __all__ = ('PAD_MODES_ODL2PYWT', 'PYWT_SUPPORTED_MODES', 'PYWT_AVAILABLE',
            'pywt_wavelet', 'pywt_pad_mode', 'precompute_raveled_slices')
 
 
+# A clear illustration of all of these padding modes is available at:
+# https://pywavelets.readthedocs.io/en/latest/ref/signal-extension-modes.html
 PAD_MODES_ODL2PYWT = {'constant': 'zero',
                       'periodic': 'periodic',
                       'symmetric': 'symmetric',
