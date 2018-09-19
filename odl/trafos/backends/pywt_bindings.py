@@ -91,8 +91,7 @@ def precompute_raveled_slices(coeff_shapes, axes=None):
     >>> import pywt
     >>> data_shape = (512, 512)
     >>> coeff_shapes = pywt.wavedecn_shapes(data_shape, wavelet='db2', level=3)
-    >>> coeff_slices, coeff_shapes = precompute_ravel_slices(coeff_shapes)
-
+    >>> coeff_slices = precompute_raveled_slices(coeff_shapes)
     """
     # initialize with the approximation coefficients.
     a_shape = coeff_shapes[0]
@@ -114,7 +113,11 @@ def precompute_raveled_slices(coeff_shapes, axes=None):
     for shape_dict in details_list:
         # new dictionaries for detail coefficient slices and shapes
         coeff_slices.append({})
-        for key, shape in shape_dict.items():
+        keys = list(shape_dict.keys())
+        # TODO: once PyWavelets 1.0.1 is released, bump version requirement and
+        # change to keys = sorted(shape_dict.keys())
+        for key in keys:
+            shape = shape_dict[key]
             size = np.prod(shape)
             sl = slice(offset, offset + size)
             offset += size
