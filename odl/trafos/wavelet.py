@@ -101,8 +101,10 @@ class WaveletTransformBase(Operator):
         impl : {'pywt'}, optional
             Back-end for the wavelet transform.
         axes : sequence of ints, optional
-            Axes over which the DWT that created ``coeffs`` was performed.  The
-            default value of ``None`` corresponds to all axes.
+            Axes over which the DWT that created ``coeffs`` was performed. The
+            default value of ``None`` corresponds to all axes. When not all
+            axes are included this is analagous to a batch transform in
+            ``len(axes)`` dimensions looped over the non-transformed axes.
         """
         if not isinstance(space, DiscreteLp):
             raise TypeError('`space` {!r} is not a `DiscreteLp` instance.'
@@ -307,14 +309,48 @@ class WaveletTransform(WaveletTransformBase):
         ...     domain=space, nlevels=1, wavelet='haar')
         >>> wavelet_trafo.is_biorthogonal
         True
-        >>> decomp = wavelet_trafo([[1, 1, 1, 1],
-        ...                         [0, 0, 0, 0],
-        ...                         [0, 0, 1, 1],
-        ...                         [1, 0, 1, 0]])
+        >>> data = [[1, 1, 1, 1],
+        ...         [0, 0, 0, 0],
+        ...         [0, 0, 1, 1],
+        ...         [1, 0, 1, 0]]
+        >>> decomp = wavelet_trafo(data)
         >>> print(decomp)
         [ 1. ,  1. ,  0.5, ...,  0. , -0.5, -0.5]
         >>> decomp.shape
         (16,)
+
+        It is also possible to apply the transform only along a subset of the
+        axes. Here, we apply a 1D wavelet transfrom along axis 0 for each
+        index along axis 1:
+
+        >>> wavelet_trafo = odl.trafos.WaveletTransform(
+        ...     domain=space, nlevels=1, wavelet='haar', axes=(0, ))
+        >>> decomp = wavelet_trafo(data)
+        >>> decomp.shape
+        (16,)
+
+        In general, the size of the coefficients may exceed the size of the
+        input data when the wavelet is longer than the Haar wavelet. This
+        due to extra coefficients that must be kept for perfect reconstruction.
+        No extra boundary coefficients are needed when the edge mode is
+        ``"pywt_periodic"`` and the size along each transformed axis is a
+        multiple of ``2**nlevels``.
+
+        >>> space = odl.uniform_discr([0, 0], [1, 1], (16, 16))
+        >>> space.size
+        256
+        >>> wavelet_trafo = odl.trafos.WaveletTransform(
+        ...     domain=space, nlevels=2, wavelet='db2',
+        ...     pad_mode='pywt_periodic')
+        >>> decomp = wavelet_trafo(np.ones(space.shape))
+        >>> decomp.shape
+        (256,)
+        >>> wavelet_trafo = odl.trafos.WaveletTransform(
+        ...     domain=space, nlevels=2, wavelet='db2', pad_mode='symmetric')
+        >>> decomp = wavelet_trafo(np.ones(space.shape))
+        >>> decomp.shape
+        (387,)
+
         """
         super(WaveletTransform, self).__init__(
             space=domain, wavelet=wavelet, nlevels=nlevels, variant='forward',
