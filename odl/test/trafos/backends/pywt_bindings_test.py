@@ -23,10 +23,8 @@ pytestmark = pytest.mark.skipif(not PYWT_AVAILABLE,
 
 
 # --- pytest fixtures --- #
-
-
-wavelet = simple_fixture('wavelet', ['db1', 'sym2'])
-odl_mode = simple_fixture('old_mode', ['constant', 'order0', 'order1'])
+wavelet = simple_fixture('wavelet_name', ['db1', 'sym2'])
+odl_mode = simple_fixture('odl_mode', ['constant', 'order0', 'order1'])
 
 
 def test_pywt_wavelet(wavelet):
@@ -34,8 +32,9 @@ def test_pywt_wavelet(wavelet):
     wavelet = pywt_wavelet(wavelet)
     assert isinstance(wavelet, pywt.Wavelet)
 
-    wavelet = pywt_wavelet(wavelet)
-    assert isinstance(wavelet, pywt.Wavelet)
+    wavelet2 = pywt_wavelet(wavelet)
+    assert isinstance(wavelet2, pywt.Wavelet)
+    assert wavelet2 is wavelet
 
 
 def test_pywt_pad_mode(odl_mode):
