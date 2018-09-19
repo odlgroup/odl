@@ -103,7 +103,6 @@ class WaveletTransformBase(Operator):
         axes : sequence of ints, optional
             Axes over which the DWT that created ``coeffs`` was performed.  The
             default value of ``None`` corresponds to all axes.
-
         """
         if not isinstance(space, DiscreteLp):
             raise TypeError('`space` {!r} is not a `DiscreteLp` instance.'
@@ -486,6 +485,13 @@ class WaveletTransformInverse(WaveletTransformBase):
                 axes=self.axes)
             recon_shape = self.range.shape
             if recon.shape != recon_shape:
+                # If the original shape was odd along any transformed axes it
+                # will have been rounded up to the next even size after the
+                # reconstruction. The extra sample should be discarded.
+                # The underlying reason is decimation by two in reconstruction
+                # must keep ceil(N/2) samples in each band for perfect
+                # reconstruction. Reconstruction then upsamples by two.
+                # When N is odd, (2 * np.ceil(N/2)) != N.
                 recon_slc = []
                 for i, (n_recon, n_intended) in enumerate(zip(recon.shape,
                                                               recon_shape)):
