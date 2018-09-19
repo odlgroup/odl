@@ -314,8 +314,6 @@ class WaveletTransform(WaveletTransformBase):
         ...         [0, 0, 1, 1],
         ...         [1, 0, 1, 0]]
         >>> decomp = wavelet_trafo(data)
-        >>> print(decomp)
-        [ 1. ,  1. ,  0.5, ...,  0. , -0.5, -0.5]
         >>> decomp.shape
         (16,)
 
