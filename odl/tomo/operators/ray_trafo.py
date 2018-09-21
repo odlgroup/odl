@@ -144,12 +144,12 @@ class RayTransformBase(Operator):
                         RuntimeWarning)
             else:
                 raise RuntimeError('bad impl')
-        else:
-            impl, impl_in = str(impl).lower(), impl
-            if impl not in _SUPPORTED_IMPL:
-                raise ValueError('`impl` {!r} not understood'.format(impl_in))
-            if impl not in _AVAILABLE_IMPLS:
-                raise ValueError('{!r} back-end not available'.format(impl))
+
+        impl, impl_in = str(impl).lower(), impl
+        if impl not in _SUPPORTED_IMPL:
+            raise ValueError('`impl` {!r} not understood'.format(impl_in))
+        if impl not in _AVAILABLE_IMPLS:
+            raise ValueError('{!r} back-end not available'.format(impl))
 
         # Cache for input/output arrays of transforms
         self.use_cache = kwargs.pop('use_cache', True)
