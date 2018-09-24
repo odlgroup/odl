@@ -89,9 +89,14 @@ def precompute_raveled_slices(coeff_shapes, axes=None):
     Examples
     --------
     >>> import pywt
-    >>> data_shape = (512, 512)
-    >>> coeff_shapes = pywt.wavedecn_shapes(data_shape, wavelet='db2', level=3)
+    >>> data_shape = (64, 64)
+    >>> coeff_shapes = pywt.wavedecn_shapes(data_shape, wavelet='db2', level=3,
+    ...                                     mode='periodization')
     >>> coeff_slices = precompute_raveled_slices(coeff_shapes)
+    >>> print(coeff_slices[0])  # approximation coefficients
+    slice(None, 64, None)
+    >>> print(coeff_slices[-1])  # first level detail coefficients
+    {'ad': slice(1024, 2048, None), 'da': slice(2048, 3072, None), 'dd': slice(3072, 4096, None)}
     """
     # initialize with the approximation coefficients.
     a_shape = coeff_shapes[0]
