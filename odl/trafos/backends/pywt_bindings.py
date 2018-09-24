@@ -67,16 +67,16 @@ def precompute_raveled_slices(coeff_shapes, axes=None):
     """Return slices and shapes for raveled multilevel wavelet coefficients.
 
     The output is equivalent to the ``coeff_slices`` output of
-    ``pywt.ravel_coeffs``, but this function does not require computing a
+    `pywt.ravel_coeffs`, but this function does not require computing a
     wavelet transform first.
 
     Parameters
     ----------
     coeff_shapes : array-like
         A list of multilevel wavelet coefficient shapes as returned by
-        ``pywt.wavedecn_shapes``.
+        `pywt.wavedecn_shapes`.
     axes : sequence of ints, optional
-        Axes over which the DWT that created `coeffs` was performed. The
+        Axes over which the DWT that created ``coeffs`` was performed. The
         default value of None corresponds to all axes.
 
     Returns
@@ -84,7 +84,7 @@ def precompute_raveled_slices(coeff_shapes, axes=None):
     coeff_slices : list
         List of slices corresponding to each coefficient. As a 2D example,
         ``coeff_arr[coeff_slices[1]['dd']]`` would extract the first level
-        detail coefficients from `coeff_arr`.
+        detail coefficients from ``coeff_arr``.
 
     Examples
     --------

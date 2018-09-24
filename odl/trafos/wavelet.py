@@ -117,7 +117,7 @@ class WaveletTransformBase(Operator):
         if axes is None:
             axes = tuple(range(space.ndim))
         elif np.isscalar(axes):
-            axes = (axes, )
+            axes = (axes,)
         elif len(axes) > space.ndim:
                 raise ValueError("Too many axes.")
         self.axes = tuple(axes)
@@ -322,7 +322,7 @@ class WaveletTransform(WaveletTransformBase):
         index along axis 1:
 
         >>> wavelet_trafo = odl.trafos.WaveletTransform(
-        ...     domain=space, nlevels=1, wavelet='haar', axes=(0, ))
+        ...     domain=space, nlevels=1, wavelet='haar', axes=(0,))
         >>> decomp = wavelet_trafo(data)
         >>> decomp.shape
         (16,)
