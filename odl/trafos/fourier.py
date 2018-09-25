@@ -259,7 +259,7 @@ class DiscreteFourierTransformBase(Operator):
         References
         ----------
         .. _pyfftw API documentation:
-           http://hgomersall.github.io/pyFFTW/pyfftw/pyfftw.html
+           https://pyfftw.readthedocs.io
         """
         assert isinstance(x, np.ndarray)
         assert isinstance(out, np.ndarray)
@@ -374,7 +374,7 @@ class DiscreteFourierTransform(DiscreteFourierTransformBase):
     .. _Numpy FFT documentation:
         http://docs.scipy.org/doc/numpy/reference/routines.fft.html
     .. _pyfftw API documentation:
-       http://hgomersall.github.io/pyFFTW/pyfftw/pyfftw.html
+       https://pyfftw.readthedocs.io
     .. _What FFTW really computes:
        http://www.fftw.org/fftw3_doc/What-FFTW-Really-Computes.html
     """
@@ -526,7 +526,7 @@ class DiscreteFourierTransformInverse(DiscreteFourierTransformBase):
     .. _Numpy FFT documentation:
         http://docs.scipy.org/doc/numpy/reference/routines.fft.html
     .. _pyfftw API documentation:
-       http://hgomersall.github.io/pyFFTW/pyfftw/pyfftw.html
+       https://pyfftw.readthedocs.io
     .. _What FFTW really computes:
        http://www.fftw.org/fftw3_doc/What-FFTW-Really-Computes.html
     """
@@ -644,7 +644,7 @@ class DiscreteFourierTransformInverse(DiscreteFourierTransformBase):
         References
         ----------
         .. _pyfftw API documentation:
-           http://hgomersall.github.io/pyFFTW/pyfftw/pyfftw.html
+           https://pyfftw.readthedocs.io
         """
         kwargs.pop('normalise_idft', None)  # Using `True` here
         kwargs.pop('axes', None)

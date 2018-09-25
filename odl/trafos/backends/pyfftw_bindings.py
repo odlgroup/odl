@@ -8,7 +8,7 @@
 
 """Bindings to the ``pyFFTW`` back-end for Fourier transforms.
 
-The `pyFFTW <https://hgomersall.github.io/pyFFTW/>`_  package is a Python
+The `pyFFTW <https://pyfftw.readthedocs.io>`_  package is a Python
 wrapper around the well-known `FFTW <http://fftw.org/>`_ library for fast
 Fourier transforms.
 """
