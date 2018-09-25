@@ -139,9 +139,7 @@ def precompute_raveled_slices(coeff_shapes, axes=None):
     for shape_dict in details_list:
         # new dictionaries for detail coefficient slices and shapes
         coeff_slices.append({})
-        keys = list(shape_dict.keys())
-        # TODO: once PyWavelets 1.0.1 is released, bump version requirement and
-        # change to keys = sorted(shape_dict.keys())
+        keys = sorted(shape_dict.keys())
         for key in keys:
             shape = shape_dict[key]
             size = np.prod(shape)
