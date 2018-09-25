@@ -52,7 +52,28 @@ def pywt_wavelet(wavelet):
 
 
 def pywt_pad_mode(pad_mode, pad_const=0):
-    """Convert ODL-style padding mode to pywt-style padding mode."""
+    """Convert ODL-style padding mode to pywt-style padding mode.
+
+    Parameters
+    ----------
+    pad_mode : str
+        The ODL padding mode to use at the boundaries.
+    pad_const : float, optional
+        Value to use outside the signal boundaries when ``pad_mode`` is
+        'constant'. Only a value of 0. is supported by PyWavelets
+
+    Returns
+    -------
+    pad_mode_pywt : str
+        The corresponding name of the requested padding mode in PyWavelets.
+        See `signal extension modes`_.
+
+    References
+    ----------
+    .. _signal extension modes:
+       https://pywavelets.readthedocs.io/en/latest/ref/signal-extension-\
+modes.html
+    """
     pad_mode = str(pad_mode).lower()
     if pad_mode == 'constant' and pad_const != 0.0:
         raise ValueError('constant padding with constant != 0 not supported '
