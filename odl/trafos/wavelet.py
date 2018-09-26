@@ -9,15 +9,13 @@
 """Discrete wavelet transformation on L2 spaces."""
 
 from __future__ import print_function, division, absolute_import
-import numpy as np
 
+import numpy as np
 from odl.discr import DiscreteLp
 from odl.operator import Operator
 from odl.trafos.backends.pywt_bindings import (
     PYWT_AVAILABLE,
-    pywt_pad_mode, pywt_wavelet, pywt_flat_coeff_size, pywt_coeff_shapes,
-    pywt_max_nlevels, pywt_flat_array_from_coeffs, pywt_coeffs_from_flat_array,
-    pywt_multi_level_decomp, pywt_multi_level_recon)
+    pywt_pad_mode, pywt_wavelet, precompute_raveled_slices)
 
 __all__ = ('WaveletTransform', 'WaveletTransformInverse')
 
@@ -25,6 +23,7 @@ __all__ = ('WaveletTransform', 'WaveletTransformInverse')
 _SUPPORTED_WAVELET_IMPLS = ()
 if PYWT_AVAILABLE:
     _SUPPORTED_WAVELET_IMPLS += ('pywt',)
+    import pywt
 
 
 class WaveletTransformBase(Operator):
@@ -36,7 +35,7 @@ class WaveletTransformBase(Operator):
     """
 
     def __init__(self, space, wavelet, nlevels, variant, pad_mode='constant',
-                 pad_const=0, impl='pywt'):
+                 pad_const=0, impl='pywt', axes=None):
         """Initialize a new instance.
 
         Parameters
@@ -71,14 +70,14 @@ class WaveletTransformBase(Operator):
         nlevels : positive int, optional
             Number of scaling levels to be used in the decomposition. The
             maximum number of levels can be calculated with
-            `pywt.dwt_max_level`.
+            `pywt.dwtn_max_level`.
             Default: Use maximum number of levels.
         pad_mode : string, optional
             Method to be used to extend the signal.
 
             ``'constant'``: Fill with ``pad_const``.
 
-            ``'symmetric'``: Reflect at the boundaries, not doubling the
+            ``'symmetric'``: Reflect at the boundaries, not repeating the
             outmost values.
 
             ``'periodic'``: Fill in values from the other side, keeping
@@ -95,19 +94,69 @@ class WaveletTransformBase(Operator):
             possible number of decomposition coefficients.
             Only available with ``impl='pywt'``, See ``pywt.Modes.modes``.
 
+            ``'reflect'``: Reflect at the boundary, without repeating the
+            outmost values.
+
+            ``'antisymmetric'``: Anti-symmetric variant of ``symmetric``.
+
+            ``'antireflect'``: Anti-symmetric variant of ``reflect``.
+
+            For reference, the following table compares the naming conventions
+            for the modes in ODL vs. PyWavelets::
+
+                ======================= ==================
+                          ODL               PyWavelets
+                ======================= ==================
+                symmetric               symmetric
+                reflect                 reflect
+                order1                  smooth
+                order0                  constant
+                constant, pad_const=0   zero
+                periodic                periodic
+                pywt_per                periodization
+                antisymmetric           antisymmetric
+                antireflect             antireflect
+                ======================= ==================
+
+            See `signal extension modes`_ for an illustration of the modes
+            (under the PyWavelets naming conventions).
         pad_const : float, optional
             Constant value to use if ``pad_mode == 'constant'``. Ignored
             otherwise. Constants other than 0 are not supported by the
             ``pywt`` back-end.
         impl : {'pywt'}, optional
             Back-end for the wavelet transform.
+        axes : sequence of ints, optional
+            Axes over which the DWT that created ``coeffs`` was performed.  The
+            default value of ``None`` corresponds to all axes. When not all
+            axes are included this is analagous to a batch transform in
+            ``len(axes)`` dimensions looped over the non-transformed axes. In
+            orther words, filtering and decimation does not occur along any
+            axes not in ``axes``.
+
+        References
+        ----------
+        .. _signal extension modes:
+           https://pywavelets.readthedocs.io/en/latest/ref/signal-extension-modes.html
         """
         if not isinstance(space, DiscreteLp):
             raise TypeError('`space` {!r} is not a `DiscreteLp` instance.'
                             ''.format(space))
 
+        self.__impl, impl_in = str(impl).lower(), impl
+        if self.impl not in _SUPPORTED_WAVELET_IMPLS:
+            raise ValueError("`impl` '{}' not supported".format(impl_in))
+
+        if axes is None:
+            axes = tuple(range(space.ndim))
+        elif np.isscalar(axes):
+            axes = (axes,)
+        elif len(axes) > space.ndim:
+                raise ValueError("Too many axes.")
+        self.axes = tuple(axes)
+
         if nlevels is None:
-            nlevels = pywt_max_nlevels(space.shape, wavelet)
+            nlevels = pywt.dwtn_max_level(space.shape, wavelet, self.axes)
         self.__nlevels, nlevels_in = int(nlevels), nlevels
         if self.nlevels != nlevels_in:
             raise ValueError('`nlevels` must be integer, got {}'
@@ -124,8 +173,13 @@ class WaveletTransformBase(Operator):
         if self.impl == 'pywt':
             self.pywt_pad_mode = pywt_pad_mode(pad_mode, pad_const)
             self.pywt_wavelet = pywt_wavelet(self.wavelet)
-            coeff_size = pywt_flat_coeff_size(space.shape, wavelet,
-                                              self.nlevels, self.pywt_pad_mode)
+            # determine coefficient shapes (without running wavedecn)
+            self._coeff_shapes = pywt.wavedecn_shapes(
+                space.shape, wavelet, mode=self.pywt_pad_mode,
+                level=self.nlevels, axes=self.axes)
+            # precompute slices into the (raveled) coeffs
+            self._coeff_slices = precompute_raveled_slices(self._coeff_shapes)
+            coeff_size = pywt.wavedecn_size(self._coeff_shapes)
             coeff_space = space.tspace_type(coeff_size, dtype=space.dtype)
         else:
             raise RuntimeError("bad `impl` '{}'".format(self.impl))
@@ -195,14 +249,14 @@ class WaveletTransformBase(Operator):
                 discr_space = self.range
                 wavelet_space = self.domain
 
-            shapes = pywt_coeff_shapes(discr_space.shape, self.pywt_wavelet,
-                                       self.nlevels, self.pywt_pad_mode)
-            coeff_list = [np.ones(shapes[0]) * 0]
-            dcoeffs_per_scale = 2 ** discr_space.ndim - 1
+            shapes = pywt.wavedecn_shapes(discr_space.shape, self.pywt_wavelet,
+                                          mode=self.pywt_pad_mode,
+                                          level=self.nlevels, axes=self.axes)
+            coeff_list = [np.full(shapes[0], 0)]
             for i in range(1, 1 + len(shapes[1:])):
-                coeff_list.append(
-                    (np.ones(shapes[i]) * i,) * dcoeffs_per_scale)
-            coeffs = pywt_flat_array_from_coeffs(coeff_list)
+                coeff_list.append({k: np.full(shapes[i][k], i)
+                                   for k in shapes[i].keys()})
+            coeffs = pywt.ravel_coeffs(coeff_list, axes=self.axes)[0]
             return wavelet_space.element(coeffs)
         else:
             raise RuntimeError("bad `impl` '{}'".format(self.impl))
@@ -213,7 +267,7 @@ class WaveletTransform(WaveletTransformBase):
     """Discrete wavelet transform between discretized Lp spaces."""
 
     def __init__(self, domain, wavelet, nlevels=None, pad_mode='constant',
-                 pad_const=0, impl='pywt'):
+                 pad_const=0, impl='pywt', axes=None):
         """Initialize a new instance.
 
         Parameters
@@ -244,14 +298,14 @@ class WaveletTransform(WaveletTransformBase):
         nlevels : positive int, optional
             Number of scaling levels to be used in the decomposition. The
             maximum number of levels can be calculated with
-            `pywt.dwt_max_level`.
+            `pywt.dwtn_max_level`.
             Default: Use maximum number of levels.
         pad_mode : string, optional
             Method to be used to extend the signal.
 
             ``'constant'``: Fill with ``pad_const``.
 
-            ``'symmetric'``: Reflect at the boundaries, not doubling the
+            ``'symmetric'``: Reflect at the boundaries, not repeating the
             outmost values.
 
             ``'periodic'``: Fill in values from the other side, keeping
@@ -264,16 +318,49 @@ class WaveletTransform(WaveletTransformBase):
             the first derivative). This requires at least 2 values along
             each axis where padding is applied.
 
-            ``'pywt_per'``:  like ``'periodic'`` padding, but gives the
-            smallest possible number of decomposition coefficients.
+            ``'pywt_per'``:  like ``'periodic'``-padding but gives the smallest
+            possible number of decomposition coefficients.
             Only available with ``impl='pywt'``, See ``pywt.Modes.modes``.
 
+            ``'reflect'``: Reflect at the boundary, without repeating the
+            outmost values.
+
+            ``'antisymmetric'``: Anti-symmetric variant of ``symmetric``.
+
+            ``'antireflect'``: Anti-symmetric variant of ``reflect``.
+
+            For reference, the following table compares the naming conventions
+            for the modes in ODL vs. PyWavelets::
+
+                ======================= ==================
+                          ODL               PyWavelets
+                ======================= ==================
+                symmetric               symmetric
+                reflect                 reflect
+                order1                  smooth
+                order0                  constant
+                constant, pad_const=0   zero
+                periodic                periodic
+                pywt_per                periodization
+                antisymmetric           antisymmetric
+                antireflect             antireflect
+                ======================= ==================
+
+            See `signal extension modes`_ for an illustration of the modes
+            (under the PyWavelets naming conventions).
         pad_const : float, optional
             Constant value to use if ``pad_mode == 'constant'``. Ignored
             otherwise. Constants other than 0 are not supported by the
             ``pywt`` back-end.
         impl : {'pywt'}, optional
             Backend for the wavelet transform.
+        axes : sequence of ints, optional
+            Axes over which the DWT that created ``coeffs`` was performed.  The
+            default value of ``None`` corresponds to all axes. When not all
+            axes are included this is analagous to a batch transform in
+            ``len(axes)`` dimensions looped over the non-transformed axes. In
+            orther words, filtering and decimation does not occur along any
+            axes not in ``axes``.
 
         Examples
         --------
@@ -285,26 +372,62 @@ class WaveletTransform(WaveletTransformBase):
         ...     domain=space, nlevels=1, wavelet='haar')
         >>> wavelet_trafo.is_biorthogonal
         True
-        >>> decomp = wavelet_trafo([[1, 1, 1, 1],
-        ...                         [0, 0, 0, 0],
-        ...                         [0, 0, 1, 1],
-        ...                         [1, 0, 1, 0]])
-        >>> print(decomp)
-        [ 1. ,  1. ,  0.5, ...,  0. , -0.5, -0.5]
+        >>> data = [[1, 1, 1, 1],
+        ...         [0, 0, 0, 0],
+        ...         [0, 0, 1, 1],
+        ...         [1, 0, 1, 0]]
+        >>> decomp = wavelet_trafo(data)
         >>> decomp.shape
         (16,)
+
+        It is also possible to apply the transform only along a subset of the
+        axes. Here, we apply a 1D wavelet transfrom along axis 0 for each
+        index along axis 1:
+
+        >>> wavelet_trafo = odl.trafos.WaveletTransform(
+        ...     domain=space, nlevels=1, wavelet='haar', axes=(0,))
+        >>> decomp = wavelet_trafo(data)
+        >>> decomp.shape
+        (16,)
+
+        In general, the size of the coefficients may exceed the size of the
+        input data when the wavelet is longer than the Haar wavelet. This
+        due to extra coefficients that must be kept for perfect reconstruction.
+        No extra boundary coefficients are needed when the edge mode is
+        ``"pywt_periodic"`` and the size along each transformed axis is a
+        multiple of ``2**nlevels``.
+
+        >>> space = odl.uniform_discr([0, 0], [1, 1], (16, 16))
+        >>> space.size
+        256
+        >>> wavelet_trafo = odl.trafos.WaveletTransform(
+        ...     domain=space, nlevels=2, wavelet='db2',
+        ...     pad_mode='pywt_periodic')
+        >>> decomp = wavelet_trafo(np.ones(space.shape))
+        >>> decomp.shape
+        (256,)
+        >>> wavelet_trafo = odl.trafos.WaveletTransform(
+        ...     domain=space, nlevels=2, wavelet='db2', pad_mode='symmetric')
+        >>> decomp = wavelet_trafo(np.ones(space.shape))
+        >>> decomp.shape
+        (387,)
+
+        References
+        ----------
+        .. _signal extension modes:
+           https://pywavelets.readthedocs.io/en/latest/ref/signal-extension-modes.html
         """
         super(WaveletTransform, self).__init__(
             space=domain, wavelet=wavelet, nlevels=nlevels, variant='forward',
-            pad_mode=pad_mode, pad_const=pad_const, impl=impl)
+            pad_mode=pad_mode, pad_const=pad_const, impl=impl, axes=axes)
 
     def _call(self, x):
         """Return wavelet transform of ``x``."""
         if self.impl == 'pywt':
-            coeff_list = pywt_multi_level_decomp(
-                x, wavelet=self.pywt_wavelet, nlevels=self.nlevels,
-                mode=self.pywt_pad_mode)
-            return pywt_flat_array_from_coeffs(coeff_list)
+            coeffs = pywt.wavedecn(
+                x, wavelet=self.pywt_wavelet, level=self.nlevels,
+                mode=self.pywt_pad_mode, axes=self.axes)
+            return pywt.ravel_coeffs(coeffs, axes=self.axes)[0]
         else:
             raise RuntimeError("bad `impl` '{}'".format(self.impl))
 
@@ -343,7 +466,8 @@ class WaveletTransform(WaveletTransformBase):
         """
         return WaveletTransformInverse(
             range=self.domain, wavelet=self.pywt_wavelet, nlevels=self.nlevels,
-            pad_mode=self.pad_mode, pad_const=self.pad_const, impl=self.impl)
+            pad_mode=self.pad_mode, pad_const=self.pad_const, impl=self.impl,
+            axes=self.axes)
 
 
 class WaveletTransformInverse(WaveletTransformBase):
@@ -356,7 +480,7 @@ class WaveletTransformInverse(WaveletTransformBase):
     """
 
     def __init__(self, range, wavelet, nlevels=None, pad_mode='constant',
-                 pad_const=0, impl='pywt'):
+                 pad_const=0, impl='pywt', axes=None):
         """Initialize a new instance.
 
          Parameters
@@ -388,14 +512,14 @@ class WaveletTransformInverse(WaveletTransformBase):
         nlevels : positive int, optional
             Number of scaling levels to be used in the decomposition. The
             maximum number of levels can be calculated with
-            `pywt.dwt_max_level`.
+            `pywt.dwtn_max_level`.
             Default: Use maximum number of levels.
         pad_mode : string, optional
             Method to be used to extend the signal.
 
             ``'constant'``: Fill with ``pad_const``.
 
-            ``'symmetric'``: Reflect at the boundaries, not doubling the
+            ``'symmetric'``: Reflect at the boundaries, not repeating the
             outmost values.
 
             ``'periodic'``: Fill in values from the other side, keeping
@@ -410,14 +534,47 @@ class WaveletTransformInverse(WaveletTransformBase):
 
             ``'pywt_per'``:  like ``'periodic'``-padding but gives the smallest
             possible number of decomposition coefficients.
-            Only available with ``impl='pywt'``, See ``pywt.MODES.modes``.
+            Only available with ``impl='pywt'``, See ``pywt.Modes.modes``.
 
+            ``'reflect'``: Reflect at the boundary, without repeating the
+            outmost values.
+
+            ``'antisymmetric'``: Anti-symmetric variant of ``symmetric``.
+
+            ``'antireflect'``: Anti-symmetric variant of ``reflect``.
+
+            For reference, the following table compares the naming conventions
+            for the modes in ODL vs. PyWavelets::
+
+                ======================= ==================
+                          ODL               PyWavelets
+                ======================= ==================
+                symmetric               symmetric
+                reflect                 reflect
+                order1                  smooth
+                order0                  constant
+                constant, pad_const=0   zero
+                periodic                periodic
+                pywt_per                periodization
+                antisymmetric           antisymmetric
+                antireflect             antireflect
+                ======================= ==================
+
+            See `signal extension modes`_ for an illustration of the modes
+            (under the PyWavelets naming conventions).
         pad_const : float, optional
             Constant value to use if ``pad_mode == 'constant'``. Ignored
             otherwise. Constants other than 0 are not supported by the
             ``pywt`` back-end.
         impl : {'pywt'}, optional
             Back-end for the wavelet transform.
+        axes : sequence of ints, optional
+            Axes over which the DWT that created ``coeffs`` was performed.  The
+            default value of ``None`` corresponds to all axes. When not all
+            axes are included this is analagous to a batch transform in
+            ``len(axes)`` dimensions looped over the non-transformed axes. In
+            orther words, filtering and decimation does not occur along any
+            axes not in ``axes``.
 
         Examples
         --------
@@ -435,20 +592,52 @@ class WaveletTransformInverse(WaveletTransformBase):
         >>> recon = wavelet_trafo.inverse(decomp)
         >>> np.allclose(recon, orig_array)
         True
+
+        References
+        ----------
+        .. _signal extension modes:
+           https://pywavelets.readthedocs.io/en/latest/ref/signal-extension-modes.html
         """
         super(WaveletTransformInverse, self).__init__(
             space=range, wavelet=wavelet, variant='inverse', nlevels=nlevels,
-            pad_mode=pad_mode, pad_const=pad_const, impl=impl)
+            pad_mode=pad_mode, pad_const=pad_const, impl=impl, axes=axes)
 
     def _call(self, coeffs):
         """Return the inverse wavelet transform of ``coeffs``."""
         if self.impl == 'pywt':
-            shapes = pywt_coeff_shapes(self.range.shape, self.pywt_wavelet,
-                                       self.nlevels, self.pywt_pad_mode)
-            coeff_list = pywt_coeffs_from_flat_array(coeffs, shapes)
-            return pywt_multi_level_recon(
-                coeff_list, recon_shape=self.range.shape,
-                wavelet=self.pywt_wavelet, mode=self.pywt_pad_mode)
+            coeffs = pywt.unravel_coeffs(coeffs,
+                                         coeff_slices=self._coeff_slices,
+                                         coeff_shapes=self._coeff_shapes,
+                                         output_format='wavedecn')
+            recon = pywt.waverecn(
+                coeffs, wavelet=self.pywt_wavelet, mode=self.pywt_pad_mode,
+                axes=self.axes)
+            recon_shape = self.range.shape
+            if recon.shape != recon_shape:
+                # If the original shape was odd along any transformed axes it
+                # will have been rounded up to the next even size after the
+                # reconstruction. The extra sample should be discarded.
+                # The underlying reason is decimation by two in reconstruction
+                # must keep ceil(N/2) samples in each band for perfect
+                # reconstruction. Reconstruction then upsamples by two.
+                # When N is odd, (2 * np.ceil(N/2)) != N.
+                recon_slc = []
+                for i, (n_recon, n_intended) in enumerate(zip(recon.shape,
+                                                              recon_shape)):
+                    if n_recon == n_intended + 1:
+                        # Upsampling added one entry too much in this axis,
+                        # drop last one
+                        recon_slc.append(slice(-1))
+                    elif n_recon == n_intended:
+                        recon_slc.append(slice(None))
+                    else:
+                        raise ValueError(
+                            'in axis {}: expected size {} or {} in '
+                            '`recon_shape`, got {}'
+                            ''.format(i, n_recon - 1, n_recon,
+                                      n_intended))
+                recon = recon[tuple(recon_slc)]
+            return recon
         else:
             raise RuntimeError("bad `impl` '{}'".format(self.impl))
 
@@ -491,7 +680,8 @@ class WaveletTransformInverse(WaveletTransformBase):
         """
         return WaveletTransform(
             domain=self.range, wavelet=self.pywt_wavelet, nlevels=self.nlevels,
-            pad_mode=self.pad_mode, pad_const=self.pad_const, impl=self.impl)
+            pad_mode=self.pad_mode, pad_const=self.pad_const, impl=self.impl,
+            axes=self.axes)
 
 
 if __name__ == '__main__':
