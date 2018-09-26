@@ -17,7 +17,7 @@ import odl
 from odl.operator.tensor_ops import (
     PointwiseNorm, PointwiseInner, PointwiseSum, MatrixOperator)
 from odl.space.pspace import ProductSpace
-from odl.util import moveaxis
+from odl.util.npy_compat import moveaxis
 from odl.util.testutils import (
     all_almost_equal, all_equal, simple_fixture, noise_element, noise_elements)
 

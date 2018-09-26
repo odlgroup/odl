@@ -439,4 +439,5 @@ for name, nargin, nargout, docstring in UFUNCS:
 
 if __name__ == '__main__':
     from odl.util.testutils import run_doctests
-    run_doctests()
+    with np.errstate(divide='ignore', invalid='ignore'):
+        run_doctests()

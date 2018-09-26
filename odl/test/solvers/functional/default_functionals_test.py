@@ -14,6 +14,7 @@ import scipy.special
 import pytest
 
 import odl
+from odl.util import npy_erroroptions
 from odl.util.testutils import all_almost_equal, noise_element, simple_fixture
 from odl.solvers.functional.default_functionals import (
     KullbackLeiblerConvexConj, KullbackLeiblerCrossEntropyConvexConj)
@@ -343,11 +344,10 @@ def test_kullback_leibler(space):
         assert cc_cc_func(x) == pytest.approx(func(x))
 
 
-def test_kullback_leibler_cross_entorpy(space):
+def test_kullback_leibler_cross_entropy(space):
     """Test the kullback leibler cross entropy and its convex conjugate."""
     # The prior needs to be positive
-    prior = noise_element(space)
-    prior = space.element(np.abs(prior))
+    prior = noise_element(space).ufuncs.absolute() + 0.1
 
     func = odl.solvers.KullbackLeiblerCrossEntropy(space, prior)
 
@@ -397,8 +397,9 @@ def test_kullback_leibler_cross_entorpy(space):
     assert all_almost_equal(cc_func.gradient(x), expected_result)
 
     # The proximal of the convex conjugate
-    expected_result = (x -
-                       scipy.special.lambertw(sigma * prior * np.exp(x)).real)
+    with npy_erroroptions(complex='ignore'):
+        expected_result = (
+            x - scipy.special.lambertw(sigma * prior * np.exp(x)).real)
     assert all_almost_equal(cc_func.proximal(sigma)(x), expected_result)
 
     # The biconjugate, which is the functional itself since it is proper,

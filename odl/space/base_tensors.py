@@ -91,18 +91,18 @@ class TensorSpace(LinearSpace):
         self.__shape = dtype.shape + shape
         self.__dtype = dtype.base
 
-        if is_real_dtype(self.dtype):
+        if is_real_dtype(self.__dtype):
             # real includes non-floating-point like integers
             field = RealNumbers()
-            self.__real_dtype = self.dtype
+            self.__real_dtype = self.__dtype
             self.__real_space = self
-            self.__complex_dtype = TYPE_MAP_R2C.get(self.dtype, None)
+            self.__complex_dtype = TYPE_MAP_R2C.get(self.__dtype, None)
             self.__complex_space = None  # Set in first call of astype
-        elif is_complex_floating_dtype(self.dtype):
+        elif is_complex_floating_dtype(self.__dtype):
             field = ComplexNumbers()
-            self.__real_dtype = TYPE_MAP_C2R[self.dtype]
+            self.__real_dtype = TYPE_MAP_C2R[self.__dtype]
             self.__real_space = None  # Set in first call of astype
-            self.__complex_dtype = self.dtype
+            self.__complex_dtype = self.__dtype
             self.__complex_space = self
         else:
             field = None
@@ -206,13 +206,13 @@ class TensorSpace(LinearSpace):
     def _astype(self, dtype):
         """Internal helper for `astype`.
 
-        Subclasses with differing init parameters should overload this
+        Subclasses with different constructor signature should override this
         method.
         """
         kwargs = {}
+        # Use weighting only for floating-point types, otherwise, e.g.,
+        # `space.astype(bool)` would fail
         if is_floating_dtype(dtype):
-            # Use weighting only for floating-point types, otherwise, e.g.,
-            # `space.astype(bool)` would fail
             weighting = getattr(self, 'weighting', None)
             if weighting is not None:
                 kwargs['weighting'] = weighting
@@ -227,13 +227,24 @@ class TensorSpace(LinearSpace):
         dtype :
             Scalar data type of the returned space. Can be provided
             in any way the `numpy.dtype` constructor understands, e.g.
-            as built-in type or as a string. Data types with non-trivial
-            shapes are not allowed.
+            as built-in type or as a string.
+            For data types with non-trivial shape, that shape is added to
+            the left of the existing axes.
 
         Returns
         -------
         newspace : `TensorSpace`
             Version of this space with given data type.
+
+        Examples
+        --------
+        >>> space = odl.rn(3)
+        >>> space.astype('float32')
+        rn(3, dtype='float32')
+        >>> space.astype(int)
+        tensor_space(3, dtype=int)
+        >>> space.astype((float, (2,)))
+        rn((2, 3))
         """
         if dtype is None:
             # Need to filter this out since Numpy iterprets it as 'float'
@@ -243,8 +254,9 @@ class TensorSpace(LinearSpace):
         if dtype == self.dtype:
             return self
 
-        if is_numeric_dtype(self.dtype):
-            # Caching for real and complex versions (exact dtype mappings)
+        # Invoke caching for real and complex versions (exact dtype mappings)
+        # if the provided dtype has no shape
+        if is_numeric_dtype(self.dtype) and dtype.shape == ():
             if dtype == self.__real_dtype:
                 if self.__real_space is None:
                     self.__real_space = self._astype(dtype)
@@ -258,11 +270,28 @@ class TensorSpace(LinearSpace):
         else:
             return self._astype(dtype)
 
-    @property
-    def default_order(self):
-        """Default storage order for new elements in this space.
+    def newaxis(self, index, shape, weighting=None):
+        """Return a copy of this space with extra axes inserted.
 
-        This property should be overridden by subclasses.
+        .. note::
+            This function is most useful in the default case of per-axis
+            weighting factors. For weighting with a single constant
+            or with an array of the same shape as this space, "inserting"
+            new factors does not really make sense, and the ``weighting``
+            argument will not be used. In these cases, it is better to
+            construct a new space altogether.
+
+        Parameters
+        ----------
+        index : int
+            Position at which to insert new axes. Negative indices are
+            counted backwards from the end.
+        shape : nonnegative int or sequence of nonnegative ints
+            Sizes of the axes that are to be inserted.
+        weighting : float, `array-like` or `Weighting`, optional
+            Weighting factors that should be used in the new axes.
+            The number of factors must correspond to the number of entries
+            in ``shape`` (1 if ``shape`` is an int).
         """
         raise NotImplementedError('abstract method')
 
@@ -471,6 +500,14 @@ class TensorSpace(LinearSpace):
         """
         raise NotImplementedError('abstract method')
 
+    @property
+    def default_order(self):
+        """Default storage order for new elements in this space.
+
+        This property should be overridden by subclasses.
+        """
+        raise NotImplementedError('abstract method')
+
     @staticmethod
     def default_dtype(field=None):
         """Return the default data type for a given field.
@@ -563,6 +600,14 @@ class Tensor(LinearSpaceElement):
 
             If ``index`` is a slice or a sequence of slices, ``value``
             must be broadcastable to the shape of the slice.
+        """
+        raise NotImplementedError('abstract method')
+
+    @property
+    def data(self):
+        """The data structure holding this element's entries.
+
+        This method should be overridden by subclasses.
         """
         raise NotImplementedError('abstract method')
 
@@ -807,11 +852,11 @@ numpy.ufunc.reduceat.html
         # --- Get some parameters for later --- #
 
         # Arguments for `writable_array` and/or space constructors
-        out_dtype = kwargs.get('dtype', None)
-        if out_dtype is None:
+        dtype_out = kwargs.get('dtype', None)
+        if dtype_out is None:
             array_kwargs = {}
         else:
-            array_kwargs = {'dtype': out_dtype}
+            array_kwargs = {'dtype': dtype_out}
 
         # --- Evaluate ufunc --- #
 

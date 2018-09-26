@@ -72,17 +72,16 @@ def test_pyfftw_call_forward(odl_floating_dtype):
     if dtype == np.dtype('float16'):  # not supported, skipping
         return
 
-    halfcomplex, out_dtype = _params_from_dtype(dtype)
-
+    halfcomplex, dtype_out = _params_from_dtype(dtype)
     for shape in [(10,), (3, 4, 5)]:
         arr = _random_array(shape, dtype)
 
         if halfcomplex:
             true_dft = np.fft.rfftn(arr)
-            dft_arr = np.empty(_halfcomplex_shape(shape), dtype=out_dtype)
+            dft_arr = np.empty(_halfcomplex_shape(shape), dtype=dtype_out)
         else:
             true_dft = np.fft.fftn(arr)
-            dft_arr = np.empty(shape, dtype=out_dtype)
+            dft_arr = np.empty(shape, dtype=dtype_out)
 
         pyfftw_call(arr, dft_arr, direction='forward',
                     halfcomplex=halfcomplex, preserve_input=False)
@@ -292,19 +291,18 @@ def test_pyfftw_call_forward_with_axes(odl_floating_dtype):
     if dtype == np.dtype('float16'):  # not supported, skipping
         return
 
-    halfcomplex, out_dtype = _params_from_dtype(dtype)
+    halfcomplex, dtype_out = _params_from_dtype(dtype)
     shape = (3, 4, 5)
-
     test_axes = [(0, 1), [1], (-1,), (1, 0), (-1, -2, -3)]
     for axes in test_axes:
         arr = _random_array(shape, dtype)
         if halfcomplex:
             true_dft = np.fft.rfftn(arr, axes=axes)
             dft_arr = np.empty(_halfcomplex_shape(shape, axes),
-                               dtype=out_dtype)
+                               dtype=dtype_out)
         else:
             true_dft = np.fft.fftn(arr, axes=axes)
-            dft_arr = np.empty(shape, dtype=out_dtype)
+            dft_arr = np.empty(shape, dtype=dtype_out)
 
         pyfftw_call(arr, dft_arr, direction='forward', axes=axes,
                     halfcomplex=halfcomplex)

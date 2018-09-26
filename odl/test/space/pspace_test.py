@@ -12,6 +12,7 @@ import pytest
 import operator
 
 import odl
+from odl.util import npy_erroroptions
 from odl.util.testutils import (
     all_equal, all_almost_equal, noise_elements, noise_element, simple_fixture)
 
@@ -991,48 +992,50 @@ def test_real_imag_and_conj():
 def test_real_setter_product_space(space, newpart):
     """Verify that the setter for the real part of an element works."""
     x = noise_element(space)
-    x.real = newpart
 
-    try:
-        # Catch the scalar
-        iter(newpart)
-    except TypeError:
-        expected_result = newpart * space.one()
-    else:
-        if newpart in space:
-            expected_result = newpart.real
-        elif np.shape(newpart) == (3,):
-            expected_result = [newpart, newpart]
+    with npy_erroroptions(complex='ignore'):
+        x.real = newpart
+        try:
+            iter(newpart)
+        except TypeError:
+            # Scalar case
+            expected_real = newpart.real * space.real_space.one()
         else:
-            expected_result = newpart
+            if newpart in space:
+                expected_real = newpart.real
+            elif np.shape(newpart) == (3,):
+                # Broadcasting
+                expected_real = [newpart, newpart]
+            else:
+                expected_real = newpart
 
     assert x in space
-    assert all_equal(x.real, expected_result)
+    assert all_equal(x.real, expected_real)
 
 
 def test_imag_setter_product_space(space, newpart):
     """Verify that the setter for the imaginary part of an element works."""
     x = noise_element(space)
-    x.imag = newpart
 
-    try:
-        # Catch the scalar
-        iter(newpart)
-    except TypeError:
-        expected_result = newpart * space.one()
-    else:
-        if newpart in space:
-            # The imaginary part is by definition real, and thus the new
-            # imaginary part is thus the real part of the element we try to set
-            # the value to
-            expected_result = newpart.real
-        elif np.shape(newpart) == (3,):
-            expected_result = [newpart, newpart]
+    with npy_erroroptions(complex='ignore'):
+        x.imag = newpart
+        try:
+            iter(newpart)
+        except TypeError:
+            # Scalar case
+            expected_imag = newpart.real * space.real_space.one()
         else:
-            expected_result = newpart
+            # For complex RHS, the *imaginary* part will be thrown away
+            if newpart in space:
+                expected_imag = newpart.real
+            elif np.shape(newpart) == (3,):
+                # Broadcasting
+                expected_imag = [newpart, newpart]
+            else:
+                expected_imag = newpart
 
     assert x in space
-    assert all_equal(x.imag, expected_result)
+    assert all_equal(x.imag, expected_imag)
 
 
 if __name__ == '__main__':

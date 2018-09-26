@@ -17,6 +17,7 @@ except ImportError:
     SKIMAGE_AVAILABLE = False
 
 from odl.discr import uniform_discr_frompartition, uniform_partition
+from odl.space.weighting import adjoint_weightings
 
 __all__ = ('skimage_radon_forward', 'skimage_radon_back_projector',
            'SKIMAGE_AVAILABLE')
@@ -56,8 +57,8 @@ def clamped_interpolation(skimage_range, sinogram):
 
     def interpolation_wrapper(x):
         x = (x[0], np.maximum(min_x, np.minimum(max_x, x[1])))
-
         return sinogram.interpolation(x)
+
     return interpolation_wrapper
 
 
@@ -140,25 +141,25 @@ def skimage_radon_back_projector(sinogram, geometry, range, out=None):
         # Only do asserts here since these are backend functions
         assert out in range
 
-    # Rotate back from (rows, cols) to (x, y)
+    # Extra weighting factor needed for skimage-internal reasons
+    scaling_factor = 4.0 * float(geometry.motion_params.length) / (2 * np.pi)
+    proj_cell_volume = (sinogram.space.partition.extent.prod() /
+                        sinogram.space.partition.size)
+    scaling_factor *= range.cell_volume / proj_cell_volume
+
+    # Get weighting functions
+    apply_dom_weighting, apply_ran_weighting = adjoint_weightings(
+        sinogram.space, range, extra_factor=scaling_factor)
+
+    # Scale sinogram if necessary
+    sinogram = apply_dom_weighting(sinogram)
+
+    # Apply backprojection and rotate back from (rows, cols) to (x, y)
     backproj = iradon(skimage_sinogram.asarray().T, theta,
                       output_size=range.shape[0], filter=None, circle=False)
     out[:] = np.rot90(backproj, -1)
 
-    # Empirically determined value, gives correct scaling
-    scaling_factor = 4.0 * float(geometry.motion_params.length) / (2 * np.pi)
-
-    # Correct in case of non-weighted spaces
-    proj_extent = float(sinogram.space.partition.extent.prod())
-    proj_size = float(sinogram.space.partition.size)
-    proj_weighting = proj_extent / proj_size
-
-    scaling_factor *= (sinogram.space.weighting.const /
-                       proj_weighting)
-    scaling_factor /= (range.weighting.const /
-                       range.cell_volume)
-
-    # Correctly scale the output
-    out *= scaling_factor
+    # Scale output
+    apply_ran_weighting(out, out=out)
 
     return out

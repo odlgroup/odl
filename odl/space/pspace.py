@@ -10,7 +10,6 @@
 
 from __future__ import print_function, division, absolute_import
 from itertools import product
-from numbers import Integral
 import numpy as np
 
 from odl.set import LinearSpace
@@ -18,7 +17,7 @@ from odl.set.space import LinearSpaceElement
 from odl.space.weighting import (
     Weighting, ArrayWeighting, ConstWeighting,
     CustomInner, CustomNorm, CustomDist)
-from odl.util import is_real_dtype, signature_string, indent
+from odl.util import is_real_dtype, signature_string, indent, is_int
 from odl.util.ufuncs import ProductSpaceUfuncs
 
 
@@ -213,9 +212,9 @@ class ProductSpace(LinearSpace):
 
         # Make a power space if the second argument is an integer.
         # For the case that the integer is 0, we already set the field here.
-        if len(spaces) == 2 and isinstance(spaces[1], Integral):
+        if len(spaces) == 2 and is_int(spaces[1]):
             field = spaces[0].field
-            spaces = [spaces[0]] * spaces[1]
+            spaces = [spaces[0]] * int(spaces[1])
 
         # Validate the space arguments
         if not all(isinstance(spc, LinearSpace) for spc in spaces):
@@ -672,8 +671,8 @@ class ProductSpace(LinearSpace):
         >>> pspace2[:-1, 0]
         ProductSpace(rn(2), 2)
         """
-        if isinstance(indices, Integral):
-            return self.spaces[indices]
+        if is_int(indices):
+            return self.spaces[int(indices)]
 
         elif isinstance(indices, slice):
             return ProductSpace(*self.spaces[indices], field=self.field)
@@ -684,12 +683,12 @@ class ProductSpace(LinearSpace):
             if not indices:
                 return self
             idx = indices[0]
-            if isinstance(idx, Integral):
+            if is_int(idx):
                 # Single integer in tuple, picking that space and passing
                 # through the rest of the tuple. If the picked space
                 # is not a product space and there are still indices left,
                 # raise an error.
-                space = self.spaces[idx]
+                space = self.spaces[int(idx)]
                 rest_indcs = indices[1:]
                 if not rest_indcs:
                     return space
@@ -898,8 +897,8 @@ class ProductSpaceElement(LinearSpaceElement):
 
     def __getitem__(self, indices):
         """Return ``self[indices]``."""
-        if isinstance(indices, Integral):
-            return self.parts[indices]
+        if is_int(indices):
+            return self.parts[int(indices)]
         elif isinstance(indices, slice):
             return self.space[indices].element(self.parts[indices])
         elif isinstance(indices, list):
@@ -913,10 +912,10 @@ class ProductSpaceElement(LinearSpaceElement):
                 return self[indices[0]]
             else:
                 # Tuple with multiple entries
-                if isinstance(indices[0], Integral):
+                if is_int(indices[0]):
                     # In case the first entry is an integer, we drop the
                     # axis and return directly from `parts`
-                    return self.parts[indices[0]][indices[1:]]
+                    return self.parts[int(indices[0])][indices[1:]]
                 else:
                     # indices[0] is a slice or list. We first retrieve the
                     # parts indexed in this axis.
@@ -949,8 +948,8 @@ class ProductSpaceElement(LinearSpaceElement):
     def __setitem__(self, indices, values):
         """Implement ``self[indices] = values``."""
         # Get the parts to which we assign values
-        if isinstance(indices, Integral):
-            indexed_parts = (self.parts[indices],)
+        if is_int(indices):
+            indexed_parts = (self.parts[int(indices)],)
             values = (values,)
         elif isinstance(indices, slice):
             indexed_parts = self.parts[indices]
@@ -1311,6 +1310,25 @@ class ProductSpaceElement(LinearSpaceElement):
         complex_conj = [part.conj() for part in self.parts]
         return self.space.element(complex_conj)
 
+    def astype(self, dtype):
+        """Cast this product space element to a new ``dtype``.
+
+        Parameters
+        ----------
+        dtype :
+            Scalar data type of the returned space. Can be provided
+            in any way the `numpy.dtype` constructor understands, e.g.
+            as built-in type or as a string. Data types with non-trivial
+            shapes are not allowed.
+
+        Returns
+        -------
+        newelem : `ProductSpaceElement`
+            Version of this element with given data type.
+        """
+        return self.space.astype(dtype).element(
+            [p.astype(dtype) for p in self.parts])
+
     def __str__(self):
         """Return ``str(self)``."""
         return repr(self)
@@ -1439,7 +1457,7 @@ class ProductSpaceElement(LinearSpaceElement):
         else:
             if (isinstance(indices, tuple) or
                     (isinstance(indices, list) and
-                     not all(isinstance(idx, Integral) for idx in indices))):
+                     not all(is_int(idx) for idx in indices))):
                 # Tuples or lists containing non-integers index by axis.
                 # We use the first index for the current pspace and pass
                 # on the rest.
@@ -1452,8 +1470,8 @@ class ProductSpaceElement(LinearSpaceElement):
 
             if isinstance(indices, slice):
                 indices = list(range(*indices.indices(len(self))))
-            elif isinstance(indices, Integral):
-                indices = [indices]
+            elif is_int(indices):
+                indices = [int(indices)]
             else:
                 # Use `indices` as-is
                 pass

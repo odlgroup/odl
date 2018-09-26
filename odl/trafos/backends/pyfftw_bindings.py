@@ -241,30 +241,30 @@ def _pyfftw_check_args(arr_in, arr_out, axes, halfcomplex, direction):
         raise ValueError('duplicate axes are not allowed')
 
     if direction == 'forward':
-        out_shape = list(arr_in.shape)
+        shape_out = list(arr_in.shape)
         if halfcomplex:
             try:
-                out_shape[axes[-1]] = arr_in.shape[axes[-1]] // 2 + 1
+                shape_out[axes[-1]] = arr_in.shape[axes[-1]] // 2 + 1
             except IndexError:
                 raise IndexError('axis index {} out of range for array '
                                  'with {} axes'
                                  ''.format(axes[-1], arr_in.ndim))
 
-        if arr_out.shape != tuple(out_shape):
+        if arr_out.shape != tuple(shape_out):
             raise ValueError('expected output shape {}, got {}'
-                             ''.format(tuple(out_shape), arr_out.shape))
+                             ''.format(tuple(shape_out), arr_out.shape))
 
         if is_real_dtype(arr_in.dtype):
-            out_dtype = complex_dtype(arr_in.dtype)
+            dtype_out = complex_dtype(arr_in.dtype)
         elif halfcomplex:
             raise ValueError('cannot combine halfcomplex forward transform '
                              'with complex input')
         else:
-            out_dtype = arr_in.dtype
+            dtype_out = arr_in.dtype
 
-        if arr_out.dtype != out_dtype:
+        if arr_out.dtype != dtype_out:
             raise ValueError('expected output dtype {}, got {}'
-                             ''.format(dtype_repr(out_dtype),
+                             ''.format(dtype_repr(dtype_out),
                                        dtype_repr(arr_out.dtype)))
 
     elif direction == 'backward':

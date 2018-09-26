@@ -22,6 +22,7 @@ from odl.trafos.backends.pywt_bindings import (
     pywt_flat_array_from_coeffs, pywt_coeffs_from_flat_array,
     pywt_single_level_decomp,
     pywt_multi_level_decomp, pywt_multi_level_recon)
+from odl.util import is_int
 from odl.util.testutils import (all_almost_equal, all_equal, noise_array,
                                 simple_fixture)
 
@@ -111,14 +112,17 @@ def _grouped_and_flat_arrays(shapes, dtype):
     i.e. the array with shape ``shapes[0]`` appears once, while the
     others appear ``2 ** ndim - 1`` times each.
     """
-    space = odl.discr_sequence_space(shape=shapes[0], dtype=dtype)
+    shapes = [[int(shape)] if is_int(shape) else shape
+              for shape in shapes]
+    space = odl.uniform_discr([0] * len(shapes[0]), shapes[0], shapes[0],
+                              dtype=dtype)
     array = noise_array(space).reshape(space.shape)
     grouped_list = [array]
     flat_list = [array.ravel()]
     ndim = space.ndim
 
     for shape in shapes[1:]:
-        space = odl.discr_sequence_space(shape=shape, dtype=dtype)
+        space = odl.uniform_discr([0] * len(shape), shape, shape, dtype=dtype)
         arrays = [noise_array(space).reshape(shape)
                   for _ in range(2 ** ndim - 1)]
         grouped_list.append(tuple(arrays))

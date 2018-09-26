@@ -11,10 +11,12 @@
 from __future__ import print_function, division, absolute_import
 import numpy as np
 
+from odl.util.utility import is_int
+
 
 __all__ = ('normalized_scalar_param_list', 'normalized_index_expression',
            'normalized_nodes_on_bdry', 'normalized_axes_tuple',
-           'safe_int_conv')
+           'normalized_axis_indices', 'safe_int_conv')
 
 
 def normalized_scalar_param_list(param, length, param_conv=None,
@@ -154,17 +156,20 @@ def normalized_index_expression(indices, shape, int_to_slice=False):
     Returns
     -------
     normalized : tuple of ints or `slice`'s
-        Normalized index expression
+        Normalized index expression.
 
     Examples
     --------
-    Sequences are turned into tuples. We can have at most as many entries
-    as the length of ``shape``, but fewer are allowed - the remaining
+    Sequences are turned into tuples, except for list of integers, which
+    are taken as indices for the first axis. We can have at most as many
+    entries as the length of ``shape``, but fewer are allowed - the remaining
     list places are filled up by ``slice(None)``:
 
     >>> normalized_index_expression([1, 2, 3], shape=(3, 4, 5))
+    ([1, 2, 3], slice(None, None, None), slice(None, None, None))
+    >>> normalized_index_expression((1, 2, 3), shape=(3, 4, 5))
     (1, 2, 3)
-    >>> normalized_index_expression([1, 2], shape=(3, 4, 5))
+    >>> normalized_index_expression((1, 2), shape=(3, 4, 5))
     (1, 2, slice(None, None, None))
     >>> normalized_index_expression([slice(2), 2], shape=(3, 4, 5))
     (slice(None, 2, None), 2, slice(None, None, None))
@@ -178,14 +183,14 @@ def normalized_index_expression(indices, shape, int_to_slice=False):
     axes:
 
     >>> x = np.zeros(shape=(3, 4, 5))
-    >>> idx1 = normalized_index_expression([1, 2, 3], shape=(3, 4, 5),
+    >>> idx1 = normalized_index_expression((1, 2, 3), shape=(3, 4, 5),
     ...                                   int_to_slice=True)
     >>> idx1
     (slice(1, 2, None), slice(2, 3, None), slice(3, 4, None))
     >>> x[idx1]
     array([[[ 0.]]])
-    >>> idx2 = normalized_index_expression([1, 2, 3], shape=(3, 4, 5),
-    ...                                   int_to_slice=False)
+    >>> idx2 = normalized_index_expression((1, 2, 3), shape=(3, 4, 5),
+    ...                                    int_to_slice=False)
     >>> idx2
     (1, 2, 3)
     >>> x[idx2]
@@ -194,46 +199,69 @@ def normalized_index_expression(indices, shape, int_to_slice=False):
     ndim = len(shape)
     # Support indexing with fewer indices as indexing along the first
     # corresponding axes. In the other cases, normalize the input.
-    if np.isscalar(indices):
+    if indices is None:
+        indices = [None, Ellipsis]
+    elif np.isscalar(indices):
         indices = [indices, Ellipsis]
-    elif (isinstance(indices, slice) or indices is Ellipsis):
+    elif (isinstance(indices, slice) or
+          indices is Ellipsis or
+          (isinstance(indices, list) and
+           all(is_int(idx) for idx in indices))):
+        indices = [indices]
+    elif getattr(indices, 'dtype', object) == bool:
         indices = [indices]
 
     indices = list(indices)
     if len(indices) < ndim and Ellipsis not in indices:
         indices.append(Ellipsis)
 
-    # Turn Ellipsis into the correct number of slice(None)
-    if Ellipsis in indices:
-        if indices.count(Ellipsis) > 1:
-            raise ValueError('cannot use more than one Ellipsis.')
+    # Turn Ellipsis into the correct number of slice(None). We need a slightly
+    # more elaborate loop because we need to avoid comparing arrays to
+    # something using `==`, i.e., we cannot use `indices.count()` or
+    # `... in indices`.
+    ell_idx = None
+    for i, idx in enumerate(indices):
+        if idx is Ellipsis:
+            if ell_idx is not None:
+                raise ValueError('cannot use more than one Ellipsis.')
+            else:
+                ell_idx = i
 
-        eidx = indices.index(Ellipsis)
-        extra_dims = ndim - len(indices) + 1
-        indices = (indices[:eidx] + [slice(None)] * extra_dims +
-                   indices[eidx + 1:])
+    # New axes don't count towards the ellipsis axes
+    num_newaxes = sum(idx is None for idx in indices)
+
+    if ell_idx is not None:
+        extra_dims = ndim - (len(indices) - num_newaxes) + 1
+        indices = (indices[:ell_idx] + [slice(None)] * extra_dims +
+                   indices[ell_idx + 1:])
 
     # Turn single indices into length-1 slices if desired
-    for (i, idx), n in zip(enumerate(indices), shape):
+    dim = 0
+    for i in range(len(indices)):
+        if indices[i] is None:
+            continue
+
+        idx = indices[i]
+        n = shape[dim]
         if np.isscalar(idx):
             if idx < 0:
                 idx += n
 
             if idx >= n:
-                raise IndexError('Index {} is out of bounds for axis '
+                raise IndexError('index {} is out of bounds for axis '
                                  '{} with size {}.'
                                  ''.format(idx, i, n))
             if int_to_slice:
                 indices[i] = slice(idx, idx + 1)
 
+        dim += 1
+
     # Catch most common errors
     if any(s.start == s.stop and s.start is not None or
            s.start == n
            for s, n in zip(indices, shape) if isinstance(s, slice)):
-        raise ValueError('Slices with empty axes not allowed.')
-    if None in indices:
-        raise ValueError('creating new axes is not supported.')
-    if len(indices) > ndim:
+        raise ValueError('slices with empty axes not allowed.')
+    if len(indices) - num_newaxes > ndim:
         raise IndexError('too may indices: {} > {}.'
                          ''.format(len(indices), ndim))
 
@@ -303,6 +331,49 @@ def normalized_nodes_on_bdry(nodes_on_bdry, length):
     return out_list
 
 
+def normalized_axis_indices(indices, ndim):
+    """Turn the given indices into a tuple of indices in the valid range.
+
+    This helper is intended for index normalization when indexing along
+    an object with ``ndim`` axes along the axes, e.g., in `DiscreteLp.byaxis`.
+    A slice is turned into a corresponding tuple of integers, and
+    a single integer is wrapped into a tuple. Negative indices are
+    incremented by ``ndim``.
+
+    Parameters
+    ----------
+    indices : slice, int or sequence of int
+        Object for indexing along axes.
+    ndim : positive int
+        Number of available axes determining the valid axis range.
+
+    Returns
+    -------
+    norm_idcs : tuple of int
+        The normalized indices that all satisfy ``0 <= i < ndim``.
+
+    Raises
+    ------
+    ValueError
+        If a given sequence contains non-integers.
+    """
+    indices_in = indices
+
+    if isinstance(indices, slice):
+        indices = list(range(ndim))[indices]
+
+    try:
+        iter(indices)
+    except TypeError:
+        indices = [indices]
+
+    if any(not is_int(i) for i in indices):
+        raise ValueError('only slice, int or sequence of int is allowed, '
+                         'got {}'.format(indices_in))
+
+    return tuple(i + ndim if i < 0 else i for i in indices)
+
+
 def normalized_axes_tuple(axes, ndim):
     """Return a tuple of ``axes`` converted to positive integers.
 
@@ -311,7 +382,7 @@ def normalized_axes_tuple(axes, ndim):
 
     Parameters
     ----------
-    axes : int or sequence of ints
+    axes : int or sequence of int
         Single integer or integer sequence of arbitrary length.
         Duplicate entries are not allowed. All entries must fulfill
         ``-ndim <= axis <= ndim - 1``.
@@ -320,7 +391,7 @@ def normalized_axes_tuple(axes, ndim):
 
     Returns
     -------
-    axes_list : tuple of ints
+    axes_list : tuple of int
         The converted tuple of axes.
 
     Examples

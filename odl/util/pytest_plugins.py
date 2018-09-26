@@ -29,8 +29,10 @@ except ImportError:
 
 
 @fixture(autouse=True)
-def _add_doctest_np_odl(doctest_namespace):
+def odl_doctest_fixture(doctest_namespace):
     doctest_namespace['np'] = np
+    # Avoid warnings in automated doctests (ufunc_ops)
+    np.seterr(invalid='ignore', divide='ignore')
     doctest_namespace['odl'] = odl
 
 

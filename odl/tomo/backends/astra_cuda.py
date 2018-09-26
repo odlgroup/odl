@@ -21,6 +21,7 @@ except ImportError:
     ASTRA_CUDA_AVAILABLE = False
 
 from odl.discr import DiscreteLp
+from odl.space.weighting import adjoint_weightings
 from odl.tomo.backends.astra_setup import (
     ASTRA_VERSION,
     astra_projection_geometry, astra_volume_geometry, astra_projector,
@@ -248,25 +249,36 @@ class AstraCudaBackProjectorImpl(object):
             else:
                 out = self.reco_space.element()
 
-            # Copy data to GPU memory
+            # Get adjoint weighting functions, using an extra correction
+            # factor accounting for inconsistencies in certain ASTRA versions
+            extra_factor = astra_cuda_bp_scaling_factor(
+                self.proj_space, self.reco_space, self.geometry)
+            apply_dom_weighting, apply_ran_weighting = adjoint_weightings(
+                self.proj_space, self.reco_space, extra_factor)
+
+            # Copy weighted data to GPU memory
             if self.geometry.ndim == 2:
-                astra.data2d.store(self.sino_id, proj_data.asarray())
+                proj_data_arr = apply_dom_weighting(proj_data)
+                astra.data2d.store(self.sino_id, proj_data_arr)
             elif self.geometry.ndim == 3:
+                # Flatten along angles
                 shape = (-1,) + self.geometry.det_partition.shape
                 reshaped_proj_data = proj_data.asarray().reshape(shape)
+                # Swap angle axis to the middle, always making a copy
                 swapped_proj_data = np.ascontiguousarray(
                     np.swapaxes(reshaped_proj_data, 0, 1))
+                # In-place since input is not aliased with `proj_data`
+                apply_dom_weighting(swapped_proj_data, out=swapped_proj_data)
                 astra.data3d.store(self.sino_id, swapped_proj_data)
 
             # Run algorithm
             astra.algorithm.run(self.algo_id)
 
-            # Copy result to CPU memory
+            # Get result from cache
             out[:] = self.out_array
 
-            # Fix scaling to weight by pixel/voxel size
-            out *= astra_cuda_bp_scaling_factor(
-                self.proj_space, self.reco_space, self.geometry)
+            # Apply reco space weighting
+            apply_ran_weighting(out, out=out)
 
             return out
 
@@ -361,12 +373,9 @@ def astra_cuda_bp_scaling_factor(proj_space, reco_space, geometry):
     # Correct in case of non-weighted spaces
     proj_extent = float(proj_space.partition.extent.prod())
     proj_size = float(proj_space.partition.size)
-    proj_weighting = proj_extent / proj_size
+    proj_cell_volume = proj_extent / proj_size
 
-    scaling_factor *= (proj_space.weighting.const /
-                       proj_weighting)
-    scaling_factor /= (reco_space.weighting.const /
-                       reco_space.cell_volume)
+    scaling_factor *= reco_space.cell_volume / proj_cell_volume
 
     if parse_version(ASTRA_VERSION) < parse_version('1.8rc1'):
         if isinstance(geometry, Parallel2dGeometry):

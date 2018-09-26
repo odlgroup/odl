@@ -9,7 +9,6 @@
 """Operators defined for tensor fields."""
 
 from __future__ import print_function, division, absolute_import
-from numbers import Integral
 import numpy as np
 from packaging.version import parse as parse_version
 
@@ -19,7 +18,8 @@ from odl.space import ProductSpace, tensor_space
 from odl.space.base_tensors import TensorSpace
 from odl.space.weighting import ArrayWeighting
 from odl.util import (
-    signature_string, indent, dtype_repr, moveaxis, writable_array)
+    signature_string, indent, dtype_repr, writable_array, is_int)
+from odl.util.npy_compat import moveaxis
 
 
 __all__ = ('PointwiseNorm', 'PointwiseInner', 'PointwiseSum', 'MatrixOperator',
@@ -996,7 +996,7 @@ def _normalize_sampling_points(sampling_points, ndim):
             raise ValueError('`sampling_points` must be empty for '
                              '0-dim. `domain`')
     elif ndim == 1:
-        if isinstance(sampling_points, Integral):
+        if is_int(sampling_points):
             sampling_points = (sampling_points,)
         sampling_points = np.array(sampling_points, dtype=int, copy=False,
                                    ndmin=1)
