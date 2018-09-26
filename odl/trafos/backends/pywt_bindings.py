@@ -116,8 +116,9 @@ def precompute_raveled_slices(coeff_shapes, axes=None):
     >>> coeff_slices = precompute_raveled_slices(coeff_shapes)
     >>> print(coeff_slices[0])  # approximation coefficients
     slice(None, 64, None)
-    >>> print(coeff_slices[-1])  # first level detail coefficients
-    {'ad': slice(1024, 2048, None), 'da': slice(2048, 3072, None), 'dd': slice(3072, 4096, None)}
+    >>> d1_coeffs = coeff_slices[-1]  # first level detail coefficients
+    >>> (d1_coeffs['ad'], d1_coeffs['da'], d1_coeffs['dd'])
+    (slice(1024, 2048, None), slice(2048, 3072, None), slice(3072, 4096, None))
     """
     # initialize with the approximation coefficients.
     a_shape = coeff_shapes[0]
