@@ -71,8 +71,7 @@ def pywt_pad_mode(pad_mode, pad_const=0):
     References
     ----------
     .. _signal extension modes:
-       https://pywavelets.readthedocs.io/en/latest/ref/signal-extension-\
-modes.html
+       https://pywavelets.readthedocs.io/en/latest/ref/signal-extension-modes.html
     """
     pad_mode = str(pad_mode).lower()
     if pad_mode == 'constant' and pad_const != 0.0:

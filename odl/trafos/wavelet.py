@@ -137,8 +137,7 @@ class WaveletTransformBase(Operator):
         References
         ----------
         .. _signal extension modes:
-           https://pywavelets.readthedocs.io/en/latest/ref/signal-extension-\
-    modes.html
+           https://pywavelets.readthedocs.io/en/latest/ref/signal-extension-modes.html
         """
         if not isinstance(space, DiscreteLp):
             raise TypeError('`space` {!r} is not a `DiscreteLp` instance.'
@@ -416,8 +415,7 @@ class WaveletTransform(WaveletTransformBase):
         References
         ----------
         .. _signal extension modes:
-           https://pywavelets.readthedocs.io/en/latest/ref/signal-extension-\
-    modes.html
+           https://pywavelets.readthedocs.io/en/latest/ref/signal-extension-modes.html
         """
         super(WaveletTransform, self).__init__(
             space=domain, wavelet=wavelet, nlevels=nlevels, variant='forward',
@@ -598,8 +596,7 @@ class WaveletTransformInverse(WaveletTransformBase):
         References
         ----------
         .. _signal extension modes:
-           https://pywavelets.readthedocs.io/en/latest/ref/signal-extension-\
-    modes.html
+           https://pywavelets.readthedocs.io/en/latest/ref/signal-extension-modes.html
         """
         super(WaveletTransformInverse, self).__init__(
             space=range, wavelet=wavelet, variant='inverse', nlevels=nlevels,
