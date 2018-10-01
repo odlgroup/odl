@@ -1051,6 +1051,74 @@ class VecGeometry(Geometry):
                 det_v = det_v_left + frac_part * (det_v_right - det_v_left)
                 return (det_u, det_v)
 
+    def __getitem__(self, indices):
+        """Return ``self[indices]``.
+
+        The returned geometry is the vec geometry gained by slicing
+        `vectors` with the given ``indices`` along the first axis and
+        using the original `det_shape`.
+
+        Parameters
+        ----------
+        indices : index expression
+            Object used to slice `vectors` along the first axis.
+
+
+        Raises
+        ------
+        ValueError
+            If ``indices`` slices along other axes than the first.
+
+        Examples
+        --------
+        >>> vecs_2d = [[0, 1, 0, 1, 1, 0],
+        ...            [0, 1, 0, 1, -1, 0],
+        ...            [-1, 0, -1, 0, 0, 1],
+        ...            [-1, 0, -1, 0, 0, -1]]
+        >>> det_shape = (10,)
+        >>> geom = odl.tomo.ParallelVecGeometry(det_shape, vecs_2d)
+        >>> geom[0]  # first angle only
+        ParallelVecGeometry((10,), array([[ 0.,  1.,  0.,  1.,  1.,  0.]]))
+        >>> geom[:3]  # first 3 angles
+        ParallelVecGeometry(
+            (10,),
+            array([[ 0.,  1.,  0.,  1.,  1.,  0.],
+                   [ 0.,  1.,  0.,  1., -1.,  0.],
+                   [-1.,  0., -1.,  0.,  0.,  1.]])
+        )
+        >>> geom[::2]  # every second angle, starting at the first
+        ParallelVecGeometry(
+            (10,),
+            array([[ 0.,  1.,  0.,  1.,  1.,  0.],
+                   [-1.,  0., -1.,  0.,  0.,  1.]])
+        )
+        >>> geom[[0, -1]]  # first and last
+        ParallelVecGeometry(
+            (10,),
+            array([[ 0.,  1.,  0.,  1.,  1.,  0.],
+                   [-1.,  0., -1.,  0.,  0., -1.]])
+        )
+        """
+        # Index vectors and make sure that we still have a valid shape
+        # for ASTRA vecs of the same type
+        sub_vecs = self.vectors[indices]
+        if np.isscalar(sub_vecs) or not hasattr(sub_vecs, 'shape'):
+            raise ValueError(
+                'indexing of `vectors` results in scalar or non-array '
+                '(type {})'.format(type(sub_vecs)))
+
+        if sub_vecs.ndim == 1 and sub_vecs.shape[0] == self.vectors.shape[1]:
+            # Reduced to single vector, add missing dimension
+            sub_vecs = sub_vecs[None, :]
+
+        if sub_vecs.ndim != 2 or sub_vecs.shape[1] != self.vectors.shape[1]:
+            raise ValueError(
+                'indexing of `vectors` results in array of shape {0}, '
+                'expected (N, {1}) or ({1},)'
+                ''.format(sub_vecs.shape, self.vectors.shape[1]))
+
+        return type(self)(self.detector.shape, sub_vecs)
+
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = [self.det_partition.shape, self.vectors]
