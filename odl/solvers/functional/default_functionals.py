@@ -2289,6 +2289,7 @@ class IndicatorSimplex(Functional):
         """Return the `proximal factory` of the functional."""
 
         domain = self.domain
+        diameter = self.diameter
 
         class ProximalSimplex(Operator):
             """Proximal operator implemented by the algorithm of [D+2008].
@@ -2307,7 +2308,7 @@ class IndicatorSimplex(Functional):
             def _call(self, x, out):
 
                 # projection onto simplex
-                proj_simplex(x, self.radius, out)
+                proj_simplex(x, diameter, out)
 
         return ProximalSimplex
 
