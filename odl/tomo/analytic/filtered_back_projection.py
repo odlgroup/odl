@@ -1,3 +1,4 @@
+# coding: utf-8
 # Copyright 2014-2018 The ODL contributors
 #
 # This file is part of ODL.
@@ -140,7 +141,7 @@ def tam_danielson_window(ray_trafo, smoothing_width=0.05, n_pi=1):
     Physics in Medicine & Biology 4 (1998), p 1015.
     https://dx.doi.org/10.1088/0031-9155/43/4/028
 
-    [PKGT2000] Proksa R, Kohler T, Grass M, Timmer J.
+    [PKGT2000] Proksa R, Köhler T, Grass M, Timmer J.
     *The n-PI-method for helical cone-beam CT*
     IEEE Trans Med Imaging. 2000 Sep;19(9):848-63.
     https://www.ncbi.nlm.nih.gov/pubmed/11127600
