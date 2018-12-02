@@ -8,11 +8,11 @@
 
 """Functions to create noise samples of different distributions."""
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 import numpy as np
 
-from odl.util import NumpyRandomSeed
-
+from odl.util import npy_random_seed
 
 __all__ = ('white_noise', 'poisson_noise', 'salt_pepper_noise',
            'uniform_noise')
@@ -49,7 +49,7 @@ def white_noise(space, mean=0, stddev=1, seed=None):
     """
     from odl.space import ProductSpace
 
-    with NumpyRandomSeed(seed):
+    with npy_random_seed(seed):
         if isinstance(space, ProductSpace):
             values = [white_noise(subspace, mean, stddev)
                       for subspace in space]
@@ -101,7 +101,7 @@ def uniform_noise(space, low=0, high=1, seed=None):
     """
     from odl.space import ProductSpace
 
-    with NumpyRandomSeed(seed):
+    with npy_random_seed(seed):
         if isinstance(space, ProductSpace):
             values = [uniform_noise(subspace, low, high)
                       for subspace in space]
@@ -155,7 +155,7 @@ def poisson_noise(intensity, seed=None):
     """
     from odl.space import ProductSpace
 
-    with NumpyRandomSeed(seed):
+    with npy_random_seed(seed):
         if isinstance(intensity.space, ProductSpace):
             values = [poisson_noise(subintensity)
                       for subintensity in intensity]
@@ -218,7 +218,7 @@ def salt_pepper_noise(vector, fraction=0.05, salt_vs_pepper=0.5,
         raise ValueError('`salt_vs_pepper` ({}) should be a float in the '
                          'interval [0, 1]'.format(salt_vs_pepper_in))
 
-    with NumpyRandomSeed(seed):
+    with npy_random_seed(seed):
         if isinstance(vector.space, ProductSpace):
             values = [salt_pepper_noise(subintensity, fraction, salt_vs_pepper,
                                         low_val, high_val)
