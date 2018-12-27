@@ -14,8 +14,8 @@ import numpy as np
 from odl.discr.lp_discr import uniform_discr_fromdiscr
 from odl.util.numerics import resize_array
 
-__all__ = ('cuboid', 'defrise', 'ellipsoid_phantom', 'indicate_proj_axis',
-           'smooth_cuboid', 'tgv_phantom')
+__all__ = ('cuboid', 'defrise', 'ellipsoid_phantom', 'random_ellipsoids',
+           'indicate_proj_axis', 'smooth_cuboid', 'tgv_phantom')
 
 
 def cuboid(space, min_pt=None, max_pt=None):
@@ -596,7 +596,7 @@ def ellipsoid_phantom(space, ellipsoids, min_pt=None, max_pt=None):
             'rotation_phi', 'rotation_theta', 'rotation_psi'
 
         The provided ellipsoids need to be specified relative to the
-        reference rectangle ``[-1, -1] x [1, 1]``, or analogously in 3d.
+        reference rectangle ``[-1, 1] x [-1, 1]``, or analogously in 3d.
         The angles are to be given in radians.
 
     min_pt, max_pt : array-like, optional
@@ -764,12 +764,112 @@ def smooth_cuboid(space, min_pt=None, max_pt=None, axis=0):
     return space.element(values)
 
 
+def random_ellipsoids(space, num, allow_overlap=True, min_axis=None,
+                      max_axis=None, max_elongation=float('inf')):
+    """Generate a phantom of random ellipsoids in a given 2D or 3D space.
+
+    The values of the individual ellipsoids are random between 0 and 1.
+    For non-overlapping ellipsoids, this also holds for the final phantom,
+    while for overlapping ellipsoids, the values add up.
+
+    Parameters
+    ----------
+    space : DiscreteLp
+        Discretized Lp space with ``space.ndim in (2, 3)``, where the phantom
+        should be created.
+    num : positive int
+        Number of ellipsoids that should be created.
+    allow_overlap : bool, optional
+        If ``False``, ellipsoids that overlap with prior ones are rejected.
+
+        .. note::
+            If ``num`` is large (in 2D, larger than 100 for the defaults),
+            it may take very long to generate enough non-overlapping
+            ellipsoids.
+
+    min_axis, max_axis : float or sequence of float
+        Minimum/maximum values for the ellipsoid axes, given as a fraction
+        of the total space extent. A sequence of min/max is applied per
+        axis, a float is applied for all axes.
+        Default: 2 pixels/voxel for ``min_axis``, 0.4 for ``max_axis``.
+    max_elongation : positive float, optional
+        Reject ellipsoids whose elongation, i.e., the ratio of the longest
+        and shortest axes, is larger than this value.
+
+    Returns
+    -------
+    ellipsoids : DiscreteLpElement
+        The generated ellipsoid phantom as a ``space.element``.
+    """
+    num = int(num)
+    ndim = space.ndim
+    if ndim not in (2, 3):
+        raise ValueError('`space` must be 2- or 3-dimensional, got space '
+                         'with ndim = {}'.format(ndim))
+
+    if min_axis is None:
+        min_axis = [2.0 / space.shape[i] for i in range(ndim)]
+    else:
+        min_axis = np.array(min_axis, dtype=float, ndmin=1)
+        min_axis = np.broadcast_to(min_axis, shape=(2,))
+
+    if max_axis is None:
+        max_axis = [0.4] * ndim
+    else:
+        max_axis = np.array(max_axis, dtype=float, ndmin=1)
+        max_axis = np.broadcast_to(max_axis, shape=(2,))
+
+    tmp = space.zero()
+    ellipsoids = []
+    ell_count = 0
+    while True:
+        # Note: Space is normalized to extent [-1, 1]^n
+        center = [np.random.uniform(-0.9, 0.9) for i in range(ndim)]
+        axis = [np.random.uniform(min_axis[i], max_axis[i])
+                for i in range(ndim)]
+        if ndim == 2:
+            rot = [np.random.uniform(0, 2 * np.pi)]
+        elif ndim == 3:
+            rot = [np.random.uniform(0, 2 * np.pi),
+                   np.random.uniform(0, np.pi),
+                   np.random.uniform(0, 2 * np.pi)]
+
+        value = [np.random.uniform(0, 1)]
+
+        # Reject if elongation is too large
+        if max(axis) / min(axis) > max_elongation:
+            continue
+
+        if allow_overlap:
+            ell_count += 1
+            ellipsoids.append(value + axis + center + rot)
+        else:
+            # Test for overlap by constructing a temporary phantom that has
+            # value 1 in all current ellipsoids. Adding the new ellipsoid
+            # should not result in a value larger than 1 anywhere.
+            tmp_ell = [1.0] + axis + center + rot
+            phan_next = tmp + ellipsoid_phantom(space, [tmp_ell])
+            if np.any(phan_next.asarray() > 1):
+                # Reject overlapping ellipsoid
+                continue
+            else:
+                tmp = phan_next
+                ellipsoids.append(value + axis + center + rot)
+                ell_count += 1
+
+        if ell_count >= num:
+            break
+
+    return ellipsoid_phantom(space, ellipsoids)
+
+
 def tgv_phantom(space, edge_smoothing=0.2):
     """Piecewise affine phantom.
 
-    This phantom is taken from [Bre+2010] and includes both linearly varying
-    regions and sharp discontinuities. It is designed to work well with
-    Total Generalized Variation (TGV) type regularization.
+    This phantom is taken from `[Bre+2010]
+    <https://epubs.siam.org/doi/abs/10.1137/090769521>`_ and includes both
+    linearly varying regions and sharp discontinuities. It is designed to
+    work well with Total Generalized Variation (TGV) type regularization.
 
     Parameters
     ----------
@@ -887,6 +987,12 @@ if __name__ == '__main__':
     ellipsoids = [[1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
                   [1.0, 0.6, 0.6, 0.6, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]
     ellipsoid_phantom(space, ellipsoids).show('ellipsoid phantom 3d')
+
+    # random ellipses 2D
+    space = odl.uniform_discr([-1, -1], [1, 1], [300, 300])
+    random_ellipsoids(space, num=40).show('overlapping random ellipses 2d')
+    random_ellipsoids(space, num=40, allow_overlap=False).show(
+        'non-overlapping random ellipses 2d', clim=[0, 1])
 
     # Defrise phantom 2D
     space = odl.uniform_discr([-1, -1], [1, 1], [300, 300])
