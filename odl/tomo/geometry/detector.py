@@ -20,7 +20,7 @@ from odl.util.npy_compat import moveaxis
 
 __all__ = ('Detector',
            'Flat1dDetector', 'Flat2dDetector',
-           'CircleSectionDetector')
+           'CircleSectionDetector', 'CircularDetector')
 
 
 class Detector(object):
@@ -896,6 +896,270 @@ class CircleSectionDetector(Detector):
         """Return ``str(self)``."""
         return repr(self)
 
+class CircularDetector(Detector):
+
+    """A 1D detector on a circle section in 2D space.
+
+    The circular section that corresponds to the angular partition 
+    is rotated to be aligned with a given axis and 
+    shifted to cross the origin. Note, the partition angle increases 
+    in the clockwise direction, by analogy to flat detectors."""
+
+    def __init__(self, partition, axis, radius, check_bounds=True):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        partition : 1-dim. `RectPartition`
+            Partition of the parameter interval, corresponding to the
+            angular sections along the line.
+        axis : `array-like`, shape ``(2,)``
+            Fixed axis along which this detector is aligned.
+        radius : nonnegative float
+            Radius of the circle.
+        check_bounds : bool, optional
+            If ``True``, methods computing vectors check input arguments.
+            Checks are vectorized and add only a small overhead.
+
+        Examples
+        --------
+        Initialize a detector with circle radius 2 and extending to
+        90 degrees on both sides of the origin (a half circle).
+
+        >>> part = odl.uniform_partition(-np.pi / 2, np.pi / 2, 10)
+        >>> det = CircularDetector(part, axis=[1, 0], radius=2)
+        >>> det.axis
+        array([ 1.,  0.])
+        >>> det.radius
+        2.0
+        >>> np.allclose(det.surface_normal(0), [0, -1])
+        True
+        """
+        super(CircularDetector, self).__init__(partition, 2, check_bounds)
+        if self.ndim != 1:
+            raise ValueError('`partition` must be 1-dimensional, got ndim={}'
+                             ''.format(self.ndim))
+
+        if np.linalg.norm(axis) == 0:
+            raise ValueError('`axis` cannot be zero')
+        self.__axis = np.asarray(axis) / np.linalg.norm(axis)
+
+        self.__radius = float(radius)
+        if self.__radius <= 0:
+            raise ValueError('`radius` must be positive')
+        
+        sin = self.__axis[0]
+        cos = -self.__axis[1]
+        self.__rotation_matrix = np.array([[cos, -sin], [sin, cos]])
+        self.__translation = \
+            - self.__radius * np.matmul(self.__rotation_matrix, (1, 0))
+
+    @property
+    def axis(self):
+        """Fixed axis along which this detector is aligned."""
+        return self.__axis
+
+    @property
+    def radius(self):
+        """Curvature radius of the detector."""
+        return self.__radius
+
+    @property
+    def rotation_matrix(self):
+        """Rotation matrix that is used to align the detector 
+        with a given axis."""
+        return self.__rotation_matrix
+
+    @property
+    def translation(self):
+        """A vector used to shift the detector towards the origin."""
+        return self.__translation
+
+    def surface(self, param):
+        """Return the detector surface point corresponding to ``param``.
+ 
+        For a parameter ``phi``, the returned point is given by ::
+
+            surf = R * radius * (cos(phi), -sin(phi)) + t
+
+        where R is a rotation matrix and t is a translation vector. 
+        Note, that increase of ``phi`` corresponds to rotation 
+        in the clockwise direction, by analogy to flat detectors.
+
+        Parameters
+        ----------
+        param : float or `array-like`
+            Parameter value(s) at which to evaluate.
+
+        Returns
+        -------
+        point : `numpy.ndarray`
+            Vector(s) pointing from the origin to the detector surface
+            point at ``param``.
+            If ``param`` is a single parameter, the returned array has
+            shape ``(2,)``, otherwise ``param.shape + (2,)``.
+
+        Examples
+        --------
+        The method works with a single parameter, resulting in a single
+        vector:
+
+        >>> part = odl.uniform_partition(-np.pi / 2, np.pi / 2, 10)
+        >>> det = CircularDetector(part, axis = [0, 1], radius=2)
+        >>> np.allclose(det.surface(- np.pi / 2), [-2, -2])
+        True
+
+        It is also vectorized, i.e., it can be called with multiple
+        parameters at once (or an n-dimensional array of parameters):
+
+        >>> np.round(det.surface([-np.pi / 2, 0, np.pi / 2]), 10)
+        array([[-2., -2.],
+               [ 0.,  0.],
+               [ 2., -2.]])
+
+        >>> det.surface(np.zeros((4, 5))).shape
+        (4, 5, 2)
+        """
+        squeeze_out = (np.shape(param) == ())
+        param = np.array(param, dtype=float, copy=False, ndmin=1)
+        if self.check_bounds and not is_inside_bounds(param, self.params):
+            raise ValueError('`param` {} not in the valid range '
+                             '{}'.format(param, self.params))
+        
+        x = np.multiply.outer(np.cos(param), (1, 0))
+        y = np.multiply.outer(-np.sin(param), (0, 1))
+        surf = self.radius * (x + y)
+        surf = np.matmul(surf, np.transpose(self.rotation_matrix))
+        surf += self.translation 
+        if squeeze_out:
+            surf = surf.squeeze()
+
+        return surf
+
+    def surface_deriv(self, param):
+        """Return the surface derivative at ``param``.
+
+        The derivative at parameter ``phi`` is given by ::
+
+            deriv = R * radius * (-sin(phi), -cos(phi))
+
+        where R is a rotation matrix.
+
+        Parameters
+        ----------
+        param : float or `array-like`
+            Parameter value(s) at which to evaluate.
+
+        Returns
+        -------
+        deriv : `numpy.ndarray`
+            Array representing the derivative vector(s) at ``param``.
+            If ``param`` is a single parameter, the returned array has
+            shape ``(2,)``, otherwise ``param.shape + (2,)``.
+
+        See Also
+        --------
+        surface
+
+        Examples
+        --------
+        The method works with a single parameter, resulting in a single
+        vector:
+
+        >>> part = odl.uniform_partition(-np.pi / 2, np.pi / 2, 10)
+        >>> det = CircularDetector(part, radius = 2)
+        >>> det.surface_deriv(0)
+        array([ 2.,  0.])
+
+        It is also vectorized, i.e., it can be called with multiple
+        parameters at once (or an n-dimensional array of parameters):
+
+        >>> np.round(det.surface_deriv([-np.pi / 2, 0, np.pi / 2]), 10)
+        array([[ 0.,  2.],
+               [ 2.,  0.],
+               [ 0., -2.]])
+
+        >>> det.surface_deriv(np.zeros((4, 5))).shape
+        (4, 5, 2)
+        """
+        squeeze_out = (np.shape(param) == ())
+        param = np.array(param, dtype=float, copy=False, ndmin=1)
+        if self.check_bounds and not is_inside_bounds(param, self.params):
+            raise ValueError('`param` {} not in the valid range '
+                             '{}'.format(param, self.params))
+
+        x = np.multiply.outer(-np.sin(param), (1, 0))
+        y = np.multiply.outer(-np.cos(param), (0, 1))
+        deriv = self.radius * (x + y)
+        deriv = np.matmul(deriv, np.transpose(self.rotation_matrix))
+
+        if squeeze_out:
+            deriv = deriv.squeeze()
+
+        return deriv
+
+    def surface_measure(self, param):
+        """Return the arc length measure at ``param``.
+
+        This is a constant function evaluating to `radius` everywhere.
+
+        Parameters
+        ----------
+        param : float or `array-like`
+            Parameter value(s) at which to evaluate.
+
+        Returns
+        -------
+        measure : float or `numpy.ndarray`
+            Constant value(s) of the arc length measure at ``param``.
+            If ``param`` is a single parameter, a float is returned,
+            otherwise an array of shape ``param.shape``.
+
+        See Also
+        --------
+        surface
+        surface_deriv
+
+        Examples
+        --------
+        The method works with a single parameter, resulting in a float:
+
+        >>> part = odl.uniform_partition(-np.pi / 2, np.pi / 2, 10)
+        >>> det = CircularDetector(part, axis=[1, 0], radius=2)
+        >>> det.surface_measure(0)
+        2.0
+        >>> det.surface_measure(np.pi / 2)
+        2.0
+
+        It is also vectorized, i.e., it can be called with multiple
+        parameters at once (or an n-dimensional array of parameters):
+
+        >>> det.surface_measure([0, np.pi / 2])
+        array([ 2.,  2.])
+        >>> det.surface_measure(np.zeros((4, 5))).shape
+        (4, 5)
+        """
+        scalar_out = (np.shape(param) == ())
+        param = np.array(param, dtype=float, copy=False, ndmin=1)
+        if self.check_bounds and not is_inside_bounds(param, self.params):
+            raise ValueError('`param` {} not in the valid range '
+                             '{}'.format(param, self.params))
+
+        if scalar_out:
+            return self.radius
+        else:
+            return self.radius * np.ones(param.shape)
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        posargs = [self.partition]
+        optargs = [('radius', array_str(self.center), '')]
+        inner_str = signature_string(posargs, optargs, sep=',\n')
+        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
+
+    def __str__(self):
+        """Return ``str(self)``."""
+        return repr(self)
 
 if __name__ == '__main__':
     from odl.util.testutils import run_doctests
