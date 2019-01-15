@@ -896,13 +896,14 @@ class CircleSectionDetector(Detector):
         """Return ``str(self)``."""
         return repr(self)
 
+
 class CircularDetector(Detector):
 
     """A 1D detector on a circle section in 2D space.
 
-    The circular section that corresponds to the angular partition 
-    is rotated to be aligned with a given axis and 
-    shifted to cross the origin. Note, the partition angle increases 
+    The circular section that corresponds to the angular partition
+    is rotated to be aligned with a given axis and
+    shifted to cross the origin. Note, the partition angle increases
     in the clockwise direction, by analogy to flat detectors."""
 
     def __init__(self, partition, axis, radius, check_bounds=True):
@@ -947,7 +948,7 @@ class CircularDetector(Detector):
         self.__radius = float(radius)
         if self.__radius <= 0:
             raise ValueError('`radius` must be positive')
-        
+
         sin = self.__axis[0]
         cos = -self.__axis[1]
         self.__rotation_matrix = np.array([[cos, -sin], [sin, cos]])
@@ -966,7 +967,7 @@ class CircularDetector(Detector):
 
     @property
     def rotation_matrix(self):
-        """Rotation matrix that is used to align the detector 
+        """Rotation matrix that is used to align the detector
         with a given axis."""
         return self.__rotation_matrix
 
@@ -977,13 +978,13 @@ class CircularDetector(Detector):
 
     def surface(self, param):
         """Return the detector surface point corresponding to ``param``.
- 
+
         For a parameter ``phi``, the returned point is given by ::
 
             surf = R * radius * (cos(phi), -sin(phi)) + t
 
-        where R is a rotation matrix and t is a translation vector. 
-        Note, that increase of ``phi`` corresponds to rotation 
+        where R is a rotation matrix and t is a translation vector.
+        Note, that increase of ``phi`` corresponds to rotation
         in the clockwise direction, by analogy to flat detectors.
 
         Parameters
@@ -1025,12 +1026,12 @@ class CircularDetector(Detector):
         if self.check_bounds and not is_inside_bounds(param, self.params):
             raise ValueError('`param` {} not in the valid range '
                              '{}'.format(param, self.params))
-        
+
         x = np.multiply.outer(np.cos(param), (1, 0))
         y = np.multiply.outer(-np.sin(param), (0, 1))
         surf = self.radius * (x + y)
         surf = np.matmul(surf, np.transpose(self.rotation_matrix))
-        surf += self.translation 
+        surf += self.translation
         if squeeze_out:
             surf = surf.squeeze()
 

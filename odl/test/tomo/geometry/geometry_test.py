@@ -531,6 +531,7 @@ def test_fanflat_frommatrix():
         geom = odl.tomo.FanFlatGeometry.frommatrix(apart, dpart, src_rad,
                                                    det_rad, sing_mat)
 
+
 def test_fancurved_props(shift):
     """Test basic properties of 2d fancurved geometries."""
     full_angle = 2 * np.pi
@@ -540,8 +541,8 @@ def test_fancurved_props(shift):
     det_rad = 5
     curve_rad = src_rad + det_rad + 1
     translation = np.array([shift, shift], dtype=float)
-    geom = odl.tomo.FanGeometry(apart, dpart, src_rad, det_rad, 
-                                det_curve_radius = curve_rad,
+    geom = odl.tomo.FanGeometry(apart, dpart, src_rad, det_rad,
+                                det_curve_radius=curve_rad,
                                 translation=translation)
 
     assert geom.ndim == 2
@@ -564,8 +565,8 @@ def test_fancurved_props(shift):
     # angle.
     # Global translation should come afterwards.
     det_point = np.pi / 6
-    dx = curve_rad*(1 - np.cos(det_point))
-    dy = curve_rad*np.sin(det_point)
+    dx = curve_rad * (1 - np.cos(det_point))
+    dy = curve_rad * np.sin(det_point)
     assert all_almost_equal(geom.det_point_position(np.pi / 2, det_point),
                             translation + [-det_rad + dx, dy])
     assert all_almost_equal(geom.det_axis(np.pi / 2), [0, 1])
