@@ -1432,7 +1432,7 @@ def cone_beam_geometry(space, src_radius, det_radius, num_angles=None,
 
 
 def helical_geometry(space, src_radius, det_radius, num_turns,
-                     num_angles=None, det_shape=None):
+                     n_pi=1, num_angles=None, det_shape=None):
     """Create a default helical geometry from ``space``.
 
     This function is intended for simple test cases where users do not
@@ -1467,6 +1467,10 @@ def helical_geometry(space, src_radius, det_radius, num_turns,
     num_angles : int, optional
         Number of angles.
         Default: Enough to fully sample the data, see Notes.
+    n_pi : odd int, optional
+        Total number of half rotations to include in the window. Values larger
+        than 1 should be used if the pitch is much smaller than the detector
+        height.
     det_shape : int or sequence of ints, optional
         Number of detector pixels.
         Default: Enough to fully sample the data, see Notes.
@@ -1487,7 +1491,7 @@ def helical_geometry(space, src_radius, det_radius, num_turns,
     >>> geometry.angles.size
     234
     >>> geometry.detector.shape
-    (57, 10)
+    (57, 9)
 
     Notes
     -----
@@ -1543,21 +1547,15 @@ def helical_geometry(space, src_radius, det_radius, num_turns,
     rb = np.hypot(r, w / 2)  # length of the boundary ray to the flat detector
     num_px_horiz = 2 * int(np.ceil(w * omega * r / (2 * np.pi * rb))) + 1
 
-    # Compute the vertical size needed in order to get a full sampling
-    # according to the Tuy condition
-    theta = 2 * np.arctan((w / 2) / r)
-
     # Compute lower and upper bound needed to fully sample the object.
     # In particular, since in a helical geometry several turns are used,
     # this is selected so that the field of view of two opposing projections,
     # separated by theta = 180 deg, overlap, but as little as possible.
     # See `tam_danielson_window` for more information.
-    source_to_line_distance = rs * (1 + np.cos(theta))
-    scale = r / source_to_line_distance
-
-    source_to_line_lower = (pitch *
-                            (num_turns * np.pi / 2 - theta) / (2 * np.pi))
-    h = 2 * source_to_line_lower * scale
+    h_axis = (pitch / (2 * np.pi) *
+              (1 + (-rho / src_radius) ** 2) *
+              (n_pi * np.pi / 2.0 - np.arctan(-rho / src_radius)))
+    h = 2 * h_axis * (rs + rd) / rs
 
     # Compute number of pixels
     min_mag = r / rs
