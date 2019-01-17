@@ -22,15 +22,15 @@ from odl.util.testutils import all_almost_equal, all_equal, simple_fixture
 
 det_pos_init_2d = simple_fixture(
     name='det_pos_init',
-    params=list(set(permutations([1, 0])) |
-                set(permutations([-1, 0])) |
-                set(permutations([1, -1]))
+    params=list(set(permutations([1, 0]))
+                | set(permutations([-1, 0]))
+                | set(permutations([1, -1]))
                 )
 )
-det_pos_init_3d_params = list(set(permutations([1, 0, 0])) |
-                              set(permutations([-1, 0, 0])) |
-                              set(permutations([1, -1, 0])) |
-                              set(product([-1, 1], repeat=3)))
+det_pos_init_3d_params = list(set(permutations([1, 0, 0]))
+                              | set(permutations([-1, 0, 0]))
+                              | set(permutations([1, -1, 0]))
+                              | set(product([-1, 1], repeat=3)))
 det_pos_init_3d = simple_fixture('det_pos_init', det_pos_init_3d_params)
 axis = simple_fixture('axis', det_pos_init_3d_params)
 shift = simple_fixture('shift', [0, 1])
@@ -108,8 +108,8 @@ def test_parallel_2d_orientation(det_pos_init_2d):
         dot = np.dot(geom.det_to_src(angle, 0), geom.det_axis(angle))
         assert dot == pytest.approx(0)
 
-        normal_det_to_src = (geom.det_to_src(angle, 0) /
-                             np.linalg.norm(geom.det_to_src(angle, 0)))
+        normal_det_to_src = (geom.det_to_src(angle, 0)
+                             / np.linalg.norm(geom.det_to_src(angle, 0)))
 
         orient = np.linalg.det(np.vstack([normal_det_to_src,
                                           geom.det_axis(angle)]))
@@ -276,8 +276,8 @@ def test_parallel_3d_orientation(axis):
         assert dot0 == pytest.approx(0)
         assert dot1 == pytest.approx(0)
 
-        normal_det_to_src = (geom.det_to_src(angle, [0, 0]) /
-                             np.linalg.norm(geom.det_to_src(angle, [0, 0])))
+        normal_det_to_src = (geom.det_to_src(angle, [0, 0])
+                             / np.linalg.norm(geom.det_to_src(angle, [0, 0])))
 
         axis_0, axis_1 = geom.det_axes(angle)
         orient = np.linalg.det(np.vstack([normal_det_to_src, axis_0, axis_1]))
@@ -462,8 +462,8 @@ def test_fanflat_props(shift):
     # At any other parameter, when adding the non-normalized vector to the
     # detector point position, one should get the source position.
     assert all_almost_equal(geom.det_to_src(np.pi / 2, 0), [1, 0])
-    src_pos = (geom.det_point_position(np.pi / 2, 1) +
-               geom.det_to_src(np.pi / 2, 1, normalized=False))
+    src_pos = (geom.det_point_position(np.pi / 2, 1)
+               + geom.det_to_src(np.pi / 2, 1, normalized=False))
     assert all_almost_equal(src_pos, geom.src_position(np.pi / 2))
 
     # Rotation matrix, should correspond to counter-clockwise rotation
@@ -577,8 +577,8 @@ def test_fancurved_props(shift):
     # At any other parameter, when adding the non-normalized vector to the
     # detector point position, one should get the source position.
     assert all_almost_equal(geom.det_to_src(np.pi / 2, 0), [1, 0])
-    src_pos = (geom.det_point_position(np.pi / 2, 1) +
-               geom.det_to_src(np.pi / 2, 1, normalized=False))
+    src_pos = (geom.det_point_position(np.pi / 2, 1)
+               + geom.det_to_src(np.pi / 2, 1, normalized=False))
     assert all_almost_equal(src_pos, geom.src_position(np.pi / 2))
 
     # Rotation matrix, should correspond to counter-clockwise rotation
@@ -644,8 +644,8 @@ def test_helical_cone_flat_props(shift):
 
     # Make sure that source and detector move at the same height and stay
     # opposite of each other
-    src_to_det_ref = (geom.det_refpoint(np.pi / 2) -
-                      geom.src_position(np.pi / 2))
+    src_to_det_ref = (geom.det_refpoint(np.pi / 2)
+                      - geom.src_position(np.pi / 2))
     assert np.dot(geom.axis, src_to_det_ref) == pytest.approx(0)
     assert np.linalg.norm(src_to_det_ref) == pytest.approx(src_rad + det_rad)
 
@@ -655,8 +655,8 @@ def test_helical_cone_flat_props(shift):
     # At any other parameter, when adding the non-normalized vector to the
     # detector point position, one should get the source position.
     assert all_almost_equal(geom.det_to_src(np.pi / 2, [0, 0]), [1, 0, 0])
-    src_pos = (geom.det_point_position(np.pi / 2, [1, 1]) +
-               geom.det_to_src(np.pi / 2, [1, 1], normalized=False))
+    src_pos = (geom.det_point_position(np.pi / 2, [1, 1])
+               + geom.det_to_src(np.pi / 2, [1, 1], normalized=False))
     assert all_almost_equal(src_pos, geom.src_position(np.pi / 2))
 
     # Rotation matrix, should correspond to counter-clockwise rotation
@@ -724,8 +724,8 @@ def test_cone_beam_geometry_helper():
     # Validate angles
     assert geometry.motion_partition.is_uniform
     assert geometry.motion_partition.extent == pytest.approx(2 * np.pi)
-    assert (geometry.motion_partition.cell_sides <=
-            (r + rho) / r * np.pi / (rho * omega))
+    assert (geometry.motion_partition.cell_sides
+            <= (r + rho) / r * np.pi / (rho * omega))
 
     # Validate detector
     det_width = 2 * magnification * rho
@@ -747,8 +747,8 @@ def test_cone_beam_geometry_helper():
     # Validate angles
     assert geometry.motion_partition.is_uniform
     assert geometry.motion_partition.extent == pytest.approx(2 * np.pi)
-    assert (geometry.motion_partition.cell_sides <=
-            (r + rho) / r * np.pi / (rho * omega))
+    assert (geometry.motion_partition.cell_sides
+            <= (r + rho) / r * np.pi / (rho * omega))
 
     # Validate detector
     assert geometry.det_partition.cell_sides[0] <= np.pi * R / (r * omega)
@@ -770,8 +770,8 @@ def test_cone_beam_geometry_helper():
     # Validate angles
     assert geometry.motion_partition.is_uniform
     assert geometry.motion_partition.extent == pytest.approx(2 * np.pi)
-    assert (geometry.motion_partition.cell_sides <=
-            (r + rho) / r * np.pi / (rho * omega))
+    assert (geometry.motion_partition.cell_sides
+            <= (r + rho) / r * np.pi / (rho * omega))
 
     # Validate detector
     det_width = 2 * magnification * rho
@@ -802,10 +802,10 @@ def test_helical_geometry_helper():
 
     # Validate angles
     assert geometry.motion_partition.is_uniform
-    assert (geometry.motion_partition.extent ==
-            pytest.approx(num_turns * 2 * np.pi))
-    assert (geometry.motion_partition.cell_sides <=
-            (r + rho) / r * np.pi / (rho * omega))
+    assert (geometry.motion_partition.extent
+            == pytest.approx(num_turns * 2 * np.pi))
+    assert (geometry.motion_partition.cell_sides
+            <= (r + rho) / r * np.pi / (rho * omega))
 
     # Validate detector
     det_width = 2 * magnification * rho

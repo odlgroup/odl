@@ -407,8 +407,8 @@ class FanGeometry(DivergentBeamGeometry):
         # computed this way since source and detector are at maximum distance,
         # i.e. the connecting line passes the origin.
         center_to_src_init = -self.src_radius * self.src_to_det_init
-        pos_vec = (self.translation[None, :] +
-                   self.rotation_matrix(angle).dot(center_to_src_init))
+        pos_vec = (self.translation[None, :]
+                   + self.rotation_matrix(angle).dot(center_to_src_init))
         if squeeze_out:
             pos_vec = pos_vec.squeeze()
 
@@ -471,8 +471,8 @@ class FanGeometry(DivergentBeamGeometry):
         # computed this way since source and detector are at maximum distance,
         # i.e. the connecting line passes the origin.
         center_to_det_init = self.det_radius * self.src_to_det_init
-        refpt = (self.translation[None, :] +
-                 self.rotation_matrix(angle).dot(center_to_det_init))
+        refpt = (self.translation[None, :]
+                 + self.rotation_matrix(angle).dot(center_to_det_init))
         if squeeze_out:
             refpt = refpt.squeeze()
 
@@ -504,8 +504,8 @@ class FanGeometry(DivergentBeamGeometry):
         """
         squeeze_out = (np.shape(angle) == ())
         angle = np.array(angle, dtype=float, copy=False, ndmin=1)
-        if (self.check_bounds and
-                not is_inside_bounds(angle, self.motion_params)):
+        if (self.check_bounds
+                and not is_inside_bounds(angle, self.motion_params)):
             raise ValueError('`angle` {} not in the valid range {}'
                              ''.format(angle, self.motion_params))
 
@@ -1063,17 +1063,17 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         # Increment along the rotation axis according to pitch and
         # offset_along_axis
         # `shift_along_axis` has shape angles.shape
-        shift_along_axis = (self.offset_along_axis +
-                            self.pitch * angle / (2 * np.pi))
+        shift_along_axis = (self.offset_along_axis
+                            + self.pitch * angle / (2 * np.pi))
         # Create outer product of `shift_along_axis` and `axis`, resulting
         # in shape (a, ndim)
         pitch_component = np.multiply.outer(shift_along_axis, self.axis)
 
         # Broadcast translation along extra dimensions
         transl_slc = (None,) * extra_dims + (slice(None),)
-        refpt = (self.translation[transl_slc] +
-                 circle_component +
-                 pitch_component)
+        refpt = (self.translation[transl_slc]
+                 + circle_component
+                 + pitch_component)
         if squeeze_out:
             refpt = refpt.squeeze()
 
@@ -1149,17 +1149,17 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         # Increment along the rotation axis according to pitch and
         # offset_along_axis
         # `shift_along_axis` has shape angles.shape
-        shift_along_axis = (self.offset_along_axis +
-                            self.pitch * angle / (2 * np.pi))
+        shift_along_axis = (self.offset_along_axis
+                            + self.pitch * angle / (2 * np.pi))
         # Create outer product of `shift_along_axis` and `axis`, resulting
         # in shape (a, ndim)
         pitch_component = np.multiply.outer(shift_along_axis, self.axis)
 
         # Broadcast translation along extra dimensions
         transl_slc = (None,) * extra_dims + (slice(None),)
-        refpt = (self.translation[transl_slc] +
-                 circle_component +
-                 pitch_component)
+        refpt = (self.translation[transl_slc]
+                 + circle_component
+                 + pitch_component)
         if squeeze_out:
             refpt = refpt.squeeze()
 
@@ -1448,8 +1448,8 @@ def cone_beam_geometry(space, src_radius, det_radius, num_angles=None,
         max_angle = 2 * np.pi
 
     if num_angles is None:
-        num_angles = int(np.ceil(max_angle * omega * rho / np.pi *
-                                 r / (r + rho)))
+        num_angles = int(np.ceil(max_angle * omega * rho / np.pi
+                                 * r / (r + rho)))
 
     angle_partition = uniform_partition(0, max_angle, num_angles)
     det_partition = uniform_partition(det_min_pt, det_max_pt, det_shape)
@@ -1603,8 +1603,8 @@ def helical_geometry(space, src_radius, det_radius, num_turns,
     max_angle = 2 * np.pi * num_turns
 
     if num_angles is None:
-        num_angles = int(np.ceil(max_angle * omega * rho / np.pi *
-                                 r / (r + rho)))
+        num_angles = int(np.ceil(max_angle * omega * rho / np.pi
+                                 * r / (r + rho)))
 
     angle_partition = uniform_partition(0, max_angle, num_angles)
     det_partition = uniform_partition(det_min_pt, det_max_pt, det_shape)

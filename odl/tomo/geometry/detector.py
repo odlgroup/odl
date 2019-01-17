@@ -1162,6 +1162,7 @@ class CircularDetector(Detector):
         """Return ``str(self)``."""
         return repr(self)
 
+
 if __name__ == '__main__':
     from odl.util.testutils import run_doctests
     run_doctests()
