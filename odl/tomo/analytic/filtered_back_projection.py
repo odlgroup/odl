@@ -1,5 +1,5 @@
 # coding: utf-8
-# Copyright 2014-2018 The ODL contributors
+# Copyright 2014-2019 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -79,16 +79,16 @@ def _fbp_filter(norm_freq, filter_type, frequency_scaling):
     """
     if callable(filter_type):
         filt = filter_type(norm_freq)
-    elif filter_type == 'Ram-Lak':
+    elif filter_type.lower() == 'ram-lak':
         filt = np.copy(norm_freq)
-    elif filter_type == 'Shepp-Logan':
+    elif filter_type.lower() == 'shepp-logan':
         filt = norm_freq * np.sinc(norm_freq / (2 * frequency_scaling))
-    elif filter_type == 'Cosine':
+    elif filter_type.lower() == 'cosine':
         filt = norm_freq * np.cos(norm_freq * np.pi / (2 * frequency_scaling))
-    elif filter_type == 'Hamming':
+    elif filter_type.lower() == 'hamming':
         filt = norm_freq * (
             0.54 + 0.46 * np.cos(norm_freq * np.pi / (frequency_scaling)))
-    elif filter_type == 'Hann':
+    elif filter_type.lower() == 'hann':
         filt = norm_freq * (
             np.cos(norm_freq * np.pi / (2 * frequency_scaling)) ** 2)
     else:
