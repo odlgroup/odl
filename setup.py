@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2019 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -57,9 +57,11 @@ def find_tests():
     for path, _, filenames in os.walk(os.path.join(root_path, test_path)):
         for filename in filenames:
             basename, suffix = os.path.splitext(filename)
-            if (suffix == '.py' and
-                    (basename.startswith('test_') or
-                     basename.endswith('_test'))):
+            if (
+                suffix == '.py'
+                and (basename.startswith('test_')
+                     or basename.endswith('_test'))
+            ):
                 tests.append(os.path.join(path, filename))
 
     return tests

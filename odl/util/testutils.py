@@ -1,4 +1,4 @@
-﻿# Copyright 2014-2018 The ODL contributors
+﻿# Copyright 2014-2019 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -258,8 +258,10 @@ def simple_fixture(name, params, fmt=None):
         ids = []
         for p in params:
             # TODO: other types of decorators?
-            if (isinstance(p, _pytest.mark.MarkDecorator) and
-                    p.name == 'skipif'):
+            if (
+                isinstance(p, _pytest.mark.MarkDecorator)
+                and p.name == 'skipif'
+            ):
                 # Unwrap the wrapped object in the decorator
                 if is_string(p.args[1]):
                     ids.append(fmt_str.format(name=name, value=p.args[1]))
@@ -332,8 +334,10 @@ def noise_array(space):
         elif np.issubdtype(space.dtype, np.floating):
             arr = np.random.randn(*space.shape)
         elif np.issubdtype(space.dtype, np.complexfloating):
-            arr = (np.random.randn(*space.shape) +
-                   1j * np.random.randn(*space.shape)) / np.sqrt(2.0)
+            arr = (
+                np.random.randn(*space.shape)
+                + 1j * np.random.randn(*space.shape)
+            ) / np.sqrt(2.0)
         else:
             raise ValueError('bad dtype {}'.format(space.dtype))
 
