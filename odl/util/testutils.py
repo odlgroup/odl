@@ -655,7 +655,7 @@ def test(arguments=None):
                            '"pytest<3.7"` in order to install '
                            'a suitable version of `pytest`.')
 
-    from .pytest_plugins import collect_ignore
+    from .pytest_config import collect_ignore
 
     this_dir = os.path.dirname(__file__)
     odl_root = os.path.abspath(os.path.join(this_dir, os.pardir, os.pardir))
