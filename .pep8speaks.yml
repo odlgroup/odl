@@ -15,6 +15,7 @@ pycodestyle:
     ignore:  # Errors and warnings to ignore
         - E402
         - E741
+        - W503
 
 no_blank_comment: False
 only_mention_files_with_errors: True
