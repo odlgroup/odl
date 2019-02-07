@@ -541,9 +541,9 @@ def test_fancurved_props(shift):
     det_rad = 5
     curve_rad = src_rad + det_rad + 1
     translation = np.array([shift, shift], dtype=float)
-    geom = odl.tomo.FanGeometry(apart, dpart, src_rad, det_rad,
-                                det_curve_radius=curve_rad,
-                                translation=translation)
+    geom = odl.tomo.FanBeamGeometry(apart, dpart, src_rad, det_rad,
+                                    det_curve_radius=curve_rad,
+                                    translation=translation)
 
     assert geom.ndim == 2
     assert isinstance(geom.detector, odl.tomo.CircularDetector)
@@ -595,7 +595,7 @@ def test_fancurved_props(shift):
 
     # Both radii zero
     with pytest.raises(ValueError):
-        odl.tomo.FanGeometry(apart, dpart, src_radius=0, det_radius=0)
+        odl.tomo.FanBeamGeometry(apart, dpart, src_radius=0, det_radius=0)
 
     # Check that str and repr work without crashing and return something
     assert str(geom)

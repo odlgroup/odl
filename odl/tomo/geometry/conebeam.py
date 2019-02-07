@@ -22,11 +22,11 @@ from odl.util import signature_string, indent, array_str
 
 
 __all__ = ('FanFlatGeometry', 'ConeFlatGeometry',
-           'FanGeometry',
+           'FanBeamGeometry',
            'cone_beam_geometry', 'helical_geometry')
 
 
-class FanGeometry(DivergentBeamGeometry):
+class FanBeamGeometry(DivergentBeamGeometry):
 
     """Fan beam (2d cone beam) geometry.
 
@@ -66,7 +66,7 @@ class FanGeometry(DivergentBeamGeometry):
             is zero.
         det_curve_radius : nonnegative float, optional
             Radius of the detector curvature.
-            If ``None``, flat detector is used, otherwise must be positive.
+            If ``None``, a flat detector is used, otherwise must be positive.
         src_to_det_init : `array-like` (shape ``(2,)``), optional
             Initial state of the vector pointing from source to detector
             reference point. The zero vector is not allowed.
@@ -104,7 +104,7 @@ class FanGeometry(DivergentBeamGeometry):
 
         >>> apart = odl.uniform_partition(0, 2 * np.pi, 10)
         >>> dpart = odl.uniform_partition(-1, 1, 20)
-        >>> geom = FanGeometry(apart, dpart, src_radius=1, det_radius=5)
+        >>> geom = FanBeamGeometry(apart, dpart, src_radius=1, det_radius=5)
         >>> geom.src_position(0)
         array([ 0., -1.])
         >>> geom.det_refpoint(0)
@@ -119,17 +119,31 @@ class FanGeometry(DivergentBeamGeometry):
         >>> geom.det_axis_init
         array([ 1.,  0.])
 
+        Specifying curvature of the detector:
+
+        >>> apart = odl.uniform_partition(0, 2 * np.pi, 10)
+        >>> dpart = odl.uniform_partition(-np.pi / 2, np.pi / 2, 10)
+        >>> geom = FanBeamGeometry(apart, dpart, src_radius=1, det_radius=5,
+        ...                        det_curve_radius = 10)
+        >>> geom.src_position(0)
+        array([ 0., -1.])
+        >>> geom.det_refpoint(0)
+        array([ 0.,  5.])
+        >>> np.round(geom.det_point_position(0, np.pi / 6), 2)
+        # (0, 5) + 10 * (sin(pi/6), cos(pi/6) - 1)
+        array([ 5.  ,  3.66])
+
         Specifying an initial detector position by default rotates the
         standard configuration to this position:
 
         >>> e_x, e_y = np.eye(2)  # standard unit vectors
-        >>> geom = FanGeometry(apart, dpart, src_radius=1, det_radius=5,
+        >>> geom = FanBeamGeometry(apart, dpart, src_radius=1, det_radius=5,
         ...                        src_to_det_init=(1, 0))
         >>> np.allclose(geom.src_to_det_init, e_x)
         True
         >>> np.allclose(geom.det_axis_init, -e_y)
         True
-        >>> geom = FanGeometry(apart, dpart, src_radius=1, det_radius=5,
+        >>> geom = FanBeamGeometry(apart, dpart, src_radius=1, det_radius=5,
         ...                        src_to_det_init=(0, -1))
         >>> np.allclose(geom.src_to_det_init, -e_y)
         True
@@ -138,7 +152,7 @@ class FanGeometry(DivergentBeamGeometry):
 
         The initial detector axis can also be set explicitly:
 
-        >>> geom = FanGeometry(
+        >>> geom = FanBeamGeometry(
         ...     apart, dpart, src_radius=1, det_radius=5,
         ...     src_to_det_init=(1, 0), det_axis_init=(0, 1))
         >>> np.allclose(geom.src_to_det_init, e_x)
@@ -192,21 +206,17 @@ class FanGeometry(DivergentBeamGeometry):
         self.__src_to_det_init = src_to_det_init
         # `check_bounds` is needed for both detector and geometry
         check_bounds = kwargs.get('check_bounds', True)
-        self.__det_curve_radius = det_curve_radius
-        if self.__det_curve_radius is None:
+        if det_curve_radius is None:
             detector = Flat1dDetector(dpart, axis=det_axis_init,
                                       check_bounds=check_bounds)
         else:
-            self.__det_curve_radius = float(self.__det_curve_radius)
-            if self.__det_curve_radius <= 0:
-                raise ValueError('`det_curve_radius` must be positive')
-            else:
-                detector = CircularDetector(dpart,
-                                            radius=self.__det_curve_radius,
-                                            axis=det_axis_init,
-                                            check_bounds=check_bounds)
+            det_curve_radius = float(det_curve_radius)
+            detector = CircularDetector(dpart,
+                                        radius=det_curve_radius,
+                                        axis=det_axis_init,
+                                        check_bounds=check_bounds)
         translation = kwargs.pop('translation', None)
-        super(FanGeometry, self).__init__(
+        super(FanBeamGeometry, self).__init__(
             ndim=2, motion_part=apart, detector=detector,
             translation=translation, **kwargs)
 
@@ -230,7 +240,7 @@ class FanGeometry(DivergentBeamGeometry):
     @classmethod
     def frommatrix(cls, apart, dpart, src_radius, det_radius, init_matrix,
                    det_curve_radius=None, **kwargs):
-        """Create an instance of `FanGeometry` using a matrix.
+        """Create an instance of `FanBeamGeometry` using a matrix.
 
         This alternative constructor uses a matrix to rotate and
         translate the default configuration. It is most useful when
@@ -261,7 +271,7 @@ class FanGeometry(DivergentBeamGeometry):
 
         Returns
         -------
-        geometry : `FanGeometry`
+        geometry : `FanBeamGeometry`
 
         Examples
         --------
@@ -271,7 +281,7 @@ class FanGeometry(DivergentBeamGeometry):
         >>> dpart = odl.uniform_partition(-1, 1, 20)
         >>> matrix = np.array([[1, 0],
         ...                    [0, -1]])
-        >>> geom = FanGeometry.frommatrix(
+        >>> geom = FanBeamGeometry.frommatrix(
         ...     apart, dpart, src_radius=1, det_radius=5, init_matrix=matrix)
         >>> geom.det_refpoint(0)
         array([ 0., -5.])
@@ -284,7 +294,7 @@ class FanGeometry(DivergentBeamGeometry):
 
         >>> matrix = np.array([[1, 0, 1],
         ...                    [0, -1, 1]])
-        >>> geom = FanGeometry.frommatrix(
+        >>> geom = FanBeamGeometry.frommatrix(
         ...     apart, dpart, src_radius=1, det_radius=5, init_matrix=matrix)
         >>> geom.translation
         array([ 1.,  1.])
@@ -329,7 +339,10 @@ class FanGeometry(DivergentBeamGeometry):
     @property
     def det_curve_radius(self):
         """Detector curve radius of this geometry."""
-        return self.__det_curve_radius
+        try:
+            return self.detector.radius
+        except AttributeError:
+            return None
 
     @property
     def src_to_det_init(self):
@@ -385,7 +398,7 @@ class FanGeometry(DivergentBeamGeometry):
 
         >>> apart = odl.uniform_partition(0, 2 * np.pi, 10)
         >>> dpart = odl.uniform_partition(-1, 1, 20)
-        >>> geom = FanGeometry(apart, dpart, src_radius=2, det_radius=5)
+        >>> geom = FanBeamGeometry(apart, dpart, src_radius=2, det_radius=5)
         >>> geom.src_position(0)
         array([ 0., -2.])
         >>> np.allclose(geom.src_position(np.pi / 2), [2, 0])
@@ -449,7 +462,7 @@ class FanGeometry(DivergentBeamGeometry):
 
         >>> apart = odl.uniform_partition(0, 2 * np.pi, 10)
         >>> dpart = odl.uniform_partition(-1, 1, 20)
-        >>> geom = FanGeometry(apart, dpart, src_radius=2, det_radius=5)
+        >>> geom = FanBeamGeometry(apart, dpart, src_radius=2, det_radius=5)
         >>> geom.det_refpoint(0)
         array([ 0.,  5.])
         >>> np.allclose(geom.det_refpoint(np.pi / 2), [-5, 0])
@@ -549,12 +562,12 @@ class FanGeometry(DivergentBeamGeometry):
         --------
         >>> apart = odl.uniform_partition(0, 4, 4)
         >>> dpart = odl.uniform_partition(-1, 1, 20)
-        >>> geom = odl.tomo.FanGeometry(apart, dpart, 50, 100)
+        >>> geom = odl.tomo.FanBeamGeometry(apart, dpart, 50, 100)
 
         Extract sub-geometry with every second angle:
 
         >>> geom[::2, :]
-        FanGeometry(
+        FanBeamGeometry(
             nonuniform_partition(
                 [ 0.5,  2.5],
                 min_pt=0.0, max_pt=4.0
@@ -568,7 +581,7 @@ class FanGeometry(DivergentBeamGeometry):
         apart = part.byaxis[0]
         dpart = part.byaxis[1]
 
-        return FanGeometry(apart, dpart,
+        return FanBeamGeometry(apart, dpart,
                            src_radius=self.src_radius,
                            det_radius=self.det_radius,
                            src_to_det_init=self.src_to_det_init,
@@ -576,13 +589,26 @@ class FanGeometry(DivergentBeamGeometry):
                            translation=self.translation)
 
 
-class FanFlatGeometry(FanGeometry):
+class FanFlatGeometry(FanBeamGeometry):
 
     """Fan beam (2d cone beam) geometry with flat 1d detector.
 
-    FanGeometry with the default det_curve_radius = None """
+    The source moves on a circle with radius ``src_radius``, and the
+    detector reference point is opposite to the source, i.e. at maximum
+    distance, on a circle with radius ``det_radius``. One of the two
+    radii can be chosen as 0, which corresponds to a stationary source
+    or detector, respectively.
 
-    pass
+    The motion parameter is the 1d rotation angle parameterizing source
+    and detector positions simultaneously.
+
+    In the standard configuration, the detector is perpendicular to the
+    ray direction, its reference point is initially at ``(0, 1)``, and
+    the initial detector axis is ``(1, 0)``.
+
+    For details, check `the online docs
+    <https://odlgroup.github.io/odl/guide/geometry_guide.html>`_.
+    """
 
 
 class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):

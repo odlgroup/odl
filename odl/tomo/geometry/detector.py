@@ -952,8 +952,8 @@ class CircularDetector(Detector):
         sin = self.__axis[0]
         cos = -self.__axis[1]
         self.__rotation_matrix = np.array([[cos, -sin], [sin, cos]])
-        self.__translation = \
-            - self.__radius * np.matmul(self.__rotation_matrix, (1, 0))
+        self.__translation = (- self.__radius
+                              * np.matmul(self.__rotation_matrix, (1, 0)))
 
     @property
     def axis(self):
@@ -983,8 +983,8 @@ class CircularDetector(Detector):
 
             surf = R * radius * (cos(phi), -sin(phi)) + t
 
-        where R is a rotation matrix and t is a translation vector.
-        Note, that increase of ``phi`` corresponds to rotation
+        where ``R`` is a rotation matrix and ``t`` is a translation vector.
+        Note that increase of ``phi`` corresponds to rotation
         in the clockwise direction, by analogy to flat detectors.
 
         Parameters
@@ -1006,8 +1006,8 @@ class CircularDetector(Detector):
         vector:
 
         >>> part = odl.uniform_partition(-np.pi / 2, np.pi / 2, 10)
-        >>> det = CircularDetector(part, axis = [0, 1], radius=2)
-        >>> np.allclose(det.surface(- np.pi / 2), [-2, -2])
+        >>> det = CircularDetector(part, axis=[0, 1], radius=2)
+        >>> np.allclose(det.surface(-np.pi / 2), [-2, -2])
         True
 
         It is also vectorized, i.e., it can be called with multiple
@@ -1027,9 +1027,10 @@ class CircularDetector(Detector):
             raise ValueError('`param` {} not in the valid range '
                              '{}'.format(param, self.params))
 
-        x = np.multiply.outer(np.cos(param), (1, 0))
-        y = np.multiply.outer(-np.sin(param), (0, 1))
-        surf = self.radius * (x + y)
+        surf = np.empty(param.shape + (2,))
+        surf[..., 0] = np.cos(param)
+        surf[..., 1] = -np.sin(param)
+        surf *= self.radius
         surf = np.matmul(surf, np.transpose(self.rotation_matrix))
         surf += self.translation
         if squeeze_out:
@@ -1068,7 +1069,7 @@ class CircularDetector(Detector):
         vector:
 
         >>> part = odl.uniform_partition(-np.pi / 2, np.pi / 2, 10)
-        >>> det = CircularDetector(part, radius = 2)
+        >>> det = CircularDetector(part, radius=2)
         >>> det.surface_deriv(0)
         array([ 2.,  0.])
 
@@ -1089,9 +1090,10 @@ class CircularDetector(Detector):
             raise ValueError('`param` {} not in the valid range '
                              '{}'.format(param, self.params))
 
-        x = np.multiply.outer(-np.sin(param), (1, 0))
-        y = np.multiply.outer(-np.cos(param), (0, 1))
-        deriv = self.radius * (x + y)
+        deriv = np.empty(param.shape + (2,))
+        deriv[..., 0] = -np.sin(param)
+        deriv[..., 1] = -np.cos(param)
+        deriv *= self.radius
         deriv = np.matmul(deriv, np.transpose(self.rotation_matrix))
 
         if squeeze_out:
