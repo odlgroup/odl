@@ -124,7 +124,7 @@ class FanBeamGeometry(DivergentBeamGeometry):
         >>> apart = odl.uniform_partition(0, 2 * np.pi, 10)
         >>> dpart = odl.uniform_partition(-np.pi / 2, np.pi / 2, 10)
         >>> geom = FanBeamGeometry(apart, dpart, src_radius=1, det_radius=5,
-        ...                        det_curve_radius = 10)
+        ...                        det_curve_radius=10)
         >>> geom.src_position(0)
         array([ 0., -1.])
         >>> geom.det_refpoint(0)
@@ -339,10 +339,7 @@ class FanBeamGeometry(DivergentBeamGeometry):
     @property
     def det_curve_radius(self):
         """Detector curve radius of this geometry."""
-        try:
-            return self.detector.radius
-        except AttributeError:
-            return None
+        return getattr(self.detector, 'radius', None)
 
     @property
     def src_to_det_init(self):
@@ -582,11 +579,11 @@ class FanBeamGeometry(DivergentBeamGeometry):
         dpart = part.byaxis[1]
 
         return FanBeamGeometry(apart, dpart,
-                           src_radius=self.src_radius,
-                           det_radius=self.det_radius,
-                           src_to_det_init=self.src_to_det_init,
-                           det_axis_init=self._det_axis_init_arg,
-                           translation=self.translation)
+                               src_radius=self.src_radius,
+                               det_radius=self.det_radius,
+                               src_to_det_init=self.src_to_det_init,
+                               det_axis_init=self._det_axis_init_arg,
+                               translation=self.translation)
 
 
 class FanFlatGeometry(FanBeamGeometry):
