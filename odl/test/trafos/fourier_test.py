@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2019 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -7,32 +7,37 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import division
+
 import numpy as np
 import pytest
 
 import odl
-from odl.trafos.util.ft_utils import (
-    reciprocal_grid, dft_preprocess_data, dft_postprocess_data,
-    _interp_kernel_ft)
 from odl.trafos.fourier import (
     DiscreteFourierTransform, DiscreteFourierTransformInverse,
     FourierTransform)
-from odl.util import (all_almost_equal, never_skip, skip_if_no_pyfftw,
-                      noise_element,
-                      is_real_dtype, conj_exponent, complex_dtype)
+from odl.trafos.util.ft_utils import (
+    _interp_kernel_ft, dft_postprocess_data, dft_preprocess_data,
+    reciprocal_grid)
+from odl.util import (
+    all_almost_equal, complex_dtype, conj_exponent, is_real_dtype,
+    noise_element, skip_if_no_pyfftw)
 from odl.util.testutils import simple_fixture
 
 
 # --- pytest fixtures --- #
 
 
-impl = simple_fixture('impl', [never_skip('numpy'),
-                               skip_if_no_pyfftw('pyfftw')])
+impl = simple_fixture(
+    'impl',
+    [pytest.param('numpy'),
+     pytest.param('pyfftw', marks=skip_if_no_pyfftw)]
+)
 exponent = simple_fixture('exponent', [2.0, 1.0, float('inf'), 1.5])
 sign = simple_fixture('sign', ['-', '+'])
 
 
-# --- helper functions --- #
+# --- Helper functions --- #
+
 
 def _params_from_dtype(dtype):
     if is_real_dtype(dtype):

@@ -1,4 +1,4 @@
-# Copyright 2014-2018 The ODL contributors
+# Copyright 2014-2019 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -9,31 +9,45 @@
 """Test for the figures of merit (FOMs) that use a known ground truth."""
 
 from __future__ import division
+
 import numpy as np
 import pytest
-import scipy.signal
 import scipy.misc
+import scipy.signal
+
 import odl
 from odl.contrib import fom
-from odl.util.testutils import simple_fixture, noise_element
+from odl.util.testutils import noise_element, simple_fixture, skip_if_no_pyfftw
 
-fft_impl = simple_fixture('fft_impl',
-                          [odl.util.testutils.never_skip('numpy'),
-                           odl.util.testutils.skip_if_no_pyfftw('pyfftw')])
 
-space = simple_fixture('space',
-                       [odl.rn(3),
-                        odl.rn(3, dtype='float32'),
-                        odl.uniform_discr(0, 1, 10),
-                        odl.uniform_discr([0, 0], [1, 1], [5, 5])])
+# --- pytest fixtures --- #
 
-scalar_fom = simple_fixture('scalar_fom',
-                            [fom.mean_squared_error,
-                             fom.mean_absolute_error,
-                             fom.mean_value_difference,
-                             fom.standard_deviation_difference,
-                             fom.range_difference,
-                             fom.blurring])
+
+fft_impl = simple_fixture(
+    'fft_impl',
+    [pytest.param('numpy'), pytest.param('pyfftw', marks=skip_if_no_pyfftw)]
+)
+
+space = simple_fixture(
+    'space',
+    [odl.rn(3),
+     odl.rn(3, dtype='float32'),
+     odl.uniform_discr(0, 1, 10),
+     odl.uniform_discr([0, 0], [1, 1], [5, 5])]
+)
+
+scalar_fom = simple_fixture(
+    'scalar_fom',
+    [fom.mean_squared_error,
+     fom.mean_absolute_error,
+     fom.mean_value_difference,
+     fom.standard_deviation_difference,
+     fom.range_difference,
+     fom.blurring]
+)
+
+
+# --- Tests --- #
 
 
 def test_general(space, scalar_fom):

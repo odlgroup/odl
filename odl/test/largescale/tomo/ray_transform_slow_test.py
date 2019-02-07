@@ -1,4 +1,4 @@
-# Copyright 2014-2018 The ODL contributors
+# Copyright 2014-2019 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -11,13 +11,13 @@
 from __future__ import division
 
 import numpy as np
-from packaging.version import parse as parse_version
 import pytest
+from packaging.version import parse as parse_version
 
 import odl
-from odl.util.testutils import skip_if_no_largescale, simple_fixture
-from odl.tomo.util.testutils import (skip_if_no_astra, skip_if_no_astra_cuda,
-                                     skip_if_no_skimage)
+from odl.tomo.util.testutils import (
+    skip_if_no_astra, skip_if_no_astra_cuda, skip_if_no_skimage)
+from odl.util.testutils import simple_fixture, skip_if_no_largescale
 
 
 # --- pytest fixtures --- #
@@ -28,35 +28,47 @@ dtype = simple_fixture('dtype', dtype_params)
 
 
 # Find the valid projectors
-projectors = [skip_if_no_astra('par2d astra_cpu uniform'),
-              skip_if_no_astra('par2d astra_cpu nonuniform'),
-              skip_if_no_astra('par2d astra_cpu random'),
-              skip_if_no_astra('cone2d astra_cpu uniform'),
-              skip_if_no_astra('cone2d astra_cpu nonuniform'),
-              skip_if_no_astra('cone2d astra_cpu random'),
-              skip_if_no_astra_cuda('par2d astra_cuda uniform'),
-              skip_if_no_astra_cuda('par2d astra_cuda nonuniform'),
-              skip_if_no_astra_cuda('par2d astra_cuda random'),
-              skip_if_no_astra_cuda('cone2d astra_cuda uniform'),
-              skip_if_no_astra_cuda('cone2d astra_cuda nonuniform'),
-              skip_if_no_astra_cuda('cone2d astra_cuda random'),
-              skip_if_no_astra_cuda('par3d astra_cuda uniform'),
-              skip_if_no_astra_cuda('par3d astra_cuda nonuniform'),
-              skip_if_no_astra_cuda('par3d astra_cuda random'),
-              skip_if_no_astra_cuda('cone3d astra_cuda uniform'),
-              skip_if_no_astra_cuda('cone3d astra_cuda nonuniform'),
-              skip_if_no_astra_cuda('cone3d astra_cuda random'),
-              skip_if_no_astra_cuda('helical astra_cuda uniform'),
-              skip_if_no_skimage('par2d skimage uniform')]
+projectors = []
+projectors.extend(
+    (
+     pytest.param(value, marks=[skip_if_no_largescale, skip_if_no_astra])
+     for value in ['par2d astra_cpu uniform',
+                   'par2d astra_cpu nonuniform',
+                   'par2d astra_cpu random',
+                   'cone2d astra_cpu uniform',
+                   'cone2d astra_cpu nonuniform',
+                   'cone2d astra_cpu random']
+     )
+)
+projectors.extend(
+    (
+     pytest.param(value, marks=[skip_if_no_largescale, skip_if_no_astra_cuda])
+     for value in ['par2d astra_cuda uniform',
+                   'par2d astra_cuda nonuniform',
+                   'par2d astra_cuda random',
+                   'cone2d astra_cuda uniform',
+                   'cone2d astra_cuda nonuniform',
+                   'cone2d astra_cuda random',
+                   'par3d astra_cuda uniform',
+                   'par3d astra_cuda nonuniform',
+                   'par3d astra_cuda random',
+                   'cone3d astra_cuda uniform',
+                   'cone3d astra_cuda nonuniform',
+                   'cone3d astra_cuda random',
+                   'helical astra_cuda uniform']
+     )
+)
+projectors.extend(
+    (
+     pytest.param(value, marks=[skip_if_no_largescale, skip_if_no_skimage])
+     for value in ['par2d skimage uniform']
+     )
+)
 
-projector_ids = [" geom='{}' - impl='{}' - angles='{}' "
-                 ''.format(*p.args[1].split()) for p in projectors]
-
-
-# bug in pytest (ignores pytestmark) forces us to do this this
-largescale = " or not pytest.config.getoption('--largescale')"
-projectors = [pytest.mark.skipif(p.args[0] + largescale, p.args[1])
-              for p in projectors]
+projector_ids = [
+    " geom='{}' - impl='{}' - angles='{}' ".format(*p.values[0].split())
+    for p in projectors
+]
 
 
 weighting = simple_fixture('weighting', [None, 1.0])
@@ -165,8 +177,10 @@ def test_adjoint(projector):
     """Test RayTransform adjoint matches definition."""
     # Relative tolerance, still rather high due to imperfectly matched
     # adjoint in the cone beam case
-    if (parse_version(odl.tomo.ASTRA_VERSION) < parse_version('1.8rc1') and
-            isinstance(projector.geometry, odl.tomo.ConeFlatGeometry)):
+    if (
+        parse_version(odl.tomo.ASTRA_VERSION) < parse_version('1.8rc1')
+        and isinstance(projector.geometry, odl.tomo.ConeFlatGeometry)
+    ):
         rtol = 0.1
     else:
         rtol = 0.05
@@ -209,8 +223,10 @@ def test_adjoint_of_adjoint(projector):
 @skip_if_no_largescale
 def test_reconstruction(projector):
     """Test RayTransform for reconstruction."""
-    if (isinstance(projector.geometry, odl.tomo.ConeFlatGeometry) and
-            projector.geometry.pitch != 0):
+    if (
+        isinstance(projector.geometry, odl.tomo.ConeFlatGeometry)
+        and projector.geometry.pitch != 0
+    ):
         pytest.skip('reconstruction with CG is hopeless with so few angles')
 
     # Create Shepp-Logan phantom

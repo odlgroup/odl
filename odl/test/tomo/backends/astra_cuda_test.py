@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2019 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -9,28 +9,28 @@
 """Test ASTRA back-end using CUDA."""
 
 from __future__ import division
+
 import numpy as np
 import pytest
 
 import odl
 from odl.tomo.backends.astra_cuda import (
-    AstraCudaProjectorImpl, AstraCudaBackProjectorImpl)
+    AstraCudaBackProjectorImpl, AstraCudaProjectorImpl)
 from odl.tomo.util.testutils import skip_if_no_astra_cuda
-
-# TODO: test with CUDA implemented uniform_discr
 
 
 # --- pytest fixtures --- #
 
+
 # Find the valid projectors
-projectors = [skip_if_no_astra_cuda('par2d'),
-              skip_if_no_astra_cuda('cone2d'),
-              skip_if_no_astra_cuda('par3d'),
-              skip_if_no_astra_cuda('cone3d'),
-              skip_if_no_astra_cuda('helical')]
+projectors = [
+    pytest.param(value, marks=skip_if_no_astra_cuda)
+    for value in ['par2d', 'cone2d', 'par3d', 'cone3d', 'helical']
+]
 
-
-space_and_geometry_ids = [" geom='{}' ".format(p.args[1]) for p in projectors]
+space_and_geometry_ids = [
+    " geom='{}' ".format(p.values[0]) for p in projectors
+]
 
 
 @pytest.fixture(scope="module", params=projectors, ids=space_and_geometry_ids)

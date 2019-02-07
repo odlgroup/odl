@@ -6,27 +6,44 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-"""Utilities for internal use."""
+"""Testing utilities."""
 
-from __future__ import print_function, division, absolute_import
-from builtins import object
+from __future__ import absolute_import, division, print_function
 from future.moves.itertools import zip_longest
-import numpy as np
-import sys
-import os
-import warnings
-from time import time
-from packaging import version
 
-from odl.util.utility import run_from_ipython, is_string
+import os
+import sys
+import warnings
+from builtins import object
+from time import time
+
+import numpy as np
+
+from odl.util.utility import is_string, run_from_ipython
 
 
 __all__ = (
-    'all_equal', 'all_almost_equal', 'dtype_ndigits', 'dtype_tol',
-    'never_skip', 'skip_if_no_pywavelets',
-    'skip_if_no_pyfftw', 'skip_if_no_largescale', 'noise_array',
-    'noise_element', 'noise_elements', 'Timer', 'timeit', 'ProgressBar',
-    'ProgressRange', 'test', 'run_doctests', 'test_file'
+    'dtype_ndigits',
+    'dtype_tol',
+    'all_equal',
+    'all_almost_equal',
+    'is_subdict',
+    'skip_if_no_pyfftw',
+    'skip_if_no_pywavelets',
+    'skip_if_no_largescale',
+    'skip_if_no_benchmark',
+    'simple_fixture',
+    'noise_array',
+    'noise_element',
+    'noise_elements',
+    'FailCounter',
+    'Timer',
+    'timeit',
+    'ProgressBar',
+    'ProgressRange',
+    'test',
+    'run_doctests',
+    'test_file',
 )
 
 
@@ -186,40 +203,32 @@ def is_subdict(subdict, dictionary):
 try:
     # Try catch in case user does not have pytest
     import pytest
+
 except ImportError:
-    def _pass(function):
-        """Trivial decorator used if pytest marks are not available."""
-        return function
+    from odl.util import OptionalArgDecorator as identity
 
-    never_skip = _pass
-    skip_if_no_pywavelets = _pass
-    skip_if_no_pyfftw = _pass
-    skip_if_no_largescale = _pass
-    skip_if_no_benchmark = _pass
+    skip_if_no_pyfftw = identity
+    skip_if_no_pywavelets = identity
+    skip_if_no_largescale = identity
+    skip_if_no_benchmark = identity
+
 else:
-    # Used in lists where the elements should all be skipifs
-    never_skip = pytest.mark.skipif(
-        "False",
-        reason='Fill in, never skips'
-    )
-
-    skip_if_no_pywavelets = pytest.mark.skipif(
-        "not odl.trafos.PYWT_AVAILABLE",
-        reason='PyWavelets not available'
-    )
-
+    # Mark decorators for test parameters
     skip_if_no_pyfftw = pytest.mark.skipif(
-        "not odl.trafos.PYFFTW_AVAILABLE",
-        reason='pyFFTW not available')
-
+        'not odl.trafos.PYFFTW_AVAILABLE',
+        reason='pyFFTW not available',
+    )
+    skip_if_no_pywavelets = pytest.mark.skipif(
+        'not odl.trafos.PYWT_AVAILABLE',
+        reason='PyWavelets not available',
+    )
     skip_if_no_largescale = pytest.mark.skipif(
         "not pytest.config.getoption('--largescale')",
-        reason='Need --largescale option to run'
+        reason='--largescale option not given',
     )
-
     skip_if_no_benchmark = pytest.mark.skipif(
         "not pytest.config.getoption('--benchmark')",
-        reason='Need --benchmark option to run'
+        reason='--benchmark option not given',
     )
 
 

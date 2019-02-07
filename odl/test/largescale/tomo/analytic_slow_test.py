@@ -9,14 +9,15 @@
 """Test analytical reconstruction methods."""
 
 from __future__ import division
-import pytest
+
 import numpy as np
+import pytest
 
 import odl
 import odl.tomo as tomo
-from odl.util.testutils import skip_if_no_largescale, simple_fixture
-from odl.tomo.util.testutils import (skip_if_no_astra, skip_if_no_astra_cuda,
-                                     skip_if_no_skimage)
+from odl.tomo.util.testutils import (
+    skip_if_no_astra, skip_if_no_astra_cuda, skip_if_no_skimage)
+from odl.util.testutils import simple_fixture, skip_if_no_largescale
 
 
 # --- pytest fixtures --- #
@@ -31,23 +32,32 @@ weighting = simple_fixture('weighting', [None, 1.0])
 
 # Find the valid projectors
 # TODO: Add nonuniform once #671 is solved
-projectors = [skip_if_no_astra('par2d astra_cpu uniform'),
-              skip_if_no_astra('cone2d astra_cpu uniform'),
-              skip_if_no_astra_cuda('par2d astra_cuda uniform'),
-              skip_if_no_astra_cuda('cone2d astra_cuda uniform'),
-              skip_if_no_astra_cuda('par3d astra_cuda uniform'),
-              skip_if_no_astra_cuda('cone3d astra_cuda uniform'),
-              skip_if_no_astra_cuda('helical astra_cuda uniform'),
-              skip_if_no_skimage('par2d skimage uniform')]
-
-projector_ids = [" geom='{}' - impl='{}' - angles='{}' "
-                 ''.format(*p.args[1].split()) for p in projectors]
-
-
-# bug in pytest (ignores pytestmark) forces us to do this this
-largescale = " or not pytest.config.getoption('--largescale')"
-projectors = [pytest.mark.skipif(p.args[0] + largescale, p.args[1])
-              for p in projectors]
+projectors = []
+projectors.extend(
+    (pytest.param(value, marks=[skip_if_no_largescale, skip_if_no_astra])
+     for value in ['par2d astra_cpu uniform',
+                   'cone2d astra_cpu uniform']
+     )
+)
+projectors.extend(
+    (pytest.param(value, marks=[skip_if_no_largescale, skip_if_no_astra_cuda])
+     for value in ['par2d astra_cuda uniform',
+                   'cone2d astra_cpu uniform',
+                   'cone2d astra_cuda uniform',
+                   'par3d astra_cuda uniform',
+                   'cone3d astra_cuda uniform',
+                   'helical astra_cuda uniform']
+     )
+)
+projectors.extend(
+    (pytest.param(value, marks=[skip_if_no_largescale, skip_if_no_skimage])
+     for value in ['par2d skimage uniform']
+     )
+)
+projector_ids = [
+    " geom='{}' - impl='{}' - angles='{}' ".format(*p.values[0].split())
+    for p in projectors
+]
 
 
 @pytest.fixture(scope="module", params=projectors, ids=projector_ids)
@@ -167,8 +177,10 @@ def test_fbp_reconstruction(projector):
     fbp_operator = odl.tomo.fbp_op(projector)
 
     # Add window if problem is in 3d.
-    if (isinstance(projector.geometry, odl.tomo.ConeFlatGeometry) and
-            projector.geometry.pitch != 0):
+    if (
+        isinstance(projector.geometry, odl.tomo.ConeFlatGeometry)
+        and projector.geometry.pitch != 0
+    ):
         fbp_operator = fbp_operator * odl.tomo.tam_danielson_window(projector)
 
     # Compute the FBP result
