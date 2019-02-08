@@ -13,7 +13,7 @@ import numpy as np
 
 import odl
 from odl.tomo.backends.skimage_radon import (
-    skimage_radon_forward, skimage_radon_back_projector)
+    skimage_radon_forward_projector, skimage_radon_back_projector)
 from odl.tomo.util.testutils import skip_if_no_skimage
 
 
@@ -34,7 +34,7 @@ def test_skimage_radon_projector_parallel2d():
     proj_space = odl.uniform_discr_frompartition(geom.partition)
 
     # Forward evaluation
-    proj_data = skimage_radon_forward(phantom, geom, proj_space)
+    proj_data = skimage_radon_forward_projector(phantom, geom, proj_space)
     assert proj_data.shape == proj_space.shape
     assert proj_data.norm() > 0
 

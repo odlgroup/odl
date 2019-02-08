@@ -1,4 +1,4 @@
-# Copyright 2014-2018 The ODL contributors
+# Copyright 2014-2019 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -8,23 +8,23 @@
 
 """Ray transforms."""
 
-from __future__ import print_function, division, absolute_import
-import numpy as np
+from __future__ import absolute_import, division, print_function
+
 import warnings
+
+import numpy as np
 
 from odl.discr import DiscreteLp
 from odl.operator import Operator
 from odl.space import FunctionSpace
-from odl.tomo.geometry import (
-    Geometry, Parallel2dGeometry, Parallel3dAxisGeometry)
 from odl.space.weighting import ConstWeighting
 from odl.tomo.backends import (
-    ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE, SKIMAGE_AVAILABLE,
-    astra_supports, ASTRA_VERSION,
-    astra_cpu_forward_projector, astra_cpu_back_projector,
-    AstraCudaProjectorImpl, AstraCudaBackProjectorImpl,
-    skimage_radon_forward, skimage_radon_back_projector)
-
+    ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE, ASTRA_VERSION, SKIMAGE_AVAILABLE,
+    AstraCudaBackProjectorImpl, AstraCudaProjectorImpl,
+    astra_cpu_back_projector, astra_cpu_forward_projector, astra_supports,
+    skimage_radon_back_projector, skimage_radon_forward_projector)
+from odl.tomo.geometry import (
+    Geometry, Parallel2dGeometry, Parallel3dAxisGeometry)
 
 ASTRA_CPU_AVAILABLE = ASTRA_AVAILABLE
 _SUPPORTED_IMPL = ('astra_cpu', 'astra_cuda', 'skimage')
@@ -311,12 +311,17 @@ class RayTransformBase(Operator):
     def _call(self, x, out=None):
         """Return ``self(x[, out])``."""
         if self.domain.is_real:
-            return self._call_real(x, out)
+            return self._call_real(x, out, **self._extra_kwargs)
 
         elif self.domain.is_complex:
             result_parts = [
-                self._call_real(x.real, getattr(out, 'real', None)),
-                self._call_real(x.imag, getattr(out, 'imag', None))]
+                self._call_real(
+                    x.real, getattr(out, 'real', None), **self._extra_kwargs
+                ),
+                self._call_real(
+                    x.imag, getattr(out, 'imag', None), **self._extra_kwargs
+                ),
+            ]
 
             if out is None:
                 out = self.range.element()
@@ -382,7 +387,7 @@ class RayTransform(RayTransformBase):
             reco_space=domain, proj_space=range, geometry=geometry,
             variant='forward', **kwargs)
 
-    def _call_real(self, x_real, out_real):
+    def _call_real(self, x_real, out_real, **kwargs):
         """Real-space forward projection for the current set-up.
 
         This method also sets ``self._astra_projector`` for
@@ -409,9 +414,11 @@ class RayTransform(RayTransformBase):
             else:
                 # Should never happen
                 raise RuntimeError('bad `impl` {!r}'.format(self.impl))
+
         elif self.impl == 'skimage':
-            return skimage_radon_forward(x_real, self.geometry,
-                                         self.range.real_space, out_real)
+            return skimage_radon_forward_projector(
+                x_real, self.geometry, self.range.real_space, out_real,
+                **kwargs)
         else:
             # Should never happen
             raise RuntimeError('bad `impl` {!r}'.format(self.impl))
