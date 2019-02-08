@@ -66,8 +66,7 @@ class AstraCudaProjectorImpl(object):
 
         self.create_ids()
 
-        # Create a mutually exclusive lock so that two callers cant use the
-        # same shared resource at the same time.
+        # ASTRA projectors are not thread-safe, thus we need to lock ourselves
         self._mutex = Lock()
 
     def call_forward(self, vol_data, out=None):
