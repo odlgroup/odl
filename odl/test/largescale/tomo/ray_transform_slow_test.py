@@ -30,19 +30,16 @@ dtype = simple_fixture('dtype', dtype_params)
 # Find the valid projectors
 projectors = []
 projectors.extend(
-    (
-     pytest.param(value, marks=[skip_if_no_largescale, skip_if_no_astra])
+    (pytest.param(value, marks=[skip_if_no_largescale, skip_if_no_astra])
      for value in ['par2d astra_cpu uniform',
                    'par2d astra_cpu nonuniform',
                    'par2d astra_cpu random',
                    'cone2d astra_cpu uniform',
                    'cone2d astra_cpu nonuniform',
-                   'cone2d astra_cpu random']
-     )
+                   'cone2d astra_cpu random'])
 )
 projectors.extend(
-    (
-     pytest.param(value, marks=[skip_if_no_largescale, skip_if_no_astra_cuda])
+    (pytest.param(value, marks=[skip_if_no_largescale, skip_if_no_astra_cuda])
      for value in ['par2d astra_cuda uniform',
                    'par2d astra_cuda nonuniform',
                    'par2d astra_cuda random',
@@ -55,14 +52,11 @@ projectors.extend(
                    'cone3d astra_cuda uniform',
                    'cone3d astra_cuda nonuniform',
                    'cone3d astra_cuda random',
-                   'helical astra_cuda uniform']
-     )
+                   'helical astra_cuda uniform'])
 )
 projectors.extend(
-    (
-     pytest.param(value, marks=[skip_if_no_largescale, skip_if_no_skimage])
-     for value in ['par2d skimage uniform']
-     )
+    (pytest.param(value, marks=[skip_if_no_largescale, skip_if_no_skimage])
+     for value in ['par2d skimage uniform'])
 )
 
 projector_ids = [

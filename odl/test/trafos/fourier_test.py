@@ -648,8 +648,10 @@ def test_fourier_trafo_complex_sum():
     dft = FourierTransform(discr, shift=False)
 
     func = discr.element(hat_func) + 1j * discr.element(char_interval)
-    func_true_ft = (dft.range.element(hat_func_ft) +
-                    1j * dft.range.element(char_interval_ft))
+    func_true_ft = (
+        dft.range.element(hat_func_ft)
+        + 1j * dft.range.element(char_interval_ft)
+    )
     func_dft = dft(func)
     assert (func_dft - func_true_ft).norm() < 0.001
 
@@ -698,9 +700,11 @@ def test_dft_with_known_pairs_2d():
         # 1st comp.: 2 * sinc(y)
         # 2nd comp.: exp(-1j * y * 3/2) * sinc(y/2)
         # Overall factor: (2 * pi)^(-1)
-        return (2 * sinc(x[0]) *
-                np.exp(-1j * x[1] * 3 / 2) * sinc(x[1] / 2) /
-                (2 * np.pi))
+        return (
+            2 * sinc(x[0])
+            * np.exp(-1j * x[1] * 3 / 2) * sinc(x[1] / 2)
+            / (2 * np.pi)
+        )
 
     discr = odl.uniform_discr([-2] * 2, [2] * 2, (100, 400), impl='numpy',
                               dtype='complex64')
@@ -764,9 +768,11 @@ def test_fourier_trafo_completely():
     fft_n = np.fft.fftn(fpre_n, s=discr.shape, axes=[0])
     assert np.allclose(fft_s, [0, -1 + 1j, 2, -1 - 1j])
     assert np.allclose(
-        fft_n, [np.exp(1j * np.pi * (3 - 2 * k) / 4) +
-                np.exp(1j * np.pi * (3 - 2 * k) / 2)
-                for k in range(4)])
+        fft_n,
+        [np.exp(1j * np.pi * (3 - 2 * k) / 4)
+         + np.exp(1j * np.pi * (3 - 2 * k) / 2)
+         for k in range(4)]
+    )
 
     # Interpolation kernel FT
     interp_s = np.sinc(np.linspace(-1 / 2, 1 / 4, 4)) / np.sqrt(2 * np.pi)

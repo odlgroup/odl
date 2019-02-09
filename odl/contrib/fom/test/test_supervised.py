@@ -62,16 +62,20 @@ def test_general(space, scalar_fom):
         assert np.isscalar(scalar_fom(data, ground_truth))
 
         # Check that FOM is minimal when ground truth is compared with itself
-        assert (scalar_fom(ground_truth, ground_truth) <=
-                scalar_fom(data, ground_truth))
+        assert (
+            scalar_fom(ground_truth, ground_truth)
+            <= scalar_fom(data, ground_truth)
+        )
 
         # Check that FOM is monotonic wrt noise level
         # This does not work for the FOMS `standard_deviation_difference`
         # and `range_difference`.
         if scalar_fom not in [fom.standard_deviation_difference,
                               fom.range_difference]:
-            assert (scalar_fom(ground_truth + noise, ground_truth) <=
-                    scalar_fom(ground_truth + 2 * noise, ground_truth))
+            assert (
+                scalar_fom(ground_truth + noise, ground_truth)
+                <= scalar_fom(ground_truth + 2 * noise, ground_truth)
+            )
 
 
 def filter_image(image, fh, fv):
@@ -217,10 +221,14 @@ def test_standard_deviation_difference_range_value(space):
     value_shift = np.random.normal(0, 10)
 
     assert fom.standard_deviation_difference(I0, I0) == pytest.approx(0)
-    assert (fom.standard_deviation_difference(10 * I0, I0, normalized=True) <=
-            1.0)
-    assert (fom.standard_deviation_difference(I0, I0 + value_shift) ==
-            pytest.approx(0, abs=1e-5))
+    assert (
+        fom.standard_deviation_difference(10 * I0, I0, normalized=True)
+        <= 1.0
+    )
+    assert (
+        fom.standard_deviation_difference(I0, I0 + value_shift)
+        == pytest.approx(0, abs=1e-5)
+    )
     test_value = fom.standard_deviation_difference(space.one(), space.zero(),
                                                    normalized=True)
     assert test_value == pytest.approx(0, abs=1e-6)
