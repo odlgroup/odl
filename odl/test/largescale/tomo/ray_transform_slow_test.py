@@ -23,6 +23,9 @@ from odl.util.testutils import simple_fixture, skip_if_no_largescale
 # --- pytest fixtures --- #
 
 
+pytestmark = skip_if_no_largescale
+
+
 dtype_params = ['float32', 'float64', 'complex64']
 dtype = simple_fixture('dtype', dtype_params)
 
@@ -30,7 +33,7 @@ dtype = simple_fixture('dtype', dtype_params)
 # Find the valid projectors
 projectors = []
 projectors.extend(
-    (pytest.param(value, marks=[skip_if_no_largescale, skip_if_no_astra])
+    (pytest.param(value, marks=skip_if_no_astra)
      for value in ['par2d astra_cpu uniform',
                    'par2d astra_cpu nonuniform',
                    'par2d astra_cpu random',
@@ -39,7 +42,7 @@ projectors.extend(
                    'cone2d astra_cpu random'])
 )
 projectors.extend(
-    (pytest.param(value, marks=[skip_if_no_largescale, skip_if_no_astra_cuda])
+    (pytest.param(value, marks=skip_if_no_astra_cuda)
      for value in ['par2d astra_cuda uniform',
                    'par2d astra_cuda nonuniform',
                    'par2d astra_cuda random',
@@ -55,7 +58,7 @@ projectors.extend(
                    'helical astra_cuda uniform'])
 )
 projectors.extend(
-    (pytest.param(value, marks=[skip_if_no_largescale, skip_if_no_skimage])
+    (pytest.param(value, marks=skip_if_no_skimage)
      for value in ['par2d skimage uniform'])
 )
 
@@ -166,7 +169,6 @@ def projector(request, dtype, weighting):
 # --- RayTransform tests --- #
 
 
-@skip_if_no_largescale
 def test_adjoint(projector):
     """Test RayTransform adjoint matches definition."""
     # Relative tolerance, still rather high due to imperfectly matched
@@ -192,7 +194,6 @@ def test_adjoint(projector):
     assert result_AxAx == pytest.approx(result_xAtAx, rel=rtol)
 
 
-@skip_if_no_largescale
 def test_adjoint_of_adjoint(projector):
     """Test RayTransform adjoint of adjoint."""
 
@@ -214,7 +215,6 @@ def test_adjoint_of_adjoint(projector):
     assert proj_adj == proj_adj_adj_adj
 
 
-@skip_if_no_largescale
 def test_reconstruction(projector):
     """Test RayTransform for reconstruction."""
     if (

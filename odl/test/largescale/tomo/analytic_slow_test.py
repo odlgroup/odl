@@ -23,6 +23,9 @@ from odl.util.testutils import simple_fixture, skip_if_no_largescale
 # --- pytest fixtures --- #
 
 
+pytestmark = skip_if_no_largescale
+
+
 filter_type = simple_fixture(
     'filter_type', ['Ram-Lak', 'Shepp-Logan', 'Cosine', 'Hamming', 'Hann'])
 frequency_scaling = simple_fixture(
@@ -34,13 +37,13 @@ weighting = simple_fixture('weighting', [None, 1.0])
 # TODO: Add nonuniform once #671 is solved
 projectors = []
 projectors.extend(
-    (pytest.param(value, marks=[skip_if_no_largescale, skip_if_no_astra])
+    (pytest.param(value, marks=skip_if_no_astra)
      for value in ['par2d astra_cpu uniform',
                    'cone2d astra_cpu uniform']
      )
 )
 projectors.extend(
-    (pytest.param(value, marks=[skip_if_no_largescale, skip_if_no_astra_cuda])
+    (pytest.param(value, marks=skip_if_no_astra_cuda)
      for value in ['par2d astra_cuda uniform',
                    'cone2d astra_cpu uniform',
                    'cone2d astra_cuda uniform',
@@ -50,7 +53,7 @@ projectors.extend(
      )
 )
 projectors.extend(
-    (pytest.param(value, marks=[skip_if_no_largescale, skip_if_no_skimage])
+    (pytest.param(value, marks=skip_if_no_skimage)
      for value in ['par2d skimage uniform']
      )
 )
@@ -163,7 +166,6 @@ def projector(request, weighting):
 # --- FBP tests --- #
 
 
-@skip_if_no_largescale
 def test_fbp_reconstruction(projector):
     """Test filtered back-projection with various projectors."""
 
@@ -193,7 +195,6 @@ def test_fbp_reconstruction(projector):
 
 
 @skip_if_no_astra_cuda
-@skip_if_no_largescale
 def test_fbp_reconstruction_filters(filter_type, frequency_scaling, weighting):
     """Validate that the various filters work as expected."""
 
