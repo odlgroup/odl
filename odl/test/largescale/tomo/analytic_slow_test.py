@@ -37,24 +37,24 @@ weighting = simple_fixture('weighting', [None, 1.0])
 # TODO: Add nonuniform once #671 is solved
 projectors = []
 projectors.extend(
-    (pytest.param(value, marks=skip_if_no_astra)
-     for value in ['par2d astra_cpu uniform',
-                   'cone2d astra_cpu uniform']
+    (pytest.param(proj_cfg, marks=skip_if_no_astra)
+     for proj_cfg in ['par2d astra_cpu uniform',
+                      'cone2d astra_cpu uniform']
      )
 )
 projectors.extend(
-    (pytest.param(value, marks=skip_if_no_astra_cuda)
-     for value in ['par2d astra_cuda uniform',
-                   'cone2d astra_cpu uniform',
-                   'cone2d astra_cuda uniform',
-                   'par3d astra_cuda uniform',
-                   'cone3d astra_cuda uniform',
-                   'helical astra_cuda uniform']
+    (pytest.param(proj_cfg, marks=skip_if_no_astra_cuda)
+     for proj_cfg in ['par2d astra_cuda uniform',
+                      'cone2d astra_cpu uniform',
+                      'cone2d astra_cuda uniform',
+                      'par3d astra_cuda uniform',
+                      'cone3d astra_cuda uniform',
+                      'helical astra_cuda uniform']
      )
 )
 projectors.extend(
-    (pytest.param(value, marks=skip_if_no_skimage)
-     for value in ['par2d skimage uniform']
+    (pytest.param(proj_cfg, marks=skip_if_no_skimage)
+     for proj_cfg in ['par2d skimage uniform']
      )
 )
 projector_ids = [
