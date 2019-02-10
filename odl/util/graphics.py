@@ -201,7 +201,7 @@ def show_discrete_data(values, grid, title=None, method='',
     interp = kwargs.pop('interp', 'nearest')
     axis_fontsize = kwargs.pop('axis_fontsize', 16)
     colorbar = kwargs.pop('colorbar', True)
-    
+
     # Normalize input
     interp, interp_in = str(interp).lower(), interp
     method, method_in = str(method).lower(), method

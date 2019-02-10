@@ -325,7 +325,7 @@ def forbild(space, resolution=False, ear=True, value_type='density',
         raise TypeError('`space` must be two-dimensional')
 
     scale, scale_in = str(scale).lower(), scale
-    value_type, value_type_in = str(value_type).lower(), value_type         
+    value_type, value_type_in = str(value_type).lower(), value_type
 
     # Create analytic description of phantom
     phantomE, phantomC = _analytical_forbild_phantom(resolution, ear)
