@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2019 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -7,11 +7,12 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import division
+
 import pytest
 
 import odl
-from odl.util.testutils import (all_almost_equal, noise_element,
-                                skip_if_no_pywavelets, simple_fixture)
+from odl.util.testutils import (
+    all_almost_equal, noise_element, simple_fixture, skip_if_no_pywavelets)
 
 
 # --- pytest fixtures --- #
@@ -22,7 +23,10 @@ pad_mode = simple_fixture('pad_mode', ['constant', 'pywt_periodic'])
 ndim = simple_fixture('ndim', [1, 2, 3])
 nlevels = simple_fixture('nlevels', [2, None])
 axes = simple_fixture('axes', [-1, None])
-wave_impl = simple_fixture('wave_impl', [skip_if_no_pywavelets('pywt')])
+wave_impl = simple_fixture(
+    'wave_impl',
+    [pytest.param('pywt', marks=skip_if_no_pywavelets)]
+)
 
 
 @pytest.fixture(scope='module')

@@ -38,7 +38,7 @@ requirements:
 test:
     requires:
         - nomkl # [not win]
-        - pytest >=3.0.3,<3.7
+        - pytest >=3.0.3
     imports:
         - odl
     commands:

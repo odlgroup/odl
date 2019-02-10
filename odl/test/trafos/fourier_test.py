@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2019 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -7,32 +7,37 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import division
+
 import numpy as np
 import pytest
 
 import odl
-from odl.trafos.util.ft_utils import (
-    reciprocal_grid, dft_preprocess_data, dft_postprocess_data,
-    _interp_kernel_ft)
 from odl.trafos.fourier import (
     DiscreteFourierTransform, DiscreteFourierTransformInverse,
     FourierTransform)
-from odl.util import (all_almost_equal, never_skip, skip_if_no_pyfftw,
-                      noise_element,
-                      is_real_dtype, conj_exponent, complex_dtype)
+from odl.trafos.util.ft_utils import (
+    _interp_kernel_ft, dft_postprocess_data, dft_preprocess_data,
+    reciprocal_grid)
+from odl.util import (
+    all_almost_equal, complex_dtype, conj_exponent, is_real_dtype,
+    noise_element, skip_if_no_pyfftw)
 from odl.util.testutils import simple_fixture
 
 
 # --- pytest fixtures --- #
 
 
-impl = simple_fixture('impl', [never_skip('numpy'),
-                               skip_if_no_pyfftw('pyfftw')])
+impl = simple_fixture(
+    'impl',
+    [pytest.param('numpy'),
+     pytest.param('pyfftw', marks=skip_if_no_pyfftw)]
+)
 exponent = simple_fixture('exponent', [2.0, 1.0, float('inf'), 1.5])
 sign = simple_fixture('sign', ['-', '+'])
 
 
-# --- helper functions --- #
+# --- Helper functions --- #
+
 
 def _params_from_dtype(dtype):
     if is_real_dtype(dtype):
@@ -643,8 +648,10 @@ def test_fourier_trafo_complex_sum():
     dft = FourierTransform(discr, shift=False)
 
     func = discr.element(hat_func) + 1j * discr.element(char_interval)
-    func_true_ft = (dft.range.element(hat_func_ft) +
-                    1j * dft.range.element(char_interval_ft))
+    func_true_ft = (
+        dft.range.element(hat_func_ft)
+        + 1j * dft.range.element(char_interval_ft)
+    )
     func_dft = dft(func)
     assert (func_dft - func_true_ft).norm() < 0.001
 
@@ -693,9 +700,11 @@ def test_dft_with_known_pairs_2d():
         # 1st comp.: 2 * sinc(y)
         # 2nd comp.: exp(-1j * y * 3/2) * sinc(y/2)
         # Overall factor: (2 * pi)^(-1)
-        return (2 * sinc(x[0]) *
-                np.exp(-1j * x[1] * 3 / 2) * sinc(x[1] / 2) /
-                (2 * np.pi))
+        return (
+            2 * sinc(x[0])
+            * np.exp(-1j * x[1] * 3 / 2) * sinc(x[1] / 2)
+            / (2 * np.pi)
+        )
 
     discr = odl.uniform_discr([-2] * 2, [2] * 2, (100, 400), impl='numpy',
                               dtype='complex64')
@@ -759,9 +768,11 @@ def test_fourier_trafo_completely():
     fft_n = np.fft.fftn(fpre_n, s=discr.shape, axes=[0])
     assert np.allclose(fft_s, [0, -1 + 1j, 2, -1 - 1j])
     assert np.allclose(
-        fft_n, [np.exp(1j * np.pi * (3 - 2 * k) / 4) +
-                np.exp(1j * np.pi * (3 - 2 * k) / 2)
-                for k in range(4)])
+        fft_n,
+        [np.exp(1j * np.pi * (3 - 2 * k) / 4)
+         + np.exp(1j * np.pi * (3 - 2 * k) / 2)
+         for k in range(4)]
+    )
 
     # Interpolation kernel FT
     interp_s = np.sinc(np.linspace(-1 / 2, 1 / 4, 4)) / np.sqrt(2 * np.pi)

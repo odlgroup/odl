@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2019 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -13,26 +13,26 @@ speed regressions.
 """
 
 from __future__ import division
-import pytest
+
 import numpy as np
+import pytest
 
 import odl
-from odl.util.testutils import never_skip, simple_fixture
-
-skip_if_no_pyfftw = pytest.mark.skipif("not odl.trafos.PYFFTW_AVAILABLE",
-                                       reason='pyfftw not available')
-pytestmark = odl.util.skip_if_no_largescale
+from odl.util.testutils import (
+    simple_fixture, skip_if_no_largescale, skip_if_no_pyfftw)
 
 
 # --- pytest fixtures --- #
 
 
-# bug in pytest (ignores pytestmark) forces us to do this this
-impl_params = [never_skip('numpy'), skip_if_no_pyfftw('pyfftw')]
-largescale = " or not pytest.config.getoption('--largescale')"
-impl = simple_fixture('impl',
-                      [pytest.mark.skipif(p.args[0] + largescale, p.args[1])
-                       for p in impl_params])
+pytestmark = skip_if_no_largescale
+
+
+impl = simple_fixture(
+    'impl',
+    [pytest.param('numpy'),
+     pytest.param('pyfftw', marks=skip_if_no_pyfftw)]
+)
 
 domain = simple_fixture(
     name='domain',
@@ -78,8 +78,10 @@ def test_fourier_trafo_forward_complex(domain, impl):
 
     ball_dom_ft = ft(ball_dom)
     ball_ran_ift = ft.adjoint(ball_ran)
-    assert (ball_dom.inner(ball_ran_ift) ==
-            pytest.approx(ball_ran.inner(ball_dom_ft), rel=0.1))
+    assert (
+        ball_dom.inner(ball_ran_ift)
+        == pytest.approx(ball_ran.inner(ball_dom_ft), rel=0.1)
+    )
 
 
 if __name__ == '__main__':

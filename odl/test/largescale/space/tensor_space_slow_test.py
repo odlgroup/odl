@@ -1,4 +1,4 @@
-# Copyright 2014-2018 The ODL contributors
+# Copyright 2014-2019 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -9,18 +9,23 @@
 """Test to make sure the `TensorSpace` spaces work with larger sizes."""
 
 from __future__ import division
+
 import numpy as np
 import pytest
 
 import odl
-from odl.util.testutils import all_almost_equal, dtype_tol, noise_elements
+from odl.util.testutils import (
+    all_almost_equal, dtype_tol, noise_elements, skip_if_no_largescale)
 
-pytestmark = odl.util.skip_if_no_largescale
+
+# --- pytest fixtures --- #
 
 
-# Pytest fixtures
+pytestmark = skip_if_no_largescale
+
+
 spc_params = ['rn', '1d', '3d']
-spc_ids = [' type={} ' ''.format(p) for p in spc_params]
+spc_ids = [' type={} '.format(p) for p in spc_params]
 
 
 @pytest.fixture(scope="module", ids=spc_ids, params=spc_params)
@@ -98,10 +103,14 @@ def test_inner(tspace):
 
     correct_inner = np.vdot(yarr, xarr) * weighting_const
 
-    assert (tspace.inner(x, y) ==
-            pytest.approx(correct_inner, rel=dtype_tol(tspace.dtype)))
-    assert (x.inner(y) ==
-            pytest.approx(correct_inner, rel=dtype_tol(tspace.dtype)))
+    assert (
+        tspace.inner(x, y)
+        == pytest.approx(correct_inner, rel=dtype_tol(tspace.dtype))
+    )
+    assert (
+        x.inner(y)
+        == pytest.approx(correct_inner, rel=dtype_tol(tspace.dtype))
+    )
 
 
 def test_norm(tspace):
@@ -111,10 +120,14 @@ def test_norm(tspace):
 
     correct_norm = np.linalg.norm(xarr) * np.sqrt(weighting_const)
 
-    assert (tspace.norm(x) ==
-            pytest.approx(correct_norm, rel=dtype_tol(tspace.dtype)))
-    assert (x.norm() ==
-            pytest.approx(correct_norm, rel=dtype_tol(tspace.dtype)))
+    assert (
+        tspace.norm(x)
+        == pytest.approx(correct_norm, rel=dtype_tol(tspace.dtype))
+    )
+    assert (
+        x.norm()
+        == pytest.approx(correct_norm, rel=dtype_tol(tspace.dtype))
+    )
 
 
 def test_dist(tspace):
@@ -124,10 +137,14 @@ def test_dist(tspace):
 
     correct_dist = np.linalg.norm(xarr - yarr) * np.sqrt(weighting_const)
 
-    assert (tspace.dist(x, y) ==
-            pytest.approx(correct_dist, rel=dtype_tol(tspace.dtype)))
-    assert (x.dist(y) ==
-            pytest.approx(correct_dist, rel=dtype_tol(tspace.dtype)))
+    assert (
+        tspace.dist(x, y)
+        == pytest.approx(correct_dist, rel=dtype_tol(tspace.dtype))
+    )
+    assert (
+        x.dist(y)
+        == pytest.approx(correct_dist, rel=dtype_tol(tspace.dtype))
+    )
 
 
 def _test_lincomb(space, a, b, discontig):
