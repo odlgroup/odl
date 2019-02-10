@@ -740,8 +740,8 @@ class CallbackSaveToDisk(Callback):
         except AttributeError:
             self.saveto_formatter = self.saveto
 
-        self.step = step
-        self.impl = impl
+        self.step = int(step)
+        self.impl = str(impl).lower()
         self.kwargs = kwargs
         self.iter = 0
 

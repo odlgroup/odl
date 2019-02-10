@@ -424,6 +424,12 @@ def broydens_method(f, x, line_search=1.0, impl='first', maxiter=1000,
 
     if not callable(line_search):
         line_search = ConstantLineSearch(line_search)
+        
+        
+    impl, impl_in = str(impl).lower(), impl
+    if impl not in ('first', 'second'):
+        raise ValueError('`impl` {!r} not understood'
+                        ''.format(impl_in))
 
     ss = []
     ys = []

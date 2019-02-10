@@ -51,6 +51,10 @@ def filter_image_sep2d(image, fh, fv, impl='numpy', padding=None):
     """
     # TODO: generalize for nD
     impl, impl_in = str(impl).lower(), impl
+    if impl not in ('numpy', 'pyfftw'):
+        raise ValueError('`impl` {!r} not understood'
+                        ''.format(impl_in))
+    
     image = np.asarray(image)
     if image.ndim != 2:
         raise ValueError('`image` must be 2-dimensional, got image with '

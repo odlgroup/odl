@@ -2623,6 +2623,8 @@ class Huber(Functional):
             norm = PointwiseNorm(self.domain, 2)(x)
         else:
             norm = x.ufuncs.absolute()
+            
+        print(norm.space)
 
         if self.gamma > 0:
             tmp = norm.ufuncs.square()

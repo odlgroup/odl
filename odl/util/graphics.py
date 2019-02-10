@@ -201,6 +201,10 @@ def show_discrete_data(values, grid, title=None, method='',
     interp = kwargs.pop('interp', 'nearest')
     axis_fontsize = kwargs.pop('axis_fontsize', 16)
     colorbar = kwargs.pop('colorbar', True)
+    
+    # Normalize input
+    interp, interp_in = str(interp).lower(), interp
+    method, method_in = str(method).lower(), method
 
     # Check if we should and can update the plot in-place
     update_in_place = kwargs.pop('update_in_place', False)
@@ -217,14 +221,15 @@ def show_discrete_data(values, grid, title=None, method='',
             elif interp == 'linear':
                 method = 'plot'
             else:
-                method = 'plot'
+                raise ValueError('`interp` {!r} not supported'
+                                 ''.format(interp_in))
 
         if method == 'plot' or method == 'step' or method == 'scatter':
             args_re += [grid.coord_vectors[0], values.real]
             args_im += [grid.coord_vectors[0], values.imag]
         else:
             raise ValueError('`method` {!r} not supported'
-                             ''.format(method))
+                             ''.format(method_in))
 
     elif values.ndim == 2:
         if not method:
@@ -242,7 +247,8 @@ def show_discrete_data(values, grid, title=None, method='',
             elif interp == 'linear':
                 interpolation = 'bilinear'
             else:
-                interpolation = 'none'
+                raise ValueError('`interp` {!r} not supported'
+                                 ''.format(interp_in))
 
             dsp_kwargs.update({'interpolation': interpolation,
                                'cmap': 'bone',
@@ -263,7 +269,7 @@ def show_discrete_data(values, grid, title=None, method='',
             sub_kwargs.update({'projection': '3d'})
         else:
             raise ValueError('`method` {!r} not supported'
-                             ''.format(method))
+                             ''.format(method_in))
 
     else:
         raise NotImplementedError('no method for {}d display implemented'
