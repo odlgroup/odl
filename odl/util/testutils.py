@@ -205,7 +205,9 @@ try:
     import pytest
 
 except ImportError:
-    from odl.util import OptionalArgDecorator as identity
+
+    def identity(f, **kwargs):
+        return f
 
     skip_if_no_pyfftw = identity
     skip_if_no_pywavelets = identity

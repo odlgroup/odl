@@ -22,7 +22,7 @@ try:
     from pytest import fixture
 except ImportError:
     # Make fixture the identity decorator (default of OptionalArgDecorator)
-    from odl.util import OptionalArgDecorator as fixture
+    from odl.util.utility import OptionalArgDecorator as fixture
 
 
 # --- Add numpy and ODL to all doctests ---

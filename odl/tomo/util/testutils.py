@@ -21,8 +21,9 @@ try:
     import pytest
 
 except ImportError:
-    # Use the identity decorator (default of OptionalArgDecorator)
-    from odl.util import OptionalArgDecorator as identity
+
+    def identity(f, **kwargs):
+        return f
 
     skip_if_no_astra = skip_if_no_astra_cuda = skip_if_no_skimage = identity
 
