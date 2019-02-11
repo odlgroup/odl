@@ -22,8 +22,11 @@ try:
 
 except ImportError:
 
-    def identity(f, **kwargs):
-        return f
+    def identity(*args, **kwargs):
+        if args and callable(args[0]):
+            return args[0]
+        else:
+            return identity
 
     skip_if_no_astra = skip_if_no_astra_cuda = skip_if_no_skimage = identity
 
