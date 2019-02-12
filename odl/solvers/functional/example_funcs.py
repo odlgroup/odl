@@ -21,7 +21,7 @@ __all__ = ('RosenbrockFunctional',)
 
 class RosenbrockFunctional(Functional):
 
-    """The well-known Rosenbrock function on ``R^n``.
+    r"""The well-known Rosenbrock function on ``R^n``.
 
     The `Rosenbrock function`_ is often used as a test problem in
     smooth optimization.

@@ -22,7 +22,7 @@ __all__ = ('steepest_descent', 'adam')
 
 def steepest_descent(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
                      projection=None, callback=None):
-    """Steepest descent method to minimize an objective function.
+    r"""Steepest descent method to minimize an objective function.
 
     General implementation of steepest decent (also known as gradient
     decent) for solving
@@ -107,7 +107,7 @@ def steepest_descent(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
 
 def adam(f, x, learning_rate=1e-3, beta1=0.9, beta2=0.999, eps=1e-8,
          maxiter=1000, tol=1e-16, callback=None):
-    """ADAM method to minimize an objective function.
+    r"""ADAM method to minimize an objective function.
 
     General implementation of ADAM for solving
 

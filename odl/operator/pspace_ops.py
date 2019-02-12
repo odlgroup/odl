@@ -24,7 +24,7 @@ __all__ = ('ProductSpaceOperator',
 
 class ProductSpaceOperator(Operator):
 
-    """A "matrix of operators" on product spaces.
+    r"""A "matrix of operators" on product spaces.
 
     For example a matrix of operators can act on a vector by
 
@@ -37,43 +37,43 @@ class ProductSpaceOperator(Operator):
     as a linear combination of "sub-operators", e.g.
 
     .. math::
-        \\left(
-        \\begin{array}{ccc}
-        A & B & 0 \\\\
-        0 & C & 0 \\\\
+        \left(
+        \begin{array}{ccc}
+        A & B & 0 \\
+        0 & C & 0 \\
         0 & 0 & D
-        \end{array}\\right)
-        \\left(
-        \\begin{array}{c}
-        x \\\\
-        y \\\\
+        \end{array}\right)
+        \left(
+        \begin{array}{c}
+        x \\
+        y \\
         z
-        \end{array}\\right)
+        \end{array}\right)
         =
-        \\left(
-        \\begin{array}{c}
-        A(x) + B(y) \\\\
-        C(y) \\\\
+        \left(
+        \begin{array}{c}
+        A(x) + B(y) \\
+        C(y) \\
         D(z)
-        \end{array}\\right)
+        \end{array}\right)
 
     Mathematically, a `ProductSpaceOperator` is an operator
 
     .. math::
-        \mathcal{A}: \mathcal{X} \\to \mathcal{Y}
+        \mathcal{A}: \mathcal{X} \to \mathcal{Y}
 
     between product spaces
-    :math:`\mathcal{X}=\mathcal{X}_1 \\times\dots\\times \mathcal{X}_m`
+    :math:`\mathcal{X}=\mathcal{X}_1 \times\dots\times \mathcal{X}_m`
     and
-    :math:`\mathcal{Y}=\mathcal{Y}_1 \\times\dots\\times \mathcal{Y}_n`
+    :math:`\mathcal{Y}=\mathcal{Y}_1 \times\dots\times \mathcal{Y}_n`
     which can be written in the form
 
     .. math::
         \mathcal{A} = (\mathcal{A}_{ij})_{i,j},  \quad
-                          i = 1, \dots, n, \\ j = 1, \dots, m
+                          i = 1, \dots, n, \ j = 1, \dots, m
 
     with *component operators*
-    :math:`\mathcal{A}_{ij}: \mathcal{X}_j \\to \mathcal{Y}_i`.
+    :math:`\mathcal{A}_{ij}: \mathcal{X}_j \to \mathcal{Y}_i`.
 
     Its action on a vector :math:`x = (x_1, \dots, x_m)` is defined as
     the matrix multiplication
@@ -521,20 +521,20 @@ class ProductSpaceOperator(Operator):
 
 class ComponentProjection(Operator):
 
-    """Projection onto the subspace identified by an index.
+    r"""Projection onto the subspace identified by an index.
 
-    For a product space :math:`\mathcal{X} = \mathcal{X}_1 \\times \dots
-    \\times \mathcal{X}_n`, the component projection
+    For a product space :math:`\mathcal{X} = \mathcal{X}_1 \times \dots
+    \times \mathcal{X}_n`, the component projection
 
     .. math::
-       \mathcal{P}_i: \mathcal{X} \\to \mathcal{X}_i
+       \mathcal{P}_i: \mathcal{X} \to \mathcal{X}_i
 
     is given by :math:`\mathcal{P}_i(x) = x_i` for an element
-    :math:`x = (x_1, \dots, x_n) \\in \mathcal{X}`.
+    :math:`x = (x_1, \dots, x_n) \in \mathcal{X}`.
 
     More generally, for an index set :math:`I \subset \{1, \dots, n\}`,
     the projection operator :math:`\mathcal{P}_I` is defined by
-    :math:`\mathcal{P}_I(x) = (x_i)_{i \\in I}`.
+    :math:`\mathcal{P}_I(x) = (x_i)_{i \in I}`.
 
     Note that this is a special case of a product space operator where
     the "operator matrix" has only one row and contains only

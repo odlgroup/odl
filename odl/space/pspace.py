@@ -37,7 +37,7 @@ class ProductSpace(LinearSpace):
     """
 
     def __init__(self, *spaces, **kwargs):
-        """Initialize a new instance.
+        r"""Initialize a new instance.
 
         Parameters
         ----------
@@ -142,37 +142,37 @@ class ProductSpace(LinearSpace):
         not the computations in the individual components. We give the
         exact definitions in the following:
 
-        Let :math:`\mathcal{X} = \mathcal{X}_1 \\times \dots \\times
+        Let :math:`\mathcal{X} = \mathcal{X}_1 \times \dots \times
         \mathcal{X}_d` be a product space, and
-        :math:`\langle \cdot, \cdot\\rangle_i`,
-        :math:`\lVert \cdot \\rVert_i`, :math:`d_i(\cdot, \cdot)` be
+        :math:`\langle \cdot, \cdot\rangle_i`,
+        :math:`\lVert \cdot \rVert_i`, :math:`d_i(\cdot, \cdot)` be
         inner products, norms and distances in the respective
         component spaces.
 
         **Inner product:**
 
         .. math::
-            \langle x, y \\rangle = \\sum_{i=1}^d \langle x_i, y_i \\rangle_i
+            \langle x, y \rangle = \sum_{i=1}^d \langle x_i, y_i \rangle_i
 
         **Norm:**
 
         - :math:`p < \infty`:
 
         .. math::
-            \lVert x\\rVert =
-            \left( \sum_{i=1}^d \lVert x_i \\rVert_i^p \\right)^{1/p}
+            \lVert x\rVert =
+            \left( \sum_{i=1}^d \lVert x_i \rVert_i^p \right)^{1/p}
 
         - :math:`p = \infty`:
 
         .. math::
-            \lVert x\\rVert = \max_i \lVert x_i \\rVert_i
+            \lVert x\rVert = \max_i \lVert x_i \rVert_i
 
         **Distance:**
 
         - :math:`p < \infty`:
 
         .. math::
-            d(x, y) = \left( \sum_{i=1}^d d_i(x_i, y_i)^p \\right)^{1/p}
+            d(x, y) = \left( \sum_{i=1}^d d_i(x_i, y_i)^p \right)^{1/p}
 
         - :math:`p = \infty`:
 
@@ -1545,7 +1545,7 @@ class ProductSpaceArrayWeighting(ArrayWeighting):
     """
 
     def __init__(self, array, exponent=2.0):
-        """Initialize a new instance.
+        r"""Initialize a new instance.
 
         Parameters
         ----------
@@ -1561,7 +1561,7 @@ class ProductSpaceArrayWeighting(ArrayWeighting):
           :math:`w` is defined as
 
           .. math::
-              \\langle x, y \\rangle_w = \\langle w \odot x, y \\rangle
+              \langle x, y \rangle_w = \langle w \odot x, y \rangle
 
           with component-wise multiplication :math:`w \odot x`. For other
           exponents, only ``norm`` and ``dist`` are defined. In the case
@@ -1579,8 +1579,8 @@ class ProductSpaceArrayWeighting(ArrayWeighting):
           in :math:`p`, i.e.,
 
           .. math::
-              \|x\|_{w,p} \\not\\to \|x\|_{w,\infty}
-              \quad\\text{for } p \\to \infty
+              \|x\|_{w,p} \not\to \|x\|_{w,\infty}
+              \quad\text{for } p \to \infty
 
           unless :math:`w = (1,...,1)`. The reason for this choice
           is that the alternative with the limit property consists in
@@ -1655,7 +1655,7 @@ class ProductSpaceConstWeighting(ConstWeighting):
     """
 
     def __init__(self, constant, exponent=2.0):
-        """Initialize a new instance.
+        r"""Initialize a new instance.
 
         Parameters
         ----------
@@ -1671,7 +1671,7 @@ class ProductSpaceConstWeighting(ConstWeighting):
           :math:`c` is defined as
 
           .. math::
-            \\langle x, y \\rangle_c = c\, \\langle x, y \\rangle.
+            \langle x, y \rangle_c = c\, \langle x, y \rangle.
 
           For other exponents, only ``norm`` and ```dist`` are defined.
           In the case of exponent ``inf``, the weighted norm is
@@ -1688,8 +1688,8 @@ class ProductSpaceConstWeighting(ConstWeighting):
           in :math:`p`, i.e.,
 
           .. math::
-              \|x\|_{c,p} \\not\\to \|x\|_{c,\infty}
-              \quad \\text{for } p \\to \infty
+              \|x\|_{c,p} \not\to \|x\|_{c,\infty}
+              \quad \text{for } p \to \infty
 
           unless :math:`c = 1`. The reason for this choice
           is that the alternative with the limit property consists in

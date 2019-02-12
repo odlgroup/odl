@@ -249,7 +249,7 @@ def axis_rotation_matrix(axis, angle):
 
 
 def rotation_matrix_from_to(from_vec, to_vec):
-    """Return a matrix that rotates ``from_vec`` to ``to_vec`` in 2d or 3d.
+    r"""Return a matrix that rotates ``from_vec`` to ``to_vec`` in 2d or 3d.
 
     Since a rotation from one vector to another in 3 dimensions has
     (at least) one degree of freedom, this function makes deliberate but
@@ -305,23 +305,23 @@ def rotation_matrix_from_to(from_vec, to_vec):
     Notes
     -----
     In 3d, the matrix corresponds to a rotation around the normal vector
-    :math:`\hat n = \hat u \\times \hat v`, where :math:`\hat u` and
+    :math:`\hat n = \hat u \times \hat v`, where :math:`\hat u` and
     :math:`\hat v` are the normalized versions of :math:`u`, the
     vector from which to rotate, and :math:`v`, the vector to which
     should be rotated.
 
     The rotation angle is determined as
-    :math:`\\alpha = \pm \\arccos(\\langle \hat u, \hat v \\rangle)`.
+    :math:`\alpha = \pm \arccos(\langle \hat u, \hat v \rangle)`.
     Its sign corresponds to the sign of
-    :math:`\\langle \hat b, \hat v\\rangle`, where
-    :math:`\hat b = \hat n \\times \hat u` is the binormal vector.
+    :math:`\langle \hat b, \hat v\rangle`, where
+    :math:`\hat b = \hat n \times \hat u` is the binormal vector.
 
     In the case that :math:`\hat u` and :math:`\hat v` are collinear,
     a perpendicular vector is chosen as :math:`\hat n = (1, 0, 0)` if
     :math:`v_1 = v_2 = 0`, else :math:`\hat n = (-v_2, v_1, v_3)`.
-    The angle in this case is :math:`\\alpha = 0` if
-    :math:`\\langle \hat u, \hat v \\rangle > 0`, otherwise
-    :math:`\\alpha = \pi`.
+    The angle in this case is :math:`\alpha = 0` if
+    :math:`\langle \hat u, \hat v \rangle > 0`, otherwise
+    :math:`\alpha = \pi`.
     """
     from_vec, from_vec_in = (np.array(from_vec, dtype=float, copy=True),
                              from_vec)

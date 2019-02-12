@@ -123,7 +123,7 @@ def matrix_representation(op):
 
 def power_method_opnorm(op, xstart=None, maxiter=100, rtol=1e-05, atol=1e-08,
                         callback=None):
-    """Estimate the operator norm with the power method.
+    r"""Estimate the operator norm with the power method.
 
     Parameters
     ----------

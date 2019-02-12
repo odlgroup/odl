@@ -74,7 +74,7 @@ class NumpyTensorSpace(TensorSpace):
     """
 
     def __init__(self, shape, dtype=None, **kwargs):
-        """Initialize a new instance.
+        r"""Initialize a new instance.
 
         Parameters
         ----------
@@ -162,39 +162,39 @@ class NumpyTensorSpace(TensorSpace):
         -----
         - A distance function or metric on a space :math:`\mathcal{X}`
           is a mapping
-          :math:`d:\mathcal{X} \\times \mathcal{X} \\to \mathbb{R}`
+          :math:`d:\mathcal{X} \times \mathcal{X} \to \mathbb{R}`
           satisfying the following conditions for all space elements
           :math:`x, y, z`:
 
           * :math:`d(x, y) \geq 0`,
           * :math:`d(x, y) = 0 \Leftrightarrow x = y`,
           * :math:`d(x, y) = d(y, x)`,
-          * :math:`d(x, y) \\leq d(x, z) + d(z, y)`.
+          * :math:`d(x, y) \leq d(x, z) + d(z, y)`.
 
         - A norm on a space :math:`\mathcal{X}` is a mapping
-          :math:`\| \cdot \|:\mathcal{X} \\to \mathbb{R}`
+          :math:`\| \cdot \|:\mathcal{X} \to \mathbb{R}`
           satisfying the following conditions for all
           space elements :math:`x, y`: and scalars :math:`s`:
 
           * :math:`\| x\| \geq 0`,
           * :math:`\| x\| = 0 \Leftrightarrow x = 0`,
           * :math:`\| sx\| = |s| \cdot \| x \|`,
-          * :math:`\| x+y\| \\leq \| x\| +
+          * :math:`\| x+y\| \leq \| x\| +
             \| y\|`.
 
         - An inner product on a space :math:`\mathcal{X}` over a field
           :math:`\mathbb{F} = \mathbb{R}` or :math:`\mathbb{C}` is a
           mapping
-          :math:`\\langle\cdot, \cdot\\rangle: \mathcal{X} \\times
-          \mathcal{X} \\to \mathbb{F}`
+          :math:`\langle\cdot, \cdot\rangle: \mathcal{X} \times
+          \mathcal{X} \to \mathbb{F}`
           satisfying the following conditions for all
           space elements :math:`x, y, z`: and scalars :math:`s`:
 
-          * :math:`\\langle x, y\\rangle =
-            \overline{\\langle y, x\\rangle}`,
-          * :math:`\\langle sx + y, z\\rangle = s \\langle x, z\\rangle +
-            \\langle y, z\\rangle`,
-          * :math:`\\langle x, x\\rangle = 0 \Leftrightarrow x = 0`.
+          * :math:`\langle x, y\rangle =
+            \overline{\langle y, x\rangle}`,
+          * :math:`\langle sx + y, z\rangle = s \langle x, z\rangle +
+            \langle y, z\rangle`,
+          * :math:`\langle x, x\rangle = 0 \Leftrightarrow x = 0`.
 
         Examples
         --------
@@ -2058,7 +2058,7 @@ class NumpyTensorSpaceArrayWeighting(ArrayWeighting):
     """
 
     def __init__(self, array, exponent=2.0):
-        """Initialize a new instance.
+        r"""Initialize a new instance.
 
         Parameters
         ----------
@@ -2076,9 +2076,9 @@ class NumpyTensorSpaceArrayWeighting(ArrayWeighting):
           :math:`W` is defined as
 
           .. math::
-              \\langle A, B\\rangle_W :=
-              \\langle W \odot A, B\\rangle =
-              \\langle w \odot a, b\\rangle =
+              \langle A, B\rangle_W :=
+              \langle W \odot A, B\rangle =
+              \langle w \odot a, b\rangle =
               b^{\mathrm{H}} (w \odot a),
 
           where :math:`a, b, w` are the "flattened" counterparts of
@@ -2087,26 +2087,26 @@ class NumpyTensorSpaceArrayWeighting(ArrayWeighting):
           for element-wise multiplication.
 
         - For other exponents, only norm and dist are defined. In the
-          case of exponent :math:`\\infty`, the weighted norm is
+          case of exponent :math:`\infty`, the weighted norm is
 
           .. math::
-              \| A\|_{W, \\infty} :=
-              \| W \odot A\|_{\\infty} =
-              \| w \odot a\|_{\\infty},
+              \| A\|_{W, \infty} :=
+              \| W \odot A\|_{\infty} =
+              \| w \odot a\|_{\infty},
 
           otherwise it is (using point-wise exponentiation)
 
           .. math::
               \| A\|_{W, p} :=
               \| W^{1/p} \odot A\|_{p} =
-              \| w^{1/p} \odot a\|_{\\infty}.
+              \| w^{1/p} \odot a\|_{\infty}.
 
         - Note that this definition does **not** fulfill the limit
           property in :math:`p`, i.e.
 
           .. math::
-              \| A\|_{W, p} \\not\\to
-              \| A\|_{W, \\infty} \quad (p \\to \\infty)
+              \| A\|_{W, p} \not\to
+              \| A\|_{W, \infty} \quad (p \to \infty)
 
           unless all weights are equal to 1.
 
@@ -2179,7 +2179,7 @@ class NumpyTensorSpaceConstWeighting(ConstWeighting):
     """
 
     def __init__(self, const, exponent=2.0):
-        """Initialize a new instance.
+        r"""Initialize a new instance.
 
         Parameters
         ----------
@@ -2195,20 +2195,20 @@ class NumpyTensorSpaceConstWeighting(ConstWeighting):
           :math:`c` is defined as
 
           .. math::
-              \\langle a, b\\rangle_c :=
-              c \, \\langle a, b\\rangle_c =
+              \langle a, b\rangle_c :=
+              c \, \langle a, b\rangle_c =
               c \, b^{\mathrm{H}} a,
 
           where :math:`b^{\mathrm{H}}` standing for transposed complex
           conjugate.
 
         - For other exponents, only norm and dist are defined. In the
-          case of exponent :math:`\\infty`, the weighted norm is defined
+          case of exponent :math:`\infty`, the weighted norm is defined
           as
 
           .. math::
-              \| a \|_{c, \\infty} :=
-              c\, \| a \|_{\\infty},
+              \| a \|_{c, \infty} :=
+              c\, \| a \|_{\infty},
 
           otherwise it is
 
@@ -2220,8 +2220,8 @@ class NumpyTensorSpaceConstWeighting(ConstWeighting):
           property in :math:`p`, i.e.
 
           .. math::
-              \| a\|_{c, p} \\not\\to
-              \| a \|_{c, \\infty} \quad (p \\to \\infty)
+              \| a\|_{c, p} \not\to
+              \| a \|_{c, \infty} \quad (p \to \infty)
 
           unless :math:`c = 1`.
 

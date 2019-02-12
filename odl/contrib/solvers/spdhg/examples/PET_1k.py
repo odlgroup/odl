@@ -444,8 +444,8 @@ mevery = [(i / 30., .15) for i in range(20)]  # how many markers to draw
 msize = 9  # marker size
 
 algs = ['pdhg', 'spdhg10', 'spdhg50', 'pesquet10', 'pesquet50']
-label = ['PDHG', 'SPDHG (10 subsets)', 'SPDHG (50)', 'Pesquet\&Repetti (10)',
-         'Pesquet\&Repetti (50)']
+label = ['PDHG', 'SPDHG (10 subsets)', 'SPDHG (50)', 'Pesquet\\&Repetti (10)',
+         'Pesquet\\&Repetti (50)']
 fig = []
 
 # ### draw figures

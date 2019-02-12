@@ -65,12 +65,12 @@ def mlem(op, x, data, niter, noise='poisson', callback=None, **kwargs):
     the algorithm attempts find an :math:`x` that maximizes:
 
     .. math::
-        P(g | g \\text{ is } X(A(x)) \\text{ distributed}).
+        P(g | g \text{ is } X(A(x)) \text{ distributed}).
 
     With 'poisson' noise the algorithm is given by:
 
     .. math::
-       x_{n+1} = \\frac{x_n}{A^* 1} A^* (g / A(x_n))
+       x_{n+1} = \frac{x_n}{A^* 1} A^* (g / A(x_n))
 
     See Also
     --------
@@ -129,13 +129,13 @@ def osmlem(op, x, data, niter, noise='poisson', callback=None, **kwargs):
     maximizes:
 
     .. math::
-        \prod_{i=1}^M P(g_i | g_i \\text{ is } X(A_i(x)) \\text{ distributed}).
+        \prod_{i=1}^M P(g_i | g_i \text{ is } X(A_i(x)) \text{ distributed}).
 
     With 'poisson' noise the algorithm is given by partial updates:
 
     .. math::
        x_{n + m/M} =
-       \\frac{x_{n + (m - 1)/M}}{A_i^* 1} A_i^* (g_i / A_i(x_{n + (m - 1)/M}))
+       \frac{x_{n + (m - 1)/M}}{A_i^* 1} A_i^* (g_i / A_i(x_{n + (m - 1)/M}))
 
     for :math:`m = 1, ..., M` and :math:`x_{n+1} = x_{n + M/M}`.
 

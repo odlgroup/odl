@@ -378,8 +378,9 @@ class MultiplyOperator(Operator):
             elif isinstance(self.domain, ComplexNumbers):
                 return InnerProductOperator(self.multiplicand.conjugate())
             else:
-                raise NotImplemented('adjoint not implemented for domain{!r}'
-                                     ''.format(self.domain))
+                raise NotImplementedError(
+                    'adjoint not implemented for domain{!r}'
+                    ''.format(self.domain))
         elif self.domain.is_complex:
             return MultiplyOperator(np.conj(self.multiplicand),
                                     domain=self.range, range=self.domain)
@@ -629,7 +630,7 @@ class NormOperator(Operator):
         return x.norm()
 
     def derivative(self, point):
-        """Derivative of this operator in ``point``.
+        r"""Derivative of this operator in ``point``.
 
             ``NormOperator().derivative(y)(x) == (y / y.norm()).inner(x)``
 
@@ -656,7 +657,7 @@ class NormOperator(Operator):
         spaces, in which case it is given by
 
         .. math::
-            (D \|\cdot\|)(y)(x) = \langle y / \|y\|, x \\rangle
+            (D \|\cdot\|)(y)(x) = \langle y / \|y\|, x \rangle
 
         Examples
         --------
@@ -729,7 +730,7 @@ class DistOperator(Operator):
         return self.vector.dist(x)
 
     def derivative(self, point):
-        """The derivative operator.
+        r"""The derivative operator.
 
             ``DistOperator(y).derivative(z)(x) ==
             ((y - z) / y.dist(z)).inner(x)``
@@ -757,7 +758,7 @@ class DistOperator(Operator):
         spaces, in which case it is given by
 
         .. math::
-            (D d(\cdot, y))(z)(x) = \\langle (y-z) / d(y, z), x \\rangle
+            (D d(\cdot, y))(z)(x) = \langle (y-z) / d(y, z), x \rangle
 
         Examples
         --------
@@ -1041,7 +1042,7 @@ class RealPart(Operator):
 
     @property
     def adjoint(self):
-        """Return the (left) adjoint.
+        r"""Return the (left) adjoint.
 
         Notes
         -----
@@ -1049,12 +1050,12 @@ class RealPart(Operator):
         space, this does not satisfy the usual adjoint equation:
 
         .. math::
-            \langle Ax, y \\rangle = \langle x, A^*y \\rangle
+            \langle Ax, y \rangle = \langle x, A^*y \rangle
 
         Instead it is an adjoint in a weaker sense as follows:
 
         .. math::
-            \langle AA^*x, y \\rangle = \langle A^*x, A^*y \\rangle
+            \langle AA^*x, y \rangle = \langle A^*x, A^*y \rangle
 
         Examples
         --------
@@ -1169,7 +1170,7 @@ class ImagPart(Operator):
 
     @property
     def adjoint(self):
-        """Return the (left) adjoint.
+        r"""Return the (left) adjoint.
 
         Notes
         -----
@@ -1177,12 +1178,12 @@ class ImagPart(Operator):
         space, this does not satisfy the usual adjoint equation:
 
         .. math::
-            \langle Ax, y \\rangle = \langle x, A^*y \\rangle
+            \langle Ax, y \rangle = \langle x, A^*y \rangle
 
         Instead it is an adjoint in a weaker sense as follows:
 
         .. math::
-            \langle AA^*x, y \\rangle = \langle A^*x, A^*y \\rangle
+            \langle AA^*x, y \rangle = \langle A^*x, A^*y \rangle
 
         Examples
         --------
@@ -1303,7 +1304,7 @@ class ComplexEmbedding(Operator):
 
     @property
     def adjoint(self):
-        """Return the (right) adjoint.
+        r"""Return the (right) adjoint.
 
         Notes
         -----
@@ -1311,12 +1312,12 @@ class ComplexEmbedding(Operator):
         space, this does not satisfy the usual adjoint equation:
 
         .. math::
-            \langle Ax, y \\rangle = \langle x, A^*y \\rangle
+            \langle Ax, y \rangle = \langle x, A^*y \rangle
 
         Instead it is an adjoint in a weaker sense as follows:
 
         .. math::
-            \langle A^*Ax, y \\rangle = \langle Ax, Ay \\rangle
+            \langle A^*Ax, y \rangle = \langle Ax, Ay \rangle
 
         Examples
         --------

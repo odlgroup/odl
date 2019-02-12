@@ -120,7 +120,7 @@ def uniform_noise(space, low=0, high=1, seed=None):
 
 
 def poisson_noise(intensity, seed=None):
-    """Poisson distributed noise with given intensity.
+    r"""Poisson distributed noise with given intensity.
 
     Parameters
     ----------
@@ -138,11 +138,11 @@ def poisson_noise(intensity, seed=None):
     Notes
     -----
     For a Poisson distributed random variable :math:`X` with intensity
-    :math:`\\lambda`, the probability of it taking the value
-    :math:`k \\in \mathbb{N}_0` is given by
+    :math:`\lambda`, the probability of it taking the value
+    :math:`k \in \mathbb{N}_0` is given by
 
     .. math::
-        \\frac{\\lambda^k e^{-\\lambda}}{k!}
+        \frac{\lambda^k e^{-\lambda}}{k!}
 
     Note that the function only takes integer values.
 

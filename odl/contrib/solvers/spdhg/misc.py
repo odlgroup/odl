@@ -441,20 +441,21 @@ class Blur2D(odl.Operator):
 
 
 class KullbackLeiblerSmooth(odl.solvers.Functional):
-    """The smooth Kullback-Leibler divergence functional.
+
+    r"""The smooth Kullback-Leibler divergence functional.
 
     Notes
     -----
     If the functional is defined on an :math:`\mathbb{R}^n`-like space, the
-    smooth Kullback-Leibler functional :math:`\\phi` is defined as
+    smooth Kullback-Leibler functional :math:`\phi` is defined as
 
     .. math::
-        \\phi(x) = \\sum_{i=1}^n \\begin{cases}
-                x + r - y + y * \\log(y / (x + r))
-                    & \\text{if $x \geq 0$} \\
+        \phi(x) = \sum_{i=1}^n \begin{cases}
+                x + r - y + y * \log(y / (x + r))
+                    & \text{if $x \geq 0$} \
                 (y / (2 * r^2)) * x^2 + (1 - y / r) * x + r - b +
-                    b * \\log(b / r) & \\text{else}
-                                 \\end{cases}
+                    b * \log(b / r) & \text{else}
+                                 \end{cases}
 
     where all variables on the right hand side of the equation have a subscript
     i which is omitted for readability.
@@ -561,24 +562,25 @@ class KullbackLeiblerSmooth(odl.solvers.Functional):
 
 
 class KullbackLeiblerSmoothConvexConj(odl.solvers.Functional):
-    """The convex conjugate of the smooth Kullback-Leibler divergence functional.
+
+    r"""The convex conj of the smooth Kullback-Leibler divergence functional.
 
     Notes
     -----
     If the functional is defined on an :math:`\mathbb{R}^n`-like space, the
-    convex conjugate of the smooth Kullback-Leibler functional :math:`\\phi^*`
+    convex conjugate of the smooth Kullback-Leibler functional :math:`\phi^*`
     is defined as
 
     .. math::
-        \\phi^*(x) = \\sum_{i=1}^n \\begin{cases}
+        \phi^*(x) = \sum_{i=1}^n \begin{cases}
                 r^2 / (2 * y) * x^2 + (r - r^2 / y) * x + r^2 / (2 * y) +
                     3 / 2 * y - 2 * r - y * log(y / r)
-                    & \\text{if $x < 1 - y / r$} \\
+                    & \text{if $x < 1 - y / r$} \
                 - r * x - y * log(1 - x)
-                    & \\text{if $1 - y / r <= x < 1} \\
+                    & \text{if $1 - y / r <= x < 1} \
                 + \infty
-                    & \\text{else}
-                                 \\end{cases}
+                    & \text{else}
+                                 \end{cases}
 
     where all variables on the right hand side of the equation have a subscript
     :math:`i` which is omitted for readability.

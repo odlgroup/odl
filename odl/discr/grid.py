@@ -75,7 +75,7 @@ class RectGrid(Set):
     """
 
     def __init__(self, *coord_vectors):
-        """Initialize a new instance.
+        r"""Initialize a new instance.
 
         Parameters
         ----------

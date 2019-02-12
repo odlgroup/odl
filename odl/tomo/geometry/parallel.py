@@ -1469,7 +1469,7 @@ class Parallel3dAxisGeometry(ParallelBeamGeometry, AxisOrientedGeometry):
 
 
 def parallel_beam_geometry(space, num_angles=None, det_shape=None):
-    """Create default parallel beam geometry from ``space``.
+    r"""Create default parallel beam geometry from ``space``.
 
     This is intended for simple test cases where users do not need the full
     flexibility of the geometries, but simply want a geometry that works.
@@ -1511,28 +1511,28 @@ def parallel_beam_geometry(space, num_angles=None, det_shape=None):
     Notes
     -----
     According to [NW2001]_, pages 72--74, a function
-    :math:`f : \\mathbb{R}^2 \\to \\mathbb{R}` that has compact support
+    :math:`f : \mathbb{R}^2 \to \mathbb{R}` that has compact support
 
     .. math::
-        \| x \| > \\rho  \implies f(x) = 0,
+        \| x \| > \rho  \implies f(x) = 0,
 
     and is essentially bandlimited
 
     .. math::
-       \| \\xi \| > \\Omega \implies \\hat{f}(\\xi) \\approx 0,
+       \| \xi \| > \Omega \implies \hat{f}(\xi) \approx 0,
 
     can be fully reconstructed from a parallel beam ray transform
     if (1) the projection angles are sampled with a spacing of
-    :math:`\\Delta \psi` such that
+    :math:`\Delta \psi` such that
 
     .. math::
-        \\Delta \psi \leq \\frac{\\pi}{\\rho \\Omega},
+        \Delta \psi \leq \frac{\pi}{\rho \Omega},
 
-    and (2) the detector is sampled with an interval :math:`\\Delta s`
+    and (2) the detector is sampled with an interval :math:`\Delta s`
     that satisfies
 
     .. math::
-        \\Delta s \leq \\frac{\\pi}{\\Omega}.
+        \Delta s \leq \frac{\pi}{\Omega}.
 
     The geometry returned by this function satisfies these conditions exactly.
 

@@ -24,7 +24,7 @@ __all__ = ('landweber', 'conjugate_gradient', 'conjugate_gradient_normal',
 
 
 def landweber(op, x, rhs, niter, omega=None, projection=None, callback=None):
-    """Optimized implementation of Landweber's method.
+    r"""Optimized implementation of Landweber's method.
 
     Solves the inverse problem::
 
@@ -61,14 +61,14 @@ def landweber(op, x, rhs, niter, omega=None, projection=None, callback=None):
     .. math::
         \mathcal{A} (x) = y,
 
-    for a given :math:`y\\in \mathcal{Y}`, i.e. an approximate
+    for a given :math:`y\in \mathcal{Y}`, i.e. an approximate
     solution :math:`x^*` to
 
     .. math::
-        \min_{x\\in \mathcal{X}} \| \mathcal{A}(x) - y \|_{\mathcal{Y}}^2
+        \min_{x\in \mathcal{X}} \| \mathcal{A}(x) - y \|_{\mathcal{Y}}^2
 
     for a (Frechet-) differentiable operator
-    :math:`\mathcal{A}: \mathcal{X} \\to \mathcal{Y}` between Hilbert
+    :math:`\mathcal{A}: \mathcal{X} \to \mathcal{Y}` between Hilbert
     spaces :math:`\mathcal{X}` and :math:`\mathcal{Y}`. The method
     starts from an initial guess :math:`x_0` and uses the
     iteration
@@ -80,8 +80,8 @@ def landweber(op, x, rhs, niter, omega=None, projection=None, callback=None):
     where :math:`\partial \mathcal{A}(x)` is the Frechet derivative
     of :math:`\mathcal{A}` at :math:`x` and :math:`\omega` is a
     relaxation parameter. For linear problems, a choice
-    :math:`0 < \omega < 2/\\lVert \mathcal{A}^2\\rVert` guarantees
-    convergence, where :math:`\\lVert\mathcal{A}\\rVert` stands for the
+    :math:`0 < \omega < 2/\lVert \mathcal{A}^2\rVert` guarantees
+    convergence, where :math:`\lVert\mathcal{A}\rVert` stands for the
     operator norm of :math:`\mathcal{A}`.
 
     Users may also optionally provide a projection to project each
@@ -391,7 +391,7 @@ def gauss_newton(op, x, rhs, niter, zero_seq=exp_zero_seq(2.0),
 
 def kaczmarz(ops, x, rhs, niter, omega=1, projection=None, random=False,
              callback=None, callback_loop='outer'):
-    """Optimized implementation of Kaczmarz's method.
+    r"""Optimized implementation of Kaczmarz's method.
 
     Solves the inverse problem given by the set of equations::
 
@@ -434,17 +434,17 @@ def kaczmarz(ops, x, rhs, niter, omega=1, projection=None, random=False,
     the inverse problem of the first kind
 
     .. math::
-        \mathcal{A}_i (x) = y_i \\quad 1 \\leq i \\leq n,
+        \mathcal{A}_i (x) = y_i \quad 1 \leq i \leq n,
 
-    for a given :math:`y_n \\in \mathcal{Y}_n`, i.e. an approximate
+    for a given :math:`y_n \in \mathcal{Y}_n`, i.e. an approximate
     solution :math:`x^*` to
 
     .. math::
-        \min_{x\\in \mathcal{X}}
-        \\sum_{i=1}^n \| \mathcal{A}_i(x) - y_i \|_{\mathcal{Y}_i}^2
+        \min_{x\in \mathcal{X}}
+        \sum_{i=1}^n \| \mathcal{A}_i(x) - y_i \|_{\mathcal{Y}_i}^2
 
     for a (Frechet-) differentiable operator
-    :math:`\mathcal{A}: \mathcal{X} \\to \mathcal{Y}` between Hilbert
+    :math:`\mathcal{A}: \mathcal{X} \to \mathcal{Y}` between Hilbert
     spaces :math:`\mathcal{X}` and :math:`\mathcal{Y}`. The method
     starts from an initial guess :math:`x_0` and uses the
     iteration
@@ -455,10 +455,10 @@ def kaczmarz(ops, x, rhs, niter, omega=1, projection=None, random=False,
 
     where :math:`\partial \mathcal{A}_{[k]}(x_k)` is the Frechet derivative
     of :math:`\mathcal{A}_{[k]}` at :math:`x_k`, :math:`\omega_{[k]}` is a
-    relaxation parameter and :math:`[k] := k \\text{ mod } n`.
+    relaxation parameter and :math:`[k] := k \text{ mod } n`.
 
     For linear problems, a choice
-    :math:`0 < \omega_i < 2/\\lVert \mathcal{A}_{i}^2\\rVert` guarantees
+    :math:`0 < \omega_i < 2/\lVert \mathcal{A}_{i}^2\rVert` guarantees
     convergence, where :math:`\|\mathcal{A}_{i}\|` stands for the
     operator norm of :math:`\mathcal{A}_{i}`.
 

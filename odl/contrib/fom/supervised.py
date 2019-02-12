@@ -223,7 +223,7 @@ def mean_value_difference(data, ground_truth, mask=None, normalized=False,
 def standard_deviation_difference(data, ground_truth, mask=None,
                                   normalized=False,
                                   force_lower_is_better=True):
-    r"""Return absolute difference in std between ``data`` and ``ground_truth``.
+    r"""Return absolute diff in std between ``data`` and ``ground_truth``.
 
     Parameters
     ----------

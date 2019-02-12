@@ -19,7 +19,7 @@ __all__ = ('newtons_method', 'bfgs_method', 'broydens_method')
 
 
 def _bfgs_direction(s, y, x, hessinv_estimate=None):
-    """Compute ``Hn^-1(x)`` for the L-BFGS method.
+    r"""Compute ``Hn^-1(x)`` for the L-BFGS method.
 
     Parameters
     ----------
@@ -43,10 +43,10 @@ def _bfgs_direction(s, y, x, hessinv_estimate=None):
 
     .. math::
         H_{n+1}^{-1} =
-        \\left(I - \\frac{ s_n y_n^T}{y_n^T s_n} \\right)
+        \left(I - \frac{ s_n y_n^T}{y_n^T s_n} \right)
         H_{n}^{-1}
-        \\left(I - \\frac{ y_n s_n^T}{y_n^T s_n} \\right) +
-        \\frac{s_n s_n^T}{y_n^T \, s_n}
+        \left(I - \frac{ y_n s_n^T}{y_n^T s_n} \right) +
+        \frac{s_n s_n^T}{y_n^T \, s_n}
 
     With :math:`H_0^{-1}` given by ``hess_estimate``.
     """
@@ -72,7 +72,7 @@ def _bfgs_direction(s, y, x, hessinv_estimate=None):
 
 
 def _broydens_direction(s, y, x, hessinv_estimate=None, impl='first'):
-    """Compute ``Hn^-1(x)`` for Broydens method.
+    r"""Compute ``Hn^-1(x)`` for Broydens method.
 
     Parameters
     ----------
@@ -97,7 +97,7 @@ def _broydens_direction(s, y, x, hessinv_estimate=None, impl='first'):
     For ``impl = 'first'``, :math:`H_n^{-1}` is defined recursively as
 
     .. math::
-        H_{n+1}^{-1} = \\left(I + s_n y_n^T \\right) H_{n}^{-1}
+        H_{n+1}^{-1} = \left(I + s_n y_n^T \right) H_{n}^{-1}
 
     and for ``impl = 'second'``:
 
@@ -126,7 +126,7 @@ def _broydens_direction(s, y, x, hessinv_estimate=None, impl='first'):
 
 def newtons_method(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
                    cg_iter=None, callback=None):
-    """Newton's method for minimizing a functional.
+    r"""Newton's method for minimizing a functional.
 
     Notes
     -----
@@ -137,11 +137,11 @@ def newtons_method(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
         \min f(x)
 
     for a differentiable function
-    :math:`f: \mathcal{X}\\to \mathbb{R}` on a Hilbert space
+    :math:`f: \mathcal{X}\to \mathbb{R}` on a Hilbert space
     :math:`\mathcal{X}`. It does so by finding a zero of the gradient
 
     .. math::
-        \\nabla f: \mathcal{X} \\to \mathcal{X}.
+        \nabla f: \mathcal{X} \to \mathcal{X}.
 
     of finding a root of a function.
 
@@ -161,9 +161,9 @@ def newtons_method(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
     and then updating as
 
     .. math::
-        x_{k+1} = x_k + \\alpha x_k,
+        x_{k+1} = x_k + \alpha x_k,
 
-    where :math:`\\alpha` is a suitable step length (see the
+    where :math:`\alpha` is a suitable step length (see the
     references). In this implementation the system of equations are
     solved using the conjugate gradient method.
 
@@ -245,7 +245,7 @@ def newtons_method(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
 
 def bfgs_method(f, x, line_search=1.0, maxiter=1000, tol=1e-15, num_store=None,
                 hessinv_estimate=None, callback=None):
-    """Quasi-Newton BFGS method to minimize a differentiable function.
+    r"""Quasi-Newton BFGS method to minimize a differentiable function.
 
     Can use either the regular BFGS method, or the limited memory BFGS method.
 
@@ -259,11 +259,11 @@ def bfgs_method(f, x, line_search=1.0, maxiter=1000, tol=1e-15, num_store=None,
         \min f(x)
 
     for a differentiable function
-    :math:`f: \mathcal{X}\\to \mathbb{R}` on a Hilbert space
+    :math:`f: \mathcal{X}\to \mathbb{R}` on a Hilbert space
     :math:`\mathcal{X}`. It does so by finding a zero of the gradient
 
     .. math::
-        \\nabla f: \mathcal{X} \\to \mathcal{X}.
+        \nabla f: \mathcal{X} \to \mathcal{X}.
 
     The QN method is an approximate Newton method, where the Hessian
     is approximated and gradually updated in each step. This
@@ -360,7 +360,7 @@ Goldfarb%E2%80%93Shanno_algorithm>`_
 def broydens_method(f, x, line_search=1.0, impl='first', maxiter=1000,
                     tol=1e-15, hessinv_estimate=None,
                     callback=None):
-    """Broyden's first method, a quasi-Newton scheme.
+    r"""Broyden's first method, a quasi-Newton scheme.
 
     Notes
     -----
@@ -372,11 +372,11 @@ def broydens_method(f, x, line_search=1.0, impl='first', maxiter=1000,
         \min f(x)
 
     for a differentiable function
-    :math:`f: \mathcal{X}\\to \mathbb{R}` on a Hilbert space
+    :math:`f: \mathcal{X}\to \mathbb{R}` on a Hilbert space
     :math:`\mathcal{X}`. It does so by finding a zero of the gradient
 
     .. math::
-        \\nabla f: \mathcal{X} \\to \mathcal{X}
+        \nabla f: \mathcal{X} \to \mathcal{X}
 
     using a Newton-type update scheme with approximate Hessian.
 

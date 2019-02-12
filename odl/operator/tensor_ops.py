@@ -716,7 +716,7 @@ class MatrixOperator(Operator):
     """
 
     def __init__(self, matrix, domain=None, range=None, axis=0):
-        """Initialize a new instance.
+        r"""Initialize a new instance.
 
         Parameters
         ----------
@@ -780,16 +780,16 @@ class MatrixOperator(Operator):
 
         Notes
         -----
-        For a matrix :math:`A \\in \\mathbb{F}^{n \\times m}`, the
-        operation on a tensor :math:`T \\in \mathbb{F}^{n_1 \\times
-        \dots \\times n_d}` is defined as the summation
+        For a matrix :math:`A \in \mathbb{F}^{n \times m}`, the
+        operation on a tensor :math:`T \in \mathbb{F}^{n_1 \times
+        \dots \times n_d}` is defined as the summation
 
         .. math::
             (A \cdot T)_{i_1, \dots, i_k, \dots, i_d} =
             \sum_{j=1}^m A_{i_k j} T_{i_1, \dots, j, \dots, i_d}.
 
         It produces a new tensor :math:`A \cdot T \in \mathbb{F}^{
-        n_1 \\times \dots \\times n \\times \dots \\times n_d}`.
+        n_1 \times \dots \times n \times \dots \times n_d}`.
         """
         # Lazy import to improve `import odl` time
         import scipy.sparse
@@ -1213,7 +1213,7 @@ class SamplingOperator(Operator):
 
 class WeightedSumSamplingOperator(Operator):
 
-    """Operator computing the sum of coefficients at sampling locations.
+    r"""Operator computing the sum of coefficients at sampling locations.
 
     This operator is the adjoint of `SamplingOperator`.
 
@@ -1224,9 +1224,9 @@ class WeightedSumSamplingOperator(Operator):
     of indices (possibly with duplicates) is given by
 
     .. math::
-        W_I(g)(x) = \sum_{i \\in I} d_i(x) g_i,
+        W_I(g)(x) = \sum_{i \in I} d_i(x) g_i,
 
-    where :math:`g \\in \mathbb{F}^N` is the value vector, and
+    where :math:`g \in \mathbb{F}^N` is the value vector, and
     :math:`d_i` is either a Dirac delta or a characteristic function of
     the cell centered around the point indexed by :math:`i`.
     """

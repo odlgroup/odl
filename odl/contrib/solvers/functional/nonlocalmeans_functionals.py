@@ -19,7 +19,7 @@ __all__ = ('NLMRegularizer',)
 
 class NLMRegularizer(Functional):
 
-    """The nonlocal means "functional".
+    r"""The nonlocal means "functional".
 
     This is not a true functional in the strict sense, but regardless it
     implements a `proximal` method and is hence usable with proximal solvers.
@@ -40,9 +40,9 @@ class NLMRegularizer(Functional):
 
     .. math::
         NL[u](x) =
-            \\frac{1}{C(x)}
-            \\int_\\Omega
-            e^{-\\frac{(G_a * |u(x + \cdot) - u(y + \cdot)|^2)(0)}{h^2}}
+            \frac{1}{C(x)}
+            \int_\Omega
+            e^{-\frac{(G_a * |u(x + \cdot) - u(y + \cdot)|^2)(0)}{h^2}}
             u(y) dy
 
     where :math:`\Omega` is the domain, :math:`G_a` is a gaussian kernel,
@@ -51,8 +51,8 @@ class NLMRegularizer(Functional):
 
     .. math::
         C(x) =
-        \\int_\\Omega
-        e^{-\\frac{(G_a * |u(x + \cdot) - u(y + \cdot)|^2)(0)}{h^2}}
+        \int_\Omega
+        e^{-\frac{(G_a * |u(x + \cdot) - u(y + \cdot)|^2)(0)}{h^2}}
         dy
 
     See [Buades+2005] for more information.

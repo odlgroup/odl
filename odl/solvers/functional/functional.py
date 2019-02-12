@@ -858,7 +858,7 @@ class FunctionalTranslation(Functional):
 
     @property
     def convex_conj(self):
-        """Convex conjugate functional of the translated functional.
+        r"""Convex conjugate functional of the translated functional.
 
         Notes
         -----

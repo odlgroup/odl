@@ -85,7 +85,7 @@ def pdhg(x, f, g, A, tau, sigma, niter, **kwargs):
 
 
 def spdhg(x, f, g, A, tau, sigma, niter, **kwargs):
-    """Computes a saddle point with a stochastic PDHG.
+    r"""Computes a saddle point with a stochastic PDHG.
 
     This means, a solution (x*, y*), y* = (y*_1, ..., y*_n) such that
 
@@ -169,7 +169,7 @@ def spdhg(x, f, g, A, tau, sigma, niter, **kwargs):
 
 
 def pa_spdhg(x, f, g, A, tau, sigma, niter, mu_g, **kwargs):
-    """Computes a saddle point with a stochastic PDHG and primal acceleration.
+    r"""Computes a saddle point with a stochastic PDHG and primal acceleration.
 
     Next to other standard arguments, this algorithm requires the strong
     convexity constant mu_g of g.
@@ -218,7 +218,6 @@ def pa_spdhg(x, f, g, A, tau, sigma, niter, mu_g, **kwargs):
     *Stochastic Primal-Dual Hybrid Gradient Algorithm with Arbitrary Sampling
     and Imaging Applications*. ArXiv: http://arxiv.org/abs/1706.04957 (2017).
     """
-
     # Probabilities
     prob = kwargs.pop('prob', None)
     if prob is None:
@@ -240,7 +239,7 @@ def pa_spdhg(x, f, g, A, tau, sigma, niter, mu_g, **kwargs):
 
 
 def spdhg_generic(x, f, g, A, tau, sigma, niter, **kwargs):
-    """Computes a saddle point with a stochastic PDHG.
+    r"""Computes a saddle point with a stochastic PDHG.
 
     This means, a solution (x*, y*), y* = (y*_1, ..., y*_n) such that
 
@@ -304,7 +303,6 @@ def spdhg_generic(x, f, g, A, tau, sigma, niter, **kwargs):
     stochastic primal-dual hybrid gradient method*. Wavelets and Sparsity XVII,
     58 (2017) http://doi.org/10.1117/12.2272946.
     """
-
     # Callback object
     callback = kwargs.pop('callback', None)
     if callback is not None and not callable(callback):
@@ -410,7 +408,7 @@ def spdhg_generic(x, f, g, A, tau, sigma, niter, **kwargs):
 
 
 def da_spdhg(x, f, g, A, tau, sigma_tilde, niter, mu, **kwargs):
-    """Computes a saddle point with a PDHG and dual acceleration.
+    r"""Computes a saddle point with a PDHG and dual acceleration.
 
     It therefore requires the functionals f*_i to be mu[i] strongly convex.
 
@@ -462,7 +460,6 @@ def da_spdhg(x, f, g, A, tau, sigma_tilde, niter, mu, **kwargs):
     *Stochastic Primal-Dual Hybrid Gradient Algorithm with Arbitrary Sampling
     and Imaging Applications*. ArXiv: http://arxiv.org/abs/1706.04957 (2017).
     """
-
     # Callback object
     callback = kwargs.pop('callback', None)
     if callback is not None and not callable(callback):
@@ -556,7 +553,7 @@ def da_spdhg(x, f, g, A, tau, sigma_tilde, niter, mu, **kwargs):
 
 
 def spdhg_pesquet(x, f, g, A, tau, sigma, niter, **kwargs):
-    """Computes a saddle point with a stochstic variant of PDHG [PR2015].
+    r"""Computes a saddle point with a stochstic variant of PDHG [PR2015].
 
     Parameters
     ----------
@@ -600,7 +597,6 @@ def spdhg_pesquet(x, f, g, A, tau, sigma, niter, **kwargs):
     Algorithms for Distributed Optimization*.
     ArXiv: http://arxiv.org/abs/1406.6404 (2015).
     """
-
     # Callback object
     callback = kwargs.pop('callback', None)
     if callback is not None and not callable(callback):
