@@ -605,6 +605,96 @@ class FanFlatGeometry(FanBeamGeometry):
 
     For details, check `the online docs
     <https://odlgroup.github.io/odl/guide/geometry_guide.html>`_.
+
+    Parameters
+    ----------
+    apart : 1-dim. `RectPartition`
+        Partition of the angle interval.
+    dpart : 1-dim. `RectPartition`
+        Partition of the detector parameter interval.
+    src_radius : nonnegative float
+        Radius of the source circle.
+    det_radius : nonnegative float
+        Radius of the detector circle. Must be nonzero if ``src_radius``
+        is zero.
+    src_to_det_init : `array-like` (shape ``(2,)``), optional
+        Initial state of the vector pointing from source to detector
+        reference point. The zero vector is not allowed.
+
+    Other Parameters
+    ----------------
+    det_axis_init : `array-like` (shape ``(2,)``), optional
+        Initial axis defining the detector orientation. The default
+        depends on ``src_to_det_init``, see Notes.
+    translation : `array-like`, shape ``(2,)``, optional
+        Global translation of the geometry. This is added last in any
+        method that computes an absolute vector, e.g., `det_refpoint`,
+        and also shifts the center of rotation.
+    check_bounds : bool, optional
+        If ``True``, methods computing vectors check input arguments.
+        Checks are vectorized and add only a small overhead.
+        Default: ``True``
+
+    Notes
+    -----
+    In the default configuration, the initial source-to-detector vector
+    is ``(0, 1)``, and the initial detector axis is ``(1, 0)``. If a
+    different ``src_to_det_init`` is chosen, the new default axis is
+    given as a rotation of the original one by a matrix that transforms
+    ``(0, 1)`` to the new (normalized) ``src_to_det_init``. This matrix
+    is calculated with the `rotation_matrix_from_to` function.
+    Expressed in code, we have ::
+
+        init_rot = rotation_matrix_from_to((0, 1), src_to_det_init)
+        det_axis_init = init_rot.dot((1, 0))
+
+    Examples
+    --------
+    Initialization with default parameters and some radii:
+
+    >>> apart = odl.uniform_partition(0, 2 * np.pi, 10)
+    >>> dpart = odl.uniform_partition(-1, 1, 20)
+    >>> geom = FanFlatGeometry(apart, dpart, src_radius=1, det_radius=5)
+    >>> geom.src_position(0)
+    array([ 0., -1.])
+    >>> geom.det_refpoint(0)
+    array([ 0.,  5.])
+    >>> geom.det_point_position(0, 1)  # (0, 5) + 1 * (1, 0)
+    array([ 1.,  5.])
+
+    Checking the default orientation:
+
+    >>> geom.src_to_det_init
+    array([ 0.,  1.])
+    >>> geom.det_axis_init
+    array([ 1.,  0.])
+
+    Specifying an initial detector position by default rotates the
+    standard configuration to this position:
+
+    >>> e_x, e_y = np.eye(2)  # standard unit vectors
+    >>> geom = FanFlatGeometry(apart, dpart, src_radius=1, det_radius=5,
+    ...                        src_to_det_init=(1, 0))
+    >>> np.allclose(geom.src_to_det_init, e_x)
+    True
+    >>> np.allclose(geom.det_axis_init, -e_y)
+    True
+    >>> geom = FanFlatGeometry(apart, dpart, src_radius=1, det_radius=5,
+    ...                        src_to_det_init=(0, -1))
+    >>> np.allclose(geom.src_to_det_init, -e_y)
+    True
+    >>> np.allclose(geom.det_axis_init, -e_x)
+    True
+
+    The initial detector axis can also be set explicitly:
+
+    >>> geom = FanFlatGeometry(
+    ...     apart, dpart, src_radius=1, det_radius=5,
+    ...     src_to_det_init=(1, 0), det_axis_init=(0, 1))
+    >>> np.allclose(geom.src_to_det_init, e_x)
+    True
+    >>> np.allclose(geom.det_axis_init, e_y)
+    True
     """
 
 
