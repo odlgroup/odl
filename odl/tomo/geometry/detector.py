@@ -20,7 +20,7 @@ from odl.util.npy_compat import moveaxis
 
 __all__ = ('Detector',
            'Flat1dDetector', 'Flat2dDetector',
-           'CircleSectionDetector', 'CircularDetector')
+           'CircularDetector')
 
 
 class Detector(object):

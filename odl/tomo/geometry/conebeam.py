@@ -210,7 +210,6 @@ class FanBeamGeometry(DivergentBeamGeometry):
             detector = Flat1dDetector(dpart, axis=det_axis_init,
                                       check_bounds=check_bounds)
         else:
-            det_curve_radius = float(det_curve_radius)
             detector = CircularDetector(dpart,
                                         radius=det_curve_radius,
                                         axis=det_axis_init,
