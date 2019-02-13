@@ -607,7 +607,7 @@ def spdhg_pesquet(x, f, g, A, tau, sigma, niter, **kwargs):
     fun_select = kwargs.pop('fun_select', None)
     if fun_select is None:
         def fun_select(x):
-            return [int(np.random.choice(len(A), 1, p=1/len(A)))]
+            return [int(np.random.choice(len(A), 1, p=1 / len(A)))]
 
     # Dual variable
     y = kwargs.pop('y', None)

@@ -42,14 +42,13 @@ https://arxiv.org/abs/1505.05191
 """
 
 import odl
-import numpy as np
 
 # Reconstruction space
 reco_space = odl.uniform_discr(min_pt=[-20, -20], max_pt=[20, 20],
                                shape=[128, 128], dtype='float32')
 
 # Make a parallel beam geometry with flat detector, and create ray transform
-geometry = odl.tomo.parallel_beam_geometry(reco_space,  num_angles=100)
+geometry = odl.tomo.parallel_beam_geometry(reco_space, num_angles=100)
 ray_trafo = odl.tomo.RayTransform(reco_space, geometry)
 
 # Create phantom, forward project to create sinograms, and add 10% noise

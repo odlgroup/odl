@@ -16,6 +16,7 @@ pycodestyle:
         - E402
         - E741
         - W503
+        - W504
 
 no_blank_comment: False
 only_mention_files_with_errors: True

@@ -24,7 +24,7 @@ z = tf.constant(np.asarray(ray_transform.range.one()))
 
 # Create tensorflow layer from odl operator
 odl_op_layer = odl.contrib.tensorflow.as_tensorflow_layer(
-        ray_transform, 'RayTransform')
+    ray_transform, 'RayTransform')
 
 
 # Add empty axes for batch and channel

@@ -28,9 +28,9 @@ noisy_data = data + odl.phantom.white_noise(data.space)
 
 # Create tensorflow layers from odl operators
 ray_transform_layer = odl.contrib.tensorflow.as_tensorflow_layer(
-        ray_transform, name='RayTransform')
+    ray_transform, name='RayTransform')
 grad_layer = odl.contrib.tensorflow.as_tensorflow_layer(
-        grad, name='Gradient')
+    grad, name='Gradient')
 x = tf.Variable(tf.zeros(shape=space.shape), name="x")
 
 # Create constant right hand side
