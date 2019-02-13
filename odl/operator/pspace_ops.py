@@ -899,6 +899,7 @@ class ReductionOperator(Operator):
     ProductSpaceOperator : More general case, used as backend.
     BroadcastOperator : Calls several operators with same argument.
     DiagonalOperator : Case where each operator should have its own argument.
+    SeparableSum : Corresponding construction for functionals.
     """
     def __init__(self, *operators):
         """Initialize a new instance.

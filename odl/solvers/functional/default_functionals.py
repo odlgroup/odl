@@ -1661,6 +1661,9 @@ class SeparableSum(Functional):
                 isinstance(functionals[1], Integral)):
             functionals = [functionals[0]] * functionals[1]
 
+        if not all(isinstance(op, Functional) for op in functionals):
+            raise TypeError('all arguments must be `Functional` instances')
+
         domains = [func.domain for func in functionals]
         domain = ProductSpace(*domains)
         linear = all(func.is_linear for func in functionals)
