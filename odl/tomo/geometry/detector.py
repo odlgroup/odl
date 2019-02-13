@@ -735,7 +735,7 @@ class CircularDetector(Detector):
         vector:
 
         >>> part = odl.uniform_partition(-np.pi / 2, np.pi / 2, 10)
-        >>> det = CircularDetector(part, axis=[0, 1], radius=2)
+        >>> det = CircularDetector(part, axis=[1, 0], radius=2)
         >>> np.allclose(det.surface(-np.pi / 2), [-2, -2])
         True
 
@@ -798,7 +798,7 @@ class CircularDetector(Detector):
         vector:
 
         >>> part = odl.uniform_partition(-np.pi / 2, np.pi / 2, 10)
-        >>> det = CircularDetector(part, radius=2)
+        >>> det = CircularDetector(part, axis=[1, 0], radius=2)
         >>> det.surface_deriv(0)
         array([ 2.,  0.])
 

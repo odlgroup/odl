@@ -129,8 +129,8 @@ class FanBeamGeometry(DivergentBeamGeometry):
         array([ 0., -1.])
         >>> geom.det_refpoint(0)
         array([ 0.,  5.])
+        >>> # (0, 5) + 10 * (sin(pi/6), cos(pi/6) - 1)
         >>> np.round(geom.det_point_position(0, np.pi / 6), 2)
-        # (0, 5) + 10 * (sin(pi/6), cos(pi/6) - 1)
         array([ 5.  ,  3.66])
 
         Specifying an initial detector position by default rotates the
