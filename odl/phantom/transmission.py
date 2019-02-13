@@ -1,4 +1,4 @@
-# Copyright 2014-2018 The ODL contributors
+# Copyright 2014-2019 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -324,6 +324,9 @@ def forbild(space, resolution=False, ear=True, value_type='density',
     if space.ndim != 2:
         raise TypeError('`space` must be two-dimensional')
 
+    scale, scale_in = str(scale).lower(), scale
+    value_type, value_type_in = str(value_type).lower(), value_type
+
     # Create analytic description of phantom
     phantomE, phantomC = _analytical_forbild_phantom(resolution, ear)
 
@@ -346,7 +349,7 @@ def forbild(space, resolution=False, ear=True, value_type='density',
         xcoord /= 10.0
         ycoord /= 10.0
     else:
-        raise ValueError('unknown `scale` {}'.format(scale))
+        raise ValueError('unknown `scale` {}'.format(scale_in))
 
     # Compute the phantom values in each voxel
     image = np.zeros(space.size)
@@ -396,7 +399,7 @@ def forbild(space, resolution=False, ear=True, value_type='density',
     elif value_type == 'density':
         return space.element(image.reshape(space.shape))
     else:
-        raise ValueError('unknown `value_type` {}'.format(value_type))
+        raise ValueError('unknown `value_type` {}'.format(value_type_in))
 
 
 if __name__ == '__main__':

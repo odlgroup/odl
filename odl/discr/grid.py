@@ -1,4 +1,4 @@
-# Copyright 2014-2018 The ODL contributors
+# Copyright 2014-2019 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -75,7 +75,7 @@ class RectGrid(Set):
     """
 
     def __init__(self, *coord_vectors):
-        """Initialize a new instance.
+        r"""Initialize a new instance.
 
         Parameters
         ----------

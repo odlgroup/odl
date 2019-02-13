@@ -77,23 +77,24 @@ def _fbp_filter(norm_freq, filter_type, frequency_scaling):
     ...                    filter_type='Hann',
     ...                    frequency_scaling=0.8)
     """
+    filter_type, filter_type_in = str(filter_type).lower(), filter_type
     if callable(filter_type):
         filt = filter_type(norm_freq)
-    elif filter_type.lower() == 'ram-lak':
+    elif filter_type == 'ram-lak':
         filt = np.copy(norm_freq)
-    elif filter_type.lower() == 'shepp-logan':
+    elif filter_type == 'shepp-logan':
         filt = norm_freq * np.sinc(norm_freq / (2 * frequency_scaling))
-    elif filter_type.lower() == 'cosine':
+    elif filter_type == 'cosine':
         filt = norm_freq * np.cos(norm_freq * np.pi / (2 * frequency_scaling))
-    elif filter_type.lower() == 'hamming':
+    elif filter_type == 'hamming':
         filt = norm_freq * (
             0.54 + 0.46 * np.cos(norm_freq * np.pi / (frequency_scaling)))
-    elif filter_type.lower() == 'hann':
+    elif filter_type == 'hann':
         filt = norm_freq * (
             np.cos(norm_freq * np.pi / (2 * frequency_scaling)) ** 2)
     else:
         raise ValueError('unknown `filter_type` ({})'
-                         ''.format(filter_type))
+                         ''.format(filter_type_in))
 
     indicator = (norm_freq <= frequency_scaling)
     filt *= indicator

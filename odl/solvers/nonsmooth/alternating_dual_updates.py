@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2019 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -149,6 +149,12 @@ def adupdates(x, g, L, stepsize, inner_stepsizes, niter, random=False,
     ranges = [opi.range for opi in L]
     if any(L[i].range != g[i].domain for i in range(length)):
         raise ValueError('L[i].range` should equal `g.domain`')
+
+    # Normalize string
+    callback_loop, callback_loop_in = str(callback_loop).lower(), callback_loop
+    if callback_loop not in ('inner', 'outer'):
+        raise ValueError('`callback_loop` {!r} not understood'
+                         ''.format(callback_loop_in))
 
     # Initialization of the dual variables
     duals = [space.zero() for space in ranges]

@@ -167,7 +167,7 @@ def _fcall_out_type(fcall):
 
 class FunctionSpace(LinearSpace):
 
-    """A vector space of functions.
+    r"""A vector space of functions.
 
     Elements in this space represent scalar-, vector- or tensor-valued
     functions on some set, usually a subset of a Euclidean space

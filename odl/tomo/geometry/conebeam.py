@@ -1,4 +1,4 @@
-# Copyright 2014-2018 The ODL contributors
+# Copyright 2014-2019 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -1212,7 +1212,7 @@ class ConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
 
 def cone_beam_geometry(space, src_radius, det_radius, num_angles=None,
                        short_scan=False, det_shape=None):
-    """Create a default fan or cone beam geometry from ``space``.
+    r"""Create a default fan or cone beam geometry from ``space``.
 
     This function is intended for simple test cases where users do not
     need the full flexibility of the geometries, but simply wants a
@@ -1294,42 +1294,42 @@ def cone_beam_geometry(space, src_radius, det_radius, num_angles=None,
     Notes
     -----
     According to [NW2001]_, pages 75--76, a function
-    :math:`f : \\mathbb{R}^2 \\to \\mathbb{R}` that has compact support
+    :math:`f : \mathbb{R}^2 \to \mathbb{R}` that has compact support
 
     .. math::
-        \| x \| > \\rho  \implies f(x) = 0,
+        \| x \| > \rho  \implies f(x) = 0,
 
     and is essentially bandlimited
 
     .. math::
-       \| \\xi \| > \\Omega \implies \\hat{f}(\\xi) \\approx 0,
+       \| \xi \| > \Omega \implies \hat{f}(\xi) \approx 0,
 
     can be fully reconstructed from a fan beam ray transform with
     source-detector distance :math:`r` (assuming all detector
     points have the same distance to the source) if (1) the projection
-    angles are sampled with a spacing of :math:`\\Delta \psi` such that
+    angles are sampled with a spacing of :math:`\Delta \psi` such that
 
     .. math::
-        \\Delta \psi \leq \\frac{r + \\rho}{r}\, \\frac{\\pi}{\\rho \\Omega},
+        \Delta \psi \leq \frac{r + \rho}{r}\, \frac{\pi}{\rho \Omega},
 
     and (2) the detector is sampled with an angular interval
-    :math:`\\Delta \\alpha` that satisfies
+    :math:`\Delta \alpha` that satisfies
 
     .. math::
-        \\Delta \\alpha \leq \\frac{\\pi}{r \\Omega}.
+        \Delta \alpha \leq \frac{\pi}{r \Omega}.
 
     For a flat detector, the angular interval is smallest in the center
     of the fan and largest at the boundaries. The worst-case relation
     between the linear and angular sampling intervals are
 
     .. math::
-        \\Delta s = R \\Delta \\alpha, \quad R^2 = r^2 + (w / 2)^2,
+        \Delta s = R \Delta \alpha, \quad R^2 = r^2 + (w / 2)^2,
 
     where :math:`w` is the width of the detector.
     Thus, to satisfy the angular detector condition one can choose
 
     .. math::
-        \\Delta s \leq \\frac{\\pi \sqrt{r^2 + (w / 2)^2}}{r \\Omega}.
+        \Delta s \leq \frac{\pi \sqrt{r^2 + (w / 2)^2}}{r \Omega}.
 
     The geometry returned by this function satisfies these conditions exactly.
 
@@ -1339,7 +1339,7 @@ def cone_beam_geometry(space, src_radius, det_radius, num_angles=None,
     2D fan beam case in the :math:`z = 0` slice. The vertical size of
     the detector is chosen such that it covers the object vertically
     with rays, using a containing cuboid
-    :math:`[-\\rho, \\rho]^2 \\times [z_{\mathrm{min}}, z_{\mathrm{min}}]`
+    :math:`[-\rho, \rho]^2 \times [z_{\mathrm{min}}, z_{\mathrm{min}}]`
     to compute the cone angle.
 
     References

@@ -1,3 +1,11 @@
+# Copyright 2014-2019 The ODL contributors
+#
+# This file is part of ODL.
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License,
+# v. 2.0. If a copy of the MPL was not distributed with this file, You can
+# obtain one at https://mozilla.org/MPL/2.0/.
+
 """Alternating Direction method of Multipliers (ADMM) method variants."""
 
 from __future__ import division
@@ -10,7 +18,7 @@ __all__ = ('admm_linearized',)
 
 
 def admm_linearized(x, f, g, L, tau, sigma, niter, **kwargs):
-    """Generic linearized ADMM method for convex problems.
+    r"""Generic linearized ADMM method for convex problems.
 
     ADMM stands for "Alternating Direction Method of Multipliers" and
     is a popular convex optimization method. This variant solves problems
@@ -50,22 +58,22 @@ def admm_linearized(x, f, g, L, tau, sigma, niter, **kwargs):
     iteration:
 
     .. math::
-        x^{(k+1)} &= \mathrm{prox}_{\\tau f} \\left[
-            x^{(k)} - \sigma^{-1}\\tau L^*\\big(
+        x^{(k+1)} &= \mathrm{prox}_{\tau f} \left[
+            x^{(k)} - \sigma^{-1}\tau L^*\big(
                 L x^{(k)} - z^{(k)} + u^{(k)}
-            \\big)
-        \\right]
+            \big)
+        \right]
 
-        z^{(k+1)} &= \mathrm{prox}_{\sigma g}\\left(
+        z^{(k+1)} &= \mathrm{prox}_{\sigma g}\left(
             L x^{(k+1)} + u^{(k)}
-        \\right)
+        \right)
 
         u^{(k+1)} &= u^{(k)} + L x^{(k+1)} - z^{(k+1)}
 
-    The step size parameters :math:`\\tau` and :math:`\sigma` must satisfy
+    The step size parameters :math:`\tau` and :math:`\sigma` must satisfy
 
     .. math::
-        0 < \\tau < \\frac{\sigma}{\|L\|^2}
+        0 < \tau < \frac{\sigma}{\|L\|^2}
 
     to guarantee convergence.
 

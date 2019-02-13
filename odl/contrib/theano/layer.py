@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2019 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -166,7 +166,7 @@ class TheanoOperator(theano.Op):
             return [tuple(native(si) for si in self.operator.range.shape)]
 
     def grad(self, inputs, output_grads):
-        """Apply the adjoint of the Jacobian at ``inputs`` to ``output_grads``.
+        r"""Apply adjoint of the Jacobian at ``inputs`` to ``output_grads``.
 
         Parameters
         ----------
@@ -225,14 +225,14 @@ class TheanoOperator(theano.Op):
         In ODL language, what ``grad`` should compute is
 
             .. math::
-                \\nabla(C \circ f)(x) = f'(x)^*\\big(\\nabla C (f(x))\\big)
+                \nabla(C \circ f)(x) = f'(x)^*\big(\nabla C (f(x))\big)
 
         according to the chain rule. In ODL code, this corresponds to ::
 
             f.derivative(x).adjoint(C.gradient(f(x))).
 
         Then, the parameter ``output_grads`` contains a single tensor
-        variable ``y`` that stands for :math:`\\nabla C(f(x))`. Thus,
+        variable ``y`` that stands for :math:`\nabla C(f(x))`. Thus,
         ``grad`` boils down to taking the ``output_grads`` ``[y]`` and
         return ``[f'(x)^*(y)]`` symbolically, where ``inputs == [x]``.
 

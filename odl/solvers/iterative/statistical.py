@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2019 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -65,12 +65,12 @@ def mlem(op, x, data, niter, noise='poisson', callback=None, **kwargs):
     the algorithm attempts find an :math:`x` that maximizes:
 
     .. math::
-        P(g | g \\text{ is } X(A(x)) \\text{ distributed}).
+        P(g | g \text{ is } X(A(x)) \text{ distributed}).
 
     With 'poisson' noise the algorithm is given by:
 
     .. math::
-       x_{n+1} = \\frac{x_n}{A^* 1} A^* (g / A(x_n))
+       x_{n+1} = \frac{x_n}{A^* 1} A^* (g / A(x_n))
 
     See Also
     --------
@@ -82,7 +82,7 @@ def mlem(op, x, data, niter, noise='poisson', callback=None, **kwargs):
 
 
 def osmlem(op, x, data, niter, noise='poisson', callback=None, **kwargs):
-    """Ordered Subsets Maximum Likelihood Expectation Maximation algorithm.
+    r"""Ordered Subsets Maximum Likelihood Expectation Maximation algorithm.
 
     This solver attempts to solve::
 
@@ -129,13 +129,13 @@ def osmlem(op, x, data, niter, noise='poisson', callback=None, **kwargs):
     maximizes:
 
     .. math::
-        \prod_{i=1}^M P(g_i | g_i \\text{ is } X(A_i(x)) \\text{ distributed}).
+        \prod_{i=1}^M P(g_i | g_i \text{ is } X(A_i(x)) \text{ distributed}).
 
     With 'poisson' noise the algorithm is given by partial updates:
 
     .. math::
        x_{n + m/M} =
-       \\frac{x_{n + (m - 1)/M}}{A_i^* 1} A_i^* (g_i / A_i(x_{n + (m - 1)/M}))
+       \frac{x_{n + (m - 1)/M}}{A_i^* 1} A_i^* (g_i / A_i(x_{n + (m - 1)/M}))
 
     for :math:`m = 1, ..., M` and :math:`x_{n+1} = x_{n + M/M}`.
 
@@ -153,8 +153,8 @@ def osmlem(op, x, data, niter, noise='poisson', callback=None, **kwargs):
     """
     noise, noise_in = str(noise).lower(), noise
     if noise not in AVAILABLE_MLEM_NOISE:
-        raise NotImplemented("noise '{}' not understood"
-                             ''.format(noise_in))
+        raise NotImplementedError("noise '{}' not understood"
+                                  ''.format(noise_in))
 
     n_ops = len(op)
     if len(data) != n_ops:
@@ -220,8 +220,8 @@ def loglikelihood(x, data, noise='poisson'):
     """
     noise, noise_in = str(noise).lower(), noise
     if noise not in AVAILABLE_MLEM_NOISE:
-        raise NotImplemented("noise '{}' not understood"
-                             ''.format(noise_in))
+        raise NotImplementedError("noise '{}' not understood"
+                                  ''.format(noise_in))
 
     if noise == 'poisson':
         if np.any(np.less(x, 0)):

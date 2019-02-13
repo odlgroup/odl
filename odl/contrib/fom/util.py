@@ -1,4 +1,4 @@
-# Copyright 2014-2018 The ODL contributors
+# Copyright 2014-2019 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -51,6 +51,10 @@ def filter_image_sep2d(image, fh, fv, impl='numpy', padding=None):
     """
     # TODO: generalize for nD
     impl, impl_in = str(impl).lower(), impl
+    if impl not in ('numpy', 'pyfftw'):
+        raise ValueError('`impl` {!r} not understood'
+                         ''.format(impl_in))
+
     image = np.asarray(image)
     if image.ndim != 2:
         raise ValueError('`image` must be 2-dimensional, got image with '
@@ -185,7 +189,7 @@ def filter_image_sep2d(image, fh, fv, impl='numpy', padding=None):
 
 
 def haarpsi_similarity_map(img1, img2, axis, c, a):
-    """Local similarity map for directional features along an axis.
+    r"""Local similarity map for directional features along an axis.
 
     Parameters
     ----------
@@ -214,11 +218,11 @@ def haarpsi_similarity_map(img1, img2, axis, c, a):
 
     .. math::
         \mathrm{HS}_{f_1, f_2}^{(k)}(x) =
-        l_a \\left(
-        \\frac{1}{2} \sum_{j=1}^2
-        S\\left(\\left|g_j^{(k)} \\ast f_1 \\right|(x),
-        \\left|g_j^{(k)} \\ast f_2 \\right|(x), c\\right)
-        \\right),
+        l_a \left(
+        \frac{1}{2} \sum_{j=1}^2
+        S\left(\left|g_j^{(k)} \ast f_1 \right|(x),
+        \left|g_j^{(k)} \ast f_2 \right|(x), c\right)
+        \right),
 
     see `[Rei+2016] <https://arxiv.org/abs/1607.06140>`_ equation (10).
     Here, the superscript :math:`(k)` refers to the axis (0 or 1)
@@ -227,7 +231,7 @@ def haarpsi_similarity_map(img1, img2, axis, c, a):
     is the pointwise similarity score
 
     .. math::
-        S(x, y, c) = \\frac{2xy + c^2}{x^2 + y^2 + c^2},
+        S(x, y, c) = \frac{2xy + c^2}{x^2 + y^2 + c^2},
 
     Hence, :math:`c` is the :math:`y`-value at which the score
     drops to :math:`1 / 2` for :math:`x = 0`. In other words, the smaller
@@ -247,7 +251,7 @@ def haarpsi_similarity_map(img1, img2, axis, c, a):
         ...
 
     The logistic function :math:`l_a` transforms values in
-    :math:`[0, \\infty)` to :math:`[1/2, 1)`, where the parameter
+    :math:`[0, \infty)` to :math:`[1/2, 1)`, where the parameter
     :math:`a` determines how fast the curve attains values close
     to 1. Larger :math:`a` means that smaller :math:`x` will yield
     a value :math:`l_a(x)` close to 1 (and thus result in a higher
@@ -324,7 +328,7 @@ def haarpsi_similarity_map(img1, img2, axis, c, a):
 
 
 def haarpsi_weight_map(img1, img2, axis):
-    """Weighting map for directional features along an axis.
+    r"""Weighting map for directional features along an axis.
 
     Parameters
     ----------
@@ -346,10 +350,10 @@ def haarpsi_weight_map(img1, img2, axis):
 
     .. math::
         \mathrm{W}_{f_1, f_2}^{(k)}(x) =
-        \max \\left\{
-        \\left|g_3^{(k)} \\ast f_1 \\right|(x),
-        \\left|g_3^{(k)} \\ast f_2 \\right|(x)
-        \\right\},
+        \max \left\{
+            \left|g_3^{(k)} \ast f_1 \right|(x),
+            \left|g_3^{(k)} \ast f_2 \right|(x)
+        \right\},
 
     see `[Rei+2016] <https://arxiv.org/abs/1607.06140>`_ equations (11)
     and (13).

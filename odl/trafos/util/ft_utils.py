@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2019 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -640,7 +640,7 @@ def reciprocal_space(space, axes=None, halfcomplex=False, shift=True,
     for i in axes:
         # Avoid double math
         label = axis_labels[i].replace('$', '')
-        axis_labels[i] = '$\^{{{}}}$'.format(label)
+        axis_labels[i] = '$\\^{{{}}}$'.format(label)
 
     recip_spc = uniform_discr_frompartition(part, exponent=exponent,
                                             dtype=dtype, impl=impl,

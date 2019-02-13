@@ -1,6 +1,6 @@
 # coding=utf-8
 
-# Copyright 2014-2018 The ODL contributors
+# Copyright 2014-2019 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -858,7 +858,7 @@ class FunctionalTranslation(Functional):
 
     @property
     def convex_conj(self):
-        """Convex conjugate functional of the translated functional.
+        r"""Convex conjugate functional of the translated functional.
 
         Notes
         -----

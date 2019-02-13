@@ -1,4 +1,4 @@
-# Copyright 2014-2018 The ODL contributors
+# Copyright 2014-2019 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -19,7 +19,7 @@ __all__ = ('conjugate_gradient_nonlinear',)
 def conjugate_gradient_nonlinear(f, x, line_search=1.0, maxiter=1000, nreset=0,
                                  tol=1e-16, beta_method='FR',
                                  callback=None):
-    """Conjugate gradient for nonlinear problems.
+    r"""Conjugate gradient for nonlinear problems.
 
     Parameters
     ----------
@@ -58,11 +58,11 @@ def conjugate_gradient_nonlinear(f, x, line_search=1.0, maxiter=1000, nreset=0,
         \min f(x)
 
     for a differentiable functional
-    :math:`f: \mathcal{X}\\to \mathbb{R}` on a Hilbert space
+    :math:`f: \mathcal{X}\to \mathbb{R}` on a Hilbert space
     :math:`\mathcal{X}`. It does so by finding a zero of the gradient
 
     .. math::
-        \\nabla f: \mathcal{X} \\to \mathcal{X}.
+        \nabla f: \mathcal{X} \to \mathcal{X}.
 
     The method is described in a
     `Wikipedia article

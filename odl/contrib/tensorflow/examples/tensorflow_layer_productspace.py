@@ -25,8 +25,7 @@ x_tf = tf.ones([1, 10, 10, 1])
 z_tf = tf.ones([1, 2, 10, 10, 1])
 
 # Create tensorflow layer from odl operator
-odl_op_layer = odl.contrib.tensorflow.as_tensorflow_layer(
-        odl_op, 'Gradient')
+odl_op_layer = odl.contrib.tensorflow.as_tensorflow_layer(odl_op, 'Gradient')
 y_tf = odl_op_layer(x_tf)
 
 # Evaluate using tensorflow

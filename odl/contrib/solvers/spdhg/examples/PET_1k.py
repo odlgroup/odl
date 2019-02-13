@@ -1,4 +1,4 @@
-# Copyright 2014-2018 The ODL contributors
+# Copyright 2014-2019 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -331,7 +331,7 @@ algs = ['pdhg', 'pesquet10', 'pesquet50', 'spdhg10', 'spdhg50']
 iter_save_v, niter_v, image_v, out_v, nsub_v = {}, {}, {}, {}, {}
 for a in algs:
     (iter_save_v[a], niter_v[a], image_v[a], out_v[a], nsub_v[a]) = np.load(
-     '{}/{}_output.npy'.format(folder_npy, a))
+        '{}/{}_output.npy'.format(folder_npy, a))
 
 epochs_save = {a: np.array(iter_save_v[a]) / np.float(nsub_v[a]) for a in algs}
 
@@ -444,8 +444,8 @@ mevery = [(i / 30., .15) for i in range(20)]  # how many markers to draw
 msize = 9  # marker size
 
 algs = ['pdhg', 'spdhg10', 'spdhg50', 'pesquet10', 'pesquet50']
-label = ['PDHG', 'SPDHG (10 subsets)', 'SPDHG (50)', 'Pesquet\&Repetti (10)',
-         'Pesquet\&Repetti (50)']
+label = ['PDHG', 'SPDHG (10 subsets)', 'SPDHG (50)', 'Pesquet\\&Repetti (10)',
+         'Pesquet\\&Repetti (50)']
 fig = []
 
 # ### draw figures

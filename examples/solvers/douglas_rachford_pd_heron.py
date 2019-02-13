@@ -1,4 +1,4 @@
-"""Solves the generalized Heron problem using the Douglas-Rachford solver.
+r"""Solves the generalized Heron problem using the Douglas-Rachford solver.
 
 The generalized Heron problem is defined as
 

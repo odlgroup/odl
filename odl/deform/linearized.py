@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2019 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -79,7 +79,7 @@ def linear_deform(template, displacement, out=None):
 
 class LinDeformFixedTempl(Operator):
 
-    """Deformation operator with fixed template acting on displacement fields.
+    r"""Deformation operator with fixed template acting on displacement fields.
 
     The operator has a fixed template ``I`` and maps a displacement
     field ``v`` to the new function ``x --> I(x + v(x))``.
@@ -91,12 +91,12 @@ class LinDeformFixedTempl(Operator):
     Notes
     -----
     For :math:`\Omega \subset \mathbb{R}^d`, we take :math:`X = L^p(\Omega)`
-    to be the template space, i.e. :math:`I \\in X`. Then the vector field
+    to be the template space, i.e. :math:`I \in X`. Then the vector field
     space is identified with :math:`V := X^d`. Hence the deformation operator
     with fixed template maps :math:`V` into :math:`X`:
 
     .. math::
-        W_I : V \\to X, \quad W_I(v) := I(\cdot + v(\cdot)),
+        W_I : V \to X, \quad W_I(v) := I(\cdot + v(\cdot)),
 
     i.e., :math:`W_I(v)(x) = I(x + v(x))`.
 
@@ -104,20 +104,20 @@ class LinDeformFixedTempl(Operator):
     an operator that maps :math:`V` into :math:`X`:
 
     .. math::
-        W_I'(v) : V \\to X, \quad W_I'(v)(u) =
-        \\big< \\nabla I(\cdot + v(\cdot)), u \\big>_{\mathbb{R}^d},
+        W_I'(v) : V \to X, \quad W_I'(v)(u) =
+        \big< \nabla I(\cdot + v(\cdot)), u \big>_{\mathbb{R}^d},
 
-    i.e., :math:`W_I'(v)(u)(x) = \\nabla I(x + v(x))^T u(x)`,
+    i.e., :math:`W_I'(v)(u)(x) = \nabla I(x + v(x))^T u(x)`,
 
     which is to be understood as a point-wise inner product, resulting
     in a function in :math:`X`. And the adjoint of the preceding derivative
     is also an operator that maps :math:`X` into :math:`V`:
 
     .. math::
-        W_I'(v)^* : X \\to V, \quad W_I'(v)^*(J) =
-        J \, \\nabla I(\cdot + v(\cdot)),
+        W_I'(v)^* : X \to V, \quad W_I'(v)^*(J) =
+        J \, \nabla I(\cdot + v(\cdot)),
 
-    i.e., :math:`W_I'(v)^*(J)(x) = J(x) \, \\nabla I(x + v(x))`.
+    i.e., :math:`W_I'(v)^*(J)(x) = J(x) \, \nabla I(x + v(x))`.
     """
 
     def __init__(self, template, domain=None):
@@ -240,7 +240,7 @@ class LinDeformFixedTempl(Operator):
 
 class LinDeformFixedDisp(Operator):
 
-    """Deformation operator with fixed displacement acting on templates.
+    r"""Deformation operator with fixed displacement acting on templates.
 
     The operator has a fixed displacement field ``v`` and maps a template
     ``I`` to the new function ``x --> I(x + v(x))``.
@@ -254,10 +254,10 @@ class LinDeformFixedDisp(Operator):
     For :math:`\Omega \subset \mathbb{R}^d`, we take :math:`V := X^d`
     to be the space of displacement fields, where :math:`X = L^p(\Omega)`
     is the template space. Hence the deformation operator with the fixed
-    displacement field :math:`v \\in V` maps :math:`X` into :math:`X`:
+    displacement field :math:`v \in V` maps :math:`X` into :math:`X`:
 
     .. math::
-        W_v : X \\to X, \quad W_v(I) := I(\cdot + v(\cdot)),
+        W_v : X \to X, \quad W_v(I) := I(\cdot + v(\cdot)),
 
     i.e., :math:`W_v(I)(x) = I(x + v(x))`.
 
@@ -266,9 +266,9 @@ class LinDeformFixedDisp(Operator):
     though, one can approximate the adjoint by
 
     .. math::
-        W_v^*(I) \\approx \exp(-\mathrm{div}\, v) \, I(\cdot - v(\cdot)),
+        W_v^*(I) \approx \exp(-\mathrm{div}\, v) \, I(\cdot - v(\cdot)),
 
-    i.e., :math:`W_v^*(I)(x) \\approx \exp(-\mathrm{div}\,v(x))\, I(x - v(x))`.
+    i.e., :math:`W_v^*(I)(x) \approx \exp(-\mathrm{div}\,v(x))\, I(x - v(x))`.
     """
 
     def __init__(self, displacement, templ_space=None):

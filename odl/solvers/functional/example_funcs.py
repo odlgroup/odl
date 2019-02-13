@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2019 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -21,7 +21,7 @@ __all__ = ('RosenbrockFunctional',)
 
 class RosenbrockFunctional(Functional):
 
-    """The well-known Rosenbrock function on ``R^n``.
+    r"""The well-known Rosenbrock function on ``R^n``.
 
     The `Rosenbrock function`_ is often used as a test problem in
     smooth optimization.

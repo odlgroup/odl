@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2019 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -29,7 +29,7 @@ class NumericalDerivative(Operator):
     """
 
     def __init__(self, operator, point, method='forward', step=None):
-        """Initialize a new instance.
+        r"""Initialize a new instance.
 
         Parameters
         ----------
@@ -70,24 +70,24 @@ class NumericalDerivative(Operator):
         ``method='backward'``:
 
         .. math::
-            \\partial A(x)(dx) =
-            (A(x) - A(x - dx \\cdot h / \| dx \|))
-            \\cdot \\frac{\| dx \|}{h}
+            \partial A(x)(dx) =
+            (A(x) - A(x - dx \cdot h / \| dx \|))
+            \cdot \frac{\| dx \|}{h}
 
         ``method='forward'``:
 
         .. math::
-            \\partial A(x)(dx) =
-            (A(x + dx \\cdot h / \| dx \|) - A(x))
-            \\cdot \\frac{\| dx \|}{h}
+            \partial A(x)(dx) =
+            (A(x + dx \cdot h / \| dx \|) - A(x))
+            \cdot \frac{\| dx \|}{h}
 
         ``method='central'``:
 
         .. math::
-            \\partial A(x)(dx) =
-            (A(x + dx \\cdot h / (2 \| dx \|)) -
-             A(x - dx \\cdot h / (2 \| dx \|))
-            \\cdot \\frac{\| dx \|}{h}
+            \partial A(x)(dx) =
+            (A(x + dx \cdot h / (2 \| dx \|)) -
+             A(x - dx \cdot h / (2 \| dx \|))
+            \cdot \frac{\| dx \|}{h}
 
         The number of operator evaluations is ``2``, regardless of parameters.
         """
@@ -198,17 +198,17 @@ class NumericalGradient(Operator):
         ``method='backward'``:
 
         .. math::
-            (\\nabla f(x))_i = \\frac{f(x) - f(x - h e_i)}{h}
+            (\nabla f(x))_i = \frac{f(x) - f(x - h e_i)}{h}
 
         ``method='forward'``:
 
         .. math::
-            (\\nabla f(x))_i = \\frac{f(x + h e_i) - f(x)}{h}
+            (\nabla f(x))_i = \frac{f(x + h e_i) - f(x)}{h}
 
         ``method='central'``:
 
         .. math::
-            (\\nabla f(x))_i = \\frac{f(x + (h/2) e_i) - f(x - (h/2) e_i)}{h}
+            (\nabla f(x))_i = \frac{f(x + (h/2) e_i) - f(x - (h/2) e_i)}{h}
 
         The number of function evaluations is ``functional.domain.size + 1`` if
         ``'backward'`` or ``'forward'`` is used and

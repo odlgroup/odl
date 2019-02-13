@@ -1,4 +1,4 @@
-# Copyright 2014-2018 The ODL contributors
+# Copyright 2014-2019 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -384,7 +384,7 @@ mevery = [(i / 30., .1) for i in range(20)]  # how many markers to draw
 msize = 9  # marker size
 
 algs = ['pdhg', 'pa_pdhg', 'spdhg_uni2', 'pa_spdhg_uni2', 'pesquet_uni2']
-label = ['PDHG', 'PA-PDHG', 'SPDHG', 'PA-SPDHG', 'Pesquet\&Repetti']
+label = ['PDHG', 'PA-PDHG', 'SPDHG', 'PA-SPDHG', 'Pesquet\\&Repetti']
 fig = []
 
 # draw first figure

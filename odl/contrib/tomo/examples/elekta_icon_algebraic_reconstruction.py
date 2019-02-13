@@ -17,7 +17,7 @@ space = tomo.elekta_icon_space(shape=(112, 112, 112))
 
 # Create sub-geometries using geometry indexing
 step = int(np.ceil(geometry.angles.size / subsets))
-geometries = [geometry[i * step:(i+1) * step] for i in range(subsets)]
+geometries = [geometry[i * step:(i + 1) * step] for i in range(subsets)]
 
 # Create ray transform
 ray_transforms = [odl.tomo.RayTransform(space, geom, use_cache=False)
