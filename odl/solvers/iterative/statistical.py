@@ -11,13 +11,10 @@
 from __future__ import print_function, division, absolute_import
 import numpy as np
 
-__all__ = ('mlem', 'osmlem', 'loglikelihood')
+__all__ = ('mlem', 'osmlem', 'poisson_log_likelihood')
 
 
-AVAILABLE_MLEM_NOISE = ('poisson',)
-
-
-def mlem(op, x, data, niter, noise='poisson', callback=None, **kwargs):
+def mlem(op, x, data, niter, callback=None, **kwargs):
 
     """Maximum Likelihood Expectation Maximation algorithm.
 
@@ -25,13 +22,12 @@ def mlem(op, x, data, niter, noise='poisson', callback=None, **kwargs):
 
         max_x L(x | data)
 
-    where ``L(x | data)`` is the likelihood of ``x`` given ``data``. The
-    likelihood depends on the forward operator ``op`` such that
+    where ``L(x | data)`` is the Poisson likelihood of ``x`` given ``data``.
+    The likelihood depends on the forward operator ``op`` such that
     (approximately)::
 
         op(x) = data
 
-    With the precise form of *approximately* is determined by ``noise``.
 
     Parameters
     ----------
@@ -41,33 +37,30 @@ def mlem(op, x, data, niter, noise='poisson', callback=None, **kwargs):
         Vector to which the result is written. Its initial value is
         used as starting point of the iteration, and its values are
         updated in each iteration step.
+        The initial value of ``x`` should be non-negative.
     data : ``op.range`` `element-like`
         Right-hand side of the equation defining the inverse problem.
     niter : int
         Number of iterations.
-    noise : {'poisson'}, optional
-        Noise model determining the variant of MLEM.
-        For ``'poisson'``, the initial value of ``x`` should be
-        non-negative.
     callback : callable, optional
         Function called with the current iterate after each iteration.
 
     Other Parameters
     ----------------
     sensitivities : float or ``op.domain`` `element-like`, optional
-        Usable with ``noise='poisson'``. The algorithm contains a ``A^T 1``
+        The algorithm contains a ``A^T 1``
         term, if this parameter is given, it is replaced by it.
         Default: ``op.adjoint(op.range.one())``
 
     Notes
     -----
-    Given a forward model :math:`A`, data :math:`g` and noise model :math:`X`,
-    the algorithm attempts find an :math:`x` that maximizes:
+    Given a forward model :math:`A` and data :math:`g`,
+    the algorithm attempts to find an :math:`x` that maximizes:
 
     .. math::
-        P(g | g \text{ is } X(A(x)) \text{ distributed}).
+        P(g | g \text{ is } Poisson(A(x)) \text{ distributed}).
 
-    With 'poisson' noise the algorithm is given by:
+    The algorithm is explicitly given by:
 
     .. math::
        x_{n+1} = \frac{x_n}{A^* 1} A^* (g / A(x_n))
@@ -77,11 +70,11 @@ def mlem(op, x, data, niter, noise='poisson', callback=None, **kwargs):
     osmlem : Ordered subsets MLEM
     loglikelihood : Function for calculating the logarithm of the likelihood
     """
-    osmlem([op], x, [data], niter=niter, noise=noise, callback=callback,
+    osmlem([op], x, [data], niter=niter, callback=callback,
            **kwargs)
 
 
-def osmlem(op, x, data, niter, noise='poisson', callback=None, **kwargs):
+def osmlem(op, x, data, niter, callback=None, **kwargs):
     r"""Ordered Subsets Maximum Likelihood Expectation Maximation algorithm.
 
     This solver attempts to solve::
@@ -94,7 +87,6 @@ def osmlem(op, x, data, niter, noise='poisson', callback=None, **kwargs):
 
         op[i](x) = data[i]
 
-    where the precise form of *approximately* is determined by ``noise``.
 
     Parameters
     ----------
@@ -104,34 +96,33 @@ def osmlem(op, x, data, niter, noise='poisson', callback=None, **kwargs):
         Vector to which the result is written. Its initial value is
         used as starting point of the iteration, and its values are
         updated in each iteration step.
-    data : sequence of ``op.range`` `element-like`
+        The initial value of ``x`` should be non-negative.
+      data : sequence of ``op.range`` `element-like`
         Right-hand sides of the equation defining the inverse problem.
     niter : int
         Number of iterations.
-    noise : {'poisson'}, optional
-        Noise model determining the variant of MLEM.
-        For ``'poisson'``, the initial value of ``x`` should be
-        non-negative.
     callback : callable, optional
         Function called with the current iterate after each iteration.
 
     Other Parameters
     ----------------
     sensitivities : float or ``op.domain`` `element-like`, optional
-        Usable with ``noise='poisson'``. The algorithm contains an ``A^T 1``
+        The algorithm contains an ``A^T 1``
         term, if this parameter is given, it is replaced by it.
         Default: ``op[i].adjoint(op[i].range.one())``
 
     Notes
     -----
-    Given a forward models :math:`A_i`, data :math:`g_i`, :math:`i = 1, ..., M`
-    and noise model :math:`X`, the algorithm attempts find an :math:`x` that
+    Given forward models :math:`A_i`, and data :math:`g_i`,
+    :math:`i = 1, ..., M`,
+    the algorithm attempts to find an :math:`x` that
     maximizes:
 
     .. math::
-        \prod_{i=1}^M P(g_i | g_i \text{ is } X(A_i(x)) \text{ distributed}).
+        \prod_{i=1}^M P(g_i | g_i \text{ is }
+        Poisson(A_i(x)) \text{ distributed}).
 
-    With 'poisson' noise the algorithm is given by partial updates:
+    The algorithm is explicitly given by partial updates:
 
     .. math::
        x_{n + m/M} =
@@ -151,11 +142,6 @@ def osmlem(op, x, data, niter, noise='poisson', callback=None, **kwargs):
     mlem : Ordinary MLEM algorithm without subsets.
     loglikelihood : Function for calculating the logarithm of the likelihood
     """
-    noise, noise_in = str(noise).lower(), noise
-    if noise not in AVAILABLE_MLEM_NOISE:
-        raise NotImplementedError("noise '{}' not understood"
-                                  ''.format(noise_in))
-
     n_ops = len(op)
     if len(data) != n_ops:
         raise ValueError('number of data ({}) does not match number of '
@@ -166,48 +152,45 @@ def osmlem(op, x, data, niter, noise='poisson', callback=None, **kwargs):
     # Convert data to range elements
     data = [op[i].range.element(data[i]) for i in range(len(op))]
 
-    if noise == 'poisson':
-        # Parameter used to enforce positivity.
-        # TODO: let users give this.
-        eps = 1e-8
+    # Parameter used to enforce positivity.
+    # TODO: let users give this.
+    eps = 1e-8
 
-        if np.any(np.less(x, 0)):
-            raise ValueError('`x` must be non-negative')
+    if np.any(np.less(x, 0)):
+        raise ValueError('`x` must be non-negative')
 
-        # Extract the sensitivites parameter
-        sensitivities = kwargs.pop('sensitivities', None)
-        if sensitivities is None:
-            sensitivities = [np.maximum(opi.adjoint(opi.range.one()), eps)
-                             for opi in op]
-        else:
-            # Make sure the sensitivities is a list of the correct size.
-            try:
-                list(sensitivities)
-            except TypeError:
-                sensitivities = [sensitivities] * n_ops
-
-        tmp_dom = op[0].domain.element()
-        tmp_ran = [opi.range.element() for opi in op]
-
-        for _ in range(niter):
-            for i in range(n_ops):
-                op[i](x, out=tmp_ran[i])
-                tmp_ran[i].ufuncs.maximum(eps, out=tmp_ran[i])
-                data[i].divide(tmp_ran[i], out=tmp_ran[i])
-
-                op[i].adjoint(tmp_ran[i], out=tmp_dom)
-                tmp_dom /= sensitivities[i]
-
-                x *= tmp_dom
-
-                if callback is not None:
-                    callback(x)
+    # Extract the sensitivites parameter
+    sensitivities = kwargs.pop('sensitivities', None)
+    if sensitivities is None:
+        sensitivities = [np.maximum(opi.adjoint(opi.range.one()), eps)
+                         for opi in op]
     else:
-        raise RuntimeError('unknown noise model')
+        # Make sure the sensitivities is a list of the correct size.
+        try:
+            list(sensitivities)
+        except TypeError:
+            sensitivities = [sensitivities] * n_ops
+
+    tmp_dom = op[0].domain.element()
+    tmp_ran = [opi.range.element() for opi in op]
+
+    for _ in range(niter):
+        for i in range(n_ops):
+            op[i](x, out=tmp_ran[i])
+            tmp_ran[i].ufuncs.maximum(eps, out=tmp_ran[i])
+            data[i].divide(tmp_ran[i], out=tmp_ran[i])
+
+            op[i].adjoint(tmp_ran[i], out=tmp_dom)
+            tmp_dom /= sensitivities[i]
+
+            x *= tmp_dom
+
+            if callback is not None:
+                callback(x)
 
 
-def loglikelihood(x, data, noise='poisson'):
-    """log-likelihood of ``data`` given noise parametrized by ``x``.
+def poisson_log_likelihood(x, data):
+    """Poisson log-likelihood of ``data`` given noise parametrized by ``x``.
 
     Parameters
     ----------
@@ -215,18 +198,8 @@ def loglikelihood(x, data, noise='poisson'):
         Value to condition the log-likelihood on.
     data : ``op.range`` element
         Data whose log-likelihood given ``x`` shall be calculated.
-    noise : {'poisson'}, optional
-        The type of noise.
     """
-    noise, noise_in = str(noise).lower(), noise
-    if noise not in AVAILABLE_MLEM_NOISE:
-        raise NotImplementedError("noise '{}' not understood"
-                                  ''.format(noise_in))
+    if np.any(np.less(x, 0)):
+        raise ValueError('`x` must be non-negative')
 
-    if noise == 'poisson':
-        if np.any(np.less(x, 0)):
-            raise ValueError('`x` must be non-negative')
-
-        return np.sum(data * np.log(x + 1e-8) - x)
-    else:
-        raise RuntimeError('unknown noise model')
+    return np.sum(data * np.log(x + 1e-8) - x)
