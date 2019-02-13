@@ -65,10 +65,7 @@ install:
       fi
 
     # Install our package
-    - pip install -e .
-
-before_script:
-    - pip install -r test_requirements.txt
+    - pip install -e .[testing]
 
 script:
     # Run tests and produce a coverage report.
