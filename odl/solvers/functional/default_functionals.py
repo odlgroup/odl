@@ -1661,7 +1661,6 @@ class SeparableSum(Functional):
                 isinstance(functionals[1], Integral)):
             functionals = [functionals[0]] * functionals[1]
 
-        # Check that all elements of `functionals` are indeed functionals
         if not all(isinstance(op, Functional) for op in functionals):
             raise TypeError('all arguments must be `Functional` instances')
 
