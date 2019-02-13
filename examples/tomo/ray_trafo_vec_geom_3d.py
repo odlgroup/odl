@@ -20,11 +20,11 @@ reco_space = odl.uniform_discr(
 angle_partition = odl.uniform_partition(0, 2 * np.pi, 180)
 # Detector: uniformly sampled, n = (512, 512), min = (-30, -30), max = (30, 30)
 detector_partition = odl.uniform_partition([-30, -30], [30, 30], [512, 512])
-circle_geometry = odl.tomo.CircularConeFlatGeometry(
+circle_geometry = odl.tomo.ConeFlatGeometry(
     angle_partition, detector_partition, src_radius=1000, det_radius=100,
     axis=[1, 0, 0])
 
-circle_vecs = odl.tomo.astra_conebeam_3d_geom_to_vec(circle_geometry)
+circle_vecs = odl.tomo.cone_3d_geom_to_astra_vecs(circle_geometry)
 
 # Cover the whole volume vertically, somewhat undersampled though
 vert_shift_min = -22
