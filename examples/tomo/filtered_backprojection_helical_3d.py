@@ -27,7 +27,7 @@ geometry = odl.tomo.helical_geometry(space,
                                      src_radius=100, det_radius=100,
                                      num_turns=7.5, num_angles=1000)
 
-# --- Create Filtered Back-Projection (FBP) operator --- #
+# --- Create Filtered Back-projection (FBP) operator --- #
 
 
 # Ray transform (= forward projection).
@@ -58,9 +58,9 @@ w_fbp_reconstruction = windowed_fbp(proj_data)
 # Show a slice of phantom, projections, and reconstruction
 phantom.show(title='Phantom',
              coords=[0, None, None], clim=[-0.1, 1.1])
-proj_data.show(title='Simulated data (sinogram)')
-fbp_reconstruction.show(title='Filtered back-projection',
+proj_data.show(title='Simulated Data (Sinogram)')
+fbp_reconstruction.show(title='Filtered Back-projection',
                         coords=[0, None, None], clim=[-0.1, 1.1])
-w_fbp_reconstruction.show(title='Windowed filtered back-projection',
+w_fbp_reconstruction.show(title='Windowed Filtered back-projection',
                           coords=[0, None, None], clim=[-0.1, 1.1],
                           force_show=True)

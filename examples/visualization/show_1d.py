@@ -14,7 +14,7 @@ space = odl.uniform_discr(0, 5, 100)
 elem = space.element(np.sin)
 
 # Get figure object
-fig = elem.show(title='Sine functions')
+fig = elem.show(title='Sine Functions')
 # Plot into the same figure
 fig = (elem / 2).show(fig=fig)
 

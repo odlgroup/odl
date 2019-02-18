@@ -63,11 +63,11 @@ proj_data = ray_trafo(phantom)
 
 # Axis in this image is x. This corresponds to 0 degrees.
 proj_data.show(indices=[0, None],
-               title='Projection at 0 degrees ~ Sum along y axis')
+               title='Projection at 0 Degrees ~ Sum Along Y Axis')
 fig, ax = plt.subplots()
 ax.plot(sum_along_y)
 ax.set_xlabel('x')
-plt.title('Sum along y axis')
+plt.title('Sum Along Y Axis')
 plt.show()
 # Check axes in geometry
 axis_sum_y = geometry.det_axis(np.deg2rad(0))
@@ -79,11 +79,11 @@ assert np.allclose(axis_sum_y, [1, 0])
 
 # Axis in this image is y. This corresponds to 90 degrees.
 proj_data.show(indices=[1, None],
-               title='Projection at 90 degrees ~ Sum along x axis')
+               title='Projection at 90 Degrees ~ Sum Along X Axis')
 fig, ax = plt.subplots()
 ax.plot(sum_along_x)
 ax.set_xlabel('y')
-plt.title('Sum along x axis')
+plt.title('Sum Along X Axis')
 plt.show()
 # Check axes in geometry
 axis_sum_x = geometry.det_axis(np.deg2rad(90))

@@ -70,9 +70,9 @@ obj = callback.callbacks[1].obj_function_values
 clim = [0, 1]
 cmap = 'gray'
 
-orig.show('original', clim=clim, cmap=cmap)
-d.show('noisy', clim=clim, cmap=cmap)
-x.show('denoised', clim=clim, cmap=cmap)
+orig.show('Original', clim=clim, cmap=cmap)
+d.show('Noisy', clim=clim, cmap=cmap)
+x.show('Denoised', clim=clim, cmap=cmap)
 
 
 # Show convergence rate
@@ -84,7 +84,7 @@ def rel_fun(x):
 i = np.array(callback.callbacks[1].iteration_counts)
 
 plt.figure()
-plt.loglog(i, rel_fun(obj), label='pdhg')
+plt.loglog(i, rel_fun(obj), label='PDHG')
 plt.loglog(i[1:], 20. / i[1:] ** 2, ':', label='$O(1/k^2)$')
-plt.title('Function values')
+plt.title('Function Values')
 plt.legend()

@@ -31,5 +31,5 @@ backproj = ray_trafo.adjoint(proj_data)
 
 # Shows a slice of the phantom, projections, and reconstruction
 phantom.show(title='Phantom')
-proj_data.show(title='Projection data (sinogram)')
-backproj.show(title='Back-projected data', force_show=True)
+proj_data.show(title='Projection Data (sinogram)')
+backproj.show(title='Back-projection', force_show=True)

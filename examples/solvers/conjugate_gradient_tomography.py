@@ -54,6 +54,6 @@ odl.solvers.conjugate_gradient_normal(
     ray_trafo, x, data, niter=20, callback=callback)
 
 # Display images
-discr_phantom.show(title='original image')
-data.show(title='sinogram')
-x.show(title='reconstructed image', force_show=True)
+discr_phantom.show(title='Original Image')
+data.show(title='Sinogram')
+x.show(title='Reconstructed Image', force_show=True)

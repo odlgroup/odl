@@ -90,5 +90,5 @@ odl.solvers.accelerated_proximal_gradient(
 
 # Display images
 data.show(title='Data')
-x.show(title='Wavelet coefficients')
-Wtrafoinv(x).show('Wavelet regularized reconstruction', force_show=True)
+x.show(title='Wavelet Coefficients')
+Wtrafoinv(x).show('Wavelet Regularized Reconstruction', force_show=True)

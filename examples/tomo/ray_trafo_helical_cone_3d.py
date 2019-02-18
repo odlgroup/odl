@@ -33,9 +33,9 @@ proj_data = ray_trafo(phantom)
 backproj = ray_trafo.adjoint(proj_data)
 
 # Shows a slice of the phantom, projections, and reconstruction
-phantom.show(coords=[None, None, 20], title='Phantom, middle z slice')
+phantom.show(coords=[None, None, 20], title='Phantom, Middle Z Slice')
 proj_data.show(coords=[2 * np.pi, None, None],
-               title='Projection after exactly one turn')
-proj_data.show(coords=[None, None, 0], title='Sinogram, middle slice')
-backproj.show(coords=[None, None, 20], title='Back-projection, middle z slice',
+               title='Projection After Exactly One Turn')
+proj_data.show(coords=[None, None, 0], title='Sinogram, Middle Slice')
+backproj.show(coords=[None, None, 20], title='Back-projection, Middle Z Slice',
               force_show=True)

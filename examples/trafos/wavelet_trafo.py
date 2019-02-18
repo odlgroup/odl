@@ -12,17 +12,17 @@ wavelet_op = odl.trafos.WaveletTransform(space, wavelet='Haar', nlevels=2)
 
 # Create a phantom and its wavelet transfrom and display them.
 phantom = odl.phantom.shepp_logan(space, modified=True)
-phantom.show(title='Shepp-Logan phantom')
+phantom.show(title='Shepp-Logan Phantom')
 
 # Note that the wavelet transform is a vector in rn.
 phantom_wt = wavelet_op(phantom)
-phantom_wt.show(title='wavelet transform')
+phantom_wt.show(title='Wavelet Transform')
 
 # It may however (for some choices of wbasis) be interpreted as a vector in the
 # domain of the transformation
 phantom_wt_2d = space.element(phantom_wt.asarray().reshape(space.shape))
-phantom_wt_2d.show('wavelet transform in 2d')
+phantom_wt_2d.show('Wavelet Transform in 2d')
 
 # Calculate the inverse transform.
 phantom_wt_inv = wavelet_op.inverse(phantom_wt)
-phantom_wt_inv.show(title='wavelet transform inverted', force_show=True)
+phantom_wt_inv.show(title='Wavelet Transform Inverted', force_show=True)

@@ -40,13 +40,14 @@ backproj = ray_trafo.adjoint(proj_data)
 
 # Show a slice of phantom, projections, and reconstruction
 phantom.show(title='Phantom')
-proj_data.show(title='Simulated data: sinogram for theta=0 and v=0',
+proj_data.show(title='Simulated Data: Sinogram for theta = 0 and v = 0',
                coords=[None, 0, None, 0])
-proj_data.show(title='Simulated data: sinogram for phi=0 and v=0',
+proj_data.show(title='Simulated Data: Sinogram for phi = 0 and v = 0',
                coords=[0, None, None, 0])
-proj_data.show(title='Simulated data: "cone plot" for u=0 and v=0',
+proj_data.show(title='Simulated Data: "Cone Plot" for u = 0 and v = 0',
                coords=[None, None, 0, 0])
-proj_data.show(title='Simulated data: projection for phi=pi/4 and theta=pi/4',
-               coords=[np.pi / 4, np.pi / 4, None, None])
+proj_data.show(
+    title='Simulated Data: Projection for phi = pi/4 and theta = pi/4',
+    coords=[np.pi / 4, np.pi / 4, None, None])
 
-backproj.show(title='Back-projection, slice z=0', force_show=True)
+backproj.show(title='Back-projection, Slice z=0', force_show=True)

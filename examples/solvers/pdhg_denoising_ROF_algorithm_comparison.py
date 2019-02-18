@@ -92,9 +92,9 @@ callback = (odl.solvers.CallbackPrintIteration() & CallbackStore())
 # number of iterations
 niter = 500
 
-# %% run algorithms
+# %% Run Algorithms
 
-# --- algorithm 1 --- #
+# --- Algorithm 1 --- #
 
 # Operator assignment
 op = odl.BroadcastOperator(odl.IdentityOperator(space), gradient)
@@ -159,33 +159,33 @@ obj_ergodic_alg3 = callback.callbacks[1].obj_function_values_ergodic
 plt.figure(0)
 ax1 = plt.subplot(231)
 ax1.imshow(orig, clim=[0, 1], cmap='gray')
-ax1.title.set_text('original image')
+ax1.title.set_text('Original Image')
 
 ax2 = plt.subplot(232)
 ax2.imshow(noisy, clim=[0, 1], cmap='gray')
-ax2.title.set_text('noisy image')
+ax2.title.set_text('Noisy Image')
 
 ax3 = plt.subplot(234)
 ax3.imshow(x_alg1, clim=[0, 1], cmap='gray')
-ax3.title.set_text('alg1')
+ax3.title.set_text('Algo 1')
 
 ax4 = plt.subplot(235)
 ax4.imshow(x_alg2, clim=[0, 1], cmap='gray')
-ax4.title.set_text('alg2')
+ax4.title.set_text('Algo 2')
 
 ax5 = plt.subplot(236)
 ax5.imshow(x_alg3, clim=[0, 1], cmap='gray')
-ax5.title.set_text('alg3')
+ax5.title.set_text('Algo 3')
 
 # show function values
 i = np.array(callback.callbacks[1].iteration_counts)
 
 plt.figure(1)
 plt.clf()
-plt.loglog(i, obj_alg1, label='alg1')
-plt.loglog(i, obj_alg2, label='alg2')
-plt.loglog(i, obj_alg3, label='alg3')
-plt.title('Function values')
+plt.loglog(i, obj_alg1, label='Algo 1')
+plt.loglog(i, obj_alg2, label='Algo 2')
+plt.loglog(i, obj_alg3, label='Algo 3')
+plt.title('Function Values')
 plt.legend()
 
 # show convergence rates
@@ -198,20 +198,20 @@ def rel_fun(x):
     return (np.array(x) - obj_opt) / (x[0] - obj_opt)
 
 
-plt.loglog(i, rel_fun(obj_alg1), label='alg1')
-plt.loglog(i, rel_fun(obj_alg2), label='alg2')
-plt.loglog(i, rel_fun(obj_alg3), label='alg3')
-plt.loglog(i[1:], 1. / i[1:], '--', label='1/k')
-plt.loglog(i[1:], 1. / i[1:]**2, ':', label='1/k^2')
-plt.title('Relative function values')
+plt.loglog(i, rel_fun(obj_alg1), label='Algo 1')
+plt.loglog(i, rel_fun(obj_alg2), label='Algo 2')
+plt.loglog(i, rel_fun(obj_alg3), label='Algo 3')
+plt.loglog(i[1:], 1. / i[1:], '--', label=r'$1/k$')
+plt.loglog(i[1:], 1. / i[1:]**2, ':', label=r'$1/k^2$')
+plt.title('Relative Function Values')
 plt.legend()
 
 # show ergodic convergence rates
 plt.figure(3)
 plt.clf()
 
-plt.loglog(i, rel_fun(obj_ergodic_alg1), label='alg1')
-plt.loglog(i, rel_fun(obj_ergodic_alg2), label='alg2')
-plt.loglog(i[1:], 4. / i[1:], '--', label='O(1/k)')
-plt.title('Relative ergodic function values')
+plt.loglog(i, rel_fun(obj_ergodic_alg1), label='Algo 1')
+plt.loglog(i, rel_fun(obj_ergodic_alg2), label='Algo 2')
+plt.loglog(i[1:], 4. / i[1:], '--', label=r'$O(1/k)$')
+plt.title('Relative Ergodic Function Values')
 plt.legend()

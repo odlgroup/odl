@@ -35,8 +35,8 @@ backproj = ray_trafo.adjoint(proj_data)
 
 # Show the slice y=0 of phantom and backprojection, as well as a projection
 # image at theta=0 and a sinogram at v=0 (middle detector row)
-phantom.show(coords=[None, 0, None], title='Phantom, middle y slice')
-backproj.show(coords=[None, 0, None], title='Back-projection, middle y slice')
-proj_data.show(coords=[0, None, None], title='Projection at theta=0')
-proj_data.show(coords=[None, None, 0], title='Sinogram, middle slice',
+phantom.show(coords=[None, 0, None], title='Phantom, Middle Y Slice')
+backproj.show(coords=[None, 0, None], title='Back-projection, Middle Y Slice')
+proj_data.show(coords=[0, None, None], title=r'Projection at theta = 0')
+proj_data.show(coords=[None, None, 0], title='Sinogram, Middle Slice',
                force_show=True)

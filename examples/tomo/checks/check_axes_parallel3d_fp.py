@@ -69,8 +69,8 @@ proj_data = ray_trafo(phantom)
 # Axes in this image are (x, z). This corresponds to
 # axis = [0, 0, 1], 0 degrees
 proj_data.show(indices=[0, None, None],
-               title='Projection at 0 degrees, axis [0, 0, 1], u = x, v = z')
-sum_along_y.show('Sum along y axis')
+               title='Projection at 0 Degrees, Axis [0, 0, 1], u = x, v = z')
+sum_along_y.show('Sum Along Y Axis')
 # Check axes in geometry
 axes_sum_y = geometry.det_axes(np.deg2rad(0))
 assert np.allclose(axes_sum_y[0], [1, 0, 0])
@@ -83,8 +83,8 @@ assert np.allclose(axes_sum_y[1], [0, 0, 1])
 # Axes in this image are (y, z). This corresponds to
 # axis = [0, 0, 1], 90 degrees
 proj_data.show(indices=[1, None, None],
-               title='Projection at 90 degrees, axis [0, 0, 1], u = y, v = z')
-sum_along_x.show('Sum along x axis')
+               title='Projection at 90 Degrees, Axis [0, 0, 1], u = y, v = z')
+sum_along_x.show('Sum Along X Axis')
 # Check axes in geometry
 axes_sum_x = geometry.det_axes(np.deg2rad(90))
 assert np.allclose(axes_sum_x[0], [0, 1, 0])
@@ -112,8 +112,8 @@ proj_data = ray_trafo(phantom)
 # Axes in this image are (x, y). This corresponds to:
 # axis = [0, 1, 0], 0 degrees
 proj_data.show(indices=[0, None, None],
-               title='Projection at 0 degrees, axis [0, 1, 0], u = x, v = y')
-sum_along_z.show('Sum along z axis')
+               title='Projection at 0 Degrees, Axis [0, 1, 0], u = x, v = y')
+sum_along_z.show('Sum Along Z Axis')
 # Check geometry axes
 axes_sum_z = geometry.det_axes(np.deg2rad(0))
 assert np.allclose(axes_sum_z[0], [1, 0, 0])
@@ -126,12 +126,12 @@ assert np.allclose(axes_sum_z[1], [0, 1, 0])
 # Axes in this image are (z, y). This corresponds to
 # axis = [0, 1, 0], 270 degrees
 proj_data.show(indices=[3, None, None],
-               title='Projection at 270 degrees, axis [0, 1, 0], u = z, v = y')
+               title='Projection at 270 Degrees, Axis [0, 1, 0], u = z, v = y')
 fig, ax = plt.subplots()
 ax.imshow(sum_along_x, cmap='bone', origin='lower')
 ax.set_xlabel('z')
 ax.set_ylabel('y')
-plt.title('Sum along x axis, transposed')
+plt.title('Sum Along X Axis, Transposed')
 plt.show()
 # Check geometry axes
 axes_sum_x_T = geometry.det_axes(np.deg2rad(270))
@@ -160,12 +160,12 @@ proj_data = ray_trafo(phantom)
 # Axes in this image are (y, x). This corresponds to
 # axis = [1, 0, 0], 90 degrees
 proj_data.show(indices=[1, None, None],
-               title='Projection at 90 degrees, axis [1, 0, 0], u = y, v = x')
+               title='Projection at 90 Degrees, Axis [1, 0, 0], u = y, v = x')
 fig, ax = plt.subplots()
 ax.imshow(sum_along_z, cmap='bone', origin='lower')
 ax.set_xlabel('y')
 ax.set_ylabel('x')
-plt.title('Sum along z axis, transposed')
+plt.title('Sum Along Z Axis, Transposed')
 plt.show()
 # Check geometry axes
 axes_sum_z_T = geometry.det_axes(np.deg2rad(90))
@@ -179,12 +179,12 @@ assert np.allclose(axes_sum_z_T[1], [1, 0, 0])
 # Axes in this image are (z, x). This corresponds to
 # axis = [1, 0, 0], 180 degrees
 proj_data.show(indices=[2, None, None],
-               title='Projection at 180 degrees, axis [1, 0, 0], u = z, v = x')
+               title='Projection at 180 Degrees, Axis [1, 0, 0], u = z, v = x')
 fig, ax = plt.subplots()
 ax.imshow(sum_along_y, cmap='bone', origin='lower')
 ax.set_xlabel('z')
 ax.set_ylabel('x')
-plt.title('Sum along y axis, transposed')
+plt.title('Sum Along Y Axis, Transposed')
 plt.show()
 # Check geometry axes
 axes_sum_y = geometry.det_axes(np.deg2rad(180))

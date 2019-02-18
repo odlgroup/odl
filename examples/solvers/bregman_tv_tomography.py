@@ -93,7 +93,7 @@ p = reco_space.zero()
 
 # This defines the outer Bregman iterations
 for breg_iter in range(niter_bregman):
-    print('Outer Bregman iteration: {}'.format(breg_iter))
+    print('Outer Bregman Iteration: {}'.format(breg_iter))
 
     # Create the affine part of the Bregman functional
     constant = l12_norm(gradient(x))
@@ -111,14 +111,14 @@ for breg_iter in range(niter_bregman):
     p -= (1 / reg_param) * ray_trafo.adjoint(l2_norm.gradient(ray_trafo(x)))
 
     # Display the result after this iteration
-    x.show(title='Outer Bregman iteration {}'.format(breg_iter),
+    x.show(title='Outer Bregman Iteration {}'.format(breg_iter),
            force_show=True)
 
 # Create an FBP-reconstruction to compare with
 fbp_op = odl.tomo.fbp_op(ray_trafo, filter_type='Hann', frequency_scaling=0.4)
 fbp_reco = fbp_op(data)
-fbp_reco.show(title='FBP reconstruction')
+fbp_reco.show(title='FBP Reconstruction')
 
 # Finally, also display phantom and sinograms
 discr_phantom.show(title='Phantom')
-data.show(title='Simulated data (Sinogram)')
+data.show(title='Simulated Data (Sinogram)')

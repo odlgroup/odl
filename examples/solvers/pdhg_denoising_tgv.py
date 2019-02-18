@@ -51,7 +51,7 @@ phantom.show(title='Phantom')
 data = A(phantom)
 data += odl.phantom.white_noise(A.range) * np.mean(data) * 0.1
 
-data.show(title='Simulated data')
+data.show(title='Simulated Data')
 
 # --- Set up the inverse problem --- #
 
@@ -123,5 +123,5 @@ odl.solvers.pdhg(x, f, g, op, niter=niter, tau=tau, sigma=sigma,
                  callback=callback)
 
 # Display images
-x[0].show(title='TGV reconstruction')
+x[0].show(title='TGV Reconstruction')
 x[1].show(title='Derivatives', force_show=True)

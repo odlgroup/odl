@@ -46,7 +46,7 @@ detector_partition = odl.uniform_partition(det_min_pt, det_max_pt, det_shape)
 assert np.allclose(detector_partition.cell_sides, 1)
 
 
-# %% Test case 1: axis = [0, 0, 1]
+# %% Test case 1: Axis = [0, 0, 1]
 
 
 geometry = odl.tomo.ConeFlatGeometry(
@@ -57,13 +57,13 @@ geometry = odl.tomo.ConeFlatGeometry(
 ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl=impl)
 proj_data = ray_trafo(phantom)
 backproj = ray_trafo.adjoint(proj_data)
-backproj.show('Backprojection, axis = [0, 0, 1], middle z slice',
+backproj.show('Backprojection, Axis = [0, 0, 1], Middle Z Slice',
               indices=[None, None, 100])
-phantom.show('Phantom, middle z slice',
+phantom.show('Phantom, Middle Z Slice',
              indices=[None, None, 100])
 
 
-# %% Test case 2: axis = [0, 1, 0]
+# %% Test case 2: Axis = [0, 1, 0]
 
 
 geometry = odl.tomo.ConeFlatGeometry(
@@ -74,13 +74,13 @@ geometry = odl.tomo.ConeFlatGeometry(
 ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl=impl)
 proj_data = ray_trafo(phantom)
 backproj = ray_trafo.adjoint(proj_data)
-backproj.show('Backprojection, axis = [0, 1, 0], middle y slice',
+backproj.show('Backprojection, Axis = [0, 1, 0], Middle Y Slice',
               indices=[None, 75, None])
-phantom.show('Phantom, middle y slice',
+phantom.show('Phantom, Middle Y Slice',
              indices=[None, 75, None])
 
 
-# %% Test case 3: axis = [1, 0, 0]
+# %% Test case 3: Axis = [1, 0, 0]
 
 
 geometry = odl.tomo.ConeFlatGeometry(
@@ -91,7 +91,7 @@ geometry = odl.tomo.ConeFlatGeometry(
 ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl=impl)
 proj_data = ray_trafo(phantom)
 backproj = ray_trafo.adjoint(proj_data)
-backproj.show('Backprojection, axis = [1, 0, 0], almost max x slice',
+backproj.show('Backprojection, Axis = [1, 0, 0], Almost Max X Slice',
               indices=[95, None, None])
-phantom.show('Phantom, almost max x slice',
+phantom.show('Phantom, Almost Max X Slice',
              indices=[95, None, None])

@@ -29,7 +29,7 @@ mri_op = sampling_mask * ft
 phantom = odl.phantom.shepp_logan(space, modified=True)
 noisy_data = mri_op(phantom) + odl.phantom.white_noise(mri_op.range) * 0.1
 phantom.show('Phantom')
-noisy_data.show('Noisy MRI data')
+noisy_data.show('Noisy MRI Data')
 
 # Gradient for TV regularization
 gradient = odl.Gradient(space)
@@ -50,5 +50,5 @@ odl.solvers.douglas_rachford_pd(x, f, g, lin_ops,
                                 tau=2.0, sigma=[1.0, 0.1],
                                 niter=500, callback=callback)
 
-x.show('douglas rachford result')
-ft.inverse(noisy_data).show('fourier inversion result', force_show=True)
+x.show('Douglas-Rachford Result')
+ft.inverse(noisy_data).show('Fourier Inversion Result', force_show=True)

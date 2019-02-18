@@ -26,7 +26,7 @@ geometry = odl.tomo.Parallel3dAxisGeometry(
     angle_partition, detector_partition, axis=[1, 1, 1])
 
 
-# --- Create Filtered Back-Projection (FBP) operator --- #
+# --- Create Filtered Back-projection (FBP) operator --- #
 
 
 # Ray transform (= forward projection).
@@ -52,6 +52,6 @@ fbp_reconstruction = fbp(proj_data)
 
 # Show a slice of phantom, projections, and reconstruction
 phantom.show(title='Phantom')
-proj_data.show(title='Simulated data (sinogram)')
-fbp_reconstruction.show(title='Filtered back-projection')
+proj_data.show(title='Simulated Data (Sinogram)')
+fbp_reconstruction.show(title='Filtered Back-projection')
 (phantom - fbp_reconstruction).show(title='Error', force_show=True)
