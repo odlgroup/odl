@@ -53,9 +53,9 @@ geometry = odl.tomo.Parallel3dAxisGeometry(angle_partition, detector_partition,
 ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl=impl)
 proj_data = ray_trafo(phantom)
 backproj = ray_trafo.adjoint(proj_data)
-backproj.show('Backprojection, axis = [0, 0, 1], middle z slice',
+backproj.show('Backprojection, Axis = [0, 0, 1], Middle Z Slice',
               indices=[None, None, 100])
-phantom.show('Phantom, middle z slice',
+phantom.show('Phantom, Middle Z Slice',
              indices=[None, None, 100])
 
 
@@ -69,9 +69,9 @@ geometry = odl.tomo.Parallel3dAxisGeometry(angle_partition, detector_partition,
 ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl=impl)
 proj_data = ray_trafo(phantom)
 backproj = ray_trafo.adjoint(proj_data)
-backproj.show('Backprojection, axis = [0, 1, 0], middle y slice',
+backproj.show('Backprojection, Axis = [0, 1, 0], Middle Y Slice',
               indices=[None, 75, None])
-phantom.show('Phantom, middle y slice',
+phantom.show('Phantom, Middle Y Slice',
              indices=[None, 75, None])
 
 
@@ -85,7 +85,7 @@ geometry = odl.tomo.Parallel3dAxisGeometry(angle_partition, detector_partition,
 ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl=impl)
 proj_data = ray_trafo(phantom)
 backproj = ray_trafo.adjoint(proj_data)
-backproj.show('Backprojection, axis = [1, 0, 0], almost max x slice',
+backproj.show('Backprojection, Axis = [1, 0, 0], Almost Max X Slice',
               indices=[95, None, None])
-phantom.show('Phantom, almost max x slice',
+phantom.show('Phantom, Almost Max X Slice',
              indices=[95, None, None])

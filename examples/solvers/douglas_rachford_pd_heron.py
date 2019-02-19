@@ -54,7 +54,7 @@ def print_objective(x):
     for minp, maxp in rectangles:
         x_proj = np.minimum(np.maximum(x, minp), maxp)
         value += (x - x_proj).norm()
-    print('point = [{:.4f}, {:.4f}], value = {:.4f}'.format(x[0], x[1], value))
+    print('Point = [{:.4f}, {:.4f}], Value = {:.4f}'.format(x[0], x[1], value))
 
 
 # Solve

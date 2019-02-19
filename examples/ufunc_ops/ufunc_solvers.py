@@ -24,4 +24,4 @@ x = opt_fun.domain.zero()
 odl.solvers.steepest_descent(opt_fun, x, maxiter=100,
                              line_search=line_search)
 
-print('optimization result={}. Should be [1, 1]'.format(x))
+print('Optimization result={}. Should be [1, 1]'.format(x))

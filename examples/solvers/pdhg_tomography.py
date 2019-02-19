@@ -84,5 +84,5 @@ odl.solvers.pdhg(x, f, g, op, niter=niter, tau=tau, sigma=sigma,
 
 # Display images
 discr_phantom.show(title='Phantom')
-data.show(title='Simulated data (Sinogram)')
-x.show(title='TV reconstruction', force_show=True)
+data.show(title='Simulated Data (Sinogram)')
+x.show(title='TV Reconstruction', force_show=True)

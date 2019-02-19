@@ -40,7 +40,7 @@ phantom = odl.phantom.shepp_logan(space, modified=True)
 # Create the convolved version of the phantom
 data = convolution(phantom)
 data += odl.phantom.white_noise(convolution.range) * np.mean(data) * 0.1
-data.show('Convolved data')
+data.show('Convolved Data')
 
 # Set up PDHG:
 
@@ -83,6 +83,6 @@ odl.solvers.pdhg(x, f, g, op, niter=niter, tau=tau, sigma=sigma,
                  callback=callback)
 
 # Display images
-phantom.show(title='original image')
-data.show(title='convolved image')
-x.show(title='deconvolved image', force_show=True)
+phantom.show(title='Original Image')
+data.show(title='Convolved Image')
+x.show(title='Deconvolved Image', force_show=True)

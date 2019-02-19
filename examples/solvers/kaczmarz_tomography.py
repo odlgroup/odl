@@ -78,5 +78,5 @@ odl.solvers.kaczmarz(
     callback=callback, callback_loop='inner')
 
 # Display images
-phantom.show(title='original image')
-x.show(title='reconstructed image', force_show=True)
+phantom.show(title='Original Image')
+x.show(title='Reconstructed Image', force_show=True)

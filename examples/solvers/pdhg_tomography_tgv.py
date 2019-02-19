@@ -54,7 +54,7 @@ phantom.show(title='Phantom')
 data = A(phantom)
 data += odl.phantom.white_noise(A.range) * np.mean(data) * 0.1
 
-data.show(title='Simulated data (Sinogram)')
+data.show(title='Simulated Data (Sinogram)')
 
 # --- Set up the inverse problem --- #
 
@@ -110,7 +110,7 @@ g = odl.solvers.SeparableSum(l2_norm, l1_norm_1, l1_norm_2)
 # Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
 op_norm = 1.1 * odl.power_method_opnorm(op)
 
-niter = 100  # Number of iterations
+niter = 300  # Number of iterations
 tau = 1.0 / op_norm  # Step size for the primal variable
 sigma = 1.0 / op_norm  # Step size for the dual variable
 
@@ -126,5 +126,5 @@ odl.solvers.pdhg(x, f, g, op, niter=niter, tau=tau, sigma=sigma,
                  callback=callback)
 
 # Display images
-x[0].show(title='TGV reconstruction')
+x[0].show(title='TGV Reconstruction')
 x[1].show(title='Derivatives', force_show=True)

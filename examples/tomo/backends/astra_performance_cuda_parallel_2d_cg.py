@@ -53,7 +53,7 @@ cfg['ProjectorId'] = proj_id
 # Create the algorithm object from the configuration structure
 alg_id = astra.algorithm.create(cfg)
 
-with odl.util.Timer('ASTRA run'):
+with odl.util.Timer('ASTRA Run'):
     # Run the algorithm
     astra.algorithm.run(alg_id, niter)
 
@@ -82,18 +82,18 @@ data = ray_trafo(phantom)
 
 # Solve with CGLS (aka CGN)
 x = reco_space.zero()
-with odl.util.Timer('ODL run'):
+with odl.util.Timer('ODL Run'):
     odl.solvers.conjugate_gradient_normal(ray_trafo, x, data, niter=niter)
 
 # Display results for comparison
 plt.figure('Phantom')
 plt.imshow(phantom.T, origin='lower', cmap='bone')
-plt.figure('ASTRA sinogram')
+plt.figure('ASTRA Sinogram')
 plt.imshow(sinogram.T, origin='lower', cmap='bone')
-plt.figure('ASTRA reconstruction')
+plt.figure('ASTRA Reconstruction')
 plt.imshow(rec.T, origin='lower', cmap='bone')
-plt.figure('ODL sinogram')
+plt.figure('ODL Sinogram')
 plt.imshow(data.asarray().T, origin='lower', cmap='bone')
-plt.figure('ODL reconstruction')
+plt.figure('ODL Reconstruction')
 plt.imshow(x.asarray().T, origin='lower', cmap='bone')
 plt.show()

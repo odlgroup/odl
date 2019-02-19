@@ -106,10 +106,10 @@ obj2 = callback.callbacks[1].obj_function_values
 clim = [0, 1]
 cmap = 'gray'
 
-orig.show('original', clim=clim, cmap=cmap)
-d.show('noisy', clim=clim, cmap=cmap)
-x1.show('denoised, alg1', clim=clim, cmap=cmap)
-x2.show('denoised, alg2', clim=clim, cmap=cmap)
+orig.show('Original', clim=clim, cmap=cmap)
+d.show('Noisy', clim=clim, cmap=cmap)
+x1.show('Denoised, Algo 1', clim=clim, cmap=cmap)
+x2.show('Denoised, Algo 2', clim=clim, cmap=cmap)
 
 # Show convergence rate
 min_obj = min(obj1 + obj2)
@@ -124,15 +124,15 @@ iters = np.array(callback.callbacks[1].iteration_counts)
 
 plt.figure()
 plt.semilogy(iters, rel_fun(obj1), color='red',
-             label='alg1, Chambolle et al 2017')
+             label='Algo 1, Chambolle et al 2017')
 plt.semilogy(iters, rel_fun(obj2), color='blue',
-             label='alg2, Chambolle and Pock 2011')
+             label='Algo 2, Chambolle and Pock 2011')
 rho = theta1
 plt.semilogy(iters[1:], rho ** iters[1:], '--', color='red',
-             label='$O(\\rho_1^k), \\rho_1={:3.2f}$'.format(rho))
+             label=r'$O(\rho_1^k), \rho_1={:3.2f}$'.format(rho))
 rho = theta2
 plt.semilogy(iters[1:], rho ** iters[1:], '--', color='blue',
-             label='$O(\\rho_2^k), \\rho_2={:3.2f}$'.format(rho))
-plt.title('Function values + theoretical upper bounds')
+             label=r'$O(\rho_2^k), \rho_2={:3.2f}$'.format(rho))
+plt.title('Function Values + Theoretical Upper Bounds')
 plt.ylim((1e-16, 1))
 plt.legend()

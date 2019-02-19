@@ -98,4 +98,4 @@ odl.solvers.douglas_rachford_pd(x, f, g, lin_ops,
                                 tau=0.5, sigma=[0.01, 0.1],
                                 niter=100, callback=callback)
 
-x.show('douglas rachford result', force_show=True)
+x.show('Reconstruction', force_show=True)

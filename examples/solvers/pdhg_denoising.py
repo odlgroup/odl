@@ -75,6 +75,6 @@ odl.solvers.pdhg(x, f, g, op, niter=niter, tau=tau, sigma=sigma,
                  callback=callback)
 
 # Display images
-orig.show(title='original image')
-noisy.show(title='noisy image')
-x.show(title='reconstruction', force_show=True)
+orig.show(title='Original Image')
+noisy.show(title='Noisy Image')
+x.show(title='Reconstruction', force_show=True)
