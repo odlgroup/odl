@@ -834,13 +834,17 @@ class ProductSpace(LinearSpace):
             return ()
         elif len(parts) == 1:
             # Don't extend the title if there is only one plot
-            fig = parts[0].show(title=title, fig=in_figs[0], **kwargs)
+            fig = self.spaces[0].show(
+                parts[0], title=title, fig=in_figs[0], **kwargs
+            )
             figs.append(fig)
         else:
             # Extend titles by indexed part to make them distinguishable
-            for i, part, fig in zip(indices, parts, in_figs):
-                fig = part.show(title='{}. Part {}'.format(title, i), fig=fig,
-                                **kwargs)
+            for i, xi, space, fig in zip(indices, parts, self.spaces, in_figs):
+                fig = space.show(
+                    xi, title='{}. Part {}'.format(title, i), fig=fig,
+                    **kwargs
+                )
                 figs.append(fig)
 
         return tuple(figs)
