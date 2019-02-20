@@ -101,10 +101,8 @@ class PartialDerivative(PointwiseTensorFieldOperator):
         >>> discr = odl.uniform_discr([0, 0], [2, 1], f.shape)
         >>> par_deriv = PartialDerivative(discr, axis=0, pad_mode='order1')
         >>> par_deriv(f)
-        uniform_discr([ 0.,  0.], [ 2.,  1.], (2, 5)).element(
-            [[ 0.,  1.,  2.,  3.,  4.],
-             [ 0.,  1.,  2.,  3.,  4.]]
-        )
+        array([[ 0.,  1.,  2.,  3.,  4.],
+               [ 0.,  1.,  2.,  3.,  4.]])
         """
         if not isinstance(domain, DiscretizedSpace):
             raise TypeError('`domain` {!r} is not a DiscretizedSpace instance'
@@ -138,10 +136,9 @@ class PartialDerivative(PointwiseTensorFieldOperator):
             out = self.range.element()
 
         # TODO: this pipes CUDA arrays through NumPy. Write native operator.
-        with writable_array(out) as out_arr:
-            finite_diff(x.asarray(), axis=self.axis, dx=self.dx,
-                        method=self.method, pad_mode=self.pad_mode,
-                        pad_const=self.pad_const, out=out_arr)
+        finite_diff(x, axis=self.axis, dx=self.dx,
+                    method=self.method, pad_mode=self.pad_mode,
+                    pad_const=self.pad_const, out=out)
         return out
 
     def derivative(self, point=None):
@@ -274,15 +271,11 @@ class Gradient(PointwiseTensorFieldOperator):
         >>> grad = Gradient(discr)
         >>> grad_f = grad(f)
         >>> grad_f[0]
-        uniform_discr([ 0.,  0.], [ 2.,  5.], (2, 5)).element(
-            [[ 0.,  1.,  2.,  3.,  4.],
-             [ 0., -2., -4., -6., -8.]]
-        )
+        array([[ 0.,  1.,  2.,  3.,  4.],
+               [ 0., -2., -4., -6., -8.]])
         >>> grad_f[1]
-        uniform_discr([ 0.,  0.], [ 2.,  5.], (2, 5)).element(
-            [[ 1.,  1.,  1.,  1., -4.],
-             [ 2.,  2.,  2.,  2., -8.]]
-        )
+        array([[ 1.,  1.,  1.,  1., -4.],
+               [ 2.,  2.,  2.,  2., -8.]])
 
         Verify adjoint:
 
@@ -347,16 +340,14 @@ class Gradient(PointwiseTensorFieldOperator):
         if out is None:
             out = self.range.element()
 
-        x_arr = x.asarray()
         ndim = self.domain.ndim
         dx = self.domain.cell_sides
 
         for axis in range(ndim):
-            with writable_array(out[axis]) as out_arr:
-                finite_diff(x_arr, axis=axis, dx=dx[axis], method=self.method,
-                            pad_mode=self.pad_mode,
-                            pad_const=self.pad_const,
-                            out=out_arr)
+            finite_diff(x, axis=axis, dx=dx[axis], method=self.method,
+                        pad_mode=self.pad_mode,
+                        pad_const=self.pad_const,
+                        out=out[axis])
         return out
 
     def derivative(self, point=None):
@@ -560,7 +551,7 @@ class Divergence(PointwiseTensorFieldOperator):
         ndim = self.range.ndim
         dx = self.range.cell_sides
 
-        tmp = np.empty(out.shape, out.dtype, order=out.space.default_order)
+        tmp = np.empty(out.shape, out.dtype, order=self.range.default_order)
         with writable_array(out) as out_arr:
             for axis in range(ndim):
                 finite_diff(x[axis], axis=axis, dx=dx[axis],
@@ -712,31 +703,27 @@ class Laplacian(PointwiseTensorFieldOperator):
         if out is None:
             out = self.range.zero()
         else:
-            out.set_zero()
+            out[:] = 0
 
-        x_arr = x.asarray()
-        out_arr = out.asarray()
-        tmp = np.empty(out.shape, out.dtype, order=out.space.default_order)
-
+        tmp = np.empty(out.shape, out.dtype, order=self.range.default_order)
         ndim = self.domain.ndim
         dx = self.domain.cell_sides
 
-        with writable_array(out) as out_arr:
-            for axis in range(ndim):
-                # TODO: this can be optimized
-                finite_diff(x_arr, axis=axis, dx=dx[axis] ** 2,
-                            method='forward',
-                            pad_mode=self.pad_mode,
-                            pad_const=self.pad_const, out=tmp)
+        for axis in range(ndim):
+            # TODO: this can be optimized
+            finite_diff(x, axis=axis, dx=dx[axis] ** 2,
+                        method='forward',
+                        pad_mode=self.pad_mode,
+                        pad_const=self.pad_const, out=tmp)
 
-                out_arr += tmp
+            out += tmp
 
-                finite_diff(x_arr, axis=axis, dx=dx[axis] ** 2,
-                            method='backward',
-                            pad_mode=self.pad_mode,
-                            pad_const=self.pad_const, out=tmp)
+            finite_diff(x, axis=axis, dx=dx[axis] ** 2,
+                        method='backward',
+                        pad_mode=self.pad_mode,
+                        pad_const=self.pad_const, out=tmp)
 
-                out_arr -= tmp
+            out -= tmp
 
         return out
 

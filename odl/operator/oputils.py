@@ -307,15 +307,14 @@ def as_scipy_operator(op):
     shape = (native(op.range.size), native(op.domain.size))
 
     def matvec(v):
-        return (op(v.reshape(op.domain.shape))).asarray().ravel()
+        return (op(v.reshape(op.domain.shape))).ravel()
 
     def rmatvec(v):
-        return (op.adjoint(v.reshape(op.range.shape))).asarray().ravel()
+        return (op.adjoint(v.reshape(op.range.shape))).ravel()
 
-    return scipy.sparse.linalg.LinearOperator(shape=shape,
-                                              matvec=matvec,
-                                              rmatvec=rmatvec,
-                                              dtype=dtype)
+    return scipy.sparse.linalg.LinearOperator(
+        shape=shape, matvec=matvec, rmatvec=rmatvec, dtype=dtype
+    )
 
 
 def as_scipy_functional(func, return_gradient=False):
