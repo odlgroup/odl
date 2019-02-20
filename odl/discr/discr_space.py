@@ -324,16 +324,16 @@ class DiscretizedSpace(TensorSpace):
 
         >>> space = odl.uniform_discr(-1, 1, 4)
         >>> space.element([1, 2, 3, 4])
-        uniform_discr(-1.0, 1.0, 4).element([ 1.,  2.,  3.,  4.])
+        array([ 1.,  2.,  3.,  4.])
         >>> vector = odl.rn(4).element([0, 1, 2, 3])
         >>> space.element(vector)
-        uniform_discr(-1.0, 1.0, 4).element([ 0.,  1.,  2.,  3.])
+        array([ 0.,  1.,  2.,  3.])
 
         On the other hand, non-discretized objects like Python functions
         can be discretized "on the fly":
 
         >>> space.element(lambda x: x * 2)
-        uniform_discr(-1.0, 1.0, 4).element([-1.5, -0.5, 0.5, 1.5])
+        array([-1.5, -0.5, 0.5, 1.5])
 
         This works also with parameterized functions, however only
         through keyword arguments (not positional arguments with
@@ -344,7 +344,11 @@ class DiscretizedSpace(TensorSpace):
         ...
         >>> space = odl.uniform_discr(-1, 1, 4)
         >>> space.element(f, c=0.5)
-        uniform_discr(-1.0, 1.0, 4).element([ 0.5 ,  0.5 ,  0.5 ,  0.75])
+        array([ 0.5 ,  0.5 ,  0.5 ,  0.75])
+
+        See Also
+        --------
+        sampling : create a discrete element from a non-discretized one
         """
         if inp is None:
             return self.tspace.element(order=order)
@@ -537,15 +541,16 @@ class DiscretizedSpace(TensorSpace):
             return self.tspace.dist(x.tensor, y.tensor)
 
     # TODO: fix
-    def show(self, title=None, method='', coords=None, indices=None,
+    def show(self, elem, title=None, method='', coords=None, indices=None,
              force_show=False, fig=None, **kwargs):
         """Display the function graphically.
 
         Parameters
         ----------
+        elem : array-like
+            Element to display using the properties of this space.
         title : string, optional
             Set the title of the figure
-
         method : string, optional
             1d methods:
 
@@ -569,7 +574,6 @@ class DiscretizedSpace(TensorSpace):
             point to be shown, i.e. ``[None, [0, 1]]`` shows all of the
             first axis and values between 0 and 1 in the second.
             This option is mutually exclusive with ``indices``.
-
         indices : int, slice, Ellipsis or sequence, optional
             Display a slice of the array instead of the full array.
             If a sequence is given, the i-th entry indexes the i-th axis,
@@ -597,20 +601,18 @@ class DiscretizedSpace(TensorSpace):
             position along the remaining axes is shown
             (semantically ``[:, :, shape[2:] // 2]``).
             This option is mutually exclusive with ``coords``.
-
         force_show : bool, optional
             Whether the plot should be forced to be shown now or deferred until
             later. Note that some backends always displays the plot, regardless
             of this value.
-
         fig : `matplotlib.figure.Figure`, optional
             The figure to show in. Expected to be of same "style", as
             the figure given by this function. The most common use case
             is that ``fig`` is the return value of an earlier call to
             this function.
-
-        kwargs : {'figsize', 'saveto', 'clim', ...}, optional
-            Extra keyword arguments passed on to the display method.
+        kwargs
+            Extra keyword arguments like ``figsize``, ``saveto``, ``clim``,
+            ..., passed on to the display method.
             See the Matplotlib functions for documentation of extra
             options.
 
@@ -625,6 +627,8 @@ class DiscretizedSpace(TensorSpace):
         """
         from odl.util.graphics import show_discrete_data
 
+        elem = self.element(elem)
+
         if self.ndim == 0:
             raise ValueError('nothing to show for 0-dimensional vector')
 
@@ -632,7 +636,7 @@ class DiscretizedSpace(TensorSpace):
             if indices is not None:
                 raise ValueError('cannot provide both coords and indices')
 
-            partition = self.space.partition
+            partition = self.partition
             shape = self.shape
             indices = []
             for axis, (n, coord) in enumerate(zip(shape, coords)):
@@ -670,8 +674,9 @@ class DiscretizedSpace(TensorSpace):
 
         # Default to showing x-y slice "in the middle"
         if indices is None and self.ndim >= 3:
-            indices = ((slice(None),) * 2 +
-                       tuple(n // 2 for n in self.space.shape[2:]))
+            indices = (
+                (slice(None),) * 2 + tuple(n // 2 for n in self.shape[2:])
+            )
 
         # Normalize indices
         if isinstance(indices, (Integral, slice)):
@@ -689,17 +694,21 @@ class DiscretizedSpace(TensorSpace):
         elif Ellipsis in indices:
             # Replace Ellipsis with the correct number of `slice(None)`
             pos = indices.index(Ellipsis)
-            indices = (tuple(indices[:pos]) +
-                       (slice(None),) * (self.ndim - len(indices) + 1) +
-                       tuple(indices[pos + 1:]))
+            indices = (
+                tuple(indices[:pos])
+                + (slice(None),) * (self.ndim - len(indices) + 1)
+                + tuple(indices[pos + 1:])
+            )
 
         # Now indices should be exactly of length `ndim`
         if len(indices) < self.ndim:
-            raise ValueError('too few axes ({} < {})'.format(len(indices),
-                                                             self.ndim))
+            raise ValueError(
+                'too few axes ({} < {})'.format(len(indices), self.ndim)
+            )
         if len(indices) > self.ndim:
-            raise ValueError('too many axes ({} > {})'.format(len(indices),
-                                                              self.ndim))
+            raise ValueError(
+                'too many axes ({} > {})'.format(len(indices), self.ndim)
+            )
 
         # Map `None` to `slice(None)` in indices for syntax like `coords`
         indices = tuple(slice(None) if idx is None else idx
@@ -707,11 +716,11 @@ class DiscretizedSpace(TensorSpace):
 
         squeezed_axes = [axis for axis in range(self.ndim)
                          if not isinstance(indices[axis], Integral)]
-        axis_labels = [self.space.axis_labels[axis] for axis in squeezed_axes]
+        axis_labels = [self.axis_labels[axis] for axis in squeezed_axes]
 
         # Squeeze grid and values according to the index expression
-        part = self.space.partition[indices].squeeze()
-        values = self.asarray()[indices].squeeze()
+        part = self.partition[indices].squeeze()
+        values = elem[indices].squeeze()
 
         return show_discrete_data(values, part, title=title, method=method,
                                   force_show=force_show, fig=fig,
@@ -1207,7 +1216,7 @@ def uniform_discr_frompartition(partition, dtype=None, impl='numpy', **kwargs):
     Examples
     --------
     >>> part = odl.uniform_partition(0, 1, 10)
-    >>> uniform_discr_frompartition(part)
+    >>> odl.uniform_discr_frompartition(part)
     uniform_discr(0.0, 1.0, 10)
 
     See Also
@@ -1270,8 +1279,8 @@ def uniform_discr_fromintv(intv_prod, shape, dtype=None, impl='numpy',
 
     Examples
     --------
-    >>> intv = IntervalProd(0, 1)
-    >>> uniform_discr_fromintv(intv, 10)
+    >>> intv = odl.IntervalProd(0, 1)
+    >>> odl.uniform_discr_fromintv(intv, 10)
     uniform_discr(0.0, 1.0, 10)
 
     See Also
@@ -1339,7 +1348,7 @@ def uniform_discr(min_pt, max_pt, shape, dtype=None, impl='numpy', **kwargs):
     --------
     Create real space:
 
-    >>> space = uniform_discr([0, 0], [1, 1], (10, 10))
+    >>> space = odl.uniform_discr([0, 0], [1, 1], (10, 10))
     >>> space
     uniform_discr([ 0.,  0.], [ 1.,  1.], (10, 10))
     >>> space.cell_sides
@@ -1351,7 +1360,7 @@ def uniform_discr(min_pt, max_pt, shape, dtype=None, impl='numpy', **kwargs):
 
     Create complex space by giving a dtype:
 
-    >>> space = uniform_discr([0, 0], [1, 1], (10, 10), dtype=complex)
+    >>> space = odl.uniform_discr([0, 0], [1, 1], (10, 10), dtype=complex)
     >>> space
     uniform_discr([ 0.,  0.], [ 1.,  1.], (10, 10), dtype=complex)
     >>> space.is_complex
