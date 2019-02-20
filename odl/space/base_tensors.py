@@ -432,30 +432,29 @@ class TensorSpace(LinearSpace):
         """
         raise NotImplementedError('abstract method')
 
-    # TODO: make work
-    def show(self, title=None, method='', indices=None, force_show=False,
+    def show(self, elem, title=None, method='', indices=None, force_show=False,
              fig=None, **kwargs):
         """Display the function graphically.
 
         Parameters
         ----------
+        elem : array-like
+            Element to display using the properties of this space.
         title : string, optional
             Set the title of the figure
-
         method : string, optional
             1d methods:
 
-                ``'plot'`` : graph plot
+            - ``'plot'`` : graph plot
 
-                ``'scatter'`` : scattered 2d points (2nd axis <-> value)
+            - ``'scatter'`` : scattered 2d points (2nd axis <-> value)
 
             2d methods:
 
-                ``'imshow'`` : image plot with coloring according to
-                value, including a colorbar.
+            - ``'imshow'`` : image plot with coloring according to value,
+              including a colorbar.
 
-                ``'scatter'`` : cloud of scattered 3d points
-                (3rd axis <-> value)
+            - ``'scatter'`` : cloud of scattered 3d points (3rd axis <-> value)
 
         indices : index expression, optional
             Display a slice of the array instead of the full array. The
@@ -466,18 +465,15 @@ class TensorSpace(LinearSpace):
             two axes at the "middle" along the remaining axes is shown
             (semantically ``[:, :, shape[2:] // 2]``).
             This option is mutually exclusive to ``coords``.
-
         force_show : bool, optional
             Whether the plot should be forced to be shown now or deferred until
             later. Note that some backends always displays the plot, regardless
             of this value.
-
         fig : `matplotlib.figure.Figure`, optional
             The figure to show in. Expected to be of same "style", as
             the figure given by this function. The most common use case
             is that ``fig`` is the return value of an earlier call to
             this function.
-
         kwargs : {'figsize', 'saveto', 'clim', ...}, optional
             Extra keyword arguments passed on to the display method.
             See the Matplotlib functions for documentation of extra
@@ -495,10 +491,12 @@ class TensorSpace(LinearSpace):
         from odl.discr import uniform_grid
         from odl.util.graphics import show_discrete_data
 
+        elem = self.element(elem)
+
         # Default to showing x-y slice "in the middle"
         if indices is None and self.ndim >= 3:
             indices = tuple(
-                [slice(None)] * 2 + [n // 2 for n in self.space.shape[2:]]
+                [slice(None)] * 2 + [n // 2 for n in self.shape[2:]]
             )
 
         if isinstance(indices, (Integral, slice)):
@@ -519,17 +517,20 @@ class TensorSpace(LinearSpace):
                        indices[pos + 1:])
 
         if len(indices) < self.ndim:
-            raise ValueError('too few axes ({} < {})'.format(len(indices),
-                                                             self.ndim))
+            raise ValueError(
+                'too few axes ({} < {})'.format(len(indices), self.ndim)
+            )
         if len(indices) > self.ndim:
-            raise ValueError('too many axes ({} > {})'.format(len(indices),
-                                                              self.ndim))
+            raise ValueError(
+                'too many axes ({} > {})'.format(len(indices), self.ndim)
+            )
 
         # Squeeze grid and values according to the index expression
-        full_grid = uniform_grid([0] * self.ndim, np.array(self.shape) - 1,
-                                 self.shape)
+        full_grid = uniform_grid(
+            [0] * self.ndim, np.array(self.shape) - 1, self.shape
+        )
         grid = full_grid[indices].squeeze()
-        values = self.asarray()[indices].squeeze()
+        values = elem[indices].squeeze()
 
         return show_discrete_data(values, grid, title=title, method=method,
                                   force_show=force_show, fig=fig, **kwargs)

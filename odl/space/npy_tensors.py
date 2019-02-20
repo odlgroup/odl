@@ -1080,8 +1080,8 @@ def _blas_is_applicable(*args):
 
     Parameters
     ----------
-    x1,...,xN : `NumpyTensor`
-        The tensors to be tested for BLAS conformity.
+    x1,...,xN : numpy.ndarray
+        The arrays to be tested for BLAS conformity.
 
     Returns
     -------
@@ -1366,7 +1366,7 @@ class NumpyTensorSpaceArrayWeighting(ArrayWeighting):
 
         Parameters
         ----------
-        array : `array-like`, one-dim.
+        array : `array-like`
             Weighting array of the inner product, norm and distance.
             All its entries must be positive, however this is not
             verified during initialization.
