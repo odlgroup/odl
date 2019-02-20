@@ -25,11 +25,10 @@ from odl.space.weighting import ConstWeighting
 from odl.util import (
     apply_on_boundary, array_str, dtype_str, is_floating_dtype,
     is_numeric_dtype, normalized_nodes_on_bdry, normalized_scalar_param_list,
-    repr_string, safe_int_conv, signature_string_parts)
+    safe_int_conv)
 
 __all__ = (
     'DiscretizedSpace',
-    'DiscretizedSpaceElement',
     'uniform_discr_frompartition',
     'uniform_discr_fromintv',
     'uniform_discr',
@@ -93,13 +92,6 @@ class DiscretizedSpace(TensorSpace):
         if kwargs:
             raise ValueError('got unexpected keyword arguments {}'
                              ''.format(kwargs))
-
-    # --- Meta-info
-
-    @property
-    def element_type(self):
-        """`DiscretizedSpaceElement`"""
-        return DiscretizedSpaceElement
 
     # --- Constructor args
 
@@ -321,7 +313,7 @@ class DiscretizedSpace(TensorSpace):
 
         Returns
         -------
-        element : `DiscretizedSpaceElement`
+        element
             The discretized element, calculated as ``point_collocation(inp)``
             or ``tspace.element(inp)``, tried in this order.
 
@@ -355,32 +347,26 @@ class DiscretizedSpace(TensorSpace):
         uniform_discr(-1.0, 1.0, 4).element([ 0.5 ,  0.5 ,  0.5 ,  0.75])
         """
         if inp is None:
-            return self.element_type(self, self.tspace.element(order=order))
+            return self.tspace.element(order=order)
         elif inp in self and order is None:
             return inp
-        elif inp in self.tspace and order is None:
-            return self.element_type(self, inp)
         elif callable(inp):
             func = sampling_function(
                 inp, self.domain, out_dtype=self.dtype,
             )
             sampled = point_collocation(func, self.meshgrid, **kwargs)
-            return self.element_type(
-                self, self.tspace.element(sampled, order=order)
-            )
+            return self.tspace.element(sampled, order=order)
         else:
             # Sequence-type input
-            return self.element_type(
-                self, self.tspace.element(inp, order=order)
-            )
+            return self.tspace.element(inp, order=order)
 
     def zero(self):
         """Return the element of all zeros."""
-        return self.element_type(self, self.tspace.zero())
+        return self.tspace.zero()
 
     def one(self):
         """Return the element of all ones."""
-        return self.element_type(self, self.tspace.one())
+        return self.tspace.one()
 
     # --- Casting
 
@@ -392,7 +378,7 @@ class DiscretizedSpace(TensorSpace):
 
     # --- Slicing
 
-    # TODO: add `byaxis`_out when discretized tensor-valued functions are
+    # TODO: add `byaxis_out` when discretized tensor-valued functions are
     # available
 
     @property
@@ -508,18 +494,6 @@ class DiscretizedSpace(TensorSpace):
 
     # --- Space functions
 
-    def _lincomb(self, a, x1, b, x2, out):
-        """Raw linear combination."""
-        self.tspace._lincomb(a, x1.tensor, b, x2.tensor, out.tensor)
-
-    def _multiply(self, x1, x2, out):
-        """Raw pointwise multiplication of two elements."""
-        self.tspace._multiply(x1.tensor, x2.tensor, out.tensor)
-
-    def _divide(self, x1, x2, out):
-        """Raw pointwise multiplication of two elements."""
-        self.tspace._divide(x1.tensor, x2.tensor, out.tensor)
-
     # The inherited methods by default use a weighting by a constant
     # (the grid cell size). In dimensions where the partitioned set contains
     # only a fraction of the outermost cells (e.g. if the outermost grid
@@ -562,773 +536,7 @@ class DiscretizedSpace(TensorSpace):
         else:
             return self.tspace.dist(x.tensor, y.tensor)
 
-    def __repr__(self):
-        """Return ``repr(self)``."""
-        # Clunky check if the factory repr can be used
-        if uniform_partition_fromintv(
-            self.partition.set, self.shape, nodes_on_bdry=False
-        ) == self.partition:
-            use_uniform = True
-            nodes_on_bdry = False
-        elif uniform_partition_fromintv(
-            self.partition.set, self.shape, nodes_on_bdry=True
-        ) == self.partition:
-            use_uniform = True
-            nodes_on_bdry = True
-        else:
-            use_uniform = False
-            nodes_on_bdry = None
-
-        if use_uniform:
-            ctor = 'uniform_discr'
-            if self.ndim == 1:
-                posargs = [self.min_pt[0], self.max_pt[0], self.shape[0]]
-                posmod = ['', '', '']
-            else:
-                posargs = [self.min_pt, self.max_pt, self.shape]
-                posmod = [array_str, array_str, '']
-
-            default_dtype_s = dtype_str(
-                self.tspace.default_dtype(RealNumbers())
-            )
-
-            dtype_s = dtype_str(self.dtype)
-            optargs = [
-                ('impl', self.impl, 'numpy'),
-                ('nodes_on_bdry', nodes_on_bdry, False),
-                ('dtype', dtype_s, default_dtype_s)
-            ]
-
-            # Add weighting stuff if not equal to default
-            if (
-                self.exponent == float('inf')
-                or self.ndim == 0
-                or not is_floating_dtype(self.dtype)
-            ):
-                # In these cases, weighting constant 1 is the default
-                if (
-                    not isinstance(self.weighting, ConstWeighting)
-                    or not np.isclose(self.weighting.const, 1.0)
-                ):
-                    optargs.append(('weighting', self.weighting.const, None))
-            else:
-                if (
-                    not isinstance(self.weighting, ConstWeighting)
-                    or not np.isclose(self.weighting.const, self.cell_volume)
-                ):
-                    optargs.append(('weighting', self.weighting.const, None))
-
-            optmod = [''] * len(optargs)
-            if self.dtype in (float, complex, int, bool):
-                optmod[2] = '!s'
-
-            inner_parts = signature_string_parts(
-                posargs, optargs, [posmod, optmod]
-            )
-            return repr_string(ctor, inner_parts)
-
-        else:
-            ctor = self.__class__.__name__
-            posargs = [self.partition, self.tspace]
-            inner_parts = signature_string_parts(posargs, [])
-            return repr_string(ctor, inner_parts, allow_mixed_seps=False)
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        return repr(self)
-
-
-# TODO: move relevant code to space
-class DiscretizedSpaceElement(object):
-
-    """Representation of a `DiscretizedSpace` element."""
-
-    def __init__(self, space, tensor):
-        """Initialize a new instance."""
-        super(DiscretizedSpaceElement, self).__init__(space)
-        self.__tensor = tensor
-
-    # --- Constructor args
-
-    @property
-    def tensor(self):
-        """Structure for data storage."""
-        return self.__tensor
-
-    # --- Pass-through `space` properties
-
-    @property
-    def cell_sides(self):
-        """Side lengths of a cell in an underlying *uniform* partition."""
-        return self.space.cell_sides
-
-    @property
-    def cell_volume(self):
-        """Cell volume of an underlying regular grid."""
-        return self.space.cell_volume
-
-    # --- Pass-through `tensor` properties
-
-    @property
-    def data(self):
-        """Data container of ``self``, depends on ``space.impl``."""
-        return self.tensor.data
-
-    @property
-    def dtype(self):
-        """Type of data storage."""
-        return self.tensor.dtype
-
-    @property
-    def size(self):
-        """Size of data storage."""
-        return self.tensor.size
-
-    def __len__(self):
-        """Return ``len(self)``.
-
-        Equivalent to ``self.shape[0]`` if possible. Zero-dimensional
-        tensors have no length and produce a `TypeError`.
-        """
-        return len(self.tensor)
-
-    def copy(self):
-        """Create an identical (deep) copy of this element."""
-        return self.space.element(self.tensor.copy())
-
-    def asarray(self, out=None):
-        """Extract the data of this array as a numpy array.
-
-        Parameters
-        ----------
-        out : `numpy.ndarray`, optional
-            Array in which the result should be written in-place.
-            Has to be contiguous and of the correct dtype.
-        """
-        return self.tensor.asarray(out=out)
-
-    def astype(self, dtype):
-        """Return a copy of this element with new ``dtype``.
-
-        Parameters
-        ----------
-        dtype :
-            Scalar data type of the returned space. Can be provided
-            in any way the `numpy.dtype` constructor understands, e.g.
-            as built-in type or as a string. Data types with non-trivial
-            shapes are not allowed.
-
-        Returns
-        -------
-        newelem : `DisceteLpElement`
-            Version of this element with given data type.
-        """
-        return self.space.astype(dtype).element(self.tensor.astype(dtype))
-
-    def __eq__(self, other):
-        """Return ``self == other``.
-
-        Returns
-        -------
-        equals : bool
-            ``True`` if all entries of ``other`` are equal to this
-            element's entries, ``False`` otherwise.
-        """
-        return other in self.space and other.tensor == self.tensor
-
-    def __getitem__(self, indices):
-        """Return ``self[indices]``.
-
-        Parameters
-        ----------
-        indices : int or `slice`
-            The position(s) that should be accessed.
-
-        Returns
-        -------
-        values : `Tensor`
-            The value(s) at the index (indices).
-        """
-        if isinstance(indices, type(self)):
-            indices = indices.tensor
-        return self.tensor[indices]
-
-    def __ipow__(self, p):
-        """Implement ``self **= p``."""
-        # The concrete `tensor` can specialize `__ipow__` for non-integer
-        # `p` so we want to use it here. Otherwise we get the default
-        # `LinearSpaceElement.__ipow__` which only works for integer `p`.
-        self.tensor.__ipow__(p)
-        return self
-
-    @property
-    def real(self):
-        """Real part of this element.
-
-        Returns
-        -------
-        real : `DiscretizedSpaceElement`
-
-        Examples
-        --------
-        Get the real part:
-
-        >>> discr = odl.uniform_discr(0, 1, 3, dtype=complex)
-        >>> x = discr.element([5+1j, 3, 2-2j])
-        >>> x.real
-        uniform_discr(0.0, 1.0, 3).element([ 5.,  3.,  2.])
-
-        Set the real part:
-
-        >>> x = discr.element([1 + 1j, 2, 3 - 3j])
-        >>> zero = discr.real_space.zero()
-        >>> x.real = zero
-        >>> x.real
-        uniform_discr(0.0, 1.0, 3).element([ 0.,  0.,  0.])
-
-        Other array-like types and broadcasting:
-
-        >>> x.real = 1.0
-        >>> x.real
-        uniform_discr(0.0, 1.0, 3).element([ 1.,  1.,  1.])
-        >>> x.real = [2, 3, 4]
-        >>> x.real
-        uniform_discr(0.0, 1.0, 3).element([ 2.,  3.,  4.])
-        """
-        return self.space.real_space.element(self.tensor.real)
-
-    @real.setter
-    def real(self, newreal):
-        """Set the real part of this element to ``newreal``.
-
-        This method is invoked by ``x.real = other``.
-
-        Parameters
-        ----------
-        newreal : array-like or scalar
-            Values to be assigned to the real part of this element.
-        """
-        self.tensor.real = newreal
-
-    @property
-    def imag(self):
-        """Imaginary part of this element.
-
-        Returns
-        -------
-        imag : `DiscretizedSpaceElement`
-
-        Examples
-        --------
-        Get the imaginary part:
-
-        >>> discr = uniform_discr(0, 1, 3, dtype=complex)
-        >>> x = discr.element([5+1j, 3, 2-2j])
-        >>> x.imag
-        uniform_discr(0.0, 1.0, 3).element([ 1.,  0., -2.])
-
-        Set the imaginary part:
-
-        >>> x = discr.element([1 + 1j, 2, 3 - 3j])
-        >>> zero = discr.real_space.zero()
-        >>> x.imag = zero
-        >>> x.imag
-        uniform_discr(0.0, 1.0, 3).element([ 0.,  0.,  0.])
-
-        Other array-like types and broadcasting:
-
-        >>> x.imag = 1.0
-        >>> x.imag
-        uniform_discr(0.0, 1.0, 3).element([ 1.,  1.,  1.])
-        >>> x.imag = [2, 3, 4]
-        >>> x.imag
-        uniform_discr(0.0, 1.0, 3).element([ 2.,  3.,  4.])
-        """
-        return self.space.real_space.element(self.tensor.imag)
-
-    @imag.setter
-    def imag(self, newimag):
-        """Set the imaginary part of this element to ``newimag``.
-
-        This method is invoked by ``x.imag = other``.
-
-        Parameters
-        ----------
-        newimag : array-like or scalar
-            Values to be assigned to the imaginary part of this element.
-
-        Raises
-        ------
-        ValueError
-            If the space is real, i.e., no imagninary part can be set.
-        """
-        if self.space.is_real:
-            raise ValueError('cannot set imaginary part in real spaces')
-        self.tensor.imag = newimag
-
-    def conj(self, out=None):
-        """Complex conjugate of this element.
-
-        Parameters
-        ----------
-        out : `DiscretizedSpaceElement`, optional
-            Element to which the complex conjugate is written.
-            Must be an element of this element's space.
-
-        Returns
-        -------
-        out : `DiscretizedSpaceElement`
-            The complex conjugate element. If ``out`` is provided,
-            the returned object is a reference to it.
-
-        Examples
-        --------
-        >>> discr = uniform_discr(0, 1, 4, dtype=complex)
-        >>> x = discr.element([5+1j, 3, 2-2j, 1j])
-        >>> y = x.conj()
-        >>> print(y)
-        [ 5.-1.j,  3.-0.j,  2.+2.j,  0.-1.j]
-
-        The out parameter allows you to avoid a copy:
-
-        >>> z = discr.element()
-        >>> z_out = x.conj(out=z)
-        >>> print(z)
-        [ 5.-1.j,  3.-0.j,  2.+2.j,  0.-1.j]
-        >>> z_out is z
-        True
-
-        It can also be used for in-place conjugation:
-
-        >>> x_out = x.conj(out=x)
-        >>> print(x)
-        [ 5.-1.j,  3.-0.j,  2.+2.j,  0.-1.j]
-        >>> x_out is x
-        True
-        """
-        if out is None:
-            return self.space.element(self.tensor.conj())
-        else:
-            self.tensor.conj(out=out.tensor)
-            return out
-
-    def __setitem__(self, indices, values):
-        """Set values of this element.
-
-        Parameters
-        ----------
-        indices : int or `slice`
-            The position(s) that should be set
-        values : scalar or `array-like`
-            Value(s) to be assigned.
-            If ``indices`` is an integer, ``values`` must be a scalar
-            value.
-            If ``indices`` is a slice, ``values`` must be
-            broadcastable to the size of the slice (same size,
-            shape ``(1,)`` or scalar).
-            For ``indices == slice(None)``, i.e. in the call
-            ``vec[:] = values``, a multi-dimensional array of correct
-            shape is allowed as ``values``.
-        """
-        if values in self.space:
-            self.tensor[indices] = values.tensor
-        else:
-            if isinstance(indices, type(self)):
-                indices = indices.tensor
-            if isinstance(values, type(self)):
-                values = values.tensor
-            self.tensor.__setitem__(indices, values)
-
-    def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
-        """Interface to Numpy's ufunc machinery.
-
-        This method is called by Numpy version 1.13 and higher as a single
-        point for the ufunc dispatch logic. An object implementing
-        ``__array_ufunc__`` takes over control when a `numpy.ufunc` is
-        called on it, allowing it to use custom implementations and
-        output types.
-
-        This includes handling of in-place arithmetic like
-        ``npy_array += custom_obj``. In this case, the custom object's
-        ``__array_ufunc__`` takes precedence over the baseline
-        `numpy.ndarray` implementation. It will be called with
-        ``npy_array`` as ``out`` argument, which ensures that the
-        returned object is a Numpy array. For this to work properly,
-        ``__array_ufunc__`` has to accept Numpy arrays as ``out`` arguments.
-
-        See the `corresponding NEP`_ and the `interface documentation`_
-        for further details. See also the `general documentation on
-        Numpy ufuncs`_.
-
-        .. note::
-            When using operations that alter the shape (like ``reduce``),
-            or the data type (can be any of the methods),
-            the resulting array is wrapped in a space of the same
-            type as ``self.space``, propagating all essential properties
-            like weighting, exponent etc. as closely as possible.
-
-        Parameters
-        ----------
-        ufunc : `numpy.ufunc`
-            Ufunc that should be called on ``self``.
-        method : str
-            Method on ``ufunc`` that should be called on ``self``.
-            Possible values:
-
-            ``'__call__'``, ``'accumulate'``, ``'at'``, ``'outer'``,
-            ``'reduce'``
-
-        input1, ..., inputN :
-            Positional arguments to ``ufunc.method``.
-        kwargs :
-            Keyword arguments to ``ufunc.method``.
-
-        Returns
-        -------
-        ufunc_result : `DiscretizedSpaceElement`, `numpy.ndarray` or tuple
-            Result of the ufunc evaluation. If no ``out`` keyword argument
-            was given, the result is a `DiscretizedSpaceElement` or a tuple
-            of such, depending on the number of outputs of ``ufunc``.
-            If ``out`` was provided, the returned object or sequence members
-            refer(s) to ``out``.
-
-        Examples
-        --------
-        We apply `numpy.add` to elements of a one-dimensional space:
-
-        >>> space = odl.uniform_discr(0, 1, 3)
-        >>> x = space.element([1, 2, 3])
-        >>> y = space.element([-1, -2, -3])
-        >>> x.__array_ufunc__(np.add, '__call__', x, y)
-        uniform_discr(0.0, 1.0, 3).element([ 0.,  0.,  0.])
-        >>> np.add(x, y)  # same mechanism for Numpy >= 1.13
-        uniform_discr(0.0, 1.0, 3).element([ 0.,  0.,  0.])
-
-        As ``out``, a `DiscretizedSpaceElement` can be provided as well as a
-        `Tensor` of appropriate type, or its underlying data container
-        type (wrapped in a sequence):
-
-        >>> out = space.element()
-        >>> res = x.__array_ufunc__(np.add, '__call__', x, y, out=(out,))
-        >>> out
-        uniform_discr(0.0, 1.0, 3).element([ 0.,  0.,  0.])
-        >>> res is out
-        True
-        >>> out_tens = odl.rn(3).element()
-        >>> res = x.__array_ufunc__(np.add, '__call__', x, y, out=(out_tens,))
-        >>> out_tens
-        rn(3).element([ 0.,  0.,  0.])
-        >>> res is out_tens
-        True
-        >>> out_arr = np.empty(3)
-        >>> res = x.__array_ufunc__(np.add, '__call__', x, y, out=(out_arr,))
-        >>> out_arr
-        array([ 0.,  0.,  0.])
-        >>> res is out_arr
-        True
-
-        With multiple dimensions:
-
-        >>> space_2d = odl.uniform_discr([0, 0], [1, 2], (2, 3))
-        >>> x = y = space_2d.one()
-        >>> x.__array_ufunc__(np.add, '__call__', x, y)
-        uniform_discr([ 0.,  0.], [ 1.,  2.], (2, 3)).element(
-            [[ 2.,  2.,  2.],
-             [ 2.,  2.,  2.]]
-        )
-
-        The ``ufunc.accumulate`` method retains the original space:
-
-        >>> x = space.element([1, 2, 3])
-        >>> x.__array_ufunc__(np.add, 'accumulate', x)
-        uniform_discr(0.0, 1.0, 3).element([ 1.,  3.,  6.])
-        >>> np.add.accumulate(x)  # same mechanism for Numpy >= 1.13
-        uniform_discr(0.0, 1.0, 3).element([ 1.,  3.,  6.])
-
-        For multi-dimensional space elements, an optional ``axis`` parameter
-        can be provided (default is 0):
-
-        >>> z = space_2d.one()
-        >>> z.__array_ufunc__(np.add, 'accumulate', z, axis=1)
-        uniform_discr([ 0.,  0.], [ 1.,  2.], (2, 3)).element(
-            [[ 1.,  2.,  3.],
-             [ 1.,  2.,  3.]]
-        )
-
-        The method also takes a ``dtype`` parameter:
-
-        >>> z.__array_ufunc__(np.add, 'accumulate', z, dtype=complex)
-        uniform_discr([ 0.,  0.], [ 1.,  2.], (2, 3), dtype=complex).element(
-            [[ 1.+0.j,  1.+0.j,  1.+0.j],
-             [ 2.+0.j,  2.+0.j,  2.+0.j]]
-        )
-
-        The ``ufunc.at`` method operates in-place. Here we add the second
-        operand ``[5, 10]`` to ``x`` at indices ``[0, 2]``:
-
-        >>> x = space.element([1, 2, 3])
-        >>> x.__array_ufunc__(np.add, 'at', x, [0, 2], [5, 10])
-        >>> x
-        uniform_discr(0.0, 1.0, 3).element([  6.,   2.,  13.])
-
-        For outer-product-type operations, i.e., operations where the result
-        shape is the sum of the individual shapes, the ``ufunc.outer``
-        method can be used:
-
-        >>> space1 = odl.uniform_discr(0, 1, 2)
-        >>> space2 = odl.uniform_discr(0, 2, 3)
-        >>> x = space1.element([0, 3])
-        >>> y = space2.element([1, 2, 3])
-        >>> x.__array_ufunc__(np.add, 'outer', x, y)
-        uniform_discr([ 0.,  0.], [ 1.,  2.], (2, 3)).element(
-            [[ 1.,  2.,  3.],
-             [ 4.,  5.,  6.]]
-        )
-        >>> y.__array_ufunc__(np.add, 'outer', y, x)
-        uniform_discr([ 0.,  0.], [ 2.,  1.], (3, 2)).element(
-            [[ 1.,  4.],
-             [ 2.,  5.],
-             [ 3.,  6.]]
-        )
-
-        Using ``ufunc.reduce`` in 1D produces a scalar:
-
-        >>> x = space.element([1, 2, 3])
-        >>> x.__array_ufunc__(np.add, 'reduce', x)
-        6.0
-
-        In multiple dimensions, ``axis`` can be provided for reduction over
-        selected axes:
-
-        >>> z = space_2d.element([[1, 2, 3],
-        ...                       [4, 5, 6]])
-        >>> z.__array_ufunc__(np.add, 'reduce', z, axis=1)
-        uniform_discr(0.0, 1.0, 2).element([  6.,  15.])
-
-        References
-        ----------
-        .. _corresponding NEP:
-           https://docs.scipy.org/doc/numpy/neps/ufunc-overrides.html
-
-        .. _interface documentation:
-           https://docs.scipy.org/doc/numpy/reference/arrays.classes.html\
-#numpy.class.__array_ufunc__
-
-        .. _general documentation on Numpy ufuncs:
-           https://docs.scipy.org/doc/numpy/reference/ufuncs.html
-
-        .. _reduceat documentation:
-           https://docs.scipy.org/doc/numpy/reference/generated/\
-        """
-        # --- Process `out` --- #
-
-        # Unwrap out if provided. The output parameters are all wrapped
-        # in one tuple, even if there is only one.
-        out_tuple = kwargs.pop('out', ())
-
-        # Check number of `out` args, depending on `method`
-        if method == '__call__' and len(out_tuple) not in (0, ufunc.nout):
-            raise ValueError(
-                "need 0 or {} `out` arguments for `method='__call__'`, "
-                'got {}'.format(ufunc.nout, len(out_tuple)))
-        elif method != '__call__' and len(out_tuple) not in (0, 1):
-            raise ValueError(
-                "need 0 or 1 `out` arguments for `method={!r}`, "
-                'got {}'.format(method, len(out_tuple)))
-
-        # We allow our own element type, tensors and their data containers
-        # as `out`
-        valid_out_types = (type(self),
-                           type(self.tensor),
-                           type(self.tensor.data))
-        if not all(isinstance(o, valid_out_types) or o is None
-                   for o in out_tuple):
-            return NotImplemented
-
-        # Assign to `out` or `out1` and `out2`, respectively (using the
-        # `tensor` attribute if available)
-        out = out1 = out2 = None
-        if len(out_tuple) == 1:
-            out = getattr(out_tuple[0], 'tensor', out_tuple[0])
-        elif len(out_tuple) == 2:
-            out1 = getattr(out_tuple[0], 'tensor', out_tuple[0])
-            out2 = getattr(out_tuple[1], 'tensor', out_tuple[1])
-
-        # --- Process `inputs` --- #
-
-        # Pull out the `tensor` attributes from `DiscretizedSpaceElement`
-        # instances
-        # since we want to pass them to `self.tensor.__array_ufunc__`
-        input_tensors = tuple(
-            elem.tensor if isinstance(elem, type(self)) else elem
-            for elem in inputs)
-
-        # --- Get some parameters for later --- #
-
-        # Need to filter for `keepdims` in case `method='reduce'` since it's
-        # invalid (happening below)
-        keepdims = kwargs.pop('keepdims', False)
-
-        # Determine list of remaining axes from `axis` for `'reduce'`
-        axis = kwargs.get('axis', None)
-        if axis is None:
-            reduced_axes = list(range(1, self.ndim))
-        else:
-            try:
-                iter(axis)
-            except TypeError:
-                axis = (int(axis),)
-
-            reduced_axes = [i for i in range(self.ndim) if i not in axis]
-
-        # --- Evaluate ufunc --- #
-
-        if method == '__call__':
-            if ufunc.nout == 1:
-                kwargs['out'] = (out,)
-                res_tens = self.tensor.__array_ufunc__(
-                    ufunc, '__call__', *input_tensors, **kwargs)
-
-                if out is None:
-                    # Wrap result tensor in appropriate DiscretizedSpace space.
-                    res_space = DiscretizedSpace(
-                        self.space.partition,
-                        res_tens.space,
-                        axis_labels=self.space.axis_labels
-                    )
-                    result = res_space.element(res_tens)
-                else:
-                    result = out_tuple[0]
-
-                return result
-
-            elif ufunc.nout == 2:
-                kwargs['out'] = (out1, out2)
-                res1_tens, res2_tens = self.tensor.__array_ufunc__(
-                    ufunc, '__call__', *input_tensors, **kwargs)
-
-                if out1 is None:
-                    # Wrap as for nout = 1
-                    res_space = DiscretizedSpace(
-                        self.space.partition,
-                        res1_tens.space,
-                        axis_labels=self.space.axis_labels
-                    )
-                    result1 = res_space.element(res1_tens)
-                else:
-                    result1 = out_tuple[0]
-
-                if out2 is None:
-                    # Wrap as for nout = 1
-                    res_space = DiscretizedSpace(
-                        self.space.partition,
-                        res2_tens.space,
-                        axis_labels=self.space.axis_labels
-                    )
-                    result2 = res_space.element(res2_tens)
-                else:
-                    result2 = out_tuple[1]
-
-                return result1, result2
-
-            else:
-                raise NotImplementedError('nout = {} not supported'
-                                          ''.format(ufunc.nout))
-
-        elif method == 'reduce' and keepdims:
-            raise ValueError(
-                '`keepdims=True` cannot be used in `reduce` since there is '
-                'no unique way to determine a function domain in collapsed '
-                'axes')
-
-        elif method == 'reduceat':
-            # Makes no sense since there is no way to determine in which
-            # space the result should live, except in special cases when
-            # axes are being completely collapsed or don't change size.
-            raise ValueError('`reduceat` not supported')
-
-        elif (
-            method == 'outer'
-            and not all(isinstance(inp, type(self)) for inp in inputs)
-        ):
-            raise TypeError(
-                "inputs must be of type {} for `method='outer'`, "
-                'got types {}'
-                ''.format(type(self), tuple(type(inp) for inp in inputs))
-            )
-
-        else:  # method != '__call__', and otherwise valid
-
-            if method != 'at':
-                # No kwargs allowed for 'at'
-                kwargs['out'] = (out,)
-
-            res_tens = self.tensor.__array_ufunc__(
-                ufunc, method, *input_tensors, **kwargs)
-
-            # Shortcut for scalar or no return value
-            if np.isscalar(res_tens) or res_tens is None:
-                # The first occurs for `reduce` with all axes,
-                # the second for in-place stuff (`at` currently)
-                return res_tens
-
-            if out is None:
-                # Wrap in appropriate DiscretizedSpace space depending
-                # on `method`
-                if method == 'accumulate':
-                    res_space = DiscretizedSpace(
-                        self.space.partition,
-                        res_tens.space,
-                        axis_labels=self.space.axis_labels
-                    )
-                    result = res_space.element(res_tens)
-
-                elif method == 'outer':
-                    # Concatenate partitions and axis_labels,
-                    # and determine `tspace` from the result tensor
-                    inp1, inp2 = inputs
-                    part = inp1.space.partition.append(inp2.space.partition)
-                    labels1 = [lbl + ' (1)' for lbl in inp1.space.axis_labels]
-                    labels2 = [lbl + ' (2)' for lbl in inp2.space.axis_labels]
-                    labels = labels1 + labels2
-
-                    if all(isinstance(inp.space.weighting, ConstWeighting)
-                           for inp in inputs):
-                        # For constant weighting, use the product of the
-                        # two weighting constants. The result tensor space
-                        # cannot know about the "correct" way to combine the
-                        # two constants, so we need to do it manually here.
-                        weighting = (inp1.space.weighting.const *
-                                     inp2.space.weighting.const)
-                        tspace = type(res_tens.space)(
-                            res_tens.shape, res_tens.dtype,
-                            exponent=res_tens.space.exponent,
-                            weighting=weighting)
-                    else:
-                        # Otherwise `TensorSpace` knows how to handle this
-                        tspace = res_tens.space
-
-                    res_space = DiscretizedSpace(
-                        part, tspace, axis_labels=labels
-                    )
-                    result = res_space.element(res_tens)
-
-                elif method == 'reduce':
-                    # Index space by axis using `reduced_axes`
-                    res_space = self.space.byaxis_in[reduced_axes].astype(
-                        res_tens.dtype)
-                    result = res_space.element(res_tens)
-
-                else:
-                    raise RuntimeError('bad `method`')
-
-            else:
-                # `out` may be `out_tuple[0].tensor`, but we want to return
-                # the original one
-                result = out_tuple[0]
-
-            return result
-
+    # TODO: fix
     def show(self, title=None, method='', coords=None, indices=None,
              force_show=False, fig=None, **kwargs):
         """Display the function graphically.
@@ -1401,11 +609,6 @@ class DiscretizedSpaceElement(object):
             is that ``fig`` is the return value of an earlier call to
             this function.
 
-        Other Parameters
-        ----------------
-        interp : {'linear', 'nearest'}, optional
-            Interpolation type that should be used for the plot.
-
         kwargs : {'figsize', 'saveto', 'clim', ...}, optional
             Extra keyword arguments passed on to the display method.
             See the Matplotlib functions for documentation of extra
@@ -1421,9 +624,6 @@ class DiscretizedSpaceElement(object):
         odl.util.graphics.show_discrete_data : Underlying implementation
         """
         from odl.util.graphics import show_discrete_data
-
-        if 'interp' not in kwargs:
-            kwargs['interp'] = 'linear'
 
         if self.ndim == 0:
             raise ValueError('nothing to show for 0-dimensional vector')
@@ -1516,6 +716,469 @@ class DiscretizedSpaceElement(object):
         return show_discrete_data(values, part, title=title, method=method,
                                   force_show=force_show, fig=fig,
                                   axis_labels=axis_labels, **kwargs)
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        # Clunky check if the factory repr can be used
+        if uniform_partition_fromintv(
+            self.partition.set, self.shape, nodes_on_bdry=False
+        ) == self.partition:
+            use_uniform = True
+            nodes_on_bdry = False
+        elif uniform_partition_fromintv(
+            self.partition.set, self.shape, nodes_on_bdry=True
+        ) == self.partition:
+            use_uniform = True
+            nodes_on_bdry = True
+        else:
+            use_uniform = False
+            nodes_on_bdry = None
+
+        if use_uniform:
+            ctor = 'uniform_discr'
+            if self.ndim == 1:
+                posargs = [self.min_pt[0], self.max_pt[0], self.shape[0]]
+                posmod = ['', '', '']
+            else:
+                posargs = [self.min_pt, self.max_pt, self.shape]
+                posmod = [array_str, array_str, '']
+
+            default_dtype_s = dtype_str(
+                self.tspace.default_dtype(RealNumbers())
+            )
+
+            dtype_s = dtype_str(self.dtype)
+            optargs = [
+                ('impl', self.impl, 'numpy'),
+                ('nodes_on_bdry', nodes_on_bdry, False),
+                ('dtype', dtype_s, default_dtype_s)
+            ]
+
+            # Add weighting stuff if not equal to default
+            if (
+                self.exponent == float('inf')
+                or self.ndim == 0
+                or not is_floating_dtype(self.dtype)
+            ):
+                # In these cases, weighting constant 1 is the default
+                if (
+                    not isinstance(self.weighting, ConstWeighting)
+                    or not np.isclose(self.weighting.const, 1.0)
+                ):
+                    optargs.append(('weighting', self.weighting.const, None))
+            else:
+                if (
+                    not isinstance(self.weighting, ConstWeighting)
+                    or not np.isclose(self.weighting.const, self.cell_volume)
+                ):
+                    optargs.append(('weighting', self.weighting.const, None))
+
+            optmod = [''] * len(optargs)
+            if self.dtype in (float, complex, int, bool):
+                optmod[2] = '!s'
+
+            inner_parts = signature_string_parts(
+                posargs, optargs, [posmod, optmod]
+            )
+            return repr_string(ctor, inner_parts)
+
+        else:
+            ctor = self.__class__.__name__
+            posargs = [self.partition, self.tspace]
+            inner_parts = signature_string_parts(posargs, [])
+            return repr_string(ctor, inner_parts, allow_mixed_seps=False)
+
+    def __str__(self):
+        """Return ``str(self)``."""
+        return repr(self)
+
+
+def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
+    """Interface to Numpy's ufunc machinery.
+
+    This method is called by Numpy version 1.13 and higher as a single
+    point for the ufunc dispatch logic. An object implementing
+    ``__array_ufunc__`` takes over control when a `numpy.ufunc` is
+    called on it, allowing it to use custom implementations and
+    output types.
+
+    This includes handling of in-place arithmetic like
+    ``npy_array += custom_obj``. In this case, the custom object's
+    ``__array_ufunc__`` takes precedence over the baseline
+    `numpy.ndarray` implementation. It will be called with
+    ``npy_array`` as ``out`` argument, which ensures that the
+    returned object is a Numpy array. For this to work properly,
+    ``__array_ufunc__`` has to accept Numpy arrays as ``out`` arguments.
+
+    See the `corresponding NEP`_ and the `interface documentation`_
+    for further details. See also the `general documentation on
+    Numpy ufuncs`_.
+
+    .. note::
+        When using operations that alter the shape (like ``reduce``),
+        or the data type (can be any of the methods),
+        the resulting array is wrapped in a space of the same
+        type as ``self.space``, propagating all essential properties
+        like weighting, exponent etc. as closely as possible.
+
+    Parameters
+    ----------
+    ufunc : `numpy.ufunc`
+        Ufunc that should be called on ``self``.
+    method : str
+        Method on ``ufunc`` that should be called on ``self``.
+        Possible values:
+
+        ``'__call__'``, ``'accumulate'``, ``'at'``, ``'outer'``,
+        ``'reduce'``
+
+    input1, ..., inputN :
+        Positional arguments to ``ufunc.method``.
+    kwargs :
+        Keyword arguments to ``ufunc.method``.
+
+    Returns
+    -------
+    ufunc_result : `DiscreteLpElement`, `numpy.ndarray` or tuple
+        Result of the ufunc evaluation. If no ``out`` keyword argument
+        was given, the result is a `DiscreteLpElement` or a tuple
+        of such, depending on the number of outputs of ``ufunc``.
+        If ``out`` was provided, the returned object or sequence members
+        refer(s) to ``out``.
+
+    Examples
+    --------
+    We apply `numpy.add` to elements of a one-dimensional space:
+
+    >>> space = odl.uniform_discr(0, 1, 3)
+    >>> x = space.element([1, 2, 3])
+    >>> y = space.element([-1, -2, -3])
+    >>> x.__array_ufunc__(np.add, '__call__', x, y)
+    uniform_discr(0.0, 1.0, 3).element([ 0.,  0.,  0.])
+    >>> np.add(x, y)  # same mechanism for Numpy >= 1.13
+    uniform_discr(0.0, 1.0, 3).element([ 0.,  0.,  0.])
+
+    As ``out``, a `DiscreteLpElement` can be provided as well as a
+    `Tensor` of appropriate type, or its underlying data container
+    type (wrapped in a sequence):
+
+    >>> out = space.element()
+    >>> res = x.__array_ufunc__(np.add, '__call__', x, y, out=(out,))
+    >>> out
+    uniform_discr(0.0, 1.0, 3).element([ 0.,  0.,  0.])
+    >>> res is out
+    True
+    >>> out_tens = odl.rn(3).element()
+    >>> res = x.__array_ufunc__(np.add, '__call__', x, y, out=(out_tens,))
+    >>> out_tens
+    rn(3).element([ 0.,  0.,  0.])
+    >>> res is out_tens
+    True
+    >>> out_arr = np.empty(3)
+    >>> res = x.__array_ufunc__(np.add, '__call__', x, y, out=(out_arr,))
+    >>> out_arr
+    array([ 0.,  0.,  0.])
+    >>> res is out_arr
+    True
+
+    With multiple dimensions:
+
+    >>> space_2d = odl.uniform_discr([0, 0], [1, 2], (2, 3))
+    >>> x = y = space_2d.one()
+    >>> x.__array_ufunc__(np.add, '__call__', x, y)
+    uniform_discr([ 0.,  0.], [ 1.,  2.], (2, 3)).element(
+        [[ 2.,  2.,  2.],
+         [ 2.,  2.,  2.]]
+    )
+
+    The ``ufunc.accumulate`` method retains the original space:
+
+    >>> x = space.element([1, 2, 3])
+    >>> x.__array_ufunc__(np.add, 'accumulate', x)
+    uniform_discr(0.0, 1.0, 3).element([ 1.,  3.,  6.])
+    >>> np.add.accumulate(x)  # same mechanism for Numpy >= 1.13
+    uniform_discr(0.0, 1.0, 3).element([ 1.,  3.,  6.])
+
+    For multi-dimensional space elements, an optional ``axis`` parameter
+    can be provided (default is 0):
+
+    >>> z = space_2d.one()
+    >>> z.__array_ufunc__(np.add, 'accumulate', z, axis=1)
+    uniform_discr([ 0.,  0.], [ 1.,  2.], (2, 3)).element(
+        [[ 1.,  2.,  3.],
+         [ 1.,  2.,  3.]]
+    )
+
+    The method also takes a ``dtype`` parameter:
+
+    >>> z.__array_ufunc__(np.add, 'accumulate', z, dtype=complex)
+    uniform_discr([ 0.,  0.], [ 1.,  2.], (2, 3), dtype=complex).element(
+        [[ 1.+0.j,  1.+0.j,  1.+0.j],
+         [ 2.+0.j,  2.+0.j,  2.+0.j]]
+    )
+
+    The ``ufunc.at`` method operates in-place. Here we add the second
+    operand ``[5, 10]`` to ``x`` at indices ``[0, 2]``:
+
+    >>> x = space.element([1, 2, 3])
+    >>> x.__array_ufunc__(np.add, 'at', x, [0, 2], [5, 10])
+    >>> x
+    uniform_discr(0.0, 1.0, 3).element([  6.,   2.,  13.])
+
+    For outer-product-type operations, i.e., operations where the result
+    shape is the sum of the individual shapes, the ``ufunc.outer``
+    method can be used:
+
+    >>> space1 = odl.uniform_discr(0, 1, 2)
+    >>> space2 = odl.uniform_discr(0, 2, 3)
+    >>> x = space1.element([0, 3])
+    >>> y = space2.element([1, 2, 3])
+    >>> x.__array_ufunc__(np.add, 'outer', x, y)
+    uniform_discr([ 0.,  0.], [ 1.,  2.], (2, 3)).element(
+        [[ 1.,  2.,  3.],
+         [ 4.,  5.,  6.]]
+    )
+    >>> y.__array_ufunc__(np.add, 'outer', y, x)
+    uniform_discr([ 0.,  0.], [ 2.,  1.], (3, 2)).element(
+        [[ 1.,  4.],
+         [ 2.,  5.],
+         [ 3.,  6.]]
+    )
+
+    Using ``ufunc.reduce`` in 1D produces a scalar:
+
+    >>> x = space.element([1, 2, 3])
+    >>> x.__array_ufunc__(np.add, 'reduce', x)
+    6.0
+
+    In multiple dimensions, ``axis`` can be provided for reduction over
+    selected axes:
+
+    >>> z = space_2d.element([[1, 2, 3],
+    ...                       [4, 5, 6]])
+    >>> z.__array_ufunc__(np.add, 'reduce', z, axis=1)
+    uniform_discr(0.0, 1.0, 2).element([  6.,  15.])
+
+    References
+    ----------
+    .. _corresponding NEP:
+       https://docs.scipy.org/doc/numpy/neps/ufunc-overrides.html
+
+    .. _interface documentation:
+       https://docs.scipy.org/doc/numpy/reference/arrays.classes.html\
+#numpy.class.__array_ufunc__
+
+    .. _general documentation on Numpy ufuncs:
+       https://docs.scipy.org/doc/numpy/reference/ufuncs.html
+
+    .. _reduceat documentation:
+       https://docs.scipy.org/doc/numpy/reference/generated/\
+    """
+    # --- Process `out` --- #
+
+    # Unwrap out if provided. The output parameters are all wrapped
+    # in one tuple, even if there is only one.
+    out_tuple = kwargs.pop('out', ())
+
+    # Check number of `out` args, depending on `method`
+    if method == '__call__' and len(out_tuple) not in (0, ufunc.nout):
+        raise ValueError(
+            "need 0 or {} `out` arguments for `method='__call__'`, "
+            'got {}'.format(ufunc.nout, len(out_tuple)))
+    elif method != '__call__' and len(out_tuple) not in (0, 1):
+        raise ValueError(
+            "need 0 or 1 `out` arguments for `method={!r}`, "
+            'got {}'.format(method, len(out_tuple)))
+
+    # We allow our own element type, tensors and their data containers
+    # as `out`
+    valid_out_types = (type(self),
+                       type(self.tensor),
+                       type(self.tensor.data))
+    if not all(isinstance(o, valid_out_types) or o is None
+               for o in out_tuple):
+        return NotImplemented
+
+    # Assign to `out` or `out1` and `out2`, respectively (using the
+    # `tensor` attribute if available)
+    out = out1 = out2 = None
+    if len(out_tuple) == 1:
+        out = getattr(out_tuple[0], 'tensor', out_tuple[0])
+    elif len(out_tuple) == 2:
+        out1 = getattr(out_tuple[0], 'tensor', out_tuple[0])
+        out2 = getattr(out_tuple[1], 'tensor', out_tuple[1])
+
+    # --- Process `inputs` --- #
+
+    # Pull out the `tensor` attributes from DiscreteLpElement instances
+    # since we want to pass them to `self.tensor.__array_ufunc__`
+    input_tensors = tuple(
+        elem.tensor if isinstance(elem, type(self)) else elem
+        for elem in inputs)
+
+    # --- Get some parameters for later --- #
+
+    # Need to filter for `keepdims` in case `method='reduce'` since it's
+    # invalid (happening below)
+    keepdims = kwargs.pop('keepdims', False)
+
+    # Determine list of remaining axes from `axis` for `'reduce'`
+    axis = kwargs.get('axis', None)
+    if axis is None:
+        reduced_axes = list(range(1, self.ndim))
+    else:
+        try:
+            iter(axis)
+        except TypeError:
+            axis = (int(axis),)
+
+        reduced_axes = [i for i in range(self.ndim) if i not in axis]
+
+    weighting = self.space.weighting
+
+    # --- Evaluate ufunc --- #
+
+    if method == '__call__':
+        if ufunc.nout == 1:
+            kwargs['out'] = (out,)
+            res_tens = self.tensor.__array_ufunc__(
+                ufunc, '__call__', *input_tensors, **kwargs)
+
+            if out is None:
+                # Wrap result tensor in appropriate DiscreteLp space.
+                res_space = DiscreteLp(
+                    self.space.partition,
+                    res_tens.space,
+                    axis_labels=self.space.axis_labels
+                )
+                result = res_space.element(res_tens)
+            else:
+                result = out_tuple[0]
+
+            return result
+
+        elif ufunc.nout == 2:
+            kwargs['out'] = (out1, out2)
+            res1_tens, res2_tens = self.tensor.__array_ufunc__(
+                ufunc, '__call__', *input_tensors, **kwargs)
+
+            if out1 is None:
+                # Wrap as for nout = 1
+                res_space = DiscreteLp(
+                    self.space.partition,
+                    res1_tens.space,
+                    axis_labels=self.space.axis_labels
+                )
+                result1 = res_space.element(res1_tens)
+            else:
+                result1 = out_tuple[0]
+
+            if out2 is None:
+                # Wrap as for nout = 1
+                res_space = DiscreteLp(
+                    self.space.partition,
+                    res2_tens.space,
+                    axis_labels=self.space.axis_labels
+                )
+                result2 = res_space.element(res2_tens)
+            else:
+                result2 = out_tuple[1]
+
+            return result1, result2
+
+        else:
+            raise NotImplementedError('nout = {} not supported'
+                                      ''.format(ufunc.nout))
+
+    elif method == 'reduce' and keepdims:
+        raise ValueError(
+            '`keepdims=True` cannot be used in `reduce` since there is '
+            'no unique way to determine a function domain in collapsed '
+            'axes')
+
+    elif method == 'reduceat':
+        # Makes no sense since there is no way to determine in which
+        # space the result should live, except in special cases when
+        # axes are being completely collapsed or don't change size.
+        raise ValueError('`reduceat` not supported')
+
+    elif (
+        method == 'outer'
+        and not all(isinstance(inp, type(self)) for inp in inputs)
+    ):
+        raise TypeError(
+            "inputs must be of type {} for `method='outer'`, got types "
+            '{}'.format(type(self), tuple(type(inp) for inp in inputs))
+        )
+
+    else:  # method != '__call__', and otherwise valid
+
+        if method != 'at':
+            # No kwargs allowed for 'at'
+            kwargs['out'] = (out,)
+
+        res_tens = self.tensor.__array_ufunc__(
+            ufunc, method, *input_tensors, **kwargs)
+
+        # Shortcut for scalar or no return value
+        if np.isscalar(res_tens) or res_tens is None:
+            # The first occurs for `reduce` with all axes,
+            # the second for in-place stuff (`at` currently)
+            return res_tens
+
+        if out is None:
+            # Wrap in appropriate DiscreteLp space depending on `method`
+            if method == 'accumulate':
+                res_space = DiscreteLp(
+                    self.space.partition,
+                    res_tens.space,
+                    axis_labels=self.space.axis_labels
+                )
+                result = res_space.element(res_tens)
+
+            elif method == 'outer':
+                # Concatenate partitions and axis_labels,
+                # and determine `tspace` from the result tensor
+                inp1, inp2 = inputs
+                part = inp1.space.partition.append(inp2.space.partition)
+                labels1 = [lbl + ' (1)' for lbl in inp1.space.axis_labels]
+                labels2 = [lbl + ' (2)' for lbl in inp2.space.axis_labels]
+                labels = labels1 + labels2
+
+                if all(isinstance(inp.space.weighting, ConstWeighting)
+                       for inp in inputs):
+                    # For constant weighting, use the product of the
+                    # two weighting constants. The result tensor space
+                    # cannot know about the "correct" way to combine the
+                    # two constants, so we need to do it manually here.
+                    weighting = (inp1.space.weighting.const *
+                                 inp2.space.weighting.const)
+                    tspace = type(res_tens.space)(
+                        res_tens.shape, res_tens.dtype,
+                        exponent=res_tens.space.exponent,
+                        weighting=weighting)
+                else:
+                    # Otherwise `TensorSpace` knows how to handle this
+                    tspace = res_tens.space
+
+                res_space = DiscreteLp(part, tspace, axis_labels=labels)
+                result = res_space.element(res_tens)
+
+            elif method == 'reduce':
+                # Index space by axis using `reduced_axes`
+                res_space = self.space.byaxis_in[reduced_axes].astype(
+                    res_tens.dtype)
+                result = res_space.element(res_tens)
+
+            else:
+                raise RuntimeError('bad `method`')
+
+        else:
+            # `out` may be `out_tuple[0].tensor`, but we want to return
+            # the original one
+            result = out_tuple[0]
+
+        return result
 
 
 def uniform_discr_frompartition(partition, dtype=None, impl='numpy', **kwargs):

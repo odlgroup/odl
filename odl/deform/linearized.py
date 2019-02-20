@@ -13,7 +13,6 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 
 from odl.discr import DiscretizedSpace, Divergence, Gradient
-from odl.discr.discr_space import DiscretizedSpaceElement
 from odl.discr.discr_utils import _normalize_interp, per_axis_interpolator
 from odl.operator import Operator, PointwiseInner
 from odl.space import ProductSpace
@@ -185,6 +184,7 @@ class LinDeformFixedTempl(Operator):
         >>> print(op(disp_field))
         [ 0. ,  0. ,  1. ,  0.5,  0. ]
         """
+        # TODO: fix
         if not isinstance(template, DiscretizedSpaceElement):
             raise TypeError(
                 '`template` must be a `DiscretizedSpaceElement, got {!r}`'
