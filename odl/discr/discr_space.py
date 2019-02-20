@@ -273,7 +273,7 @@ class DiscretizedSpace(TensorSpace):
 
         return is_uniformly_weighted
 
-    # --- Element creation
+    # --- Element handling
 
     def element(self, inp=None, order=None, **kwargs):
         """Create an element from ``inp`` or from scratch.
@@ -371,6 +371,10 @@ class DiscretizedSpace(TensorSpace):
     def one(self):
         """Return the element of all ones."""
         return self.tspace.one()
+
+    def __contains__(self, other):
+        """Return ``other in self``."""
+        return other in self.tspace
 
     # --- Casting
 
