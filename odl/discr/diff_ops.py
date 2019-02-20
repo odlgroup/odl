@@ -282,11 +282,9 @@ class Gradient(PointwiseTensorFieldOperator):
         >>> g = grad.range.element((data, data ** 2))
         >>> adj_g = grad.adjoint(g)
         >>> adj_g
-        uniform_discr([ 0.,  0.], [ 2.,  5.], (2, 5)).element(
-            [[  0.,  -2.,  -5.,  -8., -11.],
-             [  0.,  -5., -14., -23., -32.]]
-        )
-        >>> g.inner(grad_f) / f.inner(adj_g)
+        array([[ -0.,  -2.,  -5.,  -8., -11.],
+               [ -0.,  -5., -14., -23., -32.]])
+        >>> grad.range.inner(g, grad_f) / grad.domain.inner(f, adj_g)
         1.0
         """
         if domain is None and range is None:
@@ -485,16 +483,16 @@ class Divergence(PointwiseTensorFieldOperator):
         ...                  [2., 3., 4., 5., 6.]])
         >>> f = div.domain.element([data, data])
         >>> div_f = div(f)
-        >>> print(div_f)
-        [[  2.,   2.,   2.,   2.,  -3.],
-         [  2.,   2.,   2.,   2.,  -4.],
-         [ -1.,  -2.,  -3.,  -4., -12.]]
+        >>> div_f
+        array([[  2.,   2.,   2.,   2.,  -3.],
+               [  2.,   2.,   2.,   2.,  -4.],
+               [ -1.,  -2.,  -3.,  -4., -12.]])
 
         Verify adjoint:
 
         >>> g = div.range.element(data ** 2)
         >>> adj_div_g = div.adjoint(g)
-        >>> g.inner(div_f) / f.inner(adj_div_g)
+        >>> div.range.inner(g, div_f) / div.domain.inner(f, adj_div_g)
         1.0
         """
         if domain is None and range is None:
@@ -670,11 +668,9 @@ class Laplacian(PointwiseTensorFieldOperator):
         >>> f = space.element(data)
         >>> lap = Laplacian(space)
         >>> lap(f)
-        uniform_discr([ 0.,  0.], [ 3.,  3.], (3, 3)).element(
-            [[ 0.,  1.,  0.],
-             [ 1., -4.,  1.],
-             [ 0.,  1.,  0.]]
-        )
+        array([[ 0.,  1.,  0.],
+               [ 1., -4.,  1.],
+               [ 0.,  1.,  0.]])
         """
         if not isinstance(domain, DiscretizedSpace):
             raise TypeError('`domain` {!r} is not a DiscretizedSpace instance'
