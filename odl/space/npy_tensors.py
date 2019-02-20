@@ -358,21 +358,21 @@ class NumpyTensorSpace(TensorSpace):
         >>> empty = space.element()
         >>> empty.shape
         (3,)
-        >>> empty.space
-        rn(3)
+        >>> empty in space
+        True
         >>> x = space.element([1, 2, 3])
         >>> x
-        rn(3).element([ 1.,  2.,  3.])
+        array([ 1.,  2.,  3.])
 
-        If the input already is a `numpy.ndarray` of correct `dtype`, it
-        will merely be wrapped, i.e., both array and space element access
-        the same memory, such that mutations will affect both:
+        If the input already is a `numpy.ndarray` of correct `shape` and
+        `dtype`, a view will be created that shares memory with the original
+        array. Mutations will affect both:
 
         >>> arr = np.array([1, 2, 3], dtype=float)
         >>> elem = odl.rn(3).element(arr)
         >>> elem[0] = 0
         >>> elem
-        rn(3).element([ 0.,  2.,  3.])
+        array([ 0.,  2.,  3.])
         >>> arr
         array([ 0.,  2.,  3.])
 
@@ -385,10 +385,8 @@ class NumpyTensorSpace(TensorSpace):
         >>> ptr = arr.ctypes.data
         >>> y = int_space.element(data_ptr=ptr, order='F')
         >>> y
-        tensor_space((2, 3), dtype=int).element(
-            [[1, 2, 3],
-             [4, 5, 6]]
-        )
+        array([[1, 2, 3],
+               [4, 5, 6]])
         >>> y[0, 1] = -1
         >>> arr
         array([[ 1, -1,  3],
@@ -447,7 +445,7 @@ class NumpyTensorSpace(TensorSpace):
         >>> space = odl.rn(3)
         >>> x = space.zero()
         >>> x
-        rn(3).element([ 0.,  0.,  0.])
+        array([ 0.,  0.,  0.])
         """
         return self.element(np.zeros(self.shape, dtype=self.dtype,
                                      order=self.default_order))
@@ -460,7 +458,7 @@ class NumpyTensorSpace(TensorSpace):
         >>> space = odl.rn(3)
         >>> x = space.one()
         >>> x
-        rn(3).element([ 1.,  1.,  1.])
+        array([ 1.,  1.,  1.])
         """
         return self.element(np.ones(self.shape, dtype=self.dtype,
                                     order=self.default_order))
@@ -540,7 +538,7 @@ class NumpyTensorSpace(TensorSpace):
         >>> out = space.element()
         >>> result = space.lincomb(1, x, 2, y, out)
         >>> result
-        rn(3).element([ 0.,  1.,  3.])
+        array([ 0.,  1.,  3.])
         >>> result is out
         True
         """
@@ -658,7 +656,7 @@ class NumpyTensorSpace(TensorSpace):
         >>> space_w.inner(x, y)
         5.0
         """
-        return self.weighting.inner(x1, x2)
+        return self.field.element(self.weighting.inner(x1, x2))
 
     def _multiply(self, x1, x2, out):
         """Compute the entry-wise product ``out = x1 * x2``.
@@ -679,15 +677,15 @@ class NumpyTensorSpace(TensorSpace):
         >>> x = space.element([1, 0, 3])
         >>> y = space.element([-1, 1, -1])
         >>> space.multiply(x, y)
-        rn(3).element([-1.,  0., -3.])
+        array([-1.,  0., -3.])
         >>> out = space.element()
         >>> result = space.multiply(x, y, out=out)
         >>> result
-        rn(3).element([-1.,  0., -3.])
+        array([-1.,  0., -3.])
         >>> result is out
         True
         """
-        np.multiply(x1.data, x2.data, out=out.data)
+        np.multiply(x1, x2, out=out)
 
     def _divide(self, x1, x2, out):
         """Compute the entry-wise quotient ``x1 / x2``.
@@ -708,15 +706,15 @@ class NumpyTensorSpace(TensorSpace):
         >>> x = space.element([2, 0, 4])
         >>> y = space.element([1, 1, 2])
         >>> space.divide(x, y)
-        rn(3).element([ 2.,  0.,  2.])
+        array([ 2.,  0.,  2.])
         >>> out = space.element()
         >>> result = space.divide(x, y, out=out)
         >>> result
-        rn(3).element([ 2.,  0.,  2.])
+        array([ 2.,  0.,  2.])
         >>> result is out
         True
         """
-        np.divide(x1.data, x2.data, out=out.data)
+        np.divide(x1, x2, out=out)
 
     def __contains__(self, other):
         """Return ``other in self``.
@@ -757,18 +755,6 @@ class NumpyTensorSpace(TensorSpace):
         False
         >>> x in other_dtype_spc
         False
-
-        On the other hand, spaces are not unique:
-
-        >>> spc2 = odl.tensor_space((2, 3), dtype='uint64')
-        >>> spc2 == spc
-        True
-        >>> x2 = spc2.element([[5, 4, 3],
-        ...                    [2, 1, 0]])
-        >>> x2 in spc
-        True
-        >>> x in spc2
-        True
 
         Of course, random garbage is not in the space:
 
@@ -1126,11 +1112,11 @@ def _lincomb_impl(a, x1, b, x2, out):
 
     if size < THRESHOLD_SMALL:
         # Faster for small arrays
-        out.data[:] = a * x1.data + b * x2.data
+        out[:] = a * x1 + b * x2
         return
 
     elif (size < THRESHOLD_MEDIUM or
-          not _blas_is_applicable(x1.data, x2.data, out.data)):
+          not _blas_is_applicable(x1, x2, out)):
 
         def fallback_axpy(x1, x2, n, a):
             """Fallback axpy implementation avoiding copy."""
@@ -1151,23 +1137,23 @@ def _lincomb_impl(a, x1, b, x2, out):
             return x2
 
         axpy, scal, copy = (fallback_axpy, fallback_scal, fallback_copy)
-        x1_arr = x1.data
-        x2_arr = x2.data
-        out_arr = out.data
+        x1_arr = x1
+        x2_arr = x2
+        out_arr = out
 
     else:
         # Need flat data for BLAS, otherwise in-place does not work.
         # Raveling must happen in fixed order for non-contiguous out,
         # otherwise 'A' is applied to arrays, which makes the outcome
         # dependent on their respective contiguousness.
-        if out.data.flags.f_contiguous:
+        if out.flags.f_contiguous:
             ravel_order = 'F'
         else:
             ravel_order = 'C'
 
-        x1_arr = x1.data.ravel(order=ravel_order)
-        x2_arr = x2.data.ravel(order=ravel_order)
-        out_arr = out.data.ravel(order=ravel_order)
+        x1_arr = x1.ravel(order=ravel_order)
+        x2_arr = x2.ravel(order=ravel_order)
+        out_arr = out.ravel(order=ravel_order)
         axpy, scal, copy = scipy.linalg.blas.get_blas_funcs(
             ['axpy', 'scal', 'copy'], arrays=(x1_arr, x2_arr, out_arr))
 
@@ -1312,27 +1298,27 @@ def _norm_default(x):
     # Lazy import to improve `import odl` time
     import scipy.linalg
 
-    if _blas_is_applicable(x.data):
+    if _blas_is_applicable(x):
         nrm2 = scipy.linalg.blas.get_blas_funcs('nrm2', dtype=x.dtype)
         norm = partial(nrm2, n=native(x.size))
     else:
         norm = np.linalg.norm
-    return norm(x.data.ravel())
+    return norm(x.ravel())
 
 
 def _pnorm_default(x, p):
     """Default p-norm implementation."""
-    return np.linalg.norm(x.data.ravel(), ord=p)
+    return np.linalg.norm(x.ravel(), ord=p)
 
 
 def _pnorm_diagweight(x, p, w):
     """Diagonally weighted p-norm implementation."""
     # Ravel both in the same order (w is a numpy array)
-    order = 'F' if all(a.flags.f_contiguous for a in (x.data, w)) else 'C'
+    order = 'F' if all(a.flags.f_contiguous for a in (x, w)) else 'C'
 
     # This is faster than first applying the weights and then summing with
     # BLAS dot or nrm2
-    xp = np.abs(x.data.ravel(order))
+    xp = np.abs(x.ravel(order))
     if p == float('inf'):
         xp *= w.ravel(order)
         return np.max(xp)
@@ -1345,7 +1331,7 @@ def _pnorm_diagweight(x, p, w):
 def _inner_default(x1, x2):
     """Default Euclidean inner product implementation."""
     # Ravel both in the same order
-    order = 'F' if all(a.data.flags.f_contiguous for a in (x1, x2)) else 'C'
+    order = 'F' if all(a.flags.f_contiguous for a in (x1, x2)) else 'C'
 
     if is_real_dtype(x1.dtype):
         if x1.size > THRESHOLD_MEDIUM:
@@ -1353,12 +1339,12 @@ def _inner_default(x1, x2):
             return np.tensordot(x1, x2, [range(x1.ndim)] * 2)
         else:
             # Several times faster for small arrays
-            return np.dot(x1.data.ravel(order),
-                          x2.data.ravel(order))
+            return np.dot(x1.ravel(order),
+                          x2.ravel(order))
     else:
         # x2 as first argument because we want linearity in x1
-        return np.vdot(x2.data.ravel(order),
-                       x1.data.ravel(order))
+        return np.vdot(x2.ravel(order),
+                       x1.ravel(order))
 
 
 # TODO: implement intermediate weighting schemes with arrays that are
@@ -1432,10 +1418,7 @@ class NumpyTensorSpaceArrayWeighting(ArrayWeighting):
           it does not define an inner product or norm, respectively. This
           is not checked during initialization.
         """
-        if isinstance(array, NumpyTensor):
-            array = array.data
-        elif not isinstance(array, np.ndarray):
-            array = np.asarray(array)
+        array = np.asarray(array)
         super(NumpyTensorSpaceArrayWeighting, self).__init__(
             array, impl='numpy', exponent=exponent)
 
@@ -1567,11 +1550,7 @@ class NumpyTensorSpaceConstWeighting(ConstWeighting):
                                       'exponent != 2 (got {})'
                                       ''.format(self.exponent))
         else:
-            inner = self.const * _inner_default(x1, x2)
-            if x1.space.field is None:
-                return inner
-            else:
-                return x1.space.field.element(inner)
+            return self.const * _inner_default(x1, x2)
 
     def norm(self, x):
         """Return the weighted norm of ``x``.
