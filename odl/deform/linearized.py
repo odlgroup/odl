@@ -16,7 +16,6 @@ from odl.discr import DiscretizedSpace, Divergence, Gradient
 from odl.discr.discr_utils import _normalize_interp, per_axis_interpolator
 from odl.operator import Operator, PointwiseInner
 from odl.space import ProductSpace
-from odl.space.pspace import ProductSpaceElement
 from odl.util import indent, signature_string
 
 __all__ = ('LinDeformFixedTempl', 'LinDeformFixedDisp', 'linear_deform')
@@ -366,6 +365,7 @@ class LinDeformFixedDisp(Operator):
         >>> print(op(template))
         [ 0. ,  0. ,  1. ,  0.5,  0. ]
         """
+        # TODO: fix
         if not isinstance(displacement, ProductSpaceElement):
             raise TypeError(
                 '`displacement` must be a `ProductSpaceElement`, got {!r}'

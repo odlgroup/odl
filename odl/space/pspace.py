@@ -16,12 +16,10 @@ from numbers import Integral
 import numpy as np
 
 from odl.set import LinearSpace
-from odl.set.space import LinearSpaceElement
 from odl.space.weighting import (
     ArrayWeighting, ConstWeighting, CustomDist, CustomInner, CustomNorm,
     Weighting)
 from odl.util import indent, is_real_dtype, signature_string
-from odl.util.ufuncs import ProductSpaceUfuncs
 
 __all__ = ('ProductSpace',)
 
@@ -462,42 +460,36 @@ class ProductSpace(LinearSpace):
         Examples
         --------
         >>> r2, r3 = odl.rn(2), odl.rn(3)
-        >>> vec_2, vec_3 = r2.element(), r3.element()
-        >>> r2x3 = ProductSpace(r2, r3)
-        >>> vec_2x3 = r2x3.element()
-        >>> vec_2.space == vec_2x3[0].space
+        >>> x2, x3 = r2.element(), r3.element()
+        >>> Z = odl.ProductSpace(r2, r3)
+        >>> z = Z.element()
+        >>> z in Z
+        >>> z[0] in Z[0]
         True
-        >>> vec_3.space == vec_2x3[1].space
+        >>> z[1] in Z[1]
         True
 
         Create an element of the product space
 
         >>> r2, r3 = odl.rn(2), odl.rn(3)
-        >>> prod = ProductSpace(r2, r3)
+        >>> Z = odl.ProductSpace(r2, r3)
         >>> x2 = r2.element([1, 2])
         >>> x3 = r3.element([1, 2, 3])
-        >>> x = prod.element([x2, x3])
-        >>> x
-        ProductSpace(rn(2), rn(3)).element([
-            [ 1.,  2.],
-            [ 1.,  2.,  3.]
-        ])
+        >>> z = Z.element([x2, x3])
+        >>> z
+        array([array([ 1.,  2.]), array([ 1.,  2.,  3.])], dtype=object)
         """
         # If data is given as keyword arg, prefer it over arg list
         if inp is None:
             inp = [space.element() for space in self.spaces]
-
-        if inp in self:
+        elif inp in self:
             return inp
 
         if len(inp) != len(self):
             raise ValueError('length of `inp` {} does not match length of '
                              'space {}'.format(len(inp), len(self)))
 
-        if (all(isinstance(v, LinearSpaceElement) and v.space == space
-                for v, space in zip(inp, self.spaces))):
-            parts = list(inp)
-        elif cast:
+        if cast:
             # Delegate constructors
             parts = [space.element(arg)
                      for arg, space in zip(inp, self.spaces)]
@@ -505,7 +497,20 @@ class ProductSpace(LinearSpace):
             raise TypeError('input {!r} not a sequence of elements of the '
                             'component spaces'.format(inp))
 
-        return self.element_type(self, parts)
+        # If we are a power space, use the space dtype for the array
+        if self.is_power_space:
+            # TODO: What to do with homogeneous arrays of another type (not
+            # Numpy array)?
+            return np.array(parts, dtype=self.dtype)
+
+        # Otherwise, we use an object array. Note that it must be created in
+        # advance, since otherwise NumPy may still try to loop over the
+        # inputs. See https://github.com/numpy/numpy/issues/12479
+        # TODO(kohr-h): remove when above issue is resolved
+        ret = np.empty(len(parts), dtype=object)
+        for i, p in enumerate(parts):
+            ret[i] = p
+        return ret
 
     @property
     def examples(self):
@@ -532,14 +537,9 @@ class ProductSpace(LinearSpace):
 
         Examples
         --------
-        >>> r2, r3 = odl.rn(2), odl.rn(3)
-        >>> zero_2, zero_3 = r2.zero(), r3.zero()
-        >>> r2x3 = ProductSpace(r2, r3)
-        >>> zero_2x3 = r2x3.zero()
-        >>> zero_2 == zero_2x3[0]
-        True
-        >>> zero_3 == zero_2x3[1]
-        True
+        >>> Z = odl.ProductSpace(odl.rn(2), odl.rn(3))
+        >>> Z.zero()
+        array([array([ 0.,  0.]), array([ 0.,  0.,  0.])], dtype=object)
         """
         return self.element([space.zero() for space in self.spaces])
 
@@ -560,16 +560,18 @@ class ProductSpace(LinearSpace):
 
         Examples
         --------
-        >>> r2, r3 = odl.rn(2), odl.rn(3)
-        >>> one_2, one_3 = r2.one(), r3.one()
-        >>> r2x3 = ProductSpace(r2, r3)
-        >>> one_2x3 = r2x3.one()
-        >>> one_2 == one_2x3[0]
-        True
-        >>> one_3 == one_2x3[1]
-        True
+        >>> Z = odl.ProductSpace(odl.rn(2), odl.rn(3))
+        >>> Z.one()
+        array([array([ 1.,  1.]), array([ 1.,  1.,  1.])], dtype=object)
         """
         return self.element([space.one() for space in self.spaces])
+
+    def __contains__(self, other):
+        """Return ``other in self``."""
+        # TODO: doctest
+        if not isinstance(other, np.ndarray):
+            return False
+        return all(p in spc for p, spc in zip(other, self.spaces))
 
     def _lincomb(self, a, x, b, y, out):
         """Linear combination ``out = a*x + b*y``."""
@@ -612,19 +614,18 @@ class ProductSpace(LinearSpace):
 
         Examples
         --------
-        >>> r2, r3 = odl.rn(2), odl.rn(3)
-        >>> rn, rm = odl.rn(2), odl.rn(3)
-        >>> r2x3, rnxm = ProductSpace(r2, r3), ProductSpace(rn, rm)
-        >>> r2x3 == rnxm
+        >>> Z1 = odl.ProductSpace(odl.rn(2), odl.rn(3))
+        >>> Z2 = odl.ProductSpace(odl.rn(2), odl.rn(3))
+        >>> Z1 == Z2
         True
-        >>> r3x2 = ProductSpace(r3, r2)
-        >>> r2x3 == r3x2
+        >>> swapped = odl.ProductSpace(odl.rn(3), odl.rn(2))
+        >>> swapped == Z1
         False
-        >>> r5 = ProductSpace(*[odl.rn(1)]*5)
-        >>> r2x3 == r5
+        >>> r6 = odl.ProductSpace(*([odl.rn(1)] * 6))
+        >>> r6 == Z1
         False
-        >>> r5 = odl.rn(5)
-        >>> r2x3 == r5
+        >>> r6 = odl.rn(6)
+        >>> r6 == Z1
         False
         """
         if other is self:
@@ -733,6 +734,117 @@ class ProductSpace(LinearSpace):
             raise TypeError('`indices` must be integer, slice, tuple or '
                             'list, got {!r}'.format(indices))
 
+    def show(self, elem, title=None, indices=None, **kwargs):
+        """Display the parts of this product space element graphically.
+
+        Parameters
+        ----------
+        elem : numpy.ndarray with ``dtype == object``
+            Element to display using the properties of this space.
+        title : string, optional
+            Title of the figures
+        indices : int, slice, tuple or list, optional
+            Display parts of ``elem`` in the way described in the following.
+
+            A single list of integers selects the corresponding parts
+            of this vector.
+
+            For other tuples or lists, the first entry indexes the parts of
+            this vector, and the remaining entries (if any) are used to
+            slice into the parts. Handling those remaining indices is
+            up to the ``show`` methods of the parts to be displayed.
+
+            The types of the first entry trigger the following behaviors:
+
+            - ``int``: take the part corresponding to this index
+            - ``slice``: take a subset of the parts
+            - ``None``: equivalent to ``slice(None)``, i.e., everything
+
+            Typical use cases are displaying of selected parts, which can
+            be achieved with a list, e.g., ``indices=[0, 2]`` for parts
+            0 and 2, and plotting of all parts sliced in a certain way,
+            e.g., ``indices=[None, 20, None]`` for showing all parts
+            sliced with indices ``[20, None]``.
+
+            A single ``int``, ``slice``, ``list`` or ``None`` object
+            indexes the parts only, i.e., is treated roughly as
+            ``(indices, Ellipsis)``. In particular, for ``None``, all
+            parts are shown with default slicing.
+        in_figs : sequence of `matplotlib.figure.Figure`, optional
+            Update these figures instead of creating new ones. Typically
+            the return value of an earlier call to ``show`` is used
+            for this parameter.
+        kwargs
+            Additional arguments passed on to the ``show`` methods of
+            the parts.
+
+        Returns
+        -------
+        figs : tuple of `matplotlib.figure.Figure`
+            The resulting figures. In an interactive shell, they are
+            automatically displayed.
+
+        See Also
+        --------
+        odl.discr.discr_space.DiscretizedSpaceElement.show :
+            Display of a discretized function
+        odl.space.base_tensors.Tensor.show :
+            Display of sequence type data
+        odl.util.graphics.show_discrete_data :
+            Underlying implementation
+        """
+        elem = self.element(elem)
+
+        if title is None:
+            title = 'ProductSpaceElement'
+
+        if indices is None:
+            if len(elem) < 5:
+                indices = list(range(len(elem)))
+            else:
+                indices = list(np.linspace(0, len(elem) - 1, 4, dtype=int))
+        else:
+            if (isinstance(indices, tuple) or
+                    (isinstance(indices, list) and
+                     not all(isinstance(idx, Integral) for idx in indices))):
+                # Tuples or lists containing non-integers index by axis.
+                # We use the first index for the current pspace and pass
+                # on the rest.
+                indices, kwargs['indices'] = indices[0], indices[1:]
+
+            # Support `indices=[None, 0, None]` like syntax (`indices` is
+            # the first entry as of now in that case)
+            if indices is None:
+                indices = slice(None)
+
+            if isinstance(indices, slice):
+                indices = list(range(*indices.indices(len(elem))))
+            elif isinstance(indices, Integral):
+                indices = [indices]
+            else:
+                # Use `indices` as-is
+                pass
+
+        in_figs = kwargs.pop('fig', None)
+        in_figs = [None] * len(indices) if in_figs is None else in_figs
+
+        figs = []
+        parts = elem[indices]
+        if len(parts) == 0:
+            return ()
+        elif len(parts) == 1:
+            # Don't extend the title if there is only one plot
+            fig = parts[0].show(title=title, fig=in_figs[0], **kwargs)
+            figs.append(fig)
+        else:
+            # Extend titles by indexed part to make them distinguishable
+            for i, part, fig in zip(indices, parts, in_figs):
+                fig = part.show(title='{}. Part {}'.format(title, i), fig=fig,
+                                **kwargs)
+                figs.append(fig)
+
+        return tuple(figs)
+
     def __str__(self):
         """Return ``str(self)``."""
         if len(self) == 0:
@@ -784,764 +896,6 @@ class ProductSpace(LinearSpace):
                 inner_str = ',\n'.join([inner_str, weight_str])
             return '{}(\n{}\n)'.format(self.__class__.__name__,
                                        indent(inner_str))
-
-    @property
-    def element_type(self):
-        """`ProductSpaceElement`"""
-        return ProductSpaceElement
-
-
-class ProductSpaceElement(LinearSpaceElement):
-
-    """Elements of a `ProductSpace`."""
-
-    def __init__(self, space, parts):
-        """Initialize a new instance."""
-        super(ProductSpaceElement, self).__init__(space)
-        self.__parts = tuple(parts)
-
-    @property
-    def parts(self):
-        """Parts of this product space element."""
-        return self.__parts
-
-    @property
-    def shape(self):
-        """Number of values per axis in ``self``, computed recursively.
-
-        The recursion ends at the fist level that does not have a shape.
-
-        Raises
-        ------
-        ValueError
-            If a `ProductSpace` is encountered that is not a power space.
-
-        See Also
-        --------
-        ProductSpace.shape
-
-        Examples
-        --------
-        >>> r4_3 = odl.ProductSpace(odl.rn(4), 3)
-        >>> x = r4_3.element()
-        >>> x.shape
-        (3, 4)
-        >>> r4_2_3 = odl.ProductSpace(r4_3, 2)
-        >>> y = r4_2_3.element()
-        >>> y.shape
-        (2, 3, 4)
-        """
-        return self.space.shape
-
-    @property
-    def ndim(self):
-        """Number axes in ``self``, computed recursively.
-
-        Raises
-        ------
-        ValueError
-            If a `ProductSpace` is encountered that is not a power space.
-
-        See Also
-        --------
-        shape
-
-        Examples
-        --------
-        >>> r4_3 = odl.ProductSpace(odl.rn(4), 3)
-        >>> x = r4_3.element()
-        >>> x.ndim
-        2
-        >>> r4_2_3 = odl.ProductSpace(r4_3, 2)
-        >>> y = r4_2_3.element()
-        >>> y.ndim
-        3
-        """
-        return len(self.shape)
-
-    @property
-    def size(self):
-        """Total number of involved spaces, computed recursively.
-
-        See Also
-        --------
-        ProductSpace.size
-        """
-        return int(np.prod(self.shape))
-
-    @property
-    def dtype(self):
-        """The data type of the space of this element."""
-        return self.space.dtype
-
-    def __len__(self):
-        """Return ``len(self)``."""
-        return len(self.space)
-
-    @property
-    def nbytes(self):
-        """Total number of bytes in memory used by this element."""
-        return self.space.nbytes
-
-    def __eq__(self, other):
-        """Return ``self == other``.
-
-        Overrides the default `LinearSpace` method since it is implemented with
-        the distance function, which is prone to numerical errors. This
-        function checks equality per component.
-        """
-        if other is self:
-            return True
-        elif other not in self.space:
-            return False
-        else:
-            return all(sp == op for sp, op in zip(self.parts, other.parts))
-
-    def __getitem__(self, indices):
-        """Return ``self[indices]``."""
-        if isinstance(indices, Integral):
-            return self.parts[indices]
-        elif isinstance(indices, slice):
-            return self.space[indices].element(self.parts[indices])
-        elif isinstance(indices, list):
-            out_parts = [self.parts[i] for i in indices]
-            return self.space[indices].element(out_parts)
-        elif isinstance(indices, tuple):
-            if len(indices) == 0:
-                return ProductSpace().element()
-            elif len(indices) == 1:
-                # Tuple with a single entry - we just unpack and delegate
-                return self[indices[0]]
-            else:
-                # Tuple with multiple entries
-                if isinstance(indices[0], Integral):
-                    # In case the first entry is an integer, we drop the
-                    # axis and return directly from `parts`
-                    return self.parts[indices[0]][indices[1:]]
-                else:
-                    # indices[0] is a slice or list. We first retrieve the
-                    # parts indexed in this axis.
-                    # In any case we know that we want to keep this axis.
-                    if isinstance(indices[0], list):
-                        part = [self.parts[i] for i in indices[0]]
-                    else:
-                        part = self.parts[indices[0]]
-
-                    if (len(indices[1:]) == 1 and
-                            not all(isinstance(p, ProductSpaceElement)
-                                    for p in part)):
-                        # This case means we have "hit the bottom", i.e.,
-                        # there are non-ProductSpaces involved. In order
-                        # not to retrieve scalar values from these
-                        # elements, we use a slice of size 1.
-                        idx = indices[1]
-                        indexed = [p[idx:idx + 1] for p in part]
-                    else:
-                        # Here we're still in the "product space chain",
-                        # so we can use recursion to go on.
-                        indexed = [p[indices[1:]] for p in part]
-
-                    # Finally make a wrapping space for the indexed elements
-                    new_space = ProductSpace(*(p.space for p in indexed))
-                    return new_space.element(indexed)
-        else:
-            raise TypeError('bad index type {}'.format(type(indices)))
-
-    def __setitem__(self, indices, values):
-        """Implement ``self[indices] = values``."""
-        # Get the parts to which we assign values
-        if isinstance(indices, Integral):
-            indexed_parts = (self.parts[indices],)
-            values = (values,)
-        elif isinstance(indices, slice):
-            indexed_parts = self.parts[indices]
-        elif isinstance(indices, list):
-            indexed_parts = tuple(self.parts[i] for i in indices)
-        elif isinstance(indices, tuple):
-            if len(indices) == 0:
-                return
-            else:
-                # We need to explicitly use __setitem__ here, otherwise
-                # __getitem__ is used and assigned to, which fails if
-                # a space like rn(3) is indexed at the very end.
-                part = self.parts[indices[0]]
-                if isinstance(part, LinearSpaceElement):
-                    part.__setitem__(indices[1:], values)
-                else:
-                    # part is a tuple
-                    for p in part:
-                        p.__setitem__(indices[1:], values)
-                return
-        else:
-            raise TypeError('bad index type {}'.format(type(indices)))
-
-        # Do the assignment, with broadcasting if desired
-        try:
-            iter(values)
-        except TypeError:
-            # `values` is not iterable, assume it can be assigned to
-            # all indexed parts
-            for p in indexed_parts:
-                p[:] = values
-        else:
-            # `values` is iterable; it could still represent a single
-            # element of a power space.
-            if self.space.is_power_space and values in self.space[0]:
-                # Broadcast a single element across a power space
-                for p in indexed_parts:
-                    p[:] = values
-            else:
-                # Now we really have one assigned value per part
-                if len(values) != len(indexed_parts):
-                    raise ValueError(
-                        'length of iterable `values` not equal to number of '
-                        'indexed parts ({} != {})'
-                        ''.format(len(values), len(indexed_parts)))
-                for p, v in zip(indexed_parts, values):
-                    p[:] = v
-
-    def asarray(self, out=None):
-        """Extract the data of this vector as a numpy array.
-
-        Only available if `is_power_space` is True.
-
-        The ordering is such that it commutes with indexing::
-
-            self[ind].asarray() == self.asarray()[ind]
-
-        Parameters
-        ----------
-        out : `numpy.ndarray`, optional
-            Array in which the result should be written in-place.
-            Has to be contiguous and of the correct dtype and
-            shape.
-
-        Raises
-        ------
-        ValueError
-            If `is_power_space` is false.
-
-        Examples
-        --------
-        >>> spc = odl.ProductSpace(odl.rn(3), 2)
-        >>> x = spc.element([[ 1.,  2.,  3.],
-        ...                  [ 4.,  5.,  6.]])
-        >>> x.asarray()
-        array([[ 1.,  2.,  3.],
-               [ 4.,  5.,  6.]])
-        """
-        if not self.space.is_power_space:
-            raise ValueError('cannot use `asarray` if `space.is_power_space` '
-                             'is `False`')
-        else:
-            if out is None:
-                out = np.empty(self.shape, self.dtype)
-
-            for i in range(len(self)):
-                out[i] = np.asarray(self[i])
-            return out
-
-    def __array__(self):
-        """An array representation of ``self``.
-
-        Only available if `is_power_space` is True.
-
-        The ordering is such that it commutes with indexing::
-
-            np.array(self[ind]) == np.array(self)[ind]
-
-        Raises
-        ------
-        ValueError
-            If `is_power_space` is false.
-
-        Examples
-        --------
-        >>> spc = odl.ProductSpace(odl.rn(3), 2)
-        >>> x = spc.element([[ 1.,  2.,  3.],
-        ...                  [ 4.,  5.,  6.]])
-        >>> np.asarray(x)
-        array([[ 1.,  2.,  3.],
-               [ 4.,  5.,  6.]])
-        """
-        return self.asarray()
-
-    def __array_wrap__(self, array):
-        """Return a new product space element wrapping the ``array``.
-
-        Only available if `is_power_space` is ``True``.
-
-        Parameters
-        ----------
-        array : `numpy.ndarray`
-            Array to be wrapped.
-
-        Returns
-        -------
-        wrapper : `ProductSpaceElement`
-            Product space element wrapping ``array``.
-        """
-        # HACK(kohr-h): This is to support (full) reductions like
-        # `np.sum(x)` for numpy>=1.16, where many such reductions
-        # moved from plain functions to `ufunc.reduce.*`, thus
-        # invoking the `__array__` and `__array_wrap__` machinery.
-        if array.shape == ():
-            return array.item()
-
-        return self.space.element(array)
-
-    @property
-    def ufuncs(self):
-        """`ProductSpaceUfuncs`, access to Numpy style ufuncs.
-
-        These are always available if the underlying spaces are
-        `TensorSpace`.
-
-        Examples
-        --------
-        >>> r22 = odl.ProductSpace(odl.rn(2), 2)
-        >>> x = r22.element([[1, -2], [-3, 4]])
-        >>> x.ufuncs.absolute()
-        ProductSpace(rn(2), 2).element([
-            [ 1.,  2.],
-            [ 3.,  4.]
-        ])
-
-        These functions can also be used with non-vector arguments and
-        support broadcasting, per component and even recursively:
-
-        >>> x.ufuncs.add([1, 2])
-        ProductSpace(rn(2), 2).element([
-            [ 2.,  0.],
-            [-2.,  6.]
-        ])
-        >>> x.ufuncs.subtract(1)
-        ProductSpace(rn(2), 2).element([
-            [ 0., -3.],
-            [-4.,  3.]
-        ])
-
-        There is also support for various reductions (sum, prod, min, max):
-
-        >>> x.ufuncs.sum()
-        0.0
-
-        Writing to ``out`` is also supported:
-
-        >>> y = r22.element()
-        >>> result = x.ufuncs.absolute(out=y)
-        >>> result
-        ProductSpace(rn(2), 2).element([
-            [ 1.,  2.],
-            [ 3.,  4.]
-        ])
-        >>> result is y
-        True
-
-        See Also
-        --------
-        odl.util.ufuncs.TensorSpaceUfuncs
-            Base class for ufuncs in `TensorSpace` spaces, subspaces may
-            override this for greater efficiency.
-        odl.util.ufuncs.ProductSpaceUfuncs
-            For a list of available ufuncs.
-        """
-        # TODO: fix
-        return ProductSpaceUfuncs(self)
-
-    @property
-    def real(self):
-        """Real part of the element.
-
-        The real part can also be set using ``x.real = other``, where ``other``
-        is array-like or scalar.
-
-        Examples
-        --------
-        >>> space = odl.ProductSpace(odl.cn(3), odl.cn(2))
-        >>> x = space.element([[1 + 1j, 2, 3 - 3j],
-        ...                    [-1 + 2j, -2 - 3j]])
-        >>> x.real
-        ProductSpace(rn(3), rn(2)).element([
-            [ 1.,  2.,  3.],
-            [-1., -2.]
-        ])
-
-        The real part can also be set using different array-like types:
-
-        >>> x.real = space.real_space.zero()
-        >>> x
-        ProductSpace(cn(3), cn(2)).element([
-            [ 0.+1.j,  0.+0.j,  0.-3.j],
-            [ 0.+2.j,  0.-3.j]
-        ])
-
-        >>> x.real = 1.0
-        >>> x
-        ProductSpace(cn(3), cn(2)).element([
-            [ 1.+1.j,  1.+0.j,  1.-3.j],
-            [ 1.+2.j,  1.-3.j]
-        ])
-
-        >>> x.real = [[2, 3, 4], [5, 6]]
-        >>> x
-        ProductSpace(cn(3), cn(2)).element([
-            [ 2.+1.j,  3.+0.j,  4.-3.j],
-            [ 5.+2.j,  6.-3.j]
-        ])
-        """
-        real_part = [part.real for part in self.parts]
-        return self.space.real_space.element(real_part)
-
-    @real.setter
-    def real(self, newreal):
-        """Setter for the real part.
-
-        This method is invoked by ``x.real = other``.
-
-        Parameters
-        ----------
-        newreal : array-like or scalar
-            Values to be assigned to the real part of this element.
-        """
-        try:
-            iter(newreal)
-        except TypeError:
-            # `newreal` is not iterable, assume it can be assigned to
-            # all indexed parts
-            for part in self.parts:
-                part.real = newreal
-            return
-
-        if self.space.is_power_space:
-            try:
-                # Set same value in all parts
-                for part in self.parts:
-                    part.real = newreal
-            except (ValueError, TypeError):
-                # Iterate over all parts and set them separately
-                for part, new_re in zip(self.parts, newreal):
-                    part.real = new_re
-                pass
-        elif len(newreal) == len(self):
-            for part, new_re in zip(self.parts, newreal):
-                part.real = new_re
-        else:
-            raise ValueError(
-                'dimensions of the new real part does not match the space, '
-                'got element {} to set real part of {}'.format(newreal, self))
-
-    @property
-    def imag(self):
-        """Imaginary part of the element.
-
-        The imaginary part can also be set using ``x.imag = other``, where
-        ``other`` is array-like or scalar.
-
-
-        Examples
-        --------
-        >>> space = odl.ProductSpace(odl.cn(3), odl.cn(2))
-        >>> x = space.element([[1 + 1j, 2, 3 - 3j],
-        ...                    [-1 + 2j, -2 - 3j]])
-        >>> x.imag
-        ProductSpace(rn(3), rn(2)).element([
-            [ 1.,  0., -3.],
-            [ 2., -3.]
-        ])
-
-        The imaginary part can also be set using different array-like types:
-
-        >>> x.imag = space.real_space.zero()
-        >>> x
-        ProductSpace(cn(3), cn(2)).element([
-            [ 1.+0.j,  2.+0.j,  3.+0.j],
-            [-1.+0.j, -2.+0.j]
-        ])
-
-        >>> x.imag = 1.0
-        >>> x
-        ProductSpace(cn(3), cn(2)).element([
-            [ 1.+1.j,  2.+1.j,  3.+1.j],
-            [-1.+1.j, -2.+1.j]
-        ])
-
-        >>> x.imag = [[2, 3, 4], [5, 6]]
-        >>> x
-        ProductSpace(cn(3), cn(2)).element([
-            [ 1.+2.j,  2.+3.j,  3.+4.j],
-            [-1.+5.j, -2.+6.j]
-        ])
-        """
-        imag_part = [part.imag for part in self.parts]
-        return self.space.real_space.element(imag_part)
-
-    @imag.setter
-    def imag(self, newimag):
-        """Setter for the imaginary part.
-
-        This method is invoked by ``x.imag = other``.
-
-        Parameters
-        ----------
-        newimag : array-like or scalar
-            Values to be assigned to the imaginary part of this element.
-        """
-        try:
-            iter(newimag)
-        except TypeError:
-            # `newimag` is not iterable, assume it can be assigned to
-            # all indexed parts
-            for part in self.parts:
-                part.imag = newimag
-            return
-
-        if self.space.is_power_space:
-            try:
-                # Set same value in all parts
-                for part in self.parts:
-                    part.imag = newimag
-            except (ValueError, TypeError):
-                # Iterate over all parts and set them separately
-                for part, new_im in zip(self.parts, newimag):
-                    part.imag = new_im
-                pass
-        elif len(newimag) == len(self):
-            for part, new_im in zip(self.parts, newimag):
-                part.imag = new_im
-        else:
-            raise ValueError(
-                'dimensions of the new imaginary part does not match the '
-                'space, got element {} to set real part of {}}'
-                ''.format(newimag, self))
-
-    def conj(self):
-        """Complex conjugate of the element."""
-        complex_conj = [part.conj() for part in self.parts]
-        return self.space.element(complex_conj)
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        return repr(self)
-
-    def __repr__(self):
-        """Return ``repr(self)``.
-
-        Examples
-        --------
-        >>> from odl import rn  # need to import rn into namespace
-        >>> r2, r3 = odl.rn(2), odl.rn(3)
-        >>> r2x3 = ProductSpace(r2, r3)
-        >>> x = r2x3.element([[1, 2], [3, 4, 5]])
-        >>> eval(repr(x)) == x
-        True
-
-        The result is readable:
-
-        >>> x
-        ProductSpace(rn(2), rn(3)).element([
-            [ 1.,  2.],
-            [ 3.,  4.,  5.]
-        ])
-
-        Nestled spaces work as well:
-
-        >>> X = ProductSpace(r2x3, r2x3)
-        >>> x = X.element([[[1, 2], [3, 4, 5]],[[1, 2], [3, 4, 5]]])
-        >>> eval(repr(x)) == x
-        True
-        >>> x
-        ProductSpace(ProductSpace(rn(2), rn(3)), 2).element([
-            [
-                [ 1.,  2.],
-                [ 3.,  4.,  5.]
-            ],
-            [
-                [ 1.,  2.],
-                [ 3.,  4.,  5.]
-            ]
-        ])
-        """
-        inner_str = '[\n'
-        if len(self) < 5:
-            inner_str += ',\n'.join('{}'.format(
-                _indent(_strip_space(part))) for part in self.parts)
-        else:
-            inner_str += ',\n'.join('{}'.format(
-                _indent(_strip_space(part))) for part in self.parts[:3])
-            inner_str += ',\n    ...\n'
-            inner_str += ',\n'.join('{}'.format(
-                _indent(_strip_space(part))) for part in self.parts[-1:])
-
-        inner_str += '\n]'
-
-        return '{!r}.element({})'.format(self.space, inner_str)
-
-    def show(self, title=None, indices=None, **kwargs):
-        """Display the parts of this product space element graphically.
-
-        Parameters
-        ----------
-        title : string, optional
-            Title of the figures
-
-        indices : int, slice, tuple or list, optional
-            Display parts of ``self`` in the way described in the following.
-
-            A single list of integers selects the corresponding parts
-            of this vector.
-
-            For other tuples or lists, the first entry indexes the parts of
-            this vector, and the remaining entries (if any) are used to
-            slice into the parts. Handling those remaining indices is
-            up to the ``show`` methods of the parts to be displayed.
-
-            The types of the first entry trigger the following behaviors:
-
-                - ``int``: take the part corresponding to this index
-                - ``slice``: take a subset of the parts
-                - ``None``: equivalent to ``slice(None)``, i.e., everything
-
-            Typical use cases are displaying of selected parts, which can
-            be achieved with a list, e.g., ``indices=[0, 2]`` for parts
-            0 and 2, and plotting of all parts sliced in a certain way,
-            e.g., ``indices=[None, 20, None]`` for showing all parts
-            sliced with indices ``[20, None]``.
-
-            A single ``int``, ``slice``, ``list`` or ``None`` object
-            indexes the parts only, i.e., is treated roughly as
-            ``(indices, Ellipsis)``. In particular, for ``None``, all
-            parts are shown with default slicing.
-
-        in_figs : sequence of `matplotlib.figure.Figure`, optional
-            Update these figures instead of creating new ones. Typically
-            the return value of an earlier call to ``show`` is used
-            for this parameter.
-
-        kwargs
-            Additional arguments passed on to the ``show`` methods of
-            the parts.
-
-        Returns
-        -------
-        figs : tuple of `matplotlib.figure.Figure`
-            The resulting figures. In an interactive shell, they are
-            automatically displayed.
-
-        See Also
-        --------
-        odl.discr.discr_space.DiscretizedSpaceElement.show :
-            Display of a discretized function
-        odl.space.base_tensors.Tensor.show :
-            Display of sequence type data
-        odl.util.graphics.show_discrete_data :
-            Underlying implementation
-        """
-        if title is None:
-            title = 'ProductSpaceElement'
-
-        if indices is None:
-            if len(self) < 5:
-                indices = list(range(len(self)))
-            else:
-                indices = list(np.linspace(0, len(self) - 1, 4, dtype=int))
-        else:
-            if (isinstance(indices, tuple) or
-                    (isinstance(indices, list) and
-                     not all(isinstance(idx, Integral) for idx in indices))):
-                # Tuples or lists containing non-integers index by axis.
-                # We use the first index for the current pspace and pass
-                # on the rest.
-                indices, kwargs['indices'] = indices[0], indices[1:]
-
-            # Support `indices=[None, 0, None]` like syntax (`indices` is
-            # the first entry as of now in that case)
-            if indices is None:
-                indices = slice(None)
-
-            if isinstance(indices, slice):
-                indices = list(range(*indices.indices(len(self))))
-            elif isinstance(indices, Integral):
-                indices = [indices]
-            else:
-                # Use `indices` as-is
-                pass
-
-        in_figs = kwargs.pop('fig', None)
-        in_figs = [None] * len(indices) if in_figs is None else in_figs
-
-        figs = []
-        parts = self[indices]
-        if len(parts) == 0:
-            return ()
-        elif len(parts) == 1:
-            # Don't extend the title if there is only one plot
-            fig = parts[0].show(title=title, fig=in_figs[0], **kwargs)
-            figs.append(fig)
-        else:
-            # Extend titles by indexed part to make them distinguishable
-            for i, part, fig in zip(indices, parts, in_figs):
-                fig = part.show(title='{}. Part {}'.format(title, i), fig=fig,
-                                **kwargs)
-                figs.append(fig)
-
-        return tuple(figs)
-
-
-# --- Add arithmetic operators that broadcast --- #
-
-
-def _broadcast_arithmetic(op):
-    """Return ``op(self, other)`` with broadcasting.
-
-    Parameters
-    ----------
-    op : string
-        Name of the operator, e.g. ``'__add__'``.
-
-    Returns
-    -------
-    broadcast_arithmetic_op : function
-        Function intended to be used as a method for `ProductSpaceVector`
-        which performs broadcasting if possible.
-
-    Notes
-    -----
-    Broadcasting is the operation of "applying an operator multiple times" in
-    some sense. For example:
-
-    .. math::
-        (1, 2) + 1 = (2, 3)
-
-    is a form of broadcasting. In this implementation, we only allow "single
-    layer" broadcasting, i.e., we do not support broadcasting over several
-    product spaces at once.
-    """
-    def _broadcast_arithmetic_impl(self, other):
-        if (self.space.is_power_space and other in self.space[0]):
-            results = []
-            for xi in self:
-                res = getattr(xi, op)(other)
-                if res is NotImplemented:
-                    return NotImplemented
-                else:
-                    results.append(res)
-
-            return self.space.element(results)
-        else:
-            return getattr(LinearSpaceElement, op)(self, other)
-
-    # Set docstring
-    docstring = """Broadcasted {op}.""".format(op=op)
-    _broadcast_arithmetic_impl.__doc__ = docstring
-
-    return _broadcast_arithmetic_impl
-
-
-for op in ['add', 'sub', 'mul', 'div', 'truediv']:
-    for modifier in ['', 'r', 'i']:
-        name = '__{}{}__'.format(modifier, op)
-        setattr(ProductSpaceElement, name, _broadcast_arithmetic(name))
 
 
 class ProductSpaceArrayWeighting(ArrayWeighting):
@@ -1657,11 +1011,10 @@ class ProductSpaceArrayWeighting(ArrayWeighting):
             return float(np.linalg.norm(norms, ord=self.exponent))
 
 
+# TODO: move directly on space
 class ProductSpaceConstWeighting(ConstWeighting):
 
-    """Constant weighting for `ProductSpace`.
-
-    """
+    """Constant weighting for `ProductSpace`."""
 
     def __init__(self, constant, exponent=2.0):
         r"""Initialize a new instance.
@@ -1728,10 +1081,9 @@ class ProductSpaceConstWeighting(ConstWeighting):
                                       'exponent != 2 (got {})'
                                       ''.format(self.exponent))
 
-        inners = np.fromiter(
-            (x1i.inner(x2i) for x1i, x2i in zip(x1, x2)),
-            dtype=x1[0].space.dtype, count=len(x1))
-
+        inners = np.array(
+            [x1i.inner(x2i) for x1i, x2i in zip(x1, x2)]
+        )
         inner = self.const * np.sum(inners)
         return x1.space.field.element(inner)
 
@@ -1752,8 +1104,7 @@ class ProductSpaceConstWeighting(ConstWeighting):
             norm_squared = self.inner(x, x).real  # TODO: optimize?!
             return np.sqrt(norm_squared)
         else:
-            norms = np.fromiter(
-                (xi.norm() for xi in x), dtype=np.float64, count=len(x))
+            norms = np.array([xi.norm() for xi in x])
 
             if self.exponent in (1.0, float('inf')):
                 return (self.const *
