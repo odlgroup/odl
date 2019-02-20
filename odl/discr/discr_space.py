@@ -19,7 +19,7 @@ from odl.discr.partition import (
     RectPartition, uniform_partition, uniform_partition_fromintv)
 from odl.set import IntervalProd, RealNumbers
 from odl.space import ProductSpace
-from odl.space.base_tensors import Tensor, TensorSpace
+from odl.space.base_tensors import TensorSpace
 from odl.space.entry_points import tensor_space_impl
 from odl.space.weighting import ConstWeighting
 from odl.util import (
@@ -638,7 +638,8 @@ class DiscretizedSpace(TensorSpace):
         return repr(self)
 
 
-class DiscretizedSpaceElement(Tensor):
+# TODO: move relevant code to space
+class DiscretizedSpaceElement(object):
 
     """Representation of a `DiscretizedSpace` element."""
 

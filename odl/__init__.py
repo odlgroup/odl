@@ -68,7 +68,8 @@ from . import phantom
 from . import solvers
 from . import tomo
 from . import trafos
-from . import ufunc_ops
+if False:
+    from . import ufunc_ops
 from . import util
 
 # Add `test` function to global namespace so users can run `odl.test()`

@@ -1146,6 +1146,7 @@ class ProductSpaceElement(LinearSpaceElement):
         odl.util.ufuncs.ProductSpaceUfuncs
             For a list of available ufuncs.
         """
+        # TODO: fix
         return ProductSpaceUfuncs(self)
 
     @property
