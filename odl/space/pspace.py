@@ -822,7 +822,11 @@ class ProductSpace(LinearSpace):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        weight_str = self.weighting.repr_part
+        # TODO(kohr-h): verify that this is correct
+        if np.isscalar(self.weighting):
+            weight_str = '' if self.weighting == 1.0 else str(self.weighting)
+        else:
+            weight_str = np.array2string(self.weighting)
         edgeitems = np.get_printoptions()['edgeitems']
         if len(self) == 0:
             posargs = []
