@@ -28,7 +28,6 @@ from odl.operator import (
     Operator, IdentityOperator, ConstantOperator, DiagonalOperator,
     PointwiseNorm, MultiplyOperator)
 from odl.space import ProductSpace
-from odl.set.space import LinearSpaceElement
 
 
 __all__ = ('combine_proximals', 'proximal_convex_conj', 'proximal_translation',
@@ -362,6 +361,7 @@ def proximal_quadratic_perturbation(prox_factory, a, u=None):
         raise ValueError('scaling parameter muts be non-negative, got {}'
                          ''.format(a))
 
+    # TODO: fix
     if u is not None and not isinstance(u, LinearSpaceElement):
         raise TypeError('`u` must be `None` or a `LinearSpaceElement` '
                         'instance, got {!r}.'.format(u))

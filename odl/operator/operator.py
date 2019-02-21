@@ -16,7 +16,6 @@ from builtins import object
 from numbers import Integral, Number
 
 from odl.set import Field, LinearSpace, Set
-from odl.set.space import LinearSpaceElement
 from odl.util import cache_arguments
 
 __all__ = (
@@ -868,6 +867,7 @@ class Operator(object):
                 return other * self
             else:
                 return OperatorRightScalarMult(self, other)
+        # TODO: fix
         elif isinstance(other, LinearSpaceElement) and other in self.domain:
             return OperatorRightVectorMult(self, other.copy())
         else:
@@ -947,6 +947,7 @@ class Operator(object):
             return OperatorLeftScalarMult(self, other)
         elif other in self.range:
             return OperatorLeftVectorMult(self, other.copy())
+        # TODO: fix
         elif (isinstance(other, LinearSpaceElement) and
               other.space.field == self.range):
             return FunctionalLeftVectorMult(self, other.copy())
@@ -1906,6 +1907,7 @@ class FunctionalLeftVectorMult(Operator):
         >>> left_mul_op([1, 2, 3])
         rn(3).element([ 14.,  28.,  42.])
         """
+        # TODO: fix
         if not isinstance(vector, LinearSpaceElement):
             raise TypeError('`vector` {!r} not is not a LinearSpaceElement'
                             ''.format(vector))

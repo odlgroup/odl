@@ -18,7 +18,6 @@ import numpy as np
 
 from odl.operator.operator import Operator
 from odl.set import ComplexNumbers, Field, LinearSpace, RealNumbers
-from odl.set.space import LinearSpaceElement
 from odl.space import ProductSpace
 
 __all__ = ('ScalingOperator', 'ZeroOperator', 'IdentityOperator',
@@ -819,7 +818,7 @@ class ConstantOperator(Operator):
         >>> op(x, out=r3.element())
         rn(3).element([ 1.,  2.,  3.])
         """
-
+        # TODO: fix
         if ((domain is None or range is None) and
                 not isinstance(constant, LinearSpaceElement)):
             raise TypeError('If either domain or range is unspecified '
