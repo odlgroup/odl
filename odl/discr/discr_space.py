@@ -516,7 +516,7 @@ class DiscretizedSpace(TensorSpace):
             x_arr = apply_on_boundary(x, func=func_list, only_once=False)
             return self.tspace.inner(self.tspace.element(x_arr), y.tensor)
         else:
-            return self.tspace.inner(x.tensor, y.tensor)
+            return self.tspace.inner(x, y)
 
     def _norm(self, x):
         """Return ``self.norm(x)``."""
@@ -527,7 +527,7 @@ class DiscretizedSpace(TensorSpace):
             x_arr = apply_on_boundary(x, func=func_list, only_once=False)
             return self.tspace.norm(self.tspace.element(x_arr))
         else:
-            return self.tspace.norm(x.tensor)
+            return self.tspace.norm(x)
 
     def _dist(self, x, y):
         """Return ``self.dist(x, y)``."""
@@ -542,9 +542,8 @@ class DiscretizedSpace(TensorSpace):
                 self.tspace.element(arrs[1]),
             )
         else:
-            return self.tspace.dist(x.tensor, y.tensor)
+            return self.tspace.dist(x, y)
 
-    # TODO: fix
     def show(self, elem, title=None, method='', coords=None, indices=None,
              force_show=False, fig=None, **kwargs):
         """Display the function graphically.
