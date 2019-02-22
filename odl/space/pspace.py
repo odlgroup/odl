@@ -143,7 +143,7 @@ class ProductSpace(LinearSpace):
         """
         field = kwargs.pop('field', None)
         weighting = kwargs.pop('weights', None)
-        exponent = float(kwargs.pop('exponent', 2.0))
+        exponent = kwargs.pop('exponent', 2.0)
         if kwargs:
             raise TypeError('got unexpected keyword arguments: {}'
                             ''.format(kwargs))

@@ -18,7 +18,6 @@ from odl.operator.operator import Operator
 from odl.set import ComplexNumbers, RealNumbers
 from odl.space import ProductSpace, tensor_space
 from odl.space.base_tensors import TensorSpace
-from odl.space.weighting import ArrayWeighting
 from odl.util import dtype_repr, indent, signature_string, writable_array
 
 __all__ = ('PointwiseNorm', 'PointwiseInner', 'PointwiseSum', 'MatrixOperator',
@@ -831,6 +830,7 @@ class MatrixOperator(Operator):
         if range is None:
             # Infer range
             range_dtype = np.promote_types(self.matrix.dtype, domain.dtype)
+            # TODO: fix
             if (range_shape != domain.shape and
                     isinstance(domain.weighting, ArrayWeighting)):
                 # Cannot propagate weighting due to size mismatch.

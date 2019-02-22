@@ -21,7 +21,6 @@ from odl.set import IntervalProd, RealNumbers
 from odl.space import ProductSpace
 from odl.space.base_tensors import TensorSpace
 from odl.space.entry_points import tensor_space_impl
-from odl.space.weighting import ConstWeighting
 from odl.util import (
     apply_on_boundary, array_str, dtype_str, is_floating_dtype,
     is_numeric_dtype, normalized_nodes_on_bdry, normalized_scalar_param_list,
@@ -432,6 +431,7 @@ class DiscretizedSpace(TensorSpace):
                 """
                 part = space.partition.byaxis[indices]
 
+                # TODO: fix
                 if isinstance(space.weighting, ConstWeighting):
                     # Need to manually construct `tspace` since it doesn't
                     # know where its weighting factor comes from
@@ -778,12 +778,14 @@ class DiscretizedSpace(TensorSpace):
             ):
                 # In these cases, weighting constant 1 is the default
                 if (
+                    # TODO: fix
                     not isinstance(self.weighting, ConstWeighting)
                     or not np.isclose(self.weighting.const, 1.0)
                 ):
                     optargs.append(('weighting', self.weighting.const, None))
             else:
                 if (
+                    # TODO: fix
                     not isinstance(self.weighting, ConstWeighting)
                     or not np.isclose(self.weighting.const, self.cell_volume)
                 ):

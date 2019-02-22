@@ -16,7 +16,6 @@ import numpy as np
 
 from odl.discr import DiscretizedSpace
 from odl.operator import Operator
-from odl.space.weighting import ConstWeighting
 from odl.tomo.backends import (
     ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE, ASTRA_VERSION, SKIMAGE_AVAILABLE,
     AstraCudaBackProjectorImpl, AstraCudaProjectorImpl,
@@ -218,6 +217,7 @@ class RayTransformBase(Operator):
 
             if not reco_space.is_weighted:
                 weighting = None
+            # TODO: fix
             elif (isinstance(reco_space.weighting, ConstWeighting) and
                   np.isclose(reco_space.weighting.const,
                              reco_space.cell_volume)):
