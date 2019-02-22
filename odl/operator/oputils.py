@@ -45,7 +45,7 @@ def matrix_representation(op):
     ...                 [4, 5, 6],
     ...                 [7, 8, 9]])
     >>> op = odl.MatrixOperator(mat)
-    >>> matrix_representation(op)
+    >>> odl.matrix_representation(op)
     array([[1, 2, 3],
            [4, 5, 6],
            [7, 8, 9]])
@@ -64,14 +64,11 @@ def matrix_representation(op):
 
     >>> x = space.element(lambda x: x[0] ** 2 + 2 * x[1] ** 2)
     >>> grad(x)
-    ProductSpace(uniform_discr([ 0.,  0.], [ 2.,  2.], (2, 2)), 2).element([
+    array([[[ 2.  ,  2.  ],
+            [-2.75, -6.75]],
     <BLANKLINE>
-            [[ 2.  ,  2.  ],
-             [-2.75, -6.75]],
-    <BLANKLINE>
-            [[ 4.  , -4.75],
-             [ 4.  , -6.75]]
-    ])
+           [[ 4.  , -4.75],
+            [ 4.  , -6.75]]])
     >>> np.tensordot(tensor, x, axes=grad.domain.ndim)
     array([[[ 2.  ,  2.  ],
             [-2.75, -6.75]],
@@ -114,7 +111,7 @@ def matrix_representation(op):
         tmp_dom[j] = 1.0
 
         op(tmp_dom, out=tmp_ran)
-        matrix[(Ellipsis,) + j] = tmp_ran.asarray()
+        matrix[(Ellipsis,) + j] = tmp_ran
 
         tmp_dom[j] = 0.0
 
@@ -209,7 +206,7 @@ def power_method_opnorm(op, xstart=None, maxiter=100, rtol=1e-05, atol=1e-08,
         x = op.domain.element(xstart).copy()
 
     # Take first iteration step to normalize input
-    x_norm = x.norm()
+    x_norm = op.domain.norm(x)
     if x_norm == 0:
         raise ValueError('``xstart`` must be nonzero')
     x /= x_norm
@@ -237,7 +234,7 @@ def power_method_opnorm(op, xstart=None, maxiter=100, rtol=1e-05, atol=1e-08,
             x, tmp = tmp, x
 
         # Calculate x norm and verify it is valid
-        x_norm = x.norm()
+        x_norm = op.domain.norm(x)
         if x_norm == 0:
             raise ValueError('reached ``x=0`` after {} iterations'.format(i))
         if not np.isfinite(x_norm):
