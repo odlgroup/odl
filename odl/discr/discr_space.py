@@ -502,6 +502,10 @@ class DiscretizedSpace(TensorSpace):
 
     # --- Space functions
 
+    def _lincomb(self, a, x, b, y, out):
+        """Linear combination ``out = a * x + b * y``."""
+        self.tspace.lincomb(a, x, b, y, out)
+
     # The inherited methods by default use a weighting by a constant
     # (the grid cell size). In dimensions where the partitioned set contains
     # only a fraction of the outermost cells (e.g. if the outermost grid

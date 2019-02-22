@@ -868,7 +868,6 @@ class ProductSpace(LinearSpace):
                                        indent(inner_str))
 
 
-
 def _weighted_inner(x1, x2, weights, spaces):
     """Weighted inner product on a `ProductSpace`."""
     if (
