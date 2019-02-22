@@ -427,9 +427,8 @@ class ProductSpace(LinearSpace):
 
         if cast:
             # Delegate constructors
-            parts = [space.element(arg)
-                     for arg, space in zip(inp, self.spaces)]
-        else:
+            inp = [space.element(xi) for xi, space in zip(inp, self.spaces)]
+        elif not all(xi in space for xi, space in zip(inp, self.spaces)):
             raise TypeError('input {!r} not a sequence of elements of the '
                             'component spaces'.format(inp))
 
@@ -437,15 +436,15 @@ class ProductSpace(LinearSpace):
         if self.is_power_space:
             # TODO: What to do with homogeneous arrays of another type (not
             # Numpy array)?
-            return np.array(parts, dtype=self.dtype)
+            return np.array(inp, dtype=self.dtype)
 
         # Otherwise, we use an object array. Note that it must be created in
         # advance, since otherwise NumPy may still try to loop over the
         # inputs. See https://github.com/numpy/numpy/issues/12479
         # TODO(kohr-h): remove when above issue is resolved
-        ret = np.empty(len(parts), dtype=object)
-        for i, p in enumerate(parts):
-            ret[i] = p
+        ret = np.empty(len(inp), dtype=object)
+        for i, xi in enumerate(inp):
+            ret[i] = xi
         return ret
 
     def zero(self):
