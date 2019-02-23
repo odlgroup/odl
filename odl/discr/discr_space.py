@@ -24,7 +24,7 @@ from odl.space.entry_points import tensor_space_impl
 from odl.util import (
     apply_on_boundary, array_str, dtype_str, is_floating_dtype,
     is_numeric_dtype, normalized_nodes_on_bdry, normalized_scalar_param_list,
-    safe_int_conv)
+    repr_string, safe_int_conv, signature_string_parts)
 
 __all__ = (
     'DiscretizedSpace',
@@ -120,10 +120,15 @@ class DiscretizedSpace(TensorSpace):
 
     @property
     def weighting(self):
-        """This space's weighting scheme."""
+        """This space's weighting factor(s)."""
         # TODO(kohr-h): `weighting` is optional in `tspace`, how should we
         # handle that?
         return self.tspace.weighting
+
+    @property
+    def weighting_type(self):
+        """This space's weighting type."""
+        return self.tspace.weighting_type
 
     @property
     def is_weighted(self):
@@ -431,8 +436,7 @@ class DiscretizedSpace(TensorSpace):
                 """
                 part = space.partition.byaxis[indices]
 
-                # TODO: fix
-                if isinstance(space.weighting, ConstWeighting):
+                if space.weighting_type == 'const':
                     # Need to manually construct `tspace` since it doesn't
                     # know where its weighting factor comes from
                     try:
@@ -458,8 +462,9 @@ class DiscretizedSpace(TensorSpace):
                 except TypeError:
                     labels = space.axis_labels[indices]
                 else:
-                    labels = tuple(space.axis_labels[int(i)]
-                                   for i in indices)
+                    labels = tuple(
+                        space.axis_labels[int(i)] for i in indices
+                    )
 
                 return DiscretizedSpace(part, tspace, axis_labels=labels)
 
@@ -778,18 +783,17 @@ class DiscretizedSpace(TensorSpace):
             ):
                 # In these cases, weighting constant 1 is the default
                 if (
-                    # TODO: fix
-                    not isinstance(self.weighting, ConstWeighting)
-                    or not np.isclose(self.weighting.const, 1.0)
+                    self.weighting_type != 'const'
+                    or not np.isclose(self.weighting, 1.0)
                 ):
-                    optargs.append(('weighting', self.weighting.const, None))
+                    # TODO(kohr-h): this is probably not great but will work
+                    optargs.append(('weighting', self.weighting, None))
             else:
                 if (
-                    # TODO: fix
-                    not isinstance(self.weighting, ConstWeighting)
-                    or not np.isclose(self.weighting.const, self.cell_volume)
+                    self.weighting_type != 'const'
+                    or not np.isclose(self.weighting, self.cell_volume)
                 ):
-                    optargs.append(('weighting', self.weighting.const, None))
+                    optargs.append(('weighting', self.weighting, None))
 
             optmod = [''] * len(optargs)
             if self.dtype in (float, complex, int, bool):
