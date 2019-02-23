@@ -408,16 +408,24 @@ if __name__ == '__main__':
     from odl.util.testutils import run_doctests
 
     # 2D
-    discr = odl.uniform_discr([-1, -1], [1, 1], [1000, 1000])
-    shepp_logan(discr, modified=True).show('shepp_logan 2d modified=True')
-    shepp_logan(discr, modified=False).show('shepp_logan 2d modified=False')
-    forbild(discr).show('FORBILD 2d', clim=[1.035, 1.065])
-    forbild(discr, value_type='materials').show('FORBILD 2d materials')
+    space = odl.uniform_discr([-1, -1], [1, 1], [1000, 1000])
+    space.show(
+        shepp_logan(space, modified=True), 'shepp_logan 2d modified=True'
+    )
+    space.show(
+        shepp_logan(space, modified=False), 'shepp_logan 2d modified=False'
+    )
+    space.show(forbild(space), 'FORBILD 2d', clim=[1.035, 1.065])
+    space.show(forbild(space, value_type='materials'), 'FORBILD 2d materials')
 
     # 3D
-    discr = odl.uniform_discr([-1, -1, -1], [1, 1, 1], [300, 300, 300])
-    shepp_logan(discr, modified=True).show('shepp_logan 3d modified=True')
-    shepp_logan(discr, modified=False).show('shepp_logan 3d modified=False')
+    space = odl.uniform_discr([-1, -1, -1], [1, 1, 1], [300, 300, 300])
+    space.show(
+        shepp_logan(space, modified=True), 'shepp_logan 3d modified=True'
+    )
+    space.show(
+        shepp_logan(space, modified=False), 'shepp_logan 3d modified=False'
+    )
 
     # Run also the doctests
     run_doctests()
