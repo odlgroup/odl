@@ -79,7 +79,9 @@ def _default_call_in_place(op, x, out, **kwargs):
     kwargs:
         Optional arguments to the operator.
     """
-    out.assign(op.range.element(op._call_out_of_place(x, **kwargs)))
+    op.range.lincomb(
+        1, op.range.element(op._call_out_of_place(x, **kwargs)), out=out
+    )
 
 
 def _function_signature(func):
