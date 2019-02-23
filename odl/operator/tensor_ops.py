@@ -631,36 +631,13 @@ class PointwiseInnerAdjoint(PointwiseInnerBase):
             adjoint=True, vfspace=vfspace, vecfield=vecfield,
             weighting=weighting)
 
-        # Handle weighting, including sanity checks
-        if weighting is None:
-            if vfspace.weighting_type == 'array':
-                self.__weights = vfspace.weighting
-            elif vfspace.weighting_type == 'const':
-                self.__weights = vfspace.weighting * np.ones(len(vfspace))
-            else:
-                raise RuntimeError(
-                    'invalid weighting scheme {} of `vfspace`'
-                    ''.format(vfspace.weighting_type)
-                )
-        elif np.isscalar(weighting):
-            if weighting <= 0:
-                raise ValueError(
-                    'weighting constant must be positive, got {}'
-                    ''.format(weighting)
-                )
-            self.__weights = float(weighting) * np.ones(len(vfspace))
-        else:
-            self.__weights = np.asarray(weighting, dtype='float64')
-            if not (
-                np.all(self.__weights > 0)
-                and np.all(np.isfinite(self.weights))
-            ):
-                raise ValueError(
-                    'weighting array {} contains invalid entries'
-                    ''.format(weighting)
-                )
-
-        self.__is_weighted = not np.array_equiv(self.weights, 1.0)
+        # Get weighting from range
+        if self.range.weighting_type == 'array':
+            self.__ran_weights = self.range.weighting
+        elif self.range.weighting_type == 'const':
+            self.__ran_weights = (
+                self.range.weighting * np.ones(len(self.range))
+            )
 
     def _call(self, f, out):
         """Implement ``self(vf, out)``."""
