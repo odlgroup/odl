@@ -97,7 +97,7 @@ def _submarine_2d_smooth(space, taper):
 
     out = space.element(blurred_ellipse)
     out += space.element(blurred_rect)
-    return out.ufuncs.minimum(1, out=out)
+    return np.minimum(out, 1, out=out)
 
 
 def _submarine_2d_nonsmooth(space):
@@ -141,7 +141,7 @@ def _submarine_2d_nonsmooth(space):
 
     out = space.element(ellipse)
     out += space.element(rect)
-    return out.ufuncs.minimum(1, out=out)
+    return np.minimum(out, 1, out=out)
 
 
 def text(space, text, font=None, border=0.2, inverted=True):
@@ -258,11 +258,11 @@ if __name__ == '__main__':
     from odl.util.testutils import run_doctests
 
     space = odl.uniform_discr([-1, -1], [1, 1], [300, 300])
-    submarine(space, smooth=False).show('submarine smooth=False')
-    submarine(space, smooth=True).show('submarine smooth=True')
-    submarine(space, smooth=True, taper=50).show('submarine taper=50')
+    space.show(submarine(space, smooth=False), 'submarine smooth=False')
+    space.show(submarine(space, smooth=True), 'submarine smooth=True')
+    space.show(submarine(space, smooth=True, taper=50), 'submarine taper=50')
 
-    text(space, text='phantom').show('phantom')
+    space.show(text(space, text='phantom'), 'phantom')
 
     # Run also the doctests
     run_doctests()
