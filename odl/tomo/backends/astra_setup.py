@@ -570,8 +570,7 @@ def astra_data(astra_geom, datatype, data=None, ndim=2, allow_copy=False):
         Handle for the new ASTRA internal data object.
     """
     if data is not None:
-        # TODO: fix
-        if isinstance(data, (DiscretizedSpaceElement, np.ndarray)):
+        if isinstance(data, np.ndarray):
             ndim = data.ndim
         else:
             raise TypeError('`data` {!r} is neither DiscretizedSpaceElement '

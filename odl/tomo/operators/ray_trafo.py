@@ -217,10 +217,10 @@ class RayTransformBase(Operator):
 
             if not reco_space.is_weighted:
                 weighting = None
-            # TODO: fix
-            elif (isinstance(reco_space.weighting, ConstWeighting) and
-                  np.isclose(reco_space.weighting.const,
-                             reco_space.cell_volume)):
+            elif (
+                reco_space.weighting_type == 'const'
+                and np.isclose(reco_space.weighting, reco_space.cell_volume)
+            ):
                 # Approximate cell volume
                 # TODO: find a way to treat angles and detector differently
                 # regarding weighting. While the detector should be uniformly
