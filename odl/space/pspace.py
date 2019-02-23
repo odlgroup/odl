@@ -410,6 +410,7 @@ class ProductSpace(LinearSpace):
         >>> Z = odl.ProductSpace(r2, r3)
         >>> z = Z.element()
         >>> z in Z
+        True
         >>> z[0] in Z[0]
         True
         >>> z[1] in Z[1]
