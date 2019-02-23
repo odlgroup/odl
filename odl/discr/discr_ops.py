@@ -19,9 +19,8 @@ from odl.discr.partition import uniform_partition
 from odl.operator import Operator
 from odl.space import tensor_space
 from odl.util import (
-    normalized_scalar_param_list, resize_array, safe_int_conv, writable_array)
+    normalized_scalar_param_list, resize_array, safe_int_conv)
 from odl.util.numerics import _SUPPORTED_RESIZE_PAD_MODES
-from odl.util.utility import nullcontext
 
 __all__ = ('Resampling', 'ResizingOperator')
 
@@ -64,14 +63,14 @@ class Resampling(Operator):
 
         Apply the corresponding resampling operator to an element:
 
-        >>> print(resampling([0, 1, 0]))
-        [ 0.,  0.,  1.,  1.,  0.,  0.]
+        >>> resampling([0, 1, 0])
+        array([ 0.,  0.,  1.,  1.,  0.,  0.])
 
         With linear interpolation:
 
         >>> resampling = odl.Resampling(coarse_discr, fine_discr, 'linear')
-        >>> print(resampling([0, 1, 0]))
-        [ 0.  ,  0.25,  0.75,  0.75,  0.25,  0.  ]
+        >>> resampling([0, 1, 0])
+        array([ 0.  ,  0.25,  0.75,  0.75,  0.25,  0.  ])
         """
         if domain.domain != range.domain:
             raise ValueError(
@@ -110,11 +109,9 @@ class Resampling(Operator):
             x, self.domain.grid.coord_vectors, self.interp
         )
 
-        out_ctx = nullcontext() if out is None else writable_array(out)
-        with out_ctx as out_arr:
-            return point_collocation(
-                interpolator, self.range.meshgrid, out=out_arr
-            )
+        return point_collocation(
+            interpolator, self.range.meshgrid, out=out
+        )
 
     @property
     def inverse(self):
@@ -154,14 +151,14 @@ class Resampling(Operator):
         coarser to a finer sampling:
 
         >>> x = [0, 1, 0]
-        >>> print(resampling_inv(resampling(x)))
-        [ 0.,  1.,  0.]
+        >>> resampling_inv(resampling(x))
+        array([ 0.,  1.,  0.])
 
         However, it can fail in the other direction:
 
         >>> y = [0, 0, 0, 1, 0, 0]
-        >>> print(resampling(resampling_inv(y)))
-        [ 0.,  0.,  1.,  1.,  0.,  0.]
+        >>> resampling(resampling_inv(y))
+        array([ 0.,  0.,  1.,  1.,  0.,  0.])
         """
         return self.inverse
 
@@ -254,29 +251,29 @@ class ResizingOperator(Operator):
         >>> x = [[1, 2, 3, 4],
         ...      [5, 6, 7, 8]]
         >>> resize_op = odl.ResizingOperator(space, ran_shp=(4, 4))
-        >>> print(resize_op(x))
-        [[ 0.,  0.,  0.,  0.],
-         [ 1.,  2.,  3.,  4.],
-         [ 5.,  6.,  7.,  8.],
-         [ 0.,  0.,  0.,  0.]]
+        >>> resize_op(x)
+        array([[ 0.,  0.,  0.,  0.],
+               [ 1.,  2.,  3.,  4.],
+               [ 5.,  6.,  7.,  8.],
+               [ 0.,  0.,  0.,  0.]])
         >>>
         >>> resize_op = odl.ResizingOperator(space, ran_shp=(4, 4),
         ...                                  offset=(0, 0),
         ...                                  pad_mode='periodic')
-        >>> print(resize_op(x))
-        [[ 1.,  2.,  3.,  4.],
-         [ 5.,  6.,  7.,  8.],
-         [ 1.,  2.,  3.,  4.],
-         [ 5.,  6.,  7.,  8.]]
+        >>> resize_op(x)
+        array([[ 1.,  2.,  3.,  4.],
+               [ 5.,  6.,  7.,  8.],
+               [ 1.,  2.,  3.,  4.],
+               [ 5.,  6.,  7.,  8.]])
         >>>
         >>> resize_op = odl.ResizingOperator(space, ran_shp=(4, 4),
         ...                                  offset=(0, 0),
         ...                                  pad_mode='order0')
-        >>> print(resize_op(x))
-        [[ 1.,  2.,  3.,  4.],
-         [ 5.,  6.,  7.,  8.],
-         [ 5.,  6.,  7.,  8.],
-         [ 5.,  6.,  7.,  8.]]
+        >>> resize_op(x)
+        array([[ 1.,  2.,  3.,  4.],
+               [ 5.,  6.,  7.,  8.],
+               [ 5.,  6.,  7.,  8.],
+               [ 5.,  6.,  7.,  8.]])
 
         Alternatively, the range of the operator can be provided directly.
         This requires that the partitions match, i.e. that the cell sizes
@@ -286,11 +283,11 @@ class ResizingOperator(Operator):
         >>> large_spc = odl.uniform_discr([-0.5, 0], [1.5, 1], (4, 4))
         >>> resize_op = odl.ResizingOperator(space, large_spc,
         ...                                  pad_mode='periodic')
-        >>> print(resize_op(x))
-        [[ 5.,  6.,  7.,  8.],
-         [ 1.,  2.,  3.,  4.],
-         [ 5.,  6.,  7.,  8.],
-         [ 1.,  2.,  3.,  4.]]
+        >>> resize_op(x)
+        array([[ 5.,  6.,  7.,  8.],
+               [ 1.,  2.,  3.,  4.],
+               [ 5.,  6.,  7.,  8.],
+               [ 1.,  2.,  3.,  4.]])
         """
         # Swap names to be able to use the range iterator without worries
         import builtins
@@ -374,10 +371,9 @@ class ResizingOperator(Operator):
 
     def _call(self, x, out):
         """Implement ``self(x, out)``."""
-        with writable_array(out) as out_arr:
-            resize_array(x.asarray(), self.range.shape, offset=self.offset,
-                         pad_mode=self.pad_mode, pad_const=self.pad_const,
-                         direction='forward', out=out_arr)
+        resize_array(x, self.range.shape, offset=self.offset,
+                     pad_mode=self.pad_mode, pad_const=self.pad_const,
+                     direction='forward', out=out)
 
     def derivative(self, point):
         """Derivative of this operator at ``point``.
@@ -414,11 +410,9 @@ class ResizingOperator(Operator):
 
             def _call(self, x, out):
                 """Implement ``self(x, out)``."""
-                with writable_array(out) as out_arr:
-                    resize_array(x.asarray(), op.domain.shape,
-                                 offset=op.offset, pad_mode=op.pad_mode,
-                                 pad_const=0, direction='adjoint',
-                                 out=out_arr)
+                resize_array(x, op.domain.shape,
+                             offset=op.offset, pad_mode=op.pad_mode,
+                             pad_const=0, direction='adjoint', out=out)
 
             @property
             def adjoint(self):
