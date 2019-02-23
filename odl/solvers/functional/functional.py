@@ -1009,7 +1009,9 @@ class FunctionalQuadraticPerturb(Functional):
         if linear_term is None:
             grad_lipschitz = func.grad_lipschitz
         else:
-            grad_lipschitz = (func.grad_lipschitz + self.linear_term.norm())
+            grad_lipschitz = (
+                func.grad_lipschitz + func.domain.norm(linear_term)
+            )
 
         constant = func.domain.field.element(constant)
         if constant.imag != 0:
@@ -1044,9 +1046,12 @@ class FunctionalQuadraticPerturb(Functional):
 
     def _call(self, x):
         """Apply the functional to the given point."""
-        return (self.functional(x) +
-                self.quadratic_coeff * x.inner(x) +
-                x.inner(self.linear_term) + self.constant)
+        return (
+            self.functional(x)
+            + self.quadratic_coeff * self.domain.inner(x, x)
+            + self.domain.inner(x, self.linear_term)
+            + self.constant
+        )
 
     @property
     def gradient(self):
@@ -1406,12 +1411,17 @@ class BregmanDistance(Functional):
                 '{}'.format(subgrad))
         self.__subgrad = subgrad
 
-        self.__constant = -functional(point) + subgrad.inner(point)
+        self.__constant = (
+            -functional(point)
+            + functional.domain.inner(subgrad, point)
+        )
 
         self.__bregman_dist = FunctionalQuadraticPerturb(
             functional, linear_term=-subgrad, constant=self.__constant)
 
-        grad_lipschitz = functional.grad_lipschitz + subgrad.norm()
+        grad_lipschitz = (
+            functional.grad_lipschitz + functional.domain.norm(subgrad)
+        )
 
         super(BregmanDistance, self).__init__(
             space=functional.domain, linear=False,
@@ -1515,7 +1525,7 @@ def simple_functional(space, fcall=None, grad=None, prox=None, grad_lip=np.nan,
     >>> func([1, 2, 3])
     14.0
     >>> func.gradient([1, 2, 3])
-    rn(3).element([ 2.,  4.,  6.])
+    array([ 2.,  4.,  6.])
     """
     if grad is not None and not isinstance(grad, Operator):
         grad_in = grad
