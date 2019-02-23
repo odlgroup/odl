@@ -190,6 +190,10 @@ class ProductSpace(LinearSpace):
 
         if weighting is None:
             self.__weighting = 1.0
+            self.__weighting_type = 'const'
+        elif np.isscalar(weighting):
+            self.__weighting = float(weighting)
+            self.__weighting_type = 'const'
         else:
             weighting = np.atleast_1d(weighting)
             if weighting.shape != (len(spaces),):
@@ -199,6 +203,7 @@ class ProductSpace(LinearSpace):
                     ''.format(weighting.shape, (len(spaces),))
                 )
             self.__weighting = weighting
+            self.__weighting_type = 'array'
 
     # --- Constructor args
 
@@ -209,8 +214,13 @@ class ProductSpace(LinearSpace):
 
     @property
     def weighting(self):
-        """This space's weighting scheme."""
+        """This space's weighting factor(s)."""
         return self.__weighting
+
+    @property
+    def weighting_type(self):
+        """This space's weighting type."""
+        return self.__weighting_type
 
     @property
     def exponent(self):

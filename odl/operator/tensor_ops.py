@@ -146,20 +146,20 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
 
         >>> x = vfspace.element([[[1, -4]],
         ...                      [[0, 3]]])
-        >>> print(pw_norm(x))
-        [[ 1.,  5.]]
+        >>> pw_norm(x)
+        array([[ 1.,  5.]])
 
         We can change the exponent either in the vector field space
         or in the operator directly:
 
         >>> vfspace = odl.ProductSpace(spc, 2, exponent=1)
         >>> pw_norm = PointwiseNorm(vfspace)
-        >>> print(pw_norm(x))
-        [[ 1.,  7.]]
+        >>> pw_norm(x)
+        array([[ 1.,  7.]])
         >>> vfspace = odl.ProductSpace(spc, 2)
         >>> pw_norm = PointwiseNorm(vfspace, exponent=1)
-        >>> print(pw_norm(x))
-        [[ 1.,  7.]]
+        >>> pw_norm(x)
+        array([[ 1.,  7.]])
         """
         if not isinstance(vfspace, ProductSpace):
             raise TypeError('`vfspace` {!r} is not a ProductSpace '
@@ -183,27 +183,33 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
 
         # Handle weighting, including sanity checks
         if weighting is None:
-            # TODO: find a more robust way of getting the weights as an array
-            if hasattr(self.domain.weighting, 'array'):
-                self.__weights = self.domain.weighting.array
-            elif hasattr(self.domain.weighting, 'const'):
-                self.__weights = (self.domain.weighting.const *
-                                  np.ones(len(self.domain)))
+            if vfspace.weighting_type == 'array':
+                self.__weights = vfspace.weighting
+            elif vfspace.weighting_type == 'const':
+                self.__weights = vfspace.weighting * np.ones(len(vfspace))
             else:
-                raise ValueError('weighting scheme {!r} of the domain does '
-                                 'not define a weighting array or constant'
-                                 ''.format(self.domain.weighting))
+                raise RuntimeError(
+                    'invalid weighting scheme {} of `vfspace`'
+                    ''.format(vfspace.weighting_type)
+                )
         elif np.isscalar(weighting):
             if weighting <= 0:
-                raise ValueError('weighting constant must be positive, got '
-                                 '{}'.format(weighting))
-            self.__weights = float(weighting) * np.ones(len(self.domain))
+                raise ValueError(
+                    'weighting constant must be positive, got {}'
+                    ''.format(weighting)
+                )
+            self.__weights = float(weighting) * np.ones(len(vfspace))
         else:
             self.__weights = np.asarray(weighting, dtype='float64')
-            if (not np.all(self.weights > 0) or
-                    not np.all(np.isfinite(self.weights))):
-                raise ValueError('weighting array {} contains invalid '
-                                 'entries'.format(weighting))
+            if not (
+                np.all(self.__weights > 0)
+                and np.all(np.isfinite(self.weights))
+            ):
+                raise ValueError(
+                    'weighting array {} contains invalid entries'
+                    ''.format(weighting)
+                )
+
         self.__is_weighted = not np.array_equiv(self.weights, 1.0)
 
     @property
@@ -232,7 +238,7 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
 
     def _call_vecfield_1(self, vf, out):
         """Implement ``self(vf, out)`` for exponent 1."""
-        vf[0].ufuncs.absolute(out=out)
+        np.absolute(vf[0], out=out)
         if self.is_weighted:
             out *= self.weights[0]
 
@@ -241,14 +247,14 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
 
         tmp = self.range.element()
         for fi, wi in zip(vf[1:], self.weights[1:]):
-            fi.ufuncs.absolute(out=tmp)
+            np.absolute(fi, out=tmp)
             if self.is_weighted:
                 tmp *= wi
             out += tmp
 
     def _call_vecfield_inf(self, vf, out):
         """Implement ``self(vf, out)`` for exponent ``inf``."""
-        vf[0].ufuncs.absolute(out=out)
+        np.absolute(vf[0], out=out)
         if self.is_weighted:
             out *= self.weights[0]
 
@@ -257,16 +263,16 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
 
         tmp = self.range.element()
         for vfi, wi in zip(vf[1:], self.weights[1:]):
-            vfi.ufuncs.absolute(out=tmp)
+            np.absolute(vfi, out=tmp)
             if self.is_weighted:
                 tmp *= wi
-            out.ufuncs.maximum(tmp, out=out)
+            np.maximum(out, tmp, out=out)
 
     def _call_vecfield_p(self, vf, out):
         """Implement ``self(vf, out)`` for exponent 1 < p < ``inf``."""
         # Optimization for 1 component - just absolute value (maybe weighted)
         if len(self.domain) == 1:
-            vf[0].ufuncs.absolute(out=out)
+            np.absolute(vf[0], out=out)
             if self.is_weighted:
                 out *= self.weights[0] ** (1 / self.exponent)
             return
@@ -289,13 +295,13 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
         """Compute |F_i(x)|^p point-wise and write to ``out``."""
         # Optimization for very common cases
         if p == 0.5:
-            fi.ufuncs.absolute(out=out)
-            out.ufuncs.sqrt(out=out)
+            np.absolute(fi, out=out)
+            np.sqrt(out, out=out)
         elif p == 2.0 and self.base_space.field == RealNumbers():
-            fi.multiply(fi, out=out)
+            np.multiply(fi, fi, out=out)
         else:
-            fi.ufuncs.absolute(out=out)
-            out.ufuncs.power(p, out=out)
+            np.absolute(fi, out=out)
+            np.power(fi, p, out=out)
 
     def derivative(self, vf):
         """Derivative of the point-wise norm operator at ``vf``.
@@ -413,19 +419,33 @@ class PointwiseInnerBase(PointwiseTensorFieldOperator):
 
         # Handle weighting, including sanity checks
         if weighting is None:
-            if hasattr(vfspace.weighting, 'array'):
-                self.__weights = vfspace.weighting.array
-            elif hasattr(vfspace.weighting, 'const'):
-                self.__weights = (vfspace.weighting.const *
-                                  np.ones(len(vfspace)))
+            if vfspace.weighting_type == 'array':
+                self.__weights = vfspace.weighting
+            elif vfspace.weighting_type == 'const':
+                self.__weights = vfspace.weighting * np.ones(len(vfspace))
             else:
-                raise ValueError('weighting scheme {!r} of the domain does '
-                                 'not define a weighting array or constant'
-                                 ''.format(vfspace.weighting))
+                raise RuntimeError(
+                    'invalid weighting scheme {} of `vfspace`'
+                    ''.format(vfspace.weighting_type)
+                )
         elif np.isscalar(weighting):
+            if weighting <= 0:
+                raise ValueError(
+                    'weighting constant must be positive, got {}'
+                    ''.format(weighting)
+                )
             self.__weights = float(weighting) * np.ones(len(vfspace))
         else:
             self.__weights = np.asarray(weighting, dtype='float64')
+            if not (
+                np.all(self.__weights > 0)
+                and np.all(np.isfinite(self.weights))
+            ):
+                raise ValueError(
+                    'weighting array {} contains invalid entries'
+                    ''.format(weighting)
+                )
+
         self.__is_weighted = not np.array_equiv(self.weights, 1.0)
 
     @property
@@ -504,8 +524,8 @@ class PointwiseInner(PointwiseInnerBase):
 
         >>> x = vfspace.element([[[1, -4]],
         ...                      [[0, 3]]])
-        >>> print(pw_inner(x))
-        [[ 0., -7.]]
+        >>> pw_inner(x)
+        array([[ 0., -7.]])
         """
         super(PointwiseInner, self).__init__(
             adjoint=False, vfspace=vfspace, vecfield=vecfield,
@@ -519,9 +539,9 @@ class PointwiseInner(PointwiseInnerBase):
     def _call(self, vf, out):
         """Implement ``self(vf, out)``."""
         if self.domain.field == ComplexNumbers():
-            vf[0].multiply(self._vecfield[0].conj(), out=out)
+            np.multiply(vf[0], self._vecfield[0].conj(), out=out)
         else:
-            vf[0].multiply(self._vecfield[0], out=out)
+            np.multiply(vf[0], self._vecfield[0], out=out)
 
         if self.is_weighted:
             out *= self.weights[0]
@@ -530,13 +550,12 @@ class PointwiseInner(PointwiseInnerBase):
             return
 
         tmp = self.range.element()
-        for vfi, gi, wi in zip(vf[1:], self.vecfield[1:],
-                               self.weights[1:]):
+        for vfi, gi, wi in zip(vf[1:], self.vecfield[1:], self.weights[1:]):
 
             if self.domain.field == ComplexNumbers():
-                vfi.multiply(gi.conj(), out=tmp)
+                np.multiply(vfi, gi.conj(), out=tmp)
             else:
-                vfi.multiply(gi, out=tmp)
+                np.multiply(vfi, gi, out=tmp)
 
             if self.is_weighted:
                 tmp *= wi
@@ -612,22 +631,42 @@ class PointwiseInnerAdjoint(PointwiseInnerBase):
             adjoint=True, vfspace=vfspace, vecfield=vecfield,
             weighting=weighting)
 
-        # Get weighting from range
-        if hasattr(self.range.weighting, 'array'):
-            self.__ran_weights = self.range.weighting.array
-        elif hasattr(self.range.weighting, 'const'):
-            self.__ran_weights = (self.range.weighting.const *
-                                  np.ones(len(self.range)))
+        # Handle weighting, including sanity checks
+        if weighting is None:
+            if vfspace.weighting_type == 'array':
+                self.__weights = vfspace.weighting
+            elif vfspace.weighting_type == 'const':
+                self.__weights = vfspace.weighting * np.ones(len(vfspace))
+            else:
+                raise RuntimeError(
+                    'invalid weighting scheme {} of `vfspace`'
+                    ''.format(vfspace.weighting_type)
+                )
+        elif np.isscalar(weighting):
+            if weighting <= 0:
+                raise ValueError(
+                    'weighting constant must be positive, got {}'
+                    ''.format(weighting)
+                )
+            self.__weights = float(weighting) * np.ones(len(vfspace))
         else:
-            raise ValueError('weighting scheme {!r} of the range does '
-                             'not define a weighting array or constant'
-                             ''.format(self.range.weighting))
+            self.__weights = np.asarray(weighting, dtype='float64')
+            if not (
+                np.all(self.__weights > 0)
+                and np.all(np.isfinite(self.weights))
+            ):
+                raise ValueError(
+                    'weighting array {} contains invalid entries'
+                    ''.format(weighting)
+                )
+
+        self.__is_weighted = not np.array_equiv(self.weights, 1.0)
 
     def _call(self, f, out):
         """Implement ``self(vf, out)``."""
         for vfi, oi, ran_wi, dom_wi in zip(self.vecfield, out,
                                            self.__ran_weights, self.weights):
-            vfi.multiply(f, out=oi)
+            np.multiply(vfi, f, out=oi)
             if not np.isclose(ran_wi, dom_wi):
                 oi *= dom_wi / ran_wi
 
@@ -691,8 +730,8 @@ class PointwiseSum(PointwiseInner):
 
         >>> x = vfspace.element([[[1, -4]],
         ...                      [[0, 3]]])
-        >>> print(pw_sum(x))
-        [[ 1., -1.]]
+        >>> pw_sum(x)
+        array([[ 1., -1.]])
         """
         if not isinstance(vfspace, ProductSpace):
             raise TypeError('`vfspace` {!r} is not a ProductSpace '
@@ -830,9 +869,10 @@ class MatrixOperator(Operator):
         if range is None:
             # Infer range
             range_dtype = np.promote_types(self.matrix.dtype, domain.dtype)
-            # TODO: fix
-            if (range_shape != domain.shape and
-                    isinstance(domain.weighting, ArrayWeighting)):
+            if (
+                range_shape != domain.shape
+                and domain.weighting_type == 'array'
+            ):
                 # Cannot propagate weighting due to size mismatch.
                 weighting = None
             else:
