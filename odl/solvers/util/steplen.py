@@ -64,7 +64,7 @@ class BacktrackingLineSearch(LineSearch):
     optimization*. Siam, 2009.
     """
 
-    def __init__(self, function, tau=0.5, discount=0.01, alpha=1.0,
+    def __init__(self, function, space=None, tau=0.5, discount=0.01, alpha=1.0,
                  max_num_iter=None, estimate_step=False):
         """Initialize a new instance.
 
@@ -74,6 +74,10 @@ class BacktrackingLineSearch(LineSearch):
             The cost function of the optimization problem to be solved.
             If ``function`` is not a `Functional`, calling this class later
             requires a value for the ``dir_derivative`` argument.
+        space : `LinearSpace`, optional
+            Space in which the line search should be performed. Required if
+            ``function`` is not a `Functional`, otherwise defaults to
+            ``function.domain``.
         tau : float, optional
             The amount the step length is decreased in each iteration,
             as long as it does not fulfill the decrease condition.
@@ -93,7 +97,7 @@ class BacktrackingLineSearch(LineSearch):
 
         Examples
         --------
-        Create line search
+        Create line search for a `Functional`:
 
         >>> r3 = odl.rn(3)
         >>> func = odl.solvers.L2NormSquared(r3)
@@ -109,12 +113,13 @@ class BacktrackingLineSearch(LineSearch):
         >>> func(x + step_len * d) < func(x)
         True
 
-        Also works with non-functionals as arguments, but then the
-        dir_derivative argument is mandatory
+        The class also works with non-functionals as arguments, but then the
+        ``space`` must be provided to the class constructor, and the
+        ``dir_derivative`` argument to the call:
 
         >>> r3 = odl.rn(3)
         >>> func = lambda x: x[0] ** 2 + x[1] ** 2 + x[2] ** 2
-        >>> line_search = BacktrackingLineSearch(func)
+        >>> line_search = BacktrackingLineSearch(func, space=r3)
         >>> x = r3.element([1, 2, 3])
         >>> d = r3.element([-1, -1, -1])
         >>> dir_derivative = -12
@@ -124,7 +129,17 @@ class BacktrackingLineSearch(LineSearch):
         >>> func(x + step_len * d) < func(x)
         True
         """
+        from odl.solvers import Functional
+
         self.function = function
+        if space is None:
+            if isinstance(function, Functional):
+                space = function.domain
+            else:
+                raise TypeError(
+                    '`space` is required if `function` is not a `Functional`'
+                )
+        self.space = space
         self.tau = float(tau)
         self.discount = float(discount)
         self.estimate_step = bool(estimate_step)
@@ -169,7 +184,7 @@ class BacktrackingLineSearch(LineSearch):
                 raise ValueError('`dir_derivative` only optional if '
                                  '`function.gradient exists')
             else:
-                dir_derivative = gradient(x).inner(direction)
+                dir_derivative = self.space.inner(gradient(x), direction)
         else:
             dir_derivative = float(dir_derivative)
 
@@ -201,7 +216,7 @@ class BacktrackingLineSearch(LineSearch):
                                  'sufficient decrease'
                                  ''.format(self.max_num_iter, alpha))
 
-            point.lincomb(1, x, alpha, direction)  # pt = x + alpha * direction
+            self.space.lincomb(1, x, alpha, direction, out=point)
             fval = self.function(point)
 
             if np.isnan(fval):
