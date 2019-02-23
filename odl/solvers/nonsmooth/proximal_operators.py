@@ -361,11 +361,6 @@ def proximal_quadratic_perturbation(prox_factory, a, u=None):
         raise ValueError('scaling parameter muts be non-negative, got {}'
                          ''.format(a))
 
-    # TODO: fix
-    if u is not None and not isinstance(u, LinearSpaceElement):
-        raise TypeError('`u` must be `None` or a `LinearSpaceElement` '
-                        'instance, got {!r}.'.format(u))
-
     def quadratic_perturbation_prox_factory(sigma):
         r"""Create proximal for the quadratic perturbation with a given sigma.
 
@@ -608,14 +603,14 @@ def proximal_box_constraint(space, lower=None, upper=None):
         def _call(self, x, out):
             """Apply the operator to ``x`` and store the result in ``out``."""
             if lower is not None and upper is None:
-                x.ufuncs.maximum(lower, out=out)
+                np.maximum(x, lower, out=out)
             elif lower is None and upper is not None:
-                x.ufuncs.minimum(upper, out=out)
+                np.minimum(x, upper, out=out)
             elif lower is not None and upper is not None:
-                x.ufuncs.maximum(lower, out=out)
-                out.ufuncs.minimum(upper, out=out)
+                np.maximum(x, lower, out=out)
+                np.minimum(out, upper, out=out)
             else:
-                out.assign(x)
+                out[:] = x
 
     return ProxOpBoxConstraint
 
@@ -785,28 +780,28 @@ def proximal_l2(space, lam=1, g=None):
             eps = np.finfo(dtype).resolution * 10
 
             if g is None:
-                x_norm = x.norm() * (1 + eps)
+                x_norm = self.domain.norm(x) * (1 + eps)
                 if x_norm > 0:
                     step = self.sigma * lam / x_norm
                 else:
                     step = np.infty
 
                 if step < 1.0:
-                    out.lincomb(1.0 - step, x)
+                    self.range.lincomb(1 - step, x, out=out)
                 else:
-                    out.set_zero()
+                    out[:] = 0
 
             else:
-                x_norm = (x - g).norm() * (1 + eps)
+                x_norm = self.domain.norm(x - g) * (1 + eps)
                 if x_norm > 0:
                     step = self.sigma * lam / x_norm
                 else:
                     step = np.infty
 
                 if step < 1.0:
-                    out.lincomb(1.0 - step, x, step, g)
+                    self.range.lincomb(1 - step, x, step, g, out=out)
                 else:
-                    out.assign(g)
+                    out[:] = g
 
     return ProximalL2
 
@@ -892,22 +887,27 @@ def proximal_convex_conj_l2_squared(space, lam=1, g=None):
             sig = self.sigma
             if np.isscalar(sig):
                 if g is None:
-                    out.lincomb(1 / (1 + 0.5 * sig / lam), x)
+                    self.range.lincomb(1 / (1 + 0.5 * sig / lam), x, out=out)
                 else:
-                    out.lincomb(1 / (1 + 0.5 * sig / lam), x,
-                                -sig / (1 + 0.5 * sig / lam), g)
+                    self.range.lincomb(
+                        1 / (1 + 0.5 * sig / lam),
+                        x,
+                        -sig / (1 + 0.5 * sig / lam),
+                        g,
+                        out=out,
+                    )
             elif sig in space:
                 if g is None:
-                    x.divide(1 + 0.5 / lam * sig, out=out)
+                    np.divide(x, 1 + 0.5 / lam * sig, out=out)
                 else:
                     if x is out:
                         # Can't write to `out` since old `x` is still needed
-                        tmp = sig.multiply(g)
-                        out.lincomb(1, x, -1, tmp)
+                        tmp = np.multiply(g, sig)
+                        self.range.lincomb(1, x, -1, tmp, out=out)
                     else:
-                        sig.multiply(g, out=out)
-                        out.lincomb(1, x, -1, out)
-                    out.divide(1 + 0.5 / lam * sig, out=out)
+                        np.multiply(g, sig, out=out)
+                        self.range.lincomb(1, x, -1, out, out=out)
+                    np.divide(out, 1 + 0.5 / lam * sig, out=out)
             else:
                 raise RuntimeError(
                     '`sigma` is neither a scalar nor a space element.'
@@ -986,22 +986,27 @@ def proximal_l2_squared(space, lam=1, g=None):
             sig = self.sigma
             if np.isscalar(sig):
                 if g is None:
-                    out.lincomb(1 / (1 + 2 * sig * lam), x)
+                    self.range.lincomb(1 / (1 + 2 * sig * lam), x, out=out)
                 else:
-                    out.lincomb(1 / (1 + 2 * sig * lam), x,
-                                2 * sig * lam / (1 + 2 * sig * lam), g)
+                    self.range.lincomb(
+                        1 / (1 + 2 * sig * lam),
+                        x,
+                        2 * sig * lam / (1 + 2 * sig * lam),
+                        g,
+                        out=out,
+                    )
             else:   # sig in space
                 if g is None:
-                    x.divide(1 + 2 * sig * lam, out=out)
+                    np.divide(x, 1 + 2 * sig * lam, out=out)
                 else:
                     if x is out:
                         # Can't write to `out` since old `x` is still needed
-                        tmp = sig.multiply(2 * lam * g)
-                        out.lincomb(1, x, 1, tmp)
+                        tmp = np.multiply(sig, 2 * lam * g)
+                        self.range.lincomb(1, x, 1, tmp, out=out)
                     else:
-                        sig.multiply(2 * lam * g, out=out)
-                        out.lincomb(1, x, 1, out)
-                    out.divide(1 + 2 * sig * lam, out=out)
+                        np.multiply(sig, 2 * lam * g, out=out)
+                        self.range.lincomb.lincomb(1, x, 1, out, out=out)
+                    np.divide(out, 1 + 2 * sig * lam, out=out)
 
     return ProximalL2Squared
 
@@ -1113,7 +1118,7 @@ def proximal_convex_conj_l1(space, lam=1, g=None):
             # diff = x - sig * g
             if g is not None:
                 diff = self.domain.element()
-                diff.lincomb(1, x, -self.sigma, g)
+                self.domain.lincomb(1, x, -self.sigma, g, out=diff)
             else:
                 if x is out:
                     # Handle aliased `x` and `out`
@@ -1124,12 +1129,12 @@ def proximal_convex_conj_l1(space, lam=1, g=None):
                     diff = x
 
             # out = max( |x-sig*g|, lam ) / lam
-            diff.ufuncs.absolute(out=out)
-            out.ufuncs.maximum(lam, out=out)
+            np.absolute(diff, out=out)
+            np.maximum(out, lam, out=out)
             out /= lam
 
             # out = diff / ...
-            diff.divide(out, out=out)
+            np.divide(diff, out, out=out)
 
     return ProximalConvexConjL1
 
@@ -1221,19 +1226,19 @@ def proximal_convex_conj_l1_l2(space, lam=1, g=None):
             # diff = x - sig * g
             if g is not None:
                 diff = self.domain.element()
-                diff.lincomb(1, x, -self.sigma, g)
+                self.domain.lincomb(1, x, -self.sigma, g, out=diff)
             else:
                 diff = x
 
             # denom = max( |x-sig*g|_2, lam ) / lam  (|.|_2 pointwise)
             pwnorm = PointwiseNorm(self.domain, exponent=2)
             denom = pwnorm(diff)
-            denom.ufuncs.maximum(lam, out=denom)
+            np.maximum(denom, lam, out=denom)
             denom /= lam
 
             # Pointwise division
             for out_i, diff_i in zip(out, diff):
-                diff_i.divide(denom, out=out_i)
+                np.divide(diff_i, denom, out=out_i)
 
     return ProximalConvexConjL1L2
 
@@ -1336,15 +1341,15 @@ def proximal_l1(space, lam=1, g=None):
 
             # We write the operator as
             # x - (x - g) / max(|x - g| / sig*lam, 1)
-            denom = diff.ufuncs.absolute()
+            denom = np.absolute(diff)
             denom /= self.sigma * lam
-            denom.ufuncs.maximum(1, out=denom)
+            np.maximum(denom, 1, out=denom)
 
             # out = (x - g) / denom
-            diff.ufuncs.divide(denom, out=out)
+            np.divide(diff, denom, out=out)
 
             # out = x - ...
-            out.lincomb(1, x, -1, out)
+            self.range.lincomb(1, x, -1, out, out=out)
 
     return ProximalL1
 
@@ -1436,14 +1441,14 @@ def proximal_l1_l2(space, lam=1, g=None):
             pwnorm = PointwiseNorm(self.domain, exponent=2)
             denom = pwnorm(diff)
             denom /= self.sigma * lam
-            denom.ufuncs.maximum(1, out=denom)
+            np.maximum(denom, 1, out=denom)
 
             # out = (x - g) / denom
             for out_i, diff_i in zip(out, diff):
-                diff_i.divide(denom, out=out_i)
+                np.divide(diff_i, denom, out=out_i)
 
             # out = x - ...
-            out.lincomb(1, x, -1, out)
+            self.range.lincomb(1, x, -1, out, out=out)
 
     return ProximalL1L2
 
@@ -1499,8 +1504,8 @@ def proximal_linfty(space):
             if x is out:
                 x = x.copy()
 
-            proj_l1(x, radius, out)
-            out.lincomb(-1, out, 1, x)
+            proj_l1(x, radius, out=out)
+            self.range.lincomb(-1, out, 1, x, out=out)
 
     return ProximalLInfty
 
@@ -1607,8 +1612,8 @@ def proj_l1(x, radius=1, out=None):
     if out is None:
         out = x.space.element()
 
-    u = x.ufuncs.absolute()
-    v = x.ufuncs.sign()
+    u = np.absolute(x)
+    v = np.sign(x)
     proj_simplex(u, radius, out)
     out *= v
 
@@ -1655,19 +1660,17 @@ def proj_simplex(x, diameter=1, out=None):
     if out is None:
         out = x.space.element()
 
-    # sort values in descending order
-    x_sor = x.asarray().flatten()
-    x_sor.sort()
-    x_sor = x_sor[::-1]
+    # Sort values in descending order
+    x_sorted = np.sort(x)[::-1]
 
-    # find critical index
+    # Find critical index
     j = np.arange(1, x.size + 1)
-    x_avrg = (1 / j) * (np.cumsum(x_sor) - diameter)
-    crit = x_sor - x_avrg
-    i = np.argwhere(crit >= 0).flatten().max()
+    x_avg = (1 / j) * (np.cumsum(x_sorted) - diameter)
+    crit = x_sorted - x_avg
+    i = np.max(np.argwhere(crit >= 0).squeeze())
 
-    # output is a shifted and thresholded version of the input
-    out[:] = np.maximum(x - x_avrg[i], 0)
+    # Output is a shifted and thresholded version of the input
+    out[:] = np.maximum(x - x_avg[i], 0)
 
     return out
 
@@ -1782,20 +1785,20 @@ def proximal_convex_conj_kl(space, lam=1, g=None):
                 # Handle aliased `x` and `out` (need original `x` later on)
                 x = x.copy()
             else:
-                out.assign(x)
+                out[:] = x
             out -= lam
-            out.ufuncs.square(out=out)
+            np.multiply(out, out, out=out)
 
             # out = ... + 4*lam*sigma*g
             # If g is None, it is taken as the one element
             if g is None:
                 out += 4.0 * lam * self.sigma
             else:
-                out.lincomb(1, out, 4.0 * lam * self.sigma, g)
+                self.range.lincomb(1, out, 4 * lam * self.sigma, g, out=out)
 
             # out = x - sqrt(...) + lam
-            out.ufuncs.sqrt(out=out)
-            out.lincomb(1, x, -1, out)
+            np.sqrt(out, out=out)
+            self.range.lincomb(1, x, -1, out, out=out)
             out += lam
 
             # out = 1/2 * ...
@@ -1924,9 +1927,7 @@ def proximal_convex_conj_kl_cross_entropy(space, lam=1, g=None):
             if not np.issubsctype(self.domain.dtype, np.complexfloating):
                 lambw = lambw.real
 
-            lambw = x.space.element(lambw)
-
-            out.lincomb(1, x, -lam, lambw)
+            self.range.lincomb(1, x, -lam, lambw, out=out)
 
     return ProximalConvexConjKLCrossEntropy
 
@@ -1979,13 +1980,13 @@ def proximal_huber(space, gamma):
             if isinstance(self.domain, ProductSpace):
                 norm = PointwiseNorm(self.domain, 2)(x)
             else:
-                norm = x.ufuncs.absolute()
+                norm = np.absolute(x)
 
-            mask = norm.ufuncs.less_equal(gamma + self.sigma)
+            mask = np.less_equal(norm, gamma + self.sigma)
             out[mask] = gamma / (gamma + self.sigma) * x[mask]
 
-            mask.ufuncs.logical_not(out=mask)
-            sign_x = x.ufuncs.sign()
+            np.logical_not(mask, out=mask)
+            sign_x = np.sign(x)
             out[mask] = x[mask] - self.sigma * sign_x[mask]
 
             return out
