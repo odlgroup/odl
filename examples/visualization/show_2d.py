@@ -12,13 +12,13 @@ space = odl.uniform_discr([0, 0], [1, 1], [100, 100])
 phantom = odl.phantom.shepp_logan(space, modified=True)
 
 # Show all data
-phantom.show()
+space.show(phantom)
 
 # We can show subsets by index
-phantom.show(indices=[None, 50])
+space.show(phantom, indices=[None, 50])
 
 # Or we can show by coordinate
-phantom.show(coords=[None, 0.5])
+space.show(phantom, coords=[None, 0.5])
 
 # We can also show subsets
-phantom.show(coords=[[None, 0.5], None], force_show=True)
+space.show(phantom, coords=[[None, 0.5], None], force_show=True)
