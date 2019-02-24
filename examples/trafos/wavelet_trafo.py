@@ -10,19 +10,19 @@ space = odl.uniform_discr([-1, -1], [1, 1], (256, 256))
 # automatically. The default backend is PyWavelets (pywt).
 wavelet_op = odl.trafos.WaveletTransform(space, wavelet='Haar', nlevels=2)
 
-# Create a phantom and its wavelet transfrom and display them.
+# Create a phantom and its wavelet transfrom and display them
 phantom = odl.phantom.shepp_logan(space, modified=True)
-phantom.show(title='Shepp-Logan Phantom')
+space.show(phantom, title='Shepp-Logan Phantom')
 
-# Note that the wavelet transform is a vector in rn.
+# Note that the wavelet transform is a vector in R^n
 phantom_wt = wavelet_op(phantom)
-phantom_wt.show(title='Wavelet Transform')
+wavelet_op.range.show(phantom_wt, title='Wavelet Transform')
 
-# It may however (for some choices of wbasis) be interpreted as a vector in the
-# domain of the transformation
-phantom_wt_2d = space.element(phantom_wt.asarray().reshape(space.shape))
-phantom_wt_2d.show('Wavelet Transform in 2d')
+# It may however (for some choices of wbasis) be interpreted as an element
+# of the transformation domain
+phantom_wt_2d = phantom_wt.reshape(space.shape)
+space.show(phantom_wt_2d, 'Wavelet Transform in 2D')
 
-# Calculate the inverse transform.
+# Calculate the inverse transform
 phantom_wt_inv = wavelet_op.inverse(phantom_wt)
-phantom_wt_inv.show(title='Wavelet Transform Inverted', force_show=True)
+space.show(phantom_wt_inv, title='Wavelet Transform Inverted', force_show=True)
