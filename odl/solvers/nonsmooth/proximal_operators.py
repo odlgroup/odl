@@ -304,9 +304,11 @@ def proximal_arg_scaling(prox_factory, scaling):
         scaling_square = scaling * scaling
         prox = prox_factory(sigma * scaling_square)
         space = prox.domain
-        mult_inner = MultiplyOperator(scaling, domain=space, range=space)
-        mult_outer = MultiplyOperator(1 / scaling, domain=space, range=space)
-        return mult_outer * prox * mult_inner
+        return (
+            MultiplyOperator(space, scaling)
+            * prox
+            * MultiplyOperator(space, 1 / scaling)
+        )
 
     return arg_scaling_prox_factory
 
@@ -386,15 +388,19 @@ def proximal_quadratic_perturbation(prox_factory, a, u=None):
 
         const = 1.0 / np.sqrt(sigma * 2.0 * a + 1)
         prox = proximal_arg_scaling(prox_factory, const)(sigma)
+        space = prox.domain
         if u is not None:
-            return (MultiplyOperator(const, domain=u.space, range=u.space) *
-                    prox *
-                    (MultiplyOperator(const, domain=u.space, range=u.space) -
-                     sigma * const * u))
+            return (
+                MultiplyOperator(space, const)
+                * prox
+                * (MultiplyOperator(space, const) - sigma * const * u)
+            )
         else:
-            space = prox.domain
-            return (MultiplyOperator(const, domain=space, range=space) *
-                    prox * MultiplyOperator(const, domain=space, range=space))
+            return (
+                MultiplyOperator(space, const)
+                * prox
+                * MultiplyOperator(space, const)
+            )
 
     return quadratic_perturbation_prox_factory
 
