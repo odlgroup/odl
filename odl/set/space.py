@@ -306,16 +306,23 @@ class LinearSpace(Set):
         """
         if out is None:
             out = self.element()
+        elif out not in self:
+            raise LinearSpaceTypeError(
+                '`out` {!r} is not an element of {!r}'.format(out, self)
+            )
 
-        if out not in self:
-            raise LinearSpaceTypeError('`out` {!r} is not an element of '
-                                       '{!r}'.format(out, self))
-        if x1 not in self:
-            raise LinearSpaceTypeError('`x1` {!r} is not an element of '
-                                       '{!r}'.format(x1, self))
-        if x2 not in self:
-            raise LinearSpaceTypeError('`x2` {!r} is not an element of '
-                                       '{!r}'.format(x2, self))
+        field = () if self.field is None else self.field
+        if not (x1 in field or x1 in self):
+            raise LinearSpaceTypeError(
+                '`x1` {!r} is not an element of {!r} or its field'
+                ''.format(out, self)
+            )
+        if not (x2 in field or x2 in self):
+            raise LinearSpaceTypeError(
+                '`x2` {!r} is not an element of {!r} or its field'
+                ''.format(out, self)
+            )
+
         self._multiply(x1, x2, out)
         return out
 
@@ -339,16 +346,23 @@ class LinearSpace(Set):
         """
         if out is None:
             out = self.element()
+        elif out not in self:
+            raise LinearSpaceTypeError(
+                '`out` {!r} is not an element of {!r}'.format(out, self)
+            )
 
-        if out not in self:
-            raise LinearSpaceTypeError('`out` {!r} is not an element of '
-                                       '{!r}'.format(out, self))
-        if x1 not in self:
-            raise LinearSpaceTypeError('`x1` {!r} is not an element of '
-                                       '{!r}'.format(x1, self))
-        if x2 not in self:
-            raise LinearSpaceTypeError('`x2` {!r} is not an element of '
-                                       '{!r}'.format(x2, self))
+        field = () if self.field is None else self.field
+        if not (x1 in field or x1 in self):
+            raise LinearSpaceTypeError(
+                '`x1` {!r} is not an element of {!r} or its field'
+                ''.format(out, self)
+            )
+        if not (x2 in field or x2 in self):
+            raise LinearSpaceTypeError(
+                '`x2` {!r} is not an element of {!r} or its field'
+                ''.format(out, self)
+            )
+
         self._divide(x1, x2, out)
         return out
 

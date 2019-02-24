@@ -523,9 +523,7 @@ class ProductSpace(LinearSpace):
 
     def _lincomb(self, a, x, b, y, out):
         """Linear combination ``out = a*x + b*y``."""
-        for space, xi, yi, out_i in zip(
-            self.spaces, x.parts, y.parts, out.parts
-        ):
+        for space, xi, yi, out_i in zip(self.spaces, x, y, out):
             space._lincomb(a, xi, b, yi, out_i)
 
     def _inner(self, x1, x2):
@@ -546,16 +544,22 @@ class ProductSpace(LinearSpace):
 
     def _multiply(self, x1, x2, out):
         """Product ``out = x1 * x2``."""
-        for spc, xi, yi, out_i in zip(
-            self.spaces, x1.parts, x2.parts, out.parts
-        ):
+        field = () if self.field is None else self.field
+        if x1 in field:
+            x1 = [x1] * len(self)
+        if x2 in field:
+            x2 = [x2] * len(self)
+        for spc, xi, yi, out_i in zip(self.spaces, x1, x2, out):
             spc._multiply(xi, yi, out_i)
 
     def _divide(self, x1, x2, out):
         """Quotient ``out = x1 / x2``."""
-        for spc, xi, yi, out_i in zip(
-            self.spaces, x1.parts, x2.parts, out.parts
-        ):
+        field = () if self.field is None else self.field
+        if x1 in field:
+            x1 = [x1] * len(self)
+        if x2 in field:
+            x2 = [x2] * len(self)
+        for spc, xi, yi, out_i in zip(self.spaces, x1, x2, out):
             spc._divide(xi, yi, out_i)
 
     def __eq__(self, other):
@@ -591,7 +595,7 @@ class ProductSpace(LinearSpace):
         weightings_equal = (
             (
                 # Compare constants
-                np.isscalar(self.weighting)
+                self.weighting_type == 'const'
                 and np.isscalar(other.weighting)
                 and self.weighting == other.weighting
             )
