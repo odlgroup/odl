@@ -168,11 +168,12 @@ class DiscreteFourierTransformBase(Operator):
         odl.trafos.backends.pyfftw_bindings.pyfftw_call :
             Call pyfftw backend directly
         """
-        # TODO: Implement zero padding
         if self.impl == 'numpy':
-            out[:] = self._call_numpy(x.asarray())
+            out[:] = self._call_numpy(np.asarray(x))
         else:
-            out[:] = self._call_pyfftw(x.asarray(), out.asarray(), **kwargs)
+            out[:] = self._call_pyfftw(
+                np.asarray(x), np.asarray(out), **kwargs
+            )
 
     @property
     def impl(self):
@@ -285,9 +286,15 @@ class DiscreteFourierTransformBase(Operator):
 
         direction = 'forward' if self.sign == '-' else 'backward'
         self._fftw_plan = pyfftw_call(
-            x, out, direction=direction, axes=self.axes,
-            halfcomplex=self.halfcomplex, planning_effort=effort,
-            fftw_plan=self._fftw_plan, normalise_idft=False)
+            np.asarray(x),
+            np.asarray(out),
+            direction=direction,
+            axes=self.axes,
+            halfcomplex=self.halfcomplex,
+            planning_effort=effort,
+            fftw_plan=self._fftw_plan,
+            normalise_idft=False,
+        )
 
         return out
 
@@ -333,9 +340,14 @@ class DiscreteFourierTransformBase(Operator):
 
         direction = 'forward' if self.sign == '-' else 'backward'
         self._fftw_plan = pyfftw_call(
-            x.asarray(), y.asarray(), direction=direction,
-            halfcomplex=self.halfcomplex, axes=self.axes,
-            planning_effort=planning_effort, **kwargs)
+            np.asarray(x),
+            np.asarray(y),
+            direction=direction,
+            halfcomplex=self.halfcomplex,
+            axes=self.axes,
+            planning_effort=planning_effort,
+            **kwargs,
+        )
 
     def clear_fftw_plan(self):
         """Delete the FFTW plan of this transform.
@@ -612,6 +624,8 @@ class DiscreteFourierTransformInverse(DiscreteFourierTransformBase):
         out : `numpy.ndarray`
             Result of the transform
         """
+        assert isinstance(x, np.ndarray)
+
         if self.halfcomplex:
             return np.fft.irfftn(x, axes=self.axes)
         else:
@@ -654,6 +668,9 @@ class DiscreteFourierTransformInverse(DiscreteFourierTransformBase):
         .. _pyfftw API documentation:
            https://pyfftw.readthedocs.io
         """
+        assert isinstance(x, np.ndarray)
+        assert isinstance(out, np.ndarray)
+
         kwargs.pop('normalise_idft', None)  # Using `True` here
         kwargs.pop('axes', None)
         kwargs.pop('halfcomplex', None)
@@ -873,9 +890,9 @@ class FourierTransformBase(Operator):
         self._fftw_plan = None
 
         if tmp_r is not None:
-            tmp_r = domain.element(tmp_r).asarray()
+            tmp_r = domain.element(tmp_r)
         if tmp_f is not None:
-            tmp_f = range.element(tmp_f).asarray()
+            tmp_f = range.element(tmp_f)
 
         self._tmp_r = tmp_r
         self._tmp_f = tmp_f
@@ -901,12 +918,13 @@ class FourierTransformBase(Operator):
         odl.trafos.backends.pyfftw_bindings.pyfftw_call :
             Call pyfftw backend directly
         """
-        # TODO: Implement zero padding
         if self.impl == 'numpy':
-            out[:] = self._call_numpy(x.asarray())
+            out[:] = self._call_numpy(np.asarray(x))
         else:
             # 0-overhead assignment if asarray() does not copy
-            out[:] = self._call_pyfftw(x.asarray(), out.asarray(), **kwargs)
+            out[:] = self._call_pyfftw(
+                np.asarray(x), np.asarray(out), **kwargs
+            )
 
     def _call_numpy(self, x):
         """Return ``self(x)`` for numpy back-end.
@@ -1036,9 +1054,9 @@ class FourierTransformBase(Operator):
             fspace = self.range
 
         if r:
-            self._tmp_r = rspace.element().asarray()
+            self._tmp_r = np.asarray(rspace.element())
         if f:
-            self._tmp_f = fspace.element().asarray()
+            self._tmp_f = np.asarray(fspace.element())
 
     def clear_temporaries(self):
         """Set the temporaries to ``None``."""
@@ -1098,18 +1116,18 @@ class FourierTransformBase(Operator):
             elif self._tmp_f is not None:
                 arr_in = arr_out = self._tmp_f
             else:
-                arr_in = arr_out = rspace.element().asarray()
+                arr_in = arr_out = np.asarray(rspace.element())
 
         elif self.halfcomplex:
             # R2HC / HC2R: Use 'r' and 'f' temporary distinctly if initialized
             if self._tmp_r is not None:
                 arr_r = self._tmp_r
             else:
-                arr_r = rspace.element().asarray()
+                arr_r = np.asarray(rspace.element())
             if self._tmp_f is not None:
                 arr_f = self._tmp_f
             else:
-                arr_f = fspace.element().asarray()
+                arr_f = np.asarray(fspace.element())
 
             if inverse:
                 arr_in, arr_out = arr_f, arr_r
@@ -1121,7 +1139,7 @@ class FourierTransformBase(Operator):
             if self._tmp_f is not None:
                 arr_in = arr_out = self._tmp_f
             else:
-                arr_in = arr_out = fspace.element().asarray()
+                arr_in = arr_out = np.asarray(fspace.element())
 
         kwargs.pop('planning_timelimit', None)
 
@@ -1310,6 +1328,8 @@ class FourierTransform(FourierTransformBase):
         out : `numpy.ndarray`
             Result of the transform
         """
+        assert isinstance(x, np.ndarray)
+
         # Pre-processing before calculating the DFT
         # Note: since the FFT call is out-of-place, it does not matter if
         # preprocess produces real or complex output in the R2C variant.
@@ -1358,6 +1378,9 @@ class FourierTransform(FourierTransformBase):
             Result of the transform. The returned object is a reference
             to the input parameter ``out``.
         """
+        assert isinstance(x, np.ndarray)
+        assert isinstance(out, np.ndarray)
+
         # We pop some kwargs options here so that we always use the ones
         # given during init or implicitly assumed.
         kwargs.pop('axes', None)
@@ -1551,6 +1574,8 @@ class FourierTransformInverse(FourierTransformBase):
         out : `numpy.ndarray`
             Result of the transform
         """
+        assert isinstance(x, np.ndarray)
+
         # Pre-processing before calculating the DFT
         preproc = self._preprocess(x)
 
@@ -1603,6 +1628,8 @@ class FourierTransformInverse(FourierTransformBase):
             Result of the transform. If ``out`` was given, the returned
             object is a reference to it.
         """
+        assert isinstance(x, np.ndarray)
+        assert isinstance(out, np.ndarray)
 
         # We pop some kwargs options here so that we always use the ones
         # given during init or implicitly assumed.
