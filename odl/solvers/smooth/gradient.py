@@ -79,10 +79,13 @@ def steepest_descent(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
     [GNS2009] Griva, I, Nash, S G, and Sofer, A. *Linear and nonlinear
     optimization*. Siam, 2009.
     """
+    space = f.domain
     grad = f.gradient
-    if x not in grad.domain:
-        raise TypeError('`x` {!r} is not in the domain of `grad` {!r}'
-                        ''.format(x, grad.domain))
+    if x not in space:
+        raise TypeError(
+            'expected `x in f.domain`, but {!r} is not in {!r}'
+            ''.format(x, space)
+        )
 
     if not callable(line_search):
         line_search = ConstantLineSearch(line_search)
@@ -91,12 +94,12 @@ def steepest_descent(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
     for _ in range(maxiter):
         grad(x, out=grad_x)
 
-        dir_derivative = -grad_x.norm() ** 2
+        dir_derivative = -grad.range.norm(grad_x) ** 2
         if np.abs(dir_derivative) < tol:
             return  # we have converged
-        step = line_search(x, -grad_x, dir_derivative)
 
-        x.lincomb(1, x, -step, grad_x)
+        step = line_search(x, -grad_x, dir_derivative)
+        space.lincomb(1, x, -step, grad_x, out=x)  # x <- x - step * grad
 
         if projection is not None:
             projection(x)

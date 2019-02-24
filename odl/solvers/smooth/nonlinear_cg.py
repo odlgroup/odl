@@ -78,9 +78,12 @@ def conjugate_gradient_nonlinear(f, x, line_search=1.0, maxiter=1000, nreset=0,
     odl.solvers.iterative.iterative.conjugate_gradient_normal :
         Equivalent solver but for least-squares problem with linear operator
     """
-    if x not in f.domain:
-        raise TypeError('`x` {!r} is not in the domain of `f` {!r}'
-                        ''.format(x, f.domain))
+    space = f.domain
+    if x not in space:
+        raise TypeError(
+            'expected `x in f.domain`, but {!r} is not in {!r}'
+            ''.format(x, space)
+        )
 
     if not callable(line_search):
         line_search = ConstantLineSearch(line_search)
@@ -91,11 +94,11 @@ def conjugate_gradient_nonlinear(f, x, line_search=1.0, maxiter=1000, nreset=0,
     for _ in range(nreset + 1):
         # First iteration is done without beta
         dx = -f.gradient(x)
-        dir_derivative = -dx.inner(dx)
+        dir_derivative = -space.inner(dx, dx)
         if abs(dir_derivative) < tol:
             return
         a = line_search(x, dx, dir_derivative)
-        x.lincomb(1, x, a, dx)  # x = x + a * dx
+        space.lincomb(1, x, a, dx, out=x)  # x <- x + a * dx
 
         s = dx  # for 'HS' and 'DY' beta methods
 
@@ -105,13 +108,19 @@ def conjugate_gradient_nonlinear(f, x, line_search=1.0, maxiter=1000, nreset=0,
 
             # Calculate "beta"
             if beta_method == 'FR':
-                beta = dx.inner(dx) / dx_old.inner(dx_old)
+                beta = space.inner(dx, dx) / space.inner(dx_old, dx_old)
             elif beta_method == 'PR':
-                beta = dx.inner(dx - dx_old) / dx_old.inner(dx_old)
+                beta = (
+                    space.inner(dx, dx - dx_old)
+                    / space.inner(dx_old, dx_old)
+                )
             elif beta_method == 'HS':
-                beta = - dx.inner(dx - dx_old) / s.inner(dx - dx_old)
+                beta = (
+                    -space.inner(dx, dx - dx_old)
+                    / space.inner(s, dx - dx_old)
+                )
             elif beta_method == 'DY':
-                beta = - dx.inner(dx) / s.inner(dx - dx_old)
+                beta = -space.inner(dx, dx) / space.inner(s, dx - dx_old)
             else:
                 raise RuntimeError('unknown ``beta_method``')
 
@@ -119,17 +128,17 @@ def conjugate_gradient_nonlinear(f, x, line_search=1.0, maxiter=1000, nreset=0,
             beta = max(0, beta)
 
             # Update search direction
-            s.lincomb(1, dx, beta, s)  # s = dx + beta * s
+            space.lincomb(1, dx, beta, s, out=s)  # s <- dx + beta * s
 
             # Find optimal step along s
-            dir_derivative = -dx.inner(s)
+            dir_derivative = -space.inner(dx, s)
 
             if abs(dir_derivative) <= tol:
                 return
             a = line_search(x, s, dir_derivative)
 
             # Update position
-            x.lincomb(1, x, a, s)  # x = x + a * s
+            space.lincomb(1, x, a, s, out=x)  # x <- x + a * s
 
             if callback is not None:
                 callback(x)

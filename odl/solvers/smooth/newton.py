@@ -18,11 +18,13 @@ from odl.solvers.iterative.iterative import conjugate_gradient
 __all__ = ('newtons_method', 'bfgs_method', 'broydens_method')
 
 
-def _bfgs_direction(s, y, x, hessinv_estimate=None):
+def _bfgs_direction(space, s, y, x, hessinv_estimate=None):
     r"""Compute ``Hn^-1(x)`` for the L-BFGS method.
 
     Parameters
     ----------
+    space : `LinearSpace`
+        Space in which the direction should be determined.
     s : sequence of `LinearSpaceElement`
         The ``s`` coefficients in the BFGS update, see Notes.
     y : sequence of `LinearSpaceElement`
@@ -57,25 +59,27 @@ def _bfgs_direction(s, y, x, hessinv_estimate=None):
     rhos = np.zeros(len(s))
 
     for i in reversed(range(len(s))):
-        rhos[i] = 1.0 / y[i].inner(s[i])
-        alphas[i] = rhos[i] * (s[i].inner(r))
-        r.lincomb(1, r, -alphas[i], y[i])
+        rhos[i] = 1.0 / space.inner(y[i], s[i])
+        alphas[i] = rhos[i] * space.inner(s[i], r)
+        space.lincomb(1, r, -alphas[i], y[i], out=r)
 
     if hessinv_estimate is not None:
         r = hessinv_estimate(r)
 
     for i in range(len(s)):
-        beta = rhos[i] * (y[i].inner(r))
-        r.lincomb(1, r, alphas[i] - beta, s[i])
+        beta = rhos[i] * space.inner(y[i], r)
+        space.lincomb(1, r, alphas[i] - beta, s[i], out=r)
 
     return r
 
 
-def _broydens_direction(s, y, x, hessinv_estimate=None, impl='first'):
+def _broydens_direction(space, s, y, x, hessinv_estimate=None, impl='first'):
     r"""Compute ``Hn^-1(x)`` for Broydens method.
 
     Parameters
     ----------
+    space : `LinearSpace`
+        Space in which the direction should be determined.
     s : sequence of `LinearSpaceElement`'s'
         The ``s`` coefficients in the Broydens update, see Notes.
     y : sequence of `LinearSpaceElement`'s'
@@ -115,9 +119,9 @@ def _broydens_direction(s, y, x, hessinv_estimate=None, impl='first'):
 
     for i in range(len(s)):
         if impl == 'first':
-            r.lincomb(1, r, y[i].inner(r), s[i])
+            space.lincomb(1, r, space.inner(y[i], r), s[i], out=r)
         elif impl == 'second':
-            r.lincomb(1, r, y[i].inner(x), s[i])
+            space.lincomb(1, r, space.inner(y[i], x), s[i], out=r)
         else:
             raise RuntimeError('unknown `impl`')
 
@@ -196,24 +200,27 @@ def newtons_method(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
     optimization*. Siam, 2009.
     """
     # TODO: update doc
+    space = f.domain
     grad = f.gradient
-    if x not in grad.domain:
-        raise TypeError('`x` {!r} is not in the domain of `f` {!r}'
-                        ''.format(x, grad.domain))
+    if x not in space:
+        raise TypeError(
+            'expected `x in f.domain`, but {!r} is not in {!r}'
+            ''.format(x, space)
+        )
 
     if not callable(line_search):
         line_search = ConstantLineSearch(line_search)
 
     if cg_iter is None:
-        # Motivated by that if it is Ax = b, x and b in Rn, it takes at most n
-        # iterations to solve with cg
-        cg_iter = grad.domain.size
+        # For the problem Ax = b, x and b in Rn, it takes at most n
+        # iterations to solve with CG, thus this default
+        cg_iter = space.size
 
-    # TODO: optimize by using lincomb and avoiding to create copies
+    # TODO: optimize by avoiding to create copies
     for _ in range(maxiter):
 
         # Initialize the search direction to 0
-        search_direction = x.space.zero()
+        search_direction = space.zero()
 
         # Compute hessian (as operator) and gradient in the current point
         hessian = grad.derivative(x)
@@ -224,20 +231,21 @@ def newtons_method(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
         try:
             hessian_inverse = hessian.inverse
         except NotImplementedError:
-            conjugate_gradient(hessian, search_direction,
-                               -deriv_in_point, cg_iter)
+            conjugate_gradient(
+                hessian, search_direction, -deriv_in_point, cg_iter
+            )
         else:
             hessian_inverse(-deriv_in_point, out=search_direction)
 
         # Computing step length
-        dir_deriv = search_direction.inner(deriv_in_point)
+        dir_deriv = space.inner(search_direction, deriv_in_point)
         if np.abs(dir_deriv) <= tol:
             return
 
         step_length = line_search(x, search_direction, dir_deriv)
 
-        # Updating
-        x += step_length * search_direction
+        # x <- x + step_length * search_direction
+        space.lincomb(1, x, step_length, search_direction, out=x)
 
         if callback is not None:
             callback(x)
@@ -304,10 +312,13 @@ Goldfarb%E2%80%93Shanno_algorithm>`_
     [GNS2009] Griva, I, Nash, S G, and Sofer, A. *Linear and nonlinear
     optimization*. Siam, 2009.
     """
+    space = f.domain
     grad = f.gradient
-    if x not in grad.domain:
-        raise TypeError('`x` {!r} is not in the domain of `grad` {!r}'
-                        ''.format(x, grad.domain))
+    if x not in space:
+        raise TypeError(
+            'expected `x in f.domain`, but {!r} is not in {!r}'
+            ''.format(x, space)
+        )
 
     if not callable(line_search):
         line_search = ConstantLineSearch(line_search)
@@ -318,26 +329,26 @@ Goldfarb%E2%80%93Shanno_algorithm>`_
     grad_x = grad(x)
     for i in range(maxiter):
         # Determine a stepsize using line search
-        search_dir = -_bfgs_direction(ss, ys, grad_x, hessinv_estimate)
-        dir_deriv = search_dir.inner(grad_x)
+        search_dir = -_bfgs_direction(space, ss, ys, grad_x, hessinv_estimate)
+        dir_deriv = space.inner(search_dir, grad_x)
         if np.abs(dir_deriv) == 0:
             return  # we found an optimum
         step = line_search(x, direction=search_dir, dir_derivative=dir_deriv)
 
-        # Update x
+        # Update x (not with `lincomb`, since the update is used again)
         x_update = search_dir
         x_update *= step
         x += x_update
 
         grad_x, grad_diff = grad(x), grad_x
-        # grad_diff = grad(x) - grad(x_old)
-        grad_diff.lincomb(-1, grad_diff, 1, grad_x)
+        # grad_diff <- grad(x) - grad(x_old)
+        space.lincomb(-1, grad_diff, 1, grad_x, out=grad_diff)
 
-        y_inner_s = grad_diff.inner(x_update)
+        y_inner_s = space.inner(grad_diff, x_update)
 
         # Test for convergence
         if np.abs(y_inner_s) < tol:
-            if grad_x.norm() < tol:
+            if space.norm(grad_x) < tol:
                 return
             else:
                 # Reset if needed
@@ -417,10 +428,13 @@ def broydens_method(f, x, line_search=1.0, impl='first', maxiter=1000,
     [Kva1991] Kvaalen, E. *A faster Broyden method*. BIT Numerical
     Mathematics 31 (1991), pp 369--372.
     """
+    space = f.domain
     grad = f.gradient
-    if x not in grad.domain:
-        raise TypeError('`x` {!r} is not in the domain of `grad` {!r}'
-                        ''.format(x, grad.domain))
+    if x not in space:
+        raise TypeError(
+            'expected `x in f.domain`, but {!r} is not in {!r}'
+            ''.format(x, space)
+        )
 
     if not callable(line_search):
         line_search = ConstantLineSearch(line_search)
@@ -435,55 +449,58 @@ def broydens_method(f, x, line_search=1.0, impl='first', maxiter=1000,
 
     grad_x = grad(x)
     for i in range(maxiter):
-        # find step size
-        search_dir = -_broydens_direction(ss, ys, grad_x,
-                                          hessinv_estimate, impl)
-        dir_deriv = search_dir.inner(grad_x)
+        # Find step size
+        search_dir = -_broydens_direction(
+            space, ss, ys, grad_x, hessinv_estimate, impl
+        )
+        dir_deriv = space.inner(search_dir, grad_x)
         if np.abs(dir_deriv) == 0:
-            return  # we found an optimum
+            # Critical point found
+            return
 
         step = line_search(x, search_dir, dir_deriv)
 
-        # update x
+        # Update x
         x_update = step * search_dir
         x += x_update
 
-        # compute new gradient
+        # Compute new gradient
         grad_x, grad_x_old = grad(x), grad_x
         delta_grad = grad_x - grad_x_old
 
-        # update hessian.
+        # Update Hessian.
         # TODO: reuse from above
-        v = _broydens_direction(ss, ys, delta_grad, hessinv_estimate,
-                                impl)
+        v = _broydens_direction(
+            space, ss, ys, delta_grad, hessinv_estimate, impl
+        )
         if impl == 'first':
-            divisor = x_update.inner(v)
+            denom = space.inner(x_update, v)
 
             # Test for convergence
-            if np.abs(divisor) < tol:
-                if grad_x.norm() < tol:
+            if np.abs(denom) < tol:
+                if space.norm(grad_x) < tol:
                     return
                 else:
                     # Reset if needed
                     ys = []
                     ss = []
                     continue
-            u = (x_update - v) / divisor
+            u = (x_update - v) / denom
             ss.append(u)
             ys.append(x_update)
         elif impl == 'second':
-            divisor = delta_grad.inner(delta_grad)
+            denom = space.inner(delta_grad, delta_grad)
 
             # Test for convergence
-            if np.abs(divisor) < tol:
-                if grad_x.norm() < tol:
+            if np.abs(denom) < tol:
+                if space.norm(grad_x) < tol:
                     return
                 else:
                     # Reset if needed
                     ys = []
                     ss = []
                     continue
-            u = (x_update - v) / divisor
+            u = (x_update - v) / denom
             ss.append(u)
             ys.append(delta_grad)
 

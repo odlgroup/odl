@@ -834,7 +834,7 @@ class CallbackShowConvergence(Callback):
 
     """Displays a convergence plot."""
 
-    def __init__(self, functional, title='convergence', logx=False, logy=False,
+    def __init__(self, functional, title='Convergence', logx=False, logy=False,
                  **kwargs):
         """Initialize a new instance.
 
