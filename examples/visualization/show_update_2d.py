@@ -13,7 +13,7 @@ fig = None
 
 # Reuse the figure indefinitely, values are overwritten.
 for i in range(m):
-    fig = (phantom * i).show(fig=fig, clim=[0, m])
+    fig = space.show(phantom * i, fig=fig, clim=[0, m])
     plt.pause(0.1)
 
 plt.show()
