@@ -215,8 +215,12 @@ def proximal_translation(prox_factory, y):
             The proximal operator of ``s * F( . - y)`` where ``s`` is the
             step size
         """
-        return (ConstantOperator(y) + prox_factory(sigma) *
-                (IdentityOperator(y.space) - ConstantOperator(y)))
+        prox = prox_factory(sigma)
+        space = prox.domain
+        return (
+            ConstantOperator(space, y)
+            + prox * (IdentityOperator(space) - ConstantOperator(space, y))
+        )
 
     return translation_prox_factory
 
