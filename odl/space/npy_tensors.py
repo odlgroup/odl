@@ -20,8 +20,7 @@ import numpy as np
 from odl.set.sets import ComplexNumbers, RealNumbers
 from odl.space.base_tensors import TensorSpace
 from odl.util import (
-    dtype_str, is_floating_dtype, is_numeric_dtype, is_real_dtype,
-    signature_string, writable_array)
+    dtype_str, is_numeric_dtype, is_real_dtype, signature_string)
 
 __all__ = ('NumpyTensorSpace',)
 
@@ -160,6 +159,11 @@ class NumpyTensorSpace(TensorSpace):
                     '`weighting` array must have the same shape as this '
                     'space, but {} != {}'
                     ''.format(weighting.shape, self.shape)
+                )
+            if not is_real_dtype(weighting.dtype):
+                raise ValueError(
+                    '`weighting.dtype` must be real, got array with dtype {}'
+                    ''.format(dtype_str(weighting.dtype))
                 )
             self.__weighting = weighting
             self.__weighting_type = 'array'

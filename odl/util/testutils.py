@@ -296,7 +296,7 @@ def simple_fixture(name, params, fmt=None):
 
 # Helpers to generate data
 def noise_array(space):
-    """Generate a white noise array that is compatible with ``space``.
+    """Generate a white noise array for ``space``.
 
     The array contains white noise with standard deviation 1 in the case of
     floating point dtypes and uniformly spaced values between -10 and 10 in
@@ -316,9 +316,8 @@ def noise_array(space):
 
     Returns
     -------
-    noise_array : `numpy.ndarray` element
-        Array with white noise such that ``space.element``'s can be created
-        from it.
+    noise_array : numpy.ndarray
+        Array containing white noise.
 
     Examples
     --------
@@ -335,26 +334,27 @@ def noise_array(space):
         typical to the space.
     """
     from odl.space import ProductSpace
-    if isinstance(space, ProductSpace):
-        return np.array([noise_array(si) for si in space])
-    else:
-        if space.dtype == bool:
-            arr = np.random.randint(0, 2, size=space.shape, dtype=bool)
-        elif np.issubdtype(space.dtype, np.unsignedinteger):
-            arr = np.random.randint(0, 10, space.shape)
-        elif np.issubdtype(space.dtype, np.signedinteger):
-            arr = np.random.randint(-10, 10, space.shape)
-        elif np.issubdtype(space.dtype, np.floating):
-            arr = np.random.randn(*space.shape)
-        elif np.issubdtype(space.dtype, np.complexfloating):
-            arr = (
-                np.random.randn(*space.shape)
-                + 1j * np.random.randn(*space.shape)
-            ) / np.sqrt(2.0)
-        else:
-            raise ValueError('bad dtype {}'.format(space.dtype))
 
-        return arr.astype(space.dtype, copy=False)
+    if isinstance(space, ProductSpace):
+        return np.array([noise_element(spc_i) for spc_i in space])
+
+    if space.dtype == bool:
+        arr = np.random.randint(0, 2, size=space.shape, dtype=bool)
+    elif np.issubdtype(space.dtype, np.unsignedinteger):
+        arr = np.random.randint(0, 10, space.shape)
+    elif np.issubdtype(space.dtype, np.signedinteger):
+        arr = np.random.randint(-10, 10, space.shape)
+    elif np.issubdtype(space.dtype, np.floating):
+        arr = np.random.randn(*space.shape)
+    elif np.issubdtype(space.dtype, np.complexfloating):
+        arr = (
+            np.random.randn(*space.shape)
+            + 1j * np.random.randn(*space.shape)
+        ) / np.sqrt(2.0)
+    else:
+        raise ValueError('bad dtype {}'.format(space.dtype))
+
+    return arr.astype(space.dtype, copy=False)
 
 
 def noise_element(space):
