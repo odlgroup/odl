@@ -8,4 +8,4 @@ import odl
 
 space = odl.rn(5)
 vector = space.element([1, 2, 3, 4, 5])
-vector.show(force_show=True)
+space.show(vector, force_show=True)
