@@ -87,6 +87,7 @@ def proximal_gradient(x, f, g, gamma, niter, callback=None, **kwargs):
         raise TypeError('`x` {!r} is not in the domain of `g` {!r}'
                         ''.format(x, g.domain))
 
+    space = f.domain
     gamma, gamma_in = float(gamma), gamma
     if gamma <= 0:
         raise ValueError('`gamma` must be positive, got {}'.format(gamma_in))
@@ -102,16 +103,16 @@ def proximal_gradient(x, f, g, gamma, niter, callback=None, **kwargs):
     g_grad = g.gradient
 
     # Create temporary
-    tmp = x.space.element()
+    tmp = space.element()
 
     for k in range(niter):
         lam_k = lam(k)
 
-        # x - gamma grad_g (x)
-        tmp.lincomb(1, x, -gamma, g_grad(x))
+        # tmp <- x - gamma * grad_g(x)
+        space.lincomb(1, x, -gamma, g_grad(x), out=tmp)
 
-        # Update x
-        x.lincomb(1 - lam_k, x, lam_k, f_prox(tmp))
+        # x <- (1 - lambda_k) * x + lambda_k * prox_f(tmp)
+        space.lincomb(1 - lam_k, x, lam_k, f_prox(tmp), out=x)
 
         if callback is not None:
             callback(x)
@@ -176,6 +177,7 @@ def accelerated_proximal_gradient(x, f, g, gamma, niter, callback=None,
         raise TypeError('`x` {!r} is not in the domain of `g` {!r}'
                         ''.format(x, g.domain))
 
+    space = f.domain
     gamma, gamma_in = float(gamma), gamma
     if gamma <= 0:
         raise ValueError('`gamma` must be positive, got {}'.format(gamma_in))
@@ -188,7 +190,7 @@ def accelerated_proximal_gradient(x, f, g, gamma, niter, callback=None,
     g_grad = g.gradient
 
     # Create temporary
-    tmp = x.space.element()
+    tmp = space.element()
     y = x.copy()
     t = 1
 
@@ -197,17 +199,17 @@ def accelerated_proximal_gradient(x, f, g, gamma, niter, callback=None,
         t, t_old = (1 + np.sqrt(1 + 4 * t ** 2)) / 2, t
         alpha = (t_old - 1) / t
 
-        # x - gamma grad_g (y)
-        tmp.lincomb(1, y, -gamma, g_grad(y))
+        # tmp <- x - gamma * grad_g(y)
+        space.lincomb(1, y, -gamma, g_grad(y), out=tmp)
 
-        # Store old x value in y
-        y.assign(x)
+        # y <- x
+        space.lincomb(1, x, out=y)
 
-        # Update x
+        # x <- prox_f(tmp)
         f_prox(tmp, out=x)
 
-        # Update y
-        y.lincomb(1 + alpha, x, -alpha, y)
+        # y <- (1 + alpha) * x - alpha * y
+        space.lincomb(1 + alpha, x, -alpha, y, out=y)
 
         if callback is not None:
             callback(x)
