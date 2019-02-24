@@ -115,7 +115,6 @@ odl_scalar_dtype = simple_fixture(name='dtype',
 
 odl_elem_order = simple_fixture(name='order', params=[None, 'C', 'F'])
 
-odl_ufunc = simple_fixture('ufunc', [p[0] for p in odl.util.ufuncs.UFUNCS])
 odl_reduction = simple_fixture('reduction', ['sum', 'prod', 'min', 'max'])
 
 # More complicated ones with non-trivial documentation
