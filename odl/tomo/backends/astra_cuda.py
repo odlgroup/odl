@@ -393,7 +393,36 @@ def astra_cuda_bp_scaling_factor(proj_space, reco_space, geometry):
             src_radius = geometry.src_radius
             det_radius = geometry.det_radius
             scaling_factor *= ((src_radius + det_radius) / src_radius) ** 2
+    # Check if the development version of astra is used
+    if parse_version(ASTRA_VERSION) == parse_version('1.9.0dev'):
+        if isinstance(geometry, Parallel2dGeometry):
+            # Scales with 1 / cell_volume
+            scaling_factor *= float(reco_space.cell_volume)
+        elif isinstance(geometry, FanFlatGeometry):
+            # Scales with 1 / cell_volume
+            scaling_factor *= float(reco_space.cell_volume)
+            # Magnification correction
+            src_radius = geometry.src_radius
+            det_radius = geometry.det_radius
+            scaling_factor *= ((src_radius + det_radius) / src_radius)
+        elif isinstance(geometry, Parallel3dAxisGeometry):
+            # Scales with cell volume
+            # currently only square voxels are supported
+            scaling_factor /= reco_space.cell_volume
+        elif isinstance(geometry, ConeFlatGeometry):
+            # Scales with cell volume
+            scaling_factor /= reco_space.cell_volume
+            # Magnification correction (scaling = 1 / magnification ** 2)
+            src_radius = geometry.src_radius
+            det_radius = geometry.det_radius
+            scaling_factor *= ((src_radius + det_radius) / src_radius) ** 2
 
+            # Correction for scaled 1/r^2 factor in ASTRA's density weighting.
+            # This compensates for scaled voxels and pixels, as well as a
+            # missing factor src_radius ** 2 in the ASTRA BP with
+            # density weighting.
+            det_px_area = geometry.det_partition.cell_volume
+            scaling_factor *= (src_radius ** 2 * det_px_area ** 2 )
     else:
         if isinstance(geometry, Parallel2dGeometry):
             # Scales with 1 / cell_volume
