@@ -10,8 +10,6 @@
 
 from __future__ import division
 
-import operator
-
 import numpy as np
 import pytest
 
@@ -21,7 +19,7 @@ from odl.space.npy_tensors import NumpyTensorSpace
 from odl.util.testutils import (
     all_almost_equal, all_equal, noise_array, noise_elements, simple_fixture)
 
-# --- Test helpers --- #
+# --- Helpers --- #
 
 
 def _pos_array(space):
@@ -36,8 +34,10 @@ def _array_cls(impl):
     else:
         assert False
 
+
 def _inner(x1, x2, w):
     return np.vdot(x2, w * x1)
+
 
 def _norm(x, p, w):
     if p in {float('inf'), -float('inf')}:
@@ -45,11 +45,12 @@ def _norm(x, p, w):
     else:
         return np.linalg.norm((w ** (1 / p) * x).ravel(), p)
 
+
 def _dist(x1, x2, p, w):
     return _norm(x1 - x2, p, w)
 
 
-# --- Pytest fixtures --- #
+# --- pytest Fixtures --- #
 
 
 exponent = simple_fixture('exponent', [2.0, 1.0, float('inf'), 0.5, 1.5])
@@ -75,7 +76,7 @@ def tspace(odl_floating_dtype, odl_tspace_impl, weight):
     )
 
 
-# --- Space classes --- #
+# --- Tests --- #
 
 
 def test_init_npy_tspace():
