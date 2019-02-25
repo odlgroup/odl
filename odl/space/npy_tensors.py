@@ -1047,22 +1047,24 @@ def _const_weighted_norm(x, p, weight):
     if p == 2.0:
         return (np.sqrt(weight) * _norm_default(x)).item()
     elif p == float('inf'):
-        return (weight * _pnorm_default(x, p)).item()
+        return (weight * _pnorm_default(x, float('inf'))).item()
     else:
         return (weight ** (1 / p) * _pnorm_default(x, p)).item()
 
 
 def _weighted_dist(x1, x2, p, weights):
-    """Weighted p-distance on a `ProductSpace`."""
+    """Weighted p-distance on a `NumpyTensorSpace`."""
     if (
         np.isscalar(weights)
         or (isinstance(weights, np.ndarray) and weights.size == 1)
     ):
         return _const_weighted_dist(x1, x2, p, weights)
-    elif isinstance(weights, np.ndarray) and weights.ndim == 1:
+    elif isinstance(weights, np.ndarray) and weights.shape == x1.shape:
         return _array_weighted_dist(x1, x2, p, weights)
     else:
-        raise ValueError("`weights` is neither a constant nor a 1D array")
+        raise ValueError(
+            "`weights` is neither a constant nor an adequate array"
+        )
 
 
 def _array_weighted_dist(x1, x2, p, weights):
