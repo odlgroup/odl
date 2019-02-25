@@ -41,9 +41,9 @@ def _inner(x1, x2, w):
 
 def _norm(x, p, w):
     if p in {float('inf'), -float('inf')}:
-        return np.linalg.norm(x, p)
+        return np.linalg.norm(x.ravel(), p)
     else:
-        return np.linalg.norm(w ** (1 / p) * x, p)
+        return np.linalg.norm((w ** (1 / p) * x).ravel(), p)
 
 def _dist(x1, x2, p, w):
     return _norm(x1 - x2, p, w)
@@ -53,15 +53,6 @@ def _dist(x1, x2, p, w):
 
 
 exponent = simple_fixture('exponent', [2.0, 1.0, float('inf'), 0.5, 1.5])
-
-setitem_indices_params = [
-    0, [1], (1,), (0, 1), (0, 1, 2), slice(None), slice(None, None, 2),
-    (0, slice(None)), (slice(None), 0, slice(None, None, 2))]
-setitem_indices = simple_fixture('indices', setitem_indices_params)
-
-getitem_indices_params = (setitem_indices_params +
-                          [([0, 1, 1, 0], [0, 1, 1, 2]), (Ellipsis, None)])
-getitem_indices = simple_fixture('indices', getitem_indices_params)
 
 weight_params = [1.0, 0.5, _pos_array(odl.tensor_space((3, 4)))]
 weight_ids = [' weight=1.0 ', ' weight=0.5 ', ' weight=<array> ']
@@ -165,7 +156,6 @@ def test_properties(odl_tspace_impl):
     space = odl.tensor_space((3, 4), dtype='float32', exponent=1, weighting=2,
                              impl=impl)
     x = space.element()
-    assert x.space is space
     assert x.ndim == space.ndim == 2
     assert x.dtype == space.dtype == np.dtype('float32')
     assert x.size == space.size == 12
@@ -197,8 +187,8 @@ def test_element(tspace, odl_elem_order):
     order = odl_elem_order
     # From scratch
     elem = tspace.element(order=order)
-    assert elem.shape == elem.shape
-    assert elem.dtype == tspace.dtype == elem.dtype
+    assert elem.shape == tspace.shape
+    assert elem.dtype == tspace.dtype
     if order is not None:
         assert elem.flags[order + '_CONTIGUOUS']
 
@@ -309,7 +299,7 @@ def _test_lincomb(space, a, b, discontig):
         slc = tuple(
             [slice(None)] * (space.ndim - 1) + [slice(None, None, 2)]
         )
-        res_space = space.element()[slc].space
+        res_space = space[slc]
     else:
         res_space = space
 
@@ -372,6 +362,7 @@ def test_lincomb(tspace):
             _test_lincomb(tspace, a, b, discontig=False)
 
 
+@pytest.mark.xfail(reason='need space indexing to test this')
 def test_lincomb_discontig(odl_tspace_impl):
     """Test lincomb with discontiguous input."""
     impl = odl_tspace_impl
@@ -425,13 +416,6 @@ def test_multiply(tspace):
     tspace.multiply(x, y, out)
     assert all_almost_equal([x_arr, y_arr, out_arr], [x, y, out])
 
-    # member method
-    [x_arr, y_arr, out_arr], [x, y, out] = noise_elements(tspace, 3)
-    out_arr = x_arr * y_arr
-
-    x.multiply(y, out=out)
-    assert all_almost_equal([x_arr, y_arr, out_arr], [x, y, out])
-
 
 def test_multiply_exceptions(tspace):
     """Test if multiply raises correctly for bad input."""
@@ -450,116 +434,12 @@ def test_multiply_exceptions(tspace):
         tspace.multiply(x, y, other_x)
 
 
-def test_power(tspace):
-    """Test ``**`` against direct array exponentiation."""
-    [x_arr, y_arr], [x, y] = noise_elements(tspace, n=2)
-    y_pos = tspace.element(np.abs(y) + 0.1)
-    y_pos_arr = np.abs(y_arr) + 0.1
-
-    # Testing standard positive integer power out-of-place and in-place
-    assert all_almost_equal(x ** 2, x_arr ** 2)
-    y **= 2
-    y_arr **= 2
-    assert all_almost_equal(y, y_arr)
-
-    # Real number and negative integer power
-    assert all_almost_equal(y_pos ** 1.3, y_pos_arr ** 1.3)
-    assert all_almost_equal(y_pos ** (-3), y_pos_arr ** (-3))
-    y_pos **= 2.5
-    y_pos_arr **= 2.5
-    assert all_almost_equal(y_pos, y_pos_arr)
-
-    # Array raised to the power of another array, entry-wise
-    assert all_almost_equal(y_pos ** x, y_pos_arr ** x_arr)
-    y_pos **= x.real
-    y_pos_arr **= x_arr.real
-    assert all_almost_equal(y_pos, y_pos_arr)
-
-
-def test_unary_ops(tspace):
-    """Verify that the unary operators (`+x` and `-x`) work as expected."""
-    for op in [operator.pos, operator.neg]:
-        x_arr, x = noise_elements(tspace)
-
-        y_arr = op(x_arr)
-        y = op(x)
-
-        assert all_almost_equal([x, y], [x_arr, y_arr])
-
-
-def test_scalar_operator(tspace, odl_arithmetic_op):
-    """Verify binary operations with scalars.
-
-    Verifies that the statement y = op(x, scalar) gives equivalent results
-    to NumPy.
-    """
-    op = odl_arithmetic_op
-    if op in (operator.truediv, operator.itruediv):
-        ndigits = int(-np.log10(np.finfo(tspace.dtype).resolution) // 2)
-    else:
-        ndigits = int(-np.log10(np.finfo(tspace.dtype).resolution))
-
-    for scalar in [-31.2, -1, 0, 1, 2.13]:
-        x_arr, x = noise_elements(tspace)
-
-        # Left op
-        if scalar == 0 and op in [operator.truediv, operator.itruediv]:
-            # Check for correct zero division behaviour
-            with pytest.raises(ZeroDivisionError):
-                y = op(x, scalar)
-        else:
-            y_arr = op(x_arr, scalar)
-            y = op(x, scalar)
-
-            assert all_almost_equal([x, y], [x_arr, y_arr], ndigits)
-
-        # right op
-        x_arr, x = noise_elements(tspace)
-
-        y_arr = op(scalar, x_arr)
-        y = op(scalar, x)
-
-        assert all_almost_equal([x, y], [x_arr, y_arr], ndigits)
-
-
-def test_binary_operator(tspace, odl_arithmetic_op):
-    """Verify binary operations with tensors.
-
-    Verifies that the statement z = op(x, y) gives equivalent results
-    to NumPy.
-    """
-    op = odl_arithmetic_op
-    if op in (operator.truediv, operator.itruediv):
-        ndigits = int(-np.log10(np.finfo(tspace.dtype).resolution) // 2)
-    else:
-        ndigits = int(-np.log10(np.finfo(tspace.dtype).resolution))
-
-    [x_arr, y_arr], [x, y] = noise_elements(tspace, 2)
-
-    # non-aliased left
-    z_arr = op(x_arr, y_arr)
-    z = op(x, y)
-
-    assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr], ndigits)
-
-    # non-aliased right
-    z_arr = op(y_arr, x_arr)
-    z = op(y, x)
-
-    assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr], ndigits)
-
-    # aliased operation
-    z_arr = op(x_arr, x_arr)
-    z = op(x, x)
-
-    assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr], ndigits)
-
-
 def test_inner(tspace):
     """Test the inner method against numpy.vdot."""
+    rel = 1e-2 if tspace.dtype == 'float16' else 1e-5
     (xarr, yarr), (x, y) = noise_elements(tspace, 2)
     correct_inner = _inner(xarr, yarr, tspace.weighting)
-    assert tspace.inner(x, y) == pytest.approx(correct_inner)
+    assert tspace.inner(x, y) == pytest.approx(correct_inner, rel=rel)
 
 
 def test_inner_exceptions(tspace):
@@ -577,9 +457,10 @@ def test_inner_exceptions(tspace):
 
 def test_norm(tspace):
     """Test the norm method against numpy.linalg.norm."""
+    rel = 1e-2 if tspace.dtype == 'float16' else 1e-5
     xarr, x = noise_elements(tspace)
     correct_norm = _norm(xarr, tspace.exponent, tspace.weighting)
-    assert tspace.norm(x) == pytest.approx(correct_norm)
+    assert tspace.norm(x) == pytest.approx(correct_norm, rel=rel)
 
 
 def test_norm_exceptions(tspace):
@@ -602,9 +483,10 @@ def test_pnorm(exponent):
 
 def test_dist(tspace):
     """Test the dist method against numpy.linalg.norm of the difference."""
+    rel = 1e-2 if tspace.dtype == 'float16' else 1e-5
     (xarr, yarr), (x, y) = noise_elements(tspace, n=2)
     correct_dist = _dist(xarr, yarr, tspace.exponent, tspace.weighting)
-    assert tspace.dist(x, y) == pytest.approx(correct_dist)
+    assert tspace.dist(x, y) == pytest.approx(correct_dist, rel=rel)
 
 
 def test_dist_exceptions(tspace):
