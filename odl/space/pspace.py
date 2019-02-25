@@ -142,7 +142,7 @@ class ProductSpace(LinearSpace):
         ProductSpaceConstWeighting
         """
         field = kwargs.pop('field', None)
-        weighting = kwargs.pop('weights', None)
+        weighting = kwargs.pop('weighting', None)
         exponent = kwargs.pop('exponent', 2.0)
         if kwargs:
             raise TypeError('got unexpected keyword arguments: {}'
@@ -381,6 +381,19 @@ class ProductSpace(LinearSpace):
 
     # --- Element handling
 
+    def _flatten(self, spaces, inputs=None):
+        for n in self.shape[:-1]:
+            try:
+                spaces = sum((spaces[i].spaces for i in range(n)), ())
+                if inputs is not None:
+                    inputs = sum((tuple(inputs[i]) for i in range(n)), ())
+            except AttributeError:
+                break
+        if inputs is None:
+            return spaces
+        else:
+            return spaces, inputs
+
     def element(self, inp=None, cast=True):
         """Create an element in the product space.
 
@@ -426,37 +439,41 @@ class ProductSpace(LinearSpace):
         >>> z
         array([array([ 1.,  2.]), array([ 1.,  2.,  3.])], dtype=object)
         """
-        # If data is given as keyword arg, prefer it over arg list
-        if inp is None:
-            inp = [space.element() for space in self.spaces]
-        elif inp in self:
+        if inp in self:
             return inp
 
-        if len(inp) != len(self):
-            raise ValueError('length of `inp` {} does not match length of '
-                             'space {}'.format(len(inp), len(self)))
+        if inp is None:
+            flat_spaces = self._flatten(self.spaces)
+            flat_inp = [space.element() for space in flat_spaces]
+        else:
+            flat_spaces, flat_inp = self._flatten(self.spaces, inp)
+
+        if len(flat_inp) != self.size:
+            raise ValueError(
+                "flattened size {} of input {!r} does not match this space's "
+                'size {}'.format(len(flat_inp), inp, self.size)
+            )
 
         if cast:
-            # Delegate constructors
-            inp = [space.element(xi) for xi, space in zip(inp, self.spaces)]
-        elif not all(xi in space for xi, space in zip(inp, self.spaces)):
-            raise TypeError('input {!r} not a sequence of elements of the '
-                            'component spaces'.format(inp))
+            flat_inp = [
+                space.element(xi) for xi, space in zip(flat_inp, flat_spaces)
+            ]
+        elif not all(xi in space for xi, space in zip(flat_inp, flat_spaces)):
+            raise TypeError(
+                'input {!r} not a sequence of elements of the component '
+                'spaces'.format(inp)
+            )
 
-        # If we are a power space, use the space dtype for the array
-        if self.is_power_space:
-            # TODO: What to do with homogeneous arrays of another type (not
-            # Numpy array)?
-            return np.array(inp, dtype=self.dtype)
-
-        # Otherwise, we use an object array. Note that it must be created in
-        # advance, since otherwise NumPy may still try to loop over the
-        # inputs. See https://github.com/numpy/numpy/issues/12479
+        # Use an object array for final storage whose "outer shape" is equal
+        # to `self.shape`.
+        # Note: the array must be created in advance, since otherwise NumPy
+        # may still try to loop over the inputs.
+        # See https://github.com/numpy/numpy/issues/12479
         # TODO(kohr-h): remove when above issue is resolved
-        ret = np.empty(len(inp), dtype=object)
-        for i, xi in enumerate(inp):
+        ret = np.empty(self.size, dtype=object)
+        for i, xi in enumerate(flat_inp):
             ret[i] = xi
-        return ret
+        return ret.reshape(self.shape)
 
     def zero(self):
         """Create the zero element of the product space.
@@ -605,6 +622,7 @@ class ProductSpace(LinearSpace):
 
         return (
             len(self) == len(other)
+            and self.exponent == other.exponent
             and weightings_equal
             and all(s == o for s, o in zip(self.spaces, other.spaces))
         )
@@ -615,7 +633,7 @@ class ProductSpace(LinearSpace):
             weighting_hash = hash(self.weighting)
         else:
             weighting_hash = hash(self.weighting.tobytes())
-        return hash((type(self), self.spaces, weighting_hash))
+        return hash((type(self), self.spaces, self.exponent, weighting_hash))
 
     def __getitem__(self, indices):
         """Return ``self[indices]``.
@@ -909,8 +927,7 @@ def _const_weighted_inner(x1, x2, weight, spaces):
     inners = np.array(
         [space.inner(x1i, x2i) for space, x1i, x2i in zip(spaces, x1, x2)]
     )
-    inner = weight * np.sum(inners)
-    return inner.item()
+    return (weight * np.sum(inners)).item()
 
 
 def _weighted_norm(x, p, weights, spaces):
@@ -934,9 +951,9 @@ def _array_weighted_norm(x, p, weights, spaces):
         return np.sqrt(norm_squared).item()
     else:
         norms = np.array([space.norm(xi) for space, xi in zip(spaces, x)])
-        if p in {1.0, float('inf')}:
+        if p == 1.0:
             norms *= weights
-        else:
+        elif p not in {float('inf'), 0.0, -float('inf')}:
             norms *= weights ** (1 / p)
 
         return np.linalg.norm(norms, ord=p).item()
@@ -950,8 +967,8 @@ def _const_weighted_norm(x, p, weight, spaces):
         return np.sqrt(norm_squared).item()
     else:
         norms = np.array([space.norm(xi) for space, xi in zip(spaces, x)])
-        if p in {1.0, float('inf')}:
-            return (weight * np.linalg.norm(norms, ord=p)).item()
+        if p in {float('inf'), 0.0, -float('inf')}:
+            return np.linalg.norm(norms, ord=p).item()
         else:
             return (weight ** (1 / p) * np.linalg.norm(norms, ord=p)).item()
 
@@ -971,27 +988,25 @@ def _weighted_dist(x1, x2, p, weights, spaces):
 
 def _array_weighted_dist(x1, x2, p, weights, spaces):
     """Dist with exponent p, weighted by an array (one entry per subspace)."""
-    dnorms = np.array(
+    norms = np.array(
         [space.norm(x1i - x2i) for space, x1i, x2i in zip(spaces, x1, x2)]
     )
-    if p in {1.0, float('inf')}:
-        dnorms *= weights
-    else:
-        dnorms *= weights ** (1 / p)
+    if p not in {float('inf'), 0.0, -float('inf')}:
+        norms *= weights ** (1 / p)
 
-    return np.linalg.norm(dnorms, ord=p).item()
+    return np.linalg.norm(norms, ord=p).item()
 
 
 def _const_weighted_dist(x1, x2, p, weight, spaces):
     """Dist with exponent p, weighted by a constant."""
-    dnorms = np.array(
-        [space.norm(x1i - x2i) for space, x1i, x2i in zip(spaces, x1, x2)]
+    dists = np.array(
+        [space.dist(x1i, x2i) for space, x1i, x2i in zip(spaces, x1, x2)]
     )
 
-    if p == float('inf'):
-        return (weight * np.linalg.norm(dnorms, ord=p)).item()
+    if p in {float('inf'), 0.0, -float('inf')}:
+        return np.linalg.norm(dists, ord=p).item()
     else:
-        return (weight ** (1 / p) * np.linalg.norm(dnorms, ord=p)).item()
+        return (weight ** (1 / p) * np.linalg.norm(dists, ord=p)).item()
 
 
 if __name__ == '__main__':

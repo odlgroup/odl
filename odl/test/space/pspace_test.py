@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2019 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -12,17 +12,48 @@ import pytest
 import operator
 
 import odl
+from odl.space import ProductSpace
 from odl.util.testutils import (
     all_equal, all_almost_equal, noise_elements, noise_element, simple_fixture)
 
 
-exponent = simple_fixture('exponent', [2.0, 1.0, float('inf'), 0.5, 1.5])
+# --- Helpers --- #
+
+
+def _inner(x1, x2, w):
+    if w is None:
+        w = 1.0
+    inners = np.array([np.vdot(x2_i, x1_i) for x1_i, x2_i in zip(x1, x2)])
+    return np.sum(w * inners)
+
+
+def _norm(x, p, w):
+    if w is None:
+        w = 1.0
+    norms = np.array([np.linalg.norm(xi.ravel()) for xi in x])
+    if p in {float('inf'), 0.0, -float('inf')}:
+        return np.linalg.norm(norms.ravel(), p)
+    else:
+        w = np.asarray(w, dtype=float)
+        return np.linalg.norm((w ** (1 / p) * norms).ravel(), p)
+
+
+def _dist(x1, x2, p, w):
+    return _norm([x1_i - x2_i for x1_i, x2_i in zip(x1, x2)], p, w)
+
+
+# --- pytest Fixtures --- #
+
+
+exponent = simple_fixture('exponent', [2.0, 1.0, float('inf'), 0.0, 1.5])
+weighting = simple_fixture('weighting', [None, 2.0, [1.5, 2.5]])
 
 space_params = ['product_space', 'power_space']
 space_ids = [' space={} '.format(p) for p in space_params]
 
-elem_params = ['space', 'real_space', 'numpy_array', 'array', 'scalar',
-               '1d_array']
+elem_params = [
+    'space', 'real_space', 'numpy_array', 'array', 'scalar', '1d_array'
+]
 elem_ids = [' element={} '.format(p) for p in elem_params]
 
 
@@ -71,13 +102,38 @@ def newpart(request, space):
     return newreal
 
 
-def test_emptyproduct():
+# --- Tests --- #
+
+
+def test_init_pspace():
+    """Test initialization patterns and options for ``ProductSpace``."""
+    r2 = odl.rn(2)
+    r3 = odl.rn(3)
+
+    ProductSpace(r2, r3)
+    ProductSpace(r2, r3, r3, r2)
+    ProductSpace(r2, r3, exponent=1.0)
+    ProductSpace(r2, r3, field=odl.RealNumbers())
+    ProductSpace(r2, r3, weighting=0.5)
+    ProductSpace(r2, r3, weighting=[0.5, 2])
+    ProductSpace(r2, 4)
+
+    r2 * r3
+    r2 ** 3
+
+    # Make sure `repr` at works at least in the very basic case
+    assert repr(ProductSpace(r2, r3)) != ''
+
+
+def test_empty_pspace():
+    """Test that empty product spaces have sensible behavior."""
     with pytest.raises(ValueError):
+        # Requires explicit `field`
         odl.ProductSpace()
 
-    reals = odl.RealNumbers()
-    spc = odl.ProductSpace(field=reals)
-    assert spc.field == reals
+    field = odl.RealNumbers()
+    spc = odl.ProductSpace(field=field)
+    assert spc.field == field
     assert spc.size == 0
     assert spc.is_real
     assert spc.is_complex
@@ -86,101 +142,76 @@ def test_emptyproduct():
         spc[0]
 
 
-def test_RxR():
-    H = odl.rn(2)
-    HxH = odl.ProductSpace(H, H)
-
-    # Check the basic properties
-    assert len(HxH) == 2
-    assert HxH.shape == (2, 2)
-    assert HxH.size == 4
-    assert HxH.dtype == H.dtype
-    assert HxH.spaces[0] is H
-    assert HxH.spaces[1] is H
-    assert HxH.is_power_space
-    assert not HxH.is_weighted
-    assert HxH.is_real
-    assert not HxH.is_complex
-
-    v1 = H.element([1, 2])
-    v2 = H.element([3, 4])
-    v = HxH.element([v1, v2])
-    u = HxH.element([[1, 2], [3, 4]])
-
-    assert all_equal([v1, v2], v)
-    assert all_equal([v1, v2], u)
-
-
-def test_equals_space(exponent):
+def test_pspace_basic_properties():
+    """Verify basic properties of product spaces."""
     r2 = odl.rn(2)
-    r2x3_1 = odl.ProductSpace(r2, 3, exponent=exponent)
-    r2x3_2 = odl.ProductSpace(r2, 3, exponent=exponent)
-    r2x4 = odl.ProductSpace(r2, 4, exponent=exponent)
+    r3 = odl.rn(3)
 
-    assert r2x3_1 is r2x3_1
-    assert r2x3_1 is not r2x3_2
-    assert r2x3_1 is not r2x4
-    assert r2x3_1 == r2x3_1
-    assert r2x3_1 == r2x3_2
-    assert r2x3_1 != r2x4
-    assert hash(r2x3_1) == hash(r2x3_2)
-    assert hash(r2x3_1) != hash(r2x4)
-
-
-def test_equals_vec(exponent):
-    r2 = odl.rn(2)
-    r2x3 = odl.ProductSpace(r2, 3, exponent=exponent)
-    r2x4 = odl.ProductSpace(r2, 4, exponent=exponent)
-
-    x1 = r2x3.zero()
-    x2 = r2x3.zero()
-    y = r2x3.one()
-    z = r2x4.zero()
-
-    assert x1 is x1
-    assert x1 is not x2
-    assert x1 is not y
-    assert x1 == x1
-    assert x1 == x2
-    assert x1 != y
-    assert x1 != z
-
-
-def test_is_power_space():
-    r2 = odl.rn(2)
-    r2x3 = odl.ProductSpace(r2, 3)
-    assert len(r2x3) == 3
-    assert r2x3.is_power_space
-    assert r2x3.spaces[0] is r2
-    assert r2x3.spaces[1] is r2
-    assert r2x3.spaces[2] is r2
-
-    r2r2r2 = odl.ProductSpace(r2, r2, r2)
-    assert r2x3 == r2r2r2
-
-
-def test_mixed_space():
-    """Verify that a mixed productspace is handled properly."""
-    r2_1 = odl.rn(2, dtype='float64')
-    r2_2 = odl.rn(2, dtype='float32')
-    pspace = odl.ProductSpace(r2_1, r2_2)
-
+    # Non-power space
+    pspace = odl.ProductSpace(r2, r3)
+    assert len(pspace) == 2
+    assert pspace.shape == (2,)
+    assert pspace.size == 2
+    assert pspace.spaces[0] == r2
+    assert pspace.spaces[1] == r3
     assert not pspace.is_power_space
-    assert pspace.spaces[0] is r2_1
-    assert pspace.spaces[1] is r2_2
+    assert not pspace.is_weighted
     assert pspace.is_real
     assert not pspace.is_complex
+    assert pspace.dtype == 'float64'
 
-    # dtype not well defined for this space
-    with pytest.raises(AttributeError):
-        pspace.dtype
+    r2_x = r2.element([1, 2])
+    r3_x = r3.element([3, 4, 5])
+    x = pspace.element([r2_x, r3_x])
+    y = pspace.element([[1, 2], [3, 4, 5]])
+    assert all_equal(x, y)
+    assert all_equal(x, [r2_x, r3_x])
+
+    # Power space
+    pspace = odl.ProductSpace(r3, 2)
+    assert len(pspace) == 2
+    assert pspace.shape == (2, 3)
+    assert pspace.size == 6
+    assert pspace.spaces[0] == pspace.spaces[1] == r3
+    assert pspace.is_power_space
+    assert not pspace.is_weighted
+    assert pspace.is_real
+    assert not pspace.is_complex
+    assert pspace.dtype == 'float64'
+
+    x1 = r3.element([0, 1, 2])
+    x2 = r3.element([3, 4, 5])
+    x = pspace.element([x1, x2])
+    y = pspace.element([[0, 1, 2], [3, 4, 5]])
+    assert all_equal(x, y)
+    assert all_equal(x, [x1, x2])
 
 
-def test_element():
+def test_pspace_equality(exponent):
+    """Verify equality checking of product spaces."""
+    r2 = odl.rn(2)
+    pspace_1 = odl.ProductSpace(r2, 3, exponent=exponent)
+    pspace_1_same = odl.ProductSpace(r2, 3, exponent=exponent)
+    pspace_2 = odl.ProductSpace(r2, 4, exponent=exponent)
+    pspace_3 = odl.ProductSpace(
+        r2, 3, exponent=1.0 if exponent != 1.0 else 2.0
+    )
+
+    assert pspace_1 == pspace_1
+    assert pspace_1 == pspace_1_same
+    assert pspace_1 != pspace_2
+    assert pspace_1 != pspace_3
+    assert hash(pspace_1) == hash(pspace_1_same)
+    assert hash(pspace_1) != hash(pspace_2)
+    assert hash(pspace_1) != hash(pspace_3)
+
+
+def test_pspace_element():
+    """Test element creation in product spaces."""
     H = odl.rn(2)
     HxH = odl.ProductSpace(H, H)
-
-    HxH.element([[1, 2], [3, 4]])
+    elem = HxH.element([[1, 2], [3, 4]])
+    assert elem in HxH
 
     # wrong length
     with pytest.raises(ValueError):
@@ -197,7 +228,8 @@ def test_element():
         HxH.element([[1, 2], [3, 4, 5]])
 
 
-def test_lincomb():
+def test_pspace_lincomb():
+    """Test linear combination in product spaces."""
     H = odl.rn(2)
     HxH = odl.ProductSpace(H, H)
 
@@ -219,7 +251,8 @@ def test_lincomb():
     assert all_almost_equal(z, expected)
 
 
-def test_multiply():
+def test_pspace_multiply():
+    """Test multiplication in product spaces."""
     H = odl.rn(2)
     HxH = odl.ProductSpace(H, H)
 
@@ -238,256 +271,48 @@ def test_multiply():
     assert all_almost_equal(z, expected)
 
 
-def test_metric():
-    H = odl.rn(2)
-    v11 = H.element([1, 2])
-    v12 = H.element([5, 3])
-
-    v21 = H.element([1, 2])
-    v22 = H.element([8, 9])
-
-    # 1-norm
-    HxH = odl.ProductSpace(H, H, exponent=1.0)
-    w1 = HxH.element([v11, v12])
-    w2 = HxH.element([v21, v22])
-    assert (HxH.dist(w1, w2) ==
-            pytest.approx(H.dist(v11, v21) + H.dist(v12, v22)))
-
-    # 2-norm
-    HxH = odl.ProductSpace(H, H, exponent=2.0)
-    w1 = HxH.element([v11, v12])
-    w2 = HxH.element([v21, v22])
-    assert (
-        HxH.dist(w1, w2) ==
-        pytest.approx((H.dist(v11, v21) ** 2 + H.dist(v12, v22) ** 2) ** 0.5)
-    )
-
-    # inf norm
-    HxH = odl.ProductSpace(H, H, exponent=float('inf'))
-    w1 = HxH.element([v11, v12])
-    w2 = HxH.element([v21, v22])
-    assert (HxH.dist(w1, w2) ==
-            pytest.approx(max(H.dist(v11, v21), H.dist(v12, v22))))
-
-
-def test_norm():
-    H = odl.rn(2)
-    v1 = H.element([1, 2])
-    v2 = H.element([5, 3])
-
-    # 1-norm
-    HxH = odl.ProductSpace(H, H, exponent=1.0)
-    w = HxH.element([v1, v2])
-    assert HxH.norm(w) == pytest.approx(H.norm(v1) + H.norm(v2))
-
-    # 2-norm
-    HxH = odl.ProductSpace(H, H, exponent=2.0)
-    w = HxH.element([v1, v2])
-    assert (HxH.norm(w) ==
-            pytest.approx((H.norm(v1) ** 2 + H.norm(v2) ** 2) ** (1 / 2.0)))
-
-    # inf norm
-    HxH = odl.ProductSpace(H, H, exponent=float('inf'))
-    w = HxH.element([v1, v2])
-    assert HxH.norm(w) == pytest.approx(max(H.norm(v1), H.norm(v2)))
-
-
-def test_inner():
-    H = odl.rn(2)
-    v1 = H.element([1, 2])
-    v2 = H.element([5, 3])
-
-    u1 = H.element([2, 3])
-    u2 = H.element([6, 4])
-
-    HxH = odl.ProductSpace(H, H)
-    v = HxH.element([v1, v2])
-    u = HxH.element([u1, u2])
-    assert HxH.inner(v, u) == pytest.approx(H.inner(v1, u1) + H.inner(v2, u2))
-
-
-def test_vector_weighting(exponent):
+def test_pspace_dist(exponent, weighting):
+    """Test product space distance function implementation."""
     r2 = odl.rn(2)
-    r2x = r2.element([1, -1])
-    r2y = r2.element([-2, 3])
-    # inner = -5, dist = 5, norms = (sqrt(2), sqrt(13))
-
     r3 = odl.rn(3)
-    r3x = r3.element([3, 4, 4])
-    r3y = r3.element([1, -2, 1])
-    # inner = -1, dist = 7, norms = (sqrt(41), sqrt(6))
+    pspace = odl.ProductSpace(r2, r3, exponent=exponent, weighting=weighting)
 
-    inners = [-5, -1]
-    norms_x = [np.sqrt(2), np.sqrt(41)]
-    dists = [5, 7]
+    (x1_arr, x2_arr), (x1, x2) = noise_elements(r2, 2)
+    (y1_arr, y2_arr), (y1, y2) = noise_elements(r3, 2)
+    z1 = pspace.element([x1, y1])
+    z2 = pspace.element([x2, y2])
 
-    weight = [0.5, 1.5]
-    pspace = odl.ProductSpace(r2, r3, weighting=weight, exponent=exponent)
-    x = pspace.element((r2x, r3x))
-    y = pspace.element((r2y, r3y))
-
-    if exponent == 2.0:
-        true_inner = np.sum(np.multiply(inners, weight))
-        assert all_almost_equal(x.inner(y), true_inner)
-
-    if exponent == float('inf'):
-        true_norm_x = np.linalg.norm(
-            np.multiply(norms_x, weight), ord=exponent)
-    else:
-        true_norm_x = np.linalg.norm(
-            np.multiply(norms_x, np.power(weight, 1 / exponent)),
-            ord=exponent)
-
-    assert all_almost_equal(x.norm(), true_norm_x)
-
-    if exponent == float('inf'):
-        true_dist = np.linalg.norm(
-            np.multiply(dists, weight), ord=exponent)
-    else:
-        true_dist = np.linalg.norm(
-            np.multiply(dists, np.power(weight, 1 / exponent)),
-            ord=exponent)
-    assert all_almost_equal(x.dist(y), true_dist)
+    true_dist = _dist([x1_arr, y1_arr], [x2_arr, y2_arr], exponent, weighting)
+    assert pspace.dist(z1, z2) == pytest.approx(true_dist)
 
 
-def test_const_weighting(exponent):
+def test_pspace_norm(exponent, weighting):
+    """Test product space norm implementation."""
     r2 = odl.rn(2)
-    r2x = r2.element([1, -1])
-    r2y = r2.element([-2, 3])
-    # inner = -5, dist = 5, norms = (sqrt(2), sqrt(13))
-
     r3 = odl.rn(3)
-    r3x = r3.element([3, 4, 4])
-    r3y = r3.element([1, -2, 1])
-    # inner = -1, dist = 7, norms = (sqrt(41), sqrt(6))
+    pspace = odl.ProductSpace(r2, r3, exponent=exponent, weighting=weighting)
 
-    inners = [-5, -1]
-    norms_x = [np.sqrt(2), np.sqrt(41)]
-    dists = [5, 7]
+    x_arr, x = noise_elements(r2)
+    y_arr, y = noise_elements(r3)
+    z = pspace.element([x, y])
 
-    weight = 2.0
-    pspace = odl.ProductSpace(r2, r3, weighting=weight, exponent=exponent)
-    x = pspace.element((r2x, r3x))
-    y = pspace.element((r2y, r3y))
-
-    if exponent == 2.0:
-        true_inner = weight * np.sum(inners)
-        assert all_almost_equal(x.inner(y), true_inner)
-
-    if exponent == float('inf'):
-        true_norm_x = weight * np.linalg.norm(norms_x, ord=exponent)
-    else:
-        true_norm_x = (weight ** (1 / exponent) *
-                       np.linalg.norm(norms_x, ord=exponent))
-
-    assert all_almost_equal(x.norm(), true_norm_x)
-
-    if exponent == float('inf'):
-        true_dist = weight * np.linalg.norm(dists, ord=exponent)
-    else:
-        true_dist = (weight ** (1 / exponent) *
-                     np.linalg.norm(dists, ord=exponent))
-
-    assert all_almost_equal(x.dist(y), true_dist)
+    true_norm = _norm([x_arr, y_arr], exponent, weighting)
+    assert pspace.norm(z) == pytest.approx(true_norm)
 
 
-def custom_inner(x1, x2):
-    inners = np.fromiter(
-        (x1p.inner(x2p) for x1p, x2p in zip(x1.parts, x2.parts)),
-        dtype=x1.space[0].dtype, count=len(x1))
-
-    return x1.space.field.element(np.sum(inners))
-
-
-def custom_norm(x):
-    norms = np.fromiter(
-        (xp.norm() for xp in x.parts),
-        dtype=x.space[0].dtype, count=len(x))
-
-    return float(np.linalg.norm(norms, ord=1))
-
-
-def custom_dist(x1, x2):
-    dists = np.fromiter(
-        (x1p.dist(x2p) for x1p, x2p in zip(x1.parts, x2.parts)),
-        dtype=x1.space[0].dtype, count=len(x1))
-
-    return float(np.linalg.norm(dists, ord=1))
-
-
-def test_custom_funcs():
-    # Checking the standard 1-norm and standard inner product, just to
-    # see that the functions are handled correctly.
-
+def test_pspace_inner(weighting):
+    """Test product space inner product implementation."""
     r2 = odl.rn(2)
-    r2x = r2.element([1, -1])
-    r2y = r2.element([-2, 3])
-    # inner = -5, dist = 5, norms = (sqrt(2), sqrt(13))
-
     r3 = odl.rn(3)
-    r3x = r3.element([3, 4, 4])
-    r3y = r3.element([1, -2, 1])
-    # inner = -1, dist = 7, norms = (sqrt(41), sqrt(6))
+    pspace = odl.ProductSpace(r2, r3, weighting=weighting)
 
-    pspace_2 = odl.ProductSpace(r2, r3, exponent=2.0)
-    x = pspace_2.element((r2x, r3x))
-    y = pspace_2.element((r2y, r3y))
+    (x1_arr, x2_arr), (x1, x2) = noise_elements(r2, 2)
+    (y1_arr, y2_arr), (y1, y2) = noise_elements(r3, 2)
+    z1 = pspace.element([x1, y1])
+    z2 = pspace.element([x2, y2])
 
-    pspace_custom = odl.ProductSpace(r2, r3, inner=custom_inner)
-    xc = pspace_custom.element((r2x, r3x))
-    yc = pspace_custom.element((r2y, r3y))
-    assert x.inner(y) == pytest.approx(xc.inner(yc))
-
-    pspace_1 = odl.ProductSpace(r2, r3, exponent=1.0)
-    x = pspace_1.element((r2x, r3x))
-    y = pspace_1.element((r2y, r3y))
-
-    pspace_custom = odl.ProductSpace(r2, r3, norm=custom_norm)
-    xc = pspace_custom.element((r2x, r3x))
-    assert x.norm() == pytest.approx(xc.norm())
-
-    pspace_custom = odl.ProductSpace(r2, r3, dist=custom_dist)
-    xc = pspace_custom.element((r2x, r3x))
-    yc = pspace_custom.element((r2y, r3y))
-    assert x.dist(y) == pytest.approx(xc.dist(yc))
-
-    with pytest.raises(TypeError):
-        odl.ProductSpace(r2, r3, a=1)  # extra keyword argument
-
-    with pytest.raises(ValueError):
-        odl.ProductSpace(r2, r3, norm=custom_norm, inner=custom_inner)
-
-    with pytest.raises(ValueError):
-        odl.ProductSpace(r2, r3, dist=custom_dist, inner=custom_inner)
-
-    with pytest.raises(ValueError):
-        odl.ProductSpace(r2, r3, norm=custom_norm, dist=custom_dist)
-
-    with pytest.raises(ValueError):
-        odl.ProductSpace(r2, r3, norm=custom_norm, exponent=1.0)
-
-    with pytest.raises(ValueError):
-        odl.ProductSpace(r2, r3, norm=custom_norm, weighting=2.0)
-
-    with pytest.raises(ValueError):
-        odl.ProductSpace(r2, r3, dist=custom_dist, weighting=2.0)
-
-    with pytest.raises(ValueError):
-        odl.ProductSpace(r2, r3, inner=custom_inner, weighting=2.0)
-
-
-def test_power_RxR():
-    H = odl.rn(2)
-    HxH = odl.ProductSpace(H, 2)
-    assert len(HxH) == 2
-
-    v1 = H.element([1, 2])
-    v2 = H.element([3, 4])
-    v = HxH.element([v1, v2])
-    u = HxH.element([[1, 2], [3, 4]])
-
-    assert all_equal([v1, v2], v)
-    assert all_equal([v1, v2], u)
+    true_inner = _inner([x1_arr, y1_arr], [x2_arr, y2_arr], weighting)
+    assert pspace.inner(z1, z2) == pytest.approx(true_inner)
 
 
 def _test_shape(space, expected_shape):
@@ -496,12 +321,6 @@ def _test_shape(space, expected_shape):
 
     assert space.shape == expected_shape
     assert space_el.shape == expected_shape
-    try:
-        arr = space_el.asarray()
-    except ValueError:
-        pass  # could not convert to array
-    else:
-        assert arr.shape == expected_shape
     assert space.size == np.prod(expected_shape)
     assert space_el.size == np.prod(expected_shape)
     assert len(space) == expected_shape[0]
