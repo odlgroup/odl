@@ -103,19 +103,17 @@ odl_tspace_impl = simple_fixture(name='tspace_impl',
 
 floating_dtypes = np.sctypes['float'] + np.sctypes['complex']
 floating_dtype_params = [np.dtype(dt) for dt in floating_dtypes]
-odl_floating_dtype = simple_fixture(name='dtype',
-                                    params=floating_dtype_params,
-                                    fmt=' {name} = np.{value.name} ')
+odl_floating_dtype = simple_fixture(
+    name='dtype', params=floating_dtype_params, fmt=' {name}=np.{value.name} '
+)
 
 scalar_dtypes = floating_dtype_params + np.sctypes['int'] + np.sctypes['uint']
 scalar_dtype_params = [np.dtype(dt) for dt in floating_dtypes]
-odl_scalar_dtype = simple_fixture(name='dtype',
-                                  params=scalar_dtype_params,
-                                  fmt=' {name} = np.{value.name} ')
+odl_scalar_dtype = simple_fixture(
+    name='dtype', params=scalar_dtype_params, fmt=' {name}=np.{value.name} '
+)
 
 odl_elem_order = simple_fixture(name='order', params=[None, 'C', 'F'])
-
-odl_reduction = simple_fixture('reduction', ['sum', 'prod', 'min', 'max'])
 
 # More complicated ones with non-trivial documentation
 arithmetic_op_par = [operator.add,
@@ -126,7 +124,7 @@ arithmetic_op_par = [operator.add,
                      operator.itruediv,
                      operator.imul,
                      operator.isub]
-arithmetic_op_ids = [" op = '{}' ".format(op)
+arithmetic_op_ids = [" op='{}' ".format(op)
                      for op in ['+', '/', '*', '-', '+=', '/=', '*=', '-=']]
 
 
