@@ -32,7 +32,7 @@ angle_partition = odl.uniform_partition(0, 1.3 * np.pi, 360)
 # Detector: uniformly sampled, n = (512, 512), min = (-60, -60), max = (60, 60)
 detector_partition = odl.uniform_partition([-60, -60], [60, 60], [512, 512])
 # Geometry with large cone and fan angle and tilted axis.
-geometry = odl.tomo.ConeFlatGeometry(
+geometry = odl.tomo.ConeBeamGeometry(
     angle_partition, detector_partition, src_radius=80, det_radius=40)
 
 

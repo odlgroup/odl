@@ -95,7 +95,7 @@ def load_projections(folder, indices=None):
 
     Returns
     -------
-    geometry : ConeFlatGeometry
+    geometry : ConeBeamGeometry
         Geometry corresponding to the Mayo projector.
     proj_data : `numpy.ndarray`
         Projection data, given as the line integral of the linear attenuation
@@ -168,7 +168,7 @@ def load_projections(folder, indices=None):
 
     # Assemble geometry
     angle_partition = odl.nonuniform_partition(angles)
-    geometry = odl.tomo.ConeFlatGeometry(angle_partition,
+    geometry = odl.tomo.ConeBeamGeometry(angle_partition,
                                          detector_partition,
                                          src_radius=src_radius,
                                          det_radius=det_radius,

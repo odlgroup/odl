@@ -137,7 +137,7 @@ def projector(request, weighting):
 
         # Geometry
         dpart = odl.uniform_partition([-50, -50], [50, 50], [200, 200])
-        geom = tomo.ConeFlatGeometry(
+        geom = tomo.ConeBeamGeometry(
             apart, dpart, src_radius=100, det_radius=100, axis=[1, 0, 0])
 
         # Ray transform
@@ -154,7 +154,7 @@ def projector(request, weighting):
         n_angle = 2000
         apart = odl.uniform_partition(0, 8 * 2 * np.pi, n_angle)
         dpart = odl.uniform_partition([-50, -4], [50, 4], [200, 20])
-        geom = tomo.ConeFlatGeometry(
+        geom = tomo.ConeBeamGeometry(
             apart, dpart, src_radius=100, det_radius=100, pitch=5.0)
 
         # Windowed ray transform
@@ -180,7 +180,7 @@ def test_fbp_reconstruction(projector):
 
     # Add window if problem is in 3d.
     if (
-        isinstance(projector.geometry, odl.tomo.ConeFlatGeometry)
+        isinstance(projector.geometry, odl.tomo.ConeBeamGeometry)
         and projector.geometry.pitch != 0
     ):
         fbp_operator = fbp_operator * odl.tomo.tam_danielson_window(projector)
