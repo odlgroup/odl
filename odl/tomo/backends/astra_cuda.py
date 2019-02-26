@@ -422,7 +422,7 @@ def astra_cuda_bp_scaling_factor(proj_space, reco_space, geometry):
             # missing factor src_radius ** 2 in the ASTRA BP with
             # density weighting.
             det_px_area = geometry.det_partition.cell_volume
-            scaling_factor *= (src_radius ** 2 * det_px_area ** 2 )
+            scaling_factor *= (src_radius ** 2 * det_px_area ** 2)
     else:
         if isinstance(geometry, Parallel2dGeometry):
             # Scales with 1 / cell_volume
