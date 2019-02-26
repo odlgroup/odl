@@ -61,7 +61,7 @@ def space_and_geometry(request):
                                        dtype=dtype)
         dpart = odl.uniform_partition([-7, -8], [7, 8], (7, 8))
 
-        geom = odl.tomo.ConeFlatGeometry(apart, dpart,
+        geom = odl.tomo.ConeBeamGeometry(apart, dpart,
                                          src_radius=200, det_radius=100)
     elif geom == 'helical':
         reco_space = odl.uniform_discr([-4, -5, -6], [4, 5, 6], (4, 5, 6),
@@ -70,7 +70,7 @@ def space_and_geometry(request):
         # overwrite angle
         apart = odl.uniform_partition(0, 2 * 2 * np.pi, 18)
         dpart = odl.uniform_partition([-7, -8], [7, 8], (7, 8))
-        geom = odl.tomo.ConeFlatGeometry(apart, dpart, pitch=1.0,
+        geom = odl.tomo.ConeBeamGeometry(apart, dpart, pitch=1.0,
                                          src_radius=200, det_radius=100)
     else:
         raise ValueError('geom not valid')

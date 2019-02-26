@@ -132,7 +132,7 @@ def tam_danielson_window(ray_trafo, smoothing_width=0.05, n_pi=1):
     --------
     fbp_op : Filtered back-projection operator from `RayTransform`
     tam_danielson_window : Weighting for short scan data
-    odl.tomo.geometry.conebeam.ConeFlatGeometry :
+    odl.tomo.geometry.conebeam.ConeBeamGeometry :
         Primary use case for this window function.
 
     References
@@ -237,7 +237,7 @@ def parker_weighting(ray_trafo, q=0.25):
     fbp_op : Filtered back-projection operator from `RayTransform`
     tam_danielson_window : Indicator function for helical data
     odl.tomo.geometry.conebeam.FanBeamGeometry : Use case in 2d
-    odl.tomo.geometry.conebeam.ConeFlatGeometry : Use case in 3d (for pitch 0)
+    odl.tomo.geometry.conebeam.ConeBeamGeometry : Use case in 3d (for pitch 0)
 
     References
     ----------
@@ -328,10 +328,10 @@ def fbp_filter_op(ray_trafo, padding=True, filter_type='Ram-Lak',
         fan angle = 0.
         Only flat detectors are supported (det_curvature_radius is None).
 
-        `ConeFlatGeometry`, pitch = 0 (circular) : Approximate reconstruction,
+        `ConeBeamGeometry`, pitch = 0 (circular) : Approximate reconstruction,
         correct in the limit of fan angle = 0 and cone angle = 0.
 
-        `ConeFlatGeometry`, pitch > 0 (helical) : Very approximate unless a
+        `ConeBeamGeometry`, pitch > 0 (helical) : Very approximate unless a
         `tam_danielson_window` is used. Accurate with the window.
 
         Other geometries: Not supported
@@ -495,10 +495,10 @@ def fbp_op(ray_trafo, padding=True, filter_type='Ram-Lak',
         angle = 0.
         Only flat detectors are supported (det_curvature_radius is None).
 
-        `ConeFlatGeometry`, pitch = 0 (circular) : Approximate reconstruction,
+        `ConeBeamGeometry`, pitch = 0 (circular) : Approximate reconstruction,
         correct in the limit of fan angle = 0 and cone angle = 0.
 
-        `ConeFlatGeometry`, pitch > 0 (helical) : Very approximate unless a
+        `ConeBeamGeometry`, pitch > 0 (helical) : Very approximate unless a
         `tam_danielson_window` is used. Accurate with the window.
 
         Other geometries: Not supported
@@ -559,7 +559,7 @@ if __name__ == '__main__':
         min_pt=[-20, -20, 0], max_pt=[20, 20, 40], shape=[300, 300, 300])
     angle_partition = odl.uniform_partition(0, 8 * 2 * np.pi, 2000)
     detector_partition = odl.uniform_partition([-40, -4], [40, 4], [500, 500])
-    geometry = odl.tomo.ConeFlatGeometry(
+    geometry = odl.tomo.ConeBeamGeometry(
         angle_partition, detector_partition, src_radius=100, det_radius=100,
         pitch=5.0)
     ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl='astra_cuda')

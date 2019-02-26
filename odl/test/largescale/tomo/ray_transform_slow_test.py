@@ -141,7 +141,7 @@ def projector(request, dtype, weighting):
 
         # Geometry
         dpart = odl.uniform_partition([-30, -30], [30, 30], [200, 200])
-        geom = odl.tomo.ConeFlatGeometry(
+        geom = odl.tomo.ConeBeamGeometry(
             apart, dpart, src_radius=200, det_radius=100, axis=[1, 0, 0])
 
         # Ray transform
@@ -157,7 +157,7 @@ def projector(request, dtype, weighting):
         n_angles = 700
         apart = odl.uniform_partition(0, 8 * 2 * np.pi, n_angles)
         dpart = odl.uniform_partition([-30, -3], [30, 3], [200, 20])
-        geom = odl.tomo.ConeFlatGeometry(apart, dpart, pitch=5.0,
+        geom = odl.tomo.ConeBeamGeometry(apart, dpart, pitch=5.0,
                                          src_radius=200, det_radius=100)
 
         # Ray transform
@@ -175,7 +175,7 @@ def test_adjoint(projector):
     # adjoint in the cone beam case
     if (
         parse_version(odl.tomo.ASTRA_VERSION) < parse_version('1.8rc1')
-        and isinstance(projector.geometry, odl.tomo.ConeFlatGeometry)
+        and isinstance(projector.geometry, odl.tomo.ConeBeamGeometry)
     ):
         rtol = 0.1
     else:
@@ -218,7 +218,7 @@ def test_adjoint_of_adjoint(projector):
 def test_reconstruction(projector):
     """Test RayTransform for reconstruction."""
     if (
-        isinstance(projector.geometry, odl.tomo.ConeFlatGeometry)
+        isinstance(projector.geometry, odl.tomo.ConeBeamGeometry)
         and projector.geometry.pitch != 0
     ):
         pytest.skip('reconstruction with CG is hopeless with so few angles')

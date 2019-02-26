@@ -57,12 +57,12 @@ def geometry(request):
     elif geom == 'cone3d':
         apart = odl.uniform_partition(0, 2 * np.pi, n_angles)
         dpart = odl.uniform_partition([-60, -60], [60, 60], (m, m))
-        return odl.tomo.ConeFlatGeometry(apart, dpart,
+        return odl.tomo.ConeBeamGeometry(apart, dpart,
                                          src_radius=200, det_radius=100)
     elif geom == 'helical':
         apart = odl.uniform_partition(0, 8 * 2 * np.pi, n_angles)
         dpart = odl.uniform_partition([-30, -3], [30, 3], (m, m))
-        return odl.tomo.ConeFlatGeometry(apart, dpart, pitch=5.0,
+        return odl.tomo.ConeBeamGeometry(apart, dpart, pitch=5.0,
                                          src_radius=200, det_radius=100)
     else:
         raise ValueError('geom not valid')
@@ -180,7 +180,7 @@ def projector(request):
                                        dtype=dtype)
         # Geometry
         dpart = odl.uniform_partition([-60] * 2, [60] * 2, [m] * 2)
-        geom = odl.tomo.ConeFlatGeometry(apart, dpart,
+        geom = odl.tomo.ConeBeamGeometry(apart, dpart,
                                          src_radius=200, det_radius=100)
         # Ray transform
         return odl.tomo.RayTransform(reco_space, geom, impl=impl)
@@ -192,7 +192,7 @@ def projector(request):
         # Geometry, overwriting angle partition
         apart = odl.uniform_partition(0, 8 * 2 * np.pi, n_angles)
         dpart = odl.uniform_partition([-30, -3], [30, 3], [m] * 2)
-        geom = odl.tomo.ConeFlatGeometry(apart, dpart, pitch=5.0,
+        geom = odl.tomo.ConeBeamGeometry(apart, dpart, pitch=5.0,
                                          src_radius=200, det_radius=100)
         # Ray transform
         return odl.tomo.RayTransform(reco_space, geom, impl=impl)
@@ -237,7 +237,7 @@ def test_adjoint(projector):
     # adjoint in the cone beam case
     if (
         parse_version(ASTRA_VERSION) < parse_version('1.8rc1')
-        and isinstance(projector.geometry, odl.tomo.ConeFlatGeometry)
+        and isinstance(projector.geometry, odl.tomo.ConeBeamGeometry)
     ):
         rtol = 0.1
     else:
@@ -404,7 +404,7 @@ def test_shifted_volume(geometry_type):
     elif geometry_type == 'cone3d' and odl.tomo.ASTRA_CUDA_AVAILABLE:
         ndim = 3
         dpart = odl.uniform_partition([-30, -30], [30, 30], (30, 30))
-        geometry = odl.tomo.ConeFlatGeometry(apart, dpart,
+        geometry = odl.tomo.ConeBeamGeometry(apart, dpart,
                                              src_radius=200, det_radius=100)
     else:
         pytest.skip('no projector available for geometry type')
