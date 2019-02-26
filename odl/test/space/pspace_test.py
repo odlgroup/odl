@@ -170,8 +170,8 @@ def test_pspace_basic_properties():
     # Power space
     pspace = odl.ProductSpace(r3, 2)
     assert len(pspace) == 2
-    assert pspace.shape == (2, 3)
-    assert pspace.size == 6
+    assert pspace.shape == (2,)
+    assert pspace.size == 2
     assert pspace.spaces[0] == pspace.spaces[1] == r3
     assert pspace.is_power_space
     assert not pspace.is_weighted
@@ -208,24 +208,24 @@ def test_pspace_equality(exponent):
 
 def test_pspace_element():
     """Test element creation in product spaces."""
-    H = odl.rn(2)
-    HxH = odl.ProductSpace(H, H)
-    elem = HxH.element([[1, 2], [3, 4]])
-    assert elem in HxH
+    r2 = odl.rn(2)
+    pspace = odl.ProductSpace(r2, r2)
+    x = pspace.element([[1, 2], [3, 4]])
+    assert x in pspace
 
-    # wrong length
+    # Wrong length
     with pytest.raises(ValueError):
-        HxH.element([[1, 2]])
-
-    with pytest.raises(ValueError):
-        HxH.element([[1, 2], [3, 4], [5, 6]])
-
-    # wrong length of subspace element
-    with pytest.raises(ValueError):
-        HxH.element([[1, 2, 3], [4, 5]])
+        pspace.element([[1, 2]])
 
     with pytest.raises(ValueError):
-        HxH.element([[1, 2], [3, 4, 5]])
+        pspace.element([[1, 2], [3, 4], [5, 6]])
+
+    # Wrong length of subspace element
+    with pytest.raises(ValueError):
+        pspace.element([[1, 2, 3], [4, 5]])
+
+    with pytest.raises(ValueError):
+        pspace.element([[1, 2], [3, 4, 5]])
 
 
 def test_pspace_lincomb():
@@ -338,7 +338,7 @@ def test_power_shape():
     assert empty.size == empty2.size == 0
 
     r2_3 = odl.ProductSpace(r2, 3)
-    _test_shape(r2_3, (3, 2))
+    _test_shape(r2_3, (3,))
 
     r2xr3 = odl.ProductSpace(r2, r3)
     _test_shape(r2xr3, (2,))
