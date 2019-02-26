@@ -736,7 +736,7 @@ class CircularDetector(Detector):
 
         >>> part = odl.uniform_partition(-np.pi / 2, np.pi / 2, 10)
         >>> det = CircularDetector(part, axis=[1, 0], radius=2)
-        >>> np.allclose(det.surface(-np.pi / 2), [-2, -2])
+        >>> np.allclose(det.surface(0), [0, 0])
         True
 
         It is also vectorized, i.e., it can be called with multiple
