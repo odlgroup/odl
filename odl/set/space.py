@@ -382,10 +382,10 @@ class LinearSpace(Set):
         >>> r2 ** 4
         ProductSpace(rn(2), 4)
 
-        Multiple powers work as expected:
+        Multiple powers work "outside-in":
 
         >>> r2 ** (4, 2)
-        ProductSpace(ProductSpace(rn(2), 4), 2)
+        ProductSpace(ProductSpace(rn(2), 2), 4)
         """
         from odl.space import ProductSpace
 
@@ -395,7 +395,7 @@ class LinearSpace(Set):
             shape = tuple(shape)
 
         pspace = self
-        for n in shape:
+        for n in reversed(shape):
             pspace = ProductSpace(pspace, n)
 
         return pspace
