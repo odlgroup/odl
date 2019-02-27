@@ -34,6 +34,7 @@ det_pos_init_3d_params = list(set(permutations([1, 0, 0]))
 det_pos_init_3d = simple_fixture('det_pos_init', det_pos_init_3d_params)
 axis = simple_fixture('axis', det_pos_init_3d_params)
 shift = simple_fixture('shift', [0, 1])
+curved_det = simple_fixture('curved_det', [False, True])
 
 
 # --- tests --- #
@@ -422,21 +423,24 @@ def test_parallel_beam_geometry_helper():
     assert geometry.det_partition.extent == pytest.approx(2 * rho)
 
 
-def test_fanbeam_props(shift):
-    """Test basic properties of 2d fancurved geometries."""
+def test_fanbeam_props(curved_det, shift):
+    """Test basic properties of 2d fan beam geometries."""
     full_angle = 2 * np.pi
     apart = odl.uniform_partition(0, full_angle, 10)
     dpart = odl.uniform_partition(-np.pi / 2, np.pi / 2, 10)
     src_rad = 10
     det_rad = 5
-    curve_rad = src_rad + det_rad + 1
+    curve_rad = src_rad + det_rad + 1 if curved_det else None
     translation = np.array([shift, shift], dtype=float)
     geom = odl.tomo.FanBeamGeometry(apart, dpart, src_rad, det_rad,
                                     det_curve_radius=curve_rad,
                                     translation=translation)
 
     assert geom.ndim == 2
-    assert isinstance(geom.detector, odl.tomo.CircularDetector)
+    if curved_det:
+        assert isinstance(geom.detector, odl.tomo.CircularDetector)
+    else:
+        assert isinstance(geom.detector, odl.tomo.Flat1dDetector)
 
     # Check defaults
     assert all_almost_equal(geom.src_to_det_init, [0, 1])
@@ -452,13 +456,20 @@ def test_fanbeam_props(shift):
     # is equivalent to shifting first and then rotating.
     # Here we expect to rotate the reference point to [-det_rad, 0] and then
     # shift by 1 (=detector param) along the detector axis [0, 1] at that
-    # angle.
+    # angle. For curved detector, things are more complicated.
     # Global translation should come afterwards.
-    det_point = np.pi / 6
-    dx = curve_rad * (1 - np.cos(det_point))
-    dy = curve_rad * np.sin(det_point)
-    assert all_almost_equal(geom.det_point_position(np.pi / 2, det_point),
-                            translation + [-det_rad + dx, dy])
+    if curved_det:
+        det_param = np.pi / 6
+        dx = curve_rad * (1 - np.cos(det_param))
+        dy = curve_rad * np.sin(det_param)
+        true_pos = translation + [-det_rad + dx, dy]
+    else:
+        det_param = 1
+        true_pos = translation + [-det_rad, det_param]
+
+    assert all_almost_equal(
+        geom.det_point_position(np.pi / 2, det_param), true_pos
+    )
     assert all_almost_equal(geom.det_axis(np.pi / 2), [0, 1])
 
     # Detector to source vector. At param=0 it should be perpendicular to
