@@ -422,72 +422,7 @@ def test_parallel_beam_geometry_helper():
     assert geometry.det_partition.extent == pytest.approx(2 * rho)
 
 
-def test_fanflat_props(shift):
-    """Test basic properties of 2d fanflat geometries."""
-    full_angle = 2 * np.pi
-    apart = odl.uniform_partition(0, full_angle, 10)
-    dpart = odl.uniform_partition(0, 1, 10)
-    src_rad = 10
-    det_rad = 5
-    translation = np.array([shift, shift], dtype=float)
-    geom = odl.tomo.FanBeamGeometry(apart, dpart, src_rad, det_rad,
-                                    translation=translation)
-
-    assert geom.ndim == 2
-    assert isinstance(geom.detector, odl.tomo.Flat1dDetector)
-
-    # Check defaults
-    assert all_almost_equal(geom.src_to_det_init, [0, 1])
-    assert all_almost_equal(geom.src_position(0), translation + [0, -src_rad])
-    assert all_almost_equal(geom.det_refpoint(0), translation + [0, det_rad])
-    assert all_almost_equal(geom.det_point_position(0, 0),
-                            geom.det_refpoint(0))
-    assert all_almost_equal(geom.det_axis_init, [1, 0])
-    assert all_almost_equal(geom.det_axis(0), [1, 0])
-    assert all_almost_equal(geom.translation, translation)
-
-    # Check that we first rotate, then shift along the rotated axis, which
-    # is equivalent to shifting first and then rotating.
-    # Here we expect to rotate the reference point to [-det_rad, 0] and then
-    # shift by 1 (=detector param) along the detector axis [0, 1] at that
-    # angle.
-    # Global translation should come afterwards.
-    assert all_almost_equal(geom.det_point_position(np.pi / 2, 1),
-                            translation + [-det_rad, 1])
-    assert all_almost_equal(geom.det_axis(np.pi / 2), [0, 1])
-
-    # Detector to source vector. At param=0 it should be perpendicular to
-    # the detector towards the source, here at pi/2 it should point into
-    # the (+x) direction.
-    # At any other parameter, when adding the non-normalized vector to the
-    # detector point position, one should get the source position.
-    assert all_almost_equal(geom.det_to_src(np.pi / 2, 0), [1, 0])
-    src_pos = (geom.det_point_position(np.pi / 2, 1)
-               + geom.det_to_src(np.pi / 2, 1, normalized=False))
-    assert all_almost_equal(src_pos, geom.src_position(np.pi / 2))
-
-    # Rotation matrix, should correspond to counter-clockwise rotation
-    assert all_almost_equal(geom.rotation_matrix(np.pi / 2), [[0, -1],
-                                                              [1, 0]])
-
-    # Make sure that the boundary cases are treated as valid
-    geom.det_point_position(0, 0)
-    geom.det_point_position(full_angle, 1)
-
-    # Invalid parameter
-    with pytest.raises(ValueError):
-        geom.rotation_matrix(2 * full_angle)
-
-    # Both radii zero
-    with pytest.raises(ValueError):
-        odl.tomo.FanBeamGeometry(apart, dpart, src_radius=0, det_radius=0)
-
-    # Check that str and repr work without crashing and return something
-    assert str(geom)
-    assert repr(geom)
-
-
-def test_fancurved_props(shift):
+def test_fanbeam_props(shift):
     """Test basic properties of 2d fancurved geometries."""
     full_angle = 2 * np.pi
     apart = odl.uniform_partition(0, full_angle, 10)
