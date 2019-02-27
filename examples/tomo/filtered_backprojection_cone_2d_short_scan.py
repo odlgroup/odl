@@ -29,7 +29,7 @@ angle_partition = odl.uniform_partition(0, np.pi + 0.7, 360)
 # Detector: uniformly sampled, n = 512, min = -40, max = 40
 detector_partition = odl.uniform_partition(-40, 40, 512)
 # Geometry with large fan angle
-geometry = odl.tomo.FanFlatGeometry(
+geometry = odl.tomo.FanBeamGeometry(
     angle_partition, detector_partition, src_radius=80, det_radius=40)
 
 

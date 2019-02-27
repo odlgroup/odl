@@ -52,7 +52,7 @@ def geometry(request):
     elif geom == 'cone2d':
         apart = odl.uniform_partition(0, 2 * np.pi, n_angles)
         dpart = odl.uniform_partition(-30, 30, m)
-        return odl.tomo.FanFlatGeometry(apart, dpart, src_radius=200,
+        return odl.tomo.FanBeamGeometry(apart, dpart, src_radius=200,
                                         det_radius=100)
     elif geom == 'cone3d':
         apart = odl.uniform_partition(0, 2 * np.pi, n_angles)
@@ -169,7 +169,7 @@ def projector(request):
                                        dtype=dtype)
         # Geometry
         dpart = odl.uniform_partition(-30, 30, m)
-        geom = odl.tomo.FanFlatGeometry(apart, dpart, src_radius=200,
+        geom = odl.tomo.FanBeamGeometry(apart, dpart, src_radius=200,
                                         det_radius=100)
         # Ray transform
         return odl.tomo.RayTransform(reco_space, geom, impl=impl)
@@ -399,7 +399,7 @@ def test_shifted_volume(geometry_type):
     if geometry_type == 'cone2d' and odl.tomo.ASTRA_AVAILABLE:
         ndim = 2
         dpart = odl.uniform_partition(-30, 30, 30)
-        geometry = odl.tomo.FanFlatGeometry(apart, dpart,
+        geometry = odl.tomo.FanBeamGeometry(apart, dpart,
                                             src_radius=200, det_radius=100)
     elif geometry_type == 'cone3d' and odl.tomo.ASTRA_CUDA_AVAILABLE:
         ndim = 3

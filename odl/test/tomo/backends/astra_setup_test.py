@@ -199,7 +199,7 @@ def test_astra_projection_geometry():
     # Fan flat
     src_rad = 10
     det_rad = 5
-    geom_ff = odl.tomo.FanFlatGeometry(apart, dpart, src_rad, det_rad)
+    geom_ff = odl.tomo.FanBeamGeometry(apart, dpart, src_rad, det_rad)
     astra_geom = odl.tomo.astra_projection_geometry(geom_ff)
     assert astra_geom['type'] == 'fanflat_vec'
 
@@ -395,7 +395,7 @@ def test_geom_to_vec():
     # Fanbeam flat
     src_rad = 10
     det_rad = 5
-    geom_ff = odl.tomo.FanFlatGeometry(apart, dpart, src_rad, det_rad)
+    geom_ff = odl.tomo.FanBeamGeometry(apart, dpart, src_rad, det_rad)
     vec = odl.tomo.astra_conebeam_2d_geom_to_vec(geom_ff)
 
     assert vec.shape == (apart.size, 6)

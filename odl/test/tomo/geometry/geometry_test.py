@@ -430,7 +430,7 @@ def test_fanflat_props(shift):
     src_rad = 10
     det_rad = 5
     translation = np.array([shift, shift], dtype=float)
-    geom = odl.tomo.FanFlatGeometry(apart, dpart, src_rad, det_rad,
+    geom = odl.tomo.FanBeamGeometry(apart, dpart, src_rad, det_rad,
                                     translation=translation)
 
     assert geom.ndim == 2
@@ -480,56 +480,11 @@ def test_fanflat_props(shift):
 
     # Both radii zero
     with pytest.raises(ValueError):
-        odl.tomo.FanFlatGeometry(apart, dpart, src_radius=0, det_radius=0)
+        odl.tomo.FanBeamGeometry(apart, dpart, src_radius=0, det_radius=0)
 
     # Check that str and repr work without crashing and return something
     assert str(geom)
     assert repr(geom)
-
-
-def test_fanflat_frommatrix():
-    """Test the ``frommatrix`` constructor in 2d fan beam geometry."""
-    full_angle = np.pi
-    apart = odl.uniform_partition(0, full_angle, 10)
-    dpart = odl.uniform_partition(0, 1, 10)
-    src_rad = 10
-    det_rad = 5
-    angle = 3 * np.pi / 4
-    rot_matrix = np.array([[np.cos(angle), -np.sin(angle)],
-                          [np.sin(angle), np.cos(angle)]])
-
-    # Start at [0, 1] with extra rotation by 135 degrees, making 225 degrees
-    # in total for the initial position (at the bisector in the 3rd quardant)
-    geom = odl.tomo.FanFlatGeometry.frommatrix(apart, dpart, src_rad, det_rad,
-                                               rot_matrix)
-
-    init_src_to_det = np.array([-1, -1], dtype=float)
-    init_src_to_det /= np.linalg.norm(init_src_to_det)
-    assert all_almost_equal(geom.src_to_det_init, init_src_to_det)
-
-    norm_axis = np.array([-1, 1], dtype=float)
-    norm_axis /= np.linalg.norm(norm_axis)
-    assert all_almost_equal(geom.det_axis_init, norm_axis)
-
-    # With translation (1, 1)
-    matrix = np.hstack([rot_matrix, [[1], [1]]])
-    geom = odl.tomo.FanFlatGeometry.frommatrix(apart, dpart, src_rad, det_rad,
-                                               matrix)
-
-    assert all_almost_equal(geom.translation, [1, 1])
-
-    init_pos_from_center = np.array([-1, -1], dtype=float)
-    init_pos_from_center /= np.linalg.norm(init_pos_from_center)
-    init_pos_from_center *= det_rad
-    assert all_almost_equal(geom.det_refpoint(0),
-                            geom.translation + init_pos_from_center)
-
-    # Singular matrix, should raise
-    sing_mat = [[1, 1],
-                [1, 1]]
-    with pytest.raises(np.linalg.LinAlgError):
-        geom = odl.tomo.FanFlatGeometry.frommatrix(apart, dpart, src_rad,
-                                                   det_rad, sing_mat)
 
 
 def test_fancurved_props(shift):
@@ -600,6 +555,51 @@ def test_fancurved_props(shift):
     # Check that str and repr work without crashing and return something
     assert str(geom)
     assert repr(geom)
+
+
+def test_fanbeam_frommatrix():
+    """Test the ``frommatrix`` constructor in 2d fan beam geometry."""
+    full_angle = np.pi
+    apart = odl.uniform_partition(0, full_angle, 10)
+    dpart = odl.uniform_partition(0, 1, 10)
+    src_rad = 10
+    det_rad = 5
+    angle = 3 * np.pi / 4
+    rot_matrix = np.array([[np.cos(angle), -np.sin(angle)],
+                          [np.sin(angle), np.cos(angle)]])
+
+    # Start at [0, 1] with extra rotation by 135 degrees, making 225 degrees
+    # in total for the initial position (at the bisector in the 3rd quardant)
+    geom = odl.tomo.FanBeamGeometry.frommatrix(apart, dpart, src_rad, det_rad,
+                                               rot_matrix)
+
+    init_src_to_det = np.array([-1, -1], dtype=float)
+    init_src_to_det /= np.linalg.norm(init_src_to_det)
+    assert all_almost_equal(geom.src_to_det_init, init_src_to_det)
+
+    norm_axis = np.array([-1, 1], dtype=float)
+    norm_axis /= np.linalg.norm(norm_axis)
+    assert all_almost_equal(geom.det_axis_init, norm_axis)
+
+    # With translation (1, 1)
+    matrix = np.hstack([rot_matrix, [[1], [1]]])
+    geom = odl.tomo.FanBeamGeometry.frommatrix(apart, dpart, src_rad, det_rad,
+                                               matrix)
+
+    assert all_almost_equal(geom.translation, [1, 1])
+
+    init_pos_from_center = np.array([-1, -1], dtype=float)
+    init_pos_from_center /= np.linalg.norm(init_pos_from_center)
+    init_pos_from_center *= det_rad
+    assert all_almost_equal(geom.det_refpoint(0),
+                            geom.translation + init_pos_from_center)
+
+    # Singular matrix, should raise
+    sing_mat = [[1, 1],
+                [1, 1]]
+    with pytest.raises(np.linalg.LinAlgError):
+        geom = odl.tomo.FanBeamGeometry.frommatrix(apart, dpart, src_rad,
+                                                   det_rad, sing_mat)
 
 
 def test_helical_cone_flat_props(shift):

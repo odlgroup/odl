@@ -236,7 +236,7 @@ def parker_weighting(ray_trafo, q=0.25):
     --------
     fbp_op : Filtered back-projection operator from `RayTransform`
     tam_danielson_window : Indicator function for helical data
-    odl.tomo.geometry.conebeam.FanFlatGeometry : Use case in 2d
+    odl.tomo.geometry.conebeam.FanBeamGeometry : Use case in 2d
     odl.tomo.geometry.conebeam.ConeFlatGeometry : Use case in 3d (for pitch 0)
 
     References
@@ -324,8 +324,8 @@ def fbp_filter_op(ray_trafo, padding=True, filter_type='Ram-Lak',
 
         `Parallel3dAxisGeometry` : Exact reconstruction
 
-        `FanFlatGeometry` : Approximate reconstruction, correct in limit of
-        fan angle = 0.
+        `FanBeamGeometry` : Approximate reconstruction, correct in limit of
+        fan angle = 0. Only flat detectors are supported (det_curve_radius is None).
 
         `ConeFlatGeometry`, pitch = 0 (circular) : Approximate reconstruction,
         correct in the limit of fan angle = 0 and cone angle = 0.
@@ -490,8 +490,8 @@ def fbp_op(ray_trafo, padding=True, filter_type='Ram-Lak',
 
         `Parallel3dAxisGeometry` : Exact reconstruction
 
-        `FanFlatGeometry` : Approximate reconstruction, correct in limit of fan
-        angle = 0.
+        `FanBeamGeometry` : Approximate reconstruction, correct in limit of fan
+        angle = 0. Only flat detectors are supported (det_curve_radius is None).
 
         `ConeFlatGeometry`, pitch = 0 (circular) : Approximate reconstruction,
         correct in the limit of fan angle = 0 and cone angle = 0.

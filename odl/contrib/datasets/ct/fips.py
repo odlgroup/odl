@@ -18,7 +18,7 @@ from __future__ import division
 import numpy as np
 from odl.contrib.datasets.util import get_data
 from odl.discr import uniform_partition
-from odl.tomo import FanFlatGeometry
+from odl.tomo import FanBeamGeometry
 
 
 __all__ = ('walnut_data', 'walnut_geometry',
@@ -81,7 +81,7 @@ def walnut_geometry():
     d_offset = -0.279
     dpart = uniform_partition(d_offset - 57.4, d_offset + 57.4, 2296)
 
-    geometry = FanFlatGeometry(apart, dpart,
+    geometry = FanBeamGeometry(apart, dpart,
                                src_radius=110, det_radius=190)
 
     return geometry
@@ -142,7 +142,7 @@ def lotus_root_geometry():
     d_offset = 0.35
     dpart = uniform_partition(d_offset - 60, d_offset + 60, 2240)
 
-    geometry = FanFlatGeometry(apart, dpart,
+    geometry = FanBeamGeometry(apart, dpart,
                                src_radius=540, det_radius=90)
 
     return geometry
