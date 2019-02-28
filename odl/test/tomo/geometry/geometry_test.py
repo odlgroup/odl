@@ -456,7 +456,7 @@ def test_fanbeam_props(curved_det, shift):
     # is equivalent to shifting first and then rotating.
     # Here we expect to rotate the reference point to [-det_rad, 0] and then
     # shift by 1 (=detector param) along the detector axis [0, 1] at that
-    # angle. For curved detector, things are more complicated.
+    # angle. For curved detector, we have to take curvature of into account.
     # Global translation should come afterwards.
     if curved_det:
         det_param = np.pi / 6
