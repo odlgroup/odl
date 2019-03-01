@@ -429,7 +429,8 @@ def astra_cuda_bp_scaling_factor(proj_space, reco_space, geometry):
         if isinstance(geometry, Parallel2dGeometry):
             # Scales with 1 / cell_volume
             scaling_factor *= float(reco_space.cell_volume)
-        elif isinstance(geometry, FanBeamGeometry):
+        elif (isinstance(geometry, FanBeamGeometry)
+              and geometry.det_curve_radius is None):
             # Scales with 1 / cell_volume
             scaling_factor *= float(reco_space.cell_volume)
             # Magnification correction
