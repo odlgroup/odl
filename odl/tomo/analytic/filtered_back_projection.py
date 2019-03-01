@@ -325,7 +325,8 @@ def fbp_filter_op(ray_trafo, padding=True, filter_type='Ram-Lak',
         `Parallel3dAxisGeometry` : Exact reconstruction
 
         `FanBeamGeometry` : Approximate reconstruction, correct in limit of
-        fan angle = 0. Only flat detectors are supported (det_curve_radius is None).
+        fan angle = 0.
+        Only flat detectors are supported (det_curve_radius is None).
 
         `ConeFlatGeometry`, pitch = 0 (circular) : Approximate reconstruction,
         correct in the limit of fan angle = 0 and cone angle = 0.
@@ -491,7 +492,8 @@ def fbp_op(ray_trafo, padding=True, filter_type='Ram-Lak',
         `Parallel3dAxisGeometry` : Exact reconstruction
 
         `FanBeamGeometry` : Approximate reconstruction, correct in limit of fan
-        angle = 0. Only flat detectors are supported (det_curve_radius is None).
+        angle = 0.
+        Only flat detectors are supported (det_curve_radius is None).
 
         `ConeFlatGeometry`, pitch = 0 (circular) : Approximate reconstruction,
         correct in the limit of fan angle = 0 and cone angle = 0.
