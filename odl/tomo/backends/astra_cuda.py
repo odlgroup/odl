@@ -26,7 +26,7 @@ from odl.tomo.backends.astra_setup import (
     astra_projection_geometry, astra_volume_geometry, astra_projector,
     astra_data, astra_algorithm)
 from odl.tomo.geometry import (
-    Geometry, Parallel2dGeometry, FanFlatGeometry, Parallel3dAxisGeometry,
+    Geometry, Parallel2dGeometry, FanBeamGeometry, Parallel3dAxisGeometry,
     ConeFlatGeometry)
 
 
@@ -372,7 +372,8 @@ def astra_cuda_bp_scaling_factor(proj_space, reco_space, geometry):
         if isinstance(geometry, Parallel2dGeometry):
             # Scales with 1 / cell_volume
             scaling_factor *= float(reco_space.cell_volume)
-        elif isinstance(geometry, FanFlatGeometry):
+        elif (isinstance(geometry, FanBeamGeometry)
+              and geometry.det_curvature_radius is None):
             # Scales with 1 / cell_volume
             scaling_factor *= float(reco_space.cell_volume)
             # Additional magnification correction
@@ -398,7 +399,8 @@ def astra_cuda_bp_scaling_factor(proj_space, reco_space, geometry):
         if isinstance(geometry, Parallel2dGeometry):
             # Scales with 1 / cell_volume
             scaling_factor *= float(reco_space.cell_volume)
-        elif isinstance(geometry, FanFlatGeometry):
+        elif (isinstance(geometry, FanBeamGeometry)
+              and geometry.det_curvature_radius is None):
             # Scales with 1 / cell_volume
             scaling_factor *= float(reco_space.cell_volume)
             # Magnification correction
@@ -427,7 +429,8 @@ def astra_cuda_bp_scaling_factor(proj_space, reco_space, geometry):
         if isinstance(geometry, Parallel2dGeometry):
             # Scales with 1 / cell_volume
             scaling_factor *= float(reco_space.cell_volume)
-        elif isinstance(geometry, FanFlatGeometry):
+        elif (isinstance(geometry, FanBeamGeometry)
+              and geometry.det_curvature_radius is None):
             # Scales with 1 / cell_volume
             scaling_factor *= float(reco_space.cell_volume)
             # Magnification correction

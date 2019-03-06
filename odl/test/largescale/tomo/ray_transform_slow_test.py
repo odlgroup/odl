@@ -128,7 +128,7 @@ def projector(request, dtype, weighting):
 
         # Geometry
         dpart = odl.uniform_partition(-30, 30, 200)
-        geom = odl.tomo.FanFlatGeometry(apart, dpart, src_radius=200,
+        geom = odl.tomo.FanBeamGeometry(apart, dpart, src_radius=200,
                                         det_radius=100)
 
         # Ray transform

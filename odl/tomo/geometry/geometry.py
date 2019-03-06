@@ -478,7 +478,7 @@ class DivergentBeamGeometry(Geometry):
 
         >>> apart = odl.uniform_partition(0, 2 * np.pi, 10)
         >>> dpart = odl.uniform_partition(-1, 1, 20)
-        >>> geom = odl.tomo.FanFlatGeometry(apart, dpart, src_radius=2,
+        >>> geom = odl.tomo.FanBeamGeometry(apart, dpart, src_radius=2,
         ...                                 det_radius=3)
         >>> geom.det_to_src(0, 0)
         array([ 0., -1.])

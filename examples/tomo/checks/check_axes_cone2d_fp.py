@@ -53,7 +53,7 @@ assert np.allclose(detector_partition.cell_sides, 1)
 sum_along_x = np.sum(phantom, axis=0)
 sum_along_y = np.sum(phantom, axis=1)
 
-geometry = odl.tomo.FanFlatGeometry(angle_partition, detector_partition,
+geometry = odl.tomo.FanBeamGeometry(angle_partition, detector_partition,
                                     src_radius, det_radius)
 # Check initial configuration
 assert np.allclose(geometry.det_axis_init, [1, 0])

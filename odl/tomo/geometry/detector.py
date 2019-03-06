@@ -20,7 +20,7 @@ from odl.util.npy_compat import moveaxis
 
 __all__ = ('Detector',
            'Flat1dDetector', 'Flat2dDetector',
-           'CircleSectionDetector')
+           'CircularDetector')
 
 
 class Detector(object):
@@ -626,17 +626,16 @@ class Flat2dDetector(Detector):
         return repr(self)
 
 
-class CircleSectionDetector(Detector):
+class CircularDetector(Detector):
 
-    """A 1D detector on a circle section crossing the origin in 2D space.
+    """A 1D detector on a circle section in 2D space.
 
-    The parametrization is chosen such that parameter (=angle) 0
-    corresponds to the origin. Negative param correspond to points
-    "left" of the line from circle center to origin, positive angles
-    to points on the "right" of that line.
-    """
+    The circular section that corresponds to the angular partition
+    is rotated to be aligned with a given axis and
+    shifted to cross the origin. Note, the partition angle increases
+    in the clockwise direction, by analogy to flat detectors."""
 
-    def __init__(self, partition, center, check_bounds=True):
+    def __init__(self, partition, axis, radius, check_bounds=True):
         """Initialize a new instance.
 
         Parameters
@@ -644,9 +643,10 @@ class CircleSectionDetector(Detector):
         partition : 1-dim. `RectPartition`
             Partition of the parameter interval, corresponding to the
             angular sections along the line.
-        center : `array-like`, shape ``(2,)``
-            Center point of the circle, cannot be zero. Larger distance
-            to the origin results in less curvature.
+        axis : `array-like`, shape ``(2,)``
+            Fixed axis along which this detector is aligned.
+        radius : nonnegative float
+            Radius of the circle.
         check_bounds : bool, optional
             If ``True``, methods computing vectors check input arguments.
             Checks are vectorized and add only a small overhead.
@@ -657,61 +657,64 @@ class CircleSectionDetector(Detector):
         90 degrees on both sides of the origin (a half circle).
 
         >>> part = odl.uniform_partition(-np.pi / 2, np.pi / 2, 10)
-        >>> det = CircleSectionDetector(part, center=[0, -2])
+        >>> det = CircularDetector(part, axis=[1, 0], radius=2)
+        >>> det.axis
+        array([ 1.,  0.])
         >>> det.radius
         2.0
-        >>> det.center_dir
-        array([ 0., -1.])
-        >>> det.tangent_at_0
-        array([ 1.,  0.])
+        >>> np.allclose(det.surface_normal(0), [0, -1])
+        True
         """
-        super(CircleSectionDetector, self).__init__(partition, 2, check_bounds)
+        super(CircularDetector, self).__init__(partition, 2, check_bounds)
         if self.ndim != 1:
             raise ValueError('`partition` must be 1-dimensional, got ndim={}'
                              ''.format(self.ndim))
 
-        self.__center = np.asarray(center, dtype=float)
-        if self.center.shape != (2,):
-            raise ValueError('`center` must have shape (2,), got {}'
-                             ''.format(self.center.shape))
-        if np.linalg.norm(self.center) == 0:
-            raise ValueError('`center` cannot be zero')
+        if np.linalg.norm(axis) == 0:
+            raise ValueError('`axis` cannot be zero')
+        self.__axis = np.asarray(axis) / np.linalg.norm(axis)
+
+        self.__radius = float(radius)
+        if self.__radius <= 0:
+            raise ValueError('`radius` must be positive')
+
+        sin = self.__axis[0]
+        cos = -self.__axis[1]
+        self.__rotation_matrix = np.array([[cos, -sin], [sin, cos]])
+        self.__translation = (- self.__radius
+                              * np.matmul(self.__rotation_matrix, (1, 0)))
 
     @property
-    def center(self):
-        """Center point of the circle."""
-        return self.__center
+    def axis(self):
+        """Fixed axis along which this detector is aligned."""
+        return self.__axis
 
     @property
     def radius(self):
-        """Curvature radius the detector."""
-        return np.linalg.norm(self.center)
+        """Curvature radius of the detector."""
+        return self.__radius
 
     @property
-    def center_dir(self):
-        """Unit vector from the origin to the center of the circle."""
-        return self.center / self.radius
+    def rotation_matrix(self):
+        """Rotation matrix that is used to align the detector
+        with a given axis."""
+        return self.__rotation_matrix
 
     @property
-    def tangent_at_0(self):
-        """Unit vector tangent to the circle at ``param=0``.
-
-        The direction is chosen such that the circle is traversed clockwise
-        for growing angle parameter.
-        """
-        return perpendicular_vector(self.center_dir)
+    def translation(self):
+        """A vector used to shift the detector towards the origin."""
+        return self.__translation
 
     def surface(self, param):
         """Return the detector surface point corresponding to ``param``.
 
-        The surface point lies on a circle around `center` through the
-        origin. More precisely, for a parameter ``phi``, the returned
-        point is given by ::
+        For a parameter ``phi``, the returned point is given by ::
 
-            surf = radius * ((1 - cos(phi)) * center_dir +
-                             sin(phi) * tangent_at_0)
+            surf = R * radius * (cos(phi), -sin(phi)) + t
 
-        In particular, ``phi=0`` yields the origin ``(0, 0)``.
+        where ``R`` is a rotation matrix and ``t`` is a translation vector.
+        Note that increase of ``phi`` corresponds to rotation
+        in the clockwise direction, by analogy to flat detectors.
 
         Parameters
         ----------
@@ -732,21 +735,18 @@ class CircleSectionDetector(Detector):
         vector:
 
         >>> part = odl.uniform_partition(-np.pi / 2, np.pi / 2, 10)
-        >>> det = CircleSectionDetector(part, center=[0, -2])
-        >>> det.surface(0)
-        array([ 0.,  0.])
-        >>> det.surface(-np.pi / 2)
-        array([-2., -2.])
-        >>> det.surface(np.pi / 2)
-        array([ 2., -2.])
+        >>> det = CircularDetector(part, axis=[1, 0], radius=2)
+        >>> np.allclose(det.surface(0), [0, 0])
+        True
 
         It is also vectorized, i.e., it can be called with multiple
         parameters at once (or an n-dimensional array of parameters):
 
-        >>> det.surface([-np.pi / 2, 0, np.pi / 2])
+        >>> np.round(det.surface([-np.pi / 2, 0, np.pi / 2]), 10)
         array([[-2., -2.],
                [ 0.,  0.],
                [ 2., -2.]])
+
         >>> det.surface(np.zeros((4, 5))).shape
         (4, 5, 2)
         """
@@ -756,12 +756,12 @@ class CircleSectionDetector(Detector):
             raise ValueError('`param` {} not in the valid range '
                              '{}'.format(param, self.params))
 
-        # Compute an outer product of `(1-cos(param))` with `center_dir`
-        # and `sin(param)` with `tangent_at_0` and sum both, in order
-        # to broadcast along all axes
-        center_part = np.multiply.outer(1 - np.cos(param), self.center_dir)
-        tangent_part = np.multiply.outer(np.sin(param), self.tangent_at_0)
-        surf = self.radius * (center_part + tangent_part)
+        surf = np.empty(param.shape + (2,))
+        surf[..., 0] = np.cos(param)
+        surf[..., 1] = -np.sin(param)
+        surf *= self.radius
+        surf = np.matmul(surf, np.transpose(self.rotation_matrix))
+        surf += self.translation
         if squeeze_out:
             surf = surf.squeeze()
 
@@ -772,7 +772,9 @@ class CircleSectionDetector(Detector):
 
         The derivative at parameter ``phi`` is given by ::
 
-            deriv = radius * (sin(phi) * center_dir + cos(phi) * tangent_at_0)
+            deriv = R * radius * (-sin(phi), -cos(phi))
+
+        where R is a rotation matrix.
 
         Parameters
         ----------
@@ -796,22 +798,18 @@ class CircleSectionDetector(Detector):
         vector:
 
         >>> part = odl.uniform_partition(-np.pi / 2, np.pi / 2, 10)
-        >>> det = CircleSectionDetector(part, center=[0, -2])
+        >>> det = CircularDetector(part, axis=[1, 0], radius=2)
         >>> det.surface_deriv(0)
         array([ 2.,  0.])
-        >>> np.allclose(det.surface_deriv(-np.pi / 2), [0, 2])
-        True
-        >>> np.allclose(det.surface_deriv(np.pi / 2), [0, -2])
-        True
 
         It is also vectorized, i.e., it can be called with multiple
         parameters at once (or an n-dimensional array of parameters):
 
-        >>> deriv = det.surface_deriv([-np.pi / 2, 0, np.pi / 2])
-        >>> np.allclose(deriv, [[0, 2],
-        ...                     [2, 0],
-        ...                     [0, -2]])
-        True
+        >>> np.round(det.surface_deriv([-np.pi / 2, 0, np.pi / 2]), 10)
+        array([[ 0.,  2.],
+               [ 2.,  0.],
+               [ 0., -2.]])
+
         >>> det.surface_deriv(np.zeros((4, 5))).shape
         (4, 5, 2)
         """
@@ -821,12 +819,11 @@ class CircleSectionDetector(Detector):
             raise ValueError('`param` {} not in the valid range '
                              '{}'.format(param, self.params))
 
-        # Compute an outer product of `sin(param)` with `center_dir`
-        # and `cos(param)` with `tangent_at_0`, in order
-        # to broadcast along all axes
-        center_part = np.multiply.outer(np.sin(param), self.center_dir)
-        tangent_part = np.multiply.outer(np.cos(param), self.tangent_at_0)
-        deriv = self.radius * (center_part + tangent_part)
+        deriv = np.empty(param.shape + (2,))
+        deriv[..., 0] = -np.sin(param)
+        deriv[..., 1] = -np.cos(param)
+        deriv *= self.radius
+        deriv = np.matmul(deriv, np.transpose(self.rotation_matrix))
 
         if squeeze_out:
             deriv = deriv.squeeze()
@@ -860,7 +857,7 @@ class CircleSectionDetector(Detector):
         The method works with a single parameter, resulting in a float:
 
         >>> part = odl.uniform_partition(-np.pi / 2, np.pi / 2, 10)
-        >>> det = CircleSectionDetector(part, center=[0, -2])
+        >>> det = CircularDetector(part, axis=[1, 0], radius=2)
         >>> det.surface_measure(0)
         2.0
         >>> det.surface_measure(np.pi / 2)
@@ -871,8 +868,8 @@ class CircleSectionDetector(Detector):
 
         >>> det.surface_measure([0, np.pi / 2])
         array([ 2.,  2.])
-        >>> det.surface_deriv(np.zeros((4, 5))).shape
-        (4, 5, 2)
+        >>> det.surface_measure(np.zeros((4, 5))).shape
+        (4, 5)
         """
         scalar_out = (np.shape(param) == ())
         param = np.array(param, dtype=float, copy=False, ndmin=1)
@@ -888,7 +885,7 @@ class CircleSectionDetector(Detector):
     def __repr__(self):
         """Return ``repr(self)``."""
         posargs = [self.partition]
-        optargs = [('center', array_str(self.center), None)]
+        optargs = [('radius', array_str(self.center), '')]
         inner_str = signature_string(posargs, optargs, sep=',\n')
         return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
 

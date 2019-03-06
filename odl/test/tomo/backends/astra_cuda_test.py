@@ -54,7 +54,7 @@ def space_and_geometry(request):
         reco_space = odl.uniform_discr([-4, -5], [4, 5], (4, 5),
                                        dtype=dtype)
         dpart = odl.uniform_partition(-6, 6, 6)
-        geom = odl.tomo.FanFlatGeometry(apart, dpart, src_radius=100,
+        geom = odl.tomo.FanBeamGeometry(apart, dpart, src_radius=100,
                                         det_radius=10)
     elif geom == 'cone3d':
         reco_space = odl.uniform_discr([-4, -5, -6], [4, 5, 6], (4, 5, 6),
