@@ -373,7 +373,7 @@ def astra_cuda_bp_scaling_factor(proj_space, reco_space, geometry):
             # Scales with 1 / cell_volume
             scaling_factor *= float(reco_space.cell_volume)
         elif (isinstance(geometry, FanBeamGeometry)
-              and geometry.det_curve_radius is None):
+              and geometry.det_curvature_radius is None):
             # Scales with 1 / cell_volume
             scaling_factor *= float(reco_space.cell_volume)
             # Additional magnification correction
@@ -400,7 +400,7 @@ def astra_cuda_bp_scaling_factor(proj_space, reco_space, geometry):
             # Scales with 1 / cell_volume
             scaling_factor *= float(reco_space.cell_volume)
         elif (isinstance(geometry, FanBeamGeometry)
-              and geometry.det_curve_radius is None):
+              and geometry.det_curvature_radius is None):
             # Scales with 1 / cell_volume
             scaling_factor *= float(reco_space.cell_volume)
             # Magnification correction
@@ -430,7 +430,7 @@ def astra_cuda_bp_scaling_factor(proj_space, reco_space, geometry):
             # Scales with 1 / cell_volume
             scaling_factor *= float(reco_space.cell_volume)
         elif (isinstance(geometry, FanBeamGeometry)
-              and geometry.det_curve_radius is None):
+              and geometry.det_curvature_radius is None):
             # Scales with 1 / cell_volume
             scaling_factor *= float(reco_space.cell_volume)
             # Magnification correction

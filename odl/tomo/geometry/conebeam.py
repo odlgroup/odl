@@ -49,7 +49,7 @@ class FanBeamGeometry(DivergentBeamGeometry):
     _default_config = dict(src_to_det_init=(0, 1), det_axis_init=(1, 0))
 
     def __init__(self, apart, dpart, src_radius, det_radius,
-                 det_curve_radius=None, src_to_det_init=(0, 1), **kwargs):
+                 det_curvature_radius=None, src_to_det_init=(0, 1), **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -63,7 +63,7 @@ class FanBeamGeometry(DivergentBeamGeometry):
         det_radius : nonnegative float
             Radius of the detector circle. Must be nonzero if ``src_radius``
             is zero.
-        det_curve_radius : nonnegative float, optional
+        det_curvature_radius : nonnegative float, optional
             Radius of the detector curvature.
             If ``None``, a flat detector is used, otherwise must be positive.
         src_to_det_init : `array-like` (shape ``(2,)``), optional
@@ -123,7 +123,7 @@ class FanBeamGeometry(DivergentBeamGeometry):
         >>> apart = odl.uniform_partition(0, 2 * np.pi, 10)
         >>> dpart = odl.uniform_partition(-np.pi / 2, np.pi / 2, 10)
         >>> geom = FanBeamGeometry(apart, dpart, src_radius=1, det_radius=5,
-        ...                        det_curve_radius=10)
+        ...                        det_curvature_radius=10)
         >>> geom.src_position(0)
         array([ 0., -1.])
         >>> geom.det_refpoint(0)
@@ -205,12 +205,12 @@ class FanBeamGeometry(DivergentBeamGeometry):
         self.__src_to_det_init = src_to_det_init
         # `check_bounds` is needed for both detector and geometry
         check_bounds = kwargs.get('check_bounds', True)
-        if det_curve_radius is None:
+        if det_curvature_radius is None:
             detector = Flat1dDetector(dpart, axis=det_axis_init,
                                       check_bounds=check_bounds)
         else:
             detector = CircularDetector(dpart,
-                                        radius=det_curve_radius,
+                                        radius=det_curvature_radius,
                                         axis=det_axis_init,
                                         check_bounds=check_bounds)
         translation = kwargs.pop('translation', None)
@@ -237,7 +237,7 @@ class FanBeamGeometry(DivergentBeamGeometry):
 
     @classmethod
     def frommatrix(cls, apart, dpart, src_radius, det_radius, init_matrix,
-                   det_curve_radius=None, **kwargs):
+                   det_curvature_radius=None, **kwargs):
         """Create an instance of `FanBeamGeometry` using a matrix.
 
         This alternative constructor uses a matrix to rotate and
@@ -261,7 +261,7 @@ class FanBeamGeometry(DivergentBeamGeometry):
             determine the new vectors. If present, the third column acts
             as a translation after the initial transformation.
             The resulting ``det_axis_init`` will be normalized.
-        det_curve_radius : nonnegative float, optional
+        det_curvature_radius : nonnegative float, optional
             Radius of the detector curvature.
             If ``None``, flat detector is used, otherwise must be positive.
         kwargs :
@@ -321,7 +321,7 @@ class FanBeamGeometry(DivergentBeamGeometry):
         if translation.size != 0:
             kwargs['translation'] = translation
 
-        return cls(apart, dpart, src_radius, det_radius, det_curve_radius,
+        return cls(apart, dpart, src_radius, det_radius, det_curvature_radius,
                    src_to_det, det_axis_init=det_axis, **kwargs)
 
     @property
@@ -335,7 +335,7 @@ class FanBeamGeometry(DivergentBeamGeometry):
         return self.__det_radius
 
     @property
-    def det_curve_radius(self):
+    def det_curvature_radius(self):
         """Detector curve radius of this geometry."""
         return getattr(self.detector, 'radius', None)
 

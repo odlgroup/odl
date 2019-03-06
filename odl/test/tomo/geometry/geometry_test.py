@@ -433,7 +433,7 @@ def test_fanbeam_props(curved_det, shift):
     curve_rad = src_rad + det_rad + 1 if curved_det else None
     translation = np.array([shift, shift], dtype=float)
     geom = odl.tomo.FanBeamGeometry(apart, dpart, src_rad, det_rad,
-                                    det_curve_radius=curve_rad,
+                                    det_curvature_radius=curve_rad,
                                     translation=translation)
 
     assert geom.ndim == 2
