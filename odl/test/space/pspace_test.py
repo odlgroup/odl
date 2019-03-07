@@ -158,7 +158,6 @@ def test_pspace_basic_properties():
     assert not pspace.is_weighted
     assert pspace.is_real
     assert not pspace.is_complex
-    assert pspace.dtype == 'float64'
 
     r2_x = r2.element([1, 2])
     r3_x = r3.element([3, 4, 5])
@@ -177,7 +176,6 @@ def test_pspace_basic_properties():
     assert not pspace.is_weighted
     assert pspace.is_real
     assert not pspace.is_complex
-    assert pspace.dtype == 'float64'
 
     x1 = r3.element([0, 1, 2])
     x2 = r3.element([3, 4, 5])
@@ -772,14 +770,6 @@ def test_reductions():
     assert x.ufuncs.prod() == 6.0
     assert x.ufuncs.min() == 1.0
     assert x.ufuncs.max() == 3.0
-
-
-def test_np_reductions():
-    """Check that reductions via NumPy functions work."""
-    H = odl.ProductSpace(odl.rn(2), 3)
-    x = 2 * H.one()
-    assert np.sum(x) == 2 * 6
-    assert np.prod(x) == 2 ** 6
 
 
 def test_array_wrap_method():
