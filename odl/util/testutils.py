@@ -111,8 +111,10 @@ def all_equal(iter1, iter2):
     """Return ``True`` if all elements in ``a`` and ``b`` are equal."""
     # Direct comparison for scalars, tuples or lists
     try:
-        if iter1 == iter2:
-            return True
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            if iter1 is iter2 or iter1 == iter2:
+                return True
     except ValueError:  # Raised by NumPy when comparing arrays
         pass
 
@@ -156,8 +158,10 @@ def all_almost_equal_array(v1, v2, ndigits):
 def all_almost_equal(iter1, iter2, ndigits=None):
     """Return ``True`` if all elements in ``a`` and ``b`` are almost equal."""
     try:
-        if iter1 is iter2 or iter1 == iter2:
-            return True
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            if iter1 is iter2 or iter1 == iter2:
+                return True
     except ValueError:
         pass
 
