@@ -532,6 +532,43 @@ class ProductSpace(LinearSpace):
             element = self.element([elem for _, elem in examples])
             yield (name, element)
 
+    def apply(self, func, x):
+        """Apply a function to each component of an element.
+
+        Parameters
+        ----------
+        func : callable
+            Function that should be applied to each component of ``x``.
+            It must take 1 argument and return the result. It may choose to
+            mutate the input in-place.
+        x : numpy.ndarray
+            Element to which ``func`` should be applied. It must be an
+            element of this space, i.e., it must satisfy ``elem in self``.
+
+        Returns
+        -------
+        new_elem : numpy.ndarray
+            Result of applying the function componentwise.
+
+        Examples
+        --------
+        >>> pspace = odl.ProductSpace(odl.rn(2), odl.rn(3))
+        >>> x = pspace.element([[1, -1], [2, 0, -3]])
+        >>> pspace.apply(np.sign, x)
+        array([array([ 1., -1.]), array([ 1.,  0., -1.])], dtype=object)
+        """
+        if x not in self:
+            raise ValueError(
+                '`x` {!r} is not an element of {!r}'.format(x, self)
+            )
+
+        x_flat = x.ravel()
+        res = np.empty(self.size, dtype=object)
+        for i in range(self.size):
+            res[i] = func(x_flat[i])
+        return res.reshape(self.shape)
+
+
     def __contains__(self, other):
         """Return ``other in self``."""
         # TODO: doctest
