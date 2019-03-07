@@ -20,8 +20,13 @@ from odl.tomo.util.utility import rotation_matrix_from_to
 
 
 __all__ = ('Detector',
+<<<<<<< HEAD
            'Flat1dDetector', 'Flat2dDetector', 'CircularDetector',
            'CylindricalDetector', 'SphericalDetector')
+=======
+           'Flat1dDetector', 'Flat2dDetector',
+           'CircularDetector')
+>>>>>>> upstream/master
 
 
 class Detector(object):
