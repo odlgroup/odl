@@ -611,8 +611,8 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
                            src_to_det_init=(0, 1, 0),
                            det_axes_init=((1, 0, 0), (0, 0, 1)))
 
-    def __init__(self, apart, dpart, src_radius, det_radius, det_curvature_radius=None,
-                 pitch=0, axis=(0, 0, 1), **kwargs):
+    def __init__(self, apart, dpart, src_radius, det_radius,
+                 det_curvature_radius=None, pitch=0, axis=(0, 0, 1), **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -631,7 +631,8 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
             Radius or radii of the detector curvature.
             If ``None``, a flat detector is used,
             if one value, a cylindrical detector is used,
-            if a sequence of two elements, e.g. [r, r], a spherical detector is used.
+            if a sequence of two elements, e.g. [r, r], a spherical detector
+            is used.
         pitch : float, optional
             Constant distance along ``axis`` that a point on the helix
             traverses when increasing the angle parameter by ``2 * pi``.
@@ -711,9 +712,10 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         Specifying curvature of the cylindrical detector:
 
         >>> apart = odl.uniform_partition(0, 4 * np.pi, 10)
-        >>> dpart = odl.uniform_partition([-np.pi / 2, -1], [np.pi / 2, 1], (20, 20))
-        >>> geom = ConeBeamGeometry(
-        ...     apart, dpart, src_radius=5, det_radius=10, det_curvature_radius=10)
+        >>> dpart = odl.uniform_partition(
+        ...     [-np.pi / 2, -1], [np.pi / 2, 1], (20, 20))
+        >>> geom = ConeBeamGeometry(apart, dpart,
+        ...     src_radius=5, det_radius=10, det_curvature_radius=10)
         >>> # (10*sin(pi/2), 10*cos(pi/2), 1)
         >>> np.round(geom.det_point_position(0, [ np.pi / 2, 1] ), 2)
         array([ 10., 0., 1.])
@@ -723,8 +725,8 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         >>> apart = odl.uniform_partition(0, 4 * np.pi, 10)
         >>> dpart = odl.uniform_partition([-np.pi / 2, -np.pi / 4],
         ...                               [ np.pi / 2,  np.pi / 4], (20, 20))
-        >>> geom = ConeBeamGeometry(
-        ...     apart, dpart, src_radius=5, det_radius=10, det_curvature_radius=[10, 10])
+        >>> geom = ConeBeamGeometry(apart, dpart,
+        ...     src_radius=5, det_radius=10, det_curvature_radius=[10, 10])
         >>> # 10*( cos(pi/4), 0, sin(pi/4))
         >>> np.round(geom.det_point_position(0, [ np.pi / 2, np.pi / 4] ), 2)
         array([ 7.07, 0.  , 7.07])
@@ -837,9 +839,10 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
                                                check_bounds=check_bounds)
             elif np.array(det_curvature_radius).shape == (2,):
                 if det_curvature_radius[0] != det_curvature_radius[1]:
-                    raise ValueError('Curvature of spherical detector - det_curvature_radius'
-                                     ' {} must be the same in both directions'
-                                     ''.format(det_curvature_radius))
+                    raise ValueError('Curvature of spherical detector - '
+                                     'det_curvature_radius {} must be the '
+                                     'same in both directions'
+                                     .format(det_curvature_radius))
                 detector = SphericalDetector(dpart,
                                              radius=det_curvature_radius[0],
                                              axes=det_axes_init,
@@ -899,7 +902,8 @@ class ConeBeamGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
             Radius or radii of the detector curvature.
             If ``None``, a flat detector is used,
             if one value, a cylindrical detector is used,
-            if a sequence of two elements, e.g. [r, r], a spherical detector is used.
+            if a sequence of two elements, e.g. [r, r], a spherical detector
+            is used.
         pitch : float, optional
             Constant distance along the rotation axis that a point on the
             helix traverses when increasing the angle parameter by
