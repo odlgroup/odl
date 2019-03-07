@@ -927,8 +927,10 @@ class CylindricalDetector(Detector):
         Initialize a detector with height 8 and circle radius 2 extending to
         90 degrees on both sides of the origin (a half cylinder).
 
-        >>> part = odl.uniform_partition([-np.pi / 2, -4], [np.pi / 2, 4], [10, 8])
-        >>> det = CylindricalDetector(part, axes=[(1, 0, 0), (0, 0, 1)], radius = 2)
+        >>> part = odl.uniform_partition(
+        ...     [-np.pi / 2, -4], [np.pi / 2, 4], [10, 8])
+        >>> det = CylindricalDetector(
+        ...     part, axes=[(1, 0, 0), (0, 0, 1)], radius = 2)
         >>> det.axes
         array([[ 1.,  0.,  0.],
                [ 0.,  0.,  1.]])
@@ -1014,8 +1016,10 @@ class CylindricalDetector(Detector):
         The method works with a single parameter, resulting in a single
         vector:
 
-        >>> part = odl.uniform_partition([-np.pi / 2, -4], [np.pi / 2, 4], (10, 8))
-        >>> det = CylindricalDetector(part, axes=[(1, 0, 0), (0, 0, 1)], radius = 2)
+        >>> part = odl.uniform_partition(
+        ...     [-np.pi / 2, -4], [np.pi / 2, 4], (10, 8))
+        >>> det = CylindricalDetector(
+        ...     part, axes=[(1, 0, 0), (0, 0, 1)], radius = 2)
         >>> det.surface([0, 0])
         array([ 0., 0.,  0.])
         >>> np.round(det.surface([np.pi / 2, 1]), 10)
@@ -1086,8 +1090,10 @@ class CylindricalDetector(Detector):
         The method works with a single parameter, resulting in a single
         vector:
 
-        >>> part = odl.uniform_partition([-np.pi / 2, -4], [np.pi / 2, 4], (10,8))
-        >>> det = CylindricalDetector(part, axes=[(1, 0, 0), (0, 0, 1)], radius = 2)
+        >>> part = odl.uniform_partition(
+        ...     [-np.pi / 2, -4], [np.pi / 2, 4], (10,8))
+        >>> det = CylindricalDetector(
+        ...     part, axes=[(1, 0, 0), (0, 0, 1)], radius = 2)
         >>> np.round(det.surface_deriv([0, 0]), 10)
         array([[ 2., -0.,  0.],
                [ 0.,  0.,  1.]])
@@ -1121,8 +1127,8 @@ class CylindricalDetector(Detector):
         deriv_phi[..., 1] = -np.cos(param[0])
         deriv_phi[..., 2] = 0
         deriv_phi *= self.radius
-        deriv_h = np.broadcast_to(
-                    (0, 0, 1), np.broadcast(*param).shape + (3,))
+        deriv_h = np.broadcast_to((0, 0, 1),
+                                  np.broadcast(*param).shape + (3,))
         deriv = np.stack((deriv_phi, deriv_h), axis=-2)
         deriv = np.matmul(deriv, np.transpose(self.rotation_matrix))
 
@@ -1158,8 +1164,10 @@ class CylindricalDetector(Detector):
         --------
         The method works with a single parameter, resulting in a float:
 
-        >>> part = odl.uniform_partition([-np.pi / 2, -4], [np.pi / 2, 4], (10,8))
-        >>> det = CylindricalDetector(part, axes=[(1, 0, 0), (0, 0, 1)], radius = 2)
+        >>> part = odl.uniform_partition(
+        ...     [-np.pi / 2, -4], [np.pi / 2, 4], (10,8))
+        >>> det = CylindricalDetector(
+        ...     part, axes=[(1, 0, 0), (0, 0, 1)], radius = 2)
         >>> det.surface_measure([0, 0])
         array([ 2.,  1.])
 
@@ -1184,8 +1192,8 @@ class CylindricalDetector(Detector):
         if squeeze_out:
             return np.array([self.radius, 1])
         else:
-            return np.broadcast_to(
-                    [self.radius, 1], np.broadcast(*param).shape + (2,))
+            return np.broadcast_to([self.radius, 1],
+                                   np.broadcast(*param).shape + (2,))
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -1235,7 +1243,8 @@ class SphericalDetector(Detector):
 
         >>> part = odl.uniform_partition([-np.pi / 2, -np.pi / 3],
         ...                              [ np.pi / 2,  np.pi / 3], [20, 10])
-        >>> det = SphericalDetector(part, axes=[(1, 0, 0), (0, 0, 1)], radius = 2)
+        >>> det = SphericalDetector(
+        ...     part, axes=[(1, 0, 0), (0, 0, 1)], radius = 2)
         >>> det.axes
         array([[ 1.,  0.,  0.],
                [ 0.,  0.,  1.]])
@@ -1325,7 +1334,8 @@ class SphericalDetector(Detector):
 
         >>> part = odl.uniform_partition([-np.pi / 2, -np.pi / 3],
         ...                              [ np.pi / 2,  np.pi / 3], [20, 10])
-        >>> det = SphericalDetector(part, axes=[(1, 0, 0), (0, 0, 1)], radius = 2)
+        >>> det = SphericalDetector(
+        ...     part, axes=[(1, 0, 0), (0, 0, 1)], radius = 2)
         >>> det.surface([0, 0])
         array([ 0., 0.,  0.])
         >>> np.round(det.surface([ np.pi / 2, np.pi / 3]), 2)
@@ -1400,7 +1410,8 @@ class SphericalDetector(Detector):
 
         >>> part = odl.uniform_partition([-np.pi / 2, -np.pi / 3],
         ...                              [ np.pi / 2,  np.pi / 3], [20, 10])
-        >>> det = SphericalDetector(part, axes=[(1, 0, 0), (0, 0, 1)], radius = 2)
+        >>> det = SphericalDetector(
+        ...     part, axes=[(1, 0, 0), (0, 0, 1)], radius = 2)
         >>> np.round(det.surface_deriv([0, 0]), 10)
         array([[ 2., -0.,  0.],
                [ 0.,  0.,  2.]])
@@ -1477,7 +1488,8 @@ class SphericalDetector(Detector):
 
         >>> part = odl.uniform_partition([-np.pi / 2, -np.pi / 3],
         ...                              [ np.pi / 2,  np.pi / 3], [20, 10])
-        >>> det = SphericalDetector(part, axes=[(1, 0, 0), (0, 0, 1)], radius = 2)
+        >>> det = SphericalDetector(
+        ...     part, axes=[(1, 0, 0), (0, 0, 1)], radius = 2)
         >>> det.surface_measure([0, 0])
         array([ 2.,  2.])
 
@@ -1500,10 +1512,10 @@ class SphericalDetector(Detector):
                              '{}'.format(param_in, self.params))
 
         if squeeze_out:
-            return np.array([self.radius]*2)
+            return np.array([self.radius] * 2)
         else:
-            return np.broadcast_to(
-                    [self.radius]*2, np.broadcast(*param).shape + (2,))
+            return np.broadcast_to([self.radius] * 2,
+                                   np.broadcast(*param).shape + (2,))
 
     def __repr__(self):
         """Return ``repr(self)``."""
