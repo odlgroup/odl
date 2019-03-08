@@ -1680,8 +1680,7 @@ class SeparableSum(Functional):
 
         >>> x = f_sum.domain.one()
         >>> f_sum.proximal([0.5, 2.0])(x)
-        array([[ 0.5,  0.5,  0.5],
-               [ 0. ,  0. ,  0. ]])
+        array([array([ 0.5,  0.5,  0.5]), array([ 0.,  0.,  0.])], dtype=object)
 
         Create functional ``f([x1, ... ,xn]) = \sum_i ||xi||_1``:
 
@@ -2008,7 +2007,7 @@ class NuclearNorm(Functional):
         This is the inverse of `_asvector`.
         """
         shape = self.domain[0, 0].shape + self.pshape
-        arr = np.empty(shape, dtype=self.domain.dtype)
+        arr = np.empty(shape, dtype=self.domain[0, 0].dtype)
         for i, xi in enumerate(vec):
             for j, xij in enumerate(xi):
                 arr[..., i, j] = xij
