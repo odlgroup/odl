@@ -205,6 +205,10 @@ class ProductSpace(LinearSpace):
             self.__weighting = weighting
             self.__weighting_type = 'array'
 
+        # Cached properties
+        self.__shape = None
+        self.__flat_spaces = None
+
     # --- Constructor args
 
     @property
@@ -261,8 +265,12 @@ class ProductSpace(LinearSpace):
         >>> r2_2.shape
         (3,)
         """
+        if self.__shape is not None:
+            return self.__shape
+
         if len(self) == 0:
-            return ()
+            self.__shape = ()
+            return self.__shape
 
         shape = [len(self)]
         spaces = self.spaces
@@ -275,7 +283,8 @@ class ProductSpace(LinearSpace):
             spaces = spaces[0].spaces
             shape.append(len(spaces))
 
-        return tuple(shape)
+        self.__shape = tuple(shape)
+        return self.__shape
 
     @property
     def size(self):
@@ -319,6 +328,52 @@ class ProductSpace(LinearSpace):
     def is_complex(self):
         """True if this is a space of complex valued vectors."""
         return all(spc.is_complex for spc in self.spaces)
+
+    def base_space(self, flat=False):
+        """For power spaces, return the base.
+
+        Parameters
+        ----------
+        flat : bool, optional
+            If ``True``, return the base of the flattened variant of a
+            higher-order power space. Otherwise, return the base of the
+            first level.
+
+        Returns
+        -------
+        base_space : `LinearSpace`
+            The base of the power space.
+
+        Raises
+        ------
+        TypeError
+            If ``self`` is not a power space at the requested level.
+
+        Examples
+        --------
+        >>> pspace = odl.ProductSpace(odl.rn(4), 3)
+        >>> pspace2 = odl.ProductSpace(pspace, 2)
+        >>> pspace2.base_space()
+        ProductSpace(rn(4), 3)
+        >>> pspace2.base_space(flat=True)
+        rn(4)
+        """
+        if len(self) == 0:
+            raise ValueError('base undefined for spaces of size 0')
+
+        if not flat:
+            if not self.is_power_space:
+                raise TypeError('{!r} is not a power space'.format(self))
+            return self.spaces[0]
+
+        flat = self._flatten()
+        if not all(space == flat[0] for space in flat[1:]):
+            # TODO(kohr-h): go as far as possible instead of raising an
+            # exception?
+            raise TypeError(
+                '{!r} is not a power space at the lowest level'.format(self)
+            )
+        return flat[0]
 
     # --- Conversion
 
@@ -367,6 +422,9 @@ class ProductSpace(LinearSpace):
     # --- Element handling
 
     def _flatten(self, inputs=None):
+        if inputs is None and self.__flat_spaces is not None:
+            return self.__flat_spaces
+
         spaces = self.spaces
         size = 1
         for n in self.shape:
@@ -377,6 +435,8 @@ class ProductSpace(LinearSpace):
                     inputs = sum((tuple(inputs[i]) for i in range(size)), ())
             except AttributeError:
                 break
+
+        self.__flat_spaces = spaces
         if inputs is None:
             return spaces
         else:
