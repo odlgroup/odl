@@ -27,8 +27,8 @@ def matrix_representation(op):
     Parameters
     ----------
     op : `Operator`
-        The linear operator of which one wants a matrix representation.
-        If the domain or range is a `ProductSpace`, it must be a power-space.
+        Linear operator of which a matrix representation should be computed.
+        Its ``domain`` and ``range`` must be `TensorSpace`'s.
 
     Returns
     -------
@@ -50,32 +50,6 @@ def matrix_representation(op):
            [4, 5, 6],
            [7, 8, 9]])
 
-    It also works with `ProductSpace`'s and higher dimensional `TensorSpace`'s.
-    In this case, the returned "matrix" will also be higher dimensional:
-
-    >>> space = odl.uniform_discr([0, 0], [2, 2], (2, 2))
-    >>> grad = odl.Gradient(space)
-    >>> tensor = odl.matrix_representation(grad)
-    >>> tensor.shape == (2, 2, 2, 2, 2)
-    True
-
-    Since the "matrix" is now higher dimensional, we need to use e.g.
-    `numpy.tensordot` if we want to compute with the matrix representation:
-
-    >>> x = space.element(lambda x: x[0] ** 2 + 2 * x[1] ** 2)
-    >>> grad(x)
-    array([[[ 2.  ,  2.  ],
-            [-2.75, -6.75]],
-    <BLANKLINE>
-           [[ 4.  , -4.75],
-            [ 4.  , -6.75]]])
-    >>> np.tensordot(tensor, x, axes=grad.domain.ndim)
-    array([[[ 2.  ,  2.  ],
-            [-2.75, -6.75]],
-    <BLANKLINE>
-           [[ 4.  , -4.75],
-            [ 4.  , -6.75]]])
-
     Notes
     ----------
     The algorithm works by letting the operator act on all unit vectors, and
@@ -85,21 +59,14 @@ def matrix_representation(op):
     if not op.is_linear:
         raise ValueError('the operator is not linear')
 
-    if not (isinstance(op.domain, TensorSpace) or
-            (isinstance(op.domain, ProductSpace) and
-             op.domain.is_power_space and
-             all(isinstance(spc, TensorSpace) for spc in op.domain))):
-        raise TypeError('operator domain {!r} is neither `TensorSpace` '
-                        'nor `ProductSpace` with only equal `TensorSpace` '
-                        'components'.format(op.domain))
-
-    if not (isinstance(op.range, TensorSpace) or
-            (isinstance(op.range, ProductSpace) and
-             op.range.is_power_space and
-             all(isinstance(spc, TensorSpace) for spc in op.range))):
-        raise TypeError('operator range {!r} is neither `TensorSpace` '
-                        'nor `ProductSpace` with only equal `TensorSpace` '
-                        'components'.format(op.range))
+    if not isinstance(op.domain, TensorSpace):
+        raise ValueError(
+            '`op.domain` must be a `TensorSpace`, got {!r}'.format(op.domain)
+        )
+    if not isinstance(op.range, TensorSpace):
+        raise ValueError(
+            '`op.range` must be a `TensorSpace`, got {!r}'.format(op.range)
+        )
 
     # Generate the matrix
     dtype = np.promote_types(op.domain.dtype, op.range.dtype)
@@ -274,14 +241,15 @@ def as_scipy_operator(op):
 
     Examples
     --------
-    Wrap operator and solve simple problem (here toy problem ``Ix = b``)
+    Wrap operator and solve simple problem (here the toy problem
+    ``2 * x = b``):
 
-    >>> op = odl.IdentityOperator(odl.rn(3))
-    >>> scipy_op = as_scipy_operator(op)
-    >>> import scipy.sparse.linalg as scipy_solvers
-    >>> result, status = scipy_solvers.cg(scipy_op, [0, 1, 0])
+    >>> op = odl.ScalingOperator(odl.rn(3), 2.0)
+    >>> scipy_op = odl.as_scipy_operator(op)
+    >>> from scipy.sparse.linalg import cg as scipy_cg
+    >>> result, status = scipy_cg(A=scipy_op, b=[0, 1, 0], atol=1e-4)
     >>> result
-    array([ 0.,  1.,  0.])
+    array([ 0. ,  0.5,  0. ])
 
     Notes
     -----
