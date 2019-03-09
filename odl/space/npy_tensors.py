@@ -695,13 +695,41 @@ class NumpyTensorSpace(TensorSpace):
         if other is self:
             return True
 
-        return (super(NumpyTensorSpace, self).__eq__(other) and
-                self.weighting == other.weighting)
+        if self.weighting_type != getattr(other, 'weighting_type', None):
+            return False
+
+        weighting_equal = (
+            (
+                self.weighting_type == 'const'
+                and self.weighting == other.weighting
+            ) or (
+                self.weighting_type == 'array'
+                and self.weighting is other.weighting
+            )
+        )
+
+        return (
+            super(NumpyTensorSpace, self).__eq__(other)
+            and self.exponent == other.exponent
+            and weighting_equal
+        )
 
     def __hash__(self):
         """Return ``hash(self)``."""
-        return hash((super(NumpyTensorSpace, self).__hash__(),
-                     self.weighting))
+        if self.weighting_type == 'const':
+            weighting_hash = hash(self.weighting)
+        elif self.weighting_type == 'array':
+            weighting_hash = hash(self.weighting.tobytes())
+        else:
+            raise RuntimeError
+
+        return hash(
+            (
+                super(NumpyTensorSpace, self).__hash__(),
+                self.exponent,
+                weighting_hash
+            )
+        )
 
     @property
     def byaxis(self):
