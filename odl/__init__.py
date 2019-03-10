@@ -30,7 +30,6 @@ __all__ = (
     'solvers',
     'tomo',
     'trafos',
-    'ufunc_ops',
     'util',
 )
 
@@ -68,9 +67,9 @@ from . import phantom
 from . import solvers
 from . import tomo
 from . import trafos
-if False:
-    from . import ufunc_ops
 from . import util
+
+from ._ufunc import ufunc_ops, ufunc_funcs
 
 # Add `test` function to global namespace so users can run `odl.test()`
 from .util import test
@@ -81,3 +80,4 @@ __all__ += operator.__all__
 __all__ += set.__all__
 __all__ += space.__all__
 __all__ += ('test',)
+__all__ += ('ufunc_ops', 'ufunc_funcs')
