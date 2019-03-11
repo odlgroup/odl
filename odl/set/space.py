@@ -18,11 +18,8 @@ __all__ = ('LinearSpace',)
 
 
 class LinearSpace(Set):
-    """Abstract linear vector space.
 
-    Its elements are represented as instances of the
-    `LinearSpaceElement` class.
-    """
+    """Abstract linear vector space."""
 
     def __init__(self, field):
         """Initialize a new instance.
@@ -182,6 +179,11 @@ class LinearSpace(Set):
             Result of the linear combination. If ``out`` was provided,
             the returned object is a reference to it.
 
+        Raises
+        ------
+        LinearSpaceTypeError
+            If ``out`` is given but not an element of this space.
+
         Notes
         -----
         The elements ``out``, ``x1`` and ``x2`` may be aligned, thus a call
@@ -195,33 +197,26 @@ class LinearSpace(Set):
         if out is None:
             out = self.element()
         elif out not in self:
-            raise LinearSpaceTypeError('`out` {!r} is not an element of {!r}'
-                                       ''.format(out, self))
-        if self.field is not None and a not in self.field:
-            raise LinearSpaceTypeError('`a` {!r} not an element of the field '
-                                       '{!r} of {!r}'
-                                       ''.format(a, self.field, self))
-        if x1 not in self:
-            raise LinearSpaceTypeError('`x1` {!r} is not an element of {!r}'
-                                       ''.format(x1, self))
+            raise LinearSpaceTypeError(
+                '`out` {!r} is not an element of {!r}'.format(out, self)
+            )
 
-        if b is None:  # Single element
+        if self.field is not None:
+            a = self.field.element(a)
+
+        x1 = self.element(x1)
+
+        if b is None:
             if x2 is not None:
                 raise ValueError('`x2` provided but not `b`')
             self._lincomb(a, x1, 0, x1, out)
             return out
 
-        else:  # Two elements
-            if self.field is not None and b not in self.field:
-                raise LinearSpaceTypeError('`b` {!r} not an element of the '
-                                           'field {!r} of {!r}'
-                                           ''.format(b, self.field, self))
-            if x2 not in self:
-                raise LinearSpaceTypeError('`x2` {!r} is not an element of '
-                                           '{!r}'.format(x2, self))
+        if self.field is not None:
+            b = self.field.element(b)
 
-            self._lincomb(a, x1, b, x2, out)
-
+        x2 = self.element(x2)
+        self._lincomb(a, x1, b, x2, out)
         return out
 
     def dist(self, x1, x2):
@@ -237,12 +232,8 @@ class LinearSpace(Set):
         dist : float
             Distance between ``x1`` and ``x2``.
         """
-        if x1 not in self:
-            raise LinearSpaceTypeError('`x1` {!r} is not an element of '
-                                       '{!r}'.format(x1, self))
-        if x2 not in self:
-            raise LinearSpaceTypeError('`x2` {!r} is not an element of '
-                                       '{!r}'.format(x2, self))
+        x1 = self.element(x1)
+        x2 = self.element(x2)
         return float(self._dist(x1, x2))
 
     def norm(self, x):
@@ -258,9 +249,7 @@ class LinearSpace(Set):
         norm : float
             Norm of ``x``.
         """
-        if x not in self:
-            raise LinearSpaceTypeError('`x` {!r} is not an element of '
-                                       '{!r}'.format(x, self))
+        x = self.element(x)
         return float(self._norm(x))
 
     def inner(self, x1, x2):
@@ -276,17 +265,13 @@ class LinearSpace(Set):
         inner : `LinearSpace.field` element
             Inner product of ``x1`` and ``x2``.
         """
-        if x1 not in self:
-            raise LinearSpaceTypeError('`x1` {!r} is not an element of '
-                                       '{!r}'.format(x1, self))
-        if x2 not in self:
-            raise LinearSpaceTypeError('`x2` {!r} is not an element of '
-                                       '{!r}'.format(x2, self))
+        x1 = self.element(x1)
+        x2 = self.element(x2)
         inner = self._inner(x1, x2)
         if self.field is None:
             return inner
         else:
-            return self.field.element(self._inner(x1, x2))
+            return self.field.element(inner)
 
     def multiply(self, x1, x2, out=None):
         """Return the pointwise product of ``x1`` and ``x2``.
@@ -311,17 +296,17 @@ class LinearSpace(Set):
                 '`out` {!r} is not an element of {!r}'.format(out, self)
             )
 
-        field = () if self.field is None else self.field
-        if not (x1 in field or x1 in self):
-            raise LinearSpaceTypeError(
-                '`x1` {!r} is not an element of {!r} or its field'
-                ''.format(out, self)
-            )
-        if not (x2 in field or x2 in self):
-            raise LinearSpaceTypeError(
-                '`x2` {!r} is not an element of {!r} or its field'
-                ''.format(out, self)
-            )
+        if np.isscalar(x1):
+            if self.field is not None:
+                x1 = self.field.element(x1)
+        else:
+            x1 = self.element(x1)
+
+        if np.isscalar(x2):
+            if self.field is not None:
+                x2 = self.field.element(x2)
+        else:
+            x2 = self.element(x2)
 
         self._multiply(x1, x2, out)
         return out
@@ -351,17 +336,17 @@ class LinearSpace(Set):
                 '`out` {!r} is not an element of {!r}'.format(out, self)
             )
 
-        field = () if self.field is None else self.field
-        if not (x1 in field or x1 in self):
-            raise LinearSpaceTypeError(
-                '`x1` {!r} is not an element of {!r} or its field'
-                ''.format(out, self)
-            )
-        if not (x2 in field or x2 in self):
-            raise LinearSpaceTypeError(
-                '`x2` {!r} is not an element of {!r} or its field'
-                ''.format(out, self)
-            )
+        if np.isscalar(x1):
+            if self.field is not None:
+                x1 = self.field.element(x1)
+        else:
+            x1 = self.element(x1)
+
+        if np.isscalar(x2):
+            if self.field is not None:
+                x2 = self.field.element(x2)
+        else:
+            x2 = self.element(x2)
 
         self._divide(x1, x2, out)
         return out
@@ -420,8 +405,9 @@ class LinearSpace(Set):
         from odl.space import ProductSpace
 
         if not isinstance(other, LinearSpace):
-            raise TypeError('Can only multiply with `LinearSpace`, got {!r}'
-                            ''.format(other))
+            raise TypeError(
+                '`other` must be a `LinearSpace`, got {!r}'.format(other)
+            )
 
         return ProductSpace(self, other)
 
