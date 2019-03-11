@@ -616,8 +616,13 @@ class ProductSpace(LinearSpace):
         ----------
         func : callable
             Function that should be applied to each component of ``x``.
-            It must take 1 argument and return the result. It may choose to
-            mutate the input in-place.
+            Must be of the form ::
+
+                func(x[i]) -> result
+
+            i.e., accept 1 argument, a component of ``x``, and return the
+            result for that component. It may choose to mutate the input
+            in-place.
         x : numpy.ndarray
             Element to which ``func`` should be applied. It must be an
             element of this space, i.e., it must satisfy ``elem in self``.
@@ -646,10 +651,55 @@ class ProductSpace(LinearSpace):
         return res.reshape(self.shape)
 
 
+    def apply2(self, func, x):
+        """Apply an index-dependent function to each component of an element.
+
+        Parameters
+        ----------
+        func : callable
+            Function that should be applied to each component of ``x``.
+            Must be of the form ::
+
+                func(x[i], i) -> result
+
+            i.e., accept 2 arguments, a component of ``x`` and the
+            (multi-) index of the location of that component, and return the
+            result for that component. It may choose to mutate the input
+            in-place.
+        x : numpy.ndarray
+            Element to which ``func`` should be applied. It must be an
+            element of this space, i.e., it must satisfy ``elem in self``.
+
+        Returns
+        -------
+        new_elem : numpy.ndarray
+            Result of applying the function componentwise.
+
+        Examples
+        --------
+        >>> pspace = odl.ProductSpace(odl.rn(2), odl.rn(3))
+        >>> x = pspace.element([[1, -1], [2, 0, -3]])
+        >>> y = pspace.element([[1, 0], [0, 1, 2]])
+        >>> pspace.apply2(lambda v, i: v * y[i], x)
+        array([array([ 1., -0.]), array([ 0.,  0., -6.])], dtype=object)
+        """
+        if x not in self:
+            raise ValueError(
+                '`x` {!r} is not an element of {!r}'.format(x, self)
+            )
+
+        x_flat = x.ravel()
+        res = np.empty(self.size, dtype=object)
+        for i in range(self.size):
+            idx = np.unravel_index(i, self.shape)
+            res[i] = func(x_flat[i], idx)
+        return res.reshape(self.shape)
+
+
     def __contains__(self, other):
         """Return ``other in self``."""
         # TODO: doctest
-        if not isinstance(other, np.ndarray):
+        if not (isinstance(other, np.ndarray) and other.dtype == object):
             return False
         return all(oi in spc for oi, spc in zip(other, self.spaces))
 
