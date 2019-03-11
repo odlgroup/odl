@@ -158,26 +158,30 @@ def adam(f, x, learning_rate=1e-3, beta1=0.9, beta2=0.999, eps=1e-8,
     *Adam: A Method for Stochastic Optimization*, ICLR 2015.
     """
     grad = f.gradient
-    if x not in grad.domain:
-        raise TypeError('`x` {!r} is not in the domain of `grad` {!r}'
-                        ''.format(x, grad.domain))
+    dom = f.domain
 
-    m = grad.domain.zero()
-    v = grad.domain.zero()
+    if x not in dom:
+        raise TypeError(
+            '`x` {!r} is not in the domain {!r} of `f`'.format(x, dom)
+        )
 
-    grad_x = grad.range.element()
+    m = dom.zero()
+    v = dom.zero()
+
+    gx = dom.element()
     for _ in range(maxiter):
-        grad(x, out=grad_x)
+        grad(x, out=gx)
 
-        if grad_x.norm() < tol:
+        if dom.norm(gx) < tol:
             return
 
-        m.lincomb(beta1, m, 1 - beta1, grad_x)
-        v.lincomb(beta2, v, 1 - beta2, grad_x ** 2)
-
+        # m = beta1 * m + (1 - beta1) * grad(x)
+        dom.lincomb(beta1, m, 1 - beta1, gx, out=m)
+        # v = beta2 * v + (1 - beta2) * grad(x) ** 2
+        dom.lincomb(beta2, v, 1 - beta2, gx ** 2, out=v)
         step = learning_rate * np.sqrt(1 - beta2) / (1 - beta1)
-
-        x.lincomb(1, x, -step, m / (np.sqrt(v) + eps))
+        # x = x - step * m / (sqrt(v) + eps)
+        dom.lincomb(1, x, -step, m / (np.sqrt(v) + eps), out=x)
 
         if callback is not None:
             callback(x)

@@ -95,10 +95,12 @@ def landweber(op, x, rhs, niter, omega=None, projection=None, callback=None):
     <https://en.wikipedia.org/wiki/Landweber_iteration>`_.
     """
     # TODO: add a book reference
+    dom = op.domain
 
-    if x not in op.domain:
-        raise TypeError('`x` {!r} is not in the domain of `op` {!r}'
-                        ''.format(x, op.domain))
+    if x not in dom:
+        raise TypeError(
+            '`x` {!r} is not in the domain of `op` {!r}'.format(x, dom)
+        )
 
     if omega is None:
         omega = 1 / op.norm(estimate=True) ** 2
@@ -111,7 +113,7 @@ def landweber(op, x, rhs, niter, omega=None, projection=None, callback=None):
         op(x, out=tmp_ran)
         tmp_ran -= rhs
         op.derivative(x).adjoint(tmp_ran, out=tmp_dom)
-        x.lincomb(1, x, -omega, tmp_dom)
+        dom.lincomb(1, x, -omega, tmp_dom, out=x)
 
         if projection is not None:
             projection(x)
@@ -159,20 +161,25 @@ def conjugate_gradient(op, x, rhs, niter, callback=None):
     """
     # TODO: add a book reference
     # TODO: update doc
+    dom = op.domain
+    ran = op.range
 
-    if op.domain != op.range:
-        raise ValueError('operator needs to be self-adjoint')
+    if dom != ran:
+        raise ValueError(
+            '`op.domain` and `op.range` must coincide, but {!r} != {!r}'
+            ''.format(dom, ran)
+        )
 
-    if x not in op.domain:
+    if x not in dom:
         raise TypeError('`x` {!r} is not in the domain of `op` {!r}'
-                        ''.format(x, op.domain))
+                        ''.format(x, dom))
 
     r = op(x)
-    r.lincomb(1, rhs, -1, r)       # r = rhs - A x
+    dom.lincomb(1, rhs, -1, r, out=r)  # r = rhs - A x
     p = r.copy()
-    d = op.domain.element()  # Extra storage for storing A x
+    d = dom.element()  # Extra storage for storing A x
 
-    sqnorm_r_old = r.norm() ** 2  # Only recalculate norm after update
+    sqnorm_r_old = dom.norm(r) ** 2  # Only recalculate norm after update
 
     if sqnorm_r_old == 0:  # Return if no step forward
         return
@@ -180,22 +187,21 @@ def conjugate_gradient(op, x, rhs, niter, callback=None):
     for _ in range(niter):
         op(p, out=d)  # d = A p
 
-        inner_p_d = p.inner(d)
-
+        inner_p_d = dom.inner(p, d)
         if inner_p_d == 0.0:  # Return if step is 0
             return
 
         alpha = sqnorm_r_old / inner_p_d
 
-        x.lincomb(1, x, alpha, p)            # x = x + alpha*p
-        r.lincomb(1, r, -alpha, d)           # r = r - alpha*d
+        dom.lincomb(1, x, alpha, p, out=x)   # x = x + alpha * p
+        dom.lincomb(1, r, -alpha, d, out=r)  # r = r - alpha * d
 
-        sqnorm_r_new = r.norm() ** 2
+        sqnorm_r_new = dom.norm(r) ** 2
 
         beta = sqnorm_r_new / sqnorm_r_old
         sqnorm_r_old = sqnorm_r_new
 
-        p.lincomb(1, r, beta, p)                       # p = s + b * p
+        dom.lincomb(1, r, beta, p, out=p)    # p = s + b * p
 
         if callback is not None:
             callback(x)
