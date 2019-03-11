@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2019 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -7,11 +7,12 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 from __future__ import division
+
 import pytest
 
 import odl
-from odl.set.sets import (EmptySet, UniversalSet, Strings, ComplexNumbers,
-                          RealNumbers, Integers)
+from odl.set.sets import (
+    ComplexNumbers, EmptySet, Integers, RealNumbers, Strings)
 
 
 def test_empty_set():
@@ -32,28 +33,6 @@ def test_empty_set():
 
     # element
     assert X.element() is None
-
-
-def test_universal_set():
-    X = UniversalSet()
-    Z = Integers()
-
-    # __contains
-    assert None in X
-    assert 1 in X
-
-    # Contains_set
-    assert X.contains_set(X)
-    assert X.contains_set(Z)
-    assert not X.contains_set(1)
-
-    # __eq__
-    assert X == X
-    assert X != Z
-
-    # element
-    assert X.element() is None
-    assert X.element(1) == 1
 
 
 def test_strings():

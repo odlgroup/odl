@@ -18,9 +18,19 @@ from past.types.basestring import basestring
 
 from odl.util import is_int_dtype, is_numeric_dtype, is_real_dtype, unique
 
-__all__ = ('Set', 'EmptySet', 'UniversalSet', 'Field', 'Integers',
-           'RealNumbers', 'ComplexNumbers', 'Strings', 'CartesianProduct',
-           'SetUnion', 'SetIntersection', 'FiniteSet')
+__all__ = (
+    'Set',
+    'EmptySet',
+    'Strings',
+    'Field',
+    'ComplexNumbers',
+    'RealNumbers',
+    'Integers',
+    'CartesianProduct',
+    'SetUnion',
+    'SetIntersection',
+    'FiniteSet',
+)
 
 
 class Set(object):
@@ -184,34 +194,6 @@ class EmptySet(Set):
     def element(self, inp=None):
         """Return None."""
         return None
-
-
-class UniversalSet(Set):
-
-    """Set of all objects.
-
-    Forget about set theory for a moment :-).
-    """
-
-    def __contains__(self, other):
-        """Return ``other in self``, always ``True``."""
-        return True
-
-    def contains_set(self, other):
-        """Return ``True`` for any set."""
-        return isinstance(other, Set)
-
-    def __eq__(self, other):
-        """Return ``self == other``."""
-        return isinstance(other, UniversalSet)
-
-    def __hash__(self):
-        """Return ``hash(self)``."""
-        return hash(type(self))
-
-    def element(self, inp=None):
-        """Return ``inp`` in any case."""
-        return inp
 
 
 class Strings(Set):

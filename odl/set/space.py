@@ -11,10 +11,10 @@
 from __future__ import print_function, division, absolute_import
 import numpy as np
 
-from odl.set.sets import Field, Set, UniversalSet
+from odl.set.sets import Field, Set
 
 
-__all__ = ('LinearSpace', 'UniversalSpace')
+__all__ = ('LinearSpace',)
 
 
 class LinearSpace(Set):
@@ -428,77 +428,6 @@ class LinearSpace(Set):
     def __str__(self):
         """Return ``str(self)``."""
         return repr(self)
-
-
-class UniversalSpace(LinearSpace):
-
-    """A dummy linear space class.
-
-    Mostly raising `LinearSpaceNotImplementedError`.
-    """
-
-    def __init__(self):
-        """Initialize a new instance."""
-        super(UniversalSpace, self).__init__(field=UniversalSet())
-
-    def element(self, inp=None):
-        """Dummy element creation method.
-
-        raises `LinearSpaceNotImplementedError`.
-        """
-        raise LinearSpaceNotImplementedError
-
-    def _lincomb(self, a, x1, b, x2, out):
-        """Dummy linear combination.
-
-        raises `LinearSpaceNotImplementedError`.
-        """
-        raise LinearSpaceNotImplementedError
-
-    def _dist(self, x1, x2):
-        """Dummy distance method.
-
-        raises `LinearSpaceNotImplementedError`.
-        """
-        raise LinearSpaceNotImplementedError
-
-    def _norm(self, x):
-        """Dummy norm method.
-
-        raises `LinearSpaceNotImplementedError`.
-        """
-        raise LinearSpaceNotImplementedError
-
-    def _inner(self, x1, x2):
-        """Dummy inner product method.
-
-        raises `LinearSpaceNotImplementedError`.
-        """
-        raise LinearSpaceNotImplementedError
-
-    def _multiply(self, x1, x2, out):
-        """Dummy multiplication method.
-
-        raises `LinearSpaceNotImplementedError`."""
-        raise LinearSpaceNotImplementedError
-
-    def _divide(self, x1, x2, out):
-        """Dummy division method.
-
-        raises `LinearSpaceNotImplementedError`.
-        """
-        raise LinearSpaceNotImplementedError
-
-    def __eq__(self, other):
-        """Return ``self == other``.
-
-        Dummy check, ``True`` for any `LinearSpace`.
-        """
-        return isinstance(other, LinearSpace)
-
-    def __contains__(self, other):
-        """Return ``other in self``."""
-        return NotImplementedError('abstract method')
 
 
 class LinearSpaceTypeError(TypeError):
