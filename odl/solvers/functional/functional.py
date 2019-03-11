@@ -8,18 +8,19 @@
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 import numpy as np
 
+from odl.operator.default_ops import (
+    ConstantOperator, IdentityOperator, InnerProductOperator)
 from odl.operator.operator import (
-    Operator, OperatorComp, OperatorLeftScalarMult, OperatorRightScalarMult,
-    OperatorRightVectorMult, OperatorSum, OperatorPointwiseProduct)
-from odl.operator.default_ops import (IdentityOperator, ConstantOperator)
-from odl.solvers.nonsmooth import (proximal_arg_scaling, proximal_translation,
-                                   proximal_quadratic_perturbation,
-                                   proximal_const_func, proximal_convex_conj)
-from odl.util import signature_string, indent
-
+    Operator, OperatorComp, OperatorLeftScalarMult, OperatorPointwiseProduct,
+    OperatorRightScalarMult, OperatorRightVectorMult, OperatorSum)
+from odl.solvers.nonsmooth import (
+    proximal_arg_scaling, proximal_const_func, proximal_convex_conj,
+    proximal_quadratic_perturbation, proximal_translation)
+from odl.util import indent, signature_string
 
 __all__ = ('Functional', 'FunctionalLeftScalarMult',
            'FunctionalRightScalarMult', 'FunctionalComp',
@@ -204,7 +205,7 @@ class Functional(Operator):
         -------
         derivative : `Operator`
         """
-        return self.gradient(point).T
+        return InnerProductOperator(self.domain, self.gradient(point))
 
     def translated(self, shift):
         """Return a translation of the functional.
@@ -1399,33 +1400,18 @@ class BregmanDistance(Functional):
             raise TypeError('`functional` {} not an instance of ``Functional``'
                             ''.format(functional))
         self.__functional = functional
-
-        if point not in functional.domain:
-            raise ValueError('`point` {} is not in `functional.domain` {}'
-                             ''.format(point, functional.domain))
-        self.__point = point
-
-        if subgrad not in functional.domain:
-            raise TypeError(
-                '`subgrad` must be an element in `functional.domain`, got '
-                '{}'.format(subgrad))
-        self.__subgrad = subgrad
-
-        self.__constant = (
-            -functional(point)
-            + functional.domain.inner(subgrad, point)
-        )
-
+        space = functional.domain
+        self.__point = space.element(point)
+        self.__subgrad = space.element(subgrad)
+        self.__constant = -functional(point) + space.inner(subgrad, point)
         self.__bregman_dist = FunctionalQuadraticPerturb(
-            functional, linear_term=-subgrad, constant=self.__constant)
-
-        grad_lipschitz = (
-            functional.grad_lipschitz + functional.domain.norm(subgrad)
+            functional, linear_term=-subgrad, constant=self.__constant
         )
+        grad_lipschitz = functional.grad_lipschitz + space.norm(subgrad)
 
         super(BregmanDistance, self).__init__(
-            space=functional.domain, linear=False,
-            grad_lipschitz=grad_lipschitz)
+            space, linear=False, grad_lipschitz=grad_lipschitz
+        )
 
     @property
     def functional(self):
@@ -1459,15 +1445,10 @@ class BregmanDistance(Functional):
     @property
     def gradient(self):
         """Gradient operator of the functional."""
-        try:
-            op_to_return = self.functional.gradient
-        except NotImplementedError:
-            raise NotImplementedError(
-                '`self.functional.gradient` is not implemented for '
-                '`self.functional` {}'.format(self.functional))
-
-        op_to_return = op_to_return - ConstantOperator(self.subgrad)
-        return op_to_return
+        return (
+            self.functional.gradient
+            - ConstantOperator(self.domain, self.subgrad)
+        )
 
     def __repr__(self):
         '''Return ``repr(self)``.'''

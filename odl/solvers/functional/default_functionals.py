@@ -147,7 +147,10 @@ class LpNorm(Functional):
 
                 def _call(self, x):
                     """Apply the gradient operator to the given point."""
-                    return np.sign(x)
+                    if isinstance(self.domain, ProductSpace):
+                        return self.domain.apply(np.sign, x)
+                    else:
+                        return np.sign(x)
 
                 def derivative(self, x):
                     """Derivative is a.e. zero."""
@@ -1132,13 +1135,21 @@ class KullbackLeibler(Functional):
         with np.errstate(invalid='ignore', divide='ignore'):
             if self.prior is None:
                 # < x - 1 - log(x), one >
-                tmp = np.log(x)
+                if isinstance(self.domain, ProductSpace):
+                    tmp = self.domain.apply(np.log, x)
+                else:
+                    tmp = np.log(x)
                 tmp += 1
                 tmp -= x
                 res = -self.domain.inner(tmp, self.domain.one())
             else:
                 # < x - prior + xlogy(prior, prior/x), one >
-                tmp = scipy.special.xlogy(self.prior, self.prior / x)
+                if isinstance(self.domain, ProductSpace):
+                    tmp = self.domain.apply2(
+                        lambda v, i: scipy.special.xlogy(g[i], g[i] / v), x
+                    )
+                else:
+                    tmp = scipy.special.xlogy(self.prior, self.prior / x)
                 tmp -= self.prior
                 tmp += x
                 res = -self.domain.inner(tmp, self.domain.one())

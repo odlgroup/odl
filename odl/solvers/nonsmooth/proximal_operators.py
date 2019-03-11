@@ -21,14 +21,14 @@ References
 Foundations and Trends in Optimization, 1 (2014), pp 127-239.
 """
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
 import numpy as np
 
 from odl.operator import (
-    Operator, IdentityOperator, ConstantOperator, DiagonalOperator,
-    PointwiseNorm, MultiplyOperator)
+    ConstantOperator, DiagonalOperator, IdentityOperator, MultiplyOperator,
+    Operator, PointwiseNorm)
 from odl.space import ProductSpace
-
 
 __all__ = ('combine_proximals', 'proximal_convex_conj', 'proximal_translation',
            'proximal_arg_scaling', 'proximal_quadratic_perturbation',
@@ -799,7 +799,7 @@ def proximal_l2(space, lam=1, g=None):
                 if step < 1.0:
                     self.range.lincomb(1 - step, x, out=out)
                 else:
-                    out[:] = 0
+                    self.range.lincomb(0, out, out=out)
 
             else:
                 x_norm = self.domain.norm(x - g) * (1 + eps)
@@ -811,7 +811,7 @@ def proximal_l2(space, lam=1, g=None):
                 if step < 1.0:
                     self.range.lincomb(1 - step, x, step, g, out=out)
                 else:
-                    out[:] = g
+                    self.range.lincomb(1, g, out=out)
 
     return ProximalL2
 
