@@ -15,8 +15,7 @@ import numpy as np
 from odl.discr import DiscretizedSpace, Divergence, Gradient
 from odl.discr.discr_utils import _normalize_interp, per_axis_interpolator
 from odl.operator import Operator, PointwiseInner
-from odl.space import ProductSpace
-from odl.util import indent, signature_string
+from odl.util import repr_string, signature_string_parts
 
 __all__ = ('LinDeformFixedTempl', 'LinDeformFixedDisp', 'linear_deform')
 
@@ -271,13 +270,12 @@ class LinDeformFixedTempl(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        posargs = [self.template]
-        optargs = [
-            ('domain', self.domain, self.template.space.tangent_bundle),
-            ('interp', self.interp, 'linear'),
-        ]
-        inner_str = signature_string(posargs, optargs, mod='!r', sep=',\n')
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
+        posargs = [self.range, self.template]
+        optargs = [('interp', self.interp, 'linear')]
+        inner_parts = signature_string_parts(posargs, optargs)
+        return repr_string(
+            self.__class__.__name__, inner_parts, allow_mixed_seps=False
+        )
 
 
 class LinDeformFixedDisp(Operator):
@@ -368,7 +366,14 @@ class LinDeformFixedDisp(Operator):
             domain=domain, range=domain, linear=True
         )
 
-        self.__displacement = displacement
+        try:
+            self.__displacement = (self.domain.tangent_bundle).element(
+                displacement
+            )
+        except (ValueError, TypeError):
+            self.__displacement = (self.domain.tangent_bundle).element(
+                [displacement]
+            )
         self.__interp_byaxis = _normalize_interp(interp, domain.ndim)
 
     @property
@@ -428,13 +433,12 @@ class LinDeformFixedDisp(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        posargs = [self.displacement]
-        optargs = [
-            ('templ_space', self.domain, self.displacement.space[0]),
-            ('interp', self.interp, 'linear'),
-        ]
-        inner_str = signature_string(posargs, optargs, mod='!r', sep=',\n')
-        return '{}(\n{}\n)'.format(self.__class__.__name__, indent(inner_str))
+        posargs = [self.domain, self.displacement]
+        optargs = [('interp', self.interp, 'linear')]
+        inner_parts = signature_string_parts(posargs, optargs)
+        return repr_string(
+            self.__class__.__name__, inner_parts, allow_mixed_seps=False
+        )
 
 
 if __name__ == '__main__':
