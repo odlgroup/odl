@@ -348,7 +348,7 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
         inner_vf = vf.copy()
 
         for gi in inner_vf:
-            gi *= gi.ufuncs.absolute().ufuncs.power(self.exponent - 2)
+            gi *= np.abs(gi) ** (self.exponent - 2)
             if self.exponent >= 2:
                 # Any component that is zero is not divided with
                 nz = (vf_pwnorm_fac != 0)
