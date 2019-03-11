@@ -158,30 +158,30 @@ def adam(f, x, learning_rate=1e-3, beta1=0.9, beta2=0.999, eps=1e-8,
     *Adam: A Method for Stochastic Optimization*, ICLR 2015.
     """
     grad = f.gradient
-    dom = f.domain
+    space = f.domain
 
-    if x not in dom:
+    if x not in space:
         raise TypeError(
-            '`x` {!r} is not in the domain {!r} of `f`'.format(x, dom)
+            '`x` {!r} is not in the domain {!r} of `f`'.format(x, space)
         )
 
-    m = dom.zero()
-    v = dom.zero()
+    m = space.zero()
+    v = space.zero()
 
-    gx = dom.element()
+    gx = space.element()
     for _ in range(maxiter):
         grad(x, out=gx)
 
-        if dom.norm(gx) < tol:
+        if space.norm(gx) < tol:
             return
 
         # m = beta1 * m + (1 - beta1) * grad(x)
-        dom.lincomb(beta1, m, 1 - beta1, gx, out=m)
+        space.lincomb(beta1, m, 1 - beta1, gx, out=m)
         # v = beta2 * v + (1 - beta2) * grad(x) ** 2
-        dom.lincomb(beta2, v, 1 - beta2, gx ** 2, out=v)
+        space.lincomb(beta2, v, 1 - beta2, gx ** 2, out=v)
         step = learning_rate * np.sqrt(1 - beta2) / (1 - beta1)
         # x = x - step * m / (sqrt(v) + eps)
-        dom.lincomb(1, x, -step, m / (np.sqrt(v) + eps), out=x)
+        space.lincomb(1, x, -step, m / (np.sqrt(v) + eps), out=x)
 
         if callback is not None:
             callback(x)
