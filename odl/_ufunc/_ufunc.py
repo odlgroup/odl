@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 
 LINEAR_UFUNCS = {
@@ -303,11 +305,37 @@ def ufunc_op_cls(name):
     try:
         ufunc_input = UFUNC_INPUT_FOR_DOC[name]
     except KeyError:
-        raise ValueError('ufunc `{}` not supported'.format(name))
+        # Unknown ufunc, try to find some appropriate type
+        if 'd' * ufunc.nin in types:
+            in_type = 'd' * ufunc.nin
+            out_type = types[in_type]
+        elif 'l' * ufunc.nin in types:
+            in_type = 'l' * ufunc.nin
+            out_type = types[in_type]
+        elif '?' * ufunc.nin in types:
+            in_type = '?' * ufunc.nin
+            out_type = types[in_type]
+        else:
+            in_type = 'd' * ufunc.nin
+            out_type = 'd' * ufunc.nout
 
-    in_type = ufunc_input['type']
-    inp = ufunc_input['input']
-    out_type = types[in_type]
+        if ufunc.nin == 1:
+            inp = np.array(in1_default, dtype=in_type).tolist()
+        else:
+            inp = [
+                np.array(in2_default[0], dtype=in_type[0]).tolist(),
+                np.array(in2_default[1], dtype=in_type[1]).tolist(),
+            ]
+
+        warnings.warn(
+            'ufunc {!r} not known, assuming default input type {!r}'
+            ''.format(name, in_type)
+        )
+
+    else:
+        in_type = ufunc_input['type']
+        inp = ufunc_input['input']
+        out_type = types[in_type]
 
     if ufunc.nin == 1:
         space_in = tensor_space(len(inp), dtype=in_type)
