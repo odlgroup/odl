@@ -150,9 +150,18 @@ def all_equal(iter1, iter2):
 
 
 def all_almost_equal_array(v1, v2, ndigits):
-    return np.allclose(v1, v2,
-                       rtol=10 ** -ndigits, atol=10 ** -ndigits,
-                       equal_nan=True)
+    if v1.dtype == object and v2.dtype == object:
+        return all(
+            all_almost_equal_array(v1_i, v2_i, ndigits)
+            for v1_i, v2_i in zip(v1, v2)
+        )
+
+    try:
+        return np.allclose(
+            v1, v2, rtol=10 ** -ndigits, atol=10 ** -ndigits, equal_nan=True
+        )
+    except TypeError:
+        return False
 
 
 def all_almost_equal(iter1, iter2, ndigits=None):
@@ -170,7 +179,7 @@ def all_almost_equal(iter1, iter2, ndigits=None):
 
     if hasattr(iter1, '__array__') and hasattr(iter2, '__array__'):
         # Only get default ndigits if comparing arrays, need to keep `None`
-        # otherwise for recursive calls.
+        # otherwise for recursive calls
         if ndigits is None:
             ndigits = _ndigits(iter1, iter2, None)
         return all_almost_equal_array(iter1, iter2, ndigits)
