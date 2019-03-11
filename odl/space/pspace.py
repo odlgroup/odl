@@ -307,6 +307,23 @@ class ProductSpace(LinearSpace):
             0 if self.shape == () else int(np.prod(self.shape, dtype='int64'))
         )
 
+    @property
+    def dtype(self):
+        """The data type of this space.
+        This is only well defined if all subspaces have the same dtype.
+        Raises
+        ------
+        AttributeError
+            If any of the subspaces does not implement `dtype` or if the
+            dtypes of the subspaces do not match.
+        """
+        dtypes = [space.dtype for space in self.spaces]
+
+        if all(dtype == dtypes[0] for dtype in dtypes):
+            return dtypes[0]
+        else:
+            raise AttributeError("`dtype`'s of subspaces not equal")
+
     # --- Analytic properties
 
     @property
