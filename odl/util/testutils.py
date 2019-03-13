@@ -675,7 +675,7 @@ def test(arguments=None):
     this_dir = os.path.dirname(__file__)
     odl_root = os.path.abspath(os.path.join(this_dir, os.pardir, os.pardir))
 
-    args = ['-x', '{root}/odl'.format(root=odl_root)]
+    args = ['{root}/odl'.format(root=odl_root)]
 
     ignores = ['--ignore={}'.format(file) for file in collect_ignore]
     args.extend(ignores)
