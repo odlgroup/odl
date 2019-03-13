@@ -1,5 +1,0 @@
-pytest >=3.0.3
-pytest-pep8
-pytest-cov
-coverage >=4.0
-coveralls
