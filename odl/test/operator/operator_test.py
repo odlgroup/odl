@@ -66,7 +66,6 @@ def mult_sq_np(mat, x):
 
 def check_call(operator, x, expected):
     """Assert that operator(point) == expected."""
-    assert False
     # Out-of-place check
     assert all_almost_equal(operator(x), expected)
 
