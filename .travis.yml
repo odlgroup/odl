@@ -72,8 +72,8 @@ script:
     # Also invoke the alternative way of running the unit tests.
     # Fail immediately after first failure to speed up the whole thing.
     - if [[ "$SKIP_TESTS" != "true" ]]; then
-        pytest --doctest-modules --cov --cov-report term-missing $TRAVIS_BUILD_DIR/odl || exit -1;
-        python -c "import odl; odl.test()" || exit -1;
+        echo "import odl; odl.test(['--doctest-modules'])" > _run_tests.py;
+        coverage run _run_tests.py || exit -1;
       fi
     # Build the Sphinx doc (only for one specific build, master branch, no PR)
     # To avoid clogging the logs, we redirect stderr to /dev/null
