@@ -53,7 +53,7 @@ install:
     - conda create -n testenv python=$TRAVIS_PYTHON_VERSION nomkl
     - source activate testenv
     # Install packages with pip if possible, it's way faster
-    - pip install "numpy==$NUMPY_VERSION" scipy future packaging scikit-image pywavelets pytest pytest-cov;
+    - pip install "numpy==$NUMPY_VERSION" scipy future packaging scikit-image pywavelets;
     # Building pyfftw wheels sometimes fails, using a conda-forge version instead;
     # To avoid a lower version of NumPy being installed over the pip one, we exclude all dependencies
     # (PyFFTW only depends on NumPy)
@@ -72,8 +72,9 @@ script:
     # Also invoke the alternative way of running the unit tests.
     # Fail immediately after first failure to speed up the whole thing.
     - if [[ "$SKIP_TESTS" != "true" ]]; then
-        echo "import odl; odl.test(['--doctest-modules'])" > _run_tests.py;
-        coverage run _run_tests.py || exit -1;
+        pytest --doctest-modules $TRAVIS_BUILD_DIR/odl || exit -1;
+        echo "import odl; odl.test(['--doctest-modules'])" > $TRAVIS_BUILD_DIR/_run_tests.py;
+        coverage run $TRAVIS_BUILD_DIR/_run_tests.py;
       fi
     # Build the Sphinx doc (only for one specific build, master branch, no PR)
     # To avoid clogging the logs, we redirect stderr to /dev/null
