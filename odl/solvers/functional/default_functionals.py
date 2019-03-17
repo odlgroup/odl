@@ -524,6 +524,8 @@ class IndicatorLpUnitBall(Functional):
             `proximal factory` for convex conjuagte of L1-norm.
         odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_l2 :
             `proximal factory` for convex conjuagte of L2-norm.
+        odl.solvers.nonsmooth.proximal_operators.proximal_convex_conj_linfty :
+            `proximal factory` for convex conjuagte of Linfty-norm.
         """
         if self.exponent == np.inf:
             return proximal_convex_conj_l1(space=self.domain)
