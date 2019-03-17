@@ -22,7 +22,7 @@ from odl.solvers.nonsmooth.proximal_operators import (
     proximal_l1, proximal_convex_conj_l1,
     proximal_l1_l2, proximal_convex_conj_l1_l2,
     proximal_l2, proximal_convex_conj_l2, proximal_l2_squared,
-    proximal_linfty,
+    proximal_linfty, proximal_convex_conj_linfty,
     proximal_huber,
     proximal_const_func, proximal_box_constraint,
     proximal_convex_conj_kl, proximal_convex_conj_kl_cross_entropy,
@@ -529,9 +529,11 @@ class IndicatorLpUnitBall(Functional):
             return proximal_convex_conj_l1(space=self.domain)
         elif self.exponent == 2:
             return proximal_convex_conj_l2(space=self.domain)
+        elif self.exponent == 1:
+            return proximal_convex_conj_linfty(space=self.domain)
         else:
-            raise NotImplementedError('`gradient` only implemented for p=2 or '
-                                      'p=inf')
+            raise NotImplementedError('`proximal` only implemented for p=1, '
+                                      'p=2 or p=inf')
 
     def __repr__(self):
         """Return ``repr(self)``."""
