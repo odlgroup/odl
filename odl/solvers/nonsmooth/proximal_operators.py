@@ -37,7 +37,7 @@ __all__ = ('combine_proximals', 'proximal_convex_conj', 'proximal_translation',
            'proximal_box_constraint', 'proximal_nonnegativity',
            'proximal_l1', 'proximal_convex_conj_l1',
            'proximal_l2', 'proximal_convex_conj_l2',
-           'proximal_linfty',
+           'proximal_linfty', 'proximal_convex_conj_linfty',
            'proj_simplex', 'proj_l1',
            'proximal_l2_squared', 'proximal_convex_conj_l2_squared',
            'proximal_l1_l2', 'proximal_convex_conj_l1_l2',
@@ -1492,6 +1492,67 @@ def proximal_linfty(space):
             out.lincomb(-1, out, 1, x)
 
     return ProximalLInfty
+
+
+def proximal_convex_conj_linfty(space):
+    """Proximal operator factory of the Linfty norm/distance convex conjugate.
+
+    Implements the proximal operator of the convex conjugate of the
+    functional ::
+
+        F(x) = ||x||_infty
+
+    with ``x`` in ``space``.
+
+    Parameters
+    ----------
+    space : `LinearSpace` or `ProductSpace` of `LinearSpace` spaces
+        Domain of the functional F
+
+    Returns
+    -------
+    prox_factory : function
+        Factory for the proximal operator to be initialized.
+
+    Notes
+    -----
+    The convex conjugate :math:`F^*` of the functional
+
+    .. math::
+        F(x) = \|x\|_infty.
+
+    is in the case of scalar-valued functions given by the indicator function
+    of the unit 1-norm ball
+
+    .. math::
+        F^*(y) = \iota_{B_1} \\big( y \\big).
+
+    See Also
+    --------
+    proj_l1 : orthogonal projection onto balls in the 1-norm
+    """
+
+    class ProximalConvexConjLinfty(Operator):
+
+        """Proximal operator of the Linfty norm/distance convex conjugate."""
+
+        def __init__(self, sigma):
+            """Initialize a new instance.
+
+            Parameters
+            ----------
+            sigma : positive float or pointwise positive space.element
+                Step size parameter. If scalar, it contains a global stepsize,
+                otherwise the space.element defines a stepsize for each point.
+            """
+            super(ProximalConvexConjLinfty, self).__init__(
+                domain=space, range=space, linear=False)
+
+        def _call(self, x, out):
+            """Return ``self(x, out=out)``."""
+            proj_l1(x, radius=1, out=out)
+
+    return ProximalConvexConjLinfty
 
 
 def proj_l1(x, radius=1, out=None):
