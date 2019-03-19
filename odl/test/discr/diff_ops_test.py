@@ -234,41 +234,43 @@ def test_part_deriv_init():
 
 
 def test_part_deriv(space, method, padding):
-    """Discretized partial derivative."""
+    """Check partial derivative operator."""
     if isinstance(padding, tuple):
         pad_mode, pad_const = padding
     else:
         pad_mode, pad_const = padding, 0
 
-    dom_vec = noise_element(space)
-    dom_vec_arr = dom_vec.asarray()
+    x = noise_element(space)
 
     for axis in range(space.ndim):
-        partial = PartialDerivative(space, axis=axis, method=method,
-                                    pad_mode=pad_mode,
-                                    pad_const=pad_const)
-
         # Compare to helper function
-        dx = space.cell_sides[axis]
-        diff = finite_diff(dom_vec_arr, axis=axis, dx=dx, method=method,
-                           pad_mode=pad_mode,
-                           pad_const=pad_const)
+        pderiv = PartialDerivative(
+            space, axis=axis, method=method, pad_mode=pad_mode,
+            pad_const=pad_const
+        )
+        p_x = pderiv(x)
 
-        partial_vec = partial(dom_vec)
-        assert all_almost_equal(partial_vec, diff)
+        step = space.cell_sides[axis]
+        diff_x = finite_diff(
+            x, axis=axis, dx=step, method=method, pad_mode=pad_mode,
+            pad_const=pad_const
+        )
+
+        assert all_almost_equal(p_x, diff_x)
 
         # Test adjoint operator
-        derivative = partial.derivative()
-        ran_vec = noise_element(space)
-        deriv_vec = derivative(dom_vec)
-        adj_vec = derivative.adjoint(ran_vec)
-        lhs = ran_vec.inner(deriv_vec)
-        rhs = dom_vec.inner(adj_vec)
+        deriv_op = pderiv.derivative()
+        y = noise_element(space)
+        dp_x = deriv_op(x)
+        dp_adj_y = deriv_op.adjoint(y)
+        inner_dom = space.inner(x, dp_adj_y)
+        inner_ran = space.inner(dp_x, y)
 
         # Check not to use trivial data
-        assert lhs != 0
-        assert rhs != 0
-        assert lhs == pytest.approx(rhs, rel=dtype_tol(space.dtype))
+        assert inner_dom != 0
+        assert inner_ran != 0
+        rtol = dtype_tol(space.dtype)
+        assert inner_dom == pytest.approx(inner_ran, rel=rtol)
 
 
 # --- Gradient --- #
@@ -303,7 +305,7 @@ def test_gradient_init():
 
 
 def test_gradient(space, method, padding):
-    """Discretized spatial gradient operator."""
+    """Check spatial gradient operator."""
     with pytest.raises(TypeError):
         Gradient(odl.rn(1), method=method)
 
@@ -312,47 +314,47 @@ def test_gradient(space, method, padding):
     else:
         pad_mode, pad_const = padding, 0
 
-    # DiscretizedSpaceElement
-    dom_vec = noise_element(space)
-    dom_vec_arr = dom_vec.asarray()
+    x = noise_element(space)
 
-    # gradient
-    grad = Gradient(space, method=method,
-                    pad_mode=pad_mode,
-                    pad_const=pad_const)
-    grad_vec = grad(dom_vec)
-    assert len(grad_vec) == space.ndim
+    grad = Gradient(
+        space, method=method, pad_mode=pad_mode, pad_const=pad_const
+    )
+    grad_x = grad(x)
+    assert len(grad_x) == space.ndim
 
-    # computation of gradient components with helper function
-    for axis, dx in enumerate(space.cell_sides):
-        diff = finite_diff(dom_vec_arr, axis=axis, dx=dx, method=method,
-                           pad_mode=pad_mode,
-                           pad_const=pad_const)
-
-        assert all_almost_equal(grad_vec[axis].asarray(), diff)
+    # Compare with results from helper function
+    for axis, step in enumerate(space.cell_sides):
+        diff_x = finite_diff(
+            x, axis=axis, dx=step, method=method, pad_mode=pad_mode,
+            pad_const=pad_const
+        )
+        assert all_almost_equal(grad_x[axis], diff_x)
 
     # Test adjoint operator
-    derivative = grad.derivative()
-    ran_vec = noise_element(derivative.range)
-    deriv_grad_vec = derivative(dom_vec)
-    adj_grad_vec = derivative.adjoint(ran_vec)
-    lhs = ran_vec.inner(deriv_grad_vec)
-    rhs = dom_vec.inner(adj_grad_vec)
+    deriv_op = grad.derivative()
+    y = noise_element(deriv_op.range)
+    dg_x = deriv_op(x)
+    dg_adj_y = deriv_op.adjoint(y)
+    inner_dom = deriv_op.domain.inner(x, dg_adj_y)
+    inner_ran = deriv_op.range.inner(dg_x, y)
 
     # Check not to use trivial data
-    assert lhs != 0
-    assert rhs != 0
-    assert lhs == pytest.approx(rhs, rel=dtype_tol(space.dtype))
+    assert inner_dom != 0
+    assert inner_ran != 0
+    rtol = dtype_tol(space.dtype)
+    assert inner_dom == pytest.approx(inner_ran, rel=rtol)
 
-    # Higher-dimensional arrays
+    # Check that higher-dimensional versions at least run
     lin_size = 3
     for ndim in [1, 3, 6]:
         space = odl.uniform_discr([0.] * ndim, [1.] * ndim, [lin_size] * ndim)
-        dom_vec = odl.phantom.cuboid(space, [0.2] * ndim, [0.8] * ndim)
+        x = odl.phantom.cuboid(space, [0.2] * ndim, [0.8] * ndim)
 
-        grad = Gradient(space, method=method, pad_mode=pad_mode,
-                        pad_const=pad_const)
-        grad(dom_vec)
+        grad = Gradient(
+            space, method=method, pad_mode=pad_mode, pad_const=pad_const
+        )
+        grad(x)
+
 
 # --- Divergence --- #
 
@@ -386,7 +388,7 @@ def test_divergence_init():
 
 
 def test_divergence(space, method, padding):
-    """Discretized spatial divergence operator."""
+    """Check spatial divergence operator."""
     # Invalid space
     with pytest.raises(TypeError):
         Divergence(range=odl.rn(1), method=method)
@@ -397,36 +399,38 @@ def test_divergence(space, method, padding):
         pad_mode, pad_const = padding, 0
 
     # Operator instance
-    div = Divergence(range=space, method=method,
-                     pad_mode=pad_mode,
-                     pad_const=pad_const)
+    div = Divergence(
+        range=space, method=method, pad_mode=pad_mode, pad_const=pad_const
+    )
 
     # Apply operator
-    dom_vec = noise_element(div.domain)
-    div_dom_vec = div(dom_vec)
+    x = noise_element(div.domain)
+    div_x = div(x)
 
-    # computation of divergence with helper function
+    # Comparision with results from helper function
     expected_result = np.zeros(space.shape)
-    for axis, dx in enumerate(space.cell_sides):
-        expected_result += finite_diff(dom_vec[axis], axis=axis, dx=dx,
-                                       method=method, pad_mode=pad_mode,
-                                       pad_const=pad_const)
+    for axis, step in enumerate(space.cell_sides):
+        expected_result += finite_diff(
+            x[axis], axis=axis, dx=step, method=method, pad_mode=pad_mode,
+            pad_const=pad_const
+        )
 
-    assert all_almost_equal(expected_result, div_dom_vec.asarray())
+    assert all_almost_equal(div_x, expected_result)
 
-    # Adjoint operator
-    derivative = div.derivative()
-    deriv_div_dom_vec = derivative(dom_vec)
-    ran_vec = noise_element(div.range)
-    adj_div_ran_vec = derivative.adjoint(ran_vec)
+    # Test adjoint operator
+    deriv_op = div.derivative()
+    dd_x = deriv_op(x)
+    y = noise_element(div.range)
+    dd_adj_y = deriv_op.adjoint(y)
 
-    # Adjoint condition
-    lhs = ran_vec.inner(deriv_div_dom_vec)
-    rhs = dom_vec.inner(adj_div_ran_vec)
+    inner_dom = deriv_op.domain.inner(x, dd_adj_y)
+    inner_ran = deriv_op.range.inner(dd_x, y)
+
     # Check not to use trivial data
-    assert lhs != 0
-    assert rhs != 0
-    assert lhs == pytest.approx(rhs, rel=dtype_tol(space.dtype))
+    assert inner_dom != 0
+    assert inner_ran != 0
+    rtol = dtype_tol(space.dtype)
+    assert inner_dom == pytest.approx(inner_ran, rel=rtol)
 
 
 # --- Laplacian --- #
@@ -462,36 +466,38 @@ def test_laplacian(space, padding):
     lap = Laplacian(space, pad_mode=pad_mode, pad_const=pad_const)
 
     # Apply operator
-    dom_vec = noise_element(space)
-    div_dom_vec = lap(dom_vec)
+    x = noise_element(space)
+    lap_x = lap(x)
 
     # computation of divergence with helper function
     expected_result = np.zeros(space.shape)
-    for axis, dx in enumerate(space.cell_sides):
-        diff_f = finite_diff(dom_vec.asarray(), axis=axis, dx=dx ** 2,
-                             method='forward', pad_mode=pad_mode,
-                             pad_const=pad_const)
-        diff_b = finite_diff(dom_vec.asarray(), axis=axis, dx=dx ** 2,
-                             method='backward', pad_mode=pad_mode,
-                             pad_const=pad_const)
+    for axis, step in enumerate(space.cell_sides):
+        diff_f = finite_diff(
+            x, axis=axis, dx=step ** 2, method='forward', pad_mode=pad_mode,
+            pad_const=pad_const
+        )
+        diff_b = finite_diff(
+            x, axis=axis, dx=step ** 2, method='backward', pad_mode=pad_mode,
+            pad_const=pad_const
+        )
         expected_result += diff_f - diff_b
 
-    assert all_almost_equal(expected_result, div_dom_vec.asarray())
+    assert all_almost_equal(lap_x, expected_result)
 
-    # Adjoint operator
-    derivative = lap.derivative()
-    deriv_lap_dom_vec = derivative(dom_vec)
-    ran_vec = noise_element(lap.range)
-    adj_lap_ran_vec = derivative.adjoint(ran_vec)
+    # Check adjoint operator
+    deriv_op = lap.derivative()
+    dl_x = deriv_op(x)
+    y = noise_element(lap.range)
+    dl_adj_y = deriv_op.adjoint(y)
 
-    # Adjoint condition
-    lhs = ran_vec.inner(deriv_lap_dom_vec)
-    rhs = dom_vec.inner(adj_lap_ran_vec)
+    inner_dom = deriv_op.domain.inner(x, dl_adj_y)
+    inner_ran = deriv_op.range.inner(dl_x, y)
 
     # Check not to use trivial data
-    assert lhs != 0
-    assert rhs != 0
-    assert lhs == pytest.approx(rhs, rel=dtype_tol(space.dtype))
+    assert inner_dom != 0
+    assert inner_ran != 0
+    rtol = dtype_tol(space.dtype)
+    assert inner_dom == pytest.approx(inner_ran, rel=rtol)
 
 
 if __name__ == '__main__':
