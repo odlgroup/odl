@@ -867,7 +867,9 @@ def noise_power_spectrum(data, ground_truth, radial=False,
         assert isinstance(space, odl.DiscreteLp)
     except (AttributeError, AssertionError):
         data = np.asarray(data)
-        space = odl.uniform_discr([0] * data.ndim, data.shape, data.shape, data.dtype)
+        space = odl.uniform_discr(
+            [0] * data.ndim, data.shape, data.shape, data.dtype
+        )
         data = space.element(data)
 
     ft = odl.trafos.FourierTransform(space, halfcomplex=False)
