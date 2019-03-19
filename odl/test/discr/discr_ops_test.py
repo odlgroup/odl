@@ -17,7 +17,8 @@ import odl
 from odl.discr.discr_ops import _SUPPORTED_RESIZE_PAD_MODES
 from odl.space.entry_points import tensor_space_impl
 from odl.util import is_numeric_dtype, is_real_floating_dtype
-from odl.util.testutils import dtype_tol, noise_element
+from odl.util.testutils import all_equal, dtype_tol, noise_element
+
 
 # --- pytest fixtures --- #
 
@@ -205,7 +206,7 @@ def test_resizing_op_deriv(padding):
 
 
 def test_resizing_op_inverse(padding, odl_tspace_impl):
-
+    """Check the inverse of ResizingOperator."""
     impl = odl_tspace_impl
     pad_mode, pad_const = padding
     dtypes = [dt for dt in tensor_space_impl(impl).available_dtypes()
@@ -221,11 +222,11 @@ def test_resizing_op_inverse(padding, odl_tspace_impl):
 
         # Only left inverse if the operator extends in all axes
         x = noise_element(space)
-        assert res_op.inverse(res_op(x)) == x
+        assert all_equal(res_op.inverse(res_op(x)), x)
 
 
 def test_resizing_op_adjoint(padding, odl_tspace_impl):
-
+    """Check the adjoint of ResizingOperator."""
     impl = odl_tspace_impl
     pad_mode, pad_const = padding
     dtypes = [dt for dt in tensor_space_impl(impl).available_dtypes()
@@ -244,13 +245,11 @@ def test_resizing_op_adjoint(padding, odl_tspace_impl):
                 res_op.adjoint
             return
 
-        elem = noise_element(space)
-        res_elem = noise_element(res_space)
-        inner1 = res_op(elem).inner(res_elem)
-        inner2 = elem.inner(res_op.adjoint(res_elem))
-        assert inner1 == pytest.approx(
-            inner2, rel=space.size * dtype_tol(dtype)
-        )
+        x = noise_element(space)
+        y = noise_element(res_space)
+        inner_dom = res_op.domain.inner(x, res_op.adjoint(y))
+        inner_ran = res_op.range.inner(res_op(x), y)
+        assert inner_dom == pytest.approx(inner_ran, rel=dtype_tol(dtype))
 
 
 def test_resizing_op_mixed_uni_nonuni():
@@ -282,11 +281,11 @@ def test_resizing_op_mixed_uni_nonuni():
     assert np.array_equal(result, true_result)
 
     # Test adjoint
-    elem = noise_element(space)
-    res_elem = noise_element(res_op.range)
-    inner1 = res_op(elem).inner(res_elem)
-    inner2 = elem.inner(res_op.adjoint(res_elem))
-    assert inner1 == pytest.approx(inner2)
+    x = noise_element(space)
+    y = noise_element(res_op.range)
+    inner_dom = res_op.domain.inner(x, res_op.adjoint(y))
+    inner_ran = res_op.range.inner(res_op(x), y)
+    assert inner_dom == pytest.approx(inner_ran)
 
 
 if __name__ == '__main__':
