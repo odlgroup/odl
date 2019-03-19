@@ -107,7 +107,7 @@ class LinearSpace(Set):
         This method is intended to be private. Public callers should
         resort to `inner` which is type-checked.
         """
-        raise LinearSpaceNotImplementedError(
+        raise NotImplementedError(
             'inner product not implemented in space {!r}'.format(self))
 
     def _multiply(self, x1, x2, out):
@@ -116,12 +116,12 @@ class LinearSpace(Set):
         This method is intended to be private. Public callers should
         resort to `multiply` which is type-checked.
         """
-        raise LinearSpaceNotImplementedError(
+        raise NotImplementedError(
             'multiplication not implemented in space {!r}'.format(self))
 
     def one(self):
         """Return the one (multiplicative unit) element of this space."""
-        raise LinearSpaceNotImplementedError(
+        raise NotImplementedError(
             '`one` element not implemented in space {!r}'.format(self))
 
     # Default methods
@@ -181,7 +181,7 @@ class LinearSpace(Set):
 
         Raises
         ------
-        LinearSpaceTypeError
+        TypeError
             If ``out`` is given but not an element of this space.
 
         Notes
@@ -197,7 +197,7 @@ class LinearSpace(Set):
         if out is None:
             out = self.element()
         elif out not in self:
-            raise LinearSpaceTypeError(
+            raise TypeError(
                 '`out` {!r} is not an element of {!r}'.format(out, self)
             )
 
@@ -292,7 +292,7 @@ class LinearSpace(Set):
         if out is None:
             out = self.element()
         elif out not in self:
-            raise LinearSpaceTypeError(
+            raise TypeError(
                 '`out` {!r} is not an element of {!r}'.format(out, self)
             )
 
@@ -332,7 +332,7 @@ class LinearSpace(Set):
         if out is None:
             out = self.element()
         elif out not in self:
-            raise LinearSpaceTypeError(
+            raise TypeError(
                 '`out` {!r} is not an element of {!r}'.format(out, self)
             )
 
@@ -414,22 +414,6 @@ class LinearSpace(Set):
     def __str__(self):
         """Return ``str(self)``."""
         return repr(self)
-
-
-class LinearSpaceTypeError(TypeError):
-    """Exception for type errors in `LinearSpace`'s.
-
-    This exception is raised when the wrong type of element is fed to
-    `LinearSpace.lincomb` and related functions.
-    """
-
-
-class LinearSpaceNotImplementedError(NotImplementedError):
-    """Exception for unimplemented functionality in `LinearSpace`'s.
-
-    This exception is raised when a method is called in `LinearSpace`
-    that has not been defined in a specific space.
-    """
 
 
 if __name__ == '__main__':

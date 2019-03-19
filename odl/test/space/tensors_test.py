@@ -14,7 +14,6 @@ import numpy as np
 import pytest
 
 import odl
-from odl.set.space import LinearSpaceTypeError
 from odl.space.npy_tensors import NumpyTensorSpace
 from odl.util.testutils import (
     all_almost_equal, all_equal, noise_array, noise_elements, simple_fixture)
@@ -385,27 +384,16 @@ def test_lincomb_discontig(odl_tspace_impl):
             _test_lincomb(tspace, a, b, discontig=True)
 
 
-def test_lincomb_raise(tspace):
-    """Test if lincomb raises correctly for bad input."""
+def test_lincomb_exceptions(tspace):
+    """Test whether lincomb raises correctly for bad output element."""
     other_space = odl.rn((4, 3), impl=tspace.impl)
 
-    other_x = other_space.zero()
-    x, y, z = tspace.zero(), tspace.zero(), tspace.zero()
+    wrong_out = other_space.zero()
+    x, y = tspace.zero(), tspace.zero()
 
-    with pytest.raises(LinearSpaceTypeError):
-        tspace.lincomb(1, other_x, 1, y, z)
-
-    with pytest.raises(LinearSpaceTypeError):
-        tspace.lincomb(1, y, 1, other_x, z)
-
-    with pytest.raises(LinearSpaceTypeError):
-        tspace.lincomb(1, y, 1, z, other_x)
-
-    with pytest.raises(LinearSpaceTypeError):
-        tspace.lincomb([], x, 1, y, z)
-
-    with pytest.raises(LinearSpaceTypeError):
-        tspace.lincomb(1, x, [], y, z)
+    with pytest.raises(TypeError):
+        # Only `out` must be an element of the space, thus raising TypeError
+        tspace.lincomb(1, x, 1, y, wrong_out)
 
 
 def test_multiply(tspace):
@@ -419,20 +407,14 @@ def test_multiply(tspace):
 
 
 def test_multiply_exceptions(tspace):
-    """Test if multiply raises correctly for bad input."""
+    """Test if multiply raises correctly for bad output element."""
     other_space = odl.rn((4, 3))
 
-    other_x = other_space.zero()
+    wrong_out = other_space.zero()
     x, y = tspace.zero(), tspace.zero()
 
-    with pytest.raises(LinearSpaceTypeError):
-        tspace.multiply(other_x, x, y)
-
-    with pytest.raises(LinearSpaceTypeError):
-        tspace.multiply(x, other_x, y)
-
-    with pytest.raises(LinearSpaceTypeError):
-        tspace.multiply(x, y, other_x)
+    with pytest.raises(TypeError):
+        tspace.multiply(x, y, wrong_out)
 
 
 def test_inner(tspace):
@@ -443,34 +425,12 @@ def test_inner(tspace):
     assert tspace.inner(x, y) == pytest.approx(correct_inner, rel=rel)
 
 
-def test_inner_exceptions(tspace):
-    """Test if inner raises correctly for bad input."""
-    other_space = odl.rn((4, 3))
-    other_x = other_space.zero()
-    x = tspace.zero()
-
-    with pytest.raises(LinearSpaceTypeError):
-        tspace.inner(other_x, x)
-
-    with pytest.raises(LinearSpaceTypeError):
-        tspace.inner(x, other_x)
-
-
 def test_norm(tspace):
     """Test the norm method against numpy.linalg.norm."""
     rel = 1e-2 if tspace.dtype == 'float16' else 1e-5
     xarr, x = noise_elements(tspace)
     correct_norm = _norm(xarr, tspace.exponent, tspace.weighting)
     assert tspace.norm(x) == pytest.approx(correct_norm, rel=rel)
-
-
-def test_norm_exceptions(tspace):
-    """Test if norm raises correctly for bad input."""
-    other_space = odl.rn((4, 3))
-    other_x = other_space.zero()
-
-    with pytest.raises(LinearSpaceTypeError):
-        tspace.norm(other_x)
 
 
 def test_pnorm(exponent):
@@ -488,19 +448,6 @@ def test_dist(tspace):
     (xarr, yarr), (x, y) = noise_elements(tspace, n=2)
     correct_dist = _dist(xarr, yarr, tspace.exponent, tspace.weighting)
     assert tspace.dist(x, y) == pytest.approx(correct_dist, rel=rel)
-
-
-def test_dist_exceptions(tspace):
-    """Test if dist raises correctly for bad input."""
-    other_space = odl.rn((4, 3))
-    other_x = other_space.zero()
-    x = tspace.zero()
-
-    with pytest.raises(LinearSpaceTypeError):
-        tspace.dist(other_x, x)
-
-    with pytest.raises(LinearSpaceTypeError):
-        tspace.dist(x, other_x)
 
 
 def test_pdist(odl_tspace_impl, exponent):
