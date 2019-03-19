@@ -1,4 +1,4 @@
-# Copyright 2014-2018 The ODL contributors
+# Copyright 2014-2019 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -29,16 +29,16 @@ def mean_squared_error(data, ground_truth, mask=None,
 
     Parameters
     ----------
-    data : `Tensor`
-        Input data to compare to the ground truth.
-    ground_truth : `Tensor`
-        Reference to compare ``data`` to.
+    data : `Tensor` or `array-like`
+        Input data to compare to the ground truth. If not a `Tensor`, a
+        default space with cell size 1 will be assumed.
+    ground_truth : `array-like`
+        Reference to which ``data`` should be compared.
     mask : `array-like`, optional
         If given, ``data * mask`` is compared to ``ground_truth * mask``.
     normalized  : bool, optional
         If ``True``, the output values are mapped to the interval
-        :math:`[0, 1]` (see `Notes` for details), otherwise return the
-        original mean squared error.
+        :math:`[0, 1]` (see `Notes` for details).
     force_lower_is_better : bool, optional
         If ``True``, it is ensured that lower values correspond to better
         matches. For the mean squared error, this is already the case, and
@@ -67,24 +67,29 @@ def mean_squared_error(data, ground_truth, mask=None,
 
     The normalized variant takes values in :math:`[0, 1]`.
     """
-    l2norm = odl.solvers.L2Norm(data.space)
-    l2norm_squared = odl.solvers.L2NormSquared(data.space)
+    try:
+        space = data.space
+    except AttributeError:
+        data = np.asarray(data)
+        space = odl.tensor_space(data.shape, data.dtype)
+        data = space.element(data)
+    ground_truth = space.element(ground_truth)
+
+    l2norm = odl.solvers.L2Norm(space)
 
     if mask is not None:
         data = data * mask
         ground_truth = ground_truth * mask
 
     diff = data - ground_truth
-    fom = l2norm_squared(diff)
+    fom = l2norm(diff) ** 2
 
     if normalized:
         fom /= (l2norm(data) + l2norm(ground_truth)) ** 2
     else:
-        fom /= l2norm_squared(data.space.one())
+        fom /= l2norm(space.one()) ** 2
 
-    # The mean squared error is already in the desired order.
-    # The output does not need to be changed depending on the
-    # force_lower_is_better flag.
+    # Ignore `force_lower_is_better` since that's already the case
 
     return fom
 
@@ -98,10 +103,11 @@ def mean_absolute_error(data, ground_truth, mask=None,
 
     Parameters
     ----------
-    data : `Tensor`
-        Input data to compare to the ground truth.
-    ground_truth : `Tensor`
-        Reference to compare ``data`` to.
+    data : `Tensor` or `array-like`
+        Input data to compare to the ground truth. If not a `Tensor`, a
+        default space with cell size 1 will be assumed.
+    ground_truth : `array-like`
+        Reference to which ``data`` should be compared.
     mask : `array-like`, optional
         If given, ``data * mask`` is compared to ``ground_truth * mask``.
     normalized  : bool, optional
@@ -136,21 +142,28 @@ def mean_absolute_error(data, ground_truth, mask=None,
 
     The normalized variant takes values in :math:`[0, 1]`.
     """
-    l1_norm = odl.solvers.L1Norm(data.space)
+    try:
+        space = data.space
+    except AttributeError:
+        data = np.asarray(data)
+        space = odl.tensor_space(data.shape, data.dtype)
+        data = space.element(data)
+    ground_truth = space.element(ground_truth)
+
+    l1_norm = odl.solvers.L1Norm(space)
     if mask is not None:
         data = data * mask
         ground_truth = ground_truth * mask
+
     diff = data - ground_truth
     fom = l1_norm(diff)
 
     if normalized:
         fom /= (l1_norm(data) + l1_norm(ground_truth))
     else:
-        fom /= l1_norm(data.space.one())
+        fom /= l1_norm(space.one())
 
-    # The mean absolute error is already in the desired order.
-    # The output does not need to be changed depending on the
-    # force_lower_is_better flag.
+    # Ignore `force_lower_is_better` since that's already the case
 
     return fom
 
@@ -161,10 +174,11 @@ def mean_value_difference(data, ground_truth, mask=None, normalized=False,
 
     Parameters
     ----------
-    data : `Tensor`
-        Input data to compare to the ground truth.
-    ground_truth : `Tensor`
-        Reference to compare ``data`` to.
+    data : `Tensor` or `array-like`
+        Input data to compare to the ground truth. If not a `Tensor`, a
+        default space with cell size 1 will be assumed.
+    ground_truth : `array-like`
+        Reference to which ``data`` should be compared.
     mask : `array-like`, optional
         If given, ``data * mask`` is compared to ``ground_truth * mask``.
     normalized  : bool, optional
@@ -201,21 +215,31 @@ def mean_value_difference(data, ground_truth, mask=None, normalized=False,
 
     The normalized variant takes values in :math:`[0, 1]`.
     """
-    l1_norm = odl.solvers.L1Norm(data.space)
+    try:
+        space = data.space
+    except AttributeError:
+        data = np.asarray(data)
+        space = odl.tensor_space(data.shape, data.dtype)
+        data = space.element(data)
+    ground_truth = space.element(ground_truth)
+
+    l1_norm = odl.solvers.L1Norm(space)
     if mask is not None:
         data = data * mask
         ground_truth = ground_truth * mask
 
     # Volume of space
-    vol = l1_norm(data.space.one())
+    vol = l1_norm(space.one())
 
-    data_mean = data.inner(data.space.one()) / vol
-    ground_truth_mean = ground_truth.inner(ground_truth.space.one()) / vol
+    data_mean = data.inner(space.one()) / vol
+    ground_truth_mean = ground_truth.inner(space.one()) / vol
 
     fom = np.abs(data_mean - ground_truth_mean)
 
     if normalized:
         fom /= (np.abs(data_mean) + np.abs(ground_truth_mean))
+
+    # Ignore `force_lower_is_better` since that's already the case
 
     return fom
 
@@ -227,10 +251,11 @@ def standard_deviation_difference(data, ground_truth, mask=None,
 
     Parameters
     ----------
-    data : `Tensor`
-        Input data to compare to the ground truth.
-    ground_truth : `Tensor`
-        Reference to compare ``data`` to.
+    data : `Tensor` or `array-like`
+        Input data to compare to the ground truth. If not a `Tensor`, a
+        default space with cell size 1 will be assumed.
+    ground_truth : `array-like`
+        Reference to which ``data`` should be compared.
     mask : `array-like`, optional
         If given, ``data * mask`` is compared to ``ground_truth * mask``.
     normalized  : bool, optional
@@ -269,18 +294,26 @@ def standard_deviation_difference(data, ground_truth, mask=None,
 
     The normalized variant takes values in :math:`[0, 1]`.
     """
-    l1_norm = odl.solvers.L1Norm(data.space)
-    l2_norm = odl.solvers.L2Norm(data.space)
+    try:
+        space = data.space
+    except AttributeError:
+        data = np.asarray(data)
+        space = odl.tensor_space(data.shape, data.dtype)
+        data = space.element(data)
+    ground_truth = space.element(ground_truth)
+
+    l1_norm = odl.solvers.L1Norm(space)
+    l2_norm = odl.solvers.L2Norm(space)
 
     if mask is not None:
         data = data * mask
         ground_truth = ground_truth * mask
 
     # Volume of space
-    vol = l1_norm(data.space.one())
+    vol = l1_norm(space.one())
 
-    data_mean = data.inner(data.space.one()) / vol
-    ground_truth_mean = ground_truth.inner(ground_truth.space.one()) / vol
+    data_mean = data.inner(space.one()) / vol
+    ground_truth_mean = ground_truth.inner(space.one()) / vol
 
     deviation_data = l2_norm(data - data_mean)
     deviation_ground_truth = l2_norm(ground_truth - ground_truth_mean)
@@ -288,9 +321,10 @@ def standard_deviation_difference(data, ground_truth, mask=None,
 
     if normalized:
         sum_deviation = deviation_data + deviation_ground_truth
-        fom /= sum_deviation
-        if np.isnan(fom):
-            fom = 0
+        if sum_deviation == 0:
+            fom = 0.0
+        else:
+            fom /= sum_deviation
 
     return fom
 
@@ -305,10 +339,11 @@ def range_difference(data, ground_truth, mask=None, normalized=False,
 
     Parameters
     ----------
-    data : `Tensor`
-        Input data to compare to the ground truth.
-    ground_truth : `Tensor`
-        Reference to compare ``data`` to.
+    data : `Tensor` or `array-like`
+        Input data to compare to the ground truth. If not a `Tensor`, a
+        default space with cell size 1 will be assumed.
+    ground_truth : `array-like`
+        Reference to which ``data`` should be compared.
     mask : `array-like`, optional
         Binary mask or index array to define ROI in which FOM evaluation
         is performed.
@@ -375,10 +410,11 @@ def blurring(data, ground_truth, mask=None, normalized=False,
 
     Parameters
     ----------
-    data : `Tensor`
-        Input data to compare to the ground truth.
-    ground_truth : `Tensor`
-        Reference to compare ``data`` to.
+    data : `Tensor` or `array-like`
+        Input data to compare to the ground truth. If not a `Tensor`, a
+        default space with cell size 1 will be assumed.
+    ground_truth : `array-like`
+        Reference to which ``data`` should be compared.
     mask : `array-like`, optional
         Binary mask to define ROI in which FOM evaluation is performed.
     normalized  : bool, optional
@@ -423,10 +459,17 @@ def blurring(data, ground_truth, mask=None, normalized=False,
 
     The normalized variant takes values in :math:`[0, 1]`.
     """
+    try:
+        space = data.space
+    except AttributeError:
+        data = np.asarray(data)
+        space = odl.tensor_space(data.shape, data.dtype)
+        data = space.element(data)
+
     from scipy.ndimage.morphology import distance_transform_edt
 
     if smoothness_factor is None:
-        smoothness_factor = np.mean(data.space.shape) / 10
+        smoothness_factor = np.mean(data.shape) / 10
 
     if mask is not None:
         mask = distance_transform_edt(1 - mask)
@@ -440,6 +483,11 @@ def false_structures_mask(foreground, smoothness_factor=None):
 
     Parameters
     ----------
+    foreground : `Tensor` or `array-like`
+        The region that should be de-emphasized. If not a `Tensor`, a
+        default space with cell size 1 will be assumed.
+    ground_truth : `array-like`
+        Reference to which ``data`` should be compared.
     foreground : `FnBaseVector`
         The region that should be de-emphasized.
     smoothness_factor : float, optional
@@ -448,8 +496,9 @@ def false_structures_mask(foreground, smoothness_factor=None):
 
     Returns
     -------
-    result : `FnBaseVector`
-         Euclidean distances of elements in ``foreground``.
+    result : `Tensor` or `numpy.ndarray`
+         Euclidean distances of elements in ``foreground``. The return value
+         is a `Tensor` if ``foreground`` is one, too, otherwise a NumPy array.
 
     Examples
     --------
@@ -472,8 +521,16 @@ def false_structures_mask(foreground, smoothness_factor=None):
     The weighting gives higher values to structures outside the foreground
     as defined by the mask.
     """
+    try:
+        space = foreground.space
+        has_space = True
+    except AttributeError:
+        has_space = False
+        foreground = np.asarray(foreground)
+        space = odl.tensor_space(foreground.shape, foreground.dtype)
+        foreground = space.element(foreground)
+
     from scipy.ndimage.morphology import distance_transform_edt
-    space = foreground.space
 
     unique = np.unique(foreground)
     if not np.array_equiv(unique, [0., 1.]):
@@ -481,9 +538,13 @@ def false_structures_mask(foreground, smoothness_factor=None):
                          'either only true or only false values {!r}'
                          ''.format(unique))
 
-    result = distance_transform_edt(1.0 - foreground,
-                                    sampling=space.cell_sides)
-    return space.element(result)
+    result = distance_transform_edt(
+        1.0 - foreground, sampling=getattr(space, 'cell_sides', 1.0)
+    )
+    if has_space:
+        return space.element(result)
+    else:
+        return result
 
 
 def ssim(data, ground_truth, size=11, sigma=1.5, K1=0.01, K2=0.03,
@@ -498,10 +559,10 @@ def ssim(data, ground_truth, size=11, sigma=1.5, K1=0.01, K2=0.03,
 
     Parameters
     ----------
-    data : `Tensor`
+    data : `array-like`
         Input data to compare to the ground truth.
-    ground_truth : `Tensor`
-        Reference to compare ``data`` to.
+    ground_truth : `array-like`
+        Reference to which ``data`` should be compared.
     size : odd int, optional
         Size in elements per axis of the Gaussian window that is used
         for all smoothing operations.
@@ -619,10 +680,11 @@ def psnr(data, ground_truth, use_zscore=False, force_lower_is_better=False):
 
     Parameters
     ----------
-    data : `Tensor`
-        Input data to compare to the ground truth.
-    ground_truth : `Tensor`
-        Reference to compare ``data`` to.
+    data : `Tensor` or `array-like`
+        Input data to compare to the ground truth. If not a `Tensor`, a
+        default space with cell size 1 will be assumed.
+    ground_truth : `array-like`
+        Reference to which ``data`` should be compared.
     use_zscore : bool
         If ``True``, normalize ``data`` and ``ground_truth`` to have zero mean
         and unit variance before comparison.
@@ -770,10 +832,11 @@ def noise_power_spectrum(data, ground_truth, radial=False,
 
     Parameters
     ----------
-    data : `DiscreteLp` element
-        Input data or reconstruction.
-    ground_truth : `DiscreteLp` element
-        Reference to compare ``data`` to.
+    data : `DiscreteLpElement` or `array-like`
+        Input data to compare to the ground truth. If not a `Tensor`, a
+        default space with cell size 1 will be assumed.
+    ground_truth : `array-like`
+        Reference to which ``data`` should be compared.
     radial : bool
         If ``True``, compute the radial NPS.
     radial_binning_factor : positive float, optional
@@ -790,16 +853,24 @@ def noise_power_spectrum(data, ground_truth, radial=False,
     Returns
     -------
     noise_power_spectrum : `DiscreteLp`-element
-        The space is the Fourier space corresponding to ``data.space``, and
+        The space is the Fourier space corresponding to ``space``, and
         hence the axes indicate frequency.
         If ``radial`` is ``True``, an average over concentric annuli is
         taken. The result is an element of a one-dimensional space with
         domain ``[0, rmax]``, where ``rmax`` is the radius of the smallest
-        ball containing ``data.space.domain``. Its shape is ``(N,)`` with ::
+        ball containing ``space.domain``. Its shape is ``(N,)`` with ::
 
             N = int(sqrt(sum(n ** 2 for n in image.shape)) / binning_factor)
     """
-    ft = odl.trafos.FourierTransform(data.space, halfcomplex=False)
+    try:
+        space = data.space
+        assert isinstance(space, odl.DiscreteLp)
+    except (AttributeError, AssertionError):
+        data = np.asarray(data)
+        space = odl.uniform_discr([0] * data.ndim, data.shape, data.shape, data.dtype)
+        data = space.element(data)
+
+    ft = odl.trafos.FourierTransform(space, halfcomplex=False)
     nps = np.abs(ft(data - ground_truth)).real ** 2
 
     if radial:
