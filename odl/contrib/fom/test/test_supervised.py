@@ -77,6 +77,12 @@ def test_general(space, scalar_fom):
                 <= scalar_fom(ground_truth + 2 * noise, ground_truth)
             )
 
+        # Check that supplying arrays works as well
+        assert (
+            scalar_fom(ground_truth.asarray(), ground_truth.asarray())
+            <= scalar_fom(data.asarray(), ground_truth.asarray())
+        )
+
 
 def filter_image(image, fh, fv):
     """Reference filtering function using ``scipy.signal.convolve``."""
@@ -120,7 +126,6 @@ def test_mean_absolute_error(space):
 
 def test_psnr(space):
     """Test the ``psnr`` fom."""
-
     true = odl.phantom.white_noise(space)
     data = odl.phantom.white_noise(space)
     zero = space.zero()
@@ -137,6 +142,10 @@ def test_psnr(space):
 
     # Test regular call
     result = fom.psnr(data, true)
+    assert result == pytest.approx(expected, abs=1e-6)
+
+    # Test with arrays as input
+    result = fom.psnr(data.asarray(), true.asarray())
     assert result == pytest.approx(expected, abs=1e-6)
 
     # Test with force_lower_is_better giving negative of expected
