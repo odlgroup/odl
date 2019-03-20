@@ -15,6 +15,8 @@ import sys
 from builtins import object
 from numbers import Integral, Number
 
+import numpy as np
+
 from odl.set import Field, LinearSpace, Set
 from odl.util import cache_arguments
 
@@ -57,10 +59,11 @@ def _default_call_out_of_place(op, x, **kwargs):
     out = op.range.element()
     result = op._call_in_place(x, out, **kwargs)
     if result is not None and result is not out:
-        raise ValueError('`op` returned a different value than `out`.'
-                         'With in-place evaluation, the operator can '
-                         'only return nothing (`None`) or the `out` '
-                         'parameter.')
+        raise ValueError(
+            '`op` returned a different value than `out`;\n'
+            'with in-place evaluation, the operator may only return nothing '
+            '(`None`) or the original `out` parameter.'
+        )
     return out
 
 
@@ -1769,7 +1772,7 @@ class OperatorRightScalarMult(Operator):
                 tmp = self.__tmp
             else:
                 tmp = self.domain.element()
-            tmp.lincomb(self.scalar, x)
+            self.domain.lincomb(self.scalar, x, out=tmp)
             self.operator(tmp, out=out)
 
     def __mul__(self, other):
@@ -2089,11 +2092,10 @@ class OperatorLeftVectorMult(Operator):
         if not self.is_linear:
             raise OpNotImplementedError('nonlinear operators have no adjoint')
 
-        if self.vector.space.is_real:
-            # The complex conjugate of a real vector is the vector itself.
-            return self.operator.adjoint * self.vector
-        else:
+        if np.iscomplexobj(self.vector):
             return self.operator.adjoint * self.vector.conj()
+        else:
+            return self.operator.adjoint * self.vector
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -2154,7 +2156,7 @@ class OperatorRightVectorMult(Operator):
             return self.operator(x * self.vector)
         else:
             tmp = self.domain.element()
-            x.multiply(self.vector, out=tmp)
+            self.domain.multiply(x, self.vector, out=tmp)
             self.operator(tmp, out=out)
 
     @property
@@ -2209,11 +2211,10 @@ class OperatorRightVectorMult(Operator):
         if not self.is_linear:
             raise OpNotImplementedError('nonlinear operators have no adjoint')
 
-        if self.vector.space.is_real:
-            # The complex conjugate of a real vector is the vector itself.
-            return self.vector * self.operator.adjoint
-        else:
+        if np.iscomplexobj(self.vector):
             return self.vector.conj() * self.operator.adjoint
+        else:
+            return self.vector * self.operator.adjoint
 
     def __repr__(self):
         """Return ``repr(self)``."""
