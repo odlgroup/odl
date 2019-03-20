@@ -299,9 +299,12 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
             np.sqrt(out, out=out)
         elif p == 2.0 and self.base_space.field == RealNumbers():
             np.multiply(fi, fi, out=out)
+        elif p == 2.0 and self.base_space.field == ComplexNumbers():
+            np.absolute(fi, out=out)
+            np.square(out, out=out)
         else:
             np.absolute(fi, out=out)
-            np.power(fi, p, out=out)
+            np.power(out, p, out=out)
 
     def derivative(self, vf):
         """Derivative of the point-wise norm operator at ``vf``.
@@ -406,16 +409,17 @@ class PointwiseInnerBase(PointwiseTensorFieldOperator):
                 domain=vfspace, range=vfspace[0], base_space=vfspace[0],
                 linear=True)
 
+        self._vecfield = vfspace.element(vecfield)
         # Bail out if the space is complex but we cannot take the complex
         # conjugate.
-        if (vfspace.field == ComplexNumbers() and
-                not hasattr(self.base_space.element_type, 'conj')):
+        if (
+            vfspace.field == ComplexNumbers()
+            and not hasattr(self._vecfield, 'conj')
+        ):
             raise NotImplementedError(
                 'base space element type {!r} does not implement conj() '
                 'method required for complex inner products'
                 ''.format(self.base_space.element_type))
-
-        self._vecfield = vfspace.element(vecfield)
 
         # Handle weighting, including sanity checks
         if weighting is None:
