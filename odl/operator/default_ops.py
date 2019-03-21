@@ -455,7 +455,7 @@ class PowerOperator(Operator):
         elif self.__domain_is_field:
             raise ValueError('cannot use `out` with field')
         else:
-            self.range.lincomb(1, x, out=out)
+            self.range.assign(out, x)
             out **= self.exponent
             return out
 
@@ -825,7 +825,7 @@ class ConstantOperator(Operator):
         if out is None:
             return self.range.element(copy(self.constant))
         else:
-            self.range.lincomb(1, self.constant, out=out)
+            self.range.assign(out, self.constant)
 
     def derivative(self, point):
         """Derivative of this operator, always zero.
@@ -903,7 +903,7 @@ class ZeroOperator(Operator):
             if out is None:
                 out = zero
             else:
-                self.range.lincomb(1, zero, out=out)
+                self.range.assign(out, zero)
         return out
 
     @property
@@ -1515,7 +1515,7 @@ class ComplexModulus(Operator):
 
                     def _call(self, u, out):
                         """Implement ``self(u, out)``."""
-                        self.range.lincomb(1, x, out=out)
+                        self.range.assign(out, x)
                         tmp = u / op(x)
                         out.real *= tmp
                         out.imag *= tmp
@@ -1712,7 +1712,7 @@ class ComplexModulusSquared(Operator):
 
                     def _call(self, u, out):
                         """Implement ``self(u, out)``."""
-                        self.range.lincomb(1, x, out=out)
+                        self.range.assign(out, x)
                         out.real *= u
                         out.imag *= u
                         out *= 2

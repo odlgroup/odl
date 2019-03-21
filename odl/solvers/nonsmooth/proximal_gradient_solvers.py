@@ -203,7 +203,7 @@ def accelerated_proximal_gradient(x, f, g, gamma, niter, callback=None,
         space.lincomb(1, y, -gamma, g_grad(y), out=tmp)
 
         # y <- x
-        space.lincomb(1, x, out=y)
+        space.assign(y, x)
 
         # x <- prox_f(tmp)
         f_prox(tmp, out=x)

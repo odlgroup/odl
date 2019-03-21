@@ -392,6 +392,14 @@ class TensorSpace(LinearSpace):
         """
         raise NotImplementedError('abstract method')
 
+    def assign(self, out, x):
+        """Assign ``x`` to ``out``."""
+        out[:] = x
+
+    def set_zero(self, out):
+        """Set ``out`` to 0."""
+        out[:] = 0
+
     def _multiply(self, x1, x2, out):
         """The entry-wise product of two tensors, assigned to ``out``.
 

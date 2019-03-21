@@ -811,7 +811,7 @@ def proximal_l2(space, lam=1, g=None):
                 if step < 1.0:
                     self.range.lincomb(1 - step, x, step, g, out=out)
                 else:
-                    self.range.lincomb(1, g, out=out)
+                    self.range.assign(out, g)
 
     return ProximalL2
 

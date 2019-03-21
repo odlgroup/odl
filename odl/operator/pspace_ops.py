@@ -297,7 +297,7 @@ class ProductSpaceOperator(Operator):
 
             for i, evaluated in enumerate(has_evaluated_row):
                 if not evaluated:
-                    out[i].set_zero()
+                    self.ops[i].range.set_zero(out[i])
 
         return out
 
@@ -559,7 +559,7 @@ class ComponentProjection(Operator):
         if out is None:
             out = x[self.index].copy()
         else:
-            out.assign(x[self.index])
+            self.range.assign(out, x[self.index])
         return out
 
     @property
@@ -647,7 +647,7 @@ class ComponentProjectionAdjoint(Operator):
         if out is None:
             out = self.range.zero()
         else:
-            out.set_zero()
+            self.range.set_zero(out)
 
         out[self.index] = x
         return out

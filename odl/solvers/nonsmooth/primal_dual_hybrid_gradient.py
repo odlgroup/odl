@@ -268,7 +268,7 @@ def pdhg(x, f, g, L, niter, tau=None, sigma=None, **kwargs):
 
     for _ in range(niter):
         # Copy required for relaxation
-        primal_space.lincomb(1, x, out=x_old)
+        primal_space.assign(x_old, x)
 
         # Gradient ascent in the dual variable y
         # dual_tmp <- y + sigma * L(x_relax)

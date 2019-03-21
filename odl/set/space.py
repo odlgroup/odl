@@ -219,6 +219,19 @@ class LinearSpace(Set):
         self._lincomb(a, x1, b, x2, out)
         return out
 
+    def assign(self, out, x):
+        """Assign ``x`` to ``out``."""
+        self.lincomb(1, x, out=out)
+
+    def set_zero(self, out):
+        """Set ``out`` to zero.
+
+        This default implementation should be overridden for spaces where
+        elements can have nonsensical entries, where multiplication with
+        0 does not yield the desired result.
+        """
+        self.lincomb(0, out, out=out)
+
     def dist(self, x1, x2):
         """Return the distance between ``x1`` and ``x2``.
 
