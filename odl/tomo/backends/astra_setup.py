@@ -620,7 +620,7 @@ def astra_projector(vol_interp, astra_vol_geom, astra_proj_geom, ndim, impl):
     # Mapping from interpolation type and geometry to ASTRA projector type.
     # "I" means probably mathematically inconsistent. Some projectors are
     # not implemented, e.g. CPU 3d projectors in general.
-    type_map_cpu = {'parallel': {'nearest': 'line',
+    type_map_cpu = {'parallel': {'nearest': 'linear',  # I
                                  'linear': 'linear'},  # I
                     'fanflat': {'nearest': 'line_fanflat',
                                 'linear': 'line_fanflat'},  # I
