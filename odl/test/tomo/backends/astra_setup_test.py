@@ -27,43 +27,19 @@ except ImportError:
 pytestmark = pytest.mark.skipif("not odl.tomo.ASTRA_AVAILABLE")
 
 
-def _discrete_domain(ndim):
-    """Create `DiscretizedSpace` space with isotropic grid stride.
-
-    Parameters
-    ----------
-    ndim : `int`
-        Number of space dimensions
-
-    Returns
-    -------
-    space : `DiscretizedSpace`
-        Returns a `DiscretizedSpace` instance
-    """
+def _space_iso(ndim):
+    """Return isotropic DiscretizedSpace with given ``ndim``."""
     max_pt = np.arange(1, ndim + 1)
     min_pt = -max_pt
     shape = np.arange(1, ndim + 1) * 10
-
     return odl.uniform_discr(min_pt, max_pt, shape=shape, dtype='float32')
 
 
-def _discrete_domain_anisotropic(ndim):
-    """Create `DiscretizedSpace` space with anisotropic grid stride.
-
-    Parameters
-    ----------
-    ndim : `int`
-        Number of space dimensions
-
-    Returns
-    -------
-    space : `DiscretizedSpace`
-        Returns a `DiscretizedSpace` instance
-    """
+def _space_aniso(ndim):
+    """Return anisotropic DiscretizedSpace with given ``ndim``."""
     min_pt = [-1] * ndim
     max_pt = [1] * ndim
     shape = np.arange(1, ndim + 1) * 10
-
     return odl.uniform_discr(min_pt, max_pt, shape=shape, dtype='float32')
 
 
@@ -73,7 +49,7 @@ def test_vol_geom_2d():
     y_pts = 20  # y_pts = Columns
 
     # Isotropic voxel case
-    discr_dom = _discrete_domain(2)
+    vol_space = _space_iso(2)
     correct_dict = {
         'GridColCount': y_pts,
         'GridRowCount': x_pts,
@@ -83,11 +59,11 @@ def test_vol_geom_2d():
             'WindowMinY': -1.0,  # x_min
             'WindowMaxY': 1.0}}  # x_amx
 
-    vol_geom = astra_volume_geometry(discr_dom)
+    vol_geom = astra_volume_geometry(vol_space)
     assert vol_geom == correct_dict
 
     # Anisotropic voxel case
-    discr_dom = _discrete_domain_anisotropic(2)
+    vol_space = _space_aniso(2)
     correct_dict = {
         'GridColCount': y_pts,
         'GridRowCount': x_pts,
@@ -98,11 +74,11 @@ def test_vol_geom_2d():
             'WindowMaxY': 1.0}}  # x_amx
 
     if astra_supports('anisotropic_voxels_2d'):
-        vol_geom = astra_volume_geometry(discr_dom)
+        vol_geom = astra_volume_geometry(vol_space)
         assert vol_geom == correct_dict
     else:
         with pytest.raises(NotImplementedError):
-            astra_volume_geometry(discr_dom)
+            astra_volume_geometry(vol_space)
 
 
 def test_vol_geom_3d():
@@ -112,7 +88,7 @@ def test_vol_geom_3d():
     z_pts = 30
 
     # Isotropic voxel case
-    discr_dom = _discrete_domain(3)
+    vol_space = _space_iso(3)
     # x = columns, y = rows, z = slices
     correct_dict = {
         'GridColCount': z_pts,
@@ -126,10 +102,10 @@ def test_vol_geom_3d():
             'WindowMinZ': -1.0,  # x_min
             'WindowMaxZ': 1.0}}  # x_amx
 
-    vol_geom = astra_volume_geometry(discr_dom)
+    vol_geom = astra_volume_geometry(vol_space)
     assert vol_geom == correct_dict
 
-    discr_dom = _discrete_domain_anisotropic(3)
+    vol_space = _space_aniso(3)
     # x = columns, y = rows, z = slices
     correct_dict = {
         'GridColCount': z_pts,
@@ -144,16 +120,15 @@ def test_vol_geom_3d():
             'WindowMaxZ': 1.0}}  # x_amx
 
     if astra_supports('anisotropic_voxels_3d'):
-        vol_geom = astra_volume_geometry(discr_dom)
+        vol_geom = astra_volume_geometry(vol_space)
         assert vol_geom == correct_dict
     else:
         with pytest.raises(NotImplementedError):
-            astra_volume_geometry(discr_dom)
+            astra_volume_geometry(vol_space)
 
 
 def test_proj_geom_parallel_2d():
     """Create ASTRA 2D projection geometry."""
-
     apart = odl.uniform_partition(0, 2, 5)
     dpart = odl.uniform_partition(-1, 1, 10)
     geom = odl.tomo.Parallel2dGeometry(apart, dpart)
@@ -228,14 +203,14 @@ VOL_GEOM_2D = {
 
 
 def test_volume_data_2d():
-    """Create ASTRA data structure in 2D."""
+    """Verify ASTRA data structure creation in 2D."""
     # From scratch
     data_id = astra_data(VOL_GEOM_2D, 'volume', ndim=2)
     data_out = astra.data2d.get_shared(data_id)
     assert data_out.shape == (10, 20)
 
     # From existing
-    discr_dom = _discrete_domain(2)
+    discr_dom = _space_iso(2)
     data_in = discr_dom.element(np.ones((10, 20), dtype='float32'))
     data_id = astra_data(VOL_GEOM_2D, 'volume', data=data_in)
     data_out = astra.data2d.get_shared(data_id)
@@ -248,15 +223,14 @@ VOL_GEOM_3D = {
 
 
 def test_volume_data_3d():
-    """Create ASTRA data structure in 2D."""
-
+    """Verify ASTRA data structure creation in 3D."""
     # From scratch
     data_id = astra_data(VOL_GEOM_3D, 'volume', ndim=3)
     data_out = astra.data3d.get_shared(data_id)
     assert data_out.shape == (10, 20, 30)
 
     # From existing
-    discr_dom = _discrete_domain(3)
+    discr_dom = _space_iso(3)
     data_in = discr_dom.element(np.ones((10, 20, 30), dtype='float32'))
     data_id = astra_data(VOL_GEOM_3D, 'volume', data=data_in)
     data_out = astra.data3d.get_shared(data_id)
@@ -276,7 +250,7 @@ PROJ_GEOM_3D = {
 
 
 def test_parallel_2d_projector():
-    """Create ASTRA 2D projectors."""
+    """Verify that ASTRA 2D projectors can be created."""
     # We can just test if it runs
     astra_projector('line', VOL_GEOM_2D, PROJ_GEOM_2D, ndim=2)
     astra_projector('linear', VOL_GEOM_2D, PROJ_GEOM_2D, ndim=2)
