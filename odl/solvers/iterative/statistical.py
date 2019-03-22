@@ -97,7 +97,7 @@ def osmlem(op, x, data, niter, callback=None, **kwargs):
         used as starting point of the iteration, and its values are
         updated in each iteration step.
         The initial value of ``x`` should be non-negative.
-      data : sequence of ``op.range`` `element-like`
+    data : sequence of ``op.range`` `element-like`
         Right-hand sides of the equation defining the inverse problem.
     niter : int
         Number of iterations.
@@ -177,8 +177,8 @@ def osmlem(op, x, data, niter, callback=None, **kwargs):
     for _ in range(niter):
         for i in range(n_ops):
             op[i](x, out=tmp_ran[i])
-            tmp_ran[i].ufuncs.maximum(eps, out=tmp_ran[i])
-            data[i].divide(tmp_ran[i], out=tmp_ran[i])
+            np.maximum(tmp_ran[i], eps, out=tmp_ran[i])
+            op[i].range.divide(data[i], tmp_ran[i], out=tmp_ran[i])
 
             op[i].adjoint(tmp_ran[i], out=tmp_dom)
             tmp_dom /= sensitivities[i]

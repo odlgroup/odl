@@ -482,13 +482,13 @@ def kaczmarz(ops, x, rhs, niter, omega=1, projection=None, random=False,
     --------
     landweber
     """
-    domain = ops[0].domain
-    if any(domain != opi.domain for opi in ops):
+    dom = ops[0].domain
+    if any(opi.domain != dom for opi in ops):
         raise ValueError('domains of `ops` are not all equal')
 
-    if x not in domain:
+    if x not in dom:
         raise TypeError('`x` {!r} is not in the domain of `ops` {!r}'
-                        ''.format(x, domain))
+                        ''.format(x, dom))
 
     if len(ops) != len(rhs):
         raise ValueError('`number of `ops` {} does not match number of '
@@ -502,7 +502,7 @@ def kaczmarz(ops, x, rhs, niter, omega=1, projection=None, random=False,
     tmp_rans = {ran: ran.element() for ran in unique_ranges}
 
     # Single reusable element in the domain
-    tmp_dom = domain.element()
+    tmp_dom = dom.element()
 
     # Iteratively find solution
     for _ in range(niter):
@@ -519,7 +519,7 @@ def kaczmarz(ops, x, rhs, niter, omega=1, projection=None, random=False,
 
             # Update x
             ops[i].derivative(x).adjoint(tmp_ran, out=tmp_dom)
-            x.lincomb(1, x, -omega[i], tmp_dom)
+            dom.lincomb(1, x, -omega[i], tmp_dom, out=x)
 
             if projection is not None:
                 projection(x)

@@ -131,10 +131,12 @@ def test_steepst_descent():
     rosenbrock = odl.solvers.RosenbrockFunctional(space, scale)
 
     line_search = odl.solvers.BacktrackingLineSearch(
-        rosenbrock, 0.1, 0.01)
+        rosenbrock, tau=0.1, discount=0.01
+    )
     x = rosenbrock.domain.zero()
-    odl.solvers.steepest_descent(rosenbrock, x, maxiter=40,
-                                 line_search=line_search)
+    odl.solvers.steepest_descent(
+        rosenbrock, x, maxiter=40, line_search=line_search
+    )
 
     assert all_almost_equal(x, [1, 1, 1], ndigits=2)
 
