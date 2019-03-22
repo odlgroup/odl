@@ -123,14 +123,14 @@ The convolution operation, written as ODL operator, could look like this::
    >>> class MyConvolution(odl.Operator):
    ...     """Operator for convolving with a given kernel."""
    ...
-   ...     def __init__(self, kernel):
+   ...     def __init__(self, space, kernel):
    ...         """Initialize the convolution."""
-   ...         self.kernel = kernel
-   ...
    ...         # Initialize operator base class.
    ...         # This operator maps from the space of vector to the same space and is linear
    ...         super(MyConvolution, self).__init__(
-   ...             domain=kernel.space, range=kernel.space, linear=True)
+   ...             domain=space, range=space, linear=True)
+   ...
+   ...         self.kernel = kernel
    ...
    ...     def _call(self, x):
    ...         # The output of an Operator is automatically cast to an ODL object
@@ -139,7 +139,7 @@ The convolution operation, written as ODL operator, could look like this::
 This operator can then be called on its domain elements::
 
    >>> kernel = odl.rn(3).element([1, 2, 1])
-   >>> conv_op = MyConvolution(kernel)
+   >>> conv_op = MyConvolution(r3, kernel)
    >>> conv_op([1, 2, 3])
    rn(3).element([ 4.,  8.,  8.])
 
@@ -149,7 +149,7 @@ It can be also be used with any of the ODL operator functionalities such as mult
    >>> scaled_op([1, 2, 3])
    rn(3).element([  8.,  16.,  16.])
    >>> y = odl.rn(3).element([1, 1, 1])
-   >>> inner_product_op = odl.InnerProductOperator(y)
+   >>> inner_product_op = odl.InnerProductOperator(r3, y)
    >>> # Create composition with inner product operator with [1, 1, 1].
    >>> # When called on a vector, the result should be the sum of the
    >>> # convolved vector.

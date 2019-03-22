@@ -228,7 +228,7 @@ def test_projector(projector, in_place):
 
     # We expect maximum value to be along diagonal
     expected_max = projector.domain.partition.extent[0] * np.sqrt(2)
-    assert proj.ufuncs.max() == pytest.approx(expected_max, rel=rtol)
+    assert np.max(proj) == pytest.approx(expected_max, rel=rtol)
 
 
 def test_adjoint(projector):
@@ -251,8 +251,8 @@ def test_adjoint(projector):
     backproj = projector.adjoint(proj)
 
     # Verified the identity <Ax, Ax> = <A^* A x, x>
-    result_AxAx = proj.inner(proj)
-    result_xAtAx = backproj.inner(vol)
+    result_AxAx = projector.range.inner(proj, proj)
+    result_xAtAx = projector.domain.inner(backproj, vol)
     assert result_AxAx == pytest.approx(result_xAtAx, rel=rtol)
 
 
@@ -285,7 +285,7 @@ def test_angles(projector):
         lambda x: np.exp(-(2 * x[0] - 10 + x[1]) ** 2))
 
     # Create projection
-    result = projector(vol).asarray()
+    result = projector(vol)
 
     # Find the angle where the projection has a maximum (along the line).
     # TODO: center of mass would be more robust
@@ -367,8 +367,8 @@ def test_anisotropic_voxels(geometry):
         # Just check that this doesn't crash and computes something nonzero
         data = ray_trafo(vol_one)
         backproj = ray_trafo.adjoint(data_one)
-        assert data.norm() > 0
-        assert backproj.norm() > 0
+        assert ray_trafo.range.norm(data) > 0
+        assert ray_trafo.domain.norm(backproj) > 0
     else:
         assert False
 

@@ -34,7 +34,7 @@ geometry = odl.tomo.ConeBeamGeometry(apart, dpart,
                                      src_radius=500, det_radius=500)
 
 
-phantom = odl.phantom.shepp_logan(reco_space, modified=True).asarray()
+phantom = odl.phantom.shepp_logan(reco_space, modified=True)
 
 # --- ASTRA ---
 
@@ -105,5 +105,5 @@ plt.imshow(phantom.T[coords], origin='lower', cmap='bone')
 plt.figure('ASTRA Reconstruction')
 plt.imshow(rec.T[coords], origin='lower', cmap='bone')
 plt.figure('ODL Reconstruction')
-plt.imshow(x.asarray().T[coords], origin='lower', cmap='bone')
+plt.imshow(x.T[coords], origin='lower', cmap='bone')
 plt.show()

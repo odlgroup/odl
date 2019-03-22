@@ -68,12 +68,12 @@ def test_proximal_box_constraint():
             prox_factory = proximal_box_constraint(space,
                                                    lower=lower, upper=upper)
             prox = prox_factory(1.0)
-            result = prox(x).asarray()
+            result = prox(x)
 
             # Create reference
             lower_np = -np.inf if lower is None else lower
             upper_np = np.inf if upper is None else upper
-            result_np = np.minimum(np.maximum(x, lower_np), upper_np).asarray()
+            result_np = np.minimum(np.maximum(x, lower_np), upper_np)
 
             # Verify equal result
             assert all_almost_equal(result_np, result)
@@ -98,7 +98,7 @@ def test_proximal_nonnegativity():
     result = prox(x)
 
     # prox_tau[G](x) = non-negativity thresholding
-    assert all(result.asarray() >= 0)
+    assert all(result >= 0)
 
 
 def test_combine_proximal():
@@ -162,12 +162,13 @@ def test_proximal_l2_wo_data():
 
     # Elements
     x = space.element(np.arange(-5, 5))
-    x_small = x * 0.5 * lam * sigma / x.norm()
-    x_big = x * 2.0 * lam * sigma / x.norm()
+    x_norm = space.norm(x)
+    x_small = x * 0.5 * lam * sigma / x_norm
+    x_big = x * 2.0 * lam * sigma / x_norm
 
-    # Explicit computation:
+    # Explicit computation
     x_small_opt = x_small * 0
-    x_big_opt = (1 - lam * sigma / x_big.norm()) * x_big
+    x_big_opt = (1 - lam * sigma / space.norm(x_big)) * x_big
 
     assert all_almost_equal(prox(x_small), x_small_opt, HIGH_ACC)
     assert all_almost_equal(prox(x_big), x_big_opt, HIGH_ACC)
@@ -194,12 +195,13 @@ def test_proximal_l2_with_data():
 
     # Elements
     x = space.element(np.arange(-5, 5))
-    x_small = g + x * 0.5 * lam * sigma / x.norm()
-    x_big = g + x * 2.0 * lam * sigma / x.norm()
+    x_norm = space.norm(x)
+    x_small = g + x * 0.5 * lam * sigma / x_norm
+    x_big = g + x * 2.0 * lam * sigma / x_norm
 
     # Explicit computation:
     x_small_opt = g
-    const = lam * sigma / (x_big - g).norm()
+    const = lam * sigma / space.norm(x_big - g)
     x_big_opt = (1 - const) * x_big + const * g
 
     assert all_almost_equal(prox(x_small), x_small_opt, HIGH_ACC)

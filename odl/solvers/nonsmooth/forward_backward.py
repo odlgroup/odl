@@ -165,15 +165,16 @@ def forward_backward_pd(x, f, g, L, h, tau, sigma, niter,
         raise TypeError('unexpected keyword argument: {}'.format(kwargs))
 
     # Pre-allocate values
+    dom = f.domain
     v = [Li.range.zero() for Li in L]
-    y = x.space.zero()
+    y = dom.zero()
 
     for k in range(niter):
         x_old = x
 
         tmp_1 = grad_h(x) + sum(Li.adjoint(vi) for Li, vi in zip(L, v))
         prox_f(tau)(x - tau * tmp_1, out=x)
-        y.lincomb(2.0, x, -1, x_old)
+        dom.lincomb(2.0, x, -1, x_old, out=y)
 
         for i in range(m):
             if l is not None:

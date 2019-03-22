@@ -13,6 +13,7 @@ from __future__ import print_function, division, absolute_import
 import numpy as np
 
 from odl.operator import Operator
+from odl.solvers.functional.functional import Functional
 
 
 __all__ = ('douglas_rachford_pd', 'douglas_rachford_pd_stepsize')
@@ -126,6 +127,8 @@ def douglas_rachford_pd(x, f, g, L, niter, tau=None, sigma=None,
     """
     # Validate input
     m = len(L)
+    if not isinstance(f, Functional):
+        raise TypeError('`f` must be a `Functional` instance')
     if not all(isinstance(op, Operator) for op in L):
         raise ValueError('`L` not a sequence of operators')
     if not all(op.is_linear for op in L):
@@ -160,15 +163,16 @@ def douglas_rachford_pd(x, f, g, L, niter, tau=None, sigma=None,
         raise TypeError('got unexpected keyword arguments: {}'.format(kwargs))
 
     # Pre-allocate values
+    dom = f.domain
     v = [Li.range.zero() for Li in L]
-    p1 = x.space.zero()
+    p1 = dom.zero()
     p2 = [Li.range.zero() for Li in L]
-    z1 = x.space.zero()
+    z1 = dom.zero()
     # Save a bit of memory: z2 elements are local to the loop where they
     # are used
     rans = {Li.range for Li in L}
     z2 = {ran: ran.zero() for ran in rans}
-    w1 = x.space.zero()
+    w1 = dom.zero()
     w2 = [Li.range.zero() for Li in L]
 
     for k in range(niter):
@@ -183,16 +187,16 @@ def douglas_rachford_pd(x, f, g, L, niter, tau=None, sigma=None,
                 Li.adjoint(vi, out=p1)
                 z1 += p1
 
-            z1.lincomb(1, x, -tau / 2, z1)
+            dom.lincomb(1, x, -tau / 2, z1, out=z1)
         else:
-            z1.assign(x)
+            dom.assign(z1, x)
 
         f.proximal(tau)(z1, out=p1)
         # Now p1 = prox[tau*f](x - tau/2 * sum(Li^* vi))
         # Temporary z1 is no longer needed
 
         # w1 = 2 * p1 - x
-        w1.lincomb(2, p1, -1, x)
+        dom.lincomb(2, p1, -1, x, out=w1)
 
         # Part 1 of x += lam(k) * (z1 - p1)
         x.lincomb(1, x, -lam_k, p1)
@@ -210,10 +214,10 @@ def douglas_rachford_pd(x, f, g, L, niter, tau=None, sigma=None,
         for i in range(m):
             # Compute p2[i] = prox[sigma * g^*](v[i] + sigma[i]/2 * L[i](w1))
             L[i](w1, out=p2[i])
-            p2[i].lincomb(1, v[i], sigma[i] / 2, p2[i])
+            L[i].range.lincomb(1, v[i], sigma[i] / 2, p2[i], out=p2[i])
             prox_cc_g[i](sigma[i])(p2[i], out=p2[i])
             # w2[i] = 2 * p2[i] - v[i]
-            w2[i].lincomb(2, p2[i], -1, v[i])
+            L[i].range.lincomb(2, p2[i], -1, v[i], out=w2[i])
 
         if len(L) > 0:
             # Compute p1 = sum(Li.adjoint(w2i) for Li, w2i in zip(L, w2))
@@ -224,30 +228,30 @@ def douglas_rachford_pd(x, f, g, L, niter, tau=None, sigma=None,
                 Li.adjoint(w2i, out=z1)
                 p1 += z1
         else:
-            p1.set_zero()
+            dom.set_zero(p1)
 
         # z1 = w2 - tau/2 * p1
-        z1.lincomb(1, w1, -tau / 2, p1)
+        dom.lincomb(1, w1, -tau / 2, p1, out=z1)
 
         # Part 2 of x += lam(k) * (z1 - p1)
-        x.lincomb(1, x, lam_k, z1)
+        dom.lincomb(1, x, lam_k, z1, out=x)
 
         # p1 = 2 * z1 - w1
-        p1.lincomb(2, z1, -1, w1)
+        dom.lincomb(2, z1, -1, w1, out=p1)
         for i in range(m):
             z2i = z2[L[i].range]
             # Compute
             # z2[i] = prox[sigma[i] * l[i]^*](w2[i] + sigma[i]/2 * L[i](p1))
             L[i](p1, out=z2i)
-            z2i.lincomb(1, w2[i], sigma[i] / 2, L[i](p1))
+            L[i].range.lincomb(1, w2[i], sigma[i] / 2, L[i](p1), out=z2i)
             # prox_cc_l is the identity if `l is None`, thus omitted in that
             # case
             if l is not None:
                 prox_cc_l[i](sigma[i])(z2i, out=z2i)
 
             # Compute v[i] += lam(k) * (z2[i] - p2[i])
-            v[i].lincomb(1, v[i], lam_k, z2i)
-            v[i].lincomb(1, v[i], -lam_k, p2[i])
+            L[i].range.lincomb(1, v[i], lam_k, z2i, out=v[i])
+            L[i].range.lincomb(1, v[i], -lam_k, p2[i], out=v[i])
 
 
 def _operator_norms(L):

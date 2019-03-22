@@ -239,16 +239,19 @@ def pdhg(x, f, g, L, niter, tau=None, sigma=None, **kwargs):
     if x_relax is None:
         x_relax = x.copy()
     elif x_relax not in L.domain:
-        raise TypeError('`x_relax` {} is not in the domain of '
-                        '`L` {}'.format(x_relax.space, L.domain))
+        raise TypeError(
+            '`x_relax` {} is not in the domain of `L` {}'
+            ''.format(x_relax, L.domain)
+        )
 
     # Initialize the dual variable
     y = kwargs.pop('y', None)
     if y is None:
         y = L.range.zero()
     elif y not in L.range:
-        raise TypeError('`y` {} is not in the range of `L` '
-                        '{}'.format(y.space, L.range))
+        raise TypeError(
+            '`y` {} is not in the range of `L` {}'.format(y, L.range)
+        )
 
     # Get the proximals
     proximal_primal = f.proximal

@@ -406,8 +406,13 @@ class RayTransform(RayTransformBase):
 
             if data_impl == 'cpu':
                 return astra_cpu_forward_projector(
-                    x_real, self.geometry, self.range.real_space, out_real,
-                    **kwargs)
+                    x_real,
+                    self.geometry,
+                    self.domain.real_space,
+                    self.range.real_space,
+                    out_real,
+                    **kwargs,
+                )
 
             elif data_impl == 'cuda':
                 if self._astra_wrapper is None:
@@ -426,8 +431,13 @@ class RayTransform(RayTransformBase):
 
         elif self.impl == 'skimage':
             return skimage_radon_forward_projector(
-                x_real, self.geometry, self.range.real_space, out_real,
-                **kwargs)
+                x_real,
+                self.geometry,
+                self.domain.real_space,
+                self.range.real_space,
+                out_real,
+                **kwargs,
+            )
         else:
             # Should never happen
             raise RuntimeError('bad `impl` {!r}'.format(self.impl))
@@ -521,8 +531,13 @@ class RayBackProjection(RayTransformBase):
             backend, data_impl = self.impl.split('_')
             if data_impl == 'cpu':
                 return astra_cpu_back_projector(
-                    x_real, self.geometry, self.range.real_space, out_real,
-                    **kwargs)
+                    x_real,
+                    self.geometry,
+                    self.range.real_space,
+                    self.domain.real_space,
+                    out_real,
+                    **kwargs,
+                )
             elif data_impl == 'cuda':
                 if self._astra_wrapper is None:
                     astra_wrapper = AstraCudaBackProjectorImpl(
@@ -540,8 +555,13 @@ class RayBackProjection(RayTransformBase):
 
         elif self.impl == 'skimage':
             return skimage_radon_back_projector(
-                x_real, self.geometry, self.range.real_space, out_real,
-                **kwargs)
+                x_real,
+                self.geometry,
+                self.range.real_space,
+                self.domain.real_space,
+                out_real,
+                **kwargs,
+            )
         else:
             # Should never happen
             raise RuntimeError('bad `impl` {!r}'.format(self.impl))

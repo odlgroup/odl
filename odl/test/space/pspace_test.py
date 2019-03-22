@@ -9,7 +9,6 @@
 from __future__ import division
 import numpy as np
 import pytest
-import operator
 
 import odl
 from odl.space import ProductSpace
@@ -70,36 +69,6 @@ def space(request):
         raise ValueError('undefined space')
 
     return space
-
-
-@pytest.fixture(scope="module", ids=elem_ids, params=elem_params)
-def newpart(request, space):
-    element_form = request.param.strip()
-
-    if element_form == 'space':
-        tmp = noise_element(space)
-        newreal = space.element(tmp.real)
-    elif element_form == 'real_space':
-        newreal = noise_element(space).real
-    elif element_form == 'numpy_array':
-        tmp = noise_element(space)
-        newreal = [tmp[0].real.asarray(), tmp[1].real.asarray()]
-    elif element_form == 'array':
-        if space.is_power_space:
-            newreal = [[0, 1, 2], [3, 4, 5]]
-        else:
-            newreal = [[0, 1, 2], [3, 4]]
-    elif element_form == 'scalar':
-        newreal = np.random.randn()
-    elif element_form == '1d_array':
-        if not space.is_power_space:
-            pytest.skip('arrays matching only one dimension can only be used '
-                        'for power spaces')
-        newreal = [0, 1, 2]
-    else:
-        raise ValueError('undefined form of element')
-
-    return newreal
 
 
 # --- Tests --- #

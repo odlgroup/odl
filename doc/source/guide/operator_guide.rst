@@ -50,7 +50,7 @@ example::
   class MatrixOperator(odl.Operator):
       ...
       def _call(self, x, out):
-          self.matrix.dot(x, out=out.asarray())
+          self.matrix.dot(x, out=out)
 
 In-place evaluation is usually more efficient and should be used
 *whenever possible*.

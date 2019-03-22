@@ -45,17 +45,19 @@ and create a wrapping `Operator` for it in ODL.
        The operator inherits from ``odl.Operator`` to be able to be used with ODL.
        """
 
-       def __init__(self, kernel):
+       def __init__(self, space, kernel):
            """Initialize a convolution operator with a known kernel."""
-
-           # Store the kernel
-           self.kernel = kernel
 
            # Initialize the Operator class by calling its __init__ method.
            # This sets properties such as domain and range and allows the other
            # operator convenience functions to work.
            super(Convolution, self).__init__(
-               domain=kernel.space, range=kernel.space, linear=True)
+               domain=space, range=space, linear=True
+           )
+
+           # Store the kernel
+           self.kernel = kernel
+
 
        def _call(self, x):
            """Implement calling the operator by calling scipy."""
@@ -75,7 +77,7 @@ ODL also provides a nice range of standard phantoms such as the `cuboid` and `sh
    kernel = odl.phantom.cuboid(space, [-0.05, -0.05], [0.05, 0.05])
 
    # Create convolution operator
-   A = Convolution(kernel)
+   A = Convolution(space, kernel)
 
    # Create phantom (the "unknown" solution)
    phantom = odl.phantom.shepp_logan(space, modified=True)
@@ -84,9 +86,9 @@ ODL also provides a nice range of standard phantoms such as the `cuboid` and `sh
    g = A(phantom)
 
    # Display the results using the show method
-   kernel.show('kernel')
-   phantom.show('phantom')
-   g.show('convolved phantom')
+   space.show(kernel, title='kernel')
+   space.show(phantom, title='phantom')
+   space.show(g, title='convolved phantom')
 
 .. image:: figures/getting_started_kernel.png
 

@@ -56,7 +56,7 @@ def test_L1_norm(space, sigma):
     x = noise_element(space)
 
     # Test functional evaluation
-    expected_result = np.abs(x).inner(space.one())
+    expected_result = space.inner(np.abs(x), space.one())
     assert func(x) == pytest.approx(expected_result)
 
     # Test gradient - expecting sign function
@@ -68,7 +68,7 @@ def test_L1_norm(space, sigma):
     #                      z_i = {  0,           if -sigma <= x_i <= sigma
     #                            |  x_i - sigma, if x_i > sigma
     tmp = np.zeros(space.shape)
-    orig = x.asarray()
+    orig = x
     tmp[orig > sigma] = orig[orig > sigma] - sigma
     tmp[orig < -sigma] = orig[orig < -sigma] + sigma
     expected_result = space.element(tmp)
@@ -107,7 +107,7 @@ def test_indicator_lp_unit_ball(space, sigma, exponent):
 
     # Test functional evaluation
     p_norm_x = np.power(
-        func.domain.element(np.power(np.abs(x), exponent)).inner(one_elem),
+        space.inner(space.element(np.power(np.abs(x), exponent)), one_elem),
         1.0 / exponent)
 
     norm_larger_than_one = 1.01 * x / p_norm_x
@@ -121,15 +121,15 @@ def test_L2_norm(space, sigma):
     """Test the L2-norm."""
     func = odl.solvers.L2Norm(space)
     x = noise_element(space)
-    x_norm = x.norm()
+    x_norm = space.norm(x)
 
     # Test functional evaluation
-    expected_result = np.sqrt((x ** 2).inner(space.one()))
+    expected_result = np.sqrt(space.inner(x ** 2, space.one()))
     assert func(x) == pytest.approx(expected_result)
 
     # Test gradient
     if x_norm > 0:
-        expected_result = x / x.norm()
+        expected_result = x / x_norm
         assert all_almost_equal(func.gradient(x), expected_result)
 
     # Verify that the gradient at zero is zero
@@ -138,14 +138,18 @@ def test_L2_norm(space, sigma):
     # Test proximal operator - expecting
     # x * (1 - sigma/||x||) if ||x|| > sigma, 0 else
     norm_less_than_sigma = 0.99 * sigma * x / x_norm
-    assert all_almost_equal(func.proximal(sigma)(norm_less_than_sigma),
-                            space.zero())
+    assert all_almost_equal(
+        func.proximal(sigma)(norm_less_than_sigma), space.zero()
+    )
 
     norm_larger_than_sigma = 1.01 * sigma * x / x_norm
-    expected_result = (norm_larger_than_sigma *
-                       (1.0 - sigma / norm_larger_than_sigma.norm()))
-    assert all_almost_equal(func.proximal(sigma)(norm_larger_than_sigma),
-                            expected_result)
+    expected_result = (
+        norm_larger_than_sigma
+        * (1.0 - sigma / space.norm(norm_larger_than_sigma))
+    )
+    assert all_almost_equal(
+        func.proximal(sigma)(norm_larger_than_sigma), expected_result
+    )
 
     # Test convex conjugate
     func_cc = func.convex_conj
@@ -179,7 +183,7 @@ def test_L2_norm_squared(space, sigma):
     """Test the squared L2-norm."""
     func = odl.solvers.L2NormSquared(space)
     x = noise_element(space)
-    x_norm = x.norm()
+    x_norm = space.norm(x)
 
     # Test functional evaluation
     expected_result = x_norm ** 2
@@ -276,9 +280,9 @@ def test_kullback_leibler(space):
     one_elem = space.one()
 
     # Evaluation of the functional
-    expected_result = (
-        x - prior + prior * np.log(prior / x)
-    ).inner(one_elem)
+    expected_result = space.inner(
+        (x - prior + prior * np.log(prior / x)), one_elem
+    )
     assert func(x) == pytest.approx(expected_result)
 
     # Check property for prior
@@ -286,7 +290,7 @@ def test_kullback_leibler(space):
 
     # For elements with (a) negative components it should return inf
     x_neg = noise_element(space)
-    x_neg = x_neg - x_neg.ufuncs.max()
+    x_neg = x_neg - np.max(x_neg)
     assert func(x_neg) == np.inf
 
     # The gradient
@@ -310,11 +314,11 @@ def test_kullback_leibler(space):
     x = x - x.ufuncs.max() + 0.99
 
     # Evaluation of convex conjugate
-    expected_result = - (prior * np.log(1 - x)).inner(one_elem)
+    expected_result = -space.inner(prior * np.log(1 - x), one_elem)
     assert cc_func(x) == pytest.approx(expected_result)
 
     x_wrong = noise_element(space)
-    x_wrong = x_wrong - x_wrong.ufuncs.max() + 1.01
+    x_wrong = x_wrong - np.max(x_wrong) + 1.01
     assert cc_func(x_wrong) == np.inf
 
     # The gradient of the convex conjugate
@@ -347,8 +351,9 @@ def test_kullback_leibler_cross_entorpy(space):
     one_elem = space.one()
 
     # Evaluation of the functional
-    expected_result = ((prior - x + x * np.log(x / prior))
-                       .inner(one_elem))
+    expected_result = space.inner(
+        (prior - x + x * np.log(x / prior)), one_elem
+    )
     assert func(x) == pytest.approx(expected_result)
 
     # Check property for prior
@@ -379,7 +384,7 @@ def test_kullback_leibler_cross_entorpy(space):
     x = noise_element(space)
 
     # Evaluation of convex conjugate
-    expected_result = (prior * (np.exp(x) - 1)).inner(one_elem)
+    expected_result = space.inner(prior * (np.exp(x) - 1), one_elem)
     assert cc_func(x) == pytest.approx(expected_result)
 
     # The gradient of the convex conjugate
@@ -387,8 +392,9 @@ def test_kullback_leibler_cross_entorpy(space):
     assert all_almost_equal(cc_func.gradient(x), expected_result)
 
     # The proximal of the convex conjugate
-    expected_result = (x -
-                       scipy.special.lambertw(sigma * prior * np.exp(x)).real)
+    expected_result = (
+        x - scipy.special.lambertw(sigma * prior * np.exp(x)).real
+    )
     assert all_almost_equal(cc_func.proximal(sigma)(x), expected_result)
 
     # The biconjugate, which is the functional itself since it is proper,
@@ -414,7 +420,9 @@ def test_quadratic_form(space):
     assert func.constant == constant
 
     # Evaluation of the functional
-    expected_result = x.inner(operator(x)) + vector.inner(x) + constant
+    expected_result = (
+        space.inner(x, operator(x)) + space.inner(x, vector) + constant
+    )
     assert func(x) == pytest.approx(expected_result)
 
     # The gradient
@@ -427,7 +435,7 @@ def test_quadratic_form(space):
     # Test for linear functional
     func_no_operator = odl.solvers.QuadraticForm(vector=vector,
                                                  constant=constant)
-    expected_result = vector.inner(x) + constant
+    expected_result = space.inner(x, vector) + constant
     assert func_no_operator(x) == pytest.approx(expected_result)
 
     expected_gradient = vector
@@ -444,7 +452,7 @@ def test_quadratic_form(space):
 
     # Test with no offset
     func_no_offset = odl.solvers.QuadraticForm(operator, constant=constant)
-    expected_result = x.inner(operator(x)) + constant
+    expected_result = space.inner(x, operator(x)) + constant
     assert func_no_offset(x) == pytest.approx(expected_result)
 
 
@@ -618,7 +626,7 @@ def test_bregman_functional_no_gradient(space):
 
     x = np.abs(noise_element(space))
 
-    expected_result = -subgrad.inner(x - point)
+    expected_result = space.inner(-subgrad, x - point)
     assert all_almost_equal(bregman_dist(x), expected_result)
 
     # However, since the functional is not differentialbe we cannot call the

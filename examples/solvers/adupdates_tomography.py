@@ -74,8 +74,8 @@ else:
 # Create the artificial data.
 data_spaces = [op.range for op in ray_trafos]
 noisefree_data = [op(phantom) for op in ray_trafos]
-data = [proj + 0.10 * np.ptp(proj) * odl.phantom.white_noise(proj.space)
-        for proj in noisefree_data]
+data = [proj + 0.10 * np.ptp(proj) * odl.phantom.white_noise(data_space)
+        for proj, data_space in zip(noisefree_data, data_spaces)]
 
 # Functionals and operators for the total variation. This is the l1 norm of the
 # (discretized) gradient of the reconstruction. For each of the dimensions

@@ -24,7 +24,7 @@ grad = odl.Gradient(space)
 # Create data
 phantom = odl.phantom.shepp_logan(space, True)
 data = ray_transform(phantom)
-noisy_data = data + odl.phantom.white_noise(data.space)
+noisy_data = data + odl.phantom.white_noise(ray_transform.range)
 
 # Create tensorflow layers from odl operators
 ray_transform_layer = odl.contrib.tensorflow.as_tensorflow_layer(

@@ -508,11 +508,9 @@ class PowerOperator(Operator):
 class InnerProductOperator(Operator):
     """Operator taking the inner product with a fixed space element.
 
-    Implements::
+    Implements ::
 
-        InnerProductOperator(y)(x) <==> y.inner(x)
-
-    This is only applicable in inner product spaces.
+        InnerProductOperator(space, y)(x) <==> space.inner(x, y)
 
     See Also
     --------
@@ -583,12 +581,9 @@ class NormOperator(Operator):
 
     """Vector space norm as an operator.
 
-    Implements::
+    Implements ::
 
-        NormOperator()(x) <==> x.norm()
-
-    This is only applicable in normed spaces, i.e., spaces implementing
-    a ``norm`` method.
+        NormOperator(space)(x) <==> space.norm(x)
 
     See Also
     --------
@@ -620,9 +615,10 @@ class NormOperator(Operator):
     def derivative(self, point):
         r"""Derivative of this operator in ``point``.
 
-            ``NormOperator().derivative(y)(x) == (y / y.norm()).inner(x)``
+        Implements ::
 
-        This is only applicable in inner product spaces.
+            NormOperator(space).derivative(y)(x) <==>
+            space.inner(x, y / space.norm(y))
 
         Parameters
         ----------
@@ -636,8 +632,8 @@ class NormOperator(Operator):
         Raises
         ------
         ValueError
-            If ``point.norm() == 0``, in which case the derivative is not well
-            defined in the Frechet sense.
+            If ``point`` has a norm of 0, in which case the derivative is not
+            well-defined.
 
         Notes
         -----
@@ -675,12 +671,9 @@ class DistOperator(Operator):
 
     """Operator taking the distance to a fixed space element.
 
-    Implements::
+    Implements ::
 
-        DistOperator(y)(x) == y.dist(x)
-
-    This is only applicable in metric spaces, i.e., spaces implementing
-    a ``dist`` method.
+        DistOperator(space, y)(x) <==> space.dist(x, y)
 
     See Also
     --------
@@ -721,10 +714,10 @@ class DistOperator(Operator):
     def derivative(self, point):
         r"""The derivative operator.
 
-            ``DistOperator(y).derivative(z)(x) ==
-            ((y - z) / y.dist(z)).inner(x)``
+        Implements ::
 
-        This is only applicable in inner product spaces.
+            DistOperator(space, y).derivative(p)(x) <==>
+            space.inner(x, (y - p) / space.dist(y, p))
 
         Parameters
         ----------
@@ -1465,15 +1458,15 @@ class ComplexModulus(Operator):
 
                 >>> y1 = deriv.range.element([5, 5])
                 >>> y2 = deriv.range.element([1, 2])
-                >>> adj(y1).inner(adj(y2))  # <M^* y1, M^* y2>
+                >>> deriv.domain.inner(adj(y1), adj(y2))  # <M^* y1, M^* y2>
                 (15+0j)
-                >>> deriv(adj(y1)).inner(y2)  # <M M^* y1, y2>
+                >>> deriv.range.inner(deriv(adj(y1)), y2)  # <M M^* y1, y2>
                 15.0
                 >>> x1 = deriv.domain.element([6 + 3j, 2j])
                 >>> x2 = deriv.domain.element([5, 10 + 4j])
-                >>> deriv(x1).inner(deriv(x2))  # <M x1, M x2>
+                >>> deriv.range.inner(deriv(x1), deriv(x2))  # <M x1, M x2>
                 18.0
-                >>> adj(deriv(x1)).inner(x2)  # <M^* M x1, x2>
+                >>> deriv.domain.inner(adj(deriv(x1)), x2)  # <M^* M x1, x2>
                 (18+24j)
 
                 Notes
@@ -1662,15 +1655,15 @@ class ComplexModulusSquared(Operator):
 
                 >>> y1 = deriv.range.element([1, 1])
                 >>> y2 = deriv.range.element([1, -1])
-                >>> adj(y1).inner(adj(y2))  # <M^* y1, M^* y2>
+                >>> deriv.domain.inner(adj(y1), adj(y2))  # <M^* y1, M^* y2>
                 (84+0j)
-                >>> deriv(adj(y1)).inner(y2)  # <M M^* y1, y2>
+                >>> deriv.range.inner(deriv(adj(y1)), y2)  # <M M^* y1, y2>
                 84.0
                 >>> x1 = deriv.domain.element([1j, 1j])
                 >>> x2 = deriv.domain.element([1 + 1j, 1j])
-                >>> deriv(x1).inner(deriv(x2))  # <M x1, M x2>
+                >>> deriv.range.inner(deriv(x1), deriv(x2))  # <M x1, M x2>
                 112.0
-                >>> adj(deriv(x1)).inner(x2)  # <M^* M x1, x2>
+                >>> deriv.domain.inner(adj(deriv(x1)), x2)  # <M^* M x1, x2>
                 (112+16j)
 
                 Notes

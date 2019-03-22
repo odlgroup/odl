@@ -23,7 +23,7 @@ from odl.set import LinearSpace
 from odl.util import signature_string
 
 __all__ = ('Callback', 'CallbackStore', 'CallbackApply', 'CallbackPrintTiming',
-           'CallbackPrintIteration', 'CallbackPrint', 'CallbackPrintNorm',
+           'CallbackPrintIteration', 'CallbackPrint',
            'CallbackShow', 'CallbackSaveToDisk', 'CallbackSleep',
            'CallbackShowConvergence', 'CallbackPrintHardwareUsage',
            'CallbackProgressBar', 'save_animation')
@@ -220,7 +220,7 @@ class CallbackStore(Callback):
 
         Store the norm of the results:
 
-        >>> norm_function = lambda x: x.norm()
+        >>> norm_function = lambda x: odl.rn(3).norm(x)
         >>> callback = CallbackStore() * norm_function
         """
         self.results = [] if results is None else results
@@ -551,19 +551,6 @@ class CallbackPrint(Callback):
                    ('step', self.step, 1)]
         inner_str = signature_string([], optargs)
         return '{}({})'.format(self.__class__.__name__, inner_str)
-
-
-class CallbackPrintNorm(Callback):
-
-    """Callback for printing the current norm."""
-
-    def __call__(self, result):
-        """Print the current norm."""
-        print("norm = {}".format(result.norm()))
-
-    def __repr__(self):
-        """Return ``repr(self)``."""
-        return '{}()'.format(self.__class__.__name__)
 
 
 class CallbackShow(Callback):

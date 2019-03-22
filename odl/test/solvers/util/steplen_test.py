@@ -24,7 +24,7 @@ def test_backtracking_line_search():
     for direction in [space.element([1, 0]),
                       space.element([-1, 0]),
                       space.element([-1, -1])]:
-        dir_derivative = func.gradient(x).inner(direction)
+        dir_derivative = space.inner(func.gradient(x), direction)
 
         steplen = line_search(x, direction, dir_derivative)
         assert func(x + steplen * direction) < func(x)
@@ -42,7 +42,7 @@ def test_constant_line_search():
     for direction in [space.element([1, 0]),
                       space.element([-1, 0]),
                       space.element([-1, -1])]:
-        dir_derivative = func.gradient(x).inner(direction)
+        dir_derivative = space.inner(func.gradient(x), direction)
 
         steplen = line_search(x, direction, dir_derivative)
         assert steplen == 0.57
@@ -60,7 +60,7 @@ def test_line_search_from_iternum():
     for n, direction in enumerate([space.element([1, 0]),
                                    space.element([-1, 0]),
                                    space.element([-1, -1])]):
-        dir_derivative = func.gradient(x).inner(direction)
+        dir_derivative = space.inner(func.gradient(x), direction)
 
         steplen = line_search(x, direction, dir_derivative)
         assert steplen == 1 / (n + 1)

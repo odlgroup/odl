@@ -7,13 +7,16 @@ import odl
 
 
 class Convolution(odl.Operator):
-    def __init__(self, kernel, adjkernel=None):
-        self.kernel = kernel
-        self.adjkernel = (adjkernel if adjkernel is not None
-                          else kernel.space.element(kernel[::-1].copy()))
-        self.norm = float(np.sum(np.abs(self.kernel)))
+    def __init__(self, space, kernel, adjkernel=None):
         super(Convolution, self).__init__(
-            domain=kernel.space, range=kernel.space, linear=True)
+            domain=space, range=space, linear=True
+        )
+        self.kernel = np.asarray(kernel)
+        if adjkernel is None:
+            self.adjkernel = kernel[::-1]
+        else:
+            self.adjkernel = np.asarray(adjkernel)
+        self._norm = float(np.sum(np.abs(self.kernel)))
 
     def _call(self, x):
         return scipy.signal.convolve(x, self.kernel, mode='same')
@@ -22,8 +25,8 @@ class Convolution(odl.Operator):
     def adjoint(self):
         return Convolution(self.adjkernel, self.kernel)
 
-    def opnorm(self):
-        return self.norm
+    def norm(self):
+        return self._norm
 
 
 # Discretization
@@ -38,7 +41,7 @@ conv = Convolution(kernel)
 
 # Dampening parameter for landweber
 iterations = 100
-omega = 1 / conv.opnorm() ** 2
+omega = 1 / conv.norm() ** 2
 
 
 # Display callback

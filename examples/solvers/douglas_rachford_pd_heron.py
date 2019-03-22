@@ -53,7 +53,7 @@ def print_objective(x):
     value = 0
     for minp, maxp in rectangles:
         x_proj = np.minimum(np.maximum(x, minp), maxp)
-        value += (x - x_proj).norm()
+        value += space.norm(x - x_proj)
     print('Point = [{:.4f}, {:.4f}], Value = {:.4f}'.format(x[0], x[1], value))
 
 

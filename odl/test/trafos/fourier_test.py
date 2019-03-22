@@ -238,7 +238,7 @@ def test_dft_call(impl):
     rand_arr = noise_element(dft_dom)
     rand_arr_dft = dft(rand_arr, flags=('FFTW_ESTIMATE',))
     rand_arr_idft = idft(rand_arr_dft, flags=('FFTW_ESTIMATE',))
-    assert (rand_arr_idft - rand_arr).norm() < 1e-6
+    assert dft_dom.norm(rand_arr_idft - rand_arr) < 1e-6
 
     # 2d, halfcomplex, first axis
     shape = (4, 5)
@@ -267,7 +267,7 @@ def test_dft_call(impl):
     rand_arr = noise_element(dft_dom)
     rand_arr_dft = dft(rand_arr, flags=('FFTW_ESTIMATE',))
     rand_arr_idft = idft(rand_arr_dft, flags=('FFTW_ESTIMATE',))
-    assert (rand_arr_idft - rand_arr).norm() < 1e-6
+    assert dft_dom.norm(rand_arr_idft - rand_arr) < 1e-6
 
 
 def test_dft_sign(impl):
@@ -335,8 +335,7 @@ def test_dft_init_plan(impl):
         dft.init_fftw_plan()
 
         # Make sure plan can be used
-        dft._fftw_plan(dft.domain.element().asarray(),
-                       dft.range.element().asarray())
+        dft._fftw_plan(dft.domain.element(), dft.range.element())
         dft.clear_fftw_plan()
         assert dft._fftw_plan is None
 
@@ -411,8 +410,7 @@ def test_fourier_trafo_init_plan(impl, odl_floating_dtype):
         ft.init_fftw_plan()
 
         # Make sure plan can be used
-        ft._fftw_plan(ft.domain.element().asarray(),
-                      ft.range.element().asarray())
+        ft._fftw_plan(ft.domain.element(), ft.range.element())
         ft.clear_fftw_plan()
         assert ft._fftw_plan is None
 
@@ -427,8 +425,7 @@ def test_fourier_trafo_init_plan(impl, odl_floating_dtype):
         ft.init_fftw_plan()
 
         # Make sure plan can be used
-        ft._fftw_plan(ft.domain.element().asarray(),
-                      ft.range.element().asarray())
+        ft._fftw_plan(ft.domain.element(), ft.range.element())
         ft.clear_fftw_plan()
         assert ft._fftw_plan is None
 
@@ -442,8 +439,7 @@ def test_fourier_trafo_init_plan(impl, odl_floating_dtype):
         ft.init_fftw_plan()
 
         # Make sure plan can be used
-        ft._fftw_plan(ft.domain.element().asarray(),
-                      ft.range.element().asarray())
+        ft._fftw_plan(ft.domain.element(), ft.range.element())
         ft.clear_fftw_plan()
         assert ft._fftw_plan is None
 
@@ -516,7 +512,7 @@ def test_fourier_trafo_charfun_1d():
     for dft in [dft_base, dft_complex, dft_complex_shift]:
         func_true_ft = dft.range.element(char_interval_ft)
         func_dft = dft(char_interval)
-        assert (func_dft - func_true_ft).norm() < 5e-6
+        assert dft.range.norm(func_dft - func_true_ft) < 5e-6
 
 
 def test_fourier_trafo_scaling():
@@ -536,7 +532,7 @@ def test_fourier_trafo_scaling():
     for factor in (2, 1j, -2.5j, 1 - 4j):
         func_true_ft = factor * dft.range.element(char_interval_ft)
         func_dft = dft(factor * discr.element(char_interval))
-        assert (func_dft - func_true_ft).norm() < 1e-6
+        assert dft.range.norm(func_dft - func_true_ft) < 1e-6
 
 
 def test_fourier_trafo_sign(impl):
@@ -632,7 +628,7 @@ def test_fourier_trafo_hat_1d():
     dft = FourierTransform(discr)
     func_true_ft = dft.range.element(hat_func_ft)
     func_dft = dft(hat_func)
-    assert (func_dft - func_true_ft).norm() < 0.001
+    assert dft.range.norm(func_dft - func_true_ft) < 0.001
 
 
 def test_fourier_trafo_complex_sum():
@@ -662,7 +658,7 @@ def test_fourier_trafo_complex_sum():
         + 1j * dft.range.element(char_interval_ft)
     )
     func_dft = dft(func)
-    assert (func_dft - func_true_ft).norm() < 0.001
+    assert dft.range.norm(func_dft - func_true_ft) < 0.001
 
 
 def test_fourier_trafo_gaussian_1d():
@@ -675,7 +671,7 @@ def test_fourier_trafo_gaussian_1d():
     dft = FourierTransform(discr)
     func_true_ft = dft.range.element(gaussian)
     func_dft = dft(gaussian)
-    assert (func_dft - func_true_ft).norm() < 0.001
+    assert dft.range.norm(func_dft - func_true_ft) < 0.001
 
 
 def test_fourier_trafo_freq_shifted_charfun_1d():
@@ -693,7 +689,7 @@ def test_fourier_trafo_freq_shifted_charfun_1d():
     dft = FourierTransform(discr)
     func_true_ft = dft.range.element(fshift_char_interval_ft)
     func_dft = dft(fshift_char_interval)
-    assert (func_dft - func_true_ft).norm() < 0.001
+    assert dft.range.norm(func_dft - func_true_ft) < 0.001
 
 
 def test_dft_with_known_pairs_2d():
@@ -720,7 +716,7 @@ def test_dft_with_known_pairs_2d():
     dft = FourierTransform(discr)
     func_true_ft = dft.range.element(fshift_char_rect_ft)
     func_dft = dft(fshift_char_rect)
-    assert (func_dft - func_true_ft).norm() < 0.001
+    assert dft.range.norm(func_dft - func_true_ft) < 0.001
 
 
 def test_fourier_trafo_completely():

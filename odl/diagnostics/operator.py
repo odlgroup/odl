@@ -66,24 +66,7 @@ class OperatorTest(object):
             print(message)
 
     def norm(self):
-        """Estimate the operator norm of the operator.
-
-        The norm is estimated by calculating
-
-        ``A(x).norm() / x.norm()``
-
-        for some nonzero ``x``
-
-        Returns
-        -------
-        norm : float
-            Estimate of operator norm
-
-        References
-        ----------
-        Wikipedia article on `Operator norm
-        <https://en.wikipedia.org/wiki/Operator_norm>`_.
-        """
+        """Estimate the operator norm of the operator."""
         self.log('\n== Calculating operator norm ==\n')
 
         operator_norm = max(
@@ -188,7 +171,7 @@ class OperatorTest(object):
                 if denom == 0:
                     error = 0
                 else:
-                    error = (opx - op_adj_adj_x).norm() / denom
+                    error = self.oprange.norm(opx - op_adj_adj_x) / denom
 
                 if error > self.tol:
                     counter.fail('x={:25s} : error={:6.5f}'

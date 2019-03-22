@@ -17,9 +17,6 @@ from odl.operator.default_ops import (
 from odl.operator.operator import (
     Operator, OperatorComp, OperatorLeftScalarMult, OperatorPointwiseProduct,
     OperatorRightScalarMult, OperatorRightVectorMult, OperatorSum)
-from odl.solvers.nonsmooth import (
-    proximal_arg_scaling, proximal_const_func, proximal_convex_conj,
-    proximal_quadratic_perturbation, proximal_translation)
 from odl.util import indent, signature_string
 
 __all__ = ('Functional', 'FunctionalLeftScalarMult',
@@ -506,6 +503,7 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
         --------
         odl.solvers.nonsmooth.proximal_operators.proximal_const_func
         """
+        from odl.solvers.nonsmooth import proximal_const_func
 
         if self.scalar < 0:
             raise ValueError('proximal operator of functional scaled with a '
@@ -591,6 +589,8 @@ class FunctionalRightScalarMult(Functional, OperatorRightScalarMult):
         --------
         odl.solvers.nonsmooth.proximal_operators.proximal_arg_scaling
         """
+        from odl.solvers.nonsmooth import proximal_arg_scaling
+
         return proximal_arg_scaling(self.functional.proximal, self.scalar)
 
 
@@ -854,8 +854,11 @@ class FunctionalTranslation(Functional):
         --------
         odl.solvers.nonsmooth.proximal_operators.proximal_translation
         """
-        return proximal_translation(self.functional.proximal,
-                                    self.translation)
+        from odl.solvers.nonsmooth import proximal_translation
+
+        return proximal_translation(
+            self.functional.proximal, self.translation
+        )
 
     @property
     def convex_conj(self):
@@ -1064,13 +1067,17 @@ class FunctionalQuadraticPerturb(Functional):
     @property
     def proximal(self):
         """Proximal factory of the quadratically perturbed functional."""
+        from odl.solvers.nonsmooth import proximal_quadratic_perturbation
+
         if self.quadratic_coeff < 0:
             raise TypeError('`quadratic_coeff` {} must be non-negative'
                             ''.format(self.quadratic_coeff))
 
         return proximal_quadratic_perturbation(
             self.functional.proximal,
-            a=self.quadratic_coeff, u=self.linear_term)
+            a=self.quadratic_coeff,
+            u=self.linear_term,
+        )
 
     @property
     def convex_conj(self):
@@ -1326,6 +1333,8 @@ class FunctionalDefaultConvexConjugate(Functional):
         proximal : proximal_convex_conj
             Proximal computed using the Moreu identity
         """
+        from odl.solvers.nonsmooth import proximal_convex_conj
+
         return proximal_convex_conj(self.convex_conj.proximal)
 
     def __repr__(self):

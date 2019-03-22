@@ -52,7 +52,8 @@ def clamped_interpolation(skimage_range, sinogram):
     return _interpolator
 
 
-def skimage_radon_forward_projector(volume, geometry, proj_space, out=None):
+def skimage_radon_forward_projector(volume, geometry, vol_space, proj_space,
+                                    out=None):
     """Calculate forward projection using skimage.
 
     Parameters
@@ -79,12 +80,10 @@ def skimage_radon_forward_projector(volume, geometry, proj_space, out=None):
     assert volume.shape[0] == volume.shape[1]
 
     theta = np.degrees(geometry.angles)
-    skimage_range = skimage_proj_space(geometry, volume.space, proj_space)
+    skimage_range = skimage_proj_space(geometry, vol_space, proj_space)
 
     # Rotate volume from (x, y) to (rows, cols), then project
-    sino_arr = radon(
-        np.rot90(volume.asarray(), 1), theta=theta, circle=False
-    )
+    sino_arr = radon(np.rot90(volume, 1), theta=theta, circle=False)
     sinogram = skimage_range.element(sino_arr.T)
 
     if out is None:
@@ -97,13 +96,14 @@ def skimage_radon_forward_projector(volume, geometry, proj_space, out=None):
             out=out_arr,
         )
 
-    scale = volume.space.cell_sides[0]
+    scale = vol_space.cell_sides[0]
     out *= scale
 
     return out
 
 
-def skimage_radon_back_projector(sinogram, geometry, vol_space, out=None):
+def skimage_radon_back_projector(sinogram, geometry, vol_space, proj_space,
+                                 out=None):
     """Calculate forward projection using skimage.
 
     Parameters
@@ -127,12 +127,12 @@ def skimage_radon_back_projector(sinogram, geometry, vol_space, out=None):
     from skimage.transform import iradon
 
     theta = np.degrees(geometry.angles)
-    skimage_range = skimage_proj_space(geometry, vol_space, sinogram.space)
+    skimage_range = skimage_proj_space(geometry, vol_space, proj_space)
 
     skimage_sinogram = skimage_range.element()
     with writable_array(skimage_sinogram) as sino_arr:
         point_collocation(
-            clamped_interpolation(sinogram.space, sinogram),
+            clamped_interpolation(proj_space, sinogram),
             skimage_range.grid.meshgrid,
             out=sino_arr,
         )
@@ -145,7 +145,7 @@ def skimage_radon_back_projector(sinogram, geometry, vol_space, out=None):
 
     # Rotate back from (rows, cols) to (x, y), then back-project (no filter)
     backproj = iradon(
-        skimage_sinogram.asarray().T,
+        skimage_sinogram.T,
         theta,
         output_size=vol_space.shape[0],
         filter=None,
@@ -158,11 +158,11 @@ def skimage_radon_back_projector(sinogram, geometry, vol_space, out=None):
 
     # Correct in case of non-weighted spaces
     proj_volume = np.prod(sinogram.space.partition.extent)
-    proj_size = sinogram.space.partition.size
+    proj_size = proj_space.partition.size
     proj_weighting = proj_volume / proj_size
 
-    scaling_factor *= sinogram.space.weighting.const / proj_weighting
-    scaling_factor /= vol_space.weighting.const / vol_space.cell_volume
+    scaling_factor *= proj_space.weighting / proj_weighting
+    scaling_factor /= vol_space.weighting / vol_space.cell_volume
 
     # Correctly scale the output
     out *= scaling_factor

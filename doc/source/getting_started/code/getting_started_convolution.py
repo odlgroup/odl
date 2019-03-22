@@ -10,17 +10,18 @@ class Convolution(odl.Operator):
     The operator inherits from ``odl.Operator`` to be able to be used with ODL.
     """
 
-    def __init__(self, kernel):
+    def __init__(self, space, kernel):
         """Initialize a convolution operator with a known kernel."""
-
-        # Store the kernel
-        self.kernel = kernel
 
         # Initialize the Operator class by calling its __init__ method.
         # This sets properties such as domain and range and allows the other
         # operator convenience functions to work.
         super(Convolution, self).__init__(
-            domain=kernel.space, range=kernel.space, linear=True)
+            domain=space, range=space, linear=True
+        )
+
+        # Store the kernel
+        self.kernel = kernel
 
     def _call(self, x):
         """Implement calling the operator by calling scipy."""
@@ -39,7 +40,7 @@ space = odl.uniform_discr([-1, -1], [1, 1], [100, 100])
 kernel = odl.phantom.cuboid(space, [-0.05, -0.05], [0.05, 0.05])
 
 # Create convolution operator
-A = Convolution(kernel)
+A = Convolution(space, kernel)
 
 # Create phantom (the "unknown" solution)
 phantom = odl.phantom.shepp_logan(space, modified=True)
@@ -48,9 +49,9 @@ phantom = odl.phantom.shepp_logan(space, modified=True)
 g = A(phantom)
 
 # Display the results using the show method
-kernel.show('kernel')
-phantom.show('phantom')
-g.show('convolved phantom')
+space.show(kernel, 'kernel')
+space.show(phantom, 'phantom')
+space.show(g, 'convolved phantom')
 
 # Landweber
 
@@ -59,13 +60,13 @@ opnorm = odl.power_method_opnorm(A)
 
 f = space.zero()
 odl.solvers.landweber(A, f, g, niter=100, omega=1 / opnorm ** 2)
-f.show('landweber')
+space.show(f, 'landweber')
 
 # Conjugate gradient
 
 f = space.zero()
 odl.solvers.conjugate_gradient_normal(A, f, g, niter=100)
-f.show('conjugate gradient')
+space.show(f, 'conjugate gradient')
 
 # Tikhonov with identity
 
@@ -76,7 +77,7 @@ b = A.adjoint(g)
 
 f = space.zero()
 odl.solvers.conjugate_gradient(T, f, b, niter=100)
-f.show('Tikhonov identity conjugate gradient')
+space.show(f, 'Tikhonov identity conjugate gradient')
 
 # Tikhonov with gradient
 
@@ -87,7 +88,7 @@ b = A.adjoint(g)
 
 f = space.zero()
 odl.solvers.conjugate_gradient(T, f, b, niter=100)
-f.show('Tikhonov gradient conjugate gradient')
+space.show(f, 'Tikhonov gradient conjugate gradient')
 
 # Douglas-Rachford
 
@@ -114,4 +115,4 @@ tau = 1.0
 x = space.zero()
 odl.solvers.douglas_rachford_pd(x, f, g_funcs, lin_ops,
                                 tau=tau, sigma=sigma, niter=100)
-x.show('TV Douglas-Rachford', force_show=True)
+space.show(x, 'TV Douglas-Rachford', force_show=True)

@@ -1618,13 +1618,9 @@ def proj_l1(x, radius=1, out=None):
     proximal_linfty : proximal for l-infinity norm
     proj_simplex : projection onto simplex
     """
-
-    if out is None:
-        out = x.space.element()
-
     u = np.absolute(x)
     v = np.sign(x)
-    proj_simplex(u, radius, out)
+    out = proj_simplex(u, radius, out)
     out *= v
 
     return out
@@ -1667,9 +1663,6 @@ def proj_simplex(x, diameter=1, out=None):
     --------
     proj_l1 : projection onto l1-norm ball
     """
-    if out is None:
-        out = x.space.element()
-
     # Sort values in descending order
     x_sorted = np.sort(x)[::-1]
 
@@ -1680,7 +1673,7 @@ def proj_simplex(x, diameter=1, out=None):
     i = np.max(np.argwhere(crit >= 0).squeeze())
 
     # Output is a shifted and thresholded version of the input
-    out[:] = np.maximum(x - x_avg[i], 0)
+    out = np.maximum(x - x_avg[i], 0, out=out)
 
     return out
 

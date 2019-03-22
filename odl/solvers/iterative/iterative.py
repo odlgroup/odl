@@ -252,34 +252,36 @@ Conjugate_gradient_on_the_normal_equations>`_.
     """
     # TODO: add a book reference
     # TODO: update doc
+    dom = op.domain
+    ran = op.range
 
-    if x not in op.domain:
+    if x not in dom:
         raise TypeError('`x` {!r} is not in the domain of `op` {!r}'
-                        ''.format(x, op.domain))
+                        ''.format(x, dom))
 
     d = op(x)
-    d.lincomb(1, rhs, -1, d)               # d = rhs - A x
+    ran.lincomb(1, rhs, -1, d, out=d)      # d <- rhs - A(x)
     p = op.derivative(x).adjoint(d)
     s = p.copy()
     q = op.range.element()
-    sqnorm_s_old = s.norm() ** 2  # Only recalculate norm after update
+    sqnorm_s_old = dom.norm(s) ** 2  # Only recalculate norm after update
 
     for _ in range(niter):
         op(p, out=q)                       # q = A p
-        sqnorm_q = q.norm() ** 2
+        sqnorm_q = ran.norm(q) ** 2
         if sqnorm_q == 0.0:  # Return if residual is 0
             return
 
         a = sqnorm_s_old / sqnorm_q
-        x.lincomb(1, x, a, p)               # x = x + a*p
-        d.lincomb(1, d, -a, q)              # d = d - a*Ap
+        dom.lincomb(1, x, a, p, out=x)      # x <- x + a * p
+        ran.lincomb(1, d, -a, q, out=d)     # d <- d - a * A(p)
         op.derivative(p).adjoint(d, out=s)  # s = A^T d
 
-        sqnorm_s_new = s.norm() ** 2
+        sqnorm_s_new = dom.norm(s) ** 2
         b = sqnorm_s_new / sqnorm_s_old
         sqnorm_s_old = sqnorm_s_new
 
-        p.lincomb(1, s, b, p)               # p = s + b * p
+        dom.lincomb(1, s, b, p, out=p)      # p = s + b * p
 
         if callback is not None:
             callback(x)
