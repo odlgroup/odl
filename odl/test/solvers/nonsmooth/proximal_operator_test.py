@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2019 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -9,19 +9,17 @@
 """Tests for the factory functions to create proximal operators."""
 
 from __future__ import division
+
 import numpy as np
 import scipy.special
 
 import odl
 from odl.solvers.nonsmooth.proximal_operators import (
-    combine_proximals, proximal_const_func,
-    proximal_box_constraint, proximal_nonnegativity,
+    combine_proximals, proximal_box_constraint, proximal_const_func,
+    proximal_convex_conj_kl, proximal_convex_conj_kl_cross_entropy,
     proximal_convex_conj_l1, proximal_convex_conj_l1_l2,
-    proximal_l2,
-    proximal_convex_conj_l2_squared,
-    proximal_convex_conj_kl, proximal_convex_conj_kl_cross_entropy)
+    proximal_convex_conj_l2_squared, proximal_l2, proximal_nonnegativity)
 from odl.util.testutils import all_almost_equal
-
 
 # Places for the accepted error when comparing results
 HIGH_ACC = 8
@@ -50,7 +48,7 @@ def test_proximal_const_func():
     x_opt = prox(x)
 
     # Identity map
-    assert x == x_opt
+    assert all_almost_equal(x, x_opt)
 
 
 def test_proximal_box_constraint():
@@ -135,13 +133,13 @@ def test_combine_proximal():
 
     # Apply explicitly constructed and factory-function-combined proximal
     # operators
-    assert prox(x) == prox_verify(x)
+    assert all_almost_equal(prox(x), prox_verify(x))
 
     # Test output argument
-    assert prox(x, out) == prox_verify(x)
+    assert all_almost_equal(prox(x, out), prox_verify(x))
 
     # Identity mapping
-    assert out == x
+    assert all_almost_equal(out, x)
 
 
 def test_proximal_l2_wo_data():
@@ -385,10 +383,12 @@ def test_proximal_convconj_l1_product_space():
     x_opt = prox(x)
 
     # Explicit computation: (x - sigma * g) / max(lam, |x - sigma * g|)
-    denom = np.maximum(lam,
-                       np.sqrt((x0_arr - sigma * g0_arr) ** 2 +
-                               (x1_arr - sigma * g1_arr) ** 2))
-    x_verify = lam * (x - sigma * g) / denom
+    denom = np.maximum(
+        lam,
+        np.sqrt((x0_arr - sigma * g0_arr) ** 2
+                + (x1_arr - sigma * g1_arr) ** 2)
+        )
+    x_verify = [lam * (xi - sigma * gi) / denom for xi, gi in zip(x, g)]
 
     # Compare components
     assert all_almost_equal(x_verify, x_opt)

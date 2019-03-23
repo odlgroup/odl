@@ -355,18 +355,20 @@ def gauss_newton(op, x, rhs, niter, zero_seq=exp_zero_seq(2.0),
     callback : callable, optional
         Object executing code per iteration, e.g. plotting each iterate.
     """
-    if x not in op.domain:
+    dom = op.domain
+    ran = op.range
+    if x not in dom:
         raise TypeError('`x` {!r} is not in the domain of `op` {!r}'
-                        ''.format(x, op.domain))
+                        ''.format(x, dom))
 
     x0 = x.copy()
-    id_op = IdentityOperator(op.domain)
-    dx = op.domain.zero()
+    id_op = IdentityOperator(dom)
+    dx = dom.zero()
 
-    tmp_dom = op.domain.element()
-    u = op.domain.element()
-    tmp_ran = op.range.element()
-    v = op.range.element()
+    tmp_dom = dom.element()
+    u = dom.element()
+    tmp_ran = ran.element()
+    v = ran.element()
 
     for _ in range(niter):
         tm = next(zero_seq)
@@ -374,13 +376,13 @@ def gauss_newton(op, x, rhs, niter, zero_seq=exp_zero_seq(2.0),
         deriv_adjoint = deriv.adjoint
 
         # v = rhs - op(x) - deriv(x0-x)
-        # u = deriv.T(v)
-        op(x, out=tmp_ran)              # eval  op(x)
-        v.lincomb(1, rhs, -1, tmp_ran)  # assign  v = rhs - op(x)
-        tmp_dom.lincomb(1, x0, -1, x)   # assign temp  tmp_dom = x0 - x
-        deriv(tmp_dom, out=tmp_ran)     # eval  deriv(x0-x)
-        v -= tmp_ran                    # assign  v = rhs-op(x)-deriv(x0-x)
-        deriv_adjoint(v, out=u)         # eval/assign  u = deriv.T(v)
+        # u = deriv.adjoint(v)
+        op(x, out=tmp_ran)
+        ran.lincomb(1, rhs, -1, tmp_ran, out=v)  # v <- rhs - op(x)
+        dom.lincomb(1, x0, -1, x, out=tmp_dom)   # tmp_dom <- x0 - x
+        deriv(tmp_dom, out=tmp_ran)
+        v -= tmp_ran
+        deriv_adjoint(v, out=u)
 
         # Solve equation Tikhonov regularized system
         # (deriv.T o deriv + tm * id_op)^-1 u = dx
@@ -391,7 +393,7 @@ def gauss_newton(op, x, rhs, niter, zero_seq=exp_zero_seq(2.0),
         conjugate_gradient(tikh_op, dx, u, 3)
 
         # Update x
-        x.lincomb(1, x0, 1, dx)  # x = x0 + dx
+        dom.lincomb(1, x0, 1, dx, out=x)  # x = x0 + dx
 
         if callback is not None:
             callback(x)

@@ -40,7 +40,7 @@ def test_primal_dual_input_handling():
     douglas_rachford_pd(x, f, g, lin_ops, tau=1.0,
                         sigma=[1.0, 1.0], niter=niter)
 
-    assert x == x0
+    assert all_almost_equal(x, x0)
 
     # Testing that sizes needs to agree:
     # Too few sigma_i:s
@@ -55,13 +55,6 @@ def test_primal_dual_input_handling():
     with pytest.raises(ValueError):
         douglas_rachford_pd(x, f, g_too_many, lin_ops,
                             tau=1.0, sigma=[1.0, 1.0], niter=niter)
-
-    # Test for correct space
-    space2 = odl.uniform_discr(1, 2, 10)
-    x = noise_element(space2)
-    with pytest.raises(ValueError):
-        douglas_rachford_pd(x, f, g, lin_ops, tau=1.0,
-                            sigma=[1.0, 1.0], niter=niter)
 
 
 def test_primal_dual_l1():

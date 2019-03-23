@@ -311,7 +311,7 @@ def test_kullback_leibler(space):
     # The convex conjugate functional is only finite for elements with all
     # components smaller than 1.
     x = noise_element(space)
-    x = x - x.ufuncs.max() + 0.99
+    x = x - np.max(x) + 0.99
 
     # Evaluation of convex conjugate
     expected_result = -space.inner(prior * np.log(1 - x), one_elem)
@@ -361,7 +361,7 @@ def test_kullback_leibler_cross_entorpy(space):
 
     # For elements with (a) negative components it should return inf
     x_neg = noise_element(space)
-    x_neg = x_neg - x_neg.ufuncs.max()
+    x_neg = x_neg - np.max(x_neg)
     assert func(x_neg) == np.inf
 
     # The gradient

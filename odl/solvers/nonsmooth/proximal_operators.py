@@ -156,8 +156,8 @@ def proximal_convex_conj(prox_factory):
         # prox_factory accepts stepsize objects of the type given by sigma.
         space = prox_factory(sigma).domain
 
-        mult_inner = MultiplyOperator(1.0 / sigma, domain=space, range=space)
-        mult_outer = MultiplyOperator(sigma, domain=space, range=space)
+        mult_inner = MultiplyOperator(space, 1.0 / sigma)
+        mult_outer = MultiplyOperator(space, sigma)
         result = (IdentityOperator(space) -
                   mult_outer * prox_factory(1.0 / sigma) * mult_inner)
         return result

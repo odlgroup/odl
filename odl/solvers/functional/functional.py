@@ -1060,9 +1060,11 @@ class FunctionalQuadraticPerturb(Functional):
     @property
     def gradient(self):
         """Gradient operator of the functional."""
-        return (self.functional.gradient +
-                (2 * self.quadratic_coeff) * IdentityOperator(self.domain) +
-                ConstantOperator(self.linear_term))
+        return (
+            self.functional.gradient
+            + (2 * self.quadratic_coeff) * IdentityOperator(self.domain)
+            + ConstantOperator(self.domain, self.linear_term)
+        )
 
     @property
     def proximal(self):

@@ -31,7 +31,7 @@ def test_admm_lin_input_handling():
 
     admm_linearized(x, f, g, L, tau=1.0, sigma=1.0, niter=niter)
 
-    assert x == x0
+    assert all_almost_equal(x, x0)
 
     # Check that a provided callback is actually called
     class CallbackTest(Callback):
