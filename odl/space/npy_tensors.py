@@ -20,7 +20,7 @@ import numpy as np
 from odl.set.sets import ComplexNumbers, RealNumbers
 from odl.space.base_tensors import TensorSpace
 from odl.util import (
-    dtype_str, is_numeric_dtype, is_real_dtype, signature_string)
+    dtype_str, getargspec, is_numeric_dtype, is_real_dtype, signature_string)
 
 __all__ = ('NumpyTensorSpace',)
 
@@ -169,6 +169,7 @@ class NumpyTensorSpace(TensorSpace):
 
         # Caching
         self.__ufuncs = None
+        self.__reduce = None
 
         # Make sure there are no leftover kwargs
         if kwargs:
@@ -624,6 +625,34 @@ class NumpyTensorSpace(TensorSpace):
 
         self.__ufuncs = NumpyTensorSpaceUfuncs()
         return self.__ufuncs
+
+    @property
+    def reduce(self):
+        """Access to NumPy reductions."""
+        if self.__reduce is not None:
+            return self.__reduce
+
+        class NumpyTensorSpaceReduce(object):
+
+            """Accessor class for reductions on tensor spaces."""
+
+            def __getattr__(self, name):
+                """Return ``self.name``."""
+                attr = getattr(np, name, None)
+                try:
+                    spec = getargspec(attr)
+                except (ValueError, TypeError):
+                    raise ValueError(
+                        '{!r} is not a valid reduction'.format(name)
+                    )
+                if 'keepdims' not in spec.args:
+                    raise ValueError(
+                        '{!r} is not a valid reduction'.format(name)
+                    )
+                return attr
+
+        self.__reduce = NumpyTensorSpaceReduce()
+        return self.__reduce
 
     def __contains__(self, other):
         """Return ``other in self``.

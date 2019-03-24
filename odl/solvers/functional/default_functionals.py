@@ -81,21 +81,26 @@ class LpNorm(Functional):
     def _call(self, x):
         """Return the Lp-norm of ``x``."""
         if self.exponent == 0:
-            return self.domain.inner(self.domain.one(), np.not_equal(x, 0))
+            return self.domain.inner(
+                self.domain.one(),
+                self.domain.ufuncs.not_equal(x, 0),
+            )
         elif self.exponent == 1:
-            return self.domain.inner(self.domain.one(), np.absolute(x))
+            return self.domain.inner(
+                self.domain.one(), self.domain.ufuncs.absolute(x),
+            )
         elif self.exponent == 2:
             return np.sqrt(self.domain.inner(x, x))
         elif np.isfinite(self.exponent):
-            tmp = np.absolute(x)
-            np.power(tmp, self.exponent, out=tmp)
+            tmp = self.domain.ufuncs.absolute(x)
+            self.domain.ufuncs.power(tmp, self.exponent, out=tmp)
             return np.power(
                 self.domain.inner(self.domain.one(), tmp), 1 / self.exponent
             )
         elif self.exponent == np.inf:
-            return np.max(np.absolute(x))
+            return self.domain.reduce.max(self.domain.ufuncs.absolute(x))
         elif self.exponent == -np.inf:
-            return np.min(np.absolute(x))
+            return self.domain.reduce.min(self.domain.ufuncs.absolute(x))
         else:
             raise RuntimeError('unknown exponent')
 
@@ -393,7 +398,7 @@ class IndicatorGroupL1UnitBall(Functional):
 
     def _call(self, x):
         """Return ``self(x)``."""
-        x_norm = np.max(self.pointwise_norm(x))
+        x_norm = self.pointwise_norm.range.ufuncs.max(self.pointwise_norm(x))
 
         if x_norm > 1:
             return np.inf

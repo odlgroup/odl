@@ -16,8 +16,7 @@ from numbers import Integral
 import numpy as np
 
 from odl.set import LinearSpace
-from odl.util import indent, signature_string
-
+from odl.util import getargspec, indent, signature_string
 
 __all__ = ('ProductSpace',)
 
@@ -209,6 +208,7 @@ class ProductSpace(LinearSpace):
         self.__shape = None
         self.__flat_spaces = None
         self.__ufuncs = None
+        self.__reduce = None
 
     # --- Constructor args
 
@@ -785,6 +785,39 @@ class ProductSpace(LinearSpace):
         self.__ufuncs = ProductSpaceUfuncs()
         return self.__ufuncs
 
+    @property
+    def reduce(self):
+        """Access to NumPy reductions."""
+        if self.__reduce is not None:
+            return self.__reduce
+
+        space = self
+
+        class ProductSpaceReduce(object):
+
+            """Accessor class for reductions on product spaces."""
+
+            def __getattr__(self, name):
+                """Return ``self.name``."""
+                from functools import partial
+
+                npy_red = getattr(np, name)
+                try:
+                    spec = getargspec(npy_red)
+                except (ValueError, TypeError):
+                    raise ValueError(
+                        '{!r} is not a valid reduction'.format(name)
+                    )
+                if 'keepdims' not in spec.args:
+                    raise ValueError(
+                        '{!r} is not a valid reduction'.format(name)
+                    )
+
+                return partial(space._reduction_call, name)
+
+        self.__reduce = ProductSpaceReduce()
+        return self.__reduce
+
     def _ufunc_call_11(self, name, x, out=None, **kwargs):
         if out is None:
             out = [None] * len(self.spaces)
@@ -855,6 +888,14 @@ class ProductSpace(LinearSpace):
                 out2[i] = res_list[i][1]
 
         return out1, out2
+
+    def _reduction_call(self, name, x, axis=None, out=None, keepdims=False):
+        npy_red = getattr(np, name)
+        reds = [
+            getattr(space.reduce, name)(xi)
+            for xi, space in zip(x, self.spaces)
+        ]
+        return npy_red(reds)
 
     # --- Misc --- #
 

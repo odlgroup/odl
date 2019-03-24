@@ -12,9 +12,6 @@ import warnings
 
 import numpy as np
 
-from odl._ufunc._ufuncs import (
-    _ufunc_call_11, _ufunc_call_12, _ufunc_call_21, _ufunc_call_22)
-
 LINEAR_UFUNCS = {
     'negative', 'degrees', 'rad2deg', 'radians', 'deg2rad', 'add', 'subtract'
 }
@@ -64,6 +61,82 @@ def ufunc_op___init__(self, domain):
     Operator.__init__(
         self, domain, range, linear=self.ufunc.__name__ in LINEAR_UFUNCS
     )
+
+
+def _ufunc_op_call_11(ufunc, domain, x, out=None):
+    from odl.space.pspace import ProductSpace
+    from odl.space.base_tensors import TensorSpace
+
+    if isinstance(domain, TensorSpace):
+        return ufunc(x, out=out)
+    elif isinstance(domain, ProductSpace):
+        if out is None:
+            return [ufunc(xi) for xi in x]
+        else:
+            for xi, oi in zip(x, out):
+                ufunc(xi, out=oi)
+            return out
+    else:
+        raise RuntimeError
+
+
+def _ufunc_op_call_12(ufunc, domain, x, out=None):
+    from odl import ProductSpace
+    from odl.space.base_tensors import TensorSpace
+
+    if isinstance(domain, TensorSpace):
+        if out is None:
+            return ufunc(x)
+        else:
+            ufunc(x, out=(out[0], out[1]))
+            return out
+    elif isinstance(domain, ProductSpace):
+        if out is None:
+            return [ufunc(xi) for xi in x]
+        else:
+            for xi, oi in zip(x, out):
+                ufunc(xi, out=(oi[0], oi[1]))
+            return out
+    else:
+        raise RuntimeError
+
+
+def _ufunc_op_call_21(ufunc, domain, x, out=None):
+    from odl import ProductSpace
+    from odl.space.base_tensors import TensorSpace
+
+    if isinstance(domain[0], TensorSpace):
+        return ufunc(x[0], x[1], out=out)
+    elif isinstance(domain[0], ProductSpace):
+        if out is None:
+            return [ufunc(xi[0], xi[1]) for xi in x]
+        else:
+            for xi, oi in zip(x, out):
+                ufunc(xi[0], xi[1], out=oi)
+            return out
+    else:
+        raise RuntimeError
+
+
+def _ufunc_op_call_22(ufunc, domain, x, out=None):
+    from odl import ProductSpace
+    from odl.space.base_tensors import TensorSpace
+
+    if isinstance(domain[0], TensorSpace):
+        if out is None:
+            return ufunc(x[0], x[1])
+        else:
+            ufunc(x[0], x[1], out=(out[0], out[1]))
+            return out
+    elif isinstance(domain[0], ProductSpace):
+        if out is None:
+            return [ufunc(xi[0], xi[1]) for xi in x]
+        else:
+            for xi, oi in zip(x, out):
+                ufunc(xi[0], xi[1], out=(oi[0], oi[1]))
+            return out
+    else:
+        raise RuntimeError
 
 
 def ufunc_op_derivative(name):
@@ -225,13 +298,13 @@ def ufunc_op_cls(name):
     assert isinstance(ufunc, np.ufunc)
 
     if ufunc.nin == 1 and ufunc.nout == 1:
-        _call_impl = _ufunc_call_11
+        _call_impl = _ufunc_op_call_11
     elif ufunc.nin == 1 and ufunc.nout == 2:
-        _call_impl = _ufunc_call_12
+        _call_impl = _ufunc_op_call_12
     elif ufunc.nin == 2 and ufunc.nout == 1:
-        _call_impl = _ufunc_call_21
+        _call_impl = _ufunc_op_call_21
     elif ufunc.nin == 2 and ufunc.nout == 2:
-        _call_impl = _ufunc_call_22
+        _call_impl = _ufunc_op_call_22
     else:
         raise NotImplementedError
 
