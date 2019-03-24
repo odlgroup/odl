@@ -208,6 +208,7 @@ class ProductSpace(LinearSpace):
         # Cached properties
         self.__shape = None
         self.__flat_spaces = None
+        self.__ufuncs = None
 
     # --- Constructor args
 
@@ -538,7 +539,11 @@ class ProductSpace(LinearSpace):
         ret = np.empty(len(flat_spaces), dtype=object)
         for i, xi in enumerate(flat_inp):
             ret[i] = xi
-        return ret.reshape(self.shape)
+
+        shape = self.shape
+        if len(flat_spaces) > self.size:
+            shape += (len(flat_spaces) // self.size,)
+        return ret.reshape(shape)
 
     def to_scalar_dtype(self, elem):
         """Convert power space element to NumPy array with scalar dtype."""
@@ -745,6 +750,113 @@ class ProductSpace(LinearSpace):
             x2 = [x2] * len(self)
         for spc, xi, yi, out_i in zip(self.spaces, x1, x2, out):
             spc._divide(xi, yi, out_i)
+
+    @property
+    def ufuncs(self):
+        """Access to NumPy ufuncs."""
+        if self.__ufuncs is not None:
+            return self.__ufuncs
+
+        space = self
+
+        class ProductSpaceUfuncs(object):
+
+            """Accessor class for Ufuncs on product spaces."""
+
+            def __getattr__(self, name):
+                """Return ``self.name``."""
+                from functools import partial
+
+                npy_ufunc = getattr(np, name, None)
+                if not isinstance(npy_ufunc, np.ufunc):
+                    raise ValueError('{!r} is not a ufunc'.format(name))
+
+                if npy_ufunc.nin == 1 and npy_ufunc.nout == 1:
+                    return partial(space._ufunc_call_11, name)
+                elif npy_ufunc.nin == 1 and npy_ufunc.nout == 2:
+                    return partial(space._ufunc_call_12, name)
+                elif npy_ufunc.nin == 2 and npy_ufunc.nout == 1:
+                    return partial(space._ufunc_call_21, name)
+                elif npy_ufunc.nin == 2 and npy_ufunc.nout == 2:
+                    return partial(space._ufunc_call_22, name)
+                else:
+                    raise RuntimeError
+
+        self.__ufuncs = ProductSpaceUfuncs()
+        return self.__ufuncs
+
+    def _ufunc_call_11(self, name, x, out=None, **kwargs):
+        if out is None:
+            out = [None] * len(self.spaces)
+        res_list = [
+            getattr(space.ufuncs, name)(xi, oi, **kwargs)
+            for xi, oi, space in zip(x, out, self.spaces)
+        ]
+        if out[0] is None:
+            out = np.empty(len(res_list), dtype=object)
+            for i in range(len(res_list)):
+                out[i] = res_list[i]
+
+        return out
+
+    def _ufunc_call_12(self, name, x, out1=None, out2=None, **kwargs):
+        if out1 is None:
+            out1 = [None] * len(self.spaces)
+        if out2 is None:
+            out2 = [None] * len(self.spaces)
+
+        res_list = [
+            getattr(space.ufuncs, name)(xi, o1i, o2i, **kwargs)
+            for xi, o1i, o2i, space in zip(x, out1, out2, self.spaces)
+        ]
+        if out1[0] is None:
+            out1 = np.empty(len(res_list), dtype=object)
+            for i in range(len(res_list)):
+                out1[i] = res_list[i][0]
+        if out2[0] is None:
+            out2 = np.empty(len(res_list), dtype=object)
+            for i in range(len(res_list)):
+                out2[i] = res_list[i][1]
+
+        return out1, out2
+
+    def _ufunc_call_21(self, name, x1, x2, out=None, **kwargs):
+        if out is None:
+            out = [None] * len(self.spaces)
+        res_list = [
+            getattr(space.ufuncs, name)(x1i, x2i, oi, **kwargs)
+            for x1i, x2i, oi, space in zip(x1, x2, out, self.spaces)
+        ]
+        if out[0] is None:
+            out = np.empty(len(res_list), dtype=object)
+            for i in range(len(res_list)):
+                out[i] = res_list[i]
+
+        return out
+
+    def _ufunc_call_22(self, name, x1, x2, out1=None, out2=None, **kwargs):
+        if out1 is None:
+            out1 = [None] * len(self.spaces)
+        if out2 is None:
+            out2 = [None] * len(self.spaces)
+
+        res_list = [
+            getattr(space.ufuncs, name)(x1i, x2i, o1i, o2i, **kwargs)
+            for x1i, x2i, o1i, o2i, space in zip(x1, x2, out1, out2,
+                                                 self.spaces)
+        ]
+        if out1[0] is None:
+            out1 = np.empty(len(res_list), dtype=object)
+            for i in range(len(res_list)):
+                out1[i] = res_list[i][0]
+        if out2[0] is None:
+            out2 = np.empty(len(res_list), dtype=object)
+            for i in range(len(res_list)):
+                out2[i] = res_list[i][1]
+
+        return out1, out2
+
+    # --- Misc --- #
 
     def __eq__(self, other):
         """Return ``self == other``.

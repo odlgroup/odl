@@ -68,10 +68,9 @@ from . import solvers
 from . import tomo
 from . import trafos
 from . import util
-
 from ._ufunc import ufunc_ops, ufunc_funcs
 
-# Add `test` function to global namespace so users can run `odl.test()`
+# Import `test` function to global namespace so users can run `odl.test()`
 from .util import test
 
 # Amend `__all__`

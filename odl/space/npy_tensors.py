@@ -24,7 +24,6 @@ from odl.util import (
 
 __all__ = ('NumpyTensorSpace',)
 
-
 _BLAS_DTYPES = (np.dtype('float32'), np.dtype('float64'),
                 np.dtype('complex64'), np.dtype('complex128'))
 
@@ -167,6 +166,9 @@ class NumpyTensorSpace(TensorSpace):
                 )
             self.__weighting = weighting
             self.__weighting_type = 'array'
+
+        # Caching
+        self.__ufuncs = None
 
         # Make sure there are no leftover kwargs
         if kwargs:
@@ -602,6 +604,26 @@ class NumpyTensorSpace(TensorSpace):
         True
         """
         np.divide(x1, x2, out=out)
+
+    @property
+    def ufuncs(self):
+        """Access to NumPy ufuncs."""
+        if self.__ufuncs is not None:
+            return self.__ufuncs
+
+        class NumpyTensorSpaceUfuncs(object):
+
+            """Accessor class for Ufuncs on tensor spaces."""
+
+            def __getattr__(self, name):
+                """Return ``self.name``."""
+                attr = getattr(np, name, None)
+                if not isinstance(attr, np.ufunc):
+                    raise ValueError('{!r} is not a ufunc'.format(name))
+                return attr
+
+        self.__ufuncs = NumpyTensorSpaceUfuncs()
+        return self.__ufuncs
 
     def __contains__(self, other):
         """Return ``other in self``.
