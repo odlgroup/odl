@@ -240,6 +240,16 @@ class DiscretizedSpace(TensorSpace):
         """
         return self.tspace.available_dtypes()
 
+    @property
+    def ufuncs(self):
+        """Access to NumPy ufuncs."""
+        return self.tspace.ufuncs
+
+    @property
+    def reduce(self):
+        """Access to NumPy reductions."""
+        return self.tspace.reduce
+
     # --- Derived properties
 
     @property

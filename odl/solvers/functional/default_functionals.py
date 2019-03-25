@@ -152,10 +152,7 @@ class LpNorm(Functional):
 
                 def _call(self, x):
                     """Apply the gradient operator to the given point."""
-                    if isinstance(self.domain, ProductSpace):
-                        return self.domain.apply(np.sign, x)
-                    else:
-                        return np.sign(x)
+                    return self.domain.ufuncs.sign(x)
 
                 def derivative(self, x):
                     """Derivative is a.e. zero."""
@@ -244,14 +241,14 @@ class GroupL1Norm(Functional):
         --------
         >>> space = odl.rn(2)
         >>> pspace = odl.ProductSpace(space, 2)
-        >>> op = GroupL1Norm(pspace)
-        >>> op([[3, 3], [4, 4]])
+        >>> func = GroupL1Norm(pspace)
+        >>> func([[3, 3], [4, 4]])
         10.0
 
         Set exponent of inner (p) norm:
 
-        >>> op2 = GroupL1Norm(pspace, exponent=1)
-        >>> op2([[3, 3], [4, 4]])
+        >>> func_1 = GroupL1Norm(pspace, exponent=1)
+        >>> func_1([[3, 3], [4, 4]])
         14.0
         """
         if not isinstance(vfspace, ProductSpace):
@@ -278,7 +275,7 @@ class GroupL1Norm(Functional):
         The functional is not differentiable in ``x=0``. However, when
         evaluating the gradient operator in this point it will return 0.
 
-         Notes
+        Notes
         -----
         The gradient is given by
 
@@ -296,28 +293,39 @@ class GroupL1Norm(Functional):
             \left[ \nabla || ||f||_p ||_1 \right]_i =
             \frac{| f_i |^{p-2} f_i}{||f||_p^{p-1}}
         """
-        functional = self
+        func = self
 
         class GroupL1Gradient(Operator):
 
-            """The gradient operator of the `GroupL1Norm` functional."""
+            r"""The gradient operator of the `GroupL1Norm` functional.
 
-            def __init__(self):
-                """Initialize a new instance."""
-                super(GroupL1Gradient, self).__init__(
-                    functional.domain, functional.domain, linear=False)
+             Notes
+            -----
+            The gradient is given by
+
+            .. math::
+                \left[ \nabla \| \|f\|_1 \|_1 \right]_i =
+                \frac{f_i}{|f_i|}
+
+            .. math::
+                \left[ \nabla \| \|f\|_2 \|_1 \right]_i =
+                \frac{f_i}{\|f\|_2}
+
+            else:
+
+            .. math::
+                \left[ \nabla || ||f||_p ||_1 \right]_i =
+                \frac{| f_i |^{p-2} f_i}{||f||_p^{p-1}}
+            """
 
             def _call(self, x, out):
                 """Return ``self(x)``."""
-                pwnorm_x = functional.pointwise_norm(x)
-                np.sign(pwnorm_x, out=pwnorm_x)
-                functional.pointwise_norm.derivative(x).adjoint(
-                    pwnorm_x, out=out
-                )
-
+                pwnorm_x = func.pointwise_norm(x)
+                func.pointwise_norm.range.ufuncs.sign(pwnorm_x, out=pwnorm_x)
+                func.pointwise_norm.derivative(x).adjoint(pwnorm_x, out=out)
                 return out
 
-        return GroupL1Gradient()
+        return GroupL1Gradient(func.domain, func.domain, linear=False)
 
     @property
     def proximal(self):
@@ -398,7 +406,7 @@ class IndicatorGroupL1UnitBall(Functional):
 
     def _call(self, x):
         """Return ``self(x)``."""
-        x_norm = self.pointwise_norm.range.ufuncs.max(self.pointwise_norm(x))
+        x_norm = self.pointwise_norm.range.reduce.max(self.pointwise_norm(x))
 
         if x_norm > 1:
             return np.inf
@@ -1140,22 +1148,20 @@ class KullbackLeibler(Functional):
         with np.errstate(invalid='ignore', divide='ignore'):
             if self.prior is None:
                 # < x - 1 - log(x), one >
-                if isinstance(self.domain, ProductSpace):
-                    tmp = self.domain.apply(np.log, x)
-                else:
-                    tmp = np.log(x)
+                tmp = self.domain.ufuncs.log(x)
                 tmp += 1
                 tmp -= x
                 res = -self.domain.inner(tmp, self.domain.one())
             else:
-                # < x - prior + xlogy(prior, prior/x), one >
+                # < x - g + xlogy(g, g/x), one >
+                g = self.prior
                 if isinstance(self.domain, ProductSpace):
                     tmp = self.domain.apply2(
                         lambda v, i: scipy.special.xlogy(g[i], g[i] / v), x
                     )
                 else:
-                    tmp = scipy.special.xlogy(self.prior, self.prior / x)
-                tmp -= self.prior
+                    tmp = scipy.special.xlogy(g, g / x)
+                tmp -= g
                 tmp += x
                 res = -self.domain.inner(tmp, self.domain.one())
 
@@ -1290,11 +1296,17 @@ class KullbackLeiblerConvexConj(Functional):
             if self.prior is None:
                 # - < log(1 - x), one >
                 tmp = 1 - x
-                np.log(tmp, out=tmp)
+                self.domain.ufuncs.log(tmp, out=tmp)
                 res = -self.domain.inner(tmp, self.domain.one())
             else:
-                # - < xlogy(prior, 1 - x), one >
-                tmp = scipy.special.xlogy(self.prior, 1 - x)
+                # - < xlogy(g, 1 - x), one >
+                g = self.prior
+                if isinstance(self.domain, ProductSpace):
+                    tmp = self.domain.apply2(
+                        lambda v, i: scipy.special.xlogy(g[i], 1 - v), x
+                    )
+                else:
+                    tmp = scipy.special.xlogy(g, 1 - x)
                 res = -self.domain.inner(tmp, self.domain.one())
 
         if not np.isfinite(res):
@@ -1440,13 +1452,22 @@ class KullbackLeiblerCrossEntropy(Functional):
         with np.errstate(invalid='ignore', divide='ignore'):
             if self.prior is None:
                 # < 1 - x + xlogy(x, x), one >
-                tmp = scipy.special.xlogy(x, x)
+                if isinstance(self.domain, ProductSpace):
+                    tmp = self.domain.apply(scipy.special.xlogy, x)
+                else:
+                    tmp = scipy.special.xlogy(x, x)
                 tmp -= x
                 tmp += 1
                 res = self.domain.inner(tmp, self.domain.one())
             else:
-                # < prior - x + xlogy(x, x/prior), one >
-                tmp = scipy.special.xlogy(x, x / self.prior)
+                # < g - x + xlogy(x, x/g), one >
+                g = self.prior
+                if isinstance(self.domain, ProductSpace):
+                    tmp = self.domain.apply2(
+                        lambda v, i: scipy.special.xlogy(v, v / g[i]), x
+                    )
+                else:
+                    tmp = scipy.special.xlogy(x, x / g)
                 tmp -= x
                 tmp += self.prior
                 res = self.domain.inner(tmp, self.domain.one())
@@ -1464,16 +1485,11 @@ class KullbackLeiblerCrossEntropy(Functional):
         The gradient is not defined in points where one or more components
         are less than or equal to 0.
         """
-        functional = self
+        func = self
 
         class KLCrossEntropyGradient(Operator):
 
             """The gradient operator of this functional."""
-
-            def __init__(self):
-                """Initialize a new instance."""
-                super(KLCrossEntropyGradient, self).__init__(
-                    functional.domain, functional.domain, linear=False)
 
             def _call(self, x):
                 """Apply the gradient operator to the given point.
@@ -1481,21 +1497,13 @@ class KullbackLeiblerCrossEntropy(Functional):
                 The gradient is not defined in for points with components less
                 than or equal to zero.
                 """
-                if functional.prior is None:
-                    tmp = np.log(x)
+                if func.prior is None:
+                    return func.domain.ufuncs.log(x)
                 else:
-                    tmp = np.log(x / functional.prior)
+                    g = func.prior
+                    return g - 1 + func.domain.ufuncs.log(x / g)
 
-                if np.all(np.isfinite(tmp)):
-                    return tmp
-                else:
-                    # The derivative is not defined.
-                    raise ValueError('The gradient of the Kullback-Leibler '
-                                     'Cross Entropy functional is not defined '
-                                     'for `x` with one or more components '
-                                     'less than or equal to zero.'.format(x))
-
-        return KLCrossEntropyGradient()
+        return KLCrossEntropyGradient(func.domain, func.domain, linear=False)
 
     @property
     def proximal(self):
@@ -1568,36 +1576,23 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
     def _call(self, x):
         """Return the value in the point ``x``."""
         if self.prior is None:
-            res = self.domain.inner(np.expm1(x), self.domain.one())
-        else:
-            res = self.domain.inner(
-                self.prior * np.expm1(x), self.domain.one()
+            return self.domain.inner(
+                self.domain.one(), self.domain.ufuncs.expm1(x)
             )
-        return res
+        else:
+            return self.domain.inner(
+                self.domain.one(), self.prior * self.domain.ufuncs.expm1(x)
+            )
 
-    # TODO: replace this when UFuncOperators is in place: PL #576
     @property
     def gradient(self):
         """Gradient operator of the functional."""
-        functional = self
+        from odl import ufunc_ops
 
-        class KLCrossEntCCGradient(Operator):
-
-            """The gradient operator of this functional."""
-
-            def __init__(self):
-                """Initialize a new instance."""
-                super(KLCrossEntCCGradient, self).__init__(
-                    functional.domain, functional.domain, linear=False)
-
-            def _call(self, x):
-                """Apply the gradient operator to the given point."""
-                if functional.prior is None:
-                    return self.domain.element(np.exp(x))
-                else:
-                    return functional.prior * np.exp(x)
-
-        return KLCrossEntCCGradient()
+        if self.prior is None:
+            return ufunc_ops.exp
+        else:
+            return self.prior * ufunc_ops.exp
 
     @property
     def proximal(self):
@@ -2667,15 +2662,15 @@ class Huber(Functional):
             norm = norm_op(x)
             norm_space = norm_op.range
         else:
-            norm = np.absolute(x)
+            norm = self.domain.ufuncs.absolute(x)
             norm_space = self.domain
 
         if self.gamma > 0:
             tmp = norm * norm
             tmp *= 1 / (2 * self.gamma)
 
-            index = np.greater_equal(norm, self.gamma)
-            tmp[index] = norm[index] - self.gamma / 2
+            linear_part = norm_space.ufuncs.greater_equal(norm, self.gamma)
+            tmp[linear_part] = norm[linear_part] - self.gamma / 2
         else:
             tmp = norm
 
@@ -2741,36 +2736,34 @@ class Huber(Functional):
         True
         """
 
-        functional = self
+        func = self
 
         class HuberGradient(Operator):
 
             """The gradient operator of this functional."""
 
-            def __init__(self):
-                """Initialize a new instance."""
-                super(HuberGradient, self).__init__(
-                    functional.domain, functional.domain, linear=False)
-
             def _call(self, x):
                 """Apply the gradient operator to the given point."""
                 if isinstance(self.domain, ProductSpace):
-                    norm = PointwiseNorm(self.domain, 2)(x)
+                    pw_norm = PointwiseNorm(self.domain, 2)
+                    norm = pw_norm(x)
+                    norm_space = pw_norm.range
                 else:
-                    norm = np.absolute(x)
+                    norm = self.domain.ufuncs.absolute(x)
+                    norm_space = self.domain
 
-                grad = x / functional.gamma
+                grad = x / func.gamma
+                linear_part = norm_space.ufuncs.greater_equal(norm, func.gamma)
 
-                index = np.greater_equal(norm, functional.gamma)
                 if isinstance(self.domain, ProductSpace):
                     for xi, gi in zip(x, grad):
-                        gi[index] = xi[index] / norm[index]
+                        gi[linear_part] = xi[linear_part] / norm[linear_part]
                 else:
-                    grad[index] = x[index] / norm[index]
+                    grad[linear_part] = x[linear_part] / norm[linear_part]
 
                 return grad
 
-        return HuberGradient()
+        return HuberGradient(func.domain, func.domain, linear=False)
 
     def __repr__(self):
         '''Return ``repr(self)``.'''
