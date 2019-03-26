@@ -612,15 +612,17 @@ def proximal_box_constraint(space, lower=None, upper=None):
 
         def _call(self, x, out):
             """Apply the operator to ``x`` and store the result in ``out``."""
+            F = self.domain.ufuncs
+
             if lower is not None and upper is None:
-                np.maximum(x, lower, out=out)
+                F.maximum(x, lower, out=out)
             elif lower is None and upper is not None:
-                np.minimum(x, upper, out=out)
+                F.minimum(x, upper, out=out)
             elif lower is not None and upper is not None:
-                np.maximum(x, lower, out=out)
-                np.minimum(out, upper, out=out)
+                F.maximum(x, lower, out=out)
+                F.minimum(out, upper, out=out)
             else:
-                out[:] = x
+                space.assign(out, x)
 
     return ProxOpBoxConstraint
 
@@ -895,33 +897,35 @@ def proximal_convex_conj_l2_squared(space, lam=1, g=None):
             """Apply the operator to ``x`` and store the result in ``out``"""
             # (x - sig*g) / (1 + sig/(2 lam))
             sig = self.sigma
+            F = space.ufuncs
+
             if np.isscalar(sig):
                 if g is None:
-                    self.range.lincomb(1 / (1 + 0.5 * sig / lam), x, out=out)
+                    space.lincomb(1 / (1 + 0.5 * sig / lam), x, out=out)
                 else:
-                    self.range.lincomb(
+                    space.lincomb(
                         1 / (1 + 0.5 * sig / lam),
                         x,
                         -sig / (1 + 0.5 * sig / lam),
                         g,
                         out=out,
                     )
+
             elif sig in space:
                 if g is None:
-                    np.divide(x, 1 + 0.5 / lam * sig, out=out)
+                    F.divide(x, 1 + 0.5 / lam * sig, out=out)
                 else:
                     if x is out:
                         # Can't write to `out` since old `x` is still needed
-                        tmp = np.multiply(g, sig)
-                        self.range.lincomb(1, x, -1, tmp, out=out)
+                        tmp = F.multiply(sig, g)
+                        space.lincomb(1, x, -1, tmp, out=out)
                     else:
-                        np.multiply(g, sig, out=out)
-                        self.range.lincomb(1, x, -1, out, out=out)
-                    np.divide(out, 1 + 0.5 / lam * sig, out=out)
+                        F.multiply(sig, g, out=out)
+                        space.lincomb(1, x, -1, out, out=out)
+                    F.divide(out, 1 + 0.5 / lam * sig, out=out)
+
             else:
-                raise RuntimeError(
-                    '`sigma` is neither a scalar nor a space element.'
-                )
+                raise RuntimeError('bad `sig` {!r}'.format(sig))
 
     return ProximalConvexConjL2Squared
 
@@ -994,29 +998,32 @@ def proximal_l2_squared(space, lam=1, g=None):
             """Apply the operator to ``x`` and store the result in ``out``"""
             # (x + 2*sig*lam*g) / (1 + 2*sig*lam))
             sig = self.sigma
+            F = space.ufuncs
+
             if np.isscalar(sig):
                 if g is None:
-                    self.range.lincomb(1 / (1 + 2 * sig * lam), x, out=out)
+                    space.lincomb(1 / (1 + 2 * sig * lam), x, out=out)
                 else:
-                    self.range.lincomb(
+                    space.lincomb(
                         1 / (1 + 2 * sig * lam),
                         x,
                         2 * sig * lam / (1 + 2 * sig * lam),
                         g,
                         out=out,
                     )
+
             else:   # sig in space
                 if g is None:
-                    np.divide(x, 1 + 2 * sig * lam, out=out)
+                    F.divide(x, 1 + 2 * sig * lam, out=out)
                 else:
                     if x is out:
                         # Can't write to `out` since old `x` is still needed
-                        tmp = np.multiply(sig, 2 * lam * g)
-                        self.range.lincomb(1, x, 1, tmp, out=out)
+                        tmp = F.multiply(sig, 2 * lam * g)
+                        space.lincomb(1, x, 1, tmp, out=out)
                     else:
-                        np.multiply(sig, 2 * lam * g, out=out)
-                        self.range.lincomb.lincomb(1, x, 1, out, out=out)
-                    np.divide(out, 1 + 2 * sig * lam, out=out)
+                        F.multiply(sig, 2 * lam * g, out=out)
+                        space.lincomb.lincomb(1, x, 1, out, out=out)
+                    F.divide(out, 1 + 2 * sig * lam, out=out)
 
     return ProximalL2Squared
 
@@ -1123,28 +1130,32 @@ def proximal_convex_conj_l1(space, lam=1, g=None):
 
         def _call(self, x, out):
             """Return ``self(x, out=out)``."""
-            # lam * (x - sig * g) / max(lam, |x - sig * g|)
+            F = space.ufuncs
+
+            # Compute lam * (x - sig * g) / max(lam, |x - sig * g|)
 
             # diff = x - sig * g
-            if g is not None:
-                diff = self.domain.element()
-                self.domain.lincomb(1, x, -self.sigma, g, out=diff)
-            else:
+            if g is None:
+                # Handle aliased `x` and `out`
+                # This is necessary since we write to both `diff` and `out`
                 if x is out:
-                    # Handle aliased `x` and `out`
-                    # This is necessary since we write to both `diff` and
-                    # `out`.
-                    diff = x.copy()
+                    if isinstance(space, ProductSpace):
+                        diff = space.apply(lambda xi: xi.copy(), x)
+                    else:
+                        diff = x.copy()
                 else:
                     diff = x
+            else:
+                diff = space.element()
+                space.lincomb(1, x, -self.sigma, g, out=diff)
 
             # out = max( |x-sig*g|, lam ) / lam
-            np.absolute(diff, out=out)
-            np.maximum(out, lam, out=out)
+            F.absolute(diff, out=out)
+            F.maximum(out, lam, out=out)
             out /= lam
 
             # out = diff / ...
-            np.divide(diff, out, out=out)
+            F.divide(diff, out, out=out)
 
     return ProximalConvexConjL1
 
@@ -1231,24 +1242,26 @@ def proximal_convex_conj_l1_l2(space, lam=1, g=None):
 
         def _call(self, x, out):
             """Return ``self(x, out=out)``."""
-            # lam * (x - sig * g) / max(lam, |x - sig * g|)
+            pwnorm = PointwiseNorm(space, exponent=2)
+            Fb = pwnorm.range.ufuncs
+
+            # Compute lam * (x - sig * g) / max(lam, |x - sig * g|)
 
             # diff = x - sig * g
             if g is not None:
                 diff = self.domain.element()
-                self.domain.lincomb(1, x, -self.sigma, g, out=diff)
+                space.lincomb(1, x, -self.sigma, g, out=diff)
             else:
                 diff = x
 
             # denom = max( |x-sig*g|_2, lam ) / lam  (|.|_2 pointwise)
-            pwnorm = PointwiseNorm(self.domain, exponent=2)
             denom = pwnorm(diff)
-            np.maximum(denom, lam, out=denom)
+            Fb.maximum(denom, lam, out=denom)
             denom /= lam
 
             # Pointwise division
             for out_i, diff_i in zip(out, diff):
-                np.divide(diff_i, denom, out=out_i)
+                Fb.divide(diff_i, denom, out=out_i)
 
     return ProximalConvexConjL1L2
 
@@ -1339,6 +1352,8 @@ def proximal_l1(space, lam=1, g=None):
 
         def _call(self, x, out):
             """Return ``self(x, out=out)``."""
+            F = space.ufuncs
+
             # diff = x - g
             if g is not None:
                 diff = x - g
@@ -1351,15 +1366,15 @@ def proximal_l1(space, lam=1, g=None):
 
             # We write the operator as
             # x - (x - g) / max(|x - g| / sig*lam, 1)
-            denom = np.absolute(diff)
+            denom = F.absolute(diff)
             denom /= self.sigma * lam
-            np.maximum(denom, 1, out=denom)
+            F.maximum(denom, 1, out=denom)
 
             # out = (x - g) / denom
-            np.divide(diff, denom, out=out)
+            F.divide(diff, denom, out=out)
 
             # out = x - ...
-            self.range.lincomb(1, x, -1, out, out=out)
+            space.lincomb(1, x, -1, out, out=out)
 
     return ProximalL1
 
@@ -1436,6 +1451,9 @@ def proximal_l1_l2(space, lam=1, g=None):
 
         def _call(self, x, out):
             """Return ``self(x, out=out)``."""
+            pwnorm = PointwiseNorm(self.domain, exponent=2)
+            Fb = pwnorm.range.ufuncs
+
             # diff = x - g
             if g is not None:
                 diff = x - g
@@ -1448,17 +1466,16 @@ def proximal_l1_l2(space, lam=1, g=None):
 
             # We write the operator as
             # x - (x - g) / max(|x - g|_2 / sig*lam, 1)
-            pwnorm = PointwiseNorm(self.domain, exponent=2)
             denom = pwnorm(diff)
             denom /= self.sigma * lam
-            np.maximum(denom, 1, out=denom)
+            Fb.maximum(denom, 1, out=denom)
 
             # out = (x - g) / denom
             for out_i, diff_i in zip(out, diff):
-                np.divide(diff_i, denom, out=out_i)
+                Fb.divide(diff_i, denom, out=out_i)
 
             # out = x - ...
-            self.range.lincomb(1, x, -1, out, out=out)
+            space.lincomb(1, x, -1, out, out=out)
 
     return ProximalL1L2
 
@@ -1514,7 +1531,7 @@ def proximal_linfty(space):
             if x is out:
                 x = x.copy()
 
-            proj_l1(x, radius, out=out)
+            proj_l1(self.domain, x, radius, out=out)
             self.range.lincomb(-1, out, 1, x, out=out)
 
     return ProximalLInfty
@@ -1526,7 +1543,7 @@ def proximal_convex_conj_linfty(space):
     Implements the proximal operator of the convex conjugate of the
     functional ::
 
-        F(x) = \|x\|_\infty
+        F(x) = ||x||_inf
 
     with ``x`` in ``space``.
 
@@ -1581,14 +1598,14 @@ def proximal_convex_conj_linfty(space):
     return ProximalConvexConjLinfty
 
 
-def proj_l1(x, radius=1, out=None):
+def proj_l1(space, x, radius=1, out=None):
     r"""Projection onto l1-ball.
 
-    Projection onto::
+    Projection onto
 
-        ``{ x \in X | ||x||_1 \leq r}``
+        \Big\{ x \in X\ \Big|\ \|x\|_1 \leq r \Big\}
 
-    with ``r`` being the radius.
+    with :math:`r` being the radius.
 
     Parameters
     ----------
@@ -1605,36 +1622,39 @@ def proj_l1(x, radius=1, out=None):
     Notes
     -----
     The projection onto an l1-ball can be computed by projection onto a
-    simplex, see [D+2008] for details.
+    simplex, see `[D+2008] <https://doi.org/10.1145/1390156.1390191>`_ for
+    details.
 
     References
     ----------
-    [D+2008] Duchi, J., Shalev-Shwartz, S., Singer, Y., and Chandra, T.
+    [D+2008] Duchi, J, Shalev-Shwartz, S, Singer, Y, and Chandra, T.
     *Efficient Projections onto the L1-ball for Learning in High dimensions*.
-    ICML 2008, pp. 272-279. http://doi.org/10.1145/1390156.1390191
+    ICML 2008, pp. 272-279.
 
     See Also
     --------
     proximal_linfty : proximal for l-infinity norm
     proj_simplex : projection onto simplex
     """
-    u = np.absolute(x)
-    v = np.sign(x)
-    out = proj_simplex(u, radius, out)
-    out *= v
-
+    F = space.ufuncs
+    sign_x = F.sign(x)
+    F.absolute(x, out=out)
+    proj_simplex(space, out, radius, out=out)
+    out *= sign_x
     return out
 
 
-def proj_simplex(x, diameter=1, out=None):
+def proj_simplex(space, x, diameter=1, out=None):
     r"""Projection onto simplex.
 
-    Projection onto::
+    Projection onto
 
-        ``{ x \in X | x_i \geq 0, \sum_i x_i = r}``
+    .. math::
+
+        \Big\{ x \in X\ \Big|\ x_i \geq 0,\ \sum_i x_i = r\Big\}
 
     with :math:`r` being the diameter. It is computed by the formula proposed
-    in [D+2008].
+    in `[D+2008] <https://doi.org/10.1145/1390156.1390191>`_.
 
     Parameters
     ----------
@@ -1651,30 +1671,34 @@ def proj_simplex(x, diameter=1, out=None):
     Notes
     -----
     The projection onto a simplex is not of closed-form but can be solved by a
-    non-iterative algorithm, see [D+2008] for details.
+    non-iterative algorithm, see `[D+2008]
+    <https://doi.org/10.1145/1390156.1390191>`_ for details.
 
     References
     ----------
-    [D+2008] Duchi, J., Shalev-Shwartz, S., Singer, Y., and Chandra, T.
+    [D+2008] Duchi, J, Shalev-Shwartz, S, Singer, Y, and Chandra, T.
     *Efficient Projections onto the L1-ball for Learning in High dimensions*.
-    ICML 2008, pp. 272-279. http://doi.org/10.1145/1390156.1390191
+    ICML 2008, pp. 272-279.
 
     See Also
     --------
     proj_l1 : projection onto l1-norm ball
     """
-    # Sort values in descending order
-    x_sorted = np.sort(x)[::-1]
+    if isinstance(space, ProductSpace):
+        raise NotImplementedError('product spaces not supported')
+
+    # Sort flattened array in descending order
+    x_flat = x.ravel()
+    x_sorted = np.sort(x_flat)[::-1]
 
     # Find critical index
-    j = np.arange(1, x.size + 1)
+    j = np.arange(1, x_sorted.size + 1)
     x_avg = (1 / j) * (np.cumsum(x_sorted) - diameter)
     crit = x_sorted - x_avg
     i = np.max(np.argwhere(crit >= 0).squeeze())
 
     # Output is a shifted and thresholded version of the input
     out = np.maximum(x - x_avg[i], 0, out=out)
-
     return out
 
 
@@ -1781,27 +1805,32 @@ def proximal_convex_conj_kl(space, lam=1, g=None):
 
         def _call(self, x, out):
             """Return ``self(x, out=out)``."""
-            # (x + lam - sqrt((x - lam)^2 + 4*lam*sig*g)) / 2
+            F = space.ufuncs
+
+            # Compute (x + lam - sqrt((x - lam)^2 + 4*lam*sig*g)) / 2
 
             # out = (x - lam)^2
             if x is out:
                 # Handle aliased `x` and `out` (need original `x` later on)
-                x = x.copy()
+                if isinstance(space, ProductSpace):
+                    x = space.apply(lambda xi: xi.copy(), x)
+                else:
+                    x = x.copy()
             else:
-                out[:] = x
+                space.assign(out, x)
             out -= lam
-            np.multiply(out, out, out=out)
+            F.square(out, out=out)
 
             # out = ... + 4*lam*sigma*g
             # If g is None, it is taken as the one element
             if g is None:
                 out += 4.0 * lam * self.sigma
             else:
-                self.range.lincomb(1, out, 4 * lam * self.sigma, g, out=out)
+                space.lincomb(1, out, 4 * lam * self.sigma, g, out=out)
 
             # out = x - sqrt(...) + lam
-            np.sqrt(out, out=out)
-            self.range.lincomb(1, x, -1, out, out=out)
+            F.sqrt(out, out=out)
+            space.lincomb(1, x, -1, out, out=out)
             out += lam
 
             # out = 1/2 * ...
@@ -1917,20 +1946,24 @@ def proximal_convex_conj_kl_cross_entropy(space, lam=1, g=None):
             # Lazy import to improve `import odl` time
             import scipy.special
 
+            F = space.ufuncs
+
             if g is None:
                 # If g is None, it is taken as the one element
                 # Different branches of lambertw is not an issue, see Notes
-                lambw = scipy.special.lambertw(
-                    (self.sigma / lam) * np.exp(x / lam))
+                arg = (self.sigma / lam) * F.exp(x / lam)
             else:
-                # Different branches of lambertw is not an issue, see Notes
-                lambw = scipy.special.lambertw(
-                    (self.sigma / lam) * g * np.exp(x / lam))
+                arg = (self.sigma / lam) * g * F.exp(x / lam)
 
-            if not np.issubsctype(self.domain.dtype, np.complexfloating):
+            if isinstance(space, ProductSpace):
+                lambw = space.apply(scipy.special.lambertw, arg)
+            else:
+                lambw = scipy.special.lambertw(arg)
+
+            if space.dtype.kind != 'c':
                 lambw = lambw.real
 
-            self.range.lincomb(1, x, -lam, lambw, out=out)
+            space.lincomb(1, x, -lam, lambw, out=out)
 
     return ProximalConvexConjKLCrossEntropy
 
@@ -1981,16 +2014,35 @@ def proximal_huber(space, gamma):
         def _call(self, x, out):
             """Return ``self(x, out=out)``."""
             if isinstance(self.domain, ProductSpace):
-                norm = PointwiseNorm(self.domain, 2)(x)
+                norm_op = PointwiseNorm(self.domain, 2)
+                Fb = norm_op.range.ufuncs
+                norm = norm_op(x)
+
+                # Piecewise definition, threshold at ||x|| == gamma + sigma
+                mask = Fb.less_equal(norm, gamma + self.sigma)
+
+                def branch1(oi, i):
+                    oi[mask] = (gamma / (gamma + self.sigma)) * x[i][mask]
+
+                space.apply2(branch1, out)
+
+                Fb.logical_not(mask, out=mask)
+                sign_x = space.ufuncs.sign(x)
+
+                def branch2(oi, i):
+                    oi[mask] = x[i][mask] - self.sigma * sign_x[i][mask]
+
+                space.apply2(branch2, out)
+
             else:
-                norm = np.absolute(x)
+                F = space.ufuncs
 
-            mask = np.less_equal(norm, gamma + self.sigma)
-            out[mask] = gamma / (gamma + self.sigma) * x[mask]
+                norm = F.absolute(x)
+                mask = F.less_equal(norm, gamma + self.sigma)
+                out[mask] = gamma / (gamma + self.sigma) * x[mask]
 
-            np.logical_not(mask, out=mask)
-            sign_x = np.sign(x)
-            out[mask] = x[mask] - self.sigma * sign_x[mask]
+                F.logical_not(mask, out=mask)
+                out[mask] = x[mask] - self.sigma * F.sign(x)[mask]
 
             return out
 
