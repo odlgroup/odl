@@ -7,6 +7,7 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 """Discretized Fourier transform on L^p spaces."""
+from collections.abc import Iterable
 
 from __future__ import print_function, division, absolute_import
 import numpy as np
@@ -1659,11 +1660,36 @@ class NonUniformFourierTransformBase(Operator):
             linear=True,
         )
         self.im_shape = im_shape
+        self._check_samples(non_uniform_samples)
         self.non_uniform_samples = non_uniform_samples
-        # TODO: add a check on nodes to make sure it's normalized, floats and non zero
         self.nfft = NFFT(N=im_shape, M=len(non_uniform_samples))
         self.nfft.x = non_uniform_samples
         self.nfft.precompute()
+
+    def _check_samples(self, non_uniform_samples):
+        if not isinstance(non_uniform_samples, Iterable):
+            raise TypeError('`non_uniform_samples` is not iterable.')
+
+        if not non_uniform_samples:
+            raise ValueError('`non_uniform_samples` is empty')
+
+        n_dim = len(self.im_shape)
+        if not all(len(sample) == n_dim for sample in non_uniform_samples):
+            raise ValueError('One of the samples in `non_uniform_samples` does'
+                ' not have the right dimension')
+
+        if not all(self._is_sample_valid(sample) for sample in non_uniform_samples):
+            raise ValueError('One of the samples in `non_uniform_samples` is'
+                'not a float between -0.5 and 0.5')
+
+    def _is_sample_valid(self, sample):
+        floats = all(isinstance(coord, float) for coord in sample)
+        if floats:
+            normalized = all(-0.5 <= coord <= 0.5 for coord in sample)
+        else:
+            normalized = False
+        return floats & normalized
+
 
     def _normalize(self, x):
         out = x / np.sqrt(self.nfft.M)
