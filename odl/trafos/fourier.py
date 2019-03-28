@@ -1645,6 +1645,24 @@ class FourierTransformInverse(FourierTransformBase):
             sign=sign, tmp_r=self._tmp_r, tmp_f=self._tmp_f)
 
 
+class NonUniformFourierTransform(Operator):
+    """Non uniform Fast Fourier Transformself.
+    """
+    def __init__(self, domain, range=None):
+        # TODO: code correct domain and range
+        super(NonUniformFourierTransform, self).__init__(
+            domain=domain,
+            range=range,
+            linear=True
+        )
+
+    def _call(self, x):
+        pass
+
+    @property
+    def adjoint(self):
+        pass
+
 if __name__ == '__main__':
     from odl.util.testutils import run_doctests
     run_doctests()
