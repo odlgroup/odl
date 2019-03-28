@@ -54,23 +54,17 @@ def test_L1_norm(space, sigma):
     func = odl.solvers.L1Norm(space)
     x = noise_element(space)
     F = space.ufuncs
+    R = space.reduce
     sigma = float(sigma)
 
-    # Test functional evaluation
-    expected_result = space.inner(F.abs(x), space.one())
-    assert func(x) == pytest.approx(expected_result)
+    assert func(x) == pytest.approx(space.inner(F.abs(x), space.one()))
+    assert all_almost_equal(func.gradient(x), F.sign(x))
+    assert all_almost_equal(
+        func.proximal(sigma)(x), F.sign(x) * F.maximum(F.abs(x) - sigma, 0)
+    )
 
-    # Test gradient - expecting sign function
-    expected_result = F.sign(x)
-    assert all_almost_equal(func.gradient(x), expected_result)
-
-    # Test proximal - expecting sign(x) * maximum(abs(x) - sigma, 0)
-    expected_result = F.sign(x) * F.maximum(F.abs(x) - sigma, 0)
-    assert all_almost_equal(func.proximal(sigma)(x), expected_result)
-
-    # Test convex conjugate - expecting 0 if |x|_inf <= 1, infty else
-    inf_norm_x = space.reduce.max(F.abs(x))
     func_cc = func.convex_conj
+    inf_norm_x = R.max(F.abs(x))
     for c in [2.0, 1.1, 1 + 1e-5]:
         norm_gt_1 = (c / inf_norm_x) * x
         assert func_cc(norm_gt_1) == np.inf
@@ -79,11 +73,10 @@ def test_L1_norm(space, sigma):
         norm_lt_1 = (c / inf_norm_x) * x
         assert func_cc(norm_lt_1) == 0
 
-    # Test proximal of the convex conjugate - expecting x / max(1, |x|)
-    expected_result = x / F.maximum(1, F.abs(x))
-    assert all_almost_equal(func_cc.proximal(sigma)(x), expected_result)
+    assert all_almost_equal(
+        func_cc.proximal(sigma)(x), x / F.maximum(1, F.abs(x))
+    )
 
-    # Verify that the biconjugate is the functional itself
     func_cc_cc = func_cc.convex_conj
     assert isinstance(func_cc_cc, odl.solvers.L1Norm)
 
@@ -94,11 +87,9 @@ def test_indicator_lp_unit_ball(space, sigma, exponent):
     x = noise_element(space)
     F = space.ufuncs
 
-    # Test functional evaluation
     p_norm_x = np.power(
         space.inner(F.power(F.abs(x), exponent), space.one()), 1 / exponent
     )
-
     for c in [2.0, 1.1, 1 + 1e-5]:
         norm_gt_1 = (c / p_norm_x) * x
         assert func(norm_gt_1) == np.inf
@@ -113,21 +104,14 @@ def test_L2_norm(space, sigma):
     func = odl.solvers.L2Norm(space)
     x = noise_element(space)
     x_norm = space.norm(x)
+    zero = space.zero()
 
-    # Test functional evaluation
-    expected_result = np.sqrt(space.inner(x ** 2, space.one()))
-    assert func(x) == pytest.approx(expected_result)
-
-    # Test gradient
+    assert func(x) == pytest.approx(np.sqrt(space.inner(x ** 2, space.one())))
     if x_norm > 0:
-        expected_result = x / x_norm
-        assert all_almost_equal(func.gradient(x), expected_result)
+        assert all_almost_equal(func.gradient(x), x / x_norm)
+    assert all_almost_equal(func.gradient(zero), zero)
 
-    # Verify that the gradient at zero is zero
-    assert all_almost_equal(func.gradient(func.domain.zero()), space.zero())
-
-    # Test proximal operator - expecting
-    # x * (1 - sigma/||x||) if ||x|| > sigma, 0 else
+    # Prox: x * (1 - sigma/||x||) if ||x|| > sigma, else 0
     for c in [2.0, 1.1, 1 + 1e-5]:
         norm_gt_sig = (c * sigma / x_norm) * x
         expected_result = (
@@ -139,15 +123,10 @@ def test_L2_norm(space, sigma):
 
     for c in [0.0, 0.9, 1 - 1e-5]:
         norm_lt_sig = (c * sigma / x_norm) * x
-        assert all_almost_equal(
-            func.proximal(sigma)(norm_lt_sig), space.zero()
-        )
+        assert all_almost_equal(func.proximal(sigma)(norm_lt_sig), zero)
 
-    # Test convex conjugate
     func_cc = func.convex_conj
-
-    # Test evaluation of the convex conjugate - expecting
-    # 0 if ||x|| < 1, infty else
+    # Convex conj: 0 if ||x|| < 1, else infty
     for c in [2.0, 1.1, 1 + 1e-5]:
         norm_gt_1 = (c / x_norm) * x
         assert func_cc(norm_gt_1) == np.inf
@@ -156,8 +135,7 @@ def test_L2_norm(space, sigma):
         norm_lt_1 = (c / x_norm) * x
         assert func_cc(norm_lt_1) == 0
 
-    # Test the proximal of the convex conjugate - expecting
-    # x if ||x||_2 < 1, x/||x|| else
+    # Convex conj prox: x if ||x||_2 < 1, else x/||x||
     for c in [2.0, 1.1, 1 + 1e-5]:
         norm_gt_1 = (c / x_norm) * x
         assert all_almost_equal(
@@ -171,7 +149,6 @@ def test_L2_norm(space, sigma):
             func_cc.proximal(sigma)(norm_lt_1), norm_lt_1
         )
 
-    # Verify that the biconjugate is the functional itself
     func_cc_cc = func_cc.convex_conj
     assert func_cc_cc(x) == pytest.approx(func(x))
 
@@ -182,40 +159,17 @@ def test_L2_norm_squared(space, sigma):
     x = noise_element(space)
     x_norm = space.norm(x)
 
-    # Test functional evaluation
-    expected_result = x_norm ** 2
-    assert func(x) == pytest.approx(expected_result)
+    assert func(x) == pytest.approx(x_norm ** 2)
+    assert all_almost_equal(func.gradient(x), 2 * x)
+    assert all_almost_equal(func.proximal(sigma)(x), x / (1 + 2 * sigma))
 
-    # Test gradient
-    expected_result = 2.0 * x
-    assert all_almost_equal(func.gradient(x), expected_result)
-
-    # Test proximal operator
-    expected_result = x / (1 + 2.0 * sigma)
-    assert all_almost_equal(func.proximal(sigma)(x), expected_result)
-
-    # Test convex conjugate
     func_cc = func.convex_conj
+    assert func_cc(x) == pytest.approx(x_norm ** 2 / 4)
+    assert all_almost_equal(func_cc.gradient(x), x / 2.0)
+    assert all_almost_equal(func_cc.proximal(sigma)(x), x / (1 + sigma / 2.0))
 
-    # Test evaluation of the convex conjugate
-    expected_result = x_norm ** 2 / 4.0
-    assert func_cc(x) == pytest.approx(expected_result)
-
-    # Test gradient of the convex conjugate
-    expected_result = x / 2.0
-    assert all_almost_equal(func_cc.gradient(x), expected_result)
-
-    # Test proximal of the convex conjugate
-    expected_result = x / (1 + sigma / 2.0)
-    assert all_almost_equal(func_cc.proximal(sigma)(x), expected_result)
-
-    # Verify that the biconjugate is the functional itself
     func_cc_cc = func_cc.convex_conj
-
-    # Check that they evaluate to the same value
     assert func_cc_cc(x) == pytest.approx(func(x))
-
-    # Check that their gradients evaluate to the same value
     assert all_almost_equal(func_cc_cc.gradient(x), func.gradient(x))
 
 
@@ -224,35 +178,18 @@ def test_constant_functional(space, scalar):
     constant = float(scalar)
     func = odl.solvers.ConstantFunctional(space, constant=scalar)
     x = noise_element(space)
-
-    assert func.constant == constant
-
-    # Test functional evaluation
-    assert func(x) == constant
-
-    # Test gradient - expecting zero operator
-    assert isinstance(func.gradient, odl.ZeroOperator)
-
-    # Test proximal operator - expecting identity
     sigma = 1.5
+
+    assert func(x) == constant
+    assert isinstance(func.gradient, odl.ZeroOperator)
     assert isinstance(func.proximal(sigma), odl.IdentityOperator)
 
-    # Test convex conjugate
     func_cc = func.convex_conj
-
-    # Test evaluation of the convex conjugate - expecting
-    # -constant if x=0, infty else
+    # Convex conj: -constant if x = 0, else infty
     assert func_cc(x) == np.inf
     assert func_cc(space.zero()) == -constant
-
-    # Gradient of the convex conjugate (not implemeted)
-    with pytest.raises(NotImplementedError):
-        func_cc.gradient
-
-    # Proximal of the convex conjugate - expecting zero operator
     assert isinstance(func_cc.proximal(sigma), odl.ZeroOperator)
 
-    # Verify that the biconjugate is the functional itself
     func_cc_cc = func_cc.convex_conj
     assert isinstance(func_cc_cc, odl.solvers.ConstantFunctional)
     assert func_cc_cc.constant == constant
@@ -261,77 +198,58 @@ def test_constant_functional(space, scalar):
 def test_zero_functional(space):
     """Test the zero functional."""
     zero_func = odl.solvers.ZeroFunctional(space)
-    assert isinstance(zero_func, odl.solvers.ConstantFunctional)
-    assert zero_func.constant == 0
+    assert zero_func(space.one()) == 0
 
 
 def test_kullback_leibler(space):
     """Test the kullback leibler functional and its convex conjugate."""
-    # The prior needs to be positive
-    prior = np.abs(noise_element(space)) + 0.1
-
+    F = space.ufuncs
+    R = space.reduce
+    prior = noise_element(space)
+    prior = space.element(F.abs(prior) + 0.1)  # must be positive
     func = odl.solvers.KullbackLeibler(space, prior)
+    x = noise_element(space)
+    x = func.domain.element(np.abs(x) + 0.1)  # must be positive
+    sigma = 1.2
+    one = space.one()
 
-    # The fucntional is only defined for positive elements
-    x = np.abs(noise_element(space)) + 0.1
-    one_elem = space.one()
-
-    # Evaluation of the functional
-    expected_result = space.inner(
-        (x - prior + prior * np.log(prior / x)), one_elem
+    assert func(x) == pytest.approx(
+        space.inner((x - prior + prior * F.log(prior / x)), one)
     )
-    assert func(x) == pytest.approx(expected_result)
 
-    # Check property for prior
-    assert all_almost_equal(func.prior, prior)
-
-    # For elements with (a) negative components it should return inf
+    # If one or more components are negative, the result should be infinity
     x_neg = noise_element(space)
-    x_neg = x_neg - np.max(x_neg)
+    x_neg = x_neg - R.max(x_neg)
     assert func(x_neg) == np.inf
 
-    # The gradient
-    expected_result = 1 - prior / x
-    assert all_almost_equal(func.gradient(x), expected_result)
-
-    # The proximal operator
-    sigma = np.random.rand()
+    assert all_almost_equal(func.gradient(x), 1 - prior / x)
+    # TODO(kohr-h): this just tests the implementation, not the result
     expected_result = odl.solvers.proximal_convex_conj(
         odl.solvers.proximal_convex_conj_kl(space, g=prior))(sigma)(x)
     assert all_almost_equal(func.proximal(sigma)(x), expected_result)
 
-    # The convex conjugate functional
-    cc_func = func.convex_conj
+    func_cc = func.convex_conj
 
-    assert isinstance(cc_func, KullbackLeiblerConvexConj)
+    # Convex conjugate is the integral of -prior * log(1 - x) if x < 1
+    # everywhere, otherwise infinity
+    x_lt_1 = x - R.max(x) + 0.99
+    assert func_cc(x_lt_1) == pytest.approx(
+        -space.inner(prior * F.log(1 - x_lt_1), one)
+    )
+    x_ge_1 = x - R.max(x) + 1.01
+    assert func_cc(x_ge_1) == np.inf
 
-    # The convex conjugate functional is only finite for elements with all
-    # components smaller than 1.
-    x = noise_element(space)
-    x = x - np.max(x) + 0.99
+    assert all_almost_equal(func_cc.gradient(x_lt_1), prior / (1 - x_lt_1))
 
-    # Evaluation of convex conjugate
-    expected_result = -space.inner(prior * np.log(1 - x), one_elem)
-    assert cc_func(x) == pytest.approx(expected_result)
+    expected_result = (
+        1 + x_lt_1 - F.sqrt((x_lt_1 - 1) ** 2 + 4 * sigma * prior)
+    ) / 2
+    assert all_almost_equal(
+        func_cc.proximal(sigma)(x_lt_1), expected_result
+    )
 
-    x_wrong = noise_element(space)
-    x_wrong = x_wrong - np.max(x_wrong) + 1.01
-    assert cc_func(x_wrong) == np.inf
-
-    # The gradient of the convex conjugate
-    expected_result = prior / (1 - x)
-    assert all_almost_equal(cc_func.gradient(x), expected_result)
-
-    # The proximal of the convex conjugate
-    expected_result = 0.5 * (1 + x - np.sqrt((x - 1) ** 2 + 4 * sigma * prior))
-    assert all_almost_equal(cc_func.proximal(sigma)(x), expected_result)
-
-    # The biconjugate, which is the functional itself since it is proper,
-    # convex and lower-semicontinuous
-    cc_cc_func = cc_func.convex_conj
-
-    # Check that they evaluate the same
-    assert cc_cc_func(x) == pytest.approx(func(x))
+    func_cc_cc = func_cc.convex_conj
+    assert func_cc_cc(x) == pytest.approx(func(x))
 
 
 def test_kullback_leibler_cross_entorpy(space):

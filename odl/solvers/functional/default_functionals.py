@@ -2757,6 +2757,7 @@ class Huber(Functional):
                     base_space = self.domain
 
                 Fb = base_space.ufuncs
+
                 grad = x / func.gamma
                 linear_part = Fb.greater_equal(norm, func.gamma)
 
