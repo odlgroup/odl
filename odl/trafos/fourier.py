@@ -10,6 +10,7 @@
 
 from __future__ import print_function, division, absolute_import
 import numpy as np
+from pynfft.nfft import NFFT
 
 from odl.discr import DiscreteLp, discr_sequence_space
 from odl.operator import Operator
@@ -1645,19 +1646,66 @@ class FourierTransformInverse(FourierTransformBase):
             sign=sign, tmp_r=self._tmp_r, tmp_f=self._tmp_f)
 
 
-class NonUniformFourierTransform(Operator):
-    """Non uniform Fast Fourier Transformself.
+class NonUniformFourierTransformBase(Operator):
+    """Non uniform Fast Fourier Transform.
+
+    The normalization is inspired from pysap-mri, mainly this class:
+    https://github.com/CEA-COSMIC/pysap-mri/blob/master/mri/reconstruct/fourier.py#L123
     """
-    def __init__(self, domain, range=None):
+    def __init__(self, domain, non_uniform_samples, range=None):
         # TODO: code correct domain and range
-        super(NonUniformFourierTransform, self).__init__(
+        super(NonUniformFourierTransformBase, self).__init__(
             domain=domain,
             range=range,
-            linear=True
+            linear=True,
+        )
+        # TODO: add a check on nodes to make sure it's normalized, floats and non zero
+        # TODO: relate the domain to the [512, 512]
+        self.nfft = NFFT(N=[512, 512], M=len(non_uniform_samples))
+        self.nfft.x = non_uniform_samples
+        self.nfft.precompute()
+
+
+class NonUniformFourierTransform(NonUniformFourierTransformBase):
+    """Forward Non uniform Fast Fourier Transform.
+
+    The normalization is inspired from pysap-mri, mainly this class:
+    https://github.com/CEA-COSMIC/pysap-mri/blob/master/mri/reconstruct/fourier.py#L123
+    """
+    def __init__(self, domain, non_uniform_samples, range=None):
+        super(NonUniformFourierTransform, self).__init__(
+            domain=domain,
+            non_uniform_samples=non_uniform_samples,
+            range=range,
         )
 
     def _call(self, x):
+        self.nfft.f_hat = x
+        out = self.nfft.trafo()
+        return out
+
+    @property
+    def adjoint(self):
         pass
+
+
+class NonUniformFourierTransformAdjoint(NonUniformFourierTransformBase):
+    """Adjoint of Non uniform Fast Fourier Transform.
+
+    The normalization is inspired from pysap-mri, mainly this class:
+    https://github.com/CEA-COSMIC/pysap-mri/blob/master/mri/reconstruct/fourier.py#L123
+    """
+    def __init__(self, domain, non_uniform_samples, range=None):
+        super(NonUniformFourierTransformAdjoint, self).__init__(
+            domain=domain,
+            non_uniform_samples=non_uniform_samples,
+            range=range,
+        )
+
+    def _call(self, x):
+        self.nfft.f = x
+        out = self.nfft.adjoint()
+        return out
 
     @property
     def adjoint(self):
