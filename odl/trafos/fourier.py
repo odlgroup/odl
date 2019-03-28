@@ -1658,6 +1658,8 @@ class NonUniformFourierTransformBase(Operator):
             range=range,
             linear=True,
         )
+        self.im_shape = im_shape
+        self.non_uniform_samples = non_uniform_samples
         # TODO: add a check on nodes to make sure it's normalized, floats and non zero
         self.nfft = NFFT(N=im_shape, M=len(non_uniform_samples))
         self.nfft.x = non_uniform_samples
@@ -1667,19 +1669,31 @@ class NonUniformFourierTransformBase(Operator):
         out = x / np.sqrt(self.nfft.M)
         return out
 
+    @property
+    def adjoint(self):
+        return self.adjoint_class(
+            im_shape=self.im_shape,
+            non_uniform_samples=self.non_uniform_samples,
+        )
+
+    @property
+    def adjoint_class(self):
+        raise NotImplementedError(
+            "Adjoint not implemented for this non-uniform fourier operator",
+        )
+
 
 class NonUniformFourierTransform(NonUniformFourierTransformBase):
     """Forward Non uniform Fast Fourier Transform.
     """
     def __init__(self, im_shape, non_uniform_samples):
-        domain = discr_sequence_space(im_shape)
-        range = discr_sequence_space([len(non_uniform_samples)])
         super(NonUniformFourierTransform, self).__init__(
             im_shape=im_shape,
             non_uniform_samples=non_uniform_samples,
-            domain=domain,
-            range=range,
+            domain=discr_sequence_space(im_shape),
+            range=discr_sequence_space([len(non_uniform_samples)]),
         )
+        self.adjoint_class = NonUniformFourierTransformAdjoint
 
     def _call(self, x):
         self.nfft.f_hat = x
@@ -1687,33 +1701,24 @@ class NonUniformFourierTransform(NonUniformFourierTransformBase):
         out_normalized = self._normalize(out)
         return out_normalized
 
-    @property
-    def adjoint(self):
-        pass
-
 
 class NonUniformFourierTransformAdjoint(NonUniformFourierTransformBase):
     """Adjoint of Non uniform Fast Fourier Transform.
     """
     def __init__(self, im_shape, non_uniform_samples):
-        domain = discr_sequence_space([len(non_uniform_samples)])
-        range = discr_sequence_space(im_shape)
         super(NonUniformFourierTransformAdjoint, self).__init__(
             im_shape=im_shape,
             non_uniform_samples=non_uniform_samples,
-            domain=domain,
-            range=range,
+            domain=discr_sequence_space([len(non_uniform_samples)]),
+            range=discr_sequence_space(im_shape),
         )
+        self.adjoint_class = NonUniformFourierTransform
 
     def _call(self, x):
         self.nfft.f = x
         out = self.nfft.adjoint()
         out_normalized = self._normalize(out)
         return out_normalized
-
-    @property
-    def adjoint(self):
-        pass
 
 if __name__ == '__main__':
     from odl.util.testutils import run_doctests
