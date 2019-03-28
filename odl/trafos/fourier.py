@@ -1653,16 +1653,16 @@ class NonUniformFourierTransformBase(Operator):
     The normalization is inspired from pysap-mri, mainly this class:
     https://github.com/CEA-COSMIC/pysap-mri/blob/master/mri/reconstruct/fourier.py#L123
     """
-    def __init__(self, im_shape, non_uniform_samples, domain, range):
+    def __init__(self, shape, non_uniform_samples, domain, range):
         super(NonUniformFourierTransformBase, self).__init__(
             domain=domain,
             range=range,
             linear=True,
         )
-        self.im_shape = im_shape
+        self.shape = shape
         self._check_samples(non_uniform_samples)
         self.non_uniform_samples = non_uniform_samples
-        self.nfft = NFFT(N=im_shape, M=len(non_uniform_samples))
+        self.nfft = NFFT(N=shape, M=len(non_uniform_samples))
         self.nfft.x = non_uniform_samples
         self.nfft.precompute()
 
@@ -1673,7 +1673,7 @@ class NonUniformFourierTransformBase(Operator):
         if not non_uniform_samples:
             raise ValueError('`non_uniform_samples` is empty')
 
-        n_dim = len(self.im_shape)
+        n_dim = len(self.shape)
         if not all(len(sample) == n_dim for sample in non_uniform_samples):
             raise ValueError('One of the samples in `non_uniform_samples` does'
                 ' not have the right dimension')
@@ -1698,7 +1698,7 @@ class NonUniformFourierTransformBase(Operator):
     @property
     def adjoint(self):
         return self.adjoint_class(
-            im_shape=self.im_shape,
+            shape=self.shape,
             non_uniform_samples=self.non_uniform_samples,
         )
 
@@ -1712,11 +1712,11 @@ class NonUniformFourierTransformBase(Operator):
 class NonUniformFourierTransform(NonUniformFourierTransformBase):
     """Forward Non uniform Fast Fourier Transform.
     """
-    def __init__(self, im_shape, non_uniform_samples):
+    def __init__(self, shape, non_uniform_samples):
         super(NonUniformFourierTransform, self).__init__(
-            im_shape=im_shape,
+            shape=shape,
             non_uniform_samples=non_uniform_samples,
-            domain=discr_sequence_space(im_shape),
+            domain=discr_sequence_space(shape),
             range=discr_sequence_space([len(non_uniform_samples)]),
         )
         self.adjoint_class = NonUniformFourierTransformAdjoint
@@ -1731,12 +1731,12 @@ class NonUniformFourierTransform(NonUniformFourierTransformBase):
 class NonUniformFourierTransformAdjoint(NonUniformFourierTransformBase):
     """Adjoint of Non uniform Fast Fourier Transform.
     """
-    def __init__(self, im_shape, non_uniform_samples):
+    def __init__(self, shape, non_uniform_samples):
         super(NonUniformFourierTransformAdjoint, self).__init__(
-            im_shape=im_shape,
+            shape=shape,
             non_uniform_samples=non_uniform_samples,
             domain=discr_sequence_space([len(non_uniform_samples)]),
-            range=discr_sequence_space(im_shape),
+            range=discr_sequence_space(shape),
         )
         self.adjoint_class = NonUniformFourierTransform
 
