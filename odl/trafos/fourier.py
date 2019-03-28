@@ -1672,9 +1672,6 @@ class NonUniformFourierTransformBase(Operator):
 
 class NonUniformFourierTransform(NonUniformFourierTransformBase):
     """Forward Non uniform Fast Fourier Transform.
-
-    The normalization is inspired from pysap-mri, mainly this class:
-    https://github.com/CEA-COSMIC/pysap-mri/blob/master/mri/reconstruct/fourier.py#L123
     """
     def _call(self, x):
         self.nfft.f_hat = x
@@ -1689,9 +1686,6 @@ class NonUniformFourierTransform(NonUniformFourierTransformBase):
 
 class NonUniformFourierTransformAdjoint(NonUniformFourierTransformBase):
     """Adjoint of Non uniform Fast Fourier Transform.
-
-    The normalization is inspired from pysap-mri, mainly this class:
-    https://github.com/CEA-COSMIC/pysap-mri/blob/master/mri/reconstruct/fourier.py#L123
     """
     def _call(self, x):
         self.nfft.f = x
