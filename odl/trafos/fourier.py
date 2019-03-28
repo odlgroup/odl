@@ -1652,16 +1652,14 @@ class NonUniformFourierTransformBase(Operator):
     The normalization is inspired from pysap-mri, mainly this class:
     https://github.com/CEA-COSMIC/pysap-mri/blob/master/mri/reconstruct/fourier.py#L123
     """
-    def __init__(self, domain, non_uniform_samples, range=None):
-        # TODO: code correct domain and range
+    def __init__(self, im_shape, non_uniform_samples, domain, range):
         super(NonUniformFourierTransformBase, self).__init__(
             domain=domain,
             range=range,
             linear=True,
         )
         # TODO: add a check on nodes to make sure it's normalized, floats and non zero
-        # TODO: relate the domain to the [512, 512]
-        self.nfft = NFFT(N=[512, 512], M=len(non_uniform_samples))
+        self.nfft = NFFT(N=im_shape, M=len(non_uniform_samples))
         self.nfft.x = non_uniform_samples
         self.nfft.precompute()
 
@@ -1673,6 +1671,16 @@ class NonUniformFourierTransformBase(Operator):
 class NonUniformFourierTransform(NonUniformFourierTransformBase):
     """Forward Non uniform Fast Fourier Transform.
     """
+    def __init__(self, im_shape, non_uniform_samples):
+        domain = discr_sequence_space(im_shape)
+        range = discr_sequence_space([len(non_uniform_samples)])
+        super(NonUniformFourierTransform, self).__init__(
+            im_shape=im_shape,
+            non_uniform_samples=non_uniform_samples,
+            domain=domain,
+            range=range,
+        )
+
     def _call(self, x):
         self.nfft.f_hat = x
         out = self.nfft.trafo()
@@ -1687,6 +1695,16 @@ class NonUniformFourierTransform(NonUniformFourierTransformBase):
 class NonUniformFourierTransformAdjoint(NonUniformFourierTransformBase):
     """Adjoint of Non uniform Fast Fourier Transform.
     """
+    def __init__(self, im_shape, non_uniform_samples):
+        domain = discr_sequence_space([len(non_uniform_samples)])
+        range = discr_sequence_space(im_shape)
+        super(NonUniformFourierTransformAdjoint, self).__init__(
+            im_shape=im_shape,
+            non_uniform_samples=non_uniform_samples,
+            domain=domain,
+            range=range,
+        )
+
     def _call(self, x):
         self.nfft.f = x
         out = self.nfft.adjoint()
