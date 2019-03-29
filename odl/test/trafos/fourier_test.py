@@ -874,7 +874,7 @@ def test_non_uniform_fourier_adj_trafo():
     shape = [im_size] * 2
     samples = np.array(np.where(np.random.normal(size=shape) >= 0), dtype=float).T
     samples /= 2.0 * im_size
-    nfft_coeffs = np.random.normal((len(samples),))
+    nfft_coeffs = np.random.normal(size=(len(samples),))
     nfft_adj = NonUniformFourierTransformAdjoint(
         shape=shape,
         non_uniform_samples=samples,
