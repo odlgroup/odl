@@ -1715,8 +1715,8 @@ class NonUniformFourierTransform(NonUniformFourierTransformBase):
         super(NonUniformFourierTransform, self).__init__(
             shape=shape,
             non_uniform_samples=non_uniform_samples,
-            domain=discr_sequence_space(shape),
-            range=discr_sequence_space([len(non_uniform_samples)]),
+            domain=discr_sequence_space(shape, dtype=np.complex128),
+            range=discr_sequence_space([len(non_uniform_samples)], dtype=np.complex128),
         )
         self.adjoint_class = NonUniformFourierTransformAdjoint
 
@@ -1734,8 +1734,8 @@ class NonUniformFourierTransformAdjoint(NonUniformFourierTransformBase):
         super(NonUniformFourierTransformAdjoint, self).__init__(
             shape=shape,
             non_uniform_samples=non_uniform_samples,
-            domain=discr_sequence_space([len(non_uniform_samples)]),
-            range=discr_sequence_space(shape),
+            domain=discr_sequence_space([len(non_uniform_samples)], dtype=np.complex128),
+            range=discr_sequence_space(shape, dtype=np.complex128),
         )
         self.adjoint_class = NonUniformFourierTransform
 
