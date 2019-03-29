@@ -867,7 +867,8 @@ def test_non_uniform_fourier_trafo_2d_call():
         np.where(np.random.normal(size=shape) >= 0),
         dtype=float,
     ).T
-    samples /= 2.0 * im_size
+    samples /= im_size
+    samples -= 0.5
     image = np.random.normal(size=shape)
     nfft = NonUniformFourierTransform(shape=shape, non_uniform_samples=samples)
     nfft(image)
@@ -880,7 +881,8 @@ def test_non_uniform_fourier_adj_trafo_2d_call():
         np.where(np.random.normal(size=shape) >= 0),
         dtype=float,
     ).T
-    samples /= 2.0 * im_size
+    samples /= im_size
+    samples -= 0.5
     nfft_coeffs = np.random.normal(size=(len(samples),))
     nfft_adj = NonUniformFourierTransformAdjoint(
         shape=shape,
@@ -896,7 +898,8 @@ def test_non_uniform_fourier_trafo_1d_call():
         np.where(np.random.normal(size=shape) >= 0),
         dtype=float,
     ).T
-    samples /= 2.0 * sig_size
+    samples /= sig_size
+    samples -= 0.5
     image = np.random.normal(size=shape)
     nfft = NonUniformFourierTransform(shape=shape, non_uniform_samples=samples)
     nfft(image)
@@ -909,7 +912,8 @@ def test_non_uniform_fourier_adj_trafo_1d_call():
         np.where(np.random.normal(size=shape) >= 0),
         dtype=float,
     ).T
-    samples /= 2.0 * sig_size
+    samples /= sig_size
+    samples -= 0.5
     nfft_coeffs = np.random.normal(size=(len(samples),))
     nfft_adj = NonUniformFourierTransformAdjoint(
         shape=shape,
