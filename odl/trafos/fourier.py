@@ -1670,7 +1670,7 @@ class NonUniformFourierTransformBase(Operator):
         if not isinstance(non_uniform_samples, Iterable):
             raise TypeError('`non_uniform_samples` is not iterable.')
 
-        if not non_uniform_samples:
+        if len(non_uniform_samples) == 0:
             raise ValueError('`non_uniform_samples` is empty')
 
         n_dim = len(self.shape)
