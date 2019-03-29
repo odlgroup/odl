@@ -14,7 +14,8 @@ import pytest
 import odl
 from odl.trafos.fourier import (
     DiscreteFourierTransform, DiscreteFourierTransformInverse,
-    FourierTransform)
+    FourierTransform, NonUniformFourierTransform,
+    NonUniformFourierTransformAdjoint)
 from odl.trafos.util.ft_utils import (
     _interp_kernel_ft, dft_postprocess_data, dft_preprocess_data,
     reciprocal_grid)
@@ -856,6 +857,27 @@ def test_fourier_trafo_completely():
     ft_f_n = ft_op_n(f)
     assert np.allclose(ft_f_s, fhat(recip_s.coord_vectors[0]))
     assert np.allclose(ft_f_n, fhat(recip_n.coord_vectors[0]))
+
+
+# ---- Non-uniform Fourier Transform ---- #
+def test_non_uniform_fourier_trafo():
+    im_size = 512
+    shape = [im_size] * 2
+    samples = np.array(np.where(np.random.normal(size=shape) >= 0)).T
+    image = np.random.normal(size=shape)
+    nfft = NonUniformFourierTransform(shape=shape, non_uniform_samples=samples)
+    nfft(image)
+
+def test_non_uniform_fourier_adj_trafo():
+    im_size = 512
+    shape = [im_size] * 2
+    samples = np.array(np.where(np.random.normal(size=shape) >= 0)).T
+    nfft_coeffs = np.random.normal((len(samples),))
+    nfft_adj = NonUniformFourierTransformAdjoint(
+        shape=shape,
+        non_uniform_samples=samples,
+    )
+    nfft_adj(nfft_coeffs)
 
 
 if __name__ == '__main__':
