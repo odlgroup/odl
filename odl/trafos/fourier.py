@@ -1686,7 +1686,7 @@ class NonUniformFourierTransformBase(Operator):
     def _is_sample_valid(self, sample):
         floats = all(isinstance(coord, float) for coord in sample)
         if floats:
-            normalized = all(-0.5 <= coord <= 0.5 for coord in sample)
+            normalized = all(-0.5 <= coord < 0.5 for coord in sample)
         else:
             normalized = False
         return floats & normalized
