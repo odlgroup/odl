@@ -860,7 +860,7 @@ def test_fourier_trafo_completely():
 
 
 # ---- Non-uniform Fourier Transform ---- #
-def test_non_uniform_fourier_trafo():
+def test_non_uniform_fourier_trafo_2d_call():
     im_size = 512
     shape = [im_size] * 2
     samples = np.array(np.where(np.random.normal(size=shape) >= 0), dtype=float).T
@@ -869,7 +869,7 @@ def test_non_uniform_fourier_trafo():
     nfft = NonUniformFourierTransform(shape=shape, non_uniform_samples=samples)
     nfft(image)
 
-def test_non_uniform_fourier_adj_trafo():
+def test_non_uniform_fourier_adj_trafo_2d_call():
     im_size = 512
     shape = [im_size] * 2
     samples = np.array(np.where(np.random.normal(size=shape) >= 0), dtype=float).T
