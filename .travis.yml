@@ -42,12 +42,6 @@ install:
         wget -q https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
       fi
     # Necessary to install pyNFFT
-    - if [ $TRAVIS_PYTHON_VERSION == "3.4" ]; then
-        export CPLUS_INCLUDE_PATH=/usr/include/python3.4m;
-      fi
-    - if [ $TRAVIS_PYTHON_VERSION == "3.5" ]; then
-        export CPLUS_INCLUDE_PATH=/opt/python/3.5.6/include/python3.5m;
-      fi
     - if [ $TRAVIS_PYTHON_VERSION == "3.6" ]; then
         export CPLUS_INCLUDE_PATH=/opt/python/3.6.3/include/python3.6m;
       fi
