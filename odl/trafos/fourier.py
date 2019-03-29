@@ -1665,6 +1665,7 @@ class NonUniformFourierTransformBase(Operator):
         self.nfft = NFFT(N=shape, M=len(non_uniform_samples))
         self.nfft.x = non_uniform_samples
         self.nfft.precompute()
+        self.adjoint_class = None
 
     def _check_samples(self, non_uniform_samples):
         if not isinstance(non_uniform_samples, Iterable):
@@ -1697,13 +1698,11 @@ class NonUniformFourierTransformBase(Operator):
 
     @property
     def adjoint(self):
-        return self.adjoint_class(
-            shape=self.shape,
-            non_uniform_samples=self.non_uniform_samples,
-        )
-
-    @property
-    def adjoint_class(self):
+        if self.adjoint_class:
+            return self.adjoint_class(
+                shape=self.shape,
+                non_uniform_samples=self.non_uniform_samples,
+            )
         raise NotImplementedError(
             "Adjoint not implemented for this non-uniform fourier operator",
         )
@@ -1722,7 +1721,7 @@ class NonUniformFourierTransform(NonUniformFourierTransformBase):
         self.adjoint_class = NonUniformFourierTransformAdjoint
 
     def _call(self, x):
-        self.nfft.f_hat = x
+        self.nfft.f_hat = np.array(x)
         out = self.nfft.trafo()
         out_normalized = self._normalize(out)
         return out_normalized
@@ -1741,7 +1740,7 @@ class NonUniformFourierTransformAdjoint(NonUniformFourierTransformBase):
         self.adjoint_class = NonUniformFourierTransform
 
     def _call(self, x):
-        self.nfft.f = x
+        self.nfft.f = np.array(x)
         out = self.nfft.adjoint()
         out_normalized = self._normalize(out)
         return out_normalized
