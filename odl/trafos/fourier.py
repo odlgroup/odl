@@ -1677,11 +1677,13 @@ class NonUniformFourierTransformBase(Operator):
         n_dim = len(self.shape)
         if not all(len(sample) == n_dim for sample in non_uniform_samples):
             raise ValueError('One of the samples in `non_uniform_samples` does'
-                ' not have the right dimension')
+              ' not have the right dimension')
 
-        if not all(self._is_sample_valid(sample) for sample in non_uniform_samples):
+        if not all(
+                self._is_sample_valid(sample) for sample in non_uniform_samples
+            ):
             raise ValueError('One of the samples in `non_uniform_samples` is'
-                'not a float between -0.5 and 0.5')
+              ' not a float between -0.5 and 0.5')
 
     def _is_sample_valid(self, sample):
         floats = all(isinstance(coord, float) for coord in sample)
@@ -1690,7 +1692,6 @@ class NonUniformFourierTransformBase(Operator):
         else:
             normalized = False
         return floats & normalized
-
 
     def _normalize(self, x):
         out = x / np.sqrt(self.nfft.M)
@@ -1716,7 +1717,10 @@ class NonUniformFourierTransform(NonUniformFourierTransformBase):
             shape=shape,
             non_uniform_samples=non_uniform_samples,
             domain=discr_sequence_space(shape, dtype=np.complex128),
-            range=discr_sequence_space([len(non_uniform_samples)], dtype=np.complex128),
+            range=discr_sequence_space(
+                [len(non_uniform_samples)],
+                dtype=np.complex128,
+            ),
         )
         self.adjoint_class = NonUniformFourierTransformAdjoint
 
@@ -1734,7 +1738,10 @@ class NonUniformFourierTransformAdjoint(NonUniformFourierTransformBase):
         super(NonUniformFourierTransformAdjoint, self).__init__(
             shape=shape,
             non_uniform_samples=non_uniform_samples,
-            domain=discr_sequence_space([len(non_uniform_samples)], dtype=np.complex128),
+            domain=discr_sequence_space(
+                [len(non_uniform_samples)],
+                dtype=np.complex128,
+            ),
             range=discr_sequence_space(shape, dtype=np.complex128),
         )
         self.adjoint_class = NonUniformFourierTransform
@@ -1744,6 +1751,7 @@ class NonUniformFourierTransformAdjoint(NonUniformFourierTransformBase):
         out = self.nfft.adjoint()
         out_normalized = self._normalize(out)
         return out_normalized
+
 
 if __name__ == '__main__':
     from odl.util.testutils import run_doctests
