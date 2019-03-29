@@ -863,16 +863,23 @@ def test_fourier_trafo_completely():
 def test_non_uniform_fourier_trafo_2d_call():
     im_size = 512
     shape = [im_size] * 2
-    samples = np.array(np.where(np.random.normal(size=shape) >= 0), dtype=float).T
-    samples /= 2.0 *  im_size
+    samples = np.array(
+        np.where(np.random.normal(size=shape) >= 0),
+        dtype=float,
+    ).T
+    samples /= 2.0 * im_size
     image = np.random.normal(size=shape)
     nfft = NonUniformFourierTransform(shape=shape, non_uniform_samples=samples)
     nfft(image)
 
+
 def test_non_uniform_fourier_adj_trafo_2d_call():
     im_size = 512
     shape = [im_size] * 2
-    samples = np.array(np.where(np.random.normal(size=shape) >= 0), dtype=float).T
+    samples = np.array(
+        np.where(np.random.normal(size=shape) >= 0),
+        dtype=float,
+    ).T
     samples /= 2.0 * im_size
     nfft_coeffs = np.random.normal(size=(len(samples),))
     nfft_adj = NonUniformFourierTransformAdjoint(
@@ -881,19 +888,27 @@ def test_non_uniform_fourier_adj_trafo_2d_call():
     )
     nfft_adj(nfft_coeffs)
 
+
 def test_non_uniform_fourier_trafo_1d_call():
     sig_size = 512
     shape = [sig_size]
-    samples = np.array(np.where(np.random.normal(size=shape) >= 0), dtype=float).T
-    samples /= 2.0 *  sig_size
+    samples = np.array(
+        np.where(np.random.normal(size=shape) >= 0),
+        dtype=float,
+    ).T
+    samples /= 2.0 * sig_size
     image = np.random.normal(size=shape)
     nfft = NonUniformFourierTransform(shape=shape, non_uniform_samples=samples)
     nfft(image)
 
+
 def test_non_uniform_fourier_adj_trafo_1d_call():
     sig_size = 512
     shape = [sig_size]
-    samples = np.array(np.where(np.random.normal(size=shape) >= 0), dtype=float).T
+    samples = np.array(
+        np.where(np.random.normal(size=shape) >= 0),
+        dtype=float,
+    ).T
     samples /= 2.0 * sig_size
     nfft_coeffs = np.random.normal(size=(len(samples),))
     nfft_adj = NonUniformFourierTransformAdjoint(
@@ -912,8 +927,11 @@ def test_non_uniform_fourier_trafo_1d_res():
     sig = np.random.normal(size=shape)
     nfft = NonUniformFourierTransform(shape=shape, non_uniform_samples=samples)
     res_nfft = nfft(sig)
-    res_np_fft = np.fft.fftshift(np.fft.fft(np.fft.fftshift(sig), norm="ortho"))
+    res_np_fft = np.fft.fftshift(
+        np.fft.fft(np.fft.fftshift(sig), norm="ortho"),
+    )
     assert np.allclose(res_nfft, res_np_fft)
+
 
 def test_non_uniform_fourier_trafo_2d_res():
     im_size = 512
@@ -924,7 +942,9 @@ def test_non_uniform_fourier_trafo_2d_res():
     image = np.random.normal(size=shape)
     nfft = NonUniformFourierTransform(shape=shape, non_uniform_samples=samples)
     res_nfft = nfft(image)
-    res_np_fft = np.fft.fftshift(np.fft.fft2(np.fft.fftshift(image), norm="ortho"))
+    res_np_fft = np.fft.fftshift(
+        np.fft.fft2(np.fft.fftshift(image), norm="ortho"),
+    )
     assert np.allclose(res_nfft, res_np_fft.flatten())
 
 
