@@ -57,7 +57,9 @@ install:
     - conda create -n testenv python=$TRAVIS_PYTHON_VERSION nomkl
     - source activate testenv
     # Install packages with pip if possible, it's way faster
-    - pip install "numpy==$NUMPY_VERSION" scipy future packaging scikit-image pywavelets cython git+https://github.com/ghisvail/pyNFFT.git;
+    - pip install "numpy==$NUMPY_VERSION" scipy future packaging scikit-image pywavelets cython;
+    # pynfft needs numpy and cython to be installed beforehand
+    - pip install git+https://github.com/ghisvail/pyNFFT.git;
     # Building pyfftw wheels sometimes fails, using a conda-forge version instead;
     # To avoid a lower version of NumPy being installed over the pip one, we exclude all dependencies
     # (PyFFTW only depends on NumPy)
