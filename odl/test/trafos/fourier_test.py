@@ -881,6 +881,27 @@ def test_non_uniform_fourier_adj_trafo_2d_call():
     )
     nfft_adj(nfft_coeffs)
 
+def test_non_uniform_fourier_trafo_1d_call():
+    sig_size = 512
+    shape = [sig_size]
+    samples = np.array(np.where(np.random.normal(size=shape) >= 0), dtype=float).T
+    samples /= 2.0 *  sig_size
+    image = np.random.normal(size=shape)
+    nfft = NonUniformFourierTransform(shape=shape, non_uniform_samples=samples)
+    nfft(image)
+
+def test_non_uniform_fourier_adj_trafo_1d_call():
+    sig_size = 512
+    shape = [sig_size]
+    samples = np.array(np.where(np.random.normal(size=shape) >= 0), dtype=float).T
+    samples /= 2.0 * sig_size
+    nfft_coeffs = np.random.normal(size=(len(samples),))
+    nfft_adj = NonUniformFourierTransformAdjoint(
+        shape=shape,
+        non_uniform_samples=samples,
+    )
+    nfft_adj(nfft_coeffs)
+
 
 if __name__ == '__main__':
     odl.util.test_file(__file__)
