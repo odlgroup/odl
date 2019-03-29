@@ -7,9 +7,9 @@
 # obtain one at https://mozilla.org/MPL/2.0/.
 
 """Discretized Fourier transform on L^p spaces."""
+from __future__ import print_function, division, absolute_import
 from collections.abc import Iterable
 
-from __future__ import print_function, division, absolute_import
 import numpy as np
 from pynfft.nfft import NFFT
 
