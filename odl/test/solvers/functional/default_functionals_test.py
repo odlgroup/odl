@@ -15,8 +15,6 @@ import pytest
 import scipy.special
 
 import odl
-from odl.solvers.functional.default_functionals import (
-    KullbackLeiblerConvexConj, KullbackLeiblerCrossEntropyConvexConj)
 from odl.util.testutils import all_almost_equal, noise_element, simple_fixture
 
 # --- pytest fixtures --- #
@@ -205,21 +203,18 @@ def test_kullback_leibler(space):
     """Test the kullback leibler functional and its convex conjugate."""
     F = space.ufuncs
     R = space.reduce
-    prior = noise_element(space)
-    prior = space.element(F.abs(prior) + 0.1)  # must be positive
+    prior = F.abs(noise_element(space)) + 0.1  # must be positive
     func = odl.solvers.KullbackLeibler(space, prior)
-    x = noise_element(space)
-    x = func.domain.element(np.abs(x) + 0.1)  # must be positive
-    sigma = 1.2
+    x = F.abs(noise_element(space)) + 0.1  # must be positive
     one = space.one()
+    sigma = 1.2
 
     assert func(x) == pytest.approx(
         space.inner((x - prior + prior * F.log(prior / x)), one)
     )
 
     # If one or more components are negative, the result should be infinity
-    x_neg = noise_element(space)
-    x_neg = x_neg - R.max(x_neg)
+    x_neg = -F.abs(noise_element(space)) - 0.1
     assert func(x_neg) == np.inf
 
     assert all_almost_equal(func.gradient(x), 1 - prior / x)
@@ -252,123 +247,77 @@ def test_kullback_leibler(space):
     assert func_cc_cc(x) == pytest.approx(func(x))
 
 
-def test_kullback_leibler_cross_entorpy(space):
+def test_kullback_leibler_cross_entropy(space):
     """Test the kullback leibler cross entropy and its convex conjugate."""
-    # The prior needs to be positive
-    prior = noise_element(space)
-    prior = space.element(np.abs(prior))
-
+    F = space.ufuncs
+    prior = F.abs(noise_element(space)) + 0.1  # must be positive
     func = odl.solvers.KullbackLeiblerCrossEntropy(space, prior)
+    x = F.abs(noise_element(space)) + 0.5  # must be positive
+    one = space.one()
+    sigma = 1.2
 
-    # The fucntional is only defined for positive elements
-    x = noise_element(space)
-    x = func.domain.element(np.abs(x))
-    one_elem = space.one()
-
-    # Evaluation of the functional
-    expected_result = space.inner(
-        (prior - x + x * np.log(x / prior)), one_elem
+    assert func(x) == pytest.approx(
+        space.inner(prior - x + x * F.log(x / prior), one)
     )
-    assert func(x) == pytest.approx(expected_result)
-
-    # Check property for prior
-    assert all_almost_equal(func.prior, prior)
-
-    # For elements with (a) negative components it should return inf
-    x_neg = noise_element(space)
-    x_neg = x_neg - np.max(x_neg)
+    # If one or more components are negative, the result should be infinity
+    x_neg = -F.abs(noise_element(space)) - 0.1
     assert func(x_neg) == np.inf
+    assert all_almost_equal(func.gradient(x), prior - 1 + F.log(x / prior))
 
-    # The gradient
-    expected_result = np.log(x / prior)
-    assert all_almost_equal(func.gradient(x), expected_result)
-
-    # The proximal operator
-    sigma = np.random.rand()
-    prox = odl.solvers.proximal_convex_conj(
-        odl.solvers.proximal_convex_conj_kl_cross_entropy(space, g=prior))
-    expected_result = prox(sigma)(x)
-    assert all_almost_equal(func.proximal(sigma)(x), expected_result)
-
-    # The convex conjugate functional
     cc_func = func.convex_conj
+    x = noise_element(space)  # convex conjugate is defined for any x
 
-    assert isinstance(cc_func, KullbackLeiblerCrossEntropyConvexConj)
-
-    # The convex conjugate functional is defined for all values of x.
-    x = noise_element(space)
-
-    # Evaluation of convex conjugate
-    expected_result = space.inner(prior * (np.exp(x) - 1), one_elem)
-    assert cc_func(x) == pytest.approx(expected_result)
-
-    # The gradient of the convex conjugate
-    expected_result = prior * np.exp(x)
-    assert all_almost_equal(cc_func.gradient(x), expected_result)
-
-    # The proximal of the convex conjugate
-    expected_result = (
-        x - scipy.special.lambertw(sigma * prior * np.exp(x)).real
+    assert cc_func(x) == pytest.approx(
+        space.inner(prior * (F.exp(x) - 1), one)
     )
-    assert all_almost_equal(cc_func.proximal(sigma)(x), expected_result)
+    assert all_almost_equal(cc_func.gradient(x), prior * F.exp(x))
+    if isinstance(space, odl.ProductSpace):
+        arg = sigma * prior * F.exp(x)
+        result = x - space.apply(scipy.special.lambertw, arg).real
+    else:
+        result = x - scipy.special.lambertw(sigma * prior * F.exp(x)).real
+    assert all_almost_equal(cc_func.proximal(sigma)(x), result)
 
-    # The biconjugate, which is the functional itself since it is proper,
-    # convex and lower-semicontinuous
     cc_cc_func = cc_func.convex_conj
-
-    # Check that they evaluate the same
+    x = F.abs(noise_element(space))
     assert cc_cc_func(x) == pytest.approx(func(x))
 
 
 def test_quadratic_form(space):
     """Test the quadratic form functional."""
     operator = odl.IdentityOperator(space)
-    vector = space.one()
-    constant = 0.363
-    func = odl.solvers.QuadraticForm(operator, vector, constant)
-
+    vector = noise_element(space)
+    constant = np.random.rand()
+    func = odl.solvers.QuadraticForm(space, operator, vector, constant)
     x = noise_element(space)
 
-    # Checking that values is stored correctly
-    assert func.operator == operator
-    assert func.vector == vector
-    assert func.constant == constant
-
-    # Evaluation of the functional
-    expected_result = (
+    # General case with operator, vector and constant
+    assert func(x) == pytest.approx(
         space.inner(x, operator(x)) + space.inner(x, vector) + constant
     )
-    assert func(x) == pytest.approx(expected_result)
+    assert all_almost_equal(func.gradient(x), 2 * operator(x) + vector)
+    assert func.convex_conj(x) == pytest.approx(
+        space.inner(x - vector, x - vector) - constant
+    )
 
-    # The gradient
-    expected_gradient = 2 * operator(x) + vector
-    assert all_almost_equal(func.gradient(x), expected_gradient)
+    # Without operator, i.e., an affine functional
+    func_affine = odl.solvers.QuadraticForm(
+        space, vector=vector, constant=constant
+    )
+    assert func_affine(x) == pytest.approx(space.inner(x, vector) + constant)
+    assert all_almost_equal(func_affine.gradient(x), vector)
+    # The convex conjugate is a translation of IndicatorZero
+    func_affine_cc = func_affine.convex_conj
+    assert func_affine_cc(vector) == -constant
+    assert func_affine_cc(vector + 1) == float('inf')
 
-    # The convex conjugate
-    assert isinstance(func.convex_conj, odl.solvers.QuadraticForm)
-
-    # Test for linear functional
-    func_no_operator = odl.solvers.QuadraticForm(vector=vector,
-                                                 constant=constant)
-    expected_result = space.inner(x, vector) + constant
-    assert func_no_operator(x) == pytest.approx(expected_result)
-
-    expected_gradient = vector
-    assert all_almost_equal(func_no_operator.gradient(x), expected_gradient)
-
-    # The convex conjugate is a translation of the IndicatorZero
-    func_no_operator_cc = func_no_operator.convex_conj
-    assert isinstance(func_no_operator_cc,
-                      odl.solvers.FunctionalTranslation)
-    assert isinstance(func_no_operator_cc.functional,
-                      odl.solvers.IndicatorZero)
-    assert func_no_operator_cc(vector) == -constant
-    assert np.isinf(func_no_operator_cc(vector + 2.463))
-
-    # Test with no offset
-    func_no_offset = odl.solvers.QuadraticForm(operator, constant=constant)
-    expected_result = space.inner(x, operator(x)) + constant
-    assert func_no_offset(x) == pytest.approx(expected_result)
+    # Without vector
+    func_no_vector = odl.solvers.QuadraticForm(
+        space, operator, constant=constant
+    )
+    assert func_no_vector(x) == pytest.approx(
+        space.inner(x, operator(x)) + constant
+    )
 
 
 def test_separable_sum(space):

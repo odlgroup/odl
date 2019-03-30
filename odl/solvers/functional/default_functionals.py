@@ -1592,9 +1592,9 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
         from odl import ufunc_ops
 
         if self.prior is None:
-            return ufunc_ops.exp
+            return ufunc_ops.exp(self.domain)
         else:
-            return self.prior * ufunc_ops.exp
+            return self.prior * ufunc_ops.exp(self.domain)
 
     @property
     def proximal(self):
@@ -1869,24 +1869,25 @@ class QuadraticForm(Functional):
     def gradient(self):
         """Gradient operator of the functional."""
         if self.operator is None:
-            return ConstantOperator(self.vector, self.domain)
+            return ConstantOperator(self.domain, self.vector)
         else:
             if not self.operator.is_linear:
                 # TODO: Acutally works otherwise, but needs more work
                 raise NotImplementedError('`operator` must be linear')
 
             # Figure out if operator is symmetric
-            opadjoint = self.operator.adjoint
-            if opadjoint == self.operator:
-                gradient = 2 * self.operator
+            # Note: this check is equivalent to `op is op.adjoint` since
+            # there are no semantics for comparing operators
+            op_adj = self.operator.adjoint
+            if op_adj == self.operator:
+                grad = 2 * self.operator
             else:
-                gradient = self.operator + opadjoint
+                grad = self.operator + op_adj
 
-            # Return gradient
             if self.vector is None:
-                return gradient
+                return grad
             else:
-                return gradient + self.vector
+                return grad + self.vector
 
     @property
     def convex_conj(self):
@@ -1922,27 +1923,24 @@ class QuadraticForm(Functional):
         IndicatorZero
         """
         if self.operator is None:
-            tmp = IndicatorZero(space=self.domain, constant=-self.constant)
-            if self.vector is None:
-                return tmp
-            else:
-                return tmp.translated(self.vector)
+            fn = IndicatorZero(self.domain, constant=-self.constant)
+            return fn if self.vector is None else fn.translated(self.vector)
+
+        op_inv = self.operator.inverse
 
         if self.vector is None:
-            # Handle trivial case separately
-            return QuadraticForm(operator=self.operator.inverse,
-                                 constant=-self.constant)
-        else:
-            opinv = self.operator.inverse
-            vector = -opinv.adjoint(self.vector) - opinv(self.vector)
-            constant = (
-                self.domain.inner(self.vector, opinv(self.vector))
-                - self.constant
+            return QuadraticForm(
+                self.domain, operator=op_inv, constant=-self.constant
             )
 
-            return QuadraticForm(
-                operator=opinv, vector=vector, constant=constant
-            )
+        vector = -op_inv.adjoint(self.vector) - op_inv(self.vector)
+        constant = (
+            self.domain.inner(self.vector, op_inv(self.vector)) - self.constant
+        )
+
+        return QuadraticForm(
+            self.domain, operator=op_inv, vector=vector, constant=constant
+        )
 
 
 class NuclearNorm(Functional):
