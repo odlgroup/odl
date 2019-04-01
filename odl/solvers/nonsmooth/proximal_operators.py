@@ -1956,12 +1956,16 @@ def proximal_convex_conj_kl_cross_entropy(space, lam=1, g=None):
                 arg = (self.sigma / lam) * g * F.exp(x / lam)
 
             if isinstance(space, ProductSpace):
-                lambw = space.apply(scipy.special.lambertw, arg)
+                if space.is_real:
+                    lambw = space.apply(
+                        lambda v: scipy.special.lambertw(v).real, arg
+                    )
+                else:
+                    lambw = space.apply(scipy.special.lambertw, arg)
             else:
                 lambw = scipy.special.lambertw(arg)
-
-            if space.dtype.kind != 'c':
-                lambw = lambw.real
+                if space.dtype.kind != 'c':
+                    lambw = lambw.real
 
             space.lincomb(1, x, -lam, lambw, out=out)
 

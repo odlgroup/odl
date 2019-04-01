@@ -249,38 +249,42 @@ def test_kullback_leibler(space):
 
 def test_kullback_leibler_cross_entropy(space):
     """Test the kullback leibler cross entropy and its convex conjugate."""
-    F = space.ufuncs
-    prior = F.abs(noise_element(space)) + 0.1  # must be positive
-    func = odl.solvers.KullbackLeiblerCrossEntropy(space, prior)
-    x = F.abs(noise_element(space)) + 0.5  # must be positive
-    one = space.one()
-    sigma = 1.2
+    import warnings
 
-    assert func(x) == pytest.approx(
-        space.inner(prior - x + x * F.log(x / prior), one)
-    )
-    # If one or more components are negative, the result should be infinity
-    x_neg = -F.abs(noise_element(space)) - 0.1
-    assert func(x_neg) == np.inf
-    assert all_almost_equal(func.gradient(x), prior - 1 + F.log(x / prior))
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", category=np.ComplexWarning)
+        F = space.ufuncs
+        prior = F.abs(noise_element(space)) + 0.1  # must be positive
+        func = odl.solvers.KullbackLeiblerCrossEntropy(space, prior)
+        x = F.abs(noise_element(space)) + 0.5  # must be positive
+        one = space.one()
+        sigma = 1.2
 
-    cc_func = func.convex_conj
-    x = noise_element(space)  # convex conjugate is defined for any x
+        assert func(x) == pytest.approx(
+            space.inner(prior - x + x * F.log(x / prior), one)
+        )
+        # If one or more components are negative, the result should be infinity
+        x_neg = -F.abs(noise_element(space)) - 0.1
+        assert func(x_neg) == np.inf
+        assert all_almost_equal(func.gradient(x), prior - 1 + F.log(x / prior))
 
-    assert cc_func(x) == pytest.approx(
-        space.inner(prior * (F.exp(x) - 1), one)
-    )
-    assert all_almost_equal(cc_func.gradient(x), prior * F.exp(x))
-    if isinstance(space, odl.ProductSpace):
-        arg = sigma * prior * F.exp(x)
-        result = x - space.apply(scipy.special.lambertw, arg).real
-    else:
-        result = x - scipy.special.lambertw(sigma * prior * F.exp(x)).real
-    assert all_almost_equal(cc_func.proximal(sigma)(x), result)
+        cc_func = func.convex_conj
+        x = noise_element(space)  # convex conjugate is defined for any x
 
-    cc_cc_func = cc_func.convex_conj
-    x = F.abs(noise_element(space))
-    assert cc_cc_func(x) == pytest.approx(func(x))
+        assert cc_func(x) == pytest.approx(
+            space.inner(prior * (F.exp(x) - 1), one)
+        )
+        assert all_almost_equal(cc_func.gradient(x), prior * F.exp(x))
+        if isinstance(space, odl.ProductSpace):
+            arg = sigma * prior * F.exp(x)
+            result = x - space.apply(scipy.special.lambertw, arg).real
+        else:
+            result = x - scipy.special.lambertw(sigma * prior * F.exp(x)).real
+        assert all_almost_equal(cc_func.proximal(sigma)(x), result)
+
+        cc_cc_func = cc_func.convex_conj
+        x = F.abs(noise_element(space))
+        assert cc_cc_func(x) == pytest.approx(func(x))
 
 
 def test_quadratic_form(space):
@@ -337,17 +341,19 @@ def test_separable_sum(space):
 
     # Gradient
     grad = func.gradient([x, y])
-    assert grad[0] == l1.gradient(x)
-    assert grad[1] == l2.gradient(y)
+    assert all_almost_equal(grad[0], l1.gradient(x))
+    assert all_almost_equal(grad[1], l2.gradient(y))
 
     # Proximal
     sigma = 1.0
     prox = func.proximal(sigma)([x, y])
-    assert prox[0] == l1.proximal(sigma)(x)
-    assert prox[1] == l2.proximal(sigma)(y)
+    assert all_almost_equal(prox[0], l1.proximal(sigma)(x))
+    assert all_almost_equal(prox[1], l2.proximal(sigma)(y))
 
     # Convex conjugate
-    assert func.convex_conj([x, y]) == l1.convex_conj(x) + l2.convex_conj(y)
+    assert func.convex_conj([x, y]) == pytest.approx(
+        l1.convex_conj(x) + l2.convex_conj(y)
+    )
 
 
 def test_moreau_envelope_l1():
@@ -372,14 +378,15 @@ def test_moreau_envelope_l1():
 def test_moreau_envelope_l2_sq(space, sigma):
     """Test for the Moreau envelope with l2 norm squared."""
 
-    # Result is ||x||_2^2 / (1 + 2 sigma)
+    # Result is ||x||_2^2 / (1 + 2 * sigma)
     # Gradient is x * 2 / (1 + 2 * sigma)
     l2_sq = odl.solvers.L2NormSquared(space)
 
     smoothed_l2_sq = odl.solvers.MoreauEnvelope(l2_sq, sigma=sigma)
     x = noise_element(space)
-    assert all_almost_equal(smoothed_l2_sq.gradient(x),
-                            x * 2 / (1 + 2 * sigma))
+    assert all_almost_equal(
+        smoothed_l2_sq.gradient(x), x * 2 / (1 + 2 * sigma)
+    )
 
 
 def test_weighted_separablesum(space):
@@ -399,96 +406,66 @@ def test_weighted_separablesum(space):
 
 
 def test_weighted_proximal_L2_norm_squared(space):
-    """Test for the weighted proximal of the squared L2 norm"""
-
-    # Define the functional on the space.
+    """Test for the weighted proximal of the squared L2 norm."""
     func = odl.solvers.L2NormSquared(space)
-
-    # Set the stepsize as a random element of the spaces
-    # with elements between 1 and 10.
     sigma = odl.phantom.uniform_noise(space, 1, 10)
-
-    # Start at the one vector.
     x = space.one()
 
-    # Calculate the proximal point in-place and out-of-place
-    p_ip = space.element()
-    func.proximal(sigma)(x, out=p_ip)
-    p_oop = func.proximal(sigma)(x)
-
-    # Both should contain the same vector now.
-    assert all_almost_equal(p_ip, p_oop)
-
-    # Check if the subdifferential inequalities are satisfied.
+    # Check if the subdifferential inequalities are satisfied:
     # p = prox_{sigma * f}(x) iff (x - p)/sigma = grad f(p)
-    assert all_almost_equal(func.gradient(p_ip),
-                            (x - p_ip) / sigma)
+    prox = func.proximal(sigma)(x)
+    assert all_almost_equal(
+        func.gradient(prox), (x - prox) / sigma
+    )
+
+    prox_ip = space.element()
+    func.proximal(sigma)(x, out=prox_ip)
+    assert all_almost_equal(prox, prox_ip)
 
 
 def test_weighted_proximal_L1_norm_far(space):
-    """Test for the weighted proximal of the L1 norm away from zero"""
-
-    # Define the functional on the space.
+    """Test for the weighted proximal of the L1 norm away from zero."""
     func = odl.solvers.L1Norm(space)
-
-    # Set the stepsize as a random element of the spaces
-    # with elements between 1 and 10.
     sigma = odl.phantom.noise.uniform_noise(space, 1, 10)
+    x = 100 * space.one()  # no problem with differentiability
 
-    # Start far away from zero so that the L1 norm will be differentiable
-    # at the result.
-    x = 100 * space.one()
-
-    # Calculate the proximal point in-place and out-of-place
-    p_ip = space.element()
-    func.proximal(sigma)(x, out=p_ip)
-    p_oop = func.proximal(sigma)(x)
-
-    # Both should contain the same vector now.
-    assert all_almost_equal(p_ip, p_oop)
-
-    # Check if the subdifferential inequalities are satisfied.
+    # Check if the subdifferential inequalities are satisfied:
     # p = prox_{sigma * f}(x) iff (x - p)/sigma = grad f(p)
-    assert all_almost_equal(func.gradient(p_ip), (x - p_ip) / sigma)
+    prox = func.proximal(sigma)(x)
+    assert all_almost_equal(
+        func.gradient(prox), (x - prox) / sigma
+    )
+
+    prox_ip = space.element()
+    func.proximal(sigma)(x, out=prox_ip)
+    assert all_almost_equal(prox, prox_ip)
 
 
 def test_weighted_proximal_L1_norm_close(space):
     """Test for the weighted proximal of the L1 norm near zero"""
-
-    # Set the space.
     space = odl.rn(5)
-
-    # Define the functional on the space.
     func = odl.solvers.L1Norm(space)
-
-    # Set the stepsize.
     sigma = [0.1, 0.2, 0.5, 1.0, 2.0]
-
-    # Set the starting point.
     x = 0.5 * space.one()
 
-    # Calculate the proximal point in-place and out-of-place
-    p_ip = space.element()
-    func.proximal(sigma)(x, out=p_ip)
-    p_oop = func.proximal(sigma)(x)
-
-    # Both should contain the same vector now.
-    assert all_almost_equal(p_ip, p_oop)
-
-    # Check if this equals the expected result.
+    prox = func.proximal(sigma)(x)
     expected_result = [0.4, 0.3, 0.0, 0.0, 0.0]
-    assert all_almost_equal(expected_result, p_ip)
+    assert all_almost_equal(prox, expected_result)
+
+    prox_ip = space.element()
+    func.proximal(sigma)(x, out=prox_ip)
+    assert all_almost_equal(prox, prox_ip)
 
 
 def test_bregman_functional_no_gradient(space):
     """Test Bregman distance for functional without gradient."""
-
+    F = space.ufuncs
     ind_func = odl.solvers.IndicatorNonnegativity(space)
     point = np.abs(noise_element(space))
     subgrad = noise_element(space)  # Any element in the domain is ok
     bregman_dist = odl.solvers.BregmanDistance(ind_func, point, subgrad)
 
-    x = np.abs(noise_element(space))
+    x = F.abs(noise_element(space))
 
     expected_result = space.inner(-subgrad, x - point)
     assert all_almost_equal(bregman_dist(x), expected_result)
