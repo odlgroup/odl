@@ -1766,6 +1766,17 @@ class NonUniformFourierTransform(NonUniformFourierTransformBase):
     """Forward Non uniform Fast Fourier Transform.
     """
     def __init__(self, shape, non_uniform_samples):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        shape: tuple
+            The dimensions of the data whose non uniform FFT you want to
+            compute
+        non_uniform_samples: iterable
+            List of the fourier space positions where the coefficients are
+            computed. Each position must be in [-0.5; 0.5[
+        """
         super(NonUniformFourierTransform, self).__init__(
             shape=shape,
             non_uniform_samples=non_uniform_samples,
@@ -1778,6 +1789,18 @@ class NonUniformFourierTransform(NonUniformFourierTransformBase):
         self.adjoint_class = NonUniformFourierTransformAdjoint
 
     def _call(self, x):
+        """Compute the direct non uniform FFT.
+
+        Parameters
+        ----------
+        x : `numpy.ndarray`
+            The data whose non uniform FFT you want to compute
+
+        Returns
+        -------
+        out_normalized : `numpy.ndarray`
+            Result of the transform
+        """
         self.nfft.f_hat = np.array(x)
         out = self.nfft.trafo()
         out_normalized = self._normalize(out)
@@ -1788,6 +1811,17 @@ class NonUniformFourierTransformAdjoint(NonUniformFourierTransformBase):
     """Adjoint of Non uniform Fast Fourier Transform.
     """
     def __init__(self, shape, non_uniform_samples):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        shape: tuple
+            The dimensions of the data whose non uniform FFT adjoint you want to
+            compute
+        non_uniform_samples: iterable
+            List of the fourier space positions where the coefficients are
+            computed. Each position must be in [-0.5; 0.5[
+        """
         super(NonUniformFourierTransformAdjoint, self).__init__(
             shape=shape,
             non_uniform_samples=non_uniform_samples,
@@ -1800,6 +1834,18 @@ class NonUniformFourierTransformAdjoint(NonUniformFourierTransformBase):
         self.adjoint_class = NonUniformFourierTransform
 
     def _call(self, x):
+        """Compute the adjoint non uniform FFT.
+
+        Parameters
+        ----------
+        x : `numpy.ndarray`
+            The data whose non uniform FFT adjoint you want to compute
+
+        Returns
+        -------
+        out_normalized : `numpy.ndarray`
+            Result of the adjoint transform
+        """
         self.nfft.f = np.array(x)
         out = self.nfft.adjoint()
         out_normalized = self._normalize(out)
