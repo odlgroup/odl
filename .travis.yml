@@ -72,6 +72,8 @@ install:
 
     # Install our package
     - pip install -e .[testing]
+    # Install nfft
+    - sudo apt install -y libnfft3-dev
 
 script:
     # Run tests and produce a coverage report.
