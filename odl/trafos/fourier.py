@@ -1658,15 +1658,15 @@ class NonUniformFourierTransformBase(Operator):
 
         Parameters
         ----------
-        shape: tuple
+        shape : tuple
             The dimensions of the data whose non uniform FFT you want to
             compute
-        non_uniform_samples: iterable
+        non_uniform_samples : iterable
             List of the fourier space positions where the coefficients are
             computed. Each position must be in [-0.5; 0.5[
-        domain: `DiscreteLp`
+        domain : `DiscreteLp`
             Domain of the non uniform FFT or its adjoint
-        range: `DiscreteLp`
+        range : `DiscreteLp`
             Range of the non uniform FFT or its adjoint
         """
         super(NonUniformFourierTransformBase, self).__init__(
@@ -1687,13 +1687,13 @@ class NonUniformFourierTransformBase(Operator):
 
         Parameters
         ----------
-        non_uniform_samples: iterable
+        non_uniform_samples : iterable
             List of the fourier space positions where the coefficients are
             computed
 
         Raises
         ------
-        ValueError:
+        ValueError :
             If the non_uniform_samples is not an iterable, of 0 length or if
             one of the locations is not normalized in [-0.5; 0.5[
         """
@@ -1719,12 +1719,12 @@ class NonUniformFourierTransformBase(Operator):
 
         Parameters
         ----------
-        sample: iterable
+        sample : iterable
             The sample whose location you want to check
 
         Returns
         -------
-        bool: Whether the sample contains only floats in [-0.5; 0.5[
+        bool : Whether the sample contains only floats in [-0.5; 0.5[
         """
         floats = all(isinstance(coord, float) for coord in sample)
         if floats:
@@ -1738,7 +1738,7 @@ class NonUniformFourierTransformBase(Operator):
 
         Parameters
         ----------
-        x: `numpy.ndarray`
+        x : `numpy.ndarray`
             The results of the non uniform FFT
 
         Returns
@@ -1770,10 +1770,10 @@ class NonUniformFourierTransform(NonUniformFourierTransformBase):
 
         Parameters
         ----------
-        shape: tuple
+        shape : tuple
             The dimensions of the data whose non uniform FFT you want to
             compute
-        non_uniform_samples: iterable
+        non_uniform_samples : iterable
             List of the fourier space positions where the coefficients are
             computed. Each position must be in [-0.5; 0.5[
         """
@@ -1815,10 +1815,10 @@ class NonUniformFourierTransformAdjoint(NonUniformFourierTransformBase):
 
         Parameters
         ----------
-        shape: tuple
+        shape : tuple
             The dimensions of the data whose non uniform FFT adjoint you want to
             compute
-        non_uniform_samples: iterable
+        non_uniform_samples : iterable
             List of the fourier space positions where the coefficients are
             computed. Each position must be in [-0.5; 0.5[
         """
