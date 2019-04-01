@@ -30,18 +30,31 @@ from odl.operator import (
     Operator, PointwiseNorm)
 from odl.space import ProductSpace
 
-__all__ = ('combine_proximals', 'proximal_convex_conj', 'proximal_translation',
-           'proximal_arg_scaling', 'proximal_quadratic_perturbation',
-           'proximal_composition', 'proximal_const_func',
-           'proximal_box_constraint', 'proximal_nonnegativity',
-           'proximal_l1', 'proximal_convex_conj_l1',
-           'proximal_l2', 'proximal_convex_conj_l2',
-           'proximal_linfty', 'proximal_convex_conj_linfty',
-           'proj_simplex', 'proj_l1',
-           'proximal_l2_squared', 'proximal_convex_conj_l2_squared',
-           'proximal_l1_l2', 'proximal_convex_conj_l1_l2',
-           'proximal_convex_conj_kl', 'proximal_convex_conj_kl_cross_entropy',
-           'proximal_huber')
+__all__ = (
+    'combine_proximals',
+    'proximal_convex_conj',
+    'proximal_translation',
+    'proximal_arg_scaling',
+    'proximal_quadratic_perturbation',
+    'proximal_composition',
+    'proximal_const_func',
+    'proximal_box_constraint',
+    'proximal_l1',
+    'proximal_convex_conj_l1',
+    'proximal_l2',
+    'proximal_convex_conj_l2',
+    'proximal_linfty',
+    'proximal_convex_conj_linfty',
+    'proj_simplex',
+    'proj_l1',
+    'proximal_l2_squared',
+    'proximal_convex_conj_l2_squared',
+    'proximal_l1_l2',
+    'proximal_convex_conj_l1_l2',
+    'proximal_convex_conj_kl',
+    'proximal_convex_conj_kl_cross_entropy',
+    'proximal_huber',
+)
 
 
 def combine_proximals(*factory_list):
@@ -625,29 +638,6 @@ def proximal_box_constraint(space, lower=None, upper=None):
                 space.assign(out, x)
 
     return ProxOpBoxConstraint
-
-
-def proximal_nonnegativity(space):
-    """Function to create the proximal operator of ``G(x) = ind(x >= 0)``.
-
-    Function for the proximal operator of the functional ``G(x)=ind(x >= 0)``
-    to be initialized.
-
-    Parameters
-    ----------
-    space : `LinearSpace`
-        Domain of the functional G(x)
-
-    Returns
-    -------
-    prox_factory : function
-        Factory for the proximal operator to be initialized
-
-    See Also
-    --------
-    proximal_box_constraint
-    """
-    return proximal_box_constraint(space, lower=0)
 
 
 def proximal_convex_conj_l2(space, lam=1, g=None):
