@@ -1654,6 +1654,21 @@ class NonUniformFourierTransformBase(Operator):
     https://github.com/CEA-COSMIC/pysap-mri/blob/master/mri/reconstruct/fourier.py#L123
     """
     def __init__(self, shape, non_uniform_samples, domain, range):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        shape: tuple
+            The dimensions of the data whose non uniform FFT you want to
+            compute
+        non_uniform_samples: iterable
+            List of the fourier space positions where the coefficients are
+            computed. Each position must be in [-0.5; 0.5[
+        domain: `DiscreteLp`
+            Domain of the non uniform FFT or its adjoint
+        range: `DiscreteLp`
+            Range of the non uniform FFT or its adjoint
+        """
         super(NonUniformFourierTransformBase, self).__init__(
             domain=domain,
             range=range,
@@ -1668,6 +1683,20 @@ class NonUniformFourierTransformBase(Operator):
         self.adjoint_class = None
 
     def _check_samples(self, non_uniform_samples):
+        """Check that samples are correct
+
+        Parameters
+        ----------
+        non_uniform_samples: iterable
+            List of the fourier space positions where the coefficients are
+            computed
+
+        Raises
+        ------
+        ValueError:
+            If the non_uniform_samples is not an iterable, of 0 length or if
+            one of the locations is not normalized in [-0.5; 0.5[
+        """
         if not isinstance(non_uniform_samples, Iterable):
             raise TypeError('`non_uniform_samples` is not iterable.')
 
@@ -1686,6 +1715,17 @@ class NonUniformFourierTransformBase(Operator):
               ' not a float between -0.5 and 0.5')
 
     def _is_sample_valid(self, sample):
+        """Check whether a single sample is correct.
+
+        Parameters
+        ----------
+        sample: iterable
+            The sample whose location you want to check
+
+        Returns
+        -------
+        bool: Whether the sample contains only floats in [-0.5; 0.5[
+        """
         floats = all(isinstance(coord, float) for coord in sample)
         if floats:
             normalized = all(-0.5 <= coord < 0.5 for coord in sample)
@@ -1694,11 +1734,24 @@ class NonUniformFourierTransformBase(Operator):
         return floats & normalized
 
     def _normalize(self, x):
+        """Normalize the result of the non uniform FFT.
+
+        Parameters
+        ----------
+        x: `numpy.ndarray`
+            The results of the non uniform FFT
+
+        Returns
+        -------
+        out : `numpy.ndarray`
+            Normalized results of the non uniform FFT
+        """
         out = x / np.sqrt(self.nfft.M)
         return out
 
     @property
     def adjoint(self):
+        """Adjoint of this instance."""
         if self.adjoint_class:
             return self.adjoint_class(
                 shape=self.shape,
