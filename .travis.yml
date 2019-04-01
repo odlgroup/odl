@@ -51,6 +51,8 @@ install:
     - conda config --set always_yes yes --set changeps1 no
     # Useful for debugging any issues with conda
     - conda info -a
+    # Install nfft
+    - sudo apt install -y libnfft3-dev
 
     # Install dependencies and enter test environment. Use conda for the minimal stuff to
     # make it run faster and avoid downloading big stuff like mkl
@@ -72,8 +74,7 @@ install:
 
     # Install our package
     - pip install -e .[testing]
-    # Install nfft
-    - sudo apt install -y libnfft3-dev
+
 
 script:
     # Run tests and produce a coverage report.
