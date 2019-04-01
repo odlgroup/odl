@@ -223,6 +223,17 @@ class LinearSpace(Set):
         """Assign ``x`` to ``out``."""
         self.lincomb(1, x, out=out)
 
+    def copy(self, x):
+        """Return a copy of ``x``.
+
+        This default implementation is intended to work with any space that
+        supports `lincomb`. Subclasses may choose to implement an optimized
+        variant.
+        """
+        out = self.element()
+        self.assign(out, x)
+        return out
+
     def set_zero(self, out):
         """Set ``out`` to zero.
 
