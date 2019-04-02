@@ -190,6 +190,7 @@ Further reading
 .. _CUDA-accelerated data containers: https://github.com/odlgroup/odlcuda
 .. _operators: https://en.wikipedia.org/wiki/Operator_%28mathematics%29
 .. _pyFFTW: https://pypi.python.org/pypi/pyFFTW
+.. _pynfft: https://pythonhosted.org/pyNFFT/
 .. _real numbers: https://en.wikipedia.org/wiki/Real_number
 .. _rectangular boxes: https://en.wikipedia.org/wiki/Hypercube
 .. _set: https://en.wikipedia.org/wiki/Set_%28mathematics%29
