@@ -54,6 +54,7 @@ When all required PRs are merged, ensure that the latest ``master`` branch is sa
   .. code-block:: bash
 
      conda install pywavelets
+     conda install cython
      conda install -c conda-forge pyfftw pynfft
      pytest --largescale
 
