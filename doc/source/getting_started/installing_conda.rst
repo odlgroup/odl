@@ -119,6 +119,23 @@ further instructions.
 
         $ pip install pyfftw
 
+
+- Non-uniform FFT using NFFT:
+
+  * Install the `NFFT`_ C library (Linux instructions).
+
+    .. code-block:: bash
+
+        $ sudo apt install -y libnfft3-dev
+
+  * Install the python backend `pynfft`_ by running:
+
+    .. code-bock:: bash
+
+        $ export CPLUS_INCLUDE_PATH=/opt/python/<$FULL_PYTHON_VERSION>/include/<$MAJOR_MINOR_PYTHON_VERSION>m;
+        $ pip install numpy cython
+        $ pip install git+https://github.com/ghisvail/pyNFFT.git
+
 - Wavelet transforms (currently not in mainstream conda) using `PyWavelets`_:
 
   .. code-block:: bash
@@ -184,6 +201,7 @@ Now you can check that everything was installed properly by running
 .. _matplotlib: http://matplotlib.org/
 .. _FFTW: http://fftw.org/
 .. _pyFFTW: https://pypi.python.org/pypi/pyFFTW
+.. _pynfft: https://pythonhosted.org/pyNFFT/
 .. _PyWavelets: https://pypi.python.org/pypi/PyWavelets
 .. _scikit-image: http://scikit-image.org/
 .. _ProxImaL: http://www.proximal-lang.org/en/latest/
