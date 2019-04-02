@@ -925,7 +925,7 @@ def test_non_uniform_fourier_adj_trafo_1d_call():
 def test_non_uniform_fourier_trafo_1d_res():
     sig_size = 512
     shape = [sig_size]
-    samples = np.array(np.where(np.ones(shape) >= 0), dtype=float).T
+    samples = np.arange(sig_size)[:, None].astype(float)
     samples /= sig_size
     samples -= 0.5
     sig = np.random.normal(size=shape)
@@ -940,7 +940,8 @@ def test_non_uniform_fourier_trafo_1d_res():
 def test_non_uniform_fourier_trafo_2d_res():
     im_size = 512
     shape = [im_size] * 2
-    samples = np.array(np.where(np.ones(shape) >= 0), dtype=float).T
+    coords = [np.arange(im_size)[:, None].astype(float)] * 2
+    samples = np.hstack((np.meshgrid(*coords))).swapaxes(0,1).reshape(2,-1).T
     samples /= im_size
     samples -= 0.5
     image = np.random.normal(size=shape)
