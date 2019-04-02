@@ -1682,8 +1682,8 @@ class NonUniformFourierTransformBase(Operator):
         self.samples = samples
         self.nfft = NFFT(N=shape, M=len(samples))
         self.nfft.x = samples
-        self.nfft.precompute()
         self.adjoint_class = None
+        self._is_precomputed = False
 
 
 class NonUniformFourierTransform(NonUniformFourierTransformBase):
@@ -1732,6 +1732,9 @@ class NonUniformFourierTransform(NonUniformFourierTransformBase):
         out_normalized : `numpy.ndarray`
             Result of the transform
         """
+        if not self._is_precomputed:
+            self.nfft.precompute()
+            self._is_precomputed = True
         self.nfft.f_hat = np.asarray(x)
         out = self.nfft.trafo()
         # The normalization is inspired from https://github.com/CEA-COSMIC/pysap-mri/blob/master/mri/reconstruct/fourier.py#L123
@@ -1785,6 +1788,9 @@ class NonUniformFourierTransformAdjoint(NonUniformFourierTransformBase):
         out_normalized : `numpy.ndarray`
             Result of the adjoint transform
         """
+        if not self._is_precomputed:
+            self.nfft.precompute()
+            self._is_precomputed = True
         self.nfft.f = np.asarray(x)
         out = self.nfft.adjoint()
         # The normalization is inspired from https://github.com/CEA-COSMIC/pysap-mri/blob/master/mri/reconstruct/fourier.py#L123
