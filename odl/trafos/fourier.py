@@ -8,7 +8,6 @@
 
 """Discretized Fourier transform on L^p spaces."""
 from __future__ import print_function, division, absolute_import
-from collections.abc import Iterable
 
 import numpy as np
 from pynfft.nfft import NFFT
@@ -1653,17 +1652,17 @@ class NonUniformFourierTransformBase(Operator):
     The normalization is inspired from pysap-mri, mainly this class:
     https://github.com/CEA-COSMIC/pysap-mri/blob/master/mri/reconstruct/fourier.py#L123
     """
-    def __init__(self, shape, non_uniform_samples, domain, range):
+    def __init__(self, shape, samples, domain, range):
         """Initialize a new instance.
 
         Parameters
         ----------
         shape : tuple
-            The dimensions of the data whose non uniform FFT you want to
-            compute
-        non_uniform_samples : iterable
+            The dimensions of the data whose non uniform FFT has to be
+            computed
+        samples : aray-like
             List of the fourier space positions where the coefficients are
-            computed. Each position must be in [-0.5; 0.5[
+            computed.
         domain : `DiscreteLp`
             Domain of the non uniform FFT or its adjoint
         range : `DiscreteLp`
@@ -1675,118 +1674,50 @@ class NonUniformFourierTransformBase(Operator):
             linear=True,
         )
         self.shape = shape
-        self._check_samples(non_uniform_samples)
-        self.non_uniform_samples = non_uniform_samples
-        self.nfft = NFFT(N=shape, M=len(non_uniform_samples))
-        self.nfft.x = non_uniform_samples
+        samples = np.asarray(samples, dtype=float)
+        if samples.shape[1:] != shape:
+            raise ValueError(
+                '`samples` dimensions incompatible with provided `shape`',
+            )
+        self.samples = samples
+        self.nfft = NFFT(N=shape, M=len(samples))
+        self.nfft.x = samples
         self.nfft.precompute()
         self.adjoint_class = None
-
-    def _check_samples(self, non_uniform_samples):
-        """Check that samples are correct
-
-        Parameters
-        ----------
-        non_uniform_samples : iterable
-            List of the fourier space positions where the coefficients are
-            computed
-
-        Raises
-        ------
-        ValueError :
-            If the non_uniform_samples is not an iterable, of 0 length or if
-            one of the locations is not normalized in [-0.5; 0.5[
-        """
-        if not isinstance(non_uniform_samples, Iterable):
-            raise TypeError('`non_uniform_samples` is not iterable.')
-
-        if len(non_uniform_samples) == 0:
-            raise ValueError('`non_uniform_samples` is empty')
-
-        n_dim = len(self.shape)
-        if not all(len(sample) == n_dim for sample in non_uniform_samples):
-            raise ValueError('One of the samples in `non_uniform_samples` does'
-              ' not have the right dimension')
-
-        if not all(
-                self._is_sample_valid(sample) for sample in non_uniform_samples
-            ):
-            raise ValueError('One of the samples in `non_uniform_samples` is'
-              ' not a float between -0.5 and 0.5')
-
-    def _is_sample_valid(self, sample):
-        """Check whether a single sample is correct.
-
-        Parameters
-        ----------
-        sample : iterable
-            The sample whose location you want to check
-
-        Returns
-        -------
-        bool : Whether the sample contains only floats in [-0.5; 0.5[
-        """
-        floats = all(isinstance(coord, float) for coord in sample)
-        if floats:
-            normalized = all(-0.5 <= coord < 0.5 for coord in sample)
-        else:
-            normalized = False
-        return floats & normalized
-
-    def _normalize(self, x):
-        """Normalize the result of the non uniform FFT.
-
-        Parameters
-        ----------
-        x : `numpy.ndarray`
-            The results of the non uniform FFT
-
-        Returns
-        -------
-        out : `numpy.ndarray`
-            Normalized results of the non uniform FFT
-        """
-        out = x / np.sqrt(self.nfft.M)
-        return out
-
-    @property
-    def adjoint(self):
-        """Adjoint of this instance."""
-        if self.adjoint_class:
-            return self.adjoint_class(
-                shape=self.shape,
-                non_uniform_samples=self.non_uniform_samples,
-            )
-        raise NotImplementedError(
-            "Adjoint not implemented for this non-uniform fourier operator",
-        )
 
 
 class NonUniformFourierTransform(NonUniformFourierTransformBase):
     """Forward Non uniform Fast Fourier Transform.
     """
-    def __init__(self, shape, non_uniform_samples):
+    def __init__(self, shape, samples):
         """Initialize a new instance.
 
         Parameters
         ----------
         shape : tuple
-            The dimensions of the data whose non uniform FFT you want to
-            compute
-        non_uniform_samples : iterable
+            The dimensions of the data whose non uniform FFT has to be
+            computed
+        samples : array-like
             List of the fourier space positions where the coefficients are
-            computed. Each position must be in [-0.5; 0.5[
+            computed.
         """
         super(NonUniformFourierTransform, self).__init__(
             shape=shape,
-            non_uniform_samples=non_uniform_samples,
+            samples=samples,
             domain=discr_sequence_space(shape, dtype=np.complex128),
             range=discr_sequence_space(
-                [len(non_uniform_samples)],
+                [len(samples)],
                 dtype=np.complex128,
             ),
         )
         self.adjoint_class = NonUniformFourierTransformAdjoint
+
+    @property
+    def adjoint(self):
+        return NonUniformFourierTransformAdjoint(
+            shape=self.shape,
+            samples=self.samples,
+        )
 
     def _call(self, x):
         """Compute the direct non uniform FFT.
@@ -1801,37 +1732,45 @@ class NonUniformFourierTransform(NonUniformFourierTransformBase):
         out_normalized : `numpy.ndarray`
             Result of the transform
         """
-        self.nfft.f_hat = np.array(x)
+        self.nfft.f_hat = np.asarray(x)
         out = self.nfft.trafo()
-        out_normalized = self._normalize(out)
-        return out_normalized
+        # The normalization is inspired from https://github.com/CEA-COSMIC/pysap-mri/blob/master/mri/reconstruct/fourier.py#L123
+        out /= np.sqrt(self.nfft.M)
+        return out
 
 
 class NonUniformFourierTransformAdjoint(NonUniformFourierTransformBase):
     """Adjoint of Non uniform Fast Fourier Transform.
     """
-    def __init__(self, shape, non_uniform_samples):
+    def __init__(self, shape, samples):
         """Initialize a new instance.
 
         Parameters
         ----------
         shape : tuple
-            The dimensions of the data whose non uniform FFT adjoint you want to
-            compute
-        non_uniform_samples : iterable
+            The dimensions of the data whose non uniform FFT adjoint has to be
+            computed
+        samples : aray-like
             List of the fourier space positions where the coefficients are
-            computed. Each position must be in [-0.5; 0.5[
+            computed.
         """
         super(NonUniformFourierTransformAdjoint, self).__init__(
             shape=shape,
-            non_uniform_samples=non_uniform_samples,
+            samples=samples,
             domain=discr_sequence_space(
-                [len(non_uniform_samples)],
+                [len(samples)],
                 dtype=np.complex128,
             ),
             range=discr_sequence_space(shape, dtype=np.complex128),
         )
         self.adjoint_class = NonUniformFourierTransform
+
+    @property
+    def adjoint(self):
+        return NonUniformFourierTransform(
+            shape=self.shape,
+            samples=self.samples,
+        )
 
     def _call(self, x):
         """Compute the adjoint non uniform FFT.
@@ -1846,10 +1785,11 @@ class NonUniformFourierTransformAdjoint(NonUniformFourierTransformBase):
         out_normalized : `numpy.ndarray`
             Result of the adjoint transform
         """
-        self.nfft.f = np.array(x)
+        self.nfft.f = np.asarray(x)
         out = self.nfft.adjoint()
-        out_normalized = self._normalize(out)
-        return out_normalized
+        # The normalization is inspired from https://github.com/CEA-COSMIC/pysap-mri/blob/master/mri/reconstruct/fourier.py#L123
+        out /= np.sqrt(self.nfft.M)
+        return out
 
 
 if __name__ == '__main__':
