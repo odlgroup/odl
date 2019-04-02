@@ -1675,7 +1675,7 @@ class NonUniformFourierTransformBase(Operator):
         )
         self.shape = shape
         samples = np.asarray(samples, dtype=float)
-        if samples.shape[1:] != shape:
+        if samples.shape[1] != len(shape):
             raise ValueError(
                 '`samples` dimensions incompatible with provided `shape`',
             )
