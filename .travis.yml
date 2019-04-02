@@ -73,7 +73,6 @@ install:
     # Install our package
     - pip install -e .[testing]
 
-
 script:
     # Run tests and produce a coverage report.
     # Also invoke the alternative way of running the unit tests.
