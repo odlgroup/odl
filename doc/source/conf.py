@@ -64,6 +64,7 @@ intersphinx_mapping = {
     'matplotlib': ('https://matplotlib.org/', None),
     'pywt': ('https://pywavelets.readthedocs.io/en/latest/', None),
     'pyfftw': ('https://pyfftw.readthedocs.io/en/latest/', None),
+    'pynfft': ('https://pythonhosted.org/pyNFFT/', None),
     'pytest': ('https://docs.pytest.org/en/latest/', None)}
 
 

@@ -30,6 +30,23 @@ Astra is most easily installed using conda:
 For further instructions, check `the ASTRA GitHub page <https://github.com/astra-toolbox/astra-toolbox>`_.
 
 
+.. _installing_odl_extensions__pynfft:
+
+pynfft for non-uniform FFT
+==========================
+To compute non-uniform FFT, install `pynfft <https://pythonhosted.org/pyNFFT/>`.
+
+You can install `pynfft` with the following commands (on Linux):
+
+.. code-block:: bash
+
+    $ sudo apt install -y libnfft3-dev
+    $ export CPLUS_INCLUDE_PATH=/opt/python/<$FULL_PYTHON_VERSION>/include/<$MAJOR_MINOR_PYTHON_VERSION>m;
+    $ pip install cython numpy git+https://github.com/ghisvail/pyNFFT.git
+
+For further instructions, check `the pynff GitHub page <https://github.com/pyNFFT/pyNFFT>`_.
+
+
 
 CUDA backend for linear arrays
 ==============================
