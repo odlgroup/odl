@@ -49,12 +49,12 @@ When all required PRs are merged, ensure that the latest ``master`` branch is sa
 
     pytest --examples --doctest-doc --largescale
 
-- Run the tests again after installing ``pyfftw``, ``pywavelets`` and ``astra-toolbox``:
+- Run the tests again after installing ``pyfftw``, ``pywavelets``, ``pynfft`` and ``astra-toolbox``:
 
   .. code-block:: bash
 
      conda install pywavelets
-     conda install -c conda-forge pyfftw
+     conda install -c conda-forge pyfftw pynfft
      pytest --largescale
 
 - Run the alternative way of invoking the tests:
