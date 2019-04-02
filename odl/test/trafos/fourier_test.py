@@ -870,7 +870,7 @@ def test_non_uniform_fourier_trafo_2d_call():
     samples /= im_size
     samples -= 0.5
     image = np.random.normal(size=shape)
-    nfft = NonUniformFourierTransform(shape=shape, non_uniform_samples=samples)
+    nfft = NonUniformFourierTransform(shape=shape, samples=samples)
     nfft(image)
 
 
@@ -886,7 +886,7 @@ def test_non_uniform_fourier_adj_trafo_2d_call():
     nfft_coeffs = np.random.normal(size=(len(samples),))
     nfft_adj = NonUniformFourierTransformAdjoint(
         shape=shape,
-        non_uniform_samples=samples,
+        samples=samples,
     )
     nfft_adj(nfft_coeffs)
 
@@ -901,7 +901,7 @@ def test_non_uniform_fourier_trafo_1d_call():
     samples /= sig_size
     samples -= 0.5
     image = np.random.normal(size=shape)
-    nfft = NonUniformFourierTransform(shape=shape, non_uniform_samples=samples)
+    nfft = NonUniformFourierTransform(shape=shape, samples=samples)
     nfft(image)
 
 
@@ -917,7 +917,7 @@ def test_non_uniform_fourier_adj_trafo_1d_call():
     nfft_coeffs = np.random.normal(size=(len(samples),))
     nfft_adj = NonUniformFourierTransformAdjoint(
         shape=shape,
-        non_uniform_samples=samples,
+        samples=samples,
     )
     nfft_adj(nfft_coeffs)
 
@@ -929,7 +929,7 @@ def test_non_uniform_fourier_trafo_1d_res():
     samples /= sig_size
     samples -= 0.5
     sig = np.random.normal(size=shape)
-    nfft = NonUniformFourierTransform(shape=shape, non_uniform_samples=samples)
+    nfft = NonUniformFourierTransform(shape=shape, samples=samples)
     res_nfft = nfft(sig)
     res_np_fft = np.fft.fftshift(
         np.fft.fft(np.fft.fftshift(sig), norm="ortho"),
@@ -944,7 +944,7 @@ def test_non_uniform_fourier_trafo_2d_res():
     samples /= im_size
     samples -= 0.5
     image = np.random.normal(size=shape)
-    nfft = NonUniformFourierTransform(shape=shape, non_uniform_samples=samples)
+    nfft = NonUniformFourierTransform(shape=shape, samples=samples)
     res_nfft = nfft(image)
     res_np_fft = np.fft.fftshift(
         np.fft.fft2(np.fft.fftshift(image), norm="ortho"),
