@@ -44,7 +44,7 @@ You can install `pynfft` with the following commands (on Linux):
     $ export CPLUS_INCLUDE_PATH=/opt/python/<$FULL_PYTHON_VERSION>/include/<$MAJOR_MINOR_PYTHON_VERSION>m;
     $ pip install cython numpy git+https://github.com/ghisvail/pyNFFT.git
 
-For further instructions, check `the pynff GitHub page <https://github.com/pyNFFT/pyNFFT>`_.
+For further instructions, check `the pynfft GitHub page <https://github.com/pyNFFT/pyNFFT>`_.
 
 
 
