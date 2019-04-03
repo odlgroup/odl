@@ -18,9 +18,6 @@ if PYNFFT_AVAILABLE:
 
 class NonUniformFourierTransformBase(Operator):
     """Non uniform Fast Fourier Transform.
-
-    The normalization is inspired from pysap-mri, mainly this class:
-    https://github.com/CEA-COSMIC/pysap-mri/blob/master/mri/reconstruct/fourier.py#L123
     """
     def __init__(self, shape, samples, domain, range):
         """Initialize a new instance.
