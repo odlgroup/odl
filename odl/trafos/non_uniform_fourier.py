@@ -5,9 +5,10 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
-"""Discretized non-uniform Fourier transform on L^p spaces."""
-from __future__ import division
 
+"""Discretized non-uniform Fourier transform on L^p spaces."""
+
+from __future__ import division
 import numpy as np
 
 from odl.discr import discr_sequence_space
