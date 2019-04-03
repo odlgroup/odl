@@ -53,7 +53,6 @@ class NonUniformFourierTransformBase(Operator):
         self.skip_normalization = skip_normalization
         self.samples = samples
         self.nfft = NFFT(N=space.shape, M=len(samples))
-        self.nfft.x = samples
         self.adjoint_class = None
         self._has_run = False
 
@@ -65,6 +64,7 @@ class NonUniformFourierTransformBase(Operator):
             self.samples /= (self.space.max_pt - self.space.min_pt)
             self.samples -= 0.5
             self.samples[np.where(self.samples == 0.5)] = -0.5
+            self.nfft.x = self.samples
 
 
 class NonUniformFourierTransform(NonUniformFourierTransformBase):
@@ -116,8 +116,8 @@ class NonUniformFourierTransform(NonUniformFourierTransformBase):
             Result of the transform
         """
         if not self._has_run:
-            self.nfft.precompute()
             self._normalize()
+            self.nfft.precompute()
             self._has_run = True
         self.nfft.f_hat = np.asarray(x)
         out = self.nfft.trafo()
@@ -176,8 +176,8 @@ class NonUniformFourierTransformAdjoint(NonUniformFourierTransformBase):
             Result of the adjoint transform
         """
         if not self._has_run:
-            self.nfft.precompute()
             self._normalize()
+            self.nfft.precompute()
             self._has_run = True
         self.nfft.f = np.asarray(x)
         out = self.nfft.adjoint()
