@@ -19,7 +19,9 @@ if PYNFFT_AVAILABLE:
 class NonUniformFourierTransformBase(Operator):
     """Non uniform Fast Fourier Transform.
     """
-    def __init__(self, shape, samples, domain, range):
+    def __init__(
+        self, shape, samples, domain, range, skip_normalization=False,
+        max_frequencies=None):
         """Initialize a new instance.
 
         Parameters
@@ -34,6 +36,15 @@ class NonUniformFourierTransformBase(Operator):
             Domain of the non uniform FFT or its adjoint
         range : `DiscreteLp`
             Range of the non uniform FFT or its adjoint
+        skip_normalization : bool, optional
+            Whether the samples normalization step should be skipped
+        max_frequencies : None or int or float or `numpy.ndarray`, optional
+            The max frequency for each dimension in the frequency space.
+            If int or float, the max frequency will be the same for each
+            dimension of the frequency space.
+            If None, the max frequency for each dimension will be the max
+            of the absolute value of the dimension for all the samples.
+            Defaults to None.
         """
         super(NonUniformFourierTransformBase, self).__init__(
             domain=domain,
@@ -46,17 +57,55 @@ class NonUniformFourierTransformBase(Operator):
             raise ValueError(
                 '`samples` dimensions incompatible with provided `shape`',
             )
-        self.samples = samples
+        self.samples = self._normalize(
+            samples,
+            skip_normalization=skip_normalization,
+            max_frequencies=max_frequencies,
+        )
         self.nfft = NFFT(N=shape, M=len(samples))
         self.nfft.x = samples
         self.adjoint_class = None
         self._is_precomputed = False
 
+    def _normalize(
+        self, samples, skip_normalization=False, max_frequencies=None):
+        """Normalize samples in [-0.5; 0.5[.
+
+        Parameters
+        ---------
+        samples : `numpy.ndarray`
+            The samples to be normalized
+        skip_normalization : bool, optional
+            Whether the normalization step should be skipped
+        max_frequencies : None or int or float or `numpy.ndarray`, optional
+            The max frequency for each dimension in the frequency space.
+            If int or float, the max frequency will be the same for each
+            dimension of the frequency space.
+            If None, the max frequency for each dimension will be the max
+            of the absolute value of the dimension for all the samples.
+            Defaults to None.
+
+        Returns
+        -------
+        samples : `numpy.ndarray`
+            The normalized samples
+        """
+        if skip_normalization:
+            return samples
+        if max_frequencies is None:
+            max_frequencies = np.max(np.abs(samples), axis=0)
+        elif isinstance(max_frequencies, (int, float)):
+            max_frequencies = max_frequencies * np.ones(samples.shape[1])
+        samples /= max_frequencies
+        samples -= 0.5
+        samples[np.where(samples == 0.5)] = -0.5
+        return samples
 
 class NonUniformFourierTransform(NonUniformFourierTransformBase):
     """Forward Non uniform Fast Fourier Transform.
     """
-    def __init__(self, shape, samples):
+    def __init__(
+        self, shape, samples, skip_normalization=False, max_frequencies=None):
         """Initialize a new instance.
 
         Parameters
@@ -67,6 +116,15 @@ class NonUniformFourierTransform(NonUniformFourierTransformBase):
         samples : array-like
             List of the fourier space positions where the coefficients are
             computed.
+        skip_normalization : bool, optional
+            Whether the normalization step should be skipped
+        max_frequencies : None or int or float or `numpy.ndarray`, optional
+            The max frequency for each dimension in the frequency space.
+            If int or float, the max frequency will be the same for each
+            dimension of the frequency space.
+            If None, the max frequency for each dimension will be the max
+            of the absolute value of the dimension for all the samples.
+            Defaults to None.
         """
         super(NonUniformFourierTransform, self).__init__(
             shape=shape,
@@ -76,6 +134,8 @@ class NonUniformFourierTransform(NonUniformFourierTransformBase):
                 [len(samples)],
                 dtype=np.complex128,
             ),
+            skip_normalization=skip_normalization,
+            max_frequencies=max_frequencies,
         )
         self.adjoint_class = NonUniformFourierTransformAdjoint
 
@@ -84,6 +144,7 @@ class NonUniformFourierTransform(NonUniformFourierTransformBase):
         return NonUniformFourierTransformAdjoint(
             shape=self.shape,
             samples=self.samples,
+            skip_normalization=True,
         )
 
     def _call(self, x):
@@ -112,7 +173,8 @@ class NonUniformFourierTransform(NonUniformFourierTransformBase):
 class NonUniformFourierTransformAdjoint(NonUniformFourierTransformBase):
     """Adjoint of Non uniform Fast Fourier Transform.
     """
-    def __init__(self, shape, samples):
+    def __init__(
+        self, shape, samples, skip_normalization=False, max_frequencies=None):
         """Initialize a new instance.
 
         Parameters
@@ -123,6 +185,15 @@ class NonUniformFourierTransformAdjoint(NonUniformFourierTransformBase):
         samples : aray-like
             List of the fourier space positions where the coefficients are
             computed.
+        skip_normalization : bool, optional
+            Whether the normalization step should be skipped
+        max_frequencies : None or int or float or `numpy.ndarray`, optional
+            The max frequency for each dimension in the frequency space.
+            If int or float, the max frequency will be the same for each
+            dimension of the frequency space.
+            If None, the max frequency for each dimension will be the max
+            of the absolute value of the dimension for all the samples.
+            Defaults to None.
         """
         super(NonUniformFourierTransformAdjoint, self).__init__(
             shape=shape,
@@ -132,6 +203,8 @@ class NonUniformFourierTransformAdjoint(NonUniformFourierTransformBase):
                 dtype=np.complex128,
             ),
             range=discr_sequence_space(shape, dtype=np.complex128),
+            skip_normalization=skip_normalization,
+            max_frequencies=max_frequencies,
         )
         self.adjoint_class = NonUniformFourierTransform
 
@@ -140,6 +213,7 @@ class NonUniformFourierTransformAdjoint(NonUniformFourierTransformBase):
         return NonUniformFourierTransform(
             shape=self.shape,
             samples=self.samples,
+            skip_normalization=True
         )
 
     def _call(self, x):
