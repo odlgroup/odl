@@ -18,4 +18,4 @@ try:
 except ImportError:
     PYNFFT_AVAILABLE = False
 
-__all__ = ('PYNFFT_AVAILABLE')
+__all__ = ('PYNFFT_AVAILABLE', )
