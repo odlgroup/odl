@@ -11,7 +11,7 @@
 from __future__ import division
 import numpy as np
 
-from odl.discr import discr_sequence_space
+from odl import DiscreteLp, cn
 from odl.operator import Operator
 from odl.trafos import PYNFFT_AVAILABLE
 if PYNFFT_AVAILABLE:
@@ -108,14 +108,13 @@ class NonUniformFourierTransform(NonUniformFourierTransformBase):
     """Forward Non uniform Fast Fourier Transform.
     """
     def __init__(
-        self, shape, samples, skip_normalization=False, max_frequencies=None):
+        self, space, samples, skip_normalization=False, max_frequencies=None):
         """Initialize a new instance.
 
         Parameters
         ----------
-        shape : tuple
-            The dimensions of the data whose non uniform FFT has to be
-            computed
+        shape : DiscreteLp
+            The uniform space in which the data lies
         samples : array-like
             List of the fourier space positions where the coefficients are
             computed.
@@ -129,14 +128,13 @@ class NonUniformFourierTransform(NonUniformFourierTransformBase):
             of the absolute value of the dimension for all the samples.
             Defaults to None.
         """
+        if not isinstance(space, DiscreteLp) or not space.is_uniform:
+            raise ValueError("`space` should be a uniform `DiscreteLp`")
         super(NonUniformFourierTransform, self).__init__(
-            shape=shape,
+            shape=space.shape,
             samples=samples,
-            domain=discr_sequence_space(shape, dtype=np.complex128),
-            range=discr_sequence_space(
-                [len(samples)],
-                dtype=np.complex128,
-            ),
+            domain=space,
+            range=cn(len(samples)),
             skip_normalization=skip_normalization,
             max_frequencies=max_frequencies,
         )
@@ -178,14 +176,13 @@ class NonUniformFourierTransformAdjoint(NonUniformFourierTransformBase):
     """Adjoint of Non uniform Fast Fourier Transform.
     """
     def __init__(
-        self, shape, samples, skip_normalization=False, max_frequencies=None):
+        self, space, samples, skip_normalization=False, max_frequencies=None):
         """Initialize a new instance.
 
         Parameters
         ----------
-        shape : tuple
-            The dimensions of the data whose non uniform FFT adjoint has to be
-            computed
+        space : DiscreteLp
+            The uniform space in which the data lies
         samples : aray-like
             List of the fourier space positions where the coefficients are
             computed.
@@ -199,14 +196,13 @@ class NonUniformFourierTransformAdjoint(NonUniformFourierTransformBase):
             of the absolute value of the dimension for all the samples.
             Defaults to None.
         """
+        if not isinstance(space, DiscreteLp) or not space.is_uniform:
+            raise ValueError("`space` should be a uniform `DiscreteLp`")
         super(NonUniformFourierTransformAdjoint, self).__init__(
-            shape=shape,
+            shape=space.shape,
             samples=samples,
-            domain=discr_sequence_space(
-                [len(samples)],
-                dtype=np.complex128,
-            ),
-            range=discr_sequence_space(shape, dtype=np.complex128),
+            domain=cn(len(samples)),
+            range=space,
             skip_normalization=skip_normalization,
             max_frequencies=max_frequencies,
         )
