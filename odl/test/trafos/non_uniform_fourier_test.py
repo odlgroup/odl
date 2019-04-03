@@ -9,7 +9,6 @@
 from __future__ import division
 
 import numpy as np
-import pytest
 
 import odl
 from odl.trafos.non_uniform_fourier import (
