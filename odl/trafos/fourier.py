@@ -5,10 +5,8 @@
 # This Source Code Form is subject to the terms of the Mozilla Public License,
 # v. 2.0. If a copy of the MPL was not distributed with this file, You can
 # obtain one at https://mozilla.org/MPL/2.0/.
-
 """Discretized Fourier transform on L^p spaces."""
 from __future__ import print_function, division, absolute_import
-
 import numpy as np
 
 from odl.discr import DiscreteLp, discr_sequence_space
