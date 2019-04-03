@@ -79,6 +79,7 @@ Possible choices:
 - ``show`` : Install matplotlib_ to enable displaying capabilities.
 - ``fft`` : Install `pyFFTW`_ for fast Fourier transforms. Note that this requires the `FFTW`_ C library to be available on your system.
   Note also that even without this dependency, FFTs can be computed with Numpy's FFT library.
+- ``nfft`` : Install `pynfft` for non-uniform FFT. Note that this requires the `NFFT`_ C library to be available on your system.
 - ``pywavelets`` : Install `PyWavelets`_ for wavelet transforms.
 - ``scikit`` : Install `scikit-image`_ as a simple backend for ray transforms.
 - ``proximal``: Install the `ProxImaL`_ convex optimization package.
@@ -121,6 +122,7 @@ Now you can check that everything was installed properly by running
 .. _matplotlib: http://matplotlib.org/
 .. _FFTW: http://fftw.org/
 .. _pyFFTW: https://pypi.python.org/pypi/pyFFTW
+.. _pynfft: https://pythonhosted.org/pyNFFT/
 .. _PyWavelets: https://pypi.python.org/pypi/PyWavelets
 .. _scikit-image: http://scikit-image.org/
 .. _ProxImaL: http://www.proximal-lang.org/en/latest/
