@@ -22,123 +22,77 @@ class NonUniformFourierTransformBase(Operator):
     """Non uniform Fast Fourier Transform.
     """
     def __init__(
-        self, shape, samples, domain, range, skip_normalization=False,
-        max_frequencies=None):
+        self, space, samples, domain, range, skip_normalization=False):
         """Initialize a new instance.
 
         Parameters
         ----------
-        shape : tuple
-            The dimensions of the data whose non uniform FFT has to be
-            computed
+        space : DiscreteLp
+            The uniform space in which the data lies
         samples : aray-like
             List of the fourier space positions where the coefficients are
             computed.
-        domain : `DiscreteLp`
+        domain : `TensorSpace`
             Domain of the non uniform FFT or its adjoint
-        range : `DiscreteLp`
+        range : `TensorSpace`
             Range of the non uniform FFT or its adjoint
         skip_normalization : bool, optional
             Whether the samples normalization step should be skipped
-        max_frequencies : None or int or float or `numpy.ndarray`, optional
-            The max frequency for each dimension in the frequency space.
-            If int or float, the max frequency will be the same for each
-            dimension of the frequency space.
-            If None, the max frequency for each dimension will be the max
-            of the absolute value of the dimension for all the samples.
-            Defaults to None.
         """
         super(NonUniformFourierTransformBase, self).__init__(
             domain=domain,
             range=range,
             linear=True,
         )
-        self.shape = shape
+        self.space = space
         samples = np.asarray(samples, dtype=float)
-        if samples.shape[1] != len(shape):
+        if samples.shape[1] != len(space.shape):
             raise ValueError(
                 '`samples` dimensions incompatible with provided `shape`',
             )
-        self.samples = self._normalize(
-            samples,
-            skip_normalization=skip_normalization,
-            max_frequencies=max_frequencies,
-        )
-        self.nfft = NFFT(N=shape, M=len(samples))
+        self.skip_normalization = skip_normalization
+        self.samples = samples
+        self.nfft = NFFT(N=space.shape, M=len(samples))
         self.nfft.x = samples
         self.adjoint_class = None
-        self._is_precomputed = False
+        self._has_run = False
 
-    def _normalize(
-        self, samples, skip_normalization=False, max_frequencies=None):
+    def _normalize(self):
         """Normalize samples in [-0.5; 0.5[.
-
-        Parameters
-        ---------
-        samples : `numpy.ndarray`
-            The samples to be normalized
-        skip_normalization : bool, optional
-            Whether the normalization step should be skipped
-        max_frequencies : None or int or float or `numpy.ndarray`, optional
-            The max frequency for each dimension in the frequency space.
-            If int or float, the max frequency will be the same for each
-            dimension of the frequency space.
-            If None, the max frequency for each dimension will be the max
-            of the absolute value of the dimension for all the samples.
-            Defaults to None.
-
-        Returns
-        -------
-        samples : `numpy.ndarray`
-            The normalized samples
         """
-        if skip_normalization:
-            return samples
-        if max_frequencies is None:
-            max_frequencies = np.max(np.abs(samples), axis=0)
-        elif isinstance(max_frequencies, (int, float)):
-            max_frequencies = max_frequencies * np.ones(samples.shape[1])
-        samples /= max_frequencies
-        samples -= 0.5
-        samples[np.where(samples == 0.5)] = -0.5
-        return samples
+        if not self.skip_normalization:
+            self.samples -= self.space.min_pt
+            self.samples /= (self.space.max_pt - self.space.min_pt)
+            self.samples -= 0.5
+            self.samples[np.where(self.samples == 0.5)] = -0.5
 
 
 class NonUniformFourierTransform(NonUniformFourierTransformBase):
     """Forward Non uniform Fast Fourier Transform.
     """
     def __init__(
-        self, space, samples, skip_normalization=False, max_frequencies=None):
+        self, space, samples, skip_normalization=False):
         """Initialize a new instance.
 
         Parameters
         ----------
-        shape : DiscreteLp
+        space : DiscreteLp
             The uniform space in which the data lies
         samples : array-like
             List of the fourier space positions where the coefficients are
             computed.
         skip_normalization : bool, optional
             Whether the normalization step should be skipped
-        max_frequencies : None or int or float or `numpy.ndarray`, optional
-            The max frequency for each dimension in the frequency space.
-            If int or float, the max frequency will be the same for each
-            dimension of the frequency space.
-            If None, the max frequency for each dimension will be the max
-            of the absolute value of the dimension for all the samples.
-            Defaults to None.
         """
         if not isinstance(space, DiscreteLp) or not space.is_uniform:
             raise ValueError("`space` should be a uniform `DiscreteLp`")
         super(NonUniformFourierTransform, self).__init__(
-            shape=space.shape,
+            shape=space,
             samples=samples,
             domain=space,
             range=cn(len(samples)),
             skip_normalization=skip_normalization,
-            max_frequencies=max_frequencies,
         )
-        self.adjoint_class = NonUniformFourierTransformAdjoint
 
     @property
     def adjoint(self):
@@ -161,9 +115,10 @@ class NonUniformFourierTransform(NonUniformFourierTransformBase):
         out_normalized : `numpy.ndarray`
             Result of the transform
         """
-        if not self._is_precomputed:
+        if not self._has_run:
             self.nfft.precompute()
-            self._is_precomputed = True
+            self._normalize()
+            self._has_run = True
         self.nfft.f_hat = np.asarray(x)
         out = self.nfft.trafo()
         # The normalization is inspired from
@@ -176,7 +131,7 @@ class NonUniformFourierTransformAdjoint(NonUniformFourierTransformBase):
     """Adjoint of Non uniform Fast Fourier Transform.
     """
     def __init__(
-        self, space, samples, skip_normalization=False, max_frequencies=None):
+        self, space, samples, skip_normalization=False):
         """Initialize a new instance.
 
         Parameters
@@ -188,25 +143,16 @@ class NonUniformFourierTransformAdjoint(NonUniformFourierTransformBase):
             computed.
         skip_normalization : bool, optional
             Whether the normalization step should be skipped
-        max_frequencies : None or int or float or `numpy.ndarray`, optional
-            The max frequency for each dimension in the frequency space.
-            If int or float, the max frequency will be the same for each
-            dimension of the frequency space.
-            If None, the max frequency for each dimension will be the max
-            of the absolute value of the dimension for all the samples.
-            Defaults to None.
         """
         if not isinstance(space, DiscreteLp) or not space.is_uniform:
             raise ValueError("`space` should be a uniform `DiscreteLp`")
         super(NonUniformFourierTransformAdjoint, self).__init__(
-            shape=space.shape,
+            space=space,
             samples=samples,
             domain=cn(len(samples)),
             range=space,
             skip_normalization=skip_normalization,
-            max_frequencies=max_frequencies,
         )
-        self.adjoint_class = NonUniformFourierTransform
 
     @property
     def adjoint(self):
@@ -229,9 +175,10 @@ class NonUniformFourierTransformAdjoint(NonUniformFourierTransformBase):
         out_normalized : `numpy.ndarray`
             Result of the adjoint transform
         """
-        if not self._is_precomputed:
+        if not self._has_run:
             self.nfft.precompute()
-            self._is_precomputed = True
+            self._normalize()
+            self._has_run = True
         self.nfft.f = np.asarray(x)
         out = self.nfft.adjoint()
         # The normalization is inspired from
