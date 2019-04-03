@@ -83,7 +83,6 @@ def test_non_uniform_fourier_trafo_1d_res():
     nfft = NonUniformFourierTransform(
         space=space,
         samples=samples,
-        max_frequencies=sig_size,
     )
     res_nfft = nfft(sig)
     res_np_fft = np.fft.fftshift(
@@ -102,7 +101,6 @@ def test_non_uniform_fourier_trafo_2d_res():
     nfft = NonUniformFourierTransform(
         space=space,
         samples=samples,
-        max_frequencies=im_size,
     )
     res_nfft = nfft(image)
     res_np_fft = np.fft.fftshift(
