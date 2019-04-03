@@ -14,6 +14,7 @@ import odl
 from odl.trafos.non_uniform_fourier import (
     NonUniformFourierTransform, NonUniformFourierTransformAdjoint)
 
+
 # ---- Non-uniform Fourier Transform ---- #
 def test_non_uniform_fourier_trafo_2d_call():
     im_size = 512
