@@ -87,7 +87,7 @@ class NonUniformFourierTransform(NonUniformFourierTransformBase):
         if not isinstance(space, DiscreteLp) or not space.is_uniform:
             raise ValueError("`space` should be a uniform `DiscreteLp`")
         super(NonUniformFourierTransform, self).__init__(
-            shape=space,
+            space=space,
             samples=samples,
             domain=space,
             range=cn(len(samples)),
