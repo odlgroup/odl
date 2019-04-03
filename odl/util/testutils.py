@@ -29,6 +29,7 @@ __all__ = (
     'all_almost_equal',
     'is_subdict',
     'skip_if_no_pyfftw',
+    'skip_if_no_pynfft',
     'skip_if_no_pywavelets',
     'skip_if_no_largescale',
     'skip_if_no_benchmark',
@@ -213,6 +214,7 @@ except ImportError:
             return identity
 
     skip_if_no_pyfftw = identity
+    skip_if_no_pynfft = identity
     skip_if_no_pywavelets = identity
     skip_if_no_largescale = identity
     skip_if_no_benchmark = identity
@@ -222,6 +224,10 @@ else:
     skip_if_no_pyfftw = pytest.mark.skipif(
         'not odl.trafos.PYFFTW_AVAILABLE',
         reason='pyFFTW not available',
+    )
+    skip_if_no_pynfft = pytest.mark.skipif(
+        'not odl.trafos.PYNFFT_AVAILABLE',
+        reason='pynfft not available',
     )
     skip_if_no_pywavelets = pytest.mark.skipif(
         'not odl.trafos.PYWT_AVAILABLE',

@@ -15,7 +15,8 @@ import os
 
 import odl
 from odl.space.entry_points import tensor_space_impl_names
-from odl.trafos.backends import PYFFTW_AVAILABLE, PYWT_AVAILABLE
+from odl.trafos.backends import (PYFFTW_AVAILABLE, PYNFFT_AVAILABLE,
+    PYWT_AVAILABLE)
 from odl.util.testutils import simple_fixture
 
 try:
@@ -72,6 +73,15 @@ if not PYFFTW_AVAILABLE:
     collect_ignore.append(
         os.path.join(odl_root, 'odl', 'trafos', 'backends',
                      'pyfftw_bindings.py'))
+
+if not PYNFFT_AVAILABLE:
+    collect_ignore.append(
+        os.path.join(odl_root, 'odl', 'trafos', 'backends',
+                     'pynfft_bindings.py'))
+    # Currently `pynfft` is the only implementation
+    collect_ignore.append(
+        os.path.join(odl_root, 'odl', 'trafos', 'non_uniform_fourier.py'))
+
 if not PYWT_AVAILABLE:
     collect_ignore.append(
         os.path.join(odl_root, 'odl', 'trafos', 'backends',
