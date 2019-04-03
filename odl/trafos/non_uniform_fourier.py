@@ -17,6 +17,7 @@ from odl.trafos import PYNFFT_AVAILABLE
 if PYNFFT_AVAILABLE:
     from pynfft.nfft import NFFT
 
+
 class NonUniformFourierTransformBase(Operator):
     """Non uniform Fast Fourier Transform.
     """
@@ -102,6 +103,7 @@ class NonUniformFourierTransformBase(Operator):
         samples[np.where(samples == 0.5)] = -0.5
         return samples
 
+
 class NonUniformFourierTransform(NonUniformFourierTransformBase):
     """Forward Non uniform Fast Fourier Transform.
     """
@@ -166,7 +168,8 @@ class NonUniformFourierTransform(NonUniformFourierTransformBase):
             self._is_precomputed = True
         self.nfft.f_hat = np.asarray(x)
         out = self.nfft.trafo()
-        # The normalization is inspired from https://github.com/CEA-COSMIC/pysap-mri/blob/master/mri/reconstruct/fourier.py#L123
+        # The normalization is inspired from
+        # https://github.com/CEA-COSMIC/pysap-mri/blob/master/mri/reconstruct/fourier.py#L123
         out /= np.sqrt(self.nfft.M)
         return out
 
@@ -235,9 +238,11 @@ class NonUniformFourierTransformAdjoint(NonUniformFourierTransformBase):
             self._is_precomputed = True
         self.nfft.f = np.asarray(x)
         out = self.nfft.adjoint()
-        # The normalization is inspired from https://github.com/CEA-COSMIC/pysap-mri/blob/master/mri/reconstruct/fourier.py#L123
+        # The normalization is inspired from
+        # https://github.com/CEA-COSMIC/pysap-mri/blob/master/mri/reconstruct/fourier.py#L123
         out /= np.sqrt(self.nfft.M)
         return out
+
 
 if __name__ == '__main__':
     from odl.util.testutils import run_doctests
