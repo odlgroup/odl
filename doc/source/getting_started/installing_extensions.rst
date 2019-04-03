@@ -42,7 +42,7 @@ You can install `pynfft` with the following commands (on Linux):
 
     $ sudo apt install -y libnfft3-dev
     $ export CPLUS_INCLUDE_PATH=/opt/python/<$FULL_PYTHON_VERSION>/include/<$MAJOR_MINOR_PYTHON_VERSION>m;
-    $ pip install cython numpy git+https://github.com/ghisvail/pyNFFT.git
+    $ pip install cython numpy git+https://github.com/pyNFFT/pyNFFT.git
 
 For further instructions, check `the pynfft GitHub page <https://github.com/pyNFFT/pyNFFT>`_.
 

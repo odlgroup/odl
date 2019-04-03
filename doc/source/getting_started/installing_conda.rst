@@ -134,7 +134,7 @@ further instructions.
 
         $ export CPLUS_INCLUDE_PATH=/opt/python/<$FULL_PYTHON_VERSION>/include/<$MAJOR_MINOR_PYTHON_VERSION>m;
         $ pip install numpy cython
-        $ pip install git+https://github.com/ghisvail/pyNFFT.git
+        $ pip install git+https://github.com/pyNFFT/pyNFFT.git
 
 - Wavelet transforms (currently not in mainstream conda) using `PyWavelets`_:
 
