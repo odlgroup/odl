@@ -1453,7 +1453,9 @@ class KullbackLeiblerCrossEntropy(Functional):
             if self.prior is None:
                 # < 1 - x + xlogy(x, x), one >
                 if isinstance(self.domain, ProductSpace):
-                    tmp = self.domain.apply(scipy.special.xlogy, x)
+                    tmp = self.domain.apply(
+                        lambda xi: scipy.special.xlogy(xi, xi), x
+                    )
                 else:
                     tmp = scipy.special.xlogy(x, x)
                 tmp -= x
