@@ -1495,12 +1495,12 @@ def proximal_linfty(space):
 
 
 def proximal_convex_conj_linfty(space):
-    """Proximal operator factory of the Linfty norm/distance convex conjugate.
+    r"""Proximal operator factory of the Linfty norm/distance convex conjugate.
 
     Implements the proximal operator of the convex conjugate of the
     functional ::
 
-        F(x) = ||x||_\\infty
+        F(x) = \|x\|_\infty
 
     with ``x`` in ``space``.
 
@@ -1519,13 +1519,13 @@ def proximal_convex_conj_linfty(space):
     The convex conjugate :math:`F^*` of the functional
 
     .. math::
-        F(x) = ||x||_\\infty.
+        F(x) = \|x\|_\infty.
 
     is in the case of scalar-valued functions given by the indicator function
     of the unit 1-norm ball
 
     .. math::
-        F^*(y) = \\iota_{B_1} \\big( y \\big).
+        F^*(y) = \iota_{B_1} \big( y \big).
 
     See Also
     --------
