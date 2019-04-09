@@ -1,4 +1,4 @@
-# Copyright 2014-2017 The ODL contributors
+# Copyright 2014-2019 The ODL contributors
 #
 # This file is part of ODL.
 #
@@ -9,13 +9,13 @@
 """Test for the forward-backward solver."""
 
 from __future__ import division
+
 import pytest
 
 import odl
 from odl.solvers import forward_backward_pd
 from odl.util.testutils import all_almost_equal, noise_element
 
-# Places for the accepted error when comparing results
 HIGH_ACCURACY = 8
 LOW_ACCURACY = 4
 
@@ -25,7 +25,7 @@ def test_forward_backward_input_handling():
 
     space1 = odl.uniform_discr(0, 1, 10)
 
-    lin_ops = [odl.ZeroOperator(space1), odl.ZeroOperator(space1)]
+    L = [odl.ZeroOperator(space1), odl.ZeroOperator(space1)]
     g = [odl.solvers.ZeroFunctional(space1),
          odl.solvers.ZeroFunctional(space1)]
     f = odl.solvers.ZeroFunctional(space1)
@@ -37,15 +37,15 @@ def test_forward_backward_input_handling():
     x = x0.copy()
     niter = 3
 
-    forward_backward_pd(x, f, g, lin_ops, h, tau=1.0,
+    forward_backward_pd(x, f, g, L, h, tau=1.0,
                         sigma=[1.0, 1.0], niter=niter)
 
-    assert x == x0
+    assert all_almost_equal(x, x0)
 
     # Testing that sizes needs to agree:
-    # Too few sigma_i:s
+    # Too few sigmas
     with pytest.raises(ValueError):
-        forward_backward_pd(x, f, g, lin_ops, h, tau=1.0,
+        forward_backward_pd(x, f, g, L, h, tau=1.0,
                             sigma=[1.0], niter=niter)
 
     # Too many operators
@@ -53,15 +53,8 @@ def test_forward_backward_input_handling():
                   odl.solvers.ZeroFunctional(space1),
                   odl.solvers.ZeroFunctional(space1)]
     with pytest.raises(ValueError):
-        forward_backward_pd(x, f, g_too_many, lin_ops, h,
+        forward_backward_pd(x, f, g_too_many, L, h,
                             tau=1.0, sigma=[1.0, 1.0], niter=niter)
-
-    # Test for correct space
-    space2 = odl.uniform_discr(1, 2, 10)
-    x = noise_element(space2)
-    with pytest.raises(ValueError):
-        forward_backward_pd(x, f, g, lin_ops, h, tau=1.0,
-                            sigma=[1.0, 1.0], niter=niter)
 
 
 def test_forward_backward_basic():
@@ -74,10 +67,9 @@ def test_forward_backward_basic():
     and here we take f(x) = g(x) = 0, h(x) = ||x||_2^2 and L is the
     zero-operator.
     """
-
     space = odl.rn(10)
 
-    lin_ops = [odl.ZeroOperator(space)]
+    L = [odl.ZeroOperator(space)]
     g = [odl.solvers.ZeroFunctional(space)]
     f = odl.solvers.ZeroFunctional(space)
     h = odl.solvers.L2NormSquared(space)
@@ -85,7 +77,7 @@ def test_forward_backward_basic():
     x = noise_element(space)
     x_global_min = space.zero()
 
-    forward_backward_pd(x, f, g, lin_ops, h, tau=0.5,
+    forward_backward_pd(x, f, g, L, h, tau=0.5,
                         sigma=[1.0], niter=10)
 
     assert all_almost_equal(x, x_global_min, ndigits=HIGH_ACCURACY)
