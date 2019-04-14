@@ -192,6 +192,9 @@ def douglas_rachford_pd(x, f, g, L, niter, tau=None, sigma=None,
             dom.assign(z1, x)
 
         f.proximal(tau)(z1, out=p1)
+        # End of z1 as temporary
+
+        f.proximal(tau)(z1, out=p1)
         # Now p1 = prox[tau*f](x - tau/2 * sum(Li^* vi))
         # Temporary z1 is no longer needed
 
@@ -199,7 +202,7 @@ def douglas_rachford_pd(x, f, g, L, niter, tau=None, sigma=None,
         dom.lincomb(2, p1, -1, x, out=w1)
 
         # Part 1 of x += lam(k) * (z1 - p1)
-        x.lincomb(1, x, -lam_k, p1)
+        dom.lincomb(1, x, -lam_k, p1, out=x)
 
         # Now p1 is free to use as temporary; however, since p1 holds the
         # current primal iterate (not x) we call the callback here already
@@ -252,6 +255,76 @@ def douglas_rachford_pd(x, f, g, L, niter, tau=None, sigma=None,
             # Compute v[i] += lam(k) * (z2[i] - p2[i])
             L[i].range.lincomb(1, v[i], lam_k, z2i, out=v[i])
             L[i].range.lincomb(1, v[i], -lam_k, p2[i], out=v[i])
+
+    # The final result is actually in p1 according to the algorithm, so we need
+    # to assign here
+    dom.assign(x, p1)
+
+
+def douglas_rachford_pd_simple(x, f, g, L, niter, tau=None, sigma=None,
+                               callback=None, **kwargs):
+    r"""Simple version of the Douglas-Rachford PD splitting algorithm.
+
+    This is a non-optimized version mainly intended for testing.
+    """
+    m = len(L)
+    tau, sigma = douglas_rachford_pd_stepsize(L, tau, sigma)
+    assert len(sigma) == m
+
+    prox_cc_g = [gi.convex_conj.proximal for gi in g]
+
+    l = kwargs.pop('l', None)
+    assert l is None or len(l) == m
+    if l is not None:
+        prox_cc_l = [li.convex_conj.proximal for li in l]
+
+    lam_in = kwargs.pop('lam', 1.0)
+    lam = lam_in if callable(lam_in) else lambda _: lam_in
+
+    dom = f.domain
+    v = [Li.range.zero() for Li in L]
+    p2 = [None] * m
+    w2 = [None] * m
+
+    for k in range(niter):
+        lam_k = lam(k)
+
+        if len(L) > 0:
+            tmp_dom = sum(Li.adjoint(vi) for Li, vi in zip(L, v))
+            tmp_dom = x - tau / 2 * tmp_dom
+        else:
+            tmp_dom = dom.copy(x)
+
+        p1 = f.proximal(tau)(tmp_dom)
+        w1 = 2 * p1 - x
+
+        for i in range(m):
+            tmp = v[i] + (sigma[i] / 2.0) * L[i](w1)
+            p2[i] = prox_cc_g[i](sigma[i])(tmp)
+            w2[i] = 2 * p2[i] - v[i]
+
+        if len(L) > 0:
+            tmp_dom = sum(Li.adjoint(w2i) for Li, w2i in zip(L, w2))
+        else:
+            tmp_dom = dom.zero()
+
+        z1 = w1 - tau / 2 * tmp_dom
+        x += lam_k * (z1 - p1)
+        tmp_dom = 2 * z1 - w1
+
+        for i in range(m):
+            if l is None:
+                z2 = w2[i] + sigma[i] / 2 * L[i](tmp_dom)
+            else:
+                tmp = w2[i] + (sigma[i] / 2.0) * L[i](tmp_dom)
+                z2 = prox_cc_l[i](sigma[i])(tmp)
+
+            v[i] += lam_k * (z2 - p2[i])
+
+        if callback is not None:
+            callback(p1)
+
+    dom.assign(x, p1)
 
 
 def _operator_norms(L):
