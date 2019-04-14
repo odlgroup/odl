@@ -331,36 +331,55 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
         Raises
         ------
         NotImplementedError
-            * if the vector field space is complex, since the derivative
-              is not linear in that case
+            * if the vector field space is complex
             * if the exponent is ``inf``
         """
+        # TODO(kohr-h): Derivative not linear in this case, but could be
+        # supported anyway, similar to `ComplexModulus`
         if self.domain.field == ComplexNumbers():
-            raise NotImplementedError('operator not Frechet-differentiable '
-                                      'on a complex space')
+            raise NotImplementedError(
+                'derivative on complex spaces not supported'
+            )
 
+        # TODO(kohr-h): Not strictly differentiable, but a poor man's
+        # derivative could still be supported, like with `LpNorm`
         if self.exponent == float('inf'):
-            raise NotImplementedError('operator not Frechet-differentiable '
-                                      'for exponent = inf')
+            raise NotImplementedError(
+                'derivative not implemented for `exponent=inf`'
+            )
 
+        Fb = self.domain.base_space().ufuncs
         vf = self.domain.element(vf)
+
+        # Compute `pw_norm(vf)^(p-1)`
         vf_pwnorm_fac = self(vf)
-        if self.exponent != 2:  # optimize away most common case.
-            vf_pwnorm_fac **= (self.exponent - 1)
+        if self.exponent != 2:  # Optimize away most common case
+            vf_pwnorm_fac **= self.exponent - 1
 
-        inner_vf = vf.copy()
+        # Compute `vf * abs(vf)^(p-2)`
+        # NB: singularity for zeros unavoidable if `p < 2`
+        inner_vf = self.domain.copy(vf)
 
-        for gi in inner_vf:
-            gi *= np.abs(gi) ** (self.exponent - 2)
-            if self.exponent >= 2:
-                # Any component that is zero is not divided with
-                nz = (vf_pwnorm_fac != 0)
-                gi[nz] /= vf_pwnorm_fac[nz]
-            else:
-                # For exponents < 2 there will be a singularity if any
-                # component is zero. This results in inf or nan. See the
-                # documentation for further details.
-                gi /= vf_pwnorm_fac
+        def times_abs_pow_pm2(v):
+            if self.exponent != 2:
+                v *= Fb.power(Fb.abs(v), self.exponent - 2)
+
+        self.domain.apply(times_abs_pow_pm2, inner_vf)
+
+        # Divide `vf * abs(vf)^(p-2)` by `pw_norm(vf)^(p-1)`,
+        # avoiding 0/0 if `p >= 2`
+        if self.exponent >= 2:
+            nz = (vf_pwnorm_fac != 0)
+
+            def div_pwnorm_fac(v):
+                v[nz] /= vf_pwnorm_fac[nz]
+
+        else:
+
+            def div_pwnorm_fac(v):
+                v /= vf_pwnorm_fac
+
+        self.domain.apply(div_pwnorm_fac, inner_vf)
 
         return PointwiseInner(self.domain, inner_vf, weighting=self.weights)
 
